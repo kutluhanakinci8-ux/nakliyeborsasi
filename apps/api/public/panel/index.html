@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Nakliye Borsası Panel</title>
+    <link rel="stylesheet" href="/panel/styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <header>
+        <p class="pill">Nakliye Borsası · TR + UA–EU</p>
+        <h1>Yük Borsası Paneli</h1>
+        <p class="subtitle">Giriş yapın, platform ilanlarını ve harici kaynakları görüntüleyin.</p>
+      </header>
+
+      <section id="login-section" class="card">
+        <h2>Giriş</h2>
+        <label>E-posta<input id="email" type="email" value="demo@nakliyeborsasi.local" /></label>
+        <label>Şifre<input id="password" type="password" value="DemoPass123!" /></label>
+        <label
+          >Dil
+          <select id="locale">
+            <option value="tr">Türkçe</option>
+            <option value="en">English</option>
+            <option value="uk">Українська</option>
+            <option value="ru">Русский</option>
+          </select>
+        </label>
+        <button id="login-button" type="button">Giriş yap</button>
+        <p id="error" class="error" hidden></p>
+      </section>
+
+      <section id="dashboard-section" class="card" hidden>
+        <div class="actions">
+          <button id="load-listings" type="button">Platform ilanları</button>
+          <button id="load-integrations" type="button" class="secondary">Harici kaynaklar</button>
+          <button id="logout-button" type="button" class="secondary">Çıkış</button>
+        </div>
+        <div id="listings"></div>
+        <pre id="integration-output" hidden></pre>
+      </section>
+    </div>
+    <script src="/panel/panel.js"></script>
+  </body>
+</html>

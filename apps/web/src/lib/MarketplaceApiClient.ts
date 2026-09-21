@@ -13,6 +13,10 @@ export class MarketplaceApiClient {
         },
       },
     );
+    if (!response.ok) {
+      const errorBody = await response.text();
+      throw new Error(errorBody || "Marketplace request failed");
+    }
     return response.json();
   }
 }

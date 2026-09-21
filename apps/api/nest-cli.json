@@ -9,6 +9,10 @@
       {
         "include": "assets/**/*",
         "outDir": "dist"
+      },
+      {
+        "include": "public/**/*",
+        "outDir": "dist"
       }
     ]
   }

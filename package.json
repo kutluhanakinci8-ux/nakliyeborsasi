@@ -11,7 +11,9 @@
     "verify-root": "bash scripts/verify-project-root.sh",
     "preinstall": "node -e \"if(!require('fs').existsSync('package.json'))process.exit(1)\"",
     "build": "npm run verify-root && npm run build -w core && npm run build -w @nakliyeborsasi/api",
+    "build:all": "npm run build && npm run build -w @nakliyeborsasi/web",
     "start": "npm run verify-root && npm run start -w @nakliyeborsasi/api",
+    "start:web": "npm run start -w @nakliyeborsasi/web",
     "start:dev": "npm run verify-root && npm run start:dev -w @nakliyeborsasi/api",
     "lint": "npm run lint -w @nakliyeborsasi/api"
   },

@@ -169,4 +169,4 @@ bash scripts/restart-api.sh
 | `DATABASE_URL` | Postgres bağlantı URI |
 | `REDIS_URL` | Redis (cache + rate limit) |
 | `JWT_SECRET` | Üretimde güçlü rastgele değer |
-| `PORT` | Varsayılan `3000` |
+| `PORT` | API portu (VPS: **3010**) |
