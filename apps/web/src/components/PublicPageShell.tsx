@@ -11,6 +11,7 @@ type PublicPageShellProps = {
   stats?: ModuleStatItem[];
   subnav?: readonly { href: string; label: string }[];
   showHeroVisual?: boolean;
+  heroAside?: ReactNode;
   children: ReactNode;
 };
 
@@ -22,8 +23,11 @@ export function PublicPageShell({
   stats,
   subnav,
   showHeroVisual = true,
+  heroAside,
   children,
 }: PublicPageShellProps) {
+  const hasHeroColumn = Boolean(heroAside) || showHeroVisual;
+
   return (
     <div className="public-page">
       <section className="public-hero surface-animate">
@@ -32,7 +36,11 @@ export function PublicPageShell({
           <span aria-hidden>›</span>
           <span className="page-breadcrumb-current">{breadcrumbLabel}</span>
         </nav>
-        <div className="public-hero-grid">
+        <div
+          className={
+            hasHeroColumn ? "public-hero-grid" : "public-hero-grid public-hero-grid--single"
+          }
+        >
           <div className="public-hero-copy">
             <p className="exchange-eyebrow">{eyebrow}</p>
             <h1 className="exchange-title">{title}</h1>
@@ -53,7 +61,9 @@ export function PublicPageShell({
               </div>
             ) : null}
           </div>
-          {showHeroVisual ? (
+          {heroAside ? (
+            <div className="public-hero-visual">{heroAside}</div>
+          ) : showHeroVisual ? (
             <div className="public-hero-visual">
               <Image
                 src="/corridor-hero.svg"
