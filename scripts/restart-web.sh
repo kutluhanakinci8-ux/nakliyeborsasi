@@ -23,7 +23,7 @@ bash scripts/build-web.sh
 
 if command -v pm2 >/dev/null 2>&1; then
   pm2 delete nakliyeborsasi-web 2>/dev/null || true
-  PORT="$WEB_PORT" HOSTNAME="0.0.0.0" pm2 start npm --name nakliyeborsasi-web --cwd "$INSTALL_DIR/apps/web" -- start
+  PORT="$WEB_PORT" HOSTNAME="0.0.0.0" pm2 start ./node_modules/next/dist/bin/next --name nakliyeborsasi-web --cwd "$INSTALL_DIR/apps/web" -- start -H 0.0.0.0 -p "$WEB_PORT"
   pm2 save
   echo "PM2: nakliyeborsasi-web başlatıldı (cwd=apps/web, PORT=${WEB_PORT})."
 fi
