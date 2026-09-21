@@ -1,5 +1,5 @@
 import { NestFactory } from "@nestjs/core";
-import { ValidationPipe } from "@nestjs/common";
+import { RequestMethod, ValidationPipe } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { NestExpressApplication } from "@nestjs/platform-express";
 import { join } from "path";
@@ -14,13 +14,12 @@ export class BootstrapApplication {
     application.useStaticAssets(join(__dirname, "public", "panel"), {
       prefix: "/panel/",
     });
-    application.getHttpAdapter().get("/panel", (_request, response) => {
-      response.redirect("/panel/index.html");
+    application.setGlobalPrefix("api/v1", {
+      exclude: [
+        { path: "panel", method: RequestMethod.GET },
+        { path: "", method: RequestMethod.GET },
+      ],
     });
-    application.getHttpAdapter().get("/", (_request, response) => {
-      response.redirect("/panel/index.html");
-    });
-    application.setGlobalPrefix("api/v1");
     application.useGlobalPipes(
       new ValidationPipe({
         whitelist: true,

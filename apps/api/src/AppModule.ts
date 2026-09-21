@@ -7,6 +7,7 @@ import { SubscriptionModule } from "./modules/subscription/SubscriptionModule";
 import { IntegrationModule } from "./modules/integration/IntegrationModule";
 import { MarketplaceModule } from "./modules/marketplace/MarketplaceModule";
 import { IdentityModule } from "./modules/identity/IdentityModule";
+import { PanelModule } from "./modules/panel/PanelModule";
 import { HealthModule } from "./modules/health/HealthModule";
 import { DatabaseModule } from "./infrastructure/database/DatabaseModule";
 import { AuthModule } from "./modules/auth/AuthModule";
@@ -36,6 +37,7 @@ import { TrustScoreModule } from "./modules/trust/TrustScoreModule";
     AuctionModule,
     MessagingModule,
     TrustScoreModule,
+    PanelModule,
     HealthModule,
   ],
   providers: [
