@@ -9,7 +9,7 @@
   --nb-mint: #10b981;
   --nb-mint-soft: rgba(16, 185, 129, 0.14);
   --nb-gold: #ca8a04;
-  --nb-surface: rgba(255, 255, 255, 0.94);
+  --nb-surface: rgba(255, 255, 255, 0.9);
   --nb-surface-border: rgba(16, 185, 129, 0.16);
   --nb-shadow-soft: 0 12px 40px rgba(6, 95, 70, 0.07);
   --nb-shadow-panel: 0 4px 24px rgba(15, 23, 42, 0.06);
@@ -58,10 +58,43 @@ a {
   overflow: hidden;
   background: linear-gradient(
     165deg,
-    var(--nb-canvas-top) 0%,
-    var(--nb-canvas-mid) 42%,
-    var(--nb-canvas-base) 100%
+    rgba(244, 250, 247, 0.92) 0%,
+    rgba(238, 244, 241, 0.88) 42%,
+    rgba(228, 235, 232, 0.85) 100%
   );
+}
+
+.site-backdrop-video-wrap {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.site-backdrop-video {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  min-width: 100%;
+  min-height: 100%;
+  width: auto;
+  height: auto;
+  transform: translate(-50%, -50%) scale(1.06);
+  object-fit: cover;
+  opacity: 0.14;
+  filter: saturate(0.55) contrast(1.05) blur(1.5px);
+}
+
+.site-backdrop-video-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      165deg,
+      rgba(236, 253, 245, 0.88) 0%,
+      rgba(228, 235, 232, 0.78) 45%,
+      rgba(212, 224, 218, 0.82) 100%
+    ),
+    radial-gradient(ellipse 90% 70% at 50% 0%, rgba(255, 255, 255, 0.35), transparent 60%);
 }
 
 .site-backdrop-grid {
@@ -174,14 +207,14 @@ a {
   border-radius: 0 0 var(--nb-radius-xl) var(--nb-radius-xl);
   background: linear-gradient(
     180deg,
-    rgba(236, 253, 245, 0.92) 0%,
-    rgba(248, 255, 254, 0.75) 55%,
-    rgba(228, 235, 232, 0.35) 100%
+    rgba(236, 253, 245, 0.88) 0%,
+    rgba(248, 255, 254, 0.72) 55%,
+    rgba(228, 235, 232, 0.45) 100%
   );
   border: 1px solid var(--nb-surface-border);
   border-top: none;
   box-shadow: var(--nb-shadow-soft);
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(18px) saturate(1.1);
 }
 
 .public-hero-grid {
@@ -2132,11 +2165,12 @@ button.btn-secondary {
 }
 
 .module-panel {
-  background: #fff;
-  border: 1px solid #dbe3ec;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(203, 213, 225, 0.85);
   border-radius: 16px;
   padding: 20px 22px;
   box-shadow: 0 4px 20px rgba(6, 95, 70, 0.05);
+  backdrop-filter: blur(14px) saturate(1.05);
 }
 
 .module-panel-title {
