@@ -18,12 +18,6 @@ const SUBNAV = [
   { href: "#contact-faq", label: "SSS" },
 ] as const;
 
-const HERO_STATS = [
-  { value: "24 saat", label: "Form yanıt hedefi" },
-  { value: "3 ofis", label: "TR · UA · EU" },
-  { value: "4 dil", label: "Destek", highlight: true },
-] as const;
-
 export function ContactPageClient() {
   const [topic, setTopic] = useState<ContactTopic>("demo");
   const [sent, setSent] = useState(false);
@@ -40,10 +34,10 @@ export function ContactPageClient() {
     <SiteLayout headerVariant="public">
       <PublicPageShell
         breadcrumbLabel="İletişim"
-        eyebrow="İletişim"
         title="Bize ulaşın"
         lead="Satış, destek, basın ve ortaklık — doğru ekibe yönlendirilirsiniz. Aşağıdan formu doldurun, ofis haritasına bakın veya SSS’ye göz atın."
-        stats={[...HERO_STATS]}
+        showHeroVisual={false}
+        heroCompact
         subnav={SUBNAV}
       >
         <div className="contact-route-grid contact-route-grid--premium">
