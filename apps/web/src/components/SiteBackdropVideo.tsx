@@ -34,7 +34,17 @@ export function SiteBackdropVideo() {
   }, [motionOk]);
 
   if (!motionOk) {
-    return null;
+    return (
+      <div className="site-backdrop-video-wrap" aria-hidden>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/media/corridor-bg-poster.jpg"
+          alt=""
+          className="site-backdrop-video site-backdrop-poster"
+        />
+        <div className="site-backdrop-video-scrim" />
+      </div>
+    );
   }
 
   return (

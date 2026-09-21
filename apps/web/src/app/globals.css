@@ -89,8 +89,8 @@ a {
   height: auto;
   transform: translate(-50%, -50%) scale(1.12);
   object-fit: cover;
-  opacity: 0.55;
-  filter: saturate(0.92) contrast(1.06);
+  opacity: 0.52;
+  filter: saturate(1.08) contrast(1.04) hue-rotate(-6deg);
 }
 
 .site-backdrop-video-scrim {
@@ -100,11 +100,12 @@ a {
   background:
     linear-gradient(
       165deg,
-      rgba(236, 253, 245, 0.38) 0%,
-      rgba(228, 235, 232, 0.22) 45%,
-      rgba(200, 215, 208, 0.32) 100%
+      rgba(219, 234, 254, 0.48) 0%,
+      rgba(191, 219, 254, 0.26) 42%,
+      rgba(226, 232, 240, 0.34) 100%
     ),
-    radial-gradient(ellipse 90% 70% at 50% 20%, rgba(255, 255, 255, 0.12), transparent 50%);
+    radial-gradient(ellipse 88% 72% at 50% 18%, rgba(147, 197, 253, 0.18), transparent 52%),
+    radial-gradient(ellipse 70% 50% at 80% 85%, rgba(30, 64, 175, 0.08), transparent 55%);
 }
 
 .site-backdrop-grid {
@@ -112,11 +113,11 @@ a {
   inset: -20% -10%;
   z-index: 2;
   background-image:
-    linear-gradient(rgba(16, 185, 129, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(16, 185, 129, 0.04) 1px, transparent 1px);
+    linear-gradient(rgba(59, 130, 246, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.035) 1px, transparent 1px);
   background-size: 48px 48px;
   mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 15%, transparent 72%);
-  opacity: 0.22;
+  opacity: 0.2;
 }
 
 .site-backdrop-glow {
@@ -127,12 +128,30 @@ a {
   z-index: 3;
 }
 
+.site-backdrop-glow--sky {
+  width: min(640px, 90vw);
+  height: 420px;
+  top: -120px;
+  right: -8%;
+  background: radial-gradient(circle, rgba(96, 165, 250, 0.32), transparent 70%);
+}
+
+.site-backdrop-glow--deep {
+  width: 480px;
+  height: 360px;
+  bottom: 18%;
+  left: -6%;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.14), transparent 70%);
+  opacity: 0.55;
+}
+
+/* legacy aliases (ui docs) */
 .site-backdrop-glow--mint {
   width: min(640px, 90vw);
   height: 420px;
   top: -120px;
   right: -8%;
-  background: radial-gradient(circle, rgba(52, 211, 153, 0.35), transparent 70%);
+  background: radial-gradient(circle, rgba(96, 165, 250, 0.32), transparent 70%);
 }
 
 .site-backdrop-glow--gold {
@@ -140,8 +159,8 @@ a {
   height: 360px;
   bottom: 18%;
   left: -6%;
-  background: radial-gradient(circle, rgba(234, 179, 8, 0.12), transparent 70%);
-  opacity: 0.6;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.14), transparent 70%);
+  opacity: 0.55;
 }
 
 .site-canvas {
