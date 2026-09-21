@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SiteBrand } from "./SiteBrand";
 
 const SOCIAL_LINKS = [
   { href: "https://t.me/nakliyeborsasi", label: "Telegram", icon: "TG" },
@@ -19,11 +20,12 @@ export function SiteFooter() {
     <footer className="site-footer">
       <div className="site-footer-inner">
         <div className="site-footer-brand">
-          <span className="brand-mark brand-mark--sm">NB</span>
-          <div>
-            <p className="site-footer-title">Nakliye Borsası</p>
-            <p className="site-footer-tagline">TR · UA · EU yük ve taşıma borsası</p>
-          </div>
+          <SiteBrand
+            href="/marketplace"
+            size="sm"
+            variant="footer"
+            tagline="TR · UA · EU yük ve taşıma borsası"
+          />
         </div>
         <div className="site-footer-col">
           <p className="site-footer-heading">Platform</p>

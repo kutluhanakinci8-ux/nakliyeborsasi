@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { SiteBrand } from "./SiteBrand";
 import { useWebSession } from "../context/WebSessionProvider";
 
 const NAV_ITEMS = [
@@ -27,7 +28,10 @@ export function SiteHeader({ variant = "app" }: SiteHeaderProps) {
     <header className="site-header">
       <div className="site-header-utility">
         <div className="site-header-utility-inner">
-          <span className="utility-badge">TR · UA · EU koridoru</span>
+          <span className="utility-badge">
+            <span className="utility-dot" aria-hidden />
+            TR · UA · EU koridoru
+          </span>
           <div className="utility-actions">
             <label className="locale-select locale-select--header">
               <span className="sr-only">Dil</span>
@@ -50,12 +54,12 @@ export function SiteHeader({ variant = "app" }: SiteHeaderProps) {
                   </span>
                   <span className="user-email">{session.emailAddress}</span>
                 </span>
-                <button type="button" className="btn-ghost-header" onClick={logout}>
+                <button type="button" className="btn-outline-header" onClick={logout}>
                   Çıkış
                 </button>
               </>
             ) : (
-              <Link href="/login" className="btn-gold-header">
+              <Link href="/login" className="btn-premium-header">
                 Giriş yap
               </Link>
             )}
@@ -64,23 +68,21 @@ export function SiteHeader({ variant = "app" }: SiteHeaderProps) {
       </div>
       <div className="site-header-main">
         <div className="site-header-main-inner">
-          <Link href="/marketplace" className="brand brand--header">
-            <span className="brand-mark">NB</span>
-            <div>
-              <p className="brand-title brand-title--header">Nakliye Borsası</p>
-              <p className="brand-sub brand-sub--header">Yük ve taşıma arama</p>
+          <SiteBrand href="/marketplace" size="lg" />
+          <nav className="site-nav-shell" aria-label="Ana menü">
+            <div className="site-nav">
+              {NAV_ITEMS.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={
+                    isActive(item.href) ? "site-nav-link active" : "site-nav-link"
+                  }
+                >
+                  {item.label}
+                </Link>
+              ))}
             </div>
-          </Link>
-          <nav className="site-nav" aria-label="Ana menü">
-            {NAV_ITEMS.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={isActive(item.href) ? "site-nav-link active" : "site-nav-link"}
-              >
-                {item.label}
-              </Link>
-            ))}
           </nav>
         </div>
       </div>
