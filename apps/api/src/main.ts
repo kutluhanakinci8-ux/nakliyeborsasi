@@ -28,6 +28,10 @@ export class BootstrapApplication {
       }),
     );
     application.useGlobalFilters(new PlatformExceptionFilter());
+    application.enableCors({
+      origin: true,
+      credentials: true,
+    });
     const configService = application.get(ConfigService);
     const port = configService.get<string>("PORT") ?? "3010";
     await application.listen(port);

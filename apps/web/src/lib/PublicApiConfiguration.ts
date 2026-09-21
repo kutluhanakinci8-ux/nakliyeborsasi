@@ -1,11 +1,17 @@
 export class PublicApiConfiguration {
   public static resolveBaseUrl(): string {
-    if (typeof window !== "undefined" && !process.env.NEXT_PUBLIC_API_BASE_URL) {
-      const origin = window.location.origin.replace(/:3011$/, ":3010");
-      return `${origin}/api/v1`;
+    const configured = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (typeof window !== "undefined") {
+      const isLocalConfigured =
+        !configured ||
+        configured.includes("127.0.0.1") ||
+        configured.includes("localhost");
+      if (isLocalConfigured) {
+        const { protocol, hostname } = window.location;
+        return `${protocol}//${hostname}:3010/api/v1`;
+      }
+      return configured;
     }
-    return (
-      process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3010/api/v1"
-    );
+    return configured ?? "http://localhost:3010/api/v1";
   }
 }

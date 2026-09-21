@@ -23,7 +23,7 @@ bash scripts/install-deps.sh
 
 bash scripts/restart-api.sh
 
-bash scripts/restart-web.sh "$INSTALL_DIR" 3011 "http://127.0.0.1:3010/api/v1"
+bash scripts/restart-web.sh "$INSTALL_DIR" 3011
 
 SERVER_IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
 echo "=== Bitti ==="

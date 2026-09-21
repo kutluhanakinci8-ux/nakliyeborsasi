@@ -3,11 +3,20 @@ set -euo pipefail
 
 INSTALL_DIR="${1:-/var/www/nakliyeborsasi}"
 WEB_PORT="${2:-3011}"
-API_PUBLIC_URL="${3:-http://127.0.0.1:3010/api/v1}"
+API_PUBLIC_URL="${3:-}"
+
+if [[ -z "${API_PUBLIC_URL}" ]]; then
+  SERVER_IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
+  if [[ -n "${SERVER_IP}" ]]; then
+    API_PUBLIC_URL="http://${SERVER_IP}:3010/api/v1"
+  else
+    API_PUBLIC_URL="http://127.0.0.1:3010/api/v1"
+  fi
+fi
 
 if [[ "${INSTALL_DIR}" == http* ]]; then
   echo "Kullanım: bash scripts/restart-web.sh [kurulum_dizini] [web_portu] [api_url]" >&2
-  echo "Örnek:    bash scripts/restart-web.sh /var/www/nakliyeborsasi 3011 http://127.0.0.1:3010/api/v1" >&2
+  echo "Örnek:    bash scripts/restart-web.sh /var/www/nakliyeborsasi 3011 http://168.231.109.27:3010/api/v1" >&2
   echo "Not: API URL birinci argüman değildir; üçüncü argümandır." >&2
   exit 1
 fi
