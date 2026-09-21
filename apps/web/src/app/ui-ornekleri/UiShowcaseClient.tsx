@@ -78,7 +78,7 @@ export function UiShowcaseClient() {
               </li>
             ))}
           </ul>
-          <p className="ui-showcase-lead">Yasal pill hover (canlı)</p>
+          <p className="ui-showcase-lead">Yasal linkler (canlı — mint glow, pill yok)</p>
           <nav className="site-footer-legal ui-demo-legal-row" aria-label="Örnek yasal">
             <Link href="/kisisel-verilerin-korunmasi">Kişisel Verilerin Korunması</Link>
             <Link href="/kullanim-kosullari">Kullanım Koşullarımız</Link>
