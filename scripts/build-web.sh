@@ -26,8 +26,7 @@ if [[ "${REACT_BEFORE}" != 19.* ]]; then
   rm -rf node_modules apps/web/node_modules apps/web/.next
 fi
 
-echo "=== npm install (monorepo kökü) ==="
-npm install
+bash "${ROOT}/scripts/install-deps.sh"
 
 echo "=== Tek React kopyası (symlink) ==="
 rm -rf apps/web/node_modules/react apps/web/node_modules/react-dom

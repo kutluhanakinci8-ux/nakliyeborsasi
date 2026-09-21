@@ -10,6 +10,8 @@ fi
 
 cd "$INSTALL_DIR"
 
+bash "$INSTALL_DIR/scripts/install-deps.sh"
+
 if [[ ! -f ".env" ]]; then
   cp .env.example .env
 fi

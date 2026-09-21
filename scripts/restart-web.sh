@@ -14,6 +14,8 @@ fi
 
 cd "$INSTALL_DIR"
 
+bash scripts/install-deps.sh
+
 ENV_FILE="apps/web/.env.local"
 echo "NEXT_PUBLIC_API_BASE_URL=${API_PUBLIC_URL}" > "$ENV_FILE"
 
