@@ -52,7 +52,7 @@ export function UiShowcaseClient() {
               </a>
             </div>
             <div className="ui-demo-cell">
-              <span className="ui-demo-label">Mint glow</span>
+              <span className="ui-demo-label">Lacivert glow (canlı)</span>
               <a href="#linkler" className="ui-demo-link ui-demo-link--glow">
                 Mesajlar
               </a>
