@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { type ReactNode } from "react";
-import { LegalHeroAside } from "./LegalHeroAside";
 import { PublicPageShell } from "./PublicPageShell";
 import { SiteLayout } from "./SiteLayout";
 
@@ -13,9 +12,6 @@ type LegalPageLayoutProps = {
   title: string;
   lead: string;
   breadcrumbLabel?: string;
-  versionLabel?: string;
-  updatedLabel?: string;
-  jurisdiction?: string;
   toc: readonly LegalTocItem[];
   children: ReactNode;
 };
@@ -30,30 +26,17 @@ export function LegalPageLayout({
   title,
   lead,
   breadcrumbLabel,
-  versionLabel = "0.9 — ön sürüm",
-  updatedLabel = "Eylül 2026",
-  jurisdiction = "Türkiye Cumhuriyeti",
   toc,
   children,
 }: LegalPageLayoutProps) {
-  const subnav = toc.map((item) => ({ href: `#${item.id}`, label: item.label }));
-
   return (
     <SiteLayout headerVariant="public">
       <PublicPageShell
         breadcrumbLabel={breadcrumbLabel ?? title}
-        eyebrow="Yasal"
         title={title}
         lead={lead}
         showHeroVisual={false}
-        heroAside={
-          <LegalHeroAside
-            versionLabel={versionLabel}
-            updatedLabel={updatedLabel}
-            jurisdiction={jurisdiction}
-          />
-        }
-        subnav={subnav}
+        heroCompact
       >
         <div className="legal-page-grid">
           <aside className="module-panel module-panel--elevated legal-toc-panel" aria-label="İçindekiler">

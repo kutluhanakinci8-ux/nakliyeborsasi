@@ -227,6 +227,29 @@ a {
   padding-bottom: 14px;
 }
 
+.public-hero--compact {
+  margin-bottom: 20px;
+  padding: 4px 24px 18px;
+}
+
+.public-hero--compact .page-breadcrumb {
+  margin-bottom: 10px;
+}
+
+.public-hero--compact .exchange-title {
+  font-size: 1.65rem;
+  margin-bottom: 8px;
+}
+
+.public-hero--compact .exchange-lead {
+  font-size: 0.92rem;
+  max-width: 720px;
+}
+
+.public-page--compact-hero .public-content {
+  gap: 20px;
+}
+
 .public-content .module-panel,
 .public-content .contact-layout,
 .public-content .contact-route-grid {
@@ -565,69 +588,6 @@ a {
 }
 
 /* —— Yasal sayfalar (kullanım koşulları vb.) —— */
-.legal-hero-aside {
-  width: 100%;
-  max-width: 360px;
-  padding: 20px 22px;
-  border-radius: var(--nb-radius-lg);
-  background: var(--nb-surface);
-  border: 1px solid var(--nb-surface-border);
-  box-shadow: var(--nb-shadow-soft);
-}
-
-.legal-hero-doc {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  padding-bottom: 16px;
-  margin-bottom: 16px;
-  border-bottom: 1px solid rgba(16, 185, 129, 0.15);
-}
-
-.legal-hero-doc-icon svg {
-  width: 72px;
-  height: auto;
-  filter: drop-shadow(0 8px 16px rgba(6, 95, 70, 0.1));
-}
-
-.legal-hero-doc-caption {
-  margin: 0;
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: #047857;
-  text-align: center;
-}
-
-.legal-hero-meta {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.legal-hero-meta li {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.legal-hero-meta-label {
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #64748b;
-}
-
-.legal-hero-meta-value {
-  font-size: 0.92rem;
-  font-weight: 600;
-  color: #0f172a;
-}
-
 .legal-page-grid {
   display: grid;
   grid-template-columns: minmax(220px, 280px) 1fr;

@@ -5,13 +5,14 @@ import type { ModuleStatItem } from "./ModulePageShell";
 
 type PublicPageShellProps = {
   breadcrumbLabel: string;
-  eyebrow: string;
+  eyebrow?: string;
   title: string;
   lead: string;
   stats?: ModuleStatItem[];
   subnav?: readonly { href: string; label: string }[];
   showHeroVisual?: boolean;
   heroAside?: ReactNode;
+  heroCompact?: boolean;
   children: ReactNode;
 };
 
@@ -24,13 +25,18 @@ export function PublicPageShell({
   subnav,
   showHeroVisual = true,
   heroAside,
+  heroCompact = false,
   children,
 }: PublicPageShellProps) {
   const hasHeroColumn = Boolean(heroAside) || showHeroVisual;
 
   return (
-    <div className="public-page">
-      <section className="public-hero surface-animate">
+    <div className={heroCompact ? "public-page public-page--compact-hero" : "public-page"}>
+      <section
+        className={
+          heroCompact ? "public-hero public-hero--compact surface-animate" : "public-hero surface-animate"
+        }
+      >
         <nav className="page-breadcrumb" aria-label="Konum">
           <Link href="/hakkimizda">Kurumsal</Link>
           <span aria-hidden>›</span>
@@ -42,7 +48,7 @@ export function PublicPageShell({
           }
         >
           <div className="public-hero-copy">
-            <p className="exchange-eyebrow">{eyebrow}</p>
+            {eyebrow ? <p className="exchange-eyebrow">{eyebrow}</p> : null}
             <h1 className="exchange-title">{title}</h1>
             <p className="exchange-lead">{lead}</p>
             {stats && stats.length > 0 ? (
