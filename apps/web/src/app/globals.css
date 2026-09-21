@@ -401,6 +401,248 @@ a {
   color: #0f172a;
 }
 
+.contact-layout--wide {
+  grid-template-columns: 1.35fr 1fr;
+  align-items: start;
+}
+
+.contact-side-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.contact-route-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.contact-route-card {
+  text-align: left;
+  border: 1px solid #dbe3ec;
+  border-radius: 14px;
+  padding: 16px;
+  background: #fff;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.contact-route-card:hover {
+  border-color: #6ee7b7;
+}
+
+.contact-route-card.active {
+  border-color: #10b981;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.12);
+}
+
+.contact-route-title {
+  display: block;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 6px;
+}
+
+.contact-route-desc {
+  display: block;
+  font-size: 0.82rem;
+  color: #64748b;
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+
+.contact-route-email {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #047857;
+}
+
+.contact-form-hint {
+  margin: 0 0 16px;
+  font-size: 0.88rem;
+  color: #64748b;
+}
+
+.contact-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.contact-channel-list {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+}
+
+.contact-channel-list li {
+  margin-bottom: 14px;
+}
+
+.contact-channel-list a {
+  display: block;
+  font-weight: 700;
+  color: #047857;
+}
+
+.contact-channel-list span {
+  display: block;
+  font-size: 0.78rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.contact-social-label {
+  margin: 0 0 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.contact-sla-list {
+  margin: 0;
+  padding-left: 18px;
+  color: #475569;
+  line-height: 1.6;
+  font-size: 0.88rem;
+}
+
+.contact-map-section {
+  margin-top: 20px;
+}
+
+.contact-map-head {
+  margin-bottom: 14px;
+}
+
+.office-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.office-tab {
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #065f46;
+  cursor: pointer;
+}
+
+.office-tab.active {
+  background: #10b981;
+  border-color: #10b981;
+  color: #fff;
+}
+
+.office-detail {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.office-label {
+  margin: 0 0 6px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.office-address {
+  margin: 0 0 14px;
+  color: #475569;
+}
+
+.office-meta-list {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+}
+
+.office-meta-list li {
+  margin-bottom: 10px;
+  font-size: 0.88rem;
+}
+
+.office-meta-key {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+}
+
+.office-meta-list a {
+  color: #047857;
+  font-weight: 600;
+}
+
+.office-map-wrap {
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid #dbe3ec;
+  min-height: 280px;
+  background: #e2e8f0;
+}
+
+.office-map-iframe {
+  width: 100%;
+  height: 280px;
+  border: 0;
+  display: block;
+}
+
+.contact-faq {
+  margin-top: 20px;
+}
+
+.faq-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.faq-item {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.faq-item:last-child {
+  border-bottom: none;
+}
+
+.faq-question {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-weight: 600;
+  color: #0f172a;
+  text-align: left;
+  cursor: pointer;
+}
+
+.faq-answer {
+  margin: 0 0 14px;
+  color: #475569;
+  line-height: 1.55;
+  font-size: 0.9rem;
+}
+
 .site-brand {
   display: flex;
   align-items: center;
@@ -1871,7 +2113,20 @@ button.btn-secondary {
     justify-content: flex-start;
   }
 
-  .contact-layout {
+  .contact-layout,
+  .contact-layout--wide {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-route-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .office-detail {
     grid-template-columns: 1fr;
   }
 
