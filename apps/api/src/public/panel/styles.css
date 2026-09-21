@@ -84,6 +84,16 @@ button.secondary {
   margin-top: 10px;
 }
 
+.copy-id {
+  margin-bottom: 12px;
+}
+
+.listing-meta {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  word-break: break-all;
+}
+
 .session-info {
   font-size: 0.85rem;
   color: #94a3b8;

@@ -15,6 +15,7 @@ import { FreightListingEntity } from "../../infrastructure/database/entities/Fre
 import { CreateAuctionSessionRequestDto } from "./CreateAuctionSessionRequestDto";
 import { ModularSubscriptionEntitlementService } from "../subscription/ModularSubscriptionEntitlementService";
 import { LocaleResolutionService } from "../localization/LocaleResolutionService";
+import { AuctionSessionFinalizationService } from "./AuctionSessionFinalizationService";
 
 @Injectable()
 export class AuctionSessionApplicationService {
@@ -27,6 +28,7 @@ export class AuctionSessionApplicationService {
     private readonly freightListingRepository: Repository<FreightListingEntity>,
     private readonly modularSubscriptionEntitlementService: ModularSubscriptionEntitlementService,
     private readonly localeResolutionService: LocaleResolutionService,
+    private readonly auctionSessionFinalizationService: AuctionSessionFinalizationService,
   ) {}
 
   public async createSession(
@@ -62,16 +64,47 @@ export class AuctionSessionApplicationService {
         endsAt,
         minimumBidAmount: payload.minimumBidAmount.toFixed(2),
         currencyCode: payload.currencyCode,
+        winningBidId: null,
       }),
     );
   }
 
-  public async listOpenSessions(): Promise<AuctionSessionEntity[]> {
+  public async listSessions(
+    statusFilter: "open" | "closed" | "all",
+  ): Promise<AuctionSessionEntity[]> {
+    await this.auctionSessionFinalizationService.closeAllExpiredOpenSessions();
+    if (statusFilter === "open") {
+      return this.auctionSessionRepository.find({
+        where: { statusCode: AuctionSessionStatusCode.Open },
+        order: { createdAt: "DESC" },
+        relations: { bids: true },
+      });
+    }
+    if (statusFilter === "closed") {
+      return this.auctionSessionRepository.find({
+        where: { statusCode: AuctionSessionStatusCode.Closed },
+        order: { createdAt: "DESC" },
+        relations: { bids: true },
+      });
+    }
     return this.auctionSessionRepository.find({
-      where: { statusCode: AuctionSessionStatusCode.Open },
       order: { createdAt: "DESC" },
       relations: { bids: true },
     });
+  }
+
+  public async getSessionById(
+    auctionSessionId: string,
+  ): Promise<AuctionSessionEntity> {
+    await this.auctionSessionFinalizationService.closeAllExpiredOpenSessions();
+    const session = await this.auctionSessionRepository.findOne({
+      where: { id: auctionSessionId },
+      relations: { bids: true },
+    });
+    if (!session) {
+      throw new AuctionSessionNotFoundException(auctionSessionId);
+    }
+    return session;
   }
 
   public async placeBid(
@@ -95,8 +128,9 @@ export class AuctionSessionApplicationService {
       throw new ValidationException("Auction session is closed");
     }
     if (session.endsAt.getTime() < Date.now()) {
-      session.statusCode = AuctionSessionStatusCode.Closed;
-      await this.auctionSessionRepository.save(session);
+      await this.auctionSessionFinalizationService.finalizeSession(
+        auctionSessionId,
+      );
       throw new ValidationException("Auction session has expired");
     }
     if (session.ownerCompanyId === authenticatedUser.companyId) {

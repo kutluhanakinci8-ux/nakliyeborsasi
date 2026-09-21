@@ -15,6 +15,7 @@ import { LocaleResolutionService } from "../localization/LocaleResolutionService
 import { AuctionSessionApplicationService } from "./AuctionSessionApplicationService";
 import { CreateAuctionSessionRequestDto } from "./CreateAuctionSessionRequestDto";
 import { PlaceAuctionBidRequestDto } from "./PlaceAuctionBidRequestDto";
+import { AuctionSessionListQueryDto } from "./AuctionSessionListQueryDto";
 
 @Controller("auctions")
 @UseGuards(JwtAuthenticationGuard)
@@ -25,10 +26,25 @@ export class AuctionSessionController {
   ) {}
 
   @Get("sessions")
-  public async listSessions(): Promise<{ sessions: unknown[] }> {
-    const sessions =
-      await this.auctionSessionApplicationService.listOpenSessions();
+  public async listSessions(
+    @Query() query: AuctionSessionListQueryDto,
+  ): Promise<{ sessions: unknown[] }> {
+    const statusFilter = query.status ?? "open";
+    const sessions = await this.auctionSessionApplicationService.listSessions(
+      statusFilter,
+    );
     return { sessions };
+  }
+
+  @Get("sessions/:auctionSessionId")
+  public async getSession(
+    @Param("auctionSessionId") auctionSessionId: string,
+  ): Promise<{ session: unknown }> {
+    const session =
+      await this.auctionSessionApplicationService.getSessionById(
+        auctionSessionId,
+      );
+    return { session };
   }
 
   @Post("sessions")

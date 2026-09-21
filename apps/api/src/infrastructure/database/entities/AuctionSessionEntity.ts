@@ -30,6 +30,9 @@ export class AuctionSessionEntity {
   @Column({ type: "varchar", length: 8 })
   public currencyCode!: string;
 
+  @Column({ type: "uuid", nullable: true })
+  public winningBidId!: string | null;
+
   @OneToMany(() => AuctionBidEntity, (bid) => bid.auctionSession)
   public bids!: AuctionBidEntity[];
 

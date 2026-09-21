@@ -6,6 +6,8 @@ export const metadata: Metadata = {
   description: "TR + UA-EU yük borsası paneli",
 };
 
+export const dynamic = "force-dynamic";
+
 export default function RootLayout({
   children,
 }: Readonly<{

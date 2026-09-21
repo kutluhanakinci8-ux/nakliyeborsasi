@@ -5,6 +5,8 @@ import { AuctionBidEntity } from "../../infrastructure/database/entities/Auction
 import { FreightListingEntity } from "../../infrastructure/database/entities/FreightListingEntity";
 import { AuctionSessionApplicationService } from "./AuctionSessionApplicationService";
 import { AuctionSessionController } from "./AuctionSessionController";
+import { AuctionSessionFinalizationService } from "./AuctionSessionFinalizationService";
+import { AuctionExpiredSessionSweepTask } from "./AuctionExpiredSessionSweepTask";
 import { SubscriptionModule } from "../subscription/SubscriptionModule";
 import { AuthModule } from "../auth/AuthModule";
 
@@ -19,6 +21,10 @@ import { AuthModule } from "../auth/AuthModule";
     AuthModule,
   ],
   controllers: [AuctionSessionController],
-  providers: [AuctionSessionApplicationService],
+  providers: [
+    AuctionSessionApplicationService,
+    AuctionSessionFinalizationService,
+    AuctionExpiredSessionSweepTask,
+  ],
 })
 export class AuctionModule {}
