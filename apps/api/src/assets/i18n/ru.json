@@ -1,0 +1,7 @@
+{
+  "errors.subscription_required": "Требуется модульная подписка: {moduleCode}",
+  "errors.validation_failed": "Ошибка проверки запроса",
+  "errors.integration_partial_failure": "Некоторые внешние источники не ответили",
+  "marketplace.search_success": "Поиск завершен",
+  "subscription.plan_listed": "Планы подписки перечислены"
+}

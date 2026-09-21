@@ -1,0 +1,7 @@
+{
+  "errors.subscription_required": "Modular subscription required for: {moduleCode}",
+  "errors.validation_failed": "Request validation failed",
+  "errors.integration_partial_failure": "Some external providers did not respond",
+  "marketplace.search_success": "Search completed",
+  "subscription.plan_listed": "Subscription plans listed"
+}

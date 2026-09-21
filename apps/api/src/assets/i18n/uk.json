@@ -1,0 +1,7 @@
+{
+  "errors.subscription_required": "Потрібна модульна підписка: {moduleCode}",
+  "errors.validation_failed": "Помилка валідації запиту",
+  "errors.integration_partial_failure": "Деякі зовнішні джерела не відповіли",
+  "marketplace.search_success": "Пошук завершено",
+  "subscription.plan_listed": "Плани підписки перелічено"
+}

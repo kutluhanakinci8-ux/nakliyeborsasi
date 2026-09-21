@@ -1,0 +1,7 @@
+{
+  "errors.subscription_required": "Bu özellik için modüler abonelik gerekir: {moduleCode}",
+  "errors.validation_failed": "İstek doğrulanamadı",
+  "errors.integration_partial_failure": "Bazı harici kaynaklar yanıt vermedi",
+  "marketplace.search_success": "Arama tamamlandı",
+  "subscription.plan_listed": "Abonelik planları listelendi"
+}

@@ -1,0 +1,47 @@
+import {
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Min,
+} from "class-validator";
+import {
+  EquipmentTypeCode,
+  GeographicMarketCode,
+} from "@nakliyeborsasi/core";
+
+export class CreatePlatformFreightListingDto {
+  @IsString()
+  public originCountryCode!: string;
+
+  @IsString()
+  public originCityName!: string;
+
+  @IsString()
+  public destinationCountryCode!: string;
+
+  @IsString()
+  public destinationCityName!: string;
+
+  @IsEnum(EquipmentTypeCode)
+  public equipmentType!: EquipmentTypeCode;
+
+  @IsNumber()
+  @Min(0.1)
+  public weightTonnes!: number;
+
+  @IsString()
+  public loadingDateStart!: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  public priceAmount?: number;
+
+  @IsOptional()
+  @IsString()
+  public priceCurrency?: string;
+
+  @IsEnum(GeographicMarketCode)
+  public marketScope!: GeographicMarketCode;
+}
