@@ -121,9 +121,39 @@ Terminalde `#` ile başlayan satırları yapıştırmayın (zsh yorum satırı h
 |------|--------|--------|
 | `ENOENT ... /root/package.json` | VPS’te `/root` içinde npm | `cd /var/www/nakliyeborsasi` |
 | `Missing script: "build"` | Mac’te `~` içinde npm | Proje klasörüne `cd` |
-| `Connection refused :3000` | API çalışmıyor | `npm run start` + `.env` |
-| `cp: .env.example` yok | Yanlış dizin | `ls package.json` ile doğrulayın |
-| `JWT_SECRET is required` | `.env` yok / okunmuyor | `cp .env.example .env` proje kökünde |
+| `EADDRINUSE :::3000` | Port 3000 dolu (eski node/nginx) | `bash scripts/restart-api.sh` |
+| `Cannot find module dist/main.js` | Eksik build | `npm run build` (artık temiz build yapar) |
+| Health HTML `Cannot GET /api/v1/health` | 3000’de **başka uygulama** var | `bash scripts/diagnose-port.sh` + `restart-api.sh` |
+| `Connection refused :3000` | API çalışmıyor | `npm run start` veya `restart-api.sh` |
+| `JWT_SECRET is required` | `.env` yok | `cp .env.example .env` proje kökünde |
+
+### Port 3000 meşgul (VPS)
+
+```bash
+cd /var/www/nakliyeborsasi
+bash scripts/diagnose-port.sh 3000
+bash scripts/restart-api.sh
+```
+
+Doğru yanıt:
+
+```json
+{"status":"ok"}
+```
+
+HTML sayfa görüyorsanız Nest API değil, porttaki süreci değiştirin.
+
+### Tekrar bootstrap çalıştırmayın
+
+Repo zaten varsa `git clone` hata verir. Güncelleme:
+
+```bash
+cd /var/www/nakliyeborsasi
+git pull
+npm install
+npm run build
+bash scripts/restart-api.sh
+```
 
 ---
 

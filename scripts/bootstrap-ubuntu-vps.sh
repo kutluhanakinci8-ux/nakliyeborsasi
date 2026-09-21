@@ -40,8 +40,12 @@ fi
 
 npm install
 npm run build
+bash scripts/diagnose-port.sh 3000 || true
 
 echo ""
-echo "Kurulum tamam. Başlatmak için:"
+echo "Kurulum tamam. API'yi başlatmak için (port 3000'i temizler + build + start):"
+echo "  cd $INSTALL_DIR && bash scripts/restart-api.sh"
+echo ""
+echo "Manuel:"
 echo "  cd $INSTALL_DIR && npm run start"
-echo "Sağlık: curl http://127.0.0.1:3000/api/v1/health"
+echo "Sağlık (JSON olmalı): curl -s http://127.0.0.1:3000/api/v1/health"
