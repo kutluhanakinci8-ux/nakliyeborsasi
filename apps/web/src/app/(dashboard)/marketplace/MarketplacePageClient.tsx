@@ -105,6 +105,17 @@ export function MarketplacePageClient() {
                 >
                   Mesaj
                 </button>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() =>
+                    router.push(
+                      `/trust?companyId=${encodeURIComponent(listing.ownerCompanyId)}`,
+                    )
+                  }
+                >
+                  Güven
+                </button>
                 <button type="button" className="btn-primary" onClick={() => void handleCreateAuction(listing)}>
                   İhale aç
                 </button>

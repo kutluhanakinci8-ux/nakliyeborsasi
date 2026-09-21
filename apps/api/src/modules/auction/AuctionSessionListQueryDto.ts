@@ -5,4 +5,8 @@ export class AuctionSessionListQueryDto {
   @IsString()
   @IsIn(["open", "closed", "all"])
   public status?: "open" | "closed" | "all";
+
+  @IsOptional()
+  @IsString()
+  public lang?: string;
 }
