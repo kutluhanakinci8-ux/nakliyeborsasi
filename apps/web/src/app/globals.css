@@ -1927,49 +1927,41 @@ a {
 .site-footer-legal {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 10px;
+  gap: 8px 20px;
   align-items: center;
 }
 
 .site-footer-legal a {
   position: relative;
   color: #047857;
-  font-size: 0.8rem;
+  font-size: 0.88rem;
   text-decoration: none;
   font-weight: 600;
-  padding: 8px 14px;
-  border-radius: 999px;
-  border: 1px solid rgba(16, 185, 129, 0.15);
-  background: rgba(255, 255, 255, 0.28);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  padding: 6px 8px 6px 4px;
+  margin-left: -4px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
   transition:
     color 0.22s var(--nb-ease-out),
-    background 0.22s var(--nb-ease-out),
-    border-color 0.22s var(--nb-ease-out),
-    transform 0.22s var(--nb-ease-out),
-    box-shadow 0.22s var(--nb-ease-out),
     text-shadow 0.28s ease;
 }
 
 .site-footer-legal a:hover {
   color: #064e3b;
-  background: rgba(255, 255, 255, 0.62);
-  border-color: rgba(16, 185, 129, 0.35);
-  transform: translateY(-1px);
-  box-shadow: 0 8px 22px rgba(6, 95, 70, 0.1);
-  text-shadow: var(--nb-mint-glow);
+  text-shadow: var(--nb-mint-glow-strong);
 }
 
 .site-footer-legal a:focus-visible {
   outline: none;
-  box-shadow:
-    0 8px 22px rgba(6, 95, 70, 0.1),
-    0 0 0 3px rgba(16, 185, 129, 0.28);
+  text-shadow: var(--nb-mint-glow);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.28);
+  border-radius: 8px;
 }
 
 .site-footer-legal a:active {
-  transform: translateY(0);
+  color: #065f46;
+  text-shadow: 0 0 12px rgba(16, 185, 129, 0.35);
 }
 
 .site-footer-copy {
