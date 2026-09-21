@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AuthApiClient } from "../../lib/AuthApiClient";
+import { SiteLayout } from "../../components/SiteLayout";
 import { useWebSession } from "../../context/WebSessionProvider";
 
 export function LoginPageClient() {
@@ -37,48 +38,66 @@ export function LoginPageClient() {
   }
 
   return (
-    <div className="auth-screen">
-      <div className="auth-card">
-        <p className="pill">Nakliye Borsası · TR + UA–EU</p>
-        <h1>Giriş yapın</h1>
-        <p className="muted">
-          Demo: demo@ veya partner@nakliyeborsasi.local · Şifre: DemoPass123!
-        </p>
-        <p className="muted auth-tagline">
-          Lardi ve Della gibi borsalarda önce arama ve liste görürsünüz; giriş sonrası
-          panelimiz aynı yönde gelişiyor.
-        </p>
-        <form onSubmit={(event) => void handleLogin(event)}>
-          <label>
-            E-posta
-            <input
-              value={emailAddress}
-              onChange={(event) => setEmailAddress(event.target.value)}
-            />
-          </label>
-          <label>
-            Şifre
-            <input
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-            />
-          </label>
-          <label>
-            Dil
-            <select value={locale} onChange={(event) => setLocale(event.target.value)}>
-              <option value="tr">Türkçe</option>
-              <option value="en">English</option>
-              <option value="uk">Українська</option>
-              <option value="ru">Русский</option>
-            </select>
-          </label>
-          {errorMessage ? <p className="error">{errorMessage}</p> : null}
-          <button type="submit" className="btn-primary" disabled={isBusy}>
-            {isBusy ? "..." : "Giriş yap"}
-          </button>
-        </form>
-      </div>
-    </div>
+    <SiteLayout headerVariant="public">
+      <section className="auth-page">
+        <div className="auth-page-grid">
+          <div className="auth-promo">
+            <p className="auth-promo-badge">Ukrayna · Türkiye · AB koridoru</p>
+            <h1>Yük ve kamyon arama borsası</h1>
+            <p>
+              İlan arayın, mesajlaşın, ihale açın — taşıyıcı ve yük verenler için tek
+              platform.
+            </p>
+            <ul className="auth-promo-list">
+              <li>Canlı marketplace ilanları</li>
+              <li>İhale ve teklif yönetimi</li>
+              <li>Güven ve entegrasyon modülleri</li>
+            </ul>
+          </div>
+          <div className="auth-card auth-card--light">
+            <h2>Üye girişi</h2>
+            <p className="muted muted--dark">
+              Demo: demo@ veya partner@nakliyeborsasi.local · Şifre: DemoPass123!
+            </p>
+            <form onSubmit={(event) => void handleLogin(event)}>
+              <label className="label-light">
+                E-posta
+                <input
+                  className="input-light"
+                  value={emailAddress}
+                  onChange={(event) => setEmailAddress(event.target.value)}
+                />
+              </label>
+              <label className="label-light">
+                Şifre
+                <input
+                  className="input-light"
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                />
+              </label>
+              <label className="label-light">
+                Dil
+                <select
+                  className="input-light"
+                  value={locale}
+                  onChange={(event) => setLocale(event.target.value)}
+                >
+                  <option value="tr">Türkçe</option>
+                  <option value="en">English</option>
+                  <option value="uk">Українська</option>
+                  <option value="ru">Русский</option>
+                </select>
+              </label>
+              {errorMessage ? <p className="error error--light">{errorMessage}</p> : null}
+              <button type="submit" className="btn-gold-wide" disabled={isBusy}>
+                {isBusy ? "Giriş yapılıyor…" : "Giriş yap"}
+              </button>
+            </form>
+          </div>
+        </div>
+      </section>
+    </SiteLayout>
   );
 }

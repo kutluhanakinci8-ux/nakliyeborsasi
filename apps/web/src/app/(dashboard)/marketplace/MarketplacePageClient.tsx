@@ -112,8 +112,8 @@ export function MarketplacePageClient() {
           <p className="exchange-eyebrow">Nakliye Borsası</p>
           <h1 className="exchange-title">Yük ve taşıma arama</h1>
           <p className="exchange-lead">
-            Rakiplerde gördüğünüz arama ve liste deneyiminin ilk sürümü — aynı API,
-            profesyonel borsa arayüzüne doğru.
+            Koridor genelinde yük ilanlarını filtreleyin, mesaj gönderin veya ihale
+            başlatın.
           </p>
         </div>
         <button
