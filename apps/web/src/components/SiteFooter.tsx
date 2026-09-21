@@ -49,16 +49,16 @@ export function SiteFooter() {
             ))}
           </ul>
         </div>
-      </div>
-      <div className="site-footer-bottom">
-        <nav className="site-footer-legal" aria-label="Yasal bilgiler">
-          {LEGAL_LINKS.map((item) => (
-            <Link key={item.href} href={item.href}>
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-        <p className="site-footer-copy">© {new Date().getFullYear()} Nakliye Borsası</p>
+        <div className="site-footer-meta">
+          <nav className="site-footer-legal" aria-label="Yasal bilgiler">
+            {LEGAL_LINKS.map((item) => (
+              <Link key={item.href} href={item.href}>
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+          <p className="site-footer-copy">© {new Date().getFullYear()} Nakliye Borsası</p>
+        </div>
       </div>
     </footer>
   );
