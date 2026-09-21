@@ -15,6 +15,13 @@ export function SiteFooter() {
             variant="footer"
             tagline="TR · UA · EU yük ve taşıma borsası"
           />
+          <div className="site-footer-brand-social">
+            <p className="site-footer-heading">Sosyal medya</p>
+            <p className="site-footer-social-lead">
+              Bizi takip edin — duyurular ve koridor haberleri
+            </p>
+            <SocialMediaLinks />
+          </div>
         </div>
         <div className="site-footer-col">
           <p className="site-footer-heading">Platform</p>
@@ -37,20 +44,8 @@ export function SiteFooter() {
           </ul>
         </div>
       </div>
-      <div className="site-footer-social-band">
-        <div className="site-footer-social-band-inner">
-          <div className="site-footer-social-intro">
-            <p className="site-footer-heading">Sosyal medya</p>
-            <p className="site-footer-social-lead">
-              Bizi takip edin — duyurular ve koridor haberleri
-            </p>
-          </div>
-          <SocialMediaLinks />
-        </div>
-      </div>
       <div className="site-footer-bottom">
         <p>© {new Date().getFullYear()} Nakliye Borsası · Demo ortam</p>
-        <p className="site-footer-muted">Koridor: Türkiye — Ukrayna — Avrupa Birliği</p>
       </div>
     </footer>
   );

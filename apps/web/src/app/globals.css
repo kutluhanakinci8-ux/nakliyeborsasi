@@ -589,8 +589,30 @@ a {
 
 .site-footer-brand {
   display: flex;
-  gap: 12px;
+  flex-direction: column;
+  gap: 0;
   align-items: flex-start;
+}
+
+.site-footer-brand-social {
+  margin-top: 20px;
+  width: 100%;
+  max-width: 420px;
+}
+
+.site-footer-brand-social .site-footer-heading {
+  margin-bottom: 6px;
+}
+
+.site-footer-social-lead {
+  margin: 0 0 14px;
+  font-size: 0.82rem;
+  color: #6ee7b7;
+  line-height: 1.45;
+}
+
+.site-footer-brand-social .social-media-row {
+  justify-content: flex-start;
 }
 
 .site-footer-title {
@@ -639,41 +661,11 @@ a {
   color: #fef08a;
 }
 
-.site-footer-social-band {
-  border-top: 1px solid rgba(110, 231, 183, 0.22);
-  background: rgba(4, 47, 46, 0.55);
-  padding: 22px 24px 26px;
-}
-
-.site-footer-social-band-inner {
-  max-width: 1200px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  flex-wrap: wrap;
-}
-
-.site-footer-social-intro {
-  min-width: 200px;
-}
-
-.site-footer-social-lead {
-  margin: 6px 0 0;
-  font-size: 0.82rem;
-  color: #6ee7b7;
-  max-width: 280px;
-  line-height: 1.45;
-}
-
 .social-media-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
-  flex: 1;
+  gap: 8px;
 }
 
 .social-media-chip {
@@ -756,10 +748,6 @@ a {
   border-top: 1px solid rgba(110, 231, 183, 0.15);
   padding-top: 16px;
   padding-bottom: 20px;
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 8px;
   font-size: 0.8rem;
   color: #a7f3d0;
 }
