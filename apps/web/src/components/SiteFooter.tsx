@@ -1,18 +1,13 @@
 import Link from "next/link";
 import { SiteBrand } from "./SiteBrand";
+import { SocialMediaLinks } from "./SocialMediaLinks";
 import { CORPORATE_NAV_ITEMS, PLATFORM_NAV_ITEMS } from "../lib/siteNavigation";
-
-const SOCIAL_LINKS = [
-  { href: "https://t.me/nakliyeborsasi", label: "Telegram", icon: "TG" },
-  { href: "https://www.linkedin.com/", label: "LinkedIn", icon: "in" },
-  { href: "https://www.facebook.com/", label: "Facebook", icon: "f" },
-  { href: "https://www.instagram.com/", label: "Instagram", icon: "IG" },
-] as const;
 
 export function SiteFooter() {
   return (
     <footer className="site-footer">
-      <div className="site-footer-inner site-footer-inner--4">
+      <div className="site-footer-top-accent" aria-hidden />
+      <div className="site-footer-inner site-footer-inner--3">
         <div className="site-footer-brand">
           <SiteBrand
             href="/hizmetler"
@@ -41,20 +36,16 @@ export function SiteFooter() {
             ))}
           </ul>
         </div>
-        <div className="site-footer-col">
-          <p className="site-footer-heading">Sosyal medya</p>
-          <ul className="site-footer-social">
-            {SOCIAL_LINKS.map((item) => (
-              <li key={item.href}>
-                <a href={item.href} target="_blank" rel="noopener noreferrer">
-                  <span className="social-icon" aria-hidden>
-                    {item.icon}
-                  </span>
-                  {item.label}
-                </a>
-              </li>
-            ))}
-          </ul>
+      </div>
+      <div className="site-footer-social-band">
+        <div className="site-footer-social-band-inner">
+          <div className="site-footer-social-intro">
+            <p className="site-footer-heading">Sosyal medya</p>
+            <p className="site-footer-social-lead">
+              Bizi takip edin — duyurular ve koridor haberleri
+            </p>
+          </div>
+          <SocialMediaLinks />
         </div>
       </div>
       <div className="site-footer-bottom">
