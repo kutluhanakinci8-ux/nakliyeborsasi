@@ -5,7 +5,7 @@
 | 1 | Tamamlandı | PostgreSQL + TypeORM, ilan, abonelik, audit log |
 | 2 | Tamamlandı | JWT auth, şirket rolleri, korumalı API |
 | 3.1 | Tamamlandı | Web fonksiyon: giriş, ilan, ihale, mesaj, güven, entegrasyon |
-| **3.2** | **Sırada** | **Web UI/UX: navigasyon, sayfa yapısı, tasarım sistemi** (bkz. `docs/UI_ROADMAP.md`) |
+| **3.2** | **Devam ediyor** | Web shell: sidebar, sayfa route’ları, tasarım sistemi v1 |
 | 3.3 | Planlı | Expo mobil (login + ilan + push iskeleti) |
 | 4 | Tamamlandı (API) | Redis cache + rate limit (entegrasyon) |
 | 5 | Tamamlandı (MVP) | İhale + mesaj + güven API + statik `/panel/` |

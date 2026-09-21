@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { AppProviders } from "./providers";
 
 export const metadata: Metadata = {
   title: "Nakliye Borsası",
-  description: "TR + UA-EU yük borsası paneli",
+  description: "TR + UA-EU yük borsası",
 };
 
 export const dynamic = "force-dynamic";
@@ -15,7 +16,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr">
-      <body>{children}</body>
+      <body>
+        <AppProviders>{children}</AppProviders>
+      </body>
     </html>
   );
 }
