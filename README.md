@@ -1,5 +1,9 @@
 # Nakliye Borsası
 
+> **Önemli:** `npm install`, `npm run build`, `npm run start` komutlarını **mutlaka repo kökünde** çalıştırın (`package.json` burada olmalı).  
+> Mac `~` veya VPS `/root` dizininde çalıştırırsanız `ENOENT` / `Missing script: build` alırsınız.  
+> Sunucu kurulumu: **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)**
+
 Modüler yük borsası platformu — TR ve UA–EU koridoru, çoklu dil (`tr`, `en`, `uk`, `ru`), modüler abonelik ve harici kaynak entegrasyonları.
 
 ## Yapı
@@ -14,12 +18,20 @@ Modüler yük borsası platformu — TR ve UA–EU koridoru, çoklu dil (`tr`, `
 ## Kurulum
 
 ```bash
+git clone https://github.com/kutluhanakinci8-ux/nakliyeborsasi.git
+cd nakliyeborsasi
+git checkout cursor/modular-freight-platform-18ba
+
 docker compose up -d
 npm install
 cp .env.example .env
 npm run build
 npm run start
 ```
+
+VPS tek komut (root): `bash scripts/bootstrap-ubuntu-vps.sh`
+
+Detaylı anlatım: `docs/DEPLOYMENT.md`
 
 Web (opsiyonel): `npm run dev -w @nakliyeborsasi/web`
 
