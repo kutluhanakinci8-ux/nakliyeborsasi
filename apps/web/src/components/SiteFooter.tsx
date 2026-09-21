@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SiteBrand } from "./SiteBrand";
+import { CORPORATE_NAV_ITEMS, PLATFORM_NAV_ITEMS } from "../lib/siteNavigation";
 
 const SOCIAL_LINKS = [
   { href: "https://t.me/nakliyeborsasi", label: "Telegram", icon: "TG" },
@@ -8,20 +9,13 @@ const SOCIAL_LINKS = [
   { href: "https://www.instagram.com/", label: "Instagram", icon: "IG" },
 ] as const;
 
-const FOOTER_LINKS = [
-  { href: "/marketplace", label: "Yük arama" },
-  { href: "/auctions", label: "İhaleler" },
-  { href: "/trust", label: "Güven merkezi" },
-  { href: "/login", label: "Giriş / Üyelik" },
-] as const;
-
 export function SiteFooter() {
   return (
     <footer className="site-footer">
-      <div className="site-footer-inner">
+      <div className="site-footer-inner site-footer-inner--4">
         <div className="site-footer-brand">
           <SiteBrand
-            href="/marketplace"
+            href="/hizmetler"
             size="sm"
             variant="footer"
             tagline="TR · UA · EU yük ve taşıma borsası"
@@ -30,7 +24,17 @@ export function SiteFooter() {
         <div className="site-footer-col">
           <p className="site-footer-heading">Platform</p>
           <ul className="site-footer-links">
-            {FOOTER_LINKS.map((item) => (
+            {PLATFORM_NAV_ITEMS.map((item) => (
+              <li key={item.href}>
+                <Link href={item.href}>{item.label}</Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="site-footer-col">
+          <p className="site-footer-heading">Kurumsal</p>
+          <ul className="site-footer-links">
+            {CORPORATE_NAV_ITEMS.map((item) => (
               <li key={item.href}>
                 <Link href={item.href}>{item.label}</Link>
               </li>
