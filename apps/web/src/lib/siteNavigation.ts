@@ -6,13 +6,24 @@ export const PLATFORM_NAV_ITEMS = [
   { href: "/integrations", label: "Entegrasyon" },
 ] as const;
 
-export const CORPORATE_NAV_ITEMS = [
-  { href: "/hizmetler", label: "Hizmetler" },
+/** Ana menüde tek link */
+export const HIZMETLER_NAV_ITEM = {
+  href: "/hizmetler",
+  label: "Hizmetler",
+} as const;
+
+/** «Kurumsal» açılır menüsü */
+export const CORPORATE_DROPDOWN_ITEMS = [
   { href: "/hakkimizda", label: "Hakkımızda" },
   { href: "/basin", label: "Basın" },
   { href: "/kariyer", label: "Kariyer" },
   { href: "/blog", label: "Blog" },
   { href: "/iletisim", label: "İletişim" },
+] as const;
+
+export const CORPORATE_NAV_ITEMS = [
+  HIZMETLER_NAV_ITEM,
+  ...CORPORATE_DROPDOWN_ITEMS,
 ] as const;
 
 export type BlogPostSummary = {

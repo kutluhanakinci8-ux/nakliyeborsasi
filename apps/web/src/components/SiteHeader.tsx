@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { SiteBrand } from "./SiteBrand";
 import { useWebSession } from "../context/WebSessionProvider";
 import {
-  CORPORATE_NAV_ITEMS,
+  CORPORATE_DROPDOWN_ITEMS,
+  HIZMETLER_NAV_ITEM,
   PLATFORM_NAV_ITEMS,
 } from "../lib/siteNavigation";
 
@@ -16,9 +18,29 @@ type SiteHeaderProps = {
 export function SiteHeader({ variant = "app" }: SiteHeaderProps) {
   const pathname = usePathname();
   const { session, locale, setLocale, logout } = useWebSession();
+  const [corporateOpen, setCorporateOpen] = useState(false);
+  const corporateRef = useRef<HTMLDivElement>(null);
 
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(`${href}/`);
+
+  const corporateMenuActive = CORPORATE_DROPDOWN_ITEMS.some((item) =>
+    isActive(item.href),
+  );
+
+  useEffect(() => {
+    setCorporateOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    function handlePointerDown(event: MouseEvent): void {
+      if (!corporateRef.current?.contains(event.target as Node)) {
+        setCorporateOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handlePointerDown);
+    return () => document.removeEventListener("mousedown", handlePointerDown);
+  }, []);
 
   const showUserSession = Boolean(session);
 
@@ -31,13 +53,6 @@ export function SiteHeader({ variant = "app" }: SiteHeaderProps) {
             TR · UA · EU koridoru
           </span>
           <div className="utility-actions">
-            <div className="utility-quick-links">
-              {CORPORATE_NAV_ITEMS.slice(0, 3).map((item) => (
-                <Link key={item.href} href={item.href} className="utility-link">
-                  {item.label}
-                </Link>
-              ))}
-            </div>
             <label className="locale-select locale-select--header">
               <span className="sr-only">Dil</span>
               <select
@@ -72,44 +87,74 @@ export function SiteHeader({ variant = "app" }: SiteHeaderProps) {
         </div>
       </div>
       <div className="site-header-main">
-        <div className="site-header-main-inner site-header-main-inner--stacked">
+        <div className="site-header-main-inner">
           <SiteBrand href="/hizmetler" size="lg" />
-          <div className="site-header-menus">
-            <nav className="site-nav-block" aria-label="Platform menüsü">
-              <span className="site-nav-label">Platform</span>
-              <div className="site-nav">
-                {PLATFORM_NAV_ITEMS.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={
-                      isActive(item.href) ? "site-nav-link active" : "site-nav-link"
-                    }
-                  >
-                    {item.label}
-                  </Link>
-                ))}
+          <nav className="site-nav-shell" aria-label="Ana menü">
+            <div className="site-nav">
+              {PLATFORM_NAV_ITEMS.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={
+                    isActive(item.href) ? "site-nav-link active" : "site-nav-link"
+                  }
+                >
+                  {item.label}
+                </Link>
+              ))}
+              <Link
+                href={HIZMETLER_NAV_ITEM.href}
+                className={
+                  isActive(HIZMETLER_NAV_ITEM.href)
+                    ? "site-nav-link active"
+                    : "site-nav-link"
+                }
+              >
+                {HIZMETLER_NAV_ITEM.label}
+              </Link>
+              <div
+                className="site-nav-dropdown"
+                ref={corporateRef}
+                onMouseEnter={() => setCorporateOpen(true)}
+                onMouseLeave={() => setCorporateOpen(false)}
+              >
+                <button
+                  type="button"
+                  className={
+                    corporateMenuActive || corporateOpen
+                      ? "site-nav-link site-nav-link--menu active"
+                      : "site-nav-link site-nav-link--menu"
+                  }
+                  aria-expanded={corporateOpen}
+                  aria-haspopup="true"
+                  onClick={() => setCorporateOpen((open) => !open)}
+                >
+                  Kurumsal
+                  <span className="site-nav-caret" aria-hidden>
+                    ▾
+                  </span>
+                </button>
+                {corporateOpen ? (
+                  <div className="site-nav-dropdown-panel" role="menu">
+                    {CORPORATE_DROPDOWN_ITEMS.map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        role="menuitem"
+                        className={
+                          isActive(item.href)
+                            ? "site-nav-dropdown-link active"
+                            : "site-nav-dropdown-link"
+                        }
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
+                ) : null}
               </div>
-            </nav>
-            <nav className="site-nav-block" aria-label="Kurumsal menü">
-              <span className="site-nav-label">Kurumsal</span>
-              <div className="site-nav site-nav--corporate">
-                {CORPORATE_NAV_ITEMS.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={
-                      isActive(item.href)
-                        ? "site-nav-link site-nav-link--corp active"
-                        : "site-nav-link site-nav-link--corp"
-                    }
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
-            </nav>
-          </div>
+            </div>
+          </nav>
         </div>
       </div>
     </header>
