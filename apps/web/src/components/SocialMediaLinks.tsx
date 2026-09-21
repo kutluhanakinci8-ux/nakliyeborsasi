@@ -42,7 +42,7 @@ function SocialSvg({ id }: { id: SocialNetworkId }) {
 
 export function SocialMediaLinks() {
   return (
-    <div className="social-media-row" role="list">
+    <div className="social-media-row social-media-row--elevated" role="list">
       {SOCIAL_NETWORKS.map((network) => (
         <a
           key={network.id}

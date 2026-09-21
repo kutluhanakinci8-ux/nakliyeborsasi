@@ -1651,6 +1651,11 @@ a {
   gap: 8px;
 }
 
+.social-media-row--elevated {
+  gap: 14px;
+  padding: 4px 0 2px;
+}
+
 .social-media-chip {
   display: inline-flex;
   align-items: center;
@@ -1684,31 +1689,70 @@ a {
   display: grid;
   place-items: center;
   flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform 0.22s var(--nb-ease-out),
+    box-shadow 0.22s var(--nb-ease-out),
+    filter 0.22s var(--nb-ease-out);
+}
+
+.social-media-icon::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle at 28% 22%, rgba(255, 255, 255, 0.55), transparent 52%);
+  pointer-events: none;
+  z-index: 2;
 }
 
 .social-media-icon svg {
   width: 20px;
   height: 20px;
+  position: relative;
+  z-index: 1;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.15));
 }
 
 .social-media-chip--telegram .social-media-icon {
-  background: linear-gradient(145deg, #38bdf8, #0ea5e9);
+  background: linear-gradient(145deg, #7dd3fc 0%, #0ea5e9 42%, #0369a1 100%);
   color: #fff;
+  box-shadow:
+    0 8px 20px rgba(14, 165, 233, 0.4),
+    0 2px 6px rgba(3, 105, 161, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.12);
 }
 
 .social-media-chip--linkedin .social-media-icon {
-  background: linear-gradient(145deg, #60a5fa, #2563eb);
+  background: linear-gradient(145deg, #93c5fd 0%, #2563eb 45%, #1e3a8a 100%);
   color: #fff;
+  box-shadow:
+    0 8px 20px rgba(37, 99, 235, 0.38),
+    0 2px 6px rgba(30, 58, 138, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.48),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.12);
 }
 
 .social-media-chip--facebook .social-media-icon {
-  background: linear-gradient(145deg, #6366f1, #1d4ed8);
+  background: linear-gradient(145deg, #818cf8 0%, #2563eb 42%, #1e40af 100%);
   color: #fff;
+  box-shadow:
+    0 8px 20px rgba(37, 99, 235, 0.35),
+    0 2px 6px rgba(30, 64, 175, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.48),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.12);
 }
 
 .social-media-chip--instagram .social-media-icon {
-  background: linear-gradient(145deg, #f472b6, #db2777);
+  background: linear-gradient(145deg, #f9a8d4 0%, #ec4899 38%, #be185d 100%);
   color: #fff;
+  box-shadow:
+    0 8px 22px rgba(236, 72, 153, 0.42),
+    0 2px 6px rgba(190, 24, 93, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.12);
 }
 
 .social-media-label {
@@ -1728,22 +1772,86 @@ a {
 }
 
 .social-media-chip--icon-only {
+  position: relative;
   padding: 0;
   border-radius: 50%;
   background: transparent;
   border: none;
   box-shadow: none;
+  transition: transform 0.22s var(--nb-ease-out);
 }
 
 .social-media-chip--icon-only:hover {
-  transform: translateY(-2px);
+  transform: translateY(-5px);
   background: transparent;
   border: none;
 }
 
+.social-media-chip--icon-only:hover .social-media-icon {
+  transform: scale(1.08) translateY(-1px);
+  filter: brightness(1.06);
+}
+
+.social-media-chip--icon-only:active {
+  transform: translateY(-1px);
+}
+
+.social-media-chip--icon-only:active .social-media-icon {
+  transform: scale(0.96);
+  box-shadow:
+    0 3px 10px rgba(0, 0, 0, 0.2),
+    inset 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.social-media-chip--icon-only:focus-visible {
+  outline: none;
+}
+
+.social-media-chip--icon-only:focus-visible .social-media-icon {
+  outline: 3px solid rgba(16, 185, 129, 0.55);
+  outline-offset: 3px;
+}
+
+.social-media-chip--icon-only.social-media-chip--telegram:hover .social-media-icon {
+  box-shadow:
+    0 14px 32px rgba(14, 165, 233, 0.55),
+    0 4px 10px rgba(3, 105, 161, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.1);
+}
+
+.social-media-chip--icon-only.social-media-chip--linkedin:hover .social-media-icon {
+  box-shadow:
+    0 14px 32px rgba(37, 99, 235, 0.5),
+    0 4px 10px rgba(30, 58, 138, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.1);
+}
+
+.social-media-chip--icon-only.social-media-chip--facebook:hover .social-media-icon {
+  box-shadow:
+    0 14px 32px rgba(37, 99, 235, 0.48),
+    0 4px 10px rgba(30, 64, 175, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.1);
+}
+
+.social-media-chip--icon-only.social-media-chip--instagram:hover .social-media-icon {
+  box-shadow:
+    0 14px 34px rgba(236, 72, 153, 0.55),
+    0 4px 10px rgba(190, 24, 93, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.1);
+}
+
 .social-media-chip--icon-only .social-media-icon {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
+}
+
+.social-media-chip--icon-only .social-media-icon svg {
+  width: 22px;
+  height: 22px;
 }
 
 .site-footer-bottom {
