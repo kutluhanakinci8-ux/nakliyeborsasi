@@ -18,6 +18,13 @@ const SUBNAV = [
   { href: "#contact-faq", label: "SSS" },
 ] as const;
 
+const ROUTE_ICON: Record<ContactTopic, string> = {
+  demo: "S",
+  support: "D",
+  press: "B",
+  partner: "P",
+};
+
 export function ContactPageClient() {
   const [topic, setTopic] = useState<ContactTopic>("demo");
   const [sent, setSent] = useState(false);
@@ -47,24 +54,20 @@ export function ContactPageClient() {
               type="button"
               className={
                 topic === route.topic
-                  ? "contact-route-card contact-route-card--premium active"
-                  : "contact-route-card contact-route-card--premium"
+                  ? `contact-route-card contact-route-card--premium contact-route-card--${route.topic} active`
+                  : `contact-route-card contact-route-card--premium contact-route-card--${route.topic}`
               }
               onClick={() => {
                 setTopic(route.topic);
                 document.getElementById("contact-form")?.scrollIntoView({ behavior: "smooth" });
               }}
             >
-              <span className="contact-route-icon" aria-hidden>
-                {route.topic === "demo"
-                  ? "◆"
-                  : route.topic === "support"
-                    ? "✦"
-                    : route.topic === "press"
-                      ? "◎"
-                      : "◇"}
+              <span className="contact-route-card-head">
+                <span className="contact-route-icon" aria-hidden>
+                  {ROUTE_ICON[route.topic]}
+                </span>
+                <span className="contact-route-title">{route.title}</span>
               </span>
-              <span className="contact-route-title">{route.title}</span>
               <span className="contact-route-desc">{route.description}</span>
               <span className="contact-route-email">{route.email}</span>
             </button>

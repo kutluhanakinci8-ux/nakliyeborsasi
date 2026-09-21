@@ -83,7 +83,10 @@ export function PublicPageShell({
           ) : null}
         </div>
         {subnav && subnav.length > 0 ? (
-          <nav className="contact-subnav public-subnav" aria-label="Sayfa içi menü">
+          <nav
+            className="contact-subnav public-subnav contact-subnav--track"
+            aria-label="Sayfa içi menü"
+          >
             {subnav.map((item) => (
               <a key={item.href} href={item.href} className="contact-subnav-link">
                 {item.label}
