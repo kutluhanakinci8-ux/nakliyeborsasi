@@ -89,30 +89,14 @@ export function CookieSettingsClient() {
 
   if (!hydrated) {
     return (
-      <section className="cookie-prefs-panel" aria-label="Çerez tercih paneli">
+      <div className="cookie-prefs-block" aria-label="Çerez tercih paneli">
         <p className="cookie-prefs-loading">Tercih paneli yükleniyor…</p>
-      </section>
+      </div>
     );
   }
 
   return (
-    <section className="cookie-prefs-panel" id="tercih-paneli" aria-labelledby="cookie-prefs-heading">
-      <div className="cookie-prefs-head">
-        <div>
-          <h2 className="cookie-prefs-heading" id="cookie-prefs-heading">
-            Tercih paneli
-          </h2>
-          <p className="cookie-prefs-lead">
-            Zorunlu çerezler platformun güvenli çalışması için devredilemez. Diğer kategorileri aşağıdan
-            yönetebilirsiniz; seçimleriniz tarayıcınızda saklanır (demo).
-          </p>
-        </div>
-        <div className="cookie-prefs-badges" aria-hidden>
-          <span className="cookie-prefs-badge">TR · UA · EU</span>
-          <span className="cookie-prefs-badge cookie-prefs-badge--muted">KVKK uyumlu süreç</span>
-        </div>
-      </div>
-
+    <div className="cookie-prefs-block" aria-label="Çerez tercih paneli">
       <div className="cookie-pref-list">
         <PrefRow
           id="essential"
@@ -145,13 +129,13 @@ export function CookieSettingsClient() {
       </div>
 
       <div className="cookie-prefs-actions">
-        <button type="button" className="btn-primary cookie-prefs-btn" onClick={saveCurrent}>
+        <button type="button" className="legal-btn legal-btn--primary cookie-prefs-btn" onClick={saveCurrent}>
           Seçimleri kaydet
         </button>
-        <button type="button" className="btn-secondary cookie-prefs-btn" onClick={acceptAll}>
+        <button type="button" className="legal-btn legal-btn--secondary cookie-prefs-btn" onClick={acceptAll}>
           Tümünü kabul et
         </button>
-        <button type="button" className="btn-secondary cookie-prefs-btn cookie-prefs-btn--ghost" onClick={rejectOptional}>
+        <button type="button" className="legal-btn legal-btn--ghost cookie-prefs-btn" onClick={rejectOptional}>
           Zorunlu dışında reddet
         </button>
       </div>
@@ -161,6 +145,6 @@ export function CookieSettingsClient() {
           {notice}
         </p>
       ) : null}
-    </section>
+    </div>
   );
 }

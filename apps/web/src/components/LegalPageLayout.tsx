@@ -14,6 +14,7 @@ type LegalPageLayoutProps = {
   breadcrumbLabel?: string;
   eyebrow?: string;
   toc: readonly LegalTocItem[];
+  tocNote?: string;
   children: ReactNode;
 };
 
@@ -29,6 +30,7 @@ export function LegalPageLayout({
   breadcrumbLabel,
   eyebrow,
   toc,
+  tocNote = "Bu metin bilgilendirme amaçlıdır. Canlı ortamda yayımlanan sözleşme geçerlidir.",
   children,
 }: LegalPageLayoutProps) {
   return (
@@ -54,9 +56,7 @@ export function LegalPageLayout({
                 </li>
               ))}
             </ol>
-            <p className="legal-toc-note">
-              Bu metin bilgilendirme amaçlıdır. Canlı ortamda yayımlanan sözleşme geçerlidir.
-            </p>
+            <p className="legal-toc-note">{tocNote}</p>
           </aside>
           <article className="module-panel module-panel--elevated legal-prose corporate-prose">
             {children}
