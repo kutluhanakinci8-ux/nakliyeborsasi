@@ -2,13 +2,21 @@ class PanelApplication {
   constructor() {
     this.apiBase = `${window.location.origin}/api/v1`;
     this.tokenStorageKey = "nakliyeborsasi_panel_token";
+    this.session = null;
+    this.activeThreadId = null;
     this.loginSection = document.getElementById("login-section");
     this.dashboardSection = document.getElementById("dashboard-section");
     this.errorElement = document.getElementById("error");
+    this.sessionInfo = document.getElementById("session-info");
     this.listingsElement = document.getElementById("listings");
+    this.auctionsElement = document.getElementById("auctions");
+    this.messagingPanel = document.getElementById("messaging");
+    this.threadsElement = document.getElementById("threads");
+    this.messagesOutput = document.getElementById("messages-output");
     this.integrationOutput = document.getElementById("integration-output");
+    this.trustOutput = document.getElementById("trust-output");
     this.bindEvents();
-    this.restoreSession();
+    void this.restoreSession();
   }
 
   bindEvents() {
@@ -18,6 +26,24 @@ class PanelApplication {
     document.getElementById("load-listings").addEventListener("click", () => {
       void this.loadListings();
     });
+    document.getElementById("load-auctions").addEventListener("click", () => {
+      void this.loadAuctions();
+    });
+    document.getElementById("load-threads").addEventListener("click", () => {
+      void this.loadThreads();
+    });
+    document.getElementById("open-thread").addEventListener("click", () => {
+      void this.openThread();
+    });
+    document.getElementById("send-message").addEventListener("click", () => {
+      void this.sendMessage();
+    });
+    document.getElementById("load-trust").addEventListener("click", () => {
+      void this.loadTrust();
+    });
+    document.getElementById("submit-trust").addEventListener("click", () => {
+      void this.submitTrust();
+    });
     document.getElementById("load-integrations").addEventListener("click", () => {
       void this.loadIntegrations();
     });
@@ -26,10 +52,13 @@ class PanelApplication {
     });
   }
 
-  restoreSession() {
+  async restoreSession() {
     const token = window.localStorage.getItem(this.tokenStorageKey);
     if (token) {
-      this.showDashboard();
+      await this.refreshSession();
+      if (this.session) {
+        this.showDashboard();
+      }
     }
   }
 
@@ -51,19 +80,48 @@ class PanelApplication {
     this.errorElement.textContent = "";
   }
 
+  async apiFetch(path, options = {}) {
+    const headers = {
+      ...(options.headers ?? {}),
+    };
+    if (this.readToken()) {
+      headers.Authorization = `Bearer ${this.readToken()}`;
+    }
+    return fetch(`${this.apiBase}${path}`, { ...options, headers });
+  }
+
   showDashboard() {
     this.loginSection.hidden = true;
     this.dashboardSection.hidden = false;
     this.clearError();
+    if (this.session) {
+      this.sessionInfo.textContent = `Firmanız: ${this.session.companyId} · ${this.session.emailAddress}`;
+    }
   }
 
   handleLogout() {
     window.localStorage.removeItem(this.tokenStorageKey);
+    this.session = null;
     this.dashboardSection.hidden = true;
     this.loginSection.hidden = false;
     this.listingsElement.innerHTML = "";
+    this.auctionsElement.innerHTML = "";
+    this.threadsElement.innerHTML = "";
     this.integrationOutput.hidden = true;
     this.integrationOutput.textContent = "";
+    this.messagesOutput.hidden = true;
+    this.trustOutput.hidden = true;
+  }
+
+  async refreshSession() {
+    const response = await this.apiFetch("/auth/session");
+    if (!response.ok) {
+      window.localStorage.removeItem(this.tokenStorageKey);
+      this.session = null;
+      return;
+    }
+    const payload = await response.json();
+    this.session = payload.session;
   }
 
   async handleLogin() {
@@ -81,15 +139,13 @@ class PanelApplication {
     }
     const payload = await response.json();
     window.localStorage.setItem(this.tokenStorageKey, payload.accessToken);
+    await this.refreshSession();
     this.showDashboard();
   }
 
   async loadListings() {
-    const response = await fetch(
-      `${this.apiBase}/marketplace/listings?lang=${this.readLocale()}`,
-      {
-        headers: { Authorization: `Bearer ${this.readToken()}` },
-      },
+    const response = await this.apiFetch(
+      `/marketplace/listings?lang=${this.readLocale()}`,
     );
     const payload = await response.json();
     if (!response.ok) {
@@ -103,17 +159,218 @@ class PanelApplication {
       const priceText = listing.price
         ? `${listing.price.amount} ${listing.price.currencyCode}`
         : "Fiyat yok";
-      article.innerHTML = `<strong>${listing.origin.cityName} → ${listing.destination.cityName}</strong><br/>${listing.equipmentType} · ${listing.weightTonnes} t · ${priceText}`;
+      const listingId = listing.listingId ?? listing.id;
+      article.innerHTML = `<strong>${listing.origin.cityName} → ${listing.destination.cityName}</strong><br/>${listing.equipmentType} · ${listing.weightTonnes} t · ${priceText}<br/><small>${listingId}</small>`;
+      const auctionButton = document.createElement("button");
+      auctionButton.type = "button";
+      auctionButton.textContent = "Açık artırma aç";
+      auctionButton.addEventListener("click", () => {
+        void this.createAuction(listingId);
+      });
+      article.appendChild(auctionButton);
       this.listingsElement.appendChild(article);
     }
   }
 
-  async loadIntegrations() {
-    const response = await fetch(
-      `${this.apiBase}/integrations/freight-offers?lang=${this.readLocale()}&limit=8`,
+  async createAuction(freightListingId) {
+    const minimumBidAmount = Number(window.prompt("Minimum teklif (EUR)", "2000"));
+    if (!minimumBidAmount) {
+      return;
+    }
+    const response = await this.apiFetch(
+      `/auctions/sessions?lang=${this.readLocale()}`,
       {
-        headers: { Authorization: `Bearer ${this.readToken()}` },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          freightListingId,
+          minimumBidAmount,
+          currencyCode: "EUR",
+          durationHours: 24,
+        }),
       },
+    );
+    const payload = await response.json();
+    if (!response.ok) {
+      this.showError(JSON.stringify(payload));
+      return;
+    }
+    await this.loadAuctions();
+  }
+
+  async loadAuctions() {
+    const response = await this.apiFetch(
+      `/auctions/sessions?lang=${this.readLocale()}`,
+    );
+    const payload = await response.json();
+    if (!response.ok) {
+      this.showError(JSON.stringify(payload));
+      return;
+    }
+    this.auctionsElement.innerHTML = "<h3>Açık artırmalar</h3>";
+    for (const session of payload.sessions ?? []) {
+      const article = document.createElement("article");
+      article.className = "listing";
+      const bidCount = session.bids?.length ?? 0;
+      article.innerHTML = `<strong>${session.id}</strong><br/>Min: ${session.minimumBidAmount} ${session.currencyCode} · Bitiş: ${session.endsAt}<br/>Teklif: ${bidCount}`;
+      const bidButton = document.createElement("button");
+      bidButton.type = "button";
+      bidButton.textContent = "Teklif ver";
+      bidButton.addEventListener("click", () => {
+        void this.placeBid(session.id, session.minimumBidAmount);
+      });
+      article.appendChild(bidButton);
+      this.auctionsElement.appendChild(article);
+    }
+  }
+
+  async placeBid(auctionSessionId, minimumBidAmount) {
+    const bidAmount = Number(
+      window.prompt("Teklif tutarı", String(minimumBidAmount)),
+    );
+    if (!bidAmount) {
+      return;
+    }
+    const response = await this.apiFetch(
+      `/auctions/sessions/${auctionSessionId}/bids?lang=${this.readLocale()}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bidAmount }),
+      },
+    );
+    const payload = await response.json();
+    if (!response.ok) {
+      this.showError(JSON.stringify(payload));
+      return;
+    }
+    await this.loadAuctions();
+  }
+
+  async loadThreads() {
+    this.messagingPanel.hidden = false;
+    const response = await this.apiFetch(
+      `/messaging/threads?lang=${this.readLocale()}`,
+    );
+    const payload = await response.json();
+    if (!response.ok) {
+      this.showError(JSON.stringify(payload));
+      return;
+    }
+    this.threadsElement.innerHTML = "";
+    for (const thread of payload.threads ?? []) {
+      const row = document.createElement("div");
+      row.className = "thread-row";
+      row.innerHTML = `<button type="button" class="secondary">${thread.threadId.slice(0, 8)}… → ${thread.counterpartyCompanyId.slice(0, 8)}…</button>`;
+      row.querySelector("button").addEventListener("click", () => {
+        this.activeThreadId = thread.threadId;
+        document.getElementById("counterparty-id").value =
+          thread.counterpartyCompanyId;
+        void this.loadMessages(thread.threadId);
+      });
+      this.threadsElement.appendChild(row);
+    }
+  }
+
+  async openThread() {
+    const counterpartyCompanyId =
+      document.getElementById("counterparty-id").value.trim();
+    if (!counterpartyCompanyId) {
+      this.showError("Karşı firma ID girin");
+      return;
+    }
+    const response = await this.apiFetch(
+      `/messaging/threads?lang=${this.readLocale()}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ counterpartyCompanyId }),
+      },
+    );
+    const payload = await response.json();
+    if (!response.ok) {
+      this.showError(JSON.stringify(payload));
+      return;
+    }
+    this.activeThreadId = payload.thread.id;
+    await this.loadThreads();
+    await this.loadMessages(this.activeThreadId);
+  }
+
+  async loadMessages(threadId) {
+    const response = await this.apiFetch(
+      `/messaging/threads/${threadId}/messages?lang=${this.readLocale()}`,
+    );
+    const payload = await response.json();
+    this.messagesOutput.hidden = false;
+    this.messagesOutput.textContent = JSON.stringify(payload.messages, null, 2);
+  }
+
+  async sendMessage() {
+    if (!this.activeThreadId) {
+      this.showError("Önce bir sohbet seçin veya açın");
+      return;
+    }
+    const bodyText = document.getElementById("message-body").value.trim();
+    if (!bodyText) {
+      return;
+    }
+    const response = await this.apiFetch(
+      `/messaging/threads/${this.activeThreadId}/messages?lang=${this.readLocale()}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bodyText }),
+      },
+    );
+    const payload = await response.json();
+    if (!response.ok) {
+      this.showError(JSON.stringify(payload));
+      return;
+    }
+    document.getElementById("message-body").value = "";
+    await this.loadMessages(this.activeThreadId);
+  }
+
+  async loadTrust() {
+    const companyId = document.getElementById("trust-company-id").value.trim();
+    if (!companyId) {
+      this.showError("Firma ID girin");
+      return;
+    }
+    const response = await this.apiFetch(`/trust-scores/companies/${companyId}`);
+    const payload = await response.json();
+    this.trustOutput.hidden = false;
+    this.trustOutput.textContent = JSON.stringify(payload.snapshot, null, 2);
+  }
+
+  async submitTrust() {
+    const companyId = document.getElementById("trust-company-id").value.trim();
+    const scoreValue = Number(document.getElementById("trust-score").value);
+    const commentText = document.getElementById("trust-comment").value.trim();
+    if (!companyId) {
+      this.showError("Firma ID girin");
+      return;
+    }
+    const response = await this.apiFetch(
+      `/trust-scores/companies/${companyId}/reviews?lang=${this.readLocale()}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scoreValue, commentText }),
+      },
+    );
+    const payload = await response.json();
+    if (!response.ok) {
+      this.showError(JSON.stringify(payload));
+      return;
+    }
+    await this.loadTrust();
+  }
+
+  async loadIntegrations() {
+    const response = await this.apiFetch(
+      `/integrations/freight-offers?lang=${this.readLocale()}&limit=8`,
     );
     const payload = await response.json();
     this.integrationOutput.hidden = false;

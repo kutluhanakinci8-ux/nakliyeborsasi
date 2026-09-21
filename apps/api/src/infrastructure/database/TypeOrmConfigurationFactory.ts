@@ -8,6 +8,11 @@ import { SubscriptionPlanEntity } from "./entities/SubscriptionPlanEntity";
 import { CompanySubscriptionEntity } from "./entities/CompanySubscriptionEntity";
 import { FreightListingEntity } from "./entities/FreightListingEntity";
 import { AuditLogEntity } from "./entities/AuditLogEntity";
+import { AuctionSessionEntity } from "./entities/AuctionSessionEntity";
+import { AuctionBidEntity } from "./entities/AuctionBidEntity";
+import { MessageThreadEntity } from "./entities/MessageThreadEntity";
+import { MessageEntity } from "./entities/MessageEntity";
+import { CompanyTrustReviewEntity } from "./entities/CompanyTrustReviewEntity";
 
 @Injectable()
 export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
@@ -31,6 +36,11 @@ export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
         CompanySubscriptionEntity,
         FreightListingEntity,
         AuditLogEntity,
+        AuctionSessionEntity,
+        AuctionBidEntity,
+        MessageThreadEntity,
+        MessageEntity,
+        CompanyTrustReviewEntity,
       ],
       synchronize,
       logging: false,

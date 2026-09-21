@@ -11,7 +11,10 @@
       <header>
         <p class="pill">Nakliye Borsası · TR + UA–EU</p>
         <h1>Yük Borsası Paneli</h1>
-        <p class="subtitle">Giriş yapın, platform ilanlarını ve harici kaynakları görüntüleyin.</p>
+        <p class="subtitle">
+          Demo: <code>demo@nakliyeborsasi.local</code> · Partner:
+          <code>partner@nakliyeborsasi.local</code> (şifre aynı)
+        </p>
       </header>
 
       <section id="login-section" class="card">
@@ -32,12 +35,49 @@
       </section>
 
       <section id="dashboard-section" class="card" hidden>
+        <p id="session-info" class="session-info"></p>
         <div class="actions">
           <button id="load-listings" type="button">Platform ilanları</button>
+          <button id="load-auctions" type="button">Açık artırmalar</button>
+          <button id="load-threads" type="button">Mesajlar</button>
           <button id="load-integrations" type="button" class="secondary">Harici kaynaklar</button>
           <button id="logout-button" type="button" class="secondary">Çıkış</button>
         </div>
         <div id="listings"></div>
+        <div id="auctions"></div>
+        <div id="messaging" class="messaging-panel" hidden>
+          <h3>Mesajlaşma</h3>
+          <label
+            >Karşı firma ID
+            <input id="counterparty-id" type="text" placeholder="UUID" />
+          </label>
+          <button id="open-thread" type="button">Sohbet aç</button>
+          <div id="threads"></div>
+          <label
+            >Mesaj
+            <input id="message-body" type="text" placeholder="Metin" />
+          </label>
+          <button id="send-message" type="button">Gönder</button>
+          <pre id="messages-output" hidden></pre>
+        </div>
+        <div id="trust-panel" class="trust-panel">
+          <h3>Güven skoru</h3>
+          <label
+            >Firma ID
+            <input id="trust-company-id" type="text" placeholder="UUID" />
+          </label>
+          <button id="load-trust" type="button">Skoru getir</button>
+          <label
+            >Puan (1–5)
+            <input id="trust-score" type="number" min="1" max="5" value="5" />
+          </label>
+          <label
+            >Yorum
+            <input id="trust-comment" type="text" value="Güvenilir taşıma partneri" />
+          </label>
+          <button id="submit-trust" type="button">Değerlendirme gönder</button>
+          <pre id="trust-output" hidden></pre>
+        </div>
         <pre id="integration-output" hidden></pre>
       </section>
     </div>

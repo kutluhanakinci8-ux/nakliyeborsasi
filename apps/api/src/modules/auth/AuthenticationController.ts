@@ -1,8 +1,11 @@
-import { Body, Controller, Post } from "@nestjs/common";
+import { Body, Controller, Get, Post, UseGuards } from "@nestjs/common";
+import { AuthenticatedUserContext } from "@nakliyeborsasi/core";
 import { UserCredentialAuthenticationService } from "./UserCredentialAuthenticationService";
 import { RegisterCompanyUserRequestDto } from "./RegisterCompanyUserRequestDto";
 import { LoginUserRequestDto } from "./LoginUserRequestDto";
 import { JwtTokenIssuingService } from "./JwtTokenIssuingService";
+import { JwtAuthenticationGuard } from "./JwtAuthenticationGuard";
+import { AuthenticatedUserParam } from "./AuthenticatedUserParam";
 
 @Controller("auth")
 export class AuthenticationController {
@@ -35,5 +38,13 @@ export class AuthenticationController {
       accessToken:
         this.jwtTokenIssuingService.issueAccessToken(authenticatedUser),
     };
+  }
+
+  @Get("session")
+  @UseGuards(JwtAuthenticationGuard)
+  public getSession(
+    @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
+  ): { session: AuthenticatedUserContext } {
+    return { session: authenticatedUser };
   }
 }
