@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { EmptyState } from "../../../components/EmptyState";
-import { PageHeader } from "../../../components/PageHeader";
+import { ModulePageShell } from "../../../components/ModulePageShell";
 import { useWebSession } from "../../../context/WebSessionProvider";
 import {
   MessagingApiClient,
@@ -11,15 +11,23 @@ import {
   ThreadMessageRecord,
 } from "../../../lib/MessagingApiClient";
 
+function shortCompanyId(companyId: string): string {
+  if (companyId.length <= 12) {
+    return companyId;
+  }
+  return `${companyId.slice(0, 8)}…${companyId.slice(-4)}`;
+}
+
 export function MessagingPageClient() {
   const searchParams = useSearchParams();
-  const { accessToken, locale } = useWebSession();
+  const { accessToken, locale, session } = useWebSession();
   const [threads, setThreads] = useState<MessagingThreadRecord[]>([]);
   const [activeThreadId, setActiveThreadId] = useState("");
   const [counterpartyId, setCounterpartyId] = useState("");
   const [messageBody, setMessageBody] = useState("");
   const [messages, setMessages] = useState<ThreadMessageRecord[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isBusy, setIsBusy] = useState(false);
 
   useEffect(() => {
     const companyId = searchParams.get("companyId");
@@ -43,30 +51,46 @@ export function MessagingPageClient() {
 
   async function handleOpenThread(): Promise<void> {
     if (!counterpartyId.trim()) {
+      setErrorMessage("Karşı firma kimliği girin.");
       return;
     }
+    setIsBusy(true);
+    setErrorMessage("");
     try {
       const payload = await MessagingApiClient.openThread(
         accessToken,
         locale,
         counterpartyId.trim(),
       );
-      setActiveThreadId(payload.thread.id);
+      const threadId =
+        (payload.thread as { id?: string; threadId?: string }).id ??
+        (payload.thread as { threadId?: string }).threadId ??
+        "";
+      if (!threadId) {
+        throw new Error("Sohbet kimliği alınamadı");
+      }
+      setActiveThreadId(threadId);
       await loadThreads();
-      await loadMessages(payload.thread.id);
+      await loadMessages(threadId);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Sohbet hatası");
+    } finally {
+      setIsBusy(false);
     }
   }
 
   async function loadMessages(threadId: string): Promise<void> {
     setActiveThreadId(threadId);
-    const payload = await MessagingApiClient.listMessages(
-      accessToken,
-      locale,
-      threadId,
-    );
-    setMessages(payload.messages ?? []);
+    try {
+      const payload = await MessagingApiClient.listMessages(
+        accessToken,
+        locale,
+        threadId,
+      );
+      setMessages(payload.messages ?? []);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Mesaj hatası");
+    }
   }
 
   async function handleSendMessage(): Promise<void> {
@@ -87,74 +111,121 @@ export function MessagingPageClient() {
     }
   }
 
+  const activeThread = threads.find((t) => t.threadId === activeThreadId);
+
   return (
-    <>
-      <PageHeader
-        title="Mesajlar"
-        description="Taşıyıcılar arası güvenli iletişim"
-      />
-      {errorMessage ? <p className="error banner">{errorMessage}</p> : null}
-      <div className="split-layout">
-        <section className="panel-card">
-          <h2 className="section-title">Sohbetler</h2>
-          <label>
-            Karşı firma ID
+    <ModulePageShell
+      eyebrow="Mesajlar"
+      title="Firma mesajlaşması"
+      lead="Taşıyıcı ve yük veren firmalar arasında güvenli sohbet. Marketplace’te «Mesaj» ile sohbet başlatın."
+      stats={[
+        { value: String(threads.length), label: "Aktif sohbet" },
+        { value: String(messages.length), label: "Bu sohbette mesaj" },
+        { value: "Şifreli", label: "Oturum koruması", highlight: true },
+      ]}
+    >
+      {errorMessage ? <p className="error banner error--light">{errorMessage}</p> : null}
+
+      <div className="chat-layout">
+        <aside className="chat-sidebar module-panel">
+          <h2 className="module-panel-title">Sohbetler</h2>
+          <div className="chat-compose-row">
             <input
+              className="input-light"
+              placeholder="Karşı firma ID"
               value={counterpartyId}
               onChange={(event) => setCounterpartyId(event.target.value)}
             />
-          </label>
-          <button type="button" className="btn-primary" onClick={() => void handleOpenThread()}>
-            Sohbet aç
-          </button>
+            <button
+              type="button"
+              className="btn-accent"
+              disabled={isBusy}
+              onClick={() => void handleOpenThread()}
+            >
+              Aç
+            </button>
+          </div>
           {threads.length === 0 ? (
-            <EmptyState message="Henüz sohbet yok." />
+            <EmptyState message="Henüz sohbet yok. Firma ID ile yeni sohbet açın." />
           ) : (
-            <ul className="thread-list">
+            <ul className="chat-thread-list">
               {threads.map((thread) => (
                 <li key={thread.threadId}>
                   <button
                     type="button"
                     className={
                       activeThreadId === thread.threadId
-                        ? "thread-item active"
-                        : "thread-item"
+                        ? "chat-thread-item active"
+                        : "chat-thread-item"
                     }
                     onClick={() => void loadMessages(thread.threadId)}
                   >
-                    {thread.counterpartyCompanyId.slice(0, 10)}…
+                    <span className="chat-thread-title">
+                      {shortCompanyId(thread.counterpartyCompanyId)}
+                    </span>
+                    <span className="chat-thread-sub">Firma sohbeti</span>
                   </button>
                 </li>
               ))}
             </ul>
           )}
-        </section>
-        <section className="panel-card">
-          <h2 className="section-title">Mesajlar</h2>
-          {messages.length === 0 ? (
-            <EmptyState message="Sohbet seçin veya yeni sohbet açın." />
-          ) : (
-            <ul className="message-list">
-              {messages.map((message) => (
-                <li key={message.id}>
-                  <span className="muted">{message.senderCompanyId.slice(0, 8)}…</span>
-                  <p>{message.bodyText}</p>
-                </li>
-              ))}
-            </ul>
-          )}
-          <label>
-            Yeni mesaj
+        </aside>
+
+        <section className="chat-main module-panel">
+          <h2 className="module-panel-title">
+            {activeThread
+              ? shortCompanyId(activeThread.counterpartyCompanyId)
+              : "Mesaj kutusu"}
+          </h2>
+          <div className="chat-messages">
+            {messages.length === 0 ? (
+              <EmptyState message="Soldan sohbet seçin veya yeni sohbet açın." />
+            ) : (
+              <ul className="chat-message-list">
+                {messages.map((message) => {
+                  const isMine =
+                    session?.companyId &&
+                    message.senderCompanyId === session.companyId;
+                  return (
+                    <li
+                      key={message.id}
+                      className={isMine ? "chat-bubble chat-bubble--mine" : "chat-bubble"}
+                    >
+                      <span className="chat-bubble-meta">
+                        {shortCompanyId(message.senderCompanyId)} ·{" "}
+                        {new Date(message.createdAt).toLocaleString(locale)}
+                      </span>
+                      <p>{message.bodyText}</p>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+          <div className="chat-input-row">
             <input
+              className="input-light"
+              placeholder="Mesajınızı yazın…"
               value={messageBody}
+              disabled={!activeThreadId}
               onChange={(event) => setMessageBody(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  void handleSendMessage();
+                }
+              }}
             />
-          </label>
-          <button type="button" className="btn-primary" onClick={() => void handleSendMessage()}>
-            Gönder
-          </button>
+            <button
+              type="button"
+              className="btn-accent"
+              disabled={!activeThreadId || !messageBody.trim()}
+              onClick={() => void handleSendMessage()}
+            >
+              Gönder
+            </button>
+          </div>
         </section>
       </div>
-    </>
+    </ModulePageShell>
   );
 }
