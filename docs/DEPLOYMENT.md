@@ -186,6 +186,17 @@ bash scripts/restart-web.sh /var/www/nakliyeborsasi 3011 http://127.0.0.1:3010/a
 
 Statik panel (API ile): `http://SUNUCU_IP:3010/panel/` — web build olmadan da kullanılabilir.
 
+### Tek komut güncelleme (önerilen)
+
+```bash
+cd /var/www/nakliyeborsasi
+bash scripts/vps-update.sh
+```
+
+`build-web.sh: No such file` → `git pull` yapılmamış veya yanlış branch. Yukarıdaki script branch’i çeker.
+
+`npm audit` uyarıları (56 vulnerability) bu aşamada **normal**; `npm audit fix --force` **çalıştırmayın** (kırılma riski).
+
 ---
 
 ## 5) Ortam değişkenleri (.env)
