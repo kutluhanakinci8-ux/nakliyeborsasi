@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { ContactOfficeMap } from "../../components/ContactOfficeMap";
+import { PublicPageShell } from "../../components/PublicPageShell";
 import { SiteLayout } from "../../components/SiteLayout";
 import { SocialMediaLinks } from "../../components/SocialMediaLinks";
 import {
@@ -15,6 +16,12 @@ const SUBNAV = [
   { href: "#contact-form", label: "Mesaj formu" },
   { href: "#contact-offices", label: "Ofisler & harita" },
   { href: "#contact-faq", label: "SSS" },
+] as const;
+
+const HERO_STATS = [
+  { value: "24 saat", label: "Form yanıt hedefi" },
+  { value: "3 ofis", label: "TR · UA · EU" },
+  { value: "4 dil", label: "Destek", highlight: true },
 ] as const;
 
 export function ContactPageClient() {
@@ -31,46 +38,14 @@ export function ContactPageClient() {
 
   return (
     <SiteLayout headerVariant="public">
-      <div className="module-page contact-page">
-        <div className="contact-page-hero">
-          <nav className="page-breadcrumb" aria-label="Konum">
-            <Link href="/hakkimizda">Kurumsal</Link>
-            <span aria-hidden>›</span>
-            <span className="page-breadcrumb-current">İletişim</span>
-          </nav>
-          <div className="contact-page-hero-grid">
-            <div>
-              <p className="exchange-eyebrow">İletişim</p>
-              <h1 className="exchange-title">Bize ulaşın</h1>
-              <p className="exchange-lead contact-page-lead">
-                Satış, destek, basın ve ortaklık — doğru ekibe yönlendirilirsiniz. Aşağıdan
-                formu doldurun, ofis haritasına bakın veya SSS’ye göz atın.
-              </p>
-            </div>
-            <div className="stats-strip stats-strip--compact">
-              <div className="stat-item">
-                <span className="stat-item-value">24 saat</span>
-                <span className="stat-item-label">Form yanıt hedefi</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-item-value">3 ofis</span>
-                <span className="stat-item-label">TR · UA · EU</span>
-              </div>
-              <div className="stat-item stat-item--highlight">
-                <span className="stat-item-value">4 dil</span>
-                <span className="stat-item-label">Destek</span>
-              </div>
-            </div>
-          </div>
-          <nav className="contact-subnav" aria-label="Sayfa içi menü">
-            {SUBNAV.map((item) => (
-              <a key={item.href} href={item.href} className="contact-subnav-link">
-                {item.label}
-              </a>
-            ))}
-          </nav>
-        </div>
-
+      <PublicPageShell
+        breadcrumbLabel="İletişim"
+        eyebrow="İletişim"
+        title="Bize ulaşın"
+        lead="Satış, destek, basın ve ortaklık — doğru ekibe yönlendirilirsiniz. Aşağıdan formu doldurun, ofis haritasına bakın veya SSS’ye göz atın."
+        stats={[...HERO_STATS]}
+        subnav={SUBNAV}
+      >
         <div className="contact-route-grid contact-route-grid--premium">
           {CONTACT_ROUTES.map((route) => (
             <button
@@ -234,7 +209,7 @@ export function ContactPageClient() {
             })}
           </ul>
         </section>
-      </div>
+      </PublicPageShell>
     </SiteLayout>
   );
 }

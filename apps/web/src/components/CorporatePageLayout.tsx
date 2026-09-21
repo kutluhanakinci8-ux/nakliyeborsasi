@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { type ReactNode } from "react";
+import { PublicPageShell } from "./PublicPageShell";
 import { SiteLayout } from "./SiteLayout";
 
 type CorporatePageLayoutProps = {
@@ -7,6 +7,7 @@ type CorporatePageLayoutProps = {
   title: string;
   lead: string;
   breadcrumb?: string;
+  showHeroVisual?: boolean;
   children: ReactNode;
 };
 
@@ -15,27 +16,20 @@ export function CorporatePageLayout({
   title,
   lead,
   breadcrumb,
+  showHeroVisual = true,
   children,
 }: CorporatePageLayoutProps) {
   return (
     <SiteLayout headerVariant="public">
-      <div className="module-page corporate-page">
-        <div className="contact-page-hero corporate-page-hero">
-          <nav className="page-breadcrumb" aria-label="Konum">
-            <Link href="/hakkimizda">Kurumsal</Link>
-            <span aria-hidden>›</span>
-            <span className="page-breadcrumb-current">{breadcrumb ?? title}</span>
-          </nav>
-          <div className="contact-page-hero-grid corporate-page-hero-grid">
-            <div>
-              <p className="exchange-eyebrow">{eyebrow}</p>
-              <h1 className="exchange-title">{title}</h1>
-              <p className="exchange-lead contact-page-lead">{lead}</p>
-            </div>
-          </div>
-        </div>
-        {children}
-      </div>
+      <PublicPageShell
+        breadcrumbLabel={breadcrumb ?? title}
+        eyebrow={eyebrow}
+        title={title}
+        lead={lead}
+        showHeroVisual={showHeroVisual}
+      >
+        <div className="corporate-page-body">{children}</div>
+      </PublicPageShell>
     </SiteLayout>
   );
 }

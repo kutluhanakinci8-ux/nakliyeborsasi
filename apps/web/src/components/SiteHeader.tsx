@@ -45,7 +45,11 @@ export function SiteHeader({ variant = "app" }: SiteHeaderProps) {
   const showUserSession = Boolean(session);
 
   return (
-    <header className="site-header">
+    <header
+      className={
+        variant === "public" ? "site-header site-header--public" : "site-header site-header--app"
+      }
+    >
       <div className="site-header-utility">
         <div className="site-header-utility-inner">
           <span className="utility-badge">
