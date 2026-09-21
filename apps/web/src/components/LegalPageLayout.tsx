@@ -12,6 +12,7 @@ type LegalPageLayoutProps = {
   title: string;
   lead: string;
   breadcrumbLabel?: string;
+  eyebrow?: string;
   toc: readonly LegalTocItem[];
   children: ReactNode;
 };
@@ -26,6 +27,7 @@ export function LegalPageLayout({
   title,
   lead,
   breadcrumbLabel,
+  eyebrow,
   toc,
   children,
 }: LegalPageLayoutProps) {
@@ -33,6 +35,7 @@ export function LegalPageLayout({
     <SiteLayout headerVariant="public">
       <PublicPageShell
         breadcrumbLabel={breadcrumbLabel ?? title}
+        eyebrow={eyebrow}
         title={title}
         lead={lead}
         showHeroVisual={false}
