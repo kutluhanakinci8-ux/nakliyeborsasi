@@ -159,6 +159,7 @@ a {
 .site-header-main {
   background: linear-gradient(180deg, #ecfdf5 0%, #d1fae5 55%, #ccfbf1 100%);
   border-bottom: 1px solid rgba(16, 185, 129, 0.22);
+  overflow: visible;
 }
 
 .site-header-main-inner {
@@ -176,6 +177,7 @@ a {
   display: flex;
   justify-content: flex-end;
   min-width: 0;
+  overflow: visible;
 }
 
 .site-nav {
@@ -190,7 +192,8 @@ a {
   box-shadow: 0 4px 20px rgba(6, 95, 70, 0.06);
   backdrop-filter: blur(10px);
   max-width: 100%;
-  overflow-x: auto;
+  overflow: visible;
+  position: relative;
 }
 
 .site-nav-dropdown {
@@ -214,15 +217,31 @@ a {
 
 .site-nav-dropdown-panel {
   position: absolute;
-  top: calc(100% + 6px);
+  top: 100%;
   right: 0;
-  min-width: 200px;
+  margin-top: 4px;
+  min-width: 220px;
   padding: 8px;
   border-radius: 14px;
   background: #fff;
-  border: 1px solid rgba(16, 185, 129, 0.2);
-  box-shadow: 0 12px 32px rgba(6, 95, 70, 0.12);
-  z-index: 60;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  box-shadow: 0 12px 32px rgba(6, 95, 70, 0.18);
+  z-index: 100;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease,
+    visibility 0.15s ease;
+}
+
+.site-nav-dropdown-panel.is-open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0);
 }
 
 .site-nav-dropdown-link {
@@ -1674,13 +1693,14 @@ button.btn-secondary {
 
   .site-nav-shell {
     justify-content: stretch;
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
   }
 
   .site-nav {
-    width: 100%;
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    padding-bottom: 4px;
+    width: max-content;
+    max-width: none;
   }
 
   .site-footer-inner,

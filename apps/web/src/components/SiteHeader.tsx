@@ -33,13 +33,13 @@ export function SiteHeader({ variant = "app" }: SiteHeaderProps) {
   }, [pathname]);
 
   useEffect(() => {
-    function handlePointerDown(event: MouseEvent): void {
+    function handleClickOutside(event: MouseEvent): void {
       if (!corporateRef.current?.contains(event.target as Node)) {
         setCorporateOpen(false);
       }
     }
-    document.addEventListener("mousedown", handlePointerDown);
-    return () => document.removeEventListener("mousedown", handlePointerDown);
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
   }, []);
 
   const showUserSession = Boolean(session);
@@ -112,12 +112,7 @@ export function SiteHeader({ variant = "app" }: SiteHeaderProps) {
               >
                 {HIZMETLER_NAV_ITEM.label}
               </Link>
-              <div
-                className="site-nav-dropdown"
-                ref={corporateRef}
-                onMouseEnter={() => setCorporateOpen(true)}
-                onMouseLeave={() => setCorporateOpen(false)}
-              >
+              <div className="site-nav-dropdown" ref={corporateRef}>
                 <button
                   type="button"
                   className={
@@ -126,32 +121,44 @@ export function SiteHeader({ variant = "app" }: SiteHeaderProps) {
                       : "site-nav-link site-nav-link--menu"
                   }
                   aria-expanded={corporateOpen}
-                  aria-haspopup="true"
-                  onClick={() => setCorporateOpen((open) => !open)}
+                  aria-haspopup="menu"
+                  aria-controls="corporate-nav-menu"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setCorporateOpen((open) => !open);
+                  }}
                 >
                   Kurumsal
                   <span className="site-nav-caret" aria-hidden>
                     ▾
                   </span>
                 </button>
-                {corporateOpen ? (
-                  <div className="site-nav-dropdown-panel" role="menu">
-                    {CORPORATE_DROPDOWN_ITEMS.map((item) => (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        role="menuitem"
-                        className={
-                          isActive(item.href)
-                            ? "site-nav-dropdown-link active"
-                            : "site-nav-dropdown-link"
-                        }
-                      >
-                        {item.label}
-                      </Link>
-                    ))}
-                  </div>
-                ) : null}
+                <div
+                  id="corporate-nav-menu"
+                  className={
+                    corporateOpen
+                      ? "site-nav-dropdown-panel is-open"
+                      : "site-nav-dropdown-panel"
+                  }
+                  role="menu"
+                  aria-hidden={!corporateOpen}
+                >
+                  {CORPORATE_DROPDOWN_ITEMS.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      role="menuitem"
+                      className={
+                        isActive(item.href)
+                          ? "site-nav-dropdown-link active"
+                          : "site-nav-dropdown-link"
+                      }
+                      onClick={() => setCorporateOpen(false)}
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
               </div>
             </div>
           </nav>
