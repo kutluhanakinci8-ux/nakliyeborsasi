@@ -160,6 +160,32 @@ npm run build
 bash scripts/restart-api.sh
 ```
 
+### Web arayüzü (port 3011)
+
+API ayaktan sonra **proje kökünden**:
+
+```bash
+cd /var/www/nakliyeborsasi
+git pull
+npm install
+bash scripts/restart-web.sh
+```
+
+Doğru kullanım (API URL **3. argüman**):
+
+```bash
+bash scripts/restart-web.sh /var/www/nakliyeborsasi 3011 http://127.0.0.1:3010/api/v1
+```
+
+| Web build hatası | Sebep | Çözüm |
+|------------------|--------|--------|
+| `useContext` / `react.production.min.js` | Eski React 18 kök `node_modules` | `cd /var/www/nakliyeborsasi && npm install` sonra `bash scripts/build-web.sh` |
+| `ENOWORKSPACES` / SWC patch | `apps/web` içinde tek başına `npm install` | Yalnızca monorepo **kökünde** `npm install` |
+| `outputFileTracingRoot` uyarısı | Eski `next.config.js` | `git pull` (güncel config) |
+| PM2’de `nakliyeborsasi-web` yok | Build fail | Önce yeşil build, sonra `restart-web.sh` |
+
+Statik panel (API ile): `http://SUNUCU_IP:3010/panel/` — web build olmadan da kullanılabilir.
+
 ---
 
 ## 5) Ortam değişkenleri (.env)
