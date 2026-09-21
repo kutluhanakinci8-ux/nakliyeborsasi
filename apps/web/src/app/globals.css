@@ -744,12 +744,58 @@ a {
   color: #eab308;
 }
 
+.social-media-chip--icon-only {
+  padding: 0;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.social-media-chip--icon-only:hover {
+  transform: translateY(-2px);
+  background: transparent;
+  border: none;
+}
+
+.social-media-chip--icon-only .social-media-icon {
+  width: 44px;
+  height: 44px;
+}
+
 .site-footer-bottom {
   border-top: 1px solid rgba(110, 231, 183, 0.15);
   padding-top: 16px;
   padding-bottom: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 20px;
   font-size: 0.8rem;
   color: #a7f3d0;
+}
+
+.site-footer-legal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+}
+
+.site-footer-legal a {
+  color: #a7f3d0;
+  font-size: 0.8rem;
+  text-decoration: none;
+}
+
+.site-footer-legal a:hover {
+  color: #fef08a;
+}
+
+.site-footer-copy {
+  margin: 0;
+  color: #6ee7b7;
+  font-size: 0.8rem;
 }
 
 .site-footer-muted {
@@ -1819,11 +1865,6 @@ button.btn-secondary {
   .site-footer-inner--3,
   .site-footer-inner--4 {
     grid-template-columns: 1fr;
-  }
-
-  .site-footer-social-band-inner {
-    flex-direction: column;
-    align-items: stretch;
   }
 
   .social-media-row {

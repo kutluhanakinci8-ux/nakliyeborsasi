@@ -47,15 +47,16 @@ export function SocialMediaLinks() {
         <a
           key={network.id}
           href={network.href}
-          className={`social-media-chip social-media-chip--${network.id}`}
+          className={`social-media-chip social-media-chip--icon-only social-media-chip--${network.id}`}
           target="_blank"
           rel="noopener noreferrer"
           role="listitem"
+          aria-label={network.label}
+          title={network.label}
         >
           <span className="social-media-icon">
             <SocialSvg id={network.id} />
           </span>
-          <span className="social-media-label">{network.label}</span>
         </a>
       ))}
     </div>

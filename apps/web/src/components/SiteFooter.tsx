@@ -3,6 +3,12 @@ import { SiteBrand } from "./SiteBrand";
 import { SocialMediaLinks } from "./SocialMediaLinks";
 import { CORPORATE_NAV_ITEMS, PLATFORM_NAV_ITEMS } from "../lib/siteNavigation";
 
+const LEGAL_LINKS = [
+  { href: "/kisisel-verilerin-korunmasi", label: "Kişisel Verilerin Korunması" },
+  { href: "/kullanim-kosullari", label: "Kullanım Koşullarımız" },
+  { href: "/cerez-ayarlari", label: "Çerez Ayarları" },
+] as const;
+
 export function SiteFooter() {
   return (
     <footer className="site-footer">
@@ -45,7 +51,14 @@ export function SiteFooter() {
         </div>
       </div>
       <div className="site-footer-bottom">
-        <p>© {new Date().getFullYear()} Nakliye Borsası · Demo ortam</p>
+        <nav className="site-footer-legal" aria-label="Yasal bilgiler">
+          {LEGAL_LINKS.map((item) => (
+            <Link key={item.href} href={item.href}>
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+        <p className="site-footer-copy">© {new Date().getFullYear()} Nakliye Borsası</p>
       </div>
     </footer>
   );
