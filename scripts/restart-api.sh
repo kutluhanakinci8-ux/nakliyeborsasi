@@ -2,7 +2,6 @@
 set -euo pipefail
 
 INSTALL_DIR="${1:-/var/www/nakliyeborsasi}"
-PORT="${2:-3000}"
 
 if [[ ! -f "$INSTALL_DIR/package.json" ]]; then
   echo "HATA: $INSTALL_DIR proje kökü değil."
@@ -11,16 +10,19 @@ fi
 
 cd "$INSTALL_DIR"
 
-if command -v fuser >/dev/null 2>&1; then
-  fuser -k "${PORT}/tcp" 2>/dev/null || true
-elif command -v lsof >/dev/null 2>&1; then
-  PIDS="$(lsof -ti ":${PORT}" -sTCP:LISTEN 2>/dev/null || true)"
-  if [[ -n "$PIDS" ]]; then
-    kill -9 $PIDS || true
-  fi
+if [[ ! -f ".env" ]]; then
+  cp .env.example .env
 fi
 
-sleep 1
+if ! grep -q '^PORT=' .env; then
+  echo "PORT=3010" >> .env
+fi
+
+API_PORT="$(grep '^PORT=' .env | cut -d= -f2- | tr -d '\r')"
+if [[ "$API_PORT" == "3000" ]]; then
+  echo "UYARI: PORT=3000 başka uygulamalarla çakışabilir."
+  echo "Öneri: .env içinde PORT=3010 kullanın (diğer PM2 süreçlerine dokunulmaz)."
+fi
 
 npm run build
 
@@ -28,11 +30,12 @@ if command -v pm2 >/dev/null 2>&1; then
   pm2 delete nakliyeborsasi-api 2>/dev/null || true
   pm2 start npm --name nakliyeborsasi-api --cwd "$INSTALL_DIR" -- run start
   pm2 save
-  echo "PM2 ile başlatıldı. Log: pm2 logs nakliyeborsasi-api"
+  echo "PM2: yalnızca nakliyeborsasi-api yenilendi (diğer süreçlere dokunulmadı)."
+  echo "Log: pm2 logs nakliyeborsasi-api --lines 50"
 else
   nohup npm run start > /var/log/nakliyeborsasi-api.log 2>&1 &
-  echo "Arka planda başlatıldı. Log: /var/log/nakliyeborsasi-api.log"
+  echo "Log: /var/log/nakliyeborsasi-api.log"
 fi
 
-sleep 2
-bash "$INSTALL_DIR/scripts/diagnose-port.sh" "$PORT"
+sleep 3
+bash "$INSTALL_DIR/scripts/diagnose-port.sh" "$API_PORT"

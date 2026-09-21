@@ -1,5 +1,6 @@
 import { NestFactory } from "@nestjs/core";
 import { ValidationPipe } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { AppModule } from "./AppModule";
 import { PlatformExceptionFilter } from "./infrastructure/http/PlatformExceptionFilter";
 
@@ -15,7 +16,8 @@ export class BootstrapApplication {
       }),
     );
     application.useGlobalFilters(new PlatformExceptionFilter());
-    const port = process.env.PORT ?? "3000";
+    const configService = application.get(ConfigService);
+    const port = configService.get<string>("PORT") ?? "3010";
     await application.listen(port);
   }
 }

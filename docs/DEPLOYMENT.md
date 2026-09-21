@@ -127,13 +127,18 @@ Terminalde `#` ile başlayan satırları yapıştırmayın (zsh yorum satırı h
 | `Connection refused :3000` | API çalışmıyor | `npm run start` veya `restart-api.sh` |
 | `JWT_SECRET is required` | `.env` yok | `cp .env.example .env` proje kökünde |
 
-### Port 3000 meşgul (VPS)
+### Port 3000 meşgul (VPS — diğer uygulamalara dokunmayın)
+
+Bu sunucuda **3000 başka bir Node uygulamasına ait** olabilir. Nakliye Borsası için **3010** kullanın:
 
 ```bash
 cd /var/www/nakliyeborsasi
-bash scripts/diagnose-port.sh 3000
+bash scripts/set-api-port.sh .env 3010
 bash scripts/restart-api.sh
+curl -s http://127.0.0.1:3010/api/v1/health
 ```
+
+`restart-api.sh` artık **port öldürmez**; yalnızca `nakliyeborsasi-api` PM2 sürecini yeniler.
 
 Doğru yanıt:
 
