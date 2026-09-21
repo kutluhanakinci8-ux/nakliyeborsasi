@@ -12,7 +12,7 @@ export function ContactOfficeMap() {
   }
 
   return (
-    <section className="contact-map-section module-panel">
+    <section className="contact-map-section module-panel module-panel--elevated contact-map-panel">
       <div className="contact-map-head">
         <h2 className="module-panel-title">Ofisler ve harita</h2>
         <p className="muted muted--dark">

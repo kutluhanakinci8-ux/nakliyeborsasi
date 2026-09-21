@@ -591,19 +591,201 @@ a {
   border-radius: 14px;
   overflow: hidden;
   border: 1px solid #dbe3ec;
-  min-height: 280px;
+  min-height: 320px;
   background: #e2e8f0;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
 }
 
 .office-map-iframe {
   width: 100%;
-  height: 280px;
+  height: 320px;
   border: 0;
   display: block;
 }
 
+/* —— İletişim: header ile bütünleşik premium sayfa —— */
+.site-main > .contact-page {
+  padding-top: 0;
+  max-width: 1120px;
+}
+
+.contact-page-hero {
+  margin: 0 -24px 28px;
+  padding: 20px 24px 0;
+  background: linear-gradient(180deg, #ecfdf5 0%, #f8fffe 55%, #eef2f6 100%);
+  border-bottom: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.contact-page-hero-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 24px;
+  align-items: end;
+  padding-bottom: 20px;
+}
+
+.contact-page-lead {
+  max-width: 520px;
+}
+
+.stats-strip--compact {
+  margin: 0;
+}
+
+.stats-strip--compact .stat-item {
+  padding: 12px 14px;
+}
+
+.page-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #047857;
+}
+
+.page-breadcrumb a {
+  color: #059669;
+}
+
+.page-breadcrumb a:hover {
+  color: #047857;
+}
+
+.page-breadcrumb-current {
+  color: #065f46;
+}
+
+.contact-subnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 0 16px;
+}
+
+.contact-subnav-link {
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  color: #065f46;
+  font-weight: 600;
+  font-size: 0.82rem;
+  box-shadow: 0 2px 8px rgba(6, 95, 70, 0.06);
+}
+
+.contact-subnav-link:hover {
+  background: #fff;
+  border-color: #10b981;
+}
+
+.contact-anchor {
+  scroll-margin-top: 120px;
+}
+
+.module-panel--elevated {
+  box-shadow:
+    0 4px 24px rgba(15, 23, 42, 0.06),
+    0 1px 0 rgba(255, 255, 255, 0.8) inset;
+  border: 1px solid rgba(203, 213, 225, 0.9);
+}
+
+.contact-route-grid--premium {
+  margin-bottom: 24px;
+}
+
+.contact-route-card--premium {
+  position: relative;
+  overflow: hidden;
+}
+
+.contact-route-card--premium::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #34d399, #10b981);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.contact-route-card--premium.active::before {
+  opacity: 1;
+}
+
+.contact-route-icon {
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: #ecfdf5;
+  color: #047857;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  margin-bottom: 10px;
+}
+
+.contact-route-card--premium.active .contact-route-icon {
+  background: #10b981;
+  color: #fff;
+}
+
+.contact-channel-list--premium li {
+  padding: 12px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.contact-channel-list--premium li:last-child {
+  border-bottom: none;
+}
+
+.contact-submit {
+  max-width: 280px;
+  margin-top: 8px;
+}
+
+.contact-success {
+  margin-bottom: 20px;
+}
+
+.contact-map-panel {
+  margin-top: 24px;
+}
+
+.faq-list--premium .faq-item.open {
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.08), transparent);
+  border-left: 3px solid #10b981;
+  padding-left: 12px;
+  margin-left: -12px;
+}
+
+.faq-toggle {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: #ecfdf5;
+  color: #047857;
+  display: grid;
+  place-items: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.corporate-page-hero-grid {
+  grid-template-columns: 1fr;
+}
+
+.page-breadcrumb-parent {
+  color: #059669;
+}
+
 .contact-faq {
-  margin-top: 20px;
+  margin-top: 24px;
 }
 
 .faq-list {
@@ -2127,6 +2309,17 @@ button.btn-secondary {
   }
 
   .office-detail {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-page-hero {
+    margin-left: -16px;
+    margin-right: -16px;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .contact-page-hero-grid {
     grid-template-columns: 1fr;
   }
 
