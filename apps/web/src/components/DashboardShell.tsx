@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { type ReactNode } from "react";
-import { PublicApiConfiguration } from "../lib/PublicApiConfiguration";
 import { useWebSession } from "../context/WebSessionProvider";
 
 const NAV_ITEMS = [
@@ -43,7 +42,6 @@ export function DashboardShell({ children }: { children: ReactNode }) {
             </Link>
           ))}
         </nav>
-        <p className="sidebar-api">{PublicApiConfiguration.resolveBaseUrl()}</p>
       </aside>
       <div className="main-column">
         <header className="topbar">

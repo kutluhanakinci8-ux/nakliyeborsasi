@@ -3,7 +3,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AuthApiClient } from "../../lib/AuthApiClient";
-import { PublicApiConfiguration } from "../../lib/PublicApiConfiguration";
 import { useWebSession } from "../../context/WebSessionProvider";
 
 export function LoginPageClient() {
@@ -45,7 +44,10 @@ export function LoginPageClient() {
         <p className="muted">
           Demo: demo@ veya partner@nakliyeborsasi.local · Şifre: DemoPass123!
         </p>
-        <p className="muted api-hint">{PublicApiConfiguration.resolveBaseUrl()}</p>
+        <p className="muted auth-tagline">
+          Lardi ve Della gibi borsalarda önce arama ve liste görürsünüz; giriş sonrası
+          panelimiz aynı yönde gelişiyor.
+        </p>
         <form onSubmit={(event) => void handleLogin(event)}>
           <label>
             E-posta

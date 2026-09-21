@@ -1,6 +1,17 @@
 # Önyüz (UI/UX) — ne zaman, ne yapılacak?
 
-## Neden şu an “ham” görünüyor?
+## Rakipler vs bizim ekran (net cevap)
+
+| | Lardi / Della | Nakliye Borsası (şu an) |
+|---|----------------|-------------------------|
+| **Amaç** | Pazarlama + arama + üyelik | Giriş sonrası **operasyon** (ilan, ihale, mesaj) |
+| **Landing** | Hero, istatistik, üye ol | Henüz yok — doğrudan `/login` → marketplace |
+| **Liste** | Yoğun satır, filtre, km/fiyat | **Güncellendi:** arama paneli + Della tarzı satırlar (marketplace) |
+| **Bitmiş mi?** | Yıllarca iterasyon | MVP → **3.2 shell** bitti; **3.4 görsel/marketing** devam ediyor |
+
+**Web böyle mi kalacak?** Hayır. Koyu sidebar + iki kart **ilk iskeletti**; marketplace artık açık tema + arama + liste satırları ile rakiplere yaklaşıyor. Sırada: genel landing (Lardi gibi), diğer sayfaların aynı tasarım dili, mobil.
+
+---
 
 Bilerek **önce işlev, sonra görünüm** gittik:
 
