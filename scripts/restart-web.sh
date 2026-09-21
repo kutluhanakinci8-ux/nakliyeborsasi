@@ -39,10 +39,14 @@ fi
 
 sleep 3
 HTTP_CODE="$(curl -sS -o /tmp/nakliyeborsasi-web-check.html -w "%{http_code}" "http://127.0.0.1:${WEB_PORT}/" || echo 000)"
-if [[ "${HTTP_CODE}" == "200" ]]; then
-  head -c 120 /tmp/nakliyeborsasi-web-check.html || true
-  echo ""
-  echo "Web OK (HTTP ${HTTP_CODE})"
+if [[ "${HTTP_CODE}" == "200" ]] || [[ "${HTTP_CODE}" == "307" ]] || [[ "${HTTP_CODE}" == "308" ]]; then
+  if [[ "${HTTP_CODE}" != "200" ]]; then
+    echo "Web OK (HTTP ${HTTP_CODE} — / → marketplace yönlendirmesi normal)"
+  else
+    head -c 120 /tmp/nakliyeborsasi-web-check.html || true
+    echo ""
+    echo "Web OK (HTTP ${HTTP_CODE})"
+  fi
 else
   echo "UYARI: Web HTTP ${HTTP_CODE} — pm2 logs nakliyeborsasi-web --lines 30"
 fi
