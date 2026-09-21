@@ -193,7 +193,20 @@ cd /var/www/nakliyeborsasi
 bash scripts/vps-update.sh
 ```
 
-`build-web.sh: No such file` → `git pull` yapılmamış veya yanlış branch. Yukarıdaki script branch’i çeker.
+`git pull` **package-lock.json** conflict verirse (VPS’te `npm install` lock’u değiştirmiş olabilir):
+
+```bash
+cd /var/www/nakliyeborsasi
+git fetch origin
+git checkout cursor/modular-freight-platform-18ba
+git reset --hard origin/cursor/modular-freight-platform-18ba
+rm -rf node_modules apps/web/node_modules apps/web/.next
+bash scripts/vps-update.sh
+```
+
+`vps-update.sh` zaten `git reset --hard origin/...` yapar; yerel commit/lock değişikliği kalmamalı.
+
+`build-web.sh: No such file` → branch güncel değil; yukarıdaki `git reset --hard` sonrası tekrar deneyin.
 
 `npm audit` uyarıları (56 vulnerability) bu aşamada **normal**; `npm audit fix --force` **çalıştırmayın** (kırılma riski).
 
