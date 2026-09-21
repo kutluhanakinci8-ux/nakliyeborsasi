@@ -22,9 +22,15 @@ export function SiteBackdropVideo() {
     if (!video) {
       return;
     }
-    void video.play().catch(() => {
-      /* autoplay blocked — static gradient fallback remains */
-    });
+    video.load();
+    const tryPlay = (): void => {
+      void video.play().catch(() => {
+        /* autoplay policy */
+      });
+    };
+    tryPlay();
+    video.addEventListener("canplay", tryPlay);
+    return () => video.removeEventListener("canplay", tryPlay);
   }, [motionOk]);
 
   if (!motionOk) {
@@ -40,7 +46,7 @@ export function SiteBackdropVideo() {
         muted
         loop
         playsInline
-        preload="metadata"
+        preload="auto"
         tabIndex={-1}
       >
         <source src="/media/corridor-bg.mp4" type="video/mp4" />
