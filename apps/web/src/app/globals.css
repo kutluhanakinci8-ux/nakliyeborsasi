@@ -1459,10 +1459,16 @@ a {
 
 .site-brand--footer .site-brand-name {
   color: var(--nb-navy-deep);
+  transition:
+    color 0.22s var(--nb-ease-out),
+    text-shadow 0.28s ease;
 }
 
 .site-brand--footer .site-brand-tagline {
-  color: var(--nb-link);
+  color: var(--nb-navy-deep);
+  transition:
+    color 0.22s var(--nb-ease-out),
+    text-shadow 0.28s ease;
 }
 
 .site-brand--footer .site-brand-mark {
@@ -1473,7 +1479,10 @@ a {
 }
 
 .site-brand--footer .site-brand-monogram {
-  color: var(--nb-link);
+  color: var(--nb-navy-deep);
+  transition:
+    color 0.22s var(--nb-ease-out),
+    text-shadow 0.28s ease;
 }
 
 .site-brand--footer .site-brand-icon {
@@ -1624,8 +1633,11 @@ a {
   transform: none;
 }
 
-.site-footer-brand .site-brand:hover .site-brand-name {
-  text-shadow: var(--nb-mint-glow);
+.site-footer-brand .site-brand:hover .site-brand-name,
+.site-footer-brand .site-brand:hover .site-brand-tagline,
+.site-footer-brand .site-brand:hover .site-brand-monogram {
+  color: var(--nb-link-hover);
+  text-shadow: var(--nb-mint-glow-strong);
 }
 
 .site-footer-brand .site-brand:focus-visible {
@@ -1646,8 +1658,16 @@ a {
 .site-footer-social-lead {
   margin: 0 0 14px;
   font-size: 0.82rem;
-  color: #475569;
+  color: var(--nb-navy-deep);
   line-height: 1.45;
+  transition:
+    color 0.22s var(--nb-ease-out),
+    text-shadow 0.28s ease;
+}
+
+.site-footer-social-lead:hover {
+  color: var(--nb-link-hover);
+  text-shadow: var(--nb-mint-glow-strong);
 }
 
 .site-footer-brand-social .social-media-row {
@@ -1671,6 +1691,14 @@ a {
   font-weight: 700;
   color: var(--nb-navy-deep);
   font-size: 0.9rem;
+  transition:
+    color 0.22s var(--nb-ease-out),
+    text-shadow 0.28s ease;
+}
+
+.site-footer-heading:hover {
+  color: var(--nb-link-hover);
+  text-shadow: var(--nb-mint-glow-strong);
 }
 
 .site-footer-links,
@@ -1976,9 +2004,17 @@ a {
 
 .site-footer-copy {
   margin: 0;
-  color: #64748b;
+  color: var(--nb-navy-deep);
   font-size: 0.8rem;
   white-space: nowrap;
+  transition:
+    color 0.22s var(--nb-ease-out),
+    text-shadow 0.28s ease;
+}
+
+.site-footer-copy:hover {
+  color: var(--nb-link-hover);
+  text-shadow: var(--nb-mint-glow-strong);
 }
 
 .site-footer-muted {
@@ -3254,7 +3290,7 @@ button.btn-secondary {
 
 .ui-demo-link--glow:hover {
   color: var(--nb-link-hover);
-  text-shadow: 0 0 18px rgba(16, 185, 129, 0.45);
+  text-shadow: var(--nb-mint-glow-strong);
 }
 
 .ui-demo-link--pill {
