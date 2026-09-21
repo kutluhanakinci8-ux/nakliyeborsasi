@@ -46,7 +46,7 @@ if [[ "${REACT_VERSION}" != 19.* ]]; then
 fi
 
 if [[ "${NEXT_VERSION}" != 14.2.15 ]]; then
-  npm install next@14.2.15 -w @nakliyeborsasi/web
+  npm install next@14.2.15 @next/swc-linux-x64-gnu@14.2.15 -w @nakliyeborsasi/web --save-exact
 fi
 
 export NEXT_TELEMETRY_DISABLED=1

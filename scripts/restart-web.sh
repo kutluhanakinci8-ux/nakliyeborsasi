@@ -23,13 +23,19 @@ bash scripts/build-web.sh
 
 if command -v pm2 >/dev/null 2>&1; then
   pm2 delete nakliyeborsasi-web 2>/dev/null || true
-  WEB_PORT="$WEB_PORT" pm2 start npm --name nakliyeborsasi-web --cwd "$INSTALL_DIR" -- run start:web
+  PORT="$WEB_PORT" HOSTNAME="0.0.0.0" pm2 start npm --name nakliyeborsasi-web --cwd "$INSTALL_DIR/apps/web" -- start
   pm2 save
-  echo "PM2: nakliyeborsasi-web başlatıldı (diğer süreçlere dokunulmadı)."
+  echo "PM2: nakliyeborsasi-web başlatıldı (cwd=apps/web, PORT=${WEB_PORT})."
 fi
 
-sleep 2
-curl -sS "http://127.0.0.1:${WEB_PORT}" | head -c 120 || true
-echo ""
+sleep 3
+HTTP_CODE="$(curl -sS -o /tmp/nakliyeborsasi-web-check.html -w "%{http_code}" "http://127.0.0.1:${WEB_PORT}/" || echo 000)"
+if [[ "${HTTP_CODE}" == "200" ]]; then
+  head -c 120 /tmp/nakliyeborsasi-web-check.html || true
+  echo ""
+  echo "Web OK (HTTP ${HTTP_CODE})"
+else
+  echo "UYARI: Web HTTP ${HTTP_CODE} — pm2 logs nakliyeborsasi-web --lines 30"
+fi
 echo "Web: http://SUNUCU_IP:${WEB_PORT}"
 echo "API: ${API_PUBLIC_URL}"
