@@ -114,6 +114,20 @@ pre {
   font-size: 0.85rem;
 }
 
+.session-info,
+.listing-id {
+  word-break: break-all;
+}
+
+.thread-row {
+  margin-top: 8px;
+}
+
+h2 {
+  font-size: 1.1rem;
+  margin-top: 16px;
+}
+
 .error {
   color: #fca5a5;
   margin-top: 12px;

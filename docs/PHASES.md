@@ -4,7 +4,7 @@
 |-----|--------|--------|
 | 1 | Tamamlandı | PostgreSQL + TypeORM, ilan, abonelik, audit log |
 | 2 | Tamamlandı | JWT auth, şirket rolleri, korumalı API |
-| 3 | Devam ediyor | Next.js web (`apps/web` :3011), Expo mobile iskelet |
+| 3 | Devam ediyor | Next.js web — giriş, ilan, ihale, mesaj, güven (`:3011`) |
 | 4 | Tamamlandı (API) | Redis cache + dakikalık rate limit (entegrasyon araması) |
 | 5 | Tamamlandı (MVP) | İhale + mesajlaşma + güven skoru REST API, statik panel (`/panel/`) |
 | 5.1 | Tamamlandı | İhale kapanışı, kazanan teklif, firma ID kopyala (panel + web oturum) |
@@ -23,9 +23,8 @@ Panel: `http://168.231.109.27:3010/panel/` · Web: port `3011` (VPS’te PM2 ile
 
 ## Önerilen sıra (sıradaki işler)
 
-1. **Faz 3 — Web:** build doğrulama, ihale/mesaj ekranları, VPS’te `restart-web.sh`
-2. **Faz 3 — Mobil:** Expo login + ilan listesi + push iskeleti
-3. **Faz 6 — Yayın:** nginx reverse proxy, HTTPS, tek domain
+1. **Faz 3 — Mobil:** Expo login + ilan listesi + push iskeleti
+2. **Faz 6 — Yayın:** nginx reverse proxy, HTTPS, tek domain
 4. **Entegrasyonlar:** Gerçek partner API anahtarları; `CONTACTS` modülü
 5. **Faz 7:** Filo, lane analytics, kayıtlı arama
 6. **Faz 8:** WebSocket mesaj bildirimi
