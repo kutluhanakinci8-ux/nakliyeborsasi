@@ -23,6 +23,7 @@ const ROUTE_ICON: Record<ContactTopic, string> = {
   support: "D",
   press: "B",
   partner: "P",
+  career: "K",
 };
 
 export function ContactPageClient() {
