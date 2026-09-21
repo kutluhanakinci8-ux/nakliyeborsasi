@@ -13,4 +13,8 @@ export class PlatformFreightListingSearchQueryDto {
   @IsOptional()
   @IsEnum(GeographicMarketCode)
   public marketScope?: GeographicMarketCode;
+
+  @IsOptional()
+  @IsString()
+  public lang?: string;
 }

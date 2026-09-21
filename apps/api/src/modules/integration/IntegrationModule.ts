@@ -10,12 +10,14 @@ import { TruckstopFreightDataAdapter } from "./providers/TruckstopFreightDataAda
 import { SennderFreightDataAdapter } from "./providers/SennderFreightDataAdapter";
 import { FreightosFreightDataAdapter } from "./providers/FreightosFreightDataAdapter";
 import { ExternalFreightDataOrchestrator } from "./ExternalFreightDataOrchestrator";
+import { IntegrationFreightSearchApplicationService } from "./IntegrationFreightSearchApplicationService";
 import { ExternalFreightSearchController } from "./ExternalFreightSearchController";
 import { SubscriptionModule } from "../subscription/SubscriptionModule";
-import { IdentityModule } from "../identity/IdentityModule";
+import { AuthModule } from "../auth/AuthModule";
+import { RedisModule } from "../../infrastructure/redis/RedisModule";
 
 @Module({
-  imports: [HttpModule, SubscriptionModule, IdentityModule],
+  imports: [HttpModule, SubscriptionModule, AuthModule, RedisModule],
   controllers: [ExternalFreightSearchController],
   providers: [
     IntegrationConfigurationService,
@@ -28,6 +30,7 @@ import { IdentityModule } from "../identity/IdentityModule";
     SennderFreightDataAdapter,
     FreightosFreightDataAdapter,
     ExternalFreightDataOrchestrator,
+    IntegrationFreightSearchApplicationService,
   ],
   exports: [ExternalFreightDataOrchestrator],
 })

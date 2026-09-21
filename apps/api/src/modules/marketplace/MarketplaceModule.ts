@@ -3,10 +3,10 @@ import { PlatformFreightListingRepository } from "./PlatformFreightListingReposi
 import { PlatformFreightListingService } from "./PlatformFreightListingService";
 import { PlatformFreightListingController } from "./PlatformFreightListingController";
 import { SubscriptionModule } from "../subscription/SubscriptionModule";
-import { IdentityModule } from "../identity/IdentityModule";
+import { AuthModule } from "../auth/AuthModule";
 
 @Module({
-  imports: [SubscriptionModule, IdentityModule],
+  imports: [SubscriptionModule, AuthModule],
   controllers: [PlatformFreightListingController],
   providers: [PlatformFreightListingRepository, PlatformFreightListingService],
 })

@@ -19,12 +19,12 @@ export class PlatformFreightListingService {
     private readonly localeResolutionService: LocaleResolutionService,
   ) {}
 
-  public createListing(
+  public async createListing(
     companyId: string,
     payload: CreatePlatformFreightListingDto,
     locale: string,
-  ): PlatformFreightListing {
-    this.modularSubscriptionEntitlementService.assertModuleAccess(
+  ): Promise<PlatformFreightListing> {
+    await this.modularSubscriptionEntitlementService.assertModuleAccess(
       companyId,
       SubscriptionModuleCode.MarketplaceSearch,
       locale,
@@ -54,14 +54,14 @@ export class PlatformFreightListingService {
     return this.platformFreightListingRepository.saveListing(listing);
   }
 
-  public searchListings(
+  public async searchListings(
     companyId: string,
     originCountryCode: string | null,
     destinationCountryCode: string | null,
     marketScope: GeographicMarketCode | null,
     locale: string,
-  ): readonly PlatformFreightListing[] {
-    this.modularSubscriptionEntitlementService.assertModuleAccess(
+  ): Promise<readonly PlatformFreightListing[]> {
+    await this.modularSubscriptionEntitlementService.assertModuleAccess(
       companyId,
       SubscriptionModuleCode.MarketplaceSearch,
       locale,

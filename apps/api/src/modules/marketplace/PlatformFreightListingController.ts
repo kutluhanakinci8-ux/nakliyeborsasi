@@ -5,38 +5,37 @@ import {
   Headers,
   Post,
   Query,
-  Req,
+  UseGuards,
 } from "@nestjs/common";
-import { Request } from "express";
 import { PlatformFreightListingService } from "./PlatformFreightListingService";
 import { CreatePlatformFreightListingDto } from "./CreatePlatformFreightListingDto";
 import { PlatformFreightListingSearchQueryDto } from "./PlatformFreightListingSearchQueryDto";
 import { LocaleResolutionService } from "../localization/LocaleResolutionService";
-import { RequestCompanyContextExtractor } from "../identity/RequestCompanyContextExtractor";
+import { JwtAuthenticationGuard } from "../auth/JwtAuthenticationGuard";
+import { AuthenticatedUserContext } from "@nakliyeborsasi/core";
+import { AuthenticatedUserParam } from "../auth/AuthenticatedUserParam";
 
 @Controller("marketplace")
+@UseGuards(JwtAuthenticationGuard)
 export class PlatformFreightListingController {
   public constructor(
     private readonly platformFreightListingService: PlatformFreightListingService,
     private readonly localeResolutionService: LocaleResolutionService,
-    private readonly requestCompanyContextExtractor: RequestCompanyContextExtractor,
   ) {}
 
   @Get("listings")
-  public searchListings(
+  public async searchListings(
     @Query() query: PlatformFreightListingSearchQueryDto,
     @Headers("accept-language") acceptLanguage: string | undefined,
     @Query("lang") queryLanguage: string | undefined,
-    @Req() request: Request,
-  ): { message: string; listings: readonly unknown[] } {
+    @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
+  ): Promise<{ message: string; listings: readonly unknown[] }> {
     const locale = this.localeResolutionService.resolveFromHeaders(
       acceptLanguage,
       queryLanguage,
     );
-    const companyId =
-      this.requestCompanyContextExtractor.extractCompanyId(request);
-    const listings = this.platformFreightListingService.searchListings(
-      companyId,
+    const listings = await this.platformFreightListingService.searchListings(
+      authenticatedUser.companyId,
       query.originCountryCode ?? null,
       query.destinationCountryCode ?? null,
       query.marketScope ?? null,
@@ -49,20 +48,18 @@ export class PlatformFreightListingController {
   }
 
   @Post("listings")
-  public createListing(
+  public async createListing(
     @Body() body: CreatePlatformFreightListingDto,
     @Headers("accept-language") acceptLanguage: string | undefined,
     @Query("lang") queryLanguage: string | undefined,
-    @Req() request: Request,
-  ): { message: string; listing: unknown } {
+    @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
+  ): Promise<{ message: string; listing: unknown }> {
     const locale = this.localeResolutionService.resolveFromHeaders(
       acceptLanguage,
       queryLanguage,
     );
-    const companyId =
-      this.requestCompanyContextExtractor.extractCompanyId(request);
-    const listing = this.platformFreightListingService.createListing(
-      companyId,
+    const listing = await this.platformFreightListingService.createListing(
+      authenticatedUser.companyId,
       body,
       locale,
     );

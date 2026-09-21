@@ -1,16 +1,20 @@
 import { Module } from "@nestjs/common";
-import { SubscriptionPlanCatalog } from "./SubscriptionPlanCatalog";
-import { CompanySubscriptionStore } from "./CompanySubscriptionStore";
 import { ModularSubscriptionEntitlementService } from "./ModularSubscriptionEntitlementService";
 import { SubscriptionPlanController } from "./SubscriptionPlanController";
+import { SubscriptionCatalogModule } from "./SubscriptionCatalogModule";
+import { CompanySubscriptionPersistenceService } from "./CompanySubscriptionPersistenceService";
 
 @Module({
+  imports: [SubscriptionCatalogModule],
   controllers: [SubscriptionPlanController],
   providers: [
-    SubscriptionPlanCatalog,
-    CompanySubscriptionStore,
     ModularSubscriptionEntitlementService,
+    CompanySubscriptionPersistenceService,
   ],
-  exports: [ModularSubscriptionEntitlementService, CompanySubscriptionStore],
+  exports: [
+    ModularSubscriptionEntitlementService,
+    CompanySubscriptionPersistenceService,
+    SubscriptionCatalogModule,
+  ],
 })
 export class SubscriptionModule {}

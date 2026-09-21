@@ -1,71 +1,81 @@
-import { Injectable } from "@nestjs/common";
-import {
-  EquipmentTypeCode,
-  GeographicMarketCode,
-  MoneyAmount,
-  PlatformFreightListing,
-  RouteEndpoint,
-} from "@nakliyeborsasi/core";
 import { randomUUID } from "crypto";
+import { Injectable } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import {
+  GeographicMarketCode,
+  PlatformFreightListing,
+} from "@nakliyeborsasi/core";
+import { FreightListingEntity } from "../../infrastructure/database/entities/FreightListingEntity";
+import { PlatformFreightListingMapper } from "./PlatformFreightListingMapper";
 
 @Injectable()
 export class PlatformFreightListingRepository {
-  private readonly listings: Map<string, PlatformFreightListing> = new Map();
+  public constructor(
+    @InjectRepository(FreightListingEntity)
+    private readonly freightListingRepository: Repository<FreightListingEntity>,
+  ) {}
 
-  public constructor() {
-    this.seedDemoListings();
+  public async saveListing(
+    listing: PlatformFreightListing,
+  ): Promise<PlatformFreightListing> {
+    const entity = this.freightListingRepository.create({
+      id: listing.listingId,
+      ownerCompanyId: listing.ownerCompanyId,
+      originCountryCode: listing.origin.countryCode,
+      originCityName: listing.origin.cityName,
+      destinationCountryCode: listing.destination.countryCode,
+      destinationCityName: listing.destination.cityName,
+      equipmentTypeCode: listing.equipmentType,
+      weightTonnes: listing.weightTonnes.toFixed(2),
+      loadingDateStart: listing.loadingDateStart,
+      priceAmount:
+        listing.price === null ? null : listing.price.amount.toFixed(2),
+      priceCurrencyCode:
+        listing.price === null ? null : listing.price.currencyCode,
+      marketScopeCode: listing.marketScope,
+    });
+    const saved = await this.freightListingRepository.save(entity);
+    return PlatformFreightListingMapper.toDomain(saved);
   }
 
-  public saveListing(listing: PlatformFreightListing): PlatformFreightListing {
-    this.listings.set(listing.listingId, listing);
-    return listing;
+  public async findById(listingId: string): Promise<PlatformFreightListing | null> {
+    const entity = await this.freightListingRepository.findOne({
+      where: { id: listingId },
+    });
+    return entity ? PlatformFreightListingMapper.toDomain(entity) : null;
   }
 
-  public findById(listingId: string): PlatformFreightListing | null {
-    return this.listings.get(listingId) ?? null;
-  }
-
-  public search(
+  public async search(
     originCountryCode: string | null,
     destinationCountryCode: string | null,
     marketScope: GeographicMarketCode | null,
-  ): readonly PlatformFreightListing[] {
-    return [...this.listings.values()].filter((listing) => {
-      if (
-        originCountryCode &&
-        listing.origin.countryCode !== originCountryCode
-      ) {
-        return false;
-      }
-      if (
-        destinationCountryCode &&
-        listing.destination.countryCode !== destinationCountryCode
-      ) {
-        return false;
-      }
-      if (marketScope && listing.marketScope !== marketScope) {
-        return false;
-      }
-      return true;
-    });
+  ): Promise<readonly PlatformFreightListing[]> {
+    const queryBuilder =
+      this.freightListingRepository.createQueryBuilder("listing");
+    if (originCountryCode) {
+      queryBuilder.andWhere("listing.originCountryCode = :originCountryCode", {
+        originCountryCode,
+      });
+    }
+    if (destinationCountryCode) {
+      queryBuilder.andWhere(
+        "listing.destinationCountryCode = :destinationCountryCode",
+        { destinationCountryCode },
+      );
+    }
+    if (marketScope) {
+      queryBuilder.andWhere("listing.marketScopeCode = :marketScope", {
+        marketScope,
+      });
+    }
+    const entities = await queryBuilder.getMany();
+    return entities.map((entity) =>
+      PlatformFreightListingMapper.toDomain(entity),
+    );
   }
 
   public createListingId(): string {
     return randomUUID();
-  }
-
-  private seedDemoListings(): void {
-    const demoListing = new PlatformFreightListing({
-      listingId: this.createListingId(),
-      ownerCompanyId: "demo-company-001",
-      origin: new RouteEndpoint("TR", "Ankara"),
-      destination: new RouteEndpoint("UA", "Odesa"),
-      equipmentType: EquipmentTypeCode.Tautliner,
-      weightTonnes: 21,
-      loadingDateStart: "2026-09-22",
-      price: new MoneyAmount(2100, "EUR"),
-      marketScope: GeographicMarketCode.EuropeanUnionCorridor,
-    });
-    this.saveListing(demoListing);
   }
 }

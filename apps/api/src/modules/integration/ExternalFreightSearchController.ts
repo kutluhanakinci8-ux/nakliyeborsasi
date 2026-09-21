@@ -3,26 +3,27 @@ import {
   Get,
   Headers,
   Query,
-  Req,
+  UseGuards,
 } from "@nestjs/common";
-import { Request } from "express";
 import {
   ExternalFreightSearchCriteria,
   SubscriptionModuleCode,
 } from "@nakliyeborsasi/core";
 import { ExternalFreightSearchQueryDto } from "./ExternalFreightSearchQueryDto";
-import { ExternalFreightDataOrchestrator } from "./ExternalFreightDataOrchestrator";
 import { ModularSubscriptionEntitlementService } from "../subscription/ModularSubscriptionEntitlementService";
 import { LocaleResolutionService } from "../localization/LocaleResolutionService";
-import { RequestCompanyContextExtractor } from "../identity/RequestCompanyContextExtractor";
+import { IntegrationFreightSearchApplicationService } from "./IntegrationFreightSearchApplicationService";
+import { JwtAuthenticationGuard } from "../auth/JwtAuthenticationGuard";
+import { AuthenticatedUserParam } from "../auth/AuthenticatedUserParam";
+import { AuthenticatedUserContext } from "@nakliyeborsasi/core";
 
 @Controller("integrations")
+@UseGuards(JwtAuthenticationGuard)
 export class ExternalFreightSearchController {
   public constructor(
-    private readonly externalFreightDataOrchestrator: ExternalFreightDataOrchestrator,
+    private readonly integrationFreightSearchApplicationService: IntegrationFreightSearchApplicationService,
     private readonly modularSubscriptionEntitlementService: ModularSubscriptionEntitlementService,
     private readonly localeResolutionService: LocaleResolutionService,
-    private readonly requestCompanyContextExtractor: RequestCompanyContextExtractor,
   ) {}
 
   @Get("freight-offers")
@@ -30,22 +31,22 @@ export class ExternalFreightSearchController {
     @Query() query: ExternalFreightSearchQueryDto,
     @Headers("accept-language") acceptLanguage: string | undefined,
     @Query("lang") queryLanguage: string | undefined,
-    @Req() request: Request,
+    @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
   ): Promise<{
     message: string;
     companyId: string;
     data: Awaited<
-      ReturnType<ExternalFreightDataOrchestrator["searchAllProviders"]>
+      ReturnType<
+        IntegrationFreightSearchApplicationService["searchAggregatedOffers"]
+      >
     >;
   }> {
     const locale = this.localeResolutionService.resolveFromHeaders(
       acceptLanguage,
       queryLanguage,
     );
-    const companyId =
-      this.requestCompanyContextExtractor.extractCompanyId(request);
-    this.modularSubscriptionEntitlementService.assertModuleAccess(
-      companyId,
+    await this.modularSubscriptionEntitlementService.assertModuleAccess(
+      authenticatedUser.companyId,
       SubscriptionModuleCode.ExternalFeeds,
       locale,
     );
@@ -60,7 +61,8 @@ export class ExternalFreightSearchController {
       limit: query.limit ?? 25,
     });
     const aggregatedResult =
-      await this.externalFreightDataOrchestrator.searchAllProviders(
+      await this.integrationFreightSearchApplicationService.searchAggregatedOffers(
+        authenticatedUser.companyId,
         criteria,
         query.providers ?? null,
       );
@@ -69,7 +71,7 @@ export class ExternalFreightSearchController {
         locale,
         "marketplace.search_success",
       ),
-      companyId,
+      companyId: authenticatedUser.companyId,
       data: aggregatedResult,
     };
   }

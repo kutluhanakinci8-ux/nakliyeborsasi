@@ -47,4 +47,8 @@ export class ExternalFreightSearchQueryDto {
   @IsOptional()
   @IsEnum(IntegrationProviderCode, { each: true })
   public providers?: IntegrationProviderCode[];
+
+  @IsOptional()
+  @IsString()
+  public lang?: string;
 }

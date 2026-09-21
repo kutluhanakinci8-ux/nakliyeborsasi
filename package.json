@@ -3,7 +3,9 @@
   "private": true,
   "workspaces": [
     "core",
-    "apps/api"
+    "apps/api",
+    "apps/web",
+    "apps/mobile"
   ],
   "scripts": {
     "build": "npm run build -w core && npm run build -w @nakliyeborsasi/api",

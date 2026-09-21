@@ -3,22 +3,23 @@ import {
   SubscriptionEntitlementException,
   SubscriptionModuleCode,
 } from "@nakliyeborsasi/core";
-import { CompanySubscriptionStore } from "./CompanySubscriptionStore";
+import { CompanySubscriptionPersistenceService } from "./CompanySubscriptionPersistenceService";
 import { LocaleResolutionService } from "../localization/LocaleResolutionService";
 
 @Injectable()
 export class ModularSubscriptionEntitlementService {
   public constructor(
-    private readonly companySubscriptionStore: CompanySubscriptionStore,
+    private readonly companySubscriptionPersistenceService: CompanySubscriptionPersistenceService,
     private readonly localeResolutionService: LocaleResolutionService,
   ) {}
 
-  public assertModuleAccess(
+  public async assertModuleAccess(
     companyId: string,
     moduleCode: SubscriptionModuleCode,
     locale: string,
-  ): void {
-    const snapshot = this.companySubscriptionStore.getSnapshot(companyId);
+  ): Promise<void> {
+    const snapshot =
+      await this.companySubscriptionPersistenceService.getSnapshot(companyId);
     if (!snapshot) {
       throw new SubscriptionEntitlementException(
         this.localeResolutionService.translate(
@@ -40,8 +41,9 @@ export class ModularSubscriptionEntitlementService {
     }
   }
 
-  public getSearchTabLimit(companyId: string): number {
-    const snapshot = this.companySubscriptionStore.getSnapshot(companyId);
+  public async getSearchTabLimit(companyId: string): Promise<number> {
+    const snapshot =
+      await this.companySubscriptionPersistenceService.getSnapshot(companyId);
     return snapshot?.activePlan.maxConcurrentSearchTabs ?? 1;
   }
 }
