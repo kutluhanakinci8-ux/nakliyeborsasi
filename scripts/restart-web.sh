@@ -39,6 +39,7 @@ fi
 
 sleep 3
 HTTP_CODE="$(curl -sS -o /tmp/nakliyeborsasi-web-check.html -w "%{http_code}" "http://127.0.0.1:${WEB_PORT}/" || echo 000)"
+UI_CODE="$(curl -sS -o /dev/null -w "%{http_code}" "http://127.0.0.1:${WEB_PORT}/ui-ornekleri" || echo 000)"
 if [[ "${HTTP_CODE}" == "200" ]] || [[ "${HTTP_CODE}" == "307" ]] || [[ "${HTTP_CODE}" == "308" ]]; then
   if [[ "${HTTP_CODE}" != "200" ]]; then
     echo "Web OK (HTTP ${HTTP_CODE} — / → marketplace yönlendirmesi normal)"
@@ -49,6 +50,11 @@ if [[ "${HTTP_CODE}" == "200" ]] || [[ "${HTTP_CODE}" == "307" ]] || [[ "${HTTP_
   fi
 else
   echo "UYARI: Web HTTP ${HTTP_CODE} — pm2 logs nakliyeborsasi-web --lines 30"
+fi
+if [[ "${UI_CODE}" == "200" ]]; then
+  echo "Tasarım galerisi OK: http://SUNUCU_IP:${WEB_PORT}/ui-ornekleri"
+elif [[ "${UI_CODE}" == "404" ]]; then
+  echo "UYARI: /ui-ornekleri HTTP 404 — git pull + build eski olabilir; scripts/vps-update.sh tekrar çalıştırın."
 fi
 echo "Web: http://SUNUCU_IP:${WEB_PORT}"
 echo "API: ${API_PUBLIC_URL}"

@@ -13,6 +13,7 @@ git reset --hard "origin/${BRANCH}"
 
 echo "=== Son commit ==="
 git log -1 --oneline
+echo "Not: Tasarım galerisi /ui-ornekleri bu commit ile gelir (b584630 ve sonrası)."
 
 if [[ ! -x scripts/build-web.sh ]]; then
   echo "HATA: scripts/build-web.sh yok." >&2
