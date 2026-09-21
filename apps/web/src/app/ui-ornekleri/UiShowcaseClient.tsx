@@ -67,8 +67,10 @@ export function UiShowcaseClient() {
         </section>
 
         <section id="footer" className="ui-showcase-section module-panel module-panel--elevated">
-          <h2 className="ui-showcase-heading">2. Footer menü (canlı site stili)</h2>
-          <p className="ui-showcase-lead">Şu an footer’da kullanılan davranış — referans.</p>
+          <h2 className="ui-showcase-heading">2. Footer menü (canlı — mint glow)</h2>
+          <p className="ui-showcase-lead">
+            Sitede footer, üst menü ve iletişim alt menüsünde mint glow aktif.
+          </p>
           <ul className="site-footer-links ui-demo-footer-list">
             {["Yük arama", "İhaleler", "Mesajlar", "Güven"].map((label) => (
               <li key={label}>

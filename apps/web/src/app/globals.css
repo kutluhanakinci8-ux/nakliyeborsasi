@@ -13,6 +13,8 @@
   --nb-surface-soft: rgba(255, 255, 255, 0.42);
   --nb-surface-border: rgba(255, 255, 255, 0.55);
   --nb-glass-blur: 22px;
+  --nb-mint-glow: 0 0 20px rgba(16, 185, 129, 0.42), 0 0 36px rgba(52, 211, 153, 0.18);
+  --nb-mint-glow-strong: 0 0 22px rgba(16, 185, 129, 0.52), 0 0 44px rgba(52, 211, 153, 0.22);
   --nb-shadow-soft: 0 12px 40px rgba(6, 95, 70, 0.07);
   --nb-shadow-panel: 0 4px 24px rgba(15, 23, 42, 0.06);
   --nb-radius-lg: 20px;
@@ -675,6 +677,7 @@ a {
 .legal-toc-list a:hover {
   background: #ecfdf5;
   color: #047857;
+  text-shadow: var(--nb-mint-glow);
 }
 
 .legal-toc-num {
@@ -738,6 +741,7 @@ a {
 
 .legal-prose a:hover {
   color: #065f46;
+  text-shadow: var(--nb-mint-glow);
 }
 
 .legal-related-panel {
@@ -1178,6 +1182,7 @@ a {
   background: rgba(255, 255, 255, 0.55);
   border-color: rgba(16, 185, 129, 0.22);
   color: #047857;
+  text-shadow: var(--nb-mint-glow);
 }
 
 .contact-subnav--track .contact-subnav-link:active,
@@ -1187,6 +1192,7 @@ a {
   box-shadow: 0 4px 16px rgba(16, 185, 129, 0.2);
   color: #064e3b;
   outline: none;
+  text-shadow: var(--nb-mint-glow);
 }
 
 .contact-anchor {
@@ -1480,6 +1486,7 @@ a {
 .site-nav-link:hover {
   background: rgba(209, 250, 229, 0.85);
   color: #047857;
+  text-shadow: var(--nb-mint-glow);
 }
 
 .site-nav-link.active {
@@ -1601,10 +1608,14 @@ a {
 }
 
 .site-footer-brand .site-brand:hover {
-  background: rgba(255, 255, 255, 0.5);
-  border-color: rgba(16, 185, 129, 0.2);
-  box-shadow: 0 6px 20px rgba(6, 95, 70, 0.07);
-  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.35);
+  border-color: rgba(16, 185, 129, 0.15);
+  box-shadow: none;
+  transform: none;
+}
+
+.site-footer-brand .site-brand:hover .site-brand-name {
+  text-shadow: var(--nb-mint-glow);
 }
 
 .site-footer-brand .site-brand:focus-visible {
@@ -1673,55 +1684,34 @@ a {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 7px 12px 7px 10px;
-  margin-left: -10px;
-  border-radius: 10px;
-  border: 1px solid transparent;
+  padding: 6px 8px 6px 4px;
+  margin-left: -4px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
   transition:
     color 0.22s var(--nb-ease-out),
-    background 0.22s var(--nb-ease-out),
-    border-color 0.22s var(--nb-ease-out),
-    transform 0.22s var(--nb-ease-out),
-    box-shadow 0.22s var(--nb-ease-out);
-}
-
-.site-footer-links a::after,
-.site-footer-social a::after {
-  content: "→";
-  font-size: 0.82rem;
-  opacity: 0;
-  transform: translateX(-6px);
-  transition:
-    opacity 0.22s var(--nb-ease-out),
-    transform 0.22s var(--nb-ease-out);
+    text-shadow 0.28s ease;
 }
 
 .site-footer-links a:hover,
 .site-footer-social a:hover {
   color: #064e3b;
-  background: rgba(255, 255, 255, 0.52);
-  border-color: rgba(16, 185, 129, 0.22);
-  transform: translateX(4px);
-  box-shadow: 0 6px 18px rgba(6, 95, 70, 0.08);
-}
-
-.site-footer-links a:hover::after,
-.site-footer-social a:hover::after {
-  opacity: 1;
-  transform: translateX(0);
+  text-shadow: var(--nb-mint-glow-strong);
 }
 
 .site-footer-links a:focus-visible,
 .site-footer-social a:focus-visible {
   outline: none;
-  background: rgba(255, 255, 255, 0.55);
-  border-color: rgba(16, 185, 129, 0.35);
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
+  text-shadow: var(--nb-mint-glow);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.28);
+  border-radius: 8px;
 }
 
 .site-footer-links a:active,
 .site-footer-social a:active {
-  transform: translateX(2px) scale(0.99);
+  color: #065f46;
+  text-shadow: 0 0 12px rgba(16, 185, 129, 0.35);
 }
 
 .social-media-row {
@@ -1958,15 +1948,17 @@ a {
     background 0.22s var(--nb-ease-out),
     border-color 0.22s var(--nb-ease-out),
     transform 0.22s var(--nb-ease-out),
-    box-shadow 0.22s var(--nb-ease-out);
+    box-shadow 0.22s var(--nb-ease-out),
+    text-shadow 0.28s ease;
 }
 
 .site-footer-legal a:hover {
   color: #064e3b;
   background: rgba(255, 255, 255, 0.62);
   border-color: rgba(16, 185, 129, 0.35);
-  transform: translateY(-2px);
+  transform: translateY(-1px);
   box-shadow: 0 8px 22px rgba(6, 95, 70, 0.1);
+  text-shadow: var(--nb-mint-glow);
 }
 
 .site-footer-legal a:focus-visible {
