@@ -58,7 +58,7 @@ export function LegalPageLayout({
             </ol>
             <p className="legal-toc-note">{tocNote}</p>
           </aside>
-          <article className="module-panel module-panel--elevated legal-prose corporate-prose">
+          <article className="module-panel module-panel--elevated legal-prose">
             {children}
           </article>
         </div>
