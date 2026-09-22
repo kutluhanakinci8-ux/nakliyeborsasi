@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  FreightRouteCountryBadges,
+  FreightRouteHeading,
+} from "./FreightRouteHeading";
+
 type FreightListingRowProps = {
   listingId: string;
   originCity: string;
@@ -37,17 +42,23 @@ export function FreightListingRow({
   onTrust,
   onAuction,
 }: FreightListingRowProps) {
-  const routeLabel = `${originCity} (${originCountry}) — ${destinationCity} (${destinationCountry})`;
-
   return (
     <article className="freight-row">
       <div className="freight-row-main">
         <div className="freight-row-badges">
-          <span className="badge badge--country">{originCountry}</span>
+          <FreightRouteCountryBadges
+            originCountry={originCountry}
+            destinationCountry={destinationCountry}
+          />
           <span className="badge badge--muted">{formatEquipmentLabel(equipmentType)}</span>
           <span className="badge badge--muted">{weightTonnes} t</span>
         </div>
-        <h3 className="freight-route">{routeLabel}</h3>
+        <FreightRouteHeading
+          originCity={originCity}
+          originCountry={originCountry}
+          destinationCity={destinationCity}
+          destinationCountry={destinationCountry}
+        />
         <div className="freight-row-actions">
           <button type="button" className="btn-link" onClick={onMessage}>
             Mesaj

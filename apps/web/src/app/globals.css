@@ -5072,10 +5072,40 @@ button.btn-secondary {
 }
 
 .freight-route {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
   margin: 0 0 10px;
   font-size: 1.05rem;
   font-weight: 700;
   color: #1d4ed8;
+}
+
+.freight-route-endpoint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.freight-route-flag {
+  flex-shrink: 0;
+}
+
+.freight-route-code {
+  font-weight: 600;
+  color: #2563eb;
+}
+
+.freight-route-sep {
+  font-weight: 700;
+  color: #64748b;
+}
+
+.freight-route-country-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .freight-row-actions {

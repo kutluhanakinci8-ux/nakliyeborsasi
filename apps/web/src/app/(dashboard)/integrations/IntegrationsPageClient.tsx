@@ -2,6 +2,10 @@
 
 import { useState } from "react";
 import { EmptyState } from "../../../components/EmptyState";
+import {
+  FreightRouteCountryBadges,
+  FreightRouteHeading,
+} from "../../../components/FreightRouteHeading";
 import { ModulePageShell } from "../../../components/ModulePageShell";
 import { useWebSession } from "../../../context/WebSessionProvider";
 import { IntegrationApiClient } from "../../../lib/IntegrationApiClient";
@@ -125,16 +129,22 @@ export function IntegrationsPageClient() {
             <article key={offer.externalReferenceId} className="freight-row module-row">
               <div className="freight-row-main">
                 <div className="freight-row-badges">
+                  <FreightRouteCountryBadges
+                    originCountry={offer.origin.countryCode}
+                    destinationCountry={offer.destination.countryCode}
+                  />
                   <span className="badge badge--provider">
                     {formatProviderLabel(offer.providerCode)}
                   </span>
                   <span className="badge badge--muted">{offer.equipmentType}</span>
                   <span className="badge badge--muted">{offer.dimensions.weightTonnes} t</span>
                 </div>
-                <h3 className="freight-route">
-                  {offer.origin.cityName} ({offer.origin.countryCode}) —{" "}
-                  {offer.destination.cityName} ({offer.destination.countryCode})
-                </h3>
+                <FreightRouteHeading
+                  originCity={offer.origin.cityName}
+                  originCountry={offer.origin.countryCode}
+                  destinationCity={offer.destination.cityName}
+                  destinationCountry={offer.destination.countryCode}
+                />
                 <p className="module-row-meta">
                   Yükleme: {offer.loadingDateStart}
                   {offer.loadingDateEnd ? ` – ${offer.loadingDateEnd}` : ""} ·{" "}
