@@ -2398,8 +2398,8 @@ a {
 .site-footer-apps {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 10px;
+  align-items: flex-start;
+  gap: 8px;
 }
 
 .store-badge {
@@ -2421,10 +2421,14 @@ a {
   outline-offset: 3px;
 }
 
-.store-badge svg {
+.store-badge-img {
   display: block;
-  width: 156px;
-  height: auto;
+  width: auto;
+  height: 40px;
+}
+
+.store-badge-img--play {
+  height: 44px;
 }
 
 .site-footer-bottom-rule {
@@ -2448,22 +2452,17 @@ a {
   color: rgba(248, 250, 252, 0.72);
 }
 
-.payment-mark svg {
+.payment-mark-img {
   display: block;
-  height: 36px;
   width: auto;
+  height: 32px;
+  max-width: 140px;
+  object-fit: contain;
 }
 
-.payment-mark--mastercard svg {
-  width: 64px;
-}
-
-.payment-mark--securecode svg {
-  width: 108px;
-}
-
-.payment-mark--visa svg {
-  width: 64px;
+.payment-mark-img--mono {
+  filter: brightness(0) invert(1);
+  opacity: 0.78;
 }
 
 @media (min-width: 720px) {
@@ -2473,9 +2472,9 @@ a {
   }
 
   .site-footer-apps {
-    flex-direction: row;
-    align-items: center;
-    gap: 12px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
   }
 
   .site-footer-bottom-rule {
