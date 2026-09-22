@@ -12,6 +12,7 @@ export type RegisterCompanyUserPayload = {
   companyLegalName: string;
   companyCountryCode: string;
   companyParticipantTypeCode: CompanyParticipantTypeCode;
+  companyWebsiteUrl?: string;
 };
 
 export class AuthApiClient {

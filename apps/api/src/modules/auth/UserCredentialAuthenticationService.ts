@@ -39,11 +39,13 @@ export class UserCredentialAuthenticationService {
     if (existing) {
       throw new ValidationException("Email address is already registered");
     }
+    const websiteUrl = this.normalizeWebsiteUrl(payload.companyWebsiteUrl);
     const company = await this.companyRepository.save(
       this.companyRepository.create({
         legalName: payload.companyLegalName,
         countryCode: payload.companyCountryCode.toUpperCase(),
         participantTypeCode: payload.companyParticipantTypeCode,
+        websiteUrl,
       }),
     );
     const passwordHash = await this.passwordHashingService.hashPassword(
@@ -129,5 +131,14 @@ export class UserCredentialAuthenticationService {
       roleCodes,
     });
     return this.resolveSessionContext(context);
+  }
+
+  private normalizeWebsiteUrl(raw?: string): string | null {
+    const trimmed = raw?.trim();
+    if (!trimmed) {
+      return null;
+    }
+    const withScheme = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+    return withScheme.slice(0, 255);
   }
 }

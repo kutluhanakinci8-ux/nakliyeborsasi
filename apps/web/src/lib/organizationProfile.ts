@@ -90,6 +90,26 @@ export function loadOrganizationProfile(
   }
 }
 
+export function applyRegistrationOrganizationProfile(
+  companyId: string,
+  payload: {
+    legalName: string;
+    countryCode: string;
+    emailAddress: string;
+    website: string;
+  },
+): void {
+  const profile = loadOrganizationProfile(companyId, payload.emailAddress);
+  saveOrganizationProfile(companyId, {
+    ...profile,
+    legalName: payload.legalName,
+    tradeName: payload.legalName,
+    countryCode: payload.countryCode,
+    primaryEmail: payload.emailAddress,
+    website: payload.website.trim(),
+  });
+}
+
 export function saveOrganizationProfile(
   companyId: string,
   profile: OrganizationProfile,

@@ -25,6 +25,9 @@ export class CompanyEntity {
   @Column({ type: "varchar", length: 32, nullable: true })
   public participantTypeCode!: string | null;
 
+  @Column({ type: "varchar", length: 255, nullable: true })
+  public websiteUrl!: string | null;
+
   @OneToMany(() => CompanyMembershipEntity, (membership) => membership.company)
   public memberships!: CompanyMembershipEntity[];
 

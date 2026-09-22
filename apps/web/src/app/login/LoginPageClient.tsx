@@ -4,6 +4,8 @@ import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AuthApiClient } from "../../lib/AuthApiClient";
+import { SessionApiClient } from "../../lib/SessionApiClient";
+import { applyRegistrationOrganizationProfile } from "../../lib/organizationProfile";
 import { SiteLayout } from "../../components/SiteLayout";
 import { useWebSession } from "../../context/WebSessionProvider";
 
@@ -49,6 +51,7 @@ export function LoginPageClient() {
   const [displayName, setDisplayName] = useState("");
   const [companyLegalName, setCompanyLegalName] = useState("");
   const [companyCountryCode, setCompanyCountryCode] = useState("TR");
+  const [companyWebsiteUrl, setCompanyWebsiteUrl] = useState("");
   const [companyParticipantTypeCode, setCompanyParticipantTypeCode] = useState<
     "LOAD_SHIPPER" | "LOAD_CARRIER" | "LOAD_SEEKER"
   >("LOAD_SHIPPER");
@@ -106,8 +109,16 @@ export function LoginPageClient() {
         companyLegalName,
         companyCountryCode,
         companyParticipantTypeCode,
+        companyWebsiteUrl: companyWebsiteUrl.trim() || undefined,
       });
       setAccessToken(result.accessToken);
+      const session = await SessionApiClient.fetchSession(result.accessToken);
+      applyRegistrationOrganizationProfile(session.companyId, {
+        legalName: companyLegalName,
+        countryCode: companyCountryCode,
+        emailAddress,
+        website: companyWebsiteUrl.trim(),
+      });
       await refreshSession();
       router.replace("/marketplace");
     } catch (error) {
@@ -315,19 +326,33 @@ export function LoginPageClient() {
                         <option value="PL">Polonya (PL)</option>
                       </select>
                     </label>
-                    <label className="label-light">
-                      Kurumsal e-posta
-                      <input
-                        className="input-light"
-                        type="email"
-                        autoComplete="email"
-                        value={emailAddress}
-                        onChange={(event) => setEmailAddress(event.target.value)}
-                        required
-                      />
-                    </label>
-                    <label className="label-light">
-                      Şifre
+                    <div className="auth-contact-fields">
+                      <p className="auth-contact-fields-title">İletişim ve erişim</p>
+                      <label className="label-light">
+                        Web adresi
+                        <input
+                          className="input-light"
+                          type="url"
+                          inputMode="url"
+                          autoComplete="url"
+                          placeholder="https://firma.com"
+                          value={companyWebsiteUrl}
+                          onChange={(event) => setCompanyWebsiteUrl(event.target.value)}
+                        />
+                      </label>
+                      <label className="label-light">
+                        Kurumsal e-posta
+                        <input
+                          className="input-light"
+                          type="email"
+                          autoComplete="email"
+                          value={emailAddress}
+                          onChange={(event) => setEmailAddress(event.target.value)}
+                          required
+                        />
+                      </label>
+                      <label className="label-light">
+                        Şifre
                       <input
                         className="input-light"
                         type="password"
@@ -337,7 +362,8 @@ export function LoginPageClient() {
                         required
                         minLength={8}
                       />
-                    </label>
+                      </label>
+                    </div>
                     <label className="auth-terms">
                       <input
                         type="checkbox"

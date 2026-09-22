@@ -1,5 +1,12 @@
 import { CompanyParticipantTypeCode } from "@nakliyeborsasi/core";
-import { IsEmail, IsEnum, IsString, MaxLength, MinLength } from "class-validator";
+import {
+  IsEmail,
+  IsEnum,
+  IsOptional,
+  IsString,
+  MaxLength,
+  MinLength,
+} from "class-validator";
 
 export class RegisterCompanyUserRequestDto {
   @IsEmail()
@@ -24,4 +31,9 @@ export class RegisterCompanyUserRequestDto {
 
   @IsEnum(CompanyParticipantTypeCode)
   public companyParticipantTypeCode!: CompanyParticipantTypeCode;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  public companyWebsiteUrl?: string;
 }

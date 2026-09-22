@@ -2880,6 +2880,27 @@ a {
   color: #64748b;
 }
 
+.auth-contact-fields {
+  margin: 4px 0 6px;
+  padding: 14px 14px 4px;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.auth-contact-fields-title {
+  margin: 0 0 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.auth-contact-fields .label-light:last-child {
+  margin-bottom: 8px;
+}
+
 .auth-participant-field {
   margin: 0 0 14px;
   padding: 0;
