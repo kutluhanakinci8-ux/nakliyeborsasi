@@ -4944,6 +4944,340 @@ button.btn-secondary {
   color: #64748b;
 }
 
+/* —— Platform admin konsolu (üye sitesinden ayrı) —— */
+.platform-admin {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: 100vh;
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+.platform-admin-sidebar {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #1e293b;
+  background: #0b1220;
+  padding: 20px 14px;
+}
+
+.platform-admin-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding: 0 8px;
+}
+
+.platform-admin-brand-mark {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  background: linear-gradient(145deg, #0d9488, #1e3a5f);
+  color: #fff;
+}
+
+.platform-admin-brand strong {
+  display: block;
+  font-size: 0.95rem;
+}
+
+.platform-admin-brand span {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.platform-admin-nav-section {
+  margin-bottom: 18px;
+}
+
+.platform-admin-nav-title {
+  margin: 0 8px 8px;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+}
+
+.platform-admin-nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.platform-admin-nav-link {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: #cbd5e1;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.platform-admin-nav-link:hover {
+  background: #1e293b;
+  color: #f8fafc;
+}
+
+.platform-admin-nav-link.active {
+  background: #1e3a5f;
+  color: #fff;
+}
+
+.platform-admin-sidebar-foot {
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+.platform-admin-foot-link {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+.platform-admin-foot-link:hover {
+  color: #e2e8f0;
+}
+
+.platform-admin-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.platform-admin-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #fff;
+}
+
+.platform-admin-topbar-eyebrow {
+  margin: 0;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+}
+
+.platform-admin-topbar-user {
+  margin: 2px 0 0;
+  font-weight: 700;
+  color: #1e3a5f;
+}
+
+.platform-admin-content {
+  padding: 24px;
+  flex: 1;
+}
+
+.platform-admin-loading {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+.platform-admin-login {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, #0f172a 0%, #1e3a5f 55%, #0d9488 100%);
+  padding: 24px;
+}
+
+.platform-admin-login-card {
+  width: 100%;
+  max-width: 420px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 28px 26px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+}
+
+.platform-admin-login-badge {
+  display: inline-block;
+  margin: 0 0 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #0f172a;
+  color: #e2e8f0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.platform-admin-login-card h1 {
+  margin: 0 0 8px;
+  font-size: 1.5rem;
+  color: #1e3a5f;
+}
+
+.platform-admin-login-lead {
+  margin: 0 0 20px;
+  color: #64748b;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.platform-admin-btn-primary {
+  width: 100%;
+  margin-top: 12px;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 10px;
+  background: #1e3a5f;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.platform-admin-btn-primary:disabled {
+  opacity: 0.6;
+}
+
+.platform-admin-btn-ghost {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #1e3a5f;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.platform-admin-panel,
+.platform-admin-dashboard {
+  max-width: 1200px;
+}
+
+.platform-admin-panel-head {
+  margin-bottom: 20px;
+}
+
+.platform-admin-page-title {
+  margin: 0 0 8px;
+  font-size: 1.6rem;
+  color: #1e3a5f;
+}
+
+.platform-admin-page-lead {
+  margin: 0;
+  color: #64748b;
+  max-width: 640px;
+  line-height: 1.5;
+}
+
+.platform-admin-soon {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #9a3412;
+  font-size: 0.9rem;
+}
+
+.platform-admin-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.platform-admin-stat {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.platform-admin-stat-value {
+  display: block;
+  font-weight: 800;
+  color: #1e3a5f;
+}
+
+.platform-admin-stat-label {
+  font-size: 0.82rem;
+  color: #64748b;
+}
+
+.platform-admin-module-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.platform-admin-module-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 18px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.platform-admin-module-card:hover {
+  border-color: #1e3a5f;
+  box-shadow: 0 8px 24px rgba(30, 58, 95, 0.12);
+}
+
+.platform-admin-module-card h2 {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+  color: #1e3a5f;
+}
+
+.platform-admin-module-card p {
+  margin: 0 0 12px;
+  font-size: 0.88rem;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+.platform-admin-module-cta {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #0d9488;
+}
+
+.platform-admin-panel .admin-checklist {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+
+@media (max-width: 900px) {
+  .platform-admin {
+    grid-template-columns: 1fr;
+  }
+
+  .platform-admin-sidebar {
+    border-right: none;
+    border-bottom: 1px solid #1e293b;
+  }
+
+  .platform-admin-stat-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 900px) {
   .admin-org-layout {
     grid-template-columns: 1fr;

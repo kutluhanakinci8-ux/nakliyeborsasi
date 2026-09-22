@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AuthApiClient } from "../../lib/AuthApiClient";
 import { SiteLayout } from "../../components/SiteLayout";
@@ -57,7 +58,8 @@ export function LoginPageClient() {
           <div className="auth-card auth-card--light">
             <h2>Üye girişi</h2>
             <p className="muted muted--dark">
-              Demo: demo@ / partner@ · Şifre: DemoPass123! · Platform admin: admin@nakliyeborsasi.local · AdminPass123!
+              Demo: demo@ / partner@ · Şifre: DemoPass123! · Platform yönetimi:{" "}
+              <Link href="/admin/login">/admin/login</Link>
             </p>
             <form onSubmit={(event) => void handleLogin(event)}>
               <label className="label-light">
