@@ -35,6 +35,7 @@ export class InstagramPublicStatsService {
       const payload = (await response.json()) as {
         status?: string;
         message?: string;
+        require_login?: boolean;
         data?: {
           user?: {
             edge_followed_by?: { count?: number };
@@ -43,6 +44,18 @@ export class InstagramPublicStatsService {
           };
         };
       };
+
+      if (payload.require_login) {
+        return {
+          username,
+          followersCount: null,
+          followingCount: null,
+          postsCount: null,
+          source: "unavailable",
+          errorMessage:
+            "Instagram sunucu IP’sini kısıtladı; gönderi/takipçi sayılarını elle girin.",
+        };
+      }
 
       if (payload.status === "fail" || !payload.data?.user) {
         return {
