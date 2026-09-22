@@ -958,6 +958,126 @@ a {
   }
 }
 
+/* —— Kariyer (premium İK) —— */
+.career-premium-page section[id] {
+  scroll-margin-top: 96px;
+}
+
+.career-premium-why-grid,
+.career-premium-process-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 28px 36px;
+  align-items: start;
+}
+
+.career-premium-perks-grid {
+  margin-top: 18px;
+}
+
+.career-premium-job-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.career-premium-job-card {
+  padding: 20px 22px;
+  border-radius: var(--nb-radius-lg);
+  background: linear-gradient(145deg, #fff 0%, #f8fafc 100%);
+  border: 1px solid #e2e8f0;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.career-premium-job-card:hover {
+  border-color: #99f6e4;
+  box-shadow: 0 14px 32px rgba(13, 148, 136, 0.1);
+}
+
+.career-premium-job-card h3 {
+  margin: 8px 0 6px;
+  font-size: 1.08rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.35;
+}
+
+.career-premium-job-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.career-premium-job-summary {
+  margin: 12px 0 10px;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: #475569;
+  max-width: 72ch;
+}
+
+.career-premium-steps {
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 12px;
+}
+
+.career-premium-steps li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 14px;
+  align-items: start;
+  padding: 14px 16px;
+  border-radius: var(--nb-radius-md);
+  background: #fff;
+  border: 1px solid #e2e8f0;
+}
+
+.career-premium-step-num {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #0d9488;
+  font-family: ui-monospace, monospace;
+}
+
+.career-premium-steps h3 {
+  margin: 0 0 4px;
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.career-premium-steps p {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: #64748b;
+}
+
+.career-premium-cta .about-premium-body {
+  max-width: 48ch;
+}
+
+@media (max-width: 900px) {
+  .career-premium-why-grid,
+  .career-premium-process-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .career-premium-perks-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .site-header {
   position: sticky;
   top: 0;
