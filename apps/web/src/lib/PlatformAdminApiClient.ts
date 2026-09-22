@@ -123,7 +123,13 @@ export class PlatformAdminApiClient {
         isActive: boolean;
         createdAt: string;
       }[];
-      plans: { planCode: string; tierCode: string }[];
+      plans: {
+        planCode: string;
+        tierCode: string;
+        includedModules?: string[];
+        maxConcurrentSearchTabs?: number;
+        laneAnalyticsHistoryDays?: number;
+      }[];
     }>(accessToken, "subscriptions");
   }
 

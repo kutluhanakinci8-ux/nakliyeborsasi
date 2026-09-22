@@ -5305,6 +5305,79 @@ button.btn-secondary {
   list-style: disc;
 }
 
+/* —— Abonelikler (premium) —— */
+.admin-subscriptions-premium .admin-subscriptions-kpi-row {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(200px, 1.2fr);
+  margin-bottom: 14px;
+}
+
+.admin-subscriptions-tier-chart {
+  margin-bottom: 14px;
+}
+
+.admin-subscriptions-layout {
+  margin-top: 0;
+}
+
+.admin-subscriptions-list-plan {
+  display: block;
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.admin-subscriptions-plan-filters,
+.admin-subscriptions-type-filters {
+  margin-top: 0;
+}
+
+.admin-subscriptions-detail-plan {
+  margin: 4px 0 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.admin-subscriptions-module-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-subscriptions-catalog {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.admin-subscriptions-catalog li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  font-size: 0.88rem;
+}
+
+.admin-subscriptions-catalog li code {
+  grid-column: 1 / -1;
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+.admin-subscriptions-catalog li span {
+  font-size: 0.78rem;
+  color: #475569;
+  font-weight: 600;
+}
+
 .admin-toggle-row {
   display: flex;
   flex-wrap: wrap;
