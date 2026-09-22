@@ -33,6 +33,7 @@ export class DatabaseSeedRunner implements OnModuleInit {
     await this.seedSubscriptionPlans();
     await this.seedDemoTenant();
     await this.seedPartnerDemoTenant();
+    await this.seedPlatformAdminTenant();
   }
 
   private async seedSubscriptionPlans(): Promise<void> {
@@ -167,6 +168,44 @@ export class DatabaseSeedRunner implements OnModuleInit {
         priceAmount: "3200.00",
         priceCurrencyCode: "EUR",
         marketScopeCode: "UA_EU",
+      }),
+    );
+  }
+
+  private async seedPlatformAdminTenant(): Promise<void> {
+    const adminEmail = "admin@nakliyeborsasi.local";
+    const existingUser = await this.userAccountRepository.findOne({
+      where: { emailAddress: adminEmail },
+    });
+    if (existingUser) {
+      return;
+    }
+    const company = await this.companyRepository.save(
+      this.companyRepository.create({
+        legalName: "Nakliye Borsası Platform Yönetimi",
+        countryCode: "TR",
+      }),
+    );
+    const passwordHash = await bcrypt.hash("AdminPass123!", 12);
+    const user = await this.userAccountRepository.save(
+      this.userAccountRepository.create({
+        emailAddress: adminEmail,
+        passwordHash,
+        displayName: "Platform Admin",
+      }),
+    );
+    await this.companyMembershipRepository.save(
+      this.companyMembershipRepository.create({
+        companyId: company.id,
+        userId: user.id,
+        roleCode: CompanyRoleCode.CompanyOwner,
+      }),
+    );
+    await this.companySubscriptionRepository.save(
+      this.companySubscriptionRepository.create({
+        companyId: company.id,
+        planCode: "carrier_professional_tr_ua",
+        isActive: true,
       }),
     );
   }

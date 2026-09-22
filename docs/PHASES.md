@@ -20,6 +20,7 @@
 |---------|--------|------|
 | `demo@nakliyeborsasi.local` | `DemoPass123!` | `carrier_professional_tr_ua` |
 | `partner@nakliyeborsasi.local` | `DemoPass123!` | `carrier_professional_tr_ua` |
+| `admin@nakliyeborsasi.local` | `AdminPass123!` | `carrier_professional_tr_ua` (platform yönetimi) |
 
 Panel: `:3010/panel/` · Web: `:3011`
 
