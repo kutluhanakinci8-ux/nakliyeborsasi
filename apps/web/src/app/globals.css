@@ -5448,6 +5448,51 @@ button.btn-secondary {
   align-items: start;
 }
 
+/* —— Güven skorları (premium) —— */
+.admin-trust-premium .admin-trust-kpi-row {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(200px, 1.2fr);
+  margin-bottom: 14px;
+}
+
+.admin-trust-score-chart {
+  margin-bottom: 14px;
+}
+
+.admin-trust-layout {
+  margin-top: 0;
+}
+
+.admin-trust-list-comment {
+  display: block;
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 4px;
+  line-height: 1.35;
+}
+
+.admin-trust-detail-score {
+  margin: 4px 0 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0d9488;
+}
+
+.admin-trust-type-filters {
+  margin-top: 0;
+}
+
+.admin-trust-comment-body {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: #334155;
+  white-space: pre-wrap;
+}
+
+.admin-trust-detail-grid {
+  align-items: start;
+}
+
 .admin-toggle-row {
   display: flex;
   flex-wrap: wrap;
