@@ -7,7 +7,7 @@ cd "$ROOT"
 
 DEPLOY_BRANCH="${DEPLOY_BRANCH:-cursor/modular-freight-platform-18ba}"
 
-if [[ -n "${VPS_SSH_PRIVATE_KEY:-}" ]]; then
+if [[ -n "${VPS_SSH_PRIVATE_KEY:-}" ]] || [[ -n "${VPS_SSH_PASSWORD:-}" ]]; then
   bash scripts/deploy-vps-ssh.sh
   exit 0
 fi

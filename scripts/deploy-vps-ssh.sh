@@ -25,7 +25,11 @@ if [[ -n "${VPS_SSH_PRIVATE_KEY:-}" ]]; then
   chmod 600 "$KEY_FILE"
   ssh -i "$KEY_FILE" -o BatchMode=yes "${SSH_BASE_OPTS[@]}" "${VPS_USER}@${VPS_HOST}" "$REMOTE_CMD"
 elif [[ -n "${VPS_SSH_PASSWORD:-}" ]] && command -v sshpass >/dev/null 2>&1; then
-  SSHPASS="$VPS_SSH_PASSWORD" sshpass -e ssh -o BatchMode=yes "${SSH_BASE_OPTS[@]}" "${VPS_USER}@${VPS_HOST}" "$REMOTE_CMD"
+  # BatchMode=yes şifre girişini kapatır; sshpass ile kullanmayın.
+  SSHPASS="$VPS_SSH_PASSWORD" sshpass -e ssh \
+    -o PreferredAuthentications=password \
+    -o PubkeyAuthentication=no \
+    "${SSH_BASE_OPTS[@]}" "${VPS_USER}@${VPS_HOST}" "$REMOTE_CMD"
 else
   echo "HATA: VPS_SSH_PRIVATE_KEY veya VPS_SSH_PASSWORD tanımlı değil." >&2
   exit 1
