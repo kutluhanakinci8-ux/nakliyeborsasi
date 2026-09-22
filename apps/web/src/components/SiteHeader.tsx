@@ -74,9 +74,14 @@ export function SiteHeader({ variant = "app" }: SiteHeaderProps) {
             {showUserSession ? (
               <UserAccountMenu />
             ) : (
-              <Link href="/login" className="btn-premium-header">
-                Giriş yap
-              </Link>
+              <>
+                <Link href="/login?mode=register" className="btn-outline-header">
+                  Üye ol
+                </Link>
+                <Link href="/login" className="btn-premium-header">
+                  Giriş yap
+                </Link>
+              </>
             )}
           </div>
         </div>

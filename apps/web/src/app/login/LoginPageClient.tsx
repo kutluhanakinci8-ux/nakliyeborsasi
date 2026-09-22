@@ -2,17 +2,45 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AuthApiClient } from "../../lib/AuthApiClient";
 import { SiteLayout } from "../../components/SiteLayout";
 import { useWebSession } from "../../context/WebSessionProvider";
 
+type AuthMode = "login" | "register";
+
+const CORPORATE_VALUE_BLOCKS = [
+  {
+    title: "Firma doğrulama",
+    body: "Kurumsal üyelik, firma unvanı ve koridor bilgisiyle açılır.",
+  },
+  {
+    title: "İlan ve ihale",
+    body: "Yük arama, teklif ve açık artırma modülleri tek hesapta.",
+  },
+  {
+    title: "Güven kaydı",
+    body: "Mesaj, teklif ve entegrasyon işlemleri denetlenebilir kayıt altında.",
+  },
+] as const;
+
 export function LoginPageClient() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { setAccessToken, refreshSession, locale, setLocale, accessToken } =
     useWebSession();
-  const [emailAddress, setEmailAddress] = useState("demo@nakliyeborsasi.local");
-  const [password, setPassword] = useState("DemoPass123!");
+
+  const initialMode: AuthMode =
+    searchParams.get("mode") === "register" ? "register" : "login";
+  const [authMode, setAuthMode] = useState<AuthMode>(initialMode);
+
+  const [emailAddress, setEmailAddress] = useState("");
+  const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [companyLegalName, setCompanyLegalName] = useState("");
+  const [companyCountryCode, setCompanyCountryCode] = useState("TR");
+  const [acceptTerms, setAcceptTerms] = useState(false);
+
   const [errorMessage, setErrorMessage] = useState("");
   const [isBusy, setIsBusy] = useState(false);
 
@@ -21,6 +49,17 @@ export function LoginPageClient() {
       router.replace("/marketplace");
     }
   }, [accessToken, router]);
+
+  useEffect(() => {
+    setAuthMode(initialMode);
+  }, [initialMode]);
+
+  function switchMode(next: AuthMode): void {
+    setAuthMode(next);
+    setErrorMessage("");
+    const query = next === "register" ? "?mode=register" : "";
+    router.replace(`/login${query}`, { scroll: false });
+  }
 
   async function handleLogin(event: FormEvent): Promise<void> {
     event.preventDefault();
@@ -38,66 +77,243 @@ export function LoginPageClient() {
     }
   }
 
+  async function handleRegister(event: FormEvent): Promise<void> {
+    event.preventDefault();
+    if (!acceptTerms) {
+      setErrorMessage("Devam etmek için kullanım koşullarını onaylayın.");
+      return;
+    }
+    setIsBusy(true);
+    setErrorMessage("");
+    try {
+      const result = await AuthApiClient.register({
+        emailAddress,
+        password,
+        displayName,
+        companyLegalName,
+        companyCountryCode,
+      });
+      setAccessToken(result.accessToken);
+      await refreshSession();
+      router.replace("/marketplace");
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Kayıt başarısız");
+    } finally {
+      setIsBusy(false);
+    }
+  }
+
   return (
     <SiteLayout headerVariant="public">
-      <section className="auth-page">
-        <div className="auth-page-grid">
-          <div className="auth-promo">
-            <p className="auth-promo-badge">Ukrayna · Türkiye · AB koridoru</p>
-            <h1>Yük ve kamyon arama borsası</h1>
-            <p>
-              İlan arayın, mesajlaşın, ihale açın — taşıyıcı ve yük verenler için tek
-              platform.
+      <section className="auth-page auth-page--corporate">
+        <div className="auth-page-grid auth-page-grid--corporate">
+          <div className="auth-promo auth-promo--corporate">
+            <p className="auth-promo-badge">Kurumsal üyelik · TR · UA · AB</p>
+            <h1>Nakliye Borsası&apos;na güvenli erişim</h1>
+            <p className="auth-promo-lead">
+              Taşıyıcı ve yük veren firmalar için tek giriş noktası. Mevcut hesabınızla
+              giriş yapın veya firma bilgilerinizle yeni kurumsal üyelik oluşturun.
             </p>
-            <ul className="auth-promo-list">
-              <li>Canlı marketplace ilanları</li>
-              <li>İhale ve teklif yönetimi</li>
-              <li>Güven ve entegrasyon modülleri</li>
+            <div className="auth-promo-cards">
+              {CORPORATE_VALUE_BLOCKS.map((block) => (
+                <article key={block.title} className="auth-promo-card">
+                  <h3>{block.title}</h3>
+                  <p>{block.body}</p>
+                </article>
+              ))}
+            </div>
+            <ul className="auth-promo-list auth-promo-list--corporate">
+              <li>256-bit oturum ve JWT tabanlı kimlik doğrulama</li>
+              <li>KVKK ve kullanım koşullarına uyumlu kayıt süreci</li>
+              <li>Platform operasyonları için ayrı yönetici girişi</li>
             </ul>
           </div>
-          <div className="auth-card auth-card--light">
-            <h2>Üye girişi</h2>
-            <p className="muted muted--dark">
-              Test: yukveren01 / yuktasiyan01 / yukarayan01 @test… · TestPass123! ·
-              Demo: demo@ · DemoPass123! · Platform:{" "}
-              <Link href="/admin/login">/admin/login</Link>
-            </p>
-            <form onSubmit={(event) => void handleLogin(event)}>
-              <label className="label-light">
-                E-posta
-                <input
-                  className="input-light"
-                  value={emailAddress}
-                  onChange={(event) => setEmailAddress(event.target.value)}
-                />
-              </label>
-              <label className="label-light">
-                Şifre
-                <input
-                  className="input-light"
-                  type="password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                />
-              </label>
-              <label className="label-light">
-                Dil
-                <select
-                  className="input-light"
-                  value={locale}
-                  onChange={(event) => setLocale(event.target.value)}
-                >
-                  <option value="tr">Türkçe</option>
-                  <option value="en">English</option>
-                  <option value="uk">Українська</option>
-                  <option value="ru">Русский</option>
-                </select>
-              </label>
-              {errorMessage ? <p className="error error--light">{errorMessage}</p> : null}
-              <button type="submit" className="btn-gold-wide" disabled={isBusy}>
-                {isBusy ? "Giriş yapılıyor…" : "Giriş yap"}
+
+          <div className="auth-corporate-shell">
+            <div className="auth-tab-bar" role="tablist" aria-label="Üyelik işlemleri">
+              <button
+                type="button"
+                role="tab"
+                id="auth-tab-login"
+                aria-selected={authMode === "login"}
+                aria-controls="auth-panel-login"
+                className={
+                  authMode === "login" ? "auth-tab auth-tab--active" : "auth-tab"
+                }
+                onClick={() => switchMode("login")}
+              >
+                Üye girişi
               </button>
-            </form>
+              <button
+                type="button"
+                role="tab"
+                id="auth-tab-register"
+                aria-selected={authMode === "register"}
+                aria-controls="auth-panel-register"
+                className={
+                  authMode === "register" ? "auth-tab auth-tab--active" : "auth-tab"
+                }
+                onClick={() => switchMode("register")}
+              >
+                Yeni üyelik
+              </button>
+            </div>
+
+            <div className="auth-card auth-card--light auth-card--corporate">
+              {authMode === "login" ? (
+                <div
+                  id="auth-panel-login"
+                  role="tabpanel"
+                  aria-labelledby="auth-tab-login"
+                >
+                  <h2>Mevcut hesap</h2>
+                  <p className="auth-card-lead">
+                    Kurumsal e-posta ve şifrenizle platforma giriş yapın.
+                  </p>
+                  <form onSubmit={(event) => void handleLogin(event)}>
+                    <label className="label-light">
+                      Kurumsal e-posta
+                      <input
+                        className="input-light"
+                        type="email"
+                        autoComplete="username"
+                        value={emailAddress}
+                        onChange={(event) => setEmailAddress(event.target.value)}
+                        required
+                      />
+                    </label>
+                    <label className="label-light">
+                      Şifre
+                      <input
+                        className="input-light"
+                        type="password"
+                        autoComplete="current-password"
+                        value={password}
+                        onChange={(event) => setPassword(event.target.value)}
+                        required
+                      />
+                    </label>
+                    <label className="label-light">
+                      Dil
+                      <select
+                        className="input-light"
+                        value={locale}
+                        onChange={(event) => setLocale(event.target.value)}
+                      >
+                        <option value="tr">Türkçe</option>
+                        <option value="en">English</option>
+                        <option value="uk">Українська</option>
+                        <option value="ru">Русский</option>
+                      </select>
+                    </label>
+                    {errorMessage ? (
+                      <p className="error error--light">{errorMessage}</p>
+                    ) : null}
+                    <button type="submit" className="btn-gold-wide" disabled={isBusy}>
+                      {isBusy ? "Giriş yapılıyor…" : "Giriş yap"}
+                    </button>
+                  </form>
+                </div>
+              ) : (
+                <div
+                  id="auth-panel-register"
+                  role="tabpanel"
+                  aria-labelledby="auth-tab-register"
+                >
+                  <h2>Yeni kurumsal üyelik</h2>
+                  <p className="auth-card-lead">
+                    Firma sahibi olarak kayıt olun; hesabınız Starter plan ile açılır.
+                  </p>
+                  <form onSubmit={(event) => void handleRegister(event)}>
+                    <label className="label-light">
+                      Ad soyad
+                      <input
+                        className="input-light"
+                        autoComplete="name"
+                        value={displayName}
+                        onChange={(event) => setDisplayName(event.target.value)}
+                        required
+                        minLength={2}
+                      />
+                    </label>
+                    <label className="label-light">
+                      Firma unvanı
+                      <input
+                        className="input-light"
+                        autoComplete="organization"
+                        value={companyLegalName}
+                        onChange={(event) => setCompanyLegalName(event.target.value)}
+                        required
+                        minLength={2}
+                      />
+                    </label>
+                    <label className="label-light">
+                      Firma ülkesi
+                      <select
+                        className="input-light"
+                        value={companyCountryCode}
+                        onChange={(event) => setCompanyCountryCode(event.target.value)}
+                      >
+                        <option value="TR">Türkiye (TR)</option>
+                        <option value="UA">Ukrayna (UA)</option>
+                        <option value="DE">Almanya (DE)</option>
+                        <option value="PL">Polonya (PL)</option>
+                      </select>
+                    </label>
+                    <label className="label-light">
+                      Kurumsal e-posta
+                      <input
+                        className="input-light"
+                        type="email"
+                        autoComplete="email"
+                        value={emailAddress}
+                        onChange={(event) => setEmailAddress(event.target.value)}
+                        required
+                      />
+                    </label>
+                    <label className="label-light">
+                      Şifre
+                      <input
+                        className="input-light"
+                        type="password"
+                        autoComplete="new-password"
+                        value={password}
+                        onChange={(event) => setPassword(event.target.value)}
+                        required
+                        minLength={8}
+                      />
+                    </label>
+                    <label className="auth-terms">
+                      <input
+                        type="checkbox"
+                        checked={acceptTerms}
+                        onChange={(event) => setAcceptTerms(event.target.checked)}
+                      />
+                      <span>
+                        <Link href="/kullanim-kosullari">Kullanım koşullarını</Link> ve{" "}
+                        <Link href="/kisisel-verilerin-korunmasi">KVKK metnini</Link> okudum,
+                        onaylıyorum.
+                      </span>
+                    </label>
+                    {errorMessage ? (
+                      <p className="error error--light">{errorMessage}</p>
+                    ) : null}
+                    <button type="submit" className="btn-gold-wide" disabled={isBusy}>
+                      {isBusy ? "Kayıt oluşturuluyor…" : "Üyeliği oluştur"}
+                    </button>
+                  </form>
+                </div>
+              )}
+
+              <details className="auth-demo-details">
+                <summary>Demo ve test hesapları</summary>
+                <p>
+                  Demo: <code>demo@nakliyeborsasi.local</code> / DemoPass123! · Test:
+                  yukveren01@test… · TestPass123! · Platform yönetimi:{" "}
+                  <Link href="/admin/login">/admin/login</Link>
+                </p>
+              </details>
+            </div>
           </div>
         </div>
       </section>
