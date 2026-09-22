@@ -10,18 +10,64 @@ export type AccountMenuIconId =
 export type AccountMenuItem = {
   href: string;
   label: string;
+  lead: string;
   icon: AccountMenuIconId;
 };
 
 export const ACCOUNT_MENU_ITEMS: readonly AccountMenuItem[] = [
-  { href: "/hesap/organizasyon", label: "Benim organizasyonum", icon: "organization" },
-  { href: "/hesap/ilanlar", label: "İlanlarım", icon: "listings" },
-  { href: "/hesap/calisanlar", label: "Çalışanlarım", icon: "employees" },
-  { href: "/hesap/uygulamalar", label: "Benim uygulamalarım", icon: "applications" },
-  { href: "/hesap/odemeler", label: "Benim ödemelerim", icon: "payments" },
-  { href: "/hesap/ortaklar", label: "Ortaklarım", icon: "partners" },
-  { href: "/hesap/profil", label: "Benim profilim", icon: "profile" },
+  {
+    href: "/hesap/organizasyon",
+    label: "Benim organizasyonum",
+    lead:
+      "Firma kimliği, koridor yetkileri ve doğrulama durumu — rakiplerdeki gibi kartlar halinde, Nakliye Borsası kurumsal diliyle.",
+    icon: "organization",
+  },
+  {
+    href: "/hesap/ilanlar",
+    label: "İlanlarım",
+    lead:
+      "Firmanıza ait yük ilanları — düzenleme ve yeni ilan marketplace üzerinden.",
+    icon: "listings",
+  },
+  {
+    href: "/hesap/calisanlar",
+    label: "Çalışanlarım",
+    lead: "Kullanıcı davetleri, roller ve ekip erişimleri.",
+    icon: "employees",
+  },
+  {
+    href: "/hesap/uygulamalar",
+    label: "Benim uygulamalarım",
+    lead: "API anahtarları, webhook’lar ve bağlı entegrasyonlar.",
+    icon: "applications",
+  },
+  {
+    href: "/hesap/odemeler",
+    label: "Benim ödemelerim",
+    lead: "Faturalar, ödeme yöntemleri ve abonelik planı.",
+    icon: "payments",
+  },
+  {
+    href: "/hesap/ortaklar",
+    label: "Ortaklarım",
+    lead: "Taşıyıcı ve gönderici ortaklıkları, davetler ve paylaşılan ilanlar.",
+    icon: "partners",
+  },
+  {
+    href: "/hesap/profil",
+    label: "Benim profilim",
+    lead: "Kişisel bilgiler, şifre ve bildirim tercihleri.",
+    icon: "profile",
+  },
 ] as const;
+
+export function resolveAccountPageMeta(pathname: string): AccountMenuItem | null {
+  return (
+    ACCOUNT_MENU_ITEMS.find(
+      (item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
+    ) ?? null
+  );
+}
 
 export function resolveAccountDisplayName(emailAddress: string): string {
   const local = emailAddress.split("@")[0]?.trim() ?? "";

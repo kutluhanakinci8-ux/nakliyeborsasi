@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { ACCOUNT_MENU_ITEMS } from "../lib/accountNavigation";
 import { AccountMenuIcon } from "./AccountMenuIcons";
 
@@ -14,6 +14,12 @@ type AccountPageShellProps = {
 
 export function AccountPageShell({ title, lead, children }: AccountPageShellProps) {
   const pathname = usePathname();
+  const tabsRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const activeTab = tabsRef.current?.querySelector<HTMLElement>(".account-tab.active");
+    activeTab?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+  }, [pathname]);
 
   return (
     <div className="account-page module-page">
@@ -25,7 +31,7 @@ export function AccountPageShell({ title, lead, children }: AccountPageShellProp
         </div>
       </header>
 
-      <nav className="account-tabs" aria-label="Hesap bölümleri">
+      <nav ref={tabsRef} className="account-tabs" aria-label="Hesap bölümleri">
         {ACCOUNT_MENU_ITEMS.map((item) => {
           const active =
             pathname === item.href || pathname.startsWith(`${item.href}/`);

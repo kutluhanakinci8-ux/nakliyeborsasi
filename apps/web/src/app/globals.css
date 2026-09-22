@@ -3096,6 +3096,14 @@ button.btn-secondary {
   margin-bottom: 16px;
 }
 
+.account-page-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
 .account-page-actions {
   display: flex;
   flex-wrap: wrap;

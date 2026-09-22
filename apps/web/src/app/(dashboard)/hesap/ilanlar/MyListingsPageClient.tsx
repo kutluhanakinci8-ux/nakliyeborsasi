@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { EmptyState } from "../../../../components/EmptyState";
 import { FreightListingRow } from "../../../../components/FreightListingRow";
-import { ModulePageShell } from "../../../../components/ModulePageShell";
 import { useWebSession } from "../../../../context/WebSessionProvider";
 import { AuctionApiClient } from "../../../../lib/AuctionApiClient";
 import { MarketplaceApiClient } from "../../../../lib/MarketplaceApiClient";
@@ -77,11 +76,8 @@ export function MyListingsPageClient() {
   }
 
   return (
-    <ModulePageShell
-      eyebrow="Hesap"
-      title="İlanlarım"
-      lead="Firmanıza ait yük ilanları — düzenleme ve yeni ilan marketplace üzerinden."
-      action={
+    <>
+      <div className="account-page-toolbar">
         <div className="account-page-actions">
           <button
             type="button"
@@ -95,12 +91,19 @@ export function MyListingsPageClient() {
             Yeni ilan / arama
           </Link>
         </div>
-      }
-      stats={[
-        { value: String(myListings.length), label: "Aktif ilanınız" },
-        { value: session?.companyId?.slice(0, 8) ?? "—", label: "Firma ref." },
-      ]}
-    >
+      </div>
+      <div className="stats-strip">
+        <div className="stat-item">
+          <span className="stat-item-value">{String(myListings.length)}</span>
+          <span className="stat-item-label">Aktif ilanınız</span>
+        </div>
+        <div className="stat-item">
+          <span className="stat-item-value">
+            {session?.companyId?.slice(0, 8) ?? "—"}
+          </span>
+          <span className="stat-item-label">Firma ref.</span>
+        </div>
+      </div>
       {errorMessage ? <p className="error banner error--light">{errorMessage}</p> : null}
 
       {isBusy && myListings.length === 0 ? (
@@ -140,6 +143,6 @@ export function MyListingsPageClient() {
           ))}
         </div>
       )}
-    </ModulePageShell>
+    </>
   );
 }

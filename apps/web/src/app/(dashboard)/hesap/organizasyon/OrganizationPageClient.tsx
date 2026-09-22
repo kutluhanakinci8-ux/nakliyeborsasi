@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
-import { AccountPageShell } from "../../../../components/AccountPageShell";
 import { useWebSession } from "../../../../context/WebSessionProvider";
 
 type OrganizationProfile = {
@@ -102,10 +101,7 @@ export function OrganizationPageClient() {
   }
 
   return (
-    <AccountPageShell
-      title="Benim organizasyonum"
-      lead="Firma kimliği, koridor yetkileri ve doğrulama durumu — rakiplerdeki gibi kartlar halinde, Nakliye Borsası kurumsal diliyle."
-    >
+    <>
       <section className="account-verify-banner module-panel module-panel--elevated">
         <div className="account-verify-copy">
           <p className="account-verify-eyebrow">Güven ve doğrulama</p>
@@ -306,6 +302,6 @@ export function OrganizationPageClient() {
           Firma kimliği (sistem): <code>{companyId || "—"}</code>
         </p>
       </section>
-    </AccountPageShell>
+    </>
   );
 }
