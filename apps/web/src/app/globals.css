@@ -720,6 +720,244 @@ a {
   }
 }
 
+/* —— Basın (premium medya merkezi) —— */
+.press-premium-page section[id] {
+  scroll-margin-top: 96px;
+}
+
+.press-premium-section-head--left {
+  text-align: left;
+  margin-bottom: 18px;
+}
+
+.press-premium-section-head--left .about-premium-body {
+  margin-left: 0;
+}
+
+.press-premium-featured {
+  display: grid;
+  grid-template-columns: 1fr 1.05fr;
+  gap: 24px;
+  align-items: stretch;
+  margin-bottom: 20px;
+  padding: 18px;
+  border-radius: var(--nb-radius-lg);
+  background: linear-gradient(145deg, #f8fafc 0%, #fff 55%, #ecfdf5 100%);
+  border: 1px solid #e2e8f0;
+}
+
+.press-premium-featured-media {
+  min-height: 220px;
+  border-radius: var(--nb-radius-md);
+  overflow: hidden;
+}
+
+.press-premium-featured-media .about-premium-photo {
+  height: 100%;
+  min-height: 220px;
+  object-fit: cover;
+}
+
+.press-premium-featured-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 4px 4px 4px 0;
+}
+
+.press-premium-featured-copy h3 {
+  margin: 0 0 10px;
+  font-size: 1.2rem;
+  font-weight: 800;
+  line-height: 1.35;
+  color: #0f172a;
+}
+
+.press-premium-featured-copy p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #475569;
+}
+
+.press-premium-tag {
+  display: inline-block;
+  align-self: flex-start;
+  margin-bottom: 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #0f766e;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+}
+
+.press-premium-date {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.press-premium-release-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.press-premium-release-card {
+  height: 100%;
+  padding: 18px 20px;
+  border-radius: var(--nb-radius-lg);
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.press-premium-release-card:hover {
+  border-color: #99f6e4;
+  box-shadow: 0 12px 28px rgba(13, 148, 136, 0.08);
+}
+
+.press-premium-release-card h3 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.35;
+  color: #0f172a;
+}
+
+.press-premium-release-card p {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.55;
+  color: #64748b;
+}
+
+.press-premium-kit-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 28px;
+  align-items: center;
+}
+
+.press-premium-kit-list {
+  margin: 16px 0 14px;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 14px;
+}
+
+.press-premium-kit-list li {
+  padding-left: 14px;
+  border-left: 3px solid #0d9488;
+}
+
+.press-premium-kit-list strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.88rem;
+  color: #0f172a;
+}
+
+.press-premium-kit-list p {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.55;
+  color: #64748b;
+}
+
+.press-premium-inline-link {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #0d9488;
+  text-decoration: none;
+}
+
+.press-premium-inline-link:hover {
+  text-decoration: underline;
+}
+
+.press-premium-topic-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin: 0 0 22px;
+  padding: 0;
+  list-style: none;
+}
+
+.press-premium-topic-chips li {
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #1e3a8a;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+}
+
+.press-premium-quote {
+  margin: 0 auto;
+  max-width: 52ch;
+  padding: 20px 24px;
+  border-radius: var(--nb-radius-lg);
+  background: linear-gradient(160deg, #f0fdfa, #fff);
+  border: 1px solid #99f6e4;
+  text-align: center;
+}
+
+.press-premium-quote p {
+  margin: 0 0 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.55;
+  color: #134e4a;
+  font-style: italic;
+}
+
+.press-premium-quote footer {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.press-premium-email {
+  margin: 10px 0 0;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.press-premium-email a {
+  color: #5eead4;
+  text-decoration: none;
+}
+
+.press-premium-email a:hover {
+  text-decoration: underline;
+}
+
+.press-premium-contact .about-premium-body {
+  max-width: 48ch;
+}
+
+@media (max-width: 900px) {
+  .press-premium-featured,
+  .press-premium-kit-grid,
+  .press-premium-release-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .site-header {
   position: sticky;
   top: 0;
