@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { SiteBrand } from "./SiteBrand";
+import { UserAccountMenu } from "./UserAccountMenu";
 import { useWebSession } from "../context/WebSessionProvider";
 import {
   CORPORATE_DROPDOWN_ITEMS,
@@ -17,7 +18,7 @@ type SiteHeaderProps = {
 
 export function SiteHeader({ variant = "app" }: SiteHeaderProps) {
   const pathname = usePathname();
-  const { session, locale, setLocale, logout } = useWebSession();
+  const { session, locale, setLocale } = useWebSession();
   const [corporateOpen, setCorporateOpen] = useState(false);
   const corporateRef = useRef<HTMLDivElement>(null);
 
@@ -71,17 +72,7 @@ export function SiteHeader({ variant = "app" }: SiteHeaderProps) {
               </select>
             </label>
             {showUserSession ? (
-              <>
-                <span className="user-pill" title={session?.companyId}>
-                  <span className="user-avatar" aria-hidden>
-                    {session?.emailAddress.slice(0, 1).toUpperCase()}
-                  </span>
-                  <span className="user-email">{session?.emailAddress}</span>
-                </span>
-                <button type="button" className="btn-outline-header" onClick={logout}>
-                  Çıkış
-                </button>
-              </>
+              <UserAccountMenu />
             ) : (
               <Link href="/login" className="btn-premium-header">
                 Giriş yap

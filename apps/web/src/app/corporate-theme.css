@@ -141,6 +141,34 @@
   color: var(--nb-navy);
 }
 
+.site-layout--corporate .site-header--public .user-account-trigger,
+.site-layout--corporate .site-header--app .user-account-trigger {
+  background: #fff;
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #f8fafc;
+}
+
+.site-layout--corporate .site-header-utility .user-account-trigger {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #f8fafc;
+}
+
+.site-layout--corporate .site-header-utility .user-account-trigger:hover,
+.site-layout--corporate .site-header-utility .user-account-trigger.is-open {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.28);
+  box-shadow: none;
+}
+
+.site-layout--corporate .site-header-utility .user-account-trigger-label {
+  color: #f8fafc;
+}
+
+.site-layout--corporate .site-header-utility .user-account-caret {
+  color: #cbd5e1;
+}
+
 .site-layout--corporate .user-pill {
   border-color: var(--nb-surface-border);
   box-shadow: none;
