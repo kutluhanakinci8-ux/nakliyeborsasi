@@ -8,6 +8,7 @@ import {
   resolveAccountDisplayName,
   resolveAccountInitials,
 } from "../lib/accountNavigation";
+import { isPlatformAdmin } from "../lib/platformAdmin";
 import { useWebSession } from "../context/WebSessionProvider";
 import { AccountMenuIcon } from "./AccountMenuIcons";
 
@@ -69,6 +70,21 @@ export function UserAccountMenu() {
         role="menu"
         aria-hidden={!open}
       >
+        {isPlatformAdmin(session) ? (
+          <Link
+            href="/admin/organizasyon"
+            role="menuitem"
+            className={
+              pathname.startsWith("/admin")
+                ? "user-account-item active"
+                : "user-account-item"
+            }
+            onClick={() => setOpen(false)}
+          >
+            <span className="user-account-item-icon" aria-hidden>⚙</span>
+            <span className="user-account-item-label">Platform yönetimi</span>
+          </Link>
+        ) : null}
         {ACCOUNT_MENU_ITEMS.map((item) => (
           <Link
             key={item.href}

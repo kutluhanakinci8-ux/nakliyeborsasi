@@ -4780,6 +4780,184 @@ button.btn-secondary {
   white-space: nowrap;
 }
 
+.admin-shell {
+  padding-bottom: 32px;
+}
+
+.admin-hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.admin-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0 20px;
+}
+
+.admin-nav-link {
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid #cbd5e1;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: var(--nb-navy, #1e3a5f);
+  background: #fff;
+}
+
+.admin-nav-link.active {
+  background: var(--nb-navy, #1e3a5f);
+  color: #f8fafc;
+  border-color: var(--nb-navy, #1e3a5f);
+}
+
+.admin-checklist {
+  margin: 16px 0 20px;
+  padding-left: 1.2rem;
+  color: #334155;
+  line-height: 1.6;
+}
+
+.admin-org-layout {
+  display: grid;
+  grid-template-columns: minmax(240px, 300px) 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.admin-org-sidebar {
+  position: sticky;
+  top: 12px;
+}
+
+.admin-org-add {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.admin-org-add .input-light {
+  flex: 1;
+}
+
+.admin-org-company-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 360px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin-org-company {
+  width: 100%;
+  text-align: left;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #fff;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.admin-org-company.active {
+  border-color: var(--nb-navy, #1e3a5f);
+  background: #f1f5f9;
+}
+
+.admin-org-company-label {
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: var(--nb-navy, #1e3a5f);
+}
+
+.admin-org-refresh {
+  margin-top: 12px;
+  width: 100%;
+  justify-content: center;
+}
+
+.admin-org-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.admin-toggle-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.admin-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.admin-checkbox--danger {
+  color: #b91c1c;
+}
+
+.admin-audit-list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-audit-list li {
+  display: grid;
+  grid-template-columns: 160px 1fr auto;
+  gap: 12px;
+  font-size: 0.88rem;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.admin-audit-actor {
+  color: #64748b;
+  font-size: 0.82rem;
+}
+
+.admin-audit-empty {
+  padding: 12px;
+  color: #64748b;
+}
+
+@media (max-width: 900px) {
+  .admin-org-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-org-sidebar {
+    position: static;
+  }
+
+  .admin-audit-list li {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 900px) {
   .account-verify-banner {
     grid-template-columns: 1fr;

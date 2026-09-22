@@ -2,76 +2,41 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
+import {
+  CORRIDOR_OPTIONS,
+  documentStatusLabel,
+  loadOrganizationAdminSettings,
+  loadOrganizationProfile,
+  saveOrganizationProfile,
+  type OrganizationProfile,
+} from "../../../../lib/organizationProfile";
 import { useWebSession } from "../../../../context/WebSessionProvider";
-
-type OrganizationProfile = {
-  tradeName: string;
-  legalName: string;
-  taxNumber: string;
-  city: string;
-  countryCode: string;
-  phone: string;
-  website: string;
-  corridors: string[];
-};
-
-const CORRIDOR_OPTIONS = [
-  { code: "TR", label: "Türkiye" },
-  { code: "UA", label: "Ukrayna" },
-  { code: "EU", label: "AB / EU" },
-] as const;
-
-const STORAGE_PREFIX = "nb-organization-profile:";
-
-function defaultProfile(companyId: string): OrganizationProfile {
-  return {
-    tradeName: companyId ? `Firma ${companyId.slice(0, 8)}` : "",
-    legalName: "",
-    taxNumber: "",
-    city: "",
-    countryCode: "TR",
-    phone: "",
-    website: "",
-    corridors: ["TR", "UA", "EU"],
-  };
-}
-
-function loadProfile(companyId: string): OrganizationProfile {
-  if (typeof window === "undefined") {
-    return defaultProfile(companyId);
-  }
-  const raw = window.localStorage.getItem(`${STORAGE_PREFIX}${companyId}`);
-  if (!raw) {
-    return defaultProfile(companyId);
-  }
-  try {
-    return { ...defaultProfile(companyId), ...(JSON.parse(raw) as OrganizationProfile) };
-  } catch {
-    return defaultProfile(companyId);
-  }
-}
 
 export function OrganizationPageClient() {
   const { session } = useWebSession();
   const companyId = session?.companyId ?? "";
+  const emailAddress = session?.emailAddress ?? "";
   const [profile, setProfile] = useState<OrganizationProfile>(() =>
-    defaultProfile(companyId),
+    loadOrganizationProfile(companyId, emailAddress),
+  );
+  const [adminSettings, setAdminSettings] = useState(() =>
+    loadOrganizationAdminSettings(companyId),
   );
   const [saveMessage, setSaveMessage] = useState("");
-  const verificationLevel = "basic";
 
   useEffect(() => {
     if (!companyId) {
       return;
     }
-    setProfile(loadProfile(companyId));
-  }, [companyId]);
+    setProfile(loadOrganizationProfile(companyId, emailAddress));
+    setAdminSettings(loadOrganizationAdminSettings(companyId));
+  }, [companyId, emailAddress]);
 
   function persistProfile(next: OrganizationProfile): void {
     if (!companyId) {
       return;
     }
-    window.localStorage.setItem(`${STORAGE_PREFIX}${companyId}`, JSON.stringify(next));
+    saveOrganizationProfile(companyId, next);
     setSaveMessage("Değişiklikler kaydedildi (demo — tarayıcıda saklanır).");
     window.setTimeout(() => setSaveMessage(""), 4000);
   }
@@ -94,10 +59,23 @@ export function OrganizationPageClient() {
   }
 
   function updateProfile(patch: Partial<OrganizationProfile>): void {
-    setProfile((current) => {
-      const next = { ...current, ...patch };
-      return next;
-    });
+    setProfile((current) => ({ ...current, ...patch }));
+  }
+
+  const corridorDisplay = profile.corridors.join(" · ") || "—";
+  const displayEmail = profile.primaryEmail || emailAddress;
+
+  if (adminSettings.accountFrozen) {
+    return (
+      <section className="account-card module-panel module-panel--elevated">
+        <h2 className="account-card-title">Hesap geçici olarak askıda</h2>
+        <p className="account-card-lead">
+          Kurumsal profil platform yöneticisi tarafından donduruldu. Destek ile
+          iletişime geçin.
+        </p>
+        <Link href="/iletisim" className="btn-account-primary">Destek</Link>
+      </section>
+    );
   }
 
   return (
@@ -111,18 +89,34 @@ export function OrganizationPageClient() {
             katılımı açılır. Kimlik ve firma belgeleri tek seferde yüklenir.
           </p>
           <div className="account-verify-badges">
-            <span className="account-status-pill account-status-pill--ok">
-              E-posta onaylı
-            </span>
+            {adminSettings.emailVerified ? (
+              <span className="account-status-pill account-status-pill--ok">
+                E-posta onaylı
+              </span>
+            ) : (
+              <span className="account-status-pill account-status-pill--pending">
+                E-posta bekleniyor
+              </span>
+            )}
             <span
               className={
-                verificationLevel === "basic"
-                  ? "account-status-pill account-status-pill--pending"
-                  : "account-status-pill account-status-pill--ok"
+                adminSettings.documentStatus === "approved"
+                  ? "account-status-pill account-status-pill--ok"
+                  : "account-status-pill account-status-pill--pending"
               }
             >
-              Firma belgesi bekleniyor
+              {documentStatusLabel(adminSettings.documentStatus)}
             </span>
+            {adminSettings.verificationLevel === "full" ? (
+              <span className="account-status-pill account-status-pill--ok">
+                Tam doğrulama
+              </span>
+            ) : null}
+            {adminSettings.featuredInSearch ? (
+              <span className="account-status-pill account-status-pill--ok">
+                Öne çıkan arama
+              </span>
+            ) : null}
           </div>
           <div className="account-verify-actions">
             <button type="button" className="btn-account-primary">
@@ -135,7 +129,7 @@ export function OrganizationPageClient() {
         </div>
         <div className="account-verify-aside" aria-hidden>
           <div className="account-verify-stat">
-            <span className="account-verify-stat-value">TR · UA · EU</span>
+            <span className="account-verify-stat-value">{corridorDisplay}</span>
             <span className="account-verify-stat-label">Koridor odağı</span>
           </div>
           <div className="account-verify-stat">
@@ -226,6 +220,9 @@ export function OrganizationPageClient() {
             </p>
           </div>
         </header>
+        {!adminSettings.allowNewListings ? (
+          <p className="module-hint">Yeni ilan oluşturma platform yöneticisi tarafından kapatıldı.</p>
+        ) : null}
         <div className="account-corridor-toggles">
           {CORRIDOR_OPTIONS.map((corridor) => {
             const active = profile.corridors.includes(corridor.code);
@@ -238,6 +235,7 @@ export function OrganizationPageClient() {
                 }
                 onClick={() => toggleCorridor(corridor.code)}
                 aria-pressed={active}
+                disabled={!adminSettings.allowNewListings}
               >
                 <span className="account-corridor-code">{corridor.code}</span>
                 <span>{corridor.label}</span>
@@ -264,7 +262,7 @@ export function OrganizationPageClient() {
             <span className="account-contact-icon" aria-hidden>@</span>
             <div>
               <span className="account-contact-label">Birincil e-posta</span>
-              <strong>{session?.emailAddress ?? "—"}</strong>
+              <strong>{displayEmail || "—"}</strong>
             </div>
           </li>
           <li>
