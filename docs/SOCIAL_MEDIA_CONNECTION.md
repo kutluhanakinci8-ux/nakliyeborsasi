@@ -38,6 +38,10 @@ Instagram panel içine **iframe ile gömülemez** (güvenlik + Meta politikası)
 
 Bu yöntem sizin oturumunuzu kullanır; sunucu IP engeline takılmaz.
 
-## 5. Sonraki adım (firma bazlı OAuth)
+## 5. Tam otomasyon önergesi (Meta Graph OAuth)
 
-Her firmanın kendi Instagram hesabını **Hesap → Organizasyon** içinden “Instagram Business bağla” ile yetkilendirmesi planlanabilir. Jetonlar yalnızca sunucuda şifreli saklanır; tarayıcıda tutulmaz.
+Firma bazlı **Instagram Business bağla** akışı, veritabanı, API uçları, faz planı ve Meta App Review süreci:
+
+**→ [META_GRAPH_OAUTH_ONERGE.md](./META_GRAPH_OAUTH_ONERGE.md)** (ayrıntılı önerge)
+
+Özet: Her firma OAuth ile kendi hesabını bağlar; token sunucuda şifreli saklanır; metrikler Graph API ile cron/manuel senkron edilir. Geçiş döneminde tarayıcı yardımcısı (§4) yedek kalır.
