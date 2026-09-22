@@ -1,11 +1,17 @@
 import { PublicApiConfiguration } from "./PublicApiConfiguration";
 
+export type CompanyParticipantTypeCode =
+  | "LOAD_SHIPPER"
+  | "LOAD_CARRIER"
+  | "LOAD_SEEKER";
+
 export type RegisterCompanyUserPayload = {
   emailAddress: string;
   password: string;
   displayName: string;
   companyLegalName: string;
   companyCountryCode: string;
+  companyParticipantTypeCode: CompanyParticipantTypeCode;
 };
 
 export class AuthApiClient {

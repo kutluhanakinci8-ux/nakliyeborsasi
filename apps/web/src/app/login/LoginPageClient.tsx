@@ -24,6 +24,16 @@ const CORPORATE_VALUE_BLOCKS = [
   },
 ] as const;
 
+const PARTICIPANT_TYPE_OPTIONS: {
+  code: "LOAD_SHIPPER" | "LOAD_CARRIER" | "LOAD_SEEKER";
+  label: string;
+  hint: string;
+}[] = [
+  { code: "LOAD_SHIPPER", label: "Yük veren", hint: "Yük ilanı yayınlar" },
+  { code: "LOAD_CARRIER", label: "Yük taşıyan", hint: "Kapasite ve filo" },
+  { code: "LOAD_SEEKER", label: "Yük arayan", hint: "Marketplace arama" },
+];
+
 export function LoginPageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -39,6 +49,9 @@ export function LoginPageClient() {
   const [displayName, setDisplayName] = useState("");
   const [companyLegalName, setCompanyLegalName] = useState("");
   const [companyCountryCode, setCompanyCountryCode] = useState("TR");
+  const [companyParticipantTypeCode, setCompanyParticipantTypeCode] = useState<
+    "LOAD_SHIPPER" | "LOAD_CARRIER" | "LOAD_SEEKER"
+  >("LOAD_SHIPPER");
   const [acceptTerms, setAcceptTerms] = useState(false);
 
   const [errorMessage, setErrorMessage] = useState("");
@@ -92,6 +105,7 @@ export function LoginPageClient() {
         displayName,
         companyLegalName,
         companyCountryCode,
+        companyParticipantTypeCode,
       });
       setAccessToken(result.accessToken);
       await refreshSession();
@@ -247,6 +261,35 @@ export function LoginPageClient() {
                         minLength={2}
                       />
                     </label>
+                    <fieldset className="auth-participant-field">
+                      <legend>Firma rolü</legend>
+                      <div className="auth-participant-options">
+                        {PARTICIPANT_TYPE_OPTIONS.map((option) => (
+                          <label
+                            key={option.code}
+                            className={
+                              companyParticipantTypeCode === option.code
+                                ? "auth-participant-option auth-participant-option--active"
+                                : "auth-participant-option"
+                            }
+                          >
+                            <input
+                              type="radio"
+                              name="companyParticipantType"
+                              value={option.code}
+                              checked={companyParticipantTypeCode === option.code}
+                              onChange={() => setCompanyParticipantTypeCode(option.code)}
+                            />
+                            <span className="auth-participant-option-title">
+                              {option.label}
+                            </span>
+                            <span className="auth-participant-option-hint">
+                              {option.hint}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </fieldset>
                     <label className="label-light">
                       Firma ülkesi
                       <select

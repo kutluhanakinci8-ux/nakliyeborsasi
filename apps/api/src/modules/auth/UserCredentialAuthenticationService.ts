@@ -43,6 +43,7 @@ export class UserCredentialAuthenticationService {
       this.companyRepository.create({
         legalName: payload.companyLegalName,
         countryCode: payload.companyCountryCode.toUpperCase(),
+        participantTypeCode: payload.companyParticipantTypeCode,
       }),
     );
     const passwordHash = await this.passwordHashingService.hashPassword(
@@ -74,7 +75,7 @@ export class UserCredentialAuthenticationService {
       companyId: company.id,
       emailAddress: user.emailAddress,
       roleCodes: [CompanyRoleCode.CompanyOwner],
-      companyParticipantTypeCode: null,
+      companyParticipantTypeCode: payload.companyParticipantTypeCode,
     });
   }
 
