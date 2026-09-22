@@ -5205,6 +5205,106 @@ button.btn-secondary {
   padding: 10px 0;
 }
 
+/* —— Kullanıcılar (premium) —— */
+.admin-users-premium .admin-users-kpi-row {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(200px, 1.2fr);
+  margin-bottom: 14px;
+}
+
+.admin-users-role-chart {
+  margin-bottom: 14px;
+}
+
+.admin-users-layout {
+  margin-top: 0;
+}
+
+.admin-users-list-email {
+  display: block;
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-users-role-filters {
+  margin-top: 0;
+}
+
+.admin-users-detail-email {
+  margin: 4px 0 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.admin-users-detail-actions {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.admin-users-detail-actions .admin-btn-primary,
+.admin-users-detail-actions .admin-btn-secondary {
+  text-align: center;
+}
+
+.admin-users-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.admin-users-detail-wide {
+  grid-column: span 2;
+}
+
+.admin-users-dl {
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.admin-users-dl div {
+  display: grid;
+  gap: 4px;
+}
+
+.admin-users-dl dt {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+}
+
+.admin-users-dl dd {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #0f172a;
+}
+
+.admin-users-dl code {
+  font-size: 0.78rem;
+  color: #475569;
+  word-break: break-all;
+}
+
+.admin-users-checklist {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: #475569;
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.platform-admin-panel .admin-checklist,
+.admin-users-checklist {
+  list-style: disc;
+}
+
 .admin-toggle-row {
   display: flex;
   flex-wrap: wrap;
@@ -6133,6 +6233,18 @@ button.btn-secondary {
 
   .admin-field--span-2 {
     grid-column: span 1;
+  }
+
+  .admin-users-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-users-detail-wide {
+    grid-column: span 1;
+  }
+
+  .admin-users-premium .admin-users-kpi-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { EmptyState } from "../EmptyState";
 import { addManualCompanyId, loadManualCompanyIds } from "../../lib/adminCompanyDirectory";
@@ -41,6 +42,8 @@ function participantKey(code: string | null): TypeFilter {
 }
 
 export function AdminOrganizationPageClient() {
+  const searchParams = useSearchParams();
+  const firmaFromQuery = searchParams.get("firma");
   const { session, accessToken } = useWebSession();
   const actorEmail = session?.emailAddress ?? "admin";
   const [companies, setCompanies] = useState<ApiCompany[]>([]);
@@ -93,6 +96,12 @@ export function AdminOrganizationPageClient() {
   useEffect(() => {
     void refreshDirectory();
   }, [refreshDirectory]);
+
+  useEffect(() => {
+    if (firmaFromQuery) {
+      setSelectedId(firmaFromQuery);
+    }
+  }, [firmaFromQuery]);
 
   const selectedCompany = companies.find((c) => c.id === selectedId);
 
