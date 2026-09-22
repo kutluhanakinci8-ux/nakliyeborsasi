@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
+import { CountryFlag } from "../CountryFlag";
 import type { OrganizationProfile } from "../../lib/organizationProfile";
+import { countryLabelTr } from "../../lib/countryDisplay";
 import { formatParticipantType } from "../../lib/PlatformAdminApiClient";
 import {
   SocialPlatformIconLink,
@@ -106,6 +108,7 @@ function shortCompanyId(id: string): string {
 export function AdminCorporateProfileHero({
   profile,
   company,
+  countryCode,
   isEditing,
   onStartEdit,
   onSave,
@@ -113,6 +116,7 @@ export function AdminCorporateProfileHero({
 }: {
   profile: OrganizationProfile;
   company: CompanyMeta | undefined;
+  countryCode: string;
   isEditing: boolean;
   onStartEdit: () => void;
   onSave: () => void;
@@ -142,6 +146,9 @@ export function AdminCorporateProfileHero({
               {title.slice(0, 2).toLocaleUpperCase("tr-TR")}
             </div>
           )}
+          <span className="admin-corp-hero-flag" title={countryLabelTr(countryCode)}>
+            <CountryFlag code={countryCode} size="md" />
+          </span>
         </div>
         <div className="admin-corp-hero-titles">
           <p className="admin-corp-hero-eyebrow">Kurumsal profil</p>
@@ -159,14 +166,13 @@ export function AdminCorporateProfileHero({
             <span className="admin-org-badge admin-corp-pill">
               {company?.listingCount ?? 0} ilan
             </span>
-            {profile.countryCode ? (
-              <span className="admin-org-badge admin-corp-pill">
-                {profile.countryCode}
+            <span className="admin-org-badge admin-corp-pill admin-corp-pill--country">
+              <CountryFlag code={countryCode} size="sm" />
+              <span>
+                {countryLabelTr(countryCode)}
                 {profile.city.trim() ? ` · ${profile.city}` : ""}
               </span>
-            ) : profile.city.trim() ? (
-              <span className="admin-org-badge admin-corp-pill">{profile.city}</span>
-            ) : null}
+            </span>
           </div>
         </div>
       </div>
@@ -250,10 +256,23 @@ function InstagramMetric({
   );
 }
 
+function CountryReadonlyRow({ code }: { code: string }) {
+  return (
+    <div className="admin-corp-dl-row">
+      <dt>Ülke</dt>
+      <dd className="admin-corp-country-dd">
+        <CountryFlag code={code} size="md" showLabel />
+      </dd>
+    </div>
+  );
+}
+
 export function AdminCorporateProfileOverview({
   profile,
+  countryCode,
 }: {
   profile: OrganizationProfile;
+  countryCode: string;
 }) {
   const services = serviceTags(profile.servicesSummary);
   const hasInstagramUrl = profile.instagramUrl.trim().length > 0;
@@ -297,7 +316,7 @@ export function AdminCorporateProfileOverview({
       <CorpBlock title="Konum" accent="slate">
         <dl className="admin-corp-dl admin-corp-dl--compact">
           <ReadonlyRow label="Şehir" value={profile.city} />
-          <ReadonlyRow label="Ülke" value={profile.countryCode} />
+          <CountryReadonlyRow code={countryCode} />
           <ReadonlyRow label="Açık adres" value={profile.addressLine} />
         </dl>
       </CorpBlock>

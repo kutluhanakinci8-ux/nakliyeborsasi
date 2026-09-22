@@ -5630,10 +5630,80 @@ button.btn-secondary {
 }
 
 .admin-corp-hero-logo-wrap {
+  position: relative;
+  flex-shrink: 0;
   padding: 4px;
   border-radius: 18px;
   background: linear-gradient(145deg, #fff, #e2e8f0);
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+}
+
+.admin-corp-hero-flag {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #e2e8f0;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+}
+
+.admin-corp-pill--country {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-corp-country-dd {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.country-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1;
+}
+
+.country-flag-emoji {
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+  font-style: normal;
+  line-height: 1;
+}
+
+.country-flag--sm .country-flag-emoji {
+  font-size: 1.05rem;
+}
+
+.country-flag--md .country-flag-emoji {
+  font-size: 1.35rem;
+}
+
+.country-flag--lg .country-flag-emoji {
+  font-size: 1.65rem;
+}
+
+.country-flag-label {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.admin-org-company-flag {
+  flex-shrink: 0;
+}
+
+.admin-org-company-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .admin-corp-hero--premium .admin-corp-hero-logo {

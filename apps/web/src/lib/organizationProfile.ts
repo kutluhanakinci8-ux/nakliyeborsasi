@@ -209,7 +209,7 @@ export function applyRegistrationOrganizationProfile(
     ...profile,
     legalName: payload.legalName,
     tradeName: payload.tradeName?.trim() || payload.legalName,
-    countryCode: payload.countryCode,
+    countryCode: payload.countryCode.trim().toUpperCase(),
     primaryEmail: payload.emailAddress,
     website: payload.website.trim(),
     phone: payload.phone?.trim() ?? profile.phone,

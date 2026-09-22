@@ -47,6 +47,7 @@ import {
 import { refreshInstagramStatsForOrganization } from "../../lib/instagramStatsWorkflow";
 import { useWebSession } from "../../context/WebSessionProvider";
 import { AdminDonutChart } from "./AdminDashboardCharts";
+import { resolveOrganizationCountryCode } from "../../lib/countryDisplay";
 import {
   AdminCorporateProfileHero,
   AdminCorporateProfileOverview,
@@ -174,20 +175,34 @@ export function AdminOrganizationPageClient() {
 
   const selectedCompany = companies.find((c) => c.id === selectedId);
 
+  const effectiveCountryCode = useMemo(
+    () =>
+      resolveOrganizationCountryCode(
+        profile.countryCode,
+        selectedCompany?.countryCode,
+      ),
+    [profile.countryCode, selectedCompany?.countryCode],
+  );
+
   useEffect(() => {
     if (!selectedId) {
       return;
     }
     const loadedProfile = loadOrganizationProfile(selectedId, "");
     const apiName = selectedCompany?.legalName ?? "";
+    const countryCode = resolveOrganizationCountryCode(
+      loadedProfile.countryCode,
+      selectedCompany?.countryCode,
+    );
     setProfile({
       ...loadedProfile,
       tradeName: loadedProfile.tradeName || apiName,
       legalName: loadedProfile.legalName || apiName,
+      countryCode,
     });
     setAdminSettings(loadOrganizationAdminSettings(selectedId));
     setAuditLog(loadOrganizationAudit(selectedId));
-  }, [selectedId, selectedCompany?.legalName]);
+  }, [selectedId, selectedCompany?.legalName, selectedCompany?.countryCode]);
 
   const summary = useMemo(() => {
     let frozen = 0;
@@ -580,6 +595,7 @@ export function AdminOrganizationPageClient() {
             <AdminCorporateProfileHero
               profile={profile}
               company={selectedCompany}
+              countryCode={effectiveCountryCode}
               isEditing={isProfileEditing}
               onStartEdit={() => startProfileEdit("profile")}
               onSave={commitProfileEdits}
@@ -617,7 +633,10 @@ export function AdminOrganizationPageClient() {
 
         {activeAction === "edit" && editSection === "overview" ? (
           <section className="admin-panel-card admin-corp-overview-card">
-            <AdminCorporateProfileOverview profile={profile} />
+            <AdminCorporateProfileOverview
+              profile={profile}
+              countryCode={effectiveCountryCode}
+            />
             <p className="admin-corp-view-hint admin-corp-view-hint--footer">
               Kayıtlı veriler üye organizasyonu ve web taramasından gelir. Düzenleme için üstte{" "}
               <strong>Profili düzenle</strong>.
@@ -1430,11 +1449,16 @@ export function AdminOrganizationPageClient() {
             <ul className="admin-org-company-list admin-org-company-list--premium admin-org-company-list--swipe">
               {filtered.map((item) => {
                 const settings = loadOrganizationAdminSettings(item.id);
+                const listCountryCode = resolveOrganizationCountryCode(
+                  loadOrganizationProfile(item.id, "").countryCode,
+                  item.countryCode,
+                );
                 return (
                   <li key={item.id} className="admin-org-swipe-li">
                     <OrganizationSwipeListItem
                       item={item}
                       logoUrl={loadOrganizationLogoUrl(item.id)}
+                      countryCode={listCountryCode}
                       frozen={settings.accountFrozen}
                       isSelected={selectedId === item.id}
                       isSwipeOpen={swipeOpenId === item.id}

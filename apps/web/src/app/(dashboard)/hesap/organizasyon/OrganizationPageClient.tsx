@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { REGISTRATION_COUNTRY_OPTIONS, countryFlagEmoji } from "../../../../lib/countryDisplay";
 import {
   CORRIDOR_OPTIONS,
   documentStatusLabel,
@@ -280,14 +281,22 @@ export function OrganizationPageClient() {
               autoComplete="off"
               value={profile.countryCode}
               onChange={(event) =>
-                updateProfile({ countryCode: event.target.value })
+                updateProfile({ countryCode: event.target.value.toUpperCase() })
               }
             >
-              <option value="TR">TR — Türkiye</option>
-              <option value="UA">UA — Ukrayna</option>
-              <option value="PL">PL — Polonya</option>
-              <option value="DE">DE — Almanya</option>
-              <option value="RO">RO — Romanya</option>
+              {REGISTRATION_COUNTRY_OPTIONS.map((country) => (
+                <option key={country.code} value={country.code}>
+                  {countryFlagEmoji(country.code)} {country.code} — {country.labelTr}
+                </option>
+              ))}
+              {profile.countryCode &&
+              !REGISTRATION_COUNTRY_OPTIONS.some(
+                (c) => c.code === profile.countryCode,
+              ) ? (
+                <option value={profile.countryCode}>
+                  {countryFlagEmoji(profile.countryCode)} {profile.countryCode}
+                </option>
+              ) : null}
             </select>
           </label>
           <label className="label-light account-form-span-2">
