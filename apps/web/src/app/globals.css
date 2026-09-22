@@ -2392,7 +2392,8 @@ a {
 .store-badge {
   display: block;
   line-height: 0;
-  border-radius: 8px;
+  background: transparent;
+  border-radius: 0;
   transition:
     transform 0.18s var(--nb-ease-out),
     opacity 0.18s ease;
@@ -2415,7 +2416,7 @@ a {
 }
 
 .store-badge-img--play {
-  height: 44px;
+  height: 40px;
 }
 
 .site-footer-payments {

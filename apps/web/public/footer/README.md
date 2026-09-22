@@ -2,8 +2,10 @@
 
 | Dosya | Kaynak / not |
 |-------|----------------|
-| `app-store.svg` | Wikimedia — Apple App Store indirme rozeti |
-| `google-play.svg` | Wikimedia — Google Play rozeti |
+| `app-store.svg` | Wikimedia — siyah zemin (arşiv) |
+| `app-store-footer.svg` | Footer: şeffaf zemin, beyaz rozet |
+| `google-play.svg` | Wikimedia — siyah zemin (arşiv) |
+| `google-play-footer.svg` | Footer: şeffaf zemin |
 | `mastercard.svg` | Wikimedia — Mastercard marka logosu |
 | `mastercard-securecode.svg` | SecureCode metin + sembol (footer için) |
 | `visa.svg` | Visa wordmark (monokrom CSS filtresi ile) |

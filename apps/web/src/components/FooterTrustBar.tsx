@@ -6,15 +6,15 @@ const PLAY_STORE_URL =
 
 const STORE_BADGES = {
   appStore: {
-    src: "/footer/app-store.svg",
+    src: "/footer/app-store-footer.svg",
     width: 135,
     height: 40,
     alt: "Download on the App Store",
   },
   googlePlay: {
-    src: "/footer/google-play.svg",
+    src: "/footer/google-play-footer.svg",
     width: 155,
-    height: 60,
+    height: 46,
     alt: "Get it on Google Play",
   },
 } as const;
