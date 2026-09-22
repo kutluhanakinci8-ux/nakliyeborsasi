@@ -20,6 +20,17 @@ export function AccountMenuIcon({ id }: { id: AccountMenuIconId | "logout" }) {
           <path d="M3 12h18" />
         </svg>
       );
+    case "listings":
+      return (
+        <svg {...common}>
+          <path d="M8 6h13" />
+          <path d="M8 12h13" />
+          <path d="M8 18h13" />
+          <path d="M3 6h.01" />
+          <path d="M3 12h.01" />
+          <path d="M3 18h.01" />
+        </svg>
+      );
     case "employees":
       return (
         <svg {...common}>

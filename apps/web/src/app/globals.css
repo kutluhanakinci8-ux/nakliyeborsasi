@@ -3096,6 +3096,13 @@ button.btn-secondary {
   margin-bottom: 16px;
 }
 
+.account-page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
 .module-tabs {
   display: inline-flex;
   padding: 4px;

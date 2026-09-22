@@ -1,5 +1,6 @@
 export type AccountMenuIconId =
   | "organization"
+  | "listings"
   | "employees"
   | "applications"
   | "payments"
@@ -14,6 +15,7 @@ export type AccountMenuItem = {
 
 export const ACCOUNT_MENU_ITEMS: readonly AccountMenuItem[] = [
   { href: "/hesap/organizasyon", label: "Benim organizasyonum", icon: "organization" },
+  { href: "/hesap/ilanlar", label: "İlanlarım", icon: "listings" },
   { href: "/hesap/calisanlar", label: "Çalışanlarım", icon: "employees" },
   { href: "/hesap/uygulamalar", label: "Benim uygulamalarım", icon: "applications" },
   { href: "/hesap/odemeler", label: "Benim ödemelerim", icon: "payments" },
