@@ -19,9 +19,14 @@ export class CompanyWebsiteEnrichmentService {
 
     const title = this.extractTitle(html);
     const ogSiteName = this.extractMetaContent(html, "og:site_name");
+    const labeledLegalName = this.extractLabeledValue(text, [
+      "Ünvan",
+      "Ticari Unvan",
+      "Firma Ünvanı",
+    ]);
     const companyLegalName =
+      labeledLegalName ??
       this.pickCompanyName(ogSiteName, title, text, html) ??
-      this.extractLabeledValue(text, ["Ünvan", "Ticari Unvan", "Firma Ünvanı"]) ??
       null;
 
     const emails = this.extractEmails(html, text, host);
@@ -38,28 +43,28 @@ export class CompanyWebsiteEnrichmentService {
       this.extractMetaContent(html, "description") ??
       this.extractMetaContent(html, "og:description");
 
-    const taxOfficeLine = this.extractLabeledValue(text, [
-      "Vergi D. No",
-      "Vergi Dairesi",
-      "Vergi No",
-    ]);
-    const tradeRegistryNumber = this.extractLabeledValue(text, [
-      "Sicil No",
-      "Sicil",
-      "Ticaret Sicil",
-    ]);
-    const transportLicenseNumber = this.extractLabeledValue(text, [
-      "Yetki Belge No",
-      "Yetki Belgesi",
-      "Ulaştırma Bakanlığı Yetki Belge No",
-    ]);
-    const kepAddress = this.extractLabeledValue(text, ["KEP", "KEP Adresi"]);
+    const taxOfficeLine = this.extractTaxOfficeLine(text);
+    const tradeRegistryNumber = this.extractTradeRegistryNumber(text);
+    const transportLicenseNumber = this.extractTransportLicense(text);
+    const kepAddress =
+      this.extractKepAddress(html, text) ??
+      this.extractLabeledValue(text, ["KEP", "KEP Adresi"]);
     const workingHours = this.extractLabeledValue(text, [
       "Çalışma Saatleri",
       "Mesai",
       "Çalışma saatleri",
     ]);
-    const whatsappNumber = this.extractWhatsapp(text);
+    const whatsappCustomer = this.extractLabeledValue(text, [
+      "Taşınacaklar için",
+      "Müşteriler için",
+    ]);
+    const whatsappCompany = this.extractLabeledValue(text, ["Firmalar için"]);
+    const whatsappParts = [whatsappCustomer, whatsappCompany].filter(Boolean);
+    const whatsappNumber =
+      (whatsappParts.length > 0
+        ? whatsappParts.join(" · ")
+        : null) ??
+      this.extractWhatsapp(text);
 
     return {
       sourceUrl,
@@ -120,19 +125,94 @@ export class CompanyWebsiteEnrichmentService {
     return { html, text, scannedUrls };
   }
 
+  private extractTaxOfficeLine(text: string): string | null {
+    const match = text.match(
+      /Vergi\s*D\.?\s*No\s*[:.]?\s*([A-Za-zÇĞİÖŞÜçğıöşü]+)\s+(\d{8,11})/i,
+    );
+    if (match) {
+      return `${match[1]} ${match[2]}`.trim();
+    }
+    const labeled = this.extractLabeledValue(text, [
+      "Vergi D. No",
+      "Vergi Dairesi",
+    ]);
+    return labeled;
+  }
+
+  private extractTradeRegistryNumber(text: string): string | null {
+    const match = text.match(/Sicil\s*No\s*[:.]?\s*(\d{4,12})/i);
+    if (match) {
+      return match[1];
+    }
+    return this.extractLabeledValue(text, ["Sicil", "Ticaret Sicil"]);
+  }
+
+  private extractTransportLicense(text: string): string | null {
+    const match = text.match(
+      /(?:Yetki Belge No|Ulaştırma Bakanlığı Yetki Belge No)\s*[:.]?\s*([A-ZÇĞİÖŞÜ0-9][A-ZÇĞİÖŞÜ0-9.\-_]{4,40})/i,
+    );
+    return match ? match[1].trim() : null;
+  }
+
   private extractLabeledValue(text: string, labels: string[]): string | null {
     for (const label of labels) {
       const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       const pattern = new RegExp(
-        `${escaped}\\s*[:\\.]?\\s*([^\\n|]{3,160})`,
+        `${escaped}\\s*[:\\.]?\\s*([^\\n|]{3,220})`,
         "i",
       );
       const match = text.match(pattern);
       if (match?.[1]) {
-        return match[1].replace(/\s+/g, " ").trim();
+        return this.trimLabeledCapture(match[1]);
       }
     }
     return null;
+  }
+
+  private trimLabeledCapture(raw: string): string {
+    let value = raw.replace(/\s+/g, " ").trim();
+    const stopPatterns = [
+      /\s+Facebook\b/i,
+      /\s+Twitter\b/i,
+      /\s+Instagram\b/i,
+      /\s+Ücretsiz Teklif\b/i,
+      /\s+Ulaştırma Bakanlığı Yetki Belge No\b/i,
+      /\s+Vergi D\.?\s*No\b/i,
+      /\s+Sicil No\b/i,
+      /\s+Eposta:\s*/i,
+      /\s+E-posta:\s*/i,
+      /\s+Taşınacaklar için\b/i,
+      /\s+Firmalar için\b/i,
+      /\s+Ünvan:\s*/i,
+      /\s+Mersis No\b/i,
+      /\s+Gizlilik\b/i,
+      /\s+KVKK\b/i,
+    ];
+    for (const stop of stopPatterns) {
+      const cut = value.split(stop)[0];
+      if (cut && cut.length < value.length) {
+        value = cut.trim();
+      }
+    }
+    value = value.replace(/\[email protected\]/gi, "").trim();
+    const kep = value.match(
+      /[a-zA-Z0-9._%+-]+@(?:[a-zA-Z0-9.-]+\.)?kep\.tr\b/i,
+    );
+    if (kep) {
+      return kep[0];
+    }
+    if (/^\d[\d\s().-]{8,24}$/.test(value)) {
+      return value.replace(/\s+/g, " ").trim();
+    }
+    return value.slice(0, 120).trim();
+  }
+
+  private extractKepAddress(html: string, text: string): string | null {
+    const haystack = `${html}\n${text}`;
+    const match = haystack.match(
+      /[a-zA-Z0-9._%+-]+@(?:[a-zA-Z0-9.-]+\.)?kep\.tr\b/gi,
+    );
+    return match?.[0]?.toLowerCase() ?? null;
   }
 
   private extractWhatsapp(text: string): string | null {
