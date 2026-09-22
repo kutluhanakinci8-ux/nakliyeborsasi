@@ -19,17 +19,6 @@ const STORE_BADGES = {
   },
 } as const;
 
-const PAYMENT_MARKS = [
-  { src: "/footer/mastercard.svg", width: 72, height: 32, alt: "Mastercard" },
-  {
-    src: "/footer/mastercard-securecode.svg",
-    width: 128,
-    height: 32,
-    alt: "Mastercard SecureCode",
-  },
-  { src: "/footer/visa.svg", width: 72, height: 24, alt: "Visa" },
-] as const;
-
 export function FooterStoreBadges() {
   return (
     <div className="site-footer-apps" aria-label="Mobil uygulama">
@@ -63,27 +52,6 @@ export function FooterStoreBadges() {
           className="store-badge-img store-badge-img--play"
         />
       </a>
-    </div>
-  );
-}
-
-export function FooterPaymentMarks() {
-  return (
-    <div
-      className="site-footer-payments"
-      aria-label="Ödeme ve güvenlik iş ortakları"
-    >
-      {PAYMENT_MARKS.map((mark) => (
-        <span className="payment-mark" key={mark.src} title={mark.alt}>
-          <Image
-            src={mark.src}
-            alt={mark.alt}
-            width={mark.width}
-            height={mark.height}
-            className="payment-mark-img payment-mark-img--mono"
-          />
-        </span>
-      ))}
     </div>
   );
 }

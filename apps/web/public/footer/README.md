@@ -10,4 +10,4 @@
 | `mastercard-securecode.svg` | SecureCode metin + sembol (footer için) |
 | `visa.svg` | Visa wordmark (monokrom CSS filtresi ile) |
 
-Mağaza rozetleri: sosyal medyanın altı (`FooterStoreBadges`). Ödeme logoları: yasal linkler ile telif arası (`FooterPaymentMarks`). Kaynak: `FooterTrustBar.tsx`
+Mağaza rozetleri: sosyal medyanın altı (`FooterStoreBadges` — `FooterTrustBar.tsx`). Ödeme logoları footer’da gösterilmez (arşiv SVG’ler bu klasörde kalabilir).

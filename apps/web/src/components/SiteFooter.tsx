@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { SiteBrand } from "./SiteBrand";
 import { SocialMediaLinks } from "./SocialMediaLinks";
-import { FooterPaymentMarks, FooterStoreBadges } from "./FooterTrustBar";
+import { FooterStoreBadges } from "./FooterTrustBar";
 import { CORPORATE_NAV_ITEMS, PLATFORM_NAV_ITEMS } from "../lib/siteNavigation";
 
 const LEGAL_LINKS = [
@@ -50,7 +50,6 @@ export function SiteFooter() {
               </li>
             ))}
           </ul>
-          <FooterPaymentMarks />
         </div>
         <div className="site-footer-meta">
           <nav className="site-footer-legal" aria-label="Yasal bilgiler">
