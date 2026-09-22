@@ -4755,6 +4755,16 @@ button.btn-secondary {
   color: #065f46;
 }
 
+.account-session-banner {
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  font-size: 0.88rem;
+  color: #334155;
+}
+
 .account-textarea {
   resize: vertical;
   min-height: 72px;

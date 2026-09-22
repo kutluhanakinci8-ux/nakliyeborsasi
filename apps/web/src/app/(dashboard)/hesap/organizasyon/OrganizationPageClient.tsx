@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   CORRIDOR_OPTIONS,
   documentStatusLabel,
@@ -28,9 +28,8 @@ export function OrganizationPageClient() {
   );
   const [saveMessage, setSaveMessage] = useState("");
   const [isEnrichingWebsite, setIsEnrichingWebsite] = useState(false);
-  const pendingWebsiteUrl = companyId
-    ? getPendingWebsiteEnrichmentUrl(companyId)
-    : null;
+  const [pendingWebsiteUrl, setPendingWebsiteUrl] = useState<string | null>(null);
+  const enrichmentStartedForCompany = useRef<string | null>(null);
 
   useEffect(() => {
     if (!companyId) {
@@ -38,7 +37,38 @@ export function OrganizationPageClient() {
     }
     setProfile(loadOrganizationProfile(companyId, emailAddress));
     setAdminSettings(loadOrganizationAdminSettings(companyId));
+    setPendingWebsiteUrl(getPendingWebsiteEnrichmentUrl(companyId));
   }, [companyId, emailAddress]);
+
+  useEffect(() => {
+    if (!companyId || !pendingWebsiteUrl) {
+      return;
+    }
+    if (enrichmentStartedForCompany.current === companyId) {
+      return;
+    }
+    enrichmentStartedForCompany.current = companyId;
+
+    void (async () => {
+      setIsEnrichingWebsite(true);
+      setSaveMessage("Web sitesi taranıyor, firma bilgileri dolduruluyor…");
+      const outcome = await runPendingWebsiteEnrichment(companyId, emailAddress);
+      setIsEnrichingWebsite(false);
+      setPendingWebsiteUrl(null);
+      if (outcome === "success") {
+        setProfile(loadOrganizationProfile(companyId, emailAddress));
+        setSaveMessage(
+          "Web sitesinden alınan bilgiler organizasyon alanlarına işlendi.",
+        );
+      } else if (outcome === "error") {
+        setSaveMessage(
+          "Web taraması başarısız. Web sitesi alanını kontrol edip sayfayı yenileyin.",
+        );
+        enrichmentStartedForCompany.current = null;
+      }
+      window.setTimeout(() => setSaveMessage(""), 8000);
+    })();
+  }, [companyId, emailAddress, pendingWebsiteUrl]);
 
   function persistProfile(next: OrganizationProfile): void {
     if (!companyId) {
@@ -59,29 +89,6 @@ export function OrganizationPageClient() {
       persistProfile(next);
       return next;
     });
-  }
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
-    event.preventDefault();
-    persistProfile(profile);
-    if (!companyId || !pendingWebsiteUrl) {
-      return;
-    }
-    setIsEnrichingWebsite(true);
-    setSaveMessage("Web sitesi taranıyor, firma bilgileri dolduruluyor…");
-    const outcome = await runPendingWebsiteEnrichment(companyId, emailAddress);
-    setIsEnrichingWebsite(false);
-    if (outcome === "success") {
-      setProfile(loadOrganizationProfile(companyId, emailAddress));
-      setSaveMessage(
-        "Kaydedildi. Web sitesinden alınan bilgiler organizasyon alanlarına işlendi.",
-      );
-    } else if (outcome === "error") {
-      setSaveMessage(
-        "Temel bilgiler kaydedildi; web taraması başarısız. Web adresini kontrol edip tekrar kaydedin.",
-      );
-    }
-    window.setTimeout(() => setSaveMessage(""), 6000);
   }
 
   function updateProfile(patch: Partial<OrganizationProfile>): void {
@@ -106,6 +113,16 @@ export function OrganizationPageClient() {
 
   return (
     <>
+      <p className="account-session-banner">
+        Oturum: <strong>{emailAddress || "—"}</strong>
+        {companyId ? (
+          <>
+            {" "}
+            · Firma kimliği <code>{companyId.slice(0, 8)}…</code>
+          </>
+        ) : null}
+      </p>
+
       <section className="account-verify-banner module-panel module-panel--elevated">
         <div className="account-verify-copy">
           <p className="account-verify-eyebrow">Güven ve doğrulama</p>
@@ -169,15 +186,14 @@ export function OrganizationPageClient() {
 
       {pendingWebsiteUrl ? (
         <p className="account-enrichment-banner module-hint">
-          Web adresi kayıtlı: <code>{pendingWebsiteUrl}</code>. Temel bilgileri{" "}
-          <strong>Kaydet</strong> dediğinizde sistem arka planda siteyi tarayıp aşağıdaki
-          alanları dolduracak.
+          Web adresi kayıtlı: <code>{pendingWebsiteUrl}</code>. Sistem şimdi arka planda
+          siteyi tarayıp firma alanlarını dolduruyor…
         </p>
       ) : null}
 
-      <form
+      <section
         className="account-card module-panel module-panel--elevated"
-        onSubmit={(event) => void handleSubmit(event)}
+        data-form-type="organization"
       >
         <header className="account-card-head">
           <div>
@@ -186,8 +202,13 @@ export function OrganizationPageClient() {
               Ticari unvan ve vergi bilgileri sözleşme ve fatura için kullanılır.
             </p>
           </div>
-          <button type="submit" className="btn-account-primary" disabled={isEnrichingWebsite}>
-            {isEnrichingWebsite ? "Taranıyor…" : "Kaydet"}
+          <button
+            type="button"
+            className="btn-account-primary"
+            disabled={isEnrichingWebsite}
+            onClick={() => persistProfile(profile)}
+          >
+            Kaydet
           </button>
         </header>
         <div className="account-form-grid">
@@ -195,6 +216,8 @@ export function OrganizationPageClient() {
             Ticari unvan
             <input
               className="input-light"
+              name="nb-trade-name"
+              autoComplete="off"
               value={profile.tradeName}
               onChange={(event) => updateProfile({ tradeName: event.target.value })}
               required
@@ -204,6 +227,8 @@ export function OrganizationPageClient() {
             Resmi unvan
             <input
               className="input-light"
+              name="nb-legal-name"
+              autoComplete="off"
               value={profile.legalName}
               onChange={(event) =>
                 updateProfile({ legalName: event.target.value })
@@ -214,6 +239,8 @@ export function OrganizationPageClient() {
             Vergi / TIN numarası
             <input
               className="input-light"
+              name="nb-tax-number"
+              autoComplete="off"
               value={profile.taxNumber}
               onChange={(event) =>
                 updateProfile({ taxNumber: event.target.value })
@@ -224,6 +251,8 @@ export function OrganizationPageClient() {
             Ülke kodu
             <select
               className="input-light"
+              name="nb-country-code"
+              autoComplete="off"
               value={profile.countryCode}
               onChange={(event) =>
                 updateProfile({ countryCode: event.target.value })
@@ -240,6 +269,8 @@ export function OrganizationPageClient() {
             Şehir / merkez ofis
             <input
               className="input-light"
+              name="nb-city"
+              autoComplete="off"
               value={profile.city}
               onChange={(event) =>
                 updateProfile({ city: event.target.value })
@@ -248,7 +279,7 @@ export function OrganizationPageClient() {
           </label>
         </div>
         {saveMessage ? <p className="account-save-hint">{saveMessage}</p> : null}
-      </form>
+      </section>
 
       <section className="account-card module-panel module-panel--elevated">
         <header className="account-card-head">
@@ -272,6 +303,8 @@ export function OrganizationPageClient() {
             Açık adres
             <input
               className="input-light"
+              name="nb-address-line"
+              autoComplete="off"
               value={profile.addressLine}
               onChange={(event) =>
                 updateProfile({ addressLine: event.target.value })
@@ -283,6 +316,8 @@ export function OrganizationPageClient() {
             Hizmet alanları (özet)
             <textarea
               className="input-light account-textarea"
+              name="nb-services-summary"
+              autoComplete="off"
               rows={3}
               value={profile.servicesSummary}
               onChange={(event) =>
@@ -361,6 +396,8 @@ export function OrganizationPageClient() {
               <input
                 className="input-light account-contact-input"
                 type="tel"
+                name="nb-phone"
+                autoComplete="off"
                 placeholder="+90 5xx xxx xx xx"
                 value={profile.phone}
                 onChange={(event) =>
@@ -375,7 +412,12 @@ export function OrganizationPageClient() {
               <span className="account-contact-label">Web sitesi</span>
               <input
                 className="input-light account-contact-input"
-                type="url"
+                type="text"
+                inputMode="url"
+                name="nb-company-website"
+                autoComplete="off"
+                data-lpignore="true"
+                data-1p-ignore
                 placeholder="https://"
                 value={profile.website}
                 onChange={(event) =>

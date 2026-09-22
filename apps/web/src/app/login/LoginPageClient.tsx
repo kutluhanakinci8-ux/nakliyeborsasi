@@ -338,9 +338,12 @@ export function LoginPageClient() {
                         Web adresi
                         <input
                           className="input-light"
-                          type="url"
+                          type="text"
                           inputMode="url"
-                          autoComplete="url"
+                          name="nb-register-website"
+                          autoComplete="off"
+                          data-lpignore="true"
+                          data-1p-ignore
                           placeholder="https://firma.com"
                           value={companyWebsiteUrl}
                           onChange={(event) => setCompanyWebsiteUrl(event.target.value)}
@@ -355,7 +358,8 @@ export function LoginPageClient() {
                         <input
                           className="input-light"
                           type="email"
-                          autoComplete="email"
+                          name="email"
+                          autoComplete="username"
                           value={emailAddress}
                           onChange={(event) => setEmailAddress(event.target.value)}
                           required
@@ -366,6 +370,7 @@ export function LoginPageClient() {
                       <input
                         className="input-light"
                         type="password"
+                        name="new-password"
                         autoComplete="new-password"
                         value={password}
                         onChange={(event) => setPassword(event.target.value)}
