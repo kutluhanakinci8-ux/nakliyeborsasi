@@ -119,8 +119,20 @@ export function LoginPageClient() {
 
   return (
     <SiteLayout headerVariant="public">
-      <section className="auth-page auth-page--corporate">
-        <div className="auth-page-grid auth-page-grid--corporate">
+      <section
+        className={
+          authMode === "register"
+            ? "auth-page auth-page--corporate auth-page--register"
+            : "auth-page auth-page--corporate"
+        }
+      >
+        <div
+          className={
+            authMode === "register"
+              ? "auth-page-grid auth-page-grid--corporate auth-page-grid--stacked"
+              : "auth-page-grid auth-page-grid--corporate"
+          }
+        >
           <div className="auth-promo auth-promo--corporate">
             <p className="auth-promo-badge">Kurumsal üyelik · TR · UA · AB</p>
             <h1>Nakliye Borsası&apos;na güvenli erişim</h1>
