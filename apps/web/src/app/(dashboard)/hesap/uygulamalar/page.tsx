@@ -1,5 +1,5 @@
-import { AccountSectionPage } from "../../../../components/AccountSectionPage";
+import { ApplicationsPageClient } from "./ApplicationsPageClient";
 
 export default function AccountApplicationsPage() {
-  return <AccountSectionPage />;
+  return <ApplicationsPageClient />;
 }
