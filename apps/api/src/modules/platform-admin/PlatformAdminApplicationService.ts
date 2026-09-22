@@ -46,19 +46,66 @@ export class PlatformAdminApplicationService {
     trustReviews: number;
     messageThreads: number;
     auditLogs: number;
+    participantBreakdown: {
+      loadShipper: number;
+      loadCarrier: number;
+      loadSeeker: number;
+      other: number;
+    };
+    operationsIndex: {
+      listings: number;
+      auctions: number;
+      messageThreads: number;
+      trustReviews: number;
+      auditLogs: number;
+    };
   }> {
-    const [companies, users, listings, auctions, openAuctions, subscriptions, trustReviews, messageThreads, auditLogs] =
-      await Promise.all([
-        this.companyRepository.count(),
-        this.userAccountRepository.count(),
-        this.listingRepository.count(),
-        this.auctionRepository.count(),
-        this.auctionRepository.count({ where: { statusCode: "OPEN" } }),
-        this.subscriptionRepository.count({ where: { isActive: true } }),
-        this.trustRepository.count(),
-        this.threadRepository.count(),
-        this.auditRepository.count(),
-      ]);
+    const [
+      companies,
+      users,
+      listings,
+      auctions,
+      openAuctions,
+      subscriptions,
+      trustReviews,
+      messageThreads,
+      auditLogs,
+      allCompanies,
+    ] = await Promise.all([
+      this.companyRepository.count(),
+      this.userAccountRepository.count(),
+      this.listingRepository.count(),
+      this.auctionRepository.count(),
+      this.auctionRepository.count({ where: { statusCode: "OPEN" } }),
+      this.subscriptionRepository.count({ where: { isActive: true } }),
+      this.trustRepository.count(),
+      this.threadRepository.count(),
+      this.auditRepository.count(),
+      this.companyRepository.find(),
+    ]);
+
+    let loadShipper = 0;
+    let loadCarrier = 0;
+    let loadSeeker = 0;
+    let other = 0;
+    for (const company of allCompanies) {
+      switch (company.participantTypeCode) {
+        case "LOAD_SHIPPER":
+          loadShipper++;
+          break;
+        case "LOAD_CARRIER":
+          loadCarrier++;
+          break;
+        case "LOAD_SEEKER":
+          loadSeeker++;
+          break;
+        default:
+          other++;
+      }
+    }
+
+    const maxOp = Math.max(listings, auctions, messageThreads, trustReviews, 1);
+
     return {
       companies,
       users,
@@ -69,6 +116,19 @@ export class PlatformAdminApplicationService {
       trustReviews,
       messageThreads,
       auditLogs,
+      participantBreakdown: {
+        loadShipper,
+        loadCarrier,
+        loadSeeker,
+        other,
+      },
+      operationsIndex: {
+        listings: Math.round((listings / maxOp) * 100),
+        auctions: Math.round((auctions / maxOp) * 100),
+        messageThreads: Math.round((messageThreads / maxOp) * 100),
+        trustReviews: Math.round((trustReviews / maxOp) * 100),
+        auditLogs: Math.min(100, Math.round((auditLogs / 250) * 100)),
+      },
     };
   }
 

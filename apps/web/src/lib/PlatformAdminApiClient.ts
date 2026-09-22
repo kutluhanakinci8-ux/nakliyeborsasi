@@ -26,6 +26,19 @@ export type PlatformAdminOverview = {
   trustReviews: number;
   messageThreads: number;
   auditLogs: number;
+  participantBreakdown: {
+    loadShipper: number;
+    loadCarrier: number;
+    loadSeeker: number;
+    other: number;
+  };
+  operationsIndex: {
+    listings: number;
+    auctions: number;
+    messageThreads: number;
+    trustReviews: number;
+    auditLogs: number;
+  };
 };
 
 export class PlatformAdminApiClient {
