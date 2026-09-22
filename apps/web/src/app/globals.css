@@ -5493,6 +5493,141 @@ button.btn-secondary {
   align-items: start;
 }
 
+/* —— Ödemeler (premium) —— */
+.admin-payments-premium .admin-payments-kpi-row,
+.admin-integrations-premium .admin-integrations-kpi-row,
+.admin-system-premium .admin-system-kpi-row {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(200px, 1.2fr);
+  margin-bottom: 14px;
+}
+
+.admin-payments-tier-chart,
+.admin-integrations-method-chart,
+.admin-system-ops-chart {
+  margin-bottom: 14px;
+}
+
+.admin-payments-layout,
+.admin-integrations-layout {
+  margin-top: 0;
+}
+
+.admin-payments-list-plan {
+  display: block;
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.admin-payments-detail-plan {
+  margin: 4px 0 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.admin-payments-plan-filters,
+.admin-payments-type-filters,
+.admin-integrations-method-filters {
+  margin-top: 0;
+}
+
+.admin-payments-detail-grid,
+.admin-integrations-detail-grid {
+  align-items: start;
+}
+
+/* —— Entegrasyonlar (premium) —— */
+.admin-integrations-list-path,
+.admin-integrations-detail-path {
+  font-size: 0.8rem;
+  word-break: break-all;
+  color: #334155;
+}
+
+.admin-integrations-detail-meta {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.admin-integrations-code {
+  word-break: break-all;
+}
+
+/* —— Sistem (premium) —— */
+.admin-system-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.admin-system-modules {
+  grid-column: span 2;
+}
+
+.admin-system-module-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.admin-system-module-link {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.admin-system-module-link:hover {
+  border-color: #94a3b8;
+  background: #fff;
+}
+
+.admin-system-module-icon {
+  flex-shrink: 0;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: #1e3a5f;
+  color: #fff;
+}
+
+.admin-system-module-link strong {
+  display: block;
+  font-size: 0.9rem;
+  color: #0f172a;
+}
+
+.admin-system-module-link small {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.72rem;
+  color: #64748b;
+  line-height: 1.35;
+}
+
+@media (max-width: 900px) {
+  .admin-system-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-system-modules {
+    grid-column: span 1;
+  }
+}
+
 .admin-toggle-row {
   display: flex;
   flex-wrap: wrap;
