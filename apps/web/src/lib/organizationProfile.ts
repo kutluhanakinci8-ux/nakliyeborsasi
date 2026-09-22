@@ -8,6 +8,7 @@ export type OrganizationProfile = {
   website: string;
   addressLine: string;
   servicesSummary: string;
+  logoUrl: string;
   websiteEnrichmentCompletedAt: string;
   corridors: string[];
   primaryEmail: string;
@@ -53,6 +54,7 @@ export function defaultOrganizationProfile(
     website: "",
     addressLine: "",
     servicesSummary: "",
+    logoUrl: "",
     websiteEnrichmentCompletedAt: "",
     corridors: ["TR", "UA", "EU"],
     primaryEmail,

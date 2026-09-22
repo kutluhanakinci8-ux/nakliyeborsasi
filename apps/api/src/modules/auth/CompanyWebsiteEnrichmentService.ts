@@ -29,6 +29,7 @@ export class CompanyWebsiteEnrichmentService {
     const addressLine = this.extractAddress(text);
     const city = this.extractCity(text, addressLine);
     const servicesSummary = this.extractServicesSummary(text);
+    const logoUrl = this.extractLogoUrl(html, sourceUrl);
 
     return {
       sourceUrl,
@@ -40,6 +41,7 @@ export class CompanyWebsiteEnrichmentService {
       addressLine,
       city,
       servicesSummary,
+      logoUrl,
     };
   }
 
@@ -320,5 +322,112 @@ export class CompanyWebsiteEnrichmentService {
 
   private cleanLabel(raw: string): string {
     return raw.replace(/\s+/g, " ").trim();
+  }
+
+  private extractLogoUrl(html: string, pageUrl: string): string | null {
+    const candidates: string[] = [];
+
+    const ogImage = this.extractMetaContent(html, "og:image");
+    if (ogImage) {
+      candidates.push(ogImage);
+    }
+
+    const linkTags = html.match(/<link\b[^>]*>/gi) ?? [];
+    for (const tag of linkTags) {
+      const rel = tag.match(/\brel=["']([^"']+)["']/i)?.[1]?.toLowerCase() ?? "";
+      if (!/(?:^|\s)icon(?:\s|$)|apple-touch-icon|shortcut icon/.test(rel)) {
+        continue;
+      }
+      const href = tag.match(/\bhref=["']([^"']+)["']/i)?.[1];
+      if (href) {
+        candidates.unshift(href);
+      }
+    }
+
+    const logoImgPatterns = [
+      /<img\b[^>]*\bclass=["'][^"']*logo[^"']*["'][^>]*>/gi,
+      /<img\b[^>]*\bsrc=["']([^"']*logo[^"']*)["'][^>]*>/gi,
+      /<a\b[^>]*\bclass=["'][^"']*(?:logo|brand|navbar-brand)[^"']*["'][^>]*>[\s\S]*?<img\b[^>]*\bsrc=["']([^"']+)["']/gi,
+    ];
+    for (const pattern of logoImgPatterns) {
+      const matches = html.matchAll(pattern);
+      for (const match of matches) {
+        const srcFromTag = match[0].match(/\bsrc=["']([^"']+)["']/i)?.[1];
+        const captured = match[1] ?? srcFromTag;
+        if (captured) {
+          candidates.push(captured);
+        }
+      }
+    }
+
+    const ranked: { url: string; score: number }[] = [];
+    const seen = new Set<string>();
+    for (const raw of candidates) {
+      const absolute = this.resolveAbsoluteUrl(raw, pageUrl);
+      if (!absolute || seen.has(absolute)) {
+        continue;
+      }
+      seen.add(absolute);
+      if (!this.looksLikeLogoAsset(absolute)) {
+        continue;
+      }
+      ranked.push({ url: absolute, score: this.scoreLogoCandidate(absolute) });
+    }
+    ranked.sort((a, b) => b.score - a.score);
+    return ranked[0]?.url.slice(0, 512) ?? null;
+  }
+
+  private scoreLogoCandidate(url: string): number {
+    const lower = url.toLowerCase();
+    let score = 0;
+    if (lower.includes("logo")) {
+      score += 60;
+    }
+    if (lower.includes("brand")) {
+      score += 40;
+    }
+    if (lower.includes("apple-touch-icon")) {
+      score += 45;
+    }
+    if (/(?:192|180|512|256|128)x(?:\d+)/.test(lower)) {
+      score += 35;
+    }
+    if (/\.svg(\?|#|$)/.test(lower)) {
+      score += 25;
+    }
+    if (lower.includes("favicon-16") || lower.includes("16x16")) {
+      score -= 40;
+    }
+    if (lower.includes("favicon-32")) {
+      score -= 10;
+    }
+    if (lower.includes("og:image") || lower.includes("/uploads/")) {
+      score += 15;
+    }
+    return score;
+  }
+
+  private resolveAbsoluteUrl(raw: string, pageUrl: string): string | null {
+    try {
+      return new URL(raw.trim(), pageUrl).toString();
+    } catch {
+      return null;
+    }
+  }
+
+  private looksLikeLogoAsset(url: string): boolean {
+    const lower = url.toLowerCase();
+    if (lower.startsWith("data:")) {
+      return false;
+    }
+    if (
+      lower.includes("logo") ||
+      lower.includes("brand") ||
+      lower.includes("favicon") ||
+      /\.(png|jpe?g|webp|svg|ico)(\?|#|$)/i.test(lower)
+    ) {
+      return true;
+    }
+    return false;
   }
 }

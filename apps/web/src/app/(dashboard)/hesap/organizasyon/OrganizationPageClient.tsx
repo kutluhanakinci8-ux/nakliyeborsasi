@@ -299,6 +299,36 @@ export function OrganizationPageClient() {
           </button>
         </header>
         <div className="account-form-grid">
+          <div className="account-logo-field account-form-span-2">
+            <p className="label-light">Şirket logosu</p>
+            <div className="account-logo-preview-row">
+              {profile.logoUrl ? (
+                <img
+                  src={profile.logoUrl}
+                  alt="Firma logosu"
+                  className="account-logo-preview"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <div className="account-logo-placeholder" aria-hidden>
+                  Logo
+                </div>
+              )}
+              <label className="label-light account-logo-url">
+                Logo adresi (URL)
+                <input
+                  className="input-light"
+                  name="nb-logo-url"
+                  autoComplete="off"
+                  value={profile.logoUrl}
+                  onChange={(event) =>
+                    updateProfile({ logoUrl: event.target.value })
+                  }
+                  placeholder="Web sitesinden otomatik"
+                />
+              </label>
+            </div>
+          </div>
           <label className="label-light account-form-span-2">
             Açık adres
             <input

@@ -59,6 +59,7 @@ function mergeEnrichmentIntoProfile(
     addressLine: profile.addressLine.trim() || enrichment.addressLine || "",
     servicesSummary:
       profile.servicesSummary.trim() || enrichment.servicesSummary || "",
+    logoUrl: profile.logoUrl.trim() || enrichment.logoUrl || "",
     websiteEnrichmentCompletedAt: new Date().toISOString(),
   };
 }

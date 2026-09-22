@@ -6,6 +6,7 @@ import {
   resolveAccountDisplayName,
   resolveAccountInitials,
 } from "../../../../lib/accountNavigation";
+import { loadOrganizationProfile } from "../../../../lib/organizationProfile";
 import { useWebSession } from "../../../../context/WebSessionProvider";
 
 type UserProfile = {
@@ -62,7 +63,9 @@ function loadProfile(userId: string, emailAddress: string): UserProfile {
 export function ProfilePageClient() {
   const { session, locale, setLocale, logout } = useWebSession();
   const userId = session?.userId ?? "";
+  const companyId = session?.companyId ?? "";
   const emailAddress = session?.emailAddress ?? "";
+  const [companyLogoUrl, setCompanyLogoUrl] = useState("");
   const [profile, setProfile] = useState<UserProfile>(() =>
     defaultProfile(emailAddress),
   );
@@ -78,6 +81,15 @@ export function ProfilePageClient() {
       setLocale(loaded.interfaceLocale);
     }
   }, [userId, emailAddress, setLocale]);
+
+  useEffect(() => {
+    if (!companyId) {
+      setCompanyLogoUrl("");
+      return;
+    }
+    const orgProfile = loadOrganizationProfile(companyId, emailAddress);
+    setCompanyLogoUrl(orgProfile.logoUrl);
+  }, [companyId, emailAddress]);
 
   function persistProfile(next: UserProfile): void {
     if (!userId) {
@@ -127,7 +139,16 @@ export function ProfilePageClient() {
     <>
       <section className="account-profile-banner module-panel module-panel--elevated">
         <div className="account-profile-identity">
-          <span className="account-profile-avatar" aria-hidden>{initials}</span>
+          {companyLogoUrl ? (
+            <img
+              src={companyLogoUrl}
+              alt=""
+              className="account-profile-avatar account-profile-avatar--logo"
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <span className="account-profile-avatar" aria-hidden>{initials}</span>
+          )}
           <div>
             <p className="account-verify-eyebrow">Hesap sahibi</p>
             <h2 className="account-card-title">

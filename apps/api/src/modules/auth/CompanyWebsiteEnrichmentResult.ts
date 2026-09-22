@@ -8,4 +8,5 @@ export type CompanyWebsiteEnrichmentResult = {
   addressLine: string | null;
   city: string | null;
   servicesSummary: string | null;
+  logoUrl: string | null;
 };

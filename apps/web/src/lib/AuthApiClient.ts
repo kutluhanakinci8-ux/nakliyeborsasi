@@ -10,6 +10,7 @@ export type CompanyWebsiteEnrichment = {
   addressLine: string | null;
   city: string | null;
   servicesSummary: string | null;
+  logoUrl: string | null;
 };
 
 export type CompanyParticipantTypeCode =

@@ -4771,6 +4771,59 @@ button.btn-secondary {
   font-family: inherit;
 }
 
+.account-logo-field .label-light {
+  margin-bottom: 8px;
+}
+
+.account-logo-preview-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+}
+
+.account-logo-preview {
+  width: 88px;
+  height: 88px;
+  object-fit: contain;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  padding: 8px;
+}
+
+.account-logo-placeholder {
+  width: 88px;
+  height: 88px;
+  border-radius: 12px;
+  border: 1px dashed #cbd5e1;
+  background: #f8fafc;
+  color: #94a3b8;
+  font-size: 0.78rem;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+}
+
+.account-logo-url {
+  margin: 0;
+  width: 100%;
+}
+
+.account-profile-avatar--logo {
+  object-fit: contain;
+  background: #fff;
+  padding: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+@media (max-width: 520px) {
+  .account-logo-preview-row {
+    grid-template-columns: 1fr;
+    justify-items: start;
+  }
+}
+
 .account-verify-banner {
   display: grid;
   grid-template-columns: 1.4fr 0.9fr;
