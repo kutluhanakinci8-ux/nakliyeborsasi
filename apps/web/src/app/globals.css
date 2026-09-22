@@ -4739,6 +4739,26 @@ button.btn-secondary {
   grid-column: 1 / -1;
 }
 
+.account-form-subheading {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.account-card-head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.account-meta-line--wrap code {
+  word-break: break-all;
+}
+
 .account-save-hint {
   margin: 14px 0 0;
   font-size: 0.85rem;

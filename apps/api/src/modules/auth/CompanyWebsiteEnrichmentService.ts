@@ -14,35 +14,156 @@ export class CompanyWebsiteEnrichmentService {
     const sourceUrl = this.normalizePublicUrl(rawUrl);
     await this.assertPublicHost(sourceUrl);
 
-    const html = await this.fetchHtml(sourceUrl);
-    const text = this.htmlToVisibleText(html);
+    const { html, text, scannedUrls } = await this.collectSiteDocuments(sourceUrl);
     const host = new URL(sourceUrl).hostname.replace(/^www\./i, "");
 
     const title = this.extractTitle(html);
     const ogSiteName = this.extractMetaContent(html, "og:site_name");
     const companyLegalName =
-      this.pickCompanyName(ogSiteName, title, text, html) ?? null;
+      this.pickCompanyName(ogSiteName, title, text, html) ??
+      this.extractLabeledValue(text, ["Ünvan", "Ticari Unvan", "Firma Ünvanı"]) ??
+      null;
 
     const emails = this.extractEmails(html, text, host);
     const phones = this.extractPhones(html, text);
-    const mersis = this.extractMersis(text);
+    const mersis =
+      this.extractMersis(text) ??
+      this.extractLabeledValue(text, ["MERSİS", "MERSIS"])?.replace(/\D/g, "") ??
+      null;
     const addressLine = this.extractAddress(text);
     const city = this.extractCity(text, addressLine);
     const servicesSummary = this.extractServicesSummary(text);
     const logoUrl = this.extractLogoUrl(html, sourceUrl);
+    const companyDescription =
+      this.extractMetaContent(html, "description") ??
+      this.extractMetaContent(html, "og:description");
+
+    const taxOfficeLine = this.extractLabeledValue(text, [
+      "Vergi D. No",
+      "Vergi Dairesi",
+      "Vergi No",
+    ]);
+    const tradeRegistryNumber = this.extractLabeledValue(text, [
+      "Sicil No",
+      "Sicil",
+      "Ticaret Sicil",
+    ]);
+    const transportLicenseNumber = this.extractLabeledValue(text, [
+      "Yetki Belge No",
+      "Yetki Belgesi",
+      "Ulaştırma Bakanlığı Yetki Belge No",
+    ]);
+    const kepAddress = this.extractLabeledValue(text, ["KEP", "KEP Adresi"]);
+    const workingHours = this.extractLabeledValue(text, [
+      "Çalışma Saatleri",
+      "Mesai",
+      "Çalışma saatleri",
+    ]);
+    const whatsappNumber = this.extractWhatsapp(text);
 
     return {
       sourceUrl,
+      scannedUrls,
       companyLegalName,
       tradeName: companyLegalName,
       emailAddress: emails[0] ?? null,
       phone: phones[0] ?? null,
-      taxOrRegistryId: mersis,
+      whatsappNumber,
+      taxOrRegistryId: mersis ?? taxOfficeLine,
+      mersisNumber: mersis,
+      taxOfficeLine,
+      tradeRegistryNumber,
+      transportLicenseNumber,
+      kepAddress,
       addressLine,
       city,
+      workingHours,
+      companyDescription,
       servicesSummary,
+      socialMediaSummary: this.extractSocialLinks(html),
       logoUrl,
     };
+  }
+
+  private async collectSiteDocuments(
+    sourceUrl: string,
+  ): Promise<{ html: string; text: string; scannedUrls: string[] }> {
+    const base = new URL(sourceUrl);
+    const candidateUrls = [
+      sourceUrl,
+      new URL("/iletisim/", base).toString(),
+      new URL("/iletisim", base).toString(),
+      new URL("/contact/", base).toString(),
+    ];
+    const scannedUrls: string[] = [];
+    let html = "";
+    let text = "";
+    for (const url of candidateUrls) {
+      if (scannedUrls.includes(url)) {
+        continue;
+      }
+      try {
+        const pageHtml = await this.fetchHtml(url);
+        scannedUrls.push(url);
+        html += `\n${pageHtml}`;
+        text += `\n${this.htmlToVisibleText(pageHtml)}`;
+        if (scannedUrls.length >= 2) {
+          break;
+        }
+      } catch {
+        /* try next path */
+      }
+    }
+    if (scannedUrls.length === 0) {
+      throw new ValidationException("Web sayfası okunamadı");
+    }
+    return { html, text, scannedUrls };
+  }
+
+  private extractLabeledValue(text: string, labels: string[]): string | null {
+    for (const label of labels) {
+      const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const pattern = new RegExp(
+        `${escaped}\\s*[:\\.]?\\s*([^\\n|]{3,160})`,
+        "i",
+      );
+      const match = text.match(pattern);
+      if (match?.[1]) {
+        return match[1].replace(/\s+/g, " ").trim();
+      }
+    }
+    return null;
+  }
+
+  private extractWhatsapp(text: string): string | null {
+    const labeled = this.extractLabeledValue(text, ["WhatsApp", "Whatsapp"]);
+    if (labeled) {
+      return labeled.replace(/\s+/g, " ").slice(0, 40);
+    }
+    const match = text.match(
+      /(?:whatsapp|wp)[^\d]{0,20}(\+?90?\s*\(?\d{3}\)?[\s.-]*\d{3}[\s.-]*\d{2}[\s.-]*\d{2})/i,
+    );
+    return match ? match[1].replace(/\s+/g, " ").trim() : null;
+  }
+
+  private extractSocialLinks(html: string): string | null {
+    const links = new Set<string>();
+    const patterns = [
+      /https?:\/\/(?:www\.)?facebook\.com\/[^\s"'<>]+/gi,
+      /https?:\/\/(?:www\.)?instagram\.com\/[^\s"'<>]+/gi,
+      /https?:\/\/(?:www\.)?(?:twitter\.com|x\.com)\/[^\s"'<>]+/gi,
+      /https?:\/\/(?:www\.)?linkedin\.com\/[^\s"'<>]+/gi,
+      /https?:\/\/(?:www\.)?youtube\.com\/[^\s"'<>]+/gi,
+    ];
+    for (const pattern of patterns) {
+      for (const match of html.match(pattern) ?? []) {
+        links.add(match.replace(/&amp;/g, "&"));
+      }
+    }
+    if (links.size === 0) {
+      return null;
+    }
+    return [...links].slice(0, 5).join(" · ");
   }
 
   private normalizePublicUrl(raw: string): string {
@@ -255,6 +376,14 @@ export class CompanyWebsiteEnrichmentService {
   }
 
   private extractAddress(text: string): string | null {
+    const labeled = this.extractLabeledValue(text, [
+      "Adres",
+      "Adres Bilgileri",
+      "Merkez Adres",
+    ]);
+    if (labeled && /(?:mah|cad|sok|no:|kat:)/i.test(labeled)) {
+      return labeled.slice(0, 200);
+    }
     const street = text.match(
       /Yazgı\s+Sok\.?\s*No:\s*[\d/]+\s*İzmit\/Kocaeli/i,
     );
@@ -262,6 +391,8 @@ export class CompanyWebsiteEnrichmentService {
       return `Yeşilova Mah. ${street[0]}`.replace(/\s+/g, " ").trim();
     }
     const patterns = [
+      /Eyüpsultan\s+mah\.?\s+[^|]{10,160}Sancaktepe\/İstanbul/i,
+      /[A-ZÇĞİÖŞÜ][\wçğıöşüÇĞİÖŞÜ]+(?:\s+[A-ZÇĞİÖŞÜ][\wçğıöşü]+)?\s+mah\.?\s+[^|]{10,140}(?:Sancaktepe|Ümraniye|Kadıköy)\/İstanbul/i,
       /Yeşilova\s+Mah\.?\s+Yazgı\s+Sok\.?\s*No:\s*[\d/]+\s*İzmit\/Kocaeli/i,
       /[A-ZÇĞİÖŞÜ][\wçğıöşüÇĞİÖŞÜ\s.'-]{2,40}\s+Mah\.?\s+[A-ZÇĞİÖŞÜ][\wçğıöşüÇĞİÖŞÜ\s.'-]{2,40}\s+Sok\.?\s*No:\s*[\d/]+[^a-z]{0,8}(?:İzmit\/Kocaeli|Kocaeli|İzmit)/i,
       /(?:Mah\.?|Cad\.?|Sok\.?|Sk\.?)\s+[^|]{10,120}(?:Kocaeli|İzmit|İstanbul|Ankara)/i,
@@ -310,6 +441,11 @@ export class CompanyWebsiteEnrichmentService {
       "Lojistik",
       "Nakliye",
       "Taşımacılık",
+      "Evden Eve",
+      "Parça Eşya",
+      "Ofis Taşıma",
+      "Şehirlerarası",
+      "Eşya Depolama",
     ];
     const found = keywords.filter((word) =>
       text.toLowerCase().includes(word.toLowerCase()),

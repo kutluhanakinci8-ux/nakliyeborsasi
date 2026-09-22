@@ -2,14 +2,24 @@ import { PublicApiConfiguration } from "./PublicApiConfiguration";
 
 export type CompanyWebsiteEnrichment = {
   sourceUrl: string;
+  scannedUrls: string[];
   companyLegalName: string | null;
   tradeName: string | null;
   emailAddress: string | null;
   phone: string | null;
+  whatsappNumber: string | null;
   taxOrRegistryId: string | null;
+  mersisNumber: string | null;
+  taxOfficeLine: string | null;
+  tradeRegistryNumber: string | null;
+  transportLicenseNumber: string | null;
+  kepAddress: string | null;
   addressLine: string | null;
   city: string | null;
+  workingHours: string | null;
+  companyDescription: string | null;
   servicesSummary: string | null;
+  socialMediaSummary: string | null;
   logoUrl: string | null;
 };
 

@@ -2,13 +2,23 @@ export type OrganizationProfile = {
   tradeName: string;
   legalName: string;
   taxNumber: string;
+  mersisNumber: string;
+  taxOfficeLine: string;
+  tradeRegistryNumber: string;
+  transportLicenseNumber: string;
+  kepAddress: string;
   city: string;
   countryCode: string;
   phone: string;
+  whatsappNumber: string;
   website: string;
   addressLine: string;
+  workingHours: string;
+  companyDescription: string;
   servicesSummary: string;
+  socialMediaSummary: string;
   logoUrl: string;
+  websiteScannedUrls: string;
   websiteEnrichmentCompletedAt: string;
   corridors: string[];
   primaryEmail: string;
@@ -48,13 +58,23 @@ export function defaultOrganizationProfile(
     tradeName: companyId ? `Firma ${companyId.slice(0, 8)}` : "",
     legalName: "",
     taxNumber: "",
+    mersisNumber: "",
+    taxOfficeLine: "",
+    tradeRegistryNumber: "",
+    transportLicenseNumber: "",
+    kepAddress: "",
     city: "",
     countryCode: "TR",
     phone: "",
+    whatsappNumber: "",
     website: "",
     addressLine: "",
+    workingHours: "",
+    companyDescription: "",
     servicesSummary: "",
+    socialMediaSummary: "",
     logoUrl: "",
+    websiteScannedUrls: "",
     websiteEnrichmentCompletedAt: "",
     corridors: ["TR", "UA", "EU"],
     primaryEmail,

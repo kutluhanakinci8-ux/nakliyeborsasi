@@ -11,6 +11,7 @@ import {
   type OrganizationProfile,
 } from "../../../../lib/organizationProfile";
 import {
+  enrichOrganizationFromWebsite,
   getPendingWebsiteEnrichmentUrl,
   runPendingWebsiteEnrichment,
 } from "../../../../lib/websiteEnrichmentWorkflow";
@@ -93,6 +94,30 @@ export function OrganizationPageClient() {
 
   function updateProfile(patch: Partial<OrganizationProfile>): void {
     setProfile((current) => ({ ...current, ...patch }));
+  }
+
+  async function rescanWebsite(): Promise<void> {
+    const url = profile.website.trim();
+    if (!companyId || !url) {
+      setSaveMessage("Önce bir web sitesi adresi girin.");
+      window.setTimeout(() => setSaveMessage(""), 5000);
+      return;
+    }
+    setIsEnrichingWebsite(true);
+    setSaveMessage("Web sitesi yeniden taranıyor…");
+    const outcome = await enrichOrganizationFromWebsite(
+      companyId,
+      emailAddress,
+      url,
+    );
+    setIsEnrichingWebsite(false);
+    if (outcome === "success") {
+      setProfile(loadOrganizationProfile(companyId, emailAddress));
+      setSaveMessage("Tarama tamamlandı; yeni alanlar güncellendi.");
+    } else {
+      setSaveMessage("Tarama başarısız. Adresi kontrol edip tekrar deneyin.");
+    }
+    window.setTimeout(() => setSaveMessage(""), 8000);
   }
 
   const corridorDisplay = profile.corridors.join(" · ") || "—";
@@ -290,13 +315,23 @@ export function OrganizationPageClient() {
               kaydedin.
             </p>
           </div>
-          <button
-            type="button"
-            className="btn-account-ghost"
-            onClick={() => persistProfile(profile)}
-          >
-            Bu bölümü kaydet
-          </button>
+          <div className="account-card-head-actions">
+            <button
+              type="button"
+              className="btn-account-ghost"
+              disabled={isEnrichingWebsite}
+              onClick={() => void rescanWebsite()}
+            >
+              Web sitesini yeniden tara
+            </button>
+            <button
+              type="button"
+              className="btn-account-ghost"
+              onClick={() => persistProfile(profile)}
+            >
+              Bu bölümü kaydet
+            </button>
+          </div>
         </header>
         <div className="account-form-grid">
           <div className="account-logo-field account-form-span-2">
@@ -330,6 +365,20 @@ export function OrganizationPageClient() {
             </div>
           </div>
           <label className="label-light account-form-span-2">
+            Firma tanımı (web / meta)
+            <textarea
+              className="input-light account-textarea"
+              name="nb-company-description"
+              autoComplete="off"
+              rows={2}
+              value={profile.companyDescription}
+              onChange={(event) =>
+                updateProfile({ companyDescription: event.target.value })
+              }
+              placeholder="Ana sayfa veya meta açıklaması"
+            />
+          </label>
+          <label className="label-light account-form-span-2">
             Açık adres
             <input
               className="input-light"
@@ -340,6 +389,110 @@ export function OrganizationPageClient() {
                 updateProfile({ addressLine: event.target.value })
               }
               placeholder="Web sitesinden veya manuel"
+            />
+          </label>
+          <label className="label-light">
+            Çalışma saatleri
+            <input
+              className="input-light"
+              name="nb-working-hours"
+              autoComplete="off"
+              value={profile.workingHours}
+              onChange={(event) =>
+                updateProfile({ workingHours: event.target.value })
+              }
+              placeholder="Örn. her gün 09:00 - 18:00"
+            />
+          </label>
+          <label className="label-light">
+            WhatsApp
+            <input
+              className="input-light"
+              name="nb-whatsapp"
+              autoComplete="off"
+              value={profile.whatsappNumber}
+              onChange={(event) =>
+                updateProfile({ whatsappNumber: event.target.value })
+              }
+              placeholder="Müşteri veya operasyon hattı"
+            />
+          </label>
+          <p className="account-form-subheading account-form-span-2">
+            Resmi kayıt ve uyum
+          </p>
+          <label className="label-light">
+            MERSİS numarası
+            <input
+              className="input-light"
+              name="nb-mersis"
+              autoComplete="off"
+              value={profile.mersisNumber}
+              onChange={(event) =>
+                updateProfile({ mersisNumber: event.target.value })
+              }
+            />
+          </label>
+          <label className="label-light">
+            Vergi dairesi / no (satır)
+            <input
+              className="input-light"
+              name="nb-tax-office"
+              autoComplete="off"
+              value={profile.taxOfficeLine}
+              onChange={(event) =>
+                updateProfile({ taxOfficeLine: event.target.value })
+              }
+              placeholder="Örn. Sultanbeyli 3340524157"
+            />
+          </label>
+          <label className="label-light">
+            Ticaret sicil no
+            <input
+              className="input-light"
+              name="nb-trade-registry"
+              autoComplete="off"
+              value={profile.tradeRegistryNumber}
+              onChange={(event) =>
+                updateProfile({ tradeRegistryNumber: event.target.value })
+              }
+            />
+          </label>
+          <label className="label-light">
+            Ulaştırma yetki belge no
+            <input
+              className="input-light"
+              name="nb-transport-license"
+              autoComplete="off"
+              value={profile.transportLicenseNumber}
+              onChange={(event) =>
+                updateProfile({ transportLicenseNumber: event.target.value })
+              }
+            />
+          </label>
+          <label className="label-light account-form-span-2">
+            KEP adresi
+            <input
+              className="input-light"
+              name="nb-kep"
+              autoComplete="off"
+              value={profile.kepAddress}
+              onChange={(event) =>
+                updateProfile({ kepAddress: event.target.value })
+              }
+              placeholder="ornek@hs01.kep.tr"
+            />
+          </label>
+          <label className="label-light account-form-span-2">
+            Sosyal medya (özet)
+            <input
+              className="input-light"
+              name="nb-social"
+              autoComplete="off"
+              value={profile.socialMediaSummary}
+              onChange={(event) =>
+                updateProfile({ socialMediaSummary: event.target.value })
+              }
+              placeholder="Facebook, Instagram…"
             />
           </label>
           <label className="label-light account-form-span-2">
@@ -357,6 +510,12 @@ export function OrganizationPageClient() {
             />
           </label>
         </div>
+        {profile.websiteScannedUrls ? (
+          <p className="account-meta-line account-meta-line--wrap">
+            Taranan sayfalar:{" "}
+            <code>{profile.websiteScannedUrls.replace(/\n/g, " · ")}</code>
+          </p>
+        ) : null}
         {profile.websiteEnrichmentCompletedAt ? (
           <p className="account-meta-line">
             Son otomatik tarama:{" "}

@@ -10,6 +10,103 @@ import {
 
 const PENDING_ENRICHMENT_PREFIX = "nb-pending-website-enrichment:";
 
+function pickFirstNonEmpty(
+  current: string,
+  ...candidates: (string | null | undefined)[]
+): string {
+  const trimmed = current.trim();
+  if (trimmed) {
+    return trimmed;
+  }
+  for (const candidate of candidates) {
+    const value = candidate?.trim();
+    if (value) {
+      return value;
+    }
+  }
+  return "";
+}
+
+export function mergeEnrichmentIntoProfile(
+  profile: OrganizationProfile,
+  enrichment: CompanyWebsiteEnrichment,
+): OrganizationProfile {
+  const mersis =
+    pickFirstNonEmpty(profile.mersisNumber, enrichment.mersisNumber) ||
+    (enrichment.taxOrRegistryId?.match(/\d{16}/)?.[0] ?? "");
+  const taxNumber = pickFirstNonEmpty(
+    profile.taxNumber,
+    mersis || undefined,
+    enrichment.taxOrRegistryId,
+  );
+  const scannedUrls =
+    enrichment.scannedUrls?.length > 0
+      ? enrichment.scannedUrls.join("\n")
+      : enrichment.sourceUrl;
+
+  return {
+    ...profile,
+    website: pickFirstNonEmpty(profile.website, enrichment.sourceUrl),
+    tradeName: pickFirstNonEmpty(
+      profile.tradeName,
+      enrichment.tradeName,
+      enrichment.companyLegalName,
+    ),
+    legalName: pickFirstNonEmpty(
+      profile.legalName,
+      enrichment.companyLegalName,
+    ),
+    taxNumber,
+    mersisNumber: mersis,
+    taxOfficeLine: pickFirstNonEmpty(
+      profile.taxOfficeLine,
+      enrichment.taxOfficeLine,
+    ),
+    tradeRegistryNumber: pickFirstNonEmpty(
+      profile.tradeRegistryNumber,
+      enrichment.tradeRegistryNumber,
+    ),
+    transportLicenseNumber: pickFirstNonEmpty(
+      profile.transportLicenseNumber,
+      enrichment.transportLicenseNumber,
+    ),
+    kepAddress: pickFirstNonEmpty(profile.kepAddress, enrichment.kepAddress),
+    city: pickFirstNonEmpty(profile.city, enrichment.city),
+    phone: pickFirstNonEmpty(profile.phone, enrichment.phone),
+    whatsappNumber: pickFirstNonEmpty(
+      profile.whatsappNumber,
+      enrichment.whatsappNumber,
+    ),
+    primaryEmail: pickFirstNonEmpty(
+      profile.primaryEmail,
+      enrichment.emailAddress,
+    ),
+    addressLine: pickFirstNonEmpty(profile.addressLine, enrichment.addressLine),
+    workingHours: pickFirstNonEmpty(
+      profile.workingHours,
+      enrichment.workingHours,
+    ),
+    companyDescription: pickFirstNonEmpty(
+      profile.companyDescription,
+      enrichment.companyDescription,
+    ),
+    servicesSummary: pickFirstNonEmpty(
+      profile.servicesSummary,
+      enrichment.servicesSummary,
+    ),
+    socialMediaSummary: pickFirstNonEmpty(
+      profile.socialMediaSummary,
+      enrichment.socialMediaSummary,
+    ),
+    logoUrl: pickFirstNonEmpty(profile.logoUrl, enrichment.logoUrl),
+    websiteScannedUrls: pickFirstNonEmpty(
+      profile.websiteScannedUrls,
+      scannedUrls,
+    ),
+    websiteEnrichmentCompletedAt: new Date().toISOString(),
+  };
+}
+
 export function queueWebsiteEnrichmentAfterRegistration(
   companyId: string,
   websiteUrl: string,
@@ -35,33 +132,26 @@ export function clearPendingWebsiteEnrichment(companyId: string): void {
   window.localStorage.removeItem(`${PENDING_ENRICHMENT_PREFIX}${companyId}`);
 }
 
-function mergeEnrichmentIntoProfile(
-  profile: OrganizationProfile,
-  enrichment: CompanyWebsiteEnrichment,
-): OrganizationProfile {
-  return {
-    ...profile,
-    website: profile.website.trim() || enrichment.sourceUrl,
-    tradeName:
-      profile.tradeName.trim() ||
-      enrichment.tradeName ||
-      enrichment.companyLegalName ||
-      profile.tradeName,
-    legalName:
-      profile.legalName.trim() ||
-      enrichment.companyLegalName ||
-      profile.legalName,
-    taxNumber: profile.taxNumber.trim() || enrichment.taxOrRegistryId || "",
-    city: profile.city.trim() || enrichment.city || "",
-    phone: profile.phone.trim() || enrichment.phone || "",
-    primaryEmail:
-      profile.primaryEmail.trim() || enrichment.emailAddress || profile.primaryEmail,
-    addressLine: profile.addressLine.trim() || enrichment.addressLine || "",
-    servicesSummary:
-      profile.servicesSummary.trim() || enrichment.servicesSummary || "",
-    logoUrl: profile.logoUrl.trim() || enrichment.logoUrl || "",
-    websiteEnrichmentCompletedAt: new Date().toISOString(),
-  };
+export async function enrichOrganizationFromWebsite(
+  companyId: string,
+  primaryEmail: string,
+  websiteUrl: string,
+): Promise<"success" | "error"> {
+  const trimmed = websiteUrl.trim();
+  if (!companyId || !trimmed) {
+    return "error";
+  }
+  try {
+    const enrichment = await AuthApiClient.enrichCompanyWebsite(trimmed);
+    const profile = loadOrganizationProfile(companyId, primaryEmail);
+    saveOrganizationProfile(
+      companyId,
+      mergeEnrichmentIntoProfile(profile, enrichment),
+    );
+    return "success";
+  } catch {
+    return "error";
+  }
 }
 
 export async function runPendingWebsiteEnrichment(
@@ -72,16 +162,13 @@ export async function runPendingWebsiteEnrichment(
   if (!pendingUrl) {
     return "none";
   }
-  try {
-    const enrichment = await AuthApiClient.enrichCompanyWebsite(pendingUrl);
-    const profile = loadOrganizationProfile(companyId, primaryEmail);
-    saveOrganizationProfile(
-      companyId,
-      mergeEnrichmentIntoProfile(profile, enrichment),
-    );
+  const outcome = await enrichOrganizationFromWebsite(
+    companyId,
+    primaryEmail,
+    pendingUrl,
+  );
+  if (outcome === "success") {
     clearPendingWebsiteEnrichment(companyId);
-    return "success";
-  } catch {
-    return "error";
   }
+  return outcome;
 }
