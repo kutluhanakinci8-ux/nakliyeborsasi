@@ -58,7 +58,8 @@ export function LoginPageClient() {
           <div className="auth-card auth-card--light">
             <h2>Üye girişi</h2>
             <p className="muted muted--dark">
-              Demo: demo@ / partner@ · Şifre: DemoPass123! · Platform yönetimi:{" "}
+              Test: yukveren01 / yuktasiyan01 / yukarayan01 @test… · TestPass123! ·
+              Demo: demo@ · DemoPass123! · Platform:{" "}
               <Link href="/admin/login">/admin/login</Link>
             </p>
             <form onSubmit={(event) => void handleLogin(event)}>

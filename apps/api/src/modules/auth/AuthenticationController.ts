@@ -42,9 +42,13 @@ export class AuthenticationController {
 
   @Get("session")
   @UseGuards(JwtAuthenticationGuard)
-  public getSession(
+  public async getSession(
     @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
-  ): { session: AuthenticatedUserContext } {
-    return { session: authenticatedUser };
+  ): Promise<{ session: AuthenticatedUserContext }> {
+    const session =
+      await this.userCredentialAuthenticationService.resolveSessionContext(
+        authenticatedUser,
+      );
+    return { session };
   }
 }

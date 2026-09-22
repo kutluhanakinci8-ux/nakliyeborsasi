@@ -3,6 +3,7 @@ export * from "./constants/SubscriptionModuleCode";
 export * from "./constants/IntegrationProviderCode";
 export * from "./constants/GeographicMarketCode";
 export * from "./constants/CompanyRoleCode";
+export * from "./constants/CompanyParticipantTypeCode";
 export * from "./constants/EquipmentTypeCode";
 export * from "./constants/AuctionSessionStatusCode";
 export * from "./exceptions/AuctionSessionNotFoundException";

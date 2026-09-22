@@ -21,6 +21,10 @@ export class CompanyEntity {
   @Column({ type: "varchar", length: 2 })
   public countryCode!: string;
 
+  /** LOAD_SHIPPER | LOAD_CARRIER | LOAD_SEEKER */
+  @Column({ type: "varchar", length: 32, nullable: true })
+  public participantTypeCode!: string | null;
+
   @OneToMany(() => CompanyMembershipEntity, (membership) => membership.company)
   public memberships!: CompanyMembershipEntity[];
 

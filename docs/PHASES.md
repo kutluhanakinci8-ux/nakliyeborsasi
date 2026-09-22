@@ -22,6 +22,8 @@
 | `partner@nakliyeborsasi.local` | `DemoPass123!` | `carrier_professional_tr_ua` |
 | `admin@nakliyeborsasi.local` | `AdminPass123!` | `carrier_professional_tr_ua` (platform yönetimi) |
 
+**Pazar test kullanıcıları (15):** `docs/TEST_USERS.md` — şifre `TestPass123!` (yük veren / taşıyan / arayan × 5).
+
 Panel: `:3010/panel/` · Web: `:3011`
 
 ## Önerilen sıra

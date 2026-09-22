@@ -10,6 +10,7 @@ import { CompanyMembershipEntity } from "../entities/CompanyMembershipEntity";
 import { CompanySubscriptionEntity } from "../entities/CompanySubscriptionEntity";
 import { FreightListingEntity } from "../entities/FreightListingEntity";
 import { SubscriptionPlanCatalog } from "../../../modules/subscription/SubscriptionPlanCatalog";
+import { seedTestMarketParticipants } from "./TestMarketParticipantSeed";
 
 @Injectable()
 export class DatabaseSeedRunner implements OnModuleInit {
@@ -34,6 +35,13 @@ export class DatabaseSeedRunner implements OnModuleInit {
     await this.seedDemoTenant();
     await this.seedPartnerDemoTenant();
     await this.seedPlatformAdminTenant();
+    await seedTestMarketParticipants({
+      companyRepository: this.companyRepository,
+      userAccountRepository: this.userAccountRepository,
+      companyMembershipRepository: this.companyMembershipRepository,
+      companySubscriptionRepository: this.companySubscriptionRepository,
+      freightListingRepository: this.freightListingRepository,
+    });
   }
 
   private async seedSubscriptionPlans(): Promise<void> {

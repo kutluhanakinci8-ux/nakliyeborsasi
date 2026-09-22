@@ -4,6 +4,7 @@ import { Repository } from "typeorm";
 import {
   AuthenticatedUserContext,
   AuthenticationException,
+  CompanyParticipantTypeCode,
   CompanyRoleCode,
   ValidationException,
 } from "@nakliyeborsasi/core";
@@ -73,6 +74,26 @@ export class UserCredentialAuthenticationService {
       companyId: company.id,
       emailAddress: user.emailAddress,
       roleCodes: [CompanyRoleCode.CompanyOwner],
+      companyParticipantTypeCode: null,
+    });
+  }
+
+  public async resolveSessionContext(
+    base: AuthenticatedUserContext,
+  ): Promise<AuthenticatedUserContext> {
+    const company = await this.companyRepository.findOne({
+      where: { id: base.companyId },
+    });
+    const participantCode = company?.participantTypeCode as
+      | CompanyParticipantTypeCode
+      | null
+      | undefined;
+    return new AuthenticatedUserContext({
+      userId: base.userId,
+      companyId: base.companyId,
+      emailAddress: base.emailAddress,
+      roleCodes: base.roleCodes,
+      companyParticipantTypeCode: participantCode ?? null,
     });
   }
 
@@ -100,11 +121,12 @@ export class UserCredentialAuthenticationService {
     const roleCodes = user.memberships.map(
       (membership) => membership.roleCode as CompanyRoleCode,
     );
-    return new AuthenticatedUserContext({
+    const context = new AuthenticatedUserContext({
       userId: user.id,
       companyId: primaryMembership.companyId,
       emailAddress: user.emailAddress,
       roleCodes,
     });
+    return this.resolveSessionContext(context);
   }
 }
