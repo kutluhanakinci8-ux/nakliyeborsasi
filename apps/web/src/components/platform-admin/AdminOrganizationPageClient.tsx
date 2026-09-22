@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { EmptyState } from "../EmptyState";
 import { addManualCompanyId, loadManualCompanyIds } from "../../lib/adminCompanyDirectory";
 import {
@@ -61,6 +61,7 @@ export function AdminOrganizationPageClient() {
   const [message, setMessage] = useState("");
   const [activeTab, setActiveTab] = useState<OrgTab>("trust");
   const [loading, setLoading] = useState(true);
+  const mainPanelRef = useRef<HTMLDivElement>(null);
 
   const refreshDirectory = useCallback(async () => {
     if (!accessToken) {
@@ -102,6 +103,15 @@ export function AdminOrganizationPageClient() {
       setSelectedId(firmaFromQuery);
     }
   }, [firmaFromQuery]);
+
+  useEffect(() => {
+    if (!selectedId || !mainPanelRef.current) {
+      return;
+    }
+    if (window.matchMedia("(max-width: 1100px)").matches) {
+      mainPanelRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [selectedId]);
 
   const selectedCompany = companies.find((c) => c.id === selectedId);
 
@@ -377,7 +387,7 @@ export function AdminOrganizationPageClient() {
           )}
         </aside>
 
-        <div className="admin-org-main">
+        <div className="admin-org-main" ref={mainPanelRef}>
           {!selectedId ? (
             <EmptyState message="Soldan firma seçin veya UUID ekleyin." />
           ) : (

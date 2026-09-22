@@ -4833,6 +4833,7 @@ button.btn-secondary {
 .admin-org-sidebar {
   position: sticky;
   top: 12px;
+  align-self: start;
 }
 
 .admin-org-add {
@@ -4917,8 +4918,50 @@ button.btn-secondary {
 }
 
 .admin-org-layout--premium {
-  grid-template-columns: minmax(280px, 320px) 1fr;
+  grid-template-columns: minmax(280px, 320px) minmax(0, 1fr);
   gap: 14px;
+  align-items: start;
+}
+
+.admin-org-main {
+  min-width: 0;
+  padding-bottom: 48px;
+}
+
+/* Firma detayı kesilmesin: sidebar viewport içinde kayar, form altta boşluk */
+.admin-org-premium .admin-org-sidebar.admin-panel-card {
+  position: sticky;
+  top: 12px;
+  max-height: calc(100vh - 7rem);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.admin-org-premium .admin-org-sidebar .admin-org-company-list--premium,
+.admin-org-premium .admin-org-sidebar .admin-org-company-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.admin-org-premium .admin-org-main .admin-panel-card form {
+  margin-bottom: 8px;
+}
+
+.admin-org-premium .admin-org-main .admin-toggle-row {
+  margin-top: 16px;
+  margin-bottom: 0;
+  padding: 14px 0 4px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.admin-org-premium .admin-org-main .admin-textarea {
+  min-height: 5rem;
+  resize: vertical;
 }
 
 .admin-org-sidebar-head {
@@ -5851,8 +5894,10 @@ button.btn-secondary {
 }
 
 .platform-admin-content {
-  padding: 20px 24px 28px;
+  padding: 20px 24px 48px;
   flex: 1;
+  overflow-x: hidden;
+  overflow-y: visible;
   background:
     radial-gradient(ellipse 120% 80% at 100% 0%, rgba(13, 148, 136, 0.06), transparent 50%),
     radial-gradient(ellipse 80% 60% at 0% 100%, rgba(30, 58, 95, 0.05), transparent 45%),
@@ -6548,6 +6593,23 @@ button.btn-secondary {
 
   .admin-org-layout--premium {
     grid-template-columns: 1fr;
+  }
+
+  /* Dar ekranda önce firma detayı, sonra dizin */
+  .admin-org-premium .admin-org-main {
+    order: 1;
+  }
+
+  .admin-org-premium .admin-org-sidebar {
+    order: 2;
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .admin-org-premium .admin-org-sidebar .admin-org-company-list--premium,
+  .admin-org-premium .admin-org-sidebar .admin-org-company-list {
+    max-height: min(40vh, 360px);
   }
 
   .admin-form-grid {
