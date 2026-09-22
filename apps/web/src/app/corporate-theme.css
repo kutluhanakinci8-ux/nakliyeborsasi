@@ -1,0 +1,323 @@
+/**
+ * Kurumsal görünüm v2 — opak yüzeyler, nötr zemin, video/cam efekt yok.
+ * SiteLayout üzerinde .site-layout--corporate ile etkin.
+ */
+
+.site-layout--corporate {
+  --nb-canvas-base: #f1f5f9;
+  --nb-canvas-mid: #f8fafc;
+  --nb-canvas-top: #ffffff;
+  --nb-surface: #ffffff;
+  --nb-surface-soft: #f8fafc;
+  --nb-surface-border: #e2e8f0;
+  --nb-shadow-soft: 0 1px 3px rgba(15, 23, 42, 0.06);
+  --nb-shadow-panel: 0 4px 24px rgba(15, 23, 42, 0.06);
+  --nb-radius-lg: 12px;
+  --nb-radius-xl: 16px;
+  --nb-footer-text: #cbd5e1;
+  --nb-footer-text-hover: #ffffff;
+  --nb-mint-glow: none;
+  --nb-mint-glow-strong: none;
+  background: var(--nb-canvas-base);
+}
+
+.site-layout--corporate .site-footer-bridge {
+  display: none;
+}
+
+.site-layout--corporate .site-header {
+  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.08);
+}
+
+.site-layout--corporate .site-header-utility,
+.site-layout--corporate .site-header--public .site-header-utility {
+  background: var(--nb-navy-deep);
+  color: #e2e8f0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.site-layout--corporate .utility-badge,
+.site-layout--corporate .site-header--public .utility-badge {
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.site-layout--corporate .utility-dot,
+.site-layout--corporate .site-header--public .utility-dot {
+  background: #38bdf8;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25);
+}
+
+.site-layout--corporate .locale-select--header select,
+.site-layout--corporate .site-header--public .locale-select--header select {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #f8fafc;
+  font-weight: 600;
+}
+
+.site-layout--corporate .site-header-main,
+.site-layout--corporate .site-header--public .site-header-main,
+.site-layout--corporate .site-header--app .site-header-main {
+  background: #ffffff;
+  border-bottom: 1px solid var(--nb-surface-border);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.site-layout--corporate .site-nav,
+.site-layout--corporate .site-header--public .site-nav {
+  background: #f8fafc;
+  border: 1px solid var(--nb-surface-border);
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-radius: 10px;
+  padding: 4px;
+}
+
+.site-layout--corporate .site-nav-link {
+  font-weight: 600;
+  color: var(--nb-navy);
+}
+
+.site-layout--corporate .site-nav-link:hover,
+.site-layout--corporate .site-nav-dropdown-link:hover,
+.site-layout--corporate .site-header--public .site-nav-dropdown-link:hover {
+  background: #e2e8f0;
+  color: var(--nb-navy-deep);
+  text-shadow: none;
+}
+
+.site-layout--corporate .site-nav-link.active,
+.site-layout--corporate .site-header--public .site-nav-dropdown-link.active {
+  background: #ffffff;
+  color: var(--nb-navy-deep);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+  text-shadow: none;
+}
+
+.site-layout--corporate .site-header--public .site-nav-dropdown-panel {
+  background: #ffffff;
+  border: 1px solid var(--nb-surface-border);
+  box-shadow: var(--nb-shadow-panel);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.site-layout--corporate .site-brand-name,
+.site-layout--corporate .site-header--public .site-brand-name {
+  color: var(--nb-navy-deep);
+}
+
+.site-layout--corporate .site-brand-tagline,
+.site-layout--corporate .site-header--public .site-brand-tagline {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.site-layout--corporate .site-brand-mark,
+.site-layout--corporate .site-header--public .site-brand-mark {
+  background: #f1f5f9;
+  border-color: var(--nb-surface-border);
+}
+
+.site-layout--corporate .btn-premium-header {
+  background: var(--nb-navy-deep);
+  color: #ffffff;
+  border-radius: 8px;
+  box-shadow: none;
+  font-weight: 600;
+}
+
+.site-layout--corporate .btn-premium-header:hover {
+  background: var(--nb-navy);
+  filter: none;
+}
+
+.site-layout--corporate .btn-outline-header {
+  border-radius: 8px;
+  border-color: var(--nb-surface-border);
+  color: var(--nb-navy);
+}
+
+.site-layout--corporate .user-pill {
+  border-color: var(--nb-surface-border);
+  box-shadow: none;
+}
+
+.site-layout--corporate .user-avatar {
+  background: var(--nb-navy);
+  color: #fff;
+}
+
+.site-layout--corporate .public-hero {
+  margin: 0 0 28px;
+  padding: 20px 0 24px;
+  border-radius: 0;
+  background: #ffffff;
+  border: none;
+  border-bottom: 1px solid var(--nb-surface-border);
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.site-layout--corporate .public-hero--compact {
+  padding: 16px 0 20px;
+  margin-bottom: 24px;
+}
+
+.site-layout--corporate .public-hero--compact .exchange-lead {
+  color: #475569;
+  font-weight: 500;
+}
+
+.site-layout--corporate .exchange-eyebrow {
+  color: #64748b;
+  letter-spacing: 0.06em;
+}
+
+.site-layout--corporate .exchange-title {
+  color: var(--nb-navy-deep);
+}
+
+.site-layout--corporate .public-hero-image {
+  filter: none;
+}
+
+.site-layout--corporate .stats-strip--hero .stat-item {
+  background: var(--nb-surface-soft);
+  border: 1px solid var(--nb-surface-border);
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.site-layout--corporate .module-panel,
+.site-layout--corporate .module-panel--elevated {
+  background: #ffffff;
+  border: 1px solid var(--nb-surface-border);
+  border-radius: var(--nb-radius-lg);
+  box-shadow: var(--nb-shadow-soft);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.site-layout--corporate .legal-toc-panel,
+.site-layout--corporate .legal-related-panel {
+  background: var(--nb-surface-soft);
+}
+
+.site-layout--corporate .module-panel-title {
+  color: var(--nb-navy-deep);
+  font-weight: 700;
+}
+
+.site-layout--corporate .public-content .module-panel:hover {
+  box-shadow: var(--nb-shadow-panel);
+  transform: none;
+}
+
+.site-layout--corporate .site-footer {
+  background: var(--nb-navy-deep);
+  color: var(--nb-footer-text);
+  border-top: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.site-layout--corporate .site-footer-top-accent {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(56, 189, 248, 0.35) 50%,
+    transparent 100%
+  );
+  height: 2px;
+}
+
+.site-layout--corporate .site-footer-heading {
+  color: #f8fafc;
+  font-weight: 700;
+  text-shadow: none;
+}
+
+.site-layout--corporate .site-footer-heading:hover {
+  text-shadow: none;
+}
+
+.site-layout--corporate .site-footer-links a,
+.site-layout--corporate .site-footer-social a,
+.site-layout--corporate .site-footer-legal a {
+  color: var(--nb-footer-text);
+  font-weight: 500;
+  text-shadow: none;
+}
+
+.site-layout--corporate .site-footer-links a:hover,
+.site-layout--corporate .site-footer-social a:hover,
+.site-layout--corporate .site-footer-legal a:hover,
+.site-layout--corporate .site-footer-social-lead:hover,
+.site-layout--corporate .site-footer-copy:hover {
+  color: var(--nb-footer-text-hover);
+  text-shadow: none;
+}
+
+.site-layout--corporate .site-footer-meta {
+  border-top-color: rgba(255, 255, 255, 0.12);
+}
+
+.site-layout--corporate .site-footer-copy {
+  color: #94a3b8;
+}
+
+.site-layout--corporate .site-footer-brand .site-brand:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.site-layout--corporate .site-footer-brand .site-brand:hover .site-brand-name,
+.site-layout--corporate .site-footer-brand .site-brand:hover .site-brand-tagline,
+.site-layout--corporate .site-footer-brand .site-brand:hover .site-brand-monogram {
+  color: #ffffff;
+  text-shadow: none;
+}
+
+.site-layout--corporate .site-brand--footer .site-brand-name,
+.site-layout--corporate .site-brand--footer .site-brand-monogram {
+  color: #f8fafc;
+}
+
+.site-layout--corporate .site-brand--footer .site-brand-tagline {
+  color: #94a3b8;
+}
+
+.site-layout--corporate .site-brand--footer .site-brand-icon {
+  color: rgba(148, 163, 184, 0.8);
+}
+
+.site-layout--corporate .site-footer-social-lead {
+  color: #94a3b8;
+}
+
+.site-layout--corporate .module-tabs {
+  background: #f1f5f9;
+  border-color: var(--nb-surface-border);
+  border-radius: 10px;
+}
+
+.site-layout--corporate .module-tab.active {
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+  color: var(--nb-navy-deep);
+}
+
+.site-layout--corporate .page-breadcrumb a {
+  color: var(--nb-link);
+  font-weight: 500;
+}
+
+.site-layout--corporate .page-breadcrumb-current {
+  color: #64748b;
+}

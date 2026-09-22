@@ -33,10 +33,11 @@
 
 body {
   margin: 0;
-  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-family: var(--font-inter, "Inter"), system-ui, -apple-system, sans-serif;
   background: var(--nb-canvas-base);
   color: var(--nb-heading);
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
 }
 
 a {

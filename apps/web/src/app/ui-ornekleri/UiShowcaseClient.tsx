@@ -23,8 +23,8 @@ export function UiShowcaseClient() {
     <SiteLayout headerVariant="public">
       <PublicPageShell
         breadcrumbLabel="Tasarım önizleme"
-        title="Hover ve premium efekt galerisi"
-        lead="Aşağıdaki örneklerin üzerine gelin, tıklayın ve karşılaştırın. Beğendiğiniz stili söyleyin — canlı siteye taşıyalım."
+        title="Kurumsal bileşen galerisi"
+        lead="Opak kartlar, lacivert footer ve sade navigasyon — canlı site ile aynı kurumsal tema. Bileşenleri burada test edebilirsiniz."
         showHeroVisual={false}
         heroCompact
         subnav={SECTIONS.map((s) => ({ href: `#${s.id}`, label: s.label }))}

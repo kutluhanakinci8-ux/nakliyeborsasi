@@ -1,7 +1,7 @@
 # Arka plan videosu
 
-- **`corridor-bg.mp4`** — Site geneli loop (1280×720, ~12 sn). Havadan otoyol / tır (nakliye koridoru).
-- **`corridor-bg-poster.jpg`** — `prefers-reduced-motion` için durağan kare.
+- **`corridor-bg.mp4`** — (Arşiv) Eski tam sayfa arka plan videosu; kurumsal temada kullanılmıyor.
+- **`corridor-bg-poster.jpg`** — Video poster karesi; arşiv.
 
 ## Kaynak & lisans
 
