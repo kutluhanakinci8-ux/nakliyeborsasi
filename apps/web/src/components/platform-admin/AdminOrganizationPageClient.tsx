@@ -1,7 +1,15 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  FormEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import {
   addManualCompanyId,
   loadManualCompanyIds,
@@ -39,6 +47,10 @@ import {
 import { refreshInstagramStatsForOrganization } from "../../lib/instagramStatsWorkflow";
 import { useWebSession } from "../../context/WebSessionProvider";
 import { AdminDonutChart } from "./AdminDashboardCharts";
+import {
+  AdminCorporateProfileHero,
+  AdminCorporateProfileOverview,
+} from "./AdminOrganizationProfileUi";
 import { OrganizationSwipeListItem } from "./OrganizationSwipeListItem";
 import type { OrgAction, OrgEditSection } from "./organizationTypes";
 
@@ -74,7 +86,8 @@ export function AdminOrganizationPageClient() {
   const [manualId, setManualId] = useState("");
   const [message, setMessage] = useState("");
   const [activeAction, setActiveAction] = useState<OrgAction | null>(null);
-  const [editSection, setEditSection] = useState<OrgEditSection>("profile");
+  const [editSection, setEditSection] = useState<OrgEditSection>("overview");
+  const [isProfileEditing, setIsProfileEditing] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState("");
   const [loading, setLoading] = useState(true);
   const [swipeOpenId, setSwipeOpenId] = useState<string | null>(null);
@@ -148,6 +161,8 @@ export function AdminOrganizationPageClient() {
   useEffect(() => {
     setActiveAction(null);
     setDeleteConfirm("");
+    setIsProfileEditing(false);
+    setEditSection("overview");
   }, [selectedId]);
 
   useEffect(() => {
@@ -227,20 +242,49 @@ export function AdminOrganizationPageClient() {
     parsed: { posts: string; followers: string; following: string },
     note: string,
   ): void {
-    setProfile((current) => ({
-      ...current,
-      instagramPostsCount:
-        normalizeInstagramCountLabel(parsed.posts) || current.instagramPostsCount,
-      instagramFollowersCount:
-        normalizeInstagramCountLabel(parsed.followers) ||
-        current.instagramFollowersCount,
-      instagramFollowingCount:
-        normalizeInstagramCountLabel(parsed.following) ||
-        current.instagramFollowingCount,
-      instagramStatsFetchedAt: new Date().toISOString(),
-      instagramStatsNote: note,
-    }));
-    flash("Instagram sayıları forma yazıldı — Kaydet ile saklayın.");
+    if (!selectedId) {
+      return;
+    }
+    setProfile((current) => {
+      const next = {
+        ...current,
+        instagramPostsCount:
+          normalizeInstagramCountLabel(parsed.posts) || current.instagramPostsCount,
+        instagramFollowersCount:
+          normalizeInstagramCountLabel(parsed.followers) ||
+          current.instagramFollowersCount,
+        instagramFollowingCount:
+          normalizeInstagramCountLabel(parsed.following) ||
+          current.instagramFollowingCount,
+        instagramStatsFetchedAt: new Date().toISOString(),
+        instagramStatsNote: note,
+      };
+      saveOrganizationProfile(selectedId, next);
+      return next;
+    });
+    flash("Instagram sayıları kaydedildi.");
+  }
+
+  function startProfileEdit(section: OrgEditSection = "profile"): void {
+    setIsProfileEditing(true);
+    if (section !== "overview" && section !== "audit") {
+      setEditSection(section);
+    }
+  }
+
+  function commitProfileEdits(): void {
+    saveAll("Operatör profil düzenlemesi kaydedildi.");
+    setIsProfileEditing(false);
+    setEditSection("overview");
+  }
+
+  function cancelProfileEdits(): void {
+    if (selectedId) {
+      setProfile(loadOrganizationProfile(selectedId, profile.primaryEmail));
+    }
+    setIsProfileEditing(false);
+    setEditSection("overview");
+    flash("Düzenleme iptal edildi.");
   }
 
   function handleParseInstagramPaste(): void {
@@ -298,7 +342,7 @@ export function AdminOrganizationPageClient() {
 
   function handleProfileSubmit(event: FormEvent): void {
     event.preventDefault();
-    saveAll("Organizasyon profili kaydedildi.");
+    commitProfileEdits();
   }
 
   function handleAdminSubmit(event: FormEvent): void {
@@ -338,8 +382,31 @@ export function AdminOrganizationPageClient() {
     setActiveAction(action);
     setSwipeOpenId(null);
     if (action === "edit") {
-      setEditSection("profile");
+      setEditSection("overview");
+      setIsProfileEditing(false);
     }
+  }
+
+  function renderEditSectionGate(section: OrgEditSection, title: string): ReactNode {
+    if (isProfileEditing) {
+      return null;
+    }
+    return (
+      <section className="admin-panel-card admin-corp-edit-gate">
+        <h2 className="admin-corp-block-title">{title}</h2>
+        <p className="admin-corp-edit-gate-lead">
+          Bilgiler üye hesabı ve web taramasından otomatik gelir. Değiştirmek için düzenleme
+          modunu açın.
+        </p>
+        <button
+          type="button"
+          className="admin-btn-secondary"
+          onClick={() => startProfileEdit(section)}
+        >
+          Bu bölümü düzenle
+        </button>
+      </section>
+    );
   }
 
   function handleClearLocalData(): void {
@@ -509,9 +576,19 @@ export function AdminOrganizationPageClient() {
         ) : null}
 
         {activeAction === "edit" ? (
-          <nav className="admin-org-edit-tabs" aria-label="Düzenleme bölümleri">
+          <>
+            <AdminCorporateProfileHero
+              profile={profile}
+              company={selectedCompany}
+              isEditing={isProfileEditing}
+              onStartEdit={() => startProfileEdit("profile")}
+              onSave={commitProfileEdits}
+              onCancelEdit={cancelProfileEdits}
+            />
+            <nav className="admin-org-edit-tabs" aria-label="Düzenleme bölümleri">
             {(
               [
+                ["overview", "Kurumsal özet"],
                 ["profile", "Temel"],
                 ["web", "Web taraması"],
                 ["compliance", "Resmi kayıt"],
@@ -535,16 +612,32 @@ export function AdminOrganizationPageClient() {
               </button>
             ))}
           </nav>
+          </>
         ) : null}
 
-        {activeAction === "edit" && editSection === "profile" ? (
+        {activeAction === "edit" && editSection === "overview" ? (
+          <section className="admin-panel-card admin-corp-overview-card">
+            <AdminCorporateProfileOverview profile={profile} />
+            <p className="admin-corp-view-hint">
+              Bu özet, üyenin organizasyon sayfası ve web taramasından gelen kayıtlı verileri
+              gösterir. Operatör düzenlemesi için üstteki <strong>Profili düzenle</strong>{" "}
+              kullanılır.
+            </p>
+          </section>
+        ) : null}
+
+        {activeAction === "edit" &&
+          editSection === "profile" &&
+          !isProfileEditing &&
+          renderEditSectionGate("profile", "Temel bilgiler")}
+
+        {activeAction === "edit" && editSection === "profile" && isProfileEditing ? (
           <form className="admin-panel-card" onSubmit={handleProfileSubmit}>
             <header className="admin-panel-card-head">
               <div>
                 <h2>Temel bilgiler</h2>
                 <p>Ticari ve resmi unvan</p>
               </div>
-              <button type="submit" className="admin-btn-primary">Kaydet</button>
             </header>
             <div className="admin-form-grid">
               <label className="admin-field">
@@ -607,14 +700,18 @@ export function AdminOrganizationPageClient() {
           </form>
         ) : null}
 
-        {activeAction === "edit" && editSection === "web" ? (
+        {activeAction === "edit" &&
+          editSection === "web" &&
+          !isProfileEditing &&
+          renderEditSectionGate("web", "Web taraması")}
+
+        {activeAction === "edit" && editSection === "web" && isProfileEditing ? (
           <form className="admin-panel-card" onSubmit={handleProfileSubmit}>
             <header className="admin-panel-card-head">
               <div>
                 <h2>Web sitesinden alınan bilgiler</h2>
                 <p>Üye hesabında otomatik tarama ile doldurulan alanlar</p>
               </div>
-              <button type="submit" className="admin-btn-primary">Kaydet</button>
             </header>
             <div className="admin-org-logo-row">
               {profile.logoUrl ? (
@@ -708,14 +805,18 @@ export function AdminOrganizationPageClient() {
           </form>
         ) : null}
 
-        {activeAction === "edit" && editSection === "compliance" ? (
+        {activeAction === "edit" &&
+          editSection === "compliance" &&
+          !isProfileEditing &&
+          renderEditSectionGate("compliance", "Resmi kayıt")}
+
+        {activeAction === "edit" && editSection === "compliance" && isProfileEditing ? (
           <form className="admin-panel-card" onSubmit={handleProfileSubmit}>
             <header className="admin-panel-card-head">
               <div>
                 <h2>Resmi kayıt ve uyum</h2>
                 <p>MERSİS, vergi, sicil, yetki belgesi, KEP</p>
               </div>
-              <button type="submit" className="admin-btn-primary">Kaydet</button>
             </header>
             <div className="admin-form-grid">
               <label className="admin-field">
@@ -781,7 +882,7 @@ export function AdminOrganizationPageClient() {
           </form>
         ) : null}
 
-        {activeAction === "edit" && editSection === "corridor" ? (
+        {activeAction === "edit" && editSection === "corridor" && !isProfileEditing ? (
           <section className="admin-panel-card">
             <header className="admin-panel-card-head">
               <div>
@@ -790,11 +891,27 @@ export function AdminOrganizationPageClient() {
               </div>
               <button
                 type="button"
-                className="admin-btn-primary"
-                onClick={() => saveAll("Koridor yetkileri güncellendi.")}
+                className="admin-btn-secondary"
+                onClick={() => startProfileEdit("corridor")}
               >
-                Kaydet
+                Düzenle
               </button>
+            </header>
+            <p className="admin-corp-corridor-readonly">
+              {profile.corridors.length > 0
+                ? profile.corridors.join(" · ")
+                : "—"}
+            </p>
+          </section>
+        ) : null}
+
+        {activeAction === "edit" && editSection === "corridor" && isProfileEditing ? (
+          <section className="admin-panel-card">
+            <header className="admin-panel-card-head">
+              <div>
+                <h2>Koridor yetkileri</h2>
+                <p>TR · UA · EU erişimleri</p>
+              </div>
             </header>
             <div className="account-corridor-toggles">
               {CORRIDOR_OPTIONS.map((corridor) => {
@@ -817,14 +934,18 @@ export function AdminOrganizationPageClient() {
           </section>
         ) : null}
 
-        {activeAction === "edit" && editSection === "contact" ? (
+        {activeAction === "edit" &&
+          editSection === "contact" &&
+          !isProfileEditing &&
+          renderEditSectionGate("contact", "İletişim")}
+
+        {activeAction === "edit" && editSection === "contact" && isProfileEditing ? (
           <form className="admin-panel-card" onSubmit={handleProfileSubmit}>
             <header className="admin-panel-card-head">
               <div>
                 <h2>Birincil iletişim</h2>
                 <p>E-posta, telefon, WhatsApp ve web</p>
               </div>
-              <button type="submit" className="admin-btn-primary">Kaydet</button>
             </header>
             <div className="admin-form-grid">
               <label className="admin-field admin-field--span-2">
@@ -875,14 +996,18 @@ export function AdminOrganizationPageClient() {
           </form>
         ) : null}
 
-        {activeAction === "edit" && editSection === "social" ? (
+        {activeAction === "edit" &&
+          editSection === "social" &&
+          !isProfileEditing &&
+          renderEditSectionGate("social", "Sosyal medya")}
+
+        {activeAction === "edit" && editSection === "social" && isProfileEditing ? (
           <form className="admin-panel-card" onSubmit={handleProfileSubmit}>
             <header className="admin-panel-card-head">
               <div>
                 <h2>Sosyal medya</h2>
                 <p>Web taramasından ayrı platform adresleri</p>
               </div>
-              <button type="submit" className="admin-btn-primary">Kaydet</button>
             </header>
             <div className="admin-social-connection-panel">
               <p className="admin-social-connection-title">
