@@ -5658,6 +5658,35 @@ button.btn-secondary {
   color: #64748b;
 }
 
+.admin-social-connection-panel--browser {
+  background: linear-gradient(145deg, #fffbeb, #fef3c7);
+  border-color: #fde68a;
+}
+
+.admin-social-browser-steps {
+  margin: 0;
+  padding-left: 1.15rem;
+  font-size: 0.82rem;
+  color: #475569;
+  line-height: 1.55;
+}
+
+.admin-social-browser-steps li {
+  margin-bottom: 8px;
+}
+
+.admin-social-bookmarklet {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: #0d9488;
+  color: #fff !important;
+  font-weight: 800;
+  font-size: 0.78rem;
+  text-decoration: none;
+  cursor: grab;
+}
+
 .admin-org-delete-panel .admin-org-delete-warning {
   margin: 0 0 14px;
   font-size: 0.9rem;

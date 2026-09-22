@@ -28,6 +28,13 @@ import {
   type OrganizationProfile,
 } from "../../lib/organizationProfile";
 import { AuthApiClient } from "../../lib/AuthApiClient";
+import {
+  buildInstagramCaptureBookmarkletHref,
+  isInstagramStatsCaptureMessage,
+  isTrustedInstagramMessageOrigin,
+  normalizeInstagramCountLabel,
+  openInstagramProfileForCapture,
+} from "../../lib/instagramBrowserCapture";
 import { refreshInstagramStatsForOrganization } from "../../lib/instagramStatsWorkflow";
 import { useWebSession } from "../../context/WebSessionProvider";
 import { AdminDonutChart } from "./AdminDashboardCharts";
@@ -79,6 +86,34 @@ export function AdminOrganizationPageClient() {
     void AuthApiClient.fetchInstagramGraphStatus().then((status) => {
       setInstagramGraphConfigured(status.configured);
     });
+  }, []);
+
+  useEffect(() => {
+    function onInstagramCaptureMessage(event: MessageEvent): void {
+      if (!isTrustedInstagramMessageOrigin(event.origin)) {
+        return;
+      }
+      if (!isInstagramStatsCaptureMessage(event.data)) {
+        return;
+      }
+      setProfile((current) => ({
+        ...current,
+        instagramFollowersCount:
+          normalizeInstagramCountLabel(event.data.followers) ||
+          current.instagramFollowersCount,
+        instagramFollowingCount:
+          normalizeInstagramCountLabel(event.data.following) ||
+          current.instagramFollowingCount,
+        instagramPostsCount:
+          normalizeInstagramCountLabel(event.data.posts) ||
+          current.instagramPostsCount,
+        instagramStatsFetchedAt: new Date().toISOString(),
+        instagramStatsNote: "Tarayıcıdan alındı (girişli Instagram oturumu)",
+      }));
+      flash("Instagram sayıları tarayıcıdan panele aktarıldı — Kaydet ile saklayın.");
+    }
+    window.addEventListener("message", onInstagramCaptureMessage);
+    return () => window.removeEventListener("message", onInstagramCaptureMessage);
   }, []);
 
   const refreshDirectory = useCallback(async () => {
@@ -864,6 +899,45 @@ export function AdminOrganizationPageClient() {
                 Sonraki adım: her firma için &quot;Instagram Business bağla&quot;
                 (OAuth) — şimdilik platform jetonu veya manuel sayı girişi.
               </p>
+            </div>
+            <div className="admin-social-connection-panel admin-social-connection-panel--browser">
+              <p className="admin-social-connection-title">
+                API olmadan — tarayıcıda Instagram (önerilen geçici çözüm)
+              </p>
+              <p className="admin-social-connection-lead">
+                Instagram ve Facebook, panel içine gömülü girişe izin vermez. Kendi
+                hesabınızla tarayıcıda profili açıp tek tıkla sayıları panele
+                aktarabilirsiniz (firma adresi zaten kayıtlı).
+              </p>
+              <ol className="admin-social-browser-steps">
+                <li>
+                  Aşağıdaki yer imini sık kullanılanlara sürükleyin:{" "}
+                  <a
+                    className="admin-social-bookmarklet"
+                    href={buildInstagramCaptureBookmarkletHref(
+                      typeof window !== "undefined" ? window.location.origin : "",
+                    )}
+                    onClick={(event) => event.preventDefault()}
+                  >
+                    NB Instagram sayıları
+                  </a>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    className="admin-btn-secondary"
+                    disabled={!profile.instagramUrl.trim()}
+                    onClick={() =>
+                      openInstagramProfileForCapture(profile.instagramUrl)
+                    }
+                  >
+                    Firma profilini Instagram&apos;da aç
+                  </button>
+                  {" "}
+                  (aynı tarayıcıda Instagram&apos;a girişli olun)
+                </li>
+                <li>Açılan sekmede yer imine tıklayın; sayılar bu forma düşer.</li>
+              </ol>
             </div>
             <div className="admin-form-grid">
               <label className="admin-field">

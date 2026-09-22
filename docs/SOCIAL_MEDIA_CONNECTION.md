@@ -27,6 +27,17 @@ Jeton, `business_discovery` ile diğer işletme kullanıcı adlarının istatist
 - Yapılandırma tamamsa **İstatistikleri güncelle** önce Graph API’yi dener.
 - Henüz bağlı değilse sayıları elle girebilir veya token’ları yapılandırıp yeniden deneyebilirsiniz.
 
-## 4. Sonraki adım (firma bazlı OAuth)
+## 4. API olmadan: tarayıcı yardımcısı (admin)
+
+Instagram panel içine **iframe ile gömülemez** (güvenlik + Meta politikası). Bunun yerine:
+
+1. Admin → Organizasyon → Sosyal medya → **NB Instagram sayıları** yer imini tarayıcıya ekleyin.
+2. **Firma profilini Instagram'da aç** (kayıtlı URL).
+3. Girişli Instagram sekmesinde yer imine tıklayın → gönderi / takipçi / takip alanları dolar.
+4. **Kaydet**.
+
+Bu yöntem sizin oturumunuzu kullanır; sunucu IP engeline takılmaz.
+
+## 5. Sonraki adım (firma bazlı OAuth)
 
 Her firmanın kendi Instagram hesabını **Hesap → Organizasyon** içinden “Instagram Business bağla” ile yetkilendirmesi planlanabilir. Jetonlar yalnızca sunucuda şifreli saklanır; tarayıcıda tutulmaz.
