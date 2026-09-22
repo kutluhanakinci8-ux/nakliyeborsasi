@@ -30,7 +30,11 @@ export class CompanyWebsiteEnrichmentService {
       null;
 
     const emails = this.extractEmails(html, text, host);
-    const phones = this.extractPhones(html, text);
+    const whatsappNumber = this.extractWhatsappNumber(html, text);
+    const whatsappDigits = whatsappNumber
+      ? whatsappNumber.replace(/\D/g, "")
+      : "";
+    const phones = this.extractPhones(html, text, whatsappDigits);
     const mersis =
       this.extractMersis(text) ??
       this.extractLabeledValue(text, ["MERSİS", "MERSIS"])?.replace(/\D/g, "") ??
@@ -54,18 +58,6 @@ export class CompanyWebsiteEnrichmentService {
       "Mesai",
       "Çalışma saatleri",
     ]);
-    const whatsappCustomer = this.extractLabeledValue(text, [
-      "Taşınacaklar için",
-      "Müşteriler için",
-    ]);
-    const whatsappCompany = this.extractLabeledValue(text, ["Firmalar için"]);
-    const whatsappParts = [whatsappCustomer, whatsappCompany].filter(Boolean);
-    const whatsappNumber =
-      (whatsappParts.length > 0
-        ? whatsappParts.join(" · ")
-        : null) ??
-      this.extractWhatsapp(text);
-
     return {
       sourceUrl,
       scannedUrls,
@@ -235,15 +227,58 @@ export class CompanyWebsiteEnrichmentService {
     return email;
   }
 
-  private extractWhatsapp(text: string): string | null {
-    const labeled = this.extractLabeledValue(text, ["WhatsApp", "Whatsapp"]);
-    if (labeled) {
-      return labeled.replace(/\s+/g, " ").slice(0, 40);
+  private extractWhatsappNumber(html: string, text: string): string | null {
+    const linkPatterns = [
+      /api\.whatsapp\.com\/send\?phone=(\d{10,13})/gi,
+      /wa\.me\/(\d{10,13})/gi,
+      /whatsapp\.com\/send\?phone=(\d{10,13})/gi,
+    ];
+    for (const pattern of linkPatterns) {
+      const match = html.match(pattern);
+      if (match?.[1]) {
+        return this.formatTurkishPhoneDisplay(match[1]);
+      }
+    }
+    const labeledFooter = this.extractLabeledValue(text, [
+      "WhatsApp",
+      "Whatsapp",
+      "Firmalar için",
+    ]);
+    if (labeledFooter) {
+      const digits = labeledFooter.replace(/\D/g, "");
+      if (digits.length >= 10) {
+        return this.formatTurkishPhoneDisplay(digits);
+      }
     }
     const match = text.match(
       /(?:whatsapp|wp)[^\d]{0,20}(\+?90?\s*\(?\d{3}\)?[\s.-]*\d{3}[\s.-]*\d{2}[\s.-]*\d{2})/i,
     );
-    return match ? match[1].replace(/\s+/g, " ").trim() : null;
+    return match ? this.formatTurkishPhoneDisplay(match[1]) : null;
+  }
+
+  private formatTurkishPhoneDisplay(raw: string): string {
+    let digits = raw.replace(/\D/g, "");
+    if (digits.startsWith("90") && digits.length >= 12) {
+      digits = `0${digits.slice(2)}`;
+    }
+    if (!digits.startsWith("0") && digits.length === 10) {
+      digits = `0${digits}`;
+    }
+    if (digits.length === 11) {
+      return `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7, 9)} ${digits.slice(9)}`;
+    }
+    if (digits.length === 10) {
+      return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6, 8)} ${digits.slice(8)}`;
+    }
+    return raw.replace(/\s+/g, " ").trim();
+  }
+
+  private phoneDigitsKey(digits: string): string {
+    const normalized = digits.replace(/\D/g, "");
+    if (normalized.length >= 10) {
+      return normalized.slice(-10);
+    }
+    return normalized;
   }
 
   private extractSocialLinks(html: string): string | null {
@@ -456,18 +491,51 @@ export class CompanyWebsiteEnrichmentService {
     return ordered.filter((e) => !e.endsWith(".png") && !e.endsWith(".jpg"));
   }
 
-  private extractPhones(html: string, text: string): string[] {
+  private extractPhones(
+    html: string,
+    text: string,
+    excludeWhatsappDigits = "",
+  ): string[] {
+    const excludeKey = excludeWhatsappDigits
+      ? this.phoneDigitsKey(excludeWhatsappDigits)
+      : "";
+    const telMatches = [
+      ...(html.match(/href=["']tel:([^"']+)["']/gi) ?? []),
+    ]
+      .map((tag) => tag.match(/tel:([^"']+)/i)?.[1] ?? "")
+      .filter(Boolean)
+      .map((raw) => this.formatTurkishPhoneDisplay(raw));
+
     const haystack = `${html}\n${text}`;
     const matches = haystack.match(
       /(?:\+90\s*|0\s*)?(?:\(?\d{3}\)?[\s.-]*)?\d{3}[\s.-]*\d{2}[\s.-]*\d{2}(?:[\s.-]*\d{2})?/g,
     );
-    if (!matches) {
-      return [];
-    }
-    return [...new Set(matches.map((p) => p.replace(/\s+/g, " ").trim()))].slice(
-      0,
-      3,
+    const fromText = (matches ?? []).map((p) =>
+      this.formatTurkishPhoneDisplay(p),
     );
+    const ordered = [...telMatches, ...fromText];
+    const unique: string[] = [];
+    const seen = new Set<string>();
+    for (const candidate of ordered) {
+      const key = this.phoneDigitsKey(candidate);
+      if (!key || key.length < 10) {
+        continue;
+      }
+      if (excludeKey && key === excludeKey) {
+        continue;
+      }
+      if (seen.has(key)) {
+        continue;
+      }
+      seen.add(key);
+      unique.push(candidate);
+    }
+    unique.sort((a, b) => {
+      const a850 = a.replace(/\D/g, "").includes("850") ? 1 : 0;
+      const b850 = b.replace(/\D/g, "").includes("850") ? 1 : 0;
+      return b850 - a850;
+    });
+    return unique.slice(0, 3);
   }
 
   private extractMersis(text: string): string | null {

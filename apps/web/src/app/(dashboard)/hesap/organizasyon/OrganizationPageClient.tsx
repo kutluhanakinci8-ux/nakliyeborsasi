@@ -404,19 +404,6 @@ export function OrganizationPageClient() {
               placeholder="Örn. her gün 09:00 - 18:00"
             />
           </label>
-          <label className="label-light">
-            WhatsApp
-            <input
-              className="input-light"
-              name="nb-whatsapp"
-              autoComplete="off"
-              value={profile.whatsappNumber}
-              onChange={(event) =>
-                updateProfile({ whatsappNumber: event.target.value })
-              }
-              placeholder="Müşteri veya operasyon hattı"
-            />
-          </label>
           <p className="account-form-subheading account-form-span-2">
             Resmi kayıt ve uyum
           </p>
@@ -563,7 +550,7 @@ export function OrganizationPageClient() {
           <div>
             <h2 className="account-card-title">Birincil iletişim</h2>
             <p className="account-card-lead">
-              Giriş e-postası ve operasyon telefonu — teklif bildirimleri bu kanallara gider.
+              E-posta, çağrı merkezi telefonu ve WhatsApp — teklif bildirimleri bu kanallara gider.
             </p>
           </div>
           <Link href="/hesap/profil" className="btn-account-ghost">
@@ -587,10 +574,29 @@ export function OrganizationPageClient() {
                 type="tel"
                 name="nb-phone"
                 autoComplete="off"
-                placeholder="+90 5xx xxx xx xx"
+                placeholder="0850 veya sabit hat"
                 value={profile.phone}
                 onChange={(event) =>
                   updateProfile({ phone: event.target.value })
+                }
+              />
+            </div>
+          </li>
+          <li>
+            <span className="account-contact-icon" aria-hidden>
+              WA
+            </span>
+            <div>
+              <span className="account-contact-label">WhatsApp</span>
+              <input
+                className="input-light account-contact-input"
+                type="tel"
+                name="nb-whatsapp-primary"
+                autoComplete="off"
+                placeholder="Web sitesindeki WhatsApp hattı"
+                value={profile.whatsappNumber}
+                onChange={(event) =>
+                  updateProfile({ whatsappNumber: event.target.value })
                 }
               />
             </div>

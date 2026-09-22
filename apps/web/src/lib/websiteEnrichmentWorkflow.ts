@@ -10,6 +10,24 @@ import {
 
 const PENDING_ENRICHMENT_PREFIX = "nb-pending-website-enrichment:";
 
+function pickWhatsappFromEnrichment(
+  current: string,
+  incoming: string | null | undefined,
+): string {
+  const trimmed = current.trim();
+  const next = incoming?.trim() ?? "";
+  if (!next) {
+    return trimmed;
+  }
+  if (!trimmed) {
+    return next;
+  }
+  if (trimmed.includes("·") && !next.includes("·")) {
+    return next;
+  }
+  return trimmed;
+}
+
 function pickFirstNonEmpty(
   current: string,
   ...candidates: (string | null | undefined)[]
@@ -73,7 +91,7 @@ export function mergeEnrichmentIntoProfile(
     kepAddress: pickFirstNonEmpty(profile.kepAddress, enrichment.kepAddress),
     city: pickFirstNonEmpty(profile.city, enrichment.city),
     phone: pickFirstNonEmpty(profile.phone, enrichment.phone),
-    whatsappNumber: pickFirstNonEmpty(
+    whatsappNumber: pickWhatsappFromEnrichment(
       profile.whatsappNumber,
       enrichment.whatsappNumber,
     ),
