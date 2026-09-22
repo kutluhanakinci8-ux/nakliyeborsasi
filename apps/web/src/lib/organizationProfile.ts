@@ -152,6 +152,13 @@ export function migrateOrganizationProfile(
   };
 }
 
+export function loadOrganizationLogoUrl(companyId: string): string {
+  if (!companyId || typeof window === "undefined") {
+    return "";
+  }
+  return loadOrganizationProfile(companyId).logoUrl.trim();
+}
+
 export function loadOrganizationProfile(
   companyId: string,
   primaryEmail = "",

@@ -16,6 +16,7 @@ type CompanyItem = {
 
 type OrganizationSwipeListItemProps = {
   item: CompanyItem;
+  logoUrl?: string;
   frozen: boolean;
   isSelected: boolean;
   isSwipeOpen: boolean;
@@ -25,8 +26,23 @@ type OrganizationSwipeListItemProps = {
   onAction: (action: OrgAction) => void;
 };
 
+function companyLogoInitials(legalName: string): string {
+  const words = legalName
+    .replace(/[^\p{L}\s]/gu, " ")
+    .split(/\s+/)
+    .filter(Boolean);
+  if (words.length === 0) {
+    return "NB";
+  }
+  if (words.length === 1) {
+    return words[0].slice(0, 2).toLocaleUpperCase("tr-TR");
+  }
+  return `${words[0][0] ?? ""}${words[1][0] ?? ""}`.toLocaleUpperCase("tr-TR");
+}
+
 export function OrganizationSwipeListItem({
   item,
+  logoUrl,
   frozen,
   isSelected,
   isSwipeOpen,
@@ -35,6 +51,7 @@ export function OrganizationSwipeListItem({
   onSwipeClose,
   onAction,
 }: OrganizationSwipeListItemProps) {
+  const logo = logoUrl?.trim() ?? "";
   const [dragOffset, setDragOffset] = useState(0);
   const pointerStartX = useRef(0);
   const dragging = useRef(false);
@@ -139,19 +156,42 @@ export function OrganizationSwipeListItem({
             onSelect();
           }}
         >
-          <span className="admin-org-company-top">
-            <strong>{item.legalName}</strong>
-            {frozen ? (
-              <span className="admin-org-badge admin-org-badge--danger">Donduruldu</span>
-            ) : null}
-          </span>
-          <span className="admin-org-company-meta">
-            <span className="admin-org-badge">
-              {formatParticipantType(item.participantTypeCode)}
-            </span>
-            <span>{item.userCount} kullanıcı · {item.listingCount} ilan</span>
-          </span>
-          <code>{item.id.slice(0, 8)}…</code>
+          <div className="admin-org-swipe-card-row">
+            {logo ? (
+              <img
+                className="admin-org-company-logo"
+                src={logo}
+                alt=""
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <span
+                className="admin-org-company-logo admin-org-company-logo--placeholder"
+                aria-hidden
+              >
+                {companyLogoInitials(item.legalName)}
+              </span>
+            )}
+            <div className="admin-org-swipe-card-body">
+              <span className="admin-org-company-top">
+                <strong>{item.legalName}</strong>
+                {frozen ? (
+                  <span className="admin-org-badge admin-org-badge--danger">
+                    Donduruldu
+                  </span>
+                ) : null}
+              </span>
+              <span className="admin-org-company-meta">
+                <span className="admin-org-badge">
+                  {formatParticipantType(item.participantTypeCode)}
+                </span>
+                <span>
+                  {item.userCount} kullanıcı · {item.listingCount} ilan
+                </span>
+              </span>
+              <code>{item.id.slice(0, 8)}…</code>
+            </div>
+          </div>
         </button>
         <span className="admin-org-swipe-hint" aria-hidden>
           ← kaydır

@@ -19,6 +19,7 @@ import {
   loadOrganizationAdminSettings,
   clearOrganizationLocalData,
   loadOrganizationAudit,
+  loadOrganizationLogoUrl,
   loadOrganizationProfile,
   saveOrganizationAdminSettings,
   saveOrganizationProfile,
@@ -797,6 +798,7 @@ export function AdminOrganizationPageClient() {
                   <li key={item.id} className="admin-org-swipe-li">
                     <OrganizationSwipeListItem
                       item={item}
+                      logoUrl={loadOrganizationLogoUrl(item.id)}
                       frozen={settings.accountFrozen}
                       isSelected={selectedId === item.id}
                       isSwipeOpen={swipeOpenId === item.id}
