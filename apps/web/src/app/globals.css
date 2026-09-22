@@ -2901,6 +2901,13 @@ a {
   margin-bottom: 8px;
 }
 
+.auth-contact-fields-note {
+  margin: 0 0 12px;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: #64748b;
+}
+
 .auth-enrichment-panel {
   margin: 0 0 12px;
   padding: 12px 12px 4px;
@@ -4737,6 +4744,21 @@ button.btn-secondary {
   font-size: 0.85rem;
   font-weight: 600;
   color: #047857;
+}
+
+.account-enrichment-banner {
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+}
+
+.account-textarea {
+  resize: vertical;
+  min-height: 72px;
+  font-family: inherit;
 }
 
 .account-verify-banner {

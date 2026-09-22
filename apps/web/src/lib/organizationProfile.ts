@@ -6,6 +6,9 @@ export type OrganizationProfile = {
   countryCode: string;
   phone: string;
   website: string;
+  addressLine: string;
+  servicesSummary: string;
+  websiteEnrichmentCompletedAt: string;
   corridors: string[];
   primaryEmail: string;
 };
@@ -48,6 +51,9 @@ export function defaultOrganizationProfile(
     countryCode: "TR",
     phone: "",
     website: "",
+    addressLine: "",
+    servicesSummary: "",
+    websiteEnrichmentCompletedAt: "",
     corridors: ["TR", "UA", "EU"],
     primaryEmail,
   };
@@ -200,6 +206,7 @@ export function clearOrganizationLocalData(companyId: string): void {
   window.localStorage.removeItem(`${PROFILE_STORAGE_PREFIX}${companyId}`);
   window.localStorage.removeItem(`${ADMIN_STORAGE_PREFIX}${companyId}`);
   window.localStorage.removeItem(`${AUDIT_STORAGE_PREFIX}${companyId}`);
+  window.localStorage.removeItem(`nb-pending-website-enrichment:${companyId}`);
 }
 
 export function loadOrganizationAudit(companyId: string): OrganizationAuditEntry[] {

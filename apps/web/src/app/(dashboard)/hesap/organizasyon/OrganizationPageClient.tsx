@@ -10,6 +10,10 @@ import {
   saveOrganizationProfile,
   type OrganizationProfile,
 } from "../../../../lib/organizationProfile";
+import {
+  getPendingWebsiteEnrichmentUrl,
+  runPendingWebsiteEnrichment,
+} from "../../../../lib/websiteEnrichmentWorkflow";
 import { useWebSession } from "../../../../context/WebSessionProvider";
 
 export function OrganizationPageClient() {
@@ -23,6 +27,10 @@ export function OrganizationPageClient() {
     loadOrganizationAdminSettings(companyId),
   );
   const [saveMessage, setSaveMessage] = useState("");
+  const [isEnrichingWebsite, setIsEnrichingWebsite] = useState(false);
+  const pendingWebsiteUrl = companyId
+    ? getPendingWebsiteEnrichmentUrl(companyId)
+    : null;
 
   useEffect(() => {
     if (!companyId) {
@@ -53,9 +61,27 @@ export function OrganizationPageClient() {
     });
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>): void {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
     persistProfile(profile);
+    if (!companyId || !pendingWebsiteUrl) {
+      return;
+    }
+    setIsEnrichingWebsite(true);
+    setSaveMessage("Web sitesi taranıyor, firma bilgileri dolduruluyor…");
+    const outcome = await runPendingWebsiteEnrichment(companyId, emailAddress);
+    setIsEnrichingWebsite(false);
+    if (outcome === "success") {
+      setProfile(loadOrganizationProfile(companyId, emailAddress));
+      setSaveMessage(
+        "Kaydedildi. Web sitesinden alınan bilgiler organizasyon alanlarına işlendi.",
+      );
+    } else if (outcome === "error") {
+      setSaveMessage(
+        "Temel bilgiler kaydedildi; web taraması başarısız. Web adresini kontrol edip tekrar kaydedin.",
+      );
+    }
+    window.setTimeout(() => setSaveMessage(""), 6000);
   }
 
   function updateProfile(patch: Partial<OrganizationProfile>): void {
@@ -141,7 +167,18 @@ export function OrganizationPageClient() {
         </div>
       </section>
 
-      <form className="account-card module-panel module-panel--elevated" onSubmit={handleSubmit}>
+      {pendingWebsiteUrl ? (
+        <p className="account-enrichment-banner module-hint">
+          Web adresi kayıtlı: <code>{pendingWebsiteUrl}</code>. Temel bilgileri{" "}
+          <strong>Kaydet</strong> dediğinizde sistem arka planda siteyi tarayıp aşağıdaki
+          alanları dolduracak.
+        </p>
+      ) : null}
+
+      <form
+        className="account-card module-panel module-panel--elevated"
+        onSubmit={(event) => void handleSubmit(event)}
+      >
         <header className="account-card-head">
           <div>
             <h2 className="account-card-title">Temel bilgiler</h2>
@@ -149,7 +186,9 @@ export function OrganizationPageClient() {
               Ticari unvan ve vergi bilgileri sözleşme ve fatura için kullanılır.
             </p>
           </div>
-          <button type="submit" className="btn-account-primary">Kaydet</button>
+          <button type="submit" className="btn-account-primary" disabled={isEnrichingWebsite}>
+            {isEnrichingWebsite ? "Taranıyor…" : "Kaydet"}
+          </button>
         </header>
         <div className="account-form-grid">
           <label className="label-light">
@@ -210,6 +249,56 @@ export function OrganizationPageClient() {
         </div>
         {saveMessage ? <p className="account-save-hint">{saveMessage}</p> : null}
       </form>
+
+      <section className="account-card module-panel module-panel--elevated">
+        <header className="account-card-head">
+          <div>
+            <h2 className="account-card-title">Web sitesinden alınan bilgiler</h2>
+            <p className="account-card-lead">
+              Kayıt sonrası otomatik tarama ile doldurulur; gerekirse düzenleyip tekrar
+              kaydedin.
+            </p>
+          </div>
+          <button
+            type="button"
+            className="btn-account-ghost"
+            onClick={() => persistProfile(profile)}
+          >
+            Bu bölümü kaydet
+          </button>
+        </header>
+        <div className="account-form-grid">
+          <label className="label-light account-form-span-2">
+            Açık adres
+            <input
+              className="input-light"
+              value={profile.addressLine}
+              onChange={(event) =>
+                updateProfile({ addressLine: event.target.value })
+              }
+              placeholder="Web sitesinden veya manuel"
+            />
+          </label>
+          <label className="label-light account-form-span-2">
+            Hizmet alanları (özet)
+            <textarea
+              className="input-light account-textarea"
+              rows={3}
+              value={profile.servicesSummary}
+              onChange={(event) =>
+                updateProfile({ servicesSummary: event.target.value })
+              }
+              placeholder="Örn. konteyner, depolama, CFS"
+            />
+          </label>
+        </div>
+        {profile.websiteEnrichmentCompletedAt ? (
+          <p className="account-meta-line">
+            Son otomatik tarama:{" "}
+            {new Date(profile.websiteEnrichmentCompletedAt).toLocaleString("tr-TR")}
+          </p>
+        ) : null}
+      </section>
 
       <section className="account-card module-panel module-panel--elevated">
         <header className="account-card-head">
