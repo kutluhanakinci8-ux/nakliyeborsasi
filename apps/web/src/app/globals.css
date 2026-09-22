@@ -5378,6 +5378,38 @@ button.btn-secondary {
   font-weight: 600;
 }
 
+/* —— Yük ilanları (premium) —— */
+.admin-listings-premium .admin-listings-kpi-row {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(200px, 1.2fr);
+  margin-bottom: 14px;
+}
+
+.admin-listings-owner-chart {
+  margin-bottom: 14px;
+}
+
+.admin-listings-layout {
+  margin-top: 0;
+}
+
+.admin-listings-list-owner,
+.admin-listings-detail-owner {
+  display: block;
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+.admin-listings-equipment-filters,
+.admin-listings-type-filters {
+  margin-top: 0;
+}
+
+.admin-listings-detail-grid {
+  align-items: start;
+}
+
 .admin-toggle-row {
   display: flex;
   flex-wrap: wrap;
