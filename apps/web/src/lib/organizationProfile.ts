@@ -16,7 +16,13 @@ export type OrganizationProfile = {
   workingHours: string;
   companyDescription: string;
   servicesSummary: string;
+  /** @deprecated Eski kayıtlar — yüklemede ayrı alanlara taşınır */
   socialMediaSummary: string;
+  facebookUrl: string;
+  instagramUrl: string;
+  twitterUrl: string;
+  youtubeUrl: string;
+  linkedinUrl: string;
   logoUrl: string;
   websiteScannedUrls: string;
   websiteEnrichmentCompletedAt: string;
@@ -73,6 +79,11 @@ export function defaultOrganizationProfile(
     companyDescription: "",
     servicesSummary: "",
     socialMediaSummary: "",
+    facebookUrl: "",
+    instagramUrl: "",
+    twitterUrl: "",
+    youtubeUrl: "",
+    linkedinUrl: "",
     logoUrl: "",
     websiteScannedUrls: "",
     websiteEnrichmentCompletedAt: "",
@@ -97,6 +108,50 @@ export function defaultAdminSettings(updatedBy = "system"): OrganizationAdminSet
   };
 }
 
+function splitLegacySocialMediaSummary(summary: string): Partial<OrganizationProfile> {
+  const parts = summary
+    .split(/·|\|/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  const patch: Partial<OrganizationProfile> = {};
+  for (const url of parts) {
+    const lower = url.toLowerCase();
+    if (lower.includes("facebook.com") && !patch.facebookUrl) {
+      patch.facebookUrl = url;
+    } else if (lower.includes("instagram.com") && !patch.instagramUrl) {
+      patch.instagramUrl = url;
+    } else if (
+      (lower.includes("twitter.com") || lower.includes("x.com")) &&
+      !patch.twitterUrl
+    ) {
+      patch.twitterUrl = url;
+    } else if (lower.includes("youtube.com") && !patch.youtubeUrl) {
+      patch.youtubeUrl = url;
+    } else if (lower.includes("linkedin.com") && !patch.linkedinUrl) {
+      patch.linkedinUrl = url;
+    }
+  }
+  return patch;
+}
+
+export function migrateOrganizationProfile(
+  profile: OrganizationProfile,
+): OrganizationProfile {
+  const hasDedicated =
+    profile.facebookUrl.trim() ||
+    profile.instagramUrl.trim() ||
+    profile.twitterUrl.trim() ||
+    profile.youtubeUrl.trim() ||
+    profile.linkedinUrl.trim();
+  if (hasDedicated || !profile.socialMediaSummary.trim()) {
+    return profile;
+  }
+  return {
+    ...profile,
+    ...splitLegacySocialMediaSummary(profile.socialMediaSummary),
+  };
+}
+
 export function loadOrganizationProfile(
   companyId: string,
   primaryEmail = "",
@@ -109,10 +164,10 @@ export function loadOrganizationProfile(
     return defaultOrganizationProfile(companyId, primaryEmail);
   }
   try {
-    return {
+    return migrateOrganizationProfile({
       ...defaultOrganizationProfile(companyId, primaryEmail),
       ...(JSON.parse(raw) as OrganizationProfile),
-    };
+    });
   } catch {
     return defaultOrganizationProfile(companyId, primaryEmail);
   }

@@ -469,17 +469,77 @@ export function OrganizationPageClient() {
               placeholder="ornek@hs01.kep.tr"
             />
           </label>
-          <label className="label-light account-form-span-2">
-            Sosyal medya (özet)
+          <p className="account-form-subheading account-form-span-2">
+            Sosyal medya
+          </p>
+          <label className="label-light">
+            Facebook
             <input
               className="input-light"
-              name="nb-social"
+              name="nb-social-facebook"
               autoComplete="off"
-              value={profile.socialMediaSummary}
+              inputMode="url"
+              value={profile.facebookUrl}
               onChange={(event) =>
-                updateProfile({ socialMediaSummary: event.target.value })
+                updateProfile({ facebookUrl: event.target.value })
               }
-              placeholder="Facebook, Instagram…"
+              placeholder="https://www.facebook.com/…"
+            />
+          </label>
+          <label className="label-light">
+            Instagram
+            <input
+              className="input-light"
+              name="nb-social-instagram"
+              autoComplete="off"
+              inputMode="url"
+              value={profile.instagramUrl}
+              onChange={(event) =>
+                updateProfile({ instagramUrl: event.target.value })
+              }
+              placeholder="https://www.instagram.com/…"
+            />
+          </label>
+          <label className="label-light">
+            X (Twitter)
+            <input
+              className="input-light"
+              name="nb-social-twitter"
+              autoComplete="off"
+              inputMode="url"
+              value={profile.twitterUrl}
+              onChange={(event) =>
+                updateProfile({ twitterUrl: event.target.value })
+              }
+              placeholder="https://twitter.com/…"
+            />
+          </label>
+          <label className="label-light">
+            YouTube
+            <input
+              className="input-light"
+              name="nb-social-youtube"
+              autoComplete="off"
+              inputMode="url"
+              value={profile.youtubeUrl}
+              onChange={(event) =>
+                updateProfile({ youtubeUrl: event.target.value })
+              }
+              placeholder="https://www.youtube.com/…"
+            />
+          </label>
+          <label className="label-light account-form-span-2">
+            LinkedIn
+            <input
+              className="input-light"
+              name="nb-social-linkedin"
+              autoComplete="off"
+              inputMode="url"
+              value={profile.linkedinUrl}
+              onChange={(event) =>
+                updateProfile({ linkedinUrl: event.target.value })
+              }
+              placeholder="https://www.linkedin.com/company/…"
             />
           </label>
           <label className="label-light account-form-span-2">

@@ -112,10 +112,14 @@ export function mergeEnrichmentIntoProfile(
       profile.servicesSummary,
       enrichment.servicesSummary,
     ),
-    socialMediaSummary: pickFirstNonEmpty(
-      profile.socialMediaSummary,
-      enrichment.socialMediaSummary,
+    facebookUrl: pickFirstNonEmpty(profile.facebookUrl, enrichment.facebookUrl),
+    instagramUrl: pickFirstNonEmpty(
+      profile.instagramUrl,
+      enrichment.instagramUrl,
     ),
+    twitterUrl: pickFirstNonEmpty(profile.twitterUrl, enrichment.twitterUrl),
+    youtubeUrl: pickFirstNonEmpty(profile.youtubeUrl, enrichment.youtubeUrl),
+    linkedinUrl: pickFirstNonEmpty(profile.linkedinUrl, enrichment.linkedinUrl),
     logoUrl: pickFirstNonEmpty(profile.logoUrl, enrichment.logoUrl),
     websiteScannedUrls: pickFirstNonEmpty(
       profile.websiteScannedUrls,

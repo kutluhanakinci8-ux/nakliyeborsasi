@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { lookup } from "node:dns/promises";
 import { ValidationException } from "@nakliyeborsasi/core";
 import { CompanyWebsiteEnrichmentResult } from "./CompanyWebsiteEnrichmentResult";
+import { CompanyWebsiteSocialMedia } from "./CompanyWebsiteSocialMedia";
 
 const FETCH_TIMEOUT_MS = 10_000;
 const MAX_HTML_BYTES = 750_000;
@@ -77,7 +78,7 @@ export class CompanyWebsiteEnrichmentService {
       workingHours,
       companyDescription,
       servicesSummary,
-      socialMediaSummary: this.extractSocialLinks(html),
+      ...this.extractSocialMedia(html),
       logoUrl,
     };
   }
@@ -281,24 +282,40 @@ export class CompanyWebsiteEnrichmentService {
     return normalized;
   }
 
-  private extractSocialLinks(html: string): string | null {
-    const links = new Set<string>();
-    const patterns = [
-      /https?:\/\/(?:www\.)?facebook\.com\/[^\s"'<>]+/gi,
-      /https?:\/\/(?:www\.)?instagram\.com\/[^\s"'<>]+/gi,
-      /https?:\/\/(?:www\.)?(?:twitter\.com|x\.com)\/[^\s"'<>]+/gi,
-      /https?:\/\/(?:www\.)?linkedin\.com\/[^\s"'<>]+/gi,
-      /https?:\/\/(?:www\.)?youtube\.com\/[^\s"'<>]+/gi,
-    ];
-    for (const pattern of patterns) {
-      for (const match of html.match(pattern) ?? []) {
-        links.add(match.replace(/&amp;/g, "&"));
-      }
-    }
-    if (links.size === 0) {
+  private extractSocialMedia(html: string): CompanyWebsiteSocialMedia {
+    return {
+      facebookUrl: this.firstSocialUrl(
+        html,
+        /https?:\/\/(?:www\.)?facebook\.com\/[^\s"'<>]+/i,
+      ),
+      instagramUrl: this.firstSocialUrl(
+        html,
+        /https?:\/\/(?:www\.)?instagram\.com\/[^\s"'<>]+/i,
+      ),
+      twitterUrl: this.firstSocialUrl(
+        html,
+        /https?:\/\/(?:www\.)?(?:twitter\.com|x\.com)\/[^\s"'<>]+/i,
+      ),
+      youtubeUrl: this.firstSocialUrl(
+        html,
+        /https?:\/\/(?:www\.)?youtube\.com\/[^\s"'<>]+/i,
+      ),
+      linkedinUrl: this.firstSocialUrl(
+        html,
+        /https?:\/\/(?:www\.)?linkedin\.com\/[^\s"'<>]+/i,
+      ),
+    };
+  }
+
+  private firstSocialUrl(html: string, pattern: RegExp): string | null {
+    const match = html.match(pattern);
+    if (!match) {
       return null;
     }
-    return [...links].slice(0, 5).join(" · ");
+    return match[0]
+      .replace(/&amp;/g, "&")
+      .replace(/[)\]},;]+$/, "")
+      .slice(0, 256);
   }
 
   private normalizePublicUrl(raw: string): string {

@@ -17,6 +17,10 @@ export type CompanyWebsiteEnrichmentResult = {
   workingHours: string | null;
   companyDescription: string | null;
   servicesSummary: string | null;
-  socialMediaSummary: string | null;
+  facebookUrl: string | null;
+  instagramUrl: string | null;
+  twitterUrl: string | null;
+  youtubeUrl: string | null;
+  linkedinUrl: string | null;
   logoUrl: string | null;
 };
