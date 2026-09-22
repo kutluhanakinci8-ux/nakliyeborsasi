@@ -195,11 +195,8 @@ export class CompanyWebsiteEnrichmentService {
       }
     }
     value = value.replace(/\[email protected\]/gi, "").trim();
-    const kep = value.match(
-      /[a-zA-Z0-9._%+-]+@(?:[a-zA-Z0-9.-]+\.)?kep\.tr\b/i,
-    );
-    if (kep) {
-      return kep[0];
+    if (/kep\s*adresi/i.test(value) && value.length < 24) {
+      return "";
     }
     if (/^\d[\d\s().-]{8,24}$/.test(value)) {
       return value.replace(/\s+/g, " ").trim();
@@ -208,11 +205,34 @@ export class CompanyWebsiteEnrichmentService {
   }
 
   private extractKepAddress(html: string, text: string): string | null {
+    for (const encoded of html.match(/data-cfemail=["']([a-f0-9]+)["']/gi) ?? []) {
+      const hex = encoded.match(/data-cfemail=["']([a-f0-9]+)["']/i)?.[1];
+      if (!hex) {
+        continue;
+      }
+      const decoded = this.decodeCloudflareEmail(hex);
+      if (decoded.toLowerCase().includes("kep.tr")) {
+        return decoded.toLowerCase();
+      }
+    }
     const haystack = `${html}\n${text}`;
     const match = haystack.match(
       /[a-zA-Z0-9._%+-]+@(?:[a-zA-Z0-9.-]+\.)?kep\.tr\b/gi,
     );
     return match?.[0]?.toLowerCase() ?? null;
+  }
+
+  private decodeCloudflareEmail(hex: string): string {
+    if (hex.length < 4) {
+      return "";
+    }
+    const key = Number.parseInt(hex.slice(0, 2), 16);
+    let email = "";
+    for (let i = 2; i < hex.length; i += 2) {
+      const code = Number.parseInt(hex.slice(i, i + 2), 16) ^ key;
+      email += String.fromCharCode(code);
+    }
+    return email;
   }
 
   private extractWhatsapp(text: string): string | null {
