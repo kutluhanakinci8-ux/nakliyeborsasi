@@ -3581,18 +3581,28 @@ button.btn-secondary {
   }
 
   .site-footer-meta {
-    flex-direction: column;
-    align-items: flex-start;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 16px;
   }
 
   .site-footer-meta .site-footer-copy {
-    margin-left: 0;
-    text-align: left;
+    margin-left: auto;
+    text-align: right;
+    font-size: 0.75rem;
+  }
+
+  .site-footer-legal a {
+    font-size: 0.8rem;
+    padding: 4px 6px 4px 2px;
   }
 
   .site-footer-col--corporate .site-footer-payments {
-    align-self: flex-start;
-    justify-content: flex-start;
+    align-self: flex-end;
+    justify-content: flex-end;
   }
 
   .site-footer-copy {
