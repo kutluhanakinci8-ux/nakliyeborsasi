@@ -13,6 +13,7 @@ type PublicPageShellProps = {
   showHeroVisual?: boolean;
   heroAside?: ReactNode;
   heroCompact?: boolean;
+  pageClassName?: string;
   children: ReactNode;
 };
 
@@ -26,12 +27,19 @@ export function PublicPageShell({
   showHeroVisual = true,
   heroAside,
   heroCompact = false,
+  pageClassName,
   children,
 }: PublicPageShellProps) {
   const hasHeroColumn = Boolean(heroAside) || showHeroVisual;
+  const pageClass = [
+    heroCompact ? "public-page public-page--compact-hero" : "public-page",
+    pageClassName,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
-    <div className={heroCompact ? "public-page public-page--compact-hero" : "public-page"}>
+    <div className={pageClass}>
       <section
         className={
           heroCompact ? "public-hero public-hero--compact surface-animate" : "public-hero surface-animate"

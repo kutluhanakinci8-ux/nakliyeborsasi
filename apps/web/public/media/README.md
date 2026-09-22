@@ -1,3 +1,7 @@
+# Kurumsal görseller
+
+- **`about/`** — Hakkımızda sayfası hero ve bölüm fotoğrafları (`about-hero-truck.jpg`, `about-mission-team.jpg`, `about-vision-corridor.jpg`). AI üretimi; projeye özel kullanım.
+
 # Arka plan videosu
 
 - **`corridor-bg.mp4`** — (Arşiv) Eski tam sayfa arka plan videosu; kurumsal temada kullanılmıyor.
