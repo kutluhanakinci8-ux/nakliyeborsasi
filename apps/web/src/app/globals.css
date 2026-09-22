@@ -4624,6 +4624,91 @@ button.btn-secondary {
   margin-top: 16px;
 }
 
+.account-partner-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.account-partner-filter {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: var(--nb-navy, #1e3a5f);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.account-partner-filter.active {
+  background: var(--nb-navy, #1e3a5f);
+  color: #f8fafc;
+  border-color: var(--nb-navy, #1e3a5f);
+}
+
+.account-partner-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.account-partner-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.account-partner-name {
+  margin: 0;
+  font-size: 1.05rem;
+  color: var(--nb-navy, #1e3a5f);
+}
+
+.account-partner-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.account-partner-meta {
+  margin: 0 0 8px;
+  font-size: 0.88rem;
+  color: #64748b;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.account-partner-note {
+  margin: 0 0 8px;
+  font-size: 0.9rem;
+  color: #334155;
+}
+
+.account-partner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.account-partner-remove {
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+
 @media (max-width: 900px) {
   .account-verify-banner {
     grid-template-columns: 1fr;
