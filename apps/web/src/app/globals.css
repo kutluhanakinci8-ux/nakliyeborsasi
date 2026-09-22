@@ -4964,6 +4964,93 @@ button.btn-secondary {
   resize: vertical;
 }
 
+.admin-org-workspace {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.admin-org-selection-card {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.admin-org-selection-stats {
+  flex-wrap: wrap;
+}
+
+.admin-org-action-bar {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.admin-org-action-btn {
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 11px 12px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  background: #fff;
+  color: #1e3a5f;
+  cursor: pointer;
+}
+
+.admin-org-action-btn.active {
+  background: #1e3a5f;
+  border-color: #1e3a5f;
+  color: #fff;
+}
+
+.admin-org-action-btn--danger {
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+
+.admin-org-action-btn--danger.active {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: #fff;
+}
+
+.admin-org-action-hint {
+  margin: 0 0 12px;
+  padding: 14px 16px;
+  font-size: 0.88rem;
+  color: #64748b;
+}
+
+.admin-org-action-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 24px;
+}
+
+.admin-org-edit-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.admin-org-delete-panel .admin-org-delete-warning {
+  margin: 0 0 14px;
+  font-size: 0.9rem;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.admin-org-delete-submit {
+  margin-top: 12px;
+  background: linear-gradient(145deg, #b91c1c, #dc2626) !important;
+}
+
 .admin-org-sidebar-head {
   display: flex;
   justify-content: space-between;
@@ -6595,13 +6682,7 @@ button.btn-secondary {
     grid-template-columns: 1fr;
   }
 
-  /* Dar ekranda önce firma detayı, sonra dizin */
-  .admin-org-premium .admin-org-main {
-    order: 1;
-  }
-
   .admin-org-premium .admin-org-sidebar {
-    order: 2;
     position: static;
     max-height: none;
     overflow: visible;
@@ -6609,7 +6690,11 @@ button.btn-secondary {
 
   .admin-org-premium .admin-org-sidebar .admin-org-company-list--premium,
   .admin-org-premium .admin-org-sidebar .admin-org-company-list {
-    max-height: min(40vh, 360px);
+    max-height: min(36vh, 280px);
+  }
+
+  .admin-org-workspace {
+    scroll-margin-top: 12px;
   }
 
   .admin-form-grid {

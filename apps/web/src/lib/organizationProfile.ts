@@ -165,6 +165,15 @@ export function appendOrganizationAudit(
   );
 }
 
+export function clearOrganizationLocalData(companyId: string): void {
+  if (typeof window === "undefined" || !companyId) {
+    return;
+  }
+  window.localStorage.removeItem(`${PROFILE_STORAGE_PREFIX}${companyId}`);
+  window.localStorage.removeItem(`${ADMIN_STORAGE_PREFIX}${companyId}`);
+  window.localStorage.removeItem(`${AUDIT_STORAGE_PREFIX}${companyId}`);
+}
+
 export function loadOrganizationAudit(companyId: string): OrganizationAuditEntry[] {
   if (typeof window === "undefined" || !companyId) {
     return [];

@@ -4,7 +4,11 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { EmptyState } from "../EmptyState";
-import { addManualCompanyId, loadManualCompanyIds } from "../../lib/adminCompanyDirectory";
+import {
+  addManualCompanyId,
+  loadManualCompanyIds,
+  removeManualCompanyId,
+} from "../../lib/adminCompanyDirectory";
 import {
   PlatformAdminApiClient,
   formatParticipantType,
@@ -15,6 +19,7 @@ import {
   defaultAdminSettings,
   defaultOrganizationProfile,
   loadOrganizationAdminSettings,
+  clearOrganizationLocalData,
   loadOrganizationAudit,
   loadOrganizationProfile,
   saveOrganizationAdminSettings,
@@ -32,7 +37,9 @@ type ApiCompany = Awaited<
 
 type TypeFilter = "all" | "LOAD_SHIPPER" | "LOAD_CARRIER" | "LOAD_SEEKER" | "other";
 
-type OrgTab = "trust" | "profile" | "corridor" | "contact" | "audit";
+type OrgAction = "edit" | "restrict" | "delete";
+
+type OrgEditSection = "profile" | "corridor" | "contact" | "audit";
 
 function participantKey(code: string | null): TypeFilter {
   if (code === "LOAD_SHIPPER" || code === "LOAD_CARRIER" || code === "LOAD_SEEKER") {
@@ -59,9 +66,12 @@ export function AdminOrganizationPageClient() {
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
   const [manualId, setManualId] = useState("");
   const [message, setMessage] = useState("");
-  const [activeTab, setActiveTab] = useState<OrgTab>("trust");
+  const [activeAction, setActiveAction] = useState<OrgAction | null>(null);
+  const [editSection, setEditSection] = useState<OrgEditSection>("profile");
+  const [deleteConfirm, setDeleteConfirm] = useState("");
   const [loading, setLoading] = useState(true);
-  const mainPanelRef = useRef<HTMLDivElement>(null);
+  const workspaceRef = useRef<HTMLDivElement>(null);
+  const actionPanelRef = useRef<HTMLDivElement>(null);
 
   const refreshDirectory = useCallback(async () => {
     if (!accessToken) {
@@ -105,13 +115,16 @@ export function AdminOrganizationPageClient() {
   }, [firmaFromQuery]);
 
   useEffect(() => {
-    if (!selectedId || !mainPanelRef.current) {
+    setActiveAction(null);
+    setDeleteConfirm("");
+  }, [selectedId]);
+
+  useEffect(() => {
+    if (!activeAction || !actionPanelRef.current) {
       return;
     }
-    if (window.matchMedia("(max-width: 1100px)").matches) {
-      mainPanelRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  }, [selectedId]);
+    actionPanelRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [activeAction, selectedId]);
 
   const selectedCompany = companies.find((c) => c.id === selectedId);
 
@@ -225,6 +238,30 @@ export function AdminOrganizationPageClient() {
     setManualId("");
     void refreshDirectory().then(() => setSelectedId(id));
     flash("Firma dizine eklendi.");
+  }
+
+  function selectCompany(id: string): void {
+    setSelectedId(id);
+    if (workspaceRef.current && window.matchMedia("(max-width: 1100px)").matches) {
+      workspaceRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+
+  function handleClearLocalData(): void {
+    if (!selectedId) {
+      return;
+    }
+    if (deleteConfirm !== "SIL") {
+      flash('Onay için kutuya "SIL" yazın.');
+      return;
+    }
+    clearOrganizationLocalData(selectedId);
+    removeManualCompanyId(selectedId);
+    const remaining = companies.filter((c) => c.id !== selectedId);
+    flash("Yerel operatör verileri temizlendi (API kaydı durur).");
+    setDeleteConfirm("");
+    setActiveAction(null);
+    void refreshDirectory().then(() => setSelectedId(remaining[0]?.id ?? ""));
   }
 
   const q = filter.trim().toLowerCase();
@@ -364,7 +401,7 @@ export function AdminOrganizationPageClient() {
                           ? "admin-org-company admin-org-company--premium active"
                           : "admin-org-company admin-org-company--premium"
                       }
-                      onClick={() => setSelectedId(item.id)}
+                      onClick={() => selectCompany(item.id)}
                     >
                       <span className="admin-org-company-top">
                         <strong>{item.legalName}</strong>
@@ -387,12 +424,12 @@ export function AdminOrganizationPageClient() {
           )}
         </aside>
 
-        <div className="admin-org-main" ref={mainPanelRef}>
+        <div className="admin-org-workspace admin-org-main" ref={workspaceRef}>
           {!selectedId ? (
             <EmptyState message="Soldan firma seçin veya UUID ekleyin." />
           ) : (
             <>
-              <header className="admin-org-detail-hero admin-panel-card">
+              <header className="admin-org-selection-card admin-panel-card">
                 <div>
                   <h2>{profile.tradeName || selectedCompany?.legalName || "Organizasyon"}</h2>
                   <p>
@@ -417,7 +454,7 @@ export function AdminOrganizationPageClient() {
                     <span className="admin-org-badge">Belge: {adminSettings.documentStatus}</span>
                   </div>
                 </div>
-                <div className="admin-org-detail-stats">
+                <div className="admin-org-detail-stats admin-org-selection-stats">
                   <div>
                     <strong>{selectedCompany?.userCount ?? 0}</strong>
                     <span>Kullanıcı</span>
@@ -432,35 +469,63 @@ export function AdminOrganizationPageClient() {
                 </div>
               </header>
 
+              <div className="admin-org-action-bar" role="tablist" aria-label="Firma işlemleri">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={activeAction === "edit"}
+                  className={
+                    activeAction === "edit"
+                      ? "admin-org-action-btn active"
+                      : "admin-org-action-btn"
+                  }
+                  onClick={() => setActiveAction("edit")}
+                >
+                  Düzenle
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={activeAction === "restrict"}
+                  className={
+                    activeAction === "restrict"
+                      ? "admin-org-action-btn active"
+                      : "admin-org-action-btn"
+                  }
+                  onClick={() => setActiveAction("restrict")}
+                >
+                  Kısıtla
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={activeAction === "delete"}
+                  className={
+                    activeAction === "delete"
+                      ? "admin-org-action-btn admin-org-action-btn--danger active"
+                      : "admin-org-action-btn admin-org-action-btn--danger"
+                  }
+                  onClick={() => setActiveAction("delete")}
+                >
+                  Sil
+                </button>
+              </div>
+
               {message ? <p className="admin-org-toast">{message}</p> : null}
 
-              <nav className="admin-org-tabs" aria-label="Organizasyon bölümleri">
-                {(
-                  [
-                    ["trust", "Güven ve doğrulama"],
-                    ["profile", "Temel bilgiler"],
-                    ["corridor", "Koridor"],
-                    ["contact", "İletişim"],
-                    ["audit", "Denetim"],
-                  ] as [OrgTab, string][]
-                ).map(([tab, label]) => (
-                  <button
-                    key={tab}
-                    type="button"
-                    className={activeTab === tab ? "admin-org-tab active" : "admin-org-tab"}
-                    onClick={() => setActiveTab(tab)}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </nav>
+              {!activeAction ? (
+                <p className="admin-org-action-hint admin-panel-card">
+                  Düzenle, kısıtla veya sil işlemini seçin; form alanı burada açılır.
+                </p>
+              ) : null}
 
-              {activeTab === "trust" ? (
+              <div className="admin-org-action-panel" ref={actionPanelRef}>
+              {activeAction === "restrict" ? (
                 <form className="admin-panel-card" onSubmit={handleAdminSubmit}>
                   <header className="admin-panel-card-head">
                     <div>
-                      <h2>Güven ve doğrulama</h2>
-                      <p>Üye organizasyon sayfasındaki rozetler ve kısıtlar</p>
+                      <h2>Kısıtlama ve doğrulama</h2>
+                      <p>Rozetler, izinler ve hesap dondurma</p>
                     </div>
                     <button type="submit" className="admin-btn-primary">Kaydet</button>
                   </header>
@@ -597,7 +662,33 @@ export function AdminOrganizationPageClient() {
                 </form>
               ) : null}
 
-              {activeTab === "profile" ? (
+              {activeAction === "edit" ? (
+                <nav className="admin-org-edit-tabs" aria-label="Düzenleme bölümleri">
+                  {(
+                    [
+                      ["profile", "Temel bilgiler"],
+                      ["corridor", "Koridor"],
+                      ["contact", "İletişim"],
+                      ["audit", "Denetim"],
+                    ] as [OrgEditSection, string][]
+                  ).map(([section, label]) => (
+                    <button
+                      key={section}
+                      type="button"
+                      className={
+                        editSection === section
+                          ? "admin-org-type-chip active"
+                          : "admin-org-type-chip"
+                      }
+                      onClick={() => setEditSection(section)}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </nav>
+              ) : null}
+
+              {activeAction === "edit" && editSection === "profile" ? (
                 <form className="admin-panel-card" onSubmit={handleProfileSubmit}>
                   <header className="admin-panel-card-head">
                     <div>
@@ -667,7 +758,7 @@ export function AdminOrganizationPageClient() {
                 </form>
               ) : null}
 
-              {activeTab === "corridor" ? (
+              {activeAction === "edit" && editSection === "corridor" ? (
                 <section className="admin-panel-card">
                   <header className="admin-panel-card-head">
                     <div>
@@ -703,7 +794,7 @@ export function AdminOrganizationPageClient() {
                 </section>
               ) : null}
 
-              {activeTab === "contact" ? (
+              {activeAction === "edit" && editSection === "contact" ? (
                 <section className="admin-panel-card">
                   <header className="admin-panel-card-head">
                     <div>
@@ -753,7 +844,7 @@ export function AdminOrganizationPageClient() {
                 </section>
               ) : null}
 
-              {activeTab === "audit" ? (
+              {activeAction === "edit" && editSection === "audit" ? (
                 <section className="admin-panel-card">
                   <header className="admin-panel-card-head">
                     <div>
@@ -778,6 +869,42 @@ export function AdminOrganizationPageClient() {
                   </ul>
                 </section>
               ) : null}
+
+              {activeAction === "delete" ? (
+                <section className="admin-panel-card admin-org-delete-panel">
+                  <header className="admin-panel-card-head">
+                    <div>
+                      <h2>Firmayı sil / temizle</h2>
+                      <p>
+                        API veritabanındaki firma kaydı silinmez; yalnızca yerel operatör
+                        ayarları ve manuel dizin kaydı kaldırılır.
+                      </p>
+                    </div>
+                  </header>
+                  <p className="admin-org-delete-warning">
+                    <strong>{selectedCompany?.legalName}</strong> için profil, doğrulama
+                    ayarları ve denetim günlüğü (tarayıcı) temizlenecek.
+                  </p>
+                  <label className="admin-field">
+                    <span>Onay — kutuya SIL yazın</span>
+                    <input
+                      className="admin-input"
+                      value={deleteConfirm}
+                      onChange={(event) => setDeleteConfirm(event.target.value)}
+                      placeholder="SIL"
+                      autoComplete="off"
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    className="admin-btn-primary admin-org-delete-submit"
+                    onClick={handleClearLocalData}
+                  >
+                    Yerel veriyi temizle
+                  </button>
+                </section>
+              ) : null}
+              </div>
             </>
           )}
         </div>

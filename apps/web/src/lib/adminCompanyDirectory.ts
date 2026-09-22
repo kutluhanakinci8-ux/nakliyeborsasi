@@ -27,6 +27,14 @@ export function loadManualCompanyIds(): string[] {
   }
 }
 
+export function removeManualCompanyId(companyId: string): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+  const ids = loadManualCompanyIds().filter((id) => id !== companyId);
+  window.localStorage.setItem(MANUAL_REGISTRY_KEY, JSON.stringify(ids));
+}
+
 export function addManualCompanyId(companyId: string): void {
   const trimmed = companyId.trim();
   if (!trimmed || typeof window === "undefined") {
