@@ -445,7 +445,8 @@ export function AdminOrganizationPageClient() {
               >
                 ← Firma listesi
               </button>
-              <header className="admin-org-selection-card admin-panel-card">
+              <article className="admin-org-workspace-sheet admin-panel-card">
+              <header className="admin-org-selection-card">
                 <div>
                   <h2>{profile.tradeName || selectedCompany?.legalName || "Organizasyon"}</h2>
                   <p>
@@ -530,7 +531,7 @@ export function AdminOrganizationPageClient() {
               {message ? <p className="admin-org-toast">{message}</p> : null}
 
               {!activeAction ? (
-                <p className="admin-org-action-hint admin-panel-card">
+                <p className="admin-org-action-hint">
                   Düzenle, kısıtla veya sil işlemini seçin; form alanı burada açılır.
                 </p>
               ) : null}
@@ -887,7 +888,7 @@ export function AdminOrganizationPageClient() {
               ) : null}
 
               {activeAction === "delete" ? (
-                <section className="admin-panel-card admin-org-delete-panel">
+                <section className="admin-org-delete-panel admin-org-inner-panel">
                   <header className="admin-panel-card-head">
                     <div>
                       <h2>Firmayı sil / temizle</h2>
@@ -921,6 +922,7 @@ export function AdminOrganizationPageClient() {
                 </section>
               ) : null}
               </div>
+              </article>
             </>
           )}
         </div>

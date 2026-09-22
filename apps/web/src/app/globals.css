@@ -4971,6 +4971,43 @@ button.btn-secondary {
   gap: 0;
 }
 
+.admin-org-workspace-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.admin-org-workspace-sheet .admin-org-selection-card {
+  margin-bottom: 0;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.admin-org-workspace-sheet .admin-org-action-bar {
+  margin-bottom: 0;
+}
+
+.admin-org-workspace-sheet .admin-org-action-hint {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+}
+
+.admin-org-workspace-sheet .admin-org-action-panel {
+  padding-bottom: 8px;
+}
+
+.admin-org-workspace-sheet .admin-org-action-panel > .admin-panel-card,
+.admin-org-workspace-sheet .admin-org-inner-panel {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px 16px;
+  background: #f8fafc;
+}
+
 .admin-org-selection-card {
   display: flex;
   flex-wrap: wrap;
@@ -5054,6 +5091,22 @@ button.btn-secondary {
 @media (min-width: 1101px) {
   .admin-org-back-to-list {
     display: none;
+  }
+}
+
+/* Firma seçili: dar ekranda sadece yan panel (liste gizli) */
+@media (max-width: 1280px) {
+  .admin-org-layout--premium {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .admin-org-premium.admin-org-firm-open .admin-org-sidebar {
+    display: none !important;
+  }
+
+  .admin-org-premium.admin-org-firm-open .admin-org-workspace {
+    width: 100%;
   }
 }
 
@@ -6006,10 +6059,10 @@ button.btn-secondary {
 }
 
 .platform-admin-content {
-  padding: 20px 24px 48px;
+  padding: 20px 24px max(56px, calc(48px + env(safe-area-inset-bottom, 0px)));
   flex: 1;
   overflow-x: hidden;
-  overflow-y: visible;
+  overflow-y: auto;
   background:
     radial-gradient(ellipse 120% 80% at 100% 0%, rgba(13, 148, 136, 0.06), transparent 50%),
     radial-gradient(ellipse 80% 60% at 0% 100%, rgba(30, 58, 95, 0.05), transparent 45%),

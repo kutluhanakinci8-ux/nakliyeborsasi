@@ -2,6 +2,7 @@
 
 | Ne | URL |
 |----|-----|
+| **Admin konsol (Next.js)** | `http://168.231.109.27:3011/admin` |
 | **Web panel (arayüz)** | `http://168.231.109.27:3010/panel/` |
 | **API health** | `http://168.231.109.27:3010/api/v1/health` |
 | **Port 3000** | Başka uygulama — kullanmayın |
