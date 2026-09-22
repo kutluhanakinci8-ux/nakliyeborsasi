@@ -33,7 +33,14 @@ export function WebSessionProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [accessToken, setAccessTokenState] = useState("");
   const [session, setSession] = useState<AuthSessionRecord | null>(null);
-  const [locale, setLocale] = useState("tr");
+  const [locale, setLocaleState] = useState("tr");
+
+  const setLocale = useCallback((nextLocale: string) => {
+    setLocaleState(nextLocale);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("nb-ui-locale", nextLocale);
+    }
+  }, []);
   const [isReady, setIsReady] = useState(false);
 
   const setAccessToken = useCallback((token: string) => {
@@ -65,6 +72,12 @@ export function WebSessionProvider({ children }: { children: ReactNode }) {
   }, [router]);
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedLocale = window.localStorage.getItem("nb-ui-locale");
+      if (savedLocale) {
+        setLocaleState(savedLocale);
+      }
+    }
     const token = WebAccessTokenStorage.read();
     if (!token) {
       setIsReady(true);

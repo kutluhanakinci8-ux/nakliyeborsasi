@@ -4572,6 +4572,58 @@ button.btn-secondary {
   background: #f8fafc;
 }
 
+.account-profile-banner {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  padding: 22px 24px;
+}
+
+.account-profile-identity {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  flex: 1;
+  min-width: 260px;
+}
+
+.account-profile-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #f8fafc;
+  background: linear-gradient(145deg, #0f4c7a, #0d9488);
+  box-shadow: 0 8px 24px rgba(15, 76, 122, 0.25);
+}
+
+.account-profile-locale {
+  max-width: 320px;
+}
+
+.account-notification-toggles .account-corridor-chip {
+  min-height: 44px;
+}
+
+.account-security-hint {
+  margin-top: 12px;
+}
+
+.account-security-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
 @media (max-width: 900px) {
   .account-verify-banner {
     grid-template-columns: 1fr;
