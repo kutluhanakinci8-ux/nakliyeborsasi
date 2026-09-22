@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   PlatformAdminApiClient,
@@ -81,6 +82,8 @@ function formatLoadingDate(value: string): string {
 }
 
 export function AdminListingsPageClient() {
+  const searchParams = useSearchParams();
+  const ilanFromQuery = searchParams.get("ilan");
   const { accessToken } = useWebSession();
   const [rows, setRows] = useState<EnrichedListing[]>([]);
   const [loading, setLoading] = useState(true);
@@ -121,6 +124,12 @@ export function AdminListingsPageClient() {
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  useEffect(() => {
+    if (ilanFromQuery) {
+      setSelectedId(ilanFromQuery);
+    }
+  }, [ilanFromQuery]);
 
   const summary = useMemo(() => {
     const byEquipment = new Map<string, number>();

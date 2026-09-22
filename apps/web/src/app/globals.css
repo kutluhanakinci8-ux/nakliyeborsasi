@@ -5410,6 +5410,44 @@ button.btn-secondary {
   align-items: start;
 }
 
+/* —— İhaleler (premium) —— */
+.admin-auctions-premium .admin-auctions-kpi-row {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(200px, 1.2fr);
+  margin-bottom: 14px;
+}
+
+.admin-auctions-bid-chart {
+  margin-bottom: 14px;
+}
+
+.admin-auctions-layout {
+  margin-top: 0;
+}
+
+.admin-auctions-list-owner,
+.admin-auctions-detail-owner {
+  display: block;
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+.admin-auctions-bid-filters,
+.admin-auctions-type-filters {
+  margin-top: 0;
+}
+
+.admin-org-badge--warn {
+  background: #fef3c7;
+  color: #92400e;
+  border-color: #fcd34d;
+}
+
+.admin-auctions-detail-grid {
+  align-items: start;
+}
+
 .admin-toggle-row {
   display: flex;
   flex-wrap: wrap;
