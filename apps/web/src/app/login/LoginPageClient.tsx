@@ -5,6 +5,10 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AuthApiClient } from "../../lib/AuthApiClient";
 import { SessionApiClient } from "../../lib/SessionApiClient";
+import {
+  countryFlagEmoji,
+  REGISTRATION_COUNTRY_OPTIONS,
+} from "../../lib/countryDisplay";
 import { applyRegistrationOrganizationProfile } from "../../lib/organizationProfile";
 import { queueWebsiteEnrichmentAfterRegistration } from "../../lib/websiteEnrichmentWorkflow";
 import { SiteLayout } from "../../components/SiteLayout";
@@ -326,10 +330,11 @@ export function LoginPageClient() {
                         value={companyCountryCode}
                         onChange={(event) => setCompanyCountryCode(event.target.value)}
                       >
-                        <option value="TR">Türkiye (TR)</option>
-                        <option value="UA">Ukrayna (UA)</option>
-                        <option value="DE">Almanya (DE)</option>
-                        <option value="PL">Polonya (PL)</option>
+                        {REGISTRATION_COUNTRY_OPTIONS.map((country) => (
+                          <option key={country.code} value={country.code}>
+                            {countryFlagEmoji(country.code)} {country.labelTr} ({country.code})
+                          </option>
+                        ))}
                       </select>
                     </label>
                     <div className="auth-contact-fields">

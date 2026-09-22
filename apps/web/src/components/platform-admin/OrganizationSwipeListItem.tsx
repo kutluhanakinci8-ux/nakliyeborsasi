@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { CountryFlag } from "../CountryFlag";
 import { formatParticipantType } from "../../lib/PlatformAdminApiClient";
 import type { OrgAction } from "./organizationTypes";
 
@@ -9,6 +10,7 @@ const SWIPE_WIDTH = 168;
 type CompanyItem = {
   id: string;
   legalName: string;
+  countryCode: string;
   participantTypeCode: string | null;
   userCount: number;
   listingCount: number;
@@ -17,6 +19,7 @@ type CompanyItem = {
 type OrganizationSwipeListItemProps = {
   item: CompanyItem;
   logoUrl?: string;
+  countryCode: string;
   frozen: boolean;
   isSelected: boolean;
   isSwipeOpen: boolean;
@@ -43,6 +46,7 @@ function companyLogoInitials(legalName: string): string {
 export function OrganizationSwipeListItem({
   item,
   logoUrl,
+  countryCode,
   frozen,
   isSelected,
   isSwipeOpen,
@@ -174,6 +178,11 @@ export function OrganizationSwipeListItem({
             )}
             <div className="admin-org-swipe-card-body">
               <span className="admin-org-company-top">
+                <CountryFlag
+                  code={countryCode}
+                  size="sm"
+                  className="admin-org-company-flag"
+                />
                 <strong>{item.legalName}</strong>
                 {frozen ? (
                   <span className="admin-org-badge admin-org-badge--danger">
