@@ -34,6 +34,7 @@ import {
   isTrustedInstagramMessageOrigin,
   normalizeInstagramCountLabel,
   openInstagramProfileForCapture,
+  parseInstagramStatsFromText,
 } from "../../lib/instagramBrowserCapture";
 import { refreshInstagramStatsForOrganization } from "../../lib/instagramStatsWorkflow";
 import { useWebSession } from "../../context/WebSessionProvider";
@@ -80,6 +81,7 @@ export function AdminOrganizationPageClient() {
   const [isRefreshingInstagramStats, setIsRefreshingInstagramStats] =
     useState(false);
   const [instagramGraphConfigured, setInstagramGraphConfigured] = useState(false);
+  const [instagramPasteBuffer, setInstagramPasteBuffer] = useState("");
   const actionPanelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -96,21 +98,7 @@ export function AdminOrganizationPageClient() {
       if (!isInstagramStatsCaptureMessage(event.data)) {
         return;
       }
-      setProfile((current) => ({
-        ...current,
-        instagramFollowersCount:
-          normalizeInstagramCountLabel(event.data.followers) ||
-          current.instagramFollowersCount,
-        instagramFollowingCount:
-          normalizeInstagramCountLabel(event.data.following) ||
-          current.instagramFollowingCount,
-        instagramPostsCount:
-          normalizeInstagramCountLabel(event.data.posts) ||
-          current.instagramPostsCount,
-        instagramStatsFetchedAt: new Date().toISOString(),
-        instagramStatsNote: "Tarayıcıdan alındı (girişli Instagram oturumu)",
-      }));
-      flash("Instagram sayıları tarayıcıdan panele aktarıldı — Kaydet ile saklayın.");
+      applyInstagramParsedStats(event.data, "Yer imi ile Instagram sayfasından okundu");
     }
     window.addEventListener("message", onInstagramCaptureMessage);
     return () => window.removeEventListener("message", onInstagramCaptureMessage);
@@ -233,6 +221,37 @@ export function AdminOrganizationPageClient() {
   function flash(text: string): void {
     setMessage(text);
     window.setTimeout(() => setMessage(""), 4000);
+  }
+
+  function applyInstagramParsedStats(
+    parsed: { posts: string; followers: string; following: string },
+    note: string,
+  ): void {
+    setProfile((current) => ({
+      ...current,
+      instagramPostsCount:
+        normalizeInstagramCountLabel(parsed.posts) || current.instagramPostsCount,
+      instagramFollowersCount:
+        normalizeInstagramCountLabel(parsed.followers) ||
+        current.instagramFollowersCount,
+      instagramFollowingCount:
+        normalizeInstagramCountLabel(parsed.following) ||
+        current.instagramFollowingCount,
+      instagramStatsFetchedAt: new Date().toISOString(),
+      instagramStatsNote: note,
+    }));
+    flash("Instagram sayıları forma yazıldı — Kaydet ile saklayın.");
+  }
+
+  function handleParseInstagramPaste(): void {
+    const parsed = parseInstagramStatsFromText(instagramPasteBuffer);
+    if (!parsed) {
+      flash(
+        "Metinde gönderi/takipçi bulunamadı. Örn: 208 gönderi 13,9 B takipçi 1 takip",
+      );
+      return;
+    }
+    applyInstagramParsedStats(parsed, "Profil metninden yapıştırıldı");
   }
 
   async function handleRefreshInstagramStats(): Promise<void> {
@@ -936,8 +955,31 @@ export function AdminOrganizationPageClient() {
                   {" "}
                   (aynı tarayıcıda Instagram&apos;a girişli olun)
                 </li>
-                <li>Açılan sekmede yer imine tıklayın; sayılar bu forma düşer.</li>
+                <li>
+                  Instagram sekmesine geçin; üstteki{" "}
+                  <strong>208 gönderi · 13,9 B takipçi · 1 takip</strong> satırı
+                  görünürken yer imine tıklayın — sistem bu metni okur ve forma yazır.
+                </li>
+                <li>Admin panele dönüp <strong>Kaydet</strong> deyin.</li>
               </ol>
+              <p className="admin-social-paste-label">
+                Yer imi çalışmazsa: Instagram&apos;da sayıları seçip kopyalayın, buraya
+                yapıştırın:
+              </p>
+              <textarea
+                className="admin-input admin-textarea admin-social-paste"
+                rows={2}
+                placeholder="208 gönderi  13,9 B takipçi  1 takip"
+                value={instagramPasteBuffer}
+                onChange={(event) => setInstagramPasteBuffer(event.target.value)}
+              />
+              <button
+                type="button"
+                className="admin-btn-secondary admin-social-paste-btn"
+                onClick={handleParseInstagramPaste}
+              >
+                Yapıştırılan metinden sayıları çıkar
+              </button>
             </div>
             <div className="admin-form-grid">
               <label className="admin-field">

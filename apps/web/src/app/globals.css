@@ -5687,6 +5687,22 @@ button.btn-secondary {
   cursor: grab;
 }
 
+.admin-social-paste-label {
+  margin: 12px 0 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #78350f;
+}
+
+.admin-social-paste {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.admin-social-paste-btn {
+  margin-top: 4px;
+}
+
 .admin-org-delete-panel .admin-org-delete-warning {
   margin: 0 0 14px;
   font-size: 0.9rem;
