@@ -288,7 +288,13 @@ export function AdminOrganizationPageClient() {
   ];
 
   return (
-    <div className="platform-admin-command admin-org-premium">
+    <div
+      className={
+        selectedId
+          ? "platform-admin-command admin-org-premium admin-org-firm-open"
+          : "platform-admin-command admin-org-premium"
+      }
+    >
       <header className="platform-admin-command-hero">
         <div>
           <p className="platform-admin-command-eyebrow">Firmalar ve hesaplar</p>
@@ -429,6 +435,16 @@ export function AdminOrganizationPageClient() {
             <EmptyState message="Soldan firma seçin veya UUID ekleyin." />
           ) : (
             <>
+              <button
+                type="button"
+                className="admin-org-back-to-list"
+                onClick={() => {
+                  setSelectedId("");
+                  setActiveAction(null);
+                }}
+              >
+                ← Firma listesi
+              </button>
               <header className="admin-org-selection-card admin-panel-card">
                 <div>
                   <h2>{profile.tradeName || selectedCompany?.legalName || "Organizasyon"}</h2>

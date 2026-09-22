@@ -26,7 +26,14 @@ cd "$INSTALL_DIR"
 bash scripts/install-deps.sh
 
 ENV_FILE="apps/web/.env.local"
-echo "NEXT_PUBLIC_API_BASE_URL=${API_PUBLIC_URL}" > "$ENV_FILE"
+BUILD_SHA="$(git -C "$INSTALL_DIR" rev-parse --short HEAD 2>/dev/null || echo unknown)"
+BUILD_TIME="$(date -u +"%Y-%m-%dT%H:%MZ")"
+{
+  echo "NEXT_PUBLIC_API_BASE_URL=${API_PUBLIC_URL}"
+  echo "NEXT_PUBLIC_DEPLOY_SHA=${BUILD_SHA}"
+  echo "NEXT_PUBLIC_DEPLOY_TIME=${BUILD_TIME}"
+} > "$ENV_FILE"
+echo "Web build: ${BUILD_SHA} @ ${BUILD_TIME}"
 
 bash scripts/build-web.sh
 

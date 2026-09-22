@@ -5051,6 +5051,12 @@ button.btn-secondary {
   background: linear-gradient(145deg, #b91c1c, #dc2626) !important;
 }
 
+@media (min-width: 1101px) {
+  .admin-org-back-to-list {
+    display: none;
+  }
+}
+
 .admin-org-sidebar-head {
   display: flex;
   justify-content: space-between;
@@ -5980,6 +5986,25 @@ button.btn-secondary {
   color: #1e3a5f;
 }
 
+.platform-admin-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.platform-admin-deploy-pill {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #64748b;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
 .platform-admin-content {
   padding: 20px 24px 48px;
   flex: 1;
@@ -6680,6 +6705,24 @@ button.btn-secondary {
 
   .admin-org-layout--premium {
     grid-template-columns: 1fr;
+  }
+
+  .admin-org-premium.admin-org-firm-open .admin-org-sidebar {
+    display: none;
+  }
+
+  .admin-org-back-to-list {
+    display: inline-flex;
+    align-items: center;
+    margin-bottom: 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    background: #fff;
+    color: #1e3a5f;
+    cursor: pointer;
   }
 
   .admin-org-premium .admin-org-sidebar {

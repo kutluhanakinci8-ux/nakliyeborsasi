@@ -6,6 +6,9 @@ import { type ReactNode } from "react";
 import { PLATFORM_ADMIN_NAV } from "../../lib/platformAdminNavigation";
 import { useWebSession } from "../../context/WebSessionProvider";
 
+const deploySha = process.env.NEXT_PUBLIC_DEPLOY_SHA ?? "dev";
+const deployTime = process.env.NEXT_PUBLIC_DEPLOY_TIME ?? "";
+
 export function PlatformAdminShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -71,6 +74,9 @@ export function PlatformAdminShell({ children }: { children: ReactNode }) {
             </p>
           </div>
           <div className="platform-admin-topbar-actions">
+            <span className="platform-admin-deploy-pill" title={deployTime || undefined}>
+              Sürüm {deploySha}
+            </span>
             <button
               type="button"
               className="platform-admin-btn-ghost"
