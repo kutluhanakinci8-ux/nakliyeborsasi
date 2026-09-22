@@ -618,10 +618,9 @@ export function AdminOrganizationPageClient() {
         {activeAction === "edit" && editSection === "overview" ? (
           <section className="admin-panel-card admin-corp-overview-card">
             <AdminCorporateProfileOverview profile={profile} />
-            <p className="admin-corp-view-hint">
-              Bu özet, üyenin organizasyon sayfası ve web taramasından gelen kayıtlı verileri
-              gösterir. Operatör düzenlemesi için üstteki <strong>Profili düzenle</strong>{" "}
-              kullanılır.
+            <p className="admin-corp-view-hint admin-corp-view-hint--footer">
+              Kayıtlı veriler üye organizasyonu ve web taramasından gelir. Düzenleme için üstte{" "}
+              <strong>Profili düzenle</strong>.
             </p>
           </section>
         ) : null}

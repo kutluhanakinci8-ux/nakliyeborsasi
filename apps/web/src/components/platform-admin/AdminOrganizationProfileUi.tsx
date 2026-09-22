@@ -1,5 +1,10 @@
+import type { ReactNode } from "react";
 import type { OrganizationProfile } from "../../lib/organizationProfile";
 import { formatParticipantType } from "../../lib/PlatformAdminApiClient";
+import {
+  SocialPlatformIconLink,
+  type SocialPlatformId,
+} from "../SocialPlatformIcon";
 
 type CompanyMeta = {
   legalName: string;
@@ -18,16 +23,19 @@ function ReadonlyRow({
   label,
   value,
   href,
+  mono,
 }: {
   label: string;
   value: string;
   href?: string;
+  mono?: boolean;
 }) {
   const shown = displayValue(value);
+  const empty = !value.trim();
   return (
-    <div className="admin-corp-dl-row">
+    <div className={`admin-corp-dl-row${empty ? " admin-corp-dl-row--empty" : ""}`}>
       <dt>{label}</dt>
-      <dd>
+      <dd className={mono ? "admin-corp-mono" : undefined}>
         {href && value.trim() ? (
           <a href={href} target="_blank" rel="noreferrer">{shown}</a>
         ) : (
@@ -36,6 +44,63 @@ function ReadonlyRow({
       </dd>
     </div>
   );
+}
+
+function CorpBlock({
+  title,
+  accent,
+  children,
+  wide,
+  className,
+}: {
+  title: string;
+  accent: "navy" | "teal" | "amber" | "violet" | "slate";
+  children: ReactNode;
+  wide?: boolean;
+  className?: string;
+}) {
+  return (
+    <section
+      className={[
+        "admin-corp-block",
+        `admin-corp-block--${accent}`,
+        wide ? "admin-corp-block--wide" : "",
+        className ?? "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      <header className="admin-corp-block-head">
+        <h3 className="admin-corp-block-title">{title}</h3>
+      </header>
+      <div className="admin-corp-block-body">{children}</div>
+    </section>
+  );
+}
+
+function serviceTags(summary: string): string[] {
+  return summary
+    .split(/[·,;|/]+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+const SOCIAL_PLATFORMS: {
+  id: SocialPlatformId;
+  urlKey: keyof OrganizationProfile;
+}[] = [
+  { id: "instagram", urlKey: "instagramUrl" },
+  { id: "facebook", urlKey: "facebookUrl" },
+  { id: "x", urlKey: "twitterUrl" },
+  { id: "youtube", urlKey: "youtubeUrl" },
+  { id: "linkedin", urlKey: "linkedinUrl" },
+];
+
+function shortCompanyId(id: string): string {
+  if (id.length <= 14) {
+    return id;
+  }
+  return `${id.slice(0, 8)}…${id.slice(-4)}`;
 }
 
 export function AdminCorporateProfileHero({
@@ -59,22 +124,25 @@ export function AdminCorporateProfileHero({
     company?.legalName ||
     "Firma profili";
   const subtitle = profile.legalName.trim() || company?.legalName || "";
+  const companyId = company?.id ?? "";
 
   return (
-    <header className="admin-corp-hero">
+    <header className="admin-corp-hero admin-corp-hero--premium">
       <div className="admin-corp-hero-brand">
-        {profile.logoUrl ? (
-          <img
-            src={profile.logoUrl}
-            alt=""
-            className="admin-corp-hero-logo"
-            referrerPolicy="no-referrer"
-          />
-        ) : (
-          <div className="admin-corp-hero-logo admin-corp-hero-logo--empty">
-            {title.slice(0, 2).toLocaleUpperCase("tr-TR")}
-          </div>
-        )}
+        <div className="admin-corp-hero-logo-wrap">
+          {profile.logoUrl ? (
+            <img
+              src={profile.logoUrl}
+              alt=""
+              className="admin-corp-hero-logo"
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <div className="admin-corp-hero-logo admin-corp-hero-logo--empty">
+              {title.slice(0, 2).toLocaleUpperCase("tr-TR")}
+            </div>
+          )}
+        </div>
         <div className="admin-corp-hero-titles">
           <p className="admin-corp-hero-eyebrow">Kurumsal profil</p>
           <h2 className="admin-corp-hero-title">{title}</h2>
@@ -82,17 +150,22 @@ export function AdminCorporateProfileHero({
             <p className="admin-corp-hero-subtitle">{subtitle}</p>
           ) : null}
           <div className="admin-corp-hero-pills">
-            <span className="admin-org-badge">
+            <span className="admin-org-badge admin-corp-pill">
               {formatParticipantType(company?.participantTypeCode ?? null)}
             </span>
-            <span className="admin-org-badge">
+            <span className="admin-org-badge admin-corp-pill">
               {company?.userCount ?? 0} kullanıcı
             </span>
-            <span className="admin-org-badge">
+            <span className="admin-org-badge admin-corp-pill">
               {company?.listingCount ?? 0} ilan
             </span>
             {profile.countryCode ? (
-              <span className="admin-org-badge">{profile.countryCode}</span>
+              <span className="admin-org-badge admin-corp-pill">
+                {profile.countryCode}
+                {profile.city.trim() ? ` · ${profile.city}` : ""}
+              </span>
+            ) : profile.city.trim() ? (
+              <span className="admin-org-badge admin-corp-pill">{profile.city}</span>
             ) : null}
           </div>
         </div>
@@ -115,36 +188,65 @@ export function AdminCorporateProfileHero({
       </div>
       <div className="admin-corp-hero-contact">
         {profile.addressLine.trim() ? (
-          <p className="admin-corp-hero-line">
-            <span className="admin-corp-hero-icon" aria-hidden>⌖</span>
-            {profile.addressLine}
-            {profile.city.trim() ? ` · ${profile.city}` : ""}
-          </p>
-        ) : profile.city.trim() ? (
-          <p className="admin-corp-hero-line">
-            <span className="admin-corp-hero-icon" aria-hidden>⌖</span>
-            {profile.city}
-          </p>
+          <p className="admin-corp-hero-address">{profile.addressLine}</p>
         ) : null}
-        <p className="admin-corp-hero-line admin-corp-hero-line--meta">
+        <div className="admin-corp-contact-strip">
           {profile.primaryEmail.trim() ? (
-            <span>{profile.primaryEmail}</span>
+            <a
+              className="admin-corp-contact-chip"
+              href={`mailto:${profile.primaryEmail}`}
+            >
+              <span className="admin-corp-contact-chip-icon" aria-hidden>@</span>
+              {profile.primaryEmail}
+            </a>
           ) : null}
-          {profile.phone.trim() ? <span>{profile.phone}</span> : null}
+          {profile.phone.trim() ? (
+            <a className="admin-corp-contact-chip" href={`tel:${profile.phone}`}>
+              <span className="admin-corp-contact-chip-icon" aria-hidden>☎</span>
+              {profile.phone}
+            </a>
+          ) : null}
           {profile.whatsappNumber.trim() ? (
-            <span>WA {profile.whatsappNumber}</span>
+            <span className="admin-corp-contact-chip admin-corp-contact-chip--static">
+              <span className="admin-corp-contact-chip-icon" aria-hidden>WA</span>
+              {profile.whatsappNumber}
+            </span>
           ) : null}
           {profile.website.trim() ? (
-            <a href={profile.website} target="_blank" rel="noreferrer">
+            <a
+              className="admin-corp-contact-chip admin-corp-contact-chip--web"
+              href={profile.website}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <span className="admin-corp-contact-chip-icon" aria-hidden>↗</span>
               Web sitesi
             </a>
           ) : null}
-        </p>
-        <p className="admin-corp-hero-id">
-          Firma kimliği: <code>{company?.id ?? "—"}</code>
-        </p>
+        </div>
+        {companyId ? (
+          <p className="admin-corp-hero-id" title={companyId}>
+            Firma kimliği <code>{shortCompanyId(companyId)}</code>
+          </p>
+        ) : null}
       </div>
     </header>
+  );
+}
+
+function InstagramMetric({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  const shown = displayValue(value);
+  return (
+    <div className="admin-corp-ig-metric">
+      <span className="admin-corp-ig-metric-value">{shown}</span>
+      <span className="admin-corp-ig-metric-label">{label}</span>
+    </div>
   );
 }
 
@@ -153,71 +255,112 @@ export function AdminCorporateProfileOverview({
 }: {
   profile: OrganizationProfile;
 }) {
+  const services = serviceTags(profile.servicesSummary);
+  const hasInstagramUrl = profile.instagramUrl.trim().length > 0;
+  const hasAnySocial = SOCIAL_PLATFORMS.some((p) =>
+    String(profile[p.urlKey] ?? "").trim(),
+  );
+
   return (
-    <div className="admin-corp-overview">
-      <section className="admin-corp-block">
-        <h3 className="admin-corp-block-title">Kimlik ve vergi</h3>
-        <dl className="admin-corp-dl">
+    <div className="admin-corp-overview admin-corp-overview--premium">
+      <CorpBlock title="Kimlik ve vergi" accent="navy">
+        <dl className="admin-corp-dl admin-corp-dl--compact">
           <ReadonlyRow label="Ticari unvan" value={profile.tradeName} />
           <ReadonlyRow label="Resmi unvan" value={profile.legalName} />
-          <ReadonlyRow label="Vergi / TIN" value={profile.taxNumber} />
-          <ReadonlyRow label="MERSİS" value={profile.mersisNumber} />
+          <ReadonlyRow label="Vergi / TIN" value={profile.taxNumber} mono />
+          <ReadonlyRow label="MERSİS" value={profile.mersisNumber} mono />
           <ReadonlyRow label="Vergi dairesi" value={profile.taxOfficeLine} />
-          <ReadonlyRow label="Şehir" value={profile.city} />
-          <ReadonlyRow label="Ülke" value={profile.countryCode} />
         </dl>
-      </section>
-      <section className="admin-corp-block">
-        <h3 className="admin-corp-block-title">İletişim</h3>
-        <dl className="admin-corp-dl">
+      </CorpBlock>
+
+      <CorpBlock title="İletişim" accent="teal">
+        <dl className="admin-corp-dl admin-corp-dl--compact">
           <ReadonlyRow label="E-posta" value={profile.primaryEmail} />
           <ReadonlyRow label="Telefon" value={profile.phone} />
           <ReadonlyRow label="WhatsApp" value={profile.whatsappNumber} />
           <ReadonlyRow label="Web" value={profile.website} href={profile.website} />
           <ReadonlyRow label="KEP" value={profile.kepAddress} />
         </dl>
-      </section>
-      <section className="admin-corp-block">
-        <h3 className="admin-corp-block-title">Kayıt ve yetki</h3>
-        <dl className="admin-corp-dl">
+      </CorpBlock>
+
+      <CorpBlock title="Kayıt ve yetki" accent="amber">
+        <dl className="admin-corp-dl admin-corp-dl--compact">
           <ReadonlyRow label="Ticaret sicil" value={profile.tradeRegistryNumber} />
           <ReadonlyRow
-            label="Ulaştırma yetki belgesi"
+            label="Ulaştırma yetki"
             value={profile.transportLicenseNumber}
           />
           <ReadonlyRow label="Çalışma saatleri" value={profile.workingHours} />
         </dl>
-      </section>
-      <section className="admin-corp-block admin-corp-block--wide">
-        <h3 className="admin-corp-block-title">Web ve hizmetler</h3>
-        <dl className="admin-corp-dl">
+      </CorpBlock>
+
+      <CorpBlock title="Konum" accent="slate">
+        <dl className="admin-corp-dl admin-corp-dl--compact">
+          <ReadonlyRow label="Şehir" value={profile.city} />
+          <ReadonlyRow label="Ülke" value={profile.countryCode} />
           <ReadonlyRow label="Açık adres" value={profile.addressLine} />
-          <ReadonlyRow label="Firma tanımı" value={profile.companyDescription} />
-          <ReadonlyRow label="Hizmet özetleri" value={profile.servicesSummary} />
         </dl>
-        {profile.websiteEnrichmentCompletedAt ? (
-          <p className="admin-org-enrichment-meta">
-            Son web taraması:{" "}
-            {new Date(profile.websiteEnrichmentCompletedAt).toLocaleString("tr-TR")}
+      </CorpBlock>
+
+      <CorpBlock title="Web ve hizmetler" accent="violet" wide>
+        {profile.companyDescription.trim() ? (
+          <p className="admin-corp-prose">{profile.companyDescription.trim()}</p>
+        ) : (
+          <p className="admin-corp-prose admin-corp-prose--muted">Firma tanımı henüz yok.</p>
+        )}
+        {services.length > 0 ? (
+          <ul className="admin-corp-service-tags" aria-label="Hizmetler">
+            {services.map((tag) => (
+              <li key={tag}>{tag}</li>
+            ))}
+          </ul>
+        ) : profile.servicesSummary.trim() ? (
+          <p className="admin-corp-prose admin-corp-prose--small">
+            {profile.servicesSummary}
           </p>
         ) : null}
-      </section>
-      <section className="admin-corp-block admin-corp-block--wide">
-        <h3 className="admin-corp-block-title">Sosyal medya</h3>
-        <dl className="admin-corp-dl admin-corp-dl--social">
-          <ReadonlyRow label="Instagram" value={profile.instagramUrl} href={profile.instagramUrl} />
-          <ReadonlyRow label="Gönderi" value={profile.instagramPostsCount} />
-          <ReadonlyRow label="Takipçi" value={profile.instagramFollowersCount} />
-          <ReadonlyRow label="Takip" value={profile.instagramFollowingCount} />
-          <ReadonlyRow label="Facebook" value={profile.facebookUrl} href={profile.facebookUrl} />
-          <ReadonlyRow label="X" value={profile.twitterUrl} href={profile.twitterUrl} />
-          <ReadonlyRow label="YouTube" value={profile.youtubeUrl} href={profile.youtubeUrl} />
-          <ReadonlyRow label="LinkedIn" value={profile.linkedinUrl} href={profile.linkedinUrl} />
-        </dl>
-        {profile.instagramStatsNote ? (
-          <p className="admin-org-enrichment-meta">{profile.instagramStatsNote}</p>
+        {profile.websiteEnrichmentCompletedAt ? (
+          <p className="admin-corp-scan-meta">
+            Son web taraması{" "}
+            <time dateTime={profile.websiteEnrichmentCompletedAt}>
+              {new Date(profile.websiteEnrichmentCompletedAt).toLocaleString("tr-TR")}
+            </time>
+          </p>
         ) : null}
-      </section>
+      </CorpBlock>
+
+      <CorpBlock title="Sosyal ağlar" accent="teal" wide className="admin-corp-block--social">
+        <div
+          className="admin-corp-social-icons social-media-row"
+          role="list"
+          aria-label="Sosyal medya profilleri"
+        >
+          {SOCIAL_PLATFORMS.map(({ id, urlKey }) => (
+            <SocialPlatformIconLink
+              key={id}
+              id={id}
+              href={String(profile[urlKey] ?? "")}
+            />
+          ))}
+        </div>
+        {!hasAnySocial ? (
+          <p className="admin-corp-social-empty">Kayıtlı sosyal profil bağlantısı yok.</p>
+        ) : null}
+        {hasInstagramUrl ? (
+          <div className="admin-corp-ig-panel">
+            <div className="admin-corp-ig-metrics">
+              <InstagramMetric label="Gönderi" value={profile.instagramPostsCount} />
+              <InstagramMetric label="Takipçi" value={profile.instagramFollowersCount} />
+              <InstagramMetric label="Takip" value={profile.instagramFollowingCount} />
+            </div>
+          </div>
+        ) : null}
+        {profile.instagramStatsNote ? (
+          <p className="admin-corp-scan-meta admin-corp-scan-meta--note">
+            {profile.instagramStatsNote}
+          </p>
+        ) : null}
+      </CorpBlock>
     </div>
   );
 }
