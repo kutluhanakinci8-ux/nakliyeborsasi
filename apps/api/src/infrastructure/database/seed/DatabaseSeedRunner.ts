@@ -11,6 +11,12 @@ import { CompanySubscriptionEntity } from "../entities/CompanySubscriptionEntity
 import { FreightListingEntity } from "../entities/FreightListingEntity";
 import { SubscriptionPlanCatalog } from "../../../modules/subscription/SubscriptionPlanCatalog";
 import { seedTestMarketParticipants } from "./TestMarketParticipantSeed";
+import { seedTestMarketDemoGraph } from "./TestMarketDemoGraphSeed";
+import { AuctionSessionEntity } from "../entities/AuctionSessionEntity";
+import { AuctionBidEntity } from "../entities/AuctionBidEntity";
+import { MessageThreadEntity } from "../entities/MessageThreadEntity";
+import { MessageEntity } from "../entities/MessageEntity";
+import { CompanyTrustReviewEntity } from "../entities/CompanyTrustReviewEntity";
 
 @Injectable()
 export class DatabaseSeedRunner implements OnModuleInit {
@@ -27,6 +33,16 @@ export class DatabaseSeedRunner implements OnModuleInit {
     private readonly companySubscriptionRepository: Repository<CompanySubscriptionEntity>,
     @InjectRepository(FreightListingEntity)
     private readonly freightListingRepository: Repository<FreightListingEntity>,
+    @InjectRepository(AuctionSessionEntity)
+    private readonly auctionSessionRepository: Repository<AuctionSessionEntity>,
+    @InjectRepository(AuctionBidEntity)
+    private readonly auctionBidRepository: Repository<AuctionBidEntity>,
+    @InjectRepository(MessageThreadEntity)
+    private readonly messageThreadRepository: Repository<MessageThreadEntity>,
+    @InjectRepository(MessageEntity)
+    private readonly messageRepository: Repository<MessageEntity>,
+    @InjectRepository(CompanyTrustReviewEntity)
+    private readonly trustReviewRepository: Repository<CompanyTrustReviewEntity>,
     private readonly subscriptionPlanCatalog: SubscriptionPlanCatalog,
   ) {}
 
@@ -41,6 +57,16 @@ export class DatabaseSeedRunner implements OnModuleInit {
       companyMembershipRepository: this.companyMembershipRepository,
       companySubscriptionRepository: this.companySubscriptionRepository,
       freightListingRepository: this.freightListingRepository,
+    });
+    await seedTestMarketDemoGraph({
+      companyRepository: this.companyRepository,
+      userAccountRepository: this.userAccountRepository,
+      freightListingRepository: this.freightListingRepository,
+      auctionSessionRepository: this.auctionSessionRepository,
+      auctionBidRepository: this.auctionBidRepository,
+      messageThreadRepository: this.messageThreadRepository,
+      messageRepository: this.messageRepository,
+      trustReviewRepository: this.trustReviewRepository,
     });
   }
 

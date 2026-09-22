@@ -1,11 +1,5 @@
-import { AdminModulePlaceholder } from "../../../../components/platform-admin/AdminModulePlaceholder";
+import { AdminAuctionsPageClient } from "../../../../components/platform-admin/AdminAuctionsPageClient";
 
 export default function AdminAuctionsPage() {
-  return (
-    <AdminModulePlaceholder
-      title="İhaleler"
-      lead="Açık ihaleler, kurallar ve müdahale."
-      bullets={["İhale iptali", "Minimum teklif düzeltme", "İhale geçmişi raporu"]}
-    />
-  );
+  return <AdminAuctionsPageClient />;
 }

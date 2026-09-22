@@ -5234,9 +5234,45 @@ button.btn-secondary {
 
 .platform-admin-stat-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 12px;
   margin-bottom: 24px;
+}
+
+.platform-admin-table-wrap {
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.platform-admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.platform-admin-table th,
+.platform-admin-table td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.platform-admin-table th {
+  background: #f8fafc;
+  font-weight: 600;
+  color: #334155;
+}
+
+.platform-admin-table tr:hover td {
+  background: #f8fafc;
+}
+
+.platform-admin-loading-inline,
+.platform-admin-empty {
+  color: #64748b;
+  font-size: 0.9rem;
 }
 
 .platform-admin-stat {

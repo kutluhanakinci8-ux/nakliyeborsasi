@@ -16,6 +16,7 @@ import { HttpRequestAuditLoggingInterceptor } from "./infrastructure/audit/HttpR
 import { AuctionModule } from "./modules/auction/AuctionModule";
 import { MessagingModule } from "./modules/messaging/MessagingModule";
 import { TrustScoreModule } from "./modules/trust/TrustScoreModule";
+import { PlatformAdminModule } from "./modules/platform-admin/PlatformAdminModule";
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { TrustScoreModule } from "./modules/trust/TrustScoreModule";
     AuctionModule,
     MessagingModule,
     TrustScoreModule,
+    PlatformAdminModule,
     PanelModule,
     HealthModule,
   ],

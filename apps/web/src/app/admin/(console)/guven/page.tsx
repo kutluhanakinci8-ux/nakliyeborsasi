@@ -1,15 +1,5 @@
-import { AdminModulePlaceholder } from "../../../../components/platform-admin/AdminModulePlaceholder";
+import { AdminTrustPageClient } from "../../../../components/platform-admin/AdminTrustPageClient";
 
 export default function AdminTrustPage() {
-  return (
-    <AdminModulePlaceholder
-      title="Güven skorları"
-      lead="Değerlendirmeler ve itibar moderasyonu."
-      bullets={[
-        "Şüpheli yorum inceleme",
-        "Skor düzeltme ve rozet",
-        "Kara liste firmalar",
-      ]}
-    />
-  );
+  return <AdminTrustPageClient />;
 }

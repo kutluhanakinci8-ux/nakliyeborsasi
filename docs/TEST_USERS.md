@@ -53,3 +53,13 @@ Plan: `carrier_starter_tr_ua`
 | Platform admin | `admin@nakliyeborsasi.local` | `AdminPass123!` |
 
 Giriş: http://168.231.109.27:3011/login
+
+## Otomatik demo veri (API seed)
+
+API her başlatıldığında (eksikse):
+
+- Yük veren ilanlarına **ihale** + taşıyıcıdan **teklif**
+- **5 mesaj kanalı** (yük veren ↔ taşıyıcı)
+- **5 güven değerlendirmesi**
+
+Platform konsolu (`/admin`) bu verileri `GET /api/v1/platform-admin/*` ile listeler (yalnızca `admin@nakliyeborsasi.local`).

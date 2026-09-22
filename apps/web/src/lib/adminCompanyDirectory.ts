@@ -1,9 +1,13 @@
 import { MarketplaceApiClient } from "./MarketplaceApiClient";
+import {
+  PlatformAdminApiClient,
+  formatParticipantType,
+} from "./PlatformAdminApiClient";
 
 export type AdminCompanyListItem = {
   companyId: string;
   label: string;
-  source: "session" | "marketplace" | "manual";
+  source: "session" | "marketplace" | "manual" | "api";
 };
 
 const MANUAL_REGISTRY_KEY = "nb-admin-company-directory";
@@ -43,6 +47,22 @@ export async function discoverCompanies(
   sessionCompanyId: string,
 ): Promise<AdminCompanyListItem[]> {
   const map = new Map<string, AdminCompanyListItem>();
+
+  try {
+    const apiCompanies = await PlatformAdminApiClient.fetchCompanies(accessToken);
+    for (const company of apiCompanies) {
+      map.set(company.id, {
+        companyId: company.id,
+        label: `${company.legalName} · ${formatParticipantType(company.participantTypeCode)}`,
+        source: "api",
+      });
+    }
+    if (map.size > 0) {
+      return [...map.values()].sort((a, b) => a.label.localeCompare(b.label, "tr"));
+    }
+  } catch {
+    // platform-admin yalnızca operatör JWT ile çalışır
+  }
 
   if (sessionCompanyId) {
     map.set(sessionCompanyId, {
