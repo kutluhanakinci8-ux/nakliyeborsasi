@@ -1946,12 +1946,28 @@ a {
 .site-footer-meta {
   grid-column: 1 / -1;
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 14px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 20px;
   padding-top: 18px;
   margin-top: 4px;
   border-top: 1px solid rgba(16, 185, 129, 0.12);
+}
+
+.site-footer-col--corporate {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.site-footer-col--corporate .site-footer-payments {
+  margin-top: 18px;
+  align-self: flex-end;
+  justify-content: flex-end;
+  width: 100%;
+  max-width: 100%;
 }
 
 .site-footer-brand-social .site-footer-apps {
@@ -2448,7 +2464,9 @@ a {
 }
 
 .site-footer-meta .site-footer-copy {
-  margin-top: 2px;
+  margin: 0;
+  margin-left: auto;
+  text-align: right;
 }
 
 .auth-page {
@@ -3530,6 +3548,16 @@ button.btn-secondary {
   .site-footer-meta {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .site-footer-meta .site-footer-copy {
+    margin-left: 0;
+    text-align: left;
+  }
+
+  .site-footer-col--corporate .site-footer-payments {
+    align-self: flex-start;
+    justify-content: flex-start;
   }
 
   .site-footer-copy {

@@ -41,7 +41,7 @@ export function SiteFooter() {
             ))}
           </ul>
         </div>
-        <div className="site-footer-col">
+        <div className="site-footer-col site-footer-col--corporate">
           <p className="site-footer-heading">Kurumsal</p>
           <ul className="site-footer-links">
             {CORPORATE_NAV_ITEMS.map((item) => (
@@ -50,6 +50,7 @@ export function SiteFooter() {
               </li>
             ))}
           </ul>
+          <FooterPaymentMarks />
         </div>
         <div className="site-footer-meta">
           <nav className="site-footer-legal" aria-label="Yasal bilgiler">
@@ -59,7 +60,6 @@ export function SiteFooter() {
               </Link>
             ))}
           </nav>
-          <FooterPaymentMarks />
           <p className="site-footer-copy">© {new Date().getFullYear()} Nakliye Borsası</p>
         </div>
       </div>
