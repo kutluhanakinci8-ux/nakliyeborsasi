@@ -19,7 +19,6 @@ export const CORPORATE_DROPDOWN_ITEMS = [
   { href: "/kariyer", label: "Kariyer" },
   { href: "/blog", label: "Blog" },
   { href: "/iletisim", label: "İletişim" },
-  { href: "/ui-ornekleri", label: "Tasarım önizleme" },
 ] as const;
 
 export const CORPORATE_NAV_ITEMS = [
