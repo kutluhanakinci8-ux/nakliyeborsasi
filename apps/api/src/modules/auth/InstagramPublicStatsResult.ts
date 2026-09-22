@@ -3,6 +3,6 @@ export type InstagramPublicStatsResult = {
   followersCount: number | null;
   followingCount: number | null;
   postsCount: number | null;
-  source: "web_profile_info" | "unavailable";
+  source: "meta_graph" | "web_profile_info" | "unavailable";
   errorMessage: string | null;
 };

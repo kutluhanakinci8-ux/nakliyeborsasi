@@ -32,7 +32,7 @@ export type InstagramPublicStats = {
   followersCount: number | null;
   followingCount: number | null;
   postsCount: number | null;
-  source: "web_profile_info" | "unavailable";
+  source: "meta_graph" | "web_profile_info" | "unavailable";
   errorMessage: string | null;
 };
 
@@ -74,6 +74,27 @@ export class AuthApiClient {
       enrichment: CompanyWebsiteEnrichment;
     };
     return payload.enrichment;
+  }
+
+  public static async fetchInstagramGraphStatus(): Promise<{
+    configured: boolean;
+    actorId: string | null;
+    mode: "env" | "none";
+  }> {
+    const response = await fetch(
+      `${PublicApiConfiguration.resolveBaseUrl()}/auth/instagram-graph-status`,
+    );
+    if (!response.ok) {
+      return { configured: false, actorId: null, mode: "none" };
+    }
+    const payload = (await response.json()) as {
+      connection: {
+        configured: boolean;
+        actorId: string | null;
+        mode: "env" | "none";
+      };
+    };
+    return payload.connection;
   }
 
   public static async enrichInstagramStats(

@@ -27,6 +27,7 @@ import {
   type OrganizationAuditEntry,
   type OrganizationProfile,
 } from "../../lib/organizationProfile";
+import { AuthApiClient } from "../../lib/AuthApiClient";
 import { refreshInstagramStatsForOrganization } from "../../lib/instagramStatsWorkflow";
 import { useWebSession } from "../../context/WebSessionProvider";
 import { AdminDonutChart } from "./AdminDashboardCharts";
@@ -71,7 +72,14 @@ export function AdminOrganizationPageClient() {
   const [swipeOpenId, setSwipeOpenId] = useState<string | null>(null);
   const [isRefreshingInstagramStats, setIsRefreshingInstagramStats] =
     useState(false);
+  const [instagramGraphConfigured, setInstagramGraphConfigured] = useState(false);
   const actionPanelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    void AuthApiClient.fetchInstagramGraphStatus().then((status) => {
+      setInstagramGraphConfigured(status.configured);
+    });
+  }, []);
 
   const refreshDirectory = useCallback(async () => {
     if (!accessToken) {
@@ -822,6 +830,41 @@ export function AdminOrganizationPageClient() {
               </div>
               <button type="submit" className="admin-btn-primary">Kaydet</button>
             </header>
+            <div className="admin-social-connection-panel">
+              <p className="admin-social-connection-title">
+                Platform Instagram (Meta Graph)
+              </p>
+              <p className="admin-social-connection-lead">
+                Kendi Instagram Business hesabınızı Meta üzerinden bağladığınızda
+                gönderi ve takipçi sayıları güvenilir şekilde çekilir (anonim
+                tarama yerine).
+              </p>
+              <div className="admin-social-connection-status">
+                <span
+                  className={
+                    instagramGraphConfigured
+                      ? "admin-org-badge admin-org-badge--ok"
+                      : "admin-org-badge admin-org-badge--warn"
+                  }
+                >
+                  {instagramGraphConfigured
+                    ? "Sunucuda Meta token yapılandırıldı"
+                    : "Henüz bağlı değil — API ortam değişkenleri gerekli"}
+                </span>
+                <a
+                  className="admin-social-connection-link"
+                  href="https://github.com/kutluhanakinci8-ux/nakliyeborsasi/blob/cursor/modular-freight-platform-18ba/docs/SOCIAL_MEDIA_CONNECTION.md"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Bağlantı kılavuzu
+                </a>
+              </div>
+              <p className="admin-social-connection-hint">
+                Sonraki adım: her firma için &quot;Instagram Business bağla&quot;
+                (OAuth) — şimdilik platform jetonu veya manuel sayı girişi.
+              </p>
+            </div>
             <div className="admin-form-grid">
               <label className="admin-field">
                 <span>Facebook</span>

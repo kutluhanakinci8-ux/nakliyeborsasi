@@ -5611,6 +5611,53 @@ button.btn-secondary {
   min-width: 12rem;
 }
 
+.admin-social-connection-panel {
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: linear-gradient(145deg, #f8fafc, #f1f5f9);
+}
+
+.admin-social-connection-title {
+  margin: 0 0 6px;
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--nb-navy-deep);
+}
+
+.admin-social-connection-lead {
+  margin: 0 0 10px;
+  font-size: 0.82rem;
+  color: #475569;
+  line-height: 1.45;
+  max-width: 62ch;
+}
+
+.admin-social-connection-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-social-connection-link {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #0d9488;
+  text-decoration: none;
+}
+
+.admin-social-connection-link:hover {
+  text-decoration: underline;
+}
+
+.admin-social-connection-hint {
+  margin: 10px 0 0;
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
 .admin-org-delete-panel .admin-org-delete-warning {
   margin: 0 0 14px;
   font-size: 0.9rem;

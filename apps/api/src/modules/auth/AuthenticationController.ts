@@ -55,6 +55,17 @@ export class AuthenticationController {
     return { stats };
   }
 
+  @Get("instagram-graph-status")
+  public getInstagramGraphStatus(): {
+    connection: ReturnType<
+      InstagramPublicStatsService["getGraphConnectionStatus"]
+    >;
+  } {
+    return {
+      connection: this.instagramPublicStatsService.getGraphConnectionStatus(),
+    };
+  }
+
   @Post("login")
   public async login(
     @Body() body: LoginUserRequestDto,

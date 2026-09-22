@@ -41,7 +41,11 @@ export function mergeInstagramStatsIntoProfile(
       : profile.instagramStatsFetchedAt,
     instagramStatsNote:
       stats.errorMessage ??
-      (hasCounts ? "Instagram web API" : profile.instagramStatsNote),
+      (hasCounts
+        ? stats.source === "meta_graph"
+          ? "Meta Graph API (bağlı hesap)"
+          : "Instagram web API"
+        : profile.instagramStatsNote),
   };
 }
 

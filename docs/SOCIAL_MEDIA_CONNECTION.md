@@ -1,0 +1,32 @@
+# Sosyal medya bağlantısı (Meta / Instagram)
+
+Nakliye Borsası, firma Instagram istatistiklerini (gönderi, takipçi, takip) **anonim web taraması** yerine mümkün olduğunda **Meta Graph API** ile çeker. Bu, VPS IP engellerini ve işletme hesabı kısıtlarını aşmanın doğru yolu.
+
+## 1. Meta Developer uygulaması
+
+1. [developers.facebook.com](https://developers.facebook.com/) → **Uygulama oluştur** (İşletme türü).
+2. Ürün olarak **Instagram Graph API** ve **Facebook Login** ekleyin.
+3. Instagram **Business** veya **Creator** hesabını bir **Facebook Sayfası**na bağlayın.
+
+## 2. Sunucu ortam değişkenleri (API)
+
+`apps/api` veya VPS PM2 ortamında:
+
+| Değişken | Açıklama |
+|----------|----------|
+| `META_GRAPH_ACCESS_TOKEN` | Uzun ömürlü sayfa/ kullanıcı erişim jetonu (Graph API) |
+| `META_INSTAGRAM_ACTOR_ID` | Bağlı Instagram Business hesabının **sayısal** kimliği (IG User ID) |
+
+Jeton, `business_discovery` ile diğer işletme kullanıcı adlarının istatistiklerini okumak için yeterli izinlere sahip olmalıdır.
+
+## 3. Admin panelde kullanım
+
+**Organizasyonlar → Düzenle → Sosyal medya**
+
+- Üstte **Platform Instagram (Meta Graph)** durumu görünür.
+- Yapılandırma tamamsa **İstatistikleri güncelle** önce Graph API’yi dener.
+- Henüz bağlı değilse sayıları elle girebilir veya token’ları yapılandırıp yeniden deneyebilirsiniz.
+
+## 4. Sonraki adım (firma bazlı OAuth)
+
+Her firmanın kendi Instagram hesabını **Hesap → Organizasyon** içinden “Instagram Business bağla” ile yetkilendirmesi planlanabilir. Jetonlar yalnızca sunucuda şifreli saklanır; tarayıcıda tutulmaz.

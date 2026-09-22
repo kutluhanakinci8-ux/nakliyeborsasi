@@ -1,12 +1,33 @@
 import { Injectable } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { ValidationException } from "@nakliyeborsasi/core";
 import { InstagramPublicStatsResult } from "./InstagramPublicStatsResult";
 
 const FETCH_TIMEOUT_MS = 12_000;
 const IG_APP_ID = "936619743392459";
 
+export type InstagramGraphConnectionStatus = {
+  configured: boolean;
+  actorId: string | null;
+  mode: "env" | "none";
+};
+
 @Injectable()
 export class InstagramPublicStatsService {
+  public constructor(private readonly configService: ConfigService) {}
+
+  public getGraphConnectionStatus(): InstagramGraphConnectionStatus {
+    const token = this.configService.get<string>("META_GRAPH_ACCESS_TOKEN");
+    const actorId =
+      this.configService.get<string>("META_INSTAGRAM_ACTOR_ID") ?? null;
+    const configured = Boolean(token?.trim() && actorId?.trim());
+    return {
+      configured,
+      actorId: configured ? actorId : null,
+      mode: configured ? "env" : "none",
+    };
+  }
+
   public async fetchFromProfileUrl(
     rawUrl: string,
   ): Promise<InstagramPublicStatsResult> {
@@ -15,6 +36,74 @@ export class InstagramPublicStatsService {
       throw new ValidationException("Geçerli bir Instagram profil adresi gerekli");
     }
 
+    const graphResult = await this.fetchViaMetaGraph(username);
+    if (graphResult) {
+      return graphResult;
+    }
+
+    return this.fetchViaPublicWebApi(username);
+  }
+
+  private async fetchViaMetaGraph(
+    username: string,
+  ): Promise<InstagramPublicStatsResult | null> {
+    const token = this.configService.get<string>("META_GRAPH_ACCESS_TOKEN");
+    const actorId = this.configService.get<string>("META_INSTAGRAM_ACTOR_ID");
+    if (!token?.trim() || !actorId?.trim()) {
+      return null;
+    }
+
+    const discoveryField = `business_discovery.username(${username}){username,followers_count,follows_count,media_count}`;
+    const url = new URL(`https://graph.facebook.com/v21.0/${actorId}`);
+    url.searchParams.set("fields", discoveryField);
+    url.searchParams.set("access_token", token);
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+    try {
+      const response = await fetch(url.toString(), { signal: controller.signal });
+      const payload = (await response.json()) as {
+        business_discovery?: {
+          username?: string;
+          followers_count?: number;
+          follows_count?: number;
+          media_count?: number;
+        };
+        error?: { message?: string };
+      };
+
+      if (!response.ok || payload.error || !payload.business_discovery) {
+        return {
+          username,
+          followersCount: null,
+          followingCount: null,
+          postsCount: null,
+          source: "unavailable",
+          errorMessage:
+            payload.error?.message ??
+            "Meta Graph üzerinden istatistik alınamadı. Token veya hesap izinlerini kontrol edin.",
+        };
+      }
+
+      const discovery = payload.business_discovery;
+      return {
+        username: discovery.username ?? username,
+        followersCount: discovery.followers_count ?? null,
+        followingCount: discovery.follows_count ?? null,
+        postsCount: discovery.media_count ?? null,
+        source: "meta_graph",
+        errorMessage: null,
+      };
+    } catch {
+      return null;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  private async fetchViaPublicWebApi(
+    username: string,
+  ): Promise<InstagramPublicStatsResult> {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
     try {
@@ -53,7 +142,7 @@ export class InstagramPublicStatsService {
           postsCount: null,
           source: "unavailable",
           errorMessage:
-            "Instagram sunucu IP’sini kısıtladı; gönderi/takipçi sayılarını elle girin.",
+            "Anonim tarama engellendi. Meta Business hesabınızı platforma bağlayın (Graph API).",
         };
       }
 
@@ -66,7 +155,7 @@ export class InstagramPublicStatsService {
           source: "unavailable",
           errorMessage:
             payload.message ??
-            "Instagram istatistikleri alınamadı (işletme hesabı veya erişim kısıtı).",
+            "Instagram istatistikleri alınamadı. İşletme hesabı için Meta bağlantısı gerekir.",
         };
       }
 
@@ -86,7 +175,8 @@ export class InstagramPublicStatsService {
         followingCount: null,
         postsCount: null,
         source: "unavailable",
-        errorMessage: "Instagram bağlantısı kurulamadı.",
+        errorMessage:
+          "Instagram bağlantısı kurulamadı. Meta Graph token yapılandırmasını kullanın.",
       };
     } finally {
       clearTimeout(timer);
