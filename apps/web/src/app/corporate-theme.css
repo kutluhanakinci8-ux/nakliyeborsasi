@@ -321,3 +321,16 @@
 .site-layout--corporate .page-breadcrumb-current {
   color: #64748b;
 }
+
+.site-layout--corporate .site-footer-bottom {
+  border-top-color: rgba(255, 255, 255, 0.1);
+  background: #0a1929;
+}
+
+.site-layout--corporate .site-footer-bottom-rule {
+  background: rgba(148, 163, 184, 0.35);
+}
+
+.site-layout--corporate .payment-mark {
+  color: rgba(226, 232, 240, 0.78);
+}

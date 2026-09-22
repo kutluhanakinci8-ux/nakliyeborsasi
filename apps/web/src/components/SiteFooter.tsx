@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SiteBrand } from "./SiteBrand";
 import { SocialMediaLinks } from "./SocialMediaLinks";
+import { FooterTrustBar } from "./FooterTrustBar";
 import { CORPORATE_NAV_ITEMS, PLATFORM_NAV_ITEMS } from "../lib/siteNavigation";
 
 const LEGAL_LINKS = [
@@ -60,6 +61,7 @@ export function SiteFooter() {
           <p className="site-footer-copy">© {new Date().getFullYear()} Nakliye Borsası</p>
         </div>
       </div>
+      <FooterTrustBar />
     </footer>
   );
 }
