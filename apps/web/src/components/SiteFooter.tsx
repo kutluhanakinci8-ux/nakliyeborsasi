@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { SiteBrand } from "./SiteBrand";
 import { SocialMediaLinks } from "./SocialMediaLinks";
-import { FooterTrustBar } from "./FooterTrustBar";
+import { FooterPaymentMarks, FooterStoreBadges } from "./FooterTrustBar";
 import { CORPORATE_NAV_ITEMS, PLATFORM_NAV_ITEMS } from "../lib/siteNavigation";
 
 const LEGAL_LINKS = [
@@ -28,6 +28,7 @@ export function SiteFooter() {
               Bizi takip edin — duyurular ve koridor haberleri
             </p>
             <SocialMediaLinks />
+            <FooterStoreBadges />
           </div>
         </div>
         <div className="site-footer-col">
@@ -58,10 +59,10 @@ export function SiteFooter() {
               </Link>
             ))}
           </nav>
+          <FooterPaymentMarks />
           <p className="site-footer-copy">© {new Date().getFullYear()} Nakliye Borsası</p>
         </div>
       </div>
-      <FooterTrustBar />
     </footer>
   );
 }

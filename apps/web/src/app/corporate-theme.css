@@ -322,13 +322,8 @@
   color: #64748b;
 }
 
-.site-layout--corporate .site-footer-bottom {
-  border-top-color: rgba(255, 255, 255, 0.1);
-  background: #0a1929;
-}
-
-.site-layout--corporate .site-footer-bottom-rule {
-  background: rgba(148, 163, 184, 0.35);
+.site-layout--corporate .site-footer-meta {
+  border-top-color: rgba(255, 255, 255, 0.12);
 }
 
 .site-layout--corporate .payment-mark {

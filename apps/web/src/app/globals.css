@@ -1946,13 +1946,16 @@ a {
 .site-footer-meta {
   grid-column: 1 / -1;
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px 20px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
   padding-top: 18px;
   margin-top: 4px;
   border-top: 1px solid rgba(16, 185, 129, 0.12);
+}
+
+.site-footer-brand-social .site-footer-apps {
+  margin-top: 18px;
 }
 
 .site-footer-inner--3 {
@@ -2379,22 +2382,6 @@ a {
   color: #6ee7b7;
 }
 
-.site-footer-bottom {
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(0, 0, 0, 0.12);
-}
-
-.site-footer-bottom-inner {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px 24px 24px;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 20px 28px;
-}
-
 .site-footer-apps {
   display: flex;
   flex-direction: column;
@@ -2431,19 +2418,13 @@ a {
   height: 44px;
 }
 
-.site-footer-bottom-rule {
-  flex: 0 0 1px;
-  width: min(280px, 100%);
-  height: 1px;
-  background: rgba(255, 255, 255, 0.14);
-}
-
 .site-footer-payments {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
-  gap: 16px 22px;
+  justify-content: flex-start;
+  gap: 14px 20px;
+  padding: 4px 0 2px;
 }
 
 .payment-mark {
@@ -2465,28 +2446,8 @@ a {
   opacity: 0.78;
 }
 
-@media (min-width: 720px) {
-  .site-footer-bottom-inner {
-    justify-content: space-between;
-    flex-wrap: nowrap;
-  }
-
-  .site-footer-apps {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  .site-footer-bottom-rule {
-    width: 1px;
-    height: 52px;
-    flex: 0 0 1px;
-  }
-
-  .site-footer-payments {
-    justify-content: flex-end;
-    flex: 1;
-  }
+.site-footer-meta .site-footer-copy {
+  margin-top: 2px;
 }
 
 .auth-page {
