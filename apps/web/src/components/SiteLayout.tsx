@@ -1,6 +1,7 @@
 "use client";
 
 import { type ReactNode } from "react";
+import { PlatformAdminLiveSiteBanner } from "./platform-admin/PlatformAdminLiveSiteBanner";
 import { SiteFooter } from "./SiteFooter";
 import { SiteHeader } from "./SiteHeader";
 
@@ -12,6 +13,7 @@ type SiteLayoutProps = {
 export function SiteLayout({ children, headerVariant = "app" }: SiteLayoutProps) {
   return (
     <div className="site-layout site-layout--corporate">
+      <PlatformAdminLiveSiteBanner />
       <SiteHeader variant={headerVariant} />
       <main className="site-main">
         <div className="site-canvas">{children}</div>

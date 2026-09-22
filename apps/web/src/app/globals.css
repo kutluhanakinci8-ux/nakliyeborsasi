@@ -5044,6 +5044,47 @@ button.btn-secondary {
   color: #e2e8f0;
 }
 
+.platform-admin-live-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem 1.25rem;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(90deg, #0f172a 0%, #1e293b 100%);
+  border-bottom: 1px solid #334155;
+  color: #e2e8f0;
+  font-size: 0.875rem;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+}
+
+.platform-admin-live-banner p {
+  margin: 0;
+}
+
+.platform-admin-live-banner-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.85rem;
+  border-radius: 6px;
+  background: #f59e0b;
+  color: #0f172a;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.platform-admin-live-banner-link:hover {
+  background: #fbbf24;
+}
+
+.user-account-item--admin {
+  background: rgba(15, 23, 42, 0.06);
+  font-weight: 600;
+}
+
 .platform-admin-main {
   display: flex;
   flex-direction: column;

@@ -51,7 +51,13 @@ export function PlatformAdminShell({ children }: { children: ReactNode }) {
           ))}
         </nav>
         <div className="platform-admin-sidebar-foot">
-          <Link href="/marketplace" className="platform-admin-foot-link">
+          <Link
+            href="/marketplace"
+            className="platform-admin-foot-link"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Canlı site yeni sekmede açılır; bu yönetim sekmesi açık kalır"
+          >
             Canlı siteye git
           </Link>
         </div>
