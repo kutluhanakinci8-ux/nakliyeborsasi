@@ -5090,8 +5090,12 @@ button.btn-secondary {
 
 .admin-org-layout--directory {
   grid-template-columns: 1fr !important;
-  max-width: 720px;
-  margin: 0 auto;
+  width: 100%;
+}
+
+.admin-org-layout--directory .admin-org-sidebar--full {
+  width: 100%;
+  max-width: none;
 }
 
 .admin-org-sidebar--full {
