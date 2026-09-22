@@ -229,9 +229,9 @@ export class CompanyWebsiteEnrichmentService {
 
   private extractWhatsappNumber(html: string, text: string): string | null {
     const linkPatterns = [
-      /api\.whatsapp\.com\/send\?phone=(\d{10,13})/gi,
-      /wa\.me\/(\d{10,13})/gi,
-      /whatsapp\.com\/send\?phone=(\d{10,13})/gi,
+      /api\.whatsapp\.com\/send\?phone=(\d{10,13})/i,
+      /wa\.me\/(\d{10,13})/i,
+      /whatsapp\.com\/send\?phone=(\d{10,13})/i,
     ];
     for (const pattern of linkPatterns) {
       const match = html.match(pattern);
