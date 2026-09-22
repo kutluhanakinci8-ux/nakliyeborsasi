@@ -1,9 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { EmptyState } from "../EmptyState";
 import {
   addManualCompanyId,
   loadManualCompanyIds,
@@ -30,16 +28,14 @@ import {
 } from "../../lib/organizationProfile";
 import { useWebSession } from "../../context/WebSessionProvider";
 import { AdminDonutChart } from "./AdminDashboardCharts";
+import { OrganizationSwipeListItem } from "./OrganizationSwipeListItem";
+import type { OrgAction, OrgEditSection } from "./organizationTypes";
 
 type ApiCompany = Awaited<
   ReturnType<typeof PlatformAdminApiClient.fetchCompanies>
 >[number];
 
 type TypeFilter = "all" | "LOAD_SHIPPER" | "LOAD_CARRIER" | "LOAD_SEEKER" | "other";
-
-type OrgAction = "edit" | "restrict" | "delete";
-
-type OrgEditSection = "profile" | "corridor" | "contact" | "audit";
 
 function participantKey(code: string | null): TypeFilter {
   if (code === "LOAD_SHIPPER" || code === "LOAD_CARRIER" || code === "LOAD_SEEKER") {
@@ -70,7 +66,7 @@ export function AdminOrganizationPageClient() {
   const [editSection, setEditSection] = useState<OrgEditSection>("profile");
   const [deleteConfirm, setDeleteConfirm] = useState("");
   const [loading, setLoading] = useState(true);
-  const workspaceRef = useRef<HTMLDivElement>(null);
+  const [swipeOpenId, setSwipeOpenId] = useState<string | null>(null);
   const actionPanelRef = useRef<HTMLDivElement>(null);
 
   const refreshDirectory = useCallback(async () => {
@@ -242,8 +238,16 @@ export function AdminOrganizationPageClient() {
 
   function selectCompany(id: string): void {
     setSelectedId(id);
-    if (workspaceRef.current && window.matchMedia("(max-width: 1100px)").matches) {
-      workspaceRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    setActiveAction(null);
+    setSwipeOpenId(null);
+  }
+
+  function pickAction(companyId: string, action: OrgAction): void {
+    setSelectedId(companyId);
+    setActiveAction(action);
+    setSwipeOpenId(null);
+    if (action === "edit") {
+      setEditSection("profile");
     }
   }
 
@@ -262,6 +266,400 @@ export function AdminOrganizationPageClient() {
     setDeleteConfirm("");
     setActiveAction(null);
     void refreshDirectory().then(() => setSelectedId(remaining[0]?.id ?? ""));
+  }
+
+  function renderOrgActionPanels() {
+    if (!activeAction) {
+      return null;
+    }
+
+    return (
+      <div className="admin-org-action-panel">
+        {activeAction === "restrict" ? (
+          <form className="admin-panel-card" onSubmit={handleAdminSubmit}>
+            <header className="admin-panel-card-head">
+              <div>
+                <h2>Kısıtlama ve doğrulama</h2>
+                <p>Rozetler, izinler ve hesap dondurma</p>
+              </div>
+              <button type="submit" className="admin-btn-primary">Kaydet</button>
+            </header>
+            <div className="admin-form-grid">
+              <label className="admin-checkbox">
+                <input
+                  type="checkbox"
+                  checked={adminSettings.emailVerified}
+                  onChange={(event) =>
+                    setAdminSettings((c) => ({
+                      ...c,
+                      emailVerified: event.target.checked,
+                    }))
+                  }
+                />
+                E-posta onaylı
+              </label>
+              <label className="admin-field">
+                <span>Belge durumu</span>
+                <select
+                  className="admin-input"
+                  value={adminSettings.documentStatus}
+                  onChange={(event) =>
+                    setAdminSettings((c) => ({
+                      ...c,
+                      documentStatus: event.target
+                        .value as OrganizationAdminSettings["documentStatus"],
+                    }))
+                  }
+                >
+                  <option value="pending">Bekleniyor</option>
+                  <option value="approved">Onaylı</option>
+                  <option value="rejected">Reddedildi</option>
+                </select>
+              </label>
+              <label className="admin-field">
+                <span>Doğrulama seviyesi</span>
+                <select
+                  className="admin-input"
+                  value={adminSettings.verificationLevel}
+                  onChange={(event) =>
+                    setAdminSettings((c) => ({
+                      ...c,
+                      verificationLevel: event.target.value as "basic" | "full",
+                    }))
+                  }
+                >
+                  <option value="basic">Temel</option>
+                  <option value="full">Tam</option>
+                </select>
+              </label>
+              <label className="admin-field">
+                <span>Destek kayıt no</span>
+                <input
+                  className="admin-input"
+                  value={adminSettings.supportTicketRef}
+                  onChange={(event) =>
+                    setAdminSettings((c) => ({
+                      ...c,
+                      supportTicketRef: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+              <label className="admin-field admin-field--span-2">
+                <span>Admin notu</span>
+                <textarea
+                  className="admin-input admin-textarea"
+                  rows={3}
+                  value={adminSettings.adminNotes}
+                  onChange={(event) =>
+                    setAdminSettings((c) => ({
+                      ...c,
+                      adminNotes: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+            </div>
+            <div className="admin-toggle-row">
+              <label className="admin-checkbox">
+                <input
+                  type="checkbox"
+                  checked={adminSettings.featuredInSearch}
+                  onChange={(event) =>
+                    setAdminSettings((c) => ({
+                      ...c,
+                      featuredInSearch: event.target.checked,
+                    }))
+                  }
+                />
+                Öne çıkan arama
+              </label>
+              <label className="admin-checkbox">
+                <input
+                  type="checkbox"
+                  checked={adminSettings.allowNewListings}
+                  onChange={(event) =>
+                    setAdminSettings((c) => ({
+                      ...c,
+                      allowNewListings: event.target.checked,
+                    }))
+                  }
+                />
+                Yeni ilan izni
+              </label>
+              <label className="admin-checkbox">
+                <input
+                  type="checkbox"
+                  checked={adminSettings.allowAuctions}
+                  onChange={(event) =>
+                    setAdminSettings((c) => ({
+                      ...c,
+                      allowAuctions: event.target.checked,
+                    }))
+                  }
+                />
+                İhale izni
+              </label>
+              <label className="admin-checkbox admin-checkbox--danger">
+                <input
+                  type="checkbox"
+                  checked={adminSettings.accountFrozen}
+                  onChange={(event) =>
+                    setAdminSettings((c) => ({
+                      ...c,
+                      accountFrozen: event.target.checked,
+                    }))
+                  }
+                />
+                Hesabı dondur
+              </label>
+            </div>
+          </form>
+        ) : null}
+
+        {activeAction === "edit" ? (
+          <nav className="admin-org-edit-tabs" aria-label="Düzenleme bölümleri">
+            {(
+              [
+                ["profile", "Temel bilgiler"],
+                ["corridor", "Koridor"],
+                ["contact", "İletişim"],
+                ["audit", "Denetim"],
+              ] as [OrgEditSection, string][]
+            ).map(([section, label]) => (
+              <button
+                key={section}
+                type="button"
+                className={
+                  editSection === section
+                    ? "admin-org-type-chip active"
+                    : "admin-org-type-chip"
+                }
+                onClick={() => setEditSection(section)}
+              >
+                {label}
+              </button>
+            ))}
+          </nav>
+        ) : null}
+
+        {activeAction === "edit" && editSection === "profile" ? (
+          <form className="admin-panel-card" onSubmit={handleProfileSubmit}>
+            <header className="admin-panel-card-head">
+              <div>
+                <h2>Temel bilgiler</h2>
+                <p>Ticari ve resmi unvan</p>
+              </div>
+              <button type="submit" className="admin-btn-primary">Kaydet</button>
+            </header>
+            <div className="admin-form-grid">
+              <label className="admin-field">
+                <span>Ticari unvan</span>
+                <input
+                  className="admin-input"
+                  value={profile.tradeName}
+                  onChange={(event) =>
+                    setProfile((c) => ({ ...c, tradeName: event.target.value }))
+                  }
+                />
+              </label>
+              <label className="admin-field">
+                <span>Resmi unvan</span>
+                <input
+                  className="admin-input"
+                  value={profile.legalName}
+                  onChange={(event) =>
+                    setProfile((c) => ({ ...c, legalName: event.target.value }))
+                  }
+                />
+              </label>
+              <label className="admin-field">
+                <span>Vergi / TIN</span>
+                <input
+                  className="admin-input"
+                  value={profile.taxNumber}
+                  onChange={(event) =>
+                    setProfile((c) => ({ ...c, taxNumber: event.target.value }))
+                  }
+                />
+              </label>
+              <label className="admin-field">
+                <span>Ülke</span>
+                <select
+                  className="admin-input"
+                  value={profile.countryCode}
+                  onChange={(event) =>
+                    setProfile((c) => ({ ...c, countryCode: event.target.value }))
+                  }
+                >
+                  <option value="TR">TR</option>
+                  <option value="UA">UA</option>
+                  <option value="PL">PL</option>
+                  <option value="DE">DE</option>
+                  <option value="RO">RO</option>
+                </select>
+              </label>
+              <label className="admin-field admin-field--span-2">
+                <span>Şehir</span>
+                <input
+                  className="admin-input"
+                  value={profile.city}
+                  onChange={(event) =>
+                    setProfile((c) => ({ ...c, city: event.target.value }))
+                  }
+                />
+              </label>
+            </div>
+          </form>
+        ) : null}
+
+        {activeAction === "edit" && editSection === "corridor" ? (
+          <section className="admin-panel-card">
+            <header className="admin-panel-card-head">
+              <div>
+                <h2>Koridor yetkileri</h2>
+                <p>TR · UA · EU erişimleri</p>
+              </div>
+              <button
+                type="button"
+                className="admin-btn-primary"
+                onClick={() => saveAll("Koridor yetkileri güncellendi.")}
+              >
+                Kaydet
+              </button>
+            </header>
+            <div className="account-corridor-toggles">
+              {CORRIDOR_OPTIONS.map((corridor) => {
+                const active = profile.corridors.includes(corridor.code);
+                return (
+                  <button
+                    key={corridor.code}
+                    type="button"
+                    className={
+                      active ? "account-corridor-chip active" : "account-corridor-chip"
+                    }
+                    onClick={() => toggleCorridor(corridor.code)}
+                  >
+                    <span className="account-corridor-code">{corridor.code}</span>
+                    <span>{corridor.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        ) : null}
+
+        {activeAction === "edit" && editSection === "contact" ? (
+          <section className="admin-panel-card">
+            <header className="admin-panel-card-head">
+              <div>
+                <h2>Birincil iletişim</h2>
+              </div>
+              <button
+                type="button"
+                className="admin-btn-primary"
+                onClick={() => saveAll("İletişim bilgileri güncellendi.")}
+              >
+                Kaydet
+              </button>
+            </header>
+            <div className="admin-form-grid">
+              <label className="admin-field admin-field--span-2">
+                <span>Birincil e-posta</span>
+                <input
+                  className="admin-input"
+                  type="email"
+                  value={profile.primaryEmail}
+                  onChange={(event) =>
+                    setProfile((c) => ({ ...c, primaryEmail: event.target.value }))
+                  }
+                />
+              </label>
+              <label className="admin-field">
+                <span>Telefon</span>
+                <input
+                  className="admin-input"
+                  value={profile.phone}
+                  onChange={(event) =>
+                    setProfile((c) => ({ ...c, phone: event.target.value }))
+                  }
+                />
+              </label>
+              <label className="admin-field">
+                <span>Web sitesi</span>
+                <input
+                  className="admin-input"
+                  value={profile.website}
+                  onChange={(event) =>
+                    setProfile((c) => ({ ...c, website: event.target.value }))
+                  }
+                />
+              </label>
+            </div>
+          </section>
+        ) : null}
+
+        {activeAction === "edit" && editSection === "audit" ? (
+          <section className="admin-panel-card">
+            <header className="admin-panel-card-head">
+              <div>
+                <h2>Denetim günlüğü</h2>
+                <p>Yerel operatör kayıtları</p>
+              </div>
+            </header>
+            <ul className="admin-audit-list admin-audit-list--premium">
+              {auditLog.length === 0 ? (
+                <li className="admin-audit-empty">Henüz kayıt yok.</li>
+              ) : (
+                auditLog.map((entry) => (
+                  <li key={entry.id}>
+                    <time dateTime={entry.at}>
+                      {new Date(entry.at).toLocaleString("tr-TR")}
+                    </time>
+                    <span>{entry.summary}</span>
+                    <span className="admin-audit-actor">{entry.actorEmail}</span>
+                  </li>
+                ))
+              )}
+            </ul>
+          </section>
+        ) : null}
+
+        {activeAction === "delete" ? (
+          <section className="admin-org-delete-panel admin-org-inner-panel">
+            <header className="admin-panel-card-head">
+              <div>
+                <h2>Firmayı sil / temizle</h2>
+                <p>
+                  API veritabanındaki firma kaydı silinmez; yalnızca yerel operatör ayarları
+                  kaldırılır.
+                </p>
+              </div>
+            </header>
+            <p className="admin-org-delete-warning">
+              <strong>{selectedCompany?.legalName}</strong> için yerel veriler temizlenecek.
+            </p>
+            <label className="admin-field">
+              <span>Onay — kutuya SIL yazın</span>
+              <input
+                className="admin-input"
+                value={deleteConfirm}
+                onChange={(event) => setDeleteConfirm(event.target.value)}
+                placeholder="SIL"
+                autoComplete="off"
+              />
+            </label>
+            <button
+              type="button"
+              className="admin-btn-primary admin-org-delete-submit"
+              onClick={handleClearLocalData}
+            >
+              Yerel veriyi temizle
+            </button>
+          </section>
+        ) : null}
+      </div>
+    );
   }
 
   const q = filter.trim().toLowerCase();
@@ -288,13 +686,7 @@ export function AdminOrganizationPageClient() {
   ];
 
   return (
-    <div
-      className={
-        selectedId
-          ? "platform-admin-command admin-org-premium admin-org-firm-open"
-          : "platform-admin-command admin-org-premium"
-      }
-    >
+    <div className="platform-admin-command admin-org-premium">
       <header className="platform-admin-command-hero">
         <div>
           <p className="platform-admin-command-eyebrow">Firmalar ve hesaplar</p>
@@ -348,12 +740,15 @@ export function AdminOrganizationPageClient() {
         </article>
       </section>
 
-      <div className="admin-org-layout admin-org-layout--premium">
-        <aside className="admin-org-sidebar admin-panel-card">
+      <div className="admin-org-layout admin-org-layout--premium admin-org-layout--directory">
+        <aside className="admin-org-sidebar admin-org-sidebar--full admin-panel-card">
           <header className="admin-org-sidebar-head">
             <h2>Firma dizini</h2>
             <p>{filtered.length} / {companies.length}</p>
           </header>
+          <p className="admin-org-swipe-guide">
+            Kartı <strong>sola kaydırın</strong> — Düzenle, Kısıtla veya Sil
+          </p>
           <label className="admin-field">
             <span>Ara</span>
             <input
@@ -395,34 +790,27 @@ export function AdminOrganizationPageClient() {
           {loading ? (
             <p className="platform-admin-loading-inline">Liste yükleniyor…</p>
           ) : (
-            <ul className="admin-org-company-list admin-org-company-list--premium">
+            <ul className="admin-org-company-list admin-org-company-list--premium admin-org-company-list--swipe">
               {filtered.map((item) => {
                 const settings = loadOrganizationAdminSettings(item.id);
                 return (
-                  <li key={item.id}>
-                    <button
-                      type="button"
-                      className={
-                        selectedId === item.id
-                          ? "admin-org-company admin-org-company--premium active"
-                          : "admin-org-company admin-org-company--premium"
-                      }
-                      onClick={() => selectCompany(item.id)}
-                    >
-                      <span className="admin-org-company-top">
-                        <strong>{item.legalName}</strong>
-                        {settings.accountFrozen ? (
-                          <span className="admin-org-badge admin-org-badge--danger">Donduruldu</span>
-                        ) : null}
-                      </span>
-                      <span className="admin-org-company-meta">
-                        <span className="admin-org-badge">
-                          {formatParticipantType(item.participantTypeCode)}
-                        </span>
-                        <span>{item.userCount} kullanıcı · {item.listingCount} ilan</span>
-                      </span>
-                      <code>{item.id.slice(0, 8)}…</code>
-                    </button>
+                  <li key={item.id} className="admin-org-swipe-li">
+                    <OrganizationSwipeListItem
+                      item={item}
+                      frozen={settings.accountFrozen}
+                      isSelected={selectedId === item.id}
+                      isSwipeOpen={swipeOpenId === item.id}
+                      onSelect={() => selectCompany(item.id)}
+                      onSwipeOpen={() => setSwipeOpenId(item.id)}
+                      onSwipeClose={() => setSwipeOpenId(null)}
+                      onAction={(action) => pickAction(item.id, action)}
+                    />
+                    {selectedId === item.id && activeAction ? (
+                      <div className="admin-org-inline-expand" ref={actionPanelRef}>
+                        {message ? <p className="admin-org-toast">{message}</p> : null}
+                        {renderOrgActionPanels()}
+                      </div>
+                    ) : null}
                   </li>
                 );
               })}
@@ -430,502 +818,6 @@ export function AdminOrganizationPageClient() {
           )}
         </aside>
 
-        <div className="admin-org-workspace admin-org-main" ref={workspaceRef}>
-          {!selectedId ? (
-            <EmptyState message="Soldan firma seçin veya UUID ekleyin." />
-          ) : (
-            <>
-              <button
-                type="button"
-                className="admin-org-back-to-list"
-                onClick={() => {
-                  setSelectedId("");
-                  setActiveAction(null);
-                }}
-              >
-                ← Firma listesi
-              </button>
-              <article className="admin-org-workspace-sheet admin-panel-card">
-              <header className="admin-org-selection-card">
-                <div>
-                  <h2>{profile.tradeName || selectedCompany?.legalName || "Organizasyon"}</h2>
-                  <p>
-                    <code>{selectedId}</code>
-                    {selectedCompany?.countryCode ? ` · ${selectedCompany.countryCode}` : ""}
-                    {selectedCompany?.activePlanCode
-                      ? ` · ${selectedCompany.activePlanCode}`
-                      : ""}
-                  </p>
-                  <div className="admin-org-detail-pills">
-                    <span className="admin-org-badge">
-                      {formatParticipantType(selectedCompany?.participantTypeCode)}
-                    </span>
-                    {adminSettings.accountFrozen ? (
-                      <span className="admin-org-badge admin-org-badge--danger">Hesap donduruldu</span>
-                    ) : (
-                      <span className="admin-org-badge admin-org-badge--ok">Aktif</span>
-                    )}
-                    {adminSettings.emailVerified ? (
-                      <span className="admin-org-badge admin-org-badge--ok">E-posta onaylı</span>
-                    ) : null}
-                    <span className="admin-org-badge">Belge: {adminSettings.documentStatus}</span>
-                  </div>
-                </div>
-                <div className="admin-org-detail-stats admin-org-selection-stats">
-                  <div>
-                    <strong>{selectedCompany?.userCount ?? 0}</strong>
-                    <span>Kullanıcı</span>
-                  </div>
-                  <div>
-                    <strong>{selectedCompany?.listingCount ?? 0}</strong>
-                    <span>İlan</span>
-                  </div>
-                  <Link href="/hesap/organizasyon" className="admin-btn-secondary">
-                    Üye görünümü
-                  </Link>
-                </div>
-              </header>
-
-              <div className="admin-org-action-bar" role="tablist" aria-label="Firma işlemleri">
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={activeAction === "edit"}
-                  className={
-                    activeAction === "edit"
-                      ? "admin-org-action-btn active"
-                      : "admin-org-action-btn"
-                  }
-                  onClick={() => setActiveAction("edit")}
-                >
-                  Düzenle
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={activeAction === "restrict"}
-                  className={
-                    activeAction === "restrict"
-                      ? "admin-org-action-btn active"
-                      : "admin-org-action-btn"
-                  }
-                  onClick={() => setActiveAction("restrict")}
-                >
-                  Kısıtla
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={activeAction === "delete"}
-                  className={
-                    activeAction === "delete"
-                      ? "admin-org-action-btn admin-org-action-btn--danger active"
-                      : "admin-org-action-btn admin-org-action-btn--danger"
-                  }
-                  onClick={() => setActiveAction("delete")}
-                >
-                  Sil
-                </button>
-              </div>
-
-              {message ? <p className="admin-org-toast">{message}</p> : null}
-
-              {!activeAction ? (
-                <p className="admin-org-action-hint">
-                  Düzenle, kısıtla veya sil işlemini seçin; form alanı burada açılır.
-                </p>
-              ) : null}
-
-              <div className="admin-org-action-panel" ref={actionPanelRef}>
-              {activeAction === "restrict" ? (
-                <form className="admin-panel-card" onSubmit={handleAdminSubmit}>
-                  <header className="admin-panel-card-head">
-                    <div>
-                      <h2>Kısıtlama ve doğrulama</h2>
-                      <p>Rozetler, izinler ve hesap dondurma</p>
-                    </div>
-                    <button type="submit" className="admin-btn-primary">Kaydet</button>
-                  </header>
-                  <div className="admin-form-grid">
-                    <label className="admin-checkbox">
-                      <input
-                        type="checkbox"
-                        checked={adminSettings.emailVerified}
-                        onChange={(event) =>
-                          setAdminSettings((c) => ({
-                            ...c,
-                            emailVerified: event.target.checked,
-                          }))
-                        }
-                      />
-                      E-posta onaylı
-                    </label>
-                    <label className="admin-field">
-                      <span>Belge durumu</span>
-                      <select
-                        className="admin-input"
-                        value={adminSettings.documentStatus}
-                        onChange={(event) =>
-                          setAdminSettings((c) => ({
-                            ...c,
-                            documentStatus: event.target
-                              .value as OrganizationAdminSettings["documentStatus"],
-                          }))
-                        }
-                      >
-                        <option value="pending">Bekleniyor</option>
-                        <option value="approved">Onaylı</option>
-                        <option value="rejected">Reddedildi</option>
-                      </select>
-                    </label>
-                    <label className="admin-field">
-                      <span>Doğrulama seviyesi</span>
-                      <select
-                        className="admin-input"
-                        value={adminSettings.verificationLevel}
-                        onChange={(event) =>
-                          setAdminSettings((c) => ({
-                            ...c,
-                            verificationLevel: event.target.value as "basic" | "full",
-                          }))
-                        }
-                      >
-                        <option value="basic">Temel</option>
-                        <option value="full">Tam</option>
-                      </select>
-                    </label>
-                    <label className="admin-field">
-                      <span>Destek kayıt no</span>
-                      <input
-                        className="admin-input"
-                        value={adminSettings.supportTicketRef}
-                        onChange={(event) =>
-                          setAdminSettings((c) => ({
-                            ...c,
-                            supportTicketRef: event.target.value,
-                          }))
-                        }
-                      />
-                    </label>
-                    <label className="admin-field admin-field--span-2">
-                      <span>Admin notu</span>
-                      <textarea
-                        className="admin-input admin-textarea"
-                        rows={3}
-                        value={adminSettings.adminNotes}
-                        onChange={(event) =>
-                          setAdminSettings((c) => ({
-                            ...c,
-                            adminNotes: event.target.value,
-                          }))
-                        }
-                      />
-                    </label>
-                  </div>
-                  <div className="admin-toggle-row">
-                    <label className="admin-checkbox">
-                      <input
-                        type="checkbox"
-                        checked={adminSettings.featuredInSearch}
-                        onChange={(event) =>
-                          setAdminSettings((c) => ({
-                            ...c,
-                            featuredInSearch: event.target.checked,
-                          }))
-                        }
-                      />
-                      Öne çıkan arama
-                    </label>
-                    <label className="admin-checkbox">
-                      <input
-                        type="checkbox"
-                        checked={adminSettings.allowNewListings}
-                        onChange={(event) =>
-                          setAdminSettings((c) => ({
-                            ...c,
-                            allowNewListings: event.target.checked,
-                          }))
-                        }
-                      />
-                      Yeni ilan izni
-                    </label>
-                    <label className="admin-checkbox">
-                      <input
-                        type="checkbox"
-                        checked={adminSettings.allowAuctions}
-                        onChange={(event) =>
-                          setAdminSettings((c) => ({
-                            ...c,
-                            allowAuctions: event.target.checked,
-                          }))
-                        }
-                      />
-                      İhale izni
-                    </label>
-                    <label className="admin-checkbox admin-checkbox--danger">
-                      <input
-                        type="checkbox"
-                        checked={adminSettings.accountFrozen}
-                        onChange={(event) =>
-                          setAdminSettings((c) => ({
-                            ...c,
-                            accountFrozen: event.target.checked,
-                          }))
-                        }
-                      />
-                      Hesabı dondur
-                    </label>
-                  </div>
-                </form>
-              ) : null}
-
-              {activeAction === "edit" ? (
-                <nav className="admin-org-edit-tabs" aria-label="Düzenleme bölümleri">
-                  {(
-                    [
-                      ["profile", "Temel bilgiler"],
-                      ["corridor", "Koridor"],
-                      ["contact", "İletişim"],
-                      ["audit", "Denetim"],
-                    ] as [OrgEditSection, string][]
-                  ).map(([section, label]) => (
-                    <button
-                      key={section}
-                      type="button"
-                      className={
-                        editSection === section
-                          ? "admin-org-type-chip active"
-                          : "admin-org-type-chip"
-                      }
-                      onClick={() => setEditSection(section)}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </nav>
-              ) : null}
-
-              {activeAction === "edit" && editSection === "profile" ? (
-                <form className="admin-panel-card" onSubmit={handleProfileSubmit}>
-                  <header className="admin-panel-card-head">
-                    <div>
-                      <h2>Temel bilgiler</h2>
-                      <p>Ticari ve resmi unvan</p>
-                    </div>
-                    <button type="submit" className="admin-btn-primary">Kaydet</button>
-                  </header>
-                  <div className="admin-form-grid">
-                    <label className="admin-field">
-                      <span>Ticari unvan</span>
-                      <input
-                        className="admin-input"
-                        value={profile.tradeName}
-                        onChange={(event) =>
-                          setProfile((c) => ({ ...c, tradeName: event.target.value }))
-                        }
-                      />
-                    </label>
-                    <label className="admin-field">
-                      <span>Resmi unvan</span>
-                      <input
-                        className="admin-input"
-                        value={profile.legalName}
-                        onChange={(event) =>
-                          setProfile((c) => ({ ...c, legalName: event.target.value }))
-                        }
-                      />
-                    </label>
-                    <label className="admin-field">
-                      <span>Vergi / TIN</span>
-                      <input
-                        className="admin-input"
-                        value={profile.taxNumber}
-                        onChange={(event) =>
-                          setProfile((c) => ({ ...c, taxNumber: event.target.value }))
-                        }
-                      />
-                    </label>
-                    <label className="admin-field">
-                      <span>Ülke</span>
-                      <select
-                        className="admin-input"
-                        value={profile.countryCode}
-                        onChange={(event) =>
-                          setProfile((c) => ({ ...c, countryCode: event.target.value }))
-                        }
-                      >
-                        <option value="TR">TR</option>
-                        <option value="UA">UA</option>
-                        <option value="PL">PL</option>
-                        <option value="DE">DE</option>
-                        <option value="RO">RO</option>
-                      </select>
-                    </label>
-                    <label className="admin-field admin-field--span-2">
-                      <span>Şehir</span>
-                      <input
-                        className="admin-input"
-                        value={profile.city}
-                        onChange={(event) =>
-                          setProfile((c) => ({ ...c, city: event.target.value }))
-                        }
-                      />
-                    </label>
-                  </div>
-                </form>
-              ) : null}
-
-              {activeAction === "edit" && editSection === "corridor" ? (
-                <section className="admin-panel-card">
-                  <header className="admin-panel-card-head">
-                    <div>
-                      <h2>Koridor yetkileri</h2>
-                      <p>TR · UA · EU erişimleri</p>
-                    </div>
-                    <button
-                      type="button"
-                      className="admin-btn-primary"
-                      onClick={() => saveAll("Koridor yetkileri güncellendi.")}
-                    >
-                      Kaydet
-                    </button>
-                  </header>
-                  <div className="account-corridor-toggles">
-                    {CORRIDOR_OPTIONS.map((corridor) => {
-                      const active = profile.corridors.includes(corridor.code);
-                      return (
-                        <button
-                          key={corridor.code}
-                          type="button"
-                          className={
-                            active ? "account-corridor-chip active" : "account-corridor-chip"
-                          }
-                          onClick={() => toggleCorridor(corridor.code)}
-                        >
-                          <span className="account-corridor-code">{corridor.code}</span>
-                          <span>{corridor.label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </section>
-              ) : null}
-
-              {activeAction === "edit" && editSection === "contact" ? (
-                <section className="admin-panel-card">
-                  <header className="admin-panel-card-head">
-                    <div>
-                      <h2>Birincil iletişim</h2>
-                    </div>
-                    <button
-                      type="button"
-                      className="admin-btn-primary"
-                      onClick={() => saveAll("İletişim bilgileri güncellendi.")}
-                    >
-                      Kaydet
-                    </button>
-                  </header>
-                  <div className="admin-form-grid">
-                    <label className="admin-field admin-field--span-2">
-                      <span>Birincil e-posta</span>
-                      <input
-                        className="admin-input"
-                        type="email"
-                        value={profile.primaryEmail}
-                        onChange={(event) =>
-                          setProfile((c) => ({ ...c, primaryEmail: event.target.value }))
-                        }
-                      />
-                    </label>
-                    <label className="admin-field">
-                      <span>Telefon</span>
-                      <input
-                        className="admin-input"
-                        value={profile.phone}
-                        onChange={(event) =>
-                          setProfile((c) => ({ ...c, phone: event.target.value }))
-                        }
-                      />
-                    </label>
-                    <label className="admin-field">
-                      <span>Web sitesi</span>
-                      <input
-                        className="admin-input"
-                        value={profile.website}
-                        onChange={(event) =>
-                          setProfile((c) => ({ ...c, website: event.target.value }))
-                        }
-                      />
-                    </label>
-                  </div>
-                </section>
-              ) : null}
-
-              {activeAction === "edit" && editSection === "audit" ? (
-                <section className="admin-panel-card">
-                  <header className="admin-panel-card-head">
-                    <div>
-                      <h2>Denetim günlüğü</h2>
-                      <p>Yerel operatör kayıtları</p>
-                    </div>
-                  </header>
-                  <ul className="admin-audit-list admin-audit-list--premium">
-                    {auditLog.length === 0 ? (
-                      <li className="admin-audit-empty">Henüz kayıt yok.</li>
-                    ) : (
-                      auditLog.map((entry) => (
-                        <li key={entry.id}>
-                          <time dateTime={entry.at}>
-                            {new Date(entry.at).toLocaleString("tr-TR")}
-                          </time>
-                          <span>{entry.summary}</span>
-                          <span className="admin-audit-actor">{entry.actorEmail}</span>
-                        </li>
-                      ))
-                    )}
-                  </ul>
-                </section>
-              ) : null}
-
-              {activeAction === "delete" ? (
-                <section className="admin-org-delete-panel admin-org-inner-panel">
-                  <header className="admin-panel-card-head">
-                    <div>
-                      <h2>Firmayı sil / temizle</h2>
-                      <p>
-                        API veritabanındaki firma kaydı silinmez; yalnızca yerel operatör
-                        ayarları ve manuel dizin kaydı kaldırılır.
-                      </p>
-                    </div>
-                  </header>
-                  <p className="admin-org-delete-warning">
-                    <strong>{selectedCompany?.legalName}</strong> için profil, doğrulama
-                    ayarları ve denetim günlüğü (tarayıcı) temizlenecek.
-                  </p>
-                  <label className="admin-field">
-                    <span>Onay — kutuya SIL yazın</span>
-                    <input
-                      className="admin-input"
-                      value={deleteConfirm}
-                      onChange={(event) => setDeleteConfirm(event.target.value)}
-                      placeholder="SIL"
-                      autoComplete="off"
-                    />
-                  </label>
-                  <button
-                    type="button"
-                    className="admin-btn-primary admin-org-delete-submit"
-                    onClick={handleClearLocalData}
-                  >
-                    Yerel veriyi temizle
-                  </button>
-                </section>
-              ) : null}
-              </div>
-              </article>
-            </>
-          )}
-        </div>
       </div>
     </div>
   );
