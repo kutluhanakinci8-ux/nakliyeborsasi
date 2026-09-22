@@ -129,7 +129,7 @@ export function AdminOrganizationPageClient() {
     if (!selectedId) {
       return;
     }
-    const loadedProfile = loadOrganizationProfile(selectedId);
+    const loadedProfile = loadOrganizationProfile(selectedId, "");
     const apiName = selectedCompany?.legalName ?? "";
     setProfile({
       ...loadedProfile,
@@ -422,9 +422,12 @@ export function AdminOrganizationPageClient() {
           <nav className="admin-org-edit-tabs" aria-label="Düzenleme bölümleri">
             {(
               [
-                ["profile", "Temel bilgiler"],
-                ["corridor", "Koridor"],
+                ["profile", "Temel"],
+                ["web", "Web taraması"],
+                ["compliance", "Resmi kayıt"],
                 ["contact", "İletişim"],
+                ["social", "Sosyal medya"],
+                ["corridor", "Koridor"],
                 ["audit", "Denetim"],
               ] as [OrgEditSection, string][]
             ).map(([section, label]) => (
@@ -514,6 +517,180 @@ export function AdminOrganizationPageClient() {
           </form>
         ) : null}
 
+        {activeAction === "edit" && editSection === "web" ? (
+          <form className="admin-panel-card" onSubmit={handleProfileSubmit}>
+            <header className="admin-panel-card-head">
+              <div>
+                <h2>Web sitesinden alınan bilgiler</h2>
+                <p>Üye hesabında otomatik tarama ile doldurulan alanlar</p>
+              </div>
+              <button type="submit" className="admin-btn-primary">Kaydet</button>
+            </header>
+            <div className="admin-org-logo-row">
+              {profile.logoUrl ? (
+                <img
+                  src={profile.logoUrl}
+                  alt=""
+                  className="admin-org-logo-preview"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <div className="admin-org-logo-preview admin-org-logo-preview--empty">
+                  Logo yok
+                </div>
+              )}
+              <label className="admin-field admin-field--grow">
+                <span>Logo URL</span>
+                <input
+                  className="admin-input"
+                  value={profile.logoUrl}
+                  onChange={(event) =>
+                    setProfile((c) => ({ ...c, logoUrl: event.target.value }))
+                  }
+                />
+              </label>
+            </div>
+            <div className="admin-form-grid">
+              <label className="admin-field admin-field--span-2">
+                <span>Firma tanımı (meta)</span>
+                <textarea
+                  className="admin-input admin-textarea"
+                  rows={2}
+                  value={profile.companyDescription}
+                  onChange={(event) =>
+                    setProfile((c) => ({
+                      ...c,
+                      companyDescription: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+              <label className="admin-field admin-field--span-2">
+                <span>Açık adres</span>
+                <input
+                  className="admin-input"
+                  value={profile.addressLine}
+                  onChange={(event) =>
+                    setProfile((c) => ({ ...c, addressLine: event.target.value }))
+                  }
+                />
+              </label>
+              <label className="admin-field">
+                <span>Çalışma saatleri</span>
+                <input
+                  className="admin-input"
+                  value={profile.workingHours}
+                  onChange={(event) =>
+                    setProfile((c) => ({
+                      ...c,
+                      workingHours: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+              <label className="admin-field admin-field--span-2">
+                <span>Hizmet alanları (özet)</span>
+                <textarea
+                  className="admin-input admin-textarea"
+                  rows={2}
+                  value={profile.servicesSummary}
+                  onChange={(event) =>
+                    setProfile((c) => ({
+                      ...c,
+                      servicesSummary: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+            </div>
+            {profile.websiteEnrichmentCompletedAt ? (
+              <p className="admin-org-enrichment-meta">
+                Son tarama:{" "}
+                {new Date(profile.websiteEnrichmentCompletedAt).toLocaleString("tr-TR")}
+              </p>
+            ) : null}
+            {profile.websiteScannedUrls ? (
+              <p className="admin-org-enrichment-meta">
+                Taranan sayfalar:{" "}
+                <code>{profile.websiteScannedUrls.replace(/\n/g, " · ")}</code>
+              </p>
+            ) : null}
+          </form>
+        ) : null}
+
+        {activeAction === "edit" && editSection === "compliance" ? (
+          <form className="admin-panel-card" onSubmit={handleProfileSubmit}>
+            <header className="admin-panel-card-head">
+              <div>
+                <h2>Resmi kayıt ve uyum</h2>
+                <p>MERSİS, vergi, sicil, yetki belgesi, KEP</p>
+              </div>
+              <button type="submit" className="admin-btn-primary">Kaydet</button>
+            </header>
+            <div className="admin-form-grid">
+              <label className="admin-field">
+                <span>MERSİS numarası</span>
+                <input
+                  className="admin-input"
+                  value={profile.mersisNumber}
+                  onChange={(event) =>
+                    setProfile((c) => ({ ...c, mersisNumber: event.target.value }))
+                  }
+                />
+              </label>
+              <label className="admin-field">
+                <span>Vergi dairesi / no (satır)</span>
+                <input
+                  className="admin-input"
+                  value={profile.taxOfficeLine}
+                  onChange={(event) =>
+                    setProfile((c) => ({
+                      ...c,
+                      taxOfficeLine: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+              <label className="admin-field">
+                <span>Ticaret sicil no</span>
+                <input
+                  className="admin-input"
+                  value={profile.tradeRegistryNumber}
+                  onChange={(event) =>
+                    setProfile((c) => ({
+                      ...c,
+                      tradeRegistryNumber: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+              <label className="admin-field">
+                <span>Ulaştırma yetki belge no</span>
+                <input
+                  className="admin-input"
+                  value={profile.transportLicenseNumber}
+                  onChange={(event) =>
+                    setProfile((c) => ({
+                      ...c,
+                      transportLicenseNumber: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+              <label className="admin-field admin-field--span-2">
+                <span>KEP adresi</span>
+                <input
+                  className="admin-input"
+                  value={profile.kepAddress}
+                  onChange={(event) =>
+                    setProfile((c) => ({ ...c, kepAddress: event.target.value }))
+                  }
+                />
+              </label>
+            </div>
+          </form>
+        ) : null}
+
         {activeAction === "edit" && editSection === "corridor" ? (
           <section className="admin-panel-card">
             <header className="admin-panel-card-head">
@@ -551,18 +728,13 @@ export function AdminOrganizationPageClient() {
         ) : null}
 
         {activeAction === "edit" && editSection === "contact" ? (
-          <section className="admin-panel-card">
+          <form className="admin-panel-card" onSubmit={handleProfileSubmit}>
             <header className="admin-panel-card-head">
               <div>
                 <h2>Birincil iletişim</h2>
+                <p>E-posta, telefon, WhatsApp ve web</p>
               </div>
-              <button
-                type="button"
-                className="admin-btn-primary"
-                onClick={() => saveAll("İletişim bilgileri güncellendi.")}
-              >
-                Kaydet
-              </button>
+              <button type="submit" className="admin-btn-primary">Kaydet</button>
             </header>
             <div className="admin-form-grid">
               <label className="admin-field admin-field--span-2">
@@ -577,7 +749,7 @@ export function AdminOrganizationPageClient() {
                 />
               </label>
               <label className="admin-field">
-                <span>Telefon</span>
+                <span>Operasyon telefonu</span>
                 <input
                   className="admin-input"
                   value={profile.phone}
@@ -587,6 +759,19 @@ export function AdminOrganizationPageClient() {
                 />
               </label>
               <label className="admin-field">
+                <span>WhatsApp</span>
+                <input
+                  className="admin-input"
+                  value={profile.whatsappNumber}
+                  onChange={(event) =>
+                    setProfile((c) => ({
+                      ...c,
+                      whatsappNumber: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+              <label className="admin-field admin-field--span-2">
                 <span>Web sitesi</span>
                 <input
                   className="admin-input"
@@ -597,7 +782,74 @@ export function AdminOrganizationPageClient() {
                 />
               </label>
             </div>
-          </section>
+          </form>
+        ) : null}
+
+        {activeAction === "edit" && editSection === "social" ? (
+          <form className="admin-panel-card" onSubmit={handleProfileSubmit}>
+            <header className="admin-panel-card-head">
+              <div>
+                <h2>Sosyal medya</h2>
+                <p>Web taramasından ayrı platform adresleri</p>
+              </div>
+              <button type="submit" className="admin-btn-primary">Kaydet</button>
+            </header>
+            <div className="admin-form-grid">
+              <label className="admin-field">
+                <span>Facebook</span>
+                <input
+                  className="admin-input"
+                  value={profile.facebookUrl}
+                  onChange={(event) =>
+                    setProfile((c) => ({ ...c, facebookUrl: event.target.value }))
+                  }
+                />
+              </label>
+              <label className="admin-field">
+                <span>Instagram</span>
+                <input
+                  className="admin-input"
+                  value={profile.instagramUrl}
+                  onChange={(event) =>
+                    setProfile((c) => ({
+                      ...c,
+                      instagramUrl: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+              <label className="admin-field">
+                <span>X (Twitter)</span>
+                <input
+                  className="admin-input"
+                  value={profile.twitterUrl}
+                  onChange={(event) =>
+                    setProfile((c) => ({ ...c, twitterUrl: event.target.value }))
+                  }
+                />
+              </label>
+              <label className="admin-field">
+                <span>YouTube</span>
+                <input
+                  className="admin-input"
+                  value={profile.youtubeUrl}
+                  onChange={(event) =>
+                    setProfile((c) => ({ ...c, youtubeUrl: event.target.value }))
+                  }
+                />
+              </label>
+              <label className="admin-field admin-field--span-2">
+                <span>LinkedIn</span>
+                <input
+                  className="admin-input"
+                  value={profile.linkedinUrl}
+                  onChange={(event) =>
+                    setProfile((c) => ({ ...c, linkedinUrl: event.target.value }))
+                  }
+                />
+              </label>
+            </div>
+          </form>
         ) : null}
 
         {activeAction === "edit" && editSection === "audit" ? (

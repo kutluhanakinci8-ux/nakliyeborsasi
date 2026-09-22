@@ -5553,6 +5553,52 @@ button.btn-secondary {
   margin-bottom: 4px;
 }
 
+.admin-org-logo-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.admin-org-logo-preview {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  object-fit: contain;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+}
+
+.admin-org-logo-preview--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-align: center;
+  padding: 4px;
+  background: #f8fafc;
+}
+
+.admin-field--grow {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-org-enrichment-meta {
+  margin: 14px 0 0;
+  font-size: 0.8rem;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+.admin-org-enrichment-meta code {
+  word-break: break-all;
+  font-size: 0.75rem;
+}
+
 .admin-org-delete-panel .admin-org-delete-warning {
   margin: 0 0 14px;
   font-size: 0.9rem;
