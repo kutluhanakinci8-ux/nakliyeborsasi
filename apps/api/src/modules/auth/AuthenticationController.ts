@@ -6,6 +6,9 @@ import { LoginUserRequestDto } from "./LoginUserRequestDto";
 import { EnrichCompanyWebsiteRequestDto } from "./EnrichCompanyWebsiteRequestDto";
 import { CompanyWebsiteEnrichmentService } from "./CompanyWebsiteEnrichmentService";
 import { CompanyWebsiteEnrichmentResult } from "./CompanyWebsiteEnrichmentResult";
+import { EnrichInstagramStatsRequestDto } from "./EnrichInstagramStatsRequestDto";
+import { InstagramPublicStatsService } from "./InstagramPublicStatsService";
+import { InstagramPublicStatsResult } from "./InstagramPublicStatsResult";
 import { JwtTokenIssuingService } from "./JwtTokenIssuingService";
 import { JwtAuthenticationGuard } from "./JwtAuthenticationGuard";
 import { AuthenticatedUserParam } from "./AuthenticatedUserParam";
@@ -16,6 +19,7 @@ export class AuthenticationController {
     private readonly userCredentialAuthenticationService: UserCredentialAuthenticationService,
     private readonly jwtTokenIssuingService: JwtTokenIssuingService,
     private readonly companyWebsiteEnrichmentService: CompanyWebsiteEnrichmentService,
+    private readonly instagramPublicStatsService: InstagramPublicStatsService,
   ) {}
 
   @Post("register")
@@ -39,6 +43,16 @@ export class AuthenticationController {
         body.websiteUrl,
       );
     return { enrichment };
+  }
+
+  @Post("enrich-instagram-stats")
+  public async enrichInstagramStats(
+    @Body() body: EnrichInstagramStatsRequestDto,
+  ): Promise<{ stats: InstagramPublicStatsResult }> {
+    const stats = await this.instagramPublicStatsService.fetchFromProfileUrl(
+      body.instagramUrl,
+    );
+    return { stats };
   }
 
   @Post("login")

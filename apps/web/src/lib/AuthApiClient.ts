@@ -27,6 +27,15 @@ export type CompanyWebsiteEnrichment = {
   logoUrl: string | null;
 };
 
+export type InstagramPublicStats = {
+  username: string | null;
+  followersCount: number | null;
+  followingCount: number | null;
+  postsCount: number | null;
+  source: "web_profile_info" | "unavailable";
+  errorMessage: string | null;
+};
+
 export type CompanyParticipantTypeCode =
   | "LOAD_SHIPPER"
   | "LOAD_CARRIER"
@@ -65,6 +74,28 @@ export class AuthApiClient {
       enrichment: CompanyWebsiteEnrichment;
     };
     return payload.enrichment;
+  }
+
+  public static async enrichInstagramStats(
+    instagramUrl: string,
+  ): Promise<InstagramPublicStats> {
+    const response = await fetch(
+      `${PublicApiConfiguration.resolveBaseUrl()}/auth/enrich-instagram-stats`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ instagramUrl }),
+      },
+    );
+    if (!response.ok) {
+      const errorBody = await response.text();
+      throw new Error(
+        AuthApiClient.mapAuthErrorMessage(errorBody) ||
+          "Instagram istatistikleri alınamadı",
+      );
+    }
+    const payload = (await response.json()) as { stats: InstagramPublicStats };
+    return payload.stats;
   }
 
   public static async register(

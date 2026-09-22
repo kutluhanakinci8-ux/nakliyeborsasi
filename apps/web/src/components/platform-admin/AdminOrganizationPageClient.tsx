@@ -27,6 +27,7 @@ import {
   type OrganizationAuditEntry,
   type OrganizationProfile,
 } from "../../lib/organizationProfile";
+import { refreshInstagramStatsForOrganization } from "../../lib/instagramStatsWorkflow";
 import { useWebSession } from "../../context/WebSessionProvider";
 import { AdminDonutChart } from "./AdminDashboardCharts";
 import { OrganizationSwipeListItem } from "./OrganizationSwipeListItem";
@@ -68,6 +69,8 @@ export function AdminOrganizationPageClient() {
   const [deleteConfirm, setDeleteConfirm] = useState("");
   const [loading, setLoading] = useState(true);
   const [swipeOpenId, setSwipeOpenId] = useState<string | null>(null);
+  const [isRefreshingInstagramStats, setIsRefreshingInstagramStats] =
+    useState(false);
   const actionPanelRef = useRef<HTMLDivElement>(null);
 
   const refreshDirectory = useCallback(async () => {
@@ -187,6 +190,31 @@ export function AdminOrganizationPageClient() {
   function flash(text: string): void {
     setMessage(text);
     window.setTimeout(() => setMessage(""), 4000);
+  }
+
+  async function handleRefreshInstagramStats(): Promise<void> {
+    if (!selectedId || !profile.instagramUrl.trim()) {
+      flash("Önce Instagram profil adresini girin.");
+      return;
+    }
+    setIsRefreshingInstagramStats(true);
+    const outcome = await refreshInstagramStatsForOrganization(
+      selectedId,
+      profile.primaryEmail,
+      profile.instagramUrl,
+      true,
+    );
+    setProfile(loadOrganizationProfile(selectedId, profile.primaryEmail));
+    setIsRefreshingInstagramStats(false);
+    if (outcome === "success") {
+      flash("Instagram istatistikleri güncellendi.");
+    } else if (outcome === "partial") {
+      flash(
+        "Instagram otomatik alınamadı; sayıları elle girebilir veya notu okuyun.",
+      );
+    } else {
+      flash("Instagram istatistik isteği başarısız.");
+    }
   }
 
   function saveAll(summaryText: string): void {
@@ -805,19 +833,92 @@ export function AdminOrganizationPageClient() {
                   }
                 />
               </label>
+              <label className="admin-field admin-field--span-2">
+                <span>Instagram profil</span>
+                <div className="admin-instagram-url-row">
+                  <input
+                    className="admin-input"
+                    value={profile.instagramUrl}
+                    onChange={(event) =>
+                      setProfile((c) => ({
+                        ...c,
+                        instagramUrl: event.target.value,
+                      }))
+                    }
+                  />
+                  <button
+                    type="button"
+                    className="admin-btn-secondary"
+                    disabled={isRefreshingInstagramStats}
+                    onClick={() => void handleRefreshInstagramStats()}
+                  >
+                    {isRefreshingInstagramStats
+                      ? "Alınıyor…"
+                      : "İstatistikleri güncelle"}
+                  </button>
+                </div>
+              </label>
               <label className="admin-field">
-                <span>Instagram</span>
+                <span>Gönderi sayısı</span>
                 <input
                   className="admin-input"
-                  value={profile.instagramUrl}
+                  inputMode="numeric"
+                  value={profile.instagramPostsCount}
                   onChange={(event) =>
                     setProfile((c) => ({
                       ...c,
-                      instagramUrl: event.target.value,
+                      instagramPostsCount: event.target.value,
                     }))
                   }
+                  placeholder="Örn. 842"
                 />
               </label>
+              <label className="admin-field">
+                <span>Takipçi</span>
+                <input
+                  className="admin-input"
+                  inputMode="numeric"
+                  value={profile.instagramFollowersCount}
+                  onChange={(event) =>
+                    setProfile((c) => ({
+                      ...c,
+                      instagramFollowersCount: event.target.value,
+                    }))
+                  }
+                  placeholder="Örn. 12500"
+                />
+              </label>
+              <label className="admin-field">
+                <span>Takip edilen</span>
+                <input
+                  className="admin-input"
+                  inputMode="numeric"
+                  value={profile.instagramFollowingCount}
+                  onChange={(event) =>
+                    setProfile((c) => ({
+                      ...c,
+                      instagramFollowingCount: event.target.value,
+                    }))
+                  }
+                  placeholder="Örn. 120"
+                />
+              </label>
+              {profile.instagramStatsFetchedAt || profile.instagramStatsNote ? (
+                <p className="admin-org-enrichment-meta admin-field--span-2">
+                  {profile.instagramStatsFetchedAt ? (
+                    <>
+                      Son Instagram güncelleme:{" "}
+                      {new Date(profile.instagramStatsFetchedAt).toLocaleString(
+                        "tr-TR",
+                      )}
+                      .{" "}
+                    </>
+                  ) : null}
+                  {profile.instagramStatsNote ? (
+                    <span>{profile.instagramStatsNote}</span>
+                  ) : null}
+                </p>
+              ) : null}
               <label className="admin-field">
                 <span>X (Twitter)</span>
                 <input

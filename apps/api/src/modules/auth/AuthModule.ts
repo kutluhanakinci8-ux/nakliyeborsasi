@@ -10,6 +10,7 @@ import { JwtPassportStrategy } from "./JwtPassportStrategy";
 import { JwtAuthenticationGuard } from "./JwtAuthenticationGuard";
 import { CompanyRolesAuthorizationGuard } from "./CompanyRolesAuthorizationGuard";
 import { CompanyWebsiteEnrichmentService } from "./CompanyWebsiteEnrichmentService";
+import { InstagramPublicStatsService } from "./InstagramPublicStatsService";
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { CompanyWebsiteEnrichmentService } from "./CompanyWebsiteEnrichmentServi
     JwtAuthenticationGuard,
     CompanyRolesAuthorizationGuard,
     CompanyWebsiteEnrichmentService,
+    InstagramPublicStatsService,
   ],
   exports: [
     JwtAuthenticationGuard,

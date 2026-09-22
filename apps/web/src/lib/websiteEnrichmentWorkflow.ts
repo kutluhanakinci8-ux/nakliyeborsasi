@@ -2,6 +2,7 @@ import {
   AuthApiClient,
   type CompanyWebsiteEnrichment,
 } from "./AuthApiClient";
+import { refreshInstagramStatsForOrganization } from "./instagramStatsWorkflow";
 import {
   loadOrganizationProfile,
   saveOrganizationProfile,
@@ -166,10 +167,16 @@ export async function enrichOrganizationFromWebsite(
   try {
     const enrichment = await AuthApiClient.enrichCompanyWebsite(trimmed);
     const profile = loadOrganizationProfile(companyId, primaryEmail);
-    saveOrganizationProfile(
-      companyId,
-      mergeEnrichmentIntoProfile(profile, enrichment),
-    );
+    const merged = mergeEnrichmentIntoProfile(profile, enrichment);
+    saveOrganizationProfile(companyId, merged);
+    if (merged.instagramUrl.trim()) {
+      await refreshInstagramStatsForOrganization(
+        companyId,
+        primaryEmail,
+        merged.instagramUrl,
+        false,
+      );
+    }
     return "success";
   } catch {
     return "error";

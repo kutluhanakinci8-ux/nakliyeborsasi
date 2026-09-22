@@ -23,6 +23,11 @@ export type OrganizationProfile = {
   twitterUrl: string;
   youtubeUrl: string;
   linkedinUrl: string;
+  instagramPostsCount: string;
+  instagramFollowersCount: string;
+  instagramFollowingCount: string;
+  instagramStatsFetchedAt: string;
+  instagramStatsNote: string;
   logoUrl: string;
   websiteScannedUrls: string;
   websiteEnrichmentCompletedAt: string;
@@ -84,6 +89,11 @@ export function defaultOrganizationProfile(
     twitterUrl: "",
     youtubeUrl: "",
     linkedinUrl: "",
+    instagramPostsCount: "",
+    instagramFollowersCount: "",
+    instagramFollowingCount: "",
+    instagramStatsFetchedAt: "",
+    instagramStatsNote: "",
     logoUrl: "",
     websiteScannedUrls: "",
     websiteEnrichmentCompletedAt: "",
