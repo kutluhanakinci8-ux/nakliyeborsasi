@@ -2901,6 +2901,56 @@ a {
   margin-bottom: 8px;
 }
 
+.auth-enrichment-panel {
+  margin: 0 0 12px;
+  padding: 12px 12px 4px;
+  border-radius: 12px;
+  border: 1px dashed #94a3b8;
+  background: #fff;
+}
+
+.auth-enrichment-panel--success {
+  border-color: #34d399;
+  background: #f0fdf4;
+}
+
+.auth-enrichment-panel--error {
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+
+.auth-enrichment-panel-title {
+  margin: 0 0 4px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #0f766e;
+}
+
+.auth-enrichment-panel-hint {
+  margin: 0 0 10px;
+  font-size: 0.76rem;
+  line-height: 1.4;
+  color: #64748b;
+}
+
+.auth-enrichment-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.auth-enrichment-textarea {
+  resize: vertical;
+  min-height: 56px;
+  font-family: inherit;
+}
+
+@media (max-width: 520px) {
+  .auth-enrichment-row {
+    grid-template-columns: 1fr;
+  }
+}
+
 .auth-participant-field {
   margin: 0 0 14px;
   padding: 0;

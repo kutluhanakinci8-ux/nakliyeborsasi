@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AuthApiClient } from "../../lib/AuthApiClient";
@@ -52,6 +52,18 @@ export function LoginPageClient() {
   const [companyLegalName, setCompanyLegalName] = useState("");
   const [companyCountryCode, setCompanyCountryCode] = useState("TR");
   const [companyWebsiteUrl, setCompanyWebsiteUrl] = useState("");
+  const [companyTradeName, setCompanyTradeName] = useState("");
+  const [companyAddress, setCompanyAddress] = useState("");
+  const [companyCity, setCompanyCity] = useState("");
+  const [companyPhone, setCompanyPhone] = useState("");
+  const [companyTaxNumber, setCompanyTaxNumber] = useState("");
+  const [companyServicesSummary, setCompanyServicesSummary] = useState("");
+  const [showWebsiteEnrichment, setShowWebsiteEnrichment] = useState(false);
+  const [websiteEnrichmentStatus, setWebsiteEnrichmentStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
+  const [websiteEnrichmentHint, setWebsiteEnrichmentHint] = useState("");
+  const enrichmentRequestId = useRef(0);
   const [companyParticipantTypeCode, setCompanyParticipantTypeCode] = useState<
     "LOAD_SHIPPER" | "LOAD_CARRIER" | "LOAD_SEEKER"
   >("LOAD_SHIPPER");
@@ -69,6 +81,76 @@ export function LoginPageClient() {
   useEffect(() => {
     setAuthMode(initialMode);
   }, [initialMode]);
+
+  useEffect(() => {
+    const trimmed = companyWebsiteUrl.trim();
+    const looksLikeUrl =
+      trimmed.length >= 6 &&
+      (trimmed.includes(".") || trimmed.startsWith("http"));
+    if (!looksLikeUrl) {
+      setShowWebsiteEnrichment(false);
+      setWebsiteEnrichmentStatus("idle");
+      setWebsiteEnrichmentHint("");
+      return;
+    }
+
+    setShowWebsiteEnrichment(true);
+    const requestId = enrichmentRequestId.current + 1;
+    enrichmentRequestId.current = requestId;
+    setWebsiteEnrichmentStatus("loading");
+    setWebsiteEnrichmentHint("Web sitesi taranıyor…");
+
+    const timer = window.setTimeout(() => {
+      void (async () => {
+        try {
+          const enrichment = await AuthApiClient.enrichCompanyWebsite(trimmed);
+          if (enrichmentRequestId.current !== requestId) {
+            return;
+          }
+          setCompanyLegalName((current) =>
+            current.trim() ? current : enrichment.companyLegalName ?? "",
+          );
+          setCompanyTradeName((current) =>
+            current.trim() ? current : enrichment.tradeName ?? "",
+          );
+          setCompanyAddress((current) =>
+            current.trim() ? current : enrichment.addressLine ?? "",
+          );
+          setCompanyCity((current) =>
+            current.trim() ? current : enrichment.city ?? "",
+          );
+          setCompanyPhone((current) =>
+            current.trim() ? current : enrichment.phone ?? "",
+          );
+          setCompanyTaxNumber((current) =>
+            current.trim() ? current : enrichment.taxOrRegistryId ?? "",
+          );
+          setCompanyServicesSummary((current) =>
+            current.trim() ? current : enrichment.servicesSummary ?? "",
+          );
+          setEmailAddress((current) =>
+            current.trim() ? current : enrichment.emailAddress ?? "",
+          );
+          setWebsiteEnrichmentStatus("success");
+          setWebsiteEnrichmentHint(
+            "Bilgiler web sitesinden alındı — lütfen kontrol edip düzenleyin.",
+          );
+        } catch (error) {
+          if (enrichmentRequestId.current !== requestId) {
+            return;
+          }
+          setWebsiteEnrichmentStatus("error");
+          setWebsiteEnrichmentHint(
+            error instanceof Error
+              ? error.message
+              : "Web sitesi bilgileri alınamadı",
+          );
+        }
+      })();
+    }, 900);
+
+    return () => window.clearTimeout(timer);
+  }, [companyWebsiteUrl]);
 
   function switchMode(next: AuthMode): void {
     setAuthMode(next);
@@ -115,9 +197,13 @@ export function LoginPageClient() {
       const session = await SessionApiClient.fetchSession(result.accessToken);
       applyRegistrationOrganizationProfile(session.companyId, {
         legalName: companyLegalName,
+        tradeName: companyTradeName.trim() || companyLegalName,
         countryCode: companyCountryCode,
         emailAddress,
         website: companyWebsiteUrl.trim(),
+        phone: companyPhone,
+        city: companyCity,
+        taxNumber: companyTaxNumber,
       });
       await refreshSession();
       router.replace("/marketplace");
@@ -340,6 +426,90 @@ export function LoginPageClient() {
                           onChange={(event) => setCompanyWebsiteUrl(event.target.value)}
                         />
                       </label>
+                      {showWebsiteEnrichment ? (
+                        <div
+                          className={
+                            websiteEnrichmentStatus === "success"
+                              ? "auth-enrichment-panel auth-enrichment-panel--success"
+                              : websiteEnrichmentStatus === "error"
+                                ? "auth-enrichment-panel auth-enrichment-panel--error"
+                                : "auth-enrichment-panel"
+                          }
+                        >
+                          <p className="auth-enrichment-panel-title">
+                            Web sitesinden getirilen bilgiler
+                          </p>
+                          <p className="auth-enrichment-panel-hint">
+                            {websiteEnrichmentHint}
+                          </p>
+                          <label className="label-light">
+                            Ticari ünvan
+                            <input
+                              className="input-light"
+                              value={companyTradeName}
+                              onChange={(event) =>
+                                setCompanyTradeName(event.target.value)
+                              }
+                              placeholder="Web sitesinden"
+                            />
+                          </label>
+                          <label className="label-light">
+                            Açık adres
+                            <input
+                              className="input-light"
+                              value={companyAddress}
+                              onChange={(event) =>
+                                setCompanyAddress(event.target.value)
+                              }
+                              placeholder="Mahalle, cadde, il"
+                            />
+                          </label>
+                          <div className="auth-enrichment-row">
+                            <label className="label-light">
+                              Şehir / il
+                              <input
+                                className="input-light"
+                                value={companyCity}
+                                onChange={(event) =>
+                                  setCompanyCity(event.target.value)
+                                }
+                              />
+                            </label>
+                            <label className="label-light">
+                              Telefon
+                              <input
+                                className="input-light"
+                                type="tel"
+                                value={companyPhone}
+                                onChange={(event) =>
+                                  setCompanyPhone(event.target.value)
+                                }
+                              />
+                            </label>
+                          </div>
+                          <label className="label-light">
+                            MERSİS / vergi kayıt no
+                            <input
+                              className="input-light"
+                              value={companyTaxNumber}
+                              onChange={(event) =>
+                                setCompanyTaxNumber(event.target.value)
+                              }
+                            />
+                          </label>
+                          <label className="label-light">
+                            Hizmet alanları (özet)
+                            <textarea
+                              className="input-light auth-enrichment-textarea"
+                              rows={2}
+                              value={companyServicesSummary}
+                              onChange={(event) =>
+                                setCompanyServicesSummary(event.target.value)
+                              }
+                            />
+                          </label>
+                        </div>
+                      ) : null}
                       <label className="label-light">
                         Kurumsal e-posta
                         <input

@@ -9,6 +9,7 @@ import { JwtTokenIssuingService } from "./JwtTokenIssuingService";
 import { JwtPassportStrategy } from "./JwtPassportStrategy";
 import { JwtAuthenticationGuard } from "./JwtAuthenticationGuard";
 import { CompanyRolesAuthorizationGuard } from "./CompanyRolesAuthorizationGuard";
+import { CompanyWebsiteEnrichmentService } from "./CompanyWebsiteEnrichmentService";
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { CompanyRolesAuthorizationGuard } from "./CompanyRolesAuthorizationGuard
     JwtPassportStrategy,
     JwtAuthenticationGuard,
     CompanyRolesAuthorizationGuard,
+    CompanyWebsiteEnrichmentService,
   ],
   exports: [
     JwtAuthenticationGuard,

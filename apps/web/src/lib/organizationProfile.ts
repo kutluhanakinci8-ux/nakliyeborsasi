@@ -97,16 +97,24 @@ export function applyRegistrationOrganizationProfile(
     countryCode: string;
     emailAddress: string;
     website: string;
+    tradeName?: string;
+    phone?: string;
+    city?: string;
+    taxNumber?: string;
+    addressLine?: string;
   },
 ): void {
   const profile = loadOrganizationProfile(companyId, payload.emailAddress);
   saveOrganizationProfile(companyId, {
     ...profile,
     legalName: payload.legalName,
-    tradeName: payload.legalName,
+    tradeName: payload.tradeName?.trim() || payload.legalName,
     countryCode: payload.countryCode,
     primaryEmail: payload.emailAddress,
     website: payload.website.trim(),
+    phone: payload.phone?.trim() ?? profile.phone,
+    city: payload.city?.trim() ?? profile.city,
+    taxNumber: payload.taxNumber?.trim() ?? profile.taxNumber,
   });
 }
 

@@ -1,5 +1,17 @@
 import { PublicApiConfiguration } from "./PublicApiConfiguration";
 
+export type CompanyWebsiteEnrichment = {
+  sourceUrl: string;
+  companyLegalName: string | null;
+  tradeName: string | null;
+  emailAddress: string | null;
+  phone: string | null;
+  taxOrRegistryId: string | null;
+  addressLine: string | null;
+  city: string | null;
+  servicesSummary: string | null;
+};
+
 export type CompanyParticipantTypeCode =
   | "LOAD_SHIPPER"
   | "LOAD_CARRIER"
@@ -16,6 +28,30 @@ export type RegisterCompanyUserPayload = {
 };
 
 export class AuthApiClient {
+  public static async enrichCompanyWebsite(
+    websiteUrl: string,
+  ): Promise<CompanyWebsiteEnrichment> {
+    const response = await fetch(
+      `${PublicApiConfiguration.resolveBaseUrl()}/auth/enrich-company-website`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ websiteUrl }),
+      },
+    );
+    if (!response.ok) {
+      const errorBody = await response.text();
+      throw new Error(
+        AuthApiClient.mapAuthErrorMessage(errorBody) ||
+          "Web sitesi bilgileri alınamadı",
+      );
+    }
+    const payload = (await response.json()) as {
+      enrichment: CompanyWebsiteEnrichment;
+    };
+    return payload.enrichment;
+  }
+
   public static async register(
     payload: RegisterCompanyUserPayload,
   ): Promise<{ accessToken: string }> {
