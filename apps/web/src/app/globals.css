@@ -4709,6 +4709,77 @@ button.btn-secondary {
   border-color: #fecaca;
 }
 
+.account-billing-plan {
+  margin-bottom: 0;
+}
+
+.account-payment-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+  max-width: 420px;
+}
+
+.account-payment-card-chip {
+  width: 40px;
+  height: 28px;
+  border-radius: 6px;
+  background: linear-gradient(145deg, #fbbf24, #d97706);
+  flex-shrink: 0;
+}
+
+.account-payment-card-brand {
+  margin: 0 0 4px;
+  font-weight: 700;
+  color: var(--nb-navy, #1e3a5f);
+}
+
+.account-payment-card-meta {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #64748b;
+}
+
+.account-textarea {
+  resize: vertical;
+  min-height: 88px;
+  font-family: inherit;
+}
+
+.account-invoice-table-wrap {
+  overflow-x: auto;
+}
+
+.account-invoice-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.account-invoice-table th,
+.account-invoice-table td {
+  padding: 12px 10px;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.account-invoice-table th {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.account-invoice-actions-col {
+  text-align: right;
+  white-space: nowrap;
+}
+
 @media (max-width: 900px) {
   .account-verify-banner {
     grid-template-columns: 1fr;

@@ -1,5 +1,5 @@
-import { AccountSectionPage } from "../../../../components/AccountSectionPage";
+import { PaymentsPageClient } from "./PaymentsPageClient";
 
 export default function AccountPaymentsPage() {
-  return <AccountSectionPage />;
+  return <PaymentsPageClient />;
 }
