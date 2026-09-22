@@ -3,6 +3,7 @@
 - **`about/`** — Hakkımızda sayfası hero ve bölüm fotoğrafları (`about-hero-truck.jpg`, `about-mission-team.jpg`, `about-vision-corridor.jpg`). AI üretimi; projeye özel kullanım.
 - **`press/`** — Basın sayfası görselleri (`press-hero-briefing.jpg`, `press-release-logistics.jpg`, `press-media-kit.jpg`). AI üretimi; projeye özel kullanım.
 - **`career/`** — Kariyer sayfası görselleri (`career-hero-team.jpg`, `career-culture-work.jpg`, `career-growth-corridor.jpg`). AI üretimi; projeye özel kullanım.
+- **`blog/`** — Blog listesi ve kapak görselleri (`blog-hero-editorial.jpg`, `blog-thumb-*.jpg`). AI üretimi; projeye özel kullanım.
 
 # Arka plan videosu
 

@@ -32,6 +32,8 @@ export type BlogPostSummary = {
   excerpt: string;
   publishedAt: string;
   category: string;
+  coverImage: string;
+  readMinutes: number;
 };
 
 export const BLOG_POSTS: BlogPostSummary[] = [
@@ -42,6 +44,8 @@ export const BLOG_POSTS: BlogPostSummary[] = [
       "Sınır geçişleri, sigorta ve e-irsaliye entegrasyonunun yük borsalarını nasıl şekillendirdiği.",
     publishedAt: "2026-09-15",
     category: "Sektör",
+    coverImage: "/media/blog/blog-thumb-corridor.jpg",
+    readMinutes: 6,
   },
   {
     slug: "ihale-ve-teklif-guveni",
@@ -50,6 +54,8 @@ export const BLOG_POSTS: BlogPostSummary[] = [
       "Taşıyıcı seçiminde puan, değerlendirme ve platform içi mesajlaşmanın rolü.",
     publishedAt: "2026-09-01",
     category: "Ürün",
+    coverImage: "/media/blog/blog-thumb-trust.jpg",
+    readMinutes: 5,
   },
   {
     slug: "dis-kaynak-entegrasyonu",
@@ -58,6 +64,8 @@ export const BLOG_POSTS: BlogPostSummary[] = [
       "Harici adapter’lar ile marketplace aramasını birleştirmenin operasyonel faydası.",
     publishedAt: "2026-08-20",
     category: "Entegrasyon",
+    coverImage: "/media/blog/blog-thumb-integration.jpg",
+    readMinutes: 7,
   },
 ];
 
