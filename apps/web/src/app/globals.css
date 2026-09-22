@@ -1970,6 +1970,41 @@ a {
   max-width: 100%;
 }
 
+@media (min-width: 901px) {
+  .site-footer-inner--3 {
+    align-items: stretch;
+  }
+
+  .site-footer-meta {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    width: 100%;
+    column-gap: 24px;
+  }
+
+  .site-footer-meta .site-footer-legal {
+    justify-self: start;
+  }
+
+  .site-footer-meta .site-footer-copy {
+    justify-self: end;
+    margin-left: 0;
+    text-align: right;
+  }
+
+  .site-footer-col--corporate {
+    min-height: 100%;
+  }
+
+  .site-footer-col--corporate .site-footer-payments {
+    margin-top: auto;
+    padding-top: 20px;
+    align-self: flex-end;
+    justify-content: flex-end;
+  }
+}
+
 .site-footer-brand-social .site-footer-apps {
   margin-top: 18px;
 }
