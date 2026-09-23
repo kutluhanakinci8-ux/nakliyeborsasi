@@ -59,6 +59,8 @@ export class PlatformAdminApiClient {
         participantTypeCode: string | null;
         userCount: number;
         listingCount: number;
+        driverCount: number;
+        vehicleCount: number;
         activePlanCode: string | null;
       }[];
     }>(accessToken, "companies");
