@@ -72,6 +72,9 @@ export async function seedTestMarketDemoGraph(deps: {
         minimumBidAmount: listing.priceAmount ?? "1500.00",
         currencyCode: listing.priceCurrencyCode ?? "EUR",
         winningBidId: null,
+        auctionTypeCode: "REVERSE_OPEN",
+        autoExtendMinutes: 5,
+        autoExtendWindowMinutes: 3,
       }),
     );
 

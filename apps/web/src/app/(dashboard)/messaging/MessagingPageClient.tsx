@@ -34,6 +34,10 @@ export function MessagingPageClient() {
     if (companyId) {
       setCounterpartyId(companyId);
     }
+    const threadId = searchParams.get("threadId");
+    if (threadId) {
+      void loadMessages(threadId);
+    }
   }, [searchParams]);
 
   async function loadThreads(): Promise<void> {

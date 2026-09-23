@@ -7,6 +7,7 @@ import { FreightListingRow } from "../../../components/FreightListingRow";
 import { MarketplaceSearchBar } from "../../../components/MarketplaceSearchBar";
 import { useWebSession } from "../../../context/WebSessionProvider";
 import { MarketplaceApiClient } from "../../../lib/MarketplaceApiClient";
+import { AuctionCounterOfferDialog } from "../../../components/AuctionCounterOfferDialog";
 import { AuctionApiClient } from "../../../lib/AuctionApiClient";
 
 type RoutePointRecord = {
@@ -47,6 +48,9 @@ export function MarketplacePageClient() {
   const [originQuery, setOriginQuery] = useState("");
   const [destinationQuery, setDestinationQuery] = useState("");
   const [equipmentFilter, setEquipmentFilter] = useState("");
+  const [offerListing, setOfferListing] = useState<ListingRecord | null>(null);
+  const [offerError, setOfferError] = useState("");
+  const [offerBusy, setOfferBusy] = useState(false);
 
   async function loadListings(): Promise<void> {
     setIsBusy(true);
@@ -91,6 +95,52 @@ export function MarketplacePageClient() {
       return true;
     });
   }, [listings, originQuery, destinationQuery, equipmentFilter]);
+
+  async function handleFixedAccept(listing: ListingRecord): Promise<void> {
+    if (!listing.price) {
+      return;
+    }
+    try {
+      const result = await AuctionApiClient.acceptFixedListingPrice(
+        accessToken,
+        locale,
+        listing.listingId,
+      );
+      router.push(`/auctions/${result.sessionId}`);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Sabit kabul hatası");
+    }
+  }
+
+  async function submitPriceOffer(payload: {
+    amount: number;
+    currencyCode: string;
+    note: string;
+  }): Promise<void> {
+    if (!offerListing) {
+      return;
+    }
+    setOfferBusy(true);
+    setOfferError("");
+    try {
+      const result = await AuctionApiClient.sendListingPriceOffer(
+        accessToken,
+        locale,
+        offerListing.listingId,
+        {
+          offerAmount: payload.amount,
+          currencyCode: payload.currencyCode,
+          note: payload.note || undefined,
+        },
+      );
+      setOfferListing(null);
+      router.push(`/messaging?threadId=${encodeURIComponent(result.threadId)}`);
+    } catch (error) {
+      setOfferError(error instanceof Error ? error.message : "Öneri hatası");
+    } finally {
+      setOfferBusy(false);
+    }
+  }
 
   async function handleCreateAuction(listing: ListingRecord): Promise<void> {
     const minimumBidAmount = Number(
@@ -173,10 +223,30 @@ export function MarketplacePageClient() {
                 )
               }
               onAuction={() => void handleCreateAuction(listing)}
+              onPriceOffer={() => {
+                setOfferError("");
+                setOfferListing(listing);
+              }}
+              onFixedAccept={() => void handleFixedAccept(listing)}
             />
           ))}
         </div>
       )}
+
+      <AuctionCounterOfferDialog
+        open={offerListing !== null}
+        listingLabel={
+          offerListing
+            ? `${offerListing.origin.cityName} → ${offerListing.destination.cityName}`
+            : ""
+        }
+        defaultAmount={offerListing?.price?.amount ?? null}
+        defaultCurrency={offerListing?.price?.currencyCode ?? "EUR"}
+        isSubmitting={offerBusy}
+        errorMessage={offerError}
+        onClose={() => setOfferListing(null)}
+        onSubmit={(payload) => void submitPriceOffer(payload)}
+      />
     </div>
   );
 }

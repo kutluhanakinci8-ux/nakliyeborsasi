@@ -2,6 +2,10 @@ import { PlatformFreightListing } from "@nakliyeborsasi/core";
 import { AuctionBidEntity } from "../../infrastructure/database/entities/AuctionBidEntity";
 import { AuctionSessionEntity } from "../../infrastructure/database/entities/AuctionSessionEntity";
 import { CompanyEntity } from "../../infrastructure/database/entities/CompanyEntity";
+import {
+  AuctionCompetitionSnapshot,
+  mapAuctionCompetition,
+} from "./AuctionCompetitionMapper";
 
 export type AuctionSessionDetailResponse = {
   session: {
@@ -22,6 +26,9 @@ export type AuctionSessionDetailResponse = {
     priceIncludesVat: boolean;
     bidStepAmount: string | null;
     cargoDescription: string | null;
+    auctionTypeCode: string;
+    autoExtendMinutes: number;
+    autoExtendWindowMinutes: number;
     bids: {
       id: string;
       bidderCompanyId: string;
@@ -58,6 +65,25 @@ export type AuctionSessionDetailResponse = {
     trustScore: number;
     trustReviewCount: number;
   };
+  competition: AuctionCompetitionSnapshot;
+};
+
+export type AuctionSessionListItemResponse = {
+  id: string;
+  freightListingId: string;
+  minimumBidAmount: string;
+  currencyCode: string;
+  endsAt: string;
+  statusCode: string;
+  winningBidId: string | null;
+  auctionTypeCode: string;
+  bids?: {
+    id: string;
+    bidderCompanyId: string;
+    bidAmount: string;
+    createdAt?: string;
+  }[];
+  competition: AuctionCompetitionSnapshot;
 };
 
 function mapRouteEndpoint(endpoint: {
@@ -96,14 +122,46 @@ export function mapListingToDetailApi(
   };
 }
 
+export function mapSessionListItem(
+  session: AuctionSessionEntity,
+  viewerCompanyId: string,
+): AuctionSessionListItemResponse {
+  const bids = (session.bids ?? []) as AuctionBidEntity[];
+  const isOwner = session.ownerCompanyId === viewerCompanyId;
+  return {
+    id: session.id,
+    freightListingId: session.freightListingId,
+    minimumBidAmount: session.minimumBidAmount,
+    currencyCode: session.currencyCode,
+    endsAt: session.endsAt.toISOString(),
+    statusCode: session.statusCode,
+    winningBidId: session.winningBidId,
+    auctionTypeCode: session.auctionTypeCode,
+    bids: bids.map((bid) => ({
+      id: bid.id,
+      bidderCompanyId: bid.bidderCompanyId,
+      bidAmount: bid.bidAmount,
+      createdAt: bid.createdAt.toISOString(),
+    })),
+    competition: mapAuctionCompetition(
+      session,
+      bids,
+      viewerCompanyId,
+      isOwner,
+    ),
+  };
+}
+
 export function mapSessionDetail(
   session: AuctionSessionEntity,
   listing: PlatformFreightListing,
   owner: CompanyEntity,
   trustScore: number,
   trustReviewCount: number,
+  viewerCompanyId: string,
 ): AuctionSessionDetailResponse {
   const bids = (session.bids ?? []) as AuctionBidEntity[];
+  const isOwner = session.ownerCompanyId === viewerCompanyId;
   return {
     session: {
       id: session.id,
@@ -123,6 +181,9 @@ export function mapSessionDetail(
       priceIncludesVat: session.priceIncludesVat,
       bidStepAmount: session.bidStepAmount,
       cargoDescription: session.cargoDescription,
+      auctionTypeCode: session.auctionTypeCode,
+      autoExtendMinutes: session.autoExtendMinutes,
+      autoExtendWindowMinutes: session.autoExtendWindowMinutes,
       bids: bids
         .map((bid) => ({
           id: bid.id,
@@ -132,7 +193,8 @@ export function mapSessionDetail(
         }))
         .sort(
           (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+            Number(a.bidAmount) - Number(b.bidAmount) ||
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
         ),
     },
     listing: mapListingToDetailApi(listing),
@@ -144,5 +206,18 @@ export function mapSessionDetail(
       trustScore,
       trustReviewCount,
     },
+    competition: mapAuctionCompetition(
+      session,
+      bids,
+      viewerCompanyId,
+      isOwner,
+    ),
   };
 }
+
+export type AuctionSessionLiveSnapshotResponse = {
+  sessionId: string;
+  statusCode: string;
+  endsAt: string;
+  competition: AuctionCompetitionSnapshot;
+};

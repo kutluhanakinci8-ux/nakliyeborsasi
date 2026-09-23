@@ -1,25 +1,33 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  AuctionPlaceBidDialog,
+  type AuctionPlaceBidContext,
+} from "../../../components/AuctionPlaceBidDialog";
 import { EmptyState } from "../../../components/EmptyState";
 import { ModulePageShell } from "../../../components/ModulePageShell";
 import { useWebSession } from "../../../context/WebSessionProvider";
+import { useAuctionPolling } from "../../../hooks/useAuctionPolling";
 import {
   AuctionApiClient,
-  AuctionSessionRecord,
+  type AuctionCompetitionSnapshot,
+  type AuctionSessionRecord,
 } from "../../../lib/AuctionApiClient";
 
 type AuctionTab = "open" | "closed";
 
-function highestBid(session: AuctionSessionRecord): string | null {
-  if (!session.bids?.length) {
-    return null;
-  }
-  const sorted = [...session.bids].sort(
-    (a, b) => Number(b.bidAmount) - Number(a.bidAmount),
-  );
-  return sorted[0]?.bidAmount ?? null;
+const EMPTY_COMPETITION: AuctionCompetitionSnapshot = {
+  bidCount: 0,
+  bestBidAmount: null,
+  myBidAmount: null,
+  myRank: null,
+  leaderboard: [],
+};
+
+function competitionOf(session: AuctionSessionRecord): AuctionCompetitionSnapshot {
+  return session.competition ?? EMPTY_COMPETITION;
 }
 
 function formatWinner(sessionRecord: AuctionSessionRecord): string {
@@ -42,8 +50,11 @@ export function AuctionsPageClient() {
   const [activeTab, setActiveTab] = useState<AuctionTab>("open");
   const [errorMessage, setErrorMessage] = useState("");
   const [isBusy, setIsBusy] = useState(false);
+  const [bidDialog, setBidDialog] = useState<AuctionPlaceBidContext | null>(null);
+  const [bidError, setBidError] = useState("");
+  const [bidSubmitting, setBidSubmitting] = useState(false);
 
-  async function loadAuctions(): Promise<void> {
+  const loadAuctions = useCallback(async (): Promise<void> => {
     setIsBusy(true);
     setErrorMessage("");
     try {
@@ -64,36 +75,59 @@ export function AuctionsPageClient() {
     } finally {
       setIsBusy(false);
     }
-  }
+  }, [accessToken, locale]);
 
   useEffect(() => {
     void loadAuctions();
-  }, [accessToken, locale]);
+  }, [loadAuctions]);
+
+  useAuctionPolling({
+    enabled: activeTab === "open",
+    intervalMs: 20_000,
+    onTick: loadAuctions,
+  });
 
   const totalBids = useMemo(() => {
     return [...openAuctions, ...closedAuctions].reduce(
-      (sum, session) => sum + (session.bids?.length ?? 0),
+      (sum, session) => sum + (session.competition?.bidCount ?? session.bids?.length ?? 0),
       0,
     );
   }, [openAuctions, closedAuctions]);
 
-  async function handlePlaceBid(sessionRecord: AuctionSessionRecord): Promise<void> {
-    const bidAmount = Number(
-      window.prompt("Teklif tutarı", sessionRecord.minimumBidAmount),
-    );
-    if (!bidAmount) {
+  function openBidDialog(session: AuctionSessionRecord): void {
+    const competition = competitionOf(session);
+    setBidError("");
+    setBidDialog({
+      sessionId: session.id,
+      title: `İhale #${session.id.slice(0, 8)}`,
+      referenceCeiling: session.minimumBidAmount,
+      currencyCode: session.currencyCode,
+      endsAt: session.endsAt,
+      auctionTypeCode: session.auctionTypeCode ?? "REVERSE_OPEN",
+      competition,
+      terms: null,
+    });
+  }
+
+  async function submitBid(amount: number): Promise<void> {
+    if (!bidDialog) {
       return;
     }
+    setBidSubmitting(true);
+    setBidError("");
     try {
       await AuctionApiClient.placeBid(
         accessToken,
         locale,
-        sessionRecord.id,
-        bidAmount,
+        bidDialog.sessionId,
+        amount,
       );
+      setBidDialog(null);
       await loadAuctions();
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Teklif hatası");
+      setBidError(error instanceof Error ? error.message : "Teklif hatası");
+    } finally {
+      setBidSubmitting(false);
     }
   }
 
@@ -103,7 +137,7 @@ export function AuctionsPageClient() {
     <ModulePageShell
       eyebrow="İhaleler"
       title="Teklif oturumları"
-      lead="Açık ihalelere teklif verin, kapanan oturumlarda kazanan teklifi görün. Yeni ihale marketplace ilanından açılır."
+      lead="Ters ihale: en düşük uygun teklif öne çıkar. Canlı sıra (L1/L2) ve otomatik süre uzatma aktif."
       action={
         <button
           type="button"
@@ -161,7 +195,8 @@ export function AuctionsPageClient() {
       ) : (
         <div className="freight-list">
           {visibleSessions.map((session) => {
-            const topBid = highestBid(session);
+            const competition = competitionOf(session);
+            const best = competition.bestBidAmount;
             return (
               <article key={session.id} className="freight-row module-row">
                 <div className="freight-row-main">
@@ -170,11 +205,16 @@ export function AuctionsPageClient() {
                       {activeTab === "open" ? "Açık" : "Kapalı"}
                     </span>
                     <span className="badge badge--muted">
-                      Min {session.minimumBidAmount} {session.currencyCode}
+                      Tavan {session.minimumBidAmount} {session.currencyCode}
                     </span>
                     <span className="badge badge--muted">
-                      {session.bids?.length ?? 0} teklif
+                      {competition.bidCount} teklif
                     </span>
+                    {competition.myRank ? (
+                      <span className="badge badge--accent">
+                        Siz: L{competition.myRank}
+                      </span>
+                    ) : null}
                   </div>
                   <h3 className="freight-route">
                     <Link
@@ -186,23 +226,20 @@ export function AuctionsPageClient() {
                   </h3>
                   <p className="module-row-meta">
                     Bitiş: {new Date(session.endsAt).toLocaleString(locale)}
-                    {topBid ? ` · En yüksek: ${topBid} ${session.currencyCode}` : ""}
+                    {best ? ` · En iyi (L1): ${best} ${session.currencyCode}` : ""}
                     {activeTab === "closed"
                       ? ` · Kazanan: ${formatWinner(session)}`
                       : ""}
                   </p>
                   <div className="freight-row-actions">
-                    <Link
-                      href={`/auctions/${session.id}`}
-                      className="btn-link"
-                    >
+                    <Link href={`/auctions/${session.id}`} className="btn-link">
                       Detay ve şartlar
                     </Link>
                     {activeTab === "open" ? (
                       <button
                         type="button"
                         className="btn-accent"
-                        onClick={() => void handlePlaceBid(session)}
+                        onClick={() => openBidDialog(session)}
                       >
                         Teklif ver
                       </button>
@@ -211,15 +248,26 @@ export function AuctionsPageClient() {
                 </div>
                 <div className="freight-row-price">
                   <span className="price-amount">
-                    {session.minimumBidAmount} {session.currencyCode}
+                    {best ?? session.minimumBidAmount} {session.currencyCode}
                   </span>
-                  <span className="price-hint">Taban teklif</span>
+                  <span className="price-hint">
+                    {best ? "En iyi teklif" : "Referans tavan"}
+                  </span>
                 </div>
               </article>
             );
           })}
         </div>
       )}
+
+      <AuctionPlaceBidDialog
+        open={bidDialog !== null}
+        context={bidDialog}
+        isSubmitting={bidSubmitting}
+        errorMessage={bidError}
+        onClose={() => setBidDialog(null)}
+        onSubmit={(amount) => void submitBid(amount)}
+      />
     </ModulePageShell>
   );
 }

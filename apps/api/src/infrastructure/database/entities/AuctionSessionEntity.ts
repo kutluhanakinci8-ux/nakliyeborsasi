@@ -24,8 +24,18 @@ export class AuctionSessionEntity {
   @Column({ type: "timestamptz" })
   public endsAt!: Date;
 
+  /** Ters ihalede başlangıç tavan fiyat; sabit kabulde anlaşılan tutar. */
   @Column({ type: "numeric", precision: 14, scale: 2 })
   public minimumBidAmount!: string;
+
+  @Column({ type: "varchar", length: 32, default: "REVERSE_OPEN" })
+  public auctionTypeCode!: string;
+
+  @Column({ type: "int", default: 5 })
+  public autoExtendMinutes!: number;
+
+  @Column({ type: "int", default: 3 })
+  public autoExtendWindowMinutes!: number;
 
   @Column({ type: "varchar", length: 8 })
   public currencyCode!: string;

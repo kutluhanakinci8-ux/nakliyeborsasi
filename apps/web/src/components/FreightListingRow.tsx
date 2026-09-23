@@ -22,6 +22,8 @@ type FreightListingRowProps = {
   onMessage: () => void;
   onTrust: () => void;
   onAuction: () => void;
+  onPriceOffer?: () => void;
+  onFixedAccept?: () => void;
 };
 
 function formatEquipmentLabel(equipmentType: string): string {
@@ -44,6 +46,8 @@ export function FreightListingRow({
   onMessage,
   onTrust,
   onAuction,
+  onPriceOffer,
+  onFixedAccept,
 }: FreightListingRowProps) {
   const originResolved = resolveFreightLocationPoint(origin, "origin");
   const destinationResolved = resolveFreightLocationPoint(destination, "destination");
@@ -80,6 +84,24 @@ export function FreightListingRow({
         <button type="button" className="btn-link btn-link--compact" onClick={onTrust}>
           Güven profili
         </button>
+        {onPriceOffer ? (
+          <button
+            type="button"
+            className="btn-link btn-link--compact"
+            onClick={onPriceOffer}
+          >
+            Fiyat öner
+          </button>
+        ) : null}
+        {onFixedAccept && priceAmount != null ? (
+          <button
+            type="button"
+            className="btn-link btn-link--compact"
+            onClick={onFixedAccept}
+          >
+            Sabit kabul
+          </button>
+        ) : null}
         <button type="button" className="btn-accent btn-accent--compact" onClick={onAuction}>
           İhale aç
         </button>

@@ -4,6 +4,7 @@ import { Repository } from "typeorm";
 import {
   AuctionSessionNotFoundException,
   AuctionSessionStatusCode,
+  AuctionTypeCode,
   AuthenticatedUserContext,
   ResourceNotFoundException,
   SubscriptionModuleCode,
@@ -21,13 +22,21 @@ import { PlatformFreightListingMapper } from "../marketplace/PlatformFreightList
 import { TrustScoreApplicationService } from "../trust/TrustScoreApplicationService";
 import {
   AuctionSessionDetailResponse,
+  AuctionSessionListItemResponse,
+  AuctionSessionLiveSnapshotResponse,
   mapSessionDetail,
+  mapSessionListItem,
 } from "./AuctionSessionDetailMapper";
 import {
   buildDefaultAuctionTermsSummary,
   defaultPaymentDeferDays,
   defaultPaymentFormCode,
 } from "./auctionDefaultTerms";
+import {
+  findCompanyBid,
+  validateBidForSession,
+} from "./AuctionBidRules";
+import { mapAuctionCompetition } from "./AuctionCompetitionMapper";
 
 @Injectable()
 export class AuctionSessionApplicationService {
@@ -100,32 +109,41 @@ export class AuctionSessionApplicationService {
         priceIncludesVat: payload.priceIncludesVat ?? false,
         bidStepAmount: bidStep,
         cargoDescription: payload.cargoDescription?.trim() || null,
+        auctionTypeCode:
+          payload.auctionTypeCode ?? AuctionTypeCode.ReverseOpen,
+        autoExtendMinutes: payload.autoExtendMinutes ?? 5,
+        autoExtendWindowMinutes: payload.autoExtendWindowMinutes ?? 3,
       }),
     );
   }
 
   public async listSessions(
+    authenticatedUser: AuthenticatedUserContext,
     statusFilter: "open" | "closed" | "all",
-  ): Promise<AuctionSessionEntity[]> {
+  ): Promise<AuctionSessionListItemResponse[]> {
     await this.auctionSessionFinalizationService.closeAllExpiredOpenSessions();
+    let sessions: AuctionSessionEntity[];
     if (statusFilter === "open") {
-      return this.auctionSessionRepository.find({
+      sessions = await this.auctionSessionRepository.find({
         where: { statusCode: AuctionSessionStatusCode.Open },
         order: { createdAt: "DESC" },
         relations: { bids: true },
       });
-    }
-    if (statusFilter === "closed") {
-      return this.auctionSessionRepository.find({
+    } else if (statusFilter === "closed") {
+      sessions = await this.auctionSessionRepository.find({
         where: { statusCode: AuctionSessionStatusCode.Closed },
         order: { createdAt: "DESC" },
         relations: { bids: true },
       });
+    } else {
+      sessions = await this.auctionSessionRepository.find({
+        order: { createdAt: "DESC" },
+        relations: { bids: true },
+      });
     }
-    return this.auctionSessionRepository.find({
-      order: { createdAt: "DESC" },
-      relations: { bids: true },
-    });
+    return sessions.map((session) =>
+      mapSessionListItem(session, authenticatedUser.companyId),
+    );
   }
 
   public async getSessionById(
@@ -178,7 +196,34 @@ export class AuctionSessionApplicationService {
       owner,
       trust.scoreValue,
       trust.reviewCount,
+      authenticatedUser.companyId,
     );
+  }
+
+  public async getSessionLiveSnapshot(
+    authenticatedUser: AuthenticatedUserContext,
+    auctionSessionId: string,
+    locale: string,
+  ): Promise<AuctionSessionLiveSnapshotResponse> {
+    await this.modularSubscriptionEntitlementService.assertModuleAccess(
+      authenticatedUser.companyId,
+      SubscriptionModuleCode.Auction,
+      locale,
+    );
+    const session = await this.getSessionById(auctionSessionId);
+    const bids = (session.bids ?? []) as AuctionBidEntity[];
+    const isOwner = session.ownerCompanyId === authenticatedUser.companyId;
+    return {
+      sessionId: session.id,
+      statusCode: session.statusCode,
+      endsAt: session.endsAt.toISOString(),
+      competition: mapAuctionCompetition(
+        session,
+        bids,
+        authenticatedUser.companyId,
+        isOwner,
+      ),
+    };
   }
 
   public async placeBid(
@@ -194,6 +239,7 @@ export class AuctionSessionApplicationService {
     );
     const session = await this.auctionSessionRepository.findOne({
       where: { id: auctionSessionId },
+      relations: { bids: true },
     });
     if (!session) {
       throw new AuctionSessionNotFoundException(auctionSessionId);
@@ -202,29 +248,54 @@ export class AuctionSessionApplicationService {
       throw new ValidationException("Auction session is closed");
     }
     if (session.endsAt.getTime() < Date.now()) {
-      await this.auctionSessionFinalizationService.finalizeSession(
-        auctionSessionId,
-      );
+      await this.auctionSessionFinalizationService.closeAllExpiredOpenSessions();
       throw new ValidationException("Auction session has expired");
     }
     if (session.ownerCompanyId === authenticatedUser.companyId) {
       throw new ValidationException("Listing owner cannot bid on own auction");
     }
-    const minimum = Number(session.minimumBidAmount);
-    if (bidAmount < minimum) {
+    const bids = (session.bids ?? []) as AuctionBidEntity[];
+    const validation = validateBidForSession(
+      session,
+      bids,
+      authenticatedUser.companyId,
+      bidAmount,
+    );
+    if (!validation.ok) {
       throw new ValidationException(
-        this.localeResolutionService.translate(
-          locale,
-          "errors.validation_failed",
-        ),
+        `Bid rejected: ${validation.reasonCode}`,
       );
     }
-    return this.auctionBidRepository.save(
-      this.auctionBidRepository.create({
-        auctionSessionId,
-        bidderCompanyId: authenticatedUser.companyId,
-        bidAmount: bidAmount.toFixed(2),
-      }),
-    );
+
+    const existing = findCompanyBid(bids, authenticatedUser.companyId);
+    let saved: AuctionBidEntity;
+    if (existing) {
+      existing.bidAmount = bidAmount.toFixed(2);
+      saved = await this.auctionBidRepository.save(existing);
+    } else {
+      saved = await this.auctionBidRepository.save(
+        this.auctionBidRepository.create({
+          auctionSessionId,
+          bidderCompanyId: authenticatedUser.companyId,
+          bidAmount: bidAmount.toFixed(2),
+        }),
+      );
+    }
+
+    const msUntilEnd = session.endsAt.getTime() - Date.now();
+    const windowMs = session.autoExtendWindowMinutes * 60 * 1000;
+    if (
+      session.autoExtendMinutes > 0 &&
+      windowMs > 0 &&
+      msUntilEnd > 0 &&
+      msUntilEnd <= windowMs
+    ) {
+      session.endsAt = new Date(
+        session.endsAt.getTime() + session.autoExtendMinutes * 60 * 1000,
+      );
+      await this.auctionSessionRepository.save(session);
+    }
+
+    return saved;
   }
 }

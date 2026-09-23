@@ -11,6 +11,8 @@ import { AuctionSessionFinalizationService } from "./AuctionSessionFinalizationS
 import { AuctionExpiredSessionSweepTask } from "./AuctionExpiredSessionSweepTask";
 import { SubscriptionModule } from "../subscription/SubscriptionModule";
 import { AuthModule } from "../auth/AuthModule";
+import { MessagingModule } from "../messaging/MessagingModule";
+import { AuctionListingPriceActionService } from "./AuctionListingPriceActionService";
 
 @Module({
   imports: [
@@ -23,12 +25,14 @@ import { AuthModule } from "../auth/AuthModule";
     SubscriptionModule,
     AuthModule,
     TrustScoreModule,
+    MessagingModule,
   ],
   controllers: [AuctionSessionController],
   providers: [
     AuctionSessionApplicationService,
     AuctionSessionFinalizationService,
     AuctionExpiredSessionSweepTask,
+    AuctionListingPriceActionService,
   ],
 })
 export class AuctionModule {}

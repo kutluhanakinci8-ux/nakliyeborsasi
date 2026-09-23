@@ -111,13 +111,13 @@ Ortak bileşenler (modal / yan panel, `prompt` değil):
 
 ---
 
-## 6. Kabul kriterleri (Faz C1 çıkışı)
+## 6. Kabul kriterleri (Faz C — uygulandı, 2026-09-23)
 
-- [ ] Teklif verme tarayıcı `prompt` kullanmıyor
-- [ ] Dialog şartname/ödeme/KDV/min. artışı gösteriyor
-- [ ] API min. adım ve (seçilen modele göre) düşüş kuralını reddediyor
-- [ ] Finalize ve liste “en iyi teklif” metni **tek modele** uyumlu
-- [ ] Hata mesajları Türkçe, anlamlı (validation, süre doldu, kendi ilanı)
+- [x] Teklif verme tarayıcı `prompt` kullanmıyor (`AuctionPlaceBidDialog`)
+- [x] Dialog şartname/ödeme/KDV/adım + onay
+- [x] API: ters ihale, `bidStep`, firma revizesi, finalize ASC
+- [x] L1/L2 leaderboard, `/live` polling, süre uzatma
+- [x] Marketplace: sabit kabul + Messenger fiyat önerisi
 
 ---
 

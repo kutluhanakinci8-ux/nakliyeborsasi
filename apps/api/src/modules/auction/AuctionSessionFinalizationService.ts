@@ -44,7 +44,7 @@ export class AuctionSessionFinalizationService {
     const winningBid = await this.auctionBidRepository
       .createQueryBuilder("bid")
       .where("bid.auctionSessionId = :auctionSessionId", { auctionSessionId })
-      .orderBy("bid.bidAmount", "DESC")
+      .orderBy("bid.bidAmount", "ASC")
       .addOrderBy("bid.createdAt", "ASC")
       .getOne();
     session.statusCode = AuctionSessionStatusCode.Closed;

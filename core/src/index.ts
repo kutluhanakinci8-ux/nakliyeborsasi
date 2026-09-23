@@ -7,6 +7,7 @@ export * from "./constants/CompanyParticipantTypeCode";
 export * from "./constants/EquipmentTypeCode";
 export * from "./constants/FreightPlaceKindCode";
 export * from "./constants/FreightPaymentFormCode";
+export * from "./constants/AuctionTypeCode";
 export * from "./constants/AuctionSessionStatusCode";
 export * from "./exceptions/AuctionSessionNotFoundException";
 export * from "./exceptions/MessagingThreadNotFoundException";

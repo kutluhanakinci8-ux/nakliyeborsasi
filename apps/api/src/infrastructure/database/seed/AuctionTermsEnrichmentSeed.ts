@@ -38,6 +38,9 @@ export async function enrichAuctionTermsAndPayment(
     session.specDocumentUrl =
       session.specDocumentUrl ??
       "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf";
+    session.auctionTypeCode = session.auctionTypeCode ?? "REVERSE_OPEN";
+    session.autoExtendMinutes = session.autoExtendMinutes ?? 5;
+    session.autoExtendWindowMinutes = session.autoExtendWindowMinutes ?? 3;
     await auctionSessionRepository.save(session);
   }
 }

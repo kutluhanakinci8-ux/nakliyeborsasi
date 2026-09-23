@@ -63,4 +63,19 @@ export class CreateAuctionSessionRequestDto {
   @IsString()
   @MaxLength(4000)
   public cargoDescription?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(32)
+  public auctionTypeCode?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  public autoExtendMinutes?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  public autoExtendWindowMinutes?: number;
 }

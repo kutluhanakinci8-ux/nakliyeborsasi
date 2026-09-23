@@ -3,6 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import {
+  AuctionPlaceBidDialog,
+  type AuctionPlaceBidContext,
+} from "../../../components/AuctionPlaceBidDialog";
 import { CountryFlag } from "../../../components/CountryFlag";
 import { FreightRouteCountryBadges, FreightRouteHeading } from "../../../components/FreightRouteHeading";
 import { ModulePageShell } from "../../../components/ModulePageShell";
@@ -18,6 +22,7 @@ import {
   formatVatInclusionTr,
 } from "../../../lib/paymentFormDisplay";
 import { formatParticipantType } from "../../../lib/PlatformAdminApiClient";
+import { useAuctionPolling } from "../../../hooks/useAuctionPolling";
 
 function formatEquipmentLabel(equipmentType: string): string {
   const map: Record<string, string> = {
@@ -42,9 +47,11 @@ export function AuctionDetailPageClient({ sessionId }: AuctionDetailPageClientPr
   const [detail, setDetail] = useState<AuctionSessionDetail | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [isBusy, setIsBusy] = useState(false);
+  const [bidDialogOpen, setBidDialogOpen] = useState(false);
+  const [bidError, setBidError] = useState("");
+  const [bidSubmitting, setBidSubmitting] = useState(false);
 
   const loadDetail = useCallback(async (): Promise<void> => {
-    setIsBusy(true);
     setErrorMessage("");
     try {
       const payload = await AuctionApiClient.getSessionDetail(
@@ -56,43 +63,90 @@ export function AuctionDetailPageClient({ sessionId }: AuctionDetailPageClientPr
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Yükleme hatası");
       setDetail(null);
-    } finally {
-      setIsBusy(false);
+    }
+  }, [accessToken, locale, sessionId]);
+
+  const refreshLive = useCallback(async (): Promise<void> => {
+    try {
+      const live = await AuctionApiClient.getSessionLive(
+        accessToken,
+        locale,
+        sessionId,
+      );
+      setDetail((current) => {
+        if (!current || current.session.statusCode !== "OPEN") {
+          return current;
+        }
+        return {
+          ...current,
+          session: {
+            ...current.session,
+            endsAt: live.endsAt,
+            statusCode: live.statusCode,
+          },
+          competition: live.competition,
+        };
+      });
+    } catch {
+      /* polling errors are non-fatal */
     }
   }, [accessToken, locale, sessionId]);
 
   useEffect(() => {
-    void loadDetail();
+    setIsBusy(true);
+    void loadDetail().finally(() => setIsBusy(false));
   }, [loadDetail]);
 
-  async function handlePlaceBid(): Promise<void> {
+  useAuctionPolling({
+    enabled: detail?.session.statusCode === "OPEN",
+    intervalMs: 15_000,
+    onTick: refreshLive,
+  });
+
+  async function submitBid(amount: number): Promise<void> {
     if (!detail) {
       return;
     }
-    const bidAmount = Number(
-      window.prompt("Teklif tutarı", detail.session.minimumBidAmount),
-    );
-    if (!bidAmount) {
-      return;
-    }
+    setBidSubmitting(true);
+    setBidError("");
     try {
       await AuctionApiClient.placeBid(
         accessToken,
         locale,
         detail.session.id,
-        bidAmount,
+        amount,
       );
+      setBidDialogOpen(false);
+      setIsBusy(true);
       await loadDetail();
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Teklif hatası");
+      setBidError(error instanceof Error ? error.message : "Teklif hatası");
+    } finally {
+      setBidSubmitting(false);
+      setIsBusy(false);
     }
   }
 
   const listing = detail?.listing;
   const session = detail?.session;
   const owner = detail?.ownerCompany;
+  const competition = detail?.competition;
   const isOpen = session?.statusCode === "OPEN";
   const listingPrice = listing?.price;
+
+  const bidDialogContext: AuctionPlaceBidContext | null =
+    detail && listing && session && competition
+      ? {
+          sessionId: session.id,
+          title: `İhale #${session.id.slice(0, 8)}`,
+          referenceCeiling: session.minimumBidAmount,
+          currencyCode: session.currencyCode,
+          endsAt: session.endsAt,
+          auctionTypeCode: session.auctionTypeCode,
+          competition,
+          terms: session,
+        }
+      : null;
 
   return (
     <ModulePageShell
@@ -150,7 +204,10 @@ export function AuctionDetailPageClient({ sessionId }: AuctionDetailPageClientPr
                 <button
                   type="button"
                   className="btn-accent btn-accent--compact"
-                  onClick={() => void handlePlaceBid()}
+                  onClick={() => {
+                    setBidError("");
+                    setBidDialogOpen(true);
+                  }}
                 >
                   Teklif ver
                 </button>
@@ -164,10 +221,16 @@ export function AuctionDetailPageClient({ sessionId }: AuctionDetailPageClientPr
               destination={listing.destination}
             />
             <p className="auction-detail-meta">
-              Bitiş: {new Date(session.endsAt).toLocaleString(locale)} · Taban{" "}
+              Bitiş: {new Date(session.endsAt).toLocaleString(locale)} · Tavan{" "}
               {session.minimumBidAmount} {session.currencyCode}
+              {competition?.bestBidAmount
+                ? ` · L1: ${competition.bestBidAmount} ${session.currencyCode}`
+                : ""}
               {session.bidStepAmount
-                ? ` · Min. artış ${session.bidStepAmount} ${session.currencyCode}`
+                ? ` · Min. düşüş adımı ${session.bidStepAmount} ${session.currencyCode}`
+                : ""}
+              {session.autoExtendMinutes > 0
+                ? ` · Son ${session.autoExtendWindowMinutes} dk teklif +${session.autoExtendMinutes} dk`
                 : ""}
               {listingPrice
                 ? ` · İlan referans: ${listingPrice.amount.toLocaleString("tr-TR")} ${listingPrice.currencyCode}`
@@ -197,7 +260,7 @@ export function AuctionDetailPageClient({ sessionId }: AuctionDetailPageClientPr
               </div>
               {session.bidStepAmount ? (
                 <div>
-                  <dt>Teklif artışı</dt>
+                  <dt>Teklif adımı (düşüş)</dt>
                   <dd>
                     {Number(session.bidStepAmount).toLocaleString("tr-TR")}{" "}
                     {session.currencyCode}
@@ -282,30 +345,46 @@ export function AuctionDetailPageClient({ sessionId }: AuctionDetailPageClientPr
           </section>
 
           <section className="module-panel auction-detail-bids">
-            <h2 className="auction-detail-h2">Teklifler</h2>
-            {session.bids.length === 0 ? (
-              <p className="module-hint">Henüz teklif yok.</p>
-            ) : (
-              <ul className="auction-detail-bid-list">
-                {session.bids.map((bid) => (
-                  <li key={bid.id}>
+            <h2 className="auction-detail-h2">Canlı sıra (L1/L2)</h2>
+            {competition && competition.leaderboard.length > 0 ? (
+              <ul className="auction-detail-bid-list auction-leaderboard">
+                {competition.leaderboard.map((entry) => (
+                  <li
+                    key={`${entry.rank}-${entry.bidAmount}`}
+                    className={
+                      entry.isOwnCompany ? "auction-leaderboard-row--own" : ""
+                    }
+                  >
                     <span className="auction-detail-bid-amount">
-                      {Number(bid.bidAmount).toLocaleString("tr-TR")}{" "}
+                      L{entry.rank} ·{" "}
+                      {Number(entry.bidAmount).toLocaleString("tr-TR")}{" "}
                       {session.currencyCode}
                     </span>
                     <span className="auction-detail-bid-meta">
-                      Firma {bid.bidderCompanyId.slice(0, 8)}… ·{" "}
-                      {bid.createdAt
-                        ? new Date(bid.createdAt).toLocaleString(locale)
-                        : "—"}
+                      {entry.isOwnCompany
+                        ? "Sizin teklifiniz"
+                        : entry.bidderCompanyId
+                          ? `Firma ${entry.bidderCompanyId.slice(0, 8)}…`
+                          : "Rakip (anonim)"}
                     </span>
                   </li>
                 ))}
               </ul>
+            ) : (
+              <p className="module-hint">Henüz teklif yok.</p>
             )}
           </section>
         </>
       ) : null}
+
+      <AuctionPlaceBidDialog
+        open={bidDialogOpen}
+        context={bidDialogContext}
+        isSubmitting={bidSubmitting}
+        errorMessage={bidError}
+        onClose={() => setBidDialogOpen(false)}
+        onSubmit={(amount) => void submitBid(amount)}
+      />
     </ModulePageShell>
   );
 }

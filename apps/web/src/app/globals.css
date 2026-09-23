@@ -5230,6 +5230,124 @@ button.btn-secondary {
   color: #475569;
 }
 
+.badge--accent {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.auction-leaderboard-row--own {
+  border-color: #99f6e4 !important;
+  background: #f0fdfa !important;
+}
+
+.auction-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.auction-modal {
+  width: min(480px, 100%);
+  max-height: min(90vh, 720px);
+  overflow: auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.18);
+  border: 1px solid #e2e8f0;
+}
+
+.auction-modal-header {
+  padding: 18px 20px 8px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.auction-modal-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.auction-modal-subtitle {
+  margin: 6px 0 0;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.auction-modal-body {
+  padding: 16px 20px;
+}
+
+.auction-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 12px 20px 18px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.auction-modal-label {
+  display: block;
+  margin: 12px 0 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+}
+
+.auction-modal-input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.auction-modal-input--currency {
+  max-width: 88px;
+  flex: 0 0 auto;
+}
+
+.auction-modal-amount-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.auction-modal-amount-row .auction-modal-input {
+  flex: 1 1 auto;
+}
+
+.auction-modal-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-size: 0.9rem;
+  resize: vertical;
+}
+
+.auction-modal-hint {
+  margin: 10px 0 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: #64748b;
+}
+
+.auction-modal-terms-hint {
+  margin: 0 0 8px;
+  font-size: 0.82rem;
+  color: #475569;
+}
+
 .auction-detail-bid-list {
   list-style: none;
   margin: 0;

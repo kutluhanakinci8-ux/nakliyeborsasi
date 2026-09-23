@@ -16,5 +16,6 @@ import { AuthModule } from "../auth/AuthModule";
   ],
   controllers: [MessagingModuleStatusController, MessagingThreadController],
   providers: [MessagingThreadApplicationService],
+  exports: [MessagingThreadApplicationService],
 })
 export class MessagingModule {}
