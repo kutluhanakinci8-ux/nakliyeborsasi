@@ -117,6 +117,7 @@ export async function seedLogisticsPoiFromTurkeyOverpass(
   const seen = new Set<string>();
 
   for (const [south, west, north, east] of TURKEY_BBOX_TILES) {
+    await new Promise((resolve) => setTimeout(resolve, 12_000));
     const elements = await fetchOverpassTile(south, west, north, east);
     for (const element of elements) {
       const kind = resolveKind(element.tags);
@@ -154,7 +155,109 @@ export async function seedLogisticsPoiFromTurkeyOverpass(
   return { inserted, skipped };
 }
 
-/** Minimal fallback when Overpass is unavailable (dev / CI). */
+/** OSM snapshot (central TR bbox) when live Overpass is rate-limited. */
+const BOOTSTRAP_OSM_NODES: readonly OverpassElement[] = [
+  {
+    type: "node",
+    id: 5803865444,
+    lat: 38.7727079,
+    lon: 33.1733988,
+    tags: { amenity: "weighbridge", name: "KANTAR" },
+  },
+  {
+    type: "node",
+    id: 9285009658,
+    lat: 38.4182325,
+    lon: 31.6075499,
+    tags: { amenity: "weighbridge", name: "Kantar" },
+  },
+  {
+    type: "node",
+    id: 9466522015,
+    lat: 39.2609864,
+    lon: 32.0271891,
+    tags: { amenity: "weighbridge" },
+  },
+  {
+    type: "node",
+    id: 9509071727,
+    lat: 39.7140749,
+    lon: 32.8144143,
+    tags: { amenity: "weighbridge" },
+  },
+  {
+    type: "node",
+    id: 9509071749,
+    lat: 39.7131152,
+    lon: 32.8153565,
+    tags: { amenity: "weighbridge" },
+  },
+  {
+    type: "node",
+    id: 9705631469,
+    lat: 39.8119587,
+    lon: 32.5556999,
+    tags: { amenity: "weighbridge" },
+  },
+  {
+    type: "node",
+    id: 10226489549,
+    lat: 39.9615147,
+    lon: 32.8333631,
+    tags: { amenity: "weighbridge" },
+  },
+  {
+    type: "node",
+    id: 11176648255,
+    lat: 38.1289013,
+    lon: 33.0700605,
+    tags: { amenity: "weighbridge", maxweight: "60" },
+  },
+  {
+    type: "node",
+    id: 11465842116,
+    lat: 36.5748722,
+    lon: 30.5496019,
+    tags: { amenity: "weighbridge", name: "Kantar" },
+  },
+];
+
+async function persistElements(
+  repository: Repository<LogisticsPoiEntity>,
+  elements: readonly OverpassElement[],
+): Promise<number> {
+  let inserted = 0;
+  for (const element of elements) {
+    const kind = resolveKind(element.tags);
+    const lat = element.lat ?? element.center?.lat;
+    const lon = element.lon ?? element.center?.lon;
+    if (!kind || lat === undefined || lon === undefined) {
+      continue;
+    }
+    const externalId = `${element.type}/${element.id}`;
+    try {
+      await repository.save(
+        repository.create({
+          kindCode: kind,
+          displayName: resolveName(element.tags, kind),
+          latitude: lat,
+          longitude: lon,
+          countryCode: "TR",
+          sourceCode: LogisticsPoiSourceCode.OpenStreetMap,
+          externalId,
+          datasetVersion: LOGISTICS_POI_DATASET_VERSION,
+          metadataJson: element.tags ?? null,
+        }),
+      );
+      inserted += 1;
+    } catch {
+      // duplicate externalId
+    }
+  }
+  return inserted;
+}
+
+/** Fallback bootstrap (real OSM coords, bundled). */
 export async function seedLogisticsPoiCorridorSample(
   repository: Repository<LogisticsPoiEntity>,
 ): Promise<void> {
@@ -162,48 +265,5 @@ export async function seedLogisticsPoiCorridorSample(
   if (count > 0) {
     return;
   }
-  const samples: Array<{
-    kind: LogisticsPoiKindCode;
-    name: string;
-    lat: number;
-    lng: number;
-    externalId: string;
-  }> = [
-    {
-      kind: LogisticsPoiKindCode.WeighStation,
-      name: "Kantar (örnek — Polatlı)",
-      lat: 39.5842,
-      lng: 32.1638,
-      externalId: "sample/weigh-polatli",
-    },
-    {
-      kind: LogisticsPoiKindCode.TruckParking,
-      name: "Tır parkı (örnek — Konya)",
-      lat: 37.9521,
-      lng: 32.6184,
-      externalId: "sample/park-konya",
-    },
-    {
-      kind: LogisticsPoiKindCode.WeighStation,
-      name: "Kantar (örnek — Burdur)",
-      lat: 37.0182,
-      lng: 30.7125,
-      externalId: "sample/weigh-burdur",
-    },
-  ];
-  for (const sample of samples) {
-    await repository.save(
-      repository.create({
-        kindCode: sample.kind,
-        displayName: sample.name,
-        latitude: sample.lat,
-        longitude: sample.lng,
-        countryCode: "TR",
-        sourceCode: LogisticsPoiSourceCode.Curated,
-        externalId: sample.externalId,
-        datasetVersion: LOGISTICS_POI_DATASET_VERSION,
-        metadataJson: { sample: true },
-      }),
-    );
-  }
+  await persistElements(repository, BOOTSTRAP_OSM_NODES);
 }
