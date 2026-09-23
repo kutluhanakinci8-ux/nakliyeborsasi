@@ -27,6 +27,11 @@ import {
   patchKutluhanTestDriverPhone,
   seedKutluhanTestFleet,
 } from "./KutluhanTestFleetSeed";
+import { LogisticsPoiEntity } from "../entities/LogisticsPoiEntity";
+import {
+  seedLogisticsPoiCorridorSample,
+  seedLogisticsPoiFromTurkeyOverpass,
+} from "./LogisticsPoiOsmSeed";
 
 @Injectable()
 export class DatabaseSeedRunner implements OnModuleInit {
@@ -59,6 +64,8 @@ export class DatabaseSeedRunner implements OnModuleInit {
     private readonly fleetVehicleRepository: Repository<FleetVehicleEntity>,
     @InjectRepository(FleetDriverVehicleAssignmentEntity)
     private readonly fleetAssignmentRepository: Repository<FleetDriverVehicleAssignmentEntity>,
+    @InjectRepository(LogisticsPoiEntity)
+    private readonly logisticsPoiRepository: Repository<LogisticsPoiEntity>,
     private readonly subscriptionPlanCatalog: SubscriptionPlanCatalog,
   ) {}
 
@@ -131,6 +138,36 @@ export class DatabaseSeedRunner implements OnModuleInit {
     } catch {
       // Telefon senkronu atlanır.
     }
+    try {
+      await this.seedLogisticsPoi();
+    } catch {
+      // logistics_poi seed atlanır.
+    }
+  }
+
+  private async seedLogisticsPoi(): Promise<void> {
+    const count = await this.logisticsPoiRepository.count();
+    if (count > 0) {
+      return;
+    }
+    if (process.env.LOGISTICS_POI_SEED_OVERPASS === "true") {
+      void seedLogisticsPoiFromTurkeyOverpass(this.logisticsPoiRepository)
+        .then((result) => {
+          console.log(
+            `[logistics_poi] Overpass ingest: inserted=${result.inserted} skipped=${result.skipped}`,
+          );
+        })
+        .catch((error: unknown) => {
+          const message =
+            error instanceof Error ? error.message : "Overpass ingest failed";
+          console.warn(`[logistics_poi] ${message}`);
+        });
+      return;
+    }
+    if (process.env.LOGISTICS_POI_SKIP_SAMPLE === "true") {
+      return;
+    }
+    await seedLogisticsPoiCorridorSample(this.logisticsPoiRepository);
   }
 
   private async seedSubscriptionPlans(): Promise<void> {

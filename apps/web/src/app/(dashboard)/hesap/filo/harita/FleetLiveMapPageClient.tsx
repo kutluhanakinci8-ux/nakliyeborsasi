@@ -55,6 +55,8 @@ export function FleetLiveMapPageClient() {
   const [selectedRoute, setSelectedRoute] =
     useState<FleetDriverRouteSnapshot | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const [showWeighStations, setShowWeighStations] = useState(true);
+  const [showTruckParking, setShowTruckParking] = useState(true);
 
   const refresh = useCallback(async () => {
     if (!accessToken) {
@@ -155,6 +157,8 @@ export function FleetLiveMapPageClient() {
             selectedDriverId={selectedDriverId}
             selectedRoute={selectedRoute}
             onSelectDriver={setSelectedDriverId}
+            showWeighStations={showWeighStations}
+            showTruckParking={showTruckParking}
           />
         </section>
         <aside className="account-card module-panel fleet-live-map-sidebar">
@@ -175,11 +179,35 @@ export function FleetLiveMapPageClient() {
                     ? ` · ${selectedRoute.distanceKm} km (yol)`
                     : ""}
                   · Güvenlik olayı: {selectedRoute.safetyMarkers.length}
+                  · Kantar / tır parkı:{" "}
+                  {(selectedRoute.routePois ?? []).length}
                   {selectedRoute.roadGeometryStatus === "PENDING"
                     ? " · Yol hesaplanıyor…"
                     : ""}
                 </p>
               ) : null}
+              <div className="fleet-live-map-poi-toggles">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={showWeighStations}
+                    onChange={(event) =>
+                      setShowWeighStations(event.target.checked)
+                    }
+                  />
+                  Kantarlar
+                </label>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={showTruckParking}
+                    onChange={(event) =>
+                      setShowTruckParking(event.target.checked)
+                    }
+                  />
+                  Tır parkları
+                </label>
+              </div>
             </div>
           ) : (
             <p className="fleet-entity-meta">Rota için bir şoför seçin.</p>

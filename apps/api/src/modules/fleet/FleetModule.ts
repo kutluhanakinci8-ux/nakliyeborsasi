@@ -13,6 +13,8 @@ import { RouteReconstructionService } from "./telematics/routing/RouteReconstruc
 import { TelemetryMatchingQueueService } from "./telematics/routing/TelemetryMatchingQueueService";
 import { RouteMatchingJobRunner } from "./telematics/routing/RouteMatchingJobRunner";
 import { LiveSnapCacheService } from "./telematics/routing/LiveSnapCacheService";
+import { RoutePoiAlongCorridorService } from "./telematics/poi/RoutePoiAlongCorridorService";
+import { LogisticsPoiEntity } from "../../infrastructure/database/entities/LogisticsPoiEntity";
 import { FleetMatchedRouteEntity } from "../../infrastructure/database/entities/FleetMatchedRouteEntity";
 import { FleetRouteMatchingJobEntity } from "../../infrastructure/database/entities/FleetRouteMatchingJobEntity";
 import { FleetTelemetryDeviceEntity } from "../../infrastructure/database/entities/FleetTelemetryDeviceEntity";
@@ -47,6 +49,7 @@ import { CompanyMembershipEntity } from "../../infrastructure/database/entities/
       FleetTelemetryEventEntity,
       FleetMatchedRouteEntity,
       FleetRouteMatchingJobEntity,
+      LogisticsPoiEntity,
     ]),
   ],
   controllers: [
@@ -65,6 +68,7 @@ import { CompanyMembershipEntity } from "../../infrastructure/database/entities/
     TelemetryMatchingQueueService,
     RouteMatchingJobRunner,
     LiveSnapCacheService,
+    RoutePoiAlongCorridorService,
   ],
   exports: [FleetApplicationService],
 })

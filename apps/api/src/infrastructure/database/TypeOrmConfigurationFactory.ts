@@ -21,6 +21,7 @@ import { FleetTelemetryConsentLogEntity } from "./entities/FleetTelemetryConsent
 import { FleetTelemetryEventEntity } from "./entities/FleetTelemetryEventEntity";
 import { FleetMatchedRouteEntity } from "./entities/FleetMatchedRouteEntity";
 import { FleetRouteMatchingJobEntity } from "./entities/FleetRouteMatchingJobEntity";
+import { LogisticsPoiEntity } from "./entities/LogisticsPoiEntity";
 
 @Injectable()
 export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
@@ -57,6 +58,7 @@ export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
         FleetTelemetryEventEntity,
         FleetMatchedRouteEntity,
         FleetRouteMatchingJobEntity,
+        LogisticsPoiEntity,
       ],
       synchronize,
       logging: false,

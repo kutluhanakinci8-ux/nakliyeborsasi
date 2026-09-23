@@ -39,11 +39,18 @@ function speedToColor(speedKmh: number): string {
   return "#ef4444";
 }
 
+const POI_STYLE: Record<string, { fill: string; label: string }> = {
+  WEIGH_STATION: { fill: "#ea580c", label: "Kantar" },
+  TRUCK_PARKING: { fill: "#7c3aed", label: "Tır parkı" },
+};
+
 type FleetLiveMapCanvasProps = {
   drivers: readonly FleetLiveDriverPin[];
   selectedDriverId: string | null;
   selectedRoute: FleetDriverRouteSnapshot | null;
   onSelectDriver: (driverId: string) => void;
+  showWeighStations: boolean;
+  showTruckParking: boolean;
 };
 
 export function FleetLiveMapCanvas({
@@ -51,6 +58,8 @@ export function FleetLiveMapCanvas({
   selectedDriverId,
   selectedRoute,
   onSelectDriver,
+  showWeighStations,
+  showTruckParking,
 }: FleetLiveMapCanvasProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -156,6 +165,32 @@ export function FleetLiveMapCanvas({
           .addTo(routeLayer);
       }
 
+      const routePois = selectedRoute.routePois ?? [];
+      for (const poi of routePois) {
+        if (poi.kindCode === "WEIGH_STATION" && !showWeighStations) {
+          continue;
+        }
+        if (poi.kindCode === "TRUCK_PARKING" && !showTruckParking) {
+          continue;
+        }
+        const style = POI_STYLE[poi.kindCode] ?? {
+          fill: "#64748b",
+          label: "POI",
+        };
+        L.circleMarker([poi.latitude, poi.longitude], {
+          radius: 7,
+          color: "#fff",
+          weight: 2,
+          fillColor: style.fill,
+          fillOpacity: 0.95,
+        })
+          .bindPopup(
+            `<strong>${style.label}</strong><br/>${poi.displayName}<br/>` +
+              `${poi.distanceFromStartKm} km · rotadan ${poi.distanceToRouteMeters} m`,
+          )
+          .addTo(routeLayer);
+      }
+
       for (const marker of selectedRoute.safetyMarkers) {
         const lat = marker.roadLatitude ?? marker.latitude;
         const lng = marker.roadLongitude ?? marker.longitude;
@@ -217,7 +252,14 @@ export function FleetLiveMapCanvas({
     } else if (!selectedRoute?.routePoints.length && bounds.length > 1) {
       map.fitBounds(L.latLngBounds(bounds), { padding: [48, 48], maxZoom: 12 });
     }
-  }, [drivers, onSelectDriver, selectedDriverId, selectedRoute]);
+  }, [
+    drivers,
+    onSelectDriver,
+    selectedDriverId,
+    selectedRoute,
+    showTruckParking,
+    showWeighStations,
+  ]);
 
   return <div ref={containerRef} className="fleet-live-map-canvas" />;
 }

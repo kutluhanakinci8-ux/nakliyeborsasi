@@ -17,6 +17,7 @@ import {
   TelemetryGpsFilter,
   TelemetryRoadGeometryStatusCode,
   ValidationException,
+  LogisticsPoiKindCode,
 } from "@nakliyeborsasi/core";
 import { CompanyEntity } from "../../../infrastructure/database/entities/CompanyEntity";
 import { FleetDriverEntity } from "../../../infrastructure/database/entities/FleetDriverEntity";
@@ -36,6 +37,7 @@ import { LiveSnapCacheService } from "./routing/LiveSnapCacheService";
 import { RouteReconstructionService } from "./routing/RouteReconstructionService";
 import { TelemetryMatchingQueueService } from "./routing/TelemetryMatchingQueueService";
 import { OsrmRoutingClient } from "./routing/OsrmRoutingClient";
+import { RoutePoiAlongCorridorService } from "./poi/RoutePoiAlongCorridorService";
 
 @Injectable()
 export class TelemetryApplicationService {
@@ -61,6 +63,7 @@ export class TelemetryApplicationService {
     private readonly routeReconstructionService: RouteReconstructionService,
     private readonly telemetryMatchingQueueService: TelemetryMatchingQueueService,
     private readonly osrmRoutingClient: OsrmRoutingClient,
+    private readonly routePoiAlongCorridorService: RoutePoiAlongCorridorService,
   ) {}
 
   public async getCarrierLiveMap(
@@ -190,6 +193,10 @@ export class TelemetryApplicationService {
     locale: string,
     hours: number,
     mode: "road" | "matched" = "road",
+    poiKinds: readonly LogisticsPoiKindCode[] = [
+      LogisticsPoiKindCode.WeighStation,
+      LogisticsPoiKindCode.TruckParking,
+    ],
   ): Promise<FleetDriverRouteSnapshot> {
     await this.assertFleetTenant(companyId, locale);
     const driver = await this.driverRepository.findOne({
@@ -306,6 +313,10 @@ export class TelemetryApplicationService {
         reason: "MANUAL",
       });
     }
+    const routePois = await this.routePoiAlongCorridorService.resolveAlongRoute({
+      roadGeometry: reconstructed.roadGeometry,
+      kinds: poiKinds,
+    });
     const motion = this.motionFromSampleEvents(
       events
         .filter(
@@ -326,6 +337,7 @@ export class TelemetryApplicationService {
       matchedRouteId: reconstructed.matchedRouteId,
       distanceKm: reconstructed.distanceKm,
       speedSegments: reconstructed.speedSegments,
+      routePois,
       updatedAt: new Date().toISOString(),
     };
   }

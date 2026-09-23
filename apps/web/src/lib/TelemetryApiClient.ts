@@ -58,6 +58,17 @@ export type FleetRouteSpeedSegment = {
   speedKmh: number;
 };
 
+export type FleetRoutePoiMarker = {
+  poiId: string;
+  kindCode: string;
+  displayName: string;
+  latitude: number;
+  longitude: number;
+  distanceFromStartKm: number;
+  distanceToRouteMeters: number;
+  sourceCode: string;
+};
+
 export type TelemetryRoadGeometryStatusCode =
   | "READY"
   | "PENDING"
@@ -112,6 +123,7 @@ export type FleetDriverRouteSnapshot = {
   matchedRouteId: string | null;
   distanceKm: number | null;
   speedSegments: readonly FleetRouteSpeedSegment[];
+  routePois: readonly FleetRoutePoiMarker[];
   updatedAt: string;
 };
 
@@ -140,9 +152,10 @@ export class TelemetryApiClient {
     driverId: string,
     hours = 6,
     mode: "road" | "matched" = "road",
+    poi = "weigh_station,truck_parking",
   ): Promise<FleetDriverRouteSnapshot> {
     const response = await fetch(
-      `${PublicApiConfiguration.resolveBaseUrl()}/fleet/telematics/carrier/drivers/${driverId}/route?lang=${locale}&hours=${hours}&mode=${mode}`,
+      `${PublicApiConfiguration.resolveBaseUrl()}/fleet/telematics/carrier/drivers/${driverId}/route?lang=${locale}&hours=${hours}&mode=${mode}&poi=${encodeURIComponent(poi)}`,
       { headers: this.authHeaders(accessToken) },
     );
     if (!response.ok) {

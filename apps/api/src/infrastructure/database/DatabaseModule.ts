@@ -19,6 +19,7 @@ import { FleetDriverVehicleAssignmentEntity } from "./entities/FleetDriverVehicl
 import { FleetTelemetryDeviceEntity } from "./entities/FleetTelemetryDeviceEntity";
 import { FleetTelemetryConsentLogEntity } from "./entities/FleetTelemetryConsentLogEntity";
 import { FleetTelemetryEventEntity } from "./entities/FleetTelemetryEventEntity";
+import { LogisticsPoiEntity } from "./entities/LogisticsPoiEntity";
 import { DatabaseSeedRunner } from "./seed/DatabaseSeedRunner";
 import { SubscriptionCatalogModule } from "../../modules/subscription/SubscriptionCatalogModule";
 
@@ -48,6 +49,7 @@ import { SubscriptionCatalogModule } from "../../modules/subscription/Subscripti
       FleetTelemetryDeviceEntity,
       FleetTelemetryConsentLogEntity,
       FleetTelemetryEventEntity,
+      LogisticsPoiEntity,
     ]),
   ],
   providers: [DatabaseSeedRunner],

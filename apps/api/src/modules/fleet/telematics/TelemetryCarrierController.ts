@@ -4,6 +4,7 @@ import { JwtAuthenticationGuard } from "../../auth/JwtAuthenticationGuard";
 import { AuthenticatedUserParam } from "../../auth/AuthenticatedUserParam";
 import { LocaleResolutionService } from "../../localization/LocaleResolutionService";
 import { TelemetryApplicationService } from "./TelemetryApplicationService";
+import { RoutePoiAlongCorridorService } from "./poi/RoutePoiAlongCorridorService";
 
 @Controller("fleet/telematics/carrier")
 @UseGuards(JwtAuthenticationGuard)
@@ -11,6 +12,7 @@ export class TelemetryCarrierController {
   public constructor(
     private readonly telemetryApplicationService: TelemetryApplicationService,
     private readonly localeResolutionService: LocaleResolutionService,
+    private readonly routePoiAlongCorridorService: RoutePoiAlongCorridorService,
   ) {}
 
   @Get("live")
@@ -35,6 +37,7 @@ export class TelemetryCarrierController {
     @Param("driverId") driverId: string,
     @Query("hours") hoursQuery: string | undefined,
     @Query("mode") modeQuery: string | undefined,
+    @Query("poi") poiQuery: string | undefined,
     @Headers("accept-language") acceptLanguage: string | undefined,
     @Query("lang") queryLanguage: string | undefined,
     @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
@@ -52,6 +55,7 @@ export class TelemetryCarrierController {
       locale,
       Number.isFinite(hours) ? Math.min(Math.max(hours, 1), 48) : 6,
       mode === "matched" ? "matched" : "road",
+      this.routePoiAlongCorridorService.parseKindCodes(poiQuery),
     );
     return { message: "OK", route };
   }

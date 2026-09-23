@@ -54,6 +54,17 @@ export type FleetRouteSpeedSegment = {
   speedKmh: number;
 };
 
+export type FleetRoutePoiMarker = {
+  poiId: string;
+  kindCode: string;
+  displayName: string;
+  latitude: number;
+  longitude: number;
+  distanceFromStartKm: number;
+  distanceToRouteMeters: number;
+  sourceCode: string;
+};
+
 export type FleetDriverRouteSnapshot = {
   driverId: string;
   displayName: string;
@@ -66,6 +77,7 @@ export type FleetDriverRouteSnapshot = {
   matchedRouteId: string | null;
   distanceKm: number | null;
   speedSegments: readonly FleetRouteSpeedSegment[];
+  routePois: readonly FleetRoutePoiMarker[];
   updatedAt: string;
 };
 
