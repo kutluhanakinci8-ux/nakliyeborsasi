@@ -256,6 +256,17 @@ export function AuctionsPageClient() {
                     </span>
                   ) : null}
                 </div>
+                <div className="freight-row-price freight-row-price--top">
+                  <span className="price-amount">
+                    {best ?? session.minimumBidAmount} {session.currencyCode}
+                  </span>
+                  <span className="price-hint">
+                    {best ? "En iyi teklif" : "Referans tavan"}
+                  </span>
+                  <span className="price-hint auction-list-id">
+                    #{session.id.slice(0, 8)}
+                  </span>
+                </div>
                 <div className="freight-row-main auction-list-row-main">
                   {listing ? (
                     <Link
@@ -291,34 +302,23 @@ export function AuctionsPageClient() {
                   {session.cargoDescription ? (
                     <p className="auction-list-cargo">{session.cargoDescription}</p>
                   ) : null}
-                  <div className="freight-row-actions freight-row-actions--top auction-list-actions">
-                    <Link
-                      href={`/auctions/${session.id}`}
-                      className="btn-link btn-link--compact"
-                    >
-                      Detay ve şartlar
-                    </Link>
-                    {activeTab === "open" ? (
-                      <button
-                        type="button"
-                        className="btn-accent btn-accent--compact"
-                        onClick={() => openBidDialog(session)}
-                      >
-                        Teklif ver
-                      </button>
-                    ) : null}
-                  </div>
                 </div>
-                <div className="freight-row-price">
-                  <span className="price-amount">
-                    {best ?? session.minimumBidAmount} {session.currencyCode}
-                  </span>
-                  <span className="price-hint">
-                    {best ? "En iyi teklif" : "Referans tavan"}
-                  </span>
-                  <span className="price-hint auction-list-id">
-                    #{session.id.slice(0, 8)}
-                  </span>
+                <div className="freight-row-actions freight-row-actions--top auction-list-actions">
+                  <Link
+                    href={`/auctions/${session.id}`}
+                    className="btn-link btn-link--compact"
+                  >
+                    Detay ve şartlar
+                  </Link>
+                  {activeTab === "open" ? (
+                    <button
+                      type="button"
+                      className="btn-accent btn-accent--compact"
+                      onClick={() => openBidDialog(session)}
+                    >
+                      Teklif ver
+                    </button>
+                  ) : null}
                 </div>
               </article>
             );
