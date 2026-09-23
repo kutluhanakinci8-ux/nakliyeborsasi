@@ -187,6 +187,15 @@ export function EmployeesPageClient() {
                         ? `Araç: ${driver.activeVehiclePlate}`
                         : "Araç atanmadı"}
                     </span>
+                    <span aria-hidden>·</span>
+                    <span>
+                      {driver.primaryPhoneE164
+                        ? `Tel: ${driver.primaryPhoneE164}`
+                        : "Tel: —"}
+                    </span>
+                  </p>
+                  <p className="account-partner-meta">
+                    <Link href="/hesap/filo">Filo sekmesinde düzenle</Link>
                   </p>
                 </div>
               </li>
