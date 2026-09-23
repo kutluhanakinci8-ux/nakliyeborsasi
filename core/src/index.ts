@@ -35,4 +35,5 @@ export * from "./constants/TelemetryDevicePlatformCode";
 export * from "./constants/TelemetryEventTypeCode";
 export * from "./constants/TelemetryConsentPurposeCode";
 export * from "./types/TelemetryTypes";
+export * from "./types/FleetLiveMapTypes";
 export * from "./ports/ExternalFreightDataPort";

@@ -6723,6 +6723,98 @@ button.btn-secondary {
   background: #fff;
 }
 
+.fleet-live-map-banner {
+  background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%);
+}
+
+.fleet-live-map-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.fleet-live-map-layout {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 16px;
+  min-height: 480px;
+}
+
+.fleet-live-map-panel {
+  padding: 0;
+  overflow: hidden;
+}
+
+.fleet-live-map-canvas {
+  width: 100%;
+  height: min(62vh, 520px);
+  min-height: 360px;
+  z-index: 0;
+}
+
+.fleet-live-map-sidebar {
+  max-height: min(62vh, 520px);
+  overflow: auto;
+}
+
+.fleet-live-driver-list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fleet-live-driver-item {
+  width: 100%;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  text-align: left;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  cursor: pointer;
+}
+
+.fleet-live-driver-item--active {
+  border-color: #1d4ed8;
+  background: #eff6ff;
+}
+
+.fleet-live-driver-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-top: 5px;
+  flex-shrink: 0;
+}
+
+.fleet-live-driver-dot--live {
+  background: #16a34a;
+}
+
+.fleet-live-driver-dot--stale {
+  background: #d97706;
+}
+
+.fleet-live-driver-dot--offline,
+.fleet-live-driver-dot--no_signal {
+  background: #94a3b8;
+}
+
+@media (max-width: 960px) {
+  .fleet-live-map-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .fleet-live-map-sidebar {
+    max-height: none;
+  }
+}
+
 .btn-account-secondary--compact {
   flex-shrink: 0;
   padding: 6px 12px;

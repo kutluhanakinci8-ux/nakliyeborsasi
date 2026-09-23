@@ -198,8 +198,8 @@ export function DriverTelematicsPageClient() {
           </a>{" "}
           (HTTP :3011 konum izni vermez).
         </p>
-        {typeof window !== "undefined" && geolocationBlockedReason() ? (
-          <p className="error banner error--light">{geolocationBlockedReason()}</p>
+        {geoWarning ? (
+          <p className="error banner error--light">{geoWarning}</p>
         ) : null}
         {device ? (
           <p className="driver-telematics-meta">

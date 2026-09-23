@@ -5,6 +5,7 @@ import { FleetApplicationService } from "./FleetApplicationService";
 import { TelemetryApplicationService } from "./telematics/TelemetryApplicationService";
 import { TelemetryDriverController } from "./telematics/TelemetryDriverController";
 import { TelemetryIngestController } from "./telematics/TelemetryIngestController";
+import { TelemetryCarrierController } from "./telematics/TelemetryCarrierController";
 import { TelemetryDeviceGuard } from "./telematics/TelemetryDeviceGuard";
 import { FleetTelemetryDeviceEntity } from "../../infrastructure/database/entities/FleetTelemetryDeviceEntity";
 import { FleetTelemetryConsentLogEntity } from "../../infrastructure/database/entities/FleetTelemetryConsentLogEntity";
@@ -38,7 +39,12 @@ import { CompanyMembershipEntity } from "../../infrastructure/database/entities/
       FleetTelemetryEventEntity,
     ]),
   ],
-  controllers: [FleetController, TelemetryDriverController, TelemetryIngestController],
+  controllers: [
+    FleetController,
+    TelemetryDriverController,
+    TelemetryIngestController,
+    TelemetryCarrierController,
+  ],
   providers: [FleetApplicationService, TelemetryApplicationService, TelemetryDeviceGuard],
   exports: [FleetApplicationService],
 })

@@ -39,6 +39,25 @@ export type TelemetryDriverStatusSnapshot = {
   activeTripId: string | null;
 };
 
+export type FleetLiveTrackingState = "LIVE" | "STALE" | "OFFLINE" | "NO_SIGNAL";
+
+export type FleetLiveDriverPin = {
+  driverId: string;
+  displayName: string;
+  primaryPhoneE164: string | null;
+  licensePlateDisplay: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  lastSpeedKmh: number | null;
+  lastSeenAt: string | null;
+  trackingState: FleetLiveTrackingState;
+};
+
+export type FleetLiveMapSnapshot = {
+  updatedAt: string;
+  drivers: readonly FleetLiveDriverPin[];
+};
+
 export type TelemetryEnrollResult = {
   deviceId: string;
   ingestToken: string;
@@ -51,6 +70,21 @@ export class TelemetryApiClient {
       Authorization: `Bearer ${accessToken}`,
       "Content-Type": "application/json",
     };
+  }
+
+  public static async fetchCarrierLiveMap(
+    accessToken: string,
+    locale: string,
+  ): Promise<FleetLiveMapSnapshot> {
+    const response = await fetch(
+      `${PublicApiConfiguration.resolveBaseUrl()}/fleet/telematics/carrier/live?lang=${locale}`,
+      { headers: this.authHeaders(accessToken) },
+    );
+    if (!response.ok) {
+      throw new Error(await response.text());
+    }
+    const payload = (await response.json()) as { liveMap: FleetLiveMapSnapshot };
+    return payload.liveMap;
   }
 
   public static async fetchStatus(

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useWebSession } from "../../../../context/WebSessionProvider";
 import {
@@ -236,6 +237,20 @@ export function FleetPageClient() {
 
   return (
     <div className="fleet-page-grid">
+      <section className="account-card module-panel fleet-page-grid-span fleet-live-map-banner">
+        <div className="account-card-head">
+          <div>
+            <h2 className="account-card-title">Canlı harita</h2>
+            <p className="account-card-lead">
+              Şoförlerin son konumunu haritada izleyin (telemetri açık cihazlar).
+            </p>
+          </div>
+          <Link href="/hesap/filo/harita" className="btn-account-primary">
+            Haritayı aç
+          </Link>
+        </div>
+      </section>
+
       {errorMessage ? (
         <p className="error banner error--light account-form-span-2">{errorMessage}</p>
       ) : null}
@@ -345,7 +360,7 @@ export function FleetPageClient() {
               </div>
               <button
                 type="button"
-                className="btn-account-secondary btn-account-secondary--compact"
+                className="btn-account-ghost btn-account-secondary--compact"
                 disabled={isBusy}
                 onClick={() => startEditDriver(driver)}
               >

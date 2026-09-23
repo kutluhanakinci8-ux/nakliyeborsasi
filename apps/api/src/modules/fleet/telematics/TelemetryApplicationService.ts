@@ -2,13 +2,22 @@ import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import {
+  CompanyParticipantTypeCode,
+  FleetLiveDriverPin,
+  FleetLiveMapSnapshot,
+  FleetLiveTrackingState,
   ResourceNotFoundException,
+  SubscriptionModuleCode,
   TELEMETRY_CONSENT_DOCUMENT_VERSION,
   TelemetryConsentPurposeCode,
   TelemetryEnrollResult,
   ValidationException,
 } from "@nakliyeborsasi/core";
+import { CompanyEntity } from "../../../infrastructure/database/entities/CompanyEntity";
 import { FleetDriverEntity } from "../../../infrastructure/database/entities/FleetDriverEntity";
+import { FleetVehicleEntity } from "../../../infrastructure/database/entities/FleetVehicleEntity";
+import { ModularSubscriptionEntitlementService } from "../../subscription/ModularSubscriptionEntitlementService";
+import { LocaleResolutionService } from "../../localization/LocaleResolutionService";
 import { FleetTelemetryConsentLogEntity } from "../../../infrastructure/database/entities/FleetTelemetryConsentLogEntity";
 import { FleetTelemetryDeviceEntity } from "../../../infrastructure/database/entities/FleetTelemetryDeviceEntity";
 import { FleetTelemetryEventEntity } from "../../../infrastructure/database/entities/FleetTelemetryEventEntity";
@@ -20,16 +29,76 @@ import { TelemetryTokenHasher } from "./TelemetryTokenHasher";
 
 @Injectable()
 export class TelemetryApplicationService {
+  private static readonly LIVE_THRESHOLD_MS = 5 * 60 * 1000;
+  private static readonly STALE_THRESHOLD_MS = 60 * 60 * 1000;
+
   public constructor(
     @InjectRepository(FleetDriverEntity)
     private readonly driverRepository: Repository<FleetDriverEntity>,
+    @InjectRepository(FleetVehicleEntity)
+    private readonly vehicleRepository: Repository<FleetVehicleEntity>,
+    @InjectRepository(CompanyEntity)
+    private readonly companyRepository: Repository<CompanyEntity>,
     @InjectRepository(FleetTelemetryDeviceEntity)
     private readonly deviceRepository: Repository<FleetTelemetryDeviceEntity>,
     @InjectRepository(FleetTelemetryConsentLogEntity)
     private readonly consentLogRepository: Repository<FleetTelemetryConsentLogEntity>,
     @InjectRepository(FleetTelemetryEventEntity)
     private readonly eventRepository: Repository<FleetTelemetryEventEntity>,
+    private readonly modularSubscriptionEntitlementService: ModularSubscriptionEntitlementService,
+    private readonly localeResolutionService: LocaleResolutionService,
   ) {}
+
+  public async getCarrierLiveMap(
+    companyId: string,
+    locale: string,
+  ): Promise<FleetLiveMapSnapshot> {
+    await this.assertFleetTenant(companyId, locale);
+    const drivers = await this.driverRepository.find({
+      where: { companyId },
+      order: { displayName: "ASC" },
+    });
+    const vehicles = await this.vehicleRepository.find({ where: { companyId } });
+    const vehicleById = new Map(vehicles.map((vehicle) => [vehicle.id, vehicle]));
+    const devices = await this.deviceRepository.find({
+      where: { companyId, trackingEnabled: true },
+      order: { lastSeenAt: "DESC" },
+    });
+    const deviceByDriver = new Map<string, FleetTelemetryDeviceEntity>();
+    for (const device of devices) {
+      if (device.consentRevokedAt) {
+        continue;
+      }
+      if (!deviceByDriver.has(device.fleetDriverId)) {
+        deviceByDriver.set(device.fleetDriverId, device);
+      }
+    }
+
+    const now = Date.now();
+    const pins: FleetLiveDriverPin[] = drivers.map((driver) => {
+      const device = deviceByDriver.get(driver.id);
+      const vehicle = driver.activeVehicleId
+        ? vehicleById.get(driver.activeVehicleId)
+        : null;
+      const trackingState = this.resolveTrackingState(device, now);
+      return {
+        driverId: driver.id,
+        displayName: driver.displayName,
+        primaryPhoneE164: driver.primaryPhoneE164,
+        licensePlateDisplay: vehicle?.licensePlateDisplay ?? null,
+        latitude: device?.lastLatitude ?? null,
+        longitude: device?.lastLongitude ?? null,
+        lastSpeedKmh: device?.lastSpeedKmh ?? null,
+        lastSeenAt: device?.lastSeenAt?.toISOString() ?? null,
+        trackingState,
+      };
+    });
+
+    return {
+      updatedAt: new Date().toISOString(),
+      drivers: pins,
+    };
+  }
 
   public async getDriverStatus(userId: string) {
     const driver = await this.findDriverForUser(userId);
@@ -171,20 +240,68 @@ export class TelemetryApplicationService {
     );
     await this.eventRepository.save(rows);
 
-    const last = parsed[parsed.length - 1];
+    const lastLocation = [...parsed]
+      .reverse()
+      .find(
+        (event) =>
+          event.latitude !== undefined && event.longitude !== undefined,
+      );
     device.lastSeenAt = new Date();
-    if (last.latitude !== undefined) {
-      device.lastLatitude = last.latitude;
-    }
-    if (last.longitude !== undefined) {
-      device.lastLongitude = last.longitude;
-    }
-    if (last.speedKmh !== undefined) {
-      device.lastSpeedKmh = last.speedKmh;
+    if (lastLocation) {
+      device.lastLatitude = lastLocation.latitude ?? device.lastLatitude;
+      device.lastLongitude = lastLocation.longitude ?? device.lastLongitude;
+      if (lastLocation.speedKmh !== undefined) {
+        device.lastSpeedKmh = lastLocation.speedKmh;
+      }
     }
     await this.deviceRepository.save(device);
 
     return { acceptedCount: rows.length };
+  }
+
+  private resolveTrackingState(
+    device: FleetTelemetryDeviceEntity | undefined,
+    nowMs: number,
+  ): FleetLiveTrackingState {
+    if (
+      !device ||
+      device.lastLatitude === null ||
+      device.lastLongitude === null
+    ) {
+      return "NO_SIGNAL";
+    }
+    const seenAt = device.lastSeenAt?.getTime() ?? 0;
+    const age = nowMs - seenAt;
+    if (age <= TelemetryApplicationService.LIVE_THRESHOLD_MS) {
+      return "LIVE";
+    }
+    if (age <= TelemetryApplicationService.STALE_THRESHOLD_MS) {
+      return "STALE";
+    }
+    return "OFFLINE";
+  }
+
+  private async assertFleetTenant(companyId: string, locale: string): Promise<void> {
+    await this.modularSubscriptionEntitlementService.assertModuleAccess(
+      companyId,
+      SubscriptionModuleCode.Fleet,
+      locale,
+    );
+    const company = await this.companyRepository.findOne({
+      where: { id: companyId },
+    });
+    if (!company) {
+      throw new ResourceNotFoundException("Company", companyId);
+    }
+    const participant = company.participantTypeCode;
+    const allowed =
+      participant === CompanyParticipantTypeCode.LoadCarrier ||
+      participant === CompanyParticipantTypeCode.LoadSeeker;
+    if (!allowed) {
+      throw new ValidationException(
+        this.localeResolutionService.translate(locale, "errors.validation_failed"),
+      );
+    }
   }
 
   private async findDriverForUser(userId: string): Promise<FleetDriverEntity> {
