@@ -84,6 +84,12 @@ export type AuctionSessionListItemResponse = {
     createdAt?: string;
   }[];
   competition: AuctionCompetitionSnapshot;
+  listing: AuctionSessionDetailResponse["listing"] | null;
+  bidStepAmount: string | null;
+  paymentFormCode: string | null;
+  paymentDeferDays: number | null;
+  priceIncludesVat: boolean;
+  cargoDescription: string | null;
 };
 
 function mapRouteEndpoint(endpoint: {
@@ -125,6 +131,7 @@ export function mapListingToDetailApi(
 export function mapSessionListItem(
   session: AuctionSessionEntity,
   viewerCompanyId: string,
+  listing: PlatformFreightListing | null,
 ): AuctionSessionListItemResponse {
   const bids = (session.bids ?? []) as AuctionBidEntity[];
   const isOwner = session.ownerCompanyId === viewerCompanyId;
@@ -137,6 +144,12 @@ export function mapSessionListItem(
     statusCode: session.statusCode,
     winningBidId: session.winningBidId,
     auctionTypeCode: session.auctionTypeCode,
+    listing: listing ? mapListingToDetailApi(listing) : null,
+    bidStepAmount: session.bidStepAmount,
+    paymentFormCode: session.paymentFormCode,
+    paymentDeferDays: session.paymentDeferDays,
+    priceIncludesVat: session.priceIncludesVat,
+    cargoDescription: session.cargoDescription,
     bids: bids.map((bid) => ({
       id: bid.id,
       bidderCompanyId: bid.bidderCompanyId,

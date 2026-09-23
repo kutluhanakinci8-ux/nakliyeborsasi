@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { In, Repository } from "typeorm";
 import {
   AuctionSessionNotFoundException,
   AuctionSessionStatusCode,
@@ -141,8 +141,26 @@ export class AuctionSessionApplicationService {
         relations: { bids: true },
       });
     }
+    const listingIds = [
+      ...new Set(sessions.map((session) => session.freightListingId)),
+    ];
+    const listingEntities = listingIds.length
+      ? await this.freightListingRepository.find({
+          where: { id: In(listingIds) },
+        })
+      : [];
+    const listingById = new Map(
+      listingEntities.map((entity) => [
+        entity.id,
+        PlatformFreightListingMapper.toDomain(entity),
+      ]),
+    );
     return sessions.map((session) =>
-      mapSessionListItem(session, authenticatedUser.companyId),
+      mapSessionListItem(
+        session,
+        authenticatedUser.companyId,
+        listingById.get(session.freightListingId) ?? null,
+      ),
     );
   }
 

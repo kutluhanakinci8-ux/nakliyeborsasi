@@ -5113,6 +5113,42 @@ button.btn-secondary {
   text-decoration: underline;
 }
 
+.auction-list-row {
+  align-items: flex-start;
+}
+
+.auction-list-route-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.auction-list-route-link:hover .freight-route-line {
+  color: #0d9488;
+}
+
+.auction-list-meta {
+  margin-top: 6px;
+}
+
+.auction-list-cargo {
+  margin: 6px 0 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #64748b;
+  max-width: 52rem;
+}
+
+.auction-list-actions {
+  margin-top: 8px;
+}
+
+.auction-list-id {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
 .auction-detail-top {
   display: flex;
   flex-wrap: wrap;

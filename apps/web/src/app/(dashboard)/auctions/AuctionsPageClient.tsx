@@ -7,6 +7,10 @@ import {
   type AuctionPlaceBidContext,
 } from "../../../components/AuctionPlaceBidDialog";
 import { EmptyState } from "../../../components/EmptyState";
+import {
+  FreightRouteCountryBadges,
+  FreightRouteHeading,
+} from "../../../components/FreightRouteHeading";
 import { ModulePageShell } from "../../../components/ModulePageShell";
 import { useWebSession } from "../../../context/WebSessionProvider";
 import { useAuctionPolling } from "../../../hooks/useAuctionPolling";
@@ -15,8 +19,18 @@ import {
   type AuctionCompetitionSnapshot,
   type AuctionSessionRecord,
 } from "../../../lib/AuctionApiClient";
+import { formatLoadingDateTr } from "../../../lib/freightLocationDisplay";
 
 type AuctionTab = "open" | "closed";
+
+function formatEquipmentLabel(equipmentType: string): string {
+  const map: Record<string, string> = {
+    TAUTLINER: "Tenteli",
+    REFRIGERATED: "Frigo",
+    FLATBED: "Açık platform",
+  };
+  return map[equipmentType] ?? equipmentType;
+}
 
 const EMPTY_COMPETITION: AuctionCompetitionSnapshot = {
   bidCount: 0,
@@ -96,16 +110,29 @@ export function AuctionsPageClient() {
 
   function openBidDialog(session: AuctionSessionRecord): void {
     const competition = competitionOf(session);
+    const listing = session.listing;
+    const routeTitle = listing
+      ? `${listing.origin.cityName} → ${listing.destination.cityName}`
+      : `İhale #${session.id.slice(0, 8)}`;
     setBidError("");
     setBidDialog({
       sessionId: session.id,
-      title: `İhale #${session.id.slice(0, 8)}`,
+      title: routeTitle,
       referenceCeiling: session.minimumBidAmount,
       currencyCode: session.currencyCode,
       endsAt: session.endsAt,
       auctionTypeCode: session.auctionTypeCode ?? "REVERSE_OPEN",
       competition,
-      terms: null,
+      terms: {
+        termsSummary: null,
+        specDocumentUrl: null,
+        specDocumentLabel: null,
+        paymentFormCode: session.paymentFormCode ?? null,
+        paymentDeferDays: session.paymentDeferDays ?? null,
+        priceIncludesVat: session.priceIncludesVat ?? false,
+        bidStepAmount: session.bidStepAmount ?? null,
+        cargoDescription: session.cargoDescription ?? null,
+      },
     });
   }
 
@@ -197,48 +224,84 @@ export function AuctionsPageClient() {
           {visibleSessions.map((session) => {
             const competition = competitionOf(session);
             const best = competition.bestBidAmount;
+            const listing = session.listing;
             return (
-              <article key={session.id} className="freight-row module-row">
-                <div className="freight-row-main">
-                  <div className="freight-row-badges">
-                    <span className="badge badge--country">
-                      {activeTab === "open" ? "Açık" : "Kapalı"}
-                    </span>
-                    <span className="badge badge--muted">
-                      Tavan {session.minimumBidAmount} {session.currencyCode}
-                    </span>
-                    <span className="badge badge--muted">
-                      {competition.bidCount} teklif
-                    </span>
-                    {competition.myRank ? (
-                      <span className="badge badge--accent">
-                        Siz: L{competition.myRank}
+              <article key={session.id} className="freight-row module-row auction-list-row">
+                <div className="freight-row-badges freight-row-badges--top">
+                  <span className="badge badge--country">
+                    {activeTab === "open" ? "Açık" : "Kapalı"}
+                  </span>
+                  {listing ? (
+                    <FreightRouteCountryBadges
+                      originCountry={listing.origin.countryCode}
+                      destinationCountry={listing.destination.countryCode}
+                    />
+                  ) : null}
+                  {listing ? (
+                    <>
+                      <span className="badge badge--muted">
+                        {formatEquipmentLabel(listing.equipmentType)}
                       </span>
-                    ) : null}
-                  </div>
-                  <h3 className="freight-route">
+                      <span className="badge badge--muted">
+                        {listing.weightTonnes} t
+                      </span>
+                    </>
+                  ) : null}
+                  <span className="badge badge--muted">
+                    {competition.bidCount} teklif
+                  </span>
+                  {competition.myRank ? (
+                    <span className="badge badge--accent">
+                      Siz: L{competition.myRank}
+                    </span>
+                  ) : null}
+                </div>
+                <div className="freight-row-main auction-list-row-main">
+                  {listing ? (
                     <Link
                       href={`/auctions/${session.id}`}
-                      className="auction-list-title-link"
+                      className="auction-list-route-link"
                     >
-                      İhale #{session.id.slice(0, 8)}
+                      <FreightRouteHeading
+                        origin={listing.origin}
+                        destination={listing.destination}
+                      />
                     </Link>
-                  </h3>
-                  <p className="module-row-meta">
+                  ) : (
+                    <h3 className="freight-route">
+                      <Link
+                        href={`/auctions/${session.id}`}
+                        className="auction-list-title-link"
+                      >
+                        İhale #{session.id.slice(0, 8)}
+                      </Link>
+                    </h3>
+                  )}
+                  <p className="module-row-meta auction-list-meta">
+                    {listing?.loadingDateStart
+                      ? `Yükleme ${formatLoadingDateTr(listing.loadingDateStart)} · `
+                      : ""}
                     Bitiş: {new Date(session.endsAt).toLocaleString(locale)}
-                    {best ? ` · En iyi (L1): ${best} ${session.currencyCode}` : ""}
+                    {best ? ` · L1: ${best} ${session.currencyCode}` : ""}
+                    {` · Tavan ${session.minimumBidAmount} ${session.currencyCode}`}
                     {activeTab === "closed"
                       ? ` · Kazanan: ${formatWinner(session)}`
                       : ""}
                   </p>
-                  <div className="freight-row-actions">
-                    <Link href={`/auctions/${session.id}`} className="btn-link">
+                  {session.cargoDescription ? (
+                    <p className="auction-list-cargo">{session.cargoDescription}</p>
+                  ) : null}
+                  <div className="freight-row-actions freight-row-actions--top auction-list-actions">
+                    <Link
+                      href={`/auctions/${session.id}`}
+                      className="btn-link btn-link--compact"
+                    >
                       Detay ve şartlar
                     </Link>
                     {activeTab === "open" ? (
                       <button
                         type="button"
-                        className="btn-accent"
+                        className="btn-accent btn-accent--compact"
                         onClick={() => openBidDialog(session)}
                       >
                         Teklif ver
@@ -252,6 +315,9 @@ export function AuctionsPageClient() {
                   </span>
                   <span className="price-hint">
                     {best ? "En iyi teklif" : "Referans tavan"}
+                  </span>
+                  <span className="price-hint auction-list-id">
+                    #{session.id.slice(0, 8)}
                   </span>
                 </div>
               </article>

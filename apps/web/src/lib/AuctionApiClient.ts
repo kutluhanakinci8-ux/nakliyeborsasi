@@ -20,6 +20,18 @@ export type AuctionCompetitionSnapshot = {
   }[];
 };
 
+export type AuctionListingSummary = {
+  listingId: string;
+  ownerCompanyId: string;
+  origin: AuctionListingPoint;
+  destination: AuctionListingPoint;
+  equipmentType: string;
+  weightTonnes: number;
+  loadingDateStart: string;
+  marketScope: string;
+  price: { amount: number; currencyCode: string } | null;
+};
+
 export type AuctionSessionRecord = {
   id: string;
   freightListingId: string;
@@ -31,6 +43,12 @@ export type AuctionSessionRecord = {
   auctionTypeCode?: string;
   bids?: AuctionBidRecord[];
   competition?: AuctionCompetitionSnapshot;
+  listing?: AuctionListingSummary | null;
+  bidStepAmount?: string | null;
+  paymentFormCode?: string | null;
+  paymentDeferDays?: number | null;
+  priceIncludesVat?: boolean;
+  cargoDescription?: string | null;
 };
 
 export type AuctionListingPoint = {
