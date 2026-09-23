@@ -40,6 +40,13 @@ function formatOptionalMeters(value: number | null | undefined): string {
   return `${Math.round(value)} m`;
 }
 
+function formatCoordinate(value: number | null | undefined): string {
+  if (value === null || value === undefined || !Number.isFinite(value)) {
+    return "—";
+  }
+  return value.toFixed(6);
+}
+
 function motionLabel(phase: FleetMotionPhase): string {
   switch (phase) {
     case "STOPPED":
@@ -195,11 +202,29 @@ export function FleetLiveMapPageClient() {
                   : ""}
               </p>
               <dl className="fleet-telemetry-kv">
+                <div className="fleet-telemetry-kv-span">
+                  <dt>Enlem (lat)</dt>
+                  <dd>{formatCoordinate(selectedDriver.latitude)}</dd>
+                </div>
+                <div className="fleet-telemetry-kv-span">
+                  <dt>Boylam (lng)</dt>
+                  <dd>{formatCoordinate(selectedDriver.longitude)}</dd>
+                </div>
+                {selectedDriver.snappedLatitude !== null &&
+                selectedDriver.snappedLongitude !== null ? (
+                  <div className="fleet-telemetry-kv-span">
+                    <dt>Yol üstü (snap)</dt>
+                    <dd>
+                      {formatCoordinate(selectedDriver.snappedLatitude)},{" "}
+                      {formatCoordinate(selectedDriver.snappedLongitude)}
+                    </dd>
+                  </div>
+                ) : null}
                 <div>
                   <dt>Hız</dt>
                   <dd>
                     {selectedDriver.lastSpeedKmh !== null
-                      ? `${Math.round(selectedDriver.lastSpeedKmh)} km/s`
+                      ? `${selectedDriver.lastSpeedKmh.toFixed(1)} km/s`
                       : "—"}
                   </dd>
                 </div>

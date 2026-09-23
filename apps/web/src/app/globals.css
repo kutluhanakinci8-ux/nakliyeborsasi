@@ -6782,6 +6782,12 @@ button.btn-secondary {
   margin: 0;
   font-weight: 600;
   color: #0f172a;
+  font-variant-numeric: tabular-nums;
+  word-break: break-all;
+}
+
+.fleet-telemetry-kv-span {
+  grid-column: 1 / -1;
 }
 
 .fleet-telemetry-feed {

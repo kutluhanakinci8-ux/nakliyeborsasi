@@ -53,8 +53,13 @@ export class TelemetryCarrierFeedFormatter {
     const code = event.eventTypeCode;
     if (code === TelemetryEventTypeCode.LocationSample) {
       const parts: string[] = [label];
+      if (event.latitude !== null && event.longitude !== null) {
+        parts.push(
+          `${event.latitude.toFixed(5)}, ${event.longitude.toFixed(5)}`,
+        );
+      }
       if (event.speedKmh !== null) {
-        parts.push(`${Math.round(event.speedKmh)} km/s`);
+        parts.push(`${event.speedKmh.toFixed(1)} km/s`);
       }
       const alt = this.readNumber(payload, "altitudeMeters");
       const vert = this.readNumber(payload, "verticalAccuracyMeters");

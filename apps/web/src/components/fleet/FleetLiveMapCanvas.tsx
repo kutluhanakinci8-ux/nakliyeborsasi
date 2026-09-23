@@ -120,8 +120,9 @@ export function FleetLiveMapCanvas({
           })
             .bindPopup(
               [
+                `${point.latitude.toFixed(6)}, ${point.longitude.toFixed(6)}`,
                 point.speedKmh !== null
-                  ? `${Math.round(point.speedKmh)} km/s`
+                  ? `${point.speedKmh.toFixed(1)} km/s`
                   : null,
                 point.altitudeMeters != null
                   ? `Rakım ${Math.round(point.altitudeMeters)} m`
@@ -288,12 +289,16 @@ export function FleetLiveMapCanvas({
         driver.lastHorizontalAccuracyMeters != null
           ? `<br/>GPS ±${Math.round(driver.lastHorizontalAccuracyMeters)} m`
           : "";
+      const coordLine =
+        driver.latitude !== null && driver.longitude !== null
+          ? `<br/>${driver.latitude.toFixed(6)}, ${driver.longitude.toFixed(6)}`
+          : "";
       marker.bindPopup(
         `<strong>${driver.displayName}</strong><br/>${
           driver.licensePlateDisplay ?? "Araç yok"
-        }<br/>${
+        }${coordLine}<br/>${
           driver.lastSpeedKmh !== null
-            ? `${Math.round(driver.lastSpeedKmh)} km/s`
+            ? `${driver.lastSpeedKmh.toFixed(1)} km/s`
             : "—"
         }${altLine}${accLine}`,
       );
