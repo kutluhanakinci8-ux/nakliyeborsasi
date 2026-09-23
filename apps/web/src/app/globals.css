@@ -5115,18 +5115,37 @@ button.btn-secondary {
 
 .auction-list-row {
   grid-template-areas:
-    "badges price"
-    "main main";
-  grid-template-columns: 1fr auto;
-  align-items: start;
+    "top"
+    "main";
+  grid-template-columns: 1fr;
 }
 
-.freight-row-price--top {
-  grid-area: price;
+.auction-list-top {
+  grid-area: top;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 14px;
+  width: 100%;
+}
+
+.auction-list-top-badges {
+  flex: 1 1 280px;
+  min-width: 0;
+}
+
+.auction-list-top-price {
+  flex: 0 1 auto;
+  grid-area: unset;
   align-self: center;
   text-align: right;
   min-width: 108px;
   padding-top: 0;
+}
+
+.auction-list-row .freight-row-main {
+  grid-area: main;
 }
 
 .auction-list-price-head {
