@@ -7,6 +7,7 @@ import {
   CompanyRoleCode,
   FleetAssignmentTypeCode,
   FleetDriverStatusCode,
+  FleetMovementSummary,
   FleetVehicleStatusCode,
   ResourceNotFoundException,
   SubscriptionModuleCode,
@@ -75,6 +76,71 @@ export class FleetApplicationService {
     const activeAssignmentCount = await this.assignmentRepository.count({
       where: { companyId, validTo: IsNull() },
     });
+    const assignmentRows = await this.assignmentRepository.find({
+      where: { companyId },
+      order: { validFrom: "DESC" },
+      take: 24,
+    });
+    const assignments = assignmentRows.map((row) =>
+      FleetMapper.toAssignmentSummary(
+        row,
+        driverNameById.get(row.driverId) ?? "—",
+        vehiclePlateById.get(row.vehicleId) ?? "—",
+      ),
+    );
+    const movements: FleetMovementSummary[] = [];
+    for (const row of assignmentRows) {
+      movements.push({
+        movementId: row.id,
+        kind: "ASSIGNMENT",
+        status: row.validTo ? "COMPLETED" : "ACTIVE",
+        title: `${driverNameById.get(row.driverId) ?? "Şoför"} · ${vehiclePlateById.get(row.vehicleId) ?? "Araç"}`,
+        detail: row.assignmentTypeCode,
+        occurredAt: (row.validTo ?? row.validFrom).toISOString(),
+      });
+    }
+    const todayIso = new Date().toISOString().slice(0, 10);
+    const listings = await this.listingRepository.find({
+      where: { ownerCompanyId: companyId },
+    });
+    for (const listing of listings) {
+      if (!listing.assignedFleetVehicleId) {
+        continue;
+      }
+      const plate =
+        vehiclePlateById.get(listing.assignedFleetVehicleId) ?? "Araç";
+      movements.push({
+        movementId: listing.id,
+        kind: "LISTING",
+        status:
+          listing.loadingDateStart >= todayIso ? "ACTIVE" : "COMPLETED",
+        title: `${listing.originCityName} → ${listing.destinationCityName}`,
+        detail: `${listing.listingKindCode} · ${plate}`,
+        occurredAt: listing.loadingDateStart,
+      });
+    }
+    const auctions = await this.auctionRepository.find({
+      where: [{ ownerCompanyId: companyId }, { fleetOperatorCompanyId: companyId }],
+    });
+    for (const session of auctions) {
+      if (!session.assignedFleetVehicleId) {
+        continue;
+      }
+      const plate =
+        vehiclePlateById.get(session.assignedFleetVehicleId) ?? "Araç";
+      movements.push({
+        movementId: session.id,
+        kind: "AUCTION",
+        status: session.statusCode === "OPEN" ? "ACTIVE" : "COMPLETED",
+        title: `İhale ${session.statusCode}`,
+        detail: `${session.cargoDescription ?? "Sefer"} · ${plate}`,
+        occurredAt: session.endsAt.toISOString(),
+      });
+    }
+    movements.sort(
+      (a, b) =>
+        new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime(),
+    );
     return FleetMapper.toOverview(
       drivers.map((driver) =>
         FleetMapper.toDriverSummary(
@@ -93,6 +159,8 @@ export class FleetApplicationService {
         ),
       ),
       activeAssignmentCount,
+      assignments,
+      movements,
     );
   }
 

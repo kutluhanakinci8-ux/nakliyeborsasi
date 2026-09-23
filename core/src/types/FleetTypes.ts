@@ -34,10 +34,21 @@ export type FleetAssignmentSummary = {
   validTo: string | null;
 };
 
+export type FleetMovementSummary = {
+  movementId: string;
+  kind: "ASSIGNMENT" | "LISTING" | "AUCTION";
+  status: "ACTIVE" | "COMPLETED";
+  title: string;
+  detail: string;
+  occurredAt: string;
+};
+
 export type FleetOverviewSnapshot = {
   driverCount: number;
   vehicleCount: number;
   activeAssignmentCount: number;
   drivers: readonly FleetDriverSummary[];
   vehicles: readonly FleetVehicleSummary[];
+  assignments: readonly FleetAssignmentSummary[];
+  movements: readonly FleetMovementSummary[];
 };

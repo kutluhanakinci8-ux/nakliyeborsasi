@@ -44,6 +44,17 @@ Dispetcher rolü, arama odaklı **starter** plan (marketplace + ihale görüntü
 
 Plan: `carrier_starter_tr_ua`
 
+## Kutluhan test taşıyıcı (filo demo)
+
+Şifre: **`TestPass123!`** (pazar testleri ile aynı)
+
+| Rol | E-posta (giriş) | Açıklama |
+|-----|-----------------|----------|
+| Firma sahibi | `kutluhantest@test.nakliyeborsasi.local` | Filo yönetimi `/hesap/filo` |
+| Şoför paneli | `kutluhantest-sofor@test.nakliyeborsasi.local` | `/hesap/sofor-portal` (kayıt bağlı) |
+
+Firma: **Kutluhan Test Taşımacılık** — 2 şoför, 2 araç, devam eden Odesa kapasitesi + tamamlanan Berlin seferi (seed).
+
 ## Diğer demo hesaplar
 
 | Rol | E-posta | Şifre |

@@ -5,6 +5,7 @@ import { useWebSession } from "../../../../context/WebSessionProvider";
 import {
   FleetApiClient,
   type FleetDriverSummary,
+  type FleetMovementSummary,
   type FleetVehicleSummary,
 } from "../../../../lib/FleetApiClient";
 
@@ -21,6 +22,7 @@ export function FleetPageClient() {
   const { accessToken, locale } = useWebSession();
   const [drivers, setDrivers] = useState<readonly FleetDriverSummary[]>([]);
   const [vehicles, setVehicles] = useState<readonly FleetVehicleSummary[]>([]);
+  const [movements, setMovements] = useState<readonly FleetMovementSummary[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [isBusy, setIsBusy] = useState(false);
   const [driverName, setDriverName] = useState("");
@@ -47,6 +49,7 @@ export function FleetPageClient() {
       const overview = await FleetApiClient.fetchOverview(accessToken, locale);
       setDrivers(overview.drivers);
       setVehicles(overview.vehicles);
+      setMovements(overview.movements ?? []);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Filo yüklenemedi");
     } finally {
@@ -302,6 +305,35 @@ export function FleetPageClient() {
               </div>
             </li>
           ))}
+        </ul>
+      </section>
+
+      <section className="account-card module-panel fleet-page-grid-span">
+        <header className="account-card-head">
+          <div>
+            <h2 className="account-card-title">Filo hareketleri</h2>
+            <p className="account-card-lead">
+              Devam eden ve tamamlanan atama, kapasite ilanı ve ihale bağlantıları.
+            </p>
+          </div>
+        </header>
+        <ul className="fleet-entity-list">
+          {movements.length === 0 ? (
+            <li className="fleet-entity-meta">Henüz hareket kaydı yok.</li>
+          ) : (
+            movements.map((movement) => (
+              <li key={`${movement.kind}-${movement.movementId}`} className="fleet-entity-row">
+                <strong>
+                  {movement.status === "ACTIVE" ? "Devam eden" : "Tamamlanan"} ·{" "}
+                  {movement.title}
+                </strong>
+                <span className="fleet-entity-meta">
+                  {movement.kind} · {movement.detail} ·{" "}
+                  {new Date(movement.occurredAt).toLocaleString("tr-TR")}
+                </span>
+              </li>
+            ))
+          )}
         </ul>
       </section>
 

@@ -23,6 +23,7 @@ import { FleetDriverEntity } from "../entities/FleetDriverEntity";
 import { FleetVehicleEntity } from "../entities/FleetVehicleEntity";
 import { FleetDriverVehicleAssignmentEntity } from "../entities/FleetDriverVehicleAssignmentEntity";
 import { seedFleetDemoGraph } from "./FleetDemoSeed";
+import { seedKutluhanTestFleet } from "./KutluhanTestFleetSeed";
 
 @Injectable()
 export class DatabaseSeedRunner implements OnModuleInit {
@@ -102,6 +103,22 @@ export class DatabaseSeedRunner implements OnModuleInit {
       });
     } catch {
       // Fleet tabloları henüz yoksa seed atlanır.
+    }
+    try {
+      await seedKutluhanTestFleet({
+        companyRepository: this.companyRepository,
+        userAccountRepository: this.userAccountRepository,
+        companyMembershipRepository: this.companyMembershipRepository,
+        companySubscriptionRepository: this.companySubscriptionRepository,
+        freightListingRepository: this.freightListingRepository,
+        auctionSessionRepository: this.auctionSessionRepository,
+        auctionBidRepository: this.auctionBidRepository,
+        driverRepository: this.fleetDriverRepository,
+        vehicleRepository: this.fleetVehicleRepository,
+        assignmentRepository: this.fleetAssignmentRepository,
+      });
+    } catch {
+      // Kutluhan test filo seed atlanır.
     }
   }
 
