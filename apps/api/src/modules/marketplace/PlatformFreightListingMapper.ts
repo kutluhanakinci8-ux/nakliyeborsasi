@@ -22,10 +22,16 @@ export class PlatformFreightListingMapper {
       origin: new RouteEndpoint(
         entity.originCountryCode,
         entity.originCityName,
+        null,
+        entity.originPlaceName,
+        entity.originPlaceKindCode,
       ),
       destination: new RouteEndpoint(
         entity.destinationCountryCode,
         entity.destinationCityName,
+        null,
+        entity.destinationPlaceName,
+        entity.destinationPlaceKindCode,
       ),
       equipmentType: entity.equipmentTypeCode as EquipmentTypeCode,
       weightTonnes: Number(entity.weightTonnes),

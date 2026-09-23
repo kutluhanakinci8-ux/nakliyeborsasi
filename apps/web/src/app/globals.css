@@ -5074,31 +5074,72 @@ button.btn-secondary {
 .freight-route {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 6px;
-  margin: 0 0 10px;
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: #1d4ed8;
+  align-items: flex-start;
+  gap: 10px 14px;
+  margin: 0 0 8px;
 }
 
-.freight-route-endpoint {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+.freight-route-endpoint-block {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: min(100%, 280px);
+  flex: 1 1 200px;
+}
+
+.freight-route-endpoint-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.freight-route-primary {
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #1e3a8a;
+}
+
+.freight-route-secondary {
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: #64748b;
+  padding-left: 28px;
+}
+
+.freight-route-kind {
+  font-weight: 600;
+  color: #475569;
+}
+
+.freight-route-secondary-sep {
+  color: #94a3b8;
 }
 
 .freight-route-flag {
   flex-shrink: 0;
+  margin-top: 2px;
 }
 
-.freight-route-code {
-  font-weight: 600;
-  color: #2563eb;
-}
-
-.freight-route-sep {
+.freight-route-sep--arrow {
+  align-self: center;
+  font-size: 1.25rem;
   font-weight: 700;
+  color: #94a3b8;
+  flex: 0 0 auto;
+}
+
+.freight-route-badge-arrow {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #94a3b8;
+  align-self: center;
+}
+
+.freight-route-meta,
+.freight-row-meta {
+  margin: 0 0 10px;
+  font-size: 0.8rem;
   color: #64748b;
 }
 

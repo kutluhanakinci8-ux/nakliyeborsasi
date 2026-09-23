@@ -2,51 +2,56 @@
 
 import { CountryFlag } from "./CountryFlag";
 import { normalizeCountryCode } from "../lib/countryDisplay";
+import {
+  freightLocationPrimaryLabel,
+  freightLocationSecondaryLabel,
+  freightPlaceKindLabelTr,
+  type FreightLocationPoint,
+} from "../lib/freightLocationDisplay";
 
 type FreightRouteHeadingProps = {
-  originCity: string;
-  originCountry: string;
-  destinationCity: string;
-  destinationCountry: string;
+  origin: FreightLocationPoint;
+  destination: FreightLocationPoint;
   className?: string;
 };
 
-function RouteEndpoint({
-  city,
-  countryCode,
-}: {
-  city: string;
-  countryCode: string;
-}) {
-  const code = normalizeCountryCode(countryCode) ?? countryCode.trim().toUpperCase();
+function RouteEndpointBlock({ point }: { point: FreightLocationPoint }) {
+  const primary = freightLocationPrimaryLabel(point);
+  const secondary = freightLocationSecondaryLabel(point);
+  const kindLabel = freightPlaceKindLabelTr(point.placeKindCode);
 
   return (
-    <span className="freight-route-endpoint">
-      <CountryFlag code={countryCode} size="sm" className="freight-route-flag" />
-      <span className="freight-route-place">
-        {city}
-        <span className="freight-route-code"> ({code})</span>
+    <span className="freight-route-endpoint-block">
+      <span className="freight-route-endpoint-head">
+        <CountryFlag code={point.countryCode} size="sm" className="freight-route-flag" />
+        <span className="freight-route-primary">{primary}</span>
+      </span>
+      <span className="freight-route-secondary">
+        <span className="freight-route-kind">{kindLabel}</span>
+        <span className="freight-route-secondary-sep" aria-hidden> · </span>
+        <span>{secondary}</span>
       </span>
     </span>
   );
 }
 
 export function FreightRouteHeading({
-  originCity,
-  originCountry,
-  destinationCity,
-  destinationCountry,
+  origin,
+  destination,
   className = "freight-route",
 }: FreightRouteHeadingProps) {
   return (
-    <h3 className={className}>
-      <RouteEndpoint city={originCity} countryCode={originCountry} />
-      <span className="freight-route-sep" aria-hidden> — </span>
-      <RouteEndpoint city={destinationCity} countryCode={destinationCountry} />
-    </h3>
+    <div className={className}>
+      <RouteEndpointBlock point={origin} />
+      <span className="freight-route-sep freight-route-sep--arrow" aria-hidden>
+        →
+      </span>
+      <RouteEndpointBlock point={destination} />
+    </div>
   );
 }
 
+/** Üst şerit: çıkış / varış ülke kodları (bayraklı). */
 export function FreightRouteCountryBadges({
   originCountry,
   destinationCountry,
@@ -54,9 +59,11 @@ export function FreightRouteCountryBadges({
   originCountry: string;
   destinationCountry: string;
 }) {
-  const originCode = normalizeCountryCode(originCountry) ?? originCountry;
+  const originCode =
+    normalizeCountryCode(originCountry) ?? originCountry.trim().toUpperCase();
   const destinationCode =
-    normalizeCountryCode(destinationCountry) ?? destinationCountry;
+    normalizeCountryCode(destinationCountry) ??
+    destinationCountry.trim().toUpperCase();
 
   return (
     <>
@@ -67,6 +74,7 @@ export function FreightRouteCountryBadges({
         <CountryFlag code={originCountry} size="sm" />
         <span>{originCode}</span>
       </span>
+      <span className="freight-route-badge-arrow" aria-hidden>→</span>
       <span
         className="badge badge--country freight-route-country-badge"
         title="Varış ülkesi"

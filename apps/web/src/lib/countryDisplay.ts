@@ -4,6 +4,10 @@ export const REGISTRATION_COUNTRY_OPTIONS: { code: string; labelTr: string }[] =
   { code: "UA", labelTr: "Ukrayna" },
   { code: "DE", labelTr: "Almanya" },
   { code: "PL", labelTr: "Polonya" },
+  { code: "RO", labelTr: "Romanya" },
+  { code: "BG", labelTr: "Bulgaristan" },
+  { code: "NL", labelTr: "Hollanda" },
+  { code: "HU", labelTr: "Macaristan" },
 ];
 
 const LABEL_TR: Record<string, string> = Object.fromEntries(

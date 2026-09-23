@@ -5,6 +5,7 @@ export * from "./constants/GeographicMarketCode";
 export * from "./constants/CompanyRoleCode";
 export * from "./constants/CompanyParticipantTypeCode";
 export * from "./constants/EquipmentTypeCode";
+export * from "./constants/FreightPlaceKindCode";
 export * from "./constants/AuctionSessionStatusCode";
 export * from "./exceptions/AuctionSessionNotFoundException";
 export * from "./exceptions/MessagingThreadNotFoundException";

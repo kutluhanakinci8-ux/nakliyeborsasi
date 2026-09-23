@@ -19,14 +19,24 @@ export class RouteEndpoint {
 
   public readonly regionCode: string | null;
 
+  /** Liman, terminal, depo veya teslimat noktası adı (şehirden daha spesifik). */
+  public readonly placeName: string | null;
+
+  /** FreightPlaceKindCode — CITY, PORT, TERMINAL, … */
+  public readonly placeKindCode: string | null;
+
   public constructor(
     countryCode: string,
     cityName: string,
     regionCode: string | null = null,
+    placeName: string | null = null,
+    placeKindCode: string | null = null,
   ) {
     this.countryCode = countryCode;
     this.cityName = cityName;
     this.regionCode = regionCode;
+    this.placeName = placeName;
+    this.placeKindCode = placeKindCode;
   }
 }
 

@@ -9,13 +9,21 @@ import { useWebSession } from "../../../context/WebSessionProvider";
 import { MarketplaceApiClient } from "../../../lib/MarketplaceApiClient";
 import { AuctionApiClient } from "../../../lib/AuctionApiClient";
 
+type RoutePointRecord = {
+  cityName: string;
+  countryCode: string;
+  placeName?: string | null;
+  placeKindCode?: string | null;
+};
+
 type ListingRecord = {
   listingId: string;
   ownerCompanyId: string;
-  origin: { cityName: string; countryCode: string };
-  destination: { cityName: string; countryCode: string };
+  origin: RoutePointRecord;
+  destination: RoutePointRecord;
   weightTonnes: number;
   equipmentType: string;
+  loadingDateStart: string;
   price: { amount: number; currencyCode: string } | null;
 };
 
@@ -147,12 +155,11 @@ export function MarketplacePageClient() {
             <FreightListingRow
               key={listing.listingId}
               listingId={listing.listingId}
-              originCity={listing.origin.cityName}
-              originCountry={listing.origin.countryCode}
-              destinationCity={listing.destination.cityName}
-              destinationCountry={listing.destination.countryCode}
+              origin={listing.origin}
+              destination={listing.destination}
               equipmentType={listing.equipmentType}
               weightTonnes={listing.weightTonnes}
+              loadingDateStart={listing.loadingDateStart}
               priceAmount={listing.price?.amount ?? null}
               priceCurrency={listing.price?.currencyCode ?? null}
               onMessage={() =>

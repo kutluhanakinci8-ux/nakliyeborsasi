@@ -6,6 +6,7 @@ import {
   FreightRouteCountryBadges,
   FreightRouteHeading,
 } from "../../../components/FreightRouteHeading";
+import { resolveFreightLocationPoint } from "../../../lib/freightLocationDisplay";
 import { ModulePageShell } from "../../../components/ModulePageShell";
 import { useWebSession } from "../../../context/WebSessionProvider";
 import { IntegrationApiClient } from "../../../lib/IntegrationApiClient";
@@ -125,13 +126,28 @@ export function IntegrationsPageClient() {
         <EmptyState message="Bu filtrede harici teklif bulunamadı." />
       ) : (
         <div className="freight-list">
-          {offers.map((offer) => (
+          {offers.map((offer) => {
+            const origin = resolveFreightLocationPoint(
+              {
+                cityName: offer.origin.cityName,
+                countryCode: offer.origin.countryCode,
+              },
+              "origin",
+            );
+            const destination = resolveFreightLocationPoint(
+              {
+                cityName: offer.destination.cityName,
+                countryCode: offer.destination.countryCode,
+              },
+              "destination",
+            );
+            return (
             <article key={offer.externalReferenceId} className="freight-row module-row">
               <div className="freight-row-main">
                 <div className="freight-row-badges">
                   <FreightRouteCountryBadges
-                    originCountry={offer.origin.countryCode}
-                    destinationCountry={offer.destination.countryCode}
+                    originCountry={origin.countryCode}
+                    destinationCountry={destination.countryCode}
                   />
                   <span className="badge badge--provider">
                     {formatProviderLabel(offer.providerCode)}
@@ -139,12 +155,7 @@ export function IntegrationsPageClient() {
                   <span className="badge badge--muted">{offer.equipmentType}</span>
                   <span className="badge badge--muted">{offer.dimensions.weightTonnes} t</span>
                 </div>
-                <FreightRouteHeading
-                  originCity={offer.origin.cityName}
-                  originCountry={offer.origin.countryCode}
-                  destinationCity={offer.destination.cityName}
-                  destinationCountry={offer.destination.countryCode}
-                />
+                <FreightRouteHeading origin={origin} destination={destination} />
                 <p className="module-row-meta">
                   Yükleme: {offer.loadingDateStart}
                   {offer.loadingDateEnd ? ` – ${offer.loadingDateEnd}` : ""} ·{" "}
@@ -165,7 +176,8 @@ export function IntegrationsPageClient() {
                 )}
               </div>
             </article>
-          ))}
+            );
+          })}
         </div>
       )}
     </ModulePageShell>

@@ -17,11 +17,27 @@ export class CreatePlatformFreightListingDto {
   @IsString()
   public originCityName!: string;
 
+  @IsOptional()
+  @IsString()
+  public originPlaceName?: string;
+
+  @IsOptional()
+  @IsString()
+  public originPlaceKindCode?: string;
+
   @IsString()
   public destinationCountryCode!: string;
 
   @IsString()
   public destinationCityName!: string;
+
+  @IsOptional()
+  @IsString()
+  public destinationPlaceName?: string;
+
+  @IsOptional()
+  @IsString()
+  public destinationPlaceKindCode?: string;
 
   @IsEnum(EquipmentTypeCode)
   public equipmentType!: EquipmentTypeCode;

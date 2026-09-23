@@ -23,11 +23,23 @@ export class FreightListingEntity {
   @Column({ type: "varchar", length: 120 })
   public originCityName!: string;
 
+  @Column({ type: "varchar", length: 160, nullable: true })
+  public originPlaceName!: string | null;
+
+  @Column({ type: "varchar", length: 32, nullable: true })
+  public originPlaceKindCode!: string | null;
+
   @Column({ type: "varchar", length: 2 })
   public destinationCountryCode!: string;
 
   @Column({ type: "varchar", length: 120 })
   public destinationCityName!: string;
+
+  @Column({ type: "varchar", length: 160, nullable: true })
+  public destinationPlaceName!: string | null;
+
+  @Column({ type: "varchar", length: 32, nullable: true })
+  public destinationPlaceKindCode!: string | null;
 
   @Column({ type: "varchar", length: 32 })
   public equipmentTypeCode!: string;

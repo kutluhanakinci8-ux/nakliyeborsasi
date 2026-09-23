@@ -40,10 +40,16 @@ export class PlatformFreightListingService {
       origin: new RouteEndpoint(
         payload.originCountryCode,
         payload.originCityName,
+        null,
+        payload.originPlaceName ?? null,
+        payload.originPlaceKindCode ?? null,
       ),
       destination: new RouteEndpoint(
         payload.destinationCountryCode,
         payload.destinationCityName,
+        null,
+        payload.destinationPlaceName ?? null,
+        payload.destinationPlaceKindCode ?? null,
       ),
       equipmentType: payload.equipmentType,
       weightTonnes: payload.weightTonnes,
