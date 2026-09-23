@@ -258,9 +258,6 @@ export function AuctionsPageClient() {
                 </div>
                 <div className="freight-row-price freight-row-price--top">
                   <div className="auction-list-price-head">
-                    <span className="price-amount">
-                      {best ?? session.minimumBidAmount} {session.currencyCode}
-                    </span>
                     <span className="auction-list-price-side">
                       {best ? (
                         <>
@@ -273,6 +270,9 @@ export function AuctionsPageClient() {
                       <span>
                         Tavan {session.minimumBidAmount} {session.currencyCode}
                       </span>
+                    </span>
+                    <span className="price-amount">
+                      {best ?? session.minimumBidAmount} {session.currencyCode}
                     </span>
                   </div>
                   <span className="price-hint">
