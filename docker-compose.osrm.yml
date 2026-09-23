@@ -1,0 +1,40 @@
+# Self-hosted OSRM (Faz B) — TR extract first, then UA/EU shards on separate hosts.
+# Usage (after downloading Geofabrik turkey-latest.osm.pbf into ./routing-data):
+#   docker compose -f docker-compose.osrm.yml run --rm osrm-extract
+#   docker compose -f docker-compose.osrm.yml run --rm osrm-partition
+#   docker compose -f docker-compose.osrm.yml run --rm osrm-customize
+#   docker compose -f docker-compose.osrm.yml up -d osrm-routed
+#
+# API env: OSRM_BASE_URL=http://localhost:5000  (or OSRM_BASE_URL_TR for shard override)
+
+services:
+  osrm-extract:
+    image: ghcr.io/project-osrm/osrm-backend:latest
+    volumes:
+      - ./routing-data:/data
+    command: >
+      osrm-extract -p /opt/car.lua /data/turkey-latest.osm.pbf
+    profiles: ["routing-setup"]
+
+  osrm-partition:
+    image: ghcr.io/project-osrm/osrm-backend:latest
+    volumes:
+      - ./routing-data:/data
+    command: osrm-partition /data/turkey-latest.osrm
+    profiles: ["routing-setup"]
+
+  osrm-customize:
+    image: ghcr.io/project-osrm/osrm-backend:latest
+    volumes:
+      - ./routing-data:/data
+    command: osrm-customize /data/turkey-latest.osrm
+    profiles: ["routing-setup"]
+
+  osrm-routed:
+    image: ghcr.io/project-osrm/osrm-backend:latest
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./routing-data:/data
+    command: osrm-routed --algorithm mld /data/turkey-latest.osrm
+    profiles: ["routing"]

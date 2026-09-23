@@ -7,6 +7,14 @@ import { TelemetryDriverController } from "./telematics/TelemetryDriverControlle
 import { TelemetryIngestController } from "./telematics/TelemetryIngestController";
 import { TelemetryCarrierController } from "./telematics/TelemetryCarrierController";
 import { TelemetryDeviceGuard } from "./telematics/TelemetryDeviceGuard";
+import { OsrmConfigurationService } from "./telematics/routing/OsrmConfigurationService";
+import { OsrmRoutingClient } from "./telematics/routing/OsrmRoutingClient";
+import { RouteReconstructionService } from "./telematics/routing/RouteReconstructionService";
+import { TelemetryMatchingQueueService } from "./telematics/routing/TelemetryMatchingQueueService";
+import { RouteMatchingJobRunner } from "./telematics/routing/RouteMatchingJobRunner";
+import { LiveSnapCacheService } from "./telematics/routing/LiveSnapCacheService";
+import { FleetMatchedRouteEntity } from "../../infrastructure/database/entities/FleetMatchedRouteEntity";
+import { FleetRouteMatchingJobEntity } from "../../infrastructure/database/entities/FleetRouteMatchingJobEntity";
 import { FleetTelemetryDeviceEntity } from "../../infrastructure/database/entities/FleetTelemetryDeviceEntity";
 import { FleetTelemetryConsentLogEntity } from "../../infrastructure/database/entities/FleetTelemetryConsentLogEntity";
 import { FleetTelemetryEventEntity } from "../../infrastructure/database/entities/FleetTelemetryEventEntity";
@@ -37,6 +45,8 @@ import { CompanyMembershipEntity } from "../../infrastructure/database/entities/
       FleetTelemetryDeviceEntity,
       FleetTelemetryConsentLogEntity,
       FleetTelemetryEventEntity,
+      FleetMatchedRouteEntity,
+      FleetRouteMatchingJobEntity,
     ]),
   ],
   controllers: [
@@ -45,7 +55,17 @@ import { CompanyMembershipEntity } from "../../infrastructure/database/entities/
     TelemetryIngestController,
     TelemetryCarrierController,
   ],
-  providers: [FleetApplicationService, TelemetryApplicationService, TelemetryDeviceGuard],
+  providers: [
+    FleetApplicationService,
+    TelemetryApplicationService,
+    TelemetryDeviceGuard,
+    OsrmConfigurationService,
+    OsrmRoutingClient,
+    RouteReconstructionService,
+    TelemetryMatchingQueueService,
+    RouteMatchingJobRunner,
+    LiveSnapCacheService,
+  ],
   exports: [FleetApplicationService],
 })
 export class FleetModule {}

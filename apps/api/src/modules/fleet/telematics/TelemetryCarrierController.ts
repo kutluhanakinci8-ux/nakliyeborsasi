@@ -34,6 +34,7 @@ export class TelemetryCarrierController {
   public async driverRoute(
     @Param("driverId") driverId: string,
     @Query("hours") hoursQuery: string | undefined,
+    @Query("mode") modeQuery: string | undefined,
     @Headers("accept-language") acceptLanguage: string | undefined,
     @Query("lang") queryLanguage: string | undefined,
     @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
@@ -43,11 +44,14 @@ export class TelemetryCarrierController {
       queryLanguage,
     );
     const hours = Number.parseInt(hoursQuery ?? "6", 10);
+    const mode =
+      modeQuery === "matched" || modeQuery === "raw" ? modeQuery : "road";
     const route = await this.telemetryApplicationService.getCarrierDriverRoute(
       authenticatedUser.companyId,
       driverId,
       locale,
       Number.isFinite(hours) ? Math.min(Math.max(hours, 1), 48) : 6,
+      mode === "matched" ? "matched" : "road",
     );
     return { message: "OK", route };
   }

@@ -23,6 +23,22 @@ const SAFETY_COLOR: Record<string, string> = {
   SHARP_TURN: "#7c3aed",
 };
 
+function speedToColor(speedKmh: number): string {
+  if (speedKmh < 30) {
+    return "#22c55e";
+  }
+  if (speedKmh < 60) {
+    return "#84cc16";
+  }
+  if (speedKmh < 90) {
+    return "#eab308";
+  }
+  if (speedKmh < 110) {
+    return "#f97316";
+  }
+  return "#ef4444";
+}
+
 type FleetLiveMapCanvasProps = {
   drivers: readonly FleetLiveDriverPin[];
   selectedDriverId: string | null;
@@ -75,46 +91,95 @@ export function FleetLiveMapCanvas({
     layer.clearLayers();
     routeLayer.clearLayers();
 
-    if (selectedRoute && selectedRoute.routePoints.length > 1) {
-      const latLngs = selectedRoute.routePoints.map(
-        (point) => [point.latitude, point.longitude] as L.LatLngExpression,
-      );
-      L.polyline(latLngs, {
-        color: "#1d4ed8",
-        weight: 4,
-        opacity: 0.85,
-      }).addTo(routeLayer);
-      const start = selectedRoute.routePoints[0];
-      const end =
-        selectedRoute.routePoints[selectedRoute.routePoints.length - 1];
-      L.circleMarker([start.latitude, start.longitude], {
-        radius: 6,
-        color: "#0f172a",
-        fillColor: "#22c55e",
-        fillOpacity: 1,
-      })
-        .bindPopup("Rota başlangıcı")
-        .addTo(routeLayer);
-      L.circleMarker([end.latitude, end.longitude], {
-        radius: 6,
-        color: "#0f172a",
-        fillColor: "#1d4ed8",
-        fillOpacity: 1,
-      })
-        .bindPopup("Son konum")
-        .addTo(routeLayer);
+    if (selectedRoute) {
+      const road = selectedRoute.roadGeometry;
+      const boundsCoords: L.LatLngExpression[] = [];
+
+      if (road && road.coordinates.length > 1) {
+        if (selectedRoute.speedSegments.length > 1) {
+          for (const segment of selectedRoute.speedSegments) {
+            const latLngs = segment.coordinates.map(
+              (position) => [position[1], position[0]] as L.LatLngExpression,
+            );
+            L.polyline(latLngs, {
+              color: speedToColor(segment.speedKmh),
+              weight: 5,
+              opacity: 0.9,
+            }).addTo(routeLayer);
+            for (const ll of latLngs) {
+              boundsCoords.push(ll);
+            }
+          }
+        } else {
+          const latLngs = road.coordinates.map(
+            (position) => [position[1], position[0]] as L.LatLngExpression,
+          );
+          L.polyline(latLngs, {
+            color: "#1d4ed8",
+            weight: 4,
+            opacity: 0.85,
+          }).addTo(routeLayer);
+          boundsCoords.push(...latLngs);
+        }
+      } else if (selectedRoute.routePoints.length > 1) {
+        const latLngs = selectedRoute.routePoints.map(
+          (point) => [point.latitude, point.longitude] as L.LatLngExpression,
+        );
+        L.polyline(latLngs, {
+          color: "#94a3b8",
+          weight: 3,
+          opacity: 0.6,
+          dashArray: "6 8",
+        }).addTo(routeLayer);
+        boundsCoords.push(...latLngs);
+      }
+
+      if (selectedRoute.routePoints.length > 0) {
+        const start = selectedRoute.routePoints[0];
+        const end =
+          selectedRoute.routePoints[selectedRoute.routePoints.length - 1];
+        L.circleMarker([start.latitude, start.longitude], {
+          radius: 6,
+          color: "#0f172a",
+          fillColor: "#22c55e",
+          fillOpacity: 1,
+        })
+          .bindPopup("Rota başlangıcı")
+          .addTo(routeLayer);
+        L.circleMarker([end.latitude, end.longitude], {
+          radius: 6,
+          color: "#0f172a",
+          fillColor: "#1d4ed8",
+          fillOpacity: 1,
+        })
+          .bindPopup("Son konum")
+          .addTo(routeLayer);
+      }
+
       for (const marker of selectedRoute.safetyMarkers) {
-        L.circleMarker([marker.latitude, marker.longitude], {
+        const lat = marker.roadLatitude ?? marker.latitude;
+        const lng = marker.roadLongitude ?? marker.longitude;
+        L.circleMarker([lat, lng], {
           radius: 5,
           color: "#fff",
           weight: 1,
           fillColor: SAFETY_COLOR[marker.eventTypeCode] ?? "#64748b",
           fillOpacity: 0.95,
         })
-          .bindPopup(marker.eventTypeCode.replaceAll("_", " "))
+          .bindPopup(
+            marker.speedLimitKmh
+              ? `${marker.eventTypeCode.replaceAll("_", " ")} (limit ${marker.speedLimitKmh} km/s)`
+              : marker.eventTypeCode.replaceAll("_", " "),
+          )
           .addTo(routeLayer);
       }
-      map.fitBounds(L.latLngBounds(latLngs), { padding: [40, 40], maxZoom: 14 });
+
+      if (boundsCoords.length > 1) {
+        map.fitBounds(L.latLngBounds(boundsCoords), {
+          padding: [40, 40],
+          maxZoom: 14,
+        });
+      }
     }
 
     const positioned = drivers.filter(
@@ -122,8 +187,10 @@ export function FleetLiveMapCanvas({
     );
     const bounds: L.LatLngExpression[] = [];
     for (const driver of positioned) {
-      const lat = driver.latitude as number;
-      const lng = driver.longitude as number;
+      const lat =
+        driver.snappedLatitude ?? (driver.latitude as number);
+      const lng =
+        driver.snappedLongitude ?? (driver.longitude as number);
       bounds.push([lat, lng]);
       const color = STATE_COLOR[driver.trackingState] ?? "#1d4ed8";
       const marker = L.circleMarker([lat, lng], {

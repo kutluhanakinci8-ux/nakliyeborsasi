@@ -241,11 +241,11 @@ GET /carrier/drivers/:id/route ──► roadGeometry (GeoJSON)
 
 ## 11. İlgili mevcut kod
 
-- Ham rota: `TelemetryApplicationService.getCarrierDriverRoute`  
-- Harita: `FleetLiveMapCanvas.tsx` (`L.polyline` ham noktalar)  
-- Telemetri ingest: `TelemetryIngestController`  
+- Ham rota + `roadGeometry`: `TelemetryApplicationService.getCarrierDriverRoute` (`?mode=road|matched`)  
+- OSRM istemci / shard: `apps/api/src/modules/fleet/telematics/routing/`  
+- Trip cache: `fleet_matched_routes`, `RouteReconstructionService`  
+- Harita: `FleetLiveMapCanvas.tsx` (yol geometrisi + hız gradyanı)  
+- Canlı snap: `LiveSnapCacheService` + pin `snappedLatitude` / `snappedLongitude`  
+- Faz D kuyruk: `TelemetryMatchingQueueService`, `docs/TELEMATICS_STREAMING.md`  
+- OSRM Docker: `docker-compose.osrm.yml`  
 - Mimari: `docs/TELEMATICS_ARCHITECTURE.md`
-
----
-
-**Sonraki adım (onayınızla):** Faz A — TR OSRM Docker + `roadGeometry` alanı ve canlı pin snap; ardından Faz B trip cache.

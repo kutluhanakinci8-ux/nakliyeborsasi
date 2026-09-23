@@ -77,6 +77,7 @@ export function FleetLiveMapPageClient() {
           locale,
           driverId,
           6,
+          "matched",
         );
         setSelectedRoute(route);
       } catch {
@@ -161,8 +162,14 @@ export function FleetLiveMapPageClient() {
               </p>
               {selectedRoute ? (
                 <p className="fleet-entity-meta">
-                  Rota noktası: {selectedRoute.routePoints.length} · Güvenlik
-                  olayı: {selectedRoute.safetyMarkers.length}
+                  Rota noktası: {selectedRoute.routePoints.length}
+                  {selectedRoute.distanceKm !== null
+                    ? ` · ${selectedRoute.distanceKm} km (yol)`
+                    : ""}
+                  · Güvenlik olayı: {selectedRoute.safetyMarkers.length}
+                  {selectedRoute.roadGeometryStatus === "PENDING"
+                    ? " · Yol hesaplanıyor…"
+                    : ""}
                 </p>
               ) : null}
             </div>

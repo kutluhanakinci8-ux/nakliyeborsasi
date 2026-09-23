@@ -142,7 +142,11 @@ export function DriverTelemetryCompanionClient() {
         }
         setTracking(false);
       },
-      { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 1000,
+        timeout: 20000,
+      },
     );
   }, [enrollment, scheduleFlush]);
 

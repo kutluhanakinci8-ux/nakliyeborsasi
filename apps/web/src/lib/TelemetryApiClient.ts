@@ -48,6 +48,22 @@ export type FleetMotionPhase =
   | "ACCELERATING"
   | "DECELERATING";
 
+export type GeoJsonLineString = {
+  type: "LineString";
+  coordinates: Array<[number, number] | [number, number, number]>;
+};
+
+export type FleetRouteSpeedSegment = {
+  coordinates: readonly [number, number][];
+  speedKmh: number;
+};
+
+export type TelemetryRoadGeometryStatusCode =
+  | "READY"
+  | "PENDING"
+  | "UNAVAILABLE"
+  | "FALLBACK_RAW";
+
 export type FleetLiveDriverPin = {
   driverId: string;
   displayName: string;
@@ -55,6 +71,8 @@ export type FleetLiveDriverPin = {
   licensePlateDisplay: string | null;
   latitude: number | null;
   longitude: number | null;
+  snappedLatitude: number | null;
+  snappedLongitude: number | null;
   lastSpeedKmh: number | null;
   lastHeadingDegrees: number | null;
   lastSeenAt: string | null;
@@ -77,6 +95,9 @@ export type FleetRouteSafetyMarker = {
   latitude: number;
   longitude: number;
   severityCode: string | null;
+  roadLatitude: number | null;
+  roadLongitude: number | null;
+  speedLimitKmh: number | null;
 };
 
 export type FleetDriverRouteSnapshot = {
@@ -86,6 +107,11 @@ export type FleetDriverRouteSnapshot = {
   speedDeltaKmh: number | null;
   routePoints: readonly FleetRoutePoint[];
   safetyMarkers: readonly FleetRouteSafetyMarker[];
+  roadGeometry: GeoJsonLineString | null;
+  roadGeometryStatus: TelemetryRoadGeometryStatusCode;
+  matchedRouteId: string | null;
+  distanceKm: number | null;
+  speedSegments: readonly FleetRouteSpeedSegment[];
   updatedAt: string;
 };
 
@@ -113,9 +139,10 @@ export class TelemetryApiClient {
     locale: string,
     driverId: string,
     hours = 6,
+    mode: "road" | "matched" = "road",
   ): Promise<FleetDriverRouteSnapshot> {
     const response = await fetch(
-      `${PublicApiConfiguration.resolveBaseUrl()}/fleet/telematics/carrier/drivers/${driverId}/route?lang=${locale}&hours=${hours}`,
+      `${PublicApiConfiguration.resolveBaseUrl()}/fleet/telematics/carrier/drivers/${driverId}/route?lang=${locale}&hours=${hours}&mode=${mode}`,
       { headers: this.authHeaders(accessToken) },
     );
     if (!response.ok) {

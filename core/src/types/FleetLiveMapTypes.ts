@@ -1,3 +1,6 @@
+import type { GeoJsonLineString } from "./GeoJsonTypes";
+import type { TelemetryRoadGeometryStatusCode } from "../constants/TelemetryRoadGeometryStatusCode";
+
 export type FleetLiveTrackingState = "LIVE" | "STALE" | "OFFLINE" | "NO_SIGNAL";
 
 export type FleetMotionPhase =
@@ -14,6 +17,9 @@ export type FleetLiveDriverPin = {
   licensePlateDisplay: string | null;
   latitude: number | null;
   longitude: number | null;
+  /** Snap-to-road position when routing engine is available (Faz A). */
+  snappedLatitude: number | null;
+  snappedLongitude: number | null;
   lastSpeedKmh: number | null;
   lastHeadingDegrees: number | null;
   lastSeenAt: string | null;
@@ -36,6 +42,16 @@ export type FleetRouteSafetyMarker = {
   latitude: number;
   longitude: number;
   severityCode: string | null;
+  /** Snapped position on road when available (Faz C). */
+  roadLatitude: number | null;
+  roadLongitude: number | null;
+  speedLimitKmh: number | null;
+};
+
+export type FleetRouteSpeedSegment = {
+  /** GeoJSON positions [lng, lat] along this colored segment. */
+  coordinates: readonly [number, number][];
+  speedKmh: number;
 };
 
 export type FleetDriverRouteSnapshot = {
@@ -45,6 +61,11 @@ export type FleetDriverRouteSnapshot = {
   speedDeltaKmh: number | null;
   routePoints: readonly FleetRoutePoint[];
   safetyMarkers: readonly FleetRouteSafetyMarker[];
+  roadGeometry: GeoJsonLineString | null;
+  roadGeometryStatus: TelemetryRoadGeometryStatusCode;
+  matchedRouteId: string | null;
+  distanceKm: number | null;
+  speedSegments: readonly FleetRouteSpeedSegment[];
   updatedAt: string;
 };
 

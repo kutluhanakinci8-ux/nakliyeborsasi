@@ -14,6 +14,8 @@ import {
   TelemetryConsentPurposeCode,
   TelemetryEnrollResult,
   TelemetryEventTypeCode,
+  TelemetryGpsFilter,
+  TelemetryRoadGeometryStatusCode,
   ValidationException,
 } from "@nakliyeborsasi/core";
 import { CompanyEntity } from "../../../infrastructure/database/entities/CompanyEntity";
@@ -30,6 +32,10 @@ import { TelemetryMapper } from "./TelemetryMapper";
 import { TelemetryMotionInterpreter } from "./TelemetryMotionInterpreter";
 import { TelemetryTokenHasher } from "./TelemetryTokenHasher";
 import { TelemetryMotionAnalytics } from "./TelemetryMotionAnalytics";
+import { LiveSnapCacheService } from "./routing/LiveSnapCacheService";
+import { RouteReconstructionService } from "./routing/RouteReconstructionService";
+import { TelemetryMatchingQueueService } from "./routing/TelemetryMatchingQueueService";
+import { OsrmRoutingClient } from "./routing/OsrmRoutingClient";
 
 @Injectable()
 export class TelemetryApplicationService {
@@ -51,6 +57,10 @@ export class TelemetryApplicationService {
     private readonly eventRepository: Repository<FleetTelemetryEventEntity>,
     private readonly modularSubscriptionEntitlementService: ModularSubscriptionEntitlementService,
     private readonly localeResolutionService: LocaleResolutionService,
+    private readonly liveSnapCacheService: LiveSnapCacheService,
+    private readonly routeReconstructionService: RouteReconstructionService,
+    private readonly telemetryMatchingQueueService: TelemetryMatchingQueueService,
+    private readonly osrmRoutingClient: OsrmRoutingClient,
   ) {}
 
   public async getCarrierLiveMap(
@@ -101,7 +111,7 @@ export class TelemetryApplicationService {
     }
 
     const now = Date.now();
-    const pins: FleetLiveDriverPin[] = drivers.map((driver) => {
+    const pinDrafts = drivers.map((driver) => {
       const device = deviceByDriver.get(driver.id);
       const fallbackEvent = lastEventByDriver.get(driver.id);
       const vehicle = driver.activeVehicleId
@@ -131,6 +141,8 @@ export class TelemetryApplicationService {
         licensePlateDisplay: vehicle?.licensePlateDisplay ?? null,
         latitude,
         longitude,
+        snappedLatitude: null as number | null,
+        snappedLongitude: null as number | null,
         lastSpeedKmh:
           device?.lastSpeedKmh ?? fallbackEvent?.speedKmh ?? null,
         lastHeadingDegrees: latestSample?.headingDegrees ?? null,
@@ -140,6 +152,31 @@ export class TelemetryApplicationService {
         speedDeltaKmh: motion.speedDeltaKmh,
       };
     });
+
+    const pins = await Promise.all(
+      pinDrafts.map(async (pin) => {
+        if (
+          pin.latitude === null ||
+          pin.longitude === null ||
+          pin.trackingState !== "LIVE"
+        ) {
+          return pin;
+        }
+        const snapped = await this.liveSnapCacheService.snapDriver(
+          pin.driverId,
+          pin.longitude,
+          pin.latitude,
+        );
+        if (!snapped) {
+          return pin;
+        }
+        return {
+          ...pin,
+          snappedLatitude: snapped.latitude,
+          snappedLongitude: snapped.longitude,
+        };
+      }),
+    );
 
     return {
       updatedAt: new Date().toISOString(),
@@ -152,6 +189,7 @@ export class TelemetryApplicationService {
     driverId: string,
     locale: string,
     hours: number,
+    mode: "road" | "matched" = "road",
   ): Promise<FleetDriverRouteSnapshot> {
     await this.assertFleetTenant(companyId, locale);
     const driver = await this.driverRepository.findOne({
@@ -178,7 +216,7 @@ export class TelemetryApplicationService {
       order: { recordedAt: "ASC" },
       take: 800,
     });
-    const routePoints = events
+    const rawRoutePoints = events
       .filter(
         (event) =>
           event.eventTypeCode === TelemetryEventTypeCode.LocationSample &&
@@ -191,21 +229,83 @@ export class TelemetryApplicationService {
         longitude: event.longitude as number,
         speedKmh: event.speedKmh,
         headingDegrees: event.headingDegrees,
+        horizontalAccuracyMeters: event.horizontalAccuracyMeters,
       }));
-    const safetyMarkers = events
-      .filter(
-        (event) =>
-          event.eventTypeCode !== TelemetryEventTypeCode.LocationSample &&
-          event.latitude !== null &&
-          event.longitude !== null,
-      )
-      .map((event) => ({
-        eventTypeCode: event.eventTypeCode,
-        recordedAt: event.recordedAt.toISOString(),
-        latitude: event.latitude as number,
-        longitude: event.longitude as number,
-        severityCode: event.severityCode,
-      }));
+    const filteredSamples = TelemetryGpsFilter.filterForRoute(rawRoutePoints);
+    const routePoints = filteredSamples.map((point, index) => {
+      const recordedAt =
+        point.recordedAt instanceof Date
+          ? point.recordedAt.toISOString()
+          : point.recordedAt;
+      const rawIndex = rawRoutePoints.findIndex(
+        (raw) => raw.recordedAt === recordedAt,
+      );
+      const headingDegrees =
+        rawIndex >= 0 ? rawRoutePoints[rawIndex].headingDegrees ?? null : null;
+      return {
+        recordedAt,
+        latitude: point.latitude,
+        longitude: point.longitude,
+        speedKmh: point.speedKmh ?? null,
+        headingDegrees,
+      };
+    });
+    const safetyEvents = events.filter(
+      (event) =>
+        event.eventTypeCode !== TelemetryEventTypeCode.LocationSample &&
+        event.latitude !== null &&
+        event.longitude !== null,
+    );
+    const safetyMarkers = await Promise.all(
+      safetyEvents.slice(0, 40).map(async (event) => {
+        const latitude = event.latitude as number;
+        const longitude = event.longitude as number;
+        const snapped = await this.osrmRoutingClient.nearest(
+          longitude,
+          latitude,
+        );
+        const speedLimitKmh =
+          event.eventTypeCode === TelemetryEventTypeCode.SpeedExceeded
+            ? this.readSpeedLimitFromPayload(event.payloadJson)
+            : null;
+        return {
+          eventTypeCode: event.eventTypeCode,
+          recordedAt: event.recordedAt.toISOString(),
+          latitude,
+          longitude,
+          severityCode: event.severityCode,
+          roadLatitude: snapped?.latitude ?? null,
+          roadLongitude: snapped?.longitude ?? null,
+          speedLimitKmh,
+        };
+      }),
+    );
+    const windowEnd = new Date();
+    const reconstructed = await this.routeReconstructionService.resolveRouteGeometry(
+      {
+        companyId,
+        fleetDriverId: driverId,
+        tripCorrelationId: null,
+        windowStart: since,
+        windowEnd,
+        routePoints,
+        preferMatched: mode === "matched",
+      },
+    );
+    if (
+      mode === "matched" &&
+      reconstructed.roadGeometryStatus ===
+        TelemetryRoadGeometryStatusCode.FallbackRaw
+    ) {
+      await this.routeReconstructionService.enqueueRebuildJob({
+        companyId,
+        fleetDriverId: driverId,
+        tripCorrelationId: null,
+        windowStartIso: since.toISOString(),
+        windowEndIso: windowEnd.toISOString(),
+        reason: "MANUAL",
+      });
+    }
     const motion = this.motionFromSampleEvents(
       events
         .filter(
@@ -221,6 +321,11 @@ export class TelemetryApplicationService {
       speedDeltaKmh: motion.speedDeltaKmh,
       routePoints,
       safetyMarkers,
+      roadGeometry: reconstructed.roadGeometry,
+      roadGeometryStatus: reconstructed.roadGeometryStatus,
+      matchedRouteId: reconstructed.matchedRouteId,
+      distanceKm: reconstructed.distanceKm,
+      speedSegments: reconstructed.speedSegments,
       updatedAt: new Date().toISOString(),
     };
   }
@@ -381,7 +486,41 @@ export class TelemetryApplicationService {
     }
     await this.deviceRepository.save(device);
 
+    const locationSampleCount = parsed.filter(
+      (event) =>
+        event.latitude !== undefined && event.longitude !== undefined,
+    ).length;
+    if (
+      this.telemetryMatchingQueueService.shouldEnqueueAfterIngest(
+        locationSampleCount,
+      )
+    ) {
+      const windowEnd = new Date();
+      const windowStart = new Date(Date.now() - 6 * 60 * 60 * 1000);
+      await this.telemetryMatchingQueueService.enqueue({
+        companyId: device.companyId,
+        fleetDriverId: device.fleetDriverId,
+        tripCorrelationId: device.activeTripCorrelationId,
+        windowStartIso: windowStart.toISOString(),
+        windowEndIso: windowEnd.toISOString(),
+        reason: "INGEST_BATCH",
+      });
+    }
+
     return { acceptedCount: rows.length };
+  }
+
+  private readSpeedLimitFromPayload(
+    payload: Record<string, unknown> | null,
+  ): number | null {
+    if (!payload) {
+      return null;
+    }
+    const raw = payload.speedLimitKmh ?? payload.maxSpeedKmh;
+    if (typeof raw === "number" && Number.isFinite(raw)) {
+      return raw;
+    }
+    return null;
   }
 
   private motionFromSampleEvents(
