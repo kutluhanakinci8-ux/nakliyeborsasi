@@ -5053,6 +5053,25 @@ button.btn-secondary {
   margin-bottom: 8px;
 }
 
+.freight-row-badges--footer {
+  margin-bottom: 0;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.freight-row-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 14px;
+  margin-top: 6px;
+}
+
+.freight-row-footer .freight-row-actions {
+  flex: 0 1 auto;
+}
+
 .badge {
   display: inline-block;
   padding: 3px 8px;
@@ -5076,7 +5095,7 @@ button.btn-secondary {
   flex-wrap: wrap;
   align-items: flex-start;
   gap: 10px 14px;
-  margin: 0 0 8px;
+  margin: 0 0 4px;
 }
 
 .freight-route-endpoint-block {
@@ -5138,7 +5157,7 @@ button.btn-secondary {
 
 .freight-route-meta,
 .freight-row-meta {
-  margin: 0 0 10px;
+  margin: 0 0 4px;
   font-size: 0.8rem;
   color: #64748b;
 }

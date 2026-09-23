@@ -48,40 +48,40 @@ export function FreightListingRow({
   const originResolved = resolveFreightLocationPoint(origin, "origin");
   const destinationResolved = resolveFreightLocationPoint(destination, "destination");
 
-  const metaParts = [
-    formatEquipmentLabel(equipmentType),
-    `${weightTonnes} t`,
-  ];
-  if (loadingDateStart) {
-    metaParts.push(`Yükleme ${formatLoadingDateTr(loadingDateStart)}`);
-  }
+  const loadingMeta = loadingDateStart
+    ? `Yükleme ${formatLoadingDateTr(loadingDateStart)}`
+    : null;
 
   return (
     <article className="freight-row">
       <div className="freight-row-main">
-        <div className="freight-row-badges">
-          <FreightRouteCountryBadges
-            originCountry={originResolved.countryCode}
-            destinationCountry={destinationResolved.countryCode}
-          />
-          <span className="badge badge--muted">{formatEquipmentLabel(equipmentType)}</span>
-          <span className="badge badge--muted">{weightTonnes} t</span>
-        </div>
         <FreightRouteHeading
           origin={originResolved}
           destination={destinationResolved}
         />
-        <p className="freight-row-meta">{metaParts.join(" · ")}</p>
-        <div className="freight-row-actions">
-          <button type="button" className="btn-link" onClick={onMessage}>
-            Mesaj
-          </button>
-          <button type="button" className="btn-link" onClick={onTrust}>
-            Güven profili
-          </button>
-          <button type="button" className="btn-accent" onClick={onAuction}>
-            İhale aç
-          </button>
+        {loadingMeta ? <p className="freight-row-meta">{loadingMeta}</p> : null}
+        <div className="freight-row-footer">
+          <div className="freight-row-actions">
+            <button type="button" className="btn-link" onClick={onMessage}>
+              Mesaj
+            </button>
+            <button type="button" className="btn-link" onClick={onTrust}>
+              Güven profili
+            </button>
+            <button type="button" className="btn-accent" onClick={onAuction}>
+              İhale aç
+            </button>
+          </div>
+          <div className="freight-row-badges freight-row-badges--footer">
+            <FreightRouteCountryBadges
+              originCountry={originResolved.countryCode}
+              destinationCountry={destinationResolved.countryCode}
+            />
+            <span className="badge badge--muted">
+              {formatEquipmentLabel(equipmentType)}
+            </span>
+            <span className="badge badge--muted">{weightTonnes} t</span>
+          </div>
         </div>
       </div>
       <div className="freight-row-price">
