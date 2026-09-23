@@ -34,7 +34,8 @@ export const ACCOUNT_MENU_ITEMS: readonly AccountMenuItem[] = [
   {
     href: "/hesap/calisanlar",
     label: "Çalışanlarım",
-    lead: "Kullanıcı davetleri, roller ve ekip erişimleri.",
+    lead:
+      "Ofis davetleri ve filo şoför/araç özet listesi (canlı API); tam yönetim Filo sekmesinde.",
     icon: "employees",
   },
   {
