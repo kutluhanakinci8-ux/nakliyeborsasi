@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { EmptyState } from "../../../components/EmptyState";
 import { FreightListingRow } from "../../../components/FreightListingRow";
 import { MarketplaceSearchBar } from "../../../components/MarketplaceSearchBar";
-import { MarketplaceStatsStrip } from "../../../components/MarketplaceStatsStrip";
 import { useWebSession } from "../../../context/WebSessionProvider";
 import { MarketplaceApiClient } from "../../../lib/MarketplaceApiClient";
 import { AuctionApiClient } from "../../../lib/AuctionApiClient";
@@ -111,10 +110,6 @@ export function MarketplacePageClient() {
         <div>
           <p className="exchange-eyebrow">Nakliye Borsası</p>
           <h1 className="exchange-title">Yük ve taşıma arama</h1>
-          <p className="exchange-lead">
-            Koridor genelinde yük ilanlarını filtreleyin, mesaj gönderin veya ihale
-            başlatın.
-          </p>
         </div>
         <button
           type="button"
@@ -125,11 +120,6 @@ export function MarketplacePageClient() {
           Yenile
         </button>
       </header>
-
-      <MarketplaceStatsStrip
-        listingCount={listings.length}
-        corridorLabel="Aktif koridor"
-      />
 
       <MarketplaceSearchBar
         originQuery={originQuery}
