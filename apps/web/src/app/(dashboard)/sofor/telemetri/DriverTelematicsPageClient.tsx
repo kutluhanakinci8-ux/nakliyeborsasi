@@ -122,7 +122,9 @@ export function DriverTelematicsPageClient() {
         platformCode: "IOS",
         deviceLabel: "iPhone pilot",
       });
-      window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(result));
+      const serialized = JSON.stringify(result);
+      window.sessionStorage.setItem(STORAGE_KEY, serialized);
+      window.localStorage.setItem(STORAGE_KEY, serialized);
       setEnrollment(result);
       await refresh();
     } catch {

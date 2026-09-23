@@ -24,7 +24,9 @@ export function DriverTelemetryCompanionClient() {
   const [tracking, setTracking] = useState(false);
   const [lastError, setLastError] = useState("");
   const [lastSentAt, setLastSentAt] = useState<string | null>(null);
+  const [pendingCount, setPendingCount] = useState(0);
   const watchIdRef = useRef<number | null>(null);
+  const flushTimerRef = useRef<number | null>(null);
   type BufferedEvent = {
     eventTypeCode: string;
     recordedAt: string;
@@ -39,7 +41,9 @@ export function DriverTelemetryCompanionClient() {
   const bufferRef = useRef<BufferedEvent[]>([]);
 
   useEffect(() => {
-    const raw = window.sessionStorage.getItem(STORAGE_KEY);
+    const raw =
+      window.sessionStorage.getItem(STORAGE_KEY) ??
+      window.localStorage.getItem(STORAGE_KEY);
     if (raw) {
       try {
         setEnrollment(JSON.parse(raw) as TelemetryEnrollResult);
@@ -63,11 +67,30 @@ export function DriverTelemetryCompanionClient() {
       });
       setLastSentAt(new Date().toISOString());
       setLastError("");
-    } catch {
-      setLastError("Gönderim başarısız — token veya rıza kontrol edin.");
+      setPendingCount(0);
+    } catch (error) {
+      const detail =
+        error instanceof Error ? error.message : "Gönderim başarısız";
+      setLastError(
+        detail.includes("Unauthorized")
+          ? "Cihaz token geçersiz. Telemetri ayarlarından «iPhone eşleştir» ile yenileyin."
+          : `Gönderim başarısız: ${detail.slice(0, 180)}`,
+      );
       bufferRef.current.unshift(...events);
+      setPendingCount(bufferRef.current.length);
     }
   }, [enrollment]);
+
+  const scheduleFlush = useCallback(() => {
+    setPendingCount(bufferRef.current.length);
+    if (flushTimerRef.current !== null) {
+      return;
+    }
+    flushTimerRef.current = window.setTimeout(() => {
+      flushTimerRef.current = null;
+      void flushBuffer();
+    }, 2000);
+  }, [flushBuffer]);
 
   useEffect(() => {
     if (!tracking) {
@@ -75,7 +98,7 @@ export function DriverTelemetryCompanionClient() {
     }
     const interval = window.setInterval(() => {
       void flushBuffer();
-    }, 15000);
+    }, 5000);
     return () => window.clearInterval(interval);
   }, [tracking, flushBuffer]);
 
@@ -100,14 +123,14 @@ export function DriverTelemetryCompanionClient() {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
           speedKmh: speedKmh ?? undefined,
-          headingDegrees: position.coords.heading ?? undefined,
+          headingDegrees:
+            typeof position.coords.heading === "number" &&
+            Number.isFinite(position.coords.heading)
+              ? position.coords.heading
+              : undefined,
           horizontalAccuracyMeters: position.coords.accuracy,
         });
-        bufferRef.current.push({
-          eventTypeCode: "DEVICE_HEARTBEAT",
-          recordedAt: new Date().toISOString(),
-          payload: { source: "web_companion" },
-        });
+        scheduleFlush();
       },
       (error) => {
         if (error.code === error.PERMISSION_DENIED) {
@@ -121,7 +144,7 @@ export function DriverTelemetryCompanionClient() {
       },
       { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 },
     );
-  }, [enrollment]);
+  }, [enrollment, scheduleFlush]);
 
   const onMotion = useCallback((event: DeviceMotionEvent): void => {
     const acc = event.accelerationIncludingGravity;
@@ -186,6 +209,15 @@ export function DriverTelemetryCompanionClient() {
             {lastSentAt ? (
               <p className="driver-telematics-meta">
                 Son başarılı paket: {new Date(lastSentAt).toLocaleString("tr-TR")}
+              </p>
+            ) : (
+              <p className="driver-telematics-meta">
+                Henüz sunucuya paket gitmedi — 2–5 sn bekleyin veya token yenileyin.
+              </p>
+            )}
+            {pendingCount > 0 ? (
+              <p className="driver-telematics-meta">
+                Bekleyen örnek: {pendingCount}
               </p>
             ) : null}
             <div className="driver-telematics-actions">

@@ -4,7 +4,7 @@ export class PublicApiConfiguration {
     if (typeof window !== "undefined") {
       const { protocol, hostname, port } = window.location;
       if (protocol === "https:" && (port === "" || port === "443")) {
-        return `${protocol}//${hostname}/api/v1`;
+        return "/api/v1";
       }
       const isDynamicApi =
         !configured ||

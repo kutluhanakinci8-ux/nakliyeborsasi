@@ -191,7 +191,10 @@ export class TelemetryApiClient {
       },
     );
     if (!response.ok) {
-      throw new Error(await response.text());
+      const errorBody = await response.text();
+      throw new Error(
+        errorBody.length > 0 ? errorBody : `HTTP ${response.status}`,
+      );
     }
   }
 }

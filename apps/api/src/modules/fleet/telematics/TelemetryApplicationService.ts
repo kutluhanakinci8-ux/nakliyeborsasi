@@ -62,8 +62,22 @@ export class TelemetryApplicationService {
     const vehicleById = new Map(vehicles.map((vehicle) => [vehicle.id, vehicle]));
     const devices = await this.deviceRepository.find({
       where: { companyId, trackingEnabled: true },
-      order: { lastSeenAt: "DESC" },
+      order: { lastSeenAt: "DESC", createdAt: "DESC" },
     });
+    const recentPositionEvents = await this.eventRepository.find({
+      where: { companyId },
+      order: { recordedAt: "DESC" },
+      take: 300,
+    });
+    const lastEventByDriver = new Map<string, FleetTelemetryEventEntity>();
+    for (const event of recentPositionEvents) {
+      if (event.latitude === null || event.longitude === null) {
+        continue;
+      }
+      if (!lastEventByDriver.has(event.fleetDriverId)) {
+        lastEventByDriver.set(event.fleetDriverId, event);
+      }
+    }
     const deviceByDriver = new Map<string, FleetTelemetryDeviceEntity>();
     for (const device of devices) {
       if (device.consentRevokedAt) {
@@ -77,19 +91,33 @@ export class TelemetryApplicationService {
     const now = Date.now();
     const pins: FleetLiveDriverPin[] = drivers.map((driver) => {
       const device = deviceByDriver.get(driver.id);
+      const fallbackEvent = lastEventByDriver.get(driver.id);
       const vehicle = driver.activeVehicleId
         ? vehicleById.get(driver.activeVehicleId)
         : null;
-      const trackingState = this.resolveTrackingState(device, now);
+      const latitude =
+        device?.lastLatitude ?? fallbackEvent?.latitude ?? null;
+      const longitude =
+        device?.lastLongitude ?? fallbackEvent?.longitude ?? null;
+      const lastSeenAt =
+        device?.lastSeenAt ?? fallbackEvent?.recordedAt ?? null;
+      const trackingState = this.resolveTrackingState(
+        device,
+        now,
+        latitude,
+        longitude,
+        lastSeenAt,
+      );
       return {
         driverId: driver.id,
         displayName: driver.displayName,
         primaryPhoneE164: driver.primaryPhoneE164,
         licensePlateDisplay: vehicle?.licensePlateDisplay ?? null,
-        latitude: device?.lastLatitude ?? null,
-        longitude: device?.lastLongitude ?? null,
-        lastSpeedKmh: device?.lastSpeedKmh ?? null,
-        lastSeenAt: device?.lastSeenAt?.toISOString() ?? null,
+        latitude,
+        longitude,
+        lastSpeedKmh:
+          device?.lastSpeedKmh ?? fallbackEvent?.speedKmh ?? null,
+        lastSeenAt: lastSeenAt?.toISOString() ?? null,
         trackingState,
       };
     });
@@ -262,15 +290,14 @@ export class TelemetryApplicationService {
   private resolveTrackingState(
     device: FleetTelemetryDeviceEntity | undefined,
     nowMs: number,
+    latitude: number | null = device?.lastLatitude ?? null,
+    longitude: number | null = device?.lastLongitude ?? null,
+    lastSeenAt: Date | null = device?.lastSeenAt ?? null,
   ): FleetLiveTrackingState {
-    if (
-      !device ||
-      device.lastLatitude === null ||
-      device.lastLongitude === null
-    ) {
+    if (latitude === null || longitude === null) {
       return "NO_SIGNAL";
     }
-    const seenAt = device.lastSeenAt?.getTime() ?? 0;
+    const seenAt = lastSeenAt?.getTime() ?? 0;
     const age = nowMs - seenAt;
     if (age <= TelemetryApplicationService.LIVE_THRESHOLD_MS) {
       return "LIVE";
@@ -318,11 +345,10 @@ export class TelemetryApplicationService {
     fleetDriverId: string,
   ): Promise<FleetTelemetryDeviceEntity | null> {
     const devices = await this.deviceRepository.find({
-      where: { fleetDriverId },
-      order: { createdAt: "DESC" },
-      take: 1,
+      where: { fleetDriverId, trackingEnabled: true },
+      order: { lastSeenAt: "DESC", createdAt: "DESC" },
     });
-    return devices[0] ?? null;
+    return devices.find((device) => !device.consentRevokedAt) ?? null;
   }
 
   private async latestConsentLog(
