@@ -22,6 +22,10 @@ export type FleetLiveDriverPin = {
   snappedLongitude: number | null;
   lastSpeedKmh: number | null;
   lastHeadingDegrees: number | null;
+  /** Son LOCATION_SAMPLE payload veya native fix. */
+  lastAltitudeMeters: number | null;
+  lastVerticalAccuracyMeters: number | null;
+  lastSpeedSourceCode: string | null;
   lastSeenAt: string | null;
   trackingState: FleetLiveTrackingState;
   motionPhase: FleetMotionPhase;
@@ -34,6 +38,8 @@ export type FleetRoutePoint = {
   longitude: number;
   speedKmh: number | null;
   headingDegrees: number | null;
+  altitudeMeters?: number | null;
+  verticalAccuracyMeters?: number | null;
 };
 
 export type FleetRouteSafetyMarker = {

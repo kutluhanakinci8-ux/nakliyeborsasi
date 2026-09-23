@@ -3,12 +3,20 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  TelemetryGpsSamplingProfileCode,
+  TelemetrySpeedSourceCode,
+  TELEMETRY_WEB_COMPANION_FLUSH_MS,
+} from "@nakliyeborsasi/core";
+import {
   TelemetryApiClient,
   type TelemetryEnrollResult,
 } from "../../../../../lib/TelemetryApiClient";
 import { geolocationBlockedReason } from "../../../../../lib/geolocationContext";
 
 const STORAGE_KEY = "nb-telemetry-enrollment-v1";
+/** Web companion hedefi ~2 Hz (native 1–3 Hz). */
+const LOCATION_SAMPLE_INTERVAL_MS = 500;
+const MOTION_SAMPLE_INTERVAL_MS = 500;
 
 function metersPerSecondToKmh(speed: number | null): number | null {
   if (speed === null || !Number.isFinite(speed)) {
@@ -16,6 +24,31 @@ function metersPerSecondToKmh(speed: number | null): number | null {
   }
   return speed * 3.6;
 }
+
+type BufferedEvent = {
+  eventTypeCode: string;
+  recordedAt: string;
+  latitude?: number;
+  longitude?: number;
+  speedKmh?: number;
+  headingDegrees?: number;
+  horizontalAccuracyMeters?: number;
+  altitudeMeters?: number;
+  verticalAccuracyMeters?: number;
+  speedSourceCode?: string;
+  payload?: Record<string, unknown>;
+};
+
+type LastFix = {
+  latitude: number;
+  longitude: number;
+  speedKmh?: number;
+  headingDegrees?: number;
+  horizontalAccuracyMeters?: number;
+  altitudeMeters?: number;
+  verticalAccuracyMeters?: number;
+  recordedAt: string;
+};
 
 export function DriverTelemetryCompanionClient() {
   const [enrollment, setEnrollment] = useState<TelemetryEnrollResult | null>(
@@ -27,16 +60,14 @@ export function DriverTelemetryCompanionClient() {
   const [pendingCount, setPendingCount] = useState(0);
   const watchIdRef = useRef<number | null>(null);
   const flushTimerRef = useRef<number | null>(null);
-  type BufferedEvent = {
-    eventTypeCode: string;
-    recordedAt: string;
-    latitude?: number;
-    longitude?: number;
-    speedKmh?: number;
-    headingDegrees?: number;
-    horizontalAccuracyMeters?: number;
-    payload?: Record<string, unknown>;
-  };
+  const sampleTimerRef = useRef<number | null>(null);
+  const lastFixRef = useRef<LastFix | null>(null);
+  const lastMotionSampleAtRef = useRef(0);
+  const lastOrientationRef = useRef<{
+    alpha: number | null;
+    beta: number | null;
+    gamma: number | null;
+  }>({ alpha: null, beta: null, gamma: null });
 
   const bufferRef = useRef<BufferedEvent[]>([]);
 
@@ -89,8 +120,33 @@ export function DriverTelemetryCompanionClient() {
     flushTimerRef.current = window.setTimeout(() => {
       flushTimerRef.current = null;
       void flushBuffer();
-    }, 2000);
+    }, TELEMETRY_WEB_COMPANION_FLUSH_MS);
   }, [flushBuffer]);
+
+  const pushLocationSample = useCallback(() => {
+    const fix = lastFixRef.current;
+    if (!fix) {
+      return;
+    }
+    bufferRef.current.push({
+      eventTypeCode: "LOCATION_SAMPLE",
+      recordedAt: fix.recordedAt,
+      latitude: fix.latitude,
+      longitude: fix.longitude,
+      speedKmh: fix.speedKmh,
+      headingDegrees: fix.headingDegrees,
+      horizontalAccuracyMeters: fix.horizontalAccuracyMeters,
+      altitudeMeters: fix.altitudeMeters,
+      verticalAccuracyMeters: fix.verticalAccuracyMeters,
+      speedSourceCode: TelemetrySpeedSourceCode.Gps,
+      payload: {
+        samplingProfileCode: TelemetryGpsSamplingProfileCode.WebCompanion,
+        speedSourceCode: TelemetrySpeedSourceCode.Gps,
+        headingMagneticDegrees: lastOrientationRef.current.alpha,
+      },
+    });
+    scheduleFlush();
+  }, [scheduleFlush]);
 
   useEffect(() => {
     if (!tracking) {
@@ -117,9 +173,17 @@ export function DriverTelemetryCompanionClient() {
     watchIdRef.current = navigator.geolocation.watchPosition(
       (position) => {
         const speedKmh = metersPerSecondToKmh(position.coords.speed);
-        bufferRef.current.push({
-          eventTypeCode: "LOCATION_SAMPLE",
-          recordedAt: new Date(position.timestamp).toISOString(),
+        const altitude =
+          typeof position.coords.altitude === "number" &&
+          Number.isFinite(position.coords.altitude)
+            ? position.coords.altitude
+            : undefined;
+        const verticalAccuracy =
+          typeof position.coords.altitudeAccuracy === "number" &&
+          Number.isFinite(position.coords.altitudeAccuracy)
+            ? position.coords.altitudeAccuracy
+            : undefined;
+        lastFixRef.current = {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
           speedKmh: speedKmh ?? undefined,
@@ -129,8 +193,10 @@ export function DriverTelemetryCompanionClient() {
               ? position.coords.heading
               : undefined,
           horizontalAccuracyMeters: position.coords.accuracy,
-        });
-        scheduleFlush();
+          altitudeMeters: altitude,
+          verticalAccuracyMeters: verticalAccuracy,
+          recordedAt: new Date(position.timestamp).toISOString(),
+        };
       },
       (error) => {
         if (error.code === error.PERMISSION_DENIED) {
@@ -148,36 +214,114 @@ export function DriverTelemetryCompanionClient() {
         timeout: 20000,
       },
     );
-  }, [enrollment, scheduleFlush]);
+    sampleTimerRef.current = window.setInterval(() => {
+      pushLocationSample();
+    }, LOCATION_SAMPLE_INTERVAL_MS);
+  }, [enrollment, pushLocationSample]);
 
-  const onMotion = useCallback((event: DeviceMotionEvent): void => {
-    const acc = event.accelerationIncludingGravity;
-    if (!acc) {
-      return;
-    }
-    const magnitude = Math.sqrt(
-      (acc.x ?? 0) ** 2 + (acc.y ?? 0) ** 2 + (acc.z ?? 0) ** 2,
-    );
-    if (magnitude > 28) {
+  const onMotion = useCallback(
+    (event: DeviceMotionEvent) => {
+      const now = Date.now();
+      if (now - lastMotionSampleAtRef.current < MOTION_SAMPLE_INTERVAL_MS) {
+        return;
+      }
+      lastMotionSampleAtRef.current = now;
+      const fix = lastFixRef.current;
+      const linear = event.acceleration;
+      const withGravity = event.accelerationIncludingGravity;
+      const rotation = event.rotationRate;
+      const payload: Record<string, unknown> = {
+        samplingProfileCode: TelemetryGpsSamplingProfileCode.WebCompanion,
+      };
+      if (linear) {
+        payload.linearAccelerationMs2 = {
+          x: linear.x ?? 0,
+          y: linear.y ?? 0,
+          z: linear.z ?? 0,
+        };
+      }
+      if (withGravity) {
+        payload.accelerationIncludingGravityMs2 = {
+          x: withGravity.x ?? 0,
+          y: withGravity.y ?? 0,
+          z: withGravity.z ?? 0,
+        };
+      }
+      if (rotation) {
+        payload.gyroRadS = {
+          x: rotation.alpha ?? 0,
+          y: rotation.beta ?? 0,
+          z: rotation.gamma ?? 0,
+        };
+      }
+      const orient = lastOrientationRef.current;
+      if (orient.alpha !== null) {
+        payload.magnetometerHeadingDegrees = orient.alpha;
+        payload.deviceOrientation = {
+          alpha: orient.alpha,
+          beta: orient.beta,
+          gamma: orient.gamma,
+        };
+      }
       bufferRef.current.push({
-        eventTypeCode: "HARSH_BRAKE",
+        eventTypeCode: "MOTION_SAMPLE",
         recordedAt: new Date().toISOString(),
-        payload: { magnitude },
+        latitude: fix?.latitude,
+        longitude: fix?.longitude,
+        speedKmh: fix?.speedKmh,
+        headingDegrees: fix?.headingDegrees,
+        payload,
       });
-    }
-    if (magnitude > 35) {
-      bufferRef.current.push({
-        eventTypeCode: "COLLISION_SUSPECTED",
-        recordedAt: new Date().toISOString(),
-        payload: { magnitude },
-      });
-    }
+      scheduleFlush();
+    },
+    [scheduleFlush],
+  );
+
+  const onOrientation = useCallback((event: DeviceOrientationEvent) => {
+    lastOrientationRef.current = {
+      alpha:
+        typeof event.alpha === "number" && Number.isFinite(event.alpha)
+          ? event.alpha
+          : null,
+      beta:
+        typeof event.beta === "number" && Number.isFinite(event.beta)
+          ? event.beta
+          : null,
+      gamma:
+        typeof event.gamma === "number" && Number.isFinite(event.gamma)
+          ? event.gamma
+          : null,
+    };
   }, []);
 
-  const startTrackingWithMotion = (): void => {
+  const requestMotionPermission = async (): Promise<boolean> => {
+    const ctor = DeviceMotionEvent as unknown as {
+      requestPermission?: () => Promise<"granted" | "denied">;
+    };
+    if (typeof ctor.requestPermission === "function") {
+      try {
+        const result = await ctor.requestPermission();
+        return result === "granted";
+      } catch {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const startTrackingWithMotion = async (): Promise<void> => {
+    const motionOk = await requestMotionPermission();
+    if (!motionOk) {
+      setLastError(
+        "Hareket sensörü izni verilmedi; sadece konum gönderilecek.",
+      );
+    }
     startTracking();
-    if (typeof window.DeviceMotionEvent !== "undefined") {
+    if (typeof window.DeviceMotionEvent !== "undefined" && motionOk) {
       window.addEventListener("devicemotion", onMotion);
+    }
+    if (typeof window.DeviceOrientationEvent !== "undefined") {
+      window.addEventListener("deviceorientation", onOrientation);
     }
   };
 
@@ -187,7 +331,12 @@ export function DriverTelemetryCompanionClient() {
       navigator.geolocation.clearWatch(watchIdRef.current);
       watchIdRef.current = null;
     }
+    if (sampleTimerRef.current !== null) {
+      window.clearInterval(sampleTimerRef.current);
+      sampleTimerRef.current = null;
+    }
     window.removeEventListener("devicemotion", onMotion);
+    window.removeEventListener("deviceorientation", onOrientation);
     void flushBuffer();
   };
 
@@ -196,8 +345,10 @@ export function DriverTelemetryCompanionClient() {
       <header className="driver-portal-card">
         <h1 className="driver-portal-title">Canlı telemetri (pilot)</h1>
         <p className="driver-portal-lead">
-          iPhone Safari: uygulama ön planda kalsın; iOS arka plan GPS için native
-          uygulama gerekir. <Link href="/sofor/telemetri">← Telemetri ayarları</Link>
+          iPhone Safari: uygulama ön planda kalsın; arka plan 1–3 Hz ve Core
+          Motion için native uygulama gerekir. Rakım, dikey doğruluk ve IMU
+          örnekleri bu sayfadan gönderilir.{" "}
+          <Link href="/sofor/telemetri">← Telemetri ayarları</Link>
         </p>
         {lastError ? <p className="error banner error--light">{lastError}</p> : null}
       </header>
@@ -208,7 +359,7 @@ export function DriverTelemetryCompanionClient() {
           <>
             <p className="driver-telematics-meta">
               Cihaz: {enrollment.deviceId.slice(0, 8)}… ·{" "}
-              {tracking ? "Gönderim açık" : "Durduruldu"}
+              {tracking ? "Gönderim açık (~2 Hz)" : "Durduruldu"}
             </p>
             {lastSentAt ? (
               <p className="driver-telematics-meta">
@@ -229,7 +380,7 @@ export function DriverTelemetryCompanionClient() {
                 <button
                   type="button"
                   className="btn btn-primary"
-                  onClick={startTrackingWithMotion}
+                  onClick={() => void startTrackingWithMotion()}
                 >
                   Konumu paylaşmaya başla
                 </button>

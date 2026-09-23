@@ -38,6 +38,8 @@ export * from "./constants/TelemetryRouteMatchingProviderCode";
 export * from "./constants/TelemetryRouteMatchingJobStatusCode";
 export * from "./constants/TelemetryRoadGeometryStatusCode";
 export * from "./constants/TelemetryGpsSamplingProfileCode";
+export * from "./constants/TelemetrySpeedSourceCode";
+export * from "./constants/TelemetryMotionThresholds";
 export * from "./constants/LogisticsPoiKindCode";
 export * from "./constants/LogisticsPoiSourceCode";
 export * from "./telemetry/RouteCorridorFilter";

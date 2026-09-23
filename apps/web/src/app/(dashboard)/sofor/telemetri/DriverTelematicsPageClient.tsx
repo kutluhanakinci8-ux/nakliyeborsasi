@@ -37,6 +37,12 @@ function eventLabel(code: string): string {
     HARSH_BRAKE: "Sert fren",
     HARSH_ACCELERATION: "Sert kalkış",
     COLLISION_SUSPECTED: "Olası çarpışma",
+    SHARP_TURN: "Sert viraj",
+    IDLE_START: "Uzun bekleme",
+    IDLE_END: "Bekleme bitti",
+    ENGINE_IDLE_SUSPECTED: "Rölanti (tahmin)",
+    MOTION_SAMPLE: "IMU örneği",
+    PHONE_DISTRACTION_SUSPECTED: "Dikkat dağınıklığı",
     DEVICE_HEARTBEAT: "Cihaz nabız",
   };
   return map[code] ?? code;

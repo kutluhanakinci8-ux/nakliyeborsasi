@@ -137,6 +137,7 @@ export class TelemetryApplicationService {
         recentSamplesByDriver.get(driver.id) ?? [],
       );
       const latestSample = recentSamplesByDriver.get(driver.id)?.[0];
+      const kinematics = this.readKinematicsPayload(latestSample?.payloadJson);
       return {
         driverId: driver.id,
         displayName: driver.displayName,
@@ -149,6 +150,9 @@ export class TelemetryApplicationService {
         lastSpeedKmh:
           device?.lastSpeedKmh ?? fallbackEvent?.speedKmh ?? null,
         lastHeadingDegrees: latestSample?.headingDegrees ?? null,
+        lastAltitudeMeters: kinematics.altitudeMeters,
+        lastVerticalAccuracyMeters: kinematics.verticalAccuracyMeters,
+        lastSpeedSourceCode: kinematics.speedSourceCode,
         lastSeenAt: lastSeenAt?.toISOString() ?? null,
         trackingState,
         motionPhase: motion.motionPhase,
@@ -218,6 +222,10 @@ export class TelemetryApplicationService {
           TelemetryEventTypeCode.SpeedExceeded,
           TelemetryEventTypeCode.StopDetected,
           TelemetryEventTypeCode.SharpTurn,
+          TelemetryEventTypeCode.CollisionSuspected,
+          TelemetryEventTypeCode.IdleStart,
+          TelemetryEventTypeCode.EngineIdleSuspected,
+          TelemetryEventTypeCode.PhoneDistractionSuspected,
         ]),
       },
       order: { recordedAt: "ASC" },
@@ -237,6 +245,14 @@ export class TelemetryApplicationService {
         speedKmh: event.speedKmh,
         headingDegrees: event.headingDegrees,
         horizontalAccuracyMeters: event.horizontalAccuracyMeters,
+        altitudeMeters: this.readNumberFromPayload(
+          event.payloadJson,
+          "altitudeMeters",
+        ),
+        verticalAccuracyMeters: this.readNumberFromPayload(
+          event.payloadJson,
+          "verticalAccuracyMeters",
+        ),
       }));
     const filteredSamples = TelemetryGpsFilter.filterForRoute(rawRoutePoints);
     const routePoints = filteredSamples.map((point, index) => {
@@ -434,6 +450,7 @@ export class TelemetryApplicationService {
         lastLongitude: null,
         lastSpeedKmh: null,
         activeTripCorrelationId: null,
+        interpreterStateJson: null,
       }),
     );
     await this.appendConsentLog(driver.id, device.id, "ENROLL", clientIp);
@@ -459,6 +476,9 @@ export class TelemetryApplicationService {
       speedKmh: event.speedKmh,
       headingDegrees: event.headingDegrees,
       horizontalAccuracyMeters: event.horizontalAccuracyMeters,
+      altitudeMeters: event.altitudeMeters,
+      verticalAccuracyMeters: event.verticalAccuracyMeters,
+      speedSourceCode: event.speedSourceCode,
       payload: event.payload,
     }));
     const derived = TelemetryMotionInterpreter.interpretBatch(device, parsed);
@@ -520,6 +540,38 @@ export class TelemetryApplicationService {
     }
 
     return { acceptedCount: rows.length };
+  }
+
+  private readKinematicsPayload(payload: Record<string, unknown> | null | undefined): {
+    altitudeMeters: number | null;
+    verticalAccuracyMeters: number | null;
+    speedSourceCode: string | null;
+  } {
+    return {
+      altitudeMeters: this.readNumberFromPayload(payload ?? null, "altitudeMeters"),
+      verticalAccuracyMeters: this.readNumberFromPayload(
+        payload ?? null,
+        "verticalAccuracyMeters",
+      ),
+      speedSourceCode:
+        typeof payload?.speedSourceCode === "string"
+          ? payload.speedSourceCode
+          : null,
+    };
+  }
+
+  private readNumberFromPayload(
+    payload: Record<string, unknown> | null,
+    key: string,
+  ): number | null {
+    if (!payload) {
+      return null;
+    }
+    const raw = payload[key];
+    if (typeof raw === "number" && Number.isFinite(raw)) {
+      return raw;
+    }
+    return null;
   }
 
   private readSpeedLimitFromPayload(

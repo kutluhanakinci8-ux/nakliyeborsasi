@@ -68,6 +68,10 @@ export class FleetTelemetryDeviceEntity {
   @Column({ type: "varchar", length: 36, nullable: true })
   public activeTripCorrelationId!: string | null;
 
+  /** Idle / heading debounce state for TelemetryMotionInterpreter. */
+  @Column({ type: "jsonb", nullable: true })
+  public interpreterStateJson!: Record<string, unknown> | null;
+
   @CreateDateColumn({ type: "timestamptz" })
   public createdAt!: Date;
 

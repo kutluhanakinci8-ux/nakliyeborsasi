@@ -21,6 +21,10 @@ const SAFETY_COLOR: Record<string, string> = {
   SPEED_EXCEEDED: "#ca8a04",
   STOP_DETECTED: "#2563eb",
   SHARP_TURN: "#7c3aed",
+  COLLISION_SUSPECTED: "#991b1b",
+  IDLE_START: "#0ea5e9",
+  ENGINE_IDLE_SUSPECTED: "#64748b",
+  PHONE_DISTRACTION_SUSPECTED: "#be123c",
 };
 
 function speedToColor(speedKmh: number): string {

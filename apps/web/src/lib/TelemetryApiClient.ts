@@ -88,6 +88,9 @@ export type FleetLiveDriverPin = {
   snappedLongitude: number | null;
   lastSpeedKmh: number | null;
   lastHeadingDegrees: number | null;
+  lastAltitudeMeters?: number | null;
+  lastVerticalAccuracyMeters?: number | null;
+  lastSpeedSourceCode?: string | null;
   lastSeenAt: string | null;
   trackingState: FleetLiveTrackingState;
   motionPhase: FleetMotionPhase;

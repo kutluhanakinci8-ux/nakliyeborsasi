@@ -40,6 +40,19 @@ export class TelemetryIngestEventDto {
   public horizontalAccuracyMeters?: number;
 
   @IsOptional()
+  @IsNumber()
+  public altitudeMeters?: number;
+
+  @IsOptional()
+  @IsNumber()
+  public verticalAccuracyMeters?: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(16)
+  public speedSourceCode?: string;
+
+  @IsOptional()
   @IsObject()
   public payload?: Record<string, unknown>;
 }

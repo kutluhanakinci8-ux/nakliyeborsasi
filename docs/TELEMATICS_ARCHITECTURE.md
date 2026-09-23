@@ -14,9 +14,9 @@ Collect **location, speed, stops, idle time, and safety-related motion signals**
 
 ## Data categories
 
-1. **Location & kinematics** — GPS/Wi‑Fi/cell fix, speed, heading, accuracy
+1. **Location & kinematics** — GPS fix, speed, heading, horizontal/vertical accuracy, altitude, speed source (GPS/OBD)
 2. **Trip semantics** — stop detection, idle, trip start/end (derived)
-3. **Safety events** — harsh brake/accel, sharp turn, collision *suspect* (derived from motion; not a certified crash detector)
+3. **Safety events** — harsh brake/accel, sharp turn, collision *suspect*, idle/demurrage, engine idle suspect, distraction (consent-gated); see **`docs/TELEMATICS_SENSORS_FAZ_E.md`**
 4. **Device metadata** — platform, app version, last seen (no unnecessary PII in event stream)
 
 Phone numbers are stored only on **fleet driver profile** (operational contact), not duplicated in each telemetry row.
