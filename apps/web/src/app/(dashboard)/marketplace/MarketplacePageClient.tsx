@@ -164,32 +164,37 @@ export function MarketplacePageClient() {
 
   return (
     <div className="exchange-page">
-      <header className="exchange-hero">
-        <div>
+      <header className="exchange-hero exchange-hero--with-search">
+        <div className="exchange-hero-main">
           <p className="exchange-eyebrow">Nakliye Borsası</p>
-          <h1 className="exchange-title">Yük ve taşıma arama</h1>
+          <div className="exchange-hero-title-row">
+            <h1 className="exchange-title">Yük ve taşıma arama</h1>
+            <MarketplaceSearchBar
+              variant="embedded"
+              originQuery={originQuery}
+              destinationQuery={destinationQuery}
+              equipmentFilter={equipmentFilter}
+              onOriginChange={setOriginQuery}
+              onDestinationChange={setDestinationQuery}
+              onEquipmentChange={setEquipmentFilter}
+              onSearch={() => void loadListings()}
+              isBusy={isBusy}
+              resultCount={filteredListings.length}
+            />
+          </div>
+          <p className="search-meta search-meta--hero">
+            Bulundu: <strong>{filteredListings.length}</strong> ilan
+          </p>
         </div>
         <button
           type="button"
-          className="btn-secondary btn-secondary--light"
+          className="btn-secondary btn-secondary--light exchange-hero-refresh"
           onClick={() => void loadListings()}
           disabled={isBusy}
         >
           Yenile
         </button>
       </header>
-
-      <MarketplaceSearchBar
-        originQuery={originQuery}
-        destinationQuery={destinationQuery}
-        equipmentFilter={equipmentFilter}
-        onOriginChange={setOriginQuery}
-        onDestinationChange={setDestinationQuery}
-        onEquipmentChange={setEquipmentFilter}
-        onSearch={() => void loadListings()}
-        isBusy={isBusy}
-        resultCount={filteredListings.length}
-      />
 
       {errorMessage ? <p className="error banner error--light">{errorMessage}</p> : null}
 

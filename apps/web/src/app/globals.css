@@ -4904,6 +4904,46 @@ button.btn-secondary {
   border-bottom: 1px solid #dbe3ec;
 }
 
+.exchange-hero--with-search {
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.exchange-hero-main {
+  flex: 1 1 520px;
+  min-width: 0;
+}
+
+.exchange-hero-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px 20px;
+}
+
+.exchange-hero--with-search .exchange-title {
+  margin-bottom: 0;
+  flex: 0 0 auto;
+}
+
+.exchange-hero-search {
+  flex: 1 1 360px;
+  min-width: 0;
+}
+
+.search-fields--hero {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 140px auto;
+}
+
+.search-meta--hero {
+  margin: 10px 0 0;
+}
+
+.exchange-hero-refresh {
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+
 .exchange-eyebrow {
   margin: 0 0 8px;
   font-size: 0.8rem;
@@ -5208,9 +5248,19 @@ button.btn-secondary {
   margin-top: 6px;
 }
 
-.auction-list-cargo {
-  font-size: 0.82rem;
-  line-height: 1.45;
+.auction-list-load-cargo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 1.25rem;
+  margin: 6px 0 0;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.auction-list-load-cargo .auction-list-cargo {
+  font-size: inherit;
+  line-height: inherit;
   color: #64748b;
 }
 
