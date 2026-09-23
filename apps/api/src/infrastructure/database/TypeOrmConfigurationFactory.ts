@@ -13,6 +13,9 @@ import { AuctionBidEntity } from "./entities/AuctionBidEntity";
 import { MessageThreadEntity } from "./entities/MessageThreadEntity";
 import { MessageEntity } from "./entities/MessageEntity";
 import { CompanyTrustReviewEntity } from "./entities/CompanyTrustReviewEntity";
+import { FleetDriverEntity } from "./entities/FleetDriverEntity";
+import { FleetVehicleEntity } from "./entities/FleetVehicleEntity";
+import { FleetDriverVehicleAssignmentEntity } from "./entities/FleetDriverVehicleAssignmentEntity";
 
 @Injectable()
 export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
@@ -41,6 +44,9 @@ export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
         MessageThreadEntity,
         MessageEntity,
         CompanyTrustReviewEntity,
+        FleetDriverEntity,
+        FleetVehicleEntity,
+        FleetDriverVehicleAssignmentEntity,
       ],
       synchronize,
       logging: false,

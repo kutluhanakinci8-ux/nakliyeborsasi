@@ -17,6 +17,7 @@ export class SubscriptionPlanCatalog {
         includedModules: [
           SubscriptionModuleCode.MarketplaceSearch,
           SubscriptionModuleCode.Auction,
+          SubscriptionModuleCode.Fleet,
         ],
         maxConcurrentSearchTabs: 1,
         laneAnalyticsHistoryDays: 0,
@@ -32,6 +33,7 @@ export class SubscriptionPlanCatalog {
           SubscriptionModuleCode.Auction,
           SubscriptionModuleCode.Messaging,
           SubscriptionModuleCode.TrustProfile,
+          SubscriptionModuleCode.Fleet,
         ],
         maxConcurrentSearchTabs: 3,
         laneAnalyticsHistoryDays: 15,

@@ -13,6 +13,9 @@ import { AuctionBidEntity } from "./entities/AuctionBidEntity";
 import { MessageThreadEntity } from "./entities/MessageThreadEntity";
 import { MessageEntity } from "./entities/MessageEntity";
 import { CompanyTrustReviewEntity } from "./entities/CompanyTrustReviewEntity";
+import { FleetDriverEntity } from "./entities/FleetDriverEntity";
+import { FleetVehicleEntity } from "./entities/FleetVehicleEntity";
+import { FleetDriverVehicleAssignmentEntity } from "./entities/FleetDriverVehicleAssignmentEntity";
 import { DatabaseSeedRunner } from "./seed/DatabaseSeedRunner";
 import { SubscriptionCatalogModule } from "../../modules/subscription/SubscriptionCatalogModule";
 
@@ -36,6 +39,9 @@ import { SubscriptionCatalogModule } from "../../modules/subscription/Subscripti
       MessageThreadEntity,
       MessageEntity,
       CompanyTrustReviewEntity,
+      FleetDriverEntity,
+      FleetVehicleEntity,
+      FleetDriverVehicleAssignmentEntity,
     ]),
   ],
   providers: [DatabaseSeedRunner],

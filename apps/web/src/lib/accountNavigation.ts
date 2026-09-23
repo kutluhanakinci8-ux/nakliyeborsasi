@@ -2,6 +2,7 @@ export type AccountMenuIconId =
   | "organization"
   | "listings"
   | "employees"
+  | "fleet"
   | "applications"
   | "payments"
   | "partners"
@@ -34,6 +35,13 @@ export const ACCOUNT_MENU_ITEMS: readonly AccountMenuItem[] = [
     label: "Çalışanlarım",
     lead: "Kullanıcı davetleri, roller ve ekip erişimleri.",
     icon: "employees",
+  },
+  {
+    href: "/hesap/filo",
+    label: "Filo ve şoförler",
+    lead:
+      "Taşıyıcı filonuz: şoförler, çekici/kamyon kayıtları ve aktif eşleştirmeler — TR·UA·EU uyumlu alanlar.",
+    icon: "fleet",
   },
   {
     href: "/hesap/uygulamalar",

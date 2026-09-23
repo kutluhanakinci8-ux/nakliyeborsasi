@@ -6670,6 +6670,39 @@ button.btn-secondary {
   grid-column: 1 / -1;
 }
 
+.fleet-page-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.fleet-page-grid-span {
+  grid-column: 1 / -1;
+}
+
+.fleet-entity-list {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fleet-entity-row {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.fleet-entity-meta {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.82rem;
+  color: #64748b;
+}
+
 .account-form-subheading {
   margin: 4px 0 0;
   font-size: 0.78rem;

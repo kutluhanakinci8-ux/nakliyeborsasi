@@ -40,6 +40,16 @@ export function AccountMenuIcon({ id }: { id: AccountMenuIconId | "logout" }) {
           <path d="M14 20c0-2.2 1.8-4 4-4" />
         </svg>
       );
+    case "fleet":
+      return (
+        <svg {...common}>
+          <path d="M3 13h11v5H3z" />
+          <path d="M14 11h7v7h-7z" />
+          <circle cx="7.5" cy="18" r="1.5" />
+          <circle cx="17.5" cy="18" r="1.5" />
+          <path d="M5 13V9l3-3h5l2 2h3v5" />
+        </svg>
+      );
     case "applications":
       return (
         <svg {...common}>

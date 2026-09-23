@@ -17,6 +17,7 @@ import { AuctionModule } from "./modules/auction/AuctionModule";
 import { MessagingModule } from "./modules/messaging/MessagingModule";
 import { TrustScoreModule } from "./modules/trust/TrustScoreModule";
 import { PlatformAdminModule } from "./modules/platform-admin/PlatformAdminModule";
+import { FleetModule } from "./modules/fleet/FleetModule";
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { PlatformAdminModule } from "./modules/platform-admin/PlatformAdminModul
     MessagingModule,
     TrustScoreModule,
     PlatformAdminModule,
+    FleetModule,
     PanelModule,
     HealthModule,
   ],

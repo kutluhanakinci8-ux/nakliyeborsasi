@@ -19,6 +19,10 @@ import { AuctionBidEntity } from "../entities/AuctionBidEntity";
 import { MessageThreadEntity } from "../entities/MessageThreadEntity";
 import { MessageEntity } from "../entities/MessageEntity";
 import { CompanyTrustReviewEntity } from "../entities/CompanyTrustReviewEntity";
+import { FleetDriverEntity } from "../entities/FleetDriverEntity";
+import { FleetVehicleEntity } from "../entities/FleetVehicleEntity";
+import { FleetDriverVehicleAssignmentEntity } from "../entities/FleetDriverVehicleAssignmentEntity";
+import { seedFleetDemoGraph } from "./FleetDemoSeed";
 
 @Injectable()
 export class DatabaseSeedRunner implements OnModuleInit {
@@ -45,6 +49,12 @@ export class DatabaseSeedRunner implements OnModuleInit {
     private readonly messageRepository: Repository<MessageEntity>,
     @InjectRepository(CompanyTrustReviewEntity)
     private readonly trustReviewRepository: Repository<CompanyTrustReviewEntity>,
+    @InjectRepository(FleetDriverEntity)
+    private readonly fleetDriverRepository: Repository<FleetDriverEntity>,
+    @InjectRepository(FleetVehicleEntity)
+    private readonly fleetVehicleRepository: Repository<FleetVehicleEntity>,
+    @InjectRepository(FleetDriverVehicleAssignmentEntity)
+    private readonly fleetAssignmentRepository: Repository<FleetDriverVehicleAssignmentEntity>,
     private readonly subscriptionPlanCatalog: SubscriptionPlanCatalog,
   ) {}
 
@@ -82,6 +92,16 @@ export class DatabaseSeedRunner implements OnModuleInit {
       );
     } catch {
       // Şema henüz senkronize değilse seed devam eder.
+    }
+    try {
+      await seedFleetDemoGraph({
+        companyRepository: this.companyRepository,
+        driverRepository: this.fleetDriverRepository,
+        vehicleRepository: this.fleetVehicleRepository,
+        assignmentRepository: this.fleetAssignmentRepository,
+      });
+    } catch {
+      // Fleet tabloları henüz yoksa seed atlanır.
     }
   }
 
