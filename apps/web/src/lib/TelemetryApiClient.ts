@@ -64,6 +64,8 @@ export type FleetRoutePoiMarker = {
   displayName: string;
   latitude: number;
   longitude: number;
+  mapLatitude: number;
+  mapLongitude: number;
   distanceFromStartKm: number;
   distanceToRouteMeters: number;
   sourceCode: string;

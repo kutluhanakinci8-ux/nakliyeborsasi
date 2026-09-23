@@ -60,6 +60,9 @@ export type FleetRoutePoiMarker = {
   displayName: string;
   latitude: number;
   longitude: number;
+  /** Haritada rota üzerinde gösterim (koridora projeksiyon). */
+  mapLatitude: number;
+  mapLongitude: number;
   distanceFromStartKm: number;
   distanceToRouteMeters: number;
   sourceCode: string;

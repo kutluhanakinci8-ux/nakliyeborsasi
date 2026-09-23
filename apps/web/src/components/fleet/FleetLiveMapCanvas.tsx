@@ -177,7 +177,7 @@ export function FleetLiveMapCanvas({
           fill: "#64748b",
           label: "POI",
         };
-        L.circleMarker([poi.latitude, poi.longitude], {
+        L.circleMarker([poi.mapLatitude, poi.mapLongitude], {
           radius: 7,
           color: "#fff",
           weight: 2,

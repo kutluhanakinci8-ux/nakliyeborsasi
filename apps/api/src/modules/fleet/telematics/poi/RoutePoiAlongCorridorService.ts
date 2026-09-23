@@ -11,7 +11,8 @@ import { LogisticsPoiEntity } from "../../../../infrastructure/database/entities
 
 @Injectable()
 export class RoutePoiAlongCorridorService {
-  private static readonly DEFAULT_CORRIDOR_METERS = 2500;
+  /** Highways: kantar OSM noktaları otoyol ekseninden yüzlerce m–birkaç km uzakta olabilir. */
+  private static readonly DEFAULT_CORRIDOR_METERS = 8000;
   private static readonly DEFAULT_MAX_POIS = 80;
   private static readonly BBOX_PADDING_METERS = 1500;
 
@@ -61,6 +62,8 @@ export class RoutePoiAlongCorridorService {
         displayName: row?.displayName ?? "POI",
         latitude: match.latitude,
         longitude: match.longitude,
+        mapLatitude: match.latitude,
+        mapLongitude: match.longitude,
         distanceFromStartKm:
           Math.round((match.distanceFromStartMeters / 1000) * 10) / 10,
         distanceToRouteMeters: Math.round(match.distanceToRouteMeters),
