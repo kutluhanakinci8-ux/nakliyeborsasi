@@ -65,7 +65,8 @@ Standard codes in `@nakliyeborsasi/core` (`TelemetryEventTypeCode`). Payload JSO
 
 - Driver: `kutluhantest-sofor@test.nakliyeborsasi.local`
 - Phone (profile): `+905546902543` (iPhone)
-- Portal: `/sofor` → **Konum & sensörler** → `/sofor/telemetri` and **Cihaz eşleştirme** `/sofor/telemetri/cihaz`
+- Portal: **`https://168.231.109.27/sofor/telemetri`** (iPhone Safari konumu HTTP `:3011` ile çalışmaz)
+- Cihaz companion: `/sofor/telemetri/cihaz` — ilk HTTPS açılışında self-signed sertifikayı onaylayın
 
 ## Roadmap (competitive parity)
 
