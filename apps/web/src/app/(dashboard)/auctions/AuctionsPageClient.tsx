@@ -257,9 +257,24 @@ export function AuctionsPageClient() {
                   ) : null}
                 </div>
                 <div className="freight-row-price freight-row-price--top">
-                  <span className="price-amount">
-                    {best ?? session.minimumBidAmount} {session.currencyCode}
-                  </span>
+                  <div className="auction-list-price-head">
+                    <span className="price-amount">
+                      {best ?? session.minimumBidAmount} {session.currencyCode}
+                    </span>
+                    <span className="auction-list-price-side">
+                      {best ? (
+                        <>
+                          <span>L1: {best} {session.currencyCode}</span>
+                          <span className="auction-list-price-sep" aria-hidden>
+                            ·
+                          </span>
+                        </>
+                      ) : null}
+                      <span>
+                        Tavan {session.minimumBidAmount} {session.currencyCode}
+                      </span>
+                    </span>
+                  </div>
                   <span className="price-hint">
                     {best ? "En iyi teklif" : "Referans tavan"}
                   </span>
