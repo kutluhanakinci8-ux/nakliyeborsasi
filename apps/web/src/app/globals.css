@@ -5197,6 +5197,32 @@ button.btn-secondary {
   color: #94a3b8;
 }
 
+.auction-list-ends-badge {
+  max-width: 100%;
+  white-space: normal;
+  line-height: 1.3;
+}
+
+.auction-countdown {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #0f766e;
+}
+
+.auction-countdown strong {
+  font-weight: 800;
+}
+
+.auction-countdown--urgent {
+  color: #b45309;
+}
+
+.auction-countdown--in-price {
+  text-align: right;
+}
+
 .auction-detail-top {
   display: flex;
   flex-wrap: wrap;

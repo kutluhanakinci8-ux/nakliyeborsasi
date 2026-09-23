@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { AuctionCountdown } from "../../../components/AuctionCountdown";
 import {
   AuctionPlaceBidDialog,
   type AuctionPlaceBidContext,
@@ -250,6 +251,9 @@ export function AuctionsPageClient() {
                   <span className="badge badge--muted">
                     {competition.bidCount} teklif
                   </span>
+                  <span className="badge badge--muted auction-list-ends-badge">
+                    Bitiş: {new Date(session.endsAt).toLocaleString(locale)}
+                  </span>
                   {competition.myRank ? (
                     <span className="badge badge--accent">
                       Siz: L{competition.myRank}
@@ -278,6 +282,12 @@ export function AuctionsPageClient() {
                   <span className="price-hint">
                     {best ? "En iyi teklif" : "Referans tavan"}
                   </span>
+                  {activeTab === "open" && session.statusCode === "OPEN" ? (
+                    <AuctionCountdown
+                      endsAt={session.endsAt}
+                      className="auction-countdown--in-price"
+                    />
+                  ) : null}
                   <span className="price-hint auction-list-id">
                     #{session.id.slice(0, 8)}
                   </span>
@@ -305,12 +315,11 @@ export function AuctionsPageClient() {
                   )}
                   <p className="module-row-meta auction-list-meta">
                     {listing?.loadingDateStart
-                      ? `Yükleme ${formatLoadingDateTr(listing.loadingDateStart)} · `
-                      : ""}
-                    Bitiş: {new Date(session.endsAt).toLocaleString(locale)}
+                      ? `Yükleme ${formatLoadingDateTr(listing.loadingDateStart)}`
+                      : null}
                     {activeTab === "closed"
-                      ? ` · Kazanan: ${formatWinner(session)}`
-                      : ""}
+                      ? `${listing?.loadingDateStart ? " · " : ""}Kazanan: ${formatWinner(session)}`
+                      : null}
                   </p>
                   <div className="auction-list-cargo-row">
                     <p className="auction-list-cargo">
