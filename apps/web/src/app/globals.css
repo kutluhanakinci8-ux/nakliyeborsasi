@@ -5055,21 +5055,28 @@ button.btn-secondary {
 
 .freight-row-badges--footer {
   margin-bottom: 0;
-  justify-content: flex-end;
+  justify-content: flex-start;
   align-items: center;
+  flex: 0 1 auto;
+  min-width: 0;
 }
 
 .freight-row-footer {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px 14px;
-  margin-top: 6px;
+  justify-content: flex-start;
+  gap: 12px 16px;
+  margin-top: 8px;
+  width: 100%;
+  min-height: 34px;
 }
 
-.freight-row-footer .freight-row-actions {
-  flex: 0 1 auto;
+.freight-row-actions--footer {
+  margin-left: auto;
+  flex: 0 0 auto;
+  justify-content: flex-end;
+  align-items: center;
 }
 
 .badge {
@@ -5438,6 +5445,17 @@ button.btn-secondary {
 
   .freight-row {
     grid-template-columns: 1fr;
+  }
+
+  .freight-row-footer {
+    flex-wrap: wrap;
+    row-gap: 10px;
+  }
+
+  .freight-row-actions--footer {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-start;
   }
 
   .freight-row-price {
