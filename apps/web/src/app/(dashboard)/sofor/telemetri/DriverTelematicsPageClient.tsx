@@ -8,6 +8,7 @@ import {
   type TelemetryDriverStatusSnapshot,
   type TelemetryEnrollResult,
 } from "../../../../lib/TelemetryApiClient";
+import { geolocationBlockedReason } from "../../../../lib/geolocationContext";
 
 const STORAGE_KEY = "nb-telemetry-enrollment-v1";
 
@@ -51,6 +52,11 @@ export function DriverTelematicsPageClient() {
   );
   const [errorMessage, setErrorMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const [geoWarning, setGeoWarning] = useState<string | null>(null);
+
+  useEffect(() => {
+    setGeoWarning(geolocationBlockedReason());
+  }, []);
 
   const refresh = useCallback(async () => {
     if (!accessToken) {
@@ -186,8 +192,15 @@ export function DriverTelematicsPageClient() {
         <h2 className="driver-portal-section-title">iPhone cihazı</h2>
         <p className="driver-telematics-meta">
           Test numarası filo kaydında <strong>+905546902543</strong> olmalı.
-          Pilot için web companion veya ileride native uygulama kullanılır.
+          iPhone’da canlı konum için <strong>HTTPS</strong> şart:{" "}
+          <a href="https://168.231.109.27/sofor/telemetri">
+            https://168.231.109.27/sofor/telemetri
+          </a>{" "}
+          (HTTP :3011 konum izni vermez).
         </p>
+        {typeof window !== "undefined" && geolocationBlockedReason() ? (
+          <p className="error banner error--light">{geolocationBlockedReason()}</p>
+        ) : null}
         {device ? (
           <p className="driver-telematics-meta">
             Son görülme: {device.lastSeenAt ?? "henüz yok"} · platform:{" "}

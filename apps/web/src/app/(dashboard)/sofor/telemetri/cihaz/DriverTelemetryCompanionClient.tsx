@@ -6,6 +6,7 @@ import {
   TelemetryApiClient,
   type TelemetryEnrollResult,
 } from "../../../../../lib/TelemetryApiClient";
+import { geolocationBlockedReason } from "../../../../../lib/geolocationContext";
 
 const STORAGE_KEY = "nb-telemetry-enrollment-v1";
 
@@ -83,8 +84,9 @@ export function DriverTelemetryCompanionClient() {
       setLastError("Önce /sofor/telemetri üzerinden iPhone eşleştirin.");
       return;
     }
-    if (!navigator.geolocation) {
-      setLastError("Bu tarayıcı konum desteklemiyor.");
+    const blocked = geolocationBlockedReason();
+    if (blocked) {
+      setLastError(blocked);
       return;
     }
     setTracking(true);
@@ -108,7 +110,13 @@ export function DriverTelemetryCompanionClient() {
         });
       },
       (error) => {
-        setLastError(error.message);
+        if (error.code === error.PERMISSION_DENIED) {
+          setLastError(
+            "Konum izni reddedildi. Ayarlar → Safari → Konum veya site için «İzin ver» seçin.",
+          );
+        } else {
+          setLastError(error.message);
+        }
         setTracking(false);
       },
       { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 },

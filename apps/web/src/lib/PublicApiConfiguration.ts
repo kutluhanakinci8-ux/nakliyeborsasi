@@ -7,7 +7,10 @@ export class PublicApiConfiguration {
         configured.includes("127.0.0.1") ||
         configured.includes("localhost");
       if (isLocalConfigured) {
-        const { protocol, hostname } = window.location;
+        const { protocol, hostname, port } = window.location;
+        if (protocol === "https:" && (port === "" || port === "443")) {
+          return `${protocol}//${hostname}/api/v1`;
+        }
         return `${protocol}//${hostname}:3010/api/v1`;
       }
       return configured;
