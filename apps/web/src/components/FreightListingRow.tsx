@@ -61,16 +61,6 @@ export function FreightListingRow({
         />
         {loadingMeta ? <p className="freight-row-meta">{loadingMeta}</p> : null}
         <div className="freight-row-footer">
-          <div className="freight-row-badges freight-row-badges--footer">
-            <FreightRouteCountryBadges
-              originCountry={originResolved.countryCode}
-              destinationCountry={destinationResolved.countryCode}
-            />
-            <span className="badge badge--muted">
-              {formatEquipmentLabel(equipmentType)}
-            </span>
-            <span className="badge badge--muted">{weightTonnes} t</span>
-          </div>
           <div className="freight-row-actions freight-row-actions--footer">
             <button type="button" className="btn-link" onClick={onMessage}>
               Mesaj
@@ -81,6 +71,16 @@ export function FreightListingRow({
             <button type="button" className="btn-accent" onClick={onAuction}>
               İhale aç
             </button>
+          </div>
+          <div className="freight-row-badges freight-row-badges--footer">
+            <FreightRouteCountryBadges
+              originCountry={originResolved.countryCode}
+              destinationCountry={destinationResolved.countryCode}
+            />
+            <span className="badge badge--muted">
+              {formatEquipmentLabel(equipmentType)}
+            </span>
+            <span className="badge badge--muted">{weightTonnes} t</span>
           </div>
         </div>
       </div>

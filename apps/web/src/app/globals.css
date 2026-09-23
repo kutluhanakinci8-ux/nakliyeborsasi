@@ -5055,7 +5055,8 @@ button.btn-secondary {
 
 .freight-row-badges--footer {
   margin-bottom: 0;
-  justify-content: flex-start;
+  margin-left: auto;
+  justify-content: flex-end;
   align-items: center;
   flex: 0 1 auto;
   min-width: 0;
@@ -5065,7 +5066,7 @@ button.btn-secondary {
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: space-between;
   gap: 12px 16px;
   margin-top: 8px;
   width: 100%;
@@ -5073,9 +5074,8 @@ button.btn-secondary {
 }
 
 .freight-row-actions--footer {
-  margin-left: auto;
   flex: 0 0 auto;
-  justify-content: flex-end;
+  justify-content: flex-start;
   align-items: center;
 }
 
@@ -5452,8 +5452,13 @@ button.btn-secondary {
     row-gap: 10px;
   }
 
-  .freight-row-actions--footer {
+  .freight-row-badges--footer {
     margin-left: 0;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .freight-row-actions--footer {
     width: 100%;
     justify-content: flex-start;
   }
