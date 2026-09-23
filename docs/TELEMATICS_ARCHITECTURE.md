@@ -72,6 +72,7 @@ Standard codes in `@nakliyeborsasi/core` (`TelemetryEventTypeCode`). Payload JSO
 
 1. **MVP (this branch)** — API, consent, web companion, stop/speed pipeline
 2. **React Native / Swift driver app** — background GPS, Core Motion, push
-3. **Carrier map UI** — live fleet on `/hesap/filo`
-4. **Regional stacks** — EU data residency, DPA artifacts, tachograph adjacency (not replacement)
-5. **OBD / ELD partners** — `externalReference` on vehicles (already in fleet model)
+3. **Carrier map UI** — live fleet on `/hesap/filo` (ham GPS polyline = kuş uçuşu)
+4. **Yol üzeri rota** — map matching / OSRM: **`docs/TELEMATICS_ROUTE_MATCHING_PLAN.md`**
+5. **Regional stacks** — EU data residency, DPA artifacts, tachograph adjacency (not replacement)
+6. **OBD / ELD partners** — `externalReference` on vehicles (already in fleet model)
