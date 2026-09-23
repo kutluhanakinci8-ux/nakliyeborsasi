@@ -3,7 +3,11 @@ import { PublicApiConfiguration } from "./PublicApiConfiguration";
 export type FleetDriverSummary = {
   driverId: string;
   displayName: string;
+  primaryPhoneE164: string | null;
+  driverLicenseNumber: string | null;
+  driverLicenseCountryCode: string | null;
   statusCode: string;
+  linkedUserAccountId: string | null;
   activeVehiclePlate: string | null;
 };
 
@@ -98,6 +102,31 @@ export class FleetApiClient {
     }
     const payload = (await response.json()) as { overview: FleetOverviewSnapshot };
     return payload.overview;
+  }
+
+  public static async updateDriver(
+    accessToken: string,
+    locale: string,
+    driverId: string,
+    body: {
+      displayName?: string;
+      primaryPhoneE164?: string | null;
+      driverLicenseNumber?: string | null;
+      driverLicenseCountryCode?: string | null;
+      statusCode?: string;
+    },
+  ): Promise<void> {
+    const response = await fetch(
+      `${PublicApiConfiguration.resolveBaseUrl()}/fleet/drivers/${driverId}?lang=${locale}`,
+      {
+        method: "PATCH",
+        headers: this.authHeaders(accessToken),
+        body: JSON.stringify(body),
+      },
+    );
+    if (!response.ok) {
+      throw new Error(await response.text());
+    }
   }
 
   public static async createDriver(

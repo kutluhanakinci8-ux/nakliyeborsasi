@@ -6696,6 +6696,39 @@ button.btn-secondary {
   background: #f8fafc;
 }
 
+.fleet-entity-row--split {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.fleet-entity-muted {
+  font-style: normal;
+  color: #94a3b8;
+}
+
+.fleet-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.fleet-driver-edit-form {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px dashed #cbd5e1;
+  background: #fff;
+}
+
+.btn-account-secondary--compact {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  font-size: 0.82rem;
+}
+
 .fleet-entity-meta {
   display: block;
   margin-top: 4px;

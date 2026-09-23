@@ -38,6 +38,10 @@ export function FleetPageClient() {
   const [dispatchAuctionId, setDispatchAuctionId] = useState("");
   const [dispatchVehicleId, setDispatchVehicleId] = useState("");
   const [dispatchDriverId, setDispatchDriverId] = useState("");
+  const [editingDriverId, setEditingDriverId] = useState<string | null>(null);
+  const [editDriverName, setEditDriverName] = useState("");
+  const [editDriverPhone, setEditDriverPhone] = useState("");
+  const [editDriverStatus, setEditDriverStatus] = useState("ACTIVE");
 
   const loadOverview = useCallback(async (): Promise<void> => {
     if (!accessToken) {
@@ -173,6 +177,42 @@ export function FleetPageClient() {
     }
   }
 
+  function startEditDriver(driver: FleetDriverSummary): void {
+    setEditingDriverId(driver.driverId);
+    setEditDriverName(driver.displayName);
+    setEditDriverPhone(driver.primaryPhoneE164 ?? "");
+    setEditDriverStatus(driver.statusCode);
+  }
+
+  function cancelEditDriver(): void {
+    setEditingDriverId(null);
+    setEditDriverName("");
+    setEditDriverPhone("");
+    setEditDriverStatus("ACTIVE");
+  }
+
+  async function handleDriverUpdate(event: FormEvent<HTMLFormElement>): Promise<void> {
+    event.preventDefault();
+    if (!accessToken || !editingDriverId) {
+      return;
+    }
+    setIsBusy(true);
+    setErrorMessage("");
+    try {
+      await FleetApiClient.updateDriver(accessToken, locale, editingDriverId, {
+        displayName: editDriverName.trim(),
+        primaryPhoneE164: editDriverPhone.trim() || null,
+        statusCode: editDriverStatus,
+      });
+      cancelEditDriver();
+      await loadOverview();
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Şoför güncellenemedi");
+    } finally {
+      setIsBusy(false);
+    }
+  }
+
   async function handleAssign(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
     if (!accessToken || !assignDriverId || !assignVehicleId) {
@@ -230,9 +270,63 @@ export function FleetPageClient() {
             Şoför ekle
           </button>
         </form>
+        {editingDriverId ? (
+          <form
+            className="account-form-grid fleet-driver-edit-form"
+            onSubmit={(e) => void handleDriverUpdate(e)}
+          >
+            <p className="account-form-span-2 fleet-entity-meta">
+              Şoför düzenle · telemetri için telefon <strong>E.164</strong> formatında
+              (ör. +905546902543)
+            </p>
+            <label className="label-light">
+              Ad soyad
+              <input
+                className="input-light"
+                value={editDriverName}
+                onChange={(event) => setEditDriverName(event.target.value)}
+                required
+              />
+            </label>
+            <label className="label-light">
+              Telefon (E.164)
+              <input
+                className="input-light"
+                value={editDriverPhone}
+                onChange={(event) => setEditDriverPhone(event.target.value)}
+                placeholder="+905546902543"
+              />
+            </label>
+            <label className="label-light">
+              Durum
+              <select
+                className="input-light"
+                value={editDriverStatus}
+                onChange={(event) => setEditDriverStatus(event.target.value)}
+              >
+                <option value="ACTIVE">Aktif</option>
+                <option value="ON_LEAVE">İzinli</option>
+                <option value="INACTIVE">Pasif</option>
+              </select>
+            </label>
+            <div className="fleet-row-actions">
+              <button type="submit" className="btn-account-primary" disabled={isBusy}>
+                Kaydet
+              </button>
+              <button
+                type="button"
+                className="btn-account-ghost"
+                disabled={isBusy}
+                onClick={cancelEditDriver}
+              >
+                İptal
+              </button>
+            </div>
+          </form>
+        ) : null}
         <ul className="fleet-entity-list">
           {drivers.map((driver) => (
-            <li key={driver.driverId} className="fleet-entity-row">
+            <li key={driver.driverId} className="fleet-entity-row fleet-entity-row--split">
               <div>
                 <strong>{driver.displayName}</strong>
                 <span className="fleet-entity-meta">
@@ -241,7 +335,22 @@ export function FleetPageClient() {
                     ? ` · ${driver.activeVehiclePlate}`
                     : " · Araç atanmadı"}
                 </span>
+                <span className="fleet-entity-meta">
+                  Telefon:{" "}
+                  {driver.primaryPhoneE164 ?? (
+                    <em className="fleet-entity-muted">girilmedi</em>
+                  )}
+                  {driver.linkedUserAccountId ? " · Portal kullanıcısı bağlı" : ""}
+                </span>
               </div>
+              <button
+                type="button"
+                className="btn-account-secondary btn-account-secondary--compact"
+                disabled={isBusy}
+                onClick={() => startEditDriver(driver)}
+              >
+                Düzenle
+              </button>
             </li>
           ))}
         </ul>
