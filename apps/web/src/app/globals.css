@@ -5116,44 +5116,49 @@ button.btn-secondary {
 .auction-list-row {
   grid-template-areas:
     "top"
+    "sub"
     "main";
   grid-template-columns: 1fr;
 }
 
-.auction-list-top {
+.auction-list-price-line {
   grid-area: top;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px 14px;
+  gap: 6px 8px;
   width: 100%;
 }
 
-.auction-list-top-badges {
-  flex: 1 1 280px;
-  min-width: 0;
+.auction-list-price-line .freight-route-country-badges {
+  display: inline-flex;
 }
 
-.auction-list-top-price {
-  flex: 0 1 auto;
-  grid-area: unset;
-  align-self: center;
-  text-align: right;
-  min-width: 108px;
-  padding-top: 0;
+.auction-list-price-line .auction-list-price-side {
+  margin-left: auto;
+}
+
+.auction-list-price-line-amount {
+  flex-shrink: 0;
+}
+
+.auction-list-price-sub {
+  grid-area: sub;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px 12px;
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+.auction-list-price-sub .auction-list-id {
+  margin-top: 0;
 }
 
 .auction-list-row .freight-row-main {
   grid-area: main;
-}
-
-.auction-list-price-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: flex-end;
-  gap: 6px 10px;
 }
 
 .auction-list-price-side {
@@ -5240,6 +5245,10 @@ button.btn-secondary {
 
 .auction-countdown--in-price {
   text-align: right;
+}
+
+.auction-list-price-sub .auction-countdown {
+  margin-top: 0;
 }
 
 .auction-detail-top {

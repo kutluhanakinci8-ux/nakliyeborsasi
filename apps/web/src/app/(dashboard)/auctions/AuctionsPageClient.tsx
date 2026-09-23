@@ -228,71 +228,64 @@ export function AuctionsPageClient() {
             const listing = session.listing;
             return (
               <article key={session.id} className="freight-row module-row auction-list-row">
-                <div className="auction-list-top">
-                  <div className="freight-row-badges freight-row-badges--top auction-list-top-badges">
-                    <span className="badge badge--country">
-                      {activeTab === "open" ? "Açık" : "Kapalı"}
+                <div className="auction-list-price-line">
+                  <span className="badge badge--country">
+                    {activeTab === "open" ? "Açık" : "Kapalı"}
+                  </span>
+                  {listing ? (
+                    <FreightRouteCountryBadges
+                      originCountry={listing.origin.countryCode}
+                      destinationCountry={listing.destination.countryCode}
+                    />
+                  ) : null}
+                  {listing ? (
+                    <>
+                      <span className="badge badge--muted">
+                        {formatEquipmentLabel(listing.equipmentType)}
+                      </span>
+                      <span className="badge badge--muted">
+                        {listing.weightTonnes} t
+                      </span>
+                    </>
+                  ) : null}
+                  <span className="badge badge--muted">
+                    {competition.bidCount} teklif
+                  </span>
+                  <span className="badge badge--muted auction-list-ends-badge">
+                    Bitiş: {new Date(session.endsAt).toLocaleString(locale)}
+                  </span>
+                  {competition.myRank ? (
+                    <span className="badge badge--accent">
+                      Siz: L{competition.myRank}
                     </span>
-                    {listing ? (
-                      <FreightRouteCountryBadges
-                        originCountry={listing.origin.countryCode}
-                        destinationCountry={listing.destination.countryCode}
-                      />
-                    ) : null}
-                    {listing ? (
+                  ) : null}
+                  <span className="auction-list-price-side">
+                    {best ? (
                       <>
-                        <span className="badge badge--muted">
-                          {formatEquipmentLabel(listing.equipmentType)}
-                        </span>
-                        <span className="badge badge--muted">
-                          {listing.weightTonnes} t
+                        <span>L1: {best} {session.currencyCode}</span>
+                        <span className="auction-list-price-sep" aria-hidden>
+                          ·
                         </span>
                       </>
                     ) : null}
-                    <span className="badge badge--muted">
-                      {competition.bidCount} teklif
+                    <span>
+                      Tavan {session.minimumBidAmount} {session.currencyCode}
                     </span>
-                    <span className="badge badge--muted auction-list-ends-badge">
-                      Bitiş: {new Date(session.endsAt).toLocaleString(locale)}
-                    </span>
-                    {competition.myRank ? (
-                      <span className="badge badge--accent">
-                        Siz: L{competition.myRank}
-                      </span>
-                    ) : null}
-                  </div>
-                  <div className="freight-row-price auction-list-top-price">
-                    <div className="auction-list-price-head">
-                      <span className="auction-list-price-side">
-                        {best ? (
-                          <>
-                            <span>L1: {best} {session.currencyCode}</span>
-                            <span className="auction-list-price-sep" aria-hidden>
-                              ·
-                            </span>
-                          </>
-                        ) : null}
-                        <span>
-                          Tavan {session.minimumBidAmount} {session.currencyCode}
-                        </span>
-                      </span>
-                      <span className="price-amount">
-                        {best ?? session.minimumBidAmount} {session.currencyCode}
-                      </span>
-                    </div>
-                    <span className="price-hint">
-                      {best ? "En iyi teklif" : "Referans tavan"}
-                    </span>
-                    {activeTab === "open" && session.statusCode === "OPEN" ? (
-                      <AuctionCountdown
-                        endsAt={session.endsAt}
-                        className="auction-countdown--in-price"
-                      />
-                    ) : null}
-                    <span className="price-hint auction-list-id">
-                      #{session.id.slice(0, 8)}
-                    </span>
-                  </div>
+                  </span>
+                  <span className="price-amount auction-list-price-line-amount">
+                    {best ?? session.minimumBidAmount} {session.currencyCode}
+                  </span>
+                </div>
+                <div className="auction-list-price-sub">
+                  <span className="price-hint">
+                    {best ? "En iyi teklif" : "Referans tavan"}
+                  </span>
+                  {activeTab === "open" && session.statusCode === "OPEN" ? (
+                    <AuctionCountdown endsAt={session.endsAt} />
+                  ) : null}
+                  <span className="price-hint auction-list-id">
+                    #{session.id.slice(0, 8)}
+                  </span>
                 </div>
                 <div className="freight-row-main auction-list-row-main">
                   {listing ? (
