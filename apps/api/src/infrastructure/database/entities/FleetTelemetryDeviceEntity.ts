@@ -12,7 +12,7 @@ import { CompanyEntity } from "./CompanyEntity";
 import { FleetDriverEntity } from "./FleetDriverEntity";
 
 @Entity({ name: "fleet_telemetry_devices" })
-@Index(["fleetDriverId", "revokedAt"])
+@Index(["fleetDriverId", "consentRevokedAt"])
 @Index(["ingestTokenHash"], { unique: true })
 export class FleetTelemetryDeviceEntity {
   @PrimaryGeneratedColumn("uuid")
