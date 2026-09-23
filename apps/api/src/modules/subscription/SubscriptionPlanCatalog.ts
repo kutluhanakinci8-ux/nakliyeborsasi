@@ -16,6 +16,7 @@ export class SubscriptionPlanCatalog {
         tierCode: SubscriptionTierCode.Starter,
         includedModules: [
           SubscriptionModuleCode.MarketplaceSearch,
+          SubscriptionModuleCode.Auction,
         ],
         maxConcurrentSearchTabs: 1,
         laneAnalyticsHistoryDays: 0,

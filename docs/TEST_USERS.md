@@ -32,7 +32,7 @@ Plan: `carrier_professional_tr_ua`
 
 ## Yük arayan (5) — `LOAD_SEEKER`
 
-Dispetcher rolü, arama odaklı **starter** plan.
+Dispetcher rolü, arama odaklı **starter** plan (marketplace + ihale görüntüleme/teklif; lane analytics ve harici feed yok).
 
 | E-posta | Firma |
 |---------|--------|
