@@ -299,26 +299,31 @@ export function AuctionsPageClient() {
                       ? ` · Kazanan: ${formatWinner(session)}`
                       : ""}
                   </p>
-                  {session.cargoDescription ? (
-                    <p className="auction-list-cargo">{session.cargoDescription}</p>
-                  ) : null}
-                </div>
-                <div className="freight-row-actions freight-row-actions--top auction-list-actions">
-                  <Link
-                    href={`/auctions/${session.id}`}
-                    className="btn-link btn-link--compact"
-                  >
-                    Detay ve şartlar
-                  </Link>
-                  {activeTab === "open" ? (
-                    <button
-                      type="button"
-                      className="btn-accent btn-accent--compact"
-                      onClick={() => openBidDialog(session)}
-                    >
-                      Teklif ver
-                    </button>
-                  ) : null}
+                  <div className="auction-list-cargo-row">
+                    <p className="auction-list-cargo">
+                      {session.cargoDescription ??
+                        (listing
+                          ? `${formatEquipmentLabel(listing.equipmentType)}, ${listing.weightTonnes} t`
+                          : "")}
+                    </p>
+                    <div className="freight-row-actions freight-row-actions--top auction-list-actions">
+                      <Link
+                        href={`/auctions/${session.id}`}
+                        className="btn-link btn-link--compact"
+                      >
+                        Detay ve şartlar
+                      </Link>
+                      {activeTab === "open" ? (
+                        <button
+                          type="button"
+                          className="btn-accent btn-accent--compact"
+                          onClick={() => openBidDialog(session)}
+                        >
+                          Teklif ver
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
                 </div>
               </article>
             );
