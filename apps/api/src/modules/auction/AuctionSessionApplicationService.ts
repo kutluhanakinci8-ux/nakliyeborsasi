@@ -23,6 +23,11 @@ import {
   AuctionSessionDetailResponse,
   mapSessionDetail,
 } from "./AuctionSessionDetailMapper";
+import {
+  buildDefaultAuctionTermsSummary,
+  defaultPaymentDeferDays,
+  defaultPaymentFormCode,
+} from "./auctionDefaultTerms";
 
 @Injectable()
 export class AuctionSessionApplicationService {
@@ -66,6 +71,18 @@ export class AuctionSessionApplicationService {
     const endsAt = new Date(
       Date.now() + payload.durationHours * 60 * 60 * 1000,
     );
+    const termsSummary =
+      payload.termsSummary?.trim() ||
+      buildDefaultAuctionTermsSummary(listing);
+    const specDocumentUrl = payload.specDocumentUrl?.trim() || null;
+    const specDocumentLabel =
+      payload.specDocumentLabel?.trim() ||
+      (specDocumentUrl ? "Taşıma şartnamesi" : null);
+    const bidStep =
+      payload.bidStepAmount !== undefined
+        ? payload.bidStepAmount.toFixed(2)
+        : null;
+
     return this.auctionSessionRepository.save(
       this.auctionSessionRepository.create({
         freightListingId: payload.freightListingId,
@@ -75,6 +92,14 @@ export class AuctionSessionApplicationService {
         minimumBidAmount: payload.minimumBidAmount.toFixed(2),
         currencyCode: payload.currencyCode,
         winningBidId: null,
+        termsSummary,
+        specDocumentUrl,
+        specDocumentLabel,
+        paymentFormCode: payload.paymentFormCode ?? defaultPaymentFormCode(),
+        paymentDeferDays: payload.paymentDeferDays ?? defaultPaymentDeferDays(),
+        priceIncludesVat: payload.priceIncludesVat ?? false,
+        bidStepAmount: bidStep,
+        cargoDescription: payload.cargoDescription?.trim() || null,
       }),
     );
   }

@@ -14,6 +14,14 @@ export type AuctionSessionDetailResponse = {
     currencyCode: string;
     winningBidId: string | null;
     createdAt: string;
+    termsSummary: string | null;
+    specDocumentUrl: string | null;
+    specDocumentLabel: string | null;
+    paymentFormCode: string | null;
+    paymentDeferDays: number | null;
+    priceIncludesVat: boolean;
+    bidStepAmount: string | null;
+    cargoDescription: string | null;
     bids: {
       id: string;
       bidderCompanyId: string;
@@ -107,6 +115,14 @@ export function mapSessionDetail(
       currencyCode: session.currencyCode,
       winningBidId: session.winningBidId,
       createdAt: session.createdAt.toISOString(),
+      termsSummary: session.termsSummary,
+      specDocumentUrl: session.specDocumentUrl,
+      specDocumentLabel: session.specDocumentLabel,
+      paymentFormCode: session.paymentFormCode,
+      paymentDeferDays: session.paymentDeferDays,
+      priceIncludesVat: session.priceIncludesVat,
+      bidStepAmount: session.bidStepAmount,
+      cargoDescription: session.cargoDescription,
       bids: bids
         .map((bid) => ({
           id: bid.id,

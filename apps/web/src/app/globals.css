@@ -5197,6 +5197,39 @@ button.btn-secondary {
   color: #64748b;
 }
 
+.auction-detail-payment-grid {
+  margin-bottom: 14px;
+}
+
+.auction-detail-h3 {
+  margin: 0 0 8px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #334155;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.auction-detail-terms-text {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: #334155;
+  white-space: pre-wrap;
+}
+
+.auction-detail-spec-doc {
+  margin: 12px 0 0;
+  font-size: 0.88rem;
+}
+
+.auction-detail-cargo {
+  margin: 0 0 12px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #475569;
+}
+
 .auction-detail-bid-list {
   list-style: none;
   margin: 0;

@@ -25,12 +25,24 @@ export type AuctionListingPoint = {
   placeKindCode?: string | null;
 };
 
+export type AuctionSessionTermsFields = {
+  termsSummary: string | null;
+  specDocumentUrl: string | null;
+  specDocumentLabel: string | null;
+  paymentFormCode: string | null;
+  paymentDeferDays: number | null;
+  priceIncludesVat: boolean;
+  bidStepAmount: string | null;
+  cargoDescription: string | null;
+};
+
 export type AuctionSessionDetail = {
-  session: AuctionSessionRecord & {
-    ownerCompanyId: string;
-    createdAt: string;
-    bids: (AuctionBidRecord & { createdAt: string })[];
-  };
+  session: AuctionSessionRecord &
+    AuctionSessionTermsFields & {
+      ownerCompanyId: string;
+      createdAt: string;
+      bids: (AuctionBidRecord & { createdAt: string })[];
+    };
   listing: {
     listingId: string;
     ownerCompanyId: string;
@@ -83,6 +95,14 @@ export class AuctionApiClient {
       minimumBidAmount: number;
       currencyCode: string;
       durationHours: number;
+      termsSummary?: string;
+      specDocumentUrl?: string;
+      specDocumentLabel?: string;
+      paymentFormCode?: string;
+      paymentDeferDays?: number;
+      priceIncludesVat?: boolean;
+      bidStepAmount?: number;
+      cargoDescription?: string;
     },
   ): Promise<void> {
     await AuthenticatedApiClient.fetchJson(

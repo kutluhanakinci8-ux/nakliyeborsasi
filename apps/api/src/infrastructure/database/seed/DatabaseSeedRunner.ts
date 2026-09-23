@@ -13,6 +13,7 @@ import { SubscriptionPlanCatalog } from "../../../modules/subscription/Subscript
 import { seedTestMarketParticipants } from "./TestMarketParticipantSeed";
 import { seedTestMarketDemoGraph } from "./TestMarketDemoGraphSeed";
 import { enrichFreightListingPlaces } from "./FreightListingPlaceEnrichmentSeed";
+import { enrichAuctionTermsAndPayment } from "./AuctionTermsEnrichmentSeed";
 import { AuctionSessionEntity } from "../entities/AuctionSessionEntity";
 import { AuctionBidEntity } from "../entities/AuctionBidEntity";
 import { MessageThreadEntity } from "../entities/MessageThreadEntity";
@@ -73,6 +74,14 @@ export class DatabaseSeedRunner implements OnModuleInit {
       await enrichFreightListingPlaces(this.freightListingRepository);
     } catch {
       // Şema henüz senkronize değilse (yeni place kolonları) seed devam eder.
+    }
+    try {
+      await enrichAuctionTermsAndPayment(
+        this.auctionSessionRepository,
+        this.freightListingRepository,
+      );
+    } catch {
+      // Şema henüz senkronize değilse seed devam eder.
     }
   }
 

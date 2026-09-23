@@ -12,6 +12,11 @@ import {
   type AuctionSessionDetail,
 } from "../../../lib/AuctionApiClient";
 import { formatLoadingDateTr } from "../../../lib/freightLocationDisplay";
+import {
+  formatPaymentDeferTr,
+  formatPaymentFormTr,
+  formatVatInclusionTr,
+} from "../../../lib/paymentFormDisplay";
 import { formatParticipantType } from "../../../lib/PlatformAdminApiClient";
 
 function formatEquipmentLabel(equipmentType: string): string {
@@ -93,7 +98,7 @@ export function AuctionDetailPageClient({ sessionId }: AuctionDetailPageClientPr
     <ModulePageShell
       eyebrow="İhale detayı"
       title={session ? `İhale #${session.id.slice(0, 8)}` : "İhale"}
-      lead="İlanı açan firma, yük özellikleri ve teklif geçmişi tek ekranda. Şartname ve ek belgeler sonraki fazda eklenecek."
+      lead="İlanı açan firma, şartname, ödeme koşulları ve teklif geçmişi tek ekranda."
       action={
         <Link href="/auctions" className="btn-secondary btn-secondary--light">
           ← İhale listesi
@@ -161,10 +166,65 @@ export function AuctionDetailPageClient({ sessionId }: AuctionDetailPageClientPr
             <p className="auction-detail-meta">
               Bitiş: {new Date(session.endsAt).toLocaleString(locale)} · Taban{" "}
               {session.minimumBidAmount} {session.currencyCode}
+              {session.bidStepAmount
+                ? ` · Min. artış ${session.bidStepAmount} ${session.currencyCode}`
+                : ""}
               {listingPrice
                 ? ` · İlan referans: ${listingPrice.amount.toLocaleString("tr-TR")} ${listingPrice.currencyCode}`
                 : ""}
             </p>
+          </section>
+
+          <section className="module-panel auction-detail-terms">
+            <h2 className="auction-detail-h2">Şartname ve ödeme</h2>
+            <dl className="auction-detail-spec-grid auction-detail-payment-grid">
+              <div>
+                <dt>Ödeme şekli</dt>
+                <dd>{formatPaymentFormTr(session.paymentFormCode)}</dd>
+              </div>
+              <div>
+                <dt>Ödeme süresi</dt>
+                <dd>
+                  {formatPaymentDeferTr(
+                    session.paymentFormCode,
+                    session.paymentDeferDays,
+                  )}
+                </dd>
+              </div>
+              <div>
+                <dt>Fiyat</dt>
+                <dd>{formatVatInclusionTr(session.priceIncludesVat)}</dd>
+              </div>
+              {session.bidStepAmount ? (
+                <div>
+                  <dt>Teklif artışı</dt>
+                  <dd>
+                    {Number(session.bidStepAmount).toLocaleString("tr-TR")}{" "}
+                    {session.currencyCode}
+                  </dd>
+                </div>
+              ) : null}
+            </dl>
+            {session.termsSummary ? (
+              <div className="auction-detail-terms-body">
+                <h3 className="auction-detail-h3">Taşıma şartları</h3>
+                <p className="auction-detail-terms-text">{session.termsSummary}</p>
+              </div>
+            ) : (
+              <p className="module-hint">Şartname metni henüz girilmemiş.</p>
+            )}
+            {session.specDocumentUrl ? (
+              <p className="auction-detail-spec-doc">
+                <a
+                  href={session.specDocumentUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="press-premium-inline-link"
+                >
+                  {session.specDocumentLabel ?? "Şartname belgesi"} (PDF)
+                </a>
+              </p>
+            ) : null}
           </section>
 
           <section className="module-panel auction-detail-owner">
@@ -192,6 +252,9 @@ export function AuctionDetailPageClient({ sessionId }: AuctionDetailPageClientPr
 
           <section className="module-panel auction-detail-spec">
             <h2 className="auction-detail-h2">Yük ve taşıma özellikleri</h2>
+            {session.cargoDescription ? (
+              <p className="auction-detail-cargo">{session.cargoDescription}</p>
+            ) : null}
             <dl className="auction-detail-spec-grid">
               <div>
                 <dt>Araç tipi</dt>
@@ -216,10 +279,6 @@ export function AuctionDetailPageClient({ sessionId }: AuctionDetailPageClientPr
                 </dd>
               </div>
             </dl>
-            <p className="auction-detail-spec-note">
-              Şartname PDF ve ek koşullar (ödeme, KDV, ADR) bir sonraki sürümde bu bölüme
-              eklenecek.
-            </p>
           </section>
 
           <section className="module-panel auction-detail-bids">
