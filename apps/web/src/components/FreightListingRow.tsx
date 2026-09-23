@@ -90,7 +90,6 @@ export function FreightListingRow({
             <span className="price-amount">
               {priceAmount.toLocaleString("tr-TR")} {priceCurrency}
             </span>
-            <span className="price-hint">Platform fiyatı</span>
           </>
         ) : (
           <span className="price-hint">Fiyat sor</span>
