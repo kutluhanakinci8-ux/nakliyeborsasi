@@ -1,8 +1,16 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { FleetLiveMapCanvas } from "../../../../../components/fleet/FleetLiveMapCanvas";
+
+const FleetLiveMapCanvas = dynamic(
+  () =>
+    import("../../../../../components/fleet/FleetLiveMapCanvas").then(
+      (mod) => mod.FleetLiveMapCanvas,
+    ),
+  { ssr: false, loading: () => <div className="fleet-live-map-canvas" /> },
+);
 import { useWebSession } from "../../../../../context/WebSessionProvider";
 import {
   TelemetryApiClient,
