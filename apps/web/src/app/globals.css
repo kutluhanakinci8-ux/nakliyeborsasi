@@ -5038,45 +5038,47 @@ button.btn-secondary {
 .freight-row {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 16px;
-  align-items: center;
+  grid-template-areas:
+    "badges price"
+    "main price"
+    "actions price";
+  gap: 8px 16px;
+  align-items: start;
   background: #fff;
   border: 1px solid #dbe3ec;
   border-radius: 12px;
-  padding: 16px 18px;
+  padding: 14px 18px 16px;
 }
 
 .freight-row-badges {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-bottom: 8px;
+  margin-bottom: 0;
 }
 
-.freight-row-badges--footer {
-  margin-bottom: 0;
-  margin-left: auto;
-  justify-content: flex-end;
+.freight-row-badges--top {
+  grid-area: badges;
+  justify-content: flex-start;
   align-items: center;
-  flex: 0 1 auto;
+  align-self: start;
+}
+
+.freight-row-main {
+  grid-area: main;
   min-width: 0;
 }
 
-.freight-row-footer {
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px 16px;
-  margin-top: 8px;
-  width: 100%;
-  min-height: 34px;
+.freight-row-actions--footer {
+  grid-area: actions;
+  align-self: end;
 }
 
-.freight-row-actions--footer {
-  flex: 0 0 auto;
-  justify-content: flex-start;
-  align-items: center;
+.freight-row-price {
+  grid-area: price;
+  align-self: start;
+  text-align: right;
+  min-width: 120px;
 }
 
 .badge {
@@ -5204,11 +5206,6 @@ button.btn-secondary {
   color: #fff;
   font-weight: 600;
   cursor: pointer;
-}
-
-.freight-row-price {
-  text-align: right;
-  min-width: 120px;
 }
 
 .price-amount {
@@ -5445,21 +5442,14 @@ button.btn-secondary {
 
   .freight-row {
     grid-template-columns: 1fr;
+    grid-template-areas:
+      "badges"
+      "price"
+      "main"
+      "actions";
   }
 
-  .freight-row-footer {
-    flex-wrap: wrap;
-    row-gap: 10px;
-  }
-
-  .freight-row-badges--footer {
-    margin-left: 0;
-    width: 100%;
-    justify-content: flex-start;
-  }
-
-  .freight-row-actions--footer {
-    width: 100%;
+  .freight-row-badges--top {
     justify-content: flex-start;
   }
 
