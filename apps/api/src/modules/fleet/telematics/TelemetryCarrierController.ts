@@ -1,4 +1,4 @@
-import { Controller, Get, Headers, Query, UseGuards } from "@nestjs/common";
+import { Controller, Get, Headers, Param, Query, UseGuards } from "@nestjs/common";
 import { AuthenticatedUserContext } from "@nakliyeborsasi/core";
 import { JwtAuthenticationGuard } from "../../auth/JwtAuthenticationGuard";
 import { AuthenticatedUserParam } from "../../auth/AuthenticatedUserParam";
@@ -28,5 +28,27 @@ export class TelemetryCarrierController {
       locale,
     );
     return { message: "OK", liveMap: snapshot };
+  }
+
+  @Get("drivers/:driverId/route")
+  public async driverRoute(
+    @Param("driverId") driverId: string,
+    @Query("hours") hoursQuery: string | undefined,
+    @Headers("accept-language") acceptLanguage: string | undefined,
+    @Query("lang") queryLanguage: string | undefined,
+    @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
+  ) {
+    const locale = this.localeResolutionService.resolveFromHeaders(
+      acceptLanguage,
+      queryLanguage,
+    );
+    const hours = Number.parseInt(hoursQuery ?? "6", 10);
+    const route = await this.telemetryApplicationService.getCarrierDriverRoute(
+      authenticatedUser.companyId,
+      driverId,
+      locale,
+      Number.isFinite(hours) ? Math.min(Math.max(hours, 1), 48) : 6,
+    );
+    return { message: "OK", route };
   }
 }

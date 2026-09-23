@@ -6,8 +6,10 @@ import { FleetLiveMapCanvas } from "../../../../../components/fleet/FleetLiveMap
 import { useWebSession } from "../../../../../context/WebSessionProvider";
 import {
   TelemetryApiClient,
+  type FleetDriverRouteSnapshot,
   type FleetLiveDriverPin,
   type FleetLiveMapSnapshot,
+  type FleetMotionPhase,
 } from "../../../../../lib/TelemetryApiClient";
 
 function stateLabel(state: FleetLiveDriverPin["trackingState"]): string {
@@ -23,10 +25,27 @@ function stateLabel(state: FleetLiveDriverPin["trackingState"]): string {
   }
 }
 
+function motionLabel(phase: FleetMotionPhase): string {
+  switch (phase) {
+    case "STOPPED":
+      return "Duruyor";
+    case "MOVING":
+      return "Hareket halinde";
+    case "ACCELERATING":
+      return "Hızlanıyor";
+    case "DECELERATING":
+      return "Yavaşlıyor";
+    default:
+      return "Bilinmiyor";
+  }
+}
+
 export function FleetLiveMapPageClient() {
   const { accessToken, locale } = useWebSession();
   const [snapshot, setSnapshot] = useState<FleetLiveMapSnapshot | null>(null);
   const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null);
+  const [selectedRoute, setSelectedRoute] =
+    useState<FleetDriverRouteSnapshot | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
 
   const refresh = useCallback(async () => {
@@ -41,9 +60,31 @@ export function FleetLiveMapPageClient() {
       setSnapshot(liveMap);
       setErrorMessage("");
     } catch {
-      setErrorMessage("Canlı harita verisi alınamadı. Filo modülü ve giriş hesabını kontrol edin.");
+      setErrorMessage(
+        "Canlı harita verisi alınamadı. Filo modülü ve giriş hesabını kontrol edin.",
+      );
     }
   }, [accessToken, locale]);
+
+  const loadRoute = useCallback(
+    async (driverId: string) => {
+      if (!accessToken) {
+        return;
+      }
+      try {
+        const route = await TelemetryApiClient.fetchCarrierDriverRoute(
+          accessToken,
+          locale,
+          driverId,
+          6,
+        );
+        setSelectedRoute(route);
+      } catch {
+        setSelectedRoute(null);
+      }
+    },
+    [accessToken, locale],
+  );
 
   useEffect(() => {
     void refresh();
@@ -51,8 +92,22 @@ export function FleetLiveMapPageClient() {
     return () => window.clearInterval(timer);
   }, [refresh]);
 
+  useEffect(() => {
+    if (!selectedDriverId) {
+      setSelectedRoute(null);
+      return;
+    }
+    void loadRoute(selectedDriverId);
+    const timer = window.setInterval(() => {
+      void loadRoute(selectedDriverId);
+    }, 20000);
+    return () => window.clearInterval(timer);
+  }, [loadRoute, selectedDriverId]);
+
   const drivers = snapshot?.drivers ?? [];
   const liveCount = drivers.filter((driver) => driver.trackingState === "LIVE").length;
+  const selectedDriver =
+    drivers.find((driver) => driver.driverId === selectedDriverId) ?? null;
 
   return (
     <div className="fleet-live-map-page">
@@ -61,7 +116,7 @@ export function FleetLiveMapPageClient() {
           <div>
             <h1 className="account-card-title">Canlı filo haritası</h1>
             <p className="account-card-lead">
-              Şoför telefonundan gelen son konumlar (20 sn yenilenir).{" "}
+              Konum, rota, hız ve hızlanma/yavaşlama (son 6 saat).{" "}
               <Link href="/hesap/filo">← Filo yönetimi</Link>
             </p>
           </div>
@@ -89,11 +144,31 @@ export function FleetLiveMapPageClient() {
           <FleetLiveMapCanvas
             drivers={drivers}
             selectedDriverId={selectedDriverId}
+            selectedRoute={selectedRoute}
             onSelectDriver={setSelectedDriverId}
           />
         </section>
         <aside className="account-card module-panel fleet-live-map-sidebar">
           <h2 className="account-card-title">Şoförler</h2>
+          {selectedDriver ? (
+            <div className="fleet-live-map-detail">
+              <p className="fleet-entity-meta">
+                <strong>{selectedDriver.displayName}</strong> ·{" "}
+                {motionLabel(selectedDriver.motionPhase)}
+                {selectedDriver.speedDeltaKmh !== null
+                  ? ` (${selectedDriver.speedDeltaKmh > 0 ? "+" : ""}${selectedDriver.speedDeltaKmh} km/s)`
+                  : ""}
+              </p>
+              {selectedRoute ? (
+                <p className="fleet-entity-meta">
+                  Rota noktası: {selectedRoute.routePoints.length} · Güvenlik
+                  olayı: {selectedRoute.safetyMarkers.length}
+                </p>
+              ) : null}
+            </div>
+          ) : (
+            <p className="fleet-entity-meta">Rota için bir şoför seçin.</p>
+          )}
           <ul className="fleet-live-driver-list">
             {drivers.map((driver) => (
               <li key={driver.driverId}>
@@ -113,7 +188,8 @@ export function FleetLiveMapPageClient() {
                   <div>
                     <strong>{driver.displayName}</strong>
                     <span className="fleet-entity-meta">
-                      {stateLabel(driver.trackingState)}
+                      {stateLabel(driver.trackingState)} ·{" "}
+                      {motionLabel(driver.motionPhase)}
                       {driver.licensePlateDisplay
                         ? ` · ${driver.licensePlateDisplay}`
                         : ""}

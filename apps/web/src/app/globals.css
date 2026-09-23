@@ -6757,6 +6757,14 @@ button.btn-secondary {
   overflow: auto;
 }
 
+.fleet-live-map-detail {
+  margin: 8px 0 12px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+}
+
 .fleet-live-driver-list {
   list-style: none;
   margin: 12px 0 0;

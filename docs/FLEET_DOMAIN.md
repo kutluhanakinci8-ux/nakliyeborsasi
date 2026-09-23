@@ -52,7 +52,8 @@ See **`docs/TELEMATICS_ARCHITECTURE.md`**.
 | POST | `/fleet/telematics/ingest/batch` | Device batch upload (`X-NB-Device-Token`) |
 
 Web: `/sofor/telemetri`, companion `/sofor/telemetri/cihaz`.
-| GET | `/fleet/telematics/carrier/live` | Taşıyıcı canlı harita (şoför pinleri) |
+| GET | `/fleet/telematics/carrier/live` | Taşıyıcı canlı harita (şoför pinleri + hareket) |
+| GET | `/fleet/telematics/carrier/drivers/:id/route` | Rota, hız örnekleri, fren/hız olayları |
 
 Taşıyıcı UI: `/hesap/filo/harita` (20 sn otomatik yenileme).
 

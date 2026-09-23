@@ -1,16 +1,19 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { In, MoreThan, Repository } from "typeorm";
 import {
   CompanyParticipantTypeCode,
+  FleetDriverRouteSnapshot,
   FleetLiveDriverPin,
   FleetLiveMapSnapshot,
   FleetLiveTrackingState,
+  FleetMotionPhase,
   ResourceNotFoundException,
   SubscriptionModuleCode,
   TELEMETRY_CONSENT_DOCUMENT_VERSION,
   TelemetryConsentPurposeCode,
   TelemetryEnrollResult,
+  TelemetryEventTypeCode,
   ValidationException,
 } from "@nakliyeborsasi/core";
 import { CompanyEntity } from "../../../infrastructure/database/entities/CompanyEntity";
@@ -26,6 +29,7 @@ import { TelemetryIngestBatchRequestDto } from "./TelemetryIngestBatchRequestDto
 import { TelemetryMapper } from "./TelemetryMapper";
 import { TelemetryMotionInterpreter } from "./TelemetryMotionInterpreter";
 import { TelemetryTokenHasher } from "./TelemetryTokenHasher";
+import { TelemetryMotionAnalytics } from "./TelemetryMotionAnalytics";
 
 @Injectable()
 export class TelemetryApplicationService {
@@ -70,12 +74,20 @@ export class TelemetryApplicationService {
       take: 300,
     });
     const lastEventByDriver = new Map<string, FleetTelemetryEventEntity>();
+    const recentSamplesByDriver = new Map<string, FleetTelemetryEventEntity[]>();
     for (const event of recentPositionEvents) {
       if (event.latitude === null || event.longitude === null) {
         continue;
       }
       if (!lastEventByDriver.has(event.fleetDriverId)) {
         lastEventByDriver.set(event.fleetDriverId, event);
+      }
+      if (event.eventTypeCode === TelemetryEventTypeCode.LocationSample) {
+        const bucket = recentSamplesByDriver.get(event.fleetDriverId) ?? [];
+        if (bucket.length < 4) {
+          bucket.push(event);
+          recentSamplesByDriver.set(event.fleetDriverId, bucket);
+        }
       }
     }
     const deviceByDriver = new Map<string, FleetTelemetryDeviceEntity>();
@@ -108,6 +120,10 @@ export class TelemetryApplicationService {
         longitude,
         lastSeenAt,
       );
+      const motion = this.motionFromSampleEvents(
+        recentSamplesByDriver.get(driver.id) ?? [],
+      );
+      const latestSample = recentSamplesByDriver.get(driver.id)?.[0];
       return {
         driverId: driver.id,
         displayName: driver.displayName,
@@ -117,14 +133,95 @@ export class TelemetryApplicationService {
         longitude,
         lastSpeedKmh:
           device?.lastSpeedKmh ?? fallbackEvent?.speedKmh ?? null,
+        lastHeadingDegrees: latestSample?.headingDegrees ?? null,
         lastSeenAt: lastSeenAt?.toISOString() ?? null,
         trackingState,
+        motionPhase: motion.motionPhase,
+        speedDeltaKmh: motion.speedDeltaKmh,
       };
     });
 
     return {
       updatedAt: new Date().toISOString(),
       drivers: pins,
+    };
+  }
+
+  public async getCarrierDriverRoute(
+    companyId: string,
+    driverId: string,
+    locale: string,
+    hours: number,
+  ): Promise<FleetDriverRouteSnapshot> {
+    await this.assertFleetTenant(companyId, locale);
+    const driver = await this.driverRepository.findOne({
+      where: { id: driverId, companyId },
+    });
+    if (!driver) {
+      throw new ResourceNotFoundException("FleetDriver", driverId);
+    }
+    const since = new Date(Date.now() - hours * 60 * 60 * 1000);
+    const events = await this.eventRepository.find({
+      where: {
+        companyId,
+        fleetDriverId: driverId,
+        recordedAt: MoreThan(since),
+        eventTypeCode: In([
+          TelemetryEventTypeCode.LocationSample,
+          TelemetryEventTypeCode.HarshBrake,
+          TelemetryEventTypeCode.HarshAcceleration,
+          TelemetryEventTypeCode.SpeedExceeded,
+          TelemetryEventTypeCode.StopDetected,
+          TelemetryEventTypeCode.SharpTurn,
+        ]),
+      },
+      order: { recordedAt: "ASC" },
+      take: 800,
+    });
+    const routePoints = events
+      .filter(
+        (event) =>
+          event.eventTypeCode === TelemetryEventTypeCode.LocationSample &&
+          event.latitude !== null &&
+          event.longitude !== null,
+      )
+      .map((event) => ({
+        recordedAt: event.recordedAt.toISOString(),
+        latitude: event.latitude as number,
+        longitude: event.longitude as number,
+        speedKmh: event.speedKmh,
+        headingDegrees: event.headingDegrees,
+      }));
+    const safetyMarkers = events
+      .filter(
+        (event) =>
+          event.eventTypeCode !== TelemetryEventTypeCode.LocationSample &&
+          event.latitude !== null &&
+          event.longitude !== null,
+      )
+      .map((event) => ({
+        eventTypeCode: event.eventTypeCode,
+        recordedAt: event.recordedAt.toISOString(),
+        latitude: event.latitude as number,
+        longitude: event.longitude as number,
+        severityCode: event.severityCode,
+      }));
+    const motion = this.motionFromSampleEvents(
+      events
+        .filter(
+          (event) => event.eventTypeCode === TelemetryEventTypeCode.LocationSample,
+        )
+        .slice(-4)
+        .reverse(),
+    );
+    return {
+      driverId: driver.id,
+      displayName: driver.displayName,
+      motionPhase: motion.motionPhase,
+      speedDeltaKmh: motion.speedDeltaKmh,
+      routePoints,
+      safetyMarkers,
+      updatedAt: new Date().toISOString(),
     };
   }
 
@@ -285,6 +382,24 @@ export class TelemetryApplicationService {
     await this.deviceRepository.save(device);
 
     return { acceptedCount: rows.length };
+  }
+
+  private motionFromSampleEvents(
+    eventsNewestFirst: readonly FleetTelemetryEventEntity[],
+  ): { motionPhase: FleetMotionPhase; speedDeltaKmh: number | null } {
+    const chronological = [...eventsNewestFirst].reverse();
+    const samples = chronological.map((event) => ({
+      recordedAt: event.recordedAt,
+      speedKmh: event.speedKmh,
+    }));
+    const motionPhase = TelemetryMotionAnalytics.deriveMotionPhase(samples);
+    let speedDeltaKmh: number | null = null;
+    if (samples.length >= 2) {
+      const latest = samples[samples.length - 1].speedKmh ?? 0;
+      const previous = samples[samples.length - 2].speedKmh ?? latest;
+      speedDeltaKmh = Math.round((latest - previous) * 10) / 10;
+    }
+    return { motionPhase, speedDeltaKmh };
   }
 
   private resolveTrackingState(
