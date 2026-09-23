@@ -130,6 +130,16 @@ export function DriverPortalPageClient() {
         </div>
       </header>
 
+      <section className="driver-portal-card">
+        <h2 className="driver-portal-section-title">Konum & sensörler</h2>
+        <p className="driver-portal-meta">
+          Hız, durak ve güvenlik olayları — KVKK / GDPR uyumlu telemetri pilotu.
+        </p>
+        <Link href="/sofor/telemetri" className="btn btn-secondary">
+          Telemetri ayarları
+        </Link>
+      </section>
+
       {active ? (
         <section className="driver-portal-card driver-portal-card--accent">
           <h2 className="driver-portal-section-title">Aktif görev</h2>

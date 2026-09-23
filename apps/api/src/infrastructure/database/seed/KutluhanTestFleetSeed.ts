@@ -27,6 +27,7 @@ export const KUTLUHAN_TEST_OWNER_EMAIL =
 export const KUTLUHAN_TEST_DRIVER_EMAIL =
   "kutluhantest-sofor@test.nakliyeborsasi.local";
 export const KUTLUHAN_TEST_COMPANY_NAME = "Kutluhan Test Taşımacılık";
+export const KUTLUHAN_TEST_DRIVER_PHONE_E164 = "+905546902543";
 
 type KutluhanSeedDeps = {
   companyRepository: Repository<CompanyEntity>;
@@ -131,7 +132,7 @@ export async function seedKutluhanTestFleet(deps: KutluhanSeedDeps): Promise<voi
     deps.driverRepository.create({
       companyId: company.id,
       displayName: "Kutluhan Test Şoför",
-      primaryPhoneE164: "+905551234567",
+      primaryPhoneE164: KUTLUHAN_TEST_DRIVER_PHONE_E164,
       driverLicenseNumber: "TR-KT-2026",
       driverLicenseCountryCode: "TR",
       statusCode: FleetDriverStatusCode.Active,
@@ -275,4 +276,26 @@ export async function seedKutluhanTestFleet(deps: KutluhanSeedDeps): Promise<voi
       bidAmount: "1950.00",
     }),
   );
+}
+
+export async function patchKutluhanTestDriverPhone(
+  userAccountRepository: Repository<UserAccountEntity>,
+  driverRepository: Repository<FleetDriverEntity>,
+): Promise<void> {
+  const driverUser = await userAccountRepository.findOne({
+    where: { emailAddress: KUTLUHAN_TEST_DRIVER_EMAIL },
+  });
+  if (!driverUser) {
+    return;
+  }
+  const driver = await driverRepository.findOne({
+    where: { linkedUserAccountId: driverUser.id },
+  });
+  if (!driver) {
+    return;
+  }
+  if (driver.primaryPhoneE164 !== KUTLUHAN_TEST_DRIVER_PHONE_E164) {
+    driver.primaryPhoneE164 = KUTLUHAN_TEST_DRIVER_PHONE_E164;
+    await driverRepository.save(driver);
+  }
 }

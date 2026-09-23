@@ -53,6 +53,10 @@ Plan: `carrier_starter_tr_ua`
 | Firma sahibi | `kutluhantest@test.nakliyeborsasi.local` | Filo yönetimi `/hesap/filo` |
 | Şoför paneli | `kutluhantest-sofor@test.nakliyeborsasi.local` | **`/sofor`** (giriş sonrası otomatik yönlendirme) |
 
+Filo kaydı telefon (telemetri pilot): **`+905546902543`** (iPhone test cihazı).
+
+Telemetri: **`/sofor/telemetri`** → rıza + iPhone eşleştirme → **`/sofor/telemetri/cihaz`** (Safari companion, ön planda konum).
+
 Firma: **Kutluhan Test Taşımacılık** — 2 şoför, 2 araç, devam eden Odesa kapasitesi + tamamlanan Berlin seferi (seed).
 
 ## Diğer demo hesaplar

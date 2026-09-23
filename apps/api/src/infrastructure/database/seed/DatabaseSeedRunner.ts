@@ -23,7 +23,10 @@ import { FleetDriverEntity } from "../entities/FleetDriverEntity";
 import { FleetVehicleEntity } from "../entities/FleetVehicleEntity";
 import { FleetDriverVehicleAssignmentEntity } from "../entities/FleetDriverVehicleAssignmentEntity";
 import { seedFleetDemoGraph } from "./FleetDemoSeed";
-import { seedKutluhanTestFleet } from "./KutluhanTestFleetSeed";
+import {
+  patchKutluhanTestDriverPhone,
+  seedKutluhanTestFleet,
+} from "./KutluhanTestFleetSeed";
 
 @Injectable()
 export class DatabaseSeedRunner implements OnModuleInit {
@@ -119,6 +122,14 @@ export class DatabaseSeedRunner implements OnModuleInit {
       });
     } catch {
       // Kutluhan test filo seed atlanır.
+    }
+    try {
+      await patchKutluhanTestDriverPhone(
+        this.userAccountRepository,
+        this.fleetDriverRepository,
+      );
+    } catch {
+      // Telefon senkronu atlanır.
     }
   }
 

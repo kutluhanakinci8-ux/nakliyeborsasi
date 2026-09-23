@@ -16,6 +16,9 @@ import { CompanyTrustReviewEntity } from "./entities/CompanyTrustReviewEntity";
 import { FleetDriverEntity } from "./entities/FleetDriverEntity";
 import { FleetVehicleEntity } from "./entities/FleetVehicleEntity";
 import { FleetDriverVehicleAssignmentEntity } from "./entities/FleetDriverVehicleAssignmentEntity";
+import { FleetTelemetryDeviceEntity } from "./entities/FleetTelemetryDeviceEntity";
+import { FleetTelemetryConsentLogEntity } from "./entities/FleetTelemetryConsentLogEntity";
+import { FleetTelemetryEventEntity } from "./entities/FleetTelemetryEventEntity";
 
 @Injectable()
 export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
@@ -47,6 +50,9 @@ export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
         FleetDriverEntity,
         FleetVehicleEntity,
         FleetDriverVehicleAssignmentEntity,
+        FleetTelemetryDeviceEntity,
+        FleetTelemetryConsentLogEntity,
+        FleetTelemetryEventEntity,
       ],
       synchronize,
       logging: false,

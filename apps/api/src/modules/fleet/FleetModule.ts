@@ -2,6 +2,13 @@ import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { FleetController } from "./FleetController";
 import { FleetApplicationService } from "./FleetApplicationService";
+import { TelemetryApplicationService } from "./telematics/TelemetryApplicationService";
+import { TelemetryDriverController } from "./telematics/TelemetryDriverController";
+import { TelemetryIngestController } from "./telematics/TelemetryIngestController";
+import { TelemetryDeviceGuard } from "./telematics/TelemetryDeviceGuard";
+import { FleetTelemetryDeviceEntity } from "../../infrastructure/database/entities/FleetTelemetryDeviceEntity";
+import { FleetTelemetryConsentLogEntity } from "../../infrastructure/database/entities/FleetTelemetryConsentLogEntity";
+import { FleetTelemetryEventEntity } from "../../infrastructure/database/entities/FleetTelemetryEventEntity";
 import { SubscriptionModule } from "../subscription/SubscriptionModule";
 import { AuthModule } from "../auth/AuthModule";
 import { CompanyEntity } from "../../infrastructure/database/entities/CompanyEntity";
@@ -26,10 +33,13 @@ import { CompanyMembershipEntity } from "../../infrastructure/database/entities/
       AuctionSessionEntity,
       UserAccountEntity,
       CompanyMembershipEntity,
+      FleetTelemetryDeviceEntity,
+      FleetTelemetryConsentLogEntity,
+      FleetTelemetryEventEntity,
     ]),
   ],
-  controllers: [FleetController],
-  providers: [FleetApplicationService],
+  controllers: [FleetController, TelemetryDriverController, TelemetryIngestController],
+  providers: [FleetApplicationService, TelemetryApplicationService, TelemetryDeviceGuard],
   exports: [FleetApplicationService],
 })
 export class FleetModule {}

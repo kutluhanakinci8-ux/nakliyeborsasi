@@ -31,4 +31,8 @@ export * from "./types/MessagingThreadReference";
 export * from "./types/TrustScoreSnapshot";
 export * from "./types/FleetTypes";
 export * from "./types/DriverPortalTypes";
+export * from "./constants/TelemetryDevicePlatformCode";
+export * from "./constants/TelemetryEventTypeCode";
+export * from "./constants/TelemetryConsentPurposeCode";
+export * from "./types/TelemetryTypes";
 export * from "./ports/ExternalFreightDataPort";

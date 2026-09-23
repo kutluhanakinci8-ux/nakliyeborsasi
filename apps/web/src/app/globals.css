@@ -6915,6 +6915,69 @@ button.btn-secondary {
   }
 }
 
+.driver-telematics-page .driver-telematics-meta {
+  margin: 0 0 10px;
+  font-size: 0.9rem;
+  color: #475569;
+  line-height: 1.45;
+}
+
+.driver-telematics-list {
+  margin: 0 0 12px 1.1rem;
+  color: #334155;
+  font-size: 0.88rem;
+}
+
+.driver-telematics-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.driver-telematics-token-hint {
+  margin-top: 10px;
+  font-size: 0.82rem;
+  color: #64748b;
+}
+
+.driver-telematics-events {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.driver-telematics-events li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  font-size: 0.88rem;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.driver-telematics-sev {
+  font-weight: 700;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+
+.driver-telematics-sev--info {
+  color: #1d4ed8;
+}
+
+.driver-telematics-sev--warning {
+  color: #b45309;
+}
+
+.driver-telematics-sev--critical {
+  color: #b91c1c;
+}
+
 .account-form-subheading {
   margin: 4px 0 0;
   font-size: 0.78rem;

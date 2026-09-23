@@ -39,6 +39,20 @@
 
 - `GET /platform-admin/companies` includes `driverCount` and `vehicleCount` per firma
 
+## Telematics (driver phone)
+
+See **`docs/TELEMATICS_ARCHITECTURE.md`**.
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/fleet/telematics/driver/status` | Consent + device + recent events |
+| POST | `/fleet/telematics/driver/consent` | Grant tracking consent |
+| POST | `/fleet/telematics/driver/consent/revoke` | Revoke consent |
+| POST | `/fleet/telematics/driver/devices/enroll` | Register device (one-time ingest token) |
+| POST | `/fleet/telematics/ingest/batch` | Device batch upload (`X-NB-Device-Token`) |
+
+Web: `/sofor/telemetri`, companion `/sofor/telemetri/cihaz`.
+
 ## Extension points
 
 - Subcontractor carriers (parent `companyId` + `operatingCompanyId`)

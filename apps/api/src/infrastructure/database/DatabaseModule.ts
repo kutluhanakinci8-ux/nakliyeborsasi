@@ -16,6 +16,9 @@ import { CompanyTrustReviewEntity } from "./entities/CompanyTrustReviewEntity";
 import { FleetDriverEntity } from "./entities/FleetDriverEntity";
 import { FleetVehicleEntity } from "./entities/FleetVehicleEntity";
 import { FleetDriverVehicleAssignmentEntity } from "./entities/FleetDriverVehicleAssignmentEntity";
+import { FleetTelemetryDeviceEntity } from "./entities/FleetTelemetryDeviceEntity";
+import { FleetTelemetryConsentLogEntity } from "./entities/FleetTelemetryConsentLogEntity";
+import { FleetTelemetryEventEntity } from "./entities/FleetTelemetryEventEntity";
 import { DatabaseSeedRunner } from "./seed/DatabaseSeedRunner";
 import { SubscriptionCatalogModule } from "../../modules/subscription/SubscriptionCatalogModule";
 
@@ -42,6 +45,9 @@ import { SubscriptionCatalogModule } from "../../modules/subscription/Subscripti
       FleetDriverEntity,
       FleetVehicleEntity,
       FleetDriverVehicleAssignmentEntity,
+      FleetTelemetryDeviceEntity,
+      FleetTelemetryConsentLogEntity,
+      FleetTelemetryEventEntity,
     ]),
   ],
   providers: [DatabaseSeedRunner],
