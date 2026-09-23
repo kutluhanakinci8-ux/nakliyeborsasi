@@ -5134,11 +5134,12 @@ button.btn-secondary {
   display: inline-flex;
 }
 
-.auction-list-price-line .auction-list-price-side {
+.auction-list-price-line-group {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: baseline;
+  gap: 6px 10px;
   margin-left: auto;
-}
-
-.auction-list-price-line-amount {
   flex-shrink: 0;
 }
 

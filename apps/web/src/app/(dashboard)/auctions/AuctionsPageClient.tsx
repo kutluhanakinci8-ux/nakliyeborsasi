@@ -259,22 +259,24 @@ export function AuctionsPageClient() {
                       Siz: L{competition.myRank}
                     </span>
                   ) : null}
-                  <span className="auction-list-price-side">
-                    {best ? (
-                      <>
-                        <span>L1: {best} {session.currencyCode}</span>
-                        <span className="auction-list-price-sep" aria-hidden>
-                          ·
-                        </span>
-                      </>
-                    ) : null}
-                    <span>
-                      Tavan {session.minimumBidAmount} {session.currencyCode}
+                  <div className="auction-list-price-line-group">
+                    <span className="auction-list-price-side">
+                      {best ? (
+                        <>
+                          <span>L1: {best} {session.currencyCode}</span>
+                          <span className="auction-list-price-sep" aria-hidden>
+                            ·
+                          </span>
+                        </>
+                      ) : null}
+                      <span>
+                        Tavan {session.minimumBidAmount} {session.currencyCode}
+                      </span>
                     </span>
-                  </span>
-                  <span className="price-amount auction-list-price-line-amount">
-                    {best ?? session.minimumBidAmount} {session.currencyCode}
-                  </span>
+                    <span className="price-amount">
+                      {best ?? session.minimumBidAmount} {session.currencyCode}
+                    </span>
+                  </div>
                 </div>
                 <div className="auction-list-price-sub">
                   <span className="price-hint">
@@ -308,20 +310,22 @@ export function AuctionsPageClient() {
                       </Link>
                     </h3>
                   )}
-                  <p className="module-row-meta auction-list-meta">
-                    {listing?.loadingDateStart
-                      ? `Yükleme ${formatLoadingDateTr(listing.loadingDateStart)}`
-                      : null}
-                    {activeTab === "closed"
-                      ? `${listing?.loadingDateStart ? " · " : ""}Kazanan: ${formatWinner(session)}`
-                      : null}
-                  </p>
                   <div className="auction-list-cargo-row">
-                    <p className="auction-list-cargo">
-                      {session.cargoDescription ??
-                        (listing
-                          ? `${formatEquipmentLabel(listing.equipmentType)}, ${listing.weightTonnes} t`
-                          : "")}
+                    <p className="module-row-meta auction-list-meta auction-list-load-cargo">
+                      {listing?.loadingDateStart ? (
+                        <span>
+                          Yükleme {formatLoadingDateTr(listing.loadingDateStart)}
+                        </span>
+                      ) : null}
+                      <span className="auction-list-cargo">
+                        {session.cargoDescription ??
+                          (listing
+                            ? `${formatEquipmentLabel(listing.equipmentType)}, ${listing.weightTonnes} t`
+                            : "")}
+                      </span>
+                      {activeTab === "closed" ? (
+                        <span>Kazanan: {formatWinner(session)}</span>
+                      ) : null}
                     </p>
                     <div className="freight-row-actions freight-row-actions--top auction-list-actions">
                       <Link
