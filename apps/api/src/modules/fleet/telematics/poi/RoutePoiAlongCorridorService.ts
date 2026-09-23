@@ -11,7 +11,7 @@ import { LogisticsPoiEntity } from "../../../../infrastructure/database/entities
 
 @Injectable()
 export class RoutePoiAlongCorridorService {
-  private static readonly DEFAULT_CORRIDOR_METERS = 1000;
+  private static readonly DEFAULT_CORRIDOR_METERS = 2500;
   private static readonly DEFAULT_MAX_POIS = 80;
   private static readonly BBOX_PADDING_METERS = 1500;
 
