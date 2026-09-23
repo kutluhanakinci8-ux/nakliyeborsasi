@@ -69,9 +69,11 @@ export function FreightListingRow({
           origin={originResolved}
           destination={destinationResolved}
         />
-        {loadingMeta ? <p className="freight-row-meta">{loadingMeta}</p> : null}
       </div>
       <div className="freight-row-actions freight-row-actions--top">
+        {loadingMeta ? (
+          <span className="freight-row-loading-date">{loadingMeta}</span>
+        ) : null}
         <button type="button" className="btn-link btn-link--compact" onClick={onMessage}>
           Mesaj
         </button>
