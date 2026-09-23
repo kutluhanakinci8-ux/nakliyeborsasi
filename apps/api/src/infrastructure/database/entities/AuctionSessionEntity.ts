@@ -69,6 +69,15 @@ export class AuctionSessionEntity {
   @Column({ type: "text", nullable: true })
   public cargoDescription!: string | null;
 
+  @Column({ type: "uuid", nullable: true })
+  public assignedFleetVehicleId!: string | null;
+
+  @Column({ type: "uuid", nullable: true })
+  public assignedFleetDriverId!: string | null;
+
+  @Column({ type: "uuid", nullable: true })
+  public fleetOperatorCompanyId!: string | null;
+
   @OneToMany(() => AuctionBidEntity, (bid) => bid.auctionSession)
   public bids!: AuctionBidEntity[];
 

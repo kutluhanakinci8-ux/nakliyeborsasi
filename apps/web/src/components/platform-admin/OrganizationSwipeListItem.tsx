@@ -14,6 +14,8 @@ type CompanyItem = {
   participantTypeCode: string | null;
   userCount: number;
   listingCount: number;
+  driverCount: number;
+  vehicleCount: number;
 };
 
 type OrganizationSwipeListItemProps = {
@@ -196,6 +198,10 @@ export function OrganizationSwipeListItem({
                 </span>
                 <span>
                   {item.userCount} kullanıcı · {item.listingCount} ilan
+                  {item.participantTypeCode === "LOAD_CARRIER" ||
+                  item.participantTypeCode === "LOAD_SEEKER"
+                    ? ` · ${item.driverCount} şoför · ${item.vehicleCount} araç`
+                    : null}
                 </span>
               </span>
               <code>{item.id.slice(0, 8)}…</code>

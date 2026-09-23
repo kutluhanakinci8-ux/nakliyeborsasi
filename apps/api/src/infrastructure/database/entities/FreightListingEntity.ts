@@ -59,6 +59,15 @@ export class FreightListingEntity {
   @Column({ type: "varchar", length: 32 })
   public marketScopeCode!: string;
 
+  @Column({ type: "varchar", length: 32, default: "FREIGHT_LOAD" })
+  public listingKindCode!: string;
+
+  @Column({ type: "uuid", nullable: true })
+  public assignedFleetVehicleId!: string | null;
+
+  @Column({ type: "uuid", nullable: true })
+  public assignedFleetDriverId!: string | null;
+
   @ManyToOne(() => CompanyEntity, (company) => company.freightListings, {
     onDelete: "CASCADE",
   })

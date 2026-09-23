@@ -10,6 +10,8 @@ import { AuctionSessionEntity } from "../../infrastructure/database/entities/Auc
 import { CompanyTrustReviewEntity } from "../../infrastructure/database/entities/CompanyTrustReviewEntity";
 import { MessageThreadEntity } from "../../infrastructure/database/entities/MessageThreadEntity";
 import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogEntity";
+import { FleetDriverEntity } from "../../infrastructure/database/entities/FleetDriverEntity";
+import { FleetVehicleEntity } from "../../infrastructure/database/entities/FleetVehicleEntity";
 import { SubscriptionPlanCatalog } from "../subscription/SubscriptionPlanCatalog";
 
 @Injectable()
@@ -33,6 +35,10 @@ export class PlatformAdminApplicationService {
     private readonly threadRepository: Repository<MessageThreadEntity>,
     @InjectRepository(AuditLogEntity)
     private readonly auditRepository: Repository<AuditLogEntity>,
+    @InjectRepository(FleetDriverEntity)
+    private readonly fleetDriverRepository: Repository<FleetDriverEntity>,
+    @InjectRepository(FleetVehicleEntity)
+    private readonly fleetVehicleRepository: Repository<FleetVehicleEntity>,
     private readonly subscriptionPlanCatalog: SubscriptionPlanCatalog,
   ) {}
 
@@ -140,6 +146,8 @@ export class PlatformAdminApplicationService {
       participantTypeCode: string | null;
       userCount: number;
       listingCount: number;
+      driverCount: number;
+      vehicleCount: number;
       activePlanCode: string | null;
     }[]
   > {
@@ -148,6 +156,8 @@ export class PlatformAdminApplicationService {
     });
     const memberships = await this.membershipRepository.find();
     const listings = await this.listingRepository.find();
+    const drivers = await this.fleetDriverRepository.find();
+    const vehicles = await this.fleetVehicleRepository.find();
     const subs = await this.subscriptionRepository.find({ where: { isActive: true } });
 
     const usersByCompany = new Map<string, number>();
@@ -165,6 +175,20 @@ export class PlatformAdminApplicationService {
     for (const s of subs) {
       planByCompany.set(s.companyId, s.planCode);
     }
+    const driversByCompany = new Map<string, number>();
+    for (const driver of drivers) {
+      driversByCompany.set(
+        driver.companyId,
+        (driversByCompany.get(driver.companyId) ?? 0) + 1,
+      );
+    }
+    const vehiclesByCompany = new Map<string, number>();
+    for (const vehicle of vehicles) {
+      vehiclesByCompany.set(
+        vehicle.companyId,
+        (vehiclesByCompany.get(vehicle.companyId) ?? 0) + 1,
+      );
+    }
 
     return companies.map((c) => ({
       id: c.id,
@@ -173,6 +197,8 @@ export class PlatformAdminApplicationService {
       participantTypeCode: c.participantTypeCode,
       userCount: usersByCompany.get(c.id) ?? 0,
       listingCount: listingsByCompany.get(c.id) ?? 0,
+      driverCount: driversByCompany.get(c.id) ?? 0,
+      vehicleCount: vehiclesByCompany.get(c.id) ?? 0,
       activePlanCode: planByCompany.get(c.id) ?? null,
     }));
   }

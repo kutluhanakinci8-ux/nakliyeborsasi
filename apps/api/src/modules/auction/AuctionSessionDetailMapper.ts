@@ -29,6 +29,9 @@ export type AuctionSessionDetailResponse = {
     auctionTypeCode: string;
     autoExtendMinutes: number;
     autoExtendWindowMinutes: number;
+    assignedFleetVehicleId: string | null;
+    assignedFleetDriverId: string | null;
+    fleetOperatorCompanyId: string | null;
     bids: {
       id: string;
       bidderCompanyId: string;
@@ -197,6 +200,9 @@ export function mapSessionDetail(
       auctionTypeCode: session.auctionTypeCode,
       autoExtendMinutes: session.autoExtendMinutes,
       autoExtendWindowMinutes: session.autoExtendWindowMinutes,
+      assignedFleetVehicleId: session.assignedFleetVehicleId,
+      assignedFleetDriverId: session.assignedFleetDriverId,
+      fleetOperatorCompanyId: session.fleetOperatorCompanyId,
       bids: bids
         .map((bid) => ({
           id: bid.id,

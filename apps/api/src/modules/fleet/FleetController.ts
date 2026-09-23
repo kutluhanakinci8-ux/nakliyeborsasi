@@ -19,6 +19,9 @@ import { UpdateFleetDriverRequestDto } from "./UpdateFleetDriverRequestDto";
 import { CreateFleetVehicleRequestDto } from "./CreateFleetVehicleRequestDto";
 import { UpdateFleetVehicleRequestDto } from "./UpdateFleetVehicleRequestDto";
 import { AssignFleetDriverVehicleRequestDto } from "./AssignFleetDriverVehicleRequestDto";
+import { LinkFleetDriverUserRequestDto } from "./LinkFleetDriverUserRequestDto";
+import { AssignFleetToListingRequestDto } from "./AssignFleetToListingRequestDto";
+import { AssignFleetToAuctionRequestDto } from "./AssignFleetToAuctionRequestDto";
 
 @Controller("fleet")
 @UseGuards(JwtAuthenticationGuard)
@@ -142,6 +145,86 @@ export class FleetController {
       locale,
     );
     return { message: "OK", vehicle };
+  }
+
+  @Post("drivers/:driverId/link-user")
+  public async linkDriverUser(
+    @Param("driverId") driverId: string,
+    @Body() body: LinkFleetDriverUserRequestDto,
+    @Headers("accept-language") acceptLanguage: string | undefined,
+    @Query("lang") queryLanguage: string | undefined,
+    @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
+  ) {
+    const locale = this.localeResolutionService.resolveFromHeaders(
+      acceptLanguage,
+      queryLanguage,
+    );
+    const driver = await this.fleetApplicationService.linkDriverUserAccount(
+      authenticatedUser.companyId,
+      driverId,
+      body,
+      locale,
+    );
+    return { message: "OK", driver };
+  }
+
+  @Post("listings/:listingId/assign-fleet")
+  public async assignListingFleet(
+    @Param("listingId") listingId: string,
+    @Body() body: AssignFleetToListingRequestDto,
+    @Headers("accept-language") acceptLanguage: string | undefined,
+    @Query("lang") queryLanguage: string | undefined,
+    @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
+  ) {
+    const locale = this.localeResolutionService.resolveFromHeaders(
+      acceptLanguage,
+      queryLanguage,
+    );
+    const result = await this.fleetApplicationService.assignFleetToListing(
+      authenticatedUser.companyId,
+      listingId,
+      body,
+      locale,
+    );
+    return { message: "OK", assignment: result };
+  }
+
+  @Post("auctions/:sessionId/assign-fleet")
+  public async assignAuctionFleet(
+    @Param("sessionId") sessionId: string,
+    @Body() body: AssignFleetToAuctionRequestDto,
+    @Headers("accept-language") acceptLanguage: string | undefined,
+    @Query("lang") queryLanguage: string | undefined,
+    @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
+  ) {
+    const locale = this.localeResolutionService.resolveFromHeaders(
+      acceptLanguage,
+      queryLanguage,
+    );
+    const result = await this.fleetApplicationService.assignFleetToAuction(
+      authenticatedUser.companyId,
+      sessionId,
+      body,
+      locale,
+    );
+    return { message: "OK", assignment: result };
+  }
+
+  @Get("driver-portal/me")
+  public async driverPortalMe(
+    @Headers("accept-language") acceptLanguage: string | undefined,
+    @Query("lang") queryLanguage: string | undefined,
+    @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
+  ) {
+    const locale = this.localeResolutionService.resolveFromHeaders(
+      acceptLanguage,
+      queryLanguage,
+    );
+    const portal = await this.fleetApplicationService.getDriverPortal(
+      authenticatedUser.userId,
+      locale,
+    );
+    return { message: "OK", portal };
   }
 
   @Post("assignments")

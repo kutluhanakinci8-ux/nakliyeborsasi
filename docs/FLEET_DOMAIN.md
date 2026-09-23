@@ -23,6 +23,22 @@
 
 `/hesap/filo` — carrier self-service for drivers, trucks, and pairing.
 
+## Dispatch links
+
+- `freight_listings.assignedFleetVehicleId` / `assignedFleetDriverId` — kapasite veya yük ilanı
+- `auction_sessions.assignedFleetVehicleId` / `assignedFleetDriverId` / `fleetOperatorCompanyId` — ihale operasyonu
+- `POST /fleet/listings/:id/assign-fleet`, `POST /fleet/auctions/:id/assign-fleet`
+
+## Driver portal
+
+- `fleet_drivers.linkedUserAccountId` + membership `FLEET_DRIVER`
+- `POST /fleet/drivers/:id/link-user`
+- `GET /fleet/driver-portal/me` — şoförün atanan ilan/ihaleleri
+
+## Admin
+
+- `GET /platform-admin/companies` includes `driverCount` and `vehicleCount` per firma
+
 ## Extension points
 
 - Subcontractor carriers (parent `companyId` + `operatingCompanyId`)

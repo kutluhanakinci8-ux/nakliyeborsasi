@@ -30,6 +30,12 @@ export function FleetPageClient() {
   const [equipment, setEquipment] = useState("TAUTLINER");
   const [assignDriverId, setAssignDriverId] = useState("");
   const [assignVehicleId, setAssignVehicleId] = useState("");
+  const [linkDriverId, setLinkDriverId] = useState("");
+  const [linkEmail, setLinkEmail] = useState("");
+  const [dispatchListingId, setDispatchListingId] = useState("");
+  const [dispatchAuctionId, setDispatchAuctionId] = useState("");
+  const [dispatchVehicleId, setDispatchVehicleId] = useState("");
+  const [dispatchDriverId, setDispatchDriverId] = useState("");
 
   const loadOverview = useCallback(async (): Promise<void> => {
     if (!accessToken) {
@@ -89,6 +95,76 @@ export function FleetPageClient() {
       await loadOverview();
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Araç eklenemedi");
+    } finally {
+      setIsBusy(false);
+    }
+  }
+
+  async function handleLinkUser(event: FormEvent<HTMLFormElement>): Promise<void> {
+    event.preventDefault();
+    if (!accessToken || !linkDriverId || !linkEmail.trim()) {
+      return;
+    }
+    setIsBusy(true);
+    try {
+      await FleetApiClient.linkDriverUser(
+        accessToken,
+        locale,
+        linkDriverId,
+        linkEmail.trim(),
+      );
+      setLinkEmail("");
+      await loadOverview();
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Kullanıcı bağlanamadı");
+    } finally {
+      setIsBusy(false);
+    }
+  }
+
+  async function handleDispatchListing(
+    event: FormEvent<HTMLFormElement>,
+  ): Promise<void> {
+    event.preventDefault();
+    if (!accessToken || !dispatchListingId || !dispatchVehicleId) {
+      return;
+    }
+    setIsBusy(true);
+    try {
+      await FleetApiClient.assignListingFleet(
+        accessToken,
+        locale,
+        dispatchListingId.trim(),
+        dispatchVehicleId,
+        dispatchDriverId || undefined,
+      );
+      setDispatchListingId("");
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "İlan ataması başarısız");
+    } finally {
+      setIsBusy(false);
+    }
+  }
+
+  async function handleDispatchAuction(
+    event: FormEvent<HTMLFormElement>,
+  ): Promise<void> {
+    event.preventDefault();
+    if (!accessToken || !dispatchAuctionId || !dispatchVehicleId) {
+      return;
+    }
+    setIsBusy(true);
+    try {
+      await FleetApiClient.assignAuctionFleet(
+        accessToken,
+        locale,
+        dispatchAuctionId.trim(),
+        dispatchVehicleId,
+        dispatchDriverId || undefined,
+      );
+      setDispatchAuctionId("");
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "İhale ataması başarısız");
     } finally {
       setIsBusy(false);
     }
@@ -227,6 +303,121 @@ export function FleetPageClient() {
             </li>
           ))}
         </ul>
+      </section>
+
+      <section className="account-card module-panel fleet-page-grid-span">
+        <header className="account-card-head">
+          <div>
+            <h2 className="account-card-title">Şoför portalı (kullanıcı bağla)</h2>
+            <p className="account-card-lead">
+              Şoför kaydını platform kullanıcısına bağlayın; şoför /hesap/sofor-portal
+              üzerinden görevlerini görür.
+            </p>
+          </div>
+        </header>
+        <form className="account-form-grid" onSubmit={(e) => void handleLinkUser(e)}>
+          <label className="label-light">
+            Şoför
+            <select
+              className="input-light"
+              value={linkDriverId}
+              onChange={(event) => setLinkDriverId(event.target.value)}
+            >
+              <option value="">Seçin</option>
+              {drivers.map((driver) => (
+                <option key={driver.driverId} value={driver.driverId}>
+                  {driver.displayName}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="label-light">
+            Kullanıcı e-postası
+            <input
+              className="input-light"
+              type="email"
+              value={linkEmail}
+              onChange={(event) => setLinkEmail(event.target.value)}
+              placeholder="sofor@firma.com"
+              required
+            />
+          </label>
+          <button type="submit" className="btn-account-primary" disabled={isBusy}>
+            Bağla
+          </button>
+        </form>
+      </section>
+
+      <section className="account-card module-panel fleet-page-grid-span">
+        <header className="account-card-head">
+          <div>
+            <h2 className="account-card-title">İlan / ihale · araç ataması</h2>
+            <p className="account-card-lead">
+              Kapasite ilanı veya kazanılan ihale için filo araç ve şoför bağlayın.
+            </p>
+          </div>
+        </header>
+        <form className="account-form-grid" onSubmit={(e) => void handleDispatchListing(e)}>
+          <label className="label-light account-form-span-2">
+            İlan UUID
+            <input
+              className="input-light"
+              value={dispatchListingId}
+              onChange={(event) => setDispatchListingId(event.target.value)}
+              placeholder="Kapasite veya yük ilanı kimliği"
+            />
+          </label>
+          <label className="label-light">
+            Araç
+            <select
+              className="input-light"
+              value={dispatchVehicleId}
+              onChange={(event) => setDispatchVehicleId(event.target.value)}
+            >
+              <option value="">Seçin</option>
+              {vehicles.map((vehicle) => (
+                <option key={vehicle.vehicleId} value={vehicle.vehicleId}>
+                  {vehicle.licensePlateDisplay}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="label-light">
+            Şoför (isteğe bağlı)
+            <select
+              className="input-light"
+              value={dispatchDriverId}
+              onChange={(event) => setDispatchDriverId(event.target.value)}
+            >
+              <option value="">Aktif araç şoförü</option>
+              {drivers.map((driver) => (
+                <option key={driver.driverId} value={driver.driverId}>
+                  {driver.displayName}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button type="submit" className="btn-account-primary" disabled={isBusy}>
+            İlana ata
+          </button>
+        </form>
+        <form
+          className="account-form-grid"
+          style={{ marginTop: 12 }}
+          onSubmit={(e) => void handleDispatchAuction(e)}
+        >
+          <label className="label-light account-form-span-2">
+            İhale oturum UUID
+            <input
+              className="input-light"
+              value={dispatchAuctionId}
+              onChange={(event) => setDispatchAuctionId(event.target.value)}
+            />
+          </label>
+          <button type="submit" className="btn-account-primary account-form-span-2" disabled={isBusy}>
+            İhaleye ata (seçili araç / şoför)
+          </button>
+        </form>
       </section>
 
       <section className="account-card module-panel fleet-page-grid-span">

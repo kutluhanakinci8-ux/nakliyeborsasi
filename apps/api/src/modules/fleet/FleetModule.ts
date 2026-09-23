@@ -8,6 +8,10 @@ import { CompanyEntity } from "../../infrastructure/database/entities/CompanyEnt
 import { FleetDriverEntity } from "../../infrastructure/database/entities/FleetDriverEntity";
 import { FleetVehicleEntity } from "../../infrastructure/database/entities/FleetVehicleEntity";
 import { FleetDriverVehicleAssignmentEntity } from "../../infrastructure/database/entities/FleetDriverVehicleAssignmentEntity";
+import { FreightListingEntity } from "../../infrastructure/database/entities/FreightListingEntity";
+import { AuctionSessionEntity } from "../../infrastructure/database/entities/AuctionSessionEntity";
+import { UserAccountEntity } from "../../infrastructure/database/entities/UserAccountEntity";
+import { CompanyMembershipEntity } from "../../infrastructure/database/entities/CompanyMembershipEntity";
 
 @Module({
   imports: [
@@ -18,6 +22,10 @@ import { FleetDriverVehicleAssignmentEntity } from "../../infrastructure/databas
       FleetDriverEntity,
       FleetVehicleEntity,
       FleetDriverVehicleAssignmentEntity,
+      FreightListingEntity,
+      AuctionSessionEntity,
+      UserAccountEntity,
+      CompanyMembershipEntity,
     ]),
   ],
   controllers: [FleetController],

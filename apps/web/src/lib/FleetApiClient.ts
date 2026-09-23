@@ -23,6 +23,25 @@ export type FleetOverviewSnapshot = {
   vehicles: readonly FleetVehicleSummary[];
 };
 
+export type DriverPortalSnapshot = {
+  driver: FleetDriverSummary & { driverId: string };
+  company: { companyId: string; legalName: string; countryCode: string } | null;
+  activeVehicle: FleetVehicleSummary | null;
+  assignedListings: readonly {
+    listingId: string;
+    originCityName: string;
+    destinationCityName: string;
+    loadingDateStart: string;
+    listingKindCode: string;
+  }[];
+  assignedAuctions: readonly {
+    sessionId: string;
+    freightListingId: string;
+    statusCode: string;
+    endsAt: string;
+  }[];
+};
+
 export class FleetApiClient {
   private static authHeaders(accessToken: string): HeadersInit {
     return {
@@ -92,6 +111,80 @@ export class FleetApiClient {
     if (!response.ok) {
       throw new Error(await response.text());
     }
+  }
+
+  public static async linkDriverUser(
+    accessToken: string,
+    locale: string,
+    driverId: string,
+    emailAddress: string,
+  ): Promise<void> {
+    const response = await fetch(
+      `${PublicApiConfiguration.resolveBaseUrl()}/fleet/drivers/${driverId}/link-user?lang=${locale}`,
+      {
+        method: "POST",
+        headers: this.authHeaders(accessToken),
+        body: JSON.stringify({ emailAddress }),
+      },
+    );
+    if (!response.ok) {
+      throw new Error(await response.text());
+    }
+  }
+
+  public static async assignListingFleet(
+    accessToken: string,
+    locale: string,
+    listingId: string,
+    fleetVehicleId: string,
+    fleetDriverId?: string,
+  ): Promise<void> {
+    const response = await fetch(
+      `${PublicApiConfiguration.resolveBaseUrl()}/fleet/listings/${listingId}/assign-fleet?lang=${locale}`,
+      {
+        method: "POST",
+        headers: this.authHeaders(accessToken),
+        body: JSON.stringify({ fleetVehicleId, fleetDriverId }),
+      },
+    );
+    if (!response.ok) {
+      throw new Error(await response.text());
+    }
+  }
+
+  public static async assignAuctionFleet(
+    accessToken: string,
+    locale: string,
+    sessionId: string,
+    fleetVehicleId: string,
+    fleetDriverId?: string,
+  ): Promise<void> {
+    const response = await fetch(
+      `${PublicApiConfiguration.resolveBaseUrl()}/fleet/auctions/${sessionId}/assign-fleet?lang=${locale}`,
+      {
+        method: "POST",
+        headers: this.authHeaders(accessToken),
+        body: JSON.stringify({ fleetVehicleId, fleetDriverId }),
+      },
+    );
+    if (!response.ok) {
+      throw new Error(await response.text());
+    }
+  }
+
+  public static async fetchDriverPortal(
+    accessToken: string,
+    locale: string,
+  ): Promise<DriverPortalSnapshot> {
+    const response = await fetch(
+      `${PublicApiConfiguration.resolveBaseUrl()}/fleet/driver-portal/me?lang=${locale}`,
+      { headers: this.authHeaders(accessToken) },
+    );
+    if (!response.ok) {
+      throw new Error(await response.text());
+    }
+    const payload = (await response.json()) as { portal: DriverPortalSnapshot };
+    return payload.portal;
   }
 
   public static async assign(

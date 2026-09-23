@@ -3,6 +3,7 @@ export type AccountMenuIconId =
   | "listings"
   | "employees"
   | "fleet"
+  | "driverPortal"
   | "applications"
   | "payments"
   | "partners"
@@ -42,6 +43,13 @@ export const ACCOUNT_MENU_ITEMS: readonly AccountMenuItem[] = [
     lead:
       "Taşıyıcı filonuz: şoförler, çekici/kamyon kayıtları ve aktif eşleştirmeler — TR·UA·EU uyumlu alanlar.",
     icon: "fleet",
+  },
+  {
+    href: "/hesap/sofor-portal",
+    label: "Şoför panelim",
+    lead:
+      "Bağlı şoför hesabı: atanmış araç, kapasite ilanları ve ihale görevleri.",
+    icon: "driverPortal",
   },
   {
     href: "/hesap/uygulamalar",

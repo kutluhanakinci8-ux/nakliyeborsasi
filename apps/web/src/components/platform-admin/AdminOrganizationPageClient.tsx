@@ -135,6 +135,8 @@ export function AdminOrganizationPageClient() {
             participantTypeCode: null,
             userCount: 0,
             listingCount: 0,
+            driverCount: 0,
+            vehicleCount: 0,
             activePlanCode: null,
           });
         }

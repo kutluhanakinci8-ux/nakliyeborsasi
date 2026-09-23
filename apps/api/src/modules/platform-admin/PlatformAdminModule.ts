@@ -11,6 +11,8 @@ import { AuctionSessionEntity } from "../../infrastructure/database/entities/Auc
 import { CompanyTrustReviewEntity } from "../../infrastructure/database/entities/CompanyTrustReviewEntity";
 import { MessageThreadEntity } from "../../infrastructure/database/entities/MessageThreadEntity";
 import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogEntity";
+import { FleetDriverEntity } from "../../infrastructure/database/entities/FleetDriverEntity";
+import { FleetVehicleEntity } from "../../infrastructure/database/entities/FleetVehicleEntity";
 import { PlatformAdminController } from "./PlatformAdminController";
 import { PlatformAdminApplicationService } from "./PlatformAdminApplicationService";
 import { PlatformAdminGuard } from "./PlatformAdminGuard";
@@ -29,6 +31,8 @@ import { PlatformAdminGuard } from "./PlatformAdminGuard";
       CompanyTrustReviewEntity,
       MessageThreadEntity,
       AuditLogEntity,
+      FleetDriverEntity,
+      FleetVehicleEntity,
     ]),
   ],
   controllers: [PlatformAdminController],

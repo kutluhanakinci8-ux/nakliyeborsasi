@@ -7,6 +7,7 @@ export * from "./constants/CompanyParticipantTypeCode";
 export * from "./constants/EquipmentTypeCode";
 export * from "./constants/FleetDriverStatusCode";
 export * from "./constants/FleetVehicleStatusCode";
+export * from "./constants/FreightListingKindCode";
 export * from "./constants/FleetAssignmentTypeCode";
 export * from "./constants/FreightPlaceKindCode";
 export * from "./constants/FreightPaymentFormCode";
