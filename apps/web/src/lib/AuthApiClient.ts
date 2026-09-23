@@ -143,14 +143,21 @@ export class AuthApiClient {
     emailAddress: string,
     password: string,
   ): Promise<{ accessToken: string }> {
-    const response = await fetch(
-      `${PublicApiConfiguration.resolveBaseUrl()}/auth/login`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ emailAddress, password }),
-      },
-    );
+    let response: Response;
+    try {
+      response = await fetch(
+        `${PublicApiConfiguration.resolveBaseUrl()}/auth/login`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ emailAddress, password }),
+        },
+      );
+    } catch {
+      throw new Error(
+        "Sunucuya bağlanılamadı. iPhone’da https://168.231.109.27/login kullanın (HTTP :3011 veya karışık bağlantı «Load failed» verir).",
+      );
+    }
     if (!response.ok) {
       const errorBody = await response.text();
       throw new Error(

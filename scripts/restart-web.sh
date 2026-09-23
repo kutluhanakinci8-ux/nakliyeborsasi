@@ -8,7 +8,7 @@ API_PUBLIC_URL="${3:-}"
 if [[ -z "${API_PUBLIC_URL}" ]]; then
   SERVER_IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
   if [[ -n "${SERVER_IP}" ]]; then
-    API_PUBLIC_URL="http://${SERVER_IP}:3010/api/v1"
+    API_PUBLIC_URL="https://${SERVER_IP}/api/v1"
   else
     API_PUBLIC_URL="http://127.0.0.1:3010/api/v1"
   fi
