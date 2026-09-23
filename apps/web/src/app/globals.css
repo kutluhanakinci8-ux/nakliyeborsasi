@@ -6765,6 +6765,66 @@ button.btn-secondary {
   border: 1px solid #bfdbfe;
 }
 
+.fleet-telemetry-kv {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 12px;
+  margin: 10px 0;
+  font-size: 0.82rem;
+}
+
+.fleet-telemetry-kv dt {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.fleet-telemetry-kv dd {
+  margin: 0;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.fleet-telemetry-feed {
+  margin-top: 10px;
+}
+
+.fleet-telemetry-feed-title {
+  font-size: 0.9rem;
+  margin: 0 0 6px;
+}
+
+.fleet-telemetry-feed-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 200px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fleet-telemetry-feed-item {
+  display: grid;
+  grid-template-columns: 4.5rem 1fr;
+  gap: 8px;
+  font-size: 0.78rem;
+  padding: 4px 6px;
+  border-radius: 6px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+}
+
+.fleet-telemetry-feed-item--warning {
+  border-color: #fcd34d;
+  background: #fffbeb;
+}
+
+.fleet-telemetry-feed-item--critical {
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+
 .fleet-live-map-poi-toggles {
   display: flex;
   flex-wrap: wrap;

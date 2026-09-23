@@ -38,6 +38,7 @@ import { RouteReconstructionService } from "./routing/RouteReconstructionService
 import { TelemetryMatchingQueueService } from "./routing/TelemetryMatchingQueueService";
 import { OsrmRoutingClient } from "./routing/OsrmRoutingClient";
 import { RoutePoiAlongCorridorService } from "./poi/RoutePoiAlongCorridorService";
+import { TelemetryCarrierFeedFormatter } from "./TelemetryCarrierFeedFormatter";
 
 @Injectable()
 export class TelemetryApplicationService {
@@ -153,6 +154,8 @@ export class TelemetryApplicationService {
         lastAltitudeMeters: kinematics.altitudeMeters,
         lastVerticalAccuracyMeters: kinematics.verticalAccuracyMeters,
         lastSpeedSourceCode: kinematics.speedSourceCode,
+        lastHorizontalAccuracyMeters:
+          latestSample?.horizontalAccuracyMeters ?? null,
         lastSeenAt: lastSeenAt?.toISOString() ?? null,
         trackingState,
         motionPhase: motion.motionPhase,
@@ -210,6 +213,28 @@ export class TelemetryApplicationService {
       throw new ResourceNotFoundException("FleetDriver", driverId);
     }
     const since = new Date(Date.now() - hours * 60 * 60 * 1000);
+    const locationEvents = await this.eventRepository.find({
+      where: {
+        companyId,
+        fleetDriverId: driverId,
+        recordedAt: MoreThan(since),
+        eventTypeCode: TelemetryEventTypeCode.LocationSample,
+      },
+      order: { recordedAt: "ASC" },
+      take: 1200,
+    });
+    const feedEvents = await this.eventRepository.find({
+      where: {
+        companyId,
+        fleetDriverId: driverId,
+        recordedAt: MoreThan(since),
+      },
+      order: { recordedAt: "DESC" },
+      take: 40,
+    });
+    const recentFeed = feedEvents.map((event) =>
+      TelemetryCarrierFeedFormatter.toFeedItem(event),
+    );
     const events = await this.eventRepository.find({
       where: {
         companyId,
@@ -231,6 +256,25 @@ export class TelemetryApplicationService {
       order: { recordedAt: "ASC" },
       take: 800,
     });
+    const breadcrumbPoints = locationEvents
+      .filter(
+        (event) => event.latitude !== null && event.longitude !== null,
+      )
+      .map((event) => ({
+        recordedAt: event.recordedAt.toISOString(),
+        latitude: event.latitude as number,
+        longitude: event.longitude as number,
+        speedKmh: event.speedKmh,
+        headingDegrees: event.headingDegrees,
+        altitudeMeters: this.readNumberFromPayload(
+          event.payloadJson,
+          "altitudeMeters",
+        ),
+        verticalAccuracyMeters: this.readNumberFromPayload(
+          event.payloadJson,
+          "verticalAccuracyMeters",
+        ),
+      }));
     const rawRoutePoints = events
       .filter(
         (event) =>
@@ -346,6 +390,9 @@ export class TelemetryApplicationService {
       displayName: driver.displayName,
       motionPhase: motion.motionPhase,
       speedDeltaKmh: motion.speedDeltaKmh,
+      breadcrumbPoints,
+      locationSampleCount: locationEvents.length,
+      recentFeed,
       routePoints,
       safetyMarkers,
       roadGeometry: reconstructed.roadGeometry,

@@ -33,6 +33,13 @@ function stateLabel(state: FleetLiveDriverPin["trackingState"]): string {
   }
 }
 
+function formatOptionalMeters(value: number | null | undefined): string {
+  if (value === null || value === undefined || !Number.isFinite(value)) {
+    return "—";
+  }
+  return `${Math.round(value)} m`;
+}
+
 function motionLabel(phase: FleetMotionPhase): string {
   switch (phase) {
     case "STOPPED":
@@ -57,6 +64,7 @@ export function FleetLiveMapPageClient() {
   const [errorMessage, setErrorMessage] = useState("");
   const [showWeighStations, setShowWeighStations] = useState(true);
   const [showTruckParking, setShowTruckParking] = useState(true);
+  const [routeError, setRouteError] = useState("");
 
   const refresh = useCallback(async () => {
     if (!accessToken) {
@@ -76,6 +84,18 @@ export function FleetLiveMapPageClient() {
     }
   }, [accessToken, locale]);
 
+  useEffect(() => {
+    if (!snapshot || selectedDriverId) {
+      return;
+    }
+    const firstLive = snapshot.drivers.find(
+      (driver) => driver.trackingState === "LIVE",
+    );
+    if (firstLive) {
+      setSelectedDriverId(firstLive.driverId);
+    }
+  }, [snapshot, selectedDriverId]);
+
   const loadRoute = useCallback(
     async (driverId: string) => {
       if (!accessToken) {
@@ -87,11 +107,13 @@ export function FleetLiveMapPageClient() {
           locale,
           driverId,
           6,
-          "matched",
+          "road",
         );
         setSelectedRoute(route);
+        setRouteError("");
       } catch {
         setSelectedRoute(null);
+        setRouteError("Rota ve telemetri akışı yüklenemedi.");
       }
     },
     [accessToken, locale],
@@ -172,20 +194,102 @@ export function FleetLiveMapPageClient() {
                   ? ` (${selectedDriver.speedDeltaKmh > 0 ? "+" : ""}${selectedDriver.speedDeltaKmh} km/s)`
                   : ""}
               </p>
-              {selectedRoute ? (
-                <p className="fleet-entity-meta">
-                  Rota noktası: {selectedRoute.routePoints.length}
-                  {selectedRoute.distanceKm !== null
-                    ? ` · ${selectedRoute.distanceKm} km (yol)`
-                    : ""}
-                  · Güvenlik olayı: {selectedRoute.safetyMarkers.length}
-                  · Kantar / tır parkı:{" "}
-                  {(selectedRoute.routePois ?? []).length}
-                  {selectedRoute.roadGeometryStatus === "PENDING"
-                    ? " · Yol hesaplanıyor…"
-                    : ""}
-                </p>
+              <dl className="fleet-telemetry-kv">
+                <div>
+                  <dt>Hız</dt>
+                  <dd>
+                    {selectedDriver.lastSpeedKmh !== null
+                      ? `${Math.round(selectedDriver.lastSpeedKmh)} km/s`
+                      : "—"}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Yön</dt>
+                  <dd>
+                    {selectedDriver.lastHeadingDegrees !== null
+                      ? `${Math.round(selectedDriver.lastHeadingDegrees)}°`
+                      : "—"}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Rakım</dt>
+                  <dd>{formatOptionalMeters(selectedDriver.lastAltitudeMeters)}</dd>
+                </div>
+                <div>
+                  <dt>Dikey doğruluk</dt>
+                  <dd>
+                    {formatOptionalMeters(selectedDriver.lastVerticalAccuracyMeters)}
+                  </dd>
+                </div>
+                <div>
+                  <dt>GPS doğruluk</dt>
+                  <dd>
+                    {formatOptionalMeters(
+                      selectedDriver.lastHorizontalAccuracyMeters,
+                    )}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Hız kaynağı</dt>
+                  <dd>{selectedDriver.lastSpeedSourceCode ?? "—"}</dd>
+                </div>
+              </dl>
+              {routeError ? (
+                <p className="error banner error--light">{routeError}</p>
               ) : null}
+              {selectedRoute ? (
+                <>
+                  <p className="fleet-entity-meta">
+                    Konum örneği: {selectedRoute.locationSampleCount}
+                    {selectedRoute.breadcrumbPoints.length > 0
+                      ? ` · iz ${selectedRoute.breadcrumbPoints.length} nokta`
+                      : ""}
+                    {selectedRoute.distanceKm !== null
+                      ? ` · ${selectedRoute.distanceKm} km (yol)`
+                      : ""}
+                    · Güvenlik: {selectedRoute.safetyMarkers.length}
+                    · POI: {(selectedRoute.routePois ?? []).length}
+                    {selectedRoute.roadGeometryStatus === "PENDING"
+                      ? " · Yol hesaplanıyor…"
+                      : ""}
+                  </p>
+                  {selectedRoute.recentFeed.length > 0 ? (
+                    <div className="fleet-telemetry-feed">
+                      <h3 className="fleet-telemetry-feed-title">
+                        Son telemetri
+                      </h3>
+                      <ul className="fleet-telemetry-feed-list">
+                        {selectedRoute.recentFeed.slice(0, 12).map((item) => (
+                          <li
+                            key={`${item.eventTypeCode}-${item.recordedAt}`}
+                            className={
+                              item.severityCode === "CRITICAL"
+                                ? "fleet-telemetry-feed-item fleet-telemetry-feed-item--critical"
+                                : item.severityCode === "WARNING"
+                                  ? "fleet-telemetry-feed-item fleet-telemetry-feed-item--warning"
+                                  : "fleet-telemetry-feed-item"
+                            }
+                          >
+                            <time dateTime={item.recordedAt}>
+                              {new Date(item.recordedAt).toLocaleTimeString(
+                                "tr-TR",
+                              )}
+                            </time>
+                            <span>{item.detail}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : (
+                    <p className="fleet-entity-meta">
+                      Henüz olay kaydı yok. Şoför companion sayfasında
+                      «Konumu paylaş» açık olsun.
+                    </p>
+                  )}
+                </>
+              ) : (
+                <p className="fleet-entity-meta">Rota yükleniyor…</p>
+              )}
               <div className="fleet-live-map-poi-toggles">
                 <label>
                   <input

@@ -26,6 +26,7 @@ export type FleetLiveDriverPin = {
   lastAltitudeMeters: number | null;
   lastVerticalAccuracyMeters: number | null;
   lastSpeedSourceCode: string | null;
+  lastHorizontalAccuracyMeters: number | null;
   lastSeenAt: string | null;
   trackingState: FleetLiveTrackingState;
   motionPhase: FleetMotionPhase;
@@ -74,11 +75,26 @@ export type FleetRoutePoiMarker = {
   sourceCode: string;
 };
 
+export type FleetTelemetryFeedItem = {
+  eventTypeCode: string;
+  recordedAt: string;
+  severityCode: string | null;
+  speedKmh: number | null;
+  altitudeMeters: number | null;
+  verticalAccuracyMeters: number | null;
+  /** Kısa Türkçe özet (filo paneli). */
+  detail: string;
+};
+
 export type FleetDriverRouteSnapshot = {
   driverId: string;
   displayName: string;
   motionPhase: FleetMotionPhase;
   speedDeltaKmh: number | null;
+  /** Ham GPS örnekleri (dururken de görünür); harita izi için. */
+  breadcrumbPoints: readonly FleetRoutePoint[];
+  locationSampleCount: number;
+  recentFeed: readonly FleetTelemetryFeedItem[];
   routePoints: readonly FleetRoutePoint[];
   safetyMarkers: readonly FleetRouteSafetyMarker[];
   roadGeometry: GeoJsonLineString | null;

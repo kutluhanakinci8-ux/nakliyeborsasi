@@ -91,6 +91,7 @@ export type FleetLiveDriverPin = {
   lastAltitudeMeters?: number | null;
   lastVerticalAccuracyMeters?: number | null;
   lastSpeedSourceCode?: string | null;
+  lastHorizontalAccuracyMeters?: number | null;
   lastSeenAt: string | null;
   trackingState: FleetLiveTrackingState;
   motionPhase: FleetMotionPhase;
@@ -103,6 +104,18 @@ export type FleetRoutePoint = {
   longitude: number;
   speedKmh: number | null;
   headingDegrees: number | null;
+  altitudeMeters?: number | null;
+  verticalAccuracyMeters?: number | null;
+};
+
+export type FleetTelemetryFeedItem = {
+  eventTypeCode: string;
+  recordedAt: string;
+  severityCode: string | null;
+  speedKmh: number | null;
+  altitudeMeters: number | null;
+  verticalAccuracyMeters: number | null;
+  detail: string;
 };
 
 export type FleetRouteSafetyMarker = {
@@ -121,6 +134,9 @@ export type FleetDriverRouteSnapshot = {
   displayName: string;
   motionPhase: FleetMotionPhase;
   speedDeltaKmh: number | null;
+  breadcrumbPoints: readonly FleetRoutePoint[];
+  locationSampleCount: number;
+  recentFeed: readonly FleetTelemetryFeedItem[];
   routePoints: readonly FleetRoutePoint[];
   safetyMarkers: readonly FleetRouteSafetyMarker[];
   roadGeometry: GeoJsonLineString | null;

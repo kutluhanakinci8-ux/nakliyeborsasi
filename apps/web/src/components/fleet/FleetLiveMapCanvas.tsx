@@ -107,6 +107,47 @@ export function FleetLiveMapCanvas({
     if (selectedRoute) {
       const road = selectedRoute.roadGeometry;
       const boundsCoords: L.LatLngExpression[] = [];
+      const crumbs = selectedRoute.breadcrumbPoints ?? [];
+
+      if (crumbs.length > 0) {
+        for (const point of crumbs) {
+          L.circleMarker([point.latitude, point.longitude], {
+            radius: crumbs.length > 80 ? 2 : 4,
+            color: "#1e40af",
+            weight: 1,
+            fillColor: "#93c5fd",
+            fillOpacity: 0.75,
+          })
+            .bindPopup(
+              [
+                point.speedKmh !== null
+                  ? `${Math.round(point.speedKmh)} km/s`
+                  : null,
+                point.altitudeMeters != null
+                  ? `Rakım ${Math.round(point.altitudeMeters)} m`
+                  : null,
+                new Date(point.recordedAt).toLocaleString("tr-TR"),
+              ]
+                .filter(Boolean)
+                .join("<br/>"),
+            )
+            .addTo(routeLayer);
+          boundsCoords.push([point.latitude, point.longitude]);
+        }
+        if (crumbs.length > 1) {
+          L.polyline(
+            crumbs.map(
+              (point) => [point.latitude, point.longitude] as L.LatLngExpression,
+            ),
+            {
+              color: "#3b82f6",
+              weight: 2,
+              opacity: 0.45,
+              dashArray: "4 6",
+            },
+          ).addTo(routeLayer);
+        }
+      }
 
       if (road && road.coordinates.length > 1) {
         if (selectedRoute.speedSegments.length > 1) {
@@ -239,6 +280,14 @@ export function FleetLiveMapCanvas({
         fillColor: color,
         fillOpacity: 0.9,
       });
+      const altLine =
+        driver.lastAltitudeMeters != null
+          ? `<br/>Rakım ${Math.round(driver.lastAltitudeMeters)} m`
+          : "";
+      const accLine =
+        driver.lastHorizontalAccuracyMeters != null
+          ? `<br/>GPS ±${Math.round(driver.lastHorizontalAccuracyMeters)} m`
+          : "";
       marker.bindPopup(
         `<strong>${driver.displayName}</strong><br/>${
           driver.licensePlateDisplay ?? "Araç yok"
@@ -246,14 +295,17 @@ export function FleetLiveMapCanvas({
           driver.lastSpeedKmh !== null
             ? `${Math.round(driver.lastSpeedKmh)} km/s`
             : "—"
-        }`,
+        }${altLine}${accLine}`,
       );
       marker.on("click", () => onSelectDriver(driver.driverId));
       marker.addTo(layer);
     }
-    if (!selectedRoute?.routePoints.length && bounds.length === 1) {
+    const hasTrail =
+      (selectedRoute?.breadcrumbPoints?.length ?? 0) > 0 ||
+      (selectedRoute?.routePoints.length ?? 0) > 0;
+    if (!hasTrail && bounds.length === 1) {
       map.setView(bounds[0], 12);
-    } else if (!selectedRoute?.routePoints.length && bounds.length > 1) {
+    } else if (!hasTrail && bounds.length > 1) {
       map.fitBounds(L.latLngBounds(bounds), { padding: [48, 48], maxZoom: 12 });
     }
   }, [
