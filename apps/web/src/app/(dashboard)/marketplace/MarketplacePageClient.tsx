@@ -164,36 +164,45 @@ export function MarketplacePageClient() {
 
   return (
     <div className="exchange-page">
-      <header className="exchange-hero exchange-hero--with-search">
-        <div className="exchange-hero-main">
-          <p className="exchange-eyebrow">Nakliye Borsası</p>
-          <div className="exchange-hero-title-row">
+      <header className="exchange-hero exchange-hero--marketplace">
+        <div className="exchange-hero-head">
+          <div className="exchange-hero-intro">
+            <p className="exchange-eyebrow">Nakliye Borsası</p>
             <h1 className="exchange-title">Yük ve taşıma arama</h1>
-            <MarketplaceSearchBar
-              variant="embedded"
-              originQuery={originQuery}
-              destinationQuery={destinationQuery}
-              equipmentFilter={equipmentFilter}
-              onOriginChange={setOriginQuery}
-              onDestinationChange={setDestinationQuery}
-              onEquipmentChange={setEquipmentFilter}
-              onSearch={() => void loadListings()}
-              isBusy={isBusy}
-              resultCount={filteredListings.length}
-            />
           </div>
-          <p className="search-meta search-meta--hero">
-            Bulundu: <strong>{filteredListings.length}</strong> ilan
-          </p>
+          <div className="exchange-hero-head-actions">
+            <span className="exchange-corridor-pill" title="Platform koridoru">
+              TR · UA · EU
+            </span>
+            <button
+              type="button"
+              className="btn-secondary btn-secondary--light exchange-hero-refresh"
+              onClick={() => void loadListings()}
+              disabled={isBusy}
+            >
+              Yenile
+            </button>
+          </div>
         </div>
-        <button
-          type="button"
-          className="btn-secondary btn-secondary--light exchange-hero-refresh"
-          onClick={() => void loadListings()}
-          disabled={isBusy}
-        >
-          Yenile
-        </button>
+
+        <MarketplaceSearchBar
+          variant="embedded"
+          originQuery={originQuery}
+          destinationQuery={destinationQuery}
+          equipmentFilter={equipmentFilter}
+          onOriginChange={setOriginQuery}
+          onDestinationChange={setDestinationQuery}
+          onEquipmentChange={setEquipmentFilter}
+          onSearch={() => void loadListings()}
+          isBusy={isBusy}
+          resultCount={filteredListings.length}
+        />
+
+        <p className="search-meta search-meta--hero">
+          <span className="search-meta-count">{filteredListings.length}</span>
+          ilan listeleniyor
+          {isBusy ? <span className="search-meta-busy"> · güncelleniyor…</span> : null}
+        </p>
       </header>
 
       {errorMessage ? <p className="error banner error--light">{errorMessage}</p> : null}

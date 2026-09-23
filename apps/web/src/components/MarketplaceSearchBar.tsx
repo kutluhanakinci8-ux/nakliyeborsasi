@@ -1,5 +1,7 @@
 "use client";
 
+import type { FormEvent } from "react";
+
 type MarketplaceSearchBarProps = {
   originQuery: string;
   destinationQuery: string;
@@ -26,17 +28,25 @@ export function MarketplaceSearchBar({
   resultCount,
   variant = "panel",
 }: MarketplaceSearchBarProps) {
+  function handleSubmit(event: FormEvent<HTMLFormElement>): void {
+    event.preventDefault();
+    onSearch();
+  }
+
   const fields = (
-    <div
+    <form
       className={
         variant === "embedded"
           ? "search-fields search-fields--hero"
           : "search-fields"
       }
+      onSubmit={handleSubmit}
     >
       <label className="search-field">
         <span>Nereden</span>
         <input
+          name="origin"
+          autoComplete="off"
           placeholder="Örn. Ankara, Antalya"
           value={originQuery}
           onChange={(event) => onOriginChange(event.target.value)}
@@ -45,6 +55,8 @@ export function MarketplaceSearchBar({
       <label className="search-field">
         <span>Nereye</span>
         <input
+          name="destination"
+          autoComplete="off"
           placeholder="Örn. Odesa, Berlin"
           value={destinationQuery}
           onChange={(event) => onDestinationChange(event.target.value)}
@@ -53,6 +65,7 @@ export function MarketplaceSearchBar({
       <label className="search-field search-field--narrow">
         <span>Araç</span>
         <select
+          name="equipment"
           value={equipmentFilter}
           onChange={(event) => onEquipmentChange(event.target.value)}
         >
@@ -63,19 +76,20 @@ export function MarketplaceSearchBar({
         </select>
       </label>
       <button
-        type="button"
-        className="btn-search"
-        onClick={onSearch}
+        type="submit"
+        className={
+          variant === "embedded" ? "btn-search btn-search--brand" : "btn-search"
+        }
         disabled={isBusy}
       >
         {isBusy ? "Aranıyor…" : "Ara"}
       </button>
-    </div>
+    </form>
   );
 
   if (variant === "embedded") {
     return (
-      <div className="exchange-hero-search" aria-label="Yük arama">
+      <div className="exchange-search-toolbar" aria-label="Yük arama">
         {fields}
       </div>
     );
