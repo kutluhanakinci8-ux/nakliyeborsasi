@@ -71,14 +71,14 @@ export function FreightListingRow({
         />
         {loadingMeta ? <p className="freight-row-meta">{loadingMeta}</p> : null}
       </div>
-      <div className="freight-row-actions freight-row-actions--footer">
-        <button type="button" className="btn-link" onClick={onMessage}>
+      <div className="freight-row-actions freight-row-actions--top">
+        <button type="button" className="btn-link btn-link--compact" onClick={onMessage}>
           Mesaj
         </button>
-        <button type="button" className="btn-link" onClick={onTrust}>
+        <button type="button" className="btn-link btn-link--compact" onClick={onTrust}>
           Güven profili
         </button>
-        <button type="button" className="btn-accent" onClick={onAuction}>
+        <button type="button" className="btn-accent btn-accent--compact" onClick={onAuction}>
           İhale aç
         </button>
       </div>

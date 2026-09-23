@@ -5039,15 +5039,14 @@ button.btn-secondary {
   display: grid;
   grid-template-columns: 1fr auto;
   grid-template-areas:
-    "badges price"
-    "main price"
-    "actions price";
-  gap: 8px 16px;
+    "badges actions"
+    "main price";
+  gap: 10px 20px;
   align-items: start;
   background: #fff;
   border: 1px solid #dbe3ec;
   border-radius: 12px;
-  padding: 14px 18px 16px;
+  padding: 12px 18px 14px;
 }
 
 .freight-row-badges {
@@ -5061,7 +5060,8 @@ button.btn-secondary {
   grid-area: badges;
   justify-content: flex-start;
   align-items: center;
-  align-self: start;
+  align-self: center;
+  min-height: 28px;
 }
 
 .freight-row-main {
@@ -5069,16 +5069,41 @@ button.btn-secondary {
   min-width: 0;
 }
 
-.freight-row-actions--footer {
+.freight-row-actions--top {
   grid-area: actions;
-  align-self: end;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  align-self: center;
+  gap: 4px 6px;
+  min-height: 28px;
+}
+
+.freight-row-actions--top .btn-link--compact {
+  padding: 3px 7px;
+  font-size: 0.75rem;
+  line-height: 1.25;
+  border-radius: 6px;
+}
+
+.freight-row-actions--top .btn-accent--compact {
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  line-height: 1.25;
+  border-radius: 6px;
 }
 
 .freight-row-price {
   grid-area: price;
-  align-self: start;
+  align-self: center;
   text-align: right;
-  min-width: 120px;
+  min-width: 108px;
+  padding-top: 2px;
+}
+
+.freight-row-price .price-amount {
+  font-size: 1.12rem;
 }
 
 .badge {
@@ -5444,17 +5469,22 @@ button.btn-secondary {
     grid-template-columns: 1fr;
     grid-template-areas:
       "badges"
-      "price"
+      "actions"
       "main"
-      "actions";
+      "price";
   }
 
   .freight-row-badges--top {
     justify-content: flex-start;
   }
 
+  .freight-row-actions--top {
+    justify-content: flex-start;
+  }
+
   .freight-row-price {
     text-align: left;
+    align-self: start;
   }
 
   .split-layout {
