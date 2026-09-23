@@ -5129,6 +5129,26 @@ button.btn-secondary {
   padding-top: 0;
 }
 
+.auction-list-price-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 6px 10px;
+}
+
+.auction-list-price-side {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.auction-list-price-sep {
+  margin: 0 2px;
+  color: #94a3b8;
+}
+
 .auction-list-cargo-row {
   display: flex;
   flex-wrap: wrap;

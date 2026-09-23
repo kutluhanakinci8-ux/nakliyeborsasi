@@ -308,8 +308,6 @@ export function AuctionsPageClient() {
                       ? `Yükleme ${formatLoadingDateTr(listing.loadingDateStart)} · `
                       : ""}
                     Bitiş: {new Date(session.endsAt).toLocaleString(locale)}
-                    {best ? ` · L1: ${best} ${session.currencyCode}` : ""}
-                    {` · Tavan ${session.minimumBidAmount} ${session.currencyCode}`}
                     {activeTab === "closed"
                       ? ` · Kazanan: ${formatWinner(session)}`
                       : ""}
