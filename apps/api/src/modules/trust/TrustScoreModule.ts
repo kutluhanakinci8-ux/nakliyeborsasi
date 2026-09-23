@@ -16,5 +16,6 @@ import { AuthModule } from "../auth/AuthModule";
   ],
   controllers: [TrustScoreModuleStatusController, TrustScoreController],
   providers: [TrustScoreApplicationService],
+  exports: [TrustScoreApplicationService],
 })
 export class TrustScoreModule {}

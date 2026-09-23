@@ -12,10 +12,17 @@ import {
 import { AuctionSessionEntity } from "../../infrastructure/database/entities/AuctionSessionEntity";
 import { AuctionBidEntity } from "../../infrastructure/database/entities/AuctionBidEntity";
 import { FreightListingEntity } from "../../infrastructure/database/entities/FreightListingEntity";
+import { CompanyEntity } from "../../infrastructure/database/entities/CompanyEntity";
 import { CreateAuctionSessionRequestDto } from "./CreateAuctionSessionRequestDto";
 import { ModularSubscriptionEntitlementService } from "../subscription/ModularSubscriptionEntitlementService";
 import { LocaleResolutionService } from "../localization/LocaleResolutionService";
 import { AuctionSessionFinalizationService } from "./AuctionSessionFinalizationService";
+import { PlatformFreightListingMapper } from "../marketplace/PlatformFreightListingMapper";
+import { TrustScoreApplicationService } from "../trust/TrustScoreApplicationService";
+import {
+  AuctionSessionDetailResponse,
+  mapSessionDetail,
+} from "./AuctionSessionDetailMapper";
 
 @Injectable()
 export class AuctionSessionApplicationService {
@@ -26,9 +33,12 @@ export class AuctionSessionApplicationService {
     private readonly auctionBidRepository: Repository<AuctionBidEntity>,
     @InjectRepository(FreightListingEntity)
     private readonly freightListingRepository: Repository<FreightListingEntity>,
+    @InjectRepository(CompanyEntity)
+    private readonly companyRepository: Repository<CompanyEntity>,
     private readonly modularSubscriptionEntitlementService: ModularSubscriptionEntitlementService,
     private readonly localeResolutionService: LocaleResolutionService,
     private readonly auctionSessionFinalizationService: AuctionSessionFinalizationService,
+    private readonly trustScoreApplicationService: TrustScoreApplicationService,
   ) {}
 
   public async createSession(
@@ -105,6 +115,45 @@ export class AuctionSessionApplicationService {
       throw new AuctionSessionNotFoundException(auctionSessionId);
     }
     return session;
+  }
+
+  public async getSessionDetail(
+    authenticatedUser: AuthenticatedUserContext,
+    auctionSessionId: string,
+    locale: string,
+  ): Promise<AuctionSessionDetailResponse> {
+    await this.modularSubscriptionEntitlementService.assertModuleAccess(
+      authenticatedUser.companyId,
+      SubscriptionModuleCode.Auction,
+      locale,
+    );
+    const session = await this.getSessionById(auctionSessionId);
+    const listingEntity = await this.freightListingRepository.findOne({
+      where: { id: session.freightListingId },
+    });
+    if (!listingEntity) {
+      throw new ResourceNotFoundException(
+        "FreightListing",
+        session.freightListingId,
+      );
+    }
+    const owner = await this.companyRepository.findOne({
+      where: { id: session.ownerCompanyId },
+    });
+    if (!owner) {
+      throw new ResourceNotFoundException("Company", session.ownerCompanyId);
+    }
+    const trust = await this.trustScoreApplicationService.getCompanyTrustSnapshot(
+      session.ownerCompanyId,
+    );
+    const listing = PlatformFreightListingMapper.toDomain(listingEntity);
+    return mapSessionDetail(
+      session,
+      listing,
+      owner,
+      trust.scoreValue,
+      trust.reviewCount,
+    );
   }
 
   public async placeBid(

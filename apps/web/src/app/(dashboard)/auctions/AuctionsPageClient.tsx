@@ -176,7 +176,14 @@ export function AuctionsPageClient() {
                       {session.bids?.length ?? 0} teklif
                     </span>
                   </div>
-                  <h3 className="freight-route">İhale #{session.id.slice(0, 8)}</h3>
+                  <h3 className="freight-route">
+                    <Link
+                      href={`/auctions/${session.id}`}
+                      className="auction-list-title-link"
+                    >
+                      İhale #{session.id.slice(0, 8)}
+                    </Link>
+                  </h3>
                   <p className="module-row-meta">
                     Bitiş: {new Date(session.endsAt).toLocaleString(locale)}
                     {topBid ? ` · En yüksek: ${topBid} ${session.currencyCode}` : ""}
@@ -184,8 +191,14 @@ export function AuctionsPageClient() {
                       ? ` · Kazanan: ${formatWinner(session)}`
                       : ""}
                   </p>
-                  {activeTab === "open" ? (
-                    <div className="freight-row-actions">
+                  <div className="freight-row-actions">
+                    <Link
+                      href={`/auctions/${session.id}`}
+                      className="btn-link"
+                    >
+                      Detay ve şartlar
+                    </Link>
+                    {activeTab === "open" ? (
                       <button
                         type="button"
                         className="btn-accent"
@@ -193,8 +206,8 @@ export function AuctionsPageClient() {
                       >
                         Teklif ver
                       </button>
-                    </div>
-                  ) : null}
+                    ) : null}
+                  </div>
                 </div>
                 <div className="freight-row-price">
                   <span className="price-amount">

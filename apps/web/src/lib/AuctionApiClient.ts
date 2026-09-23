@@ -4,6 +4,7 @@ export type AuctionBidRecord = {
   id: string;
   bidderCompanyId: string;
   bidAmount: string;
+  createdAt?: string;
 };
 
 export type AuctionSessionRecord = {
@@ -17,7 +18,52 @@ export type AuctionSessionRecord = {
   bids?: AuctionBidRecord[];
 };
 
+export type AuctionListingPoint = {
+  countryCode: string;
+  cityName: string;
+  placeName?: string | null;
+  placeKindCode?: string | null;
+};
+
+export type AuctionSessionDetail = {
+  session: AuctionSessionRecord & {
+    ownerCompanyId: string;
+    createdAt: string;
+    bids: (AuctionBidRecord & { createdAt: string })[];
+  };
+  listing: {
+    listingId: string;
+    ownerCompanyId: string;
+    origin: AuctionListingPoint;
+    destination: AuctionListingPoint;
+    equipmentType: string;
+    weightTonnes: number;
+    loadingDateStart: string;
+    marketScope: string;
+    price: { amount: number; currencyCode: string } | null;
+  };
+  ownerCompany: {
+    companyId: string;
+    legalName: string;
+    countryCode: string;
+    participantTypeCode: string | null;
+    trustScore: number;
+    trustReviewCount: number;
+  };
+};
+
 export class AuctionApiClient {
+  public static async getSessionDetail(
+    accessToken: string,
+    locale: string,
+    auctionSessionId: string,
+  ): Promise<AuctionSessionDetail> {
+    return AuthenticatedApiClient.fetchJson(
+      accessToken,
+      `/auctions/sessions/${encodeURIComponent(auctionSessionId)}?lang=${locale}`,
+    ) as Promise<AuctionSessionDetail>;
+  }
+
   public static async listSessions(
     accessToken: string,
     locale: string,

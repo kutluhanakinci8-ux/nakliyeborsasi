@@ -16,6 +16,7 @@ import { AuctionSessionApplicationService } from "./AuctionSessionApplicationSer
 import { CreateAuctionSessionRequestDto } from "./CreateAuctionSessionRequestDto";
 import { PlaceAuctionBidRequestDto } from "./PlaceAuctionBidRequestDto";
 import { AuctionSessionListQueryDto } from "./AuctionSessionListQueryDto";
+import { AuctionSessionDetailResponse } from "./AuctionSessionDetailMapper";
 
 @Controller("auctions")
 @UseGuards(JwtAuthenticationGuard)
@@ -39,12 +40,19 @@ export class AuctionSessionController {
   @Get("sessions/:auctionSessionId")
   public async getSession(
     @Param("auctionSessionId") auctionSessionId: string,
-  ): Promise<{ session: unknown }> {
-    const session =
-      await this.auctionSessionApplicationService.getSessionById(
-        auctionSessionId,
-      );
-    return { session };
+    @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
+    @Headers("accept-language") acceptLanguage: string | undefined,
+    @Query("lang") queryLanguage: string | undefined,
+  ): Promise<AuctionSessionDetailResponse> {
+    const locale = this.localeResolutionService.resolveFromHeaders(
+      acceptLanguage,
+      queryLanguage,
+    );
+    return this.auctionSessionApplicationService.getSessionDetail(
+      authenticatedUser,
+      auctionSessionId,
+      locale,
+    );
   }
 
   @Post("sessions")
