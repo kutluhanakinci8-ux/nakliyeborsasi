@@ -8,6 +8,7 @@ import { UserAccountMenu } from "./UserAccountMenu";
 import { useWebSession } from "../context/WebSessionProvider";
 import {
   CORPORATE_DROPDOWN_ITEMS,
+  DRIVER_PORTAL_NAV_ITEM,
   HIZMETLER_NAV_ITEM,
   PLATFORM_NAV_ITEMS,
 } from "../lib/siteNavigation";
@@ -44,6 +45,7 @@ export function SiteHeader({ variant = "app" }: SiteHeaderProps) {
   }, []);
 
   const showUserSession = Boolean(session);
+  const isFleetDriver = session?.roleCodes?.includes("FLEET_DRIVER") ?? false;
 
   return (
     <header
@@ -91,6 +93,18 @@ export function SiteHeader({ variant = "app" }: SiteHeaderProps) {
           <SiteBrand href="/hizmetler" size="lg" />
           <nav className="site-nav-shell" aria-label="Ana menü">
             <div className="site-nav">
+              {isFleetDriver ? (
+                <Link
+                  href={DRIVER_PORTAL_NAV_ITEM.href}
+                  className={
+                    isActive(DRIVER_PORTAL_NAV_ITEM.href)
+                      ? "site-nav-link active"
+                      : "site-nav-link"
+                  }
+                >
+                  {DRIVER_PORTAL_NAV_ITEM.label}
+                </Link>
+              ) : null}
               {PLATFORM_NAV_ITEMS.map((item) => (
                 <Link
                   key={item.href}

@@ -30,4 +30,5 @@ export * from "./types/AuctionSessionSummary";
 export * from "./types/MessagingThreadReference";
 export * from "./types/TrustScoreSnapshot";
 export * from "./types/FleetTypes";
+export * from "./types/DriverPortalTypes";
 export * from "./ports/ExternalFreightDataPort";

@@ -51,7 +51,7 @@ Plan: `carrier_starter_tr_ua`
 | Rol | E-posta (giriş) | Açıklama |
 |-----|-----------------|----------|
 | Firma sahibi | `kutluhantest@test.nakliyeborsasi.local` | Filo yönetimi `/hesap/filo` |
-| Şoför paneli | `kutluhantest-sofor@test.nakliyeborsasi.local` | `/hesap/sofor-portal` (kayıt bağlı) |
+| Şoför paneli | `kutluhantest-sofor@test.nakliyeborsasi.local` | **`/sofor`** (giriş sonrası otomatik yönlendirme) |
 
 Firma: **Kutluhan Test Taşımacılık** — 2 şoför, 2 araç, devam eden Odesa kapasitesi + tamamlanan Berlin seferi (seed).
 

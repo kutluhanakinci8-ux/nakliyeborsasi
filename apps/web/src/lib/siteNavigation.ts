@@ -1,3 +1,8 @@
+export const DRIVER_PORTAL_NAV_ITEM = {
+  href: "/sofor",
+  label: "Şoför paneli",
+} as const;
+
 export const PLATFORM_NAV_ITEMS = [
   { href: "/marketplace", label: "Yük arama" },
   { href: "/auctions", label: "İhaleler" },

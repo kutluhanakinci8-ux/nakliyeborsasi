@@ -89,8 +89,13 @@ export function LoginPageClient() {
     try {
       const result = await AuthApiClient.login(emailAddress, password);
       setAccessToken(result.accessToken);
+      const sessionRecord = await SessionApiClient.fetchSession(result.accessToken);
       await refreshSession();
-      router.replace("/marketplace");
+      if (sessionRecord.roleCodes.includes("FLEET_DRIVER")) {
+        router.replace("/sofor");
+      } else {
+        router.replace("/marketplace");
+      }
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Giriş başarısız");
     } finally {

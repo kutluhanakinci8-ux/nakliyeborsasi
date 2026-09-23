@@ -34,23 +34,47 @@ export type FleetOverviewSnapshot = {
   movements?: readonly FleetMovementSummary[];
 };
 
+export type DriverPortalJob = {
+  jobId: string;
+  kind: "LISTING" | "AUCTION";
+  phase: "ACTIVE" | "COMPLETED";
+  originCityName: string;
+  originCountryCode: string;
+  destinationCityName: string;
+  destinationCountryCode: string;
+  loadingDateStart: string;
+  completedAt: string | null;
+  revenueAmount: number | null;
+  revenueCurrencyCode: string | null;
+  statusLabel: string;
+  cargoLabel: string | null;
+};
+
 export type DriverPortalSnapshot = {
-  driver: FleetDriverSummary & { driverId: string };
-  company: { companyId: string; legalName: string; countryCode: string } | null;
-  activeVehicle: FleetVehicleSummary | null;
-  assignedListings: readonly {
-    listingId: string;
-    originCityName: string;
-    destinationCityName: string;
-    loadingDateStart: string;
-    listingKindCode: string;
-  }[];
-  assignedAuctions: readonly {
-    sessionId: string;
-    freightListingId: string;
+  driver: {
+    driverId: string;
+    displayName: string;
     statusCode: string;
-    endsAt: string;
-  }[];
+    primaryPhoneE164: string | null;
+    activeVehiclePlate: string | null;
+  };
+  company: { companyId: string; legalName: string; countryCode: string } | null;
+  activeVehicle: {
+    vehicleId: string;
+    licensePlateDisplay: string;
+    equipmentTypeCode: string;
+    statusCode: string;
+  } | null;
+  dutyStatus: "ON_DUTY" | "AVAILABLE" | "OFF";
+  earnings: {
+    currencyCode: string;
+    monthToDateAmount: number;
+    yearToDateAmount: number;
+    completedTripCount: number;
+    pendingTripCount: number;
+  };
+  activeJob: DriverPortalJob | null;
+  jobs: readonly DriverPortalJob[];
 };
 
 export class FleetApiClient {

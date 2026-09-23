@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { IsNull, Repository } from "typeorm";
+import { In, IsNull, Repository } from "typeorm";
 import {
   AuthorizationException,
   CompanyParticipantTypeCode,
@@ -33,6 +33,7 @@ import { AssignFleetToAuctionRequestDto } from "./AssignFleetToAuctionRequestDto
 import { LinkFleetDriverUserRequestDto } from "./LinkFleetDriverUserRequestDto";
 import { FleetMapper } from "./FleetMapper";
 import { normalizeLicensePlate } from "./FleetPlateNormalization";
+import { DriverPortalAssembler } from "./DriverPortalAssembler";
 
 @Injectable()
 export class FleetApplicationService {
@@ -462,35 +463,26 @@ export class FleetApplicationService {
     const auctions = await this.auctionRepository.find({
       where: { assignedFleetDriverId: driver.id },
     });
-    return {
-      driver: FleetMapper.toDriverSummary(
-        driver,
-        vehicle?.licensePlateDisplay ?? null,
-      ),
-      company: company
-        ? {
-            companyId: company.id,
-            legalName: company.legalName,
-            countryCode: company.countryCode,
-          }
-        : null,
-      activeVehicle: vehicle
-        ? FleetMapper.toVehicleSummary(vehicle, driver.displayName)
-        : null,
-      assignedListings: listings.map((listing) => ({
-        listingId: listing.id,
-        originCityName: listing.originCityName,
-        destinationCityName: listing.destinationCityName,
-        loadingDateStart: listing.loadingDateStart,
-        listingKindCode: listing.listingKindCode,
-      })),
-      assignedAuctions: auctions.map((session) => ({
-        sessionId: session.id,
-        freightListingId: session.freightListingId,
-        statusCode: session.statusCode,
-        endsAt: session.endsAt.toISOString(),
-      })),
-    };
+    const listingIds = new Set([
+      ...listings.map((listing) => listing.id),
+      ...auctions.map((session) => session.freightListingId),
+    ]);
+    const routeListings =
+      listingIds.size > 0
+        ? await this.listingRepository.find({
+            where: { id: In([...listingIds]) },
+          })
+        : [];
+    const listingById = new Map(routeListings.map((listing) => [listing.id, listing]));
+
+    return DriverPortalAssembler.assemble({
+      driver,
+      company,
+      vehicle,
+      listings,
+      auctions,
+      listingById,
+    });
   }
 
   public async clearAssignment(

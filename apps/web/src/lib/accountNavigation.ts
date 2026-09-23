@@ -46,10 +46,10 @@ export const ACCOUNT_MENU_ITEMS: readonly AccountMenuItem[] = [
     icon: "fleet",
   },
   {
-    href: "/hesap/sofor-portal",
+    href: "/sofor",
     label: "Şoför panelim",
     lead:
-      "Bağlı şoför hesabı: atanmış araç, kapasite ilanları ve ihale görevleri.",
+      "Görev, teslimat geçmişi ve kazanç özeti — global şoför portalı (/sofor).",
     icon: "driverPortal",
   },
   {

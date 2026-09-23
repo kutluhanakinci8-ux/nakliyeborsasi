@@ -1,5 +1,5 @@
-import { DriverPortalPageClient } from "./DriverPortalPageClient";
+import { redirect } from "next/navigation";
 
-export default function DriverPortalPage() {
-  return <DriverPortalPageClient />;
+export default function DriverPortalAccountRedirectPage() {
+  redirect("/sofor");
 }
