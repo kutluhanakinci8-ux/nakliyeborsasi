@@ -37,34 +37,37 @@ export function MarketplaceSearchBar({
     <form
       className={
         variant === "embedded"
-          ? "search-fields search-fields--hero"
+          ? "search-fields search-fields--hero search-fields--hero-compact"
           : "search-fields"
       }
       onSubmit={handleSubmit}
     >
       <label className="search-field">
-        <span>Nereden</span>
+        <span className={variant === "embedded" ? "sr-only" : undefined}>Nereden</span>
         <input
           name="origin"
           autoComplete="off"
-          placeholder="Örn. Ankara, Antalya"
+          placeholder={variant === "embedded" ? "Nereden" : "Örn. Ankara, Antalya"}
+          aria-label="Nereden"
           value={originQuery}
           onChange={(event) => onOriginChange(event.target.value)}
         />
       </label>
       <label className="search-field">
-        <span>Nereye</span>
+        <span className={variant === "embedded" ? "sr-only" : undefined}>Nereye</span>
         <input
           name="destination"
           autoComplete="off"
-          placeholder="Örn. Odesa, Berlin"
+          placeholder={variant === "embedded" ? "Nereye" : "Örn. Odesa, Berlin"}
+          aria-label="Nereye"
           value={destinationQuery}
           onChange={(event) => onDestinationChange(event.target.value)}
         />
       </label>
       <label className="search-field search-field--narrow">
-        <span>Araç</span>
+        <span className={variant === "embedded" ? "sr-only" : undefined}>Araç</span>
         <select
+          aria-label="Araç"
           name="equipment"
           value={equipmentFilter}
           onChange={(event) => onEquipmentChange(event.target.value)}
@@ -89,7 +92,7 @@ export function MarketplaceSearchBar({
 
   if (variant === "embedded") {
     return (
-      <div className="exchange-search-toolbar" aria-label="Yük arama">
+      <div className="exchange-search-toolbar exchange-search-toolbar--compact">
         {fields}
       </div>
     );
