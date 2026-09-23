@@ -70,8 +70,11 @@ export async function seedLogisticsPoiFromTurkeyOverpass(
 
   const response = await fetch(OVERPASS_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: `data=${encodeURIComponent(TURKEY_OVERPASS_QUERY)}`,
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+      Accept: "application/json",
+    },
+    body: new URLSearchParams({ data: TURKEY_OVERPASS_QUERY }).toString(),
   });
   if (!response.ok) {
     throw new Error(`Overpass HTTP ${response.status}`);

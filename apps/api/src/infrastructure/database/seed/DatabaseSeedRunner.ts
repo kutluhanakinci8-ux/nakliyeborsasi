@@ -152,15 +152,19 @@ export class DatabaseSeedRunner implements OnModuleInit {
     }
     if (process.env.LOGISTICS_POI_SEED_OVERPASS === "true") {
       void seedLogisticsPoiFromTurkeyOverpass(this.logisticsPoiRepository)
-        .then((result) => {
+        .then(async (result) => {
           console.log(
             `[logistics_poi] Overpass ingest: inserted=${result.inserted} skipped=${result.skipped}`,
           );
+          if (result.inserted === 0) {
+            await seedLogisticsPoiCorridorSample(this.logisticsPoiRepository);
+          }
         })
-        .catch((error: unknown) => {
+        .catch(async (error: unknown) => {
           const message =
             error instanceof Error ? error.message : "Overpass ingest failed";
           console.warn(`[logistics_poi] ${message}`);
+          await seedLogisticsPoiCorridorSample(this.logisticsPoiRepository);
         });
       return;
     }
