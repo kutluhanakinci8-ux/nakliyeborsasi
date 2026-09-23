@@ -47,4 +47,21 @@ docker run -d --name nb-osrm-routed --restart unless-stopped \
 echo "=== Test ==="
 curl -sf "http://127.0.0.1:5000/nearest/v1/driving/32.8597,39.9334?number=1" | head -c 200
 echo ""
-echo "OK: OSRM hazır. API .env → OSRM_BASE_URL=http://127.0.0.1:5000"
+
+ENV_FILE="${INSTALL_DIR}/.env"
+if grep -q '^OSRM_BASE_URL=' "$ENV_FILE"; then
+  sed -i 's|^OSRM_BASE_URL=.*|OSRM_BASE_URL=http://127.0.0.1:5000|' "$ENV_FILE"
+else
+  echo "OSRM_BASE_URL=http://127.0.0.1:5000" >> "$ENV_FILE"
+fi
+if grep -q '^OSRM_BASE_URL_TR=' "$ENV_FILE"; then
+  sed -i 's|^OSRM_BASE_URL_TR=.*|OSRM_BASE_URL_TR=http://127.0.0.1:5000|' "$ENV_FILE"
+else
+  echo "OSRM_BASE_URL_TR=http://127.0.0.1:5000" >> "$ENV_FILE"
+fi
+
+if command -v pm2 >/dev/null 2>&1; then
+  pm2 restart nakliyeborsasi-api --update-env || true
+fi
+
+echo "OK: OSRM hazır. API yeniden başlatıldı (OSRM_BASE_URL=http://127.0.0.1:5000)"
