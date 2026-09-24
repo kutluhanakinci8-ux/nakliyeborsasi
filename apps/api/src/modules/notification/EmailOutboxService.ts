@@ -96,6 +96,26 @@ export class EmailOutboxService {
     });
   }
 
+  public async getOutboxStats(): Promise<{
+    sent: number;
+    pending: number;
+    failed: number;
+    last24hSent: number;
+  }> {
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const [sent, pending, failed, last24hSent] = await Promise.all([
+      this.outboxRepository.count({ where: { status: "sent" } }),
+      this.outboxRepository.count({ where: { status: "pending" } }),
+      this.outboxRepository.count({ where: { status: "failed" } }),
+      this.outboxRepository
+        .createQueryBuilder("row")
+        .where("row.status = :status", { status: "sent" })
+        .andWhere("row.sentAt >= :since", { since })
+        .getCount(),
+    ]);
+    return { sent, pending, failed, last24hSent };
+  }
+
   public async drainQueue(batchSize = 25): Promise<{ processed: number; sent: number; failed: number }> {
     const rows = await this.outboxRepository.find({
       where: { status: In(["pending", "failed"]) },

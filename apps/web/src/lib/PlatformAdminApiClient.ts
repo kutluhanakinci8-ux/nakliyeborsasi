@@ -224,6 +224,25 @@ export class PlatformAdminApiClient {
     return payload.setting;
   }
 
+  public static async fetchEmailOutboxStats(
+    accessToken: string,
+  ): Promise<{
+    sent: number;
+    pending: number;
+    failed: number;
+    last24hSent: number;
+  }> {
+    const payload = await adminFetch<{
+      stats: {
+        sent: number;
+        pending: number;
+        failed: number;
+        last24hSent: number;
+      };
+    }>(accessToken, "notifications/outbox/stats");
+    return payload.stats;
+  }
+
   public static async fetchNotificationOutbox(
     accessToken: string,
     limit = 50,

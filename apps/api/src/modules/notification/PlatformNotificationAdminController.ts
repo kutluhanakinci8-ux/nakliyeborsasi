@@ -92,6 +92,11 @@ export class PlatformNotificationAdminController {
     return { setting: updated };
   }
 
+  @Get("outbox/stats")
+  public async outboxStats() {
+    return { stats: await this.emailOutboxService.getOutboxStats() };
+  }
+
   @Get("outbox")
   public async outbox(@Query("limit") limit?: string) {
     const parsed = limit ? Number.parseInt(limit, 10) : 50;

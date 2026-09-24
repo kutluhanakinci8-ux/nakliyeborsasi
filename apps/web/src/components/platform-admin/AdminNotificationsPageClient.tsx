@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   PlatformAdminApiClient,
   type EmailDeliveryHealth,
@@ -8,6 +8,7 @@ import {
   type PlatformNotificationSetting,
 } from "../../lib/PlatformAdminApiClient";
 import { useWebSession } from "../../context/WebSessionProvider";
+import { AdminPageHeader } from "./AdminPageHeader";
 
 const EVENT_LABELS: Record<string, string> = {
   USER_REGISTERED: "Yeni kayıt",
@@ -17,15 +18,37 @@ const EVENT_LABELS: Record<string, string> = {
   PASSWORD_RESET: "Şifre sıfırlama",
 };
 
+type OutboxStats = {
+  sent: number;
+  pending: number;
+  failed: number;
+  last24hSent: number;
+};
+
+function statusBadge(status: string): string {
+  if (status === "sent") {
+    return "pa-badge pa-badge--sent";
+  }
+  if (status === "pending") {
+    return "pa-badge pa-badge--pending";
+  }
+  return "pa-badge pa-badge--failed";
+}
+
 export function AdminNotificationsPageClient() {
   const { accessToken } = useWebSession();
   const [settings, setSettings] = useState<PlatformNotificationSetting[]>([]);
   const [outbox, setOutbox] = useState<EmailOutboxRow[]>([]);
+  const [stats, setStats] = useState<OutboxStats | null>(null);
   const [testEmail, setTestEmail] = useState("lertalogistics@gmail.com");
   const [testEvent, setTestEvent] = useState("USER_LOGIN");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [health, setHealth] = useState<EmailDeliveryHealth | null>(null);
+  const [statusFilter, setStatusFilter] = useState<"all" | "sent" | "pending" | "failed">(
+    "all",
+  );
+  const [search, setSearch] = useState("");
 
   const refresh = useCallback(async () => {
     if (!accessToken) {
@@ -33,14 +56,16 @@ export function AdminNotificationsPageClient() {
     }
     setLoading(true);
     try {
-      const [nextSettings, nextOutbox, nextHealth] = await Promise.all([
+      const [nextSettings, nextOutbox, nextHealth, nextStats] = await Promise.all([
         PlatformAdminApiClient.fetchNotificationSettings(accessToken),
-        PlatformAdminApiClient.fetchNotificationOutbox(accessToken, 80),
+        PlatformAdminApiClient.fetchNotificationOutbox(accessToken, 120),
         PlatformAdminApiClient.fetchEmailDeliveryHealth(accessToken),
+        PlatformAdminApiClient.fetchEmailOutboxStats(accessToken),
       ]);
       setSettings(nextSettings);
       setOutbox(nextOutbox);
       setHealth(nextHealth);
+      setStats(nextStats);
     } finally {
       setLoading(false);
     }
@@ -49,6 +74,23 @@ export function AdminNotificationsPageClient() {
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  const filteredOutbox = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return outbox.filter((row) => {
+      if (statusFilter !== "all" && row.status !== statusFilter) {
+        return false;
+      }
+      if (!q) {
+        return true;
+      }
+      return (
+        row.recipientEmail.toLowerCase().includes(q) ||
+        row.subject.toLowerCase().includes(q) ||
+        row.eventCode.toLowerCase().includes(q)
+      );
+    });
+  }, [outbox, statusFilter, search]);
 
   async function saveRecipients(eventCode: string, raw: string): Promise<void> {
     if (!accessToken) {
@@ -82,6 +124,19 @@ export function AdminNotificationsPageClient() {
     );
   }
 
+  async function toggleUser(eventCode: string, enabled: boolean): Promise<void> {
+    if (!accessToken) {
+      return;
+    }
+    const updated = await PlatformAdminApiClient.updateNotificationSetting(
+      accessToken,
+      { eventCode, userEmailEnabled: enabled },
+    );
+    setSettings((current) =>
+      current.map((row) => (row.eventCode === eventCode ? updated : row)),
+    );
+  }
+
   async function sendTest(): Promise<void> {
     if (!accessToken) {
       return;
@@ -97,167 +152,276 @@ export function AdminNotificationsPageClient() {
   }
 
   return (
-    <div className="admin-page module-page">
-      <header className="exchange-hero account-page-hero">
-        <div>
-          <p className="exchange-eyebrow">Sistem</p>
-          <h1 className="exchange-title">E-posta bildirimleri</h1>
-          <p className="exchange-lead">
-            Admin alıcı listesi (çoklu e-posta), olay anahtarları ve gönderim
-            günlüğü. Şablonlar şimdilik Türkçe (admin).
-          </p>
-        </div>
-      </header>
+    <div className="pa-page">
+      <AdminPageHeader
+        section="Sistem · Global bildirimler"
+        title="E-posta ve operasyon merkezi"
+        lead="Kurumsal transactional e-posta, admin uyarıları ve gönderim günlüğü. Çoklu alıcı, SMTP sağlığı ve kuyruk yönetimi tek ekranda."
+        meta={
+          <>
+            <span className="admin-status-pill admin-status-pill--ok">
+              {health?.emailEnabled ? "E-posta aktif" : "E-posta kapalı"}
+            </span>
+            {health ? (
+              <span className="admin-status-pill">
+                {health.deliveryMode.toUpperCase()} · {health.smtpHost}
+              </span>
+            ) : null}
+          </>
+        }
+      />
 
-      {message ? <p className="account-save-hint">{message}</p> : null}
-      {loading ? <p className="module-hint">Yükleniyor…</p> : null}
+      {message ? <p className="pa-toast">{message}</p> : null}
+      {loading && !health ? <p className="module-hint">Yükleniyor…</p> : null}
 
-      {health ? (
-        <section className="account-card module-panel module-panel--elevated">
-          <h2 className="account-card-title">SMTP durumu</h2>
-          <p className="account-card-lead">
-            Mod: <strong>{health.deliveryMode}</strong> ({health.smtpHost}:{health.smtpPort})
-            {health.deliveryMode === "mailpit"
-              ? " — mesajlar Mailpit’te; Gmail kutusu için SMTP_PROFILE=gmail ve uygulama şifresi."
-              : null}
-          </p>
-          <ul className="account-card-lead">
-            <li>Gönderen: {health.smtpFrom}</li>
-            <li>Web linkleri: {health.webPublicBaseUrl}</li>
-            <li>
-              SMTP kimlik: {health.smtpAuthConfigured ? "tanımlı" : "yok (Mailpit için normal)"}
-            </li>
-            <li>
-              Son doğrulama:{" "}
-              {health.lastVerifyOk === null
-                ? "henüz yok"
-                : health.lastVerifyOk
-                  ? "başarılı"
-                  : `hata — ${health.lastVerifyError ?? ""}`}
-            </li>
-          </ul>
-          <div className="account-form-grid">
-            <button
-              type="button"
-              className="btn-account-secondary"
-              onClick={() =>
-                void PlatformAdminApiClient.verifyEmailSmtp(accessToken!).then(
-                  (result) => {
-                    setHealth(result.health);
-                    setMessage(result.ok ? "SMTP bağlantısı doğrulandı." : result.error ?? "Doğrulama başarısız");
-                    window.setTimeout(() => setMessage(""), 5000);
-                  },
-                )
-              }
-            >
-              SMTP doğrula
-            </button>
-            <button
-              type="button"
-              className="btn-account-secondary"
-              onClick={() =>
-                void PlatformAdminApiClient.drainEmailOutbox(accessToken!).then(
-                  (result) => {
-                    setMessage(
-                      `Kuyruk: ${result.processed} işlendi, ${result.sent} gönderildi, ${result.failed} hata.`,
-                    );
-                    void refresh();
-                    window.setTimeout(() => setMessage(""), 5000);
-                  },
-                )
-              }
-            >
-              Kuyruğu işle
-            </button>
-            <button
-              type="button"
-              className="btn-account-secondary"
-              onClick={() =>
-                void PlatformAdminApiClient.retryFailedEmails(accessToken!).then(
-                  (result) => {
-                    setMessage(`${result.retried} başarısız kayıt yeniden denendi.`);
-                    void refresh();
-                    window.setTimeout(() => setMessage(""), 5000);
-                  },
-                )
-              }
-            >
-              Başarısızları yeniden dene
-            </button>
-          </div>
-        </section>
-      ) : null}
-
-      <section className="account-card module-panel module-panel--elevated">
-        <h2 className="account-card-title">Test gönderimi</h2>
-        <div className="account-form-grid">
-          <label className="label-light">
-            Olay
-            <select
-              className="input-light"
-              value={testEvent}
-              onChange={(event) => setTestEvent(event.target.value)}
-            >
-              {Object.keys(EVENT_LABELS).map((code) => (
-                <option key={code} value={code}>{EVENT_LABELS[code]}</option>
-              ))}
-            </select>
-          </label>
-          <label className="label-light">
-            Alıcı
-            <input
-              className="input-light"
-              value={testEmail}
-              onChange={(event) => setTestEmail(event.target.value)}
-            />
-          </label>
-        </div>
-        <button type="button" className="btn-account-primary" onClick={() => void sendTest()}>
-          Test gönder
-        </button>
+      <section className="pa-metric-row" aria-label="Gönderim özetleri">
+        <article className="pa-metric">
+          <p className="pa-metric-label">Son 24 saat (gönderildi)</p>
+          <p className="pa-metric-value">{stats?.last24hSent ?? "—"}</p>
+          <p className="pa-metric-hint">Transactional outbox</p>
+        </article>
+        <article className="pa-metric">
+          <p className="pa-metric-label">Toplam gönderildi</p>
+          <p className="pa-metric-value">{stats?.sent ?? "—"}</p>
+        </article>
+        <article className="pa-metric">
+          <p className="pa-metric-label">Bekleyen</p>
+          <p className="pa-metric-value">{stats?.pending ?? "—"}</p>
+        </article>
+        <article className="pa-metric">
+          <p className="pa-metric-label">Başarısız</p>
+          <p className="pa-metric-value">{stats?.failed ?? "—"}</p>
+        </article>
       </section>
 
-      <section className="account-card module-panel module-panel--elevated">
-        <h2 className="account-card-title">Olay ayarları</h2>
-        <ul className="account-partner-list">
-          {settings.map((row) => (
-            <li key={row.eventCode} className="account-partner-item">
-              <div>
-                <strong>{EVENT_LABELS[row.eventCode] ?? row.eventCode}</strong>
-                <p className="account-card-lead">{row.eventCode}</p>
-                <label className="label-light account-form-span-2">
-                  Admin alıcıları (virgülle)
-                  <input
-                    className="input-light"
-                    defaultValue={row.adminRecipientEmails.join(", ")}
-                    onBlur={(event) =>
-                      void saveRecipients(row.eventCode, event.target.value)
-                    }
-                  />
-                </label>
-              </div>
+      <div className="pa-grid-2">
+        {health ? (
+          <section className="pa-panel">
+            <h2 className="pa-panel-title">SMTP altyapısı</h2>
+            <p className="pa-panel-lead">
+              Üretim gönderimi ve bağlantı doğrulama. Mod:{" "}
+              <span className="pa-badge pa-badge--gmail">{health.deliveryMode}</span>
+            </p>
+            <ul className="pa-kv-list">
+              <li>
+                <span>Sunucu</span>
+                <span>{health.smtpHost}:{health.smtpPort}</span>
+              </li>
+              <li>
+                <span>Gönderen</span>
+                <span>{health.smtpFrom}</span>
+              </li>
+              <li>
+                <span>Web linkleri</span>
+                <span>{health.webPublicBaseUrl}</span>
+              </li>
+              <li>
+                <span>Kimlik doğrulama</span>
+                <span>{health.smtpAuthConfigured ? "Tanımlı" : "Yok"}</span>
+              </li>
+              <li>
+                <span>Son doğrulama</span>
+                <span>
+                  {health.lastVerifyOk === null
+                    ? "—"
+                    : health.lastVerifyOk
+                      ? "Başarılı"
+                      : `Hata: ${health.lastVerifyError ?? ""}`}
+                </span>
+              </li>
+            </ul>
+            <div className="pa-toolbar">
               <button
                 type="button"
-                className={
-                  row.adminEmailEnabled
-                    ? "account-corridor-chip active"
-                    : "account-corridor-chip"
-                }
+                className="pa-btn pa-btn--secondary"
                 onClick={() =>
-                  void toggleAdmin(row.eventCode, !row.adminEmailEnabled)
+                  accessToken &&
+                  void PlatformAdminApiClient.verifyEmailSmtp(accessToken).then(
+                    (result) => {
+                      setHealth(result.health);
+                      setMessage(
+                        result.ok
+                          ? "SMTP bağlantısı doğrulandı."
+                          : result.error ?? "Doğrulama başarısız",
+                      );
+                      window.setTimeout(() => setMessage(""), 5000);
+                    },
+                  )
                 }
               >
-                Admin e-posta {row.adminEmailEnabled ? "açık" : "kapalı"}
+                SMTP doğrula
               </button>
-            </li>
+              <button
+                type="button"
+                className="pa-btn pa-btn--ghost"
+                onClick={() =>
+                  accessToken &&
+                  void PlatformAdminApiClient.drainEmailOutbox(accessToken).then(
+                    (result) => {
+                      setMessage(
+                        `Kuyruk: ${result.processed} işlendi, ${result.sent} gönderildi.`,
+                      );
+                      void refresh();
+                    },
+                  )
+                }
+              >
+                Kuyruğu işle
+              </button>
+              <button
+                type="button"
+                className="pa-btn pa-btn--ghost"
+                onClick={() =>
+                  accessToken &&
+                  void PlatformAdminApiClient.retryFailedEmails(accessToken).then(
+                    (result) => {
+                      setMessage(`${result.retried} kayıt yeniden denendi.`);
+                      void refresh();
+                    },
+                  )
+                }
+              >
+                Başarısızları yeniden dene
+              </button>
+            </div>
+          </section>
+        ) : null}
+
+        <section className="pa-panel">
+          <h2 className="pa-panel-title">Test gönderimi</h2>
+          <p className="pa-panel-lead">
+            Kurumsal HTML şablonunu canlı SMTP ile doğrulayın.
+          </p>
+          <div className="pa-form-row">
+            <label className="pa-label">
+              Olay
+              <select
+                className="pa-input"
+                value={testEvent}
+                onChange={(event) => setTestEvent(event.target.value)}
+              >
+                {Object.keys(EVENT_LABELS).map((code) => (
+                  <option key={code} value={code}>{EVENT_LABELS[code]}</option>
+                ))}
+              </select>
+            </label>
+            <label className="pa-label">
+              Alıcı
+              <input
+                className="pa-input"
+                value={testEmail}
+                onChange={(event) => setTestEmail(event.target.value)}
+              />
+            </label>
+          </div>
+          <button
+            type="button"
+            className="pa-btn pa-btn--primary"
+            onClick={() => void sendTest()}
+          >
+            Test e-postası gönder
+          </button>
+        </section>
+      </div>
+
+      <section className="pa-panel">
+        <h2 className="pa-panel-title">Olay politikaları</h2>
+        <p className="pa-panel-lead">
+          Admin ve kullanıcı kanalları ayrı ayrı yönetilir. Alıcı listesi virgülle
+          ayrılmış e-posta adresleridir (global operasyon ekipleri).
+        </p>
+        <div className="pa-event-grid">
+          {settings.map((row) => (
+            <article key={row.eventCode} className="pa-event-card">
+              <div className="pa-event-card-head">
+                <div>
+                  <h3 className="pa-event-card-title">
+                    {EVENT_LABELS[row.eventCode] ?? row.eventCode}
+                  </h3>
+                  <p className="pa-event-code">{row.eventCode}</p>
+                </div>
+                <label className="pa-switch" title="Admin e-posta">
+                  <input
+                    type="checkbox"
+                    checked={row.adminEmailEnabled}
+                    onChange={(event) =>
+                      void toggleAdmin(row.eventCode, event.target.checked)
+                    }
+                  />
+                  <span className="pa-switch-slider" />
+                </label>
+              </div>
+              <label className="pa-label">
+                Admin alıcıları
+                <input
+                  className="pa-input"
+                  defaultValue={row.adminRecipientEmails.join(", ")}
+                  onBlur={(event) =>
+                    void saveRecipients(row.eventCode, event.target.value)
+                  }
+                />
+              </label>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginTop: 12,
+                  fontSize: "0.82rem",
+                  color: "#64748b",
+                }}
+              >
+                <span>Kullanıcı e-postası</span>
+                <label className="pa-switch">
+                  <input
+                    type="checkbox"
+                    checked={row.userEmailEnabled}
+                    onChange={(event) =>
+                      void toggleUser(row.eventCode, event.target.checked)
+                    }
+                  />
+                  <span className="pa-switch-slider" />
+                </label>
+              </div>
+            </article>
           ))}
-        </ul>
+        </div>
       </section>
 
-      <section className="account-card module-panel module-panel--elevated">
-        <h2 className="account-card-title">Gönderim günlüğü (outbox)</h2>
+      <section className="pa-panel">
+        <h2 className="pa-panel-title">Gönderim günlüğü</h2>
+        <p className="pa-panel-lead">Outbox kayıtları — filtreleyin ve durumu izleyin.</p>
+        <div className="pa-table-toolbar">
+          <select
+            className="pa-input"
+            style={{ maxWidth: 160 }}
+            value={statusFilter}
+            onChange={(event) =>
+              setStatusFilter(event.target.value as typeof statusFilter)
+            }
+          >
+            <option value="all">Tüm durumlar</option>
+            <option value="sent">Gönderildi</option>
+            <option value="pending">Bekliyor</option>
+            <option value="failed">Başarısız</option>
+          </select>
+          <input
+            className="pa-input"
+            style={{ flex: 1, minWidth: 200 }}
+            placeholder="Alıcı, konu veya olay ara…"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
+          <button
+            type="button"
+            className="pa-btn pa-btn--ghost"
+            onClick={() => void refresh()}
+          >
+            Yenile
+          </button>
+        </div>
         <div className="admin-data-table-wrap">
-          <table className="admin-data-table">
+          <table className="pa-outbox-table">
             <thead>
               <tr>
                 <th>Zaman</th>
@@ -268,20 +432,33 @@ export function AdminNotificationsPageClient() {
               </tr>
             </thead>
             <tbody>
-              {outbox.map((row) => (
+              {filteredOutbox.map((row) => (
                 <tr key={row.id}>
                   <td>{new Date(row.createdAt).toLocaleString("tr-TR")}</td>
-                  <td>{row.eventCode}</td>
-                  <td>{row.recipientEmail}</td>
-                  <td>{row.subject}</td>
                   <td>
-                    {row.status}
-                    {row.lastError ? ` — ${row.lastError}` : ""}
+                    <code style={{ fontSize: "0.75rem" }}>{row.eventCode}</code>
+                  </td>
+                  <td>{row.recipientEmail}</td>
+                  <td>
+                    <span className="pa-outbox-subject" title={row.subject}>
+                      {row.subject}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={statusBadge(row.status)}>{row.status}</span>
+                    {row.lastError ? (
+                      <span className="pa-outbox-error">{row.lastError}</span>
+                    ) : null}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          {filteredOutbox.length === 0 ? (
+            <p className="module-hint" style={{ padding: 16 }}>
+              Kayıt bulunamadı.
+            </p>
+          ) : null}
         </div>
       </section>
     </div>
