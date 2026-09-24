@@ -8,9 +8,9 @@ cd "$INSTALL_DIR"
 
 echo "=== Git: origin/${BRANCH} (yerel değişiklikler sıfırlanır) ==="
 git fetch origin "$BRANCH"
-git reset --hard
-git clean -fd
-git checkout -B "$BRANCH" "origin/${BRANCH}"
+git checkout -f -B "$BRANCH" "origin/${BRANCH}"
+git reset --hard "origin/${BRANCH}"
+git clean -fdx
 
 echo "=== Son commit ==="
 git log -1 --oneline
