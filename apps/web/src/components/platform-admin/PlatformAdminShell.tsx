@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { type ReactNode } from "react";
+import { PLATFORM_MONOGRAM } from "../../lib/platformBranding";
 import { PLATFORM_ADMIN_NAV } from "../../lib/platformAdminNavigation";
 import { useWebSession } from "../../context/WebSessionProvider";
 
@@ -18,7 +19,7 @@ export function PlatformAdminShell({ children }: { children: ReactNode }) {
     <div className="platform-admin">
       <aside className="platform-admin-sidebar">
         <div className="platform-admin-brand">
-          <span className="platform-admin-brand-mark">NB</span>
+          <span className="platform-admin-brand-mark">{PLATFORM_MONOGRAM}</span>
           <div>
             <strong>Platform yönetimi</strong>
             <span>Lerta Logistics</span>
