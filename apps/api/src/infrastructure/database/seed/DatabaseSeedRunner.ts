@@ -320,7 +320,7 @@ export class DatabaseSeedRunner implements OnModuleInit {
     }
     const company = await this.companyRepository.save(
       this.companyRepository.create({
-        legalName: "Nakliye Borsası Platform Yönetimi",
+        legalName: "Lerta Logistics Platform Yönetimi",
         countryCode: "TR",
       }),
     );

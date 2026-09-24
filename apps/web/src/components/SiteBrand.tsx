@@ -1,4 +1,8 @@
 import Link from "next/link";
+import {
+  PLATFORM_MONOGRAM,
+  PLATFORM_PRODUCT_NAME,
+} from "../lib/platformBranding";
 
 type SiteBrandProps = {
   href?: string;
@@ -29,10 +33,10 @@ export function SiteBrand({
           <circle cx="21" cy="22" r="2.2" fill="currentColor" />
           <path d="M6 14h12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
         </svg>
-        <span className="site-brand-monogram">NB</span>
+        <span className="site-brand-monogram">{PLATFORM_MONOGRAM}</span>
       </div>
       <div className="site-brand-copy">
-        <span className="site-brand-name">Nakliye Borsası</span>
+        <span className="site-brand-name">{PLATFORM_PRODUCT_NAME}</span>
         {showTagline ? (
           <span className="site-brand-tagline">{tagline}</span>
         ) : null}

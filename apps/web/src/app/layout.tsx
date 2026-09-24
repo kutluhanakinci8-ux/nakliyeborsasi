@@ -11,8 +11,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Nakliye Borsası",
-  description: "TR + UA-EU yük borsası",
+  title: "Lerta Logistics",
+  description:
+    "LERTA LOGISTICS — TR · UA · EU koridorunda yük arama, ihale ve lojistik iş birliği platformu.",
 };
 
 export const dynamic = "force-dynamic";

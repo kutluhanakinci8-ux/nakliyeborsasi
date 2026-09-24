@@ -151,7 +151,7 @@ export function ContactPageClient() {
                   <span>TR genel hat · mesai içi</span>
                 </li>
                 <li>
-                  <a href="mailto:info@nakliyeborsasi.local">info@nakliyeborsasi.local</a>
+                  <a href="mailto:lertalogistics@gmail.com">lertalogistics@gmail.com</a>
                   <span>Genel bilgi</span>
                 </li>
                 <li>

@@ -110,7 +110,7 @@ export function CareerPageClient() {
           <div className="about-premium-hero-visual">
             <Image
               src="/media/career/career-hero-team.jpg"
-              alt="Nakliye Borsası ekibi modern ofiste iş birliği yapıyor"
+              alt="Lerta Logistics ekibi modern ofiste iş birliği yapıyor"
               width={640}
               height={360}
               priority
@@ -126,7 +126,7 @@ export function CareerPageClient() {
         <section id="neden" className="career-premium-why module-panel">
           <div className="career-premium-why-grid">
             <div>
-              <p className="about-premium-kicker">Neden Nakliye Borsası?</p>
+              <p className="about-premium-kicker">Neden Lerta Logistics?</p>
               <h2 className="about-premium-h2">Koridorun dijital omurgasını kuruyoruz</h2>
               <p className="about-premium-body">
                 Sadece bir ilan sitesi değil; güven, ihale, mesajlaşma ve harici borsa

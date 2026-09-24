@@ -167,7 +167,7 @@ export function ServicesPageClient() {
           <div className="about-premium-hero-visual">
             <Image
               src="/media/services/services-hero-platform.jpg"
-              alt="Nakliye Borsası dijital platform görünümü"
+              alt="Lerta Logistics dijital platform görünümü"
               width={640}
               height={360}
               priority
@@ -185,7 +185,7 @@ export function ServicesPageClient() {
             <p className="about-premium-kicker">Misyon & vizyon</p>
             <h2 className="about-premium-h2">Operasyonu birleştiren hizmet katmanları</h2>
             <p className="about-premium-body">
-              Nakliye Borsası, koridor genelinde yük arama, ihale, mesajlaşma ve güven skorunu tek
+              Lerta Logistics, koridor genelinde yük arama, ihale, mesajlaşma ve güven skorunu tek
               platformda sunar; harici borsalarla entegrasyon operasyon yükünü azaltır. Kurumsal
               üyelik ve web zenginleştirme ile firma verisi tek doğruluk kaynağına taşınır.
             </p>
@@ -205,7 +205,7 @@ export function ServicesPageClient() {
             <p className="about-premium-kicker">Platform modülleri</p>
             <h2 className="about-premium-h2">Canlı demo modülleri</h2>
             <p className="about-premium-body">
-              Lardi ve Della tarzı platformlarda gördüğünüz yetenekler — Nakliye Borsası&apos;nda
+              Lardi ve Della tarzı platformlarda gördüğünüz yetenekler — Lerta Logistics&apos;te
               tek oturum.
             </p>
           </header>

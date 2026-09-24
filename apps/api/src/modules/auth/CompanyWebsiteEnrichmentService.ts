@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { lookup } from "node:dns/promises";
 import {
   decodeHtmlEntities,
+  PLATFORM_HTTP_USER_AGENT_ENRICHMENT,
   scrubMergedContactFromAddress,
   ValidationException,
 } from "@nakliyeborsasi/core";
@@ -443,7 +444,7 @@ export class CompanyWebsiteEnrichmentService {
         headers: {
           Accept: "text/html,application/xhtml+xml",
           "User-Agent":
-            "NakliyeBorsasi-CompanyEnrichment/1.0 (+https://nakliyeborsasi.local)",
+            PLATFORM_HTTP_USER_AGENT_ENRICHMENT,
         },
       });
       if (!response.ok) {

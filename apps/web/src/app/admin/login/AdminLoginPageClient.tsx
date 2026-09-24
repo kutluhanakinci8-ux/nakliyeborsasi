@@ -13,7 +13,7 @@ export function AdminLoginPageClient() {
   const router = useRouter();
   const { setAccessToken, refreshSession, accessToken, session, isReady } =
     useWebSession();
-  const [emailAddress, setEmailAddress] = useState("admin@nakliyeborsasi.local");
+  const [emailAddress, setEmailAddress] = useState("lertalogistics@gmail.com");
   const [password, setPassword] = useState("AdminPass123!");
   const [errorMessage, setErrorMessage] = useState("");
   const [isBusy, setIsBusy] = useState(false);

@@ -13,13 +13,13 @@ import {
 const ARTICLE_SECTIONS: Record<string, string[]> = {
   "tr-ua-eu-koridoru-2026": [
     "Türkiye — Ukrayna — Avrupa Birliği hattında yük arayan firmalar artık yalnızca telefon ve Excel ile ilerlemek istemiyor. Dijital borsalar; ilan, teklif, güven ve mesajlaşmayı tek kimlik altında topluyor.",
-    "Sınır geçişleri ve sigorta süreçleri hâlâ operasyonel darboğaz; ancak e-irsaliye ve entegrasyon katmanları bu süreçleri platform içinde izlenebilir kılıyor. Nakliye Borsası demo ortamı bu trendleri TR · UA · EU senaryolarıyla simüle ediyor.",
+    "Sınır geçişleri ve sigorta süreçleri hâlâ operasyonel darboğaz; ancak e-irsaliye ve entegrasyon katmanları bu süreçleri platform içinde izlenebilir kılıyor. Lerta Logistics demo ortamı bu trendleri TR · UA · EU senaryolarıyla simüle ediyor.",
     "Önümüzdeki fazlarda filo, ödeme ve uyum modülleri aynı kurumsal tasarım diline eklenecek.",
   ],
   "ihale-ve-teklif-guveni": [
     "İhale oturumlarında minimum teklif, süre ve para birimi kuralları şeffaflığı artırır; ancak taşıyıcı seçimi için güven skoru kritik tamamlayıcıdır.",
     "Platform içi mesajlaşma kayıt altında tutulur; değerlendirmeler ve ortalama puan güven merkezinde görünür. Böylece hem yük veren hem taşıyıcı tarafında tekrarlayan risk azalır.",
-    "Nakliye Borsası’nda ihale modülü marketplace ile aynı firma profiline bağlanır — admin ve üye tarafında tutarlı veri.",
+    "Lerta Logistics'te ihale modülü marketplace ile aynı firma profiline bağlanır — admin ve üye tarafında tutarlı veri.",
   ],
   "dis-kaynak-entegrasyonu": [
     "Lardi, Della ve benzeri kaynaklardan gelen teklifler farklı formatlarda gelir. Adapter katmanı bu veriyi normalize eder; kullanıcı tek arama kutusundan sonuç görür.",

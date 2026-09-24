@@ -247,7 +247,10 @@ export function AdminSystemPageClient() {
           </header>
           <ul className="admin-checklist admin-users-checklist">
             <li>Test şifresi: TestPass123! (@test.nakliyeborsasi.local)</li>
-            <li>Admin: admin@nakliyeborsasi.local — docs/TEST_USERS.md</li>
+            <li>
+              Platform operatörü: lertalogistics@gmail.com (veya seed admin@nakliyeborsasi.local) —
+              docs/TEST_USERS.md
+            </li>
             <li>Bakım modu, global duyuru banner: sonraki sürüm</li>
             <li>VPS deploy: scripts/deploy-vps-ssh.sh</li>
           </ul>

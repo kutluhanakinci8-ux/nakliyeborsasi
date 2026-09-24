@@ -1,3 +1,5 @@
+import { PLATFORM_PRIMARY_CONTACT_EMAIL } from "./platformBranding";
+
 export type ContactOffice = {
   id: string;
   city: string;
@@ -20,7 +22,7 @@ export const CONTACT_OFFICES: ContactOffice[] = [
     label: "Türkiye merkez",
     addressLine: "Maslak · Şişli, İstanbul",
     phone: "+90 (212) 000 00 00",
-    email: "tr@nakliyeborsasi.local",
+    email: PLATFORM_PRIMARY_CONTACT_EMAIL,
     hours: "Pzt–Cum 09:00–18:00",
     timezone: "GMT+3",
     mapEmbedUrl:
@@ -34,7 +36,7 @@ export const CONTACT_OFFICES: ContactOffice[] = [
     label: "Ukrayna ofisi",
     addressLine: "Pechersk, Kyiv",
     phone: "+380 (44) 000 00 00",
-    email: "ua@nakliyeborsasi.local",
+    email: PLATFORM_PRIMARY_CONTACT_EMAIL,
     hours: "Pzt–Cum 09:00–17:00",
     timezone: "GMT+2",
     mapEmbedUrl:
@@ -48,7 +50,7 @@ export const CONTACT_OFFICES: ContactOffice[] = [
     label: "AB koridoru (EU hub)",
     addressLine: "Śródmieście, Warsaw",
     phone: "+48 22 000 00 00",
-    email: "eu@nakliyeborsasi.local",
+    email: PLATFORM_PRIMARY_CONTACT_EMAIL,
     hours: "Pzt–Cum 08:00–17:00",
     timezone: "GMT+1",
     mapEmbedUrl:
@@ -74,7 +76,7 @@ export const CONTACT_FAQ: { question: string; answer: string }[] = [
   },
   {
     question: "Basın ve medya iletişimi?",
-    answer: "Formda «Basın» konusunu seçin veya basin@nakliyeborsasi.local adresine yazın.",
+    answer: `Formda «Basın» konusunu seçin veya ${PLATFORM_PRIMARY_CONTACT_EMAIL} adresine yazın.`,
   },
 ];
 
@@ -90,24 +92,24 @@ export const CONTACT_ROUTES: {
     topic: "demo",
     title: "Demo & satış",
     description: "Platform turu, fiyatlandırma ve kurumsal hesap.",
-    email: "sales@nakliyeborsasi.local",
+    email: PLATFORM_PRIMARY_CONTACT_EMAIL,
   },
   {
     topic: "support",
     title: "Destek",
     description: "Teknik sorun, entegrasyon ve hesap yardımı.",
-    email: "destek@nakliyeborsasi.local",
+    email: PLATFORM_PRIMARY_CONTACT_EMAIL,
   },
   {
     topic: "press",
     title: "Basın",
     description: "Basın bülteni, röportaj ve medya kiti.",
-    email: "basin@nakliyeborsasi.local",
+    email: PLATFORM_PRIMARY_CONTACT_EMAIL,
   },
   {
     topic: "partner",
     title: "İş ortaklığı",
     description: "Forwarder, taşıyıcı ve API partnerliği.",
-    email: "partner@nakliyeborsasi.local",
+    email: PLATFORM_PRIMARY_CONTACT_EMAIL,
   },
 ];

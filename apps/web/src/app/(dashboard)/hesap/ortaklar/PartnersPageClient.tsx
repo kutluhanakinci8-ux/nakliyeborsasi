@@ -57,7 +57,7 @@ function defaultStore(): PartnersStore {
         relation: "carrier",
         status: "active",
         corridorLabel: "TR · UA · EU",
-        contactEmail: "partner@nakliyeborsasi.local",
+        contactEmail: "lertalogistics@gmail.com",
         note: "Demo ortak — güven profili ve mesajla test edin.",
         linkedSince: "2026-01-10",
       },

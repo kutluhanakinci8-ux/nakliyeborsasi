@@ -6,9 +6,8 @@ import {
 import {
   AuthenticatedUserContext,
   AuthorizationException,
+  isPlatformOperatorEmail,
 } from "@nakliyeborsasi/core";
-
-const PLATFORM_OPERATOR_EMAILS = new Set(["admin@nakliyeborsasi.local"]);
 
 @Injectable()
 export class PlatformAdminGuard implements CanActivate {
@@ -20,8 +19,7 @@ export class PlatformAdminGuard implements CanActivate {
     if (!user?.emailAddress) {
       throw new AuthorizationException("Authentication required");
     }
-    const email = user.emailAddress.trim().toLowerCase();
-    if (!PLATFORM_OPERATOR_EMAILS.has(email)) {
+    if (!isPlatformOperatorEmail(user.emailAddress)) {
       throw new AuthorizationException("Platform operator access required");
     }
     return true;

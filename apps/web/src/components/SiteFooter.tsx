@@ -59,7 +59,7 @@ export function SiteFooter() {
               </Link>
             ))}
           </nav>
-          <p className="site-footer-copy">© {new Date().getFullYear()} Nakliye Borsası</p>
+          <p className="site-footer-copy">© {new Date().getFullYear()} Lerta Logistics</p>
         </div>
       </div>
     </footer>

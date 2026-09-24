@@ -130,7 +130,7 @@ export function UiShowcaseClient() {
           <p className="ui-showcase-lead">Ek: ripple + tooltip denemesi</p>
           <div className="ui-demo-social-extra">
             <a
-              href="https://t.me/nakliyeborsasi"
+              href="https://t.me/lertalogistics"
               className="ui-demo-social ui-demo-social--telegram"
               target="_blank"
               rel="noopener noreferrer"

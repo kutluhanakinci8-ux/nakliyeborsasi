@@ -93,7 +93,7 @@ export function BlogPageClient() {
         breadcrumbLabel="Blog"
         eyebrow="İçerik merkezi"
         title="Sektör ve ürün yazıları"
-        lead="Koridor haberleri, ürün güncellemeleri ve entegrasyon rehberleri. Nakliye Borsası ekibinden ve sektörden notlar."
+        lead="Koridor haberleri, ürün güncellemeleri ve entegrasyon rehberleri. Lerta Logistics ekibinden ve sektörden notlar."
         stats={[...HERO_STATS]}
         subnav={PAGE_SUBNAV}
         heroAside={

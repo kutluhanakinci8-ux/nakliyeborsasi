@@ -1,3 +1,7 @@
+import {
+  PLATFORM_DEFAULT_SMTP_FROM,
+  PLATFORM_PRIMARY_CONTACT_EMAIL,
+} from "@nakliyeborsasi/core";
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 
@@ -16,7 +20,7 @@ export class NotificationConfigurationService {
   public resolveDefaultAdminRecipients(): string[] {
     const raw =
       this.configService.get<string>("PLATFORM_ADMIN_EMAILS") ??
-      "admin@nakliyeborsasi.local";
+      PLATFORM_PRIMARY_CONTACT_EMAIL;
     return raw
       .split(/[,;]/)
       .map((email) => email.trim().toLowerCase())
@@ -39,7 +43,7 @@ export class NotificationConfigurationService {
     const pass = this.configService.get<string>("SMTP_PASS");
     const from =
       this.configService.get<string>("SMTP_FROM") ??
-      "Nakliye Borsası <noreply@nakliyeborsasi.local>";
+      PLATFORM_DEFAULT_SMTP_FROM;
     return { host, port, secure, user, pass, from };
   }
 

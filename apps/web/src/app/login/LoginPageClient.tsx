@@ -160,7 +160,7 @@ export function LoginPageClient() {
         >
           <div className="auth-promo auth-promo--corporate">
             <p className="auth-promo-badge">Kurumsal üyelik · TR · UA · AB</p>
-            <h1>Nakliye Borsası&apos;na güvenli erişim</h1>
+            <h1>Lerta Logistics&apos;e güvenli erişim</h1>
             <p className="auth-promo-lead">
               Taşıyıcı ve yük veren firmalar için tek giriş noktası. Mevcut hesabınızla
               giriş yapın veya firma bilgilerinizle yeni kurumsal üyelik oluşturun.

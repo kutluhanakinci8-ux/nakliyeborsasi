@@ -9,7 +9,7 @@ export default function KisiselVerilerPage() {
     >
       <div className="corporate-prose module-panel">
         <p>
-          Nakliye Borsası demo platformunda toplanan e-posta, firma kimliği ve işlem kayıtları yalnızca
+          Lerta Logistics demo platformunda toplanan e-posta, firma kimliği ve işlem kayıtları yalnızca
           hizmet sunumu ve güvenlik amacıyla işlenir. Canlı ortamda güncel aydınlatma metni burada
           yayımlanacaktır.
         </p>

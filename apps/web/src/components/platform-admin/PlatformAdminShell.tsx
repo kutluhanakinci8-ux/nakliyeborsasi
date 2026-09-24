@@ -21,7 +21,7 @@ export function PlatformAdminShell({ children }: { children: ReactNode }) {
           <span className="platform-admin-brand-mark">NB</span>
           <div>
             <strong>Platform yönetimi</strong>
-            <span>Nakliye Borsası</span>
+            <span>Lerta Logistics</span>
           </div>
         </div>
         <nav className="platform-admin-nav" aria-label="Platform yönetimi">

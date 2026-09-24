@@ -1,8 +1,8 @@
 import Image from "next/image";
 
-const APP_STORE_URL = "https://apps.apple.com/app/nakliye-borsasi";
+const APP_STORE_URL = "https://apps.apple.com/app/lerta-logistics";
 const PLAY_STORE_URL =
-  "https://play.google.com/store/apps/details?id=com.nakliyeborsasi.app";
+  "https://play.google.com/store/apps/details?id=com.lertalogistics.app";
 
 const STORE_BADGES = {
   appStore: {

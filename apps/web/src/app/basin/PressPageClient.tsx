@@ -22,7 +22,7 @@ const PRESS_RELEASES = [
   {
     date: "2026-09-10",
     tag: "Platform",
-    title: "Nakliye Borsası demo platformu TR–UA koridorunda açıldı",
+    title: "Lerta Logistics demo platformu TR–UA koridorunda açıldı",
     summary:
       "Marketplace, ihale, mesajlaşma ve güven modülleri tek kurumsal hesapta birleştirildi. Pilot firmalar için web kaynaklı organizasyon profili zenginleştirme devreye alındı.",
     featured: true,
@@ -49,12 +49,12 @@ const PRESS_KIT_ITEMS = [
   {
     title: "Kurumsal özet (boilerplate)",
     body:
-      "Nakliye Borsası, Türkiye — Ukrayna — Avrupa Birliği koridorunda yük verenleri, taşıyıcıları ve forwarder’ları tek dijital borsada buluşturan kurumsal bir platformdur.",
+      "Lerta Logistics, Türkiye — Ukrayna — Avrupa Birliği koridorunda yük verenleri, taşıyıcıları ve forwarder’ları tek dijital borsada buluşturan kurumsal bir platformdur.",
   },
   {
     title: "Logo ve görsel kimlik",
     body:
-      "NB monogramı ve yeşil–lacivert kurumsal palet. Vektör logo talebi için medya hattımıza yazın.",
+      "LL monogramı ve yeşil–lacivert kurumsal palet. Vektör logo talebi için medya hattımıza yazın.",
   },
   {
     title: "Ekran görüntüleri",
@@ -73,7 +73,7 @@ const FOCUS_TOPICS = [
 ] as const;
 
 const MEDIA_CONTACT = {
-  email: "basin@nakliyeborsasi.local",
+  email: "lertalogistics@gmail.com",
   note: "Röportaj, demo ve basın kiti talepleri için 48 saat içinde dönüş hedeflenir.",
 };
 
@@ -88,7 +88,7 @@ export function PressPageClient() {
         breadcrumbLabel="Basın"
         eyebrow="Medya merkezi"
         title="Basın ve kurumsal iletişim"
-        lead="Nakliye Borsası hakkında güncel duyurular, ürün haberleri ve koridor odaklı basın materyalleri. Medya temsilcileri için basın kiti ve doğrudan iletişim kanalı."
+        lead="Lerta Logistics hakkında güncel duyurular, ürün haberleri ve koridor odaklı basın materyalleri. Medya temsilcileri için basın kiti ve doğrudan iletişim kanalı."
         stats={[...HERO_STATS]}
         subnav={PAGE_SUBNAV}
         heroAside={
@@ -207,7 +207,7 @@ export function PressPageClient() {
               “Koridor lojistiğinde şeffaflık, güven ve entegrasyon artık aynı platformda
               buluşmalı — basın ve sektör bunu birlikte anlatmalı.”
             </p>
-            <footer>— Kurumsal iletişim, Nakliye Borsası</footer>
+            <footer>— Kurumsal iletişim, Lerta Logistics</footer>
           </blockquote>
         </section>
 

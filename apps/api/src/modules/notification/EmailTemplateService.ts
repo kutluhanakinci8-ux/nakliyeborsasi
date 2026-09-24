@@ -1,3 +1,8 @@
+import {
+  PLATFORM_EMAIL_SUBJECT_TAG,
+  PLATFORM_PRODUCT_NAME,
+  PLATFORM_PRODUCT_NAME_UPPER,
+} from "@nakliyeborsasi/core";
 import { Injectable } from "@nestjs/common";
 import { NotificationEventCode } from "./NotificationEventCode";
 
@@ -26,7 +31,7 @@ export class EmailTemplateService {
     switch (eventCode) {
       case NotificationEventCode.UserRegistered:
         return {
-          subject: `[NB] Yeni firma kaydı — ${payload.companyLegalName}`,
+          subject: `[${PLATFORM_EMAIL_SUBJECT_TAG}] Yeni firma kaydı — ${payload.companyLegalName}`,
           html: this.wrapHtml(
             "Yeni firma kaydı",
             `<p><strong>${payload.displayName}</strong> platforma kayıt oldu.</p>
@@ -44,7 +49,7 @@ export class EmailTemplateService {
         };
       case NotificationEventCode.UserLogin:
         return {
-          subject: `[NB] Giriş — ${payload.emailAddress}`,
+          subject: `[${PLATFORM_EMAIL_SUBJECT_TAG}] Giriş — ${payload.emailAddress}`,
           html: this.wrapHtml(
             "Kullanıcı girişi",
             `<p><strong>${payload.displayName}</strong> oturum açtı.</p>
@@ -57,7 +62,7 @@ export class EmailTemplateService {
         };
       case NotificationEventCode.UserFirstLogin:
         return {
-          subject: `[NB] İlk giriş — ${payload.emailAddress}`,
+          subject: `[${PLATFORM_EMAIL_SUBJECT_TAG}] İlk giriş — ${payload.emailAddress}`,
           html: this.wrapHtml(
             "İlk giriş",
             `<p>${payload.emailAddress} ilk kez oturum açtı.</p>`,
@@ -66,7 +71,7 @@ export class EmailTemplateService {
         };
       default:
         return {
-          subject: `[NB] Bildirim — ${eventCode}`,
+          subject: `[${PLATFORM_EMAIL_SUBJECT_TAG}] Bildirim — ${eventCode}`,
           html: this.wrapHtml("Bildirim", `<pre>${JSON.stringify(payload)}</pre>`),
           text: eventCode,
         };
@@ -80,7 +85,7 @@ export class EmailTemplateService {
     switch (eventCode) {
       case NotificationEventCode.UserRegistered:
         return {
-          subject: "Nakliye Borsası — kaydınız alındı",
+          subject: `${PLATFORM_PRODUCT_NAME} — kaydınız alındı`,
           html: this.wrapHtml(
             "Hoş geldiniz",
             `<p>Merhaba ${payload.displayName},</p>
@@ -111,7 +116,7 @@ export class EmailTemplateService {
         };
       default:
         return {
-          subject: "Nakliye Borsası",
+          subject: PLATFORM_PRODUCT_NAME,
           html: this.wrapHtml("Bilgi", `<p>${payload.message ?? ""}</p>`),
           text: payload.message ?? "",
         };
@@ -125,7 +130,7 @@ export class EmailTemplateService {
     switch (eventCode) {
       case NotificationEventCode.UserRegistered:
         return {
-          subject: "Nakliye Borsası — registration received",
+          subject: `${PLATFORM_PRODUCT_NAME} — registration received`,
           html: this.wrapHtml(
             "Welcome",
             `<p>Hello ${payload.displayName},</p>
@@ -160,7 +165,7 @@ export class EmailTemplateService {
   private wrapHtml(title: string, body: string): string {
     return `<!DOCTYPE html><html><body style="font-family:system-ui,sans-serif;background:#f8fafc;padding:24px;">
       <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:12px;padding:24px;border:1px solid #e2e8f0;">
-        <p style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#0d9488;margin:0 0 8px;">Nakliye Borsası</p>
+        <p style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#0d9488;margin:0 0 8px;">${PLATFORM_PRODUCT_NAME_UPPER}</p>
         <h1 style="font-size:20px;margin:0 0 16px;color:#0f2444;">${title}</h1>
         ${body}
       </div></body></html>`;

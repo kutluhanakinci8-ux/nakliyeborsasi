@@ -18,7 +18,7 @@ export default function KullanimKosullariPage() {
   return (
     <LegalPageLayout
       title="Kullanım Koşullarımız"
-      lead="Nakliye Borsası web platformu ve modüllerini (yük arama, ihale, mesajlaşma, güven ve entegrasyon) kullanırken taraflar arasında geçerli olan çerçeve hükümler."
+      lead="Lerta Logistics web platformu ve modüllerini (yük arama, ihale, mesajlaşma, güven ve entegrasyon) kullanırken taraflar arasında geçerli olan çerçeve hükümler."
       breadcrumbLabel="Kullanım Koşullarımız"
       toc={TOC}
     >
@@ -30,7 +30,7 @@ export default function KullanimKosullariPage() {
 
       <h2 id="genel">1. Genel hükümler</h2>
       <p>
-        Nakliye Borsası; taşıyıcı, nakliyeci, forwarder ve yük sahibi tarafların ilan, teklif
+        Lerta Logistics; taşıyıcı, nakliyeci, forwarder ve yük sahibi tarafların ilan, teklif
         ve iletişim süreçlerini dijital ortamda yürütmesine aracılık eden bir yazılım
         platformudur. Platform aracı nakliyeci değildir; taraflar arasındaki taşıma sözleşmesinin
         tarafı olmaz.
@@ -42,7 +42,7 @@ export default function KullanimKosullariPage() {
 
       <h2 id="tanimlar">2. Tanımlar</h2>
       <p>
-        <strong>Platform:</strong> Nakliye Borsası web uygulaması, API’leri ve ilişkili arayüzler.
+        <strong>Platform:</strong> Lerta Logistics web uygulaması, API’leri ve ilişkili arayüzler.
         <br />
         <strong>Kullanıcı / Üye:</strong> Hesap oluşturan veya demo erişimi kullanan gerçek veya
         tüzel kişi.
@@ -129,7 +129,7 @@ export default function KullanimKosullariPage() {
       </p>
       <p>
         Sorularınız için{" "}
-        <a href="mailto:legal@nakliyeborsasi.local">legal@nakliyeborsasi.local</a> veya{" "}
+        <a href="mailto:lertalogistics@gmail.com">lertalogistics@gmail.com</a> veya{" "}
         <a href="/iletisim">iletişim formu</a> üzerinden bize ulaşabilirsiniz.
       </p>
     </LegalPageLayout>

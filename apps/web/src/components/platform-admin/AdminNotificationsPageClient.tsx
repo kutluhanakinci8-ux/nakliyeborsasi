@@ -20,7 +20,7 @@ export function AdminNotificationsPageClient() {
   const { accessToken } = useWebSession();
   const [settings, setSettings] = useState<PlatformNotificationSetting[]>([]);
   const [outbox, setOutbox] = useState<EmailOutboxRow[]>([]);
-  const [testEmail, setTestEmail] = useState("admin@nakliyeborsasi.local");
+  const [testEmail, setTestEmail] = useState("lertalogistics@gmail.com");
   const [testEvent, setTestEvent] = useState("USER_LOGIN");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);

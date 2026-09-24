@@ -92,7 +92,7 @@ export function AdminDashboardClient() {
     <div className="platform-admin-command">
       <header className="platform-admin-command-hero">
         <div>
-          <p className="platform-admin-command-eyebrow">Nakliye Borsası · TR · UA · EU</p>
+          <p className="platform-admin-command-eyebrow">Lerta Logistics · TR · UA · EU</p>
           <h1 className="platform-admin-command-title">Kontrol merkezi</h1>
           <p className="platform-admin-command-sub">
             {todayLabel} — platform operasyon özeti

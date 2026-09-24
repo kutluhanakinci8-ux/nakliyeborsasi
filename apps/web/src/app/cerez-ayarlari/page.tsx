@@ -40,7 +40,7 @@ export default function CerezAyarlariPage() {
         halinde — kullanım istatistiklerinin toplanması için kullanılabilir.
       </p>
       <p>
-        Nakliye Borsası; yük arama, ihale, mesajlaşma ve güven modüllerinde kesintisiz deneyim için sınırlı
+        Lerta Logistics; yük arama, ihale, mesajlaşma ve güven modüllerinde kesintisiz deneyim için sınırlı
         ve amaca yönelik çerezler kullanır. Koridor odağımız <strong>TR · UA · EU</strong> hatlarıdır; veri
         işleme süreçleri bu coğrafyadaki mevzuata uygun tasarlanır.
       </p>

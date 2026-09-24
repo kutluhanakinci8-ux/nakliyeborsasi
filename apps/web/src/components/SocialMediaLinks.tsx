@@ -5,7 +5,7 @@ const SOCIAL_NETWORKS: {
   href: string;
   label: string;
 }[] = [
-  { id: "telegram", href: "https://t.me/nakliyeborsasi", label: "Telegram" },
+  { id: "telegram", href: "https://t.me/lertalogistics", label: "Telegram" },
   { id: "linkedin", href: "https://www.linkedin.com/", label: "LinkedIn" },
   { id: "facebook", href: "https://www.facebook.com/", label: "Facebook" },
   { id: "instagram", href: "https://www.instagram.com/", label: "Instagram" },

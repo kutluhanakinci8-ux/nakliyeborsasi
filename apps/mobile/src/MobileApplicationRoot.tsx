@@ -6,7 +6,7 @@ export class MobileApplicationRoot extends React.Component {
   public render(): React.ReactNode {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>Nakliye Borsası Mobile</Text>
+        <Text style={styles.title}>Lerta Logistics Mobile</Text>
         <Text>React Native (Expo) iskeleti — aynı JWT API</Text>
         <StatusBar style="auto" />
       </View>

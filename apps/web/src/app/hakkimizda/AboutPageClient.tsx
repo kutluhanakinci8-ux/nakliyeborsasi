@@ -49,7 +49,7 @@ const VALUES = [
 const MILESTONES = [
   {
     phase: "Bugün",
-    title: "Modüler nakliye borsası",
+    title: "Modüler lojistik platformu",
     body:
       "Yük arama, ihale, mesajlaşma, güven merkezi ve entegrasyon katmanı canlı demo ve pilot müşterilerle.",
   },
@@ -74,7 +74,7 @@ export function AboutPageClient() {
           pageClassName="about-premium-page"
           breadcrumbLabel="Hakkımızda"
           eyebrow="Kurumsal"
-          title="Nakliye Borsası kimdir?"
+          title="Lerta Logistics kimdir?"
           lead="Türkiye, Ukrayna ve Avrupa Birliği koridorunda yük verenleri, taşıyıcıları ve forwarder’ları tek dijital borsada buluşturan kurumsal platformuz. Şeffaf fiyat, güvenilir partner ve entegre operasyon için tasarlandı."
           stats={[...HERO_STATS]}
           subnav={PAGE_SUBNAV}
@@ -103,7 +103,7 @@ export function AboutPageClient() {
                   Dijital yük borsası — kurumsal standartta
                 </h2>
                 <p className="about-premium-body">
-                  Nakliye Borsası; taşımacılık sektöründe ilan, teklif, ihale ve partner
+                  Lerta Logistics; taşımacılık sektöründe ilan, teklif, ihale ve partner
                   güvenini aynı veri modelinde toplayan bir{" "}
                   <strong>nakliye borsası platformudur</strong>. Küçük filodan uluslararası
                   forwarder’a kadar her ölçekte firma, koridor genelinde aynı arayüz ve aynı
