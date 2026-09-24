@@ -17,6 +17,8 @@ import {
   runPendingWebsiteEnrichment,
 } from "../../../../lib/websiteEnrichmentWorkflow";
 import { useWebSession } from "../../../../context/WebSessionProvider";
+import { OrganizationSectionNav } from "../../../../components/account/OrganizationSectionNav";
+import { CompanySubscriptionPanel } from "../../../../components/account/CompanySubscriptionPanel";
 
 export function OrganizationPageClient() {
   const { session } = useWebSession();
@@ -137,19 +139,64 @@ export function OrganizationPageClient() {
     );
   }
 
-  return (
-    <>
-      <p className="account-session-banner">
-        Oturum: <strong>{emailAddress || "—"}</strong>
-        {companyId ? (
-          <>
-            {" "}
-            · Firma kimliği <code>{companyId.slice(0, 8)}…</code>
-          </>
-        ) : null}
-      </p>
+  const displayTradeName =
+    profile.tradeName || profile.legalName || "Kurumsal hesabınız";
 
-      <section className="account-verify-banner module-panel module-panel--elevated">
+  return (
+    <div className="account-org-page">
+      <header
+        id="org-ozet"
+        className="account-org-hero module-panel module-panel--elevated account-org-section"
+      >
+        <div className="account-org-hero-main">
+          {profile.logoUrl ? (
+            <img
+              src={profile.logoUrl}
+              alt=""
+              className="account-org-logo"
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <span className="account-org-logo account-org-logo--placeholder" aria-hidden>
+              {profile.tradeName?.slice(0, 2).toUpperCase() || "NB"}
+            </span>
+          )}
+          <div>
+            <p className="account-org-hero-kicker">Kurumsal hesap</p>
+            <h1 className="account-org-hero-title">{displayTradeName}</h1>
+            <p className="account-org-hero-lead">
+              Bu sekme <strong>firmanızı</strong> temsil eder: sözleşme, doğrulama, koridor ve
+              abonelik. Kişisel ayarlar için{" "}
+              <Link href="/hesap/profil">Benim profilim</Link>.
+            </p>
+            <p className="account-session-banner account-session-banner--inline">
+              Yönetici oturumu: <strong>{emailAddress || "—"}</strong>
+              {companyId ? (
+                <>
+                  {" "}
+                  · Kimlik <code>{companyId.slice(0, 8)}…</code>
+                </>
+              ) : null}
+            </p>
+          </div>
+        </div>
+        <div className="account-org-hero-actions">
+          <Link href="/hesap/calisanlar" className="btn-account-ghost">
+            Çalışanlar
+          </Link>
+          <Link href="/hesap/odemeler" className="btn-account-ghost">
+            Ödemeler
+          </Link>
+        </div>
+      </header>
+
+      <div className="account-org-layout">
+        <OrganizationSectionNav />
+        <div className="account-org-main">
+      <section
+        id="org-dogrulama"
+        className="account-verify-banner module-panel module-panel--elevated account-org-section"
+      >
         <div className="account-verify-copy">
           <p className="account-verify-eyebrow">Güven ve doğrulama</p>
           <h2 className="account-card-title">Kurumsal doğrulama</h2>
@@ -218,7 +265,8 @@ export function OrganizationPageClient() {
       ) : null}
 
       <section
-        className="account-card module-panel module-panel--elevated"
+        id="org-temel"
+        className="account-card module-panel module-panel--elevated account-org-section"
         data-form-type="organization"
       >
         <header className="account-card-head">
@@ -315,7 +363,10 @@ export function OrganizationPageClient() {
         {saveMessage ? <p className="account-save-hint">{saveMessage}</p> : null}
       </section>
 
-      <section className="account-card module-panel module-panel--elevated">
+      <section
+        id="org-web"
+        className="account-card module-panel module-panel--elevated account-org-section"
+      >
         <header className="account-card-head">
           <div>
             <h2 className="account-card-title">Web sitesinden alınan bilgiler</h2>
@@ -580,7 +631,10 @@ export function OrganizationPageClient() {
         ) : null}
       </section>
 
-      <section className="account-card module-panel module-panel--elevated">
+      <section
+        id="org-koridor"
+        className="account-card module-panel module-panel--elevated account-org-section"
+      >
         <header className="account-card-head">
           <div>
             <h2 className="account-card-title">Koridor yetkileri</h2>
@@ -614,16 +668,20 @@ export function OrganizationPageClient() {
         </div>
       </section>
 
-      <section className="account-card module-panel module-panel--elevated">
+      <section
+        id="org-iletisim"
+        className="account-card module-panel module-panel--elevated account-org-section"
+      >
         <header className="account-card-head">
           <div>
             <h2 className="account-card-title">Birincil iletişim</h2>
             <p className="account-card-lead">
-              E-posta, çağrı merkezi telefonu ve WhatsApp — teklif bildirimleri bu kanallara gider.
+              Firma düzeyinde operasyon kanalları — teklif ve ihale bildirimleri buraya gider.
+              Giriş e-postanız kişisel profilde salt okunur.
             </p>
           </div>
           <Link href="/hesap/profil" className="btn-account-ghost">
-            Profilde düzenle
+            Kişisel profil
           </Link>
         </header>
         <ul className="account-contact-list">
@@ -695,6 +753,11 @@ export function OrganizationPageClient() {
           Firma kimliği (sistem): <code>{companyId || "—"}</code>
         </p>
       </section>
-    </>
+
+      <CompanySubscriptionPanel />
+
+        </div>
+      </div>
+    </div>
   );
 }

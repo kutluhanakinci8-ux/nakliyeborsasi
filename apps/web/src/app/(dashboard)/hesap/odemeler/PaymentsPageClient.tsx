@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useWebSession } from "../../../../context/WebSessionProvider";
+import { SubscriptionApiClient } from "../../../../lib/SubscriptionApiClient";
 
 type InvoiceStatus = "paid" | "open" | "overdue";
 
@@ -124,7 +125,7 @@ function formatMoney(amount: number, currency: string): string {
 }
 
 export function PaymentsPageClient() {
-  const { session } = useWebSession();
+  const { session, accessToken, isReady } = useWebSession();
   const companyId = session?.companyId ?? "";
   const emailAddress = session?.emailAddress ?? "";
   const [store, setStore] = useState<BillingStore>(() => defaultStore(emailAddress));
@@ -136,6 +137,29 @@ export function PaymentsPageClient() {
     }
     setStore(loadStore(companyId, emailAddress));
   }, [companyId, emailAddress]);
+
+  useEffect(() => {
+    if (!isReady || !accessToken) {
+      return;
+    }
+    void SubscriptionApiClient.fetchCompanySubscription(accessToken).then((view) => {
+      const plan = view.activePlan;
+      if (!plan) {
+        return;
+      }
+      setStore((current) => {
+        const next = {
+          ...current,
+          planCode: plan.planCode,
+          planLabel: `${plan.displayName} · TR-UA`,
+          planPrice: plan.monthlyPriceEur ?? current.planPrice,
+          currencyCode: "EUR",
+        };
+        persistStore(companyId, next);
+        return next;
+      });
+    });
+  }, [accessToken, isReady, companyId]);
 
   const openInvoiceCount = useMemo(
     () => store.invoices.filter((inv) => inv.status !== "paid").length,
@@ -216,9 +240,9 @@ export function PaymentsPageClient() {
             )}
           </div>
           <div className="account-verify-actions">
-            <button type="button" className="btn-account-primary" disabled>
-              Planı yükselt (yakında)
-            </button>
+            <a href="/hesap/organizasyon#org-abonelik" className="btn-account-primary">
+              Planı değiştir
+            </a>
             <button type="button" className="btn-account-ghost" onClick={toggleAutoRenew}>
               {store.autoRenew ? "Otomatik yenilemeyi kapat" : "Otomatik yenilemeyi aç"}
             </button>

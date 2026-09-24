@@ -23,8 +23,9 @@ export const ACCOUNT_MENU_ITEMS: readonly AccountMenuItem[] = [
     href: "/hesap/organizasyon",
     label: "Benim organizasyonum",
     lead:
-      "Firma kimliği, koridor yetkileri ve doğrulama durumu — rakiplerdeki gibi kartlar halinde, Nakliye Borsası kurumsal diliyle.",
+      "Firma kimliği, doğrulama, koridorlar, kurumsal iletişim ve abonelik — çok kullanıcılı hesabın yönetim merkezi.",
     icon: "organization",
+    hidePageHero: true,
   },
   {
     href: "/hesap/ilanlar",
@@ -63,7 +64,7 @@ export const ACCOUNT_MENU_ITEMS: readonly AccountMenuItem[] = [
   {
     href: "/hesap/odemeler",
     label: "Benim ödemelerim",
-    lead: "Faturalar, ödeme yöntemleri ve abonelik planı.",
+    lead: "Ödeme yöntemi, e-fatura bilgileri ve tahsilat geçmişi (plan özeti organizasyon ile senkron).",
     icon: "payments",
   },
   {
@@ -75,7 +76,7 @@ export const ACCOUNT_MENU_ITEMS: readonly AccountMenuItem[] = [
   {
     href: "/hesap/profil",
     label: "Benim profilim",
-    lead: "Kişisel bilgiler, şifre ve bildirim tercihleri.",
+    lead: "Kişisel bilgiler, dil, bildirimler ve oturum güvenliği — firma verisi organizasyon sekmesinde.",
     icon: "profile",
     hidePageHero: true,
   },
