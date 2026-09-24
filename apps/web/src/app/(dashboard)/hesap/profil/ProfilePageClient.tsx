@@ -255,8 +255,8 @@ export function ProfilePageClient() {
                 Kaydet
               </button>
             </header>
-            <div className="account-profile-field-grid">
-              <label className="account-profile-field">
+            <div className="account-profile-field-grid account-profile-field-grid--compact">
+              <label className="account-profile-field account-profile-field--inline">
                 <span className="account-profile-field-label">Görünen ad</span>
                 <input
                   className="account-profile-input"
@@ -265,7 +265,7 @@ export function ProfilePageClient() {
                   placeholder="Ad Soyad"
                 />
               </label>
-              <label className="account-profile-field">
+              <label className="account-profile-field account-profile-field--inline">
                 <span className="account-profile-field-label">Ünvan / görev</span>
                 <input
                   className="account-profile-input"
@@ -274,7 +274,7 @@ export function ProfilePageClient() {
                   placeholder="Örn. Operasyon müdürü"
                 />
               </label>
-              <label className="account-profile-field account-profile-field--span">
+              <label className="account-profile-field account-profile-field--inline">
                 <span className="account-profile-field-label">Cep telefonu</span>
                 <input
                   className="account-profile-input"
@@ -284,7 +284,7 @@ export function ProfilePageClient() {
                   placeholder="+90 5xx xxx xx xx"
                 />
               </label>
-              <label className="account-profile-field account-profile-field--span">
+              <label className="account-profile-field account-profile-field--inline">
                 <span className="account-profile-field-label">Birincil e-posta</span>
                 <input
                   className="account-profile-input account-profile-input--readonly"
