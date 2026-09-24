@@ -5,8 +5,39 @@ import type {
   FleetDriverRouteSnapshot,
   FleetLiveDriverPin,
 } from "../../lib/TelemetryApiClient";
+import { PolylineSimplifier } from "@nakliyeborsasi/core";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+
+type TrailPoint = {
+  latitude: number;
+  longitude: number;
+  recordedAt: string;
+  speedKmh?: number | null;
+  altitudeMeters?: number | null;
+};
+
+function trailForMapDisplay(points: readonly TrailPoint[]): TrailPoint[] {
+  if (points.length <= 80) {
+    return [...points];
+  }
+  const step = Math.max(1, Math.floor(points.length / 120));
+  const decimated = points.filter(
+    (_, index) => index % step === 0 || index === points.length - 1,
+  );
+  if (decimated.length <= 2) {
+    return decimated;
+  }
+  const simplified = PolylineSimplifier.simplify(decimated, 40);
+  const indexByKey = new Map<string, number>();
+  decimated.forEach((point, index) => {
+    indexByKey.set(`${point.latitude},${point.longitude}`, index);
+  });
+  return simplified.map((point) => {
+    const index = indexByKey.get(`${point.latitude},${point.longitude}`);
+    return index !== undefined ? decimated[index] : decimated[0];
+  });
+}
 
 const STATE_COLOR: Record<string, string> = {
   LIVE: "#16a34a",
@@ -107,48 +138,8 @@ export function FleetLiveMapCanvas({
     if (selectedRoute) {
       const road = selectedRoute.roadGeometry;
       const boundsCoords: L.LatLngExpression[] = [];
-      const crumbs = selectedRoute.breadcrumbPoints ?? [];
-
-      if (crumbs.length > 0) {
-        for (const point of crumbs) {
-          L.circleMarker([point.latitude, point.longitude], {
-            radius: crumbs.length > 80 ? 2 : 4,
-            color: "#1e40af",
-            weight: 1,
-            fillColor: "#93c5fd",
-            fillOpacity: 0.75,
-          })
-            .bindPopup(
-              [
-                `${point.latitude.toFixed(6)}, ${point.longitude.toFixed(6)}`,
-                point.speedKmh !== null
-                  ? `${point.speedKmh.toFixed(1)} km/s`
-                  : null,
-                point.altitudeMeters != null
-                  ? `Rakım ${Math.round(point.altitudeMeters)} m`
-                  : null,
-                new Date(point.recordedAt).toLocaleString("tr-TR"),
-              ]
-                .filter(Boolean)
-                .join("<br/>"),
-            )
-            .addTo(routeLayer);
-          boundsCoords.push([point.latitude, point.longitude]);
-        }
-        if (crumbs.length > 1) {
-          L.polyline(
-            crumbs.map(
-              (point) => [point.latitude, point.longitude] as L.LatLngExpression,
-            ),
-            {
-              color: "#3b82f6",
-              weight: 2,
-              opacity: 0.45,
-              dashArray: "4 6",
-            },
-          ).addTo(routeLayer);
-        }
-      }
+      const crumbs = trailForMapDisplay(selectedRoute.breadcrumbPoints ?? []);
+      let drewRoadLine = false;
 
       if (road && road.coordinates.length > 1) {
         if (selectedRoute.speedSegments.length > 1) {
@@ -161,6 +152,7 @@ export function FleetLiveMapCanvas({
               weight: 5,
               opacity: 0.9,
             }).addTo(routeLayer);
+            drewRoadLine = true;
             for (const ll of latLngs) {
               boundsCoords.push(ll);
             }
@@ -174,6 +166,7 @@ export function FleetLiveMapCanvas({
             weight: 4,
             opacity: 0.85,
           }).addTo(routeLayer);
+          drewRoadLine = true;
           boundsCoords.push(...latLngs);
         }
       } else if (selectedRoute.routePoints.length > 1) {
@@ -186,13 +179,31 @@ export function FleetLiveMapCanvas({
           opacity: 0.6,
           dashArray: "6 8",
         }).addTo(routeLayer);
+        drewRoadLine = true;
         boundsCoords.push(...latLngs);
       }
 
-      if (selectedRoute.routePoints.length > 0) {
-        const start = selectedRoute.routePoints[0];
-        const end =
-          selectedRoute.routePoints[selectedRoute.routePoints.length - 1];
+      if (!drewRoadLine && crumbs.length > 1) {
+        const latLngs = crumbs.map(
+          (point) => [point.latitude, point.longitude] as L.LatLngExpression,
+        );
+        L.polyline(latLngs, {
+          color: "#1d4ed8",
+          weight: 4,
+          opacity: 0.85,
+        }).addTo(routeLayer);
+        boundsCoords.push(...latLngs);
+      } else if (!drewRoadLine && crumbs.length === 1) {
+        boundsCoords.push([crumbs[0].latitude, crumbs[0].longitude]);
+      }
+
+      const pathForMarkers =
+        selectedRoute.routePoints.length > 1
+          ? selectedRoute.routePoints
+          : crumbs;
+      if (pathForMarkers.length > 0) {
+        const start = pathForMarkers[0];
+        const end = pathForMarkers[pathForMarkers.length - 1];
         L.circleMarker([start.latitude, start.longitude], {
           radius: 6,
           color: "#0f172a",

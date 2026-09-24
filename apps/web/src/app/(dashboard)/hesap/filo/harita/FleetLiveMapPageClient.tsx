@@ -113,8 +113,8 @@ export function FleetLiveMapPageClient() {
           accessToken,
           locale,
           driverId,
-          6,
-          "road",
+          24,
+          "matched",
         );
         setSelectedRoute(route);
         setRouteError("");
@@ -156,7 +156,7 @@ export function FleetLiveMapPageClient() {
           <div>
             <h1 className="account-card-title">Canlı filo haritası</h1>
             <p className="account-card-lead">
-              Konum, rota, hız ve hızlanma/yavaşlama (son 6 saat).{" "}
+              Konum, rota, hız ve hızlanma/yavaşlama (son 24 saat).{" "}
               <Link href="/hesap/filo">← Filo yönetimi</Link>
             </p>
           </div>

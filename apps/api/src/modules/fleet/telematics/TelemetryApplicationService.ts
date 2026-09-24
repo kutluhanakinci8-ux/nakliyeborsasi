@@ -221,7 +221,7 @@ export class TelemetryApplicationService {
         eventTypeCode: TelemetryEventTypeCode.LocationSample,
       },
       order: { recordedAt: "ASC" },
-      take: 1200,
+      take: 4000,
     });
     const feedEvents = await this.eventRepository.find({
       where: {
