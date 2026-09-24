@@ -11,6 +11,7 @@ import { JwtAuthenticationGuard } from "../auth/JwtAuthenticationGuard";
 import { PlatformAdminGuard } from "../platform-admin/PlatformAdminGuard";
 import { MailDomainApplicationService } from "./MailDomainApplicationService";
 import { PlatformMailRoadmapService } from "./PlatformMailRoadmapService";
+import { MailTenantSubdomainService } from "./MailTenantSubdomainService";
 import { MailDomainType } from "../../infrastructure/database/entities/MailDomainEntity";
 
 @Controller("platform-admin/mail")
@@ -19,6 +20,7 @@ export class PlatformMailIdentityAdminController {
   public constructor(
     private readonly mailDomainApplicationService: MailDomainApplicationService,
     private readonly platformMailRoadmapService: PlatformMailRoadmapService,
+    private readonly mailTenantSubdomainService: MailTenantSubdomainService,
   ) {}
 
   @Get("roadmap")
@@ -58,6 +60,36 @@ export class PlatformMailIdentityAdminController {
     const domain =
       await this.mailDomainApplicationService.markVerified(domainId);
     return { domain };
+  }
+
+  @Get("tenant-subdomain/pilot")
+  public async tenantPilotBundle() {
+    return {
+      bundle: await this.mailTenantSubdomainService.getPilotBundle(),
+    };
+  }
+
+  @Post("tenant-subdomain/verify-dns")
+  public async verifyTenantDns() {
+    const domain = await this.mailTenantSubdomainService.verifyTenantDomainDns();
+    return { domain };
+  }
+
+  @Post("tenant-subdomain/provision")
+  public async provisionTenantSender(
+    @Body()
+    body: {
+      organizationId: string;
+      localPart: string;
+      displayName?: string;
+    },
+  ) {
+    const result = await this.mailTenantSubdomainService.provisionPilotSender({
+      organizationId: body.organizationId,
+      localPart: body.localPart,
+      displayName: body.displayName,
+    });
+    return result;
   }
 
   @Post("domains/:domainId/senders")

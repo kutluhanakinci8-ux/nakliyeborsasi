@@ -256,7 +256,8 @@ export class PlatformNotificationAdminController {
       companyCountryCode: "TR",
       participantType: "LOAD_CARRIER",
       planCode: "carrier_professional_tr_ua",
-      companyId: "00000000-0000-0000-0000-000000000001",
+      companyId:
+        body.organizationId ?? "00000000-0000-0000-0000-000000000001",
       userId: "00000000-0000-0000-0000-000000000002",
       ipAddress: "127.0.0.1",
       userAgent: "Test/1.0",
@@ -264,12 +265,15 @@ export class PlatformNotificationAdminController {
       occurredAt: new Date().toISOString(),
       organizasyonUrl: `${this.notificationConfigurationService.resolveWebBaseUrl()}/hesap/organizasyon`,
     };
+    const companyId =
+      body.organizationId ?? "00000000-0000-0000-0000-000000000001";
     const row = await this.emailOutboxService.enqueue({
       eventCode,
       recipientKind: EmailRecipientKind.Admin,
       recipientEmail: body.recipientEmail,
       locale: "tr",
       payload: samplePayload,
+      metadata: { companyId },
       idempotencyKey: `TEST:${eventCode}:${body.recipientEmail}:${Date.now()}`,
     });
     return { message: "OK", outboxId: row?.id };

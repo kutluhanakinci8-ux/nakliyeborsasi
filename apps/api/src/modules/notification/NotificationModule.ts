@@ -45,6 +45,8 @@ import { MailSenderResolutionService } from "./MailSenderResolutionService";
 import { MailDomainApplicationService } from "./MailDomainApplicationService";
 import { PlatformMailRoadmapService } from "./PlatformMailRoadmapService";
 import { PlatformMailIdentityAdminController } from "./PlatformMailIdentityAdminController";
+import { MailDomainDnsVerificationService } from "./MailDomainDnsVerificationService";
+import { MailTenantSubdomainService } from "./MailTenantSubdomainService";
 
 @Module({
   imports: [
@@ -99,6 +101,8 @@ import { PlatformMailIdentityAdminController } from "./PlatformMailIdentityAdmin
     MailSenderResolutionService,
     MailDomainApplicationService,
     PlatformMailRoadmapService,
+    MailDomainDnsVerificationService,
+    MailTenantSubdomainService,
   ],
   exports: [
     AuthNotificationService,

@@ -1,0 +1,38 @@
+# Faz B pilot — `@kullanici.lerta.tr`
+
+Organizasyonlar **paylaşımlı alt alan** üzerinden transactional `From` alır:  
+`{slug}@kullanici.lerta.tr` (ör. `acme-lojistik@kullanici.lerta.tr`).
+
+Platform bildirimleri (Faz A) değişmez: `notifications@mail.lerta.tr`.
+
+## 1. Tek seferlik DNS (isimtescil — IP Bazlı DNS)
+
+| Tür | Host | Değer |
+|-----|------|--------|
+| TXT | `kullanici.lerta.tr` | `v=spf1 ip4:168.231.109.27 -all` |
+| TXT | `default._domainkey.kullanici.lerta.tr` | VPS `setup-opendkim-kullanici-lerta-tr.sh` çıktısı |
+| TXT | `_dmarc.lerta.tr` | (Faz A ile aynı DMARC yeterli) |
+
+VPS:
+
+```bash
+bash scripts/setup-opendkim-kullanici-lerta-tr.sh
+# MAIL_PLATFORM_TENANT_DKIM_TXT=.env içine public key
+```
+
+## 2. Admin ürün akışı
+
+1. **Bildirimler → Kurumsal kimlik (B)** → **DNS doğrula** (`kullanici.lerta.tr`).
+2. Pilot organizasyon seç → **local-part** (slug) → **Provision**.
+3. **Operasyon → Test mail** — isteğe `organizationId` ile Faz B From testi.
+
+## 3. Gönderim mantığı
+
+- Outbox `metadata.companyId` → `MailSenderResolutionService` → doğrulanmış varsayılan sender identity.
+- Domain doğrulanmamış veya kimlik yoksa → Faz A `notifications@mail.lerta.tr`.
+
+## 4. Sonraki adımlar (B2+)
+
+- `hesap/organizasyon` self-service UI
+- Otomatik DNS doğrulama job
+- Org başına rate limit / suppression ayrımı

@@ -24,7 +24,7 @@ export class MailDomainApplicationService {
   }
 
   public async createDomain(params: {
-    organizationId: string;
+    organizationId: string | null;
     domain: string;
     domainType: MailDomainType;
     notes?: string;

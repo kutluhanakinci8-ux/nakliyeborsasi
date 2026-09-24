@@ -1,4 +1,4 @@
-import { IsEmail, IsString, MaxLength } from "class-validator";
+import { IsEmail, IsOptional, IsString, IsUUID, MaxLength } from "class-validator";
 
 export class TestNotificationEmailDto {
   @IsString()
@@ -7,4 +7,9 @@ export class TestNotificationEmailDto {
 
   @IsEmail()
   public recipientEmail!: string;
+
+  /** Faz B: outbox From çözümü için pilot organizasyon UUID */
+  @IsOptional()
+  @IsUUID()
+  public organizationId?: string;
 }

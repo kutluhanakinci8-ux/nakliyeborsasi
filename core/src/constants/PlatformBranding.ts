@@ -9,6 +9,9 @@ export const PLATFORM_MONOGRAM = "LL";
 /** Public contact and default notification From domain (Faz A). */
 export const PLATFORM_PRIMARY_CONTACT_EMAIL = "notifications@mail.lerta.tr";
 
+/** Faz B — paylaşımlı organizasyon gönderim alt alanı (ör. acme@kullanici.lerta.tr). */
+export const PLATFORM_TENANT_MAIL_DOMAIN = "kullanici.lerta.tr";
+
 /** Platform `/admin` operator login (seed owner). */
 export const PLATFORM_OPERATOR_EMAIL = "admin@lerta.tr";
 

@@ -582,6 +582,41 @@ export class PlatformAdminApiClient {
     );
     return payload.sender;
   }
+
+  public static async fetchTenantSubdomainPilot(
+    accessToken: string,
+  ): Promise<TenantSubdomainPilotBundle> {
+    const payload = await adminFetch<{ bundle: TenantSubdomainPilotBundle }>(
+      accessToken,
+      "mail/tenant-subdomain/pilot",
+    );
+    return payload.bundle;
+  }
+
+  public static async verifyTenantSubdomainDns(
+    accessToken: string,
+  ): Promise<MailDomainRow> {
+    const payload = await adminFetch<{ domain: MailDomainRow }>(
+      accessToken,
+      "mail/tenant-subdomain/verify-dns",
+      { method: "POST" },
+    );
+    return payload.domain;
+  }
+
+  public static async provisionTenantSubdomainSender(
+    accessToken: string,
+    body: {
+      organizationId: string;
+      localPart: string;
+      displayName?: string;
+    },
+  ): Promise<{ fromAddress: string }> {
+    return adminFetch(accessToken, "mail/tenant-subdomain/provision", {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+  }
 }
 
 export type MailRoadmapPhase = {
@@ -613,6 +648,26 @@ export type MailSenderIdentityRow = {
   displayName: string | null;
   isDefault: boolean;
   organizationId: string;
+};
+
+export type TenantSubdomainPilotBundle = {
+  domain: string;
+  mailDomain: MailDomainRow | null;
+  dnsCheck: {
+    ok: boolean;
+    domain: string;
+    spf: { ok: boolean; detail: string };
+    dkim: { ok: boolean; detail: string };
+  };
+  dnsInstructions: {
+    spfHost: string;
+    spfValue: string;
+    dkimHost: string;
+    dkimValueHint: string;
+    dmarcHost: string;
+    dmarcValue: string;
+  };
+  senders: MailSenderIdentityRow[];
 };
 
 export type MailDomainRow = {
