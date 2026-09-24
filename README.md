@@ -15,6 +15,77 @@ Modüler yük borsası platformu — TR ve UA–EU koridoru, çoklu dil (`tr`, `
 | `apps/web/` | Next.js panel iskeleti |
 | `apps/mobile/` | Expo React Native iskeleti |
 
+## E-posta ve bildirim platformu (Lerta)
+
+**Önemli:** Platformun **yazılımı bizim** — kuyruk, şablonlar, olay kataloğu, admin paneli, analitik, suppression, kullanıcı/firma tercihleri, webhook işleme kodu repoda.  
+**Postmark zorunlu değil.** Postmark/SES yalnızca **giden postayı internete taşıyan hat** (MTA/ESP) için *isteğe bağlı* bir seçenektir; aynı işi **kendi VPS SMTP** (Postfix vb.) veya ileride **tam kendi mail sunucunuz** (Faz C) da yapabilir. Gmail relay üretim için geçici; kalıcı hedef kendi domain (`mail.lerta.tr`).
+
+### Strateji: Hedef A → B → C
+
+| Hedef | Açıklama | Durum |
+|-------|----------|--------|
+| **A** | Sadece **platform bildirimleri** (`notifications@mail.lerta.tr`, ihale/kayıt vb.) | Devam ediyor |
+| **B** | Müşteri **gönderen kimliği** (`@musteri.com` veya `@kullanici.lerta.tr`) — hâlâ bildirim, tam webmail değil | Planlandı |
+| **C** | **Tam posta kutusu** (gelen+giden, panel webmail, isteğe bağlı IMAP) | Planlandı |
+
+Detaylı yol haritası: [docs/EMAIL_PLATFORM_STRATEGY_ABC.md](docs/EMAIL_PLATFORM_STRATEGY_ABC.md)  
+Faz A DNS (isimtescil `lerta.tr`): [docs/EMAIL_PHASE_A_DNS_ISIMTESCIL.md](docs/EMAIL_PHASE_A_DNS_ISIMTESCIL.md)
+
+### Şu ana kadar yapılanlar
+
+**Admin ve ürün**
+
+- `/admin/bildirimler` — **Operasyon**, **Analitik**, **Politika & ESP**, **Platform gönderim** (Faz A checklist + DNS tablosu).
+- Outbox kuyruğu, retry, test gönderim, gönderim günlüğü, mesaj önizleme.
+- F1 analitik: özet KPI, günlük seri, olay kırılımı, CSV export.
+- F2 engagement: açılma/tıklama pixel, bounce sınıflandırma, engagement event’leri.
+- F3 politika: olay kataloğu (ihale, ilan, mesaj + auth), kullanıcı/firma tercihleri, suppression CRUD.
+- F4 ESP hibrit: `EMAIL_DELIVERY_PROVIDER=smtp|postmark`, Postmark gönderim, Postmark/SES webhook uçları.
+- Gmail API: admin gelen kutusu listesi + OAuth (tam Gmail UI gömülmez); operasyon okuma için.
+- Profil sayfası bildirim tercihleri API ile senkron.
+
+**API (özet)**
+
+- `platform-admin/notifications/*` — outbox, health, analytics, suppressions, catalog, `platform-sending` (DNS checklist).
+- `email/track/open|click`, `email/webhooks/postmark|ses`, `me/notification-preferences`.
+
+**Deploy / ops**
+
+- VPS deploy scriptleri: git senkron, web build doğrulama (`/admin/bildirimler` HTTP 200).
+- Üretim web: `cursor/modular-freight-platform-18ba` dalı, PM2 `nakliyeborsasi-web` :3011.
+
+**Dokümantasyon**
+
+- [docs/MAIL_ADMIN_BENCHMARK_REPORT.md](docs/MAIL_ADMIN_BENCHMARK_REPORT.md) — rakip analizi  
+- [docs/EMAIL_F3_F4_OPERATIONS.md](docs/EMAIL_F3_F4_OPERATIONS.md) — env ve webhook  
+- [docs/GMAIL_INBOX_IN_ADMIN.md](docs/GMAIL_INBOX_IN_ADMIN.md) — Gmail API panel
+
+### Yapılacaklar (sıra)
+
+**Faz A — bitirmek (sizin + VPS)**
+
+1. `lerta.tr` → isimtescil **Host Name DNS**: `mail.lerta.tr` SPF, DKIM, DMARC (rehberdeki tablo).
+2. Gönderim hattı seçimi (biri):
+   - **Kendi sunucu:** VPS’te Postfix (veya mevcut SMTP) + `SMTP_PROFILE=custom`, `SMTP_FROM=...@mail.lerta.tr`, `EMAIL_DELIVERY_PROVIDER=smtp`; veya
+   - **Postmark (opsiyonel):** token + webhook + aynı DNS kayıtları.
+3. VPS `.env`: `MAIL_PLATFORM_DOMAIN`, `MAIL_PLATFORM_FROM_EMAIL`, Gmail relay’i üretim gönderimden kaldırma.
+4. Admin → **Platform gönderim** checklist’inin yeşile dönmesi + Operasyon’dan test maili.
+
+**Faz B**
+
+- `MailDomain` / `MailSenderIdentity` entity’leri, org domain doğrulama UI, outbox’ta org From.
+- Pilot müşteri `@musteri.com` transactional gönderim.
+
+**Faz C**
+
+- Inbound MX + MIME depolama + panel webmail; isteğe bağlı IMAP/Mailcow hücresi.
+- Bildirim outbox ile mailbox verisinin ayrımı.
+
+### Ortam değişkenleri (e-posta)
+
+`.env.example` içinde Faz A alanları (`MAIL_PLATFORM_*`, `POSTMARK_*`, `EMAIL_DELIVERY_PROVIDER`).  
+Üretim örnek domain: `mail.lerta.tr`, From: `notifications@mail.lerta.tr`.
+
 ## Kurulum
 
 ```bash
@@ -59,4 +130,4 @@ Demo seed hesabı: `docs/PHASES.md`
 
 - Dosya başına tek sınıf, satır içi yorum yok, ortak tipler `core/`
 
-Detay: `docs/MVP_SCOPE.md`, `docs/ARCHITECTURE.md`, `docs/PHASES.md`
+Detay: `docs/MVP_SCOPE.md`, `docs/ARCHITECTURE.md`, `docs/PHASES.md`, `docs/EMAIL_PLATFORM_STRATEGY_ABC.md`
