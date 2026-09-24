@@ -1,15 +1,14 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { promises as dns } from "node:dns";
-import { EmailDeliveryService } from "./EmailDeliveryService";
+import { EmailDeliveryHealthService } from "./EmailDeliveryHealthService";
 import { NotificationConfigurationService } from "./NotificationConfigurationService";
-import { PostmarkEmailSender } from "./PostmarkEmailSender";
 
 export type PlatformDnsRecordInstruction = {
   type: "TXT" | "CNAME" | "MX";
   host: string;
   value: string;
-  purpose: "spf" | "dkim" | "dmarc" | "return_path" | "mx";
+  purpose: "spf" | "dkim" | "dmarc" | "mx";
   notes?: string;
 };
 
@@ -26,9 +25,9 @@ export type PlatformSendingSnapshot = {
   domain: string;
   fromEmail: string;
   configuredFrom: string;
-  deliveryProvider: "smtp" | "postmark";
-  postmarkConfigured: boolean;
-  postmarkWebhookConfigured: boolean;
+  deliveryProvider: "smtp";
+  smtpHost: string;
+  smtpProfile: string;
   registrarHint: string;
   dnsRecords: PlatformDnsRecordInstruction[];
   checklist: PlatformSendingCheckItem[];
@@ -42,8 +41,7 @@ export class PlatformMailSendingService {
   public constructor(
     private readonly configService: ConfigService,
     private readonly notificationConfigurationService: NotificationConfigurationService,
-    private readonly emailDeliveryService: EmailDeliveryService,
-    private readonly postmarkEmailSender: PostmarkEmailSender,
+    private readonly emailDeliveryHealthService: EmailDeliveryHealthService,
   ) {}
 
   public resolvePlatformDomain(): string {
@@ -83,53 +81,59 @@ export class PlatformMailSendingService {
     return `_dmarc.${organizational}`;
   }
 
-  public resolveSpfInclude(): string {
+  public resolveDkimSelector(): string {
     return (
-      this.configService.get<string>("MAIL_PLATFORM_SPF_INCLUDE")?.trim() ||
-      "spf.mtasv.net"
+      this.configService.get<string>("MAIL_PLATFORM_DKIM_SELECTOR")?.trim() ||
+      "default"
     );
+  }
+
+  public resolveDkimHost(): string {
+    const override = this.configService.get<string>("MAIL_PLATFORM_DKIM_HOST")?.trim();
+    if (override) {
+      return override;
+    }
+    const domain = this.resolvePlatformDomain();
+    return `${this.resolveDkimSelector()}._domainkey.${domain}`;
+  }
+
+  public buildSpfValue(): string {
+    const explicit = this.configService.get<string>("MAIL_PLATFORM_SPF_TXT")?.trim();
+    if (explicit) {
+      return explicit;
+    }
+    const ipv4 = this.configService.get<string>("MAIL_PLATFORM_SPF_IPV4")?.trim();
+    if (ipv4) {
+      return `v=spf1 ip4:${ipv4} -all`;
+    }
+    const domain = this.resolvePlatformDomain();
+    return `v=spf1 a mx -all`;
   }
 
   public buildDnsInstructions(): PlatformDnsRecordInstruction[] {
     const domain = this.resolvePlatformDomain();
-    const spfInclude = this.resolveSpfInclude();
-    const dkimHost =
-      this.configService.get<string>("POSTMARK_DKIM_HOST")?.trim() ||
-      `pm._domainkey.${domain}`;
-    const dkimTarget =
-      this.configService.get<string>("POSTMARK_DKIM_TARGET")?.trim() ||
-      "pm.mtasv.net";
-    const returnPath =
-      this.configService.get<string>("POSTMARK_RETURN_PATH")?.trim() ||
-      `pm-bounces.${domain}`;
-    const returnPathTarget =
-      this.configService
-        .get<string>("POSTMARK_RETURN_PATH_TARGET")
-        ?.trim() || "pm.mtasv.net";
+    const spfValue = this.buildSpfValue();
+    const dkimHost = this.resolveDkimHost();
+    const dkimTxt =
+      this.configService.get<string>("MAIL_PLATFORM_DKIM_TXT")?.trim() ||
+      "v=DKIM1; k=rsa; p=… (VPS OpenDKIM / Postfix ile üretilen public key)";
 
     const records: PlatformDnsRecordInstruction[] = [
       {
         type: "TXT",
         host: domain,
-        value: `v=spf1 include:${spfInclude} ~all`,
+        value: spfValue,
         purpose: "spf",
         notes:
-          "Postmark gönderimi için. isimtescil: Alan adı → DNS → TXT kaydı.",
+          "Gönderim yalnızca sizin VPS MTA (Postfix). MAIL_PLATFORM_SPF_IPV4 veya MAIL_PLATFORM_SPF_TXT ile özelleştirin.",
       },
       {
-        type: "CNAME",
+        type: "TXT",
         host: dkimHost,
-        value: dkimTarget,
+        value: dkimTxt,
         purpose: "dkim",
         notes:
-          "Postmark panelindeki DKIM değerleriyle birebir eşleşmeli (POSTMARK_DKIM_* env).",
-      },
-      {
-        type: "CNAME",
-        host: returnPath,
-        value: returnPathTarget,
-        purpose: "return_path",
-        notes: "Bounce / Return-Path (Postmark önerilen kayıt).",
+          "Kendi sunucunuzda üretilen DKIM public key (TXT). MAIL_PLATFORM_DKIM_TXT ile checklist doğrulanır.",
       },
       {
         type: "TXT",
@@ -148,7 +152,7 @@ export class PlatformMailSendingService {
         host: domain,
         value: mxHost,
         purpose: "mx",
-        notes: "Faz C inbound için; Faz A gönderiminde zorunlu değil.",
+        notes: "Faz C inbound için; Faz A giden bildirimde zorunlu değil.",
       });
     }
 
@@ -158,24 +162,15 @@ export class PlatformMailSendingService {
   public async buildSnapshot(): Promise<PlatformSendingSnapshot> {
     const domain = this.resolvePlatformDomain();
     const fromEmail = this.resolveFromEmail();
-    const smtpFrom = this.notificationConfigurationService.resolveSmtpConfig().from;
-    const postmarkFrom =
-      this.configService.get<string>("POSTMARK_FROM")?.trim() || "";
-    const configuredFrom = postmarkFrom || smtpFrom;
-    const deliveryProvider = this.emailDeliveryService.resolveMode();
-    const postmarkConfigured = this.postmarkEmailSender.isConfigured();
-    const postmarkWebhookConfigured = Boolean(
-      this.configService.get<string>("POSTMARK_WEBHOOK_TOKEN")?.trim(),
-    );
-
+    const smtp = this.notificationConfigurationService.resolveSmtpConfig();
+    const smtpProfile = this.notificationConfigurationService.resolveSmtpProfile();
     const dnsRecords = this.buildDnsInstructions();
     const checklist = await this.buildChecklist({
       domain,
       fromEmail,
-      configuredFrom,
-      deliveryProvider,
-      postmarkConfigured,
-      postmarkWebhookConfigured,
+      configuredFrom: smtp.from,
+      smtpProfile,
+      smtpHost: smtp.host,
       dnsRecords,
     });
 
@@ -183,11 +178,11 @@ export class PlatformMailSendingService {
       phase: "A",
       domain,
       fromEmail,
-      configuredFrom,
-      deliveryProvider,
-      postmarkConfigured,
-      postmarkWebhookConfigured,
-      registrarHint: "isimtescil.net — lerta.tr / lerta.com.tr DNS yönetimi",
+      configuredFrom: smtp.from,
+      deliveryProvider: "smtp",
+      smtpHost: smtp.host,
+      smtpProfile,
+      registrarHint: "isimtescil.net — lerta.tr DNS (Host Name kayıtları)",
       dnsRecords,
       checklist,
       checkedAt: new Date().toISOString(),
@@ -198,9 +193,8 @@ export class PlatformMailSendingService {
     domain: string;
     fromEmail: string;
     configuredFrom: string;
-    deliveryProvider: "smtp" | "postmark";
-    postmarkConfigured: boolean;
-    postmarkWebhookConfigured: boolean;
+    smtpProfile: string;
+    smtpHost: string;
     dnsRecords: PlatformDnsRecordInstruction[];
   }): Promise<PlatformSendingCheckItem[]> {
     const items: PlatformSendingCheckItem[] = [];
@@ -213,28 +207,23 @@ export class PlatformMailSendingService {
     items.push({
       id: "A1-spf",
       titleTr: "A1 — SPF (TXT)",
-      descriptionTr: `${params.domain} üzerinde gönderim yetkisi (Postmark include).`,
+      descriptionTr: `${params.domain} — yalnızca sizin MTA IP / sunucu.`,
       status: spfOk.ok ? "ok" : "pending",
       detail: spfOk.detail,
     });
 
     const dkimRecord = params.dnsRecords.find((r) => r.purpose === "dkim");
-    const dkimTarget =
-      this.configService.get<string>("POSTMARK_DKIM_TARGET")?.trim();
-    const dkimOk =
-      dkimRecord && dkimTarget
-        ? await this.cnameMatches(dkimRecord.host, dkimTarget)
-        : {
-            ok: false,
-            detail:
-              "POSTMARK_DKIM_TARGET tanımlı değil — Postmark domain ekranından kopyalayın.",
-          };
+    const dkimFragment =
+      this.configService.get<string>("MAIL_PLATFORM_DKIM_TXT")?.trim() || "v=DKIM1";
+    const dkimOk = dkimRecord
+      ? await this.txtContains(dkimRecord.host, "v=DKIM1", dkimFragment)
+      : { ok: false, detail: "DKIM talimatı yok" };
 
     items.push({
       id: "A1-dkim",
-      titleTr: "A1 — DKIM (CNAME)",
-      descriptionTr: "Postmark imza doğrulaması.",
-      status: dkimOk.ok ? "ok" : dkimTarget ? "pending" : "warning",
+      titleTr: "A1 — DKIM (TXT)",
+      descriptionTr: "Kendi Postfix/OpenDKIM imzanız.",
+      status: dkimOk.ok ? "ok" : "pending",
       detail: dkimOk.detail,
     });
 
@@ -258,49 +247,40 @@ export class PlatformMailSendingService {
     items.push({
       id: "A2-from",
       titleTr: "A2 — Gönderen adresi",
-      descriptionTr: `Üretim From: ${params.fromEmail} (Gmail relay yerine).`,
+      descriptionTr: `Üretim From: ${params.fromEmail}.`,
       status: fromAligned ? "ok" : "warning",
       detail: fromAligned
         ? `Yapılandırma: ${params.configuredFrom}`
-        : `Beklenen: ${params.fromEmail}. SMTP_FROM veya POSTMARK_FROM güncelleyin. Şu an: ${params.configuredFrom}`,
+        : `Beklenen: ${params.fromEmail}. SMTP_FROM güncelleyin. Şu an: ${params.configuredFrom}`,
     });
 
-    let espStatus: PlatformSendingCheckItem["status"] = "pending";
-    let espDetail = "";
-    if (params.deliveryProvider === "postmark") {
-      if (params.postmarkConfigured) {
-        espStatus = params.postmarkWebhookConfigured ? "ok" : "warning";
-        espDetail = params.postmarkWebhookConfigured
-          ? "Postmark API token ve webhook token tanımlı."
-          : "POSTMARK_SERVER_TOKEN var; POSTMARK_WEBHOOK_TOKEN ekleyin (bounce/şikâyet).";
-      } else {
-        espStatus = "error";
-        espDetail = "EMAIL_DELIVERY_PROVIDER=postmark ancak POSTMARK_SERVER_TOKEN eksik.";
-      }
-    } else {
-      espStatus = "warning";
-      espDetail =
-        "EMAIL_DELIVERY_PROVIDER=smtp — üretim için postmark + token önerilir.";
-    }
-
+    const productionSmtp =
+      params.smtpProfile === "custom" &&
+      params.smtpHost !== "127.0.0.1" &&
+      params.smtpHost !== "localhost";
     items.push({
-      id: "A3-esp",
-      titleTr: "A3 — Production ESP",
-      descriptionTr: "Postmark gönderim + webhook (admin Politika sekmesinde URL).",
-      status: espStatus,
-      detail: espDetail,
+      id: "A3-mta",
+      titleTr: "A3 — Kendi SMTP (MTA)",
+      descriptionTr:
+        "Üçüncü taraf ESP yok; gönderim VPS Postfix veya sizin SMTP uç noktanız.",
+      status: productionSmtp ? "ok" : params.smtpProfile === "mailpit" ? "warning" : "pending",
+      detail: productionSmtp
+        ? `SMTP_PROFILE=custom, host=${params.smtpHost}`
+        : params.smtpProfile === "mailpit"
+          ? "Geliştirme Mailpit aktif — üretimde SMTP_PROFILE=custom ve gerçek host kullanın."
+          : "SMTP_HOST ve SMTP_PROFILE=custom tanımlayın.",
     });
 
-    const gmailMode =
-      this.notificationConfigurationService.resolveDeliveryMode() === "gmail";
+    const health = this.emailDeliveryHealthService.getSnapshot();
     items.push({
-      id: "A-gmail-off",
-      titleTr: "A — Gmail relay kapatma",
-      descriptionTr: "SMTP_PROFILE=gmail üretim gönderiminde kullanılmamalı.",
-      status: gmailMode ? "error" : "ok",
-      detail: gmailMode
-        ? "Hâlâ Gmail SMTP profili aktif. VPS .env: SMTP_PROFILE=custom veya Postmark."
-        : "Gmail gönderim profili kapalı (operasyon okuma için Gmail API ayrı kalabilir).",
+      id: "A4-verify",
+      titleTr: "A4 — SMTP bağlantı testi",
+      descriptionTr: "Admin Operasyon sekmesinden «SMTP doğrula» çalıştırın.",
+      status: health.lastVerifyOk === true ? "ok" : health.lastVerifyOk === false ? "error" : "pending",
+      detail:
+        health.lastVerifyOk === true
+          ? `Son doğrulama: ${health.lastVerifiedAt ?? "—"}`
+          : health.lastVerifyError ?? "Henüz doğrulanmadı.",
     });
 
     return items;
@@ -326,7 +306,7 @@ export class PlatformMailSendingService {
       ) {
         return {
           ok: false,
-          detail: `${host} TXT var ancak beklenen parça eksik: ${expectedFragment}`,
+          detail: `${host} TXT var ancak beklenen parça eksik (env MAIL_PLATFORM_DKIM_TXT / SPF).`,
         };
       }
       return { ok: true, detail: flat.slice(0, 200) };
@@ -334,29 +314,6 @@ export class PlatformMailSendingService {
       const message = error instanceof Error ? error.message : String(error);
       this.logger.debug(`TXT lookup ${host}: ${message}`);
       return { ok: false, detail: `DNS sorgusu başarısız: ${message}` };
-    }
-  }
-
-  private async cnameMatches(
-    host: string,
-    expectedTarget: string,
-  ): Promise<{ ok: boolean; detail: string }> {
-    try {
-      const targets = await dns.resolveCname(host);
-      const normalized = expectedTarget.replace(/\.$/, "").toLowerCase();
-      const match = targets.some(
-        (t) => t.replace(/\.$/, "").toLowerCase() === normalized,
-      );
-      if (match) {
-        return { ok: true, detail: `${host} → ${targets[0]}` };
-      }
-      return {
-        ok: false,
-        detail: `${host} CNAME: ${targets.join(", ")} (beklenen: ${expectedTarget})`,
-      };
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      return { ok: false, detail: `CNAME sorgusu: ${message}` };
     }
   }
 }

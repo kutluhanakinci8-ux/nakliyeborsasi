@@ -12,7 +12,7 @@ export type EmailDeliveryHealthSnapshot = {
   smtpFrom: string;
   webPublicBaseUrl: string;
   defaultAdminRecipients: string[];
-  deliveryMode: "mailpit" | "gmail" | "custom";
+  deliveryMode: "mailpit" | "custom";
   lastVerifyOk: boolean | null;
   lastVerifyError: string | null;
   lastVerifiedAt: string | null;

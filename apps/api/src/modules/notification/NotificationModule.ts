@@ -15,7 +15,6 @@ import { PlatformNotificationSettingsService } from "./PlatformNotificationSetti
 import { AuthNotificationService } from "./AuthNotificationService";
 import { EmailSecurityTokenService } from "./EmailSecurityTokenService";
 import { PlatformNotificationAdminController } from "./PlatformNotificationAdminController";
-import { PlatformGmailAdminController } from "./PlatformGmailAdminController";
 import { PlatformGmailCredentialEntity } from "../../infrastructure/database/entities/PlatformGmailCredentialEntity";
 import { PlatformGmailOAuthStateEntity } from "../../infrastructure/database/entities/PlatformGmailOAuthStateEntity";
 import { GmailInboxService } from "./GmailInboxService";
@@ -37,10 +36,7 @@ import { EmailSuppressionService } from "./EmailSuppressionService";
 import { UserNotificationPreferenceService } from "./UserNotificationPreferenceService";
 import { CompanyNotificationPreferenceService } from "./CompanyNotificationPreferenceService";
 import { OperationalNotificationService } from "./OperationalNotificationService";
-import { PostmarkEmailSender } from "./PostmarkEmailSender";
 import { EmailDeliveryService } from "./EmailDeliveryService";
-import { EmailEspWebhookService } from "./EmailEspWebhookService";
-import { EmailEspWebhookController } from "./EmailEspWebhookController";
 import { PlatformMailSendingService } from "./PlatformMailSendingService";
 import { UserNotificationPreferencesController } from "./UserNotificationPreferencesController";
 import { AuctionSessionEntity } from "../../infrastructure/database/entities/AuctionSessionEntity";
@@ -70,16 +66,13 @@ import { AuctionBidEntity } from "../../infrastructure/database/entities/Auction
   ],
   controllers: [
     PlatformNotificationAdminController,
-    PlatformGmailAdminController,
     EmailTrackingController,
-    EmailEspWebhookController,
     UserNotificationPreferencesController,
   ],
   providers: [
     NotificationConfigurationService,
     EmailTemplateService,
     SmtpEmailSender,
-    PostmarkEmailSender,
     EmailDeliveryService,
     EmailOutboxService,
     PlatformNotificationSettingsService,
@@ -97,7 +90,6 @@ import { AuctionBidEntity } from "../../infrastructure/database/entities/Auction
     UserNotificationPreferenceService,
     CompanyNotificationPreferenceService,
     OperationalNotificationService,
-    EmailEspWebhookService,
     PlatformMailSendingService,
   ],
   exports: [

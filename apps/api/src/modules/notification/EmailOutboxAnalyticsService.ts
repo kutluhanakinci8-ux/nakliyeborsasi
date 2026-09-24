@@ -95,7 +95,14 @@ export class EmailOutboxAnalyticsService {
       since,
     );
 
-    const postmarkToken = this.configService.get<string>("POSTMARK_SERVER_TOKEN");
+    const smtpProfile =
+      this.configService.get<string>("SMTP_PROFILE")?.trim().toLowerCase() ??
+      "mailpit";
+    const smtpHost = this.configService.get<string>("SMTP_HOST") ?? "";
+    const ownMtaProduction =
+      smtpProfile === "custom" &&
+      smtpHost !== "127.0.0.1" &&
+      smtpHost !== "localhost";
     const maturityScorePercent = this.computeMaturityScore({
       hasDailySeries: true,
       hasEventBreakdown: true,
@@ -106,8 +113,7 @@ export class EmailOutboxAnalyticsService {
       hasBounceClassification: true,
       hasSuppression: true,
       hasOrgPreferences: true,
-      hasEspWebhook: true,
-      hasPostmarkHybrid: Boolean(postmarkToken?.trim()),
+      hasOwnMtaProduction: ownMtaProduction,
     });
 
     return {
@@ -126,7 +132,7 @@ export class EmailOutboxAnalyticsService {
       },
       maturityScorePercent,
       maturityTargetPercent: 100,
-      maturityPhase: "F3/F4 — Politika, suppression, ESP webhook",
+      maturityPhase: "F3/F4 — Politika, suppression, kendi MTA",
       engagement,
     };
   }
@@ -289,8 +295,7 @@ export class EmailOutboxAnalyticsService {
     hasBounceClassification: boolean;
     hasSuppression: boolean;
     hasOrgPreferences: boolean;
-    hasEspWebhook: boolean;
-    hasPostmarkHybrid: boolean;
+    hasOwnMtaProduction: boolean;
   }): number {
     const baseline = 42;
     const f1Ready =
@@ -315,11 +320,8 @@ export class EmailOutboxAnalyticsService {
     if (flags.hasOrgPreferences) {
       score += 14;
     }
-    if (flags.hasEspWebhook) {
-      score += 6;
-    }
-    if (flags.hasPostmarkHybrid) {
-      score += 4;
+    if (flags.hasOwnMtaProduction) {
+      score += 10;
     }
     return Math.min(100, score);
   }

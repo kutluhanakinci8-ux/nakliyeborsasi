@@ -82,14 +82,16 @@ export class PlatformNotificationAdminController {
 
   @Get("delivery")
   public deliveryInfo() {
+    const smtp = this.notificationConfigurationService.resolveSmtpConfig();
     return {
       mode: this.emailDeliveryService.resolveMode(),
-      postmarkConfigured:
-        this.emailDeliveryService.resolveMode() === "postmark",
-      webhookUrls: {
-        postmark: `${this.notificationConfigurationService.resolveApiPublicBaseUrl()}/email/webhooks/postmark`,
-        ses: `${this.notificationConfigurationService.resolveApiPublicBaseUrl()}/email/webhooks/ses`,
-      },
+      smtpProfile: this.notificationConfigurationService.resolveSmtpProfile(),
+      smtpHost: smtp.host,
+      smtpPort: smtp.port,
+      policyTr:
+        "Gönderim yalnızca kendi SMTP/MTA (Postfix). Üçüncü taraf ESP (Postmark, SES, Gmail relay) kullanılmaz.",
+      bounceHandlingTr:
+        "Bounce ve suppression: SMTP hata sınıflandırması, admin listesi ve (Faz C) kendi inbound webhook.",
     };
   }
 
@@ -249,7 +251,7 @@ export class PlatformNotificationAdminController {
     const eventCode = body.eventCode as NotificationEventCode;
     const samplePayload = {
       displayName: "Lerta Logistics (test)",
-      emailAddress: "lertalogistics@gmail.com",
+      emailAddress: "admin@lerta.tr",
       companyLegalName: "Lerta Logistics",
       companyCountryCode: "TR",
       participantType: "LOAD_CARRIER",

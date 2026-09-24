@@ -14,7 +14,11 @@ export function AdminMailPolicyPanel() {
   const [suppressions, setSuppressions] = useState<EmailSuppressionRow[]>([]);
   const [delivery, setDelivery] = useState<{
     mode: string;
-    webhookUrls: { postmark: string; ses: string };
+    smtpProfile: string;
+    smtpHost: string;
+    smtpPort: number;
+    policyTr: string;
+    bounceHandlingTr: string;
   } | null>(null);
   const [newEmail, setNewEmail] = useState("");
   const [loading, setLoading] = useState(true);
@@ -56,17 +60,6 @@ export function AdminMailPolicyPanel() {
       return;
     }
     await PlatformAdminApiClient.removeEmailSuppression(accessToken, email);
-    await refresh();
-  }
-
-  async function syncGmailBounces(): Promise<void> {
-    if (!accessToken) {
-      return;
-    }
-    const result = await PlatformAdminApiClient.syncGmailBounces(accessToken);
-    window.alert(
-      `Gmail tarandı: ${result.scanned} mesaj, ${result.suppressionsAdded} suppression eklendi.`,
-    );
     await refresh();
   }
 
@@ -131,13 +124,6 @@ export function AdminMailPolicyPanel() {
           >
             Ekle
           </button>
-          <button
-            type="button"
-            className="pa-btn pa-btn--ghost"
-            onClick={() => void syncGmailBounces()}
-          >
-            Gmail bounce tara
-          </button>
         </div>
         <div className="admin-data-table-wrap" style={{ marginTop: 12 }}>
           <table className="pa-outbox-table">
@@ -174,22 +160,27 @@ export function AdminMailPolicyPanel() {
 
       {delivery ? (
         <section className="pa-panel">
-          <h2 className="pa-panel-title">ESP / webhook (F4)</h2>
-          <p className="pa-panel-lead">
-            Gönderim modu: <strong>{delivery.mode}</strong>. Postmark için{" "}
-            <code>EMAIL_DELIVERY_PROVIDER=postmark</code> ve{" "}
-            <code>POSTMARK_SERVER_TOKEN</code> tanımlayın.
-          </p>
+          <h2 className="pa-panel-title">Gönderim hattı (kendi MTA)</h2>
+          <p className="pa-panel-lead">{delivery.policyTr}</p>
           <ul className="pa-kv-list">
             <li>
-              <span>Postmark webhook</span>
-              <span style={{ fontSize: "0.75rem" }}>{delivery.webhookUrls.postmark}</span>
+              <span>Mod</span>
+              <span>{delivery.mode}</span>
             </li>
             <li>
-              <span>Amazon SES webhook</span>
-              <span style={{ fontSize: "0.75rem" }}>{delivery.webhookUrls.ses}</span>
+              <span>SMTP profil</span>
+              <span>{delivery.smtpProfile}</span>
+            </li>
+            <li>
+              <span>SMTP uç</span>
+              <span>
+                {delivery.smtpHost}:{delivery.smtpPort}
+              </span>
             </li>
           </ul>
+          <p className="module-hint" style={{ marginTop: "0.75rem" }}>
+            {delivery.bounceHandlingTr}
+          </p>
         </section>
       ) : null}
     </div>

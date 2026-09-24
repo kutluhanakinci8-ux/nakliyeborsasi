@@ -1,37 +1,23 @@
-# Lerta Logistics — platform markası
+# Platform markası (Lerta Logistics)
 
-## Görünen ad
+## E-posta adresleri
 
-- **Ürün adı:** Lerta Logistics (`PLATFORM_PRODUCT_NAME`)
-- **Büyük harf (e-posta üst bilgi):** LERTA LOGISTICS
-- **Monogram:** LL
+- **admin@lerta.tr** — platform operatörü (`/admin` girişi, seed owner).
+- **notifications@mail.lerta.tr** — transactional bildirim From, genel iletişim (`PLATFORM_PRIMARY_CONTACT_EMAIL`).
 
-Kaynak: `core/src/constants/PlatformBranding.ts` — API ve web aynı sabitleri kullanır.
+`PLATFORM_ADMIN_EMAILS` virgülle ayrılmış admin bildirim alıcıları.
 
-## Birincil e-posta
+## Admin konsol erişimi
 
-- **lertalogistics@gmail.com** — operasyon, admin bildirimleri (`PLATFORM_ADMIN_EMAILS`), iletişim formları, SMTP varsayılan gönderen.
+`/admin` yalnızca `isPlatformOperatorEmail` ile eşleşen adreslerle açılır (`admin@lerta.tr`, `notifications@mail.lerta.tr`).
 
-Platform operatör konsolu (`/admin`) **yalnızca** `lertalogistics@gmail.com` ile açılır (`isPlatformOperatorEmail`).
-
-## Platform sahibi (bootstrap)
-
-API açılışında `ensurePlatformOwnerAccount` hesabı oluşturur:
-
-- E-posta: `lertalogistics@gmail.com`
-- Firma: Lerta Logistics (yük veren / TR)
-- İlk şifre: `core` içindeki `PLATFORM_OWNER_BOOTSTRAP_PASSWORD` (varsayılan `822159Ka`); girişten sonra değiştirin.
-- Henüz giriş yapılmamışsa seed bootstrap şifresini yeniden uygular; `PLATFORM_OWNER_FORCE_BOOTSTRAP_PASSWORD=true` ile zorlanabilir.
-
-## Ortam değişkenleri
+## Üretim `.env` örneği
 
 ```env
-PLATFORM_ADMIN_EMAILS=lertalogistics@gmail.com
-SMTP_FROM=Lerta Logistics <lertalogistics@gmail.com>
+PLATFORM_ADMIN_EMAILS=admin@lerta.tr,notifications@mail.lerta.tr
+SMTP_FROM=Lerta Logistics <notifications@mail.lerta.tr>
+MAIL_PLATFORM_DOMAIN=mail.lerta.tr
+MAIL_PLATFORM_FROM_EMAIL=notifications@mail.lerta.tr
 ```
 
-VPS’te `.env` güncellenmeli; kod varsayılanları artık Gmail’i işaret eder.
-
-## Monorepo paket adı
-
-npm workspace adı `@nakliyeborsasi/*` geçmiş uyumluluk için değiştirilmedi; kullanıcıya dönük metinlerde **Lerta Logistics** kullanılır.
+Gönderim: **kendi VPS MTA** — harici ESP veya Gmail relay kullanılmaz.

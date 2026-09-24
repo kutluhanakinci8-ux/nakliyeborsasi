@@ -10,13 +10,14 @@ import { useWebSession } from "../../context/WebSessionProvider";
 const ENV_SNIPPET = [
   "MAIL_PLATFORM_DOMAIN=mail.lerta.tr",
   "MAIL_PLATFORM_FROM_EMAIL=notifications@mail.lerta.tr",
-  "EMAIL_DELIVERY_PROVIDER=postmark",
-  "POSTMARK_SERVER_TOKEN=...",
-  "POSTMARK_FROM=Lerta Logistics notifications@mail.lerta.tr",
-  "POSTMARK_WEBHOOK_TOKEN=...",
-  "POSTMARK_DKIM_HOST=pm._domainkey.mail.lerta.tr",
-  "POSTMARK_DKIM_TARGET=(Postmark panelinden)",
+  "MAIL_PLATFORM_SPF_IPV4=<VPS genel IPv4>",
+  "MAIL_PLATFORM_DKIM_SELECTOR=default",
+  "MAIL_PLATFORM_DKIM_TXT=v=DKIM1; k=rsa; p=<OpenDKIM public key>",
   "SMTP_PROFILE=custom",
+  "SMTP_HOST=127.0.0.1",
+  "SMTP_PORT=25",
+  "SMTP_FROM=Lerta Logistics <notifications@mail.lerta.tr>",
+  "PLATFORM_ADMIN_EMAILS=admin@lerta.tr,notifications@mail.lerta.tr",
 ].join("\n");
 
 function statusLabel(status: string): string {
@@ -102,7 +103,7 @@ export function AdminPlatformSendingPanel() {
           </section>
 
           <section className="pa-panel">
-            <h2 className="pa-panel-title">A1-A3 kontrol listesi</h2>
+            <h2 className="pa-panel-title">A1–A4 kontrol listesi</h2>
             <ul className="pa-checklist">
               {snapshot.checklist.map((item) => (
                 <li key={item.id} className="pa-checklist-item">
@@ -126,8 +127,8 @@ export function AdminPlatformSendingPanel() {
           <section className="pa-panel">
             <h2 className="pa-panel-title">DNS kayıtları (isimtescil)</h2>
             <p className="pa-panel-lead">
-              Postmark domain doğrulamasından sonra DKIM/CNAME değerlerini VPS env ile
-              eşleştirin. Varsayılan alan: <code>mail.lerta.tr</code>
+              Kayıtlar <strong>kendi VPS Postfix/OpenDKIM</strong> çıktısıyla
+              eşleşmeli. Üçüncü taraf ESP (Postmark, SES, Gmail relay) kullanılmaz.
             </p>
             <div className="pa-table-wrap">
               <table className="pa-table">
@@ -161,9 +162,8 @@ export function AdminPlatformSendingPanel() {
             <h2 className="pa-panel-title">VPS ortam değişkenleri (özet)</h2>
             <pre className="pa-code-block">{ENV_SNIPPET}</pre>
             <p className="module-hint">
-              Yapılandırılmış From: {snapshot.configuredFrom} · Provider:{" "}
-              {snapshot.deliveryProvider}
-              {snapshot.postmarkConfigured ? " (token var)" : " (token yok)"}
+              Yapılandırılmış From: {snapshot.configuredFrom} · SMTP:{" "}
+              {snapshot.smtpProfile} @ {snapshot.smtpHost}
             </p>
           </section>
         </>

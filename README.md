@@ -17,8 +17,7 @@ Modüler yük borsası platformu — TR ve UA–EU koridoru, çoklu dil (`tr`, `
 
 ## E-posta ve bildirim platformu (Lerta)
 
-**Önemli:** Platformun **yazılımı bizim** — kuyruk, şablonlar, olay kataloğu, admin paneli, analitik, suppression, kullanıcı/firma tercihleri, webhook işleme kodu repoda.  
-**Postmark zorunlu değil.** Postmark/SES yalnızca **giden postayı internete taşıyan hat** (MTA/ESP) için *isteğe bağlı* bir seçenektir; aynı işi **kendi VPS SMTP** (Postfix vb.) veya ileride **tam kendi mail sunucunuz** (Faz C) da yapabilir. Gmail relay üretim için geçici; kalıcı hedef kendi domain (`mail.lerta.tr`).
+**Önemli:** Platformun **yazılımı ve taşıma hattı bizim** — kuyruk, şablonlar, olay kataloğu, admin paneli, analitik, suppression, kullanıcı/firma tercihleri bu repoda; **giden posta yalnızca kendi VPS MTA** (Postfix + OpenDKIM). Postmark, SES, SendGrid, Gmail relay **kullanılmaz**. Kalıcı domain: `mail.lerta.tr`, From: `notifications@mail.lerta.tr`.
 
 ### Strateji: Hedef A → B → C
 
@@ -40,36 +39,32 @@ Faz A DNS (isimtescil `lerta.tr`): [docs/EMAIL_PHASE_A_DNS_ISIMTESCIL.md](docs/E
 - F1 analitik: özet KPI, günlük seri, olay kırılımı, CSV export.
 - F2 engagement: açılma/tıklama pixel, bounce sınıflandırma, engagement event’leri.
 - F3 politika: olay kataloğu (ihale, ilan, mesaj + auth), kullanıcı/firma tercihleri, suppression CRUD.
-- F4 ESP hibrit: `EMAIL_DELIVERY_PROVIDER=smtp|postmark`, Postmark gönderim, Postmark/SES webhook uçları.
-- Gmail API: admin gelen kutusu listesi + OAuth (tam Gmail UI gömülmez); operasyon okuma için.
+- F4 gönderim: yalnızca **SMTP** (`SmtpEmailSender` → kendi Postfix).
+- Gelen kutu: Faz C’de kendi MX + panel webmail (harici Gmail/ESP entegrasyonu yok).
 - Profil sayfası bildirim tercihleri API ile senkron.
 
 **API (özet)**
 
 - `platform-admin/notifications/*` — outbox, health, analytics, suppressions, catalog, `platform-sending` (DNS checklist).
-- `email/track/open|click`, `email/webhooks/postmark|ses`, `me/notification-preferences`.
+- `email/track/open|click`, `me/notification-preferences`.
 
 **Deploy / ops**
 
 - VPS deploy scriptleri: git senkron, web build doğrulama (`/admin/bildirimler` HTTP 200).
-- Üretim web: `cursor/modular-freight-platform-18ba` dalı, PM2 `nakliyeborsasi-web` :3011.
+- Üretim web: `cursor/own-mail-platform-519e` dalı, PM2 `nakliyeborsasi-web` :3011.
 
 **Dokümantasyon**
 
 - [docs/MAIL_ADMIN_BENCHMARK_REPORT.md](docs/MAIL_ADMIN_BENCHMARK_REPORT.md) — rakip analizi  
 - [docs/EMAIL_F3_F4_OPERATIONS.md](docs/EMAIL_F3_F4_OPERATIONS.md) — env ve webhook  
-- [docs/GMAIL_INBOX_IN_ADMIN.md](docs/GMAIL_INBOX_IN_ADMIN.md) — Gmail API panel
-
 ### Yapılacaklar (sıra)
 
 **Faz A — bitirmek (sizin + VPS)**
 
-1. `lerta.tr` → isimtescil **Host Name DNS**: `mail.lerta.tr` SPF, DKIM, DMARC (rehberdeki tablo).
-2. Gönderim hattı seçimi (biri):
-   - **Kendi sunucu:** VPS’te Postfix (veya mevcut SMTP) + `SMTP_PROFILE=custom`, `SMTP_FROM=...@mail.lerta.tr`, `EMAIL_DELIVERY_PROVIDER=smtp`; veya
-   - **Postmark (opsiyonel):** token + webhook + aynı DNS kayıtları.
-3. VPS `.env`: `MAIL_PLATFORM_DOMAIN`, `MAIL_PLATFORM_FROM_EMAIL`, Gmail relay’i üretim gönderimden kaldırma.
-4. Admin → **Platform gönderim** checklist’inin yeşile dönmesi + Operasyon’dan test maili.
+1. `lerta.tr` → isimtescil DNS: SPF, DKIM, DMARC ([rehber](docs/EMAIL_PHASE_A_DNS_ISIMTESCIL.md)).
+2. VPS Postfix + OpenDKIM; `SMTP_PROFILE=custom`, `SMTP_FROM=notifications@mail.lerta.tr`.
+3. VPS `.env`: `MAIL_PLATFORM_*`, `MAIL_PLATFORM_SPF_IPV4`, `MAIL_PLATFORM_DKIM_TXT`.
+4. Admin → **Platform gönderim** checklist + Operasyon’dan SMTP doğrula ve test maili.
 
 **Faz B**
 
@@ -83,15 +78,15 @@ Faz A DNS (isimtescil `lerta.tr`): [docs/EMAIL_PHASE_A_DNS_ISIMTESCIL.md](docs/E
 
 ### Ortam değişkenleri (e-posta)
 
-`.env.example` içinde Faz A alanları (`MAIL_PLATFORM_*`, `POSTMARK_*`, `EMAIL_DELIVERY_PROVIDER`).  
-Üretim örnek domain: `mail.lerta.tr`, From: `notifications@mail.lerta.tr`.
+`.env.example` içinde Faz A alanları (`MAIL_PLATFORM_*`, `SMTP_*`).  
+Operatör: `admin@lerta.tr` · Bildirim From: `notifications@mail.lerta.tr`.
 
 ## Kurulum
 
 ```bash
 git clone https://github.com/kutluhanakinci8-ux/nakliyeborsasi.git
 cd nakliyeborsasi
-git checkout cursor/modular-freight-platform-18ba
+git checkout cursor/own-mail-platform-519e
 
 docker compose up -d
 npm install

@@ -48,9 +48,9 @@ export type PlatformSendingSnapshot = {
   domain: string;
   fromEmail: string;
   configuredFrom: string;
-  deliveryProvider: string;
-  postmarkConfigured: boolean;
-  postmarkWebhookConfigured: boolean;
+  deliveryProvider: "smtp";
+  smtpHost: string;
+  smtpProfile: string;
   registrarHint: string;
   dnsRecords: PlatformDnsRecordInstruction[];
   checklist: PlatformSendingCheckItem[];
@@ -67,7 +67,7 @@ export type EmailDeliveryHealth = {
   smtpFrom: string;
   webPublicBaseUrl: string;
   defaultAdminRecipients: string[];
-  deliveryMode: "mailpit" | "gmail" | "custom";
+  deliveryMode: "mailpit" | "custom";
   lastVerifyOk: boolean | null;
   lastVerifyError: string | null;
   lastVerifiedAt: string | null;
@@ -535,13 +535,13 @@ export class PlatformAdminApiClient {
 
   public static async fetchEmailDeliveryInfo(accessToken: string): Promise<{
     mode: string;
-    webhookUrls: { postmark: string; ses: string };
+    smtpProfile: string;
+    smtpHost: string;
+    smtpPort: number;
+    policyTr: string;
+    bounceHandlingTr: string;
   }> {
-    const payload = await adminFetch<{
-      mode: string;
-      webhookUrls: { postmark: string; ses: string };
-    }>(accessToken, "notifications/delivery");
-    return payload;
+    return adminFetch(accessToken, "notifications/delivery");
   }
 
   public static async syncGmailBounces(

@@ -1,8 +1,8 @@
 import { CompanyParticipantTypeCode } from "./CompanyParticipantTypeCode";
-import { PLATFORM_PRIMARY_CONTACT_EMAIL } from "./PlatformBranding";
+import { PLATFORM_OPERATOR_EMAIL } from "./PlatformBranding";
 
 /** Tek platform sahibi / operatör hesabı (admin konsol + tam yetki). */
-export const PLATFORM_OWNER_EMAIL = PLATFORM_PRIMARY_CONTACT_EMAIL;
+export const PLATFORM_OWNER_EMAIL = PLATFORM_OPERATOR_EMAIL;
 
 /**
  * İlk kurulum şifresi — giriş yaptıktan sonra profilden değiştirin.
