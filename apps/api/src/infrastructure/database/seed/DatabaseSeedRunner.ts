@@ -32,6 +32,7 @@ import {
   seedLogisticsPoiCorridorSample,
   seedLogisticsPoiFromTurkeyOverpass,
 } from "./LogisticsPoiOsmSeed";
+import { ensurePlatformOwnerAccount } from "./PlatformOwnerSeed";
 
 @Injectable()
 export class DatabaseSeedRunner implements OnModuleInit {
@@ -71,6 +72,12 @@ export class DatabaseSeedRunner implements OnModuleInit {
 
   public async onModuleInit(): Promise<void> {
     await this.seedSubscriptionPlans();
+    await ensurePlatformOwnerAccount({
+      companyRepository: this.companyRepository,
+      userAccountRepository: this.userAccountRepository,
+      companyMembershipRepository: this.companyMembershipRepository,
+      companySubscriptionRepository: this.companySubscriptionRepository,
+    });
     await this.seedDemoTenant();
     await this.seedPartnerDemoTenant();
     await this.seedPlatformAdminTenant();

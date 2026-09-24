@@ -12,7 +12,16 @@ Kaynak: `core/src/constants/PlatformBranding.ts` — API ve web aynı sabitleri 
 
 - **lertalogistics@gmail.com** — operasyon, admin bildirimleri (`PLATFORM_ADMIN_EMAILS`), iletişim formları, SMTP varsayılan gönderen.
 
-Yerel geliştirmede test kullanıcıları `@test.nakliyeborsasi.local` ve seed `admin@nakliyeborsasi.local` kalır; platform operatör konsolu (`/admin`) bu adreslerle **ve** `lertalogistics@gmail.com` ile açılır (`isPlatformOperatorEmail`).
+Platform operatör konsolu (`/admin`) **yalnızca** `lertalogistics@gmail.com` ile açılır (`isPlatformOperatorEmail`).
+
+## Platform sahibi (bootstrap)
+
+API açılışında `ensurePlatformOwnerAccount` hesabı oluşturur:
+
+- E-posta: `lertalogistics@gmail.com`
+- Firma: Lerta Logistics (yük veren / TR)
+- İlk şifre: `core` içindeki `PLATFORM_OWNER_BOOTSTRAP_PASSWORD` (varsayılan `822159Ka`); girişten sonra değiştirin.
+- Henüz giriş yapılmamışsa seed bootstrap şifresini yeniden uygular; `PLATFORM_OWNER_FORCE_BOOTSTRAP_PASSWORD=true` ile zorlanabilir.
 
 ## Ortam değişkenleri
 

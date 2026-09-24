@@ -9,18 +9,12 @@ export const PLATFORM_MONOGRAM = "LL";
 /** Primary business inbox (operations, admin notifications, public contact). */
 export const PLATFORM_PRIMARY_CONTACT_EMAIL = "lertalogistics@gmail.com";
 
-/**
- * Accounts allowed to use the platform operator console (/admin).
- * Dev seed `admin@nakliyeborsasi.local` remains for local QA.
- */
-export const PLATFORM_OPERATOR_EMAILS: readonly string[] = [
-  PLATFORM_PRIMARY_CONTACT_EMAIL,
-  "admin@nakliyeborsasi.local",
-];
-
+/** Yalnızca platform sahibi e-postası `/admin` konsoluna erişebilir. */
 export function isPlatformOperatorEmail(emailAddress: string): boolean {
-  const normalized = emailAddress.trim().toLowerCase();
-  return PLATFORM_OPERATOR_EMAILS.some((entry) => entry === normalized);
+  return (
+    emailAddress.trim().toLowerCase() ===
+    PLATFORM_PRIMARY_CONTACT_EMAIL.toLowerCase()
+  );
 }
 
 export const PLATFORM_EMAIL_SUBJECT_TAG = "Lerta";

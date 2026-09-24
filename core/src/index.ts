@@ -1,4 +1,5 @@
 export * from "./constants/PlatformBranding";
+export * from "./constants/PlatformOwnerAccount";
 export * from "./constants/SupportedLocale";
 export * from "./constants/SubscriptionModuleCode";
 export * from "./constants/IntegrationProviderCode";
