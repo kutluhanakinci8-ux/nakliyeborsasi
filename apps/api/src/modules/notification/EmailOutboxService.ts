@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { In, Repository } from "typeorm";
 import { EmailOutboxEntity } from "../../infrastructure/database/entities/EmailOutboxEntity";
 import { EmailRecipientKind, NotificationEventCode } from "./NotificationEventCode";
 import { EmailTemplateService } from "./EmailTemplateService";
@@ -94,5 +94,60 @@ export class EmailOutboxService {
       order: { createdAt: "DESC" },
       take: Math.min(limit, 200),
     });
+  }
+
+  public async drainQueue(batchSize = 25): Promise<{ processed: number; sent: number; failed: number }> {
+    const rows = await this.outboxRepository.find({
+      where: { status: In(["pending", "failed"]) },
+      order: { createdAt: "ASC" },
+      take: batchSize,
+    });
+    let sent = 0;
+    let failed = 0;
+    for (const row of rows) {
+      const retryCount = Number(row.metadata?.retryCount ?? 0);
+      if (row.status === "failed" && retryCount >= 8) {
+        continue;
+      }
+      try {
+        row.status = "pending";
+        await this.outboxRepository.save(row);
+        await this.processById(row.id);
+        sent += 1;
+      } catch {
+        failed += 1;
+        const meta = { ...(row.metadata ?? {}), retryCount: retryCount + 1 };
+        row.metadata = meta;
+        await this.outboxRepository.save(row);
+      }
+    }
+    return { processed: rows.length, sent, failed };
+  }
+
+  public async retryById(id: string): Promise<EmailOutboxEntity | null> {
+    const row = await this.outboxRepository.findOne({ where: { id } });
+    if (!row || row.status === "sent") {
+      return row;
+    }
+    row.status = "pending";
+    row.lastError = null;
+    row.metadata = { ...(row.metadata ?? {}), retryCount: 0 };
+    await this.outboxRepository.save(row);
+    await this.processById(row.id);
+    return this.outboxRepository.findOne({ where: { id } });
+  }
+
+  public async retryFailed(limit = 50): Promise<number> {
+    const rows = await this.outboxRepository.find({
+      where: { status: "failed" },
+      order: { updatedAt: "ASC" },
+      take: limit,
+    });
+    let count = 0;
+    for (const row of rows) {
+      await this.retryById(row.id);
+      count += 1;
+    }
+    return count;
   }
 }

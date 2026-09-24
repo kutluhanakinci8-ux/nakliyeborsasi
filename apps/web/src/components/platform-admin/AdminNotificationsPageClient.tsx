@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   PlatformAdminApiClient,
+  type EmailDeliveryHealth,
   type EmailOutboxRow,
   type PlatformNotificationSetting,
 } from "../../lib/PlatformAdminApiClient";
@@ -24,6 +25,7 @@ export function AdminNotificationsPageClient() {
   const [testEvent, setTestEvent] = useState("USER_LOGIN");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
+  const [health, setHealth] = useState<EmailDeliveryHealth | null>(null);
 
   const refresh = useCallback(async () => {
     if (!accessToken) {
@@ -31,12 +33,14 @@ export function AdminNotificationsPageClient() {
     }
     setLoading(true);
     try {
-      const [nextSettings, nextOutbox] = await Promise.all([
+      const [nextSettings, nextOutbox, nextHealth] = await Promise.all([
         PlatformAdminApiClient.fetchNotificationSettings(accessToken),
         PlatformAdminApiClient.fetchNotificationOutbox(accessToken, 80),
+        PlatformAdminApiClient.fetchEmailDeliveryHealth(accessToken),
       ]);
       setSettings(nextSettings);
       setOutbox(nextOutbox);
+      setHealth(nextHealth);
     } finally {
       setLoading(false);
     }
@@ -107,6 +111,82 @@ export function AdminNotificationsPageClient() {
 
       {message ? <p className="account-save-hint">{message}</p> : null}
       {loading ? <p className="module-hint">Yükleniyor…</p> : null}
+
+      {health ? (
+        <section className="account-card module-panel module-panel--elevated">
+          <h2 className="account-card-title">SMTP durumu</h2>
+          <p className="account-card-lead">
+            Mod: <strong>{health.deliveryMode}</strong> ({health.smtpHost}:{health.smtpPort})
+            {health.deliveryMode === "mailpit"
+              ? " — mesajlar Mailpit’te; Gmail kutusu için SMTP_PROFILE=gmail ve uygulama şifresi."
+              : null}
+          </p>
+          <ul className="account-card-lead">
+            <li>Gönderen: {health.smtpFrom}</li>
+            <li>Web linkleri: {health.webPublicBaseUrl}</li>
+            <li>
+              SMTP kimlik: {health.smtpAuthConfigured ? "tanımlı" : "yok (Mailpit için normal)"}
+            </li>
+            <li>
+              Son doğrulama:{" "}
+              {health.lastVerifyOk === null
+                ? "henüz yok"
+                : health.lastVerifyOk
+                  ? "başarılı"
+                  : `hata — ${health.lastVerifyError ?? ""}`}
+            </li>
+          </ul>
+          <div className="account-form-grid">
+            <button
+              type="button"
+              className="btn-account-secondary"
+              onClick={() =>
+                void PlatformAdminApiClient.verifyEmailSmtp(accessToken!).then(
+                  (result) => {
+                    setHealth(result.health);
+                    setMessage(result.ok ? "SMTP bağlantısı doğrulandı." : result.error ?? "Doğrulama başarısız");
+                    window.setTimeout(() => setMessage(""), 5000);
+                  },
+                )
+              }
+            >
+              SMTP doğrula
+            </button>
+            <button
+              type="button"
+              className="btn-account-secondary"
+              onClick={() =>
+                void PlatformAdminApiClient.drainEmailOutbox(accessToken!).then(
+                  (result) => {
+                    setMessage(
+                      `Kuyruk: ${result.processed} işlendi, ${result.sent} gönderildi, ${result.failed} hata.`,
+                    );
+                    void refresh();
+                    window.setTimeout(() => setMessage(""), 5000);
+                  },
+                )
+              }
+            >
+              Kuyruğu işle
+            </button>
+            <button
+              type="button"
+              className="btn-account-secondary"
+              onClick={() =>
+                void PlatformAdminApiClient.retryFailedEmails(accessToken!).then(
+                  (result) => {
+                    setMessage(`${result.retried} başarısız kayıt yeniden denendi.`);
+                    void refresh();
+                    window.setTimeout(() => setMessage(""), 5000);
+                  },
+                )
+              }
+            >
+              Başarısızları yeniden dene
+            </button>
+          </div>
+        </section>
+      ) : null}
 
       <section className="account-card module-panel module-panel--elevated">
         <h2 className="account-card-title">Test gönderimi</h2>

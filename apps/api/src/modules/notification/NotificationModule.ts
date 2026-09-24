@@ -15,6 +15,8 @@ import { PlatformNotificationSettingsService } from "./PlatformNotificationSetti
 import { AuthNotificationService } from "./AuthNotificationService";
 import { EmailSecurityTokenService } from "./EmailSecurityTokenService";
 import { PlatformNotificationAdminController } from "./PlatformNotificationAdminController";
+import { EmailOutboxProcessor } from "./EmailOutboxProcessor";
+import { EmailDeliveryHealthService } from "./EmailDeliveryHealthService";
 
 @Module({
   imports: [
@@ -37,6 +39,8 @@ import { PlatformNotificationAdminController } from "./PlatformNotificationAdmin
     PlatformNotificationSettingsService,
     AuthNotificationService,
     EmailSecurityTokenService,
+    EmailOutboxProcessor,
+    EmailDeliveryHealthService,
   ],
   exports: [
     AuthNotificationService,

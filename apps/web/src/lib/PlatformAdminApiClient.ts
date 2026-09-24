@@ -27,6 +27,22 @@ export type PlatformNotificationSetting = {
   adminRecipientEmails: string[];
 };
 
+export type EmailDeliveryHealth = {
+  emailEnabled: boolean;
+  smtpProfile: string;
+  smtpHost: string;
+  smtpPort: number;
+  smtpSecure: boolean;
+  smtpAuthConfigured: boolean;
+  smtpFrom: string;
+  webPublicBaseUrl: string;
+  defaultAdminRecipients: string[];
+  deliveryMode: "mailpit" | "gmail" | "custom";
+  lastVerifyOk: boolean | null;
+  lastVerifyError: string | null;
+  lastVerifiedAt: string | null;
+};
+
 export type EmailOutboxRow = {
   id: string;
   eventCode: string;
@@ -227,6 +243,38 @@ export class PlatformAdminApiClient {
     await adminFetch(accessToken, "notifications/test", {
       method: "POST",
       body: JSON.stringify({ eventCode, recipientEmail }),
+    });
+  }
+
+  public static async fetchEmailDeliveryHealth(
+    accessToken: string,
+  ): Promise<EmailDeliveryHealth> {
+    const payload = await adminFetch<{ health: EmailDeliveryHealth }>(
+      accessToken,
+      "notifications/health",
+    );
+    return payload.health;
+  }
+
+  public static async verifyEmailSmtp(
+    accessToken: string,
+  ): Promise<{ ok: boolean; error?: string; health: EmailDeliveryHealth }> {
+    return adminFetch(accessToken, "notifications/health/verify", {
+      method: "POST",
+    });
+  }
+
+  public static async drainEmailOutbox(
+    accessToken: string,
+  ): Promise<{ processed: number; sent: number; failed: number }> {
+    return adminFetch(accessToken, "notifications/outbox/drain", {
+      method: "POST",
+    });
+  }
+
+  public static async retryFailedEmails(accessToken: string): Promise<{ retried: number }> {
+    return adminFetch(accessToken, "notifications/outbox/retry-failed", {
+      method: "POST",
     });
   }
 }

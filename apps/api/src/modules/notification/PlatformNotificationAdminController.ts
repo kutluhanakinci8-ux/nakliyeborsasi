@@ -1,7 +1,18 @@
-import { Body, Controller, Get, Patch, Post, Query, UseGuards } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from "@nestjs/common";
 import { JwtAuthenticationGuard } from "../auth/JwtAuthenticationGuard";
 import { PlatformAdminGuard } from "../platform-admin/PlatformAdminGuard";
+import { EmailDeliveryHealthService } from "./EmailDeliveryHealthService";
 import { EmailOutboxService } from "./EmailOutboxService";
+import { NotificationConfigurationService } from "./NotificationConfigurationService";
 import { PlatformNotificationSettingsService } from "./PlatformNotificationSettingsService";
 import { NotificationEventCode, EmailRecipientKind } from "./NotificationEventCode";
 import { UpdatePlatformNotificationSettingDto } from "./UpdatePlatformNotificationSettingDto";
@@ -13,7 +24,51 @@ export class PlatformNotificationAdminController {
   public constructor(
     private readonly platformNotificationSettingsService: PlatformNotificationSettingsService,
     private readonly emailOutboxService: EmailOutboxService,
+    private readonly emailDeliveryHealthService: EmailDeliveryHealthService,
+    private readonly notificationConfigurationService: NotificationConfigurationService,
   ) {}
+
+  @Get("health")
+  public async health() {
+    return {
+      health: this.emailDeliveryHealthService.getSnapshot(),
+    };
+  }
+
+  @Post("health/verify")
+  public async verifySmtp() {
+    try {
+      await this.emailDeliveryHealthService.verifySmtpConnection();
+      return { ok: true, health: this.emailDeliveryHealthService.getSnapshot() };
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "SMTP verify failed";
+      this.emailDeliveryHealthService.captureVerifyFailure(message);
+      return {
+        ok: false,
+        error: message,
+        health: this.emailDeliveryHealthService.getSnapshot(),
+      };
+    }
+  }
+
+  @Post("outbox/drain")
+  public async drainOutbox() {
+    const result = await this.emailOutboxService.drainQueue();
+    return { ok: true, ...result };
+  }
+
+  @Post("outbox/retry-failed")
+  public async retryFailed() {
+    const count = await this.emailOutboxService.retryFailed();
+    return { ok: true, retried: count };
+  }
+
+  @Post("outbox/:id/retry")
+  public async retryOne(@Param("id") id: string) {
+    const row = await this.emailOutboxService.retryById(id);
+    return { ok: true, message: row };
+  }
 
   @Get("settings")
   public async settings() {
@@ -63,7 +118,7 @@ export class PlatformNotificationAdminController {
       userAgent: "Test/1.0",
       loginCount: "1",
       occurredAt: new Date().toISOString(),
-      organizasyonUrl: "http://localhost:3011/hesap/organizasyon",
+      organizasyonUrl: `${this.notificationConfigurationService.resolveWebBaseUrl()}/hesap/organizasyon`,
     };
     const row = await this.emailOutboxService.enqueue({
       eventCode,

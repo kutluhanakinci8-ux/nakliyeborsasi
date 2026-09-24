@@ -32,6 +32,7 @@ export class PlatformNotificationSettingsService implements OnModuleInit {
         where: { eventCode },
       });
       if (existing) {
+        await this.mergeDefaultAdminRecipients(existing);
         continue;
       }
       const adminEnabled =
@@ -74,6 +75,26 @@ export class PlatformNotificationSettingsService implements OnModuleInit {
     }
     Object.assign(row, patch);
     return this.settingsRepository.save(row);
+  }
+
+  private async mergeDefaultAdminRecipients(
+    row: PlatformNotificationSettingEntity,
+  ): Promise<void> {
+    const defaults = this.notificationConfigurationService.resolveDefaultAdminRecipients();
+    if (defaults.length === 0) {
+      return;
+    }
+    const current = row.adminRecipientEmails ?? [];
+    const staleOnly =
+      current.length === 0 ||
+      current.every((email) =>
+        email.endsWith("@nakliyeborsasi.local"),
+      );
+    if (!staleOnly) {
+      return;
+    }
+    row.adminRecipientEmails = [...defaults];
+    await this.settingsRepository.save(row);
   }
 
   public async getSetting(

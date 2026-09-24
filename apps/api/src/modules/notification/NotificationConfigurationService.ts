@@ -27,6 +27,32 @@ export class NotificationConfigurationService {
       .filter(Boolean);
   }
 
+  public resolveSmtpProfile(): string {
+    const raw = this.configService.get<string>("SMTP_PROFILE")?.trim().toLowerCase();
+    if (raw === "gmail" || raw === "mailpit" || raw === "custom") {
+      return raw;
+    }
+    const host = this.configService.get<string>("SMTP_HOST") ?? "";
+    if (host.includes("gmail")) {
+      return "gmail";
+    }
+    if (host === "127.0.0.1" || host === "localhost") {
+      return "mailpit";
+    }
+    return "custom";
+  }
+
+  public resolveDeliveryMode(): "mailpit" | "gmail" | "custom" {
+    const profile = this.resolveSmtpProfile();
+    if (profile === "gmail") {
+      return "gmail";
+    }
+    if (profile === "mailpit") {
+      return "mailpit";
+    }
+    return "custom";
+  }
+
   public resolveSmtpConfig(): {
     host: string;
     port: number;
@@ -35,15 +61,34 @@ export class NotificationConfigurationService {
     pass?: string;
     from: string;
   } {
-    const host =
-      this.configService.get<string>("SMTP_HOST") ?? "127.0.0.1";
-    const port = Number(this.configService.get<string>("SMTP_PORT") ?? "1025");
-    const secure = this.configService.get<string>("SMTP_SECURE") === "true";
-    const user = this.configService.get<string>("SMTP_USER");
-    const pass = this.configService.get<string>("SMTP_PASS");
+    const profile = this.resolveSmtpProfile();
     const from =
       this.configService.get<string>("SMTP_FROM") ??
       PLATFORM_DEFAULT_SMTP_FROM;
+
+    if (profile === "gmail") {
+      return {
+        host: this.configService.get<string>("SMTP_HOST") ?? "smtp.gmail.com",
+        port: Number(this.configService.get<string>("SMTP_PORT") ?? "587"),
+        secure: this.configService.get<string>("SMTP_SECURE") === "true",
+        user:
+          this.configService.get<string>("SMTP_USER") ??
+          PLATFORM_PRIMARY_CONTACT_EMAIL,
+        pass: this.configService.get<string>("SMTP_PASS"),
+        from,
+      };
+    }
+
+    const host =
+      this.configService.get<string>("SMTP_HOST") ??
+      (profile === "mailpit" ? "127.0.0.1" : "127.0.0.1");
+    const port = Number(
+      this.configService.get<string>("SMTP_PORT") ??
+        (profile === "mailpit" ? "1025" : "1025"),
+    );
+    const secure = this.configService.get<string>("SMTP_SECURE") === "true";
+    const user = this.configService.get<string>("SMTP_USER");
+    const pass = this.configService.get<string>("SMTP_PASS");
     return { host, port, secure, user, pass, from };
   }
 
