@@ -39,7 +39,13 @@ bash scripts/setup-opendkim-kullanici-lerta-tr.sh
 
 Arka plan: `MailTenantDnsVerificationScheduler` (~30 dk) paylaşımlı alan DNS’ini senkronlar.
 
-## 5. Sonraki adımlar (B3+)
+## 5. B3 — Rate limit ve ihale testi
 
-- Org başına rate limit / suppression ayrımı
+- Kurumsal `From` kullanılan gönderimler: `MAIL_ORG_MAX_SENDS_PER_HOUR` (varsayılan 200/saat/org).
+- Admin **Operasyon**: olay `AUCTION_BID_PLACED` + organizasyon UUID + test alıcı → outbox `metadata.companyId` ile tenant From.
+- API: `GET /api/v1/platform-admin/notifications/org-send-rate?organizationId=...`
+
+## 6. Sonraki adımlar (B4+)
+
+- Org suppression ayrımı (platform listesinden bağımsız)
 - Özel domain `@musteri.com`

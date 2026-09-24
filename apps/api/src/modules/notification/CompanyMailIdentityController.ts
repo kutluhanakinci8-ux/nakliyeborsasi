@@ -11,6 +11,7 @@ import { CompanyRoleCode, AuthenticatedUserContext } from "@nakliyeborsasi/core"
 import { JwtAuthenticationGuard } from "../auth/JwtAuthenticationGuard";
 import { AuthenticatedUserParam } from "../auth/AuthenticatedUserParam";
 import { MailTenantSubdomainService } from "./MailTenantSubdomainService";
+import { MailOrganizationSendRateService } from "./MailOrganizationSendRateService";
 
 class ProvisionCompanyMailIdentityDto {
   public localPart!: string;
@@ -26,6 +27,7 @@ class UpdateCompanyMailDisplayNameDto {
 export class CompanyMailIdentityController {
   public constructor(
     private readonly mailTenantSubdomainService: MailTenantSubdomainService,
+    private readonly mailOrganizationSendRateService: MailOrganizationSendRateService,
   ) {}
 
   @Get()
@@ -38,6 +40,9 @@ export class CompanyMailIdentityController {
     return {
       message: "OK",
       identity,
+      sendRate: this.mailOrganizationSendRateService.getSnapshot(
+        user.companyId,
+      ),
       replyToHintTr:
         "Yanıtlar şimdilik platform destek hattına yönlendirilir; tam posta kutusu Faz C.",
     };

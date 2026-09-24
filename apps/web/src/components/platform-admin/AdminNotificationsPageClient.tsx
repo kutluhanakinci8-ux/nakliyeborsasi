@@ -404,8 +404,9 @@ export function AdminNotificationsPageClient() {
           <h2 className="pa-panel-title">Test gönderimi</h2>
           <p className="pa-panel-lead">
             Kurumsal HTML şablonunu canlı SMTP ile doğrulayın. Faz B: organizasyon
-            UUID girerseniz From, provision edilen{" "}
-            <code>slug@kullanici.lerta.tr</code> olur.
+            UUID + olay <strong>İhale — yeni teklif</strong> ile tenant From ve
+            ihale şablonunu test edin (
+            <code>slug@kullanici.lerta.tr</code>).
           </p>
           <div className="pa-form-row">
             <label className="pa-label">

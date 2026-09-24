@@ -11,6 +11,7 @@ import { EmailSuppressionService } from "./EmailSuppressionService";
 import { UserNotificationPreferenceService } from "./UserNotificationPreferenceService";
 import { EmailDeliveryService } from "./EmailDeliveryService";
 import { MailSenderResolutionService } from "./MailSenderResolutionService";
+import { MailOrganizationSendRateService } from "./MailOrganizationSendRateService";
 
 @Injectable()
 export class EmailOutboxService {
@@ -27,6 +28,7 @@ export class EmailOutboxService {
     private readonly userNotificationPreferenceService: UserNotificationPreferenceService,
     private readonly emailDeliveryService: EmailDeliveryService,
     private readonly mailSenderResolutionService: MailSenderResolutionService,
+    private readonly mailOrganizationSendRateService: MailOrganizationSendRateService,
   ) {}
 
   public async enqueue(params: {
@@ -109,16 +111,27 @@ export class EmailOutboxService {
         row.htmlBody,
       );
       row.htmlBody = htmlWithTracking;
-      const from = await this.mailSenderResolutionService.resolveFromForOutbox(
-        row.metadata,
-      );
+      const resolved =
+        await this.mailSenderResolutionService.resolveFromForOutbox(
+          row.metadata,
+        );
+      if (resolved.tenantOrganizationId) {
+        this.mailOrganizationSendRateService.assertCanSend(
+          resolved.tenantOrganizationId,
+        );
+      }
       const delivery = await this.emailDeliveryService.send({
         to: row.recipientEmail,
         subject: row.subject,
         html: htmlWithTracking,
         text: row.textBody,
-        from,
+        from: resolved.from,
       });
+      if (resolved.tenantOrganizationId) {
+        this.mailOrganizationSendRateService.recordSend(
+          resolved.tenantOrganizationId,
+        );
+      }
       row.status = "sent";
       row.sentAt = new Date();
       row.providerMessageId = delivery.messageId;

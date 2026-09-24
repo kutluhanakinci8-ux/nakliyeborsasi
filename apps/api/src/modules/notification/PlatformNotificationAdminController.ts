@@ -24,6 +24,8 @@ import { EmailSuppressionService } from "./EmailSuppressionService";
 import { EmailDeliveryService } from "./EmailDeliveryService";
 import { NOTIFICATION_EVENT_CATALOG } from "./NotificationEventCatalog";
 import { PlatformMailSendingService } from "./PlatformMailSendingService";
+import { buildAdminTestNotificationPayload } from "./NotificationTestPayloadFactory";
+import { MailOrganizationSendRateService } from "./MailOrganizationSendRateService";
 
 @Controller("platform-admin/notifications")
 @UseGuards(JwtAuthenticationGuard, PlatformAdminGuard)
@@ -37,6 +39,7 @@ export class PlatformNotificationAdminController {
     private readonly emailSuppressionService: EmailSuppressionService,
     private readonly emailDeliveryService: EmailDeliveryService,
     private readonly platformMailSendingService: PlatformMailSendingService,
+    private readonly mailOrganizationSendRateService: MailOrganizationSendRateService,
   ) {}
 
   @Get("platform-sending")
@@ -246,27 +249,29 @@ export class PlatformNotificationAdminController {
     };
   }
 
+  @Get("org-send-rate")
+  public orgSendRate(@Query("organizationId") organizationId: string) {
+    if (!organizationId?.trim()) {
+      return { ok: false, message: "organizationId gerekli" };
+    }
+    return {
+      ok: true,
+      rate: this.mailOrganizationSendRateService.getSnapshot(
+        organizationId.trim(),
+      ),
+    };
+  }
+
   @Post("test")
   public async testSend(@Body() body: TestNotificationEmailDto) {
     const eventCode = body.eventCode as NotificationEventCode;
-    const samplePayload = {
-      displayName: "Lerta Logistics (test)",
-      emailAddress: "admin@lerta.tr",
-      companyLegalName: "Lerta Logistics",
-      companyCountryCode: "TR",
-      participantType: "LOAD_CARRIER",
-      planCode: "carrier_professional_tr_ua",
-      companyId:
-        body.organizationId ?? "00000000-0000-0000-0000-000000000001",
-      userId: "00000000-0000-0000-0000-000000000002",
-      ipAddress: "127.0.0.1",
-      userAgent: "Test/1.0",
-      loginCount: "1",
-      occurredAt: new Date().toISOString(),
-      organizasyonUrl: `${this.notificationConfigurationService.resolveWebBaseUrl()}/hesap/organizasyon`,
-    };
     const companyId =
       body.organizationId ?? "00000000-0000-0000-0000-000000000001";
+    const samplePayload = buildAdminTestNotificationPayload({
+      eventCode,
+      organizationId: companyId,
+      webBaseUrl: this.notificationConfigurationService.resolveWebBaseUrl(),
+    });
     const row = await this.emailOutboxService.enqueue({
       eventCode,
       recipientKind: EmailRecipientKind.Admin,

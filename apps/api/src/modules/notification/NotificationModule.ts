@@ -17,6 +17,7 @@ import { EmailSecurityTokenService } from "./EmailSecurityTokenService";
 import { PlatformNotificationAdminController } from "./PlatformNotificationAdminController";
 import { CompanyMailIdentityController } from "./CompanyMailIdentityController";
 import { MailTenantDnsVerificationScheduler } from "./MailTenantDnsVerificationScheduler";
+import { MailOrganizationSendRateService } from "./MailOrganizationSendRateService";
 import { EmailOutboxAnalyticsService } from "./EmailOutboxAnalyticsService";
 import { EmailOutboxEngagementEventEntity } from "../../infrastructure/database/entities/EmailOutboxEngagementEventEntity";
 import { EmailOutboxClickTokenEntity } from "../../infrastructure/database/entities/EmailOutboxClickTokenEntity";
@@ -109,6 +110,7 @@ import { MailTenantSubdomainService } from "./MailTenantSubdomainService";
     MailDomainDnsVerificationService,
     MailTenantSubdomainService,
     MailTenantDnsVerificationScheduler,
+    MailOrganizationSendRateService,
   ],
   exports: [
     AuthNotificationService,

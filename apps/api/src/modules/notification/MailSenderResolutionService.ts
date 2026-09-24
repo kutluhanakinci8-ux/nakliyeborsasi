@@ -17,28 +17,28 @@ export class MailSenderResolutionService {
 
   public async resolveFromForOutbox(
     metadata: Record<string, unknown> | null | undefined,
-  ): Promise<string> {
+  ): Promise<{ from: string; tenantOrganizationId: string | null }> {
     const fallback =
       this.notificationConfigurationService.resolveSmtpConfig().from;
     const companyId =
       typeof metadata?.companyId === "string" ? metadata.companyId : null;
     if (!companyId) {
-      return fallback;
+      return { from: fallback, tenantOrganizationId: null };
     }
     const identity = await this.senderRepository.findOne({
       where: { organizationId: companyId, isDefault: true },
       relations: { mailDomain: true },
     });
     if (!identity?.mailDomain) {
-      return fallback;
+      return { from: fallback, tenantOrganizationId: null };
     }
     if (identity.mailDomain.verificationStatus !== "verified") {
-      return fallback;
+      return { from: fallback, tenantOrganizationId: null };
     }
     const email = `${identity.localPart}@${identity.mailDomain.domain}`.toLowerCase();
-    if (identity.displayName?.trim()) {
-      return `${identity.displayName.trim()} <${email}>`;
-    }
-    return email;
+    const from = identity.displayName?.trim()
+      ? `${identity.displayName.trim()} <${email}>`
+      : email;
+    return { from, tenantOrganizationId: companyId };
   }
 }
