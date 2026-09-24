@@ -91,7 +91,7 @@ export class PlatformNotificationAdminController {
       policyTr:
         "Gönderim yalnızca kendi SMTP/MTA (Postfix). Üçüncü taraf ESP (Postmark, SES, Gmail relay) kullanılmaz.",
       bounceHandlingTr:
-        "Bounce ve suppression: SMTP hata sınıflandırması, admin listesi ve (Faz C) kendi inbound webhook.",
+        "Faz A: SMTP hataları sınıflandırılır; hard/spam otomatik suppression. Admin Politika sekmesinde manuel liste.",
     };
   }
 

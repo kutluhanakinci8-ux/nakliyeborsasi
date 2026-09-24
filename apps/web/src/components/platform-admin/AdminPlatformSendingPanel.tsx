@@ -103,7 +103,7 @@ export function AdminPlatformSendingPanel() {
           </section>
 
           <section className="pa-panel">
-            <h2 className="pa-panel-title">A1–A4 kontrol listesi</h2>
+            <h2 className="pa-panel-title">A1–A7 üretim kontrol listesi</h2>
             <ul className="pa-checklist">
               {snapshot.checklist.map((item) => (
                 <li key={item.id} className="pa-checklist-item">

@@ -64,5 +64,12 @@ export function classifySmtpDeliveryFailure(
   ) {
     return { bounceClass: "soft", smtpCode };
   }
-  return { bounceClass: "unknown", smtpCode };
+  return { bounceClass: "unknown", smtpCode: null };
+}
+
+/** Faz A: kalıcı teslimat hatalarında alıcıyı suppression listesine al. */
+export function shouldAutoSuppressForBounceClass(
+  bounceClass: BounceClass,
+): boolean {
+  return bounceClass === "hard" || bounceClass === "spam";
 }

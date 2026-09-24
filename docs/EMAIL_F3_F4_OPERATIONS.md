@@ -11,10 +11,14 @@
 
 Üçüncü taraf ESP token’ları ve webhook URL’leri **yok**.
 
-## Bounce / suppression
+## Bounce / suppression (Faz A üretim)
 
-- SMTP hata yanıtları → outbox `bounceClass` + suppression kuralları.
+- SMTP hata yanıtları → outbox `bounceClass` + engagement `bounce` event.
+- **hard** ve **spam** sınıfı → otomatik `email_suppressions` (`source=smtp_auto`).
+- Yumuşak hatalar: drain yeniden dener (en fazla 8).
 - Admin **Politika** sekmesinde manuel suppression.
+
+Detay: [EMAIL_FAZ_A_PRODUCTION.md](./EMAIL_FAZ_A_PRODUCTION.md)
 
 ## Admin panel
 

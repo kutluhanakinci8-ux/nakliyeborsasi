@@ -71,6 +71,14 @@ export type EmailDeliveryHealth = {
   lastVerifyOk: boolean | null;
   lastVerifyError: string | null;
   lastVerifiedAt: string | null;
+  outboxOperations?: {
+    lastDrainAt: string | null;
+    lastDrain: { processed: number; sent: number; failed: number } | null;
+    lastDrainError: string | null;
+    processorIntervalSeconds: number;
+  };
+  smtpPeriodicVerifyEnabled?: boolean;
+  nextPeriodicVerifyHintTr?: string;
 };
 
 export type EmailOutboxRow = {

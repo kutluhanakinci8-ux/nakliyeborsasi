@@ -13,4 +13,8 @@ export class PlatformNotificationSettingEntity {
 
   @Column({ type: "jsonb", default: [] })
   public adminRecipientEmails!: string[];
+
+  /** Faz A üretim varsayılanları (tek seferlik senkron) */
+  @Column({ type: "jsonb", nullable: true })
+  public metadata!: Record<string, unknown> | null;
 }

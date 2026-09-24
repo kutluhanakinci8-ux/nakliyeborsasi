@@ -8,8 +8,10 @@ import { EmailOutboxEntity } from "../../infrastructure/database/entities/EmailO
 import { EmailTrackingSignatureService } from "./EmailTrackingSignatureService";
 import {
   classifySmtpDeliveryFailure,
+  shouldAutoSuppressForBounceClass,
   type BounceClass,
 } from "./SmtpDeliveryFailureClassifier";
+import { EmailSuppressionService } from "./EmailSuppressionService";
 
 @Injectable()
 export class EmailEngagementService {
@@ -21,6 +23,7 @@ export class EmailEngagementService {
     @InjectRepository(EmailOutboxEntity)
     private readonly outboxRepository: Repository<EmailOutboxEntity>,
     private readonly emailTrackingSignatureService: EmailTrackingSignatureService,
+    private readonly emailSuppressionService: EmailSuppressionService,
   ) {}
 
   public async recordOpen(
@@ -112,6 +115,14 @@ export class EmailEngagementService {
         ipAddress: null,
       }),
     );
+    if (shouldAutoSuppressForBounceClass(classified.bounceClass)) {
+      await this.emailSuppressionService.addSuppression({
+        email: row.recipientEmail,
+        reason: `bounce:${classified.bounceClass}`,
+        source: "smtp_auto",
+        note: errorMessage.slice(0, 500),
+      });
+    }
   }
 
   public async getEngagementSummary(since: Date): Promise<{

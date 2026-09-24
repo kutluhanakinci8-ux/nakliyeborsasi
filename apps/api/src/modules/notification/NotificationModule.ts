@@ -23,6 +23,7 @@ import { EmailEngagementService } from "./EmailEngagementService";
 import { EmailHtmlTrackingService } from "./EmailHtmlTrackingService";
 import { EmailTrackingSignatureService } from "./EmailTrackingSignatureService";
 import { EmailOutboxProcessor } from "./EmailOutboxProcessor";
+import { EmailOutboxOperationsService } from "./EmailOutboxOperationsService";
 import { EmailDeliveryHealthService } from "./EmailDeliveryHealthService";
 import { EmailSuppressionEntity } from "../../infrastructure/database/entities/EmailSuppressionEntity";
 import { UserNotificationPreferenceEntity } from "../../infrastructure/database/entities/UserNotificationPreferenceEntity";
@@ -87,6 +88,7 @@ import { MailTenantSubdomainService } from "./MailTenantSubdomainService";
     PlatformNotificationSettingsService,
     AuthNotificationService,
     EmailSecurityTokenService,
+    EmailOutboxOperationsService,
     EmailOutboxProcessor,
     EmailDeliveryHealthService,
     EmailOutboxAnalyticsService,

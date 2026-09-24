@@ -1,4 +1,5 @@
 import { Injectable, OnModuleInit } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { PlatformNotificationSettingEntity } from "../../infrastructure/database/entities/PlatformNotificationSettingEntity";
@@ -16,6 +17,7 @@ export class PlatformNotificationSettingsService implements OnModuleInit {
     @InjectRepository(PlatformNotificationSettingEntity)
     private readonly settingsRepository: Repository<PlatformNotificationSettingEntity>,
     private readonly notificationConfigurationService: NotificationConfigurationService,
+    private readonly configService: ConfigService,
   ) {}
 
   public async onModuleInit(): Promise<void> {
@@ -30,6 +32,7 @@ export class PlatformNotificationSettingsService implements OnModuleInit {
       });
       if (existing) {
         await this.mergeDefaultAdminRecipients(existing);
+        await this.applyPhaseAProductionDefaults(existing, eventCode);
         continue;
       }
       const definition = NOTIFICATION_EVENT_CATALOG.find(
@@ -43,9 +46,36 @@ export class PlatformNotificationSettingsService implements OnModuleInit {
             eventCode !== NotificationEventCode.UserFirstLogin,
           userEmailEnabled: definition?.defaultUserEnabled ?? false,
           adminRecipientEmails: [...defaults],
+          metadata: null,
         }),
       );
     }
+  }
+
+  /** Faz A: gürültülü admin bildirimlerini bir kez kapat (USER_LOGIN). */
+  private async applyPhaseAProductionDefaults(
+    row: PlatformNotificationSettingEntity,
+    eventCode: NotificationEventCode,
+  ): Promise<void> {
+    if (eventCode !== NotificationEventCode.UserLogin) {
+      return;
+    }
+    const meta = row.metadata ?? {};
+    if (meta.phaseAUserLoginDefaultApplied === true) {
+      return;
+    }
+    const forceOn =
+      this.configService.get<string>("PLATFORM_ADMIN_NOTIFY_USER_LOGIN") ===
+      "true";
+    if (!forceOn) {
+      row.adminEmailEnabled = false;
+    }
+    row.metadata = {
+      ...meta,
+      phaseAUserLoginDefaultApplied: true,
+      phaseAUserLoginAppliedAt: new Date().toISOString(),
+    };
+    await this.settingsRepository.save(row);
   }
 
   public async listSettings(): Promise<PlatformNotificationSettingEntity[]> {

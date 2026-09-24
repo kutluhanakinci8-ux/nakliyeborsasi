@@ -5,6 +5,7 @@ import {
   OnModuleInit,
 } from "@nestjs/common";
 import { EmailOutboxService } from "./EmailOutboxService";
+import { EmailOutboxOperationsService } from "./EmailOutboxOperationsService";
 import { NotificationConfigurationService } from "./NotificationConfigurationService";
 
 const DRAIN_INTERVAL_MS = 30_000;
@@ -16,6 +17,7 @@ export class EmailOutboxProcessor implements OnModuleInit, OnModuleDestroy {
 
   public constructor(
     private readonly emailOutboxService: EmailOutboxService,
+    private readonly emailOutboxOperationsService: EmailOutboxOperationsService,
     private readonly notificationConfigurationService: NotificationConfigurationService,
   ) {}
 
@@ -24,13 +26,9 @@ export class EmailOutboxProcessor implements OnModuleInit, OnModuleDestroy {
       this.logger.warn("EMAIL_ENABLED=false — outbox processor kapalı");
       return;
     }
-    void this.emailOutboxService.drainQueue().catch((error) => {
-      this.logger.error("İlk outbox drain başarısız", error);
-    });
+    void this.runDrain("startup");
     this.timer = setInterval(() => {
-      void this.emailOutboxService.drainQueue().catch((error) => {
-        this.logger.error("Outbox drain başarısız", error);
-      });
+      void this.runDrain("interval");
     }, DRAIN_INTERVAL_MS);
   }
 
@@ -38,6 +36,23 @@ export class EmailOutboxProcessor implements OnModuleInit, OnModuleDestroy {
     if (this.timer) {
       clearInterval(this.timer);
       this.timer = null;
+    }
+  }
+
+  private async runDrain(reason: string): Promise<void> {
+    try {
+      const result = await this.emailOutboxService.drainQueue();
+      this.emailOutboxOperationsService.recordDrain(result);
+      if (result.failed > 0) {
+        this.logger.warn(
+          `Outbox drain (${reason}): processed=${result.processed} sent=${result.sent} failed=${result.failed}`,
+        );
+      }
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Outbox drain failed";
+      this.emailOutboxOperationsService.recordDrainError(message);
+      this.logger.error(`Outbox drain başarısız (${reason})`, error);
     }
   }
 }

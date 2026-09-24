@@ -1,6 +1,15 @@
-import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
+import {
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+  OnModuleInit,
+} from "@nestjs/common";
 import * as nodemailer from "nodemailer";
 import { NotificationConfigurationService } from "./NotificationConfigurationService";
+import {
+  EmailOutboxOperationsService,
+  type EmailOutboxOperationsSnapshot,
+} from "./EmailOutboxOperationsService";
 
 export type EmailDeliveryHealthSnapshot = {
   emailEnabled: boolean;
@@ -16,17 +25,26 @@ export type EmailDeliveryHealthSnapshot = {
   lastVerifyOk: boolean | null;
   lastVerifyError: string | null;
   lastVerifiedAt: string | null;
+  outboxOperations: EmailOutboxOperationsSnapshot;
+  smtpPeriodicVerifyEnabled: boolean;
+  nextPeriodicVerifyHintTr: string;
 };
 
+const SMTP_VERIFY_INTERVAL_MS = 6 * 60 * 60 * 1000;
+
 @Injectable()
-export class EmailDeliveryHealthService implements OnModuleInit {
+export class EmailDeliveryHealthService
+  implements OnModuleInit, OnModuleDestroy
+{
   private readonly logger = new Logger(EmailDeliveryHealthService.name);
   private lastVerifyOk: boolean | null = null;
   private lastVerifyError: string | null = null;
   private lastVerifiedAt: Date | null = null;
+  private verifyTimer: ReturnType<typeof setInterval> | null = null;
 
   public constructor(
     private readonly notificationConfigurationService: NotificationConfigurationService,
+    private readonly emailOutboxOperationsService: EmailOutboxOperationsService,
   ) {}
 
   public async onModuleInit(): Promise<void> {
@@ -41,6 +59,21 @@ export class EmailDeliveryHealthService implements OnModuleInit {
           error instanceof Error ? error.message : String(error)
         }`,
       );
+    }
+    this.verifyTimer = setInterval(() => {
+      void this.verifySmtpConnection().catch((error) => {
+        const message =
+          error instanceof Error ? error.message : String(error);
+        this.captureVerifyFailure(message);
+        this.logger.warn(`Periyodik SMTP doğrulama başarısız: ${message}`);
+      });
+    }, SMTP_VERIFY_INTERVAL_MS);
+  }
+
+  public onModuleDestroy(): void {
+    if (this.verifyTimer) {
+      clearInterval(this.verifyTimer);
+      this.verifyTimer = null;
     }
   }
 
@@ -79,6 +112,11 @@ export class EmailDeliveryHealthService implements OnModuleInit {
       lastVerifyOk: this.lastVerifyOk,
       lastVerifyError: this.lastVerifyError,
       lastVerifiedAt: this.lastVerifiedAt?.toISOString() ?? null,
+      outboxOperations: this.emailOutboxOperationsService.getSnapshot(),
+      smtpPeriodicVerifyEnabled:
+        this.notificationConfigurationService.isEmailEnabled(),
+      nextPeriodicVerifyHintTr:
+        "SMTP bağlantısı yaklaşık her 6 saatte bir otomatik doğrulanır.",
     };
   }
 }

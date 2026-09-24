@@ -2,6 +2,8 @@ import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { promises as dns } from "node:dns";
 import { EmailDeliveryHealthService } from "./EmailDeliveryHealthService";
+import { EmailOutboxOperationsService } from "./EmailOutboxOperationsService";
+import { EmailOutboxService } from "./EmailOutboxService";
 import { NotificationConfigurationService } from "./NotificationConfigurationService";
 
 export type PlatformDnsRecordInstruction = {
@@ -42,6 +44,8 @@ export class PlatformMailSendingService {
     private readonly configService: ConfigService,
     private readonly notificationConfigurationService: NotificationConfigurationService,
     private readonly emailDeliveryHealthService: EmailDeliveryHealthService,
+    private readonly emailOutboxService: EmailOutboxService,
+    private readonly emailOutboxOperationsService: EmailOutboxOperationsService,
   ) {}
 
   public resolvePlatformDomain(): string {
@@ -285,7 +289,8 @@ export class PlatformMailSendingService {
     items.push({
       id: "A4-verify",
       titleTr: "A4 — SMTP bağlantı testi",
-      descriptionTr: "Admin Operasyon sekmesinden «SMTP doğrula» çalıştırın.",
+      descriptionTr:
+        "Operasyon sekmesinden «SMTP doğrula» veya API başlangıç / 6 saatlik otomatik doğrulama.",
       status: health.lastVerifyOk === true ? "ok" : health.lastVerifyOk === false ? "error" : "pending",
       detail:
         health.lastVerifyOk === true
@@ -293,7 +298,103 @@ export class PlatformMailSendingService {
           : health.lastVerifyError ?? "Henüz doğrulanmadı.",
     });
 
+    const sendingIpv4 = this.configService
+      .get<string>("MAIL_PLATFORM_SPF_IPV4")
+      ?.trim();
+    if (sendingIpv4) {
+      const aOk = await this.resolveARecordMatches(params.domain, sendingIpv4);
+      items.push({
+        id: "A5-mail-a",
+        titleTr: "A5 — mail host A kaydı",
+        descriptionTr: `${params.domain} A kaydı gönderim VPS IP ile aynı olmalı (inbox itibarı).`,
+        status: aOk.ok ? "ok" : "warning",
+        detail: aOk.detail,
+      });
+
+      const ptrOk = await this.resolvePtrMatches(sendingIpv4, params.domain);
+      items.push({
+        id: "A5-ptr",
+        titleTr: "A5 — PTR (rDNS)",
+        descriptionTr: `Gönderim IP (${sendingIpv4}) geri DNS kaydı mail hostname ile uyumlu olmalı.`,
+        status: ptrOk.ok ? "ok" : "warning",
+        detail: ptrOk.detail,
+      });
+    } else {
+      items.push({
+        id: "A5-mail-a",
+        titleTr: "A5 — Gönderim IP (env)",
+        descriptionTr: "MAIL_PLATFORM_SPF_IPV4 tanımlayın; A/PTR kontrolü için gerekli.",
+        status: "pending",
+        detail: "Örnek: MAIL_PLATFORM_SPF_IPV4=168.x.x.x",
+      });
+    }
+
+    const outboxStats = await this.emailOutboxService.getOutboxStats();
+    const ops = this.emailOutboxOperationsService.getSnapshot();
+    const queueHealthy =
+      outboxStats.pending <= 50 &&
+      outboxStats.failed <= 25 &&
+      !ops.lastDrainError;
+    items.push({
+      id: "A6-outbox",
+      titleTr: "A6 — Outbox kuyruğu",
+      descriptionTr:
+        "Arka plan drain (~30 sn). Bekleyen / başarısız sayıları operasyon eşiğinin altında.",
+      status: queueHealthy ? "ok" : outboxStats.failed > 100 ? "error" : "warning",
+      detail: `pending=${outboxStats.pending} failed=${outboxStats.failed} sent=${outboxStats.sent} · son drain=${ops.lastDrainAt ?? "—"}`,
+    });
+
+    items.push({
+      id: "A7-bounce",
+      titleTr: "A7 — Bounce → suppression",
+      descriptionTr:
+        "Kalıcı SMTP hataları (hard/spam) otomatik suppression listesine eklenir.",
+      status: "ok",
+      detail:
+        "Aktif: hard ve spam sınıfı. Yumuşak hatalar yeniden denenir (max 8).",
+    });
+
     return items;
+  }
+
+  private async resolveARecordMatches(
+    host: string,
+    expectedIpv4: string,
+  ): Promise<{ ok: boolean; detail: string }> {
+    try {
+      const rows = await dns.resolve4(host);
+      if (rows.includes(expectedIpv4)) {
+        return { ok: true, detail: `A: ${rows.join(", ")}` };
+      }
+      return {
+        ok: false,
+        detail: `A kayıtları: ${rows.join(", ") || "—"}; beklenen: ${expectedIpv4}. isimtescil panelinde düzeltin.`,
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return { ok: false, detail: `A sorgusu: ${message}` };
+    }
+  }
+
+  private async resolvePtrMatches(
+    ipv4: string,
+    mailHost: string,
+  ): Promise<{ ok: boolean; detail: string }> {
+    try {
+      const hosts = await dns.reverse(ipv4);
+      const flat = hosts.join(" ").toLowerCase();
+      const expected = mailHost.toLowerCase();
+      if (flat.includes(expected)) {
+        return { ok: true, detail: hosts.join(", ") };
+      }
+      return {
+        ok: false,
+        detail: `PTR: ${hosts.join(", ") || "—"}; ideal: ${expected} (Hostinger rDNS talebi).`,
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return { ok: false, detail: `PTR sorgusu: ${message}` };
+    }
   }
 
   private async txtContains(

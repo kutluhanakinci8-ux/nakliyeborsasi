@@ -102,10 +102,15 @@ export class PlatformMailRoadmapService {
           status: phaseAProgress >= 100 && productionSmtp ? "active" : "active",
           progressPercent: phaseAProgress,
           nextStepsTr: productionSmtp
-            ? [
-                "isimtescil DNS (SPF, DKIM, DMARC) checklist yeşil",
-                "Admin Operasyon: test maili gönder",
-              ]
+            ? phaseAProgress >= 100
+              ? [
+                  "Faz A üretim standardı tamam — PTR/A uyarılarını izleyin",
+                  "DMARC raporları (dmarc@lerta.tr) ile teslimat takibi",
+                ]
+              : [
+                  "Platform gönderim: A5 PTR + mail A kaydı (inbox itibarı)",
+                  "Checklist tamam → Operasyon test maili",
+                ]
             : [
                 "VPS: scripts/setup-postfix-phase-a-lerta.sh",
                 "scripts/vps-enable-production-smtp.sh",

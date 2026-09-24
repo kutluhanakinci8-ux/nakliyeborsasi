@@ -35,7 +35,7 @@ export const NOTIFICATION_EVENT_CATALOG: NotificationEventDefinition[] = [
     code: NotificationEventCode.UserLogin,
     category: "auth",
     userPreferenceKey: null,
-    defaultAdminEnabled: true,
+    defaultAdminEnabled: false,
     defaultUserEnabled: false,
     labelTr: "Giriş",
   },
