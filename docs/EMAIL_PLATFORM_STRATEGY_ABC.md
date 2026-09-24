@@ -4,11 +4,11 @@
 
 | Hedef | Tanım | Son kullanıcı görünümü |
 |-------|--------|-------------------------|
-| **A** | Sadece platform bildirimleri | `lertalogistics@gmail.com` geçişi → kalıcı **`mail.lerta.com`** / `noreply@lertalogistics.com` |
+| **A** | Sadece platform bildirimleri | `notifications@mail.lerta.tr` — kendi VPS MTA (Postfix + OpenDKIM) |
 | **B** | Müşteri kimliği ile gönderim | `bildirim@musteri.com` veya `kullanici@lertalogistics.com` (gerçek From; hâlâ **giden bildirim**, tam webmail değil) |
 | **C** | Tam mailbox | Gelen + giden, klasörler, yanıt, (isteğe bağlı) IMAP; panel içi veya harici istemci |
 
-Mevcut omurga: `apps/api/src/modules/notification/*`, admin **`/admin/bildirimler`**, F1–F4 (outbox, analitik, politika, ESP webhook). Bu belge **yeni ürün hatlarını** fazlara böler.
+Mevcut omurga: `apps/api/src/modules/notification/*`, admin **`/admin/bildirimler`**, F1–F4 (outbox, analitik, politika, kendi SMTP). Harici ESP/Gmail entegrasyonu repoda **yok**. Bu belge **yeni ürün hatlarını** fazlara böler.
 
 ---
 
@@ -71,7 +71,7 @@ flowchart TB
 
 - Tüm sistem e-postaları: auth, ihale, ilan, mesaj, admin uyarıları.
 - Tek veya az sayıda **platform gönderen** profili.
-- Gmail **relay** yerine **`mail.lertalogistics.com`** (veya `notifications.lertalogistics.com`) + Postmark veya SES (mevcut `EMAIL_DELIVERY_PROVIDER`).
+- Gönderim yalnızca **`mail.lerta.tr`** ve VPS **Postfix** (`SmtpEmailSender`).
 
 ### 3.2 Teknik iş listesi
 
@@ -79,22 +79,22 @@ flowchart TB
 |---|-----|-----|
 | A1 | DNS: SPF, DKIM, DMARC platform domain | VPS / Cloudflare; admin’de “doğrulandı” rozeti |
 | A2 | `SMTP_FROM` / varsayılan From platform domain | `docs/PLATFORM_BRANDING.md` ile uyum |
-| A3 | Production: Postmark veya SES + webhook | `EmailEspWebhookController` zaten var |
-| A4 | Gmail relay’i sadece acil fallback veya kaldır | Rate limit ve itibar |
+| A3 | Production SMTP doğrulama + suppression | Admin Operasyon |
+| A4 | Bounce: SMTP sınıflandırma (Faz C’de inbound webhook) | ESP webhook yok |
 | A5 | Admin: gönderim sağlığı, analitik, suppression tam kullanım | `/admin/bildirimler` |
 | A6 | `EMAIL_TRACKING_ENABLED` prod kararı + secret rotasyonu | |
 | A7 | Runbook: bounce, şikâyet, suppression | `docs/EMAIL_F3_F4_OPERATIONS.md` genişlet |
 
 ### 3.3 Başarı kriteri
 
-- %99+ platform bildirimleri `From: ...@lertalogistics.com` (veya seçilen domain).
-- Webhook ile delivered/bounce/complaint outbox’a işleniyor.
-- Gmail kişisel hesap operasyon için opsiyonel (Gmail API okuma), **gönderim hattı değil**.
+- %99+ platform bildirimleri `From: notifications@mail.lerta.tr` (veya seçilen platform domain).
+- SMTP hataları ve suppression outbox ile uyumlu.
+- Gelen kutusu **Faz C** (kendi MX + webmail).
 
 ### 3.4 Kod referansları (mevcut)
 
 - `EmailOutboxService`, `EmailOutboxProcessor`, `EmailDeliveryService`
-- `SmtpEmailSender`, `PostmarkEmailSender`
+- `SmtpEmailSender`
 - `OperationalNotificationService`, `NotificationEventCatalog`
 
 ---
@@ -199,7 +199,7 @@ Gönderim: `EmailOutbox` → `fromIdentityId` veya snapshot `fromAddress`.
 |-----------------|-----|
 | Operasyon, outbox, SMTP test | A (mevcut) |
 | Analitik, CSV, önizleme | A (mevcut) |
-| Politika & ESP, suppression | A (mevcut) |
+| Politika & suppression, kendi MTA | A (mevcut) |
 | Platform DNS sağlığı | A1 |
 | Tenant domain listesi / doğrulama | B |
 | Mailbox kota, inbound hata, kuyruk | C |
@@ -208,7 +208,7 @@ Gönderim: `EmailOutbox` → `fromIdentityId` veya snapshot `fromAddress`.
 
 ## 8. Sonraki uygulama adımı (önerilen sprint)
 
-1. **A1–A3:** `mail.lertalogistics.com` DNS + Postmark/SES prod + Gmail’i gönderimden çıkar.
+1. **A1–A4:** `mail.lerta.tr` DNS + VPS Postfix/OpenDKIM + admin checklist.
 2. **B tasarım:** `MailDomain` / `MailSenderIdentity` entity + migration + admin read-only liste.
 3. Mail sekmesine **“Platform gönderim”** ve **“Kurumsal kimlikler (yakında)”** alt bölümleri.
 
@@ -219,5 +219,5 @@ Faz C için mimari spike: inbound webhook POC (tek adres, DB’ye yaz, admin’d
 ## 9. Referanslar
 
 - `docs/MAIL_ADMIN_BENCHMARK_REPORT.md` — rakip skorları, TMS vs ESP
-- `docs/EMAIL_F3_F4_OPERATIONS.md` — env ve webhook
-- `docs/GMAIL_INBOX_IN_ADMIN.md` — geçici operasyon okuma (Faz C öncesi)
+- `docs/EMAIL_F3_F4_OPERATIONS.md` — politika ve kendi MTA
+- `docs/EMAIL_PHASE_A_DNS_ISIMTESCIL.md` — Faz A DNS

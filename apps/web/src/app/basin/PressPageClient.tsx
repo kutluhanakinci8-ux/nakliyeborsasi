@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { PublicPageShell } from "../../components/PublicPageShell";
 import { SiteLayout } from "../../components/SiteLayout";
+import { PLATFORM_PRIMARY_CONTACT_EMAIL } from "../../lib/platformBranding";
 
 const PAGE_SUBNAV = [
   { href: "#bultenler", label: "Bültenler" },
@@ -73,7 +74,7 @@ const FOCUS_TOPICS = [
 ] as const;
 
 const MEDIA_CONTACT = {
-  email: "lertalogistics@gmail.com",
+  email: PLATFORM_PRIMARY_CONTACT_EMAIL,
   note: "Röportaj, demo ve basın kiti talepleri için 48 saat içinde dönüş hedeflenir.",
 };
 

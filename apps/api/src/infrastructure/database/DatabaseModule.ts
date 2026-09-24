@@ -24,8 +24,6 @@ import { EmailOutboxEntity } from "./entities/EmailOutboxEntity";
 import { PlatformNotificationSettingEntity } from "./entities/PlatformNotificationSettingEntity";
 import { EmailVerificationTokenEntity } from "./entities/EmailVerificationTokenEntity";
 import { PasswordResetTokenEntity } from "./entities/PasswordResetTokenEntity";
-import { PlatformGmailCredentialEntity } from "./entities/PlatformGmailCredentialEntity";
-import { PlatformGmailOAuthStateEntity } from "./entities/PlatformGmailOAuthStateEntity";
 import { EmailOutboxEngagementEventEntity } from "./entities/EmailOutboxEngagementEventEntity";
 import { EmailOutboxClickTokenEntity } from "./entities/EmailOutboxClickTokenEntity";
 import { EmailSuppressionEntity } from "./entities/EmailSuppressionEntity";
@@ -65,8 +63,6 @@ import { SubscriptionCatalogModule } from "../../modules/subscription/Subscripti
       PlatformNotificationSettingEntity,
       EmailVerificationTokenEntity,
       PasswordResetTokenEntity,
-      PlatformGmailCredentialEntity,
-      PlatformGmailOAuthStateEntity,
       EmailOutboxEngagementEventEntity,
       EmailOutboxClickTokenEntity,
       EmailSuppressionEntity,

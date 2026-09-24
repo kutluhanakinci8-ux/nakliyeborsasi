@@ -248,7 +248,7 @@ export function AdminSystemPageClient() {
           <ul className="admin-checklist admin-users-checklist">
             <li>Test şifresi: TestPass123! (@test.nakliyeborsasi.local)</li>
             <li>
-              Platform operatörü: lertalogistics@gmail.com (veya seed admin@nakliyeborsasi.local) —
+              Platform operatörü: admin@lerta.tr —
               docs/TEST_USERS.md
             </li>
             <li>Bakım modu, global duyuru banner: sonraki sürüm</li>

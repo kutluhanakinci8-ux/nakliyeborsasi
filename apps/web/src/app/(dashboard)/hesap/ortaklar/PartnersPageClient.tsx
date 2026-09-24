@@ -5,6 +5,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { EmptyState } from "../../../../components/EmptyState";
 import { useWebSession } from "../../../../context/WebSessionProvider";
+import { PLATFORM_PRIMARY_CONTACT_EMAIL } from "../../../../lib/platformBranding";
 
 type PartnerRelation = "carrier" | "shipper" | "forwarder";
 type PartnerStatus = "active" | "pending" | "invited";
@@ -57,7 +58,7 @@ function defaultStore(): PartnersStore {
         relation: "carrier",
         status: "active",
         corridorLabel: "TR · UA · EU",
-        contactEmail: "lertalogistics@gmail.com",
+        contactEmail: PLATFORM_PRIMARY_CONTACT_EMAIL,
         note: "Demo ortak — güven profili ve mesajla test edin.",
         linkedSince: "2026-01-10",
       },

@@ -11,6 +11,7 @@ import {
   CONTACT_ROUTES,
   type ContactTopic,
 } from "../../lib/contactOffices";
+import { PLATFORM_PRIMARY_CONTACT_EMAIL } from "../../lib/platformBranding";
 
 const SUBNAV = [
   { href: "#contact-form", label: "Mesaj formu" },
@@ -151,7 +152,9 @@ export function ContactPageClient() {
                   <span>TR genel hat · mesai içi</span>
                 </li>
                 <li>
-                  <a href="mailto:lertalogistics@gmail.com">lertalogistics@gmail.com</a>
+                  <a href={`mailto:${PLATFORM_PRIMARY_CONTACT_EMAIL}`}>
+                    {PLATFORM_PRIMARY_CONTACT_EMAIL}
+                  </a>
                   <span>Genel bilgi</span>
                 </li>
                 <li>

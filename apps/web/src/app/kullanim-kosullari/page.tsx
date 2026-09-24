@@ -1,4 +1,5 @@
 import { LegalPageLayout } from "../../components/LegalPageLayout";
+import { PLATFORM_PRIMARY_CONTACT_EMAIL } from "../../lib/platformBranding";
 
 const TOC = [
   { id: "genel", label: "Genel hükümler" },
@@ -129,7 +130,10 @@ export default function KullanimKosullariPage() {
       </p>
       <p>
         Sorularınız için{" "}
-        <a href="mailto:lertalogistics@gmail.com">lertalogistics@gmail.com</a> veya{" "}
+        <a href={`mailto:${PLATFORM_PRIMARY_CONTACT_EMAIL}`}>
+          {PLATFORM_PRIMARY_CONTACT_EMAIL}
+        </a>{" "}
+        veya{" "}
         <a href="/iletisim">iletişim formu</a> üzerinden bize ulaşabilirsiniz.
       </p>
     </LegalPageLayout>

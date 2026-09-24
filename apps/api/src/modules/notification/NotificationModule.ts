@@ -15,9 +15,6 @@ import { PlatformNotificationSettingsService } from "./PlatformNotificationSetti
 import { AuthNotificationService } from "./AuthNotificationService";
 import { EmailSecurityTokenService } from "./EmailSecurityTokenService";
 import { PlatformNotificationAdminController } from "./PlatformNotificationAdminController";
-import { PlatformGmailCredentialEntity } from "../../infrastructure/database/entities/PlatformGmailCredentialEntity";
-import { PlatformGmailOAuthStateEntity } from "../../infrastructure/database/entities/PlatformGmailOAuthStateEntity";
-import { GmailInboxService } from "./GmailInboxService";
 import { EmailOutboxAnalyticsService } from "./EmailOutboxAnalyticsService";
 import { EmailOutboxEngagementEventEntity } from "../../infrastructure/database/entities/EmailOutboxEngagementEventEntity";
 import { EmailOutboxClickTokenEntity } from "../../infrastructure/database/entities/EmailOutboxClickTokenEntity";
@@ -25,7 +22,6 @@ import { EmailTrackingController } from "./EmailTrackingController";
 import { EmailEngagementService } from "./EmailEngagementService";
 import { EmailHtmlTrackingService } from "./EmailHtmlTrackingService";
 import { EmailTrackingSignatureService } from "./EmailTrackingSignatureService";
-import { GmailOAuthConfigurationService } from "./GmailOAuthConfigurationService";
 import { EmailOutboxProcessor } from "./EmailOutboxProcessor";
 import { EmailDeliveryHealthService } from "./EmailDeliveryHealthService";
 import { EmailSuppressionEntity } from "../../infrastructure/database/entities/EmailSuppressionEntity";
@@ -53,8 +49,6 @@ import { AuctionBidEntity } from "../../infrastructure/database/entities/Auction
       UserAccountEntity,
       CompanyEntity,
       CompanyMembershipEntity,
-      PlatformGmailCredentialEntity,
-      PlatformGmailOAuthStateEntity,
       EmailOutboxEngagementEventEntity,
       EmailOutboxClickTokenEntity,
       EmailSuppressionEntity,
@@ -80,8 +74,6 @@ import { AuctionBidEntity } from "../../infrastructure/database/entities/Auction
     EmailSecurityTokenService,
     EmailOutboxProcessor,
     EmailDeliveryHealthService,
-    GmailInboxService,
-    GmailOAuthConfigurationService,
     EmailOutboxAnalyticsService,
     EmailEngagementService,
     EmailHtmlTrackingService,

@@ -56,7 +56,7 @@ Faz A DNS (isimtescil `lerta.tr`): [docs/EMAIL_PHASE_A_DNS_ISIMTESCIL.md](docs/E
 **Dokümantasyon**
 
 - [docs/MAIL_ADMIN_BENCHMARK_REPORT.md](docs/MAIL_ADMIN_BENCHMARK_REPORT.md) — rakip analizi  
-- [docs/EMAIL_F3_F4_OPERATIONS.md](docs/EMAIL_F3_F4_OPERATIONS.md) — env ve webhook  
+- [docs/EMAIL_F3_F4_OPERATIONS.md](docs/EMAIL_F3_F4_OPERATIONS.md) — politika ve kendi MTA  
 ### Yapılacaklar (sıra)
 
 **Faz A — bitirmek (sizin + VPS)**

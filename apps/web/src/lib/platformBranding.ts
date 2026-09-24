@@ -3,5 +3,6 @@ export {
   PLATFORM_PRODUCT_NAME_UPPER,
   PLATFORM_MONOGRAM,
   PLATFORM_PRIMARY_CONTACT_EMAIL,
+  PLATFORM_OPERATOR_EMAIL,
   isPlatformOperatorEmail,
 } from "@nakliyeborsasi/core";
