@@ -6586,10 +6586,9 @@ button.btn-secondary {
 .account-org-hero {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
+  align-items: center;
   gap: 20px;
-  padding: 24px 26px;
+  padding: 20px 24px;
   border: 1px solid rgba(15, 36, 68, 0.1);
   background:
     radial-gradient(100% 120% at 100% 0%, rgba(30, 58, 95, 0.12), transparent 55%),

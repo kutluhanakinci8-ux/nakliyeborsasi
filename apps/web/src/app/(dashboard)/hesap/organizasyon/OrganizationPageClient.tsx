@@ -164,29 +164,7 @@ export function OrganizationPageClient() {
           <div>
             <p className="account-org-hero-kicker">Kurumsal hesap</p>
             <h1 className="account-org-hero-title">{displayTradeName}</h1>
-            <p className="account-org-hero-lead">
-              Bu sekme <strong>firmanızı</strong> temsil eder: sözleşme, doğrulama, koridor ve
-              abonelik. Kişisel ayarlar için{" "}
-              <Link href="/hesap/profil">Benim profilim</Link>.
-            </p>
-            <p className="account-session-banner account-session-banner--inline">
-              Yönetici oturumu: <strong>{emailAddress || "—"}</strong>
-              {companyId ? (
-                <>
-                  {" "}
-                  · Kimlik <code>{companyId.slice(0, 8)}…</code>
-                </>
-              ) : null}
-            </p>
           </div>
-        </div>
-        <div className="account-org-hero-actions">
-          <Link href="/hesap/calisanlar" className="btn-account-ghost">
-            Çalışanlar
-          </Link>
-          <Link href="/hesap/odemeler" className="btn-account-ghost">
-            Ödemeler
-          </Link>
         </div>
       </header>
 
