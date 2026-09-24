@@ -62,6 +62,14 @@ export class MailDomainDnsVerificationService {
     return "v=spf1";
   }
 
+  public async verifyTxtRecord(
+    host: string,
+    mustInclude: string,
+    expectedFragment?: string,
+  ): Promise<{ ok: boolean; detail: string }> {
+    return this.txtContains(host, mustInclude, expectedFragment);
+  }
+
   private async txtContains(
     host: string,
     mustInclude: string,

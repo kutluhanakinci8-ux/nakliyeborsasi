@@ -103,11 +103,29 @@ export function AdminMailDomainsPanel() {
     await refresh();
   }
 
-  async function verifyDomain(id: string): Promise<void> {
+  async function verifyDomain(row: MailDomainRow): Promise<void> {
     if (!accessToken) {
       return;
     }
-    await PlatformAdminApiClient.verifyMailDomain(accessToken, id);
+    setMessage("");
+    if (row.domainType === "custom") {
+      try {
+        const result = await PlatformAdminApiClient.verifyMailDomainDns(
+          accessToken,
+          row.id,
+        );
+        setMessage(
+          result.ok
+            ? `${row.domain} DNS doğrulandı (SPF+DKIM).`
+            : `${row.domain} DNS henüz eksik — SPF/DKIM kontrol edin.`,
+        );
+      } catch {
+        setMessage(`${row.domain} DNS doğrulama başarısız.`);
+      }
+    } else {
+      await PlatformAdminApiClient.verifyMailDomain(accessToken, row.id);
+      setMessage(`${row.domain} manuel verified işaretlendi.`);
+    }
     await refresh();
   }
 
@@ -235,10 +253,12 @@ export function AdminMailDomainsPanel() {
       </section>
 
       <section className="pa-panel">
-        <h2 className="pa-panel-title">Özel domain (musteri.com)</h2>
+        <h2 className="pa-panel-title">Özel domain (B5 — musteri.com)</h2>
         <p className="pa-panel-lead">
-          İleride müşteri kendi domainini bağlar; şimdilik pilot{" "}
-          <code>kullanici.lerta.tr</code> önerilir.
+          Organizasyon sahibi <strong>Hesap → E-posta kimliği</strong> üzerinden
+          de kayıt açabilir. Admin buradan da ekleyebilir; DKIM anahtarı otomatik
+          üretilir. DNS doğrulama → OpenDKIM (<code>MAIL_SYNC_OPENDKIM=true</code>{" "}
+          veya <code>scripts/register-opendkim-custom-domain.sh</code>).
         </p>
         <div className="pa-toolbar">
           <input
@@ -292,10 +312,10 @@ export function AdminMailDomainsPanel() {
                       style={{ fontSize: "0.75rem" }}
                       onClick={() => {
                         setSelectedDomainId(row.id);
-                        void verifyDomain(row.id);
+                        void verifyDomain(row);
                       }}
                     >
-                      Manuel doğrula
+                      {row.domainType === "custom" ? "DNS doğrula" : "Manuel doğrula"}
                     </button>
                   </td>
                 </tr>

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -12,6 +13,7 @@ import { PlatformAdminGuard } from "../platform-admin/PlatformAdminGuard";
 import { MailDomainApplicationService } from "./MailDomainApplicationService";
 import { PlatformMailRoadmapService } from "./PlatformMailRoadmapService";
 import { MailTenantSubdomainService } from "./MailTenantSubdomainService";
+import { MailCustomDomainService } from "./MailCustomDomainService";
 import { MailDomainType } from "../../infrastructure/database/entities/MailDomainEntity";
 
 @Controller("platform-admin/mail")
@@ -21,6 +23,7 @@ export class PlatformMailIdentityAdminController {
     private readonly mailDomainApplicationService: MailDomainApplicationService,
     private readonly platformMailRoadmapService: PlatformMailRoadmapService,
     private readonly mailTenantSubdomainService: MailTenantSubdomainService,
+    private readonly mailCustomDomainService: MailCustomDomainService,
   ) {}
 
   @Get("roadmap")
@@ -46,10 +49,21 @@ export class PlatformMailIdentityAdminController {
       notes?: string;
     },
   ) {
+    const domainType = body.domainType ?? "custom";
+    if (domainType === "custom" && body.organizationId) {
+      const bundle = await this.mailCustomDomainService.registerForOrganization(
+        body.organizationId,
+        body.domain,
+      );
+      if (!bundle.mailDomain) {
+        throw new BadRequestException("Custom domain registration failed");
+      }
+      return { domain: bundle.mailDomain };
+    }
     const domain = await this.mailDomainApplicationService.createDomain({
       organizationId: body.organizationId,
       domain: body.domain,
-      domainType: body.domainType ?? "custom",
+      domainType,
       notes: body.notes,
     });
     return { domain };
@@ -60,6 +74,12 @@ export class PlatformMailIdentityAdminController {
     const domain =
       await this.mailDomainApplicationService.markVerified(domainId);
     return { domain };
+  }
+
+  @Post("domains/:domainId/verify-dns")
+  public async verifyDomainDns(@Param("domainId") domainId: string) {
+    const result = await this.mailCustomDomainService.verifyDomainById(domainId);
+    return { ok: result.dnsCheck.ok, ...result };
   }
 
   @Get("tenant-subdomain/pilot")

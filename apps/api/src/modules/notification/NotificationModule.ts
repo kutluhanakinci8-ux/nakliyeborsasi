@@ -18,6 +18,8 @@ import { PlatformNotificationAdminController } from "./PlatformNotificationAdmin
 import { CompanyMailIdentityController } from "./CompanyMailIdentityController";
 import { MailTenantDnsVerificationScheduler } from "./MailTenantDnsVerificationScheduler";
 import { MailOrganizationSendRateService } from "./MailOrganizationSendRateService";
+import { MailCustomDomainService } from "./MailCustomDomainService";
+import { MailCustomDomainOpenDkimInstaller } from "./MailCustomDomainOpenDkimInstaller";
 import { EmailOutboxAnalyticsService } from "./EmailOutboxAnalyticsService";
 import { EmailOutboxEngagementEventEntity } from "../../infrastructure/database/entities/EmailOutboxEngagementEventEntity";
 import { EmailOutboxClickTokenEntity } from "../../infrastructure/database/entities/EmailOutboxClickTokenEntity";
@@ -113,6 +115,8 @@ import { MailTenantSubdomainService } from "./MailTenantSubdomainService";
     MailTenantSubdomainService,
     MailTenantDnsVerificationScheduler,
     MailOrganizationSendRateService,
+    MailCustomDomainService,
+    MailCustomDomainOpenDkimInstaller,
   ],
   exports: [
     AuthNotificationService,

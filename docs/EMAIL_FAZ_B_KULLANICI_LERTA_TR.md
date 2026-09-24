@@ -49,7 +49,11 @@ Arka plan: `MailTenantDnsVerificationScheduler` (~30 dk) paylaşımlı alan DNS�
 
 Detay: [EMAIL_FAZ_B_B4_REPUTATION.md](./EMAIL_FAZ_B_B4_REPUTATION.md)
 
-## 7. Sonraki adımlar (B5+)
+## 7. B5 — Özel domain
 
-- Özel domain `@musteri.com`
+Detay: [EMAIL_FAZ_B_B5_CUSTOM_DOMAIN.md](./EMAIL_FAZ_B_B5_CUSTOM_DOMAIN.md)
+
+## 8. Sonraki adımlar
+
 - Gönderim audit / KVKK log
+- Gelen posta kutusu (Faz C)

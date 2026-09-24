@@ -580,6 +580,15 @@ export class PlatformAdminApiClient {
     return payload.domain;
   }
 
+  public static async verifyMailDomainDns(
+    accessToken: string,
+    domainId: string,
+  ): Promise<{ ok: boolean; dnsCheck: { ok: boolean } }> {
+    return adminFetch(accessToken, `mail/domains/${domainId}/verify-dns`, {
+      method: "POST",
+    });
+  }
+
   public static async addMailSender(
     accessToken: string,
     domainId: string,

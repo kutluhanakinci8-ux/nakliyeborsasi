@@ -15,6 +15,7 @@ import { AuthenticatedUserParam } from "../auth/AuthenticatedUserParam";
 import { MailTenantSubdomainService } from "./MailTenantSubdomainService";
 import { MailOrganizationSendRateService } from "./MailOrganizationSendRateService";
 import { EmailSuppressionService } from "./EmailSuppressionService";
+import { MailCustomDomainService } from "./MailCustomDomainService";
 
 class ProvisionCompanyMailIdentityDto {
   public localPart!: string;
@@ -32,6 +33,7 @@ export class CompanyMailIdentityController {
     private readonly mailTenantSubdomainService: MailTenantSubdomainService,
     private readonly mailOrganizationSendRateService: MailOrganizationSendRateService,
     private readonly emailSuppressionService: EmailSuppressionService,
+    private readonly mailCustomDomainService: MailCustomDomainService,
   ) {}
 
   @Get()
@@ -59,6 +61,55 @@ export class CompanyMailIdentityController {
   ) {
     this.assertCompanyOwner(user);
     const result = await this.mailTenantSubdomainService.provisionPilotSender({
+      organizationId: user.companyId,
+      localPart: body.localPart,
+      displayName: body.displayName,
+    });
+    return { message: "OK", ...result };
+  }
+
+  @Get("custom-domain")
+  public async getCustomDomain(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    const bundle = await this.mailCustomDomainService.getOrganizationBundle(
+      user.companyId,
+    );
+    return { message: "OK", bundle };
+  }
+
+  @Post("custom-domain")
+  public async registerCustomDomain(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: { domain: string },
+  ) {
+    this.assertCompanyOwner(user);
+    const bundle = await this.mailCustomDomainService.registerForOrganization(
+      user.companyId,
+      body.domain,
+    );
+    return { message: "OK", bundle };
+  }
+
+  @Post("custom-domain/verify-dns")
+  public async verifyCustomDomainDns(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    this.assertCompanyOwner(user);
+    const domain =
+      await this.mailCustomDomainService.verifyAndMarkOrganizationDomain(
+        user.companyId,
+      );
+    return { message: "OK", domain };
+  }
+
+  @Post("custom-domain/provision")
+  public async provisionCustomDomainSender(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: ProvisionCompanyMailIdentityDto,
+  ) {
+    this.assertCompanyOwner(user);
+    const result = await this.mailCustomDomainService.provisionSender({
       organizationId: user.companyId,
       localPart: body.localPart,
       displayName: body.displayName,

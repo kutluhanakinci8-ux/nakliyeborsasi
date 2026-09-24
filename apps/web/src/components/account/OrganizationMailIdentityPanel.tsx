@@ -4,11 +4,16 @@ import { useCallback, useEffect, useState } from "react";
 import {
   addOrgSuppression,
   fetchCompanyMailIdentity,
+  fetchCustomDomainBundle,
   fetchOrgSuppressions,
   provisionCompanyMailIdentity,
+  provisionCustomDomainSender,
+  registerCustomDomain,
   removeOrgSuppression,
   updateCompanyMailDisplayName,
+  verifyCustomDomainDns,
   type CompanyMailIdentitySnapshot,
+  type CustomDomainBundle,
   type OrgSuppressionRow,
 } from "../../lib/CompanyMailIdentityApi";
 import { useWebSession } from "../../context/WebSessionProvider";
@@ -41,6 +46,11 @@ export function OrganizationMailIdentityPanel({
   const [error, setError] = useState("");
   const [suppressions, setSuppressions] = useState<OrgSuppressionRow[]>([]);
   const [blockEmail, setBlockEmail] = useState("");
+  const [customDomain, setCustomDomain] = useState<CustomDomainBundle | null>(
+    null,
+  );
+  const [customDomainInput, setCustomDomainInput] = useState("");
+  const [customLocalPart, setCustomLocalPart] = useState("bildirim");
 
   const refresh = useCallback(async () => {
     if (!accessToken) {
@@ -53,6 +63,7 @@ export function OrganizationMailIdentityPanel({
       setIdentity(next);
       if (isOwner) {
         setSuppressions(await fetchOrgSuppressions(accessToken));
+        setCustomDomain(await fetchCustomDomainBundle(accessToken));
       }
       if (!next.sender && !localPart) {
         setLocalPart(slugifyLocalPart(companyTradeName));
@@ -227,6 +238,189 @@ export function OrganizationMailIdentityPanel({
           {!identity.fromAddress && identity.platformDnsReady && !isOwner ? (
             <p className="module-hint">
               Kurumsal gönderen adresi yalnızca firma sahibi oluşturabilir.
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
+      {isOwner ? (
+        <div
+          className="account-org-mail-status"
+          style={{ marginTop: "1.5rem", borderTop: "1px solid var(--border-subtle, #e5e7eb)", paddingTop: "1.25rem" }}
+        >
+          <p className="account-verify-eyebrow">Faz B5 — Özel domain</p>
+          <h3 className="account-card-title" style={{ fontSize: "1rem" }}>
+            Kendi alan adınız (@musteri.com)
+          </h3>
+          <p className="module-hint">
+            Bildirimler <code>bildirim@sizin-domain.com</code> gibi adreslerden
+            gider. DNS (SPF + DKIM) doğrulandıktan sonra gönderen oluşturulur;
+            paylaşımlı <code>kullanici.lerta.tr</code> kimliğinin yerini alır.
+          </p>
+
+          {!customDomain?.mailDomain ? (
+            <div className="account-form-row" style={{ marginTop: "0.75rem" }}>
+              <label className="account-label">
+                Alan adı
+                <input
+                  className="account-input"
+                  placeholder="musteri.com"
+                  value={customDomainInput}
+                  onChange={(e) => setCustomDomainInput(e.target.value)}
+                />
+              </label>
+              <button
+                type="button"
+                className="btn-account-secondary"
+                onClick={() => {
+                  if (!accessToken || !customDomainInput.trim()) {
+                    return;
+                  }
+                  setMessage("");
+                  setError("");
+                  void registerCustomDomain(
+                    accessToken,
+                    customDomainInput.trim(),
+                  )
+                    .then((bundle) => {
+                      setCustomDomain(bundle);
+                      setMessage(
+                        `Özel domain kaydı oluşturuldu: ${bundle.dnsInstructions?.domain}`,
+                      );
+                    })
+                    .catch(() =>
+                      setError(
+                        "Domain eklenemedi — geçersiz alan veya başka firmaya bağlı olabilir.",
+                      ),
+                    );
+                }}
+              >
+                Özel domain kaydet
+              </button>
+            </div>
+          ) : null}
+
+          {customDomain?.dnsInstructions ? (
+            <div style={{ marginTop: "1rem" }}>
+              <p className="account-card-lead">
+                Domain: <code>{customDomain.dnsInstructions.domain}</code> — durum:{" "}
+                <strong>{customDomain.mailDomain?.verificationStatus}</strong>
+              </p>
+              <ul className="module-hint" style={{ textAlign: "left" }}>
+                <li>
+                  TXT <code>{customDomain.dnsInstructions.spfHost}</code> →{" "}
+                  <code>{customDomain.dnsInstructions.spfValue}</code>
+                </li>
+                <li>
+                  TXT <code>{customDomain.dnsInstructions.dkimHost}</code> → DKIM
+                  (panelde üretilen değer)
+                </li>
+                <li>
+                  TXT <code>{customDomain.dnsInstructions.dmarcHost}</code> →{" "}
+                  <code>{customDomain.dnsInstructions.dmarcValue}</code>
+                </li>
+              </ul>
+              {customDomain.dnsInstructions.dkimTxt ? (
+                <p className="module-hint" style={{ wordBreak: "break-all" }}>
+                  DKIM: <code>{customDomain.dnsInstructions.dkimTxt}</code>
+                </p>
+              ) : null}
+              {customDomain.dnsCheck ? (
+                <div className="account-verify-badges" style={{ marginTop: "0.5rem" }}>
+                  <span
+                    className={
+                      customDomain.dnsCheck.spf.ok
+                        ? "account-status-pill account-status-pill--ok"
+                        : "account-status-pill account-status-pill--pending"
+                    }
+                  >
+                    SPF {customDomain.dnsCheck.spf.ok ? "ok" : "eksik"}
+                  </span>
+                  <span
+                    className={
+                      customDomain.dnsCheck.dkim.ok
+                        ? "account-status-pill account-status-pill--ok"
+                        : "account-status-pill account-status-pill--pending"
+                    }
+                  >
+                    DKIM {customDomain.dnsCheck.dkim.ok ? "ok" : "eksik"}
+                  </span>
+                </div>
+              ) : null}
+              <div className="account-form-row" style={{ marginTop: "0.75rem" }}>
+                <button
+                  type="button"
+                  className="btn-account-secondary"
+                  onClick={() => {
+                    if (!accessToken) {
+                      return;
+                    }
+                    setMessage("");
+                    setError("");
+                    void verifyCustomDomainDns(accessToken)
+                      .then(() => {
+                        setMessage("DNS doğrulandı; OpenDKIM senkronu denendi.");
+                        void refresh();
+                      })
+                      .catch(() => {
+                        setError(
+                          "DNS henüz hazır değil — SPF/DKIM TXT kayıtlarını kontrol edin.",
+                        );
+                        void refresh();
+                      });
+                  }}
+                >
+                  DNS doğrula
+                </button>
+              </div>
+              <p className="module-hint">
+                VPS (root): <code>{customDomain.dnsInstructions.vpsOpendkimScript}</code>
+                — veya <code>MAIL_SYNC_OPENDKIM=true</code> ile otomatik.
+              </p>
+            </div>
+          ) : null}
+
+          {customDomain?.mailDomain?.verificationStatus === "verified" &&
+          !customDomain.fromAddress ? (
+            <div className="account-form-row" style={{ marginTop: "1rem" }}>
+              <label className="account-label">
+                Gönderen ön eki
+                <input
+                  className="account-input"
+                  value={customLocalPart}
+                  onChange={(e) => setCustomLocalPart(e.target.value)}
+                  placeholder="bildirim"
+                />
+              </label>
+              <button
+                type="button"
+                className="btn-account-primary"
+                onClick={() => {
+                  if (!accessToken || !customLocalPart.trim()) {
+                    return;
+                  }
+                  void provisionCustomDomainSender(
+                    accessToken,
+                    customLocalPart.trim(),
+                    displayName.trim() || companyTradeName,
+                  )
+                    .then((r) => {
+                      setMessage(`Özel domain gönderen: ${r.fromAddress}`);
+                      void refresh();
+                    })
+                    .catch(() =>
+                      setError("Gönderen oluşturulamadı — adres kullanımda olabilir."),
+                    );
+                }}
+              >
+                @{customDomain.dnsInstructions?.domain ?? "domain"} gönderen oluştur
+              </button>
+            </div>
+          ) : null}
+
+          {customDomain?.fromAddress ? (
+            <p className="account-card-lead" style={{ marginTop: "0.75rem" }}>
+              Aktif özel gönderen: <code>{customDomain.fromAddress}</code>
             </p>
           ) : null}
         </div>

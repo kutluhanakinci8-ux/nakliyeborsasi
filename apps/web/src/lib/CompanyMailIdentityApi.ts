@@ -1,5 +1,25 @@
 import { PublicApiConfiguration } from "./PublicApiConfiguration";
 
+export type CustomDomainBundle = {
+  mailDomain: { id: string; domain: string; verificationStatus: string } | null;
+  dnsInstructions: {
+    domain: string;
+    spfHost: string;
+    spfValue: string;
+    dkimHost: string;
+    dkimTxt: string;
+    dmarcHost: string;
+    dmarcValue: string;
+    vpsOpendkimScript: string;
+  } | null;
+  dnsCheck: {
+    ok: boolean;
+    spf: { ok: boolean; detail: string };
+    dkim: { ok: boolean; detail: string };
+  } | null;
+  fromAddress: string | null;
+};
+
 export type CompanyMailIdentitySnapshot = {
   domain: string;
   platformDnsReady: boolean;
@@ -38,6 +58,51 @@ async function apiFetch<T>(
     throw new Error(text || `API failed: ${path}`);
   }
   return (await response.json()) as T;
+}
+
+export async function fetchCustomDomainBundle(
+  accessToken: string,
+): Promise<CustomDomainBundle> {
+  const payload = await apiFetch<{ bundle: CustomDomainBundle }>(
+    accessToken,
+    "company/mail-identity/custom-domain",
+  );
+  return payload.bundle;
+}
+
+export async function registerCustomDomain(
+  accessToken: string,
+  domain: string,
+): Promise<CustomDomainBundle> {
+  const payload = await apiFetch<{ bundle: CustomDomainBundle }>(
+    accessToken,
+    "company/mail-identity/custom-domain",
+    { method: "POST", body: JSON.stringify({ domain }) },
+  );
+  return payload.bundle;
+}
+
+export async function verifyCustomDomainDns(accessToken: string): Promise<void> {
+  await apiFetch(accessToken, "company/mail-identity/custom-domain/verify-dns", {
+    method: "POST",
+    body: JSON.stringify({}),
+  });
+}
+
+export async function provisionCustomDomainSender(
+  accessToken: string,
+  localPart: string,
+  displayName?: string,
+): Promise<{ fromAddress: string }> {
+  const payload = await apiFetch<{ fromAddress: string }>(
+    accessToken,
+    "company/mail-identity/custom-domain/provision",
+    {
+      method: "POST",
+      body: JSON.stringify({ localPart, displayName }),
+    },
+  );
+  return { fromAddress: payload.fromAddress };
 }
 
 export async function fetchCompanyMailIdentity(
