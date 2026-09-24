@@ -12,6 +12,11 @@ import { UserNotificationPreferenceService } from "./UserNotificationPreferenceS
 import { EmailDeliveryService } from "./EmailDeliveryService";
 import { MailSenderResolutionService } from "./MailSenderResolutionService";
 import { MailOrganizationSendRateService } from "./MailOrganizationSendRateService";
+import {
+  appendTenantTrustFooter,
+  resolveTenantReplyToAddress,
+} from "./MailTenantEmailBranding";
+import { CompanyEntity } from "../../infrastructure/database/entities/CompanyEntity";
 
 @Injectable()
 export class EmailOutboxService {
@@ -29,6 +34,8 @@ export class EmailOutboxService {
     private readonly emailDeliveryService: EmailDeliveryService,
     private readonly mailSenderResolutionService: MailSenderResolutionService,
     private readonly mailOrganizationSendRateService: MailOrganizationSendRateService,
+    @InjectRepository(CompanyEntity)
+    private readonly companyRepository: Repository<CompanyEntity>,
   ) {}
 
   public async enqueue(params: {
@@ -46,7 +53,16 @@ export class EmailOutboxService {
     if (existing) {
       return existing;
     }
-    if (await this.emailSuppressionService.isSuppressed(params.recipientEmail)) {
+    const enqueueOrgId =
+      typeof params.metadata?.companyId === "string"
+        ? params.metadata.companyId
+        : null;
+    if (
+      await this.emailSuppressionService.isSuppressed(
+        params.recipientEmail,
+        enqueueOrgId,
+      )
+    ) {
       this.logger.warn(
         `Suppressed recipient skipped: ${params.recipientEmail}`,
       );
@@ -105,27 +121,45 @@ export class EmailOutboxService {
     if (!row || row.status === "sent") {
       return;
     }
+    let tenantOrganizationIdForBounce: string | null = null;
     try {
-      const htmlWithTracking = await this.emailHtmlTrackingService.applyTracking(
-        row.id,
-        row.htmlBody,
-      );
-      row.htmlBody = htmlWithTracking;
       const resolved =
         await this.mailSenderResolutionService.resolveFromForOutbox(
           row.metadata,
         );
+      tenantOrganizationIdForBounce = resolved.tenantOrganizationId;
       if (resolved.tenantOrganizationId) {
         this.mailOrganizationSendRateService.assertCanSend(
           resolved.tenantOrganizationId,
         );
       }
+      let htmlBody = row.htmlBody;
+      let textBody = row.textBody;
+      if (resolved.tenantOrganizationId) {
+        const company = await this.companyRepository.findOne({
+          where: { id: resolved.tenantOrganizationId },
+        });
+        const fromEmail = extractEmailAddress(resolved.from);
+        htmlBody = appendTenantTrustFooter(htmlBody, {
+          organizationName: company?.legalName ?? "Kurumsal hesap",
+          fromAddress: fromEmail,
+        });
+        textBody = `${textBody}\n\n— ${company?.legalName ?? "Kurumsal hesap"} adına ${fromEmail} (${resolveTenantReplyToAddress()} yanıt).`;
+      }
+      const htmlWithTracking = await this.emailHtmlTrackingService.applyTracking(
+        row.id,
+        htmlBody,
+      );
+      row.htmlBody = htmlWithTracking;
       const delivery = await this.emailDeliveryService.send({
         to: row.recipientEmail,
         subject: row.subject,
         html: htmlWithTracking,
-        text: row.textBody,
+        text: textBody,
         from: resolved.from,
+        replyTo: resolved.tenantOrganizationId
+          ? resolveTenantReplyToAddress()
+          : undefined,
       });
       if (resolved.tenantOrganizationId) {
         this.mailOrganizationSendRateService.recordSend(
@@ -149,6 +183,7 @@ export class EmailOutboxService {
       await this.emailEngagementService.recordBounceForOutbox(
         row.id,
         row.lastError,
+        tenantOrganizationIdForBounce,
       );
       throw error;
     }
@@ -235,4 +270,12 @@ export class EmailOutboxService {
     }
     return count;
   }
+}
+
+function extractEmailAddress(fromHeader: string): string {
+  const match = fromHeader.match(/<([^>]+)>/);
+  if (match?.[1]) {
+    return match[1].toLowerCase();
+  }
+  return fromHeader.trim().toLowerCase();
 }

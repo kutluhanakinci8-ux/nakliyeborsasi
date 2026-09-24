@@ -55,31 +55,56 @@ export class PlatformNotificationAdminController {
   }
 
   @Get("suppressions")
-  public async suppressions(@Query("limit") limit?: string) {
+  public async suppressions(
+    @Query("limit") limit?: string,
+    @Query("organizationId") organizationId?: string,
+  ) {
     const parsed = limit ? Number.parseInt(limit, 10) : 200;
+    const take = Number.isFinite(parsed) ? parsed : 200;
+    if (organizationId?.trim()) {
+      return {
+        scope: "organization",
+        suppressions: await this.emailSuppressionService.listForOrganization(
+          organizationId.trim(),
+          take,
+        ),
+      };
+    }
     return {
-      suppressions: await this.emailSuppressionService.list(
-        Number.isFinite(parsed) ? parsed : 200,
-      ),
+      scope: "platform",
+      suppressions: await this.emailSuppressionService.listPlatform(take),
     };
   }
 
   @Post("suppressions")
   public async addSuppression(
-    @Body() body: { email: string; reason?: string; note?: string },
+    @Body()
+    body: {
+      email: string;
+      reason?: string;
+      note?: string;
+      organizationId?: string;
+    },
   ) {
     const row = await this.emailSuppressionService.addSuppression({
       email: body.email,
       reason: body.reason ?? "manual",
       source: "admin",
       note: body.note,
+      organizationId: body.organizationId ?? null,
     });
     return { suppression: row };
   }
 
   @Delete("suppressions")
-  public async removeSuppression(@Query("email") email: string) {
-    const removed = await this.emailSuppressionService.removeSuppression(email);
+  public async removeSuppression(
+    @Query("email") email: string,
+    @Query("organizationId") organizationId?: string,
+  ) {
+    const removed = await this.emailSuppressionService.removeSuppression(
+      email,
+      organizationId ?? null,
+    );
     return { ok: removed };
   }
 

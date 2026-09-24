@@ -45,7 +45,11 @@ Arka plan: `MailTenantDnsVerificationScheduler` (~30 dk) paylaşımlı alan DNS�
 - Admin **Operasyon**: olay `AUCTION_BID_PLACED` + organizasyon UUID + test alıcı → outbox `metadata.companyId` ile tenant From.
 - API: `GET /api/v1/platform-admin/notifications/org-send-rate?organizationId=...`
 
-## 6. Sonraki adımlar (B4+)
+## 6. B4 — İtibar (tamamlandı)
 
-- Org suppression ayrımı (platform listesinden bağımsız)
+Detay: [EMAIL_FAZ_B_B4_REPUTATION.md](./EMAIL_FAZ_B_B4_REPUTATION.md)
+
+## 7. Sonraki adımlar (B5+)
+
 - Özel domain `@musteri.com`
+- Gönderim audit / KVKK log

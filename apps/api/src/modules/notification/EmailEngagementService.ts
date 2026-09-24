@@ -91,6 +91,7 @@ export class EmailEngagementService {
   public async recordBounceForOutbox(
     outboxId: string,
     errorMessage: string,
+    organizationIdForSuppression?: string | null,
   ): Promise<void> {
     const classified = classifySmtpDeliveryFailure(errorMessage);
     const row = await this.outboxRepository.findOne({ where: { id: outboxId } });
@@ -121,6 +122,7 @@ export class EmailEngagementService {
         reason: `bounce:${classified.bounceClass}`,
         source: "smtp_auto",
         note: errorMessage.slice(0, 500),
+        organizationId: organizationIdForSuppression ?? null,
       });
     }
   }

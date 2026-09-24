@@ -1,10 +1,12 @@
 import {
   Body,
   Controller,
+  Delete,
   ForbiddenException,
   Get,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from "@nestjs/common";
 import { CompanyRoleCode, AuthenticatedUserContext } from "@nakliyeborsasi/core";
@@ -12,6 +14,7 @@ import { JwtAuthenticationGuard } from "../auth/JwtAuthenticationGuard";
 import { AuthenticatedUserParam } from "../auth/AuthenticatedUserParam";
 import { MailTenantSubdomainService } from "./MailTenantSubdomainService";
 import { MailOrganizationSendRateService } from "./MailOrganizationSendRateService";
+import { EmailSuppressionService } from "./EmailSuppressionService";
 
 class ProvisionCompanyMailIdentityDto {
   public localPart!: string;
@@ -28,6 +31,7 @@ export class CompanyMailIdentityController {
   public constructor(
     private readonly mailTenantSubdomainService: MailTenantSubdomainService,
     private readonly mailOrganizationSendRateService: MailOrganizationSendRateService,
+    private readonly emailSuppressionService: EmailSuppressionService,
   ) {}
 
   @Get()
@@ -60,6 +64,46 @@ export class CompanyMailIdentityController {
       displayName: body.displayName,
     });
     return { message: "OK", ...result };
+  }
+
+  @Get("suppressions")
+  public async listSuppressions(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    return {
+      suppressions: await this.emailSuppressionService.listForOrganization(
+        user.companyId,
+      ),
+    };
+  }
+
+  @Post("suppressions")
+  public async addSuppression(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: { email: string; reason?: string; note?: string },
+  ) {
+    this.assertCompanyOwner(user);
+    const row = await this.emailSuppressionService.addSuppression({
+      email: body.email,
+      reason: body.reason ?? "manual",
+      source: "org_admin",
+      note: body.note,
+      organizationId: user.companyId,
+    });
+    return { suppression: row };
+  }
+
+  @Delete("suppressions")
+  public async removeSuppression(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Query("email") email: string,
+  ) {
+    this.assertCompanyOwner(user);
+    const removed = await this.emailSuppressionService.removeSuppression(
+      email,
+      user.companyId,
+    );
+    return { ok: removed };
   }
 
   @Patch("display-name")

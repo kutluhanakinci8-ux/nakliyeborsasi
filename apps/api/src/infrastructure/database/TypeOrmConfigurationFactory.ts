@@ -29,6 +29,7 @@ import { PasswordResetTokenEntity } from "./entities/PasswordResetTokenEntity";
 import { EmailOutboxEngagementEventEntity } from "./entities/EmailOutboxEngagementEventEntity";
 import { EmailOutboxClickTokenEntity } from "./entities/EmailOutboxClickTokenEntity";
 import { EmailSuppressionEntity } from "./entities/EmailSuppressionEntity";
+import { EmailOrganizationSuppressionEntity } from "./entities/EmailOrganizationSuppressionEntity";
 import { UserNotificationPreferenceEntity } from "./entities/UserNotificationPreferenceEntity";
 import { CompanyNotificationPreferenceEntity } from "./entities/CompanyNotificationPreferenceEntity";
 import { MailDomainEntity } from "./entities/MailDomainEntity";
@@ -79,6 +80,7 @@ export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
         EmailOutboxEngagementEventEntity,
         EmailOutboxClickTokenEntity,
         EmailSuppressionEntity,
+        EmailOrganizationSuppressionEntity,
         UserNotificationPreferenceEntity,
         CompanyNotificationPreferenceEntity,
         MailDomainEntity,

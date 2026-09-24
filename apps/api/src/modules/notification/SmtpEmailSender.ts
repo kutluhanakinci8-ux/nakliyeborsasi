@@ -16,6 +16,7 @@ export class SmtpEmailSender {
     html: string;
     text: string;
     from?: string;
+    replyTo?: string;
   }): Promise<string | null> {
     if (!this.notificationConfigurationService.isEmailEnabled()) {
       this.logger.warn(`EMAIL_ENABLED=false — skipped send to ${params.to}`);
@@ -31,6 +32,7 @@ export class SmtpEmailSender {
       subject: params.subject,
       html: params.html,
       text: params.text,
+      replyTo: params.replyTo?.trim() || undefined,
     });
     return result.messageId ?? null;
   }

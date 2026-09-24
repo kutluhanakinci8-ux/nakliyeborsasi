@@ -29,6 +29,7 @@ import { EmailOutboxProcessor } from "./EmailOutboxProcessor";
 import { EmailOutboxOperationsService } from "./EmailOutboxOperationsService";
 import { EmailDeliveryHealthService } from "./EmailDeliveryHealthService";
 import { EmailSuppressionEntity } from "../../infrastructure/database/entities/EmailSuppressionEntity";
+import { EmailOrganizationSuppressionEntity } from "../../infrastructure/database/entities/EmailOrganizationSuppressionEntity";
 import { UserNotificationPreferenceEntity } from "../../infrastructure/database/entities/UserNotificationPreferenceEntity";
 import { CompanyNotificationPreferenceEntity } from "../../infrastructure/database/entities/CompanyNotificationPreferenceEntity";
 import { CompanyMembershipEntity } from "../../infrastructure/database/entities/CompanyMembershipEntity";
@@ -66,6 +67,7 @@ import { MailTenantSubdomainService } from "./MailTenantSubdomainService";
       EmailOutboxEngagementEventEntity,
       EmailOutboxClickTokenEntity,
       EmailSuppressionEntity,
+      EmailOrganizationSuppressionEntity,
       UserNotificationPreferenceEntity,
       CompanyNotificationPreferenceEntity,
       AuctionSessionEntity,

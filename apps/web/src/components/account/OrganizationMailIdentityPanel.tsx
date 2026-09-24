@@ -2,10 +2,14 @@
 
 import { useCallback, useEffect, useState } from "react";
 import {
+  addOrgSuppression,
   fetchCompanyMailIdentity,
+  fetchOrgSuppressions,
   provisionCompanyMailIdentity,
+  removeOrgSuppression,
   updateCompanyMailDisplayName,
   type CompanyMailIdentitySnapshot,
+  type OrgSuppressionRow,
 } from "../../lib/CompanyMailIdentityApi";
 import { useWebSession } from "../../context/WebSessionProvider";
 
@@ -35,6 +39,8 @@ export function OrganizationMailIdentityPanel({
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [suppressions, setSuppressions] = useState<OrgSuppressionRow[]>([]);
+  const [blockEmail, setBlockEmail] = useState("");
 
   const refresh = useCallback(async () => {
     if (!accessToken) {
@@ -45,6 +51,9 @@ export function OrganizationMailIdentityPanel({
     try {
       const next = await fetchCompanyMailIdentity(accessToken);
       setIdentity(next);
+      if (isOwner) {
+        setSuppressions(await fetchOrgSuppressions(accessToken));
+      }
       if (!next.sender && !localPart) {
         setLocalPart(slugifyLocalPart(companyTradeName));
       }
@@ -58,7 +67,7 @@ export function OrganizationMailIdentityPanel({
     } finally {
       setLoading(false);
     }
-  }, [accessToken, companyTradeName]);
+  }, [accessToken, companyTradeName, isOwner]);
 
   useEffect(() => {
     void refresh();
@@ -219,6 +228,63 @@ export function OrganizationMailIdentityPanel({
             <p className="module-hint">
               Kurumsal gönderen adresi yalnızca firma sahibi oluşturabilir.
             </p>
+          ) : null}
+        </div>
+      ) : null}
+
+      {isOwner && identity?.fromAddress ? (
+        <div style={{ marginTop: "1.5rem" }}>
+          <h3 className="account-card-title" style={{ fontSize: "1rem" }}>
+            Org suppression (B4)
+          </h3>
+          <p className="module-hint">
+            Bu listeye alınan adreslere yalnızca firmanız adına giden bildirimler
+            gönderilmez; platform genel listesinden bağımsızdır.
+          </p>
+          <div className="account-form-row">
+            <input
+              className="account-input"
+              placeholder="engellenecek@ornek.com"
+              value={blockEmail}
+              onChange={(e) => setBlockEmail(e.target.value)}
+            />
+            <button
+              type="button"
+              className="btn-account-secondary"
+              onClick={() => {
+                if (!accessToken || !blockEmail.trim()) {
+                  return;
+                }
+                void addOrgSuppression(accessToken, blockEmail.trim()).then(
+                  () => {
+                    setBlockEmail("");
+                    void refresh();
+                  },
+                );
+              }}
+            >
+              Engelle
+            </button>
+          </div>
+          {suppressions.length > 0 ? (
+            <ul className="module-hint">
+              {suppressions.map((row) => (
+                <li key={row.emailAddress}>
+                  {row.emailAddress}{" "}
+                  <button
+                    type="button"
+                    className="btn-account-ghost"
+                    onClick={() =>
+                      void removeOrgSuppression(accessToken!, row.emailAddress).then(
+                        () => void refresh(),
+                      )
+                    }
+                  >
+                    Kaldır
+                  </button>
+                </li>
+              ))}
+            </ul>
           ) : null}
         </div>
       ) : null}

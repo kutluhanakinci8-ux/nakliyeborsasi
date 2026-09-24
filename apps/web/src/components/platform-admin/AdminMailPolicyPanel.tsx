@@ -107,8 +107,9 @@ export function AdminMailPolicyPanel() {
       <section className="pa-panel">
         <h2 className="pa-panel-title">Suppression listesi</h2>
         <p className="pa-panel-lead">
-          Bounce, şikâyet ve manuel engeller. Bu adreslere outbox gönderimi
-          yapılmaz.
+          Platform geneli bounce ve manuel engeller. Kurumsal org listesi için
+          isteğe bağlı <code>organizationId</code> query (API) veya firma paneli
+          E-posta kimliği → Org suppression.
         </p>
         <div className="pa-toolbar">
           <input

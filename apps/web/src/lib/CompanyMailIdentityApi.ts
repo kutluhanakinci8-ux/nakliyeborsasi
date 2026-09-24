@@ -71,3 +71,46 @@ export async function updateCompanyMailDisplayName(
     body: JSON.stringify({ displayName }),
   });
 }
+
+export type OrgSuppressionRow = {
+  organizationId: string;
+  emailAddress: string;
+  reason: string;
+  source: string;
+  note: string | null;
+};
+
+export async function fetchOrgSuppressions(
+  accessToken: string,
+): Promise<OrgSuppressionRow[]> {
+  const payload = await apiFetch<{ suppressions: OrgSuppressionRow[] }>(
+    accessToken,
+    "company/mail-identity/suppressions",
+  );
+  return payload.suppressions;
+}
+
+export async function addOrgSuppression(
+  accessToken: string,
+  email: string,
+): Promise<void> {
+  await apiFetch(accessToken, "company/mail-identity/suppressions", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
+export async function removeOrgSuppression(
+  accessToken: string,
+  email: string,
+): Promise<void> {
+  const headers = new Headers();
+  headers.set("Authorization", `Bearer ${accessToken}`);
+  const response = await fetch(
+    `${PublicApiConfiguration.resolveBaseUrl()}/company/mail-identity/suppressions?email=${encodeURIComponent(email)}`,
+    { method: "DELETE", headers },
+  );
+  if (!response.ok) {
+    throw new Error("DELETE suppression failed");
+  }
+}
