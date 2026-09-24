@@ -7,9 +7,10 @@ BRANCH="${2:-cursor/modular-freight-platform-18ba}"
 cd "$INSTALL_DIR"
 
 echo "=== Git: origin/${BRANCH} (yerel değişiklikler sıfırlanır) ==="
-git fetch origin
-git checkout "$BRANCH"
-git reset --hard "origin/${BRANCH}"
+git fetch origin "$BRANCH"
+git reset --hard
+git clean -fd
+git checkout -B "$BRANCH" "origin/${BRANCH}"
 
 echo "=== Son commit ==="
 git log -1 --oneline
