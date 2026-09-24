@@ -11,7 +11,7 @@ git fetch origin "$BRANCH"
 # Önce working tree'i boşalt; checkout bazen package-lock.json ile takılır.
 git merge --abort 2>/dev/null || true
 git reset --hard HEAD 2>/dev/null || true
-git clean -fdx
+git clean -fdx -e .env -e apps/web/.env.local
 git checkout -f -B "$BRANCH" "origin/${BRANCH}" || {
   echo "checkout başarısız — ref üzerinden zorla hizalanıyor"
   git fetch origin "$BRANCH"
@@ -19,7 +19,7 @@ git checkout -f -B "$BRANCH" "origin/${BRANCH}" || {
   git checkout -f "$BRANCH"
 }
 git reset --hard "origin/${BRANCH}"
-git clean -fdx
+git clean -fdx -e .env -e apps/web/.env.local
 
 echo "=== Son commit ==="
 git log -1 --oneline
