@@ -254,21 +254,31 @@ export class PlatformMailSendingService {
         : `Beklenen: ${params.fromEmail}. SMTP_FROM güncelleyin. Şu an: ${params.configuredFrom}`,
     });
 
-    const productionSmtp =
+    const loopbackOwnMta =
+      params.smtpProfile === "custom" &&
+      (params.smtpHost === "127.0.0.1" || params.smtpHost === "localhost");
+    const remoteOwnMta =
       params.smtpProfile === "custom" &&
       params.smtpHost !== "127.0.0.1" &&
       params.smtpHost !== "localhost";
+    const ownMtaConfigured = loopbackOwnMta || remoteOwnMta;
     items.push({
       id: "A3-mta",
       titleTr: "A3 — Kendi SMTP (MTA)",
       descriptionTr:
         "Üçüncü taraf ESP yok; gönderim VPS Postfix veya sizin SMTP uç noktanız.",
-      status: productionSmtp ? "ok" : params.smtpProfile === "mailpit" ? "warning" : "pending",
-      detail: productionSmtp
-        ? `SMTP_PROFILE=custom, host=${params.smtpHost}`
+      status: ownMtaConfigured
+        ? "ok"
         : params.smtpProfile === "mailpit"
-          ? "Geliştirme Mailpit aktif — üretimde SMTP_PROFILE=custom ve gerçek host kullanın."
-          : "SMTP_HOST ve SMTP_PROFILE=custom tanımlayın.",
+          ? "warning"
+          : "pending",
+      detail: loopbackOwnMta
+        ? "SMTP_PROFILE=custom, yerel Postfix (127.0.0.1:25) — Faz A üretim."
+        : remoteOwnMta
+          ? `SMTP_PROFILE=custom, host=${params.smtpHost}`
+          : params.smtpProfile === "mailpit"
+            ? "Geliştirme Mailpit aktif — üretimde SMTP_PROFILE=custom kullanın."
+            : "SMTP_HOST ve SMTP_PROFILE=custom tanımlayın.",
     });
 
     const health = this.emailDeliveryHealthService.getSnapshot();
