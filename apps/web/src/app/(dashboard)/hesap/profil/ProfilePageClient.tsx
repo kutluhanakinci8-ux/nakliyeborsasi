@@ -7,6 +7,11 @@ import {
   resolveAccountInitials,
 } from "../../../../lib/accountNavigation";
 import { loadOrganizationProfile } from "../../../../lib/organizationProfile";
+import {
+  SubscriptionApiClient,
+  type CompanySubscriptionPlanView,
+  type CompanySubscriptionView,
+} from "../../../../lib/SubscriptionApiClient";
 import { useWebSession } from "../../../../context/WebSessionProvider";
 
 type UserProfile = {
@@ -28,6 +33,29 @@ const ROLE_LABELS: Record<string, string> = {
   VIEWER: "Görüntüleme",
   BILLING_ADMIN: "Fatura ve ödeme",
 };
+
+const MODULE_LABELS: Record<string, string> = {
+  MARKETPLACE_SEARCH: "Yük arama",
+  CONTACTS: "İletişim açılımı",
+  AUCTION: "İhaleler",
+  MESSAGING: "Mesajlaşma",
+  TRUST_PROFILE: "Güven profili",
+  FLEET: "Filo ve telematik",
+  LANE_ANALYTICS: "Koridor analitiği",
+  EXTERNAL_FEEDS: "Harici akışlar",
+  API_ACCESS: "API erişimi",
+};
+
+function formatEur(amount: number | null): string {
+  if (amount === null) {
+    return "—";
+  }
+  return new Intl.NumberFormat("tr-TR", {
+    style: "currency",
+    currency: "EUR",
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
 
 function defaultProfile(emailAddress: string): UserProfile {
   return {
@@ -61,7 +89,8 @@ function loadProfile(userId: string, emailAddress: string): UserProfile {
 }
 
 export function ProfilePageClient() {
-  const { session, locale, setLocale, logout } = useWebSession();
+  const { session, locale, setLocale, logout, accessToken, isReady } =
+    useWebSession();
   const userId = session?.userId ?? "";
   const companyId = session?.companyId ?? "";
   const emailAddress = session?.emailAddress ?? "";
@@ -70,6 +99,12 @@ export function ProfilePageClient() {
     defaultProfile(emailAddress),
   );
   const [saveMessage, setSaveMessage] = useState("");
+  const [subscriptionView, setSubscriptionView] =
+    useState<CompanySubscriptionView | null>(null);
+  const [subscriptionLoading, setSubscriptionLoading] = useState(false);
+  const [subscriptionError, setSubscriptionError] = useState("");
+  const [planActionMessage, setPlanActionMessage] = useState("");
+  const [selectingPlanCode, setSelectingPlanCode] = useState("");
 
   useEffect(() => {
     if (!userId) {
@@ -90,6 +125,68 @@ export function ProfilePageClient() {
     const orgProfile = loadOrganizationProfile(companyId, emailAddress);
     setCompanyLogoUrl(orgProfile.logoUrl);
   }, [companyId, emailAddress]);
+
+  useEffect(() => {
+    if (!isReady || !accessToken) {
+      return;
+    }
+    let cancelled = false;
+    setSubscriptionLoading(true);
+    setSubscriptionError("");
+    void SubscriptionApiClient.fetchCompanySubscription(accessToken)
+      .then((view) => {
+        if (!cancelled) {
+          setSubscriptionView(view);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setSubscriptionError(
+            "Abonelik bilgisi yüklenemedi. Oturumu yenileyip tekrar deneyin.",
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setSubscriptionLoading(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [accessToken, isReady]);
+
+  async function handleSelectPlan(plan: CompanySubscriptionPlanView): Promise<void> {
+    if (!accessToken || !subscriptionView?.canManageSubscription) {
+      return;
+    }
+    setSelectingPlanCode(plan.planCode);
+    setPlanActionMessage("");
+    setSubscriptionError("");
+    try {
+      const result = await SubscriptionApiClient.selectCompanyPlan(
+        accessToken,
+        plan.planCode,
+      );
+      setSubscriptionView((current) =>
+        current
+          ? {
+              ...current,
+              activePlan: result.activePlan,
+              hasActiveSubscription: result.hasActiveSubscription,
+            }
+          : current,
+      );
+      setPlanActionMessage(
+        `${plan.displayName} planı firmanız için etkinleştirildi. Faturalama için Ödemeler sekmesini kullanın.`,
+      );
+      window.setTimeout(() => setPlanActionMessage(""), 6000);
+    } catch {
+      setSubscriptionError("Plan seçilemedi. Yetkinizi ve bağlantınızı kontrol edin.");
+    } finally {
+      setSelectingPlanCode("");
+    }
+  }
 
   function persistProfile(next: UserProfile): void {
     if (!userId) {
@@ -134,10 +231,14 @@ export function ProfilePageClient() {
 
   const initials = resolveAccountInitials(emailAddress);
   const roles = session?.roleCodes ?? [];
+  const activePlanCode = subscriptionView?.activePlan?.planCode ?? "";
 
   return (
-    <>
-      <section className="account-profile-banner module-panel module-panel--elevated">
+    <div className="account-profile-page account-profile-page--premium">
+      <section
+        className="account-profile-banner account-profile-banner--premium module-panel module-panel--elevated"
+        aria-label="Profil özeti"
+      >
         <div className="account-profile-identity">
           {companyLogoUrl ? (
             <img
@@ -182,6 +283,118 @@ export function ProfilePageClient() {
         </div>
       </section>
 
+      <section className="account-card account-subscription-panel module-panel module-panel--elevated">
+        <header className="account-card-head">
+          <div>
+            <p className="account-subscription-kicker">Firma aboneliği</p>
+            <h2 className="account-card-title">Plan ve modül erişimi</h2>
+            <p className="account-card-lead">
+              Nakliye Borsası modülleri firma aboneliği ile açılır. TR · UA · EU
+              operasyonları için planınızı seçin; faturalama ve ödeme yöntemleri
+              ödemeler sekmesinde yapılandırılır.
+            </p>
+          </div>
+          <Link href="/hesap/odemeler" className="btn-account-ghost">
+            Faturalama ayarları
+          </Link>
+        </header>
+
+        {subscriptionLoading ? (
+          <p className="account-subscription-hint">Abonelik yükleniyor…</p>
+        ) : null}
+        {subscriptionError ? (
+          <p className="account-subscription-error" role="alert">{subscriptionError}</p>
+        ) : null}
+        {planActionMessage ? (
+          <p className="account-subscription-success">{planActionMessage}</p>
+        ) : null}
+
+        {!subscriptionLoading && subscriptionView && !subscriptionView.hasActiveSubscription ? (
+          <div className="account-subscription-alert" role="status">
+            <strong>Aktif abonelik gerekli.</strong> Platformu kullanmaya devam etmek için
+            bir plan seçin. Mevcut verileriniz korunur; yalnızca modül erişimi plana bağlanır.
+          </div>
+        ) : null}
+
+        {subscriptionView?.activePlan ? (
+          <div className="account-subscription-active">
+            <span className="account-subscription-active-label">Aktif plan</span>
+            <span className="account-subscription-active-name">
+              {subscriptionView.activePlan.displayName}
+            </span>
+            <span className="account-subscription-active-price">
+              {formatEur(subscriptionView.activePlan.monthlyPriceEur)} / ay
+            </span>
+          </div>
+        ) : null}
+
+        <div className="account-plan-grid">
+          {subscriptionView?.catalog.map((plan) => {
+            const isActive = plan.planCode === activePlanCode;
+            const isSelecting = selectingPlanCode === plan.planCode;
+            return (
+              <article
+                key={plan.planCode}
+                className={
+                  plan.recommended
+                    ? "account-plan-card account-plan-card--featured"
+                    : "account-plan-card"
+                }
+                data-active={isActive ? "true" : "false"}
+              >
+                {plan.recommended ? (
+                  <span className="account-plan-badge">Önerilen</span>
+                ) : null}
+                <h3 className="account-plan-name">{plan.displayName}</h3>
+                <p className="account-plan-tagline">{plan.tagline}</p>
+                <p className="account-plan-price">
+                  <span className="account-plan-price-value">
+                    {formatEur(plan.monthlyPriceEur)}
+                  </span>
+                  <span className="account-plan-price-unit">/ ay</span>
+                </p>
+                <p className="account-plan-annual">
+                  Yıllık {formatEur(plan.annualPriceEur)} (2 ay tasarruf)
+                </p>
+                <ul className="account-plan-modules">
+                  {plan.includedModules.map((moduleCode) => (
+                    <li key={moduleCode}>
+                      {MODULE_LABELS[moduleCode] ?? moduleCode}
+                    </li>
+                  ))}
+                </ul>
+                <p className="account-plan-meta">
+                  {plan.maxConcurrentSearchTabs} paralel arama sekmesi ·{" "}
+                  {plan.laneAnalyticsHistoryDays} gün koridor geçmişi
+                </p>
+                {subscriptionView.canManageSubscription ? (
+                  <button
+                    type="button"
+                    className={
+                      isActive ? "btn-account-ghost account-plan-cta" : "btn-account-primary account-plan-cta"
+                    }
+                    disabled={isActive || isSelecting}
+                    onClick={() => void handleSelectPlan(plan)}
+                  >
+                    {isActive
+                      ? "Mevcut plan"
+                      : isSelecting
+                        ? "Etkinleştiriliyor…"
+                        : "Bu planı seç"}
+                  </button>
+                ) : (
+                  <p className="account-plan-readonly">
+                    Plan değişikliği yalnızca firma sahibi veya fatura yöneticisi
+                    tarafından yapılabilir.
+                  </p>
+                )}
+              </article>
+            );
+          })}
+        </div>
+      </section>
+
+      <div className="account-profile-columns">
       <form
         className="account-card module-panel module-panel--elevated"
         onSubmit={handlePersonalSubmit}
@@ -265,6 +478,7 @@ export function ProfilePageClient() {
           </select>
         </label>
       </section>
+      </div>
 
       <section className="account-card module-panel module-panel--elevated">
         <header className="account-card-head">
@@ -373,6 +587,6 @@ export function ProfilePageClient() {
           </Link>
         </div>
       </section>
-    </>
+    </div>
   );
 }

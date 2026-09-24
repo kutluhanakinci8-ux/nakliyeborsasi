@@ -14,6 +14,8 @@ export type AccountMenuItem = {
   label: string;
   lead: string;
   icon: AccountMenuIconId;
+  /** Profil gibi sekmelerde üst başlık alanını gizler; sekme çubuğu yeterli. */
+  hidePageHero?: boolean;
 };
 
 export const ACCOUNT_MENU_ITEMS: readonly AccountMenuItem[] = [
@@ -75,6 +77,7 @@ export const ACCOUNT_MENU_ITEMS: readonly AccountMenuItem[] = [
     label: "Benim profilim",
     lead: "Kişisel bilgiler, şifre ve bildirim tercihleri.",
     icon: "profile",
+    hidePageHero: true,
   },
 ] as const;
 

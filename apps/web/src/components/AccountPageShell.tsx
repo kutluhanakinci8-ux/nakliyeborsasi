@@ -9,10 +9,16 @@ import { AccountMenuIcon } from "./AccountMenuIcons";
 type AccountPageShellProps = {
   title: string;
   lead: string;
+  hidePageHero?: boolean;
   children: ReactNode;
 };
 
-export function AccountPageShell({ title, lead, children }: AccountPageShellProps) {
+export function AccountPageShell({
+  title,
+  lead,
+  hidePageHero = false,
+  children,
+}: AccountPageShellProps) {
   const pathname = usePathname();
   const tabsRef = useRef<HTMLElement>(null);
 
@@ -22,14 +28,22 @@ export function AccountPageShell({ title, lead, children }: AccountPageShellProp
   }, [pathname]);
 
   return (
-    <div className="account-page module-page">
-      <header className="exchange-hero account-page-hero">
-        <div>
-          <p className="exchange-eyebrow">Hesap</p>
-          <h1 className="exchange-title">{title}</h1>
-          <p className="exchange-lead">{lead}</p>
-        </div>
-      </header>
+    <div
+      className={
+        hidePageHero
+          ? "account-page account-page--no-hero module-page"
+          : "account-page module-page"
+      }
+    >
+      {hidePageHero ? null : (
+        <header className="exchange-hero account-page-hero">
+          <div>
+            <p className="exchange-eyebrow">Hesap</p>
+            <h1 className="exchange-title">{title}</h1>
+            <p className="exchange-lead">{lead}</p>
+          </div>
+        </header>
+      )}
 
       <nav ref={tabsRef} className="account-tabs" aria-label="Hesap bölümleri">
         {ACCOUNT_MENU_ITEMS.map((item) => {

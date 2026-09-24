@@ -38,4 +38,21 @@ export class CompanySubscriptionPersistenceService {
     });
     return new CompanySubscriptionSnapshot(companyId, planDefinition);
   }
+
+  public async assignActivePlan(
+    companyId: string,
+    planCode: string,
+  ): Promise<void> {
+    await this.companySubscriptionRepository.update(
+      { companyId, isActive: true },
+      { isActive: false },
+    );
+    await this.companySubscriptionRepository.save(
+      this.companySubscriptionRepository.create({
+        companyId,
+        planCode,
+        isActive: true,
+      }),
+    );
+  }
 }

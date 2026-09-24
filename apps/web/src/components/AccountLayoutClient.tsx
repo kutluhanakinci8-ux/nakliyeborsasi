@@ -18,7 +18,11 @@ export function AccountLayoutClient({ children }: AccountLayoutClientProps) {
   }
 
   return (
-    <AccountPageShell title={meta.label} lead={meta.lead}>
+    <AccountPageShell
+      title={meta.label}
+      lead={meta.lead}
+      hidePageHero={meta.hidePageHero}
+    >
       {children}
     </AccountPageShell>
   );

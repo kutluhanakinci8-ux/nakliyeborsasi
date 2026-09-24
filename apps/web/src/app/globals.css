@@ -6572,6 +6572,268 @@ button.btn-secondary {
   margin-bottom: 8px;
 }
 
+.account-page--no-hero .account-tabs {
+  padding-top: 2px;
+  margin-bottom: 4px;
+}
+
+.account-profile-page--premium {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.account-profile-banner--premium {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(15, 36, 68, 0.08);
+  background:
+    radial-gradient(120% 80% at 0% 0%, rgba(13, 148, 136, 0.12), transparent 55%),
+    radial-gradient(90% 70% at 100% 20%, rgba(30, 58, 95, 0.1), transparent 50%),
+    linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.account-profile-banner--premium::after {
+  content: "";
+  position: absolute;
+  inset: auto -40% -60% 40%;
+  height: 120px;
+  background: radial-gradient(circle, rgba(15, 76, 122, 0.06), transparent 70%);
+  pointer-events: none;
+}
+
+.account-profile-columns {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 18px;
+  align-items: start;
+}
+
+.account-subscription-kicker {
+  margin: 0 0 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #0d9488;
+}
+
+.account-subscription-panel {
+  border: 1px solid rgba(15, 36, 68, 0.08);
+  background: linear-gradient(165deg, #ffffff 0%, #f1f5f9 100%);
+}
+
+.account-subscription-hint,
+.account-subscription-success {
+  margin: 0 0 12px;
+  font-size: 0.88rem;
+  color: #64748b;
+}
+
+.account-subscription-success {
+  color: #0f766e;
+  font-weight: 600;
+}
+
+.account-subscription-error {
+  margin: 0 0 12px;
+  font-size: 0.88rem;
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.account-subscription-alert {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #fcd34d;
+  background: #fffbeb;
+  color: #92400e;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.account-subscription-active {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 14px;
+  margin-bottom: 18px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(15, 36, 68, 0.04);
+  border: 1px solid #e2e8f0;
+}
+
+.account-subscription-active-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+}
+
+.account-subscription-active-name {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--nb-navy-deep);
+}
+
+.account-subscription-active-price {
+  font-size: 0.9rem;
+  color: #475569;
+  font-weight: 600;
+}
+
+.account-plan-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.account-plan-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px 16px 16px;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+
+.account-plan-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 12px 32px rgba(15, 36, 68, 0.08);
+}
+
+.account-plan-card[data-active="true"] {
+  border-color: #0d9488;
+  box-shadow: 0 0 0 1px rgba(13, 148, 136, 0.35);
+}
+
+.account-plan-card--featured {
+  border-color: rgba(30, 58, 95, 0.35);
+  background: linear-gradient(180deg, #ffffff 0%, #f0f9ff 100%);
+}
+
+.account-plan-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: var(--nb-navy-deep, #0f2444);
+  color: #f8fafc;
+}
+
+.account-plan-name {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--nb-navy-deep);
+}
+
+.account-plan-tagline {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #64748b;
+  min-height: 2.9em;
+}
+
+.account-plan-price {
+  margin: 4px 0 0;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.account-plan-price-value {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--nb-navy-deep);
+}
+
+.account-plan-price-unit {
+  font-size: 0.85rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.account-plan-annual {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #94a3b8;
+}
+
+.account-plan-modules {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.account-plan-modules li {
+  position: relative;
+  padding-left: 18px;
+  font-size: 0.8rem;
+  color: #334155;
+  line-height: 1.35;
+}
+
+.account-plan-modules li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.45em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #0d9488;
+}
+
+.account-plan-meta {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.account-plan-cta {
+  margin-top: 8px;
+  width: 100%;
+  justify-content: center;
+}
+
+.account-plan-readonly {
+  margin: 8px 0 0;
+  font-size: 0.78rem;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+@media (max-width: 1100px) {
+  .account-plan-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .account-profile-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
 .account-tabs {
   display: flex;
   gap: 6px;
