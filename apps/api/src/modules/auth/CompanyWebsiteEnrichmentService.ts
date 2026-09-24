@@ -1,6 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { lookup } from "node:dns/promises";
-import { ValidationException } from "@nakliyeborsasi/core";
+import {
+  decodeHtmlEntities,
+  scrubMergedContactFromAddress,
+  ValidationException,
+} from "@nakliyeborsasi/core";
 import { CompanyWebsiteEnrichmentResult } from "./CompanyWebsiteEnrichmentResult";
 import { CompanyWebsiteSocialMedia } from "./CompanyWebsiteSocialMedia";
 
@@ -40,7 +44,7 @@ export class CompanyWebsiteEnrichmentService {
       this.extractMersis(text) ??
       this.extractLabeledValue(text, ["MERSİS", "MERSIS"])?.replace(/\D/g, "") ??
       null;
-    const addressLine = this.extractAddress(text);
+    const addressLine = this.extractAddress(text, html);
     const city = this.extractCity(text, addressLine);
     const servicesSummary = this.extractServicesSummary(text);
     const logoUrl = this.extractLogoUrl(html, sourceUrl);
@@ -163,8 +167,16 @@ export class CompanyWebsiteEnrichmentService {
   }
 
   private trimLabeledCapture(raw: string): string {
-    let value = raw.replace(/\s+/g, " ").trim();
+    let value = decodeHtmlEntities(raw).replace(/\s+/g, " ").trim();
     const stopPatterns = [
+      /\s+Telefon\s*:/i,
+      /\s+Tel\s*:/i,
+      /\s+GSM\s*:/i,
+      /\s+WhatsApp\b/i,
+      /\s+E\s*[- ]?Posta\s*:/i,
+      /\s+Email\s*:/i,
+      /\s+E-posta\s*:/i,
+      /\s+Web\s*:/i,
       /\s+Facebook\b/i,
       /\s+Twitter\b/i,
       /\s+Instagram\b/i,
@@ -459,14 +471,13 @@ export class CompanyWebsiteEnrichmentService {
     const withoutScripts = html
       .replace(/<script[\s\S]*?<\/script>/gi, " ")
       .replace(/<style[\s\S]*?<\/style>/gi, " ");
-    const text = withoutScripts
-      .replace(/<br\s*\/?>/gi, "\n")
-      .replace(/<\/p>/gi, "\n")
-      .replace(/<\/div>/gi, "\n")
-      .replace(/<[^>]+>/g, " ")
-      .replace(/&nbsp;/gi, " ")
-      .replace(/&amp;/gi, "&")
-      .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)))
+    const text = decodeHtmlEntities(
+      withoutScripts
+        .replace(/<br\s*\/?>/gi, "\n")
+        .replace(/<\/p>/gi, "\n")
+        .replace(/<\/div>/gi, "\n")
+        .replace(/<[^>]+>/g, " "),
+    )
       .replace(/\s+/g, " ")
       .trim();
     return text;
@@ -599,14 +610,18 @@ export class CompanyWebsiteEnrichmentService {
     return match ? match[0] : null;
   }
 
-  private extractAddress(text: string): string | null {
+  private extractAddress(text: string, html: string): string | null {
     const labeled = this.extractLabeledValue(text, [
       "Adres",
       "Adres Bilgileri",
       "Merkez Adres",
     ]);
-    if (labeled && /(?:mah|cad|sok|no:|kat:)/i.test(labeled)) {
-      return labeled.slice(0, 200);
+    if (labeled && /(?:mah|cad|sok|no:|kat:|İstanbul|İSTANBUL)/i.test(labeled)) {
+      return scrubMergedContactFromAddress(labeled);
+    }
+    const ogAddress = this.extractMetaContent(html, "og:street-address");
+    if (ogAddress) {
+      return scrubMergedContactFromAddress(ogAddress);
     }
     const street = text.match(
       /Yazgı\s+Sok\.?\s*No:\s*[\d/]+\s*İzmit\/Kocaeli/i,
@@ -624,11 +639,12 @@ export class CompanyWebsiteEnrichmentService {
     for (const pattern of patterns) {
       const match = text.match(pattern);
       if (match) {
-        return match[0]
-          .replace(/\s+/g, " ")
-          .replace(/(?:factory|location_pin|mail|phone)[_\s]*/gi, "")
-          .trim()
-          .slice(0, 200);
+        return scrubMergedContactFromAddress(
+          match[0]
+            .replace(/\s+/g, " ")
+            .replace(/(?:factory|location_pin|mail|phone)[_\s]*/gi, "")
+            .trim(),
+        );
       }
     }
     return null;
@@ -681,7 +697,7 @@ export class CompanyWebsiteEnrichmentService {
   }
 
   private cleanLabel(raw: string): string {
-    return raw.replace(/\s+/g, " ").trim();
+    return decodeHtmlEntities(raw).replace(/\s+/g, " ").trim();
   }
 
   private extractLogoUrl(html: string, pageUrl: string): string | null {

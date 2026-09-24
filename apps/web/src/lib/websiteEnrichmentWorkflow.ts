@@ -3,8 +3,10 @@ import {
   type CompanyWebsiteEnrichment,
 } from "./AuthApiClient";
 import { refreshInstagramStatsForOrganization } from "./instagramStatsWorkflow";
+import { scrubMergedContactFromAddress } from "@nakliyeborsasi/core";
 import {
   loadOrganizationProfile,
+  normalizeEnrichedTextField,
   normalizeOrganizationPhoneField,
   saveOrganizationProfile,
   type OrganizationProfile,
@@ -105,14 +107,20 @@ export function mergeEnrichmentIntoProfile(
       profile.primaryEmail,
       enrichment.emailAddress,
     ),
-    addressLine: pickFirstNonEmpty(profile.addressLine, enrichment.addressLine),
+    addressLine: scrubMergedContactFromAddress(
+      normalizeEnrichedTextField(
+        pickFirstNonEmpty(profile.addressLine, enrichment.addressLine),
+      ),
+    ),
     workingHours: pickFirstNonEmpty(
       profile.workingHours,
       enrichment.workingHours,
     ),
-    companyDescription: pickFirstNonEmpty(
-      profile.companyDescription,
-      enrichment.companyDescription,
+    companyDescription: normalizeEnrichedTextField(
+      pickFirstNonEmpty(
+        profile.companyDescription,
+        enrichment.companyDescription,
+      ),
     ),
     servicesSummary: pickFirstNonEmpty(
       profile.servicesSummary,

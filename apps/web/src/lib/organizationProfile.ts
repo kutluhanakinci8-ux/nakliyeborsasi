@@ -1,3 +1,8 @@
+import {
+  decodeHtmlEntities,
+  scrubMergedContactFromAddress,
+} from "@nakliyeborsasi/core";
+
 export type OrganizationProfile = {
   tradeName: string;
   legalName: string;
@@ -157,11 +162,21 @@ export function normalizeOrganizationPhoneField(value: string): string {
   }
 }
 
+export function normalizeEnrichedTextField(value: string): string {
+  return decodeHtmlEntities(value).replace(/\s+/g, " ").trim();
+}
+
 export function migrateOrganizationProfile(
   profile: OrganizationProfile,
 ): OrganizationProfile {
   const phone = normalizeOrganizationPhoneField(profile.phone);
   const whatsappNumber = normalizeOrganizationPhoneField(profile.whatsappNumber);
+  const addressLine = scrubMergedContactFromAddress(
+    normalizeEnrichedTextField(profile.addressLine),
+  );
+  const companyDescription = normalizeEnrichedTextField(
+    profile.companyDescription,
+  );
   const hasDedicated =
     profile.facebookUrl.trim() ||
     profile.instagramUrl.trim() ||
@@ -172,6 +187,8 @@ export function migrateOrganizationProfile(
     ...profile,
     phone,
     whatsappNumber,
+    addressLine,
+    companyDescription,
   };
   if (hasDedicated || !profile.socialMediaSummary.trim()) {
     return withPhones;

@@ -50,4 +50,5 @@ export * from "./telemetry/GeoMath";
 export * from "./telemetry/TelemetryGpsFilter";
 export * from "./telemetry/PolylineSimplifier";
 export * from "./telemetry/OsrmShardResolver";
+export * from "./text/decodeHtmlEntities";
 export * from "./ports/ExternalFreightDataPort";
