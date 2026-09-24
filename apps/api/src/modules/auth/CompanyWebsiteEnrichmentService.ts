@@ -257,8 +257,24 @@ export class CompanyWebsiteEnrichmentService {
     return match ? this.formatTurkishPhoneDisplay(match[1]) : null;
   }
 
+  private decodePhoneRaw(raw: string): string {
+    let value = raw.trim();
+    if (!value) {
+      return "";
+    }
+    if (value.includes("%")) {
+      try {
+        value = decodeURIComponent(value);
+      } catch {
+        value = value.replace(/%20/gi, " ");
+      }
+    }
+    return value.replace(/\+/g, " ").replace(/\s+/g, " ").trim();
+  }
+
   private formatTurkishPhoneDisplay(raw: string): string {
-    let digits = raw.replace(/\D/g, "");
+    const decoded = this.decodePhoneRaw(raw);
+    let digits = decoded.replace(/\D/g, "");
     if (digits.startsWith("90") && digits.length >= 12) {
       digits = `0${digits.slice(2)}`;
     }
@@ -271,7 +287,29 @@ export class CompanyWebsiteEnrichmentService {
     if (digits.length === 10) {
       return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6, 8)} ${digits.slice(8)}`;
     }
-    return raw.replace(/\s+/g, " ").trim();
+    return decoded.replace(/\s+/g, " ").trim();
+  }
+
+  private extractLabeledPhones(text: string): string[] {
+    const out: string[] = [];
+    const labels = [
+      "Telefon",
+      "Tel",
+      "Telefon Numarası",
+      "Call Center",
+      "Müşteri Hizmetleri",
+    ];
+    for (const label of labels) {
+      const value = this.extractLabeledValue(text, [label]);
+      if (!value) {
+        continue;
+      }
+      const digits = this.decodePhoneRaw(value).replace(/\D/g, "");
+      if (digits.length >= 10 && digits.length <= 11) {
+        out.push(this.formatTurkishPhoneDisplay(value));
+      }
+    }
+    return out;
   }
 
   private phoneDigitsKey(digits: string): string {
@@ -521,8 +559,9 @@ export class CompanyWebsiteEnrichmentService {
     ]
       .map((tag) => tag.match(/tel:([^"']+)/i)?.[1] ?? "")
       .filter(Boolean)
-      .map((raw) => this.formatTurkishPhoneDisplay(raw));
+      .map((raw) => this.formatTurkishPhoneDisplay(this.decodePhoneRaw(raw)));
 
+    const labeledPhones = this.extractLabeledPhones(text);
     const haystack = `${html}\n${text}`;
     const matches = haystack.match(
       /(?:\+90\s*|0\s*)?(?:\(?\d{3}\)?[\s.-]*)?\d{3}[\s.-]*\d{2}[\s.-]*\d{2}(?:[\s.-]*\d{2})?/g,
@@ -530,7 +569,7 @@ export class CompanyWebsiteEnrichmentService {
     const fromText = (matches ?? []).map((p) =>
       this.formatTurkishPhoneDisplay(p),
     );
-    const ordered = [...telMatches, ...fromText];
+    const ordered = [...labeledPhones, ...telMatches, ...fromText];
     const unique: string[] = [];
     const seen = new Set<string>();
     for (const candidate of ordered) {

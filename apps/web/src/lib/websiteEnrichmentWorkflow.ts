@@ -5,6 +5,7 @@ import {
 import { refreshInstagramStatsForOrganization } from "./instagramStatsWorkflow";
 import {
   loadOrganizationProfile,
+  normalizeOrganizationPhoneField,
   saveOrganizationProfile,
   type OrganizationProfile,
 } from "./organizationProfile";
@@ -91,10 +92,14 @@ export function mergeEnrichmentIntoProfile(
     ),
     kepAddress: pickFirstNonEmpty(profile.kepAddress, enrichment.kepAddress),
     city: pickFirstNonEmpty(profile.city, enrichment.city),
-    phone: pickFirstNonEmpty(profile.phone, enrichment.phone),
-    whatsappNumber: pickWhatsappFromEnrichment(
-      profile.whatsappNumber,
-      enrichment.whatsappNumber,
+    phone: normalizeOrganizationPhoneField(
+      pickFirstNonEmpty(profile.phone, enrichment.phone),
+    ),
+    whatsappNumber: normalizeOrganizationPhoneField(
+      pickWhatsappFromEnrichment(
+        profile.whatsappNumber,
+        enrichment.whatsappNumber,
+      ),
     ),
     primaryEmail: pickFirstNonEmpty(
       profile.primaryEmail,

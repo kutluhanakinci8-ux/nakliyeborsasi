@@ -144,20 +144,40 @@ function splitLegacySocialMediaSummary(summary: string): Partial<OrganizationPro
   return patch;
 }
 
+/** Eski taramalarda tel: URL encode (%20) kalmış olabilir. */
+export function normalizeOrganizationPhoneField(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed.includes("%")) {
+    return trimmed;
+  }
+  try {
+    return decodeURIComponent(trimmed).replace(/\s+/g, " ").trim();
+  } catch {
+    return trimmed.replace(/%20/gi, " ").trim();
+  }
+}
+
 export function migrateOrganizationProfile(
   profile: OrganizationProfile,
 ): OrganizationProfile {
+  const phone = normalizeOrganizationPhoneField(profile.phone);
+  const whatsappNumber = normalizeOrganizationPhoneField(profile.whatsappNumber);
   const hasDedicated =
     profile.facebookUrl.trim() ||
     profile.instagramUrl.trim() ||
     profile.twitterUrl.trim() ||
     profile.youtubeUrl.trim() ||
     profile.linkedinUrl.trim();
+  const withPhones = {
+    ...profile,
+    phone,
+    whatsappNumber,
+  };
   if (hasDedicated || !profile.socialMediaSummary.trim()) {
-    return profile;
+    return withPhones;
   }
   return {
-    ...profile,
+    ...withPhones,
     ...splitLegacySocialMediaSummary(profile.socialMediaSummary),
   };
 }
