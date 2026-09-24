@@ -63,5 +63,12 @@ if [[ "${UI_CODE}" == "200" ]]; then
 elif [[ "${UI_CODE}" == "404" ]]; then
   echo "UYARI: /ui-ornekleri HTTP 404 — git pull + build eski olabilir; scripts/vps-update.sh tekrar çalıştırın."
 fi
+MAIL_CODE="$(curl -sS -o /dev/null -w "%{http_code}" "http://127.0.0.1:${WEB_PORT}/admin/bildirimler" || echo 000)"
+if [[ "${MAIL_CODE}" == "200" ]] || [[ "${MAIL_CODE}" == "307" ]] || [[ "${MAIL_CODE}" == "308" ]]; then
+  echo "Admin mail sayfası OK: /admin/bildirimler (HTTP ${MAIL_CODE})"
+else
+  echo "HATA: /admin/bildirimler HTTP ${MAIL_CODE} — web build eksik; git log ve apps/web/.next kontrol edin." >&2
+  exit 1
+fi
 echo "Web: http://SUNUCU_IP:${WEB_PORT}"
 echo "API: ${API_PUBLIC_URL}"
