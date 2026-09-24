@@ -27,6 +27,36 @@ export type PlatformNotificationSetting = {
   adminRecipientEmails: string[];
 };
 
+export type PlatformDnsRecordInstruction = {
+  type: "TXT" | "CNAME" | "MX";
+  host: string;
+  value: string;
+  purpose: string;
+  notes?: string;
+};
+
+export type PlatformSendingCheckItem = {
+  id: string;
+  titleTr: string;
+  descriptionTr: string;
+  status: "ok" | "warning" | "pending" | "error";
+  detail: string | null;
+};
+
+export type PlatformSendingSnapshot = {
+  phase: "A";
+  domain: string;
+  fromEmail: string;
+  configuredFrom: string;
+  deliveryProvider: string;
+  postmarkConfigured: boolean;
+  postmarkWebhookConfigured: boolean;
+  registrarHint: string;
+  dnsRecords: PlatformDnsRecordInstruction[];
+  checklist: PlatformSendingCheckItem[];
+  checkedAt: string;
+};
+
 export type EmailDeliveryHealth = {
   emailEnabled: boolean;
   smtpProfile: string;
@@ -491,6 +521,16 @@ export class PlatformAdminApiClient {
       `notifications/suppressions?email=${encodeURIComponent(email)}`,
       { method: "DELETE" },
     );
+  }
+
+  public static async fetchPlatformSendingSnapshot(
+    accessToken: string,
+  ): Promise<PlatformSendingSnapshot> {
+    const payload = await adminFetch<{ snapshot: PlatformSendingSnapshot }>(
+      accessToken,
+      "notifications/platform-sending",
+    );
+    return payload.snapshot;
   }
 
   public static async fetchEmailDeliveryInfo(accessToken: string): Promise<{

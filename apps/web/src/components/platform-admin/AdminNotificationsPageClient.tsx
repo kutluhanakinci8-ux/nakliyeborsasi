@@ -14,6 +14,7 @@ import { AdminGmailInboxPanel } from "./AdminGmailInboxPanel";
 import { AdminMailAnalyticsPanel } from "./AdminMailAnalyticsPanel";
 import { AdminOutboxPreviewModal } from "./AdminOutboxPreviewModal";
 import { AdminMailPolicyPanel } from "./AdminMailPolicyPanel";
+import { AdminPlatformSendingPanel } from "./AdminPlatformSendingPanel";
 import type { EmailOutboxDetail } from "../../lib/PlatformAdminApiClient";
 
 const EVENT_LABELS: Record<string, string> = {
@@ -63,8 +64,8 @@ export function AdminNotificationsPageClient() {
   );
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState<
-    "operations" | "analytics" | "policy"
-  >("operations");
+    "platform" | "operations" | "analytics" | "policy"
+  >("platform");
   const [preview, setPreview] = useState<EmailOutboxDetail | null>(null);
 
   const refresh = useCallback(async () => {
@@ -217,6 +218,17 @@ export function AdminNotificationsPageClient() {
         <button
           type="button"
           className={
+            activeTab === "platform"
+              ? "pa-mail-tab is-active"
+              : "pa-mail-tab"
+          }
+          onClick={() => setActiveTab("platform")}
+        >
+          Platform gönderim
+        </button>
+        <button
+          type="button"
+          className={
             activeTab === "operations"
               ? "pa-mail-tab is-active"
               : "pa-mail-tab"
@@ -249,6 +261,7 @@ export function AdminNotificationsPageClient() {
         </button>
       </nav>
 
+      {activeTab === "platform" ? <AdminPlatformSendingPanel /> : null}
       {activeTab === "analytics" ? <AdminMailAnalyticsPanel /> : null}
       {activeTab === "policy" ? <AdminMailPolicyPanel /> : null}
 

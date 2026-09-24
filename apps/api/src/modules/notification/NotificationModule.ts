@@ -41,6 +41,7 @@ import { PostmarkEmailSender } from "./PostmarkEmailSender";
 import { EmailDeliveryService } from "./EmailDeliveryService";
 import { EmailEspWebhookService } from "./EmailEspWebhookService";
 import { EmailEspWebhookController } from "./EmailEspWebhookController";
+import { PlatformMailSendingService } from "./PlatformMailSendingService";
 import { UserNotificationPreferencesController } from "./UserNotificationPreferencesController";
 import { AuctionSessionEntity } from "../../infrastructure/database/entities/AuctionSessionEntity";
 import { AuctionBidEntity } from "../../infrastructure/database/entities/AuctionBidEntity";
@@ -97,6 +98,7 @@ import { AuctionBidEntity } from "../../infrastructure/database/entities/Auction
     CompanyNotificationPreferenceService,
     OperationalNotificationService,
     EmailEspWebhookService,
+    PlatformMailSendingService,
   ],
   exports: [
     AuthNotificationService,

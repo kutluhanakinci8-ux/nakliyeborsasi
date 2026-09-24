@@ -23,6 +23,7 @@ import { TestNotificationEmailDto } from "./TestNotificationEmailDto";
 import { EmailSuppressionService } from "./EmailSuppressionService";
 import { EmailDeliveryService } from "./EmailDeliveryService";
 import { NOTIFICATION_EVENT_CATALOG } from "./NotificationEventCatalog";
+import { PlatformMailSendingService } from "./PlatformMailSendingService";
 
 @Controller("platform-admin/notifications")
 @UseGuards(JwtAuthenticationGuard, PlatformAdminGuard)
@@ -35,7 +36,15 @@ export class PlatformNotificationAdminController {
     private readonly notificationConfigurationService: NotificationConfigurationService,
     private readonly emailSuppressionService: EmailSuppressionService,
     private readonly emailDeliveryService: EmailDeliveryService,
+    private readonly platformMailSendingService: PlatformMailSendingService,
   ) {}
+
+  @Get("platform-sending")
+  public async platformSending() {
+    return {
+      snapshot: await this.platformMailSendingService.buildSnapshot(),
+    };
+  }
 
   @Get("catalog")
   public catalog() {
