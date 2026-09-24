@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   PlatformAdminApiClient,
   type EmailDeliveryHealth,
@@ -9,6 +10,7 @@ import {
 } from "../../lib/PlatformAdminApiClient";
 import { useWebSession } from "../../context/WebSessionProvider";
 import { AdminPageHeader } from "./AdminPageHeader";
+import { AdminGmailInboxPanel } from "./AdminGmailInboxPanel";
 
 const EVENT_LABELS: Record<string, string> = {
   USER_REGISTERED: "Yeni kayıt",
@@ -36,6 +38,7 @@ function statusBadge(status: string): string {
 }
 
 export function AdminNotificationsPageClient() {
+  const searchParams = useSearchParams();
   const { accessToken } = useWebSession();
   const [settings, setSettings] = useState<PlatformNotificationSetting[]>([]);
   const [outbox, setOutbox] = useState<EmailOutboxRow[]>([]);
@@ -74,6 +77,17 @@ export function AdminNotificationsPageClient() {
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  useEffect(() => {
+    const gmail = searchParams.get("gmail");
+    if (gmail === "connected") {
+      setMessage("Gmail hesabı başarıyla bağlandı.");
+      window.setTimeout(() => setMessage(""), 5000);
+    } else if (gmail === "error" || gmail === "token_error") {
+      setMessage("Gmail bağlantısı tamamlanamadı. OAuth ayarlarını kontrol edin.");
+      window.setTimeout(() => setMessage(""), 6000);
+    }
+  }, [searchParams]);
 
   const filteredOutbox = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -193,6 +207,8 @@ export function AdminNotificationsPageClient() {
           <p className="pa-metric-value">{stats?.failed ?? "—"}</p>
         </article>
       </section>
+
+      <AdminGmailInboxPanel />
 
       <div className="pa-grid-2">
         {health ? (

@@ -15,6 +15,11 @@ import { PlatformNotificationSettingsService } from "./PlatformNotificationSetti
 import { AuthNotificationService } from "./AuthNotificationService";
 import { EmailSecurityTokenService } from "./EmailSecurityTokenService";
 import { PlatformNotificationAdminController } from "./PlatformNotificationAdminController";
+import { PlatformGmailAdminController } from "./PlatformGmailAdminController";
+import { PlatformGmailCredentialEntity } from "../../infrastructure/database/entities/PlatformGmailCredentialEntity";
+import { PlatformGmailOAuthStateEntity } from "../../infrastructure/database/entities/PlatformGmailOAuthStateEntity";
+import { GmailInboxService } from "./GmailInboxService";
+import { GmailOAuthConfigurationService } from "./GmailOAuthConfigurationService";
 import { EmailOutboxProcessor } from "./EmailOutboxProcessor";
 import { EmailDeliveryHealthService } from "./EmailDeliveryHealthService";
 
@@ -28,9 +33,11 @@ import { EmailDeliveryHealthService } from "./EmailDeliveryHealthService";
       PasswordResetTokenEntity,
       UserAccountEntity,
       CompanyEntity,
+      PlatformGmailCredentialEntity,
+      PlatformGmailOAuthStateEntity,
     ]),
   ],
-  controllers: [PlatformNotificationAdminController],
+  controllers: [PlatformNotificationAdminController, PlatformGmailAdminController],
   providers: [
     NotificationConfigurationService,
     EmailTemplateService,
@@ -41,6 +48,8 @@ import { EmailDeliveryHealthService } from "./EmailDeliveryHealthService";
     EmailSecurityTokenService,
     EmailOutboxProcessor,
     EmailDeliveryHealthService,
+    GmailInboxService,
+    GmailOAuthConfigurationService,
   ],
   exports: [
     AuthNotificationService,

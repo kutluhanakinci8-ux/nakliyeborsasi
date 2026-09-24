@@ -296,7 +296,53 @@ export class PlatformAdminApiClient {
       method: "POST",
     });
   }
+
+  public static async fetchGmailStatus(accessToken: string): Promise<{
+    status: GmailConnectionStatus;
+    redirectUri: string;
+  }> {
+    return adminFetch(accessToken, "gmail/status");
+  }
+
+  public static async startGmailConnect(
+    accessToken: string,
+  ): Promise<{ ok: boolean; authUrl?: string; error?: string }> {
+    return adminFetch(accessToken, "gmail/connect/start", { method: "POST" });
+  }
+
+  public static async fetchGmailMessages(
+    accessToken: string,
+    limit = 40,
+  ): Promise<GmailInboxMessage[]> {
+    const payload = await adminFetch<{ messages: GmailInboxMessage[] }>(
+      accessToken,
+      `gmail/messages?limit=${limit}`,
+    );
+    return payload.messages;
+  }
+
+  public static async disconnectGmail(accessToken: string): Promise<void> {
+    await adminFetch(accessToken, "gmail/connection", { method: "DELETE" });
+  }
 }
+
+export type GmailConnectionStatus = {
+  configured: boolean;
+  connected: boolean;
+  emailAddress: string | null;
+  connectedAt: string | null;
+};
+
+export type GmailInboxMessage = {
+  id: string;
+  threadId: string;
+  subject: string;
+  from: string;
+  snippet: string;
+  receivedAt: string | null;
+  labelIds: string[];
+  gmailWebUrl: string;
+};
 
 export function formatParticipantType(code: string | null | undefined): string {
   switch (code) {
