@@ -26,6 +26,8 @@ import { EmailVerificationTokenEntity } from "./entities/EmailVerificationTokenE
 import { PasswordResetTokenEntity } from "./entities/PasswordResetTokenEntity";
 import { PlatformGmailCredentialEntity } from "./entities/PlatformGmailCredentialEntity";
 import { PlatformGmailOAuthStateEntity } from "./entities/PlatformGmailOAuthStateEntity";
+import { EmailOutboxEngagementEventEntity } from "./entities/EmailOutboxEngagementEventEntity";
+import { EmailOutboxClickTokenEntity } from "./entities/EmailOutboxClickTokenEntity";
 import { DatabaseSeedRunner } from "./seed/DatabaseSeedRunner";
 import { SubscriptionCatalogModule } from "../../modules/subscription/SubscriptionCatalogModule";
 
@@ -62,6 +64,8 @@ import { SubscriptionCatalogModule } from "../../modules/subscription/Subscripti
       PasswordResetTokenEntity,
       PlatformGmailCredentialEntity,
       PlatformGmailOAuthStateEntity,
+      EmailOutboxEngagementEventEntity,
+      EmailOutboxClickTokenEntity,
     ]),
   ],
   providers: [DatabaseSeedRunner],

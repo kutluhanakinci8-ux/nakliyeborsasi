@@ -98,4 +98,16 @@ export class NotificationConfigurationService {
       "http://localhost:3011"
     );
   }
+
+  public resolveApiPublicBaseUrl(): string {
+    const web = this.resolveWebBaseUrl().replace(/\/$/, "");
+    if (web.includes(":3011")) {
+      return `${web.replace(":3011", ":3010")}/api/v1`;
+    }
+    return `${web}/api/v1`;
+  }
+
+  public isTrackingDisabled(): boolean {
+    return this.configService.get<string>("EMAIL_TRACKING_ENABLED") === "false";
+  }
 }

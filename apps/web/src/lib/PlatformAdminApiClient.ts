@@ -53,6 +53,9 @@ export type EmailOutboxRow = {
   lastError: string | null;
   createdAt: string;
   sentAt: string | null;
+  openCount?: number;
+  clickCount?: number;
+  bounceClass?: string | null;
 };
 
 export type EmailOutboxDetail = EmailOutboxRow & {
@@ -61,6 +64,10 @@ export type EmailOutboxDetail = EmailOutboxRow & {
   textBody: string;
   providerMessageId: string | null;
   metadata: Record<string, unknown> | null;
+  openCount: number;
+  clickCount: number;
+  bounceClass: string | null;
+  firstOpenedAt: string | null;
 };
 
 export type EmailOutboxDailyPoint = {
@@ -96,6 +103,18 @@ export type EmailOutboxAnalyticsSummary = {
   maturityScorePercent: number;
   maturityTargetPercent: number;
   maturityPhase: string;
+  engagement: {
+    sentInPeriod: number;
+    uniqueOpens: number;
+    totalOpens: number;
+    totalClicks: number;
+    messagesWithClicks: number;
+    bounces: number;
+    openRatePercent: number | null;
+    clickRatePercent: number | null;
+    bounceRatePercent: number | null;
+    bounceByClass: Record<string, number>;
+  };
 };
 
 export type PlatformAdminOverview = {

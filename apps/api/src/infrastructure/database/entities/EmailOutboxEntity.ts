@@ -57,4 +57,16 @@ export class EmailOutboxEntity {
 
   @Column({ type: "timestamptz", nullable: true })
   public sentAt!: Date | null;
+
+  @Column({ type: "int", default: 0 })
+  public openCount!: number;
+
+  @Column({ type: "int", default: 0 })
+  public clickCount!: number;
+
+  @Column({ type: "timestamptz", nullable: true })
+  public firstOpenedAt!: Date | null;
+
+  @Column({ type: "varchar", length: 32, nullable: true })
+  public bounceClass!: string | null;
 }

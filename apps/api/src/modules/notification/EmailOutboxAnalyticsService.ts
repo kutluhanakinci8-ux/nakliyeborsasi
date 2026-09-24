@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { EmailOutboxEntity } from "../../infrastructure/database/entities/EmailOutboxEntity";
+import { EmailEngagementService } from "./EmailEngagementService";
 
 export type EmailOutboxDailyPoint = {
   day: string;
@@ -36,6 +37,18 @@ export type EmailOutboxAnalyticsSummary = {
   maturityScorePercent: number;
   maturityTargetPercent: number;
   maturityPhase: string;
+  engagement: {
+    sentInPeriod: number;
+    uniqueOpens: number;
+    totalOpens: number;
+    totalClicks: number;
+    messagesWithClicks: number;
+    bounces: number;
+    openRatePercent: number | null;
+    clickRatePercent: number | null;
+    bounceRatePercent: number | null;
+    bounceByClass: Record<string, number>;
+  };
 };
 
 @Injectable()
@@ -43,6 +56,7 @@ export class EmailOutboxAnalyticsService {
   public constructor(
     @InjectRepository(EmailOutboxEntity)
     private readonly outboxRepository: Repository<EmailOutboxEntity>,
+    private readonly emailEngagementService: EmailEngagementService,
   ) {}
 
   public resolveDays(raw?: string): number {
@@ -75,14 +89,18 @@ export class EmailOutboxAnalyticsService {
 
     const avgQueueSeconds = await this.averageQueueSeconds(since);
 
+    const engagement = await this.emailEngagementService.getEngagementSummary(
+      since,
+    );
+
     const maturityScorePercent = this.computeMaturityScore({
       hasDailySeries: true,
       hasEventBreakdown: true,
       hasExport: true,
       hasPreview: true,
       hasExtendedKpi: true,
-      hasOpenTracking: false,
-      hasBounceWebhook: false,
+      hasOpenTracking: true,
+      hasBounceClassification: true,
       hasSuppression: false,
       hasOrgPreferences: false,
     });
@@ -103,7 +121,8 @@ export class EmailOutboxAnalyticsService {
       },
       maturityScorePercent,
       maturityTargetPercent: 100,
-      maturityPhase: "F1 — Outbox analitik",
+      maturityPhase: "F2 — Açılma, tıklama ve bounce",
+      engagement,
     };
   }
 
@@ -262,7 +281,7 @@ export class EmailOutboxAnalyticsService {
     hasPreview: boolean;
     hasExtendedKpi: boolean;
     hasOpenTracking: boolean;
-    hasBounceWebhook: boolean;
+    hasBounceClassification: boolean;
     hasSuppression: boolean;
     hasOrgPreferences: boolean;
   }): number {
@@ -280,7 +299,7 @@ export class EmailOutboxAnalyticsService {
     if (flags.hasOpenTracking) {
       score += 13;
     }
-    if (flags.hasBounceWebhook) {
+    if (flags.hasBounceClassification) {
       score += 10;
     }
     if (flags.hasSuppression) {

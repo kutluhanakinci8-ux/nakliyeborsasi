@@ -39,6 +39,12 @@ export function AdminOutboxPreviewModal({ message, onClose }: Props) {
                 : "—"}
             </dd>
           </div>
+          <div>
+            <dt>Açılma / tıklama</dt>
+            <dd>
+              {message.openCount} / {message.clickCount}
+            </dd>
+          </div>
           {message.lastError ? (
             <div>
               <dt>Hata</dt>

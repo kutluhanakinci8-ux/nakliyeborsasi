@@ -153,6 +153,56 @@ export function AdminMailAnalyticsPanel() {
         </section>
       ) : null}
 
+      <section className="pa-metric-row" aria-label="Engagement özetleri">
+        <article className="pa-metric">
+          <p className="pa-metric-label">Açılma oranı (benzersiz)</p>
+          <p className="pa-metric-value">
+            {formatPercent(summary?.engagement.openRatePercent ?? null)}
+          </p>
+          <p className="pa-metric-hint">
+            {summary?.engagement.uniqueOpens ?? 0} /{" "}
+            {summary?.engagement.sentInPeriod ?? 0} gönderim
+          </p>
+        </article>
+        <article className="pa-metric">
+          <p className="pa-metric-label">Tıklama oranı</p>
+          <p className="pa-metric-value">
+            {formatPercent(summary?.engagement.clickRatePercent ?? null)}
+          </p>
+          <p className="pa-metric-hint">
+            {summary?.engagement.totalClicks ?? 0} tıklama
+          </p>
+        </article>
+        <article className="pa-metric">
+          <p className="pa-metric-label">Bounce oranı</p>
+          <p className="pa-metric-value">
+            {formatPercent(summary?.engagement.bounceRatePercent ?? null)}
+          </p>
+          <p className="pa-metric-hint">
+            SMTP hata sınıflandırması (F2)
+          </p>
+        </article>
+        <article className="pa-metric">
+          <p className="pa-metric-label">Toplam açılma</p>
+          <p className="pa-metric-value">{summary?.engagement.totalOpens ?? "—"}</p>
+          <p className="pa-metric-hint">Pixel izleme (yeni gönderimler)</p>
+        </article>
+      </section>
+
+      {summary && Object.keys(summary.engagement.bounceByClass).length > 0 ? (
+        <section className="pa-panel">
+          <h2 className="pa-panel-title">Bounce türleri</h2>
+          <ul className="pa-kv-list">
+            {Object.entries(summary.engagement.bounceByClass).map(([key, value]) => (
+              <li key={key}>
+                <span>{key}</span>
+                <span>{value}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       <section className="pa-metric-row" aria-label="Dönem özetleri">
         <article className="pa-metric">
           <p className="pa-metric-label">Kuyruğa alınan</p>

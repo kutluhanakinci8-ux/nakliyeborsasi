@@ -5,6 +5,8 @@ import { EmailOutboxEntity } from "../../infrastructure/database/entities/EmailO
 import { EmailRecipientKind, NotificationEventCode } from "./NotificationEventCode";
 import { EmailTemplateService } from "./EmailTemplateService";
 import { SmtpEmailSender } from "./SmtpEmailSender";
+import { EmailHtmlTrackingService } from "./EmailHtmlTrackingService";
+import { EmailEngagementService } from "./EmailEngagementService";
 
 @Injectable()
 export class EmailOutboxService {
@@ -15,6 +17,8 @@ export class EmailOutboxService {
     private readonly outboxRepository: Repository<EmailOutboxEntity>,
     private readonly emailTemplateService: EmailTemplateService,
     private readonly smtpEmailSender: SmtpEmailSender,
+    private readonly emailHtmlTrackingService: EmailHtmlTrackingService,
+    private readonly emailEngagementService: EmailEngagementService,
   ) {}
 
   public async enqueue(params: {
@@ -69,10 +73,15 @@ export class EmailOutboxService {
       return;
     }
     try {
+      const htmlWithTracking = await this.emailHtmlTrackingService.applyTracking(
+        row.id,
+        row.htmlBody,
+      );
+      row.htmlBody = htmlWithTracking;
       const messageId = await this.smtpEmailSender.send({
         to: row.recipientEmail,
         subject: row.subject,
-        html: row.htmlBody,
+        html: htmlWithTracking,
         text: row.textBody,
       });
       row.status = "sent";
@@ -85,6 +94,10 @@ export class EmailOutboxService {
       row.lastError =
         error instanceof Error ? error.message : "Unknown send error";
       await this.outboxRepository.save(row);
+      await this.emailEngagementService.recordBounceForOutbox(
+        row.id,
+        row.lastError,
+      );
       throw error;
     }
   }

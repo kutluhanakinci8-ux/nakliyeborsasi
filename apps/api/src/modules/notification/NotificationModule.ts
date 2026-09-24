@@ -20,6 +20,12 @@ import { PlatformGmailCredentialEntity } from "../../infrastructure/database/ent
 import { PlatformGmailOAuthStateEntity } from "../../infrastructure/database/entities/PlatformGmailOAuthStateEntity";
 import { GmailInboxService } from "./GmailInboxService";
 import { EmailOutboxAnalyticsService } from "./EmailOutboxAnalyticsService";
+import { EmailOutboxEngagementEventEntity } from "../../infrastructure/database/entities/EmailOutboxEngagementEventEntity";
+import { EmailOutboxClickTokenEntity } from "../../infrastructure/database/entities/EmailOutboxClickTokenEntity";
+import { EmailTrackingController } from "./EmailTrackingController";
+import { EmailEngagementService } from "./EmailEngagementService";
+import { EmailHtmlTrackingService } from "./EmailHtmlTrackingService";
+import { EmailTrackingSignatureService } from "./EmailTrackingSignatureService";
 import { GmailOAuthConfigurationService } from "./GmailOAuthConfigurationService";
 import { EmailOutboxProcessor } from "./EmailOutboxProcessor";
 import { EmailDeliveryHealthService } from "./EmailDeliveryHealthService";
@@ -36,9 +42,15 @@ import { EmailDeliveryHealthService } from "./EmailDeliveryHealthService";
       CompanyEntity,
       PlatformGmailCredentialEntity,
       PlatformGmailOAuthStateEntity,
+      EmailOutboxEngagementEventEntity,
+      EmailOutboxClickTokenEntity,
     ]),
   ],
-  controllers: [PlatformNotificationAdminController, PlatformGmailAdminController],
+  controllers: [
+    PlatformNotificationAdminController,
+    PlatformGmailAdminController,
+    EmailTrackingController,
+  ],
   providers: [
     NotificationConfigurationService,
     EmailTemplateService,
@@ -52,6 +64,9 @@ import { EmailDeliveryHealthService } from "./EmailDeliveryHealthService";
     GmailInboxService,
     GmailOAuthConfigurationService,
     EmailOutboxAnalyticsService,
+    EmailEngagementService,
+    EmailHtmlTrackingService,
+    EmailTrackingSignatureService,
   ],
   exports: [
     AuthNotificationService,

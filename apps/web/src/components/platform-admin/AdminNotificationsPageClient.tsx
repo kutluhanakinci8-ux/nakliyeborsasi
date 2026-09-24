@@ -491,6 +491,8 @@ export function AdminNotificationsPageClient() {
                 <th>Olay</th>
                 <th>Alıcı</th>
                 <th>Konu</th>
+                <th>Açılma</th>
+                <th>Tıklama</th>
                 <th>Durum</th>
                 <th />
               </tr>
@@ -508,8 +510,13 @@ export function AdminNotificationsPageClient() {
                       {row.subject}
                     </span>
                   </td>
+                  <td>{row.openCount ?? 0}</td>
+                  <td>{row.clickCount ?? 0}</td>
                   <td>
                     <span className={statusBadge(row.status)}>{row.status}</span>
+                    {row.bounceClass ? (
+                      <span className="pa-outbox-error">bounce: {row.bounceClass}</span>
+                    ) : null}
                     {row.lastError ? (
                       <span className="pa-outbox-error">{row.lastError}</span>
                     ) : null}

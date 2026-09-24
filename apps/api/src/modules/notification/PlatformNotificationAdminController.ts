@@ -175,6 +175,9 @@ export class PlatformNotificationAdminController {
         sentAt: row.sentAt,
         locale: row.locale,
         providerMessageId: row.providerMessageId,
+        openCount: row.openCount,
+        clickCount: row.clickCount,
+        bounceClass: row.bounceClass,
       })),
     };
   }
