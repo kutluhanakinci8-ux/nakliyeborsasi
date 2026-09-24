@@ -73,6 +73,33 @@ export class NotificationConfigurationService {
     return { host, port, secure, user, pass, from };
   }
 
+  /** Nodemailer options; loopback Postfix often uses STARTTLS with a local cert. */
+  public resolveSmtpTransportOptions(): {
+    host: string;
+    port: number;
+    secure: boolean;
+    auth?: { user: string; pass: string };
+    tls?: { rejectUnauthorized: boolean };
+  } {
+    const smtp = this.resolveSmtpConfig();
+    const loopback =
+      smtp.host === "127.0.0.1" ||
+      smtp.host === "localhost" ||
+      smtp.host === "::1";
+    return {
+      host: smtp.host,
+      port: smtp.port,
+      secure: smtp.secure,
+      auth:
+        smtp.user && smtp.pass
+          ? { user: smtp.user, pass: smtp.pass }
+          : undefined,
+      ...(loopback && !smtp.secure
+        ? { tls: { rejectUnauthorized: false } }
+        : {}),
+    };
+  }
+
   public resolveWebBaseUrl(): string {
     return (
       this.configService.get<string>("WEB_PUBLIC_BASE_URL") ??

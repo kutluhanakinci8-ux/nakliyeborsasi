@@ -22,15 +22,9 @@ export class SmtpEmailSender {
       return null;
     }
     const smtp = this.notificationConfigurationService.resolveSmtpConfig();
-    const transport = nodemailer.createTransport({
-      host: smtp.host,
-      port: smtp.port,
-      secure: smtp.secure,
-      auth:
-        smtp.user && smtp.pass
-          ? { user: smtp.user, pass: smtp.pass }
-          : undefined,
-    });
+    const transport = nodemailer.createTransport(
+      this.notificationConfigurationService.resolveSmtpTransportOptions(),
+    );
     const result = await transport.sendMail({
       from: params.from?.trim() || smtp.from,
       to: params.to,

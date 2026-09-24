@@ -40,9 +40,22 @@ SIGNINGTABLE_LINE="*@${MAIL_HOSTNAME} default._domainkey.${MAIL_HOSTNAME}"
 grep -qF "${KEYTABLE_LINE}" /etc/opendkim/KeyTable 2>/dev/null || echo "${KEYTABLE_LINE}" >> /etc/opendkim/KeyTable
 grep -qF "${SIGNINGTABLE_LINE}" /etc/opendkim/SigningTable 2>/dev/null || echo "${SIGNINGTABLE_LINE}" >> /etc/opendkim/SigningTable
 
+cat >/etc/opendkim/TrustedHosts <<EOF
+127.0.0.1
+localhost
+${MAIL_HOSTNAME}
+EOF
+chown opendkim:opendkim /etc/opendkim/TrustedHosts
+
+mkdir -p /run/opendkim
+chown opendkim:opendkim /run/opendkim
+
 cat >/etc/opendkim.conf <<'EOF'
 Syslog                  yes
 UMask                   002
+UserID                  opendkim:opendkim
+PidFile                 /run/opendkim/opendkim.pid
+Background              yes
 Canonicalization        relaxed/simple
 Mode                    sv
 SubDomains              no

@@ -45,16 +45,9 @@ export class EmailDeliveryHealthService implements OnModuleInit {
   }
 
   public async verifySmtpConnection(): Promise<void> {
-    const smtp = this.notificationConfigurationService.resolveSmtpConfig();
-    const transport = nodemailer.createTransport({
-      host: smtp.host,
-      port: smtp.port,
-      secure: smtp.secure,
-      auth:
-        smtp.user && smtp.pass
-          ? { user: smtp.user, pass: smtp.pass }
-          : undefined,
-    });
+    const transport = nodemailer.createTransport(
+      this.notificationConfigurationService.resolveSmtpTransportOptions(),
+    );
     await transport.verify();
     this.lastVerifyOk = true;
     this.lastVerifyError = null;
