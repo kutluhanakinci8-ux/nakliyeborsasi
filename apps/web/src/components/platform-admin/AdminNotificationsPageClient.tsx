@@ -55,6 +55,12 @@ export function AdminNotificationsPageClient() {
   const [stats, setStats] = useState<OutboxStats | null>(null);
   const [testEmail, setTestEmail] = useState("admin@lerta.tr");
   const [testEvent, setTestEvent] = useState("USER_LOGIN");
+  const [testOrganizationId, setTestOrganizationId] = useState(() => {
+    if (typeof window === "undefined") {
+      return "";
+    }
+    return window.sessionStorage.getItem("paFazBTestOrgId") ?? "";
+  });
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [health, setHealth] = useState<EmailDeliveryHealth | null>(null);
@@ -178,6 +184,7 @@ export function AdminNotificationsPageClient() {
       accessToken,
       testEvent,
       testEmail,
+      testOrganizationId,
     );
     setMessage("Test e-postası kuyruğa alındı.");
     await refresh();
@@ -396,9 +403,20 @@ export function AdminNotificationsPageClient() {
         <section className="pa-panel">
           <h2 className="pa-panel-title">Test gönderimi</h2>
           <p className="pa-panel-lead">
-            Kurumsal HTML şablonunu canlı SMTP ile doğrulayın.
+            Kurumsal HTML şablonunu canlı SMTP ile doğrulayın. Faz B: organizasyon
+            UUID girerseniz From, provision edilen{" "}
+            <code>slug@kullanici.lerta.tr</code> olur.
           </p>
           <div className="pa-form-row">
+            <label className="pa-label">
+              Organizasyon UUID (Faz B, isteğe bağlı)
+              <input
+                className="pa-input"
+                placeholder="Provision sonrası org UUID"
+                value={testOrganizationId}
+                onChange={(event) => setTestOrganizationId(event.target.value)}
+              />
+            </label>
             <label className="pa-label">
               Olay
               <select

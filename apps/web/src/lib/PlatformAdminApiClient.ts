@@ -414,10 +414,17 @@ export class PlatformAdminApiClient {
     accessToken: string,
     eventCode: string,
     recipientEmail: string,
+    organizationId?: string,
   ): Promise<void> {
     await adminFetch(accessToken, "notifications/test", {
       method: "POST",
-      body: JSON.stringify({ eventCode, recipientEmail }),
+      body: JSON.stringify({
+        eventCode,
+        recipientEmail,
+        ...(organizationId?.trim()
+          ? { organizationId: organizationId.trim() }
+          : {}),
+      }),
     });
   }
 

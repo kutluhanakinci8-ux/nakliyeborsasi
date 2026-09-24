@@ -81,7 +81,12 @@ export function AdminMailDomainsPanel() {
         displayName: displayName.trim() || undefined,
       },
     );
-    setMessage(`Gönderen hazır: ${result.fromAddress}`);
+    setMessage(
+      `Gönderen hazır: ${result.fromAddress} — Operasyon testinde org UUID: ${orgId.trim()}`,
+    );
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem("paFazBTestOrgId", orgId.trim());
+    }
     await refresh();
   }
 
