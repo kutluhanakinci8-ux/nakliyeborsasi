@@ -3,7 +3,7 @@ name: Deploy VPS
 on:
   push:
     branches:
-      - cursor/modular-freight-platform-18ba
+      - cursor/own-mail-platform-519e
   workflow_dispatch:
 
 concurrency:

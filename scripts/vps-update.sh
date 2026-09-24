@@ -2,7 +2,7 @@
 set -euo pipefail
 
 INSTALL_DIR="${1:-/var/www/nakliyeborsasi}"
-BRANCH="${2:-cursor/modular-freight-platform-18ba}"
+BRANCH="${2:-cursor/own-mail-platform-519e}"
 
 cd "$INSTALL_DIR"
 

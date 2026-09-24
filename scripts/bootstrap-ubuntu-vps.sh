@@ -3,7 +3,7 @@ set -euo pipefail
 
 INSTALL_DIR="${1:-/var/www/nakliyeborsasi}"
 REPO_URL="${2:-https://github.com/kutluhanakinci8-ux/nakliyeborsasi.git}"
-BRANCH="${3:-cursor/modular-freight-platform-18ba}"
+BRANCH="${3:-cursor/own-mail-platform-519e}"
 
 export DEBIAN_FRONTEND=noninteractive
 apt-get update

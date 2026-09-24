@@ -7,7 +7,7 @@ set -euo pipefail
 VPS_HOST="${VPS_HOST:-168.231.109.27}"
 VPS_USER="${VPS_USER:-root}"
 VPS_INSTALL_DIR="${VPS_INSTALL_DIR:-/var/www/nakliyeborsasi}"
-EXPECTED_BRANCH="cursor/modular-freight-platform-18ba"
+EXPECTED_BRANCH="cursor/own-mail-platform-519e"
 VPS_BRANCH="${VPS_BRANCH:-$EXPECTED_BRANCH}"
 if [[ "${VPS_BRANCH}" != "${EXPECTED_BRANCH}" ]]; then
   echo "UYARI: VPS_BRANCH=${VPS_BRANCH} (beklenen: ${EXPECTED_BRANCH})" >&2
