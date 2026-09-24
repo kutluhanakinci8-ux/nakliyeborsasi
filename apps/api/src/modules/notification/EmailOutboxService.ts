@@ -10,6 +10,7 @@ import { EmailEngagementService } from "./EmailEngagementService";
 import { EmailSuppressionService } from "./EmailSuppressionService";
 import { UserNotificationPreferenceService } from "./UserNotificationPreferenceService";
 import { EmailDeliveryService } from "./EmailDeliveryService";
+import { MailSenderResolutionService } from "./MailSenderResolutionService";
 
 @Injectable()
 export class EmailOutboxService {
@@ -25,6 +26,7 @@ export class EmailOutboxService {
     private readonly emailSuppressionService: EmailSuppressionService,
     private readonly userNotificationPreferenceService: UserNotificationPreferenceService,
     private readonly emailDeliveryService: EmailDeliveryService,
+    private readonly mailSenderResolutionService: MailSenderResolutionService,
   ) {}
 
   public async enqueue(params: {
@@ -107,11 +109,15 @@ export class EmailOutboxService {
         row.htmlBody,
       );
       row.htmlBody = htmlWithTracking;
+      const from = await this.mailSenderResolutionService.resolveFromForOutbox(
+        row.metadata,
+      );
       const delivery = await this.emailDeliveryService.send({
         to: row.recipientEmail,
         subject: row.subject,
         html: htmlWithTracking,
         text: row.textBody,
+        from,
       });
       row.status = "sent";
       row.sentAt = new Date();

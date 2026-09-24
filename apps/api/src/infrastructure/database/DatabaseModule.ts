@@ -29,6 +29,10 @@ import { EmailOutboxClickTokenEntity } from "./entities/EmailOutboxClickTokenEnt
 import { EmailSuppressionEntity } from "./entities/EmailSuppressionEntity";
 import { UserNotificationPreferenceEntity } from "./entities/UserNotificationPreferenceEntity";
 import { CompanyNotificationPreferenceEntity } from "./entities/CompanyNotificationPreferenceEntity";
+import { MailDomainEntity } from "./entities/MailDomainEntity";
+import { MailSenderIdentityEntity } from "./entities/MailSenderIdentityEntity";
+import { MailMailboxEntity } from "./entities/MailMailboxEntity";
+import { MailInboundMessageEntity } from "./entities/MailInboundMessageEntity";
 import { DatabaseSeedRunner } from "./seed/DatabaseSeedRunner";
 import { SubscriptionCatalogModule } from "../../modules/subscription/SubscriptionCatalogModule";
 
@@ -68,6 +72,10 @@ import { SubscriptionCatalogModule } from "../../modules/subscription/Subscripti
       EmailSuppressionEntity,
       UserNotificationPreferenceEntity,
       CompanyNotificationPreferenceEntity,
+      MailDomainEntity,
+      MailSenderIdentityEntity,
+      MailMailboxEntity,
+      MailInboundMessageEntity,
     ]),
   ],
   providers: [DatabaseSeedRunner],

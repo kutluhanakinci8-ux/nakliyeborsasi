@@ -31,6 +31,10 @@ import { EmailOutboxClickTokenEntity } from "./entities/EmailOutboxClickTokenEnt
 import { EmailSuppressionEntity } from "./entities/EmailSuppressionEntity";
 import { UserNotificationPreferenceEntity } from "./entities/UserNotificationPreferenceEntity";
 import { CompanyNotificationPreferenceEntity } from "./entities/CompanyNotificationPreferenceEntity";
+import { MailDomainEntity } from "./entities/MailDomainEntity";
+import { MailSenderIdentityEntity } from "./entities/MailSenderIdentityEntity";
+import { MailMailboxEntity } from "./entities/MailMailboxEntity";
+import { MailInboundMessageEntity } from "./entities/MailInboundMessageEntity";
 
 @Injectable()
 export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
@@ -77,6 +81,10 @@ export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
         EmailSuppressionEntity,
         UserNotificationPreferenceEntity,
         CompanyNotificationPreferenceEntity,
+        MailDomainEntity,
+        MailSenderIdentityEntity,
+        MailMailboxEntity,
+        MailInboundMessageEntity,
       ],
       synchronize,
       logging: false,

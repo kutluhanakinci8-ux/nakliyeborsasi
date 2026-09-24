@@ -13,6 +13,8 @@ import { AdminMailAnalyticsPanel } from "./AdminMailAnalyticsPanel";
 import { AdminOutboxPreviewModal } from "./AdminOutboxPreviewModal";
 import { AdminMailPolicyPanel } from "./AdminMailPolicyPanel";
 import { AdminPlatformSendingPanel } from "./AdminPlatformSendingPanel";
+import { AdminMailRoadmapPanel } from "./AdminMailRoadmapPanel";
+import { AdminMailDomainsPanel } from "./AdminMailDomainsPanel";
 import type { EmailOutboxDetail } from "../../lib/PlatformAdminApiClient";
 
 const EVENT_LABELS: Record<string, string> = {
@@ -61,8 +63,13 @@ export function AdminNotificationsPageClient() {
   );
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState<
-    "platform" | "operations" | "analytics" | "policy"
-  >("platform");
+    | "roadmap"
+    | "platform"
+    | "domains"
+    | "operations"
+    | "analytics"
+    | "policy"
+  >("roadmap");
   const [preview, setPreview] = useState<EmailOutboxDetail | null>(null);
 
   const refresh = useCallback(async () => {
@@ -204,6 +211,15 @@ export function AdminNotificationsPageClient() {
         <button
           type="button"
           className={
+            activeTab === "roadmap" ? "pa-mail-tab is-active" : "pa-mail-tab"
+          }
+          onClick={() => setActiveTab("roadmap")}
+        >
+          Yol haritası
+        </button>
+        <button
+          type="button"
+          className={
             activeTab === "platform"
               ? "pa-mail-tab is-active"
               : "pa-mail-tab"
@@ -211,6 +227,15 @@ export function AdminNotificationsPageClient() {
           onClick={() => setActiveTab("platform")}
         >
           Platform gönderim
+        </button>
+        <button
+          type="button"
+          className={
+            activeTab === "domains" ? "pa-mail-tab is-active" : "pa-mail-tab"
+          }
+          onClick={() => setActiveTab("domains")}
+        >
+          Kurumsal kimlik (B)
         </button>
         <button
           type="button"
@@ -247,7 +272,9 @@ export function AdminNotificationsPageClient() {
         </button>
       </nav>
 
+      {activeTab === "roadmap" ? <AdminMailRoadmapPanel /> : null}
       {activeTab === "platform" ? <AdminPlatformSendingPanel /> : null}
+      {activeTab === "domains" ? <AdminMailDomainsPanel /> : null}
       {activeTab === "analytics" ? <AdminMailAnalyticsPanel /> : null}
       {activeTab === "policy" ? <AdminMailPolicyPanel /> : null}
 

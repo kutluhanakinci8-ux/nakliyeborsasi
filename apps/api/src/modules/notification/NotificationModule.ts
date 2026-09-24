@@ -37,6 +37,14 @@ import { PlatformMailSendingService } from "./PlatformMailSendingService";
 import { UserNotificationPreferencesController } from "./UserNotificationPreferencesController";
 import { AuctionSessionEntity } from "../../infrastructure/database/entities/AuctionSessionEntity";
 import { AuctionBidEntity } from "../../infrastructure/database/entities/AuctionBidEntity";
+import { MailDomainEntity } from "../../infrastructure/database/entities/MailDomainEntity";
+import { MailSenderIdentityEntity } from "../../infrastructure/database/entities/MailSenderIdentityEntity";
+import { MailMailboxEntity } from "../../infrastructure/database/entities/MailMailboxEntity";
+import { MailInboundMessageEntity } from "../../infrastructure/database/entities/MailInboundMessageEntity";
+import { MailSenderResolutionService } from "./MailSenderResolutionService";
+import { MailDomainApplicationService } from "./MailDomainApplicationService";
+import { PlatformMailRoadmapService } from "./PlatformMailRoadmapService";
+import { PlatformMailIdentityAdminController } from "./PlatformMailIdentityAdminController";
 
 @Module({
   imports: [
@@ -56,10 +64,15 @@ import { AuctionBidEntity } from "../../infrastructure/database/entities/Auction
       CompanyNotificationPreferenceEntity,
       AuctionSessionEntity,
       AuctionBidEntity,
+      MailDomainEntity,
+      MailSenderIdentityEntity,
+      MailMailboxEntity,
+      MailInboundMessageEntity,
     ]),
   ],
   controllers: [
     PlatformNotificationAdminController,
+    PlatformMailIdentityAdminController,
     EmailTrackingController,
     UserNotificationPreferencesController,
   ],
@@ -83,6 +96,9 @@ import { AuctionBidEntity } from "../../infrastructure/database/entities/Auction
     CompanyNotificationPreferenceService,
     OperationalNotificationService,
     PlatformMailSendingService,
+    MailSenderResolutionService,
+    MailDomainApplicationService,
+    PlatformMailRoadmapService,
   ],
   exports: [
     AuthNotificationService,

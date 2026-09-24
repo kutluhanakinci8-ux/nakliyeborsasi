@@ -18,8 +18,9 @@ SMTP_PROFILE=mailpit
 
 ## 2. Üretim (VPS Postfix)
 
-1. DNS: [EMAIL_PHASE_A_DNS_ISIMTESCIL.md](EMAIL_PHASE_A_DNS_ISIMTESCIL.md)
-2. VPS `.env`:
+1. Sunucu: `bash scripts/setup-postfix-phase-a-lerta.sh` sonra `bash scripts/vps-enable-production-smtp.sh`
+2. DNS: [EMAIL_PHASE_A_DNS_ISIMTESCIL.md](EMAIL_PHASE_A_DNS_ISIMTESCIL.md)
+3. VPS `.env` (veya `vps-enable-production-smtp.sh`):
 
 ```env
 EMAIL_ENABLED=true

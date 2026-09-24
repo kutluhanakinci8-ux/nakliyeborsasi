@@ -16,6 +16,7 @@ export class EmailDeliveryService {
     subject: string;
     html: string;
     text: string;
+    from?: string;
   }): Promise<{ messageId: string | null; provider: EmailDeliveryMode }> {
     const messageId = await this.smtpEmailSender.send(params);
     return { messageId, provider: "smtp" };

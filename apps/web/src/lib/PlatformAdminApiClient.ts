@@ -516,7 +516,116 @@ export class PlatformAdminApiClient {
     return adminFetch(accessToken, "notifications/delivery");
   }
 
+  public static async fetchMailRoadmap(
+    accessToken: string,
+  ): Promise<MailRoadmapSnapshot> {
+    const payload = await adminFetch<{ snapshot: MailRoadmapSnapshot }>(
+      accessToken,
+      "mail/roadmap",
+    );
+    return payload.snapshot;
+  }
+
+  public static async fetchMailDomains(
+    accessToken: string,
+  ): Promise<MailDomainRow[]> {
+    const payload = await adminFetch<{ domains: MailDomainRow[] }>(
+      accessToken,
+      "mail/domains",
+    );
+    return payload.domains;
+  }
+
+  public static async createMailDomain(
+    accessToken: string,
+    body: {
+      organizationId: string;
+      domain: string;
+      domainType?: "platform" | "custom" | "subdomain";
+      notes?: string;
+    },
+  ): Promise<MailDomainRow> {
+    const payload = await adminFetch<{ domain: MailDomainRow }>(
+      accessToken,
+      "mail/domains",
+      { method: "POST", body: JSON.stringify(body) },
+    );
+    return payload.domain;
+  }
+
+  public static async verifyMailDomain(
+    accessToken: string,
+    domainId: string,
+  ): Promise<MailDomainRow> {
+    const payload = await adminFetch<{ domain: MailDomainRow }>(
+      accessToken,
+      `mail/domains/${domainId}/verify`,
+      { method: "PATCH" },
+    );
+    return payload.domain;
+  }
+
+  public static async addMailSender(
+    accessToken: string,
+    domainId: string,
+    body: {
+      organizationId: string;
+      localPart: string;
+      displayName?: string;
+      isDefault?: boolean;
+    },
+  ): Promise<MailSenderIdentityRow> {
+    const payload = await adminFetch<{ sender: MailSenderIdentityRow }>(
+      accessToken,
+      `mail/domains/${domainId}/senders`,
+      { method: "POST", body: JSON.stringify(body) },
+    );
+    return payload.sender;
+  }
 }
+
+export type MailRoadmapPhase = {
+  phase: "A" | "B" | "C";
+  titleTr: string;
+  summaryTr: string;
+  status: "active" | "planned" | "future";
+  progressPercent: number;
+  nextStepsTr: string[];
+};
+
+export type MailRoadmapSnapshot = {
+  phases: MailRoadmapPhase[];
+  platformSending: PlatformSendingSnapshot;
+  counts: {
+    mailDomains: number;
+    verifiedDomains: number;
+    senderIdentities: number;
+    mailboxes: number;
+    inboundMessages: number;
+  };
+  smtpProfile: string;
+  checkedAt: string;
+};
+
+export type MailSenderIdentityRow = {
+  id: string;
+  localPart: string;
+  displayName: string | null;
+  isDefault: boolean;
+  organizationId: string;
+};
+
+export type MailDomainRow = {
+  id: string;
+  organizationId: string | null;
+  domain: string;
+  domainType: string;
+  verificationStatus: string;
+  notes: string | null;
+  senderIdentities?: MailSenderIdentityRow[];
+  createdAt: string;
+};
+
 
 export type NotificationCatalogEvent = {
   code: string;

@@ -15,6 +15,7 @@ export class SmtpEmailSender {
     subject: string;
     html: string;
     text: string;
+    from?: string;
   }): Promise<string | null> {
     if (!this.notificationConfigurationService.isEmailEnabled()) {
       this.logger.warn(`EMAIL_ENABLED=false — skipped send to ${params.to}`);
@@ -31,7 +32,7 @@ export class SmtpEmailSender {
           : undefined,
     });
     const result = await transport.sendMail({
-      from: smtp.from,
+      from: params.from?.trim() || smtp.from,
       to: params.to,
       subject: params.subject,
       html: params.html,
