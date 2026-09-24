@@ -13,6 +13,7 @@ import { AdminPageHeader } from "./AdminPageHeader";
 import { AdminGmailInboxPanel } from "./AdminGmailInboxPanel";
 import { AdminMailAnalyticsPanel } from "./AdminMailAnalyticsPanel";
 import { AdminOutboxPreviewModal } from "./AdminOutboxPreviewModal";
+import { AdminMailPolicyPanel } from "./AdminMailPolicyPanel";
 import type { EmailOutboxDetail } from "../../lib/PlatformAdminApiClient";
 
 const EVENT_LABELS: Record<string, string> = {
@@ -21,6 +22,12 @@ const EVENT_LABELS: Record<string, string> = {
   USER_FIRST_LOGIN: "İlk giriş (yedek)",
   EMAIL_VERIFICATION: "E-posta doğrulama",
   PASSWORD_RESET: "Şifre sıfırlama",
+  AUCTION_BID_PLACED: "İhale — yeni teklif",
+  AUCTION_OUTBID: "İhale — teklif geçildi",
+  AUCTION_WON: "İhale — kazanan",
+  AUCTION_PUBLISHED: "İhale yayınlandı",
+  LISTING_NEW_OFFER: "Yeni teklif / ilan",
+  MESSAGING_NEW_MESSAGE: "Yeni mesaj",
 };
 
 type OutboxStats = {
@@ -55,9 +62,9 @@ export function AdminNotificationsPageClient() {
     "all",
   );
   const [search, setSearch] = useState("");
-  const [activeTab, setActiveTab] = useState<"operations" | "analytics">(
-    "operations",
-  );
+  const [activeTab, setActiveTab] = useState<
+    "operations" | "analytics" | "policy"
+  >("operations");
   const [preview, setPreview] = useState<EmailOutboxDetail | null>(null);
 
   const refresh = useCallback(async () => {
@@ -229,9 +236,21 @@ export function AdminNotificationsPageClient() {
         >
           Analitik
         </button>
+        <button
+          type="button"
+          className={
+            activeTab === "policy"
+              ? "pa-mail-tab is-active"
+              : "pa-mail-tab"
+          }
+          onClick={() => setActiveTab("policy")}
+        >
+          Politika & ESP
+        </button>
       </nav>
 
       {activeTab === "analytics" ? <AdminMailAnalyticsPanel /> : null}
+      {activeTab === "policy" ? <AdminMailPolicyPanel /> : null}
 
       {activeTab === "operations" ? (
         <>

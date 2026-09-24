@@ -4,14 +4,11 @@ import { Repository } from "typeorm";
 import { PlatformNotificationSettingEntity } from "../../infrastructure/database/entities/PlatformNotificationSettingEntity";
 import { NotificationConfigurationService } from "./NotificationConfigurationService";
 import { NotificationEventCode } from "./NotificationEventCode";
+import { NOTIFICATION_EVENT_CATALOG } from "./NotificationEventCatalog";
 
-const DEFAULT_EVENTS: NotificationEventCode[] = [
-  NotificationEventCode.UserRegistered,
-  NotificationEventCode.UserLogin,
-  NotificationEventCode.UserFirstLogin,
-  NotificationEventCode.EmailVerification,
-  NotificationEventCode.PasswordReset,
-];
+const DEFAULT_EVENTS: NotificationEventCode[] = NOTIFICATION_EVENT_CATALOG.map(
+  (row) => row.code,
+);
 
 @Injectable()
 export class PlatformNotificationSettingsService implements OnModuleInit {
@@ -35,17 +32,16 @@ export class PlatformNotificationSettingsService implements OnModuleInit {
         await this.mergeDefaultAdminRecipients(existing);
         continue;
       }
-      const adminEnabled =
-        eventCode !== NotificationEventCode.UserFirstLogin;
-      const userEnabled =
-        eventCode === NotificationEventCode.UserRegistered ||
-        eventCode === NotificationEventCode.EmailVerification ||
-        eventCode === NotificationEventCode.PasswordReset;
+      const definition = NOTIFICATION_EVENT_CATALOG.find(
+        (row) => row.code === eventCode,
+      );
       await this.settingsRepository.save(
         this.settingsRepository.create({
           eventCode,
-          adminEmailEnabled: adminEnabled,
-          userEmailEnabled: userEnabled,
+          adminEmailEnabled:
+            definition?.defaultAdminEnabled ??
+            eventCode !== NotificationEventCode.UserFirstLogin,
+          userEmailEnabled: definition?.defaultUserEnabled ?? false,
           adminRecipientEmails: [...defaults],
         }),
       );

@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Header,
   Param,
@@ -19,6 +20,9 @@ import { PlatformNotificationSettingsService } from "./PlatformNotificationSetti
 import { NotificationEventCode, EmailRecipientKind } from "./NotificationEventCode";
 import { UpdatePlatformNotificationSettingDto } from "./UpdatePlatformNotificationSettingDto";
 import { TestNotificationEmailDto } from "./TestNotificationEmailDto";
+import { EmailSuppressionService } from "./EmailSuppressionService";
+import { EmailDeliveryService } from "./EmailDeliveryService";
+import { NOTIFICATION_EVENT_CATALOG } from "./NotificationEventCatalog";
 
 @Controller("platform-admin/notifications")
 @UseGuards(JwtAuthenticationGuard, PlatformAdminGuard)
@@ -29,7 +33,56 @@ export class PlatformNotificationAdminController {
     private readonly emailOutboxAnalyticsService: EmailOutboxAnalyticsService,
     private readonly emailDeliveryHealthService: EmailDeliveryHealthService,
     private readonly notificationConfigurationService: NotificationConfigurationService,
+    private readonly emailSuppressionService: EmailSuppressionService,
+    private readonly emailDeliveryService: EmailDeliveryService,
   ) {}
+
+  @Get("catalog")
+  public catalog() {
+    return { events: NOTIFICATION_EVENT_CATALOG };
+  }
+
+  @Get("suppressions")
+  public async suppressions(@Query("limit") limit?: string) {
+    const parsed = limit ? Number.parseInt(limit, 10) : 200;
+    return {
+      suppressions: await this.emailSuppressionService.list(
+        Number.isFinite(parsed) ? parsed : 200,
+      ),
+    };
+  }
+
+  @Post("suppressions")
+  public async addSuppression(
+    @Body() body: { email: string; reason?: string; note?: string },
+  ) {
+    const row = await this.emailSuppressionService.addSuppression({
+      email: body.email,
+      reason: body.reason ?? "manual",
+      source: "admin",
+      note: body.note,
+    });
+    return { suppression: row };
+  }
+
+  @Delete("suppressions")
+  public async removeSuppression(@Query("email") email: string) {
+    const removed = await this.emailSuppressionService.removeSuppression(email);
+    return { ok: removed };
+  }
+
+  @Get("delivery")
+  public deliveryInfo() {
+    return {
+      mode: this.emailDeliveryService.resolveMode(),
+      postmarkConfigured:
+        this.emailDeliveryService.resolveMode() === "postmark",
+      webhookUrls: {
+        postmark: `${this.notificationConfigurationService.resolveApiPublicBaseUrl()}/email/webhooks/postmark`,
+        ses: `${this.notificationConfigurationService.resolveApiPublicBaseUrl()}/email/webhooks/ses`,
+      },
+    };
+  }
 
   @Get("health")
   public async health() {

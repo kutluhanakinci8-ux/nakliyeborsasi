@@ -29,6 +29,21 @@ import { EmailTrackingSignatureService } from "./EmailTrackingSignatureService";
 import { GmailOAuthConfigurationService } from "./GmailOAuthConfigurationService";
 import { EmailOutboxProcessor } from "./EmailOutboxProcessor";
 import { EmailDeliveryHealthService } from "./EmailDeliveryHealthService";
+import { EmailSuppressionEntity } from "../../infrastructure/database/entities/EmailSuppressionEntity";
+import { UserNotificationPreferenceEntity } from "../../infrastructure/database/entities/UserNotificationPreferenceEntity";
+import { CompanyNotificationPreferenceEntity } from "../../infrastructure/database/entities/CompanyNotificationPreferenceEntity";
+import { CompanyMembershipEntity } from "../../infrastructure/database/entities/CompanyMembershipEntity";
+import { EmailSuppressionService } from "./EmailSuppressionService";
+import { UserNotificationPreferenceService } from "./UserNotificationPreferenceService";
+import { CompanyNotificationPreferenceService } from "./CompanyNotificationPreferenceService";
+import { OperationalNotificationService } from "./OperationalNotificationService";
+import { PostmarkEmailSender } from "./PostmarkEmailSender";
+import { EmailDeliveryService } from "./EmailDeliveryService";
+import { EmailEspWebhookService } from "./EmailEspWebhookService";
+import { EmailEspWebhookController } from "./EmailEspWebhookController";
+import { UserNotificationPreferencesController } from "./UserNotificationPreferencesController";
+import { AuctionSessionEntity } from "../../infrastructure/database/entities/AuctionSessionEntity";
+import { AuctionBidEntity } from "../../infrastructure/database/entities/AuctionBidEntity";
 
 @Module({
   imports: [
@@ -40,21 +55,31 @@ import { EmailDeliveryHealthService } from "./EmailDeliveryHealthService";
       PasswordResetTokenEntity,
       UserAccountEntity,
       CompanyEntity,
+      CompanyMembershipEntity,
       PlatformGmailCredentialEntity,
       PlatformGmailOAuthStateEntity,
       EmailOutboxEngagementEventEntity,
       EmailOutboxClickTokenEntity,
+      EmailSuppressionEntity,
+      UserNotificationPreferenceEntity,
+      CompanyNotificationPreferenceEntity,
+      AuctionSessionEntity,
+      AuctionBidEntity,
     ]),
   ],
   controllers: [
     PlatformNotificationAdminController,
     PlatformGmailAdminController,
     EmailTrackingController,
+    EmailEspWebhookController,
+    UserNotificationPreferencesController,
   ],
   providers: [
     NotificationConfigurationService,
     EmailTemplateService,
     SmtpEmailSender,
+    PostmarkEmailSender,
+    EmailDeliveryService,
     EmailOutboxService,
     PlatformNotificationSettingsService,
     AuthNotificationService,
@@ -67,12 +92,18 @@ import { EmailDeliveryHealthService } from "./EmailDeliveryHealthService";
     EmailEngagementService,
     EmailHtmlTrackingService,
     EmailTrackingSignatureService,
+    EmailSuppressionService,
+    UserNotificationPreferenceService,
+    CompanyNotificationPreferenceService,
+    OperationalNotificationService,
+    EmailEspWebhookService,
   ],
   exports: [
     AuthNotificationService,
     EmailSecurityTokenService,
     EmailOutboxService,
     PlatformNotificationSettingsService,
+    OperationalNotificationService,
   ],
 })
 export class NotificationModule {}

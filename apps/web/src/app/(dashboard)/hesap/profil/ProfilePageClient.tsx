@@ -8,6 +8,10 @@ import {
 } from "../../../../lib/accountNavigation";
 import { ProfileSectionNav } from "../../../../components/account/ProfileSectionNav";
 import { useWebSession } from "../../../../context/WebSessionProvider";
+import {
+  fetchNotificationPreferences,
+  updateNotificationPreferences,
+} from "../../../../lib/AccountNotificationPreferencesApi";
 
 type UserProfile = {
   fullName: string;
@@ -98,7 +102,7 @@ function loadProfile(userId: string, emailAddress: string): UserProfile {
 }
 
 export function ProfilePageClient() {
-  const { session, locale, setLocale, logout } = useWebSession();
+  const { session, locale, setLocale, logout, accessToken } = useWebSession();
   const userId = session?.userId ?? "";
   const emailAddress = session?.emailAddress ?? "";
   const [profile, setProfile] = useState<UserProfile>(() =>
@@ -115,7 +119,14 @@ export function ProfilePageClient() {
     if (loaded.interfaceLocale) {
       setLocale(loaded.interfaceLocale);
     }
-  }, [userId, emailAddress, setLocale]);
+    if (accessToken) {
+      void fetchNotificationPreferences(accessToken)
+        .then((prefs) => {
+          setProfile((current) => ({ ...current, ...prefs }));
+        })
+        .catch(() => undefined);
+    }
+  }, [userId, emailAddress, setLocale, accessToken]);
 
   function persistProfile(next: UserProfile): void {
     if (!userId) {
@@ -123,7 +134,7 @@ export function ProfilePageClient() {
     }
     window.localStorage.setItem(`${STORAGE_PREFIX}${userId}`, JSON.stringify(next));
     window.localStorage.setItem("nb-ui-locale", next.interfaceLocale);
-    setSaveMessage("Profil kaydedildi (demo — tarayıcıda saklanır).");
+    setSaveMessage("Profil kaydedildi.");
     window.setTimeout(() => setSaveMessage(""), 4000);
   }
 
@@ -154,6 +165,11 @@ export function ProfilePageClient() {
     setProfile((current) => {
       const next = { ...current, [key]: !current[key] };
       persistProfile(next);
+      if (accessToken) {
+        void updateNotificationPreferences(accessToken, { [key]: next[key] }).catch(
+          () => undefined,
+        );
+      }
       return next;
     });
   }

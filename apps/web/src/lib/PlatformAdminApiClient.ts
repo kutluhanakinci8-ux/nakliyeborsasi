@@ -450,7 +450,86 @@ export class PlatformAdminApiClient {
   public static async disconnectGmail(accessToken: string): Promise<void> {
     await adminFetch(accessToken, "gmail/connection", { method: "DELETE" });
   }
+
+  public static async fetchNotificationCatalog(
+    accessToken: string,
+  ): Promise<NotificationCatalogEvent[]> {
+    const payload = await adminFetch<{ events: NotificationCatalogEvent[] }>(
+      accessToken,
+      "notifications/catalog",
+    );
+    return payload.events;
+  }
+
+  public static async fetchEmailSuppressions(
+    accessToken: string,
+  ): Promise<EmailSuppressionRow[]> {
+    const payload = await adminFetch<{ suppressions: EmailSuppressionRow[] }>(
+      accessToken,
+      "notifications/suppressions",
+    );
+    return payload.suppressions;
+  }
+
+  public static async addEmailSuppression(
+    accessToken: string,
+    email: string,
+    note?: string,
+  ): Promise<void> {
+    await adminFetch(accessToken, "notifications/suppressions", {
+      method: "POST",
+      body: JSON.stringify({ email, note }),
+    });
+  }
+
+  public static async removeEmailSuppression(
+    accessToken: string,
+    email: string,
+  ): Promise<void> {
+    await adminFetch(
+      accessToken,
+      `notifications/suppressions?email=${encodeURIComponent(email)}`,
+      { method: "DELETE" },
+    );
+  }
+
+  public static async fetchEmailDeliveryInfo(accessToken: string): Promise<{
+    mode: string;
+    webhookUrls: { postmark: string; ses: string };
+  }> {
+    const payload = await adminFetch<{
+      mode: string;
+      webhookUrls: { postmark: string; ses: string };
+    }>(accessToken, "notifications/delivery");
+    return payload;
+  }
+
+  public static async syncGmailBounces(
+    accessToken: string,
+  ): Promise<{ scanned: number; suppressionsAdded: number }> {
+    return adminFetch(accessToken, "gmail/sync-bounces?limit=80", {
+      method: "POST",
+    });
+  }
 }
+
+export type NotificationCatalogEvent = {
+  code: string;
+  category: string;
+  userPreferenceKey: string | null;
+  defaultAdminEnabled: boolean;
+  defaultUserEnabled: boolean;
+  labelTr: string;
+};
+
+export type EmailSuppressionRow = {
+  emailAddress: string;
+  reason: string;
+  source: string;
+  note: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
 
 export type GmailConnectionStatus = {
   configured: boolean;

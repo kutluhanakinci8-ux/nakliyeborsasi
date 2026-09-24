@@ -30,6 +30,9 @@ import { PlatformGmailCredentialEntity } from "./entities/PlatformGmailCredentia
 import { PlatformGmailOAuthStateEntity } from "./entities/PlatformGmailOAuthStateEntity";
 import { EmailOutboxEngagementEventEntity } from "./entities/EmailOutboxEngagementEventEntity";
 import { EmailOutboxClickTokenEntity } from "./entities/EmailOutboxClickTokenEntity";
+import { EmailSuppressionEntity } from "./entities/EmailSuppressionEntity";
+import { UserNotificationPreferenceEntity } from "./entities/UserNotificationPreferenceEntity";
+import { CompanyNotificationPreferenceEntity } from "./entities/CompanyNotificationPreferenceEntity";
 
 @Injectable()
 export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
@@ -75,6 +78,9 @@ export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
         PlatformGmailOAuthStateEntity,
         EmailOutboxEngagementEventEntity,
         EmailOutboxClickTokenEntity,
+        EmailSuppressionEntity,
+        UserNotificationPreferenceEntity,
+        CompanyNotificationPreferenceEntity,
       ],
       synchronize,
       logging: false,

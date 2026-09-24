@@ -3,6 +3,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { EmailOutboxEntity } from "../../infrastructure/database/entities/EmailOutboxEntity";
 import { EmailEngagementService } from "./EmailEngagementService";
+import { ConfigService } from "@nestjs/config";
 
 export type EmailOutboxDailyPoint = {
   day: string;
@@ -57,6 +58,7 @@ export class EmailOutboxAnalyticsService {
     @InjectRepository(EmailOutboxEntity)
     private readonly outboxRepository: Repository<EmailOutboxEntity>,
     private readonly emailEngagementService: EmailEngagementService,
+    private readonly configService: ConfigService,
   ) {}
 
   public resolveDays(raw?: string): number {
@@ -93,6 +95,7 @@ export class EmailOutboxAnalyticsService {
       since,
     );
 
+    const postmarkToken = this.configService.get<string>("POSTMARK_SERVER_TOKEN");
     const maturityScorePercent = this.computeMaturityScore({
       hasDailySeries: true,
       hasEventBreakdown: true,
@@ -101,8 +104,10 @@ export class EmailOutboxAnalyticsService {
       hasExtendedKpi: true,
       hasOpenTracking: true,
       hasBounceClassification: true,
-      hasSuppression: false,
-      hasOrgPreferences: false,
+      hasSuppression: true,
+      hasOrgPreferences: true,
+      hasEspWebhook: true,
+      hasPostmarkHybrid: Boolean(postmarkToken?.trim()),
     });
 
     return {
@@ -121,7 +126,7 @@ export class EmailOutboxAnalyticsService {
       },
       maturityScorePercent,
       maturityTargetPercent: 100,
-      maturityPhase: "F2 — Açılma, tıklama ve bounce",
+      maturityPhase: "F3/F4 — Politika, suppression, ESP webhook",
       engagement,
     };
   }
@@ -284,6 +289,8 @@ export class EmailOutboxAnalyticsService {
     hasBounceClassification: boolean;
     hasSuppression: boolean;
     hasOrgPreferences: boolean;
+    hasEspWebhook: boolean;
+    hasPostmarkHybrid: boolean;
   }): number {
     const baseline = 42;
     const f1Ready =
@@ -307,6 +314,12 @@ export class EmailOutboxAnalyticsService {
     }
     if (flags.hasOrgPreferences) {
       score += 14;
+    }
+    if (flags.hasEspWebhook) {
+      score += 6;
+    }
+    if (flags.hasPostmarkHybrid) {
+      score += 4;
     }
     return Math.min(100, score);
   }

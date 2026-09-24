@@ -7,6 +7,9 @@ import { EmailTemplateService } from "./EmailTemplateService";
 import { SmtpEmailSender } from "./SmtpEmailSender";
 import { EmailHtmlTrackingService } from "./EmailHtmlTrackingService";
 import { EmailEngagementService } from "./EmailEngagementService";
+import { EmailSuppressionService } from "./EmailSuppressionService";
+import { UserNotificationPreferenceService } from "./UserNotificationPreferenceService";
+import { EmailDeliveryService } from "./EmailDeliveryService";
 
 @Injectable()
 export class EmailOutboxService {
@@ -19,6 +22,9 @@ export class EmailOutboxService {
     private readonly smtpEmailSender: SmtpEmailSender,
     private readonly emailHtmlTrackingService: EmailHtmlTrackingService,
     private readonly emailEngagementService: EmailEngagementService,
+    private readonly emailSuppressionService: EmailSuppressionService,
+    private readonly userNotificationPreferenceService: UserNotificationPreferenceService,
+    private readonly emailDeliveryService: EmailDeliveryService,
   ) {}
 
   public async enqueue(params: {
@@ -35,6 +41,29 @@ export class EmailOutboxService {
     });
     if (existing) {
       return existing;
+    }
+    if (await this.emailSuppressionService.isSuppressed(params.recipientEmail)) {
+      this.logger.warn(
+        `Suppressed recipient skipped: ${params.recipientEmail}`,
+      );
+      return null;
+    }
+    const userId =
+      typeof params.metadata?.userId === "string"
+        ? params.metadata.userId
+        : null;
+    if (
+      params.recipientKind === EmailRecipientKind.User &&
+      userId &&
+      !(await this.userNotificationPreferenceService.isUserEmailAllowed(
+        userId,
+        params.eventCode,
+      ))
+    ) {
+      this.logger.debug(
+        `User preference blocked ${params.eventCode} for ${userId}`,
+      );
+      return null;
     }
     const audience =
       params.recipientKind === EmailRecipientKind.Admin ? "admin" : "user";
@@ -78,7 +107,7 @@ export class EmailOutboxService {
         row.htmlBody,
       );
       row.htmlBody = htmlWithTracking;
-      const messageId = await this.smtpEmailSender.send({
+      const delivery = await this.emailDeliveryService.send({
         to: row.recipientEmail,
         subject: row.subject,
         html: htmlWithTracking,
@@ -86,7 +115,11 @@ export class EmailOutboxService {
       });
       row.status = "sent";
       row.sentAt = new Date();
-      row.providerMessageId = messageId;
+      row.providerMessageId = delivery.messageId;
+      row.metadata = {
+        ...(row.metadata ?? {}),
+        deliveryProvider: delivery.provider,
+      };
       row.lastError = null;
       await this.outboxRepository.save(row);
     } catch (error) {

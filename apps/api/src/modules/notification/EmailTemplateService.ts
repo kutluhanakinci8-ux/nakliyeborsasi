@@ -87,6 +87,13 @@ export class EmailTemplateService {
           ),
           text: `Giriş: ${payload.emailAddress} (${payload.companyLegalName})`,
         };
+      case NotificationEventCode.AuctionBidPlaced:
+      case NotificationEventCode.AuctionOutbid:
+      case NotificationEventCode.AuctionWon:
+      case NotificationEventCode.AuctionPublished:
+      case NotificationEventCode.ListingNewOffer:
+      case NotificationEventCode.MessagingNewMessage:
+        return this.renderOperationalAdminTr(eventCode, payload);
       case NotificationEventCode.UserFirstLogin:
         return {
           subject: `[${PLATFORM_EMAIL_SUBJECT_TAG}] İlk giriş — ${payload.emailAddress}`,
@@ -121,6 +128,13 @@ export class EmailTemplateService {
     payload: EmailTemplatePayload,
   ): { subject: string; html: string; text: string } {
     switch (eventCode) {
+      case NotificationEventCode.AuctionBidPlaced:
+      case NotificationEventCode.AuctionOutbid:
+      case NotificationEventCode.AuctionWon:
+      case NotificationEventCode.AuctionPublished:
+      case NotificationEventCode.ListingNewOffer:
+      case NotificationEventCode.MessagingNewMessage:
+        return this.renderOperationalAdminTr(eventCode, payload);
       case NotificationEventCode.UserRegistered:
         return {
           subject: `${PLATFORM_PRODUCT_NAME} — kaydınız alındı`,
@@ -219,5 +233,38 @@ export class EmailTemplateService {
       default:
         return this.renderUserTr(eventCode, payload);
     }
+  }
+
+  private renderOperationalAdminTr(
+    eventCode: NotificationEventCode,
+    payload: EmailTemplatePayload,
+  ): { subject: string; html: string; text: string } {
+    const titles: Partial<Record<NotificationEventCode, string>> = {
+      [NotificationEventCode.AuctionBidPlaced]: "İhalede yeni teklif",
+      [NotificationEventCode.AuctionOutbid]: "Teklifiniz geçildi",
+      [NotificationEventCode.AuctionWon]: "İhale kazanıldı",
+      [NotificationEventCode.AuctionPublished]: "Yeni ihale yayınlandı",
+      [NotificationEventCode.ListingNewOffer]: "Yeni teklif / ilan",
+      [NotificationEventCode.MessagingNewMessage]: "Yeni mesaj",
+    };
+    const title = titles[eventCode] ?? "Operasyon bildirimi";
+    const auctionUrl = payload.auctionUrl ?? "#";
+    return {
+      subject: `[${PLATFORM_EMAIL_SUBJECT_TAG}] ${title} — ${payload.companyLegalName ?? ""}`,
+      html: wrapCorporateEmail(
+        title,
+        `${leadParagraph(
+          `<strong>${escapeHtml(payload.bidderCompanyName ?? payload.displayName ?? "—")}</strong> · ${escapeHtml(payload.bidAmount ?? "")}`,
+        )}
+        ${detailTable([
+          { label: "Firma", value: payload.companyLegalName ?? "—" },
+          { label: "İhale", value: payload.auctionSessionId ?? "—" },
+          { label: "Zaman", value: formatOccurredAt(payload.occurredAt ?? "") },
+        ])}
+        ${primaryButton(auctionUrl, "İhaleyi aç")}`,
+        { eyebrow: "Operasyon", preheader: title },
+      ),
+      text: `${title}: ${payload.auctionSessionId ?? ""} ${auctionUrl}`,
+    };
   }
 }

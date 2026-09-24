@@ -18,12 +18,14 @@ import { PlatformAdminGuard } from "../platform-admin/PlatformAdminGuard";
 import { PlatformGmailOAuthStateEntity } from "../../infrastructure/database/entities/PlatformGmailOAuthStateEntity";
 import { GmailInboxService } from "./GmailInboxService";
 import { GmailOAuthConfigurationService } from "./GmailOAuthConfigurationService";
+import { EmailEspWebhookService } from "./EmailEspWebhookService";
 
 @Controller("platform-admin/gmail")
 export class PlatformGmailAdminController {
   public constructor(
     private readonly gmailInboxService: GmailInboxService,
     private readonly gmailOAuthConfigurationService: GmailOAuthConfigurationService,
+    private readonly emailEspWebhookService: EmailEspWebhookService,
     @InjectRepository(PlatformGmailOAuthStateEntity)
     private readonly oauthStateRepository: Repository<PlatformGmailOAuthStateEntity>,
   ) {}
@@ -105,6 +107,22 @@ export class PlatformGmailAdminController {
     const max = Number.isFinite(parsed) ? Math.min(parsed, 80) : 40;
     const messages = await this.gmailInboxService.listInboxMessages(max);
     return { messages };
+  }
+
+  @Post("sync-bounces")
+  @UseGuards(JwtAuthenticationGuard, PlatformAdminGuard)
+  public async syncBounces(@Query("limit") limit?: string) {
+    const parsed = limit ? Number.parseInt(limit, 10) : 60;
+    const max = Number.isFinite(parsed) ? Math.min(parsed, 100) : 60;
+    const messages = await this.gmailInboxService.listInboxMessages(max);
+    const added = await this.emailEspWebhookService.syncGmailBounceCandidates(
+      messages.map((row) => ({
+        from: row.from,
+        subject: row.subject,
+        snippet: row.snippet,
+      })),
+    );
+    return { ok: true, scanned: messages.length, suppressionsAdded: added };
   }
 
   @Delete("connection")

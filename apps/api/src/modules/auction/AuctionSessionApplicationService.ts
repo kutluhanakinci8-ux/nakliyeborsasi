@@ -34,9 +34,11 @@ import {
 } from "./auctionDefaultTerms";
 import {
   findCompanyBid,
+  rankReverseBids,
   validateBidForSession,
 } from "./AuctionBidRules";
 import { mapAuctionCompetition } from "./AuctionCompetitionMapper";
+import { OperationalNotificationService } from "../notification/OperationalNotificationService";
 
 @Injectable()
 export class AuctionSessionApplicationService {
@@ -52,6 +54,7 @@ export class AuctionSessionApplicationService {
     private readonly modularSubscriptionEntitlementService: ModularSubscriptionEntitlementService,
     private readonly localeResolutionService: LocaleResolutionService,
     private readonly auctionSessionFinalizationService: AuctionSessionFinalizationService,
+    private readonly operationalNotificationService: OperationalNotificationService,
     private readonly trustScoreApplicationService: TrustScoreApplicationService,
   ) {}
 
@@ -285,6 +288,10 @@ export class AuctionSessionApplicationService {
       );
     }
 
+    const rankedBefore = rankReverseBids(bids);
+    const previousLeaderCompanyId =
+      rankedBefore[0]?.bid.bidderCompanyId ?? null;
+
     const existing = findCompanyBid(bids, authenticatedUser.companyId);
     let saved: AuctionBidEntity;
     if (existing) {
@@ -313,6 +320,15 @@ export class AuctionSessionApplicationService {
       );
       await this.auctionSessionRepository.save(session);
     }
+
+    void this.operationalNotificationService
+      .afterAuctionBidPlaced({
+        session,
+        bid: saved,
+        bidderCompanyId: authenticatedUser.companyId,
+        previousLeaderCompanyId,
+      })
+      .catch(() => undefined);
 
     return saved;
   }

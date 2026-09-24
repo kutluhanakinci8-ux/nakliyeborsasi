@@ -12,6 +12,7 @@ import { AuctionExpiredSessionSweepTask } from "./AuctionExpiredSessionSweepTask
 import { SubscriptionModule } from "../subscription/SubscriptionModule";
 import { AuthModule } from "../auth/AuthModule";
 import { MessagingModule } from "../messaging/MessagingModule";
+import { NotificationModule } from "../notification/NotificationModule";
 import { AuctionListingPriceActionService } from "./AuctionListingPriceActionService";
 
 @Module({
@@ -26,6 +27,7 @@ import { AuctionListingPriceActionService } from "./AuctionListingPriceActionSer
     AuthModule,
     TrustScoreModule,
     MessagingModule,
+    NotificationModule,
   ],
   controllers: [AuctionSessionController],
   providers: [

@@ -28,6 +28,9 @@ import { PlatformGmailCredentialEntity } from "./entities/PlatformGmailCredentia
 import { PlatformGmailOAuthStateEntity } from "./entities/PlatformGmailOAuthStateEntity";
 import { EmailOutboxEngagementEventEntity } from "./entities/EmailOutboxEngagementEventEntity";
 import { EmailOutboxClickTokenEntity } from "./entities/EmailOutboxClickTokenEntity";
+import { EmailSuppressionEntity } from "./entities/EmailSuppressionEntity";
+import { UserNotificationPreferenceEntity } from "./entities/UserNotificationPreferenceEntity";
+import { CompanyNotificationPreferenceEntity } from "./entities/CompanyNotificationPreferenceEntity";
 import { DatabaseSeedRunner } from "./seed/DatabaseSeedRunner";
 import { SubscriptionCatalogModule } from "../../modules/subscription/SubscriptionCatalogModule";
 
@@ -66,6 +69,9 @@ import { SubscriptionCatalogModule } from "../../modules/subscription/Subscripti
       PlatformGmailOAuthStateEntity,
       EmailOutboxEngagementEventEntity,
       EmailOutboxClickTokenEntity,
+      EmailSuppressionEntity,
+      UserNotificationPreferenceEntity,
+      CompanyNotificationPreferenceEntity,
     ]),
   ],
   providers: [DatabaseSeedRunner],
