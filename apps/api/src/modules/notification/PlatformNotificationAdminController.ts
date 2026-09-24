@@ -106,9 +106,9 @@ export class PlatformNotificationAdminController {
   public async testSend(@Body() body: TestNotificationEmailDto) {
     const eventCode = body.eventCode as NotificationEventCode;
     const samplePayload = {
-      displayName: "Test Kullanıcı",
-      emailAddress: "test@nakliyeborsasi.local",
-      companyLegalName: "Test Lojistik A.Ş.",
+      displayName: "Lerta Logistics (test)",
+      emailAddress: "lertalogistics@gmail.com",
+      companyLegalName: "Lerta Logistics",
       companyCountryCode: "TR",
       participantType: "LOAD_CARRIER",
       planCode: "carrier_professional_tr_ua",
