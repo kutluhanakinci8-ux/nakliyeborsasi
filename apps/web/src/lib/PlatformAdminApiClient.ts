@@ -541,6 +541,16 @@ export class PlatformAdminApiClient {
     return payload.snapshot;
   }
 
+  public static async fetchMailIdentityAudit(
+    accessToken: string,
+  ): Promise<MailIdentityAuditLogRow[]> {
+    const payload = await adminFetch<{ logs: MailIdentityAuditLogRow[] }>(
+      accessToken,
+      "mail/identity-audit",
+    );
+    return payload.logs;
+  }
+
   public static async fetchMailDomains(
     accessToken: string,
   ): Promise<MailDomainRow[]> {
@@ -702,6 +712,15 @@ export type MailDomainRow = {
   verificationStatus: string;
   notes: string | null;
   senderIdentities?: MailSenderIdentityRow[];
+  createdAt: string;
+};
+
+export type MailIdentityAuditLogRow = {
+  id: string;
+  actorUserId: string | null;
+  actorCompanyId: string | null;
+  actionCode: string;
+  metadata: Record<string, unknown> | null;
   createdAt: string;
 };
 

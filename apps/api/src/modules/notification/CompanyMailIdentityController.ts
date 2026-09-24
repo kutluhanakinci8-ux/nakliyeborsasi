@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -16,6 +17,10 @@ import { MailTenantSubdomainService } from "./MailTenantSubdomainService";
 import { MailOrganizationSendRateService } from "./MailOrganizationSendRateService";
 import { EmailSuppressionService } from "./EmailSuppressionService";
 import { MailCustomDomainService } from "./MailCustomDomainService";
+import {
+  MailIdentityAuditAction,
+  MailIdentityAuditService,
+} from "./MailIdentityAuditService";
 
 class ProvisionCompanyMailIdentityDto {
   public localPart!: string;
@@ -34,6 +39,7 @@ export class CompanyMailIdentityController {
     private readonly mailOrganizationSendRateService: MailOrganizationSendRateService,
     private readonly emailSuppressionService: EmailSuppressionService,
     private readonly mailCustomDomainService: MailCustomDomainService,
+    private readonly mailIdentityAuditService: MailIdentityAuditService,
   ) {}
 
   @Get()
@@ -65,6 +71,17 @@ export class CompanyMailIdentityController {
       localPart: body.localPart,
       displayName: body.displayName,
     });
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.SenderProvisioned,
+      {
+        organizationId: user.companyId,
+        fromAddress: result.fromAddress,
+        channel: "tenant_subdomain",
+        localPart: body.localPart,
+      },
+      "/company/mail-identity/provision",
+    );
     return { message: "OK", ...result };
   }
 
@@ -88,6 +105,16 @@ export class CompanyMailIdentityController {
       user.companyId,
       body.domain,
     );
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.CustomDomainRegistered,
+      {
+        organizationId: user.companyId,
+        domain: bundle.mailDomain?.domain ?? body.domain,
+        mailDomainId: bundle.mailDomain?.id ?? null,
+      },
+      "/company/mail-identity/custom-domain",
+    );
     return { message: "OK", bundle };
   }
 
@@ -96,11 +123,36 @@ export class CompanyMailIdentityController {
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
   ) {
     this.assertCompanyOwner(user);
-    const domain =
-      await this.mailCustomDomainService.verifyAndMarkOrganizationDomain(
-        user.companyId,
+    try {
+      const domain =
+        await this.mailCustomDomainService.verifyAndMarkOrganizationDomain(
+          user.companyId,
+        );
+      await this.mailIdentityAuditService.recordFromUser(
+        user,
+        MailIdentityAuditAction.CustomDomainDnsVerified,
+        {
+          organizationId: user.companyId,
+          domain: domain.domain,
+          mailDomainId: domain.id,
+        },
+        "/company/mail-identity/custom-domain/verify-dns",
       );
-    return { message: "OK", domain };
+      return { message: "OK", domain };
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        await this.mailIdentityAuditService.recordFromUser(
+          user,
+          MailIdentityAuditAction.CustomDomainDnsFailed,
+          {
+            organizationId: user.companyId,
+            detail: error.getResponse(),
+          },
+          "/company/mail-identity/custom-domain/verify-dns",
+        );
+      }
+      throw error;
+    }
   }
 
   @Post("custom-domain/provision")
@@ -114,6 +166,17 @@ export class CompanyMailIdentityController {
       localPart: body.localPart,
       displayName: body.displayName,
     });
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.SenderProvisioned,
+      {
+        organizationId: user.companyId,
+        fromAddress: result.fromAddress,
+        channel: "custom_domain",
+        localPart: body.localPart,
+      },
+      "/company/mail-identity/custom-domain/provision",
+    );
     return { message: "OK", ...result };
   }
 
@@ -141,6 +204,16 @@ export class CompanyMailIdentityController {
       note: body.note,
       organizationId: user.companyId,
     });
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.SuppressionAdded,
+      {
+        organizationId: user.companyId,
+        email: body.email,
+        reason: body.reason ?? "manual",
+      },
+      "/company/mail-identity/suppressions",
+    );
     return { suppression: row };
   }
 
@@ -154,6 +227,17 @@ export class CompanyMailIdentityController {
       email,
       user.companyId,
     );
+    if (removed) {
+      await this.mailIdentityAuditService.recordFromUser(
+        user,
+        MailIdentityAuditAction.SuppressionRemoved,
+        {
+          organizationId: user.companyId,
+          email,
+        },
+        "/company/mail-identity/suppressions",
+      );
+    }
     return { ok: removed };
   }
 
@@ -168,6 +252,16 @@ export class CompanyMailIdentityController {
         user.companyId,
         body.displayName,
       );
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.DisplayNameUpdated,
+      {
+        organizationId: user.companyId,
+        displayName: body.displayName,
+        senderId: sender.id,
+      },
+      "/company/mail-identity/display-name",
+    );
     return { message: "OK", sender };
   }
 

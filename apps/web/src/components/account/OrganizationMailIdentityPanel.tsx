@@ -133,7 +133,8 @@ export function OrganizationMailIdentityPanel({
       <p className="account-card-lead">
         İhale ve bildirim e-postaları firmanız adına{" "}
         <strong>@{identity?.domain ?? "kullanici.lerta.tr"}</strong> adresinden
-        gider. Tam posta kutusu (gelen mail) ileride eklenecek.
+        gider. Tam posta kutusu (gelen mail) ileride eklenecek. Kimlik
+        değişiklikleri denetim günlüğüne kaydedilir (KVKK).
       </p>
 
       {loading && !identity ? (

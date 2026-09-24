@@ -8,13 +8,19 @@ import {
   Post,
   UseGuards,
 } from "@nestjs/common";
+import { AuthenticatedUserContext } from "@nakliyeborsasi/core";
 import { JwtAuthenticationGuard } from "../auth/JwtAuthenticationGuard";
 import { PlatformAdminGuard } from "../platform-admin/PlatformAdminGuard";
+import { AuthenticatedUserParam } from "../auth/AuthenticatedUserParam";
 import { MailDomainApplicationService } from "./MailDomainApplicationService";
 import { PlatformMailRoadmapService } from "./PlatformMailRoadmapService";
 import { MailTenantSubdomainService } from "./MailTenantSubdomainService";
 import { MailCustomDomainService } from "./MailCustomDomainService";
 import { MailDomainType } from "../../infrastructure/database/entities/MailDomainEntity";
+import {
+  MailIdentityAuditAction,
+  MailIdentityAuditService,
+} from "./MailIdentityAuditService";
 
 @Controller("platform-admin/mail")
 @UseGuards(JwtAuthenticationGuard, PlatformAdminGuard)
@@ -24,6 +30,7 @@ export class PlatformMailIdentityAdminController {
     private readonly platformMailRoadmapService: PlatformMailRoadmapService,
     private readonly mailTenantSubdomainService: MailTenantSubdomainService,
     private readonly mailCustomDomainService: MailCustomDomainService,
+    private readonly mailIdentityAuditService: MailIdentityAuditService,
   ) {}
 
   @Get("roadmap")
@@ -31,6 +38,11 @@ export class PlatformMailIdentityAdminController {
     return {
       snapshot: await this.platformMailRoadmapService.buildSnapshot(),
     };
+  }
+
+  @Get("identity-audit")
+  public async identityAudit() {
+    return { logs: await this.mailIdentityAuditService.listRecent() };
   }
 
   @Get("domains")
@@ -41,6 +53,7 @@ export class PlatformMailIdentityAdminController {
 
   @Post("domains")
   public async createDomain(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
     @Body()
     body: {
       organizationId: string;
@@ -58,6 +71,17 @@ export class PlatformMailIdentityAdminController {
       if (!bundle.mailDomain) {
         throw new BadRequestException("Custom domain registration failed");
       }
+      await this.mailIdentityAuditService.recordFromUser(
+        user,
+        MailIdentityAuditAction.AdminDomainCreated,
+        {
+          organizationId: body.organizationId,
+          domain: bundle.mailDomain.domain,
+          mailDomainId: bundle.mailDomain.id,
+          domainType: "custom",
+        },
+        "/platform-admin/mail/domains",
+      );
       return { domain: bundle.mailDomain };
     }
     const domain = await this.mailDomainApplicationService.createDomain({
@@ -66,19 +90,59 @@ export class PlatformMailIdentityAdminController {
       domainType,
       notes: body.notes,
     });
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.AdminDomainCreated,
+      {
+        organizationId: body.organizationId,
+        domain: domain.domain,
+        mailDomainId: domain.id,
+        domainType,
+      },
+      "/platform-admin/mail/domains",
+    );
     return { domain };
   }
 
   @Patch("domains/:domainId/verify")
-  public async verifyDomain(@Param("domainId") domainId: string) {
+  public async verifyDomain(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("domainId") domainId: string,
+  ) {
     const domain =
       await this.mailDomainApplicationService.markVerified(domainId);
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.AdminDomainManuallyVerified,
+      {
+        mailDomainId: domainId,
+        domain: domain.domain,
+        organizationId: domain.organizationId,
+      },
+      `/platform-admin/mail/domains/${domainId}/verify`,
+    );
     return { domain };
   }
 
   @Post("domains/:domainId/verify-dns")
-  public async verifyDomainDns(@Param("domainId") domainId: string) {
+  public async verifyDomainDns(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("domainId") domainId: string,
+  ) {
     const result = await this.mailCustomDomainService.verifyDomainById(domainId);
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      result.dnsCheck.ok
+        ? MailIdentityAuditAction.AdminDomainDnsVerified
+        : MailIdentityAuditAction.CustomDomainDnsFailed,
+      {
+        mailDomainId: domainId,
+        domain: result.domain.domain,
+        organizationId: result.domain.organizationId,
+        dnsOk: result.dnsCheck.ok,
+      },
+      `/platform-admin/mail/domains/${domainId}/verify-dns`,
+    );
     return { ok: result.dnsCheck.ok, ...result };
   }
 
@@ -90,13 +154,22 @@ export class PlatformMailIdentityAdminController {
   }
 
   @Post("tenant-subdomain/verify-dns")
-  public async verifyTenantDns() {
+  public async verifyTenantDns(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
     const domain = await this.mailTenantSubdomainService.verifyTenantDomainDns();
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.TenantSubdomainDnsVerified,
+      { domain: domain.domain, mailDomainId: domain.id },
+      "/platform-admin/mail/tenant-subdomain/verify-dns",
+    );
     return { domain };
   }
 
   @Post("tenant-subdomain/provision")
   public async provisionTenantSender(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
     @Body()
     body: {
       organizationId: string;
@@ -109,11 +182,22 @@ export class PlatformMailIdentityAdminController {
       localPart: body.localPart,
       displayName: body.displayName,
     });
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.TenantSubdomainProvisioned,
+      {
+        organizationId: body.organizationId,
+        fromAddress: result.fromAddress,
+        localPart: body.localPart,
+      },
+      "/platform-admin/mail/tenant-subdomain/provision",
+    );
     return result;
   }
 
   @Post("domains/:domainId/senders")
   public async addSender(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
     @Param("domainId") domainId: string,
     @Body()
     body: {
@@ -130,6 +214,18 @@ export class PlatformMailIdentityAdminController {
       displayName: body.displayName,
       isDefault: body.isDefault,
     });
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.SenderProvisioned,
+      {
+        organizationId: body.organizationId,
+        mailDomainId: domainId,
+        localPart: body.localPart,
+        senderId: sender.id,
+        channel: "admin_manual",
+      },
+      `/platform-admin/mail/domains/${domainId}/senders`,
+    );
     return { sender };
   }
 }

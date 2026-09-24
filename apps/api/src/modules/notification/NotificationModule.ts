@@ -54,10 +54,14 @@ import { PlatformMailRoadmapService } from "./PlatformMailRoadmapService";
 import { PlatformMailIdentityAdminController } from "./PlatformMailIdentityAdminController";
 import { MailDomainDnsVerificationService } from "./MailDomainDnsVerificationService";
 import { MailTenantSubdomainService } from "./MailTenantSubdomainService";
+import { MailIdentityAuditService } from "./MailIdentityAuditService";
+import { AuditModule } from "../../infrastructure/audit/AuditModule";
+import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogEntity";
 
 @Module({
   imports: [
     forwardRef(() => AuthModule),
+    AuditModule,
     TypeOrmModule.forFeature([
       EmailOutboxEntity,
       PlatformNotificationSettingEntity,
@@ -78,6 +82,7 @@ import { MailTenantSubdomainService } from "./MailTenantSubdomainService";
       MailSenderIdentityEntity,
       MailMailboxEntity,
       MailInboundMessageEntity,
+      AuditLogEntity,
     ]),
   ],
   controllers: [
@@ -117,6 +122,7 @@ import { MailTenantSubdomainService } from "./MailTenantSubdomainService";
     MailOrganizationSendRateService,
     MailCustomDomainService,
     MailCustomDomainOpenDkimInstaller,
+    MailIdentityAuditService,
   ],
   exports: [
     AuthNotificationService,

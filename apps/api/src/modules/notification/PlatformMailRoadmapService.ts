@@ -126,8 +126,9 @@ export class PlatformMailRoadmapService {
           progressPercent: phaseBProgress,
           nextStepsTr: verifiedDomains > 0
             ? [
-                "Hesap → Organizasyon → E-posta kimliği (self-service)",
+                "B5 özel domain + B6 denetim sekmesi (Bildirimler)",
                 "Pilot firmalarla transactional From testi",
+                "Faz C: MX + gelen posta (planlı)",
               ]
             : [
                 "Admin → Kurumsal kimlik: DNS doğrula",

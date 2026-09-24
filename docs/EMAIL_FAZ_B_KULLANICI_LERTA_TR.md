@@ -53,7 +53,10 @@ Detay: [EMAIL_FAZ_B_B4_REPUTATION.md](./EMAIL_FAZ_B_B4_REPUTATION.md)
 
 Detay: [EMAIL_FAZ_B_B5_CUSTOM_DOMAIN.md](./EMAIL_FAZ_B_B5_CUSTOM_DOMAIN.md)
 
-## 8. Sonraki adımlar
+## 8. B6 — Denetim (KVKK)
 
-- Gönderim audit / KVKK log
-- Gelen posta kutusu (Faz C)
+Detay: [EMAIL_FAZ_B_B6_AUDIT.md](./EMAIL_FAZ_B_B6_AUDIT.md)
+
+## 9. Sonraki adımlar
+
+- **Faz C** — MX, inbound MIME, panel webmail

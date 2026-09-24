@@ -15,6 +15,7 @@ import { AdminMailPolicyPanel } from "./AdminMailPolicyPanel";
 import { AdminPlatformSendingPanel } from "./AdminPlatformSendingPanel";
 import { AdminMailRoadmapPanel } from "./AdminMailRoadmapPanel";
 import { AdminMailDomainsPanel } from "./AdminMailDomainsPanel";
+import { AdminMailIdentityAuditPanel } from "./AdminMailIdentityAuditPanel";
 import type { EmailOutboxDetail } from "../../lib/PlatformAdminApiClient";
 
 const EVENT_LABELS: Record<string, string> = {
@@ -75,6 +76,7 @@ export function AdminNotificationsPageClient() {
     | "operations"
     | "analytics"
     | "policy"
+    | "identity-audit"
   >("roadmap");
   const [preview, setPreview] = useState<EmailOutboxDetail | null>(null);
 
@@ -277,6 +279,17 @@ export function AdminNotificationsPageClient() {
         >
           Politika
         </button>
+        <button
+          type="button"
+          className={
+            activeTab === "identity-audit"
+              ? "pa-mail-tab is-active"
+              : "pa-mail-tab"
+          }
+          onClick={() => setActiveTab("identity-audit")}
+        >
+          Denetim (B6)
+        </button>
       </nav>
 
       {activeTab === "roadmap" ? <AdminMailRoadmapPanel /> : null}
@@ -284,6 +297,7 @@ export function AdminNotificationsPageClient() {
       {activeTab === "domains" ? <AdminMailDomainsPanel /> : null}
       {activeTab === "analytics" ? <AdminMailAnalyticsPanel /> : null}
       {activeTab === "policy" ? <AdminMailPolicyPanel /> : null}
+      {activeTab === "identity-audit" ? <AdminMailIdentityAuditPanel /> : null}
 
       {activeTab === "operations" ? (
         <>
