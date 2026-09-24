@@ -22,6 +22,10 @@ import { FleetTelemetryEventEntity } from "./entities/FleetTelemetryEventEntity"
 import { FleetMatchedRouteEntity } from "./entities/FleetMatchedRouteEntity";
 import { FleetRouteMatchingJobEntity } from "./entities/FleetRouteMatchingJobEntity";
 import { LogisticsPoiEntity } from "./entities/LogisticsPoiEntity";
+import { EmailOutboxEntity } from "./entities/EmailOutboxEntity";
+import { PlatformNotificationSettingEntity } from "./entities/PlatformNotificationSettingEntity";
+import { EmailVerificationTokenEntity } from "./entities/EmailVerificationTokenEntity";
+import { PasswordResetTokenEntity } from "./entities/PasswordResetTokenEntity";
 
 @Injectable()
 export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
@@ -59,6 +63,10 @@ export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
         FleetMatchedRouteEntity,
         FleetRouteMatchingJobEntity,
         LogisticsPoiEntity,
+        EmailOutboxEntity,
+        PlatformNotificationSettingEntity,
+        EmailVerificationTokenEntity,
+        PasswordResetTokenEntity,
       ],
       synchronize,
       logging: false,

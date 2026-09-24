@@ -239,16 +239,37 @@ Mevcut `/admin/sistem` overview’a KPI: “Bugün kayıt / ilk giriş”.
 
 ---
 
-## 13. Açık ürün kararları (onayınıza sunulur)
+## 13. Ürün kararları (onaylandı — 2026-09-24)
 
-1. Kayıt sonrası otomatik JWT ile marketplace’e yönlendirme **ilk giriş** sayılsın mı?
-2. Her başarılı girişte admin e-postası **kapalı** mı (yalnızca ilk + kayıt)?
-3. Admin alıcıları: tek `ops@` mi, rol bazlı mı?
-4. Çoklu dil: admin e-postaları daima TR mi?
+1. Kayıt sonrası otomatik oturum **ilk giriş** sayılır (`firstLoginAt` kayıt anında).
+2. Admin’e **her başarılı giriş** e-postası gider (`USER_LOGIN`).
+3. Admin alıcıları: **liste** (`platform_notification_settings.adminRecipientEmails` + `PLATFORM_ADMIN_EMAILS` env).
+4. Admin şablonları: **şimdilik Türkçe**; kullanıcı transactional TR/EN (`preferredLocale`).
+
+## 14. Uygulama durumu
+
+| Faz | Durum | Not |
+|-----|--------|-----|
+| A1 | Tamamlandı | `email_outbox`, SMTP (Mailpit varsayılan 1025), şablonlar |
+| A2 | Tamamlandı | `firstLoginAt`, `lastLoginAt`, `loginCount`, auth hook |
+| A3 | Tamamlandı | `/admin/bildirimler`, `platform-admin/notifications/*` |
+| A4 | Tamamlandı | Kullanıcı kayıt e-postası TR/EN |
+| B | Tamamlandı (API) | `request-email-verification`, `verify-email`, `request-password-reset`, `reset-password` |
+
+### Ortam değişkenleri
+
+```bash
+EMAIL_ENABLED=true
+PLATFORM_ADMIN_EMAILS=admin@nakliyeborsasi.local,ops@firma.com
+SMTP_HOST=127.0.0.1
+SMTP_PORT=1025
+SMTP_FROM="Nakliye Borsası <noreply@nakliyeborsasi.local>"
+WEB_PUBLIC_BASE_URL=http://168.231.109.27:3011
+```
 
 ---
 
-## 14. Sonuç
+## 15. Sonuç
 
 Nakliye Borsası’nda **giriş ve kayıt olayları** üretim için hazır; **e-posta katmanı sıfırdan** inşa edilmeli. Öncelikli değer: platform yöneticisinin **yeni firma** ve **ilk gerçek giriş** anlarını e-posta + admin panelinde görmesi; paralelde kullanıcıya **kurumsal hoş geldin** transactional mesajı. Mevcut audit log ve abonelik/organizasyon verisi şablon zenginliği için yeterli; `UserAccountEntity` ve auth servisi minimal migration ile tamamlanır.
 

@@ -20,6 +20,10 @@ import { FleetTelemetryDeviceEntity } from "./entities/FleetTelemetryDeviceEntit
 import { FleetTelemetryConsentLogEntity } from "./entities/FleetTelemetryConsentLogEntity";
 import { FleetTelemetryEventEntity } from "./entities/FleetTelemetryEventEntity";
 import { LogisticsPoiEntity } from "./entities/LogisticsPoiEntity";
+import { EmailOutboxEntity } from "./entities/EmailOutboxEntity";
+import { PlatformNotificationSettingEntity } from "./entities/PlatformNotificationSettingEntity";
+import { EmailVerificationTokenEntity } from "./entities/EmailVerificationTokenEntity";
+import { PasswordResetTokenEntity } from "./entities/PasswordResetTokenEntity";
 import { DatabaseSeedRunner } from "./seed/DatabaseSeedRunner";
 import { SubscriptionCatalogModule } from "../../modules/subscription/SubscriptionCatalogModule";
 
@@ -50,6 +54,10 @@ import { SubscriptionCatalogModule } from "../../modules/subscription/Subscripti
       FleetTelemetryConsentLogEntity,
       FleetTelemetryEventEntity,
       LogisticsPoiEntity,
+      EmailOutboxEntity,
+      PlatformNotificationSettingEntity,
+      EmailVerificationTokenEntity,
+      PasswordResetTokenEntity,
     ]),
   ],
   providers: [DatabaseSeedRunner],

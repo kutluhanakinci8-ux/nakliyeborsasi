@@ -22,6 +22,21 @@ export class UserAccountEntity {
   @Column({ type: "varchar", length: 120 })
   public displayName!: string;
 
+  @Column({ type: "varchar", length: 8, default: "tr" })
+  public preferredLocale!: string;
+
+  @Column({ type: "timestamptz", nullable: true })
+  public firstLoginAt!: Date | null;
+
+  @Column({ type: "timestamptz", nullable: true })
+  public lastLoginAt!: Date | null;
+
+  @Column({ type: "int", default: 0 })
+  public loginCount!: number;
+
+  @Column({ type: "timestamptz", nullable: true })
+  public emailVerifiedAt!: Date | null;
+
   @OneToMany(() => CompanyMembershipEntity, (membership) => membership.user)
   public memberships!: CompanyMembershipEntity[];
 

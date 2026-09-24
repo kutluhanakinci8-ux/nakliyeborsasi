@@ -1,4 +1,5 @@
-import { Module } from "@nestjs/common";
+import { Module, forwardRef } from "@nestjs/common";
+import { NotificationModule } from "../notification/NotificationModule";
 import { JwtModule } from "@nestjs/jwt";
 import { PassportModule } from "@nestjs/passport";
 import { ConfigModule, ConfigService } from "@nestjs/config";
@@ -14,6 +15,7 @@ import { InstagramPublicStatsService } from "./InstagramPublicStatsService";
 
 @Module({
   imports: [
+    forwardRef(() => NotificationModule),
     PassportModule.register({ defaultStrategy: "jwt" }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -47,6 +49,7 @@ import { InstagramPublicStatsService } from "./InstagramPublicStatsService";
     JwtAuthenticationGuard,
     CompanyRolesAuthorizationGuard,
     JwtTokenIssuingService,
+    PasswordHashingService,
   ],
 })
 export class AuthModule {}
