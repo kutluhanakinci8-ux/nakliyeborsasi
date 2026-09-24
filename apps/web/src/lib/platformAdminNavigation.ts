@@ -91,8 +91,8 @@ export const PLATFORM_ADMIN_NAV: PlatformAdminNavSection[] = [
       },
       {
         href: "/admin/bildirimler",
-        label: "E-posta bildirimleri",
-        description: "Admin alıcı listesi, outbox, test gönderim",
+        label: "Mail yönetimi",
+        description: "Admin bildirimleri, alıcı listesi, outbox ve test gönderim",
       },
     ],
   },

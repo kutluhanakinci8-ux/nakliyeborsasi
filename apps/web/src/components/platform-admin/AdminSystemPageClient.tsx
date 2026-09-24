@@ -23,6 +23,7 @@ const MODULE_ICONS: Record<string, string> = {
   "/admin/odemeler": "PAY",
   "/admin/entegrasyon": "API",
   "/admin/sistem": "SYS",
+  "/admin/bildirimler": "MAIL",
 };
 
 function formatNumber(value: number): string {
