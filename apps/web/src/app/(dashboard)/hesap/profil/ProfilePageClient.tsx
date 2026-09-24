@@ -6,6 +6,7 @@ import {
   resolveAccountDisplayName,
   resolveAccountInitials,
 } from "../../../../lib/accountNavigation";
+import { ProfileSectionNav } from "../../../../components/account/ProfileSectionNav";
 import { useWebSession } from "../../../../context/WebSessionProvider";
 
 type UserProfile = {
@@ -27,6 +28,43 @@ const ROLE_LABELS: Record<string, string> = {
   VIEWER: "Görüntüleme",
   BILLING_ADMIN: "Fatura ve ödeme",
 };
+
+const LOCALE_OPTIONS = [
+  { code: "tr", label: "Türkçe", region: "TR · UA koridoru" },
+  { code: "en", label: "English", region: "Global UI" },
+  { code: "uk", label: "Українська", region: "UA" },
+  { code: "ru", label: "Русский", region: "CIS" },
+] as const;
+
+const NOTIFICATION_OPTIONS: {
+  key: keyof Pick<
+    UserProfile,
+    "notifyNewOffers" | "notifyMessages" | "notifyAuctions" | "notifyWeeklyDigest"
+  >;
+  title: string;
+  description: string;
+}[] = [
+  {
+    key: "notifyNewOffers",
+    title: "Yeni teklif ve ilan",
+    description: "Marketplace ve atanmış yüklerde anlık uyarı.",
+  },
+  {
+    key: "notifyMessages",
+    title: "Mesajlar",
+    description: "Taşıyıcı ve gönderici sohbetleri.",
+  },
+  {
+    key: "notifyAuctions",
+    title: "İhaleler",
+    description: "Açık artırma, süre uzatma ve kazanan bildirimi.",
+  },
+  {
+    key: "notifyWeeklyDigest",
+    title: "Haftalık özet",
+    description: "KPI ve koridor özeti — e-posta.",
+  },
+];
 
 function defaultProfile(emailAddress: string): UserProfile {
   return {
@@ -98,7 +136,7 @@ export function ProfilePageClient() {
     persistProfile(profile);
   }
 
-  function handleLocaleChange(nextLocale: string): void {
+  function handleLocaleSelect(nextLocale: string): void {
     setLocale(nextLocale);
     setProfile((current) => {
       const next = { ...current, interfaceLocale: nextLocale };
@@ -122,245 +160,288 @@ export function ProfilePageClient() {
 
   const initials = resolveAccountInitials(emailAddress);
   const roles = session?.roleCodes ?? [];
+  const displayName = profile.fullName || resolveAccountDisplayName(emailAddress);
+  const activeLocale = profile.interfaceLocale || locale;
 
   return (
-    <div className="account-profile-page account-profile-page--premium">
-      <section
-        className="account-profile-banner account-profile-banner--premium module-panel module-panel--elevated"
-        aria-label="Kişisel hesap özeti"
-      >
-        <div className="account-profile-identity">
-          <span className="account-profile-avatar" aria-hidden>{initials}</span>
-          <div>
-            <p className="account-verify-eyebrow">Kişisel hesap</p>
-            <h2 className="account-card-title">
-              {profile.fullName || resolveAccountDisplayName(emailAddress)}
-            </h2>
-            <p className="account-card-lead">{emailAddress || "—"}</p>
-            <div className="account-verify-badges">
-              {roles.length === 0 ? (
-                <span className="account-status-pill">Rol atanmadı</span>
-              ) : (
-                roles.map((role) => (
-                  <span key={role} className="account-status-pill account-status-pill--ok">
-                    {ROLE_LABELS[role] ?? role}
-                  </span>
-                ))
-              )}
+    <div className="account-profile-page account-profile-page--premium-v2">
+      <header className="account-profile-hero" aria-label="Kişisel hesap özeti">
+        <div className="account-profile-hero-backdrop" aria-hidden />
+        <div className="account-profile-hero-inner">
+          <div className="account-profile-hero-identity">
+            <div className="account-profile-avatar-wrap">
+              <span className="account-profile-avatar account-profile-avatar--xl" aria-hidden>
+                {initials}
+              </span>
+              <span className="account-profile-avatar-status" title="Oturum aktif" />
+            </div>
+            <div>
+              <p className="account-profile-hero-kicker">Kişisel hesap</p>
+              <h1 className="account-profile-hero-name">{displayName}</h1>
+              {profile.jobTitle ? (
+                <p className="account-profile-hero-title">{profile.jobTitle}</p>
+              ) : null}
+              <p className="account-profile-hero-email">{emailAddress || "—"}</p>
+              <div className="account-profile-hero-badges">
+                {roles.length === 0 ? (
+                  <span className="account-profile-pill">Rol atanmadı</span>
+                ) : (
+                  roles.map((role) => (
+                    <span key={role} className="account-profile-pill account-profile-pill--accent">
+                      {ROLE_LABELS[role] ?? role}
+                    </span>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="account-profile-hero-metrics">
+            <div className="account-profile-metric">
+              <span className="account-profile-metric-value">{activeLocale.toUpperCase()}</span>
+              <span className="account-profile-metric-label">Arayüz dili</span>
+            </div>
+            <div className="account-profile-metric">
+              <span className="account-profile-metric-value account-profile-metric-value--ok">
+                Aktif
+              </span>
+              <span className="account-profile-metric-label">Oturum</span>
+            </div>
+            <div className="account-profile-metric account-profile-metric--wide">
+              <span className="account-profile-metric-value account-profile-metric-value--mono">
+                {userId ? `${userId.slice(0, 8)}…` : "—"}
+              </span>
+              <span className="account-profile-metric-label">Kullanıcı kimliği</span>
             </div>
           </div>
         </div>
-        <div className="account-verify-aside">
-          <div className="account-verify-stat">
-            <span className="account-verify-stat-value">{locale.toUpperCase()}</span>
-            <span className="account-verify-stat-label">Arayüz dili</span>
-          </div>
-          <Link href="/hesap/organizasyon" className="account-profile-org-link">
-            Firma ve abonelik →
-          </Link>
-        </div>
-      </section>
+      </header>
 
-      <p className="account-profile-scope-hint module-hint">
-        Firma unvanı, doğrulama, koridorlar ve plan seçimi{" "}
-        <Link href="/hesap/organizasyon">Benim organizasyonum</Link> sekmesinde. Ödeme
-        yöntemi ve faturalar <Link href="/hesap/odemeler">Benim ödemelerim</Link> sekmesinde.
-      </p>
-
-      <div className="account-profile-columns">
-        <form
-          className="account-card module-panel module-panel--elevated"
-          onSubmit={handlePersonalSubmit}
-        >
-          <header className="account-card-head">
-            <div>
-              <h2 className="account-card-title">Kişisel bilgiler</h2>
-              <p className="account-card-lead">
-                Adınız ve iletişim bilgileriniz ekip içi görünürlük ve bildirimler için
-                kullanılır. E-posta adresi giriş için sabittir.
-              </p>
-            </div>
-            <button type="submit" className="btn-account-primary">Kaydet</button>
-          </header>
-          <div className="account-form-grid">
-            <label className="label-light">
-              Görünen ad
-              <input
-                className="input-light"
-                value={profile.fullName}
-                onChange={(event) => updateProfile({ fullName: event.target.value })}
-                placeholder="Ad Soyad"
-              />
-            </label>
-            <label className="label-light">
-              Ünvan / görev
-              <input
-                className="input-light"
-                value={profile.jobTitle}
-                onChange={(event) => updateProfile({ jobTitle: event.target.value })}
-                placeholder="Örn. Operasyon müdürü"
-              />
-            </label>
-            <label className="label-light account-form-span-2">
-              Cep telefonu
-              <input
-                className="input-light"
-                type="tel"
-                value={profile.phone}
-                onChange={(event) => updateProfile({ phone: event.target.value })}
-                placeholder="+90 5xx xxx xx xx"
-              />
-            </label>
-            <label className="label-light account-form-span-2">
-              Birincil e-posta (salt okunur)
-              <input
-                className="input-light"
-                value={emailAddress}
-                readOnly
-                aria-readonly="true"
-              />
-            </label>
-          </div>
-          {saveMessage ? <p className="account-save-hint">{saveMessage}</p> : null}
-          <p className="account-meta-line">
-            Kullanıcı kimliği: <code>{userId || "—"}</code>
-          </p>
-        </form>
-
-        <section className="account-card module-panel module-panel--elevated">
-          <header className="account-card-head">
-            <div>
-              <h2 className="account-card-title">Dil ve bölge</h2>
-              <p className="account-card-lead">
-                Platform arayüzü ve e-posta özetleri için tercih edilen dil. Üst menüdeki
-                dil seçici ile senkron kalır.
-              </p>
-            </div>
-          </header>
-          <label className="label-light account-profile-locale">
-            Arayüz dili
-            <select
-              className="input-light"
-              value={profile.interfaceLocale || locale}
-              onChange={(event) => handleLocaleChange(event.target.value)}
-            >
-              <option value="tr">Türkçe</option>
-              <option value="en">English</option>
-              <option value="uk">Українська</option>
-              <option value="ru">Русский</option>
-            </select>
-          </label>
-        </section>
+      <div className="account-profile-shortcuts" aria-label="İlgili hesap alanları">
+        <Link href="/hesap/organizasyon" className="account-profile-shortcut">
+          <span className="account-profile-shortcut-icon" aria-hidden>◎</span>
+          <span className="account-profile-shortcut-copy">
+            <strong>Kurumsal hesap</strong>
+            <span>Doğrulama, koridorlar ve abonelik planı</span>
+          </span>
+          <span className="account-profile-shortcut-chevron" aria-hidden>→</span>
+        </Link>
+        <Link href="/hesap/odemeler" className="account-profile-shortcut">
+          <span className="account-profile-shortcut-icon" aria-hidden>€</span>
+          <span className="account-profile-shortcut-copy">
+            <strong>Ödemeler</strong>
+            <span>Fatura bilgileri ve tahsilat geçmişi</span>
+          </span>
+          <span className="account-profile-shortcut-chevron" aria-hidden>→</span>
+        </Link>
       </div>
 
-      <section className="account-card module-panel module-panel--elevated">
-        <header className="account-card-head">
-          <div>
-            <h2 className="account-card-title">Bildirimler</h2>
-            <p className="account-card-lead">
-              Hangi olaylarda e-posta veya uygulama içi uyarı alacağınızı seçin (kişisel
-              tercih; firma geneli kurallar organizasyonda).
-            </p>
-          </div>
-        </header>
-        <div className="account-corridor-toggles account-notification-toggles">
-          <button
-            type="button"
-            className={
-              profile.notifyNewOffers
-                ? "account-corridor-chip active"
-                : "account-corridor-chip"
-            }
-            aria-pressed={profile.notifyNewOffers}
-            onClick={() => toggleNotification("notifyNewOffers")}
+      <div className="account-profile-layout">
+        <ProfileSectionNav />
+        <main className="account-profile-main">
+          <form
+            id="profile-identity"
+            className="account-profile-panel module-panel module-panel--elevated"
+            onSubmit={handlePersonalSubmit}
           >
-            <span>Yeni teklif / ilan</span>
-          </button>
-          <button
-            type="button"
-            className={
-              profile.notifyMessages
-                ? "account-corridor-chip active"
-                : "account-corridor-chip"
-            }
-            aria-pressed={profile.notifyMessages}
-            onClick={() => toggleNotification("notifyMessages")}
-          >
-            <span>Mesajlar</span>
-          </button>
-          <button
-            type="button"
-            className={
-              profile.notifyAuctions
-                ? "account-corridor-chip active"
-                : "account-corridor-chip"
-            }
-            aria-pressed={profile.notifyAuctions}
-            onClick={() => toggleNotification("notifyAuctions")}
-          >
-            <span>İhaleler</span>
-          </button>
-          <button
-            type="button"
-            className={
-              profile.notifyWeeklyDigest
-                ? "account-corridor-chip active"
-                : "account-corridor-chip"
-            }
-            aria-pressed={profile.notifyWeeklyDigest}
-            onClick={() => toggleNotification("notifyWeeklyDigest")}
-          >
-            <span>Haftalık özet</span>
-          </button>
-        </div>
-      </section>
+            <header className="account-profile-panel-head">
+              <div>
+                <p className="account-profile-panel-kicker">01 · Kimlik</p>
+                <h2 className="account-profile-panel-title">Kişisel bilgiler</h2>
+                <p className="account-profile-panel-lead">
+                  Ekip içi görünürlük ve bildirimler için. Giriş e-postası değiştirilemez.
+                </p>
+              </div>
+              <button type="submit" className="btn-account-primary account-profile-save">
+                Kaydet
+              </button>
+            </header>
+            <div className="account-profile-field-grid">
+              <label className="account-profile-field">
+                <span className="account-profile-field-label">Görünen ad</span>
+                <input
+                  className="account-profile-input"
+                  value={profile.fullName}
+                  onChange={(event) => updateProfile({ fullName: event.target.value })}
+                  placeholder="Ad Soyad"
+                />
+              </label>
+              <label className="account-profile-field">
+                <span className="account-profile-field-label">Ünvan / görev</span>
+                <input
+                  className="account-profile-input"
+                  value={profile.jobTitle}
+                  onChange={(event) => updateProfile({ jobTitle: event.target.value })}
+                  placeholder="Örn. Operasyon müdürü"
+                />
+              </label>
+              <label className="account-profile-field account-profile-field--span">
+                <span className="account-profile-field-label">Cep telefonu</span>
+                <input
+                  className="account-profile-input"
+                  type="tel"
+                  value={profile.phone}
+                  onChange={(event) => updateProfile({ phone: event.target.value })}
+                  placeholder="+90 5xx xxx xx xx"
+                />
+              </label>
+              <label className="account-profile-field account-profile-field--span">
+                <span className="account-profile-field-label">Birincil e-posta</span>
+                <input
+                  className="account-profile-input account-profile-input--readonly"
+                  value={emailAddress}
+                  readOnly
+                  aria-readonly="true"
+                />
+              </label>
+            </div>
+            {saveMessage ? (
+              <p className="account-profile-toast" role="status">{saveMessage}</p>
+            ) : null}
+          </form>
 
-      <section className="account-card module-panel module-panel--elevated">
-        <header className="account-card-head">
-          <div>
-            <h2 className="account-card-title">Güvenlik</h2>
-            <p className="account-card-lead">
-              Şifre ve oturum yönetimi. Kurumsal doğrulama ve belgeler organizasyon
-              sekmesinde.
-            </p>
-          </div>
-          <Link href="/hesap/organizasyon#org-dogrulama" className="btn-account-ghost">
-            Kurumsal doğrulama
-          </Link>
-        </header>
-        <div className="account-form-grid">
-          <label className="label-light">
-            Yeni şifre
-            <input
-              className="input-light"
-              type="password"
-              disabled
-              placeholder="Yakında — API ile güncellenecek"
-            />
-          </label>
-          <label className="label-light">
-            Şifre tekrar
-            <input
-              className="input-light"
-              type="password"
-              disabled
-              placeholder="Yakında — API ile güncellenecek"
-            />
-          </label>
-        </div>
-        <p className="module-hint account-security-hint">
-          Şifre değişimi ve iki adımlı doğrulama sonraki sürümde eklenecek. Şüpheli
-          erişimde oturumu kapatın ve destek ile iletişime geçin.
-        </p>
-        <div className="account-security-actions">
-          <button type="button" className="btn-account-ghost" onClick={() => logout()}>
-            Tüm cihazlarda çıkış (bu oturum)
-          </button>
-          <Link href="/iletisim" className="btn-account-primary">
-            Destek
-          </Link>
-        </div>
-      </section>
+          <section
+            id="profile-locale"
+            className="account-profile-panel module-panel module-panel--elevated account-profile-section"
+          >
+            <header className="account-profile-panel-head">
+              <div>
+                <p className="account-profile-panel-kicker">02 · Bölge</p>
+                <h2 className="account-profile-panel-title">Dil ve bölge</h2>
+                <p className="account-profile-panel-lead">
+                  Arayüz ve e-posta özetleri. Üst menü dil seçici ile senkron.
+                </p>
+              </div>
+            </header>
+            <div className="account-profile-locale-grid" role="radiogroup" aria-label="Arayüz dili">
+              {LOCALE_OPTIONS.map((option) => {
+                const selected = activeLocale === option.code;
+                return (
+                  <button
+                    key={option.code}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    className={
+                      selected
+                        ? "account-profile-locale-card account-profile-locale-card--active"
+                        : "account-profile-locale-card"
+                    }
+                    onClick={() => handleLocaleSelect(option.code)}
+                  >
+                    <span className="account-profile-locale-code">{option.code.toUpperCase()}</span>
+                    <span className="account-profile-locale-name">{option.label}</span>
+                    <span className="account-profile-locale-region">{option.region}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          <section
+            id="profile-notify"
+            className="account-profile-panel module-panel module-panel--elevated account-profile-section"
+          >
+            <header className="account-profile-panel-head">
+              <div>
+                <p className="account-profile-panel-kicker">03 · Uyarılar</p>
+                <h2 className="account-profile-panel-title">Bildirimler</h2>
+                <p className="account-profile-panel-lead">
+                  Kişisel tercihleriniz; firma geneli kurallar organizasyon sekmesinde.
+                </p>
+              </div>
+            </header>
+            <ul className="account-profile-toggle-list">
+              {NOTIFICATION_OPTIONS.map((item) => {
+                const on = profile[item.key];
+                return (
+                  <li key={item.key}>
+                    <button
+                      type="button"
+                      className="account-profile-toggle-row"
+                      aria-pressed={on}
+                      onClick={() => toggleNotification(item.key)}
+                    >
+                      <span className="account-profile-toggle-copy">
+                        <strong>{item.title}</strong>
+                        <span>{item.description}</span>
+                      </span>
+                      <span
+                        className={
+                          on
+                            ? "account-profile-switch account-profile-switch--on"
+                            : "account-profile-switch"
+                        }
+                        aria-hidden
+                      >
+                        <span className="account-profile-switch-knob" />
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+
+          <section
+            id="profile-security"
+            className="account-profile-panel module-panel module-panel--elevated account-profile-section"
+          >
+            <header className="account-profile-panel-head">
+              <div>
+                <p className="account-profile-panel-kicker">04 · Güvenlik</p>
+                <h2 className="account-profile-panel-title">Oturum ve erişim</h2>
+                <p className="account-profile-panel-lead">
+                  Şifre ve MFA yakında. Kurumsal belgeler organizasyon doğrulamasında.
+                </p>
+              </div>
+              <Link
+                href="/hesap/organizasyon#org-dogrulama"
+                className="btn-account-ghost"
+              >
+                Kurumsal doğrulama
+              </Link>
+            </header>
+            <div className="account-profile-security-banner">
+              <span className="account-profile-security-icon" aria-hidden />
+              <div>
+                <strong>Bu oturum güvende</strong>
+                <p>
+                  Şüpheli erişimde çıkış yapın. İki adımlı doğrulama bir sonraki sürümde
+                  etkinleştirilebilir.
+                </p>
+              </div>
+            </div>
+            <div className="account-profile-field-grid">
+              <label className="account-profile-field">
+                <span className="account-profile-field-label">Yeni şifre</span>
+                <input
+                  className="account-profile-input account-profile-input--readonly"
+                  type="password"
+                  disabled
+                  placeholder="Yakında — API"
+                />
+              </label>
+              <label className="account-profile-field">
+                <span className="account-profile-field-label">Şifre tekrar</span>
+                <input
+                  className="account-profile-input account-profile-input--readonly"
+                  type="password"
+                  disabled
+                  placeholder="Yakında — API"
+                />
+              </label>
+            </div>
+            <div className="account-profile-security-actions">
+              <button type="button" className="btn-account-ghost" onClick={() => logout()}>
+                Bu oturumu sonlandır
+              </button>
+              <Link href="/iletisim" className="btn-account-primary">
+                Güvenlik desteği
+              </Link>
+            </div>
+          </section>
+        </main>
+      </div>
     </div>
   );
 }
