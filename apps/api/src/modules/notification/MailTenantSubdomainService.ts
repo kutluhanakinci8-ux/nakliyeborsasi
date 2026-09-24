@@ -100,6 +100,86 @@ export class MailTenantSubdomainService {
     return this.domainRepository.save(row);
   }
 
+  public async getOrganizationMailIdentity(organizationId: string): Promise<{
+    domain: string;
+    platformDnsReady: boolean;
+    domainVerified: boolean;
+    dnsCheck: Awaited<
+      ReturnType<MailDomainDnsVerificationService["verifyTenantSubdomainDns"]>
+    >;
+    sender: MailSenderIdentityEntity | null;
+    fromAddress: string | null;
+  }> {
+    const domain = this.mailDomainDnsVerificationService.resolveTenantMailDomain();
+    const dnsCheck =
+      await this.mailDomainDnsVerificationService.verifyTenantSubdomainDns();
+    const mailDomain = await this.domainRepository.findOne({
+      where: { domain },
+    });
+    const sender = await this.senderRepository.findOne({
+      where: { organizationId, isDefault: true },
+      relations: { mailDomain: true },
+    });
+    const fromAddress =
+      sender && mailDomain
+        ? `${sender.localPart}@${domain}`
+        : sender?.mailDomain
+          ? `${sender.localPart}@${sender.mailDomain.domain}`
+          : null;
+    return {
+      domain,
+      platformDnsReady: dnsCheck.ok,
+      domainVerified: mailDomain?.verificationStatus === "verified",
+      dnsCheck,
+      sender,
+      fromAddress,
+    };
+  }
+
+  public async updateOrganizationSenderDisplayName(
+    organizationId: string,
+    displayName: string,
+  ): Promise<MailSenderIdentityEntity> {
+    const sender = await this.senderRepository.findOne({
+      where: { organizationId, isDefault: true },
+    });
+    if (!sender) {
+      throw new BadRequestException(
+        "Kurumsal gönderen kimliği henüz tanımlı değil.",
+      );
+    }
+    sender.displayName = displayName.trim().slice(0, 120) || "Kurumsal bildirim";
+    return this.senderRepository.save(sender);
+  }
+
+  public async syncTenantDomainVerificationFromDns(): Promise<{
+    domain: string;
+    dnsOk: boolean;
+    verificationStatus: string | null;
+  }> {
+    const check =
+      await this.mailDomainDnsVerificationService.verifyTenantSubdomainDns();
+    const domain = check.domain;
+    if (!check.ok) {
+      const row = await this.domainRepository.findOne({ where: { domain } });
+      if (row && row.verificationStatus === "verified") {
+        row.verificationStatus = "pending";
+        await this.domainRepository.save(row);
+      }
+      return {
+        domain,
+        dnsOk: false,
+        verificationStatus: row?.verificationStatus ?? null,
+      };
+    }
+    const row = await this.ensureTenantDomainRow();
+    if (row.verificationStatus !== "verified") {
+      row.verificationStatus = "verified";
+      await this.domainRepository.save(row);
+    }
+    return { domain, dnsOk: true, verificationStatus: "verified" };
+  }
+
   public async provisionPilotSender(params: {
     organizationId: string;
     localPart: string;

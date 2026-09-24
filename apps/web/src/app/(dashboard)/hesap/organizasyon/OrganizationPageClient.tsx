@@ -19,6 +19,7 @@ import {
 import { useWebSession } from "../../../../context/WebSessionProvider";
 import { OrganizationSectionNav } from "../../../../components/account/OrganizationSectionNav";
 import { CompanySubscriptionPanel } from "../../../../components/account/CompanySubscriptionPanel";
+import { OrganizationMailIdentityPanel } from "../../../../components/account/OrganizationMailIdentityPanel";
 
 export function OrganizationPageClient() {
   const { session } = useWebSession();
@@ -731,6 +732,8 @@ export function OrganizationPageClient() {
           Firma kimliği (sistem): <code>{companyId || "—"}</code>
         </p>
       </section>
+
+      <OrganizationMailIdentityPanel companyTradeName={displayTradeName} />
 
       <CompanySubscriptionPanel />
 

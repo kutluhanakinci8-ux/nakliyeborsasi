@@ -15,6 +15,8 @@ import { PlatformNotificationSettingsService } from "./PlatformNotificationSetti
 import { AuthNotificationService } from "./AuthNotificationService";
 import { EmailSecurityTokenService } from "./EmailSecurityTokenService";
 import { PlatformNotificationAdminController } from "./PlatformNotificationAdminController";
+import { CompanyMailIdentityController } from "./CompanyMailIdentityController";
+import { MailTenantDnsVerificationScheduler } from "./MailTenantDnsVerificationScheduler";
 import { EmailOutboxAnalyticsService } from "./EmailOutboxAnalyticsService";
 import { EmailOutboxEngagementEventEntity } from "../../infrastructure/database/entities/EmailOutboxEngagementEventEntity";
 import { EmailOutboxClickTokenEntity } from "../../infrastructure/database/entities/EmailOutboxClickTokenEntity";
@@ -76,6 +78,7 @@ import { MailTenantSubdomainService } from "./MailTenantSubdomainService";
   controllers: [
     PlatformNotificationAdminController,
     PlatformMailIdentityAdminController,
+    CompanyMailIdentityController,
     EmailTrackingController,
     UserNotificationPreferencesController,
   ],
@@ -105,6 +108,7 @@ import { MailTenantSubdomainService } from "./MailTenantSubdomainService";
     PlatformMailRoadmapService,
     MailDomainDnsVerificationService,
     MailTenantSubdomainService,
+    MailTenantDnsVerificationScheduler,
   ],
   exports: [
     AuthNotificationService,

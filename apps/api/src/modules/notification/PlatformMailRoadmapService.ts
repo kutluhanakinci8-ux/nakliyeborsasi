@@ -124,11 +124,15 @@ export class PlatformMailRoadmapService {
             "Organizasyon domain veya alt alan; outbox From doğrulanmış kimlikten (transactional).",
           status: verifiedDomains > 0 ? "active" : "planned",
           progressPercent: phaseBProgress,
-          nextStepsTr: [
-            "Admin → Kurumsal kimlik: domain ekle",
-            "DNS doğrulama sonrası «verified» işaretle",
-            "Varsayılan gönderen kimliği tanımla",
-          ],
+          nextStepsTr: verifiedDomains > 0
+            ? [
+                "Hesap → Organizasyon → E-posta kimliği (self-service)",
+                "Pilot firmalarla transactional From testi",
+              ]
+            : [
+                "Admin → Kurumsal kimlik: DNS doğrula",
+                "kullanici.lerta.tr verified sonrası org provision",
+              ],
         },
         {
           phase: "C",

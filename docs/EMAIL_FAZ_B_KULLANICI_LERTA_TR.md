@@ -31,8 +31,15 @@ bash scripts/setup-opendkim-kullanici-lerta-tr.sh
 - Outbox `metadata.companyId` → `MailSenderResolutionService` → doğrulanmış varsayılan sender identity.
 - Domain doğrulanmamış veya kimlik yoksa → Faz A `notifications@mail.lerta.tr`.
 
-## 4. Sonraki adımlar (B2+)
+## 4. Organizasyon self-service (B2)
 
-- `hesap/organizasyon` self-service UI
-- Otomatik DNS doğrulama job
+1. Firma sahibi: **Hesap → Organizasyon → E-posta kimliği**
+2. Platform DNS hazır ve domain `verified` ise local-part seç → **Kurumsal gönderen oluştur**
+3. API: `GET/POST/PATCH /api/v1/company/mail-identity`
+
+Arka plan: `MailTenantDnsVerificationScheduler` (~30 dk) paylaşımlı alan DNS’ini senkronlar.
+
+## 5. Sonraki adımlar (B3+)
+
 - Org başına rate limit / suppression ayrımı
+- Özel domain `@musteri.com`

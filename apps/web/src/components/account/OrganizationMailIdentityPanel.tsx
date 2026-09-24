@@ -1,0 +1,234 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import {
+  fetchCompanyMailIdentity,
+  provisionCompanyMailIdentity,
+  updateCompanyMailDisplayName,
+  type CompanyMailIdentitySnapshot,
+} from "../../lib/CompanyMailIdentityApi";
+import { useWebSession } from "../../context/WebSessionProvider";
+
+function slugifyLocalPart(input: string): string {
+  return input
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 48);
+}
+
+type OrganizationMailIdentityPanelProps = {
+  companyTradeName: string;
+};
+
+export function OrganizationMailIdentityPanel({
+  companyTradeName,
+}: OrganizationMailIdentityPanelProps) {
+  const { accessToken, session } = useWebSession();
+  const isOwner = session?.roleCodes?.includes("COMPANY_OWNER") ?? false;
+  const [identity, setIdentity] = useState<CompanyMailIdentitySnapshot | null>(
+    null,
+  );
+  const [localPart, setLocalPart] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+
+  const refresh = useCallback(async () => {
+    if (!accessToken) {
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      const next = await fetchCompanyMailIdentity(accessToken);
+      setIdentity(next);
+      if (!next.sender && !localPart) {
+        setLocalPart(slugifyLocalPart(companyTradeName));
+      }
+      if (next.sender?.displayName) {
+        setDisplayName(next.sender.displayName);
+      } else if (!displayName) {
+        setDisplayName(companyTradeName);
+      }
+    } catch {
+      setError("E-posta kimliği bilgisi alınamadı.");
+    } finally {
+      setLoading(false);
+    }
+  }, [accessToken, companyTradeName]);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  async function handleProvision(): Promise<void> {
+    if (!accessToken || !localPart.trim()) {
+      return;
+    }
+    setMessage("");
+    setError("");
+    try {
+      const result = await provisionCompanyMailIdentity(accessToken, {
+        localPart: localPart.trim(),
+        displayName: displayName.trim() || undefined,
+      });
+      setMessage(`Kurumsal gönderen adresi hazır: ${result.fromAddress}`);
+      await refresh();
+    } catch {
+      setError(
+        "Adres oluşturulamadı. DNS doğrulaması veya adres kullanımda olabilir.",
+      );
+    }
+  }
+
+  async function handleDisplayNameSave(): Promise<void> {
+    if (!accessToken || !identity?.sender) {
+      return;
+    }
+    setMessage("");
+    setError("");
+    try {
+      await updateCompanyMailDisplayName(accessToken, displayName.trim());
+      setMessage("Görünen ad güncellendi.");
+      await refresh();
+    } catch {
+      setError("Görünen ad kaydedilemedi.");
+    }
+  }
+
+  if (!accessToken) {
+    return null;
+  }
+
+  return (
+    <section
+      id="org-eposta"
+      className="account-card module-panel module-panel--elevated account-org-section"
+    >
+      <p className="account-verify-eyebrow">Faz B — Kurumsal kimlik</p>
+      <h2 className="account-card-title">E-posta gönderen kimliği</h2>
+      <p className="account-card-lead">
+        İhale ve bildirim e-postaları firmanız adına{" "}
+        <strong>@{identity?.domain ?? "kullanici.lerta.tr"}</strong> adresinden
+        gider. Tam posta kutusu (gelen mail) ileride eklenecek.
+      </p>
+
+      {loading && !identity ? (
+        <p className="module-hint">Yükleniyor…</p>
+      ) : null}
+
+      {identity ? (
+        <div className="account-org-mail-status">
+          <div className="account-verify-badges" style={{ marginBottom: "1rem" }}>
+            <span
+              className={
+                identity.platformDnsReady
+                  ? "account-status-pill account-status-pill--ok"
+                  : "account-status-pill account-status-pill--pending"
+              }
+            >
+              Platform DNS {identity.platformDnsReady ? "hazır" : "bekleniyor"}
+            </span>
+            <span
+              className={
+                identity.fromAddress
+                  ? "account-status-pill account-status-pill--ok"
+                  : "account-status-pill account-status-pill--pending"
+              }
+            >
+              {identity.fromAddress ? "Kimlik tanımlı" : "Kimlik yok"}
+            </span>
+          </div>
+
+          {identity.fromAddress ? (
+            <p className="account-card-lead">
+              Gönderen: <code>{identity.fromAddress}</code>
+              {identity.sender?.displayName
+                ? ` (${identity.sender.displayName})`
+                : null}
+            </p>
+          ) : null}
+
+          {!identity.platformDnsReady ? (
+            <p className="module-hint">
+              Paylaşımlı alan DNS kayıtları henüz doğrulanmadı. Lerta operatörü
+              kurulumu tamamladığında buradan adres alabilirsiniz.
+            </p>
+          ) : null}
+
+          {identity.fromAddress && isOwner ? (
+            <div className="account-form-row" style={{ marginTop: "1rem" }}>
+              <label className="account-label">
+                Görünen ad (From başlığı)
+                <input
+                  className="account-input"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                />
+              </label>
+              <button
+                type="button"
+                className="btn-account-secondary"
+                onClick={() => void handleDisplayNameSave()}
+              >
+                Görünen adı kaydet
+              </button>
+            </div>
+          ) : null}
+
+          {!identity.fromAddress &&
+          identity.platformDnsReady &&
+          identity.domainVerified &&
+          isOwner ? (
+            <div className="account-form-row" style={{ marginTop: "1rem" }}>
+              <label className="account-label">
+                Adres ön eki (local-part)
+                <input
+                  className="account-input"
+                  value={localPart}
+                  onChange={(e) => setLocalPart(e.target.value)}
+                  placeholder="ornek-lojistik"
+                />
+              </label>
+              <p className="module-hint">
+                Örnek: <code>{localPart || "firma"}@{identity.domain}</code> —
+                küçük harf, rakam ve tire; 3–50 karakter.
+              </p>
+              <label className="account-label">
+                Görünen ad
+                <input
+                  className="account-input"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                />
+              </label>
+              <button
+                type="button"
+                className="btn-account-primary"
+                onClick={() => void handleProvision()}
+              >
+                Kurumsal gönderen oluştur
+              </button>
+            </div>
+          ) : null}
+
+          {!identity.fromAddress && identity.platformDnsReady && !isOwner ? (
+            <p className="module-hint">
+              Kurumsal gönderen adresi yalnızca firma sahibi oluşturabilir.
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
+      {message ? <p className="account-save-message">{message}</p> : null}
+      {error ? (
+        <p className="account-save-message account-save-message--error">
+          {error}
+        </p>
+      ) : null}
+    </section>
+  );
+}
