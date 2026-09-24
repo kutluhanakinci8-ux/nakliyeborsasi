@@ -485,3 +485,250 @@
   font-size: 0.75rem;
   color: #b91c1c;
 }
+
+.pa-mail-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pa-mail-tab {
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #475569;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 10px 18px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.pa-mail-tab.is-active {
+  background: #1e3a5f;
+  border-color: #1e3a5f;
+  color: #fff;
+}
+
+.pa-mail-analytics-toolbar {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pa-segmented {
+  display: inline-flex;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.pa-segmented-btn {
+  border: none;
+  background: #fff;
+  padding: 8px 14px;
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.pa-segmented-btn.is-active {
+  background: #eff6ff;
+  color: #1e40af;
+}
+
+.pa-maturity-panel {
+  border-color: #bfdbfe;
+  background: linear-gradient(135deg, #fff 0%, #f8fbff 100%);
+}
+
+.pa-maturity-bar-wrap {
+  height: 10px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+
+.pa-maturity-bar {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #2563eb, #0ea5e9);
+  transition: width 0.4s ease;
+}
+
+.pa-maturity-label {
+  margin: 10px 0 0;
+  font-size: 0.88rem;
+  color: #334155;
+}
+
+.pa-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  min-height: 200px;
+  padding: 12px 4px 0;
+  overflow-x: auto;
+}
+
+.pa-chart-col {
+  flex: 1;
+  min-width: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.pa-chart-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 160px;
+  width: 100%;
+  justify-content: center;
+}
+
+.pa-chart-bar {
+  width: 8px;
+  min-height: 2px;
+  border-radius: 4px 4px 0 0;
+}
+
+.pa-chart-bar--enqueued {
+  background: #94a3b8;
+}
+
+.pa-chart-bar--sent {
+  background: #16a34a;
+}
+
+.pa-chart-bar--failed {
+  background: #dc2626;
+}
+
+.pa-chart-day {
+  font-size: 0.65rem;
+  color: #94a3b8;
+}
+
+.pa-chart-legend {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.pa-legend-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.pa-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.pa-modal {
+  background: #fff;
+  border-radius: 16px;
+  max-width: 960px;
+  width: 100%;
+  max-height: 90vh;
+  overflow: auto;
+  padding: 20px 22px;
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.25);
+}
+
+.pa-modal-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.pa-modal-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0f2444;
+}
+
+.pa-modal-meta {
+  margin: 6px 0 0;
+  font-size: 0.82rem;
+  color: #64748b;
+}
+
+.pa-preview-kv {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+  font-size: 0.82rem;
+}
+
+.pa-preview-kv dt {
+  font-weight: 700;
+  color: #64748b;
+}
+
+.pa-preview-kv dd {
+  margin: 4px 0 0;
+  color: #334155;
+}
+
+.pa-preview-tabs {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .pa-preview-tabs {
+    grid-template-columns: 1fr;
+  }
+
+  .pa-preview-kv {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pa-preview-tabs h3 {
+  margin: 0 0 8px;
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.pa-preview-frame {
+  width: 100%;
+  min-height: 320px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.pa-preview-text {
+  margin: 0;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #f8fafc;
+  font-size: 0.75rem;
+  white-space: pre-wrap;
+  max-height: 320px;
+  overflow: auto;
+}

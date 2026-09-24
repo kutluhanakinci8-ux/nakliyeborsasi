@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Header,
   Param,
   Patch,
   Post,
@@ -12,6 +13,7 @@ import { JwtAuthenticationGuard } from "../auth/JwtAuthenticationGuard";
 import { PlatformAdminGuard } from "../platform-admin/PlatformAdminGuard";
 import { EmailDeliveryHealthService } from "./EmailDeliveryHealthService";
 import { EmailOutboxService } from "./EmailOutboxService";
+import { EmailOutboxAnalyticsService } from "./EmailOutboxAnalyticsService";
 import { NotificationConfigurationService } from "./NotificationConfigurationService";
 import { PlatformNotificationSettingsService } from "./PlatformNotificationSettingsService";
 import { NotificationEventCode, EmailRecipientKind } from "./NotificationEventCode";
@@ -24,6 +26,7 @@ export class PlatformNotificationAdminController {
   public constructor(
     private readonly platformNotificationSettingsService: PlatformNotificationSettingsService,
     private readonly emailOutboxService: EmailOutboxService,
+    private readonly emailOutboxAnalyticsService: EmailOutboxAnalyticsService,
     private readonly emailDeliveryHealthService: EmailDeliveryHealthService,
     private readonly notificationConfigurationService: NotificationConfigurationService,
   ) {}
@@ -97,13 +100,82 @@ export class PlatformNotificationAdminController {
     return { stats: await this.emailOutboxService.getOutboxStats() };
   }
 
+  @Get("analytics/summary")
+  public async analyticsSummary(@Query("days") days?: string) {
+    const resolved = this.emailOutboxAnalyticsService.resolveDays(days);
+    return {
+      summary: await this.emailOutboxAnalyticsService.getSummary(resolved),
+    };
+  }
+
+  @Get("analytics/daily")
+  public async analyticsDaily(@Query("days") days?: string) {
+    const resolved = this.emailOutboxAnalyticsService.resolveDays(days);
+    return {
+      days: resolved,
+      series: await this.emailOutboxAnalyticsService.getDailySeries(resolved),
+    };
+  }
+
+  @Get("analytics/events")
+  public async analyticsEvents(@Query("days") days?: string) {
+    const resolved = this.emailOutboxAnalyticsService.resolveDays(days);
+    return {
+      days: resolved,
+      events: await this.emailOutboxAnalyticsService.getEventBreakdown(resolved),
+    };
+  }
+
+  @Get("outbox/export")
+  @Header("Content-Type", "text/csv; charset=utf-8")
+  public async outboxExport(
+    @Query("days") days?: string,
+    @Query("status") status?: string,
+    @Query("limit") limit?: string,
+  ): Promise<string> {
+    const resolvedDays = this.emailOutboxAnalyticsService.resolveDays(days);
+    const parsedLimit = limit ? Number.parseInt(limit, 10) : 5000;
+    const safeLimit = Number.isFinite(parsedLimit)
+      ? Math.min(Math.max(parsedLimit, 1), 10000)
+      : 5000;
+    const statusFilter =
+      status === "sent" || status === "pending" || status === "failed"
+        ? status
+        : "all";
+    const rows = await this.emailOutboxAnalyticsService.listForExport({
+      days: resolvedDays,
+      status: statusFilter,
+      limit: safeLimit,
+    });
+    return this.emailOutboxAnalyticsService.buildCsv(rows);
+  }
+
+  @Get("outbox/:id")
+  public async outboxDetail(@Param("id") id: string) {
+    const message = await this.emailOutboxAnalyticsService.getMessageById(id);
+    return { message };
+  }
+
   @Get("outbox")
   public async outbox(@Query("limit") limit?: string) {
     const parsed = limit ? Number.parseInt(limit, 10) : 50;
+    const messages = await this.emailOutboxService.listRecent(
+      Number.isFinite(parsed) ? parsed : 50,
+    );
     return {
-      messages: await this.emailOutboxService.listRecent(
-        Number.isFinite(parsed) ? parsed : 50,
-      ),
+      messages: messages.map((row) => ({
+        id: row.id,
+        eventCode: row.eventCode,
+        recipientKind: row.recipientKind,
+        recipientEmail: row.recipientEmail,
+        subject: row.subject,
+        status: row.status,
+        lastError: row.lastError,
+        createdAt: row.createdAt,
+        sentAt: row.sentAt,
+        locale: row.locale,
+        providerMessageId: row.providerMessageId,
+      })),
     };
   }
 

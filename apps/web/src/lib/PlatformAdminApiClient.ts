@@ -55,6 +55,49 @@ export type EmailOutboxRow = {
   sentAt: string | null;
 };
 
+export type EmailOutboxDetail = EmailOutboxRow & {
+  locale: string;
+  htmlBody: string;
+  textBody: string;
+  providerMessageId: string | null;
+  metadata: Record<string, unknown> | null;
+};
+
+export type EmailOutboxDailyPoint = {
+  day: string;
+  enqueued: number;
+  sent: number;
+  failed: number;
+  pending: number;
+};
+
+export type EmailOutboxEventBreakdownRow = {
+  eventCode: string;
+  sent: number;
+  failed: number;
+  pending: number;
+  total: number;
+};
+
+export type EmailOutboxAnalyticsSummary = {
+  days: number;
+  enqueued: number;
+  sent: number;
+  failed: number;
+  pending: number;
+  successRatePercent: number | null;
+  avgQueueSeconds: number | null;
+  previousPeriod: {
+    enqueued: number;
+    sent: number;
+    failed: number;
+    successRatePercent: number | null;
+  };
+  maturityScorePercent: number;
+  maturityTargetPercent: number;
+  maturityPhase: string;
+};
+
 export type PlatformAdminOverview = {
   companies: number;
   users: number;
@@ -241,6 +284,70 @@ export class PlatformAdminApiClient {
       };
     }>(accessToken, "notifications/outbox/stats");
     return payload.stats;
+  }
+
+  public static async fetchEmailAnalyticsSummary(
+    accessToken: string,
+    days: 7 | 30,
+  ): Promise<EmailOutboxAnalyticsSummary> {
+    const payload = await adminFetch<{ summary: EmailOutboxAnalyticsSummary }>(
+      accessToken,
+      `notifications/analytics/summary?days=${days}`,
+    );
+    return payload.summary;
+  }
+
+  public static async fetchEmailAnalyticsDaily(
+    accessToken: string,
+    days: 7 | 30,
+  ): Promise<EmailOutboxDailyPoint[]> {
+    const payload = await adminFetch<{ series: EmailOutboxDailyPoint[] }>(
+      accessToken,
+      `notifications/analytics/daily?days=${days}`,
+    );
+    return payload.series;
+  }
+
+  public static async fetchEmailAnalyticsEvents(
+    accessToken: string,
+    days: 7 | 30,
+  ): Promise<EmailOutboxEventBreakdownRow[]> {
+    const payload = await adminFetch<{ events: EmailOutboxEventBreakdownRow[] }>(
+      accessToken,
+      `notifications/analytics/events?days=${days}`,
+    );
+    return payload.events;
+  }
+
+  public static async fetchEmailOutboxDetail(
+    accessToken: string,
+    id: string,
+  ): Promise<EmailOutboxDetail> {
+    const payload = await adminFetch<{ message: EmailOutboxDetail }>(
+      accessToken,
+      `notifications/outbox/${id}`,
+    );
+    return payload.message;
+  }
+
+  public static async fetchEmailOutboxExportBlob(
+    accessToken: string,
+    params: { days: 7 | 30; status?: string },
+  ): Promise<Blob> {
+    const query = new URLSearchParams({ days: String(params.days) });
+    if (params.status && params.status !== "all") {
+      query.set("status", params.status);
+    }
+    const response = await fetch(
+      `${PublicApiConfiguration.resolveBaseUrl()}/platform-admin/notifications/outbox/export?${query}`,
+      {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      },
+    );
+    if (!response.ok) {
+      throw new Error("CSV export failed");
+    }
+    return response.blob();
   }
 
   public static async fetchNotificationOutbox(

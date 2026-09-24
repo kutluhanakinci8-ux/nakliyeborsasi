@@ -19,6 +19,7 @@ import { PlatformGmailAdminController } from "./PlatformGmailAdminController";
 import { PlatformGmailCredentialEntity } from "../../infrastructure/database/entities/PlatformGmailCredentialEntity";
 import { PlatformGmailOAuthStateEntity } from "../../infrastructure/database/entities/PlatformGmailOAuthStateEntity";
 import { GmailInboxService } from "./GmailInboxService";
+import { EmailOutboxAnalyticsService } from "./EmailOutboxAnalyticsService";
 import { GmailOAuthConfigurationService } from "./GmailOAuthConfigurationService";
 import { EmailOutboxProcessor } from "./EmailOutboxProcessor";
 import { EmailDeliveryHealthService } from "./EmailDeliveryHealthService";
@@ -50,6 +51,7 @@ import { EmailDeliveryHealthService } from "./EmailDeliveryHealthService";
     EmailDeliveryHealthService,
     GmailInboxService,
     GmailOAuthConfigurationService,
+    EmailOutboxAnalyticsService,
   ],
   exports: [
     AuthNotificationService,

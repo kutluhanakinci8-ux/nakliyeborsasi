@@ -11,6 +11,9 @@ import {
 import { useWebSession } from "../../context/WebSessionProvider";
 import { AdminPageHeader } from "./AdminPageHeader";
 import { AdminGmailInboxPanel } from "./AdminGmailInboxPanel";
+import { AdminMailAnalyticsPanel } from "./AdminMailAnalyticsPanel";
+import { AdminOutboxPreviewModal } from "./AdminOutboxPreviewModal";
+import type { EmailOutboxDetail } from "../../lib/PlatformAdminApiClient";
 
 const EVENT_LABELS: Record<string, string> = {
   USER_REGISTERED: "Yeni kayıt",
@@ -52,6 +55,10 @@ export function AdminNotificationsPageClient() {
     "all",
   );
   const [search, setSearch] = useState("");
+  const [activeTab, setActiveTab] = useState<"operations" | "analytics">(
+    "operations",
+  );
+  const [preview, setPreview] = useState<EmailOutboxDetail | null>(null);
 
   const refresh = useCallback(async () => {
     if (!accessToken) {
@@ -151,6 +158,17 @@ export function AdminNotificationsPageClient() {
     );
   }
 
+  async function openPreview(id: string): Promise<void> {
+    if (!accessToken) {
+      return;
+    }
+    const detail = await PlatformAdminApiClient.fetchEmailOutboxDetail(
+      accessToken,
+      id,
+    );
+    setPreview(detail);
+  }
+
   async function sendTest(): Promise<void> {
     if (!accessToken) {
       return;
@@ -188,6 +206,35 @@ export function AdminNotificationsPageClient() {
       {message ? <p className="pa-toast">{message}</p> : null}
       {loading && !health ? <p className="module-hint">Yükleniyor…</p> : null}
 
+      <nav className="pa-mail-tabs" aria-label="Mail bölümleri">
+        <button
+          type="button"
+          className={
+            activeTab === "operations"
+              ? "pa-mail-tab is-active"
+              : "pa-mail-tab"
+          }
+          onClick={() => setActiveTab("operations")}
+        >
+          Operasyon
+        </button>
+        <button
+          type="button"
+          className={
+            activeTab === "analytics"
+              ? "pa-mail-tab is-active"
+              : "pa-mail-tab"
+          }
+          onClick={() => setActiveTab("analytics")}
+        >
+          Analitik
+        </button>
+      </nav>
+
+      {activeTab === "analytics" ? <AdminMailAnalyticsPanel /> : null}
+
+      {activeTab === "operations" ? (
+        <>
       <section className="pa-metric-row" aria-label="Gönderim özetleri">
         <article className="pa-metric">
           <p className="pa-metric-label">Son 24 saat (gönderildi)</p>
@@ -445,6 +492,7 @@ export function AdminNotificationsPageClient() {
                 <th>Alıcı</th>
                 <th>Konu</th>
                 <th>Durum</th>
+                <th />
               </tr>
             </thead>
             <tbody>
@@ -466,6 +514,16 @@ export function AdminNotificationsPageClient() {
                       <span className="pa-outbox-error">{row.lastError}</span>
                     ) : null}
                   </td>
+                  <td>
+                    <button
+                      type="button"
+                      className="pa-btn pa-btn--ghost"
+                      style={{ padding: "6px 10px", fontSize: "0.75rem" }}
+                      onClick={() => void openPreview(row.id)}
+                    >
+                      Önizle
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -477,6 +535,13 @@ export function AdminNotificationsPageClient() {
           ) : null}
         </div>
       </section>
+        </>
+      ) : null}
+
+      <AdminOutboxPreviewModal
+        message={preview}
+        onClose={() => setPreview(null)}
+      />
     </div>
   );
 }
