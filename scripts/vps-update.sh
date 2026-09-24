@@ -8,7 +8,16 @@ cd "$INSTALL_DIR"
 
 echo "=== Git: origin/${BRANCH} (yerel değişiklikler sıfırlanır) ==="
 git fetch origin "$BRANCH"
-git checkout -f -B "$BRANCH" "origin/${BRANCH}"
+# Önce working tree'i boşalt; checkout bazen package-lock.json ile takılır.
+git merge --abort 2>/dev/null || true
+git reset --hard HEAD 2>/dev/null || true
+git clean -fdx
+git checkout -f -B "$BRANCH" "origin/${BRANCH}" || {
+  echo "checkout başarısız — ref üzerinden zorla hizalanıyor"
+  git fetch origin "$BRANCH"
+  git branch -f "$BRANCH" "origin/${BRANCH}"
+  git checkout -f "$BRANCH"
+}
 git reset --hard "origin/${BRANCH}"
 git clean -fdx
 

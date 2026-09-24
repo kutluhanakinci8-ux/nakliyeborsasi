@@ -7,14 +7,19 @@ set -euo pipefail
 VPS_HOST="${VPS_HOST:-168.231.109.27}"
 VPS_USER="${VPS_USER:-root}"
 VPS_INSTALL_DIR="${VPS_INSTALL_DIR:-/var/www/nakliyeborsasi}"
-VPS_BRANCH="${VPS_BRANCH:-cursor/modular-freight-platform-18ba}"
+EXPECTED_BRANCH="cursor/modular-freight-platform-18ba"
+VPS_BRANCH="${VPS_BRANCH:-$EXPECTED_BRANCH}"
+if [[ "${VPS_BRANCH}" != "${EXPECTED_BRANCH}" ]]; then
+  echo "UYARI: VPS_BRANCH=${VPS_BRANCH} (beklenen: ${EXPECTED_BRANCH})" >&2
+fi
 
 SSH_BASE_OPTS=(
   -o StrictHostKeyChecking=accept-new
   -o ConnectTimeout=20
 )
 
-REMOTE_CMD="cd '${VPS_INSTALL_DIR}' && bash scripts/vps-update.sh '${VPS_INSTALL_DIR}' '${VPS_BRANCH}'"
+# Sunucudaki eski vps-update.sh checkout'ta takılabilir; önce ref'i hizala.
+REMOTE_CMD="cd '${VPS_INSTALL_DIR}' && git fetch origin '${VPS_BRANCH}' && (git merge --abort 2>/dev/null || true) && git reset --hard HEAD && git clean -fdx && git branch -f '${VPS_BRANCH}' 'origin/${VPS_BRANCH}' && git checkout -f '${VPS_BRANCH}' && git reset --hard 'origin/${VPS_BRANCH}' && bash scripts/vps-update.sh '${VPS_INSTALL_DIR}' '${VPS_BRANCH}'"
 
 echo "=== VPS deploy: ${VPS_USER}@${VPS_HOST} branch=${VPS_BRANCH} ==="
 
