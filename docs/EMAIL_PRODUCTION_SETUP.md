@@ -32,19 +32,63 @@ Admin panel: **Mail yönetimi** → Test gönder → outbox **sent**.
 
 ## 2. Gmail (gerçek kutu)
 
-1. Google hesabında **2 adımlı doğrulama** açık olmalı.
-2. **Uygulama şifresi** oluştur (16 karakter).
-3. VPS `.env`:
+### A) Google tarafı (bir kez)
 
-```env
-SMTP_PROFILE=gmail
-SMTP_USER=lertalogistics@gmail.com
-SMTP_PASS=xxxx xxxx xxxx xxxx
-SMTP_FROM=Lerta Logistics <lertalogistics@gmail.com>
+1. https://myaccount.google.com/security → **2 Adımlı Doğrulama** → Açık.
+2. Aynı sayfada **Uygulama şifreleri** (App passwords).
+3. Uygulama: **Mail**, Cihaz: **Diğer** → ad: `Lerta VPS`.
+4. Google **16 karakterlik şifre** verir (ör. `abcd efgh ijkl mnop`). Bunu kopyalayın.
+
+### B) VPS `.env` — iki yöntem
+
+**Yöntem 1 — Otomatik script (önerilen)**
+
+Sunucuya SSH ile bağlanın:
+
+```bash
+ssh root@168.231.109.27
+cd /var/www/nakliyeborsasi
+git pull origin cursor/email-production-0825   # script yoksa önce deploy
+read -s SMTP_PASS && export SMTP_PASS && bash scripts/vps-email-gmail-env.sh
 ```
 
-4. API restart: `bash scripts/restart-api.sh`
-5. Admin → **SMTP doğrula** (Mail yönetimi sayfası).
+`read -s` şifreyi ekrana yazmaz; Enter’dan sonra script `.env`’i günceller ve API’yi yeniden başlatır.
+
+**Yöntem 2 — Elle `nano`**
+
+```bash
+ssh root@168.231.109.27
+nano /var/www/nakliyeborsasi/.env
+```
+
+Şu satırları ekleyin veya değiştirin (`SMTP_PASS` = Google uygulama şifresi, boşluksuz da olur):
+
+```env
+EMAIL_ENABLED=true
+SMTP_PROFILE=gmail
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=lertalogistics@gmail.com
+SMTP_PASS="abcdefghijklmnop"
+SMTP_FROM=Lerta Logistics <lertalogistics@gmail.com>
+PLATFORM_ADMIN_EMAILS=lertalogistics@gmail.com
+WEB_PUBLIC_BASE_URL=https://168.231.109.27
+```
+
+Kaydet: `Ctrl+O`, Enter, çık: `Ctrl+X`.
+
+```bash
+cd /var/www/nakliyeborsasi && bash scripts/restart-api.sh
+```
+
+### C) Doğrulama
+
+1. https://168.231.109.27/admin/bildirimler → **SMTP durumu** artık `gmail (smtp.gmail.com:587)` göstermeli.
+2. **SMTP doğrula** → «başarılı».
+3. **Test gönder** → `lertalogistics@gmail.com` → Gmail **Gelen kutusu** (Mailpit değil).
+
+Geri test moduna dönmek için: `SMTP_PROFILE=mailpit`, `SMTP_HOST=127.0.0.1`, `SMTP_PORT=1025`, `SMTP_PASS` satırını silin veya boşaltın, API restart.
 
 ## 3. Otomatik işleme
 
