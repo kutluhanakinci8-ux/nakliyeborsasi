@@ -1,14 +1,31 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { registerMailSaas } from "@/lib/consoleApi";
 import { useConsoleSession } from "@/lib/session";
 
+const MAIL_PLAN_CODES = new Set([
+  "lerta_mail_pilot_tr",
+  "lerta_mail_corporate_tr",
+]);
+
 export default function RegisterPage() {
   const router = useRouter();
   const { setAccessToken } = useConsoleSession();
+  const [subscriptionPlanCode, setSubscriptionPlanCode] = useState(
+    "lerta_mail_pilot_tr",
+  );
+
+  useEffect(() => {
+    const fromQuery = new URLSearchParams(window.location.search)
+      .get("plan")
+      ?.trim();
+    if (fromQuery && MAIL_PLAN_CODES.has(fromQuery)) {
+      setSubscriptionPlanCode(fromQuery);
+    }
+  }, []);
   const [companyLegalName, setCompanyLegalName] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
@@ -26,9 +43,14 @@ export default function RegisterPage() {
         password,
         displayName: displayName.trim() || companyLegalName.trim(),
         companyLegalName: companyLegalName.trim(),
+        subscriptionPlanCode,
       });
       setAccessToken(token);
-      router.replace("/domain");
+      router.replace(
+        subscriptionPlanCode === "lerta_mail_corporate_tr"
+          ? "/dashboard"
+          : "/domain",
+      );
     } catch {
       setError("Kayıt tamamlanamadı. E-posta kullanımda olabilir.");
     } finally {

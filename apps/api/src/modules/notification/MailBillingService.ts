@@ -19,6 +19,8 @@ export type MailBillingStatus = {
     testMode: boolean;
     webhookConfigured: boolean;
     corporatePriceConfigured: boolean;
+    apiReachable: boolean | null;
+    apiError: string | null;
   };
   iyzico: {
     apiConfigured: boolean;
@@ -156,7 +158,7 @@ export class MailBillingService {
     return { ok: true };
   }
 
-  public getBillingStatus(): MailBillingStatus {
+  public async getBillingStatus(): Promise<MailBillingStatus> {
     const provider =
       this.configService.get<string>("MAIL_BILLING_PROVIDER")?.trim() ||
       "stripe";
@@ -179,6 +181,21 @@ export class MailBillingService {
       this.configService.get<string>("IYZICO_CORPORATE_PRICE_TRY")?.trim() ||
       "490.00";
 
+    let apiReachable: boolean | null = null;
+    let apiError: string | null = null;
+    if (stripeKey) {
+      try {
+        const stripe = new Stripe(stripeKey);
+        await stripe.balance.retrieve();
+        apiReachable = true;
+      } catch (error) {
+        apiReachable = false;
+        apiError =
+          error instanceof Error ? error.message : "Stripe API hatası";
+        this.logger.warn(`Stripe bağlantı testi: ${apiError}`);
+      }
+    }
+
     return {
       provider,
       stripe: {
@@ -186,6 +203,8 @@ export class MailBillingService {
         testMode: Boolean(stripeKey?.startsWith("sk_test_")),
         webhookConfigured: Boolean(webhookSecret),
         corporatePriceConfigured: Boolean(priceId),
+        apiReachable,
+        apiError,
       },
       iyzico: {
         apiConfigured: this.mailIyzicoBillingService.isConfigured(),

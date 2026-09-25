@@ -21,6 +21,7 @@ const CONSOLE =
 
 export function PricingSection() {
   const [plans, setPlans] = useState<MailPlan[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -34,12 +35,15 @@ export function PricingSection() {
         setPlans(data.plans);
       } catch {
         setError("Plan listesi yüklenemedi.");
+      } finally {
+        setLoading(false);
       }
     })();
   }, []);
 
-  const registerHref = `${CONSOLE.replace(/\/$/, "")}/register`;
-  const domainHref = `${CONSOLE.replace(/\/$/, "")}/domain`;
+  const registerHref = (planCode: string) =>
+    `${CONSOLE.replace(/\/$/, "")}/register?plan=${encodeURIComponent(planCode)}`;
+  const corporateCheckoutHint = `${CONSOLE.replace(/\/$/, "")}/dashboard`;
 
   return (
     <section className="pricing" id="fiyatlar">
@@ -48,6 +52,9 @@ export function PricingSection() {
         Fiyatlar API kataloğundan gelir. Kayıt{" "}
         <strong>yonetim.lerta.com.tr</strong> üzerinden.
       </p>
+      {loading ? (
+        <p className="pricing-lead">Planlar yükleniyor…</p>
+      ) : null}
       {error ? <p style={{ color: "#f87171" }}>{error}</p> : null}
       <div className="pricing-grid">
         {plans.map((plan) => (
@@ -74,11 +81,21 @@ export function PricingSection() {
             <a
               className={`btn ${plan.recommended ? "btn-primary" : "btn-ghost"}`}
               href={
-                plan.customDomainAllowed ? domainHref : registerHref
+                plan.customDomainAllowed
+                  ? registerHref(plan.planCode)
+                  : registerHref(plan.planCode)
               }
             >
-              {plan.customDomainAllowed ? "Domain ile başla" : "Kayıt ol"}
+              {plan.customDomainAllowed
+                ? "Kayıt ol — ödeme konsolda"
+                : "Kayıt ol"}
             </a>
+            {plan.customDomainAllowed ? (
+              <p className="price-period" style={{ marginTop: 12 }}>
+                Kayıt sonrası{" "}
+                <a href={corporateCheckoutHint}>Öde ve Kurumsal’a geç</a>
+              </p>
+            ) : null}
           </article>
         ))}
       </div>
