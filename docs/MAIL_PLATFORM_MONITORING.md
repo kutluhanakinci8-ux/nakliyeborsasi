@@ -39,6 +39,9 @@ Bildirim / SMTP detay: `GET platform-admin/notifications/health`.
 | `MAIL_MONITOR_CERT_WARN_DAYS` | `14` | TLS uyarı |
 | `MAIL_MONITOR_CERT_CRIT_DAYS` | `3` | TLS kritik |
 | `MAIL_TLS_CERT_PATHS` | — | Örn. `/etc/letsencrypt/live/mail.lerta.com.tr/fullchain.pem` |
+| `LERTA_MAIL_RUNTIME_ROLE` | `all` | `api` \| `worker` \| `all` — F3 arka plan işleri — [MAIL_MULTI_VPS_SCALE.md](./MAIL_MULTI_VPS_SCALE.md) |
+
+Yanıtta `runtimeRole`: `{ role, backgroundJobsEnabled, detailTr }`.
 
 ## VPS cron (API dışı)
 

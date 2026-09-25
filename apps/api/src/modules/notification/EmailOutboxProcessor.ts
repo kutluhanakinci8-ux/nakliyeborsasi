@@ -7,6 +7,7 @@ import {
 import { EmailOutboxService } from "./EmailOutboxService";
 import { EmailOutboxOperationsService } from "./EmailOutboxOperationsService";
 import { NotificationConfigurationService } from "./NotificationConfigurationService";
+import { MailRuntimeRoleService } from "./MailRuntimeRoleService";
 
 const DRAIN_INTERVAL_MS = 30_000;
 
@@ -19,9 +20,16 @@ export class EmailOutboxProcessor implements OnModuleInit, OnModuleDestroy {
     private readonly emailOutboxService: EmailOutboxService,
     private readonly emailOutboxOperationsService: EmailOutboxOperationsService,
     private readonly notificationConfigurationService: NotificationConfigurationService,
+    private readonly mailRuntimeRoleService: MailRuntimeRoleService,
   ) {}
 
   public onModuleInit(): void {
+    if (!this.mailRuntimeRoleService.shouldRunBackgroundJobs()) {
+      this.logger.log(
+        `LERTA_MAIL_RUNTIME_ROLE=${this.mailRuntimeRoleService.getRole()} — outbox processor kapalı`,
+      );
+      return;
+    }
     if (!this.notificationConfigurationService.isEmailEnabled()) {
       this.logger.warn("EMAIL_ENABLED=false — outbox processor kapalı");
       return;

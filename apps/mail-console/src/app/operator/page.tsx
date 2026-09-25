@@ -154,6 +154,35 @@ export default function OperatorPage() {
           <li>Aylık restore drill (staging)</li>
         </ul>
       </div>
+      <div className="card" style={{ marginBottom: 16 }}>
+        <h2 style={{ marginTop: 0 }}>Ölçek / worker (F3)</h2>
+        <p style={{ margin: "0 0 8px", color: "var(--muted)", fontSize: "0.9rem" }}>
+          <code>LERTA_MAIL_RUNTIME_ROLE</code>: <strong>all</strong> (tek VPS) ·{" "}
+          <strong>api</strong> (LB arkası, arka plan kapalı) ·{" "}
+          <strong>worker</strong> (outbox + Postfix). En az bir worker veya{" "}
+          <code>all</code> düğüm gerekli.
+        </p>
+        {monitoring?.runtimeRole ? (
+          <p style={{ margin: 0, fontSize: "0.9rem" }}>
+            Bu instance: <strong>{monitoring.runtimeRole.role}</strong>
+            {monitoring.runtimeRole.backgroundJobsEnabled
+              ? " · arka plan işleri açık"
+              : " · arka plan işleri kapalı"}
+            <br />
+            <span style={{ color: "var(--muted)" }}>
+              {monitoring.runtimeRole.detailTr}
+            </span>
+          </p>
+        ) : (
+          <p style={{ margin: 0, fontSize: "0.9rem", color: "var(--muted)" }}>
+            Rol bilgisi için F1 izleme yanıtına bakın (
+            <code>runtimeRole</code>).
+          </p>
+        )}
+        <p style={{ margin: "8px 0 0", fontSize: 12, color: "var(--muted)" }}>
+          <code>docs/MAIL_MULTI_VPS_SCALE.md</code>
+        </p>
+      </div>
       {monitoring ? (
         <div className="card" style={{ marginBottom: 16 }}>
           <h2 style={{ marginTop: 0 }}>İzleme (F1)</h2>

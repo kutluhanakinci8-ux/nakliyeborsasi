@@ -1,6 +1,7 @@
 import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { MailInboundRoutingService } from "./MailInboundRoutingService";
+import { MailRuntimeRoleService } from "./MailRuntimeRoleService";
 
 /**
  * VPS başlangıcında ve deploy sonrası Postfix virtual_alias haritasını günceller.
@@ -12,9 +13,16 @@ export class MailInboundPostfixSyncBootstrap implements OnModuleInit {
   public constructor(
     private readonly configService: ConfigService,
     private readonly mailInboundRoutingService: MailInboundRoutingService,
+    private readonly mailRuntimeRoleService: MailRuntimeRoleService,
   ) {}
 
   public onModuleInit(): void {
+    if (!this.mailRuntimeRoleService.shouldRunBackgroundJobs()) {
+      this.logger.log(
+        `LERTA_MAIL_RUNTIME_ROLE=${this.mailRuntimeRoleService.getRole()} — Postfix bootstrap atlandı`,
+      );
+      return;
+    }
     const apply =
       this.configService.get<string>("MAIL_INBOUND_APPLY_POSTFIX") === "true";
     if (!apply) {

@@ -6,6 +6,10 @@ import { existsSync, readFileSync, statfsSync } from "node:fs";
 import { promisify } from "node:util";
 import { EmailDeliveryHealthService } from "./EmailDeliveryHealthService";
 import { EmailOutboxService } from "./EmailOutboxService";
+import {
+  MailRuntimeRoleService,
+  type MailRuntimeRoleSnapshot,
+} from "./MailRuntimeRoleService";
 
 const execFileAsync = promisify(execFile);
 
@@ -75,6 +79,7 @@ export type MailPlatformMonitoringSnapshot = {
     }[];
     detailTr: string;
   };
+  runtimeRole: MailRuntimeRoleSnapshot;
 };
 
 @Injectable()
@@ -86,6 +91,7 @@ export class MailPlatformMonitoringService {
     private readonly configService: ConfigService,
     private readonly emailDeliveryHealthService: EmailDeliveryHealthService,
     private readonly emailOutboxService: EmailOutboxService,
+    private readonly mailRuntimeRoleService: MailRuntimeRoleService,
   ) {}
 
   public async buildPublicStatusPage(): Promise<MailPublicStatusPage> {
@@ -225,6 +231,7 @@ export class MailPlatformMonitoringService {
       postfixQueue,
       disk,
       tlsCertificates,
+      runtimeRole: this.mailRuntimeRoleService.getSnapshot(),
     };
   }
 

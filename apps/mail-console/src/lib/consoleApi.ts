@@ -405,6 +405,11 @@ export type MailPlatformMonitoring = {
     certs: { path: string; daysRemaining: number; expiresAt: string }[];
     detailTr: string;
   };
+  runtimeRole?: {
+    role: "all" | "api" | "worker";
+    backgroundJobsEnabled: boolean;
+    detailTr: string;
+  };
 };
 
 export async function fetchMailPlatformMonitoring(accessToken: string) {

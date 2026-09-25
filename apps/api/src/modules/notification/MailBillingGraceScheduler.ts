@@ -5,6 +5,7 @@ import {
   OnModuleInit,
 } from "@nestjs/common";
 import { MailSubscriptionLifecycleService } from "./MailSubscriptionLifecycleService";
+import { MailRuntimeRoleService } from "./MailRuntimeRoleService";
 
 const INTERVAL_MS = 15 * 60 * 1000;
 
@@ -15,9 +16,16 @@ export class MailBillingGraceScheduler implements OnModuleInit, OnModuleDestroy 
 
   public constructor(
     private readonly mailSubscriptionLifecycleService: MailSubscriptionLifecycleService,
+    private readonly mailRuntimeRoleService: MailRuntimeRoleService,
   ) {}
 
   public onModuleInit(): void {
+    if (!this.mailRuntimeRoleService.shouldRunBackgroundJobs()) {
+      this.logger.log(
+        `LERTA_MAIL_RUNTIME_ROLE=${this.mailRuntimeRoleService.getRole()} — billing grace scheduler kapalı`,
+      );
+      return;
+    }
     void this.tick().catch((error) => {
       this.logger.warn(
         `İlk grace taraması: ${error instanceof Error ? error.message : error}`,
