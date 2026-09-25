@@ -40,6 +40,10 @@ export default function DashboardPage() {
   const [planName, setPlanName] = useState<string | null>(null);
   const [planCode, setPlanCode] = useState<string | null>(null);
   const [sendLimit, setSendLimit] = useState<number | null>(null);
+  const [sendUsed, setSendUsed] = useState(0);
+  const [sendNearLimit, setSendNearLimit] = useState(false);
+  const [sendAtLimit, setSendAtLimit] = useState(false);
+  const [sendWindowLabel, setSendWindowLabel] = useState("Son 60 dakika");
   const [planMessage, setPlanMessage] = useState("");
   const [mailboxQuota, setMailboxQuota] = useState<string>("");
   const [mailboxUsed, setMailboxUsed] = useState(0);
@@ -57,6 +61,13 @@ export default function DashboardPage() {
       setPlanName(sub.subscription.plan?.displayName ?? sub.subscription.planCode);
       setPlanCode(sub.subscription.planCode);
       setSendLimit(sub.subscription.sendRate);
+      const quota = sub.subscription.sendRateQuota;
+      if (quota) {
+        setSendUsed(quota.sendsLastHour);
+        setSendNearLimit(quota.nearLimit);
+        setSendAtLimit(quota.atLimit);
+        setSendWindowLabel(quota.windowLabelTr);
+      }
       setMailboxUsed(sub.subscription.mailboxQuota.used);
       setMailboxLimit(sub.subscription.mailboxQuota.limit);
       setMailboxQuota(
@@ -257,9 +268,48 @@ export default function DashboardPage() {
         <h2>Plan</h2>
         <p>
           Aktif: <strong>{planName ?? "—"}</strong>
-          {sendLimit ? ` · Gönderim: ${sendLimit}/saat` : ""}
           {mailboxQuota ? ` · ${mailboxQuota}` : ""}
         </p>
+        {sendLimit && sendLimit > 0 ? (
+          <div style={{ marginBottom: 12 }}>
+            <p style={{ margin: "0 0 8px", fontSize: 14 }}>
+              Gönderim kotası ({sendWindowLabel}):{" "}
+              <strong>{sendUsed}</strong> / {sendLimit}
+            </p>
+            <div
+              style={{
+                height: 8,
+                borderRadius: 4,
+                background: "var(--border)",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  width: `${Math.min(100, (sendUsed / sendLimit) * 100)}%`,
+                  height: "100%",
+                  background:
+                    sendAtLimit || sendUsed >= sendLimit
+                      ? "#dc2626"
+                      : sendNearLimit
+                        ? "#d97706"
+                        : "var(--accent)",
+                }}
+              />
+            </div>
+            {sendAtLimit ? (
+              <p style={{ color: "#dc2626", marginTop: 8, marginBottom: 0 }}>
+                Saatlik limit doldu. Bir süre sonra tekrar deneyin veya planı
+                yükseltin.
+              </p>
+            ) : sendNearLimit ? (
+              <p style={{ color: "#b45309", marginTop: 8, marginBottom: 0 }}>
+                Kotaya yaklaşıyorsunuz — yoğun gönderim için Kurumsal plana
+                geçin.
+              </p>
+            ) : null}
+          </div>
+        ) : null}
         {mailboxLimit > 0 ? (
           <div style={{ marginBottom: 12 }}>
             <div

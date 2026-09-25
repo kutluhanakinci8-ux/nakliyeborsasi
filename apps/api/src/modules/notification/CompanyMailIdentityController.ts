@@ -63,11 +63,32 @@ export class CompanyMailIdentityController {
   public async mailSubscription(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
   ) {
+    assertMailConsoleAccess(user);
     const subscription =
       await this.mailSaasSubscriptionService.getOrganizationMailPlan(
         user.companyId,
       );
-    return { message: "OK", subscription };
+    const sendRateQuota = await this.mailOrganizationSendRateService.getSnapshot(
+      user.companyId,
+    );
+    return {
+      message: "OK",
+      subscription: {
+        ...subscription,
+        sendRateQuota,
+      },
+    };
+  }
+
+  @Get("send-rate")
+  public async sendRate(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    assertMailConsoleAccess(user);
+    const sendRateQuota = await this.mailOrganizationSendRateService.getSnapshot(
+      user.companyId,
+    );
+    return { message: "OK", sendRateQuota };
   }
 
   @Post("subscription/select")

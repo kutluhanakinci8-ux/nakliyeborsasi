@@ -6,6 +6,7 @@ import { ConsoleShell } from "@/components/ConsoleShell";
 import {
   fetchCustomDomainBundle,
   fetchAuthSession,
+  fetchMailSendRate,
   fetchMailSenders,
   isPlatformOperator,
   provisionCustomMailbox,
@@ -36,6 +37,8 @@ export default function MailboxesPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [canManage, setCanManage] = useState(true);
+  const [sendUsed, setSendUsed] = useState(0);
+  const [sendLimit, setSendLimit] = useState(80);
 
   const reload = useCallback(async () => {
     if (!accessToken) {
@@ -44,6 +47,13 @@ export default function MailboxesPage() {
     const data = await fetchMailSenders(accessToken);
     setSenders(data.senders);
     setQuota(data.mailboxQuota);
+    try {
+      const rate = await fetchMailSendRate(accessToken);
+      setSendUsed(rate.sendRateQuota.sendsLastHour);
+      setSendLimit(rate.sendRateQuota.limitPerHour);
+    } catch {
+      /* optional */
+    }
     try {
       const bundle = await fetchCustomDomainBundle(accessToken);
       const verified =
@@ -139,6 +149,9 @@ export default function MailboxesPage() {
 
       <div className="card">
         <h2 style={{ marginTop: 0 }}>Kota</h2>
+        <p style={{ margin: "0 0 8px", fontSize: 14, color: "var(--muted)" }}>
+          Gönderim (son 60 dk): <strong>{sendUsed}</strong> / {sendLimit}
+        </p>
         <p style={{ margin: "0 0 8px" }}>
           <strong>{quota.used}</strong> / {quota.limit} kutu kullanılıyor
         </p>

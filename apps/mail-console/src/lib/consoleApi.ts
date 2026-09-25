@@ -230,6 +230,17 @@ export type MailPlanView = {
   customDomainAllowed: boolean;
 };
 
+export type MailSendRateQuota = {
+  sendsLastHour: number;
+  limitPerHour: number;
+  remaining: number;
+  utilizationPercent: number;
+  nearLimit: boolean;
+  atLimit: boolean;
+  window: "hour";
+  windowLabelTr: string;
+};
+
 export async function fetchMailSubscription(accessToken: string) {
   return apiFetch<{
     subscription: {
@@ -237,9 +248,17 @@ export async function fetchMailSubscription(accessToken: string) {
       isMailPlan: boolean;
       plan: MailPlanView | null;
       sendRate: number;
+      sendRateQuota: MailSendRateQuota;
       mailboxQuota: { used: number; limit: number };
     };
   }>(accessToken, "company/mail-identity/subscription");
+}
+
+export async function fetchMailSendRate(accessToken: string) {
+  return apiFetch<{ sendRateQuota: MailSendRateQuota }>(
+    accessToken,
+    "company/mail-identity/send-rate",
+  );
 }
 
 export async function fetchMailBillingStatus(accessToken: string) {

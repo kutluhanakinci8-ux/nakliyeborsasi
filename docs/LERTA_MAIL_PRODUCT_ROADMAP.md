@@ -52,7 +52,7 @@
 | B2 | Çoklu posta kutusu (plan kotası) | `/mailboxes` listesi + kota çubuğu — **uygulandı** |
 | B3 | Kullanıcı daveti + roller | `/team` + davet e-postası; `MAIL_ADMIN`, `BILLING_ADMIN`, `VIEWER` — **uygulandı** |
 | B4 | Alias / paylaşımlı adres (isteğe bağlı) | `destek@` → iki kullanıcı |
-| B5 | Gönderim kotası & upgrade | Saat/gün limiti; konsolda kullanım çubuğu |
+| B5 | Gönderim kotası & upgrade | Dashboard saatlik kullanım çubuğu + `send-rate` API — **uygulandı** |
 | B6 | Abonelik yaşam döngüsü | İptal, yenileme, ödeme başarısız → grace period |
 | B7 | Operatör: tenant listesi, askıya alma, abuse | `yonetim/operator` genişletme |
 
