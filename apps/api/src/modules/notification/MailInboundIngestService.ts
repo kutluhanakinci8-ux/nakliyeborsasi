@@ -233,7 +233,7 @@ export class MailInboundIngestService {
     const domain = await this.domainRepository.findOne({
       where: { domain: domainName, verificationStatus: "verified" },
     });
-    if (!domain?.organizationId) {
+    if (!domain) {
       throw new NotFoundException(
         `Alıcı tanınmıyor — doğrulanmış domain veya mailbox gerekli: ${recipient}`,
       );
@@ -241,7 +241,6 @@ export class MailInboundIngestService {
 
     const sender = await this.senderRepository.findOne({
       where: {
-        organizationId: domain.organizationId,
         mailDomainId: domain.id,
         localPart,
       },
@@ -254,7 +253,7 @@ export class MailInboundIngestService {
 
     return this.mailboxRepository.save(
       this.mailboxRepository.create({
-        organizationId: domain.organizationId,
+        organizationId: sender.organizationId,
         emailAddress: recipient,
         status: "active",
         quotaBytes: "0",
