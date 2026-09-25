@@ -40,7 +40,10 @@ API yeniden başlar.
 
 ```bash
 MAIL_BILLING_JWT='<JWT>' ./scripts/verify-mail-billing-config.sh
+MAIL_BILLING_JWT='<JWT>' ./scripts/smoke-mail-billing-stripe.sh
 ```
+
+Konsol dashboard’da **Öde ve Kurumsal’a geç** butonu, Stripe hazır değilse devre dışı kalır ve eksik `.env` maddeleri listelenir.
 
 ## 5. iyzico (sıradaki adım)
 

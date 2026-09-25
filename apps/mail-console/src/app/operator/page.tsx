@@ -105,6 +105,13 @@ export default function OperatorPage() {
           <p style={{ margin: "0 0 8px" }}>
             Sağlayıcı: <strong>{billingStatus.provider}</strong>
           </p>
+          {billingStatus.checkout.blockers.length > 0 ? (
+            <ul style={{ margin: "0 0 8px", paddingLeft: 20, color: "#b45309" }}>
+              {billingStatus.checkout.blockers.map((line) => (
+                <li key={line}>{line}</li>
+              ))}
+            </ul>
+          ) : null}
           <ul style={{ margin: 0, paddingLeft: 20, color: "var(--muted)" }}>
             <li>
               Stripe:{" "}
