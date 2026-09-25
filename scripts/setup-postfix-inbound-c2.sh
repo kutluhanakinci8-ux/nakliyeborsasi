@@ -4,7 +4,7 @@
 set -euo pipefail
 
 INSTALL_DIR="${INSTALL_DIR:-/var/www/nakliyeborsasi}"
-TENANT_DOMAIN="${MAIL_PLATFORM_TENANT_DOMAIN:-kullanici.lerta.tr}"
+TENANT_DOMAIN="${MAIL_PLATFORM_TENANT_DOMAIN:-${TENANT_DOMAIN:-kullanici.lerta.tr}}"
 VIRTUAL_PATH="${MAIL_INBOUND_POSTFIX_VIRTUAL_PATH:-/etc/postfix/lerta-inbound-virtual}"
 PIPE_SCRIPT="${MAIL_INBOUND_PIPE_SCRIPT:-${INSTALL_DIR}/scripts/postfix-pipe-inbound-to-api.sh}"
 

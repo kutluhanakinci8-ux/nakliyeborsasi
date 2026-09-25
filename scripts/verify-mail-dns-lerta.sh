@@ -26,7 +26,7 @@ fi
 SPF=$(dig +short TXT "${MAIL_HOST}" | tr -d '"' | head -1)
 echo "SPF: ${SPF}"
 
-TENANT="${MAIL_PLATFORM_TENANT_DOMAIN:-kullanici.lerta.tr}"
+TENANT="${MAIL_PLATFORM_TENANT_DOMAIN:-${TENANT_DOMAIN:-kullanici.lerta.tr}}"
 echo ""
 echo "=== Tenant inbound: ${TENANT} ==="
 MX=$(dig +short MX "${TENANT}" | head -1)

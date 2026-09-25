@@ -65,8 +65,10 @@ export class MailTenantSubdomainService {
         spfValue: `v=spf1 ip4:${ipv4} -all`,
         dkimHost: `default._domainkey.${domain}`,
         dkimValueHint: dkimHint,
-        dmarcHost: `_dmarc.lerta.tr`,
-        dmarcValue: "v=DMARC1; p=none; rua=mailto:dmarc@lerta.tr; pct=100",
+        dmarcHost: `_dmarc.${domain}`,
+        dmarcValue:
+          this.configService.get<string>("MAIL_PLATFORM_DMARC_TXT")?.trim() ||
+          "v=DMARC1; p=none; rua=mailto:dmarc@lerta.com.tr; pct=100",
       },
       senders: mailDomain?.senderIdentities ?? [],
     };
