@@ -1,4 +1,4 @@
-import { MailIdentityAuditAction } from "./MailIdentityAuditService";
+import { MailIdentityAuditAction } from "./MailIdentityAuditAction";
 
 const LABELS: Record<string, string> = {
   [MailIdentityAuditAction.CustomDomainRegistered]: "Özel domain kaydı",
