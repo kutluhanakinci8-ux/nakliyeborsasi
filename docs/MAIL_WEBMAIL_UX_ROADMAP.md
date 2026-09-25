@@ -72,10 +72,11 @@ sudo certbot certonly --webroot -w /var/www/certbot -d posta.lerta.com.tr
 - API: `POST messages/bulk/star` `{ messageIds, starred }`
 - UI: toplu **Yıldızla** / **Yıldız kaldır**; `j`/`k` liste gezintisi; Shift+tık aralık seçimi
 
-## G6 — Offline (kısmi, uygulandı)
+## G6 — Offline & push (kısmi, uygulandı)
 
 - Service worker: statik önbellek, `/offline.html` gezinme yedek
-- Planlı: Web Push (VAPID), yeni posta bildirimi (D7)
+- Web Push: VAPID, abonelik API, inbound bildirimi, Ayarlar → Bildirim
+- Planlı: ses, okunmamış özet, iOS kısıtları dokümantasyonu
 
 ---
 

@@ -1,7 +1,12 @@
 "use client";
 
+import { Suspense } from "react";
 import { MailClient } from "./MailClient";
 
 export default function MailPage() {
-  return <MailClient />;
+  return (
+    <Suspense fallback={null}>
+      <MailClient />
+    </Suspense>
+  );
 }

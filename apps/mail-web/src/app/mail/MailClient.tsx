@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   composeMail,
   createDraft,
@@ -81,6 +81,8 @@ function inboxFolderForView(view: View): MailInboxFolder {
 
 export function MailClient() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const deepLinkMessageHandled = useRef(false);
   const { accessToken, logout } = useMailSession();
   const [view, setView] = useState<View>("inbox");
   const [summary, setSummary] = useState<MailInboxSummary | null>(null);
@@ -274,6 +276,15 @@ export function MailClient() {
       void refresh();
     }
   }
+
+  useEffect(() => {
+    const messageId = searchParams.get("message");
+    if (!accessToken || !messageId || deepLinkMessageHandled.current) {
+      return;
+    }
+    deepLinkMessageHandled.current = true;
+    void openMessage(messageId);
+  }, [accessToken, searchParams]);
 
   async function downloadAttachment(index: number, filename: string) {
     if (!accessToken || !detail) {

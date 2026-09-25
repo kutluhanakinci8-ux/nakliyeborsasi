@@ -10,6 +10,11 @@ import {
   type MailImapSettings,
 } from "@/lib/mailApi";
 import { MailComposePresetsPanel } from "./MailComposePresetsPanel";
+import { fetchMailPushConfig } from "@/lib/mailApi";
+import {
+  subscribeMailWebPush,
+  unsubscribeMailWebPush,
+} from "@/lib/mailPush";
 
 type Props = {
   accessToken: string;
@@ -17,7 +22,11 @@ type Props = {
 };
 
 export function MailSettingsPanel({ accessToken, onClose }: Props) {
-  const [tab, setTab] = useState<"imap" | "presets" | "security">("imap");
+  const [tab, setTab] = useState<
+    "imap" | "presets" | "security" | "notifications"
+  >("imap");
+  const [pushStatus, setPushStatus] = useState<string>("");
+  const [pushConfigured, setPushConfigured] = useState(false);
   const [totpEnabled, setTotpEnabled] = useState(false);
   const [totpSecret, setTotpSecret] = useState<string | null>(null);
   const [totpCode, setTotpCode] = useState("");
@@ -32,6 +41,8 @@ export function MailSettingsPanel({ accessToken, onClose }: Props) {
         setSettings(await fetchImapSettings(accessToken));
         const totp = await fetchTotpStatus(accessToken);
         setTotpEnabled(totp.status.enabled);
+        const push = await fetchMailPushConfig(accessToken);
+        setPushConfigured(push.config.enabled);
       } catch {
         setError("IMAP ayarları yüklenemedi.");
       }
@@ -91,9 +102,75 @@ export function MailSettingsPanel({ accessToken, onClose }: Props) {
           >
             2FA
           </button>
+          <button
+            type="button"
+            className={tab === "notifications" ? "active" : ""}
+            onClick={() => setTab("notifications")}
+          >
+            Bildirim
+          </button>
         </div>
         {tab === "presets" ? (
           <MailComposePresetsPanel accessToken={accessToken} />
+        ) : null}
+        {tab === "notifications" ? (
+          <>
+            <p style={{ color: "var(--muted)", fontSize: "0.9rem" }}>
+              Yeni gelen posta için tarayıcı bildirimi (Web Push). HTTPS ve
+              izin gerekir.
+            </p>
+            {!pushConfigured ? (
+              <p>Sunucuda push henüz yapılandırılmamış (VAPID anahtarları).</p>
+            ) : null}
+            {pushStatus ? <p>{pushStatus}</p> : null}
+            <div className="compose-actions">
+              <button type="button" onClick={onClose}>Kapat</button>
+              <button
+                type="button"
+                disabled={!pushConfigured}
+                onClick={() =>
+                  void (async () => {
+                    setPushStatus("");
+                    try {
+                      const result = await subscribeMailWebPush(accessToken);
+                      if (result === "enabled") {
+                        setPushStatus("Bildirimler açıldı.");
+                      } else if (result === "denied") {
+                        setPushStatus("Tarayıcı bildirim izni reddedildi.");
+                      } else if (result === "unsupported") {
+                        setPushStatus("Bu tarayıcı Web Push desteklemiyor.");
+                      } else {
+                        setPushStatus("Push sunucuda kapalı.");
+                      }
+                    } catch (err) {
+                      setPushStatus(
+                        err instanceof Error
+                          ? err.message
+                          : "Abonelik başarısız.",
+                      );
+                    }
+                  })()
+                }
+              >
+                Bildirimleri aç
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  void (async () => {
+                    try {
+                      await unsubscribeMailWebPush(accessToken);
+                      setPushStatus("Bildirimler kapatıldı.");
+                    } catch {
+                      setPushStatus("Kapatılamadı.");
+                    }
+                  })()
+                }
+              >
+                Bildirimleri kapat
+              </button>
+            </div>
+          </>
         ) : null}
         {tab === "security" ? (
           <>

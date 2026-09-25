@@ -473,6 +473,38 @@ export type MailInboxBranding = {
   detailTr: string;
 };
 
+export type MailPushConfig = {
+  enabled: boolean;
+  publicKey: string | null;
+};
+
+export async function fetchMailPushConfig(accessToken: string) {
+  return apiFetch<{ config: MailPushConfig }>(
+    accessToken,
+    "company/mail-inbox/push-config",
+  );
+}
+
+export async function registerMailPushSubscription(
+  accessToken: string,
+  body: { endpoint: string; p256dh: string; auth: string },
+) {
+  await apiFetch(accessToken, "company/mail-inbox/push/subscribe", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function unregisterMailPushSubscription(
+  accessToken: string,
+  endpoint: string,
+) {
+  await apiFetch(accessToken, "company/mail-inbox/push/unsubscribe", {
+    method: "POST",
+    body: JSON.stringify({ endpoint }),
+  });
+}
+
 export async function fetchMailInboxBranding(accessToken: string) {
   return apiFetch<{ branding: MailInboxBranding }>(
     accessToken,

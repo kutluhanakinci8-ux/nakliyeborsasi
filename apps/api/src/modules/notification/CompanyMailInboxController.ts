@@ -9,6 +9,7 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   Res,
   UseGuards,
 } from "@nestjs/common";
@@ -43,6 +44,12 @@ import {
 } from "./BulkMailInboxRequestDto";
 import { MailOrganizationBrandingService } from "./MailOrganizationBrandingService";
 import { SetMessageStarredRequestDto } from "./SetMessageStarredRequestDto";
+import { MailWebPushService } from "./MailWebPushService";
+import {
+  RegisterWebPushSubscriptionRequestDto,
+  UnregisterWebPushSubscriptionRequestDto,
+} from "./RegisterWebPushSubscriptionRequestDto";
+import type { Request } from "express";
 
 @Controller("company/mail-inbox")
 @UseGuards(JwtAuthenticationGuard, MailProductTotpPolicyGuard)
@@ -55,7 +62,42 @@ export class CompanyMailInboxController {
     private readonly mailComposePresetService: MailComposePresetService,
     private readonly mailOrganizationStorageService: MailOrganizationStorageService,
     private readonly mailOrganizationBrandingService: MailOrganizationBrandingService,
+    private readonly mailWebPushService: MailWebPushService,
   ) {}
+
+  @Get("push-config")
+  public pushConfig() {
+    return { config: this.mailWebPushService.getPublicConfig() };
+  }
+
+  @Post("push/subscribe")
+  public async registerPush(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: RegisterWebPushSubscriptionRequestDto,
+    @Req() request: Request,
+  ) {
+    await this.mailWebPushService.registerSubscription({
+      userId: user.userId,
+      organizationId: user.companyId,
+      endpoint: body.endpoint,
+      p256dh: body.p256dh,
+      auth: body.auth,
+      userAgent: request.headers["user-agent"] ?? null,
+    });
+    return { ok: true };
+  }
+
+  @Post("push/unsubscribe")
+  public async unregisterPush(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: UnregisterWebPushSubscriptionRequestDto,
+  ) {
+    await this.mailWebPushService.unregisterSubscription(
+      user.userId,
+      body.endpoint,
+    );
+    return { ok: true };
+  }
 
   @Get("branding")
   public async branding(@AuthenticatedUserParam() user: AuthenticatedUserContext) {
