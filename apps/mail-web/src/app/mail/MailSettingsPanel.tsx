@@ -10,6 +10,7 @@ import {
   type MailImapSettings,
 } from "@/lib/mailApi";
 import { MailComposePresetsPanel } from "./MailComposePresetsPanel";
+import { MailRulesPanel } from "./MailRulesPanel";
 import { fetchMailPushConfig } from "@/lib/mailApi";
 import {
   subscribeMailWebPush,
@@ -23,7 +24,7 @@ type Props = {
 
 export function MailSettingsPanel({ accessToken, onClose }: Props) {
   const [tab, setTab] = useState<
-    "imap" | "presets" | "security" | "notifications"
+    "imap" | "presets" | "security" | "notifications" | "rules"
   >("imap");
   const [pushStatus, setPushStatus] = useState<string>("");
   const [pushConfigured, setPushConfigured] = useState(false);
@@ -109,9 +110,24 @@ export function MailSettingsPanel({ accessToken, onClose }: Props) {
           >
             Bildirim
           </button>
+          <button
+            type="button"
+            className={tab === "rules" ? "active" : ""}
+            onClick={() => setTab("rules")}
+          >
+            Kurallar
+          </button>
         </div>
         {tab === "presets" ? (
           <MailComposePresetsPanel accessToken={accessToken} />
+        ) : null}
+        {tab === "rules" ? (
+          <>
+            <MailRulesPanel accessToken={accessToken} />
+            <div className="compose-actions">
+              <button type="button" onClick={onClose}>Kapat</button>
+            </div>
+          </>
         ) : null}
         {tab === "notifications" ? (
           <>

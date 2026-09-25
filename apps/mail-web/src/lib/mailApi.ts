@@ -48,6 +48,69 @@ export type MailInboxListItem = {
   customFolderId?: string | null;
 };
 
+export type MailInboxRule = {
+  id: string;
+  name: string;
+  sortOrder: number;
+  enabled: boolean;
+  fromContains: string | null;
+  subjectContains: string | null;
+  actionStar: boolean;
+  actionCustomFolderId: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export async function fetchInboxRules(accessToken: string) {
+  return apiFetch<{ rules: MailInboxRule[] }>(
+    accessToken,
+    "company/mail-inbox/rules",
+  );
+}
+
+export async function createInboxRule(
+  accessToken: string,
+  body: {
+    name: string;
+    fromContains?: string;
+    subjectContains?: string;
+    actionStar?: boolean;
+    actionCustomFolderId?: string | null;
+    enabled?: boolean;
+  },
+) {
+  return apiFetch<{ rule: MailInboxRule }>(
+    accessToken,
+    "company/mail-inbox/rules",
+    { method: "POST", body: JSON.stringify(body) },
+  );
+}
+
+export async function updateInboxRule(
+  accessToken: string,
+  ruleId: string,
+  body: Partial<{
+    name: string;
+    fromContains: string | null;
+    subjectContains: string | null;
+    actionStar: boolean;
+    actionCustomFolderId: string | null;
+    enabled: boolean;
+  }>,
+) {
+  return apiFetch<{ rule: MailInboxRule }>(
+    accessToken,
+    `company/mail-inbox/rules/${ruleId}`,
+    { method: "PATCH", body: JSON.stringify(body) },
+  );
+}
+
+export async function deleteInboxRule(accessToken: string, ruleId: string) {
+  await apiFetch(accessToken, `company/mail-inbox/rules/${ruleId}`, {
+    method: "DELETE",
+  });
+}
+
 export type MailCustomFolder = {
   id: string;
   name: string;

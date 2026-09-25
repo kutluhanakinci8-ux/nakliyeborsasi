@@ -111,6 +111,8 @@ import { MailWebPushSubscriptionEntity } from "../../infrastructure/database/ent
 import { MailWebPushService } from "./MailWebPushService";
 import { MailCustomFolderEntity } from "../../infrastructure/database/entities/MailCustomFolderEntity";
 import { MailCustomFolderService } from "./MailCustomFolderService";
+import { MailInboxRuleEntity } from "../../infrastructure/database/entities/MailInboxRuleEntity";
+import { MailInboxRuleService } from "./MailInboxRuleService";
 import { MailAddressAliasService } from "./MailAddressAliasService";
 import { MailPlatformKpiService } from "./MailPlatformKpiService";
 import { PublicMailStatusController } from "./PublicMailStatusController";
@@ -164,6 +166,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
       MailAddressAliasTargetEntity,
       MailWebPushSubscriptionEntity,
       MailCustomFolderEntity,
+      MailInboxRuleEntity,
       CompanyMailTeamInviteEntity,
       MailOrganizationBillingStateEntity,
       MailOrganizationOperatorStateEntity,
@@ -253,6 +256,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     MailPilotOnboardingService,
     MailWebPushService,
     MailCustomFolderService,
+    MailInboxRuleService,
   ],
   exports: [
     AuthNotificationService,
