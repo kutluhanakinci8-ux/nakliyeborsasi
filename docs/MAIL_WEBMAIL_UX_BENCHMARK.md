@@ -11,7 +11,7 @@
 |-------|---------|---------------|-------|---------|-----|
 | Güven & TLS | 12% | **40**† | 98 | 98 | †Canlıda “Güvenli değil” = sertifika/HTTPS eksik |
 | Temel kutu (okuma/yazma) | 20% | **72** | 95 | 94 | Klasörler, ek, taslak, arama filtreleri var |
-| Üretkenlik (toplu, kısayol) | 15% | **58** | 92 | 90 | G2: toplu okundu/arşiv/çöp + kısayollar; yıldız/snooze yok |
+| Üretkenlik (toplu, kısayol) | 15% | **62** | 92 | 90 | G2 toplu + kısayollar; G5 yıldız; snooze yok |
 | Konuşma & iletme | 10% | **72** | 95 | 93 | Thread + **İlet** (G3); tümüne yanıt (Cc meta yok) kısıtlı |
 | Yazma deneyimi | 12% | **68** | 90 | 88 | Cc/Bcc + basit zengin HTML; tam WYSIWYG değil |
 | Mobil / PWA | 10% | **60** | 85 | 82 | Paneller var; native push yok |
@@ -38,7 +38,7 @@
 | Zengin metin compose | ✗ | ✓ | ✓ | G4 |
 | Toplu seç + sil/arşiv | ✗ | ✓ | ✓ | G2 |
 | Okundu / okunmadı işaretle | kısmi | ✓ | ✓ | G2 |
-| Yıldız / bayrak | ✗ | ✓ | ✓ | G3 |
+| Yıldız / bayrak | ✓ (G5) | ✓ | ✓ | — |
 | Klavye kısayolları (j/k, c, r) | ✗ | ✓ | ✓ | G2 |
 | Depolama kotası çubuğu | ✓ | ✓ | ✓ | — |
 | İmza / şablon | ✓ | ✓ | ✓ | — |

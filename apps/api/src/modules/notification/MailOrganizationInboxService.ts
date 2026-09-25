@@ -5,7 +5,14 @@ import {
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { readFileSync } from "node:fs";
-import { Brackets, In, IsNull, Repository, SelectQueryBuilder } from "typeorm";
+import {
+  Brackets,
+  In,
+  IsNull,
+  Not,
+  Repository,
+  SelectQueryBuilder,
+} from "typeorm";
 import { MailMailboxEntity } from "../../infrastructure/database/entities/MailMailboxEntity";
 import {
   MailInboundAttachmentMeta,
@@ -14,7 +21,13 @@ import {
 import { MailSenderIdentityEntity } from "../../infrastructure/database/entities/MailSenderIdentityEntity";
 import { MailImapMaildirService } from "./MailImapMaildirService";
 
-export type InboxFolder = "inbox" | "spam" | "all" | "archive" | "trash";
+export type InboxFolder =
+  | "inbox"
+  | "spam"
+  | "all"
+  | "archive"
+  | "trash"
+  | "starred";
 export type MailboxFolder = "inbox" | "archive" | "trash";
 
 export type MailInboxSearchFilters = {
@@ -45,6 +58,7 @@ export class MailOrganizationInboxService {
     spamCount: number;
     archiveCount: number;
     trashCount: number;
+    starredCount: number;
   }> {
     const primaryAddress = await this.resolvePrimaryAddress(organizationId);
     const mailboxIds = await this.mailboxIdsForOrganization(organizationId);
@@ -57,6 +71,7 @@ export class MailOrganizationInboxService {
         spamCount: 0,
         archiveCount: 0,
         trashCount: 0,
+        starredCount: 0,
       };
     }
     const inboxWhere = {
@@ -64,8 +79,14 @@ export class MailOrganizationInboxService {
       spamStatus: In(["clean", "suspected"]),
       mailboxFolder: "inbox" as const,
     };
-    const [totalMessages, unreadCount, spamCount, archiveCount, trashCount] =
-      await Promise.all([
+    const [
+      totalMessages,
+      unreadCount,
+      spamCount,
+      archiveCount,
+      trashCount,
+      starredCount,
+    ] = await Promise.all([
       this.inboundRepository.count({ where: inboxWhere }),
       this.inboundRepository.count({
         where: { ...inboxWhere, readAt: IsNull() },
@@ -83,6 +104,13 @@ export class MailOrganizationInboxService {
       this.inboundRepository.count({
         where: { mailboxId: In(mailboxIds), mailboxFolder: "trash" },
       }),
+      this.inboundRepository.count({
+        where: {
+          mailboxId: In(mailboxIds),
+          starredAt: Not(IsNull()),
+          mailboxFolder: In(["inbox", "archive"]),
+        },
+      }),
     ]);
     const mailbox = primaryAddress
       ? await this.mailboxRepository.findOne({
@@ -97,6 +125,7 @@ export class MailOrganizationInboxService {
       spamCount,
       archiveCount,
       trashCount,
+      starredCount,
     };
   }
 
@@ -216,6 +245,7 @@ export class MailOrganizationInboxService {
     bodyHtml: string | null;
     receivedAt: string;
     readAt: string | null;
+    starredAt: string | null;
     emailAddress: string;
     spamStatus: string;
     spamReason: string | null;
@@ -252,6 +282,7 @@ export class MailOrganizationInboxService {
       spamStatus: row.spamStatus,
       spamReason: row.spamReason,
       mailboxFolder: row.mailboxFolder ?? "inbox",
+      starredAt: row.starredAt?.toISOString() ?? null,
       attachments: (row.attachments ?? []).map((file, index) => ({
         index,
         filename: file.filename,
@@ -384,6 +415,20 @@ export class MailOrganizationInboxService {
       row.readAt = new Date();
       await this.inboundRepository.save(row);
     }
+  }
+
+  public async setStarred(
+    organizationId: string,
+    messageId: string,
+    starred: boolean,
+  ): Promise<{ starredAt: string | null }> {
+    const row = await this.assertMessageAccess(organizationId, messageId);
+    if (row.mailboxFolder === "trash") {
+      throw new ForbiddenException("Çöp kutusundaki mesaj yıldızlanamaz.");
+    }
+    row.starredAt = starred ? new Date() : null;
+    await this.inboundRepository.save(row);
+    return { starredAt: row.starredAt?.toISOString() ?? null };
   }
 
   public async markUnread(
@@ -538,6 +583,13 @@ export class MailOrganizationInboxService {
       });
       return;
     }
+    if (folder === "starred") {
+      qb.andWhere("m.starredAt IS NOT NULL");
+      qb.andWhere("m.mailboxFolder IN (:...starredMailFolders)", {
+        starredMailFolders: ["inbox", "archive"],
+      });
+      return;
+    }
     qb.andWhere("m.spamStatus IN (:...inboxSpamStatuses)", {
       inboxSpamStatuses: ["clean", "suspected"],
     });
@@ -566,6 +618,13 @@ export class MailOrganizationInboxService {
     if (folder === "all") {
       return {
         mailboxId: In(mailboxIds),
+        mailboxFolder: In(["inbox", "archive"]),
+      };
+    }
+    if (folder === "starred") {
+      return {
+        mailboxId: In(mailboxIds),
+        starredAt: Not(IsNull()),
         mailboxFolder: In(["inbox", "archive"]),
       };
     }
@@ -626,6 +685,7 @@ export class MailOrganizationInboxService {
       spamStatus: row.spamStatus,
       spamReason: row.spamReason,
       attachmentCount: row.attachments?.length ?? 0,
+      starredAt: row.starredAt?.toISOString() ?? null,
     };
   }
 }

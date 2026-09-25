@@ -41,6 +41,7 @@ import {
   BulkMailInboxIdsDto,
 } from "./BulkMailInboxRequestDto";
 import { MailOrganizationBrandingService } from "./MailOrganizationBrandingService";
+import { SetMessageStarredRequestDto } from "./SetMessageStarredRequestDto";
 
 @Controller("company/mail-inbox")
 @UseGuards(JwtAuthenticationGuard, MailProductTotpPolicyGuard)
@@ -359,6 +360,20 @@ export class CompanyMailInboxController {
     return { ok: true };
   }
 
+  @Patch("messages/:messageId/star")
+  public async setStarred(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("messageId") messageId: string,
+    @Body() body: SetMessageStarredRequestDto,
+  ) {
+    const result = await this.mailOrganizationInboxService.setStarred(
+      user.companyId,
+      messageId,
+      body.starred,
+    );
+    return { ok: true, ...result };
+  }
+
   @Patch("messages/:messageId/unread")
   public async markUnread(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
@@ -498,7 +513,8 @@ export class CompanyMailInboxController {
       folder === "spam" ||
       folder === "all" ||
       folder === "archive" ||
-      folder === "trash"
+      folder === "trash" ||
+      folder === "starred"
     ) {
       return folder;
     }

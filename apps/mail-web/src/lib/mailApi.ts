@@ -5,7 +5,8 @@ export type MailInboxFolder =
   | "spam"
   | "all"
   | "archive"
-  | "trash";
+  | "trash"
+  | "starred";
 
 export type MailMailboxFolder = "inbox" | "archive" | "trash";
 
@@ -29,6 +30,7 @@ export type MailInboxSummary = {
   spamCount: number;
   archiveCount?: number;
   trashCount?: number;
+  starredCount?: number;
   storageQuota?: MailStorageQuota;
 };
 
@@ -42,6 +44,7 @@ export type MailInboxListItem = {
   spamStatus: string;
   spamReason?: string | null;
   attachmentCount?: number;
+  starredAt?: string | null;
 };
 
 export type MailInboxMessageDetail = MailInboxListItem & {
@@ -371,6 +374,21 @@ export async function markUnread(accessToken: string, id: string) {
   await apiFetch(accessToken, `company/mail-inbox/messages/${id}/unread`, {
     method: "PATCH",
   });
+}
+
+export async function setMessageStarred(
+  accessToken: string,
+  messageId: string,
+  starred: boolean,
+) {
+  return apiFetch<{ ok: boolean; starredAt: string | null }>(
+    accessToken,
+    `company/mail-inbox/messages/${messageId}/star`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ starred }),
+    },
+  );
 }
 
 export async function bulkMarkRead(accessToken: string, messageIds: string[]) {

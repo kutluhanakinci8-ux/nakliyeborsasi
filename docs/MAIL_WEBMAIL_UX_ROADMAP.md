@@ -9,7 +9,7 @@
 | **G2** | Üretkenlik | Orta | Yenile; okundu/okunmadı; toplu seç + arşiv/çöp; kısayol `?` |
 | **G3** | İletme & adresleme | Orta | İlet API+UI; BCC; “Tümüne yanıtla” |
 | **G4** | Görünüm & marka | Orta | Karanlık tema; tenant logo; compose iyileştirme (markdown veya RTE) |
-| **G5** | Güç kullanıcı | Büyük | Yıldız; özel klasör; sunucu kuralları (Sieve benzeri) |
+| **G5** | Güç kullanıcı | Büyük | Yıldız (uygulandı); özel klasör; sunucu kuralları (Sieve benzeri) |
 | **G6** | Bildirim & offline | Büyük | Web push; service worker cache (D7 ile hizalı) |
 
 ---
@@ -61,7 +61,13 @@ sudo certbot certonly --webroot -w /var/www/certbot -d posta.lerta.com.tr
 
 ---
 
-## G5–G6
+## G5 — Yıldızlı (kısmi, uygulandı)
+
+- API: `starredAt`, `folder=starred`, `PATCH messages/:id/star`
+- UI: **Yıldızlı** klasörü; liste/okuma ☆/★; klavye `s`
+- Planlı (G5 devamı): özel klasör, sunucu kuralları, toplu yıldız
+
+## G6
 
 Faz D6/D7 ve kurumsal talep ile planlanır; detay `LERTA_MAIL_PRODUCT_ROADMAP.md` Faz D tablosu.
 

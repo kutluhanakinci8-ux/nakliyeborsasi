@@ -27,6 +27,7 @@ import {
   searchInbox,
   sendDraft,
   setMessageMailboxFolder,
+  setMessageStarred,
   deleteMessagePermanently,
   updateDraft,
   type MailComposePreset,
@@ -55,6 +56,7 @@ type View =
   | "all"
   | "archive"
   | "trash"
+  | "starred"
   | "drafts";
 
 function inboxFolderForView(view: View): MailInboxFolder {
@@ -69,6 +71,9 @@ function inboxFolderForView(view: View): MailInboxFolder {
   }
   if (view === "trash") {
     return "trash";
+  }
+  if (view === "starred") {
+    return "starred";
   }
   return "inbox";
 }
@@ -463,13 +468,15 @@ export function MailClient() {
     view === "inbox" ||
     view === "spam" ||
     view === "all" ||
-    view === "archive";
+    view === "archive" ||
+    view === "starred";
 
   const canBulkSelect =
     view === "inbox" ||
     view === "spam" ||
     view === "all" ||
     view === "archive" ||
+    view === "starred" ||
     view === "trash";
 
   useEffect(() => {
@@ -534,6 +541,40 @@ export function MailClient() {
         error instanceof Error ? error.message : "Klasör değiştirilemedi.",
       );
     }
+  }
+
+  async function toggleMessageStarred(
+    messageId: string,
+    starred: boolean,
+  ) {
+    if (!accessToken) {
+      return;
+    }
+    try {
+      const result = await setMessageStarred(accessToken, messageId, starred);
+      if (detail?.id === messageId) {
+        setDetail({ ...detail, starredAt: result.starredAt });
+      }
+      if (view === "starred" && !starred && selectedId === messageId) {
+        setDetail(null);
+        setSelectedId(null);
+        setMobilePane("list");
+      }
+      setToast(starred ? "Yıldızlandı." : "Yıldız kaldırıldı.");
+      void refresh();
+    } catch (error) {
+      setToast(
+        error instanceof Error ? error.message : "Yıldız güncellenemedi.",
+      );
+    }
+  }
+
+  function toggleCurrentStarred() {
+    if (!detail || detail.mailboxFolder === "trash") {
+      return;
+    }
+    const starred = Boolean(detail.starredAt);
+    void toggleMessageStarred(detail.id, !starred);
   }
 
   async function markCurrentUnread() {
@@ -756,6 +797,9 @@ export function MailClient() {
     onForward: () => {
       startForwardFromDetail();
     },
+    onToggleStar: () => {
+      toggleCurrentStarred();
+    },
     onShowHelp: () => setShortcutsOpen(true),
     onEscape: () => {
       if (shortcutsOpen) {
@@ -859,6 +903,16 @@ export function MailClient() {
             onClick={() => switchView("all")}
           >
             Tümü
+          </button>
+          <button
+            type="button"
+            className={view === "starred" ? "active" : ""}
+            onClick={() => switchView("starred")}
+          >
+            Yıldızlı
+            {summary && (summary.starredCount ?? 0) > 0
+              ? ` (${summary.starredCount})`
+              : ""}
           </button>
           <button
             type="button"
@@ -1099,7 +1153,9 @@ export function MailClient() {
                   ? "sent"
                   : view === "drafts"
                     ? "drafts"
-                    : "inbox"
+                    : view === "starred"
+                      ? "starred"
+                      : "inbox"
             }
           />
         ) : (
@@ -1108,7 +1164,7 @@ export function MailClient() {
               key={m.id}
               role="button"
               tabIndex={0}
-              className={`mail-list-item ${selectedId === m.id ? "selected" : ""} ${!m.readAt && (view === "inbox" || view === "all" || view === "spam" || view === "archive") ? "unread" : ""}`}
+              className={`mail-list-item ${selectedId === m.id ? "selected" : ""} ${!m.readAt && (view === "inbox" || view === "all" || view === "spam" || view === "archive" || view === "starred") ? "unread" : ""}`}
               onClick={() => {
                 if (view === "drafts") {
                   const d = drafts.find((x) => x.id === m.id);
@@ -1182,6 +1238,33 @@ export function MailClient() {
                   onClick={(e) => e.stopPropagation()}
                   onChange={() => toggleChecked(m.id)}
                 />
+              ) : null}
+              {view !== "sent" &&
+              view !== "drafts" &&
+              (!threadView || !canUseThreads || searchActive) ? (
+                <button
+                  type="button"
+                  className={`mail-star-btn ${
+                    "starredAt" in m && m.starredAt ? "starred" : ""
+                  }`}
+                  aria-label={
+                    "starredAt" in m && m.starredAt
+                      ? "Yıldızı kaldır"
+                      : "Yıldızla"
+                  }
+                  title={
+                    "starredAt" in m && m.starredAt
+                      ? "Yıldızı kaldır"
+                      : "Yıldızla"
+                  }
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const starred = "starredAt" in m && Boolean(m.starredAt);
+                    void toggleMessageStarred(m.id, !starred);
+                  }}
+                >
+                  {"starredAt" in m && m.starredAt ? "★" : "☆"}
+                </button>
               ) : null}
               <div className="mail-list-item-body">
                 <div className="mail-list-from">
@@ -1373,6 +1456,15 @@ export function MailClient() {
               )}
             </div>
             <div className="mail-folder-actions">
+              {detail.mailboxFolder !== "trash" ? (
+                <button
+                  type="button"
+                  className={`mail-star-btn inline ${detail.starredAt ? "starred" : ""}`}
+                  onClick={() => void toggleCurrentStarred()}
+                >
+                  {detail.starredAt ? "★ Yıldızlı" : "☆ Yıldızla"}
+                </button>
+              ) : null}
               {view === "trash" || detail.mailboxFolder === "trash" ? (
                 <>
                   <button

@@ -1,4 +1,4 @@
-type Variant = "inbox" | "sent" | "drafts" | "search" | "read";
+type Variant = "inbox" | "sent" | "drafts" | "search" | "read" | "starred";
 
 const COPY: Record<
   Variant,
@@ -25,6 +25,14 @@ const COPY: Record<
   search: {
     title: "Sonuç bulunamadı",
     body: "Farklı anahtar kelime veya gelişmiş filtre deneyin.",
+  },
+  starred: {
+    title: "Yıldızlı mesaj yok",
+    body: "Önemli postaları yıldızlayın; burada tek listede görünür.",
+    tips: [
+      "Liste veya okuma panelindeki ☆ düğmesine tıklayın.",
+      "Klavye: mesaj açıkken s tuşu.",
+    ],
   },
   read: {
     title: "Mesaj seçin",

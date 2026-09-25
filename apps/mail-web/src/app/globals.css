@@ -452,6 +452,28 @@ a {
   word-break: break-all;
 }
 
+.mail-star-btn {
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 2px 4px;
+  color: var(--muted);
+}
+
+.mail-star-btn.starred {
+  color: #e8a317;
+}
+
+.mail-star-btn.inline {
+  font-size: 0.9rem;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
 .mail-list-item {
   display: flex;
   align-items: flex-start;
