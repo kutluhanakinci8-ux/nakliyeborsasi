@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ConsoleShell } from "@/components/ConsoleShell";
 import {
+  fetchMailBillingStatus,
   fetchOperatorDomains,
   isPlatformOperator,
   operatorVerifyDomainDns,
@@ -25,6 +26,9 @@ export default function OperatorPage() {
   const [denied, setDenied] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [flash, setFlash] = useState("");
+  const [billingStatus, setBillingStatus] = useState<
+    Awaited<ReturnType<typeof fetchMailBillingStatus>>["status"] | null
+  >(null);
 
   async function reload() {
     if (!accessToken) {
@@ -46,6 +50,12 @@ export default function OperatorPage() {
         return;
       }
       await reload();
+      try {
+        const billing = await fetchMailBillingStatus(accessToken);
+        setBillingStatus(billing.status);
+      } catch {
+        setBillingStatus(null);
+      }
     })();
   }, [accessToken, router]);
 
@@ -88,6 +98,44 @@ export default function OperatorPage() {
       <h1 style={{ marginTop: 0 }}>Operatör — mail domainleri</h1>
       {flash ? (
         <p style={{ color: "var(--success)", fontWeight: 600 }}>{flash}</p>
+      ) : null}
+      {billingStatus ? (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <h2 style={{ marginTop: 0 }}>Ödeme altyapısı</h2>
+          <p style={{ margin: "0 0 8px" }}>
+            Sağlayıcı: <strong>{billingStatus.provider}</strong>
+          </p>
+          <ul style={{ margin: 0, paddingLeft: 20, color: "var(--muted)" }}>
+            <li>
+              Stripe:{" "}
+              {billingStatus.stripe.configured
+                ? billingStatus.stripe.testMode
+                  ? "test modu"
+                  : "canlı anahtar"
+                : "yapılandırılmadı"}
+              {billingStatus.stripe.configured ? (
+                <>
+                  {" "}
+                  · webhook{" "}
+                  {billingStatus.stripe.webhookConfigured ? "OK" : "eksik"} ·
+                  price id{" "}
+                  {billingStatus.stripe.corporatePriceConfigured ? "OK" : "eksik"}
+                </>
+              ) : null}
+            </li>
+            <li>
+              iyzico API:{" "}
+              {billingStatus.iyzico.apiConfigured ? "OK" : "eksik"} · callback{" "}
+              <code style={{ fontSize: 12 }}>{billingStatus.iyzico.callbackUrl}</code>
+            </li>
+          </ul>
+          <p style={{ margin: "12px 0 0", fontSize: 13, color: "var(--muted)" }}>
+            Vitrin:{" "}
+            <a href="https://kurumsal.lerta.com.tr" target="_blank" rel="noreferrer">
+              kurumsal.lerta.com.tr
+            </a>
+          </p>
+        </div>
       ) : null}
       <div className="card">
         <table style={{ width: "100%", borderCollapse: "collapse" }}>

@@ -209,6 +209,26 @@ export async function fetchMailSubscription(accessToken: string) {
   }>(accessToken, "company/mail-identity/subscription");
 }
 
+export async function fetchMailBillingStatus(accessToken: string) {
+  return apiFetch<{
+    status: {
+      provider: string;
+      stripe: {
+        configured: boolean;
+        testMode: boolean;
+        webhookConfigured: boolean;
+        corporatePriceConfigured: boolean;
+      };
+      iyzico: {
+        apiConfigured: boolean;
+        fallbackCheckoutUrlConfigured: boolean;
+        callbackUrl: string;
+        corporatePriceTry: string;
+      };
+    };
+  }>(accessToken, "company/mail-billing/status");
+}
+
 export async function startCorporateCheckout(accessToken: string) {
   return apiFetch<{
     provider: string;

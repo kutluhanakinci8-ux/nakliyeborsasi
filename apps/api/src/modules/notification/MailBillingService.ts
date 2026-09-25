@@ -8,8 +8,25 @@ import { ConfigService } from "@nestjs/config";
 import Stripe from "stripe";
 import { AuthenticatedUserContext, CompanyRoleCode } from "@nakliyeborsasi/core";
 import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
+import { MailIyzicoBillingService } from "./MailIyzicoBillingService";
 
 export const LERTA_MAIL_CORPORATE_PLAN = "lerta_mail_corporate_tr";
+
+export type MailBillingStatus = {
+  provider: string;
+  stripe: {
+    configured: boolean;
+    testMode: boolean;
+    webhookConfigured: boolean;
+    corporatePriceConfigured: boolean;
+  };
+  iyzico: {
+    apiConfigured: boolean;
+    fallbackCheckoutUrlConfigured: boolean;
+    callbackUrl: string;
+    corporatePriceTry: string;
+  };
+};
 
 @Injectable()
 export class MailBillingService {
@@ -18,6 +35,7 @@ export class MailBillingService {
   public constructor(
     private readonly configService: ConfigService,
     private readonly mailSaasSubscriptionService: MailSaasSubscriptionService,
+    private readonly mailIyzicoBillingService: MailIyzicoBillingService,
   ) {}
 
   public async createCorporateCheckout(
@@ -34,7 +52,7 @@ export class MailBillingService {
       "stripe";
 
     if (provider === "iyzico") {
-      return this.createIyzicoCheckout(user.companyId, params);
+      return this.mailIyzicoBillingService.createCorporateCheckout(user, params);
     }
 
     const stripeKey = this.configService
@@ -138,29 +156,68 @@ export class MailBillingService {
     return { ok: true };
   }
 
-  private createIyzicoCheckout(
-    organizationId: string,
-    params: { successUrl?: string; cancelUrl?: string },
-  ): { provider: "iyzico"; url: string | null; message?: string } {
-    const pageUrl = this.configService
-      .get<string>("IYZICO_CHECKOUT_PAGE_URL")
+  public getBillingStatus(): MailBillingStatus {
+    const provider =
+      this.configService.get<string>("MAIL_BILLING_PROVIDER")?.trim() ||
+      "stripe";
+    const stripeKey = this.configService
+      .get<string>("STRIPE_SECRET_KEY")
       ?.trim();
-    if (!pageUrl) {
-      return {
-        provider: "iyzico",
-        url: null,
-        message:
-          "iyzico ödeme sayfası (IYZICO_CHECKOUT_PAGE_URL) tanımlı değil.",
-      };
-    }
+    const webhookSecret = this.configService
+      .get<string>("STRIPE_WEBHOOK_SECRET")
+      ?.trim();
+    const priceId = this.configService
+      .get<string>("STRIPE_MAIL_CORPORATE_PRICE_ID")
+      ?.trim();
+    const apiPublic =
+      this.configService.get<string>("MAIL_API_PUBLIC_URL")?.trim() ||
+      "https://yonetim.lerta.com.tr/api/v1";
+    const callbackUrl =
+      this.configService.get<string>("IYZICO_CALLBACK_URL")?.trim() ||
+      `${apiPublic}/webhooks/mail-billing/iyzico`;
+    const corporateTry =
+      this.configService.get<string>("IYZICO_CORPORATE_PRICE_TRY")?.trim() ||
+      "490.00";
+
+    return {
+      provider,
+      stripe: {
+        configured: Boolean(stripeKey),
+        testMode: Boolean(stripeKey?.startsWith("sk_test_")),
+        webhookConfigured: Boolean(webhookSecret),
+        corporatePriceConfigured: Boolean(priceId),
+      },
+      iyzico: {
+        apiConfigured: this.mailIyzicoBillingService.isConfigured(),
+        fallbackCheckoutUrlConfigured: Boolean(
+          this.configService.get<string>("IYZICO_CHECKOUT_PAGE_URL")?.trim(),
+        ),
+        callbackUrl,
+        corporatePriceTry: corporateTry,
+      },
+    };
+  }
+
+  public async handleIyzicoCallback(token: string): Promise<{
+    ok: boolean;
+    paymentStatus?: string;
+    organizationId?: string;
+  }> {
+    return this.mailIyzicoBillingService.handleCallback(token);
+  }
+
+  public consoleBillingSuccessUrl(): string {
     const baseConsole =
       this.configService.get<string>("MAIL_CONSOLE_PUBLIC_URL")?.trim() ||
       "https://yonetim.lerta.com.tr";
-    const success = encodeURIComponent(
-      params.successUrl ?? `${baseConsole}/dashboard?billing=success`,
-    );
-    const url = `${pageUrl}${pageUrl.includes("?") ? "&" : "?"}organizationId=${encodeURIComponent(organizationId)}&plan=${LERTA_MAIL_CORPORATE_PLAN}&successUrl=${success}`;
-    return { provider: "iyzico", url };
+    return `${baseConsole}/dashboard?billing=success`;
+  }
+
+  public consoleBillingCancelUrl(): string {
+    const baseConsole =
+      this.configService.get<string>("MAIL_CONSOLE_PUBLIC_URL")?.trim() ||
+      "https://yonetim.lerta.com.tr";
+    return `${baseConsole}/dashboard?billing=cancel`;
   }
 
   private extractOrganizationId(event: Stripe.Event): string | null {

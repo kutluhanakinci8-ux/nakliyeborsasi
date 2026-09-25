@@ -1,12 +1,15 @@
 import {
   Body,
   Controller,
+  Get,
   Headers,
   Post,
+  Query,
   Req,
+  Res,
   UseGuards,
 } from "@nestjs/common";
-import { Request } from "express";
+import { Request, Response } from "express";
 import { JwtAuthenticationGuard } from "../auth/JwtAuthenticationGuard";
 import { AuthenticatedUserParam } from "../auth/AuthenticatedUserParam";
 import { AuthenticatedUserContext } from "@nakliyeborsasi/core";
@@ -25,9 +28,24 @@ class MailBillingCheckoutDto {
   public cancelUrl?: string;
 }
 
+class IyzicoCallbackDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  public token?: string;
+}
+
 @Controller("company/mail-billing")
 export class MailBillingController {
   public constructor(private readonly mailBillingService: MailBillingService) {}
+
+  @Get("status")
+  @UseGuards(JwtAuthenticationGuard)
+  public getStatus(@AuthenticatedUserParam() user: AuthenticatedUserContext) {
+    void user;
+    const status = this.mailBillingService.getBillingStatus();
+    return { message: "OK", status };
+  }
 
   @Post("checkout/corporate")
   @UseGuards(JwtAuthenticationGuard)
@@ -54,5 +72,43 @@ export class MailBillingWebhookController {
   ) {
     const rawBody = request.rawBody ?? Buffer.from("");
     return this.mailBillingService.handleStripeWebhook(rawBody, signature);
+  }
+
+  @Post("iyzico")
+  public async iyzicoCallbackPost(
+    @Body() body: IyzicoCallbackDto,
+    @Req() request: Request,
+    @Res() response: Response,
+  ) {
+    const token =
+      body.token?.trim() ||
+      (typeof request.body?.token === "string" ? request.body.token.trim() : "");
+    await this.finishIyzicoCallback(token, response);
+  }
+
+  @Get("iyzico")
+  public async iyzicoCallbackGet(
+    @Query("token") token: string | undefined,
+    @Res() response: Response,
+  ) {
+    await this.finishIyzicoCallback(token?.trim() ?? "", response);
+  }
+
+  private async finishIyzicoCallback(
+    token: string,
+    response: Response,
+  ): Promise<void> {
+    const successUrl = this.mailBillingService.consoleBillingSuccessUrl();
+    const cancelUrl = this.mailBillingService.consoleBillingCancelUrl();
+    try {
+      const result = await this.mailBillingService.handleIyzicoCallback(token);
+      if (result.ok) {
+        response.redirect(302, successUrl);
+        return;
+      }
+      response.redirect(302, `${cancelUrl}&reason=payment_${result.paymentStatus ?? "failed"}`);
+    } catch {
+      response.redirect(302, `${cancelUrl}&reason=callback_error`);
+    }
   }
 }

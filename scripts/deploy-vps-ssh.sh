@@ -19,7 +19,7 @@ SSH_BASE_OPTS=(
 )
 
 # Sunucudaki eski vps-update.sh checkout'ta takılabilir; önce ref'i hizala.
-REMOTE_CMD="cd '${VPS_INSTALL_DIR}' && git fetch origin '${VPS_BRANCH}' && (git merge --abort 2>/dev/null || true) && git checkout -f '${VPS_BRANCH}' 2>/dev/null || true && git reset --hard 'origin/${VPS_BRANCH}' && git clean -fdx -e .env -e apps/web/.env.local && bash scripts/deploy-posta-lerta-com-tr.sh '${VPS_INSTALL_DIR}'"
+REMOTE_CMD="cd '${VPS_INSTALL_DIR}' && git fetch origin '${VPS_BRANCH}' && (git merge --abort 2>/dev/null || true) && git checkout -f '${VPS_BRANCH}' 2>/dev/null || true && git reset --hard 'origin/${VPS_BRANCH}' && git clean -fdx -e .env -e apps/web/.env.local && DEPLOY_BRANCH='${VPS_BRANCH}' bash scripts/deploy-posta-lerta-com-tr.sh '${VPS_INSTALL_DIR}'"
 
 echo "=== VPS deploy: ${VPS_USER}@${VPS_HOST} branch=${VPS_BRANCH} ==="
 
