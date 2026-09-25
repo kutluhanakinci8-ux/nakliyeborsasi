@@ -1,15 +1,26 @@
-# Ürün vizyonu — Lerta Mail (SaaS) + Lerta Logistics entegrasyonu
+# Ürün vizyonu — Lerta Mail (SaaS) + Lerta Logistics
+
+## Domain ayrımı (kesin kural)
+
+| Ürün | Alan adı | Ne bağlanır |
+|------|-----------|-------------|
+| **Lerta Logistics** | **`lerta.tr`** | Nakliye borsası uygulaması, panel, ihale, lojistik modüller. Platform mail: `mail.lerta.tr`, tenant: `kullanici.lerta.tr`. |
+| **Lerta Mail (satılacak posta programı)** | **`lerta.com.tr`** | Gmail benzeri webmail, müşteri kutuları, SaaS kayıt/abonelik. MTA: `mail.lerta.com.tr`, tenant: `kullanici.lerta.com.tr`. |
+
+**İki domain birbirinden bağımsız marka/ürün.** Ortak olan şey: aynı VPS’teki **kod + API + Postfix** (tek motor, iki DNS profili).
+
+`www.lerta.com.tr` üzerindeki mevcut U88 sitesi logistics veya mail ürünü değil; mail ürünü için **ayrı alt alan** (ör. `posta.lerta.com.tr`) kullanılır.
 
 ## Ne istiyoruz?
 
-**Tek mail altyapısı** (kendi MTA, API, veri modeli), **iki müşteri yüzü**:
+**Tek mail altyapısı** (kendi MTA, API, veri modeli), **iki ürün**:
 
-| Yüz | Kim kullanır | Nerede | Amaç |
-|-----|----------------|--------|------|
-| **A — Lerta Logistics** | Nakliye Borsası firmaları | `app.lerta.com.tr` / ileride `lerta.tr` | İhale, bildirim, org kimliği; mail **modül** olarak |
-| **B — Lerta Mail (SaaS)** | Herhangi bir firma (satış) | `lerta.com.tr` altında **ayrı ön yüz** | Gmail benzeri kutu; **bağımsız ürün**, çok kiracılı |
+| Yüz | Domain | Kim | Amaç |
+|-----|--------|-----|------|
+| **A — Lerta Logistics** | **lerta.tr** | Lojistik müşterileri | Uygulama + gömülü mail modülü (bildirim, org From) |
+| **B — Lerta Mail SaaS** | **lerta.com.tr** | Herhangi bir firma (satış) | Ayrı ön yüz, Gmail benzeri kutu, çok kiracılı |
 
-B’yi **başka firmalara hizmet / satış** için tasarlıyoruz. A ile **aynı backend**, farklı **marka, giriş, abonelik ve UX**.
+B’yi **başka firmalara hizmet / satış** için tasarlıyoruz. A ile **aynı backend**, farklı **domain, marka, giriş, abonelik ve UX**.
 
 ---
 
@@ -46,11 +57,12 @@ B’yi **başka firmalara hizmet / satış** için tasarlıyoruz. A ile **aynı 
 
 ## Faz planı (ürün odaklı)
 
-### Faz 0 — Yayın ayrımı ✅ (devam ediyor)
+### Faz 0 — Yayın ayrımı
 
-- [x] Logistics: `app.lerta.com.tr` (U88 `www` dokunulmaz)
-- [ ] Mail SaaS için **ayrı hostname** kararı: örn. `posta.lerta.com.tr` veya `mail.lerta.com.tr` (sadece web UI, MTA `mail.` ile aynı host olabilir)
-- [ ] İki web build veya tek monorepo **iki Next uygulaması**: `apps/web` (logistics), `apps/mail-web` (SaaS) — **henüz yok**
+- **Logistics:** üretim **`lerta.tr`** (`app.lerta.tr`, `mail.lerta.tr`, …) — mevcut Faz A/B planı
+- **Mail SaaS:** üretim **`lerta.com.tr`** (`posta` veya `app` + `mail` + `kullanici`) — U88 `www` dokunulmaz
+- Geçici: Logistics test için `app.lerta.com.tr` açılmış olabilir; uzun vadede logistics **yalnızca lerta.tr**
+- [ ] `apps/mail-web` — sadece **lerta.com.tr** markası (henüz yok)
 
 ### Faz 1 — Ortak backend, pilot domain `*.lerta.com.tr`
 
@@ -87,10 +99,10 @@ Teknik: yeni `apps/mail-web`, `NEXT_PUBLIC_API_BASE_URL`, OAuth/JWT **org kullan
 - Reply-To kurumsal kutu
 - Tek giriş (SSO): logistics hesabı = mail hesabı (aynı `organizationId`)
 
-### Faz 5 — `lerta.tr` taşıma
+### Faz 5 — İki domain’i yan yana üretim
 
-- Logistics üretim domain’i
-- Mail SaaS markası `lerta.com.tr` kalabilir veya `posta.lerta.tr`
+- Logistics tamamen **lerta.tr** DNS + `WEB_PUBLIC_BASE_URL`
+- Mail SaaS tamamen **lerta.com.tr**; `.env` profilleri veya iki VPS deploy ayrımı (ops kararı)
 
 ---
 
@@ -110,15 +122,14 @@ Teknik: yeni `apps/mail-web`, `NEXT_PUBLIC_API_BASE_URL`, OAuth/JWT **org kullan
 
 ---
 
-## Önerilen hostname (netleştirin)
+## Hostname özeti
 
-| Host | Öneri |
-|------|--------|
-| Logistics uygulama | `app.lerta.com.tr` ✅ |
-| **Lerta Mail (SaaS UI)** | `posta.lerta.com.tr` veya `webmail.lerta.com.tr` |
-| MTA / IMAP | `mail.lerta.com.tr` |
-| Paylaşımlı tenant adresleri | `kullanici.lerta.com.tr` |
-| Kurumsal site U88 | `www.lerta.com.tr` (dokunulmaz) |
+| | **lerta.tr** (Logistics) | **lerta.com.tr** (Mail SaaS) |
+|---|--------------------------|------------------------------|
+| Uygulama | `app.lerta.tr` (veya mevcut) | `posta.lerta.com.tr` (webmail UI) |
+| MTA | `mail.lerta.tr` | `mail.lerta.com.tr` |
+| Tenant adresler | `@kullanici.lerta.tr` | `@kullanici.lerta.com.tr` |
+| Diğer | — | `www` = U88 (ayrı program, dokunulmaz) |
 
 ---
 

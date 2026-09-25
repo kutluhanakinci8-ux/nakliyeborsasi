@@ -1,8 +1,8 @@
 # Pilot: `lerta.com.tr` üzerinde yayın ve mail geliştirme
 
-**Ürün vizyonu (önemli):** Aynı mail motoru hem **Lerta Logistics** içinde modül, hem **`lerta.com.tr` üzerinde satılacak Gmail benzeri Lerta Mail SaaS** olacak. Detay: [EMAIL_PRODUCT_LERTA_MAIL_SAAS.md](./EMAIL_PRODUCT_LERTA_MAIL_SAAS.md).
+**Domain kuralı:** **Lerta Logistics = `lerta.tr`** · **Mail programı (SaaS) = `lerta.com.tr`** — iki ayrı domain, ortak kod/MTA. Detay: [EMAIL_PRODUCT_LERTA_MAIL_SAAS.md](./EMAIL_PRODUCT_LERTA_MAIL_SAAS.md).
 
-**Durum (2026-09):** Ana alan adı `lerta.com.tr` / `www` U88’de kalır. Logistics: `app.lerta.com.tr`. Mail altyapısı `mail` / `kullanici` alt alanları. `lerta.tr` entegrasyonu pilot stabil olduktan sonra kopyalanır.
+**Durum (2026-09):** `www.lerta.com.tr` U88. Mail ürünü: `mail` / `kullanici` / (ileride `posta`) alt alanları. Logistics üretim **`lerta.tr`**; `app.lerta.com.tr` yalnızca geçici test olabilir.
 
 ---
 
