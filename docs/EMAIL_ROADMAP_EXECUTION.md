@@ -29,11 +29,19 @@ Kod: `PlatformMailSendingService`, `EmailOutboxService`, `NotificationConfigurat
 
 Tablolar: `mail_domains`, `mail_sender_identities`. API: `GET/POST platform-admin/mail/*`.
 
-## Faz C — Tam posta kutusu (en son)
+## Faz C — Tam posta kutusu
 
-**Hedef:** Gelen + giden, panel webmail, isteğe bağlı IMAP.
+**Hedef:** Gelen + giden, panel webmail, IMAP (Dovecot).
 
-Stub entity: `mail_mailboxes`, `mail_inbound_messages`. MX + MIME depolama + UI henüz planlı.
+| Adım | Durum |
+|------|--------|
+| C1 inbound webhook + pipe | Kod ✅ |
+| C2 org webmail + Postfix virtual | Kod ✅ |
+| C3 compose / spam / ekler | Kod ✅ |
+| C4 HTML MIME + IMAP API + Rspamd hook | Kod ✅; VPS scriptleri **planlı çalıştırma** |
+| VPS Dovecot/Rspamd kurulum | Bekliyor — [EMAIL_REMAINING_WORK_PLAN.md](./EMAIL_REMAINING_WORK_PLAN.md) |
+
+Kalan işler özeti: **EMAIL_REMAINING_WORK_PLAN.md**.
 
 ## Deploy
 
