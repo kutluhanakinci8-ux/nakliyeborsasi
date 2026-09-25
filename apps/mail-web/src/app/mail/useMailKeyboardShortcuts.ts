@@ -3,6 +3,8 @@ import { useEffect } from "react";
 type Handlers = {
   onCompose: () => void;
   onReply: () => void;
+  onReplyAll: () => void;
+  onSnooze1h: () => void;
   onFocusSearch: () => void;
   onArchive: () => void;
   onTrash: () => void;
@@ -62,6 +64,14 @@ export function useMailKeyboardShortcuts(handlers: Handlers) {
         case "r":
           event.preventDefault();
           handlers.onReply();
+          break;
+        case "a":
+          event.preventDefault();
+          handlers.onReplyAll();
+          break;
+        case "z":
+          event.preventDefault();
+          handlers.onSnooze1h();
           break;
         case "/":
           event.preventDefault();

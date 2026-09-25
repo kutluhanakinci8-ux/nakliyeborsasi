@@ -21,6 +21,9 @@ import {
 } from "../../infrastructure/database/entities/MailInboundMessageEntity";
 import { MailSenderIdentityEntity } from "../../infrastructure/database/entities/MailSenderIdentityEntity";
 import { MailImapMaildirService } from "./MailImapMaildirService";
+import {
+  parseAddressListFromMime,
+} from "./MailInboundMimeParse";
 
 export type InboxFolder =
   | "inbox"
@@ -61,6 +64,7 @@ export class MailOrganizationInboxService {
     archiveCount: number;
     trashCount: number;
     starredCount: number;
+    snoozedCount: number;
   }> {
     const primaryAddress = await this.resolvePrimaryAddress(organizationId);
     const mailboxIds = await this.mailboxIdsForOrganization(organizationId);
@@ -74,13 +78,25 @@ export class MailOrganizationInboxService {
         archiveCount: 0,
         trashCount: 0,
         starredCount: 0,
+        snoozedCount: 0,
       };
     }
+    const now = new Date();
     const inboxWhere = {
       mailboxId: In(mailboxIds),
       spamStatus: In(["clean", "suspected"]),
       mailboxFolder: "inbox" as const,
     };
+    const visibleInboxQb = () =>
+      this.inboundRepository
+        .createQueryBuilder("m")
+        .where("m.mailboxId IN (:...mailboxIds)", { mailboxIds })
+        .andWhere("m.spamStatus IN (:...spam)", { spam: ["clean", "suspected"] })
+        .andWhere("m.mailboxFolder = :inbox", { inbox: "inbox" })
+        .andWhere(
+          "(m.snoozedUntil IS NULL OR m.snoozedUntil <= :now)",
+          { now },
+        );
     const [
       totalMessages,
       unreadCount,
@@ -88,11 +104,10 @@ export class MailOrganizationInboxService {
       archiveCount,
       trashCount,
       starredCount,
+      snoozedCount,
     ] = await Promise.all([
-      this.inboundRepository.count({ where: inboxWhere }),
-      this.inboundRepository.count({
-        where: { ...inboxWhere, readAt: IsNull() },
-      }),
+      visibleInboxQb().getCount(),
+      visibleInboxQb().andWhere("m.readAt IS NULL").getCount(),
       this.inboundRepository.count({
         where: {
           mailboxId: In(mailboxIds),
@@ -113,6 +128,12 @@ export class MailOrganizationInboxService {
           mailboxFolder: In(["inbox", "archive"]),
         },
       }),
+      this.inboundRepository
+        .createQueryBuilder("m")
+        .where("m.mailboxId IN (:...mailboxIds)", { mailboxIds })
+        .andWhere("m.mailboxFolder = :inbox", { inbox: "inbox" })
+        .andWhere("m.snoozedUntil > :now", { now })
+        .getCount(),
     ]);
     const mailbox = primaryAddress
       ? await this.mailboxRepository.findOne({
@@ -128,6 +149,7 @@ export class MailOrganizationInboxService {
       archiveCount,
       trashCount,
       starredCount,
+      snoozedCount,
     };
   }
 
@@ -254,6 +276,9 @@ export class MailOrganizationInboxService {
     receivedAt: string;
     readAt: string | null;
     starredAt: string | null;
+    snoozedUntil: string | null;
+    toRecipients: string[];
+    ccRecipients: string[];
     emailAddress: string;
     spamStatus: string;
     spamReason: string | null;
@@ -270,11 +295,30 @@ export class MailOrganizationInboxService {
       where: { id: row.mailboxId },
     });
     let bodyText = row.bodyText;
-    if (!bodyText && row.rawMimePath) {
+    let toRecipients = row.toRecipients;
+    let ccRecipients = row.ccRecipients;
+    if (row.rawMimePath) {
       try {
-        bodyText = readFileSync(row.rawMimePath, "utf8").slice(0, 200_000);
+        const rawMime = readFileSync(row.rawMimePath, "utf8");
+        if (!bodyText) {
+          bodyText = rawMime.slice(0, 200_000);
+        }
+        if (
+          (!toRecipients || toRecipients.length === 0) &&
+          (!ccRecipients || ccRecipients.length === 0)
+        ) {
+          toRecipients = parseAddressListFromMime(rawMime, "To");
+          ccRecipients = parseAddressListFromMime(rawMime, "Cc");
+          if (toRecipients.length > 0 || ccRecipients.length > 0) {
+            row.toRecipients = toRecipients;
+            row.ccRecipients = ccRecipients;
+            await this.inboundRepository.save(row);
+          }
+        }
       } catch {
-        bodyText = row.snippet;
+        if (!bodyText) {
+          bodyText = row.snippet;
+        }
       }
     }
     return {
@@ -291,6 +335,9 @@ export class MailOrganizationInboxService {
       spamReason: row.spamReason,
       mailboxFolder: row.mailboxFolder ?? "inbox",
       starredAt: row.starredAt?.toISOString() ?? null,
+      snoozedUntil: row.snoozedUntil?.toISOString() ?? null,
+      toRecipients: toRecipients ?? [],
+      ccRecipients: ccRecipients ?? [],
       attachments: (row.attachments ?? []).map((file, index) => ({
         index,
         filename: file.filename,

@@ -32,6 +32,7 @@ export type MailInboxSummary = {
   archiveCount?: number;
   trashCount?: number;
   starredCount?: number;
+  snoozedCount?: number;
   storageQuota?: MailStorageQuota;
 };
 
@@ -145,6 +146,9 @@ export type MailInboxMessageDetail = MailInboxListItem & {
   bodyHtml: string | null;
   emailAddress: string;
   mailboxFolder?: MailMailboxFolder;
+  snoozedUntil?: string | null;
+  toRecipients?: string[];
+  ccRecipients?: string[];
   attachments: {
     index: number;
     filename: string;

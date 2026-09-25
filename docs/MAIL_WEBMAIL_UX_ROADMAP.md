@@ -87,7 +87,8 @@ sudo certbot certonly --webroot -w /var/www/certbot -d posta.lerta.com.tr
 - Web Push: VAPID, abonelik API, inbound bildirimi, Ayarlar → Bildirim
 - Ses, sekme/PWA okunmamış rozeti, günlük özet e-postası (08:00)
 - Geri al gönder: yeni posta, yanıt, iletme, taslak (5 sn)
-- Planlı: iOS push kısıtları dokümantasyonu, snooze
+- Snooze: klasör sayacı, `z` kısayolu, süre bitince web push
+- Planlı: iOS push kısıtları dokümantasyonu
 
 ## G5 — Kurallar v2 (uygulandı)
 

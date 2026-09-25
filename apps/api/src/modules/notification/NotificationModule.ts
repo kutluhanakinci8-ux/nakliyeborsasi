@@ -119,6 +119,7 @@ import { MailInboxPreferencesEntity } from "../../infrastructure/database/entiti
 import { MailInboxPreferencesService } from "./MailInboxPreferencesService";
 import { MailInboxDigestService } from "./MailInboxDigestService";
 import { MailInboxDigestScheduler } from "./MailInboxDigestScheduler";
+import { MailSnoozeWakeProcessor } from "./MailSnoozeWakeProcessor";
 import { MailInboxRuleService } from "./MailInboxRuleService";
 import { MailAddressAliasService } from "./MailAddressAliasService";
 import { MailPlatformKpiService } from "./MailPlatformKpiService";
@@ -271,6 +272,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     MailInboxPreferencesService,
     MailInboxDigestService,
     MailInboxDigestScheduler,
+    MailSnoozeWakeProcessor,
   ],
   exports: [
     AuthNotificationService,
