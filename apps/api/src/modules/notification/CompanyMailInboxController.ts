@@ -35,6 +35,10 @@ import {
   assertMailConsoleAccess,
   canManageMailInboxWrite,
 } from "./MailCompanyRoleAuthorization";
+import {
+  BulkMailInboxFolderDto,
+  BulkMailInboxIdsDto,
+} from "./BulkMailInboxRequestDto";
 
 @Controller("company/mail-inbox")
 @UseGuards(JwtAuthenticationGuard, MailProductTotpPolicyGuard)
@@ -342,6 +346,57 @@ export class CompanyMailInboxController {
   ) {
     await this.mailOrganizationInboxService.markRead(user.companyId, messageId);
     return { ok: true };
+  }
+
+  @Patch("messages/:messageId/unread")
+  public async markUnread(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("messageId") messageId: string,
+  ) {
+    await this.mailOrganizationInboxService.markUnread(
+      user.companyId,
+      messageId,
+    );
+    return { ok: true };
+  }
+
+  @Post("messages/bulk/read")
+  public async bulkMarkRead(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: BulkMailInboxIdsDto,
+  ) {
+    const result = await this.mailOrganizationInboxService.bulkMarkRead(
+      user.companyId,
+      body.messageIds,
+    );
+    return { ok: true, ...result };
+  }
+
+  @Post("messages/bulk/unread")
+  public async bulkMarkUnread(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: BulkMailInboxIdsDto,
+  ) {
+    const result = await this.mailOrganizationInboxService.bulkMarkUnread(
+      user.companyId,
+      body.messageIds,
+    );
+    return { ok: true, ...result };
+  }
+
+  @Post("messages/bulk/folder")
+  public async bulkSetFolder(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: BulkMailInboxFolderDto,
+  ) {
+    this.assertMailInboxWriter(user);
+    const folder = this.parseMailboxFolder(body.folder);
+    const result = await this.mailOrganizationInboxService.bulkSetMailboxFolder(
+      user.companyId,
+      body.messageIds,
+      folder,
+    );
+    return { ok: true, ...result };
   }
 
   @Patch("messages/:messageId/folder")

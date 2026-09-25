@@ -1,0 +1,84 @@
+import { useEffect } from "react";
+
+type Handlers = {
+  onCompose: () => void;
+  onReply: () => void;
+  onFocusSearch: () => void;
+  onArchive: () => void;
+  onTrash: () => void;
+  onMarkUnread: () => void;
+  onShowHelp: () => void;
+  onEscape: () => void;
+  enabled: boolean;
+};
+
+function isTypingTarget(target: EventTarget | null): boolean {
+  if (!target || !(target instanceof HTMLElement)) {
+    return false;
+  }
+  const tag = target.tagName;
+  return (
+    tag === "INPUT" ||
+    tag === "TEXTAREA" ||
+    tag === "SELECT" ||
+    target.isContentEditable
+  );
+}
+
+export function useMailKeyboardShortcuts(handlers: Handlers) {
+  useEffect(() => {
+    if (!handlers.enabled) {
+      return;
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (isTypingTarget(event.target)) {
+        if (event.key === "Escape") {
+          handlers.onEscape();
+        }
+        return;
+      }
+      if (event.key === "?" && !event.metaKey && !event.ctrlKey) {
+        event.preventDefault();
+        handlers.onShowHelp();
+        return;
+      }
+      if (event.key === "Escape") {
+        handlers.onEscape();
+        return;
+      }
+      if (event.metaKey || event.ctrlKey || event.altKey) {
+        return;
+      }
+      switch (event.key) {
+        case "c":
+          event.preventDefault();
+          handlers.onCompose();
+          break;
+        case "r":
+          event.preventDefault();
+          handlers.onReply();
+          break;
+        case "/":
+          event.preventDefault();
+          handlers.onFocusSearch();
+          break;
+        case "e":
+          event.preventDefault();
+          handlers.onArchive();
+          break;
+        case "#":
+          event.preventDefault();
+          handlers.onTrash();
+          break;
+        case "u":
+          event.preventDefault();
+          handlers.onMarkUnread();
+          break;
+        default:
+          break;
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [handlers]);
+}

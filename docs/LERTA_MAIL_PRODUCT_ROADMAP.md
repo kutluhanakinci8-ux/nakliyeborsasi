@@ -96,7 +96,7 @@
 |---|-----|--------|
 | G0 | HTTPS / sertifika | `verify-posta-https.sh` — **VPS doğrulama gerekli** |
 | G1 | Boş durum, sidebar, thread toggle | **uygulandı** — `MAIL_WEBMAIL_UX_ROADMAP.md` |
-| G2 | Toplu işlem, okundu, kısayollar | Planlı |
+| G2 | Toplu işlem, okundu, kısayollar | **uygulandı** |
 | G3 | İlet, BCC | Planlı |
 | G4 | Tema, tenant logo, zengin yazım | Planlı |
 | G5–G6 | Yıldız, kurallar, push | Planlı |

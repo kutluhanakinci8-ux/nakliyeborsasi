@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   composeMail,
@@ -16,6 +16,10 @@ import {
   fetchSentMessage,
   fileToAttachment,
   markRead,
+  markUnread,
+  bulkMarkRead,
+  bulkMarkUnread,
+  bulkSetMessageMailboxFolder,
   replyMail,
   searchInbox,
   sendDraft,
@@ -37,6 +41,8 @@ import {
 import { useMailSession } from "@/lib/session";
 import { MailSettingsPanel } from "./MailSettingsPanel";
 import { MailEmptyState } from "./MailEmptyState";
+import { MailShortcutsDialog } from "./MailShortcutsDialog";
+import { useMailKeyboardShortcuts } from "./useMailKeyboardShortcuts";
 
 type View =
   | "inbox"
@@ -119,6 +125,9 @@ export function MailClient() {
   const [composeTemplates, setComposeTemplates] = useState<
     MailComposePreset[]
   >([]);
+  const [checkedIds, setCheckedIds] = useState<Set<string>>(() => new Set());
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const refresh = useCallback(async () => {
     if (!accessToken) {
@@ -410,6 +419,93 @@ export function MailClient() {
     view === "all" ||
     view === "archive";
 
+  const canBulkSelect =
+    view === "inbox" ||
+    view === "spam" ||
+    view === "all" ||
+    view === "archive" ||
+    view === "trash";
+
+  useEffect(() => {
+    setCheckedIds(new Set());
+  }, [view]);
+
+  function toggleChecked(id: string) {
+    setCheckedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }
+
+  async function runBulkMarkRead(unread: boolean) {
+    if (!accessToken || checkedIds.size === 0) {
+      return;
+    }
+    const messageIds = [...checkedIds];
+    try {
+      const result = unread
+        ? await bulkMarkUnread(accessToken, messageIds)
+        : await bulkMarkRead(accessToken, messageIds);
+      setToast(
+        unread
+          ? `${result.updated} mesaj okunmadı işaretlendi.`
+          : `${result.updated} mesaj okundu.`,
+      );
+      setCheckedIds(new Set());
+      void refresh();
+    } catch (error) {
+      setToast(
+        error instanceof Error ? error.message : "Toplu işlem başarısız.",
+      );
+    }
+  }
+
+  async function runBulkFolder(folder: MailMailboxFolder) {
+    if (!accessToken || checkedIds.size === 0) {
+      return;
+    }
+    const messageIds = [...checkedIds];
+    try {
+      await bulkSetMessageMailboxFolder(accessToken, messageIds, folder);
+      setToast(
+        folder === "trash"
+          ? `${messageIds.length} mesaj çöpe taşındı.`
+          : folder === "archive"
+            ? `${messageIds.length} mesaj arşivlendi.`
+            : `${messageIds.length} mesaj gelen kutusuna alındı.`,
+      );
+      setCheckedIds(new Set());
+      setDetail(null);
+      setSelectedId(null);
+      void refresh();
+    } catch (error) {
+      setToast(
+        error instanceof Error ? error.message : "Klasör değiştirilemedi.",
+      );
+    }
+  }
+
+  async function markCurrentUnread() {
+    if (!accessToken || !selectedId || !detail) {
+      return;
+    }
+    try {
+      await markUnread(accessToken, selectedId);
+      setDetail({ ...detail, readAt: null });
+      setToast("Okunmadı işaretlendi.");
+      void refresh();
+    } catch (error) {
+      setToast(
+        error instanceof Error ? error.message : "Güncellenemedi.",
+      );
+    }
+  }
+
   async function moveCurrentMessage(folder: MailMailboxFolder) {
     if (!accessToken || !selectedId) {
       return;
@@ -507,6 +603,23 @@ export function MailClient() {
         }))
       : searchResults ?? messages;
 
+  const listMessageIds = useMemo(
+    () => listItems.map((m) => m.id),
+    [listItems],
+  );
+
+  const allListSelected =
+    listMessageIds.length > 0 &&
+    listMessageIds.every((id) => checkedIds.has(id));
+
+  function toggleSelectAll() {
+    if (allListSelected) {
+      setCheckedIds(new Set());
+      return;
+    }
+    setCheckedIds(new Set(listMessageIds));
+  }
+
   function switchView(next: View) {
     setView(next);
     setDetail(null);
@@ -547,6 +660,44 @@ export function MailClient() {
     setComposeStoredAttachments([]);
     setComposeError("");
   }
+
+  useMailKeyboardShortcuts({
+    enabled: Boolean(accessToken) && !composeOpen,
+    onCompose: () => {
+      resetCompose();
+      setComposeOpen(true);
+    },
+    onReply: () => {
+      if (detail) {
+        document
+          .querySelector<HTMLTextAreaElement>(".mail-reply textarea")
+          ?.focus();
+      }
+    },
+    onFocusSearch: () => searchInputRef.current?.focus(),
+    onArchive: () => {
+      if (detail) {
+        void moveCurrentMessage("archive");
+      }
+    },
+    onTrash: () => {
+      if (detail) {
+        void moveCurrentMessage("trash");
+      }
+    },
+    onMarkUnread: () => {
+      void markCurrentUnread();
+    },
+    onShowHelp: () => setShortcutsOpen(true),
+    onEscape: () => {
+      if (shortcutsOpen) {
+        setShortcutsOpen(false);
+      } else if (composeOpen) {
+        setComposeOpen(false);
+        resetCompose();
+      }
+    },
+  });
 
   function applyComposeTemplate(presetId: string) {
     const preset = composeTemplates.find((t) => t.id === presetId);
@@ -727,19 +878,57 @@ export function MailClient() {
       <section className="mail-list">
         {view !== "drafts" ? (
           <div className="mail-search">
-            {canUseThreads && !searchActive ? (
-              <div className="mail-list-toolbar">
+            <div className="mail-list-toolbar mail-list-toolbar-main">
+              {canUseThreads && !searchActive ? (
                 <label className="mail-thread-toggle">
                   <input
                     type="checkbox"
                     checked={threadView}
                     onChange={(e) => setThreadView(e.target.checked)}
                   />
-                  Konuşma görünümü
+                  Konuşma
                 </label>
-              </div>
-            ) : null}
+              ) : null}
+              {canBulkSelect && listItems.length > 0 ? (
+                <label className="mail-bulk-check">
+                  <input
+                    type="checkbox"
+                    checked={allListSelected}
+                    onChange={toggleSelectAll}
+                    aria-label="Tümünü seç"
+                  />
+                </label>
+              ) : null}
+              {canBulkSelect && checkedIds.size > 0 ? (
+                <span className="mail-bulk-actions">
+                  <button type="button" onClick={() => void runBulkMarkRead(false)}>
+                    Okundu
+                  </button>
+                  <button type="button" onClick={() => void runBulkMarkRead(true)}>
+                    Okunmadı
+                  </button>
+                  <button type="button" onClick={() => void runBulkFolder("archive")}>
+                    Arşiv
+                  </button>
+                  <button type="button" onClick={() => void runBulkFolder("trash")}>
+                    Çöp
+                  </button>
+                </span>
+              ) : null}
+              <button type="button" className="mail-toolbar-btn" onClick={() => void refresh()}>
+                Yenile
+              </button>
+              <button
+                type="button"
+                className="mail-toolbar-btn"
+                onClick={() => setShortcutsOpen(true)}
+                title="Klavye kısayolları"
+              >
+                ?
+              </button>
+            </div>
             <input
+              ref={searchInputRef}
               type="search"
               placeholder="Ara (konu, gönderen)…"
               value={searchQuery}
@@ -900,12 +1089,24 @@ export function MailClient() {
                 }
               }}
             >
-              <div className="mail-list-from">
-                {m.fromAddress}
-                {(m.attachmentCount ?? 0) > 0 ? " 📎" : ""}
+              {canBulkSelect ? (
+                <input
+                  type="checkbox"
+                  className="mail-list-check"
+                  checked={checkedIds.has(m.id)}
+                  aria-label="Mesajı seç"
+                  onClick={(e) => e.stopPropagation()}
+                  onChange={() => toggleChecked(m.id)}
+                />
+              ) : null}
+              <div className="mail-list-item-body">
+                <div className="mail-list-from">
+                  {m.fromAddress}
+                  {(m.attachmentCount ?? 0) > 0 ? " 📎" : ""}
+                </div>
+                <div className="mail-list-subject">{m.subject}</div>
+                <div className="mail-list-snippet">{m.snippet}</div>
               </div>
-              <div className="mail-list-subject">{m.subject}</div>
-              <div className="mail-list-snippet">{m.snippet}</div>
             </div>
           ))
         )}
@@ -1121,6 +1322,14 @@ export function MailClient() {
                   >
                     Sil
                   </button>
+                  {detail.readAt ? (
+                    <button
+                      type="button"
+                      onClick={() => void markCurrentUnread()}
+                    >
+                      Okunmadı
+                    </button>
+                  ) : null}
                 </>
               )}
             </div>
@@ -1277,6 +1486,9 @@ export function MailClient() {
           accessToken={accessToken}
           onClose={() => setSettingsOpen(false)}
         />
+      ) : null}
+      {shortcutsOpen ? (
+        <MailShortcutsDialog onClose={() => setShortcutsOpen(false)} />
       ) : null}
     </div>
   );

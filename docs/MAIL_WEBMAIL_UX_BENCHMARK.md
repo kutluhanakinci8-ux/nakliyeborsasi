@@ -11,7 +11,7 @@
 |-------|---------|---------------|-------|---------|-----|
 | Güven & TLS | 12% | **40**† | 98 | 98 | †Canlıda “Güvenli değil” = sertifika/HTTPS eksik |
 | Temel kutu (okuma/yazma) | 20% | **72** | 95 | 94 | Klasörler, ek, taslak, arama filtreleri var |
-| Üretkenlik (toplu, kısayol) | 15% | **25** | 92 | 90 | Toplu seçim, yıldız, snooze yok |
+| Üretkenlik (toplu, kısayol) | 15% | **58** | 92 | 90 | G2: toplu okundu/arşiv/çöp + kısayollar; yıldız/snooze yok |
 | Konuşma & iletme | 10% | **55** | 95 | 93 | Thread var; **İlet** yok |
 | Yazma deneyimi | 12% | **45** | 90 | 88 | Düz metin; zengin HTML editör yok |
 | Mobil / PWA | 10% | **60** | 85 | 82 | Paneller var; native push yok |

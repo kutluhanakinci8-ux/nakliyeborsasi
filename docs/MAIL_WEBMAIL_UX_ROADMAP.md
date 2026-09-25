@@ -34,11 +34,15 @@ sudo certbot certonly --webroot -w /var/www/certbot -d posta.lerta.com.tr
 
 ---
 
-## G2 — Sonraki
+## G2 — Üretkenlik (uygulandı)
 
-- API: `POST …/messages/mark-read` (toplu), `PATCH …/read`
-- UI: checkbox sütunu, Shift+tık aralık seçimi
-- `?` modal: `c` yaz, `r` yanıtla, `/` ara
+- API: `POST messages/bulk/read|unread|folder`, `PATCH messages/:id/unread`
+- UI: toplu seçim, okundu/okunmadı, arşiv/çöp, yenile, `?` kısayol yardımı
+- Klavye: `c` `r` `/` `e` `#` `u` `?` `Esc`
+
+## G2+ — İyileştirme (planlı)
+
+- Shift+tık aralık seçimi, `j`/`k` liste gezintisi
 
 ---
 

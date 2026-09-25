@@ -125,6 +125,72 @@ a {
   margin-bottom: 8px;
 }
 
+.mail-list-toolbar-main {
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.mail-bulk-check input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+}
+
+.mail-bulk-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.mail-bulk-actions button,
+.mail-toolbar-btn {
+  border: 1px solid var(--border);
+  background: var(--panel);
+  border-radius: 16px;
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.mail-bulk-actions button:hover,
+.mail-toolbar-btn:hover {
+  background: #f1f3f4;
+}
+
+.mail-list-check {
+  margin-top: 14px;
+  flex-shrink: 0;
+  accent-color: var(--accent);
+}
+
+.mail-list-item-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.mail-shortcuts-dialog {
+  max-width: 420px;
+}
+
+.mail-shortcuts-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.mail-shortcuts-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.mail-shortcuts-table kbd {
+  font-family: inherit;
+  background: #f1f3f4;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
 .mail-thread-toggle {
   display: inline-flex;
   align-items: center;
@@ -273,6 +339,9 @@ a {
 }
 
 .mail-list-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
   padding: 12px 16px;
   border-bottom: 1px solid var(--border);
   cursor: pointer;

@@ -367,6 +367,49 @@ export async function markRead(accessToken: string, id: string) {
   });
 }
 
+export async function markUnread(accessToken: string, id: string) {
+  await apiFetch(accessToken, `company/mail-inbox/messages/${id}/unread`, {
+    method: "PATCH",
+  });
+}
+
+export async function bulkMarkRead(accessToken: string, messageIds: string[]) {
+  return apiFetch<{ updated: number }>(
+    accessToken,
+    "company/mail-inbox/messages/bulk/read",
+    {
+      method: "POST",
+      body: JSON.stringify({ messageIds }),
+    },
+  );
+}
+
+export async function bulkMarkUnread(accessToken: string, messageIds: string[]) {
+  return apiFetch<{ updated: number }>(
+    accessToken,
+    "company/mail-inbox/messages/bulk/unread",
+    {
+      method: "POST",
+      body: JSON.stringify({ messageIds }),
+    },
+  );
+}
+
+export async function bulkSetMessageMailboxFolder(
+  accessToken: string,
+  messageIds: string[],
+  folder: MailMailboxFolder,
+) {
+  return apiFetch<{ updated: number }>(
+    accessToken,
+    "company/mail-inbox/messages/bulk/folder",
+    {
+      method: "POST",
+      body: JSON.stringify({ messageIds, folder }),
+    },
+  );
+}
+
 export async function setMessageMailboxFolder(
   accessToken: string,
   messageId: string,

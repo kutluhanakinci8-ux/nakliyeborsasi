@@ -386,6 +386,62 @@ export class MailOrganizationInboxService {
     }
   }
 
+  public async markUnread(
+    organizationId: string,
+    messageId: string,
+  ): Promise<void> {
+    const row = await this.assertMessageAccess(organizationId, messageId);
+    if (row.readAt) {
+      row.readAt = null;
+      await this.inboundRepository.save(row);
+    }
+  }
+
+  public async bulkMarkRead(
+    organizationId: string,
+    messageIds: string[],
+  ): Promise<{ updated: number }> {
+    let updated = 0;
+    for (const messageId of messageIds) {
+      const row = await this.assertMessageAccess(organizationId, messageId);
+      if (!row.readAt) {
+        row.readAt = new Date();
+        await this.inboundRepository.save(row);
+        updated += 1;
+      }
+    }
+    return { updated };
+  }
+
+  public async bulkMarkUnread(
+    organizationId: string,
+    messageIds: string[],
+  ): Promise<{ updated: number }> {
+    let updated = 0;
+    for (const messageId of messageIds) {
+      const row = await this.assertMessageAccess(organizationId, messageId);
+      if (row.readAt) {
+        row.readAt = null;
+        await this.inboundRepository.save(row);
+        updated += 1;
+      }
+    }
+    return { updated };
+  }
+
+  public async bulkSetMailboxFolder(
+    organizationId: string,
+    messageIds: string[],
+    folder: MailboxFolder,
+  ): Promise<{ updated: number }> {
+    let updated = 0;
+    for (const messageId of messageIds) {
+      await this.setMailboxFolder(organizationId, messageId, folder);
+      updated += 1;
+    }
+    return { updated };
+  }
+
   public async setMailboxFolder(
     organizationId: string,
     messageId: string,
