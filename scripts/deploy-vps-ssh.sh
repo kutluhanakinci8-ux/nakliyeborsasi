@@ -7,11 +7,7 @@ set -euo pipefail
 VPS_HOST="${VPS_HOST:-168.231.109.27}"
 VPS_USER="${VPS_USER:-root}"
 VPS_INSTALL_DIR="${VPS_INSTALL_DIR:-/var/www/nakliyeborsasi}"
-EXPECTED_BRANCH="cursor/own-mail-platform-519e"
-VPS_BRANCH="${VPS_BRANCH:-$EXPECTED_BRANCH}"
-if [[ "${VPS_BRANCH}" != "${EXPECTED_BRANCH}" ]]; then
-  echo "UYARI: VPS_BRANCH=${VPS_BRANCH} (beklenen: ${EXPECTED_BRANCH})" >&2
-fi
+VPS_BRANCH="${VPS_BRANCH:-main}"
 
 SSH_BASE_OPTS=(
   -o StrictHostKeyChecking=accept-new
@@ -19,7 +15,7 @@ SSH_BASE_OPTS=(
 )
 
 # Sunucudaki eski vps-update.sh checkout'ta takılabilir; önce ref'i hizala.
-REMOTE_CMD="cd '${VPS_INSTALL_DIR}' && git fetch origin '${VPS_BRANCH}' && (git merge --abort 2>/dev/null || true) && git checkout -f '${VPS_BRANCH}' 2>/dev/null || true && git reset --hard 'origin/${VPS_BRANCH}' && git clean -fdx -e .env -e apps/web/.env.local && bash scripts/vps-update.sh '${VPS_INSTALL_DIR}' '${VPS_BRANCH}'"
+REMOTE_CMD="cd '${VPS_INSTALL_DIR}' && git fetch origin '${VPS_BRANCH}' && (git merge --abort 2>/dev/null || true) && git checkout -f '${VPS_BRANCH}' 2>/dev/null || true && git reset --hard 'origin/${VPS_BRANCH}' && git clean -fdx -e .env -e apps/web/.env.local && bash scripts/deploy-posta-lerta-com-tr.sh '${VPS_INSTALL_DIR}'"
 
 echo "=== VPS deploy: ${VPS_USER}@${VPS_HOST} branch=${VPS_BRANCH} ==="
 

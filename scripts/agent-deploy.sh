@@ -5,7 +5,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-DEPLOY_BRANCH="${DEPLOY_BRANCH:-cursor/own-mail-platform-519e}"
+DEPLOY_BRANCH="${DEPLOY_BRANCH:-main}"
 
 if [[ -n "${VPS_SSH_PRIVATE_KEY:-}" ]] || [[ -n "${VPS_SSH_PASSWORD:-}" ]]; then
   bash scripts/deploy-vps-ssh.sh
