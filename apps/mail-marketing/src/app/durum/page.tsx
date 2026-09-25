@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { MarketingPageShell } from "@/components/MarketingPageShell";
 import {
   fetchPublicMailStatus,
@@ -5,6 +6,11 @@ import {
 } from "@/lib/publicStatus";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Durum — Lerta Mail",
+  description: "Lerta Mail sistem durumu ve bileşen sağlığı.",
+};
 
 export default async function DurumPage() {
   let page: Awaited<ReturnType<typeof fetchPublicMailStatus>> | null = null;

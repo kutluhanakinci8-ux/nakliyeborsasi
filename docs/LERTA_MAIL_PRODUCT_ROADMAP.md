@@ -15,7 +15,7 @@
 | Konsol (kayıt, domain sihirbazı, pilot kutu, plan, ödeme iskeleti) | MVP |
 | Vitrin + API fiyat planları | MVP |
 | Stripe / iyzico callback kodu | Kod hazır; **Stripe test anahtarları VPS’te sizden** |
-| www → mail vitrin | **Bekliyor** (U88 taşınması) |
+| www → mail vitrin | **Bekliyor** (U88 taşınması; cutover scriptleri hazır — `WWW_CUTOVER_LERTA_MAIL.md`) |
 | Thread / konuşma görünümü | Yok |
 | Çoklu kullanıcı / davet / roller (mail_admin) | **uygulandı (B3)** |
 | Faturalama yaşam döngüsü (iptal, fatura e-postası) | Yok |
@@ -33,7 +33,7 @@
 | A1 | Stripe **test** checkout uçtan uca | Kurumsal + Enterprise checkout; `smoke-mail-billing-stripe.sh` — **kod hazır, VPS anahtar bekliyor** |
 | A2 | Stripe **canlı** + webhook prod | `MAIL_BILLING_PRODUCTION_CUTOVER.md` — **VPS live anahtar bekliyor** |
 | A3 | iyzico sandbox → prod (TR ödeme) | Aynı runbook — **canlı anahtar bekliyor** |
-| A4 | `www` cutover | `preflight-www-cutover` OK; `www` title = Lerta Mail |
+| A4 | `www` cutover | `preflight` + `apply-www-cutover` + `smoke-www-cutover` — **araçlar hazır; DNS/U88 iş kararı** |
 | A5 | Vitrin kurumsal kimlik | Logo, tipografi, SSS, KVKK, iletişim, SLA — **uygulandı** (`MAIL_MARKETING_VITRIN_A5.md`; hukuk metinleri yayın öncesi onay) |
 | A6 | Kayıt → onboarding akışı | Kayıt → domain sihirbazı; dashboard kurumsal banner — **B1 ile güçlendirildi** |
 | A7 | Fiyatlandırma TRY + EUR tutarlılığı | `mail-plans` EUR+TRY, iyzico tutarları — **katalog uyumlu** |

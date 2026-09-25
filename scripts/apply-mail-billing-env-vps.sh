@@ -43,6 +43,7 @@ upsert_remote "MAIL_API_PUBLIC_URL" "${MAIL_API_PUBLIC_URL:-https://yonetim.lert
 upsert_remote "STRIPE_SECRET_KEY" "${STRIPE_SECRET_KEY:-}"
 upsert_remote "STRIPE_WEBHOOK_SECRET" "${STRIPE_WEBHOOK_SECRET:-}"
 upsert_remote "STRIPE_MAIL_CORPORATE_PRICE_ID" "${STRIPE_MAIL_CORPORATE_PRICE_ID:-}"
+upsert_remote "STRIPE_MAIL_ENTERPRISE_PRICE_ID" "${STRIPE_MAIL_ENTERPRISE_PRICE_ID:-}"
 upsert_remote "IYZICO_API_KEY" "${IYZICO_API_KEY:-}"
 upsert_remote "IYZICO_SECRET_KEY" "${IYZICO_SECRET_KEY:-}"
 upsert_remote "IYZICO_BASE_URL" "${IYZICO_BASE_URL:-https://sandbox-api.iyzipay.com}"

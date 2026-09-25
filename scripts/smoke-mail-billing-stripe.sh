@@ -35,3 +35,16 @@ fi
 echo ""
 echo "Tarayıcıda açın ve test kartı 4242 4242 4242 4242 kullanın:"
 echo "$URL"
+
+if [[ "${SMOKE_ENTERPRISE:-}" == "1" ]]; then
+  echo ""
+  echo "== POST checkout/enterprise =="
+  ENT_JSON="$(curl -fsS -X POST -H "Authorization: Bearer $JWT" \
+    -H "Content-Type: application/json" \
+    -d '{}' \
+    "$API_BASE/company/mail-billing/checkout/enterprise")"
+  echo "$ENT_JSON" | python3 -m json.tool
+  ENT_URL="$(echo "$ENT_JSON" | python3 -c "import sys,json; print(json.load(sys.stdin).get('url') or '')")"
+  [[ -n "$ENT_URL" ]] || { echo "Enterprise checkout URL üretilmedi." >&2; exit 4; }
+  echo "$ENT_URL"
+fi

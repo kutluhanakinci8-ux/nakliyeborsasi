@@ -4,7 +4,7 @@
 
 ## 1. Kod merge sırası
 
-GitHub PR zinciri (eskiden yeniye): F3 → F4 → F5 → B4 → operatör KPI → Faz A billing → A5 vitrin (bu dal).
+GitHub PR zinciri (eskiden yeniye): … → Faz A billing → A5 vitrin → A4 www cutover araçları (bu dal).
 
 Her merge sonrası: `git pull`, API + konsol + vitrin build, PM2/systemd restart.
 
