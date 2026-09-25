@@ -94,7 +94,7 @@
 
 | # | İş | Takip |
 |---|-----|--------|
-| E1 | Tenant teslimat paneli | Bounce, suppression, son 7 gün gönderim |
+| E1 | Tenant teslimat paneli | `GET …/delivery`, konsol /delivery — **uygulandı** |
 | E2 | DMARC aggregate (rua) görünümü | Domain bazlı özet |
 | E3 | KVKK veri export + hesap silme | API + konsol talebi |
 | E4 | Denetim kaydı (tenant) | Kim, ne zaman, domain/kutu değişti |

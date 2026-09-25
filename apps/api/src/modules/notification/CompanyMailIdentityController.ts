@@ -17,6 +17,7 @@ import { AuthenticatedUserParam } from "../auth/AuthenticatedUserParam";
 import { MailTenantSubdomainService } from "./MailTenantSubdomainService";
 import { MailOrganizationSendRateService } from "./MailOrganizationSendRateService";
 import { MailOrganizationStorageService } from "./MailOrganizationStorageService";
+import { MailOrganizationDeliveryService } from "./MailOrganizationDeliveryService";
 import { EmailSuppressionService } from "./EmailSuppressionService";
 import { MailCustomDomainService } from "./MailCustomDomainService";
 import {
@@ -49,6 +50,7 @@ export class CompanyMailIdentityController {
     private readonly mailTenantSubdomainService: MailTenantSubdomainService,
     private readonly mailOrganizationSendRateService: MailOrganizationSendRateService,
     private readonly mailOrganizationStorageService: MailOrganizationStorageService,
+    private readonly mailOrganizationDeliveryService: MailOrganizationDeliveryService,
     private readonly emailSuppressionService: EmailSuppressionService,
     private readonly mailCustomDomainService: MailCustomDomainService,
     private readonly mailIdentityAuditService: MailIdentityAuditService,
@@ -317,6 +319,20 @@ export class CompanyMailIdentityController {
       "/company/mail-identity/custom-domain/provision",
     );
     return { message: "OK", ...result };
+  }
+
+  @Get("delivery")
+  public async deliveryPanel(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Query("days") daysRaw?: string,
+  ) {
+    assertMailConsoleAccess(user);
+    const days = daysRaw ? Number.parseInt(daysRaw, 10) : 7;
+    const panel = await this.mailOrganizationDeliveryService.getDeliveryPanel(
+      user.companyId,
+      Number.isFinite(days) ? days : 7,
+    );
+    return { message: "OK", panel };
   }
 
   @Get("suppressions")

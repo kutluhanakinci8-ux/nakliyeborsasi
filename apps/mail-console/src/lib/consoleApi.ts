@@ -369,6 +369,65 @@ export async function fetchMailSendRate(accessToken: string) {
   );
 }
 
+export type MailDeliveryPanel = {
+  days: number;
+  periodStart: string;
+  sent: {
+    total: number;
+    daily: { day: string; sentCount: number }[];
+    recent: {
+      id: string;
+      toAddress: string;
+      subject: string;
+      sentAt: string;
+      smtpMessageId: string | null;
+    }[];
+  };
+  suppressions: {
+    total: number;
+    bounceRelated: number;
+    items: {
+      emailAddress: string;
+      reason: string;
+      source: string;
+      note: string | null;
+      updatedAt: string;
+    }[];
+  };
+};
+
+export async function fetchMailDeliveryPanel(
+  accessToken: string,
+  days = 7,
+) {
+  return apiFetch<{ panel: MailDeliveryPanel }>(
+    accessToken,
+    `company/mail-identity/delivery?days=${days}`,
+  );
+}
+
+export async function addMailSuppression(
+  accessToken: string,
+  email: string,
+  reason?: string,
+) {
+  await apiFetch(accessToken, "company/mail-identity/suppressions", {
+    method: "POST",
+    body: JSON.stringify({ email, reason: reason ?? "manual" }),
+  });
+}
+
+export async function removeMailSuppression(
+  accessToken: string,
+  email: string,
+) {
+  await apiFetch(
+    accessToken,
+    `company/mail-identity/suppressions?email=${encodeURIComponent(email)}`,
+    { method: "DELETE" },
+  );
+}
+
 export type MailBillingLifecycle = {
   status: string;
   billingProvider: string;
