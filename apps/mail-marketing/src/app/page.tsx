@@ -64,9 +64,15 @@ export default function MarketingHomePage() {
 
         <PricingSection />
 
-        <footer>
-          © {new Date().getFullYear()} Lerta Mail · Pilot: kullanici.lerta.com.tr ·
-          Logistics ürünü ayrı domain: lerta.tr
+        <footer className="site-footer">
+          <span>
+            © {new Date().getFullYear()} Lerta Mail · Pilot: kullanici.lerta.com.tr
+          </span>
+          <nav className="footer-links">
+            <a href="/kvkk">KVKK</a>
+            <a href="/iletisim">İletişim</a>
+            <a href={registerHref}>Kayıt</a>
+          </nav>
         </footer>
       </div>
     </div>

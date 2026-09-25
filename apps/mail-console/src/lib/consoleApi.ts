@@ -213,11 +213,16 @@ export async function fetchMailBillingStatus(accessToken: string) {
   return apiFetch<{
     status: {
       provider: string;
+      checkout: {
+        canStart: boolean;
+        blockers: string[];
+      };
       stripe: {
         configured: boolean;
         testMode: boolean;
         webhookConfigured: boolean;
         corporatePriceConfigured: boolean;
+        corporatePriceValid: boolean | null;
         apiReachable: boolean | null;
         apiError: string | null;
       };

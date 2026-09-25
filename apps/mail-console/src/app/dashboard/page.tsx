@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ConsoleShell } from "@/components/ConsoleShell";
 import { MAIL_WEB_URL } from "@/lib/apiConfig";
 import {
+  fetchMailBillingStatus,
   fetchMailIdentity,
   fetchMailSubscription,
   isPlatformOperator,
@@ -13,6 +14,7 @@ import {
   selectMailPlan,
   startCorporateCheckout,
 } from "@/lib/consoleApi";
+import { useConsoleSession } from "@/lib/session";
 
 const CORPORATE_PLAN_CODE = "lerta_mail_corporate_tr";
 
@@ -21,7 +23,6 @@ function sleep(ms: number): Promise<void> {
     window.setTimeout(resolve, ms);
   });
 }
-import { useConsoleSession } from "@/lib/session";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -36,14 +37,18 @@ export default function DashboardPage() {
   const [pilotError, setPilotError] = useState("");
   const [pilotLoading, setPilotLoading] = useState(false);
   const [planName, setPlanName] = useState<string | null>(null);
+  const [planCode, setPlanCode] = useState<string | null>(null);
   const [sendLimit, setSendLimit] = useState<number | null>(null);
   const [planMessage, setPlanMessage] = useState("");
   const [mailboxQuota, setMailboxQuota] = useState<string>("");
+  const [checkoutCanStart, setCheckoutCanStart] = useState(true);
+  const [checkoutBlockers, setCheckoutBlockers] = useState<string[]>([]);
 
   async function refreshSubscription(token: string): Promise<string | null> {
     try {
       const sub = await fetchMailSubscription(token);
       setPlanName(sub.subscription.plan?.displayName ?? sub.subscription.planCode);
+      setPlanCode(sub.subscription.planCode);
       setSendLimit(sub.subscription.sendRate);
       setMailboxQuota(
         `${sub.subscription.mailboxQuota.used}/${sub.subscription.mailboxQuota.limit} kutu`,
@@ -51,6 +56,7 @@ export default function DashboardPage() {
       return sub.subscription.planCode;
     } catch {
       setPlanName(null);
+      setPlanCode(null);
       return null;
     }
   }
@@ -67,9 +73,7 @@ export default function DashboardPage() {
           : null;
       const billing = params?.get("billing") ?? null;
       if (billing === "success") {
-        setPlanMessage(
-          "Ödeme alındı. Kurumsal plan etkinleştiriliyor…",
-        );
+        setPlanMessage("Ödeme alındı. Kurumsal plan etkinleştiriliyor…");
       } else if (billing === "cancel") {
         const reason = params?.get("reason");
         setPlanMessage(
@@ -90,13 +94,22 @@ export default function DashboardPage() {
         setFromAddress(null);
       }
 
+      try {
+        const billingStatus = await fetchMailBillingStatus(accessToken);
+        setCheckoutCanStart(billingStatus.status.checkout.canStart);
+        setCheckoutBlockers(billingStatus.status.checkout.blockers);
+      } catch {
+        setCheckoutCanStart(false);
+        setCheckoutBlockers(["Ödeme durumu alınamadı"]);
+      }
+
       await refreshSubscription(accessToken);
 
       if (billing === "success") {
         for (let attempt = 0; attempt < 6; attempt += 1) {
           await sleep(attempt === 0 ? 1500 : 2500);
-          const planCode = await refreshSubscription(accessToken);
-          if (planCode === CORPORATE_PLAN_CODE) {
+          const activePlan = await refreshSubscription(accessToken);
+          if (activePlan === CORPORATE_PLAN_CODE) {
             setPlanMessage("Kurumsal plan aktif.");
             break;
           }
@@ -165,6 +178,17 @@ export default function DashboardPage() {
     }
   }
 
+  const onboardingStep =
+    planCode === CORPORATE_PLAN_CODE && fromAddress
+      ? verified
+        ? 4
+        : 3
+      : planCode === CORPORATE_PLAN_CODE
+        ? 2
+        : fromAddress
+          ? 2
+          : 1;
+
   if (!accessToken) {
     return null;
   }
@@ -172,6 +196,25 @@ export default function DashboardPage() {
   return (
     <ConsoleShell operator={operator}>
       <h1 style={{ marginTop: 0 }}>Özet</h1>
+
+      <div className="card">
+        <h2>Kurulum — adım {onboardingStep}/4</h2>
+        <ol style={{ margin: 0, paddingLeft: 20, color: "var(--muted)" }}>
+          <li style={{ fontWeight: onboardingStep === 1 ? 600 : 400 }}>
+            Pilot kutu veya özel domain ile adres açın
+          </li>
+          <li style={{ fontWeight: onboardingStep === 2 ? 600 : 400 }}>
+            Kurumsal plan (ödeme veya deneme)
+          </li>
+          <li style={{ fontWeight: onboardingStep === 3 ? 600 : 400 }}>
+            DNS doğrulama (özel domain)
+          </li>
+          <li style={{ fontWeight: onboardingStep === 4 ? 600 : 400 }}>
+            Webmail ile ilk gönderim
+          </li>
+        </ol>
+      </div>
+
       <div className="card">
         <h2>Plan</h2>
         <p>
@@ -179,10 +222,22 @@ export default function DashboardPage() {
           {sendLimit ? ` · Gönderim: ${sendLimit}/saat` : ""}
           {mailboxQuota ? ` · ${mailboxQuota}` : ""}
         </p>
+        {checkoutBlockers.length > 0 && !checkoutCanStart ? (
+          <ul style={{ color: "var(--muted)", fontSize: 14, marginTop: 0 }}>
+            {checkoutBlockers.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+        ) : null}
         {planMessage ? (
           <p style={{ color: "var(--success)", fontWeight: 600 }}>{planMessage}</p>
         ) : null}
-        <button type="button" className="btn" onClick={() => void payCorporateCheckout()}>
+        <button
+          type="button"
+          className="btn"
+          disabled={!checkoutCanStart}
+          onClick={() => void payCorporateCheckout()}
+        >
           Öde ve Kurumsal’a geç
         </button>
         <button
@@ -260,15 +315,6 @@ export default function DashboardPage() {
           {pilotError ? <p className="auth-error">{pilotError}</p> : null}
         </div>
       ) : null}
-
-      <div className="card">
-        <h2>Sonraki adımlar</h2>
-        <ol>
-          <li>Pilot veya özel domain ile gönderen adresi tanımlayın</li>
-          <li>DNS kayıtlarını (MX, SPF, DKIM) doğrulayın</li>
-          <li>posta.lerta.com.tr üzerinden mail atın</li>
-        </ol>
-      </div>
     </ConsoleShell>
   );
 }

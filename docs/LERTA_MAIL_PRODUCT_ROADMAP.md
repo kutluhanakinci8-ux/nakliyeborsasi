@@ -30,12 +30,12 @@
 
 | # | İş | Takip / kabul kriteri |
 |---|-----|------------------------|
-| A1 | Stripe **test** checkout uçtan uca | Operatör paneli Stripe API OK; test kart → Kurumsal plan |
+| A1 | Stripe **test** checkout uçtan uca | Operatör paneli Stripe API OK; `smoke-mail-billing-stripe.sh`; test kart → Kurumsal plan — **kod hazır, VPS anahtar bekliyor** |
 | A2 | Stripe **canlı** + webhook prod | `invoice.paid` sonrası plan; hata alert |
 | A3 | iyzico sandbox → prod (TR ödeme) | Callback + plan aktivasyonu |
 | A4 | `www` cutover | `preflight-www-cutover` OK; `www` title = Lerta Mail |
-| A5 | Vitrin kurumsal kimlik | Logo, tipografi, SSS, KVKK, iletişim, SLA özeti |
-| A6 | Kayıt → onboarding akışı | Yeni kullanıcı 5 dk içinde ilk adres veya domain adımında |
+| A5 | Vitrin kurumsal kimlik | Logo, tipografi, SSS, KVKK, iletişim, SLA özeti — **KVKK + iletişim sayfaları başlandı** |
+| A6 | Kayıt → onboarding akışı | Dashboard 4 adımlı kurulum — **başlandı** |
 | A7 | Fiyatlandırma TRY + EUR tutarlılığı | Vitrin = API katalog = checkout tutarı |
 
 **Bağımlılık:** A4 için U88’nin `u88.lerta.com.tr` (veya harici) taşınması.

@@ -14,11 +14,16 @@ export const LERTA_MAIL_CORPORATE_PLAN = "lerta_mail_corporate_tr";
 
 export type MailBillingStatus = {
   provider: string;
+  checkout: {
+    canStart: boolean;
+    blockers: string[];
+  };
   stripe: {
     configured: boolean;
     testMode: boolean;
     webhookConfigured: boolean;
     corporatePriceConfigured: boolean;
+    corporatePriceValid: boolean | null;
     apiReachable: boolean | null;
     apiError: string | null;
   };
@@ -79,6 +84,25 @@ export class MailBillingService {
     }
 
     const stripe = new Stripe(stripeKey);
+    try {
+      const price = await stripe.prices.retrieve(priceId);
+      if (!price.active) {
+        throw new BadRequestException(
+          "Stripe price pasif veya geçersiz. Dashboard'da aktif bir price seçin.",
+        );
+      }
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      this.logger.warn(
+        `Stripe price doğrulama: ${error instanceof Error ? error.message : error}`,
+      );
+      throw new BadRequestException(
+        "STRIPE_MAIL_CORPORATE_PRICE_ID Stripe'da bulunamadı.",
+      );
+    }
+
     const baseConsole =
       this.configService.get<string>("MAIL_CONSOLE_PUBLIC_URL")?.trim() ||
       "https://yonetim.lerta.com.tr";
@@ -94,6 +118,7 @@ export class MailBillingService {
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: successUrl,
       cancel_url: cancelUrl,
+      customer_email: user.emailAddress,
       client_reference_id: user.companyId,
       metadata: {
         organizationId: user.companyId,
@@ -144,13 +169,17 @@ export class MailBillingService {
       event.type === "checkout.session.completed" ||
       event.type === "invoice.paid"
     ) {
-      const organizationId = this.extractOrganizationId(event);
+      const organizationId = await this.extractOrganizationId(stripe, event);
       const planCode =
         this.extractPlanCode(event) ?? LERTA_MAIL_CORPORATE_PLAN;
       if (organizationId) {
         await this.mailSaasSubscriptionService.activateMailPlanForBilling(
           organizationId,
           planCode,
+        );
+      } else {
+        this.logger.warn(
+          `Stripe ${event.type}: organizationId bulunamadı, plan atanmadı.`,
         );
       }
     }
@@ -183,26 +212,61 @@ export class MailBillingService {
 
     let apiReachable: boolean | null = null;
     let apiError: string | null = null;
+    let corporatePriceValid: boolean | null = null;
+    const blockers: string[] = [];
+
+    if (provider === "stripe") {
+      if (!stripeKey) {
+        blockers.push("STRIPE_SECRET_KEY tanımlı değil");
+      }
+      if (!priceId) {
+        blockers.push("STRIPE_MAIL_CORPORATE_PRICE_ID tanımlı değil");
+      }
+      if (!webhookSecret) {
+        blockers.push(
+          "STRIPE_WEBHOOK_SECRET eksik (ödeme sonrası plan otomatik açılmaz)",
+        );
+      }
+    }
+
     if (stripeKey) {
       try {
         const stripe = new Stripe(stripeKey);
         await stripe.balance.retrieve();
         apiReachable = true;
+        if (priceId) {
+          const price = await stripe.prices.retrieve(priceId);
+          corporatePriceValid = price.active;
+          if (!price.active) {
+            blockers.push("Stripe price pasif");
+          }
+        }
       } catch (error) {
         apiReachable = false;
         apiError =
           error instanceof Error ? error.message : "Stripe API hatası";
+        blockers.push(`Stripe API: ${apiError}`);
         this.logger.warn(`Stripe bağlantı testi: ${apiError}`);
       }
     }
 
+    const canStart =
+      provider === "iyzico"
+        ? this.mailIyzicoBillingService.isConfigured()
+        : Boolean(stripeKey && priceId && apiReachable && corporatePriceValid);
+
     return {
       provider,
+      checkout: {
+        canStart,
+        blockers,
+      },
       stripe: {
         configured: Boolean(stripeKey),
         testMode: Boolean(stripeKey?.startsWith("sk_test_")),
         webhookConfigured: Boolean(webhookSecret),
         corporatePriceConfigured: Boolean(priceId),
+        corporatePriceValid,
         apiReachable,
         apiError,
       },
@@ -239,7 +303,10 @@ export class MailBillingService {
     return `${baseConsole}/dashboard?billing=cancel`;
   }
 
-  private extractOrganizationId(event: Stripe.Event): string | null {
+  private async extractOrganizationId(
+    stripe: Stripe,
+    event: Stripe.Event,
+  ): Promise<string | null> {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
       return (
@@ -250,7 +317,27 @@ export class MailBillingService {
     }
     if (event.type === "invoice.paid") {
       const invoice = event.data.object as Stripe.Invoice;
-      return invoice.metadata?.organizationId ?? null;
+      if (invoice.metadata?.organizationId) {
+        return invoice.metadata.organizationId;
+      }
+      const subscriptionRef = invoice.subscription;
+      const subscriptionId =
+        typeof subscriptionRef === "string"
+          ? subscriptionRef
+          : subscriptionRef?.id;
+      if (!subscriptionId) {
+        return null;
+      }
+      try {
+        const subscription =
+          await stripe.subscriptions.retrieve(subscriptionId);
+        return subscription.metadata?.organizationId ?? null;
+      } catch (error) {
+        this.logger.warn(
+          `Stripe subscription metadata: ${error instanceof Error ? error.message : error}`,
+        );
+        return null;
+      }
     }
     return null;
   }
