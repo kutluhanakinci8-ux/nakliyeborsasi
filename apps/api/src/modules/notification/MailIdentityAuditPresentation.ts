@@ -31,6 +31,8 @@ const LABELS: Record<string, string> = {
   [MailIdentityAuditAction.IntegrationApiKeyRevoked]: "API anahtarı iptal edildi",
   [MailIdentityAuditAction.IntegrationWebhookCreated]: "Webhook kaydı",
   [MailIdentityAuditAction.IntegrationWebhookUpdated]: "Webhook güncellendi",
+  [MailIdentityAuditAction.MailAliasCreated]: "Paylaşımlı alias oluşturuldu",
+  [MailIdentityAuditAction.MailAliasRemoved]: "Alias kaldırıldı",
   [MailIdentityAuditAction.SecurityRequireTotpUpdated]:
     "2FA zorunluluğu güncellendi",
   [MailIdentityAuditAction.SecurityTotpEnabled]: "TOTP etkinleştirildi",

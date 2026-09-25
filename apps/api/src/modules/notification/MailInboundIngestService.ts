@@ -28,6 +28,7 @@ import { sanitizeInboundHtml } from "./MailHtmlSanitize";
 import { MailImapMaildirService } from "./MailImapMaildirService";
 import { MailOrganizationStorageService } from "./MailOrganizationStorageService";
 import { MailOrganizationWebhookDispatcherService } from "./MailOrganizationWebhookDispatcherService";
+import { MailAddressAliasService } from "./MailAddressAliasService";
 import type { MailInboundAttachmentMeta } from "../../infrastructure/database/entities/MailInboundMessageEntity";
 
 export type InboundIngestInput = {
@@ -58,6 +59,7 @@ export class MailInboundIngestService {
     private readonly mailImapMaildirService: MailImapMaildirService,
     private readonly mailOrganizationStorageService: MailOrganizationStorageService,
     private readonly mailOrganizationWebhookDispatcherService: MailOrganizationWebhookDispatcherService,
+    private readonly mailAddressAliasService: MailAddressAliasService,
   ) {}
 
   public async ingest(input: InboundIngestInput): Promise<MailInboundMessageEntity> {
@@ -97,19 +99,58 @@ export class MailInboundIngestService {
       }
     }
 
-    const mailbox = await this.resolveMailbox(recipient);
+    const aliasMailboxes =
+      await this.mailAddressAliasService.resolveMailboxesForRecipient(
+        recipient,
+      );
+    const mailboxes =
+      aliasMailboxes ?? [await this.resolveMailbox(recipient)];
+    let first: MailInboundMessageEntity | null = null;
+    for (const mailbox of mailboxes) {
+      const row = await this.storeInboundForMailbox({
+        mailbox,
+        recipient,
+        fromAddress,
+        subject,
+        snippet,
+        bodyText,
+        bodyHtml,
+        rawMime,
+        rspamdScore: input.rspamdScore,
+        rspamdAction: input.rspamdAction,
+      });
+      if (!first) {
+        first = row;
+      }
+    }
+    return first!;
+  }
+
+  private async storeInboundForMailbox(params: {
+    mailbox: MailMailboxEntity;
+    recipient: string;
+    fromAddress: string;
+    subject: string;
+    snippet: string | null;
+    bodyText: string | null;
+    bodyHtml: string | null;
+    rawMime: string | null;
+    rspamdScore?: number;
+    rspamdAction?: string;
+  }): Promise<MailInboundMessageEntity> {
     const messageId = randomUUID();
     let rawMimePath: string | null = null;
+    const rawMime = params.rawMime;
     if (rawMime) {
       rawMimePath = this.persistRawMime(messageId, rawMime);
     }
     const verdict = await this.mailInboundSpamService.evaluate({
-      fromAddress,
-      subject,
-      bodyText,
-      organizationId: mailbox.organizationId,
-      rspamdScore: input.rspamdScore,
-      rspamdAction: input.rspamdAction,
+      fromAddress: params.fromAddress,
+      subject: params.subject,
+      bodyText: params.bodyText,
+      organizationId: params.mailbox.organizationId,
+      rspamdScore: params.rspamdScore,
+      rspamdAction: params.rspamdAction,
     });
     const internetMessageId = rawMime ? parseInternetMessageId(rawMime) : null;
     const inReplyTo = rawMime ? parseInReplyTo(rawMime) : null;
@@ -122,35 +163,35 @@ export class MailInboundIngestService {
         : null;
 
     const inboundBytes =
-      (bodyText?.length ?? 0) +
-      (bodyHtml?.length ?? 0) +
+      (params.bodyText?.length ?? 0) +
+      (params.bodyHtml?.length ?? 0) +
       (rawMime?.length ?? 0) +
       (attachments?.reduce((sum, file) => sum + file.sizeBytes, 0) ?? 0);
     await this.mailOrganizationStorageService.assertCanStore(
-      mailbox.organizationId,
+      params.mailbox.organizationId,
       inboundBytes,
     );
 
     let maildirFilePath: string | null = null;
     if (rawMime) {
       maildirFilePath = this.mailImapMaildirService.deliverToMaildir({
-        recipient,
+        recipient: params.mailbox.emailAddress,
         rawMime,
-        messageId: messageId,
+        messageId,
       });
     }
     const row = await this.inboundRepository.save(
       this.inboundRepository.create({
         id: messageId,
-        mailboxId: mailbox.id,
-        fromAddress,
-        subject,
-        snippet,
-        bodyText,
-        bodyHtml,
+        mailboxId: params.mailbox.id,
+        fromAddress: params.fromAddress,
+        subject: params.subject,
+        snippet: params.snippet,
+        bodyText: params.bodyText,
+        bodyHtml: params.bodyHtml,
         rawMimePath,
-        rspamdScore: input.rspamdScore ?? null,
-        rspamdAction: input.rspamdAction ?? null,
+        rspamdScore: params.rspamdScore ?? null,
+        rspamdAction: params.rspamdAction ?? null,
         spamStatus: verdict.spamStatus,
         spamReason: verdict.spamReason,
         internetMessageId,
@@ -162,15 +203,16 @@ export class MailInboundIngestService {
       }),
     );
     this.logger.log(
-      `Inbound stored ${row.id} → ${recipient} (mailbox ${mailbox.id})`,
+      `Inbound stored ${row.id} → ${params.recipient} (mailbox ${params.mailbox.id})`,
     );
     this.mailOrganizationWebhookDispatcherService.dispatch(
-      mailbox.organizationId,
+      params.mailbox.organizationId,
       "inbound.received",
       {
         messageId: row.id,
-        mailboxId: mailbox.id,
-        recipient,
+        mailboxId: params.mailbox.id,
+        recipient: params.recipient,
+        deliveredTo: params.mailbox.emailAddress,
         fromAddress: row.fromAddress,
         subject: row.subject,
         receivedAt: row.receivedAt.toISOString(),

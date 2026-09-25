@@ -17,7 +17,7 @@
 | Stripe / iyzico callback kodu | Kod hazır; **Stripe test anahtarları VPS’te sizden** |
 | www → mail vitrin | **Bekliyor** (U88 taşınması) |
 | Thread / konuşma görünümü | Yok |
-| Çoklu kullanıcı / davet / roller (mail_admin) | **B3 — ekip daveti + roller** |
+| Çoklu kullanıcı / davet / roller (mail_admin) | **uygulandı (B3)** |
 | Faturalama yaşam döngüsü (iptal, fatura e-postası) | Yok |
 | KVKK export / silme self-servis | Konsol /privacy + API (E3) |
 | Kurumsal kimlik (logo, imza, hukuki sayfalar) | Kısmi |
@@ -51,7 +51,7 @@
 | B1 | Domain sihirbazı UX (varsayılan onboarding) | Kayıt → `/domain`; kurumsal dashboard domain-first — **uygulandı** |
 | B2 | Çoklu posta kutusu (plan kotası) | `/mailboxes` listesi + kota çubuğu — **uygulandı** |
 | B3 | Kullanıcı daveti + roller | `/team` + davet e-postası; `MAIL_ADMIN`, `BILLING_ADMIN`, `VIEWER` — **uygulandı** |
-| B4 | Alias / paylaşımlı adres (isteğe bağlı) | `destek@` → iki kullanıcı |
+| B4 | Alias / paylaşımlı adres (isteğe bağlı) | `company/mail-identity/aliases`, konsol mailboxes — **uygulandı** |
 | B5 | Gönderim kotası & upgrade | Dashboard saatlik kullanım çubuğu + `send-rate` API — **uygulandı** |
 | B6 | Abonelik yaşam döngüsü | Stripe webhook grace, iptal/yenileme, konsol — **uygulandı** |
 | B7 | Operatör: tenant listesi, askıya alma, abuse | `/operator` tenant tablosu + gönderim engeli — **uygulandı** |

@@ -52,6 +52,9 @@ import {
   CreateMailWebhookRequestDto,
   UpdateMailWebhookRequestDto,
 } from "./MailIntegrationRequestDto";
+import { MailAddressAliasService } from "./MailAddressAliasService";
+import { CreateMailAliasRequestDto } from "./MailAliasRequestDto";
+import { MailInboundRoutingService } from "./MailInboundRoutingService";
 import {
   assertMailConsoleAccess,
   canManageMailDomain,
@@ -82,7 +85,15 @@ export class CompanyMailIdentityController {
     private readonly mailPilotOnboardingService: MailPilotOnboardingService,
     private readonly mailOrganizationBrandingService: MailOrganizationBrandingService,
     private readonly mailOrganizationIntegrationService: MailOrganizationIntegrationService,
+    private readonly mailAddressAliasService: MailAddressAliasService,
+    private readonly mailInboundRoutingService: MailInboundRoutingService,
   ) {}
+
+  private refreshInboundRouting(): void {
+    void this.mailInboundRoutingService.writePostfixVirtualMap().catch(() => {
+      /* best-effort */
+    });
+  }
 
   @Post("pilot/quick-start")
   public async pilotQuickStart(
@@ -613,6 +624,66 @@ export class CompanyMailIdentityController {
           email,
         },
         "/company/mail-identity/suppressions",
+      );
+    }
+    return { ok: removed };
+  }
+
+  @Get("aliases")
+  public async listAliases(@AuthenticatedUserParam() user: AuthenticatedUserContext) {
+    assertMailConsoleAccess(user);
+    const aliases = await this.mailAddressAliasService.listAliases(
+      user.companyId,
+    );
+    return { message: "OK", aliases };
+  }
+
+  @Post("aliases")
+  public async createAlias(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: CreateMailAliasRequestDto,
+  ) {
+    this.assertMailIdentityManager(user);
+    const alias = await this.mailAddressAliasService.createAlias(
+      user.companyId,
+      {
+        mailDomainId: body.mailDomainId,
+        localPart: body.localPart,
+        mailboxIds: body.mailboxIds,
+        label: body.label,
+      },
+    );
+    this.refreshInboundRouting();
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.MailAliasCreated,
+      {
+        organizationId: user.companyId,
+        aliasEmail: alias?.aliasEmail,
+        mailboxIds: body.mailboxIds,
+      },
+      "/company/mail-identity/aliases",
+    );
+    return { message: "OK", alias };
+  }
+
+  @Delete("aliases/:id")
+  public async deleteAlias(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("id") id: string,
+  ) {
+    this.assertMailIdentityManager(user);
+    const removed = await this.mailAddressAliasService.deleteAlias(
+      user.companyId,
+      id,
+    );
+    if (removed) {
+      this.refreshInboundRouting();
+      await this.mailIdentityAuditService.recordFromUser(
+        user,
+        MailIdentityAuditAction.MailAliasRemoved,
+        { organizationId: user.companyId, aliasId: id },
+        "/company/mail-identity/aliases",
       );
     }
     return { ok: removed };

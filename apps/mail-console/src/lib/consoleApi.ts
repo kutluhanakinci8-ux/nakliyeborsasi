@@ -211,6 +211,7 @@ export async function fetchMailSenders(accessToken: string) {
   return apiFetch<{
     senders: {
       id: string;
+      mailboxId: string | null;
       localPart: string;
       displayName: string | null;
       isDefault: boolean;
@@ -496,6 +497,46 @@ export type MailIntegrationSnapshot = {
     signingSecretPrefix: string;
   }[];
 };
+
+export type MailAliasRow = {
+  id: string;
+  aliasEmail: string;
+  localPart: string;
+  label: string | null;
+  targets: { mailboxId: string; emailAddress: string }[];
+  createdAt: string;
+};
+
+export async function fetchMailAliases(accessToken: string) {
+  return apiFetch<{ aliases: MailAliasRow[] }>(
+    accessToken,
+    "company/mail-identity/aliases",
+  );
+}
+
+export async function createMailAlias(
+  accessToken: string,
+  body: {
+    mailDomainId: string;
+    localPart: string;
+    mailboxIds: string[];
+    label?: string;
+  },
+) {
+  return apiFetch<{ alias: MailAliasRow }>(
+    accessToken,
+    "company/mail-identity/aliases",
+    { method: "POST", body: JSON.stringify(body) },
+  );
+}
+
+export async function deleteMailAlias(accessToken: string, aliasId: string) {
+  return apiFetch<{ ok: boolean }>(
+    accessToken,
+    `company/mail-identity/aliases/${aliasId}`,
+    { method: "DELETE" },
+  );
+}
 
 export async function fetchMailIntegration(accessToken: string) {
   return apiFetch<{ integration: MailIntegrationSnapshot }>(

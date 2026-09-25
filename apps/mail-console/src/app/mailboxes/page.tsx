@@ -8,6 +8,9 @@ import {
   fetchAuthSession,
   fetchMailSendRate,
   fetchMailSenders,
+  fetchMailAliases,
+  createMailAlias,
+  deleteMailAlias,
   isPlatformOperator,
   provisionCustomMailbox,
   provisionTenantMailbox,
@@ -17,6 +20,7 @@ import { useConsoleSession } from "@/lib/session";
 
 type SenderRow = {
   id: string;
+  mailboxId: string | null;
   fromAddress: string;
   displayName: string | null;
   isDefault: boolean;
@@ -39,6 +43,13 @@ export default function MailboxesPage() {
   const [canManage, setCanManage] = useState(true);
   const [sendUsed, setSendUsed] = useState(0);
   const [sendLimit, setSendLimit] = useState(80);
+  const [domainId, setDomainId] = useState<string | null>(null);
+  const [aliases, setAliases] = useState<
+    Awaited<ReturnType<typeof fetchMailAliases>>["aliases"]
+  >([]);
+  const [aliasLocal, setAliasLocal] = useState("destek");
+  const [aliasLabel, setAliasLabel] = useState("");
+  const [aliasMailboxIds, setAliasMailboxIds] = useState<string[]>([]);
 
   const reload = useCallback(async () => {
     if (!accessToken) {
@@ -60,9 +71,17 @@ export default function MailboxesPage() {
         bundle.mailDomain?.verificationStatus === "verified";
       setCustomVerified(verified);
       setChannel(verified ? "custom" : "tenant");
+      setDomainId(bundle.mailDomain?.id ?? null);
     } catch {
       setCustomVerified(false);
       setChannel("tenant");
+      setDomainId(null);
+    }
+    try {
+      const aliasData = await fetchMailAliases(accessToken);
+      setAliases(aliasData.aliases);
+    } catch {
+      setAliases([]);
     }
   }, [accessToken]);
 
@@ -112,6 +131,41 @@ export default function MailboxesPage() {
       setError(
         e instanceof Error ? e.message : "Kutu eklenemedi. Kota veya DNS kontrol edin.",
       );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function toggleAliasMailbox(mailboxId: string) {
+    setAliasMailboxIds((current) =>
+      current.includes(mailboxId)
+        ? current.filter((id) => id !== mailboxId)
+        : [...current, mailboxId],
+    );
+  }
+
+  async function onCreateAlias(event: FormEvent) {
+    event.preventDefault();
+    if (!accessToken || !domainId || !customVerified) {
+      return;
+    }
+    if (aliasMailboxIds.length === 0) {
+      setError("En az bir posta kutusu seçin.");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      await createMailAlias(accessToken, {
+        mailDomainId: domainId,
+        localPart: aliasLocal.trim(),
+        mailboxIds: aliasMailboxIds,
+        label: aliasLabel.trim() || undefined,
+      });
+      setMessage("Alias oluşturuldu. Postfix senkronu birkaç saniye sürebilir.");
+      await reload();
+    } catch {
+      setError("Alias eklenemedi (adres çakışması veya kurumsal plan gerekli).");
     } finally {
       setLoading(false);
     }
@@ -268,6 +322,76 @@ export default function MailboxesPage() {
           Salt okunur rol — kutu ekleyemez veya varsayılanı değiştiremezsiniz.
         </p>
       )}
+
+      {canManage && customVerified && domainId ? (
+        <div className="card" style={{ marginTop: 16 }}>
+          <h2 style={{ marginTop: 0 }}>Paylaşımlı alias (B4)</h2>
+          <p style={{ color: "var(--muted)", fontSize: 14 }}>
+            Örn. <code>destek@</code> → birden fazla kutuya gelen posta kopyası.
+          </p>
+          {aliases.length > 0 ? (
+            <ul style={{ paddingLeft: 20, fontSize: 14 }}>
+              {aliases.map((alias) => (
+                <li key={alias.id} style={{ marginBottom: 8 }}>
+                  <strong>{alias.aliasEmail}</strong>
+                  {" → "}
+                  {alias.targets.map((t) => t.emailAddress).join(", ")}
+                  <button
+                    type="button"
+                    className="btn secondary"
+                    style={{ marginLeft: 8, padding: "2px 8px", fontSize: 12 }}
+                    disabled={loading}
+                    onClick={() =>
+                      void deleteMailAlias(accessToken!, alias.id).then(reload)
+                    }
+                  >
+                    Sil
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p style={{ color: "var(--muted)", fontSize: 14 }}>Henüz alias yok.</p>
+          )}
+          <form onSubmit={onCreateAlias}>
+            <input
+              className="input"
+              placeholder="destek"
+              value={aliasLocal}
+              onChange={(e) => setAliasLocal(e.target.value)}
+              required
+            />
+            <input
+              className="input"
+              placeholder="Etiket (isteğe bağlı)"
+              value={aliasLabel}
+              onChange={(e) => setAliasLabel(e.target.value)}
+            />
+            <p style={{ fontSize: 13, margin: "8px 0" }}>Hedef kutular:</p>
+            {senders
+              .filter((row) => row.mailboxId)
+              .map((row) => (
+                <label
+                  key={row.id}
+                  style={{ display: "block", fontSize: 14, marginBottom: 4 }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={aliasMailboxIds.includes(row.mailboxId!)}
+                    onChange={() => toggleAliasMailbox(row.mailboxId!)}
+                  />
+                  {row.fromAddress}
+                </label>
+              ))}
+            <button className="btn" type="submit" disabled={loading}>
+              Alias ekle
+            </button>
+          </form>
+          <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 8 }}>
+            <code>docs/MAIL_ADDRESS_ALIASES.md</code>
+          </p>
+        </div>
+      ) : null}
     </ConsoleShell>
   );
 }

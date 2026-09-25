@@ -45,6 +45,8 @@ export const MailIdentityAuditAction = {
   IntegrationApiKeyRevoked: "MAIL_INTEGRATION_API_KEY_REVOKED",
   IntegrationWebhookCreated: "MAIL_INTEGRATION_WEBHOOK_CREATED",
   IntegrationWebhookUpdated: "MAIL_INTEGRATION_WEBHOOK_UPDATED",
+  MailAliasCreated: "MAIL_ALIAS_CREATED",
+  MailAliasRemoved: "MAIL_ALIAS_REMOVED",
 } as const;
 
 export type MailTenantAuditLogDto = {

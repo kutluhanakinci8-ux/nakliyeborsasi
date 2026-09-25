@@ -7,8 +7,9 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { In, Repository } from "typeorm";
 import { MailSenderIdentityEntity } from "../../infrastructure/database/entities/MailSenderIdentityEntity";
+import { MailMailboxEntity } from "../../infrastructure/database/entities/MailMailboxEntity";
 import {
   AuthorizationException,
   CompanyRoleCode,
@@ -26,6 +27,8 @@ export class MailSaasSubscriptionService {
     private readonly companySubscriptionPersistenceService: CompanySubscriptionPersistenceService,
     @InjectRepository(MailSenderIdentityEntity)
     private readonly senderRepository: Repository<MailSenderIdentityEntity>,
+    @InjectRepository(MailMailboxEntity)
+    private readonly mailboxRepository: Repository<MailMailboxEntity>,
     @Inject(forwardRef(() => MailSubscriptionLifecycleService))
     private readonly mailSubscriptionLifecycleService: MailSubscriptionLifecycleService,
   ) {}
@@ -75,17 +78,37 @@ export class MailSaasSubscriptionService {
       relations: { mailDomain: true },
       order: { isDefault: "DESC", createdAt: "ASC" },
     });
-    return senders.map((sender) => ({
-      id: sender.id,
-      localPart: sender.localPart,
-      displayName: sender.displayName,
-      isDefault: sender.isDefault,
-      domain: sender.mailDomain?.domain ?? "",
-      fromAddress: sender.mailDomain
+    const addresses = senders
+      .map((sender) =>
+        sender.mailDomain
+          ? `${sender.localPart}@${sender.mailDomain.domain}`.toLowerCase()
+          : null,
+      )
+      .filter((value): value is string => Boolean(value));
+    const mailboxes = addresses.length
+      ? await this.mailboxRepository.find({
+          where: { organizationId, emailAddress: In(addresses) },
+        })
+      : [];
+    const mailboxByEmail = new Map(
+      mailboxes.map((row) => [row.emailAddress.toLowerCase(), row.id]),
+    );
+    return senders.map((sender) => {
+      const fromAddress = sender.mailDomain
         ? `${sender.localPart}@${sender.mailDomain.domain}`
-        : `${sender.localPart}@`,
-      createdAt: sender.createdAt.toISOString(),
-    }));
+        : `${sender.localPart}@`;
+      return {
+        id: sender.id,
+        mailboxId:
+          mailboxByEmail.get(fromAddress.toLowerCase()) ?? null,
+        localPart: sender.localPart,
+        displayName: sender.displayName,
+        isDefault: sender.isDefault,
+        domain: sender.mailDomain?.domain ?? "",
+        fromAddress,
+        createdAt: sender.createdAt.toISOString(),
+      };
+    });
   }
 
   public async setDefaultSender(
