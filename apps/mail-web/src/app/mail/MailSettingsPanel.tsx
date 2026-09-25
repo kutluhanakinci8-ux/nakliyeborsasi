@@ -11,7 +11,11 @@ import {
 } from "@/lib/mailApi";
 import { MailComposePresetsPanel } from "./MailComposePresetsPanel";
 import { MailRulesPanel } from "./MailRulesPanel";
-import { fetchMailPushConfig } from "@/lib/mailApi";
+import {
+  fetchInboxPreferences,
+  fetchMailPushConfig,
+  updateInboxPreferences,
+} from "@/lib/mailApi";
 import {
   subscribeMailWebPush,
   unsubscribeMailWebPush,
@@ -34,6 +38,7 @@ export function MailSettingsPanel({ accessToken, onClose }: Props) {
   const [pushStatus, setPushStatus] = useState<string>("");
   const [pushConfigured, setPushConfigured] = useState(false);
   const [notifySound, setNotifySound] = useState(false);
+  const [dailyDigest, setDailyDigest] = useState(true);
   const [totpEnabled, setTotpEnabled] = useState(false);
   const [totpSecret, setTotpSecret] = useState<string | null>(null);
   const [totpCode, setTotpCode] = useState("");
@@ -54,6 +59,8 @@ export function MailSettingsPanel({ accessToken, onClose }: Props) {
         setTotpEnabled(totp.status.enabled);
         const push = await fetchMailPushConfig(accessToken);
         setPushConfigured(push.config.enabled);
+        const prefs = await fetchInboxPreferences(accessToken);
+        setDailyDigest(prefs.preferences.dailyDigestEnabled);
       } catch {
         setError("IMAP ayarları yüklenemedi.");
       }
@@ -163,6 +170,23 @@ export function MailSettingsPanel({ accessToken, onClose }: Props) {
                 }}
               />
               Yeni posta bildiriminde ses (sekme açıkken)
+            </label>
+            <label style={{ display: "block", marginTop: "0.75rem" }}>
+              <input
+                type="checkbox"
+                checked={dailyDigest}
+                onChange={(e) => {
+                  const on = e.target.checked;
+                  setDailyDigest(on);
+                  void updateInboxPreferences(accessToken, {
+                    dailyDigestEnabled: on,
+                  }).catch(() => {
+                    setPushStatus("Özet ayarı kaydedilemedi.");
+                    setDailyDigest(!on);
+                  });
+                }}
+              />
+              Günlük özet e-postası (08:00, okunmamış varsa)
             </label>
             <div className="compose-actions">
               <button type="button" onClick={onClose}>Kapat</button>

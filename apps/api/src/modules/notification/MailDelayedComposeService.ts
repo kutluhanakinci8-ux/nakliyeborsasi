@@ -8,6 +8,8 @@ import { LessThanOrEqual, Repository } from "typeorm";
 import {
   MailDelayedComposeEntity,
   MailDelayedComposePayload,
+  MailDelayedSendPayload,
+  MailDelayedStoredPayload,
 } from "../../infrastructure/database/entities/MailDelayedComposeEntity";
 import { MailMailboxComposeService } from "./MailMailboxComposeService";
 
@@ -24,7 +26,7 @@ export class MailDelayedComposeService {
 
   public async schedule(
     organizationId: string,
-    payload: MailDelayedComposePayload,
+    payload: MailDelayedSendPayload,
     delaySeconds?: number,
   ): Promise<{ id: string; sendAt: string }> {
     const seconds = this.normalizeDelay(delaySeconds);
@@ -72,10 +74,10 @@ export class MailDelayedComposeService {
         continue;
       }
       try {
-        const result = await this.mailMailboxComposeService.compose({
-          organizationId: stillPending.organizationId,
-          ...stillPending.payload,
-        });
+        const result = await this.dispatchSend(
+          stillPending.organizationId,
+          stillPending.payload,
+        );
         const updated = await this.delayedRepository.update(
           { id: stillPending.id, status: "pending" },
           { status: "sent", sentId: result.sentId },
@@ -94,6 +96,60 @@ export class MailDelayedComposeService {
       }
     }
     return { processed };
+  }
+
+  private async dispatchSend(
+    organizationId: string,
+    payload: MailDelayedStoredPayload,
+  ): Promise<{ sentId: string; smtpMessageId: string | null }> {
+    if (this.isLegacyCompose(payload)) {
+      return this.mailMailboxComposeService.compose({
+        organizationId,
+        ...payload,
+      });
+    }
+    const send = payload as MailDelayedSendPayload;
+    if (send.kind === "reply") {
+      return this.mailMailboxComposeService.reply({
+        organizationId,
+        inboundMessageId: send.inboundMessageId,
+        text: send.text,
+        bcc: send.bcc,
+        attachments: send.attachments,
+      });
+    }
+    if (send.kind === "forward") {
+      return this.mailMailboxComposeService.forward({
+        organizationId,
+        inboundMessageId: send.inboundMessageId,
+        to: send.to,
+        text: send.text,
+        includeOriginal: send.includeOriginal,
+        attachments: send.attachments,
+      });
+    }
+    if (send.kind === "compose") {
+      return this.mailMailboxComposeService.compose({
+        organizationId,
+        to: send.to,
+        cc: send.cc,
+        bcc: send.bcc,
+        subject: send.subject,
+        text: send.text,
+        html: send.html,
+        attachments: send.attachments,
+      });
+    }
+    throw new BadRequestException("Geçersiz bekleyen gönderim türü.");
+  }
+
+  private isLegacyCompose(
+    payload: MailDelayedStoredPayload,
+  ): payload is MailDelayedComposePayload {
+    if ("kind" in payload && payload.kind !== undefined) {
+      return false;
+    }
+    return "to" in payload && "subject" in payload;
   }
 
   private normalizeDelay(delaySeconds?: number): number {

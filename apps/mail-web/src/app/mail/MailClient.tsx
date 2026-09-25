@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { syncMailUnreadBadge } from "@/lib/mailUnreadBadge";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   cancelDelayedCompose,
@@ -253,6 +254,26 @@ export function MailClient() {
     return () => window.clearInterval(id);
   }, [pendingUndo, refresh]);
 
+  useEffect(() => {
+    syncMailUnreadBadge(summary?.unreadCount ?? 0);
+  }, [summary?.unreadCount]);
+
+  function applyDelayedSend(result: {
+    delayed?: boolean;
+    pendingId?: string;
+    sendAt?: string;
+  }): boolean {
+    if (result.delayed && result.pendingId && result.sendAt) {
+      setPendingUndo({
+        pendingId: result.pendingId,
+        sendAt: new Date(result.sendAt).getTime(),
+      });
+      setToast("");
+      return true;
+    }
+    return false;
+  }
+
   async function cancelPendingUndo() {
     if (!accessToken || !pendingUndo) {
       return;
@@ -388,14 +409,18 @@ export function MailClient() {
         replyFiles.length > 0
           ? await Promise.all(replyFiles.map((f) => fileToAttachment(f)))
           : undefined;
-      await replyMail(accessToken, selectedId, {
+      const replyResult = await replyMail(accessToken, selectedId, {
         text: replyText.trim(),
         bcc: replyBcc.trim() || undefined,
         attachments,
+        delaySeconds: 5,
       });
-      setToast("Yanıt gönderildi.");
       setReplyText("");
       setReplyFiles([]);
+      if (applyDelayedSend(replyResult)) {
+        return;
+      }
+      setToast("Yanıt gönderildi.");
     } catch (error) {
       setToast(
         error instanceof Error ? error.message : "Yanıt gönderilemedi.",
@@ -494,12 +519,20 @@ export function MailClient() {
             : [];
         const attachments = [...composeStoredAttachments, ...fileAttachments];
         if (forwardMessageId) {
-          await forwardMail(accessToken, forwardMessageId, {
-            to: composeTo.trim(),
-            text: composeText.trim() || undefined,
-            includeOriginal: true,
-            attachments: attachments.length > 0 ? attachments : undefined,
-          });
+          const forwardResult = await forwardMail(
+            accessToken,
+            forwardMessageId,
+            {
+              to: composeTo.trim(),
+              text: composeText.trim() || undefined,
+              includeOriginal: true,
+              attachments: attachments.length > 0 ? attachments : undefined,
+              delaySeconds: 5,
+            },
+          );
+          if (applyDelayedSend(forwardResult)) {
+            scheduledUndo = true;
+          }
         } else {
           const result = await composeMail(accessToken, {
             to: composeTo.trim(),
@@ -511,13 +544,8 @@ export function MailClient() {
             attachments: attachments.length > 0 ? attachments : undefined,
             delaySeconds: 5,
           });
-          if ("delayed" in result && result.delayed) {
+          if (applyDelayedSend(result)) {
             scheduledUndo = true;
-            setPendingUndo({
-              pendingId: result.pendingId,
-              sendAt: new Date(result.sendAt).getTime(),
-            });
-            setToast("");
           }
         }
       }

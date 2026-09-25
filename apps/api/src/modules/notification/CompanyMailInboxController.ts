@@ -59,6 +59,8 @@ import {
 } from "./MailCustomFolderRequestDto";
 import { MailInboxRuleService } from "./MailInboxRuleService";
 import { MailDelayedComposeService } from "./MailDelayedComposeService";
+import { MailInboxPreferencesService } from "./MailInboxPreferencesService";
+import { UpdateMailInboxPreferencesRequestDto } from "./MailInboxPreferencesRequestDto";
 import {
   CreateMailInboxRuleRequestDto,
   ReorderMailInboxRulesRequestDto,
@@ -80,7 +82,31 @@ export class CompanyMailInboxController {
     private readonly mailCustomFolderService: MailCustomFolderService,
     private readonly mailInboxRuleService: MailInboxRuleService,
     private readonly mailDelayedComposeService: MailDelayedComposeService,
+    private readonly mailInboxPreferencesService: MailInboxPreferencesService,
   ) {}
+
+  @Get("preferences")
+  public async getInboxPreferences(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    const preferences = await this.mailInboxPreferencesService.get(
+      user.companyId,
+    );
+    return { preferences };
+  }
+
+  @Patch("preferences")
+  public async updateInboxPreferences(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: UpdateMailInboxPreferencesRequestDto,
+  ) {
+    this.assertMailInboxWriter(user);
+    const preferences = await this.mailInboxPreferencesService.update(
+      user.companyId,
+      { dailyDigestEnabled: body.dailyDigestEnabled },
+    );
+    return { preferences };
+  }
 
   @Get("rules")
   public async listInboxRules(
@@ -719,7 +745,7 @@ export class CompanyMailInboxController {
     if (body.delaySeconds && body.delaySeconds > 0) {
       const pending = await this.mailDelayedComposeService.schedule(
         user.companyId,
-        payload,
+        { kind: "compose", ...payload },
         body.delaySeconds,
       );
       return {
@@ -753,6 +779,25 @@ export class CompanyMailInboxController {
     @Body() body: ReplyMailRequestDto,
   ) {
     this.assertMailInboxWriter(user);
+    if (body.delaySeconds && body.delaySeconds > 0) {
+      const pending = await this.mailDelayedComposeService.schedule(
+        user.companyId,
+        {
+          kind: "reply",
+          inboundMessageId: messageId,
+          text: body.text,
+          bcc: body.bcc,
+          attachments: body.attachments,
+        },
+        body.delaySeconds,
+      );
+      return {
+        ok: true,
+        delayed: true,
+        pendingId: pending.id,
+        sendAt: pending.sendAt,
+      };
+    }
     const result = await this.mailMailboxComposeService.reply({
       organizationId: user.companyId,
       inboundMessageId: messageId,
@@ -770,6 +815,26 @@ export class CompanyMailInboxController {
     @Body() body: ForwardMailRequestDto,
   ) {
     this.assertMailInboxWriter(user);
+    if (body.delaySeconds && body.delaySeconds > 0) {
+      const pending = await this.mailDelayedComposeService.schedule(
+        user.companyId,
+        {
+          kind: "forward",
+          inboundMessageId: messageId,
+          to: body.to,
+          text: body.text,
+          includeOriginal: body.includeOriginal,
+          attachments: body.attachments,
+        },
+        body.delaySeconds,
+      );
+      return {
+        ok: true,
+        delayed: true,
+        pendingId: pending.id,
+        sendAt: pending.sendAt,
+      };
+    }
     const result = await this.mailMailboxComposeService.forward({
       organizationId: user.companyId,
       inboundMessageId: messageId,

@@ -52,6 +52,7 @@ import { MailWebPushSubscriptionEntity } from "./entities/MailWebPushSubscriptio
 import { MailCustomFolderEntity } from "./entities/MailCustomFolderEntity";
 import { MailInboxRuleEntity } from "./entities/MailInboxRuleEntity";
 import { MailDelayedComposeEntity } from "./entities/MailDelayedComposeEntity";
+import { MailInboxPreferencesEntity } from "./entities/MailInboxPreferencesEntity";
 
 @Injectable()
 export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
@@ -119,6 +120,7 @@ export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
         MailCustomFolderEntity,
         MailInboxRuleEntity,
         MailDelayedComposeEntity,
+        MailInboxPreferencesEntity,
       ],
       synchronize,
       logging: false,

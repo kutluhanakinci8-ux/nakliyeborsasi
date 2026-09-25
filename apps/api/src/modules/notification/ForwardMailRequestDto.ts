@@ -3,9 +3,12 @@ import {
   IsArray,
   IsBoolean,
   IsEmail,
+  IsInt,
   IsOptional,
   IsString,
+  Max,
   MaxLength,
+  Min,
   MinLength,
   ValidateNested,
 } from "class-validator";
@@ -30,4 +33,10 @@ export class ForwardMailRequestDto {
   @ValidateNested({ each: true })
   @Type(() => ComposeMailAttachmentDto)
   public attachments?: ComposeMailAttachmentDto[];
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(10)
+  public delaySeconds?: number;
 }

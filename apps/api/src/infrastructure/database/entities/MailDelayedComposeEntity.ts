@@ -6,6 +6,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
+
 export type MailDelayedComposeAttachment = {
   filename: string;
   contentType: string;
@@ -21,6 +22,30 @@ export type MailDelayedComposePayload = {
   html?: string;
   attachments?: MailDelayedComposeAttachment[];
 };
+
+export type MailDelayedSendPayload =
+  | ({
+      kind: "compose";
+    } & MailDelayedComposePayload)
+  | {
+      kind: "reply";
+      inboundMessageId: string;
+      text: string;
+      bcc?: string;
+      attachments?: MailDelayedComposeAttachment[];
+    }
+  | {
+      kind: "forward";
+      inboundMessageId: string;
+      to: string;
+      text?: string;
+      includeOriginal?: boolean;
+      attachments?: MailDelayedComposeAttachment[];
+    };
+
+export type MailDelayedStoredPayload =
+  | MailDelayedSendPayload
+  | MailDelayedComposePayload;
 
 export type MailDelayedComposeStatus =
   | "pending"
@@ -45,7 +70,7 @@ export class MailDelayedComposeEntity {
   public sendAfter!: Date;
 
   @Column({ type: "jsonb" })
-  public payload!: MailDelayedComposePayload;
+  public payload!: MailDelayedStoredPayload;
 
   @Column({ type: "uuid", nullable: true })
   public sentId!: string | null;
