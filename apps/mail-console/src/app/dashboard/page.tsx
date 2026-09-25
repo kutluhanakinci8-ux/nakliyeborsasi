@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ConsoleShell } from "@/components/ConsoleShell";
 import { MAIL_WEB_URL } from "@/lib/apiConfig";
 import {
+  fetchCustomDomainBundle,
   fetchMailBillingStatus,
   fetchMailIdentity,
   fetchMailSubscription,
@@ -43,6 +44,10 @@ export default function DashboardPage() {
   const [mailboxQuota, setMailboxQuota] = useState<string>("");
   const [checkoutCanStart, setCheckoutCanStart] = useState(true);
   const [checkoutBlockers, setCheckoutBlockers] = useState<string[]>([]);
+  const [customDomain, setCustomDomain] = useState<string | null>(null);
+  const [customDomainStatus, setCustomDomainStatus] = useState<string | null>(
+    null,
+  );
 
   async function refreshSubscription(token: string): Promise<string | null> {
     try {
@@ -92,6 +97,15 @@ export default function DashboardPage() {
         setPlatformDnsReady(data.identity.platformDnsReady);
       } catch {
         setFromAddress(null);
+      }
+
+      try {
+        const bundle = await fetchCustomDomainBundle(accessToken);
+        setCustomDomain(bundle.mailDomain?.domain ?? null);
+        setCustomDomainStatus(bundle.mailDomain?.verificationStatus ?? null);
+      } catch {
+        setCustomDomain(null);
+        setCustomDomainStatus(null);
       }
 
       try {
@@ -178,16 +192,21 @@ export default function DashboardPage() {
     }
   }
 
-  const onboardingStep =
-    planCode === CORPORATE_PLAN_CODE && fromAddress
-      ? verified
-        ? 4
-        : 3
-      : planCode === CORPORATE_PLAN_CODE
+  const isCorporate = planCode === CORPORATE_PLAN_CODE;
+  const customVerified = customDomainStatus === "verified";
+  const onboardingStep = isCorporate
+    ? !customDomain
+      ? 1
+      : !customVerified
         ? 2
-        : fromAddress
-          ? 2
-          : 1;
+        : !fromAddress
+          ? 3
+          : 4
+    : fromAddress
+      ? 3
+      : customDomain
+        ? 2
+        : 1;
 
   if (!accessToken) {
     return null;
@@ -197,17 +216,32 @@ export default function DashboardPage() {
     <ConsoleShell operator={operator}>
       <h1 style={{ marginTop: 0 }}>Özet</h1>
 
+      {isCorporate && !customVerified ? (
+        <div className="card" style={{ borderColor: "var(--accent)" }}>
+          <h2 style={{ marginTop: 0 }}>Özel domain gerekli</h2>
+          <p style={{ margin: 0, color: "var(--muted)" }}>
+            Kurumsal pakette gönderen adresiniz kendi alan adınızda olmalı.
+            {customDomain
+              ? ` (${customDomain} — DNS doğrulaması bekleniyor)`
+              : " Henüz domain eklenmedi."}
+          </p>
+          <Link className="btn" href="/domain" style={{ marginTop: 12, display: "inline-block" }}>
+            Domain sihirbazına git
+          </Link>
+        </div>
+      ) : null}
+
       <div className="card">
         <h2>Kurulum — adım {onboardingStep}/4</h2>
         <ol style={{ margin: 0, paddingLeft: 20, color: "var(--muted)" }}>
           <li style={{ fontWeight: onboardingStep === 1 ? 600 : 400 }}>
-            Pilot kutu veya özel domain ile adres açın
+            Özel domain ekle (kurumsal) veya pilot kutu
           </li>
           <li style={{ fontWeight: onboardingStep === 2 ? 600 : 400 }}>
-            Kurumsal plan (ödeme veya deneme)
+            DNS doğrulama
           </li>
           <li style={{ fontWeight: onboardingStep === 3 ? 600 : 400 }}>
-            DNS doğrulama (özel domain)
+            İlk posta adresi ve plan (ödeme / deneme)
           </li>
           <li style={{ fontWeight: onboardingStep === 4 ? 600 : 400 }}>
             Webmail ile ilk gönderim
@@ -286,7 +320,7 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      {!fromAddress ? (
+      {!fromAddress && !isCorporate ? (
         <div className="card">
           <h2>Pilot kutu ({tenantDomain})</h2>
           <p style={{ color: "var(--muted)" }}>

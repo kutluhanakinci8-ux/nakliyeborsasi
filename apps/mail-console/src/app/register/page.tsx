@@ -47,9 +47,7 @@ export default function RegisterPage() {
       });
       setAccessToken(token);
       router.replace(
-        subscriptionPlanCode === "lerta_mail_corporate_tr"
-          ? "/dashboard"
-          : "/domain",
+        `/domain?welcome=1&plan=${encodeURIComponent(subscriptionPlanCode)}`,
       );
     } catch {
       setError("Kayıt tamamlanamadı. E-posta kullanımda olabilir.");
@@ -63,7 +61,9 @@ export default function RegisterPage() {
       <form className="auth-card" onSubmit={onSubmit}>
         <h1>Lerta Mail — Kayıt</h1>
         <p style={{ color: "var(--muted)", marginTop: 0 }}>
-          Kurumsal posta için ayrı firma hesabı oluşturun.
+          {subscriptionPlanCode === "lerta_mail_corporate_tr"
+            ? "Kayıt sonrası özel domain sihirbazına yönlendirileceksiniz."
+            : "Pilot paket: kayıt sonrası domain veya pilot kutu adımlarını seçebilirsiniz."}
         </p>
         {error ? <p className="auth-error">{error}</p> : null}
         <label htmlFor="company">Firma ünvanı</label>

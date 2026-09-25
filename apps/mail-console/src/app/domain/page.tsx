@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ConsoleShell } from "@/components/ConsoleShell";
@@ -23,6 +24,7 @@ export default function DomainPage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [welcomePlan, setWelcomePlan] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     if (!accessToken) {
@@ -41,6 +43,10 @@ export default function DomainPage() {
       setOperator(await isPlatformOperator(accessToken));
       await refresh();
     })();
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("welcome") === "1") {
+      setWelcomePlan(params.get("plan"));
+    }
   }, [accessToken, refresh, router]);
 
   async function onRegister(event: FormEvent) {
@@ -108,7 +114,16 @@ export default function DomainPage() {
 
   return (
     <ConsoleShell operator={operator}>
-      <h1 style={{ marginTop: 0 }}>Özel domain</h1>
+      <h1 style={{ marginTop: 0 }}>Özel domain kurulumu</h1>
+      {welcomePlan === "lerta_mail_corporate_tr" ? (
+        <div className="card" style={{ marginBottom: 16, borderColor: "var(--accent)" }}>
+          <h2 style={{ marginTop: 0 }}>Hoş geldiniz — adım 1</h2>
+          <p style={{ margin: 0, color: "var(--muted)" }}>
+            Kurumsal paket için önce alan adınızı ekleyin. DNS doğrulandıktan sonra
+            ilk posta adresinizi oluşturup webmail&apos;e geçebilirsiniz.
+          </p>
+        </div>
+      ) : null}
       <p style={{ color: "var(--muted)" }}>
         Müşterileriniz sizin alan adınızdan mail alır (ör. info@firma.com.tr).
       </p>
@@ -218,6 +233,17 @@ export default function DomainPage() {
           </div>
         </>
       )}
+
+      <div className="card" style={{ marginTop: 16 }}>
+        <h2>Pilot alt alan (isteğe bağlı)</h2>
+        <p style={{ color: "var(--muted)", marginTop: 0 }}>
+          Özel domain olmadan denemek için paylaşımlı{" "}
+          <strong>kullanici.lerta.com.tr</strong> altında kutu açabilirsiniz.
+        </p>
+        <Link className="btn secondary" href="/dashboard">
+          Pilot kutuya geç
+        </Link>
+      </div>
     </ConsoleShell>
   );
 }

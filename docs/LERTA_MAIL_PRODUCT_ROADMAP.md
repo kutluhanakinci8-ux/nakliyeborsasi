@@ -34,8 +34,8 @@
 | A2 | Stripe **canlı** + webhook prod | `invoice.paid` sonrası plan; hata alert |
 | A3 | iyzico sandbox → prod (TR ödeme) | Callback + plan aktivasyonu |
 | A4 | `www` cutover | `preflight-www-cutover` OK; `www` title = Lerta Mail |
-| A5 | Vitrin kurumsal kimlik | Logo, tipografi, SSS, KVKK, iletişim, SLA özeti — **KVKK + iletişim sayfaları başlandı** |
-| A6 | Kayıt → onboarding akışı | Dashboard 4 adımlı kurulum — **başlandı** |
+| A5 | Vitrin kurumsal kimlik | Logo, tipografi, SSS, KVKK, iletişim, SLA — **SSS/SLA + marka header (devam: SSS içerik, hukuk)** |
+| A6 | Kayıt → onboarding akışı | Kayıt → domain sihirbazı; dashboard kurumsal banner — **B1 ile güçlendirildi** |
 | A7 | Fiyatlandırma TRY + EUR tutarlılığı | Vitrin = API katalog = checkout tutarı |
 
 **Bağımlılık:** A4 için U88’nin `u88.lerta.com.tr` (veya harici) taşınması.
@@ -48,7 +48,7 @@
 
 | # | İş | Takip / kabul kriteri |
 |---|-----|------------------------|
-| B1 | Domain sihirbazı UX (varsayılan onboarding) | Kayıt sonrası önce domain; pilot ikincil |
+| B1 | Domain sihirbazı UX (varsayılan onboarding) | Kayıt → `/domain`; kurumsal dashboard domain-first — **uygulandı** |
 | B2 | Çoklu posta kutusu (plan kotası) | Kurumsal plan N kutu; kota aşımında net UI |
 | B3 | Kullanıcı daveti + roller | `CompanyOwner`, `BillingAdmin`, `MailAdmin`, salt okunur |
 | B4 | Alias / paylaşımlı adres (isteğe bağlı) | `destek@` → iki kullanıcı |
