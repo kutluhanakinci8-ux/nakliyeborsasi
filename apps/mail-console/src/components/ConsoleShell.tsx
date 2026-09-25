@@ -53,6 +53,9 @@ export function ConsoleShell({
           <Link className={navClass("/privacy")} href="/privacy">
             Gizlilik / KVKK
           </Link>
+          <Link className={navClass("/audit")} href="/audit">
+            Denetim
+          </Link>
           {operator ? (
             <Link className={navClass("/operator")} href="/operator">
               Operatör

@@ -540,6 +540,36 @@ export async function cancelMailDeletionRequest(
   );
 }
 
+export type MailTenantAuditEntry = {
+  id: string;
+  actionCode: string;
+  labelTr: string;
+  summaryTr: string;
+  actorUserId: string | null;
+  actorEmail: string | null;
+  requestPath: string;
+  metadata: Record<string, unknown> | null;
+  createdAt: string;
+};
+
+export async function fetchMailTenantAudit(
+  accessToken: string,
+  params: { limit?: number; before?: string } = {},
+) {
+  const query = new URLSearchParams();
+  if (params.limit) {
+    query.set("limit", String(params.limit));
+  }
+  if (params.before) {
+    query.set("before", params.before);
+  }
+  const suffix = query.size > 0 ? `?${query.toString()}` : "";
+  return apiFetch<{ logs: MailTenantAuditEntry[]; nextBefore: string | null }>(
+    accessToken,
+    `company/mail-identity/audit${suffix}`,
+  );
+}
+
 export type MailBillingLifecycle = {
   status: string;
   billingProvider: string;

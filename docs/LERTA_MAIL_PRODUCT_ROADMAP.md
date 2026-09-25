@@ -97,7 +97,7 @@
 | E1 | Tenant teslimat paneli | `GET …/delivery`, konsol /delivery — **uygulandı** |
 | E2 | DMARC aggregate (rua) görünümü | `mail_dmarc_aggregate`, konsol /dmarc, admin ingest — **uygulandı** |
 | E3 | KVKK veri export + hesap silme | `privacy/*`, konsol /privacy, `MAIL_KVKK_*` — **uygulandı** |
-| E4 | Denetim kaydı (tenant) | Kim, ne zaman, domain/kutu değişti |
+| E4 | Denetim kaydı (tenant) | `GET …/audit`, konsol /audit, `MAIL_TEAM_*` — **uygulandı** |
 | E5 | 2FA (TOTP) yönetim + webmail | Opsiyonel zorunlu kurumsal paket |
 | E6 | SPF/DKIM rotasyon runbook | Operatör dokümantasyonu |
 | E7 | Yedekleme / felaket kurtarma | RPO/RTO tanımı, Maildir yedek |

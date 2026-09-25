@@ -149,6 +149,15 @@ export class CompanyMailIdentityController {
       user.roleCodes,
       body.planCode,
     );
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.SubscriptionPlanSelected,
+      {
+        organizationId: user.companyId,
+        planCode: body.planCode,
+      },
+      "/company/mail-identity/subscription/select",
+    );
     return { message: "OK", subscription };
   }
 
@@ -202,6 +211,17 @@ export class CompanyMailIdentityController {
     );
     const senders = await this.mailSaasSubscriptionService.listOrganizationSenders(
       user.companyId,
+    );
+    const chosen = senders.find((s) => s.id === senderId);
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.DefaultSenderSet,
+      {
+        organizationId: user.companyId,
+        senderId,
+        fromAddress: chosen?.fromAddress ?? null,
+      },
+      `/company/mail-identity/senders/${senderId}/default`,
     );
     return { message: "OK", senders };
   }
@@ -330,6 +350,24 @@ export class CompanyMailIdentityController {
       "/company/mail-identity/custom-domain/provision",
     );
     return { message: "OK", ...result };
+  }
+
+  @Get("audit")
+  public async listTenantAudit(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Query("limit") limitRaw?: string,
+    @Query("before") before?: string,
+  ) {
+    assertMailConsoleAccess(user);
+    const parsed = limitRaw ? Number.parseInt(limitRaw, 10) : 50;
+    const panel = await this.mailIdentityAuditService.listForOrganization(
+      user.companyId,
+      {
+        limit: Number.isFinite(parsed) ? parsed : 50,
+        before: before?.trim() || undefined,
+      },
+    );
+    return { message: "OK", ...panel };
   }
 
   @Get("privacy/export")

@@ -1,10 +1,15 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Like, Repository } from "typeorm";
+import { In, Like, Repository } from "typeorm";
 import { AuthenticatedUserContext } from "@nakliyeborsasi/core";
 import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogEntity";
+import { UserAccountEntity } from "../../infrastructure/database/entities/UserAccountEntity";
 import { AuditLogPersistenceService } from "../../infrastructure/audit/AuditLogPersistenceService";
 import { AuditLogWriteRequest } from "../../infrastructure/audit/AuditLogWriteRequest";
+import {
+  mailAuditLabelTr,
+  mailAuditSummaryTr,
+} from "./MailIdentityAuditPresentation";
 
 export const MailIdentityAuditAction = {
   CustomDomainRegistered: "MAIL_IDENTITY_CUSTOM_DOMAIN_REGISTERED",
@@ -25,7 +30,26 @@ export const MailIdentityAuditAction = {
   PrivacyDeletionRequested: "MAIL_PRIVACY_DELETION_REQUESTED",
   PrivacyDeletionCompleted: "MAIL_PRIVACY_DELETION_COMPLETED",
   PrivacyDeletionCancelled: "MAIL_PRIVACY_DELETION_CANCELLED",
+  DefaultSenderSet: "MAIL_IDENTITY_DEFAULT_SENDER_SET",
+  SubscriptionPlanSelected: "MAIL_SUBSCRIPTION_PLAN_SELECTED",
+  TeamInviteCreated: "MAIL_TEAM_INVITE_CREATED",
+  TeamInviteRevoked: "MAIL_TEAM_INVITE_REVOKED",
+  TeamInviteAccepted: "MAIL_TEAM_INVITE_ACCEPTED",
+  TeamMemberRoleChanged: "MAIL_TEAM_MEMBER_ROLE_CHANGED",
+  TeamMemberRemoved: "MAIL_TEAM_MEMBER_REMOVED",
 } as const;
+
+export type MailTenantAuditLogDto = {
+  id: string;
+  actionCode: string;
+  labelTr: string;
+  summaryTr: string;
+  actorUserId: string | null;
+  actorEmail: string | null;
+  requestPath: string;
+  metadata: Record<string, unknown> | null;
+  createdAt: string;
+};
 
 export type MailIdentityAuditActionCode =
   (typeof MailIdentityAuditAction)[keyof typeof MailIdentityAuditAction];
@@ -36,6 +60,8 @@ export class MailIdentityAuditService {
     private readonly auditLogPersistenceService: AuditLogPersistenceService,
     @InjectRepository(AuditLogEntity)
     private readonly auditLogRepository: Repository<AuditLogEntity>,
+    @InjectRepository(UserAccountEntity)
+    private readonly userAccountRepository: Repository<UserAccountEntity>,
   ) {}
 
   public async record(params: {
@@ -103,5 +129,64 @@ export class MailIdentityAuditService {
       metadata: row.metadata,
       createdAt: row.createdAt.toISOString(),
     }));
+  }
+
+  public async listForOrganization(
+    organizationId: string,
+    options: { limit?: number; before?: string } = {},
+  ): Promise<{ logs: MailTenantAuditLogDto[]; nextBefore: string | null }> {
+    const limit = Math.min(Math.max(options.limit ?? 50, 1), 100);
+    const qb = this.auditLogRepository
+      .createQueryBuilder("log")
+      .where("log.actionCode LIKE :mailPrefix", { mailPrefix: "MAIL_%" })
+      .andWhere(
+        `(log.actorCompanyId = :orgId OR log.metadata->>'organizationId' = :orgId)`,
+        { orgId: organizationId },
+      )
+      .orderBy("log.createdAt", "DESC")
+      .take(limit + 1);
+    if (options.before) {
+      const beforeDate = new Date(options.before);
+      if (!Number.isNaN(beforeDate.getTime())) {
+        qb.andWhere("log.createdAt < :before", { before: beforeDate });
+      }
+    }
+    const rows = await qb.getMany();
+    const hasMore = rows.length > limit;
+    const page = hasMore ? rows.slice(0, limit) : rows;
+    const actorIds = [
+      ...new Set(
+        page
+          .map((row) => row.actorUserId)
+          .filter((id): id is string => Boolean(id)),
+      ),
+    ];
+    const actors =
+      actorIds.length > 0
+        ? await this.userAccountRepository.find({
+            where: { id: In(actorIds) },
+          })
+        : [];
+    const emailByUserId = new Map(
+      actors.map((user) => [user.id, user.emailAddress]),
+    );
+    const logs: MailTenantAuditLogDto[] = page.map((row) => ({
+      id: row.id,
+      actionCode: row.actionCode,
+      labelTr: mailAuditLabelTr(row.actionCode),
+      summaryTr: mailAuditSummaryTr(row.actionCode, row.metadata),
+      actorUserId: row.actorUserId,
+      actorEmail: row.actorUserId
+        ? emailByUserId.get(row.actorUserId) ?? null
+        : null,
+      requestPath: row.requestPath,
+      metadata: row.metadata,
+      createdAt: row.createdAt.toISOString(),
+    }));
+    const nextBefore =
+      hasMore && page.length > 0
+        ? page[page.length - 1].createdAt.toISOString()
+        : null;
+    return { logs, nextBefore };
   }
 }

@@ -29,6 +29,10 @@ import {
   canManageMailTeam,
 } from "./MailCompanyRoleAuthorization";
 import { AcceptMailTeamInviteDto } from "./CompanyMailTeamRequestDto";
+import {
+  MailIdentityAuditAction,
+  MailIdentityAuditService,
+} from "./MailIdentityAuditService";
 
 const INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -47,6 +51,7 @@ export class CompanyMailTeamService {
     private readonly passwordHashingService: PasswordHashingService,
     private readonly jwtTokenIssuingService: JwtTokenIssuingService,
     private readonly configService: ConfigService,
+    private readonly mailIdentityAuditService: MailIdentityAuditService,
   ) {}
 
   public async listTeam(companyId: string) {
@@ -163,6 +168,17 @@ export class CompanyMailTeamService {
       idempotencyKey: `MAIL_TEAM_INVITE:${invite.id}`,
       metadata: { companyId: actor.companyId },
     });
+    await this.mailIdentityAuditService.recordFromUser(
+      actor,
+      MailIdentityAuditAction.TeamInviteCreated,
+      {
+        organizationId: actor.companyId,
+        email: normalizedEmail,
+        roleCode,
+        inviteId: invite.id,
+      },
+      "/company/mail-identity/team/invites",
+    );
     return this.listTeam(actor.companyId);
   }
 
@@ -181,6 +197,16 @@ export class CompanyMailTeamService {
     }
     invite.revokedAt = new Date();
     await this.inviteRepository.save(invite);
+    await this.mailIdentityAuditService.recordFromUser(
+      actor,
+      MailIdentityAuditAction.TeamInviteRevoked,
+      {
+        organizationId: actor.companyId,
+        email: invite.email,
+        inviteId: invite.id,
+      },
+      `/company/mail-identity/team/invites/${inviteId}`,
+    );
     return this.listTeam(actor.companyId);
   }
 
@@ -204,6 +230,7 @@ export class CompanyMailTeamService {
     }
     const membership = await this.membershipRepository.findOne({
       where: { id: membershipId, companyId: actor.companyId },
+      relations: { user: true },
     });
     if (!membership) {
       throw new NotFoundException("Üyelik bulunamadı.");
@@ -211,8 +238,21 @@ export class CompanyMailTeamService {
     if (membership.roleCode === CompanyRoleCode.CompanyOwner) {
       throw new BadRequestException("Firma sahibinin rolü değiştirilemez.");
     }
+    const previousRole = membership.roleCode;
     membership.roleCode = roleCode;
     await this.membershipRepository.save(membership);
+    await this.mailIdentityAuditService.recordFromUser(
+      actor,
+      MailIdentityAuditAction.TeamMemberRoleChanged,
+      {
+        organizationId: actor.companyId,
+        membershipId,
+        email: membership.user.emailAddress,
+        roleCode,
+        previousRoleCode: previousRole,
+      },
+      `/company/mail-identity/team/members/${membershipId}/role`,
+    );
     return this.listTeam(actor.companyId);
   }
 
@@ -227,6 +267,7 @@ export class CompanyMailTeamService {
     }
     const membership = await this.membershipRepository.findOne({
       where: { id: membershipId, companyId: actor.companyId },
+      relations: { user: true },
     });
     if (!membership) {
       throw new NotFoundException("Üyelik bulunamadı.");
@@ -247,6 +288,17 @@ export class CompanyMailTeamService {
       throw new BadRequestException("Firma sahibi bulunamadı.");
     }
     await this.membershipRepository.remove(membership);
+    await this.mailIdentityAuditService.recordFromUser(
+      actor,
+      MailIdentityAuditAction.TeamMemberRemoved,
+      {
+        organizationId: actor.companyId,
+        membershipId,
+        email: membership.user.emailAddress,
+        roleCode: membership.roleCode,
+      },
+      `/company/mail-identity/team/members/${membershipId}`,
+    );
     return this.listTeam(actor.companyId);
   }
 
@@ -322,6 +374,19 @@ export class CompanyMailTeamService {
     await this.inviteRepository.save(invite);
     const company = await this.companyRepository.findOne({
       where: { id: invite.companyId },
+    });
+    await this.mailIdentityAuditService.record({
+      actorUserId: user.id,
+      actorCompanyId: invite.companyId,
+      actionCode: MailIdentityAuditAction.TeamInviteAccepted,
+      metadata: {
+        organizationId: invite.companyId,
+        email: invite.email,
+        roleCode: invite.roleCode,
+        inviteId: invite.id,
+      },
+      requestPath: "/auth/mail-team-invite/accept",
+      httpMethod: "USER_ACTION",
     });
     const context = new AuthenticatedUserContext({
       userId: user.id,
