@@ -6,12 +6,14 @@ import {
   composeMail,
   fetchInbox,
   fetchMessage,
+  fetchSentMessage,
   markRead,
   replyMail,
   type MailInboxListItem,
   type MailInboxMessageDetail,
   type MailInboxSummary,
   type MailSentItem,
+  type MailSentMessageDetail,
 } from "@/lib/mailApi";
 import { useMailSession } from "@/lib/session";
 
@@ -26,7 +28,9 @@ export function MailClient() {
   const [sent, setSent] = useState<MailSentItem[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detail, setDetail] = useState<MailInboxMessageDetail | null>(null);
-  const [sentPreview, setSentPreview] = useState<MailSentItem | null>(null);
+  const [sentPreview, setSentPreview] = useState<MailSentMessageDetail | null>(
+    null,
+  );
   const [replyText, setReplyText] = useState("");
   const [composeOpen, setComposeOpen] = useState(false);
   const [composeTo, setComposeTo] = useState("");
@@ -102,8 +106,12 @@ export function MailClient() {
       setToast("Gönderildi.");
       setView("sent");
       void refresh();
-    } catch {
-      setComposeError("Gönderilemedi. SMTP veya kurumsal kutu ayarını kontrol edin.");
+    } catch (error) {
+      setComposeError(
+        error instanceof Error
+          ? error.message
+          : "Gönderilemedi. SMTP veya kurumsal kutu ayarını kontrol edin.",
+      );
     } finally {
       setSending(false);
     }
@@ -214,10 +222,28 @@ export function MailClient() {
               className={`mail-list-item ${selectedId === m.id ? "selected" : ""} ${!m.readAt && view !== "sent" ? "unread" : ""}`}
               onClick={() => {
                 if (view === "sent") {
-                  const s = sent.find((x) => x.id === m.id);
                   setSelectedId(m.id);
-                  setSentPreview(s ?? null);
                   setDetail(null);
+                  void (async () => {
+                    if (!accessToken) {
+                      return;
+                    }
+                    try {
+                      setSentPreview(await fetchSentMessage(accessToken, m.id));
+                    } catch {
+                      const s = sent.find((x) => x.id === m.id);
+                      setSentPreview(
+                        s
+                          ? {
+                              ...s,
+                              fromAddress: summary?.primaryAddress ?? "—",
+                              bodyText: null,
+                              smtpMessageId: null,
+                            }
+                          : null,
+                      );
+                    }
+                  })();
                   return;
                 }
                 void openMessage(m.id);
@@ -251,7 +277,9 @@ export function MailClient() {
                 {new Date(sentPreview.sentAt).toLocaleString("tr-TR")}
               </div>
             </header>
-            <p className="mail-empty">Gönderilen mesaj içeriği veritabanında özet olarak saklanır.</p>
+            <div className="mail-read-body">
+              <pre>{sentPreview.bodyText ?? "(İçerik yok)"}</pre>
+            </div>
           </>
         ) : !detail ? (
           <p className="mail-empty">Okumak için bir mesaj seçin</p>

@@ -67,6 +67,18 @@ export class CompanyMailInboxController {
     return { summary, messages, sent, folder: resolvedFolder };
   }
 
+  @Get("sent/:sentId")
+  public async getSentMessage(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("sentId") sentId: string,
+  ) {
+    const message = await this.mailMailboxComposeService.getSentMessage(
+      user.companyId,
+      sentId,
+    );
+    return { message };
+  }
+
   @Get("messages/:messageId")
   public async getMessage(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,

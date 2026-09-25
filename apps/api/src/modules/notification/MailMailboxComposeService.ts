@@ -147,6 +147,22 @@ export class MailMailboxComposeService {
     }));
   }
 
+  public async getSentMessage(organizationId: string, sentId: string) {
+    const row = await this.sentRepository.findOne({ where: { id: sentId } });
+    if (!row || row.organizationId !== organizationId) {
+      throw new NotFoundException("Gönderilen mesaj bulunamadı");
+    }
+    return {
+      id: row.id,
+      fromAddress: row.fromAddress,
+      toAddress: row.toAddress,
+      subject: row.subject,
+      bodyText: row.bodyText,
+      sentAt: row.sentAt.toISOString(),
+      smtpMessageId: row.smtpMessageId,
+    };
+  }
+
   private async resolveSenderMailbox(organizationId: string) {
     const identity = await this.senderRepository.findOne({
       where: { organizationId, isDefault: true },

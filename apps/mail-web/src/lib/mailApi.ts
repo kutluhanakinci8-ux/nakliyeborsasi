@@ -37,6 +37,27 @@ export type MailSentItem = {
   sentAt: string;
 };
 
+export type MailSentMessageDetail = MailSentItem & {
+  fromAddress: string;
+  bodyText: string | null;
+  smtpMessageId: string | null;
+};
+
+export function formatApiError(raw: string): string {
+  try {
+    const parsed = JSON.parse(raw) as { message?: string | string[] };
+    if (Array.isArray(parsed.message)) {
+      return parsed.message.join(" ");
+    }
+    if (typeof parsed.message === "string") {
+      return parsed.message;
+    }
+  } catch {
+    /* plain text */
+  }
+  return raw.length > 200 ? "İşlem başarısız." : raw;
+}
+
 async function apiFetch<T>(
   accessToken: string,
   path: string,
@@ -53,7 +74,7 @@ async function apiFetch<T>(
   });
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(text || `API ${path}`);
+    throw new Error(formatApiError(text || `API ${path}`));
   }
   return (await response.json()) as T;
 }
@@ -83,6 +104,14 @@ export async function fetchInbox(
     messages: MailInboxListItem[];
     sent: MailSentItem[];
   }>(accessToken, `company/mail-inbox?folder=${folder}`);
+}
+
+export async function fetchSentMessage(accessToken: string, id: string) {
+  const payload = await apiFetch<{ message: MailSentMessageDetail }>(
+    accessToken,
+    `company/mail-inbox/sent/${id}`,
+  );
+  return payload.message;
 }
 
 export async function fetchMessage(accessToken: string, id: string) {
