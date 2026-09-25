@@ -11,7 +11,13 @@ type MailPlan = {
   recommended: boolean;
   mailMaxSendsPerHour: number;
   mailMaxMailboxes: number;
+  mailStorageLimitGb: number;
+  mailMaxAttachmentMb: number;
   customDomainAllowed: boolean;
+  mailWhiteLabelAllowed?: boolean;
+  mailPublicApiAllowed?: boolean;
+  monthlyPriceTry?: number;
+  annualPriceTry?: number;
 };
 
 const API_BASE =
@@ -67,16 +73,32 @@ export function PricingSection() {
               {plan.monthlyPriceEur === 0
                 ? "Ücretsiz"
                 : `€${plan.monthlyPriceEur}/ay`}
+              {plan.monthlyPriceTry && plan.monthlyPriceTry > 0
+                ? ` · ₺${plan.monthlyPriceTry}/ay`
+                : ""}
             </p>
             <p className="price-period">{plan.tagline}</p>
+            {plan.planCode === "lerta_mail_pilot_tr" ? (
+              <p className="price-period" style={{ fontWeight: 600 }}>
+                Ücretsiz pilot · 1 kutu · 80 e-posta/saat
+              </p>
+            ) : null}
             <ul>
               <li>{plan.mailMaxSendsPerHour} gönderim / saat</li>
               <li>{plan.mailMaxMailboxes} posta kutusu</li>
+              <li>{plan.mailStorageLimitGb} GB depolama</li>
+              <li>Tek ek en fazla {plan.mailMaxAttachmentMb} MB</li>
               <li>
                 {plan.customDomainAllowed
                   ? "Özel domain"
                   : "Pilot alt alan (kullanici.lerta.com.tr)"}
               </li>
+              {plan.mailWhiteLabelAllowed ? (
+                <li>White-label e-posta</li>
+              ) : null}
+              {plan.mailPublicApiAllowed ? (
+                <li>Public API + webhook</li>
+              ) : null}
             </ul>
             <a
               className={`btn ${plan.recommended ? "btn-primary" : "btn-ghost"}`}

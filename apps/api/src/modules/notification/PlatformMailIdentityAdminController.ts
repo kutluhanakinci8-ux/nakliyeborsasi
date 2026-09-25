@@ -24,6 +24,12 @@ import {
 import { MailInboundIngestService } from "./MailInboundIngestService";
 import { MailInboundRoutingService } from "./MailInboundRoutingService";
 import { MailImapAccessService } from "./MailImapAccessService";
+import { PlatformMailTenantAdminService } from "./PlatformMailTenantAdminService";
+import { MailDmarcAggregateService } from "./MailDmarcAggregateService";
+import { IngestDmarcReportRequestDto } from "./IngestDmarcReportRequestDto";
+import { MailPlatformMonitoringService } from "./MailPlatformMonitoringService";
+import { MailPlatformKpiService } from "./MailPlatformKpiService";
+import { MailBillingService } from "./MailBillingService";
 
 @Controller("platform-admin/mail")
 @UseGuards(JwtAuthenticationGuard, PlatformAdminGuard)
@@ -37,7 +43,108 @@ export class PlatformMailIdentityAdminController {
     private readonly mailInboundIngestService: MailInboundIngestService,
     private readonly mailInboundRoutingService: MailInboundRoutingService,
     private readonly mailImapAccessService: MailImapAccessService,
+    private readonly platformMailTenantAdminService: PlatformMailTenantAdminService,
+    private readonly mailDmarcAggregateService: MailDmarcAggregateService,
+    private readonly mailPlatformMonitoringService: MailPlatformMonitoringService,
+    private readonly mailPlatformKpiService: MailPlatformKpiService,
+    private readonly mailBillingService: MailBillingService,
   ) {}
+
+  @Get("billing-health")
+  public async billingHealth() {
+    const status = await this.mailBillingService.getBillingStatus();
+    const a1 = this.mailBillingService.buildA1Acceptance(status);
+    return { message: "OK", status, a1 };
+  }
+
+  @Get("kpi")
+  public async kpi() {
+    return { kpi: await this.mailPlatformKpiService.buildSnapshot() };
+  }
+
+  @Get("monitoring")
+  public async monitoring() {
+    return {
+      monitoring: await this.mailPlatformMonitoringService.buildSnapshot(),
+    };
+  }
+
+  @Post("dmarc/ingest")
+  public async ingestDmarcReport(@Body() body: IngestDmarcReportRequestDto) {
+    if (body.xml?.trim()) {
+      const row = await this.mailDmarcAggregateService.ingestFromXml({
+        xml: body.xml,
+        organizationId: body.organizationId ?? null,
+      });
+      return { ok: true, report: row };
+    }
+    if (body.summary) {
+      const row = await this.mailDmarcAggregateService.ingestSummary({
+        domain: body.summary.domain.toLowerCase(),
+        periodStart: new Date(body.summary.periodStart),
+        periodEnd: new Date(body.summary.periodEnd),
+        messageCount: body.summary.messageCount,
+        dispositionNone: body.summary.disposition.none,
+        dispositionQuarantine: body.summary.disposition.quarantine,
+        dispositionReject: body.summary.disposition.reject,
+        dkimPass: body.summary.dkim.pass,
+        dkimFail: body.summary.dkim.fail,
+        spfPass: body.summary.spf.pass,
+        spfFail: body.summary.spf.fail,
+        reporterOrgName: body.summary.reporterOrgName ?? null,
+        organizationId: body.organizationId ?? null,
+      });
+      return { ok: true, report: row };
+    }
+    throw new BadRequestException("xml veya summary gerekli");
+  }
+
+  @Get("tenants")
+  public async listTenants() {
+    return {
+      tenants: await this.platformMailTenantAdminService.listTenants(),
+    };
+  }
+
+  @Post("tenants/:organizationId/suspend")
+  public async suspendTenant(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("organizationId") organizationId: string,
+    @Body() body: { reason?: string; abuseFlag?: boolean },
+  ) {
+    const tenant = await this.platformMailTenantAdminService.suspendTenant(
+      user,
+      organizationId,
+      body,
+    );
+    return { ok: true, tenant };
+  }
+
+  @Post("tenants/:organizationId/unsuspend")
+  public async unsuspendTenant(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("organizationId") organizationId: string,
+  ) {
+    const tenant = await this.platformMailTenantAdminService.unsuspendTenant(
+      user,
+      organizationId,
+    );
+    return { ok: true, tenant };
+  }
+
+  @Patch("tenants/:organizationId/note")
+  public async updateTenantNote(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("organizationId") organizationId: string,
+    @Body() body: { note: string },
+  ) {
+    const tenant = await this.platformMailTenantAdminService.updateTenantNote(
+      user,
+      organizationId,
+      body.note ?? "",
+    );
+    return { ok: true, tenant };
+  }
 
   @Post("imap/sync-dovecot")
   public async syncDovecotImap() {

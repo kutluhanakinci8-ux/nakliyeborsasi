@@ -128,9 +128,36 @@ export class UserCredentialAuthenticationService {
     if (!primaryMembership) {
       throw new AuthenticationException("User has no company membership");
     }
-    const roleCodes = user.memberships.map(
-      (membership) => membership.roleCode as CompanyRoleCode,
-    );
+    const roleCodes = user.memberships
+      .filter(
+        (membership) => membership.companyId === primaryMembership.companyId,
+      )
+      .map((membership) => membership.roleCode as CompanyRoleCode);
+    const context = new AuthenticatedUserContext({
+      userId: user.id,
+      companyId: primaryMembership.companyId,
+      emailAddress: user.emailAddress,
+      roleCodes,
+    });
+    return this.resolveSessionContext(context);
+  }
+
+  public async resolveAuthenticatedUserById(
+    userId: string,
+  ): Promise<AuthenticatedUserContext> {
+    const user = await this.userAccountRepository.findOne({
+      where: { id: userId },
+      relations: { memberships: true },
+    });
+    if (!user || user.memberships.length === 0) {
+      throw new AuthenticationException("User has no company membership");
+    }
+    const primaryMembership = user.memberships[0];
+    const roleCodes = user.memberships
+      .filter(
+        (membership) => membership.companyId === primaryMembership.companyId,
+      )
+      .map((membership) => membership.roleCode as CompanyRoleCode);
     const context = new AuthenticatedUserContext({
       userId: user.id,
       companyId: primaryMembership.companyId,

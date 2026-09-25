@@ -12,10 +12,10 @@ import { UserNotificationPreferenceService } from "./UserNotificationPreferenceS
 import { EmailDeliveryService } from "./EmailDeliveryService";
 import { MailSenderResolutionService } from "./MailSenderResolutionService";
 import { MailOrganizationSendRateService } from "./MailOrganizationSendRateService";
-import {
-  appendTenantTrustFooter,
-  resolveTenantReplyToAddress,
-} from "./MailTenantEmailBranding";
+import { MailTenantSuspensionService } from "./MailTenantSuspensionService";
+import { resolveTenantReplyToAddress } from "./MailTenantEmailBranding";
+import { MailOrganizationBrandingService } from "./MailOrganizationBrandingService";
+import { MailOrganizationWebhookDispatcherService } from "./MailOrganizationWebhookDispatcherService";
 import { CompanyEntity } from "../../infrastructure/database/entities/CompanyEntity";
 
 @Injectable()
@@ -34,9 +34,68 @@ export class EmailOutboxService {
     private readonly emailDeliveryService: EmailDeliveryService,
     private readonly mailSenderResolutionService: MailSenderResolutionService,
     private readonly mailOrganizationSendRateService: MailOrganizationSendRateService,
+    private readonly mailTenantSuspensionService: MailTenantSuspensionService,
+    private readonly mailOrganizationBrandingService: MailOrganizationBrandingService,
+    private readonly mailOrganizationWebhookDispatcherService: MailOrganizationWebhookDispatcherService,
     @InjectRepository(CompanyEntity)
     private readonly companyRepository: Repository<CompanyEntity>,
   ) {}
+
+  public async enqueueTenantApiMessage(params: {
+    organizationId: string;
+    recipientEmail: string;
+    subject: string;
+    htmlBody: string;
+    textBody: string;
+    idempotencyKey: string;
+    apiKeyId: string;
+  }): Promise<EmailOutboxEntity | null> {
+    const existing = await this.outboxRepository.findOne({
+      where: { idempotencyKey: params.idempotencyKey },
+    });
+    if (existing) {
+      return existing;
+    }
+    if (
+      await this.emailSuppressionService.isSuppressed(
+        params.recipientEmail,
+        params.organizationId,
+      )
+    ) {
+      return null;
+    }
+    await this.mailTenantSuspensionService.assertOrganizationCanSend(
+      params.organizationId,
+    );
+    await this.mailOrganizationSendRateService.assertCanSend(
+      params.organizationId,
+    );
+    const row = await this.outboxRepository.save(
+      this.outboxRepository.create({
+        eventCode: "MAIL_PUBLIC_API_SEND",
+        recipientKind: EmailRecipientKind.User,
+        recipientEmail: params.recipientEmail.toLowerCase(),
+        locale: "tr",
+        subject: params.subject,
+        htmlBody: params.htmlBody,
+        textBody: params.textBody,
+        status: "pending",
+        idempotencyKey: params.idempotencyKey,
+        metadata: {
+          companyId: params.organizationId,
+          source: "mail_public_api",
+          apiKeyId: params.apiKeyId,
+        },
+        providerMessageId: null,
+        lastError: null,
+        sentAt: null,
+      }),
+    );
+    void this.processById(row.id).catch((error) => {
+      this.logger.error(`Outbox process failed: ${row.id}`, error);
+    });
+    return row;
+  }
 
   public async enqueue(params: {
     eventCode: NotificationEventCode;
@@ -129,6 +188,9 @@ export class EmailOutboxService {
         );
       tenantOrganizationIdForBounce = resolved.tenantOrganizationId;
       if (resolved.tenantOrganizationId) {
+        await this.mailTenantSuspensionService.assertOrganizationCanSend(
+          resolved.tenantOrganizationId,
+        );
         await this.mailOrganizationSendRateService.assertCanSend(
           resolved.tenantOrganizationId,
         );
@@ -140,10 +202,15 @@ export class EmailOutboxService {
           where: { id: resolved.tenantOrganizationId },
         });
         const fromEmail = extractEmailAddress(resolved.from);
-        htmlBody = appendTenantTrustFooter(htmlBody, {
-          organizationName: company?.legalName ?? "Kurumsal hesap",
-          fromAddress: fromEmail,
-        });
+        htmlBody =
+          await this.mailOrganizationBrandingService.wrapTransactionalBodies(
+            resolved.tenantOrganizationId,
+            htmlBody,
+            {
+              organizationName: company?.legalName ?? "Kurumsal hesap",
+              fromAddress: fromEmail,
+            },
+          );
         textBody = `${textBody}\n\n— ${company?.legalName ?? "Kurumsal hesap"} adına ${fromEmail} (${resolveTenantReplyToAddress()} yanıt).`;
       }
       const htmlWithTracking = await this.emailHtmlTrackingService.applyTracking(
@@ -175,11 +242,21 @@ export class EmailOutboxService {
       };
       row.lastError = null;
       await this.outboxRepository.save(row);
+      this.maybeDispatchPublicApiWebhook(
+        row,
+        tenantOrganizationIdForBounce,
+        "message.sent",
+      );
     } catch (error) {
       row.status = "failed";
       row.lastError =
         error instanceof Error ? error.message : "Unknown send error";
       await this.outboxRepository.save(row);
+      this.maybeDispatchPublicApiWebhook(
+        row,
+        tenantOrganizationIdForBounce,
+        "message.failed",
+      );
       await this.emailEngagementService.recordBounceForOutbox(
         row.id,
         row.lastError,
@@ -187,6 +264,25 @@ export class EmailOutboxService {
       );
       throw error;
     }
+  }
+
+  private maybeDispatchPublicApiWebhook(
+    row: EmailOutboxEntity,
+    organizationId: string | null,
+    event: "message.sent" | "message.failed",
+  ): void {
+    if (row.metadata?.source !== "mail_public_api" || !organizationId) {
+      return;
+    }
+    this.mailOrganizationWebhookDispatcherService.dispatch(organizationId, event, {
+      messageId: row.id,
+      recipientEmail: row.recipientEmail,
+      subject: row.subject,
+      status: row.status,
+      sentAt: row.sentAt?.toISOString() ?? null,
+      lastError: row.lastError,
+      providerMessageId: row.providerMessageId,
+    });
   }
 
   public async listRecent(limit: number): Promise<EmailOutboxEntity[]> {

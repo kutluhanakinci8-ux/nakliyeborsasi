@@ -9,7 +9,7 @@
 ## 2. Webhook
 
 - URL: `https://yonetim.lerta.com.tr/api/v1/webhooks/mail-billing/stripe`
-- Olaylar: `checkout.session.completed`, `invoice.paid`
+- Olaylar: `checkout.session.completed`, `invoice.paid`, `invoice.payment_failed`, `customer.subscription.updated`, `customer.subscription.deleted`
 - Signing secret → `STRIPE_WEBHOOK_SECRET`
 
 ## 3. VPS `.env`
@@ -34,14 +34,16 @@ API yeniden başlar.
 
 ## 4. Doğrulama
 
-1. **yonetim** → Operatör → **Ödeme altyapısı** (Stripe API OK, webhook, price id).
+1. **yonetim** → Operatör → **Ödeme altyapısı (Faz A1)** — checklist yeşil.
 2. Firma hesabı → **Öde ve Kurumsal’a geç** → test kart `4242 4242 4242 4242`.
 3. Dönüş: `dashboard?billing=success` ve plan **Kurumsal**.
 
 ```bash
-MAIL_BILLING_JWT='<JWT>' ./scripts/verify-mail-billing-config.sh
-MAIL_BILLING_JWT='<JWT>' ./scripts/smoke-mail-billing-stripe.sh
+OPERATOR_JWT='<platform operatör JWT>' ./scripts/run-mail-billing-a1-acceptance.sh
+OPERATOR_JWT='<JWT>' RUN_CHECKOUT_SMOKE=1 ./scripts/run-mail-billing-a1-acceptance.sh
 ```
+
+Detay: [MAIL_BILLING_A1_ACCEPTANCE.md](./MAIL_BILLING_A1_ACCEPTANCE.md) · API `GET platform-admin/mail/billing-health`
 
 Konsol dashboard’da **Öde ve Kurumsal’a geç** butonu, Stripe hazır değilse devre dışı kalır ve eksik `.env` maddeleri listelenir.
 

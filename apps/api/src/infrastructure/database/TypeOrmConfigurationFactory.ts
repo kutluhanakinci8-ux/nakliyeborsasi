@@ -39,6 +39,15 @@ import { MailInboundMessageEntity } from "./entities/MailInboundMessageEntity";
 import { MailMailboxSentEntity } from "./entities/MailMailboxSentEntity";
 import { MailImapCredentialEntity } from "./entities/MailImapCredentialEntity";
 import { MailComposeDraftEntity } from "./entities/MailComposeDraftEntity";
+import { CompanyMailTeamInviteEntity } from "./entities/CompanyMailTeamInviteEntity";
+import { MailOrganizationBillingStateEntity } from "./entities/MailOrganizationBillingStateEntity";
+import { MailOrganizationOperatorStateEntity } from "./entities/MailOrganizationOperatorStateEntity";
+import { MailOrganizationDeletionRequestEntity } from "./entities/MailOrganizationDeletionRequestEntity";
+import { MailOrganizationBrandingEntity } from "./entities/MailOrganizationBrandingEntity";
+import { MailOrganizationApiKeyEntity } from "./entities/MailOrganizationApiKeyEntity";
+import { MailOrganizationWebhookEndpointEntity } from "./entities/MailOrganizationWebhookEndpointEntity";
+import { MailAddressAliasEntity } from "./entities/MailAddressAliasEntity";
+import { MailAddressAliasTargetEntity } from "./entities/MailAddressAliasTargetEntity";
 
 @Injectable()
 export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
@@ -93,6 +102,15 @@ export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
         MailMailboxSentEntity,
         MailImapCredentialEntity,
         MailComposeDraftEntity,
+        CompanyMailTeamInviteEntity,
+        MailOrganizationBillingStateEntity,
+        MailOrganizationOperatorStateEntity,
+        MailOrganizationDeletionRequestEntity,
+        MailOrganizationBrandingEntity,
+        MailOrganizationApiKeyEntity,
+        MailOrganizationWebhookEndpointEntity,
+        MailAddressAliasEntity,
+        MailAddressAliasTargetEntity,
       ],
       synchronize,
       logging: false,

@@ -10,6 +10,7 @@ export function MarketingSiteFooter() {
       <nav className="footer-links">
         <a href="/sss">SSS</a>
         <a href="/sla">SLA</a>
+        <a href="/durum">Durum</a>
         <a href="/kvkk">KVKK</a>
         <a href="/iletisim">İletişim</a>
         <a href={CORPORATE_REGISTER}>Kurumsal kayıt</a>

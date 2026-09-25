@@ -6,6 +6,7 @@ import {
 } from "@nestjs/common";
 import { NotificationConfigurationService } from "./NotificationConfigurationService";
 import { MailTenantSubdomainService } from "./MailTenantSubdomainService";
+import { MailRuntimeRoleService } from "./MailRuntimeRoleService";
 
 const INTERVAL_MS = 30 * 60 * 1000;
 
@@ -19,9 +20,16 @@ export class MailTenantDnsVerificationScheduler
   public constructor(
     private readonly notificationConfigurationService: NotificationConfigurationService,
     private readonly mailTenantSubdomainService: MailTenantSubdomainService,
+    private readonly mailRuntimeRoleService: MailRuntimeRoleService,
   ) {}
 
   public onModuleInit(): void {
+    if (!this.mailRuntimeRoleService.shouldRunBackgroundJobs()) {
+      this.logger.log(
+        `LERTA_MAIL_RUNTIME_ROLE=${this.mailRuntimeRoleService.getRole()} — tenant DNS scheduler kapalı`,
+      );
+      return;
+    }
     if (!this.notificationConfigurationService.isEmailEnabled()) {
       return;
     }

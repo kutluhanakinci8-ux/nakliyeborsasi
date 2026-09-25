@@ -7,6 +7,7 @@ import { In, Repository } from "typeorm";
 import { PLATFORM_TENANT_MAIL_DOMAIN } from "@nakliyeborsasi/core";
 import { MailSenderIdentityEntity } from "../../infrastructure/database/entities/MailSenderIdentityEntity";
 import { MailDomainEntity } from "../../infrastructure/database/entities/MailDomainEntity";
+import { MailAddressAliasService } from "./MailAddressAliasService";
 
 export type InboundRoutingEntry = {
   emailAddress: string;
@@ -25,6 +26,7 @@ export class MailInboundRoutingService {
     private readonly senderRepository: Repository<MailSenderIdentityEntity>,
     @InjectRepository(MailDomainEntity)
     private readonly domainRepository: Repository<MailDomainEntity>,
+    private readonly mailAddressAliasService: MailAddressAliasService,
   ) {}
 
   public resolveInboundDomains(): string[] {
@@ -61,17 +63,39 @@ export class MailInboundRoutingService {
     });
     const pipeScript = this.resolvePipeScript();
     const entries: InboundRoutingEntry[] = [];
+    const seen = new Set<string>();
     for (const sender of senders) {
       if (!verifiedIds.has(sender.mailDomainId) || !sender.mailDomain) {
         continue;
       }
       const emailAddress =
         `${sender.localPart}@${sender.mailDomain.domain}`.toLowerCase();
+      if (seen.has(emailAddress)) {
+        continue;
+      }
+      seen.add(emailAddress);
       entries.push({
         emailAddress,
         organizationId: sender.organizationId,
         domain: sender.mailDomain.domain,
         virtualAliasLine: `${emailAddress}\t"|${pipeScript} ${emailAddress}"`,
+      });
+    }
+    const aliasRows =
+      await this.mailAddressAliasService.listAliasEmailsForRouting();
+    for (const alias of aliasRows) {
+      if (!inboundDomains.includes(alias.domain.toLowerCase())) {
+        continue;
+      }
+      if (seen.has(alias.aliasEmail)) {
+        continue;
+      }
+      seen.add(alias.aliasEmail);
+      entries.push({
+        emailAddress: alias.aliasEmail,
+        organizationId: alias.organizationId,
+        domain: alias.domain,
+        virtualAliasLine: `${alias.aliasEmail}\t"|${pipeScript} ${alias.aliasEmail}"`,
       });
     }
     entries.sort((a, b) => a.emailAddress.localeCompare(b.emailAddress));

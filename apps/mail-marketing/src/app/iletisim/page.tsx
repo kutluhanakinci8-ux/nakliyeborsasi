@@ -1,5 +1,12 @@
+import type { Metadata } from "next";
 import { MarketingPageShell } from "@/components/MarketingPageShell";
+import { SALES_EMAIL, SUPPORT_EMAIL } from "@/lib/marketingSite";
 import { CONSOLE_URL } from "@/lib/marketingUrls";
+
+export const metadata: Metadata = {
+  title: "İletişim — Lerta Mail",
+  description: "Lerta Mail destek, satış ve ürün erişim bilgileri.",
+};
 
 export default function ContactPage() {
   return (
@@ -7,8 +14,12 @@ export default function ContactPage() {
       <h1>İletişim</h1>
       <ul>
         <li>
-          E-posta:{" "}
-          <a href="mailto:destek@lerta.com.tr">destek@lerta.com.tr</a>
+          Destek:{" "}
+          <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>
+        </li>
+        <li>
+          Kurumsal satış / Enterprise:{" "}
+          <a href={`mailto:${SALES_EMAIL}`}>{SALES_EMAIL}</a>
         </li>
         <li>
           Yönetim konsolu:{" "}
@@ -17,8 +28,9 @@ export default function ContactPage() {
         <li>Webmail: posta.lerta.com.tr</li>
       </ul>
       <p style={{ color: "var(--muted)" }}>
-        Kurumsal satış ve teknik destek için yanıt süresi hedefi: iş günü 24
-        saat.
+        Yanıt süresi hedefi: destek için iş günü 24 saat; Enterprise için iş
+        günü 8 saat (sözleşmeye bağlı). Acil kesinti bildirimi için /durum
+        sayfasını kontrol edin.
       </p>
     </MarketingPageShell>
   );

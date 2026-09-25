@@ -9,6 +9,7 @@ import {
   Patch,
   Post,
   Query,
+  Res,
   UseGuards,
 } from "@nestjs/common";
 import { CompanyRoleCode, AuthenticatedUserContext } from "@nakliyeborsasi/core";
@@ -16,6 +17,18 @@ import { JwtAuthenticationGuard } from "../auth/JwtAuthenticationGuard";
 import { AuthenticatedUserParam } from "../auth/AuthenticatedUserParam";
 import { MailTenantSubdomainService } from "./MailTenantSubdomainService";
 import { MailOrganizationSendRateService } from "./MailOrganizationSendRateService";
+import { MailOrganizationStorageService } from "./MailOrganizationStorageService";
+import { MailOrganizationDeliveryService } from "./MailOrganizationDeliveryService";
+import { MailDmarcAggregateService } from "./MailDmarcAggregateService";
+import { MailOrganizationPrivacyService } from "./MailOrganizationPrivacyService";
+import { MailOrganizationSecurityService } from "./MailOrganizationSecurityService";
+import { UserTotpService } from "../auth/UserTotpService";
+import { MailConsoleAccessGuard } from "./MailConsoleAccessGuard";
+import {
+  ConfirmMailDeletionRequestDto,
+  CreateMailDeletionRequestDto,
+} from "./MailPrivacyRequestDto";
+import { Response } from "express";
 import { EmailSuppressionService } from "./EmailSuppressionService";
 import { MailCustomDomainService } from "./MailCustomDomainService";
 import {
@@ -25,26 +38,77 @@ import {
 
 import {
   ProvisionMailIdentityDto,
+  PilotQuickStartDto,
   RegisterCustomDomainDto,
   SelectMailPlanRequestDto,
 } from "./CompanyMailIdentityRequestDto";
+import { MailPilotOnboardingService } from "./MailPilotOnboardingService";
 import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
+import { MailOrganizationBrandingService } from "./MailOrganizationBrandingService";
+import { UpdateMailBrandingRequestDto } from "./MailBrandingRequestDto";
+import { MailOrganizationIntegrationService } from "./MailOrganizationIntegrationService";
+import {
+  CreateMailApiKeyRequestDto,
+  CreateMailWebhookRequestDto,
+  UpdateMailWebhookRequestDto,
+} from "./MailIntegrationRequestDto";
+import { MailAddressAliasService } from "./MailAddressAliasService";
+import { CreateMailAliasRequestDto } from "./MailAliasRequestDto";
+import { MailInboundRoutingService } from "./MailInboundRoutingService";
+import {
+  assertMailConsoleAccess,
+  canManageMailDomain,
+  canManageMailIdentity,
+  canManageCompanyTeamRoles,
+} from "./MailCompanyRoleAuthorization";
 
 class UpdateCompanyMailDisplayNameDto {
   public displayName!: string;
 }
 
 @Controller("company/mail-identity")
-@UseGuards(JwtAuthenticationGuard)
+@UseGuards(JwtAuthenticationGuard, MailConsoleAccessGuard)
 export class CompanyMailIdentityController {
   public constructor(
     private readonly mailTenantSubdomainService: MailTenantSubdomainService,
     private readonly mailOrganizationSendRateService: MailOrganizationSendRateService,
+    private readonly mailOrganizationStorageService: MailOrganizationStorageService,
+    private readonly mailOrganizationDeliveryService: MailOrganizationDeliveryService,
+    private readonly mailDmarcAggregateService: MailDmarcAggregateService,
+    private readonly mailOrganizationPrivacyService: MailOrganizationPrivacyService,
+    private readonly mailOrganizationSecurityService: MailOrganizationSecurityService,
+    private readonly userTotpService: UserTotpService,
     private readonly emailSuppressionService: EmailSuppressionService,
     private readonly mailCustomDomainService: MailCustomDomainService,
     private readonly mailIdentityAuditService: MailIdentityAuditService,
     private readonly mailSaasSubscriptionService: MailSaasSubscriptionService,
+    private readonly mailPilotOnboardingService: MailPilotOnboardingService,
+    private readonly mailOrganizationBrandingService: MailOrganizationBrandingService,
+    private readonly mailOrganizationIntegrationService: MailOrganizationIntegrationService,
+    private readonly mailAddressAliasService: MailAddressAliasService,
+    private readonly mailInboundRoutingService: MailInboundRoutingService,
   ) {}
+
+  private refreshInboundRouting(): void {
+    void this.mailInboundRoutingService.writePostfixVirtualMap().catch(() => {
+      /* best-effort */
+    });
+  }
+
+  @Post("pilot/quick-start")
+  public async pilotQuickStart(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: PilotQuickStartDto,
+  ) {
+    this.assertMailIdentityManager(user);
+    const result = await this.mailPilotOnboardingService.quickStart({
+      organizationId: user.companyId,
+      companyLegalName: body.companyLegalName,
+      displayName: body.displayName,
+      localPart: body.localPart,
+    });
+    return { message: "OK", ...result };
+  }
 
   @Get("plans")
   public listMailPlans() {
@@ -58,11 +122,47 @@ export class CompanyMailIdentityController {
   public async mailSubscription(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
   ) {
+    assertMailConsoleAccess(user);
     const subscription =
       await this.mailSaasSubscriptionService.getOrganizationMailPlan(
         user.companyId,
       );
-    return { message: "OK", subscription };
+    const sendRateQuota = await this.mailOrganizationSendRateService.getSnapshot(
+      user.companyId,
+    );
+    const storageQuota = await this.mailOrganizationStorageService.getSnapshot(
+      user.companyId,
+    );
+    return {
+      message: "OK",
+      subscription: {
+        ...subscription,
+        sendRateQuota,
+        storageQuota,
+      },
+    };
+  }
+
+  @Get("storage")
+  public async storageQuota(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    assertMailConsoleAccess(user);
+    const storageQuota = await this.mailOrganizationStorageService.getSnapshot(
+      user.companyId,
+    );
+    return { message: "OK", storageQuota };
+  }
+
+  @Get("send-rate")
+  public async sendRate(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    assertMailConsoleAccess(user);
+    const sendRateQuota = await this.mailOrganizationSendRateService.getSnapshot(
+      user.companyId,
+    );
+    return { message: "OK", sendRateQuota };
   }
 
   @Post("subscription/select")
@@ -75,11 +175,21 @@ export class CompanyMailIdentityController {
       user.roleCodes,
       body.planCode,
     );
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.SubscriptionPlanSelected,
+      {
+        organizationId: user.companyId,
+        planCode: body.planCode,
+      },
+      "/company/mail-identity/subscription/select",
+    );
     return { message: "OK", subscription };
   }
 
   @Get()
   public async getIdentity(@AuthenticatedUserParam() user: AuthenticatedUserContext) {
+    assertMailConsoleAccess(user);
     await this.mailTenantSubdomainService.syncTenantDomainVerificationFromDns();
     const identity =
       await this.mailTenantSubdomainService.getOrganizationMailIdentity(
@@ -100,6 +210,7 @@ export class CompanyMailIdentityController {
   public async listSenders(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
   ) {
+    assertMailConsoleAccess(user);
     const senders = await this.mailSaasSubscriptionService.listOrganizationSenders(
       user.companyId,
     );
@@ -119,13 +230,24 @@ export class CompanyMailIdentityController {
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
     @Param("senderId") senderId: string,
   ) {
-    this.assertCompanyOwner(user);
+    this.assertMailIdentityManager(user);
     await this.mailSaasSubscriptionService.setDefaultSender(
       user.companyId,
       senderId,
     );
     const senders = await this.mailSaasSubscriptionService.listOrganizationSenders(
       user.companyId,
+    );
+    const chosen = senders.find((s) => s.id === senderId);
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.DefaultSenderSet,
+      {
+        organizationId: user.companyId,
+        senderId,
+        fromAddress: chosen?.fromAddress ?? null,
+      },
+      `/company/mail-identity/senders/${senderId}/default`,
     );
     return { message: "OK", senders };
   }
@@ -135,7 +257,7 @@ export class CompanyMailIdentityController {
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
     @Body() body: ProvisionMailIdentityDto,
   ) {
-    this.assertCompanyOwner(user);
+    this.assertMailIdentityManager(user);
     const result = await this.mailTenantSubdomainService.provisionPilotSender({
       organizationId: user.companyId,
       localPart: body.localPart,
@@ -160,6 +282,7 @@ export class CompanyMailIdentityController {
   public async getCustomDomain(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
   ) {
+    assertMailConsoleAccess(user);
     const bundle = await this.mailCustomDomainService.getOrganizationBundle(
       user.companyId,
     );
@@ -171,7 +294,7 @@ export class CompanyMailIdentityController {
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
     @Body() body: RegisterCustomDomainDto,
   ) {
-    this.assertCompanyOwner(user);
+    this.assertMailDomainManager(user);
     await this.mailSaasSubscriptionService.assertCustomDomainAllowed(
       user.companyId,
     );
@@ -196,7 +319,7 @@ export class CompanyMailIdentityController {
   public async verifyCustomDomainDns(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
   ) {
-    this.assertCompanyOwner(user);
+    this.assertMailDomainManager(user);
     try {
       const domain =
         await this.mailCustomDomainService.verifyAndMarkOrganizationDomain(
@@ -234,7 +357,7 @@ export class CompanyMailIdentityController {
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
     @Body() body: ProvisionMailIdentityDto,
   ) {
-    this.assertCompanyOwner(user);
+    this.assertMailIdentityManager(user);
     const result = await this.mailCustomDomainService.provisionSender({
       organizationId: user.companyId,
       localPart: body.localPart,
@@ -255,10 +378,200 @@ export class CompanyMailIdentityController {
     return { message: "OK", ...result };
   }
 
+  @Get("security")
+  public async getMailSecurity(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    assertMailConsoleAccess(user);
+    const [policy, totp] = await Promise.all([
+      this.mailOrganizationSecurityService.getSecurityPolicy(user.companyId),
+      this.userTotpService.getStatus(user.userId),
+    ]);
+    return {
+      message: "OK",
+      policy,
+      totp,
+      permissions: {
+        canManagePolicy: canManageCompanyTeamRoles(user),
+      },
+    };
+  }
+
+  @Patch("security")
+  public async updateMailSecurity(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: { requireTotpForConsole?: boolean },
+  ) {
+    this.assertCompanyOwner(user);
+    if (body.requireTotpForConsole === undefined) {
+      throw new BadRequestException("requireTotpForConsole gerekli.");
+    }
+    const policy =
+      await this.mailOrganizationSecurityService.setRequireTotpForConsole(
+        user.companyId,
+        body.requireTotpForConsole,
+      );
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.SecurityRequireTotpUpdated,
+      {
+        organizationId: user.companyId,
+        requireTotpForConsole: body.requireTotpForConsole,
+      },
+      "/company/mail-identity/security",
+    );
+    return { message: "OK", policy };
+  }
+
+  @Get("audit")
+  public async listTenantAudit(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Query("limit") limitRaw?: string,
+    @Query("before") before?: string,
+  ) {
+    assertMailConsoleAccess(user);
+    const parsed = limitRaw ? Number.parseInt(limitRaw, 10) : 50;
+    const panel = await this.mailIdentityAuditService.listForOrganization(
+      user.companyId,
+      {
+        limit: Number.isFinite(parsed) ? parsed : 50,
+        before: before?.trim() || undefined,
+      },
+    );
+    return { message: "OK", ...panel };
+  }
+
+  @Get("privacy/export")
+  public async exportPrivacyData(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Res() response: Response,
+  ): Promise<void> {
+    this.assertCompanyOwner(user);
+    const payload = await this.mailOrganizationPrivacyService.buildExport(
+      user.companyId,
+    );
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.PrivacyDataExport,
+      { organizationId: user.companyId },
+      "/company/mail-identity/privacy/export",
+    );
+    const filename = `lerta-mail-export-${user.companyId.slice(0, 8)}.json`;
+    response.setHeader("Content-Type", "application/json; charset=utf-8");
+    response.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${filename}"`,
+    );
+    response.send(JSON.stringify(payload, null, 2));
+  }
+
+  @Get("privacy/deletion-status")
+  public async deletionStatus(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    this.assertCompanyOwner(user);
+    const status = await this.mailOrganizationPrivacyService.getDeletionStatus(
+      user.companyId,
+    );
+    return { message: "OK", ...status };
+  }
+
+  @Post("privacy/deletion-request")
+  public async createDeletionRequest(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: CreateMailDeletionRequestDto,
+  ) {
+    this.assertCompanyOwner(user);
+    const result = await this.mailOrganizationPrivacyService.createDeletionRequest(
+      {
+        organizationId: user.companyId,
+        userId: user.userId,
+        confirmPhrase: body.confirmPhrase,
+        reason: body.reason,
+      },
+    );
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.PrivacyDeletionRequested,
+      { requestId: result.requestId, executeAfter: result.executeAfter },
+      "/company/mail-identity/privacy/deletion-request",
+    );
+    return { message: "OK", ...result };
+  }
+
+  @Post("privacy/deletion-request/confirm")
+  public async confirmDeletionRequest(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: ConfirmMailDeletionRequestDto,
+  ) {
+    this.assertCompanyOwner(user);
+    const result =
+      await this.mailOrganizationPrivacyService.confirmDeletionRequest({
+        organizationId: user.companyId,
+        requestId: body.requestId,
+        confirmToken: body.confirmToken,
+      });
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.PrivacyDeletionCompleted,
+      { requestId: body.requestId },
+      "/company/mail-identity/privacy/deletion-request/confirm",
+    );
+    return { message: "OK", ...result };
+  }
+
+  @Delete("privacy/deletion-request/:requestId")
+  public async cancelDeletionRequest(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("requestId") requestId: string,
+  ) {
+    this.assertCompanyOwner(user);
+    await this.mailOrganizationPrivacyService.cancelDeletionRequest(
+      user.companyId,
+      requestId,
+    );
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.PrivacyDeletionCancelled,
+      { requestId },
+      "/company/mail-identity/privacy/deletion-request",
+    );
+    return { message: "OK", ok: true };
+  }
+
+  @Get("dmarc")
+  public async dmarcSummary(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Query("days") daysRaw?: string,
+  ) {
+    assertMailConsoleAccess(user);
+    const days = daysRaw ? Number.parseInt(daysRaw, 10) : 30;
+    const panel = await this.mailDmarcAggregateService.listForOrganization(
+      user.companyId,
+      Number.isFinite(days) ? days : 30,
+    );
+    return { message: "OK", panel };
+  }
+
+  @Get("delivery")
+  public async deliveryPanel(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Query("days") daysRaw?: string,
+  ) {
+    assertMailConsoleAccess(user);
+    const days = daysRaw ? Number.parseInt(daysRaw, 10) : 7;
+    const panel = await this.mailOrganizationDeliveryService.getDeliveryPanel(
+      user.companyId,
+      Number.isFinite(days) ? days : 7,
+    );
+    return { message: "OK", panel };
+  }
+
   @Get("suppressions")
   public async listSuppressions(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
   ) {
+    assertMailConsoleAccess(user);
     return {
       suppressions: await this.emailSuppressionService.listForOrganization(
         user.companyId,
@@ -271,7 +584,7 @@ export class CompanyMailIdentityController {
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
     @Body() body: { email: string; reason?: string; note?: string },
   ) {
-    this.assertCompanyOwner(user);
+    this.assertMailIdentityManager(user);
     const row = await this.emailSuppressionService.addSuppression({
       email: body.email,
       reason: body.reason ?? "manual",
@@ -297,7 +610,7 @@ export class CompanyMailIdentityController {
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
     @Query("email") email: string,
   ) {
-    this.assertCompanyOwner(user);
+    this.assertMailIdentityManager(user);
     const removed = await this.emailSuppressionService.removeSuppression(
       email,
       user.companyId,
@@ -316,12 +629,211 @@ export class CompanyMailIdentityController {
     return { ok: removed };
   }
 
+  @Get("aliases")
+  public async listAliases(@AuthenticatedUserParam() user: AuthenticatedUserContext) {
+    assertMailConsoleAccess(user);
+    const aliases = await this.mailAddressAliasService.listAliases(
+      user.companyId,
+    );
+    return { message: "OK", aliases };
+  }
+
+  @Post("aliases")
+  public async createAlias(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: CreateMailAliasRequestDto,
+  ) {
+    this.assertMailIdentityManager(user);
+    const alias = await this.mailAddressAliasService.createAlias(
+      user.companyId,
+      {
+        mailDomainId: body.mailDomainId,
+        localPart: body.localPart,
+        mailboxIds: body.mailboxIds,
+        label: body.label,
+      },
+    );
+    this.refreshInboundRouting();
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.MailAliasCreated,
+      {
+        organizationId: user.companyId,
+        aliasEmail: alias?.aliasEmail,
+        mailboxIds: body.mailboxIds,
+      },
+      "/company/mail-identity/aliases",
+    );
+    return { message: "OK", alias };
+  }
+
+  @Delete("aliases/:id")
+  public async deleteAlias(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("id") id: string,
+  ) {
+    this.assertMailIdentityManager(user);
+    const removed = await this.mailAddressAliasService.deleteAlias(
+      user.companyId,
+      id,
+    );
+    if (removed) {
+      this.refreshInboundRouting();
+      await this.mailIdentityAuditService.recordFromUser(
+        user,
+        MailIdentityAuditAction.MailAliasRemoved,
+        { organizationId: user.companyId, aliasId: id },
+        "/company/mail-identity/aliases",
+      );
+    }
+    return { ok: removed };
+  }
+
+  @Get("integration")
+  public async getIntegration(@AuthenticatedUserParam() user: AuthenticatedUserContext) {
+    assertMailConsoleAccess(user);
+    const integration =
+      await this.mailOrganizationIntegrationService.getIntegrationSnapshot(
+        user.companyId,
+      );
+    return { message: "OK", integration };
+  }
+
+  @Post("integration/api-keys")
+  public async createIntegrationApiKey(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: CreateMailApiKeyRequestDto,
+  ) {
+    this.assertMailIdentityManager(user);
+    const created = await this.mailOrganizationIntegrationService.createApiKey(
+      user.companyId,
+      body.label,
+    );
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.IntegrationApiKeyCreated,
+      {
+        organizationId: user.companyId,
+        apiKeyId: created.id,
+        keyPrefix: created.keyPrefix,
+      },
+      "/company/mail-identity/integration/api-keys",
+    );
+    return { message: "OK", apiKey: created };
+  }
+
+  @Delete("integration/api-keys/:id")
+  public async revokeIntegrationApiKey(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("id") id: string,
+  ) {
+    this.assertMailIdentityManager(user);
+    const revoked = await this.mailOrganizationIntegrationService.revokeApiKey(
+      user.companyId,
+      id,
+    );
+    if (revoked) {
+      await this.mailIdentityAuditService.recordFromUser(
+        user,
+        MailIdentityAuditAction.IntegrationApiKeyRevoked,
+        { organizationId: user.companyId, apiKeyId: id },
+        "/company/mail-identity/integration/api-keys",
+      );
+    }
+    return { ok: revoked };
+  }
+
+  @Post("integration/webhooks")
+  public async createIntegrationWebhook(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: CreateMailWebhookRequestDto,
+  ) {
+    this.assertMailIdentityManager(user);
+    const result = await this.mailOrganizationIntegrationService.createWebhook(
+      user.companyId,
+      body,
+    );
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.IntegrationWebhookCreated,
+      {
+        organizationId: user.companyId,
+        webhookId: result.webhook.id,
+        url: result.webhook.url,
+      },
+      "/company/mail-identity/integration/webhooks",
+    );
+    return { message: "OK", ...result };
+  }
+
+  @Patch("integration/webhooks/:id")
+  public async updateIntegrationWebhook(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("id") id: string,
+    @Body() body: UpdateMailWebhookRequestDto,
+  ) {
+    this.assertMailIdentityManager(user);
+    const result = await this.mailOrganizationIntegrationService.updateWebhook(
+      user.companyId,
+      id,
+      body,
+    );
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.IntegrationWebhookUpdated,
+      {
+        organizationId: user.companyId,
+        webhookId: id,
+      },
+      "/company/mail-identity/integration/webhooks",
+    );
+    return { message: "OK", ...result };
+  }
+
+  @Get("branding")
+  public async getBranding(@AuthenticatedUserParam() user: AuthenticatedUserContext) {
+    assertMailConsoleAccess(user);
+    const branding = await this.mailOrganizationBrandingService.getSnapshot(
+      user.companyId,
+    );
+    return { message: "OK", branding };
+  }
+
+  @Patch("branding")
+  public async updateBranding(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: UpdateMailBrandingRequestDto,
+  ) {
+    this.assertMailIdentityManager(user);
+    const branding = await this.mailOrganizationBrandingService.updateBranding(
+      user.companyId,
+      {
+        logoUrl: body.logoUrl,
+        emailBrandTitle: body.emailBrandTitle,
+        defaultFromDisplayName: body.defaultFromDisplayName,
+        hidePlatformEmailChrome: body.hidePlatformEmailChrome,
+      },
+    );
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.BrandingUpdated,
+      {
+        organizationId: user.companyId,
+        logoUrl: branding.logoUrl,
+        emailBrandTitle: branding.emailBrandTitle,
+        hidePlatformEmailChrome: branding.hidePlatformEmailChrome,
+      },
+      "/company/mail-identity/branding",
+    );
+    return { message: "OK", branding };
+  }
+
   @Patch("display-name")
   public async updateDisplayName(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
     @Body() body: UpdateCompanyMailDisplayNameDto,
   ) {
-    this.assertCompanyOwner(user);
+    this.assertMailIdentityManager(user);
     const sender =
       await this.mailTenantSubdomainService.updateOrganizationSenderDisplayName(
         user.companyId,
@@ -340,10 +852,26 @@ export class CompanyMailIdentityController {
     return { message: "OK", sender };
   }
 
-  private assertCompanyOwner(user: AuthenticatedUserContext): void {
-    if (!user.roleCodes.includes(CompanyRoleCode.CompanyOwner)) {
+  private assertMailIdentityManager(user: AuthenticatedUserContext): void {
+    if (!canManageMailIdentity(user)) {
       throw new ForbiddenException(
-        "Kurumsal e-posta kimliği yalnızca firma sahibi tarafından yönetilebilir.",
+        "Posta kimliği yalnızca firma sahibi veya posta yöneticisi tarafından yönetilebilir.",
+      );
+    }
+  }
+
+  private assertMailDomainManager(user: AuthenticatedUserContext): void {
+    if (!canManageMailDomain(user)) {
+      throw new ForbiddenException(
+        "Özel domain yalnızca firma sahibi tarafından yönetilebilir.",
+      );
+    }
+  }
+
+  private assertCompanyOwner(user: AuthenticatedUserContext): void {
+    if (!canManageCompanyTeamRoles(user)) {
+      throw new ForbiddenException(
+        "Gizlilik ve veri silme işlemleri yalnızca firma sahibi tarafından yapılabilir.",
       );
     }
   }

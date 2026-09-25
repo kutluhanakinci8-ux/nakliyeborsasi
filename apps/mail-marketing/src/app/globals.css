@@ -133,9 +133,114 @@ header {
   font-weight: 600;
 }
 
+.wrap-narrow h2 {
+  font-size: 1.15rem;
+  margin: 1.75rem 0 0.5rem;
+}
+
+.wrap-narrow ul {
+  margin: 0.5rem 0 1rem;
+  padding-left: 1.25rem;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.wrap-narrow ul strong {
+  color: var(--text);
+}
+
+.trust-strip {
+  margin: 2.5rem 0 0;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.trust-strip h2 {
+  font-size: 1rem;
+  margin: 0 0 0.75rem;
+}
+
+.trust-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  font-size: 0.95rem;
+}
+
 .faq-item p {
   margin: 12px 0 0;
   color: var(--muted);
+}
+
+.status-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 20px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  margin: 24px 0 16px;
+}
+
+.status-banner.status-operational {
+  border-color: #166534;
+  background: rgba(22, 101, 52, 0.2);
+}
+
+.status-banner.status-degraded {
+  border-color: #b45309;
+  background: rgba(180, 83, 9, 0.15);
+}
+
+.status-banner.status-major_outage {
+  border-color: #b91c1c;
+  background: rgba(185, 28, 28, 0.15);
+}
+
+.status-banner.status-maintenance {
+  border-color: #2563eb;
+  background: rgba(37, 99, 235, 0.15);
+}
+
+.status-notice {
+  padding: 12px 16px;
+  border-left: 3px solid var(--accent);
+  background: var(--bg-soft);
+  border-radius: 8px;
+}
+
+.status-pill {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.status-pill.status-operational {
+  background: #166534;
+  color: #dcfce7;
+}
+
+.status-pill.status-degraded {
+  background: #b45309;
+  color: #fffbeb;
+}
+
+.status-pill.status-major_outage {
+  background: #b91c1c;
+  color: #fef2f2;
+}
+
+.status-pill.status-maintenance {
+  background: #1d4ed8;
+  color: #eff6ff;
+}
+
+.status-table td {
+  vertical-align: top;
 }
 
 .sla-table {

@@ -9,7 +9,16 @@ export type SubscriptionPlanDisplayMeta = {
   productLine?: "logistics" | "lerta_mail";
   mailMaxSendsPerHour?: number;
   mailMaxMailboxes?: number;
+  /** Plan depolama üst sınırı (bayt). */
+  mailStorageLimitBytes?: number;
+  /** Tek ek üst sınırı (bayt). */
+  mailMaxAttachmentBytes?: number;
   customDomainAllowed?: boolean;
+  mailWhiteLabelAllowed?: boolean;
+  mailPublicApiAllowed?: boolean;
+  /** Vitrin / iyzico (A7) — aylık TRY gösterimi */
+  monthlyPriceTry?: number;
+  annualPriceTry?: number;
 };
 
 const DISPLAY: readonly SubscriptionPlanDisplayMeta[] = [
@@ -45,7 +54,10 @@ const DISPLAY: readonly SubscriptionPlanDisplayMeta[] = [
     productLine: "lerta_mail",
     mailMaxSendsPerHour: 80,
     mailMaxMailboxes: 1,
+    mailStorageLimitBytes: 2 * 1024 * 1024 * 1024,
+    mailMaxAttachmentBytes: 2 * 1024 * 1024,
     customDomainAllowed: false,
+    monthlyPriceTry: 0,
   },
   {
     planCode: "lerta_mail_corporate_tr",
@@ -57,7 +69,28 @@ const DISPLAY: readonly SubscriptionPlanDisplayMeta[] = [
     productLine: "lerta_mail",
     mailMaxSendsPerHour: 500,
     mailMaxMailboxes: 25,
+    mailStorageLimitBytes: 25 * 1024 * 1024 * 1024,
+    mailMaxAttachmentBytes: 10 * 1024 * 1024,
     customDomainAllowed: true,
+    monthlyPriceTry: 490,
+    annualPriceTry: 4900,
+  },
+  {
+    planCode: "lerta_mail_enterprise_tr",
+    displayName: "Enterprise",
+    tagline: "White-label e-posta, logo, From adı ve yükseltilmiş kota.",
+    monthlyPriceEur: 149,
+    annualPriceEur: 1490,
+    productLine: "lerta_mail",
+    mailMaxSendsPerHour: 2000,
+    mailMaxMailboxes: 100,
+    mailStorageLimitBytes: 100 * 1024 * 1024 * 1024,
+    mailMaxAttachmentBytes: 25 * 1024 * 1024,
+    customDomainAllowed: true,
+    mailWhiteLabelAllowed: true,
+    mailPublicApiAllowed: true,
+    monthlyPriceTry: 1490,
+    annualPriceTry: 14900,
   },
 ];
 

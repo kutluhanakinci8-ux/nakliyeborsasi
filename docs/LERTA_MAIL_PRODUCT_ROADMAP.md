@@ -15,11 +15,11 @@
 | Konsol (kayıt, domain sihirbazı, pilot kutu, plan, ödeme iskeleti) | MVP |
 | Vitrin + API fiyat planları | MVP |
 | Stripe / iyzico callback kodu | Kod hazır; **Stripe test anahtarları VPS’te sizden** |
-| www → mail vitrin | **Bekliyor** (U88 taşınması) |
+| www → mail vitrin | **Bekliyor** (U88 taşınması; cutover scriptleri hazır — `WWW_CUTOVER_LERTA_MAIL.md`) |
 | Thread / konuşma görünümü | Yok |
-| Çoklu kullanıcı / davet / roller (mail_admin) | Kısıtlı |
+| Çoklu kullanıcı / davet / roller (mail_admin) | **uygulandı (B3)** |
 | Faturalama yaşam döngüsü (iptal, fatura e-postası) | Yok |
-| KVKK export / silme self-servis | Yok |
+| KVKK export / silme self-servis | Konsol /privacy + API (E3) |
 | Kurumsal kimlik (logo, imza, hukuki sayfalar) | Kısmi |
 
 ---
@@ -30,13 +30,13 @@
 
 | # | İş | Takip / kabul kriteri |
 |---|-----|------------------------|
-| A1 | Stripe **test** checkout uçtan uca | Operatör paneli Stripe API OK; `smoke-mail-billing-stripe.sh`; test kart → Kurumsal plan — **kod hazır, VPS anahtar bekliyor** |
-| A2 | Stripe **canlı** + webhook prod | `invoice.paid` sonrası plan; hata alert |
-| A3 | iyzico sandbox → prod (TR ödeme) | Callback + plan aktivasyonu |
-| A4 | `www` cutover | `preflight-www-cutover` OK; `www` title = Lerta Mail |
-| A5 | Vitrin kurumsal kimlik | Logo, tipografi, SSS, KVKK, iletişim, SLA — **SSS/SLA + marka header (devam: SSS içerik, hukuk)** |
+| A1 | Stripe **test** checkout uçtan uca | `billing-health` + `run-mail-billing-a1-acceptance.sh` — **kod hazır, VPS test anahtar + manuel checkout** |
+| A2 | Stripe **canlı** + webhook prod | `MAIL_BILLING_PRODUCTION_CUTOVER.md` — **VPS live anahtar bekliyor** |
+| A3 | iyzico sandbox → prod (TR ödeme) | Aynı runbook — **canlı anahtar bekliyor** |
+| A4 | `www` cutover | `preflight` + `apply-www-cutover` + `smoke-www-cutover` — **araçlar hazır; DNS/U88 iş kararı** |
+| A5 | Vitrin kurumsal kimlik | Logo, tipografi, SSS, KVKK, iletişim, SLA — **uygulandı** (`MAIL_MARKETING_VITRIN_A5.md`; hukuk metinleri yayın öncesi onay) |
 | A6 | Kayıt → onboarding akışı | Kayıt → domain sihirbazı; dashboard kurumsal banner — **B1 ile güçlendirildi** |
-| A7 | Fiyatlandırma TRY + EUR tutarlılığı | Vitrin = API katalog = checkout tutarı |
+| A7 | Fiyatlandırma TRY + EUR tutarlılığı | `mail-plans` EUR+TRY, iyzico tutarları — **katalog uyumlu** |
 
 **Bağımlılık:** A4 için U88’nin `u88.lerta.com.tr` (veya harici) taşınması.
 
@@ -50,11 +50,11 @@
 |---|-----|------------------------|
 | B1 | Domain sihirbazı UX (varsayılan onboarding) | Kayıt → `/domain`; kurumsal dashboard domain-first — **uygulandı** |
 | B2 | Çoklu posta kutusu (plan kotası) | `/mailboxes` listesi + kota çubuğu — **uygulandı** |
-| B3 | Kullanıcı daveti + roller | `CompanyOwner`, `BillingAdmin`, `MailAdmin`, salt okunur |
-| B4 | Alias / paylaşımlı adres (isteğe bağlı) | `destek@` → iki kullanıcı |
-| B5 | Gönderim kotası & upgrade | Saat/gün limiti; konsolda kullanım çubuğu |
-| B6 | Abonelik yaşam döngüsü | İptal, yenileme, ödeme başarısız → grace period |
-| B7 | Operatör: tenant listesi, askıya alma, abuse | `yonetim/operator` genişletme |
+| B3 | Kullanıcı daveti + roller | `/team` + davet e-postası; `MAIL_ADMIN`, `BILLING_ADMIN`, `VIEWER` — **uygulandı** |
+| B4 | Alias / paylaşımlı adres (isteğe bağlı) | `company/mail-identity/aliases`, konsol mailboxes — **uygulandı** |
+| B5 | Gönderim kotası & upgrade | Dashboard saatlik kullanım çubuğu + `send-rate` API — **uygulandı** |
+| B6 | Abonelik yaşam döngüsü | Stripe webhook grace, iptal/yenileme, konsol — **uygulandı** |
+| B7 | Operatör: tenant listesi, askıya alma, abuse | `/operator` tenant tablosu + gönderim engeli — **uygulandı** |
 
 ---
 
@@ -64,11 +64,11 @@
 
 | # | İş | Takip / kabul kriteri |
 |---|-----|------------------------|
-| C1 | `slug@kullanici.lerta.com.tr` tek tık | Kayıt → pilot kutu → webmail |
-| C2 | Ücretsiz pilot limitleri net | 1 kutu, 80/saat; vitrinde açık |
-| C3 | Pilot → Kurumsal yükseltme | Ödeme veya domain geçişi tek akış |
-| C4 | Şifre sıfırlama / hesap güvenliği | Mail-only kullanıcı self-servis |
-| C5 | Mobil uyumlu webmail | posta responsive; temel PWA (opsiyonel) |
+| C1 | `slug@kullanici.lerta.com.tr` tek tık | Kayıt → `pilot/quick-start` → webmail handoff — **uygulandı** |
+| C2 | Ücretsiz pilot limitleri net | Vitrin + kayıt metni — **uygulandı** |
+| C3 | Pilot → Kurumsal yükseltme | `/upgrade` ödeme + domain — **uygulandı** |
+| C4 | Şifre sıfırlama / hesap güvenliği | `/forgot-password`, `/reset-password` — **uygulandı** |
+| C5 | Mobil uyumlu webmail | Mobil paneller, `100dvh`, manifest + PWA meta — **uygulandı** |
 
 ---
 
@@ -78,13 +78,31 @@
 
 | # | İş | Öncelik | Kabul kriteri |
 |---|-----|---------|----------------|
-| D1 | Konuşma / thread listesi | Yüksek | Aynı `In-Reply-To` zinciri tek satır |
-| D2 | Çöp / arşiv klasörleri | Yüksek | IMAP + UI uyumu |
-| D3 | İmza ve şablonlar | Orta | Compose’da seçilebilir |
-| D4 | Gelişmiş arama (filtre) | Orta | Gönderen, tarih, ek var |
-| D5 | Büyük ek / kota depolama | Orta | Plan depolama GB; uyarı |
+| D1 | Konuşma / thread listesi | Yüksek | `In-Reply-To` zinciri, API `threads`, webmail konuşma görünümü — **uygulandı** |
+| D2 | Çöp / arşiv klasörleri | Yüksek | `mailboxFolder`, Maildir `.Archive`/`.Trash`, webmail — **uygulandı** |
+| D3 | İmza ve şablonlar | Orta | `compose-presets` API, ayarlar + yaz ekranı — **uygulandı** |
+| D4 | Gelişmiş arama (filtre) | Orta | Gönderen, tarih aralığı, ek — **uygulandı** |
+| D5 | Büyük ek / kota depolama | Orta | Plan GB + ek MB, kota çubuğu, ingest engeli — **uygulandı** |
 | D6 | Takvim / kişiler | Düşük | Harici CalDAV sonra |
 | D7 | Bildirimler (push / ses) | Düşük | PWA sonrası |
+
+---
+
+## Faz G — Webmail UX & rekabet (posta.lerta.com.tr)
+
+**Amaç:** Gmail/Outlook ile görünür özellik açığını faz faz kapatmak; önce güven (HTTPS) ve keşfedilebilirlik.
+
+| # | İş | Durum |
+|---|-----|--------|
+| G0 | HTTPS / sertifika | `verify-posta-https.sh` — **VPS doğrulama gerekli** |
+| G1 | Boş durum, sidebar, thread toggle | **uygulandı** — `MAIL_WEBMAIL_UX_ROADMAP.md` |
+| G2 | Toplu işlem, okundu, kısayollar | **uygulandı** |
+| G3 | İlet, BCC | **uygulandı** |
+| G4 | Tema, tenant logo, zengin yazım | **uygulandı** |
+| G5 | Yıldızlı mesajlar (API + webmail) | **kısmi** |
+| G6 | Kurallar, push, offline | Planlı |
+
+Rakip matrisi: `docs/MAIL_WEBMAIL_UX_BENCHMARK.md` (~52/100 bugün).
 
 ---
 
@@ -94,13 +112,13 @@
 
 | # | İş | Takip |
 |---|-----|--------|
-| E1 | Tenant teslimat paneli | Bounce, suppression, son 7 gün gönderim |
-| E2 | DMARC aggregate (rua) görünümü | Domain bazlı özet |
-| E3 | KVKK veri export + hesap silme | API + konsol talebi |
-| E4 | Denetim kaydı (tenant) | Kim, ne zaman, domain/kutu değişti |
-| E5 | 2FA (TOTP) yönetim + webmail | Opsiyonel zorunlu kurumsal paket |
-| E6 | SPF/DKIM rotasyon runbook | Operatör dokümantasyonu |
-| E7 | Yedekleme / felaket kurtarma | RPO/RTO tanımı, Maildir yedek |
+| E1 | Tenant teslimat paneli | `GET …/delivery`, konsol /delivery — **uygulandı** |
+| E2 | DMARC aggregate (rua) görünümü | `mail_dmarc_aggregate`, konsol /dmarc, admin ingest — **uygulandı** |
+| E3 | KVKK veri export + hesap silme | `privacy/*`, konsol /privacy, `MAIL_KVKK_*` — **uygulandı** |
+| E4 | Denetim kaydı (tenant) | `GET …/audit`, konsol /audit, `MAIL_TEAM_*` — **uygulandı** |
+| E5 | 2FA (TOTP) yönetim + webmail | `auth/totp`, konsol /security, org zorunluluk — **uygulandı** |
+| E6 | SPF/DKIM rotasyon runbook | `MAIL_SPF_DKIM_ROTATION_RUNBOOK.md`, `verify-custom-domain-mail-dns.sh` — **uygulandı** |
+| E7 | Yedekleme / felaket kurtarma | `MAIL_BACKUP_DISASTER_RECOVERY.md`, backup/restore scriptleri — **uygulandı** |
 
 ---
 
@@ -108,11 +126,11 @@
 
 | # | İş |
 |---|-----|
-| F1 | İzleme: API, kuyruk, postfix, disk, cert süresi |
-| F2 | Durum sayfası (`status.lerta.com.tr` veya vitrin altı) |
-| F3 | Çok VPS / ayrı mail worker (yük büyüdüğünde) |
-| F4 | White-label (logo, From adı) Enterprise |
-| F5 | Public API / webhook (müşteri entegrasyonu) |
+| F1 | İzleme: API, kuyruk, postfix, disk, cert süresi | `platform-admin/mail/monitoring`, konsol operatör, `MAIL_PLATFORM_MONITORING.md` — **uygulandı** |
+| F2 | Durum sayfası (`status.lerta.com.tr` veya vitrin altı) | `/durum`, `public/lerta-mail/status` — **uygulandı** |
+| F3 | Çok VPS / ayrı mail worker (yük büyüdüğünde) | `LERTA_MAIL_RUNTIME_ROLE`, `MAIL_MULTI_VPS_SCALE.md` — **uygulandı** |
+| F4 | White-label (logo, From adı) Enterprise | `lerta_mail_enterprise_tr`, konsol /branding, `MAIL_WHITE_LABEL_ENTERPRISE.md` — **uygulandı** |
+| F5 | Public API / webhook (müşteri entegrasyonu) | `public/lerta-mail/v1`, konsol /integration, `MAIL_PUBLIC_API_WEBHOOKS.md` — **uygulandı** |
 
 ---
 
@@ -140,7 +158,7 @@
 | Bounce oranı (platform) | suppression | < %2 |
 | Destek talebi / tenant | manuel | düşüş |
 
-Operatör konsoluna ileride **mini KPI kartı** (Faz B7 ile).
+Operatör konsolu **mini KPI kartı** — `platform-admin/mail/kpi`, `MAIL_OPERATOR_KPI.md` — **uygulandı**.
 
 ---
 

@@ -44,7 +44,13 @@ export class SubscriptionPlanController {
       recommended: boolean;
       mailMaxSendsPerHour: number;
       mailMaxMailboxes: number;
+      mailStorageLimitGb: number;
+      mailMaxAttachmentMb: number;
       customDomainAllowed: boolean;
+      mailWhiteLabelAllowed: boolean;
+      mailPublicApiAllowed: boolean;
+      monthlyPriceTry: number;
+      annualPriceTry: number;
     }[];
   } {
     const plans = this.subscriptionPlanCatalog
@@ -63,7 +69,23 @@ export class SubscriptionPlanController {
           recommended: display?.recommended ?? false,
           mailMaxSendsPerHour: display?.mailMaxSendsPerHour ?? 80,
           mailMaxMailboxes: display?.mailMaxMailboxes ?? 1,
+          mailStorageLimitGb:
+            Math.round(
+              ((display?.mailStorageLimitBytes ?? 2 * 1024 ** 3) /
+                (1024 ** 3)) *
+                10,
+            ) / 10,
+          mailMaxAttachmentMb:
+            Math.round(
+              ((display?.mailMaxAttachmentBytes ?? 2 * 1024 ** 2) /
+                (1024 ** 2)) *
+                10,
+            ) / 10,
           customDomainAllowed: display?.customDomainAllowed ?? false,
+          mailWhiteLabelAllowed: display?.mailWhiteLabelAllowed ?? false,
+          mailPublicApiAllowed: display?.mailPublicApiAllowed ?? false,
+          monthlyPriceTry: display?.monthlyPriceTry ?? 0,
+          annualPriceTry: display?.annualPriceTry ?? 0,
         };
       });
     return { message: "OK", plans };

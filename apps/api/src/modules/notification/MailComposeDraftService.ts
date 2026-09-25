@@ -11,16 +11,17 @@ import {
   MailComposeDraftEntity,
 } from "../../infrastructure/database/entities/MailComposeDraftEntity";
 import { ComposeAttachmentInput } from "./MailMailboxComposeService";
+import { MailOrganizationStorageService } from "./MailOrganizationStorageService";
 
 @Injectable()
 export class MailComposeDraftService {
   private static readonly maxDraftsPerUser = 25;
   private static readonly maxAttachments = 3;
-  private static readonly maxAttachmentBytes = 2 * 1024 * 1024;
 
   public constructor(
     @InjectRepository(MailComposeDraftEntity)
     private readonly draftRepository: Repository<MailComposeDraftEntity>,
+    private readonly mailOrganizationStorageService: MailOrganizationStorageService,
   ) {}
 
   public async list(organizationId: string, userId: string) {
@@ -43,7 +44,11 @@ export class MailComposeDraftService {
     },
   ) {
     await this.assertDraftQuota(organizationId, userId);
-    const attachments = this.parseAttachments(body.attachments);
+    const attachments = await this.parseAttachments(
+      organizationId,
+      body.attachments,
+    );
+    await this.assertDraftStorage(organizationId, body.text ?? "", attachments);
     const row = await this.draftRepository.save(
       this.draftRepository.create({
         organizationId,
@@ -69,6 +74,7 @@ export class MailComposeDraftService {
     },
   ) {
     const row = await this.assertDraftAccess(organizationId, userId, draftId);
+    const bytesBefore = this.estimateDraftBytes(row.bodyText ?? "", row.attachments);
     if (body.to !== undefined) {
       row.toAddress = body.to.trim().toLowerCase() || null;
     }
@@ -79,7 +85,18 @@ export class MailComposeDraftService {
       row.bodyText = body.text;
     }
     if (body.attachments !== undefined) {
-      row.attachments = this.parseAttachments(body.attachments);
+      row.attachments = await this.parseAttachments(
+        organizationId,
+        body.attachments,
+      );
+    }
+    const bytesAfter = this.estimateDraftBytes(row.bodyText ?? "", row.attachments);
+    const delta = bytesAfter - bytesBefore;
+    if (delta > 0) {
+      await this.mailOrganizationStorageService.assertCanStore(
+        organizationId,
+        delta,
+      );
     }
     const saved = await this.draftRepository.save(row);
     return this.toDto(saved);
@@ -162,9 +179,33 @@ export class MailComposeDraftService {
     return row;
   }
 
-  private parseAttachments(
+  private estimateDraftBytes(
+    text: string,
+    attachments: MailComposeDraftAttachmentMeta[] | null,
+  ): number {
+    const attachmentBytes =
+      attachments?.reduce((sum, file) => {
+        const decoded = Buffer.from(file.contentBase64, "base64");
+        return sum + decoded.length;
+      }, 0) ?? 0;
+    return text.length + attachmentBytes;
+  }
+
+  private async assertDraftStorage(
+    organizationId: string,
+    text: string,
+    attachments: MailComposeDraftAttachmentMeta[] | null,
+  ): Promise<void> {
+    await this.mailOrganizationStorageService.assertCanStore(
+      organizationId,
+      this.estimateDraftBytes(text, attachments),
+    );
+  }
+
+  private async parseAttachments(
+    organizationId: string,
     attachments?: ComposeAttachmentInput[],
-  ): MailComposeDraftAttachmentMeta[] | null {
+  ): Promise<MailComposeDraftAttachmentMeta[] | null> {
     if (!attachments?.length) {
       return null;
     }
@@ -173,10 +214,17 @@ export class MailComposeDraftService {
         `En fazla ${MailComposeDraftService.maxAttachments} ek.`,
       );
     }
+    const maxBytes =
+      await this.mailOrganizationStorageService.resolveMaxAttachmentBytes(
+        organizationId,
+      );
+    const maxMb = Math.max(1, Math.round(maxBytes / (1024 * 1024)));
     return attachments.map((item) => {
       const content = Buffer.from(item.contentBase64, "base64");
-      if (content.length > MailComposeDraftService.maxAttachmentBytes) {
-        throw new BadRequestException("Ek dosya 2 MB sınırını aşıyor.");
+      if (content.length > maxBytes) {
+        throw new BadRequestException(
+          `Ek dosya plan limitini aşıyor (${maxMb} MB).`,
+        );
       }
       return {
         filename: item.filename,

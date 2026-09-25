@@ -1,12 +1,15 @@
 import {
   BadRequestException,
   ForbiddenException,
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { In, Repository } from "typeorm";
 import { MailSenderIdentityEntity } from "../../infrastructure/database/entities/MailSenderIdentityEntity";
+import { MailMailboxEntity } from "../../infrastructure/database/entities/MailMailboxEntity";
 import {
   AuthorizationException,
   CompanyRoleCode,
@@ -15,6 +18,7 @@ import {
 import { SubscriptionPlanCatalog } from "../subscription/SubscriptionPlanCatalog";
 import { SubscriptionPlanDisplayCatalog } from "../subscription/SubscriptionPlanDisplayCatalog";
 import { CompanySubscriptionPersistenceService } from "../subscription/CompanySubscriptionPersistenceService";
+import { MailSubscriptionLifecycleService } from "./MailSubscriptionLifecycleService";
 
 @Injectable()
 export class MailSaasSubscriptionService {
@@ -23,6 +27,10 @@ export class MailSaasSubscriptionService {
     private readonly companySubscriptionPersistenceService: CompanySubscriptionPersistenceService,
     @InjectRepository(MailSenderIdentityEntity)
     private readonly senderRepository: Repository<MailSenderIdentityEntity>,
+    @InjectRepository(MailMailboxEntity)
+    private readonly mailboxRepository: Repository<MailMailboxEntity>,
+    @Inject(forwardRef(() => MailSubscriptionLifecycleService))
+    private readonly mailSubscriptionLifecycleService: MailSubscriptionLifecycleService,
   ) {}
 
   public listMailPlans() {
@@ -55,6 +63,8 @@ export class MailSaasSubscriptionService {
         used: mailboxUsed,
         limit: mailboxLimit,
       },
+      storageLimitBytes: this.resolveStorageLimitBytesForPlanCode(planCode),
+      maxAttachmentBytes: this.resolveMaxAttachmentBytesForPlanCode(planCode),
     };
   }
 
@@ -68,17 +78,37 @@ export class MailSaasSubscriptionService {
       relations: { mailDomain: true },
       order: { isDefault: "DESC", createdAt: "ASC" },
     });
-    return senders.map((sender) => ({
-      id: sender.id,
-      localPart: sender.localPart,
-      displayName: sender.displayName,
-      isDefault: sender.isDefault,
-      domain: sender.mailDomain?.domain ?? "",
-      fromAddress: sender.mailDomain
+    const addresses = senders
+      .map((sender) =>
+        sender.mailDomain
+          ? `${sender.localPart}@${sender.mailDomain.domain}`.toLowerCase()
+          : null,
+      )
+      .filter((value): value is string => Boolean(value));
+    const mailboxes = addresses.length
+      ? await this.mailboxRepository.find({
+          where: { organizationId, emailAddress: In(addresses) },
+        })
+      : [];
+    const mailboxByEmail = new Map(
+      mailboxes.map((row) => [row.emailAddress.toLowerCase(), row.id]),
+    );
+    return senders.map((sender) => {
+      const fromAddress = sender.mailDomain
         ? `${sender.localPart}@${sender.mailDomain.domain}`
-        : `${sender.localPart}@`,
-      createdAt: sender.createdAt.toISOString(),
-    }));
+        : `${sender.localPart}@`;
+      return {
+        id: sender.id,
+        mailboxId:
+          mailboxByEmail.get(fromAddress.toLowerCase()) ?? null,
+        localPart: sender.localPart,
+        displayName: sender.displayName,
+        isDefault: sender.isDefault,
+        domain: sender.mailDomain?.domain ?? "",
+        fromAddress,
+        createdAt: sender.createdAt.toISOString(),
+      };
+    });
   }
 
   public async setDefaultSender(
@@ -146,6 +176,26 @@ export class MailSaasSubscriptionService {
     );
   }
 
+  public resolveStorageLimitBytesForPlanCode(planCode: string | null): number {
+    if (planCode) {
+      const display = SubscriptionPlanDisplayCatalog.find(planCode);
+      if (display?.mailStorageLimitBytes) {
+        return display.mailStorageLimitBytes;
+      }
+    }
+    return 2 * 1024 * 1024 * 1024;
+  }
+
+  public resolveMaxAttachmentBytesForPlanCode(planCode: string | null): number {
+    if (planCode) {
+      const display = SubscriptionPlanDisplayCatalog.find(planCode);
+      if (display?.mailMaxAttachmentBytes) {
+        return display.mailMaxAttachmentBytes;
+      }
+    }
+    return 2 * 1024 * 1024;
+  }
+
   public resolveSendLimitForPlanCode(planCode: string | null): number {
     if (planCode) {
       const display = SubscriptionPlanDisplayCatalog.find(planCode);
@@ -192,6 +242,9 @@ export class MailSaasSubscriptionService {
       organizationId,
       planCode,
     );
+    await this.mailSubscriptionLifecycleService.recordManualTrialSelection(
+      organizationId,
+    );
     return this.getOrganizationMailPlan(organizationId);
   }
 
@@ -214,7 +267,22 @@ export class MailSaasSubscriptionService {
       recommended: display?.recommended ?? false,
       mailMaxSendsPerHour: display?.mailMaxSendsPerHour ?? 80,
       mailMaxMailboxes: display?.mailMaxMailboxes ?? 1,
+      mailStorageLimitGb:
+        Math.round(
+          ((display?.mailStorageLimitBytes ??
+            2 * 1024 * 1024 * 1024) /
+            (1024 ** 3)) *
+            10,
+        ) / 10,
+      mailMaxAttachmentMb:
+        Math.round(
+          ((display?.mailMaxAttachmentBytes ?? 2 * 1024 * 1024) /
+            (1024 * 1024)) *
+            10,
+        ) / 10,
       customDomainAllowed: display?.customDomainAllowed ?? false,
+      mailWhiteLabelAllowed: display?.mailWhiteLabelAllowed ?? false,
+      mailPublicApiAllowed: display?.mailPublicApiAllowed ?? false,
       tierCode: plan?.tierCode ?? null,
     };
   }

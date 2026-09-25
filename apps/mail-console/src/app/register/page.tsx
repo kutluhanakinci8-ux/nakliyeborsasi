@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { registerMailSaas } from "@/lib/consoleApi";
+import { MAIL_WEB_URL } from "@/lib/apiConfig";
+import { quickStartPilotMailbox, registerMailSaas } from "@/lib/consoleApi";
 import { useConsoleSession } from "@/lib/session";
 
 const MAIL_PLAN_CODES = new Set([
@@ -17,13 +18,17 @@ export default function RegisterPage() {
   const [subscriptionPlanCode, setSubscriptionPlanCode] = useState(
     "lerta_mail_pilot_tr",
   );
+  const [pilotSlug, setPilotSlug] = useState("");
 
   useEffect(() => {
-    const fromQuery = new URLSearchParams(window.location.search)
-      .get("plan")
-      ?.trim();
+    const params = new URLSearchParams(window.location.search);
+    const fromQuery = params.get("plan")?.trim();
     if (fromQuery && MAIL_PLAN_CODES.has(fromQuery)) {
       setSubscriptionPlanCode(fromQuery);
+    }
+    const slug = params.get("slug")?.trim().toLowerCase() ?? "";
+    if (slug) {
+      setPilotSlug(slug);
     }
   }, []);
   const [companyLegalName, setCompanyLegalName] = useState("");
@@ -46,6 +51,21 @@ export default function RegisterPage() {
         subscriptionPlanCode,
       });
       setAccessToken(token);
+      if (subscriptionPlanCode === "lerta_mail_pilot_tr") {
+        try {
+          const quick = await quickStartPilotMailbox(token, {
+            companyLegalName: companyLegalName.trim(),
+            displayName: displayName.trim() || companyLegalName.trim(),
+            localPart: pilotSlug.trim() || undefined,
+          });
+          const handoff = `${MAIL_WEB_URL.replace(/\/$/, "")}/auth/consume#access_token=${encodeURIComponent(token)}&from=${encodeURIComponent(quick.fromAddress)}`;
+          window.location.href = handoff;
+          return;
+        } catch {
+          router.replace("/dashboard?pilot=dns_pending");
+          return;
+        }
+      }
       router.replace(
         `/domain?welcome=1&plan=${encodeURIComponent(subscriptionPlanCode)}`,
       );
@@ -63,8 +83,24 @@ export default function RegisterPage() {
         <p style={{ color: "var(--muted)", marginTop: 0 }}>
           {subscriptionPlanCode === "lerta_mail_corporate_tr"
             ? "Kayıt sonrası özel domain sihirbazına yönlendirileceksiniz."
-            : "Pilot paket: kayıt sonrası domain veya pilot kutu adımlarını seçebilirsiniz."}
+            : "Pilot: 1 kutu, 80 gönderim/saat — kayıt sonrası adresiniz açılır ve webmail’e yönlendirilir."}
         </p>
+        {subscriptionPlanCode === "lerta_mail_pilot_tr" ? (
+          <>
+            <label htmlFor="slug">Pilot adres (isteğe bağlı)</label>
+            <input
+              id="slug"
+              className="input"
+              placeholder="ornek-firma"
+              value={pilotSlug}
+              onChange={(e) => setPilotSlug(e.target.value)}
+              pattern="[a-z0-9][a-z0-9-]{1,48}[a-z0-9]"
+            />
+            <p style={{ fontSize: "0.85rem", color: "var(--muted)", marginTop: 0 }}>
+              Boş bırakırsanız firma adından otomatik üretilir (@kullanici.lerta.com.tr).
+            </p>
+          </>
+        ) : null}
         {error ? <p className="auth-error">{error}</p> : null}
         <label htmlFor="company">Firma ünvanı</label>
         <input

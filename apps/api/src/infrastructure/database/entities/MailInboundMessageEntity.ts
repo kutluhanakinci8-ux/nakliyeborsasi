@@ -53,11 +53,24 @@ export class MailInboundMessageEntity {
   @Column({ type: "varchar", length: 255, nullable: true })
   public internetMessageId!: string | null;
 
+  @Column({ type: "varchar", length: 255, nullable: true })
+  public inReplyTo!: string | null;
+
   @Column({ type: "jsonb", nullable: true })
   public attachments!: MailInboundAttachmentMeta[] | null;
 
   @Column({ type: "timestamptz", nullable: true })
   public readAt!: Date | null;
+
+  @Column({ type: "timestamptz", nullable: true })
+  public starredAt!: Date | null;
+
+  /** Webmail / IMAP klasörü (spam ayrı `spamStatus` ile). */
+  @Column({ type: "varchar", length: 16, default: "inbox" })
+  public mailboxFolder!: "inbox" | "archive" | "trash";
+
+  @Column({ type: "text", nullable: true })
+  public maildirFilePath!: string | null;
 
   @CreateDateColumn({ type: "timestamptz" })
   public receivedAt!: Date;

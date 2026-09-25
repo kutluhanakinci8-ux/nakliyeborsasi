@@ -1,11 +1,37 @@
 import { resolveApiBaseUrl } from "./apiConfig";
 
+export type MailInboxFolder =
+  | "inbox"
+  | "spam"
+  | "all"
+  | "archive"
+  | "trash"
+  | "starred";
+
+export type MailMailboxFolder = "inbox" | "archive" | "trash";
+
+export type MailStorageQuota = {
+  usedBytes: number;
+  limitBytes: number;
+  remainingBytes: number;
+  utilizationPercent: number;
+  nearLimit: boolean;
+  atLimit: boolean;
+  maxAttachmentBytes: number;
+  limitLabelGb: number;
+  windowLabelTr: string;
+};
+
 export type MailInboxSummary = {
   primaryAddress: string | null;
   mailboxId: string | null;
   unreadCount: number;
   totalMessages: number;
   spamCount: number;
+  archiveCount?: number;
+  trashCount?: number;
+  starredCount?: number;
+  storageQuota?: MailStorageQuota;
 };
 
 export type MailInboxListItem = {
@@ -18,12 +44,14 @@ export type MailInboxListItem = {
   spamStatus: string;
   spamReason?: string | null;
   attachmentCount?: number;
+  starredAt?: string | null;
 };
 
 export type MailInboxMessageDetail = MailInboxListItem & {
   bodyText: string | null;
   bodyHtml: string | null;
   emailAddress: string;
+  mailboxFolder?: MailMailboxFolder;
   attachments: {
     index: number;
     filename: string;
@@ -124,10 +152,28 @@ async function apiFetch<T>(
   return (await response.json()) as T;
 }
 
+export async function requestPasswordReset(emailAddress: string): Promise<void> {
+  const response = await fetch(
+    `${resolveApiBaseUrl()}/auth/request-password-reset`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ emailAddress: emailAddress.trim() }),
+    },
+  );
+  if (!response.ok) {
+    throw new Error("İstek gönderilemedi");
+  }
+}
+
+export type LoginResponse =
+  | { kind: "token"; accessToken: string }
+  | { kind: "totp"; challengeToken: string };
+
 export async function login(
   emailAddress: string,
   password: string,
-): Promise<string> {
+): Promise<LoginResponse> {
   const response = await fetch(`${resolveApiBaseUrl()}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -136,13 +182,89 @@ export async function login(
   if (!response.ok) {
     throw new Error("Giriş başarısız");
   }
+  const payload = (await response.json()) as {
+    accessToken?: string;
+    requiresTotp?: boolean;
+    challengeToken?: string;
+  };
+  if (payload.requiresTotp && payload.challengeToken) {
+    return { kind: "totp", challengeToken: payload.challengeToken };
+  }
+  if (!payload.accessToken) {
+    throw new Error("Giriş başarısız");
+  }
+  return { kind: "token", accessToken: payload.accessToken };
+}
+
+export async function completeTotpLogin(
+  challengeToken: string,
+  code: string,
+): Promise<string> {
+  const response = await fetch(`${resolveApiBaseUrl()}/auth/login/totp`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ challengeToken, code }),
+  });
+  if (!response.ok) {
+    throw new Error("Doğrulama kodu geçersiz");
+  }
   const payload = (await response.json()) as { accessToken: string };
   return payload.accessToken;
 }
 
+async function mailApiFetch<T>(
+  accessToken: string,
+  path: string,
+  init: RequestInit = {},
+): Promise<T> {
+  const headers = new Headers(init.headers);
+  headers.set("Authorization", `Bearer ${accessToken}`);
+  if (init.body && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+  const response = await fetch(`${resolveApiBaseUrl()}/${path}`, {
+    ...init,
+    headers,
+  });
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+  return (await response.json()) as T;
+}
+
+export async function fetchTotpStatus(accessToken: string) {
+  return mailApiFetch<{
+    status: { enabled: boolean; enabledAt: string | null };
+  }>(accessToken, "auth/totp/status");
+}
+
+export async function beginTotpSetup(accessToken: string) {
+  return mailApiFetch<{
+    setup: { secret: string; otpauthUrl: string };
+  }>(accessToken, "auth/totp/setup", { method: "POST", body: "{}" });
+}
+
+export async function confirmTotpSetup(accessToken: string, code: string) {
+  return mailApiFetch(accessToken, "auth/totp/confirm", {
+    method: "POST",
+    body: JSON.stringify({ code }),
+  });
+}
+
+export type MailInboxThreadRow = {
+  threadId: string;
+  subject: string;
+  fromAddress: string;
+  snippet: string | null;
+  receivedAt: string;
+  messageCount: number;
+  unreadCount: number;
+  latestMessageId: string;
+};
+
 export async function fetchInbox(
   accessToken: string,
-  folder: "inbox" | "spam" | "all",
+  folder: MailInboxFolder,
 ) {
   return apiFetch<{
     summary: MailInboxSummary;
@@ -151,15 +273,60 @@ export async function fetchInbox(
   }>(accessToken, `company/mail-inbox?folder=${folder}`);
 }
 
+export async function fetchInboxThreads(
+  accessToken: string,
+  folder: MailInboxFolder,
+) {
+  return apiFetch<{ threads: MailInboxThreadRow[] }>(
+    accessToken,
+    `company/mail-inbox/threads?folder=${folder}`,
+  );
+}
+
+export async function fetchThreadMessages(
+  accessToken: string,
+  threadId: string,
+  folder: MailInboxFolder,
+) {
+  return apiFetch<{ messages: MailInboxListItem[] }>(
+    accessToken,
+    `company/mail-inbox/threads/${encodeURIComponent(threadId)}/messages?folder=${folder}`,
+  );
+}
+
+export type MailInboxSearchOptions = {
+  q?: string;
+  from?: string;
+  receivedAfter?: string;
+  receivedBefore?: string;
+  hasAttachment?: boolean;
+};
+
 export async function searchInbox(
   accessToken: string,
-  query: string,
-  folder: "inbox" | "spam" | "all",
+  folder: MailInboxFolder,
+  options: MailInboxSearchOptions = {},
 ) {
-  const params = new URLSearchParams({
-    q: query,
-    folder,
-  });
+  const params = new URLSearchParams({ folder });
+  const q = options.q?.trim() ?? "";
+  if (q) {
+    params.set("q", q);
+  }
+  const from = options.from?.trim() ?? "";
+  if (from) {
+    params.set("from", from);
+  }
+  if (options.receivedAfter?.trim()) {
+    params.set("receivedAfter", options.receivedAfter.trim());
+  }
+  if (options.receivedBefore?.trim()) {
+    params.set("receivedBefore", options.receivedBefore.trim());
+  }
+  if (options.hasAttachment === true) {
+    params.set("hasAttachment", "true");
+  } else if (options.hasAttachment === false) {
+    params.set("hasAttachment", "false");
+  }
   return apiFetch<{ messages: MailInboxListItem[] }>(
     accessToken,
     `company/mail-inbox/search?${params.toString()}`,
@@ -203,12 +370,110 @@ export async function markRead(accessToken: string, id: string) {
   });
 }
 
+export async function markUnread(accessToken: string, id: string) {
+  await apiFetch(accessToken, `company/mail-inbox/messages/${id}/unread`, {
+    method: "PATCH",
+  });
+}
+
+export async function setMessageStarred(
+  accessToken: string,
+  messageId: string,
+  starred: boolean,
+) {
+  return apiFetch<{ ok: boolean; starredAt: string | null }>(
+    accessToken,
+    `company/mail-inbox/messages/${messageId}/star`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ starred }),
+    },
+  );
+}
+
+export async function bulkMarkRead(accessToken: string, messageIds: string[]) {
+  return apiFetch<{ updated: number }>(
+    accessToken,
+    "company/mail-inbox/messages/bulk/read",
+    {
+      method: "POST",
+      body: JSON.stringify({ messageIds }),
+    },
+  );
+}
+
+export async function bulkMarkUnread(accessToken: string, messageIds: string[]) {
+  return apiFetch<{ updated: number }>(
+    accessToken,
+    "company/mail-inbox/messages/bulk/unread",
+    {
+      method: "POST",
+      body: JSON.stringify({ messageIds }),
+    },
+  );
+}
+
+export async function bulkSetMessageMailboxFolder(
+  accessToken: string,
+  messageIds: string[],
+  folder: MailMailboxFolder,
+) {
+  return apiFetch<{ updated: number }>(
+    accessToken,
+    "company/mail-inbox/messages/bulk/folder",
+    {
+      method: "POST",
+      body: JSON.stringify({ messageIds, folder }),
+    },
+  );
+}
+
+export async function setMessageMailboxFolder(
+  accessToken: string,
+  messageId: string,
+  folder: MailMailboxFolder,
+) {
+  await apiFetch(accessToken, `company/mail-inbox/messages/${messageId}/folder`, {
+    method: "PATCH",
+    body: JSON.stringify({ folder }),
+  });
+}
+
+export async function deleteMessagePermanently(
+  accessToken: string,
+  messageId: string,
+) {
+  await apiFetch(accessToken, `company/mail-inbox/messages/${messageId}`, {
+    method: "DELETE",
+  });
+}
+
+export type MailInboxBranding = {
+  allowed: boolean;
+  planCode: string | null;
+  logoUrl: string | null;
+  emailBrandTitle: string | null;
+  defaultFromDisplayName: string | null;
+  hidePlatformEmailChrome: boolean;
+  detailTr: string;
+};
+
+export async function fetchMailInboxBranding(accessToken: string) {
+  return apiFetch<{ branding: MailInboxBranding }>(
+    accessToken,
+    "company/mail-inbox/branding",
+  );
+}
+
 export async function composeMail(
   accessToken: string,
   body: {
     to: string;
+    cc?: string;
+    bcc?: string;
     subject: string;
     text: string;
+    html?: string;
     attachments?: ComposeAttachment[];
   },
 ) {
@@ -221,11 +486,35 @@ export async function composeMail(
 export async function replyMail(
   accessToken: string,
   messageId: string,
-  body: { text: string; attachments?: ComposeAttachment[] },
+  body: {
+    text: string;
+    bcc?: string;
+    attachments?: ComposeAttachment[];
+  },
 ) {
   await apiFetch(
     accessToken,
     `company/mail-inbox/messages/${messageId}/reply`,
+    {
+      method: "POST",
+      body: JSON.stringify(body),
+    },
+  );
+}
+
+export async function forwardMail(
+  accessToken: string,
+  messageId: string,
+  body: {
+    to: string;
+    text?: string;
+    includeOriginal?: boolean;
+    attachments?: ComposeAttachment[];
+  },
+) {
+  await apiFetch(
+    accessToken,
+    `company/mail-inbox/messages/${messageId}/forward`,
     {
       method: "POST",
       body: JSON.stringify(body),
@@ -286,6 +575,68 @@ export async function sendDraft(accessToken: string, draftId: string) {
   await apiFetch(accessToken, `company/mail-inbox/drafts/${draftId}/send`, {
     method: "POST",
     body: JSON.stringify({}),
+  });
+}
+
+export type MailComposePreset = {
+  id: string;
+  kind: "signature" | "template";
+  name: string;
+  subject: string | null;
+  bodyText: string;
+  isDefault: boolean;
+  updatedAt: string;
+};
+
+export async function fetchComposePresets(accessToken: string) {
+  return apiFetch<{
+    signatures: MailComposePreset[];
+    templates: MailComposePreset[];
+  }>(accessToken, "company/mail-inbox/compose-presets");
+}
+
+export async function createComposePreset(
+  accessToken: string,
+  body: {
+    kind: "signature" | "template";
+    name: string;
+    subject?: string;
+    bodyText: string;
+    isDefault?: boolean;
+  },
+) {
+  const payload = await apiFetch<{ preset: MailComposePreset }>(
+    accessToken,
+    "company/mail-inbox/compose-presets",
+    { method: "POST", body: JSON.stringify(body) },
+  );
+  return payload.preset;
+}
+
+export async function updateComposePreset(
+  accessToken: string,
+  presetId: string,
+  body: {
+    name?: string;
+    subject?: string;
+    bodyText?: string;
+    isDefault?: boolean;
+  },
+) {
+  const payload = await apiFetch<{ preset: MailComposePreset }>(
+    accessToken,
+    `company/mail-inbox/compose-presets/${presetId}`,
+    { method: "PATCH", body: JSON.stringify(body) },
+  );
+  return payload.preset;
+}
+
+export async function deleteComposePreset(
+  accessToken: string,
+  presetId: string,
+) {
+  await apiFetch(accessToken, `company/mail-inbox/compose-presets/${presetId}`, {
+    method: "DELETE",
   });
 }
 

@@ -178,6 +178,23 @@ export class EmailTemplateService {
           ),
           text: payload.resetUrl ?? "",
         };
+      case NotificationEventCode.MailTeamInvite:
+        return {
+          subject: `Lerta Mail — ${payload.companyLegalName ?? "ekip daveti"}`,
+          html: wrapCorporateEmail(
+            "Ekibe davet edildiniz",
+            `${leadParagraph(
+              `<strong>${escapeHtml(payload.companyLegalName ?? "Firma")}</strong> sizi Lerta Mail yönetim konsoluna <strong>${escapeHtml(payload.roleLabel ?? "")}</strong> rolüyle davet etti.`,
+            )}
+            ${primaryButton(payload.inviteUrl ?? "#", "Daveti kabul et")}
+            ${mutedParagraph("Bağlantı 7 gün geçerlidir. Bu daveti beklemiyorsanız e-postayı yok sayın.")}`,
+            {
+              eyebrow: "Lerta Mail",
+              preheader: "Yönetim konsolu daveti",
+            },
+          ),
+          text: payload.inviteUrl ?? "",
+        };
       default:
         return {
           subject: PLATFORM_PRODUCT_NAME,

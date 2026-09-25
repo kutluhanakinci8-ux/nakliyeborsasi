@@ -38,12 +38,25 @@ export function parseMinimalMimeHeaders(rawMime: string): {
   return { fromAddress, subject, textSnippet };
 }
 
-export function parseInternetMessageId(rawMime: string): string | null {
+function parseMimeHeaderValue(rawMime: string, headerName: string): string | null {
   const headEnd = rawMime.search(/\r?\n\r?\n/);
   const head = headEnd >= 0 ? rawMime.slice(0, headEnd) : rawMime;
   const unfold = head.replace(/\r?\n[ \t]+/g, " ");
-  const match = unfold.match(/^Message-ID:\s*(.+)$/im);
-  return match?.[1]?.trim().replace(/^<|>$/g, "") ?? null;
+  const match = unfold.match(new RegExp(`^${headerName}:\\s*(.+)$`, "im"));
+  const raw = match?.[1]?.trim() ?? null;
+  if (!raw) {
+    return null;
+  }
+  const angle = raw.match(/<([^>]+)>/);
+  return (angle?.[1] ?? raw).replace(/^<|>$/g, "").trim() || null;
+}
+
+export function parseInternetMessageId(rawMime: string): string | null {
+  return parseMimeHeaderValue(rawMime, "Message-ID");
+}
+
+export function parseInReplyTo(rawMime: string): string | null {
+  return parseMimeHeaderValue(rawMime, "In-Reply-To");
 }
 
 export type ParsedMimeAttachment = {

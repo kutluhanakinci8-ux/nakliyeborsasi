@@ -30,6 +30,8 @@ Akış:
 2. Firma sahibi: `POST /company/mail-inbox/imap-credentials/rotate` (şifre bir kez gösterilir)
 3. Admin: `POST /platform-admin/mail/imap/sync-dovecot`
 
+Webmail arşiv/çöp (Faz D2): API `PATCH company/mail-inbox/messages/:id/folder` ile Maildir içinde `.Archive/new` ve `.Trash/new` altına taşınır (Dovecot IMAP ile uyumlu).
+
 Thunderbird / Outlook: IMAP SSL, kullanıcı = kurumsal e-posta adresi.
 
 ## 3. Rspamd

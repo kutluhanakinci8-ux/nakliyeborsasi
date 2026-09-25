@@ -57,6 +57,17 @@ export default function MarketingHomePage() {
         </article>
       </section>
 
+      <section className="trust-strip" aria-labelledby="trust-heading">
+        <h2 id="trust-heading">Güven ve şeffaflık</h2>
+        <div className="trust-links">
+          <a href="/sss">Sık sorulan sorular</a>
+          <a href="/sla">Hizmet düzeyi (SLA)</a>
+          <a href="/kvkk">KVKK aydınlatma</a>
+          <a href="/durum">Canlı durum</a>
+          <a href="/iletisim">İletişim</a>
+        </div>
+      </section>
+
       <PricingSection />
     </MarketingPageShell>
   );

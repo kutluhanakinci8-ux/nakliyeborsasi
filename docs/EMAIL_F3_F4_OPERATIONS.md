@@ -8,6 +8,9 @@
 | `SMTP_HOST` / `SMTP_PORT` | Genelde `127.0.0.1:25` (aynı VPS) |
 | `SMTP_FROM` | `notifications@mail.lerta.tr` |
 | `MAIL_PLATFORM_*` | DNS checklist (SPF IP, DKIM TXT) |
+| SPF/DKIM rotasyon | [MAIL_SPF_DKIM_ROTATION_RUNBOOK.md](./MAIL_SPF_DKIM_ROTATION_RUNBOOK.md) |
+| Yedekleme / DR | [MAIL_BACKUP_DISASTER_RECOVERY.md](./MAIL_BACKUP_DISASTER_RECOVERY.md) |
+| Platform izleme (F1) | [MAIL_PLATFORM_MONITORING.md](./MAIL_PLATFORM_MONITORING.md) |
 
 Üçüncü taraf ESP token’ları ve webhook URL’leri **yok**.
 

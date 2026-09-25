@@ -12,6 +12,8 @@ import { MailInboundMessageEntity } from "../../infrastructure/database/entities
 import { MailMailboxSentEntity } from "../../infrastructure/database/entities/MailMailboxSentEntity";
 import { SmtpEmailSender } from "./SmtpEmailSender";
 import { MailOrganizationSendRateService } from "./MailOrganizationSendRateService";
+import { MailOrganizationStorageService } from "./MailOrganizationStorageService";
+import { MailTenantSuspensionService } from "./MailTenantSuspensionService";
 import { resolveTenantReplyToAddress } from "./MailTenantEmailBranding";
 
 export type ComposeAttachmentInput = {
@@ -23,11 +25,12 @@ export type ComposeAttachmentInput = {
 @Injectable()
 export class MailMailboxComposeService {
   private static readonly maxAttachments = 3;
-  private static readonly maxAttachmentBytes = 2 * 1024 * 1024;
 
   public constructor(
     private readonly smtpEmailSender: SmtpEmailSender,
     private readonly mailOrganizationSendRateService: MailOrganizationSendRateService,
+    private readonly mailOrganizationStorageService: MailOrganizationStorageService,
+    private readonly mailTenantSuspensionService: MailTenantSuspensionService,
     @InjectRepository(MailSenderIdentityEntity)
     private readonly senderRepository: Repository<MailSenderIdentityEntity>,
     @InjectRepository(MailMailboxEntity)
@@ -41,21 +44,37 @@ export class MailMailboxComposeService {
   public async compose(params: {
     organizationId: string;
     to: string;
+    cc?: string;
+    bcc?: string;
     subject: string;
     text: string;
+    html?: string;
     attachments?: ComposeAttachmentInput[];
   }): Promise<{ sentId: string; smtpMessageId: string | null }> {
     const { fromHeader, fromEmail, mailbox } =
       await this.resolveSenderMailbox(params.organizationId);
     await this.assertRateLimit(params.organizationId);
-    const nodemailerAttachments = this.parseAttachments(params.attachments);
+    await this.mailTenantSuspensionService.assertOrganizationCanSend(
+      params.organizationId,
+    );
+    const nodemailerAttachments = await this.parseAttachments(
+      params.organizationId,
+      params.attachments,
+    );
+    await this.mailOrganizationStorageService.assertCanStore(
+      params.organizationId,
+      params.text.length +
+        nodemailerAttachments.reduce((sum, file) => sum + file.content.length, 0),
+    );
     const replyTo = resolveTenantReplyToAddress();
     const smtpMessageId = await this.smtpEmailSender.send({
       from: fromHeader,
-      to: params.to.trim(),
+      to: normalizeRecipientList(params.to),
+      cc: normalizeOptionalRecipients(params.cc),
+      bcc: normalizeOptionalRecipients(params.bcc),
       subject: params.subject.trim(),
       text: params.text,
-      html: `<pre>${escapeHtml(params.text)}</pre>`,
+      html: resolveOutboundHtml(params.text, params.html),
       replyTo,
       attachments: nodemailerAttachments,
     });
@@ -79,6 +98,7 @@ export class MailMailboxComposeService {
     organizationId: string;
     inboundMessageId: string;
     text: string;
+    bcc?: string;
     attachments?: ComposeAttachmentInput[];
   }): Promise<{ sentId: string; smtpMessageId: string | null }> {
     const inbound = await this.inboundRepository.findOne({
@@ -100,7 +120,18 @@ export class MailMailboxComposeService {
       params.organizationId,
     );
     await this.assertRateLimit(params.organizationId);
-    const nodemailerAttachments = this.parseAttachments(params.attachments);
+    await this.mailTenantSuspensionService.assertOrganizationCanSend(
+      params.organizationId,
+    );
+    const nodemailerAttachments = await this.parseAttachments(
+      params.organizationId,
+      params.attachments,
+    );
+    await this.mailOrganizationStorageService.assertCanStore(
+      params.organizationId,
+      params.text.length +
+        nodemailerAttachments.reduce((sum, file) => sum + file.content.length, 0),
+    );
     const replyTo = resolveTenantReplyToAddress();
     const inReplyTo = inbound.internetMessageId
       ? `<${inbound.internetMessageId}>`
@@ -108,6 +139,7 @@ export class MailMailboxComposeService {
     const smtpMessageId = await this.smtpEmailSender.send({
       from: fromHeader,
       to: inbound.fromAddress,
+      bcc: normalizeOptionalRecipients(params.bcc),
       subject,
       text: params.text,
       html: `<pre>${escapeHtml(params.text)}</pre>`,
@@ -125,6 +157,81 @@ export class MailMailboxComposeService {
         toAddress: inbound.fromAddress,
         subject,
         bodyText: params.text,
+        relatedInboundMessageId: inbound.id,
+        smtpMessageId,
+      }),
+    );
+    return { sentId: sent.id, smtpMessageId };
+  }
+
+  public async forward(params: {
+    organizationId: string;
+    inboundMessageId: string;
+    to: string;
+    text?: string;
+    includeOriginal?: boolean;
+    attachments?: ComposeAttachmentInput[];
+  }): Promise<{ sentId: string; smtpMessageId: string | null }> {
+    const inbound = await this.inboundRepository.findOne({
+      where: { id: params.inboundMessageId },
+    });
+    if (!inbound) {
+      throw new NotFoundException("Mesaj bulunamadı");
+    }
+    const mailbox = await this.mailboxRepository.findOne({
+      where: { id: inbound.mailboxId },
+    });
+    if (!mailbox || mailbox.organizationId !== params.organizationId) {
+      throw new ForbiddenException("Bu mesaj iletilemez");
+    }
+    const subject = inbound.subject.toLowerCase().startsWith("fwd:")
+      ? inbound.subject
+      : `Fwd: ${inbound.subject}`;
+    const includeOriginal = params.includeOriginal !== false;
+    const originalBlock = includeOriginal
+      ? buildForwardOriginalBlock(inbound)
+      : "";
+    const text = [params.text?.trim() ?? "", originalBlock]
+      .filter((part) => part.length > 0)
+      .join("\n\n");
+    if (!text.trim()) {
+      throw new BadRequestException("İletilecek metin boş olamaz.");
+    }
+    const { fromHeader, fromEmail } = await this.resolveSenderMailbox(
+      params.organizationId,
+    );
+    await this.assertRateLimit(params.organizationId);
+    await this.mailTenantSuspensionService.assertOrganizationCanSend(
+      params.organizationId,
+    );
+    const nodemailerAttachments = await this.parseAttachments(
+      params.organizationId,
+      params.attachments,
+    );
+    await this.mailOrganizationStorageService.assertCanStore(
+      params.organizationId,
+      text.length +
+        nodemailerAttachments.reduce((sum, file) => sum + file.content.length, 0),
+    );
+    const replyTo = resolveTenantReplyToAddress();
+    const smtpMessageId = await this.smtpEmailSender.send({
+      from: fromHeader,
+      to: normalizeRecipientList(params.to),
+      subject,
+      text,
+      html: `<pre>${escapeHtml(text)}</pre>`,
+      replyTo,
+      attachments: nodemailerAttachments,
+    });
+    this.mailOrganizationSendRateService.recordSend(params.organizationId);
+    const sent = await this.sentRepository.save(
+      this.sentRepository.create({
+        organizationId: params.organizationId,
+        mailboxId: mailbox.id,
+        fromAddress: fromEmail,
+        toAddress: normalizeRecipientList(params.to).toLowerCase(),
+        subject,
+        bodyText: text,
         relatedInboundMessageId: inbound.id,
         smtpMessageId,
       }),
@@ -204,9 +311,10 @@ export class MailMailboxComposeService {
     }
   }
 
-  private parseAttachments(
+  private async parseAttachments(
+    organizationId: string,
     attachments?: ComposeAttachmentInput[],
-  ): { filename: string; content: Buffer; contentType: string }[] {
+  ): Promise<{ filename: string; content: Buffer; contentType: string }[]> {
     if (!attachments?.length) {
       return [];
     }
@@ -215,11 +323,16 @@ export class MailMailboxComposeService {
         `En fazla ${MailMailboxComposeService.maxAttachments} ek.`,
       );
     }
+    const maxBytes =
+      await this.mailOrganizationStorageService.resolveMaxAttachmentBytes(
+        organizationId,
+      );
+    const maxMb = Math.max(1, Math.round(maxBytes / (1024 * 1024)));
     return attachments.map((item) => {
       const content = Buffer.from(item.contentBase64, "base64");
-      if (content.length > MailMailboxComposeService.maxAttachmentBytes) {
+      if (content.length > maxBytes) {
         throw new BadRequestException(
-          `Ek çok büyük: ${item.filename} (max 2MB)`,
+          `Ek çok büyük: ${item.filename} (plan limiti ${maxMb} MB)`,
         );
       }
       return {
@@ -236,4 +349,61 @@ function escapeHtml(input: string): string {
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
+}
+
+function normalizeRecipientList(raw: string): string {
+  const parts = raw
+    .split(/[,;]/)
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0);
+  if (parts.length === 0) {
+    throw new BadRequestException("Alıcı e-posta gerekli.");
+  }
+  return parts.join(", ");
+}
+
+function normalizeOptionalRecipients(raw?: string): string | undefined {
+  if (!raw?.trim()) {
+    return undefined;
+  }
+  return normalizeRecipientList(raw);
+}
+
+function buildForwardOriginalBlock(inbound: MailInboundMessageEntity): string {
+  const date = inbound.receivedAt.toLocaleString("tr-TR");
+  const body =
+    inbound.bodyText?.trim() ||
+    stripHtml(inbound.bodyHtml ?? "") ||
+    inbound.snippet ||
+    "(İçerik yok)";
+  return [
+    "---------- İletilen mesaj ----------",
+    `Kimden: ${inbound.fromAddress}`,
+    `Tarih: ${date}`,
+    `Konu: ${inbound.subject}`,
+    "",
+    body,
+  ].join("\n");
+}
+
+function stripHtml(html: string): string {
+  return html
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+function resolveOutboundHtml(text: string, html?: string): string {
+  if (html?.trim()) {
+    return sanitizeOutboundHtml(html.trim());
+  }
+  return `<pre>${escapeHtml(text)}</pre>`;
+}
+
+function sanitizeOutboundHtml(html: string): string {
+  return html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
+    .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "");
 }

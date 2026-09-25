@@ -16,6 +16,11 @@ export class ReplyMailRequestDto {
   public text!: string;
 
   @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  public bcc?: string;
+
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => ComposeMailAttachmentDto)

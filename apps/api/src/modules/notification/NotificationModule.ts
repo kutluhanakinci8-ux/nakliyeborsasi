@@ -16,6 +16,20 @@ import { AuthNotificationService } from "./AuthNotificationService";
 import { EmailSecurityTokenService } from "./EmailSecurityTokenService";
 import { PlatformNotificationAdminController } from "./PlatformNotificationAdminController";
 import { CompanyMailIdentityController } from "./CompanyMailIdentityController";
+import {
+  CompanyMailTeamController,
+  MailTeamInvitePublicController,
+} from "./CompanyMailTeamController";
+import { CompanyMailTeamService } from "./CompanyMailTeamService";
+import { CompanyMailTeamInviteEntity } from "../../infrastructure/database/entities/CompanyMailTeamInviteEntity";
+import { MailOrganizationBillingStateEntity } from "../../infrastructure/database/entities/MailOrganizationBillingStateEntity";
+import { MailSubscriptionLifecycleService } from "./MailSubscriptionLifecycleService";
+import { MailBillingGraceScheduler } from "./MailBillingGraceScheduler";
+import { MailOrganizationOperatorStateEntity } from "../../infrastructure/database/entities/MailOrganizationOperatorStateEntity";
+import { PlatformMailTenantAdminService } from "./PlatformMailTenantAdminService";
+import { MailTenantSuspensionService } from "./MailTenantSuspensionService";
+import { MailPilotOnboardingService } from "./MailPilotOnboardingService";
+import { CompanySubscriptionEntity } from "../../infrastructure/database/entities/CompanySubscriptionEntity";
 import { MailTenantDnsVerificationScheduler } from "./MailTenantDnsVerificationScheduler";
 import { MailOrganizationSendRateService } from "./MailOrganizationSendRateService";
 import { MailCustomDomainService } from "./MailCustomDomainService";
@@ -69,7 +83,33 @@ import { MailImapAccessService } from "./MailImapAccessService";
 import { MailImapCredentialEntity } from "../../infrastructure/database/entities/MailImapCredentialEntity";
 import { MailMailboxSentEntity } from "../../infrastructure/database/entities/MailMailboxSentEntity";
 import { MailComposeDraftEntity } from "../../infrastructure/database/entities/MailComposeDraftEntity";
+import { MailComposePresetEntity } from "../../infrastructure/database/entities/MailComposePresetEntity";
 import { MailComposeDraftService } from "./MailComposeDraftService";
+import { MailComposePresetService } from "./MailComposePresetService";
+import { MailOrganizationStorageService } from "./MailOrganizationStorageService";
+import { MailOrganizationDeliveryService } from "./MailOrganizationDeliveryService";
+import { MailDmarcAggregateReportEntity } from "../../infrastructure/database/entities/MailDmarcAggregateReportEntity";
+import { MailDmarcAggregateService } from "./MailDmarcAggregateService";
+import { MailOrganizationDeletionRequestEntity } from "../../infrastructure/database/entities/MailOrganizationDeletionRequestEntity";
+import { MailOrganizationPrivacyService } from "./MailOrganizationPrivacyService";
+import { MailOrganizationSecurityService } from "./MailOrganizationSecurityService";
+import { MailConsoleAccessGuard } from "./MailConsoleAccessGuard";
+import { MailProductTotpPolicyGuard } from "./MailProductTotpPolicyGuard";
+import { MailPlatformMonitoringService } from "./MailPlatformMonitoringService";
+import { MailRuntimeRoleService } from "./MailRuntimeRoleService";
+import { MailOrganizationBrandingEntity } from "../../infrastructure/database/entities/MailOrganizationBrandingEntity";
+import { MailOrganizationBrandingService } from "./MailOrganizationBrandingService";
+import { MailOrganizationApiKeyEntity } from "../../infrastructure/database/entities/MailOrganizationApiKeyEntity";
+import { MailOrganizationWebhookEndpointEntity } from "../../infrastructure/database/entities/MailOrganizationWebhookEndpointEntity";
+import { MailOrganizationIntegrationService } from "./MailOrganizationIntegrationService";
+import { MailOrganizationWebhookDispatcherService } from "./MailOrganizationWebhookDispatcherService";
+import { MailPublicApiGuard } from "./MailPublicApiGuard";
+import { MailPublicApiController } from "./MailPublicApiController";
+import { MailAddressAliasEntity } from "../../infrastructure/database/entities/MailAddressAliasEntity";
+import { MailAddressAliasTargetEntity } from "../../infrastructure/database/entities/MailAddressAliasTargetEntity";
+import { MailAddressAliasService } from "./MailAddressAliasService";
+import { MailPlatformKpiService } from "./MailPlatformKpiService";
+import { PublicMailStatusController } from "./PublicMailStatusController";
 import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
 import { MailBillingService } from "./MailBillingService";
 import { MailIyzicoBillingService } from "./MailIyzicoBillingService";
@@ -110,6 +150,18 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
       MailMailboxSentEntity,
       MailImapCredentialEntity,
       MailComposeDraftEntity,
+      MailComposePresetEntity,
+      MailDmarcAggregateReportEntity,
+      MailOrganizationDeletionRequestEntity,
+      MailOrganizationBrandingEntity,
+      MailOrganizationApiKeyEntity,
+      MailOrganizationWebhookEndpointEntity,
+      MailAddressAliasEntity,
+      MailAddressAliasTargetEntity,
+      CompanyMailTeamInviteEntity,
+      MailOrganizationBillingStateEntity,
+      MailOrganizationOperatorStateEntity,
+      CompanySubscriptionEntity,
     ]),
   ],
   controllers: [
@@ -117,11 +169,15 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     PlatformMailIdentityAdminController,
     MailInboundWebhookController,
     CompanyMailIdentityController,
+    CompanyMailTeamController,
+    MailTeamInvitePublicController,
     CompanyMailInboxController,
     MailBillingController,
     MailBillingWebhookController,
     EmailTrackingController,
     UserNotificationPreferencesController,
+    PublicMailStatusController,
+    MailPublicApiController,
   ],
   providers: [
     NotificationConfigurationService,
@@ -164,9 +220,31 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     MailImapMaildirService,
     MailImapAccessService,
     MailComposeDraftService,
+    MailComposePresetService,
+    MailOrganizationStorageService,
+    MailOrganizationDeliveryService,
+    MailDmarcAggregateService,
+    MailOrganizationPrivacyService,
+    MailOrganizationSecurityService,
+    MailConsoleAccessGuard,
+    MailProductTotpPolicyGuard,
+    MailPlatformMonitoringService,
+    MailRuntimeRoleService,
+    MailOrganizationBrandingService,
+    MailOrganizationIntegrationService,
+    MailOrganizationWebhookDispatcherService,
+    MailPublicApiGuard,
+    MailAddressAliasService,
+    MailPlatformKpiService,
     MailSaasSubscriptionService,
     MailIyzicoBillingService,
     MailBillingService,
+    CompanyMailTeamService,
+    MailSubscriptionLifecycleService,
+    MailBillingGraceScheduler,
+    PlatformMailTenantAdminService,
+    MailTenantSuspensionService,
+    MailPilotOnboardingService,
   ],
   exports: [
     AuthNotificationService,

@@ -12,6 +12,8 @@ export class SmtpEmailSender {
 
   public async send(params: {
     to: string;
+    cc?: string;
+    bcc?: string;
     subject: string;
     html: string;
     text: string;
@@ -36,6 +38,8 @@ export class SmtpEmailSender {
     const result = await transport.sendMail({
       from: params.from?.trim() || smtp.from,
       to: params.to,
+      cc: params.cc?.trim() || undefined,
+      bcc: params.bcc?.trim() || undefined,
       subject: params.subject,
       html: params.html,
       text: params.text,

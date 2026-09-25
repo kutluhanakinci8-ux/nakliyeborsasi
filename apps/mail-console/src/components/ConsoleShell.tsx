@@ -38,6 +38,33 @@ export function ConsoleShell({
           <Link className={navClass("/mailboxes")} href="/mailboxes">
             Posta kutuları
           </Link>
+          <Link className={navClass("/delivery")} href="/delivery">
+            Teslimat
+          </Link>
+          <Link className={navClass("/dmarc")} href="/dmarc">
+            DMARC
+          </Link>
+          <Link className={navClass("/upgrade")} href="/upgrade">
+            Kurumsala geç
+          </Link>
+          <Link className={navClass("/team")} href="/team">
+            Ekip
+          </Link>
+          <Link className={navClass("/privacy")} href="/privacy">
+            Gizlilik / KVKK
+          </Link>
+          <Link className={navClass("/audit")} href="/audit">
+            Denetim
+          </Link>
+          <Link className={navClass("/security")} href="/security">
+            Güvenlik
+          </Link>
+          <Link className={navClass("/branding")} href="/branding">
+            White-label
+          </Link>
+          <Link className={navClass("/integration")} href="/integration">
+            Entegrasyon
+          </Link>
           {operator ? (
             <Link className={navClass("/operator")} href="/operator">
               Operatör

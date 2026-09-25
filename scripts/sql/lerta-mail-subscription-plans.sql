@@ -18,6 +18,13 @@ INSERT INTO subscription_plans (
     '["LERTA_MAIL"]'::jsonb,
     0,
     0
+  ),
+  (
+    'lerta_mail_enterprise_tr',
+    'ENTERPRISE',
+    '["LERTA_MAIL"]'::jsonb,
+    0,
+    0
   )
 ON CONFLICT ("planCode") DO UPDATE SET
   "tierCode" = EXCLUDED."tierCode",

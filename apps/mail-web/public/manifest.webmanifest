@@ -1,0 +1,18 @@
+{
+  "name": "Lerta Posta",
+  "short_name": "Lerta Posta",
+  "description": "Kurumsal webmail — lerta.com.tr",
+  "start_url": "/mail",
+  "display": "standalone",
+  "background_color": "#f6f8fc",
+  "theme_color": "#1a73e8",
+  "lang": "tr",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -2,10 +2,14 @@
 
 import { useEffect, useState } from "react";
 import {
+  beginTotpSetup,
+  confirmTotpSetup,
   fetchImapSettings,
+  fetchTotpStatus,
   rotateImapPassword,
   type MailImapSettings,
 } from "@/lib/mailApi";
+import { MailComposePresetsPanel } from "./MailComposePresetsPanel";
 
 type Props = {
   accessToken: string;
@@ -13,6 +17,10 @@ type Props = {
 };
 
 export function MailSettingsPanel({ accessToken, onClose }: Props) {
+  const [tab, setTab] = useState<"imap" | "presets" | "security">("imap");
+  const [totpEnabled, setTotpEnabled] = useState(false);
+  const [totpSecret, setTotpSecret] = useState<string | null>(null);
+  const [totpCode, setTotpCode] = useState("");
   const [settings, setSettings] = useState<MailImapSettings | null>(null);
   const [error, setError] = useState("");
   const [newPassword, setNewPassword] = useState<string | null>(null);
@@ -22,6 +30,8 @@ export function MailSettingsPanel({ accessToken, onClose }: Props) {
     void (async () => {
       try {
         setSettings(await fetchImapSettings(accessToken));
+        const totp = await fetchTotpStatus(accessToken);
+        setTotpEnabled(totp.status.enabled);
       } catch {
         setError("IMAP ayarları yüklenemedi.");
       }
@@ -58,7 +68,85 @@ export function MailSettingsPanel({ accessToken, onClose }: Props) {
         role="dialog"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2>IMAP / Outlook</h2>
+        <h2>Ayarlar</h2>
+        <div className="settings-tabs">
+          <button
+            type="button"
+            className={tab === "imap" ? "active" : ""}
+            onClick={() => setTab("imap")}
+          >
+            IMAP
+          </button>
+          <button
+            type="button"
+            className={tab === "presets" ? "active" : ""}
+            onClick={() => setTab("presets")}
+          >
+            İmza / şablon
+          </button>
+          <button
+            type="button"
+            className={tab === "security" ? "active" : ""}
+            onClick={() => setTab("security")}
+          >
+            2FA
+          </button>
+        </div>
+        {tab === "presets" ? (
+          <MailComposePresetsPanel accessToken={accessToken} />
+        ) : null}
+        {tab === "security" ? (
+          <>
+            <p style={{ color: "var(--muted)", fontSize: "0.9rem" }}>
+              İki adımlı doğrulama (TOTP). Kapatmak için yönetim konsolu
+              güvenlik sayfasını kullanın.
+            </p>
+            <p>{totpEnabled ? "TOTP açık." : "TOTP kapalı."}</p>
+            {!totpEnabled && !totpSecret ? (
+              <button
+                type="button"
+                onClick={() =>
+                  void (async () => {
+                    const data = await beginTotpSetup(accessToken);
+                    setTotpSecret(data.setup.secret);
+                  })()
+                }
+              >
+                TOTP kur
+              </button>
+            ) : null}
+            {totpSecret ? (
+              <div style={{ marginTop: 12 }}>
+                <p>
+                  Secret: <code>{totpSecret}</code>
+                </p>
+                <input
+                  placeholder="6 haneli kod"
+                  value={totpCode}
+                  onChange={(e) => setTotpCode(e.target.value)}
+                />
+                <button
+                  type="button"
+                  style={{ marginLeft: 8 }}
+                  onClick={() =>
+                    void (async () => {
+                      await confirmTotpSetup(accessToken, totpCode);
+                      setTotpSecret(null);
+                      setTotpEnabled(true);
+                    })()
+                  }
+                >
+                  Etkinleştir
+                </button>
+              </div>
+            ) : null}
+            <div className="compose-actions">
+              <button type="button" onClick={onClose}>Kapat</button>
+            </div>
+          </>
+        ) : null}
+        {tab === "imap" ? (
+          <>
         <p style={{ color: "var(--muted)", fontSize: "0.9rem" }}>
           Masaüstü istemci (Thunderbird, Outlook) ile kutunuza bağlanın.
         </p>
@@ -106,6 +194,13 @@ export function MailSettingsPanel({ accessToken, onClose }: Props) {
             {loading ? "…" : "IMAP şifresi oluştur / yenile"}
           </button>
         </div>
+          </>
+        ) : null}
+        {tab === "presets" ? (
+          <div className="compose-actions">
+            <button type="button" onClick={onClose}>Kapat</button>
+          </div>
+        ) : null}
       </div>
     </div>
   );

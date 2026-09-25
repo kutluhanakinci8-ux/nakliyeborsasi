@@ -10,6 +10,7 @@ import {
   EmailOutboxOperationsService,
   type EmailOutboxOperationsSnapshot,
 } from "./EmailOutboxOperationsService";
+import { MailRuntimeRoleService } from "./MailRuntimeRoleService";
 
 export type EmailDeliveryHealthSnapshot = {
   emailEnabled: boolean;
@@ -45,10 +46,19 @@ export class EmailDeliveryHealthService
   public constructor(
     private readonly notificationConfigurationService: NotificationConfigurationService,
     private readonly emailOutboxOperationsService: EmailOutboxOperationsService,
+    private readonly mailRuntimeRoleService: MailRuntimeRoleService,
   ) {}
 
   public async onModuleInit(): Promise<void> {
     if (!this.notificationConfigurationService.isEmailEnabled()) {
+      return;
+    }
+    const periodic =
+      this.mailRuntimeRoleService.shouldRunBackgroundJobs();
+    if (!periodic) {
+      this.logger.log(
+        `LERTA_MAIL_RUNTIME_ROLE=${this.mailRuntimeRoleService.getRole()} — periyodik SMTP doğrulama kapalı`,
+      );
       return;
     }
     try {

@@ -7,7 +7,10 @@ import { ConsoleShell } from "@/components/ConsoleShell";
 import { MAIL_WEB_URL } from "@/lib/apiConfig";
 import {
   fetchCustomDomainBundle,
+  cancelMailSubscription,
+  fetchMailBillingLifecycle,
   fetchMailBillingStatus,
+  resumeMailSubscription,
   fetchMailIdentity,
   fetchMailSubscription,
   isPlatformOperator,
@@ -40,6 +43,15 @@ export default function DashboardPage() {
   const [planName, setPlanName] = useState<string | null>(null);
   const [planCode, setPlanCode] = useState<string | null>(null);
   const [sendLimit, setSendLimit] = useState<number | null>(null);
+  const [sendUsed, setSendUsed] = useState(0);
+  const [sendNearLimit, setSendNearLimit] = useState(false);
+  const [sendAtLimit, setSendAtLimit] = useState(false);
+  const [sendWindowLabel, setSendWindowLabel] = useState("Son 60 dakika");
+  const [storageUsedGb, setStorageUsedGb] = useState(0);
+  const [storageLimitGb, setStorageLimitGb] = useState(0);
+  const [storagePercent, setStoragePercent] = useState(0);
+  const [storageNearLimit, setStorageNearLimit] = useState(false);
+  const [storageAtLimit, setStorageAtLimit] = useState(false);
   const [planMessage, setPlanMessage] = useState("");
   const [mailboxQuota, setMailboxQuota] = useState<string>("");
   const [mailboxUsed, setMailboxUsed] = useState(0);
@@ -50,6 +62,13 @@ export default function DashboardPage() {
   const [customDomainStatus, setCustomDomainStatus] = useState<string | null>(
     null,
   );
+  const [billingLifecycle, setBillingLifecycle] = useState<{
+    statusLabelTr: string;
+    detailTr: string;
+    cancelAtPeriodEnd: boolean;
+    inGrace: boolean;
+    billingProvider: string;
+  } | null>(null);
 
   async function refreshSubscription(token: string): Promise<string | null> {
     try {
@@ -57,11 +76,26 @@ export default function DashboardPage() {
       setPlanName(sub.subscription.plan?.displayName ?? sub.subscription.planCode);
       setPlanCode(sub.subscription.planCode);
       setSendLimit(sub.subscription.sendRate);
+      const quota = sub.subscription.sendRateQuota;
+      if (quota) {
+        setSendUsed(quota.sendsLastHour);
+        setSendNearLimit(quota.nearLimit);
+        setSendAtLimit(quota.atLimit);
+        setSendWindowLabel(quota.windowLabelTr);
+      }
       setMailboxUsed(sub.subscription.mailboxQuota.used);
       setMailboxLimit(sub.subscription.mailboxQuota.limit);
       setMailboxQuota(
         `${sub.subscription.mailboxQuota.used}/${sub.subscription.mailboxQuota.limit} kutu`,
       );
+      const storage = sub.subscription.storageQuota;
+      if (storage) {
+        setStorageUsedGb(storage.usedBytes / (1024 ** 3));
+        setStorageLimitGb(storage.limitLabelGb);
+        setStoragePercent(storage.utilizationPercent);
+        setStorageNearLimit(storage.nearLimit);
+        setStorageAtLimit(storage.atLimit);
+      }
       return sub.subscription.planCode;
     } catch {
       setPlanName(null);
@@ -113,8 +147,15 @@ export default function DashboardPage() {
       }
 
       try {
+        const life = await fetchMailBillingLifecycle(accessToken);
+        setBillingLifecycle(life.lifecycle);
+      } catch {
+        setBillingLifecycle(null);
+      }
+
+      try {
         const billingStatus = await fetchMailBillingStatus(accessToken);
-        setCheckoutCanStart(billingStatus.status.checkout.canStart);
+        setCheckoutCanStart(billingStatus.status.checkout.canStartCorporate);
         setCheckoutBlockers(billingStatus.status.checkout.blockers);
       } catch {
         setCheckoutCanStart(false);
@@ -257,9 +298,87 @@ export default function DashboardPage() {
         <h2>Plan</h2>
         <p>
           Aktif: <strong>{planName ?? "—"}</strong>
-          {sendLimit ? ` · Gönderim: ${sendLimit}/saat` : ""}
           {mailboxQuota ? ` · ${mailboxQuota}` : ""}
         </p>
+        {sendLimit && sendLimit > 0 ? (
+          <div style={{ marginBottom: 12 }}>
+            <p style={{ margin: "0 0 8px", fontSize: 14 }}>
+              Gönderim kotası ({sendWindowLabel}):{" "}
+              <strong>{sendUsed}</strong> / {sendLimit}
+            </p>
+            <div
+              style={{
+                height: 8,
+                borderRadius: 4,
+                background: "var(--border)",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  width: `${Math.min(100, (sendUsed / sendLimit) * 100)}%`,
+                  height: "100%",
+                  background:
+                    sendAtLimit || sendUsed >= sendLimit
+                      ? "#dc2626"
+                      : sendNearLimit
+                        ? "#d97706"
+                        : "var(--accent)",
+                }}
+              />
+            </div>
+            {sendAtLimit ? (
+              <p style={{ color: "#dc2626", marginTop: 8, marginBottom: 0 }}>
+                Saatlik limit doldu. Bir süre sonra tekrar deneyin veya planı
+                yükseltin.
+              </p>
+            ) : sendNearLimit ? (
+              <p style={{ color: "#b45309", marginTop: 8, marginBottom: 0 }}>
+                Kotaya yaklaşıyorsunuz — yoğun gönderim için Kurumsal plana
+                geçin.
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+        {storageLimitGb > 0 ? (
+          <div style={{ marginBottom: 12 }}>
+            <p style={{ margin: "0 0 8px", fontSize: 14 }}>
+              Depolama: <strong>{storageUsedGb.toFixed(1)}</strong> /{" "}
+              {storageLimitGb} GB
+            </p>
+            <div
+              style={{
+                height: 8,
+                borderRadius: 4,
+                background: "var(--border)",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  width: `${Math.min(100, storagePercent)}%`,
+                  height: "100%",
+                  background:
+                    storageAtLimit
+                      ? "#dc2626"
+                      : storageNearLimit
+                        ? "#d97706"
+                        : "var(--accent)",
+                }}
+              />
+            </div>
+            {storageAtLimit ? (
+              <p style={{ color: "#dc2626", marginTop: 8, marginBottom: 0 }}>
+                Depolama kotası doldu. Çöp kutusunu temizleyin veya Kurumsal
+                plana geçin.
+              </p>
+            ) : storageNearLimit ? (
+              <p style={{ color: "#b45309", marginTop: 8, marginBottom: 0 }}>
+                Depolama kotasına yaklaşıyorsunuz.
+              </p>
+            ) : null}
+          </div>
+        ) : null}
         {mailboxLimit > 0 ? (
           <div style={{ marginBottom: 12 }}>
             <div
@@ -290,6 +409,82 @@ export default function DashboardPage() {
               <li key={line}>{line}</li>
             ))}
           </ul>
+        ) : null}
+        {billingLifecycle ? (
+          <div
+            style={{
+              marginBottom: 12,
+              padding: 12,
+              borderRadius: 8,
+              background: billingLifecycle.inGrace
+                ? "#fff7ed"
+                : billingLifecycle.cancelAtPeriodEnd
+                  ? "#f8fafc"
+                  : "transparent",
+              border: billingLifecycle.inGrace
+                ? "1px solid #fdba74"
+                : "1px solid var(--border)",
+            }}
+          >
+            <strong>{billingLifecycle.statusLabelTr}</strong>
+            <p style={{ margin: "6px 0 0", fontSize: 14, color: "var(--muted)" }}>
+              {billingLifecycle.detailTr}
+            </p>
+            {billingLifecycle.billingProvider === "stripe" ? (
+              <div style={{ marginTop: 10 }}>
+                {billingLifecycle.cancelAtPeriodEnd ? (
+                  <button
+                    type="button"
+                    className="btn secondary"
+                    onClick={() => {
+                      void (async () => {
+                        if (!accessToken) {
+                          return;
+                        }
+                        try {
+                          const res = await resumeMailSubscription(accessToken);
+                          setBillingLifecycle(res.lifecycle);
+                          setPlanMessage("Abonelik yenileme tekrar açıldı.");
+                        } catch {
+                          setPlanMessage("Yenileme açılamadı.");
+                        }
+                      })();
+                    }}
+                  >
+                    İptali geri al
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn secondary"
+                    onClick={() => {
+                      if (
+                        !window.confirm(
+                          "Abonelik dönem sonunda iptal edilecek. Emin misiniz?",
+                        )
+                      ) {
+                        return;
+                      }
+                      void (async () => {
+                        if (!accessToken) {
+                          return;
+                        }
+                        try {
+                          const res = await cancelMailSubscription(accessToken);
+                          setBillingLifecycle(res.lifecycle);
+                          setPlanMessage("Dönem sonunda iptal planlandı.");
+                        } catch {
+                          setPlanMessage("İptal isteği gönderilemedi.");
+                        }
+                      })();
+                    }}
+                  >
+                    Dönem sonunda iptal
+                  </button>
+                )}
+              </div>
+            ) : null}
+          </div>
         ) : null}
         {planMessage ? (
           <p style={{ color: "var(--success)", fontWeight: 600 }}>{planMessage}</p>

@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { InjectRepository } from "@nestjs/typeorm";
 import { createHash, randomBytes } from "crypto";
 import { Repository } from "typeorm";
@@ -29,6 +30,7 @@ export class EmailSecurityTokenService {
     private readonly platformNotificationSettingsService: PlatformNotificationSettingsService,
     private readonly notificationConfigurationService: NotificationConfigurationService,
     private readonly passwordHashingService: PasswordHashingService,
+    private readonly configService: ConfigService,
   ) {}
 
   public async requestEmailVerification(userId: string): Promise<void> {
@@ -116,8 +118,13 @@ export class EmailSecurityTokenService {
         consumedAt: null,
       }),
     );
+    const mailConsole =
+      this.configService.get<string>("MAIL_CONSOLE_PUBLIC_URL")?.trim() ||
+      null;
     const baseUrl = this.notificationConfigurationService.resolveWebBaseUrl();
-    const resetUrl = `${baseUrl}/login?resetPassword=${rawToken}`;
+    const resetUrl = mailConsole
+      ? `${mailConsole.replace(/\/$/, "")}/reset-password?token=${rawToken}`
+      : `${baseUrl}/login?resetPassword=${rawToken}`;
     await this.emailOutboxService.enqueue({
       eventCode: NotificationEventCode.PasswordReset,
       recipientKind: EmailRecipientKind.User,
