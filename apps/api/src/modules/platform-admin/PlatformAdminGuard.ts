@@ -19,9 +19,25 @@ export class PlatformAdminGuard implements CanActivate {
     if (!user?.emailAddress) {
       throw new AuthorizationException("Authentication required");
     }
-    if (!isPlatformOperatorEmail(user.emailAddress)) {
-      throw new AuthorizationException("Platform operator access required");
+    if (this.isAllowedOperator(user.emailAddress)) {
+      return true;
     }
-    return true;
+    throw new AuthorizationException("Platform operator access required");
+  }
+
+  private isAllowedOperator(emailAddress: string): boolean {
+    if (isPlatformOperatorEmail(emailAddress)) {
+      return true;
+    }
+    const extra = process.env.PLATFORM_OPERATOR_EMAILS?.trim();
+    if (!extra) {
+      return false;
+    }
+    const normalized = emailAddress.trim().toLowerCase();
+    return extra
+      .split(/[,;\s]+/)
+      .map((part) => part.trim().toLowerCase())
+      .filter(Boolean)
+      .includes(normalized);
   }
 }

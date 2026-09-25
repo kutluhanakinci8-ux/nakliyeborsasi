@@ -35,6 +35,16 @@ set_kv "MAIL_INBOUND_APPLY_POSTFIX" "true"
 set_kv "MAIL_IMAP_APPLY_DOVECOT" "true"
 set_kv "MAIL_IMAP_MAILDIR_ROOT" "/var/mail/vhosts"
 
+# Platform /admin ve mail operatörleri (virgülle birden fazla)
+if [[ -n "${PLATFORM_OPERATOR_EMAILS:-}" ]]; then
+  set_kv "PLATFORM_OPERATOR_EMAILS" "${PLATFORM_OPERATOR_EMAILS}"
+fi
+
+# DNS’teki tenant DKIM TXT (VPS default.txt ile aynı olmalı)
+if [[ -n "${MAIL_PLATFORM_TENANT_DKIM_TXT:-}" ]]; then
+  set_kv "MAIL_PLATFORM_TENANT_DKIM_TXT" "${MAIL_PLATFORM_TENANT_DKIM_TXT}"
+fi
+
 echo "Pilot mail env yazıldı: ${ENV_FILE}"
 echo "Sonra: bash ${INSTALL_DIR}/scripts/setup-mail-lerta-com-tr-pilot.sh"
 echo "      bash ${INSTALL_DIR}/scripts/restart-api.sh"
