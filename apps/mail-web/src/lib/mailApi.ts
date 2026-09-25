@@ -45,6 +45,15 @@ export type MailInboxListItem = {
   spamReason?: string | null;
   attachmentCount?: number;
   starredAt?: string | null;
+  customFolderId?: string | null;
+};
+
+export type MailCustomFolder = {
+  id: string;
+  name: string;
+  sortOrder: number;
+  messageCount: number;
+  createdAt: string;
 };
 
 export type MailInboxMessageDetail = MailInboxListItem & {
@@ -265,21 +274,70 @@ export type MailInboxThreadRow = {
 export async function fetchInbox(
   accessToken: string,
   folder: MailInboxFolder,
+  customFolderId?: string | null,
 ) {
+  const params = new URLSearchParams({ folder });
+  if (folder === "inbox" && customFolderId) {
+    params.set("customFolderId", customFolderId);
+  }
   return apiFetch<{
     summary: MailInboxSummary;
     messages: MailInboxListItem[];
     sent: MailSentItem[];
-  }>(accessToken, `company/mail-inbox?folder=${folder}`);
+  }>(accessToken, `company/mail-inbox?${params.toString()}`);
+}
+
+export async function fetchCustomFolders(accessToken: string) {
+  return apiFetch<{ folders: MailCustomFolder[] }>(
+    accessToken,
+    "company/mail-inbox/custom-folders",
+  );
+}
+
+export async function createCustomFolder(accessToken: string, name: string) {
+  return apiFetch<{ folder: MailCustomFolder }>(
+    accessToken,
+    "company/mail-inbox/custom-folders",
+    { method: "POST", body: JSON.stringify({ name }) },
+  );
+}
+
+export async function deleteCustomFolder(
+  accessToken: string,
+  folderId: string,
+) {
+  await apiFetch(accessToken, `company/mail-inbox/custom-folders/${folderId}`, {
+    method: "DELETE",
+  });
+}
+
+export async function bulkSetMessageCustomFolder(
+  accessToken: string,
+  messageIds: string[],
+  customFolderId: string | null,
+) {
+  return apiFetch<{ updated: number }>(
+    accessToken,
+    "company/mail-inbox/messages/bulk/custom-folder",
+    {
+      method: "POST",
+      body: JSON.stringify({ messageIds, customFolderId }),
+    },
+  );
 }
 
 export async function fetchInboxThreads(
   accessToken: string,
   folder: MailInboxFolder,
+  customFolderId?: string | null,
 ) {
+  const params = new URLSearchParams({ folder });
+  if (folder === "inbox" && customFolderId) {
+    params.set("customFolderId", customFolderId);
+  }
   return apiFetch<{ threads: MailInboxThreadRow[] }>(
     accessToken,
-    `company/mail-inbox/threads?folder=${folder}`,
+    `company/mail-inbox/threads?${params.toString()}`,
   );
 }
 
@@ -287,10 +345,15 @@ export async function fetchThreadMessages(
   accessToken: string,
   threadId: string,
   folder: MailInboxFolder,
+  customFolderId?: string | null,
 ) {
+  const params = new URLSearchParams({ folder });
+  if (folder === "inbox" && customFolderId) {
+    params.set("customFolderId", customFolderId);
+  }
   return apiFetch<{ messages: MailInboxListItem[] }>(
     accessToken,
-    `company/mail-inbox/threads/${encodeURIComponent(threadId)}/messages?folder=${folder}`,
+    `company/mail-inbox/threads/${encodeURIComponent(threadId)}/messages?${params.toString()}`,
   );
 }
 
@@ -306,8 +369,12 @@ export async function searchInbox(
   accessToken: string,
   folder: MailInboxFolder,
   options: MailInboxSearchOptions = {},
+  customFolderId?: string | null,
 ) {
   const params = new URLSearchParams({ folder });
+  if (folder === "inbox" && customFolderId) {
+    params.set("customFolderId", customFolderId);
+  }
   const q = options.q?.trim() ?? "";
   if (q) {
     params.set("q", q);

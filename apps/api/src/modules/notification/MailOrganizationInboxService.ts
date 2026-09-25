@@ -133,6 +133,7 @@ export class MailOrganizationInboxService {
     organizationId: string,
     folder: InboxFolder = "inbox",
     limit = 50,
+    customFolderId?: string | null,
   ): Promise<
     {
       id: string;
@@ -151,7 +152,7 @@ export class MailOrganizationInboxService {
       return [];
     }
     const rows = await this.inboundRepository.find({
-      where: this.whereForFolder(mailboxIds, folder),
+      where: this.whereForFolder(mailboxIds, folder, customFolderId),
       order: { receivedAt: "DESC" },
       take: limit,
     });
@@ -163,6 +164,7 @@ export class MailOrganizationInboxService {
     folder: InboxFolder = "inbox",
     filters: MailInboxSearchFilters = {},
     limit = 50,
+    customFolderId?: string | null,
   ): Promise<
     {
       id: string;
@@ -185,7 +187,7 @@ export class MailOrganizationInboxService {
     }
     const qb = this.inboundRepository.createQueryBuilder("m");
     qb.where("m.mailboxId IN (:...mailboxIds)", { mailboxIds });
-    this.applyFolderToQueryBuilder(qb, folder);
+    this.applyFolderToQueryBuilder(qb, folder, customFolderId);
 
     const term = filters.q?.trim() ?? "";
     if (term.length >= 2) {
@@ -310,6 +312,7 @@ export class MailOrganizationInboxService {
     organizationId: string,
     folder: InboxFolder = "inbox",
     limit = 40,
+    customFolderId?: string | null,
   ): Promise<
     {
       threadId: string;
@@ -327,7 +330,7 @@ export class MailOrganizationInboxService {
       return [];
     }
     const rows = await this.inboundRepository.find({
-      where: this.whereForFolder(mailboxIds, folder),
+      where: this.whereForFolder(mailboxIds, folder, customFolderId),
       order: { receivedAt: "DESC" },
       take: 300,
     });
@@ -372,6 +375,7 @@ export class MailOrganizationInboxService {
     organizationId: string,
     threadId: string,
     folder: InboxFolder = "inbox",
+    customFolderId?: string | null,
   ): Promise<
     {
       id: string;
@@ -390,7 +394,7 @@ export class MailOrganizationInboxService {
       return [];
     }
     const rows = await this.inboundRepository.find({
-      where: this.whereForFolder(mailboxIds, folder),
+      where: this.whereForFolder(mailboxIds, folder, customFolderId),
       order: { receivedAt: "ASC" },
       take: 300,
     });
@@ -526,6 +530,9 @@ export class MailOrganizationInboxService {
       folder,
     );
     row.mailboxFolder = folder;
+    if (folder !== "inbox") {
+      row.customFolderId = null;
+    }
     await this.inboundRepository.save(row);
     return { mailboxFolder: folder };
   }
@@ -582,6 +589,7 @@ export class MailOrganizationInboxService {
   private applyFolderToQueryBuilder(
     qb: SelectQueryBuilder<MailInboundMessageEntity>,
     folder: InboxFolder,
+    customFolderId?: string | null,
   ): void {
     if (folder === "trash") {
       qb.andWhere("m.mailboxFolder = :mailFolderTrash", {
@@ -621,11 +629,24 @@ export class MailOrganizationInboxService {
     qb.andWhere("m.mailboxFolder = :mailFolderInbox", {
       mailFolderInbox: "inbox",
     });
+    this.applyInboxCustomFolderFilter(qb, customFolderId);
+  }
+
+  private applyInboxCustomFolderFilter(
+    qb: SelectQueryBuilder<MailInboundMessageEntity>,
+    customFolderId?: string | null,
+  ): void {
+    if (customFolderId) {
+      qb.andWhere("m.customFolderId = :customFolderId", { customFolderId });
+      return;
+    }
+    qb.andWhere("m.customFolderId IS NULL");
   }
 
   private whereForFolder(
     mailboxIds: string[],
     folder: InboxFolder,
+    customFolderId?: string | null,
   ): Record<string, unknown> {
     if (folder === "trash") {
       return { mailboxId: In(mailboxIds), mailboxFolder: "trash" };
@@ -653,11 +674,17 @@ export class MailOrganizationInboxService {
         mailboxFolder: In(["inbox", "archive"]),
       };
     }
-    return {
+    const base: Record<string, unknown> = {
       mailboxId: In(mailboxIds),
       spamStatus: In(["clean", "suspected"]),
       mailboxFolder: "inbox",
     };
+    if (customFolderId) {
+      base.customFolderId = customFolderId;
+    } else {
+      base.customFolderId = IsNull();
+    }
+    return base;
   }
 
   private async mailboxIdsForOrganization(
@@ -711,6 +738,7 @@ export class MailOrganizationInboxService {
       spamReason: row.spamReason,
       attachmentCount: row.attachments?.length ?? 0,
       starredAt: row.starredAt?.toISOString() ?? null,
+      customFolderId: row.customFolderId,
     };
   }
 }

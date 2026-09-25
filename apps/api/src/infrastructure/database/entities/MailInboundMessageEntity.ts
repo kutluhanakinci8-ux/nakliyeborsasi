@@ -65,6 +65,9 @@ export class MailInboundMessageEntity {
   @Column({ type: "timestamptz", nullable: true })
   public starredAt!: Date | null;
 
+  @Column({ type: "uuid", nullable: true })
+  public customFolderId!: string | null;
+
   /** Webmail / IMAP klasörü (spam ayrı `spamStatus` ile). */
   @Column({ type: "varchar", length: 16, default: "inbox" })
   public mailboxFolder!: "inbox" | "archive" | "trash";
