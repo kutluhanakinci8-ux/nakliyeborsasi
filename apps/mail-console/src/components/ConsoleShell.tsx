@@ -50,6 +50,9 @@ export function ConsoleShell({
           <Link className={navClass("/team")} href="/team">
             Ekip
           </Link>
+          <Link className={navClass("/privacy")} href="/privacy">
+            Gizlilik / KVKK
+          </Link>
           {operator ? (
             <Link className={navClass("/operator")} href="/operator">
               Operatör

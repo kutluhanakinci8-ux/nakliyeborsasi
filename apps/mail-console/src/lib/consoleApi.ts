@@ -464,6 +464,82 @@ export async function fetchMailDmarcPanel(accessToken: string, days = 30) {
   );
 }
 
+export type MailDeletionStatus = {
+  hasRequest: boolean;
+  request?: {
+    id: string;
+    status: "pending" | "cancelled" | "completed";
+    reason: string | null;
+    executeAfter: string;
+    completedAt: string | null;
+    createdAt: string;
+  };
+};
+
+export async function fetchMailDeletionStatus(accessToken: string) {
+  return apiFetch<MailDeletionStatus>(
+    accessToken,
+    "company/mail-identity/privacy/deletion-status",
+  );
+}
+
+export async function downloadMailPrivacyExport(accessToken: string) {
+  const response = await fetch(
+    `${resolveApiBaseUrl()}/company/mail-identity/privacy/export`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    },
+  );
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || "Veri dışa aktarımı başarısız");
+  }
+  const blob = await response.blob();
+  const disposition = response.headers.get("Content-Disposition");
+  const match = disposition?.match(/filename="([^"]+)"/);
+  const filename = match?.[1] ?? "lerta-mail-export.json";
+  return { blob, filename };
+}
+
+export async function createMailDeletionRequest(
+  accessToken: string,
+  params: { confirmPhrase: string; reason?: string },
+) {
+  return apiFetch<{
+    requestId: string;
+    confirmToken: string;
+    executeAfter: string;
+  }>(accessToken, "company/mail-identity/privacy/deletion-request", {
+    method: "POST",
+    body: JSON.stringify(params),
+  });
+}
+
+export async function confirmMailDeletionRequest(
+  accessToken: string,
+  params: { requestId: string; confirmToken: string },
+) {
+  return apiFetch<{ ok: true; completedAt: string }>(
+    accessToken,
+    "company/mail-identity/privacy/deletion-request/confirm",
+    {
+      method: "POST",
+      body: JSON.stringify(params),
+    },
+  );
+}
+
+export async function cancelMailDeletionRequest(
+  accessToken: string,
+  requestId: string,
+) {
+  return apiFetch<{ ok: true }>(
+    accessToken,
+    `company/mail-identity/privacy/deletion-request/${requestId}`,
+    { method: "DELETE" },
+  );
+}
+
 export type MailBillingLifecycle = {
   status: string;
   billingProvider: string;

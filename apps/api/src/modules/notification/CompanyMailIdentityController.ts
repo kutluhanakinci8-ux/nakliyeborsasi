@@ -9,6 +9,7 @@ import {
   Patch,
   Post,
   Query,
+  Res,
   UseGuards,
 } from "@nestjs/common";
 import { CompanyRoleCode, AuthenticatedUserContext } from "@nakliyeborsasi/core";
@@ -19,6 +20,12 @@ import { MailOrganizationSendRateService } from "./MailOrganizationSendRateServi
 import { MailOrganizationStorageService } from "./MailOrganizationStorageService";
 import { MailOrganizationDeliveryService } from "./MailOrganizationDeliveryService";
 import { MailDmarcAggregateService } from "./MailDmarcAggregateService";
+import { MailOrganizationPrivacyService } from "./MailOrganizationPrivacyService";
+import {
+  ConfirmMailDeletionRequestDto,
+  CreateMailDeletionRequestDto,
+} from "./MailPrivacyRequestDto";
+import { Response } from "express";
 import { EmailSuppressionService } from "./EmailSuppressionService";
 import { MailCustomDomainService } from "./MailCustomDomainService";
 import {
@@ -38,6 +45,7 @@ import {
   assertMailConsoleAccess,
   canManageMailDomain,
   canManageMailIdentity,
+  canManageCompanyTeamRoles,
 } from "./MailCompanyRoleAuthorization";
 
 class UpdateCompanyMailDisplayNameDto {
@@ -53,6 +61,7 @@ export class CompanyMailIdentityController {
     private readonly mailOrganizationStorageService: MailOrganizationStorageService,
     private readonly mailOrganizationDeliveryService: MailOrganizationDeliveryService,
     private readonly mailDmarcAggregateService: MailDmarcAggregateService,
+    private readonly mailOrganizationPrivacyService: MailOrganizationPrivacyService,
     private readonly emailSuppressionService: EmailSuppressionService,
     private readonly mailCustomDomainService: MailCustomDomainService,
     private readonly mailIdentityAuditService: MailIdentityAuditService,
@@ -323,6 +332,104 @@ export class CompanyMailIdentityController {
     return { message: "OK", ...result };
   }
 
+  @Get("privacy/export")
+  public async exportPrivacyData(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Res() response: Response,
+  ): Promise<void> {
+    this.assertCompanyOwner(user);
+    const payload = await this.mailOrganizationPrivacyService.buildExport(
+      user.companyId,
+    );
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.PrivacyDataExport,
+      { organizationId: user.companyId },
+      "/company/mail-identity/privacy/export",
+    );
+    const filename = `lerta-mail-export-${user.companyId.slice(0, 8)}.json`;
+    response.setHeader("Content-Type", "application/json; charset=utf-8");
+    response.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${filename}"`,
+    );
+    response.send(JSON.stringify(payload, null, 2));
+  }
+
+  @Get("privacy/deletion-status")
+  public async deletionStatus(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    this.assertCompanyOwner(user);
+    const status = await this.mailOrganizationPrivacyService.getDeletionStatus(
+      user.companyId,
+    );
+    return { message: "OK", ...status };
+  }
+
+  @Post("privacy/deletion-request")
+  public async createDeletionRequest(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: CreateMailDeletionRequestDto,
+  ) {
+    this.assertCompanyOwner(user);
+    const result = await this.mailOrganizationPrivacyService.createDeletionRequest(
+      {
+        organizationId: user.companyId,
+        userId: user.userId,
+        confirmPhrase: body.confirmPhrase,
+        reason: body.reason,
+      },
+    );
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.PrivacyDeletionRequested,
+      { requestId: result.requestId, executeAfter: result.executeAfter },
+      "/company/mail-identity/privacy/deletion-request",
+    );
+    return { message: "OK", ...result };
+  }
+
+  @Post("privacy/deletion-request/confirm")
+  public async confirmDeletionRequest(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: ConfirmMailDeletionRequestDto,
+  ) {
+    this.assertCompanyOwner(user);
+    const result =
+      await this.mailOrganizationPrivacyService.confirmDeletionRequest({
+        organizationId: user.companyId,
+        requestId: body.requestId,
+        confirmToken: body.confirmToken,
+      });
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.PrivacyDeletionCompleted,
+      { requestId: body.requestId },
+      "/company/mail-identity/privacy/deletion-request/confirm",
+    );
+    return { message: "OK", ...result };
+  }
+
+  @Delete("privacy/deletion-request/:requestId")
+  public async cancelDeletionRequest(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("requestId") requestId: string,
+  ) {
+    this.assertCompanyOwner(user);
+    await this.mailOrganizationPrivacyService.cancelDeletionRequest(
+      user.companyId,
+      requestId,
+    );
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.PrivacyDeletionCancelled,
+      { requestId },
+      "/company/mail-identity/privacy/deletion-request",
+    );
+    return { message: "OK", ok: true };
+  }
+
   @Get("dmarc")
   public async dmarcSummary(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
@@ -449,6 +556,14 @@ export class CompanyMailIdentityController {
     if (!canManageMailDomain(user)) {
       throw new ForbiddenException(
         "Özel domain yalnızca firma sahibi tarafından yönetilebilir.",
+      );
+    }
+  }
+
+  private assertCompanyOwner(user: AuthenticatedUserContext): void {
+    if (!canManageCompanyTeamRoles(user)) {
+      throw new ForbiddenException(
+        "Gizlilik ve veri silme işlemleri yalnızca firma sahibi tarafından yapılabilir.",
       );
     }
   }

@@ -19,7 +19,7 @@
 | Thread / konuşma görünümü | Yok |
 | Çoklu kullanıcı / davet / roller (mail_admin) | **B3 — ekip daveti + roller** |
 | Faturalama yaşam döngüsü (iptal, fatura e-postası) | Yok |
-| KVKK export / silme self-servis | Yok |
+| KVKK export / silme self-servis | Konsol /privacy + API (E3) |
 | Kurumsal kimlik (logo, imza, hukuki sayfalar) | Kısmi |
 
 ---
@@ -96,7 +96,7 @@
 |---|-----|--------|
 | E1 | Tenant teslimat paneli | `GET …/delivery`, konsol /delivery — **uygulandı** |
 | E2 | DMARC aggregate (rua) görünümü | `mail_dmarc_aggregate`, konsol /dmarc, admin ingest — **uygulandı** |
-| E3 | KVKK veri export + hesap silme | API + konsol talebi |
+| E3 | KVKK veri export + hesap silme | `privacy/*`, konsol /privacy, `MAIL_KVKK_*` — **uygulandı** |
 | E4 | Denetim kaydı (tenant) | Kim, ne zaman, domain/kutu değişti |
 | E5 | 2FA (TOTP) yönetim + webmail | Opsiyonel zorunlu kurumsal paket |
 | E6 | SPF/DKIM rotasyon runbook | Operatör dokümantasyonu |
