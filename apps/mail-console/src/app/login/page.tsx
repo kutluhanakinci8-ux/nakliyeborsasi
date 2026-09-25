@@ -62,6 +62,8 @@ export default function LoginPage() {
         </button>
         <p style={{ marginTop: 16, fontSize: "0.9rem" }}>
           Hesabınız yok mu? <Link href="/register">Kayıt olun</Link>
+          {" · "}
+          <Link href="/forgot-password">Şifremi unuttum</Link>
         </p>
       </form>
     </div>

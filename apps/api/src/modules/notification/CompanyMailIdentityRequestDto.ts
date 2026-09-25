@@ -35,3 +35,23 @@ export class ProvisionMailIdentityDto {
   @IsOptional()
   public makeDefault?: boolean;
 }
+
+export class PilotQuickStartDto {
+  @IsString()
+  @MinLength(2)
+  @MaxLength(255)
+  public companyLegalName!: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  public displayName?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  @Matches(/^[a-z0-9][a-z0-9-]{1,48}[a-z0-9]$/, {
+    message: "local-part: küçük harf, rakam, tire",
+  })
+  public localPart?: string;
+}

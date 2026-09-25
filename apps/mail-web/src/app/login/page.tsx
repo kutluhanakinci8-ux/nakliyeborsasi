@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { login } from "@/lib/mailApi";
@@ -57,6 +58,9 @@ export default function LoginPage() {
         <button type="submit" disabled={loading}>
           {loading ? "Giriş…" : "Giriş yap"}
         </button>
+        <p style={{ marginTop: 12, fontSize: "0.9rem" }}>
+          <Link href="/forgot-password">Şifremi unuttum</Link>
+        </p>
       </form>
     </div>
   );

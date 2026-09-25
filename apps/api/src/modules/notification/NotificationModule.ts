@@ -28,6 +28,7 @@ import { MailBillingGraceScheduler } from "./MailBillingGraceScheduler";
 import { MailOrganizationOperatorStateEntity } from "../../infrastructure/database/entities/MailOrganizationOperatorStateEntity";
 import { PlatformMailTenantAdminService } from "./PlatformMailTenantAdminService";
 import { MailTenantSuspensionService } from "./MailTenantSuspensionService";
+import { MailPilotOnboardingService } from "./MailPilotOnboardingService";
 import { CompanySubscriptionEntity } from "../../infrastructure/database/entities/CompanySubscriptionEntity";
 import { MailTenantDnsVerificationScheduler } from "./MailTenantDnsVerificationScheduler";
 import { MailOrganizationSendRateService } from "./MailOrganizationSendRateService";
@@ -191,6 +192,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     MailBillingGraceScheduler,
     PlatformMailTenantAdminService,
     MailTenantSuspensionService,
+    MailPilotOnboardingService,
   ],
   exports: [
     AuthNotificationService,

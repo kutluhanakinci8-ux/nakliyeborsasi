@@ -69,6 +69,11 @@ export function PricingSection() {
                 : `€${plan.monthlyPriceEur}/ay`}
             </p>
             <p className="price-period">{plan.tagline}</p>
+            {plan.planCode === "lerta_mail_pilot_tr" ? (
+              <p className="price-period" style={{ fontWeight: 600 }}>
+                Ücretsiz pilot · 1 kutu · 80 e-posta/saat
+              </p>
+            ) : null}
             <ul>
               <li>{plan.mailMaxSendsPerHour} gönderim / saat</li>
               <li>{plan.mailMaxMailboxes} posta kutusu</li>

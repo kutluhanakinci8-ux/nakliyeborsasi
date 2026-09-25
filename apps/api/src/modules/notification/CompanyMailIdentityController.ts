@@ -25,9 +25,11 @@ import {
 
 import {
   ProvisionMailIdentityDto,
+  PilotQuickStartDto,
   RegisterCustomDomainDto,
   SelectMailPlanRequestDto,
 } from "./CompanyMailIdentityRequestDto";
+import { MailPilotOnboardingService } from "./MailPilotOnboardingService";
 import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
 import {
   assertMailConsoleAccess,
@@ -49,7 +51,23 @@ export class CompanyMailIdentityController {
     private readonly mailCustomDomainService: MailCustomDomainService,
     private readonly mailIdentityAuditService: MailIdentityAuditService,
     private readonly mailSaasSubscriptionService: MailSaasSubscriptionService,
+    private readonly mailPilotOnboardingService: MailPilotOnboardingService,
   ) {}
+
+  @Post("pilot/quick-start")
+  public async pilotQuickStart(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: PilotQuickStartDto,
+  ) {
+    this.assertMailIdentityManager(user);
+    const result = await this.mailPilotOnboardingService.quickStart({
+      organizationId: user.companyId,
+      companyLegalName: body.companyLegalName,
+      displayName: body.displayName,
+      localPart: body.localPart,
+    });
+    return { message: "OK", ...result };
+  }
 
   @Get("plans")
   public listMailPlans() {

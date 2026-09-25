@@ -142,6 +142,50 @@ export async function setDefaultMailSender(
   );
 }
 
+export async function quickStartPilotMailbox(
+  accessToken: string,
+  params: {
+    companyLegalName: string;
+    displayName?: string;
+    localPart?: string;
+  },
+) {
+  return apiFetch<{
+    fromAddress: string;
+    localPart: string;
+    tenantDomain: string;
+    webmailHandoffPath: string;
+  }>(accessToken, "company/mail-identity/pilot/quick-start", {
+    method: "POST",
+    body: JSON.stringify(params),
+  });
+}
+
+export async function requestPasswordReset(emailAddress: string) {
+  const response = await fetch(
+    `${resolveApiBaseUrl()}/auth/request-password-reset`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ emailAddress: emailAddress.trim() }),
+    },
+  );
+  if (!response.ok) {
+    throw new Error("İstek gönderilemedi");
+  }
+}
+
+export async function resetPasswordWithToken(token: string, newPassword: string) {
+  const response = await fetch(`${resolveApiBaseUrl()}/auth/reset-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token, newPassword: newPassword }),
+  });
+  if (!response.ok) {
+    throw new Error("Şifre güncellenemedi");
+  }
+}
+
 export async function provisionTenantMailbox(
   accessToken: string,
   localPart: string,

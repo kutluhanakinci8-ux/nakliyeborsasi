@@ -64,10 +64,10 @@
 
 | # | İş | Takip / kabul kriteri |
 |---|-----|------------------------|
-| C1 | `slug@kullanici.lerta.com.tr` tek tık | Kayıt → pilot kutu → webmail |
-| C2 | Ücretsiz pilot limitleri net | 1 kutu, 80/saat; vitrinde açık |
-| C3 | Pilot → Kurumsal yükseltme | Ödeme veya domain geçişi tek akış |
-| C4 | Şifre sıfırlama / hesap güvenliği | Mail-only kullanıcı self-servis |
+| C1 | `slug@kullanici.lerta.com.tr` tek tık | Kayıt → `pilot/quick-start` → webmail handoff — **uygulandı** |
+| C2 | Ücretsiz pilot limitleri net | Vitrin + kayıt metni — **uygulandı** |
+| C3 | Pilot → Kurumsal yükseltme | `/upgrade` ödeme + domain — **uygulandı** |
+| C4 | Şifre sıfırlama / hesap güvenliği | `/forgot-password`, `/reset-password` — **uygulandı** |
 | C5 | Mobil uyumlu webmail | posta responsive; temel PWA (opsiyonel) |
 
 ---

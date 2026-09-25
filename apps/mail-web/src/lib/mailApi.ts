@@ -124,6 +124,20 @@ async function apiFetch<T>(
   return (await response.json()) as T;
 }
 
+export async function requestPasswordReset(emailAddress: string): Promise<void> {
+  const response = await fetch(
+    `${resolveApiBaseUrl()}/auth/request-password-reset`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ emailAddress: emailAddress.trim() }),
+    },
+  );
+  if (!response.ok) {
+    throw new Error("İstek gönderilemedi");
+  }
+}
+
 export async function login(
   emailAddress: string,
   password: string,
