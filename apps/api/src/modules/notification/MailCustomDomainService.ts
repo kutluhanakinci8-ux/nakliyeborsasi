@@ -219,6 +219,7 @@ export class MailCustomDomainService {
     organizationId: string;
     localPart: string;
     displayName?: string;
+    makeDefault?: boolean;
   }): Promise<{ fromAddress: string; sender: MailSenderIdentityEntity }> {
     const mailDomain = await this.domainRepository.findOne({
       where: { organizationId: params.organizationId, domainType: "custom" },
@@ -235,22 +236,37 @@ export class MailCustomDomainService {
     const taken = await this.senderRepository.findOne({
       where: { mailDomainId: mailDomain.id, localPart },
     });
-    if (!taken) {
-      await this.mailSaasSubscriptionService.assertMailboxQuota(
-        params.organizationId,
-        1,
-      );
+    if (taken) {
+      if (taken.organizationId !== params.organizationId) {
+        throw new BadRequestException("Bu adres başka bir firmaya ait.");
+      }
+      const makeDefault = params.makeDefault ?? false;
+      if (makeDefault) {
+        await this.mailSaasSubscriptionService.setDefaultSender(
+          params.organizationId,
+          taken.id,
+        );
+      }
+      if (params.displayName?.trim()) {
+        taken.displayName = params.displayName.trim();
+        await this.senderRepository.save(taken);
+      }
+      return {
+        fromAddress: `${localPart}@${mailDomain.domain}`,
+        sender: taken,
+      };
     }
-    await this.senderRepository.update(
-      { organizationId: params.organizationId, isDefault: true },
-      { isDefault: false },
+    await this.mailSaasSubscriptionService.assertMailboxQuota(
+      params.organizationId,
+      1,
     );
+    const makeDefault = params.makeDefault ?? true;
     const sender = await this.mailDomainApplicationService.addSenderIdentity({
       mailDomainId: mailDomain.id,
       organizationId: params.organizationId,
       localPart,
       displayName: params.displayName,
-      isDefault: true,
+      isDefault: makeDefault,
     });
     return {
       fromAddress: `${localPart}@${mailDomain.domain}`,

@@ -222,14 +222,19 @@ export default function DomainPage() {
                 onChange={(e) => setLocalPart(e.target.value)}
                 required
               />
-              <button
-                className="btn"
-                type="submit"
-                disabled={loading || status !== "verified"}
-              >
-                @{bundle.mailDomain.domain} oluştur
-              </button>
-            </form>
+            <button
+              className="btn"
+              type="submit"
+              disabled={loading || status !== "verified"}
+            >
+              @{bundle.mailDomain.domain} oluştur
+            </button>
+          </form>
+          <p style={{ marginTop: 12 }}>
+            <Link className="btn secondary" href="/mailboxes">
+              Tüm kutuları yönet
+            </Link>
+          </p>
           </div>
         </>
       )}

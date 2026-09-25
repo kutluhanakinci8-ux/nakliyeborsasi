@@ -62,6 +62,43 @@ export class MailSaasSubscriptionService {
     return this.senderRepository.count({ where: { organizationId } });
   }
 
+  public async listOrganizationSenders(organizationId: string) {
+    const senders = await this.senderRepository.find({
+      where: { organizationId },
+      relations: { mailDomain: true },
+      order: { isDefault: "DESC", createdAt: "ASC" },
+    });
+    return senders.map((sender) => ({
+      id: sender.id,
+      localPart: sender.localPart,
+      displayName: sender.displayName,
+      isDefault: sender.isDefault,
+      domain: sender.mailDomain?.domain ?? "",
+      fromAddress: sender.mailDomain
+        ? `${sender.localPart}@${sender.mailDomain.domain}`
+        : `${sender.localPart}@`,
+      createdAt: sender.createdAt.toISOString(),
+    }));
+  }
+
+  public async setDefaultSender(
+    organizationId: string,
+    senderId: string,
+  ): Promise<void> {
+    const sender = await this.senderRepository.findOne({
+      where: { id: senderId, organizationId },
+    });
+    if (!sender) {
+      throw new NotFoundException("Gönderen adresi bulunamadı.");
+    }
+    await this.senderRepository.update(
+      { organizationId, isDefault: true },
+      { isDefault: false },
+    );
+    sender.isDefault = true;
+    await this.senderRepository.save(sender);
+  }
+
   public resolveMailboxLimitForPlanCode(planCode: string | null): number {
     if (planCode) {
       const display = SubscriptionPlanDisplayCatalog.find(planCode);
