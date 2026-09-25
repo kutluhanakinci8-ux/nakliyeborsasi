@@ -9,7 +9,20 @@
 
 **İki domain birbirinden bağımsız marka/ürün.** Ortak olan şey: aynı VPS’teki **kod + API + Postfix** (tek motor, iki DNS profili).
 
-`www.lerta.com.tr` üzerindeki mevcut U88 sitesi logistics veya mail ürünü değil; mail ürünü için **ayrı alt alan** (ör. `posta.lerta.com.tr`) kullanılır.
+**Ürün bağımsızlığı:** Lerta Mail tamamen ayrı program (kayıt, yönetim, webmail, faturalama). Logistics / U88 / diğer ürünler **sonradan entegre** edilir.
+
+**Hostname hedefi (`lerta.com.tr`):**
+
+| Host | Rol |
+|------|-----|
+| `www.lerta.com.tr` / kök | **Lerta Mail kurumsal vitrin** (landing, fiyat, kayıt) — ürün bitince yalnızca bu program |
+| `posta.lerta.com.tr` | Webmail (Gmail benzeri kutu) |
+| `yonetim.lerta.com.tr` | Operatör + tenant yönetim konsolu (DNS, kutular, planlar) |
+| `mail.lerta.com.tr` | MTA (SMTP/IMAP, PTR) |
+
+Geçiş: Bugün `www` üzerinde U88 vardır; mail vitrini hazır olana kadar geliştirme `kurumsal` veya staging host’ta yapılabilir. **Canlı cutover** = U88 başka adrese taşınır veya sonlandırılır, sonra `www` → mail vitrin.
+
+Pilot dönemde webmail: `posta.lerta.com.tr` (çalışıyor).
 
 ## Ne istiyoruz?
 
@@ -129,14 +142,60 @@ Teknik: yeni `apps/mail-web`, `NEXT_PUBLIC_API_BASE_URL`, OAuth/JWT **org kullan
 | Uygulama | `app.lerta.tr` (veya mevcut) | `posta.lerta.com.tr` (webmail UI) |
 | MTA | `mail.lerta.tr` | `mail.lerta.com.tr` |
 | Tenant adresler | `@kullanici.lerta.tr` | `@kullanici.lerta.com.tr` |
-| Diğer | — | `www` = U88 (ayrı program, dokunulmaz) |
+| Diğer | — | `www` → mail vitrin (geçiş planlı); `yonetim` → konsol |
 
 ---
 
-## Sıradaki karar (sizden)
+## Kararlar (onaylı)
 
-1. SaaS kutu UI için hostname: **`posta.lerta.com.tr`** uygun mu?
-2. İlk satış modeli: sadece `@kullanici.lerta.com.tr` mi, yoksa ilk günden **özel domain** mi?
-3. Logistics ile **aynı kullanıcı hesabı** mı, mail için **ayrı kayıt** mı?
+| Konu | Karar |
+|------|--------|
+| Ürün | Lerta Mail **bağımsız** SaaS; entegrasyonlar sonra |
+| Vitrin | **`www.lerta.com.tr`** uzun vadede yalnızca mail programı |
+| Webmail | **`posta.lerta.com.tr`** |
+| Yönetim | **Ayrı** — `yonetim.lerta.com.tr` (operatör + firma admin) |
+| Kayıt | **Ayrı kayıt** (mail-only hesap; logistics hesabı şart değil) |
+| Satış adresi | Müşteri **kendi domaini** (ör. `info@firma.com`); `@kullanici.lerta.com.tr` yalnızca pilot / düşük paket |
 
-Onay sonrası repo: `apps/mail-web` iskeleti + Faz 2 ekran listesi + DNS `posta` A kaydı.
+---
+
+## Satılabilir adres modeli (özel domain öncelikli)
+
+**Hedef:** Müşteri “istediği” kurumsal posta — çoğunlukla **kendi alan adı**.
+
+| Paket | Gönderen / gelen | DNS |
+|-------|------------------|-----|
+| **Starter (pilot)** | `slug@kullanici.lerta.com.tr` | Paylaşımlı tenant subdomain (mevcut) |
+| **Business** | `*@musteri.com.tr` | Müşteri MX → `mail.lerta.com.tr`, SPF/DKIM/DMARC sihirbazı |
+| **Enterprise** | Çok domain / alias | Aynı + operatör onayı, kota, denetim |
+
+**Backend:** `MailCustomDomainService` (B5), OpenDKIM kurulumu, doğrulama API’leri **var** — eksik: self-servis wizard (`yonetim` + tenant onboarding), fiyatlandırma, varsayılan ürün mesajının “özel domain” olması.
+
+**Ürün akışı (satış):**
+
+1. Ayrı kayıt → firma oluştur.
+2. Onboarding: “Alan adınız” → DNS kayıt listesi → doğrula.
+3. İlk kutu: `destek@musteri.com` (veya seçilen adres).
+4. Webmail: `posta` — giriş mail-only hesapla.
+5. Operatör: `yonetim` — tüm tenant’lar, abuse, kota.
+
+---
+
+## Repo hedefi (3 ön yüz + motor)
+
+```
+apps/mail-marketing/   → www vitrin + kayıt
+apps/mail-web/         → posta (mevcut, premium UX)
+apps/mail-console/     → yonetim
+apps/api/              → ortak motor (değişmez prensip)
+```
+
+---
+
+## Çalışma sırası (özet)
+
+1. **Adres & B5:** Tenant self-servis özel domain + DNS wizard (API’ye bağlı).
+2. **mail-console:** Operatör + firma admin (domain verify, kutu, kullanıcı davet).
+3. **mail-marketing:** Landing + ayrı kayıt akışı.
+4. **mail-web:** Premium kutu (ek, arama, gönderilen içerik, hata mesajları).
+5. **www cutover:** Vitrin hazır → U88 geçiş planı → `www` yalnızca Lerta Mail.
