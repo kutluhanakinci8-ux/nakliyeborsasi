@@ -91,8 +91,18 @@ EOF
 
 write_http
 ln -sf "$NGINX_SITE" /etc/nginx/sites-enabled/lerta-posta-mail-web.conf
+
+# posta host adı başka projelerin (U88, Ekolojik vb.) nginx dosyasında olmamalı.
+if grep -rl "${APP_HOST}" /etc/nginx/sites-enabled/ 2>/dev/null | grep -v "lerta-posta-mail-web.conf" | grep -q .; then
+  echo "HATA: ${APP_HOST} başka nginx site dosyasında da tanımlı (programlar karışır)." >&2
+  grep -rl "${APP_HOST}" /etc/nginx/sites-enabled/ 2>/dev/null | grep -v "lerta-posta-mail-web.conf" || true
+  echo "Önce o dosyalardan ${APP_HOST} satırını kaldırın; Ekolojik/U88 yapılandırmasına dokunmayın." >&2
+  exit 1
+fi
+
 nginx -t && systemctl reload nginx
 echo "HTTP: http://${APP_HOST}/"
+echo "NOT: HTTPS sertifikası yoksa tarayıcı https:// açınca varsayılan site (ör. Ekolojik) görünebilir — certbot adımını tamamlayın."
 
 if [[ -f "${LE_DIR}/fullchain.pem" ]]; then
   write_https
