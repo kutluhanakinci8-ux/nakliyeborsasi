@@ -65,6 +65,15 @@ export class MailInboundMessageEntity {
   @Column({ type: "timestamptz", nullable: true })
   public starredAt!: Date | null;
 
+  @Column({ type: "timestamptz", nullable: true })
+  public snoozedUntil!: Date | null;
+
+  @Column({ type: "jsonb", nullable: true })
+  public toRecipients!: string[] | null;
+
+  @Column({ type: "jsonb", nullable: true })
+  public ccRecipients!: string[] | null;
+
   @Column({ type: "uuid", nullable: true })
   public customFolderId!: string | null;
 

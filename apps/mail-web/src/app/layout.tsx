@@ -3,8 +3,10 @@ import "./globals.css";
 import { MailSessionProvider } from "@/lib/session";
 import { MailThemeProvider } from "@/components/MailThemeProvider";
 import { MailPwaRegister } from "@/components/MailPwaRegister";
+import { MailHttpsRedirect } from "@/components/MailHttpsRedirect";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://posta.lerta.com.tr"),
   title: "Lerta Posta",
   description: "Kurumsal e-posta — lerta.com.tr",
   manifest: "/manifest.webmanifest",
@@ -33,6 +35,7 @@ export default function RootLayout({
         <MailSessionProvider>
           <MailThemeProvider>
             <MailPwaRegister />
+            <MailHttpsRedirect />
             {children}
           </MailThemeProvider>
         </MailSessionProvider>

@@ -116,7 +116,9 @@ export class MailDelayedComposeService {
         organizationId,
         inboundMessageId: send.inboundMessageId,
         text: send.text,
+        cc: send.cc,
         bcc: send.bcc,
+        replyAll: send.replyAll,
         attachments: send.attachments,
       });
     }

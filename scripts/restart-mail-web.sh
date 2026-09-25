@@ -17,6 +17,7 @@ BUILD_TIME="$(date -u +"%Y-%m-%dT%H:%MZ")"
   echo "NEXT_PUBLIC_DEPLOY_TIME=${BUILD_TIME}"
 } > "$ENV_FILE"
 
+rm -rf "$INSTALL_DIR/apps/mail-web/.next"
 npm run build -w @lerta/mail-web
 
 wait_http() {

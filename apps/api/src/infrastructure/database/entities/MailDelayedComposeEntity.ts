@@ -31,7 +31,9 @@ export type MailDelayedSendPayload =
       kind: "reply";
       inboundMessageId: string;
       text: string;
+      cc?: string;
       bcc?: string;
+      replyAll?: boolean;
       attachments?: MailDelayedComposeAttachment[];
     }
   | {

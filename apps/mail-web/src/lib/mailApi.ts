@@ -6,7 +6,8 @@ export type MailInboxFolder =
   | "all"
   | "archive"
   | "trash"
-  | "starred";
+  | "starred"
+  | "snoozed";
 
 export type MailMailboxFolder = "inbox" | "archive" | "trash";
 
@@ -735,12 +736,32 @@ export async function cancelDelayedCompose(
   });
 }
 
+export async function snoozeMailMessage(
+  accessToken: string,
+  messageId: string,
+  snoozedUntil: string,
+) {
+  return apiFetch<{ ok: true; snoozedUntil: string }>(
+    accessToken,
+    `company/mail-inbox/messages/${messageId}/snooze`,
+    { method: "POST", body: JSON.stringify({ snoozedUntil }) },
+  );
+}
+
+export async function unsnoozeMailMessage(accessToken: string, messageId: string) {
+  await apiFetch(accessToken, `company/mail-inbox/messages/${messageId}/unsnooze`, {
+    method: "POST",
+  });
+}
+
 export async function replyMail(
   accessToken: string,
   messageId: string,
   body: {
     text: string;
+    cc?: string;
     bcc?: string;
+    replyAll?: boolean;
     attachments?: ComposeAttachment[];
     delaySeconds?: number;
   },

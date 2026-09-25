@@ -59,6 +59,52 @@ export function parseInReplyTo(rawMime: string): string | null {
   return parseMimeHeaderValue(rawMime, "In-Reply-To");
 }
 
+function parseMimeHeaderLine(rawMime: string, headerName: string): string | null {
+  const headEnd = rawMime.search(/\r?\n\r?\n/);
+  const head = headEnd >= 0 ? rawMime.slice(0, headEnd) : rawMime;
+  const lines = head.split(/\r?\n/);
+  let value = "";
+  let collecting = false;
+  for (const line of lines) {
+    const isContinuation = /^\s/.test(line);
+    const isTarget = line.toLowerCase().startsWith(`${headerName.toLowerCase()}:`);
+    if (isTarget) {
+      value = line.slice(headerName.length + 1).trim();
+      collecting = true;
+      continue;
+    }
+    if (collecting && isContinuation) {
+      value += ` ${line.trim()}`;
+      continue;
+    }
+    if (collecting && !isContinuation) {
+      break;
+    }
+  }
+  return value || null;
+}
+
+export function parseAddressListFromMime(
+  rawMime: string,
+  headerName: string,
+): string[] {
+  const raw = parseMimeHeaderLine(rawMime, headerName);
+  if (!raw) {
+    return [];
+  }
+  const seen = new Set<string>();
+  const results: string[] = [];
+  for (const part of raw.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/)) {
+    const email = normalizeEmailAddress(part);
+    if (!email.includes("@") || seen.has(email)) {
+      continue;
+    }
+    seen.add(email);
+    results.push(email);
+  }
+  return results;
+}
+
 export type ParsedMimeAttachment = {
   filename: string;
   contentType: string;

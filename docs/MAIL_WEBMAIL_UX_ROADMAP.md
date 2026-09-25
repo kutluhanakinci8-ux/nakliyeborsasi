@@ -4,7 +4,7 @@
 
 | Faz | Odak | Süre (teknik) | Kabul |
 |-----|------|----------------|-------|
-| **G0** | HTTPS / güven | Ops | `verify-posta-https.sh` PASS; tarayıcı kilit |
+| **G0** | HTTPS / güven | Ops | HSTS + HTTP→HTTPS; middleware; `verify-posta-https.sh` PASS |
 | **G1** | Boş durum, keşfedilebilirlik | Küçük kod | İpuçlu empty state; sidebar kaydırma; thread toggle görünür |
 | **G2** | Üretkenlik | Orta | Yenile; okundu/okunmadı; toplu seç + arşiv/çöp; kısayol `?` |
 | **G3** | İletme & adresleme | Orta | İlet API+UI; BCC; “Tümüne yanıtla” |

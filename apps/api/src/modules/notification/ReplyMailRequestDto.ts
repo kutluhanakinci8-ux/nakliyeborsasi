@@ -1,6 +1,7 @@
 import { Type } from "class-transformer";
 import {
   IsArray,
+  IsBoolean,
   IsInt,
   IsOptional,
   IsString,
@@ -17,6 +18,15 @@ export class ReplyMailRequestDto {
   @MinLength(1)
   @MaxLength(200_000)
   public text!: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  public cc?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  public replyAll?: boolean;
 
   @IsOptional()
   @IsString()

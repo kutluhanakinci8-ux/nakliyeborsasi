@@ -29,6 +29,7 @@ import {
   bulkSetMessageMailboxFolder,
   bulkSetMessageStarred,
   replyMail,
+  snoozeMailMessage,
   forwardMail,
   fetchMailInboxBranding,
   type MailInboxBranding,
@@ -66,6 +67,7 @@ type View =
   | "archive"
   | "trash"
   | "starred"
+  | "snoozed"
   | "drafts";
 
 function inboxFolderForView(view: View): MailInboxFolder {
@@ -83,6 +85,9 @@ function inboxFolderForView(view: View): MailInboxFolder {
   }
   if (view === "starred") {
     return "starred";
+  }
+  if (view === "snoozed") {
+    return "snoozed";
   }
   return "inbox";
 }
@@ -406,7 +411,7 @@ export function MailClient() {
     }
   }
 
-  async function sendReply() {
+  async function sendReply(replyAll = false) {
     if (!accessToken || !selectedId || !replyText.trim()) {
       return;
     }
@@ -418,6 +423,7 @@ export function MailClient() {
       const replyResult = await replyMail(accessToken, selectedId, {
         text: replyText.trim(),
         bcc: replyBcc.trim() || undefined,
+        replyAll,
         attachments,
         delaySeconds: 5,
       });
@@ -431,6 +437,22 @@ export function MailClient() {
       setToast(
         error instanceof Error ? error.message : "Yanıt gönderilemedi.",
       );
+    }
+  }
+
+  async function snoozeSelected(hours: number) {
+    if (!accessToken || !selectedId) {
+      return;
+    }
+    const until = new Date(Date.now() + hours * 60 * 60 * 1000);
+    try {
+      await snoozeMailMessage(accessToken, selectedId, until.toISOString());
+      setToast(`Ertelendi (${hours} saat).`);
+      setDetail(null);
+      setSelectedId(null);
+      void refresh();
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : "Ertelenemedi.");
     }
   }
 
@@ -1184,6 +1206,13 @@ export function MailClient() {
           </button>
           <button
             type="button"
+            className={view === "snoozed" ? "active" : ""}
+            onClick={() => switchView("snoozed")}
+          >
+            Ertelenen
+          </button>
+          <button
+            type="button"
             className={view === "spam" ? "active" : ""}
             onClick={() => switchView("spam")}
           >
@@ -1386,6 +1415,14 @@ export function MailClient() {
           >
             Çıkış
           </button>
+          {process.env.NEXT_PUBLIC_DEPLOY_SHA ? (
+            <span
+              className="mail-deploy-sha"
+              title={process.env.NEXT_PUBLIC_DEPLOY_TIME}
+            >
+              Sürüm {process.env.NEXT_PUBLIC_DEPLOY_SHA}
+            </span>
+          ) : null}
         </div>
         </div>
       </aside>
@@ -1980,9 +2017,29 @@ export function MailClient() {
                     MB)
                   </p>
                 ) : null}
-                <button type="button" onClick={() => void sendReply()}>
+                <button type="button" onClick={() => void sendReply(false)}>
                   Yanıtla
                 </button>
+                <button type="button" onClick={() => void sendReply(true)}>
+                  Tümüne yanıtla
+                </button>
+                <select
+                  className="mail-snooze-select"
+                  defaultValue=""
+                  onChange={(e) => {
+                    const hours = Number(e.target.value);
+                    if (hours > 0) {
+                      void snoozeSelected(hours);
+                      e.target.value = "";
+                    }
+                  }}
+                >
+                  <option value="">Ertele…</option>
+                  <option value="1">1 saat</option>
+                  <option value="3">3 saat</option>
+                  <option value="24">Yarın</option>
+                  <option value="168">1 hafta</option>
+                </select>
                 <button type="button" onClick={() => startForwardFromDetail()}>
                   İlet
                 </button>
