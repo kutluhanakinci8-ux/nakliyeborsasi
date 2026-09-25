@@ -4,7 +4,7 @@ set -euo pipefail
 
 INSTALL_DIR="${1:-/var/www/nakliyeborsasi}"
 ENV_FILE="${INSTALL_DIR}/.env"
-APP_HOST="${APP_HOST:-app.lerta.com.tr}"
+APP_HOST="${APP_HOST:-posta.lerta.com.tr}"
 VPS_IP="${MAIL_PLATFORM_SPF_IPV4:-168.231.109.27}"
 
 if [[ ! -f "${ENV_FILE}" ]]; then
@@ -28,6 +28,7 @@ set_kv "MAIL_PLATFORM_TENANT_DOMAIN" "kullanici.lerta.com.tr"
 set_kv "MAIL_INBOUND_VIRTUAL_DOMAINS" "kullanici.lerta.com.tr"
 set_kv "MAIL_IMAP_HOST" "mail.lerta.com.tr"
 set_kv "WEB_PUBLIC_BASE_URL" "https://${APP_HOST}"
+set_kv "MAIL_SAAS_WEB_URL" "https://${APP_HOST}"
 set_kv "SMTP_FROM" "Lerta Logistics <notifications@mail.lerta.com.tr>"
 set_kv "MAIL_PLATFORM_SPF_IPV4" "${VPS_IP}"
 set_kv "MAIL_INBOUND_APPLY_POSTFIX" "true"

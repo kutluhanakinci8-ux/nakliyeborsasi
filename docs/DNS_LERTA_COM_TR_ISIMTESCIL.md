@@ -1,63 +1,48 @@
-# isimtescil — `lerta.com.tr` DNS (pilot)
+# isimtescil — Lerta Mail SaaS (`lerta.com.tr`)
 
-**Kök site (U88):** `lerta.com.tr` / `www` mevcut A kaydı kalır — **değiştirmeyin** (502 U88 API ise ayrı konu).
+**Logistics = `lerta.tr` (ayrı).** Bu tablo yalnızca **satılacak posta programı** için.
 
-**Bu program (Nakliye Borsası):** `app.lerta.com.tr`
-
-Panel: **Alan Adı Yönetimi → lerta.com.tr → DNS Yönetimi** (IP Bazlı DNS).
-
-## 1. Uygulama (Faz 0 — hemen)
-
-| Tür | Host / ad | Değer |
-|-----|-----------|--------|
-| **A** | `app` veya `app.lerta.com.tr` | `168.231.109.27` |
-
-Doğrulama: `dig +short A app.lerta.com.tr` → `168.231.109.27`
-
-VPS (root):
-
-```bash
-cd /var/www/nakliyeborsasi
-bash scripts/nginx-app-lerta-com-tr.sh
-bash scripts/enable-mail-pilot-lerta-com-tr-env.sh
-bash scripts/restart-api.sh
-bash scripts/restart-web.sh /var/www/nakliyeborsasi 3011 https://app.lerta.com.tr/api/v1
-```
-
-Tarayıcı: `https://app.lerta.com.tr/login` · `https://app.lerta.com.tr/admin/bildirimler`
-
-## 2. Mail — platform gönderim (Faz 1)
+## Uygulama
 
 | Tür | Host | Değer |
 |-----|------|--------|
+| A | `posta` | `168.231.109.27` |
 | A | `mail` | `168.231.109.27` |
+| A | `kullanici` | `168.231.109.27` |
+
+- Webmail UI: **https://posta.lerta.com.tr**
+- `www` / kök → U88 (dokunmayın)
+
+## Platform gönderim (`notifications@mail.lerta.com.tr`)
+
+| Tür | Host | Değer |
+|-----|------|--------|
 | TXT | `mail.lerta.com.tr` | `v=spf1 ip4:168.231.109.27 -all` |
-| TXT | `default._domainkey.mail.lerta.com.tr` | VPS `setup-mail-lerta-com-tr-pilot.sh` çıktısı |
+| TXT | `default._domainkey.mail.lerta.com.tr` | VPS OpenDKIM çıktısı |
 | TXT | `_dmarc.mail.lerta.com.tr` | `v=DMARC1; p=none; rua=mailto:dmarc@lerta.com.tr` |
 
-Hostinger **PTR** (aynı IP): `mail.lerta.com.tr`
-
-## 3. Mail — kurumsal tenant (gelen + From)
+## Tenant (`slug@kullanici.lerta.com.tr` + gelen posta)
 
 | Tür | Host | Değer |
 |-----|------|--------|
 | TXT | `kullanici.lerta.com.tr` | `v=spf1 ip4:168.231.109.27 -all` |
-| TXT | `default._domainkey.kullanici.lerta.com.tr` | OpenDKIM tenant çıktısı |
+| TXT | `default._domainkey.kullanici.lerta.com.tr` | VPS tenant DKIM |
 | TXT | `_dmarc.kullanici.lerta.com.tr` | `v=DMARC1; p=none; rua=mailto:dmarc@lerta.com.tr` |
-| **MX** | `kullanici.lerta.com.tr` | `10 mail.lerta.com.tr` |
+| **MX** | `kullanici.lerta.com.tr` | **`10 mail.lerta.com.tr`** |
 
-VPS:
+PTR (Hostinger, IP): `mail.lerta.com.tr`
 
-```bash
-bash scripts/setup-mail-lerta-com-tr-pilot.sh
-bash scripts/apply-mail-vps-inbound-stack.sh   # zaten kuruluysa atlanabilir
-```
-
-Admin → **Kurumsal kimlik (B)** → DNS doğrula → org provision.
-
-## 4. Kontrol
+## VPS kurulum
 
 ```bash
-bash scripts/verify-mail-dns-lerta.sh
-# MAIL_PLATFORM_TENANT_DOMAIN=kullanici.lerta.com.tr ile tenant bölümü
+cd /var/www/nakliyeborsasi
+bash scripts/enable-mail-pilot-lerta-com-tr-env.sh
+bash scripts/setup-mail-lerta-com-tr-pilot.sh   # DKIM TXT ekrana yazılır
+bash scripts/nginx-posta-lerta-com-tr.sh
+bash scripts/restart-mail-web.sh
+bash scripts/restart-api.sh
 ```
+
+Panel (platform admin hâlâ logistics web’de olabilir); müşteri kutusu: **posta.lerta.com.tr/login**
+
+Test kullanıcısı: kurumsal posta kimliği olan firma hesabı (ör. pilot org).
