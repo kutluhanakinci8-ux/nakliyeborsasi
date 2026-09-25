@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ConsoleShell } from "@/components/ConsoleShell";
 import {
   fetchCustomDomainBundle,
+  fetchAuthSession,
   fetchMailSenders,
   isPlatformOperator,
   provisionCustomMailbox,
@@ -34,6 +35,7 @@ export default function MailboxesPage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [canManage, setCanManage] = useState(true);
 
   const reload = useCallback(async () => {
     if (!accessToken) {
@@ -61,6 +63,11 @@ export default function MailboxesPage() {
     }
     void (async () => {
       setOperator(await isPlatformOperator(accessToken));
+      const session = await fetchAuthSession(accessToken);
+      const roles = session.session.roleCodes;
+      setCanManage(
+        roles.includes("COMPANY_OWNER") || roles.includes("MAIL_ADMIN"),
+      );
       await reload();
     })();
   }, [accessToken, reload, router]);
@@ -190,7 +197,7 @@ export default function MailboxesPage() {
                   </td>
                   <td>{row.displayName ?? "—"}</td>
                   <td>
-                    {!row.isDefault ? (
+                    {canManage && !row.isDefault ? (
                       <button
                         type="button"
                         className="btn secondary"
@@ -208,6 +215,7 @@ export default function MailboxesPage() {
         )}
       </div>
 
+      {canManage ? (
       <div className="card">
         <h2 style={{ marginTop: 0 }}>Yeni kutu</h2>
         {customVerified ? (
@@ -242,6 +250,11 @@ export default function MailboxesPage() {
           </button>
         </form>
       </div>
+      ) : (
+        <p style={{ color: "var(--muted)" }}>
+          Salt okunur rol — kutu ekleyemez veya varsayılanı değiştiremezsiniz.
+        </p>
+      )}
     </ConsoleShell>
   );
 }

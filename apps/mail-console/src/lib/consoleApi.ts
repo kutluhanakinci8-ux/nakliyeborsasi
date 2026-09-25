@@ -280,6 +280,131 @@ export async function startCorporateCheckout(accessToken: string) {
   });
 }
 
+export async function fetchAuthSession(accessToken: string) {
+  return apiFetch<{
+    session: {
+      roleCodes: string[];
+      emailAddress: string;
+    };
+  }>(accessToken, "auth/session");
+}
+
+export async function fetchMailTeam(accessToken: string) {
+  return apiFetch<{
+    team: {
+      companyLegalName: string;
+      members: {
+        membershipId: string;
+        emailAddress: string;
+        displayName: string;
+        roleCode: string;
+        joinedAt: string;
+      }[];
+      pendingInvites: {
+        inviteId: string;
+        email: string;
+        roleCode: string;
+        expiresAt: string;
+      }[];
+      invitableRoles: string[];
+    };
+    permissions: { canInvite: boolean; canManageRoles: boolean };
+  }>(accessToken, "company/mail-identity/team");
+}
+
+export async function createMailTeamInvite(
+  accessToken: string,
+  email: string,
+  roleCode: string,
+) {
+  return apiFetch<{ team: unknown }>(
+    accessToken,
+    "company/mail-identity/team/invites",
+    {
+      method: "POST",
+      body: JSON.stringify({ email, roleCode }),
+    },
+  );
+}
+
+export async function revokeMailTeamInvite(
+  accessToken: string,
+  inviteId: string,
+) {
+  return apiFetch<{ team: unknown }>(
+    accessToken,
+    `company/mail-identity/team/invites/${inviteId}`,
+    { method: "DELETE" },
+  );
+}
+
+export async function updateMailTeamMemberRole(
+  accessToken: string,
+  membershipId: string,
+  roleCode: string,
+) {
+  return apiFetch<{ team: unknown }>(
+    accessToken,
+    `company/mail-identity/team/members/${membershipId}/role`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ roleCode }),
+    },
+  );
+}
+
+export async function removeMailTeamMember(
+  accessToken: string,
+  membershipId: string,
+) {
+  return apiFetch<{ team: unknown }>(
+    accessToken,
+    `company/mail-identity/team/members/${membershipId}`,
+    { method: "DELETE" },
+  );
+}
+
+export async function previewMailTeamInvite(token: string) {
+  const response = await fetch(
+    `${resolveApiBaseUrl()}/auth/mail-team-invite/preview?token=${encodeURIComponent(token)}`,
+  );
+  if (!response.ok) {
+    throw new Error("Davet geçersiz");
+  }
+  const data = (await response.json()) as {
+    preview: {
+      companyLegalName: string;
+      email: string;
+      roleLabel: string;
+      requiresRegistration: boolean;
+    };
+  };
+  return data.preview;
+}
+
+export async function acceptMailTeamInvite(
+  token: string,
+  params: { password: string; displayName?: string },
+) {
+  const response = await fetch(
+    `${resolveApiBaseUrl()}/auth/mail-team-invite/accept`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        token,
+        password: params.password,
+        displayName: params.displayName,
+      }),
+    },
+  );
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || "Davet kabul edilemedi");
+  }
+  return (await response.json()) as { accessToken: string };
+}
+
 export async function selectMailPlan(accessToken: string, planCode: string) {
   return apiFetch<{ subscription: unknown }>(
     accessToken,

@@ -11,7 +11,7 @@ import {
   Res,
   UseGuards,
 } from "@nestjs/common";
-import { CompanyRoleCode, AuthenticatedUserContext } from "@nakliyeborsasi/core";
+import { AuthenticatedUserContext } from "@nakliyeborsasi/core";
 import { Response } from "express";
 import { JwtAuthenticationGuard } from "../auth/JwtAuthenticationGuard";
 import { AuthenticatedUserParam } from "../auth/AuthenticatedUserParam";
@@ -25,6 +25,10 @@ import { ComposeMailRequestDto } from "./ComposeMailRequestDto";
 import { ReplyMailRequestDto } from "./ReplyMailRequestDto";
 import { MailComposeDraftService } from "./MailComposeDraftService";
 import { SaveMailDraftRequestDto } from "./SaveMailDraftRequestDto";
+import {
+  assertMailConsoleAccess,
+  canManageMailInboxWrite,
+} from "./MailCompanyRoleAuthorization";
 
 @Controller("company/mail-inbox")
 @UseGuards(JwtAuthenticationGuard)
@@ -47,7 +51,7 @@ export class CompanyMailInboxController {
   public async rotateImapCredentials(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
   ) {
-    this.assertCompanyOwner(user);
+    this.assertMailInboxWriter(user);
     const credentials = await this.mailImapAccessService.rotatePassword(
       user.companyId,
     );
@@ -140,7 +144,7 @@ export class CompanyMailInboxController {
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
     @Param("draftId") draftId: string,
   ) {
-    this.assertCompanyOwner(user);
+    this.assertMailInboxWriter(user);
     const payload = await this.mailComposeDraftService.getForSend(
       user.companyId,
       user.userId,
@@ -221,7 +225,7 @@ export class CompanyMailInboxController {
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
     @Body() body: ComposeMailRequestDto,
   ) {
-    this.assertCompanyOwner(user);
+    this.assertMailInboxWriter(user);
     const result = await this.mailMailboxComposeService.compose({
       organizationId: user.companyId,
       to: body.to,
@@ -238,7 +242,7 @@ export class CompanyMailInboxController {
     @Param("messageId") messageId: string,
     @Body() body: ReplyMailRequestDto,
   ) {
-    this.assertCompanyOwner(user);
+    this.assertMailInboxWriter(user);
     const result = await this.mailMailboxComposeService.reply({
       organizationId: user.companyId,
       inboundMessageId: messageId,
@@ -255,10 +259,11 @@ export class CompanyMailInboxController {
     return "inbox";
   }
 
-  private assertCompanyOwner(user: AuthenticatedUserContext): void {
-    if (!user.roleCodes.includes(CompanyRoleCode.CompanyOwner)) {
+  private assertMailInboxWriter(user: AuthenticatedUserContext): void {
+    assertMailConsoleAccess(user);
+    if (!canManageMailInboxWrite(user)) {
       throw new ForbiddenException(
-        "Posta gönderimi yalnızca firma sahibi tarafından yapılabilir.",
+        "Posta gönderimi yalnızca firma sahibi veya posta yöneticisi tarafından yapılabilir.",
       );
     }
   }

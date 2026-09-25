@@ -16,6 +16,12 @@ import { AuthNotificationService } from "./AuthNotificationService";
 import { EmailSecurityTokenService } from "./EmailSecurityTokenService";
 import { PlatformNotificationAdminController } from "./PlatformNotificationAdminController";
 import { CompanyMailIdentityController } from "./CompanyMailIdentityController";
+import {
+  CompanyMailTeamController,
+  MailTeamInvitePublicController,
+} from "./CompanyMailTeamController";
+import { CompanyMailTeamService } from "./CompanyMailTeamService";
+import { CompanyMailTeamInviteEntity } from "../../infrastructure/database/entities/CompanyMailTeamInviteEntity";
 import { MailTenantDnsVerificationScheduler } from "./MailTenantDnsVerificationScheduler";
 import { MailOrganizationSendRateService } from "./MailOrganizationSendRateService";
 import { MailCustomDomainService } from "./MailCustomDomainService";
@@ -110,6 +116,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
       MailMailboxSentEntity,
       MailImapCredentialEntity,
       MailComposeDraftEntity,
+      CompanyMailTeamInviteEntity,
     ]),
   ],
   controllers: [
@@ -117,6 +124,8 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     PlatformMailIdentityAdminController,
     MailInboundWebhookController,
     CompanyMailIdentityController,
+    CompanyMailTeamController,
+    MailTeamInvitePublicController,
     CompanyMailInboxController,
     MailBillingController,
     MailBillingWebhookController,
@@ -167,6 +176,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     MailSaasSubscriptionService,
     MailIyzicoBillingService,
     MailBillingService,
+    CompanyMailTeamService,
   ],
   exports: [
     AuthNotificationService,

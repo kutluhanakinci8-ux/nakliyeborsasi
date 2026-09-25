@@ -29,6 +29,11 @@ import {
   SelectMailPlanRequestDto,
 } from "./CompanyMailIdentityRequestDto";
 import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
+import {
+  assertMailConsoleAccess,
+  canManageMailDomain,
+  canManageMailIdentity,
+} from "./MailCompanyRoleAuthorization";
 
 class UpdateCompanyMailDisplayNameDto {
   public displayName!: string;
@@ -80,6 +85,7 @@ export class CompanyMailIdentityController {
 
   @Get()
   public async getIdentity(@AuthenticatedUserParam() user: AuthenticatedUserContext) {
+    assertMailConsoleAccess(user);
     await this.mailTenantSubdomainService.syncTenantDomainVerificationFromDns();
     const identity =
       await this.mailTenantSubdomainService.getOrganizationMailIdentity(
@@ -100,6 +106,7 @@ export class CompanyMailIdentityController {
   public async listSenders(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
   ) {
+    assertMailConsoleAccess(user);
     const senders = await this.mailSaasSubscriptionService.listOrganizationSenders(
       user.companyId,
     );
@@ -119,7 +126,7 @@ export class CompanyMailIdentityController {
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
     @Param("senderId") senderId: string,
   ) {
-    this.assertCompanyOwner(user);
+    this.assertMailIdentityManager(user);
     await this.mailSaasSubscriptionService.setDefaultSender(
       user.companyId,
       senderId,
@@ -135,7 +142,7 @@ export class CompanyMailIdentityController {
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
     @Body() body: ProvisionMailIdentityDto,
   ) {
-    this.assertCompanyOwner(user);
+    this.assertMailIdentityManager(user);
     const result = await this.mailTenantSubdomainService.provisionPilotSender({
       organizationId: user.companyId,
       localPart: body.localPart,
@@ -160,6 +167,7 @@ export class CompanyMailIdentityController {
   public async getCustomDomain(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
   ) {
+    assertMailConsoleAccess(user);
     const bundle = await this.mailCustomDomainService.getOrganizationBundle(
       user.companyId,
     );
@@ -171,7 +179,7 @@ export class CompanyMailIdentityController {
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
     @Body() body: RegisterCustomDomainDto,
   ) {
-    this.assertCompanyOwner(user);
+    this.assertMailDomainManager(user);
     await this.mailSaasSubscriptionService.assertCustomDomainAllowed(
       user.companyId,
     );
@@ -196,7 +204,7 @@ export class CompanyMailIdentityController {
   public async verifyCustomDomainDns(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
   ) {
-    this.assertCompanyOwner(user);
+    this.assertMailDomainManager(user);
     try {
       const domain =
         await this.mailCustomDomainService.verifyAndMarkOrganizationDomain(
@@ -234,7 +242,7 @@ export class CompanyMailIdentityController {
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
     @Body() body: ProvisionMailIdentityDto,
   ) {
-    this.assertCompanyOwner(user);
+    this.assertMailIdentityManager(user);
     const result = await this.mailCustomDomainService.provisionSender({
       organizationId: user.companyId,
       localPart: body.localPart,
@@ -259,6 +267,7 @@ export class CompanyMailIdentityController {
   public async listSuppressions(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
   ) {
+    assertMailConsoleAccess(user);
     return {
       suppressions: await this.emailSuppressionService.listForOrganization(
         user.companyId,
@@ -271,7 +280,7 @@ export class CompanyMailIdentityController {
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
     @Body() body: { email: string; reason?: string; note?: string },
   ) {
-    this.assertCompanyOwner(user);
+    this.assertMailIdentityManager(user);
     const row = await this.emailSuppressionService.addSuppression({
       email: body.email,
       reason: body.reason ?? "manual",
@@ -297,7 +306,7 @@ export class CompanyMailIdentityController {
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
     @Query("email") email: string,
   ) {
-    this.assertCompanyOwner(user);
+    this.assertMailIdentityManager(user);
     const removed = await this.emailSuppressionService.removeSuppression(
       email,
       user.companyId,
@@ -321,7 +330,7 @@ export class CompanyMailIdentityController {
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
     @Body() body: UpdateCompanyMailDisplayNameDto,
   ) {
-    this.assertCompanyOwner(user);
+    this.assertMailIdentityManager(user);
     const sender =
       await this.mailTenantSubdomainService.updateOrganizationSenderDisplayName(
         user.companyId,
@@ -340,10 +349,18 @@ export class CompanyMailIdentityController {
     return { message: "OK", sender };
   }
 
-  private assertCompanyOwner(user: AuthenticatedUserContext): void {
-    if (!user.roleCodes.includes(CompanyRoleCode.CompanyOwner)) {
+  private assertMailIdentityManager(user: AuthenticatedUserContext): void {
+    if (!canManageMailIdentity(user)) {
       throw new ForbiddenException(
-        "Kurumsal e-posta kimliği yalnızca firma sahibi tarafından yönetilebilir.",
+        "Posta kimliği yalnızca firma sahibi veya posta yöneticisi tarafından yönetilebilir.",
+      );
+    }
+  }
+
+  private assertMailDomainManager(user: AuthenticatedUserContext): void {
+    if (!canManageMailDomain(user)) {
+      throw new ForbiddenException(
+        "Özel domain yalnızca firma sahibi tarafından yönetilebilir.",
       );
     }
   }

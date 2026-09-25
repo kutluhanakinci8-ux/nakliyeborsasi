@@ -64,6 +64,14 @@ export const NOTIFICATION_EVENT_CATALOG: NotificationEventDefinition[] = [
     labelTr: "Şifre sıfırlama",
   },
   {
+    code: NotificationEventCode.MailTeamInvite,
+    category: "auth",
+    userPreferenceKey: null,
+    defaultAdminEnabled: false,
+    defaultUserEnabled: true,
+    labelTr: "Lerta Mail ekip daveti",
+  },
+  {
     code: NotificationEventCode.AuctionBidPlaced,
     category: "auction",
     userPreferenceKey: "notifyAuctions",

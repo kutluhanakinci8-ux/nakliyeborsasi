@@ -128,9 +128,11 @@ export class UserCredentialAuthenticationService {
     if (!primaryMembership) {
       throw new AuthenticationException("User has no company membership");
     }
-    const roleCodes = user.memberships.map(
-      (membership) => membership.roleCode as CompanyRoleCode,
-    );
+    const roleCodes = user.memberships
+      .filter(
+        (membership) => membership.companyId === primaryMembership.companyId,
+      )
+      .map((membership) => membership.roleCode as CompanyRoleCode);
     const context = new AuthenticatedUserContext({
       userId: user.id,
       companyId: primaryMembership.companyId,

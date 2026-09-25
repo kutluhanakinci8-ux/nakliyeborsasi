@@ -38,6 +38,9 @@ export function ConsoleShell({
           <Link className={navClass("/mailboxes")} href="/mailboxes">
             Posta kutuları
           </Link>
+          <Link className={navClass("/team")} href="/team">
+            Ekip
+          </Link>
           {operator ? (
             <Link className={navClass("/operator")} href="/operator">
               Operatör

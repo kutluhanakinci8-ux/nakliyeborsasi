@@ -3,5 +3,6 @@ export enum CompanyRoleCode {
   Dispatcher = "DISPATCHER",
   Viewer = "VIEWER",
   BillingAdmin = "BILLING_ADMIN",
+  MailAdmin = "MAIL_ADMIN",
   FleetDriver = "FLEET_DRIVER",
 }

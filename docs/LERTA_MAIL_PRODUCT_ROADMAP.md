@@ -17,7 +17,7 @@
 | Stripe / iyzico callback kodu | Kod hazır; **Stripe test anahtarları VPS’te sizden** |
 | www → mail vitrin | **Bekliyor** (U88 taşınması) |
 | Thread / konuşma görünümü | Yok |
-| Çoklu kullanıcı / davet / roller (mail_admin) | Kısıtlı |
+| Çoklu kullanıcı / davet / roller (mail_admin) | **B3 — ekip daveti + roller** |
 | Faturalama yaşam döngüsü (iptal, fatura e-postası) | Yok |
 | KVKK export / silme self-servis | Yok |
 | Kurumsal kimlik (logo, imza, hukuki sayfalar) | Kısmi |
@@ -50,7 +50,7 @@
 |---|-----|------------------------|
 | B1 | Domain sihirbazı UX (varsayılan onboarding) | Kayıt → `/domain`; kurumsal dashboard domain-first — **uygulandı** |
 | B2 | Çoklu posta kutusu (plan kotası) | `/mailboxes` listesi + kota çubuğu — **uygulandı** |
-| B3 | Kullanıcı daveti + roller | `CompanyOwner`, `BillingAdmin`, `MailAdmin`, salt okunur |
+| B3 | Kullanıcı daveti + roller | `/team` + davet e-postası; `MAIL_ADMIN`, `BILLING_ADMIN`, `VIEWER` — **uygulandı** |
 | B4 | Alias / paylaşımlı adres (isteğe bağlı) | `destek@` → iki kullanıcı |
 | B5 | Gönderim kotası & upgrade | Saat/gün limiti; konsolda kullanım çubuğu |
 | B6 | Abonelik yaşam döngüsü | İptal, yenileme, ödeme başarısız → grace period |
