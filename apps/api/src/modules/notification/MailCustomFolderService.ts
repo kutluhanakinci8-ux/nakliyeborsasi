@@ -7,6 +7,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { In, IsNull, Repository } from "typeorm";
 import { MailCustomFolderEntity } from "../../infrastructure/database/entities/MailCustomFolderEntity";
 import { MailInboundMessageEntity } from "../../infrastructure/database/entities/MailInboundMessageEntity";
+import { MailInboxRuleEntity } from "../../infrastructure/database/entities/MailInboxRuleEntity";
 import { MailMailboxEntity } from "../../infrastructure/database/entities/MailMailboxEntity";
 
 const MAX_FOLDERS_PER_ORG = 25;
@@ -28,6 +29,8 @@ export class MailCustomFolderService {
     private readonly inboundRepository: Repository<MailInboundMessageEntity>,
     @InjectRepository(MailMailboxEntity)
     private readonly mailboxRepository: Repository<MailMailboxEntity>,
+    @InjectRepository(MailInboxRuleEntity)
+    private readonly ruleRepository: Repository<MailInboxRuleEntity>,
   ) {}
 
   public async listForOrganization(
@@ -88,8 +91,12 @@ export class MailCustomFolderService {
     folderId: string,
     name: string,
   ): Promise<MailCustomFolderRow> {
+    const trimmed = name.trim();
+    if (!trimmed) {
+      throw new BadRequestException("Klasör adı gerekli.");
+    }
     const row = await this.assertFolder(organizationId, folderId);
-    row.name = name.trim();
+    row.name = trimmed;
     await this.folderRepository.save(row);
     const count = await this.countMessagesInFolder(organizationId, folderId);
     return this.toRow(row, count);
@@ -97,6 +104,10 @@ export class MailCustomFolderService {
 
   public async remove(organizationId: string, folderId: string): Promise<void> {
     await this.assertFolder(organizationId, folderId);
+    await this.ruleRepository.update(
+      { organizationId, actionCustomFolderId: folderId },
+      { actionCustomFolderId: null },
+    );
     const mailboxIds = await this.mailboxIds(organizationId);
     if (mailboxIds.length > 0) {
       await this.inboundRepository.update(

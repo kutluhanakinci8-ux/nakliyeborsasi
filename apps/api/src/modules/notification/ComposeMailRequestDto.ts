@@ -2,9 +2,12 @@ import { Type } from "class-transformer";
 import {
   IsArray,
   IsEmail,
+  IsInt,
   IsOptional,
   IsString,
+  Max,
   MaxLength,
+  Min,
   MinLength,
   ValidateNested,
 } from "class-validator";
@@ -58,4 +61,11 @@ export class ComposeMailRequestDto {
   @ValidateNested({ each: true })
   @Type(() => ComposeMailAttachmentDto)
   public attachments?: ComposeMailAttachmentDto[];
+
+  /** 1–10: gönderimi geciktir (geri al penceresi). 0 veya boş = anında gönder. */
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(10)
+  public delaySeconds?: number;
 }
