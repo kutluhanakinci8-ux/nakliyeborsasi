@@ -5,7 +5,7 @@ import {
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { readFileSync } from "node:fs";
-import { ILike, In, IsNull, Repository } from "typeorm";
+import { Brackets, In, IsNull, Repository, SelectQueryBuilder } from "typeorm";
 import { MailMailboxEntity } from "../../infrastructure/database/entities/MailMailboxEntity";
 import {
   MailInboundAttachmentMeta,
@@ -16,6 +16,14 @@ import { MailImapMaildirService } from "./MailImapMaildirService";
 
 export type InboxFolder = "inbox" | "spam" | "all" | "archive" | "trash";
 export type MailboxFolder = "inbox" | "archive" | "trash";
+
+export type MailInboxSearchFilters = {
+  q?: string;
+  fromAddress?: string;
+  receivedAfter?: Date;
+  receivedBefore?: Date;
+  hasAttachment?: boolean;
+};
 
 @Injectable()
 export class MailOrganizationInboxService {
@@ -123,8 +131,8 @@ export class MailOrganizationInboxService {
 
   public async searchMessages(
     organizationId: string,
-    query: string,
     folder: InboxFolder = "inbox",
+    filters: MailInboxSearchFilters = {},
     limit = 50,
   ): Promise<
     {
@@ -139,34 +147,61 @@ export class MailOrganizationInboxService {
       attachmentCount: number;
     }[]
   > {
-    const term = query.trim();
-    if (term.length < 2) {
+    if (!this.hasSearchCriteria(filters)) {
       return [];
     }
     const mailboxIds = await this.mailboxIdsForOrganization(organizationId);
     if (mailboxIds.length === 0) {
       return [];
     }
-    const baseWhere = this.whereForFolder(mailboxIds, folder);
-    const pattern = `%${term.replace(/[%_]/g, "")}%`;
-    const rows = await this.inboundRepository.find({
-      where: [
-        { ...baseWhere, subject: ILike(pattern) },
-        { ...baseWhere, fromAddress: ILike(pattern) },
-        { ...baseWhere, snippet: ILike(pattern) },
-      ],
-      order: { receivedAt: "DESC" },
-      take: limit,
-    });
-    const seen = new Set<string>();
-    const unique: MailInboundMessageEntity[] = [];
-    for (const row of rows) {
-      if (!seen.has(row.id)) {
-        seen.add(row.id);
-        unique.push(row);
-      }
+    const qb = this.inboundRepository.createQueryBuilder("m");
+    qb.where("m.mailboxId IN (:...mailboxIds)", { mailboxIds });
+    this.applyFolderToQueryBuilder(qb, folder);
+
+    const term = filters.q?.trim() ?? "";
+    if (term.length >= 2) {
+      const pattern = `%${term.replace(/[%_]/g, "")}%`;
+      qb.andWhere(
+        new Brackets((sub) => {
+          sub
+            .where("m.subject ILIKE :textPattern", { textPattern: pattern })
+            .orWhere("m.fromAddress ILIKE :textPattern", { textPattern: pattern })
+            .orWhere("m.snippet ILIKE :textPattern", { textPattern: pattern });
+        }),
+      );
     }
-    return unique.map((row) => this.toListRow(row));
+
+    const from = filters.fromAddress?.trim() ?? "";
+    if (from.length > 0) {
+      const fromPattern = `%${from.replace(/[%_]/g, "")}%`;
+      qb.andWhere("m.fromAddress ILIKE :fromPattern", { fromPattern });
+    }
+
+    if (filters.receivedAfter) {
+      qb.andWhere("m.receivedAt >= :receivedAfter", {
+        receivedAfter: filters.receivedAfter,
+      });
+    }
+    if (filters.receivedBefore) {
+      qb.andWhere("m.receivedAt <= :receivedBefore", {
+        receivedBefore: filters.receivedBefore,
+      });
+    }
+    if (filters.hasAttachment === true) {
+      qb.andWhere(
+        "m.attachments IS NOT NULL AND jsonb_array_length(m.attachments) > 0",
+      );
+    } else if (filters.hasAttachment === false) {
+      qb.andWhere(
+        "(m.attachments IS NULL OR jsonb_array_length(m.attachments) = 0)",
+      );
+    }
+
+    const rows = await qb
+      .orderBy("m.receivedAt", "DESC")
+      .take(limit)
+      .getMany();
+    return rows.map((row) => this.toListRow(row));
   }
 
   public async getMessage(
@@ -400,6 +435,59 @@ export class MailOrganizationInboxService {
       throw new ForbiddenException("Bu mesaja erişim yok");
     }
     return row;
+  }
+
+  private hasSearchCriteria(filters: MailInboxSearchFilters): boolean {
+    if ((filters.q?.trim().length ?? 0) >= 2) {
+      return true;
+    }
+    if ((filters.fromAddress?.trim().length ?? 0) > 0) {
+      return true;
+    }
+    if (filters.receivedAfter || filters.receivedBefore) {
+      return true;
+    }
+    if (filters.hasAttachment !== undefined) {
+      return true;
+    }
+    return false;
+  }
+
+  private applyFolderToQueryBuilder(
+    qb: SelectQueryBuilder<MailInboundMessageEntity>,
+    folder: InboxFolder,
+  ): void {
+    if (folder === "trash") {
+      qb.andWhere("m.mailboxFolder = :mailFolderTrash", {
+        mailFolderTrash: "trash",
+      });
+      return;
+    }
+    if (folder === "archive") {
+      qb.andWhere("m.mailboxFolder = :mailFolderArchive", {
+        mailFolderArchive: "archive",
+      });
+      return;
+    }
+    if (folder === "spam") {
+      qb.andWhere("m.spamStatus = :spamBlocked", { spamBlocked: "blocked" });
+      qb.andWhere("m.mailboxFolder IN (:...spamMailFolders)", {
+        spamMailFolders: ["inbox", "archive"],
+      });
+      return;
+    }
+    if (folder === "all") {
+      qb.andWhere("m.mailboxFolder IN (:...allMailFolders)", {
+        allMailFolders: ["inbox", "archive"],
+      });
+      return;
+    }
+    qb.andWhere("m.spamStatus IN (:...inboxSpamStatuses)", {
+      inboxSpamStatuses: ["clean", "suspected"],
+    });
+    qb.andWhere("m.mailboxFolder = :mailFolderInbox", {
+      mailFolderInbox: "inbox",
+    });
   }
 
   private whereForFolder(

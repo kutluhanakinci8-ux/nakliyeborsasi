@@ -70,6 +70,13 @@ export function MailClient() {
   const [messages, setMessages] = useState<MailInboxListItem[]>([]);
   const [sent, setSent] = useState<MailSentItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchFrom, setSearchFrom] = useState("");
+  const [searchDateFrom, setSearchDateFrom] = useState("");
+  const [searchDateTo, setSearchDateTo] = useState("");
+  const [searchHasAttachment, setSearchHasAttachment] = useState<
+    "any" | "yes" | "no"
+  >("any");
+  const [searchFiltersOpen, setSearchFiltersOpen] = useState(false);
   const [searchResults, setSearchResults] = useState<MailInboxListItem[] | null>(
     null,
   );
@@ -155,25 +162,67 @@ export function MailClient() {
     });
   }, [composeOpen, accessToken]);
 
+  const searchActive = useMemo(() => {
+    if (searchQuery.trim().length >= 2) {
+      return true;
+    }
+    if (searchFrom.trim().length > 0) {
+      return true;
+    }
+    if (searchDateFrom || searchDateTo) {
+      return true;
+    }
+    if (searchHasAttachment !== "any") {
+      return true;
+    }
+    return false;
+  }, [
+    searchQuery,
+    searchFrom,
+    searchDateFrom,
+    searchDateTo,
+    searchHasAttachment,
+  ]);
+
   useEffect(() => {
     if (!accessToken || view === "sent" || view === "drafts") {
       setSearchResults(null);
       return;
     }
-    const q = searchQuery.trim();
-    if (q.length < 2) {
+    if (!searchActive) {
       setSearchResults(null);
       return;
     }
+    setSearchResults(null);
     const timer = window.setTimeout(() => {
       void (async () => {
         const folder = inboxFolderForView(view);
-        const data = await searchInbox(accessToken, q, folder);
+        const data = await searchInbox(accessToken, folder, {
+          q: searchQuery.trim(),
+          from: searchFrom.trim(),
+          receivedAfter: searchDateFrom || undefined,
+          receivedBefore: searchDateTo || undefined,
+          hasAttachment:
+            searchHasAttachment === "yes"
+              ? true
+              : searchHasAttachment === "no"
+                ? false
+                : undefined,
+        });
         setSearchResults(data.messages);
       })();
     }, 300);
     return () => window.clearTimeout(timer);
-  }, [accessToken, searchQuery, view]);
+  }, [
+    accessToken,
+    searchQuery,
+    searchFrom,
+    searchDateFrom,
+    searchDateTo,
+    searchHasAttachment,
+    searchActive,
+    view,
+  ]);
 
   async function openMessage(id: string) {
     if (!accessToken) {
@@ -414,7 +463,7 @@ export function MailClient() {
   }, [accessToken, threadView, inboxFolder, canUseThreads]);
 
   const listItems =
-    threadView && canUseThreads
+    threadView && canUseThreads && !searchActive
       ? threads.map((t) => ({
           id: t.latestMessageId,
           threadId: t.threadId,
@@ -459,6 +508,11 @@ export function MailClient() {
     setSentPreview(null);
     setSelectedId(null);
     setSearchQuery("");
+    setSearchFrom("");
+    setSearchDateFrom("");
+    setSearchDateTo("");
+    setSearchHasAttachment("any");
+    setSearchFiltersOpen(false);
     setSearchResults(null);
     setDraftPreview(null);
     setActiveThreadId(null);
@@ -642,7 +696,76 @@ export function MailClient() {
               onChange={(e) => setSearchQuery(e.target.value)}
               aria-label="Posta ara"
             />
-            {canUseThreads ? (
+            <button
+              type="button"
+              className="mail-search-filters-toggle"
+              onClick={() => setSearchFiltersOpen((open) => !open)}
+            >
+              {searchFiltersOpen ? "Filtreleri gizle" : "Gelişmiş filtre"}
+            </button>
+            {searchFiltersOpen ? (
+              <div className="mail-search-filters">
+                <label>
+                  Gönderen
+                  <input
+                    type="text"
+                    placeholder="ornek@firma.com"
+                    value={searchFrom}
+                    onChange={(e) => setSearchFrom(e.target.value)}
+                  />
+                </label>
+                <label>
+                  Başlangıç
+                  <input
+                    type="date"
+                    value={searchDateFrom}
+                    onChange={(e) => setSearchDateFrom(e.target.value)}
+                  />
+                </label>
+                <label>
+                  Bitiş
+                  <input
+                    type="date"
+                    value={searchDateTo}
+                    onChange={(e) => setSearchDateTo(e.target.value)}
+                  />
+                </label>
+                <label>
+                  Ek
+                  <select
+                    value={searchHasAttachment}
+                    onChange={(e) =>
+                      setSearchHasAttachment(
+                        e.target.value as "any" | "yes" | "no",
+                      )
+                    }
+                  >
+                    <option value="any">Fark etmez</option>
+                    <option value="yes">Ek var</option>
+                    <option value="no">Ek yok</option>
+                  </select>
+                </label>
+                <button
+                  type="button"
+                  className="mail-search-clear"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSearchFrom("");
+                    setSearchDateFrom("");
+                    setSearchDateTo("");
+                    setSearchHasAttachment("any");
+                  }}
+                >
+                  Filtreleri temizle
+                </button>
+              </div>
+            ) : null}
+            {searchActive && searchResults !== null ? (
+              <p className="mail-search-hint">
+                {searchResults.length} sonuç
+              </p>
+            ) : null}
+            {canUseThreads && !searchActive ? (
               <label
                 style={{
                   display: "flex",

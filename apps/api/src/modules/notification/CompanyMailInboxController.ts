@@ -173,13 +173,33 @@ export class CompanyMailInboxController {
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
     @Query("q") query?: string,
     @Query("folder") folder?: string,
+    @Query("from") fromAddress?: string,
+    @Query("receivedAfter") receivedAfter?: string,
+    @Query("receivedBefore") receivedBefore?: string,
+    @Query("hasAttachment") hasAttachment?: string,
   ) {
+    const resolvedFolder = this.parseFolder(folder);
+    const attachmentFilter = this.parseHasAttachmentFilter(hasAttachment);
     const messages = await this.mailOrganizationInboxService.searchMessages(
       user.companyId,
-      query ?? "",
-      this.parseFolder(folder),
+      resolvedFolder,
+      {
+        q: query ?? "",
+        fromAddress: fromAddress?.trim() || undefined,
+        receivedAfter: this.parseSearchDateStart(receivedAfter),
+        receivedBefore: this.parseSearchDateEnd(receivedBefore),
+        hasAttachment: attachmentFilter,
+      },
     );
-    return { messages, q: (query ?? "").trim() };
+    return {
+      messages,
+      folder: resolvedFolder,
+      q: (query ?? "").trim(),
+      from: (fromAddress ?? "").trim(),
+      receivedAfter: receivedAfter?.trim() ?? "",
+      receivedBefore: receivedBefore?.trim() ?? "",
+      hasAttachment: attachmentFilter ?? null,
+    };
   }
 
   @Get("drafts")
@@ -384,6 +404,43 @@ export class CompanyMailInboxController {
       return folder;
     }
     return "inbox";
+  }
+
+  private parseSearchDateStart(value?: string): Date | undefined {
+    const raw = value?.trim();
+    if (!raw) {
+      return undefined;
+    }
+    const parsed = new Date(`${raw}T00:00:00.000Z`);
+    if (Number.isNaN(parsed.getTime())) {
+      throw new BadRequestException("receivedAfter geçersiz");
+    }
+    return parsed;
+  }
+
+  private parseSearchDateEnd(value?: string): Date | undefined {
+    const raw = value?.trim();
+    if (!raw) {
+      return undefined;
+    }
+    const parsed = new Date(`${raw}T23:59:59.999Z`);
+    if (Number.isNaN(parsed.getTime())) {
+      throw new BadRequestException("receivedBefore geçersiz");
+    }
+    return parsed;
+  }
+
+  private parseHasAttachmentFilter(
+    value?: string,
+  ): boolean | undefined {
+    const raw = value?.trim().toLowerCase();
+    if (raw === "true" || raw === "1") {
+      return true;
+    }
+    if (raw === "false" || raw === "0") {
+      return false;
+    }
+    return undefined;
   }
 
   private parseMailboxFolder(

@@ -577,6 +577,59 @@ a {
   font-size: 0.85rem;
 }
 
+.mail-search-filters-toggle {
+  margin-top: 8px;
+  border: none;
+  background: none;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 0;
+}
+
+.mail-search-filters {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+}
+
+.mail-search-filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.mail-search-filters input,
+.mail-search-filters select {
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+
+.mail-search-clear {
+  grid-column: 1 / -1;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.mail-search-hint {
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
 @media (max-width: 900px) {
   .mail-back-read {
     display: inline-block;

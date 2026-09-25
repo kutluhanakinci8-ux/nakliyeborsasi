@@ -209,15 +209,39 @@ export async function fetchThreadMessages(
   );
 }
 
+export type MailInboxSearchOptions = {
+  q?: string;
+  from?: string;
+  receivedAfter?: string;
+  receivedBefore?: string;
+  hasAttachment?: boolean;
+};
+
 export async function searchInbox(
   accessToken: string,
-  query: string,
   folder: MailInboxFolder,
+  options: MailInboxSearchOptions = {},
 ) {
-  const params = new URLSearchParams({
-    q: query,
-    folder,
-  });
+  const params = new URLSearchParams({ folder });
+  const q = options.q?.trim() ?? "";
+  if (q) {
+    params.set("q", q);
+  }
+  const from = options.from?.trim() ?? "";
+  if (from) {
+    params.set("from", from);
+  }
+  if (options.receivedAfter?.trim()) {
+    params.set("receivedAfter", options.receivedAfter.trim());
+  }
+  if (options.receivedBefore?.trim()) {
+    params.set("receivedBefore", options.receivedBefore.trim());
+  }
+  if (options.hasAttachment === true) {
+    params.set("hasAttachment", "true");
+  } else if (options.hasAttachment === false) {
+    params.set("hasAttachment", "false");
+  }
   return apiFetch<{ messages: MailInboxListItem[] }>(
     accessToken,
     `company/mail-inbox/search?${params.toString()}`,
