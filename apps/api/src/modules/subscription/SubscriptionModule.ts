@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { Module, forwardRef } from "@nestjs/common";
 import { AuthModule } from "../auth/AuthModule";
 import { ModularSubscriptionEntitlementService } from "./ModularSubscriptionEntitlementService";
 import { SubscriptionPlanController } from "./SubscriptionPlanController";
@@ -8,7 +8,7 @@ import { CompanySubscriptionPersistenceService } from "./CompanySubscriptionPers
 import { CompanySubscriptionApplicationService } from "./CompanySubscriptionApplicationService";
 
 @Module({
-  imports: [AuthModule, SubscriptionCatalogModule],
+  imports: [forwardRef(() => AuthModule), SubscriptionCatalogModule],
   controllers: [SubscriptionPlanController, CompanySubscriptionController],
   providers: [
     ModularSubscriptionEntitlementService,

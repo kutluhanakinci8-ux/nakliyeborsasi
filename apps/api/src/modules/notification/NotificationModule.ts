@@ -85,7 +85,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
   imports: [
     forwardRef(() => AuthModule),
     AuditModule,
-    SubscriptionModule,
+    forwardRef(() => SubscriptionModule),
     TypeOrmModule.forFeature([
       EmailOutboxEntity,
       PlatformNotificationSettingEntity,
