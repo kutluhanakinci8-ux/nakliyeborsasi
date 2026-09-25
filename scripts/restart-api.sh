@@ -39,5 +39,13 @@ else
   echo "Log: /var/log/nakliyeborsasi-api.log"
 fi
 
-sleep 3
-bash "$INSTALL_DIR/scripts/diagnose-port.sh" "$API_PORT"
+echo "API başlatılıyor (port ${API_PORT})…"
+attempt=0
+while [[ "$attempt" -lt 60 ]]; do
+  if curl -sf -o /dev/null --connect-timeout 2 "http://127.0.0.1:${API_PORT}/api/v1/health"; then
+    break
+  fi
+  sleep 1
+  attempt=$((attempt + 1))
+done
+bash "$INSTALL_DIR/scripts/diagnose-port.sh" "$API_PORT" || true

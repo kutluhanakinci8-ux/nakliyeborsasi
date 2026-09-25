@@ -19,14 +19,31 @@ BUILD_TIME="$(date -u +"%Y-%m-%dT%H:%MZ")"
 
 npm run build -w @lerta/mail-web
 
+wait_http() {
+  local url="$1"
+  local label="$2"
+  local attempt=0
+  while [[ "$attempt" -lt 45 ]]; do
+    if curl -sf -o /dev/null --connect-timeout 2 "$url"; then
+      curl -sS -o /dev/null -w "${label} HTTP %{http_code}\n" "$url"
+      return 0
+    fi
+    sleep 1
+    attempt=$((attempt + 1))
+  done
+  echo "UYARI: ${label} hazır değil (45s): ${url}" >&2
+  echo "pm2 logs lerta-mail-web --lines 40" >&2
+  return 1
+}
+
 if command -v pm2 >/dev/null 2>&1; then
   pm2 delete lerta-mail-web 2>/dev/null || true
-  PORT="$WEB_PORT" HOSTNAME="0.0.0.0" pm2 start ./node_modules/next/dist/bin/next \
+  NODE_ENV=production pm2 start npm \
     --name lerta-mail-web \
     --cwd "$INSTALL_DIR/apps/mail-web" \
-    -- start -H 0.0.0.0 -p "$WEB_PORT"
+    -- run start
   pm2 save
-  echo "PM2: lerta-mail-web :${WEB_PORT}"
+  echo "PM2: lerta-mail-web :${WEB_PORT} (npm run start)"
 fi
 
-curl -sS -o /dev/null -w "mail-web HTTP %{http_code}\n" "http://127.0.0.1:${WEB_PORT}/login"
+wait_http "http://127.0.0.1:${WEB_PORT}/login" "mail-web" || true
