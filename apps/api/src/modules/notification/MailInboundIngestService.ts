@@ -117,6 +117,14 @@ export class MailInboundIngestService {
           )
         : null;
 
+    let maildirFilePath: string | null = null;
+    if (rawMime) {
+      maildirFilePath = this.mailImapMaildirService.deliverToMaildir({
+        recipient,
+        rawMime,
+        messageId: messageId,
+      });
+    }
     const row = await this.inboundRepository.save(
       this.inboundRepository.create({
         id: messageId,
@@ -135,15 +143,10 @@ export class MailInboundIngestService {
         inReplyTo,
         attachments,
         readAt: null,
+        mailboxFolder: "inbox",
+        maildirFilePath,
       }),
     );
-    if (rawMime) {
-      this.mailImapMaildirService.deliverToMaildir({
-        recipient,
-        rawMime,
-        messageId: row.id,
-      });
-    }
     this.logger.log(
       `Inbound stored ${row.id} → ${recipient} (mailbox ${mailbox.id})`,
     );

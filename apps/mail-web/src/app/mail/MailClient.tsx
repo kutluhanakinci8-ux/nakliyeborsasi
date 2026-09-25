@@ -18,8 +18,12 @@ import {
   replyMail,
   searchInbox,
   sendDraft,
+  setMessageMailboxFolder,
+  deleteMessagePermanently,
   updateDraft,
   type MailDraftItem,
+  type MailInboxFolder,
+  type MailMailboxFolder,
   type MailInboxListItem,
   type MailInboxMessageDetail,
   type MailInboxSummary,
@@ -31,14 +35,27 @@ import {
 import { useMailSession } from "@/lib/session";
 import { MailSettingsPanel } from "./MailSettingsPanel";
 
-type View = "inbox" | "spam" | "sent" | "all" | "drafts";
+type View =
+  | "inbox"
+  | "spam"
+  | "sent"
+  | "all"
+  | "archive"
+  | "trash"
+  | "drafts";
 
-function inboxFolderForView(view: View): "inbox" | "spam" | "all" {
+function inboxFolderForView(view: View): MailInboxFolder {
   if (view === "spam") {
     return "spam";
   }
   if (view === "all") {
     return "all";
+  }
+  if (view === "archive") {
+    return "archive";
+  }
+  if (view === "trash") {
+    return "trash";
   }
   return "inbox";
 }
@@ -316,7 +333,57 @@ export function MailClient() {
 
   const inboxFolder = inboxFolderForView(view);
   const canUseThreads =
-    view === "inbox" || view === "spam" || view === "all";
+    view === "inbox" ||
+    view === "spam" ||
+    view === "all" ||
+    view === "archive";
+
+  async function moveCurrentMessage(folder: MailMailboxFolder) {
+    if (!accessToken || !selectedId) {
+      return;
+    }
+    try {
+      await setMessageMailboxFolder(accessToken, selectedId, folder);
+      setToast(
+        folder === "trash"
+          ? "Çöp kutusuna taşındı."
+          : folder === "archive"
+            ? "Arşivlendi."
+            : "Gelen kutusuna alındı.",
+      );
+      setDetail(null);
+      setSelectedId(null);
+      setActiveThreadId(null);
+      setThreadMessages([]);
+      setMobilePane("list");
+      void refresh();
+      if (threadView && canUseThreads) {
+        void fetchInboxThreads(accessToken, inboxFolder).then((data) => {
+          setThreads(data.threads);
+        });
+      }
+    } catch (error) {
+      setToast(
+        error instanceof Error ? error.message : "Klasör değiştirilemedi.",
+      );
+    }
+  }
+
+  async function purgeCurrentMessage() {
+    if (!accessToken || !selectedId) {
+      return;
+    }
+    try {
+      await deleteMessagePermanently(accessToken, selectedId);
+      setToast("Kalıcı olarak silindi.");
+      setDetail(null);
+      setSelectedId(null);
+      setMobilePane("list");
+      void refresh();
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : "Silinemedi.");
+    }
+  }
 
   useEffect(() => {
     if (!accessToken || !threadView || !canUseThreads) {
@@ -464,6 +531,27 @@ export function MailClient() {
             onClick={() => switchView("spam")}
           >
             Spam
+            {summary && summary.spamCount > 0 ? ` (${summary.spamCount})` : ""}
+          </button>
+          <button
+            type="button"
+            className={view === "archive" ? "active" : ""}
+            onClick={() => switchView("archive")}
+          >
+            Arşiv
+            {summary && (summary.archiveCount ?? 0) > 0
+              ? ` (${summary.archiveCount})`
+              : ""}
+          </button>
+          <button
+            type="button"
+            className={view === "trash" ? "active" : ""}
+            onClick={() => switchView("trash")}
+          >
+            Çöp
+            {summary && (summary.trashCount ?? 0) > 0
+              ? ` (${summary.trashCount})`
+              : ""}
           </button>
           <button
             type="button"
@@ -543,7 +631,7 @@ export function MailClient() {
               key={m.id}
               role="button"
               tabIndex={0}
-              className={`mail-list-item ${selectedId === m.id ? "selected" : ""} ${!m.readAt && (view === "inbox" || view === "all" || view === "spam") ? "unread" : ""}`}
+              className={`mail-list-item ${selectedId === m.id ? "selected" : ""} ${!m.readAt && (view === "inbox" || view === "all" || view === "spam" || view === "archive") ? "unread" : ""}`}
               onClick={() => {
                 if (view === "drafts") {
                   const d = drafts.find((x) => x.id === m.id);
@@ -789,7 +877,50 @@ export function MailClient() {
                 <pre>{detail.bodyText ?? ""}</pre>
               )}
             </div>
-            {view !== "sent" ? (
+            <div className="mail-folder-actions">
+              {view === "trash" || detail.mailboxFolder === "trash" ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => void moveCurrentMessage("inbox")}
+                  >
+                    Geri al
+                  </button>
+                  <button
+                    type="button"
+                    className="danger"
+                    onClick={() => void purgeCurrentMessage()}
+                  >
+                    Kalıcı sil
+                  </button>
+                </>
+              ) : (
+                <>
+                  {view !== "archive" && detail.mailboxFolder !== "archive" ? (
+                    <button
+                      type="button"
+                      onClick={() => void moveCurrentMessage("archive")}
+                    >
+                      Arşivle
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => void moveCurrentMessage("inbox")}
+                    >
+                      Gelen kutusuna taşı
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => void moveCurrentMessage("trash")}
+                  >
+                    Sil
+                  </button>
+                </>
+              )}
+            </div>
+            {view !== "sent" && view !== "trash" ? (
               <div className="mail-reply">
                 <textarea
                   placeholder="Yanıt yazın…"

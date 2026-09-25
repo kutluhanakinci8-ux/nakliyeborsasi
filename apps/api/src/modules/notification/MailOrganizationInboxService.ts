@@ -12,8 +12,10 @@ import {
   MailInboundMessageEntity,
 } from "../../infrastructure/database/entities/MailInboundMessageEntity";
 import { MailSenderIdentityEntity } from "../../infrastructure/database/entities/MailSenderIdentityEntity";
+import { MailImapMaildirService } from "./MailImapMaildirService";
 
-export type InboxFolder = "inbox" | "spam" | "all";
+export type InboxFolder = "inbox" | "spam" | "all" | "archive" | "trash";
+export type MailboxFolder = "inbox" | "archive" | "trash";
 
 @Injectable()
 export class MailOrganizationInboxService {
@@ -24,6 +26,7 @@ export class MailOrganizationInboxService {
     private readonly inboundRepository: Repository<MailInboundMessageEntity>,
     @InjectRepository(MailSenderIdentityEntity)
     private readonly senderRepository: Repository<MailSenderIdentityEntity>,
+    private readonly mailImapMaildirService: MailImapMaildirService,
   ) {}
 
   public async getSummary(organizationId: string): Promise<{
@@ -32,6 +35,8 @@ export class MailOrganizationInboxService {
     unreadCount: number;
     totalMessages: number;
     spamCount: number;
+    archiveCount: number;
+    trashCount: number;
   }> {
     const primaryAddress = await this.resolvePrimaryAddress(organizationId);
     const mailboxIds = await this.mailboxIdsForOrganization(organizationId);
@@ -42,19 +47,33 @@ export class MailOrganizationInboxService {
         unreadCount: 0,
         totalMessages: 0,
         spamCount: 0,
+        archiveCount: 0,
+        trashCount: 0,
       };
     }
     const inboxWhere = {
       mailboxId: In(mailboxIds),
       spamStatus: In(["clean", "suspected"]),
+      mailboxFolder: "inbox" as const,
     };
-    const [totalMessages, unreadCount, spamCount] = await Promise.all([
+    const [totalMessages, unreadCount, spamCount, archiveCount, trashCount] =
+      await Promise.all([
       this.inboundRepository.count({ where: inboxWhere }),
       this.inboundRepository.count({
         where: { ...inboxWhere, readAt: IsNull() },
       }),
       this.inboundRepository.count({
-        where: { mailboxId: In(mailboxIds), spamStatus: "blocked" },
+        where: {
+          mailboxId: In(mailboxIds),
+          spamStatus: "blocked",
+          mailboxFolder: In(["inbox", "archive"]),
+        },
+      }),
+      this.inboundRepository.count({
+        where: { mailboxId: In(mailboxIds), mailboxFolder: "archive" },
+      }),
+      this.inboundRepository.count({
+        where: { mailboxId: In(mailboxIds), mailboxFolder: "trash" },
       }),
     ]);
     const mailbox = primaryAddress
@@ -68,6 +87,8 @@ export class MailOrganizationInboxService {
       unreadCount,
       totalMessages,
       spamCount,
+      archiveCount,
+      trashCount,
     };
   }
 
@@ -163,6 +184,7 @@ export class MailOrganizationInboxService {
     emailAddress: string;
     spamStatus: string;
     spamReason: string | null;
+    mailboxFolder: MailboxFolder;
     attachments: {
       index: number;
       filename: string;
@@ -194,6 +216,7 @@ export class MailOrganizationInboxService {
       emailAddress: mailbox?.emailAddress ?? "—",
       spamStatus: row.spamStatus,
       spamReason: row.spamReason,
+      mailboxFolder: row.mailboxFolder ?? "inbox",
       attachments: (row.attachments ?? []).map((file, index) => ({
         index,
         filename: file.filename,
@@ -328,6 +351,38 @@ export class MailOrganizationInboxService {
     }
   }
 
+  public async setMailboxFolder(
+    organizationId: string,
+    messageId: string,
+    folder: MailboxFolder,
+  ): Promise<{ mailboxFolder: MailboxFolder }> {
+    const row = await this.assertMessageAccess(organizationId, messageId);
+    if (row.mailboxFolder === folder) {
+      return { mailboxFolder: folder };
+    }
+    row.maildirFilePath = this.mailImapMaildirService.relocateMailboxFile(
+      row.maildirFilePath,
+      folder,
+    );
+    row.mailboxFolder = folder;
+    await this.inboundRepository.save(row);
+    return { mailboxFolder: folder };
+  }
+
+  public async deleteMessagePermanently(
+    organizationId: string,
+    messageId: string,
+  ): Promise<void> {
+    const row = await this.assertMessageAccess(organizationId, messageId);
+    if (row.mailboxFolder !== "trash") {
+      throw new ForbiddenException(
+        "Kalıcı silme yalnızca çöp kutusundaki mesajlar için geçerlidir.",
+      );
+    }
+    this.mailImapMaildirService.deleteMailboxFile(row.maildirFilePath);
+    await this.inboundRepository.remove(row);
+  }
+
   private async assertMessageAccess(
     organizationId: string,
     messageId: string,
@@ -351,15 +406,29 @@ export class MailOrganizationInboxService {
     mailboxIds: string[],
     folder: InboxFolder,
   ): Record<string, unknown> {
+    if (folder === "trash") {
+      return { mailboxId: In(mailboxIds), mailboxFolder: "trash" };
+    }
+    if (folder === "archive") {
+      return { mailboxId: In(mailboxIds), mailboxFolder: "archive" };
+    }
     if (folder === "spam") {
-      return { mailboxId: In(mailboxIds), spamStatus: "blocked" };
+      return {
+        mailboxId: In(mailboxIds),
+        spamStatus: "blocked",
+        mailboxFolder: In(["inbox", "archive"]),
+      };
     }
     if (folder === "all") {
-      return { mailboxId: In(mailboxIds) };
+      return {
+        mailboxId: In(mailboxIds),
+        mailboxFolder: In(["inbox", "archive"]),
+      };
     }
     return {
       mailboxId: In(mailboxIds),
       spamStatus: In(["clean", "suspected"]),
+      mailboxFolder: "inbox",
     };
   }
 

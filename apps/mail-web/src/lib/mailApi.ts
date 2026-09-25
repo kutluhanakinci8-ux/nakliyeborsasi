@@ -1,11 +1,22 @@
 import { resolveApiBaseUrl } from "./apiConfig";
 
+export type MailInboxFolder =
+  | "inbox"
+  | "spam"
+  | "all"
+  | "archive"
+  | "trash";
+
+export type MailMailboxFolder = "inbox" | "archive" | "trash";
+
 export type MailInboxSummary = {
   primaryAddress: string | null;
   mailboxId: string | null;
   unreadCount: number;
   totalMessages: number;
   spamCount: number;
+  archiveCount?: number;
+  trashCount?: number;
 };
 
 export type MailInboxListItem = {
@@ -24,6 +35,7 @@ export type MailInboxMessageDetail = MailInboxListItem & {
   bodyText: string | null;
   bodyHtml: string | null;
   emailAddress: string;
+  mailboxFolder?: MailMailboxFolder;
   attachments: {
     index: number;
     filename: string;
@@ -167,7 +179,7 @@ export type MailInboxThreadRow = {
 
 export async function fetchInbox(
   accessToken: string,
-  folder: "inbox" | "spam" | "all",
+  folder: MailInboxFolder,
 ) {
   return apiFetch<{
     summary: MailInboxSummary;
@@ -178,7 +190,7 @@ export async function fetchInbox(
 
 export async function fetchInboxThreads(
   accessToken: string,
-  folder: "inbox" | "spam" | "all",
+  folder: MailInboxFolder,
 ) {
   return apiFetch<{ threads: MailInboxThreadRow[] }>(
     accessToken,
@@ -189,7 +201,7 @@ export async function fetchInboxThreads(
 export async function fetchThreadMessages(
   accessToken: string,
   threadId: string,
-  folder: "inbox" | "spam" | "all",
+  folder: MailInboxFolder,
 ) {
   return apiFetch<{ messages: MailInboxListItem[] }>(
     accessToken,
@@ -200,7 +212,7 @@ export async function fetchThreadMessages(
 export async function searchInbox(
   accessToken: string,
   query: string,
-  folder: "inbox" | "spam" | "all",
+  folder: MailInboxFolder,
 ) {
   const params = new URLSearchParams({
     q: query,
@@ -246,6 +258,26 @@ export async function downloadMailAttachment(
 export async function markRead(accessToken: string, id: string) {
   await apiFetch(accessToken, `company/mail-inbox/messages/${id}/read`, {
     method: "PATCH",
+  });
+}
+
+export async function setMessageMailboxFolder(
+  accessToken: string,
+  messageId: string,
+  folder: MailMailboxFolder,
+) {
+  await apiFetch(accessToken, `company/mail-inbox/messages/${messageId}/folder`, {
+    method: "PATCH",
+    body: JSON.stringify({ folder }),
+  });
+}
+
+export async function deleteMessagePermanently(
+  accessToken: string,
+  messageId: string,
+) {
+  await apiFetch(accessToken, `company/mail-inbox/messages/${messageId}`, {
+    method: "DELETE",
   });
 }
 

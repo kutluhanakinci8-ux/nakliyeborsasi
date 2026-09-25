@@ -1,11 +1,20 @@
 import { PublicApiConfiguration } from "./PublicApiConfiguration";
 
+export type MailInboxFolder =
+  | "inbox"
+  | "spam"
+  | "all"
+  | "archive"
+  | "trash";
+
 export type MailInboxSummary = {
   primaryAddress: string | null;
   mailboxId: string | null;
   unreadCount: number;
   totalMessages: number;
   spamCount: number;
+  archiveCount?: number;
+  trashCount?: number;
 };
 
 export type MailInboxListItem = {
@@ -80,7 +89,7 @@ async function apiFetch<T>(
 
 export async function fetchCompanyMailInbox(
   accessToken: string,
-  folder: "inbox" | "spam" | "all" = "inbox",
+  folder: MailInboxFolder = "inbox",
 ): Promise<{
   summary: MailInboxSummary;
   messages: MailInboxListItem[];

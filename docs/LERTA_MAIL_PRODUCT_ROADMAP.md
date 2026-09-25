@@ -79,7 +79,7 @@
 | # | İş | Öncelik | Kabul kriteri |
 |---|-----|---------|----------------|
 | D1 | Konuşma / thread listesi | Yüksek | `In-Reply-To` zinciri, API `threads`, webmail konuşma görünümü — **uygulandı** |
-| D2 | Çöp / arşiv klasörleri | Yüksek | IMAP + UI uyumu |
+| D2 | Çöp / arşiv klasörleri | Yüksek | `mailboxFolder`, Maildir `.Archive`/`.Trash`, webmail — **uygulandı** |
 | D3 | İmza ve şablonlar | Orta | Compose’da seçilebilir |
 | D4 | Gelişmiş arama (filtre) | Orta | Gönderen, tarih, ek var |
 | D5 | Büyük ek / kota depolama | Orta | Plan depolama GB; uyarı |

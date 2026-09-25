@@ -447,6 +447,28 @@ a {
   font-size: 0.75rem;
 }
 
+.mail-folder-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 24px;
+  border-top: 1px solid var(--border);
+}
+
+.mail-folder-actions button {
+  border: 1px solid var(--border);
+  background: var(--panel);
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.mail-folder-actions button.danger {
+  border-color: #d93025;
+  color: #d93025;
+}
+
 @media (max-width: 900px) {
   .mail-back-read {
     display: inline-block;

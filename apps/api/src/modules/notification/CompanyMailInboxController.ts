@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -248,6 +249,35 @@ export class CompanyMailInboxController {
     return { ok: true };
   }
 
+  @Patch("messages/:messageId/folder")
+  public async setMessageFolder(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("messageId") messageId: string,
+    @Body() body: { folder?: string },
+  ) {
+    this.assertMailInboxWriter(user);
+    const folder = this.parseMailboxFolder(body.folder);
+    const result = await this.mailOrganizationInboxService.setMailboxFolder(
+      user.companyId,
+      messageId,
+      folder,
+    );
+    return { ok: true, ...result };
+  }
+
+  @Delete("messages/:messageId")
+  public async deleteMessage(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("messageId") messageId: string,
+  ) {
+    this.assertMailInboxWriter(user);
+    await this.mailOrganizationInboxService.deleteMessagePermanently(
+      user.companyId,
+      messageId,
+    );
+    return { ok: true };
+  }
+
   @Post("compose")
   public async compose(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
@@ -281,10 +311,24 @@ export class CompanyMailInboxController {
   }
 
   private parseFolder(folder?: string): InboxFolder {
-    if (folder === "spam" || folder === "all") {
+    if (
+      folder === "spam" ||
+      folder === "all" ||
+      folder === "archive" ||
+      folder === "trash"
+    ) {
       return folder;
     }
     return "inbox";
+  }
+
+  private parseMailboxFolder(
+    folder?: string,
+  ): "inbox" | "archive" | "trash" {
+    if (folder === "archive" || folder === "trash" || folder === "inbox") {
+      return folder;
+    }
+    throw new BadRequestException("Geçersiz klasör");
   }
 
   private assertMailInboxWriter(user: AuthenticatedUserContext): void {

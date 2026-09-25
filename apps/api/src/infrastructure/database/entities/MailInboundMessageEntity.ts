@@ -62,6 +62,13 @@ export class MailInboundMessageEntity {
   @Column({ type: "timestamptz", nullable: true })
   public readAt!: Date | null;
 
+  /** Webmail / IMAP klasörü (spam ayrı `spamStatus` ile). */
+  @Column({ type: "varchar", length: 16, default: "inbox" })
+  public mailboxFolder!: "inbox" | "archive" | "trash";
+
+  @Column({ type: "text", nullable: true })
+  public maildirFilePath!: string | null;
+
   @CreateDateColumn({ type: "timestamptz" })
   public receivedAt!: Date;
 }
