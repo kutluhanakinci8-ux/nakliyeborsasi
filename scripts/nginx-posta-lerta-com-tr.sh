@@ -51,6 +51,25 @@ server {
 EOF
 }
 
+write_http_redirect_to_https() {
+  cat > "$NGINX_SITE" <<EOF
+server {
+    listen 80;
+    listen [::]:80;
+    server_name ${APP_HOST};
+
+    location ^~ /.well-known/acme-challenge/ {
+        root ${CERTBOT_WEBROOT};
+        default_type text/plain;
+    }
+
+    location / {
+        return 301 https://\$host\$request_uri;
+    }
+}
+EOF
+}
+
 write_https() {
   cat >> "$NGINX_SITE" <<EOF
 
@@ -104,10 +123,15 @@ nginx -t && systemctl reload nginx
 echo "HTTP: http://${APP_HOST}/"
 echo "NOT: HTTPS sertifikası yoksa tarayıcı https:// açınca varsayılan site (ör. Ekolojik) görünebilir — certbot adımını tamamlayın."
 
-if [[ -f "${LE_DIR}/fullchain.pem" ]]; then
+apply_tls_nginx() {
+  write_http_redirect_to_https
   write_https
   nginx -t && systemctl reload nginx
-  echo "HTTPS: https://${APP_HOST}/"
+  echo "HTTPS: https://${APP_HOST}/ (HTTP → HTTPS yönlendirme aktif)"
+}
+
+if [[ -f "${LE_DIR}/fullchain.pem" ]]; then
+  apply_tls_nginx
   exit 0
 fi
 
@@ -115,9 +139,7 @@ if command -v certbot >/dev/null 2>&1; then
   if certbot certonly --webroot -w "$CERTBOT_WEBROOT" -d "$APP_HOST" \
     --non-interactive --agree-tos --register-unsafely-without-email \
     --keep-until-expiring; then
-    write_https
-    nginx -t && systemctl reload nginx
-    echo "HTTPS: https://${APP_HOST}/"
+    apply_tls_nginx
   else
     echo "UYARI: DNS A kaydı ${APP_HOST} → bu sunucu gerekli."
   fi
