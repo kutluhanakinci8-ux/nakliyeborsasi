@@ -10,6 +10,7 @@ export class BootstrapApplication {
   public static async run(): Promise<void> {
     const application = await NestFactory.create<NestExpressApplication>(
       AppModule,
+      { rawBody: true },
     );
     application.useStaticAssets(join(__dirname, "public", "panel"), {
       prefix: "/panel/",

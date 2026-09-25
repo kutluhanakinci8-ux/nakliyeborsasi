@@ -8,6 +8,7 @@ export type SubscriptionPlanDisplayMeta = {
   recommended?: boolean;
   productLine?: "logistics" | "lerta_mail";
   mailMaxSendsPerHour?: number;
+  mailMaxMailboxes?: number;
   customDomainAllowed?: boolean;
 };
 
@@ -43,6 +44,7 @@ const DISPLAY: readonly SubscriptionPlanDisplayMeta[] = [
     annualPriceEur: 0,
     productLine: "lerta_mail",
     mailMaxSendsPerHour: 80,
+    mailMaxMailboxes: 1,
     customDomainAllowed: false,
   },
   {
@@ -54,6 +56,7 @@ const DISPLAY: readonly SubscriptionPlanDisplayMeta[] = [
     recommended: true,
     productLine: "lerta_mail",
     mailMaxSendsPerHour: 500,
+    mailMaxMailboxes: 25,
     customDomainAllowed: true,
   },
 ];

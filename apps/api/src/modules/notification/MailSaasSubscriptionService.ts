@@ -1,8 +1,12 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { MailSenderIdentityEntity } from "../../infrastructure/database/entities/MailSenderIdentityEntity";
 import {
   AuthorizationException,
   CompanyRoleCode,
@@ -17,6 +21,8 @@ export class MailSaasSubscriptionService {
   public constructor(
     private readonly subscriptionPlanCatalog: SubscriptionPlanCatalog,
     private readonly companySubscriptionPersistenceService: CompanySubscriptionPersistenceService,
+    @InjectRepository(MailSenderIdentityEntity)
+    private readonly senderRepository: Repository<MailSenderIdentityEntity>,
   ) {}
 
   public listMailPlans() {
@@ -38,12 +44,69 @@ export class MailSaasSubscriptionService {
       snapshot?.activePlan.includedModules.includes(
         SubscriptionModuleCode.LertaMail,
       ) ?? false;
+    const mailboxLimit = this.resolveMailboxLimitForPlanCode(planCode);
+    const mailboxUsed = await this.countMailboxes(organizationId);
     return {
       planCode,
       isMailPlan,
       plan: planCode ? this.toMailPlanView(planCode) : null,
       sendRate: this.resolveSendLimitForPlanCode(planCode),
+      mailboxQuota: {
+        used: mailboxUsed,
+        limit: mailboxLimit,
+      },
     };
+  }
+
+  public async countMailboxes(organizationId: string): Promise<number> {
+    return this.senderRepository.count({ where: { organizationId } });
+  }
+
+  public resolveMailboxLimitForPlanCode(planCode: string | null): number {
+    if (planCode) {
+      const display = SubscriptionPlanDisplayCatalog.find(planCode);
+      if (display?.mailMaxMailboxes) {
+        return display.mailMaxMailboxes;
+      }
+    }
+    return 1;
+  }
+
+  public async assertMailboxQuota(
+    organizationId: string,
+    additionalSlots = 1,
+  ): Promise<void> {
+    const snapshot =
+      await this.companySubscriptionPersistenceService.getSnapshot(
+        organizationId,
+      );
+    const limit = this.resolveMailboxLimitForPlanCode(
+      snapshot?.activePlan.planCode ?? null,
+    );
+    const used = await this.countMailboxes(organizationId);
+    if (used + additionalSlots > limit) {
+      throw new ForbiddenException(
+        `Kutu limiti doldu (${used}/${limit}). Planı yükseltin veya ödeme yapın.`,
+      );
+    }
+  }
+
+  /** Stripe / iyzico webhook — rol kontrolü yok. */
+  public async activateMailPlanForBilling(
+    organizationId: string,
+    planCode: string,
+  ): Promise<void> {
+    const plan = this.subscriptionPlanCatalog.findPlanByCode(planCode);
+    if (
+      !plan ||
+      !plan.includedModules.includes(SubscriptionModuleCode.LertaMail)
+    ) {
+      throw new BadRequestException("Geçersiz mail plan kodu (billing).");
+    }
+    await this.companySubscriptionPersistenceService.assignActivePlan(
+      organizationId,
+      planCode,
+    );
   }
 
   public resolveSendLimitForPlanCode(planCode: string | null): number {
@@ -113,6 +176,7 @@ export class MailSaasSubscriptionService {
       annualPriceEur: display?.annualPriceEur ?? 0,
       recommended: display?.recommended ?? false,
       mailMaxSendsPerHour: display?.mailMaxSendsPerHour ?? 80,
+      mailMaxMailboxes: display?.mailMaxMailboxes ?? 1,
       customDomainAllowed: display?.customDomainAllowed ?? false,
       tierCode: plan?.tierCode ?? null,
     };

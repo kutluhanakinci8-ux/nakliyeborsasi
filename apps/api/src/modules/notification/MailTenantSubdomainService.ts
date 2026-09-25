@@ -10,6 +10,7 @@ import { MailSenderIdentityEntity } from "../../infrastructure/database/entities
 import { MailDomainApplicationService } from "./MailDomainApplicationService";
 import { MailDomainDnsVerificationService } from "./MailDomainDnsVerificationService";
 import { ConfigService } from "@nestjs/config";
+import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
 
 export type TenantSubdomainPilotBundle = {
   domain: string;
@@ -34,6 +35,7 @@ export class MailTenantSubdomainService {
     private readonly mailDomainApplicationService: MailDomainApplicationService,
     private readonly mailDomainDnsVerificationService: MailDomainDnsVerificationService,
     private readonly configService: ConfigService,
+    private readonly mailSaasSubscriptionService: MailSaasSubscriptionService,
     @InjectRepository(MailDomainEntity)
     private readonly domainRepository: Repository<MailDomainEntity>,
     @InjectRepository(MailSenderIdentityEntity)
@@ -212,6 +214,13 @@ export class MailTenantSubdomainService {
     if (taken && taken.organizationId !== params.organizationId) {
       throw new ConflictException(
         `${localPart}@${tenantDomain} başka bir organizasyona ait.`,
+      );
+    }
+
+    if (!taken) {
+      await this.mailSaasSubscriptionService.assertMailboxQuota(
+        params.organizationId,
+        1,
       );
     }
 

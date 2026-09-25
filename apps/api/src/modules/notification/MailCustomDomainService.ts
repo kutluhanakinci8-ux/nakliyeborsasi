@@ -19,6 +19,7 @@ import { MailDomainApplicationService } from "./MailDomainApplicationService";
 import { MailDomainDnsVerificationService } from "./MailDomainDnsVerificationService";
 import { PLATFORM_TENANT_MAIL_DOMAIN } from "@nakliyeborsasi/core";
 import { MailCustomDomainOpenDkimInstaller } from "./MailCustomDomainOpenDkimInstaller";
+import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
 
 export type CustomDomainDnsInstructions = {
   domain: string;
@@ -59,6 +60,7 @@ export class MailCustomDomainService {
     @InjectRepository(MailSenderIdentityEntity)
     private readonly senderRepository: Repository<MailSenderIdentityEntity>,
     private readonly mailCustomDomainOpenDkimInstaller: MailCustomDomainOpenDkimInstaller,
+    private readonly mailSaasSubscriptionService: MailSaasSubscriptionService,
   ) {}
 
   public normalizeDomain(domain: string): string {
@@ -229,6 +231,15 @@ export class MailCustomDomainService {
     const localPart = params.localPart.trim().toLowerCase();
     if (!/^[a-z0-9][a-z0-9._-]{1,48}[a-z0-9]$/.test(localPart)) {
       throw new BadRequestException("Geçersiz e-posta ön eki (local-part).");
+    }
+    const taken = await this.senderRepository.findOne({
+      where: { mailDomainId: mailDomain.id, localPart },
+    });
+    if (!taken) {
+      await this.mailSaasSubscriptionService.assertMailboxQuota(
+        params.organizationId,
+        1,
+      );
     }
     await this.senderRepository.update(
       { organizationId: params.organizationId, isDefault: true },

@@ -71,6 +71,11 @@ import { MailMailboxSentEntity } from "../../infrastructure/database/entities/Ma
 import { MailComposeDraftEntity } from "../../infrastructure/database/entities/MailComposeDraftEntity";
 import { MailComposeDraftService } from "./MailComposeDraftService";
 import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
+import { MailBillingService } from "./MailBillingService";
+import {
+  MailBillingController,
+  MailBillingWebhookController,
+} from "./MailBillingController";
 import { AuditModule } from "../../infrastructure/audit/AuditModule";
 import { SubscriptionModule } from "../subscription/SubscriptionModule";
 import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogEntity";
@@ -112,6 +117,8 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     MailInboundWebhookController,
     CompanyMailIdentityController,
     CompanyMailInboxController,
+    MailBillingController,
+    MailBillingWebhookController,
     EmailTrackingController,
     UserNotificationPreferencesController,
   ],
@@ -157,6 +164,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     MailImapAccessService,
     MailComposeDraftService,
     MailSaasSubscriptionService,
+    MailBillingService,
   ],
   exports: [
     AuthNotificationService,

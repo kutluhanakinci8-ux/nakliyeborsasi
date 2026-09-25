@@ -10,6 +10,7 @@ type MailPlan = {
   annualPriceEur: number;
   recommended: boolean;
   mailMaxSendsPerHour: number;
+  mailMaxMailboxes: number;
   customDomainAllowed: boolean;
 };
 
@@ -63,6 +64,7 @@ export function PricingSection() {
             <p className="price-period">{plan.tagline}</p>
             <ul>
               <li>{plan.mailMaxSendsPerHour} gönderim / saat</li>
+              <li>{plan.mailMaxMailboxes} posta kutusu</li>
               <li>
                 {plan.customDomainAllowed
                   ? "Özel domain"

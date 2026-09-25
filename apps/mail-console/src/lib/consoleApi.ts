@@ -193,6 +193,7 @@ export type MailPlanView = {
   annualPriceEur: number;
   recommended: boolean;
   mailMaxSendsPerHour: number;
+  mailMaxMailboxes: number;
   customDomainAllowed: boolean;
 };
 
@@ -203,8 +204,20 @@ export async function fetchMailSubscription(accessToken: string) {
       isMailPlan: boolean;
       plan: MailPlanView | null;
       sendRate: number;
+      mailboxQuota: { used: number; limit: number };
     };
   }>(accessToken, "company/mail-identity/subscription");
+}
+
+export async function startCorporateCheckout(accessToken: string) {
+  return apiFetch<{
+    provider: string;
+    url: string | null;
+    message?: string;
+  }>(accessToken, "company/mail-billing/checkout/corporate", {
+    method: "POST",
+    body: JSON.stringify({}),
+  });
 }
 
 export async function selectMailPlan(accessToken: string, planCode: string) {

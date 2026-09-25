@@ -43,6 +43,7 @@ export class SubscriptionPlanController {
       annualPriceEur: number;
       recommended: boolean;
       mailMaxSendsPerHour: number;
+      mailMaxMailboxes: number;
       customDomainAllowed: boolean;
     }[];
   } {
@@ -61,6 +62,7 @@ export class SubscriptionPlanController {
           annualPriceEur: display?.annualPriceEur ?? 0,
           recommended: display?.recommended ?? false,
           mailMaxSendsPerHour: display?.mailMaxSendsPerHour ?? 80,
+          mailMaxMailboxes: display?.mailMaxMailboxes ?? 1,
           customDomainAllowed: display?.customDomainAllowed ?? false,
         };
       });

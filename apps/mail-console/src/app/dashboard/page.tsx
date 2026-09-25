@@ -11,6 +11,7 @@ import {
   isPlatformOperator,
   provisionTenantMailbox,
   selectMailPlan,
+  startCorporateCheckout,
 } from "@/lib/consoleApi";
 import { useConsoleSession } from "@/lib/session";
 
@@ -29,6 +30,7 @@ export default function DashboardPage() {
   const [planName, setPlanName] = useState<string | null>(null);
   const [sendLimit, setSendLimit] = useState<number | null>(null);
   const [planMessage, setPlanMessage] = useState("");
+  const [mailboxQuota, setMailboxQuota] = useState<string>("");
 
   useEffect(() => {
     if (!accessToken) {
@@ -50,23 +52,49 @@ export default function DashboardPage() {
         const sub = await fetchMailSubscription(accessToken);
         setPlanName(sub.subscription.plan?.displayName ?? sub.subscription.planCode);
         setSendLimit(sub.subscription.sendRate);
+        setMailboxQuota(
+          `${sub.subscription.mailboxQuota.used}/${sub.subscription.mailboxQuota.limit} kutu`,
+        );
       } catch {
         setPlanName(null);
       }
     })();
   }, [accessToken, router]);
 
-  async function upgradeToCorporate() {
+  async function payCorporateCheckout() {
+    if (!accessToken) {
+      return;
+    }
+    setPlanMessage("");
+    try {
+      const checkout = await startCorporateCheckout(accessToken);
+      if (checkout.url) {
+        window.location.href = checkout.url;
+        return;
+      }
+      setPlanMessage(
+        checkout.message ??
+          "Ödeme URL üretilemedi; Stripe/iyzico .env kontrol edin.",
+      );
+    } catch {
+      setPlanMessage("Ödeme başlatılamadı.");
+    }
+  }
+
+  async function upgradeToCorporateTrial() {
     if (!accessToken) {
       return;
     }
     setPlanMessage("");
     try {
       await selectMailPlan(accessToken, "lerta_mail_corporate_tr");
-      setPlanMessage("Kurumsal plana geçildi.");
+      setPlanMessage("Kurumsal plan (deneme) aktif.");
       const sub = await fetchMailSubscription(accessToken);
       setPlanName(sub.subscription.plan?.displayName ?? null);
       setSendLimit(sub.subscription.sendRate);
+      setMailboxQuota(
+        `${sub.subscription.mailboxQuota.used}/${sub.subscription.mailboxQuota.limit} kutu`,
+      );
     } catch {
       setPlanMessage("Plan güncellenemedi.");
     }
@@ -110,16 +138,21 @@ export default function DashboardPage() {
         <p>
           Aktif: <strong>{planName ?? "—"}</strong>
           {sendLimit ? ` · Gönderim: ${sendLimit}/saat` : ""}
+          {mailboxQuota ? ` · ${mailboxQuota}` : ""}
         </p>
         {planMessage ? (
           <p style={{ color: "var(--success)", fontWeight: 600 }}>{planMessage}</p>
         ) : null}
+        <button type="button" className="btn" onClick={() => void payCorporateCheckout()}>
+          Öde ve Kurumsal’a geç
+        </button>
         <button
           type="button"
           className="btn secondary"
-          onClick={() => void upgradeToCorporate()}
+          style={{ marginLeft: 8 }}
+          onClick={() => void upgradeToCorporateTrial()}
         >
-          Kurumsal plana yükselt
+          Deneme (ödeme yok)
         </button>
       </div>
 
