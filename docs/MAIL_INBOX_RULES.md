@@ -14,6 +14,8 @@ En az biri dolu olmalı; ikisi doluysa **her ikisi** sağlanmalı.
 - `actionStar` — yıldızla
 - `actionCustomFolderId` — özel klasöre taşı
 - `actionArchive` — arşive taşı (maildir + `mailboxFolder`)
+- `actionMarkRead` — okundu işaretle (`readAt`)
+- `actionTrash` — çöpe taşı (maildir + `mailboxFolder`)
 
 En az biri seçilmeli. Birden fazla işlem aynı kuralda birlikte uygulanabilir.
 

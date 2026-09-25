@@ -58,6 +58,8 @@ export type MailInboxRule = {
   actionStar: boolean;
   actionCustomFolderId: string | null;
   actionArchive: boolean;
+  actionMarkRead: boolean;
+  actionTrash: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -78,6 +80,8 @@ export async function createInboxRule(
     actionStar?: boolean;
     actionCustomFolderId?: string | null;
     actionArchive?: boolean;
+    actionMarkRead?: boolean;
+    actionTrash?: boolean;
     enabled?: boolean;
   },
 ) {
@@ -109,6 +113,8 @@ export async function updateInboxRule(
     actionStar: boolean;
     actionCustomFolderId: string | null;
     actionArchive: boolean;
+    actionMarkRead: boolean;
+    actionTrash: boolean;
     enabled: boolean;
   }>,
 ) {
@@ -815,10 +821,16 @@ export async function deleteDraft(accessToken: string, draftId: string) {
   });
 }
 
-export async function sendDraft(accessToken: string, draftId: string) {
-  await apiFetch(accessToken, `company/mail-inbox/drafts/${draftId}/send`, {
+export async function sendDraft(
+  accessToken: string,
+  draftId: string,
+  options?: { delaySeconds?: number },
+) {
+  return apiFetch<
+    { ok: true; sentId: string; smtpMessageId: string | null } | MailDelayedSendResult
+  >(accessToken, `company/mail-inbox/drafts/${draftId}/send`, {
     method: "POST",
-    body: JSON.stringify({}),
+    body: JSON.stringify({ delaySeconds: options?.delaySeconds }),
   });
 }
 

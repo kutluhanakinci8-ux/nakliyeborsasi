@@ -247,12 +247,13 @@ export function MailClient() {
         setToast("Gönderildi.");
         setView("sent");
         void refresh();
+        void refreshDrafts();
       }
     };
     tick();
     const id = window.setInterval(tick, 400);
     return () => window.clearInterval(id);
-  }, [pendingUndo, refresh]);
+  }, [pendingUndo, refresh, refreshDrafts]);
 
   useEffect(() => {
     syncMailUnreadBadge(summary?.unreadCount ?? 0);
@@ -516,7 +517,12 @@ export function MailClient() {
           text: composeText,
           attachments: attachments.length > 0 ? attachments : undefined,
         });
-        await sendDraft(accessToken, editingDraftId);
+        const draftResult = await sendDraft(accessToken, editingDraftId, {
+          delaySeconds: 5,
+        });
+        if (applyDelayedSend(draftResult)) {
+          scheduledUndo = true;
+        }
       } else {
         const fileAttachments =
           composeFiles.length > 0
@@ -1763,7 +1769,16 @@ export function MailClient() {
                   }
                   void (async () => {
                     try {
-                      await sendDraft(accessToken, draftPreview.id);
+                      const draftResult = await sendDraft(
+                        accessToken,
+                        draftPreview.id,
+                        { delaySeconds: 5 },
+                      );
+                      if (applyDelayedSend(draftResult)) {
+                        setDraftPreview(null);
+                        setSelectedId(null);
+                        return;
+                      }
                       setToast("Gönderildi.");
                       setDraftPreview(null);
                       setSelectedId(null);

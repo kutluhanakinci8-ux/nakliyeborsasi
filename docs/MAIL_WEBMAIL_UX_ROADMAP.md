@@ -85,7 +85,13 @@ sudo certbot certonly --webroot -w /var/www/certbot -d posta.lerta.com.tr
 
 - Service worker: statik önbellek, `/offline.html` gezinme yedek
 - Web Push: VAPID, abonelik API, inbound bildirimi, Ayarlar → Bildirim
-- Planlı: ses, okunmamış özet, iOS kısıtları dokümantasyonu
+- Ses, sekme/PWA okunmamış rozeti, günlük özet e-postası (08:00)
+- Geri al gönder: yeni posta, yanıt, iletme, taslak (5 sn)
+- Planlı: iOS push kısıtları dokümantasyonu, snooze
+
+## G5 — Kurallar v2 (uygulandı)
+
+- Okundu işaretle ve çöpe taşı işlemleri
 
 ---
 

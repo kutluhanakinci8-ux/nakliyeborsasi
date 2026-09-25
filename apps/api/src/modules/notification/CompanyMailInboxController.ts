@@ -59,6 +59,7 @@ import {
 } from "./MailCustomFolderRequestDto";
 import { MailInboxRuleService } from "./MailInboxRuleService";
 import { MailDelayedComposeService } from "./MailDelayedComposeService";
+import { SendDraftRequestDto } from "./SendDraftRequestDto";
 import { MailInboxPreferencesService } from "./MailInboxPreferencesService";
 import { UpdateMailInboxPreferencesRequestDto } from "./MailInboxPreferencesRequestDto";
 import {
@@ -128,6 +129,8 @@ export class CompanyMailInboxController {
       actionStar: body.actionStar,
       actionCustomFolderId: body.actionCustomFolderId ?? null,
       actionArchive: body.actionArchive,
+      actionMarkRead: body.actionMarkRead,
+      actionTrash: body.actionTrash,
       enabled: body.enabled,
     });
     return { rule };
@@ -158,6 +161,8 @@ export class CompanyMailInboxController {
       actionStar: body.actionStar,
       actionCustomFolderId: body.actionCustomFolderId,
       actionArchive: body.actionArchive,
+      actionMarkRead: body.actionMarkRead,
+      actionTrash: body.actionTrash,
       enabled: body.enabled,
     });
     return { rule };
@@ -516,8 +521,31 @@ export class CompanyMailInboxController {
   public async sendDraft(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
     @Param("draftId") draftId: string,
+    @Body() body: SendDraftRequestDto,
   ) {
     this.assertMailInboxWriter(user);
+    if (body.delaySeconds && body.delaySeconds > 0) {
+      await this.mailComposeDraftService.getForSend(
+        user.companyId,
+        user.userId,
+        draftId,
+      );
+      const pending = await this.mailDelayedComposeService.schedule(
+        user.companyId,
+        {
+          kind: "draft_send",
+          userId: user.userId,
+          draftId,
+        },
+        body.delaySeconds,
+      );
+      return {
+        ok: true,
+        delayed: true,
+        pendingId: pending.id,
+        sendAt: pending.sendAt,
+      };
+    }
     const payload = await this.mailComposeDraftService.getForSend(
       user.companyId,
       user.userId,

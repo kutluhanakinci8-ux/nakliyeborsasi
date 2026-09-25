@@ -22,6 +22,8 @@ export type MailInboxRuleDto = {
   actionStar: boolean;
   actionCustomFolderId: string | null;
   actionArchive: boolean;
+  actionMarkRead: boolean;
+  actionTrash: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -54,6 +56,8 @@ export class MailInboxRuleService {
       actionStar?: boolean;
       actionCustomFolderId?: string | null;
       actionArchive?: boolean;
+      actionMarkRead?: boolean;
+      actionTrash?: boolean;
       enabled?: boolean;
     },
   ): Promise<MailInboxRuleDto> {
@@ -81,6 +85,8 @@ export class MailInboxRuleService {
         actionStar: Boolean(input.actionStar),
         actionCustomFolderId: input.actionCustomFolderId ?? null,
         actionArchive: Boolean(input.actionArchive),
+        actionMarkRead: Boolean(input.actionMarkRead),
+        actionTrash: Boolean(input.actionTrash),
       }),
     );
     return this.toDto(row);
@@ -96,6 +102,8 @@ export class MailInboxRuleService {
       actionStar?: boolean;
       actionCustomFolderId?: string | null;
       actionArchive?: boolean;
+      actionMarkRead?: boolean;
+      actionTrash?: boolean;
       enabled?: boolean;
     },
   ): Promise<MailInboxRuleDto> {
@@ -116,6 +124,8 @@ export class MailInboxRuleService {
           ? input.actionCustomFolderId
           : row.actionCustomFolderId,
       actionArchive: input.actionArchive ?? row.actionArchive,
+      actionMarkRead: input.actionMarkRead ?? row.actionMarkRead,
+      actionTrash: input.actionTrash ?? row.actionTrash,
       enabled: input.enabled ?? row.enabled,
     };
     this.validateRuleInput(merged);
@@ -131,6 +141,8 @@ export class MailInboxRuleService {
     row.actionStar = merged.actionStar;
     row.actionCustomFolderId = merged.actionCustomFolderId;
     row.actionArchive = merged.actionArchive;
+    row.actionMarkRead = merged.actionMarkRead;
+    row.actionTrash = merged.actionTrash;
     row.enabled = merged.enabled;
     await this.ruleRepository.save(row);
     return this.toDto(row);
@@ -193,7 +205,19 @@ export class MailInboxRuleService {
         message.customFolderId = rule.actionCustomFolderId;
         changed = true;
       }
-      if (rule.actionArchive && message.mailboxFolder === "inbox") {
+      if (rule.actionMarkRead && !message.readAt) {
+        message.readAt = new Date();
+        changed = true;
+      }
+      if (rule.actionTrash && message.mailboxFolder === "inbox") {
+        message.maildirFilePath = this.mailImapMaildirService.relocateMailboxFile(
+          message.maildirFilePath,
+          "trash",
+        );
+        message.mailboxFolder = "trash";
+        message.customFolderId = null;
+        changed = true;
+      } else if (rule.actionArchive && message.mailboxFolder === "inbox") {
         message.maildirFilePath = this.mailImapMaildirService.relocateMailboxFile(
           message.maildirFilePath,
           "archive",
@@ -232,6 +256,8 @@ export class MailInboxRuleService {
     actionStar?: boolean;
     actionCustomFolderId?: string | null;
     actionArchive?: boolean;
+    actionMarkRead?: boolean;
+    actionTrash?: boolean;
     name?: string;
   }): void {
     const from = this.normalizeOptional(input.fromContains);
@@ -244,10 +270,12 @@ export class MailInboxRuleService {
     if (
       !input.actionStar &&
       !input.actionCustomFolderId &&
-      !input.actionArchive
+      !input.actionArchive &&
+      !input.actionMarkRead &&
+      !input.actionTrash
     ) {
       throw new BadRequestException(
-        "En az bir işlem seçin (yıldızla, klasör veya arşiv).",
+        "En az bir işlem seçin (yıldızla, klasör, arşiv, okundu veya çöp).",
       );
     }
     if (!input.name?.trim()) {
@@ -284,6 +312,8 @@ export class MailInboxRuleService {
       actionStar: row.actionStar,
       actionCustomFolderId: row.actionCustomFolderId,
       actionArchive: row.actionArchive,
+      actionMarkRead: row.actionMarkRead,
+      actionTrash: row.actionTrash,
       createdAt: row.createdAt.toISOString(),
       updatedAt: row.updatedAt.toISOString(),
     };

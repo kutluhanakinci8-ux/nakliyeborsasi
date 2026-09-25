@@ -40,6 +40,14 @@ export class CreateMailInboxRuleRequestDto {
 
   @IsOptional()
   @IsBoolean()
+  public actionMarkRead?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  public actionTrash?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
   public enabled?: boolean;
 }
 
@@ -79,6 +87,14 @@ export class UpdateMailInboxRuleRequestDto {
   @IsOptional()
   @IsBoolean()
   public actionArchive?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  public actionMarkRead?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  public actionTrash?: boolean;
 
   @IsOptional()
   @IsBoolean()
