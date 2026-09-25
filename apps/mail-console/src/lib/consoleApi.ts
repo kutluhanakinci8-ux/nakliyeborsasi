@@ -471,6 +471,74 @@ export async function fetchMailBranding(accessToken: string) {
   );
 }
 
+export type MailIntegrationSnapshot = {
+  allowed: boolean;
+  planCode: string | null;
+  detailTr: string;
+  publicApiBasePath: string;
+  availableWebhookEvents: (
+    | "message.sent"
+    | "message.failed"
+    | "inbound.received"
+  )[];
+  apiKeys: {
+    id: string;
+    label: string;
+    keyPrefix: string;
+    lastUsedAt: string | null;
+    createdAt: string;
+  }[];
+  webhooks: {
+    id: string;
+    url: string;
+    events: string[];
+    enabled: boolean;
+    signingSecretPrefix: string;
+  }[];
+};
+
+export async function fetchMailIntegration(accessToken: string) {
+  return apiFetch<{ integration: MailIntegrationSnapshot }>(
+    accessToken,
+    "company/mail-identity/integration",
+  );
+}
+
+export async function createMailApiKey(accessToken: string, label: string) {
+  return apiFetch<{
+    apiKey: {
+      id: string;
+      apiKey: string;
+      keyPrefix: string;
+      label: string;
+    };
+  }>(accessToken, "company/mail-identity/integration/api-keys", {
+    method: "POST",
+    body: JSON.stringify({ label }),
+  });
+}
+
+export async function revokeMailApiKey(accessToken: string, id: string) {
+  return apiFetch<{ ok: boolean }>(
+    accessToken,
+    `company/mail-identity/integration/api-keys/${id}`,
+    { method: "DELETE" },
+  );
+}
+
+export async function createMailWebhook(
+  accessToken: string,
+  body: { url: string; events: string[]; description?: string },
+) {
+  return apiFetch<{
+    webhook: MailIntegrationSnapshot["webhooks"][number];
+    signingSecret: string;
+  }>(accessToken, "company/mail-identity/integration/webhooks", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
 export async function updateMailBranding(
   accessToken: string,
   body: {

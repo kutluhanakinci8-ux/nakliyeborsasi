@@ -41,6 +41,10 @@ export const MailIdentityAuditAction = {
   SecurityTotpEnabled: "MAIL_SECURITY_TOTP_ENABLED",
   SecurityTotpDisabled: "MAIL_SECURITY_TOTP_DISABLED",
   BrandingUpdated: "MAIL_BRANDING_UPDATED",
+  IntegrationApiKeyCreated: "MAIL_INTEGRATION_API_KEY_CREATED",
+  IntegrationApiKeyRevoked: "MAIL_INTEGRATION_API_KEY_REVOKED",
+  IntegrationWebhookCreated: "MAIL_INTEGRATION_WEBHOOK_CREATED",
+  IntegrationWebhookUpdated: "MAIL_INTEGRATION_WEBHOOK_UPDATED",
 } as const;
 
 export type MailTenantAuditLogDto = {

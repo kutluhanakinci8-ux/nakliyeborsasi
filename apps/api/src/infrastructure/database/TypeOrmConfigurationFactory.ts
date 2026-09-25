@@ -44,6 +44,8 @@ import { MailOrganizationBillingStateEntity } from "./entities/MailOrganizationB
 import { MailOrganizationOperatorStateEntity } from "./entities/MailOrganizationOperatorStateEntity";
 import { MailOrganizationDeletionRequestEntity } from "./entities/MailOrganizationDeletionRequestEntity";
 import { MailOrganizationBrandingEntity } from "./entities/MailOrganizationBrandingEntity";
+import { MailOrganizationApiKeyEntity } from "./entities/MailOrganizationApiKeyEntity";
+import { MailOrganizationWebhookEndpointEntity } from "./entities/MailOrganizationWebhookEndpointEntity";
 
 @Injectable()
 export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
@@ -103,6 +105,8 @@ export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
         MailOrganizationOperatorStateEntity,
         MailOrganizationDeletionRequestEntity,
         MailOrganizationBrandingEntity,
+        MailOrganizationApiKeyEntity,
+        MailOrganizationWebhookEndpointEntity,
       ],
       synchronize,
       logging: false,

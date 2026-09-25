@@ -15,6 +15,7 @@ import { MailOrganizationSendRateService } from "./MailOrganizationSendRateServi
 import { MailTenantSuspensionService } from "./MailTenantSuspensionService";
 import { resolveTenantReplyToAddress } from "./MailTenantEmailBranding";
 import { MailOrganizationBrandingService } from "./MailOrganizationBrandingService";
+import { MailOrganizationWebhookDispatcherService } from "./MailOrganizationWebhookDispatcherService";
 import { CompanyEntity } from "../../infrastructure/database/entities/CompanyEntity";
 
 @Injectable()
@@ -35,9 +36,66 @@ export class EmailOutboxService {
     private readonly mailOrganizationSendRateService: MailOrganizationSendRateService,
     private readonly mailTenantSuspensionService: MailTenantSuspensionService,
     private readonly mailOrganizationBrandingService: MailOrganizationBrandingService,
+    private readonly mailOrganizationWebhookDispatcherService: MailOrganizationWebhookDispatcherService,
     @InjectRepository(CompanyEntity)
     private readonly companyRepository: Repository<CompanyEntity>,
   ) {}
+
+  public async enqueueTenantApiMessage(params: {
+    organizationId: string;
+    recipientEmail: string;
+    subject: string;
+    htmlBody: string;
+    textBody: string;
+    idempotencyKey: string;
+    apiKeyId: string;
+  }): Promise<EmailOutboxEntity | null> {
+    const existing = await this.outboxRepository.findOne({
+      where: { idempotencyKey: params.idempotencyKey },
+    });
+    if (existing) {
+      return existing;
+    }
+    if (
+      await this.emailSuppressionService.isSuppressed(
+        params.recipientEmail,
+        params.organizationId,
+      )
+    ) {
+      return null;
+    }
+    await this.mailTenantSuspensionService.assertOrganizationCanSend(
+      params.organizationId,
+    );
+    await this.mailOrganizationSendRateService.assertCanSend(
+      params.organizationId,
+    );
+    const row = await this.outboxRepository.save(
+      this.outboxRepository.create({
+        eventCode: "MAIL_PUBLIC_API_SEND",
+        recipientKind: EmailRecipientKind.User,
+        recipientEmail: params.recipientEmail.toLowerCase(),
+        locale: "tr",
+        subject: params.subject,
+        htmlBody: params.htmlBody,
+        textBody: params.textBody,
+        status: "pending",
+        idempotencyKey: params.idempotencyKey,
+        metadata: {
+          companyId: params.organizationId,
+          source: "mail_public_api",
+          apiKeyId: params.apiKeyId,
+        },
+        providerMessageId: null,
+        lastError: null,
+        sentAt: null,
+      }),
+    );
+    void this.processById(row.id).catch((error) => {
+      this.logger.error(`Outbox process failed: ${row.id}`, error);
+    });
+    return row;
+  }
 
   public async enqueue(params: {
     eventCode: NotificationEventCode;
@@ -184,11 +242,21 @@ export class EmailOutboxService {
       };
       row.lastError = null;
       await this.outboxRepository.save(row);
+      this.maybeDispatchPublicApiWebhook(
+        row,
+        tenantOrganizationIdForBounce,
+        "message.sent",
+      );
     } catch (error) {
       row.status = "failed";
       row.lastError =
         error instanceof Error ? error.message : "Unknown send error";
       await this.outboxRepository.save(row);
+      this.maybeDispatchPublicApiWebhook(
+        row,
+        tenantOrganizationIdForBounce,
+        "message.failed",
+      );
       await this.emailEngagementService.recordBounceForOutbox(
         row.id,
         row.lastError,
@@ -196,6 +264,25 @@ export class EmailOutboxService {
       );
       throw error;
     }
+  }
+
+  private maybeDispatchPublicApiWebhook(
+    row: EmailOutboxEntity,
+    organizationId: string | null,
+    event: "message.sent" | "message.failed",
+  ): void {
+    if (row.metadata?.source !== "mail_public_api" || !organizationId) {
+      return;
+    }
+    this.mailOrganizationWebhookDispatcherService.dispatch(organizationId, event, {
+      messageId: row.id,
+      recipientEmail: row.recipientEmail,
+      subject: row.subject,
+      status: row.status,
+      sentAt: row.sentAt?.toISOString() ?? null,
+      lastError: row.lastError,
+      providerMessageId: row.providerMessageId,
+    });
   }
 
   public async listRecent(limit: number): Promise<EmailOutboxEntity[]> {

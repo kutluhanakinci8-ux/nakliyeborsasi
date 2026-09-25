@@ -62,6 +62,9 @@ export function ConsoleShell({
           <Link className={navClass("/branding")} href="/branding">
             White-label
           </Link>
+          <Link className={navClass("/integration")} href="/integration">
+            Entegrasyon
+          </Link>
           {operator ? (
             <Link className={navClass("/operator")} href="/operator">
               Operatör

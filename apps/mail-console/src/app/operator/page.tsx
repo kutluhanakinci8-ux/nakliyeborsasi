@@ -155,6 +155,17 @@ export default function OperatorPage() {
         </ul>
       </div>
       <div className="card" style={{ marginBottom: 16 }}>
+        <h2 style={{ marginTop: 0 }}>Public API (F5)</h2>
+        <p style={{ margin: 0, fontSize: "0.9rem", color: "var(--muted)" }}>
+          <code>/api/v1/public/lerta-mail/v1/messages</code> · Bearer{" "}
+          <code>lerta_mail_live_…</code> · webhook HMAC. Konsol{" "}
+          <code>/integration</code>
+        </p>
+        <p style={{ margin: "8px 0 0", fontSize: 12, color: "var(--muted)" }}>
+          <code>docs/MAIL_PUBLIC_API_WEBHOOKS.md</code>
+        </p>
+      </div>
+      <div className="card" style={{ marginBottom: 16 }}>
         <h2 style={{ marginTop: 0 }}>White-label (F4)</h2>
         <p style={{ margin: 0, fontSize: "0.9rem", color: "var(--muted)" }}>
           Plan <code>lerta_mail_enterprise_tr</code> → tenant{" "}

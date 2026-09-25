@@ -27,6 +27,7 @@ import { MailInboundSpamService } from "./MailInboundSpamService";
 import { sanitizeInboundHtml } from "./MailHtmlSanitize";
 import { MailImapMaildirService } from "./MailImapMaildirService";
 import { MailOrganizationStorageService } from "./MailOrganizationStorageService";
+import { MailOrganizationWebhookDispatcherService } from "./MailOrganizationWebhookDispatcherService";
 import type { MailInboundAttachmentMeta } from "../../infrastructure/database/entities/MailInboundMessageEntity";
 
 export type InboundIngestInput = {
@@ -56,6 +57,7 @@ export class MailInboundIngestService {
     private readonly mailInboundSpamService: MailInboundSpamService,
     private readonly mailImapMaildirService: MailImapMaildirService,
     private readonly mailOrganizationStorageService: MailOrganizationStorageService,
+    private readonly mailOrganizationWebhookDispatcherService: MailOrganizationWebhookDispatcherService,
   ) {}
 
   public async ingest(input: InboundIngestInput): Promise<MailInboundMessageEntity> {
@@ -161,6 +163,19 @@ export class MailInboundIngestService {
     );
     this.logger.log(
       `Inbound stored ${row.id} → ${recipient} (mailbox ${mailbox.id})`,
+    );
+    this.mailOrganizationWebhookDispatcherService.dispatch(
+      mailbox.organizationId,
+      "inbound.received",
+      {
+        messageId: row.id,
+        mailboxId: mailbox.id,
+        recipient,
+        fromAddress: row.fromAddress,
+        subject: row.subject,
+        receivedAt: row.receivedAt.toISOString(),
+        spamStatus: row.spamStatus,
+      },
     );
     return row;
   }

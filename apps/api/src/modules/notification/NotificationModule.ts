@@ -99,6 +99,12 @@ import { MailPlatformMonitoringService } from "./MailPlatformMonitoringService";
 import { MailRuntimeRoleService } from "./MailRuntimeRoleService";
 import { MailOrganizationBrandingEntity } from "../../infrastructure/database/entities/MailOrganizationBrandingEntity";
 import { MailOrganizationBrandingService } from "./MailOrganizationBrandingService";
+import { MailOrganizationApiKeyEntity } from "../../infrastructure/database/entities/MailOrganizationApiKeyEntity";
+import { MailOrganizationWebhookEndpointEntity } from "../../infrastructure/database/entities/MailOrganizationWebhookEndpointEntity";
+import { MailOrganizationIntegrationService } from "./MailOrganizationIntegrationService";
+import { MailOrganizationWebhookDispatcherService } from "./MailOrganizationWebhookDispatcherService";
+import { MailPublicApiGuard } from "./MailPublicApiGuard";
+import { MailPublicApiController } from "./MailPublicApiController";
 import { PublicMailStatusController } from "./PublicMailStatusController";
 import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
 import { MailBillingService } from "./MailBillingService";
@@ -144,6 +150,8 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
       MailDmarcAggregateReportEntity,
       MailOrganizationDeletionRequestEntity,
       MailOrganizationBrandingEntity,
+      MailOrganizationApiKeyEntity,
+      MailOrganizationWebhookEndpointEntity,
       CompanyMailTeamInviteEntity,
       MailOrganizationBillingStateEntity,
       MailOrganizationOperatorStateEntity,
@@ -163,6 +171,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     EmailTrackingController,
     UserNotificationPreferencesController,
     PublicMailStatusController,
+    MailPublicApiController,
   ],
   providers: [
     NotificationConfigurationService,
@@ -216,6 +225,9 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     MailPlatformMonitoringService,
     MailRuntimeRoleService,
     MailOrganizationBrandingService,
+    MailOrganizationIntegrationService,
+    MailOrganizationWebhookDispatcherService,
+    MailPublicApiGuard,
     MailSaasSubscriptionService,
     MailIyzicoBillingService,
     MailBillingService,

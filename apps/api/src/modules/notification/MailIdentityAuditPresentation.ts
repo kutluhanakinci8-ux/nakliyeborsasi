@@ -27,6 +27,10 @@ const LABELS: Record<string, string> = {
   [MailIdentityAuditAction.TeamMemberRoleChanged]: "Ekip rolü güncellendi",
   [MailIdentityAuditAction.TeamMemberRemoved]: "Ekip üyesi çıkarıldı",
   [MailIdentityAuditAction.BrandingUpdated]: "White-label marka ayarları",
+  [MailIdentityAuditAction.IntegrationApiKeyCreated]: "API anahtarı oluşturuldu",
+  [MailIdentityAuditAction.IntegrationApiKeyRevoked]: "API anahtarı iptal edildi",
+  [MailIdentityAuditAction.IntegrationWebhookCreated]: "Webhook kaydı",
+  [MailIdentityAuditAction.IntegrationWebhookUpdated]: "Webhook güncellendi",
   [MailIdentityAuditAction.SecurityRequireTotpUpdated]:
     "2FA zorunluluğu güncellendi",
   [MailIdentityAuditAction.SecurityTotpEnabled]: "TOTP etkinleştirildi",

@@ -46,6 +46,12 @@ import { MailPilotOnboardingService } from "./MailPilotOnboardingService";
 import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
 import { MailOrganizationBrandingService } from "./MailOrganizationBrandingService";
 import { UpdateMailBrandingRequestDto } from "./MailBrandingRequestDto";
+import { MailOrganizationIntegrationService } from "./MailOrganizationIntegrationService";
+import {
+  CreateMailApiKeyRequestDto,
+  CreateMailWebhookRequestDto,
+  UpdateMailWebhookRequestDto,
+} from "./MailIntegrationRequestDto";
 import {
   assertMailConsoleAccess,
   canManageMailDomain,
@@ -75,6 +81,7 @@ export class CompanyMailIdentityController {
     private readonly mailSaasSubscriptionService: MailSaasSubscriptionService,
     private readonly mailPilotOnboardingService: MailPilotOnboardingService,
     private readonly mailOrganizationBrandingService: MailOrganizationBrandingService,
+    private readonly mailOrganizationIntegrationService: MailOrganizationIntegrationService,
   ) {}
 
   @Post("pilot/quick-start")
@@ -609,6 +616,107 @@ export class CompanyMailIdentityController {
       );
     }
     return { ok: removed };
+  }
+
+  @Get("integration")
+  public async getIntegration(@AuthenticatedUserParam() user: AuthenticatedUserContext) {
+    assertMailConsoleAccess(user);
+    const integration =
+      await this.mailOrganizationIntegrationService.getIntegrationSnapshot(
+        user.companyId,
+      );
+    return { message: "OK", integration };
+  }
+
+  @Post("integration/api-keys")
+  public async createIntegrationApiKey(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: CreateMailApiKeyRequestDto,
+  ) {
+    this.assertMailIdentityManager(user);
+    const created = await this.mailOrganizationIntegrationService.createApiKey(
+      user.companyId,
+      body.label,
+    );
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.IntegrationApiKeyCreated,
+      {
+        organizationId: user.companyId,
+        apiKeyId: created.id,
+        keyPrefix: created.keyPrefix,
+      },
+      "/company/mail-identity/integration/api-keys",
+    );
+    return { message: "OK", apiKey: created };
+  }
+
+  @Delete("integration/api-keys/:id")
+  public async revokeIntegrationApiKey(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("id") id: string,
+  ) {
+    this.assertMailIdentityManager(user);
+    const revoked = await this.mailOrganizationIntegrationService.revokeApiKey(
+      user.companyId,
+      id,
+    );
+    if (revoked) {
+      await this.mailIdentityAuditService.recordFromUser(
+        user,
+        MailIdentityAuditAction.IntegrationApiKeyRevoked,
+        { organizationId: user.companyId, apiKeyId: id },
+        "/company/mail-identity/integration/api-keys",
+      );
+    }
+    return { ok: revoked };
+  }
+
+  @Post("integration/webhooks")
+  public async createIntegrationWebhook(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: CreateMailWebhookRequestDto,
+  ) {
+    this.assertMailIdentityManager(user);
+    const result = await this.mailOrganizationIntegrationService.createWebhook(
+      user.companyId,
+      body,
+    );
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.IntegrationWebhookCreated,
+      {
+        organizationId: user.companyId,
+        webhookId: result.webhook.id,
+        url: result.webhook.url,
+      },
+      "/company/mail-identity/integration/webhooks",
+    );
+    return { message: "OK", ...result };
+  }
+
+  @Patch("integration/webhooks/:id")
+  public async updateIntegrationWebhook(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("id") id: string,
+    @Body() body: UpdateMailWebhookRequestDto,
+  ) {
+    this.assertMailIdentityManager(user);
+    const result = await this.mailOrganizationIntegrationService.updateWebhook(
+      user.companyId,
+      id,
+      body,
+    );
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.IntegrationWebhookUpdated,
+      {
+        organizationId: user.companyId,
+        webhookId: id,
+      },
+      "/company/mail-identity/integration/webhooks",
+    );
+    return { message: "OK", ...result };
   }
 
   @Get("branding")

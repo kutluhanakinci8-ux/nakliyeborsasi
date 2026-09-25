@@ -112,7 +112,7 @@
 | F2 | Durum sayfası (`status.lerta.com.tr` veya vitrin altı) | `/durum`, `public/lerta-mail/status` — **uygulandı** |
 | F3 | Çok VPS / ayrı mail worker (yük büyüdüğünde) | `LERTA_MAIL_RUNTIME_ROLE`, `MAIL_MULTI_VPS_SCALE.md` — **uygulandı** |
 | F4 | White-label (logo, From adı) Enterprise | `lerta_mail_enterprise_tr`, konsol /branding, `MAIL_WHITE_LABEL_ENTERPRISE.md` — **uygulandı** |
-| F5 | Public API / webhook (müşteri entegrasyonu) |
+| F5 | Public API / webhook (müşteri entegrasyonu) | `public/lerta-mail/v1`, konsol /integration, `MAIL_PUBLIC_API_WEBHOOKS.md` — **uygulandı** |
 
 ---
 

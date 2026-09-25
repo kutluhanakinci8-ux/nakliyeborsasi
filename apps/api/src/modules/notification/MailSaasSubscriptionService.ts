@@ -259,6 +259,7 @@ export class MailSaasSubscriptionService {
         ) / 10,
       customDomainAllowed: display?.customDomainAllowed ?? false,
       mailWhiteLabelAllowed: display?.mailWhiteLabelAllowed ?? false,
+      mailPublicApiAllowed: display?.mailPublicApiAllowed ?? false,
       tierCode: plan?.tierCode ?? null,
     };
   }

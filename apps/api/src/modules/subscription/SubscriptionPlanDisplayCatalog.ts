@@ -15,6 +15,7 @@ export type SubscriptionPlanDisplayMeta = {
   mailMaxAttachmentBytes?: number;
   customDomainAllowed?: boolean;
   mailWhiteLabelAllowed?: boolean;
+  mailPublicApiAllowed?: boolean;
 };
 
 const DISPLAY: readonly SubscriptionPlanDisplayMeta[] = [
@@ -81,6 +82,7 @@ const DISPLAY: readonly SubscriptionPlanDisplayMeta[] = [
     mailMaxAttachmentBytes: 25 * 1024 * 1024,
     customDomainAllowed: true,
     mailWhiteLabelAllowed: true,
+    mailPublicApiAllowed: true,
   },
 ];
 
