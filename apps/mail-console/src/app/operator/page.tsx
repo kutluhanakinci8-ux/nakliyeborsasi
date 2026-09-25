@@ -116,6 +116,12 @@ export default function OperatorPage() {
               {billingStatus.stripe.configured ? (
                 <>
                   {" "}
+                  · API{" "}
+                  {billingStatus.stripe.apiReachable === true
+                    ? "OK"
+                    : billingStatus.stripe.apiReachable === false
+                      ? `hata (${billingStatus.stripe.apiError ?? "?"})`
+                      : "—"}{" "}
                   · webhook{" "}
                   {billingStatus.stripe.webhookConfigured ? "OK" : "eksik"} ·
                   price id{" "}

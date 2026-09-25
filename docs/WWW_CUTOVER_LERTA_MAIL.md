@@ -4,10 +4,16 @@
 
 ## Ön koşullar
 
-- [ ] `kurumsal.lerta.com.tr` veya staging vitrin production-ready (fiyat, kayıt, HTTPS)
+- [x] `kurumsal.lerta.com.tr` vitrin (fiyat, kayıt, HTTPS) — canlı
 - [ ] `posta` / `yonetim` / `mail` DNS ve TLS stabil
 - [ ] U88 veya mevcut `www` uygulaması için **yeni host** (ör. `u88.lerta.com.tr` veya harici domain) hazır
 - [ ] Müşteri / iç iletişim: `www` artık yalnızca Lerta Mail
+
+## Preflight (değişiklik yapmaz)
+
+```bash
+bash scripts/preflight-www-cutover-lerta-mail.sh
+```
 
 ## Cutover adımları (bakım penceresi)
 

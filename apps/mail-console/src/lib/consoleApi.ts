@@ -218,6 +218,8 @@ export async function fetchMailBillingStatus(accessToken: string) {
         testMode: boolean;
         webhookConfigured: boolean;
         corporatePriceConfigured: boolean;
+        apiReachable: boolean | null;
+        apiError: string | null;
       };
       iyzico: {
         apiConfigured: boolean;

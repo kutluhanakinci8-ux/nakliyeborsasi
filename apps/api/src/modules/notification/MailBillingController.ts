@@ -41,9 +41,11 @@ export class MailBillingController {
 
   @Get("status")
   @UseGuards(JwtAuthenticationGuard)
-  public getStatus(@AuthenticatedUserParam() user: AuthenticatedUserContext) {
+  public async getStatus(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
     void user;
-    const status = this.mailBillingService.getBillingStatus();
+    const status = await this.mailBillingService.getBillingStatus();
     return { message: "OK", status };
   }
 
