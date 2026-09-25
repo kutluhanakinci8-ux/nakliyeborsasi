@@ -1,6 +1,8 @@
 import { Type } from "class-transformer";
 import {
   IsArray,
+  IsBoolean,
+  IsEmail,
   IsOptional,
   IsString,
   MaxLength,
@@ -9,16 +11,19 @@ import {
 } from "class-validator";
 import { ComposeMailAttachmentDto } from "./ComposeMailRequestDto";
 
-export class ReplyMailRequestDto {
-  @IsString()
-  @MinLength(1)
-  @MaxLength(200_000)
-  public text!: string;
+export class ForwardMailRequestDto {
+  @IsEmail()
+  @MaxLength(320)
+  public to!: string;
 
   @IsOptional()
   @IsString()
-  @MaxLength(2000)
-  public bcc?: string;
+  @MaxLength(200_000)
+  public text?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  public includeOriginal?: boolean;
 
   @IsOptional()
   @IsArray()

@@ -12,8 +12,8 @@
 | Güven & TLS | 12% | **40**† | 98 | 98 | †Canlıda “Güvenli değil” = sertifika/HTTPS eksik |
 | Temel kutu (okuma/yazma) | 20% | **72** | 95 | 94 | Klasörler, ek, taslak, arama filtreleri var |
 | Üretkenlik (toplu, kısayol) | 15% | **58** | 92 | 90 | G2: toplu okundu/arşiv/çöp + kısayollar; yıldız/snooze yok |
-| Konuşma & iletme | 10% | **55** | 95 | 93 | Thread var; **İlet** yok |
-| Yazma deneyimi | 12% | **45** | 90 | 88 | Düz metin; zengin HTML editör yok |
+| Konuşma & iletme | 10% | **72** | 95 | 93 | Thread + **İlet** (G3); tümüne yanıt (Cc meta yok) kısıtlı |
+| Yazma deneyimi | 12% | **58** | 90 | 88 | Cc/Bcc; düz metin compose |
 | Mobil / PWA | 10% | **60** | 85 | 82 | Paneller var; native push yok |
 | Kurumsal (marka, alias) | 8% | **35** | 70 | 75 | White-label konsolda; webmail logosu sabit |
 | Entegrasyon (IMAP, takvim) | 8% | **50** | 90 | 92 | IMAP paneli var; CalDAV/kişi yok |

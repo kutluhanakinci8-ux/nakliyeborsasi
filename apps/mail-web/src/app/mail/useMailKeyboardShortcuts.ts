@@ -7,6 +7,7 @@ type Handlers = {
   onArchive: () => void;
   onTrash: () => void;
   onMarkUnread: () => void;
+  onForward: () => void;
   onShowHelp: () => void;
   onEscape: () => void;
   enabled: boolean;
@@ -73,6 +74,10 @@ export function useMailKeyboardShortcuts(handlers: Handlers) {
         case "u":
           event.preventDefault();
           handlers.onMarkUnread();
+          break;
+        case "f":
+          event.preventDefault();
+          handlers.onForward();
           break;
         default:
           break;

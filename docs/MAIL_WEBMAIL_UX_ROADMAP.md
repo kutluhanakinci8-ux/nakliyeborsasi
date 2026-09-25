@@ -46,10 +46,10 @@ sudo certbot certonly --webroot -w /var/www/certbot -d posta.lerta.com.tr
 
 ---
 
-## G3 — İletme
+## G3 — İletme & BCC (uygulandı)
 
-- API: `POST company/mail-inbox/messages/:id/forward`
-- UI: İlet düğmesi, alıcı ön doldurma `Fwd:` konu
+- API: `POST messages/:id/forward`, compose `cc`/`bcc`, reply `bcc`
+- UI: **İlet** + `f` kısayolu; yaz ekranında Cc/Bcc; yanıtta Bcc
 
 ---
 

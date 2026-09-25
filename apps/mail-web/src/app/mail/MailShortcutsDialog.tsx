@@ -9,6 +9,7 @@ const ROWS = [
   { keys: "e", action: "Arşivle (mesaj açıkken)" },
   { keys: "#", action: "Çöpe taşı (mesaj açıkken)" },
   { keys: "u", action: "Okunmadı işaretle (mesaj açıkken)" },
+  { keys: "f", action: "İlet (mesaj açıkken)" },
   { keys: "?", action: "Bu yardım penceresi" },
   { keys: "Esc", action: "Yaz penceresini / yardımı kapat" },
 ];

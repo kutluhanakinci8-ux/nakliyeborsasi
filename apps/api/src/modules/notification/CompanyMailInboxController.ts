@@ -25,6 +25,7 @@ import { MailMailboxComposeService } from "./MailMailboxComposeService";
 import { MailImapAccessService } from "./MailImapAccessService";
 import { ComposeMailRequestDto } from "./ComposeMailRequestDto";
 import { ReplyMailRequestDto } from "./ReplyMailRequestDto";
+import { ForwardMailRequestDto } from "./ForwardMailRequestDto";
 import { MailComposeDraftService } from "./MailComposeDraftService";
 import { MailComposePresetService } from "./MailComposePresetService";
 import { MailOrganizationStorageService } from "./MailOrganizationStorageService";
@@ -437,6 +438,8 @@ export class CompanyMailInboxController {
     const result = await this.mailMailboxComposeService.compose({
       organizationId: user.companyId,
       to: body.to,
+      cc: body.cc,
+      bcc: body.bcc,
       subject: body.subject,
       text: body.text,
       attachments: body.attachments,
@@ -455,6 +458,25 @@ export class CompanyMailInboxController {
       organizationId: user.companyId,
       inboundMessageId: messageId,
       text: body.text,
+      bcc: body.bcc,
+      attachments: body.attachments,
+    });
+    return { ok: true, ...result };
+  }
+
+  @Post("messages/:messageId/forward")
+  public async forward(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("messageId") messageId: string,
+    @Body() body: ForwardMailRequestDto,
+  ) {
+    this.assertMailInboxWriter(user);
+    const result = await this.mailMailboxComposeService.forward({
+      organizationId: user.companyId,
+      inboundMessageId: messageId,
+      to: body.to,
+      text: body.text,
+      includeOriginal: body.includeOriginal,
       attachments: body.attachments,
     });
     return { ok: true, ...result };

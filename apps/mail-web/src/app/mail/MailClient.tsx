@@ -21,6 +21,7 @@ import {
   bulkMarkUnread,
   bulkSetMessageMailboxFolder,
   replyMail,
+  forwardMail,
   searchInbox,
   sendDraft,
   setMessageMailboxFolder,
@@ -97,6 +98,11 @@ export function MailClient() {
   const [replyFiles, setReplyFiles] = useState<File[]>([]);
   const [composeOpen, setComposeOpen] = useState(false);
   const [composeTo, setComposeTo] = useState("");
+  const [composeCc, setComposeCc] = useState("");
+  const [composeBcc, setComposeBcc] = useState("");
+  const [composeShowCcBcc, setComposeShowCcBcc] = useState(false);
+  const [forwardMessageId, setForwardMessageId] = useState<string | null>(null);
+  const [replyBcc, setReplyBcc] = useState("");
   const [composeSubject, setComposeSubject] = useState("");
   const [composeText, setComposeText] = useState("");
   const [composeFiles, setComposeFiles] = useState<File[]>([]);
@@ -279,6 +285,7 @@ export function MailClient() {
           : undefined;
       await replyMail(accessToken, selectedId, {
         text: replyText.trim(),
+        bcc: replyBcc.trim() || undefined,
         attachments,
       });
       setToast("Yanıt gönderildi.");
@@ -341,7 +348,16 @@ export function MailClient() {
     if (!accessToken) {
       return;
     }
-    if (!composeTo.trim() || !composeSubject.trim() || !composeText.trim()) {
+    if (forwardMessageId) {
+      if (!composeTo.trim()) {
+        setComposeError("İletmek için alıcı (Kime) zorunlu.");
+        return;
+      }
+    } else if (
+      !composeTo.trim() ||
+      !composeSubject.trim() ||
+      !composeText.trim()
+    ) {
       setComposeError("Kime, konu ve mesaj zorunlu.");
       return;
     }
@@ -367,15 +383,29 @@ export function MailClient() {
             ? await Promise.all(composeFiles.map((f) => fileToAttachment(f)))
             : [];
         const attachments = [...composeStoredAttachments, ...fileAttachments];
-        await composeMail(accessToken, {
-          to: composeTo.trim(),
-          subject: composeSubject.trim(),
-          text: composeText,
-          attachments: attachments.length > 0 ? attachments : undefined,
-        });
+        if (forwardMessageId) {
+          await forwardMail(accessToken, forwardMessageId, {
+            to: composeTo.trim(),
+            text: composeText.trim() || undefined,
+            includeOriginal: true,
+            attachments: attachments.length > 0 ? attachments : undefined,
+          });
+        } else {
+          await composeMail(accessToken, {
+            to: composeTo.trim(),
+            cc: composeCc.trim() || undefined,
+            bcc: composeBcc.trim() || undefined,
+            subject: composeSubject.trim(),
+            text: composeText,
+            attachments: attachments.length > 0 ? attachments : undefined,
+          });
+        }
       }
       setComposeOpen(false);
+      setForwardMessageId(null);
       setComposeTo("");
+      setComposeCc("");
+      setComposeBcc("");
       setComposeSubject("");
       setComposeText("");
     setComposeFiles([]);
@@ -653,12 +683,29 @@ export function MailClient() {
 
   function resetCompose() {
     setEditingDraftId(null);
+    setForwardMessageId(null);
     setComposeTo("");
+    setComposeCc("");
+    setComposeBcc("");
+    setComposeShowCcBcc(false);
     setComposeSubject("");
     setComposeText("");
     setComposeFiles([]);
     setComposeStoredAttachments([]);
     setComposeError("");
+  }
+
+  function startForwardFromDetail() {
+    if (!detail) {
+      return;
+    }
+    resetCompose();
+    setForwardMessageId(detail.id);
+    const subj = detail.subject.trim();
+    setComposeSubject(
+      subj.toLowerCase().startsWith("fwd:") ? subj : `Fwd: ${subj}`,
+    );
+    setComposeOpen(true);
   }
 
   useMailKeyboardShortcuts({
@@ -687,6 +734,9 @@ export function MailClient() {
     },
     onMarkUnread: () => {
       void markCurrentUnread();
+    },
+    onForward: () => {
+      startForwardFromDetail();
     },
     onShowHelp: () => setShortcutsOpen(true),
     onEscape: () => {
@@ -1335,6 +1385,13 @@ export function MailClient() {
             </div>
             {view !== "sent" && view !== "trash" ? (
               <div className="mail-reply">
+                <input
+                  type="text"
+                  placeholder="Bcc (gizli kopya, virgülle ayırın)"
+                  value={replyBcc}
+                  onChange={(e) => setReplyBcc(e.target.value)}
+                  className="mail-reply-bcc"
+                />
                 <textarea
                   placeholder="Yanıt yazın…"
                   value={replyText}
@@ -1356,6 +1413,9 @@ export function MailClient() {
                 <button type="button" onClick={() => void sendReply()}>
                   Yanıtla
                 </button>
+                <button type="button" onClick={() => startForwardFromDetail()}>
+                  İlet
+                </button>
               </div>
             ) : null}
           </>
@@ -1373,17 +1433,53 @@ export function MailClient() {
             role="dialog"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2>{editingDraftId ? "Taslak" : "Yeni mesaj"}</h2>
+            <h2>
+              {forwardMessageId
+                ? "İlet"
+                : editingDraftId
+                  ? "Taslak"
+                  : "Yeni mesaj"}
+            </h2>
             <input
               placeholder="Kime"
               value={composeTo}
               onChange={(e) => setComposeTo(e.target.value)}
             />
-            <input
-              placeholder="Konu"
-              value={composeSubject}
-              onChange={(e) => setComposeSubject(e.target.value)}
-            />
+            {!forwardMessageId ? (
+              <button
+                type="button"
+                className="mail-compose-cc-toggle"
+                onClick={() => setComposeShowCcBcc((open) => !open)}
+              >
+                {composeShowCcBcc ? "Cc/Bcc gizle" : "Cc / Bcc"}
+              </button>
+            ) : null}
+            {!forwardMessageId && composeShowCcBcc ? (
+              <>
+                <input
+                  placeholder="Cc (virgülle ayırın)"
+                  value={composeCc}
+                  onChange={(e) => setComposeCc(e.target.value)}
+                />
+                <input
+                  placeholder="Bcc (virgülle ayırın)"
+                  value={composeBcc}
+                  onChange={(e) => setComposeBcc(e.target.value)}
+                />
+              </>
+            ) : null}
+            {forwardMessageId ? (
+              <p className="mail-compose-forward-hint">
+                Konu: <strong>{composeSubject}</strong> — orijinal metin
+                otomatik eklenir.
+              </p>
+            ) : (
+              <input
+                placeholder="Konu"
+                value={composeSubject}
+                onChange={(e) => setComposeSubject(e.target.value)}
+              />
+            )}
             <div className="compose-preset-row">
               <label>
                 Şablon
@@ -1424,7 +1520,11 @@ export function MailClient() {
               </label>
             </div>
             <textarea
-              placeholder="Mesaj"
+              placeholder={
+                forwardMessageId
+                  ? "Üst not (isteğe bağlı)…"
+                  : "Mesaj"
+              }
               rows={6}
               value={composeText}
               onChange={(e) => setComposeText(e.target.value)}
@@ -1463,13 +1563,15 @@ export function MailClient() {
               >
                 İptal
               </button>
-              <button
-                type="button"
-                disabled={sending}
-                onClick={() => void saveComposeDraft()}
-              >
-                Taslak kaydet
-              </button>
+              {!forwardMessageId ? (
+                <button
+                  type="button"
+                  disabled={sending}
+                  onClick={() => void saveComposeDraft()}
+                >
+                  Taslak kaydet
+                </button>
+              ) : null}
               <button
                 type="button"
                 disabled={sending}

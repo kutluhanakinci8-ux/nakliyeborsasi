@@ -434,6 +434,8 @@ export async function composeMail(
   accessToken: string,
   body: {
     to: string;
+    cc?: string;
+    bcc?: string;
     subject: string;
     text: string;
     attachments?: ComposeAttachment[];
@@ -448,11 +450,35 @@ export async function composeMail(
 export async function replyMail(
   accessToken: string,
   messageId: string,
-  body: { text: string; attachments?: ComposeAttachment[] },
+  body: {
+    text: string;
+    bcc?: string;
+    attachments?: ComposeAttachment[];
+  },
 ) {
   await apiFetch(
     accessToken,
     `company/mail-inbox/messages/${messageId}/reply`,
+    {
+      method: "POST",
+      body: JSON.stringify(body),
+    },
+  );
+}
+
+export async function forwardMail(
+  accessToken: string,
+  messageId: string,
+  body: {
+    to: string;
+    text?: string;
+    includeOriginal?: boolean;
+    attachments?: ComposeAttachment[];
+  },
+) {
+  await apiFetch(
+    accessToken,
+    `company/mail-inbox/messages/${messageId}/forward`,
     {
       method: "POST",
       body: JSON.stringify(body),

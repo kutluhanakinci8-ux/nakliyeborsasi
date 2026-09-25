@@ -28,6 +28,16 @@ export class ComposeMailRequestDto {
   @MaxLength(320)
   public to!: string;
 
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  public cc?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  public bcc?: string;
+
   @IsString()
   @MinLength(1)
   @MaxLength(500)
