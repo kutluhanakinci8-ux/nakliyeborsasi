@@ -103,6 +103,19 @@ export class MailBillingController {
     });
     return { message: "OK", ...result };
   }
+
+  @Post("checkout/enterprise")
+  @UseGuards(JwtAuthenticationGuard)
+  public async enterpriseCheckout(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: MailBillingCheckoutDto,
+  ) {
+    const result = await this.mailBillingService.createEnterpriseCheckout(user, {
+      successUrl: body.successUrl,
+      cancelUrl: body.cancelUrl,
+    });
+    return { message: "OK", ...result };
+  }
 }
 
 @Controller("webhooks/mail-billing")

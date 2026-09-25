@@ -8,10 +8,13 @@ import {
   fetchMailSubscription,
   isPlatformOperator,
   startCorporateCheckout,
+  startEnterpriseCheckout,
+  fetchMailBillingStatus,
 } from "@/lib/consoleApi";
 import { useConsoleSession } from "@/lib/session";
 
 const CORPORATE = "lerta_mail_corporate_tr";
+const ENTERPRISE = "lerta_mail_enterprise_tr";
 const PILOT = "lerta_mail_pilot_tr";
 
 export default function UpgradePage() {
@@ -20,6 +23,7 @@ export default function UpgradePage() {
   const [operator, setOperator] = useState(false);
   const [planCode, setPlanCode] = useState<string | null>(null);
   const [message, setMessage] = useState("");
+  const [enterpriseCheckoutOk, setEnterpriseCheckoutOk] = useState(false);
 
   useEffect(() => {
     if (!accessToken) {
@@ -30,6 +34,14 @@ export default function UpgradePage() {
       setOperator(await isPlatformOperator(accessToken));
       const sub = await fetchMailSubscription(accessToken);
       setPlanCode(sub.subscription.planCode);
+      try {
+        const billing = await fetchMailBillingStatus(accessToken);
+        setEnterpriseCheckoutOk(
+          billing.status.checkout.canStartEnterprise,
+        );
+      } catch {
+        setEnterpriseCheckoutOk(false);
+      }
     })();
   }, [accessToken, router]);
 
@@ -47,6 +59,23 @@ export default function UpgradePage() {
       setMessage(checkout.message ?? "Ödeme başlatılamadı.");
     } catch {
       setMessage("Ödeme başlatılamadı.");
+    }
+  }
+
+  async function payEnterprise() {
+    if (!accessToken) {
+      return;
+    }
+    setMessage("");
+    try {
+      const checkout = await startEnterpriseCheckout(accessToken);
+      if (checkout.url) {
+        window.location.href = checkout.url;
+        return;
+      }
+      setMessage(checkout.message ?? "Enterprise ödeme başlatılamadı.");
+    } catch {
+      setMessage("Enterprise ödeme başlatılamadı (STRIPE_MAIL_ENTERPRISE_PRICE_ID).");
     }
   }
 
@@ -69,7 +98,9 @@ export default function UpgradePage() {
           Aktif plan: <strong>{planCode}</strong>
           {planCode === CORPORATE
             ? " — zaten Kurumsal pakettesiniz."
-            : ""}
+            : planCode === ENTERPRISE
+              ? " — Enterprise aktif (white-label + API)."
+              : ""}
         </p>
       )}
       {message ? <p style={{ color: "#b45309" }}>{message}</p> : null}
@@ -92,6 +123,28 @@ export default function UpgradePage() {
           Domain sihirbazı
         </Link>
       </div>
+      {planCode !== ENTERPRISE ? (
+        <div className="card" style={{ marginTop: 16 }}>
+          <h2 style={{ marginTop: 0 }}>3 — Enterprise</h2>
+          <p style={{ color: "var(--muted)" }}>
+            White-label, Public API/webhook, yükseltilmiş kota. €149/ay · ₺1490/ay
+            (katalog).
+          </p>
+          <button
+            type="button"
+            className="btn"
+            disabled={!enterpriseCheckoutOk}
+            onClick={() => void payEnterprise()}
+          >
+            Öde ve Enterprise&apos;a geç
+          </button>
+          {!enterpriseCheckoutOk ? (
+            <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 8 }}>
+              Stripe: <code>STRIPE_MAIL_ENTERPRISE_PRICE_ID</code> gerekli.
+            </p>
+          ) : null}
+        </div>
+      ) : null}
       <p style={{ marginTop: 24 }}>
         <Link href="/dashboard">← Özet</Link>
       </p>

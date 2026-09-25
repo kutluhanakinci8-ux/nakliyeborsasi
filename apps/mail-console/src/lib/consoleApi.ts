@@ -920,7 +920,8 @@ export async function fetchMailBillingStatus(accessToken: string) {
     status: {
       provider: string;
       checkout: {
-        canStart: boolean;
+        canStartCorporate: boolean;
+        canStartEnterprise: boolean;
         blockers: string[];
       };
       stripe: {
@@ -929,6 +930,8 @@ export async function fetchMailBillingStatus(accessToken: string) {
         webhookConfigured: boolean;
         corporatePriceConfigured: boolean;
         corporatePriceValid: boolean | null;
+        enterprisePriceConfigured: boolean;
+        enterprisePriceValid: boolean | null;
         apiReachable: boolean | null;
         apiError: string | null;
       };
@@ -937,6 +940,7 @@ export async function fetchMailBillingStatus(accessToken: string) {
         fallbackCheckoutUrlConfigured: boolean;
         callbackUrl: string;
         corporatePriceTry: string;
+        enterprisePriceTry: string;
       };
     };
   }>(accessToken, "company/mail-billing/status");
@@ -947,7 +951,20 @@ export async function startCorporateCheckout(accessToken: string) {
     provider: string;
     url: string | null;
     message?: string;
+    planCode?: string;
   }>(accessToken, "company/mail-billing/checkout/corporate", {
+    method: "POST",
+    body: JSON.stringify({}),
+  });
+}
+
+export async function startEnterpriseCheckout(accessToken: string) {
+  return apiFetch<{
+    provider: string;
+    url: string | null;
+    message?: string;
+    planCode?: string;
+  }>(accessToken, "company/mail-billing/checkout/enterprise", {
     method: "POST",
     body: JSON.stringify({}),
   });

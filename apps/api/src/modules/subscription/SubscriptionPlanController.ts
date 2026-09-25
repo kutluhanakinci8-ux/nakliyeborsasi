@@ -47,6 +47,10 @@ export class SubscriptionPlanController {
       mailStorageLimitGb: number;
       mailMaxAttachmentMb: number;
       customDomainAllowed: boolean;
+      mailWhiteLabelAllowed: boolean;
+      mailPublicApiAllowed: boolean;
+      monthlyPriceTry: number;
+      annualPriceTry: number;
     }[];
   } {
     const plans = this.subscriptionPlanCatalog
@@ -78,6 +82,10 @@ export class SubscriptionPlanController {
                 10,
             ) / 10,
           customDomainAllowed: display?.customDomainAllowed ?? false,
+          mailWhiteLabelAllowed: display?.mailWhiteLabelAllowed ?? false,
+          mailPublicApiAllowed: display?.mailPublicApiAllowed ?? false,
+          monthlyPriceTry: display?.monthlyPriceTry ?? 0,
+          annualPriceTry: display?.annualPriceTry ?? 0,
         };
       });
     return { message: "OK", plans };

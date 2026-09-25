@@ -16,6 +16,9 @@ export type SubscriptionPlanDisplayMeta = {
   customDomainAllowed?: boolean;
   mailWhiteLabelAllowed?: boolean;
   mailPublicApiAllowed?: boolean;
+  /** Vitrin / iyzico (A7) — aylık TRY gösterimi */
+  monthlyPriceTry?: number;
+  annualPriceTry?: number;
 };
 
 const DISPLAY: readonly SubscriptionPlanDisplayMeta[] = [
@@ -54,6 +57,7 @@ const DISPLAY: readonly SubscriptionPlanDisplayMeta[] = [
     mailStorageLimitBytes: 2 * 1024 * 1024 * 1024,
     mailMaxAttachmentBytes: 2 * 1024 * 1024,
     customDomainAllowed: false,
+    monthlyPriceTry: 0,
   },
   {
     planCode: "lerta_mail_corporate_tr",
@@ -68,6 +72,8 @@ const DISPLAY: readonly SubscriptionPlanDisplayMeta[] = [
     mailStorageLimitBytes: 25 * 1024 * 1024 * 1024,
     mailMaxAttachmentBytes: 10 * 1024 * 1024,
     customDomainAllowed: true,
+    monthlyPriceTry: 490,
+    annualPriceTry: 4900,
   },
   {
     planCode: "lerta_mail_enterprise_tr",
@@ -83,6 +89,8 @@ const DISPLAY: readonly SubscriptionPlanDisplayMeta[] = [
     customDomainAllowed: true,
     mailWhiteLabelAllowed: true,
     mailPublicApiAllowed: true,
+    monthlyPriceTry: 1490,
+    annualPriceTry: 14900,
   },
 ];
 

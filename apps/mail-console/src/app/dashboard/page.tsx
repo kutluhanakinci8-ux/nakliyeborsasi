@@ -155,7 +155,7 @@ export default function DashboardPage() {
 
       try {
         const billingStatus = await fetchMailBillingStatus(accessToken);
-        setCheckoutCanStart(billingStatus.status.checkout.canStart);
+        setCheckoutCanStart(billingStatus.status.checkout.canStartCorporate);
         setCheckoutBlockers(billingStatus.status.checkout.blockers);
       } catch {
         setCheckoutCanStart(false);

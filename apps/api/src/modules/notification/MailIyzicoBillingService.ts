@@ -1,7 +1,10 @@
 import { BadRequestException, Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { AuthenticatedUserContext } from "@nakliyeborsasi/core";
-import { LERTA_MAIL_CORPORATE_PLAN } from "./MailBillingService";
+import {
+  LERTA_MAIL_CORPORATE_PLAN,
+  LERTA_MAIL_ENTERPRISE_PLAN,
+} from "./MailBillingService";
 import { MailIyzicoApiClient } from "./MailIyzicoApiClient";
 import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
 
@@ -25,6 +28,14 @@ export class MailIyzicoBillingService {
     user: AuthenticatedUserContext,
     params: { successUrl?: string; cancelUrl?: string },
   ): Promise<{ provider: "iyzico"; url: string | null; message?: string }> {
+    return this.createPlanCheckout(user, LERTA_MAIL_CORPORATE_PLAN, params);
+  }
+
+  public async createPlanCheckout(
+    user: AuthenticatedUserContext,
+    planCode: string,
+    params: { successUrl?: string; cancelUrl?: string },
+  ): Promise<{ provider: "iyzico"; url: string | null; message?: string }> {
     const client = this.createClient();
     if (!client) {
       const pageUrl = this.configService
@@ -41,17 +52,24 @@ export class MailIyzicoBillingService {
         params.successUrl ??
           `${this.consoleBase()}/dashboard?billing=success`,
       );
-      const url = `${pageUrl}${pageUrl.includes("?") ? "&" : "?"}organizationId=${encodeURIComponent(user.companyId)}&plan=${LERTA_MAIL_CORPORATE_PLAN}&successUrl=${success}`;
+      const url = `${pageUrl}${pageUrl.includes("?") ? "&" : "?"}organizationId=${encodeURIComponent(user.companyId)}&plan=${encodeURIComponent(planCode)}&successUrl=${success}`;
       return { provider: "iyzico", url };
     }
 
-    const price = this.configService
-      .get<string>("IYZICO_CORPORATE_PRICE_TRY")
-      ?.trim() || "490.00";
+    const price =
+      planCode === LERTA_MAIL_ENTERPRISE_PLAN
+        ? this.configService.get<string>("IYZICO_ENTERPRISE_PRICE_TRY")?.trim() ||
+          "1490.00"
+        : this.configService.get<string>("IYZICO_CORPORATE_PRICE_TRY")?.trim() ||
+          "490.00";
+    const basketName =
+      planCode === LERTA_MAIL_ENTERPRISE_PLAN
+        ? "Lerta Mail Enterprise"
+        : "Lerta Mail Kurumsal";
     const callbackUrl =
       this.configService.get<string>("IYZICO_CALLBACK_URL")?.trim() ||
       `${this.apiPublicBase()}/webhooks/mail-billing/iyzico`;
-    const conversationId = `mail-${user.companyId}-${Date.now()}`;
+    const conversationId = `mail-${user.companyId}-${planCode}-${Date.now()}`;
 
     const init = await client.initializeCheckoutForm({
       locale: "tr",
@@ -89,8 +107,8 @@ export class MailIyzicoBillingService {
       },
       basketItems: [
         {
-          id: LERTA_MAIL_CORPORATE_PLAN,
-          name: "Lerta Mail Kurumsal",
+          id: planCode,
+          name: basketName,
           category1: "SaaS",
           itemType: "VIRTUAL",
           price,
@@ -137,10 +155,11 @@ export class MailIyzicoBillingService {
     }
 
     const organizationId = this.resolveOrganizationId(detail);
+    const planCode = this.resolvePlanCode(detail);
     if (detail.paymentStatus === "SUCCESS" && organizationId) {
       await this.mailSaasSubscriptionService.activateMailPlanForBilling(
         organizationId,
-        LERTA_MAIL_CORPORATE_PLAN,
+        planCode,
       );
       return {
         ok: true,
@@ -154,6 +173,27 @@ export class MailIyzicoBillingService {
       paymentStatus: detail.paymentStatus,
       organizationId: organizationId ?? undefined,
     };
+  }
+
+  private resolvePlanCode(detail: {
+    basketId?: string;
+    conversationId?: string;
+    basketItems?: { id?: string }[];
+  }): string {
+    const fromItem = detail.basketItems?.[0]?.id;
+    if (
+      fromItem === LERTA_MAIL_ENTERPRISE_PLAN ||
+      fromItem === LERTA_MAIL_CORPORATE_PLAN
+    ) {
+      return fromItem;
+    }
+    const fromConversation = detail.conversationId?.match(
+      /^mail-[0-9a-f-]{36}-(lerta_mail_[^-]+)-/i,
+    );
+    if (fromConversation?.[1]) {
+      return fromConversation[1];
+    }
+    return LERTA_MAIL_CORPORATE_PLAN;
   }
 
   private resolveOrganizationId(

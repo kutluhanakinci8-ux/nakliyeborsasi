@@ -316,8 +316,10 @@ export default function OperatorPage() {
                       : "—"}{" "}
                   · webhook{" "}
                   {billingStatus.stripe.webhookConfigured ? "OK" : "eksik"} ·
-                  price id{" "}
+                  kurumsal price{" "}
                   {billingStatus.stripe.corporatePriceConfigured ? "OK" : "eksik"}
+                  · enterprise price{" "}
+                  {billingStatus.stripe.enterprisePriceConfigured ? "OK" : "eksik"}
                 </>
               ) : null}
             </li>

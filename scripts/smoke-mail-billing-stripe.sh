@@ -14,7 +14,7 @@ echo "== GET mail-billing/status =="
 STATUS_JSON="$(curl -fsS -H "Authorization: Bearer $JWT" "$API_BASE/company/mail-billing/status")"
 echo "$STATUS_JSON" | python3 -m json.tool
 
-CAN_START="$(echo "$STATUS_JSON" | python3 -c "import sys,json; print(json.load(sys.stdin)['status']['checkout']['canStart'])")"
+CAN_START="$(echo "$STATUS_JSON" | python3 -c "import sys,json; c=json.load(sys.stdin)['status']['checkout']; print(c.get('canStartCorporate', c.get('canStart', False)))")"
 if [[ "$CAN_START" != "True" ]]; then
   echo "Checkout başlatılamaz — blockers yukarıda. VPS: apply-mail-billing-env-vps.sh" >&2
   exit 2
