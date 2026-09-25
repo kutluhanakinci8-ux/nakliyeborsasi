@@ -7,7 +7,10 @@ import { ConsoleShell } from "@/components/ConsoleShell";
 import { MAIL_WEB_URL } from "@/lib/apiConfig";
 import {
   fetchCustomDomainBundle,
+  cancelMailSubscription,
+  fetchMailBillingLifecycle,
   fetchMailBillingStatus,
+  resumeMailSubscription,
   fetchMailIdentity,
   fetchMailSubscription,
   isPlatformOperator,
@@ -54,6 +57,13 @@ export default function DashboardPage() {
   const [customDomainStatus, setCustomDomainStatus] = useState<string | null>(
     null,
   );
+  const [billingLifecycle, setBillingLifecycle] = useState<{
+    statusLabelTr: string;
+    detailTr: string;
+    cancelAtPeriodEnd: boolean;
+    inGrace: boolean;
+    billingProvider: string;
+  } | null>(null);
 
   async function refreshSubscription(token: string): Promise<string | null> {
     try {
@@ -121,6 +131,13 @@ export default function DashboardPage() {
       } catch {
         setCustomDomain(null);
         setCustomDomainStatus(null);
+      }
+
+      try {
+        const life = await fetchMailBillingLifecycle(accessToken);
+        setBillingLifecycle(life.lifecycle);
+      } catch {
+        setBillingLifecycle(null);
       }
 
       try {
@@ -340,6 +357,82 @@ export default function DashboardPage() {
               <li key={line}>{line}</li>
             ))}
           </ul>
+        ) : null}
+        {billingLifecycle ? (
+          <div
+            style={{
+              marginBottom: 12,
+              padding: 12,
+              borderRadius: 8,
+              background: billingLifecycle.inGrace
+                ? "#fff7ed"
+                : billingLifecycle.cancelAtPeriodEnd
+                  ? "#f8fafc"
+                  : "transparent",
+              border: billingLifecycle.inGrace
+                ? "1px solid #fdba74"
+                : "1px solid var(--border)",
+            }}
+          >
+            <strong>{billingLifecycle.statusLabelTr}</strong>
+            <p style={{ margin: "6px 0 0", fontSize: 14, color: "var(--muted)" }}>
+              {billingLifecycle.detailTr}
+            </p>
+            {billingLifecycle.billingProvider === "stripe" ? (
+              <div style={{ marginTop: 10 }}>
+                {billingLifecycle.cancelAtPeriodEnd ? (
+                  <button
+                    type="button"
+                    className="btn secondary"
+                    onClick={() => {
+                      void (async () => {
+                        if (!accessToken) {
+                          return;
+                        }
+                        try {
+                          const res = await resumeMailSubscription(accessToken);
+                          setBillingLifecycle(res.lifecycle);
+                          setPlanMessage("Abonelik yenileme tekrar açıldı.");
+                        } catch {
+                          setPlanMessage("Yenileme açılamadı.");
+                        }
+                      })();
+                    }}
+                  >
+                    İptali geri al
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn secondary"
+                    onClick={() => {
+                      if (
+                        !window.confirm(
+                          "Abonelik dönem sonunda iptal edilecek. Emin misiniz?",
+                        )
+                      ) {
+                        return;
+                      }
+                      void (async () => {
+                        if (!accessToken) {
+                          return;
+                        }
+                        try {
+                          const res = await cancelMailSubscription(accessToken);
+                          setBillingLifecycle(res.lifecycle);
+                          setPlanMessage("Dönem sonunda iptal planlandı.");
+                        } catch {
+                          setPlanMessage("İptal isteği gönderilemedi.");
+                        }
+                      })();
+                    }}
+                  >
+                    Dönem sonunda iptal
+                  </button>
+                )}
+              </div>
+            ) : null}
+          </div>
         ) : null}
         {planMessage ? (
           <p style={{ color: "var(--success)", fontWeight: 600 }}>{planMessage}</p>

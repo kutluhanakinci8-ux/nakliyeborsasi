@@ -1,6 +1,8 @@
 import {
   BadRequestException,
   ForbiddenException,
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
@@ -15,6 +17,7 @@ import {
 import { SubscriptionPlanCatalog } from "../subscription/SubscriptionPlanCatalog";
 import { SubscriptionPlanDisplayCatalog } from "../subscription/SubscriptionPlanDisplayCatalog";
 import { CompanySubscriptionPersistenceService } from "../subscription/CompanySubscriptionPersistenceService";
+import { MailSubscriptionLifecycleService } from "./MailSubscriptionLifecycleService";
 
 @Injectable()
 export class MailSaasSubscriptionService {
@@ -23,6 +26,8 @@ export class MailSaasSubscriptionService {
     private readonly companySubscriptionPersistenceService: CompanySubscriptionPersistenceService,
     @InjectRepository(MailSenderIdentityEntity)
     private readonly senderRepository: Repository<MailSenderIdentityEntity>,
+    @Inject(forwardRef(() => MailSubscriptionLifecycleService))
+    private readonly mailSubscriptionLifecycleService: MailSubscriptionLifecycleService,
   ) {}
 
   public listMailPlans() {
@@ -191,6 +196,9 @@ export class MailSaasSubscriptionService {
     await this.companySubscriptionPersistenceService.assignActivePlan(
       organizationId,
       planCode,
+    );
+    await this.mailSubscriptionLifecycleService.recordManualTrialSelection(
+      organizationId,
     );
     return this.getOrganizationMailPlan(organizationId);
   }

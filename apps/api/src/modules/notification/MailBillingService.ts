@@ -9,6 +9,7 @@ import Stripe from "stripe";
 import { AuthenticatedUserContext, CompanyRoleCode } from "@nakliyeborsasi/core";
 import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
 import { MailIyzicoBillingService } from "./MailIyzicoBillingService";
+import { MailSubscriptionLifecycleService } from "./MailSubscriptionLifecycleService";
 
 export const LERTA_MAIL_CORPORATE_PLAN = "lerta_mail_corporate_tr";
 
@@ -43,6 +44,7 @@ export class MailBillingService {
     private readonly configService: ConfigService,
     private readonly mailSaasSubscriptionService: MailSaasSubscriptionService,
     private readonly mailIyzicoBillingService: MailIyzicoBillingService,
+    private readonly mailSubscriptionLifecycleService: MailSubscriptionLifecycleService,
   ) {}
 
   public async createCorporateCheckout(
@@ -53,7 +55,7 @@ export class MailBillingService {
     url: string | null;
     message?: string;
   }> {
-    this.assertBillingRole(user);
+    this.assertBillingRoleForUser(user);
     const provider =
       this.configService.get<string>("MAIL_BILLING_PROVIDER")?.trim() ||
       "stripe";
@@ -165,23 +167,66 @@ export class MailBillingService {
       throw new BadRequestException("Geçersiz Stripe imzası.");
     }
 
-    if (
-      event.type === "checkout.session.completed" ||
-      event.type === "invoice.paid"
-    ) {
+    if (event.type === "checkout.session.completed") {
+      const session = event.data.object as Stripe.Checkout.Session;
+      const organizationId =
+        session.metadata?.organizationId ??
+        session.client_reference_id ??
+        null;
+      const planCode =
+        session.metadata?.planCode ?? LERTA_MAIL_CORPORATE_PLAN;
+      const subscriptionRef = session.subscription;
+      const subscriptionId =
+        typeof subscriptionRef === "string"
+          ? subscriptionRef
+          : subscriptionRef?.id ?? null;
+      if (organizationId) {
+        await this.mailSubscriptionLifecycleService.recordStripeCheckoutCompleted(
+          {
+            organizationId,
+            subscriptionId,
+            planCode,
+          },
+        );
+      } else {
+        this.logger.warn(
+          "Stripe checkout.session.completed: organizationId bulunamadı.",
+        );
+      }
+    }
+
+    if (event.type === "invoice.paid") {
       const organizationId = await this.extractOrganizationId(stripe, event);
       const planCode =
         this.extractPlanCode(event) ?? LERTA_MAIL_CORPORATE_PLAN;
       if (organizationId) {
+        await this.mailSubscriptionLifecycleService.recordStripeInvoicePaid(
+          organizationId,
+        );
         await this.mailSaasSubscriptionService.activateMailPlanForBilling(
           organizationId,
           planCode,
         );
-      } else {
-        this.logger.warn(
-          `Stripe ${event.type}: organizationId bulunamadı, plan atanmadı.`,
+      }
+    }
+
+    if (event.type === "invoice.payment_failed") {
+      const organizationId = await this.extractOrganizationId(stripe, event);
+      if (organizationId) {
+        await this.mailSubscriptionLifecycleService.recordStripePaymentFailed(
+          organizationId,
         );
       }
+    }
+
+    if (
+      event.type === "customer.subscription.updated" ||
+      event.type === "customer.subscription.deleted"
+    ) {
+      const subscription = event.data.object as Stripe.Subscription;
+      await this.mailSubscriptionLifecycleService.applyStripeSubscriptionEvent(
+        subscription,
+      );
     }
 
     return { ok: true };
@@ -315,7 +360,10 @@ export class MailBillingService {
         null
       );
     }
-    if (event.type === "invoice.paid") {
+    if (
+      event.type === "invoice.paid" ||
+      event.type === "invoice.payment_failed"
+    ) {
       const invoice = event.data.object as Stripe.Invoice;
       if (invoice.metadata?.organizationId) {
         return invoice.metadata.organizationId;
@@ -354,7 +402,7 @@ export class MailBillingService {
     return null;
   }
 
-  private assertBillingRole(user: AuthenticatedUserContext): void {
+  public assertBillingRoleForUser(user: AuthenticatedUserContext): void {
     if (
       !user.roleCodes.some(
         (role) =>

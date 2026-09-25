@@ -15,11 +15,15 @@
 | `IYZICO_CORPORATE_PRICE_TRY` | Checkout tutarı (örn. `490.00`) |
 | `IYZICO_CALLBACK_URL` | Opsiyonel; varsayılan `{MAIL_API_PUBLIC_URL}/webhooks/mail-billing/iyzico` |
 | `IYZICO_CHECKOUT_PAGE_URL` | API anahtarı yoksa: harici ödeme sayfası base URL |
+| `MAIL_BILLING_GRACE_DAYS` | Ödeme başarısız sonrası Kurumsal ek süre (varsayılan `7`) |
 
 ## API
 
 - `GET /api/v1/company/mail-billing/status` (JWT) → yapılandırma özeti (test modu, webhook, iyzico callback URL)
 - `POST /api/v1/company/mail-billing/checkout/corporate` (JWT) → `{ url, provider }`
+- `GET /api/v1/company/mail-billing/lifecycle` (JWT) → abonelik durumu / grace
+- `POST /api/v1/company/mail-billing/cancel` (JWT, owner/billing admin) → dönem sonu iptal veya manuel pilot düşüş
+- `POST /api/v1/company/mail-billing/resume` (JWT) → Stripe `cancel_at_period_end` kaldırma
 - `POST /api/v1/webhooks/mail-billing/stripe` (Stripe imzası, raw body)
 - `POST` veya `GET /api/v1/webhooks/mail-billing/iyzico` — iyzico `token` → plan aktivasyonu, ardından konsola yönlendirme
 

@@ -14,6 +14,7 @@ import { JwtAuthenticationGuard } from "../auth/JwtAuthenticationGuard";
 import { AuthenticatedUserParam } from "../auth/AuthenticatedUserParam";
 import { AuthenticatedUserContext } from "@nakliyeborsasi/core";
 import { MailBillingService } from "./MailBillingService";
+import { MailSubscriptionLifecycleService } from "./MailSubscriptionLifecycleService";
 import { IsOptional, IsString, IsUrl, MaxLength } from "class-validator";
 
 class MailBillingCheckoutDto {
@@ -37,7 +38,10 @@ class IyzicoCallbackDto {
 
 @Controller("company/mail-billing")
 export class MailBillingController {
-  public constructor(private readonly mailBillingService: MailBillingService) {}
+  public constructor(
+    private readonly mailBillingService: MailBillingService,
+    private readonly mailSubscriptionLifecycleService: MailSubscriptionLifecycleService,
+  ) {}
 
   @Get("status")
   @UseGuards(JwtAuthenticationGuard)
@@ -47,6 +51,44 @@ export class MailBillingController {
     void user;
     const status = await this.mailBillingService.getBillingStatus();
     return { message: "OK", status };
+  }
+
+  @Get("lifecycle")
+  @UseGuards(JwtAuthenticationGuard)
+  public async lifecycle(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    const lifecycle =
+      await this.mailSubscriptionLifecycleService.getLifecycleView(
+        user.companyId,
+      );
+    return { message: "OK", lifecycle };
+  }
+
+  @Post("cancel")
+  @UseGuards(JwtAuthenticationGuard)
+  public async cancelAtPeriodEnd(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    this.mailBillingService.assertBillingRoleForUser(user);
+    const lifecycle =
+      await this.mailSubscriptionLifecycleService.requestCancelAtPeriodEnd(
+        user,
+      );
+    return { message: "OK", lifecycle };
+  }
+
+  @Post("resume")
+  @UseGuards(JwtAuthenticationGuard)
+  public async resumeSubscription(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    this.mailBillingService.assertBillingRoleForUser(user);
+    const lifecycle =
+      await this.mailSubscriptionLifecycleService.requestResumeSubscription(
+        user,
+      );
+    return { message: "OK", lifecycle };
   }
 
   @Post("checkout/corporate")

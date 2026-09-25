@@ -261,6 +261,41 @@ export async function fetchMailSendRate(accessToken: string) {
   );
 }
 
+export type MailBillingLifecycle = {
+  status: string;
+  billingProvider: string;
+  cancelAtPeriodEnd: boolean;
+  currentPeriodEnd: string | null;
+  graceEndsAt: string | null;
+  inGrace: boolean;
+  canSendMail: boolean;
+  statusLabelTr: string;
+  detailTr: string;
+};
+
+export async function fetchMailBillingLifecycle(accessToken: string) {
+  return apiFetch<{ lifecycle: MailBillingLifecycle }>(
+    accessToken,
+    "company/mail-billing/lifecycle",
+  );
+}
+
+export async function cancelMailSubscription(accessToken: string) {
+  return apiFetch<{ lifecycle: MailBillingLifecycle }>(
+    accessToken,
+    "company/mail-billing/cancel",
+    { method: "POST", body: JSON.stringify({}) },
+  );
+}
+
+export async function resumeMailSubscription(accessToken: string) {
+  return apiFetch<{ lifecycle: MailBillingLifecycle }>(
+    accessToken,
+    "company/mail-billing/resume",
+    { method: "POST", body: JSON.stringify({}) },
+  );
+}
+
 export async function fetchMailBillingStatus(accessToken: string) {
   return apiFetch<{
     status: {
