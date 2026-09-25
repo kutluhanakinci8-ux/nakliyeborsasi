@@ -129,6 +129,20 @@ export default function OperatorPage() {
           <li>48s sonra eski selector kaldır</li>
         </ol>
       </div>
+      <div className="card" style={{ marginBottom: 16 }}>
+        <h2 style={{ marginTop: 0 }}>Yedekleme / DR (E7)</h2>
+        <p style={{ margin: "0 0 8px", color: "var(--muted)", fontSize: "0.9rem" }}>
+          RPO ~24h / RTO ~4h (pilot). Günlük: PostgreSQL dump +{" "}
+          <code>backup-mail-vps-snapshot.sh</code>. Detay:{" "}
+          <code>docs/MAIL_BACKUP_DISASTER_RECOVERY.md</code>
+        </p>
+        <ul style={{ margin: 0, paddingLeft: 20, fontSize: "0.9rem" }}>
+          <li>Maildir: <code>MAIL_IMAP_MAILDIR_ROOT</code> (vars. /var/mail/vhosts)</li>
+          <li>OpenDKIM: <code>/etc/opendkim</code> tarball</li>
+          <li>Restore: <code>restore-maildir-from-archive.sh … --confirm</code></li>
+          <li>Aylık restore drill (staging)</li>
+        </ul>
+      </div>
       {flash ? (
         <p style={{ color: "var(--success)", fontWeight: 600 }}>{flash}</p>
       ) : null}

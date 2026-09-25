@@ -9,6 +9,7 @@
 | `SMTP_FROM` | `notifications@mail.lerta.tr` |
 | `MAIL_PLATFORM_*` | DNS checklist (SPF IP, DKIM TXT) |
 | SPF/DKIM rotasyon | [MAIL_SPF_DKIM_ROTATION_RUNBOOK.md](./MAIL_SPF_DKIM_ROTATION_RUNBOOK.md) |
+| Yedekleme / DR | [MAIL_BACKUP_DISASTER_RECOVERY.md](./MAIL_BACKUP_DISASTER_RECOVERY.md) |
 
 Üçüncü taraf ESP token’ları ve webhook URL’leri **yok**.
 

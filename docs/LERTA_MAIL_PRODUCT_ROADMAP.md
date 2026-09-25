@@ -100,7 +100,7 @@
 | E4 | Denetim kaydı (tenant) | `GET …/audit`, konsol /audit, `MAIL_TEAM_*` — **uygulandı** |
 | E5 | 2FA (TOTP) yönetim + webmail | `auth/totp`, konsol /security, org zorunluluk — **uygulandı** |
 | E6 | SPF/DKIM rotasyon runbook | `MAIL_SPF_DKIM_ROTATION_RUNBOOK.md`, `verify-custom-domain-mail-dns.sh` — **uygulandı** |
-| E7 | Yedekleme / felaket kurtarma | RPO/RTO tanımı, Maildir yedek |
+| E7 | Yedekleme / felaket kurtarma | `MAIL_BACKUP_DISASTER_RECOVERY.md`, backup/restore scriptleri — **uygulandı** |
 
 ---
 
