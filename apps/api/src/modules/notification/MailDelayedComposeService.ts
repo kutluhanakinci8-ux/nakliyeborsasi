@@ -12,6 +12,7 @@ import {
   MailDelayedStoredPayload,
 } from "../../infrastructure/database/entities/MailDelayedComposeEntity";
 import { MailMailboxComposeService } from "./MailMailboxComposeService";
+import { MailComposeDraftService } from "./MailComposeDraftService";
 
 const MAX_DELAY_SECONDS = 10;
 const DEFAULT_DELAY_SECONDS = 5;
@@ -22,6 +23,7 @@ export class MailDelayedComposeService {
     @InjectRepository(MailDelayedComposeEntity)
     private readonly delayedRepository: Repository<MailDelayedComposeEntity>,
     private readonly mailMailboxComposeService: MailMailboxComposeService,
+    private readonly mailComposeDraftService: MailComposeDraftService,
   ) {}
 
   public async schedule(
@@ -139,6 +141,26 @@ export class MailDelayedComposeService {
         html: send.html,
         attachments: send.attachments,
       });
+    }
+    if (send.kind === "draft_send") {
+      const payload = await this.mailComposeDraftService.getForSend(
+        organizationId,
+        send.userId,
+        send.draftId,
+      );
+      const result = await this.mailMailboxComposeService.compose({
+        organizationId,
+        to: payload.to,
+        subject: payload.subject,
+        text: payload.text,
+        attachments: payload.attachments,
+      });
+      await this.mailComposeDraftService.deleteAfterSend(
+        organizationId,
+        send.userId,
+        send.draftId,
+      );
+      return result;
     }
     throw new BadRequestException("Geçersiz bekleyen gönderim türü.");
   }

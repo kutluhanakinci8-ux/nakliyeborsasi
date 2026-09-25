@@ -40,6 +40,12 @@ export class MailInboxRuleEntity {
   @Column({ type: "boolean", default: false })
   public actionArchive!: boolean;
 
+  @Column({ type: "boolean", default: false })
+  public actionMarkRead!: boolean;
+
+  @Column({ type: "boolean", default: false })
+  public actionTrash!: boolean;
+
   @CreateDateColumn({ type: "timestamptz" })
   public createdAt!: Date;
 

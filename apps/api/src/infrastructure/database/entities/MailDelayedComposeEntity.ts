@@ -41,6 +41,11 @@ export type MailDelayedSendPayload =
       text?: string;
       includeOriginal?: boolean;
       attachments?: MailDelayedComposeAttachment[];
+    }
+  | {
+      kind: "draft_send";
+      userId: string;
+      draftId: string;
     };
 
 export type MailDelayedStoredPayload =

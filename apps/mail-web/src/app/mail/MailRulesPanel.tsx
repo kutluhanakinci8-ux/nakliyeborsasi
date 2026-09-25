@@ -25,6 +25,8 @@ export function MailRulesPanel({ accessToken }: Props) {
   const [subjectContains, setSubjectContains] = useState("");
   const [actionStar, setActionStar] = useState(false);
   const [actionArchive, setActionArchive] = useState(false);
+  const [actionMarkRead, setActionMarkRead] = useState(false);
+  const [actionTrash, setActionTrash] = useState(false);
   const [actionFolderId, setActionFolderId] = useState("");
 
   async function reload() {
@@ -49,6 +51,8 @@ export function MailRulesPanel({ accessToken }: Props) {
         subjectContains: subjectContains.trim() || undefined,
         actionStar,
         actionArchive,
+        actionMarkRead,
+        actionTrash,
         actionCustomFolderId: actionFolderId || null,
       });
       setName("");
@@ -56,6 +60,8 @@ export function MailRulesPanel({ accessToken }: Props) {
       setSubjectContains("");
       setActionStar(false);
       setActionArchive(false);
+      setActionMarkRead(false);
+      setActionTrash(false);
       setActionFolderId("");
       await reload();
     } catch (err) {
@@ -134,6 +140,8 @@ export function MailRulesPanel({ accessToken }: Props) {
                     }`
                   : null}
                 {rule.actionArchive ? " · Arşivle" : null}
+                {rule.actionMarkRead ? " · Okundu" : null}
+                {rule.actionTrash ? " · Çöp" : null}
               </div>
               <button
                 type="button"
@@ -181,6 +189,22 @@ export function MailRulesPanel({ accessToken }: Props) {
           onChange={(e) => setActionArchive(e.target.checked)}
         />
         Arşivle
+      </label>
+      <label>
+        <input
+          type="checkbox"
+          checked={actionMarkRead}
+          onChange={(e) => setActionMarkRead(e.target.checked)}
+        />
+        Okundu işaretle
+      </label>
+      <label>
+        <input
+          type="checkbox"
+          checked={actionTrash}
+          onChange={(e) => setActionTrash(e.target.checked)}
+        />
+        Çöpe taşı
       </label>
       <select
         value={actionFolderId}
