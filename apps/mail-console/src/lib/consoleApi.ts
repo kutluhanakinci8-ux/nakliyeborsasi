@@ -413,6 +413,45 @@ export type MailPlatformMonitoring = {
   };
 };
 
+export type MailPlatformKpi = {
+  collectedAt: string;
+  summaryTr: string;
+  tenants: {
+    total: number;
+    suspended: number;
+    withVerifiedCustomDomain: number;
+    onPaidMailPlan: number;
+    activeOutboundLast7Days: number;
+  };
+  domains: {
+    customTotal: number;
+    customVerified: number;
+    verificationRatePercent: number;
+  };
+  outbox: {
+    pending: number;
+    failed: number;
+    sentLast24h: number;
+  };
+  billing: {
+    grace: number;
+    pastDue: number;
+    trialing: number;
+    active: number;
+  };
+  suppressions: {
+    bounceTotal: number;
+    addedLast7Days: number;
+  };
+};
+
+export async function fetchMailPlatformKpi(accessToken: string) {
+  return apiFetch<{ kpi: MailPlatformKpi }>(
+    accessToken,
+    "platform-admin/mail/kpi",
+  );
+}
+
 export async function fetchMailPlatformMonitoring(accessToken: string) {
   return apiFetch<{ monitoring: MailPlatformMonitoring }>(
     accessToken,

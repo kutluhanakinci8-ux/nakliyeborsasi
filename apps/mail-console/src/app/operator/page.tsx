@@ -6,6 +6,8 @@ import { ConsoleShell } from "@/components/ConsoleShell";
 import {
   fetchMailBillingStatus,
   fetchMailPlatformMonitoring,
+  fetchMailPlatformKpi,
+  type MailPlatformKpi,
   fetchOperatorDomains,
   fetchOperatorTenants,
   isPlatformOperator,
@@ -40,6 +42,7 @@ export default function OperatorPage() {
   const [monitoring, setMonitoring] = useState<MailPlatformMonitoring | null>(
     null,
   );
+  const [kpi, setKpi] = useState<MailPlatformKpi | null>(null);
 
   async function reload() {
     if (!accessToken) {
@@ -78,6 +81,12 @@ export default function OperatorPage() {
         setMonitoring(mon.monitoring);
       } catch {
         setMonitoring(null);
+      }
+      try {
+        const kpiData = await fetchMailPlatformKpi(accessToken);
+        setKpi(kpiData.kpi);
+      } catch {
+        setKpi(null);
       }
     })();
   }, [accessToken, router]);
@@ -119,6 +128,40 @@ export default function OperatorPage() {
   return (
     <ConsoleShell operator={true}>
       <h1 style={{ marginTop: 0 }}>Operatör — mail domainleri</h1>
+      {kpi ? (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <h2 style={{ marginTop: 0 }}>Ürün KPI (özet)</h2>
+          <p style={{ margin: "0 0 12px", fontSize: "0.95rem" }}>{kpi.summaryTr}</p>
+          <ul style={{ margin: 0, paddingLeft: 20, fontSize: "0.9rem" }}>
+            <li>
+              Tenant: {kpi.tenants.total} (askıda {kpi.tenants.suspended}) · ödeme
+              planı {kpi.tenants.onPaidMailPlan}
+            </li>
+            <li>
+              Doğrulanmış özel domain: {kpi.tenants.withVerifiedCustomDomain} ·
+              platform oranı {kpi.domains.verificationRatePercent}%
+            </li>
+            <li>
+              7 gün outbound aktif tenant: {kpi.tenants.activeOutboundLast7Days}
+            </li>
+            <li>
+              Outbox: bekleyen {kpi.outbox.pending}, başarısız {kpi.outbox.failed},
+              24s gönderim {kpi.outbox.sentLast24h}
+            </li>
+            <li>
+              Faturalama: aktif {kpi.billing.active}, grace {kpi.billing.grace},
+              gecikmiş {kpi.billing.pastDue}
+            </li>
+            <li>
+              Bounce suppression: {kpi.suppressions.bounceTotal} (7g +{" "}
+              {kpi.suppressions.addedLast7Days})
+            </li>
+          </ul>
+          <p style={{ margin: "8px 0 0", fontSize: 12, color: "var(--muted)" }}>
+            API: <code>GET platform-admin/mail/kpi</code>
+          </p>
+        </div>
+      ) : null}
       <div className="card" style={{ marginBottom: 16 }}>
         <h2 style={{ marginTop: 0 }}>SPF / DKIM rotasyon (E6)</h2>
         <p style={{ margin: "0 0 8px", color: "var(--muted)", fontSize: "0.9rem" }}>

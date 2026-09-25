@@ -18,6 +18,8 @@ Yanıt özet alanları:
 
 Konsol: **Operatör** sayfası — «İzleme (F1)» kartı.
 
+Ürün KPI özet: `GET platform-admin/mail/kpi` — [MAIL_OPERATOR_KPI.md](./MAIL_OPERATOR_KPI.md).
+
 Genel sağlık (load balancer): `GET /health` → `{ status: "ok" }`.
 
 Halka açık durum (F2): `GET /api/v1/public/lerta-mail/status` — [MAIL_PUBLIC_STATUS_PAGE.md](./MAIL_PUBLIC_STATUS_PAGE.md).

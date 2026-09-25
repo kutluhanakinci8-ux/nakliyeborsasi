@@ -140,7 +140,7 @@
 | Bounce oranı (platform) | suppression | < %2 |
 | Destek talebi / tenant | manuel | düşüş |
 
-Operatör konsoluna ileride **mini KPI kartı** (Faz B7 ile).
+Operatör konsolu **mini KPI kartı** — `platform-admin/mail/kpi`, `MAIL_OPERATOR_KPI.md` — **uygulandı**.
 
 ---
 

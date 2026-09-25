@@ -108,6 +108,7 @@ import { MailPublicApiController } from "./MailPublicApiController";
 import { MailAddressAliasEntity } from "../../infrastructure/database/entities/MailAddressAliasEntity";
 import { MailAddressAliasTargetEntity } from "../../infrastructure/database/entities/MailAddressAliasTargetEntity";
 import { MailAddressAliasService } from "./MailAddressAliasService";
+import { MailPlatformKpiService } from "./MailPlatformKpiService";
 import { PublicMailStatusController } from "./PublicMailStatusController";
 import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
 import { MailBillingService } from "./MailBillingService";
@@ -234,6 +235,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     MailOrganizationWebhookDispatcherService,
     MailPublicApiGuard,
     MailAddressAliasService,
+    MailPlatformKpiService,
     MailSaasSubscriptionService,
     MailIyzicoBillingService,
     MailBillingService,

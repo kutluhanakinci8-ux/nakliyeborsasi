@@ -28,6 +28,7 @@ import { PlatformMailTenantAdminService } from "./PlatformMailTenantAdminService
 import { MailDmarcAggregateService } from "./MailDmarcAggregateService";
 import { IngestDmarcReportRequestDto } from "./IngestDmarcReportRequestDto";
 import { MailPlatformMonitoringService } from "./MailPlatformMonitoringService";
+import { MailPlatformKpiService } from "./MailPlatformKpiService";
 
 @Controller("platform-admin/mail")
 @UseGuards(JwtAuthenticationGuard, PlatformAdminGuard)
@@ -44,7 +45,13 @@ export class PlatformMailIdentityAdminController {
     private readonly platformMailTenantAdminService: PlatformMailTenantAdminService,
     private readonly mailDmarcAggregateService: MailDmarcAggregateService,
     private readonly mailPlatformMonitoringService: MailPlatformMonitoringService,
+    private readonly mailPlatformKpiService: MailPlatformKpiService,
   ) {}
+
+  @Get("kpi")
+  public async kpi() {
+    return { kpi: await this.mailPlatformKpiService.buildSnapshot() };
+  }
 
   @Get("monitoring")
   public async monitoring() {
