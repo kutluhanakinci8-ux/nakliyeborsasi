@@ -4,6 +4,7 @@ import { Repository } from "typeorm";
 import { MailSenderIdentityEntity } from "../../infrastructure/database/entities/MailSenderIdentityEntity";
 import { MailDomainEntity } from "../../infrastructure/database/entities/MailDomainEntity";
 import { NotificationConfigurationService } from "./NotificationConfigurationService";
+import { MailOrganizationBrandingService } from "./MailOrganizationBrandingService";
 
 @Injectable()
 export class MailSenderResolutionService {
@@ -13,6 +14,7 @@ export class MailSenderResolutionService {
     @InjectRepository(MailDomainEntity)
     private readonly domainRepository: Repository<MailDomainEntity>,
     private readonly notificationConfigurationService: NotificationConfigurationService,
+    private readonly mailOrganizationBrandingService: MailOrganizationBrandingService,
   ) {}
 
   public async resolveFromForOutbox(
@@ -36,8 +38,14 @@ export class MailSenderResolutionService {
       return { from: fallback, tenantOrganizationId: null };
     }
     const email = `${identity.localPart}@${identity.mailDomain.domain}`.toLowerCase();
-    const from = identity.displayName?.trim()
-      ? `${identity.displayName.trim()} <${email}>`
+    const brandingName =
+      await this.mailOrganizationBrandingService.resolveDefaultFromDisplayName(
+        companyId,
+      );
+    const displayName =
+      brandingName?.trim() || identity.displayName?.trim() || "";
+    const from = displayName
+      ? `${displayName} <${email}>`
       : email;
     return { from, tenantOrganizationId: companyId };
   }

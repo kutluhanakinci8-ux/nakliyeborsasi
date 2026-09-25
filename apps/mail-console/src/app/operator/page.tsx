@@ -155,6 +155,17 @@ export default function OperatorPage() {
         </ul>
       </div>
       <div className="card" style={{ marginBottom: 16 }}>
+        <h2 style={{ marginTop: 0 }}>White-label (F4)</h2>
+        <p style={{ margin: 0, fontSize: "0.9rem", color: "var(--muted)" }}>
+          Plan <code>lerta_mail_enterprise_tr</code> → tenant{" "}
+          <code>GET/PATCH company/mail-identity/branding</code>, konsol{" "}
+          <code>/branding</code>. Logo https, From adı, Lerta şablon gizleme.
+        </p>
+        <p style={{ margin: "8px 0 0", fontSize: 12, color: "var(--muted)" }}>
+          <code>docs/MAIL_WHITE_LABEL_ENTERPRISE.md</code>
+        </p>
+      </div>
+      <div className="card" style={{ marginBottom: 16 }}>
         <h2 style={{ marginTop: 0 }}>Ölçek / worker (F3)</h2>
         <p style={{ margin: "0 0 8px", color: "var(--muted)", fontSize: "0.9rem" }}>
           <code>LERTA_MAIL_RUNTIME_ROLE</code>: <strong>all</strong> (tek VPS) ·{" "}

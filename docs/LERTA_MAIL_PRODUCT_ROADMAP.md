@@ -111,7 +111,7 @@
 | F1 | İzleme: API, kuyruk, postfix, disk, cert süresi | `platform-admin/mail/monitoring`, konsol operatör, `MAIL_PLATFORM_MONITORING.md` — **uygulandı** |
 | F2 | Durum sayfası (`status.lerta.com.tr` veya vitrin altı) | `/durum`, `public/lerta-mail/status` — **uygulandı** |
 | F3 | Çok VPS / ayrı mail worker (yük büyüdüğünde) | `LERTA_MAIL_RUNTIME_ROLE`, `MAIL_MULTI_VPS_SCALE.md` — **uygulandı** |
-| F4 | White-label (logo, From adı) Enterprise |
+| F4 | White-label (logo, From adı) Enterprise | `lerta_mail_enterprise_tr`, konsol /branding, `MAIL_WHITE_LABEL_ENTERPRISE.md` — **uygulandı** |
 | F5 | Public API / webhook (müşteri entegrasyonu) |
 
 ---

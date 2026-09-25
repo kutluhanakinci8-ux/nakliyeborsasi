@@ -14,6 +14,7 @@ export type SubscriptionPlanDisplayMeta = {
   /** Tek ek üst sınırı (bayt). */
   mailMaxAttachmentBytes?: number;
   customDomainAllowed?: boolean;
+  mailWhiteLabelAllowed?: boolean;
 };
 
 const DISPLAY: readonly SubscriptionPlanDisplayMeta[] = [
@@ -66,6 +67,20 @@ const DISPLAY: readonly SubscriptionPlanDisplayMeta[] = [
     mailStorageLimitBytes: 25 * 1024 * 1024 * 1024,
     mailMaxAttachmentBytes: 10 * 1024 * 1024,
     customDomainAllowed: true,
+  },
+  {
+    planCode: "lerta_mail_enterprise_tr",
+    displayName: "Enterprise",
+    tagline: "White-label e-posta, logo, From adı ve yükseltilmiş kota.",
+    monthlyPriceEur: 149,
+    annualPriceEur: 1490,
+    productLine: "lerta_mail",
+    mailMaxSendsPerHour: 2000,
+    mailMaxMailboxes: 100,
+    mailStorageLimitBytes: 100 * 1024 * 1024 * 1024,
+    mailMaxAttachmentBytes: 25 * 1024 * 1024,
+    customDomainAllowed: true,
+    mailWhiteLabelAllowed: true,
   },
 ];
 

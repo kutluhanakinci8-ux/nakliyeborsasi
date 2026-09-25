@@ -97,6 +97,8 @@ import { MailConsoleAccessGuard } from "./MailConsoleAccessGuard";
 import { MailProductTotpPolicyGuard } from "./MailProductTotpPolicyGuard";
 import { MailPlatformMonitoringService } from "./MailPlatformMonitoringService";
 import { MailRuntimeRoleService } from "./MailRuntimeRoleService";
+import { MailOrganizationBrandingEntity } from "../../infrastructure/database/entities/MailOrganizationBrandingEntity";
+import { MailOrganizationBrandingService } from "./MailOrganizationBrandingService";
 import { PublicMailStatusController } from "./PublicMailStatusController";
 import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
 import { MailBillingService } from "./MailBillingService";
@@ -141,6 +143,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
       MailComposePresetEntity,
       MailDmarcAggregateReportEntity,
       MailOrganizationDeletionRequestEntity,
+      MailOrganizationBrandingEntity,
       CompanyMailTeamInviteEntity,
       MailOrganizationBillingStateEntity,
       MailOrganizationOperatorStateEntity,
@@ -212,6 +215,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     MailProductTotpPolicyGuard,
     MailPlatformMonitoringService,
     MailRuntimeRoleService,
+    MailOrganizationBrandingService,
     MailSaasSubscriptionService,
     MailIyzicoBillingService,
     MailBillingService,

@@ -53,6 +53,13 @@ export class SubscriptionPlanCatalog {
         laneAnalyticsHistoryDays: 0,
       }),
       new SubscriptionPlanDefinition({
+        planCode: "lerta_mail_enterprise_tr",
+        tierCode: SubscriptionTierCode.Enterprise,
+        includedModules: [SubscriptionModuleCode.LertaMail],
+        maxConcurrentSearchTabs: 0,
+        laneAnalyticsHistoryDays: 0,
+      }),
+      new SubscriptionPlanDefinition({
         planCode: "forwarder_enterprise_tr_ua",
         tierCode: SubscriptionTierCode.Enterprise,
         includedModules: [

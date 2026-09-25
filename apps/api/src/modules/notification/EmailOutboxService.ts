@@ -13,10 +13,8 @@ import { EmailDeliveryService } from "./EmailDeliveryService";
 import { MailSenderResolutionService } from "./MailSenderResolutionService";
 import { MailOrganizationSendRateService } from "./MailOrganizationSendRateService";
 import { MailTenantSuspensionService } from "./MailTenantSuspensionService";
-import {
-  appendTenantTrustFooter,
-  resolveTenantReplyToAddress,
-} from "./MailTenantEmailBranding";
+import { resolveTenantReplyToAddress } from "./MailTenantEmailBranding";
+import { MailOrganizationBrandingService } from "./MailOrganizationBrandingService";
 import { CompanyEntity } from "../../infrastructure/database/entities/CompanyEntity";
 
 @Injectable()
@@ -36,6 +34,7 @@ export class EmailOutboxService {
     private readonly mailSenderResolutionService: MailSenderResolutionService,
     private readonly mailOrganizationSendRateService: MailOrganizationSendRateService,
     private readonly mailTenantSuspensionService: MailTenantSuspensionService,
+    private readonly mailOrganizationBrandingService: MailOrganizationBrandingService,
     @InjectRepository(CompanyEntity)
     private readonly companyRepository: Repository<CompanyEntity>,
   ) {}
@@ -145,10 +144,15 @@ export class EmailOutboxService {
           where: { id: resolved.tenantOrganizationId },
         });
         const fromEmail = extractEmailAddress(resolved.from);
-        htmlBody = appendTenantTrustFooter(htmlBody, {
-          organizationName: company?.legalName ?? "Kurumsal hesap",
-          fromAddress: fromEmail,
-        });
+        htmlBody =
+          await this.mailOrganizationBrandingService.wrapTransactionalBodies(
+            resolved.tenantOrganizationId,
+            htmlBody,
+            {
+              organizationName: company?.legalName ?? "Kurumsal hesap",
+              fromAddress: fromEmail,
+            },
+          );
         textBody = `${textBody}\n\n— ${company?.legalName ?? "Kurumsal hesap"} adına ${fromEmail} (${resolveTenantReplyToAddress()} yanıt).`;
       }
       const htmlWithTracking = await this.emailHtmlTrackingService.applyTracking(

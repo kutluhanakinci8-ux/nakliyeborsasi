@@ -26,6 +26,7 @@ const LABELS: Record<string, string> = {
   [MailIdentityAuditAction.TeamInviteAccepted]: "Ekip daveti kabul edildi",
   [MailIdentityAuditAction.TeamMemberRoleChanged]: "Ekip rolü güncellendi",
   [MailIdentityAuditAction.TeamMemberRemoved]: "Ekip üyesi çıkarıldı",
+  [MailIdentityAuditAction.BrandingUpdated]: "White-label marka ayarları",
   [MailIdentityAuditAction.SecurityRequireTotpUpdated]:
     "2FA zorunluluğu güncellendi",
   [MailIdentityAuditAction.SecurityTotpEnabled]: "TOTP etkinleştirildi",
@@ -63,6 +64,8 @@ export function mailAuditSummaryTr(
       return fromAddress ?? displayName ?? "Yeni gönderen";
     case MailIdentityAuditAction.DisplayNameUpdated:
       return displayName ? `Ad: ${displayName}` : "Görünen ad";
+    case MailIdentityAuditAction.BrandingUpdated:
+      return "Logo / From / şablon ayarları güncellendi";
     case MailIdentityAuditAction.SuppressionAdded:
     case MailIdentityAuditAction.SuppressionRemoved:
       return email ? `Adres: ${email}` : "";

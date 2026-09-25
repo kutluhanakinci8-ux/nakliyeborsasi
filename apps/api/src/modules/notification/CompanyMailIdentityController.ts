@@ -44,6 +44,8 @@ import {
 } from "./CompanyMailIdentityRequestDto";
 import { MailPilotOnboardingService } from "./MailPilotOnboardingService";
 import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
+import { MailOrganizationBrandingService } from "./MailOrganizationBrandingService";
+import { UpdateMailBrandingRequestDto } from "./MailBrandingRequestDto";
 import {
   assertMailConsoleAccess,
   canManageMailDomain,
@@ -72,6 +74,7 @@ export class CompanyMailIdentityController {
     private readonly mailIdentityAuditService: MailIdentityAuditService,
     private readonly mailSaasSubscriptionService: MailSaasSubscriptionService,
     private readonly mailPilotOnboardingService: MailPilotOnboardingService,
+    private readonly mailOrganizationBrandingService: MailOrganizationBrandingService,
   ) {}
 
   @Post("pilot/quick-start")
@@ -606,6 +609,44 @@ export class CompanyMailIdentityController {
       );
     }
     return { ok: removed };
+  }
+
+  @Get("branding")
+  public async getBranding(@AuthenticatedUserParam() user: AuthenticatedUserContext) {
+    assertMailConsoleAccess(user);
+    const branding = await this.mailOrganizationBrandingService.getSnapshot(
+      user.companyId,
+    );
+    return { message: "OK", branding };
+  }
+
+  @Patch("branding")
+  public async updateBranding(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: UpdateMailBrandingRequestDto,
+  ) {
+    this.assertMailIdentityManager(user);
+    const branding = await this.mailOrganizationBrandingService.updateBranding(
+      user.companyId,
+      {
+        logoUrl: body.logoUrl,
+        emailBrandTitle: body.emailBrandTitle,
+        defaultFromDisplayName: body.defaultFromDisplayName,
+        hidePlatformEmailChrome: body.hidePlatformEmailChrome,
+      },
+    );
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.BrandingUpdated,
+      {
+        organizationId: user.companyId,
+        logoUrl: branding.logoUrl,
+        emailBrandTitle: branding.emailBrandTitle,
+        hidePlatformEmailChrome: branding.hidePlatformEmailChrome,
+      },
+      "/company/mail-identity/branding",
+    );
+    return { message: "OK", branding };
   }
 
   @Patch("display-name")

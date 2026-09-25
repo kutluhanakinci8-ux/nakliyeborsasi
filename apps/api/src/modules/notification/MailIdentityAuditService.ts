@@ -40,6 +40,7 @@ export const MailIdentityAuditAction = {
   SecurityRequireTotpUpdated: "MAIL_SECURITY_REQUIRE_TOTP_UPDATED",
   SecurityTotpEnabled: "MAIL_SECURITY_TOTP_ENABLED",
   SecurityTotpDisabled: "MAIL_SECURITY_TOTP_DISABLED",
+  BrandingUpdated: "MAIL_BRANDING_UPDATED",
 } as const;
 
 export type MailTenantAuditLogDto = {

@@ -451,7 +451,41 @@ export type MailPlanView = {
   mailStorageLimitGb?: number;
   mailMaxAttachmentMb?: number;
   customDomainAllowed: boolean;
+  mailWhiteLabelAllowed?: boolean;
 };
+
+export type MailBrandingSnapshot = {
+  allowed: boolean;
+  planCode: string | null;
+  logoUrl: string | null;
+  emailBrandTitle: string | null;
+  defaultFromDisplayName: string | null;
+  hidePlatformEmailChrome: boolean;
+  detailTr: string;
+};
+
+export async function fetchMailBranding(accessToken: string) {
+  return apiFetch<{ branding: MailBrandingSnapshot }>(
+    accessToken,
+    "company/mail-identity/branding",
+  );
+}
+
+export async function updateMailBranding(
+  accessToken: string,
+  body: {
+    logoUrl?: string | null;
+    emailBrandTitle?: string | null;
+    defaultFromDisplayName?: string | null;
+    hidePlatformEmailChrome?: boolean;
+  },
+) {
+  return apiFetch<{ branding: MailBrandingSnapshot }>(
+    accessToken,
+    "company/mail-identity/branding",
+    { method: "PATCH", body: JSON.stringify(body) },
+  );
+}
 
 export type MailStorageQuota = {
   usedBytes: number;
