@@ -27,6 +27,7 @@ import { MailImapAccessService } from "./MailImapAccessService";
 import { PlatformMailTenantAdminService } from "./PlatformMailTenantAdminService";
 import { MailDmarcAggregateService } from "./MailDmarcAggregateService";
 import { IngestDmarcReportRequestDto } from "./IngestDmarcReportRequestDto";
+import { MailPlatformMonitoringService } from "./MailPlatformMonitoringService";
 
 @Controller("platform-admin/mail")
 @UseGuards(JwtAuthenticationGuard, PlatformAdminGuard)
@@ -42,7 +43,15 @@ export class PlatformMailIdentityAdminController {
     private readonly mailImapAccessService: MailImapAccessService,
     private readonly platformMailTenantAdminService: PlatformMailTenantAdminService,
     private readonly mailDmarcAggregateService: MailDmarcAggregateService,
+    private readonly mailPlatformMonitoringService: MailPlatformMonitoringService,
   ) {}
+
+  @Get("monitoring")
+  public async monitoring() {
+    return {
+      monitoring: await this.mailPlatformMonitoringService.buildSnapshot(),
+    };
+  }
 
   @Post("dmarc/ingest")
   public async ingestDmarcReport(@Body() body: IngestDmarcReportRequestDto) {

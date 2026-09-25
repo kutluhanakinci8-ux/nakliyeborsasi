@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ConsoleShell } from "@/components/ConsoleShell";
 import {
   fetchMailBillingStatus,
+  fetchMailPlatformMonitoring,
   fetchOperatorDomains,
   fetchOperatorTenants,
   isPlatformOperator,
@@ -12,6 +13,7 @@ import {
   operatorUnsuspendTenant,
   operatorVerifyDomainDns,
   type MailOperatorTenantRow,
+  type MailPlatformMonitoring,
 } from "@/lib/consoleApi";
 import { useConsoleSession } from "@/lib/session";
 
@@ -35,6 +37,9 @@ export default function OperatorPage() {
   >(null);
   const [tenants, setTenants] = useState<MailOperatorTenantRow[]>([]);
   const [tenantBusyId, setTenantBusyId] = useState<string | null>(null);
+  const [monitoring, setMonitoring] = useState<MailPlatformMonitoring | null>(
+    null,
+  );
 
   async function reload() {
     if (!accessToken) {
@@ -67,6 +72,12 @@ export default function OperatorPage() {
         setBillingStatus(billing.status);
       } catch {
         setBillingStatus(null);
+      }
+      try {
+        const mon = await fetchMailPlatformMonitoring(accessToken);
+        setMonitoring(mon.monitoring);
+      } catch {
+        setMonitoring(null);
       }
     })();
   }, [accessToken, router]);
@@ -143,6 +154,39 @@ export default function OperatorPage() {
           <li>Aylık restore drill (staging)</li>
         </ul>
       </div>
+      {monitoring ? (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <h2 style={{ marginTop: 0 }}>İzleme (F1)</h2>
+          <p style={{ margin: "0 0 8px" }}>
+            Genel:{" "}
+            <strong
+              style={{
+                color:
+                  monitoring.overallStatus === "ok"
+                    ? "var(--success)"
+                    : monitoring.overallStatus === "critical"
+                      ? "#b91c1c"
+                      : "#b45309",
+              }}
+            >
+              {monitoring.overallStatus}
+            </strong>
+            {" · "}
+            API uptime {Math.floor(monitoring.api.uptimeSeconds / 60)} dk
+          </p>
+          <ul style={{ margin: 0, paddingLeft: 20, fontSize: "0.9rem" }}>
+            <li>Outbox: {monitoring.outbox.detailTr}</li>
+            <li>SMTP: {monitoring.smtp.detailTr}</li>
+            <li>Postfix: {monitoring.postfixQueue.detailTr}</li>
+            <li>Disk: {monitoring.disk.detailTr}</li>
+            <li>TLS: {monitoring.tlsCertificates.detailTr}</li>
+          </ul>
+          <p style={{ margin: "8px 0 0", fontSize: 12, color: "var(--muted)" }}>
+            API: <code>GET platform-admin/mail/monitoring</code> ·{" "}
+            <code>docs/MAIL_PLATFORM_MONITORING.md</code>
+          </p>
+        </div>
+      ) : null}
       {flash ? (
         <p style={{ color: "var(--success)", fontWeight: 600 }}>{flash}</p>
       ) : null}

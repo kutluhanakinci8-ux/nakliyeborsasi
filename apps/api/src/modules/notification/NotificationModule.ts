@@ -95,6 +95,7 @@ import { MailOrganizationPrivacyService } from "./MailOrganizationPrivacyService
 import { MailOrganizationSecurityService } from "./MailOrganizationSecurityService";
 import { MailConsoleAccessGuard } from "./MailConsoleAccessGuard";
 import { MailProductTotpPolicyGuard } from "./MailProductTotpPolicyGuard";
+import { MailPlatformMonitoringService } from "./MailPlatformMonitoringService";
 import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
 import { MailBillingService } from "./MailBillingService";
 import { MailIyzicoBillingService } from "./MailIyzicoBillingService";
@@ -206,6 +207,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     MailOrganizationSecurityService,
     MailConsoleAccessGuard,
     MailProductTotpPolicyGuard,
+    MailPlatformMonitoringService,
     MailSaasSubscriptionService,
     MailIyzicoBillingService,
     MailBillingService,

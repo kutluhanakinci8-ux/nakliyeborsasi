@@ -108,7 +108,7 @@
 
 | # | İş |
 |---|-----|
-| F1 | İzleme: API, kuyruk, postfix, disk, cert süresi |
+| F1 | İzleme: API, kuyruk, postfix, disk, cert süresi | `platform-admin/mail/monitoring`, konsol operatör, `MAIL_PLATFORM_MONITORING.md` — **uygulandı** |
 | F2 | Durum sayfası (`status.lerta.com.tr` veya vitrin altı) |
 | F3 | Çok VPS / ayrı mail worker (yük büyüdüğünde) |
 | F4 | White-label (logo, From adı) Enterprise |

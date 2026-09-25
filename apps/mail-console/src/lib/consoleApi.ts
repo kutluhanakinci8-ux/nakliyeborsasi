@@ -381,6 +381,39 @@ export async function fetchOperatorDomains(accessToken: string) {
   );
 }
 
+export type MailPlatformMonitoring = {
+  collectedAt: string;
+  overallStatus: "ok" | "warning" | "critical" | "unknown";
+  api: { status: string; uptimeSeconds: number };
+  outbox: {
+    status: string;
+    pending: number;
+    failed: number;
+    detailTr: string;
+    lastDrainAt: string | null;
+    lastDrainError: string | null;
+  };
+  smtp: { status: string; detailTr: string };
+  postfixQueue: { status: string; messageCount: number | null; detailTr: string };
+  disk: {
+    status: string;
+    mounts: { path: string; usedPercent: number; freeGb: number }[];
+    detailTr: string;
+  };
+  tlsCertificates: {
+    status: string;
+    certs: { path: string; daysRemaining: number; expiresAt: string }[];
+    detailTr: string;
+  };
+};
+
+export async function fetchMailPlatformMonitoring(accessToken: string) {
+  return apiFetch<{ monitoring: MailPlatformMonitoring }>(
+    accessToken,
+    "platform-admin/mail/monitoring",
+  );
+}
+
 export async function isPlatformOperator(accessToken: string): Promise<boolean> {
   try {
     await fetchOperatorDomains(accessToken);
