@@ -668,14 +668,38 @@ export async function fetchMailInboxBranding(accessToken: string) {
   );
 }
 
+export type MailDelayedSendResult = {
+  ok: true;
+  delayed: true;
+  pendingId: string;
+  sendAt: string;
+};
+
 export type ComposeMailResult =
   | { ok: true; sentId: string; smtpMessageId: string | null }
-  | {
-      ok: true;
-      delayed: true;
-      pendingId: string;
-      sendAt: string;
-    };
+  | MailDelayedSendResult;
+
+export type MailInboxPreferences = {
+  dailyDigestEnabled: boolean;
+};
+
+export async function fetchInboxPreferences(accessToken: string) {
+  return apiFetch<{ preferences: MailInboxPreferences }>(
+    accessToken,
+    "company/mail-inbox/preferences",
+  );
+}
+
+export async function updateInboxPreferences(
+  accessToken: string,
+  body: Partial<MailInboxPreferences>,
+) {
+  return apiFetch<{ preferences: MailInboxPreferences }>(
+    accessToken,
+    "company/mail-inbox/preferences",
+    { method: "PATCH", body: JSON.stringify(body) },
+  );
+}
 
 export async function composeMail(
   accessToken: string,
@@ -712,16 +736,15 @@ export async function replyMail(
     text: string;
     bcc?: string;
     attachments?: ComposeAttachment[];
+    delaySeconds?: number;
   },
 ) {
-  await apiFetch(
-    accessToken,
-    `company/mail-inbox/messages/${messageId}/reply`,
-    {
-      method: "POST",
-      body: JSON.stringify(body),
-    },
-  );
+  return apiFetch<
+    { ok: true; sentId: string; smtpMessageId: string | null } | MailDelayedSendResult
+  >(accessToken, `company/mail-inbox/messages/${messageId}/reply`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
 }
 
 export async function forwardMail(
@@ -732,16 +755,15 @@ export async function forwardMail(
     text?: string;
     includeOriginal?: boolean;
     attachments?: ComposeAttachment[];
+    delaySeconds?: number;
   },
 ) {
-  await apiFetch(
-    accessToken,
-    `company/mail-inbox/messages/${messageId}/forward`,
-    {
-      method: "POST",
-      body: JSON.stringify(body),
-    },
-  );
+  return apiFetch<
+    { ok: true; sentId: string; smtpMessageId: string | null } | MailDelayedSendResult
+  >(accessToken, `company/mail-inbox/messages/${messageId}/forward`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
 }
 
 export async function fetchDrafts(accessToken: string) {
