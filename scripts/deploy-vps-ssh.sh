@@ -8,6 +8,10 @@ VPS_HOST="${VPS_HOST:-168.231.109.27}"
 VPS_USER="${VPS_USER:-root}"
 VPS_INSTALL_DIR="${VPS_INSTALL_DIR:-/var/www/nakliyeborsasi}"
 VPS_BRANCH="${VPS_BRANCH:-main}"
+# Eski agent ortam değişkeni VPS'i yanlış branch'e çekmesin.
+if [[ "${VPS_BRANCH}" == "cursor/own-mail-platform-519e" ]]; then
+  VPS_BRANCH=main
+fi
 
 SSH_BASE_OPTS=(
   -o StrictHostKeyChecking=accept-new

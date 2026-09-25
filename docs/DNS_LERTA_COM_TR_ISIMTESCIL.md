@@ -8,10 +8,12 @@
 |-----|------|--------|
 | A | `posta` | `168.231.109.27` |
 | A | `yonetim` | `168.231.109.27` |
+| A | `kurumsal` | `168.231.109.27` |
 | A | `mail` | `168.231.109.27` |
 | A | `kullanici` | `168.231.109.27` |
 
 - Webmail UI: **https://posta.lerta.com.tr**
+- Kurumsal vitrin (www cutover öncesi): **https://kurumsal.lerta.com.tr**
 - `www` / kök → U88 (dokunmayın)
 
 ## Platform gönderim (`notifications@mail.lerta.com.tr`)
