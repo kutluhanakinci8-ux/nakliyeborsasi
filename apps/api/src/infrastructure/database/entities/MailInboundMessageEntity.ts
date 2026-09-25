@@ -23,6 +23,9 @@ export class MailInboundMessageEntity {
   public snippet!: string | null;
 
   @Column({ type: "text", nullable: true })
+  public bodyText!: string | null;
+
+  @Column({ type: "text", nullable: true })
   public rawMimePath!: string | null;
 
   @Column({ type: "timestamptz", nullable: true })

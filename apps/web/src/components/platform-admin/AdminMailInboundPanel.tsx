@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   PlatformAdminApiClient,
+  type InboundRoutingSnapshot,
   type MailInboundMessageRow,
 } from "../../lib/PlatformAdminApiClient";
 import { useWebSession } from "../../context/WebSessionProvider";
@@ -16,6 +17,7 @@ export function AdminMailInboundPanel() {
   const [subject, setSubject] = useState("C1 spike test");
   const [text, setText] = useState("Pilot inbound mesajı — outbox ile karışmaz.");
   const [toast, setToast] = useState("");
+  const [routing, setRouting] = useState<InboundRoutingSnapshot | null>(null);
 
   const refresh = useCallback(async () => {
     if (!accessToken) {
@@ -23,9 +25,12 @@ export function AdminMailInboundPanel() {
     }
     setLoading(true);
     try {
-      setMessages(
-        await PlatformAdminApiClient.fetchMailInboundMessages(accessToken),
-      );
+      const [msgs, route] = await Promise.all([
+        PlatformAdminApiClient.fetchMailInboundMessages(accessToken),
+        PlatformAdminApiClient.fetchInboundRouting(accessToken),
+      ]);
+      setMessages(msgs);
+      setRouting(route);
     } finally {
       setLoading(false);
     }
@@ -59,13 +64,34 @@ export function AdminMailInboundPanel() {
   return (
     <div className="pa-mail-inbound">
       <section className="pa-panel">
-        <h2 className="pa-panel-title">Faz C1 — Gelen posta (spike)</h2>
+        <h2 className="pa-panel-title">Faz C — Gelen posta</h2>
         <p className="pa-panel-lead">
-          Inbound webhook <code>POST /api/v1/mail/inbound/webhook</code> (secret
-          header). Postfix pipe ve MX planı:{" "}
-          <code>docs/EMAIL_FAZ_C_C1_INBOUND_SPIKE.md</code>. Outbox bildirimleri
-          burada listelenmez.
+          C1 webhook + C2 Postfix <code>virtual_alias_maps</code> ve org webmail
+          (<code>/hesap/organizasyon#org-gelen-kutusu</code>). Detay:{" "}
+          <code>docs/EMAIL_FAZ_C_C2_WEBMAIL_INBOUND.md</code>
         </p>
+        {routing ? (
+          <div style={{ marginBottom: "0.75rem" }}>
+            <p className="module-hint">
+              MX domainler: {routing.inboundDomains.join(", ")} —{" "}
+              {routing.entries.length} alias
+            </p>
+            <button
+              type="button"
+              className="pa-btn pa-btn--secondary"
+              onClick={() => {
+                if (!accessToken) {
+                  return;
+                }
+                void PlatformAdminApiClient.syncPostfixInboundRouting(
+                  accessToken,
+                ).then((r) => setToast(r.detail));
+              }}
+            >
+              Postfix virtual senkron (VPS)
+            </button>
+          </div>
+        ) : null}
         <div className="pa-toolbar" style={{ flexWrap: "wrap", gap: "0.5rem" }}>
           <input
             className="pa-input"

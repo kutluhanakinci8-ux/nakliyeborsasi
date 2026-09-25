@@ -8,6 +8,7 @@ const ORG_SECTIONS = [
   { id: "org-koridor", label: "Koridorlar" },
   { id: "org-iletisim", label: "İletişim" },
   { id: "org-eposta", label: "E-posta kimliği" },
+  { id: "org-gelen-kutusu", label: "Gelen kutusu" },
   { id: "org-abonelik", label: "Abonelik" },
 ] as const;
 

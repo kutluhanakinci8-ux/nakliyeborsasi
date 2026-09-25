@@ -20,6 +20,7 @@ import { useWebSession } from "../../../../context/WebSessionProvider";
 import { OrganizationSectionNav } from "../../../../components/account/OrganizationSectionNav";
 import { CompanySubscriptionPanel } from "../../../../components/account/CompanySubscriptionPanel";
 import { OrganizationMailIdentityPanel } from "../../../../components/account/OrganizationMailIdentityPanel";
+import { OrganizationMailInboxPanel } from "../../../../components/account/OrganizationMailInboxPanel";
 
 export function OrganizationPageClient() {
   const { session } = useWebSession();
@@ -734,6 +735,8 @@ export function OrganizationPageClient() {
       </section>
 
       <OrganizationMailIdentityPanel companyTradeName={displayTradeName} />
+
+      <OrganizationMailInboxPanel />
 
       <CompanySubscriptionPanel />
 

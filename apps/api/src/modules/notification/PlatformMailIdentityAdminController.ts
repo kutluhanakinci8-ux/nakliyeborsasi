@@ -22,6 +22,7 @@ import {
   MailIdentityAuditService,
 } from "./MailIdentityAuditService";
 import { MailInboundIngestService } from "./MailInboundIngestService";
+import { MailInboundRoutingService } from "./MailInboundRoutingService";
 
 @Controller("platform-admin/mail")
 @UseGuards(JwtAuthenticationGuard, PlatformAdminGuard)
@@ -33,6 +34,7 @@ export class PlatformMailIdentityAdminController {
     private readonly mailCustomDomainService: MailCustomDomainService,
     private readonly mailIdentityAuditService: MailIdentityAuditService,
     private readonly mailInboundIngestService: MailInboundIngestService,
+    private readonly mailInboundRoutingService: MailInboundRoutingService,
   ) {}
 
   @Get("roadmap")
@@ -52,6 +54,18 @@ export class PlatformMailIdentityAdminController {
     return {
       messages: await this.mailInboundIngestService.listRecentForAdmin(),
     };
+  }
+
+  @Get("inbound-routing")
+  public async inboundRouting() {
+    return {
+      snapshot: await this.mailInboundRoutingService.buildRoutingSnapshot(),
+    };
+  }
+
+  @Post("inbound-routing/sync-postfix")
+  public async syncPostfixInboundRouting() {
+    return await this.mailInboundRoutingService.writePostfixVirtualMap();
   }
 
   @Post("inbound-messages/simulate")

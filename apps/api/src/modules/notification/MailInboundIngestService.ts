@@ -15,6 +15,7 @@ import { MailInboundMessageEntity } from "../../infrastructure/database/entities
 import { MailSenderIdentityEntity } from "../../infrastructure/database/entities/MailSenderIdentityEntity";
 import { MailDomainEntity } from "../../infrastructure/database/entities/MailDomainEntity";
 import {
+  extractPlainBodyFromMime,
   normalizeEmailAddress,
   parseMinimalMimeHeaders,
 } from "./MailInboundMimeParse";
@@ -55,6 +56,8 @@ export class MailInboundIngestService {
     let subject = input.subject?.trim() ?? "(konu yok)";
     let snippet =
       input.text?.replace(/\s+/g, " ").trim().slice(0, 500) ?? null;
+    let bodyText =
+      input.text?.trim().slice(0, 200_000) ?? null;
     let rawMime = input.rawMime ?? null;
 
     if (rawMime) {
@@ -67,6 +70,9 @@ export class MailInboundIngestService {
       }
       if (!snippet && parsed.textSnippet) {
         snippet = parsed.textSnippet;
+      }
+      if (!bodyText) {
+        bodyText = extractPlainBodyFromMime(rawMime);
       }
     }
 
@@ -84,6 +90,7 @@ export class MailInboundIngestService {
         fromAddress,
         subject,
         snippet,
+        bodyText,
         rawMimePath,
         readAt: null,
       }),

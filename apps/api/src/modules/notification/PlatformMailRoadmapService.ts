@@ -142,11 +142,11 @@ export class PlatformMailRoadmapService {
             "Gelen + giden, panel webmail, isteğe bağlı IMAP; harici Gmail/ESP yok.",
           status: inboundMessages > 0 || mailboxes > 0 ? "active" : "planned",
           progressPercent:
-            inboundMessages > 0 ? 12 : mailboxes > 0 ? 8 : 3,
+            inboundMessages > 0 ? 28 : mailboxes > 0 ? 18 : 8,
           nextStepsTr: [
-            "C1: MAIL_INBOUND_WEBHOOK_SECRET + Postfix pipe (docs)",
-            "Admin → Bildirimler → Gelen posta (C1)",
-            "Pilot MX → VPS; sonra webmail UI",
+            "C2: Hesap → Organizasyon → Gelen kutusu",
+            "MX + setup-postfix-inbound-c2.sh + virtual senkron",
+            "C3: yanıt yazma (compose) planlı",
           ],
         },
       ],

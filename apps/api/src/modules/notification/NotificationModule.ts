@@ -58,6 +58,9 @@ import { MailIdentityAuditService } from "./MailIdentityAuditService";
 import { MailInboundIngestService } from "./MailInboundIngestService";
 import { MailInboundWebhookController } from "./MailInboundWebhookController";
 import { MailInboundWebhookGuard } from "./MailInboundWebhookGuard";
+import { MailOrganizationInboxService } from "./MailOrganizationInboxService";
+import { MailInboundRoutingService } from "./MailInboundRoutingService";
+import { CompanyMailInboxController } from "./CompanyMailInboxController";
 import { AuditModule } from "../../infrastructure/audit/AuditModule";
 import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogEntity";
 
@@ -93,6 +96,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     PlatformMailIdentityAdminController,
     MailInboundWebhookController,
     CompanyMailIdentityController,
+    CompanyMailInboxController,
     EmailTrackingController,
     UserNotificationPreferencesController,
   ],
@@ -129,6 +133,8 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     MailIdentityAuditService,
     MailInboundIngestService,
     MailInboundWebhookGuard,
+    MailOrganizationInboxService,
+    MailInboundRoutingService,
   ],
   exports: [
     AuthNotificationService,

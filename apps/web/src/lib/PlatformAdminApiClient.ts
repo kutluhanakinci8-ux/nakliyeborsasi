@@ -576,6 +576,29 @@ export class PlatformAdminApiClient {
     });
   }
 
+  public static async fetchInboundRouting(
+    accessToken: string,
+  ): Promise<InboundRoutingSnapshot> {
+    const payload = await adminFetch<{ snapshot: InboundRoutingSnapshot }>(
+      accessToken,
+      "mail/inbound-routing",
+    );
+    return payload.snapshot;
+  }
+
+  public static async syncPostfixInboundRouting(
+    accessToken: string,
+  ): Promise<{
+    written: boolean;
+    path: string | null;
+    entryCount: number;
+    detail: string;
+  }> {
+    return adminFetch(accessToken, "mail/inbound-routing/sync-postfix", {
+      method: "POST",
+    });
+  }
+
   public static async fetchMailDomains(
     accessToken: string,
   ): Promise<MailDomainRow[]> {
@@ -747,6 +770,17 @@ export type MailIdentityAuditLogRow = {
   actionCode: string;
   metadata: Record<string, unknown> | null;
   createdAt: string;
+};
+
+export type InboundRoutingSnapshot = {
+  inboundDomains: string[];
+  pipeScript: string;
+  entries: {
+    emailAddress: string;
+    virtualAliasLine: string;
+    organizationId: string;
+    domain: string;
+  }[];
 };
 
 export type MailInboundMessageRow = {
