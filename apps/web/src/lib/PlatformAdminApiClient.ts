@@ -551,6 +551,31 @@ export class PlatformAdminApiClient {
     return payload.logs;
   }
 
+  public static async fetchMailInboundMessages(
+    accessToken: string,
+  ): Promise<MailInboundMessageRow[]> {
+    const payload = await adminFetch<{ messages: MailInboundMessageRow[] }>(
+      accessToken,
+      "mail/inbound-messages",
+    );
+    return payload.messages;
+  }
+
+  public static async simulateMailInbound(
+    accessToken: string,
+    body: {
+      recipient: string;
+      sender?: string;
+      subject?: string;
+      text?: string;
+    },
+  ): Promise<void> {
+    await adminFetch(accessToken, "mail/inbound-messages/simulate", {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+  }
+
   public static async fetchMailDomains(
     accessToken: string,
   ): Promise<MailDomainRow[]> {
@@ -722,6 +747,18 @@ export type MailIdentityAuditLogRow = {
   actionCode: string;
   metadata: Record<string, unknown> | null;
   createdAt: string;
+};
+
+export type MailInboundMessageRow = {
+  id: string;
+  mailboxId: string;
+  emailAddress: string;
+  organizationId: string;
+  fromAddress: string;
+  subject: string;
+  snippet: string | null;
+  receivedAt: string;
+  readAt: string | null;
 };
 
 

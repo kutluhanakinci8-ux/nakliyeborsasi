@@ -55,6 +55,9 @@ import { PlatformMailIdentityAdminController } from "./PlatformMailIdentityAdmin
 import { MailDomainDnsVerificationService } from "./MailDomainDnsVerificationService";
 import { MailTenantSubdomainService } from "./MailTenantSubdomainService";
 import { MailIdentityAuditService } from "./MailIdentityAuditService";
+import { MailInboundIngestService } from "./MailInboundIngestService";
+import { MailInboundWebhookController } from "./MailInboundWebhookController";
+import { MailInboundWebhookGuard } from "./MailInboundWebhookGuard";
 import { AuditModule } from "../../infrastructure/audit/AuditModule";
 import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogEntity";
 
@@ -88,6 +91,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
   controllers: [
     PlatformNotificationAdminController,
     PlatformMailIdentityAdminController,
+    MailInboundWebhookController,
     CompanyMailIdentityController,
     EmailTrackingController,
     UserNotificationPreferencesController,
@@ -123,6 +127,8 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     MailCustomDomainService,
     MailCustomDomainOpenDkimInstaller,
     MailIdentityAuditService,
+    MailInboundIngestService,
+    MailInboundWebhookGuard,
   ],
   exports: [
     AuthNotificationService,

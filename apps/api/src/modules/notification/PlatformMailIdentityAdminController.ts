@@ -21,6 +21,7 @@ import {
   MailIdentityAuditAction,
   MailIdentityAuditService,
 } from "./MailIdentityAuditService";
+import { MailInboundIngestService } from "./MailInboundIngestService";
 
 @Controller("platform-admin/mail")
 @UseGuards(JwtAuthenticationGuard, PlatformAdminGuard)
@@ -31,6 +32,7 @@ export class PlatformMailIdentityAdminController {
     private readonly mailTenantSubdomainService: MailTenantSubdomainService,
     private readonly mailCustomDomainService: MailCustomDomainService,
     private readonly mailIdentityAuditService: MailIdentityAuditService,
+    private readonly mailInboundIngestService: MailInboundIngestService,
   ) {}
 
   @Get("roadmap")
@@ -43,6 +45,27 @@ export class PlatformMailIdentityAdminController {
   @Get("identity-audit")
   public async identityAudit() {
     return { logs: await this.mailIdentityAuditService.listRecent() };
+  }
+
+  @Get("inbound-messages")
+  public async listInboundMessages() {
+    return {
+      messages: await this.mailInboundIngestService.listRecentForAdmin(),
+    };
+  }
+
+  @Post("inbound-messages/simulate")
+  public async simulateInbound(
+    @Body()
+    body: {
+      recipient: string;
+      sender?: string;
+      subject?: string;
+      text?: string;
+    },
+  ) {
+    const message = await this.mailInboundIngestService.ingest(body);
+    return { ok: true, message };
   }
 
   @Get("domains")

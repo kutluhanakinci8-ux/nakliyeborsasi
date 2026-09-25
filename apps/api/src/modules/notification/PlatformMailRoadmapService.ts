@@ -140,12 +140,13 @@ export class PlatformMailRoadmapService {
           titleTr: "Faz C — Tam posta kutusu",
           summaryTr:
             "Gelen + giden, panel webmail, isteğe bağlı IMAP; harici Gmail/ESP yok.",
-          status: "future",
-          progressPercent: mailboxes > 0 ? 5 : 0,
+          status: inboundMessages > 0 || mailboxes > 0 ? "active" : "planned",
+          progressPercent:
+            inboundMessages > 0 ? 12 : mailboxes > 0 ? 8 : 3,
           nextStepsTr: [
-            "MX → kendi sunucu",
-            "Inbound MIME depolama + webmail UI",
-            "Bildirim outbox ile mailbox verisi ayrı tutulur",
+            "C1: MAIL_INBOUND_WEBHOOK_SECRET + Postfix pipe (docs)",
+            "Admin → Bildirimler → Gelen posta (C1)",
+            "Pilot MX → VPS; sonra webmail UI",
           ],
         },
       ],
