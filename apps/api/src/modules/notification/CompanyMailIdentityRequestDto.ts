@@ -30,4 +30,8 @@ export class ProvisionMailIdentityDto {
   @IsString()
   @MaxLength(120)
   public displayName?: string;
+
+  /** İlk kutu varsayılan true; ek kutular için false gönderin. */
+  @IsOptional()
+  public makeDefault?: boolean;
 }

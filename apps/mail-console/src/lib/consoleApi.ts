@@ -117,17 +117,46 @@ export async function verifyCustomDomainDns(accessToken: string) {
   );
 }
 
+export async function fetchMailSenders(accessToken: string) {
+  return apiFetch<{
+    senders: {
+      id: string;
+      localPart: string;
+      displayName: string | null;
+      isDefault: boolean;
+      domain: string;
+      fromAddress: string;
+    }[];
+    mailboxQuota: { used: number; limit: number };
+  }>(accessToken, "company/mail-identity/senders");
+}
+
+export async function setDefaultMailSender(
+  accessToken: string,
+  senderId: string,
+) {
+  return apiFetch<{ senders: unknown[] }>(
+    accessToken,
+    `company/mail-identity/senders/${senderId}/default`,
+    { method: "POST", body: JSON.stringify({}) },
+  );
+}
+
 export async function provisionTenantMailbox(
   accessToken: string,
   localPart: string,
-  displayName?: string,
+  options?: { displayName?: string; makeDefault?: boolean },
 ) {
   return apiFetch<{ fromAddress: string }>(
     accessToken,
     "company/mail-identity/provision",
     {
       method: "POST",
-      body: JSON.stringify({ localPart, displayName }),
+      body: JSON.stringify({
+        localPart,
+        displayName: options?.displayName,
+        makeDefault: options?.makeDefault,
+      }),
     },
   );
 }
@@ -146,14 +175,18 @@ export async function operatorVerifyDomainDns(
 export async function provisionCustomMailbox(
   accessToken: string,
   localPart: string,
-  displayName?: string,
+  options?: { displayName?: string; makeDefault?: boolean },
 ) {
   return apiFetch<{ fromAddress: string }>(
     accessToken,
     "company/mail-identity/custom-domain/provision",
     {
       method: "POST",
-      body: JSON.stringify({ localPart, displayName }),
+      body: JSON.stringify({
+        localPart,
+        displayName: options?.displayName,
+        makeDefault: options?.makeDefault,
+      }),
     },
   );
 }

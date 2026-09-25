@@ -42,6 +42,8 @@ export default function DashboardPage() {
   const [sendLimit, setSendLimit] = useState<number | null>(null);
   const [planMessage, setPlanMessage] = useState("");
   const [mailboxQuota, setMailboxQuota] = useState<string>("");
+  const [mailboxUsed, setMailboxUsed] = useState(0);
+  const [mailboxLimit, setMailboxLimit] = useState(1);
   const [checkoutCanStart, setCheckoutCanStart] = useState(true);
   const [checkoutBlockers, setCheckoutBlockers] = useState<string[]>([]);
   const [customDomain, setCustomDomain] = useState<string | null>(null);
@@ -55,6 +57,8 @@ export default function DashboardPage() {
       setPlanName(sub.subscription.plan?.displayName ?? sub.subscription.planCode);
       setPlanCode(sub.subscription.planCode);
       setSendLimit(sub.subscription.sendRate);
+      setMailboxUsed(sub.subscription.mailboxQuota.used);
+      setMailboxLimit(sub.subscription.mailboxQuota.limit);
       setMailboxQuota(
         `${sub.subscription.mailboxQuota.used}/${sub.subscription.mailboxQuota.limit} kutu`,
       );
@@ -256,6 +260,30 @@ export default function DashboardPage() {
           {sendLimit ? ` · Gönderim: ${sendLimit}/saat` : ""}
           {mailboxQuota ? ` · ${mailboxQuota}` : ""}
         </p>
+        {mailboxLimit > 0 ? (
+          <div style={{ marginBottom: 12 }}>
+            <div
+              style={{
+                height: 8,
+                borderRadius: 4,
+                background: "var(--border)",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  width: `${Math.min(100, (mailboxUsed / mailboxLimit) * 100)}%`,
+                  height: "100%",
+                  background:
+                    mailboxUsed >= mailboxLimit ? "#dc2626" : "var(--accent)",
+                }}
+              />
+            </div>
+            <p style={{ margin: "8px 0 0", fontSize: 13, color: "var(--muted)" }}>
+              <Link href="/mailboxes">Posta kutularını yönet</Link>
+            </p>
+          </div>
+        ) : null}
         {checkoutBlockers.length > 0 && !checkoutCanStart ? (
           <ul style={{ color: "var(--muted)", fontSize: 14, marginTop: 0 }}>
             {checkoutBlockers.map((line) => (

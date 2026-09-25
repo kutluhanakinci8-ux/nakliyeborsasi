@@ -5,6 +5,7 @@ import {
   Delete,
   ForbiddenException,
   Get,
+  Param,
   Patch,
   Post,
   Query,
@@ -95,6 +96,40 @@ export class CompanyMailIdentityController {
     };
   }
 
+  @Get("senders")
+  public async listSenders(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    const senders = await this.mailSaasSubscriptionService.listOrganizationSenders(
+      user.companyId,
+    );
+    const subscription =
+      await this.mailSaasSubscriptionService.getOrganizationMailPlan(
+        user.companyId,
+      );
+    return {
+      message: "OK",
+      senders,
+      mailboxQuota: subscription.mailboxQuota,
+    };
+  }
+
+  @Post("senders/:senderId/default")
+  public async setDefaultSender(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("senderId") senderId: string,
+  ) {
+    this.assertCompanyOwner(user);
+    await this.mailSaasSubscriptionService.setDefaultSender(
+      user.companyId,
+      senderId,
+    );
+    const senders = await this.mailSaasSubscriptionService.listOrganizationSenders(
+      user.companyId,
+    );
+    return { message: "OK", senders };
+  }
+
   @Post("provision")
   public async provision(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
@@ -105,6 +140,7 @@ export class CompanyMailIdentityController {
       organizationId: user.companyId,
       localPart: body.localPart,
       displayName: body.displayName,
+      makeDefault: body.makeDefault,
     });
     await this.mailIdentityAuditService.recordFromUser(
       user,
@@ -203,6 +239,7 @@ export class CompanyMailIdentityController {
       organizationId: user.companyId,
       localPart: body.localPart,
       displayName: body.displayName,
+      makeDefault: body.makeDefault,
     });
     await this.mailIdentityAuditService.recordFromUser(
       user,

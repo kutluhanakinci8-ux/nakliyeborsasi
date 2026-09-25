@@ -185,6 +185,7 @@ export class MailTenantSubdomainService {
     organizationId: string;
     localPart: string;
     displayName?: string;
+    makeDefault?: boolean;
   }): Promise<{
     domain: MailDomainEntity;
     sender: MailSenderIdentityEntity;
@@ -217,19 +218,37 @@ export class MailTenantSubdomainService {
       );
     }
 
-    if (!taken) {
-      await this.mailSaasSubscriptionService.assertMailboxQuota(
-        params.organizationId,
-        1,
-      );
+    if (taken && taken.organizationId === params.organizationId) {
+      const makeDefault = params.makeDefault ?? false;
+      if (makeDefault) {
+        await this.mailSaasSubscriptionService.setDefaultSender(
+          params.organizationId,
+          taken.id,
+        );
+      }
+      if (params.displayName?.trim()) {
+        taken.displayName = params.displayName.trim();
+        await this.senderRepository.save(taken);
+      }
+      return {
+        domain: domainRow,
+        sender: taken,
+        fromAddress: `${localPart}@${tenantDomain}`,
+      };
     }
 
+    await this.mailSaasSubscriptionService.assertMailboxQuota(
+      params.organizationId,
+      1,
+    );
+
+    const makeDefault = params.makeDefault ?? true;
     const sender = await this.mailDomainApplicationService.addSenderIdentity({
       mailDomainId: domainRow.id,
       organizationId: params.organizationId,
       localPart,
       displayName: params.displayName?.trim() || "Kurumsal bildirim",
-      isDefault: true,
+      isDefault: makeDefault,
     });
 
     return {

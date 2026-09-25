@@ -49,7 +49,7 @@
 | # | İş | Takip / kabul kriteri |
 |---|-----|------------------------|
 | B1 | Domain sihirbazı UX (varsayılan onboarding) | Kayıt → `/domain`; kurumsal dashboard domain-first — **uygulandı** |
-| B2 | Çoklu posta kutusu (plan kotası) | Kurumsal plan N kutu; kota aşımında net UI |
+| B2 | Çoklu posta kutusu (plan kotası) | `/mailboxes` listesi + kota çubuğu — **uygulandı** |
 | B3 | Kullanıcı daveti + roller | `CompanyOwner`, `BillingAdmin`, `MailAdmin`, salt okunur |
 | B4 | Alias / paylaşımlı adres (isteğe bağlı) | `destek@` → iki kullanıcı |
 | B5 | Gönderim kotası & upgrade | Saat/gün limiti; konsolda kullanım çubuğu |
