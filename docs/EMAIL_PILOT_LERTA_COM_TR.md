@@ -1,6 +1,8 @@
-# Pilot: `lerta.com.tr` üzerinde bu programı yayınlama ve mail geliştirme
+# Pilot: `lerta.com.tr` üzerinde yayın ve mail geliştirme
 
-**Durum (2026-09):** Ana alan adı `lerta.com.tr` başka bir uygulamada kullanılıyor olabilir. Bu **engel değil**. Bu repo’daki Nakliye Borsası / Lerta Logistics programını ve mail platformunu önce **alt alan adları** ile `lerta.com.tr` DNS’inde tanımlayıp VPS’te (`168.231.109.27`) çalıştırıyoruz. `lerta.tr` entegrasyonu pilot stabil olduktan sonra kopyalanır.
+**Ürün vizyonu (önemli):** Aynı mail motoru hem **Lerta Logistics** içinde modül, hem **`lerta.com.tr` üzerinde satılacak Gmail benzeri Lerta Mail SaaS** olacak. Detay: [EMAIL_PRODUCT_LERTA_MAIL_SAAS.md](./EMAIL_PRODUCT_LERTA_MAIL_SAAS.md).
+
+**Durum (2026-09):** Ana alan adı `lerta.com.tr` / `www` U88’de kalır. Logistics: `app.lerta.com.tr`. Mail altyapısı `mail` / `kullanici` alt alanları. `lerta.tr` entegrasyonu pilot stabil olduktan sonra kopyalanır.
 
 ---
 
