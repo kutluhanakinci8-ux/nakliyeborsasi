@@ -946,6 +946,20 @@ export async function fetchMailBillingStatus(accessToken: string) {
   }>(accessToken, "company/mail-billing/status");
 }
 
+export type MailBillingA1ChecklistItem = {
+  key: string;
+  label: string;
+  ok: boolean;
+  detail?: string;
+};
+
+export async function fetchMailPlatformBillingHealth(accessToken: string) {
+  return apiFetch<{
+    status: Awaited<ReturnType<typeof fetchMailBillingStatus>>["status"];
+    a1: { ready: boolean; checklist: MailBillingA1ChecklistItem[] };
+  }>(accessToken, "platform-admin/mail/billing-health");
+}
+
 export async function startCorporateCheckout(accessToken: string) {
   return apiFetch<{
     provider: string;

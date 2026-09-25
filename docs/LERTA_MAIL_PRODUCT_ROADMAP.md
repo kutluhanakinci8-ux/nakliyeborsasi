@@ -30,7 +30,7 @@
 
 | # | İş | Takip / kabul kriteri |
 |---|-----|------------------------|
-| A1 | Stripe **test** checkout uçtan uca | Kurumsal + Enterprise checkout; `smoke-mail-billing-stripe.sh` — **kod hazır, VPS anahtar bekliyor** |
+| A1 | Stripe **test** checkout uçtan uca | `billing-health` + `run-mail-billing-a1-acceptance.sh` — **kod hazır, VPS test anahtar + manuel checkout** |
 | A2 | Stripe **canlı** + webhook prod | `MAIL_BILLING_PRODUCTION_CUTOVER.md` — **VPS live anahtar bekliyor** |
 | A3 | iyzico sandbox → prod (TR ödeme) | Aynı runbook — **canlı anahtar bekliyor** |
 | A4 | `www` cutover | `preflight` + `apply-www-cutover` + `smoke-www-cutover` — **araçlar hazır; DNS/U88 iş kararı** |

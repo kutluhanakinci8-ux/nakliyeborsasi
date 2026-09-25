@@ -46,6 +46,18 @@ export type MailBillingStatus = {
   };
 };
 
+export type MailBillingA1ChecklistItem = {
+  key: string;
+  label: string;
+  ok: boolean;
+  detail?: string;
+};
+
+export type MailBillingA1Acceptance = {
+  ready: boolean;
+  checklist: MailBillingA1ChecklistItem[];
+};
+
 @Injectable()
 export class MailBillingService {
   private readonly logger = new Logger(MailBillingService.name);
@@ -411,6 +423,56 @@ export class MailBillingService {
         enterprisePriceTry: enterpriseTry,
       },
     };
+  }
+
+  /** Faz A1 — Stripe test checkout hazırlık özeti (operatör). */
+  public buildA1Acceptance(status: MailBillingStatus): MailBillingA1Acceptance {
+    const checklist: MailBillingA1ChecklistItem[] = [
+      {
+        key: "provider_stripe",
+        label: "MAIL_BILLING_PROVIDER=stripe",
+        ok: status.provider === "stripe",
+        detail:
+          status.provider !== "stripe"
+            ? `Aktif: ${status.provider}`
+            : undefined,
+      },
+      {
+        key: "stripe_test_key",
+        label: "Stripe test secret (sk_test_…)",
+        ok: status.stripe.configured && status.stripe.testMode,
+        detail:
+          status.stripe.configured && !status.stripe.testMode
+            ? "Canlı anahtar — A1 için test modu gerekir"
+            : undefined,
+      },
+      {
+        key: "stripe_api",
+        label: "Stripe API erişimi",
+        ok: status.stripe.apiReachable === true,
+        detail: status.stripe.apiError ?? undefined,
+      },
+      {
+        key: "corporate_price",
+        label: "Kurumsal price ID aktif",
+        ok: status.stripe.corporatePriceValid === true,
+      },
+      {
+        key: "webhook_secret",
+        label: "STRIPE_WEBHOOK_SECRET tanımlı",
+        ok: status.stripe.webhookConfigured,
+      },
+      {
+        key: "checkout_corporate",
+        label: "Kurumsal checkout başlatılabilir",
+        ok: status.checkout.canStartCorporate,
+      },
+    ];
+
+    const ready =
+      checklist.every((item) => item.ok) && status.checkout.blockers.length === 0;
+
+    return { ready, checklist };
   }
 
   public async handleIyzicoCallback(token: string): Promise<{

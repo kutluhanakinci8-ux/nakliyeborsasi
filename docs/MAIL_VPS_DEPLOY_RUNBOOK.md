@@ -4,7 +4,7 @@
 
 ## 1. Kod merge sırası
 
-GitHub PR zinciri (eskiden yeniye): … → Faz A billing → A5 vitrin → A4 www cutover araçları (bu dal).
+GitHub PR zinciri (eskiden yeniye): … → A5 vitrin → A4 cutover → A1 billing-health (bu dal).
 
 Her merge sonrası: `git pull`, API + konsol + vitrin build, PM2/systemd restart.
 

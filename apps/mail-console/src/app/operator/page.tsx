@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ConsoleShell } from "@/components/ConsoleShell";
 import {
-  fetchMailBillingStatus,
+  fetchMailPlatformBillingHealth,
+  type MailBillingA1ChecklistItem,
   fetchMailPlatformMonitoring,
   fetchMailPlatformKpi,
   type MailPlatformKpi,
@@ -35,8 +36,12 @@ export default function OperatorPage() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [flash, setFlash] = useState("");
   const [billingStatus, setBillingStatus] = useState<
-    Awaited<ReturnType<typeof fetchMailBillingStatus>>["status"] | null
+    Awaited<ReturnType<typeof fetchMailPlatformBillingHealth>>["status"] | null
   >(null);
+  const [billingA1, setBillingA1] = useState<{
+    ready: boolean;
+    checklist: MailBillingA1ChecklistItem[];
+  } | null>(null);
   const [tenants, setTenants] = useState<MailOperatorTenantRow[]>([]);
   const [tenantBusyId, setTenantBusyId] = useState<string | null>(null);
   const [monitoring, setMonitoring] = useState<MailPlatformMonitoring | null>(
@@ -71,10 +76,12 @@ export default function OperatorPage() {
         setTenants([]);
       }
       try {
-        const billing = await fetchMailBillingStatus(accessToken);
+        const billing = await fetchMailPlatformBillingHealth(accessToken);
         setBillingStatus(billing.status);
+        setBillingA1(billing.a1);
       } catch {
         setBillingStatus(null);
+        setBillingA1(null);
       }
       try {
         const mon = await fetchMailPlatformMonitoring(accessToken);
@@ -286,7 +293,28 @@ export default function OperatorPage() {
       ) : null}
       {billingStatus ? (
         <div className="card" style={{ marginBottom: 16 }}>
-          <h2 style={{ marginTop: 0 }}>Ödeme altyapısı</h2>
+          <h2 style={{ marginTop: 0 }}>Ödeme altyapısı (Faz A1)</h2>
+          {billingA1 ? (
+            <p
+              style={{
+                margin: "0 0 12px",
+                fontWeight: 600,
+                color: billingA1.ready ? "var(--success)" : "#b45309",
+              }}
+            >
+              A1 test checkout: {billingA1.ready ? "HAZIR" : "eksik adımlar var"}
+            </p>
+          ) : null}
+          {billingA1?.checklist.length ? (
+            <ul style={{ margin: "0 0 12px", paddingLeft: 20, fontSize: 14 }}>
+              {billingA1.checklist.map((item) => (
+                <li key={item.key} style={{ color: item.ok ? "var(--muted)" : "#b45309" }}>
+                  {item.ok ? "✓" : "○"} {item.label}
+                  {item.detail ? ` — ${item.detail}` : ""}
+                </li>
+              ))}
+            </ul>
+          ) : null}
           <p style={{ margin: "0 0 8px" }}>
             Sağlayıcı: <strong>{billingStatus.provider}</strong>
           </p>
@@ -334,6 +362,15 @@ export default function OperatorPage() {
             <a href="https://kurumsal.lerta.com.tr" target="_blank" rel="noreferrer">
               kurumsal.lerta.com.tr
             </a>
+            · API{" "}
+            <code>GET platform-admin/mail/billing-health</code> ·{" "}
+            <code>docs/MAIL_BILLING_A1_ACCEPTANCE.md</code>
+          </p>
+          <p style={{ margin: "8px 0 0", fontSize: 12, color: "var(--muted)" }}>
+            VPS:{" "}
+            <code>
+              MAIL_BILLING_JWT=&apos;…&apos; ./scripts/run-mail-billing-a1-acceptance.sh
+            </code>
           </p>
         </div>
       ) : null}

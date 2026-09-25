@@ -29,6 +29,7 @@ import { MailDmarcAggregateService } from "./MailDmarcAggregateService";
 import { IngestDmarcReportRequestDto } from "./IngestDmarcReportRequestDto";
 import { MailPlatformMonitoringService } from "./MailPlatformMonitoringService";
 import { MailPlatformKpiService } from "./MailPlatformKpiService";
+import { MailBillingService } from "./MailBillingService";
 
 @Controller("platform-admin/mail")
 @UseGuards(JwtAuthenticationGuard, PlatformAdminGuard)
@@ -46,7 +47,15 @@ export class PlatformMailIdentityAdminController {
     private readonly mailDmarcAggregateService: MailDmarcAggregateService,
     private readonly mailPlatformMonitoringService: MailPlatformMonitoringService,
     private readonly mailPlatformKpiService: MailPlatformKpiService,
+    private readonly mailBillingService: MailBillingService,
   ) {}
+
+  @Get("billing-health")
+  public async billingHealth() {
+    const status = await this.mailBillingService.getBillingStatus();
+    const a1 = this.mailBillingService.buildA1Acceptance(status);
+    return { message: "OK", status, a1 };
+  }
 
   @Get("kpi")
   public async kpi() {
