@@ -14,6 +14,7 @@ import {
   CompanyRoleCode,
 } from "@nakliyeborsasi/core";
 import { JwtAuthenticationGuard } from "../auth/JwtAuthenticationGuard";
+import { MailConsoleAccessGuard } from "./MailConsoleAccessGuard";
 import { AuthenticatedUserParam } from "../auth/AuthenticatedUserParam";
 import { CompanyMailTeamService } from "./CompanyMailTeamService";
 import {
@@ -27,7 +28,7 @@ import {
 } from "./MailCompanyRoleAuthorization";
 
 @Controller("company/mail-identity/team")
-@UseGuards(JwtAuthenticationGuard)
+@UseGuards(JwtAuthenticationGuard, MailConsoleAccessGuard)
 export class CompanyMailTeamController {
   public constructor(
     private readonly companyMailTeamService: CompanyMailTeamService,

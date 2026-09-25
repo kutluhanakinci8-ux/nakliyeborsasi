@@ -21,6 +21,9 @@ import { MailOrganizationStorageService } from "./MailOrganizationStorageService
 import { MailOrganizationDeliveryService } from "./MailOrganizationDeliveryService";
 import { MailDmarcAggregateService } from "./MailDmarcAggregateService";
 import { MailOrganizationPrivacyService } from "./MailOrganizationPrivacyService";
+import { MailOrganizationSecurityService } from "./MailOrganizationSecurityService";
+import { UserTotpService } from "../auth/UserTotpService";
+import { MailConsoleAccessGuard } from "./MailConsoleAccessGuard";
 import {
   ConfirmMailDeletionRequestDto,
   CreateMailDeletionRequestDto,
@@ -53,7 +56,7 @@ class UpdateCompanyMailDisplayNameDto {
 }
 
 @Controller("company/mail-identity")
-@UseGuards(JwtAuthenticationGuard)
+@UseGuards(JwtAuthenticationGuard, MailConsoleAccessGuard)
 export class CompanyMailIdentityController {
   public constructor(
     private readonly mailTenantSubdomainService: MailTenantSubdomainService,
@@ -62,6 +65,8 @@ export class CompanyMailIdentityController {
     private readonly mailOrganizationDeliveryService: MailOrganizationDeliveryService,
     private readonly mailDmarcAggregateService: MailDmarcAggregateService,
     private readonly mailOrganizationPrivacyService: MailOrganizationPrivacyService,
+    private readonly mailOrganizationSecurityService: MailOrganizationSecurityService,
+    private readonly userTotpService: UserTotpService,
     private readonly emailSuppressionService: EmailSuppressionService,
     private readonly mailCustomDomainService: MailCustomDomainService,
     private readonly mailIdentityAuditService: MailIdentityAuditService,
@@ -350,6 +355,51 @@ export class CompanyMailIdentityController {
       "/company/mail-identity/custom-domain/provision",
     );
     return { message: "OK", ...result };
+  }
+
+  @Get("security")
+  public async getMailSecurity(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    assertMailConsoleAccess(user);
+    const [policy, totp] = await Promise.all([
+      this.mailOrganizationSecurityService.getSecurityPolicy(user.companyId),
+      this.userTotpService.getStatus(user.userId),
+    ]);
+    return {
+      message: "OK",
+      policy,
+      totp,
+      permissions: {
+        canManagePolicy: canManageCompanyTeamRoles(user),
+      },
+    };
+  }
+
+  @Patch("security")
+  public async updateMailSecurity(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: { requireTotpForConsole?: boolean },
+  ) {
+    this.assertCompanyOwner(user);
+    if (body.requireTotpForConsole === undefined) {
+      throw new BadRequestException("requireTotpForConsole gerekli.");
+    }
+    const policy =
+      await this.mailOrganizationSecurityService.setRequireTotpForConsole(
+        user.companyId,
+        body.requireTotpForConsole,
+      );
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.SecurityRequireTotpUpdated,
+      {
+        organizationId: user.companyId,
+        requireTotpForConsole: body.requireTotpForConsole,
+      },
+      "/company/mail-identity/security",
+    );
+    return { message: "OK", policy };
   }
 
   @Get("audit")

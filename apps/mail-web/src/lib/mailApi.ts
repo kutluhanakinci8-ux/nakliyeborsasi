@@ -163,10 +163,14 @@ export async function requestPasswordReset(emailAddress: string): Promise<void> 
   }
 }
 
+export type LoginResponse =
+  | { kind: "token"; accessToken: string }
+  | { kind: "totp"; challengeToken: string };
+
 export async function login(
   emailAddress: string,
   password: string,
-): Promise<string> {
+): Promise<LoginResponse> {
   const response = await fetch(`${resolveApiBaseUrl()}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -175,8 +179,73 @@ export async function login(
   if (!response.ok) {
     throw new Error("Giriş başarısız");
   }
+  const payload = (await response.json()) as {
+    accessToken?: string;
+    requiresTotp?: boolean;
+    challengeToken?: string;
+  };
+  if (payload.requiresTotp && payload.challengeToken) {
+    return { kind: "totp", challengeToken: payload.challengeToken };
+  }
+  if (!payload.accessToken) {
+    throw new Error("Giriş başarısız");
+  }
+  return { kind: "token", accessToken: payload.accessToken };
+}
+
+export async function completeTotpLogin(
+  challengeToken: string,
+  code: string,
+): Promise<string> {
+  const response = await fetch(`${resolveApiBaseUrl()}/auth/login/totp`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ challengeToken, code }),
+  });
+  if (!response.ok) {
+    throw new Error("Doğrulama kodu geçersiz");
+  }
   const payload = (await response.json()) as { accessToken: string };
   return payload.accessToken;
+}
+
+async function mailApiFetch<T>(
+  accessToken: string,
+  path: string,
+  init: RequestInit = {},
+): Promise<T> {
+  const headers = new Headers(init.headers);
+  headers.set("Authorization", `Bearer ${accessToken}`);
+  if (init.body && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+  const response = await fetch(`${resolveApiBaseUrl()}/${path}`, {
+    ...init,
+    headers,
+  });
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+  return (await response.json()) as T;
+}
+
+export async function fetchTotpStatus(accessToken: string) {
+  return mailApiFetch<{
+    status: { enabled: boolean; enabledAt: string | null };
+  }>(accessToken, "auth/totp/status");
+}
+
+export async function beginTotpSetup(accessToken: string) {
+  return mailApiFetch<{
+    setup: { secret: string; otpauthUrl: string };
+  }>(accessToken, "auth/totp/setup", { method: "POST", body: "{}" });
+}
+
+export async function confirmTotpSetup(accessToken: string, code: string) {
+  return mailApiFetch(accessToken, "auth/totp/confirm", {
+    method: "POST",
+    body: JSON.stringify({ code }),
+  });
 }
 
 export type MailInboxThreadRow = {

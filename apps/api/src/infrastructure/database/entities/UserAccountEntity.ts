@@ -37,6 +37,15 @@ export class UserAccountEntity {
   @Column({ type: "timestamptz", nullable: true })
   public emailVerifiedAt!: Date | null;
 
+  @Column({ name: "totp_secret_ciphertext", type: "text", nullable: true })
+  public totpSecretCiphertext!: string | null;
+
+  @Column({ name: "totp_pending_secret_ciphertext", type: "text", nullable: true })
+  public totpPendingSecretCiphertext!: string | null;
+
+  @Column({ name: "totp_enabled_at", type: "timestamptz", nullable: true })
+  public totpEnabledAt!: Date | null;
+
   @OneToMany(() => CompanyMembershipEntity, (membership) => membership.user)
   public memberships!: CompanyMembershipEntity[];
 

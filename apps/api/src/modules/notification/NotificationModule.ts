@@ -92,6 +92,9 @@ import { MailDmarcAggregateReportEntity } from "../../infrastructure/database/en
 import { MailDmarcAggregateService } from "./MailDmarcAggregateService";
 import { MailOrganizationDeletionRequestEntity } from "../../infrastructure/database/entities/MailOrganizationDeletionRequestEntity";
 import { MailOrganizationPrivacyService } from "./MailOrganizationPrivacyService";
+import { MailOrganizationSecurityService } from "./MailOrganizationSecurityService";
+import { MailConsoleAccessGuard } from "./MailConsoleAccessGuard";
+import { MailProductTotpPolicyGuard } from "./MailProductTotpPolicyGuard";
 import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
 import { MailBillingService } from "./MailBillingService";
 import { MailIyzicoBillingService } from "./MailIyzicoBillingService";
@@ -200,6 +203,9 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     MailOrganizationDeliveryService,
     MailDmarcAggregateService,
     MailOrganizationPrivacyService,
+    MailOrganizationSecurityService,
+    MailConsoleAccessGuard,
+    MailProductTotpPolicyGuard,
     MailSaasSubscriptionService,
     MailIyzicoBillingService,
     MailBillingService,

@@ -23,6 +23,9 @@ export class MailOrganizationOperatorStateEntity {
   @Column({ type: "boolean", default: false })
   public abuseFlag!: boolean;
 
+  @Column({ name: "require_totp_for_console", type: "boolean", default: false })
+  public requireTotpForConsole!: boolean;
+
   @Column({ type: "text", nullable: true })
   public operatorNote!: string | null;
 

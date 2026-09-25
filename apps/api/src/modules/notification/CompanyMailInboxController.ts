@@ -15,6 +15,7 @@ import {
 import { AuthenticatedUserContext } from "@nakliyeborsasi/core";
 import { Response } from "express";
 import { JwtAuthenticationGuard } from "../auth/JwtAuthenticationGuard";
+import { MailProductTotpPolicyGuard } from "./MailProductTotpPolicyGuard";
 import { AuthenticatedUserParam } from "../auth/AuthenticatedUserParam";
 import {
   InboxFolder,
@@ -36,7 +37,7 @@ import {
 } from "./MailCompanyRoleAuthorization";
 
 @Controller("company/mail-inbox")
-@UseGuards(JwtAuthenticationGuard)
+@UseGuards(JwtAuthenticationGuard, MailProductTotpPolicyGuard)
 export class CompanyMailInboxController {
   public constructor(
     private readonly mailOrganizationInboxService: MailOrganizationInboxService,

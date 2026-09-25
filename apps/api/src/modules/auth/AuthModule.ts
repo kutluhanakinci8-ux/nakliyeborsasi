@@ -13,11 +13,15 @@ import { CompanyRolesAuthorizationGuard } from "./CompanyRolesAuthorizationGuard
 import { CompanyWebsiteEnrichmentService } from "./CompanyWebsiteEnrichmentService";
 import { InstagramPublicStatsService } from "./InstagramPublicStatsService";
 import { SubscriptionCatalogModule } from "../subscription/SubscriptionCatalogModule";
+import { TypeOrmModule } from "@nestjs/typeorm";
+import { UserAccountEntity } from "../../infrastructure/database/entities/UserAccountEntity";
+import { UserTotpService } from "./UserTotpService";
 
 @Module({
   imports: [
     forwardRef(() => NotificationModule),
     SubscriptionCatalogModule,
+    TypeOrmModule.forFeature([UserAccountEntity]),
     PassportModule.register({ defaultStrategy: "jwt" }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -46,12 +50,14 @@ import { SubscriptionCatalogModule } from "../subscription/SubscriptionCatalogMo
     CompanyRolesAuthorizationGuard,
     CompanyWebsiteEnrichmentService,
     InstagramPublicStatsService,
+    UserTotpService,
   ],
   exports: [
     JwtAuthenticationGuard,
     CompanyRolesAuthorizationGuard,
     JwtTokenIssuingService,
     PasswordHashingService,
+    UserTotpService,
   ],
 })
 export class AuthModule {}

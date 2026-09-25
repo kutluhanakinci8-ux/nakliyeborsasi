@@ -37,6 +37,9 @@ export const MailIdentityAuditAction = {
   TeamInviteAccepted: "MAIL_TEAM_INVITE_ACCEPTED",
   TeamMemberRoleChanged: "MAIL_TEAM_MEMBER_ROLE_CHANGED",
   TeamMemberRemoved: "MAIL_TEAM_MEMBER_REMOVED",
+  SecurityRequireTotpUpdated: "MAIL_SECURITY_REQUIRE_TOTP_UPDATED",
+  SecurityTotpEnabled: "MAIL_SECURITY_TOTP_ENABLED",
+  SecurityTotpDisabled: "MAIL_SECURITY_TOTP_DISABLED",
 } as const;
 
 export type MailTenantAuditLogDto = {

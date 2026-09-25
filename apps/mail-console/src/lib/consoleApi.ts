@@ -47,7 +47,14 @@ async function apiFetch<T>(
   return (await response.json()) as T;
 }
 
-export async function login(emailAddress: string, password: string) {
+export type LoginResponse =
+  | { kind: "token"; accessToken: string }
+  | { kind: "totp"; challengeToken: string };
+
+export async function login(
+  emailAddress: string,
+  password: string,
+): Promise<LoginResponse> {
   const response = await fetch(`${resolveApiBaseUrl()}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -56,8 +63,91 @@ export async function login(emailAddress: string, password: string) {
   if (!response.ok) {
     throw new Error("Giriş başarısız");
   }
+  const payload = (await response.json()) as {
+    accessToken?: string;
+    requiresTotp?: boolean;
+    challengeToken?: string;
+  };
+  if (payload.requiresTotp && payload.challengeToken) {
+    return { kind: "totp", challengeToken: payload.challengeToken };
+  }
+  if (!payload.accessToken) {
+    throw new Error("Giriş başarısız");
+  }
+  return { kind: "token", accessToken: payload.accessToken };
+}
+
+export async function completeTotpLogin(challengeToken: string, code: string) {
+  const response = await fetch(`${resolveApiBaseUrl()}/auth/login/totp`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ challengeToken, code }),
+  });
+  if (!response.ok) {
+    throw new Error("Doğrulama kodu geçersiz");
+  }
   const payload = (await response.json()) as { accessToken: string };
   return payload.accessToken;
+}
+
+export async function fetchTotpStatus(accessToken: string) {
+  return apiFetch<{
+    status: {
+      enabled: boolean;
+      enabledAt: string | null;
+      pendingSetup: boolean;
+    };
+  }>(accessToken, "auth/totp/status");
+}
+
+export async function beginTotpSetup(accessToken: string) {
+  return apiFetch<{
+    setup: { secret: string; otpauthUrl: string; issuer: string };
+  }>(accessToken, "auth/totp/setup", { method: "POST", body: "{}" });
+}
+
+export async function confirmTotpSetup(accessToken: string, code: string) {
+  return apiFetch(accessToken, "auth/totp/confirm", {
+    method: "POST",
+    body: JSON.stringify({ code }),
+  });
+}
+
+export async function disableTotp(
+  accessToken: string,
+  password: string,
+  code: string,
+) {
+  return apiFetch(accessToken, "auth/totp/disable", {
+    method: "POST",
+    body: JSON.stringify({ password, code }),
+  });
+}
+
+export async function fetchMailSecurityPolicy(accessToken: string) {
+  return apiFetch<{
+    policy: { requireTotpForConsole: boolean };
+    totp: {
+      enabled: boolean;
+      enabledAt: string | null;
+      pendingSetup: boolean;
+    };
+    permissions: { canManagePolicy: boolean };
+  }>(accessToken, "company/mail-identity/security");
+}
+
+export async function updateMailSecurityPolicy(
+  accessToken: string,
+  requireTotpForConsole: boolean,
+) {
+  return apiFetch<{ policy: { requireTotpForConsole: boolean } }>(
+    accessToken,
+    "company/mail-identity/security",
+    {
+      method: "PATCH",
+      body: JSON.stringify({ requireTotpForConsole }),
+    },
+  );
 }
 
 export async function registerMailSaas(params: {

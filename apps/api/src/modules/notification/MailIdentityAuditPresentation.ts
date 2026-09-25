@@ -26,6 +26,10 @@ const LABELS: Record<string, string> = {
   [MailIdentityAuditAction.TeamInviteAccepted]: "Ekip daveti kabul edildi",
   [MailIdentityAuditAction.TeamMemberRoleChanged]: "Ekip rolü güncellendi",
   [MailIdentityAuditAction.TeamMemberRemoved]: "Ekip üyesi çıkarıldı",
+  [MailIdentityAuditAction.SecurityRequireTotpUpdated]:
+    "2FA zorunluluğu güncellendi",
+  [MailIdentityAuditAction.SecurityTotpEnabled]: "TOTP etkinleştirildi",
+  [MailIdentityAuditAction.SecurityTotpDisabled]: "TOTP kapatıldı",
 };
 
 function readString(metadata: Record<string, unknown> | null, key: string): string | null {
