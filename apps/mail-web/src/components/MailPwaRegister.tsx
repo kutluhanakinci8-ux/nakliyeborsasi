@@ -1,6 +1,10 @@
 "use client";
 
 import { useEffect } from "react";
+import {
+  isMailNotifySoundEnabled,
+  playMailNotifyBeep,
+} from "@/lib/mailNotifySound";
 
 export function MailPwaRegister() {
   useEffect(() => {
@@ -10,6 +14,18 @@ export function MailPwaRegister() {
     void navigator.serviceWorker.register("/sw.js").catch(() => {
       /* pilot: SW opsiyonel */
     });
+    const onMessage = (event: MessageEvent) => {
+      if (
+        event.data?.type === "lerta-mail-push" &&
+        isMailNotifySoundEnabled()
+      ) {
+        playMailNotifyBeep();
+      }
+    };
+    navigator.serviceWorker.addEventListener("message", onMessage);
+    return () => {
+      navigator.serviceWorker.removeEventListener("message", onMessage);
+    };
   }, []);
   return null;
 }

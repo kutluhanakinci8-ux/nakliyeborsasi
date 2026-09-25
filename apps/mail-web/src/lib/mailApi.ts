@@ -57,6 +57,7 @@ export type MailInboxRule = {
   subjectContains: string | null;
   actionStar: boolean;
   actionCustomFolderId: string | null;
+  actionArchive: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -76,6 +77,7 @@ export async function createInboxRule(
     subjectContains?: string;
     actionStar?: boolean;
     actionCustomFolderId?: string | null;
+    actionArchive?: boolean;
     enabled?: boolean;
   },
 ) {
@@ -83,6 +85,17 @@ export async function createInboxRule(
     accessToken,
     "company/mail-inbox/rules",
     { method: "POST", body: JSON.stringify(body) },
+  );
+}
+
+export async function reorderInboxRules(
+  accessToken: string,
+  ruleIds: string[],
+) {
+  return apiFetch<{ rules: MailInboxRule[] }>(
+    accessToken,
+    "company/mail-inbox/rules/reorder",
+    { method: "POST", body: JSON.stringify({ ruleIds }) },
   );
 }
 
@@ -95,6 +108,7 @@ export async function updateInboxRule(
     subjectContains: string | null;
     actionStar: boolean;
     actionCustomFolderId: string | null;
+    actionArchive: boolean;
     enabled: boolean;
   }>,
 ) {

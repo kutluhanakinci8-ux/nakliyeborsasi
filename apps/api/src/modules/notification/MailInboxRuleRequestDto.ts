@@ -1,4 +1,7 @@
 import {
+  ArrayMaxSize,
+  ArrayMinSize,
+  IsArray,
   IsBoolean,
   IsOptional,
   IsString,
@@ -33,7 +36,19 @@ export class CreateMailInboxRuleRequestDto {
 
   @IsOptional()
   @IsBoolean()
+  public actionArchive?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
   public enabled?: boolean;
+}
+
+export class ReorderMailInboxRulesRequestDto {
+  @IsArray()
+  @ArrayMinSize(1)
+  @ArrayMaxSize(20)
+  @IsUUID("4", { each: true })
+  public ruleIds!: string[];
 }
 
 export class UpdateMailInboxRuleRequestDto {
@@ -60,6 +75,10 @@ export class UpdateMailInboxRuleRequestDto {
   @ValidateIf((_, value) => value !== null && value !== undefined)
   @IsUUID()
   public actionCustomFolderId?: string | null;
+
+  @IsOptional()
+  @IsBoolean()
+  public actionArchive?: boolean;
 
   @IsOptional()
   @IsBoolean()

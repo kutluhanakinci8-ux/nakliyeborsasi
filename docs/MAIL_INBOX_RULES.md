@@ -13,12 +13,14 @@ En az biri dolu olmalı; ikisi doluysa **her ikisi** sağlanmalı.
 
 - `actionStar` — yıldızla
 - `actionCustomFolderId` — özel klasöre taşı
+- `actionArchive` — arşive taşı (maildir + `mailboxFolder`)
 
-En az biri seçilmeli.
+En az biri seçilmeli. Birden fazla işlem aynı kuralda birlikte uygulanabilir.
 
 ## API
 
 - `GET/POST/PATCH/DELETE company/mail-inbox/rules`
+- `POST company/mail-inbox/rules/reorder` — `{ "ruleIds": ["uuid", ...] }` tam liste sırası
 
 ## UI
 

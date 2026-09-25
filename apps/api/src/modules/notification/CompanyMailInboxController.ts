@@ -60,6 +60,7 @@ import {
 import { MailInboxRuleService } from "./MailInboxRuleService";
 import {
   CreateMailInboxRuleRequestDto,
+  ReorderMailInboxRulesRequestDto,
   UpdateMailInboxRuleRequestDto,
 } from "./MailInboxRuleRequestDto";
 
@@ -98,9 +99,22 @@ export class CompanyMailInboxController {
       subjectContains: body.subjectContains,
       actionStar: body.actionStar,
       actionCustomFolderId: body.actionCustomFolderId ?? null,
+      actionArchive: body.actionArchive,
       enabled: body.enabled,
     });
     return { rule };
+  }
+
+  @Post("rules/reorder")
+  public async reorderInboxRules(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: ReorderMailInboxRulesRequestDto,
+  ) {
+    const rules = await this.mailInboxRuleService.reorder(
+      user.companyId,
+      body.ruleIds,
+    );
+    return { rules };
   }
 
   @Patch("rules/:ruleId")
@@ -115,6 +129,7 @@ export class CompanyMailInboxController {
       subjectContains: body.subjectContains,
       actionStar: body.actionStar,
       actionCustomFolderId: body.actionCustomFolderId,
+      actionArchive: body.actionArchive,
       enabled: body.enabled,
     });
     return { rule };

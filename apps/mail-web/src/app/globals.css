@@ -500,6 +500,17 @@ a {
   margin: 12px 0;
 }
 
+.mail-rules-order {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 0.35rem;
+}
+
+.mail-rules-order button {
+  padding: 0.15rem 0.45rem;
+  font-size: 0.85rem;
+}
+
 .mail-rules-item {
   border: 1px solid var(--border);
   border-radius: 8px;

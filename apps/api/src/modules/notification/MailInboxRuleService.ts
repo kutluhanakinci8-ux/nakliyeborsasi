@@ -8,6 +8,7 @@ import { Repository } from "typeorm";
 import { MailInboxRuleEntity } from "../../infrastructure/database/entities/MailInboxRuleEntity";
 import { MailInboundMessageEntity } from "../../infrastructure/database/entities/MailInboundMessageEntity";
 import { MailCustomFolderService } from "./MailCustomFolderService";
+import { MailImapMaildirService } from "./MailImapMaildirService";
 
 const MAX_RULES = 20;
 
@@ -20,6 +21,7 @@ export type MailInboxRuleDto = {
   subjectContains: string | null;
   actionStar: boolean;
   actionCustomFolderId: string | null;
+  actionArchive: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -32,6 +34,7 @@ export class MailInboxRuleService {
     @InjectRepository(MailInboundMessageEntity)
     private readonly inboundRepository: Repository<MailInboundMessageEntity>,
     private readonly mailCustomFolderService: MailCustomFolderService,
+    private readonly mailImapMaildirService: MailImapMaildirService,
   ) {}
 
   public async list(organizationId: string): Promise<MailInboxRuleDto[]> {
@@ -50,6 +53,7 @@ export class MailInboxRuleService {
       subjectContains?: string | null;
       actionStar?: boolean;
       actionCustomFolderId?: string | null;
+      actionArchive?: boolean;
       enabled?: boolean;
     },
   ): Promise<MailInboxRuleDto> {
@@ -76,6 +80,7 @@ export class MailInboxRuleService {
         subjectContains: this.normalizeOptional(input.subjectContains),
         actionStar: Boolean(input.actionStar),
         actionCustomFolderId: input.actionCustomFolderId ?? null,
+        actionArchive: Boolean(input.actionArchive),
       }),
     );
     return this.toDto(row);
@@ -90,6 +95,7 @@ export class MailInboxRuleService {
       subjectContains?: string | null;
       actionStar?: boolean;
       actionCustomFolderId?: string | null;
+      actionArchive?: boolean;
       enabled?: boolean;
     },
   ): Promise<MailInboxRuleDto> {
@@ -109,6 +115,7 @@ export class MailInboxRuleService {
         input.actionCustomFolderId !== undefined
           ? input.actionCustomFolderId
           : row.actionCustomFolderId,
+      actionArchive: input.actionArchive ?? row.actionArchive,
       enabled: input.enabled ?? row.enabled,
     };
     this.validateRuleInput(merged);
@@ -123,9 +130,35 @@ export class MailInboxRuleService {
     row.subjectContains = merged.subjectContains;
     row.actionStar = merged.actionStar;
     row.actionCustomFolderId = merged.actionCustomFolderId;
+    row.actionArchive = merged.actionArchive;
     row.enabled = merged.enabled;
     await this.ruleRepository.save(row);
     return this.toDto(row);
+  }
+
+  public async reorder(
+    organizationId: string,
+    ruleIds: string[],
+  ): Promise<MailInboxRuleDto[]> {
+    const existing = await this.ruleRepository.find({
+      where: { organizationId },
+    });
+    const idSet = new Set(ruleIds);
+    if (
+      existing.length !== ruleIds.length ||
+      existing.some((row) => !idSet.has(row.id))
+    ) {
+      throw new BadRequestException("Kural sırası listesi geçersiz.");
+    }
+    await Promise.all(
+      ruleIds.map((id, index) =>
+        this.ruleRepository.update(
+          { id, organizationId },
+          { sortOrder: index },
+        ),
+      ),
+    );
+    return this.list(organizationId);
   }
 
   public async remove(organizationId: string, ruleId: string): Promise<void> {
@@ -160,6 +193,15 @@ export class MailInboxRuleService {
         message.customFolderId = rule.actionCustomFolderId;
         changed = true;
       }
+      if (rule.actionArchive && message.mailboxFolder === "inbox") {
+        message.maildirFilePath = this.mailImapMaildirService.relocateMailboxFile(
+          message.maildirFilePath,
+          "archive",
+        );
+        message.mailboxFolder = "archive";
+        message.customFolderId = null;
+        changed = true;
+      }
       if (changed) {
         await this.inboundRepository.save(message);
       }
@@ -189,6 +231,7 @@ export class MailInboxRuleService {
     subjectContains?: string | null;
     actionStar?: boolean;
     actionCustomFolderId?: string | null;
+    actionArchive?: boolean;
     name?: string;
   }): void {
     const from = this.normalizeOptional(input.fromContains);
@@ -198,9 +241,13 @@ export class MailInboxRuleService {
         "En az bir koşul gerekli (gönderen veya konu içerir).",
       );
     }
-    if (!input.actionStar && !input.actionCustomFolderId) {
+    if (
+      !input.actionStar &&
+      !input.actionCustomFolderId &&
+      !input.actionArchive
+    ) {
       throw new BadRequestException(
-        "En az bir işlem seçin (yıldızla veya klasör).",
+        "En az bir işlem seçin (yıldızla, klasör veya arşiv).",
       );
     }
     if (!input.name?.trim()) {
@@ -236,6 +283,7 @@ export class MailInboxRuleService {
       subjectContains: row.subjectContains,
       actionStar: row.actionStar,
       actionCustomFolderId: row.actionCustomFolderId,
+      actionArchive: row.actionArchive,
       createdAt: row.createdAt.toISOString(),
       updatedAt: row.updatedAt.toISOString(),
     };
