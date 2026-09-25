@@ -12,7 +12,7 @@
 ## Cutover adımları (bakım penceresi)
 
 1. **U88 taşıma:** PM2/nginx vhost `u88-lerta-com-tr.conf` — `www` yerine alt host’a yönlendir veya ayrı sunucu.
-2. **Nginx:** `www.lerta.com.tr` + kök `lerta.com.tr` → `lerta-mail-marketing` (:3014) veya statik export.
+2. **Nginx:** `CONFIRM_CUTOVER=yes bash scripts/apply-www-cutover-lerta-mail.sh` (DNS A doğrulaması + marketing + `nginx-www-lerta-mail-marketing.sh`).
 3. **Sertifika:** `certbot -d www.lerta.com.tr -d lerta.com.tr` (mevcut posta sertifikalarına dokunma).
 4. **Smoke test:** vitrin, kayıt, posta girişi, MX gönderim.
 5. **Geri alma:** eski `www` vhost yedeğini `sites-available` altında sakla; 5 dk içinde `ln -sf` ile geri dön.
