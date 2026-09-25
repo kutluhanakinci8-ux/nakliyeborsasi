@@ -13,7 +13,7 @@
 | A | `kullanici` | `168.231.109.27` |
 
 - Webmail UI: **https://posta.lerta.com.tr**
-- Kurumsal vitrin (www cutover öncesi): **https://kurumsal.lerta.com.tr**
+- Kurumsal vitrin (www cutover öncesi): **https://kurumsal.lerta.com.tr** (A kaydı + Let’s Encrypt — canlı)
 - `www` / kök → U88 (dokunmayın)
 
 ## Platform gönderim (`notifications@mail.lerta.com.tr`)

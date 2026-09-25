@@ -13,6 +13,14 @@ import {
   selectMailPlan,
   startCorporateCheckout,
 } from "@/lib/consoleApi";
+
+const CORPORATE_PLAN_CODE = "lerta_mail_corporate_tr";
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+}
 import { useConsoleSession } from "@/lib/session";
 
 export default function DashboardPage() {
@@ -32,23 +40,20 @@ export default function DashboardPage() {
   const [planMessage, setPlanMessage] = useState("");
   const [mailboxQuota, setMailboxQuota] = useState<string>("");
 
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-    const params = new URLSearchParams(window.location.search);
-    const billing = params.get("billing");
-    if (billing === "success") {
-      setPlanMessage("Ödeme alındı. Kurumsal plan birkaç saniye içinde güncellenir.");
-    } else if (billing === "cancel") {
-      const reason = params.get("reason");
-      setPlanMessage(
-        reason
-          ? `Ödeme tamamlanamadı (${reason}).`
-          : "Ödeme iptal edildi veya tamamlanamadı.",
+  async function refreshSubscription(token: string): Promise<string | null> {
+    try {
+      const sub = await fetchMailSubscription(token);
+      setPlanName(sub.subscription.plan?.displayName ?? sub.subscription.planCode);
+      setSendLimit(sub.subscription.sendRate);
+      setMailboxQuota(
+        `${sub.subscription.mailboxQuota.used}/${sub.subscription.mailboxQuota.limit} kutu`,
       );
+      return sub.subscription.planCode;
+    } catch {
+      setPlanName(null);
+      return null;
     }
-  }, []);
+  }
 
   useEffect(() => {
     if (!accessToken) {
@@ -56,6 +61,24 @@ export default function DashboardPage() {
       return;
     }
     void (async () => {
+      const params =
+        typeof window !== "undefined"
+          ? new URLSearchParams(window.location.search)
+          : null;
+      const billing = params?.get("billing") ?? null;
+      if (billing === "success") {
+        setPlanMessage(
+          "Ödeme alındı. Kurumsal plan etkinleştiriliyor…",
+        );
+      } else if (billing === "cancel") {
+        const reason = params?.get("reason");
+        setPlanMessage(
+          reason
+            ? `Ödeme tamamlanamadı (${reason}).`
+            : "Ödeme iptal edildi veya tamamlanamadı.",
+        );
+      }
+
       setOperator(await isPlatformOperator(accessToken));
       try {
         const data = await fetchMailIdentity(accessToken);
@@ -66,15 +89,18 @@ export default function DashboardPage() {
       } catch {
         setFromAddress(null);
       }
-      try {
-        const sub = await fetchMailSubscription(accessToken);
-        setPlanName(sub.subscription.plan?.displayName ?? sub.subscription.planCode);
-        setSendLimit(sub.subscription.sendRate);
-        setMailboxQuota(
-          `${sub.subscription.mailboxQuota.used}/${sub.subscription.mailboxQuota.limit} kutu`,
-        );
-      } catch {
-        setPlanName(null);
+
+      await refreshSubscription(accessToken);
+
+      if (billing === "success") {
+        for (let attempt = 0; attempt < 6; attempt += 1) {
+          await sleep(attempt === 0 ? 1500 : 2500);
+          const planCode = await refreshSubscription(accessToken);
+          if (planCode === CORPORATE_PLAN_CODE) {
+            setPlanMessage("Kurumsal plan aktif.");
+            break;
+          }
+        }
       }
     })();
   }, [accessToken, router]);
@@ -105,14 +131,9 @@ export default function DashboardPage() {
     }
     setPlanMessage("");
     try {
-      await selectMailPlan(accessToken, "lerta_mail_corporate_tr");
+      await selectMailPlan(accessToken, CORPORATE_PLAN_CODE);
       setPlanMessage("Kurumsal plan (deneme) aktif.");
-      const sub = await fetchMailSubscription(accessToken);
-      setPlanName(sub.subscription.plan?.displayName ?? null);
-      setSendLimit(sub.subscription.sendRate);
-      setMailboxQuota(
-        `${sub.subscription.mailboxQuota.used}/${sub.subscription.mailboxQuota.limit} kutu`,
-      );
+      await refreshSubscription(accessToken);
     } catch {
       setPlanMessage("Plan güncellenemedi.");
     }
