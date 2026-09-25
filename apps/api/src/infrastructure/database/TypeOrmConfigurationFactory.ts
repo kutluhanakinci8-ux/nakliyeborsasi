@@ -41,6 +41,7 @@ import { MailImapCredentialEntity } from "./entities/MailImapCredentialEntity";
 import { MailComposeDraftEntity } from "./entities/MailComposeDraftEntity";
 import { CompanyMailTeamInviteEntity } from "./entities/CompanyMailTeamInviteEntity";
 import { MailOrganizationBillingStateEntity } from "./entities/MailOrganizationBillingStateEntity";
+import { MailOrganizationOperatorStateEntity } from "./entities/MailOrganizationOperatorStateEntity";
 
 @Injectable()
 export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
@@ -97,6 +98,7 @@ export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
         MailComposeDraftEntity,
         CompanyMailTeamInviteEntity,
         MailOrganizationBillingStateEntity,
+        MailOrganizationOperatorStateEntity,
       ],
       synchronize,
       logging: false,

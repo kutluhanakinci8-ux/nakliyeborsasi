@@ -19,6 +19,8 @@ export const MailIdentityAuditAction = {
   AdminDomainCreated: "MAIL_IDENTITY_ADMIN_DOMAIN_CREATED",
   AdminDomainDnsVerified: "MAIL_IDENTITY_ADMIN_DOMAIN_DNS_VERIFIED",
   AdminDomainManuallyVerified: "MAIL_IDENTITY_ADMIN_DOMAIN_MANUAL_VERIFIED",
+  TenantSuspended: "MAIL_TENANT_SUSPENDED",
+  TenantUnsuspended: "MAIL_TENANT_UNSUSPENDED",
 } as const;
 
 export type MailIdentityAuditActionCode =

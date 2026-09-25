@@ -6,8 +6,12 @@ import { ConsoleShell } from "@/components/ConsoleShell";
 import {
   fetchMailBillingStatus,
   fetchOperatorDomains,
+  fetchOperatorTenants,
   isPlatformOperator,
+  operatorSuspendTenant,
+  operatorUnsuspendTenant,
   operatorVerifyDomainDns,
+  type MailOperatorTenantRow,
 } from "@/lib/consoleApi";
 import { useConsoleSession } from "@/lib/session";
 
@@ -29,6 +33,8 @@ export default function OperatorPage() {
   const [billingStatus, setBillingStatus] = useState<
     Awaited<ReturnType<typeof fetchMailBillingStatus>>["status"] | null
   >(null);
+  const [tenants, setTenants] = useState<MailOperatorTenantRow[]>([]);
+  const [tenantBusyId, setTenantBusyId] = useState<string | null>(null);
 
   async function reload() {
     if (!accessToken) {
@@ -50,6 +56,12 @@ export default function OperatorPage() {
         return;
       }
       await reload();
+      try {
+        const tenantData = await fetchOperatorTenants(accessToken);
+        setTenants(tenantData.tenants);
+      } catch {
+        setTenants([]);
+      }
       try {
         const billing = await fetchMailBillingStatus(accessToken);
         setBillingStatus(billing.status);
@@ -150,7 +162,141 @@ export default function OperatorPage() {
           </p>
         </div>
       ) : null}
+      <div className="card" style={{ marginBottom: 16 }}>
+        <h2 style={{ marginTop: 0 }}>Mail tenant&apos;ları</h2>
+        {tenants.length === 0 ? (
+          <p style={{ color: "var(--muted)" }}>Henüz kayıtlı tenant yok.</p>
+        ) : (
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr style={{ textAlign: "left", borderBottom: "1px solid var(--border)" }}>
+                <th>Firma</th>
+                <th>Plan</th>
+                <th>Kutular</th>
+                <th>Domain</th>
+                <th>Durum</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              {tenants.map((row) => (
+                <tr key={row.organizationId} style={{ borderBottom: "1px solid #eee" }}>
+                  <td style={{ padding: "8px 4px" }}>
+                    <strong>{row.companyLegalName}</strong>
+                    <br />
+                    <code style={{ fontSize: 11 }}>{row.organizationId.slice(0, 8)}…</code>
+                  </td>
+                  <td>
+                    {row.planCode ?? "—"}
+                    {row.billingStatus ? (
+                      <div style={{ fontSize: 12, color: "var(--muted)" }}>
+                        {row.billingStatus}
+                      </div>
+                    ) : null}
+                  </td>
+                  <td>{row.mailboxCount}</td>
+                  <td>
+                    {row.customDomain ?? "—"}
+                    {row.customDomain ? (
+                      <span
+                        className={`badge ${row.domainVerified ? "ok" : "pending"}`}
+                        style={{ marginLeft: 6 }}
+                      >
+                        {row.domainVerified ? "DNS OK" : "bekliyor"}
+                      </span>
+                    ) : null}
+                  </td>
+                  <td>
+                    {row.suspended ? (
+                      <span className="badge pending">askıda</span>
+                    ) : row.abuseFlag ? (
+                      <span className="badge pending">abuse</span>
+                    ) : (
+                      <span className="badge ok">aktif</span>
+                    )}
+                    {row.suspendReason ? (
+                      <div style={{ fontSize: 11, color: "#b45309" }}>
+                        {row.suspendReason}
+                      </div>
+                    ) : null}
+                  </td>
+                  <td>
+                    {row.suspended ? (
+                      <button
+                        type="button"
+                        className="btn secondary"
+                        disabled={tenantBusyId === row.organizationId}
+                        onClick={() => {
+                          void (async () => {
+                            if (!accessToken) {
+                              return;
+                            }
+                            setTenantBusyId(row.organizationId);
+                            try {
+                              await operatorUnsuspendTenant(
+                                accessToken,
+                                row.organizationId,
+                              );
+                              const data = await fetchOperatorTenants(accessToken);
+                              setTenants(data.tenants);
+                              setFlash("Tenant askıdan çıkarıldı.");
+                            } catch {
+                              setFlash("Askı kaldırılamadı.");
+                            } finally {
+                              setTenantBusyId(null);
+                            }
+                          })();
+                        }}
+                      >
+                        Askıyı kaldır
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="btn secondary"
+                        disabled={tenantBusyId === row.organizationId}
+                        onClick={() => {
+                          const reason = window.prompt(
+                            "Askıya alma nedeni (spam/abuse):",
+                            "Şüpheli gönderim",
+                          );
+                          if (!reason) {
+                            return;
+                          }
+                          void (async () => {
+                            if (!accessToken) {
+                              return;
+                            }
+                            setTenantBusyId(row.organizationId);
+                            try {
+                              await operatorSuspendTenant(
+                                accessToken,
+                                row.organizationId,
+                                reason,
+                              );
+                              const data = await fetchOperatorTenants(accessToken);
+                              setTenants(data.tenants);
+                              setFlash("Tenant askıya alındı.");
+                            } catch {
+                              setFlash("Askıya alınamadı.");
+                            } finally {
+                              setTenantBusyId(null);
+                            }
+                          })();
+                        }}
+                      >
+                        Askıya al
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
       <div className="card">
+        <h2 style={{ marginTop: 0 }}>Domainler</h2>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr

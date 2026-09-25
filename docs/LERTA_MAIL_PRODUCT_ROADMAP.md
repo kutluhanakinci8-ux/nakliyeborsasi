@@ -54,7 +54,7 @@
 | B4 | Alias / paylaşımlı adres (isteğe bağlı) | `destek@` → iki kullanıcı |
 | B5 | Gönderim kotası & upgrade | Dashboard saatlik kullanım çubuğu + `send-rate` API — **uygulandı** |
 | B6 | Abonelik yaşam döngüsü | Stripe webhook grace, iptal/yenileme, konsol — **uygulandı** |
-| B7 | Operatör: tenant listesi, askıya alma, abuse | `yonetim/operator` genişletme |
+| B7 | Operatör: tenant listesi, askıya alma, abuse | `/operator` tenant tablosu + gönderim engeli — **uygulandı** |
 
 ---
 

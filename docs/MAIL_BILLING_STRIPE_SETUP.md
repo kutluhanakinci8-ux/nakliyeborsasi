@@ -9,7 +9,7 @@
 ## 2. Webhook
 
 - URL: `https://yonetim.lerta.com.tr/api/v1/webhooks/mail-billing/stripe`
-- Olaylar: `checkout.session.completed`, `invoice.paid`
+- Olaylar: `checkout.session.completed`, `invoice.paid`, `invoice.payment_failed`, `customer.subscription.updated`, `customer.subscription.deleted`
 - Signing secret → `STRIPE_WEBHOOK_SECRET`
 
 ## 3. VPS `.env`

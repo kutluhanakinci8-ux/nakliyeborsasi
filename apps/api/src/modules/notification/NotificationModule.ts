@@ -25,6 +25,10 @@ import { CompanyMailTeamInviteEntity } from "../../infrastructure/database/entit
 import { MailOrganizationBillingStateEntity } from "../../infrastructure/database/entities/MailOrganizationBillingStateEntity";
 import { MailSubscriptionLifecycleService } from "./MailSubscriptionLifecycleService";
 import { MailBillingGraceScheduler } from "./MailBillingGraceScheduler";
+import { MailOrganizationOperatorStateEntity } from "../../infrastructure/database/entities/MailOrganizationOperatorStateEntity";
+import { PlatformMailTenantAdminService } from "./PlatformMailTenantAdminService";
+import { MailTenantSuspensionService } from "./MailTenantSuspensionService";
+import { CompanySubscriptionEntity } from "../../infrastructure/database/entities/CompanySubscriptionEntity";
 import { MailTenantDnsVerificationScheduler } from "./MailTenantDnsVerificationScheduler";
 import { MailOrganizationSendRateService } from "./MailOrganizationSendRateService";
 import { MailCustomDomainService } from "./MailCustomDomainService";
@@ -121,6 +125,8 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
       MailComposeDraftEntity,
       CompanyMailTeamInviteEntity,
       MailOrganizationBillingStateEntity,
+      MailOrganizationOperatorStateEntity,
+      CompanySubscriptionEntity,
     ]),
   ],
   controllers: [
@@ -183,6 +189,8 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     CompanyMailTeamService,
     MailSubscriptionLifecycleService,
     MailBillingGraceScheduler,
+    PlatformMailTenantAdminService,
+    MailTenantSuspensionService,
   ],
   exports: [
     AuthNotificationService,

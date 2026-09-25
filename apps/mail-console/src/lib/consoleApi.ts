@@ -191,6 +191,55 @@ export async function provisionCustomMailbox(
   );
 }
 
+export type MailOperatorTenantRow = {
+  organizationId: string;
+  companyLegalName: string;
+  planCode: string | null;
+  billingStatus: string | null;
+  mailboxCount: number;
+  senderCount: number;
+  customDomain: string | null;
+  domainVerified: boolean;
+  suspended: boolean;
+  abuseFlag: boolean;
+  suspendReason: string | null;
+  operatorNote: string | null;
+  suspendedAt: string | null;
+};
+
+export async function fetchOperatorTenants(accessToken: string) {
+  return apiFetch<{ tenants: MailOperatorTenantRow[] }>(
+    accessToken,
+    "platform-admin/mail/tenants",
+  );
+}
+
+export async function operatorSuspendTenant(
+  accessToken: string,
+  organizationId: string,
+  reason: string,
+) {
+  return apiFetch<{ tenant: MailOperatorTenantRow }>(
+    accessToken,
+    `platform-admin/mail/tenants/${organizationId}/suspend`,
+    {
+      method: "POST",
+      body: JSON.stringify({ reason, abuseFlag: true }),
+    },
+  );
+}
+
+export async function operatorUnsuspendTenant(
+  accessToken: string,
+  organizationId: string,
+) {
+  return apiFetch<{ tenant: MailOperatorTenantRow }>(
+    accessToken,
+    `platform-admin/mail/tenants/${organizationId}/unsuspend`,
+    { method: "POST", body: JSON.stringify({}) },
+  );
+}
+
 export async function fetchOperatorDomains(accessToken: string) {
   return apiFetch<{ domains: unknown[] }>(
     accessToken,

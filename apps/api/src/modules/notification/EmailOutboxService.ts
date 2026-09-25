@@ -12,6 +12,7 @@ import { UserNotificationPreferenceService } from "./UserNotificationPreferenceS
 import { EmailDeliveryService } from "./EmailDeliveryService";
 import { MailSenderResolutionService } from "./MailSenderResolutionService";
 import { MailOrganizationSendRateService } from "./MailOrganizationSendRateService";
+import { MailTenantSuspensionService } from "./MailTenantSuspensionService";
 import {
   appendTenantTrustFooter,
   resolveTenantReplyToAddress,
@@ -34,6 +35,7 @@ export class EmailOutboxService {
     private readonly emailDeliveryService: EmailDeliveryService,
     private readonly mailSenderResolutionService: MailSenderResolutionService,
     private readonly mailOrganizationSendRateService: MailOrganizationSendRateService,
+    private readonly mailTenantSuspensionService: MailTenantSuspensionService,
     @InjectRepository(CompanyEntity)
     private readonly companyRepository: Repository<CompanyEntity>,
   ) {}
@@ -129,6 +131,9 @@ export class EmailOutboxService {
         );
       tenantOrganizationIdForBounce = resolved.tenantOrganizationId;
       if (resolved.tenantOrganizationId) {
+        await this.mailTenantSuspensionService.assertOrganizationCanSend(
+          resolved.tenantOrganizationId,
+        );
         await this.mailOrganizationSendRateService.assertCanSend(
           resolved.tenantOrganizationId,
         );

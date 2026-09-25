@@ -12,6 +12,7 @@ import { MailInboundMessageEntity } from "../../infrastructure/database/entities
 import { MailMailboxSentEntity } from "../../infrastructure/database/entities/MailMailboxSentEntity";
 import { SmtpEmailSender } from "./SmtpEmailSender";
 import { MailOrganizationSendRateService } from "./MailOrganizationSendRateService";
+import { MailTenantSuspensionService } from "./MailTenantSuspensionService";
 import { resolveTenantReplyToAddress } from "./MailTenantEmailBranding";
 
 export type ComposeAttachmentInput = {
@@ -28,6 +29,7 @@ export class MailMailboxComposeService {
   public constructor(
     private readonly smtpEmailSender: SmtpEmailSender,
     private readonly mailOrganizationSendRateService: MailOrganizationSendRateService,
+    private readonly mailTenantSuspensionService: MailTenantSuspensionService,
     @InjectRepository(MailSenderIdentityEntity)
     private readonly senderRepository: Repository<MailSenderIdentityEntity>,
     @InjectRepository(MailMailboxEntity)
@@ -48,6 +50,9 @@ export class MailMailboxComposeService {
     const { fromHeader, fromEmail, mailbox } =
       await this.resolveSenderMailbox(params.organizationId);
     await this.assertRateLimit(params.organizationId);
+    await this.mailTenantSuspensionService.assertOrganizationCanSend(
+      params.organizationId,
+    );
     const nodemailerAttachments = this.parseAttachments(params.attachments);
     const replyTo = resolveTenantReplyToAddress();
     const smtpMessageId = await this.smtpEmailSender.send({
@@ -100,6 +105,9 @@ export class MailMailboxComposeService {
       params.organizationId,
     );
     await this.assertRateLimit(params.organizationId);
+    await this.mailTenantSuspensionService.assertOrganizationCanSend(
+      params.organizationId,
+    );
     const nodemailerAttachments = this.parseAttachments(params.attachments);
     const replyTo = resolveTenantReplyToAddress();
     const inReplyTo = inbound.internetMessageId

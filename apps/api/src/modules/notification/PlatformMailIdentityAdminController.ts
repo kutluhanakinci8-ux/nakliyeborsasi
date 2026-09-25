@@ -24,6 +24,7 @@ import {
 import { MailInboundIngestService } from "./MailInboundIngestService";
 import { MailInboundRoutingService } from "./MailInboundRoutingService";
 import { MailImapAccessService } from "./MailImapAccessService";
+import { PlatformMailTenantAdminService } from "./PlatformMailTenantAdminService";
 
 @Controller("platform-admin/mail")
 @UseGuards(JwtAuthenticationGuard, PlatformAdminGuard)
@@ -37,7 +38,55 @@ export class PlatformMailIdentityAdminController {
     private readonly mailInboundIngestService: MailInboundIngestService,
     private readonly mailInboundRoutingService: MailInboundRoutingService,
     private readonly mailImapAccessService: MailImapAccessService,
+    private readonly platformMailTenantAdminService: PlatformMailTenantAdminService,
   ) {}
+
+  @Get("tenants")
+  public async listTenants() {
+    return {
+      tenants: await this.platformMailTenantAdminService.listTenants(),
+    };
+  }
+
+  @Post("tenants/:organizationId/suspend")
+  public async suspendTenant(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("organizationId") organizationId: string,
+    @Body() body: { reason?: string; abuseFlag?: boolean },
+  ) {
+    const tenant = await this.platformMailTenantAdminService.suspendTenant(
+      user,
+      organizationId,
+      body,
+    );
+    return { ok: true, tenant };
+  }
+
+  @Post("tenants/:organizationId/unsuspend")
+  public async unsuspendTenant(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("organizationId") organizationId: string,
+  ) {
+    const tenant = await this.platformMailTenantAdminService.unsuspendTenant(
+      user,
+      organizationId,
+    );
+    return { ok: true, tenant };
+  }
+
+  @Patch("tenants/:organizationId/note")
+  public async updateTenantNote(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("organizationId") organizationId: string,
+    @Body() body: { note: string },
+  ) {
+    const tenant = await this.platformMailTenantAdminService.updateTenantNote(
+      user,
+      organizationId,
+      body.note ?? "",
+    );
+    return { ok: true, tenant };
+  }
 
   @Post("imap/sync-dovecot")
   public async syncDovecotImap() {
