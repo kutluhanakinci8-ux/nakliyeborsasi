@@ -367,6 +367,68 @@ export async function sendDraft(accessToken: string, draftId: string) {
   });
 }
 
+export type MailComposePreset = {
+  id: string;
+  kind: "signature" | "template";
+  name: string;
+  subject: string | null;
+  bodyText: string;
+  isDefault: boolean;
+  updatedAt: string;
+};
+
+export async function fetchComposePresets(accessToken: string) {
+  return apiFetch<{
+    signatures: MailComposePreset[];
+    templates: MailComposePreset[];
+  }>(accessToken, "company/mail-inbox/compose-presets");
+}
+
+export async function createComposePreset(
+  accessToken: string,
+  body: {
+    kind: "signature" | "template";
+    name: string;
+    subject?: string;
+    bodyText: string;
+    isDefault?: boolean;
+  },
+) {
+  const payload = await apiFetch<{ preset: MailComposePreset }>(
+    accessToken,
+    "company/mail-inbox/compose-presets",
+    { method: "POST", body: JSON.stringify(body) },
+  );
+  return payload.preset;
+}
+
+export async function updateComposePreset(
+  accessToken: string,
+  presetId: string,
+  body: {
+    name?: string;
+    subject?: string;
+    bodyText?: string;
+    isDefault?: boolean;
+  },
+) {
+  const payload = await apiFetch<{ preset: MailComposePreset }>(
+    accessToken,
+    `company/mail-inbox/compose-presets/${presetId}`,
+    { method: "PATCH", body: JSON.stringify(body) },
+  );
+  return payload.preset;
+}
+
+export async function deleteComposePreset(
+  accessToken: string,
+  presetId: string,
+) {
+  await apiFetch(accessToken, `company/mail-inbox/compose-presets/${presetId}`, {
+    method: "DELETE",
+  });
+}
+
 export async function fetchImapSettings(accessToken: string) {
   const payload = await apiFetch<{ settings: MailImapSettings }>(
     accessToken,

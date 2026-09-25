@@ -80,7 +80,7 @@
 |---|-----|---------|----------------|
 | D1 | Konuşma / thread listesi | Yüksek | `In-Reply-To` zinciri, API `threads`, webmail konuşma görünümü — **uygulandı** |
 | D2 | Çöp / arşiv klasörleri | Yüksek | `mailboxFolder`, Maildir `.Archive`/`.Trash`, webmail — **uygulandı** |
-| D3 | İmza ve şablonlar | Orta | Compose’da seçilebilir |
+| D3 | İmza ve şablonlar | Orta | `compose-presets` API, ayarlar + yaz ekranı — **uygulandı** |
 | D4 | Gelişmiş arama (filtre) | Orta | Gönderen, tarih, ek var |
 | D5 | Büyük ek / kota depolama | Orta | Plan depolama GB; uyarı |
 | D6 | Takvim / kişiler | Düşük | Harici CalDAV sonra |

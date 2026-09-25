@@ -6,6 +6,7 @@ import {
   rotateImapPassword,
   type MailImapSettings,
 } from "@/lib/mailApi";
+import { MailComposePresetsPanel } from "./MailComposePresetsPanel";
 
 type Props = {
   accessToken: string;
@@ -13,6 +14,7 @@ type Props = {
 };
 
 export function MailSettingsPanel({ accessToken, onClose }: Props) {
+  const [tab, setTab] = useState<"imap" | "presets">("imap");
   const [settings, setSettings] = useState<MailImapSettings | null>(null);
   const [error, setError] = useState("");
   const [newPassword, setNewPassword] = useState<string | null>(null);
@@ -58,7 +60,28 @@ export function MailSettingsPanel({ accessToken, onClose }: Props) {
         role="dialog"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2>IMAP / Outlook</h2>
+        <h2>Ayarlar</h2>
+        <div className="settings-tabs">
+          <button
+            type="button"
+            className={tab === "imap" ? "active" : ""}
+            onClick={() => setTab("imap")}
+          >
+            IMAP
+          </button>
+          <button
+            type="button"
+            className={tab === "presets" ? "active" : ""}
+            onClick={() => setTab("presets")}
+          >
+            İmza / şablon
+          </button>
+        </div>
+        {tab === "presets" ? (
+          <MailComposePresetsPanel accessToken={accessToken} />
+        ) : null}
+        {tab === "imap" ? (
+          <>
         <p style={{ color: "var(--muted)", fontSize: "0.9rem" }}>
           Masaüstü istemci (Thunderbird, Outlook) ile kutunuza bağlanın.
         </p>
@@ -106,6 +129,13 @@ export function MailSettingsPanel({ accessToken, onClose }: Props) {
             {loading ? "…" : "IMAP şifresi oluştur / yenile"}
           </button>
         </div>
+          </>
+        ) : null}
+        {tab === "presets" ? (
+          <div className="compose-actions">
+            <button type="button" onClick={onClose}>Kapat</button>
+          </div>
+        ) : null}
       </div>
     </div>
   );

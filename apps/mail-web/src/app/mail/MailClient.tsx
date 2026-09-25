@@ -7,6 +7,7 @@ import {
   createDraft,
   deleteDraft,
   downloadMailAttachment,
+  fetchComposePresets,
   fetchDrafts,
   fetchInbox,
   fetchInboxThreads,
@@ -21,6 +22,7 @@ import {
   setMessageMailboxFolder,
   deleteMessagePermanently,
   updateDraft,
+  type MailComposePreset,
   type MailDraftItem,
   type MailInboxFolder,
   type MailMailboxFolder,
@@ -103,6 +105,12 @@ export function MailClient() {
   const [mobilePane, setMobilePane] = useState<"nav" | "list" | "read">(
     "list",
   );
+  const [composeSignatures, setComposeSignatures] = useState<
+    MailComposePreset[]
+  >([]);
+  const [composeTemplates, setComposeTemplates] = useState<
+    MailComposePreset[]
+  >([]);
 
   const refresh = useCallback(async () => {
     if (!accessToken) {
@@ -136,6 +144,16 @@ export function MailClient() {
       void refreshDrafts();
     }
   }, [accessToken, refreshDrafts, view]);
+
+  useEffect(() => {
+    if (!composeOpen || !accessToken) {
+      return;
+    }
+    void fetchComposePresets(accessToken).then((data) => {
+      setComposeSignatures(data.signatures);
+      setComposeTemplates(data.templates);
+    });
+  }, [composeOpen, accessToken]);
 
   useEffect(() => {
     if (!accessToken || view === "sent" || view === "drafts") {
@@ -471,6 +489,28 @@ export function MailClient() {
     setComposeError("");
   }
 
+  function applyComposeTemplate(presetId: string) {
+    const preset = composeTemplates.find((t) => t.id === presetId);
+    if (!preset) {
+      return;
+    }
+    if (preset.subject) {
+      setComposeSubject(preset.subject);
+    }
+    setComposeText(preset.bodyText);
+  }
+
+  function applyComposeSignature(presetId: string) {
+    const preset = composeSignatures.find((s) => s.id === presetId);
+    if (!preset) {
+      return;
+    }
+    const block = `\n\n--\n${preset.bodyText}`;
+    setComposeText((prev) =>
+      prev.trim() ? `${prev.replace(/\s+$/, "")}${block}` : preset.bodyText,
+    );
+  }
+
   return (
     <div className={`mail-app mobile-pane-${mobilePane}`}>
       <div className="mail-mobile-bar">
@@ -567,7 +607,7 @@ export function MailClient() {
           className="mail-nav-imap"
           onClick={() => setSettingsOpen(true)}
         >
-          IMAP ayarları
+          Ayarlar
         </button>
         <div className="mail-address">
           {summary?.primaryAddress ?? "—"}
@@ -970,6 +1010,45 @@ export function MailClient() {
               value={composeSubject}
               onChange={(e) => setComposeSubject(e.target.value)}
             />
+            <div className="compose-preset-row">
+              <label>
+                Şablon
+                <select
+                  defaultValue=""
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      applyComposeTemplate(e.target.value);
+                      e.target.value = "";
+                    }
+                  }}
+                >
+                  <option value="">Seç…</option>
+                  {composeTemplates.map((t) => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                İmza
+                <select
+                  defaultValue=""
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      applyComposeSignature(e.target.value);
+                      e.target.value = "";
+                    }
+                  }}
+                >
+                  <option value="">Ekle…</option>
+                  {composeSignatures.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                      {s.isDefault ? " ★" : ""}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
             <textarea
               placeholder="Mesaj"
               rows={6}

@@ -25,7 +25,10 @@ import { MailImapAccessService } from "./MailImapAccessService";
 import { ComposeMailRequestDto } from "./ComposeMailRequestDto";
 import { ReplyMailRequestDto } from "./ReplyMailRequestDto";
 import { MailComposeDraftService } from "./MailComposeDraftService";
+import { MailComposePresetService } from "./MailComposePresetService";
 import { SaveMailDraftRequestDto } from "./SaveMailDraftRequestDto";
+import { SaveMailComposePresetRequestDto } from "./SaveMailComposePresetRequestDto";
+import { UpdateMailComposePresetRequestDto } from "./UpdateMailComposePresetRequestDto";
 import {
   assertMailConsoleAccess,
   canManageMailInboxWrite,
@@ -39,7 +42,68 @@ export class CompanyMailInboxController {
     private readonly mailMailboxComposeService: MailMailboxComposeService,
     private readonly mailImapAccessService: MailImapAccessService,
     private readonly mailComposeDraftService: MailComposeDraftService,
+    private readonly mailComposePresetService: MailComposePresetService,
   ) {}
+
+  @Get("compose-presets")
+  public async listComposePresets(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    return this.mailComposePresetService.listForUser(
+      user.companyId,
+      user.userId,
+    );
+  }
+
+  @Post("compose-presets")
+  public async createComposePreset(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: SaveMailComposePresetRequestDto,
+  ) {
+    const preset = await this.mailComposePresetService.create(
+      user.companyId,
+      user.userId,
+      {
+        kind: body.kind,
+        name: body.name,
+        subject: body.subject,
+        bodyText: body.bodyText,
+        isDefault: body.isDefault,
+      },
+      canManageMailInboxWrite(user),
+    );
+    return { preset };
+  }
+
+  @Patch("compose-presets/:presetId")
+  public async updateComposePreset(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("presetId") presetId: string,
+    @Body() body: UpdateMailComposePresetRequestDto,
+  ) {
+    const preset = await this.mailComposePresetService.update(
+      user.companyId,
+      user.userId,
+      presetId,
+      body,
+      canManageMailInboxWrite(user),
+    );
+    return { preset };
+  }
+
+  @Delete("compose-presets/:presetId")
+  public async deleteComposePreset(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("presetId") presetId: string,
+  ) {
+    await this.mailComposePresetService.delete(
+      user.companyId,
+      user.userId,
+      presetId,
+      canManageMailInboxWrite(user),
+    );
+    return { ok: true };
+  }
 
   @Get("imap-settings")
   public async imapSettings(@AuthenticatedUserParam() user: AuthenticatedUserContext) {
