@@ -1,10 +1,10 @@
-# Lerta Mail — VPS deploy runbook (stack F3–F5 + B4)
+# Lerta Mail — VPS deploy runbook
 
 **Hedef VPS örnek:** `168.231.109.27` · yönetim `yonetim.lerta.com.tr`
 
 ## 1. Kod merge sırası
 
-GitHub PR zinciri (eskiden yeniye): … → A5 vitrin → A4 cutover → A1 billing-health (bu dal).
+GitHub PR zinciri (eskiden yeniye): … → webmail G1–G4 → A1 billing → A5 vitrin → A4 cutover.
 
 Her merge sonrası: `git pull`, API + konsol + vitrin build, PM2/systemd restart.
 
@@ -48,8 +48,20 @@ Postfix/Dovecot: alias veya yeni sender sonrası inbound sync (`MAIL_INBOUND_APP
 
 ## 5. Smoke kontrol listesi
 
+Tek komut (VPS veya CI):
+
+```bash
+./scripts/run-lerta-mail-vps-deploy-checklist.sh
+OPERATOR_JWT='…' ./scripts/run-lerta-mail-vps-deploy-checklist.sh
+```
+
+Manuel:
+
+- [ ] `bash scripts/verify-posta-https.sh` (G0)
 - [ ] `GET /health` OK
 - [ ] `GET public/lerta-mail/status` OK
-- [ ] Operatör: KPI + izleme kartları
+- [ ] `BASE_URL=https://kurumsal.lerta.com.tr bash scripts/smoke-www-cutover-lerta-mail.sh`
+- [ ] Operatör: KPI + izleme + **Faz A1** billing-health
+- [ ] Webmail: tema, Enterprise logo (`GET company/mail-inbox/branding`), zengin yazım
 - [ ] Test tenant: domain DNS, outbox drain, `/integration` (Enterprise)
 - [ ] Yedek cron: [MAIL_BACKUP_DISASTER_RECOVERY.md](./MAIL_BACKUP_DISASTER_RECOVERY.md)

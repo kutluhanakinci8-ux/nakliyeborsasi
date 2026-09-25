@@ -1,4 +1,5 @@
-:root {
+:root,
+html[data-mail-theme="light"] {
   --bg: #f6f8fc;
   --panel: #fff;
   --border: #e0e3e7;
@@ -8,6 +9,26 @@
   --accent-hover: #1765cc;
   --sidebar: #f1f3f4;
   --unread: #202124;
+  --compose-btn-bg: #c2e7ff;
+  --compose-btn-text: #001d35;
+  --nav-active: #d3e3fd;
+  --toast-bg: #e6f4ea;
+}
+
+html[data-mail-theme="dark"] {
+  --bg: #1a1c1e;
+  --panel: #242628;
+  --border: #3c4043;
+  --text: #e8eaed;
+  --muted: #9aa0a6;
+  --accent: #8ab4f8;
+  --accent-hover: #aecbfa;
+  --sidebar: #202124;
+  --unread: #fff;
+  --compose-btn-bg: #394457;
+  --compose-btn-text: #e8eaed;
+  --nav-active: #394457;
+  --toast-bg: #2d3b2f;
 }
 
 * {
@@ -69,8 +90,8 @@ a {
   padding: 12px 20px;
   border: none;
   border-radius: 24px;
-  background: #c2e7ff;
-  color: #001d35;
+  background: var(--compose-btn-bg);
+  color: var(--compose-btn-text);
   font-weight: 600;
   cursor: pointer;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
@@ -93,7 +114,7 @@ a {
 }
 
 .mail-nav button.active {
-  background: #d3e3fd;
+  background: var(--nav-active);
   font-weight: 600;
 }
 
@@ -197,6 +218,74 @@ a {
   margin: 0 0 8px;
   font-size: 0.88rem;
   color: var(--muted);
+}
+
+.mail-theme-fab {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 40;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  font-size: 1.1rem;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.mail-brand-logo {
+  max-height: 28px;
+  max-width: 140px;
+  object-fit: contain;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+
+.mail-brand-title-only {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.mail-rich-editor {
+  margin-bottom: 8px;
+}
+
+.mail-rich-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.mail-rich-toolbar {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.mail-rich-toolbar button {
+  border: 1px solid var(--border);
+  background: var(--panel);
+  border-radius: 4px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.mail-rich-surface {
+  min-height: 140px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 0.95rem;
+  line-height: 1.5;
 }
 
 .mail-reply-bcc {

@@ -48,6 +48,7 @@ export class MailMailboxComposeService {
     bcc?: string;
     subject: string;
     text: string;
+    html?: string;
     attachments?: ComposeAttachmentInput[];
   }): Promise<{ sentId: string; smtpMessageId: string | null }> {
     const { fromHeader, fromEmail, mailbox } =
@@ -73,7 +74,7 @@ export class MailMailboxComposeService {
       bcc: normalizeOptionalRecipients(params.bcc),
       subject: params.subject.trim(),
       text: params.text,
-      html: `<pre>${escapeHtml(params.text)}</pre>`,
+      html: resolveOutboundHtml(params.text, params.html),
       replyTo,
       attachments: nodemailerAttachments,
     });
@@ -392,4 +393,17 @@ function stripHtml(html: string): string {
     .replace(/<[^>]+>/g, "")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
+}
+
+function resolveOutboundHtml(text: string, html?: string): string {
+  if (html?.trim()) {
+    return sanitizeOutboundHtml(html.trim());
+  }
+  return `<pre>${escapeHtml(text)}</pre>`;
+}
+
+function sanitizeOutboundHtml(html: string): string {
+  return html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
+    .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "");
 }

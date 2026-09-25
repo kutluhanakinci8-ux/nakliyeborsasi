@@ -22,6 +22,8 @@ import {
   bulkSetMessageMailboxFolder,
   replyMail,
   forwardMail,
+  fetchMailInboxBranding,
+  type MailInboxBranding,
   searchInbox,
   sendDraft,
   setMessageMailboxFolder,
@@ -44,6 +46,7 @@ import { MailSettingsPanel } from "./MailSettingsPanel";
 import { MailEmptyState } from "./MailEmptyState";
 import { MailShortcutsDialog } from "./MailShortcutsDialog";
 import { useMailKeyboardShortcuts } from "./useMailKeyboardShortcuts";
+import { ComposeRichEditor } from "./ComposeRichEditor";
 
 type View =
   | "inbox"
@@ -134,6 +137,11 @@ export function MailClient() {
   const [checkedIds, setCheckedIds] = useState<Set<string>>(() => new Set());
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const [inboxBranding, setInboxBranding] = useState<MailInboxBranding | null>(
+    null,
+  );
+  const [composeRich, setComposeRich] = useState(false);
+  const [composeHtml, setComposeHtml] = useState("");
 
   const refresh = useCallback(async () => {
     if (!accessToken) {
@@ -160,6 +168,9 @@ export function MailClient() {
     }
     void refresh();
     void refreshDrafts();
+    void fetchMailInboxBranding(accessToken)
+      .then((data) => setInboxBranding(data.branding))
+      .catch(() => setInboxBranding(null));
   }, [accessToken, refresh, refreshDrafts, router]);
 
   useEffect(() => {
@@ -361,6 +372,10 @@ export function MailClient() {
       setComposeError("Kime, konu ve mesaj zorunlu.");
       return;
     }
+    const outboundHtml =
+      composeRich && composeHtml.trim() && !forwardMessageId
+        ? composeHtml.trim()
+        : undefined;
     setComposeError("");
     setSending(true);
     try {
@@ -397,6 +412,7 @@ export function MailClient() {
             bcc: composeBcc.trim() || undefined,
             subject: composeSubject.trim(),
             text: composeText,
+            html: outboundHtml,
             attachments: attachments.length > 0 ? attachments : undefined,
           });
         }
@@ -690,6 +706,8 @@ export function MailClient() {
     setComposeShowCcBcc(false);
     setComposeSubject("");
     setComposeText("");
+    setComposeRich(false);
+    setComposeHtml("");
     setComposeFiles([]);
     setComposeStoredAttachments([]);
     setComposeError("");
@@ -788,7 +806,23 @@ export function MailClient() {
       </div>
       <aside className="mail-sidebar">
         <div className="mail-brand">
-          <strong>Lerta</strong> Posta
+          {inboxBranding?.allowed && inboxBranding.logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={inboxBranding.logoUrl}
+              alt=""
+              className="mail-brand-logo"
+            />
+          ) : null}
+          {inboxBranding?.allowed && inboxBranding.emailBrandTitle ? (
+            <span className="mail-brand-title-only">
+              {inboxBranding.emailBrandTitle}
+            </span>
+          ) : (
+            <>
+              <strong>Lerta</strong> Posta
+            </>
+          )}
         </div>
         <button
           type="button"
@@ -1164,7 +1198,13 @@ export function MailClient() {
 
       <section className="mail-read">
         {toast ? (
-          <p style={{ padding: 12, background: "#e6f4ea", margin: 0 }}>
+          <p
+            style={{
+              padding: 12,
+              background: "var(--toast-bg)",
+              margin: 0,
+            }}
+          >
             {toast}
           </p>
         ) : null}
@@ -1519,16 +1559,27 @@ export function MailClient() {
                 </select>
               </label>
             </div>
-            <textarea
-              placeholder={
-                forwardMessageId
-                  ? "Üst not (isteğe bağlı)…"
-                  : "Mesaj"
-              }
-              rows={6}
-              value={composeText}
-              onChange={(e) => setComposeText(e.target.value)}
-            />
+            {!forwardMessageId && !editingDraftId ? (
+              <ComposeRichEditor
+                enabled={composeRich}
+                onEnabledChange={setComposeRich}
+                plainText={composeText}
+                onPlainTextChange={setComposeText}
+                onHtmlChange={setComposeHtml}
+              />
+            ) : null}
+            {!composeRich || forwardMessageId || editingDraftId ? (
+              <textarea
+                placeholder={
+                  forwardMessageId
+                    ? "Üst not (isteğe bağlı)…"
+                    : "Mesaj"
+                }
+                rows={6}
+                value={composeText}
+                onChange={(e) => setComposeText(e.target.value)}
+              />
+            ) : null}
             <input
               type="file"
               multiple

@@ -430,6 +430,23 @@ export async function deleteMessagePermanently(
   });
 }
 
+export type MailInboxBranding = {
+  allowed: boolean;
+  planCode: string | null;
+  logoUrl: string | null;
+  emailBrandTitle: string | null;
+  defaultFromDisplayName: string | null;
+  hidePlatformEmailChrome: boolean;
+  detailTr: string;
+};
+
+export async function fetchMailInboxBranding(accessToken: string) {
+  return apiFetch<{ branding: MailInboxBranding }>(
+    accessToken,
+    "company/mail-inbox/branding",
+  );
+}
+
 export async function composeMail(
   accessToken: string,
   body: {
@@ -438,6 +455,7 @@ export async function composeMail(
     bcc?: string;
     subject: string;
     text: string;
+    html?: string;
     attachments?: ComposeAttachment[];
   },
 ) {

@@ -40,6 +40,7 @@ import {
   BulkMailInboxFolderDto,
   BulkMailInboxIdsDto,
 } from "./BulkMailInboxRequestDto";
+import { MailOrganizationBrandingService } from "./MailOrganizationBrandingService";
 
 @Controller("company/mail-inbox")
 @UseGuards(JwtAuthenticationGuard, MailProductTotpPolicyGuard)
@@ -51,7 +52,16 @@ export class CompanyMailInboxController {
     private readonly mailComposeDraftService: MailComposeDraftService,
     private readonly mailComposePresetService: MailComposePresetService,
     private readonly mailOrganizationStorageService: MailOrganizationStorageService,
+    private readonly mailOrganizationBrandingService: MailOrganizationBrandingService,
   ) {}
+
+  @Get("branding")
+  public async branding(@AuthenticatedUserParam() user: AuthenticatedUserContext) {
+    const branding = await this.mailOrganizationBrandingService.getSnapshot(
+      user.companyId,
+    );
+    return { message: "OK", branding };
+  }
 
   @Get("compose-presets")
   public async listComposePresets(
@@ -442,6 +452,7 @@ export class CompanyMailInboxController {
       bcc: body.bcc,
       subject: body.subject,
       text: body.text,
+      html: body.html,
       attachments: body.attachments,
     });
     return { ok: true, ...result };

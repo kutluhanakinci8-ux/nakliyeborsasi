@@ -49,6 +49,11 @@ export class ComposeMailRequestDto {
   public text!: string;
 
   @IsOptional()
+  @IsString()
+  @MaxLength(500_000)
+  public html?: string;
+
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => ComposeMailAttachmentDto)

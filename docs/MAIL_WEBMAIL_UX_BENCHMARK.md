@@ -15,7 +15,7 @@
 | Konuşma & iletme | 10% | **72** | 95 | 93 | Thread + **İlet** (G3); tümüne yanıt (Cc meta yok) kısıtlı |
 | Yazma deneyimi | 12% | **58** | 90 | 88 | Cc/Bcc; düz metin compose |
 | Mobil / PWA | 10% | **60** | 85 | 82 | Paneller var; native push yok |
-| Kurumsal (marka, alias) | 8% | **35** | 70 | 75 | White-label konsolda; webmail logosu sabit |
+| Kurumsal (marka, alias) | 8% | **62** | 70 | 75 | G4: Enterprise logo/başlık webmailde |
 | Entegrasyon (IMAP, takvim) | 8% | **50** | 90 | 92 | IMAP paneli var; CalDAV/kişi yok |
 | Akıllı özellikler | 5% | **15** | 80 | 75 | Kural, öncelik, AI özet yok |
 

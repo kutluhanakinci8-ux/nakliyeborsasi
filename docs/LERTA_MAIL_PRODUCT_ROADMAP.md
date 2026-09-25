@@ -98,7 +98,7 @@
 | G1 | Boş durum, sidebar, thread toggle | **uygulandı** — `MAIL_WEBMAIL_UX_ROADMAP.md` |
 | G2 | Toplu işlem, okundu, kısayollar | **uygulandı** |
 | G3 | İlet, BCC | **uygulandı** |
-| G4 | Tema, tenant logo, zengin yazım | Planlı |
+| G4 | Tema, tenant logo, zengin yazım | **uygulandı** |
 | G5–G6 | Yıldız, kurallar, push | Planlı |
 
 Rakip matrisi: `docs/MAIL_WEBMAIL_UX_BENCHMARK.md` (~52/100 bugün).

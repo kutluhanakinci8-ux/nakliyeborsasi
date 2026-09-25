@@ -53,10 +53,11 @@ sudo certbot certonly --webroot -w /var/www/certbot -d posta.lerta.com.tr
 
 ---
 
-## G4 — Marka & tema
+## G4 — Marka & tema (uygulandı)
 
-- `GET company/mail-identity/branding` (mevcut) → webmail header
-- `prefers-color-scheme` + toggle
+- `GET company/mail-inbox/branding` → Enterprise logo / başlık
+- Koyu/açık tema (☾/☀ FAB)
+- Zengin yazım + API `html`
 
 ---
 
