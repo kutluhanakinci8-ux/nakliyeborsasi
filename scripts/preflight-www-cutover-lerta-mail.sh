@@ -25,7 +25,13 @@ curl -sS -I --connect-timeout 8 "https://${WWW_HOST}/" 2>/dev/null | head -8 || 
 
 echo ""
 echo "== Kurumsal vitrin (hedef içerik örneği) =="
-curl -sS --connect-timeout 8 "https://kurumsal.lerta.com.tr/" 2>/dev/null | grep -o '<title>[^<]*</title>' || true
+KURUMSAL_TITLE="$(curl -sS --connect-timeout 8 "https://kurumsal.lerta.com.tr/" 2>/dev/null | grep -o '<title>[^<]*</title>' || true)"
+echo "${KURUMSAL_TITLE:-title alınamadı}"
+if echo "${KURUMSAL_TITLE}" | grep -qi 'Lerta Mail'; then
+  echo "OK: kurumsal title Lerta Mail içeriyor (A4/A5 vitrin hazır)."
+else
+  echo "NOT: title içinde 'Lerta Mail' yok — mail-marketing deploy kontrol edin."
+fi
 
 echo ""
 echo "== Cutover komutu (U88 taşındıktan sonra) =="

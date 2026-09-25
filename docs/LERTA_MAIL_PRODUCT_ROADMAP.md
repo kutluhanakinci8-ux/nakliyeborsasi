@@ -31,10 +31,10 @@
 | # | İş | Takip / kabul kriteri |
 |---|-----|------------------------|
 | A1 | Stripe **test** checkout uçtan uca | Kurumsal + Enterprise checkout; `smoke-mail-billing-stripe.sh` — **kod hazır, VPS anahtar bekliyor** |
-| A2 | Stripe **canlı** + webhook prod | `invoice.paid` sonrası plan; hata alert |
-| A3 | iyzico sandbox → prod (TR ödeme) | Callback + plan aktivasyonu |
+| A2 | Stripe **canlı** + webhook prod | `MAIL_BILLING_PRODUCTION_CUTOVER.md` — **VPS live anahtar bekliyor** |
+| A3 | iyzico sandbox → prod (TR ödeme) | Aynı runbook — **canlı anahtar bekliyor** |
 | A4 | `www` cutover | `preflight-www-cutover` OK; `www` title = Lerta Mail |
-| A5 | Vitrin kurumsal kimlik | Logo, tipografi, SSS, KVKK, iletişim, SLA — **SSS/SLA + marka header (devam: SSS içerik, hukuk)** |
+| A5 | Vitrin kurumsal kimlik | Logo, tipografi, SSS, KVKK, iletişim, SLA — **uygulandı** (`MAIL_MARKETING_VITRIN_A5.md`; hukuk metinleri yayın öncesi onay) |
 | A6 | Kayıt → onboarding akışı | Kayıt → domain sihirbazı; dashboard kurumsal banner — **B1 ile güçlendirildi** |
 | A7 | Fiyatlandırma TRY + EUR tutarlılığı | `mail-plans` EUR+TRY, iyzico tutarları — **katalog uyumlu** |
 
