@@ -25,6 +25,8 @@ import { MailInboundIngestService } from "./MailInboundIngestService";
 import { MailInboundRoutingService } from "./MailInboundRoutingService";
 import { MailImapAccessService } from "./MailImapAccessService";
 import { PlatformMailTenantAdminService } from "./PlatformMailTenantAdminService";
+import { MailDmarcAggregateService } from "./MailDmarcAggregateService";
+import { IngestDmarcReportRequestDto } from "./IngestDmarcReportRequestDto";
 
 @Controller("platform-admin/mail")
 @UseGuards(JwtAuthenticationGuard, PlatformAdminGuard)
@@ -39,7 +41,38 @@ export class PlatformMailIdentityAdminController {
     private readonly mailInboundRoutingService: MailInboundRoutingService,
     private readonly mailImapAccessService: MailImapAccessService,
     private readonly platformMailTenantAdminService: PlatformMailTenantAdminService,
+    private readonly mailDmarcAggregateService: MailDmarcAggregateService,
   ) {}
+
+  @Post("dmarc/ingest")
+  public async ingestDmarcReport(@Body() body: IngestDmarcReportRequestDto) {
+    if (body.xml?.trim()) {
+      const row = await this.mailDmarcAggregateService.ingestFromXml({
+        xml: body.xml,
+        organizationId: body.organizationId ?? null,
+      });
+      return { ok: true, report: row };
+    }
+    if (body.summary) {
+      const row = await this.mailDmarcAggregateService.ingestSummary({
+        domain: body.summary.domain.toLowerCase(),
+        periodStart: new Date(body.summary.periodStart),
+        periodEnd: new Date(body.summary.periodEnd),
+        messageCount: body.summary.messageCount,
+        dispositionNone: body.summary.disposition.none,
+        dispositionQuarantine: body.summary.disposition.quarantine,
+        dispositionReject: body.summary.disposition.reject,
+        dkimPass: body.summary.dkim.pass,
+        dkimFail: body.summary.dkim.fail,
+        spfPass: body.summary.spf.pass,
+        spfFail: body.summary.spf.fail,
+        reporterOrgName: body.summary.reporterOrgName ?? null,
+        organizationId: body.organizationId ?? null,
+      });
+      return { ok: true, report: row };
+    }
+    throw new BadRequestException("xml veya summary gerekli");
+  }
 
   @Get("tenants")
   public async listTenants() {

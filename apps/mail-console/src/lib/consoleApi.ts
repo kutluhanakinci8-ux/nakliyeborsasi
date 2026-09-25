@@ -428,6 +428,42 @@ export async function removeMailSuppression(
   );
 }
 
+export type MailDmarcPanel = {
+  days: number;
+  domains: {
+    domain: string;
+    totals: {
+      messageCount: number;
+      dispositionNone: number;
+      dispositionQuarantine: number;
+      dispositionReject: number;
+      dkimPass: number;
+      dkimFail: number;
+      spfPass: number;
+      spfFail: number;
+    };
+    reports: {
+      id: string;
+      domain: string;
+      periodStart: string;
+      periodEnd: string;
+      messageCount: number;
+      disposition: { none: number; quarantine: number; reject: number };
+      dkim: { pass: number; fail: number };
+      spf: { pass: number; fail: number };
+      reporterOrgName: string | null;
+      ingestedAt: string;
+    }[];
+  }[];
+};
+
+export async function fetchMailDmarcPanel(accessToken: string, days = 30) {
+  return apiFetch<{ panel: MailDmarcPanel }>(
+    accessToken,
+    `company/mail-identity/dmarc?days=${days}`,
+  );
+}
+
 export type MailBillingLifecycle = {
   status: string;
   billingProvider: string;

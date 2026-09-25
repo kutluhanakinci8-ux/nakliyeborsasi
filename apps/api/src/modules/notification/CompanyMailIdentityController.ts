@@ -18,6 +18,7 @@ import { MailTenantSubdomainService } from "./MailTenantSubdomainService";
 import { MailOrganizationSendRateService } from "./MailOrganizationSendRateService";
 import { MailOrganizationStorageService } from "./MailOrganizationStorageService";
 import { MailOrganizationDeliveryService } from "./MailOrganizationDeliveryService";
+import { MailDmarcAggregateService } from "./MailDmarcAggregateService";
 import { EmailSuppressionService } from "./EmailSuppressionService";
 import { MailCustomDomainService } from "./MailCustomDomainService";
 import {
@@ -51,6 +52,7 @@ export class CompanyMailIdentityController {
     private readonly mailOrganizationSendRateService: MailOrganizationSendRateService,
     private readonly mailOrganizationStorageService: MailOrganizationStorageService,
     private readonly mailOrganizationDeliveryService: MailOrganizationDeliveryService,
+    private readonly mailDmarcAggregateService: MailDmarcAggregateService,
     private readonly emailSuppressionService: EmailSuppressionService,
     private readonly mailCustomDomainService: MailCustomDomainService,
     private readonly mailIdentityAuditService: MailIdentityAuditService,
@@ -319,6 +321,20 @@ export class CompanyMailIdentityController {
       "/company/mail-identity/custom-domain/provision",
     );
     return { message: "OK", ...result };
+  }
+
+  @Get("dmarc")
+  public async dmarcSummary(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Query("days") daysRaw?: string,
+  ) {
+    assertMailConsoleAccess(user);
+    const days = daysRaw ? Number.parseInt(daysRaw, 10) : 30;
+    const panel = await this.mailDmarcAggregateService.listForOrganization(
+      user.companyId,
+      Number.isFinite(days) ? days : 30,
+    );
+    return { message: "OK", panel };
   }
 
   @Get("delivery")

@@ -41,6 +41,9 @@ export function ConsoleShell({
           <Link className={navClass("/delivery")} href="/delivery">
             Teslimat
           </Link>
+          <Link className={navClass("/dmarc")} href="/dmarc">
+            DMARC
+          </Link>
           <Link className={navClass("/upgrade")} href="/upgrade">
             Kurumsala geç
           </Link>

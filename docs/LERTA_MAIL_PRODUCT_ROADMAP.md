@@ -95,7 +95,7 @@
 | # | İş | Takip |
 |---|-----|--------|
 | E1 | Tenant teslimat paneli | `GET …/delivery`, konsol /delivery — **uygulandı** |
-| E2 | DMARC aggregate (rua) görünümü | Domain bazlı özet |
+| E2 | DMARC aggregate (rua) görünümü | `mail_dmarc_aggregate`, konsol /dmarc, admin ingest — **uygulandı** |
 | E3 | KVKK veri export + hesap silme | API + konsol talebi |
 | E4 | Denetim kaydı (tenant) | Kim, ne zaman, domain/kutu değişti |
 | E5 | 2FA (TOTP) yönetim + webmail | Opsiyonel zorunlu kurumsal paket |
