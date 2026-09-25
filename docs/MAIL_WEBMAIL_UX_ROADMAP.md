@@ -65,11 +65,17 @@ sudo certbot certonly --webroot -w /var/www/certbot -d posta.lerta.com.tr
 
 - API: `starredAt`, `folder=starred`, `PATCH messages/:id/star`
 - UI: **Yıldızlı** klasörü; liste/okuma ☆/★; klavye `s`
-- Planlı (G5 devamı): özel klasör, sunucu kuralları, toplu yıldız
+- Planlı (G5 devamı): özel klasör, sunucu kuralları
 
-## G6
+## G5+ — Üretkenlik (uygulandı)
 
-Faz D6/D7 ve kurumsal talep ile planlanır; detay `LERTA_MAIL_PRODUCT_ROADMAP.md` Faz D tablosu.
+- API: `POST messages/bulk/star` `{ messageIds, starred }`
+- UI: toplu **Yıldızla** / **Yıldız kaldır**; `j`/`k` liste gezintisi; Shift+tık aralık seçimi
+
+## G6 — Offline (kısmi, uygulandı)
+
+- Service worker: statik önbellek, `/offline.html` gezinme yedek
+- Planlı: Web Push (VAPID), yeni posta bildirimi (D7)
 
 ---
 

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { MailSessionProvider } from "@/lib/session";
 import { MailThemeProvider } from "@/components/MailThemeProvider";
+import { MailPwaRegister } from "@/components/MailPwaRegister";
 
 export const metadata: Metadata = {
   title: "Lerta Posta",
@@ -30,7 +31,10 @@ export default function RootLayout({
     <html lang="tr" data-mail-theme="light">
       <body>
         <MailSessionProvider>
-          <MailThemeProvider>{children}</MailThemeProvider>
+          <MailThemeProvider>
+            <MailPwaRegister />
+            {children}
+          </MailThemeProvider>
         </MailSessionProvider>
       </body>
     </html>

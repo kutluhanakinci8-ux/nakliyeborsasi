@@ -2,6 +2,7 @@ import {
   ArrayMaxSize,
   ArrayMinSize,
   IsArray,
+  IsBoolean,
   IsIn,
   IsString,
   MaxLength,
@@ -19,4 +20,9 @@ export class BulkMailInboxIdsDto {
 export class BulkMailInboxFolderDto extends BulkMailInboxIdsDto {
   @IsIn(["inbox", "archive", "trash"])
   public folder!: "inbox" | "archive" | "trash";
+}
+
+export class BulkMailInboxStarDto extends BulkMailInboxIdsDto {
+  @IsBoolean()
+  public starred!: boolean;
 }

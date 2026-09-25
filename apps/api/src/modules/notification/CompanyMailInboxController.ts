@@ -38,6 +38,7 @@ import {
 } from "./MailCompanyRoleAuthorization";
 import {
   BulkMailInboxFolderDto,
+  BulkMailInboxStarDto,
   BulkMailInboxIdsDto,
 } from "./BulkMailInboxRequestDto";
 import { MailOrganizationBrandingService } from "./MailOrganizationBrandingService";
@@ -421,6 +422,19 @@ export class CompanyMailInboxController {
       user.companyId,
       body.messageIds,
       folder,
+    );
+    return { ok: true, ...result };
+  }
+
+  @Post("messages/bulk/star")
+  public async bulkSetStarred(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: BulkMailInboxStarDto,
+  ) {
+    const result = await this.mailOrganizationInboxService.bulkSetStarred(
+      user.companyId,
+      body.messageIds,
+      body.starred,
     );
     return { ok: true, ...result };
   }

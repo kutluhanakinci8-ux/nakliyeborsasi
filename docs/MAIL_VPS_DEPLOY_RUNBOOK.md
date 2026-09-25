@@ -4,7 +4,7 @@
 
 ## 1. Kod merge sırası
 
-GitHub PR zinciri (eskiden yeniye): … → webmail G1–G5 → A1 billing → A5 vitrin → A4 cutover.
+GitHub PR zinciri (eskiden yeniye): … → webmail G1–G5+ → A1 billing → A5 vitrin → A4 cutover.
 
 Her merge sonrası: `git pull`, API + konsol + vitrin build, PM2/systemd restart.
 

@@ -428,6 +428,21 @@ export async function bulkSetMessageMailboxFolder(
   );
 }
 
+export async function bulkSetMessageStarred(
+  accessToken: string,
+  messageIds: string[],
+  starred: boolean,
+) {
+  return apiFetch<{ updated: number }>(
+    accessToken,
+    "company/mail-inbox/messages/bulk/star",
+    {
+      method: "POST",
+      body: JSON.stringify({ messageIds, starred }),
+    },
+  );
+}
+
 export async function setMessageMailboxFolder(
   accessToken: string,
   messageId: string,

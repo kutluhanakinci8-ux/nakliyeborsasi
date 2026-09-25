@@ -99,8 +99,9 @@
 | G2 | Toplu işlem, okundu, kısayollar | **uygulandı** |
 | G3 | İlet, BCC | **uygulandı** |
 | G4 | Tema, tenant logo, zengin yazım | **uygulandı** |
-| G5 | Yıldızlı mesajlar (API + webmail) | **kısmi** |
-| G6 | Kurallar, push, offline | Planlı |
+| G5 | Yıldızlı mesajlar (API + webmail) | **kısmi** (klasör/kural sonra) |
+| G5+ | j/k, Shift seçim, toplu yıldız | **uygulandı** |
+| G6 | Offline SW; push sonra | **kısmi** |
 
 Rakip matrisi: `docs/MAIL_WEBMAIL_UX_BENCHMARK.md` (~52/100 bugün).
 
