@@ -12,7 +12,9 @@ git pull origin "$BRANCH"
 
 bash "$INSTALL_DIR/scripts/restart-api.sh" "$INSTALL_DIR"
 bash "$INSTALL_DIR/scripts/restart-mail-web.sh" "$INSTALL_DIR" 3012 "https://posta.lerta.com.tr/api/v1"
+bash "$INSTALL_DIR/scripts/restart-mail-console.sh" "$INSTALL_DIR" 3013 "https://yonetim.lerta.com.tr/api/v1"
 bash "$INSTALL_DIR/scripts/nginx-posta-lerta-com-tr.sh"
+bash "$INSTALL_DIR/scripts/nginx-yonetim-lerta-com-tr.sh"
 
 if [[ -f "$INSTALL_DIR/scripts/audit-nginx-posta-isolation.sh" ]]; then
   bash "$INSTALL_DIR/scripts/audit-nginx-posta-isolation.sh"

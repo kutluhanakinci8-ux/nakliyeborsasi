@@ -22,10 +22,10 @@ import {
   MailIdentityAuditService,
 } from "./MailIdentityAuditService";
 
-class ProvisionCompanyMailIdentityDto {
-  public localPart!: string;
-  public displayName?: string;
-}
+import {
+  ProvisionMailIdentityDto,
+  RegisterCustomDomainDto,
+} from "./CompanyMailIdentityRequestDto";
 
 class UpdateCompanyMailDisplayNameDto {
   public displayName!: string;
@@ -63,7 +63,7 @@ export class CompanyMailIdentityController {
   @Post("provision")
   public async provision(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
-    @Body() body: ProvisionCompanyMailIdentityDto,
+    @Body() body: ProvisionMailIdentityDto,
   ) {
     this.assertCompanyOwner(user);
     const result = await this.mailTenantSubdomainService.provisionPilotSender({
@@ -98,7 +98,7 @@ export class CompanyMailIdentityController {
   @Post("custom-domain")
   public async registerCustomDomain(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
-    @Body() body: { domain: string },
+    @Body() body: RegisterCustomDomainDto,
   ) {
     this.assertCompanyOwner(user);
     const bundle = await this.mailCustomDomainService.registerForOrganization(
@@ -158,7 +158,7 @@ export class CompanyMailIdentityController {
   @Post("custom-domain/provision")
   public async provisionCustomDomainSender(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
-    @Body() body: ProvisionCompanyMailIdentityDto,
+    @Body() body: ProvisionMailIdentityDto,
   ) {
     this.assertCompanyOwner(user);
     const result = await this.mailCustomDomainService.provisionSender({
