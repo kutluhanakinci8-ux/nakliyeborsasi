@@ -39,7 +39,7 @@
 | Toplu seç + sil/arşiv | ✗ | ✓ | ✓ | G2 |
 | Okundu / okunmadı işaretle | kısmi | ✓ | ✓ | G2 |
 | Yıldız / bayrak | ✓ (G5) | ✓ | ✓ | — |
-| Klavye kısayolları (j/k, c, r) | ✗ | ✓ | ✓ | G2 |
+| Klavye kısayolları (j/k, c, r) | ✓ (G5+) | ✓ | ✓ | — |
 | Depolama kotası çubuğu | ✓ | ✓ | ✓ | — |
 | İmza / şablon | ✓ | ✓ | ✓ | — |
 | IMAP / şifre döndürme | ✓ | ✓ | ✓ | — |

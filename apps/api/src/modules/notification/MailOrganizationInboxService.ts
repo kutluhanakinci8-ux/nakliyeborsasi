@@ -487,6 +487,31 @@ export class MailOrganizationInboxService {
     return { updated };
   }
 
+  public async bulkSetStarred(
+    organizationId: string,
+    messageIds: string[],
+    starred: boolean,
+  ): Promise<{ updated: number }> {
+    let updated = 0;
+    for (const messageId of messageIds) {
+      const row = await this.assertMessageAccess(organizationId, messageId);
+      if (row.mailboxFolder === "trash") {
+        continue;
+      }
+      const wasStarred = row.starredAt !== null;
+      if (starred && !wasStarred) {
+        row.starredAt = new Date();
+        await this.inboundRepository.save(row);
+        updated += 1;
+      } else if (!starred && wasStarred) {
+        row.starredAt = null;
+        await this.inboundRepository.save(row);
+        updated += 1;
+      }
+    }
+    return { updated };
+  }
+
   public async setMailboxFolder(
     organizationId: string,
     messageId: string,

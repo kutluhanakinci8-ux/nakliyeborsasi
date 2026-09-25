@@ -9,9 +9,12 @@ type Handlers = {
   onMarkUnread: () => void;
   onForward: () => void;
   onToggleStar: () => void;
+  onListNext: () => void;
+  onListPrev: () => void;
   onShowHelp: () => void;
   onEscape: () => void;
   enabled: boolean;
+  listNavigationEnabled: boolean;
 };
 
 function isTypingTarget(target: EventTarget | null): boolean {
@@ -83,6 +86,18 @@ export function useMailKeyboardShortcuts(handlers: Handlers) {
         case "s":
           event.preventDefault();
           handlers.onToggleStar();
+          break;
+        case "j":
+          if (handlers.listNavigationEnabled) {
+            event.preventDefault();
+            handlers.onListNext();
+          }
+          break;
+        case "k":
+          if (handlers.listNavigationEnabled) {
+            event.preventDefault();
+            handlers.onListPrev();
+          }
           break;
         default:
           break;

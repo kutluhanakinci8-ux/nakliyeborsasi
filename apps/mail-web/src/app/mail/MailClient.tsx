@@ -20,6 +20,7 @@ import {
   bulkMarkRead,
   bulkMarkUnread,
   bulkSetMessageMailboxFolder,
+  bulkSetMessageStarred,
   replyMail,
   forwardMail,
   fetchMailInboxBranding,
@@ -142,6 +143,7 @@ export function MailClient() {
   const [checkedIds, setCheckedIds] = useState<Set<string>>(() => new Set());
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const checkboxAnchorRef = useRef<string | null>(null);
   const [inboxBranding, setInboxBranding] = useState<MailInboxBranding | null>(
     null,
   );
@@ -483,18 +485,6 @@ export function MailClient() {
     setCheckedIds(new Set());
   }, [view]);
 
-  function toggleChecked(id: string) {
-    setCheckedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  }
-
   async function runBulkMarkRead(unread: boolean) {
     if (!accessToken || checkedIds.size === 0) {
       return;
@@ -514,6 +504,35 @@ export function MailClient() {
     } catch (error) {
       setToast(
         error instanceof Error ? error.message : "Toplu işlem başarısız.",
+      );
+    }
+  }
+
+  async function runBulkStar(starred: boolean) {
+    if (!accessToken || checkedIds.size === 0) {
+      return;
+    }
+    const messageIds = [...checkedIds];
+    try {
+      const result = await bulkSetMessageStarred(
+        accessToken,
+        messageIds,
+        starred,
+      );
+      setToast(
+        starred
+          ? `${result.updated} mesaj yıldızlandı.`
+          : `${result.updated} mesajdan yıldız kaldırıldı.`,
+      );
+      setCheckedIds(new Set());
+      if (view === "starred" && !starred) {
+        setDetail(null);
+        setSelectedId(null);
+      }
+      void refresh();
+    } catch (error) {
+      setToast(
+        error instanceof Error ? error.message : "Toplu yıldız başarısız.",
       );
     }
   }
@@ -695,6 +714,66 @@ export function MailClient() {
     [listItems],
   );
 
+  function toggleChecked(id: string, shiftKey = false) {
+    if (shiftKey && checkboxAnchorRef.current && canBulkSelect) {
+      const anchor = checkboxAnchorRef.current;
+      const start = listMessageIds.indexOf(anchor);
+      const end = listMessageIds.indexOf(id);
+      if (start >= 0 && end >= 0) {
+        const lo = Math.min(start, end);
+        const hi = Math.max(start, end);
+        setCheckedIds((prev) => {
+          const next = new Set(prev);
+          for (const mid of listMessageIds.slice(lo, hi + 1)) {
+            next.add(mid);
+          }
+          return next;
+        });
+        checkboxAnchorRef.current = id;
+        return;
+      }
+    }
+    setCheckedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+    checkboxAnchorRef.current = id;
+  }
+
+  const listNavigationEnabled =
+    canBulkSelect &&
+    listMessageIds.length > 0 &&
+    !(threadView && canUseThreads && !searchActive);
+
+  const navigateList = useCallback(
+    (delta: 1 | -1) => {
+      if (!listNavigationEnabled) {
+        return;
+      }
+      const currentIndex = selectedId
+        ? listMessageIds.indexOf(selectedId)
+        : -1;
+      let nextIndex =
+        currentIndex < 0 ? (delta > 0 ? 0 : listMessageIds.length - 1) : currentIndex + delta;
+      if (nextIndex < 0) {
+        nextIndex = 0;
+      }
+      if (nextIndex >= listMessageIds.length) {
+        nextIndex = listMessageIds.length - 1;
+      }
+      const nextId = listMessageIds[nextIndex];
+      if (nextId) {
+        void openMessage(nextId);
+      }
+    },
+    [listNavigationEnabled, listMessageIds, selectedId],
+  );
+
   const allListSelected =
     listMessageIds.length > 0 &&
     listMessageIds.every((id) => checkedIds.has(id));
@@ -800,6 +879,9 @@ export function MailClient() {
     onToggleStar: () => {
       toggleCurrentStarred();
     },
+    listNavigationEnabled,
+    onListNext: () => navigateList(1),
+    onListPrev: () => navigateList(-1),
     onShowHelp: () => setShortcutsOpen(true),
     onEscape: () => {
       if (shortcutsOpen) {
@@ -1051,6 +1133,22 @@ export function MailClient() {
                   <button type="button" onClick={() => void runBulkFolder("trash")}>
                     Çöp
                   </button>
+                  {view !== "trash" ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => void runBulkStar(true)}
+                      >
+                        Yıldızla
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void runBulkStar(false)}
+                      >
+                        Yıldız kaldır
+                      </button>
+                    </>
+                  ) : null}
                 </span>
               ) : null}
               <button type="button" className="mail-toolbar-btn" onClick={() => void refresh()}>
@@ -1235,8 +1333,11 @@ export function MailClient() {
                   className="mail-list-check"
                   checked={checkedIds.has(m.id)}
                   aria-label="Mesajı seç"
-                  onClick={(e) => e.stopPropagation()}
-                  onChange={() => toggleChecked(m.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleChecked(m.id, e.shiftKey);
+                  }}
+                  onChange={() => {}}
                 />
               ) : null}
               {view !== "sent" &&
