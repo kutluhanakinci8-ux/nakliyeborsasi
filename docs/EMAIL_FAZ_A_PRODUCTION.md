@@ -32,6 +32,8 @@ SMTP_PORT=25
 
 ## Operasyon runbook
 
+Detaylı SPF/DKIM anahtar ve IP rotasyonu: [MAIL_SPF_DKIM_ROTATION_RUNBOOK.md](./MAIL_SPF_DKIM_ROTATION_RUNBOOK.md).
+
 1. **Junk / düşük itibar:** PTR + A kaydı (A5). DMARC `rua` raporlarını izle.
 2. **Kuyruk birikimi:** Admin → Operasyon → outbox drain; Postfix `mailq` VPS’te.
 3. **Suppression:** Politika sekmesi veya otomatik (hard/spam). Manuel kaldırma: DELETE suppression API.

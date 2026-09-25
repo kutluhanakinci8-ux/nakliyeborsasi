@@ -108,6 +108,27 @@ export default function OperatorPage() {
   return (
     <ConsoleShell operator={true}>
       <h1 style={{ marginTop: 0 }}>Operatör — mail domainleri</h1>
+      <div className="card" style={{ marginBottom: 16 }}>
+        <h2 style={{ marginTop: 0 }}>SPF / DKIM rotasyon (E6)</h2>
+        <p style={{ margin: "0 0 8px", color: "var(--muted)", fontSize: "0.9rem" }}>
+          Anahtar veya gönderim IP değişiminde dual-selector DKIM yayınla, SPF ve
+          PTR güncelle, DMARC fail spike izle. Tam adımlar: repo{" "}
+          <code>docs/MAIL_SPF_DKIM_ROTATION_RUNBOOK.md</code>
+        </p>
+        <ol style={{ margin: 0, paddingLeft: 20, fontSize: "0.9rem" }}>
+          <li>DMARC konsol + <code>verify-mail-dns-lerta.sh</code></li>
+          <li>Yeni DKIM selector DNS + OpenDKIM KeyTable</li>
+          <li>
+            <code>MAIL_SYNC_OPENDKIM=true</code> ve{" "}
+            <code>MAIL_PLATFORM_SPF_IPV4</code> senkron
+          </li>
+          <li>
+            Müşteri domain:{" "}
+            <code>verify-custom-domain-mail-dns.sh musteri.com</code>
+          </li>
+          <li>48s sonra eski selector kaldır</li>
+        </ol>
+      </div>
       {flash ? (
         <p style={{ color: "var(--success)", fontWeight: 600 }}>{flash}</p>
       ) : null}
