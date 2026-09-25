@@ -258,12 +258,17 @@ export function MailClient() {
     syncMailUnreadBadge(summary?.unreadCount ?? 0);
   }, [summary?.unreadCount]);
 
-  function applyDelayedSend(result: {
-    delayed?: boolean;
-    pendingId?: string;
-    sendAt?: string;
-  }): boolean {
-    if (result.delayed && result.pendingId && result.sendAt) {
+  function applyDelayedSend(
+    result:
+      | { delayed?: boolean; pendingId?: string; sendAt?: string }
+      | { ok?: boolean },
+  ): boolean {
+    if (
+      "delayed" in result &&
+      result.delayed &&
+      result.pendingId &&
+      result.sendAt
+    ) {
       setPendingUndo({
         pendingId: result.pendingId,
         sendAt: new Date(result.sendAt).getTime(),
