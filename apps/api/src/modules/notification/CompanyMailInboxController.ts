@@ -18,23 +18,10 @@ import {
   InboxFolder,
   MailOrganizationInboxService,
 } from "./MailOrganizationInboxService";
-import {
-  ComposeAttachmentInput,
-  MailMailboxComposeService,
-} from "./MailMailboxComposeService";
+import { MailMailboxComposeService } from "./MailMailboxComposeService";
 import { MailImapAccessService } from "./MailImapAccessService";
-
-class ComposeMailDto {
-  public to!: string;
-  public subject!: string;
-  public text!: string;
-  public attachments?: ComposeAttachmentInput[];
-}
-
-class ReplyMailDto {
-  public text!: string;
-  public attachments?: ComposeAttachmentInput[];
-}
+import { ComposeMailRequestDto } from "./ComposeMailRequestDto";
+import { ReplyMailRequestDto } from "./ReplyMailRequestDto";
 
 @Controller("company/mail-inbox")
 @UseGuards(JwtAuthenticationGuard)
@@ -126,7 +113,7 @@ export class CompanyMailInboxController {
   @Post("compose")
   public async compose(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
-    @Body() body: ComposeMailDto,
+    @Body() body: ComposeMailRequestDto,
   ) {
     this.assertCompanyOwner(user);
     const result = await this.mailMailboxComposeService.compose({
@@ -143,7 +130,7 @@ export class CompanyMailInboxController {
   public async reply(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
     @Param("messageId") messageId: string,
-    @Body() body: ReplyMailDto,
+    @Body() body: ReplyMailRequestDto,
   ) {
     this.assertCompanyOwner(user);
     const result = await this.mailMailboxComposeService.reply({

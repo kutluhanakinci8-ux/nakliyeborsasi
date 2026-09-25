@@ -33,6 +33,8 @@ export function MailClient() {
   const [composeSubject, setComposeSubject] = useState("");
   const [composeText, setComposeText] = useState("");
   const [toast, setToast] = useState("");
+  const [composeError, setComposeError] = useState("");
+  const [sending, setSending] = useState(false);
 
   const refresh = useCallback(async () => {
     if (!accessToken) {
@@ -81,14 +83,30 @@ export function MailClient() {
     if (!accessToken) {
       return;
     }
-    await composeMail(accessToken, {
-      to: composeTo,
-      subject: composeSubject,
-      text: composeText,
-    });
-    setComposeOpen(false);
-    setToast("Gönderildi.");
-    void refresh();
+    if (!composeTo.trim() || !composeSubject.trim() || !composeText.trim()) {
+      setComposeError("Kime, konu ve mesaj zorunlu.");
+      return;
+    }
+    setComposeError("");
+    setSending(true);
+    try {
+      await composeMail(accessToken, {
+        to: composeTo.trim(),
+        subject: composeSubject.trim(),
+        text: composeText,
+      });
+      setComposeOpen(false);
+      setComposeTo("");
+      setComposeSubject("");
+      setComposeText("");
+      setToast("Gönderildi.");
+      setView("sent");
+      void refresh();
+    } catch {
+      setComposeError("Gönderilemedi. SMTP veya kurumsal kutu ayarını kontrol edin.");
+    } finally {
+      setSending(false);
+    }
   }
 
   const listItems =
@@ -113,7 +131,10 @@ export function MailClient() {
         <button
           type="button"
           className="mail-compose-btn"
-          onClick={() => setComposeOpen(true)}
+          onClick={() => {
+            setComposeError("");
+            setComposeOpen(true);
+          }}
         >
           Yaz
         </button>
@@ -298,12 +319,21 @@ export function MailClient() {
               value={composeText}
               onChange={(e) => setComposeText(e.target.value)}
             />
+            {composeError ? (
+              <p className="login-error" style={{ marginBottom: 12 }}>
+                {composeError}
+              </p>
+            ) : null}
             <div className="compose-actions">
               <button type="button" onClick={() => setComposeOpen(false)}>
                 İptal
               </button>
-              <button type="button" onClick={() => void sendCompose()}>
-                Gönder
+              <button
+                type="button"
+                disabled={sending}
+                onClick={() => void sendCompose()}
+              >
+                {sending ? "Gönderiliyor…" : "Gönder"}
               </button>
             </div>
           </div>
