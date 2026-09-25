@@ -29,6 +29,7 @@ import { MailImapMaildirService } from "./MailImapMaildirService";
 import { MailOrganizationStorageService } from "./MailOrganizationStorageService";
 import { MailOrganizationWebhookDispatcherService } from "./MailOrganizationWebhookDispatcherService";
 import { MailAddressAliasService } from "./MailAddressAliasService";
+import { MailWebPushService } from "./MailWebPushService";
 import type { MailInboundAttachmentMeta } from "../../infrastructure/database/entities/MailInboundMessageEntity";
 
 export type InboundIngestInput = {
@@ -60,6 +61,7 @@ export class MailInboundIngestService {
     private readonly mailOrganizationStorageService: MailOrganizationStorageService,
     private readonly mailOrganizationWebhookDispatcherService: MailOrganizationWebhookDispatcherService,
     private readonly mailAddressAliasService: MailAddressAliasService,
+    private readonly mailWebPushService: MailWebPushService,
   ) {}
 
   public async ingest(input: InboundIngestInput): Promise<MailInboundMessageEntity> {
@@ -219,6 +221,14 @@ export class MailInboundIngestService {
         spamStatus: row.spamStatus,
       },
     );
+    if (row.spamStatus !== "blocked" && row.mailboxFolder === "inbox") {
+      void this.mailWebPushService.notifyNewInbound({
+        organizationId: params.mailbox.organizationId,
+        messageId: row.id,
+        fromAddress: row.fromAddress,
+        subject: row.subject,
+      });
+    }
     return row;
   }
 

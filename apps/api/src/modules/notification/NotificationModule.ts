@@ -107,6 +107,8 @@ import { MailPublicApiGuard } from "./MailPublicApiGuard";
 import { MailPublicApiController } from "./MailPublicApiController";
 import { MailAddressAliasEntity } from "../../infrastructure/database/entities/MailAddressAliasEntity";
 import { MailAddressAliasTargetEntity } from "../../infrastructure/database/entities/MailAddressAliasTargetEntity";
+import { MailWebPushSubscriptionEntity } from "../../infrastructure/database/entities/MailWebPushSubscriptionEntity";
+import { MailWebPushService } from "./MailWebPushService";
 import { MailAddressAliasService } from "./MailAddressAliasService";
 import { MailPlatformKpiService } from "./MailPlatformKpiService";
 import { PublicMailStatusController } from "./PublicMailStatusController";
@@ -158,6 +160,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
       MailOrganizationWebhookEndpointEntity,
       MailAddressAliasEntity,
       MailAddressAliasTargetEntity,
+      MailWebPushSubscriptionEntity,
       CompanyMailTeamInviteEntity,
       MailOrganizationBillingStateEntity,
       MailOrganizationOperatorStateEntity,
@@ -245,6 +248,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     PlatformMailTenantAdminService,
     MailTenantSuspensionService,
     MailPilotOnboardingService,
+    MailWebPushService,
   ],
   exports: [
     AuthNotificationService,

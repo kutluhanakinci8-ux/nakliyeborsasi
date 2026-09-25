@@ -48,6 +48,7 @@ import { MailOrganizationApiKeyEntity } from "./entities/MailOrganizationApiKeyE
 import { MailOrganizationWebhookEndpointEntity } from "./entities/MailOrganizationWebhookEndpointEntity";
 import { MailAddressAliasEntity } from "./entities/MailAddressAliasEntity";
 import { MailAddressAliasTargetEntity } from "./entities/MailAddressAliasTargetEntity";
+import { MailWebPushSubscriptionEntity } from "./entities/MailWebPushSubscriptionEntity";
 
 @Injectable()
 export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
@@ -111,6 +112,7 @@ export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
         MailOrganizationWebhookEndpointEntity,
         MailAddressAliasEntity,
         MailAddressAliasTargetEntity,
+        MailWebPushSubscriptionEntity,
       ],
       synchronize,
       logging: false,
