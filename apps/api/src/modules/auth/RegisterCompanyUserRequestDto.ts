@@ -36,4 +36,10 @@ export class RegisterCompanyUserRequestDto {
   @IsString()
   @MaxLength(255)
   public companyWebsiteUrl?: string;
+
+  /** Lerta Mail kayıt: lerta_mail_pilot_tr vb. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(64)
+  public subscriptionPlanCode?: string;
 }

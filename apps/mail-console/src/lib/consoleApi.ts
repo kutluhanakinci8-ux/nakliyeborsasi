@@ -65,6 +65,7 @@ export async function registerMailSaas(params: {
   password: string;
   displayName: string;
   companyLegalName: string;
+  subscriptionPlanCode?: string;
 }) {
   const response = await fetch(`${resolveApiBaseUrl()}/auth/register`, {
     method: "POST",
@@ -76,6 +77,8 @@ export async function registerMailSaas(params: {
       companyLegalName: params.companyLegalName,
       companyCountryCode: "TR",
       companyParticipantTypeCode: "LOAD_SHIPPER",
+      subscriptionPlanCode:
+        params.subscriptionPlanCode ?? "lerta_mail_pilot_tr",
     }),
   });
   if (!response.ok) {
@@ -180,4 +183,37 @@ export async function fetchMailIdentity(accessToken: string) {
       platformDnsReady: boolean;
     };
   }>(accessToken, "company/mail-identity");
+}
+
+export type MailPlanView = {
+  planCode: string;
+  displayName: string;
+  tagline: string;
+  monthlyPriceEur: number;
+  annualPriceEur: number;
+  recommended: boolean;
+  mailMaxSendsPerHour: number;
+  customDomainAllowed: boolean;
+};
+
+export async function fetchMailSubscription(accessToken: string) {
+  return apiFetch<{
+    subscription: {
+      planCode: string | null;
+      isMailPlan: boolean;
+      plan: MailPlanView | null;
+      sendRate: number;
+    };
+  }>(accessToken, "company/mail-identity/subscription");
+}
+
+export async function selectMailPlan(accessToken: string, planCode: string) {
+  return apiFetch<{ subscription: unknown }>(
+    accessToken,
+    "company/mail-identity/subscription/select",
+    {
+      method: "POST",
+      body: JSON.stringify({ planCode }),
+    },
+  );
 }

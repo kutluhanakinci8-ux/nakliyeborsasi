@@ -129,7 +129,7 @@ Teknik: yeni `apps/mail-web`, `NEXT_PUBLIC_API_BASE_URL`, OAuth/JWT **org kullan
 | Admin operasyon merkezi | ✅ (platform) | Kısmen → **tenant admin** gerekir |
 | Org gömülü inbox panel | Var, sınırlı | **Yetersiz** → ayrı mail-web |
 | Thread / Gmail UX | ❌ planlı | **Faz 2 ana iş** |
-| Billing / self-signup mail-only | ❌ | Faz 3 |
+| Billing / self-signup mail-only | Pilot (`lerta_mail_*` planları + API) | Faz 3 faturalama |
 
 **Sonuç:** Altyapı ve API çoğunlukla **ortak motor**; satacağınız ürün için **ayrı ön yüz + onboarding + plan** şart.
 

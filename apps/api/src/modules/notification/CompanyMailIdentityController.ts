@@ -25,7 +25,9 @@ import {
 import {
   ProvisionMailIdentityDto,
   RegisterCustomDomainDto,
+  SelectMailPlanRequestDto,
 } from "./CompanyMailIdentityRequestDto";
+import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
 
 class UpdateCompanyMailDisplayNameDto {
   public displayName!: string;
@@ -40,7 +42,40 @@ export class CompanyMailIdentityController {
     private readonly emailSuppressionService: EmailSuppressionService,
     private readonly mailCustomDomainService: MailCustomDomainService,
     private readonly mailIdentityAuditService: MailIdentityAuditService,
+    private readonly mailSaasSubscriptionService: MailSaasSubscriptionService,
   ) {}
+
+  @Get("plans")
+  public listMailPlans() {
+    return {
+      message: "OK",
+      plans: this.mailSaasSubscriptionService.listMailPlans(),
+    };
+  }
+
+  @Get("subscription")
+  public async mailSubscription(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    const subscription =
+      await this.mailSaasSubscriptionService.getOrganizationMailPlan(
+        user.companyId,
+      );
+    return { message: "OK", subscription };
+  }
+
+  @Post("subscription/select")
+  public async selectMailPlan(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: SelectMailPlanRequestDto,
+  ) {
+    const subscription = await this.mailSaasSubscriptionService.selectMailPlan(
+      user.companyId,
+      user.roleCodes,
+      body.planCode,
+    );
+    return { message: "OK", subscription };
+  }
 
   @Get()
   public async getIdentity(@AuthenticatedUserParam() user: AuthenticatedUserContext) {
@@ -52,7 +87,7 @@ export class CompanyMailIdentityController {
     return {
       message: "OK",
       identity,
-      sendRate: this.mailOrganizationSendRateService.getSnapshot(
+      sendRate: await this.mailOrganizationSendRateService.getSnapshot(
         user.companyId,
       ),
       replyToHintTr:
@@ -101,6 +136,9 @@ export class CompanyMailIdentityController {
     @Body() body: RegisterCustomDomainDto,
   ) {
     this.assertCompanyOwner(user);
+    await this.mailSaasSubscriptionService.assertCustomDomainAllowed(
+      user.companyId,
+    );
     const bundle = await this.mailCustomDomainService.registerForOrganization(
       user.companyId,
       body.domain,

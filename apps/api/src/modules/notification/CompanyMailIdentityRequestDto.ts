@@ -10,6 +10,13 @@ export class RegisterCustomDomainDto {
   public domain!: string;
 }
 
+export class SelectMailPlanRequestDto {
+  @IsString()
+  @MinLength(4)
+  @MaxLength(64)
+  public planCode!: string;
+}
+
 export class ProvisionMailIdentityDto {
   @IsString()
   @MinLength(1)

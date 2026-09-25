@@ -12,10 +12,12 @@ import { JwtAuthenticationGuard } from "./JwtAuthenticationGuard";
 import { CompanyRolesAuthorizationGuard } from "./CompanyRolesAuthorizationGuard";
 import { CompanyWebsiteEnrichmentService } from "./CompanyWebsiteEnrichmentService";
 import { InstagramPublicStatsService } from "./InstagramPublicStatsService";
+import { SubscriptionCatalogModule } from "../subscription/SubscriptionCatalogModule";
 
 @Module({
   imports: [
     forwardRef(() => NotificationModule),
+    SubscriptionCatalogModule,
     PassportModule.register({ defaultStrategy: "jwt" }),
     JwtModule.registerAsync({
       imports: [ConfigModule],

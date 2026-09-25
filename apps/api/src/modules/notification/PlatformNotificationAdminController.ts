@@ -275,13 +275,13 @@ export class PlatformNotificationAdminController {
   }
 
   @Get("org-send-rate")
-  public orgSendRate(@Query("organizationId") organizationId: string) {
+  public async orgSendRate(@Query("organizationId") organizationId: string) {
     if (!organizationId?.trim()) {
       return { ok: false, message: "organizationId gerekli" };
     }
     return {
       ok: true,
-      rate: this.mailOrganizationSendRateService.getSnapshot(
+      rate: await this.mailOrganizationSendRateService.getSnapshot(
         organizationId.trim(),
       ),
     };

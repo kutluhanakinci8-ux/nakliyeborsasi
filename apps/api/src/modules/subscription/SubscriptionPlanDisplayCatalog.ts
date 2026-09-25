@@ -6,6 +6,9 @@ export type SubscriptionPlanDisplayMeta = {
   monthlyPriceEur: number;
   annualPriceEur: number;
   recommended?: boolean;
+  productLine?: "logistics" | "lerta_mail";
+  mailMaxSendsPerHour?: number;
+  customDomainAllowed?: boolean;
 };
 
 const DISPLAY: readonly SubscriptionPlanDisplayMeta[] = [
@@ -30,6 +33,28 @@ const DISPLAY: readonly SubscriptionPlanDisplayMeta[] = [
     tagline: "API, gelişmiş analitik ve global ölçek operasyon.",
     monthlyPriceEur: 349,
     annualPriceEur: 3490,
+    productLine: "logistics",
+  },
+  {
+    planCode: "lerta_mail_pilot_tr",
+    displayName: "Pilot",
+    tagline: "kullanici.lerta.com.tr — webmail, taslaklar, IMAP.",
+    monthlyPriceEur: 0,
+    annualPriceEur: 0,
+    productLine: "lerta_mail",
+    mailMaxSendsPerHour: 80,
+    customDomainAllowed: false,
+  },
+  {
+    planCode: "lerta_mail_corporate_tr",
+    displayName: "Kurumsal",
+    tagline: "Özel domain, MX sihirbazı, yükseltilmiş gönderim kotası.",
+    monthlyPriceEur: 49,
+    annualPriceEur: 490,
+    recommended: true,
+    productLine: "lerta_mail",
+    mailMaxSendsPerHour: 500,
+    customDomainAllowed: true,
   },
 ];
 

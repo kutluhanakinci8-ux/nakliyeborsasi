@@ -47,7 +47,7 @@ export class MailMailboxComposeService {
   }): Promise<{ sentId: string; smtpMessageId: string | null }> {
     const { fromHeader, fromEmail, mailbox } =
       await this.resolveSenderMailbox(params.organizationId);
-    this.assertRateLimit(params.organizationId);
+    await this.assertRateLimit(params.organizationId);
     const nodemailerAttachments = this.parseAttachments(params.attachments);
     const replyTo = resolveTenantReplyToAddress();
     const smtpMessageId = await this.smtpEmailSender.send({
@@ -99,7 +99,7 @@ export class MailMailboxComposeService {
     const { fromHeader, fromEmail } = await this.resolveSenderMailbox(
       params.organizationId,
     );
-    this.assertRateLimit(params.organizationId);
+    await this.assertRateLimit(params.organizationId);
     const nodemailerAttachments = this.parseAttachments(params.attachments);
     const replyTo = resolveTenantReplyToAddress();
     const inReplyTo = inbound.internetMessageId
@@ -194,9 +194,9 @@ export class MailMailboxComposeService {
     return { fromHeader, fromEmail, mailbox };
   }
 
-  private assertRateLimit(organizationId: string): void {
+  private async assertRateLimit(organizationId: string): Promise<void> {
     try {
-      this.mailOrganizationSendRateService.assertCanSend(organizationId);
+      await this.mailOrganizationSendRateService.assertCanSend(organizationId);
     } catch {
       throw new BadRequestException(
         "Kurumsal gönderim saatlik limiti aşıldı — daha sonra deneyin.",

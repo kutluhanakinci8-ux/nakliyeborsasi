@@ -70,13 +70,16 @@ import { MailImapCredentialEntity } from "../../infrastructure/database/entities
 import { MailMailboxSentEntity } from "../../infrastructure/database/entities/MailMailboxSentEntity";
 import { MailComposeDraftEntity } from "../../infrastructure/database/entities/MailComposeDraftEntity";
 import { MailComposeDraftService } from "./MailComposeDraftService";
+import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
 import { AuditModule } from "../../infrastructure/audit/AuditModule";
+import { SubscriptionModule } from "../subscription/SubscriptionModule";
 import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogEntity";
 
 @Module({
   imports: [
     forwardRef(() => AuthModule),
     AuditModule,
+    SubscriptionModule,
     TypeOrmModule.forFeature([
       EmailOutboxEntity,
       PlatformNotificationSettingEntity,
@@ -153,6 +156,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     MailImapMaildirService,
     MailImapAccessService,
     MailComposeDraftService,
+    MailSaasSubscriptionService,
   ],
   exports: [
     AuthNotificationService,

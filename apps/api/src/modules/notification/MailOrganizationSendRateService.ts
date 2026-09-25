@@ -1,5 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
+import { CompanySubscriptionPersistenceService } from "../subscription/CompanySubscriptionPersistenceService";
 
 type OrgRateSnapshot = {
   organizationId: string;
@@ -12,17 +14,30 @@ export class MailOrganizationSendRateService {
   private readonly logger = new Logger(MailOrganizationSendRateService.name);
   private readonly sendTimestamps = new Map<string, number[]>();
 
-  public constructor(private readonly configService: ConfigService) {}
+  public constructor(
+    private readonly configService: ConfigService,
+    private readonly mailSaasSubscriptionService: MailSaasSubscriptionService,
+    private readonly companySubscriptionPersistenceService: CompanySubscriptionPersistenceService,
+  ) {}
 
-  public resolveLimitPerHour(): number {
+  public async resolveLimitPerHour(organizationId: string): Promise<number> {
     const raw = this.configService.get<string>("MAIL_ORG_MAX_SENDS_PER_HOUR");
-    const parsed = raw ? Number.parseInt(raw, 10) : 200;
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : 200;
+    const envOverride = raw ? Number.parseInt(raw, 10) : null;
+    if (envOverride && Number.isFinite(envOverride) && envOverride > 0) {
+      return envOverride;
+    }
+    const snapshot =
+      await this.companySubscriptionPersistenceService.getSnapshot(
+        organizationId,
+      );
+    return this.mailSaasSubscriptionService.resolveSendLimitForPlanCode(
+      snapshot?.activePlan.planCode ?? null,
+    );
   }
 
-  public assertCanSend(organizationId: string): void {
+  public async assertCanSend(organizationId: string): Promise<void> {
     const count = this.countSendsInWindow(organizationId);
-    const limit = this.resolveLimitPerHour();
+    const limit = await this.resolveLimitPerHour(organizationId);
     if (count >= limit) {
       throw new Error(
         `Kurumsal gönderim limiti aşıldı (${limit}/saat, org=${organizationId}).`,
@@ -39,11 +54,11 @@ export class MailOrganizationSendRateService {
     this.sendTimestamps.set(organizationId, pruned);
   }
 
-  public getSnapshot(organizationId: string): OrgRateSnapshot {
+  public async getSnapshot(organizationId: string): Promise<OrgRateSnapshot> {
     return {
       organizationId,
       sendsLastHour: this.countSendsInWindow(organizationId),
-      limitPerHour: this.resolveLimitPerHour(),
+      limitPerHour: await this.resolveLimitPerHour(organizationId),
     };
   }
 

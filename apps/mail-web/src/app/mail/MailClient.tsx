@@ -23,6 +23,7 @@ import {
   type MailInboxSummary,
   type MailSentItem,
   type MailSentMessageDetail,
+  type ComposeAttachment,
 } from "@/lib/mailApi";
 import { useMailSession } from "@/lib/session";
 import { MailSettingsPanel } from "./MailSettingsPanel";
@@ -63,6 +64,9 @@ export function MailClient() {
   const [composeSubject, setComposeSubject] = useState("");
   const [composeText, setComposeText] = useState("");
   const [composeFiles, setComposeFiles] = useState<File[]>([]);
+  const [composeStoredAttachments, setComposeStoredAttachments] = useState<
+    ComposeAttachment[]
+  >([]);
   const [toast, setToast] = useState("");
   const [composeError, setComposeError] = useState("");
   const [sending, setSending] = useState(false);
@@ -186,6 +190,7 @@ export function MailClient() {
     setComposeSubject(draft.subject ?? "");
     setComposeText(draft.text ?? "");
     setComposeFiles([]);
+    setComposeStoredAttachments(draft.attachments ?? []);
     setComposeError("");
     setComposeOpen(true);
   }
@@ -197,15 +202,16 @@ export function MailClient() {
     setComposeError("");
     setSending(true);
     try {
-      const attachments =
+      const fileAttachments =
         composeFiles.length > 0
           ? await Promise.all(composeFiles.map((f) => fileToAttachment(f)))
-          : undefined;
+          : [];
+      const attachments = [...composeStoredAttachments, ...fileAttachments];
       const body = {
         to: composeTo.trim() || undefined,
         subject: composeSubject.trim() || undefined,
         text: composeText || undefined,
-        attachments,
+        attachments: attachments.length > 0 ? attachments : undefined,
       };
       if (editingDraftId) {
         await updateDraft(accessToken, editingDraftId, body);
@@ -236,30 +242,38 @@ export function MailClient() {
     setSending(true);
     try {
       if (editingDraftId) {
+        const fileAttachments =
+          composeFiles.length > 0
+            ? await Promise.all(composeFiles.map((f) => fileToAttachment(f)))
+            : [];
+        const attachments = [...composeStoredAttachments, ...fileAttachments];
         await updateDraft(accessToken, editingDraftId, {
           to: composeTo.trim(),
           subject: composeSubject.trim(),
           text: composeText,
+          attachments: attachments.length > 0 ? attachments : undefined,
         });
         await sendDraft(accessToken, editingDraftId);
       } else {
-        const attachments =
+        const fileAttachments =
           composeFiles.length > 0
             ? await Promise.all(composeFiles.map((f) => fileToAttachment(f)))
-            : undefined;
+            : [];
+        const attachments = [...composeStoredAttachments, ...fileAttachments];
         await composeMail(accessToken, {
           to: composeTo.trim(),
           subject: composeSubject.trim(),
           text: composeText,
-          attachments,
+          attachments: attachments.length > 0 ? attachments : undefined,
         });
       }
       setComposeOpen(false);
       setComposeTo("");
       setComposeSubject("");
       setComposeText("");
-      setComposeFiles([]);
-      setEditingDraftId(null);
+    setComposeFiles([]);
+    setComposeStoredAttachments([]);
+    setEditingDraftId(null);
       setToast("Gönderildi.");
       setView("sent");
       void refresh();
@@ -331,6 +345,7 @@ export function MailClient() {
     setComposeSubject("");
     setComposeText("");
     setComposeFiles([]);
+    setComposeStoredAttachments([]);
     setComposeError("");
   }
 
@@ -536,6 +551,13 @@ export function MailClient() {
             <div className="mail-read-body">
               <pre>{draftPreview.text ?? ""}</pre>
             </div>
+            {draftPreview.attachments.length > 0 ? (
+              <ul className="mail-attachments">
+                {draftPreview.attachments.map((file) => (
+                  <li key={file.filename}>{file.filename}</li>
+                ))}
+              </ul>
+            ) : null}
             <div className="mail-reply">
               <button
                 type="button"
@@ -691,9 +713,16 @@ export function MailClient() {
                 setComposeFiles(Array.from(e.target.files ?? []))
               }
             />
+            {composeStoredAttachments.length > 0 ? (
+              <ul className="mail-attachments">
+                {composeStoredAttachments.map((file) => (
+                  <li key={file.filename}>{file.filename} (taslakta)</li>
+                ))}
+              </ul>
+            ) : null}
             {composeFiles.length > 0 ? (
               <p className="mail-attach-hint">
-                {composeFiles.length} ek seçildi
+                {composeFiles.length} yeni ek seçildi
               </p>
             ) : null}
             {composeError ? (

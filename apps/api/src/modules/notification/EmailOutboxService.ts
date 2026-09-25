@@ -129,7 +129,7 @@ export class EmailOutboxService {
         );
       tenantOrganizationIdForBounce = resolved.tenantOrganizationId;
       if (resolved.tenantOrganizationId) {
-        this.mailOrganizationSendRateService.assertCanSend(
+        await this.mailOrganizationSendRateService.assertCanSend(
           resolved.tenantOrganizationId,
         );
       }

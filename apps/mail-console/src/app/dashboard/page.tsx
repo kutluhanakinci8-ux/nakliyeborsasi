@@ -7,8 +7,10 @@ import { ConsoleShell } from "@/components/ConsoleShell";
 import { MAIL_WEB_URL } from "@/lib/apiConfig";
 import {
   fetchMailIdentity,
+  fetchMailSubscription,
   isPlatformOperator,
   provisionTenantMailbox,
+  selectMailPlan,
 } from "@/lib/consoleApi";
 import { useConsoleSession } from "@/lib/session";
 
@@ -24,6 +26,9 @@ export default function DashboardPage() {
   const [pilotMessage, setPilotMessage] = useState("");
   const [pilotError, setPilotError] = useState("");
   const [pilotLoading, setPilotLoading] = useState(false);
+  const [planName, setPlanName] = useState<string | null>(null);
+  const [sendLimit, setSendLimit] = useState<number | null>(null);
+  const [planMessage, setPlanMessage] = useState("");
 
   useEffect(() => {
     if (!accessToken) {
@@ -41,8 +46,31 @@ export default function DashboardPage() {
       } catch {
         setFromAddress(null);
       }
+      try {
+        const sub = await fetchMailSubscription(accessToken);
+        setPlanName(sub.subscription.plan?.displayName ?? sub.subscription.planCode);
+        setSendLimit(sub.subscription.sendRate);
+      } catch {
+        setPlanName(null);
+      }
     })();
   }, [accessToken, router]);
+
+  async function upgradeToCorporate() {
+    if (!accessToken) {
+      return;
+    }
+    setPlanMessage("");
+    try {
+      await selectMailPlan(accessToken, "lerta_mail_corporate_tr");
+      setPlanMessage("Kurumsal plana geçildi.");
+      const sub = await fetchMailSubscription(accessToken);
+      setPlanName(sub.subscription.plan?.displayName ?? null);
+      setSendLimit(sub.subscription.sendRate);
+    } catch {
+      setPlanMessage("Plan güncellenemedi.");
+    }
+  }
 
   async function onProvisionPilot(event: FormEvent) {
     event.preventDefault();
@@ -77,6 +105,24 @@ export default function DashboardPage() {
   return (
     <ConsoleShell operator={operator}>
       <h1 style={{ marginTop: 0 }}>Özet</h1>
+      <div className="card">
+        <h2>Plan</h2>
+        <p>
+          Aktif: <strong>{planName ?? "—"}</strong>
+          {sendLimit ? ` · Gönderim: ${sendLimit}/saat` : ""}
+        </p>
+        {planMessage ? (
+          <p style={{ color: "var(--success)", fontWeight: 600 }}>{planMessage}</p>
+        ) : null}
+        <button
+          type="button"
+          className="btn secondary"
+          onClick={() => void upgradeToCorporate()}
+        >
+          Kurumsal plana yükselt
+        </button>
+      </div>
+
       <div className="card">
         <h2>Kurumsal posta kutusu</h2>
         <p>

@@ -15,6 +15,7 @@ import { CompanySubscriptionEntity } from "../../infrastructure/database/entitie
 import { PasswordHashingService } from "./PasswordHashingService";
 import { RegisterCompanyUserRequestDto } from "./RegisterCompanyUserRequestDto";
 import { LoginUserRequestDto } from "./LoginUserRequestDto";
+import { SubscriptionPlanCatalog } from "../subscription/SubscriptionPlanCatalog";
 
 @Injectable()
 export class UserCredentialAuthenticationService {
@@ -28,6 +29,7 @@ export class UserCredentialAuthenticationService {
     @InjectRepository(CompanySubscriptionEntity)
     private readonly companySubscriptionRepository: Repository<CompanySubscriptionEntity>,
     private readonly passwordHashingService: PasswordHashingService,
+    private readonly subscriptionPlanCatalog: SubscriptionPlanCatalog,
   ) {}
 
   public async registerCompanyOwner(
@@ -65,10 +67,15 @@ export class UserCredentialAuthenticationService {
         roleCode: CompanyRoleCode.CompanyOwner,
       }),
     );
+    const planCode =
+      payload.subscriptionPlanCode?.trim() || "carrier_starter_tr_ua";
+    if (!this.subscriptionPlanCatalog.findPlanByCode(planCode)) {
+      throw new ValidationException("Unknown subscription plan");
+    }
     await this.companySubscriptionRepository.save(
       this.companySubscriptionRepository.create({
         companyId: company.id,
-        planCode: "carrier_starter_tr_ua",
+        planCode,
         isActive: true,
       }),
     );

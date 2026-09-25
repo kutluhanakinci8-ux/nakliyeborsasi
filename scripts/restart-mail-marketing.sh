@@ -5,6 +5,7 @@ INSTALL_DIR="${1:-/var/www/nakliyeborsasi}"
 WEB_PORT="${2:-3014}"
 CONSOLE_URL="${3:-https://yonetim.lerta.com.tr}"
 MAIL_WEB_URL="${4:-https://posta.lerta.com.tr}"
+API_PUBLIC_URL="${5:-https://yonetim.lerta.com.tr/api/v1}"
 
 cd "$INSTALL_DIR"
 bash scripts/install-deps.sh
@@ -15,6 +16,7 @@ BUILD_TIME="$(date -u +"%Y-%m-%dT%H:%MZ")"
 {
   echo "NEXT_PUBLIC_CONSOLE_URL=${CONSOLE_URL}"
   echo "NEXT_PUBLIC_MAIL_WEB_URL=${MAIL_WEB_URL}"
+  echo "NEXT_PUBLIC_API_BASE_URL=${API_PUBLIC_URL}"
   echo "NEXT_PUBLIC_DEPLOY_SHA=${BUILD_SHA}"
   echo "NEXT_PUBLIC_DEPLOY_TIME=${BUILD_TIME}"
 } > "$ENV_FILE"

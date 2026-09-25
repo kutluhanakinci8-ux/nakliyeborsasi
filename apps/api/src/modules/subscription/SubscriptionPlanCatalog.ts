@@ -39,6 +39,20 @@ export class SubscriptionPlanCatalog {
         laneAnalyticsHistoryDays: 15,
       }),
       new SubscriptionPlanDefinition({
+        planCode: "lerta_mail_pilot_tr",
+        tierCode: SubscriptionTierCode.Starter,
+        includedModules: [SubscriptionModuleCode.LertaMail],
+        maxConcurrentSearchTabs: 0,
+        laneAnalyticsHistoryDays: 0,
+      }),
+      new SubscriptionPlanDefinition({
+        planCode: "lerta_mail_corporate_tr",
+        tierCode: SubscriptionTierCode.Professional,
+        includedModules: [SubscriptionModuleCode.LertaMail],
+        maxConcurrentSearchTabs: 0,
+        laneAnalyticsHistoryDays: 0,
+      }),
+      new SubscriptionPlanDefinition({
         planCode: "forwarder_enterprise_tr_ua",
         tierCode: SubscriptionTierCode.Enterprise,
         includedModules: [
