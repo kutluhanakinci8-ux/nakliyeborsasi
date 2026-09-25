@@ -35,6 +35,7 @@ import { MailSenderIdentityEntity } from "./entities/MailSenderIdentityEntity";
 import { MailMailboxEntity } from "./entities/MailMailboxEntity";
 import { MailInboundMessageEntity } from "./entities/MailInboundMessageEntity";
 import { MailMailboxSentEntity } from "./entities/MailMailboxSentEntity";
+import { MailImapCredentialEntity } from "./entities/MailImapCredentialEntity";
 import { DatabaseSeedRunner } from "./seed/DatabaseSeedRunner";
 import { SubscriptionCatalogModule } from "../../modules/subscription/SubscriptionCatalogModule";
 
@@ -80,6 +81,7 @@ import { SubscriptionCatalogModule } from "../../modules/subscription/Subscripti
       MailMailboxEntity,
       MailInboundMessageEntity,
       MailMailboxSentEntity,
+      MailImapCredentialEntity,
     ]),
   ],
   providers: [DatabaseSeedRunner],

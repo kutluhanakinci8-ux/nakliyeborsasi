@@ -22,6 +22,7 @@ import {
   ComposeAttachmentInput,
   MailMailboxComposeService,
 } from "./MailMailboxComposeService";
+import { MailImapAccessService } from "./MailImapAccessService";
 
 class ComposeMailDto {
   public to!: string;
@@ -41,7 +42,26 @@ export class CompanyMailInboxController {
   public constructor(
     private readonly mailOrganizationInboxService: MailOrganizationInboxService,
     private readonly mailMailboxComposeService: MailMailboxComposeService,
+    private readonly mailImapAccessService: MailImapAccessService,
   ) {}
+
+  @Get("imap-settings")
+  public async imapSettings(@AuthenticatedUserParam() user: AuthenticatedUserContext) {
+    return {
+      settings: await this.mailImapAccessService.getSettings(user.companyId),
+    };
+  }
+
+  @Post("imap-credentials/rotate")
+  public async rotateImapCredentials(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    this.assertCompanyOwner(user);
+    const credentials = await this.mailImapAccessService.rotatePassword(
+      user.companyId,
+    );
+    return { ok: true, credentials };
+  }
 
   @Get()
   public async summary(

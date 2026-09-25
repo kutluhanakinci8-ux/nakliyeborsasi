@@ -33,6 +33,15 @@ export class MailInboundMessageEntity {
   public bodyText!: string | null;
 
   @Column({ type: "text", nullable: true })
+  public bodyHtml!: string | null;
+
+  @Column({ type: "float", nullable: true })
+  public rspamdScore!: number | null;
+
+  @Column({ type: "varchar", length: 32, nullable: true })
+  public rspamdAction!: string | null;
+
+  @Column({ type: "text", nullable: true })
   public rawMimePath!: string | null;
 
   @Column({ type: "varchar", length: 16, default: "clean" })

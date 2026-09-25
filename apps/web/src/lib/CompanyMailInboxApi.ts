@@ -29,8 +29,19 @@ export type MailInboxAttachmentMeta = {
 
 export type MailInboxMessageDetail = MailInboxListItem & {
   bodyText: string | null;
+  bodyHtml: string | null;
   emailAddress: string;
   attachments: MailInboxAttachmentMeta[];
+};
+
+export type MailImapSettings = {
+  enabled: boolean;
+  imapHost: string;
+  imapPort: number;
+  imapTls: boolean;
+  username: string | null;
+  maildirPath: string | null;
+  hasCredential: boolean;
 };
 
 export type MailSentItem = {
@@ -130,6 +141,28 @@ export async function composeCompanyMail(
     method: "POST",
     body: JSON.stringify(body),
   });
+}
+
+export async function fetchMailImapSettings(
+  accessToken: string,
+): Promise<MailImapSettings> {
+  const payload = await apiFetch<{ settings: MailImapSettings }>(
+    accessToken,
+    "company/mail-inbox/imap-settings",
+  );
+  return payload.settings;
+}
+
+export async function rotateMailImapPassword(accessToken: string): Promise<{
+  username: string;
+  password: string;
+}> {
+  const payload = await apiFetch<{
+    credentials: { username: string; password: string };
+  }>(accessToken, "company/mail-inbox/imap-credentials/rotate", {
+    method: "POST",
+  });
+  return payload.credentials;
 }
 
 export async function replyCompanyMail(

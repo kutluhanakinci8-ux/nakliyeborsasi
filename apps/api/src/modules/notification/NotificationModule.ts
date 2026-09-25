@@ -63,6 +63,9 @@ import { MailInboundRoutingService } from "./MailInboundRoutingService";
 import { CompanyMailInboxController } from "./CompanyMailInboxController";
 import { MailInboundSpamService } from "./MailInboundSpamService";
 import { MailMailboxComposeService } from "./MailMailboxComposeService";
+import { MailImapMaildirService } from "./MailImapMaildirService";
+import { MailImapAccessService } from "./MailImapAccessService";
+import { MailImapCredentialEntity } from "../../infrastructure/database/entities/MailImapCredentialEntity";
 import { MailMailboxSentEntity } from "../../infrastructure/database/entities/MailMailboxSentEntity";
 import { AuditModule } from "../../infrastructure/audit/AuditModule";
 import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogEntity";
@@ -93,6 +96,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
       MailInboundMessageEntity,
       AuditLogEntity,
       MailMailboxSentEntity,
+      MailImapCredentialEntity,
     ]),
   ],
   controllers: [
@@ -141,6 +145,8 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     MailInboundRoutingService,
     MailInboundSpamService,
     MailMailboxComposeService,
+    MailImapMaildirService,
+    MailImapAccessService,
   ],
   exports: [
     AuthNotificationService,

@@ -586,6 +586,12 @@ export class PlatformAdminApiClient {
     return payload.snapshot;
   }
 
+  public static async syncDovecotImap(
+    accessToken: string,
+  ): Promise<{ written: boolean; detail: string; users: number }> {
+    return adminFetch(accessToken, "mail/imap/sync-dovecot", { method: "POST" });
+  }
+
   public static async syncPostfixInboundRouting(
     accessToken: string,
   ): Promise<{

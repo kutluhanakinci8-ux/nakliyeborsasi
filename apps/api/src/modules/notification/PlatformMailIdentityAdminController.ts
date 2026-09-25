@@ -23,6 +23,7 @@ import {
 } from "./MailIdentityAuditService";
 import { MailInboundIngestService } from "./MailInboundIngestService";
 import { MailInboundRoutingService } from "./MailInboundRoutingService";
+import { MailImapAccessService } from "./MailImapAccessService";
 
 @Controller("platform-admin/mail")
 @UseGuards(JwtAuthenticationGuard, PlatformAdminGuard)
@@ -35,7 +36,13 @@ export class PlatformMailIdentityAdminController {
     private readonly mailIdentityAuditService: MailIdentityAuditService,
     private readonly mailInboundIngestService: MailInboundIngestService,
     private readonly mailInboundRoutingService: MailInboundRoutingService,
+    private readonly mailImapAccessService: MailImapAccessService,
   ) {}
+
+  @Post("imap/sync-dovecot")
+  public async syncDovecotImap() {
+    return await this.mailImapAccessService.syncDovecotPasswdFile();
+  }
 
   @Get("roadmap")
   public async roadmap() {

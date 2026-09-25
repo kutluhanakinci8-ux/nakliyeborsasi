@@ -109,6 +109,7 @@ export class MailOrganizationInboxService {
     subject: string;
     snippet: string | null;
     bodyText: string | null;
+    bodyHtml: string | null;
     receivedAt: string;
     readAt: string | null;
     emailAddress: string;
@@ -139,6 +140,7 @@ export class MailOrganizationInboxService {
       subject: row.subject,
       snippet: row.snippet,
       bodyText: bodyText ?? row.snippet,
+      bodyHtml: row.bodyHtml,
       receivedAt: row.receivedAt.toISOString(),
       readAt: row.readAt?.toISOString() ?? null,
       emailAddress: mailbox?.emailAddress ?? "—",

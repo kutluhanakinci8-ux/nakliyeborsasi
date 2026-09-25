@@ -24,24 +24,51 @@ fi
 RAW="$(cat)"
 export RECIPIENT RAW SECRET API_BASE
 python3 - <<'PY'
-import json, os, re, urllib.request
+import json, os, re, shutil, subprocess, urllib.request
 
 recipient = os.environ["RECIPIENT"]
 raw = os.environ["RAW"]
 secret = os.environ["SECRET"]
 api = os.environ["API_BASE"].rstrip("/")
 
+rspamd_score = None
+rspamd_action = None
+if shutil.which("rspamc"):
+    try:
+        proc = subprocess.run(
+            ["rspamc", "symbols"],
+            input=raw.encode("utf-8"),
+            capture_output=True,
+            timeout=25,
+        )
+        if proc.stdout:
+            text = proc.stdout.decode("utf-8", errors="replace")
+            m_score = re.search(r"score:\s*([0-9.]+)", text, re.I)
+            m_action = re.search(r"action:\s*(\w+)", text, re.I)
+            if m_score:
+                rspamd_score = float(m_score.group(1))
+            if m_action:
+                rspamd_action = m_action.group(1).lower()
+    except Exception:
+        pass
+
 from_hdr = re.search(r"^From:\s*(.+)$", raw, re.I | re.M)
 subj_hdr = re.search(r"^Subject:\s*(.+)$", raw, re.I | re.M)
 sender = (from_hdr.group(1).strip() if from_hdr else "unknown@pipe.local")
 subject = (subj_hdr.group(1).strip() if subj_hdr else "(no subject)")
 
-body = json.dumps({
+payload = {
     "recipient": recipient,
     "sender": sender,
     "subject": subject,
     "rawMime": raw,
-}).encode("utf-8")
+}
+if rspamd_score is not None:
+    payload["rspamdScore"] = rspamd_score
+if rspamd_action:
+    payload["rspamdAction"] = rspamd_action
+
+body = json.dumps(payload).encode("utf-8")
 
 req = urllib.request.Request(
     f"{api}/mail/inbound/webhook",

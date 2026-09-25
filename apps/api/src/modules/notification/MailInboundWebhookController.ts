@@ -1,5 +1,5 @@
 import { Body, Controller, Post, UseGuards } from "@nestjs/common";
-import { IsOptional, IsString, MinLength } from "class-validator";
+import { IsNumber, IsOptional, IsString, MinLength } from "class-validator";
 import { MailInboundWebhookGuard } from "./MailInboundWebhookGuard";
 import { MailInboundIngestService } from "./MailInboundIngestService";
 
@@ -23,6 +23,14 @@ class MailInboundWebhookDto {
   @IsOptional()
   @IsString()
   public rawMime?: string;
+
+  @IsOptional()
+  @IsNumber()
+  public rspamdScore?: number;
+
+  @IsOptional()
+  @IsString()
+  public rspamdAction?: string;
 }
 
 @Controller("mail/inbound")

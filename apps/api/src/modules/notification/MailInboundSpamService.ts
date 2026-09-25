@@ -19,7 +19,35 @@ export class MailInboundSpamService {
     subject: string;
     bodyText: string | null;
     organizationId: string | null;
+    rspamdScore?: number | null;
+    rspamdAction?: string | null;
   }): Promise<InboundSpamVerdict> {
+    const rejectScore = this.resolveRspamdRejectScore();
+    if (params.rspamdAction?.toLowerCase() === "reject") {
+      return {
+        spamStatus: "blocked",
+        spamReason: `Rspamd reject (skor ${params.rspamdScore ?? "?"})`,
+      };
+    }
+    if (
+      typeof params.rspamdScore === "number" &&
+      params.rspamdScore >= rejectScore
+    ) {
+      return {
+        spamStatus: "blocked",
+        spamReason: `Rspamd skor ${params.rspamdScore} ≥ ${rejectScore}`,
+      };
+    }
+    if (
+      typeof params.rspamdScore === "number" &&
+      params.rspamdScore >= rejectScore * 0.6
+    ) {
+      return {
+        spamStatus: "suspected",
+        spamReason: `Rspamd şüpheli skor ${params.rspamdScore}`,
+      };
+    }
+
     const from = params.fromAddress.toLowerCase();
     const haystack = `${params.subject}\n${params.bodyText ?? ""}`.toLowerCase();
 
@@ -58,6 +86,12 @@ export class MailInboundSpamService {
     }
 
     return { spamStatus: "clean", spamReason: null };
+  }
+
+  private resolveRspamdRejectScore(): number {
+    const raw = this.configService.get<string>("MAIL_RSPAMD_REJECT_SCORE");
+    const parsed = raw ? Number.parseFloat(raw) : 15;
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 15;
   }
 
   private parseList(envKey: string): string[] {

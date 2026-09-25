@@ -90,6 +90,21 @@ export function AdminMailInboundPanel() {
             >
               Postfix virtual senkron (VPS)
             </button>
+            <button
+              type="button"
+              className="pa-btn pa-btn--secondary"
+              style={{ marginLeft: "0.5rem" }}
+              onClick={() => {
+                if (!accessToken) {
+                  return;
+                }
+                void PlatformAdminApiClient.syncDovecotImap(accessToken).then(
+                  (r) => setToast(r.detail),
+                );
+              }}
+            >
+              Dovecot IMAP passwd senkron
+            </button>
           </div>
         ) : null}
         <div className="pa-toolbar" style={{ flexWrap: "wrap", gap: "0.5rem" }}>

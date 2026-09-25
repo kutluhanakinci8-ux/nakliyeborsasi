@@ -8,6 +8,9 @@ import {
   fetchCompanyMailInboxMessage,
   markCompanyMailInboxRead,
   replyCompanyMail,
+  fetchMailImapSettings,
+  rotateMailImapPassword,
+  type MailImapSettings,
   type ComposeAttachment,
   type MailInboxListItem,
   type MailInboxMessageDetail,
@@ -52,6 +55,8 @@ export function OrganizationMailInboxPanel() {
   const [replyText, setReplyText] = useState("");
   const [attachFiles, setAttachFiles] = useState<File[]>([]);
   const [toast, setToast] = useState("");
+  const [imap, setImap] = useState<MailImapSettings | null>(null);
+  const [imapPassword, setImapPassword] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     if (!accessToken) {
@@ -63,10 +68,13 @@ export function OrganizationMailInboxPanel() {
       setSummary(inbox.summary);
       setMessages(inbox.messages);
       setSent(inbox.sent);
+      if (isOwner) {
+        setImap(await fetchMailImapSettings(accessToken));
+      }
     } finally {
       setLoading(false);
     }
-  }, [accessToken, folder]);
+  }, [accessToken, folder, isOwner]);
 
   useEffect(() => {
     void refresh();
@@ -141,7 +149,7 @@ export function OrganizationMailInboxPanel() {
       id="org-gelen-kutusu"
       className="account-card module-panel module-panel--elevated account-org-section"
     >
-      <p className="account-verify-eyebrow">Faz C3 — Gelen / giden</p>
+      <p className="account-verify-eyebrow">Faz C4 — Gelen / giden / IMAP</p>
       <h2 className="account-card-title">Kurumsal posta</h2>
       <p className="account-card-lead">
         Adres: <strong>{summary?.primaryAddress ?? "—"}</strong>
@@ -182,6 +190,34 @@ export function OrganizationMailInboxPanel() {
           </button>
         ) : null}
       </div>
+
+      {isOwner && imap?.enabled ? (
+        <div className="module-hint" style={{ marginBottom: "0.75rem" }}>
+          IMAP: <code>{imap.imapHost}:{imap.imapPort}</code> — kullanıcı{" "}
+          <code>{imap.username ?? "—"}</code>
+          <button
+            type="button"
+            className="btn-account-ghost"
+            style={{ marginLeft: "0.5rem" }}
+            onClick={() => {
+              if (!accessToken) {
+                return;
+              }
+              void rotateMailImapPassword(accessToken).then((c) => {
+                setImapPassword(c.password);
+                setToast("IMAP şifresi oluşturuldu — kopyalayın (bir kez gösterilir).");
+              });
+            }}
+          >
+            IMAP şifresi oluştur
+          </button>
+          {imapPassword ? (
+            <p>
+              Şifre: <code>{imapPassword}</code>
+            </p>
+          ) : null}
+        </div>
+      ) : null}
 
       {composeOpen && isOwner ? (
         <div className="account-form-row" style={{ marginBottom: "1rem" }}>
@@ -289,15 +325,29 @@ export function OrganizationMailInboxPanel() {
               {detail.spamReason ? (
                 <p className="module-hint">Spam: {detail.spamReason}</p>
               ) : null}
-              <pre
-                style={{
-                  whiteSpace: "pre-wrap",
-                  fontSize: "0.85rem",
-                  marginTop: "0.75rem",
-                }}
-              >
-                {detail.bodyText ?? detail.snippet ?? "(içerik yok)"}
-              </pre>
+              {detail.bodyHtml ? (
+                <iframe
+                  title="HTML içerik"
+                  sandbox=""
+                  srcDoc={detail.bodyHtml}
+                  style={{
+                    width: "100%",
+                    minHeight: "240px",
+                    border: "1px solid #e2e8f0",
+                    marginTop: "0.75rem",
+                  }}
+                />
+              ) : (
+                <pre
+                  style={{
+                    whiteSpace: "pre-wrap",
+                    fontSize: "0.85rem",
+                    marginTop: "0.75rem",
+                  }}
+                >
+                  {detail.bodyText ?? detail.snippet ?? "(içerik yok)"}
+                </pre>
+              )}
               {detail.attachments.length > 0 ? (
                 <ul className="module-hint">
                   {detail.attachments.map((att) => (

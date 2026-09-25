@@ -142,11 +142,11 @@ export class PlatformMailRoadmapService {
             "Gelen + giden, panel webmail, isteğe bağlı IMAP; harici Gmail/ESP yok.",
           status: inboundMessages > 0 || mailboxes > 0 ? "active" : "planned",
           progressPercent:
-            inboundMessages > 0 ? 42 : mailboxes > 0 ? 28 : 12,
+            inboundMessages > 0 ? 55 : mailboxes > 0 ? 40 : 20,
           nextStepsTr: [
-            "C3: compose/yanıt + spam + ekler (aktif)",
-            "C4: gelişmiş MIME / IMAP planı",
-            "Rspamd entegrasyonu (opsiyonel)",
+            "C4: HTML MIME + Dovecot IMAP + Rspamd (docs)",
+            "Org: IMAP şifresi rotate + Thunderbird test",
+            "Üretim: MAIL_IMAP_MAILDIR_ROOT + setup scriptleri",
           ],
         },
       ],

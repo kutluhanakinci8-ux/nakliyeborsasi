@@ -16,12 +16,15 @@ import { MailSenderIdentityEntity } from "../../infrastructure/database/entities
 import { MailDomainEntity } from "../../infrastructure/database/entities/MailDomainEntity";
 import {
   extractAttachmentsFromMime,
+  extractHtmlBodyFromMime,
   extractPlainBodyFromMime,
   normalizeEmailAddress,
   parseInternetMessageId,
   parseMinimalMimeHeaders,
 } from "./MailInboundMimeParse";
 import { MailInboundSpamService } from "./MailInboundSpamService";
+import { sanitizeInboundHtml } from "./MailHtmlSanitize";
+import { MailImapMaildirService } from "./MailImapMaildirService";
 import type { MailInboundAttachmentMeta } from "../../infrastructure/database/entities/MailInboundMessageEntity";
 
 export type InboundIngestInput = {
@@ -30,6 +33,8 @@ export type InboundIngestInput = {
   subject?: string;
   text?: string;
   rawMime?: string;
+  rspamdScore?: number;
+  rspamdAction?: string;
 };
 
 @Injectable()
@@ -47,6 +52,7 @@ export class MailInboundIngestService {
     @InjectRepository(MailDomainEntity)
     private readonly domainRepository: Repository<MailDomainEntity>,
     private readonly mailInboundSpamService: MailInboundSpamService,
+    private readonly mailImapMaildirService: MailImapMaildirService,
   ) {}
 
   public async ingest(input: InboundIngestInput): Promise<MailInboundMessageEntity> {
@@ -63,6 +69,7 @@ export class MailInboundIngestService {
       input.text?.replace(/\s+/g, " ").trim().slice(0, 500) ?? null;
     let bodyText =
       input.text?.trim().slice(0, 200_000) ?? null;
+    let bodyHtml: string | null = null;
     let rawMime = input.rawMime ?? null;
 
     if (rawMime) {
@@ -79,6 +86,10 @@ export class MailInboundIngestService {
       if (!bodyText) {
         bodyText = extractPlainBodyFromMime(rawMime);
       }
+      const htmlRaw = extractHtmlBodyFromMime(rawMime);
+      if (htmlRaw) {
+        bodyHtml = sanitizeInboundHtml(htmlRaw);
+      }
     }
 
     const mailbox = await this.resolveMailbox(recipient);
@@ -92,6 +103,8 @@ export class MailInboundIngestService {
       subject,
       bodyText,
       organizationId: mailbox.organizationId,
+      rspamdScore: input.rspamdScore,
+      rspamdAction: input.rspamdAction,
     });
     const internetMessageId = rawMime ? parseInternetMessageId(rawMime) : null;
     const attachments =
@@ -110,7 +123,10 @@ export class MailInboundIngestService {
         subject,
         snippet,
         bodyText,
+        bodyHtml,
         rawMimePath,
+        rspamdScore: input.rspamdScore ?? null,
+        rspamdAction: input.rspamdAction ?? null,
         spamStatus: verdict.spamStatus,
         spamReason: verdict.spamReason,
         internetMessageId,
@@ -118,6 +134,13 @@ export class MailInboundIngestService {
         readAt: null,
       }),
     );
+    if (rawMime) {
+      this.mailImapMaildirService.deliverToMaildir({
+        recipient,
+        rawMime,
+        messageId: row.id,
+      });
+    }
     this.logger.log(
       `Inbound stored ${row.id} → ${recipient} (mailbox ${mailbox.id})`,
     );
