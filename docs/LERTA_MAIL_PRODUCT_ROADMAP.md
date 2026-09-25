@@ -99,7 +99,7 @@
 | G2 | Toplu işlem, okundu, kısayollar | **uygulandı** |
 | G3 | İlet, BCC | **uygulandı** |
 | G4 | Tema, tenant logo, zengin yazım | **uygulandı** |
-| G5 | Yıldız + özel klasörler | **kısmi** (kurallar sonra) |
+| G5 | Yıldız, özel klasör, gelen kuralları (MVP) | **uygulandı** |
 | G5+ | j/k, Shift seçim, toplu yıldız | **uygulandı** |
 | G6 | Offline SW; push sonra | **kısmi** |
 

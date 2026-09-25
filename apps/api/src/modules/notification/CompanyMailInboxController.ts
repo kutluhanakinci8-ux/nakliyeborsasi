@@ -57,6 +57,11 @@ import {
   SetMessageCustomFolderRequestDto,
   UpdateMailCustomFolderRequestDto,
 } from "./MailCustomFolderRequestDto";
+import { MailInboxRuleService } from "./MailInboxRuleService";
+import {
+  CreateMailInboxRuleRequestDto,
+  UpdateMailInboxRuleRequestDto,
+} from "./MailInboxRuleRequestDto";
 
 @Controller("company/mail-inbox")
 @UseGuards(JwtAuthenticationGuard, MailProductTotpPolicyGuard)
@@ -71,7 +76,58 @@ export class CompanyMailInboxController {
     private readonly mailOrganizationBrandingService: MailOrganizationBrandingService,
     private readonly mailWebPushService: MailWebPushService,
     private readonly mailCustomFolderService: MailCustomFolderService,
+    private readonly mailInboxRuleService: MailInboxRuleService,
   ) {}
+
+  @Get("rules")
+  public async listInboxRules(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    const rules = await this.mailInboxRuleService.list(user.companyId);
+    return { rules };
+  }
+
+  @Post("rules")
+  public async createInboxRule(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: CreateMailInboxRuleRequestDto,
+  ) {
+    const rule = await this.mailInboxRuleService.create(user.companyId, {
+      name: body.name,
+      fromContains: body.fromContains,
+      subjectContains: body.subjectContains,
+      actionStar: body.actionStar,
+      actionCustomFolderId: body.actionCustomFolderId ?? null,
+      enabled: body.enabled,
+    });
+    return { rule };
+  }
+
+  @Patch("rules/:ruleId")
+  public async updateInboxRule(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("ruleId") ruleId: string,
+    @Body() body: UpdateMailInboxRuleRequestDto,
+  ) {
+    const rule = await this.mailInboxRuleService.update(user.companyId, ruleId, {
+      name: body.name,
+      fromContains: body.fromContains,
+      subjectContains: body.subjectContains,
+      actionStar: body.actionStar,
+      actionCustomFolderId: body.actionCustomFolderId,
+      enabled: body.enabled,
+    });
+    return { rule };
+  }
+
+  @Delete("rules/:ruleId")
+  public async deleteInboxRule(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("ruleId") ruleId: string,
+  ) {
+    await this.mailInboxRuleService.remove(user.companyId, ruleId);
+    return { ok: true };
+  }
 
   private parseCustomFolderId(
     folder: InboxFolder,

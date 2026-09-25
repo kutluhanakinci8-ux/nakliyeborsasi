@@ -65,12 +65,16 @@ sudo certbot certonly --webroot -w /var/www/certbot -d posta.lerta.com.tr
 
 - API: `starredAt`, `folder=starred`, `PATCH messages/:id/star`
 - UI: **Yıldızlı** klasörü; liste/okuma ☆/★; klavye `s`
-- Planlı (G5 devamı): sunucu kuralları (Sieve benzeri)
-
-## G5 — Özel klasörler (kısmi, uygulandı)
+## G5 — Özel klasörler (uygulandı)
 
 - API: `custom-folders` CRUD, `customFolderId` on messages, bulk taşıma
 - Gelen kutusu = klasörsüz; özel klasörler sidebar’da
+
+## G5 — Gelen kuralları (MVP, uygulandı)
+
+- `mail_inbox_rule`: gönderen/konu içerir → yıldız ve/veya özel klasör
+- Inbound ingest sırasında ilk eşleşen kural uygulanır
+- Webmail: Ayarlar → **Kurallar**
 
 ## G5+ — Üretkenlik (uygulandı)
 

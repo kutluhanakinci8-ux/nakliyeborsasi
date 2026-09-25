@@ -487,6 +487,42 @@ a {
   line-height: 1;
 }
 
+.mail-rules-panel input,
+.mail-rules-panel select {
+  display: block;
+  width: 100%;
+  margin: 8px 0;
+}
+
+.mail-rules-list {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0;
+}
+
+.mail-rules-item {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+
+.mail-rules-meta {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.mail-rules-delete {
+  margin-top: 8px;
+  font-size: 0.85rem;
+}
+
+.mail-rules-empty {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
 .mail-bulk-folder-select {
   font-size: 0.85rem;
   max-width: 140px;

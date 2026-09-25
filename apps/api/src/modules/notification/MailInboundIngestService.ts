@@ -30,6 +30,7 @@ import { MailOrganizationStorageService } from "./MailOrganizationStorageService
 import { MailOrganizationWebhookDispatcherService } from "./MailOrganizationWebhookDispatcherService";
 import { MailAddressAliasService } from "./MailAddressAliasService";
 import { MailWebPushService } from "./MailWebPushService";
+import { MailInboxRuleService } from "./MailInboxRuleService";
 import type { MailInboundAttachmentMeta } from "../../infrastructure/database/entities/MailInboundMessageEntity";
 
 export type InboundIngestInput = {
@@ -62,6 +63,7 @@ export class MailInboundIngestService {
     private readonly mailOrganizationWebhookDispatcherService: MailOrganizationWebhookDispatcherService,
     private readonly mailAddressAliasService: MailAddressAliasService,
     private readonly mailWebPushService: MailWebPushService,
+    private readonly mailInboxRuleService: MailInboxRuleService,
   ) {}
 
   public async ingest(input: InboundIngestInput): Promise<MailInboundMessageEntity> {
@@ -204,32 +206,39 @@ export class MailInboundIngestService {
         maildirFilePath,
       }),
     );
+    const afterRules = await this.mailInboxRuleService.applyToMessage(
+      params.mailbox.organizationId,
+      row,
+    );
     this.logger.log(
-      `Inbound stored ${row.id} → ${params.recipient} (mailbox ${params.mailbox.id})`,
+      `Inbound stored ${afterRules.id} → ${params.recipient} (mailbox ${params.mailbox.id})`,
     );
     this.mailOrganizationWebhookDispatcherService.dispatch(
       params.mailbox.organizationId,
       "inbound.received",
       {
-        messageId: row.id,
+        messageId: afterRules.id,
         mailboxId: params.mailbox.id,
         recipient: params.recipient,
         deliveredTo: params.mailbox.emailAddress,
-        fromAddress: row.fromAddress,
-        subject: row.subject,
-        receivedAt: row.receivedAt.toISOString(),
-        spamStatus: row.spamStatus,
+        fromAddress: afterRules.fromAddress,
+        subject: afterRules.subject,
+        receivedAt: afterRules.receivedAt.toISOString(),
+        spamStatus: afterRules.spamStatus,
       },
     );
-    if (row.spamStatus !== "blocked" && row.mailboxFolder === "inbox") {
+    if (
+      afterRules.spamStatus !== "blocked" &&
+      afterRules.mailboxFolder === "inbox"
+    ) {
       void this.mailWebPushService.notifyNewInbound({
         organizationId: params.mailbox.organizationId,
-        messageId: row.id,
-        fromAddress: row.fromAddress,
-        subject: row.subject,
+        messageId: afterRules.id,
+        fromAddress: afterRules.fromAddress,
+        subject: afterRules.subject,
       });
     }
-    return row;
+    return afterRules;
   }
 
   public async listRecentForAdmin(limit = 80): Promise<
