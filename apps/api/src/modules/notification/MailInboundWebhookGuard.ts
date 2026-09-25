@@ -23,6 +23,7 @@ export class MailInboundWebhookGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<Request>();
     const header =
       request.header("x-lerta-inbound-secret") ??
+      request.header("x-mail-inbound-secret") ??
       request.header("authorization")?.replace(/^Bearer\s+/i, "");
     if (!header || header !== expected) {
       throw new UnauthorizedException("Invalid inbound webhook secret");

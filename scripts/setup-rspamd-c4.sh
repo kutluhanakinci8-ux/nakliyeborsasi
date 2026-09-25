@@ -6,8 +6,9 @@ export DEBIAN_FRONTEND=noninteractive
 apt-get update
 apt-get install -y rspamd
 
-postconf -e "smtpd_milters = inet:127.0.0.1:11332"
-postconf -e "non_smtpd_milters = inet:127.0.0.1:11332"
+# Rspamd tarama + OpenDKIM imza (Faz A) birlikte
+postconf -e "smtpd_milters = inet:127.0.0.1:11332, inet:127.0.0.1:8891"
+postconf -e "non_smtpd_milters = inet:127.0.0.1:11332, inet:127.0.0.1:8891"
 postconf -e "milter_default_action = accept"
 postconf -e "milter_protocol = 6"
 

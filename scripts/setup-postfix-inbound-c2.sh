@@ -8,11 +8,15 @@ TENANT_DOMAIN="${MAIL_PLATFORM_TENANT_DOMAIN:-kullanici.lerta.tr}"
 VIRTUAL_PATH="${MAIL_INBOUND_POSTFIX_VIRTUAL_PATH:-/etc/postfix/lerta-inbound-virtual}"
 PIPE_SCRIPT="${MAIL_INBOUND_PIPE_SCRIPT:-${INSTALL_DIR}/scripts/postfix-pipe-inbound-to-api.sh}"
 
-echo "==> C2 inbound: virtual domains + alias map"
+echo "==> C2 inbound: virtual domains + alias map (internet MX)"
+# Faz A script sets loopback-only; inbound MX requires public SMTP.
 postconf -e "inet_interfaces = all"
 postconf -e "inet_protocols = ipv4"
+postconf -e "mydestination ="
 postconf -e "virtual_mailbox_domains = ${TENANT_DOMAIN}"
 postconf -e "virtual_alias_maps = hash:${VIRTUAL_PATH}"
+postconf -e "smtpd_recipient_restrictions = permit_mynetworks, permit_sasl_authenticated, reject_non_fqdn_recipient, reject_unknown_recipient_domain, permit"
+postconf -e "smtpd_relay_restrictions = permit_mynetworks, permit_sasl_authenticated, defer_unauth_destination"
 
 touch "${VIRTUAL_PATH}"
 postmap "${VIRTUAL_PATH}" || true

@@ -1,6 +1,7 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
+import { MailInboundRoutingService } from "./MailInboundRoutingService";
 import {
   MailDomainEntity,
   MailDomainType,
@@ -9,11 +10,14 @@ import { MailSenderIdentityEntity } from "../../infrastructure/database/entities
 
 @Injectable()
 export class MailDomainApplicationService {
+  private readonly logger = new Logger(MailDomainApplicationService.name);
+
   public constructor(
     @InjectRepository(MailDomainEntity)
     private readonly domainRepository: Repository<MailDomainEntity>,
     @InjectRepository(MailSenderIdentityEntity)
     private readonly senderRepository: Repository<MailSenderIdentityEntity>,
+    private readonly mailInboundRoutingService: MailInboundRoutingService,
   ) {}
 
   public async listDomains(): Promise<MailDomainEntity[]> {
@@ -75,7 +79,7 @@ export class MailDomainApplicationService {
         { isDefault: false },
       );
     }
-    return this.senderRepository.save(
+    const sender = await this.senderRepository.save(
       this.senderRepository.create({
         mailDomainId: params.mailDomainId,
         organizationId: params.organizationId,
@@ -85,5 +89,20 @@ export class MailDomainApplicationService {
         isDefault: params.isDefault ?? false,
       }),
     );
+    void this.mailInboundRoutingService
+      .writePostfixVirtualMap()
+      .then((result) => {
+        if (result.written) {
+          this.logger.log(
+            `Postfix virtual map güncellendi (${result.entryCount} giriş).`,
+          );
+        }
+      })
+      .catch((error) => {
+        this.logger.warn(
+          `Postfix virtual map sync: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      });
+    return sender;
   }
 }

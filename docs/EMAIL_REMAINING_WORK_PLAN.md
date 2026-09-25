@@ -41,7 +41,8 @@ Tek seferlik root scriptler; API deploy’dan **sonra** veya önce sırayla.
 | Sıra | Script / aksiyon | Bağımlılık | Not |
 |------|------------------|------------|-----|
 | 1.1 | `setup-postfix-inbound-c2.sh` (zaten kısmen) | Postfix Faz A | `inet_interfaces`, virtual domain |
-| 1.2 | Admin → **Postfix virtual senkron** | Provision edilmiş sender’lar | `MAIL_INBOUND_APPLY_POSTFIX=true` |
+| 1.2 | Admin → **Postfix virtual senkron** | Provision + API startup (`MailInboundPostfixSyncBootstrap`) | `MAIL_INBOUND_APPLY_POSTFIX=true` |
+| 1.2b | VPS **inbound stack** | `bash scripts/apply-mail-vps-inbound-stack.sh` (C2+Rspamd+Dovecot) | root |
 | 1.3 | `setup-rspamd-c4.sh` | Postfix | Milter 11332 |
 | 1.4 | `setup-dovecot-c4.sh` | `MAIL_IMAP_MAILDIR_ROOT` | IMAP 993 |
 | 1.5 | Org → **IMAP şifresi rotate** + Admin → **Dovecot passwd senkron** | 1.4 | Thunderbird pilot |

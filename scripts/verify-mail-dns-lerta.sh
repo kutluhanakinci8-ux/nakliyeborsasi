@@ -25,4 +25,21 @@ fi
 
 SPF=$(dig +short TXT "${MAIL_HOST}" | tr -d '"' | head -1)
 echo "SPF: ${SPF}"
+
+TENANT="${MAIL_PLATFORM_TENANT_DOMAIN:-kullanici.lerta.tr}"
+echo ""
+echo "=== Tenant inbound: ${TENANT} ==="
+MX=$(dig +short MX "${TENANT}" | head -1)
+echo "MX: ${MX:-<yok>}"
+if [[ -n "${MX}" ]]; then
+  echo "OK: MX kaydı var"
+else
+  echo "UYARI: MX yok — isimtescil: 10 mail.lerta.tr"
+fi
+TDMARC=$(dig +short TXT "_dmarc.${TENANT}" | head -1)
+echo "DMARC (_dmarc.${TENANT}): ${TDMARC:-<yok>}"
+if [[ -z "${TDMARC}" ]]; then
+  echo "UYARI: tenant DMARC önerilir: v=DMARC1; p=none; rua=mailto:dmarc@lerta.tr"
+fi
+
 echo "=== Bitti ==="

@@ -11,7 +11,8 @@ Platform bildirimleri (Faz A) değişmez: `notifications@mail.lerta.tr`.
 |-----|------|--------|
 | TXT | `kullanici.lerta.tr` | `v=spf1 ip4:168.231.109.27 -all` |
 | TXT | `default._domainkey.kullanici.lerta.tr` | VPS `setup-opendkim-kullanici-lerta-tr.sh` çıktısı |
-| TXT | `_dmarc.lerta.tr` | (Faz A ile aynı DMARC yeterli) |
+| TXT | `_dmarc.kullanici.lerta.tr` | `v=DMARC1; p=none; rua=mailto:dmarc@lerta.tr` (önerilen) |
+| MX | `kullanici.lerta.tr` | `10 mail.lerta.tr` (Faz C2 inbound) |
 
 VPS:
 

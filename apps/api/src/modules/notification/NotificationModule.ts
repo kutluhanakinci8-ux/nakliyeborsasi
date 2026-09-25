@@ -60,6 +60,7 @@ import { MailInboundWebhookController } from "./MailInboundWebhookController";
 import { MailInboundWebhookGuard } from "./MailInboundWebhookGuard";
 import { MailOrganizationInboxService } from "./MailOrganizationInboxService";
 import { MailInboundRoutingService } from "./MailInboundRoutingService";
+import { MailInboundPostfixSyncBootstrap } from "./MailInboundPostfixSyncBootstrap";
 import { CompanyMailInboxController } from "./CompanyMailInboxController";
 import { MailInboundSpamService } from "./MailInboundSpamService";
 import { MailMailboxComposeService } from "./MailMailboxComposeService";
@@ -143,6 +144,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     MailInboundWebhookGuard,
     MailOrganizationInboxService,
     MailInboundRoutingService,
+    MailInboundPostfixSyncBootstrap,
     MailInboundSpamService,
     MailMailboxComposeService,
     MailImapMaildirService,
