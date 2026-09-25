@@ -50,6 +50,13 @@ import {
   UnregisterWebPushSubscriptionRequestDto,
 } from "./RegisterWebPushSubscriptionRequestDto";
 import type { Request } from "express";
+import { MailCustomFolderService } from "./MailCustomFolderService";
+import {
+  BulkSetMessageCustomFolderRequestDto,
+  CreateMailCustomFolderRequestDto,
+  SetMessageCustomFolderRequestDto,
+  UpdateMailCustomFolderRequestDto,
+} from "./MailCustomFolderRequestDto";
 
 @Controller("company/mail-inbox")
 @UseGuards(JwtAuthenticationGuard, MailProductTotpPolicyGuard)
@@ -63,7 +70,19 @@ export class CompanyMailInboxController {
     private readonly mailOrganizationStorageService: MailOrganizationStorageService,
     private readonly mailOrganizationBrandingService: MailOrganizationBrandingService,
     private readonly mailWebPushService: MailWebPushService,
+    private readonly mailCustomFolderService: MailCustomFolderService,
   ) {}
+
+  private parseCustomFolderId(
+    folder: InboxFolder,
+    customFolderId?: string,
+  ): string | null | undefined {
+    if (folder !== "inbox") {
+      return undefined;
+    }
+    const raw = customFolderId?.trim();
+    return raw ? raw : null;
+  }
 
   @Get("push-config")
   public pushConfig() {
@@ -185,18 +204,70 @@ export class CompanyMailInboxController {
     return { ok: true, credentials };
   }
 
+  @Get("custom-folders")
+  public async listCustomFolders(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    const folders = await this.mailCustomFolderService.listForOrganization(
+      user.companyId,
+    );
+    return { folders };
+  }
+
+  @Post("custom-folders")
+  public async createCustomFolder(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: CreateMailCustomFolderRequestDto,
+  ) {
+    const folder = await this.mailCustomFolderService.create(
+      user.companyId,
+      body.name,
+    );
+    return { folder };
+  }
+
+  @Patch("custom-folders/:folderId")
+  public async updateCustomFolder(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("folderId") folderId: string,
+    @Body() body: UpdateMailCustomFolderRequestDto,
+  ) {
+    const folder = await this.mailCustomFolderService.updateName(
+      user.companyId,
+      folderId,
+      body.name,
+    );
+    return { folder };
+  }
+
+  @Delete("custom-folders/:folderId")
+  public async deleteCustomFolder(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("folderId") folderId: string,
+  ) {
+    await this.mailCustomFolderService.remove(user.companyId, folderId);
+    return { ok: true };
+  }
+
   @Get()
   public async summary(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
     @Query("folder") folder?: string,
+    @Query("customFolderId") customFolderId?: string,
   ) {
     const resolvedFolder = this.parseFolder(folder);
+    const resolvedCustomFolderId = this.parseCustomFolderId(
+      resolvedFolder,
+      customFolderId,
+    );
     const summary = await this.mailOrganizationInboxService.getSummary(
       user.companyId,
     );
     const messages = await this.mailOrganizationInboxService.listMessages(
       user.companyId,
       resolvedFolder,
+      50,
+      resolvedCustomFolderId,
     );
     const sent = await this.mailMailboxComposeService.listSent(user.companyId);
     const storageQuota = await this.mailOrganizationStorageService.getSnapshot(
@@ -214,11 +285,18 @@ export class CompanyMailInboxController {
   public async listThreads(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
     @Query("folder") folder?: string,
+    @Query("customFolderId") customFolderId?: string,
   ) {
     const resolvedFolder = this.parseFolder(folder);
+    const resolvedCustomFolderId = this.parseCustomFolderId(
+      resolvedFolder,
+      customFolderId,
+    );
     const threads = await this.mailOrganizationInboxService.listConversationThreads(
       user.companyId,
       resolvedFolder,
+      40,
+      resolvedCustomFolderId,
     );
     return { threads, folder: resolvedFolder };
   }
@@ -228,12 +306,18 @@ export class CompanyMailInboxController {
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
     @Param("threadId") threadId: string,
     @Query("folder") folder?: string,
+    @Query("customFolderId") customFolderId?: string,
   ) {
     const resolvedFolder = this.parseFolder(folder);
+    const resolvedCustomFolderId = this.parseCustomFolderId(
+      resolvedFolder,
+      customFolderId,
+    );
     const messages = await this.mailOrganizationInboxService.listThreadMessages(
       user.companyId,
       threadId,
       resolvedFolder,
+      resolvedCustomFolderId,
     );
     return { threadId, messages, folder: resolvedFolder };
   }
@@ -247,8 +331,13 @@ export class CompanyMailInboxController {
     @Query("receivedAfter") receivedAfter?: string,
     @Query("receivedBefore") receivedBefore?: string,
     @Query("hasAttachment") hasAttachment?: string,
+    @Query("customFolderId") customFolderId?: string,
   ) {
     const resolvedFolder = this.parseFolder(folder);
+    const resolvedCustomFolderId = this.parseCustomFolderId(
+      resolvedFolder,
+      customFolderId,
+    );
     const attachmentFilter = this.parseHasAttachmentFilter(hasAttachment);
     const messages = await this.mailOrganizationInboxService.searchMessages(
       user.companyId,
@@ -260,6 +349,8 @@ export class CompanyMailInboxController {
         receivedBefore: this.parseSearchDateEnd(receivedBefore),
         hasAttachment: attachmentFilter,
       },
+      50,
+      resolvedCustomFolderId,
     );
     return {
       messages,
@@ -479,6 +570,33 @@ export class CompanyMailInboxController {
       body.starred,
     );
     return { ok: true, ...result };
+  }
+
+  @Post("messages/bulk/custom-folder")
+  public async bulkSetCustomFolder(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: BulkSetMessageCustomFolderRequestDto,
+  ) {
+    const result = await this.mailCustomFolderService.bulkSetMessageFolder(
+      user.companyId,
+      body.messageIds,
+      body.customFolderId ?? null,
+    );
+    return { ok: true, ...result };
+  }
+
+  @Patch("messages/:messageId/custom-folder")
+  public async setMessageCustomFolder(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("messageId") messageId: string,
+    @Body() body: SetMessageCustomFolderRequestDto,
+  ) {
+    await this.mailCustomFolderService.setMessageFolder(
+      user.companyId,
+      messageId,
+      body.customFolderId ?? null,
+    );
+    return { ok: true };
   }
 
   @Patch("messages/:messageId/folder")

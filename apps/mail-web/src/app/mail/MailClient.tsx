@@ -10,6 +10,9 @@ import {
   fetchComposePresets,
   fetchDrafts,
   fetchInbox,
+  fetchCustomFolders,
+  createCustomFolder,
+  bulkSetMessageCustomFolder,
   fetchInboxThreads,
   fetchMessage,
   fetchThreadMessages,
@@ -38,6 +41,7 @@ import {
   type MailInboxListItem,
   type MailInboxMessageDetail,
   type MailInboxSummary,
+  type MailCustomFolder,
   type MailInboxThreadRow,
   type MailSentItem,
   type MailSentMessageDetail,
@@ -151,17 +155,36 @@ export function MailClient() {
   );
   const [composeRich, setComposeRich] = useState(false);
   const [composeHtml, setComposeHtml] = useState("");
+  const [customFolders, setCustomFolders] = useState<MailCustomFolder[]>([]);
+  const [activeCustomFolderId, setActiveCustomFolderId] = useState<
+    string | null
+  >(null);
+
+  const inboxCustomFolderId =
+    view === "inbox" ? activeCustomFolderId : null;
+
+  const refreshCustomFolders = useCallback(async () => {
+    if (!accessToken) {
+      return;
+    }
+    const data = await fetchCustomFolders(accessToken);
+    setCustomFolders(data.folders);
+  }, [accessToken]);
 
   const refresh = useCallback(async () => {
     if (!accessToken) {
       return;
     }
     const folder = inboxFolderForView(view);
-    const data = await fetchInbox(accessToken, folder);
+    const data = await fetchInbox(
+      accessToken,
+      folder,
+      folder === "inbox" ? inboxCustomFolderId : undefined,
+    );
     setSummary(data.summary);
     setMessages(data.messages);
     setSent(data.sent);
-  }, [accessToken, view]);
+  }, [accessToken, view, inboxCustomFolderId]);
 
   const refreshDrafts = useCallback(async () => {
     if (!accessToken) {
@@ -180,7 +203,8 @@ export function MailClient() {
     void fetchMailInboxBranding(accessToken)
       .then((data) => setInboxBranding(data.branding))
       .catch(() => setInboxBranding(null));
-  }, [accessToken, refresh, refreshDrafts, router]);
+    void refreshCustomFolders();
+  }, [accessToken, refresh, refreshDrafts, refreshCustomFolders, router]);
 
   useEffect(() => {
     if (accessToken && view === "drafts") {
@@ -233,18 +257,23 @@ export function MailClient() {
     const timer = window.setTimeout(() => {
       void (async () => {
         const folder = inboxFolderForView(view);
-        const data = await searchInbox(accessToken, folder, {
-          q: searchQuery.trim(),
-          from: searchFrom.trim(),
-          receivedAfter: searchDateFrom || undefined,
-          receivedBefore: searchDateTo || undefined,
-          hasAttachment:
-            searchHasAttachment === "yes"
-              ? true
-              : searchHasAttachment === "no"
-                ? false
-                : undefined,
-        });
+        const data = await searchInbox(
+          accessToken,
+          folder,
+          {
+            q: searchQuery.trim(),
+            from: searchFrom.trim(),
+            receivedAfter: searchDateFrom || undefined,
+            receivedBefore: searchDateTo || undefined,
+            hasAttachment:
+              searchHasAttachment === "yes"
+                ? true
+                : searchHasAttachment === "no"
+                  ? false
+                  : undefined,
+          },
+          folder === "inbox" ? inboxCustomFolderId : undefined,
+        );
         setSearchResults(data.messages);
       })();
     }, 300);
@@ -258,6 +287,7 @@ export function MailClient() {
     searchHasAttachment,
     searchActive,
     view,
+    inboxCustomFolderId,
   ]);
 
   async function openMessage(id: string) {
@@ -478,11 +508,12 @@ export function MailClient() {
     return Math.max(1, Math.round(bytes / (1024 * 1024)));
   }, [summary?.storageQuota?.maxAttachmentBytes]);
   const canUseThreads =
-    view === "inbox" ||
-    view === "spam" ||
-    view === "all" ||
-    view === "archive" ||
-    view === "starred";
+    !activeCustomFolderId &&
+    (view === "inbox" ||
+      view === "spam" ||
+      view === "all" ||
+      view === "archive" ||
+      view === "starred");
 
   const canBulkSelect =
     view === "inbox" ||
@@ -515,6 +546,32 @@ export function MailClient() {
     } catch (error) {
       setToast(
         error instanceof Error ? error.message : "Toplu işlem başarısız.",
+      );
+    }
+  }
+
+  async function runBulkCustomFolder(customFolderId: string | null) {
+    if (!accessToken || checkedIds.size === 0) {
+      return;
+    }
+    const messageIds = [...checkedIds];
+    try {
+      await bulkSetMessageCustomFolder(
+        accessToken,
+        messageIds,
+        customFolderId,
+      );
+      setToast(
+        customFolderId
+          ? `${messageIds.length} mesaj klasöre taşındı.`
+          : `${messageIds.length} mesaj gelen kutusuna alındı.`,
+      );
+      setCheckedIds(new Set());
+      void refresh();
+      void refreshCustomFolders();
+    } catch (error) {
+      setToast(
+        error instanceof Error ? error.message : "Klasör değiştirilemedi.",
       );
     }
   }
@@ -643,7 +700,11 @@ export function MailClient() {
       setMobilePane("list");
       void refresh();
       if (threadView && canUseThreads) {
-        void fetchInboxThreads(accessToken, inboxFolder).then((data) => {
+        void fetchInboxThreads(
+          accessToken,
+          inboxFolder,
+          inboxCustomFolderId,
+        ).then((data) => {
           setThreads(data.threads);
         });
       }
@@ -675,10 +736,14 @@ export function MailClient() {
       setThreads([]);
       return;
     }
-    void fetchInboxThreads(accessToken, inboxFolder).then((data) => {
+    void fetchInboxThreads(
+      accessToken,
+      inboxFolder,
+      inboxCustomFolderId,
+    ).then((data) => {
       setThreads(data.threads);
     });
-  }, [accessToken, threadView, inboxFolder, canUseThreads]);
+  }, [accessToken, threadView, inboxFolder, inboxCustomFolderId, canUseThreads]);
 
   const listItems =
     threadView && canUseThreads && !searchActive
@@ -799,6 +864,9 @@ export function MailClient() {
 
   function switchView(next: View) {
     setView(next);
+    if (next !== "inbox") {
+      setActiveCustomFolderId(null);
+    }
     setDetail(null);
     setSentPreview(null);
     setSelectedId(null);
@@ -823,7 +891,12 @@ export function MailClient() {
       return;
     }
     setActiveThreadId(threadId);
-    const data = await fetchThreadMessages(accessToken, threadId, inboxFolder);
+    const data = await fetchThreadMessages(
+      accessToken,
+      threadId,
+      inboxFolder,
+      inboxCustomFolderId,
+    );
     setThreadMessages(data.messages);
     await openMessage(latestMessageId);
   }
@@ -975,8 +1048,13 @@ export function MailClient() {
         <nav className="mail-nav">
           <button
             type="button"
-            className={view === "inbox" ? "active" : ""}
-            onClick={() => switchView("inbox")}
+            className={
+              view === "inbox" && !activeCustomFolderId ? "active" : ""
+            }
+            onClick={() => {
+              setActiveCustomFolderId(null);
+              switchView("inbox");
+            }}
           >
             Gelen
             {summary && summary.unreadCount > 0
@@ -1043,6 +1121,54 @@ export function MailClient() {
             Taslaklar
             {drafts.length > 0 ? ` (${drafts.length})` : ""}
           </button>
+          <div className="mail-custom-folders-head">
+            <span>Özel klasörler</span>
+            <button
+              type="button"
+              className="mail-custom-folder-add"
+              title="Yeni klasör"
+              onClick={() => {
+                const name = window.prompt("Klasör adı");
+                if (!name?.trim() || !accessToken) {
+                  return;
+                }
+                void (async () => {
+                  try {
+                    await createCustomFolder(accessToken, name.trim());
+                    setToast("Klasör oluşturuldu.");
+                    void refreshCustomFolders();
+                  } catch (error) {
+                    setToast(
+                      error instanceof Error
+                        ? error.message
+                        : "Klasör oluşturulamadı.",
+                    );
+                  }
+                })();
+              }}
+            >
+              +
+            </button>
+          </div>
+          {customFolders.map((f) => (
+            <button
+              key={f.id}
+              type="button"
+              className={
+                view === "inbox" && activeCustomFolderId === f.id
+                  ? "active"
+                  : ""
+              }
+              onClick={() => {
+                setActiveCustomFolderId(f.id);
+                switchView("inbox");
+                void refresh();
+              }}
+            >
+              {f.name}
+              {f.messageCount > 0 ? ` (${f.messageCount})` : ""}
+            </button>
+          ))}
         </nav>
         </div>
         <div className="mail-sidebar-footer">
@@ -1159,6 +1285,29 @@ export function MailClient() {
                         Yıldız kaldır
                       </button>
                     </>
+                  ) : null}
+                  {view === "inbox" || activeCustomFolderId ? (
+                    <select
+                      className="mail-bulk-folder-select"
+                      defaultValue=""
+                      aria-label="Özel klasöre taşı"
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        e.target.value = "";
+                        if (!v) {
+                          return;
+                        }
+                        void runBulkCustomFolder(
+                          v === "__inbox__" ? null : v,
+                        );
+                      }}
+                    >
+                      <option value="">Klasöre taşı…</option>
+                      <option value="__inbox__">Gelen (klasörsüz)</option>
+                      {customFolders.map((f) => (
+                        <option key={f.id} value={f.id}>{f.name}</option>
+                      ))}
+                    </select>
                   ) : null}
                 </span>
               ) : null}
