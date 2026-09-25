@@ -10,3 +10,4 @@ coverage/
 *.tsbuildinfo
 .next/
 data/inbound/
+data/inbound/attachments/

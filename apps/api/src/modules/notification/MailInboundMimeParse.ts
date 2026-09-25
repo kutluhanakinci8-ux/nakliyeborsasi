@@ -62,6 +62,64 @@ function decodeQuotedPrintable(input: string): string {
     );
 }
 
+export function parseInternetMessageId(rawMime: string): string | null {
+  const headEnd = rawMime.search(/\r?\n\r?\n/);
+  const head = headEnd >= 0 ? rawMime.slice(0, headEnd) : rawMime;
+  const unfold = head.replace(/\r?\n[ \t]+/g, " ");
+  const match = unfold.match(/^Message-ID:\s*(.+)$/im);
+  return match?.[1]?.trim().replace(/^<|>$/g, "") ?? null;
+}
+
+export type ParsedMimeAttachment = {
+  filename: string;
+  contentType: string;
+  content: Buffer;
+};
+
+export function extractAttachmentsFromMime(
+  rawMime: string,
+): ParsedMimeAttachment[] {
+  const boundaryMatch = rawMime.match(/boundary="?([^"\s;]+)"?/i);
+  if (!boundaryMatch) {
+    return [];
+  }
+  const boundary = boundaryMatch[1];
+  const headEnd = rawMime.search(/\r?\n\r?\n/);
+  const body =
+    headEnd >= 0 ? rawMime.slice(headEnd).replace(/^\r?\n\r?\n/, "") : rawMime;
+  const segments = body.split(`--${boundary}`);
+  const results: ParsedMimeAttachment[] = [];
+  for (const segment of segments) {
+    if (!/content-disposition:\s*attachment/i.test(segment)) {
+      continue;
+    }
+    const filenameMatch = segment.match(/filename="?([^"\r\n]+)"?/i);
+    const typeMatch = segment.match(/content-type:\s*([^;\r\n]+)/i);
+    const encodingMatch = segment.match(/content-transfer-encoding:\s*(\S+)/i);
+    const chunkParts = segment.split(/\r?\n\r?\n/);
+    if (chunkParts.length < 2) {
+      continue;
+    }
+    const rawContent = chunkParts.slice(1).join("\n\n").trim();
+    if (!rawContent || rawContent.startsWith("--")) {
+      continue;
+    }
+    const encoding = (encodingMatch?.[1] ?? "").toLowerCase();
+    let content: Buffer;
+    if (encoding === "base64") {
+      content = Buffer.from(rawContent.replace(/\s+/g, ""), "base64");
+    } else {
+      content = Buffer.from(decodeQuotedPrintable(rawContent), "utf8");
+    }
+    results.push({
+      filename: filenameMatch?.[1]?.trim() || "attachment.bin",
+      contentType: typeMatch?.[1]?.trim() || "application/octet-stream",
+      content,
+    });
+  }
+  return results;
+}
+
 export function normalizeEmailAddress(input: string): string {
   const trimmed = input.trim();
   const angle = trimmed.match(/<([^>]+)>/);

@@ -7,8 +7,13 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { readFileSync } from "node:fs";
 import { In, IsNull, Repository } from "typeorm";
 import { MailMailboxEntity } from "../../infrastructure/database/entities/MailMailboxEntity";
-import { MailInboundMessageEntity } from "../../infrastructure/database/entities/MailInboundMessageEntity";
+import {
+  MailInboundAttachmentMeta,
+  MailInboundMessageEntity,
+} from "../../infrastructure/database/entities/MailInboundMessageEntity";
 import { MailSenderIdentityEntity } from "../../infrastructure/database/entities/MailSenderIdentityEntity";
+
+export type InboxFolder = "inbox" | "spam" | "all";
 
 @Injectable()
 export class MailOrganizationInboxService {
@@ -26,37 +31,49 @@ export class MailOrganizationInboxService {
     mailboxId: string | null;
     unreadCount: number;
     totalMessages: number;
+    spamCount: number;
   }> {
     const primaryAddress = await this.resolvePrimaryAddress(organizationId);
-    const mailbox = primaryAddress
-      ? await this.mailboxRepository.findOne({
-          where: { organizationId, emailAddress: primaryAddress },
-        })
-      : null;
-    if (!mailbox) {
+    const mailboxIds = await this.mailboxIdsForOrganization(organizationId);
+    if (mailboxIds.length === 0) {
       return {
         primaryAddress,
         mailboxId: null,
         unreadCount: 0,
         totalMessages: 0,
+        spamCount: 0,
       };
     }
-    const [totalMessages, unreadCount] = await Promise.all([
-      this.inboundRepository.count({ where: { mailboxId: mailbox.id } }),
+    const inboxWhere = {
+      mailboxId: In(mailboxIds),
+      spamStatus: In(["clean", "suspected"]),
+    };
+    const [totalMessages, unreadCount, spamCount] = await Promise.all([
+      this.inboundRepository.count({ where: inboxWhere }),
       this.inboundRepository.count({
-        where: { mailboxId: mailbox.id, readAt: IsNull() },
+        where: { ...inboxWhere, readAt: IsNull() },
+      }),
+      this.inboundRepository.count({
+        where: { mailboxId: In(mailboxIds), spamStatus: "blocked" },
       }),
     ]);
+    const mailbox = primaryAddress
+      ? await this.mailboxRepository.findOne({
+          where: { organizationId, emailAddress: primaryAddress },
+        })
+      : null;
     return {
       primaryAddress,
-      mailboxId: mailbox.id,
+      mailboxId: mailbox?.id ?? null,
       unreadCount,
       totalMessages,
+      spamCount,
     };
   }
 
   public async listMessages(
     organizationId: string,
+    folder: InboxFolder = "inbox",
     limit = 50,
   ): Promise<
     {
@@ -66,6 +83,9 @@ export class MailOrganizationInboxService {
       snippet: string | null;
       receivedAt: string;
       readAt: string | null;
+      spamStatus: string;
+      spamReason: string | null;
+      attachmentCount: number;
     }[]
   > {
     const mailboxIds = await this.mailboxIdsForOrganization(organizationId);
@@ -73,7 +93,7 @@ export class MailOrganizationInboxService {
       return [];
     }
     const rows = await this.inboundRepository.find({
-      where: { mailboxId: In(mailboxIds) },
+      where: this.whereForFolder(mailboxIds, folder),
       order: { receivedAt: "DESC" },
       take: limit,
     });
@@ -92,19 +112,19 @@ export class MailOrganizationInboxService {
     receivedAt: string;
     readAt: string | null;
     emailAddress: string;
+    spamStatus: string;
+    spamReason: string | null;
+    attachments: {
+      index: number;
+      filename: string;
+      contentType: string;
+      sizeBytes: number;
+    }[];
   }> {
-    const row = await this.inboundRepository.findOne({
-      where: { id: messageId },
-    });
-    if (!row) {
-      throw new NotFoundException("Mesaj bulunamadı");
-    }
+    const row = await this.assertMessageAccess(organizationId, messageId);
     const mailbox = await this.mailboxRepository.findOne({
       where: { id: row.mailboxId },
     });
-    if (!mailbox || mailbox.organizationId !== organizationId) {
-      throw new ForbiddenException("Bu mesaja erişim yok");
-    }
     let bodyText = row.bodyText;
     if (!bodyText && row.rawMimePath) {
       try {
@@ -121,14 +141,47 @@ export class MailOrganizationInboxService {
       bodyText: bodyText ?? row.snippet,
       receivedAt: row.receivedAt.toISOString(),
       readAt: row.readAt?.toISOString() ?? null,
-      emailAddress: mailbox.emailAddress,
+      emailAddress: mailbox?.emailAddress ?? "—",
+      spamStatus: row.spamStatus,
+      spamReason: row.spamReason,
+      attachments: (row.attachments ?? []).map((file, index) => ({
+        index,
+        filename: file.filename,
+        contentType: file.contentType,
+        sizeBytes: file.sizeBytes,
+      })),
     };
+  }
+
+  public async getAttachment(
+    organizationId: string,
+    messageId: string,
+    index: number,
+  ): Promise<{ file: MailInboundAttachmentMeta; buffer: Buffer }> {
+    const row = await this.assertMessageAccess(organizationId, messageId);
+    const file = row.attachments?.[index];
+    if (!file) {
+      throw new NotFoundException("Ek bulunamadı");
+    }
+    const buffer = readFileSync(file.storagePath);
+    return { file, buffer };
   }
 
   public async markRead(
     organizationId: string,
     messageId: string,
   ): Promise<void> {
+    const row = await this.assertMessageAccess(organizationId, messageId);
+    if (!row.readAt) {
+      row.readAt = new Date();
+      await this.inboundRepository.save(row);
+    }
+  }
+
+  private async assertMessageAccess(
+    organizationId: string,
+    messageId: string,
+  ): Promise<MailInboundMessageEntity> {
     const row = await this.inboundRepository.findOne({
       where: { id: messageId },
     });
@@ -141,10 +194,23 @@ export class MailOrganizationInboxService {
     if (!mailbox || mailbox.organizationId !== organizationId) {
       throw new ForbiddenException("Bu mesaja erişim yok");
     }
-    if (!row.readAt) {
-      row.readAt = new Date();
-      await this.inboundRepository.save(row);
+    return row;
+  }
+
+  private whereForFolder(
+    mailboxIds: string[],
+    folder: InboxFolder,
+  ): Record<string, unknown> {
+    if (folder === "spam") {
+      return { mailboxId: In(mailboxIds), spamStatus: "blocked" };
     }
+    if (folder === "all") {
+      return { mailboxId: In(mailboxIds) };
+    }
+    return {
+      mailboxId: In(mailboxIds),
+      spamStatus: In(["clean", "suspected"]),
+    };
   }
 
   private async mailboxIdsForOrganization(
@@ -177,6 +243,9 @@ export class MailOrganizationInboxService {
       snippet: row.snippet,
       receivedAt: row.receivedAt.toISOString(),
       readAt: row.readAt?.toISOString() ?? null,
+      spamStatus: row.spamStatus,
+      spamReason: row.spamReason,
+      attachmentCount: row.attachments?.length ?? 0,
     };
   }
 }

@@ -793,6 +793,7 @@ export type MailInboundMessageRow = {
   snippet: string | null;
   receivedAt: string;
   readAt: string | null;
+  spamStatus?: string;
 };
 
 

@@ -17,6 +17,13 @@ export class SmtpEmailSender {
     text: string;
     from?: string;
     replyTo?: string;
+    inReplyTo?: string;
+    references?: string;
+    attachments?: {
+      filename: string;
+      content: Buffer;
+      contentType?: string;
+    }[];
   }): Promise<string | null> {
     if (!this.notificationConfigurationService.isEmailEnabled()) {
       this.logger.warn(`EMAIL_ENABLED=false — skipped send to ${params.to}`);
@@ -33,6 +40,13 @@ export class SmtpEmailSender {
       html: params.html,
       text: params.text,
       replyTo: params.replyTo?.trim() || undefined,
+      inReplyTo: params.inReplyTo,
+      references: params.references,
+      attachments: params.attachments?.map((file) => ({
+        filename: file.filename,
+        content: file.content,
+        contentType: file.contentType,
+      })),
     });
     return result.messageId ?? null;
   }

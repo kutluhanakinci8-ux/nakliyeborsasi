@@ -5,6 +5,7 @@ export type MailInboxSummary = {
   mailboxId: string | null;
   unreadCount: number;
   totalMessages: number;
+  spamCount: number;
 };
 
 export type MailInboxListItem = {
@@ -14,11 +15,36 @@ export type MailInboxListItem = {
   snippet: string | null;
   receivedAt: string;
   readAt: string | null;
+  spamStatus: string;
+  spamReason: string | null;
+  attachmentCount: number;
+};
+
+export type MailInboxAttachmentMeta = {
+  index: number;
+  filename: string;
+  contentType: string;
+  sizeBytes: number;
 };
 
 export type MailInboxMessageDetail = MailInboxListItem & {
   bodyText: string | null;
   emailAddress: string;
+  attachments: MailInboxAttachmentMeta[];
+};
+
+export type MailSentItem = {
+  id: string;
+  toAddress: string;
+  subject: string;
+  sentAt: string;
+  relatedInboundMessageId: string | null;
+};
+
+export type ComposeAttachment = {
+  filename: string;
+  contentType: string;
+  contentBase64: string;
 };
 
 async function apiFetch<T>(
@@ -28,6 +54,9 @@ async function apiFetch<T>(
 ): Promise<T> {
   const headers = new Headers(init.headers);
   headers.set("Authorization", `Bearer ${accessToken}`);
+  if (init.body && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
   const response = await fetch(
     `${PublicApiConfiguration.resolveBaseUrl()}/${path}`,
     { ...init, headers },
@@ -38,11 +67,19 @@ async function apiFetch<T>(
   return (await response.json()) as T;
 }
 
-export async function fetchCompanyMailInbox(accessToken: string): Promise<{
+export async function fetchCompanyMailInbox(
+  accessToken: string,
+  folder: "inbox" | "spam" | "all" = "inbox",
+): Promise<{
   summary: MailInboxSummary;
   messages: MailInboxListItem[];
+  sent: MailSentItem[];
+  folder: string;
 }> {
-  return apiFetch(accessToken, "company/mail-inbox");
+  return apiFetch(
+    accessToken,
+    `company/mail-inbox?folder=${encodeURIComponent(folder)}`,
+  );
 }
 
 export async function fetchCompanyMailInboxMessage(
@@ -56,11 +93,52 @@ export async function fetchCompanyMailInboxMessage(
   return payload.message;
 }
 
+export async function downloadCompanyMailAttachment(
+  accessToken: string,
+  messageId: string,
+  index: number,
+): Promise<Blob> {
+  const response = await fetch(
+    `${PublicApiConfiguration.resolveBaseUrl()}/company/mail-inbox/messages/${messageId}/attachments/${index}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  );
+  if (!response.ok) {
+    throw new Error("attachment download failed");
+  }
+  return response.blob();
+}
+
 export async function markCompanyMailInboxRead(
   accessToken: string,
   messageId: string,
 ): Promise<void> {
   await apiFetch(accessToken, `company/mail-inbox/messages/${messageId}/read`, {
     method: "PATCH",
+  });
+}
+
+export async function composeCompanyMail(
+  accessToken: string,
+  body: {
+    to: string;
+    subject: string;
+    text: string;
+    attachments?: ComposeAttachment[];
+  },
+): Promise<void> {
+  await apiFetch(accessToken, "company/mail-inbox/compose", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function replyCompanyMail(
+  accessToken: string,
+  messageId: string,
+  body: { text: string; attachments?: ComposeAttachment[] },
+): Promise<void> {
+  await apiFetch(accessToken, `company/mail-inbox/messages/${messageId}/reply`, {
+    method: "POST",
+    body: JSON.stringify(body),
   });
 }

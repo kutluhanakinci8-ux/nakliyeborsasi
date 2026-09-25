@@ -1,31 +1,63 @@
 import {
+  Body,
   Controller,
+  ForbiddenException,
   Get,
   Param,
   Patch,
+  Post,
+  Query,
+  Res,
   UseGuards,
 } from "@nestjs/common";
-import { AuthenticatedUserContext } from "@nakliyeborsasi/core";
+import { CompanyRoleCode, AuthenticatedUserContext } from "@nakliyeborsasi/core";
+import { Response } from "express";
 import { JwtAuthenticationGuard } from "../auth/JwtAuthenticationGuard";
 import { AuthenticatedUserParam } from "../auth/AuthenticatedUserParam";
-import { MailOrganizationInboxService } from "./MailOrganizationInboxService";
+import {
+  InboxFolder,
+  MailOrganizationInboxService,
+} from "./MailOrganizationInboxService";
+import {
+  ComposeAttachmentInput,
+  MailMailboxComposeService,
+} from "./MailMailboxComposeService";
+
+class ComposeMailDto {
+  public to!: string;
+  public subject!: string;
+  public text!: string;
+  public attachments?: ComposeAttachmentInput[];
+}
+
+class ReplyMailDto {
+  public text!: string;
+  public attachments?: ComposeAttachmentInput[];
+}
 
 @Controller("company/mail-inbox")
 @UseGuards(JwtAuthenticationGuard)
 export class CompanyMailInboxController {
   public constructor(
     private readonly mailOrganizationInboxService: MailOrganizationInboxService,
+    private readonly mailMailboxComposeService: MailMailboxComposeService,
   ) {}
 
   @Get()
-  public async summary(@AuthenticatedUserParam() user: AuthenticatedUserContext) {
+  public async summary(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Query("folder") folder?: string,
+  ) {
+    const resolvedFolder = this.parseFolder(folder);
     const summary = await this.mailOrganizationInboxService.getSummary(
       user.companyId,
     );
     const messages = await this.mailOrganizationInboxService.listMessages(
       user.companyId,
+      resolvedFolder,
     );
-    return { summary, messages };
+    const sent = await this.mailMailboxComposeService.listSent(user.companyId);
+    return { summary, messages, sent, folder: resolvedFolder };
   }
 
   @Get("messages/:messageId")
@@ -40,6 +72,28 @@ export class CompanyMailInboxController {
     return { message };
   }
 
+  @Get("messages/:messageId/attachments/:index")
+  public async downloadAttachment(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("messageId") messageId: string,
+    @Param("index") indexRaw: string,
+    @Res() response: Response,
+  ): Promise<void> {
+    const index = Number.parseInt(indexRaw, 10);
+    const { file, buffer } =
+      await this.mailOrganizationInboxService.getAttachment(
+        user.companyId,
+        messageId,
+        index,
+      );
+    response.setHeader("Content-Type", file.contentType);
+    response.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${file.filename}"`,
+    );
+    response.send(buffer);
+  }
+
   @Patch("messages/:messageId/read")
   public async markRead(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
@@ -47,5 +101,52 @@ export class CompanyMailInboxController {
   ) {
     await this.mailOrganizationInboxService.markRead(user.companyId, messageId);
     return { ok: true };
+  }
+
+  @Post("compose")
+  public async compose(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: ComposeMailDto,
+  ) {
+    this.assertCompanyOwner(user);
+    const result = await this.mailMailboxComposeService.compose({
+      organizationId: user.companyId,
+      to: body.to,
+      subject: body.subject,
+      text: body.text,
+      attachments: body.attachments,
+    });
+    return { ok: true, ...result };
+  }
+
+  @Post("messages/:messageId/reply")
+  public async reply(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("messageId") messageId: string,
+    @Body() body: ReplyMailDto,
+  ) {
+    this.assertCompanyOwner(user);
+    const result = await this.mailMailboxComposeService.reply({
+      organizationId: user.companyId,
+      inboundMessageId: messageId,
+      text: body.text,
+      attachments: body.attachments,
+    });
+    return { ok: true, ...result };
+  }
+
+  private parseFolder(folder?: string): InboxFolder {
+    if (folder === "spam" || folder === "all") {
+      return folder;
+    }
+    return "inbox";
+  }
+
+  private assertCompanyOwner(user: AuthenticatedUserContext): void {
+    if (!user.roleCodes.includes(CompanyRoleCode.CompanyOwner)) {
+      throw new ForbiddenException(
+        "Posta gönderimi yalnızca firma sahibi tarafından yapılabilir.",
+      );
+    }
   }
 }

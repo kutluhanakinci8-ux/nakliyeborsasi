@@ -5,6 +5,13 @@ import {
   PrimaryGeneratedColumn,
 } from "typeorm";
 
+export type MailInboundAttachmentMeta = {
+  filename: string;
+  contentType: string;
+  sizeBytes: number;
+  storagePath: string;
+};
+
 @Entity({ name: "mail_inbound_message" })
 export class MailInboundMessageEntity {
   @PrimaryGeneratedColumn("uuid")
@@ -27,6 +34,18 @@ export class MailInboundMessageEntity {
 
   @Column({ type: "text", nullable: true })
   public rawMimePath!: string | null;
+
+  @Column({ type: "varchar", length: 16, default: "clean" })
+  public spamStatus!: "clean" | "suspected" | "blocked";
+
+  @Column({ type: "varchar", length: 255, nullable: true })
+  public spamReason!: string | null;
+
+  @Column({ type: "varchar", length: 255, nullable: true })
+  public internetMessageId!: string | null;
+
+  @Column({ type: "jsonb", nullable: true })
+  public attachments!: MailInboundAttachmentMeta[] | null;
 
   @Column({ type: "timestamptz", nullable: true })
   public readAt!: Date | null;

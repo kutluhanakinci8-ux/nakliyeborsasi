@@ -15,10 +15,14 @@ import { MailInboundMessageEntity } from "../../infrastructure/database/entities
 import { MailSenderIdentityEntity } from "../../infrastructure/database/entities/MailSenderIdentityEntity";
 import { MailDomainEntity } from "../../infrastructure/database/entities/MailDomainEntity";
 import {
+  extractAttachmentsFromMime,
   extractPlainBodyFromMime,
   normalizeEmailAddress,
+  parseInternetMessageId,
   parseMinimalMimeHeaders,
 } from "./MailInboundMimeParse";
+import { MailInboundSpamService } from "./MailInboundSpamService";
+import type { MailInboundAttachmentMeta } from "../../infrastructure/database/entities/MailInboundMessageEntity";
 
 export type InboundIngestInput = {
   recipient: string;
@@ -42,6 +46,7 @@ export class MailInboundIngestService {
     private readonly senderRepository: Repository<MailSenderIdentityEntity>,
     @InjectRepository(MailDomainEntity)
     private readonly domainRepository: Repository<MailDomainEntity>,
+    private readonly mailInboundSpamService: MailInboundSpamService,
   ) {}
 
   public async ingest(input: InboundIngestInput): Promise<MailInboundMessageEntity> {
@@ -82,6 +87,20 @@ export class MailInboundIngestService {
     if (rawMime) {
       rawMimePath = this.persistRawMime(messageId, rawMime);
     }
+    const verdict = await this.mailInboundSpamService.evaluate({
+      fromAddress,
+      subject,
+      bodyText,
+      organizationId: mailbox.organizationId,
+    });
+    const internetMessageId = rawMime ? parseInternetMessageId(rawMime) : null;
+    const attachments =
+      rawMime && rawMime.length > 0
+        ? this.persistAttachments(
+            messageId,
+            extractAttachmentsFromMime(rawMime),
+          )
+        : null;
 
     const row = await this.inboundRepository.save(
       this.inboundRepository.create({
@@ -92,6 +111,10 @@ export class MailInboundIngestService {
         snippet,
         bodyText,
         rawMimePath,
+        spamStatus: verdict.spamStatus,
+        spamReason: verdict.spamReason,
+        internetMessageId,
+        attachments,
         readAt: null,
       }),
     );
@@ -112,6 +135,7 @@ export class MailInboundIngestService {
       snippet: string | null;
       receivedAt: string;
       readAt: string | null;
+      spamStatus: string;
     }[]
   > {
     const rows = await this.inboundRepository.find({
@@ -137,6 +161,33 @@ export class MailInboundIngestService {
         snippet: row.snippet,
         receivedAt: row.receivedAt.toISOString(),
         readAt: row.readAt?.toISOString() ?? null,
+        spamStatus: row.spamStatus,
+      };
+    });
+  }
+
+  private persistAttachments(
+    messageId: string,
+    parsed: ReturnType<typeof extractAttachmentsFromMime>,
+  ): MailInboundAttachmentMeta[] {
+    if (parsed.length === 0) {
+      return [];
+    }
+    const base =
+      this.configService.get<string>("MAIL_INBOUND_STORAGE_DIR")?.trim() ||
+      join(process.cwd(), "data", "inbound");
+    const dir = join(base, "attachments", messageId);
+    mkdirSync(dir, { recursive: true });
+    const max = 5;
+    return parsed.slice(0, max).map((file, index) => {
+      const safeName = file.filename.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const path = join(dir, `${index}-${safeName}`);
+      writeFileSync(path, file.content);
+      return {
+        filename: file.filename,
+        contentType: file.contentType,
+        sizeBytes: file.content.length,
+        storagePath: path,
       };
     });
   }
