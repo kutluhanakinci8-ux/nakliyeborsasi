@@ -164,10 +164,7 @@ export class MailTenantSubdomainService {
     const domain = check.domain;
     if (!check.ok) {
       const row = await this.domainRepository.findOne({ where: { domain } });
-      if (row && row.verificationStatus === "verified") {
-        row.verificationStatus = "pending";
-        await this.domainRepository.save(row);
-      }
+      // Manuel/pilot doğrulama korunur; DNS geçici uyumsuzlukta gönderim kesilmez.
       return {
         domain,
         dnsOk: false,
