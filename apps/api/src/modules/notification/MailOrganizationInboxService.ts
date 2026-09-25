@@ -5,7 +5,7 @@ import {
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { readFileSync } from "node:fs";
-import { In, IsNull, Repository } from "typeorm";
+import { ILike, In, IsNull, Repository } from "typeorm";
 import { MailMailboxEntity } from "../../infrastructure/database/entities/MailMailboxEntity";
 import {
   MailInboundAttachmentMeta,
@@ -98,6 +98,54 @@ export class MailOrganizationInboxService {
       take: limit,
     });
     return rows.map((row) => this.toListRow(row));
+  }
+
+  public async searchMessages(
+    organizationId: string,
+    query: string,
+    folder: InboxFolder = "inbox",
+    limit = 50,
+  ): Promise<
+    {
+      id: string;
+      fromAddress: string;
+      subject: string;
+      snippet: string | null;
+      receivedAt: string;
+      readAt: string | null;
+      spamStatus: string;
+      spamReason: string | null;
+      attachmentCount: number;
+    }[]
+  > {
+    const term = query.trim();
+    if (term.length < 2) {
+      return [];
+    }
+    const mailboxIds = await this.mailboxIdsForOrganization(organizationId);
+    if (mailboxIds.length === 0) {
+      return [];
+    }
+    const baseWhere = this.whereForFolder(mailboxIds, folder);
+    const pattern = `%${term.replace(/[%_]/g, "")}%`;
+    const rows = await this.inboundRepository.find({
+      where: [
+        { ...baseWhere, subject: ILike(pattern) },
+        { ...baseWhere, fromAddress: ILike(pattern) },
+        { ...baseWhere, snippet: ILike(pattern) },
+      ],
+      order: { receivedAt: "DESC" },
+      take: limit,
+    });
+    const seen = new Set<string>();
+    const unique: MailInboundMessageEntity[] = [];
+    for (const row of rows) {
+      if (!seen.has(row.id)) {
+        seen.add(row.id);
+        unique.push(row);
+      }
+    }
+    return unique.map((row) => this.toListRow(row));
   }
 
   public async getMessage(

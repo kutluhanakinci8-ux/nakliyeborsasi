@@ -22,6 +22,8 @@ import { MailCustomDomainOpenDkimInstaller } from "./MailCustomDomainOpenDkimIns
 
 export type CustomDomainDnsInstructions = {
   domain: string;
+  mxHost: string;
+  mxPriority: number;
   spfHost: string;
   spfValue: string;
   dkimHost: string;
@@ -36,6 +38,7 @@ export type CustomDomainBundle = {
   dnsInstructions: CustomDomainDnsInstructions | null;
   dnsCheck: {
     ok: boolean;
+    mx: { ok: boolean; detail: string };
     spf: { ok: boolean; detail: string };
     dkim: { ok: boolean; detail: string };
   } | null;
@@ -305,8 +308,11 @@ export class MailCustomDomainService {
     const parts = domain.split(".");
     const orgRoot =
       parts.length >= 2 ? parts.slice(-2).join(".") : domain;
+    const mxHost = this.mailDomainDnsVerificationService.resolvePlatformMxHost();
     return {
       domain,
+      mxHost,
+      mxPriority: 10,
       spfHost: (snap.spfHost as string) ?? domain,
       spfValue: (snap.spfValue as string) ?? `v=spf1 ip4:${ipv4} -all`,
       dkimHost:
@@ -322,10 +328,15 @@ export class MailCustomDomainService {
 
   private async verifyDomainDns(mailDomain: MailDomainEntity): Promise<{
     ok: boolean;
+    mx: { ok: boolean; detail: string };
     spf: { ok: boolean; detail: string };
     dkim: { ok: boolean; detail: string };
   }> {
     const instructions = this.buildInstructionsFromSnapshot(mailDomain);
+    const mx = await this.mailDomainDnsVerificationService.verifyMxRecord(
+      mailDomain.domain,
+      instructions.mxHost,
+    );
     const spf = await this.mailDomainDnsVerificationService.verifyTxtRecord(
       instructions.spfHost,
       "v=spf1",
@@ -341,7 +352,7 @@ export class MailCustomDomainService {
           ok: false,
           detail: "DKIM TXT üretilmedi — domain kaydını yeniden oluşturun.",
         };
-    return { ok: spf.ok && dkim.ok, spf, dkim };
+    return { ok: mx.ok && spf.ok && dkim.ok, mx, spf, dkim };
   }
 
   private generateDkimMaterial(domain: string): {

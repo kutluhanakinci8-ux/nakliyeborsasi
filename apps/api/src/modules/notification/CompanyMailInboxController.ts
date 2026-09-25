@@ -67,6 +67,20 @@ export class CompanyMailInboxController {
     return { summary, messages, sent, folder: resolvedFolder };
   }
 
+  @Get("search")
+  public async search(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Query("q") query?: string,
+    @Query("folder") folder?: string,
+  ) {
+    const messages = await this.mailOrganizationInboxService.searchMessages(
+      user.companyId,
+      query ?? "",
+      this.parseFolder(folder),
+    );
+    return { messages, q: (query ?? "").trim() };
+  }
+
   @Get("sent/:sentId")
   public async getSentMessage(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,

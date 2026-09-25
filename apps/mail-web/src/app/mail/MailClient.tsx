@@ -1,14 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   composeMail,
+  downloadMailAttachment,
   fetchInbox,
   fetchMessage,
   fetchSentMessage,
+  fileToAttachment,
   markRead,
   replyMail,
+  searchInbox,
   type MailInboxListItem,
   type MailInboxMessageDetail,
   type MailInboxSummary,
@@ -19,6 +22,16 @@ import { useMailSession } from "@/lib/session";
 
 type View = "inbox" | "spam" | "sent" | "all";
 
+function inboxFolderForView(view: View): "inbox" | "spam" | "all" {
+  if (view === "spam") {
+    return "spam";
+  }
+  if (view === "all") {
+    return "all";
+  }
+  return "inbox";
+}
+
 export function MailClient() {
   const router = useRouter();
   const { accessToken, logout } = useMailSession();
@@ -26,16 +39,23 @@ export function MailClient() {
   const [summary, setSummary] = useState<MailInboxSummary | null>(null);
   const [messages, setMessages] = useState<MailInboxListItem[]>([]);
   const [sent, setSent] = useState<MailSentItem[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<MailInboxListItem[] | null>(
+    null,
+  );
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detail, setDetail] = useState<MailInboxMessageDetail | null>(null);
   const [sentPreview, setSentPreview] = useState<MailSentMessageDetail | null>(
     null,
   );
+  const [sentLoading, setSentLoading] = useState(false);
   const [replyText, setReplyText] = useState("");
+  const [replyFiles, setReplyFiles] = useState<File[]>([]);
   const [composeOpen, setComposeOpen] = useState(false);
   const [composeTo, setComposeTo] = useState("");
   const [composeSubject, setComposeSubject] = useState("");
   const [composeText, setComposeText] = useState("");
+  const [composeFiles, setComposeFiles] = useState<File[]>([]);
   const [toast, setToast] = useState("");
   const [composeError, setComposeError] = useState("");
   const [sending, setSending] = useState(false);
@@ -44,8 +64,7 @@ export function MailClient() {
     if (!accessToken) {
       return;
     }
-    const folder =
-      view === "spam" ? "spam" : view === "all" ? "all" : "inbox";
+    const folder = inboxFolderForView(view);
     const data = await fetchInbox(accessToken, folder);
     setSummary(data.summary);
     setMessages(data.messages);
@@ -60,17 +79,56 @@ export function MailClient() {
     void refresh();
   }, [accessToken, refresh, router]);
 
+  useEffect(() => {
+    if (!accessToken || view === "sent") {
+      setSearchResults(null);
+      return;
+    }
+    const q = searchQuery.trim();
+    if (q.length < 2) {
+      setSearchResults(null);
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      void (async () => {
+        const folder = inboxFolderForView(view);
+        const data = await searchInbox(accessToken, q, folder);
+        setSearchResults(data.messages);
+      })();
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [accessToken, searchQuery, view]);
+
   async function openMessage(id: string) {
     if (!accessToken) {
       return;
     }
     setSelectedId(id);
+    setSentPreview(null);
     const message = await fetchMessage(accessToken, id);
     setDetail(message);
     setReplyText("");
+    setReplyFiles([]);
     if (!message.readAt) {
       await markRead(accessToken, id);
       void refresh();
+    }
+  }
+
+  async function downloadAttachment(index: number, filename: string) {
+    if (!accessToken || !detail) {
+      return;
+    }
+    try {
+      const blob = await downloadMailAttachment(accessToken, detail.id, index);
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = filename;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setToast("Ek indirilemedi.");
     }
   }
 
@@ -78,9 +136,23 @@ export function MailClient() {
     if (!accessToken || !selectedId || !replyText.trim()) {
       return;
     }
-    await replyMail(accessToken, selectedId, replyText.trim());
-    setToast("Yanıt gönderildi.");
-    setReplyText("");
+    try {
+      const attachments =
+        replyFiles.length > 0
+          ? await Promise.all(replyFiles.map((f) => fileToAttachment(f)))
+          : undefined;
+      await replyMail(accessToken, selectedId, {
+        text: replyText.trim(),
+        attachments,
+      });
+      setToast("Yanıt gönderildi.");
+      setReplyText("");
+      setReplyFiles([]);
+    } catch (error) {
+      setToast(
+        error instanceof Error ? error.message : "Yanıt gönderilemedi.",
+      );
+    }
   }
 
   async function sendCompose() {
@@ -94,15 +166,21 @@ export function MailClient() {
     setComposeError("");
     setSending(true);
     try {
+      const attachments =
+        composeFiles.length > 0
+          ? await Promise.all(composeFiles.map((f) => fileToAttachment(f)))
+          : undefined;
       await composeMail(accessToken, {
         to: composeTo.trim(),
         subject: composeSubject.trim(),
         text: composeText,
+        attachments,
       });
       setComposeOpen(false);
       setComposeTo("");
       setComposeSubject("");
       setComposeText("");
+      setComposeFiles([]);
       setToast("Gönderildi.");
       setView("sent");
       void refresh();
@@ -117,9 +195,21 @@ export function MailClient() {
     }
   }
 
+  const filteredSent = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q || view !== "sent") {
+      return sent;
+    }
+    return sent.filter(
+      (s) =>
+        s.subject.toLowerCase().includes(q) ||
+        s.toAddress.toLowerCase().includes(q),
+    );
+  }, [sent, searchQuery, view]);
+
   const listItems =
     view === "sent"
-      ? sent.map((s) => ({
+      ? filteredSent.map((s) => ({
           id: s.id,
           fromAddress: "Gönderilen",
           subject: s.subject,
@@ -127,8 +217,18 @@ export function MailClient() {
           receivedAt: s.sentAt,
           readAt: s.sentAt,
           spamStatus: "clean",
+          attachmentCount: 0,
         }))
-      : messages;
+      : searchResults ?? messages;
+
+  function switchView(next: View) {
+    setView(next);
+    setDetail(null);
+    setSentPreview(null);
+    setSelectedId(null);
+    setSearchQuery("");
+    setSearchResults(null);
+  }
 
   return (
     <div className="mail-app">
@@ -150,12 +250,7 @@ export function MailClient() {
           <button
             type="button"
             className={view === "inbox" ? "active" : ""}
-            onClick={() => {
-              setView("inbox");
-              setDetail(null);
-              setSentPreview(null);
-              setSelectedId(null);
-            }}
+            onClick={() => switchView("inbox")}
           >
             Gelen
             {summary && summary.unreadCount > 0
@@ -165,24 +260,21 @@ export function MailClient() {
           <button
             type="button"
             className={view === "sent" ? "active" : ""}
-            onClick={() => {
-              setView("sent");
-              setDetail(null);
-              setSentPreview(null);
-              setSelectedId(null);
-            }}
+            onClick={() => switchView("sent")}
           >
             Gönderilen
           </button>
           <button
             type="button"
+            className={view === "all" ? "active" : ""}
+            onClick={() => switchView("all")}
+          >
+            Tümü
+          </button>
+          <button
+            type="button"
             className={view === "spam" ? "active" : ""}
-            onClick={() => {
-              setView("spam");
-              setDetail(null);
-              setSentPreview(null);
-              setSelectedId(null);
-            }}
+            onClick={() => switchView("spam")}
           >
             Spam
           </button>
@@ -211,6 +303,15 @@ export function MailClient() {
       </aside>
 
       <section className="mail-list">
+        <div className="mail-search">
+          <input
+            type="search"
+            placeholder="Ara (konu, gönderen)…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Posta ara"
+          />
+        </div>
         {listItems.length === 0 ? (
           <p className="mail-empty">Mesaj yok</p>
         ) : (
@@ -224,12 +325,16 @@ export function MailClient() {
                 if (view === "sent") {
                   setSelectedId(m.id);
                   setDetail(null);
+                  setSentLoading(true);
+                  setSentPreview(null);
                   void (async () => {
                     if (!accessToken) {
                       return;
                     }
                     try {
-                      setSentPreview(await fetchSentMessage(accessToken, m.id));
+                      setSentPreview(
+                        await fetchSentMessage(accessToken, m.id),
+                      );
                     } catch {
                       const s = sent.find((x) => x.id === m.id);
                       setSentPreview(
@@ -242,6 +347,8 @@ export function MailClient() {
                             }
                           : null,
                       );
+                    } finally {
+                      setSentLoading(false);
                     }
                   })();
                   return;
@@ -254,7 +361,10 @@ export function MailClient() {
                 }
               }}
             >
-              <div className="mail-list-from">{m.fromAddress}</div>
+              <div className="mail-list-from">
+                {m.fromAddress}
+                {(m.attachmentCount ?? 0) > 0 ? " 📎" : ""}
+              </div>
               <div className="mail-list-subject">{m.subject}</div>
               <div className="mail-list-snippet">{m.snippet}</div>
             </div>
@@ -268,7 +378,9 @@ export function MailClient() {
             {toast}
           </p>
         ) : null}
-        {sentPreview ? (
+        {sentLoading ? (
+          <p className="mail-empty">Yükleniyor…</p>
+        ) : sentPreview ? (
           <>
             <header className="mail-read-header">
               <h1>{sentPreview.subject}</h1>
@@ -290,14 +402,32 @@ export function MailClient() {
               <div className="mail-read-meta">
                 Kimden: {detail.fromAddress} ·{" "}
                 {new Date(detail.receivedAt).toLocaleString("tr-TR")}
+                {detail.spamReason ? ` · ${detail.spamReason}` : ""}
               </div>
             </header>
+            {detail.attachments.length > 0 ? (
+              <ul className="mail-attachments">
+                {detail.attachments.map((file) => (
+                  <li key={file.index}>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void downloadAttachment(file.index, file.filename)
+                      }
+                    >
+                      {file.filename} ({Math.round(file.sizeBytes / 1024)} KB)
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
             <div className="mail-read-body">
               {detail.bodyHtml ? (
-                <div
-                  dangerouslySetInnerHTML={{
-                    __html: detail.bodyHtml,
-                  }}
+                <iframe
+                  title="Mesaj içeriği"
+                  className="mail-html-frame"
+                  sandbox=""
+                  srcDoc={detail.bodyHtml}
                 />
               ) : (
                 <pre>{detail.bodyText ?? ""}</pre>
@@ -310,6 +440,18 @@ export function MailClient() {
                   value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}
                 />
+                <input
+                  type="file"
+                  multiple
+                  onChange={(e) =>
+                    setReplyFiles(Array.from(e.target.files ?? []))
+                  }
+                />
+                {replyFiles.length > 0 ? (
+                  <p className="mail-attach-hint">
+                    {replyFiles.length} ek seçildi (en fazla 3, 2 MB)
+                  </p>
+                ) : null}
                 <button type="button" onClick={() => void sendReply()}>
                   Yanıtla
                 </button>
@@ -347,6 +489,18 @@ export function MailClient() {
               value={composeText}
               onChange={(e) => setComposeText(e.target.value)}
             />
+            <input
+              type="file"
+              multiple
+              onChange={(e) =>
+                setComposeFiles(Array.from(e.target.files ?? []))
+              }
+            />
+            {composeFiles.length > 0 ? (
+              <p className="mail-attach-hint">
+                {composeFiles.length} ek seçildi
+              </p>
+            ) : null}
             {composeError ? (
               <p className="login-error" style={{ marginBottom: 12 }}>
                 {composeError}

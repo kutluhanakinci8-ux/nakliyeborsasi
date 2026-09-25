@@ -13,8 +13,6 @@ import {
 } from "@/lib/consoleApi";
 import { useConsoleSession } from "@/lib/session";
 
-const MTA_HOST = "mail.lerta.com.tr";
-
 export default function DomainPage() {
   const router = useRouter();
   const { accessToken } = useConsoleSession();
@@ -154,7 +152,8 @@ export default function DomainPage() {
             </h2>
             {bundle.dnsCheck ? (
               <p>
-                SPF: {bundle.dnsCheck.spf.ok ? "✓" : "✗"} · DKIM:{" "}
+                MX: {bundle.dnsCheck.mx?.ok ? "✓" : "✗"} · SPF:{" "}
+                {bundle.dnsCheck.spf.ok ? "✓" : "✗"} · DKIM:{" "}
                 {bundle.dnsCheck.dkim.ok ? "✓" : "✗"}
               </p>
             ) : null}
@@ -174,7 +173,8 @@ export default function DomainPage() {
               <div className="dns-row">
                 <span>MX</span>
                 <code>
-                  @ → 10 {MTA_HOST}
+                  @ → {instructions.mxPriority ?? 10}{" "}
+                  {instructions.mxHost ?? "mail.lerta.com.tr"}
                 </code>
               </div>
               <div className="dns-row">

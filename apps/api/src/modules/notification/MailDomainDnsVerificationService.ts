@@ -70,6 +70,47 @@ export class MailDomainDnsVerificationService {
     return this.txtContains(host, mustInclude, expectedFragment);
   }
 
+  public resolvePlatformMxHost(): string {
+    return (
+      this.configService.get<string>("MAIL_PLATFORM_MX_HOST")?.trim() ||
+      "mail.lerta.com.tr"
+    );
+  }
+
+  public async verifyMxRecord(
+    domain: string,
+    expectedExchange?: string,
+  ): Promise<{ ok: boolean; detail: string }> {
+    const target = (expectedExchange ?? this.resolvePlatformMxHost())
+      .trim()
+      .toLowerCase()
+      .replace(/\.$/, "");
+    try {
+      const records = await dns.resolveMx(domain);
+      if (records.length === 0) {
+        return { ok: false, detail: `${domain} için MX kaydı yok.` };
+      }
+      const match = records.some((row) => {
+        const host = row.exchange.toLowerCase().replace(/\.$/, "");
+        return host === target || host.endsWith(`.${target}`);
+      });
+      const summary = records
+        .map((row) => `${row.priority} ${row.exchange}`)
+        .join(", ");
+      if (!match) {
+        return {
+          ok: false,
+          detail: `MX: ${summary} (beklenen: ${target})`,
+        };
+      }
+      return { ok: true, detail: summary };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.debug(`MX ${domain}: ${message}`);
+      return { ok: false, detail: `DNS MX: ${message}` };
+    }
+  }
+
   private async txtContains(
     host: string,
     mustInclude: string,

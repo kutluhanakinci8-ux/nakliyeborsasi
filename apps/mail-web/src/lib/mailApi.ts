@@ -16,6 +16,8 @@ export type MailInboxListItem = {
   receivedAt: string;
   readAt: string | null;
   spamStatus: string;
+  spamReason?: string | null;
+  attachmentCount?: number;
 };
 
 export type MailInboxMessageDetail = MailInboxListItem & {
@@ -42,6 +44,29 @@ export type MailSentMessageDetail = MailSentItem & {
   bodyText: string | null;
   smtpMessageId: string | null;
 };
+
+export type ComposeAttachment = {
+  filename: string;
+  contentType: string;
+  contentBase64: string;
+};
+
+export function fileToAttachment(file: File): Promise<ComposeAttachment> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      const base64 = result.split(",")[1] ?? "";
+      resolve({
+        filename: file.name,
+        contentType: file.type || "application/octet-stream",
+        contentBase64: base64,
+      });
+    };
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
 
 export function formatApiError(raw: string): string {
   try {
@@ -106,6 +131,21 @@ export async function fetchInbox(
   }>(accessToken, `company/mail-inbox?folder=${folder}`);
 }
 
+export async function searchInbox(
+  accessToken: string,
+  query: string,
+  folder: "inbox" | "spam" | "all",
+) {
+  const params = new URLSearchParams({
+    q: query,
+    folder,
+  });
+  return apiFetch<{ messages: MailInboxListItem[] }>(
+    accessToken,
+    `company/mail-inbox/search?${params.toString()}`,
+  );
+}
+
 export async function fetchSentMessage(accessToken: string, id: string) {
   const payload = await apiFetch<{ message: MailSentMessageDetail }>(
     accessToken,
@@ -122,6 +162,21 @@ export async function fetchMessage(accessToken: string, id: string) {
   return payload.message;
 }
 
+export async function downloadMailAttachment(
+  accessToken: string,
+  messageId: string,
+  index: number,
+): Promise<Blob> {
+  const response = await fetch(
+    `${resolveApiBaseUrl()}/company/mail-inbox/messages/${messageId}/attachments/${index}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  );
+  if (!response.ok) {
+    throw new Error("Ek indirilemedi");
+  }
+  return response.blob();
+}
+
 export async function markRead(accessToken: string, id: string) {
   await apiFetch(accessToken, `company/mail-inbox/messages/${id}/read`, {
     method: "PATCH",
@@ -130,7 +185,12 @@ export async function markRead(accessToken: string, id: string) {
 
 export async function composeMail(
   accessToken: string,
-  body: { to: string; subject: string; text: string },
+  body: {
+    to: string;
+    subject: string;
+    text: string;
+    attachments?: ComposeAttachment[];
+  },
 ) {
   await apiFetch(accessToken, "company/mail-inbox/compose", {
     method: "POST",
@@ -141,10 +201,14 @@ export async function composeMail(
 export async function replyMail(
   accessToken: string,
   messageId: string,
-  text: string,
+  body: { text: string; attachments?: ComposeAttachment[] },
 ) {
-  await apiFetch(accessToken, `company/mail-inbox/messages/${messageId}/reply`, {
-    method: "POST",
-    body: JSON.stringify({ text }),
-  });
+  await apiFetch(
+    accessToken,
+    `company/mail-inbox/messages/${messageId}/reply`,
+    {
+      method: "POST",
+      body: JSON.stringify(body),
+    },
+  );
 }

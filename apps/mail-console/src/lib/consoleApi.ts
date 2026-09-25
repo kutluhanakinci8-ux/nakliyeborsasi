@@ -8,6 +8,8 @@ export type CustomDomainBundle = {
   } | null;
   dnsInstructions: {
     domain: string;
+    mxHost?: string;
+    mxPriority?: number;
     spfHost: string;
     spfValue: string;
     dkimHost: string;
@@ -17,6 +19,7 @@ export type CustomDomainBundle = {
   } | null;
   dnsCheck: {
     ok: boolean;
+    mx?: { ok: boolean; detail: string };
     spf: { ok: boolean; detail: string };
     dkim: { ok: boolean; detail: string };
   } | null;
@@ -107,7 +110,33 @@ export async function verifyCustomDomainDns(accessToken: string) {
   return apiFetch<{ domain: { verificationStatus: string } }>(
     accessToken,
     "company/mail-identity/custom-domain/verify-dns",
-    { method: "POST", body: "{}" },
+    { method: "POST", body: JSON.stringify({}) },
+  );
+}
+
+export async function provisionTenantMailbox(
+  accessToken: string,
+  localPart: string,
+  displayName?: string,
+) {
+  return apiFetch<{ fromAddress: string }>(
+    accessToken,
+    "company/mail-identity/provision",
+    {
+      method: "POST",
+      body: JSON.stringify({ localPart, displayName }),
+    },
+  );
+}
+
+export async function operatorVerifyDomainDns(
+  accessToken: string,
+  domainId: string,
+) {
+  return apiFetch<{ dnsCheck: CustomDomainBundle["dnsCheck"] }>(
+    accessToken,
+    `platform-admin/mail/domains/${domainId}/verify-dns`,
+    { method: "POST", body: JSON.stringify({}) },
   );
 }
 
@@ -143,8 +172,12 @@ export async function isPlatformOperator(accessToken: string): Promise<boolean> 
 }
 
 export async function fetchMailIdentity(accessToken: string) {
-  return apiFetch<{ identity: { fromAddress: string | null; domainVerified: boolean } }>(
-    accessToken,
-    "company/mail-identity",
-  );
+  return apiFetch<{
+    identity: {
+      fromAddress: string | null;
+      domainVerified: boolean;
+      domain: string;
+      platformDnsReady: boolean;
+    };
+  }>(accessToken, "company/mail-identity");
 }
