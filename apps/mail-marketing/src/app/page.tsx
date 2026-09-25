@@ -1,80 +1,63 @@
+import { MarketingPageShell } from "@/components/MarketingPageShell";
+import {
+  CONSOLE_URL,
+  CORPORATE_REGISTER,
+  MAIL_WEB_URL,
+} from "@/lib/marketingUrls";
 import { PricingSection } from "./PricingSection";
 
-const consoleUrl =
-  process.env.NEXT_PUBLIC_CONSOLE_URL ?? "https://yonetim.lerta.com.tr";
-const webmailUrl =
-  process.env.NEXT_PUBLIC_MAIL_WEB_URL ?? "https://posta.lerta.com.tr";
-
 export default function MarketingHomePage() {
-  const registerHref = `${consoleUrl.replace(/\/$/, "")}/register`;
-  const loginHref = `${webmailUrl.replace(/\/$/, "")}/login`;
-  const consoleLoginHref = `${consoleUrl.replace(/\/$/, "")}/login`;
+  const loginHref = `${MAIL_WEB_URL.replace(/\/$/, "")}/login`;
+  const consoleLoginHref = `${CONSOLE_URL.replace(/\/$/, "")}/login`;
 
   return (
-    <div className="landing">
-      <div className="wrap">
-        <header>
-          <div className="brand">Lerta Mail</div>
-          <nav className="nav-links">
-            <a className="btn btn-ghost" href="#fiyatlar">Fiyatlar</a>
-            <a className="btn btn-ghost" href={loginHref}>Webmail giriş</a>
-            <a className="btn btn-primary" href={registerHref}>Ücretsiz başla</a>
-          </nav>
-        </header>
+    <MarketingPageShell>
+      <section className="hero">
+        <p className="hero-eyebrow">Kurumsal e-posta SaaS</p>
+        <h1>Posta kutunuz, firmanızın alan adında</h1>
+        <p className="lead">
+          Özel domain, DNS sihirbazı ve webmail tek panelde. Bireysel deneme için
+          pilot alt alan; kurumsal müşteriler için{" "}
+          <strong>info@sizin-domain.com</strong> modeli.
+        </p>
+        <div className="hero-cta">
+          <a className="btn btn-primary" href={CORPORATE_REGISTER}>
+            Domain ile başla
+          </a>
+          <a className="btn btn-ghost" href={consoleLoginHref}>
+            Yönetim konsolu
+          </a>
+          <a className="btn btn-ghost" href={loginHref}>
+            Webmail giriş
+          </a>
+        </div>
+      </section>
 
-        <section className="hero">
-          <h1>Kurumsal posta, sizin domaininizde</h1>
-          <p className="lead">
-            Gmail benzeri webmail, güvenli gönderim ve DNS sihirbazı ile dakikalar
-            içinde kutunuzu açın. Lerta Logistics’ten bağımsız, tam SaaS ürün.
+      <section className="grid">
+        <article className="card">
+          <h3>Özel domain öncelikli</h3>
+          <p>
+            Kayıt sonrası ilk adım: alan adınızı ekleyin, MX/SPF/DKIM/DMARC
+            kayıtlarını panelden takip edin.
           </p>
-          <div className="hero-cta">
-            <a className="btn btn-primary" href={registerHref}>
-              Hesap oluştur
-            </a>
-            <a className="btn btn-ghost" href={consoleLoginHref}>
-              Yönetim konsolu
-            </a>
-          </div>
-        </section>
+        </article>
+        <article className="card">
+          <h3>Webmail</h3>
+          <p>
+            Gelen kutusu, taslaklar, arama ve ekler —{" "}
+            <a href={loginHref}>posta.lerta.com.tr</a>.
+          </p>
+        </article>
+        <article className="card">
+          <h3>Güvenilir gönderim</h3>
+          <p>
+            Postfix, OpenDKIM ve Rspamd; kiracı bazlı izolasyon ve gönderim
+            kotası.
+          </p>
+        </article>
+      </section>
 
-        <section className="grid">
-          <article className="card">
-            <h3>Özel domain</h3>
-            <p>
-              MX, SPF, DKIM ve DMARC adımlarını panelden takip edin; doğrulama
-              sonrası kurumsal adreslerinizi kullanın.
-            </p>
-          </article>
-          <article className="card">
-            <h3>Webmail</h3>
-            <p>
-              Gelen kutusu, gönderilenler ve yanıtla —{" "}
-              <a href={loginHref}>posta.lerta.com.tr</a> üzerinden.
-            </p>
-          </article>
-          <article className="card">
-            <h3>Kendi altyapımız</h3>
-            <p>
-              Postfix, OpenDKIM ve Rspamd ile teslimat; verileriniz tek VPS
-              üzerinde izole kiracı modeliyle.
-            </p>
-          </article>
-        </section>
-
-        <PricingSection />
-
-        <footer className="site-footer">
-          <span>
-            © {new Date().getFullYear()} Lerta Mail · Pilot: kullanici.lerta.com.tr
-          </span>
-          <nav className="footer-links">
-            <a href="/kvkk">KVKK</a>
-            <a href="/iletisim">İletişim</a>
-            <a href={registerHref}>Kayıt</a>
-          </nav>
-        </footer>
-      </div>
-    </div>
+      <PricingSection />
+    </MarketingPageShell>
   );
 }

@@ -87,8 +87,8 @@ export function PricingSection() {
               }
             >
               {plan.customDomainAllowed
-                ? "Kayıt ol — ödeme konsolda"
-                : "Kayıt ol"}
+                ? "Domain ile kayıt"
+                : "Pilot kayıt"}
             </a>
             {plan.customDomainAllowed ? (
               <p className="price-period" style={{ marginTop: 12 }}>
