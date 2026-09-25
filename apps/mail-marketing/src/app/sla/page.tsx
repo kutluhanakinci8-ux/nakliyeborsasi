@@ -36,8 +36,7 @@ export default function SlaPage() {
         </tbody>
       </table>
       <p style={{ color: "var(--muted)", fontSize: 14 }}>
-        Durum ve kesintiler: destek@lerta.com.tr · İleride status sayfası
-        eklenecek.
+        Canlı durum: <a href="/durum">/durum</a> · destek@lerta.com.tr
       </p>
     </MarketingPageShell>
   );

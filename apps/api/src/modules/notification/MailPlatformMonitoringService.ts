@@ -11,6 +11,25 @@ const execFileAsync = promisify(execFile);
 
 export type MailMonitoringCheckStatus = "ok" | "warning" | "critical" | "unknown";
 
+export type PublicServiceStatus =
+  | "operational"
+  | "degraded"
+  | "major_outage"
+  | "maintenance";
+
+export type MailPublicStatusPage = {
+  updatedAt: string;
+  overall: PublicServiceStatus;
+  overallLabelTr: string;
+  messageTr: string | null;
+  components: {
+    id: string;
+    nameTr: string;
+    status: PublicServiceStatus;
+    descriptionTr: string;
+  }[];
+};
+
 export type MailPlatformMonitoringSnapshot = {
   collectedAt: string;
   overallStatus: MailMonitoringCheckStatus;
@@ -68,6 +87,84 @@ export class MailPlatformMonitoringService {
     private readonly emailDeliveryHealthService: EmailDeliveryHealthService,
     private readonly emailOutboxService: EmailOutboxService,
   ) {}
+
+  public async buildPublicStatusPage(): Promise<MailPublicStatusPage> {
+    const snap = await this.buildSnapshot();
+    const maintenance =
+      this.configService.get<string>("MAIL_PUBLIC_STATUS_MAINTENANCE") ===
+      "true";
+    const messageTr =
+      this.configService.get<string>("MAIL_PUBLIC_STATUS_MESSAGE")?.trim() ||
+      null;
+
+    const outboundInternal = this.worstStatus([
+      snap.smtp.status,
+      snap.outbox.status,
+    ]);
+    const inboundInternal = this.worstStatus([
+      snap.postfixQueue.status,
+      snap.disk.status,
+    ]);
+
+    const platformInternal = snap.overallStatus;
+
+    const components = [
+      {
+        id: "api",
+        nameTr: "API ve kimlik doğrulama",
+        status: maintenance
+          ? "maintenance"
+          : this.mapMonitoringToPublic(platformInternal),
+        descriptionTr: maintenance
+          ? "Planlı bakım"
+          : "Giriş ve API uç noktaları",
+      },
+      {
+        id: "webmail",
+        nameTr: "Webmail",
+        status: maintenance
+          ? "maintenance"
+          : this.mapMonitoringToPublic(platformInternal),
+        descriptionTr: "posta.lerta.com.tr",
+      },
+      {
+        id: "console",
+        nameTr: "Yönetim konsolu",
+        status: maintenance
+          ? "maintenance"
+          : this.mapMonitoringToPublic(platformInternal),
+        descriptionTr: "Domain, kutu ve ekip yönetimi",
+      },
+      {
+        id: "outbound",
+        nameTr: "E-posta gönderimi",
+        status: maintenance
+          ? "maintenance"
+          : this.mapMonitoringToPublic(outboundInternal),
+        descriptionTr: snap.outbox.detailTr,
+      },
+      {
+        id: "inbound",
+        nameTr: "Gelen posta (MX)",
+        status: maintenance
+          ? "maintenance"
+          : this.mapMonitoringToPublic(inboundInternal),
+        descriptionTr: snap.postfixQueue.detailTr,
+      },
+    ];
+
+    const overall = maintenance
+      ? "maintenance"
+      : this.worstPublicStatus(components.map((c) => c.status));
+
+    return {
+      updatedAt: snap.collectedAt,
+      overall,
+      overallLabelTr: this.publicStatusLabelTr(overall),
+      messageTr,
+      components,
+    };
+  }
 
   public async buildSnapshot(): Promise<MailPlatformMonitoringSnapshot> {
     const health = this.emailDeliveryHealthService.getSnapshot();
@@ -340,5 +437,46 @@ export class MailPlatformMonitoringService {
     const raw = this.configService.get<string>(key);
     const parsed = raw ? Number.parseInt(raw, 10) : fallback;
     return Number.isFinite(parsed) ? parsed : fallback;
+  }
+
+  private mapMonitoringToPublic(
+    status: MailMonitoringCheckStatus,
+  ): PublicServiceStatus {
+    switch (status) {
+      case "ok":
+        return "operational";
+      case "warning":
+        return "degraded";
+      case "critical":
+        return "major_outage";
+      default:
+        return "operational";
+    }
+  }
+
+  private worstPublicStatus(statuses: PublicServiceStatus[]): PublicServiceStatus {
+    if (statuses.includes("major_outage")) {
+      return "major_outage";
+    }
+    if (statuses.includes("maintenance")) {
+      return "maintenance";
+    }
+    if (statuses.includes("degraded")) {
+      return "degraded";
+    }
+    return "operational";
+  }
+
+  private publicStatusLabelTr(status: PublicServiceStatus): string {
+    switch (status) {
+      case "operational":
+        return "Tüm sistemler çalışıyor";
+      case "degraded":
+        return "Kısmi performans düşüşü";
+      case "major_outage":
+        return "Kesinti veya ciddi sorun";
+      case "maintenance":
+        return "Planlı bakım";
+    }
   }
 }

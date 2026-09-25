@@ -20,6 +20,8 @@ Konsol: **Operatör** sayfası — «İzleme (F1)» kartı.
 
 Genel sağlık (load balancer): `GET /health` → `{ status: "ok" }`.
 
+Halka açık durum (F2): `GET /api/v1/public/lerta-mail/status` — [MAIL_PUBLIC_STATUS_PAGE.md](./MAIL_PUBLIC_STATUS_PAGE.md).
+
 Bildirim / SMTP detay: `GET platform-admin/notifications/health`.
 
 ## Ortam değişkenleri

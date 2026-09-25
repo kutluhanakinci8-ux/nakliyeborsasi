@@ -96,6 +96,7 @@ import { MailOrganizationSecurityService } from "./MailOrganizationSecurityServi
 import { MailConsoleAccessGuard } from "./MailConsoleAccessGuard";
 import { MailProductTotpPolicyGuard } from "./MailProductTotpPolicyGuard";
 import { MailPlatformMonitoringService } from "./MailPlatformMonitoringService";
+import { PublicMailStatusController } from "./PublicMailStatusController";
 import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
 import { MailBillingService } from "./MailBillingService";
 import { MailIyzicoBillingService } from "./MailIyzicoBillingService";
@@ -157,6 +158,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     MailBillingWebhookController,
     EmailTrackingController,
     UserNotificationPreferencesController,
+    PublicMailStatusController,
   ],
   providers: [
     NotificationConfigurationService,

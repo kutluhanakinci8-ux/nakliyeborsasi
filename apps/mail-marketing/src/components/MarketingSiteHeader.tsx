@@ -18,6 +18,7 @@ export function MarketingSiteHeader() {
       <nav className="nav-links">
         <a className="btn btn-ghost" href="/#fiyatlar">Fiyatlar</a>
         <a className="btn btn-ghost" href="/sss">SSS</a>
+        <a className="btn btn-ghost" href="/durum">Durum</a>
         <a className="btn btn-ghost" href={loginHref}>Webmail</a>
         <a className="btn btn-ghost" href={consoleLoginHref}>Yönetim</a>
         <a className="btn btn-primary" href={CORPORATE_REGISTER}>
