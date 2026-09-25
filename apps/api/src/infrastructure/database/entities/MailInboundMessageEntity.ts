@@ -53,6 +53,9 @@ export class MailInboundMessageEntity {
   @Column({ type: "varchar", length: 255, nullable: true })
   public internetMessageId!: string | null;
 
+  @Column({ type: "varchar", length: 255, nullable: true })
+  public inReplyTo!: string | null;
+
   @Column({ type: "jsonb", nullable: true })
   public attachments!: MailInboundAttachmentMeta[] | null;
 

@@ -19,6 +19,7 @@ import {
   extractHtmlBodyFromMime,
   extractPlainBodyFromMime,
   normalizeEmailAddress,
+  parseInReplyTo,
   parseInternetMessageId,
   parseMinimalMimeHeaders,
 } from "./MailInboundMimeParse";
@@ -107,6 +108,7 @@ export class MailInboundIngestService {
       rspamdAction: input.rspamdAction,
     });
     const internetMessageId = rawMime ? parseInternetMessageId(rawMime) : null;
+    const inReplyTo = rawMime ? parseInReplyTo(rawMime) : null;
     const attachments =
       rawMime && rawMime.length > 0
         ? this.persistAttachments(
@@ -130,6 +132,7 @@ export class MailInboundIngestService {
         spamStatus: verdict.spamStatus,
         spamReason: verdict.spamReason,
         internetMessageId,
+        inReplyTo,
         attachments,
         readAt: null,
       }),

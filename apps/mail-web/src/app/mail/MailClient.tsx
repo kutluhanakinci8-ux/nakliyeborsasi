@@ -9,7 +9,9 @@ import {
   downloadMailAttachment,
   fetchDrafts,
   fetchInbox,
+  fetchInboxThreads,
   fetchMessage,
+  fetchThreadMessages,
   fetchSentMessage,
   fileToAttachment,
   markRead,
@@ -21,6 +23,7 @@ import {
   type MailInboxListItem,
   type MailInboxMessageDetail,
   type MailInboxSummary,
+  type MailInboxThreadRow,
   type MailSentItem,
   type MailSentMessageDetail,
   type ComposeAttachment,
@@ -74,6 +77,15 @@ export function MailClient() {
   const [draftPreview, setDraftPreview] = useState<MailDraftItem | null>(null);
   const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [threadView, setThreadView] = useState(false);
+  const [threads, setThreads] = useState<MailInboxThreadRow[]>([]);
+  const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
+  const [threadMessages, setThreadMessages] = useState<MailInboxListItem[]>(
+    [],
+  );
+  const [mobilePane, setMobilePane] = useState<"nav" | "list" | "read">(
+    "list",
+  );
 
   const refresh = useCallback(async () => {
     if (!accessToken) {
@@ -132,6 +144,7 @@ export function MailClient() {
     if (!accessToken) {
       return;
     }
+    setMobilePane("read");
     setSelectedId(id);
     setSentPreview(null);
     const message = await fetchMessage(accessToken, id);
@@ -301,8 +314,37 @@ export function MailClient() {
     );
   }, [sent, searchQuery, view]);
 
+  const inboxFolder = inboxFolderForView(view);
+  const canUseThreads =
+    view === "inbox" || view === "spam" || view === "all";
+
+  useEffect(() => {
+    if (!accessToken || !threadView || !canUseThreads) {
+      setThreads([]);
+      return;
+    }
+    void fetchInboxThreads(accessToken, inboxFolder).then((data) => {
+      setThreads(data.threads);
+    });
+  }, [accessToken, threadView, inboxFolder, canUseThreads]);
+
   const listItems =
-    view === "drafts"
+    threadView && canUseThreads
+      ? threads.map((t) => ({
+          id: t.latestMessageId,
+          threadId: t.threadId,
+          fromAddress: t.fromAddress,
+          subject:
+            t.messageCount > 1
+              ? `${t.subject} (${t.messageCount})`
+              : t.subject,
+          snippet: t.snippet,
+          receivedAt: t.receivedAt,
+          readAt: t.unreadCount > 0 ? null : t.receivedAt,
+          spamStatus: "clean",
+          attachmentCount: 0,
+        }))
+      : view === "drafts"
       ? drafts.map((d) => ({
           id: d.id,
           fromAddress: "Taslak",
@@ -334,9 +376,22 @@ export function MailClient() {
     setSearchQuery("");
     setSearchResults(null);
     setDraftPreview(null);
+    setActiveThreadId(null);
+    setThreadMessages([]);
+    setMobilePane("list");
     if (next === "drafts") {
       void refreshDrafts();
     }
+  }
+
+  async function openThread(threadId: string, latestMessageId: string) {
+    if (!accessToken) {
+      return;
+    }
+    setActiveThreadId(threadId);
+    const data = await fetchThreadMessages(accessToken, threadId, inboxFolder);
+    setThreadMessages(data.messages);
+    await openMessage(latestMessageId);
   }
 
   function resetCompose() {
@@ -350,7 +405,20 @@ export function MailClient() {
   }
 
   return (
-    <div className="mail-app">
+    <div className={`mail-app mobile-pane-${mobilePane}`}>
+      <div className="mail-mobile-bar">
+        <button type="button" onClick={() => setMobilePane("nav")}>
+          Menü
+        </button>
+        <button type="button" onClick={() => setMobilePane("list")}>
+          Liste
+        </button>
+        {selectedId ? (
+          <button type="button" onClick={() => setMobilePane("read")}>
+            Mesaj
+          </button>
+        ) : null}
+      </div>
       <aside className="mail-sidebar">
         <div className="mail-brand">
           <strong>Lerta</strong> Posta
@@ -446,6 +514,25 @@ export function MailClient() {
               onChange={(e) => setSearchQuery(e.target.value)}
               aria-label="Posta ara"
             />
+            {canUseThreads ? (
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  marginTop: 8,
+                  fontSize: "0.85rem",
+                  color: "var(--muted)",
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={threadView}
+                  onChange={(e) => setThreadView(e.target.checked)}
+                />
+                Konuşma görünümü
+              </label>
+            ) : null}
           </div>
         ) : null}
         {listItems.length === 0 ? (
@@ -499,10 +586,24 @@ export function MailClient() {
                   })();
                   return;
                 }
+                if (threadView && canUseThreads && "threadId" in m) {
+                  void openThread(
+                    (m as { threadId: string }).threadId,
+                    m.id,
+                  );
+                  return;
+                }
                 void openMessage(m.id);
               }}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && view !== "sent") {
+                  if (threadView && canUseThreads && "threadId" in m) {
+                    void openThread(
+                      (m as { threadId: string }).threadId,
+                      m.id,
+                    );
+                    return;
+                  }
                   void openMessage(m.id);
                 }
               }}
@@ -615,6 +716,44 @@ export function MailClient() {
         ) : (
           <>
             <header className="mail-read-header">
+              <button
+                type="button"
+                className="mail-back-read"
+                onClick={() => {
+                  setMobilePane("list");
+                  setDetail(null);
+                  setSelectedId(null);
+                  setActiveThreadId(null);
+                  setThreadMessages([]);
+                }}
+              >
+                ← Liste
+              </button>
+              {activeThreadId && threadMessages.length > 1 ? (
+                <div className="mail-thread-stack" role="list">
+                  {threadMessages.map((tm) => (
+                    <button
+                      key={tm.id}
+                      type="button"
+                      role="listitem"
+                      className={
+                        selectedId === tm.id ? "active" : undefined
+                      }
+                      onClick={() => void openMessage(tm.id)}
+                    >
+                      <span className="mail-thread-stack-from">
+                        {tm.fromAddress}
+                      </span>
+                      <span className="mail-thread-stack-date">
+                        {new Date(tm.receivedAt).toLocaleString("tr-TR", {
+                          dateStyle: "short",
+                          timeStyle: "short",
+                        })}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              ) : null}
               <h1>{detail.subject}</h1>
               <div className="mail-read-meta">
                 Kimden: {detail.fromAddress} ·{" "}

@@ -154,6 +154,17 @@ export async function login(
   return payload.accessToken;
 }
 
+export type MailInboxThreadRow = {
+  threadId: string;
+  subject: string;
+  fromAddress: string;
+  snippet: string | null;
+  receivedAt: string;
+  messageCount: number;
+  unreadCount: number;
+  latestMessageId: string;
+};
+
 export async function fetchInbox(
   accessToken: string,
   folder: "inbox" | "spam" | "all",
@@ -163,6 +174,27 @@ export async function fetchInbox(
     messages: MailInboxListItem[];
     sent: MailSentItem[];
   }>(accessToken, `company/mail-inbox?folder=${folder}`);
+}
+
+export async function fetchInboxThreads(
+  accessToken: string,
+  folder: "inbox" | "spam" | "all",
+) {
+  return apiFetch<{ threads: MailInboxThreadRow[] }>(
+    accessToken,
+    `company/mail-inbox/threads?folder=${folder}`,
+  );
+}
+
+export async function fetchThreadMessages(
+  accessToken: string,
+  threadId: string,
+  folder: "inbox" | "spam" | "all",
+) {
+  return apiFetch<{ messages: MailInboxListItem[] }>(
+    accessToken,
+    `company/mail-inbox/threads/${encodeURIComponent(threadId)}/messages?folder=${folder}`,
+  );
 }
 
 export async function searchInbox(

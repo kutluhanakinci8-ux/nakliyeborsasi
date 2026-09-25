@@ -68,7 +68,7 @@
 | C2 | Ücretsiz pilot limitleri net | Vitrin + kayıt metni — **uygulandı** |
 | C3 | Pilot → Kurumsal yükseltme | `/upgrade` ödeme + domain — **uygulandı** |
 | C4 | Şifre sıfırlama / hesap güvenliği | `/forgot-password`, `/reset-password` — **uygulandı** |
-| C5 | Mobil uyumlu webmail | posta responsive; temel PWA (opsiyonel) |
+| C5 | Mobil uyumlu webmail | Mobil paneller, `100dvh`, manifest + PWA meta — **uygulandı** |
 
 ---
 
@@ -78,7 +78,7 @@
 
 | # | İş | Öncelik | Kabul kriteri |
 |---|-----|---------|----------------|
-| D1 | Konuşma / thread listesi | Yüksek | Aynı `In-Reply-To` zinciri tek satır |
+| D1 | Konuşma / thread listesi | Yüksek | `In-Reply-To` zinciri, API `threads`, webmail konuşma görünümü — **uygulandı** |
 | D2 | Çöp / arşiv klasörleri | Yüksek | IMAP + UI uyumu |
 | D3 | İmza ve şablonlar | Orta | Compose’da seçilebilir |
 | D4 | Gelişmiş arama (filtre) | Orta | Gönderen, tarih, ek var |

@@ -75,6 +75,34 @@ export class CompanyMailInboxController {
     return { summary, messages, sent, folder: resolvedFolder };
   }
 
+  @Get("threads")
+  public async listThreads(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Query("folder") folder?: string,
+  ) {
+    const resolvedFolder = this.parseFolder(folder);
+    const threads = await this.mailOrganizationInboxService.listConversationThreads(
+      user.companyId,
+      resolvedFolder,
+    );
+    return { threads, folder: resolvedFolder };
+  }
+
+  @Get("threads/:threadId/messages")
+  public async listThreadMessages(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("threadId") threadId: string,
+    @Query("folder") folder?: string,
+  ) {
+    const resolvedFolder = this.parseFolder(folder);
+    const messages = await this.mailOrganizationInboxService.listThreadMessages(
+      user.companyId,
+      threadId,
+      resolvedFolder,
+    );
+    return { threadId, messages, folder: resolvedFolder };
+  }
+
   @Get("search")
   public async search(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,

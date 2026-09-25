@@ -217,6 +217,106 @@ export class MailOrganizationInboxService {
     return { file, buffer };
   }
 
+  public async listConversationThreads(
+    organizationId: string,
+    folder: InboxFolder = "inbox",
+    limit = 40,
+  ): Promise<
+    {
+      threadId: string;
+      subject: string;
+      fromAddress: string;
+      snippet: string | null;
+      receivedAt: string;
+      messageCount: number;
+      unreadCount: number;
+      latestMessageId: string;
+    }[]
+  > {
+    const mailboxIds = await this.mailboxIdsForOrganization(organizationId);
+    if (mailboxIds.length === 0) {
+      return [];
+    }
+    const rows = await this.inboundRepository.find({
+      where: this.whereForFolder(mailboxIds, folder),
+      order: { receivedAt: "DESC" },
+      take: 300,
+    });
+    const byInternetId = new Map<string, MailInboundMessageEntity>();
+    for (const row of rows) {
+      if (row.internetMessageId) {
+        byInternetId.set(row.internetMessageId, row);
+      }
+    }
+    const threadBuckets = new Map<string, MailInboundMessageEntity[]>();
+    for (const row of rows) {
+      const threadId = this.resolveThreadRootId(row, byInternetId);
+      const bucket = threadBuckets.get(threadId) ?? [];
+      bucket.push(row);
+      threadBuckets.set(threadId, bucket);
+    }
+    const threads = [...threadBuckets.entries()].map(([threadId, messages]) => {
+      const sorted = [...messages].sort(
+        (a, b) => b.receivedAt.getTime() - a.receivedAt.getTime(),
+      );
+      const latest = sorted[0];
+      const unreadCount = messages.filter((m) => !m.readAt).length;
+      return {
+        threadId,
+        subject: latest.subject,
+        fromAddress: latest.fromAddress,
+        snippet: latest.snippet,
+        receivedAt: latest.receivedAt.toISOString(),
+        messageCount: messages.length,
+        unreadCount,
+        latestMessageId: latest.id,
+      };
+    });
+    threads.sort(
+      (a, b) =>
+        new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime(),
+    );
+    return threads.slice(0, limit);
+  }
+
+  public async listThreadMessages(
+    organizationId: string,
+    threadId: string,
+    folder: InboxFolder = "inbox",
+  ): Promise<
+    {
+      id: string;
+      fromAddress: string;
+      subject: string;
+      snippet: string | null;
+      receivedAt: string;
+      readAt: string | null;
+      spamStatus: string;
+      spamReason: string | null;
+      attachmentCount: number;
+    }[]
+  > {
+    const mailboxIds = await this.mailboxIdsForOrganization(organizationId);
+    if (mailboxIds.length === 0) {
+      return [];
+    }
+    const rows = await this.inboundRepository.find({
+      where: this.whereForFolder(mailboxIds, folder),
+      order: { receivedAt: "ASC" },
+      take: 300,
+    });
+    const byInternetId = new Map<string, MailInboundMessageEntity>();
+    for (const row of rows) {
+      if (row.internetMessageId) {
+        byInternetId.set(row.internetMessageId, row);
+      }
+    }
+    const inThread = rows.filter(
+      (row) => this.resolveThreadRootId(row, byInternetId) === threadId,
+    );
+    return inThread.map((row) => this.toListRow(row));
+  }
+
   public async markRead(
     organizationId: string,
     messageId: string,
@@ -283,6 +383,23 @@ export class MailOrganizationInboxService {
       return null;
     }
     return `${sender.localPart}@${sender.mailDomain.domain}`;
+  }
+
+  private resolveThreadRootId(
+    row: MailInboundMessageEntity,
+    byInternetId: Map<string, MailInboundMessageEntity>,
+  ): string {
+    const visited = new Set<string>();
+    let current: MailInboundMessageEntity | undefined = row;
+    while (current?.inReplyTo && !visited.has(current.id)) {
+      visited.add(current.id);
+      const parent = byInternetId.get(current.inReplyTo);
+      if (!parent) {
+        break;
+      }
+      current = parent;
+    }
+    return current?.internetMessageId ?? current?.id ?? row.id;
   }
 
   private toListRow(row: MailInboundMessageEntity) {
