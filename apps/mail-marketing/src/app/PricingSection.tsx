@@ -11,6 +11,8 @@ type MailPlan = {
   recommended: boolean;
   mailMaxSendsPerHour: number;
   mailMaxMailboxes: number;
+  mailStorageLimitGb: number;
+  mailMaxAttachmentMb: number;
   customDomainAllowed: boolean;
 };
 
@@ -77,6 +79,8 @@ export function PricingSection() {
             <ul>
               <li>{plan.mailMaxSendsPerHour} gönderim / saat</li>
               <li>{plan.mailMaxMailboxes} posta kutusu</li>
+              <li>{plan.mailStorageLimitGb} GB depolama</li>
+              <li>Tek ek en fazla {plan.mailMaxAttachmentMb} MB</li>
               <li>
                 {plan.customDomainAllowed
                   ? "Özel domain"

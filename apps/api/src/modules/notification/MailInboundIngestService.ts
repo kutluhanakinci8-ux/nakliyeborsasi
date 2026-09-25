@@ -26,6 +26,7 @@ import {
 import { MailInboundSpamService } from "./MailInboundSpamService";
 import { sanitizeInboundHtml } from "./MailHtmlSanitize";
 import { MailImapMaildirService } from "./MailImapMaildirService";
+import { MailOrganizationStorageService } from "./MailOrganizationStorageService";
 import type { MailInboundAttachmentMeta } from "../../infrastructure/database/entities/MailInboundMessageEntity";
 
 export type InboundIngestInput = {
@@ -54,6 +55,7 @@ export class MailInboundIngestService {
     private readonly domainRepository: Repository<MailDomainEntity>,
     private readonly mailInboundSpamService: MailInboundSpamService,
     private readonly mailImapMaildirService: MailImapMaildirService,
+    private readonly mailOrganizationStorageService: MailOrganizationStorageService,
   ) {}
 
   public async ingest(input: InboundIngestInput): Promise<MailInboundMessageEntity> {
@@ -116,6 +118,16 @@ export class MailInboundIngestService {
             extractAttachmentsFromMime(rawMime),
           )
         : null;
+
+    const inboundBytes =
+      (bodyText?.length ?? 0) +
+      (bodyHtml?.length ?? 0) +
+      (rawMime?.length ?? 0) +
+      (attachments?.reduce((sum, file) => sum + file.sizeBytes, 0) ?? 0);
+    await this.mailOrganizationStorageService.assertCanStore(
+      mailbox.organizationId,
+      inboundBytes,
+    );
 
     let maildirFilePath: string | null = null;
     if (rawMime) {

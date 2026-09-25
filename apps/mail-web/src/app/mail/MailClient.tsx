@@ -399,6 +399,10 @@ export function MailClient() {
   }, [sent, searchQuery, view]);
 
   const inboxFolder = inboxFolderForView(view);
+  const maxAttachmentMb = useMemo(() => {
+    const bytes = summary?.storageQuota?.maxAttachmentBytes ?? 2 * 1024 * 1024;
+    return Math.max(1, Math.round(bytes / (1024 * 1024)));
+  }, [summary?.storageQuota?.maxAttachmentBytes]);
   const canUseThreads =
     view === "inbox" ||
     view === "spam" ||
@@ -663,6 +667,35 @@ export function MailClient() {
         >
           Ayarlar
         </button>
+        {summary?.storageQuota ? (
+          <div className="mail-storage-quota">
+            <div className="mail-storage-label">
+              Depolama{" "}
+              {(summary.storageQuota.usedBytes / (1024 ** 3)).toFixed(1)} /{" "}
+              {summary.storageQuota.limitLabelGb} GB
+            </div>
+            <div className="mail-storage-bar">
+              <div
+                className={
+                  summary.storageQuota.atLimit
+                    ? "fill danger"
+                    : summary.storageQuota.nearLimit
+                      ? "fill warn"
+                      : "fill"
+                }
+                style={{
+                  width: `${summary.storageQuota.utilizationPercent}%`,
+                }}
+              />
+            </div>
+            {summary.storageQuota.nearLimit ? (
+              <p className="mail-storage-warn">
+                Depolama kotasına yaklaşıyorsunuz. Eski postaları arşivleyin veya
+                silin.
+              </p>
+            ) : null}
+          </div>
+        ) : null}
         <div className="mail-address">
           {summary?.primaryAddress ?? "—"}
           <br />
@@ -1099,7 +1132,8 @@ export function MailClient() {
                 />
                 {replyFiles.length > 0 ? (
                   <p className="mail-attach-hint">
-                    {replyFiles.length} ek seçildi (en fazla 3, 2 MB)
+                    {replyFiles.length} ek seçildi (en fazla 3, {maxAttachmentMb}{" "}
+                    MB)
                   </p>
                 ) : null}
                 <button type="button" onClick={() => void sendReply()}>
@@ -1194,7 +1228,7 @@ export function MailClient() {
             ) : null}
             {composeFiles.length > 0 ? (
               <p className="mail-attach-hint">
-                {composeFiles.length} yeni ek seçildi
+                {composeFiles.length} yeni ek (en fazla {maxAttachmentMb} MB)
               </p>
             ) : null}
             {composeError ? (

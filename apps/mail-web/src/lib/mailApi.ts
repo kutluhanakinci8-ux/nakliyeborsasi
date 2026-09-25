@@ -9,6 +9,18 @@ export type MailInboxFolder =
 
 export type MailMailboxFolder = "inbox" | "archive" | "trash";
 
+export type MailStorageQuota = {
+  usedBytes: number;
+  limitBytes: number;
+  remainingBytes: number;
+  utilizationPercent: number;
+  nearLimit: boolean;
+  atLimit: boolean;
+  maxAttachmentBytes: number;
+  limitLabelGb: number;
+  windowLabelTr: string;
+};
+
 export type MailInboxSummary = {
   primaryAddress: string | null;
   mailboxId: string | null;
@@ -17,6 +29,7 @@ export type MailInboxSummary = {
   spamCount: number;
   archiveCount?: number;
   trashCount?: number;
+  storageQuota?: MailStorageQuota;
 };
 
 export type MailInboxListItem = {

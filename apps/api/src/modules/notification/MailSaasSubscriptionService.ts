@@ -60,6 +60,8 @@ export class MailSaasSubscriptionService {
         used: mailboxUsed,
         limit: mailboxLimit,
       },
+      storageLimitBytes: this.resolveStorageLimitBytesForPlanCode(planCode),
+      maxAttachmentBytes: this.resolveMaxAttachmentBytesForPlanCode(planCode),
     };
   }
 
@@ -151,6 +153,26 @@ export class MailSaasSubscriptionService {
     );
   }
 
+  public resolveStorageLimitBytesForPlanCode(planCode: string | null): number {
+    if (planCode) {
+      const display = SubscriptionPlanDisplayCatalog.find(planCode);
+      if (display?.mailStorageLimitBytes) {
+        return display.mailStorageLimitBytes;
+      }
+    }
+    return 2 * 1024 * 1024 * 1024;
+  }
+
+  public resolveMaxAttachmentBytesForPlanCode(planCode: string | null): number {
+    if (planCode) {
+      const display = SubscriptionPlanDisplayCatalog.find(planCode);
+      if (display?.mailMaxAttachmentBytes) {
+        return display.mailMaxAttachmentBytes;
+      }
+    }
+    return 2 * 1024 * 1024;
+  }
+
   public resolveSendLimitForPlanCode(planCode: string | null): number {
     if (planCode) {
       const display = SubscriptionPlanDisplayCatalog.find(planCode);
@@ -222,6 +244,19 @@ export class MailSaasSubscriptionService {
       recommended: display?.recommended ?? false,
       mailMaxSendsPerHour: display?.mailMaxSendsPerHour ?? 80,
       mailMaxMailboxes: display?.mailMaxMailboxes ?? 1,
+      mailStorageLimitGb:
+        Math.round(
+          ((display?.mailStorageLimitBytes ??
+            2 * 1024 * 1024 * 1024) /
+            (1024 ** 3)) *
+            10,
+        ) / 10,
+      mailMaxAttachmentMb:
+        Math.round(
+          ((display?.mailMaxAttachmentBytes ?? 2 * 1024 * 1024) /
+            (1024 * 1024)) *
+            10,
+        ) / 10,
       customDomainAllowed: display?.customDomainAllowed ?? false,
       tierCode: plan?.tierCode ?? null,
     };

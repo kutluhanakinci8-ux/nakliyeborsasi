@@ -9,6 +9,10 @@ export type SubscriptionPlanDisplayMeta = {
   productLine?: "logistics" | "lerta_mail";
   mailMaxSendsPerHour?: number;
   mailMaxMailboxes?: number;
+  /** Plan depolama üst sınırı (bayt). */
+  mailStorageLimitBytes?: number;
+  /** Tek ek üst sınırı (bayt). */
+  mailMaxAttachmentBytes?: number;
   customDomainAllowed?: boolean;
 };
 
@@ -45,6 +49,8 @@ const DISPLAY: readonly SubscriptionPlanDisplayMeta[] = [
     productLine: "lerta_mail",
     mailMaxSendsPerHour: 80,
     mailMaxMailboxes: 1,
+    mailStorageLimitBytes: 2 * 1024 * 1024 * 1024,
+    mailMaxAttachmentBytes: 2 * 1024 * 1024,
     customDomainAllowed: false,
   },
   {
@@ -57,6 +63,8 @@ const DISPLAY: readonly SubscriptionPlanDisplayMeta[] = [
     productLine: "lerta_mail",
     mailMaxSendsPerHour: 500,
     mailMaxMailboxes: 25,
+    mailStorageLimitBytes: 25 * 1024 * 1024 * 1024,
+    mailMaxAttachmentBytes: 10 * 1024 * 1024,
     customDomainAllowed: true,
   },
 ];

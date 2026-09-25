@@ -44,6 +44,8 @@ export class SubscriptionPlanController {
       recommended: boolean;
       mailMaxSendsPerHour: number;
       mailMaxMailboxes: number;
+      mailStorageLimitGb: number;
+      mailMaxAttachmentMb: number;
       customDomainAllowed: boolean;
     }[];
   } {
@@ -63,6 +65,18 @@ export class SubscriptionPlanController {
           recommended: display?.recommended ?? false,
           mailMaxSendsPerHour: display?.mailMaxSendsPerHour ?? 80,
           mailMaxMailboxes: display?.mailMaxMailboxes ?? 1,
+          mailStorageLimitGb:
+            Math.round(
+              ((display?.mailStorageLimitBytes ?? 2 * 1024 ** 3) /
+                (1024 ** 3)) *
+                10,
+            ) / 10,
+          mailMaxAttachmentMb:
+            Math.round(
+              ((display?.mailMaxAttachmentBytes ?? 2 * 1024 ** 2) /
+                (1024 ** 2)) *
+                10,
+            ) / 10,
           customDomainAllowed: display?.customDomainAllowed ?? false,
         };
       });

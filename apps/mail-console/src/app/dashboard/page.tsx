@@ -47,6 +47,11 @@ export default function DashboardPage() {
   const [sendNearLimit, setSendNearLimit] = useState(false);
   const [sendAtLimit, setSendAtLimit] = useState(false);
   const [sendWindowLabel, setSendWindowLabel] = useState("Son 60 dakika");
+  const [storageUsedGb, setStorageUsedGb] = useState(0);
+  const [storageLimitGb, setStorageLimitGb] = useState(0);
+  const [storagePercent, setStoragePercent] = useState(0);
+  const [storageNearLimit, setStorageNearLimit] = useState(false);
+  const [storageAtLimit, setStorageAtLimit] = useState(false);
   const [planMessage, setPlanMessage] = useState("");
   const [mailboxQuota, setMailboxQuota] = useState<string>("");
   const [mailboxUsed, setMailboxUsed] = useState(0);
@@ -83,6 +88,14 @@ export default function DashboardPage() {
       setMailboxQuota(
         `${sub.subscription.mailboxQuota.used}/${sub.subscription.mailboxQuota.limit} kutu`,
       );
+      const storage = sub.subscription.storageQuota;
+      if (storage) {
+        setStorageUsedGb(storage.usedBytes / (1024 ** 3));
+        setStorageLimitGb(storage.limitLabelGb);
+        setStoragePercent(storage.utilizationPercent);
+        setStorageNearLimit(storage.nearLimit);
+        setStorageAtLimit(storage.atLimit);
+      }
       return sub.subscription.planCode;
     } catch {
       setPlanName(null);
@@ -323,6 +336,45 @@ export default function DashboardPage() {
               <p style={{ color: "#b45309", marginTop: 8, marginBottom: 0 }}>
                 Kotaya yaklaşıyorsunuz — yoğun gönderim için Kurumsal plana
                 geçin.
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+        {storageLimitGb > 0 ? (
+          <div style={{ marginBottom: 12 }}>
+            <p style={{ margin: "0 0 8px", fontSize: 14 }}>
+              Depolama: <strong>{storageUsedGb.toFixed(1)}</strong> /{" "}
+              {storageLimitGb} GB
+            </p>
+            <div
+              style={{
+                height: 8,
+                borderRadius: 4,
+                background: "var(--border)",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  width: `${Math.min(100, storagePercent)}%`,
+                  height: "100%",
+                  background:
+                    storageAtLimit
+                      ? "#dc2626"
+                      : storageNearLimit
+                        ? "#d97706"
+                        : "var(--accent)",
+                }}
+              />
+            </div>
+            {storageAtLimit ? (
+              <p style={{ color: "#dc2626", marginTop: 8, marginBottom: 0 }}>
+                Depolama kotası doldu. Çöp kutusunu temizleyin veya Kurumsal
+                plana geçin.
+              </p>
+            ) : storageNearLimit ? (
+              <p style={{ color: "#b45309", marginTop: 8, marginBottom: 0 }}>
+                Depolama kotasına yaklaşıyorsunuz.
               </p>
             ) : null}
           </div>

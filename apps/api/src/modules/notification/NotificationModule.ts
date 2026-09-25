@@ -86,6 +86,7 @@ import { MailComposeDraftEntity } from "../../infrastructure/database/entities/M
 import { MailComposePresetEntity } from "../../infrastructure/database/entities/MailComposePresetEntity";
 import { MailComposeDraftService } from "./MailComposeDraftService";
 import { MailComposePresetService } from "./MailComposePresetService";
+import { MailOrganizationStorageService } from "./MailOrganizationStorageService";
 import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
 import { MailBillingService } from "./MailBillingService";
 import { MailIyzicoBillingService } from "./MailIyzicoBillingService";
@@ -188,6 +189,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     MailImapAccessService,
     MailComposeDraftService,
     MailComposePresetService,
+    MailOrganizationStorageService,
     MailSaasSubscriptionService,
     MailIyzicoBillingService,
     MailBillingService,

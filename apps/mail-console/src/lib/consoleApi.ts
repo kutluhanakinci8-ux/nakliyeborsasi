@@ -320,7 +320,21 @@ export type MailPlanView = {
   recommended: boolean;
   mailMaxSendsPerHour: number;
   mailMaxMailboxes: number;
+  mailStorageLimitGb?: number;
+  mailMaxAttachmentMb?: number;
   customDomainAllowed: boolean;
+};
+
+export type MailStorageQuota = {
+  usedBytes: number;
+  limitBytes: number;
+  remainingBytes: number;
+  utilizationPercent: number;
+  nearLimit: boolean;
+  atLimit: boolean;
+  maxAttachmentBytes: number;
+  limitLabelGb: number;
+  windowLabelTr: string;
 };
 
 export type MailSendRateQuota = {
@@ -342,6 +356,7 @@ export async function fetchMailSubscription(accessToken: string) {
       plan: MailPlanView | null;
       sendRate: number;
       sendRateQuota: MailSendRateQuota;
+      storageQuota?: MailStorageQuota;
       mailboxQuota: { used: number; limit: number };
     };
   }>(accessToken, "company/mail-identity/subscription");

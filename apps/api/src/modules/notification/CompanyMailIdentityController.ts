@@ -16,6 +16,7 @@ import { JwtAuthenticationGuard } from "../auth/JwtAuthenticationGuard";
 import { AuthenticatedUserParam } from "../auth/AuthenticatedUserParam";
 import { MailTenantSubdomainService } from "./MailTenantSubdomainService";
 import { MailOrganizationSendRateService } from "./MailOrganizationSendRateService";
+import { MailOrganizationStorageService } from "./MailOrganizationStorageService";
 import { EmailSuppressionService } from "./EmailSuppressionService";
 import { MailCustomDomainService } from "./MailCustomDomainService";
 import {
@@ -47,6 +48,7 @@ export class CompanyMailIdentityController {
   public constructor(
     private readonly mailTenantSubdomainService: MailTenantSubdomainService,
     private readonly mailOrganizationSendRateService: MailOrganizationSendRateService,
+    private readonly mailOrganizationStorageService: MailOrganizationStorageService,
     private readonly emailSuppressionService: EmailSuppressionService,
     private readonly mailCustomDomainService: MailCustomDomainService,
     private readonly mailIdentityAuditService: MailIdentityAuditService,
@@ -89,13 +91,28 @@ export class CompanyMailIdentityController {
     const sendRateQuota = await this.mailOrganizationSendRateService.getSnapshot(
       user.companyId,
     );
+    const storageQuota = await this.mailOrganizationStorageService.getSnapshot(
+      user.companyId,
+    );
     return {
       message: "OK",
       subscription: {
         ...subscription,
         sendRateQuota,
+        storageQuota,
       },
     };
+  }
+
+  @Get("storage")
+  public async storageQuota(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    assertMailConsoleAccess(user);
+    const storageQuota = await this.mailOrganizationStorageService.getSnapshot(
+      user.companyId,
+    );
+    return { message: "OK", storageQuota };
   }
 
   @Get("send-rate")

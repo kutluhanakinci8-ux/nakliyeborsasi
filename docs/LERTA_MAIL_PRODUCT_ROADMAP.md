@@ -82,7 +82,7 @@
 | D2 | Çöp / arşiv klasörleri | Yüksek | `mailboxFolder`, Maildir `.Archive`/`.Trash`, webmail — **uygulandı** |
 | D3 | İmza ve şablonlar | Orta | `compose-presets` API, ayarlar + yaz ekranı — **uygulandı** |
 | D4 | Gelişmiş arama (filtre) | Orta | Gönderen, tarih aralığı, ek — **uygulandı** |
-| D5 | Büyük ek / kota depolama | Orta | Plan depolama GB; uyarı |
+| D5 | Büyük ek / kota depolama | Orta | Plan GB + ek MB, kota çubuğu, ingest engeli — **uygulandı** |
 | D6 | Takvim / kişiler | Düşük | Harici CalDAV sonra |
 | D7 | Bildirimler (push / ses) | Düşük | PWA sonrası |
 

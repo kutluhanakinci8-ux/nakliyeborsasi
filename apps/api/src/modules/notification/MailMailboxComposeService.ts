@@ -12,6 +12,7 @@ import { MailInboundMessageEntity } from "../../infrastructure/database/entities
 import { MailMailboxSentEntity } from "../../infrastructure/database/entities/MailMailboxSentEntity";
 import { SmtpEmailSender } from "./SmtpEmailSender";
 import { MailOrganizationSendRateService } from "./MailOrganizationSendRateService";
+import { MailOrganizationStorageService } from "./MailOrganizationStorageService";
 import { MailTenantSuspensionService } from "./MailTenantSuspensionService";
 import { resolveTenantReplyToAddress } from "./MailTenantEmailBranding";
 
@@ -24,11 +25,11 @@ export type ComposeAttachmentInput = {
 @Injectable()
 export class MailMailboxComposeService {
   private static readonly maxAttachments = 3;
-  private static readonly maxAttachmentBytes = 2 * 1024 * 1024;
 
   public constructor(
     private readonly smtpEmailSender: SmtpEmailSender,
     private readonly mailOrganizationSendRateService: MailOrganizationSendRateService,
+    private readonly mailOrganizationStorageService: MailOrganizationStorageService,
     private readonly mailTenantSuspensionService: MailTenantSuspensionService,
     @InjectRepository(MailSenderIdentityEntity)
     private readonly senderRepository: Repository<MailSenderIdentityEntity>,
@@ -53,7 +54,15 @@ export class MailMailboxComposeService {
     await this.mailTenantSuspensionService.assertOrganizationCanSend(
       params.organizationId,
     );
-    const nodemailerAttachments = this.parseAttachments(params.attachments);
+    const nodemailerAttachments = await this.parseAttachments(
+      params.organizationId,
+      params.attachments,
+    );
+    await this.mailOrganizationStorageService.assertCanStore(
+      params.organizationId,
+      params.text.length +
+        nodemailerAttachments.reduce((sum, file) => sum + file.content.length, 0),
+    );
     const replyTo = resolveTenantReplyToAddress();
     const smtpMessageId = await this.smtpEmailSender.send({
       from: fromHeader,
@@ -108,7 +117,15 @@ export class MailMailboxComposeService {
     await this.mailTenantSuspensionService.assertOrganizationCanSend(
       params.organizationId,
     );
-    const nodemailerAttachments = this.parseAttachments(params.attachments);
+    const nodemailerAttachments = await this.parseAttachments(
+      params.organizationId,
+      params.attachments,
+    );
+    await this.mailOrganizationStorageService.assertCanStore(
+      params.organizationId,
+      params.text.length +
+        nodemailerAttachments.reduce((sum, file) => sum + file.content.length, 0),
+    );
     const replyTo = resolveTenantReplyToAddress();
     const inReplyTo = inbound.internetMessageId
       ? `<${inbound.internetMessageId}>`
@@ -212,9 +229,10 @@ export class MailMailboxComposeService {
     }
   }
 
-  private parseAttachments(
+  private async parseAttachments(
+    organizationId: string,
     attachments?: ComposeAttachmentInput[],
-  ): { filename: string; content: Buffer; contentType: string }[] {
+  ): Promise<{ filename: string; content: Buffer; contentType: string }[]> {
     if (!attachments?.length) {
       return [];
     }
@@ -223,11 +241,16 @@ export class MailMailboxComposeService {
         `En fazla ${MailMailboxComposeService.maxAttachments} ek.`,
       );
     }
+    const maxBytes =
+      await this.mailOrganizationStorageService.resolveMaxAttachmentBytes(
+        organizationId,
+      );
+    const maxMb = Math.max(1, Math.round(maxBytes / (1024 * 1024)));
     return attachments.map((item) => {
       const content = Buffer.from(item.contentBase64, "base64");
-      if (content.length > MailMailboxComposeService.maxAttachmentBytes) {
+      if (content.length > maxBytes) {
         throw new BadRequestException(
-          `Ek çok büyük: ${item.filename} (max 2MB)`,
+          `Ek çok büyük: ${item.filename} (plan limiti ${maxMb} MB)`,
         );
       }
       return {

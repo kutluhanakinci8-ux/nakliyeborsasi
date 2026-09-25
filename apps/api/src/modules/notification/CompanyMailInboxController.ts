@@ -26,6 +26,7 @@ import { ComposeMailRequestDto } from "./ComposeMailRequestDto";
 import { ReplyMailRequestDto } from "./ReplyMailRequestDto";
 import { MailComposeDraftService } from "./MailComposeDraftService";
 import { MailComposePresetService } from "./MailComposePresetService";
+import { MailOrganizationStorageService } from "./MailOrganizationStorageService";
 import { SaveMailDraftRequestDto } from "./SaveMailDraftRequestDto";
 import { SaveMailComposePresetRequestDto } from "./SaveMailComposePresetRequestDto";
 import { UpdateMailComposePresetRequestDto } from "./UpdateMailComposePresetRequestDto";
@@ -43,6 +44,7 @@ export class CompanyMailInboxController {
     private readonly mailImapAccessService: MailImapAccessService,
     private readonly mailComposeDraftService: MailComposeDraftService,
     private readonly mailComposePresetService: MailComposePresetService,
+    private readonly mailOrganizationStorageService: MailOrganizationStorageService,
   ) {}
 
   @Get("compose-presets")
@@ -137,7 +139,15 @@ export class CompanyMailInboxController {
       resolvedFolder,
     );
     const sent = await this.mailMailboxComposeService.listSent(user.companyId);
-    return { summary, messages, sent, folder: resolvedFolder };
+    const storageQuota = await this.mailOrganizationStorageService.getSnapshot(
+      user.companyId,
+    );
+    return {
+      summary: { ...summary, storageQuota },
+      messages,
+      sent,
+      folder: resolvedFolder,
+    };
   }
 
   @Get("threads")
