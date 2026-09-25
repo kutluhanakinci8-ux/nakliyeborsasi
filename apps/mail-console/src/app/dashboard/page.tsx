@@ -33,6 +33,24 @@ export default function DashboardPage() {
   const [mailboxQuota, setMailboxQuota] = useState<string>("");
 
   useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    const params = new URLSearchParams(window.location.search);
+    const billing = params.get("billing");
+    if (billing === "success") {
+      setPlanMessage("Ödeme alındı. Kurumsal plan birkaç saniye içinde güncellenir.");
+    } else if (billing === "cancel") {
+      const reason = params.get("reason");
+      setPlanMessage(
+        reason
+          ? `Ödeme tamamlanamadı (${reason}).`
+          : "Ödeme iptal edildi veya tamamlanamadı.",
+      );
+    }
+  }, []);
+
+  useEffect(() => {
     if (!accessToken) {
       router.replace("/login");
       return;

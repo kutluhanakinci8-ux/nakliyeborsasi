@@ -72,6 +72,7 @@ import { MailComposeDraftEntity } from "../../infrastructure/database/entities/M
 import { MailComposeDraftService } from "./MailComposeDraftService";
 import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
 import { MailBillingService } from "./MailBillingService";
+import { MailIyzicoBillingService } from "./MailIyzicoBillingService";
 import {
   MailBillingController,
   MailBillingWebhookController,
@@ -164,6 +165,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     MailImapAccessService,
     MailComposeDraftService,
     MailSaasSubscriptionService,
+    MailIyzicoBillingService,
     MailBillingService,
   ],
   exports: [
