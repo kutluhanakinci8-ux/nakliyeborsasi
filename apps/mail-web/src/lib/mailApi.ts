@@ -45,6 +45,26 @@ export type MailSentMessageDetail = MailSentItem & {
   smtpMessageId: string | null;
 };
 
+export type MailDraftItem = {
+  id: string;
+  to: string | null;
+  subject: string | null;
+  text: string | null;
+  attachments: ComposeAttachment[];
+  updatedAt: string;
+  createdAt: string;
+};
+
+export type MailImapSettings = {
+  enabled: boolean;
+  imapHost: string;
+  imapPort: number;
+  imapTls: boolean;
+  username: string | null;
+  maildirPath: string | null;
+  hasCredential: boolean;
+};
+
 export type ComposeAttachment = {
   filename: string;
   contentType: string;
@@ -211,4 +231,78 @@ export async function replyMail(
       body: JSON.stringify(body),
     },
   );
+}
+
+export async function fetchDrafts(accessToken: string) {
+  const payload = await apiFetch<{ drafts: MailDraftItem[] }>(
+    accessToken,
+    "company/mail-inbox/drafts",
+  );
+  return payload.drafts;
+}
+
+export async function createDraft(
+  accessToken: string,
+  body: {
+    to?: string;
+    subject?: string;
+    text?: string;
+    attachments?: ComposeAttachment[];
+  },
+) {
+  const payload = await apiFetch<{ draft: MailDraftItem }>(
+    accessToken,
+    "company/mail-inbox/drafts",
+    { method: "POST", body: JSON.stringify(body) },
+  );
+  return payload.draft;
+}
+
+export async function updateDraft(
+  accessToken: string,
+  draftId: string,
+  body: {
+    to?: string;
+    subject?: string;
+    text?: string;
+    attachments?: ComposeAttachment[];
+  },
+) {
+  const payload = await apiFetch<{ draft: MailDraftItem }>(
+    accessToken,
+    `company/mail-inbox/drafts/${draftId}`,
+    { method: "PATCH", body: JSON.stringify(body) },
+  );
+  return payload.draft;
+}
+
+export async function deleteDraft(accessToken: string, draftId: string) {
+  await apiFetch(accessToken, `company/mail-inbox/drafts/${draftId}`, {
+    method: "DELETE",
+  });
+}
+
+export async function sendDraft(accessToken: string, draftId: string) {
+  await apiFetch(accessToken, `company/mail-inbox/drafts/${draftId}/send`, {
+    method: "POST",
+    body: JSON.stringify({}),
+  });
+}
+
+export async function fetchImapSettings(accessToken: string) {
+  const payload = await apiFetch<{ settings: MailImapSettings }>(
+    accessToken,
+    "company/mail-inbox/imap-settings",
+  );
+  return payload.settings;
+}
+
+export async function rotateImapPassword(accessToken: string) {
+  const payload = await apiFetch<{
+    credentials: { username: string; password: string };
+  }>(accessToken, "company/mail-inbox/imap-credentials/rotate", {
+    method: "POST",
+    body: JSON.stringify({}),
+  });
+  return payload.credentials;
 }

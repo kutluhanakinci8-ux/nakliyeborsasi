@@ -38,6 +38,7 @@ import { MailMailboxEntity } from "./entities/MailMailboxEntity";
 import { MailInboundMessageEntity } from "./entities/MailInboundMessageEntity";
 import { MailMailboxSentEntity } from "./entities/MailMailboxSentEntity";
 import { MailImapCredentialEntity } from "./entities/MailImapCredentialEntity";
+import { MailComposeDraftEntity } from "./entities/MailComposeDraftEntity";
 
 @Injectable()
 export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
@@ -91,6 +92,7 @@ export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
         MailInboundMessageEntity,
         MailMailboxSentEntity,
         MailImapCredentialEntity,
+        MailComposeDraftEntity,
       ],
       synchronize,
       logging: false,

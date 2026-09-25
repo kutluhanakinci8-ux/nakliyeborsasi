@@ -152,6 +152,40 @@ a {
   margin: 4px 0 0;
 }
 
+.mail-nav-imap {
+  margin: 8px 12px 0;
+  width: calc(100% - 24px);
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.mail-nav-imap:hover {
+  background: #eef2f8;
+  color: var(--text);
+}
+
+.imap-dl {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: 8px 12px;
+  font-size: 0.9rem;
+  margin: 0 0 16px;
+}
+
+.imap-dl dt {
+  color: var(--muted);
+}
+
+.imap-dl dd {
+  margin: 0;
+  word-break: break-all;
+}
+
 .mail-list-item {
   padding: 12px 16px;
   border-bottom: 1px solid var(--border);

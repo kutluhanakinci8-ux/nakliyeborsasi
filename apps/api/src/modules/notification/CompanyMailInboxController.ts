@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   ForbiddenException,
   Get,
   Param,
@@ -22,6 +23,8 @@ import { MailMailboxComposeService } from "./MailMailboxComposeService";
 import { MailImapAccessService } from "./MailImapAccessService";
 import { ComposeMailRequestDto } from "./ComposeMailRequestDto";
 import { ReplyMailRequestDto } from "./ReplyMailRequestDto";
+import { MailComposeDraftService } from "./MailComposeDraftService";
+import { SaveMailDraftRequestDto } from "./SaveMailDraftRequestDto";
 
 @Controller("company/mail-inbox")
 @UseGuards(JwtAuthenticationGuard)
@@ -30,6 +33,7 @@ export class CompanyMailInboxController {
     private readonly mailOrganizationInboxService: MailOrganizationInboxService,
     private readonly mailMailboxComposeService: MailMailboxComposeService,
     private readonly mailImapAccessService: MailImapAccessService,
+    private readonly mailComposeDraftService: MailComposeDraftService,
   ) {}
 
   @Get("imap-settings")
@@ -79,6 +83,82 @@ export class CompanyMailInboxController {
       this.parseFolder(folder),
     );
     return { messages, q: (query ?? "").trim() };
+  }
+
+  @Get("drafts")
+  public async listDrafts(@AuthenticatedUserParam() user: AuthenticatedUserContext) {
+    const drafts = await this.mailComposeDraftService.list(
+      user.companyId,
+      user.userId,
+    );
+    return { drafts };
+  }
+
+  @Post("drafts")
+  public async createDraft(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: SaveMailDraftRequestDto,
+  ) {
+    const draft = await this.mailComposeDraftService.create(
+      user.companyId,
+      user.userId,
+      body,
+    );
+    return { draft };
+  }
+
+  @Patch("drafts/:draftId")
+  public async updateDraft(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("draftId") draftId: string,
+    @Body() body: SaveMailDraftRequestDto,
+  ) {
+    const draft = await this.mailComposeDraftService.update(
+      user.companyId,
+      user.userId,
+      draftId,
+      body,
+    );
+    return { draft };
+  }
+
+  @Delete("drafts/:draftId")
+  public async deleteDraft(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("draftId") draftId: string,
+  ) {
+    await this.mailComposeDraftService.delete(
+      user.companyId,
+      user.userId,
+      draftId,
+    );
+    return { ok: true };
+  }
+
+  @Post("drafts/:draftId/send")
+  public async sendDraft(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("draftId") draftId: string,
+  ) {
+    this.assertCompanyOwner(user);
+    const payload = await this.mailComposeDraftService.getForSend(
+      user.companyId,
+      user.userId,
+      draftId,
+    );
+    const result = await this.mailMailboxComposeService.compose({
+      organizationId: user.companyId,
+      to: payload.to,
+      subject: payload.subject,
+      text: payload.text,
+      attachments: payload.attachments,
+    });
+    await this.mailComposeDraftService.deleteAfterSend(
+      user.companyId,
+      user.userId,
+      draftId,
+    );
+    return { ok: true, ...result };
   }
 
   @Get("sent/:sentId")

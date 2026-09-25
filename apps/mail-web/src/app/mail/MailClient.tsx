@@ -4,7 +4,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   composeMail,
+  createDraft,
+  deleteDraft,
   downloadMailAttachment,
+  fetchDrafts,
   fetchInbox,
   fetchMessage,
   fetchSentMessage,
@@ -12,6 +15,9 @@ import {
   markRead,
   replyMail,
   searchInbox,
+  sendDraft,
+  updateDraft,
+  type MailDraftItem,
   type MailInboxListItem,
   type MailInboxMessageDetail,
   type MailInboxSummary,
@@ -19,8 +25,9 @@ import {
   type MailSentMessageDetail,
 } from "@/lib/mailApi";
 import { useMailSession } from "@/lib/session";
+import { MailSettingsPanel } from "./MailSettingsPanel";
 
-type View = "inbox" | "spam" | "sent" | "all";
+type View = "inbox" | "spam" | "sent" | "all" | "drafts";
 
 function inboxFolderForView(view: View): "inbox" | "spam" | "all" {
   if (view === "spam") {
@@ -59,6 +66,10 @@ export function MailClient() {
   const [toast, setToast] = useState("");
   const [composeError, setComposeError] = useState("");
   const [sending, setSending] = useState(false);
+  const [drafts, setDrafts] = useState<MailDraftItem[]>([]);
+  const [draftPreview, setDraftPreview] = useState<MailDraftItem | null>(null);
+  const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const refresh = useCallback(async () => {
     if (!accessToken) {
@@ -71,16 +82,30 @@ export function MailClient() {
     setSent(data.sent);
   }, [accessToken, view]);
 
+  const refreshDrafts = useCallback(async () => {
+    if (!accessToken) {
+      return;
+    }
+    setDrafts(await fetchDrafts(accessToken));
+  }, [accessToken]);
+
   useEffect(() => {
     if (!accessToken) {
       router.replace("/login");
       return;
     }
     void refresh();
-  }, [accessToken, refresh, router]);
+    void refreshDrafts();
+  }, [accessToken, refresh, refreshDrafts, router]);
 
   useEffect(() => {
-    if (!accessToken || view === "sent") {
+    if (accessToken && view === "drafts") {
+      void refreshDrafts();
+    }
+  }, [accessToken, refreshDrafts, view]);
+
+  useEffect(() => {
+    if (!accessToken || view === "sent" || view === "drafts") {
       setSearchResults(null);
       return;
     }
@@ -155,6 +180,50 @@ export function MailClient() {
     }
   }
 
+  function openComposeFromDraft(draft: MailDraftItem) {
+    setEditingDraftId(draft.id);
+    setComposeTo(draft.to ?? "");
+    setComposeSubject(draft.subject ?? "");
+    setComposeText(draft.text ?? "");
+    setComposeFiles([]);
+    setComposeError("");
+    setComposeOpen(true);
+  }
+
+  async function saveComposeDraft() {
+    if (!accessToken) {
+      return;
+    }
+    setComposeError("");
+    setSending(true);
+    try {
+      const attachments =
+        composeFiles.length > 0
+          ? await Promise.all(composeFiles.map((f) => fileToAttachment(f)))
+          : undefined;
+      const body = {
+        to: composeTo.trim() || undefined,
+        subject: composeSubject.trim() || undefined,
+        text: composeText || undefined,
+        attachments,
+      };
+      if (editingDraftId) {
+        await updateDraft(accessToken, editingDraftId, body);
+      } else {
+        const created = await createDraft(accessToken, body);
+        setEditingDraftId(created.id);
+      }
+      setToast("Taslak kaydedildi.");
+      void refreshDrafts();
+    } catch (error) {
+      setComposeError(
+        error instanceof Error ? error.message : "Taslak kaydedilemedi.",
+      );
+    } finally {
+      setSending(false);
+    }
+  }
+
   async function sendCompose() {
     if (!accessToken) {
       return;
@@ -166,24 +235,35 @@ export function MailClient() {
     setComposeError("");
     setSending(true);
     try {
-      const attachments =
-        composeFiles.length > 0
-          ? await Promise.all(composeFiles.map((f) => fileToAttachment(f)))
-          : undefined;
-      await composeMail(accessToken, {
-        to: composeTo.trim(),
-        subject: composeSubject.trim(),
-        text: composeText,
-        attachments,
-      });
+      if (editingDraftId) {
+        await updateDraft(accessToken, editingDraftId, {
+          to: composeTo.trim(),
+          subject: composeSubject.trim(),
+          text: composeText,
+        });
+        await sendDraft(accessToken, editingDraftId);
+      } else {
+        const attachments =
+          composeFiles.length > 0
+            ? await Promise.all(composeFiles.map((f) => fileToAttachment(f)))
+            : undefined;
+        await composeMail(accessToken, {
+          to: composeTo.trim(),
+          subject: composeSubject.trim(),
+          text: composeText,
+          attachments,
+        });
+      }
       setComposeOpen(false);
       setComposeTo("");
       setComposeSubject("");
       setComposeText("");
       setComposeFiles([]);
+      setEditingDraftId(null);
       setToast("Gönderildi.");
       setView("sent");
       void refresh();
+      void refreshDrafts();
     } catch (error) {
       setComposeError(
         error instanceof Error
@@ -208,7 +288,18 @@ export function MailClient() {
   }, [sent, searchQuery, view]);
 
   const listItems =
-    view === "sent"
+    view === "drafts"
+      ? drafts.map((d) => ({
+          id: d.id,
+          fromAddress: "Taslak",
+          subject: d.subject || "(Konu yok)",
+          snippet: d.to || "—",
+          receivedAt: d.updatedAt,
+          readAt: d.updatedAt,
+          spamStatus: "clean",
+          attachmentCount: d.attachments.length,
+        }))
+      : view === "sent"
       ? filteredSent.map((s) => ({
           id: s.id,
           fromAddress: "Gönderilen",
@@ -228,6 +319,19 @@ export function MailClient() {
     setSelectedId(null);
     setSearchQuery("");
     setSearchResults(null);
+    setDraftPreview(null);
+    if (next === "drafts") {
+      void refreshDrafts();
+    }
+  }
+
+  function resetCompose() {
+    setEditingDraftId(null);
+    setComposeTo("");
+    setComposeSubject("");
+    setComposeText("");
+    setComposeFiles([]);
+    setComposeError("");
   }
 
   return (
@@ -240,7 +344,7 @@ export function MailClient() {
           type="button"
           className="mail-compose-btn"
           onClick={() => {
-            setComposeError("");
+            resetCompose();
             setComposeOpen(true);
           }}
         >
@@ -278,7 +382,22 @@ export function MailClient() {
           >
             Spam
           </button>
+          <button
+            type="button"
+            className={view === "drafts" ? "active" : ""}
+            onClick={() => switchView("drafts")}
+          >
+            Taslaklar
+            {drafts.length > 0 ? ` (${drafts.length})` : ""}
+          </button>
         </nav>
+        <button
+          type="button"
+          className="mail-nav-imap"
+          onClick={() => setSettingsOpen(true)}
+        >
+          IMAP ayarları
+        </button>
         <div className="mail-address">
           {summary?.primaryAddress ?? "—"}
           <br />
@@ -303,15 +422,17 @@ export function MailClient() {
       </aside>
 
       <section className="mail-list">
-        <div className="mail-search">
-          <input
-            type="search"
-            placeholder="Ara (konu, gönderen)…"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            aria-label="Posta ara"
-          />
-        </div>
+        {view !== "drafts" ? (
+          <div className="mail-search">
+            <input
+              type="search"
+              placeholder="Ara (konu, gönderen)…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label="Posta ara"
+            />
+          </div>
+        ) : null}
         {listItems.length === 0 ? (
           <p className="mail-empty">Mesaj yok</p>
         ) : (
@@ -320,8 +441,18 @@ export function MailClient() {
               key={m.id}
               role="button"
               tabIndex={0}
-              className={`mail-list-item ${selectedId === m.id ? "selected" : ""} ${!m.readAt && view !== "sent" ? "unread" : ""}`}
+              className={`mail-list-item ${selectedId === m.id ? "selected" : ""} ${!m.readAt && (view === "inbox" || view === "all" || view === "spam") ? "unread" : ""}`}
               onClick={() => {
+                if (view === "drafts") {
+                  const d = drafts.find((x) => x.id === m.id);
+                  if (d) {
+                    setSelectedId(m.id);
+                    setDraftPreview(d);
+                    setDetail(null);
+                    setSentPreview(null);
+                  }
+                  return;
+                }
                 if (view === "sent") {
                   setSelectedId(m.id);
                   setDetail(null);
@@ -391,6 +522,70 @@ export function MailClient() {
             </header>
             <div className="mail-read-body">
               <pre>{sentPreview.bodyText ?? "(İçerik yok)"}</pre>
+            </div>
+          </>
+        ) : draftPreview ? (
+          <>
+            <header className="mail-read-header">
+              <h1>{draftPreview.subject || "(Konu yok)"}</h1>
+              <div className="mail-read-meta">
+                Kime: {draftPreview.to ?? "—"} · Güncellendi:{" "}
+                {new Date(draftPreview.updatedAt).toLocaleString("tr-TR")}
+              </div>
+            </header>
+            <div className="mail-read-body">
+              <pre>{draftPreview.text ?? ""}</pre>
+            </div>
+            <div className="mail-reply">
+              <button
+                type="button"
+                onClick={() => openComposeFromDraft(draftPreview)}
+              >
+                Düzenle
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!accessToken) {
+                    return;
+                  }
+                  void (async () => {
+                    try {
+                      await sendDraft(accessToken, draftPreview.id);
+                      setToast("Gönderildi.");
+                      setDraftPreview(null);
+                      setSelectedId(null);
+                      void refresh();
+                      void refreshDrafts();
+                      setView("sent");
+                    } catch (error) {
+                      setToast(
+                        error instanceof Error
+                          ? error.message
+                          : "Gönderilemedi.",
+                      );
+                    }
+                  })();
+                }}
+              >
+                Gönder
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!accessToken) {
+                    return;
+                  }
+                  void (async () => {
+                    await deleteDraft(accessToken, draftPreview.id);
+                    setDraftPreview(null);
+                    setSelectedId(null);
+                    void refreshDrafts();
+                  })();
+                }}
+              >
+                Sil
+              </button>
             </div>
           </>
         ) : !detail ? (
@@ -472,7 +667,7 @@ export function MailClient() {
             role="dialog"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2>Yeni mesaj</h2>
+            <h2>{editingDraftId ? "Taslak" : "Yeni mesaj"}</h2>
             <input
               placeholder="Kime"
               value={composeTo}
@@ -507,8 +702,21 @@ export function MailClient() {
               </p>
             ) : null}
             <div className="compose-actions">
-              <button type="button" onClick={() => setComposeOpen(false)}>
+              <button
+                type="button"
+                onClick={() => {
+                  setComposeOpen(false);
+                  resetCompose();
+                }}
+              >
                 İptal
+              </button>
+              <button
+                type="button"
+                disabled={sending}
+                onClick={() => void saveComposeDraft()}
+              >
+                Taslak kaydet
               </button>
               <button
                 type="button"
@@ -520,6 +728,12 @@ export function MailClient() {
             </div>
           </div>
         </div>
+      ) : null}
+      {settingsOpen && accessToken ? (
+        <MailSettingsPanel
+          accessToken={accessToken}
+          onClose={() => setSettingsOpen(false)}
+        />
       ) : null}
     </div>
   );
