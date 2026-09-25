@@ -13,7 +13,7 @@
 | Temel kutu (okuma/yazma) | 20% | **72** | 95 | 94 | Klasörler, ek, taslak, arama filtreleri var |
 | Üretkenlik (toplu, kısayol) | 15% | **58** | 92 | 90 | G2: toplu okundu/arşiv/çöp + kısayollar; yıldız/snooze yok |
 | Konuşma & iletme | 10% | **72** | 95 | 93 | Thread + **İlet** (G3); tümüne yanıt (Cc meta yok) kısıtlı |
-| Yazma deneyimi | 12% | **58** | 90 | 88 | Cc/Bcc; düz metin compose |
+| Yazma deneyimi | 12% | **68** | 90 | 88 | Cc/Bcc + basit zengin HTML; tam WYSIWYG değil |
 | Mobil / PWA | 10% | **60** | 85 | 82 | Paneller var; native push yok |
 | Kurumsal (marka, alias) | 8% | **62** | 70 | 75 | G4: Enterprise logo/başlık webmailde |
 | Entegrasyon (IMAP, takvim) | 8% | **50** | 90 | 92 | IMAP paneli var; CalDAV/kişi yok |
