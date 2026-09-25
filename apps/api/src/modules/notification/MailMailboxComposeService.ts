@@ -98,7 +98,9 @@ export class MailMailboxComposeService {
     organizationId: string;
     inboundMessageId: string;
     text: string;
+    cc?: string;
     bcc?: string;
+    replyAll?: boolean;
     attachments?: ComposeAttachmentInput[];
   }): Promise<{ sentId: string; smtpMessageId: string | null }> {
     const inbound = await this.inboundRepository.findOne({
@@ -136,9 +138,16 @@ export class MailMailboxComposeService {
     const inReplyTo = inbound.internetMessageId
       ? `<${inbound.internetMessageId}>`
       : undefined;
+    const replyAll = this.resolveReplyAllRecipients(
+      inbound,
+      fromEmail,
+      params.replyAll,
+      params.cc,
+    );
     const smtpMessageId = await this.smtpEmailSender.send({
       from: fromHeader,
-      to: inbound.fromAddress,
+      to: replyAll.to,
+      cc: normalizeOptionalRecipients(replyAll.cc),
       bcc: normalizeOptionalRecipients(params.bcc),
       subject,
       text: params.text,
@@ -341,6 +350,34 @@ export class MailMailboxComposeService {
         contentType: item.contentType || "application/octet-stream",
       };
     });
+  }
+
+  private resolveReplyAllRecipients(
+    inbound: MailInboundMessageEntity,
+    selfEmail: string,
+    replyAll?: boolean,
+    ccOverride?: string,
+  ): { to: string; cc?: string } {
+    if (!replyAll) {
+      return { to: inbound.fromAddress, cc: ccOverride };
+    }
+    const self = selfEmail.toLowerCase();
+    const participants = new Set<string>();
+    participants.add(inbound.fromAddress.toLowerCase());
+    for (const address of inbound.toRecipients ?? []) {
+      participants.add(address.toLowerCase());
+    }
+    for (const address of inbound.ccRecipients ?? []) {
+      participants.add(address.toLowerCase());
+    }
+    participants.delete(self);
+    const ccList = [...participants].filter(
+      (address) => address !== inbound.fromAddress.toLowerCase(),
+    );
+    return {
+      to: inbound.fromAddress,
+      cc: ccOverride ?? (ccList.length > 0 ? ccList.join(", ") : undefined),
+    };
   }
 }
 

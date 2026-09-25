@@ -533,6 +533,17 @@ a {
   flex-shrink: 0;
 }
 
+.mail-deploy-sha {
+  font-size: 0.7rem;
+  color: var(--muted);
+  margin: 4px 16px 0;
+}
+
+.mail-snooze-select {
+  margin-left: 4px;
+  max-width: 8rem;
+}
+
 .mail-rules-panel input,
 .mail-rules-panel select {
   display: block;

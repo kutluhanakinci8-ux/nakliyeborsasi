@@ -60,6 +60,7 @@ import {
 import { MailInboxRuleService } from "./MailInboxRuleService";
 import { MailDelayedComposeService } from "./MailDelayedComposeService";
 import { SendDraftRequestDto } from "./SendDraftRequestDto";
+import { SnoozeMailMessageRequestDto } from "./SnoozeMailMessageRequestDto";
 import { MailInboxPreferencesService } from "./MailInboxPreferencesService";
 import { UpdateMailInboxPreferencesRequestDto } from "./MailInboxPreferencesRequestDto";
 import {
@@ -814,7 +815,9 @@ export class CompanyMailInboxController {
           kind: "reply",
           inboundMessageId: messageId,
           text: body.text,
+          cc: body.cc,
           bcc: body.bcc,
+          replyAll: body.replyAll,
           attachments: body.attachments,
         },
         body.delaySeconds,
@@ -830,10 +833,47 @@ export class CompanyMailInboxController {
       organizationId: user.companyId,
       inboundMessageId: messageId,
       text: body.text,
+      cc: body.cc,
       bcc: body.bcc,
+      replyAll: body.replyAll,
       attachments: body.attachments,
     });
     return { ok: true, ...result };
+  }
+
+  @Post("messages/:messageId/snooze")
+  public async snoozeMessage(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("messageId") messageId: string,
+    @Body() body: SnoozeMailMessageRequestDto,
+  ) {
+    this.assertMailInboxWriter(user);
+    if (!body.snoozedUntil) {
+      throw new BadRequestException("snoozedUntil gerekli (ISO tarih).");
+    }
+    const until = new Date(body.snoozedUntil);
+    if (Number.isNaN(until.getTime()) || until.getTime() <= Date.now()) {
+      throw new BadRequestException("Geçerli gelecek bir tarih gerekli.");
+    }
+    const result = await this.mailOrganizationInboxService.snoozeMessage(
+      user.companyId,
+      messageId,
+      until,
+    );
+    return { ok: true, ...result };
+  }
+
+  @Post("messages/:messageId/unsnooze")
+  public async unsnoozeMessage(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("messageId") messageId: string,
+  ) {
+    this.assertMailInboxWriter(user);
+    await this.mailOrganizationInboxService.clearSnooze(
+      user.companyId,
+      messageId,
+    );
+    return { ok: true };
   }
 
   @Post("messages/:messageId/forward")
@@ -880,7 +920,8 @@ export class CompanyMailInboxController {
       folder === "all" ||
       folder === "archive" ||
       folder === "trash" ||
-      folder === "starred"
+      folder === "starred" ||
+      folder === "snoozed"
     ) {
       return folder;
     }

@@ -19,6 +19,7 @@ import {
   extractHtmlBodyFromMime,
   extractPlainBodyFromMime,
   normalizeEmailAddress,
+  parseAddressListFromMime,
   parseInReplyTo,
   parseInternetMessageId,
   parseMinimalMimeHeaders,
@@ -158,6 +159,12 @@ export class MailInboundIngestService {
     });
     const internetMessageId = rawMime ? parseInternetMessageId(rawMime) : null;
     const inReplyTo = rawMime ? parseInReplyTo(rawMime) : null;
+    const toRecipients = rawMime
+      ? parseAddressListFromMime(rawMime, "To")
+      : null;
+    const ccRecipients = rawMime
+      ? parseAddressListFromMime(rawMime, "Cc")
+      : null;
     const attachments =
       rawMime && rawMime.length > 0
         ? this.persistAttachments(
@@ -200,8 +207,11 @@ export class MailInboundIngestService {
         spamReason: verdict.spamReason,
         internetMessageId,
         inReplyTo,
+        toRecipients,
+        ccRecipients,
         attachments,
         readAt: null,
+        snoozedUntil: null,
         mailboxFolder: "inbox",
         maildirFilePath,
       }),

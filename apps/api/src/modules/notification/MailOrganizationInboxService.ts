@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -27,7 +28,8 @@ export type InboxFolder =
   | "all"
   | "archive"
   | "trash"
-  | "starred";
+  | "starred"
+  | "snoozed";
 export type MailboxFolder = "inbox" | "archive" | "trash";
 
 export type MailInboxSearchFilters = {
@@ -151,11 +153,14 @@ export class MailOrganizationInboxService {
     if (mailboxIds.length === 0) {
       return [];
     }
-    const rows = await this.inboundRepository.find({
-      where: this.whereForFolder(mailboxIds, folder, customFolderId),
-      order: { receivedAt: "DESC" },
-      take: limit,
-    });
+    const qb = this.inboundRepository.createQueryBuilder("m");
+    qb.where("m.mailboxId IN (:...mailboxIds)", { mailboxIds });
+    this.applyFolderToQueryBuilder(qb, folder, customFolderId);
+    this.applySnoozeListFilter(qb, folder);
+    const rows = await qb
+      .orderBy("m.receivedAt", "DESC")
+      .take(limit)
+      .getMany();
     return rows.map((row) => this.toListRow(row));
   }
 
@@ -188,6 +193,7 @@ export class MailOrganizationInboxService {
     const qb = this.inboundRepository.createQueryBuilder("m");
     qb.where("m.mailboxId IN (:...mailboxIds)", { mailboxIds });
     this.applyFolderToQueryBuilder(qb, folder, customFolderId);
+    this.applySnoozeListFilter(qb, folder);
 
     const term = filters.q?.trim() ?? "";
     if (term.length >= 2) {
@@ -586,6 +592,46 @@ export class MailOrganizationInboxService {
     return false;
   }
 
+  public async snoozeMessage(
+    organizationId: string,
+    messageId: string,
+    snoozedUntil: Date,
+  ): Promise<{ snoozedUntil: string }> {
+    const row = await this.assertMessageAccess(organizationId, messageId);
+    if (row.mailboxFolder === "trash") {
+      throw new BadRequestException("Çöpteki mesaj ertelenemez.");
+    }
+    row.snoozedUntil = snoozedUntil;
+    await this.inboundRepository.save(row);
+    return { snoozedUntil: snoozedUntil.toISOString() };
+  }
+
+  public async clearSnooze(
+    organizationId: string,
+    messageId: string,
+  ): Promise<void> {
+    const row = await this.assertMessageAccess(organizationId, messageId);
+    row.snoozedUntil = null;
+    await this.inboundRepository.save(row);
+  }
+
+  private applySnoozeListFilter(
+    qb: SelectQueryBuilder<MailInboundMessageEntity>,
+    folder: InboxFolder,
+  ): void {
+    const now = new Date();
+    if (folder === "snoozed") {
+      qb.andWhere("m.snoozedUntil > :snoozeNow", { snoozeNow: now });
+      return;
+    }
+    if (folder === "inbox" || folder === "all" || folder === "starred") {
+      qb.andWhere(
+        "(m.snoozedUntil IS NULL OR m.snoozedUntil <= :snoozeNow)",
+        { snoozeNow: now },
+      );
+    }
+  }
+
   private applyFolderToQueryBuilder(
     qb: SelectQueryBuilder<MailInboundMessageEntity>,
     folder: InboxFolder,
@@ -620,6 +666,15 @@ export class MailOrganizationInboxService {
       qb.andWhere("m.starredAt IS NOT NULL");
       qb.andWhere("m.mailboxFolder IN (:...starredMailFolders)", {
         starredMailFolders: ["inbox", "archive"],
+      });
+      return;
+    }
+    if (folder === "snoozed") {
+      qb.andWhere("m.spamStatus IN (:...inboxSpamStatuses)", {
+        inboxSpamStatuses: ["clean", "suspected"],
+      });
+      qb.andWhere("m.mailboxFolder = :mailFolderInbox", {
+        mailFolderInbox: "inbox",
       });
       return;
     }
