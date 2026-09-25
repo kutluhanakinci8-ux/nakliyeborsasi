@@ -5,6 +5,8 @@ type Props = {
 const ROWS = [
   { keys: "c", action: "Yeni mesaj (Yaz)" },
   { keys: "r", action: "Yanıtla (mesaj açıkken)" },
+  { keys: "a", action: "Tümüne yanıtla (mesaj açıkken)" },
+  { keys: "z", action: "1 saat ertele (mesaj açıkken)" },
   { keys: "/", action: "Arama kutusuna odaklan" },
   { keys: "e", action: "Arşivle (mesaj açıkken)" },
   { keys: "#", action: "Çöpe taşı (mesaj açıkken)" },

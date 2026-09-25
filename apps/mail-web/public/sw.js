@@ -1,5 +1,5 @@
 /* Lerta Posta — G6 offline shell (static + fallback). */
-const CACHE = "lerta-mail-shell-v2";
+const CACHE = "lerta-mail-shell-v3";
 const PRECACHE = ["/mail", "/manifest.webmanifest", "/offline.html"];
 
 self.addEventListener("install", (event) => {

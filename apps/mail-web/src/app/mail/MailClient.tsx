@@ -30,6 +30,7 @@ import {
   bulkSetMessageStarred,
   replyMail,
   snoozeMailMessage,
+  unsnoozeMailMessage,
   forwardMail,
   fetchMailInboxBranding,
   type MailInboxBranding,
@@ -127,6 +128,7 @@ export function MailClient() {
   const [composeShowCcBcc, setComposeShowCcBcc] = useState(false);
   const [forwardMessageId, setForwardMessageId] = useState<string | null>(null);
   const [replyBcc, setReplyBcc] = useState("");
+  const [replyAllMode, setReplyAllMode] = useState(false);
   const [composeSubject, setComposeSubject] = useState("");
   const [composeText, setComposeText] = useState("");
   const [composeFiles, setComposeFiles] = useState<File[]>([]);
@@ -411,10 +413,11 @@ export function MailClient() {
     }
   }
 
-  async function sendReply(replyAll = false) {
+  async function sendReply(replyAll?: boolean) {
     if (!accessToken || !selectedId || !replyText.trim()) {
       return;
     }
+    const useReplyAll = replyAll ?? replyAllMode;
     try {
       const attachments =
         replyFiles.length > 0
@@ -423,16 +426,17 @@ export function MailClient() {
       const replyResult = await replyMail(accessToken, selectedId, {
         text: replyText.trim(),
         bcc: replyBcc.trim() || undefined,
-        replyAll,
+        replyAll: useReplyAll,
         attachments,
         delaySeconds: 5,
       });
       setReplyText("");
       setReplyFiles([]);
+      setReplyAllMode(false);
       if (applyDelayedSend(replyResult)) {
         return;
       }
-      setToast("Yanıt gönderildi.");
+      setToast(useReplyAll ? "Tümüne yanıt gönderildi." : "Yanıt gönderildi.");
     } catch (error) {
       setToast(
         error instanceof Error ? error.message : "Yanıt gönderilemedi.",
@@ -1057,9 +1061,23 @@ export function MailClient() {
     },
     onReply: () => {
       if (detail) {
+        setReplyAllMode(false);
         document
           .querySelector<HTMLTextAreaElement>(".mail-reply textarea")
           ?.focus();
+      }
+    },
+    onReplyAll: () => {
+      if (detail) {
+        setReplyAllMode(true);
+        document
+          .querySelector<HTMLTextAreaElement>(".mail-reply textarea")
+          ?.focus();
+      }
+    },
+    onSnooze1h: () => {
+      if (detail && selectedId) {
+        void snoozeSelected(1);
       }
     },
     onFocusSearch: () => searchInputRef.current?.focus(),
@@ -1210,6 +1228,9 @@ export function MailClient() {
             onClick={() => switchView("snoozed")}
           >
             Ertelenen
+            {summary && (summary.snoozedCount ?? 0) > 0
+              ? ` (${summary.snoozedCount})`
+              : ""}
           </button>
           <button
             type="button"
@@ -1900,6 +1921,10 @@ export function MailClient() {
                 Kimden: {detail.fromAddress} ·{" "}
                 {new Date(detail.receivedAt).toLocaleString("tr-TR")}
                 {detail.spamReason ? ` · ${detail.spamReason}` : ""}
+                {detail.snoozedUntil &&
+                new Date(detail.snoozedUntil).getTime() > Date.now()
+                  ? ` · Ertelenmiş: ${new Date(detail.snoozedUntil).toLocaleString("tr-TR")}`
+                  : null}
               </div>
             </header>
             {detail.attachments.length > 0 ? (
@@ -1999,6 +2024,9 @@ export function MailClient() {
                   onChange={(e) => setReplyBcc(e.target.value)}
                   className="mail-reply-bcc"
                 />
+                {replyAllMode ? (
+                  <p className="mail-reply-all-hint">Tümüne yanıt modu (a)</p>
+                ) : null}
                 <textarea
                   placeholder="Yanıt yazın…"
                   value={replyText}
@@ -2016,6 +2044,25 @@ export function MailClient() {
                     {replyFiles.length} ek seçildi (en fazla 3, {maxAttachmentMb}{" "}
                     MB)
                   </p>
+                ) : null}
+                {detail.snoozedUntil &&
+                new Date(detail.snoozedUntil).getTime() > Date.now() &&
+                accessToken &&
+                selectedId ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      void unsnoozeMailMessage(accessToken, selectedId).then(
+                        () => {
+                          setToast("Erteleme kaldırıldı.");
+                          void refresh();
+                          void openMessage(selectedId);
+                        },
+                      )
+                    }
+                  >
+                    Ertelemeyi kaldır
+                  </button>
                 ) : null}
                 <button type="button" onClick={() => void sendReply(false)}>
                   Yanıtla

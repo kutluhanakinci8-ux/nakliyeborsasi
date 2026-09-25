@@ -544,6 +544,12 @@ a {
   max-width: 8rem;
 }
 
+.mail-reply-all-hint {
+  font-size: 0.85rem;
+  color: var(--accent);
+  margin: 0 0 6px;
+}
+
 .mail-rules-panel input,
 .mail-rules-panel select {
   display: block;

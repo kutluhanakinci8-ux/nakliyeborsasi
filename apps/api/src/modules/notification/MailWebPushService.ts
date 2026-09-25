@@ -82,6 +82,45 @@ export class MailWebPushService {
     await this.subscriptionRepository.delete({ userId, endpoint });
   }
 
+  public async notifySnoozeEnded(params: {
+    organizationId: string;
+    messageId: string;
+    subject: string;
+  }): Promise<void> {
+    if (!this.ensureVapid()) {
+      return;
+    }
+    const subs = await this.subscriptionRepository.find({
+      where: { organizationId: params.organizationId },
+    });
+    if (subs.length === 0) {
+      return;
+    }
+    const webBase =
+      process.env.MAIL_WEB_PUBLIC_URL?.trim() ?? "https://posta.lerta.com.tr";
+    const payload = JSON.stringify({
+      title: "Ertelenen posta",
+      body: params.subject.slice(0, 180),
+      url: `${webBase.replace(/\/$/, "")}/mail?message=${params.messageId}`,
+    });
+    for (const row of subs) {
+      try {
+        await webpush.sendNotification(
+          {
+            endpoint: row.endpoint,
+            keys: { p256dh: row.p256dh, auth: row.auth },
+          },
+          payload,
+        );
+      } catch (error) {
+        const status = (error as { statusCode?: number }).statusCode;
+        if (status === 404 || status === 410) {
+          await this.subscriptionRepository.delete({ id: row.id });
+        }
+      }
+    }
+  }
+
   public async notifyNewInbound(params: {
     organizationId: string;
     messageId: string;
