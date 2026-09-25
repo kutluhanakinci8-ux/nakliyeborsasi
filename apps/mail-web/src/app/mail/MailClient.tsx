@@ -36,6 +36,7 @@ import {
 } from "@/lib/mailApi";
 import { useMailSession } from "@/lib/session";
 import { MailSettingsPanel } from "./MailSettingsPanel";
+import { MailEmptyState } from "./MailEmptyState";
 
 type View =
   | "inbox"
@@ -598,6 +599,7 @@ export function MailClient() {
         >
           Yaz
         </button>
+        <div className="mail-nav-scroll">
         <nav className="mail-nav">
           <button
             type="button"
@@ -660,12 +662,14 @@ export function MailClient() {
             {drafts.length > 0 ? ` (${drafts.length})` : ""}
           </button>
         </nav>
+        </div>
+        <div className="mail-sidebar-footer">
         <button
           type="button"
           className="mail-nav-imap"
           onClick={() => setSettingsOpen(true)}
         >
-          Ayarlar
+          Ayarlar (IMAP · imza · 2FA)
         </button>
         {summary?.storageQuota ? (
           <div className="mail-storage-quota">
@@ -717,11 +721,24 @@ export function MailClient() {
             Çıkış
           </button>
         </div>
+        </div>
       </aside>
 
       <section className="mail-list">
         {view !== "drafts" ? (
           <div className="mail-search">
+            {canUseThreads && !searchActive ? (
+              <div className="mail-list-toolbar">
+                <label className="mail-thread-toggle">
+                  <input
+                    type="checkbox"
+                    checked={threadView}
+                    onChange={(e) => setThreadView(e.target.checked)}
+                  />
+                  Konuşma görünümü
+                </label>
+              </div>
+            ) : null}
             <input
               type="search"
               placeholder="Ara (konu, gönderen)…"
@@ -798,29 +815,20 @@ export function MailClient() {
                 {searchResults.length} sonuç
               </p>
             ) : null}
-            {canUseThreads && !searchActive ? (
-              <label
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  marginTop: 8,
-                  fontSize: "0.85rem",
-                  color: "var(--muted)",
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={threadView}
-                  onChange={(e) => setThreadView(e.target.checked)}
-                />
-                Konuşma görünümü
-              </label>
-            ) : null}
           </div>
         ) : null}
         {listItems.length === 0 ? (
-          <p className="mail-empty">Mesaj yok</p>
+          <MailEmptyState
+            variant={
+              searchActive
+                ? "search"
+                : view === "sent"
+                  ? "sent"
+                  : view === "drafts"
+                    ? "drafts"
+                    : "inbox"
+            }
+          />
         ) : (
           listItems.map((m) => (
             <div
@@ -996,7 +1004,7 @@ export function MailClient() {
             </div>
           </>
         ) : !detail ? (
-          <p className="mail-empty">Okumak için bir mesaj seçin</p>
+          <MailEmptyState variant="read" />
         ) : (
           <>
             <header className="mail-read-header">

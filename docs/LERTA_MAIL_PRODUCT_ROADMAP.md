@@ -88,6 +88,23 @@
 
 ---
 
+## Faz G — Webmail UX & rekabet (posta.lerta.com.tr)
+
+**Amaç:** Gmail/Outlook ile görünür özellik açığını faz faz kapatmak; önce güven (HTTPS) ve keşfedilebilirlik.
+
+| # | İş | Durum |
+|---|-----|--------|
+| G0 | HTTPS / sertifika | `verify-posta-https.sh` — **VPS doğrulama gerekli** |
+| G1 | Boş durum, sidebar, thread toggle | **uygulandı** — `MAIL_WEBMAIL_UX_ROADMAP.md` |
+| G2 | Toplu işlem, okundu, kısayollar | Planlı |
+| G3 | İlet, BCC | Planlı |
+| G4 | Tema, tenant logo, zengin yazım | Planlı |
+| G5–G6 | Yıldız, kurallar, push | Planlı |
+
+Rakip matrisi: `docs/MAIL_WEBMAIL_UX_BENCHMARK.md` (~52/100 bugün).
+
+---
+
 ## Faz E — Teslimat, güven, uyumluluk
 
 **Amaç:** Kurumsal satın alma ve KVKK sorularına hazır cevap.
