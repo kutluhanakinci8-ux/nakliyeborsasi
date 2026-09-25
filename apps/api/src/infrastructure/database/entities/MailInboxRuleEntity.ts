@@ -37,6 +37,9 @@ export class MailInboxRuleEntity {
   @Column({ type: "uuid", nullable: true })
   public actionCustomFolderId!: string | null;
 
+  @Column({ type: "boolean", default: false })
+  public actionArchive!: boolean;
+
   @CreateDateColumn({ type: "timestamptz" })
   public createdAt!: Date;
 

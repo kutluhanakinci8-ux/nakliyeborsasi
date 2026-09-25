@@ -6,6 +6,7 @@ import {
   deleteInboxRule,
   fetchCustomFolders,
   fetchInboxRules,
+  reorderInboxRules,
   updateInboxRule,
   type MailCustomFolder,
   type MailInboxRule,
@@ -23,6 +24,7 @@ export function MailRulesPanel({ accessToken }: Props) {
   const [fromContains, setFromContains] = useState("");
   const [subjectContains, setSubjectContains] = useState("");
   const [actionStar, setActionStar] = useState(false);
+  const [actionArchive, setActionArchive] = useState(false);
   const [actionFolderId, setActionFolderId] = useState("");
 
   async function reload() {
@@ -46,12 +48,14 @@ export function MailRulesPanel({ accessToken }: Props) {
         fromContains: fromContains.trim() || undefined,
         subjectContains: subjectContains.trim() || undefined,
         actionStar,
+        actionArchive,
         actionCustomFolderId: actionFolderId || null,
       });
       setName("");
       setFromContains("");
       setSubjectContains("");
       setActionStar(false);
+      setActionArchive(false);
       setActionFolderId("");
       await reload();
     } catch (err) {
@@ -69,8 +73,38 @@ export function MailRulesPanel({ accessToken }: Props) {
         {rules.length === 0 ? (
           <li className="mail-rules-empty">Henüz kural yok.</li>
         ) : (
-          rules.map((rule) => (
+          rules.map((rule, index) => (
             <li key={rule.id} className="mail-rules-item">
+              <div className="mail-rules-order">
+                <button
+                  type="button"
+                  disabled={index === 0}
+                  title="Yukarı"
+                  onClick={() => {
+                    const ids = rules.map((r) => r.id);
+                    [ids[index - 1], ids[index]] = [ids[index], ids[index - 1]];
+                    void reorderInboxRules(accessToken, ids).then(() =>
+                      reload(),
+                    );
+                  }}
+                >
+                  ↑
+                </button>
+                <button
+                  type="button"
+                  disabled={index === rules.length - 1}
+                  title="Aşağı"
+                  onClick={() => {
+                    const ids = rules.map((r) => r.id);
+                    [ids[index], ids[index + 1]] = [ids[index + 1], ids[index]];
+                    void reorderInboxRules(accessToken, ids).then(() =>
+                      reload(),
+                    );
+                  }}
+                >
+                  ↓
+                </button>
+              </div>
               <label>
                 <input
                   type="checkbox"
@@ -99,6 +133,7 @@ export function MailRulesPanel({ accessToken }: Props) {
                         ?.name ?? "—"
                     }`
                   : null}
+                {rule.actionArchive ? " · Arşivle" : null}
               </div>
               <button
                 type="button"
@@ -138,6 +173,14 @@ export function MailRulesPanel({ accessToken }: Props) {
           onChange={(e) => setActionStar(e.target.checked)}
         />
         Yıldızla
+      </label>
+      <label>
+        <input
+          type="checkbox"
+          checked={actionArchive}
+          onChange={(e) => setActionArchive(e.target.checked)}
+        />
+        Arşivle
       </label>
       <select
         value={actionFolderId}

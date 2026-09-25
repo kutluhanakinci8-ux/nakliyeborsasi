@@ -16,6 +16,11 @@ import {
   subscribeMailWebPush,
   unsubscribeMailWebPush,
 } from "@/lib/mailPush";
+import {
+  isMailNotifySoundEnabled,
+  playMailNotifyBeep,
+  setMailNotifySoundEnabled,
+} from "@/lib/mailNotifySound";
 
 type Props = {
   accessToken: string;
@@ -28,6 +33,7 @@ export function MailSettingsPanel({ accessToken, onClose }: Props) {
   >("imap");
   const [pushStatus, setPushStatus] = useState<string>("");
   const [pushConfigured, setPushConfigured] = useState(false);
+  const [notifySound, setNotifySound] = useState(false);
   const [totpEnabled, setTotpEnabled] = useState(false);
   const [totpSecret, setTotpSecret] = useState<string | null>(null);
   const [totpCode, setTotpCode] = useState("");
@@ -35,6 +41,10 @@ export function MailSettingsPanel({ accessToken, onClose }: Props) {
   const [error, setError] = useState("");
   const [newPassword, setNewPassword] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setNotifySound(isMailNotifySoundEnabled());
+  }, []);
 
   useEffect(() => {
     void (async () => {
@@ -139,6 +149,21 @@ export function MailSettingsPanel({ accessToken, onClose }: Props) {
               <p>Sunucuda push henüz yapılandırılmamış (VAPID anahtarları).</p>
             ) : null}
             {pushStatus ? <p>{pushStatus}</p> : null}
+            <label style={{ display: "block", marginTop: "0.75rem" }}>
+              <input
+                type="checkbox"
+                checked={notifySound}
+                onChange={(e) => {
+                  const on = e.target.checked;
+                  setNotifySound(on);
+                  setMailNotifySoundEnabled(on);
+                  if (on) {
+                    playMailNotifyBeep();
+                  }
+                }}
+              />
+              Yeni posta bildiriminde ses (sekme açıkken)
+            </label>
             <div className="compose-actions">
               <button type="button" onClick={onClose}>Kapat</button>
               <button
