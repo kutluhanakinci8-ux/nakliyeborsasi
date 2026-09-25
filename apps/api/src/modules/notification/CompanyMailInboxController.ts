@@ -58,6 +58,7 @@ import {
   UpdateMailCustomFolderRequestDto,
 } from "./MailCustomFolderRequestDto";
 import { MailInboxRuleService } from "./MailInboxRuleService";
+import { MailDelayedComposeService } from "./MailDelayedComposeService";
 import {
   CreateMailInboxRuleRequestDto,
   ReorderMailInboxRulesRequestDto,
@@ -78,6 +79,7 @@ export class CompanyMailInboxController {
     private readonly mailWebPushService: MailWebPushService,
     private readonly mailCustomFolderService: MailCustomFolderService,
     private readonly mailInboxRuleService: MailInboxRuleService,
+    private readonly mailDelayedComposeService: MailDelayedComposeService,
   ) {}
 
   @Get("rules")
@@ -705,8 +707,7 @@ export class CompanyMailInboxController {
     @Body() body: ComposeMailRequestDto,
   ) {
     this.assertMailInboxWriter(user);
-    const result = await this.mailMailboxComposeService.compose({
-      organizationId: user.companyId,
+    const payload = {
       to: body.to,
       cc: body.cc,
       bcc: body.bcc,
@@ -714,8 +715,35 @@ export class CompanyMailInboxController {
       text: body.text,
       html: body.html,
       attachments: body.attachments,
+    };
+    if (body.delaySeconds && body.delaySeconds > 0) {
+      const pending = await this.mailDelayedComposeService.schedule(
+        user.companyId,
+        payload,
+        body.delaySeconds,
+      );
+      return {
+        ok: true,
+        delayed: true,
+        pendingId: pending.id,
+        sendAt: pending.sendAt,
+      };
+    }
+    const result = await this.mailMailboxComposeService.compose({
+      organizationId: user.companyId,
+      ...payload,
     });
     return { ok: true, ...result };
+  }
+
+  @Post("compose/pending/:pendingId/cancel")
+  public async cancelDelayedCompose(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("pendingId") pendingId: string,
+  ) {
+    this.assertMailInboxWriter(user);
+    await this.mailDelayedComposeService.cancel(user.companyId, pendingId);
+    return { ok: true };
   }
 
   @Post("messages/:messageId/reply")

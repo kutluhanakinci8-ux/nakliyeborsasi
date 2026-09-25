@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
+  cancelDelayedCompose,
   composeMail,
   createDraft,
   deleteDraft,
@@ -12,6 +13,8 @@ import {
   fetchInbox,
   fetchCustomFolders,
   createCustomFolder,
+  deleteCustomFolder,
+  renameCustomFolder,
   bulkSetMessageCustomFolder,
   fetchInboxThreads,
   fetchMessage,
@@ -125,6 +128,11 @@ export function MailClient() {
     ComposeAttachment[]
   >([]);
   const [toast, setToast] = useState("");
+  const [pendingUndo, setPendingUndo] = useState<{
+    pendingId: string;
+    sendAt: number;
+  } | null>(null);
+  const [undoSecondsLeft, setUndoSecondsLeft] = useState(0);
   const [composeError, setComposeError] = useState("");
   const [sending, setSending] = useState(false);
   const [drafts, setDrafts] = useState<MailDraftItem[]>([]);
@@ -221,6 +229,44 @@ export function MailClient() {
       setComposeTemplates(data.templates);
     });
   }, [composeOpen, accessToken]);
+
+  useEffect(() => {
+    if (!pendingUndo) {
+      setUndoSecondsLeft(0);
+      return;
+    }
+    const tick = () => {
+      const left = Math.max(
+        0,
+        Math.ceil((pendingUndo.sendAt - Date.now()) / 1000),
+      );
+      setUndoSecondsLeft(left);
+      if (left <= 0) {
+        setPendingUndo(null);
+        setToast("Gönderildi.");
+        setView("sent");
+        void refresh();
+      }
+    };
+    tick();
+    const id = window.setInterval(tick, 400);
+    return () => window.clearInterval(id);
+  }, [pendingUndo, refresh]);
+
+  async function cancelPendingUndo() {
+    if (!accessToken || !pendingUndo) {
+      return;
+    }
+    try {
+      await cancelDelayedCompose(accessToken, pendingUndo.pendingId);
+      setPendingUndo(null);
+      setToast("Gönderim iptal edildi.");
+    } catch (error) {
+      setToast(
+        error instanceof Error ? error.message : "Geri alınamadı.",
+      );
+    }
+  }
 
   const searchActive = useMemo(() => {
     if (searchQuery.trim().length >= 2) {
@@ -426,6 +472,7 @@ export function MailClient() {
         : undefined;
     setComposeError("");
     setSending(true);
+    let scheduledUndo = false;
     try {
       if (editingDraftId) {
         const fileAttachments =
@@ -454,7 +501,7 @@ export function MailClient() {
             attachments: attachments.length > 0 ? attachments : undefined,
           });
         } else {
-          await composeMail(accessToken, {
+          const result = await composeMail(accessToken, {
             to: composeTo.trim(),
             cc: composeCc.trim() || undefined,
             bcc: composeBcc.trim() || undefined,
@@ -462,7 +509,16 @@ export function MailClient() {
             text: composeText,
             html: outboundHtml,
             attachments: attachments.length > 0 ? attachments : undefined,
+            delaySeconds: 5,
           });
+          if ("delayed" in result && result.delayed) {
+            scheduledUndo = true;
+            setPendingUndo({
+              pendingId: result.pendingId,
+              sendAt: new Date(result.sendAt).getTime(),
+            });
+            setToast("");
+          }
         }
       }
       setComposeOpen(false);
@@ -472,12 +528,14 @@ export function MailClient() {
       setComposeBcc("");
       setComposeSubject("");
       setComposeText("");
-    setComposeFiles([]);
-    setComposeStoredAttachments([]);
-    setEditingDraftId(null);
-      setToast("Gönderildi.");
-      setView("sent");
-      void refresh();
+      setComposeFiles([]);
+      setComposeStoredAttachments([]);
+      setEditingDraftId(null);
+      if (!scheduledUndo) {
+        setToast("Gönderildi.");
+        setView("sent");
+        void refresh();
+      }
       void refreshDrafts();
     } catch (error) {
       setComposeError(
@@ -1151,23 +1209,84 @@ export function MailClient() {
             </button>
           </div>
           {customFolders.map((f) => (
-            <button
-              key={f.id}
-              type="button"
-              className={
-                view === "inbox" && activeCustomFolderId === f.id
-                  ? "active"
-                  : ""
-              }
-              onClick={() => {
-                setActiveCustomFolderId(f.id);
-                switchView("inbox");
-                void refresh();
-              }}
-            >
-              {f.name}
-              {f.messageCount > 0 ? ` (${f.messageCount})` : ""}
-            </button>
+            <div key={f.id} className="mail-custom-folder-row">
+              <button
+                type="button"
+                className={
+                  view === "inbox" && activeCustomFolderId === f.id
+                    ? "active"
+                    : ""
+                }
+                onClick={() => {
+                  setActiveCustomFolderId(f.id);
+                  switchView("inbox");
+                  void refresh();
+                }}
+              >
+                {f.name}
+                {f.messageCount > 0 ? ` (${f.messageCount})` : ""}
+              </button>
+              <button
+                type="button"
+                className="mail-custom-folder-action"
+                title="Yeniden adlandır"
+                onClick={() => {
+                  const next = window.prompt("Yeni klasör adı", f.name);
+                  if (!next?.trim() || !accessToken || next.trim() === f.name) {
+                    return;
+                  }
+                  void renameCustomFolder(accessToken, f.id, next.trim()).then(
+                    () => {
+                      setToast("Klasör güncellendi.");
+                      void refreshCustomFolders();
+                    },
+                    (error: unknown) => {
+                      setToast(
+                        error instanceof Error
+                          ? error.message
+                          : "Klasör güncellenemedi.",
+                      );
+                    },
+                  );
+                }}
+              >
+                ✎
+              </button>
+              <button
+                type="button"
+                className="mail-custom-folder-action mail-custom-folder-delete"
+                title="Klasörü sil"
+                onClick={() => {
+                  if (
+                    !accessToken ||
+                    !window.confirm(
+                      `"${f.name}" silinsin mi? İçindeki postalar Gelen'e döner.`,
+                    )
+                  ) {
+                    return;
+                  }
+                  void deleteCustomFolder(accessToken, f.id).then(
+                    () => {
+                      if (activeCustomFolderId === f.id) {
+                        setActiveCustomFolderId(null);
+                      }
+                      setToast("Klasör silindi.");
+                      void refreshCustomFolders();
+                      void refresh();
+                    },
+                    (error: unknown) => {
+                      setToast(
+                        error instanceof Error
+                          ? error.message
+                          : "Klasör silinemedi.",
+                      );
+                    },
+                  );
+                }}
+              >
+                ×
+              </button>
+            </div>
           ))}
         </nav>
         </div>
@@ -1541,7 +1660,17 @@ export function MailClient() {
       </section>
 
       <section className="mail-read">
-        {toast ? (
+        {pendingUndo ? (
+          <div className="mail-undo-bar">
+            <span>
+              Gönderiliyor… {undoSecondsLeft > 0 ? `${undoSecondsLeft}s` : ""}
+            </span>
+            <button type="button" onClick={() => void cancelPendingUndo()}>
+              Geri al
+            </button>
+          </div>
+        ) : null}
+        {toast && !pendingUndo ? (
           <p
             style={{
               padding: 12,

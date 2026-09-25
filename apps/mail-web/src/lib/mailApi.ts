@@ -379,6 +379,18 @@ export async function createCustomFolder(accessToken: string, name: string) {
   );
 }
 
+export async function renameCustomFolder(
+  accessToken: string,
+  folderId: string,
+  name: string,
+) {
+  return apiFetch<{ folder: MailCustomFolder }>(
+    accessToken,
+    `company/mail-inbox/custom-folders/${folderId}`,
+    { method: "PATCH", body: JSON.stringify({ name }) },
+  );
+}
+
 export async function deleteCustomFolder(
   accessToken: string,
   folderId: string,
@@ -656,6 +668,15 @@ export async function fetchMailInboxBranding(accessToken: string) {
   );
 }
 
+export type ComposeMailResult =
+  | { ok: true; sentId: string; smtpMessageId: string | null }
+  | {
+      ok: true;
+      delayed: true;
+      pendingId: string;
+      sendAt: string;
+    };
+
 export async function composeMail(
   accessToken: string,
   body: {
@@ -666,11 +687,21 @@ export async function composeMail(
     text: string;
     html?: string;
     attachments?: ComposeAttachment[];
+    delaySeconds?: number;
   },
 ) {
-  await apiFetch(accessToken, "company/mail-inbox/compose", {
+  return apiFetch<ComposeMailResult>(accessToken, "company/mail-inbox/compose", {
     method: "POST",
     body: JSON.stringify(body),
+  });
+}
+
+export async function cancelDelayedCompose(
+  accessToken: string,
+  pendingId: string,
+) {
+  await apiFetch(accessToken, `company/mail-inbox/compose/pending/${pendingId}/cancel`, {
+    method: "POST",
   });
 }
 

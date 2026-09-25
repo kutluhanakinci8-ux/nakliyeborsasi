@@ -50,7 +50,7 @@
 | Push / ses bildirimi | ✗ | ✓ | ✓ | D7 |
 | Karanlık tema | ✗ | ✓ | ✓ | G4 |
 | Kurumsal logo (tenant) | ✗ | kısmi | ✓ | G4 |
-| Geri al (undo send) | ✗ | ✓ | ✓ | G5 |
+| Geri al (undo send) | ✓ (5s) | ✓ | ✓ | G5 |
 | Harici istemci (Thunderbird) | IMAP | ✓ | ✓ | Dokümantasyon |
 
 ---
