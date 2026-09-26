@@ -39,6 +39,6 @@ if [[ -s "${TMP_V}" ]]; then
 fi
 if [[ -s "${TMP_A}" ]]; then
   mv "${TMP_A}" "${ALIASES_PATH}"
-  postmap "${ALIASES_PATH}"
+  postalias "${ALIASES_PATH}"
 fi
 rm -f "${TMP_V}" "${TMP_A}"

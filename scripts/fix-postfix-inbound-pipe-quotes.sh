@@ -17,7 +17,7 @@ postconf -e "virtual_alias_maps = hash:${VIRTUAL_PATH}"
 postconf -e "alias_maps = hash:/etc/aliases, hash:${ALIASES_PATH}"
 
 touch "${ALIASES_PATH}"
-postmap "${ALIASES_PATH}" 2>/dev/null || true
+postalias "${ALIASES_PATH}" 2>/dev/null || true
 
 if [[ -x "${INSTALL_DIR}/scripts/rebuild-postfix-inbound-from-virtual.sh" ]]; then
   bash "${INSTALL_DIR}/scripts/rebuild-postfix-inbound-from-virtual.sh"

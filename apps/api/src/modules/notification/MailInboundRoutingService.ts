@@ -148,7 +148,7 @@ export class MailInboundRoutingService {
     writeFileSync(aliasesPath, aliasesBody, { encoding: "utf8" });
     try {
       execFileSync("postmap", [path], { stdio: "pipe" });
-      execFileSync("postmap", [aliasesPath], { stdio: "pipe" });
+      execFileSync("postalias", [aliasesPath], { stdio: "pipe" });
       execFileSync("systemctl", ["reload", "postfix"], { stdio: "pipe" });
     } catch (error) {
       this.logger.warn(`postmap/postfix reload: ${String(error)}`);
