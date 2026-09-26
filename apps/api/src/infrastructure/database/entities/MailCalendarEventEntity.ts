@@ -37,6 +37,12 @@ export class MailCalendarEventEntity {
   @Column({ name: "created_by_user_id", type: "uuid", nullable: true })
   public createdByUserId!: string | null;
 
+  @Column({ name: "ics_feed_id", type: "uuid", nullable: true })
+  public icsFeedId!: string | null;
+
+  @Column({ name: "external_uid", type: "varchar", length: 320, nullable: true })
+  public externalUid!: string | null;
+
   @CreateDateColumn({ name: "created_at", type: "timestamptz" })
   public createdAt!: Date;
 

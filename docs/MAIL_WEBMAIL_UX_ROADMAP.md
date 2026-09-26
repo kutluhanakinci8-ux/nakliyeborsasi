@@ -114,6 +114,11 @@ sudo certbot certonly --webroot -w /var/www/certbot -d posta.lerta.com.tr
 - Ay ızgarası, gün seçimi ile etkinlik listesi
 - `POST contacts/import` (`.vcf` yükle)
 
+## D6 — Harici iCal URL (uygulandı)
+
+- `calendar/feeds` CRUD + `sync` (HTTPS, UID ile upsert)
+- [MAIL_CALDAV_EXTERNAL.md](./MAIL_CALDAV_EXTERNAL.md)
+
 ## G5 — Kurallar v2 (uygulandı)
 
 - Okundu işaretle ve çöpe taşı işlemleri

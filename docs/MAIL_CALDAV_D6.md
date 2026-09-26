@@ -44,9 +44,13 @@ bash scripts/apply-mail-d6-calendar-contacts-schema.sh /var/www/nakliyeborsasi
 - Takvim ay ızgarası + gün filtresi
 - Kişi `.vcf` içe aktarma
 
+## Harici iCal URL (uygulandı)
+
+- [MAIL_CALDAV_EXTERNAL.md](./MAIL_CALDAV_EXTERNAL.md) — HTTPS feed + senkron
+
 ## Sonraki (plan)
 
-- Harici CalDAV/CardDAV hesap bağlama (Nextcloud vb.)
+- Tam CalDAV/CardDAV hesap bağlama (kimlik bilgisi + yazma)
 - Tekrarlayan etkinlikler, çok günlü etkinlik çubuğu
 
 ## İlgili

@@ -1,4 +1,5 @@
 export type ParsedIcalEvent = {
+  uid: string | null;
   title: string;
   description: string | null;
   location: string | null;
@@ -73,6 +74,7 @@ export function parseIcalEvents(icsText: string): ParsedIcalEvent[] {
   let dtStart: string | null = null;
   let dtEnd: string | null = null;
   let allDay = false;
+  let uid: string | null = null;
 
   for (const line of lines) {
     if (line === "BEGIN:VEVENT") {
@@ -83,6 +85,7 @@ export function parseIcalEvents(icsText: string): ParsedIcalEvent[] {
       dtStart = null;
       dtEnd = null;
       allDay = false;
+      uid = null;
       continue;
     }
     if (line === "END:VEVENT" && inEvent) {
@@ -100,6 +103,7 @@ export function parseIcalEvents(icsText: string): ParsedIcalEvent[] {
         endsAt = new Date(startsAt.getTime() + 24 * 60 * 60 * 1000);
       }
       events.push({
+        uid: uid?.trim() || null,
         title: title.trim() || "Etkinlik",
         description,
         location,
@@ -129,6 +133,8 @@ export function parseIcalEvents(icsText: string): ParsedIcalEvent[] {
       dtStart = value;
     } else if (key === "DTEND") {
       dtEnd = value;
+    } else if (key === "UID") {
+      uid = value;
     }
   }
   return events;

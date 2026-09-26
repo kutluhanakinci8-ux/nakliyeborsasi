@@ -88,6 +88,36 @@ export class CreateMailOrgContactRequestDto {
   public notes?: string;
 }
 
+export class CreateMailCalendarIcsFeedRequestDto {
+  @IsString()
+  @MaxLength(120)
+  public label!: string;
+
+  @IsString()
+  @MaxLength(2000)
+  public feedUrl!: string;
+
+  @IsOptional()
+  @IsBoolean()
+  public enabled?: boolean;
+}
+
+export class UpdateMailCalendarIcsFeedRequestDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  public label?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  public feedUrl?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  public enabled?: boolean;
+}
+
 export class ImportMailContactsVcfRequestDto {
   @IsString()
   @MaxLength(500_000)
