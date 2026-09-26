@@ -29,6 +29,7 @@ import { MailOrganizationOperatorStateEntity } from "../../infrastructure/databa
 import { PlatformMailTenantAdminService } from "./PlatformMailTenantAdminService";
 import { MailTenantSuspensionService } from "./MailTenantSuspensionService";
 import { MailPilotOnboardingService } from "./MailPilotOnboardingService";
+import { MailAddressOnboardingService } from "./MailAddressOnboardingService";
 import { CompanySubscriptionEntity } from "../../infrastructure/database/entities/CompanySubscriptionEntity";
 import { MailTenantDnsVerificationScheduler } from "./MailTenantDnsVerificationScheduler";
 import { MailOrganizationSendRateService } from "./MailOrganizationSendRateService";
@@ -284,6 +285,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     PlatformMailTenantAdminService,
     MailTenantSuspensionService,
     MailPilotOnboardingService,
+    MailAddressOnboardingService,
     MailWebPushService,
     MailCustomFolderService,
     MailInboxRuleService,

@@ -37,12 +37,14 @@ import {
 } from "./MailIdentityAuditService";
 
 import {
+  ClaimMailAddressDto,
   ProvisionMailIdentityDto,
   PilotQuickStartDto,
   RegisterCustomDomainDto,
   SelectMailPlanRequestDto,
 } from "./CompanyMailIdentityRequestDto";
 import { MailPilotOnboardingService } from "./MailPilotOnboardingService";
+import { MailAddressOnboardingService } from "./MailAddressOnboardingService";
 import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
 import { MailOrganizationBrandingService } from "./MailOrganizationBrandingService";
 import { UpdateMailBrandingRequestDto } from "./MailBrandingRequestDto";
@@ -83,6 +85,7 @@ export class CompanyMailIdentityController {
     private readonly mailIdentityAuditService: MailIdentityAuditService,
     private readonly mailSaasSubscriptionService: MailSaasSubscriptionService,
     private readonly mailPilotOnboardingService: MailPilotOnboardingService,
+    private readonly mailAddressOnboardingService: MailAddressOnboardingService,
     private readonly mailOrganizationBrandingService: MailOrganizationBrandingService,
     private readonly mailOrganizationIntegrationService: MailOrganizationIntegrationService,
     private readonly mailAddressAliasService: MailAddressAliasService,
@@ -93,6 +96,33 @@ export class CompanyMailIdentityController {
     void this.mailInboundRoutingService.writePostfixVirtualMap().catch(() => {
       /* best-effort */
     });
+  }
+
+  @Post("onboarding/claim-address")
+  public async claimMailAddress(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: ClaimMailAddressDto,
+  ) {
+    this.assertMailIdentityManager(user);
+    const result = await this.mailAddressOnboardingService.claimDesiredAddress({
+      organizationId: user.companyId,
+      desiredAddress: body.desiredAddress,
+      displayName: body.displayName,
+    });
+    this.refreshInboundRouting();
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.SenderProvisioned,
+      {
+        organizationId: user.companyId,
+        fromAddress: result.fromAddress,
+        channel: result.channel,
+        publicDnsReady: result.publicDnsReady,
+        onboarding: "claim-address",
+      },
+      "/company/mail-identity/onboarding/claim-address",
+    );
+    return { message: "OK", ...result };
   }
 
   @Post("pilot/quick-start")
