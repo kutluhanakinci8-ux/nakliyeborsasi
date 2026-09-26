@@ -1,22 +1,30 @@
-/* Lerta Posta — G6 offline shell (static + fallback). */
-const CACHE = "lerta-mail-shell-v3";
-const PRECACHE = ["/mail", "/manifest.webmanifest", "/offline.html"];
+/* Lerta Posta — G6 offline shell (network-first; deploy sonrası eski UI önlenir). */
+const CACHE = "lerta-mail-shell-v5";
+const PRECACHE = ["/manifest.webmanifest", "/offline.html"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(PRECACHE)).then(() => self.skipWaiting()),
+    caches
+      .open(CACHE)
+      .then((cache) => cache.addAll(PRECACHE))
+      .then(() => self.skipWaiting()),
   );
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((key) => key.startsWith("lerta-mail-shell-") && key !== CACHE)
-          .map((key) => caches.delete(key)),
-      ),
-    ).then(() => self.clients.claim()),
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(
+          keys
+            .filter(
+              (key) => key.startsWith("lerta-mail-shell-") && key !== CACHE,
+            )
+            .map((key) => caches.delete(key)),
+        ),
+      )
+      .then(() => self.clients.claim()),
   );
 });
 
@@ -34,9 +42,21 @@ self.addEventListener("fetch", (event) => {
   }
   if (request.mode === "navigate") {
     event.respondWith(
-      fetch(request).catch(() =>
-        caches.match("/offline.html").then((cached) => cached ?? caches.match("/mail")),
-      ),
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const copy = response.clone();
+            void caches.open(CACHE).then((cache) => cache.put(request, copy));
+          }
+          return response;
+        })
+        .catch(() =>
+          caches
+            .match(request)
+            .then(
+              (cached) => cached ?? caches.match("/offline.html"),
+            ),
+        ),
     );
     return;
   }
@@ -46,17 +66,15 @@ self.addEventListener("fetch", (event) => {
     url.pathname.endsWith(".png")
   ) {
     event.respondWith(
-      caches.open(CACHE).then((cache) =>
-        cache.match(request).then((cached) =>
-          cached ??
-          fetch(request).then((response) => {
-            if (response.ok) {
-              void cache.put(request, response.clone());
-            }
-            return response;
-          }),
-        ),
-      ),
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const copy = response.clone();
+            void caches.open(CACHE).then((cache) => cache.put(request, copy));
+          }
+          return response;
+        })
+        .catch(() => caches.match(request)),
     );
   }
 });
