@@ -4693,6 +4693,32 @@ button.btn-secondary {
   padding: 1rem 1.25rem;
 }
 
+.messaging-mail-embed {
+  width: 100%;
+  min-height: min(78vh, 900px);
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #f8fafc;
+}
+
+.messaging-mail-embed-frame {
+  width: 100%;
+  height: min(78vh, 900px);
+  border: 0;
+  display: block;
+}
+
+.messaging-email-hint {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+  font-size: 0.9rem;
+}
+
 .chat-layout {
   display: grid;
   grid-template-columns: 320px 1fr;

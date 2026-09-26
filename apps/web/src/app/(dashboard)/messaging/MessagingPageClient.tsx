@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { OrganizationMailInboxPanel } from "../../../components/account/OrganizationMailInboxPanel";
+import { MessagingMailWebEmbed } from "../../../components/messaging/MessagingMailWebEmbed";
 import { EmptyState } from "../../../components/EmptyState";
 import { ModulePageShell } from "../../../components/ModulePageShell";
 import { useWebSession } from "../../../context/WebSessionProvider";
@@ -156,7 +157,7 @@ export function MessagingPageClient() {
   const pageLead =
     mode === "email"
       ? "Lerta Post kurumsal kutunuz — gelen ve giden posta, aynı oturumda. Adresleriniz *.post.lerta.com.tr uzantılı teknik formatta görünür."
-      : "Taşıyıcı ve yük veren firmalar arasında güvenli sohbet. Marketplace’te «Mesaj» ile sohbet başlatın.";
+      : "Taşıyıcı ve yük veren firmalar arasında güvenli sohbet. Kurumsal Lerta Post kutusu için üstte «Kurumsal e-posta» sekmesine geçin.";
 
   return (
     <ModulePageShell
@@ -214,11 +215,34 @@ export function MessagingPageClient() {
       {errorMessage ? <p className="error banner error--light">{errorMessage}</p> : null}
 
       {mode === "email" ? (
-        <OrganizationMailInboxPanel
-          variant="messaging"
-          primaryAddressDisplay="technical"
-        />
+        <>
+          <MessagingMailWebEmbed />
+          <details className="module-panel messaging-mail-panel" style={{ marginTop: "1rem" }}>
+            <summary className="module-panel-title" style={{ cursor: "pointer" }}>
+              Hızlı gelen kutusu (uygulama içi)
+            </summary>
+            <OrganizationMailInboxPanel
+              variant="messaging"
+              primaryAddressDisplay="technical"
+            />
+          </details>
+        </>
       ) : (
+        <>
+          <p className="messaging-email-hint">
+            <strong>Kurumsal e-posta</strong> (Lerta Post,{" "}
+            <code>*.post.lerta.com.tr</code>) bu sayfada — yeşil{" "}
+            <button
+              type="button"
+              className="btn-accent"
+              style={{ display: "inline", padding: "0.2rem 0.6rem", marginLeft: "0.25rem" }}
+              onClick={() => switchMode("email")}
+            >
+              Kurumsal e-posta
+            </button>{" "}
+            sekmesine tıklayın veya{" "}
+            <a href="/messaging?tab=email">/messaging?tab=email</a> adresini açın.
+          </p>
         <div className="chat-layout">
           <aside className="chat-sidebar module-panel">
             <h2 className="module-panel-title">Sohbetler</h2>
@@ -319,6 +343,7 @@ export function MessagingPageClient() {
             </div>
           </section>
         </div>
+        </>
       )}
     </ModulePageShell>
   );
