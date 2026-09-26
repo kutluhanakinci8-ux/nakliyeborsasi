@@ -12,6 +12,7 @@ import { MailAddressAliasService } from "./MailAddressAliasService";
 export type InboundRoutingEntry = {
   emailAddress: string;
   virtualAliasLine: string;
+  localAliasLine: string;
   organizationId: string;
   domain: string;
 };
@@ -40,6 +41,16 @@ export class MailInboundRoutingService {
       .split(",")
       .map((d) => d.trim().toLowerCase())
       .filter(Boolean);
+  }
+
+  /** Postfix virtual → local stub (pipe /etc/aliases üzerinden). */
+  public inboundLocalStub(emailAddress: string): string {
+    const slug = emailAddress
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 120);
+    return `lerta-inbound-${slug || "addr"}`;
   }
 
   public async buildRoutingSnapshot(): Promise<{
@@ -74,11 +85,13 @@ export class MailInboundRoutingService {
         continue;
       }
       seen.add(emailAddress);
+      const stub = this.inboundLocalStub(emailAddress);
       entries.push({
         emailAddress,
         organizationId: sender.organizationId,
         domain: sender.mailDomain.domain,
-        virtualAliasLine: `${emailAddress}\t"|${pipeScript} ${emailAddress}"`,
+        virtualAliasLine: `${emailAddress}\t${stub}`,
+        localAliasLine: `${stub}: "|${pipeScript} ${emailAddress}"`,
       });
     }
     const aliasRows =
@@ -91,11 +104,13 @@ export class MailInboundRoutingService {
         continue;
       }
       seen.add(alias.aliasEmail);
+      const stub = this.inboundLocalStub(alias.aliasEmail);
       entries.push({
         emailAddress: alias.aliasEmail,
         organizationId: alias.organizationId,
         domain: alias.domain,
-        virtualAliasLine: `${alias.aliasEmail}\t"|${pipeScript} ${alias.aliasEmail}"`,
+        virtualAliasLine: `${alias.aliasEmail}\t${stub}`,
+        localAliasLine: `${stub}: "|${pipeScript} ${alias.aliasEmail}"`,
       });
     }
     entries.sort((a, b) => a.emailAddress.localeCompare(b.emailAddress));
@@ -113,8 +128,13 @@ export class MailInboundRoutingService {
     const path =
       this.configService.get<string>("MAIL_INBOUND_POSTFIX_VIRTUAL_PATH")?.trim() ||
       "/etc/postfix/lerta-inbound-virtual";
+    const aliasesPath =
+      this.configService
+        .get<string>("MAIL_INBOUND_POSTFIX_ALIASES_PATH")
+        ?.trim() || "/etc/postfix/lerta-inbound-aliases";
     const snapshot = await this.buildRoutingSnapshot();
-    const body = `${snapshot.entries.map((e) => e.virtualAliasLine).join("\n")}\n`;
+    const virtualBody = `${snapshot.entries.map((e) => e.virtualAliasLine).join("\n")}\n`;
+    const aliasesBody = `${snapshot.entries.map((e) => e.localAliasLine).join("\n")}\n`;
     if (!apply) {
       return {
         written: false,
@@ -124,9 +144,11 @@ export class MailInboundRoutingService {
           "MAIL_INBOUND_APPLY_POSTFIX=true değil — yalnızca önizleme (dosya yazılmadı).",
       };
     }
-    writeFileSync(path, body, { encoding: "utf8" });
+    writeFileSync(path, virtualBody, { encoding: "utf8" });
+    writeFileSync(aliasesPath, aliasesBody, { encoding: "utf8" });
     try {
       execFileSync("postmap", [path], { stdio: "pipe" });
+      execFileSync("postmap", [aliasesPath], { stdio: "pipe" });
       execFileSync("systemctl", ["reload", "postfix"], { stdio: "pipe" });
     } catch (error) {
       this.logger.warn(`postmap/postfix reload: ${String(error)}`);
@@ -141,7 +163,8 @@ export class MailInboundRoutingService {
       written: true,
       path,
       entryCount: snapshot.entries.length,
-      detail: "Postfix virtual_alias_maps güncellendi.",
+      detail:
+        "Postfix virtual_alias_maps + lerta-inbound-aliases güncellendi (pipe → API).",
     };
   }
 

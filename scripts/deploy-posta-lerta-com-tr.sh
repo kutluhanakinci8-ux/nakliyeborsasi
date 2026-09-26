@@ -56,6 +56,9 @@ if [[ -x "$INSTALL_DIR/scripts/apply-lerta-mail-subscription-plans.sh" ]]; then
   bash "$INSTALL_DIR/scripts/apply-lerta-mail-subscription-plans.sh" "$INSTALL_DIR" || true
 fi
 
+if [[ -x "$INSTALL_DIR/scripts/fix-postfix-inbound-pipe-quotes.sh" ]]; then
+  bash "$INSTALL_DIR/scripts/fix-postfix-inbound-pipe-quotes.sh" || true
+fi
 bash "$INSTALL_DIR/scripts/restart-api.sh" "$INSTALL_DIR"
 bash "$INSTALL_DIR/scripts/restart-mail-web.sh" "$INSTALL_DIR" 3012 "https://posta.lerta.com.tr/api/v1"
 bash "$INSTALL_DIR/scripts/restart-mail-console.sh" "$INSTALL_DIR" 3013 "https://yonetim.lerta.com.tr/api/v1"
