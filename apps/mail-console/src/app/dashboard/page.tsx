@@ -34,6 +34,8 @@ export default function DashboardPage() {
   const { accessToken } = useConsoleSession();
   const [operator, setOperator] = useState(false);
   const [fromAddress, setFromAddress] = useState<string | null>(null);
+  const [displayAddress, setDisplayAddress] = useState<string | null>(null);
+  const [mailChannel, setMailChannel] = useState<string | null>(null);
   const [tenantDomain, setTenantDomain] = useState(MAIL_SAAS_TENANT_DOMAIN);
   const [verified, setVerified] = useState(false);
   const [platformDnsReady, setPlatformDnsReady] = useState(false);
@@ -131,6 +133,10 @@ export default function DashboardPage() {
       try {
         const data = await fetchMailIdentity(accessToken);
         setFromAddress(data.identity.fromAddress);
+        setDisplayAddress(
+          data.identity.displayAddress ?? data.identity.vanityAddress ?? data.identity.fromAddress,
+        );
+        setMailChannel(data.identity.channel);
         setVerified(data.identity.domainVerified);
         setTenantDomain(data.identity.domain);
         setPlatformDnsReady(data.identity.platformDnsReady);
@@ -239,7 +245,8 @@ export default function DashboardPage() {
   }
 
   const isCorporate = planCode === CORPORATE_PLAN_CODE;
-  const customVerified = customDomainStatus === "verified";
+  const isLertaPost = mailChannel === "instant_post";
+  const customVerified = customDomainStatus === "verified" || isLertaPost;
   const onboardingStep = isCorporate
     ? !customDomain
       ? 1
@@ -262,7 +269,7 @@ export default function DashboardPage() {
     <ConsoleShell operator={operator}>
       <h1 style={{ marginTop: 0 }}>Özet</h1>
 
-      {isCorporate && !customVerified ? (
+      {isCorporate && !customVerified && !isLertaPost ? (
         <div className="card" style={{ borderColor: "var(--accent)" }}>
           <h2 style={{ marginTop: 0 }}>Özel domain gerekli</h2>
           <p style={{ margin: 0, color: "var(--muted)" }}>
@@ -511,9 +518,20 @@ export default function DashboardPage() {
       <div className="card">
         <h2>Kurumsal posta kutusu</h2>
         <p>
-          Adres: <strong>{fromAddress ?? "Henüz tanımlı değil"}</strong>
+          Adres:{" "}
+          <strong>{displayAddress ?? fromAddress ?? "Henüz tanımlı değil"}</strong>
         </p>
+        {isLertaPost && fromAddress && displayAddress !== fromAddress ? (
+          <p style={{ color: "var(--muted)", fontSize: 14, marginTop: 4 }}>
+            Teknik: <code>{fromAddress}</code>
+          </p>
+        ) : null}
         <p>
+          {isLertaPost ? (
+            <span className="badge ok" style={{ marginRight: 8 }}>
+              Lerta Posta
+            </span>
+          ) : null}
           Domain durumu:{" "}
           <span className={`badge ${verified ? "ok" : "pending"}`}>
             {verified ? "Doğrulandı" : "Kurulum gerekli"}
@@ -530,7 +548,7 @@ export default function DashboardPage() {
         </p>
         <p style={{ marginTop: 16 }}>
           <Link className="btn secondary" href="/domain">
-            Özel domain
+            {isLertaPost ? "Posta adresi" : "Özel domain"}
           </Link>
           <a
             className="btn"

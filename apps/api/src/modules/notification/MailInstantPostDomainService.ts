@@ -12,9 +12,14 @@ import {
   isInstantPostMailDomain,
 } from "@nakliyeborsasi/core";
 import { MailDomainEntity } from "../../infrastructure/database/entities/MailDomainEntity";
+import { MailImapCredentialEntity } from "../../infrastructure/database/entities/MailImapCredentialEntity";
+import { MailMailboxEntity } from "../../infrastructure/database/entities/MailMailboxEntity";
 import { MailSenderIdentityEntity } from "../../infrastructure/database/entities/MailSenderIdentityEntity";
 import { MailDomainApplicationService } from "./MailDomainApplicationService";
 import { MailDomainDnsVerificationService } from "./MailDomainDnsVerificationService";
+import { MailImapAccessService } from "./MailImapAccessService";
+import { MailImapMaildirService } from "./MailImapMaildirService";
+import { MailInboundRoutingService } from "./MailInboundRoutingService";
 import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
 
 const INSTANT_POST_DOMAIN_TYPES = ["instant_post", "instant_box"] as const;
@@ -30,6 +35,13 @@ export class MailInstantPostDomainService {
     private readonly domainRepository: Repository<MailDomainEntity>,
     @InjectRepository(MailSenderIdentityEntity)
     private readonly senderRepository: Repository<MailSenderIdentityEntity>,
+    @InjectRepository(MailMailboxEntity)
+    private readonly mailboxRepository: Repository<MailMailboxEntity>,
+    @InjectRepository(MailImapCredentialEntity)
+    private readonly imapCredentialRepository: Repository<MailImapCredentialEntity>,
+    private readonly mailImapMaildirService: MailImapMaildirService,
+    private readonly mailImapAccessService: MailImapAccessService,
+    private readonly mailInboundRoutingService: MailInboundRoutingService,
   ) {}
 
   public resolveZone(): string {
@@ -193,6 +205,98 @@ export class MailInstantPostDomainService {
       throw new BadRequestException(
         "Lerta Post adresleri otomatik yönetilir; info@firmaniz.post yazarak Hazırla kullanın.",
       );
+    }
+  }
+
+  /**
+   * Mevcut varsayılan kutuyu (ör. info@abayer.com) Lerta Post'a taşır.
+   * Maildir ve IMAP kullanıcı adı teknik FQDN'e güncellenir; UI vanity gösterir.
+   */
+  public async switchOrganizationPrimaryToPost(params: {
+    organizationId: string;
+    orgSlug: string;
+    localPart: string;
+    displayName?: string;
+  }): Promise<{
+    fromAddress: string;
+    vanityAddress: string;
+    previousFromAddress: string | null;
+    maildirRenamed: boolean;
+  }> {
+    const previousSender = await this.senderRepository.findOne({
+      where: { organizationId: params.organizationId, isDefault: true },
+      relations: { mailDomain: true },
+    });
+    const previousFromAddress = previousSender?.mailDomain
+      ? `${previousSender.localPart}@${previousSender.mailDomain.domain}`.toLowerCase()
+      : null;
+
+    const post = await this.provisionMailbox({
+      organizationId: params.organizationId,
+      orgSlug: params.orgSlug,
+      localPart: params.localPart,
+      displayName: params.displayName,
+      makeDefault: true,
+    });
+    const newFromAddress = post.fromAddress.toLowerCase();
+
+    if (previousFromAddress && previousFromAddress !== newFromAddress) {
+      await this.repointMailboxRow(
+        params.organizationId,
+        previousFromAddress,
+        newFromAddress,
+      );
+      const cred = await this.imapCredentialRepository.findOne({
+        where: { organizationId: params.organizationId },
+      });
+      if (cred && cred.emailAddress.toLowerCase() === previousFromAddress) {
+        cred.emailAddress = newFromAddress;
+        await this.imapCredentialRepository.save(cred);
+        void this.mailImapAccessService.syncDovecotPasswdFile().catch(() => {
+          /* best-effort */
+        });
+      }
+    }
+
+    const maildirRenamed = previousFromAddress
+      ? this.mailImapMaildirService.renameMailboxHomedir(
+          previousFromAddress,
+          newFromAddress,
+        )
+      : false;
+
+    void this.mailInboundRoutingService.writePostfixVirtualMap().catch(() => {
+      /* best-effort */
+    });
+
+    return {
+      fromAddress: post.fromAddress,
+      vanityAddress: post.vanityAddress,
+      previousFromAddress,
+      maildirRenamed,
+    };
+  }
+
+  private async repointMailboxRow(
+    organizationId: string,
+    oldEmail: string,
+    newEmail: string,
+  ): Promise<void> {
+    const oldRow = await this.mailboxRepository.findOne({
+      where: { organizationId, emailAddress: oldEmail },
+    });
+    const newRow = await this.mailboxRepository.findOne({
+      where: { organizationId, emailAddress: newEmail },
+    });
+    if (oldRow && newRow && oldRow.id !== newRow.id) {
+      await this.mailboxRepository.remove(newRow);
+      oldRow.emailAddress = newEmail;
+      await this.mailboxRepository.save(oldRow);
+      return;
+    }
+    if (oldRow) {
+      oldRow.emailAddress = newEmail;
+      await this.mailboxRepository.save(oldRow);
     }
   }
 }

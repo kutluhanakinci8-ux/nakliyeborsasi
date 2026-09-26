@@ -30,6 +30,10 @@ import { IngestDmarcReportRequestDto } from "./IngestDmarcReportRequestDto";
 import { MailPlatformMonitoringService } from "./MailPlatformMonitoringService";
 import { MailPlatformKpiService } from "./MailPlatformKpiService";
 import { MailBillingService } from "./MailBillingService";
+import { MailInstantPostDomainService } from "./MailInstantPostDomainService";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { MailDomainEntity } from "../../infrastructure/database/entities/MailDomainEntity";
 
 @Controller("platform-admin/mail")
 @UseGuards(JwtAuthenticationGuard, PlatformAdminGuard)
@@ -48,6 +52,9 @@ export class PlatformMailIdentityAdminController {
     private readonly mailPlatformMonitoringService: MailPlatformMonitoringService,
     private readonly mailPlatformKpiService: MailPlatformKpiService,
     private readonly mailBillingService: MailBillingService,
+    private readonly mailInstantPostDomainService: MailInstantPostDomainService,
+    @InjectRepository(MailDomainEntity)
+    private readonly mailDomainRepository: Repository<MailDomainEntity>,
   ) {}
 
   @Get("billing-health")
@@ -316,6 +323,54 @@ export class PlatformMailIdentityAdminController {
       "/platform-admin/mail/tenant-subdomain/verify-dns",
     );
     return { domain };
+  }
+
+  @Post("instant-post/switch-primary")
+  public async switchOrganizationToLertaPost(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body()
+    body: {
+      organizationId?: string;
+      lookupCustomDomain?: string;
+      orgSlug: string;
+      localPart?: string;
+      displayName?: string;
+    },
+  ) {
+    let organizationId = body.organizationId?.trim();
+    if (!organizationId && body.lookupCustomDomain?.trim()) {
+      const domain = body.lookupCustomDomain.trim().toLowerCase();
+      const row = await this.mailDomainRepository.findOne({
+        where: { domain, domainType: "custom" },
+      });
+      organizationId = row?.organizationId ?? undefined;
+    }
+    if (!organizationId) {
+      throw new BadRequestException(
+        "organizationId veya lookupCustomDomain (ör. abayer.com) gerekli.",
+      );
+    }
+    const result =
+      await this.mailInstantPostDomainService.switchOrganizationPrimaryToPost({
+        organizationId,
+        orgSlug: body.orgSlug,
+        localPart: body.localPart?.trim() || "info",
+        displayName: body.displayName,
+      });
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.SenderProvisioned,
+      {
+        organizationId,
+        fromAddress: result.fromAddress,
+        vanityAddress: result.vanityAddress,
+        previousFromAddress: result.previousFromAddress,
+        channel: "instant_post",
+        migration: "switch-primary",
+      },
+      "/platform-admin/mail/instant-post/switch-primary",
+    );
+    return { message: "OK", ...result };
   }
 
   @Post("tenant-subdomain/provision")

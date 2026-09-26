@@ -496,6 +496,14 @@ export async function fetchMailIdentity(accessToken: string) {
   return apiFetch<{
     identity: {
       fromAddress: string | null;
+      vanityAddress: string | null;
+      displayAddress: string | null;
+      channel:
+        | "instant_post"
+        | "custom_domain"
+        | "tenant_subdomain"
+        | "platform"
+        | "unknown";
       domainVerified: boolean;
       domain: string;
       platformDnsReady: boolean;

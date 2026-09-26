@@ -84,6 +84,48 @@ export class MailImapMaildirService {
     }
   }
 
+  public renameMailboxHomedir(oldEmail: string, newEmail: string): boolean {
+    const root = this.resolveMaildirRoot();
+    if (!root) {
+      return false;
+    }
+    const parse = (email: string) => {
+      const at = email.lastIndexOf("@");
+      if (at < 1) {
+        return null;
+      }
+      return {
+        local: email.slice(0, at),
+        domain: email.slice(at + 1),
+      };
+    };
+    const from = parse(oldEmail.trim().toLowerCase());
+    const to = parse(newEmail.trim().toLowerCase());
+    if (!from || !to) {
+      return false;
+    }
+    const oldHome = join(root, from.domain, from.local);
+    const newHome = join(root, to.domain, to.local);
+    if (!existsSync(oldHome)) {
+      return false;
+    }
+    if (existsSync(newHome)) {
+      this.logger.warn(`Maildir rename skipped — target exists: ${newHome}`);
+      return false;
+    }
+    try {
+      mkdirSync(join(root, to.domain), { recursive: true });
+      renameSync(oldHome, newHome);
+      this.logger.log(`Maildir homedir ${oldHome} → ${newHome}`);
+      return true;
+    } catch (error) {
+      this.logger.warn(
+        `Maildir homedir rename failed: ${error instanceof Error ? error.message : error}`,
+      );
+      return false;
+    }
+  }
+
   public resolveMaildirForAddress(email: string): string | null {
     const root = this.resolveMaildirRoot();
     if (!root) {

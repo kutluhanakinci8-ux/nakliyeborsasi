@@ -45,6 +45,7 @@ import {
 } from "./CompanyMailIdentityRequestDto";
 import { MailPilotOnboardingService } from "./MailPilotOnboardingService";
 import { MailAddressOnboardingService } from "./MailAddressOnboardingService";
+import { MailOrganizationIdentityService } from "./MailOrganizationIdentityService";
 import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
 import { MailOrganizationBrandingService } from "./MailOrganizationBrandingService";
 import { UpdateMailBrandingRequestDto } from "./MailBrandingRequestDto";
@@ -86,6 +87,7 @@ export class CompanyMailIdentityController {
     private readonly mailSaasSubscriptionService: MailSaasSubscriptionService,
     private readonly mailPilotOnboardingService: MailPilotOnboardingService,
     private readonly mailAddressOnboardingService: MailAddressOnboardingService,
+    private readonly mailOrganizationIdentityService: MailOrganizationIdentityService,
     private readonly mailOrganizationBrandingService: MailOrganizationBrandingService,
     private readonly mailOrganizationIntegrationService: MailOrganizationIntegrationService,
     private readonly mailAddressAliasService: MailAddressAliasService,
@@ -222,7 +224,7 @@ export class CompanyMailIdentityController {
     assertMailConsoleAccess(user);
     await this.mailTenantSubdomainService.syncTenantDomainVerificationFromDns();
     const identity =
-      await this.mailTenantSubdomainService.getOrganizationMailIdentity(
+      await this.mailOrganizationIdentityService.getPrimaryIdentity(
         user.companyId,
       );
     return {
