@@ -7,6 +7,10 @@ export type ParsedIcalEvent = {
   endsAt: Date;
   allDay: boolean;
   recurrenceRule: string | null;
+  recurrenceIdAt: Date | null;
+  recurrenceIdAllDay: boolean;
+  exDates: Date[];
+  exDatesAllDay: boolean;
 };
 
 function formatUtc(d: Date): string {
@@ -77,6 +81,10 @@ export function parseIcalEvents(icsText: string): ParsedIcalEvent[] {
   let allDay = false;
   let uid: string | null = null;
   let recurrenceRule: string | null = null;
+  let recurrenceIdAt: Date | null = null;
+  let recurrenceIdAllDay = false;
+  let exDates: Date[] = [];
+  let exDatesAllDay = false;
 
   for (const line of lines) {
     if (line === "BEGIN:VEVENT") {
@@ -89,6 +97,10 @@ export function parseIcalEvents(icsText: string): ParsedIcalEvent[] {
       allDay = false;
       uid = null;
       recurrenceRule = null;
+      recurrenceIdAt = null;
+      recurrenceIdAllDay = false;
+      exDates = [];
+      exDatesAllDay = false;
       continue;
     }
     if (line === "END:VEVENT" && inEvent) {
@@ -114,6 +126,10 @@ export function parseIcalEvents(icsText: string): ParsedIcalEvent[] {
         endsAt,
         allDay: startAllDay,
         recurrenceRule,
+        recurrenceIdAt,
+        recurrenceIdAllDay,
+        exDates,
+        exDatesAllDay,
       });
       inEvent = false;
       continue;
@@ -141,9 +157,26 @@ export function parseIcalEvents(icsText: string): ParsedIcalEvent[] {
       uid = value;
     } else if (key === "RRULE") {
       recurrenceRule = value.trim();
+    } else if (key === "RECURRENCE-ID") {
+      const ridAllDay = keyPart.toUpperCase().includes("VALUE=DATE");
+      recurrenceIdAt = parseIcalDate(value, ridAllDay);
+      recurrenceIdAllDay = ridAllDay;
+    } else if (key === "EXDATE") {
+      const exAllDay = keyPart.toUpperCase().includes("VALUE=DATE");
+      const chunks = value.split(",").map((part) => part.trim()).filter(Boolean);
+      for (const chunk of chunks) {
+        exDates.push(parseIcalDate(chunk, exAllDay));
+      }
+      if (exAllDay) {
+        exDatesAllDay = true;
+      }
     }
   }
   return events;
+}
+
+export function isCalDavRecurrenceOverride(ev: ParsedIcalEvent): boolean {
+  return Boolean(ev.recurrenceIdAt && !ev.recurrenceRule);
 }
 
 export function buildSingleVeventIcal(event: {

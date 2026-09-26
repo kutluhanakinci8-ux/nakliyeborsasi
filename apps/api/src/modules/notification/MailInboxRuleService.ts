@@ -260,7 +260,12 @@ export class MailInboxRuleService {
     scanned: number;
     capped: boolean;
     matchLogicDescription: string;
-    samples: Array<{ id: string; fromAddress: string; subject: string }>;
+    samples: Array<{
+      id: string;
+      fromAddress: string;
+      subject: string;
+      matchedBecause: string;
+    }>;
   }> {
     const rule = await this.assertRule(organizationId, ruleId);
     const messages = await this.loadInboxCandidates(organizationId, PREVIEW_SCAN_LIMIT);
@@ -281,6 +286,7 @@ export class MailInboxRuleService {
         id: m.id,
         fromAddress: m.fromAddress,
         subject: m.subject,
+        matchedBecause: this.explainMatch(rule, m),
       })),
     };
   }
@@ -370,6 +376,62 @@ export class MailInboxRuleService {
       changed = true;
     }
     return changed;
+  }
+
+  private explainMatch(
+    rule: MailInboxRuleEntity,
+    message: MailInboundMessageEntity,
+  ): string {
+    if (!this.matches(rule, message)) {
+      return "";
+    }
+    const groups = parseConditionGroupsJson(rule.conditionGroupsJson);
+    if (groups && conditionGroupsAreValid(groups)) {
+      const matchedIndices: number[] = [];
+      groups.groups.forEach((group, index) => {
+        if (groupHasAnyCondition(group) && this.matchesSingleGroup(group, message)) {
+          matchedIndices.push(index + 1);
+        }
+      });
+      if (groups.matchAnyBetweenGroups) {
+        return `Eşleşen grup: ${matchedIndices.join(", ")} (gruplar arası VEYA)`;
+      }
+      return `Eşleşen gruplar: ${matchedIndices.join(", ")} (tümü gerekli)`;
+    }
+    const fromNeedle = rule.fromContains?.toLowerCase() ?? "";
+    const subjectNeedle = rule.subjectContains?.toLowerCase() ?? "";
+    const toNeedle = rule.toContains?.toLowerCase() ?? "";
+    const fromOk =
+      !fromNeedle ||
+      this.fieldMatchesAlternatives(message.fromAddress, fromNeedle);
+    const subjectOk =
+      !subjectNeedle ||
+      this.fieldMatchesAlternatives(message.subject, subjectNeedle);
+    const toList = message.toRecipients ?? [];
+    const toOk =
+      !toNeedle ||
+      toList.some((addr) =>
+        this.fieldMatchesAlternatives(addr, toNeedle),
+      );
+    const hasAttachment = (message.attachments?.length ?? 0) > 0;
+    const hits: string[] = [];
+    if (fromNeedle && fromOk) {
+      hits.push("gönderen");
+    }
+    if (subjectNeedle && subjectOk) {
+      hits.push("konu");
+    }
+    if (toNeedle && toOk) {
+      hits.push("alıcı");
+    }
+    if (rule.requireAttachment && hasAttachment) {
+      hits.push("ek");
+    }
+    if (hits.length === 0) {
+      return "Koşul sağlandı";
+    }
+    const mode = rule.matchAnyCondition ? "VEYA" : "VE";
+    return `Eşleşen koşul (${mode}): ${hits.join(", ")}`;
   }
 
   private matches(

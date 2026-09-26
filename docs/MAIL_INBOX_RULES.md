@@ -43,7 +43,7 @@ En az biri seçilmeli. Birden fazla işlem aynı kuralda birlikte uygulanabilir.
 
 - `GET/POST/PATCH/DELETE company/mail-inbox/rules`
 - `POST company/mail-inbox/rules/reorder` — `{ "ruleIds": ["uuid", ...] }` tam liste sırası
-- `GET company/mail-inbox/rules/:ruleId/preview` — gelen kutusunda eşleşme sayısı (ilk 500 mesaj); `matchLogicDescription` (düz koşul veya gruplar metni)
+- `GET company/mail-inbox/rules/:ruleId/preview` — gelen kutusunda eşleşme sayısı (ilk 500 mesaj); `matchLogicDescription`; örneklerde `matchedBecause` (hangi grup/koşul)
 - `POST company/mail-inbox/rules/:ruleId/apply-inbox` — mevcut gelen kutusuna uygula (en fazla 100 mesaj, yönetici)
 
 ## UI
