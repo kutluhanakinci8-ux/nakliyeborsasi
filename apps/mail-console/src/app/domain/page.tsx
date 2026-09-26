@@ -5,10 +5,10 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ConsoleShell } from "@/components/ConsoleShell";
 import {
+  claimMailAddress,
   CustomDomainBundle,
   fetchCustomDomainBundle,
   isPlatformOperator,
-  provisionCustomMailbox,
   registerCustomDomain,
   verifyCustomDomainDns,
 } from "@/lib/consoleApi";
@@ -20,6 +20,7 @@ export default function DomainPage() {
   const [operator, setOperator] = useState(false);
   const [bundle, setBundle] = useState<CustomDomainBundle | null>(null);
   const [domainInput, setDomainInput] = useState("");
+  const [desiredAddress, setDesiredAddress] = useState("");
   const [localPart, setLocalPart] = useState("info");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -48,6 +49,33 @@ export default function DomainPage() {
       setWelcomePlan(params.get("plan"));
     }
   }, [accessToken, refresh, router]);
+
+  async function onClaimAddress(event: FormEvent) {
+    event.preventDefault();
+    if (!accessToken) {
+      return;
+    }
+    setError("");
+    setLoading(true);
+    try {
+      const result = await claimMailAddress(
+        accessToken,
+        desiredAddress.trim().toLowerCase(),
+      );
+      if (result.bundle) {
+        setBundle(result.bundle);
+      } else {
+        await refresh();
+      }
+      setMessage(`${result.fromAddress} — ${result.nextStepTr}`);
+    } catch {
+      setError(
+        "Adres hazırlanamadı. Formatı kontrol edin veya paketiniz özel domain içeriyor mu bakın.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function onRegister(event: FormEvent) {
     event.preventDefault();
@@ -86,20 +114,20 @@ export default function DomainPage() {
 
   async function onProvision(event: FormEvent) {
     event.preventDefault();
-    if (!accessToken) {
+    if (!accessToken || !bundle?.mailDomain) {
       return;
     }
     setError("");
     setLoading(true);
     try {
-      const result = await provisionCustomMailbox(
+      const result = await claimMailAddress(
         accessToken,
-        localPart.trim().toLowerCase(),
+        `${localPart.trim().toLowerCase()}@${bundle.mailDomain.domain}`,
       );
       setMessage(`Kutu hazır: ${result.fromAddress}`);
       await refresh();
     } catch {
-      setError("Kutu oluşturulamadı. Domain doğrulandı mı?");
+      setError("Kutu oluşturulamadı.");
     } finally {
       setLoading(false);
     }
@@ -111,16 +139,17 @@ export default function DomainPage() {
 
   const instructions = bundle?.dnsInstructions;
   const status = bundle?.mailDomain?.verificationStatus ?? "—";
+  const dnsReady = bundle?.dnsCheck?.ok === true;
 
   return (
     <ConsoleShell operator={operator}>
       <h1 style={{ marginTop: 0 }}>Özel domain kurulumu</h1>
       {welcomePlan === "lerta_mail_corporate_tr" ? (
         <div className="card" style={{ marginBottom: 16, borderColor: "var(--accent)" }}>
-          <h2 style={{ marginTop: 0 }}>Hoş geldiniz — adım 1</h2>
+          <h2 style={{ marginTop: 0 }}>Hoş geldiniz</h2>
           <p style={{ margin: 0, color: "var(--muted)" }}>
-            Kurumsal paket için önce alan adınızı ekleyin. DNS doğrulandıktan sonra
-            ilk posta adresinizi oluşturup webmail&apos;e geçebilirsiniz.
+            Almak istediğiniz kurumsal adresi yazın; sistem alan adı kaydı, kutu ve
+            DNS talimatlarını hazırlar.
           </p>
         </div>
       ) : null}
@@ -132,9 +161,31 @@ export default function DomainPage() {
       ) : null}
       {error ? <p className="auth-error">{error}</p> : null}
 
+      <div className="card" style={{ marginBottom: 16 }}>
+        <h2>İstediğiniz posta adresi</h2>
+        <p style={{ color: "var(--muted)", marginTop: 0 }}>
+          Tek satırda yazın — arka planda domain, kutu ve gönderen kimliği
+          oluşturulur. DNS kayıtlarını ekledikten sonra teslimat açılır.
+        </p>
+        <form onSubmit={onClaimAddress}>
+          <input
+            className="input"
+            type="email"
+            placeholder="karagoz@firma.com.tr"
+            value={desiredAddress}
+            onChange={(e) => setDesiredAddress(e.target.value)}
+            required
+            style={{ maxWidth: 360 }}
+          />
+          <button className="btn" type="submit" disabled={loading}>
+            Hazırla
+          </button>
+        </form>
+      </div>
+
       {!bundle?.mailDomain ? (
         <div className="card">
-          <h2>1. Alan adı ekle</h2>
+          <h2>Alternatif: yalnızca alan adı</h2>
           <form onSubmit={onRegister}>
             <input
               className="input"
@@ -143,7 +194,7 @@ export default function DomainPage() {
               onChange={(e) => setDomainInput(e.target.value)}
               required
             />
-            <button className="btn" type="submit" disabled={loading}>
+            <button className="btn secondary" type="submit" disabled={loading}>
               Kaydet
             </button>
           </form>
@@ -155,14 +206,14 @@ export default function DomainPage() {
               {bundle.mailDomain.domain}{" "}
               <span
                 className={`badge ${
-                  status === "verified"
+                  dnsReady
                     ? "ok"
                     : status === "failed"
                       ? "fail"
                       : "pending"
                 }`}
               >
-                {status}
+                {dnsReady ? "teslimat hazır" : status}
               </span>
             </h2>
             {bundle.dnsCheck ? (
@@ -170,6 +221,12 @@ export default function DomainPage() {
                 MX: {bundle.dnsCheck.mx?.ok ? "✓" : "✗"} · SPF:{" "}
                 {bundle.dnsCheck.spf.ok ? "✓" : "✗"} · DKIM:{" "}
                 {bundle.dnsCheck.dkim.ok ? "✓" : "✗"}
+              </p>
+            ) : null}
+            {!dnsReady ? (
+              <p style={{ color: "var(--muted)" }}>
+                «verified» yalnızca sahiplik içindir; Gmail/Outlook için üç kayıt
+                da yeşil olmalı.
               </p>
             ) : null}
             <button
@@ -184,7 +241,7 @@ export default function DomainPage() {
 
           {instructions ? (
             <div className="card">
-              <h2>2. DNS kayıtları (isimtescil)</h2>
+              <h2>DNS kayıtları (isimtescil)</h2>
               <div className="dns-row">
                 <span>MX</span>
                 <code>
@@ -212,7 +269,7 @@ export default function DomainPage() {
           ) : null}
 
           <div className="card">
-            <h2>3. İlk posta adresi</h2>
+            <h2>Ek posta adresi</h2>
             <p>Mevcut: <strong>{bundle.fromAddress ?? "—"}</strong></p>
             <form onSubmit={onProvision}>
               <input
@@ -222,19 +279,15 @@ export default function DomainPage() {
                 onChange={(e) => setLocalPart(e.target.value)}
                 required
               />
-            <button
-              className="btn"
-              type="submit"
-              disabled={loading || status !== "verified"}
-            >
-              @{bundle.mailDomain.domain} oluştur
-            </button>
-          </form>
-          <p style={{ marginTop: 12 }}>
-            <Link className="btn secondary" href="/mailboxes">
-              Tüm kutuları yönet
-            </Link>
-          </p>
+              <button className="btn secondary" type="submit" disabled={loading}>
+                @{bundle.mailDomain.domain} oluştur
+              </button>
+            </form>
+            <p style={{ marginTop: 12 }}>
+              <Link className="btn secondary" href="/mailboxes">
+                Tüm kutuları yönet
+              </Link>
+            </p>
           </div>
         </>
       )}
@@ -243,7 +296,7 @@ export default function DomainPage() {
         <h2>Pilot alt alan (isteğe bağlı)</h2>
         <p style={{ color: "var(--muted)", marginTop: 0 }}>
           Özel domain olmadan denemek için paylaşımlı{" "}
-          <strong>kullanici.lerta.com.tr</strong> altında kutu açabilirsiniz.
+          <strong>kullanici.lerta.tr</strong> altında kutu açabilirsiniz.
         </p>
         <Link className="btn secondary" href="/dashboard">
           Pilot kutuya geç

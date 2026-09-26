@@ -220,11 +220,19 @@ export class MailCustomDomainService {
     localPart: string;
     displayName?: string;
     makeDefault?: boolean;
+    /** Kurulum akışında kutu DNS beklenmeden oluşturulabilir; gönderim DNS ile açılır. */
+    allowUnverifiedDomain?: boolean;
   }): Promise<{ fromAddress: string; sender: MailSenderIdentityEntity }> {
     const mailDomain = await this.domainRepository.findOne({
       where: { organizationId: params.organizationId, domainType: "custom" },
     });
-    if (!mailDomain || mailDomain.verificationStatus !== "verified") {
+    if (!mailDomain) {
+      throw new BadRequestException("Özel domain kaydı bulunamadı.");
+    }
+    if (
+      !params.allowUnverifiedDomain &&
+      mailDomain.verificationStatus !== "verified"
+    ) {
       throw new BadRequestException(
         "Önce özel domain DNS doğrulamasını tamamlayın.",
       );
