@@ -2272,173 +2272,257 @@ export function MailClient() {
 
       {composeOpen ? (
         <div
-          className="compose-overlay"
+          className="compose-overlay compose-overlay--premium"
           role="presentation"
-          onClick={() => setComposeOpen(false)}
+          onClick={() => {
+            setComposeOpen(false);
+            resetCompose();
+          }}
         >
           <div
-            className="compose-dialog"
+            className="compose-dialog compose-dialog--premium"
             role="dialog"
+            aria-labelledby="compose-premium-title"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2>
-              {forwardMessageId
-                ? "İlet"
-                : editingDraftId
-                  ? "Taslak"
-                  : "Yeni mesaj"}
-            </h2>
-            <input
-              placeholder="Kime"
-              value={composeTo}
-              onChange={(e) => setComposeTo(e.target.value)}
-            />
-            {!forwardMessageId ? (
+            <header className="compose-premium-header">
+              <div className="compose-premium-header-text">
+                <h2 id="compose-premium-title">
+                  {forwardMessageId
+                    ? "İlet"
+                    : editingDraftId
+                      ? "Taslak düzenle"
+                      : "Yeni mesaj"}
+                </h2>
+                <p className="compose-premium-subtitle">
+                  {summary?.primaryAddress
+                    ? `Gönderen: ${summary.primaryAddress}`
+                    : "Kurumsal gönderim"}
+                </p>
+              </div>
               <button
                 type="button"
-                className="mail-compose-cc-toggle"
-                onClick={() => setComposeShowCcBcc((open) => !open)}
-              >
-                {composeShowCcBcc ? "Cc/Bcc gizle" : "Cc / Bcc"}
-              </button>
-            ) : null}
-            {!forwardMessageId && composeShowCcBcc ? (
-              <>
-                <input
-                  placeholder="Cc (virgülle ayırın)"
-                  value={composeCc}
-                  onChange={(e) => setComposeCc(e.target.value)}
-                />
-                <input
-                  placeholder="Bcc (virgülle ayırın)"
-                  value={composeBcc}
-                  onChange={(e) => setComposeBcc(e.target.value)}
-                />
-              </>
-            ) : null}
-            {forwardMessageId ? (
-              <p className="mail-compose-forward-hint">
-                Konu: <strong>{composeSubject}</strong> — orijinal metin
-                otomatik eklenir.
-              </p>
-            ) : (
-              <input
-                placeholder="Konu"
-                value={composeSubject}
-                onChange={(e) => setComposeSubject(e.target.value)}
-              />
-            )}
-            <div className="compose-preset-row">
-              <label>
-                Şablon
-                <select
-                  defaultValue=""
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      applyComposeTemplate(e.target.value);
-                      e.target.value = "";
-                    }
-                  }}
-                >
-                  <option value="">Seç…</option>
-                  {composeTemplates.map((t) => (
-                    <option key={t.id} value={t.id}>{t.name}</option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                İmza
-                <select
-                  defaultValue=""
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      applyComposeSignature(e.target.value);
-                      e.target.value = "";
-                    }
-                  }}
-                >
-                  <option value="">Ekle…</option>
-                  {composeSignatures.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                      {s.isDefault ? " ★" : ""}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-            {!forwardMessageId && !editingDraftId ? (
-              <ComposeRichEditor
-                enabled={composeRich}
-                onEnabledChange={setComposeRich}
-                plainText={composeText}
-                onPlainTextChange={setComposeText}
-                onHtmlChange={setComposeHtml}
-              />
-            ) : null}
-            {!composeRich || forwardMessageId || editingDraftId ? (
-              <textarea
-                placeholder={
-                  forwardMessageId
-                    ? "Üst not (isteğe bağlı)…"
-                    : "Mesaj"
-                }
-                rows={6}
-                value={composeText}
-                onChange={(e) => setComposeText(e.target.value)}
-              />
-            ) : null}
-            <input
-              type="file"
-              multiple
-              onChange={(e) =>
-                setComposeFiles(Array.from(e.target.files ?? []))
-              }
-            />
-            {composeStoredAttachments.length > 0 ? (
-              <ul className="mail-attachments">
-                {composeStoredAttachments.map((file) => (
-                  <li key={file.filename}>{file.filename} (taslakta)</li>
-                ))}
-              </ul>
-            ) : null}
-            {composeFiles.length > 0 ? (
-              <p className="mail-attach-hint">
-                {composeFiles.length} yeni ek (en fazla {maxAttachmentMb} MB)
-              </p>
-            ) : null}
-            {composeError ? (
-              <p className="login-error" style={{ marginBottom: 12 }}>
-                {composeError}
-              </p>
-            ) : null}
-            <div className="compose-actions">
-              <button
-                type="button"
+                className="compose-premium-close"
+                aria-label="Kapat"
                 onClick={() => {
                   setComposeOpen(false);
                   resetCompose();
                 }}
               >
-                İptal
+                ×
               </button>
+            </header>
+
+            <div className="compose-premium-body">
+              <div className="compose-field">
+                <label className="compose-field-label" htmlFor="compose-to">
+                  Kime
+                </label>
+                <input
+                  id="compose-to"
+                  className="compose-input"
+                  placeholder="ornek@firma.com"
+                  value={composeTo}
+                  onChange={(e) => setComposeTo(e.target.value)}
+                  autoFocus
+                />
+              </div>
+
               {!forwardMessageId ? (
+                <div className="compose-premium-inline-tools">
+                  <button
+                    type="button"
+                    className="compose-chip-btn"
+                    onClick={() => setComposeShowCcBcc((open) => !open)}
+                  >
+                    {composeShowCcBcc ? "Cc/Bcc gizle" : "Cc / Bcc"}
+                  </button>
+                </div>
+              ) : null}
+
+              {!forwardMessageId && composeShowCcBcc ? (
+                <>
+                  <div className="compose-field">
+                    <label className="compose-field-label" htmlFor="compose-cc">
+                      Cc
+                    </label>
+                    <input
+                      id="compose-cc"
+                      className="compose-input"
+                      placeholder="Virgülle ayırın"
+                      value={composeCc}
+                      onChange={(e) => setComposeCc(e.target.value)}
+                    />
+                  </div>
+                  <div className="compose-field">
+                    <label className="compose-field-label" htmlFor="compose-bcc">
+                      Bcc
+                    </label>
+                    <input
+                      id="compose-bcc"
+                      className="compose-input"
+                      placeholder="Virgülle ayırın"
+                      value={composeBcc}
+                      onChange={(e) => setComposeBcc(e.target.value)}
+                    />
+                  </div>
+                </>
+              ) : null}
+
+              {forwardMessageId ? (
+                <p className="mail-compose-forward-hint compose-premium-forward">
+                  Konu: <strong>{composeSubject}</strong> — orijinal metin
+                  otomatik eklenir.
+                </p>
+              ) : (
+                <div className="compose-field">
+                  <label className="compose-field-label" htmlFor="compose-subject">
+                    Konu
+                  </label>
+                  <input
+                    id="compose-subject"
+                    className="compose-input"
+                    placeholder="Mesaj konusu"
+                    value={composeSubject}
+                    onChange={(e) => setComposeSubject(e.target.value)}
+                  />
+                </div>
+              )}
+
+              <div className="compose-preset-row compose-premium-presets">
+                <label className="compose-preset-label">
+                  <span>Şablon</span>
+                  <select
+                    className="compose-select"
+                    defaultValue=""
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        applyComposeTemplate(e.target.value);
+                        e.target.value = "";
+                      }
+                    }}
+                  >
+                    <option value="">Seç…</option>
+                    {composeTemplates.map((t) => (
+                      <option key={t.id} value={t.id}>{t.name}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="compose-preset-label">
+                  <span>İmza</span>
+                  <select
+                    className="compose-select"
+                    defaultValue=""
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        applyComposeSignature(e.target.value);
+                        e.target.value = "";
+                      }
+                    }}
+                  >
+                    <option value="">Ekle…</option>
+                    {composeSignatures.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                        {s.isDefault ? " ★" : ""}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <div className="compose-premium-editor-wrap">
+                {!forwardMessageId && !editingDraftId ? (
+                  <ComposeRichEditor
+                    enabled={composeRich}
+                    onEnabledChange={setComposeRich}
+                    plainText={composeText}
+                    onPlainTextChange={setComposeText}
+                    onHtmlChange={setComposeHtml}
+                  />
+                ) : null}
+                {!composeRich || forwardMessageId || editingDraftId ? (
+                  <textarea
+                    className="compose-textarea"
+                    placeholder={
+                      forwardMessageId
+                        ? "Üst not (isteğe bağlı)…"
+                        : "Mesajınızı yazın…"
+                    }
+                    rows={8}
+                    value={composeText}
+                    onChange={(e) => setComposeText(e.target.value)}
+                  />
+                ) : null}
+              </div>
+
+              <div className="compose-attach-zone">
+                <label className="compose-attach-label">
+                  <span className="compose-attach-title">Ekler</span>
+                  <span className="compose-attach-btn">Dosya seç</span>
+                  <input
+                    type="file"
+                    multiple
+                    className="compose-attach-input"
+                    onChange={(e) =>
+                      setComposeFiles(Array.from(e.target.files ?? []))
+                    }
+                  />
+                </label>
+                {composeStoredAttachments.length > 0 ? (
+                  <ul className="compose-attach-list">
+                    {composeStoredAttachments.map((file) => (
+                      <li key={file.filename}>{file.filename} (taslakta)</li>
+                    ))}
+                  </ul>
+                ) : null}
+                {composeFiles.length > 0 ? (
+                  <p className="mail-attach-hint">
+                    {composeFiles.length} yeni ek (en fazla {maxAttachmentMb}{" "}
+                    MB)
+                  </p>
+                ) : (
+                  <p className="compose-attach-hint">Dosya seçilmedi</p>
+                )}
+              </div>
+
+              {composeError ? (
+                <p className="compose-premium-error">{composeError}</p>
+              ) : null}
+            </div>
+
+            <footer className="compose-premium-footer">
+              <div className="compose-actions compose-actions--premium">
                 <button
                   type="button"
-                  disabled={sending}
-                  onClick={() => void saveComposeDraft()}
+                  className="compose-btn compose-btn--ghost"
+                  onClick={() => {
+                    setComposeOpen(false);
+                    resetCompose();
+                  }}
                 >
-                  Taslak kaydet
+                  İptal
                 </button>
-              ) : null}
-              <button
-                type="button"
-                disabled={sending}
-                onClick={() => void sendCompose()}
-              >
-                {sending ? "Gönderiliyor…" : "Gönder"}
-              </button>
-            </div>
+                {!forwardMessageId ? (
+                  <button
+                    type="button"
+                    className="compose-btn compose-btn--secondary"
+                    disabled={sending}
+                    onClick={() => void saveComposeDraft()}
+                  >
+                    Taslak kaydet
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  className="compose-btn compose-btn--primary"
+                  disabled={sending}
+                  onClick={() => void sendCompose()}
+                >
+                  {sending ? "Gönderiliyor…" : "Gönder"}
+                </button>
+              </div>
+            </footer>
           </div>
         </div>
       ) : null}
