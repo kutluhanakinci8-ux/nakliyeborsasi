@@ -41,6 +41,28 @@ export class CreateMailCalendarEventRequestDto {
   public recurrenceUntil?: string;
 }
 
+export class PatchMailCalendarOccurrenceRequestDto {
+  @IsISO8601()
+  public occurrenceStartsAt!: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  public title?: string;
+
+  @IsOptional()
+  @IsISO8601()
+  public startsAt?: string;
+
+  @IsOptional()
+  @IsISO8601()
+  public endsAt?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  public allDay?: boolean;
+}
+
 export class UpdateMailCalendarEventRequestDto {
   @IsOptional()
   @IsString()

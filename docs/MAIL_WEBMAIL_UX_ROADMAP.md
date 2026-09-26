@@ -153,6 +153,11 @@ sudo certbot certonly --webroot -w /var/www/certbot -d posta.lerta.com.tr
 - `mail_calendar_recurrence_exception`; bu tekrarı sil / tüm seri
 - Ay ızgarasında çok günlü etkinlik vurgusu (`multi-day-span`)
 
+## D6+ — Tekrar düzenleme + ızgara şerit (uygulandı)
+
+- `PATCH calendar/events/:id/occurrence`; override kolonları; `occurrenceAnchorAt`
+- Hafta satırında çok günlü sürekli bar (`mail-cal-event-bar`)
+
 ## G6+ — Kurallar alternatif metin (uygulandı)
 
 - Koşul alanlarında `|` ile OR alt string (ör. `a|b`)
@@ -170,6 +175,10 @@ sudo certbot certonly --webroot -w /var/www/certbot -d posta.lerta.com.tr
 ## G6 — Kurallar OR mantığı (uygulandı)
 
 - `matchAnyCondition` — koşullar VEYA ile eşleşir (UI: “Koşullardan herhangi biri”)
+
+## G6+ — Koşul grupları (uygulandı)
+
+- `mail_inbox_rule.condition_groups_json`; iç içe AND/OR blokları (API + Ayarlar → Kurallar)
 
 ## G9 — IMAP/SMTP istemci bilgisi (uygulandı)
 

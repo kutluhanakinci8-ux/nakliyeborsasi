@@ -1364,11 +1364,49 @@ a {
   flex-shrink: 0;
 }
 
+.mail-cal-month {
+  margin-bottom: 12px;
+}
+
 .mail-cal-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 4px;
-  margin-bottom: 12px;
+}
+
+.mail-cal-grid-head {
+  margin-bottom: 4px;
+}
+
+.mail-cal-week {
+  position: relative;
+  margin-bottom: 4px;
+}
+
+.mail-cal-week-bars {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 22px;
+  height: 6px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.mail-cal-event-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--accent);
+  opacity: 0.85;
+  min-width: 0;
+}
+
+.mail-cal-week-days {
+  position: relative;
+  z-index: 0;
 }
 
 .mail-cal-weekday {
@@ -1399,6 +1437,42 @@ a {
 
 .mail-cal-day.multi-day-span.has-events {
   box-shadow: inset 0 -4px 0 var(--accent);
+}
+
+.mail-cal-occ-edit {
+  margin: 16px 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mail-cal-occ-edit h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.mail-rules-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 8px 0;
+}
+
+.mail-rules-group {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mail-rules-group legend {
+  font-weight: 600;
+  font-size: 0.9rem;
 }
 
 .mail-cal-day.selected {

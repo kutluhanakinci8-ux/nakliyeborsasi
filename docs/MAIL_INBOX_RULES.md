@@ -9,7 +9,18 @@ Kurallar **organizasyon** bazında; yeni inbound mesaj ingest edildiğinde (spam
 - `toContains` — **To** alıcı listesinde (G5+)
 - `requireAttachment` — ek koşulu (G5+)
 
-En az biri dolu olmalı.
+En az biri dolu olmalı — veya geçerli **`conditionGroups`** JSON (G6+ gruplar).
+
+### Koşul grupları (`conditionGroups`)
+
+En fazla **3** grup. Her grupta `fromContains`, `subjectContains`, `toContains`, `requireAttachment` (düz metin alanlarında `|` alternatifleri geçerli).
+
+| Alan | Davranış |
+|------|----------|
+| `groups[].matchAny` | Grup içi VEYA / VE |
+| `matchAnyBetweenGroups` | Gruplar arası VEYA / VE |
+
+Örnek: `(gönderen destek VE konu fatura) VEYA (alıcı muhasebe)` — iki grup, aralarında VEYA.
 
 **Alternatif (OR alt string):** `fromContains`, `subjectContains`, `toContains` alanlarında `|` ile ayrılmış değerlerden **biri** eşleşirse o koşul sağlanır (ör. `destek|support`).
 

@@ -46,6 +46,58 @@ export function eventOverlapsDayKey(
   return enumerateDayKeysBetween(startsAtIso, endsAtIso).includes(dayKey);
 }
 
+export type WeekMultiDayBar = {
+  eventKey: string;
+  title: string;
+  startCol: number;
+  endCol: number;
+};
+
+export function splitGridIntoWeeks(
+  grid: CalendarGridCell[],
+): CalendarGridCell[][] {
+  const weeks: CalendarGridCell[][] = [];
+  for (let i = 0; i < grid.length; i += 7) {
+    weeks.push(grid.slice(i, i + 7));
+  }
+  return weeks;
+}
+
+export function computeWeekMultiDayBars(
+  week: CalendarGridCell[],
+  events: Array<{ id: string; title: string; startsAt: string; endsAt: string }>,
+): WeekMultiDayBar[] {
+  const weekKeys = week.map((c) => c.key);
+  const bars: WeekMultiDayBar[] = [];
+  for (const ev of events) {
+    const spanKeys = enumerateDayKeysBetween(ev.startsAt, ev.endsAt);
+    if (spanKeys.length < 2) {
+      continue;
+    }
+    const indices: number[] = [];
+    for (let col = 0; col < week.length; col += 1) {
+      if (spanKeys.includes(weekKeys[col]!)) {
+        indices.push(col);
+      }
+    }
+    if (indices.length < 2) {
+      continue;
+    }
+    const startCol = Math.min(...indices);
+    const endCol = Math.max(...indices);
+    if (endCol <= startCol) {
+      continue;
+    }
+    bars.push({
+      eventKey: `${ev.id}-${ev.startsAt}`,
+      title: ev.title,
+      startCol,
+      endCol,
+    });
+  }
+  return bars;
+}
+
 export function buildMonthGrid(year: number, month: number): CalendarGridCell[] {
   const first = new Date(year, month, 1);
   const startPad = (first.getDay() + 6) % 7;

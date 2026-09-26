@@ -86,6 +86,7 @@ import {
   CreateMailContactCardDavAccountRequestDto,
   UpdateMailContactCardDavAccountRequestDto,
   UpdateMailCalendarEventRequestDto,
+  PatchMailCalendarOccurrenceRequestDto,
   UpdateMailOrgContactRequestDto,
 } from "./MailCalendarContactRequestDto";
 
@@ -155,6 +156,7 @@ export class CompanyMailInboxController {
       toContains: body.toContains,
       requireAttachment: body.requireAttachment,
       matchAnyCondition: body.matchAnyCondition,
+      conditionGroups: body.conditionGroups ?? null,
       actionStar: body.actionStar,
       actionCustomFolderId: body.actionCustomFolderId ?? null,
       actionArchive: body.actionArchive,
@@ -190,6 +192,7 @@ export class CompanyMailInboxController {
       toContains: body.toContains,
       requireAttachment: body.requireAttachment,
       matchAnyCondition: body.matchAnyCondition,
+      conditionGroups: body.conditionGroups,
       actionStar: body.actionStar,
       actionCustomFolderId: body.actionCustomFolderId,
       actionArchive: body.actionArchive,
@@ -1256,6 +1259,26 @@ export class CompanyMailInboxController {
               ? new Date(body.recurrenceUntil)
               : null
             : undefined,
+      },
+    );
+    return { ok: true, event };
+  }
+
+  @Patch("calendar/events/:eventId/occurrence")
+  public async patchCalendarOccurrence(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("eventId") eventId: string,
+    @Body() body: PatchMailCalendarOccurrenceRequestDto,
+  ) {
+    const event = await this.mailOrganizationCalendarService.patchOccurrence(
+      user.companyId,
+      eventId,
+      new Date(body.occurrenceStartsAt),
+      {
+        title: body.title,
+        startsAt: body.startsAt ? new Date(body.startsAt) : undefined,
+        endsAt: body.endsAt ? new Date(body.endsAt) : undefined,
+        allDay: body.allDay,
       },
     );
     return { ok: true, event };

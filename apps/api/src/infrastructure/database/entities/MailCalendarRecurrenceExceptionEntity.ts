@@ -25,6 +25,18 @@ export class MailCalendarRecurrenceExceptionEntity {
   @Column({ type: "boolean", default: true })
   public cancelled!: boolean;
 
+  @Column({ name: "override_title", type: "varchar", length: 200, nullable: true })
+  public overrideTitle!: string | null;
+
+  @Column({ name: "override_starts_at", type: "timestamptz", nullable: true })
+  public overrideStartsAt!: Date | null;
+
+  @Column({ name: "override_ends_at", type: "timestamptz", nullable: true })
+  public overrideEndsAt!: Date | null;
+
+  @Column({ name: "override_all_day", type: "boolean", nullable: true })
+  public overrideAllDay!: boolean | null;
+
   @CreateDateColumn({ name: "created_at", type: "timestamptz" })
   public createdAt!: Date;
 }

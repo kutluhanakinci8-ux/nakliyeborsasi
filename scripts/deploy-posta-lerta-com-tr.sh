@@ -43,6 +43,12 @@ fi
 if [[ -x "$INSTALL_DIR/scripts/apply-mail-g6-rules-or-schema.sh" ]]; then
   bash "$INSTALL_DIR/scripts/apply-mail-g6-rules-or-schema.sh" "$INSTALL_DIR" || true
 fi
+if [[ -x "$INSTALL_DIR/scripts/apply-mail-d6-occurrence-override-schema.sh" ]]; then
+  bash "$INSTALL_DIR/scripts/apply-mail-d6-occurrence-override-schema.sh" "$INSTALL_DIR" || true
+fi
+if [[ -x "$INSTALL_DIR/scripts/apply-mail-g6-rule-condition-groups-schema.sh" ]]; then
+  bash "$INSTALL_DIR/scripts/apply-mail-g6-rule-condition-groups-schema.sh" "$INSTALL_DIR" || true
+fi
 if [[ -x "$INSTALL_DIR/scripts/apply-lerta-mail-subscription-plans.sh" ]]; then
   bash "$INSTALL_DIR/scripts/apply-lerta-mail-subscription-plans.sh" "$INSTALL_DIR" || true
 fi
