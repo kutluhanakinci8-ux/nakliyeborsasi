@@ -144,6 +144,62 @@ export class CreateMailCalendarCalDavAccountRequestDto {
   public writeEnabled?: boolean;
 }
 
+export class CreateMailContactCardDavAccountRequestDto {
+  @IsString()
+  @MaxLength(120)
+  public label!: string;
+
+  @IsString()
+  @MaxLength(2000)
+  public addressbookUrl!: string;
+
+  @IsString()
+  @MaxLength(320)
+  public username!: string;
+
+  @IsString()
+  @MaxLength(500)
+  public password!: string;
+
+  @IsOptional()
+  @IsBoolean()
+  public enabled?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  public writeEnabled?: boolean;
+}
+
+export class UpdateMailContactCardDavAccountRequestDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  public label?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  public addressbookUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(320)
+  public username?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  public password?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  public enabled?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  public writeEnabled?: boolean;
+}
+
 export class UpdateMailCalendarCalDavAccountRequestDto {
   @IsOptional()
   @IsString()

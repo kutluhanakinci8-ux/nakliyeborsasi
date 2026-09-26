@@ -73,6 +73,7 @@ import { MailOrganizationCalendarService } from "./MailOrganizationCalendarServi
 import { MailOrganizationContactService } from "./MailOrganizationContactService";
 import { MailCalendarIcsFeedService } from "./MailCalendarIcsFeedService";
 import { MailCalendarCalDavService } from "./MailCalendarCalDavService";
+import { MailContactCardDavService } from "./MailContactCardDavService";
 import {
   CreateMailCalendarEventRequestDto,
   CreateMailOrgContactRequestDto,
@@ -82,6 +83,8 @@ import {
   UpdateMailCalendarIcsFeedRequestDto,
   CreateMailCalendarCalDavAccountRequestDto,
   UpdateMailCalendarCalDavAccountRequestDto,
+  CreateMailContactCardDavAccountRequestDto,
+  UpdateMailContactCardDavAccountRequestDto,
   UpdateMailCalendarEventRequestDto,
   UpdateMailOrgContactRequestDto,
 } from "./MailCalendarContactRequestDto";
@@ -106,6 +109,7 @@ export class CompanyMailInboxController {
     private readonly mailOrganizationContactService: MailOrganizationContactService,
     private readonly mailCalendarIcsFeedService: MailCalendarIcsFeedService,
     private readonly mailCalendarCalDavService: MailCalendarCalDavService,
+    private readonly mailContactCardDavService: MailContactCardDavService,
   ) {}
 
   @Get("preferences")
@@ -1286,6 +1290,105 @@ export class CompanyMailInboxController {
       user.companyId,
       user.userId,
       body.ics,
+    );
+    return { ok: true, ...result };
+  }
+
+  @Get("contacts/carddav/accounts")
+  public async listContactCardDavAccounts(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    const accounts = await this.mailContactCardDavService.list(user.companyId);
+    return { accounts };
+  }
+
+  @Post("contacts/carddav/accounts")
+  public async createContactCardDavAccount(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: CreateMailContactCardDavAccountRequestDto,
+  ) {
+    this.assertMailInboxWriter(user);
+    const account = await this.mailContactCardDavService.create(
+      user.companyId,
+      {
+        label: body.label,
+        addressbookUrl: body.addressbookUrl,
+        username: body.username,
+        password: body.password,
+        enabled: body.enabled,
+        writeEnabled: body.writeEnabled,
+      },
+    );
+    return { ok: true, account };
+  }
+
+  @Post("contacts/carddav/accounts/sync-all")
+  public async syncAllContactCardDavAccounts(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    this.assertMailInboxWriter(user);
+    const result = await this.mailContactCardDavService.syncAllForOrganization(
+      user.companyId,
+    );
+    return { ok: true, ...result };
+  }
+
+  @Patch("contacts/carddav/accounts/:accountId")
+  public async updateContactCardDavAccount(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("accountId") accountId: string,
+    @Body() body: UpdateMailContactCardDavAccountRequestDto,
+  ) {
+    this.assertMailInboxWriter(user);
+    const account = await this.mailContactCardDavService.update(
+      user.companyId,
+      accountId,
+      {
+        label: body.label,
+        addressbookUrl: body.addressbookUrl,
+        username: body.username,
+        password: body.password,
+        enabled: body.enabled,
+        writeEnabled: body.writeEnabled,
+      },
+    );
+    return { ok: true, account };
+  }
+
+  @Delete("contacts/carddav/accounts/:accountId")
+  public async deleteContactCardDavAccount(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("accountId") accountId: string,
+  ) {
+    this.assertMailInboxWriter(user);
+    await this.mailContactCardDavService.delete(user.companyId, accountId);
+    return { ok: true };
+  }
+
+  @Post("contacts/carddav/accounts/:accountId/sync")
+  public async syncContactCardDavAccount(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("accountId") accountId: string,
+  ) {
+    this.assertMailInboxWriter(user);
+    const result = await this.mailContactCardDavService.sync(
+      user.companyId,
+      accountId,
+    );
+    return { ok: true, ...result };
+  }
+
+  @Post("contacts/carddav/accounts/:accountId/push/:contactId")
+  public async pushContactToCardDav(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("accountId") accountId: string,
+    @Param("contactId") contactId: string,
+  ) {
+    this.assertMailInboxWriter(user);
+    const result = await this.mailContactCardDavService.pushContactToAccount(
+      user.companyId,
+      accountId,
+      contactId,
     );
     return { ok: true, ...result };
   }

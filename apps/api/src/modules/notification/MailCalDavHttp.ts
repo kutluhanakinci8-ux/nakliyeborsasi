@@ -160,3 +160,93 @@ export function joinCalDavResourceUrl(
   const safeName = fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
   return new URL(safeName, base).toString();
 }
+
+function decodeDavXmlChunk(chunk: string): string {
+  let text = chunk;
+  if (text.includes("<![CDATA[")) {
+    text = text.replace(/^<!\[CDATA\[/, "").replace(/\]\]>$/, "");
+  }
+  return text
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#(\d+);/g, (_, code) =>
+      String.fromCharCode(Number.parseInt(code, 10)),
+    );
+}
+
+export function extractAddressDataFromMultistatus(xml: string): string[] {
+  const blocks: string[] = [];
+  const pattern =
+    /<(?:[\w-]+:)?address-data[^>]*>([\s\S]*?)<\/(?:[\w-]+:)?address-data>/gi;
+  let match: RegExpExecArray | null;
+  while ((match = pattern.exec(xml)) !== null) {
+    const chunk = decodeDavXmlChunk(match[1] ?? "");
+    if (chunk.includes("BEGIN:VCARD")) {
+      blocks.push(chunk);
+    }
+  }
+  return blocks;
+}
+
+export async function cardDavAddressbookQuery(
+  addressbookUrl: string,
+  username: string,
+  password: string,
+): Promise<string[]> {
+  const body = `<?xml version="1.0" encoding="utf-8" ?>
+<C:addressbook-query xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:carddav">
+  <D:prop>
+    <D:getetag/>
+    <C:address-data/>
+  </D:prop>
+  <C:filter>
+    <C:prop-filter name="FN">
+      <C:is-defined/>
+    </C:prop-filter>
+  </C:filter>
+</C:addressbook-query>`;
+  const { status, text } = await davRequest(
+    "REPORT",
+    addressbookUrl,
+    username,
+    password,
+    body,
+    "1",
+  );
+  if (status !== 207) {
+    throw new Error(`CardDAV REPORT HTTP ${status}`);
+  }
+  return extractAddressDataFromMultistatus(text);
+}
+
+export async function cardDavPutVcard(
+  resourceUrl: string,
+  username: string,
+  password: string,
+  vcardBody: string,
+): Promise<void> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    const response = await fetch(resourceUrl, {
+      method: "PUT",
+      headers: {
+        Authorization: basicAuthHeader(username, password),
+        "Content-Type": "text/vcard; charset=utf-8",
+      },
+      body: vcardBody,
+      signal: controller.signal,
+    });
+    if (
+      response.status !== 201 &&
+      response.status !== 204 &&
+      response.status !== 200
+    ) {
+      throw new Error(`CardDAV PUT HTTP ${response.status}`);
+    }
+  } finally {
+    clearTimeout(timer);
+  }
+}

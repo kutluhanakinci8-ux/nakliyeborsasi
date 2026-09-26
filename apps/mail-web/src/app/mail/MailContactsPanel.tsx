@@ -5,10 +5,13 @@ import {
   createOrgContact,
   deleteOrgContact,
   downloadContactsVcf,
+  fetchContactCardDavAccounts,
   importContactsVcf,
   fetchOrgContacts,
+  pushContactToCardDav,
   type MailOrgContact,
 } from "@/lib/mailApi";
+import { MailContactsCardDavPanel } from "./MailContactsCardDavPanel";
 
 type Props = {
   accessToken: string;
@@ -26,6 +29,9 @@ export function MailContactsPanel({
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [cardDavPushAccountId, setCardDavPushAccountId] = useState<
+    string | null
+  >(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -44,6 +50,15 @@ export function MailContactsPanel({
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    void fetchContactCardDavAccounts(accessToken)
+      .then((data) => {
+        const writable = data.accounts.find((a) => a.enabled && a.writeEnabled);
+        setCardDavPushAccountId(writable?.id ?? null);
+      })
+      .catch(() => setCardDavPushAccountId(null));
+  }, [accessToken]);
 
   async function onAdd() {
     if (!displayName.trim()) {
@@ -167,6 +182,28 @@ export function MailContactsPanel({
                   Yaz
                 </button>
               ) : null}
+              {cardDavPushAccountId ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    void pushContactToCardDav(
+                      accessToken,
+                      cardDavPushAccountId,
+                      c.id,
+                    )
+                      .then(() => onToast("CardDAV’a yazıldı."))
+                      .catch((err: unknown) => {
+                        onToast(
+                          err instanceof Error
+                            ? err.message
+                            : "CardDAV yazma başarısız.",
+                        );
+                      })
+                  }
+                >
+                  CardDAV’a yaz
+                </button>
+              ) : null}
               <button
                 type="button"
                 className="mail-d6-danger"
@@ -192,6 +229,11 @@ export function MailContactsPanel({
           <li className="mail-d6-empty">Henüz kişi yok.</li>
         ) : null}
       </ul>
+      <MailContactsCardDavPanel
+        accessToken={accessToken}
+        onToast={onToast}
+        onSynced={() => void load()}
+      />
     </div>
   );
 }
