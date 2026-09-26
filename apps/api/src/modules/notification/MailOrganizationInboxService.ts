@@ -60,6 +60,7 @@ export class MailOrganizationInboxService {
 
   public async getSummary(organizationId: string): Promise<{
     primaryAddress: string | null;
+    technicalPrimaryAddress: string | null;
     mailboxId: string | null;
     unreadCount: number;
     totalMessages: number;
@@ -70,10 +71,13 @@ export class MailOrganizationInboxService {
     snoozedCount: number;
   }> {
     const primaryAddress = await this.resolvePrimaryAddress(organizationId);
+    const technicalPrimaryAddress =
+      await this.resolvePrimaryTechnicalAddress(organizationId);
     const mailboxIds = await this.mailboxIdsForOrganization(organizationId);
     if (mailboxIds.length === 0) {
       return {
         primaryAddress,
+        technicalPrimaryAddress,
         mailboxId: null,
         unreadCount: 0,
         totalMessages: 0,
@@ -138,15 +142,14 @@ export class MailOrganizationInboxService {
         .andWhere("m.snoozedUntil > :now", { now })
         .getCount(),
     ]);
-    const technicalPrimary =
-      await this.resolvePrimaryTechnicalAddress(organizationId);
-    const mailbox = technicalPrimary
+    const mailbox = technicalPrimaryAddress
       ? await this.mailboxRepository.findOne({
-          where: { organizationId, emailAddress: technicalPrimary },
+          where: { organizationId, emailAddress: technicalPrimaryAddress },
         })
       : null;
     return {
       primaryAddress,
+      technicalPrimaryAddress,
       mailboxId: mailbox?.id ?? null,
       unreadCount,
       totalMessages,

@@ -18,8 +18,16 @@ import {
   type MailSentItem,
 } from "../../lib/CompanyMailInboxApi";
 import { useWebSession } from "../../context/WebSessionProvider";
+import { buildMailWebSsoHandoffUrl } from "../../lib/MailWebUrl";
 
 type Folder = "inbox" | "spam" | "all";
+
+export type OrganizationMailInboxPanelProps = {
+  /** Hesap → Organizasyon varsayılanı; Mesajlar sekmesinde `messaging`. */
+  variant?: "account" | "messaging";
+  /** Logistics Mesajlar: teknik `*.post.lerta.com.tr` adresi. */
+  primaryAddressDisplay?: "public" | "technical";
+};
 
 function fileToAttachment(file: File): Promise<ComposeAttachment> {
   return new Promise((resolve, reject) => {
@@ -38,8 +46,12 @@ function fileToAttachment(file: File): Promise<ComposeAttachment> {
   });
 }
 
-export function OrganizationMailInboxPanel() {
+export function OrganizationMailInboxPanel({
+  variant = "account",
+  primaryAddressDisplay = "public",
+}: OrganizationMailInboxPanelProps = {}) {
   const { accessToken, session } = useWebSession();
+  const inMessaging = variant === "messaging";
   const isOwner = session?.roleCodes?.includes("COMPANY_OWNER") ?? false;
   const [folder, setFolder] = useState<Folder>("inbox");
   const [summary, setSummary] = useState<MailInboxSummary | null>(null);
@@ -144,15 +156,42 @@ export function OrganizationMailInboxPanel() {
     return null;
   }
 
+  const displayAddress =
+    primaryAddressDisplay === "technical"
+      ? (summary?.technicalPrimaryAddress ??
+        summary?.primaryAddress ??
+        "—")
+      : (summary?.primaryAddress ?? "—");
+
+  const sectionClass = inMessaging
+    ? "module-panel messaging-mail-panel"
+    : "account-card module-panel module-panel--elevated account-org-section";
+
   return (
     <section
-      id="org-gelen-kutusu"
-      className="account-card module-panel module-panel--elevated account-org-section"
+      id={inMessaging ? undefined : "org-gelen-kutusu"}
+      className={sectionClass}
     >
-      <p className="account-verify-eyebrow">Faz C4 — Gelen / giden / IMAP</p>
-      <h2 className="account-card-title">Kurumsal posta</h2>
-      <p className="account-card-lead">
-        Adres: <strong>{summary?.primaryAddress ?? "—"}</strong>
+      {!inMessaging ? (
+        <p className="account-verify-eyebrow">Faz C4 — Gelen / giden / IMAP</p>
+      ) : null}
+      <h2 className={inMessaging ? "module-panel-title" : "account-card-title"}>
+        Kurumsal e-posta
+      </h2>
+      <p className={inMessaging ? "module-hint" : "account-card-lead"}>
+        Adres: <strong>{displayAddress}</strong>
+        {inMessaging && primaryAddressDisplay === "technical" ? (
+          <>
+            {" "}
+            <span className="module-hint">
+              (Lerta Post ·{" "}
+              {summary?.primaryAddress && summary.primaryAddress !== displayAddress
+                ? `görünen: ${summary.primaryAddress}`
+                : "kurumsal kutu"}
+              )
+            </span>
+          </>
+        ) : null}
         {summary && summary.unreadCount > 0 ? (
           <> — {summary.unreadCount} okunmamış</>
         ) : null}
@@ -160,6 +199,20 @@ export function OrganizationMailInboxPanel() {
           <> — {summary.spamCount} spam</>
         ) : null}
       </p>
+
+      {inMessaging ? (
+        <p className="module-hint" style={{ marginBottom: "0.75rem" }}>
+          Gelen ve giden posta bu sekmede; tam webmail (takvim, kurallar, arşiv) için{" "}
+          <a
+            href={buildMailWebSsoHandoffUrl(accessToken)}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            posta.lerta.com.tr
+          </a>
+          .
+        </p>
+      ) : null}
 
       <div className="account-verify-badges" style={{ marginBottom: "0.75rem" }}>
         {(["inbox", "spam", "all"] as Folder[]).map((f) => (

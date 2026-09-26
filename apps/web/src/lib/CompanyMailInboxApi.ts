@@ -9,6 +9,7 @@ export type MailInboxFolder =
 
 export type MailInboxSummary = {
   primaryAddress: string | null;
+  technicalPrimaryAddress?: string | null;
   mailboxId: string | null;
   unreadCount: number;
   totalMessages: number;
