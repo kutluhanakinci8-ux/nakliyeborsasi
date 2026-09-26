@@ -61,23 +61,27 @@ export class MailOrganizationIdentityService {
     }
 
     const channel = this.resolveChannel(mailDomain);
-    const vanityAddress = addressPair?.publicAddress ?? null;
-    const displayAddress =
-      addressPair && addressPair.publicAddress !== addressPair.technicalAddress
+    const vanityAddress =
+      addressPair &&
+      addressPair.publicAddress !== addressPair.technicalAddress
         ? addressPair.publicAddress
-        : fromAddress;
+        : null;
+    const displayAddress = addressPair?.publicAddress ?? fromAddress;
 
     if (channel === "instant_post") {
-      const publicDnsReady =
+      const wildcardDnsReady =
         await this.mailInstantPostDomainService.platformPostDnsReady();
+      const managed =
+        mailDomain.dnsSnapshot?.managedByPlatform === true ||
+        mailDomain.dnsSnapshot?.product === "lerta_post";
       return {
-        fromAddress,
+        fromAddress: displayAddress,
         vanityAddress,
         displayAddress,
         channel,
         domain: mailDomain.domain,
         domainVerified: mailDomain.verificationStatus === "verified",
-        platformDnsReady: publicDnsReady,
+        platformDnsReady: wildcardDnsReady || managed,
         sender,
       };
     }

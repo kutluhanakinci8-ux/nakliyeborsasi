@@ -169,8 +169,10 @@ export default function DomainPage() {
       <div className="card" style={{ marginBottom: 16 }}>
         <h2>İstediğiniz posta adresi</h2>
         <p style={{ color: "var(--muted)", marginTop: 0 }}>
-          Tek satırda yazın. <strong>@firma.post</strong> → Lerta Posta (DNS otomatik);
-          <strong>@firma.com.tr</strong> → müşteri DNS; <strong>@lerta.com.tr</strong> → paylaşımlı pilot.
+          Örnek: <strong>info@kutluhan.post</strong>, <strong>abayer@abayer.post</strong> —{" "}
+          <code>@</code> öncesi ve firma adını siz yazın, son her zaman{" "}
+          <strong>.post</strong>. Lerta Posta DNS’i biz yönetiriz;{" "}
+          <strong>@firma.com.tr</strong> için müşteri DNS gerekir.
         </p>
         <form onSubmit={onClaimAddress}>
           <input

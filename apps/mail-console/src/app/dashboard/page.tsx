@@ -581,11 +581,6 @@ export default function DashboardPage() {
           Adres:{" "}
           <strong>{displayAddress ?? fromAddress ?? "Henüz tanımlı değil"}</strong>
         </p>
-        {isLertaPost && fromAddress && displayAddress !== fromAddress ? (
-          <p style={{ color: "var(--muted)", fontSize: 14, marginTop: 4 }}>
-            Teknik: <code>{fromAddress}</code>
-          </p>
-        ) : null}
         <p>
           {isLertaPost ? (
             <span className="badge ok" style={{ marginRight: 8 }}>

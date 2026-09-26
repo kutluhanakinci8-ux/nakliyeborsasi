@@ -9,8 +9,11 @@ import { In, Repository } from "typeorm";
 import {
   PLATFORM_MAIL_INSTANT_POST_ZONE,
   formatInstantPostVanityEmail,
+  instantPostOrgSlugFromMailDomain,
   isInstantPostMailDomain,
 } from "@nakliyeborsasi/core";
+import { MailCustomDomainOpenDkimInstaller } from "./MailCustomDomainOpenDkimInstaller";
+import { MailDomainDkimMaterialService } from "./MailDomainDkimMaterialService";
 import { MailDomainEntity } from "../../infrastructure/database/entities/MailDomainEntity";
 import { MailImapCredentialEntity } from "../../infrastructure/database/entities/MailImapCredentialEntity";
 import { MailMailboxEntity } from "../../infrastructure/database/entities/MailMailboxEntity";
@@ -42,6 +45,8 @@ export class MailInstantPostDomainService {
     private readonly mailImapMaildirService: MailImapMaildirService,
     private readonly mailImapAccessService: MailImapAccessService,
     private readonly mailInboundRoutingService: MailInboundRoutingService,
+    private readonly mailDomainDkimMaterialService: MailDomainDkimMaterialService,
+    private readonly mailCustomDomainOpenDkimInstaller: MailCustomDomainOpenDkimInstaller,
   ) {}
 
   public resolveZone(): string {
@@ -89,6 +94,7 @@ export class MailInstantPostDomainService {
         existingForOrg.domainType = "instant_post";
         await this.domainRepository.save(existingForOrg);
       }
+      await this.ensureOutboundSigning(existingForOrg);
       return existingForOrg;
     }
     const taken = await this.domainRepository.findOne({ where: { domain } });
@@ -98,6 +104,7 @@ export class MailInstantPostDomainService {
       );
     }
     if (taken) {
+      await this.ensureOutboundSigning(taken);
       return taken;
     }
 
@@ -124,7 +131,69 @@ export class MailInstantPostDomainService {
         this.mailDomainDnsVerificationService.resolvePlatformMxHost(),
       wildcardZone: this.resolveZone(),
     };
-    return this.domainRepository.save(row);
+    const saved = await this.domainRepository.save(row);
+    await this.ensureOutboundSigning(saved);
+    return saved;
+  }
+
+  public async ensureOutboundSigning(
+    mailDomain: MailDomainEntity,
+  ): Promise<{ ok: boolean; detail: string }> {
+    const slug = instantPostOrgSlugFromMailDomain(mailDomain.domain);
+    if (!slug) {
+      return { ok: false, detail: "Lerta Post slug çözülemedi." };
+    }
+    const snapshot = mailDomain.dnsSnapshot ?? {};
+    let privateKeyPem = snapshot.dkimPrivateKeyPem as string | undefined;
+    let dkimTxt = snapshot.dkimTxt as string | undefined;
+    if (!privateKeyPem) {
+      const generated = this.mailDomainDkimMaterialService.generateForDomain(
+        mailDomain.domain,
+      );
+      if (!generated) {
+        return {
+          ok: false,
+          detail:
+            "DKIM üretilemedi — VPS: bash scripts/register-opendkim-custom-domain.sh " +
+            mailDomain.domain,
+        };
+      }
+      privateKeyPem = generated.privateKeyPem;
+      dkimTxt = generated.dkimTxt;
+      mailDomain.dnsSnapshot = {
+        ...snapshot,
+        dkimPrivateKeyPem: privateKeyPem,
+        dkimTxt,
+        dkimSelector: "default",
+      };
+      await this.domainRepository.save(mailDomain);
+    }
+    const technical = this.mailCustomDomainOpenDkimInstaller.tryInstall({
+      domain: mailDomain.domain,
+      selector: "default",
+      privateKeyPem,
+    });
+    const vanity = this.mailCustomDomainOpenDkimInstaller.tryRegisterLertaPostVanitySigning(
+      { orgSlug: slug, technicalFqdn: mailDomain.domain },
+    );
+    return {
+      ok: technical.installed || vanity.installed,
+      detail: `${technical.detail} · ${vanity.detail}`,
+    };
+  }
+
+  public async repairAllInstantPostSigning(): Promise<
+    { domain: string; detail: string }[]
+  > {
+    const rows = await this.domainRepository.find({
+      where: { domainType: In([...INSTANT_POST_DOMAIN_TYPES]) },
+    });
+    const results: { domain: string; detail: string }[] = [];
+    for (const row of rows) {
+      const r = await this.ensureOutboundSigning(row);
+      results.push({ domain: row.domain, detail: r.detail });
+    }
+    return results;
   }
 
   public async platformPostDnsReady(): Promise<boolean> {

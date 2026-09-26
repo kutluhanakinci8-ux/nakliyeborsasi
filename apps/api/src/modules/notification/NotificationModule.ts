@@ -37,6 +37,7 @@ import { MailTenantDnsVerificationScheduler } from "./MailTenantDnsVerificationS
 import { MailOrganizationSendRateService } from "./MailOrganizationSendRateService";
 import { MailCustomDomainService } from "./MailCustomDomainService";
 import { MailCustomDomainOpenDkimInstaller } from "./MailCustomDomainOpenDkimInstaller";
+import { MailDomainDkimMaterialService } from "./MailDomainDkimMaterialService";
 import { EmailOutboxAnalyticsService } from "./EmailOutboxAnalyticsService";
 import { EmailOutboxEngagementEventEntity } from "../../infrastructure/database/entities/EmailOutboxEngagementEventEntity";
 import { EmailOutboxClickTokenEntity } from "../../infrastructure/database/entities/EmailOutboxClickTokenEntity";
@@ -251,6 +252,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     MailOrganizationSendRateService,
     MailCustomDomainService,
     MailCustomDomainOpenDkimInstaller,
+    MailDomainDkimMaterialService,
     MailIdentityAuditService,
     MailInboundIngestService,
     MailInboundWebhookGuard,

@@ -325,6 +325,21 @@ export class PlatformMailIdentityAdminController {
     return { domain };
   }
 
+  @Post("instant-post/repair-signing")
+  public async repairInstantPostSigning(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    const results =
+      await this.mailInstantPostDomainService.repairAllInstantPostSigning();
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.AdminDomainDnsVerified,
+      { repairCount: results.length },
+      "/platform-admin/mail/instant-post/repair-signing",
+    );
+    return { message: "OK", results };
+  }
+
   @Post("instant-post/switch-primary")
   public async switchOrganizationToLertaPost(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
