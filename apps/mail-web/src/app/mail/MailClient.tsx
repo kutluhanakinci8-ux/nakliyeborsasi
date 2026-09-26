@@ -58,6 +58,8 @@ import { useMailSession } from "@/lib/session";
 import { MailSettingsPanel } from "./MailSettingsPanel";
 import { MailEmptyState } from "./MailEmptyState";
 import { MailShortcutsDialog } from "./MailShortcutsDialog";
+import { MailCalendarPanel } from "./MailCalendarPanel";
+import { MailContactsPanel } from "./MailContactsPanel";
 import { useMailKeyboardShortcuts } from "./useMailKeyboardShortcuts";
 import { ComposeRichEditor } from "./ComposeRichEditor";
 
@@ -70,7 +72,9 @@ type View =
   | "trash"
   | "starred"
   | "snoozed"
-  | "drafts";
+  | "drafts"
+  | "calendar"
+  | "contacts";
 
 function inboxFolderForView(view: View): MailInboxFolder {
   if (view === "spam") {
@@ -190,6 +194,11 @@ export function MailClient() {
 
   const refresh = useCallback(async () => {
     if (!accessToken) {
+      return;
+    }
+    if (view === "calendar" || view === "contacts") {
+      const data = await fetchInbox(accessToken, "inbox");
+      setSummary(data.summary);
       return;
     }
     const folder = inboxFolderForView(view);
@@ -326,7 +335,13 @@ export function MailClient() {
   ]);
 
   useEffect(() => {
-    if (!accessToken || view === "sent" || view === "drafts") {
+    if (
+      !accessToken ||
+      view === "sent" ||
+      view === "drafts" ||
+      view === "calendar" ||
+      view === "contacts"
+    ) {
       setSearchResults(null);
       return;
     }
@@ -1293,6 +1308,20 @@ export function MailClient() {
             Taslaklar
             {drafts.length > 0 ? ` (${drafts.length})` : ""}
           </button>
+          <button
+            type="button"
+            className={view === "calendar" ? "active" : ""}
+            onClick={() => switchView("calendar")}
+          >
+            Takvim
+          </button>
+          <button
+            type="button"
+            className={view === "contacts" ? "active" : ""}
+            onClick={() => switchView("contacts")}
+          >
+            Kişiler
+          </button>
           <div className="mail-custom-folders-head">
             <span>Özel klasörler</span>
             <button
@@ -1473,6 +1502,27 @@ export function MailClient() {
         </div>
       </aside>
 
+      {view === "calendar" || view === "contacts" ? (
+        <section className="mail-d6-pane">
+          {view === "calendar" ? (
+            <MailCalendarPanel
+              accessToken={accessToken!}
+              onToast={setToast}
+            />
+          ) : (
+            <MailContactsPanel
+              accessToken={accessToken!}
+              onToast={setToast}
+              onComposeTo={(addr) => {
+                resetCompose();
+                setComposeTo(addr);
+                setComposeOpen(true);
+              }}
+            />
+          )}
+        </section>
+      ) : (
+        <>
       <section className="mail-list">
         {view !== "drafts" ? (
           <div className="mail-search">
@@ -2139,6 +2189,8 @@ export function MailClient() {
           </>
         )}
       </section>
+        </>
+      )}
 
       {composeOpen ? (
         <div

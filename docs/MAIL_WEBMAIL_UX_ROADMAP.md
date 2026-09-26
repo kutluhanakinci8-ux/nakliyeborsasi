@@ -103,6 +103,12 @@ sudo certbot certonly --webroot -w /var/www/certbot -d posta.lerta.com.tr
 - Ayarlar → Bildirim: iOS Ana ekrana ekle uyarısı
 - [MAIL_CALDAV_D6.md](./MAIL_CALDAV_D6.md) — D6 plan notu (uygulama sonra)
 
+## D6 — Takvim & kişiler (MVP, uygulandı)
+
+- Org takvimi + kişi defteri; webmail **Takvim** / **Kişiler**
+- iCal `.ics` içe/dışa; vCard `.vcf` dışa
+- Detay: [MAIL_CALDAV_D6.md](./MAIL_CALDAV_D6.md)
+
 ## G5 — Kurallar v2 (uygulandı)
 
 - Okundu işaretle ve çöpe taşı işlemleri

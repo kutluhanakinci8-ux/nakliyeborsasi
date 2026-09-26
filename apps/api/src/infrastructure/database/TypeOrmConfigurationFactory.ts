@@ -53,6 +53,8 @@ import { MailCustomFolderEntity } from "./entities/MailCustomFolderEntity";
 import { MailInboxRuleEntity } from "./entities/MailInboxRuleEntity";
 import { MailDelayedComposeEntity } from "./entities/MailDelayedComposeEntity";
 import { MailInboxPreferencesEntity } from "./entities/MailInboxPreferencesEntity";
+import { MailCalendarEventEntity } from "./entities/MailCalendarEventEntity";
+import { MailOrgContactEntity } from "./entities/MailOrgContactEntity";
 
 @Injectable()
 export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
@@ -121,6 +123,8 @@ export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
         MailInboxRuleEntity,
         MailDelayedComposeEntity,
         MailInboxPreferencesEntity,
+        MailCalendarEventEntity,
+        MailOrgContactEntity,
       ],
       synchronize,
       logging: false,

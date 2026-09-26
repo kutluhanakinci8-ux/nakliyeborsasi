@@ -1126,8 +1126,14 @@ a {
   }
 
   .mail-app.mobile-pane-nav .mail-list,
-  .mail-app.mobile-pane-nav .mail-read {
+  .mail-app.mobile-pane-nav .mail-read,
+  .mail-app.mobile-pane-nav .mail-d6-pane {
     display: none;
+  }
+
+  .mail-d6-pane {
+    grid-column: 1;
+    grid-row: 2;
   }
 
   .mail-app.mobile-pane-nav .mail-sidebar {
@@ -1230,4 +1236,116 @@ a {
   padding: 2px 8px;
   font-size: 0.75rem;
   cursor: pointer;
+}
+
+.mail-d6-pane {
+  grid-column: 2 / -1;
+  overflow: auto;
+  background: var(--panel);
+  border-left: 1px solid var(--border);
+}
+
+.mail-d6-inner {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 20px 24px 48px;
+}
+
+.mail-d6-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.mail-d6-header h1 {
+  font-size: 1.35rem;
+  margin: 0;
+}
+
+.mail-d6-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.mail-d6-toolbar button,
+.mail-d6-form button,
+.mail-d6-list button {
+  border: 1px solid var(--border);
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.mail-d6-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.mail-d6-form input {
+  flex: 1 1 140px;
+  min-width: 120px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.mail-d6-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.mail-d6-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.mail-d6-meta {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.mail-d6-danger {
+  color: #d93025;
+  border-color: #f5c6c2 !important;
+}
+
+.mail-d6-empty {
+  color: var(--muted);
+  justify-content: center;
+}
+
+.mail-d6-hint {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 24px;
+}
+
+.mail-d6-file-btn {
+  border: 1px solid var(--border);
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.mail-d6-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
 }

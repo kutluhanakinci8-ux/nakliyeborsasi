@@ -116,6 +116,10 @@ import { MailDelayedComposeEntity } from "../../infrastructure/database/entities
 import { MailDelayedComposeService } from "./MailDelayedComposeService";
 import { MailDelayedComposeProcessor } from "./MailDelayedComposeProcessor";
 import { MailInboxPreferencesEntity } from "../../infrastructure/database/entities/MailInboxPreferencesEntity";
+import { MailCalendarEventEntity } from "../../infrastructure/database/entities/MailCalendarEventEntity";
+import { MailOrgContactEntity } from "../../infrastructure/database/entities/MailOrgContactEntity";
+import { MailOrganizationCalendarService } from "./MailOrganizationCalendarService";
+import { MailOrganizationContactService } from "./MailOrganizationContactService";
 import { MailInboxPreferencesService } from "./MailInboxPreferencesService";
 import { MailInboxDigestService } from "./MailInboxDigestService";
 import { MailInboxDigestScheduler } from "./MailInboxDigestScheduler";
@@ -177,6 +181,8 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
       MailInboxRuleEntity,
       MailDelayedComposeEntity,
       MailInboxPreferencesEntity,
+      MailCalendarEventEntity,
+      MailOrgContactEntity,
       CompanyMailTeamInviteEntity,
       MailOrganizationBillingStateEntity,
       MailOrganizationOperatorStateEntity,
@@ -273,6 +279,8 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     MailInboxDigestService,
     MailInboxDigestScheduler,
     MailSnoozeWakeProcessor,
+    MailOrganizationCalendarService,
+    MailOrganizationContactService,
   ],
   exports: [
     AuthNotificationService,

@@ -69,6 +69,15 @@ import {
   ReorderMailInboxRulesRequestDto,
   UpdateMailInboxRuleRequestDto,
 } from "./MailInboxRuleRequestDto";
+import { MailOrganizationCalendarService } from "./MailOrganizationCalendarService";
+import { MailOrganizationContactService } from "./MailOrganizationContactService";
+import {
+  CreateMailCalendarEventRequestDto,
+  CreateMailOrgContactRequestDto,
+  ImportMailCalendarIcsRequestDto,
+  UpdateMailCalendarEventRequestDto,
+  UpdateMailOrgContactRequestDto,
+} from "./MailCalendarContactRequestDto";
 
 @Controller("company/mail-inbox")
 @UseGuards(JwtAuthenticationGuard, MailProductTotpPolicyGuard)
@@ -86,6 +95,8 @@ export class CompanyMailInboxController {
     private readonly mailInboxRuleService: MailInboxRuleService,
     private readonly mailDelayedComposeService: MailDelayedComposeService,
     private readonly mailInboxPreferencesService: MailInboxPreferencesService,
+    private readonly mailOrganizationCalendarService: MailOrganizationCalendarService,
+    private readonly mailOrganizationContactService: MailOrganizationContactService,
   ) {}
 
   @Get("preferences")
@@ -955,6 +966,193 @@ export class CompanyMailInboxController {
     const parsed = new Date(`${raw}T00:00:00.000Z`);
     if (Number.isNaN(parsed.getTime())) {
       throw new BadRequestException("receivedAfter geçersiz");
+    }
+    return parsed;
+  }
+
+  @Get("calendar/events")
+  public async listCalendarEvents(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Query("from") fromRaw: string,
+    @Query("to") toRaw: string,
+  ) {
+    const from = this.parseIsoDateQuery(fromRaw, "from");
+    const to = this.parseIsoDateQuery(toRaw, "to");
+    const events = await this.mailOrganizationCalendarService.listInRange(
+      user.companyId,
+      from,
+      to,
+    );
+    return { events };
+  }
+
+  @Post("calendar/events")
+  public async createCalendarEvent(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: CreateMailCalendarEventRequestDto,
+  ) {
+    const event = await this.mailOrganizationCalendarService.create(
+      user.companyId,
+      user.userId,
+      {
+        title: body.title,
+        description: body.description,
+        location: body.location,
+        startsAt: new Date(body.startsAt),
+        endsAt: new Date(body.endsAt),
+        allDay: body.allDay,
+      },
+    );
+    return { ok: true, event };
+  }
+
+  @Patch("calendar/events/:eventId")
+  public async updateCalendarEvent(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("eventId") eventId: string,
+    @Body() body: UpdateMailCalendarEventRequestDto,
+  ) {
+    const event = await this.mailOrganizationCalendarService.update(
+      user.companyId,
+      eventId,
+      {
+        title: body.title,
+        description: body.description,
+        location: body.location,
+        startsAt: body.startsAt ? new Date(body.startsAt) : undefined,
+        endsAt: body.endsAt ? new Date(body.endsAt) : undefined,
+        allDay: body.allDay,
+      },
+    );
+    return { ok: true, event };
+  }
+
+  @Delete("calendar/events/:eventId")
+  public async deleteCalendarEvent(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("eventId") eventId: string,
+  ) {
+    await this.mailOrganizationCalendarService.delete(user.companyId, eventId);
+    return { ok: true };
+  }
+
+  @Get("calendar/export.ics")
+  public async exportCalendarIcs(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Query("from") fromRaw: string,
+    @Query("to") toRaw: string,
+    @Res() res: Response,
+  ) {
+    const from = this.parseIsoDateQuery(fromRaw, "from");
+    const to = this.parseIsoDateQuery(toRaw, "to");
+    const ics = await this.mailOrganizationCalendarService.exportIcs(
+      user.companyId,
+      from,
+      to,
+    );
+    res.setHeader("Content-Type", "text/calendar; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      'attachment; filename="lerta-takvim.ics"',
+    );
+    res.send(ics);
+  }
+
+  @Post("calendar/import")
+  public async importCalendarIcs(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: ImportMailCalendarIcsRequestDto,
+  ) {
+    const result = await this.mailOrganizationCalendarService.importIcs(
+      user.companyId,
+      user.userId,
+      body.ics,
+    );
+    return { ok: true, ...result };
+  }
+
+  @Get("contacts")
+  public async listOrgContacts(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    const contacts = await this.mailOrganizationContactService.list(
+      user.companyId,
+    );
+    return { contacts };
+  }
+
+  @Post("contacts")
+  public async createOrgContact(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: CreateMailOrgContactRequestDto,
+  ) {
+    const contact = await this.mailOrganizationContactService.create(
+      user.companyId,
+      {
+        displayName: body.displayName,
+        email: body.email,
+        phone: body.phone,
+        notes: body.notes,
+      },
+    );
+    return { ok: true, contact };
+  }
+
+  @Patch("contacts/:contactId")
+  public async updateOrgContact(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("contactId") contactId: string,
+    @Body() body: UpdateMailOrgContactRequestDto,
+  ) {
+    const contact = await this.mailOrganizationContactService.update(
+      user.companyId,
+      contactId,
+      {
+        displayName: body.displayName,
+        email: body.email,
+        phone: body.phone,
+        notes: body.notes,
+      },
+    );
+    return { ok: true, contact };
+  }
+
+  @Delete("contacts/:contactId")
+  public async deleteOrgContact(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("contactId") contactId: string,
+  ) {
+    await this.mailOrganizationContactService.delete(
+      user.companyId,
+      contactId,
+    );
+    return { ok: true };
+  }
+
+  @Get("contacts/export.vcf")
+  public async exportContactsVcf(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Res() res: Response,
+  ) {
+    const vcf = await this.mailOrganizationContactService.exportVcf(
+      user.companyId,
+    );
+    res.setHeader("Content-Type", "text/vcard; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      'attachment; filename="lerta-kisiler.vcf"',
+    );
+    res.send(vcf);
+  }
+
+  private parseIsoDateQuery(value: string, label: string): Date {
+    const raw = value?.trim();
+    if (!raw) {
+      throw new BadRequestException(`${label} gerekli (ISO tarih).`);
+    }
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.getTime())) {
+      throw new BadRequestException(`${label} geçersiz.`);
     }
     return parsed;
   }
