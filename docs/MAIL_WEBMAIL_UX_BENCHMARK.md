@@ -2,7 +2,7 @@
 
 **Kapsam:** `posta.lerta.com.tr` (`apps/mail-web`) — günlük kullanım vs Gmail, Outlook Web, Zoho Mail, Proton Mail.  
 **Referans ekran:** 3 sütun (sol menü · liste · okuma), pilot `kullanici.lerta.com.tr` kutusu.  
-**Son güncelleme:** G7 (HTTPS HSTS, snooze, push, kurallar, undo send).
+**Son güncelleme:** G8 (IMAP rehberi, ayarlar UX, D6 plan notu).
 
 ---
 
@@ -53,7 +53,7 @@
 | Karanlık tema | ✓ (G4) | ✓ | ✓ | — |
 | Kurumsal logo (tenant) | ✓ (G4) | kısmi | ✓ | — |
 | Geri al (undo send) | ✓ (5s) | ✓ | ✓ | — |
-| Harici istemci (Thunderbird) | IMAP | ✓ | ✓ | Dokümantasyon |
+| Harici istemci (Thunderbird) | ✓ rehber + ayarlar | ✓ | ✓ | — |
 
 ---
 

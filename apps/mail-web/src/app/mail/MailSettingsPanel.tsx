@@ -46,6 +46,7 @@ export function MailSettingsPanel({ accessToken, onClose }: Props) {
   const [error, setError] = useState("");
   const [newPassword, setNewPassword] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [copyHint, setCopyHint] = useState("");
 
   useEffect(() => {
     setNotifySound(isMailNotifySoundEnabled());
@@ -83,6 +84,16 @@ export function MailSettingsPanel({ accessToken, onClose }: Props) {
       );
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function copyText(label: string, value: string) {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopyHint(`${label} kopyalandı.`);
+      window.setTimeout(() => setCopyHint(""), 2500);
+    } catch {
+      setCopyHint("Kopyalanamadı.");
     }
   }
 
@@ -155,6 +166,14 @@ export function MailSettingsPanel({ accessToken, onClose }: Props) {
             {!pushConfigured ? (
               <p>Sunucuda push henüz yapılandırılmamış (VAPID anahtarları).</p>
             ) : null}
+            <div className="mail-settings-callout">
+              <strong>iPhone / iPad (Safari)</strong>
+              <p>
+                Bildirimler tarayıcı <em>sekmede</em> çalışmaz. Paylaş →{" "}
+                <strong>Ana Ekrana Ekle</strong>, uygulamayı ana ekrandan açın,
+                sonra buradan bildirimleri açın.
+              </p>
+            </div>
             {pushStatus ? <p>{pushStatus}</p> : null}
             <label style={{ display: "block", marginTop: "0.75rem" }}>
               <input
@@ -290,8 +309,12 @@ export function MailSettingsPanel({ accessToken, onClose }: Props) {
         {tab === "imap" ? (
           <>
         <p style={{ color: "var(--muted)", fontSize: "0.9rem" }}>
-          Masaüstü istemci (Thunderbird, Outlook) ile kutunuza bağlanın.
+          Masaüstü istemci (Thunderbird, Outlook) ile kutunuza bağlanın.{" "}
+          <a href="/help/imap" target="_blank" rel="noopener noreferrer">
+            Kurulum rehberi
+          </a>
         </p>
+        {copyHint ? <p style={{ fontSize: "0.85rem" }}>{copyHint}</p> : null}
         {error ? <p className="login-error">{error}</p> : null}
         {settings ? (
           <dl className="imap-dl">
@@ -301,9 +324,34 @@ export function MailSettingsPanel({ accessToken, onClose }: Props) {
             <dd>
               {settings.imapHost}:{settings.imapPort}{" "}
               {settings.imapTls ? "(SSL/TLS)" : ""}
+              {settings.enabled ? (
+                <button
+                  type="button"
+                  className="mail-copy-inline"
+                  onClick={() =>
+                    void copyText(
+                      "Sunucu",
+                      `${settings.imapHost}:${settings.imapPort}`,
+                    )
+                  }
+                >
+                  Kopyala
+                </button>
+              ) : null}
             </dd>
             <dt>Kullanıcı</dt>
-            <dd>{settings.username ?? "—"}</dd>
+            <dd>
+              {settings.username ?? "—"}
+              {settings.username ? (
+                <button
+                  type="button"
+                  className="mail-copy-inline"
+                  onClick={() => void copyText("Kullanıcı", settings.username!)}
+                >
+                  Kopyala
+                </button>
+              ) : null}
+            </dd>
             <dt>Şifre</dt>
             <dd>
               {settings.hasCredential
