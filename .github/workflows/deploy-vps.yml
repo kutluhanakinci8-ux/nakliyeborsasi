@@ -3,7 +3,7 @@ name: Deploy VPS
 on:
   push:
     branches:
-      - cursor/own-mail-platform-519e
+      - main
   workflow_dispatch:
 
 concurrency:
@@ -25,4 +25,4 @@ jobs:
           script: |
             set -euo pipefail
             cd /var/www/nakliyeborsasi
-            bash scripts/vps-update.sh /var/www/nakliyeborsasi cursor/own-mail-platform-519e
+            DEPLOY_BRANCH=main bash scripts/deploy-production-vps.sh /var/www/nakliyeborsasi
