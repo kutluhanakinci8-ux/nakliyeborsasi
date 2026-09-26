@@ -4,6 +4,7 @@ import {
   IsArray,
   IsBoolean,
   IsIn,
+  IsISO8601,
   IsString,
   MaxLength,
 } from "class-validator";
@@ -25,4 +26,9 @@ export class BulkMailInboxFolderDto extends BulkMailInboxIdsDto {
 export class BulkMailInboxStarDto extends BulkMailInboxIdsDto {
   @IsBoolean()
   public starred!: boolean;
+}
+
+export class BulkMailInboxSnoozeDto extends BulkMailInboxIdsDto {
+  @IsISO8601()
+  public snoozedUntil!: string;
 }

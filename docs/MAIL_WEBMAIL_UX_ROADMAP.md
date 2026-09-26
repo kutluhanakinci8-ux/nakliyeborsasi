@@ -88,7 +88,13 @@ sudo certbot certonly --webroot -w /var/www/certbot -d posta.lerta.com.tr
 - Ses, sekme/PWA okunmamış rozeti, günlük özet e-postası (08:00)
 - Geri al gönder: yeni posta, yanıt, iletme, taslak (5 sn)
 - Snooze: klasör sayacı, `z` kısayolu, süre bitince web push
-- Planlı: iOS push kısıtları dokümantasyonu
+
+## G7 — Dokümantasyon & toplu erteleme (uygulandı)
+
+- [MAIL_WEB_PUSH_IOS.md](./MAIL_WEB_PUSH_IOS.md) — iOS PWA push rehberi
+- API: `POST messages/bulk/snooze` `{ messageIds, snoozedUntil }`
+- UI: toplu seçim → **Ertele…** (1 sa / 3 sa / 1 gün / 1 hafta)
+- Benchmark güncellemesi (HTTPS, G2–G6 özellikleri)
 
 ## G5 — Kurallar v2 (uygulandı)
 
