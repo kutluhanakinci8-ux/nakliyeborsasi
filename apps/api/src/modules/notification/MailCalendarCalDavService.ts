@@ -20,7 +20,12 @@ import {
   calDavPutIcs,
   joinCalDavResourceUrl,
 } from "./MailCalDavHttp";
-import { buildSingleVeventIcal, parseIcalEvents } from "./MailIcalUtil";
+import {
+  buildCalDavRecurringSeriesIcal,
+  buildSingleVeventIcal,
+  type CalDavRecurrenceOverrideVevent,
+  parseIcalEvents,
+} from "./MailIcalUtil";
 
 const MAX_ACCOUNTS = 3;
 const SYNC_PAST_MS = 90 * 24 * 60 * 60 * 1000;
@@ -264,17 +269,11 @@ export class MailCalendarCalDavService {
     );
     const externalUid =
       event.externalUid?.trim() || `${event.id}@posta.lerta.com.tr`;
-    const ics = buildSingleVeventIcal({
-      uid: externalUid,
-      title: event.title,
-      description: event.description,
-      location: event.location,
-      startsAt: event.startsAt,
-      endsAt: event.endsAt,
-      allDay: event.allDay,
-      recurrenceRule: event.recurrenceRule,
-      recurrenceUntil: event.recurrenceUntil,
-    });
+    const ics = await this.buildEventIcsForCalDav(
+      event,
+      organizationId,
+      externalUid,
+    );
     const resourceHref =
       event.caldavAccountId === accountId && event.caldavResourceHref
         ? event.caldavResourceHref
@@ -376,6 +375,32 @@ export class MailCalendarCalDavService {
     );
     void etag;
     return { resourceHref, externalUid };
+  }
+
+  /** Tekrarlı seri CalDAV’a bağlıysa master .ics (RRULE + EXDATE + override) yeniden yaz. */
+  public async syncRecurrenceMasterToCalDavIfLinked(
+    organizationId: string,
+    eventId: string,
+  ): Promise<void> {
+    const event = await this.eventRepository.findOne({
+      where: { id: eventId, organizationId },
+    });
+    if (
+      !event?.recurrenceRule ||
+      !event.caldavAccountId ||
+      !event.caldavResourceHref
+    ) {
+      return;
+    }
+    try {
+      await this.pushEventToAccount(
+        organizationId,
+        event.caldavAccountId,
+        eventId,
+      );
+    } catch {
+      // CalDAV senkronu en iyi çaba; silme/iptal API’sini bozmaz.
+    }
   }
 
   public async deleteRemoteForEvent(
@@ -533,6 +558,71 @@ export class MailCalendarCalDavService {
       throw new BadRequestException("Bu URL adresine izin verilmiyor.");
     }
     return url;
+  }
+
+  private async buildEventIcsForCalDav(
+    event: MailCalendarEventEntity,
+    organizationId: string,
+    externalUid: string,
+  ): Promise<string> {
+    if (!event.recurrenceRule?.trim()) {
+      return buildSingleVeventIcal({
+        uid: externalUid,
+        title: event.title,
+        description: event.description,
+        location: event.location,
+        startsAt: event.startsAt,
+        endsAt: event.endsAt,
+        allDay: event.allDay,
+      });
+    }
+    const exceptions = await this.recurrenceExceptionRepository.find({
+      where: { organizationId, masterEventId: event.id },
+      order: { occurrenceStartsAt: "ASC" },
+    });
+    const exDates = exceptions
+      .filter((row) => row.cancelled)
+      .map((row) => row.occurrenceStartsAt);
+    const durationMs = event.endsAt.getTime() - event.startsAt.getTime();
+    const overrides: CalDavRecurrenceOverrideVevent[] = [];
+    for (const ex of exceptions.filter((row) => !row.cancelled)) {
+      const hasOverride = Boolean(
+        ex.overrideTitle?.trim() ||
+          ex.overrideStartsAt ||
+          ex.overrideEndsAt ||
+          ex.overrideAllDay != null,
+      );
+      if (!hasOverride) {
+        continue;
+      }
+      const startsAt = ex.overrideStartsAt ?? ex.occurrenceStartsAt;
+      const endsAt =
+        ex.overrideEndsAt ?? new Date(startsAt.getTime() + durationMs);
+      overrides.push({
+        recurrenceIdAt: ex.occurrenceStartsAt,
+        recurrenceIdAllDay: event.allDay,
+        title: ex.overrideTitle?.trim() || event.title,
+        description: event.description,
+        location: event.location,
+        startsAt,
+        endsAt,
+        allDay: ex.overrideAllDay ?? event.allDay,
+      });
+    }
+    return buildCalDavRecurringSeriesIcal({
+      uid: externalUid,
+      title: event.title,
+      description: event.description,
+      location: event.location,
+      startsAt: event.startsAt,
+      endsAt: event.endsAt,
+      allDay: event.allDay,
+      recurrenceRule: event.recurrenceRule,
+      recurrenceUntil: event.recurrenceUntil,
+      exDates,
+      exDatesAllDay: event.allDay,
+      overrides,
+    });
   }
 
   private async assertAccount(

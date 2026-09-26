@@ -12,6 +12,7 @@ import { MailCustomFolderService } from "./MailCustomFolderService";
 import { MailImapMaildirService } from "./MailImapMaildirService";
 import {
   conditionGroupsAreValid,
+  describeInboxRuleMatchLogic,
   groupHasAnyCondition,
   parseConditionGroupsJson,
   serializeConditionGroups,
@@ -258,6 +259,7 @@ export class MailInboxRuleService {
     matchCount: number;
     scanned: number;
     capped: boolean;
+    matchLogicDescription: string;
     samples: Array<{ id: string; fromAddress: string; subject: string }>;
   }> {
     const rule = await this.assertRule(organizationId, ruleId);
@@ -267,6 +269,14 @@ export class MailInboxRuleService {
       matchCount: matched.length,
       scanned: messages.length,
       capped: messages.length >= PREVIEW_SCAN_LIMIT,
+      matchLogicDescription: describeInboxRuleMatchLogic({
+        fromContains: rule.fromContains,
+        subjectContains: rule.subjectContains,
+        toContains: rule.toContains,
+        requireAttachment: rule.requireAttachment,
+        matchAnyCondition: rule.matchAnyCondition,
+        conditionGroupsJson: rule.conditionGroupsJson,
+      }),
       samples: matched.slice(0, 5).map((m) => ({
         id: m.id,
         fromAddress: m.fromAddress,

@@ -466,44 +466,82 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
             </div>
             <span className="mail-d6-actions">
               {caldavPushAccountId ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    const anchor = occurrenceAnchor(ev);
-                    const pushPromise =
-                      ev.recurrenceRule && ev.occurrenceAnchorAt
-                        ? pushCalendarOccurrenceToCalDav(
-                            accessToken,
-                            caldavPushAccountId,
-                            ev.id,
-                            anchor,
+                <>
+                  {ev.recurrenceRule ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void pushCalendarEventToCalDav(
+                          accessToken,
+                          caldavPushAccountId,
+                          ev.id,
+                        )
+                          .then(() =>
+                            onToast(
+                              "Tüm seri CalDAV’a yazıldı (RRULE, EXDATE, override’lar).",
+                            ),
                           )
-                        : pushCalendarEventToCalDav(
-                            accessToken,
-                            caldavPushAccountId,
-                            ev.id,
-                          );
-                    void pushPromise
-                      .then(() =>
-                        onToast(
-                          ev.recurrenceRule && ev.occurrenceAnchorAt
-                            ? "Tekrar örneği CalDAV’a yazıldı (RECURRENCE-ID)."
-                            : "CalDAV’a yazıldı.",
-                        ),
-                      )
-                      .catch((err: unknown) => {
-                        onToast(
-                          err instanceof Error
-                            ? err.message
-                            : "CalDAV yazma başarısız.",
-                        );
-                      });
-                  }}
-                >
-                  {ev.recurrenceRule && ev.occurrenceAnchorAt
-                    ? "CalDAV’a yaz (bu tekrar)"
-                    : "CalDAV’a yaz"}
-                </button>
+                          .catch((err: unknown) => {
+                            onToast(
+                              err instanceof Error
+                                ? err.message
+                                : "CalDAV yazma başarısız.",
+                            );
+                          })
+                      }
+                    >
+                      CalDAV (tüm seri)
+                    </button>
+                  ) : null}
+                  {ev.recurrenceRule && ev.occurrenceAnchorAt ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void pushCalendarOccurrenceToCalDav(
+                          accessToken,
+                          caldavPushAccountId,
+                          ev.id,
+                          occurrenceAnchor(ev),
+                        )
+                          .then(() =>
+                            onToast(
+                              "Bu tekrar CalDAV’a yazıldı (RECURRENCE-ID).",
+                            ),
+                          )
+                          .catch((err: unknown) => {
+                            onToast(
+                              err instanceof Error
+                                ? err.message
+                                : "CalDAV yazma başarısız.",
+                            );
+                          })
+                      }
+                    >
+                      CalDAV (bu tekrar)
+                    </button>
+                  ) : !ev.recurrenceRule ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void pushCalendarEventToCalDav(
+                          accessToken,
+                          caldavPushAccountId,
+                          ev.id,
+                        )
+                          .then(() => onToast("CalDAV’a yazıldı."))
+                          .catch((err: unknown) => {
+                            onToast(
+                              err instanceof Error
+                                ? err.message
+                                : "CalDAV yazma başarısız.",
+                            );
+                          })
+                      }
+                    >
+                      CalDAV’a yaz
+                    </button>
+                  ) : null}
+                </>
               ) : null}
               {ev.recurrenceRule ? (
                 <>

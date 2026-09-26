@@ -121,6 +121,7 @@ export async function previewInboxRule(accessToken: string, ruleId: string) {
       matchCount: number;
       scanned: number;
       capped: boolean;
+      matchLogicDescription: string;
       samples: Array<{ id: string; fromAddress: string; subject: string }>;
     };
   }>(accessToken, `company/mail-inbox/rules/${ruleId}/preview`);

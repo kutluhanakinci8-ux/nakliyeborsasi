@@ -291,6 +291,10 @@ export class MailOrganizationCalendarService {
       existing.overrideEndsAt = endsAt;
     }
     await this.recurrenceExceptionRepository.save(existing);
+    await this.mailCalendarCalDavService.syncRecurrenceMasterToCalDavIfLinked(
+      organizationId,
+      row.id,
+    );
     return this.toDto(row, true, existing.overrideStartsAt!, existing.overrideEndsAt!, {
       title: existing.overrideTitle ?? row.title,
       allDay: existing.overrideAllDay ?? row.allDay,
@@ -330,6 +334,10 @@ export class MailOrganizationCalendarService {
         existing.cancelled = true;
         await this.recurrenceExceptionRepository.save(existing);
       }
+      await this.mailCalendarCalDavService.syncRecurrenceMasterToCalDavIfLinked(
+        organizationId,
+        row.id,
+      );
       return;
     }
     await this.mailCalendarCalDavService.deleteRemoteForEvent(row);

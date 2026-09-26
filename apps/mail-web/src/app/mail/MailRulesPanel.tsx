@@ -335,7 +335,7 @@ export function MailRulesPanel({ accessToken }: Props) {
                           .map((s) => s.subject)
                           .join("; ");
                         setInfo(
-                          `Önizleme: ${preview.matchCount} eşleşme${cap}${sample ? ` — örnek: ${sample}` : ""}`,
+                          `Önizleme: ${preview.matchCount} eşleşme${cap}. Mantık: ${preview.matchLogicDescription}${sample ? ` — örnek: ${sample}` : ""}`,
                         );
                       },
                       () => setError("Önizleme başarısız."),

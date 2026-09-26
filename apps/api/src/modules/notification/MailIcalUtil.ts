@@ -207,6 +207,104 @@ export function buildSingleVeventIcal(event: {
   return `${lines.join("\r\n")}\r\n`;
 }
 
+export type CalDavRecurrenceOverrideVevent = {
+  recurrenceIdAt: Date;
+  recurrenceIdAllDay: boolean;
+  title: string;
+  description: string | null;
+  location: string | null;
+  startsAt: Date;
+  endsAt: Date;
+  allDay: boolean;
+};
+
+/** Tek .ics içinde master RRULE + EXDATE + RECURRENCE-ID override bileşenleri. */
+export function buildCalDavRecurringSeriesIcal(input: {
+  uid: string;
+  title: string;
+  description: string | null;
+  location: string | null;
+  startsAt: Date;
+  endsAt: Date;
+  allDay: boolean;
+  recurrenceRule: string;
+  recurrenceUntil?: Date | null;
+  exDates: Date[];
+  exDatesAllDay: boolean;
+  overrides: CalDavRecurrenceOverrideVevent[];
+}): string {
+  const lines = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Lerta Posta//CalDAV//TR",
+    "CALSCALE:GREGORIAN",
+    "BEGIN:VEVENT",
+    `UID:${input.uid}`,
+    `DTSTAMP:${formatUtc(new Date())}`,
+  ];
+  if (input.allDay) {
+    lines.push(`DTSTART;VALUE=DATE:${formatDateOnly(input.startsAt)}`);
+    lines.push(`DTEND;VALUE=DATE:${formatDateOnly(input.endsAt)}`);
+  } else {
+    lines.push(`DTSTART:${formatUtc(input.startsAt)}`);
+    lines.push(`DTEND:${formatUtc(input.endsAt)}`);
+  }
+  lines.push(`SUMMARY:${escapeIcalText(input.title)}`);
+  if (input.description) {
+    lines.push(`DESCRIPTION:${escapeIcalText(input.description)}`);
+  }
+  if (input.location) {
+    lines.push(`LOCATION:${escapeIcalText(input.location)}`);
+  }
+  let rrule = input.recurrenceRule.trim();
+  if (input.recurrenceUntil) {
+    const until = formatUtc(input.recurrenceUntil)
+      .replace(/[-:]/g, "")
+      .replace(/\.\d{3}Z$/, "Z");
+    if (!rrule.toUpperCase().includes("UNTIL=")) {
+      rrule = `${rrule};UNTIL=${until}`;
+    }
+  }
+  lines.push(`RRULE:${rrule}`);
+  for (const ex of input.exDates) {
+    if (input.exDatesAllDay) {
+      lines.push(`EXDATE;VALUE=DATE:${formatDateOnly(ex)}`);
+    } else {
+      lines.push(`EXDATE:${formatUtc(ex)}`);
+    }
+  }
+  lines.push("END:VEVENT");
+
+  for (const ov of input.overrides) {
+    lines.push("BEGIN:VEVENT", `UID:${input.uid}`, `DTSTAMP:${formatUtc(new Date())}`);
+    if (ov.recurrenceIdAllDay) {
+      lines.push(
+        `RECURRENCE-ID;VALUE=DATE:${formatDateOnly(ov.recurrenceIdAt)}`,
+      );
+    } else {
+      lines.push(`RECURRENCE-ID:${formatUtc(ov.recurrenceIdAt)}`);
+    }
+    if (ov.allDay) {
+      lines.push(`DTSTART;VALUE=DATE:${formatDateOnly(ov.startsAt)}`);
+      lines.push(`DTEND;VALUE=DATE:${formatDateOnly(ov.endsAt)}`);
+    } else {
+      lines.push(`DTSTART:${formatUtc(ov.startsAt)}`);
+      lines.push(`DTEND:${formatUtc(ov.endsAt)}`);
+    }
+    lines.push(`SUMMARY:${escapeIcalText(ov.title)}`);
+    if (ov.description) {
+      lines.push(`DESCRIPTION:${escapeIcalText(ov.description)}`);
+    }
+    if (ov.location) {
+      lines.push(`LOCATION:${escapeIcalText(ov.location)}`);
+    }
+    lines.push("END:VEVENT");
+  }
+
+  lines.push("END:VCALENDAR");
+  return `${lines.join("\r\n")}\r\n`;
+}
+
 export function buildIcalCalendar(
   events: Array<{
     id: string;
