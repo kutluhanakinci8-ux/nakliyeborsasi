@@ -19,6 +19,33 @@ export function dayKeyFromIso(iso: string): string {
   return dayKeyFromParts(d.getFullYear(), d.getMonth(), d.getDate());
 }
 
+export function enumerateDayKeysBetween(
+  startsAtIso: string,
+  endsAtIso: string,
+): string[] {
+  const start = new Date(startsAtIso);
+  const end = new Date(endsAtIso);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    return [];
+  }
+  const cursor = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  const last = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+  const keys: string[] = [];
+  while (cursor.getTime() <= last.getTime()) {
+    keys.push(dayKeyFromParts(cursor.getFullYear(), cursor.getMonth(), cursor.getDate()));
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return keys.length > 0 ? keys : [dayKeyFromIso(startsAtIso)];
+}
+
+export function eventOverlapsDayKey(
+  startsAtIso: string,
+  endsAtIso: string,
+  dayKey: string,
+): boolean {
+  return enumerateDayKeysBetween(startsAtIso, endsAtIso).includes(dayKey);
+}
+
 export function buildMonthGrid(year: number, month: number): CalendarGridCell[] {
   const first = new Date(year, month, 1);
   const startPad = (first.getDay() + 6) % 7;

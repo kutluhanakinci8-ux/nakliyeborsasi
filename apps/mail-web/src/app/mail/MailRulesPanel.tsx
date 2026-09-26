@@ -221,17 +221,17 @@ export function MailRulesPanel({ accessToken }: Props) {
         onChange={(e) => setName(e.target.value)}
       />
       <input
-        placeholder="Gönderen adresi içerir (isteğe bağlı)"
+        placeholder="Gönderen içerir (| ile alternatif: destek|support)"
         value={fromContains}
         onChange={(e) => setFromContains(e.target.value)}
       />
       <input
-        placeholder="Konu içerir (isteğe bağlı)"
+        placeholder="Konu içerir (| ile alternatif)"
         value={subjectContains}
         onChange={(e) => setSubjectContains(e.target.value)}
       />
       <input
-        placeholder="Alıcı (To) içerir (isteğe bağlı)"
+        placeholder="Alıcı (To) içerir (| ile alternatif)"
         value={toContains}
         onChange={(e) => setToContains(e.target.value)}
       />

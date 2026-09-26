@@ -11,6 +11,8 @@ Kurallar **organizasyon** bazında; yeni inbound mesaj ingest edildiğinde (spam
 
 En az biri dolu olmalı.
 
+**Alternatif (OR alt string):** `fromContains`, `subjectContains`, `toContains` alanlarında `|` ile ayrılmış değerlerden **biri** eşleşirse o koşul sağlanır (ör. `destek|support`).
+
 | `matchAnyCondition` | Davranış |
 |-------------------|----------|
 | `false` (varsayılan) | Dolu koşulların **hepsi** sağlanmalı (VE). `requireAttachment` true ise ek zorunlu. |

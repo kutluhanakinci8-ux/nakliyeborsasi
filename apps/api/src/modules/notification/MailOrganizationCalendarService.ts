@@ -4,8 +4,9 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { In, Repository } from "typeorm";
 import { MailCalendarEventEntity } from "../../infrastructure/database/entities/MailCalendarEventEntity";
+import { MailCalendarRecurrenceExceptionEntity } from "../../infrastructure/database/entities/MailCalendarRecurrenceExceptionEntity";
 import { MailCalendarCalDavService } from "./MailCalendarCalDavService";
 import { buildIcalCalendar, parseIcalEvents } from "./MailIcalUtil";
 import {
@@ -38,6 +39,8 @@ export class MailOrganizationCalendarService {
     @InjectRepository(MailCalendarEventEntity)
     private readonly eventRepository: Repository<MailCalendarEventEntity>,
     private readonly mailCalendarCalDavService: MailCalendarCalDavService,
+    @InjectRepository(MailCalendarRecurrenceExceptionEntity)
+    private readonly recurrenceExceptionRepository: Repository<MailCalendarRecurrenceExceptionEntity>,
   ) {}
 
   public async listInRange(
@@ -61,6 +64,13 @@ export class MailOrganizationCalendarService {
       )
       .orderBy("e.startsAt", "ASC")
       .getMany();
+    const recurringIds = rows
+      .filter((row) => row.recurrenceRule)
+      .map((row) => row.id);
+    const cancelledKeys = await this.loadCancelledOccurrenceKeys(
+      organizationId,
+      recurringIds,
+    );
     const expanded: MailCalendarEventDto[] = [];
     for (const row of rows) {
       if (!row.recurrenceRule) {
@@ -77,6 +87,13 @@ export class MailOrganizationCalendarService {
       });
       for (let i = 0; i < occurrences.length; i += 1) {
         const occ = occurrences[i]!;
+        if (
+          cancelledKeys.has(
+            this.occurrenceKey(row.id, occ.startsAt.getTime()),
+          )
+        ) {
+          continue;
+        }
         expanded.push(
           this.toDto(
             row,
@@ -192,10 +209,72 @@ export class MailOrganizationCalendarService {
     return this.toDto(row, false);
   }
 
-  public async delete(organizationId: string, eventId: string): Promise<void> {
+  public async delete(
+    organizationId: string,
+    eventId: string,
+    occurrenceStartsAt?: Date,
+  ): Promise<void> {
     const row = await this.assertEvent(organizationId, eventId);
+    if (occurrenceStartsAt && row.recurrenceRule) {
+      const occ = new Date(occurrenceStartsAt.getTime());
+      if (Number.isNaN(occ.getTime())) {
+        throw new BadRequestException("occurrenceStartsAt geçersiz.");
+      }
+      const existing = await this.recurrenceExceptionRepository.findOne({
+        where: {
+          organizationId,
+          masterEventId: row.id,
+          occurrenceStartsAt: occ,
+        },
+      });
+      if (!existing) {
+        await this.recurrenceExceptionRepository.save(
+          this.recurrenceExceptionRepository.create({
+            organizationId,
+            masterEventId: row.id,
+            occurrenceStartsAt: occ,
+            cancelled: true,
+          }),
+        );
+      } else if (!existing.cancelled) {
+        existing.cancelled = true;
+        await this.recurrenceExceptionRepository.save(existing);
+      }
+      return;
+    }
     await this.mailCalendarCalDavService.deleteRemoteForEvent(row);
+    await this.recurrenceExceptionRepository.delete({
+      organizationId,
+      masterEventId: row.id,
+    });
     await this.eventRepository.remove(row);
+  }
+
+  private occurrenceKey(masterId: string, startsAtMs: number): string {
+    return `${masterId}:${startsAtMs}`;
+  }
+
+  private async loadCancelledOccurrenceKeys(
+    organizationId: string,
+    masterEventIds: string[],
+  ): Promise<Set<string>> {
+    if (masterEventIds.length === 0) {
+      return new Set();
+    }
+    const rows = await this.recurrenceExceptionRepository.find({
+      where: {
+        organizationId,
+        masterEventId: In(masterEventIds),
+        cancelled: true,
+      },
+    });
+    const set = new Set<string>();
+    for (const row of rows) {
+      set.add(
+        this.occurrenceKey(row.masterEventId, row.occurrenceStartsAt.getTime()),
+      );
+    }
+    return set;
   }
 
   public async exportIcs(

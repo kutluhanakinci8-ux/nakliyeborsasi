@@ -117,6 +117,7 @@ import { MailDelayedComposeService } from "./MailDelayedComposeService";
 import { MailDelayedComposeProcessor } from "./MailDelayedComposeProcessor";
 import { MailInboxPreferencesEntity } from "../../infrastructure/database/entities/MailInboxPreferencesEntity";
 import { MailCalendarEventEntity } from "../../infrastructure/database/entities/MailCalendarEventEntity";
+import { MailCalendarRecurrenceExceptionEntity } from "../../infrastructure/database/entities/MailCalendarRecurrenceExceptionEntity";
 import { MailOrgContactEntity } from "../../infrastructure/database/entities/MailOrgContactEntity";
 import { MailCalendarIcsFeedEntity } from "../../infrastructure/database/entities/MailCalendarIcsFeedEntity";
 import { MailCalendarIcsFeedService } from "./MailCalendarIcsFeedService";
@@ -191,6 +192,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
       MailDelayedComposeEntity,
       MailInboxPreferencesEntity,
       MailCalendarEventEntity,
+      MailCalendarRecurrenceExceptionEntity,
       MailOrgContactEntity,
       MailCalendarIcsFeedEntity,
       MailCalendarCalDavAccountEntity,

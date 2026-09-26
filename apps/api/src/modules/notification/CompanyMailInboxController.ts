@@ -1265,8 +1265,16 @@ export class CompanyMailInboxController {
   public async deleteCalendarEvent(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
     @Param("eventId") eventId: string,
+    @Query("occurrenceStartsAt") occurrenceStartsAtRaw?: string,
   ) {
-    await this.mailOrganizationCalendarService.delete(user.companyId, eventId);
+    const occurrenceStartsAt = occurrenceStartsAtRaw
+      ? new Date(occurrenceStartsAtRaw)
+      : undefined;
+    await this.mailOrganizationCalendarService.delete(
+      user.companyId,
+      eventId,
+      occurrenceStartsAt,
+    );
     return { ok: true };
   }
 
