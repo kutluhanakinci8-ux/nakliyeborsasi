@@ -1021,6 +1021,96 @@ export async function syncCalendarIcsFeed(
   });
 }
 
+export type MailCalendarCalDavAccount = {
+  id: string;
+  label: string;
+  calendarUrl: string;
+  username: string;
+  enabled: boolean;
+  writeEnabled: boolean;
+  lastSyncedAt: string | null;
+  lastSyncError: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export async function fetchCalendarCalDavAccounts(accessToken: string) {
+  return apiFetch<{ accounts: MailCalendarCalDavAccount[] }>(
+    accessToken,
+    "company/mail-inbox/calendar/caldav/accounts",
+  );
+}
+
+export async function createCalendarCalDavAccount(
+  accessToken: string,
+  body: {
+    label: string;
+    calendarUrl: string;
+    username: string;
+    password: string;
+    enabled?: boolean;
+    writeEnabled?: boolean;
+  },
+) {
+  return apiFetch<{ account: MailCalendarCalDavAccount }>(
+    accessToken,
+    "company/mail-inbox/calendar/caldav/accounts",
+    { method: "POST", body: JSON.stringify(body) },
+  );
+}
+
+export async function deleteCalendarCalDavAccount(
+  accessToken: string,
+  accountId: string,
+) {
+  await apiFetch(
+    accessToken,
+    `company/mail-inbox/calendar/caldav/accounts/${accountId}`,
+    { method: "DELETE" },
+  );
+}
+
+export async function syncCalendarCalDavAccount(
+  accessToken: string,
+  accountId: string,
+) {
+  return apiFetch<{
+    imported: number;
+    updated: number;
+    removed: number;
+  }>(
+    accessToken,
+    `company/mail-inbox/calendar/caldav/accounts/${accountId}/sync`,
+    { method: "POST", body: JSON.stringify({}) },
+  );
+}
+
+export async function syncAllCalendarCalDavAccounts(accessToken: string) {
+  return apiFetch<{
+    accounts: number;
+    succeeded: number;
+    failed: number;
+    imported: number;
+    updated: number;
+    removed: number;
+  }>(accessToken, "company/mail-inbox/calendar/caldav/accounts/sync-all", {
+    method: "POST",
+    body: JSON.stringify({}),
+  });
+}
+
+export async function pushCalendarEventToCalDav(
+  accessToken: string,
+  accountId: string,
+  eventId: string,
+) {
+  return apiFetch<{ resourceHref: string; externalUid: string }>(
+    accessToken,
+    `company/mail-inbox/calendar/caldav/accounts/${accountId}/push/${eventId}`,
+    { method: "POST", body: JSON.stringify({}) },
+  );
+}
+
 export async function syncAllCalendarIcsFeeds(accessToken: string) {
   return apiFetch<{
     feeds: number;

@@ -121,6 +121,9 @@ import { MailOrgContactEntity } from "../../infrastructure/database/entities/Mai
 import { MailCalendarIcsFeedEntity } from "../../infrastructure/database/entities/MailCalendarIcsFeedEntity";
 import { MailCalendarIcsFeedService } from "./MailCalendarIcsFeedService";
 import { MailCalendarIcsFeedSyncScheduler } from "./MailCalendarIcsFeedSyncScheduler";
+import { MailCalendarCalDavAccountEntity } from "../../infrastructure/database/entities/MailCalendarCalDavAccountEntity";
+import { MailCalendarCalDavService } from "./MailCalendarCalDavService";
+import { MailCalendarCalDavSyncScheduler } from "./MailCalendarCalDavSyncScheduler";
 import { MailOrganizationCalendarService } from "./MailOrganizationCalendarService";
 import { MailOrganizationContactService } from "./MailOrganizationContactService";
 import { MailInboxPreferencesService } from "./MailInboxPreferencesService";
@@ -187,6 +190,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
       MailCalendarEventEntity,
       MailOrgContactEntity,
       MailCalendarIcsFeedEntity,
+      MailCalendarCalDavAccountEntity,
       CompanyMailTeamInviteEntity,
       MailOrganizationBillingStateEntity,
       MailOrganizationOperatorStateEntity,
@@ -287,6 +291,8 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     MailOrganizationContactService,
     MailCalendarIcsFeedService,
     MailCalendarIcsFeedSyncScheduler,
+    MailCalendarCalDavService,
+    MailCalendarCalDavSyncScheduler,
   ],
   exports: [
     AuthNotificationService,

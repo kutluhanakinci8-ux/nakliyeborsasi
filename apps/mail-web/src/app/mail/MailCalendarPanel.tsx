@@ -11,6 +11,11 @@ import {
 } from "@/lib/mailApi";
 import { buildMonthGrid, dayKeyFromIso } from "./mailCalendarGrid";
 import { MailCalendarFeedsPanel } from "./MailCalendarFeedsPanel";
+import { MailCalendarCalDavPanel } from "./MailCalendarCalDavPanel";
+import {
+  fetchCalendarCalDavAccounts,
+  pushCalendarEventToCalDav,
+} from "@/lib/mailApi";
 
 type Props = {
   accessToken: string;
@@ -34,6 +39,9 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
   const [endLocal, setEndLocal] = useState("");
   const [allDay, setAllDay] = useState(false);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [caldavPushAccountId, setCaldavPushAccountId] = useState<string | null>(
+    null,
+  );
 
   const bounds = useMemo(() => monthBounds(year, month), [year, month]);
   const grid = useMemo(() => buildMonthGrid(year, month), [year, month]);
@@ -80,6 +88,15 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    void fetchCalendarCalDavAccounts(accessToken)
+      .then((data) => {
+        const writable = data.accounts.find((a) => a.enabled && a.writeEnabled);
+        setCaldavPushAccountId(writable?.id ?? null);
+      })
+      .catch(() => setCaldavPushAccountId(null));
+  }, [accessToken]);
 
   function shiftMonth(delta: number) {
     const d = new Date(year, month + delta, 1);
@@ -262,24 +279,48 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
                   : `${new Date(ev.startsAt).toLocaleString("tr-TR")} – ${new Date(ev.endsAt).toLocaleString("tr-TR")}`}
               </div>
             </div>
-            <button
-              type="button"
-              className="mail-d6-danger"
-              onClick={() =>
-                void deleteCalendarEvent(accessToken, ev.id)
-                  .then(() => {
-                    onToast("Silindi.");
-                    void load();
-                  })
-                  .catch((err: unknown) => {
-                    onToast(
-                      err instanceof Error ? err.message : "Silinemedi.",
-                    );
-                  })
-              }
-            >
-              Sil
-            </button>
+            <span className="mail-d6-actions">
+              {caldavPushAccountId ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    void pushCalendarEventToCalDav(
+                      accessToken,
+                      caldavPushAccountId,
+                      ev.id,
+                    )
+                      .then(() => onToast("CalDAV’a yazıldı."))
+                      .catch((err: unknown) => {
+                        onToast(
+                          err instanceof Error
+                            ? err.message
+                            : "CalDAV yazma başarısız.",
+                        );
+                      })
+                  }
+                >
+                  CalDAV’a yaz
+                </button>
+              ) : null}
+              <button
+                type="button"
+                className="mail-d6-danger"
+                onClick={() =>
+                  void deleteCalendarEvent(accessToken, ev.id)
+                    .then(() => {
+                      onToast("Silindi.");
+                      void load();
+                    })
+                    .catch((err: unknown) => {
+                      onToast(
+                        err instanceof Error ? err.message : "Silinemedi.",
+                      );
+                    })
+                }
+              >
+                Sil
+              </button>
+            </span>
           </li>
         ))}
         {!loading && visibleEvents.length === 0 ? (
@@ -289,6 +330,11 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
         ) : null}
       </ul>
       <MailCalendarFeedsPanel
+        accessToken={accessToken}
+        onToast={onToast}
+        onSynced={() => void load()}
+      />
+      <MailCalendarCalDavPanel
         accessToken={accessToken}
         onToast={onToast}
         onSynced={() => void load()}

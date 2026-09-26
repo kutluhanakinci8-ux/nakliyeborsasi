@@ -118,6 +118,62 @@ export class UpdateMailCalendarIcsFeedRequestDto {
   public enabled?: boolean;
 }
 
+export class CreateMailCalendarCalDavAccountRequestDto {
+  @IsString()
+  @MaxLength(120)
+  public label!: string;
+
+  @IsString()
+  @MaxLength(2000)
+  public calendarUrl!: string;
+
+  @IsString()
+  @MaxLength(320)
+  public username!: string;
+
+  @IsString()
+  @MaxLength(500)
+  public password!: string;
+
+  @IsOptional()
+  @IsBoolean()
+  public enabled?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  public writeEnabled?: boolean;
+}
+
+export class UpdateMailCalendarCalDavAccountRequestDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  public label?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  public calendarUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(320)
+  public username?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  public password?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  public enabled?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  public writeEnabled?: boolean;
+}
+
 export class ImportMailContactsVcfRequestDto {
   @IsString()
   @MaxLength(500_000)

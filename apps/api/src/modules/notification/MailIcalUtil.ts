@@ -140,6 +140,42 @@ export function parseIcalEvents(icsText: string): ParsedIcalEvent[] {
   return events;
 }
 
+export function buildSingleVeventIcal(event: {
+  uid: string;
+  title: string;
+  description: string | null;
+  location: string | null;
+  startsAt: Date;
+  endsAt: Date;
+  allDay: boolean;
+}): string {
+  const lines = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Lerta Posta//CalDAV//TR",
+    "CALSCALE:GREGORIAN",
+    "BEGIN:VEVENT",
+    `UID:${event.uid}`,
+    `DTSTAMP:${formatUtc(new Date())}`,
+  ];
+  if (event.allDay) {
+    lines.push(`DTSTART;VALUE=DATE:${formatDateOnly(event.startsAt)}`);
+    lines.push(`DTEND;VALUE=DATE:${formatDateOnly(event.endsAt)}`);
+  } else {
+    lines.push(`DTSTART:${formatUtc(event.startsAt)}`);
+    lines.push(`DTEND:${formatUtc(event.endsAt)}`);
+  }
+  lines.push(`SUMMARY:${escapeIcalText(event.title)}`);
+  if (event.description) {
+    lines.push(`DESCRIPTION:${escapeIcalText(event.description)}`);
+  }
+  if (event.location) {
+    lines.push(`LOCATION:${escapeIcalText(event.location)}`);
+  }
+  lines.push("END:VEVENT", "END:VCALENDAR");
+  return `${lines.join("\r\n")}\r\n`;
+}
+
 export function buildIcalCalendar(
   events: Array<{
     id: string;

@@ -48,9 +48,13 @@ bash scripts/apply-mail-d6-calendar-contacts-schema.sh /var/www/nakliyeborsasi
 
 - [MAIL_CALDAV_EXTERNAL.md](./MAIL_CALDAV_EXTERNAL.md) — HTTPS feed + senkron
 
+## CalDAV hesap (uygulandı)
+
+- [MAIL_CALDAV.md](./MAIL_CALDAV.md) — kimlik bilgisi, REPORT çekme, PUT yazma
+
 ## Sonraki (plan)
 
-- Tam CalDAV/CardDAV hesap bağlama (kimlik bilgisi + yazma)
+- CardDAV kişi senkronu
 - Tekrarlayan etkinlikler, çok günlü etkinlik çubuğu
 
 ## İlgili
