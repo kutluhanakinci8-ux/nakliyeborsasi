@@ -68,6 +68,47 @@ export function isInstantPostMailDomain(domain: string): boolean {
   );
 }
 
+export function instantPostOrgSlugFromMailDomain(domain: string): string | null {
+  const normalized = domain.trim().toLowerCase();
+  const suffix = `.${PLATFORM_MAIL_INSTANT_POST_ZONE}`;
+  if (!normalized.endsWith(suffix)) {
+    return null;
+  }
+  const slug = normalized.slice(0, -suffix.length);
+  return slug.length > 0 ? slug : null;
+}
+
+/** Müşteriye gösterilen / From başlığı vs SMTP kimliği (Lerta Post). */
+export function resolveMailSenderAddresses(
+  localPart: string,
+  mailDomain: { domain: string; domainType: string },
+): { publicAddress: string; technicalAddress: string } {
+  const technicalAddress =
+    `${localPart.trim().toLowerCase()}@${mailDomain.domain.trim().toLowerCase()}`;
+  if (
+    mailDomain.domainType === "instant_post" ||
+    mailDomain.domainType === "instant_box"
+  ) {
+    const slug = instantPostOrgSlugFromMailDomain(mailDomain.domain);
+    if (slug) {
+      return {
+        publicAddress: formatInstantPostVanityEmail(localPart, slug),
+        technicalAddress,
+      };
+    }
+  }
+  return { publicAddress: technicalAddress, technicalAddress };
+}
+
+export function formatMailFromHeader(
+  emailAddress: string,
+  displayName?: string | null,
+): string {
+  const email = emailAddress.trim();
+  const name = displayName?.trim();
+  return name ? `${name} <${email}>` : email;
+}
+
 /** Özel domain olarak eklenemeyen Lerta Mail SaaS alanları. */
 export function isReservedLertaMailSaasDomain(domain: string): boolean {
   const normalized = domain.trim().toLowerCase().replace(/\.$/, "");

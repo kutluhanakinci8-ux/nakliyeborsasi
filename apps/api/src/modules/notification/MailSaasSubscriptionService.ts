@@ -7,6 +7,7 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
+import { resolveMailSenderAddresses } from "@nakliyeborsasi/core";
 import { In, Repository } from "typeorm";
 import { MailSenderIdentityEntity } from "../../infrastructure/database/entities/MailSenderIdentityEntity";
 import { MailMailboxEntity } from "../../infrastructure/database/entities/MailMailboxEntity";
@@ -81,7 +82,10 @@ export class MailSaasSubscriptionService {
     const addresses = senders
       .map((sender) =>
         sender.mailDomain
-          ? `${sender.localPart}@${sender.mailDomain.domain}`.toLowerCase()
+          ? resolveMailSenderAddresses(
+              sender.localPart,
+              sender.mailDomain,
+            ).technicalAddress
           : null,
       )
       .filter((value): value is string => Boolean(value));
@@ -95,12 +99,21 @@ export class MailSaasSubscriptionService {
     );
     return senders.map((sender) => {
       const fromAddress = sender.mailDomain
-        ? `${sender.localPart}@${sender.mailDomain.domain}`
+        ? resolveMailSenderAddresses(
+            sender.localPart,
+            sender.mailDomain,
+          ).publicAddress
         : `${sender.localPart}@`;
+      const technicalAddress = sender.mailDomain
+        ? resolveMailSenderAddresses(
+            sender.localPart,
+            sender.mailDomain,
+          ).technicalAddress
+        : fromAddress;
       return {
         id: sender.id,
         mailboxId:
-          mailboxByEmail.get(fromAddress.toLowerCase()) ?? null,
+          mailboxByEmail.get(technicalAddress.toLowerCase()) ?? null,
         localPart: sender.localPart,
         displayName: sender.displayName,
         isDefault: sender.isDefault,

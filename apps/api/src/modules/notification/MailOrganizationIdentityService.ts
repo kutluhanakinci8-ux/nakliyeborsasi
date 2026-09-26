@@ -1,10 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import {
-  PLATFORM_MAIL_INSTANT_POST_ZONE,
-  formatInstantPostVanityEmail,
-} from "@nakliyeborsasi/core";
+import { resolveMailSenderAddresses } from "@nakliyeborsasi/core";
 import { MailDomainEntity } from "../../infrastructure/database/entities/MailDomainEntity";
 import { MailSenderIdentityEntity } from "../../infrastructure/database/entities/MailSenderIdentityEntity";
 import { MailDomainDnsVerificationService } from "./MailDomainDnsVerificationService";
@@ -41,9 +38,10 @@ export class MailOrganizationIdentityService {
       relations: { mailDomain: true },
     });
     const mailDomain = sender?.mailDomain ?? null;
-    const fromAddress = mailDomain
-      ? `${sender!.localPart}@${mailDomain.domain}`
+    const addressPair = mailDomain
+      ? resolveMailSenderAddresses(sender!.localPart, mailDomain)
       : null;
+    const fromAddress = addressPair?.technicalAddress ?? null;
 
     if (!mailDomain || !fromAddress) {
       const tenantDomain =
@@ -63,8 +61,11 @@ export class MailOrganizationIdentityService {
     }
 
     const channel = this.resolveChannel(mailDomain);
-    const vanityAddress = this.resolveVanityAddress(sender!, mailDomain);
-    const displayAddress = vanityAddress ?? fromAddress;
+    const vanityAddress = addressPair?.publicAddress ?? null;
+    const displayAddress =
+      addressPair && addressPair.publicAddress !== addressPair.technicalAddress
+        ? addressPair.publicAddress
+        : fromAddress;
 
     if (channel === "instant_post") {
       const publicDnsReady =
@@ -138,24 +139,4 @@ export class MailOrganizationIdentityService {
     return "platform";
   }
 
-  private resolveVanityAddress(
-    sender: MailSenderIdentityEntity,
-    mailDomain: MailDomainEntity,
-  ): string | null {
-    if (
-      mailDomain.domainType !== "instant_post" &&
-      mailDomain.domainType !== "instant_box"
-    ) {
-      return null;
-    }
-    const suffix = `.${PLATFORM_MAIL_INSTANT_POST_ZONE}`;
-    if (!mailDomain.domain.endsWith(suffix)) {
-      return null;
-    }
-    const orgSlug = mailDomain.domain.slice(0, -suffix.length);
-    if (!orgSlug) {
-      return null;
-    }
-    return formatInstantPostVanityEmail(sender.localPart, orgSlug);
-  }
 }

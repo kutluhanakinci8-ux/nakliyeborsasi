@@ -18,6 +18,8 @@ export class SmtpEmailSender {
     html: string;
     text: string;
     from?: string;
+    /** SMTP MAIL FROM (DKIM/SPF); From başlığından farklı olabilir (Lerta Post). */
+    envelopeFrom?: string;
     replyTo?: string;
     inReplyTo?: string;
     references?: string;
@@ -35,8 +37,18 @@ export class SmtpEmailSender {
     const transport = nodemailer.createTransport(
       this.notificationConfigurationService.resolveSmtpTransportOptions(),
     );
+    const headerFrom = params.from?.trim() || smtp.from;
+    const envelopeFrom = params.envelopeFrom?.trim() || undefined;
     const result = await transport.sendMail({
-      from: params.from?.trim() || smtp.from,
+      from: headerFrom,
+      ...(envelopeFrom
+        ? {
+            envelope: {
+              from: envelopeFrom,
+              to: params.to,
+            },
+          }
+        : {}),
       to: params.to,
       cc: params.cc?.trim() || undefined,
       bcc: params.bcc?.trim() || undefined,

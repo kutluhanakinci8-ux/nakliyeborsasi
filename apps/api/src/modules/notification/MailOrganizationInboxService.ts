@@ -20,6 +20,7 @@ import {
   MailInboundMessageEntity,
 } from "../../infrastructure/database/entities/MailInboundMessageEntity";
 import { MailSenderIdentityEntity } from "../../infrastructure/database/entities/MailSenderIdentityEntity";
+import { resolveMailSenderAddresses } from "@nakliyeborsasi/core";
 import { MailImapMaildirService } from "./MailImapMaildirService";
 import {
   parseAddressListFromMime,
@@ -137,9 +138,11 @@ export class MailOrganizationInboxService {
         .andWhere("m.snoozedUntil > :now", { now })
         .getCount(),
     ]);
-    const mailbox = primaryAddress
+    const technicalPrimary =
+      await this.resolvePrimaryTechnicalAddress(organizationId);
+    const mailbox = technicalPrimary
       ? await this.mailboxRepository.findOne({
-          where: { organizationId, emailAddress: primaryAddress },
+          where: { organizationId, emailAddress: technicalPrimary },
         })
       : null;
     return {
@@ -843,7 +846,26 @@ export class MailOrganizationInboxService {
     if (!sender?.mailDomain) {
       return null;
     }
-    return `${sender.localPart}@${sender.mailDomain.domain}`;
+    return resolveMailSenderAddresses(
+      sender.localPart,
+      sender.mailDomain,
+    ).publicAddress;
+  }
+
+  private async resolvePrimaryTechnicalAddress(
+    organizationId: string,
+  ): Promise<string | null> {
+    const sender = await this.senderRepository.findOne({
+      where: { organizationId, isDefault: true },
+      relations: { mailDomain: true },
+    });
+    if (!sender?.mailDomain) {
+      return null;
+    }
+    return resolveMailSenderAddresses(
+      sender.localPart,
+      sender.mailDomain,
+    ).technicalAddress;
   }
 
   private resolveThreadRootId(
