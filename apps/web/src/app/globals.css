@@ -4685,6 +4685,14 @@ button.btn-secondary {
   margin-top: 16px;
 }
 
+.messaging-mode-tabs {
+  flex-wrap: wrap;
+}
+
+.messaging-mail-panel {
+  padding: 1rem 1.25rem;
+}
+
 .chat-layout {
   display: grid;
   grid-template-columns: 320px 1fr;

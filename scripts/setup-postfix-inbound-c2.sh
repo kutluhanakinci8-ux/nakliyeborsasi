@@ -4,7 +4,7 @@
 set -euo pipefail
 
 INSTALL_DIR="${INSTALL_DIR:-/var/www/nakliyeborsasi}"
-TENANT_DOMAIN="${MAIL_PLATFORM_TENANT_DOMAIN:-${TENANT_DOMAIN:-kullanici.lerta.com.tr}}"
+TENANT_DOMAIN="${MAIL_PLATFORM_TENANT_DOMAIN:-${TENANT_DOMAIN:-lerta.com.tr}}"
 MAIL_HOST="${MAIL_HOSTNAME:-mail.lerta.com.tr}"
 VIRTUAL_PATH="${MAIL_INBOUND_POSTFIX_VIRTUAL_PATH:-/etc/postfix/lerta-inbound-virtual}"
 ALIASES_PATH="${MAIL_INBOUND_POSTFIX_ALIASES_PATH:-/etc/postfix/lerta-inbound-aliases}"

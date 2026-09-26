@@ -56,7 +56,7 @@ export class MailTenantSubdomainService {
     const dkimHint =
       this.configService.get<string>("MAIL_PLATFORM_TENANT_DKIM_TXT")?.trim() ||
       this.configService.get<string>("MAIL_PLATFORM_DKIM_TXT")?.trim() ||
-      "VPS OpenDKIM default._domainkey.kullanici.lerta.tr";
+      `VPS OpenDKIM default._domainkey.${domain}`;
 
     return {
       domain,
@@ -195,7 +195,7 @@ export class MailTenantSubdomainService {
     });
     if (!domainRow || domainRow.verificationStatus !== "verified") {
       throw new BadRequestException(
-        "Önce kullanici.lerta.tr DNS doğrulamasını tamamlayın (admin: DNS doğrula).",
+        "Önce paylaşımlı tenant DNS doğrulamasını tamamlayın (platform admin: DNS doğrula).",
       );
     }
 

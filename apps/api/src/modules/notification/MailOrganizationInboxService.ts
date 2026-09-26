@@ -20,6 +20,7 @@ import {
   MailInboundMessageEntity,
 } from "../../infrastructure/database/entities/MailInboundMessageEntity";
 import { MailSenderIdentityEntity } from "../../infrastructure/database/entities/MailSenderIdentityEntity";
+import { resolveMailSenderAddresses } from "@nakliyeborsasi/core";
 import { MailImapMaildirService } from "./MailImapMaildirService";
 import {
   parseAddressListFromMime,
@@ -59,6 +60,7 @@ export class MailOrganizationInboxService {
 
   public async getSummary(organizationId: string): Promise<{
     primaryAddress: string | null;
+    technicalPrimaryAddress: string | null;
     mailboxId: string | null;
     unreadCount: number;
     totalMessages: number;
@@ -69,10 +71,13 @@ export class MailOrganizationInboxService {
     snoozedCount: number;
   }> {
     const primaryAddress = await this.resolvePrimaryAddress(organizationId);
+    const technicalPrimaryAddress =
+      await this.resolvePrimaryTechnicalAddress(organizationId);
     const mailboxIds = await this.mailboxIdsForOrganization(organizationId);
     if (mailboxIds.length === 0) {
       return {
         primaryAddress,
+        technicalPrimaryAddress,
         mailboxId: null,
         unreadCount: 0,
         totalMessages: 0,
@@ -137,13 +142,14 @@ export class MailOrganizationInboxService {
         .andWhere("m.snoozedUntil > :now", { now })
         .getCount(),
     ]);
-    const mailbox = primaryAddress
+    const mailbox = technicalPrimaryAddress
       ? await this.mailboxRepository.findOne({
-          where: { organizationId, emailAddress: primaryAddress },
+          where: { organizationId, emailAddress: technicalPrimaryAddress },
         })
       : null;
     return {
       primaryAddress,
+      technicalPrimaryAddress,
       mailboxId: mailbox?.id ?? null,
       unreadCount,
       totalMessages,
@@ -843,7 +849,26 @@ export class MailOrganizationInboxService {
     if (!sender?.mailDomain) {
       return null;
     }
-    return `${sender.localPart}@${sender.mailDomain.domain}`;
+    return resolveMailSenderAddresses(
+      sender.localPart,
+      sender.mailDomain,
+    ).publicAddress;
+  }
+
+  private async resolvePrimaryTechnicalAddress(
+    organizationId: string,
+  ): Promise<string | null> {
+    const sender = await this.senderRepository.findOne({
+      where: { organizationId, isDefault: true },
+      relations: { mailDomain: true },
+    });
+    if (!sender?.mailDomain) {
+      return null;
+    }
+    return resolveMailSenderAddresses(
+      sender.localPart,
+      sender.mailDomain,
+    ).technicalAddress;
   }
 
   private resolveThreadRootId(

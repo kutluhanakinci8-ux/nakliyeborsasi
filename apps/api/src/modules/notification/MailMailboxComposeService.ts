@@ -14,6 +14,10 @@ import { SmtpEmailSender } from "./SmtpEmailSender";
 import { MailOrganizationSendRateService } from "./MailOrganizationSendRateService";
 import { MailOrganizationStorageService } from "./MailOrganizationStorageService";
 import { MailTenantSuspensionService } from "./MailTenantSuspensionService";
+import {
+  formatMailFromHeader,
+  resolveMailSenderAddresses,
+} from "@nakliyeborsasi/core";
 import { resolveTenantReplyToAddress } from "./MailTenantEmailBranding";
 
 export type ComposeAttachmentInput = {
@@ -51,7 +55,7 @@ export class MailMailboxComposeService {
     html?: string;
     attachments?: ComposeAttachmentInput[];
   }): Promise<{ sentId: string; smtpMessageId: string | null }> {
-    const { fromHeader, fromEmail, mailbox } =
+    const { fromHeader, fromEmail, envelopeMailFrom, mailbox } =
       await this.resolveSenderMailbox(params.organizationId);
     await this.assertRateLimit(params.organizationId);
     await this.mailTenantSuspensionService.assertOrganizationCanSend(
@@ -69,6 +73,7 @@ export class MailMailboxComposeService {
     const replyTo = resolveTenantReplyToAddress();
     const smtpMessageId = await this.smtpEmailSender.send({
       from: fromHeader,
+      envelopeMailFrom,
       to: normalizeRecipientList(params.to),
       cc: normalizeOptionalRecipients(params.cc),
       bcc: normalizeOptionalRecipients(params.bcc),
@@ -78,6 +83,11 @@ export class MailMailboxComposeService {
       replyTo,
       attachments: nodemailerAttachments,
     });
+    if (!smtpMessageId) {
+      throw new BadRequestException(
+        "E-posta gönderimi kapalı (EMAIL_ENABLED) veya SMTP yanıt vermedi.",
+      );
+    }
     this.mailOrganizationSendRateService.recordSend(params.organizationId);
     const sent = await this.sentRepository.save(
       this.sentRepository.create({
@@ -118,9 +128,8 @@ export class MailMailboxComposeService {
     const subject = inbound.subject.toLowerCase().startsWith("re:")
       ? inbound.subject
       : `Re: ${inbound.subject}`;
-    const { fromHeader, fromEmail } = await this.resolveSenderMailbox(
-      params.organizationId,
-    );
+    const { fromHeader, fromEmail, envelopeMailFrom, technicalEmail } =
+      await this.resolveSenderMailbox(params.organizationId);
     await this.assertRateLimit(params.organizationId);
     await this.mailTenantSuspensionService.assertOrganizationCanSend(
       params.organizationId,
@@ -140,12 +149,13 @@ export class MailMailboxComposeService {
       : undefined;
     const replyAll = this.resolveReplyAllRecipients(
       inbound,
-      fromEmail,
+      technicalEmail,
       params.replyAll,
       params.cc,
     );
     const smtpMessageId = await this.smtpEmailSender.send({
       from: fromHeader,
+      envelopeMailFrom,
       to: replyAll.to,
       cc: normalizeOptionalRecipients(replyAll.cc),
       bcc: normalizeOptionalRecipients(params.bcc),
@@ -206,9 +216,8 @@ export class MailMailboxComposeService {
     if (!text.trim()) {
       throw new BadRequestException("İletilecek metin boş olamaz.");
     }
-    const { fromHeader, fromEmail } = await this.resolveSenderMailbox(
-      params.organizationId,
-    );
+    const { fromHeader, fromEmail, envelopeMailFrom } =
+      await this.resolveSenderMailbox(params.organizationId);
     await this.assertRateLimit(params.organizationId);
     await this.mailTenantSuspensionService.assertOrganizationCanSend(
       params.organizationId,
@@ -225,6 +234,7 @@ export class MailMailboxComposeService {
     const replyTo = resolveTenantReplyToAddress();
     const smtpMessageId = await this.smtpEmailSender.send({
       from: fromHeader,
+      envelopeMailFrom,
       to: normalizeRecipientList(params.to),
       subject,
       text,
@@ -289,25 +299,36 @@ export class MailMailboxComposeService {
         "Doğrulanmış kurumsal gönderen kimliği gerekli.",
       );
     }
-    const fromEmail =
-      `${identity.localPart}@${identity.mailDomain.domain}`.toLowerCase();
-    const fromHeader = identity.displayName?.trim()
-      ? `${identity.displayName.trim()} <${fromEmail}>`
-      : fromEmail;
+    const { publicAddress, technicalAddress } = resolveMailSenderAddresses(
+      identity.localPart,
+      identity.mailDomain,
+    );
+    const fromHeader = formatMailFromHeader(
+      publicAddress,
+      identity.displayName,
+    );
+    const envelopeMailFrom =
+      publicAddress !== technicalAddress ? technicalAddress : undefined;
     let mailbox = await this.mailboxRepository.findOne({
-      where: { organizationId, emailAddress: fromEmail },
+      where: { organizationId, emailAddress: technicalAddress },
     });
     if (!mailbox) {
       mailbox = await this.mailboxRepository.save(
         this.mailboxRepository.create({
           organizationId,
-          emailAddress: fromEmail,
+          emailAddress: technicalAddress,
           status: "active",
           quotaBytes: "0",
         }),
       );
     }
-    return { fromHeader, fromEmail, mailbox };
+    return {
+      fromHeader,
+      fromEmail: publicAddress,
+      envelopeMailFrom,
+      technicalEmail: technicalAddress,
+      mailbox,
+    };
   }
 
   private async assertRateLimit(organizationId: string): Promise<void> {

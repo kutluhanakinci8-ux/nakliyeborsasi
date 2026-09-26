@@ -57,6 +57,41 @@ export class MailCustomDomainOpenDkimInstaller {
     return { installed: true, detail: `OpenDKIM: ${domain} signing eklendi.` };
   }
 
+  /** From: info@firma.post imzası → teknik FQDN anahtarı (451 önleme). */
+  public tryRegisterLertaPostVanitySigning(params: {
+    orgSlug: string;
+    technicalFqdn: string;
+    selector?: string;
+  }): { installed: boolean; detail: string } {
+    const enabled =
+      this.configService.get<string>("MAIL_SYNC_OPENDKIM") === "true";
+    const vanityDomain = `${params.orgSlug.trim().toLowerCase()}.post`;
+    const selector = params.selector || "default";
+    const signingLine = `*@${vanityDomain} ${selector}._domainkey.${params.technicalFqdn}`;
+    if (!enabled) {
+      return {
+        installed: false,
+        detail: `MAIL_SYNC_OPENDKIM kapalı — VPS: echo '${signingLine}' >> /etc/opendkim/SigningTable`,
+      };
+    }
+    const signingTablePath = "/etc/opendkim/SigningTable";
+    if (!existsSync(signingTablePath)) {
+      return { installed: false, detail: "OpenDKIM SigningTable bulunamadı." };
+    }
+    if (!this.fileContainsLine(signingTablePath, signingLine)) {
+      appendFileSync(signingTablePath, `${signingLine}\n`);
+    }
+    try {
+      execFileSync("systemctl", ["restart", "opendkim"], { stdio: "ignore" });
+    } catch {
+      this.logger.warn("opendkim restart başarısız — manuel kontrol edin.");
+    }
+    return {
+      installed: true,
+      detail: `Vanity imza: ${signingLine}`,
+    };
+  }
+
   private fileContainsLine(path: string, line: string): boolean {
     if (!existsSync(path)) {
       return false;

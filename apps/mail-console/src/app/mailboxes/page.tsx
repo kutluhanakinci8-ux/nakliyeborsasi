@@ -292,7 +292,7 @@ export default function MailboxesPage() {
         ) : (
           <p style={{ color: "var(--muted)", fontSize: 14 }}>
             Özel domain henüz doğrulanmadı; pilot alt alanı (
-            kullanici.lerta.com.tr) kullanılır.
+            lerta.com.tr) kullanılır.
           </p>
         )}
         <form onSubmit={onSubmit}>

@@ -12,7 +12,7 @@ export function AdminMailInboundPanel() {
   const { accessToken } = useWebSession();
   const [messages, setMessages] = useState<MailInboundMessageRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [recipient, setRecipient] = useState("kutluhan@kullanici.lerta.tr");
+  const [recipient, setRecipient] = useState("kutluhan@lerta.com.tr");
   const [sender, setSender] = useState("test@example.com");
   const [subject, setSubject] = useState("C1 spike test");
   const [text, setText] = useState("Pilot inbound mesajı — outbox ile karışmaz.");

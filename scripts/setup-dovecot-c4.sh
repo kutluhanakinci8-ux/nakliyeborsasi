@@ -4,7 +4,7 @@ set -euo pipefail
 
 MAILDIR_ROOT="${MAIL_IMAP_MAILDIR_ROOT:-/var/mail/vhosts}"
 PASSWD_FILE="${MAIL_IMAP_DOVECOT_PASSWD_PATH:-/etc/dovecot/lerta-imap-passwd}"
-DOMAIN="${MAIL_PLATFORM_TENANT_DOMAIN:-kullanici.lerta.tr}"
+DOMAIN="${MAIL_PLATFORM_TENANT_DOMAIN:-lerta.com.tr}"
 
 export DEBIAN_FRONTEND=noninteractive
 apt-get update

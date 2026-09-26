@@ -1,10 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MAIL_WEB_URL } from "@/lib/apiConfig";
-import { quickStartPilotMailbox, registerMailSaas } from "@/lib/consoleApi";
+import {
+  parseLertaPostDesiredAddress,
+  suggestLertaPostFromCompany,
+} from "@/lib/lertaPostAddress";
+import {
+  claimMailAddress,
+  quickStartPilotMailbox,
+  registerMailSaas,
+} from "@/lib/consoleApi";
 import { useConsoleSession } from "@/lib/session";
 
 const MAIL_PLAN_CODES = new Set([
@@ -18,7 +26,7 @@ export default function RegisterPage() {
   const [subscriptionPlanCode, setSubscriptionPlanCode] = useState(
     "lerta_mail_pilot_tr",
   );
-  const [pilotSlug, setPilotSlug] = useState("");
+  const [postaDesired, setPostaDesired] = useState("");
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -28,7 +36,7 @@ export default function RegisterPage() {
     }
     const slug = params.get("slug")?.trim().toLowerCase() ?? "";
     if (slug) {
-      setPilotSlug(slug);
+      setPostaDesired(slug.includes("@") ? slug : `info@${slug}.post`);
     }
   }, []);
   const [companyLegalName, setCompanyLegalName] = useState("");
@@ -37,6 +45,15 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const parsedPost = useMemo(
+    () => parseLertaPostDesiredAddress(postaDesired),
+    [postaDesired],
+  );
+  const suggestedFromCompany = useMemo(
+    () => suggestLertaPostFromCompany(companyLegalName, "info"),
+    [companyLegalName],
+  );
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -52,11 +69,31 @@ export default function RegisterPage() {
       });
       setAccessToken(token);
       if (subscriptionPlanCode === "lerta_mail_pilot_tr") {
+        const desired =
+          parseLertaPostDesiredAddress(postaDesired)?.full ??
+          suggestLertaPostFromCompany(companyLegalName, "info");
+        if (desired) {
+          try {
+            const claim = await claimMailAddress(token, desired, {
+              displayName: displayName.trim() || companyLegalName.trim(),
+            });
+            const show =
+              claim.vanityAddress ?? claim.fromAddress ?? desired;
+            const handoff = `${MAIL_WEB_URL.replace(/\/$/, "")}/auth/consume#access_token=${encodeURIComponent(token)}&from=${encodeURIComponent(show)}`;
+            window.location.href = handoff;
+            return;
+          } catch {
+            setError(
+              "Lerta Posta adresi açılamadı. Format: info@firmaniz.post (küçük harf).",
+            );
+            setLoading(false);
+            return;
+          }
+        }
         try {
           const quick = await quickStartPilotMailbox(token, {
             companyLegalName: companyLegalName.trim(),
             displayName: displayName.trim() || companyLegalName.trim(),
-            localPart: pilotSlug.trim() || undefined,
           });
           const handoff = `${MAIL_WEB_URL.replace(/\/$/, "")}/auth/consume#access_token=${encodeURIComponent(token)}&from=${encodeURIComponent(quick.fromAddress)}`;
           window.location.href = handoff;
@@ -79,26 +116,84 @@ export default function RegisterPage() {
   return (
     <div className="auth-page">
       <form className="auth-card" onSubmit={onSubmit}>
-        <h1>Lerta Mail — Kayıt</h1>
+        <h1>Lerta Posta — Kayıt</h1>
         <p style={{ color: "var(--muted)", marginTop: 0 }}>
           {subscriptionPlanCode === "lerta_mail_corporate_tr"
             ? "Kayıt sonrası özel domain sihirbazına yönlendirileceksiniz."
-            : "Pilot: 1 kutu, 80 gönderim/saat — kayıt sonrası adresiniz açılır ve webmail’e yönlendirilir."}
+            : "1 kutu, 80 gönderim/saat. Kayıt sonrası Lerta Posta adresiniz açılır ve webmail’e yönlendirilir."}
         </p>
         {subscriptionPlanCode === "lerta_mail_pilot_tr" ? (
           <>
-            <label htmlFor="slug">Pilot adres (isteğe bağlı)</label>
+            <label htmlFor="posta">Lerta Posta adresiniz</label>
             <input
-              id="slug"
+              id="posta"
               className="input"
-              placeholder="ornek-firma"
-              value={pilotSlug}
-              onChange={(e) => setPilotSlug(e.target.value)}
-              pattern="[a-z0-9][a-z0-9-]{1,48}[a-z0-9]"
+              type="email"
+              inputMode="email"
+              autoComplete="off"
+              placeholder="info@firmaniz.post"
+              value={postaDesired}
+              onChange={(e) => setPostaDesired(e.target.value.trim().toLowerCase())}
             />
-            <p style={{ fontSize: "0.85rem", color: "var(--muted)", marginTop: 0 }}>
-              Boş bırakırsanız firma adından otomatik üretilir (@kullanici.lerta.com.tr).
-            </p>
+            <div
+              style={{
+                fontSize: "0.85rem",
+                color: "var(--muted)",
+                marginTop: 8,
+                lineHeight: 1.5,
+              }}
+            >
+              <p style={{ margin: "0 0 8px" }}>
+                Nasıl yazılır: <strong>ön ek</strong> + <strong>@</strong> +{" "}
+                <strong>firma adı</strong> + <strong>.post</strong>
+              </p>
+              <p
+                style={{
+                  margin: "0 0 8px",
+                  fontFamily: "ui-monospace, monospace",
+                  fontSize: "0.8rem",
+                }}
+              >
+                [ info | adiniz | satis ] @ [ kutluhan | abayer ] .post
+              </p>
+              <p style={{ margin: 0 }}>
+                Örnekler: <strong>info@kutluhan.post</strong>,{" "}
+                <strong>abayer@abayer.post</strong>,{" "}
+                <strong>satis@abayer.post</strong>
+              </p>
+            </div>
+            {parsedPost ? (
+              <p
+                style={{
+                  fontSize: "0.9rem",
+                  color: "var(--success)",
+                  fontWeight: 600,
+                  marginBottom: 0,
+                }}
+              >
+                Açılacak kutu: {parsedPost.full}
+              </p>
+            ) : postaDesired.trim() ? (
+              <p className="auth-error" style={{ fontSize: "0.85rem" }}>
+                Geçerli format: küçük harf, ör. info@firmaniz.post
+              </p>
+            ) : suggestedFromCompany ? (
+              <p style={{ fontSize: "0.85rem", color: "var(--muted)", marginBottom: 0 }}>
+                Boş bırakırsanız öneri:{" "}
+                <button
+                  type="button"
+                  className="btn secondary"
+                  style={{ padding: "2px 8px", fontSize: "0.8rem", marginLeft: 4 }}
+                  onClick={() => setPostaDesired(suggestedFromCompany)}
+                >
+                  {suggestedFromCompany}
+                </button>
+              </p>
+            ) : (
+              <p style={{ fontSize: "0.85rem", color: "var(--muted)", marginBottom: 0 }}>
+                Firma ünvanını yazdıktan sonra size uygun bir .post adresi önerilir.
+              </p>
+            )}
           </>
         ) : null}
         {error ? <p className="auth-error">{error}</p> : null}
@@ -118,6 +213,10 @@ export default function RegisterPage() {
           onChange={(e) => setDisplayName(e.target.value)}
         />
         <label htmlFor="email">Giriş e-postası</label>
+        <p style={{ fontSize: "0.8rem", color: "var(--muted)", margin: "4px 0 8px" }}>
+          Panele giriş için (ör. sizin Gmail veya kurumsal adresiniz); Lerta Posta
+          kutusu yukarıdaki <code>.post</code> adresidir.
+        </p>
         <input
           id="email"
           className="input"

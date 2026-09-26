@@ -4,7 +4,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { execFileSync } from "node:child_process";
 import { writeFileSync } from "node:fs";
 import { In, Repository } from "typeorm";
-import { PLATFORM_TENANT_MAIL_DOMAIN } from "@nakliyeborsasi/core";
+import { PLATFORM_MAIL_SAAS_TENANT_DOMAIN } from "@nakliyeborsasi/core";
 import { MailSenderIdentityEntity } from "../../infrastructure/database/entities/MailSenderIdentityEntity";
 import { MailDomainEntity } from "../../infrastructure/database/entities/MailDomainEntity";
 import { MailAddressAliasService } from "./MailAddressAliasService";
@@ -36,7 +36,7 @@ export class MailInboundRoutingService {
       this.configService
         .get<string>("MAIL_PLATFORM_TENANT_DOMAIN")
         ?.trim() ||
-      PLATFORM_TENANT_MAIL_DOMAIN;
+      PLATFORM_MAIL_SAAS_TENANT_DOMAIN;
     return raw
       .split(",")
       .map((d) => d.trim().toLowerCase())

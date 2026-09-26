@@ -91,7 +91,7 @@ export function PricingSection() {
               <li>
                 {plan.customDomainAllowed
                   ? "Özel domain"
-                  : "Pilot alt alan (kullanici.lerta.com.tr)"}
+                  : "Pilot adres (@lerta.com.tr)"}
               </li>
               {plan.mailWhiteLabelAllowed ? (
                 <li>White-label e-posta</li>

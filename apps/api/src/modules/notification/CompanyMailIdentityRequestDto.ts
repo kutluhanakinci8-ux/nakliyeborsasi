@@ -36,6 +36,21 @@ export class ProvisionMailIdentityDto {
   public makeDefault?: boolean;
 }
 
+export class ClaimMailAddressDto {
+  @IsString()
+  @MinLength(5)
+  @MaxLength(255)
+  @Matches(/^[^@\s]+@[^@\s]+\.[^@\s]+$/, {
+    message: "Geçerli bir e-posta adresi girin (ör. info@firma.com.tr)",
+  })
+  public desiredAddress!: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  public displayName?: string;
+}
+
 export class PilotQuickStartDto {
   @IsString()
   @MinLength(2)

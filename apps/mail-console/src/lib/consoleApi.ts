@@ -307,6 +307,30 @@ export async function operatorVerifyDomainDns(
   );
 }
 
+export async function claimMailAddress(
+  accessToken: string,
+  desiredAddress: string,
+  options?: { displayName?: string },
+) {
+  return apiFetch<{
+    fromAddress: string;
+    localPart: string;
+    domain: string;
+    channel: "custom_domain" | "tenant_subdomain" | "instant_post";
+    vanityAddress: string | null;
+    mailboxProvisioned: boolean;
+    publicDnsReady: boolean;
+    nextStepTr: string;
+    bundle: CustomDomainBundle | null;
+  }>(accessToken, "company/mail-identity/onboarding/claim-address", {
+    method: "POST",
+    body: JSON.stringify({
+      desiredAddress,
+      displayName: options?.displayName,
+    }),
+  });
+}
+
 export async function provisionCustomMailbox(
   accessToken: string,
   localPart: string,
@@ -472,6 +496,14 @@ export async function fetchMailIdentity(accessToken: string) {
   return apiFetch<{
     identity: {
       fromAddress: string | null;
+      vanityAddress: string | null;
+      displayAddress: string | null;
+      channel:
+        | "instant_post"
+        | "custom_domain"
+        | "tenant_subdomain"
+        | "platform"
+        | "unknown";
       domainVerified: boolean;
       domain: string;
       platformDnsReady: boolean;

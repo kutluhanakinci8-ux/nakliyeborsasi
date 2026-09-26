@@ -5,7 +5,10 @@ import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ConsoleShell } from "@/components/ConsoleShell";
 import { MAIL_WEB_URL } from "@/lib/apiConfig";
+import { MAIL_SAAS_TENANT_DOMAIN } from "@/lib/mailTenantDomain";
+import { suggestLertaPostMailbox } from "@/lib/lertaPostAddress";
 import {
+  claimMailAddress,
   fetchCustomDomainBundle,
   cancelMailSubscription,
   fetchMailBillingLifecycle,
@@ -33,7 +36,9 @@ export default function DashboardPage() {
   const { accessToken } = useConsoleSession();
   const [operator, setOperator] = useState(false);
   const [fromAddress, setFromAddress] = useState<string | null>(null);
-  const [tenantDomain, setTenantDomain] = useState("kullanici.lerta.com.tr");
+  const [displayAddress, setDisplayAddress] = useState<string | null>(null);
+  const [mailChannel, setMailChannel] = useState<string | null>(null);
+  const [tenantDomain, setTenantDomain] = useState(MAIL_SAAS_TENANT_DOMAIN);
   const [verified, setVerified] = useState(false);
   const [platformDnsReady, setPlatformDnsReady] = useState(false);
   const [pilotLocalPart, setPilotLocalPart] = useState("");
@@ -62,6 +67,9 @@ export default function DashboardPage() {
   const [customDomainStatus, setCustomDomainStatus] = useState<string | null>(
     null,
   );
+  const [lertaPostLoading, setLertaPostLoading] = useState(false);
+  const [lertaPostMessage, setLertaPostMessage] = useState("");
+  const [lertaPostError, setLertaPostError] = useState("");
   const [billingLifecycle, setBillingLifecycle] = useState<{
     statusLabelTr: string;
     detailTr: string;
@@ -130,6 +138,10 @@ export default function DashboardPage() {
       try {
         const data = await fetchMailIdentity(accessToken);
         setFromAddress(data.identity.fromAddress);
+        setDisplayAddress(
+          data.identity.displayAddress ?? data.identity.vanityAddress ?? data.identity.fromAddress,
+        );
+        setMailChannel(data.identity.channel);
         setVerified(data.identity.domainVerified);
         setTenantDomain(data.identity.domain);
         setPlatformDnsReady(data.identity.platformDnsReady);
@@ -211,6 +223,35 @@ export default function DashboardPage() {
     }
   }
 
+  const suggestedLertaPost = suggestLertaPostMailbox(customDomain, "info");
+
+  async function onSwitchToLertaPost() {
+    if (!accessToken || !suggestedLertaPost) {
+      return;
+    }
+    setLertaPostError("");
+    setLertaPostMessage("");
+    setLertaPostLoading(true);
+    try {
+      const result = await claimMailAddress(accessToken, suggestedLertaPost);
+      setDisplayAddress(result.vanityAddress ?? result.fromAddress);
+      setFromAddress(result.fromAddress);
+      setMailChannel("instant_post");
+      setVerified(true);
+      setPlatformDnsReady(result.publicDnsReady);
+      setLertaPostMessage(
+        `${result.vanityAddress ?? result.fromAddress} — ${result.nextStepTr}`,
+      );
+      await refreshSubscription(accessToken);
+    } catch {
+      setLertaPostError(
+        "Lerta Posta adresi açılamadı. API güncel mi kontrol edin veya domain sayfasında manuel yazın.",
+      );
+    } finally {
+      setLertaPostLoading(false);
+    }
+  }
+
   async function onProvisionPilot(event: FormEvent) {
     event.preventDefault();
     if (!accessToken) {
@@ -238,7 +279,8 @@ export default function DashboardPage() {
   }
 
   const isCorporate = planCode === CORPORATE_PLAN_CODE;
-  const customVerified = customDomainStatus === "verified";
+  const isLertaPost = mailChannel === "instant_post";
+  const customVerified = customDomainStatus === "verified" || isLertaPost;
   const onboardingStep = isCorporate
     ? !customDomain
       ? 1
@@ -261,7 +303,7 @@ export default function DashboardPage() {
     <ConsoleShell operator={operator}>
       <h1 style={{ marginTop: 0 }}>Özet</h1>
 
-      {isCorporate && !customVerified ? (
+      {isCorporate && !customVerified && !isLertaPost ? (
         <div className="card" style={{ borderColor: "var(--accent)" }}>
           <h2 style={{ marginTop: 0 }}>Özel domain gerekli</h2>
           <p style={{ margin: 0, color: "var(--muted)" }}>
@@ -507,12 +549,44 @@ export default function DashboardPage() {
         </button>
       </div>
 
+      {!isLertaPost && suggestedLertaPost ? (
+        <div className="card" style={{ marginBottom: 16, borderColor: "var(--accent)" }}>
+          <h2 style={{ marginTop: 0 }}>Lerta Posta (sıfır DNS)</h2>
+          <p style={{ margin: 0, color: "var(--muted)" }}>
+            Kurumsal kutunuz <strong>{suggestedLertaPost}</strong> olarak tanımlanabilir.
+            Yönetim paneli giriş e-postanız değişmez; gönderim ve alım bu Posta adresiyle
+            yapılır.
+          </p>
+          <button
+            type="button"
+            className="btn"
+            style={{ marginTop: 12 }}
+            disabled={lertaPostLoading}
+            onClick={() => void onSwitchToLertaPost()}
+          >
+            {suggestedLertaPost} olarak ayarla
+          </button>
+          {lertaPostMessage ? (
+            <p style={{ color: "var(--success)", fontWeight: 600, marginTop: 12 }}>
+              {lertaPostMessage}
+            </p>
+          ) : null}
+          {lertaPostError ? <p className="auth-error">{lertaPostError}</p> : null}
+        </div>
+      ) : null}
+
       <div className="card">
         <h2>Kurumsal posta kutusu</h2>
         <p>
-          Adres: <strong>{fromAddress ?? "Henüz tanımlı değil"}</strong>
+          Adres:{" "}
+          <strong>{displayAddress ?? fromAddress ?? "Henüz tanımlı değil"}</strong>
         </p>
         <p>
+          {isLertaPost ? (
+            <span className="badge ok" style={{ marginRight: 8 }}>
+              Lerta Posta
+            </span>
+          ) : null}
           Domain durumu:{" "}
           <span className={`badge ${verified ? "ok" : "pending"}`}>
             {verified ? "Doğrulandı" : "Kurulum gerekli"}
@@ -529,7 +603,7 @@ export default function DashboardPage() {
         </p>
         <p style={{ marginTop: 16 }}>
           <Link className="btn secondary" href="/domain">
-            Özel domain
+            {isLertaPost ? "Posta adresi" : "Özel domain"}
           </Link>
           <a
             className="btn"
