@@ -197,6 +197,12 @@ sudo certbot certonly --webroot -w /var/www/certbot -d posta.lerta.com.tr
 - Kural önizleme örneklerinde `matchedBecause`
 - Tekrar iptalinde uzak `_occ_*.ics` DELETE
 
+## G6+++++ — Sync temizleme + occ rewrite + karşı önizleme (uygulandı)
+
+- CalDAV sync: uzakta kalkmış `EXDATE`/override → yerel istisna silme
+- Occurrence PATCH: bağlı CalDAV’da `_occ_` dosyası yeniden PUT
+- Kural önizleme: `nonMatchingSamples` + `failedBecause`
+
 ## G9 — IMAP/SMTP istemci bilgisi (uygulandı)
 
 - `imap-settings` API: SMTP host/port/güvenlik + gönderilen klasör notu

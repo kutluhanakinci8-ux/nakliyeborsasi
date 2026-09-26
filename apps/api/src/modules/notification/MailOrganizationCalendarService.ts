@@ -295,6 +295,11 @@ export class MailOrganizationCalendarService {
       organizationId,
       row.id,
     );
+    await this.mailCalendarCalDavService.pushOccurrenceToCalDavIfLinked(
+      organizationId,
+      row.id,
+      occ,
+    );
     return this.toDto(row, true, existing.overrideStartsAt!, existing.overrideEndsAt!, {
       title: existing.overrideTitle ?? row.title,
       allDay: existing.overrideAllDay ?? row.allDay,

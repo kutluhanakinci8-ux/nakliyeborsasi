@@ -421,6 +421,29 @@ export class MailCalendarCalDavService {
     }
   }
 
+  public async pushOccurrenceToCalDavIfLinked(
+    organizationId: string,
+    eventId: string,
+    occurrenceStartsAt: Date,
+  ): Promise<void> {
+    const event = await this.eventRepository.findOne({
+      where: { id: eventId, organizationId },
+    });
+    if (!event?.recurrenceRule || !event.caldavAccountId) {
+      return;
+    }
+    try {
+      await this.pushOccurrenceToAccount(
+        organizationId,
+        event.caldavAccountId,
+        eventId,
+        occurrenceStartsAt,
+      );
+    } catch {
+      // En iyi çaba; PATCH yanıtını bozmaz.
+    }
+  }
+
   public async syncRecurrenceMasterToCalDavIfLinked(
     organizationId: string,
     eventId: string,
@@ -656,6 +679,70 @@ export class MailCalendarCalDavService {
     for (const ov of overridesForUid) {
       if (ov.recurrenceIdAt) {
         await this.applyCalDavRecurrenceOverride(organizationId, masterEventId, ov);
+      }
+    }
+    await this.pruneCancelledExceptionsNotInExDates(
+      organizationId,
+      masterEventId,
+      master.exDates,
+    );
+    await this.pruneOverridesAbsentFromCalDav(
+      organizationId,
+      masterEventId,
+      overridesForUid,
+      master.exDates,
+    );
+  }
+
+  /** Uzak master’dan kalkmış EXDATE → yerel iptal istisnasını kaldır. */
+  private async pruneCancelledExceptionsNotInExDates(
+    organizationId: string,
+    masterEventId: string,
+    exDates: Date[],
+  ): Promise<void> {
+    const allowed = new Set(exDates.map((d) => d.getTime()));
+    const rows = await this.recurrenceExceptionRepository.find({
+      where: { organizationId, masterEventId, cancelled: true },
+    });
+    for (const row of rows) {
+      if (!allowed.has(row.occurrenceStartsAt.getTime())) {
+        await this.recurrenceExceptionRepository.remove(row);
+      }
+    }
+  }
+
+  /** Uzak .ics’te artık olmayan override (RECURRENCE-ID) istisnalarını kaldır. */
+  private async pruneOverridesAbsentFromCalDav(
+    organizationId: string,
+    masterEventId: string,
+    overridesForUid: ParsedIcalEvent[],
+    exDates: Date[],
+  ): Promise<void> {
+    const overrideKeys = new Set(
+      overridesForUid
+        .filter((ov) => ov.recurrenceIdAt)
+        .map((ov) => ov.recurrenceIdAt!.getTime()),
+    );
+    const cancelledKeys = new Set(exDates.map((d) => d.getTime()));
+    const rows = await this.recurrenceExceptionRepository.find({
+      where: { organizationId, masterEventId, cancelled: false },
+    });
+    for (const row of rows) {
+      const key = row.occurrenceStartsAt.getTime();
+      if (cancelledKeys.has(key)) {
+        continue;
+      }
+      const hasOverride = Boolean(
+        row.overrideTitle?.trim() ||
+          row.overrideStartsAt ||
+          row.overrideEndsAt ||
+          row.overrideAllDay != null,
+      );
+      if (!hasOverride) {
+        continue;
+      }
+      if (!overrideKeys.has(key)) {
+        await this.recurrenceExceptionRepository.remove(row);
       }
     }
   }

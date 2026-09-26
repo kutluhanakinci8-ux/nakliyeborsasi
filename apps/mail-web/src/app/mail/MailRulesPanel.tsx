@@ -337,8 +337,14 @@ export function MailRulesPanel({ accessToken }: Props) {
                               `“${s.subject}” (${s.matchedBecause || "—"})`,
                           )
                           .join("; ");
+                        const counter = preview.nonMatchingSamples
+                          .map(
+                            (s) =>
+                              `“${s.subject}” (${s.failedBecause || "—"})`,
+                          )
+                          .join("; ");
                         setInfo(
-                          `Önizleme: ${preview.matchCount} eşleşme${cap}. Mantık: ${preview.matchLogicDescription}${sample ? ` — örnekler: ${sample}` : ""}`,
+                          `Önizleme: ${preview.matchCount} eşleşme${cap}. Mantık: ${preview.matchLogicDescription}${sample ? ` — eşleşen: ${sample}` : ""}${counter ? ` — eşleşmeyen: ${counter}` : ""}`,
                         );
                       },
                       () => setError("Önizleme başarısız."),
