@@ -44,7 +44,11 @@ Harici **iCal URL** (şifresiz abonelik) için [MAIL_CALDAV_EXTERNAL.md](./MAIL_
 bash scripts/apply-mail-d6-caldav-schema.sh /var/www/nakliyeborsasi
 ```
 
+## CalDAV silme ve ETag (uygulandı)
+
+- Yerel etkinlik silinirken bağlı CalDAV kaynağına `DELETE` (yazma açık hesap).
+- `PUT` sonrası `ETag` saklanır; güncellemede `If-Match` (412 → yeniden çekin).
+
 ## Sonraki
 
-- Sunucuda silme (DELETE), ETag ile çakışma
 - Tekrarlayan etkinlikler

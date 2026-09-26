@@ -135,6 +135,10 @@ sudo certbot certonly --webroot -w /var/www/certbot -d posta.lerta.com.tr
 - `contacts/carddav/accounts` CRUD, sync, push
 - [MAIL_CARDDAV.md](./MAIL_CARDDAV.md)
 
+## D6 — CalDAV DELETE + ETag (uygulandı)
+
+- `mail_calendar_event.caldav_etag`; silmede uzak DELETE, yazmada If-Match
+
 ## G5 — Kurallar v2 (uygulandı)
 
 - Okundu işaretle ve çöpe taşı işlemleri
