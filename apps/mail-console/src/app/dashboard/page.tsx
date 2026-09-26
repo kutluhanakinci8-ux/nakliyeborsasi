@@ -5,6 +5,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ConsoleShell } from "@/components/ConsoleShell";
 import { MAIL_WEB_URL } from "@/lib/apiConfig";
+import { MAIL_SAAS_TENANT_DOMAIN } from "@/lib/mailTenantDomain";
 import {
   fetchCustomDomainBundle,
   cancelMailSubscription,
@@ -33,7 +34,7 @@ export default function DashboardPage() {
   const { accessToken } = useConsoleSession();
   const [operator, setOperator] = useState(false);
   const [fromAddress, setFromAddress] = useState<string | null>(null);
-  const [tenantDomain, setTenantDomain] = useState("lerta.com.tr");
+  const [tenantDomain, setTenantDomain] = useState(MAIL_SAAS_TENANT_DOMAIN);
   const [verified, setVerified] = useState(false);
   const [platformDnsReady, setPlatformDnsReady] = useState(false);
   const [pilotLocalPart, setPilotLocalPart] = useState("");

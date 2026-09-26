@@ -23,7 +23,7 @@ if [[ -f "${ENV_FILE}" ]]; then
   set_kv "MAIL_INBOUND_APPLY_POSTFIX" "true"
   set_kv "MAIL_IMAP_APPLY_DOVECOT" "true"
   set_kv "MAIL_IMAP_MAILDIR_ROOT" "/var/mail/vhosts"
-  set_kv "MAIL_INBOUND_VIRTUAL_DOMAINS" "${MAIL_PLATFORM_TENANT_DOMAIN:-kullanici.lerta.tr}"
+  set_kv "MAIL_INBOUND_VIRTUAL_DOMAINS" "${MAIL_PLATFORM_TENANT_DOMAIN:-lerta.com.tr}"
   echo "Updated ${ENV_FILE} (inbound + IMAP flags)."
 fi
 
@@ -32,8 +32,8 @@ echo "=== Dinleyici kontrolü (25 / 993) ==="
 ss -tlnp | grep -E ':25|:993' || true
 echo ""
 echo "DNS (isimtescil — manuel):"
-echo "  MX  kullanici.lerta.tr  →  10 mail.lerta.tr"
-echo "  TXT _dmarc.kullanici.lerta.tr → v=DMARC1; p=none; rua=mailto:dmarc@lerta.tr"
+echo "  MX  lerta.com.tr  →  10 mail.lerta.com.tr"
+echo "  TXT _dmarc.lerta.com.tr → v=DMARC1; p=none; rua=mailto:dmarc@lerta.com.tr"
 echo "Hostinger: PTR 168.231.109.27 → mail.lerta.tr"
 echo ""
 echo "API yeniden başlat: cd ${INSTALL_DIR} && bash scripts/restart-api.sh"

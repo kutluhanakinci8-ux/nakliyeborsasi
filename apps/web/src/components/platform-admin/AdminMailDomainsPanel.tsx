@@ -51,7 +51,7 @@ export function AdminMailDomainsPanel() {
     void refresh();
   }, [refresh]);
 
-  const tenantDomain = pilot?.domain ?? "kullanici.lerta.tr";
+  const tenantDomain = pilot?.domain ?? "lerta.com.tr";
 
   async function verifyTenantDns(): Promise<void> {
     if (!accessToken) {
@@ -60,7 +60,7 @@ export function AdminMailDomainsPanel() {
     setMessage("");
     try {
       await PlatformAdminApiClient.verifyTenantSubdomainDns(accessToken);
-      setMessage("kullanici.lerta.tr DNS doğrulandı.");
+      setMessage(`${tenantDomain} DNS doğrulandı.`);
       await refresh();
     } catch {
       setMessage("DNS henüz hazır değil — isimtescil TXT ve VPS OpenDKIM kontrol edin.");
@@ -186,7 +186,7 @@ export function AdminMailDomainsPanel() {
             className="pa-btn pa-btn--secondary"
             onClick={() => void verifyTenantDns()}
           >
-            kullanici.lerta.tr DNS doğrula
+            {tenantDomain} DNS doğrula
           </button>
         </div>
       </section>

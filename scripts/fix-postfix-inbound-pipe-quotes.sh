@@ -12,7 +12,7 @@ echo "==> Postfix inbound pipe düzeltmesi"
 
 postconf -e "mydestination = ${MAIL_HOST}, localhost"
 postconf -e "local_transport = local:"
-postconf -e "virtual_mailbox_domains = kullanici.lerta.com.tr"
+postconf -e "virtual_mailbox_domains = lerta.com.tr"
 postconf -e "virtual_alias_maps = hash:${VIRTUAL_PATH}"
 postconf -e "alias_maps = hash:/etc/aliases, hash:${ALIASES_PATH}"
 

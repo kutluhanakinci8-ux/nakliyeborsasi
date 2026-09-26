@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MAIL_WEB_URL } from "@/lib/apiConfig";
+import { MAIL_SAAS_TENANT_DOMAIN, formatTenantMailbox } from "@/lib/mailTenantDomain";
 import { quickStartPilotMailbox, registerMailSaas } from "@/lib/consoleApi";
 import { useConsoleSession } from "@/lib/session";
 
@@ -87,17 +88,19 @@ export default function RegisterPage() {
         </p>
         {subscriptionPlanCode === "lerta_mail_pilot_tr" ? (
           <>
-            <label htmlFor="slug">Pilot adres (isteğe bağlı)</label>
+            <label htmlFor="slug">Pilot posta adresi (isteğe bağlı)</label>
             <input
               id="slug"
               className="input"
-              placeholder="ornek-firma"
+              placeholder="karagoz"
               value={pilotSlug}
               onChange={(e) => setPilotSlug(e.target.value)}
               pattern="[a-z0-9][a-z0-9-]{1,48}[a-z0-9]"
             />
             <p style={{ fontSize: "0.85rem", color: "var(--muted)", marginTop: 0 }}>
-              Boş bırakırsanız firma adından otomatik üretilir (@lerta.com.tr).
+              {pilotSlug.trim()
+                ? `Kutu: ${formatTenantMailbox(pilotSlug)}`
+                : `Boş bırakırsanız firma adından otomatik (@${MAIL_SAAS_TENANT_DOMAIN}).`}
             </p>
           </>
         ) : null}
