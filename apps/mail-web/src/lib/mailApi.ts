@@ -936,6 +936,58 @@ export async function deleteComposePreset(
   });
 }
 
+export type MailCalendarIcsFeed = {
+  id: string;
+  label: string;
+  feedUrl: string;
+  enabled: boolean;
+  lastSyncedAt: string | null;
+  lastSyncError: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export async function fetchCalendarIcsFeeds(accessToken: string) {
+  return apiFetch<{ feeds: MailCalendarIcsFeed[] }>(
+    accessToken,
+    "company/mail-inbox/calendar/feeds",
+  );
+}
+
+export async function createCalendarIcsFeed(
+  accessToken: string,
+  body: { label: string; feedUrl: string; enabled?: boolean },
+) {
+  return apiFetch<{ feed: MailCalendarIcsFeed }>(
+    accessToken,
+    "company/mail-inbox/calendar/feeds",
+    { method: "POST", body: JSON.stringify(body) },
+  );
+}
+
+export async function deleteCalendarIcsFeed(
+  accessToken: string,
+  feedId: string,
+) {
+  await apiFetch(accessToken, `company/mail-inbox/calendar/feeds/${feedId}`, {
+    method: "DELETE",
+  });
+}
+
+export async function syncCalendarIcsFeed(
+  accessToken: string,
+  feedId: string,
+) {
+  return apiFetch<{
+    imported: number;
+    updated: number;
+    removed: number;
+  }>(accessToken, `company/mail-inbox/calendar/feeds/${feedId}/sync`, {
+    method: "POST",
+    body: JSON.stringify({}),
+  });
+}
+
 export type MailCalendarEvent = {
   id: string;
   title: string;

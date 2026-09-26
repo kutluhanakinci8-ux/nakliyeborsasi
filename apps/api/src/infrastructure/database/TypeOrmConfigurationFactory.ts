@@ -55,6 +55,7 @@ import { MailDelayedComposeEntity } from "./entities/MailDelayedComposeEntity";
 import { MailInboxPreferencesEntity } from "./entities/MailInboxPreferencesEntity";
 import { MailCalendarEventEntity } from "./entities/MailCalendarEventEntity";
 import { MailOrgContactEntity } from "./entities/MailOrgContactEntity";
+import { MailCalendarIcsFeedEntity } from "./entities/MailCalendarIcsFeedEntity";
 
 @Injectable()
 export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
@@ -125,6 +126,7 @@ export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
         MailInboxPreferencesEntity,
         MailCalendarEventEntity,
         MailOrgContactEntity,
+        MailCalendarIcsFeedEntity,
       ],
       synchronize,
       logging: false,

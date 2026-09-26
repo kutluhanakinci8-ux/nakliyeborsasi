@@ -10,6 +10,7 @@ import {
   type MailCalendarEvent,
 } from "@/lib/mailApi";
 import { buildMonthGrid, dayKeyFromIso } from "./mailCalendarGrid";
+import { MailCalendarFeedsPanel } from "./MailCalendarFeedsPanel";
 
 type Props = {
   accessToken: string;
@@ -287,10 +288,11 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
           </li>
         ) : null}
       </ul>
-      <p className="mail-d6-hint">
-        Harici CalDAV sunucusu bağlantısı sonraki fazda; şimdilik org takvimi ve
-        iCal içe/dışa aktarma.
-      </p>
+      <MailCalendarFeedsPanel
+        accessToken={accessToken}
+        onToast={onToast}
+        onSynced={() => void load()}
+      />
     </div>
   );
 }

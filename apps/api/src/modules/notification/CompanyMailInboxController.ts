@@ -71,11 +71,14 @@ import {
 } from "./MailInboxRuleRequestDto";
 import { MailOrganizationCalendarService } from "./MailOrganizationCalendarService";
 import { MailOrganizationContactService } from "./MailOrganizationContactService";
+import { MailCalendarIcsFeedService } from "./MailCalendarIcsFeedService";
 import {
   CreateMailCalendarEventRequestDto,
   CreateMailOrgContactRequestDto,
   ImportMailCalendarIcsRequestDto,
   ImportMailContactsVcfRequestDto,
+  CreateMailCalendarIcsFeedRequestDto,
+  UpdateMailCalendarIcsFeedRequestDto,
   UpdateMailCalendarEventRequestDto,
   UpdateMailOrgContactRequestDto,
 } from "./MailCalendarContactRequestDto";
@@ -98,6 +101,7 @@ export class CompanyMailInboxController {
     private readonly mailInboxPreferencesService: MailInboxPreferencesService,
     private readonly mailOrganizationCalendarService: MailOrganizationCalendarService,
     private readonly mailOrganizationContactService: MailOrganizationContactService,
+    private readonly mailCalendarIcsFeedService: MailCalendarIcsFeedService,
   ) {}
 
   @Get("preferences")
@@ -969,6 +973,71 @@ export class CompanyMailInboxController {
       throw new BadRequestException("receivedAfter geçersiz");
     }
     return parsed;
+  }
+
+  @Get("calendar/feeds")
+  public async listCalendarIcsFeeds(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    const feeds = await this.mailCalendarIcsFeedService.list(user.companyId);
+    return { feeds };
+  }
+
+  @Post("calendar/feeds")
+  public async createCalendarIcsFeed(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: CreateMailCalendarIcsFeedRequestDto,
+  ) {
+    this.assertMailInboxWriter(user);
+    const feed = await this.mailCalendarIcsFeedService.create(user.companyId, {
+      label: body.label,
+      feedUrl: body.feedUrl,
+      enabled: body.enabled,
+    });
+    return { ok: true, feed };
+  }
+
+  @Patch("calendar/feeds/:feedId")
+  public async updateCalendarIcsFeed(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("feedId") feedId: string,
+    @Body() body: UpdateMailCalendarIcsFeedRequestDto,
+  ) {
+    this.assertMailInboxWriter(user);
+    const feed = await this.mailCalendarIcsFeedService.update(
+      user.companyId,
+      feedId,
+      {
+        label: body.label,
+        feedUrl: body.feedUrl,
+        enabled: body.enabled,
+      },
+    );
+    return { ok: true, feed };
+  }
+
+  @Delete("calendar/feeds/:feedId")
+  public async deleteCalendarIcsFeed(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("feedId") feedId: string,
+  ) {
+    this.assertMailInboxWriter(user);
+    await this.mailCalendarIcsFeedService.delete(user.companyId, feedId);
+    return { ok: true };
+  }
+
+  @Post("calendar/feeds/:feedId/sync")
+  public async syncCalendarIcsFeed(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("feedId") feedId: string,
+  ) {
+    this.assertMailInboxWriter(user);
+    const result = await this.mailCalendarIcsFeedService.sync(
+      user.companyId,
+      feedId,
+      user.userId,
+    );
+    return { ok: true, ...result };
   }
 
   @Get("calendar/events")
