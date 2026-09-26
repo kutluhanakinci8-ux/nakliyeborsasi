@@ -1,5 +1,5 @@
-/* Lerta Posta — G6 offline shell (static + fallback). */
-const CACHE = "lerta-mail-shell-v3";
+/* Lerta Posta — G6 offline shell (network-first navigate + static cache). */
+const CACHE = "lerta-mail-shell-v4";
 const PRECACHE = ["/mail", "/manifest.webmanifest", "/offline.html"];
 
 self.addEventListener("install", (event) => {
@@ -34,9 +34,21 @@ self.addEventListener("fetch", (event) => {
   }
   if (request.mode === "navigate") {
     event.respondWith(
-      fetch(request).catch(() =>
-        caches.match("/offline.html").then((cached) => cached ?? caches.match("/mail")),
-      ),
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const copy = response.clone();
+            void caches.open(CACHE).then((cache) => cache.put(request, copy));
+          }
+          return response;
+        })
+        .catch(() =>
+          caches.match(request).then(
+            (cached) =>
+              cached ??
+              caches.match("/mail").then((shell) => shell ?? caches.match("/offline.html")),
+          ),
+        ),
     );
     return;
   }

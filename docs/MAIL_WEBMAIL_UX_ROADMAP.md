@@ -10,7 +10,7 @@
 | **G3** | İletme & adresleme | Orta | İlet API+UI; BCC; “Tümüne yanıtla” |
 | **G4** | Görünüm & marka | Orta | Karanlık tema; tenant logo; compose iyileştirme (markdown veya RTE) |
 | **G5** | Güç kullanıcı | Büyük | Yıldız (uygulandı); özel klasör; sunucu kuralları (Sieve benzeri) |
-| **G6** | Bildirim & offline | Büyük | Web push; service worker cache (D7 ile hizalı) |
+| **G6** | Bildirim & offline | Büyük | Web push; SW v4 network-first (D7 ile hizalı) |
 
 ---
 
@@ -81,9 +81,9 @@ sudo certbot certonly --webroot -w /var/www/certbot -d posta.lerta.com.tr
 - API: `POST messages/bulk/star` `{ messageIds, starred }`
 - UI: toplu **Yıldızla** / **Yıldız kaldır**; `j`/`k` liste gezintisi; Shift+tık aralık seçimi
 
-## G6 — Offline & push (kısmi, uygulandı)
+## G6 — Offline & push (uygulandı)
 
-- Service worker: statik önbellek, `/offline.html` gezinme yedek
+- Service worker v4: network-first gezinme + son `/mail` önbelleği, statik stale-while-revalidate
 - Web Push: VAPID, abonelik API, inbound bildirimi, Ayarlar → Bildirim
 - Ses, sekme/PWA okunmamış rozeti, günlük özet e-postası (08:00)
 - Geri al gönder: yeni posta, yanıt, iletme, taslak (5 sn)
@@ -101,7 +101,7 @@ sudo certbot certonly --webroot -w /var/www/certbot -d posta.lerta.com.tr
 - [MAIL_THUNDERBIRD_IMAP.md](./MAIL_THUNDERBIRD_IMAP.md) + web `/help/imap`
 - Ayarlar → IMAP: rehber linki, sunucu/kullanıcı **Kopyala**
 - Ayarlar → Bildirim: iOS Ana ekrana ekle uyarısı
-- [MAIL_CALDAV_D6.md](./MAIL_CALDAV_D6.md) — D6 plan notu (uygulama sonra)
+- [MAIL_CALDAV_D6.md](./MAIL_CALDAV_D6.md) — D6 uygulandı (CalDAV/CardDAV canlı)
 
 ## D6 — Takvim & kişiler (MVP, uygulandı)
 
@@ -207,6 +207,11 @@ sudo certbot certonly --webroot -w /var/www/certbot -d posta.lerta.com.tr
 
 - `from_caldav` — prune yalnızca CalDAV kaynaklı istisnalar; web düzenlemesi `from_caldav=false`
 - Önizleme: 8 karşı örnek; `newOccurrenceAnchorAt` + eski `_occ_` DELETE
+
+## G6+++++++ — CalDAV EXDATE/RECURRENCE-ID fuzzy eşleşme (uygulandı)
+
+- `MailCalDavOccurrenceMatch`: tüm gün UTC tarih; zamanlı ±60s tolerans
+- Sync prune/upsert ham `getTime()` yerine fuzzy anchor
 
 ## G9 — IMAP/SMTP istemci bilgisi (uygulandı)
 
