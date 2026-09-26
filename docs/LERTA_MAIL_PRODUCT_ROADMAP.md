@@ -180,5 +180,6 @@ Operatör konsolu **mini KPI kartı** — `platform-admin/mail/kpi`, `MAIL_OPERA
 - DNS: `docs/DNS_LERTA_COM_TR_ISIMTESCIL.md`
 - Ödeme: `docs/MAIL_BILLING_STRIPE_SETUP.md`, `docs/MAIL_BILLING_IYZICO_SETUP.md`
 - www: `docs/WWW_CUTOVER_LERTA_MAIL.md`, `scripts/preflight-www-cutover-lerta-mail.sh`
+- Kurumsal satış sunumu (TR): `docs/MAIL_KURUMSAL_SUNUM_TR.md`
 
 **Son güncelleme:** kurumsal vitrin HTTPS canlı; ödeme kodu merge; Stripe anahtarları müşteri tarafında.

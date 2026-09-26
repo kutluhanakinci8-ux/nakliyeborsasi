@@ -72,3 +72,5 @@
 Lerta Mail **tam Gmail klonu** olmayacak; hedef: **Türkiye KOBİ + pilot** için güvenilir, sade, IMAP uyumlu kutu. Rekabet avantajı: **aynı ekosistem** (yonetim DNS, kota, KVKK) — bunları webmail içinde **görünür** yapmak (durum, kota, konsol linki).
 
 Uygulama fazları: [MAIL_WEBMAIL_UX_ROADMAP.md](./MAIL_WEBMAIL_UX_ROADMAP.md)
+
+Kurumsal müşteri sunumu (TR avantajları): [MAIL_KURUMSAL_SUNUM_TR.md](./MAIL_KURUMSAL_SUNUM_TR.md)
