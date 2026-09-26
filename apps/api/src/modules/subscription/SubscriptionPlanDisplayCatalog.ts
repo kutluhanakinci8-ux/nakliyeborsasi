@@ -48,7 +48,7 @@ const DISPLAY: readonly SubscriptionPlanDisplayMeta[] = [
   {
     planCode: "lerta_mail_pilot_tr",
     displayName: "Pilot",
-    tagline: "kullanici.lerta.com.tr — webmail, taslaklar, IMAP.",
+    tagline: "@lerta.com.tr — webmail, taslaklar, IMAP.",
     monthlyPriceEur: 0,
     annualPriceEur: 0,
     productLine: "lerta_mail",

@@ -24,8 +24,8 @@ set_kv() {
 
 set_kv "MAIL_PLATFORM_DOMAIN" "mail.lerta.com.tr"
 set_kv "MAIL_PLATFORM_FROM_EMAIL" "notifications@mail.lerta.com.tr"
-set_kv "MAIL_PLATFORM_TENANT_DOMAIN" "kullanici.lerta.com.tr"
-set_kv "MAIL_INBOUND_VIRTUAL_DOMAINS" "kullanici.lerta.com.tr"
+set_kv "MAIL_PLATFORM_TENANT_DOMAIN" "lerta.com.tr"
+set_kv "MAIL_INBOUND_VIRTUAL_DOMAINS" "lerta.com.tr,kullanici.lerta.com.tr"
 set_kv "MAIL_IMAP_HOST" "mail.lerta.com.tr"
 set_kv "WEB_PUBLIC_BASE_URL" "https://${APP_HOST}"
 set_kv "MAIL_SAAS_WEB_URL" "https://${APP_HOST}"

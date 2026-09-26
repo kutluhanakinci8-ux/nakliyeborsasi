@@ -12,7 +12,7 @@ export const MARKETING_FAQ: FaqItem[] = [
   },
   {
     q: "Özel domain zorunlu mu?",
-    a: "Kurumsal ve Enterprise paketlerde hedef model info@firmaniz.com.tr. Pilot pakette kullanici.lerta.com.tr altında adres açabilirsiniz.",
+    a: "Kurumsal ve Enterprise paketlerde hedef model info@firmaniz.com.tr. Pilot pakette hemen kullanabileceğiniz adres örneği karagoz@lerta.com.tr.",
   },
   {
     q: "DNS kayıtlarını kim ekler?",

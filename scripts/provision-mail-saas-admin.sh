@@ -66,12 +66,13 @@ echo "==> Platform operatör ile kutu: ${MAIL_LOCAL}@..."
 PLATFORM_TOKEN=$(json_post "${API_BASE}/auth/login" \
   "{\"emailAddress\":\"${PLATFORM_EMAIL}\",\"password\":\"${PLATFORM_PASSWORD}\"}" | jq -r .accessToken)
 
+TENANT_DOMAIN="${MAIL_PLATFORM_TENANT_DOMAIN:-lerta.com.tr}"
 DOMAIN_ID=$(curl -sf "${API_BASE}/platform-admin/mail/domains" \
-  -H "Authorization: Bearer ${PLATFORM_TOKEN}" | jq -r '.domains[] | select(.domain=="kullanici.lerta.com.tr") | .id' | head -1)
+  -H "Authorization: Bearer ${PLATFORM_TOKEN}" | jq -r ".domains[] | select(.domain==\"${TENANT_DOMAIN}\") | .id" | head -1)
 
 if [[ -z "${DOMAIN_ID}" || "${DOMAIN_ID}" == "null" ]]; then
   DOMAIN_ID=$(json_post "${API_BASE}/platform-admin/mail/domains" \
-    "{\"organizationId\":\"${ORG_ID}\",\"domain\":\"kullanici.lerta.com.tr\",\"domainType\":\"subdomain\",\"notes\":\"tenant shared\"}" \
+    "{\"organizationId\":\"${ORG_ID}\",\"domain\":\"${TENANT_DOMAIN}\",\"domainType\":\"subdomain\",\"notes\":\"tenant shared\"}" \
     "${PLATFORM_TOKEN}" | jq -r .domain.id)
 fi
 
@@ -84,4 +85,4 @@ json_post "${API_BASE}/platform-admin/mail/tenant-subdomain/provision" \
 
 json_post "${API_BASE}/platform-admin/mail/inbound-routing/sync-postfix" "{}" "${PLATFORM_TOKEN}" >/dev/null
 
-echo "Tamam. Giriş: ${ADMIN_EMAIL} · Kutu: ${MAIL_LOCAL}@kullanici.lerta.com.tr"
+echo "Tamam. Giriş: ${ADMIN_EMAIL} · Kutu: ${MAIL_LOCAL}@${TENANT_DOMAIN}"

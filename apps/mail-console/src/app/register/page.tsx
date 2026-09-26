@@ -97,7 +97,7 @@ export default function RegisterPage() {
               pattern="[a-z0-9][a-z0-9-]{1,48}[a-z0-9]"
             />
             <p style={{ fontSize: "0.85rem", color: "var(--muted)", marginTop: 0 }}>
-              Boş bırakırsanız firma adından otomatik üretilir (@kullanici.lerta.com.tr).
+              Boş bırakırsanız firma adından otomatik üretilir (@lerta.com.tr).
             </p>
           </>
         ) : null}

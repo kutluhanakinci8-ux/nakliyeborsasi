@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { PLATFORM_TENANT_MAIL_DOMAIN } from "@nakliyeborsasi/core";
+import { PLATFORM_MAIL_SAAS_TENANT_DOMAIN } from "@nakliyeborsasi/core";
 import * as dns from "node:dns/promises";
 
 @Injectable()
@@ -12,7 +12,7 @@ export class MailDomainDnsVerificationService {
   public resolveTenantMailDomain(): string {
     return (
       this.configService.get<string>("MAIL_PLATFORM_TENANT_DOMAIN")?.trim() ||
-      PLATFORM_TENANT_MAIL_DOMAIN
+      PLATFORM_MAIL_SAAS_TENANT_DOMAIN
     );
   }
 
@@ -36,7 +36,7 @@ export class MailDomainDnsVerificationService {
       : {
           ok: false,
           detail:
-            "MAIL_PLATFORM_TENANT_DKIM_TXT tanımlı değil (kullanici.lerta.tr OpenDKIM).",
+            "MAIL_PLATFORM_TENANT_DKIM_TXT tanımlı değil (tenant OpenDKIM).",
         };
 
     return {

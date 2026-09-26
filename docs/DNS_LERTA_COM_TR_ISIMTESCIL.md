@@ -10,8 +10,6 @@
 | A | `yonetim` | `168.231.109.27` |
 | A | `kurumsal` | `168.231.109.27` |
 | A | `mail` | `168.231.109.27` |
-| A | `kullanici` | `168.231.109.27` |
-
 - Webmail UI: **https://posta.lerta.com.tr**
 - Kurumsal vitrin (www cutover öncesi): **https://kurumsal.lerta.com.tr** (A kaydı + Let’s Encrypt — canlı)
 - `www` / kök → U88 (dokunmayın)
@@ -24,14 +22,16 @@
 | TXT | `default._domainkey.mail.lerta.com.tr` | VPS OpenDKIM çıktısı |
 | TXT | `_dmarc.mail.lerta.com.tr` | `v=DMARC1; p=none; rua=mailto:dmarc@lerta.com.tr` |
 
-## Tenant (`slug@kullanici.lerta.com.tr` + gelen posta)
+## Tenant (müşteri kutuları `slug@lerta.com.tr` + gelen posta)
 
 | Tür | Host | Değer |
 |-----|------|--------|
-| TXT | `kullanici.lerta.com.tr` | `v=spf1 ip4:168.231.109.27 -all` |
-| TXT | `default._domainkey.kullanici.lerta.com.tr` | VPS tenant DKIM |
-| TXT | `_dmarc.kullanici.lerta.com.tr` | `v=DMARC1; p=none; rua=mailto:dmarc@lerta.com.tr` |
-| **MX** | `kullanici.lerta.com.tr` | **`10 mail.lerta.com.tr`** |
+| TXT | `lerta.com.tr` | `v=spf1 ip4:168.231.109.27 -all` |
+| TXT | `default._domainkey.lerta.com.tr` | VPS tenant DKIM (`setup-mail-lerta-com-tr-pilot.sh`) |
+| TXT | `_dmarc.lerta.com.tr` | `v=DMARC1; p=none; rua=mailto:dmarc@lerta.com.tr` |
+| **MX** | `lerta.com.tr` | **`10 mail.lerta.com.tr`** |
+
+Eski pilot `kullanici.lerta.com.tr` kayıtları kaldırılabilir; geçiş için inbound env’de virgülle tutulabilir.
 
 PTR (Hostinger, IP): `mail.lerta.com.tr`
 

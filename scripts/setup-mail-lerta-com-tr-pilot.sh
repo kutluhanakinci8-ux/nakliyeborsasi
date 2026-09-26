@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Postfix/OpenDKIM + inbound tenant — mail.lerta.com.tr / kullanici.lerta.com.tr
+# Postfix/OpenDKIM + inbound tenant — mail.lerta.com.tr / lerta.com.tr (müşteri kutuları)
 set -euo pipefail
 
 INSTALL_DIR="${INSTALL_DIR:-/var/www/nakliyeborsasi}"
 MAIL_HOST="${MAIL_HOSTNAME:-mail.lerta.com.tr}"
-TENANT_DOMAIN="${TENANT_DOMAIN:-kullanici.lerta.com.tr}"
+TENANT_DOMAIN="${TENANT_DOMAIN:-lerta.com.tr}"
 
 echo "==> Postfix myhostname=${MAIL_HOST}"
 postconf -e "myhostname = ${MAIL_HOST}"

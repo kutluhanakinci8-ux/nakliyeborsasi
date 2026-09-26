@@ -243,7 +243,7 @@ export default function DomainPage() {
         <h2>Pilot alt alan (isteğe bağlı)</h2>
         <p style={{ color: "var(--muted)", marginTop: 0 }}>
           Özel domain olmadan denemek için paylaşımlı{" "}
-          <strong>kullanici.lerta.com.tr</strong> altında kutu açabilirsiniz.
+          <strong>lerta.com.tr</strong> üzerinde pilot kutu açabilirsiniz (ör. karagoz@lerta.com.tr).
         </p>
         <Link className="btn secondary" href="/dashboard">
           Pilot kutuya geç

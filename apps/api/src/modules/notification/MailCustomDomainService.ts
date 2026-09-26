@@ -17,7 +17,10 @@ import { MailDomainEntity } from "../../infrastructure/database/entities/MailDom
 import { MailSenderIdentityEntity } from "../../infrastructure/database/entities/MailSenderIdentityEntity";
 import { MailDomainApplicationService } from "./MailDomainApplicationService";
 import { MailDomainDnsVerificationService } from "./MailDomainDnsVerificationService";
-import { PLATFORM_TENANT_MAIL_DOMAIN } from "@nakliyeborsasi/core";
+import {
+  PLATFORM_MAIL_SAAS_TENANT_DOMAIN,
+  isReservedLertaMailSaasDomain,
+} from "@nakliyeborsasi/core";
 import { MailCustomDomainOpenDkimInstaller } from "./MailCustomDomainOpenDkimInstaller";
 import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
 
@@ -69,14 +72,9 @@ export class MailCustomDomainService {
 
   public assertValidCustomDomain(domain: string): void {
     const normalized = this.normalizeDomain(domain);
-    if (
-      normalized === "lerta.tr" ||
-      normalized.endsWith(".lerta.tr") ||
-      normalized === PLATFORM_TENANT_MAIL_DOMAIN ||
-      normalized.endsWith(`.${PLATFORM_TENANT_MAIL_DOMAIN}`)
-    ) {
+    if (isReservedLertaMailSaasDomain(normalized)) {
       throw new BadRequestException(
-        "Paylaşımlı platform alanları özel domain olarak eklenemez; kullanici.lerta.tr akışını kullanın.",
+        `Paylaşımlı platform alanları özel domain olarak eklenemez; pilot adres için @${PLATFORM_MAIL_SAAS_TENANT_DOMAIN} kullanın.`,
       );
     }
     if (

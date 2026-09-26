@@ -33,7 +33,7 @@ export default function DashboardPage() {
   const { accessToken } = useConsoleSession();
   const [operator, setOperator] = useState(false);
   const [fromAddress, setFromAddress] = useState<string | null>(null);
-  const [tenantDomain, setTenantDomain] = useState("kullanici.lerta.com.tr");
+  const [tenantDomain, setTenantDomain] = useState("lerta.com.tr");
   const [verified, setVerified] = useState(false);
   const [platformDnsReady, setPlatformDnsReady] = useState(false);
   const [pilotLocalPart, setPilotLocalPart] = useState("");
