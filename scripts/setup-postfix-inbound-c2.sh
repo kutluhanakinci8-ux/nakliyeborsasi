@@ -20,7 +20,7 @@ postconf -e "virtual_alias_maps = hash:${VIRTUAL_PATH}"
 postconf -e "alias_maps = hash:/etc/aliases, hash:${ALIASES_PATH}"
 postconf -e "local_transport = local:"
 touch "${ALIASES_PATH}"
-postmap "${ALIASES_PATH}" 2>/dev/null || true
+postalias "${ALIASES_PATH}" 2>/dev/null || true
 postconf -e "smtpd_recipient_restrictions = permit_mynetworks, permit_sasl_authenticated, reject_non_fqdn_recipient, reject_unknown_recipient_domain, permit"
 postconf -e "smtpd_relay_restrictions = permit_mynetworks, permit_sasl_authenticated, defer_unauth_destination"
 
