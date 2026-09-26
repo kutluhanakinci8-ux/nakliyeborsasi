@@ -869,6 +869,19 @@ export class CompanyMailInboxController {
     return { ok: true, ...result };
   }
 
+  @Get("compose/pending/:pendingId")
+  public async getDelayedComposeStatus(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("pendingId") pendingId: string,
+  ) {
+    this.assertMailInboxWriter(user);
+    const status = await this.mailDelayedComposeService.getStatus(
+      user.companyId,
+      pendingId,
+    );
+    return { ok: true, ...status };
+  }
+
   @Post("compose/pending/:pendingId/cancel")
   public async cancelDelayedCompose(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,

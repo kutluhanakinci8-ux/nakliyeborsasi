@@ -795,6 +795,18 @@ export async function composeMail(
   });
 }
 
+export async function fetchDelayedComposeStatus(
+  accessToken: string,
+  pendingId: string,
+) {
+  return apiFetch<{
+    ok: true;
+    status: "pending" | "cancelled" | "sent" | "failed";
+    errorMessage: string | null;
+    sentId: string | null;
+  }>(accessToken, `company/mail-inbox/compose/pending/${pendingId}`);
+}
+
 export async function cancelDelayedCompose(
   accessToken: string,
   pendingId: string,
