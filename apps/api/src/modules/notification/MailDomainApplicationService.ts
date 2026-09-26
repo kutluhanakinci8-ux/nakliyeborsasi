@@ -7,6 +7,7 @@ import {
   MailDomainType,
 } from "../../infrastructure/database/entities/MailDomainEntity";
 import { MailSenderIdentityEntity } from "../../infrastructure/database/entities/MailSenderIdentityEntity";
+import { MailMailboxEntity } from "../../infrastructure/database/entities/MailMailboxEntity";
 
 @Injectable()
 export class MailDomainApplicationService {
@@ -17,6 +18,8 @@ export class MailDomainApplicationService {
     private readonly domainRepository: Repository<MailDomainEntity>,
     @InjectRepository(MailSenderIdentityEntity)
     private readonly senderRepository: Repository<MailSenderIdentityEntity>,
+    @InjectRepository(MailMailboxEntity)
+    private readonly mailboxRepository: Repository<MailMailboxEntity>,
     private readonly mailInboundRoutingService: MailInboundRoutingService,
   ) {}
 
@@ -89,6 +92,10 @@ export class MailDomainApplicationService {
         isDefault: params.isDefault ?? false,
       }),
     );
+    const fromEmail =
+      `${sender.localPart}@${domain.domain}`.toLowerCase();
+    await this.ensureMailbox(params.organizationId, fromEmail);
+
     void this.mailInboundRoutingService
       .writePostfixVirtualMap()
       .then((result) => {
@@ -104,5 +111,25 @@ export class MailDomainApplicationService {
         );
       });
     return sender;
+  }
+
+  private async ensureMailbox(
+    organizationId: string,
+    emailAddress: string,
+  ): Promise<void> {
+    const existing = await this.mailboxRepository.findOne({
+      where: { organizationId, emailAddress },
+    });
+    if (existing) {
+      return;
+    }
+    await this.mailboxRepository.save(
+      this.mailboxRepository.create({
+        organizationId,
+        emailAddress,
+        status: "active",
+        quotaBytes: "0",
+      }),
+    );
   }
 }
