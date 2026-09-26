@@ -1,3 +1,4 @@
+import { decodeMimeEncodedWords } from "./MailMimeCharset";
 import {
   decodePartBody,
   decodeQuotedPrintable,
@@ -30,12 +31,34 @@ export function parseMinimalMimeHeaders(rawMime: string): {
     fromRaw?.match(/<([^>]+)>/)?.[1] ??
     fromRaw?.match(/[\w.+-]+@[\w.-]+/)?.[0] ??
     fromRaw;
-  const subject = subjectMatch?.[1]?.trim() ?? null;
+  const subjectRaw = subjectMatch?.[1]?.trim() ?? null;
+  const subject = subjectRaw ? decodeMimeEncodedWords(subjectRaw) : null;
   const plain = extractPlainBodyFromMime(rawMime);
   const textSnippet =
     (plain ?? body).replace(/\s+/g, " ").trim().slice(0, 500) || null;
 
   return { fromAddress, subject, textSnippet };
+}
+
+/** Re-decode subject/body from stored raw MIME (fixes legacy DB rows). */
+export function reparseInboundDisplayFromRawMime(rawMime: string): {
+  subject: string | null;
+  bodyText: string | null;
+  bodyHtml: string | null;
+  snippet: string | null;
+} {
+  const headers = parseMinimalMimeHeaders(rawMime);
+  const bodyText = extractPlainBodyFromMime(rawMime);
+  const bodyHtml = extractHtmlBodyFromMime(rawMime);
+  const snippet =
+    (bodyText ?? headers.textSnippet)?.replace(/\s+/g, " ").trim().slice(0, 500) ??
+    null;
+  return {
+    subject: headers.subject,
+    bodyText,
+    bodyHtml,
+    snippet,
+  };
 }
 
 function parseMimeHeaderValue(rawMime: string, headerName: string): string | null {

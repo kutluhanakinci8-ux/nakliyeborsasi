@@ -16,14 +16,14 @@ import { MailSenderIdentityEntity } from "../../infrastructure/database/entities
 import { MailDomainEntity } from "../../infrastructure/database/entities/MailDomainEntity";
 import {
   extractAttachmentsFromMime,
-  extractHtmlBodyFromMime,
-  extractPlainBodyFromMime,
   normalizeEmailAddress,
   parseAddressListFromMime,
   parseInReplyTo,
   parseInternetMessageId,
   parseMinimalMimeHeaders,
+  reparseInboundDisplayFromRawMime,
 } from "./MailInboundMimeParse";
+import { decodeMimeEncodedWords } from "./MailMimeCharset";
 import { MailInboundSpamService } from "./MailInboundSpamService";
 import { sanitizeInboundHtml } from "./MailHtmlSanitize";
 import { MailImapMaildirService } from "./MailImapMaildirService";
@@ -76,7 +76,7 @@ export class MailInboundIngestService {
     let fromAddress = input.sender
       ? normalizeEmailAddress(input.sender)
       : "unknown@inbound.local";
-    let subject = input.subject?.trim() ?? "(konu yok)";
+    let subject = decodeMimeEncodedWords(input.subject?.trim() ?? "") || "(konu yok)";
     let snippet =
       input.text?.replace(/\s+/g, " ").trim().slice(0, 500) ?? null;
     let bodyText =
@@ -85,22 +85,22 @@ export class MailInboundIngestService {
     let rawMime = input.rawMime ?? null;
 
     if (rawMime) {
+      const reparsed = reparseInboundDisplayFromRawMime(rawMime);
       const parsed = parseMinimalMimeHeaders(rawMime);
       if (parsed.fromAddress) {
         fromAddress = normalizeEmailAddress(parsed.fromAddress);
       }
-      if (parsed.subject) {
-        subject = parsed.subject.slice(0, 500);
+      if (reparsed.subject) {
+        subject = reparsed.subject.slice(0, 500);
       }
-      if (!snippet && parsed.textSnippet) {
-        snippet = parsed.textSnippet;
+      if (reparsed.snippet) {
+        snippet = reparsed.snippet;
       }
-      if (!bodyText) {
-        bodyText = extractPlainBodyFromMime(rawMime);
+      if (reparsed.bodyText) {
+        bodyText = reparsed.bodyText;
       }
-      const htmlRaw = extractHtmlBodyFromMime(rawMime);
-      if (htmlRaw) {
-        bodyHtml = sanitizeInboundHtml(htmlRaw);
+      if (reparsed.bodyHtml) {
+        bodyHtml = sanitizeInboundHtml(reparsed.bodyHtml);
       }
     }
 
@@ -371,7 +371,7 @@ export class MailInboundIngestService {
       join(process.cwd(), "data", "inbound");
     mkdirSync(base, { recursive: true });
     const path = join(base, `${messageId}.eml`);
-    writeFileSync(path, rawMime, { encoding: "utf8" });
+    writeFileSync(path, rawMime, { encoding: "latin1" });
     return path;
   }
 }

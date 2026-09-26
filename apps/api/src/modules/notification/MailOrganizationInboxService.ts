@@ -23,7 +23,9 @@ import { MailSenderIdentityEntity } from "../../infrastructure/database/entities
 import { MailImapMaildirService } from "./MailImapMaildirService";
 import {
   parseAddressListFromMime,
+  reparseInboundDisplayFromRawMime,
 } from "./MailInboundMimeParse";
+import { decodeMimeEncodedWords } from "./MailMimeCharset";
 
 export type InboxFolder =
   | "inbox"
@@ -295,13 +297,26 @@ export class MailOrganizationInboxService {
       where: { id: row.mailboxId },
     });
     let bodyText = row.bodyText;
+    let bodyHtml = row.bodyHtml;
+    let subject = row.subject;
+    let snippet = row.snippet;
     let toRecipients = row.toRecipients;
     let ccRecipients = row.ccRecipients;
     if (row.rawMimePath) {
       try {
-        const rawMime = readFileSync(row.rawMimePath, "utf8");
-        if (!bodyText) {
-          bodyText = rawMime.slice(0, 200_000);
+        const rawMime = readFileSync(row.rawMimePath, "latin1");
+        const reparsed = reparseInboundDisplayFromRawMime(rawMime);
+        if (reparsed.subject) {
+          subject = reparsed.subject;
+        }
+        if (reparsed.bodyText) {
+          bodyText = reparsed.bodyText;
+        }
+        if (reparsed.bodyHtml) {
+          bodyHtml = reparsed.bodyHtml;
+        }
+        if (reparsed.snippet) {
+          snippet = reparsed.snippet;
         }
         if (
           (!toRecipients || toRecipients.length === 0) &&
@@ -320,14 +335,16 @@ export class MailOrganizationInboxService {
           bodyText = row.snippet;
         }
       }
+    } else {
+      subject = decodeMimeEncodedWords(subject);
     }
     return {
       id: row.id,
       fromAddress: row.fromAddress,
-      subject: row.subject,
-      snippet: row.snippet,
-      bodyText: bodyText ?? row.snippet,
-      bodyHtml: row.bodyHtml,
+      subject,
+      snippet,
+      bodyText: bodyText ?? snippet ?? row.snippet,
+      bodyHtml,
       receivedAt: row.receivedAt.toISOString(),
       readAt: row.readAt?.toISOString() ?? null,
       emailAddress: mailbox?.emailAddress ?? "—",
@@ -850,7 +867,7 @@ export class MailOrganizationInboxService {
     return {
       id: row.id,
       fromAddress: row.fromAddress,
-      subject: row.subject,
+      subject: decodeMimeEncodedWords(row.subject),
       snippet: row.snippet,
       receivedAt: row.receivedAt.toISOString(),
       readAt: row.readAt?.toISOString() ?? null,
