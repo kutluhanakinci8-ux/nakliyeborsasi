@@ -8,7 +8,11 @@ import {
 } from "typeorm";
 import { MailSenderIdentityEntity } from "./MailSenderIdentityEntity";
 
-export type MailDomainType = "platform" | "custom" | "subdomain";
+export type MailDomainType =
+  | "platform"
+  | "custom"
+  | "subdomain"
+  | "instant_box";
 
 export type MailDomainVerificationStatus =
   | "pending"

@@ -67,7 +67,9 @@ export default function DomainPage() {
       } else {
         await refresh();
       }
-      setMessage(`${result.fromAddress} — ${result.nextStepTr}`);
+      setMessage(
+        `${result.vanityAddress ?? result.fromAddress} — ${result.nextStepTr}`,
+      );
     } catch {
       setError(
         "Adres hazırlanamadı. Formatı kontrol edin veya paketiniz özel domain içeriyor mu bakın.",
@@ -164,14 +166,14 @@ export default function DomainPage() {
       <div className="card" style={{ marginBottom: 16 }}>
         <h2>İstediğiniz posta adresi</h2>
         <p style={{ color: "var(--muted)", marginTop: 0 }}>
-          Tek satırda yazın — arka planda domain, kutu ve gönderen kimliği
-          oluşturulur. DNS kayıtlarını ekledikten sonra teslimat açılır.
+          Tek satırda yazın. <strong>@firma.box</strong> → DNS otomatik (Lerta);
+          <strong>@firma.com.tr</strong> → müşteri DNS; <strong>@lerta.com.tr</strong> → paylaşımlı pilot.
         </p>
         <form onSubmit={onClaimAddress}>
           <input
             className="input"
             type="email"
-            placeholder="karagoz@lerta.com.tr veya info@firma.com.tr"
+            placeholder="info@abayer.box veya karagoz@lerta.com.tr"
             value={desiredAddress}
             onChange={(e) => setDesiredAddress(e.target.value)}
             required

@@ -1,17 +1,21 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
-import { PLATFORM_TENANT_MAIL_DOMAIN } from "@nakliyeborsasi/core";
+import { parseInstantBoxVanityEmail } from "@nakliyeborsasi/core";
 import {
   CustomDomainBundle,
   MailCustomDomainService,
 } from "./MailCustomDomainService";
+import { MailInstantBoxDomainService } from "./MailInstantBoxDomainService";
 import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
 import { MailTenantSubdomainService } from "./MailTenantSubdomainService";
+import { MailDomainDnsVerificationService } from "./MailDomainDnsVerificationService";
 
 export type ClaimMailAddressResult = {
   fromAddress: string;
+  /** Müşteriye gösterilen kısa adres (ör. info@abayer.box) */
+  vanityAddress: string | null;
   localPart: string;
   domain: string;
-  channel: "custom_domain" | "tenant_subdomain";
+  channel: "custom_domain" | "tenant_subdomain" | "instant_box";
   mailboxProvisioned: boolean;
   /** MX+SPF+DKIM public DNS — gerekli teslimat için */
   publicDnsReady: boolean;
@@ -23,26 +27,38 @@ export type ClaimMailAddressResult = {
 export class MailAddressOnboardingService {
   public constructor(
     private readonly mailCustomDomainService: MailCustomDomainService,
+    private readonly mailInstantBoxDomainService: MailInstantBoxDomainService,
     private readonly mailSaasSubscriptionService: MailSaasSubscriptionService,
     private readonly mailTenantSubdomainService: MailTenantSubdomainService,
+    private readonly mailDomainDnsVerificationService: MailDomainDnsVerificationService,
   ) {}
 
   public parseDesiredAddress(raw: string): {
     localPart: string;
     domain: string;
+    instantBoxOrgSlug?: string;
   } {
+    const instant = parseInstantBoxVanityEmail(raw);
+    if (instant) {
+      return {
+        localPart: instant.localPart,
+        domain: instant.fqdn,
+        instantBoxOrgSlug: instant.orgSlug,
+      };
+    }
     const trimmed = raw.trim().toLowerCase();
     const at = trimmed.lastIndexOf("@");
     if (at <= 0 || at === trimmed.length - 1) {
       throw new BadRequestException(
-        "Geçerli bir e-posta adresi girin (ör. info@firma.com.tr).",
+        "Geçerli bir e-posta adresi girin (ör. info@firma.com.tr veya info@firma.box).",
       );
     }
     const localPart = trimmed.slice(0, at);
     const domain = this.mailCustomDomainService.normalizeDomain(
       trimmed.slice(at + 1),
     );
-    const tenantDomain = PLATFORM_TENANT_MAIL_DOMAIN;
+    const tenantDomain =
+      this.mailDomainDnsVerificationService.resolveTenantMailDomain();
     if (domain === tenantDomain) {
       if (!/^[a-z0-9][a-z0-9-]{1,48}[a-z0-9]$/.test(localPart)) {
         throw new BadRequestException(
@@ -65,10 +81,35 @@ export class MailAddressOnboardingService {
     desiredAddress: string;
     displayName?: string;
   }): Promise<ClaimMailAddressResult> {
-    const { localPart, domain } = this.parseDesiredAddress(
-      params.desiredAddress,
-    );
-    const tenantDomain = PLATFORM_TENANT_MAIL_DOMAIN;
+    const parsed = this.parseDesiredAddress(params.desiredAddress);
+    const { localPart, domain } = parsed;
+    const tenantDomain =
+      this.mailDomainDnsVerificationService.resolveTenantMailDomain();
+
+    if (parsed.instantBoxOrgSlug) {
+      const box = await this.mailInstantBoxDomainService.provisionSender({
+        organizationId: params.organizationId,
+        orgSlug: parsed.instantBoxOrgSlug,
+        localPart,
+        displayName: params.displayName,
+        makeDefault: true,
+      });
+      const publicDnsReady =
+        await this.mailInstantBoxDomainService.platformInstantBoxDnsReady();
+      return {
+        fromAddress: box.fromAddress,
+        vanityAddress: box.vanityAddress,
+        localPart,
+        domain: box.mailDomain.domain,
+        channel: "instant_box",
+        mailboxProvisioned: true,
+        publicDnsReady,
+        bundle: null,
+        nextStepTr: publicDnsReady
+          ? `${box.vanityAddress} hazır — DNS Lerta tarafında; webmail kullanabilirsiniz.`
+          : `${box.vanityAddress} kutusu oluşturuldu; platform box DNS (wildcard) henüz doğrulanmadı.`,
+      };
+    }
 
     if (domain === tenantDomain) {
       const result = await this.mailTenantSubdomainService.provisionPilotSender({
@@ -83,6 +124,7 @@ export class MailAddressOnboardingService {
         );
       return {
         fromAddress: result.fromAddress,
+        vanityAddress: null,
         localPart,
         domain: tenantDomain,
         channel: "tenant_subdomain",
@@ -134,6 +176,7 @@ export class MailAddressOnboardingService {
 
     return {
       fromAddress: `${localPart}@${domain}`,
+      vanityAddress: null,
       localPart,
       domain,
       channel: "custom_domain",

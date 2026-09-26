@@ -31,7 +31,17 @@
 | TXT | `_dmarc.lerta.com.tr` | `v=DMARC1; p=none; rua=mailto:dmarc@lerta.com.tr` |
 | **MX** | `lerta.com.tr` | **`10 mail.lerta.com.tr`** |
 
-Eski pilot `kullanici.lerta.com.tr` kayıtları kaldırılabilir; geçiş için inbound env’de virgülle tutulabilir.
+Eski pilot `kullanici.lerta.com.tr` kayıtları kaldırılabilir.
+
+## Lerta Box — otomatik müşteri DNS (`info@firma.box`)
+
+Müşteri DNS yapmaz. Teknik adres: `info@firma.box.lerta.com.tr`, satış yüzü: **`info@firma.box`**.
+
+| Tür | Host | Değer |
+|-----|------|--------|
+| **MX** | `*.box.lerta.com.tr` (wildcard) | `10 mail.lerta.com.tr` |
+| TXT | `box.lerta.com.tr` | `v=spf1 ip4:168.231.109.27 -all` |
+| TXT | `default._domainkey.firma.box.lerta.com.tr` | Kutu açılışında API üretir (OpenDKIM) |
 
 PTR (Hostinger, IP): `mail.lerta.com.tr`
 
