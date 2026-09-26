@@ -6,7 +6,8 @@ Webmail **Takvim** → **Harici takvim (iCal URL)** bölümü, org düzeyinde HT
 
 1. Harici servisten **iCal / ICS** abonelik URL’si alın (HTTPS zorunlu).
 2. Webmail → Takvim → Ad + URL → **Ekle** (firma sahibi / posta yöneticisi).
-3. **Senkronize** — etkinlikler org takvimine aktarılır (`UID` ile güncellenir).
+3. **Senkronize** veya **Tümünü senkronize et** — etkinlikler org takvimine aktarılır (`UID` ile güncellenir).
+4. **Otomatik** — etkin (`enabled`) akışlar API arka plan işinde periyodik çekilir (varsayılan 1 saat).
 
 ## API
 
@@ -17,6 +18,7 @@ Webmail **Takvim** → **Harici takvim (iCal URL)** bölümü, org düzeyinde HT
 | PATCH | `calendar/feeds/:feedId` |
 | DELETE | `calendar/feeds/:feedId` |
 | POST | `calendar/feeds/:feedId/sync` |
+| POST | `calendar/feeds/sync-all` |
 
 Senkronize edilen etkinlikler `mail_calendar_event.ics_feed_id` + `external_uid` ile işlenir.
 
@@ -24,6 +26,14 @@ Senkronize edilen etkinlikler `mail_calendar_event.ics_feed_id` + `external_uid`
 
 - Yalnızca **HTTPS** URL; localhost ve özel IP aralıkları engellenir.
 - Sunucu tarafı `fetch` (20 sn timeout); en fazla **5** akış / org.
+
+## Ortam
+
+| Değişken | Açıklama |
+|----------|----------|
+| `MAIL_CALENDAR_ICS_SYNC_INTERVAL_MS` | Otomatik senkron aralığı (ms). Varsayılan `3600000` (1 saat); minimum `60000`. |
+
+Arka plan işi yalnızca `MailRuntimeRoleService.shouldRunBackgroundJobs()` true olan API süreçlerinde çalışır (digest/snooze ile aynı model).
 
 ## VPS şema
 

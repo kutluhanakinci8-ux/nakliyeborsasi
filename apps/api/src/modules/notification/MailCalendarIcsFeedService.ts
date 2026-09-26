@@ -99,12 +99,100 @@ export class MailCalendarIcsFeedService {
   public async sync(
     organizationId: string,
     feedId: string,
-    userId: string,
+    userId: string | null,
   ): Promise<{ imported: number; updated: number; removed: number }> {
     const feed = await this.assertFeed(organizationId, feedId);
     if (!feed.enabled) {
       throw new BadRequestException("Bu akış devre dışı.");
     }
+    const outcome = await this.syncFeedRow(feed, userId);
+    if (!outcome.ok) {
+      throw new BadRequestException(outcome.error);
+    }
+    return {
+      imported: outcome.imported,
+      updated: outcome.updated,
+      removed: outcome.removed,
+    };
+  }
+
+  public async syncAllForOrganization(
+    organizationId: string,
+    userId: string | null,
+  ): Promise<{
+    feeds: number;
+    succeeded: number;
+    failed: number;
+    imported: number;
+    updated: number;
+    removed: number;
+  }> {
+    const rows = await this.feedRepository.find({
+      where: { organizationId, enabled: true },
+      order: { createdAt: "ASC" },
+    });
+    let succeeded = 0;
+    let failed = 0;
+    let imported = 0;
+    let updated = 0;
+    let removed = 0;
+    for (const feed of rows) {
+      const outcome = await this.syncFeedRow(feed, userId);
+      if (outcome.ok) {
+        succeeded += 1;
+        imported += outcome.imported;
+        updated += outcome.updated;
+        removed += outcome.removed;
+      } else {
+        failed += 1;
+      }
+    }
+    return {
+      feeds: rows.length,
+      succeeded,
+      failed,
+      imported,
+      updated,
+      removed,
+    };
+  }
+
+  public async syncAllEnabledInBackground(): Promise<{
+    feeds: number;
+    succeeded: number;
+    failed: number;
+  }> {
+    const rows = await this.feedRepository.find({
+      where: { enabled: true },
+      order: { createdAt: "ASC" },
+    });
+    let succeeded = 0;
+    let failed = 0;
+    for (const feed of rows) {
+      const outcome = await this.syncFeedRow(feed, null);
+      if (outcome.ok) {
+        succeeded += 1;
+      } else {
+        failed += 1;
+      }
+    }
+    return { feeds: rows.length, succeeded, failed };
+  }
+
+  private async syncFeedRow(
+    feed: MailCalendarIcsFeedEntity,
+    userId: string | null,
+  ): Promise<
+    | {
+        ok: true;
+        imported: number;
+        updated: number;
+        removed: number;
+      }
+    | { ok: false; error: string }
+  > {
+    const organizationId = feed.organizationId;
+    const feedId = feed.id;
     try {
       const icsText = await this.fetchFeed(feed.feedUrl);
       const parsed = parseIcalEvents(icsText).filter((ev) => ev.uid);
@@ -160,13 +248,13 @@ export class MailCalendarIcsFeedService {
       feed.lastSyncedAt = new Date();
       feed.lastSyncError = null;
       await this.feedRepository.save(feed);
-      return { imported, updated, removed };
+      return { ok: true, imported, updated, removed };
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Senkron başarısız.";
       feed.lastSyncError = message.slice(0, 500);
       await this.feedRepository.save(feed);
-      throw new BadRequestException(message);
+      return { ok: false, error: message };
     }
   }
 

@@ -1069,6 +1069,18 @@ export class CompanyMailInboxController {
     return { ok: true, ...result };
   }
 
+  @Post("calendar/feeds/sync-all")
+  public async syncAllCalendarIcsFeeds(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    this.assertMailInboxWriter(user);
+    const result = await this.mailCalendarIcsFeedService.syncAllForOrganization(
+      user.companyId,
+      user.userId,
+    );
+    return { ok: true, ...result };
+  }
+
   @Get("calendar/events")
   public async listCalendarEvents(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
