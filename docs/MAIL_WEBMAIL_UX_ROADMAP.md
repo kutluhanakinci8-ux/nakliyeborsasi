@@ -139,6 +139,15 @@ sudo certbot certonly --webroot -w /var/www/certbot -d posta.lerta.com.tr
 
 - `mail_calendar_event.caldav_etag`; silmede uzak DELETE, yazmada If-Match
 
+## D6 — Tekrarlayan etkinlikler (uygulandı)
+
+- `recurrence_rule` / `recurrence_until`; günlük-haftalık-aylık, iCal RRULE
+- [MAIL_CALENDAR_RECURRENCE.md](./MAIL_CALENDAR_RECURRENCE.md)
+
+## D6 — CardDAV DELETE + ETag (uygulandı)
+
+- `mail_org_contact.carddav_etag`; silmede uzak DELETE
+
 ## G5 — Kurallar v2 (uygulandı)
 
 - Okundu işaretle ve çöpe taşı işlemleri

@@ -25,6 +25,11 @@ Takvim CalDAV: [MAIL_CALDAV.md](./MAIL_CALDAV.md).
 
 Kimlik bilgisi şifreleme CalDAV ile aynı (`MAIL_CALENDAR_CREDENTIAL_KEY` vb.).
 
+## CardDAV silme ve ETag (uygulandı)
+
+- **CardDAV’a yaz** sonrası `ETag`; güncellemede `If-Match`.
+- Kişi **Sil** → bağlı CardDAV kaynağına `DELETE` (yazma açık hesap).
+
 ## Ortam
 
 | Değişken | Açıklama |

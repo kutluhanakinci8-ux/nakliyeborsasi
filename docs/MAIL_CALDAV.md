@@ -51,4 +51,5 @@ bash scripts/apply-mail-d6-caldav-schema.sh /var/www/nakliyeborsasi
 
 ## Sonraki
 
-- Tekrarlayan etkinlikler
+- CardDAV DELETE + ETag (kişiler)
+- Tek örnek düzenleme / istisna (RECURRENCE-ID)

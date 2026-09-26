@@ -1224,6 +1224,10 @@ export class CompanyMailInboxController {
         startsAt: new Date(body.startsAt),
         endsAt: new Date(body.endsAt),
         allDay: body.allDay,
+        recurrenceFrequency: body.recurrenceFrequency,
+        recurrenceUntil: body.recurrenceUntil
+          ? new Date(body.recurrenceUntil)
+          : null,
       },
     );
     return { ok: true, event };
@@ -1245,6 +1249,13 @@ export class CompanyMailInboxController {
         startsAt: body.startsAt ? new Date(body.startsAt) : undefined,
         endsAt: body.endsAt ? new Date(body.endsAt) : undefined,
         allDay: body.allDay,
+        recurrenceFrequency: body.recurrenceFrequency,
+        recurrenceUntil:
+          body.recurrenceUntil !== undefined
+            ? body.recurrenceUntil
+              ? new Date(body.recurrenceUntil)
+              : null
+            : undefined,
       },
     );
     return { ok: true, event };

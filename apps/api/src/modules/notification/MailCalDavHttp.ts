@@ -278,19 +278,27 @@ export async function cardDavPutVcard(
   username: string,
   password: string,
   vcardBody: string,
-): Promise<void> {
+  ifMatchEtag?: string | null,
+): Promise<string | null> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   try {
+    const headers: Record<string, string> = {
+      Authorization: basicAuthHeader(username, password),
+      "Content-Type": "text/vcard; charset=utf-8",
+    };
+    if (ifMatchEtag) {
+      headers["If-Match"] = ifMatchEtag;
+    }
     const response = await fetch(resourceUrl, {
       method: "PUT",
-      headers: {
-        Authorization: basicAuthHeader(username, password),
-        "Content-Type": "text/vcard; charset=utf-8",
-      },
+      headers,
       body: vcardBody,
       signal: controller.signal,
     });
+    if (response.status === 412) {
+      throw new Error("CardDAV ETag uyuşmazlığı (412); sunucudan yeniden çekin.");
+    }
     if (
       response.status !== 201 &&
       response.status !== 204 &&
@@ -298,6 +306,8 @@ export async function cardDavPutVcard(
     ) {
       throw new Error(`CardDAV PUT HTTP ${response.status}`);
     }
+    const etag = response.headers.get("etag");
+    return etag?.replace(/^"|"$/g, "") ?? null;
   } finally {
     clearTimeout(timer);
   }

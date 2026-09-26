@@ -269,6 +269,8 @@ export class MailCalendarCalDavService {
       startsAt: event.startsAt,
       endsAt: event.endsAt,
       allDay: event.allDay,
+      recurrenceRule: event.recurrenceRule,
+      recurrenceUntil: event.recurrenceUntil,
     });
     const resourceHref =
       event.caldavAccountId === accountId && event.caldavResourceHref

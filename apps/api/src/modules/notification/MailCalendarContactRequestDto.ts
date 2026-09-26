@@ -1,5 +1,6 @@
 import {
   IsBoolean,
+  IsIn,
   IsISO8601,
   IsOptional,
   IsString,
@@ -30,6 +31,14 @@ export class CreateMailCalendarEventRequestDto {
   @IsOptional()
   @IsBoolean()
   public allDay?: boolean;
+
+  @IsOptional()
+  @IsIn(["daily", "weekly", "monthly"])
+  public recurrenceFrequency?: "daily" | "weekly" | "monthly";
+
+  @IsOptional()
+  @IsISO8601()
+  public recurrenceUntil?: string;
 }
 
 export class UpdateMailCalendarEventRequestDto {
@@ -59,6 +68,14 @@ export class UpdateMailCalendarEventRequestDto {
   @IsOptional()
   @IsBoolean()
   public allDay?: boolean;
+
+  @IsOptional()
+  @IsIn(["daily", "weekly", "monthly"])
+  public recurrenceFrequency?: "daily" | "weekly" | "monthly" | null;
+
+  @IsOptional()
+  @IsISO8601()
+  public recurrenceUntil?: string | null;
 }
 
 export class ImportMailCalendarIcsRequestDto {
