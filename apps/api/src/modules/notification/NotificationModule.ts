@@ -120,6 +120,7 @@ import { MailCalendarEventEntity } from "../../infrastructure/database/entities/
 import { MailOrgContactEntity } from "../../infrastructure/database/entities/MailOrgContactEntity";
 import { MailCalendarIcsFeedEntity } from "../../infrastructure/database/entities/MailCalendarIcsFeedEntity";
 import { MailCalendarIcsFeedService } from "./MailCalendarIcsFeedService";
+import { MailCalendarIcsFeedSyncScheduler } from "./MailCalendarIcsFeedSyncScheduler";
 import { MailOrganizationCalendarService } from "./MailOrganizationCalendarService";
 import { MailOrganizationContactService } from "./MailOrganizationContactService";
 import { MailInboxPreferencesService } from "./MailInboxPreferencesService";
@@ -285,6 +286,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     MailOrganizationCalendarService,
     MailOrganizationContactService,
     MailCalendarIcsFeedService,
+    MailCalendarIcsFeedSyncScheduler,
   ],
   exports: [
     AuthNotificationService,

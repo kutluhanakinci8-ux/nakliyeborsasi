@@ -5,6 +5,7 @@ import {
   createCalendarIcsFeed,
   deleteCalendarIcsFeed,
   fetchCalendarIcsFeeds,
+  syncAllCalendarIcsFeeds,
   syncCalendarIcsFeed,
   type MailCalendarIcsFeed,
 } from "@/lib/mailApi";
@@ -23,6 +24,7 @@ export function MailCalendarFeedsPanel({
   const [feeds, setFeeds] = useState<MailCalendarIcsFeed[]>([]);
   const [label, setLabel] = useState("");
   const [feedUrl, setFeedUrl] = useState("");
+  const [syncingAll, setSyncingAll] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -44,8 +46,40 @@ export function MailCalendarFeedsPanel({
       <h2>Harici takvim (iCal URL)</h2>
       <p className="mail-d6-hint">
         Nextcloud / Google “gizli iCal adresi” gibi HTTPS bağlantılarını ekleyin.
-        Tam CalDAV yazma sonraki fazda.
+        Etkin akışlar sunucuda saatlik otomatik senkronize edilir; tam CalDAV
+        yazma sonraki fazda.
       </p>
+      {feeds.some((f) => f.enabled) ? (
+        <button
+          type="button"
+          className="mail-d6-sync-all"
+          disabled={syncingAll}
+          onClick={() =>
+            void (async () => {
+              setSyncingAll(true);
+              try {
+                const r = await syncAllCalendarIcsFeeds(accessToken);
+                onToast(
+                  `Tümü: ${r.succeeded}/${r.feeds} akış · ${r.imported} yeni, ${r.updated} güncel, ${r.removed} kaldırıldı${r.failed ? ` · ${r.failed} hata` : ""}.`,
+                );
+                void load();
+                onSynced();
+              } catch (error) {
+                onToast(
+                  error instanceof Error
+                    ? error.message
+                    : "Toplu senkron başarısız.",
+                );
+                void load();
+              } finally {
+                setSyncingAll(false);
+              }
+            })()
+          }
+        >
+          {syncingAll ? "Senkronize ediliyor…" : "Tümünü senkronize et"}
+        </button>
+      ) : null}
       <div className="mail-d6-form">
         <input
           placeholder="Ad (ör. Nextcloud)"

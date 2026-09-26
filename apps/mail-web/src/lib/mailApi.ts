@@ -1021,6 +1021,20 @@ export async function syncCalendarIcsFeed(
   });
 }
 
+export async function syncAllCalendarIcsFeeds(accessToken: string) {
+  return apiFetch<{
+    feeds: number;
+    succeeded: number;
+    failed: number;
+    imported: number;
+    updated: number;
+    removed: number;
+  }>(accessToken, "company/mail-inbox/calendar/feeds/sync-all", {
+    method: "POST",
+    body: JSON.stringify({}),
+  });
+}
+
 export type MailCalendarEvent = {
   id: string;
   title: string;
