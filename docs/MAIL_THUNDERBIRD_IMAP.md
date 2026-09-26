@@ -17,8 +17,19 @@ Kurumsal kutu: **webmail** (`https://posta.lerta.com.tr/mail`) + isteğe bağlı
 | Güvenlik | SSL/TLS |
 | Kullanıcı adı | Tam e-posta adresiniz |
 | Şifre | Webmail’de **bir kez** gösterilen IMAP şifresi |
+| SMTP sunucu | `MAIL_CLIENT_SMTP_HOST` (varsayılan IMAP host) |
+| SMTP port | `587` (STARTTLS) veya `465` (SSL) — `MAIL_CLIENT_SMTP_*` |
+| SMTP kimlik | IMAP ile **aynı** kullanıcı + şifre |
 
 Ayarlar ekranındaki değerler API `GET company/mail-inbox/imap-settings` ile aynıdır.
+
+### Operatör env (isteğe bağlı)
+
+```bash
+MAIL_CLIENT_SMTP_HOST=mail.lerta.tr
+MAIL_CLIENT_SMTP_PORT=587
+MAIL_CLIENT_SMTP_SECURITY=starttls   # veya ssl (465)
+```
 
 ## Thunderbird (özet)
 

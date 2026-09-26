@@ -213,6 +213,11 @@ export type MailImapSettings = {
   imapHost: string;
   imapPort: number;
   imapTls: boolean;
+  smtpHost: string;
+  smtpPort: number;
+  smtpSecurity: "starttls" | "ssl";
+  smtpAuthUsesImapPassword: boolean;
+  sentFolderImapHint: string;
   username: string | null;
   maildirPath: string | null;
   hasCredential: boolean;

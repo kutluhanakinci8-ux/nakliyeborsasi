@@ -32,13 +32,23 @@ export default function ImapHelpPage() {
         </li>
       </ul>
 
+      <h2>Giden posta (SMTP)</h2>
+      <ul>
+        <li>
+          Sunucu ve port: webmail <strong>Ayarlar → IMAP</strong> altında{" "}
+          <strong>Giden (SMTP)</strong> satırı (genelde port 587 STARTTLS)
+        </li>
+        <li>Kullanıcı ve şifre: IMAP ile aynı</li>
+        <li>Gönderim hatası: önce webmailden deneyin, şifreyi yenileyin</li>
+      </ul>
+
       <h2>Thunderbird</h2>
       <ol>
         <li>Hesap ekle → E-posta → manuel yapılandırma</li>
         <li>Gelen sunucusu: IMAP, SSL, yukarıdaki bilgiler</li>
         <li>
-          Giden (SMTP): yöneticinizin verdiği sunucu (çoğu kurulumda aynı host,
-          587 STARTTLS). Gönderim sorununda webmail kullanın.
+          Giden: SMTP, Ayarlar ekranındaki host/port; kimlik doğrulama açık,
+          STARTTLS veya SSL ekrandaki gibi
         </li>
       </ol>
 

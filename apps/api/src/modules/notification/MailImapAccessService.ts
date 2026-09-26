@@ -26,6 +26,11 @@ export class MailImapAccessService {
     imapHost: string;
     imapPort: number;
     imapTls: boolean;
+    smtpHost: string;
+    smtpPort: number;
+    smtpSecurity: "starttls" | "ssl";
+    smtpAuthUsesImapPassword: boolean;
+    sentFolderImapHint: string;
     username: string | null;
     maildirPath: string | null;
     hasCredential: boolean;
@@ -34,16 +39,34 @@ export class MailImapAccessService {
     const row = await this.credentialRepository.findOne({
       where: { organizationId },
     });
+    const imapHost =
+      this.configService.get<string>("MAIL_IMAP_HOST")?.trim() ||
+      "mail.lerta.tr";
+    const smtpHost =
+      this.configService.get<string>("MAIL_CLIENT_SMTP_HOST")?.trim() ||
+      imapHost;
+    const smtpPort = Number(
+      this.configService.get<string>("MAIL_CLIENT_SMTP_PORT")?.trim() || "587",
+    );
+    const securityRaw =
+      this.configService.get<string>("MAIL_CLIENT_SMTP_SECURITY")?.trim() ||
+      (smtpPort === 465 ? "ssl" : "starttls");
+    const smtpSecurity: "starttls" | "ssl" =
+      securityRaw.toLowerCase() === "ssl" ? "ssl" : "starttls";
     return {
       enabled: this.mailImapMaildirService.isEnabled(),
-      imapHost:
-        this.configService.get<string>("MAIL_IMAP_HOST")?.trim() ||
-        "mail.lerta.tr",
+      imapHost,
       imapPort: Number(
         this.configService.get<string>("MAIL_IMAP_PORT")?.trim() || "993",
       ),
       imapTls:
         this.configService.get<string>("MAIL_IMAP_TLS")?.trim() !== "false",
+      smtpHost,
+      smtpPort,
+      smtpSecurity,
+      smtpAuthUsesImapPassword: true,
+      sentFolderImapHint:
+        "Gönderilen klasörü öncelikle webmailde; IMAP Sent her ortamda dolu olmayabilir.",
       username: email,
       maildirPath: email
         ? this.mailImapMaildirService.resolveMaildirForAddress(email)

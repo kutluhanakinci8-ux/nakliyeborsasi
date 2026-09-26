@@ -352,12 +352,36 @@ export function MailSettingsPanel({ accessToken, onClose }: Props) {
                 </button>
               ) : null}
             </dd>
+            <dt>Giden (SMTP)</dt>
+            <dd>
+              {settings.smtpHost}:{settings.smtpPort}{" "}
+              {settings.smtpSecurity === "ssl" ? "(SSL)" : "(STARTTLS)"}
+              {settings.enabled ? (
+                <button
+                  type="button"
+                  className="mail-copy-inline"
+                  onClick={() =>
+                    void copyText(
+                      "SMTP sunucu",
+                      `${settings.smtpHost}:${settings.smtpPort}`,
+                    )
+                  }
+                >
+                  Kopyala
+                </button>
+              ) : null}
+              <div className="mail-imap-hint">
+                Kimlik doğrulama: IMAP ile aynı kullanıcı ve şifre.
+              </div>
+            </dd>
             <dt>Şifre</dt>
             <dd>
               {settings.hasCredential
                 ? "Kayıtlı (güvenlik için gösterilmez)"
                 : "Henüz oluşturulmadı"}
             </dd>
+            <dt>Gönderilen (IMAP)</dt>
+            <dd className="mail-imap-hint">{settings.sentFolderImapHint}</dd>
           </dl>
         ) : (
           <p>Yükleniyor…</p>
