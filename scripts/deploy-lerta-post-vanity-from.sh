@@ -31,4 +31,7 @@ if [[ -x "${INSTALL_DIR}/scripts/register-opendkim-custom-domain.sh" ]] && [[ ! 
   bash "${INSTALL_DIR}/scripts/register-opendkim-custom-domain.sh" "${DOMAIN_FQDN}" || true
 fi
 
-echo "Deploy tamam. Test: webmailden mail gönderin; Kimden: info@abayer.post olmalı."
+bash "${INSTALL_DIR}/scripts/vps-diagnose-outbound-mail.sh" "${INSTALL_DIR}" || true
+
+echo "Deploy tamam. Test: webmailden mail gönderin."
+echo "Kimden: info@abayer.post · MAIL FROM (teknik): info@abayer.post.lerta.com.tr"

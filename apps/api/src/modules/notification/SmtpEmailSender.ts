@@ -1,6 +1,11 @@
-import { Injectable, Logger } from "@nestjs/common";
+import {
+  BadGatewayException,
+  Injectable,
+  Logger,
+} from "@nestjs/common";
 import * as nodemailer from "nodemailer";
 import { NotificationConfigurationService } from "./NotificationConfigurationService";
+import { collectSmtpEnvelopeRecipients } from "./SmtpEnvelopeHelper";
 
 @Injectable()
 export class SmtpEmailSender {
@@ -18,6 +23,8 @@ export class SmtpEmailSender {
     html: string;
     text: string;
     from?: string;
+    /** MAIL FROM — Lerta Post: teknik FQDN; From başlığı vanity kalır. */
+    envelopeMailFrom?: string;
     replyTo?: string;
     inReplyTo?: string;
     references?: string;
@@ -36,23 +43,46 @@ export class SmtpEmailSender {
       this.notificationConfigurationService.resolveSmtpTransportOptions(),
     );
     const headerFrom = params.from?.trim() || smtp.from;
-    const result = await transport.sendMail({
-      from: headerFrom,
+    const envelopeMailFrom = params.envelopeMailFrom?.trim() || undefined;
+    const envelopeTo = collectSmtpEnvelopeRecipients({
       to: params.to,
-      cc: params.cc?.trim() || undefined,
-      bcc: params.bcc?.trim() || undefined,
-      subject: params.subject,
-      html: params.html,
-      text: params.text,
-      replyTo: params.replyTo?.trim() || undefined,
-      inReplyTo: params.inReplyTo,
-      references: params.references,
-      attachments: params.attachments?.map((file) => ({
-        filename: file.filename,
-        content: file.content,
-        contentType: file.contentType,
-      })),
+      cc: params.cc,
+      bcc: params.bcc,
     });
-    return result.messageId ?? null;
+    try {
+      const result = await transport.sendMail({
+        from: headerFrom,
+        ...(envelopeMailFrom
+          ? {
+              envelope: {
+                from: envelopeMailFrom,
+                to: envelopeTo.length > 0 ? envelopeTo : [params.to],
+              },
+            }
+          : {}),
+        to: params.to,
+        cc: params.cc?.trim() || undefined,
+        bcc: params.bcc?.trim() || undefined,
+        subject: params.subject,
+        html: params.html,
+        text: params.text,
+        replyTo: params.replyTo?.trim() || undefined,
+        inReplyTo: params.inReplyTo,
+        references: params.references,
+        attachments: params.attachments?.map((file) => ({
+          filename: file.filename,
+          content: file.content,
+          contentType: file.contentType,
+        })),
+      });
+      return result.messageId ?? null;
+    } catch (error) {
+      const detail =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(`SMTP gönderim hatası: ${detail}`);
+      throw new BadGatewayException(
+        `Posta sunucusu gönderimi reddetti veya yanıt vermedi. (${detail.slice(0, 200)})`,
+      );
+    }
   }
 }
