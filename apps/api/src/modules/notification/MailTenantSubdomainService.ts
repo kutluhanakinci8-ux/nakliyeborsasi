@@ -124,12 +124,9 @@ export class MailTenantSubdomainService {
       where: { organizationId, isDefault: true },
       relations: { mailDomain: true },
     });
-    const fromAddress =
-      sender && mailDomain
-        ? `${sender.localPart}@${domain}`
-        : sender?.mailDomain
-          ? `${sender.localPart}@${sender.mailDomain.domain}`
-          : null;
+    const fromAddress = sender?.mailDomain
+      ? `${sender.localPart}@${sender.mailDomain.domain}`
+      : null;
     return {
       domain,
       platformDnsReady: dnsCheck.ok,
