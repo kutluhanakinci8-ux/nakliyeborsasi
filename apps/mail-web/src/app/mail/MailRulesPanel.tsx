@@ -27,6 +27,7 @@ export function MailRulesPanel({ accessToken }: Props) {
   const [subjectContains, setSubjectContains] = useState("");
   const [toContains, setToContains] = useState("");
   const [requireAttachment, setRequireAttachment] = useState(false);
+  const [matchAnyCondition, setMatchAnyCondition] = useState(false);
   const [actionStar, setActionStar] = useState(false);
   const [info, setInfo] = useState("");
   const [actionArchive, setActionArchive] = useState(false);
@@ -56,6 +57,7 @@ export function MailRulesPanel({ accessToken }: Props) {
         subjectContains: subjectContains.trim() || undefined,
         toContains: toContains.trim() || undefined,
         requireAttachment,
+        matchAnyCondition,
         actionStar,
         actionArchive,
         actionMarkRead,
@@ -67,6 +69,7 @@ export function MailRulesPanel({ accessToken }: Props) {
       setSubjectContains("");
       setToContains("");
       setRequireAttachment(false);
+      setMatchAnyCondition(false);
       setActionStar(false);
       setActionArchive(false);
       setActionMarkRead(false);
@@ -141,6 +144,7 @@ export function MailRulesPanel({ accessToken }: Props) {
                   : null}
                 {rule.toContains ? ` · Alıcı: “${rule.toContains}”` : null}
                 {rule.requireAttachment ? " · Ek var" : null}
+                {rule.matchAnyCondition ? " · Koşul: VEYA" : null}
               </div>
               <div className="mail-rules-meta">
                 {rule.actionStar ? "★ Yıldızla" : null}
@@ -231,6 +235,14 @@ export function MailRulesPanel({ accessToken }: Props) {
         value={toContains}
         onChange={(e) => setToContains(e.target.value)}
       />
+      <label>
+        <input
+          type="checkbox"
+          checked={matchAnyCondition}
+          onChange={(e) => setMatchAnyCondition(e.target.checked)}
+        />
+        Koşullardan herhangi biri (VEYA) — varsayılan: tümü (VE)
+      </label>
       <label>
         <input
           type="checkbox"

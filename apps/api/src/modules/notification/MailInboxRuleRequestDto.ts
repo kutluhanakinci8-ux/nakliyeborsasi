@@ -36,6 +36,10 @@ export class CreateMailInboxRuleRequestDto {
 
   @IsOptional()
   @IsBoolean()
+  public matchAnyCondition?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
   public actionStar?: boolean;
 
   @IsOptional()
@@ -92,6 +96,10 @@ export class UpdateMailInboxRuleRequestDto {
   @IsOptional()
   @IsBoolean()
   public requireAttachment?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  public matchAnyCondition?: boolean;
 
   @IsOptional()
   @IsBoolean()

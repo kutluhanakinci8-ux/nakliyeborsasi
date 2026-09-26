@@ -2,14 +2,19 @@
 
 Kurallar **organizasyon** bazında; yeni inbound mesaj ingest edildiğinde (spam engelli değil, gelen klasöründe) sırayla değerlendirilir — **ilk eşleşen** kural uygulanır.
 
-## Koşullar (AND)
+## Koşullar
 
 - `fromContains` — gönderen adresinde (büyük/küçük harf duyarsız alt string)
 - `subjectContains` — konuda (aynı şekilde)
 - `toContains` — **To** alıcı listesinde (G5+)
-- `requireAttachment` — yalnızca ekli postalar (G5+)
+- `requireAttachment` — ek koşulu (G5+)
 
-En az biri dolu olmalı; birden fazla koşul **hepsi** sağlanmalı.
+En az biri dolu olmalı.
+
+| `matchAnyCondition` | Davranış |
+|-------------------|----------|
+| `false` (varsayılan) | Dolu koşulların **hepsi** sağlanmalı (VE). `requireAttachment` true ise ek zorunlu. |
+| `true` | Dolu koşullardan **herhangi biri** yeterli (VEYA). `requireAttachment` ayrı bir OR dalıdır. |
 
 ## İşlemler
 

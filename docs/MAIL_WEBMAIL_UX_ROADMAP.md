@@ -140,6 +140,10 @@ sudo certbot certonly --webroot -w /var/www/certbot -d posta.lerta.com.tr
 - `GET rules/:id/preview`, `POST rules/:id/apply-inbox`
 - [MAIL_INBOX_RULES.md](./MAIL_INBOX_RULES.md)
 
+## G6 — Kurallar OR mantığı (uygulandı)
+
+- `matchAnyCondition` — koşullar VEYA ile eşleşir (UI: “Koşullardan herhangi biri”)
+
 ## G9 — IMAP/SMTP istemci bilgisi (uygulandı)
 
 - `imap-settings` API: SMTP host/port/güvenlik + gönderilen klasör notu
