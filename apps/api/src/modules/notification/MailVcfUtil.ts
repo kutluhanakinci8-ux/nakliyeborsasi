@@ -1,4 +1,5 @@
 export type ParsedVcfContact = {
+  uid: string | null;
   displayName: string;
   email: string | null;
   phone: string | null;
@@ -31,6 +32,7 @@ export function parseVcfContacts(vcfText: string): ParsedVcfContact[] {
   let email: string | null = null;
   let phone: string | null = null;
   let note: string | null = null;
+  let uid: string | null = null;
 
   for (const line of lines) {
     if (line === "BEGIN:VCARD") {
@@ -40,6 +42,7 @@ export function parseVcfContacts(vcfText: string): ParsedVcfContact[] {
       email = null;
       phone = null;
       note = null;
+      uid = null;
       continue;
     }
     if (line === "END:VCARD" && inCard) {
@@ -49,6 +52,7 @@ export function parseVcfContacts(vcfText: string): ParsedVcfContact[] {
         email?.trim() ||
         "Kişi";
       contacts.push({
+        uid: uid?.trim() || null,
         displayName,
         email: email?.trim().toLowerCase() || null,
         phone: phone?.trim() || null,
@@ -76,7 +80,39 @@ export function parseVcfContacts(vcfText: string): ParsedVcfContact[] {
       phone = value;
     } else if (key === "NOTE" && !note) {
       note = value;
+    } else if (key === "UID" && !uid) {
+      uid = value;
     }
   }
   return contacts;
+}
+
+function escapeVcfField(value: string): string {
+  return value.replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/,/g, "\\,");
+}
+
+export function buildSingleVcard(contact: {
+  uid: string;
+  displayName: string;
+  email: string | null;
+  phone: string | null;
+  notes: string | null;
+}): string {
+  const lines = [
+    "BEGIN:VCARD",
+    "VERSION:3.0",
+    `UID:${contact.uid}`,
+    `FN:${escapeVcfField(contact.displayName)}`,
+  ];
+  if (contact.email) {
+    lines.push(`EMAIL:${contact.email}`);
+  }
+  if (contact.phone) {
+    lines.push(`TEL:${contact.phone}`);
+  }
+  if (contact.notes) {
+    lines.push(`NOTE:${escapeVcfField(contact.notes)}`);
+  }
+  lines.push("END:VCARD");
+  return `${lines.join("\r\n")}\r\n`;
 }

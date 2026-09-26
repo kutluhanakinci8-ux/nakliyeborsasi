@@ -1263,6 +1263,96 @@ export async function downloadContactsVcf(accessToken: string): Promise<Blob> {
   return response.blob();
 }
 
+export type MailContactCardDavAccount = {
+  id: string;
+  label: string;
+  addressbookUrl: string;
+  username: string;
+  enabled: boolean;
+  writeEnabled: boolean;
+  lastSyncedAt: string | null;
+  lastSyncError: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export async function fetchContactCardDavAccounts(accessToken: string) {
+  return apiFetch<{ accounts: MailContactCardDavAccount[] }>(
+    accessToken,
+    "company/mail-inbox/contacts/carddav/accounts",
+  );
+}
+
+export async function createContactCardDavAccount(
+  accessToken: string,
+  body: {
+    label: string;
+    addressbookUrl: string;
+    username: string;
+    password: string;
+    enabled?: boolean;
+    writeEnabled?: boolean;
+  },
+) {
+  return apiFetch<{ account: MailContactCardDavAccount }>(
+    accessToken,
+    "company/mail-inbox/contacts/carddav/accounts",
+    { method: "POST", body: JSON.stringify(body) },
+  );
+}
+
+export async function deleteContactCardDavAccount(
+  accessToken: string,
+  accountId: string,
+) {
+  await apiFetch(
+    accessToken,
+    `company/mail-inbox/contacts/carddav/accounts/${accountId}`,
+    { method: "DELETE" },
+  );
+}
+
+export async function syncContactCardDavAccount(
+  accessToken: string,
+  accountId: string,
+) {
+  return apiFetch<{
+    imported: number;
+    updated: number;
+    removed: number;
+  }>(
+    accessToken,
+    `company/mail-inbox/contacts/carddav/accounts/${accountId}/sync`,
+    { method: "POST", body: JSON.stringify({}) },
+  );
+}
+
+export async function syncAllContactCardDavAccounts(accessToken: string) {
+  return apiFetch<{
+    accounts: number;
+    succeeded: number;
+    failed: number;
+    imported: number;
+    updated: number;
+    removed: number;
+  }>(accessToken, "company/mail-inbox/contacts/carddav/accounts/sync-all", {
+    method: "POST",
+    body: JSON.stringify({}),
+  });
+}
+
+export async function pushContactToCardDav(
+  accessToken: string,
+  accountId: string,
+  contactId: string,
+) {
+  return apiFetch<{ resourceHref: string; externalUid: string }>(
+    accessToken,
+    `company/mail-inbox/contacts/carddav/accounts/${accountId}/push/${contactId}`,
+    { method: "POST", body: JSON.stringify({}) },
+  );
+}
+
 export async function fetchImapSettings(accessToken: string) {
   const payload = await apiFetch<{ settings: MailImapSettings }>(
     accessToken,

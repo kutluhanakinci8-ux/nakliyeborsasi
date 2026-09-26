@@ -9,7 +9,7 @@ Webmail **Takvim** → **CalDAV hesabı**: HTTPS takvim koleksiyonuna Basic Auth
 3. **Çek** / **Tüm CalDAV hesaplarını çek** — `REPORT calendar-query` ile etkinlikler (`UID` upsert).
 4. Liste satırında **CalDAV’a yaz** — yerel etkinlik `PUT` ile sunucuya gönderilir (yazma açık ilk hesap).
 
-Harici **iCal URL** (şifresiz abonelik) için [MAIL_CALDAV_EXTERNAL.md](./MAIL_CALDAV_EXTERNAL.md).
+Harici **iCal URL** (şifresiz abonelik) için [MAIL_CALDAV_EXTERNAL.md](./MAIL_CALDAV_EXTERNAL.md). Kişiler: [MAIL_CARDDAV.md](./MAIL_CARDDAV.md).
 
 ## API
 
@@ -46,6 +46,5 @@ bash scripts/apply-mail-d6-caldav-schema.sh /var/www/nakliyeborsasi
 
 ## Sonraki
 
-- CardDAV kişi senkronu
 - Sunucuda silme (DELETE), ETag ile çakışma
 - Tekrarlayan etkinlikler

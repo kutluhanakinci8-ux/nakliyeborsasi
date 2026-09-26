@@ -28,6 +28,15 @@ export class MailOrgContactEntity {
   @Column({ type: "varchar", length: 500, nullable: true })
   public notes!: string | null;
 
+  @Column({ name: "carddav_account_id", type: "uuid", nullable: true })
+  public carddavAccountId!: string | null;
+
+  @Column({ name: "external_uid", type: "varchar", length: 320, nullable: true })
+  public externalUid!: string | null;
+
+  @Column({ name: "carddav_resource_href", type: "varchar", length: 2000, nullable: true })
+  public carddavResourceHref!: string | null;
+
   @CreateDateColumn({ name: "created_at", type: "timestamptz" })
   public createdAt!: Date;
 
