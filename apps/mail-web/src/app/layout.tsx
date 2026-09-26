@@ -1,5 +1,12 @@
 import type { Metadata, Viewport } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
+
+const inter = Inter({
+  subsets: ["latin", "latin-ext"],
+  display: "swap",
+  variable: "--font-mail",
+});
 import { MailSessionProvider } from "@/lib/session";
 import { MailThemeProvider } from "@/components/MailThemeProvider";
 import { MailPwaRegister } from "@/components/MailPwaRegister";
@@ -21,7 +28,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#1a73e8",
+  themeColor: "#0f4c81",
 };
 
 export default function RootLayout({
@@ -30,8 +37,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="tr" data-mail-theme="light">
-      <body>
+    <html lang="tr" data-mail-theme="light" className={inter.variable}>
+      <body className={inter.className}>
         <MailSessionProvider>
           <MailThemeProvider>
             <MailPwaRegister />
