@@ -1349,3 +1349,56 @@ a {
   gap: 6px;
   flex-shrink: 0;
 }
+
+.mail-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.mail-cal-weekday {
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-align: center;
+  padding: 4px 0;
+}
+
+.mail-cal-day {
+  aspect-ratio: 1;
+  min-height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.mail-cal-day.muted {
+  opacity: 0.45;
+}
+
+.mail-cal-day.has-events {
+  font-weight: 600;
+  border-color: var(--accent);
+}
+
+.mail-cal-day.selected {
+  background: #e8f0fe;
+  border-color: #1a73e8;
+}
+
+.mail-d6-filter-hint {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 0 0 12px;
+}
+
+.mail-d6-filter-hint button {
+  border: none;
+  background: none;
+  color: var(--accent);
+  cursor: pointer;
+  padding: 0;
+  margin-left: 6px;
+}

@@ -5,6 +5,7 @@ import {
   createOrgContact,
   deleteOrgContact,
   downloadContactsVcf,
+  importContactsVcf,
   fetchOrgContacts,
   type MailOrgContact,
 } from "@/lib/mailApi";
@@ -92,6 +93,37 @@ export function MailContactsPanel({
         >
           .vcf indir
         </button>
+        <label className="mail-d6-file-btn">
+          .vcf yükle
+          <input
+            type="file"
+            accept=".vcf,text/vcard"
+            hidden
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              e.target.value = "";
+              if (!file) {
+                return;
+              }
+              void file.text().then((vcf) =>
+                importContactsVcf(accessToken, vcf)
+                  .then((r) => {
+                    onToast(
+                      `${r.imported} kişi içe aktarıldı${r.skipped ? `, ${r.skipped} atlandı` : ""}.`,
+                    );
+                    void load();
+                  })
+                  .catch((err: unknown) => {
+                    onToast(
+                      err instanceof Error
+                        ? err.message
+                        : "İçe aktarma başarısız.",
+                    );
+                  }),
+              );
+            }}
+          />
+        </label>
       </header>
 
       <div className="mail-d6-form">

@@ -1051,6 +1051,14 @@ export async function deleteOrgContact(accessToken: string, contactId: string) {
   });
 }
 
+export async function importContactsVcf(accessToken: string, vcf: string) {
+  return apiFetch<{ imported: number; skipped: number }>(
+    accessToken,
+    "company/mail-inbox/contacts/import",
+    { method: "POST", body: JSON.stringify({ vcf }) },
+  );
+}
+
 export async function downloadContactsVcf(accessToken: string): Promise<Blob> {
   const response = await fetch(
     `${resolveApiBaseUrl()}/company/mail-inbox/contacts/export.vcf`,

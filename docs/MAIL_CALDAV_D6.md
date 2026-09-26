@@ -9,7 +9,8 @@ Sol menü → **Takvim** / **Kişiler**
 - Etkinlik ekle/sil, ay görünümü listesi
 - Kişi ekle/sil, listeden **Yaz** ile compose
 - **.ics** içe/dışa aktarma (takvim)
-- **.vcf** dışa aktarma (kişiler)
+- **.vcf** içe/dışa aktarma (kişiler)
+- Ay **ızgarası** (gün seç → liste filtresi)
 
 ## API (`company/mail-inbox`)
 
@@ -26,6 +27,7 @@ Sol menü → **Takvim** / **Kişiler**
 | PATCH | `contacts/:contactId` |
 | DELETE | `contacts/:contactId` |
 | GET | `contacts/export.vcf` |
+| POST | `contacts/import` `{ "vcf": "..." }` |
 
 Veri `mail_calendar_event` ve `mail_org_contact` tablolarında; org (`companyId`) ile sınırlı.
 
@@ -37,11 +39,15 @@ bash scripts/apply-mail-d6-calendar-contacts-schema.sh /var/www/nakliyeborsasi
 
 `deploy-posta-lerta-com-tr.sh` bu scripti otomatik çağırır.
 
+## D6+ (uygulandı)
+
+- Takvim ay ızgarası + gün filtresi
+- Kişi `.vcf` içe aktarma
+
 ## Sonraki (plan)
 
 - Harici CalDAV/CardDAV hesap bağlama (Nextcloud vb.)
-- Tam ay ızgarası UI, tekrarlayan etkinlikler
-- Kişi `.vcf` içe aktarma
+- Tekrarlayan etkinlikler, çok günlü etkinlik çubuğu
 
 ## İlgili
 

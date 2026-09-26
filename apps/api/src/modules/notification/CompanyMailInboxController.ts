@@ -75,6 +75,7 @@ import {
   CreateMailCalendarEventRequestDto,
   CreateMailOrgContactRequestDto,
   ImportMailCalendarIcsRequestDto,
+  ImportMailContactsVcfRequestDto,
   UpdateMailCalendarEventRequestDto,
   UpdateMailOrgContactRequestDto,
 } from "./MailCalendarContactRequestDto";
@@ -1127,6 +1128,18 @@ export class CompanyMailInboxController {
       contactId,
     );
     return { ok: true };
+  }
+
+  @Post("contacts/import")
+  public async importContactsVcf(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: ImportMailContactsVcfRequestDto,
+  ) {
+    const result = await this.mailOrganizationContactService.importVcf(
+      user.companyId,
+      body.vcf,
+    );
+    return { ok: true, ...result };
   }
 
   @Get("contacts/export.vcf")
