@@ -12,7 +12,8 @@ export type MailDomainType =
   | "platform"
   | "custom"
   | "subdomain"
-  | "instant_box";
+  | "instant_box"
+  | "instant_post";
 
 export type MailDomainVerificationStatus =
   | "pending"

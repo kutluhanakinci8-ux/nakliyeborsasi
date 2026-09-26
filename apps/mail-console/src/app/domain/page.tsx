@@ -145,18 +145,21 @@ export default function DomainPage() {
 
   return (
     <ConsoleShell operator={operator}>
-      <h1 style={{ marginTop: 0 }}>Özel domain kurulumu</h1>
+      <h1 style={{ marginTop: 0 }}>Lerta Posta — adresinizi seçin</h1>
       {welcomePlan === "lerta_mail_corporate_tr" ? (
         <div className="card" style={{ marginBottom: 16, borderColor: "var(--accent)" }}>
           <h2 style={{ marginTop: 0 }}>Hoş geldiniz</h2>
           <p style={{ margin: 0, color: "var(--muted)" }}>
-            Almak istediğiniz kurumsal adresi yazın; sistem alan adı kaydı, kutu ve
-            DNS talimatlarını hazırlar.
+            İstediğiniz adresi yazın (ör. <strong>info@abayer.post</strong>). Lerta Post
+            ile DNS ve teknik kurulum arka planda tamamlanır; siz webmail ile kullanmaya
+            başlarsınız.
           </p>
         </div>
       ) : null}
       <p style={{ color: "var(--muted)" }}>
-        Müşterileriniz sizin alan adınızdan mail alır (ör. info@firma.com.tr).
+        <strong>Lerta Post:</strong> ön eki siz seçin, firma adınız <code>.post</code> ile
+        biter (info, satis, destek…). Kendi alan adınız için{" "}
+        <code>info@firma.com.tr</code> yazın.
       </p>
       {message ? (
         <p style={{ color: "var(--success)", fontWeight: 600 }}>{message}</p>
@@ -166,14 +169,14 @@ export default function DomainPage() {
       <div className="card" style={{ marginBottom: 16 }}>
         <h2>İstediğiniz posta adresi</h2>
         <p style={{ color: "var(--muted)", marginTop: 0 }}>
-          Tek satırda yazın. <strong>@firma.box</strong> → DNS otomatik (Lerta);
+          Tek satırda yazın. <strong>@firma.post</strong> → Lerta Posta (DNS otomatik);
           <strong>@firma.com.tr</strong> → müşteri DNS; <strong>@lerta.com.tr</strong> → paylaşımlı pilot.
         </p>
         <form onSubmit={onClaimAddress}>
           <input
             className="input"
             type="email"
-            placeholder="info@abayer.box veya karagoz@lerta.com.tr"
+            placeholder="info@abayer.post veya karagoz@lerta.com.tr"
             value={desiredAddress}
             onChange={(e) => setDesiredAddress(e.target.value)}
             required

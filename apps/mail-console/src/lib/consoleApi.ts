@@ -316,7 +316,7 @@ export async function claimMailAddress(
     fromAddress: string;
     localPart: string;
     domain: string;
-    channel: "custom_domain" | "tenant_subdomain" | "instant_box";
+    channel: "custom_domain" | "tenant_subdomain" | "instant_post";
     vanityAddress: string | null;
     mailboxProvisioned: boolean;
     publicDnsReady: boolean;

@@ -5,12 +5,11 @@ import {
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { In, Repository } from "typeorm";
 import {
-  PLATFORM_MAIL_INSTANT_BOX_ZONE,
-  formatInstantBoxVanityEmail,
-  instantBoxFqdnForOrgSlug,
-  isInstantBoxMailDomain,
+  PLATFORM_MAIL_INSTANT_POST_ZONE,
+  formatInstantPostVanityEmail,
+  isInstantPostMailDomain,
 } from "@nakliyeborsasi/core";
 import { MailDomainEntity } from "../../infrastructure/database/entities/MailDomainEntity";
 import { MailSenderIdentityEntity } from "../../infrastructure/database/entities/MailSenderIdentityEntity";
@@ -18,8 +17,10 @@ import { MailDomainApplicationService } from "./MailDomainApplicationService";
 import { MailDomainDnsVerificationService } from "./MailDomainDnsVerificationService";
 import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
 
+const INSTANT_POST_DOMAIN_TYPES = ["instant_post", "instant_box"] as const;
+
 @Injectable()
-export class MailInstantBoxDomainService {
+export class MailInstantPostDomainService {
   public constructor(
     private readonly configService: ConfigService,
     private readonly mailDomainApplicationService: MailDomainApplicationService,
@@ -34,48 +35,54 @@ export class MailInstantBoxDomainService {
   public resolveZone(): string {
     return (
       this.configService
-        .get<string>("MAIL_PLATFORM_INSTANT_BOX_ZONE")
-        ?.trim() || PLATFORM_MAIL_INSTANT_BOX_ZONE
+        .get<string>("MAIL_PLATFORM_INSTANT_POST_ZONE")
+        ?.trim() || PLATFORM_MAIL_INSTANT_POST_ZONE
     );
   }
 
   public fqdnForSlug(orgSlug: string): string {
     const slug = this.normalizeOrgSlug(orgSlug);
-    const zone = this.resolveZone();
-    return `${slug}.${zone}`;
+    return `${slug}.${this.resolveZone()}`;
   }
 
   public normalizeOrgSlug(slug: string): string {
     const normalized = slug.trim().toLowerCase();
     if (!/^[a-z0-9][a-z0-9-]{1,48}[a-z0-9]$/.test(normalized)) {
       throw new BadRequestException(
-        "Kutu adı: 3–50 karakter, küçük harf, rakam ve tire (ör. abayer).",
+        "Firma posta adı: 3–50 karakter, küçük harf, rakam ve tire (ör. abayer).",
       );
     }
     return normalized;
   }
 
-  public async ensureOrgInstantBoxDomain(
+  public async ensureOrgPostDomain(
     organizationId: string,
     orgSlug: string,
   ): Promise<MailDomainEntity> {
     const slug = this.normalizeOrgSlug(orgSlug);
     const domain = this.fqdnForSlug(slug);
     const existingForOrg = await this.domainRepository.findOne({
-      where: { organizationId, domainType: "instant_box" },
+      where: {
+        organizationId,
+        domainType: In([...INSTANT_POST_DOMAIN_TYPES]),
+      },
     });
     if (existingForOrg) {
       if (existingForOrg.domain !== domain) {
         throw new BadRequestException(
-          `Bu firma için kutu alanı zaten ${existingForOrg.domain}. Yeni slug kullanılamaz.`,
+          `Bu firma için posta alanı zaten ${existingForOrg.domain}. Slug değiştirilemez.`,
         );
+      }
+      if (existingForOrg.domainType === "instant_box") {
+        existingForOrg.domainType = "instant_post";
+        await this.domainRepository.save(existingForOrg);
       }
       return existingForOrg;
     }
     const taken = await this.domainRepository.findOne({ where: { domain } });
     if (taken && taken.organizationId !== organizationId) {
       throw new ConflictException(
-        `${slug}.box başka bir firmaya ait. Farklı bir kutu adı seçin.`,
+        `${slug}.post başka bir firmaya ait. Farklı bir firma adı seçin.`,
       );
     }
     if (taken) {
@@ -88,13 +95,14 @@ export class MailInstantBoxDomainService {
     const row = await this.mailDomainApplicationService.createDomain({
       organizationId,
       domain,
-      domainType: "instant_box",
-      notes: `Lerta Box — ${slug}`,
+      domainType: "instant_post",
+      notes: `Lerta Post — ${slug}`,
     });
     row.verificationStatus = "verified";
     row.dnsSnapshot = {
       managedByPlatform: true,
-      vanityLabel: formatInstantBoxVanityEmail("info", slug).split("@")[1],
+      product: "lerta_post",
+      vanitySuffix: `.${slug}.post`,
       spfHost: domain,
       spfValue: `v=spf1 ip4:${ipv4} -all`,
       dkimHost: `default._domainkey.${domain}`,
@@ -107,7 +115,7 @@ export class MailInstantBoxDomainService {
     return this.domainRepository.save(row);
   }
 
-  public async platformInstantBoxDnsReady(): Promise<boolean> {
+  public async platformPostDnsReady(): Promise<boolean> {
     const zone = this.resolveZone();
     const mxHost = this.mailDomainDnsVerificationService.resolvePlatformMxHost();
     const mx = await this.mailDomainDnsVerificationService.verifyMxRecord(
@@ -126,7 +134,7 @@ export class MailInstantBoxDomainService {
     return mx.ok && spf.ok;
   }
 
-  public async provisionSender(params: {
+  public async provisionMailbox(params: {
     organizationId: string;
     orgSlug: string;
     localPart: string;
@@ -139,13 +147,13 @@ export class MailInstantBoxDomainService {
     mailDomain: MailDomainEntity;
   }> {
     const slug = this.normalizeOrgSlug(params.orgSlug);
-    const mailDomain = await this.ensureOrgInstantBoxDomain(
+    const mailDomain = await this.ensureOrgPostDomain(
       params.organizationId,
       slug,
     );
     const localPart = params.localPart.trim().toLowerCase();
     if (!/^[a-z0-9][a-z0-9._-]{1,48}[a-z0-9]$/.test(localPart)) {
-      throw new BadRequestException("Geçersiz e-posta ön eki.");
+      throw new BadRequestException("Geçersiz e-posta ön eki (info, satis, …).");
     }
     const taken = await this.senderRepository.findOne({
       where: { mailDomainId: mailDomain.id, localPart },
@@ -156,7 +164,7 @@ export class MailInstantBoxDomainService {
     if (taken) {
       return {
         fromAddress: `${localPart}@${mailDomain.domain}`,
-        vanityAddress: formatInstantBoxVanityEmail(localPart, slug),
+        vanityAddress: formatInstantPostVanityEmail(localPart, slug),
         sender: taken,
         mailDomain,
       };
@@ -174,24 +182,16 @@ export class MailInstantBoxDomainService {
     });
     return {
       fromAddress: `${localPart}@${mailDomain.domain}`,
-      vanityAddress: formatInstantBoxVanityEmail(localPart, slug),
+      vanityAddress: formatInstantPostVanityEmail(localPart, slug),
       sender,
       mailDomain,
     };
   }
 
-  public async getOrganizationInstantBox(
-    organizationId: string,
-  ): Promise<MailDomainEntity | null> {
-    return this.domainRepository.findOne({
-      where: { organizationId, domainType: "instant_box" },
-    });
-  }
-
   public assertNotCustomDomainConfusion(domain: string): void {
-    if (isInstantBoxMailDomain(domain)) {
+    if (isInstantPostMailDomain(domain)) {
       throw new BadRequestException(
-        "Box adresleri otomatik yönetilir; info@firmaniz.box yazarak Hazırla kullanın.",
+        "Lerta Post adresleri otomatik yönetilir; info@firmaniz.post yazarak Hazırla kullanın.",
       );
     }
   }

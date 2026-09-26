@@ -33,15 +33,15 @@
 
 Eski pilot `kullanici.lerta.com.tr` kayıtları kaldırılabilir.
 
-## Lerta Box — otomatik müşteri DNS (`info@firma.box`)
+## Lerta Post — sıfır müşteri DNS (`info@firma.post`)
 
-Müşteri DNS yapmaz. Teknik adres: `info@firma.box.lerta.com.tr`, satış yüzü: **`info@firma.box`**.
+Müşteri DNS yapmaz. Satış yüzü: **`info@abayer.post`** (ön ek: info, satis, …). Teknik FQDN: `abayer.post.lerta.com.tr`.
 
 | Tür | Host | Değer |
 |-----|------|--------|
-| **MX** | `*.box.lerta.com.tr` (wildcard) | `10 mail.lerta.com.tr` |
-| TXT | `box.lerta.com.tr` | `v=spf1 ip4:168.231.109.27 -all` |
-| TXT | `default._domainkey.firma.box.lerta.com.tr` | Kutu açılışında API üretir (OpenDKIM) |
+| **MX** | `*.post.lerta.com.tr` (wildcard) | `10 mail.lerta.com.tr` |
+| TXT | `post.lerta.com.tr` | `v=spf1 ip4:168.231.109.27 -all` |
+| TXT | `default._domainkey.firma.post.lerta.com.tr` | Kutu açılışında API üretir (OpenDKIM) |
 
 PTR (Hostinger, IP): `mail.lerta.com.tr`
 

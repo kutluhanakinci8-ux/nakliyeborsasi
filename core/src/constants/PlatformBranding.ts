@@ -19,23 +19,28 @@ export const PLATFORM_TENANT_MAIL_DOMAIN = "kullanici.lerta.tr";
 export const PLATFORM_MAIL_SAAS_TENANT_DOMAIN = "lerta.com.tr";
 
 /**
- * Otomatik DNS — markalı kutu: `info@abayer.box` → teknik `info@abayer.box.lerta.com.tr`.
- * İsimtescil: wildcard MX `*.box.lerta.com.tr` (tek sefer, platform).
+ * Lerta Post — sıfır müşteri DNS: `{localPart}@{firma}.post` (ör. `info@abayer.post`).
+ * Teknik FQDN: `info@abayer.post.lerta.com.tr` · wildcard MX `*.post.lerta.com.tr`.
  */
-export const PLATFORM_MAIL_INSTANT_BOX_LABEL = "box";
-export const PLATFORM_MAIL_INSTANT_BOX_ZONE = "box.lerta.com.tr";
+export const PLATFORM_MAIL_INSTANT_POST_LABEL = "post";
+export const PLATFORM_MAIL_INSTANT_POST_ZONE = "post.lerta.com.tr";
 
-export function instantBoxFqdnForOrgSlug(orgSlug: string): string {
+export function instantPostFqdnForOrgSlug(orgSlug: string): string {
   const slug = orgSlug.trim().toLowerCase();
-  return `${slug}.${PLATFORM_MAIL_INSTANT_BOX_ZONE}`;
+  return `${slug}.${PLATFORM_MAIL_INSTANT_POST_ZONE}`;
 }
 
-/** `info@abayer.box` biçimini ayrıştırır; tam FQDN değilse null. */
-export function parseInstantBoxVanityEmail(
+/**
+ * Vanity adres: local-part + firma slug + `.post` (local-part: info, satis, ahmet, …).
+ */
+export function parseInstantPostVanityEmail(
   raw: string,
 ): { localPart: string; orgSlug: string; fqdn: string } | null {
   const trimmed = raw.trim().toLowerCase();
-  const vanityPattern = /^([a-z0-9][a-z0-9._-]{1,48}[a-z0-9])@([a-z0-9][a-z0-9-]{1,48}[a-z0-9])\.box$/;
+  const label = PLATFORM_MAIL_INSTANT_POST_LABEL;
+  const vanityPattern = new RegExp(
+    `^([a-z0-9][a-z0-9._-]{1,48}[a-z0-9])@([a-z0-9][a-z0-9-]{1,48}[a-z0-9])\\.${label}$`,
+  );
   const match = trimmed.match(vanityPattern);
   if (!match) {
     return null;
@@ -44,22 +49,22 @@ export function parseInstantBoxVanityEmail(
   return {
     localPart: match[1],
     orgSlug,
-    fqdn: instantBoxFqdnForOrgSlug(orgSlug),
+    fqdn: instantPostFqdnForOrgSlug(orgSlug),
   };
 }
 
-export function formatInstantBoxVanityEmail(
+export function formatInstantPostVanityEmail(
   localPart: string,
   orgSlug: string,
 ): string {
-  return `${localPart.trim().toLowerCase()}@${orgSlug.trim().toLowerCase()}.${PLATFORM_MAIL_INSTANT_BOX_LABEL}`;
+  return `${localPart.trim().toLowerCase()}@${orgSlug.trim().toLowerCase()}.${PLATFORM_MAIL_INSTANT_POST_LABEL}`;
 }
 
-export function isInstantBoxMailDomain(domain: string): boolean {
+export function isInstantPostMailDomain(domain: string): boolean {
   const normalized = domain.trim().toLowerCase().replace(/\.$/, "");
   return (
-    normalized === PLATFORM_MAIL_INSTANT_BOX_ZONE ||
-    normalized.endsWith(`.${PLATFORM_MAIL_INSTANT_BOX_ZONE}`)
+    normalized === PLATFORM_MAIL_INSTANT_POST_ZONE ||
+    normalized.endsWith(`.${PLATFORM_MAIL_INSTANT_POST_ZONE}`)
   );
 }
 
@@ -83,7 +88,7 @@ export function isReservedLertaMailSaasDomain(domain: string): boolean {
   if (normalized === "kullanici.lerta.com.tr") {
     return true;
   }
-  if (isInstantBoxMailDomain(normalized)) {
+  if (isInstantPostMailDomain(normalized)) {
     return true;
   }
   return false;
