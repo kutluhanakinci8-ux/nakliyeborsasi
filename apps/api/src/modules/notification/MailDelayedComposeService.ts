@@ -46,6 +46,27 @@ export class MailDelayedComposeService {
     return { id: row.id, sendAt: sendAfter.toISOString() };
   }
 
+  public async getStatus(
+    organizationId: string,
+    pendingId: string,
+  ): Promise<{
+    status: MailDelayedComposeEntity["status"];
+    errorMessage: string | null;
+    sentId: string | null;
+  }> {
+    const row = await this.delayedRepository.findOne({
+      where: { id: pendingId, organizationId },
+    });
+    if (!row) {
+      throw new NotFoundException("Bekleyen gönderim bulunamadı.");
+    }
+    return {
+      status: row.status,
+      errorMessage: row.errorMessage,
+      sentId: row.sentId,
+    };
+  }
+
   public async cancel(organizationId: string, pendingId: string): Promise<void> {
     const result = await this.delayedRepository.update(
       { id: pendingId, organizationId, status: "pending" },

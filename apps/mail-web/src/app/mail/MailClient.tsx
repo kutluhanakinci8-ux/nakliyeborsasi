@@ -5,6 +5,7 @@ import { syncMailUnreadBadge } from "@/lib/mailUnreadBadge";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   cancelDelayedCompose,
+  fetchDelayedComposeStatus,
   composeMail,
   createDraft,
   deleteDraft,
@@ -256,6 +257,43 @@ export function MailClient() {
       setUndoSecondsLeft(0);
       return;
     }
+    let settled = false;
+    const settleDelayedSend = async (pendingId: string) => {
+      if (!accessToken || settled) {
+        return;
+      }
+      settled = true;
+      const poll = async (attempt: number): Promise<void> => {
+        try {
+          const status = await fetchDelayedComposeStatus(accessToken, pendingId);
+          if (status.status === "pending" && attempt < 12) {
+            await new Promise((r) => window.setTimeout(r, 500));
+            return poll(attempt + 1);
+          }
+          setPendingUndo(null);
+          if (status.status === "sent") {
+            setToast("Gönderildi.");
+            setView("sent");
+            void refresh();
+            void refreshDrafts();
+            return;
+          }
+          if (status.status === "failed") {
+            setToast(status.errorMessage ?? "Gönderilemedi.");
+            return;
+          }
+          if (status.status === "cancelled") {
+            setToast("Gönderim iptal edildi.");
+            return;
+          }
+          setToast("Gönderim durumu alınamadı — Gönderilen klasörünü kontrol edin.");
+        } catch {
+          setPendingUndo(null);
+          setToast("Gönderim doğrulanamadı.");
+        }
+      };
+      await poll(0);
+    };
     const tick = () => {
       const left = Math.max(
         0,
@@ -263,17 +301,13 @@ export function MailClient() {
       );
       setUndoSecondsLeft(left);
       if (left <= 0) {
-        setPendingUndo(null);
-        setToast("Gönderildi.");
-        setView("sent");
-        void refresh();
-        void refreshDrafts();
+        void settleDelayedSend(pendingUndo.pendingId);
       }
     };
     tick();
     const id = window.setInterval(tick, 400);
     return () => window.clearInterval(id);
-  }, [pendingUndo, refresh, refreshDrafts]);
+  }, [pendingUndo, refresh, refreshDrafts, accessToken]);
 
   useEffect(() => {
     syncMailUnreadBadge(summary?.unreadCount ?? 0);
