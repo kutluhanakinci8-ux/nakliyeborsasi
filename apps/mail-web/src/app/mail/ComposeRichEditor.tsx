@@ -43,31 +43,40 @@ export function ComposeRichEditor({
 
   if (!enabled) {
     return (
-      <label className="mail-rich-toggle">
+      <label className="mail-rich-toggle compose-rich-toggle">
         <input
           type="checkbox"
           checked={enabled}
           onChange={(e) => onEnabledChange(e.target.checked)}
         />
-        Zengin biçim (kalın, italik, bağlantı)
+        <span>Zengin biçim (kalın, italik, bağlantı)</span>
       </label>
     );
   }
 
   return (
-    <div className="mail-rich-editor">
-      <label className="mail-rich-toggle">
-        <input
-          type="checkbox"
-          checked={enabled}
-          onChange={(e) => onEnabledChange(e.target.checked)}
-        />
-        Zengin biçim açık
-      </label>
-      <div className="mail-rich-toolbar" role="toolbar" aria-label="Biçim">
-        <button type="button" onClick={() => exec("bold")}>B</button>
-        <button type="button" onClick={() => exec("italic")}>I</button>
-        <button type="button" onClick={() => exec("underline")}>U</button>
+    <div className="mail-rich-editor compose-rich-editor">
+      <div className="compose-rich-head">
+        <span className="compose-rich-badge">Zengin metin</span>
+        <label className="mail-rich-toggle compose-rich-toggle">
+          <input
+            type="checkbox"
+            checked={enabled}
+            onChange={(e) => onEnabledChange(e.target.checked)}
+          />
+          <span>Kapat</span>
+        </label>
+      </div>
+      <div className="mail-rich-toolbar compose-rich-toolbar" role="toolbar" aria-label="Biçim">
+        <button type="button" onClick={() => exec("bold")} title="Kalın">
+          <strong>B</strong>
+        </button>
+        <button type="button" onClick={() => exec("italic")} title="İtalik">
+          <em>I</em>
+        </button>
+        <button type="button" onClick={() => exec("underline")} title="Altı çizili">
+          <span className="compose-u">U</span>
+        </button>
         <button
           type="button"
           onClick={() => {
@@ -82,7 +91,7 @@ export function ComposeRichEditor({
       </div>
       <div
         ref={editorRef}
-        className="mail-rich-surface"
+        className="mail-rich-surface compose-rich-surface"
         contentEditable
         role="textbox"
         aria-multiline="true"
