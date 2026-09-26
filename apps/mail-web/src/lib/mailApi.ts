@@ -59,6 +59,7 @@ export type MailInboxRule = {
   subjectContains: string | null;
   toContains: string | null;
   requireAttachment: boolean;
+  matchAnyCondition: boolean;
   actionStar: boolean;
   actionCustomFolderId: string | null;
   actionArchive: boolean;
@@ -83,6 +84,7 @@ export async function createInboxRule(
     subjectContains?: string;
     toContains?: string;
     requireAttachment?: boolean;
+    matchAnyCondition?: boolean;
     actionStar?: boolean;
     actionCustomFolderId?: string | null;
     actionArchive?: boolean;
@@ -140,6 +142,7 @@ export async function updateInboxRule(
     subjectContains: string | null;
     toContains: string | null;
     requireAttachment: boolean;
+    matchAnyCondition: boolean;
     actionStar: boolean;
     actionCustomFolderId: string | null;
     actionArchive: boolean;

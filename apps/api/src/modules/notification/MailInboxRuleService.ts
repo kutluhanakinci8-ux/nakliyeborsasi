@@ -24,6 +24,7 @@ export type MailInboxRuleDto = {
   subjectContains: string | null;
   toContains: string | null;
   requireAttachment: boolean;
+  matchAnyCondition: boolean;
   actionStar: boolean;
   actionCustomFolderId: string | null;
   actionArchive: boolean;
@@ -62,6 +63,7 @@ export class MailInboxRuleService {
       subjectContains?: string | null;
       toContains?: string | null;
       requireAttachment?: boolean;
+      matchAnyCondition?: boolean;
       actionStar?: boolean;
       actionCustomFolderId?: string | null;
       actionArchive?: boolean;
@@ -93,6 +95,7 @@ export class MailInboxRuleService {
         subjectContains: this.normalizeOptional(input.subjectContains),
         toContains: this.normalizeOptional(input.toContains),
         requireAttachment: Boolean(input.requireAttachment),
+        matchAnyCondition: Boolean(input.matchAnyCondition),
         actionStar: Boolean(input.actionStar),
         actionCustomFolderId: input.actionCustomFolderId ?? null,
         actionArchive: Boolean(input.actionArchive),
@@ -112,6 +115,7 @@ export class MailInboxRuleService {
       subjectContains?: string | null;
       toContains?: string | null;
       requireAttachment?: boolean;
+      matchAnyCondition?: boolean;
       actionStar?: boolean;
       actionCustomFolderId?: string | null;
       actionArchive?: boolean;
@@ -137,6 +141,8 @@ export class MailInboxRuleService {
           : row.toContains,
       requireAttachment:
         input.requireAttachment ?? row.requireAttachment,
+      matchAnyCondition:
+        input.matchAnyCondition ?? row.matchAnyCondition,
       actionStar: input.actionStar ?? row.actionStar,
       actionCustomFolderId:
         input.actionCustomFolderId !== undefined
@@ -159,6 +165,7 @@ export class MailInboxRuleService {
     row.subjectContains = merged.subjectContains;
     row.toContains = merged.toContains;
     row.requireAttachment = merged.requireAttachment;
+    row.matchAnyCondition = merged.matchAnyCondition;
     row.actionStar = merged.actionStar;
     row.actionCustomFolderId = merged.actionCustomFolderId;
     row.actionArchive = merged.actionArchive;
@@ -352,9 +359,27 @@ export class MailInboxRuleService {
     const toOk =
       !toNeedle ||
       toList.some((addr) => addr.toLowerCase().includes(toNeedle));
-    const attachmentOk =
-      !rule.requireAttachment ||
-      (message.attachments?.length ?? 0) > 0;
+    const hasAttachment = (message.attachments?.length ?? 0) > 0;
+    if (rule.matchAnyCondition) {
+      const parts: boolean[] = [];
+      if (fromNeedle) {
+        parts.push(fromOk);
+      }
+      if (subjectNeedle) {
+        parts.push(subjectOk);
+      }
+      if (toNeedle) {
+        parts.push(toOk);
+      }
+      if (rule.requireAttachment) {
+        parts.push(hasAttachment);
+      }
+      if (parts.length === 0) {
+        return false;
+      }
+      return parts.some(Boolean);
+    }
+    const attachmentOk = !rule.requireAttachment || hasAttachment;
     return fromOk && subjectOk && toOk && attachmentOk;
   }
 
@@ -422,6 +447,7 @@ export class MailInboxRuleService {
       subjectContains: row.subjectContains,
       toContains: row.toContains,
       requireAttachment: row.requireAttachment,
+      matchAnyCondition: row.matchAnyCondition,
       actionStar: row.actionStar,
       actionCustomFolderId: row.actionCustomFolderId,
       actionArchive: row.actionArchive,

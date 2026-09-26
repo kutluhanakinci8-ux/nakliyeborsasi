@@ -37,6 +37,9 @@ export class MailInboxRuleEntity {
   @Column({ name: "require_attachment", type: "boolean", default: false })
   public requireAttachment!: boolean;
 
+  @Column({ name: "match_any_condition", type: "boolean", default: false })
+  public matchAnyCondition!: boolean;
+
   @Column({ type: "boolean", default: false })
   public actionStar!: boolean;
 
