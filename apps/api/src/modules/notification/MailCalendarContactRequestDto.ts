@@ -66,6 +66,10 @@ export class PatchMailCalendarOccurrenceRequestDto {
   @IsOptional()
   @IsBoolean()
   public allDay?: boolean;
+
+  @IsOptional()
+  @IsISO8601()
+  public newOccurrenceAnchorAt?: string;
 }
 
 export class UpdateMailCalendarEventRequestDto {

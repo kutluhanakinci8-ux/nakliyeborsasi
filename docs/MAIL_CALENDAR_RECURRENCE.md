@@ -35,8 +35,8 @@ Takvim → yeni etkinlik → **Tekrar** seçimi; isteğe bağlı **bitiş tarihi
 - **Tüm seri** (tek PUT): `POST .../push/:eventId` — master `RRULE`, iptal edilen tekrarlar için `EXDATE`, düzenlenen örnekler için aynı dosyada ek `VEVENT` + `RECURRENCE-ID` (webmail: **CalDAV (tüm seri)**).
 - **Bu tekrar** (override dosyası): `POST .../push/:eventId/occurrence` — `{ "occurrenceStartsAt" }` (webmail: **CalDAV (bu tekrar)**).
 - **Bu tekrarı sil** sonrası seri CalDAV’a bağlıysa master `.ics` otomatik yenilenir (`EXDATE` eklenir); ayrı `_occ_<ms>.ics` dosyası uzaktan silinir.
-- **CalDAV sync** gelen `.ics` içinden `EXDATE` → iptal istisnası, `RECURRENCE-ID` bileşenleri → override istisnası olarak içe alınır; uzakta kalkmış `EXDATE`/override yerel istisnayı temizler.
-- **Bu tekrarı düzenle** + CalDAV bağlıysa master seri güncellenir ve `_occ_<anchor>.ics` yeniden yazılır.
+- **CalDAV sync** gelen `.ics` içinden `EXDATE` → iptal istisnası, `RECURRENCE-ID` bileşenleri → override istisnası olarak içe alınır (`from_caldav=true`); uzakta kalkmış `EXDATE`/override yalnızca CalDAV kaynaklı istisnaları temizler — yerel-only (`from_caldav=false`) korunur.
+- **Bu tekrarı düzenle** + CalDAV bağlıysa master seri güncellenir ve `_occ_<anchor>.ics` yeniden yazılır; `newOccurrenceAnchorAt` ile anchor taşınırsa eski `_occ_` dosyası silinir.
 
 ## VPS şema
 

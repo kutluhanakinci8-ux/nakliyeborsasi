@@ -46,6 +46,9 @@ fi
 if [[ -x "$INSTALL_DIR/scripts/apply-mail-d6-occurrence-override-schema.sh" ]]; then
   bash "$INSTALL_DIR/scripts/apply-mail-d6-occurrence-override-schema.sh" "$INSTALL_DIR" || true
 fi
+if [[ -x "$INSTALL_DIR/scripts/apply-mail-d6-exception-caldav-source-schema.sh" ]]; then
+  bash "$INSTALL_DIR/scripts/apply-mail-d6-exception-caldav-source-schema.sh" "$INSTALL_DIR" || true
+fi
 if [[ -x "$INSTALL_DIR/scripts/apply-mail-g6-rule-condition-groups-schema.sh" ]]; then
   bash "$INSTALL_DIR/scripts/apply-mail-g6-rule-condition-groups-schema.sh" "$INSTALL_DIR" || true
 fi

@@ -1297,6 +1297,9 @@ export class CompanyMailInboxController {
         startsAt: body.startsAt ? new Date(body.startsAt) : undefined,
         endsAt: body.endsAt ? new Date(body.endsAt) : undefined,
         allDay: body.allDay,
+        newOccurrenceAnchorAt: body.newOccurrenceAnchorAt
+          ? new Date(body.newOccurrenceAnchorAt)
+          : undefined,
       },
     );
     return { ok: true, event };
