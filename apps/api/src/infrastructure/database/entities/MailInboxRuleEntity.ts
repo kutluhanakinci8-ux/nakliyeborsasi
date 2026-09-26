@@ -31,6 +31,12 @@ export class MailInboxRuleEntity {
   @Column({ type: "varchar", length: 500, nullable: true })
   public subjectContains!: string | null;
 
+  @Column({ name: "to_contains", type: "varchar", length: 320, nullable: true })
+  public toContains!: string | null;
+
+  @Column({ name: "require_attachment", type: "boolean", default: false })
+  public requireAttachment!: boolean;
+
   @Column({ type: "boolean", default: false })
   public actionStar!: boolean;
 

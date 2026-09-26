@@ -144,6 +144,8 @@ export class CompanyMailInboxController {
       name: body.name,
       fromContains: body.fromContains,
       subjectContains: body.subjectContains,
+      toContains: body.toContains,
+      requireAttachment: body.requireAttachment,
       actionStar: body.actionStar,
       actionCustomFolderId: body.actionCustomFolderId ?? null,
       actionArchive: body.actionArchive,
@@ -176,6 +178,8 @@ export class CompanyMailInboxController {
       name: body.name,
       fromContains: body.fromContains,
       subjectContains: body.subjectContains,
+      toContains: body.toContains,
+      requireAttachment: body.requireAttachment,
       actionStar: body.actionStar,
       actionCustomFolderId: body.actionCustomFolderId,
       actionArchive: body.actionArchive,
@@ -193,6 +197,31 @@ export class CompanyMailInboxController {
   ) {
     await this.mailInboxRuleService.remove(user.companyId, ruleId);
     return { ok: true };
+  }
+
+  @Get("rules/:ruleId/preview")
+  public async previewInboxRule(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("ruleId") ruleId: string,
+  ) {
+    const preview = await this.mailInboxRuleService.previewRule(
+      user.companyId,
+      ruleId,
+    );
+    return { preview };
+  }
+
+  @Post("rules/:ruleId/apply-inbox")
+  public async applyInboxRuleToExisting(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("ruleId") ruleId: string,
+  ) {
+    this.assertMailInboxWriter(user);
+    const result = await this.mailInboxRuleService.applyRuleToInbox(
+      user.companyId,
+      ruleId,
+    );
+    return { ok: true, ...result };
   }
 
   private parseCustomFolderId(

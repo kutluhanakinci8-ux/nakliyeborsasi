@@ -587,6 +587,13 @@ a {
   margin-top: 4px;
 }
 
+.mail-rules-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
 .mail-rules-delete {
   margin-top: 8px;
   font-size: 0.85rem;
