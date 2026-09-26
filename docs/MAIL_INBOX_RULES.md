@@ -48,4 +48,4 @@ En az biri seçilmeli. Birden fazla işlem aynı kuralda birlikte uygulanabilir.
 
 ## UI
 
-`posta.lerta.com.tr/mail` → Ayarlar → **Kurallar** — **Önizle**, **Gelen kutusuna uygula**
+`posta.lerta.com.tr/mail` → Ayarlar → **Kurallar** — **Düzenle** (düz koşul veya gruplar), **Önizle**, **Gelen kutusuna uygula**

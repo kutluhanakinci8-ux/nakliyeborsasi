@@ -47,6 +47,28 @@ function formatConditionGroups(groups: MailInboxRuleConditionGroups): string {
   return groups.groups.map(groupSummary).join(between);
 }
 
+const MAX_CONDITION_GROUPS = 3;
+
+function defaultConditionGroupSlots(): MailInboxRuleConditionGroup[] {
+  return Array.from({ length: MAX_CONDITION_GROUPS }, () => emptyGroup());
+}
+
+function conditionGroupsFromRule(rule: MailInboxRule): MailInboxRuleConditionGroup[] {
+  const slots = defaultConditionGroupSlots();
+  const fromApi = rule.conditionGroups?.groups ?? [];
+  for (let i = 0; i < Math.min(fromApi.length, MAX_CONDITION_GROUPS); i += 1) {
+    const g = fromApi[i]!;
+    slots[i] = {
+      matchAny: g.matchAny,
+      fromContains: g.fromContains ?? "",
+      subjectContains: g.subjectContains ?? "",
+      toContains: g.toContains ?? "",
+      requireAttachment: Boolean(g.requireAttachment),
+    };
+  }
+  return slots;
+}
+
 type Props = {
   accessToken: string;
 };
@@ -69,9 +91,10 @@ export function MailRulesPanel({ accessToken }: Props) {
   const [actionFolderId, setActionFolderId] = useState("");
   const [useConditionGroups, setUseConditionGroups] = useState(false);
   const [matchAnyBetweenGroups, setMatchAnyBetweenGroups] = useState(false);
+  const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
   const [conditionGroups, setConditionGroups] = useState<
     MailInboxRuleConditionGroup[]
-  >([emptyGroup(), emptyGroup()]);
+  >(defaultConditionGroupSlots());
 
   async function reload() {
     const [rulesData, folderData] = await Promise.all([
@@ -111,47 +134,109 @@ export function MailRulesPanel({ accessToken }: Props) {
     return { matchAnyBetweenGroups, groups };
   }
 
-  async function onCreate() {
-    setError("");
-    try {
-      const groupsPayload = buildConditionGroupsPayload();
-      await createInboxRule(accessToken, {
-        name: name.trim(),
-        fromContains: useConditionGroups
-          ? undefined
-          : fromContains.trim() || undefined,
-        subjectContains: useConditionGroups
-          ? undefined
-          : subjectContains.trim() || undefined,
-        toContains: useConditionGroups
-          ? undefined
-          : toContains.trim() || undefined,
-        requireAttachment: useConditionGroups ? undefined : requireAttachment,
-        matchAnyCondition: useConditionGroups ? undefined : matchAnyCondition,
-        conditionGroups: groupsPayload,
-        actionStar,
-        actionArchive,
-        actionMarkRead,
-        actionTrash,
-        actionCustomFolderId: actionFolderId || null,
-      });
-      setName("");
+  function resetForm() {
+    setEditingRuleId(null);
+    setName("");
+    setFromContains("");
+    setSubjectContains("");
+    setToContains("");
+    setRequireAttachment(false);
+    setMatchAnyCondition(false);
+    setUseConditionGroups(false);
+    setMatchAnyBetweenGroups(false);
+    setConditionGroups(defaultConditionGroupSlots());
+    setActionStar(false);
+    setActionArchive(false);
+    setActionMarkRead(false);
+    setActionTrash(false);
+    setActionFolderId("");
+  }
+
+  function beginEdit(rule: MailInboxRule) {
+    setEditingRuleId(rule.id);
+    setName(rule.name);
+    setActionStar(rule.actionStar);
+    setActionArchive(rule.actionArchive);
+    setActionMarkRead(rule.actionMarkRead);
+    setActionTrash(rule.actionTrash);
+    setActionFolderId(rule.actionCustomFolderId ?? "");
+    if (rule.conditionGroups) {
+      setUseConditionGroups(true);
+      setMatchAnyBetweenGroups(rule.conditionGroups.matchAnyBetweenGroups);
+      setConditionGroups(conditionGroupsFromRule(rule));
       setFromContains("");
       setSubjectContains("");
       setToContains("");
       setRequireAttachment(false);
       setMatchAnyCondition(false);
+    } else {
       setUseConditionGroups(false);
-      setMatchAnyBetweenGroups(false);
-      setConditionGroups([emptyGroup(), emptyGroup()]);
-      setActionStar(false);
-      setActionArchive(false);
-      setActionMarkRead(false);
-      setActionTrash(false);
-      setActionFolderId("");
+      setFromContains(rule.fromContains ?? "");
+      setSubjectContains(rule.subjectContains ?? "");
+      setToContains(rule.toContains ?? "");
+      setRequireAttachment(rule.requireAttachment);
+      setMatchAnyCondition(rule.matchAnyCondition);
+      setConditionGroups(defaultConditionGroupSlots());
+    }
+    setError("");
+    setInfo("");
+  }
+
+  async function onSubmit() {
+    setError("");
+    try {
+      const groupsPayload = buildConditionGroupsPayload();
+      const body = {
+        name: name.trim(),
+        fromContains: useConditionGroups
+          ? null
+          : fromContains.trim() || null,
+        subjectContains: useConditionGroups
+          ? null
+          : subjectContains.trim() || null,
+        toContains: useConditionGroups ? null : toContains.trim() || null,
+        requireAttachment: useConditionGroups ? false : requireAttachment,
+        matchAnyCondition: useConditionGroups ? false : matchAnyCondition,
+        conditionGroups: useConditionGroups ? groupsPayload : null,
+        actionStar,
+        actionArchive,
+        actionMarkRead,
+        actionTrash,
+        actionCustomFolderId: actionFolderId || null,
+      };
+      if (editingRuleId) {
+        await updateInboxRule(accessToken, editingRuleId, body);
+        setInfo("Kural güncellendi.");
+      } else {
+        await createInboxRule(accessToken, {
+          ...body,
+          fromContains: useConditionGroups
+            ? undefined
+            : fromContains.trim() || undefined,
+          subjectContains: useConditionGroups
+            ? undefined
+            : subjectContains.trim() || undefined,
+          toContains: useConditionGroups
+            ? undefined
+            : toContains.trim() || undefined,
+          requireAttachment: useConditionGroups ? undefined : requireAttachment,
+          matchAnyCondition: useConditionGroups
+            ? undefined
+            : matchAnyCondition,
+          conditionGroups: groupsPayload,
+        });
+        setInfo("Kural eklendi.");
+      }
+      resetForm();
       await reload();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Kural eklenemedi.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : editingRuleId
+            ? "Kural güncellenemedi."
+            : "Kural eklenemedi.",
+      );
     }
   }
 
@@ -237,6 +322,9 @@ export function MailRulesPanel({ accessToken }: Props) {
                 {rule.actionTrash ? " · Çöp" : null}
               </div>
               <div className="mail-rules-actions">
+                <button type="button" onClick={() => beginEdit(rule)}>
+                  Düzenle
+                </button>
                 <button
                   type="button"
                   onClick={() =>
@@ -291,7 +379,7 @@ export function MailRulesPanel({ accessToken }: Props) {
           ))
         )}
       </ul>
-      <h3>Yeni kural</h3>
+      <h3>{editingRuleId ? "Kural düzenle" : "Yeni kural"}</h3>
       <input
         placeholder="Kural adı"
         value={name}
@@ -303,7 +391,7 @@ export function MailRulesPanel({ accessToken }: Props) {
           checked={useConditionGroups}
           onChange={(e) => setUseConditionGroups(e.target.checked)}
         />
-        Gelişmiş koşul grupları (en fazla 2 grup)
+        Gelişmiş koşul grupları (en fazla 3 grup)
       </label>
       {useConditionGroups ? (
         <div className="mail-rules-groups">
@@ -451,7 +539,16 @@ export function MailRulesPanel({ accessToken }: Props) {
           <option key={f.id} value={f.id}>{f.name}</option>
         ))}
       </select>
-      <button type="button" onClick={() => void onCreate()}>Kural ekle</button>
+      <div className="mail-rules-form-actions">
+        <button type="button" onClick={() => void onSubmit()}>
+          {editingRuleId ? "Kaydet" : "Kural ekle"}
+        </button>
+        {editingRuleId ? (
+          <button type="button" onClick={() => resetForm()}>
+            İptal
+          </button>
+        ) : null}
+      </div>
     </div>
   );
 }

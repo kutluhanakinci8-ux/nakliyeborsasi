@@ -22,6 +22,7 @@ import { MailCalendarCalDavPanel } from "./MailCalendarCalDavPanel";
 import {
   fetchCalendarCalDavAccounts,
   pushCalendarEventToCalDav,
+  pushCalendarOccurrenceToCalDav,
 } from "@/lib/mailApi";
 
 type Props = {
@@ -467,23 +468,41 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
               {caldavPushAccountId ? (
                 <button
                   type="button"
-                  onClick={() =>
-                    void pushCalendarEventToCalDav(
-                      accessToken,
-                      caldavPushAccountId,
-                      ev.id,
-                    )
-                      .then(() => onToast("CalDAV’a yazıldı."))
+                  onClick={() => {
+                    const anchor = occurrenceAnchor(ev);
+                    const pushPromise =
+                      ev.recurrenceRule && ev.occurrenceAnchorAt
+                        ? pushCalendarOccurrenceToCalDav(
+                            accessToken,
+                            caldavPushAccountId,
+                            ev.id,
+                            anchor,
+                          )
+                        : pushCalendarEventToCalDav(
+                            accessToken,
+                            caldavPushAccountId,
+                            ev.id,
+                          );
+                    void pushPromise
+                      .then(() =>
+                        onToast(
+                          ev.recurrenceRule && ev.occurrenceAnchorAt
+                            ? "Tekrar örneği CalDAV’a yazıldı (RECURRENCE-ID)."
+                            : "CalDAV’a yazıldı.",
+                        ),
+                      )
                       .catch((err: unknown) => {
                         onToast(
                           err instanceof Error
                             ? err.message
                             : "CalDAV yazma başarısız.",
                         );
-                      })
-                  }
+                      });
+                  }}
                 >
-                  CalDAV’a yaz
+                  {ev.recurrenceRule && ev.occurrenceAnchorAt
+                    ? "CalDAV’a yaz (bu tekrar)"
+                    : "CalDAV’a yaz"}
                 </button>
               ) : null}
               {ev.recurrenceRule ? (
