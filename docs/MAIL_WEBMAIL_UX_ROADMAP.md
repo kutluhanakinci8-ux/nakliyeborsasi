@@ -34,6 +34,12 @@ sudo certbot certonly --webroot -w /var/www/certbot -d posta.lerta.com.tr
 - Kurumsal renk paleti, Inter tipografi, kart satırlar (avatar, tarih, okunmamış nokta)
 - Başlık: **Gelen kutusu** + okunmamış sayacı; gelişmiş arama alanı
 
+## G1+ — Okuma & yanıt premium (uygulandı)
+
+- Okuma paneli: başlık/meta, chip araç çubuğu (yıldız, arşiv, sil, okunmadı)
+- Yanıt kartı: compose ile aynı alan/ek/buton dili; gruplu Yanıtla / Tümüne yanıtla / Ertele / İlet
+- Taslak önizleme: aynı `compose-btn` hiyerarşisi
+
 ## G1 — Bu sprint (kod)
 
 - [x] `MailEmptyState` — liste ve okuma paneli

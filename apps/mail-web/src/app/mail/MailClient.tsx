@@ -1928,7 +1928,7 @@ export function MailClient() {
         )}
       </section>
 
-      <section className="mail-read">
+      <section className="mail-read mail-read--premium">
         {pendingUndo ? (
           <div className="mail-undo-bar">
             <span>
@@ -1940,15 +1940,7 @@ export function MailClient() {
           </div>
         ) : null}
         {toast && !pendingUndo ? (
-          <p
-            style={{
-              padding: 12,
-              background: "var(--toast-bg)",
-              margin: 0,
-            }}
-          >
-            {toast}
-          </p>
+          <p className="mail-read-toast">{toast}</p>
         ) : null}
         {sentLoading ? (
           <p className="mail-empty">Yükleniyor…</p>
@@ -1984,15 +1976,17 @@ export function MailClient() {
                 ))}
               </ul>
             ) : null}
-            <div className="mail-reply">
+            <div className="mail-reply mail-reply--premium mail-reply-draft-actions">
               <button
                 type="button"
+                className="compose-btn compose-btn--secondary"
                 onClick={() => openComposeFromDraft(draftPreview)}
               >
                 Düzenle
               </button>
               <button
                 type="button"
+                className="compose-btn compose-btn--primary"
                 onClick={() => {
                   if (!accessToken) {
                     return;
@@ -2029,6 +2023,7 @@ export function MailClient() {
               </button>
               <button
                 type="button"
+                className="compose-btn compose-btn--ghost"
                 onClick={() => {
                   if (!accessToken) {
                     return;
@@ -2049,10 +2044,10 @@ export function MailClient() {
           <MailEmptyState variant="read" />
         ) : (
           <>
-            <header className="mail-read-header">
+            <header className="mail-read-header mail-read-header--premium">
               <button
                 type="button"
-                className="mail-back-read"
+                className="mail-back-read compose-chip-btn"
                 onClick={() => {
                   setMobilePane("list");
                   setDetail(null);
@@ -2088,8 +2083,8 @@ export function MailClient() {
                   ))}
                 </div>
               ) : null}
-              <h1>{detail.subject}</h1>
-              <div className="mail-read-meta">
+              <h1 className="mail-read-title">{detail.subject}</h1>
+              <div className="mail-read-meta mail-read-meta--premium">
                 Kimden: {detail.fromAddress} ·{" "}
                 {new Date(detail.receivedAt).toLocaleString("tr-TR")}
                 {detail.spamReason ? ` · ${detail.spamReason}` : ""}
@@ -2127,11 +2122,15 @@ export function MailClient() {
                 <pre>{detail.bodyText ?? ""}</pre>
               )}
             </div>
-            <div className="mail-folder-actions">
+            <div
+              className="mail-read-toolbar"
+              role="toolbar"
+              aria-label="Mesaj işlemleri"
+            >
               {detail.mailboxFolder !== "trash" ? (
                 <button
                   type="button"
-                  className={`mail-star-btn inline ${detail.starredAt ? "starred" : ""}`}
+                  className={`mail-read-tool-btn ${detail.starredAt ? "is-active" : ""}`}
                   onClick={() => void toggleCurrentStarred()}
                 >
                   {detail.starredAt ? "★ Yıldızlı" : "☆ Yıldızla"}
@@ -2141,13 +2140,14 @@ export function MailClient() {
                 <>
                   <button
                     type="button"
+                    className="mail-read-tool-btn"
                     onClick={() => void moveCurrentMessage("inbox")}
                   >
                     Geri al
                   </button>
                   <button
                     type="button"
-                    className="danger"
+                    className="mail-read-tool-btn mail-read-tool-btn--danger"
                     onClick={() => void purgeCurrentMessage()}
                   >
                     Kalıcı sil
@@ -2158,6 +2158,7 @@ export function MailClient() {
                   {view !== "archive" && detail.mailboxFolder !== "archive" ? (
                     <button
                       type="button"
+                      className="mail-read-tool-btn"
                       onClick={() => void moveCurrentMessage("archive")}
                     >
                       Arşivle
@@ -2165,6 +2166,7 @@ export function MailClient() {
                   ) : (
                     <button
                       type="button"
+                      className="mail-read-tool-btn"
                       onClick={() => void moveCurrentMessage("inbox")}
                     >
                       Gelen kutusuna taşı
@@ -2172,6 +2174,7 @@ export function MailClient() {
                   )}
                   <button
                     type="button"
+                    className="mail-read-tool-btn"
                     onClick={() => void moveCurrentMessage("trash")}
                   >
                     Sil
@@ -2179,6 +2182,7 @@ export function MailClient() {
                   {detail.readAt ? (
                     <button
                       type="button"
+                      className="mail-read-tool-btn"
                       onClick={() => void markCurrentUnread()}
                     >
                       Okunmadı
@@ -2188,41 +2192,61 @@ export function MailClient() {
               )}
             </div>
             {view !== "sent" && view !== "trash" ? (
-              <div className="mail-reply">
-                <input
-                  type="text"
-                  placeholder="Bcc (gizli kopya, virgülle ayırın)"
-                  value={replyBcc}
-                  onChange={(e) => setReplyBcc(e.target.value)}
-                  className="mail-reply-bcc"
-                />
-                {replyAllMode ? (
-                  <p className="mail-reply-all-hint">Tümüne yanıt modu (a)</p>
-                ) : null}
+              <div className="mail-reply mail-reply--premium">
+                <div className="mail-reply-premium-head">
+                  <h3 className="mail-reply-premium-title">Yanıt</h3>
+                  {replyAllMode ? (
+                    <span className="mail-reply-all-badge">Tümüne yanıt (a)</span>
+                  ) : null}
+                </div>
+                <div className="compose-field mail-reply-field">
+                  <label className="compose-field-label" htmlFor="reply-bcc">
+                    Bcc
+                  </label>
+                  <input
+                    id="reply-bcc"
+                    type="text"
+                    placeholder="Gizli kopya, virgülle ayırın"
+                    value={replyBcc}
+                    onChange={(e) => setReplyBcc(e.target.value)}
+                    className="compose-input"
+                  />
+                </div>
                 <textarea
-                  placeholder="Yanıt yazın…"
+                  className="compose-textarea mail-reply-textarea"
+                  placeholder="Yanıtınızı yazın…"
                   value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}
+                  rows={5}
                 />
-                <input
-                  type="file"
-                  multiple
-                  onChange={(e) =>
-                    setReplyFiles(Array.from(e.target.files ?? []))
-                  }
-                />
-                {replyFiles.length > 0 ? (
-                  <p className="mail-attach-hint">
-                    {replyFiles.length} ek seçildi (en fazla 3, {maxAttachmentMb}{" "}
-                    MB)
-                  </p>
-                ) : null}
+                <div className="compose-attach-zone mail-reply-attach">
+                  <label className="compose-attach-label">
+                    <span className="compose-attach-title">Ek</span>
+                    <span className="compose-attach-btn">Dosya seç</span>
+                    <input
+                      type="file"
+                      multiple
+                      className="compose-attach-input"
+                      onChange={(e) =>
+                        setReplyFiles(Array.from(e.target.files ?? []))
+                      }
+                    />
+                  </label>
+                  {replyFiles.length > 0 ? (
+                    <p className="mail-attach-hint">
+                      {replyFiles.length} ek (en fazla 3, {maxAttachmentMb} MB)
+                    </p>
+                  ) : (
+                    <p className="compose-attach-hint">Dosya seçilmedi</p>
+                  )}
+                </div>
                 {detail.snoozedUntil &&
                 new Date(detail.snoozedUntil).getTime() > Date.now() &&
                 accessToken &&
                 selectedId ? (
                   <button
                     type="button"
+                    className="compose-chip-btn mail-reply-unsnooze"
                     onClick={() =>
                       void unsnoozeMailMessage(accessToken, selectedId).then(
                         () => {
@@ -2236,32 +2260,51 @@ export function MailClient() {
                     Ertelemeyi kaldır
                   </button>
                 ) : null}
-                <button type="button" onClick={() => void sendReply(false)}>
-                  Yanıtla
-                </button>
-                <button type="button" onClick={() => void sendReply(true)}>
-                  Tümüne yanıtla
-                </button>
-                <select
-                  className="mail-snooze-select"
-                  defaultValue=""
-                  onChange={(e) => {
-                    const hours = Number(e.target.value);
-                    if (hours > 0) {
-                      void snoozeSelected(hours);
-                      e.target.value = "";
-                    }
-                  }}
-                >
-                  <option value="">Ertele…</option>
-                  <option value="1">1 saat</option>
-                  <option value="3">3 saat</option>
-                  <option value="24">Yarın</option>
-                  <option value="168">1 hafta</option>
-                </select>
-                <button type="button" onClick={() => startForwardFromDetail()}>
-                  İlet
-                </button>
+                <div className="mail-reply-premium-actions">
+                  <div className="mail-reply-action-group">
+                    <button
+                      type="button"
+                      className="compose-btn compose-btn--primary"
+                      onClick={() => void sendReply(false)}
+                    >
+                      Yanıtla
+                    </button>
+                    <button
+                      type="button"
+                      className="compose-btn compose-btn--secondary"
+                      onClick={() => void sendReply(true)}
+                    >
+                      Tümüne yanıtla
+                    </button>
+                  </div>
+                  <div className="mail-reply-action-group mail-reply-action-group--end">
+                    <select
+                      className="compose-select mail-snooze-select"
+                      defaultValue=""
+                      aria-label="Ertele"
+                      onChange={(e) => {
+                        const hours = Number(e.target.value);
+                        if (hours > 0) {
+                          void snoozeSelected(hours);
+                          e.target.value = "";
+                        }
+                      }}
+                    >
+                      <option value="">Ertele…</option>
+                      <option value="1">1 saat</option>
+                      <option value="3">3 saat</option>
+                      <option value="24">Yarın</option>
+                      <option value="168">1 hafta</option>
+                    </select>
+                    <button
+                      type="button"
+                      className="compose-btn compose-btn--ghost"
+                      onClick={() => startForwardFromDetail()}
+                    >
+                      İlet
+                    </button>
+                  </div>
+                </div>
               </div>
             ) : null}
           </>
