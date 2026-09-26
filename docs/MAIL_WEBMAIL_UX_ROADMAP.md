@@ -203,6 +203,11 @@ sudo certbot certonly --webroot -w /var/www/certbot -d posta.lerta.com.tr
 - Occurrence PATCH: bağlı CalDAV’da `_occ_` dosyası yeniden PUT
 - Kural önizleme: `nonMatchingSamples` + `failedBecause`
 
+## G6++++++ — Yerel istisna koruma + anchor occ silme (uygulandı)
+
+- `from_caldav` — prune yalnızca CalDAV kaynaklı istisnalar; web düzenlemesi `from_caldav=false`
+- Önizleme: 8 karşı örnek; `newOccurrenceAnchorAt` + eski `_occ_` DELETE
+
 ## G9 — IMAP/SMTP istemci bilgisi (uygulandı)
 
 - `imap-settings` API: SMTP host/port/güvenlik + gönderilen klasör notu

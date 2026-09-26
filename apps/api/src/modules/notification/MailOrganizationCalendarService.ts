@@ -241,15 +241,60 @@ export class MailOrganizationCalendarService {
       startsAt?: Date;
       endsAt?: Date;
       allDay?: boolean;
+      newOccurrenceAnchorAt?: Date;
     },
   ): Promise<MailCalendarEventDto> {
     const row = await this.assertEvent(organizationId, eventId);
     if (!row.recurrenceRule) {
       throw new BadRequestException("Yalnızca tekrarlı etkinlik örneği düzenlenir.");
     }
-    const occ = new Date(occurrenceStartsAt.getTime());
+    let occ = new Date(occurrenceStartsAt.getTime());
     if (Number.isNaN(occ.getTime())) {
       throw new BadRequestException("occurrenceStartsAt geçersiz.");
+    }
+    let existing = await this.recurrenceExceptionRepository.findOne({
+      where: {
+        organizationId,
+        masterEventId: row.id,
+        occurrenceStartsAt: occ,
+      },
+    });
+    const newAnchor = input.newOccurrenceAnchorAt
+      ? new Date(input.newOccurrenceAnchorAt.getTime())
+      : null;
+    if (newAnchor && !Number.isNaN(newAnchor.getTime()) && newAnchor.getTime() !== occ.getTime()) {
+      await this.mailCalendarCalDavService.deleteRemoteOccurrenceResource(
+        organizationId,
+        row.id,
+        occ,
+      );
+      if (existing?.caldavOccurrencePushedAtMs) {
+        const pushedMs = Number(existing.caldavOccurrencePushedAtMs);
+        if (!Number.isNaN(pushedMs) && pushedMs !== occ.getTime()) {
+          await this.mailCalendarCalDavService.deleteRemoteOccurrenceResource(
+            organizationId,
+            row.id,
+            new Date(pushedMs),
+          );
+        }
+      }
+      const carry = existing;
+      if (carry) {
+        await this.recurrenceExceptionRepository.remove(carry);
+      }
+      existing = this.recurrenceExceptionRepository.create({
+        organizationId,
+        masterEventId: row.id,
+        occurrenceStartsAt: newAnchor,
+        cancelled: false,
+        fromCaldav: false,
+        overrideTitle: carry?.overrideTitle ?? null,
+        overrideStartsAt: carry?.overrideStartsAt ?? null,
+        overrideEndsAt: carry?.overrideEndsAt ?? null,
+        overrideAllDay: carry?.overrideAllDay ?? null,
+        caldavOccurrencePushedAtMs: null,
+      });
+      occ = newAnchor;
     }
     const startsAt = input.startsAt ?? occ;
     const endsAt = input.endsAt ?? new Date(row.endsAt.getTime() - row.startsAt.getTime() + startsAt.getTime());
@@ -258,22 +303,17 @@ export class MailOrganizationCalendarService {
       startsAt,
       endsAt,
     });
-    let existing = await this.recurrenceExceptionRepository.findOne({
-      where: {
-        organizationId,
-        masterEventId: row.id,
-        occurrenceStartsAt: occ,
-      },
-    });
     if (!existing) {
       existing = this.recurrenceExceptionRepository.create({
         organizationId,
         masterEventId: row.id,
         occurrenceStartsAt: occ,
         cancelled: false,
+        fromCaldav: false,
       });
     }
     existing.cancelled = false;
+    existing.fromCaldav = false;
     if (input.title !== undefined) {
       existing.overrideTitle = input.title.trim() || null;
     }
@@ -289,6 +329,17 @@ export class MailOrganizationCalendarService {
     if (!existing.overrideStartsAt) {
       existing.overrideStartsAt = startsAt;
       existing.overrideEndsAt = endsAt;
+    }
+    if (
+      existing.caldavOccurrencePushedAtMs &&
+      Number(existing.caldavOccurrencePushedAtMs) !== occ.getTime()
+    ) {
+      await this.mailCalendarCalDavService.deleteRemoteOccurrenceResource(
+        organizationId,
+        row.id,
+        new Date(Number(existing.caldavOccurrencePushedAtMs)),
+      );
+      existing.caldavOccurrencePushedAtMs = null;
     }
     await this.recurrenceExceptionRepository.save(existing);
     await this.mailCalendarCalDavService.syncRecurrenceMasterToCalDavIfLinked(
@@ -333,10 +384,12 @@ export class MailOrganizationCalendarService {
             masterEventId: row.id,
             occurrenceStartsAt: occ,
             cancelled: true,
+            fromCaldav: false,
           }),
         );
       } else if (!existing.cancelled) {
         existing.cancelled = true;
+        existing.fromCaldav = false;
         await this.recurrenceExceptionRepository.save(existing);
       }
       await this.mailCalendarCalDavService.deleteRemoteOccurrenceResource(

@@ -22,6 +22,7 @@ import {
 
 const MAX_RULES = 20;
 const PREVIEW_SCAN_LIMIT = 500;
+const PREVIEW_NON_MATCH_LIMIT = 8;
 const APPLY_INBOX_LIMIT = 100;
 
 export type MailInboxRuleDto = {
@@ -295,7 +296,7 @@ export class MailInboxRuleService {
         subject: m.subject,
         matchedBecause: this.explainMatch(rule, m),
       })),
-      nonMatchingSamples: nonMatched.slice(0, 3).map((m) => ({
+      nonMatchingSamples: nonMatched.slice(0, PREVIEW_NON_MATCH_LIMIT).map((m) => ({
         id: m.id,
         fromAddress: m.fromAddress,
         subject: m.subject,

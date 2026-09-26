@@ -1240,6 +1240,7 @@ export async function patchCalendarOccurrence(
     startsAt?: string;
     endsAt?: string;
     allDay?: boolean;
+    newOccurrenceAnchorAt?: string;
   },
 ) {
   return apiFetch<{ ok: true; event: MailCalendarEvent }>(

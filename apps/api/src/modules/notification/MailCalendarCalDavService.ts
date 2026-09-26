@@ -376,6 +376,10 @@ export class MailCalendarCalDavService {
       null,
     );
     void etag;
+    if (exception) {
+      exception.caldavOccurrencePushedAtMs = String(anchor.getTime());
+      await this.recurrenceExceptionRepository.save(exception);
+    }
     return { resourceHref, externalUid };
   }
 
@@ -702,7 +706,7 @@ export class MailCalendarCalDavService {
   ): Promise<void> {
     const allowed = new Set(exDates.map((d) => d.getTime()));
     const rows = await this.recurrenceExceptionRepository.find({
-      where: { organizationId, masterEventId, cancelled: true },
+      where: { organizationId, masterEventId, cancelled: true, fromCaldav: true },
     });
     for (const row of rows) {
       if (!allowed.has(row.occurrenceStartsAt.getTime())) {
@@ -725,7 +729,7 @@ export class MailCalendarCalDavService {
     );
     const cancelledKeys = new Set(exDates.map((d) => d.getTime()));
     const rows = await this.recurrenceExceptionRepository.find({
-      where: { organizationId, masterEventId, cancelled: false },
+      where: { organizationId, masterEventId, cancelled: false, fromCaldav: true },
     });
     for (const row of rows) {
       const key = row.occurrenceStartsAt.getTime();
@@ -795,8 +799,10 @@ export class MailCalendarCalDavService {
         masterEventId,
         occurrenceStartsAt: occ,
         cancelled: input.cancelled ?? false,
+        fromCaldav: true,
       });
     }
+    row.fromCaldav = true;
     if (input.cancelled !== undefined) {
       row.cancelled = input.cancelled;
     }

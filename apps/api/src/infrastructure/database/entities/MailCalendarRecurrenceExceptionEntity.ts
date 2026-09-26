@@ -37,6 +37,18 @@ export class MailCalendarRecurrenceExceptionEntity {
   @Column({ name: "override_all_day", type: "boolean", nullable: true })
   public overrideAllDay!: boolean | null;
 
+  /** CalDAV sync ile yazıldıysa true; yerel-only istisnalar prune edilmez. */
+  @Column({ name: "from_caldav", type: "boolean", default: false })
+  public fromCaldav!: boolean;
+
+  /** Son başarılı `_occ_<ms>.ics` push anahtarı (anchor taşımada eski dosya silinir). */
+  @Column({
+    name: "caldav_occurrence_pushed_at_ms",
+    type: "bigint",
+    nullable: true,
+  })
+  public caldavOccurrencePushedAtMs!: string | null;
+
   @CreateDateColumn({ name: "created_at", type: "timestamptz" })
   public createdAt!: Date;
 }
