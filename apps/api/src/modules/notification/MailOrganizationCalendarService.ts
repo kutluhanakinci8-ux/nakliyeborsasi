@@ -6,6 +6,7 @@ import {
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { MailCalendarEventEntity } from "../../infrastructure/database/entities/MailCalendarEventEntity";
+import { MailCalendarCalDavService } from "./MailCalendarCalDavService";
 import { buildIcalCalendar, parseIcalEvents } from "./MailIcalUtil";
 
 const MAX_EVENTS = 500;
@@ -27,6 +28,7 @@ export class MailOrganizationCalendarService {
   public constructor(
     @InjectRepository(MailCalendarEventEntity)
     private readonly eventRepository: Repository<MailCalendarEventEntity>,
+    private readonly mailCalendarCalDavService: MailCalendarCalDavService,
   ) {}
 
   public async listInRange(
@@ -125,6 +127,7 @@ export class MailOrganizationCalendarService {
 
   public async delete(organizationId: string, eventId: string): Promise<void> {
     const row = await this.assertEvent(organizationId, eventId);
+    await this.mailCalendarCalDavService.deleteRemoteForEvent(row);
     await this.eventRepository.remove(row);
   }
 

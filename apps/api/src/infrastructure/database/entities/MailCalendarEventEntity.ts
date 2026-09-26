@@ -49,6 +49,9 @@ export class MailCalendarEventEntity {
   @Column({ name: "caldav_resource_href", type: "varchar", length: 2000, nullable: true })
   public caldavResourceHref!: string | null;
 
+  @Column({ name: "caldav_etag", type: "varchar", length: 200, nullable: true })
+  public caldavEtag!: string | null;
+
   @CreateDateColumn({ name: "created_at", type: "timestamptz" })
   public createdAt!: Date;
 

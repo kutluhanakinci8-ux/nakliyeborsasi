@@ -131,21 +131,73 @@ export async function calDavPutIcs(
   username: string,
   password: string,
   icsBody: string,
+  ifMatchEtag?: string | null,
+): Promise<string | null> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    const headers: Record<string, string> = {
+      Authorization: basicAuthHeader(username, password),
+      "Content-Type": "text/calendar; charset=utf-8",
+    };
+    if (ifMatchEtag) {
+      headers["If-Match"] = ifMatchEtag;
+    }
+    const response = await fetch(resourceUrl, {
+      method: "PUT",
+      headers,
+      body: icsBody,
+      signal: controller.signal,
+    });
+    if (response.status === 412) {
+      throw new Error("CalDAV ETag uyuşmazlığı (412); sunucudan yeniden çekin.");
+    }
+    if (
+      response.status !== 201 &&
+      response.status !== 204 &&
+      response.status !== 200
+    ) {
+      throw new Error(`CalDAV PUT HTTP ${response.status}`);
+    }
+    const etag = response.headers.get("etag");
+    return etag?.replace(/^"|"$/g, "") ?? null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+export async function calDavDeleteResource(
+  resourceUrl: string,
+  username: string,
+  password: string,
+  ifMatchEtag?: string | null,
 ): Promise<void> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   try {
+    const headers: Record<string, string> = {
+      Authorization: basicAuthHeader(username, password),
+    };
+    if (ifMatchEtag) {
+      headers["If-Match"] = ifMatchEtag;
+    }
     const response = await fetch(resourceUrl, {
-      method: "PUT",
-      headers: {
-        Authorization: basicAuthHeader(username, password),
-        "Content-Type": "text/calendar; charset=utf-8",
-      },
-      body: icsBody,
+      method: "DELETE",
+      headers,
       signal: controller.signal,
     });
-    if (response.status !== 201 && response.status !== 204 && response.status !== 200) {
-      throw new Error(`CalDAV PUT HTTP ${response.status}`);
+    if (response.status === 404) {
+      return;
+    }
+    if (response.status === 412) {
+      throw new Error("CalDAV silme ETag uyuşmazlığı (412).");
+    }
+    if (
+      response.status !== 200 &&
+      response.status !== 204 &&
+      response.status !== 202
+    ) {
+      throw new Error(`CalDAV DELETE HTTP ${response.status}`);
     }
   } finally {
     clearTimeout(timer);

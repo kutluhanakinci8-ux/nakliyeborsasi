@@ -15,6 +15,7 @@ import {
 import {
   calDavCalendarQuery,
   calDavPropfind,
+  calDavDeleteResource,
   calDavPutIcs,
   joinCalDavResourceUrl,
 } from "./MailCalDavHttp";
@@ -276,12 +277,49 @@ export class MailCalendarCalDavService {
             account.calendarUrl,
             `${externalUid.replace(/[@/]/g, "_")}.ics`,
           );
-    await calDavPutIcs(resourceHref, account.username, password, ics);
+    const etag = await calDavPutIcs(
+      resourceHref,
+      account.username,
+      password,
+      ics,
+      event.caldavAccountId === accountId ? event.caldavEtag : null,
+    );
     event.caldavAccountId = accountId;
     event.caldavResourceHref = resourceHref;
     event.externalUid = externalUid;
+    if (etag) {
+      event.caldavEtag = etag;
+    }
     await this.eventRepository.save(event);
     return { resourceHref, externalUid };
+  }
+
+  public async deleteRemoteForEvent(
+    event: MailCalendarEventEntity,
+  ): Promise<void> {
+    if (!event.caldavAccountId || !event.caldavResourceHref) {
+      return;
+    }
+    const account = await this.accountRepository.findOne({
+      where: { id: event.caldavAccountId, organizationId: event.organizationId },
+    });
+    if (!account || !account.writeEnabled) {
+      return;
+    }
+    const password = decryptCalendarCredential(
+      account.passwordCiphertext,
+      this.configService,
+    );
+    try {
+      await calDavDeleteResource(
+        event.caldavResourceHref,
+        account.username,
+        password,
+        event.caldavEtag,
+      );
+    } catch {
+      // Yerel silme devam etsin; sunucu hatası ingest'i bloklamasın.
+    }
   }
 
   private async syncAccountRow(
