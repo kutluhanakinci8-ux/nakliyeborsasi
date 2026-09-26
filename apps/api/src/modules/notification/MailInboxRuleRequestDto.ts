@@ -1,3 +1,4 @@
+import { Type } from "class-transformer";
 import {
   ArrayMaxSize,
   ArrayMinSize,
@@ -8,7 +9,44 @@ import {
   IsUUID,
   MaxLength,
   ValidateIf,
+  ValidateNested,
 } from "class-validator";
+
+export class MailInboxRuleConditionGroupRequestDto {
+  @IsBoolean()
+  public matchAny!: boolean;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(320)
+  public fromContains?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  public subjectContains?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(320)
+  public toContains?: string | null;
+
+  @IsOptional()
+  @IsBoolean()
+  public requireAttachment?: boolean;
+}
+
+export class MailInboxRuleConditionGroupsRequestDto {
+  @IsBoolean()
+  public matchAnyBetweenGroups!: boolean;
+
+  @IsArray()
+  @ArrayMinSize(1)
+  @ArrayMaxSize(3)
+  @ValidateNested({ each: true })
+  @Type(() => MailInboxRuleConditionGroupRequestDto)
+  public groups!: MailInboxRuleConditionGroupRequestDto[];
+}
 
 export class CreateMailInboxRuleRequestDto {
   @IsString()
@@ -62,6 +100,11 @@ export class CreateMailInboxRuleRequestDto {
   @IsOptional()
   @IsBoolean()
   public enabled?: boolean;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => MailInboxRuleConditionGroupsRequestDto)
+  public conditionGroups?: MailInboxRuleConditionGroupsRequestDto | null;
 }
 
 export class ReorderMailInboxRulesRequestDto {
@@ -125,4 +168,9 @@ export class UpdateMailInboxRuleRequestDto {
   @IsOptional()
   @IsBoolean()
   public enabled?: boolean;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => MailInboxRuleConditionGroupsRequestDto)
+  public conditionGroups?: MailInboxRuleConditionGroupsRequestDto | null;
 }

@@ -12,7 +12,40 @@ import {
   updateInboxRule,
   type MailCustomFolder,
   type MailInboxRule,
+  type MailInboxRuleConditionGroup,
+  type MailInboxRuleConditionGroups,
 } from "@/lib/mailApi";
+
+const emptyGroup = (): MailInboxRuleConditionGroup => ({
+  matchAny: false,
+  fromContains: "",
+  subjectContains: "",
+  toContains: "",
+  requireAttachment: false,
+});
+
+function groupSummary(group: MailInboxRuleConditionGroup): string {
+  const parts: string[] = [];
+  if (group.fromContains?.trim()) {
+    parts.push(`gönderen: ${group.fromContains.trim()}`);
+  }
+  if (group.subjectContains?.trim()) {
+    parts.push(`konu: ${group.subjectContains.trim()}`);
+  }
+  if (group.toContains?.trim()) {
+    parts.push(`alıcı: ${group.toContains.trim()}`);
+  }
+  if (group.requireAttachment) {
+    parts.push("ek");
+  }
+  const inner = parts.length ? parts.join(", ") : "—";
+  return group.matchAny ? `(${inner} — VEYA)` : `(${inner} — VE)`;
+}
+
+function formatConditionGroups(groups: MailInboxRuleConditionGroups): string {
+  const between = groups.matchAnyBetweenGroups ? " VEYA " : " VE ";
+  return groups.groups.map(groupSummary).join(between);
+}
 
 type Props = {
   accessToken: string;
@@ -34,6 +67,11 @@ export function MailRulesPanel({ accessToken }: Props) {
   const [actionMarkRead, setActionMarkRead] = useState(false);
   const [actionTrash, setActionTrash] = useState(false);
   const [actionFolderId, setActionFolderId] = useState("");
+  const [useConditionGroups, setUseConditionGroups] = useState(false);
+  const [matchAnyBetweenGroups, setMatchAnyBetweenGroups] = useState(false);
+  const [conditionGroups, setConditionGroups] = useState<
+    MailInboxRuleConditionGroup[]
+  >([emptyGroup(), emptyGroup()]);
 
   async function reload() {
     const [rulesData, folderData] = await Promise.all([
@@ -48,16 +86,49 @@ export function MailRulesPanel({ accessToken }: Props) {
     void reload().catch(() => setError("Kurallar yüklenemedi."));
   }, [accessToken]);
 
+  function buildConditionGroupsPayload(): MailInboxRuleConditionGroups | null {
+    if (!useConditionGroups) {
+      return null;
+    }
+    const groups = conditionGroups
+      .map((g) => ({
+        matchAny: g.matchAny,
+        fromContains: g.fromContains?.trim() || null,
+        subjectContains: g.subjectContains?.trim() || null,
+        toContains: g.toContains?.trim() || null,
+        requireAttachment: Boolean(g.requireAttachment),
+      }))
+      .filter(
+        (g) =>
+          g.fromContains ||
+          g.subjectContains ||
+          g.toContains ||
+          g.requireAttachment,
+      );
+    if (groups.length === 0) {
+      return null;
+    }
+    return { matchAnyBetweenGroups, groups };
+  }
+
   async function onCreate() {
     setError("");
     try {
+      const groupsPayload = buildConditionGroupsPayload();
       await createInboxRule(accessToken, {
         name: name.trim(),
-        fromContains: fromContains.trim() || undefined,
-        subjectContains: subjectContains.trim() || undefined,
-        toContains: toContains.trim() || undefined,
-        requireAttachment,
-        matchAnyCondition,
+        fromContains: useConditionGroups
+          ? undefined
+          : fromContains.trim() || undefined,
+        subjectContains: useConditionGroups
+          ? undefined
+          : subjectContains.trim() || undefined,
+        toContains: useConditionGroups
+          ? undefined
+          : toContains.trim() || undefined,
+        requireAttachment: useConditionGroups ? undefined : requireAttachment,
+        matchAnyCondition: useConditionGroups ? undefined : matchAnyCondition,
+        conditionGroups: groupsPayload,
         actionStar,
         actionArchive,
         actionMarkRead,
@@ -70,6 +141,9 @@ export function MailRulesPanel({ accessToken }: Props) {
       setToContains("");
       setRequireAttachment(false);
       setMatchAnyCondition(false);
+      setUseConditionGroups(false);
+      setMatchAnyBetweenGroups(false);
+      setConditionGroups([emptyGroup(), emptyGroup()]);
       setActionStar(false);
       setActionArchive(false);
       setActionMarkRead(false);
@@ -145,6 +219,9 @@ export function MailRulesPanel({ accessToken }: Props) {
                 {rule.toContains ? ` · Alıcı: “${rule.toContains}”` : null}
                 {rule.requireAttachment ? " · Ek var" : null}
                 {rule.matchAnyCondition ? " · Koşul: VEYA" : null}
+                {rule.conditionGroups
+                  ? ` · Gruplar: ${formatConditionGroups(rule.conditionGroups)}`
+                  : null}
               </div>
               <div className="mail-rules-meta">
                 {rule.actionStar ? "★ Yıldızla" : null}
@@ -220,37 +297,119 @@ export function MailRulesPanel({ accessToken }: Props) {
         value={name}
         onChange={(e) => setName(e.target.value)}
       />
-      <input
-        placeholder="Gönderen içerir (| ile alternatif: destek|support)"
-        value={fromContains}
-        onChange={(e) => setFromContains(e.target.value)}
-      />
-      <input
-        placeholder="Konu içerir (| ile alternatif)"
-        value={subjectContains}
-        onChange={(e) => setSubjectContains(e.target.value)}
-      />
-      <input
-        placeholder="Alıcı (To) içerir (| ile alternatif)"
-        value={toContains}
-        onChange={(e) => setToContains(e.target.value)}
-      />
       <label>
         <input
           type="checkbox"
-          checked={matchAnyCondition}
-          onChange={(e) => setMatchAnyCondition(e.target.checked)}
+          checked={useConditionGroups}
+          onChange={(e) => setUseConditionGroups(e.target.checked)}
         />
-        Koşullardan herhangi biri (VEYA) — varsayılan: tümü (VE)
+        Gelişmiş koşul grupları (en fazla 2 grup)
       </label>
-      <label>
-        <input
-          type="checkbox"
-          checked={requireAttachment}
-          onChange={(e) => setRequireAttachment(e.target.checked)}
-        />
-        Yalnızca ekli postalar
-      </label>
+      {useConditionGroups ? (
+        <div className="mail-rules-groups">
+          <label>
+            <input
+              type="checkbox"
+              checked={matchAnyBetweenGroups}
+              onChange={(e) => setMatchAnyBetweenGroups(e.target.checked)}
+            />
+            Gruplar arası VEYA (kapalı = tüm gruplar sağlanmalı)
+          </label>
+          {conditionGroups.map((group, gi) => (
+            <fieldset key={gi} className="mail-rules-group">
+              <legend>Grup {gi + 1}</legend>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={group.matchAny}
+                  onChange={(e) => {
+                    const next = [...conditionGroups];
+                    next[gi] = { ...group, matchAny: e.target.checked };
+                    setConditionGroups(next);
+                  }}
+                />
+                Bu grupta VEYA
+              </label>
+              <input
+                placeholder="Gönderen (| alternatif)"
+                value={group.fromContains ?? ""}
+                onChange={(e) => {
+                  const next = [...conditionGroups];
+                  next[gi] = { ...group, fromContains: e.target.value };
+                  setConditionGroups(next);
+                }}
+              />
+              <input
+                placeholder="Konu (| alternatif)"
+                value={group.subjectContains ?? ""}
+                onChange={(e) => {
+                  const next = [...conditionGroups];
+                  next[gi] = { ...group, subjectContains: e.target.value };
+                  setConditionGroups(next);
+                }}
+              />
+              <input
+                placeholder="Alıcı (| alternatif)"
+                value={group.toContains ?? ""}
+                onChange={(e) => {
+                  const next = [...conditionGroups];
+                  next[gi] = { ...group, toContains: e.target.value };
+                  setConditionGroups(next);
+                }}
+              />
+              <label>
+                <input
+                  type="checkbox"
+                  checked={Boolean(group.requireAttachment)}
+                  onChange={(e) => {
+                    const next = [...conditionGroups];
+                    next[gi] = {
+                      ...group,
+                      requireAttachment: e.target.checked,
+                    };
+                    setConditionGroups(next);
+                  }}
+                />
+                Ek zorunlu
+              </label>
+            </fieldset>
+          ))}
+        </div>
+      ) : (
+        <>
+          <input
+            placeholder="Gönderen içerir (| ile alternatif: destek|support)"
+            value={fromContains}
+            onChange={(e) => setFromContains(e.target.value)}
+          />
+          <input
+            placeholder="Konu içerir (| ile alternatif)"
+            value={subjectContains}
+            onChange={(e) => setSubjectContains(e.target.value)}
+          />
+          <input
+            placeholder="Alıcı (To) içerir (| ile alternatif)"
+            value={toContains}
+            onChange={(e) => setToContains(e.target.value)}
+          />
+          <label>
+            <input
+              type="checkbox"
+              checked={matchAnyCondition}
+              onChange={(e) => setMatchAnyCondition(e.target.checked)}
+            />
+            Koşullardan herhangi biri (VEYA) — varsayılan: tümü (VE)
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={requireAttachment}
+              onChange={(e) => setRequireAttachment(e.target.checked)}
+            />
+            Yalnızca ekli postalar
+          </label>
+        </>
+      )}
       <label>
         <input
           type="checkbox"

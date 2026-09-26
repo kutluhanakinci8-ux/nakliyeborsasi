@@ -10,6 +10,14 @@ import { MailInboundMessageEntity } from "../../infrastructure/database/entities
 import { MailMailboxEntity } from "../../infrastructure/database/entities/MailMailboxEntity";
 import { MailCustomFolderService } from "./MailCustomFolderService";
 import { MailImapMaildirService } from "./MailImapMaildirService";
+import {
+  conditionGroupsAreValid,
+  groupHasAnyCondition,
+  parseConditionGroupsJson,
+  serializeConditionGroups,
+  type MailInboxRuleConditionGroup,
+  type MailInboxRuleConditionGroups,
+} from "./MailInboxRuleConditionGroups";
 
 const MAX_RULES = 20;
 const PREVIEW_SCAN_LIMIT = 500;
@@ -25,6 +33,7 @@ export type MailInboxRuleDto = {
   toContains: string | null;
   requireAttachment: boolean;
   matchAnyCondition: boolean;
+  conditionGroups: MailInboxRuleConditionGroups | null;
   actionStar: boolean;
   actionCustomFolderId: string | null;
   actionArchive: boolean;
@@ -64,6 +73,7 @@ export class MailInboxRuleService {
       toContains?: string | null;
       requireAttachment?: boolean;
       matchAnyCondition?: boolean;
+      conditionGroups?: MailInboxRuleConditionGroups | null;
       actionStar?: boolean;
       actionCustomFolderId?: string | null;
       actionArchive?: boolean;
@@ -96,6 +106,9 @@ export class MailInboxRuleService {
         toContains: this.normalizeOptional(input.toContains),
         requireAttachment: Boolean(input.requireAttachment),
         matchAnyCondition: Boolean(input.matchAnyCondition),
+        conditionGroupsJson: serializeConditionGroups(
+          input.conditionGroups ?? null,
+        ),
         actionStar: Boolean(input.actionStar),
         actionCustomFolderId: input.actionCustomFolderId ?? null,
         actionArchive: Boolean(input.actionArchive),
@@ -116,6 +129,7 @@ export class MailInboxRuleService {
       toContains?: string | null;
       requireAttachment?: boolean;
       matchAnyCondition?: boolean;
+      conditionGroups?: MailInboxRuleConditionGroups | null;
       actionStar?: boolean;
       actionCustomFolderId?: string | null;
       actionArchive?: boolean;
@@ -143,6 +157,10 @@ export class MailInboxRuleService {
         input.requireAttachment ?? row.requireAttachment,
       matchAnyCondition:
         input.matchAnyCondition ?? row.matchAnyCondition,
+      conditionGroups:
+        input.conditionGroups !== undefined
+          ? input.conditionGroups
+          : parseConditionGroupsJson(row.conditionGroupsJson),
       actionStar: input.actionStar ?? row.actionStar,
       actionCustomFolderId:
         input.actionCustomFolderId !== undefined
@@ -166,6 +184,9 @@ export class MailInboxRuleService {
     row.toContains = merged.toContains;
     row.requireAttachment = merged.requireAttachment;
     row.matchAnyCondition = merged.matchAnyCondition;
+    row.conditionGroupsJson = serializeConditionGroups(
+      merged.conditionGroups ?? null,
+    );
     row.actionStar = merged.actionStar;
     row.actionCustomFolderId = merged.actionCustomFolderId;
     row.actionArchive = merged.actionArchive;
@@ -345,6 +366,10 @@ export class MailInboxRuleService {
     rule: MailInboxRuleEntity,
     message: MailInboundMessageEntity,
   ): boolean {
+    const groups = parseConditionGroupsJson(rule.conditionGroupsJson);
+    if (groups && conditionGroupsAreValid(groups)) {
+      return this.matchesConditionGroups(groups, message);
+    }
     const fromNeedle = rule.fromContains?.toLowerCase() ?? "";
     const subjectNeedle = rule.subjectContains?.toLowerCase() ?? "";
     const toNeedle = rule.toContains?.toLowerCase() ?? "";
@@ -392,6 +417,7 @@ export class MailInboxRuleService {
     subjectContains?: string | null;
     toContains?: string | null;
     requireAttachment?: boolean;
+    conditionGroups?: MailInboxRuleConditionGroups | null;
     actionStar?: boolean;
     actionCustomFolderId?: string | null;
     actionArchive?: boolean;
@@ -399,13 +425,17 @@ export class MailInboxRuleService {
     actionTrash?: boolean;
     name?: string;
   }): void {
-    const from = this.normalizeOptional(input.fromContains);
-    const subject = this.normalizeOptional(input.subjectContains);
-    const to = this.normalizeOptional(input.toContains);
-    if (!from && !subject && !to && !input.requireAttachment) {
-      throw new BadRequestException(
-        "En az bir koşul gerekli (gönderen, alıcı, konu veya ek).",
-      );
+    if (input.conditionGroups && conditionGroupsAreValid(input.conditionGroups)) {
+      // Gelişmiş gruplar yeterli.
+    } else {
+      const from = this.normalizeOptional(input.fromContains);
+      const subject = this.normalizeOptional(input.subjectContains);
+      const to = this.normalizeOptional(input.toContains);
+      if (!from && !subject && !to && !input.requireAttachment) {
+        throw new BadRequestException(
+          "En az bir koşul gerekli (gönderen, alıcı, konu, ek veya koşul grupları).",
+        );
+      }
     }
     if (
       !input.actionStar &&
@@ -421,6 +451,52 @@ export class MailInboxRuleService {
     if (!input.name?.trim()) {
       throw new BadRequestException("Kural adı gerekli.");
     }
+  }
+
+  private matchesConditionGroups(
+    root: MailInboxRuleConditionGroups,
+    message: MailInboundMessageEntity,
+  ): boolean {
+    const active = root.groups.filter(groupHasAnyCondition);
+    if (active.length === 0) {
+      return false;
+    }
+    const results = active.map((group) =>
+      this.matchesSingleGroup(group, message),
+    );
+    return root.matchAnyBetweenGroups
+      ? results.some(Boolean)
+      : results.every(Boolean);
+  }
+
+  private matchesSingleGroup(
+    group: MailInboxRuleConditionGroup,
+    message: MailInboundMessageEntity,
+  ): boolean {
+    const fromNeedle = group.fromContains?.toLowerCase() ?? "";
+    const subjectNeedle = group.subjectContains?.toLowerCase() ?? "";
+    const toNeedle = group.toContains?.toLowerCase() ?? "";
+    const fromOk =
+      !fromNeedle ||
+      this.fieldMatchesAlternatives(message.fromAddress, fromNeedle);
+    const subjectOk =
+      !subjectNeedle ||
+      this.fieldMatchesAlternatives(message.subject, subjectNeedle);
+    const toList = message.toRecipients ?? [];
+    const toOk =
+      !toNeedle ||
+      toList.some((addr) => this.fieldMatchesAlternatives(addr, toNeedle));
+    const hasAttachment = (message.attachments?.length ?? 0) > 0;
+    if (group.matchAny) {
+      const parts: boolean[] = [];
+      if (fromNeedle) parts.push(fromOk);
+      if (subjectNeedle) parts.push(subjectOk);
+      if (toNeedle) parts.push(toOk);
+      if (group.requireAttachment) parts.push(hasAttachment);
+      return parts.length > 0 && parts.some(Boolean);
+    }
+    const attachmentOk = !group.requireAttachment || hasAttachment;
+    return fromOk && subjectOk && toOk && attachmentOk;
   }
 
   private fieldMatchesAlternatives(haystack: string, needle: string): boolean {
@@ -464,6 +540,7 @@ export class MailInboxRuleService {
       toContains: row.toContains,
       requireAttachment: row.requireAttachment,
       matchAnyCondition: row.matchAnyCondition,
+      conditionGroups: parseConditionGroupsJson(row.conditionGroupsJson),
       actionStar: row.actionStar,
       actionCustomFolderId: row.actionCustomFolderId,
       actionArchive: row.actionArchive,

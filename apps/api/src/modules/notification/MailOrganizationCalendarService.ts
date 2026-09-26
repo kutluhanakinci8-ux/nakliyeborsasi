@@ -29,6 +29,9 @@ export type MailCalendarEventDto = {
   recurrenceRule: string | null;
   recurrenceUntil: string | null;
   isRecurrenceOccurrence: boolean;
+  isOccurrenceOverride: boolean;
+  /** Tekrar örneği anahtarı (istisna PATCH/DELETE için; override sonrası da sabit). */
+  occurrenceAnchorAt: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -67,7 +70,7 @@ export class MailOrganizationCalendarService {
     const recurringIds = rows
       .filter((row) => row.recurrenceRule)
       .map((row) => row.id);
-    const cancelledKeys = await this.loadCancelledOccurrenceKeys(
+    const occurrenceExceptions = await this.loadOccurrenceExceptions(
       organizationId,
       recurringIds,
     );
@@ -87,19 +90,39 @@ export class MailOrganizationCalendarService {
       });
       for (let i = 0; i < occurrences.length; i += 1) {
         const occ = occurrences[i]!;
-        if (
-          cancelledKeys.has(
-            this.occurrenceKey(row.id, occ.startsAt.getTime()),
-          )
-        ) {
+        const ex = occurrenceExceptions.get(
+          this.occurrenceKey(row.id, occ.startsAt.getTime()),
+        );
+        if (ex?.cancelled) {
           continue;
+        }
+        let occStart = occ.startsAt;
+        let occEnd = occ.endsAt;
+        let occTitle = row.title;
+        let occAllDay = row.allDay;
+        let isOverride = false;
+        if (ex?.overrideStartsAt && ex.overrideEndsAt) {
+          occStart = ex.overrideStartsAt;
+          occEnd = ex.overrideEndsAt;
+          occTitle = ex.overrideTitle?.trim() || row.title;
+          occAllDay = ex.overrideAllDay ?? row.allDay;
+          isOverride = true;
+        } else if (ex?.overrideTitle?.trim()) {
+          occTitle = ex.overrideTitle.trim();
+          isOverride = true;
         }
         expanded.push(
           this.toDto(
             row,
             i > 0 || occ.startsAt.getTime() !== row.startsAt.getTime(),
-            occ.startsAt,
-            occ.endsAt,
+            occStart,
+            occEnd,
+            {
+              title: occTitle,
+              allDay: occAllDay,
+              isOccurrenceOverride: isOverride,
+              occurrenceAnchorAt: occ.startsAt.toISOString(),
+            },
           ),
         );
       }
@@ -209,6 +232,73 @@ export class MailOrganizationCalendarService {
     return this.toDto(row, false);
   }
 
+  public async patchOccurrence(
+    organizationId: string,
+    eventId: string,
+    occurrenceStartsAt: Date,
+    input: {
+      title?: string;
+      startsAt?: Date;
+      endsAt?: Date;
+      allDay?: boolean;
+    },
+  ): Promise<MailCalendarEventDto> {
+    const row = await this.assertEvent(organizationId, eventId);
+    if (!row.recurrenceRule) {
+      throw new BadRequestException("Yalnızca tekrarlı etkinlik örneği düzenlenir.");
+    }
+    const occ = new Date(occurrenceStartsAt.getTime());
+    if (Number.isNaN(occ.getTime())) {
+      throw new BadRequestException("occurrenceStartsAt geçersiz.");
+    }
+    const startsAt = input.startsAt ?? occ;
+    const endsAt = input.endsAt ?? new Date(row.endsAt.getTime() - row.startsAt.getTime() + startsAt.getTime());
+    this.validateEventInput({
+      title: input.title?.trim() || row.title,
+      startsAt,
+      endsAt,
+    });
+    let existing = await this.recurrenceExceptionRepository.findOne({
+      where: {
+        organizationId,
+        masterEventId: row.id,
+        occurrenceStartsAt: occ,
+      },
+    });
+    if (!existing) {
+      existing = this.recurrenceExceptionRepository.create({
+        organizationId,
+        masterEventId: row.id,
+        occurrenceStartsAt: occ,
+        cancelled: false,
+      });
+    }
+    existing.cancelled = false;
+    if (input.title !== undefined) {
+      existing.overrideTitle = input.title.trim() || null;
+    }
+    if (input.startsAt !== undefined) {
+      existing.overrideStartsAt = input.startsAt;
+    }
+    if (input.endsAt !== undefined) {
+      existing.overrideEndsAt = input.endsAt;
+    }
+    if (input.allDay !== undefined) {
+      existing.overrideAllDay = input.allDay;
+    }
+    if (!existing.overrideStartsAt) {
+      existing.overrideStartsAt = startsAt;
+      existing.overrideEndsAt = endsAt;
+    }
+    await this.recurrenceExceptionRepository.save(existing);
+    return this.toDto(row, true, existing.overrideStartsAt!, existing.overrideEndsAt!, {
+      title: existing.overrideTitle ?? row.title,
+      allDay: existing.overrideAllDay ?? row.allDay,
+      isOccurrenceOverride: true,
+      occurrenceAnchorAt: occ.toISOString(),
+    });
+  }
+
   public async delete(
     organizationId: string,
     eventId: string,
@@ -254,27 +344,27 @@ export class MailOrganizationCalendarService {
     return `${masterId}:${startsAtMs}`;
   }
 
-  private async loadCancelledOccurrenceKeys(
+  private async loadOccurrenceExceptions(
     organizationId: string,
     masterEventIds: string[],
-  ): Promise<Set<string>> {
+  ): Promise<Map<string, MailCalendarRecurrenceExceptionEntity>> {
     if (masterEventIds.length === 0) {
-      return new Set();
+      return new Map();
     }
     const rows = await this.recurrenceExceptionRepository.find({
       where: {
         organizationId,
         masterEventId: In(masterEventIds),
-        cancelled: true,
       },
     });
-    const set = new Set<string>();
+    const map = new Map<string, MailCalendarRecurrenceExceptionEntity>();
     for (const row of rows) {
-      set.add(
+      map.set(
         this.occurrenceKey(row.masterEventId, row.occurrenceStartsAt.getTime()),
+        row,
       );
     }
-    return set;
+    return map;
   }
 
   public async exportIcs(
@@ -404,18 +494,26 @@ export class MailOrganizationCalendarService {
     isRecurrenceOccurrence: boolean,
     startsAt?: Date,
     endsAt?: Date,
+    overrides?: {
+      title?: string;
+      allDay?: boolean;
+      isOccurrenceOverride?: boolean;
+      occurrenceAnchorAt?: string | null;
+    },
   ): MailCalendarEventDto {
     return {
       id: row.id,
-      title: row.title,
+      title: overrides?.title ?? row.title,
       description: row.description,
       location: row.location,
       startsAt: (startsAt ?? row.startsAt).toISOString(),
       endsAt: (endsAt ?? row.endsAt).toISOString(),
-      allDay: row.allDay,
+      allDay: overrides?.allDay ?? row.allDay,
       recurrenceRule: row.recurrenceRule,
       recurrenceUntil: row.recurrenceUntil?.toISOString() ?? null,
       isRecurrenceOccurrence,
+      isOccurrenceOverride: Boolean(overrides?.isOccurrenceOverride),
+      occurrenceAnchorAt: overrides?.occurrenceAnchorAt ?? null,
       createdAt: row.createdAt.toISOString(),
       updatedAt: row.updatedAt.toISOString(),
     };

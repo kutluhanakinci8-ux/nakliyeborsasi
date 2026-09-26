@@ -7,13 +7,15 @@ import {
   downloadCalendarIcs,
   fetchCalendarEvents,
   importCalendarIcs,
+  patchCalendarOccurrence,
   type MailCalendarEvent,
 } from "@/lib/mailApi";
 import {
   buildMonthGrid,
-  dayKeyFromIso,
+  computeWeekMultiDayBars,
   enumerateDayKeysBetween,
   eventOverlapsDayKey,
+  splitGridIntoWeeks,
 } from "./mailCalendarGrid";
 import { MailCalendarFeedsPanel } from "./MailCalendarFeedsPanel";
 import { MailCalendarCalDavPanel } from "./MailCalendarCalDavPanel";
@@ -31,6 +33,16 @@ function monthBounds(year: number, month: number) {
   const from = new Date(Date.UTC(year, month, 1, 0, 0, 0));
   const to = new Date(Date.UTC(year, month + 1, 0, 23, 59, 59, 999));
   return { from: from.toISOString(), to: to.toISOString() };
+}
+
+function toDatetimeLocalValue(iso: string): string {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function occurrenceAnchor(ev: MailCalendarEvent): string {
+  return ev.occurrenceAnchorAt ?? ev.startsAt;
 }
 
 export function MailCalendarPanel({ accessToken, onToast }: Props) {
@@ -51,9 +63,16 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
   const [caldavPushAccountId, setCaldavPushAccountId] = useState<string | null>(
     null,
   );
+  const [editingOccurrence, setEditingOccurrence] =
+    useState<MailCalendarEvent | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editStartLocal, setEditStartLocal] = useState("");
+  const [editEndLocal, setEditEndLocal] = useState("");
+  const [editAllDay, setEditAllDay] = useState(false);
 
   const bounds = useMemo(() => monthBounds(year, month), [year, month]);
   const grid = useMemo(() => buildMonthGrid(year, month), [year, month]);
+  const weeks = useMemo(() => splitGridIntoWeeks(grid), [grid]);
   const eventDays = useMemo(() => {
     const set = new Set<string>();
     for (const ev of events) {
@@ -128,6 +147,42 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
     setYear(d.getFullYear());
     setMonth(d.getMonth());
     setSelectedDay(null);
+  }
+
+  function beginEditOccurrence(ev: MailCalendarEvent) {
+    setEditingOccurrence(ev);
+    setEditTitle(ev.title);
+    setEditStartLocal(toDatetimeLocalValue(ev.startsAt));
+    setEditEndLocal(toDatetimeLocalValue(ev.endsAt));
+    setEditAllDay(ev.allDay);
+  }
+
+  async function onSaveOccurrenceEdit() {
+    if (!editingOccurrence) {
+      return;
+    }
+    const startsAt = new Date(editStartLocal);
+    const endsAt = new Date(editEndLocal);
+    if (Number.isNaN(startsAt.getTime()) || Number.isNaN(endsAt.getTime())) {
+      onToast("Geçersiz tarih.");
+      return;
+    }
+    try {
+      await patchCalendarOccurrence(accessToken, editingOccurrence.id, {
+        occurrenceStartsAt: occurrenceAnchor(editingOccurrence),
+        title: editTitle.trim() || undefined,
+        startsAt: startsAt.toISOString(),
+        endsAt: endsAt.toISOString(),
+        allDay: editAllDay,
+      });
+      setEditingOccurrence(null);
+      onToast("Bu tekrar güncellendi.");
+      void load();
+    } catch (error) {
+      onToast(
+        error instanceof Error ? error.message : "Güncellenemedi.",
+      );
+    }
   }
 
   async function onAddEvent() {
@@ -227,36 +282,63 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
         </div>
       </header>
 
-      <div className="mail-cal-grid" role="grid" aria-label="Ay görünümü">
-        {["Pt", "Sa", "Ça", "Pe", "Cu", "Ct", "Pz"].map((label) => (
-          <div key={label} className="mail-cal-weekday" role="columnheader">
-            {label}
-          </div>
-        ))}
-        {grid.map((cell) => {
-          const hasEvents = eventDays.has(cell.key);
-          const multiDay = multiDayKeys.has(cell.key);
-          const selected = selectedDay === cell.key;
+      <div className="mail-cal-month" aria-label="Ay görünümü">
+        <div className="mail-cal-grid mail-cal-grid-head" role="row">
+          {["Pt", "Sa", "Ça", "Pe", "Cu", "Ct", "Pz"].map((label) => (
+            <div key={label} className="mail-cal-weekday" role="columnheader">
+              {label}
+            </div>
+          ))}
+        </div>
+        {weeks.map((week, weekIndex) => {
+          const bars = computeWeekMultiDayBars(week, events);
           return (
-            <button
-              key={cell.key}
-              type="button"
-              role="gridcell"
-              className={[
-                "mail-cal-day",
-                cell.inMonth ? "" : "muted",
-                hasEvents ? "has-events" : "",
-                multiDay ? "multi-day-span" : "",
-                selected ? "selected" : "",
-              ]
-                .filter(Boolean)
-                .join(" ")}
-              onClick={() =>
-                setSelectedDay((prev) => (prev === cell.key ? null : cell.key))
-              }
-            >
-              {cell.day}
-            </button>
+            <div key={weekIndex} className="mail-cal-week">
+              {bars.length > 0 ? (
+                <div className="mail-cal-week-bars" aria-hidden="true">
+                  {bars.map((bar) => (
+                    <div
+                      key={bar.eventKey}
+                      className="mail-cal-event-bar"
+                      style={{
+                        gridColumn: `${bar.startCol + 1} / ${bar.endCol + 2}`,
+                      }}
+                      title={bar.title}
+                    />
+                  ))}
+                </div>
+              ) : null}
+              <div className="mail-cal-grid mail-cal-week-days" role="row">
+                {week.map((cell) => {
+                  const hasEvents = eventDays.has(cell.key);
+                  const multiDay = multiDayKeys.has(cell.key);
+                  const selected = selectedDay === cell.key;
+                  return (
+                    <button
+                      key={cell.key}
+                      type="button"
+                      role="gridcell"
+                      className={[
+                        "mail-cal-day",
+                        cell.inMonth ? "" : "muted",
+                        hasEvents ? "has-events" : "",
+                        multiDay ? "multi-day-span" : "",
+                        selected ? "selected" : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
+                      onClick={() =>
+                        setSelectedDay((prev) =>
+                          prev === cell.key ? null : cell.key,
+                        )
+                      }
+                    >
+                      {cell.day}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           );
         })}
       </div>
@@ -323,6 +405,48 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
         </button>
       </div>
 
+      {editingOccurrence ? (
+        <div className="mail-cal-occ-edit">
+          <h3>Bu tekrarı düzenle</h3>
+          <input
+            value={editTitle}
+            onChange={(e) => setEditTitle(e.target.value)}
+            aria-label="Başlık"
+          />
+          <input
+            type="datetime-local"
+            value={editStartLocal}
+            onChange={(e) => setEditStartLocal(e.target.value)}
+            aria-label="Başlangıç"
+          />
+          <input
+            type="datetime-local"
+            value={editEndLocal}
+            onChange={(e) => setEditEndLocal(e.target.value)}
+            aria-label="Bitiş"
+          />
+          <label>
+            <input
+              type="checkbox"
+              checked={editAllDay}
+              onChange={(e) => setEditAllDay(e.target.checked)}
+            />
+            Tüm gün
+          </label>
+          <div className="mail-d6-actions">
+            <button type="button" onClick={() => void onSaveOccurrenceEdit()}>
+              Kaydet
+            </button>
+            <button
+              type="button"
+              onClick={() => setEditingOccurrence(null)}
+            >
+              İptal
+            </button>
+          </div>
+        </div>
+      ) : null}
+
       {loading ? <p>Yükleniyor…</p> : null}
       <ul className="mail-d6-list">
         {visibleEvents.map((ev) => (
@@ -331,6 +455,7 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
               <strong>
                 {ev.title}
                 {ev.recurrenceRule ? " ↻" : ""}
+                {ev.isOccurrenceOverride ? " ✎" : ""}
               </strong>
               <div className="mail-d6-meta">
                 {ev.allDay
@@ -362,29 +487,37 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
                 </button>
               ) : null}
               {ev.recurrenceRule ? (
-                <button
-                  type="button"
-                  onClick={() =>
-                    void deleteCalendarEvent(
-                      accessToken,
-                      ev.id,
-                      ev.startsAt,
-                    )
-                      .then(() => {
-                        onToast("Bu tekrar kaldırıldı.");
-                        void load();
-                      })
-                      .catch((err: unknown) => {
-                        onToast(
-                          err instanceof Error
-                            ? err.message
-                            : "Kaldırılamadı.",
-                        );
-                      })
-                  }
-                >
-                  Bu tekrarı sil
-                </button>
+                <>
+                  <button
+                    type="button"
+                    onClick={() => beginEditOccurrence(ev)}
+                  >
+                    Bu tekrarı düzenle
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      void deleteCalendarEvent(
+                        accessToken,
+                        ev.id,
+                        occurrenceAnchor(ev),
+                      )
+                        .then(() => {
+                          onToast("Bu tekrar kaldırıldı.");
+                          void load();
+                        })
+                        .catch((err: unknown) => {
+                          onToast(
+                            err instanceof Error
+                              ? err.message
+                              : "Kaldırılamadı.",
+                          );
+                        })
+                    }
+                  >
+                    Bu tekrarı sil
+                  </button>
+                </>
               ) : null}
               <button
                 type="button"

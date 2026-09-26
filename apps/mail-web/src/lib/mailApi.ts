@@ -50,6 +50,19 @@ export type MailInboxListItem = {
   customFolderId?: string | null;
 };
 
+export type MailInboxRuleConditionGroup = {
+  matchAny: boolean;
+  fromContains?: string | null;
+  subjectContains?: string | null;
+  toContains?: string | null;
+  requireAttachment?: boolean;
+};
+
+export type MailInboxRuleConditionGroups = {
+  matchAnyBetweenGroups: boolean;
+  groups: MailInboxRuleConditionGroup[];
+};
+
 export type MailInboxRule = {
   id: string;
   name: string;
@@ -60,6 +73,7 @@ export type MailInboxRule = {
   toContains: string | null;
   requireAttachment: boolean;
   matchAnyCondition: boolean;
+  conditionGroups: MailInboxRuleConditionGroups | null;
   actionStar: boolean;
   actionCustomFolderId: string | null;
   actionArchive: boolean;
@@ -85,6 +99,7 @@ export async function createInboxRule(
     toContains?: string;
     requireAttachment?: boolean;
     matchAnyCondition?: boolean;
+    conditionGroups?: MailInboxRuleConditionGroups | null;
     actionStar?: boolean;
     actionCustomFolderId?: string | null;
     actionArchive?: boolean;
@@ -143,6 +158,7 @@ export async function updateInboxRule(
     toContains: string | null;
     requireAttachment: boolean;
     matchAnyCondition: boolean;
+    conditionGroups: MailInboxRuleConditionGroups | null;
     actionStar: boolean;
     actionCustomFolderId: string | null;
     actionArchive: boolean;
@@ -1139,6 +1155,8 @@ export type MailCalendarEvent = {
   recurrenceRule: string | null;
   recurrenceUntil: string | null;
   isRecurrenceOccurrence: boolean;
+  isOccurrenceOverride: boolean;
+  occurrenceAnchorAt: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -1182,6 +1200,24 @@ export async function createCalendarEvent(
     accessToken,
     "company/mail-inbox/calendar/events",
     { method: "POST", body: JSON.stringify(body) },
+  );
+}
+
+export async function patchCalendarOccurrence(
+  accessToken: string,
+  eventId: string,
+  body: {
+    occurrenceStartsAt: string;
+    title?: string;
+    startsAt?: string;
+    endsAt?: string;
+    allDay?: boolean;
+  },
+) {
+  return apiFetch<{ ok: true; event: MailCalendarEvent }>(
+    accessToken,
+    `company/mail-inbox/calendar/events/${eventId}/occurrence`,
+    { method: "PATCH", body: JSON.stringify(body) },
   );
 }
 

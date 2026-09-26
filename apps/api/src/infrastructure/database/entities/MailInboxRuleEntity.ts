@@ -40,6 +40,9 @@ export class MailInboxRuleEntity {
   @Column({ name: "match_any_condition", type: "boolean", default: false })
   public matchAnyCondition!: boolean;
 
+  @Column({ name: "condition_groups_json", type: "text", nullable: true })
+  public conditionGroupsJson!: string | null;
+
   @Column({ type: "boolean", default: false })
   public actionStar!: boolean;
 
