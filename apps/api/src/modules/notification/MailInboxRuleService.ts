@@ -266,10 +266,17 @@ export class MailInboxRuleService {
       subject: string;
       matchedBecause: string;
     }>;
+    nonMatchingSamples: Array<{
+      id: string;
+      fromAddress: string;
+      subject: string;
+      failedBecause: string;
+    }>;
   }> {
     const rule = await this.assertRule(organizationId, ruleId);
     const messages = await this.loadInboxCandidates(organizationId, PREVIEW_SCAN_LIMIT);
     const matched = messages.filter((message) => this.matches(rule, message));
+    const nonMatched = messages.filter((message) => !this.matches(rule, message));
     return {
       matchCount: matched.length,
       scanned: messages.length,
@@ -287,6 +294,12 @@ export class MailInboxRuleService {
         fromAddress: m.fromAddress,
         subject: m.subject,
         matchedBecause: this.explainMatch(rule, m),
+      })),
+      nonMatchingSamples: nonMatched.slice(0, 3).map((m) => ({
+        id: m.id,
+        fromAddress: m.fromAddress,
+        subject: m.subject,
+        failedBecause: this.explainNonMatch(rule, m),
       })),
     };
   }
@@ -376,6 +389,68 @@ export class MailInboxRuleService {
       changed = true;
     }
     return changed;
+  }
+
+  private explainNonMatch(
+    rule: MailInboxRuleEntity,
+    message: MailInboundMessageEntity,
+  ): string {
+    if (this.matches(rule, message)) {
+      return "";
+    }
+    const groups = parseConditionGroupsJson(rule.conditionGroupsJson);
+    if (groups && conditionGroupsAreValid(groups)) {
+      const active = groups.groups
+        .map((group, index) => ({ group, index }))
+        .filter(({ group }) => groupHasAnyCondition(group));
+      const failed = active
+        .filter(({ group }) => !this.matchesSingleGroup(group, message))
+        .map(({ index }) => index + 1);
+      if (groups.matchAnyBetweenGroups) {
+        if (failed.length === active.length) {
+          return `Hiçbir grup tutmadı (denenen: ${active.map(({ index }) => index + 1).join(", ")})`;
+        }
+        return `Gruplar arası VEYA — eşleşen grup yok (eksik: ${failed.join(", ")})`;
+      }
+      return `Tüm gruplar gerekli — eksik: ${failed.join(", ")}`;
+    }
+    const fromNeedle = rule.fromContains?.toLowerCase() ?? "";
+    const subjectNeedle = rule.subjectContains?.toLowerCase() ?? "";
+    const toNeedle = rule.toContains?.toLowerCase() ?? "";
+    const fromOk =
+      !fromNeedle ||
+      this.fieldMatchesAlternatives(message.fromAddress, fromNeedle);
+    const subjectOk =
+      !subjectNeedle ||
+      this.fieldMatchesAlternatives(message.subject, subjectNeedle);
+    const toList = message.toRecipients ?? [];
+    const toOk =
+      !toNeedle ||
+      toList.some((addr) =>
+        this.fieldMatchesAlternatives(addr, toNeedle),
+      );
+    const hasAttachment = (message.attachments?.length ?? 0) > 0;
+    const misses: string[] = [];
+    if (fromNeedle && !fromOk) {
+      misses.push("gönderen");
+    }
+    if (subjectNeedle && !subjectOk) {
+      misses.push("konu");
+    }
+    if (toNeedle && !toOk) {
+      misses.push("alıcı");
+    }
+    if (rule.requireAttachment && !hasAttachment) {
+      misses.push("ek");
+    }
+    if (rule.matchAnyCondition) {
+      return misses.length > 0
+        ? `VEYA modu — hiçbiri tutmadı (zayıf: ${misses.join(", ")})`
+        : "Koşullar sağlanmadı";
+    }
+    return misses.length > 0
+      ? `Eksik (VE): ${misses.join(", ")}`
+      : "Koşullar sağlanmadı";
   }
 
   private explainMatch(
