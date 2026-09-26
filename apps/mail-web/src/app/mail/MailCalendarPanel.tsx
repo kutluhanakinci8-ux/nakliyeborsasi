@@ -70,6 +70,7 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
   const [editStartLocal, setEditStartLocal] = useState("");
   const [editEndLocal, setEditEndLocal] = useState("");
   const [editAllDay, setEditAllDay] = useState(false);
+  const [editNewAnchorLocal, setEditNewAnchorLocal] = useState("");
 
   const bounds = useMemo(() => monthBounds(year, month), [year, month]);
   const grid = useMemo(() => buildMonthGrid(year, month), [year, month]);
@@ -156,6 +157,7 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
     setEditStartLocal(toDatetimeLocalValue(ev.startsAt));
     setEditEndLocal(toDatetimeLocalValue(ev.endsAt));
     setEditAllDay(ev.allDay);
+    setEditNewAnchorLocal("");
   }
 
   async function onSaveOccurrenceEdit() {
@@ -168,13 +170,26 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
       onToast("Geçersiz tarih.");
       return;
     }
+    const currentAnchor = occurrenceAnchor(editingOccurrence);
+    let newOccurrenceAnchorAt: string | undefined;
+    if (editNewAnchorLocal.trim()) {
+      const newAnchor = new Date(editNewAnchorLocal);
+      if (Number.isNaN(newAnchor.getTime())) {
+        onToast("Geçersiz yeni tekrar anahtarı.");
+        return;
+      }
+      if (newAnchor.getTime() !== new Date(currentAnchor).getTime()) {
+        newOccurrenceAnchorAt = newAnchor.toISOString();
+      }
+    }
     try {
       await patchCalendarOccurrence(accessToken, editingOccurrence.id, {
-        occurrenceStartsAt: occurrenceAnchor(editingOccurrence),
+        occurrenceStartsAt: currentAnchor,
         title: editTitle.trim() || undefined,
         startsAt: startsAt.toISOString(),
         endsAt: endsAt.toISOString(),
         allDay: editAllDay,
+        newOccurrenceAnchorAt,
       });
       setEditingOccurrence(null);
       onToast("Bu tekrar güncellendi.");
@@ -434,6 +449,23 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
             />
             Tüm gün
           </label>
+          <p className="mail-d6-meta">
+            Mevcut tekrar anahtarı:{" "}
+            {new Date(occurrenceAnchor(editingOccurrence)).toLocaleString("tr-TR")}
+          </p>
+          <label>
+            Yeni tekrar anahtarı (isteğe bağlı, CalDAV)
+            <input
+              type="datetime-local"
+              value={editNewAnchorLocal}
+              onChange={(e) => setEditNewAnchorLocal(e.target.value)}
+              aria-label="Yeni tekrar anahtarı"
+            />
+          </label>
+          <p className="mail-d6-meta">
+            Seride farklı bir örneğe taşımak için doldurun; eski CalDAV{" "}
+            <code>_occ_</code> dosyası silinir.
+          </p>
           <div className="mail-d6-actions">
             <button type="button" onClick={() => void onSaveOccurrenceEdit()}>
               Kaydet
