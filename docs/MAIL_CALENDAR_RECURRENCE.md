@@ -32,7 +32,9 @@ Takvim → yeni etkinlik → **Tekrar** seçimi; isteğe bağlı **bitiş tarihi
 
 - İçe/dışa aktarma `RRULE` (FREQ=DAILY|WEEKLY|MONTHLY).
 - CalDAV **PUT** tekrar kuralını içerir.
-- Tekrar örneği override: `POST .../calendar/caldav/accounts/:accountId/push/:eventId/occurrence` — `{ "occurrenceStartsAt" }` ile `RECURRENCE-ID` içeren ayrı `.ics` (webmail: **CalDAV’a yaz (bu tekrar)**).
+- **Tüm seri** (tek PUT): `POST .../push/:eventId` — master `RRULE`, iptal edilen tekrarlar için `EXDATE`, düzenlenen örnekler için aynı dosyada ek `VEVENT` + `RECURRENCE-ID` (webmail: **CalDAV (tüm seri)**).
+- **Bu tekrar** (override dosyası): `POST .../push/:eventId/occurrence` — `{ "occurrenceStartsAt" }` (webmail: **CalDAV (bu tekrar)**).
+- **Bu tekrarı sil** sonrası seri CalDAV’a bağlıysa master `.ics` otomatik yenilenir (`EXDATE` eklenir).
 
 ## VPS şema
 

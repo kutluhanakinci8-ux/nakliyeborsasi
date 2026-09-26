@@ -79,3 +79,55 @@ export function conditionGroupsAreValid(
   const active = groups.groups.filter(groupHasAnyCondition);
   return active.length > 0;
 }
+
+function describeGroupConditions(group: MailInboxRuleConditionGroup): string {
+  const parts: string[] = [];
+  if (group.fromContains) {
+    parts.push(`gönderen “${group.fromContains}”`);
+  }
+  if (group.subjectContains) {
+    parts.push(`konu “${group.subjectContains}”`);
+  }
+  if (group.toContains) {
+    parts.push(`alıcı “${group.toContains}”`);
+  }
+  if (group.requireAttachment) {
+    parts.push("ek var");
+  }
+  const joined = parts.join(group.matchAny ? " VEYA " : " VE ");
+  return group.matchAny ? `(${joined})` : joined;
+}
+
+export function describeInboxRuleMatchLogic(input: {
+  fromContains: string | null;
+  subjectContains: string | null;
+  toContains: string | null;
+  requireAttachment: boolean;
+  matchAnyCondition: boolean;
+  conditionGroupsJson: string | null;
+}): string {
+  const groups = parseConditionGroupsJson(input.conditionGroupsJson);
+  if (groups && conditionGroupsAreValid(groups)) {
+    const active = groups.groups.filter(groupHasAnyCondition);
+    const between = groups.matchAnyBetweenGroups ? " VEYA " : " VE ";
+    return `Gruplar: ${active.map(describeGroupConditions).join(between)}`;
+  }
+  const parts: string[] = [];
+  if (input.fromContains) {
+    parts.push(`gönderen “${input.fromContains}”`);
+  }
+  if (input.subjectContains) {
+    parts.push(`konu “${input.subjectContains}”`);
+  }
+  if (input.toContains) {
+    parts.push(`alıcı “${input.toContains}”`);
+  }
+  if (input.requireAttachment) {
+    parts.push("ek var");
+  }
+  if (parts.length === 0) {
+    return "Koşul tanımlı değil.";
+  }
+  const joiner = input.matchAnyCondition ? " VEYA " : " VE ";
+  return `Koşullar: ${parts.join(joiner)}`;
+}
