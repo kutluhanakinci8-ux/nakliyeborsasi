@@ -55,7 +55,7 @@ export class MailMailboxComposeService {
     html?: string;
     attachments?: ComposeAttachmentInput[];
   }): Promise<{ sentId: string; smtpMessageId: string | null }> {
-    const { fromHeader, fromEmail, envelopeFrom, mailbox } =
+    const { fromHeader, fromEmail, mailbox } =
       await this.resolveSenderMailbox(params.organizationId);
     await this.assertRateLimit(params.organizationId);
     await this.mailTenantSuspensionService.assertOrganizationCanSend(
@@ -73,7 +73,6 @@ export class MailMailboxComposeService {
     const replyTo = resolveTenantReplyToAddress();
     const smtpMessageId = await this.smtpEmailSender.send({
       from: fromHeader,
-      envelopeFrom,
       to: normalizeRecipientList(params.to),
       cc: normalizeOptionalRecipients(params.cc),
       bcc: normalizeOptionalRecipients(params.bcc),
@@ -123,7 +122,7 @@ export class MailMailboxComposeService {
     const subject = inbound.subject.toLowerCase().startsWith("re:")
       ? inbound.subject
       : `Re: ${inbound.subject}`;
-    const { fromHeader, fromEmail, envelopeFrom, technicalEmail } =
+    const { fromHeader, fromEmail, technicalEmail } =
       await this.resolveSenderMailbox(params.organizationId);
     await this.assertRateLimit(params.organizationId);
     await this.mailTenantSuspensionService.assertOrganizationCanSend(
@@ -150,7 +149,6 @@ export class MailMailboxComposeService {
     );
     const smtpMessageId = await this.smtpEmailSender.send({
       from: fromHeader,
-      envelopeFrom,
       to: replyAll.to,
       cc: normalizeOptionalRecipients(replyAll.cc),
       bcc: normalizeOptionalRecipients(params.bcc),
@@ -211,7 +209,7 @@ export class MailMailboxComposeService {
     if (!text.trim()) {
       throw new BadRequestException("İletilecek metin boş olamaz.");
     }
-    const { fromHeader, fromEmail, envelopeFrom } =
+    const { fromHeader, fromEmail } =
       await this.resolveSenderMailbox(params.organizationId);
     await this.assertRateLimit(params.organizationId);
     await this.mailTenantSuspensionService.assertOrganizationCanSend(
@@ -229,7 +227,6 @@ export class MailMailboxComposeService {
     const replyTo = resolveTenantReplyToAddress();
     const smtpMessageId = await this.smtpEmailSender.send({
       from: fromHeader,
-      envelopeFrom,
       to: normalizeRecipientList(params.to),
       subject,
       text,
@@ -302,8 +299,6 @@ export class MailMailboxComposeService {
       publicAddress,
       identity.displayName,
     );
-    const envelopeFrom =
-      publicAddress !== technicalAddress ? technicalAddress : undefined;
     let mailbox = await this.mailboxRepository.findOne({
       where: { organizationId, emailAddress: technicalAddress },
     });
@@ -320,7 +315,6 @@ export class MailMailboxComposeService {
     return {
       fromHeader,
       fromEmail: publicAddress,
-      envelopeFrom,
       technicalEmail: technicalAddress,
       mailbox,
     };
