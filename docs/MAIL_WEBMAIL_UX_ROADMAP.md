@@ -129,6 +129,11 @@ sudo certbot certonly --webroot -w /var/www/certbot -d posta.lerta.com.tr
 - `GET rules/:id/preview`, `POST rules/:id/apply-inbox`
 - [MAIL_INBOX_RULES.md](./MAIL_INBOX_RULES.md)
 
+## G9 — IMAP/SMTP istemci bilgisi (uygulandı)
+
+- `imap-settings` API: SMTP host/port/güvenlik + gönderilen klasör notu
+- Ayarlar → IMAP: Giden (SMTP) kopyala; [MAIL_CLIENT_SMTP_ENV.md](./MAIL_CLIENT_SMTP_ENV.md)
+
 ---
 
 ## Deploy kontrol listesi (her UX sprint)
