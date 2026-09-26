@@ -57,6 +57,8 @@ export type MailInboxRule = {
   enabled: boolean;
   fromContains: string | null;
   subjectContains: string | null;
+  toContains: string | null;
+  requireAttachment: boolean;
   actionStar: boolean;
   actionCustomFolderId: string | null;
   actionArchive: boolean;
@@ -79,6 +81,8 @@ export async function createInboxRule(
     name: string;
     fromContains?: string;
     subjectContains?: string;
+    toContains?: string;
+    requireAttachment?: boolean;
     actionStar?: boolean;
     actionCustomFolderId?: string | null;
     actionArchive?: boolean;
@@ -91,6 +95,28 @@ export async function createInboxRule(
     accessToken,
     "company/mail-inbox/rules",
     { method: "POST", body: JSON.stringify(body) },
+  );
+}
+
+export async function previewInboxRule(accessToken: string, ruleId: string) {
+  return apiFetch<{
+    preview: {
+      matchCount: number;
+      scanned: number;
+      capped: boolean;
+      samples: Array<{ id: string; fromAddress: string; subject: string }>;
+    };
+  }>(accessToken, `company/mail-inbox/rules/${ruleId}/preview`);
+}
+
+export async function applyInboxRuleToMailbox(
+  accessToken: string,
+  ruleId: string,
+) {
+  return apiFetch<{ applied: number }>(
+    accessToken,
+    `company/mail-inbox/rules/${ruleId}/apply-inbox`,
+    { method: "POST", body: JSON.stringify({}) },
   );
 }
 
@@ -112,6 +138,8 @@ export async function updateInboxRule(
     name: string;
     fromContains: string | null;
     subjectContains: string | null;
+    toContains: string | null;
+    requireAttachment: boolean;
     actionStar: boolean;
     actionCustomFolderId: string | null;
     actionArchive: boolean;

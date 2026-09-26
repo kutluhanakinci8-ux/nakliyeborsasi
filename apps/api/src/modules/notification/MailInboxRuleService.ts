@@ -4,13 +4,16 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { In, Repository } from "typeorm";
 import { MailInboxRuleEntity } from "../../infrastructure/database/entities/MailInboxRuleEntity";
 import { MailInboundMessageEntity } from "../../infrastructure/database/entities/MailInboundMessageEntity";
+import { MailMailboxEntity } from "../../infrastructure/database/entities/MailMailboxEntity";
 import { MailCustomFolderService } from "./MailCustomFolderService";
 import { MailImapMaildirService } from "./MailImapMaildirService";
 
 const MAX_RULES = 20;
+const PREVIEW_SCAN_LIMIT = 500;
+const APPLY_INBOX_LIMIT = 100;
 
 export type MailInboxRuleDto = {
   id: string;
@@ -19,6 +22,8 @@ export type MailInboxRuleDto = {
   enabled: boolean;
   fromContains: string | null;
   subjectContains: string | null;
+  toContains: string | null;
+  requireAttachment: boolean;
   actionStar: boolean;
   actionCustomFolderId: string | null;
   actionArchive: boolean;
@@ -35,6 +40,8 @@ export class MailInboxRuleService {
     private readonly ruleRepository: Repository<MailInboxRuleEntity>,
     @InjectRepository(MailInboundMessageEntity)
     private readonly inboundRepository: Repository<MailInboundMessageEntity>,
+    @InjectRepository(MailMailboxEntity)
+    private readonly mailboxRepository: Repository<MailMailboxEntity>,
     private readonly mailCustomFolderService: MailCustomFolderService,
     private readonly mailImapMaildirService: MailImapMaildirService,
   ) {}
@@ -53,6 +60,8 @@ export class MailInboxRuleService {
       name: string;
       fromContains?: string | null;
       subjectContains?: string | null;
+      toContains?: string | null;
+      requireAttachment?: boolean;
       actionStar?: boolean;
       actionCustomFolderId?: string | null;
       actionArchive?: boolean;
@@ -82,6 +91,8 @@ export class MailInboxRuleService {
         enabled: input.enabled ?? true,
         fromContains: this.normalizeOptional(input.fromContains),
         subjectContains: this.normalizeOptional(input.subjectContains),
+        toContains: this.normalizeOptional(input.toContains),
+        requireAttachment: Boolean(input.requireAttachment),
         actionStar: Boolean(input.actionStar),
         actionCustomFolderId: input.actionCustomFolderId ?? null,
         actionArchive: Boolean(input.actionArchive),
@@ -99,6 +110,8 @@ export class MailInboxRuleService {
       name?: string;
       fromContains?: string | null;
       subjectContains?: string | null;
+      toContains?: string | null;
+      requireAttachment?: boolean;
       actionStar?: boolean;
       actionCustomFolderId?: string | null;
       actionArchive?: boolean;
@@ -118,6 +131,12 @@ export class MailInboxRuleService {
         input.subjectContains !== undefined
           ? this.normalizeOptional(input.subjectContains)
           : row.subjectContains,
+      toContains:
+        input.toContains !== undefined
+          ? this.normalizeOptional(input.toContains)
+          : row.toContains,
+      requireAttachment:
+        input.requireAttachment ?? row.requireAttachment,
       actionStar: input.actionStar ?? row.actionStar,
       actionCustomFolderId:
         input.actionCustomFolderId !== undefined
@@ -138,6 +157,8 @@ export class MailInboxRuleService {
     row.name = merged.name.trim();
     row.fromContains = merged.fromContains;
     row.subjectContains = merged.subjectContains;
+    row.toContains = merged.toContains;
+    row.requireAttachment = merged.requireAttachment;
     row.actionStar = merged.actionStar;
     row.actionCustomFolderId = merged.actionCustomFolderId;
     row.actionArchive = merged.actionArchive;
@@ -193,39 +214,7 @@ export class MailInboxRuleService {
       if (!this.matches(rule, message)) {
         continue;
       }
-      let changed = false;
-      if (rule.actionStar && !message.starredAt) {
-        message.starredAt = new Date();
-        changed = true;
-      }
-      if (
-        rule.actionCustomFolderId &&
-        message.customFolderId !== rule.actionCustomFolderId
-      ) {
-        message.customFolderId = rule.actionCustomFolderId;
-        changed = true;
-      }
-      if (rule.actionMarkRead && !message.readAt) {
-        message.readAt = new Date();
-        changed = true;
-      }
-      if (rule.actionTrash && message.mailboxFolder === "inbox") {
-        message.maildirFilePath = this.mailImapMaildirService.relocateMailboxFile(
-          message.maildirFilePath,
-          "trash",
-        );
-        message.mailboxFolder = "trash";
-        message.customFolderId = null;
-        changed = true;
-      } else if (rule.actionArchive && message.mailboxFolder === "inbox") {
-        message.maildirFilePath = this.mailImapMaildirService.relocateMailboxFile(
-          message.maildirFilePath,
-          "archive",
-        );
-        message.mailboxFolder = "archive";
-        message.customFolderId = null;
-        changed = true;
-      }
+      const changed = await this.applyRuleActions(rule, message);
       if (changed) {
         await this.inboundRepository.save(message);
       }
@@ -234,25 +223,146 @@ export class MailInboxRuleService {
     return message;
   }
 
+  public async previewRule(
+    organizationId: string,
+    ruleId: string,
+  ): Promise<{
+    matchCount: number;
+    scanned: number;
+    capped: boolean;
+    samples: Array<{ id: string; fromAddress: string; subject: string }>;
+  }> {
+    const rule = await this.assertRule(organizationId, ruleId);
+    const messages = await this.loadInboxCandidates(organizationId, PREVIEW_SCAN_LIMIT);
+    const matched = messages.filter((message) => this.matches(rule, message));
+    return {
+      matchCount: matched.length,
+      scanned: messages.length,
+      capped: messages.length >= PREVIEW_SCAN_LIMIT,
+      samples: matched.slice(0, 5).map((m) => ({
+        id: m.id,
+        fromAddress: m.fromAddress,
+        subject: m.subject,
+      })),
+    };
+  }
+
+  public async applyRuleToInbox(
+    organizationId: string,
+    ruleId: string,
+  ): Promise<{ applied: number }> {
+    const rule = await this.assertRule(organizationId, ruleId);
+    const messages = await this.loadInboxCandidates(
+      organizationId,
+      APPLY_INBOX_LIMIT * 3,
+    );
+    let applied = 0;
+    for (const message of messages) {
+      if (applied >= APPLY_INBOX_LIMIT) {
+        break;
+      }
+      if (!this.matches(rule, message)) {
+        continue;
+      }
+      const changed = await this.applyRuleActions(rule, message);
+      if (changed) {
+        await this.inboundRepository.save(message);
+        applied += 1;
+      }
+    }
+    return { applied };
+  }
+
+  private async loadInboxCandidates(
+    organizationId: string,
+    limit: number,
+  ): Promise<MailInboundMessageEntity[]> {
+    const mailbox = await this.mailboxRepository.findOne({
+      where: { organizationId },
+    });
+    if (!mailbox) {
+      return [];
+    }
+    return this.inboundRepository.find({
+      where: {
+        mailboxId: mailbox.id,
+        mailboxFolder: "inbox",
+        spamStatus: In(["clean", "suspected"]),
+      },
+      order: { receivedAt: "DESC" },
+      take: limit,
+    });
+  }
+
+  private async applyRuleActions(
+    rule: MailInboxRuleEntity,
+    message: MailInboundMessageEntity,
+  ): Promise<boolean> {
+    let changed = false;
+    if (rule.actionStar && !message.starredAt) {
+      message.starredAt = new Date();
+      changed = true;
+    }
+    if (
+      rule.actionCustomFolderId &&
+      message.customFolderId !== rule.actionCustomFolderId
+    ) {
+      message.customFolderId = rule.actionCustomFolderId;
+      changed = true;
+    }
+    if (rule.actionMarkRead && !message.readAt) {
+      message.readAt = new Date();
+      changed = true;
+    }
+    if (rule.actionTrash && message.mailboxFolder === "inbox") {
+      message.maildirFilePath = this.mailImapMaildirService.relocateMailboxFile(
+        message.maildirFilePath,
+        "trash",
+      );
+      message.mailboxFolder = "trash";
+      message.customFolderId = null;
+      changed = true;
+    } else if (rule.actionArchive && message.mailboxFolder === "inbox") {
+      message.maildirFilePath = this.mailImapMaildirService.relocateMailboxFile(
+        message.maildirFilePath,
+        "archive",
+      );
+      message.mailboxFolder = "archive";
+      message.customFolderId = null;
+      changed = true;
+    }
+    return changed;
+  }
+
   private matches(
     rule: MailInboxRuleEntity,
     message: MailInboundMessageEntity,
   ): boolean {
     const fromNeedle = rule.fromContains?.toLowerCase() ?? "";
     const subjectNeedle = rule.subjectContains?.toLowerCase() ?? "";
-    if (!fromNeedle && !subjectNeedle) {
+    const toNeedle = rule.toContains?.toLowerCase() ?? "";
+    if (!fromNeedle && !subjectNeedle && !toNeedle && !rule.requireAttachment) {
       return false;
     }
     const fromOk =
       !fromNeedle || message.fromAddress.toLowerCase().includes(fromNeedle);
     const subjectOk =
       !subjectNeedle || message.subject.toLowerCase().includes(subjectNeedle);
-    return fromOk && subjectOk;
+    const toList = message.toRecipients ?? [];
+    const toOk =
+      !toNeedle ||
+      toList.some((addr) => addr.toLowerCase().includes(toNeedle));
+    const attachmentOk =
+      !rule.requireAttachment ||
+      (message.attachments?.length ?? 0) > 0;
+    return fromOk && subjectOk && toOk && attachmentOk;
   }
 
   private validateRuleInput(input: {
     fromContains?: string | null;
     subjectContains?: string | null;
+    toContains?: string | null;
+    requireAttachment?: boolean;
     actionStar?: boolean;
     actionCustomFolderId?: string | null;
     actionArchive?: boolean;
@@ -262,9 +372,10 @@ export class MailInboxRuleService {
   }): void {
     const from = this.normalizeOptional(input.fromContains);
     const subject = this.normalizeOptional(input.subjectContains);
-    if (!from && !subject) {
+    const to = this.normalizeOptional(input.toContains);
+    if (!from && !subject && !to && !input.requireAttachment) {
       throw new BadRequestException(
-        "En az bir koşul gerekli (gönderen veya konu içerir).",
+        "En az bir koşul gerekli (gönderen, alıcı, konu veya ek).",
       );
     }
     if (
@@ -309,6 +420,8 @@ export class MailInboxRuleService {
       enabled: row.enabled,
       fromContains: row.fromContains,
       subjectContains: row.subjectContains,
+      toContains: row.toContains,
+      requireAttachment: row.requireAttachment,
       actionStar: row.actionStar,
       actionCustomFolderId: row.actionCustomFolderId,
       actionArchive: row.actionArchive,

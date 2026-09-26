@@ -26,6 +26,15 @@ export class CreateMailInboxRuleRequestDto {
   public subjectContains?: string;
 
   @IsOptional()
+  @IsString()
+  @MaxLength(320)
+  public toContains?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  public requireAttachment?: boolean;
+
+  @IsOptional()
   @IsBoolean()
   public actionStar?: boolean;
 
@@ -74,6 +83,15 @@ export class UpdateMailInboxRuleRequestDto {
   @IsString()
   @MaxLength(500)
   public subjectContains?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(320)
+  public toContains?: string | null;
+
+  @IsOptional()
+  @IsBoolean()
+  public requireAttachment?: boolean;
 
   @IsOptional()
   @IsBoolean()

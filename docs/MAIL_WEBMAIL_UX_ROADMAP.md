@@ -123,6 +123,12 @@ sudo certbot certonly --webroot -w /var/www/certbot -d posta.lerta.com.tr
 
 - Okundu işaretle ve çöpe taşı işlemleri
 
+## G5+ — Kurallar genişletme (uygulandı)
+
+- Koşullar: alıcı (`toContains`), ek zorunlu (`requireAttachment`)
+- `GET rules/:id/preview`, `POST rules/:id/apply-inbox`
+- [MAIL_INBOX_RULES.md](./MAIL_INBOX_RULES.md)
+
 ---
 
 ## Deploy kontrol listesi (her UX sprint)

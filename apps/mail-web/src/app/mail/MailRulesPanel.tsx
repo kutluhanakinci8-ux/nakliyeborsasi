@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react";
 import {
+  applyInboxRuleToMailbox,
   createInboxRule,
   deleteInboxRule,
   fetchCustomFolders,
   fetchInboxRules,
+  previewInboxRule,
   reorderInboxRules,
   updateInboxRule,
   type MailCustomFolder,
@@ -23,7 +25,10 @@ export function MailRulesPanel({ accessToken }: Props) {
   const [name, setName] = useState("");
   const [fromContains, setFromContains] = useState("");
   const [subjectContains, setSubjectContains] = useState("");
+  const [toContains, setToContains] = useState("");
+  const [requireAttachment, setRequireAttachment] = useState(false);
   const [actionStar, setActionStar] = useState(false);
+  const [info, setInfo] = useState("");
   const [actionArchive, setActionArchive] = useState(false);
   const [actionMarkRead, setActionMarkRead] = useState(false);
   const [actionTrash, setActionTrash] = useState(false);
@@ -49,6 +54,8 @@ export function MailRulesPanel({ accessToken }: Props) {
         name: name.trim(),
         fromContains: fromContains.trim() || undefined,
         subjectContains: subjectContains.trim() || undefined,
+        toContains: toContains.trim() || undefined,
+        requireAttachment,
         actionStar,
         actionArchive,
         actionMarkRead,
@@ -58,6 +65,8 @@ export function MailRulesPanel({ accessToken }: Props) {
       setName("");
       setFromContains("");
       setSubjectContains("");
+      setToContains("");
+      setRequireAttachment(false);
       setActionStar(false);
       setActionArchive(false);
       setActionMarkRead(false);
@@ -75,6 +84,7 @@ export function MailRulesPanel({ accessToken }: Props) {
         Yeni gelen postalar için sunucu kuralları (ilk eşleşen uygulanır).
       </p>
       {error ? <p className="login-error">{error}</p> : null}
+      {info ? <p style={{ fontSize: "0.9rem" }}>{info}</p> : null}
       <ul className="mail-rules-list">
         {rules.length === 0 ? (
           <li className="mail-rules-empty">Henüz kural yok.</li>
@@ -129,6 +139,8 @@ export function MailRulesPanel({ accessToken }: Props) {
                 {rule.subjectContains
                   ? `Konu: “${rule.subjectContains}”`
                   : null}
+                {rule.toContains ? ` · Alıcı: “${rule.toContains}”` : null}
+                {rule.requireAttachment ? " · Ek var" : null}
               </div>
               <div className="mail-rules-meta">
                 {rule.actionStar ? "★ Yıldızla" : null}
@@ -143,17 +155,57 @@ export function MailRulesPanel({ accessToken }: Props) {
                 {rule.actionMarkRead ? " · Okundu" : null}
                 {rule.actionTrash ? " · Çöp" : null}
               </div>
-              <button
-                type="button"
-                className="mail-rules-delete"
-                onClick={() =>
-                  void deleteInboxRule(accessToken, rule.id).then(() =>
-                    reload(),
-                  )
-                }
-              >
-                Sil
-              </button>
+              <div className="mail-rules-actions">
+                <button
+                  type="button"
+                  onClick={() =>
+                    void previewInboxRule(accessToken, rule.id).then(
+                      ({ preview }) => {
+                        const cap = preview.capped ? " (ilk 500 tarandı)" : "";
+                        const sample = preview.samples
+                          .map((s) => s.subject)
+                          .join("; ");
+                        setInfo(
+                          `Önizleme: ${preview.matchCount} eşleşme${cap}${sample ? ` — örnek: ${sample}` : ""}`,
+                        );
+                      },
+                      () => setError("Önizleme başarısız."),
+                    )
+                  }
+                >
+                  Önizle
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    void applyInboxRuleToMailbox(accessToken, rule.id).then(
+                      (r) => {
+                        setInfo(`${r.applied} mesaja uygulandı (en fazla 100).`);
+                      },
+                      (err: unknown) => {
+                        setError(
+                          err instanceof Error
+                            ? err.message
+                            : "Uygulanamadı.",
+                        );
+                      },
+                    )
+                  }
+                >
+                  Gelen kutusuna uygula
+                </button>
+                <button
+                  type="button"
+                  className="mail-rules-delete"
+                  onClick={() =>
+                    void deleteInboxRule(accessToken, rule.id).then(() =>
+                      reload(),
+                    )
+                  }
+                >
+                  Sil
+                </button>
+              </div>
             </li>
           ))
         )}
@@ -174,6 +226,19 @@ export function MailRulesPanel({ accessToken }: Props) {
         value={subjectContains}
         onChange={(e) => setSubjectContains(e.target.value)}
       />
+      <input
+        placeholder="Alıcı (To) içerir (isteğe bağlı)"
+        value={toContains}
+        onChange={(e) => setToContains(e.target.value)}
+      />
+      <label>
+        <input
+          type="checkbox"
+          checked={requireAttachment}
+          onChange={(e) => setRequireAttachment(e.target.checked)}
+        />
+        Yalnızca ekli postalar
+      </label>
       <label>
         <input
           type="checkbox"
