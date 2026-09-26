@@ -6,6 +6,7 @@ export type ParsedIcalEvent = {
   startsAt: Date;
   endsAt: Date;
   allDay: boolean;
+  recurrenceRule: string | null;
 };
 
 function formatUtc(d: Date): string {
@@ -75,6 +76,7 @@ export function parseIcalEvents(icsText: string): ParsedIcalEvent[] {
   let dtEnd: string | null = null;
   let allDay = false;
   let uid: string | null = null;
+  let recurrenceRule: string | null = null;
 
   for (const line of lines) {
     if (line === "BEGIN:VEVENT") {
@@ -86,6 +88,7 @@ export function parseIcalEvents(icsText: string): ParsedIcalEvent[] {
       dtEnd = null;
       allDay = false;
       uid = null;
+      recurrenceRule = null;
       continue;
     }
     if (line === "END:VEVENT" && inEvent) {
@@ -110,6 +113,7 @@ export function parseIcalEvents(icsText: string): ParsedIcalEvent[] {
         startsAt,
         endsAt,
         allDay: startAllDay,
+        recurrenceRule,
       });
       inEvent = false;
       continue;
@@ -135,6 +139,8 @@ export function parseIcalEvents(icsText: string): ParsedIcalEvent[] {
       dtEnd = value;
     } else if (key === "UID") {
       uid = value;
+    } else if (key === "RRULE") {
+      recurrenceRule = value.trim();
     }
   }
   return events;
@@ -148,6 +154,8 @@ export function buildSingleVeventIcal(event: {
   startsAt: Date;
   endsAt: Date;
   allDay: boolean;
+  recurrenceRule?: string | null;
+  recurrenceUntil?: Date | null;
 }): string {
   const lines = [
     "BEGIN:VCALENDAR",
@@ -172,6 +180,16 @@ export function buildSingleVeventIcal(event: {
   if (event.location) {
     lines.push(`LOCATION:${escapeIcalText(event.location)}`);
   }
+  if (event.recurrenceRule?.trim()) {
+    let rrule = event.recurrenceRule.trim();
+    if (event.recurrenceUntil) {
+      const until = formatUtc(event.recurrenceUntil).replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+      if (!rrule.toUpperCase().includes("UNTIL=")) {
+        rrule = `${rrule};UNTIL=${until}`;
+      }
+    }
+    lines.push(`RRULE:${rrule}`);
+  }
   lines.push("END:VEVENT", "END:VCALENDAR");
   return `${lines.join("\r\n")}\r\n`;
 }
@@ -185,6 +203,8 @@ export function buildIcalCalendar(
     startsAt: Date;
     endsAt: Date;
     allDay: boolean;
+    recurrenceRule?: string | null;
+    recurrenceUntil?: Date | null;
   }>,
 ): string {
   const lines = [
@@ -211,6 +231,9 @@ export function buildIcalCalendar(
     }
     if (ev.location) {
       lines.push(`LOCATION:${escapeIcalText(ev.location)}`);
+    }
+    if (ev.recurrenceRule?.trim()) {
+      lines.push(`RRULE:${ev.recurrenceRule.trim()}`);
     }
     lines.push("END:VEVENT");
   }

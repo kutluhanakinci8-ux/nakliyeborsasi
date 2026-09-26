@@ -14,6 +14,7 @@ import {
   encryptCalendarCredential,
 } from "./MailCalendarCalDavCredentialCipher";
 import {
+  calDavDeleteResource,
   calDavPropfind,
   cardDavAddressbookQuery,
   cardDavPutVcard,
@@ -264,12 +265,52 @@ export class MailContactCardDavService {
             account.addressbookUrl,
             `${externalUid.replace(/[@/]/g, "_")}.vcf`,
           );
-    await cardDavPutVcard(resourceHref, account.username, password, vcard);
+    const etag = await cardDavPutVcard(
+      resourceHref,
+      account.username,
+      password,
+      vcard,
+      contact.carddavAccountId === accountId ? contact.carddavEtag : null,
+    );
     contact.carddavAccountId = accountId;
     contact.carddavResourceHref = resourceHref;
     contact.externalUid = externalUid;
+    if (etag) {
+      contact.carddavEtag = etag;
+    }
     await this.contactRepository.save(contact);
     return { resourceHref, externalUid };
+  }
+
+  public async deleteRemoteForContact(
+    contact: MailOrgContactEntity,
+  ): Promise<void> {
+    if (!contact.carddavAccountId || !contact.carddavResourceHref) {
+      return;
+    }
+    const account = await this.accountRepository.findOne({
+      where: {
+        id: contact.carddavAccountId,
+        organizationId: contact.organizationId,
+      },
+    });
+    if (!account || !account.writeEnabled) {
+      return;
+    }
+    const password = decryptCalendarCredential(
+      account.passwordCiphertext,
+      this.configService,
+    );
+    try {
+      await calDavDeleteResource(
+        contact.carddavResourceHref,
+        account.username,
+        password,
+        contact.carddavEtag,
+      );
+    } catch {
+      // Yerel silme devam etsin.
+    }
   }
 
   private async syncAccountRow(

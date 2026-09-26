@@ -37,6 +37,9 @@ export class MailOrgContactEntity {
   @Column({ name: "carddav_resource_href", type: "varchar", length: 2000, nullable: true })
   public carddavResourceHref!: string | null;
 
+  @Column({ name: "carddav_etag", type: "varchar", length: 200, nullable: true })
+  public carddavEtag!: string | null;
+
   @CreateDateColumn({ name: "created_at", type: "timestamptz" })
   public createdAt!: Date;
 

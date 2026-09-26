@@ -1136,6 +1136,9 @@ export type MailCalendarEvent = {
   startsAt: string;
   endsAt: string;
   allDay: boolean;
+  recurrenceRule: string | null;
+  recurrenceUntil: string | null;
+  isRecurrenceOccurrence: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -1171,6 +1174,8 @@ export async function createCalendarEvent(
     startsAt: string;
     endsAt: string;
     allDay?: boolean;
+    recurrenceFrequency?: "daily" | "weekly" | "monthly";
+    recurrenceUntil?: string;
   },
 ) {
   return apiFetch<{ event: MailCalendarEvent }>(

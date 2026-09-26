@@ -28,6 +28,12 @@ fi
 if [[ -x "$INSTALL_DIR/scripts/apply-mail-d6-caldav-etag-schema.sh" ]]; then
   bash "$INSTALL_DIR/scripts/apply-mail-d6-caldav-etag-schema.sh" "$INSTALL_DIR" || true
 fi
+if [[ -x "$INSTALL_DIR/scripts/apply-mail-d6-recurrence-schema.sh" ]]; then
+  bash "$INSTALL_DIR/scripts/apply-mail-d6-recurrence-schema.sh" "$INSTALL_DIR" || true
+fi
+if [[ -x "$INSTALL_DIR/scripts/apply-mail-d6-carddav-etag-schema.sh" ]]; then
+  bash "$INSTALL_DIR/scripts/apply-mail-d6-carddav-etag-schema.sh" "$INSTALL_DIR" || true
+fi
 if [[ -x "$INSTALL_DIR/scripts/apply-mail-g5plus-rules-schema.sh" ]]; then
   bash "$INSTALL_DIR/scripts/apply-mail-g5plus-rules-schema.sh" "$INSTALL_DIR" || true
 fi

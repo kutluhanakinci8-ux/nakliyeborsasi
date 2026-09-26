@@ -8,6 +8,12 @@ import { Repository } from "typeorm";
 import { MailCalendarEventEntity } from "../../infrastructure/database/entities/MailCalendarEventEntity";
 import { MailCalendarCalDavService } from "./MailCalendarCalDavService";
 import { buildIcalCalendar, parseIcalEvents } from "./MailIcalUtil";
+import {
+  expandEventOccurrences,
+  frequencyToRrule,
+  type RecurrenceFrequency,
+  validateRecurrenceRule,
+} from "./MailRruleUtil";
 
 const MAX_EVENTS = 500;
 
@@ -19,6 +25,9 @@ export type MailCalendarEventDto = {
   startsAt: string;
   endsAt: string;
   allDay: boolean;
+  recurrenceRule: string | null;
+  recurrenceUntil: string | null;
+  isRecurrenceOccurrence: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -42,11 +51,47 @@ export class MailOrganizationCalendarService {
     const rows = await this.eventRepository
       .createQueryBuilder("e")
       .where("e.organizationId = :organizationId", { organizationId })
-      .andWhere("e.startsAt < :to", { to })
-      .andWhere("e.endsAt > :from", { from })
+      .andWhere(
+        `(
+          (e.recurrence_rule IS NULL AND e.starts_at < :to AND e.ends_at > :from)
+          OR
+          (e.recurrence_rule IS NOT NULL AND e.starts_at < :to AND (e.recurrence_until IS NULL OR e.recurrence_until > :from))
+        )`,
+        { from, to },
+      )
       .orderBy("e.startsAt", "ASC")
       .getMany();
-    return rows.map((row) => this.toDto(row));
+    const expanded: MailCalendarEventDto[] = [];
+    for (const row of rows) {
+      if (!row.recurrenceRule) {
+        expanded.push(this.toDto(row, false));
+        continue;
+      }
+      const occurrences = expandEventOccurrences({
+        startsAt: row.startsAt,
+        endsAt: row.endsAt,
+        recurrenceRule: row.recurrenceRule,
+        recurrenceUntil: row.recurrenceUntil,
+        rangeFrom: from,
+        rangeTo: to,
+      });
+      for (let i = 0; i < occurrences.length; i += 1) {
+        const occ = occurrences[i]!;
+        expanded.push(
+          this.toDto(
+            row,
+            i > 0 || occ.startsAt.getTime() !== row.startsAt.getTime(),
+            occ.startsAt,
+            occ.endsAt,
+          ),
+        );
+      }
+    }
+    expanded.sort(
+      (a, b) =>
+        new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime(),
+    );
+    return expanded;
   }
 
   public async create(
@@ -59,9 +104,15 @@ export class MailOrganizationCalendarService {
       startsAt: Date;
       endsAt: Date;
       allDay?: boolean;
+      recurrenceFrequency?: RecurrenceFrequency | null;
+      recurrenceUntil?: Date | null;
     },
   ): Promise<MailCalendarEventDto> {
     this.validateEventInput(input);
+    const recurrenceRule = this.resolveRecurrenceRule(
+      input.recurrenceFrequency,
+      null,
+    );
     const count = await this.eventRepository.count({
       where: { organizationId },
     });
@@ -80,9 +131,11 @@ export class MailOrganizationCalendarService {
         endsAt: input.endsAt,
         allDay: Boolean(input.allDay),
         createdByUserId: userId,
+        recurrenceRule,
+        recurrenceUntil: input.recurrenceUntil ?? null,
       }),
     );
-    return this.toDto(row);
+    return this.toDto(row, false);
   }
 
   public async update(
@@ -95,6 +148,8 @@ export class MailOrganizationCalendarService {
       startsAt?: Date;
       endsAt?: Date;
       allDay?: boolean;
+      recurrenceFrequency?: RecurrenceFrequency | null;
+      recurrenceUntil?: Date | null;
     },
   ): Promise<MailCalendarEventDto> {
     const row = await this.assertEvent(organizationId, eventId);
@@ -116,13 +171,25 @@ export class MailOrganizationCalendarService {
     if (input.allDay !== undefined) {
       row.allDay = input.allDay;
     }
+    if (
+      input.recurrenceFrequency !== undefined ||
+      input.recurrenceUntil !== undefined
+    ) {
+      row.recurrenceRule = this.resolveRecurrenceRule(
+        input.recurrenceFrequency ?? null,
+        row.recurrenceRule,
+      );
+      if (input.recurrenceUntil !== undefined) {
+        row.recurrenceUntil = input.recurrenceUntil;
+      }
+    }
     this.validateEventInput({
       title: row.title,
       startsAt: row.startsAt,
       endsAt: row.endsAt,
     });
     await this.eventRepository.save(row);
-    return this.toDto(row);
+    return this.toDto(row, false);
   }
 
   public async delete(organizationId: string, eventId: string): Promise<void> {
@@ -152,6 +219,8 @@ export class MailOrganizationCalendarService {
         startsAt: row.startsAt,
         endsAt: row.endsAt,
         allDay: row.allDay,
+        recurrenceRule: row.recurrenceRule,
+        recurrenceUntil: row.recurrenceUntil,
       })),
     );
   }
@@ -192,6 +261,8 @@ export class MailOrganizationCalendarService {
           endsAt: ev.endsAt,
           allDay: ev.allDay,
           createdByUserId: userId,
+          recurrenceRule: this.safeRecurrenceRule(ev.recurrenceRule),
+          recurrenceUntil: null,
         }),
       );
       imported += 1;
@@ -225,15 +296,47 @@ export class MailOrganizationCalendarService {
     }
   }
 
-  private toDto(row: MailCalendarEventEntity): MailCalendarEventDto {
+  private safeRecurrenceRule(rule: string | null): string | null {
+    if (!rule?.trim()) {
+      return null;
+    }
+    try {
+      return validateRecurrenceRule(rule);
+    } catch {
+      return null;
+    }
+  }
+
+  private resolveRecurrenceRule(
+    frequency: RecurrenceFrequency | null | undefined,
+    existing: string | null,
+  ): string | null {
+    if (frequency === null) {
+      return null;
+    }
+    if (frequency === undefined) {
+      return existing;
+    }
+    return frequencyToRrule(frequency);
+  }
+
+  private toDto(
+    row: MailCalendarEventEntity,
+    isRecurrenceOccurrence: boolean,
+    startsAt?: Date,
+    endsAt?: Date,
+  ): MailCalendarEventDto {
     return {
       id: row.id,
       title: row.title,
       description: row.description,
       location: row.location,
-      startsAt: row.startsAt.toISOString(),
-      endsAt: row.endsAt.toISOString(),
+      startsAt: (startsAt ?? row.startsAt).toISOString(),
+      endsAt: (endsAt ?? row.endsAt).toISOString(),
       allDay: row.allDay,
+      recurrenceRule: row.recurrenceRule,
+      recurrenceUntil: row.recurrenceUntil?.toISOString() ?? null,
+      isRecurrenceOccurrence,
       createdAt: row.createdAt.toISOString(),
       updatedAt: row.updatedAt.toISOString(),
     };

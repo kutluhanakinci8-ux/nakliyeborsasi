@@ -52,6 +52,12 @@ export class MailCalendarEventEntity {
   @Column({ name: "caldav_etag", type: "varchar", length: 200, nullable: true })
   public caldavEtag!: string | null;
 
+  @Column({ name: "recurrence_rule", type: "varchar", length: 500, nullable: true })
+  public recurrenceRule!: string | null;
+
+  @Column({ name: "recurrence_until", type: "timestamptz", nullable: true })
+  public recurrenceUntil!: Date | null;
+
   @CreateDateColumn({ name: "created_at", type: "timestamptz" })
   public createdAt!: Date;
 

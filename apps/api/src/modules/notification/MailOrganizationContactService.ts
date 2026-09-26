@@ -6,6 +6,7 @@ import {
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { MailOrgContactEntity } from "../../infrastructure/database/entities/MailOrgContactEntity";
+import { MailContactCardDavService } from "./MailContactCardDavService";
 import { parseVcfContacts } from "./MailVcfUtil";
 
 const MAX_CONTACTS = 1000;
@@ -25,6 +26,7 @@ export class MailOrganizationContactService {
   public constructor(
     @InjectRepository(MailOrgContactEntity)
     private readonly contactRepository: Repository<MailOrgContactEntity>,
+    private readonly mailContactCardDavService: MailContactCardDavService,
   ) {}
 
   public async list(organizationId: string): Promise<MailOrgContactDto[]> {
@@ -96,6 +98,7 @@ export class MailOrganizationContactService {
 
   public async delete(organizationId: string, contactId: string): Promise<void> {
     const row = await this.assertContact(organizationId, contactId);
+    await this.mailContactCardDavService.deleteRemoteForContact(row);
     await this.contactRepository.remove(row);
   }
 

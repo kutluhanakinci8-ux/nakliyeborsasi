@@ -38,6 +38,10 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
   const [startLocal, setStartLocal] = useState("");
   const [endLocal, setEndLocal] = useState("");
   const [allDay, setAllDay] = useState(false);
+  const [recurrenceFrequency, setRecurrenceFrequency] = useState<
+    "" | "daily" | "weekly" | "monthly"
+  >("");
+  const [recurrenceUntilLocal, setRecurrenceUntilLocal] = useState("");
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [caldavPushAccountId, setCaldavPushAccountId] = useState<string | null>(
     null,
@@ -122,8 +126,14 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
         startsAt: startsAt.toISOString(),
         endsAt: endsAt.toISOString(),
         allDay,
+        recurrenceFrequency: recurrenceFrequency || undefined,
+        recurrenceUntil: recurrenceUntilLocal
+          ? new Date(`${recurrenceUntilLocal}T23:59:59`).toISOString()
+          : undefined,
       });
       setTitle("");
+      setRecurrenceFrequency("");
+      setRecurrenceUntilLocal("");
       onToast("Etkinlik eklendi.");
       void load();
     } catch (error) {
@@ -262,6 +272,29 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
           />
           Tüm gün
         </label>
+        <select
+          value={recurrenceFrequency}
+          onChange={(e) =>
+            setRecurrenceFrequency(
+              e.target.value as "" | "daily" | "weekly" | "monthly",
+            )
+          }
+          aria-label="Tekrar"
+        >
+          <option value="">Tekrar yok</option>
+          <option value="daily">Her gün</option>
+          <option value="weekly">Her hafta</option>
+          <option value="monthly">Her ay</option>
+        </select>
+        {recurrenceFrequency ? (
+          <input
+            type="date"
+            value={recurrenceUntilLocal}
+            onChange={(e) => setRecurrenceUntilLocal(e.target.value)}
+            aria-label="Tekrar bitiş tarihi"
+            title="Tekrar bitiş (isteğe bağlı)"
+          />
+        ) : null}
         <button type="button" onClick={() => void onAddEvent()}>
           Ekle
         </button>
@@ -270,9 +303,12 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
       {loading ? <p>Yükleniyor…</p> : null}
       <ul className="mail-d6-list">
         {visibleEvents.map((ev) => (
-          <li key={ev.id}>
+          <li key={`${ev.id}-${ev.startsAt}`}>
             <div>
-              <strong>{ev.title}</strong>
+              <strong>
+                {ev.title}
+                {ev.recurrenceRule ? " ↻" : ""}
+              </strong>
               <div className="mail-d6-meta">
                 {ev.allDay
                   ? new Date(ev.startsAt).toLocaleDateString("tr-TR")
