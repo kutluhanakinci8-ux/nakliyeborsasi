@@ -124,6 +124,12 @@ sudo certbot certonly --webroot -w /var/www/certbot -d posta.lerta.com.tr
 - Arka plan: `MailCalendarIcsFeedSyncScheduler` (`MAIL_CALENDAR_ICS_SYNC_INTERVAL_MS`)
 - `POST calendar/feeds/sync-all` + web **Tümünü senkronize et**
 
+## D6 — CalDAV hesap (uygulandı)
+
+- `calendar/caldav/accounts` CRUD, sync, push; şifreli kimlik bilgisi
+- Arka plan: `MailCalendarCalDavSyncScheduler`
+- [MAIL_CALDAV.md](./MAIL_CALDAV.md)
+
 ## G5 — Kurallar v2 (uygulandı)
 
 - Okundu işaretle ve çöpe taşı işlemleri

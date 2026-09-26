@@ -72,6 +72,7 @@ import {
 import { MailOrganizationCalendarService } from "./MailOrganizationCalendarService";
 import { MailOrganizationContactService } from "./MailOrganizationContactService";
 import { MailCalendarIcsFeedService } from "./MailCalendarIcsFeedService";
+import { MailCalendarCalDavService } from "./MailCalendarCalDavService";
 import {
   CreateMailCalendarEventRequestDto,
   CreateMailOrgContactRequestDto,
@@ -79,6 +80,8 @@ import {
   ImportMailContactsVcfRequestDto,
   CreateMailCalendarIcsFeedRequestDto,
   UpdateMailCalendarIcsFeedRequestDto,
+  CreateMailCalendarCalDavAccountRequestDto,
+  UpdateMailCalendarCalDavAccountRequestDto,
   UpdateMailCalendarEventRequestDto,
   UpdateMailOrgContactRequestDto,
 } from "./MailCalendarContactRequestDto";
@@ -102,6 +105,7 @@ export class CompanyMailInboxController {
     private readonly mailOrganizationCalendarService: MailOrganizationCalendarService,
     private readonly mailOrganizationContactService: MailOrganizationContactService,
     private readonly mailCalendarIcsFeedService: MailCalendarIcsFeedService,
+    private readonly mailCalendarCalDavService: MailCalendarCalDavService,
   ) {}
 
   @Get("preferences")
@@ -1077,6 +1081,108 @@ export class CompanyMailInboxController {
     const result = await this.mailCalendarIcsFeedService.syncAllForOrganization(
       user.companyId,
       user.userId,
+    );
+    return { ok: true, ...result };
+  }
+
+  @Get("calendar/caldav/accounts")
+  public async listCalendarCalDavAccounts(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    const accounts = await this.mailCalendarCalDavService.list(user.companyId);
+    return { accounts };
+  }
+
+  @Post("calendar/caldav/accounts")
+  public async createCalendarCalDavAccount(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: CreateMailCalendarCalDavAccountRequestDto,
+  ) {
+    this.assertMailInboxWriter(user);
+    const account = await this.mailCalendarCalDavService.create(
+      user.companyId,
+      {
+        label: body.label,
+        calendarUrl: body.calendarUrl,
+        username: body.username,
+        password: body.password,
+        enabled: body.enabled,
+        writeEnabled: body.writeEnabled,
+      },
+    );
+    return { ok: true, account };
+  }
+
+  @Post("calendar/caldav/accounts/sync-all")
+  public async syncAllCalendarCalDavAccounts(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    this.assertMailInboxWriter(user);
+    const result =
+      await this.mailCalendarCalDavService.syncAllForOrganization(
+        user.companyId,
+        user.userId,
+      );
+    return { ok: true, ...result };
+  }
+
+  @Patch("calendar/caldav/accounts/:accountId")
+  public async updateCalendarCalDavAccount(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("accountId") accountId: string,
+    @Body() body: UpdateMailCalendarCalDavAccountRequestDto,
+  ) {
+    this.assertMailInboxWriter(user);
+    const account = await this.mailCalendarCalDavService.update(
+      user.companyId,
+      accountId,
+      {
+        label: body.label,
+        calendarUrl: body.calendarUrl,
+        username: body.username,
+        password: body.password,
+        enabled: body.enabled,
+        writeEnabled: body.writeEnabled,
+      },
+    );
+    return { ok: true, account };
+  }
+
+  @Delete("calendar/caldav/accounts/:accountId")
+  public async deleteCalendarCalDavAccount(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("accountId") accountId: string,
+  ) {
+    this.assertMailInboxWriter(user);
+    await this.mailCalendarCalDavService.delete(user.companyId, accountId);
+    return { ok: true };
+  }
+
+  @Post("calendar/caldav/accounts/:accountId/sync")
+  public async syncCalendarCalDavAccount(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("accountId") accountId: string,
+  ) {
+    this.assertMailInboxWriter(user);
+    const result = await this.mailCalendarCalDavService.sync(
+      user.companyId,
+      accountId,
+      user.userId,
+    );
+    return { ok: true, ...result };
+  }
+
+  @Post("calendar/caldav/accounts/:accountId/push/:eventId")
+  public async pushCalendarEventToCalDav(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("accountId") accountId: string,
+    @Param("eventId") eventId: string,
+  ) {
+    this.assertMailInboxWriter(user);
+    const result = await this.mailCalendarCalDavService.pushEventToAccount(
+      user.companyId,
+      accountId,
+      eventId,
     );
     return { ok: true, ...result };
   }

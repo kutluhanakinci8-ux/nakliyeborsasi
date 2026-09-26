@@ -43,6 +43,12 @@ export class MailCalendarEventEntity {
   @Column({ name: "external_uid", type: "varchar", length: 320, nullable: true })
   public externalUid!: string | null;
 
+  @Column({ name: "caldav_account_id", type: "uuid", nullable: true })
+  public caldavAccountId!: string | null;
+
+  @Column({ name: "caldav_resource_href", type: "varchar", length: 2000, nullable: true })
+  public caldavResourceHref!: string | null;
+
   @CreateDateColumn({ name: "created_at", type: "timestamptz" })
   public createdAt!: Date;
 
