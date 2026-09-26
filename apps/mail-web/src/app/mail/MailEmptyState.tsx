@@ -43,11 +43,22 @@ const COPY: Record<
   },
 };
 
-export function MailEmptyState({ variant }: { variant: Variant }) {
+export function MailEmptyState({
+  variant,
+  premium,
+}: {
+  variant: Variant;
+  premium?: boolean;
+}) {
   const content = COPY[variant];
   return (
-    <div className="mail-empty-state" role="status">
-      <div className="mail-empty-icon" aria-hidden="true">@</div>
+    <div
+      className={`mail-empty-state${premium ? " mail-empty-state--premium" : ""}`}
+      role="status"
+    >
+      <div className="mail-empty-icon" aria-hidden="true">
+        {premium ? "✉" : "@"}
+      </div>
       <h2 className="mail-empty-title">{content.title}</h2>
       <p className="mail-empty-body">{content.body}</p>
       {content.tips?.length ? (

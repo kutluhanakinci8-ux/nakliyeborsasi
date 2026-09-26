@@ -25,6 +25,11 @@ sudo certbot certonly --webroot -w /var/www/certbot -d posta.lerta.com.tr
 
 ---
 
+## G1+ — Gelen kutusu premium liste (uygulandı)
+
+- Kurumsal renk paleti, Inter tipografi, kart satırlar (avatar, tarih, okunmamış nokta)
+- Başlık: **Gelen kutusu** + okunmamış sayacı; gelişmiş arama alanı
+
 ## G1 — Bu sprint (kod)
 
 - [x] `MailEmptyState` — liste ve okuma paneli

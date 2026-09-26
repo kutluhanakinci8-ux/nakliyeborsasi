@@ -62,6 +62,7 @@ import { MailCalendarPanel } from "./MailCalendarPanel";
 import { MailContactsPanel } from "./MailContactsPanel";
 import { useMailKeyboardShortcuts } from "./useMailKeyboardShortcuts";
 import { ComposeRichEditor } from "./ComposeRichEditor";
+import { MailInboxMessageRow } from "./MailInboxMessageRow";
 
 type View =
   | "inbox"
@@ -183,6 +184,8 @@ export function MailClient() {
 
   const inboxCustomFolderId =
     view === "inbox" ? activeCustomFolderId : null;
+
+  const isPrimaryInbox = view === "inbox" && !activeCustomFolderId;
 
   const refreshCustomFolders = useCallback(async () => {
     if (!accessToken) {
@@ -1523,9 +1526,25 @@ export function MailClient() {
         </section>
       ) : (
         <>
-      <section className="mail-list">
+      <section
+        className={`mail-list${isPrimaryInbox ? " mail-list-inbox-premium" : ""}`}
+      >
         {view !== "drafts" ? (
-          <div className="mail-search">
+          <div
+            className={`mail-search${isPrimaryInbox ? " mail-inbox-search-premium" : ""}`}
+          >
+            {isPrimaryInbox ? (
+              <header className="mail-inbox-header">
+                <div className="mail-inbox-header-text">
+                  <h2 className="mail-inbox-header-title">Gelen kutusu</h2>
+                  <p className="mail-inbox-header-meta">
+                    {summary && summary.unreadCount > 0
+                      ? `${summary.unreadCount} okunmamış`
+                      : "Tüm mesajlar okundu"}
+                  </p>
+                </div>
+              </header>
+            ) : null}
             <div className="mail-list-toolbar mail-list-toolbar-main">
               {canUseThreads && !searchActive ? (
                 <label className="mail-thread-toggle">
@@ -1633,14 +1652,23 @@ export function MailClient() {
                 ?
               </button>
             </div>
-            <input
-              ref={searchInputRef}
-              type="search"
-              placeholder="Ara (konu, gönderen)…"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              aria-label="Posta ara"
-            />
+            <div className="mail-inbox-search-field">
+              <span className="mail-inbox-search-icon" aria-hidden="true">
+                ⌕
+              </span>
+              <input
+                ref={searchInputRef}
+                type="search"
+                placeholder={
+                  isPrimaryInbox
+                    ? "Gelen kutusunda ara…"
+                    : "Ara (konu, gönderen)…"
+                }
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                aria-label="Posta ara"
+              />
+            </div>
             <button
               type="button"
               className="mail-search-filters-toggle"
@@ -1714,6 +1742,7 @@ export function MailClient() {
         ) : null}
         {listItems.length === 0 ? (
           <MailEmptyState
+            premium={isPrimaryInbox}
             variant={
               searchActive
                 ? "search"
@@ -1727,12 +1756,60 @@ export function MailClient() {
             }
           />
         ) : (
-          listItems.map((m) => (
+          listItems.map((m) => {
+            const unread =
+              !m.readAt &&
+              (view === "inbox" ||
+                view === "all" ||
+                view === "spam" ||
+                view === "archive" ||
+                view === "starred");
+
+            if (isPrimaryInbox) {
+              const openRow = () => {
+                if (threadView && canUseThreads && "threadId" in m) {
+                  void openThread(
+                    (m as { threadId: string }).threadId,
+                    m.id,
+                  );
+                  return;
+                }
+                void openMessage(m.id);
+              };
+              return (
+                <MailInboxMessageRow
+                  key={m.id}
+                  message={{
+                    ...m,
+                    starredAt:
+                      "starredAt" in m ? m.starredAt ?? null : null,
+                  }}
+                  selected={selectedId === m.id}
+                  unread={unread}
+                  showStar={
+                    !threadView || !canUseThreads || searchActive
+                  }
+                  showCheckbox={canBulkSelect}
+                  checked={checkedIds.has(m.id)}
+                  onOpen={openRow}
+                  onToggleStar={() => {
+                    const starred =
+                      "starredAt" in m && Boolean(m.starredAt);
+                    void toggleMessageStarred(m.id, !starred);
+                  }}
+                  onToggleCheck={(shiftKey) =>
+                    toggleChecked(m.id, shiftKey)
+                  }
+                />
+              );
+            }
+
+            return (
             <div
               key={m.id}
               role="button"
               tabIndex={0}
-              className={`mail-list-item ${selectedId === m.id ? "selected" : ""} ${!m.readAt && (view === "inbox" || view === "all" || view === "spam" || view === "archive" || view === "starred") ? "unread" : ""}`}
+              className={`mail-list-item ${selectedId === m.id ? "selected" : ""} ${unread ? "unread" : ""}`}
               onClick={() => {
                 if (view === "drafts") {
                   const d = drafts.find((x) => x.id === m.id);
@@ -1846,7 +1923,8 @@ export function MailClient() {
                 <div className="mail-list-snippet">{m.snippet}</div>
               </div>
             </div>
-          ))
+            );
+          })
         )}
       </section>
 
