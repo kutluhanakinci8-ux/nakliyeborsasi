@@ -332,10 +332,13 @@ export function MailRulesPanel({ accessToken }: Props) {
                       ({ preview }) => {
                         const cap = preview.capped ? " (ilk 500 tarandı)" : "";
                         const sample = preview.samples
-                          .map((s) => s.subject)
+                          .map(
+                            (s) =>
+                              `“${s.subject}” (${s.matchedBecause || "—"})`,
+                          )
                           .join("; ");
                         setInfo(
-                          `Önizleme: ${preview.matchCount} eşleşme${cap}. Mantık: ${preview.matchLogicDescription}${sample ? ` — örnek: ${sample}` : ""}`,
+                          `Önizleme: ${preview.matchCount} eşleşme${cap}. Mantık: ${preview.matchLogicDescription}${sample ? ` — örnekler: ${sample}` : ""}`,
                         );
                       },
                       () => setError("Önizleme başarısız."),

@@ -191,6 +191,12 @@ sudo certbot certonly --webroot -w /var/www/certbot -d posta.lerta.com.tr
 - Tekrar iptali / düzenleme sonrası bağlı CalDAV master otomatik yenileme
 - Kural önizlemede `matchLogicDescription`
 
+## G6++++ — CalDAV sync + önizleme detay + occ silme (uygulandı)
+
+- CalDAV sync: `EXDATE` / `RECURRENCE-ID` okuma → istisna tablosu
+- Kural önizleme örneklerinde `matchedBecause`
+- Tekrar iptalinde uzak `_occ_*.ics` DELETE
+
 ## G9 — IMAP/SMTP istemci bilgisi (uygulandı)
 
 - `imap-settings` API: SMTP host/port/güvenlik + gönderilen klasör notu

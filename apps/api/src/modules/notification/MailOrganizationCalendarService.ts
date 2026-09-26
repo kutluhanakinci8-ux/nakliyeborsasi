@@ -334,6 +334,11 @@ export class MailOrganizationCalendarService {
         existing.cancelled = true;
         await this.recurrenceExceptionRepository.save(existing);
       }
+      await this.mailCalendarCalDavService.deleteRemoteOccurrenceResource(
+        organizationId,
+        row.id,
+        occ,
+      );
       await this.mailCalendarCalDavService.syncRecurrenceMasterToCalDavIfLinked(
         organizationId,
         row.id,

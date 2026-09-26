@@ -24,6 +24,8 @@ import {
   buildCalDavRecurringSeriesIcal,
   buildSingleVeventIcal,
   type CalDavRecurrenceOverrideVevent,
+  isCalDavRecurrenceOverride,
+  type ParsedIcalEvent,
   parseIcalEvents,
 } from "./MailIcalUtil";
 
@@ -378,6 +380,47 @@ export class MailCalendarCalDavService {
   }
 
   /** Tekrarlı seri CalDAV’a bağlıysa master .ics (RRULE + EXDATE + override) yeniden yaz. */
+  public async deleteRemoteOccurrenceResource(
+    organizationId: string,
+    eventId: string,
+    occurrenceStartsAt: Date,
+  ): Promise<void> {
+    const event = await this.eventRepository.findOne({
+      where: { id: eventId, organizationId },
+    });
+    if (!event?.caldavAccountId) {
+      return;
+    }
+    const account = await this.accountRepository.findOne({
+      where: { id: event.caldavAccountId, organizationId },
+    });
+    if (!account?.writeEnabled) {
+      return;
+    }
+    const password = decryptCalendarCredential(
+      account.passwordCiphertext,
+      this.configService,
+    );
+    const externalUid =
+      event.externalUid?.trim() || `${event.id}@posta.lerta.com.tr`;
+    const slug = externalUid.replace(/[@/]/g, "_");
+    const anchor = new Date(occurrenceStartsAt.getTime());
+    const resourceHref = joinCalDavResourceUrl(
+      account.calendarUrl,
+      `${slug}_occ_${anchor.getTime()}.ics`,
+    );
+    try {
+      await calDavDeleteResource(
+        resourceHref,
+        account.username,
+        password,
+        null,
+      );
+    } catch {
+      // En iyi çaba.
+    }
+  }
+
   public async syncRecurrenceMasterToCalDavIfLinked(
     organizationId: string,
     eventId: string,
@@ -463,6 +506,8 @@ export class MailCalendarCalDavService {
       const parsed = icsBlocks.flatMap((block) =>
         parseIcalEvents(block).filter((ev) => ev.uid),
       );
+      const overrides = parsed.filter((ev) => isCalDavRecurrenceOverride(ev));
+      const masters = parsed.filter((ev) => !isCalDavRecurrenceOverride(ev));
       const uidSet = new Set(parsed.map((ev) => ev.uid!));
       const existing = await this.eventRepository.find({
         where: { organizationId, caldavAccountId: accountId },
@@ -476,7 +521,7 @@ export class MailCalendarCalDavService {
       }
       let imported = 0;
       let updated = 0;
-      for (const ev of parsed) {
+      for (const ev of masters) {
         const externalUid = ev.uid!;
         const found = await this.eventRepository.findOne({
           where: {
@@ -492,10 +537,21 @@ export class MailCalendarCalDavService {
           found.startsAt = ev.startsAt;
           found.endsAt = ev.endsAt;
           found.allDay = ev.allDay;
+          if (ev.recurrenceRule) {
+            found.recurrenceRule = ev.recurrenceRule;
+          }
           await this.eventRepository.save(found);
+          if (ev.recurrenceRule) {
+            await this.applyCalDavRecurrenceFromParsed(
+              organizationId,
+              found.id,
+              ev,
+              overrides.filter((row) => row.uid === externalUid),
+            );
+          }
           updated += 1;
         } else {
-          await this.eventRepository.save(
+          const created = await this.eventRepository.save(
             this.eventRepository.create({
               organizationId,
               title: ev.title,
@@ -504,13 +560,39 @@ export class MailCalendarCalDavService {
               startsAt: ev.startsAt,
               endsAt: ev.endsAt,
               allDay: ev.allDay,
+              recurrenceRule: ev.recurrenceRule,
               createdByUserId: userId,
               caldavAccountId: accountId,
               externalUid,
               caldavResourceHref: null,
             }),
           );
+          if (ev.recurrenceRule) {
+            await this.applyCalDavRecurrenceFromParsed(
+              organizationId,
+              created.id,
+              ev,
+              overrides.filter((row) => row.uid === externalUid),
+            );
+          }
           imported += 1;
+        }
+      }
+      for (const ov of overrides) {
+        const externalUid = ov.uid!;
+        const found = await this.eventRepository.findOne({
+          where: {
+            organizationId,
+            caldavAccountId: accountId,
+            externalUid,
+          },
+        });
+        if (found?.recurrenceRule && ov.recurrenceIdAt) {
+          await this.applyCalDavRecurrenceOverride(
+            organizationId,
+            found.id,
+            ov,
+          );
         }
       }
       account.lastSyncedAt = new Date();
@@ -558,6 +640,95 @@ export class MailCalendarCalDavService {
       throw new BadRequestException("Bu URL adresine izin verilmiyor.");
     }
     return url;
+  }
+
+  private async applyCalDavRecurrenceFromParsed(
+    organizationId: string,
+    masterEventId: string,
+    master: ParsedIcalEvent,
+    overridesForUid: ParsedIcalEvent[],
+  ): Promise<void> {
+    for (const exDate of master.exDates) {
+      await this.upsertRecurrenceException(organizationId, masterEventId, exDate, {
+        cancelled: true,
+      });
+    }
+    for (const ov of overridesForUid) {
+      if (ov.recurrenceIdAt) {
+        await this.applyCalDavRecurrenceOverride(organizationId, masterEventId, ov);
+      }
+    }
+  }
+
+  private async applyCalDavRecurrenceOverride(
+    organizationId: string,
+    masterEventId: string,
+    ov: ParsedIcalEvent,
+  ): Promise<void> {
+    if (!ov.recurrenceIdAt) {
+      return;
+    }
+    await this.upsertRecurrenceException(
+      organizationId,
+      masterEventId,
+      ov.recurrenceIdAt,
+      {
+        cancelled: false,
+        title: ov.title,
+        startsAt: ov.startsAt,
+        endsAt: ov.endsAt,
+        allDay: ov.allDay,
+      },
+    );
+  }
+
+  private async upsertRecurrenceException(
+    organizationId: string,
+    masterEventId: string,
+    occurrenceStartsAt: Date,
+    input: {
+      cancelled?: boolean;
+      title?: string;
+      startsAt?: Date;
+      endsAt?: Date;
+      allDay?: boolean;
+    },
+  ): Promise<void> {
+    const occ = new Date(occurrenceStartsAt.getTime());
+    let row = await this.recurrenceExceptionRepository.findOne({
+      where: {
+        organizationId,
+        masterEventId,
+        occurrenceStartsAt: occ,
+      },
+    });
+    if (!row) {
+      row = this.recurrenceExceptionRepository.create({
+        organizationId,
+        masterEventId,
+        occurrenceStartsAt: occ,
+        cancelled: input.cancelled ?? false,
+      });
+    }
+    if (input.cancelled !== undefined) {
+      row.cancelled = input.cancelled;
+    }
+    if (input.title !== undefined) {
+      row.overrideTitle = input.title.trim() || null;
+    }
+    if (input.startsAt !== undefined) {
+      row.overrideStartsAt = input.startsAt;
+    }
+    if (input.endsAt !== undefined) {
+      row.overrideEndsAt = input.endsAt;
+    }
+    if (input.allDay !== undefined) {
+      row.overrideAllDay = input.allDay;
+    }
+    if (!row.cancelled && input.startsAt) {
+      row.cancelled = false;
+    }
+    await this.recurrenceExceptionRepository.save(row);
   }
 
   private async buildEventIcsForCalDav(
