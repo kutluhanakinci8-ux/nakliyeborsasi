@@ -87,6 +87,7 @@ import {
   UpdateMailContactCardDavAccountRequestDto,
   UpdateMailCalendarEventRequestDto,
   PatchMailCalendarOccurrenceRequestDto,
+  PushCalDavOccurrenceRequestDto,
   UpdateMailOrgContactRequestDto,
 } from "./MailCalendarContactRequestDto";
 
@@ -1192,6 +1193,23 @@ export class CompanyMailInboxController {
       user.companyId,
       accountId,
       eventId,
+    );
+    return { ok: true, ...result };
+  }
+
+  @Post("calendar/caldav/accounts/:accountId/push/:eventId/occurrence")
+  public async pushCalendarOccurrenceToCalDav(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("accountId") accountId: string,
+    @Param("eventId") eventId: string,
+    @Body() body: PushCalDavOccurrenceRequestDto,
+  ) {
+    this.assertMailInboxWriter(user);
+    const result = await this.mailCalendarCalDavService.pushOccurrenceToAccount(
+      user.companyId,
+      accountId,
+      eventId,
+      new Date(body.occurrenceStartsAt),
     );
     return { ok: true, ...result };
   }

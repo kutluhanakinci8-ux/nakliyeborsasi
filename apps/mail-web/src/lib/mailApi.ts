@@ -1130,6 +1130,22 @@ export async function pushCalendarEventToCalDav(
   );
 }
 
+export async function pushCalendarOccurrenceToCalDav(
+  accessToken: string,
+  accountId: string,
+  eventId: string,
+  occurrenceStartsAt: string,
+) {
+  return apiFetch<{ resourceHref: string; externalUid: string }>(
+    accessToken,
+    `company/mail-inbox/calendar/caldav/accounts/${accountId}/push/${eventId}/occurrence`,
+    {
+      method: "POST",
+      body: JSON.stringify({ occurrenceStartsAt }),
+    },
+  );
+}
+
 export async function syncAllCalendarIcsFeeds(accessToken: string) {
   return apiFetch<{
     feeds: number;

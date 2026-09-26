@@ -1475,6 +1475,13 @@ a {
   font-size: 0.9rem;
 }
 
+.mail-rules-form-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
 .mail-cal-day.selected {
   background: #e8f0fe;
   border-color: #1a73e8;

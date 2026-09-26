@@ -180,6 +180,11 @@ sudo certbot certonly --webroot -w /var/www/certbot -d posta.lerta.com.tr
 
 - `mail_inbox_rule.condition_groups_json`; iç içe AND/OR blokları (API + Ayarlar → Kurallar)
 
+## G6++ — Kurallar UI + CalDAV tekrar push (uygulandı)
+
+- Kurallar: 3 grup UI, mevcut kuralı düzenleme (PATCH + `conditionGroups` temizleme)
+- CalDAV: tekrar örneği `RECURRENCE-ID` ile push (`push/.../occurrence`)
+
 ## G9 — IMAP/SMTP istemci bilgisi (uygulandı)
 
 - `imap-settings` API: SMTP host/port/güvenlik + gönderilen klasör notu

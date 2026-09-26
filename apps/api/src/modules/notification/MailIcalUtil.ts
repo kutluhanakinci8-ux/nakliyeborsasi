@@ -156,6 +156,9 @@ export function buildSingleVeventIcal(event: {
   allDay: boolean;
   recurrenceRule?: string | null;
   recurrenceUntil?: Date | null;
+  /** Tekrar örneği override — master UID ile RECURRENCE-ID (RRULE yok). */
+  recurrenceIdAt?: Date;
+  recurrenceIdAllDay?: boolean;
 }): string {
   const lines = [
     "BEGIN:VCALENDAR",
@@ -166,6 +169,16 @@ export function buildSingleVeventIcal(event: {
     `UID:${event.uid}`,
     `DTSTAMP:${formatUtc(new Date())}`,
   ];
+  if (event.recurrenceIdAt) {
+    const ridAllDay = Boolean(event.recurrenceIdAllDay);
+    if (ridAllDay) {
+      lines.push(
+        `RECURRENCE-ID;VALUE=DATE:${formatDateOnly(event.recurrenceIdAt)}`,
+      );
+    } else {
+      lines.push(`RECURRENCE-ID:${formatUtc(event.recurrenceIdAt)}`);
+    }
+  }
   if (event.allDay) {
     lines.push(`DTSTART;VALUE=DATE:${formatDateOnly(event.startsAt)}`);
     lines.push(`DTEND;VALUE=DATE:${formatDateOnly(event.endsAt)}`);

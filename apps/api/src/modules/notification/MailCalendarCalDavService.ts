@@ -8,6 +8,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { MailCalendarCalDavAccountEntity } from "../../infrastructure/database/entities/MailCalendarCalDavAccountEntity";
 import { MailCalendarEventEntity } from "../../infrastructure/database/entities/MailCalendarEventEntity";
+import { MailCalendarRecurrenceExceptionEntity } from "../../infrastructure/database/entities/MailCalendarRecurrenceExceptionEntity";
 import {
   decryptCalendarCredential,
   encryptCalendarCredential,
@@ -45,6 +46,8 @@ export class MailCalendarCalDavService {
     private readonly accountRepository: Repository<MailCalendarCalDavAccountEntity>,
     @InjectRepository(MailCalendarEventEntity)
     private readonly eventRepository: Repository<MailCalendarEventEntity>,
+    @InjectRepository(MailCalendarRecurrenceExceptionEntity)
+    private readonly recurrenceExceptionRepository: Repository<MailCalendarRecurrenceExceptionEntity>,
     private readonly configService: ConfigService,
   ) {}
 
@@ -293,6 +296,85 @@ export class MailCalendarCalDavService {
       event.caldavEtag = etag;
     }
     await this.eventRepository.save(event);
+    return { resourceHref, externalUid };
+  }
+
+  public async pushOccurrenceToAccount(
+    organizationId: string,
+    accountId: string,
+    eventId: string,
+    occurrenceStartsAt: Date,
+  ): Promise<{ resourceHref: string; externalUid: string }> {
+    const account = await this.assertAccount(organizationId, accountId);
+    if (!account.writeEnabled) {
+      throw new BadRequestException("Bu hesap için yazma kapalı.");
+    }
+    const event = await this.eventRepository.findOne({
+      where: { id: eventId, organizationId },
+    });
+    if (!event) {
+      throw new NotFoundException("Etkinlik bulunamadı.");
+    }
+    if (!event.recurrenceRule) {
+      throw new BadRequestException("Yalnızca tekrarlı etkinlik örneği yazılır.");
+    }
+    if (event.icsFeedId) {
+      throw new BadRequestException(
+        "Harici iCal akışından gelen etkinlik CalDAV’a yazılamaz.",
+      );
+    }
+    const anchor = new Date(occurrenceStartsAt.getTime());
+    if (Number.isNaN(anchor.getTime())) {
+      throw new BadRequestException("occurrenceStartsAt geçersiz.");
+    }
+    const exception = await this.recurrenceExceptionRepository.findOne({
+      where: {
+        organizationId,
+        masterEventId: event.id,
+        occurrenceStartsAt: anchor,
+      },
+    });
+    if (exception?.cancelled) {
+      throw new BadRequestException("İptal edilmiş tekrar CalDAV’a yazılamaz.");
+    }
+    const durationMs = event.endsAt.getTime() - event.startsAt.getTime();
+    const startsAt = exception?.overrideStartsAt ?? anchor;
+    const endsAt =
+      exception?.overrideEndsAt ??
+      new Date(startsAt.getTime() + durationMs);
+    const allDay = exception?.overrideAllDay ?? event.allDay;
+    const title = exception?.overrideTitle?.trim() || event.title;
+
+    const password = decryptCalendarCredential(
+      account.passwordCiphertext,
+      this.configService,
+    );
+    const externalUid =
+      event.externalUid?.trim() || `${event.id}@posta.lerta.com.tr`;
+    const ics = buildSingleVeventIcal({
+      uid: externalUid,
+      title,
+      description: event.description,
+      location: event.location,
+      startsAt,
+      endsAt,
+      allDay,
+      recurrenceIdAt: anchor,
+      recurrenceIdAllDay: event.allDay,
+    });
+    const slug = externalUid.replace(/[@/]/g, "_");
+    const resourceHref = joinCalDavResourceUrl(
+      account.calendarUrl,
+      `${slug}_occ_${anchor.getTime()}.ics`,
+    );
+    const etag = await calDavPutIcs(
+      resourceHref,
+      account.username,
+      password,
+      ics,
+      null,
+    );
+    void etag;
     return { resourceHref, externalUid };
   }
 

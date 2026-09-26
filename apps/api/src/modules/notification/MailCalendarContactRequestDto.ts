@@ -41,6 +41,11 @@ export class CreateMailCalendarEventRequestDto {
   public recurrenceUntil?: string;
 }
 
+export class PushCalDavOccurrenceRequestDto {
+  @IsISO8601()
+  public occurrenceStartsAt!: string;
+}
+
 export class PatchMailCalendarOccurrenceRequestDto {
   @IsISO8601()
   public occurrenceStartsAt!: string;
