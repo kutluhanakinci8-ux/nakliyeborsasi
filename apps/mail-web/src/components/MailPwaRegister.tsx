@@ -11,9 +11,16 @@ export function MailPwaRegister() {
     if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
       return;
     }
-    void navigator.serviceWorker.register("/sw.js").catch(() => {
-      /* pilot: SW opsiyonel */
-    });
+    const sha =
+      process.env.NEXT_PUBLIC_DEPLOY_SHA?.trim() || "dev";
+    void navigator.serviceWorker
+      .register(`/sw.js?v=${encodeURIComponent(sha)}`, { updateViaCache: "none" })
+      .then((reg) => {
+        void reg.update();
+      })
+      .catch(() => {
+        /* pilot: SW opsiyonel */
+      });
     const onMessage = (event: MessageEvent) => {
       if (
         event.data?.type === "lerta-mail-push" &&
