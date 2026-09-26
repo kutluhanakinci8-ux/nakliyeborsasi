@@ -1181,3 +1181,53 @@ a {
     padding: 24px;
   }
 }
+
+.mail-help-page {
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: 24px 20px 48px;
+  line-height: 1.55;
+}
+
+.mail-help-page h1 {
+  font-size: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.mail-help-page h2 {
+  font-size: 1.1rem;
+  margin-top: 1.5rem;
+}
+
+.mail-help-back {
+  margin-bottom: 1rem;
+}
+
+.mail-help-muted {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-top: 2rem;
+}
+
+.mail-settings-callout {
+  margin-top: 0.75rem;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid #f9ab00;
+  background: #fff8e1;
+  font-size: 0.88rem;
+}
+
+.mail-settings-callout p {
+  margin: 0.35rem 0 0;
+}
+
+.mail-copy-inline {
+  margin-left: 8px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  cursor: pointer;
+}

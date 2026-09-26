@@ -96,6 +96,13 @@ sudo certbot certonly --webroot -w /var/www/certbot -d posta.lerta.com.tr
 - UI: toplu seçim → **Ertele…** (1 sa / 3 sa / 1 gün / 1 hafta)
 - Benchmark güncellemesi (HTTPS, G2–G6 özellikleri)
 
+## G8 — Harici istemci & bildirim keşfi (uygulandı)
+
+- [MAIL_THUNDERBIRD_IMAP.md](./MAIL_THUNDERBIRD_IMAP.md) + web `/help/imap`
+- Ayarlar → IMAP: rehber linki, sunucu/kullanıcı **Kopyala**
+- Ayarlar → Bildirim: iOS Ana ekrana ekle uyarısı
+- [MAIL_CALDAV_D6.md](./MAIL_CALDAV_D6.md) — D6 plan notu (uygulama sonra)
+
 ## G5 — Kurallar v2 (uygulandı)
 
 - Okundu işaretle ve çöpe taşı işlemleri
