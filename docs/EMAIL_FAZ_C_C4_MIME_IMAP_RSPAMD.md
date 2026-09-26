@@ -2,7 +2,8 @@
 
 ## 1. MIME / HTML
 
-- `MailMimePartParser` — multipart plain + html
+- `MailMimePartParser` — multipart plain + html (nested multipart, charset-aware QP/base64)
+- `MailMimeCharset` — RFC 2047 encoded-word headers (Subject), ISO-8859-9 / windows-1254 body decode
 - `bodyHtml` (sanitize edilmiş) + `bodyText` inbound tablosunda
 - UI: HTML görünüm `iframe` + `srcDoc`
 
