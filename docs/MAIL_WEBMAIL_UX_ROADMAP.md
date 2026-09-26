@@ -109,6 +109,11 @@ sudo certbot certonly --webroot -w /var/www/certbot -d posta.lerta.com.tr
 - iCal `.ics` içe/dışa; vCard `.vcf` dışa
 - Detay: [MAIL_CALDAV_D6.md](./MAIL_CALDAV_D6.md)
 
+## D6+ — Takvim ızgarası & vCard import (uygulandı)
+
+- Ay ızgarası, gün seçimi ile etkinlik listesi
+- `POST contacts/import` (`.vcf` yükle)
+
 ## G5 — Kurallar v2 (uygulandı)
 
 - Okundu işaretle ve çöpe taşı işlemleri

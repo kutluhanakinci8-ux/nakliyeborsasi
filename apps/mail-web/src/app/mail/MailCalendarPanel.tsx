@@ -9,6 +9,7 @@ import {
   importCalendarIcs,
   type MailCalendarEvent,
 } from "@/lib/mailApi";
+import { buildMonthGrid, dayKeyFromIso } from "./mailCalendarGrid";
 
 type Props = {
   accessToken: string;
@@ -31,8 +32,23 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
   const [startLocal, setStartLocal] = useState("");
   const [endLocal, setEndLocal] = useState("");
   const [allDay, setAllDay] = useState(false);
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
   const bounds = useMemo(() => monthBounds(year, month), [year, month]);
+  const grid = useMemo(() => buildMonthGrid(year, month), [year, month]);
+  const eventDays = useMemo(() => {
+    const set = new Set<string>();
+    for (const ev of events) {
+      set.add(dayKeyFromIso(ev.startsAt));
+    }
+    return set;
+  }, [events]);
+  const visibleEvents = useMemo(() => {
+    if (!selectedDay) {
+      return events;
+    }
+    return events.filter((ev) => dayKeyFromIso(ev.startsAt) === selectedDay);
+  }, [events, selectedDay]);
   const monthLabel = useMemo(
     () =>
       new Date(year, month, 1).toLocaleDateString("tr-TR", {
@@ -68,6 +84,7 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
     const d = new Date(year, month + delta, 1);
     setYear(d.getFullYear());
     setMonth(d.getMonth());
+    setSelectedDay(null);
   }
 
   async function onAddEvent() {
@@ -161,6 +178,46 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
         </div>
       </header>
 
+      <div className="mail-cal-grid" role="grid" aria-label="Ay görünümü">
+        {["Pt", "Sa", "Ça", "Pe", "Cu", "Ct", "Pz"].map((label) => (
+          <div key={label} className="mail-cal-weekday" role="columnheader">
+            {label}
+          </div>
+        ))}
+        {grid.map((cell) => {
+          const hasEvents = eventDays.has(cell.key);
+          const selected = selectedDay === cell.key;
+          return (
+            <button
+              key={cell.key}
+              type="button"
+              role="gridcell"
+              className={[
+                "mail-cal-day",
+                cell.inMonth ? "" : "muted",
+                hasEvents ? "has-events" : "",
+                selected ? "selected" : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              onClick={() =>
+                setSelectedDay((prev) => (prev === cell.key ? null : cell.key))
+              }
+            >
+              {cell.day}
+            </button>
+          );
+        })}
+      </div>
+      {selectedDay ? (
+        <p className="mail-d6-filter-hint">
+          Filtre: {selectedDay}{" "}
+          <button type="button" onClick={() => setSelectedDay(null)}>
+            Tüm ay
+          </button>
+        </p>
+      ) : null}
+
       <div className="mail-d6-form">
         <input
           placeholder="Etkinlik başlığı"
@@ -194,7 +251,7 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
 
       {loading ? <p>Yükleniyor…</p> : null}
       <ul className="mail-d6-list">
-        {events.map((ev) => (
+        {visibleEvents.map((ev) => (
           <li key={ev.id}>
             <div>
               <strong>{ev.title}</strong>
@@ -224,8 +281,10 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
             </button>
           </li>
         ))}
-        {!loading && events.length === 0 ? (
-          <li className="mail-d6-empty">Bu ay etkinlik yok.</li>
+        {!loading && visibleEvents.length === 0 ? (
+          <li className="mail-d6-empty">
+            {selectedDay ? "Bu gün etkinlik yok." : "Bu ay etkinlik yok."}
+          </li>
         ) : null}
       </ul>
       <p className="mail-d6-hint">

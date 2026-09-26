@@ -6,6 +6,7 @@ import {
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { MailOrgContactEntity } from "../../infrastructure/database/entities/MailOrgContactEntity";
+import { parseVcfContacts } from "./MailVcfUtil";
 
 const MAX_CONTACTS = 1000;
 
@@ -96,6 +97,54 @@ export class MailOrganizationContactService {
   public async delete(organizationId: string, contactId: string): Promise<void> {
     const row = await this.assertContact(organizationId, contactId);
     await this.contactRepository.remove(row);
+  }
+
+  public async importVcf(
+    organizationId: string,
+    vcfText: string,
+  ): Promise<{ imported: number; skipped: number }> {
+    const trimmed = vcfText.trim();
+    if (trimmed.length < 10) {
+      throw new BadRequestException("Geçersiz vCard içeriği.");
+    }
+    if (trimmed.length > 500_000) {
+      throw new BadRequestException("vCard dosyası çok büyük.");
+    }
+    const parsed = parseVcfContacts(trimmed);
+    if (parsed.length === 0) {
+      throw new BadRequestException("vCard içinde kişi bulunamadı.");
+    }
+    const count = await this.contactRepository.count({
+      where: { organizationId },
+    });
+    let imported = 0;
+    let skipped = 0;
+    for (const row of parsed) {
+      if (count + imported >= MAX_CONTACTS) {
+        skipped += parsed.length - imported - skipped;
+        break;
+      }
+      try {
+        this.validateContactInput({
+          displayName: row.displayName,
+          email: row.email,
+        });
+      } catch {
+        skipped += 1;
+        continue;
+      }
+      await this.contactRepository.save(
+        this.contactRepository.create({
+          organizationId,
+          displayName: row.displayName.trim(),
+          email: row.email,
+          phone: row.phone,
+          notes: row.notes,
+        }),
+      );
+      imported += 1;
+    }
+    return { imported, skipped };
   }
 
   public async exportVcf(organizationId: string): Promise<string> {

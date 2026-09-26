@@ -88,6 +88,12 @@ export class CreateMailOrgContactRequestDto {
   public notes?: string;
 }
 
+export class ImportMailContactsVcfRequestDto {
+  @IsString()
+  @MaxLength(500_000)
+  public vcf!: string;
+}
+
 export class UpdateMailOrgContactRequestDto {
   @IsOptional()
   @IsString()
