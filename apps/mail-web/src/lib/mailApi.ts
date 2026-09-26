@@ -1188,10 +1188,18 @@ export async function createCalendarEvent(
 export async function deleteCalendarEvent(
   accessToken: string,
   eventId: string,
+  occurrenceStartsAt?: string,
 ) {
-  await apiFetch(accessToken, `company/mail-inbox/calendar/events/${eventId}`, {
-    method: "DELETE",
-  });
+  const q = occurrenceStartsAt
+    ? `?occurrenceStartsAt=${encodeURIComponent(occurrenceStartsAt)}`
+    : "";
+  await apiFetch(
+    accessToken,
+    `company/mail-inbox/calendar/events/${eventId}${q}`,
+    {
+      method: "DELETE",
+    },
+  );
 }
 
 export async function importCalendarIcs(accessToken: string, ics: string) {

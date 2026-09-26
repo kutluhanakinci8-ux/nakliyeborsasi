@@ -148,6 +148,15 @@ sudo certbot certonly --webroot -w /var/www/certbot -d posta.lerta.com.tr
 
 - `mail_org_contact.carddav_etag`; silmede uzak DELETE
 
+## D6 — Tekrar istisnası + çok günlü ızgara (uygulandı)
+
+- `mail_calendar_recurrence_exception`; bu tekrarı sil / tüm seri
+- Ay ızgarasında çok günlü etkinlik vurgusu (`multi-day-span`)
+
+## G6+ — Kurallar alternatif metin (uygulandı)
+
+- Koşul alanlarında `|` ile OR alt string (ör. `a|b`)
+
 ## G5 — Kurallar v2 (uygulandı)
 
 - Okundu işaretle ve çöpe taşı işlemleri

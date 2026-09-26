@@ -352,13 +352,17 @@ export class MailInboxRuleService {
       return false;
     }
     const fromOk =
-      !fromNeedle || message.fromAddress.toLowerCase().includes(fromNeedle);
+      !fromNeedle ||
+      this.fieldMatchesAlternatives(message.fromAddress, fromNeedle);
     const subjectOk =
-      !subjectNeedle || message.subject.toLowerCase().includes(subjectNeedle);
+      !subjectNeedle ||
+      this.fieldMatchesAlternatives(message.subject, subjectNeedle);
     const toList = message.toRecipients ?? [];
     const toOk =
       !toNeedle ||
-      toList.some((addr) => addr.toLowerCase().includes(toNeedle));
+      toList.some((addr) =>
+        this.fieldMatchesAlternatives(addr, toNeedle),
+      );
     const hasAttachment = (message.attachments?.length ?? 0) > 0;
     if (rule.matchAnyCondition) {
       const parts: boolean[] = [];
@@ -417,6 +421,18 @@ export class MailInboxRuleService {
     if (!input.name?.trim()) {
       throw new BadRequestException("Kural adı gerekli.");
     }
+  }
+
+  private fieldMatchesAlternatives(haystack: string, needle: string): boolean {
+    const lowerHay = haystack.toLowerCase();
+    if (needle.includes("|")) {
+      return needle
+        .split("|")
+        .map((part) => part.trim())
+        .filter((part) => part.length > 0)
+        .some((part) => lowerHay.includes(part));
+    }
+    return lowerHay.includes(needle);
   }
 
   private normalizeOptional(value?: string | null): string | null {

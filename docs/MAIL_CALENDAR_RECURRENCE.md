@@ -6,7 +6,8 @@ Org takviminde **günlük / haftalık / aylık** tekrar; liste görünümünde a
 
 Takvim → yeni etkinlik → **Tekrar** seçimi; isteğe bağlı **bitiş tarihi**.
 
-- Silme: tüm seriyi kaldırır (tek örnek silme sonraki faz).
+- **Bu tekrarı sil** — `DELETE calendar/events/:id?occurrenceStartsAt=` ile istisna (o örnek listeden düşer).
+- **Tüm seriyi sil** — ana etkinlik ve istisnalar kaldırılır.
 - Ay ızgarasında tekrarların her örneği gün noktası olarak görünür.
 
 ## API

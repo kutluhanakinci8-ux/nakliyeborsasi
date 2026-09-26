@@ -9,7 +9,12 @@ import {
   importCalendarIcs,
   type MailCalendarEvent,
 } from "@/lib/mailApi";
-import { buildMonthGrid, dayKeyFromIso } from "./mailCalendarGrid";
+import {
+  buildMonthGrid,
+  dayKeyFromIso,
+  enumerateDayKeysBetween,
+  eventOverlapsDayKey,
+} from "./mailCalendarGrid";
 import { MailCalendarFeedsPanel } from "./MailCalendarFeedsPanel";
 import { MailCalendarCalDavPanel } from "./MailCalendarCalDavPanel";
 import {
@@ -52,7 +57,21 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
   const eventDays = useMemo(() => {
     const set = new Set<string>();
     for (const ev of events) {
-      set.add(dayKeyFromIso(ev.startsAt));
+      for (const key of enumerateDayKeysBetween(ev.startsAt, ev.endsAt)) {
+        set.add(key);
+      }
+    }
+    return set;
+  }, [events]);
+  const multiDayKeys = useMemo(() => {
+    const set = new Set<string>();
+    for (const ev of events) {
+      const keys = enumerateDayKeysBetween(ev.startsAt, ev.endsAt);
+      if (keys.length > 1) {
+        for (const key of keys) {
+          set.add(key);
+        }
+      }
     }
     return set;
   }, [events]);
@@ -60,7 +79,9 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
     if (!selectedDay) {
       return events;
     }
-    return events.filter((ev) => dayKeyFromIso(ev.startsAt) === selectedDay);
+    return events.filter((ev) =>
+      eventOverlapsDayKey(ev.startsAt, ev.endsAt, selectedDay),
+    );
   }, [events, selectedDay]);
   const monthLabel = useMemo(
     () =>
@@ -214,6 +235,7 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
         ))}
         {grid.map((cell) => {
           const hasEvents = eventDays.has(cell.key);
+          const multiDay = multiDayKeys.has(cell.key);
           const selected = selectedDay === cell.key;
           return (
             <button
@@ -224,6 +246,7 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
                 "mail-cal-day",
                 cell.inMonth ? "" : "muted",
                 hasEvents ? "has-events" : "",
+                multiDay ? "multi-day-span" : "",
                 selected ? "selected" : "",
               ]
                 .filter(Boolean)
@@ -338,13 +361,40 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
                   CalDAV’a yaz
                 </button>
               ) : null}
+              {ev.recurrenceRule ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    void deleteCalendarEvent(
+                      accessToken,
+                      ev.id,
+                      ev.startsAt,
+                    )
+                      .then(() => {
+                        onToast("Bu tekrar kaldırıldı.");
+                        void load();
+                      })
+                      .catch((err: unknown) => {
+                        onToast(
+                          err instanceof Error
+                            ? err.message
+                            : "Kaldırılamadı.",
+                        );
+                      })
+                  }
+                >
+                  Bu tekrarı sil
+                </button>
+              ) : null}
               <button
                 type="button"
                 className="mail-d6-danger"
                 onClick={() =>
                   void deleteCalendarEvent(accessToken, ev.id)
                     .then(() => {
-                      onToast("Silindi.");
+                      onToast(
+                        ev.recurrenceRule ? "Tüm seri silindi." : "Silindi.",
+                      );
                       void load();
                     })
                     .catch((err: unknown) => {
@@ -354,7 +404,7 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
                     })
                 }
               >
-                Sil
+                {ev.recurrenceRule ? "Tüm seriyi sil" : "Sil"}
               </button>
             </span>
           </li>
