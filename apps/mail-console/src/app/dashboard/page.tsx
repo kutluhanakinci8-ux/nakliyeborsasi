@@ -6,7 +6,9 @@ import { useRouter } from "next/navigation";
 import { ConsoleShell } from "@/components/ConsoleShell";
 import { MAIL_WEB_URL } from "@/lib/apiConfig";
 import { MAIL_SAAS_TENANT_DOMAIN } from "@/lib/mailTenantDomain";
+import { suggestLertaPostMailbox } from "@/lib/lertaPostAddress";
 import {
+  claimMailAddress,
   fetchCustomDomainBundle,
   cancelMailSubscription,
   fetchMailBillingLifecycle,
@@ -65,6 +67,9 @@ export default function DashboardPage() {
   const [customDomainStatus, setCustomDomainStatus] = useState<string | null>(
     null,
   );
+  const [lertaPostLoading, setLertaPostLoading] = useState(false);
+  const [lertaPostMessage, setLertaPostMessage] = useState("");
+  const [lertaPostError, setLertaPostError] = useState("");
   const [billingLifecycle, setBillingLifecycle] = useState<{
     statusLabelTr: string;
     detailTr: string;
@@ -215,6 +220,35 @@ export default function DashboardPage() {
       await refreshSubscription(accessToken);
     } catch {
       setPlanMessage("Plan güncellenemedi.");
+    }
+  }
+
+  const suggestedLertaPost = suggestLertaPostMailbox(customDomain, "info");
+
+  async function onSwitchToLertaPost() {
+    if (!accessToken || !suggestedLertaPost) {
+      return;
+    }
+    setLertaPostError("");
+    setLertaPostMessage("");
+    setLertaPostLoading(true);
+    try {
+      const result = await claimMailAddress(accessToken, suggestedLertaPost);
+      setDisplayAddress(result.vanityAddress ?? result.fromAddress);
+      setFromAddress(result.fromAddress);
+      setMailChannel("instant_post");
+      setVerified(true);
+      setPlatformDnsReady(result.publicDnsReady);
+      setLertaPostMessage(
+        `${result.vanityAddress ?? result.fromAddress} — ${result.nextStepTr}`,
+      );
+      await refreshSubscription(accessToken);
+    } catch {
+      setLertaPostError(
+        "Lerta Posta adresi açılamadı. API güncel mi kontrol edin veya domain sayfasında manuel yazın.",
+      );
+    } finally {
+      setLertaPostLoading(false);
     }
   }
 
@@ -514,6 +548,32 @@ export default function DashboardPage() {
           Deneme (ödeme yok)
         </button>
       </div>
+
+      {!isLertaPost && suggestedLertaPost ? (
+        <div className="card" style={{ marginBottom: 16, borderColor: "var(--accent)" }}>
+          <h2 style={{ marginTop: 0 }}>Lerta Posta (sıfır DNS)</h2>
+          <p style={{ margin: 0, color: "var(--muted)" }}>
+            Kurumsal kutunuz <strong>{suggestedLertaPost}</strong> olarak tanımlanabilir.
+            Yönetim paneli giriş e-postanız değişmez; gönderim ve alım bu Posta adresiyle
+            yapılır.
+          </p>
+          <button
+            type="button"
+            className="btn"
+            style={{ marginTop: 12 }}
+            disabled={lertaPostLoading}
+            onClick={() => void onSwitchToLertaPost()}
+          >
+            {suggestedLertaPost} olarak ayarla
+          </button>
+          {lertaPostMessage ? (
+            <p style={{ color: "var(--success)", fontWeight: 600, marginTop: 12 }}>
+              {lertaPostMessage}
+            </p>
+          ) : null}
+          {lertaPostError ? <p className="auth-error">{lertaPostError}</p> : null}
+        </div>
+      ) : null}
 
       <div className="card">
         <h2>Kurumsal posta kutusu</h2>
