@@ -752,6 +752,21 @@ export async function snoozeMailMessage(
   );
 }
 
+export async function bulkSnoozeMailMessages(
+  accessToken: string,
+  messageIds: string[],
+  snoozedUntil: string,
+) {
+  return apiFetch<{ updated: number }>(
+    accessToken,
+    "company/mail-inbox/messages/bulk/snooze",
+    {
+      method: "POST",
+      body: JSON.stringify({ messageIds, snoozedUntil }),
+    },
+  );
+}
+
 export async function unsnoozeMailMessage(accessToken: string, messageId: string) {
   await apiFetch(accessToken, `company/mail-inbox/messages/${messageId}/unsnooze`, {
     method: "POST",

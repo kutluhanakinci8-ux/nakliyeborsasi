@@ -26,3 +26,5 @@ Yeni inbound (spam engelli değil) → org aboneliklerine push.
 ## Webmail
 
 Ayarlar → **Bildirim** → Bildirimleri aç (tarayıcı izni + service worker).
+
+**iOS / Safari:** Sekmede push yok; iOS 16.4+ için uygulamayı ana ekrana ekleyin. Detay: [MAIL_WEB_PUSH_IOS.md](./MAIL_WEB_PUSH_IOS.md).

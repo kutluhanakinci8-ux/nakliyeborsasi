@@ -662,6 +662,24 @@ export class MailOrganizationInboxService {
     await this.inboundRepository.save(row);
   }
 
+  public async bulkSnoozeMessages(
+    organizationId: string,
+    messageIds: string[],
+    snoozedUntil: Date,
+  ): Promise<{ updated: number }> {
+    let updated = 0;
+    for (const messageId of messageIds) {
+      const row = await this.assertMessageAccess(organizationId, messageId);
+      if (row.mailboxFolder === "trash") {
+        continue;
+      }
+      row.snoozedUntil = snoozedUntil;
+      await this.inboundRepository.save(row);
+      updated += 1;
+    }
+    return { updated };
+  }
+
   private applySnoozeListFilter(
     qb: SelectQueryBuilder<MailInboundMessageEntity>,
     folder: InboxFolder,

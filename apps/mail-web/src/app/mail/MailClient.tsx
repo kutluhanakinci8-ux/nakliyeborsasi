@@ -28,6 +28,7 @@ import {
   bulkMarkUnread,
   bulkSetMessageMailboxFolder,
   bulkSetMessageStarred,
+  bulkSnoozeMailMessages,
   replyMail,
   snoozeMailMessage,
   unsnoozeMailMessage,
@@ -724,6 +725,30 @@ export function MailClient() {
     } catch (error) {
       setToast(
         error instanceof Error ? error.message : "Toplu yıldız başarısız.",
+      );
+    }
+  }
+
+  async function runBulkSnooze(hours: number) {
+    if (!accessToken || checkedIds.size === 0) {
+      return;
+    }
+    const messageIds = [...checkedIds];
+    const until = new Date(Date.now() + hours * 60 * 60 * 1000);
+    try {
+      const result = await bulkSnoozeMailMessages(
+        accessToken,
+        messageIds,
+        until.toISOString(),
+      );
+      setToast(`${result.updated} mesaj ${hours} saat ertelendi.`);
+      setCheckedIds(new Set());
+      setDetail(null);
+      setSelectedId(null);
+      void refresh();
+    } catch (error) {
+      setToast(
+        error instanceof Error ? error.message : "Toplu erteleme başarısız.",
       );
     }
   }
@@ -1500,6 +1525,25 @@ export function MailClient() {
                       >
                         Yıldız kaldır
                       </button>
+                      <select
+                        className="mail-bulk-folder-select"
+                        defaultValue=""
+                        aria-label="Seçilenleri ertele"
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          e.target.value = "";
+                          if (!v) {
+                            return;
+                          }
+                          void runBulkSnooze(Number(v));
+                        }}
+                      >
+                        <option value="">Ertele…</option>
+                        <option value="1">1 saat</option>
+                        <option value="3">3 saat</option>
+                        <option value="24">1 gün</option>
+                        <option value="168">1 hafta</option>
+                      </select>
                     </>
                   ) : null}
                   {view === "inbox" || activeCustomFolderId ? (

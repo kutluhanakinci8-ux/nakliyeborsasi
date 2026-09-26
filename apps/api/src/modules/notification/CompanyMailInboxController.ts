@@ -40,6 +40,7 @@ import {
 import {
   BulkMailInboxFolderDto,
   BulkMailInboxStarDto,
+  BulkMailInboxSnoozeDto,
   BulkMailInboxIdsDto,
 } from "./BulkMailInboxRequestDto";
 import { MailOrganizationBrandingService } from "./MailOrganizationBrandingService";
@@ -696,6 +697,24 @@ export class CompanyMailInboxController {
       user.companyId,
       body.messageIds,
       body.starred,
+    );
+    return { ok: true, ...result };
+  }
+
+  @Post("messages/bulk/snooze")
+  public async bulkSnoozeMessages(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: BulkMailInboxSnoozeDto,
+  ) {
+    this.assertMailInboxWriter(user);
+    const until = new Date(body.snoozedUntil);
+    if (Number.isNaN(until.getTime()) || until.getTime() <= Date.now()) {
+      throw new BadRequestException("Geçerli gelecek bir tarih gerekli.");
+    }
+    const result = await this.mailOrganizationInboxService.bulkSnoozeMessages(
+      user.companyId,
+      body.messageIds,
+      until,
     );
     return { ok: true, ...result };
   }
