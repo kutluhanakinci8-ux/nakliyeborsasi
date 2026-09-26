@@ -13,6 +13,9 @@ git pull origin "$BRANCH"
 if [[ -x "$INSTALL_DIR/scripts/apply-mail-compose-draft-schema.sh" ]]; then
   bash "$INSTALL_DIR/scripts/apply-mail-compose-draft-schema.sh" "$INSTALL_DIR" || true
 fi
+if [[ -x "$INSTALL_DIR/scripts/apply-mail-d6-calendar-contacts-schema.sh" ]]; then
+  bash "$INSTALL_DIR/scripts/apply-mail-d6-calendar-contacts-schema.sh" "$INSTALL_DIR" || true
+fi
 if [[ -x "$INSTALL_DIR/scripts/apply-lerta-mail-subscription-plans.sh" ]]; then
   bash "$INSTALL_DIR/scripts/apply-lerta-mail-subscription-plans.sh" "$INSTALL_DIR" || true
 fi

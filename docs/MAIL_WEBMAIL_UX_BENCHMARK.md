@@ -2,7 +2,7 @@
 
 **Kapsam:** `posta.lerta.com.tr` (`apps/mail-web`) — günlük kullanım vs Gmail, Outlook Web, Zoho Mail, Proton Mail.  
 **Referans ekran:** 3 sütun (sol menü · liste · okuma), pilot `kullanici.lerta.com.tr` kutusu.  
-**Son güncelleme:** G8 (IMAP rehberi, ayarlar UX, D6 plan notu).
+**Son güncelleme:** D6 MVP (org takvim + kişiler, iCal/vCard).
 
 ---
 
@@ -17,7 +17,7 @@
 | Yazma deneyimi | 12% | **72** | 90 | 88 | Cc/Bcc, HTML; tam WYSIWYG değil |
 | Mobil / PWA | 10% | **68** | 85 | 82 | Paneller + SW; iOS push sadece PWA ([iOS doc](./MAIL_WEB_PUSH_IOS.md)) |
 | Kurumsal (marka, alias) | 8% | **65** | 70 | 75 | G4 logo/başlık; alias/IMAP paneli |
-| Entegrasyon (IMAP, takvim) | 8% | **50** | 90 | 92 | IMAP; CalDAV/kişi yok (D6) |
+| Entegrasyon (IMAP, takvim) | 8% | **62** | 90 | 92 | IMAP; org takvim/kişi MVP (harici CalDAV sonra) |
 | Akıllı özellikler | 5% | **35** | 80 | 75 | Gelen kuralları MVP; AI özet yok |
 
 **Ağırlıklı Lerta skoru ≈ 72/100** — KOBİ pilot için **güçlü MVP**; Gmail/Outlook ile **takvim/kişi + AI** açığı sürer.
@@ -48,7 +48,7 @@
 | TOTP (webmail) | ✓ | ✓ | ✓ | — |
 | Özel klasör / etiket | ✓ (G5) | ✓ | ✓ | — |
 | Kurallar / filtre | ✓ MVP (G5) | ✓ | ✓ | G5+ derinleştirme |
-| Takvim / kişiler | ✗ | ✓ | ✓ | D6 |
+| Takvim / kişiler | ✓ MVP (D6) | ✓ | ✓ | Harici CalDAV |
 | Web push / ses | ✓ (G6) | ✓ | ✓ | iOS PWA doc |
 | Karanlık tema | ✓ (G4) | ✓ | ✓ | — |
 | Kurumsal logo (tenant) | ✓ (G4) | kısmi | ✓ | — |

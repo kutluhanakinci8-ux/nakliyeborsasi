@@ -936,6 +936,133 @@ export async function deleteComposePreset(
   });
 }
 
+export type MailCalendarEvent = {
+  id: string;
+  title: string;
+  description: string | null;
+  location: string | null;
+  startsAt: string;
+  endsAt: string;
+  allDay: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type MailOrgContact = {
+  id: string;
+  displayName: string;
+  email: string | null;
+  phone: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export async function fetchCalendarEvents(
+  accessToken: string,
+  from: string,
+  to: string,
+) {
+  const q = new URLSearchParams({ from, to });
+  return apiFetch<{ events: MailCalendarEvent[] }>(
+    accessToken,
+    `company/mail-inbox/calendar/events?${q}`,
+  );
+}
+
+export async function createCalendarEvent(
+  accessToken: string,
+  body: {
+    title: string;
+    description?: string;
+    location?: string;
+    startsAt: string;
+    endsAt: string;
+    allDay?: boolean;
+  },
+) {
+  return apiFetch<{ event: MailCalendarEvent }>(
+    accessToken,
+    "company/mail-inbox/calendar/events",
+    { method: "POST", body: JSON.stringify(body) },
+  );
+}
+
+export async function deleteCalendarEvent(
+  accessToken: string,
+  eventId: string,
+) {
+  await apiFetch(accessToken, `company/mail-inbox/calendar/events/${eventId}`, {
+    method: "DELETE",
+  });
+}
+
+export async function importCalendarIcs(accessToken: string, ics: string) {
+  return apiFetch<{ imported: number; skipped: number }>(
+    accessToken,
+    "company/mail-inbox/calendar/import",
+    { method: "POST", body: JSON.stringify({ ics }) },
+  );
+}
+
+export async function downloadCalendarIcs(
+  accessToken: string,
+  from: string,
+  to: string,
+): Promise<Blob> {
+  const q = new URLSearchParams({ from, to });
+  const response = await fetch(
+    `${resolveApiBaseUrl()}/company/mail-inbox/calendar/export.ics?${q}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  );
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(formatApiError(text));
+  }
+  return response.blob();
+}
+
+export async function fetchOrgContacts(accessToken: string) {
+  return apiFetch<{ contacts: MailOrgContact[] }>(
+    accessToken,
+    "company/mail-inbox/contacts",
+  );
+}
+
+export async function createOrgContact(
+  accessToken: string,
+  body: {
+    displayName: string;
+    email?: string;
+    phone?: string;
+    notes?: string;
+  },
+) {
+  return apiFetch<{ contact: MailOrgContact }>(
+    accessToken,
+    "company/mail-inbox/contacts",
+    { method: "POST", body: JSON.stringify(body) },
+  );
+}
+
+export async function deleteOrgContact(accessToken: string, contactId: string) {
+  await apiFetch(accessToken, `company/mail-inbox/contacts/${contactId}`, {
+    method: "DELETE",
+  });
+}
+
+export async function downloadContactsVcf(accessToken: string): Promise<Blob> {
+  const response = await fetch(
+    `${resolveApiBaseUrl()}/company/mail-inbox/contacts/export.vcf`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  );
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(formatApiError(text));
+  }
+  return response.blob();
+}
+
 export async function fetchImapSettings(accessToken: string) {
   const payload = await apiFetch<{ settings: MailImapSettings }>(
     accessToken,

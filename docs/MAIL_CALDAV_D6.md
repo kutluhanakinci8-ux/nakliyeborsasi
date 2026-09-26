@@ -1,17 +1,48 @@
-# D6 — Takvim ve kişiler (plan)
+# D6 — Takvim ve kişiler (MVP uygulandı)
 
-**Durum:** Henüz uygulanmadı. Faz D yol haritasında düşük öncelik; harici **CalDAV/CardDAV** entegrasyonu veya ayrı ürün fazı olarak değerlendirilecek.
+Org düzeyinde **basit takvim** ve **kişi listesi** webmail içinde; harici CalDAV/CardDAV sunucu köprüsü sonraki faz.
 
-## Hedef (taslak)
+## Webmail
 
-- Kurumsal kullanıcı: webmail yan panel veya `posta.lerta.com.tr` altında basit takvim/kişi görünümü **veya**
-- Nextcloud / Google Workspace köprüsü ile mevcut CalDAV sunucusuna bağlantı bilgisi (sadece dokümantasyon + deep link)
+Sol menü → **Takvim** / **Kişiler**
 
-## Kabul kriteri (gelecek)
+- Etkinlik ekle/sil, ay görünümü listesi
+- Kişi ekle/sil, listeden **Yaz** ile compose
+- **.ics** içe/dışa aktarma (takvim)
+- **.vcf** dışa aktarma (kişiler)
 
-- En az bir pilot org için okuma/yazma testi (iCal VEVENT import/export minimum)
-- KVKK: kişi verisi org sınırında, audit ile uyumlu
+## API (`company/mail-inbox`)
 
-## Şimdilik
+| Yöntem | Yol |
+|--------|-----|
+| GET | `calendar/events?from=&to=` (ISO) |
+| POST | `calendar/events` |
+| PATCH | `calendar/events/:eventId` |
+| DELETE | `calendar/events/:eventId` |
+| GET | `calendar/export.ics?from=&to=` |
+| POST | `calendar/import` `{ "ics": "..." }` |
+| GET | `contacts` |
+| POST | `contacts` |
+| PATCH | `contacts/:contactId` |
+| DELETE | `contacts/:contactId` |
+| GET | `contacts/export.vcf` |
 
-- E-posta odaklı MVP: [MAIL_THUNDERBIRD_IMAP.md](./MAIL_THUNDERBIRD_IMAP.md), [MAIL_WEBMAIL_UX_ROADMAP.md](./MAIL_WEBMAIL_UX_ROADMAP.md)
+Veri `mail_calendar_event` ve `mail_org_contact` tablolarında; org (`companyId`) ile sınırlı.
+
+## VPS şema
+
+```bash
+bash scripts/apply-mail-d6-calendar-contacts-schema.sh /var/www/nakliyeborsasi
+```
+
+`deploy-posta-lerta-com-tr.sh` bu scripti otomatik çağırır.
+
+## Sonraki (plan)
+
+- Harici CalDAV/CardDAV hesap bağlama (Nextcloud vb.)
+- Tam ay ızgarası UI, tekrarlayan etkinlikler
+- Kişi `.vcf` içe aktarma
+
+## İlgili
+
+- [MAIL_WEBMAIL_UX_ROADMAP.md](./MAIL_WEBMAIL_UX_ROADMAP.md)
