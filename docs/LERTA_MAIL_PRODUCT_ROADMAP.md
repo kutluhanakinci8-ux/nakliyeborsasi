@@ -16,9 +16,9 @@
 | Vitrin + API fiyat planları | MVP |
 | Stripe / iyzico callback kodu | Kod hazır; **Stripe test anahtarları VPS’te sizden** |
 | www → mail vitrin | **Bekliyor** (U88 taşınması; cutover scriptleri hazır — `WWW_CUTOVER_LERTA_MAIL.md`) |
-| Thread / konuşma görünümü | Yok |
+| Thread / konuşma görünümü | **uygulandı (D1)** |
 | Çoklu kullanıcı / davet / roller (mail_admin) | **uygulandı (B3)** |
-| Faturalama yaşam döngüsü (iptal, fatura e-postası) | Yok |
+| Faturalama yaşam döngüsü (iptal, fatura e-postası) | **uygulandı (B6)** — canlı ödeme anahtarı bekliyor |
 | KVKK export / silme self-servis | Konsol /privacy + API (E3) |
 | Kurumsal kimlik (logo, imza, hukuki sayfalar) | Kısmi |
 
@@ -83,8 +83,8 @@
 | D3 | İmza ve şablonlar | Orta | `compose-presets` API, ayarlar + yaz ekranı — **uygulandı** |
 | D4 | Gelişmiş arama (filtre) | Orta | Gönderen, tarih aralığı, ek — **uygulandı** |
 | D5 | Büyük ek / kota depolama | Orta | Plan GB + ek MB, kota çubuğu, ingest engeli — **uygulandı** |
-| D6 | Takvim / kişiler | Düşük | Harici CalDAV sonra |
-| D7 | Bildirimler (push / ses) | Düşük | PWA sonrası |
+| D6 | Takvim / kişiler | Düşük | Org takvim + kişi, iCal/CalDAV/CardDAV, tekrar — **uygulandı** |
+| D7 | Bildirimler (push / ses) | Düşük | Web push, SW v4, ses — **uygulandı** |
 
 ---
 
@@ -101,9 +101,10 @@
 | G4 | Tema, tenant logo, zengin yazım | **uygulandı** |
 | G5 | Yıldız, özel klasör, gelen kuralları (MVP) | **uygulandı** |
 | G5+ | j/k, Shift seçim, toplu yıldız | **uygulandı** |
-| G6 | Offline SW; push sonra | **kısmi** |
+| G6 | Offline SW; web push | **uygulandı** (SW v4 network-first; iOS PWA kısıtları sürer) |
 
-Rakip matrisi: `docs/MAIL_WEBMAIL_UX_BENCHMARK.md` (~52/100 bugün).
+Rakip matrisi: `docs/MAIL_WEBMAIL_UX_BENCHMARK.md` (~72/100).
+Tamamlanma özeti: `docs/MAIL_PROJECT_COMPLETION_STATUS.md`.
 
 ---
 
@@ -169,7 +170,7 @@ Operatör konsolu **mini KPI kartı** — `platform-admin/mail/kpi`, `MAIL_OPERA
 |---|----------------|------------|
 | Ölçek | Global, tüketici + enterprise | TR odak, KOBİ + özel domain |
 | Güç | Ekosistem, depolama | Kendi MTA, şeffaf DNS, yerel ödeme |
-| Zayıf kalır | Marka, AI, mobil app store | Thread, takvim, native app |
+| Zayıf kalır | Marka, AI, mobil app store | Tam WYSIWYG, AI, native app store |
 | Kazanır | Veri Türkiye, sade fiyat, hızlı domain kurulumu | |
 
 ---
@@ -181,4 +182,4 @@ Operatör konsolu **mini KPI kartı** — `platform-admin/mail/kpi`, `MAIL_OPERA
 - Ödeme: `docs/MAIL_BILLING_STRIPE_SETUP.md`, `docs/MAIL_BILLING_IYZICO_SETUP.md`
 - www: `docs/WWW_CUTOVER_LERTA_MAIL.md`, `scripts/preflight-www-cutover-lerta-mail.sh`
 
-**Son güncelleme:** kurumsal vitrin HTTPS canlı; ödeme kodu merge; Stripe anahtarları müşteri tarafında.
+**Son güncelleme:** D6/G6 kod tamam; Faz A canlı ödeme + www cutover iş/ops bekliyor.

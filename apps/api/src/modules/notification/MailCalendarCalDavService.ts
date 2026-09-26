@@ -28,6 +28,10 @@ import {
   type ParsedIcalEvent,
   parseIcalEvents,
 } from "./MailIcalUtil";
+import {
+  exDateListIncludes,
+  occurrenceInstantMatches,
+} from "./MailCalDavOccurrenceMatch";
 
 const MAX_ACCOUNTS = 3;
 const SYNC_PAST_MS = 90 * 24 * 60 * 60 * 1000;
@@ -675,10 +679,15 @@ export class MailCalendarCalDavService {
     master: ParsedIcalEvent,
     overridesForUid: ParsedIcalEvent[],
   ): Promise<void> {
+    const seriesAllDay = master.exDatesAllDay || master.allDay;
     for (const exDate of master.exDates) {
-      await this.upsertRecurrenceException(organizationId, masterEventId, exDate, {
-        cancelled: true,
-      });
+      await this.upsertRecurrenceException(
+        organizationId,
+        masterEventId,
+        exDate,
+        { cancelled: true },
+        seriesAllDay,
+      );
     }
     for (const ov of overridesForUid) {
       if (ov.recurrenceIdAt) {
@@ -689,12 +698,14 @@ export class MailCalendarCalDavService {
       organizationId,
       masterEventId,
       master.exDates,
+      seriesAllDay,
     );
     await this.pruneOverridesAbsentFromCalDav(
       organizationId,
       masterEventId,
       overridesForUid,
       master.exDates,
+      seriesAllDay,
     );
   }
 
@@ -703,13 +714,13 @@ export class MailCalendarCalDavService {
     organizationId: string,
     masterEventId: string,
     exDates: Date[],
+    masterAllDay: boolean,
   ): Promise<void> {
-    const allowed = new Set(exDates.map((d) => d.getTime()));
     const rows = await this.recurrenceExceptionRepository.find({
       where: { organizationId, masterEventId, cancelled: true, fromCaldav: true },
     });
     for (const row of rows) {
-      if (!allowed.has(row.occurrenceStartsAt.getTime())) {
+      if (!exDateListIncludes(exDates, row.occurrenceStartsAt, masterAllDay)) {
         await this.recurrenceExceptionRepository.remove(row);
       }
     }
@@ -721,19 +732,13 @@ export class MailCalendarCalDavService {
     masterEventId: string,
     overridesForUid: ParsedIcalEvent[],
     exDates: Date[],
+    masterAllDay: boolean,
   ): Promise<void> {
-    const overrideKeys = new Set(
-      overridesForUid
-        .filter((ov) => ov.recurrenceIdAt)
-        .map((ov) => ov.recurrenceIdAt!.getTime()),
-    );
-    const cancelledKeys = new Set(exDates.map((d) => d.getTime()));
     const rows = await this.recurrenceExceptionRepository.find({
       where: { organizationId, masterEventId, cancelled: false, fromCaldav: true },
     });
     for (const row of rows) {
-      const key = row.occurrenceStartsAt.getTime();
-      if (cancelledKeys.has(key)) {
+      if (exDateListIncludes(exDates, row.occurrenceStartsAt, masterAllDay)) {
         continue;
       }
       const hasOverride = Boolean(
@@ -745,7 +750,16 @@ export class MailCalendarCalDavService {
       if (!hasOverride) {
         continue;
       }
-      if (!overrideKeys.has(key)) {
+      const stillOnRemote = overridesForUid.some(
+        (ov) =>
+          ov.recurrenceIdAt &&
+          occurrenceInstantMatches(
+            row.occurrenceStartsAt,
+            ov.recurrenceIdAt,
+            ov.recurrenceIdAllDay || masterAllDay,
+          ),
+      );
+      if (!stillOnRemote) {
         await this.recurrenceExceptionRepository.remove(row);
       }
     }
@@ -770,6 +784,23 @@ export class MailCalendarCalDavService {
         endsAt: ov.endsAt,
         allDay: ov.allDay,
       },
+      ov.recurrenceIdAllDay || ov.allDay,
+    );
+  }
+
+  private async findRecurrenceExceptionByAnchor(
+    organizationId: string,
+    masterEventId: string,
+    anchor: Date,
+    anchorAllDay: boolean,
+  ) {
+    const rows = await this.recurrenceExceptionRepository.find({
+      where: { organizationId, masterEventId },
+    });
+    return (
+      rows.find((row) =>
+        occurrenceInstantMatches(row.occurrenceStartsAt, anchor, anchorAllDay),
+      ) ?? null
     );
   }
 
@@ -784,15 +815,15 @@ export class MailCalendarCalDavService {
       endsAt?: Date;
       allDay?: boolean;
     },
+    anchorAllDay: boolean,
   ): Promise<void> {
     const occ = new Date(occurrenceStartsAt.getTime());
-    let row = await this.recurrenceExceptionRepository.findOne({
-      where: {
-        organizationId,
-        masterEventId,
-        occurrenceStartsAt: occ,
-      },
-    });
+    let row = await this.findRecurrenceExceptionByAnchor(
+      organizationId,
+      masterEventId,
+      occ,
+      anchorAllDay,
+    );
     if (!row) {
       row = this.recurrenceExceptionRepository.create({
         organizationId,
