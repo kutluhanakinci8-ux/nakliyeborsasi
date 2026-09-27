@@ -38,6 +38,7 @@ export class MailCustomDomainOpenDkimInstaller {
     mkdirSync(keyDir, { recursive: true });
     const privatePath = `${keyDir}/${selector}.private`;
     writeFileSync(privatePath, params.privateKeyPem, { encoding: "utf8", mode: 0o600 });
+    this.ensureOpenDkimKeyOwnership(keyDir, privatePath);
 
     const keyTableLine = `${selector}._domainkey.${domain} ${domain}:${selector}:${privatePath}`;
     const signingLine = `*@${domain} ${selector}._domainkey.${domain}`;
@@ -97,5 +98,19 @@ export class MailCustomDomainOpenDkimInstaller {
       return false;
     }
     return readFileSync(path, "utf8").includes(line);
+  }
+
+  /** API root ile yazılan anahtarlar opendkim kullanıcısından okunmalı (451 önleme). */
+  private ensureOpenDkimKeyOwnership(keyDir: string, privatePath: string): void {
+    try {
+      execFileSync("chown", ["-R", "opendkim:opendkim", keyDir], {
+        stdio: "ignore",
+      });
+      execFileSync("chmod", ["600", privatePath], { stdio: "ignore" });
+    } catch {
+      this.logger.warn(
+        `OpenDKIM key chown başarısız (${privatePath}) — VPS: chown -R opendkim:opendkim /etc/opendkim/keys`,
+      );
+    }
   }
 }
