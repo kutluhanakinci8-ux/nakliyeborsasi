@@ -219,7 +219,7 @@ export function MarketplacePageClient() {
               priceCurrency={listing.price?.currencyCode ?? null}
               onMessage={() =>
                 router.push(
-                  `/messaging?companyId=${encodeURIComponent(listing.ownerCompanyId)}`,
+                  `/messaging?tab=chat&companyId=${encodeURIComponent(listing.ownerCompanyId)}&listingId=${encodeURIComponent(listing.listingId)}`,
                 )
               }
               onTrust={() =>

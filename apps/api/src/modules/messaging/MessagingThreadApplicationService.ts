@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { IsNull, Repository } from "typeorm";
+import { In, IsNull, Repository } from "typeorm";
 import {
   AuthenticatedUserContext,
   AuthorizationException,
@@ -13,6 +13,8 @@ import { MessageThreadEntity } from "../../infrastructure/database/entities/Mess
 import { MessageEntity } from "../../infrastructure/database/entities/MessageEntity";
 import { OpenMessagingThreadRequestDto } from "./OpenMessagingThreadRequestDto";
 import { ModularSubscriptionEntitlementService } from "../subscription/ModularSubscriptionEntitlementService";
+import { OperationalNotificationService } from "../notification/OperationalNotificationService";
+import { CompanyEntity } from "../../infrastructure/database/entities/CompanyEntity";
 
 @Injectable()
 export class MessagingThreadApplicationService {
@@ -21,7 +23,10 @@ export class MessagingThreadApplicationService {
     private readonly messageThreadRepository: Repository<MessageThreadEntity>,
     @InjectRepository(MessageEntity)
     private readonly messageRepository: Repository<MessageEntity>,
+    @InjectRepository(CompanyEntity)
+    private readonly companyRepository: Repository<CompanyEntity>,
     private readonly modularSubscriptionEntitlementService: ModularSubscriptionEntitlementService,
+    private readonly operationalNotificationService: OperationalNotificationService,
   ) {}
 
   public async openThread(
@@ -77,16 +82,48 @@ export class MessagingThreadApplicationService {
       })
       .orderBy("thread.createdAt", "DESC")
       .getMany();
-    return threads.map(
-      (thread) =>
+    const counterpartyIds = threads.map((thread) =>
+      thread.companyAId === authenticatedUser.companyId
+        ? thread.companyBId
+        : thread.companyAId,
+    );
+    const companies =
+      counterpartyIds.length > 0
+        ? await this.companyRepository.find({
+            where: { id: In(counterpartyIds) },
+          })
+        : [];
+    const companyNameById = new Map(
+      companies.map((row) => [row.id, row.legalName]),
+    );
+    const enriched: MessagingThreadReference[] = [];
+    for (const thread of threads) {
+      const counterpartyCompanyId =
+        thread.companyAId === authenticatedUser.companyId
+          ? thread.companyBId
+          : thread.companyAId;
+      const lastMessage = await this.messageRepository.findOne({
+        where: { threadId: thread.id },
+        order: { createdAt: "DESC" },
+      });
+      enriched.push(
         new MessagingThreadReference({
           threadId: thread.id,
-          counterpartyCompanyId:
-            thread.companyAId === authenticatedUser.companyId
-              ? thread.companyBId
-              : thread.companyAId,
+          counterpartyCompanyId,
+          counterpartyLegalName:
+            companyNameById.get(counterpartyCompanyId) ?? null,
+          lastMessagePreview: lastMessage?.bodyText?.slice(0, 120) ?? null,
+          lastMessageAt: lastMessage?.createdAt?.toISOString() ?? null,
+          freightListingId: thread.freightListingId,
         }),
-    );
+      );
+    }
+    enriched.sort((a, b) => {
+      const left = a.lastMessageAt ?? "";
+      const right = b.lastMessageAt ?? "";
+      return right.localeCompare(left);
+    });
+    return enriched;
   }
 
   public async listMessages(
@@ -116,7 +153,7 @@ export class MessagingThreadApplicationService {
       threadId,
       locale,
     );
-    return this.messageRepository.save(
+    const saved = await this.messageRepository.save(
       this.messageRepository.create({
         threadId: thread.id,
         senderCompanyId: authenticatedUser.companyId,
@@ -124,6 +161,24 @@ export class MessagingThreadApplicationService {
         bodyText,
       }),
     );
+    const counterpartyCompanyId =
+      thread.companyAId === authenticatedUser.companyId
+        ? thread.companyBId
+        : thread.companyAId;
+    const senderCompany = await this.companyRepository.findOne({
+      where: { id: authenticatedUser.companyId },
+    });
+    void this.operationalNotificationService.afterMessagingMessageSent({
+      threadId: thread.id,
+      counterpartyCompanyId,
+      senderCompanyId: authenticatedUser.companyId,
+      senderCompanyName:
+        senderCompany?.legalName?.trim() || authenticatedUser.companyId,
+      messageId: saved.id,
+      bodyPreview: bodyText.trim().slice(0, 280),
+      freightListingId: thread.freightListingId,
+    });
+    return saved;
   }
 
   private async requireParticipantThread(

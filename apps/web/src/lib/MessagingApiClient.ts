@@ -3,6 +3,10 @@ import { AuthenticatedApiClient } from "./AuthenticatedApiClient";
 export type MessagingThreadRecord = {
   threadId: string;
   counterpartyCompanyId: string;
+  counterpartyLegalName?: string | null;
+  lastMessagePreview?: string | null;
+  lastMessageAt?: string | null;
+  freightListingId?: string | null;
 };
 
 export type ThreadMessageRecord = {
@@ -27,13 +31,17 @@ export class MessagingApiClient {
     accessToken: string,
     locale: string,
     counterpartyCompanyId: string,
+    freightListingId?: string,
   ): Promise<{ thread: { id: string } }> {
     return AuthenticatedApiClient.fetchJson(
       accessToken,
       `/messaging/threads?lang=${locale}`,
       {
         method: "POST",
-        body: JSON.stringify({ counterpartyCompanyId }),
+        body: JSON.stringify({
+          counterpartyCompanyId,
+          ...(freightListingId ? { freightListingId } : {}),
+        }),
       },
     ) as Promise<{ thread: { id: string } }>;
   }

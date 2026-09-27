@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMailSession } from "@/lib/session";
 import { parseEmbedFromSearch } from "@/lib/embeddedParentSession";
+import { postTokenRequestToEmbedParents } from "@/lib/embedParentOrigins";
 
 function ConsumeHandoff() {
   const router = useRouter();
@@ -26,19 +27,19 @@ function ConsumeHandoff() {
       parseEmbedFromSearch(window.location.search) ||
       window.parent !== window;
     if (embedded) {
-      try {
-        window.parent.postMessage(
-          { type: "lerta-mail-request-token" },
-          "https://app.lerta.com.tr",
-        );
-      } catch {
-        /* ignore */
-      }
+      postTokenRequestToEmbedParents({ type: "lerta-mail-request-token" });
     }
-    const target = fromAddress
-      ? `/mail?welcome=${encodeURIComponent(fromAddress)}`
-      : "/mail";
-    router.replace(target);
+    const search = new URLSearchParams(window.location.search);
+    const composeTo = search.get("composeTo")?.trim();
+    const query = new URLSearchParams();
+    if (fromAddress) {
+      query.set("welcome", fromAddress);
+    }
+    if (composeTo) {
+      query.set("composeTo", composeTo);
+    }
+    const qs = query.toString();
+    router.replace(qs ? `/mail?${qs}` : "/mail");
   }, [router, setAccessToken]);
 
   if (error) {

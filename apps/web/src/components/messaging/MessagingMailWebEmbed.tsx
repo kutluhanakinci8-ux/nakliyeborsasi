@@ -11,10 +11,14 @@ import { buildMailWebSsoHandoffUrl } from "../../lib/MailWebUrl";
 
 type Props = {
   className?: string;
+  composeTo?: string;
 };
 
 /** posta.lerta.com.tr webmail — logistics oturumu ile SSO (iframe + postMessage). */
-export function MessagingMailWebEmbed({ className = "" }: Props) {
+export function MessagingMailWebEmbed({
+  className = "",
+  composeTo,
+}: Props) {
   const { accessToken } = useWebSession();
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
@@ -22,8 +26,11 @@ export function MessagingMailWebEmbed({ className = "" }: Props) {
     if (!accessToken) {
       return null;
     }
-    return buildMailWebSsoHandoffUrl(accessToken, { embed: true });
-  }, [accessToken]);
+    return buildMailWebSsoHandoffUrl(accessToken, {
+      embed: true,
+      composeTo: composeTo?.trim() || undefined,
+    });
+  }, [accessToken, composeTo]);
 
   useEffect(() => {
     if (!accessToken) {

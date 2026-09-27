@@ -104,6 +104,7 @@ export function MailClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const deepLinkMessageHandled = useRef(false);
+  const deepLinkComposeHandled = useRef(false);
   const { accessToken, logout } = useMailSession();
   const [view, setView] = useState<View>("inbox");
   const [summary, setSummary] = useState<MailInboxSummary | null>(null);
@@ -456,6 +457,16 @@ export function MailClient() {
     }
     deepLinkMessageHandled.current = true;
     void openMessage(messageId);
+  }, [accessToken, searchParams]);
+
+  useEffect(() => {
+    const to = searchParams.get("composeTo")?.trim();
+    if (!accessToken || !to || deepLinkComposeHandled.current) {
+      return;
+    }
+    deepLinkComposeHandled.current = true;
+    setComposeTo(to);
+    setComposeOpen(true);
   }, [accessToken, searchParams]);
 
   async function downloadAttachment(index: number, filename: string) {

@@ -7,12 +7,15 @@ import { MessagingThreadController } from "./MessagingThreadController";
 import { MessagingThreadApplicationService } from "./MessagingThreadApplicationService";
 import { SubscriptionModule } from "../subscription/SubscriptionModule";
 import { AuthModule } from "../auth/AuthModule";
+import { NotificationModule } from "../notification/NotificationModule";
+import { CompanyEntity } from "../../infrastructure/database/entities/CompanyEntity";
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([MessageThreadEntity, MessageEntity]),
+    TypeOrmModule.forFeature([MessageThreadEntity, MessageEntity, CompanyEntity]),
     SubscriptionModule,
     AuthModule,
+    NotificationModule,
   ],
   controllers: [MessagingModuleStatusController, MessagingThreadController],
   providers: [MessagingThreadApplicationService],

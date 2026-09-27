@@ -32,6 +32,36 @@ export class OperationalNotificationService {
     private readonly membershipRepository: Repository<CompanyMembershipEntity>,
   ) {}
 
+  public async afterMessagingMessageSent(params: {
+    threadId: string;
+    counterpartyCompanyId: string;
+    senderCompanyId: string;
+    senderCompanyName: string;
+    messageId: string;
+    bodyPreview: string;
+    freightListingId: string | null;
+  }): Promise<void> {
+    const baseUrl = this.notificationConfigurationService.resolveWebBaseUrl();
+    const listingQuery = params.freightListingId
+      ? `&listingId=${encodeURIComponent(params.freightListingId)}`
+      : "";
+    await this.emitToCompany({
+      companyId: params.counterpartyCompanyId,
+      eventCode: NotificationEventCode.MessagingNewMessage,
+      payload: {
+        threadId: params.threadId,
+        senderCompanyId: params.senderCompanyId,
+        senderCompanyName: params.senderCompanyName,
+        bidderCompanyName: params.senderCompanyName,
+        messagePreview: params.bodyPreview,
+        messagingUrl: `${baseUrl}/messaging?tab=chat&threadId=${encodeURIComponent(params.threadId)}${listingQuery}`,
+        occurredAt: new Date().toISOString(),
+        freightListingId: params.freightListingId ?? "",
+      },
+      idempotencyPrefix: `MESSAGING_MSG:${params.messageId}`,
+    });
+  }
+
   public async afterAuctionBidPlaced(params: {
     session: AuctionSessionEntity;
     bid: AuctionBidEntity;
