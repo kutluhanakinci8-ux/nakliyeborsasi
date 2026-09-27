@@ -109,6 +109,29 @@ export function formatMailFromHeader(
   return name ? `${name} <${email}>` : email;
 }
 
+/** Lerta Post: alıcı From başlığı — vanity veya DKIM hizalı teknik adres. */
+export type InstantPostFromMode = "vanity" | "aligned";
+
+export function resolveInstantPostFromMode(
+  raw: string | null | undefined,
+): InstantPostFromMode {
+  const normalized = raw?.trim().toLowerCase();
+  return normalized === "vanity" ? "vanity" : "aligned";
+}
+
+/** SMTP From e-posta adresi (display name ayrı). */
+export function resolveSmtpFromEmailAddress(
+  addresses: { publicAddress: string; technicalAddress: string },
+  mode: InstantPostFromMode,
+): string {
+  if (addresses.publicAddress === addresses.technicalAddress) {
+    return addresses.publicAddress;
+  }
+  return mode === "vanity"
+    ? addresses.publicAddress
+    : addresses.technicalAddress;
+}
+
 /** Özel domain olarak eklenemeyen Lerta Mail SaaS alanları. */
 export function isReservedLertaMailSaasDomain(domain: string): boolean {
   const normalized = domain.trim().toLowerCase().replace(/\.$/, "");

@@ -5,6 +5,7 @@ import {
   addOrgSuppression,
   formatMailIdentityApiError,
   fetchCompanyMailIdentity,
+  type MailDeliverabilityHints,
   fetchCustomDomainBundle,
   fetchOrgSuppressions,
   claimCompanyMailAddress,
@@ -89,6 +90,8 @@ export function OrganizationMailIdentityPanel({
   const [identity, setIdentity] = useState<CompanyMailIdentitySnapshot | null>(
     null,
   );
+  const [deliverability, setDeliverability] =
+    useState<MailDeliverabilityHints | null>(null);
   const [localPart, setLocalPart] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(true);
@@ -121,8 +124,10 @@ export function OrganizationMailIdentityPanel({
     setLoading(true);
     setError("");
     try {
-      const next = await fetchCompanyMailIdentity(accessToken);
+      const bundle = await fetchCompanyMailIdentity(accessToken);
+      const next = bundle.identity;
       setIdentity(next);
+      setDeliverability(bundle.deliverability);
       if (isOwner) {
         setSuppressions(await fetchOrgSuppressions(accessToken));
         setCustomDomain(await fetchCustomDomainBundle(accessToken));
@@ -309,6 +314,59 @@ export function OrganizationMailIdentityPanel({
                 ? ` — ${identity.sender.displayName}`
                 : null}
             </p>
+          ) : null}
+
+          {deliverability ? (
+            <div
+              className="module-panel"
+              style={{ marginTop: "1rem", padding: "1rem" }}
+            >
+              <p className="account-verify-eyebrow">Güvenilir gönderim (SPF / DKIM)</p>
+              <p className="module-hint" style={{ marginBottom: "0.75rem" }}>
+                {deliverability.outlookHintTr}
+              </p>
+              <p className="module-hint">
+                Alıcıya giden SMTP From:{" "}
+                <code>{deliverability.smtpFromAddress}</code>
+                {deliverability.fromHeaderMode === "aligned" ? (
+                  <>
+                    {" "}
+                    · Görünen ürün adresi:{" "}
+                    <code>{deliverability.vanityAddress}</code>
+                  </>
+                ) : null}
+              </p>
+              {deliverability.zoneDnsRecords.length > 0 ? (
+                <details style={{ marginTop: "0.75rem" }}>
+                  <summary className="module-panel-title" style={{ cursor: "pointer" }}>
+                    isimtescil — post.lerta.com.tr bölgesi (operatör)
+                  </summary>
+                  <ul className="module-hint" style={{ marginTop: "0.5rem" }}>
+                    {deliverability.zoneDnsRecords.map((row) => (
+                      <li key={`${row.type}-${row.host}`}>
+                        <strong>{row.type}</strong> {row.host}:{" "}
+                        <code style={{ wordBreak: "break-all" }}>{row.value}</code>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              ) : null}
+              {deliverability.tenantDnsRecords.length > 0 ? (
+                <details style={{ marginTop: "0.5rem" }}>
+                  <summary className="module-panel-title" style={{ cursor: "pointer" }}>
+                    Bu kutu — DKIM / SPF (DNS’e TXT)
+                  </summary>
+                  <ul className="module-hint" style={{ marginTop: "0.5rem" }}>
+                    {deliverability.tenantDnsRecords.map((row) => (
+                      <li key={`${row.type}-${row.host}`}>
+                        <strong>{row.type}</strong> {row.host}:{" "}
+                        <code style={{ wordBreak: "break-all" }}>{row.value}</code>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              ) : null}
+            </div>
           ) : null}
 
           {!identity.fromAddress &&

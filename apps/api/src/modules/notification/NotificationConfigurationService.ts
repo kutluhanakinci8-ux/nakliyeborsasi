@@ -1,6 +1,8 @@
 import {
+  InstantPostFromMode,
   PLATFORM_DEFAULT_SMTP_FROM,
   PLATFORM_PRIMARY_CONTACT_EMAIL,
+  resolveInstantPostFromMode,
 } from "@nakliyeborsasi/core";
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
@@ -117,5 +119,12 @@ export class NotificationConfigurationService {
 
   public isTrackingDisabled(): boolean {
     return this.configService.get<string>("EMAIL_TRACKING_ENABLED") === "false";
+  }
+
+  /** Lerta Post gönderim From: aligned = DKIM/SPF hizalı teknik FQDN (önerilen). */
+  public resolveInstantPostFromMode(): InstantPostFromMode {
+    return resolveInstantPostFromMode(
+      this.configService.get<string>("MAIL_INSTANT_POST_FROM_MODE"),
+    );
   }
 }
