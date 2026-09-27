@@ -15,6 +15,11 @@ if [[ -f /etc/opendkim/SigningTable ]] && ! grep -qF "${VANITY}" /etc/opendkim/S
   echo "${VANITY}" >> /etc/opendkim/SigningTable
 fi
 
+if [[ -d /etc/opendkim/keys ]]; then
+  chown -R opendkim:opendkim /etc/opendkim/keys
+  find /etc/opendkim/keys -type f -name '*.private' -exec chmod 600 {} \;
+fi
+
 systemctl restart opendkim 2>/dev/null || true
 systemctl restart postfix 2>/dev/null || true
 
