@@ -228,13 +228,6 @@ export function MessagingPageClient() {
 
       {mode === "email" ? (
         <>
-          <p className="module-hint" style={{ marginBottom: "0.75rem" }}>
-            Bu sekme kurumsal postanız (Lerta Post). Kutu henüz yoksa{" "}
-            <a href="/hesap/organizasyon#org-eposta">
-              Hesap → Organizasyon → E-posta kimliği
-            </a>
-            → «Lerta Post kutusu oluştur».
-          </p>
           <MessagingMailWebEmbed />
           <details className="module-panel messaging-mail-panel" style={{ marginTop: "1rem" }}>
             <summary className="module-panel-title" style={{ cursor: "pointer" }}>
