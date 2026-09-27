@@ -27,6 +27,8 @@ export type MailSendReadiness = {
   canSend: boolean;
   reasonTr: string | null;
   displayAddress: string | null;
+  billingWarningTr?: string | null;
+  billingStatus?: string | null;
 };
 
 export type MailInboxSummary = {

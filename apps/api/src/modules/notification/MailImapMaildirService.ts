@@ -126,6 +126,31 @@ export class MailImapMaildirService {
     }
   }
 
+  /** IMAP Sent klasörü (Dovecot `.Sent`) — Thunderbird/Apple Mail senkronu. */
+  public appendSentMessage(params: {
+    mailboxEmail: string;
+    rawMime: string;
+    messageId: string;
+  }): string | null {
+    const root = this.resolveMaildirRoot();
+    if (!root) {
+      return null;
+    }
+    const at = params.mailboxEmail.lastIndexOf("@");
+    if (at < 1) {
+      return null;
+    }
+    const local = params.mailboxEmail.slice(0, at);
+    const domain = params.mailboxEmail.slice(at + 1);
+    const sentCur = join(root, domain, local, "Maildir", ".Sent", "cur");
+    mkdirSync(sentCur, { recursive: true });
+    const safeId = params.messageId.replace(/[^a-zA-Z0-9-]/g, "") || "sent";
+    const path = join(sentCur, `${Date.now()}.${safeId}.eml:2,S`);
+    writeFileSync(path, params.rawMime, { encoding: "utf8" });
+    this.logger.debug(`Maildir Sent append ${path}`);
+    return path;
+  }
+
   public resolveMaildirForAddress(email: string): string | null {
     const root = this.resolveMaildirRoot();
     if (!root) {

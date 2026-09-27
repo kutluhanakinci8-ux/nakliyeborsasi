@@ -23,6 +23,9 @@ import { NotificationConfigurationService } from "./NotificationConfigurationSer
 import { MailDomainEntity } from "../../infrastructure/database/entities/MailDomainEntity";
 import { MailOrganizationIdentityService } from "./MailOrganizationIdentityService";
 import { MailTenantSubdomainService } from "./MailTenantSubdomainService";
+import { MailImapMaildirService } from "./MailImapMaildirService";
+import { buildOutgoingSentMime } from "./MailSentMimeBuilder";
+import { MailSubscriptionLifecycleService } from "./MailSubscriptionLifecycleService";
 
 export type ComposeAttachmentInput = {
   filename: string;
@@ -41,6 +44,8 @@ export class MailMailboxComposeService {
     private readonly mailTenantSuspensionService: MailTenantSuspensionService,
     private readonly mailOrganizationIdentityService: MailOrganizationIdentityService,
     private readonly mailTenantSubdomainService: MailTenantSubdomainService,
+    private readonly mailImapMaildirService: MailImapMaildirService,
+    private readonly mailSubscriptionLifecycleService: MailSubscriptionLifecycleService,
     private readonly notificationConfigurationService: NotificationConfigurationService,
     @InjectRepository(MailSenderIdentityEntity)
     private readonly senderRepository: Repository<MailSenderIdentityEntity>,
@@ -64,7 +69,7 @@ export class MailMailboxComposeService {
     html?: string;
     attachments?: ComposeAttachmentInput[];
   }): Promise<{ sentId: string; smtpMessageId: string | null }> {
-    const { fromHeader, fromEmail, envelopeMailFrom, mailbox } =
+    const { fromHeader, fromEmail, envelopeMailFrom, mailbox, technicalEmail } =
       await this.resolveSenderMailbox(params.organizationId);
     await this.assertRateLimit(params.organizationId);
     await this.mailTenantSuspensionService.assertOrganizationCanSend(
@@ -113,6 +118,14 @@ export class MailMailboxComposeService {
         smtpMessageId,
       }),
     );
+    this.mirrorSentToImap({
+      technicalEmail,
+      fromHeader,
+      to: params.to.trim(),
+      subject: params.subject.trim(),
+      text: params.text,
+      smtpMessageId,
+    });
     return { sentId: sent.id, smtpMessageId };
   }
 
@@ -195,6 +208,14 @@ export class MailMailboxComposeService {
         smtpMessageId,
       }),
     );
+    this.mirrorSentToImap({
+      technicalEmail,
+      fromHeader,
+      to: replyAll.to,
+      subject,
+      text: params.text,
+      smtpMessageId,
+    });
     return { sentId: sent.id, smtpMessageId };
   }
 
@@ -231,7 +252,7 @@ export class MailMailboxComposeService {
     if (!text.trim()) {
       throw new BadRequestException("İletilecek metin boş olamaz.");
     }
-    const { fromHeader, fromEmail, envelopeMailFrom } =
+    const { fromHeader, fromEmail, envelopeMailFrom, technicalEmail } =
       await this.resolveSenderMailbox(params.organizationId);
     await this.assertRateLimit(params.organizationId);
     await this.mailTenantSuspensionService.assertOrganizationCanSend(
@@ -273,6 +294,14 @@ export class MailMailboxComposeService {
         smtpMessageId,
       }),
     );
+    this.mirrorSentToImap({
+      technicalEmail,
+      fromHeader,
+      to: normalizeRecipientList(params.to),
+      subject,
+      text,
+      smtpMessageId,
+    });
     return { sentId: sent.id, smtpMessageId };
   }
 
@@ -280,9 +309,68 @@ export class MailMailboxComposeService {
     canSend: boolean;
     reasonTr: string | null;
     displayAddress: string | null;
+    billingWarningTr: string | null;
+    billingStatus: string | null;
   }> {
+    const billing =
+      await this.mailSubscriptionLifecycleService.getLifecycleView(
+        organizationId,
+      );
+    if (!billing.canSendMail) {
+      return {
+        canSend: false,
+        reasonTr: billing.detailTr || billing.statusLabelTr,
+        displayAddress: null,
+        billingWarningTr: null,
+        billingStatus: billing.status,
+      };
+    }
     try {
-      await this.resolveSenderMailbox(organizationId);
+      await this.mailTenantSuspensionService.assertOrganizationCanSend(
+        organizationId,
+      );
+    } catch (error) {
+      const reason =
+        error instanceof ForbiddenException
+          ? String(error.message)
+          : "Gönderim askıya alındı.";
+      return {
+        canSend: false,
+        reasonTr: reason,
+        displayAddress: null,
+        billingWarningTr: null,
+        billingStatus: billing.status,
+      };
+    }
+    const storage =
+      await this.mailOrganizationStorageService.getSnapshot(organizationId);
+    if (storage.atLimit) {
+      return {
+        canSend: false,
+        reasonTr:
+          "Depolama kotası dolu — yeni gönderim yapılamaz. Arşivleyin veya planı yükseltin.",
+        displayAddress: null,
+        billingWarningTr: billing.inGrace ? billing.detailTr : null,
+        billingStatus: billing.status,
+      };
+    }
+    const rate =
+      await this.mailOrganizationSendRateService.getSnapshot(organizationId);
+    if (rate.atLimit) {
+      return {
+        canSend: false,
+        reasonTr: `Saatlik gönderim limitine ulaşıldı (${rate.limitPerHour}/saat).`,
+        displayAddress: null,
+        billingWarningTr: billing.inGrace ? billing.detailTr : null,
+        billingStatus: billing.status,
+      };
+    }
+    try {
+      const { fromHeader: _from, technicalEmail: _tech, ...rest } =
+        await this.resolveSenderMailbox(organizationId);
+      void _from;
+      void _tech;
+      void rest;
       const primary =
         await this.mailOrganizationIdentityService.getPrimaryIdentity(
           organizationId,
@@ -291,14 +379,48 @@ export class MailMailboxComposeService {
         canSend: true,
         reasonTr: null,
         displayAddress: primary.displayAddress ?? primary.fromAddress,
+        billingWarningTr: billing.inGrace ? billing.detailTr : null,
+        billingStatus: billing.status,
       };
     } catch (error) {
       const reason =
         error instanceof BadRequestException
           ? String(error.message)
           : "Gönderim şu an kullanılamıyor.";
-      return { canSend: false, reasonTr: reason, displayAddress: null };
+      return {
+        canSend: false,
+        reasonTr: reason,
+        displayAddress: null,
+        billingWarningTr: billing.inGrace ? billing.detailTr : null,
+        billingStatus: billing.status,
+      };
     }
+  }
+
+  private mirrorSentToImap(params: {
+    technicalEmail: string;
+    fromHeader: string;
+    to: string;
+    subject: string;
+    text: string;
+    smtpMessageId: string | null;
+  }): void {
+    if (!this.mailImapMaildirService.isEnabled()) {
+      return;
+    }
+    const mime = buildOutgoingSentMime({
+      fromHeader: params.fromHeader,
+      to: params.to,
+      subject: params.subject,
+      text: params.text,
+      messageId: params.smtpMessageId,
+      date: new Date(),
+    });
+    this.mailImapMaildirService.appendSentMessage({
+      mailboxEmail: params.technicalEmail,
+      rawMime: mime,
+      messageId: params.smtpMessageId ?? `local-${Date.now()}`,
+    });
   }
 
   public async listSent(organizationId: string, limit = 40) {
