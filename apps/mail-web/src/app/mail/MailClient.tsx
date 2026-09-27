@@ -748,6 +748,22 @@ export function MailClient() {
     }
   }
 
+  async function promptCreateCustomFolder(): Promise<void> {
+    const name = window.prompt("Klasör adı");
+    if (!name?.trim() || !accessToken) {
+      return;
+    }
+    try {
+      await createCustomFolder(accessToken, name.trim());
+      setToast("Klasör oluşturuldu.");
+      void refreshCustomFolders();
+    } catch (error) {
+      setToast(
+        error instanceof Error ? error.message : "Klasör oluşturulamadı.",
+      );
+    }
+  }
+
   async function runBulkCustomFolder(customFolderId: string | null) {
     if (!accessToken || checkedIds.size === 0) {
       return;
@@ -1399,35 +1415,9 @@ export function MailClient() {
           >
             Kişiler
           </button>
-          <div className="mail-custom-folders-head">
-            <span>Özel klasörler</span>
-            <button
-              type="button"
-              className="mail-custom-folder-add"
-              title="Yeni klasör"
-              onClick={() => {
-                const name = window.prompt("Klasör adı");
-                if (!name?.trim() || !accessToken) {
-                  return;
-                }
-                void (async () => {
-                  try {
-                    await createCustomFolder(accessToken, name.trim());
-                    setToast("Klasör oluşturuldu.");
-                    void refreshCustomFolders();
-                  } catch (error) {
-                    setToast(
-                      error instanceof Error
-                        ? error.message
-                        : "Klasör oluşturulamadı.",
-                    );
-                  }
-                })();
-              }}
-            >
-              +
-            </button>
-          </div>
+          {customFolders.length > 0 ? (
+            <div className="mail-custom-folders-label">Özel klasörler</div>
+          ) : null}
           {customFolders.map((f) => (
             <div key={f.id} className="mail-custom-folder-row">
               <button
@@ -1519,27 +1509,50 @@ export function MailClient() {
         {sendReadiness?.billingWarningTr ? (
           <p className="mail-storage-warn">{sendReadiness.billingWarningTr}</p>
         ) : null}
-        <button
-          type="button"
-          className="mail-nav-imap mail-nav-imap--icon"
-          onClick={() => setSettingsOpen(true)}
-          aria-label="Ayarlar: IMAP, imza, iki adımlı doğrulama"
-          title="Ayarlar (IMAP · imza · 2FA)"
-        >
-          <svg
-            className="mail-nav-imap-icon"
-            viewBox="0 0 24 24"
-            width="20"
-            height="20"
-            aria-hidden
-            focusable="false"
+        <div className="mail-sidebar-icon-actions">
+          <button
+            type="button"
+            className="mail-nav-imap mail-nav-imap--icon"
+            onClick={() => void promptCreateCustomFolder()}
+            aria-label="Yeni özel klasör"
+            title="Yeni özel klasör"
           >
-            <path
-              fill="currentColor"
-              d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96a7.03 7.03 0 0 0-1.63-.94l-.36-2.54A.49.49 0 0 0 14 2h-4a.49.49 0 0 0-.49.42l-.36 2.54a7.03 7.03 0 0 0-1.63.94l-2.39-.96a.49.49 0 0 0-.59.22L2.71 8.04a.49.49 0 0 0 .12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.13.22.39.3.59.22l2.39-.96c.5.38 1.04.69 1.63.94l.36 2.54c.05.24.26.42.49.42h4c.24 0 .44-.18.49-.42l.36-2.54c.59-.25 1.13-.56 1.63-.94l2.39.96c.2.08.46 0 .59-.22l1.92-3.32a.49.49 0 0 0-.12-.61l-2.03-1.58ZM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7Z"
-            />
-          </svg>
-        </button>
+            <svg
+              className="mail-nav-imap-icon"
+              viewBox="0 0 24 24"
+              width="20"
+              height="20"
+              aria-hidden
+              focusable="false"
+            >
+              <path
+                fill="currentColor"
+                d="M20 6h-8l-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2Zm-2 10h-2v2h-2v-2h-2v-2h2v-2h2v2h2v2Z"
+              />
+            </svg>
+          </button>
+          <button
+            type="button"
+            className="mail-nav-imap mail-nav-imap--icon"
+            onClick={() => setSettingsOpen(true)}
+            aria-label="Ayarlar: IMAP, imza, iki adımlı doğrulama"
+            title="Ayarlar (IMAP · imza · 2FA)"
+          >
+            <svg
+              className="mail-nav-imap-icon"
+              viewBox="0 0 24 24"
+              width="20"
+              height="20"
+              aria-hidden
+              focusable="false"
+            >
+              <path
+                fill="currentColor"
+                d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96a7.03 7.03 0 0 0-1.63-.94l-.36-2.54A.49.49 0 0 0 14 2h-4a.49.49 0 0 0-.49.42l-.36 2.54a7.03 7.03 0 0 0-1.63.94l-2.39-.96a.49.49 0 0 0-.59.22L2.71 8.04a.49.49 0 0 0 .12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.13.22.39.3.59.22l2.39-.96c.5.38 1.04.69 1.63.94l.36 2.54c.05.24.26.42.49.42h4c.24 0 .44-.18.49-.42l.36-2.54c.59-.25 1.13-.56 1.63-.94l2.39.96c.2.08.46 0 .59-.22l1.92-3.32a.49.49 0 0 0-.12-.61l-2.03-1.58ZM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7Z"
+              />
+            </svg>
+          </button>
+        </div>
         {summary?.storageQuota ? (
           <div className="mail-storage-quota">
             <div className="mail-storage-label">
