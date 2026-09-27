@@ -17,6 +17,28 @@ import {
   TrustScoreApiClient,
   TrustScoreRecord,
 } from "../../../lib/TrustScoreApiClient";
+import { ensureMessagingWebPush } from "../../../lib/messagingPush";
+
+type PendingAttachment = {
+  filename: string;
+  contentType: string;
+  contentBase64: string;
+};
+
+async function readFileAsAttachment(file: File): Promise<PendingAttachment> {
+  const buffer = await file.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  const chunk = 0x8000;
+  for (let offset = 0; offset < bytes.length; offset += chunk) {
+    binary += String.fromCharCode(...bytes.subarray(offset, offset + chunk));
+  }
+  return {
+    filename: file.name,
+    contentType: file.type || "application/octet-stream",
+    contentBase64: btoa(binary),
+  };
+}
 
 type MessagingMode = "chat" | "email";
 
@@ -68,6 +90,9 @@ export function MessagingPageClient() {
   const [threadSummary, setThreadSummary] =
     useState<MessagingThreadSummaryRecord | null>(null);
   const [translations, setTranslations] = useState<Record<string, string>>({});
+  const [pendingAttachments, setPendingAttachments] = useState<
+    PendingAttachment[]
+  >([]);
   const [translateBusyId, setTranslateBusyId] = useState("");
   const isCompanyOwner =
     session?.roleCodes?.includes("COMPANY_OWNER") ?? false;
@@ -239,7 +264,10 @@ export function MessagingPageClient() {
   }
 
   async function handleSendMessage(): Promise<void> {
-    if (!activeThreadId || !messageBody.trim()) {
+    if (
+      !activeThreadId ||
+      (!messageBody.trim() && pendingAttachments.length === 0)
+    ) {
       return;
     }
     try {
@@ -248,8 +276,10 @@ export function MessagingPageClient() {
         locale,
         activeThreadId,
         messageBody.trim(),
+        pendingAttachments.length > 0 ? pendingAttachments : undefined,
       );
       setMessageBody("");
+      setPendingAttachments([]);
       await loadMessages(activeThreadId);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Gönderim hatası");
@@ -296,6 +326,13 @@ export function MessagingPageClient() {
     }, 12_000);
     return () => window.clearInterval(timer);
   }, [mode, activeThreadId, loadMessages]);
+
+  useEffect(() => {
+    if (mode !== "chat" || !accessToken) {
+      return;
+    }
+    void ensureMessagingWebPush(accessToken).catch(() => undefined);
+  }, [mode, accessToken]);
 
   useEffect(() => {
     const companyId = activeThread?.counterpartyCompanyId;
@@ -553,6 +590,48 @@ export function MessagingPageClient() {
                           ) : null}
                         </span>
                         <p>{message.bodyText}</p>
+                        {message.attachments && message.attachments.length > 0 ? (
+                          <ul className="chat-attachment-list">
+                            {message.attachments.map((attachment) => (
+                              <li key={attachment.index}>
+                                <button
+                                  type="button"
+                                  className="chat-attachment-link"
+                                  onClick={async () => {
+                                    if (!activeThreadId) {
+                                      return;
+                                    }
+                                    try {
+                                      const blob =
+                                        await MessagingApiClient.downloadAttachment(
+                                          accessToken,
+                                          locale,
+                                          activeThreadId,
+                                          message.id,
+                                          attachment.index,
+                                        );
+                                      const url = URL.createObjectURL(blob);
+                                      const anchor = document.createElement("a");
+                                      anchor.href = url;
+                                      anchor.download = attachment.filename;
+                                      anchor.click();
+                                      URL.revokeObjectURL(url);
+                                    } catch (error) {
+                                      setErrorMessage(
+                                        error instanceof Error
+                                          ? error.message
+                                          : "Ek indirilemedi",
+                                      );
+                                    }
+                                  }}
+                                >
+                                  📎 {attachment.filename} (
+                                  {Math.round(attachment.sizeBytes / 1024)} KB)
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : null}
                         {translations[message.id] ? (
                           <p className="chat-translation">
                             {translations[message.id]}
@@ -586,7 +665,52 @@ export function MessagingPageClient() {
                 </ul>
               )}
             </div>
+            {pendingAttachments.length > 0 ? (
+              <ul className="chat-pending-attachments">
+                {pendingAttachments.map((file) => (
+                  <li key={file.filename}>
+                    {file.filename}
+                    <button
+                      type="button"
+                      className="chat-attachment-remove"
+                      onClick={() =>
+                        setPendingAttachments((current) =>
+                          current.filter((row) => row.filename !== file.filename),
+                        )
+                      }
+                    >
+                      Kaldır
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
             <div className="chat-input-row">
+              <label className="chat-file-picker">
+                <span className="btn-secondary">Dosya</span>
+                <input
+                  type="file"
+                  accept="image/*,application/pdf,text/plain"
+                  disabled={!activeThreadId || pendingAttachments.length >= 2}
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    event.target.value = "";
+                    if (!file) {
+                      return;
+                    }
+                    void readFileAsAttachment(file)
+                      .then((attachment) => {
+                        setPendingAttachments((current) => [
+                          ...current.slice(0, 1),
+                          attachment,
+                        ]);
+                      })
+                      .catch(() =>
+                        setErrorMessage("Dosya okunamadı (en fazla 2,5 MB)."),
+                      );
+                  }}
+                />
+              </label>
               <input
                 className="input-light"
                 placeholder="Mesajınızı yazın…"
@@ -602,7 +726,10 @@ export function MessagingPageClient() {
               <button
                 type="button"
                 className="btn-accent"
-                disabled={!activeThreadId || !messageBody.trim()}
+                disabled={
+                  !activeThreadId ||
+                  (!messageBody.trim() && pendingAttachments.length === 0)
+                }
                 onClick={() => void handleSendMessage()}
               >
                 Gönder

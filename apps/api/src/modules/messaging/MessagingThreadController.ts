@@ -4,10 +4,13 @@ import {
   Get,
   Headers,
   Param,
+  ParseIntPipe,
   Post,
   Query,
+  Res,
   UseGuards,
 } from "@nestjs/common";
+import { Response } from "express";
 import { AuthenticatedUserContext } from "@nakliyeborsasi/core";
 import { JwtAuthenticationGuard } from "../auth/JwtAuthenticationGuard";
 import { AuthenticatedUserParam } from "../auth/AuthenticatedUserParam";
@@ -15,7 +18,7 @@ import { LocaleResolutionService } from "../localization/LocaleResolutionService
 import { MessagingThreadApplicationService } from "./MessagingThreadApplicationService";
 import { MessagingTranslationService } from "./MessagingTranslationService";
 import { OpenMessagingThreadRequestDto } from "./OpenMessagingThreadRequestDto";
-import { SendThreadMessageRequestDto } from "./SendThreadMessageRequestDto";
+import { SendThreadMessageRequestDto } from "./MessagingAttachmentRequestDto";
 import { TranslateMessagingTextRequestDto } from "./TranslateMessagingTextRequestDto";
 
 @Controller("messaging")
@@ -98,10 +101,40 @@ export class MessagingThreadController {
     const message = await this.messagingThreadApplicationService.sendMessage(
       authenticatedUser,
       threadId,
-      body.bodyText,
+      body.bodyText ?? "",
       locale,
+      body.attachments,
     );
     return { message };
+  }
+
+  @Get("threads/:threadId/messages/:messageId/attachments/:index")
+  public async downloadAttachment(
+    @Param("threadId") threadId: string,
+    @Param("messageId") messageId: string,
+    @Param("index", ParseIntPipe) index: number,
+    @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
+    @Headers("accept-language") acceptLanguage: string | undefined,
+    @Query("lang") queryLanguage: string | undefined,
+    @Res() response: Response,
+  ): Promise<void> {
+    const locale = this.localeResolutionService.resolveFromHeaders(
+      acceptLanguage,
+      queryLanguage,
+    );
+    const file = await this.messagingThreadApplicationService.getMessageAttachment(
+      authenticatedUser,
+      threadId,
+      messageId,
+      index,
+      locale,
+    );
+    response.setHeader("Content-Type", file.contentType);
+    response.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${encodeURIComponent(file.filename)}"`,
+    );
+    response.send(file.buffer);
   }
 
   @Get("export")

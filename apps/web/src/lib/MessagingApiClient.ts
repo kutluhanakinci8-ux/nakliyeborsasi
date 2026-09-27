@@ -1,4 +1,5 @@
 import { AuthenticatedApiClient } from "./AuthenticatedApiClient";
+import { PublicApiConfiguration } from "./PublicApiConfiguration";
 
 export type MessagingThreadRecord = {
   threadId: string;
@@ -10,12 +11,20 @@ export type MessagingThreadRecord = {
   unreadCount?: number;
 };
 
+export type ThreadMessageAttachmentRecord = {
+  index: number;
+  filename: string;
+  contentType: string;
+  sizeBytes: number;
+};
+
 export type ThreadMessageRecord = {
   id: string;
   senderCompanyId: string;
   bodyText: string;
   createdAt: string;
   readByRecipient?: boolean;
+  attachments?: ThreadMessageAttachmentRecord[];
 };
 
 export type MessagingThreadSummaryRecord = {
@@ -109,14 +118,54 @@ export class MessagingApiClient {
     locale: string,
     threadId: string,
     bodyText: string,
+    attachments?: {
+      filename: string;
+      contentType: string;
+      contentBase64: string;
+    }[],
   ): Promise<void> {
     await AuthenticatedApiClient.fetchJson(
       accessToken,
       `/messaging/threads/${threadId}/messages?lang=${locale}`,
       {
         method: "POST",
-        body: JSON.stringify({ bodyText }),
+        body: JSON.stringify({
+          bodyText,
+          ...(attachments?.length ? { attachments } : {}),
+        }),
       },
     );
+  }
+
+  public static attachmentDownloadUrl(
+    locale: string,
+    threadId: string,
+    messageId: string,
+    index: number,
+  ): string {
+    const base = PublicApiConfiguration.resolveBaseUrl();
+    return `${base}/messaging/threads/${threadId}/messages/${messageId}/attachments/${index}?lang=${encodeURIComponent(locale)}`;
+  }
+
+  public static async downloadAttachment(
+    accessToken: string,
+    locale: string,
+    threadId: string,
+    messageId: string,
+    index: number,
+  ): Promise<Blob> {
+    const url = MessagingApiClient.attachmentDownloadUrl(
+      locale,
+      threadId,
+      messageId,
+      index,
+    );
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!response.ok) {
+      throw new Error("Ek indirilemedi");
+    }
+    return response.blob();
   }
 }

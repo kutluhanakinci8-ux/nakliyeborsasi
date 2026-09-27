@@ -1,3 +1,10 @@
+export type MessagingMessageAttachmentView = {
+  index: number;
+  filename: string;
+  contentType: string;
+  sizeBytes: number;
+};
+
 export class MessagingThreadMessageView {
   public readonly id: string;
 
@@ -10,17 +17,21 @@ export class MessagingThreadMessageView {
   /** Karşı taraf bu mesajı gördü mü (sadece sizin gönderdiğiniz mesajlar için). */
   public readonly readByRecipient: boolean;
 
+  public readonly attachments: MessagingMessageAttachmentView[];
+
   public constructor(params: {
     id: string;
     senderCompanyId: string;
     bodyText: string;
     createdAt: string;
     readByRecipient: boolean;
+    attachments?: MessagingMessageAttachmentView[];
   }) {
     this.id = params.id;
     this.senderCompanyId = params.senderCompanyId;
     this.bodyText = params.bodyText;
     this.createdAt = params.createdAt;
     this.readByRecipient = params.readByRecipient;
+    this.attachments = params.attachments ?? [];
   }
 }
