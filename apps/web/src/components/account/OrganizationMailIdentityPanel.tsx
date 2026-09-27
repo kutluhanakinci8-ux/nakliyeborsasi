@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   addOrgSuppression,
+  formatMailIdentityApiError,
   fetchCompanyMailIdentity,
   fetchCustomDomainBundle,
   fetchOrgSuppressions,
@@ -40,6 +41,33 @@ function slugifyPostOrg(input: string): string {
   return slugifyLocalPart(input).replace(/-/g, "") || "firma";
 }
 
+/** Kutu ön eki: yalnızca `info` — tam e-posta yazılırsa @ öncesi alınır. */
+function normalizePostLocalPart(raw: string): string {
+  let value = raw.trim().toLowerCase();
+  if (value.includes("@")) {
+    value = value.split("@")[0] ?? value;
+  }
+  value = value.replace(/[^a-z0-9._-]/g, "");
+  return value.slice(0, 48);
+}
+
+function normalizePostOrgSlug(raw: string): string {
+  return raw
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, "")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 50);
+}
+
+function isValidPostOrgSlug(slug: string): boolean {
+  return /^[a-z0-9][a-z0-9-]{1,48}[a-z0-9]$/.test(slug);
+}
+
+function isValidPostLocalPart(local: string): boolean {
+  return /^[a-z0-9][a-z0-9._-]{0,48}[a-z0-9]$|^[a-z0-9]$/.test(local);
+}
+
 function normalizeCustomDomainInput(raw: string): string {
   const trimmed = raw.trim().toLowerCase();
   if (trimmed.includes("@")) {
@@ -75,6 +103,16 @@ export function OrganizationMailIdentityPanel({
   const [customLocalPart, setCustomLocalPart] = useState("bildirim");
   const [postOrgSlug, setPostOrgSlug] = useState("");
   const [postLocalPart, setPostLocalPart] = useState("info");
+  const [claimingPost, setClaimingPost] = useState(false);
+
+  const lertaPostPreview = useMemo(() => {
+    const slug = normalizePostOrgSlug(postOrgSlug);
+    const local = normalizePostLocalPart(postLocalPart);
+    if (!slug || !local) {
+      return null;
+    }
+    return `${local}@${slug}.post`;
+  }, [postOrgSlug, postLocalPart]);
 
   const refresh = useCallback(async () => {
     if (!accessToken) {
@@ -112,28 +150,57 @@ export function OrganizationMailIdentityPanel({
   }, [refresh]);
 
   async function handleClaimLertaPost(): Promise<void> {
-    if (!accessToken || !postOrgSlug.trim() || !postLocalPart.trim()) {
-      return;
-    }
-    const slug = postOrgSlug.trim().toLowerCase();
-    const local = postLocalPart.trim().toLowerCase();
-    const desiredAddress = `${local}@${slug}.post`;
     setMessage("");
     setError("");
+    if (!accessToken) {
+      setError("Oturum bulunamadı — sayfayı yenileyip tekrar giriş yapın.");
+      return;
+    }
+    if (!isOwner) {
+      setError("Lerta Post kutusu yalnızca firma sahibi oluşturabilir.");
+      return;
+    }
+    const slug = normalizePostOrgSlug(postOrgSlug);
+    const local = normalizePostLocalPart(postLocalPart);
+    if (!slug || !local) {
+      setError("Firma kısa adı ve kutu ön eki zorunlu.");
+      return;
+    }
+    if (!isValidPostOrgSlug(slug)) {
+      setError(
+        "Firma kısa adı: 3–50 karakter, küçük harf/rakam/tire (ör. abayer).",
+      );
+      return;
+    }
+    if (!isValidPostLocalPart(local)) {
+      setError(
+        "Kutu ön eki yalnızca info gibi tek parça olmalı — tam e-posta yazmayın.",
+      );
+      return;
+    }
+    const desiredAddress = `${local}@${slug}.post`;
+    setClaimingPost(true);
     try {
       const result = await claimCompanyMailAddress(accessToken, {
         desiredAddress,
         displayName: displayName.trim() || companyTradeName,
       });
+      setPostLocalPart(local);
+      setPostOrgSlug(slug);
       setMessage(
         result.nextStepTr ||
           `Lerta Post kutusu hazır: ${result.vanityAddress ?? result.fromAddress}`,
       );
       await refresh();
-    } catch {
+    } catch (error) {
+      const raw = error instanceof Error ? error.message : "";
       setError(
-        "Lerta Post adresi oluşturulamadı — slug kullanımda veya geçersiz. Farklı firma kısa adı deneyin.",
+        raw
+          ? formatMailIdentityApiError(raw)
+          : "Lerta Post adresi oluşturulamadı — slug kullanımda veya geçersiz.",
       );
+    } finally {
+      setClaimingPost(false);
     }
   }
 
@@ -252,8 +319,14 @@ export function OrganizationMailIdentityPanel({
               <p className="account-verify-eyebrow">Lerta Post (önerilen)</p>
               <p className="module-hint">
                 DNS sizden istenmez. Görünen adres{" "}
-                <code>{postLocalPart || "info"}@{postOrgSlug || "firma"}.post</code>
-                ; Mesajlar ve posta.lerta.com.tr aynı kutuyu kullanır.
+                <code>{lertaPostPreview ?? "info@firma.post"}</code> (teknik:{" "}
+                <code>
+                  {lertaPostPreview
+                    ? `${normalizePostLocalPart(postLocalPart)}@${normalizePostOrgSlug(postOrgSlug)}.post.lerta.com.tr`
+                    : "info@firma.post.lerta.com.tr"}
+                </code>
+                ). <strong>Kutu ön eki</strong> sadece <code>info</code> olmalı;
+                <code>info@lerta.com.tr</code> yazmayın.
               </p>
               <label className="account-label">
                 Firma kısa adı (slug)
@@ -261,24 +334,30 @@ export function OrganizationMailIdentityPanel({
                   className="account-input"
                   value={postOrgSlug}
                   onChange={(e) => setPostOrgSlug(e.target.value)}
+                  onBlur={() => setPostOrgSlug(normalizePostOrgSlug(postOrgSlug))}
                   placeholder="abayer"
                 />
               </label>
               <label className="account-label">
-                Kutu ön eki
+                Kutu ön eki (local-part)
                 <input
                   className="account-input"
                   value={postLocalPart}
                   onChange={(e) => setPostLocalPart(e.target.value)}
+                  onBlur={() =>
+                    setPostLocalPart(normalizePostLocalPart(postLocalPart))
+                  }
                   placeholder="info"
+                  autoComplete="off"
                 />
               </label>
               <button
                 type="button"
                 className="btn-account-primary"
+                disabled={claimingPost}
                 onClick={() => void handleClaimLertaPost()}
               >
-                Lerta Post kutusu oluştur
+                {claimingPost ? "Oluşturuluyor…" : "Lerta Post kutusu oluştur"}
               </button>
             </div>
           ) : null}

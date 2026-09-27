@@ -42,6 +42,21 @@ export type CompanyMailIdentitySnapshot = {
   fromAddress: string | null;
 };
 
+export function formatMailIdentityApiError(raw: string): string {
+  try {
+    const parsed = JSON.parse(raw) as { message?: string | string[] };
+    if (Array.isArray(parsed.message)) {
+      return parsed.message.join(" ");
+    }
+    if (typeof parsed.message === "string") {
+      return parsed.message;
+    }
+  } catch {
+    /* plain text */
+  }
+  return raw.length > 220 ? "İşlem başarısız." : raw;
+}
+
 async function apiFetch<T>(
   accessToken: string,
   path: string,
@@ -58,7 +73,7 @@ async function apiFetch<T>(
   );
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(text || `API failed: ${path}`);
+    throw new Error(formatMailIdentityApiError(text || `API failed: ${path}`));
   }
   return (await response.json()) as T;
 }
