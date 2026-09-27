@@ -6,6 +6,7 @@ import { MailDomainEntity } from "../../infrastructure/database/entities/MailDom
 import { MailSenderIdentityEntity } from "../../infrastructure/database/entities/MailSenderIdentityEntity";
 import { MailDomainDnsVerificationService } from "./MailDomainDnsVerificationService";
 import { MailInstantPostDomainService } from "./MailInstantPostDomainService";
+import { resolveTenantReplyToAddress } from "./MailTenantEmailBranding";
 
 export type OrganizationMailChannel =
   | "instant_post"
@@ -141,6 +142,26 @@ export class MailOrganizationIdentityService {
       return "tenant_subdomain";
     }
     return "platform";
+  }
+
+  public async resolveOutboundReplyTo(organizationId: string): Promise<string> {
+    const useMailbox =
+      process.env.MAIL_REPLY_TO_ORGANIZATION_MAILBOX?.trim() !== "false";
+    if (!useMailbox) {
+      return resolveTenantReplyToAddress();
+    }
+    const sender = await this.senderRepository.findOne({
+      where: { organizationId, isDefault: true },
+      relations: { mailDomain: true },
+    });
+    if (!sender?.mailDomain) {
+      return resolveTenantReplyToAddress();
+    }
+    const addresses = resolveMailSenderAddresses(
+      sender.localPart,
+      sender.mailDomain,
+    );
+    return addresses.technicalAddress?.trim() || resolveTenantReplyToAddress();
   }
 
 }

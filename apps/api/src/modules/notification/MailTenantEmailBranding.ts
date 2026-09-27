@@ -28,7 +28,7 @@ export function appendTenantTrustFooter(
       Gönderen: <code style="font-size:11px;">${escapeHtml(from)}</code>.`
       : `Bu e-posta <strong>${escapeHtml(org)}</strong> adına ${PLATFORM_PRODUCT_NAME} platformu üzerinden gönderilmiştir.
       Gönderen: <code style="font-size:11px;">${escapeHtml(from)}</code>.
-      Yanıtlarınız platform destek hattına yönlendirilir.`;
+      Yanıtlarınız kurumsal posta kutunuza (Reply-To) yönlendirilir.`;
   const footer = `
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:24px;">
   <tr>

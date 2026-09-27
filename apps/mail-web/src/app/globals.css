@@ -2356,3 +2356,27 @@ a {
   font-size: 1.15rem;
   font-weight: 650;
 }
+
+.mail-app--embed {
+  min-height: 100vh;
+}
+
+.mail-app--embed .mail-deploy-sha,
+.mail-app--embed .mail-address button,
+.mail-app--embed .mail-theme-fab {
+  display: none !important;
+}
+
+.mail-app--embed .mail-brand strong {
+  font-weight: 600;
+}
+
+.mail-storage-warn--danger {
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.mail-compose-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

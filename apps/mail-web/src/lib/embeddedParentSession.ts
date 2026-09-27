@@ -1,9 +1,15 @@
+import { resolveEmbedParentOrigins } from "./embedParentOrigins";
+
 /** app.lerta.com.tr iframe içinde posta — üçüncü taraf çerez/localStorage kısıtına karşı. */
 export const LERTA_MAIL_EMBED_PARENT_ORIGINS = [
   "https://app.lerta.com.tr",
   "http://localhost:3011",
   "http://127.0.0.1:3011",
 ] as const;
+
+export function resolveAllowedEmbedParentOrigins(): string[] {
+  return [...resolveEmbedParentOrigins()];
+}
 
 export type MailEmbedTokenMessage = {
   type: "lerta-mail-set-token";
@@ -15,7 +21,7 @@ export type MailEmbedTokenRequestMessage = {
 };
 
 export function isAllowedEmbedParent(origin: string): boolean {
-  return (LERTA_MAIL_EMBED_PARENT_ORIGINS as readonly string[]).includes(origin);
+  return resolveAllowedEmbedParentOrigins().includes(origin);
 }
 
 export function parseEmbedFromSearch(search: string): boolean {

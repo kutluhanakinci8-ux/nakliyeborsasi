@@ -106,6 +106,8 @@ export function MailClient() {
   const deepLinkMessageHandled = useRef(false);
   const deepLinkComposeHandled = useRef(false);
   const { accessToken, logout } = useMailSession();
+  const embedMode =
+    searchParams.get("embed") === "1" || searchParams.get("embedded") === "1";
   const [view, setView] = useState<View>("inbox");
   const [summary, setSummary] = useState<MailInboxSummary | null>(null);
   const [sendReadiness, setSendReadiness] = useState<{
@@ -1222,6 +1224,8 @@ export function MailClient() {
     setComposeText(preset.bodyText);
   }
 
+  const storageAtLimit = summary?.storageQuota?.atLimit ?? false;
+
   function applyComposeSignature(presetId: string) {
     const preset = composeSignatures.find((s) => s.id === presetId);
     if (!preset) {
@@ -1234,7 +1238,9 @@ export function MailClient() {
   }
 
   return (
-    <div className={`mail-app mobile-pane-${mobilePane}`}>
+    <div
+      className={`mail-app mobile-pane-${mobilePane}${embedMode ? " mail-app--embed" : ""}`}
+    >
       <div className="mail-mobile-bar">
         <button type="button" onClick={() => setMobilePane("nav")}>
           Menü
@@ -1271,6 +1277,12 @@ export function MailClient() {
         <button
           type="button"
           className="mail-compose-btn"
+          disabled={storageAtLimit}
+          title={
+            storageAtLimit
+              ? "Depolama kotası dolu — önce arşivleyin veya silin"
+              : undefined
+          }
           onClick={() => {
             resetCompose();
             setComposeOpen(true);
@@ -1519,7 +1531,12 @@ export function MailClient() {
                 }}
               />
             </div>
-            {summary.storageQuota.nearLimit ? (
+            {summary.storageQuota.atLimit ? (
+              <p className="mail-storage-warn mail-storage-warn--danger">
+                Depolama kotası dolu — yeni gönderim ve ekler engellenebilir.
+                Arşivleyin veya plan yükseltin.
+              </p>
+            ) : summary.storageQuota.nearLimit ? (
               <p className="mail-storage-warn">
                 Depolama kotasına yaklaşıyorsunuz. Eski postaları arşivleyin veya
                 silin.
