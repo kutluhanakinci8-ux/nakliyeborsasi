@@ -32,6 +32,7 @@ import { MailOrganizationWebhookDispatcherService } from "./MailOrganizationWebh
 import { MailAddressAliasService } from "./MailAddressAliasService";
 import { MailWebPushService } from "./MailWebPushService";
 import { MailInboxRuleService } from "./MailInboxRuleService";
+import { MailAutoReplyService } from "./MailAutoReplyService";
 import type { MailInboundAttachmentMeta } from "../../infrastructure/database/entities/MailInboundMessageEntity";
 
 export type InboundIngestInput = {
@@ -65,6 +66,7 @@ export class MailInboundIngestService {
     private readonly mailAddressAliasService: MailAddressAliasService,
     private readonly mailWebPushService: MailWebPushService,
     private readonly mailInboxRuleService: MailInboxRuleService,
+    private readonly mailAutoReplyService: MailAutoReplyService,
   ) {}
 
   public async ingest(input: InboundIngestInput): Promise<MailInboundMessageEntity> {
@@ -246,6 +248,11 @@ export class MailInboundIngestService {
         messageId: afterRules.id,
         fromAddress: afterRules.fromAddress,
         subject: afterRules.subject,
+      });
+      void this.mailAutoReplyService.tryReplyForInbound({
+        organizationId: params.mailbox.organizationId,
+        mailboxEmail: params.mailbox.emailAddress,
+        inbound: afterRules,
       });
     }
     return afterRules;

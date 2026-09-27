@@ -10,7 +10,7 @@ Outlook mobil ayarlar ekranına göre mevcut durum ve faz planı.
 | Gruplu liste + ikon satırları | Yatay sekmeler (IMAP, imza, …) | 🔄 S-A1 |
 | **Ekran ve görünüm** | Tema FAB (☾/☀), ayarlarda değil | 🔄 S-A1 |
 | **İmza** | İmza / şablon sekmesi | ✅ |
-| **Otomatik yanıtlar** | — | ❌ S-A2 |
+| **Otomatik yanıtlar** | Ayarlar + inbound tetikleme | ✅ S-A2 |
 | **Bildirimler ve sesler** | Push, ses, günlük özet | ✅ (S-A1’de tek satır) |
 | **Hesaplar** | Tek kurumsal kutu + IMAP | ⚠️ kısmi |
 | **Posta** (yoğunluk, varsayılan) | Kurallar, klasörler | ⚠️ kısmi |
@@ -27,6 +27,6 @@ Outlook mobil ayarlar ekranına göre mevcut durum ve faz planı.
 | Faz | Kapsam | Deploy |
 |-----|--------|--------|
 | **S-A1** | Outlook tarzı ayar merkezi: arama, gruplar, drill-down; görünüm (açık/koyu) ayarlarda | ✅ kod |
-| **S-A2** | Otomatik yanıt (API + şablon + aç/kapa + tarih aralığı) | |
+| **S-A2** | Otomatik yanıt (API + şablon + aç/kapa + tarih aralığı) | ✅ kod |
 | **S-A3** | Posta tercihleri (liste yoğunluğu), takvim/kişi kısayolları, gizlilik/yarım linkleri | |
 | **S-A4** | Hesaplar özeti (gönderen kimlikleri, alias), gelişmiş entegrasyonlar | |

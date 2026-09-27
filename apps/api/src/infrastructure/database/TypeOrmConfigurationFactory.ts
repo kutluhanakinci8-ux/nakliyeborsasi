@@ -55,6 +55,7 @@ import { MailCustomFolderEntity } from "./entities/MailCustomFolderEntity";
 import { MailInboxRuleEntity } from "./entities/MailInboxRuleEntity";
 import { MailDelayedComposeEntity } from "./entities/MailDelayedComposeEntity";
 import { MailInboxPreferencesEntity } from "./entities/MailInboxPreferencesEntity";
+import { MailAutoReplyThrottleEntity } from "./entities/MailAutoReplyThrottleEntity";
 import { MailCalendarEventEntity } from "./entities/MailCalendarEventEntity";
 import { MailCalendarRecurrenceExceptionEntity } from "./entities/MailCalendarRecurrenceExceptionEntity";
 import { MailOrgContactEntity } from "./entities/MailOrgContactEntity";
@@ -131,6 +132,7 @@ export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
         MailInboxRuleEntity,
         MailDelayedComposeEntity,
         MailInboxPreferencesEntity,
+        MailAutoReplyThrottleEntity,
         MailCalendarEventEntity,
         MailCalendarRecurrenceExceptionEntity,
         MailOrgContactEntity,
