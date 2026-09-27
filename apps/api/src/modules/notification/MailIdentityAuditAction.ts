@@ -34,6 +34,12 @@ export const MailIdentityAuditAction = {
   IntegrationWebhookUpdated: "MAIL_INTEGRATION_WEBHOOK_UPDATED",
   MailAliasCreated: "MAIL_ALIAS_CREATED",
   MailAliasRemoved: "MAIL_ALIAS_REMOVED",
+  InboxComposeSent: "MAIL_INBOX_COMPOSE_SENT",
+  InboxReplySent: "MAIL_INBOX_REPLY_SENT",
+  InboxForwardSent: "MAIL_INBOX_FORWARD_SENT",
+  InboxDraftSent: "MAIL_INBOX_DRAFT_SENT",
+  InboxMessageDeleted: "MAIL_INBOX_MESSAGE_DELETED",
+  AdminEdiscoveryExport: "MAIL_ADMIN_EDISCOVERY_EXPORT",
 } as const;
 
 export type MailIdentityAuditActionCode =

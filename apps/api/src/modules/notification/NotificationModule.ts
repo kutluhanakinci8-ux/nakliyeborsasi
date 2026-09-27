@@ -109,6 +109,9 @@ import { MailOrganizationIntegrationService } from "./MailOrganizationIntegratio
 import { MailOrganizationWebhookDispatcherService } from "./MailOrganizationWebhookDispatcherService";
 import { MailPublicApiGuard } from "./MailPublicApiGuard";
 import { MailPublicApiController } from "./MailPublicApiController";
+import { CompanyMailJmapController } from "./CompanyMailJmapController";
+import { MailJmapBridgeService } from "./MailJmapBridgeService";
+import { MailPlatformEdiscoveryService } from "./MailPlatformEdiscoveryService";
 import { MailAddressAliasEntity } from "../../infrastructure/database/entities/MailAddressAliasEntity";
 import { MailAddressAliasTargetEntity } from "../../infrastructure/database/entities/MailAddressAliasTargetEntity";
 import { MailWebPushSubscriptionEntity } from "../../infrastructure/database/entities/MailWebPushSubscriptionEntity";
@@ -215,6 +218,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     CompanyMailTeamController,
     MailTeamInvitePublicController,
     CompanyMailInboxController,
+    CompanyMailJmapController,
     MailBillingController,
     MailBillingWebhookController,
     EmailTrackingController,
@@ -261,6 +265,8 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     MailInboundPostfixSyncBootstrap,
     MailInboundSpamService,
     MailMailboxComposeService,
+    MailJmapBridgeService,
+    MailPlatformEdiscoveryService,
     MailImapMaildirService,
     MailImapAccessService,
     MailComposeDraftService,

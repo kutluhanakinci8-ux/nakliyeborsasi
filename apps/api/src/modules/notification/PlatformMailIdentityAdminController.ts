@@ -31,6 +31,7 @@ import { MailPlatformMonitoringService } from "./MailPlatformMonitoringService";
 import { MailPlatformKpiService } from "./MailPlatformKpiService";
 import { MailBillingService } from "./MailBillingService";
 import { MailInstantPostDomainService } from "./MailInstantPostDomainService";
+import { MailPlatformEdiscoveryService } from "./MailPlatformEdiscoveryService";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { MailDomainEntity } from "../../infrastructure/database/entities/MailDomainEntity";
@@ -53,6 +54,7 @@ export class PlatformMailIdentityAdminController {
     private readonly mailPlatformKpiService: MailPlatformKpiService,
     private readonly mailBillingService: MailBillingService,
     private readonly mailInstantPostDomainService: MailInstantPostDomainService,
+    private readonly mailPlatformEdiscoveryService: MailPlatformEdiscoveryService,
     @InjectRepository(MailDomainEntity)
     private readonly mailDomainRepository: Repository<MailDomainEntity>,
   ) {}
@@ -168,6 +170,37 @@ export class PlatformMailIdentityAdminController {
   @Get("identity-audit")
   public async identityAudit() {
     return { logs: await this.mailIdentityAuditService.listRecent() };
+  }
+
+  @Get("ediscovery/organizations")
+  public async ediscoveryOrganizations() {
+    return {
+      organizations:
+        await this.mailPlatformEdiscoveryService.listOrganizationSummaries(),
+    };
+  }
+
+  @Get("ediscovery/export/:organizationId")
+  public async ediscoveryExport(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("organizationId") organizationId: string,
+  ) {
+    const packageBody =
+      await this.mailPlatformEdiscoveryService.buildExportPackage(
+        organizationId,
+      );
+    await this.mailIdentityAuditService.record({
+      actorUserId: user.userId,
+      actorCompanyId: user.companyId,
+      actionCode: MailIdentityAuditAction.AdminEdiscoveryExport,
+      metadata: {
+        organizationId,
+        exportedAt: packageBody.exportedAt,
+      },
+      requestPath: `/platform-admin/mail/ediscovery/export/${organizationId}`,
+      httpMethod: "GET",
+    });
+    return packageBody;
   }
 
   @Get("inbound-messages")

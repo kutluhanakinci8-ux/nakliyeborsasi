@@ -36,6 +36,10 @@ export function AdminSystemPageClient() {
   const [messageThreads, setMessageThreads] = useState<
     Awaited<ReturnType<typeof PlatformAdminApiClient.fetchMessageThreads>>
   >([]);
+  const [mailEdiscoveryOrgs, setMailEdiscoveryOrgs] = useState<
+    Awaited<ReturnType<typeof PlatformAdminApiClient.fetchMailEdiscoveryOrganizations>>
+  >([]);
+  const [ediscoveryBusyId, setEdiscoveryBusyId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const modules = flattenPlatformAdminNav().filter((item) => item.href !== "/admin");
@@ -46,12 +50,14 @@ export function AdminSystemPageClient() {
     }
     setLoading(true);
     try {
-      const [ov, threads] = await Promise.all([
+      const [ov, threads, mailOrgs] = await Promise.all([
         PlatformAdminApiClient.fetchOverview(accessToken),
         PlatformAdminApiClient.fetchMessageThreads(accessToken),
+        PlatformAdminApiClient.fetchMailEdiscoveryOrganizations(accessToken),
       ]);
       setOverview(ov);
       setMessageThreads(threads);
+      setMailEdiscoveryOrgs(mailOrgs);
     } finally {
       setLoading(false);
     }
@@ -243,6 +249,80 @@ export function AdminSystemPageClient() {
               </li>
             ))}
           </ul>
+        </section>
+
+        <section className="admin-panel-card admin-users-detail-wide">
+          <header className="admin-panel-card-head">
+            <div>
+              <h2>Kurumsal posta eDiscovery</h2>
+              <p>Firma posta kutuları — metadata + KVKK paketi (JSON indir)</p>
+            </div>
+          </header>
+          {mailEdiscoveryOrgs.length === 0 ? (
+            <p className="admin-meta-line">Henüz posta kiracısı yok.</p>
+          ) : (
+            <div className="admin-table-scroll">
+              <table className="admin-data-table">
+                <thead>
+                  <tr>
+                    <th>Firma</th>
+                    <th>Birincil adres</th>
+                    <th>Gelen</th>
+                    <th>Giden</th>
+                    <th>Paket</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {mailEdiscoveryOrgs.slice(0, 30).map((row) => (
+                    <tr key={row.organizationId}>
+                      <td>
+                        <code>{row.organizationId.slice(0, 8)}…</code>
+                      </td>
+                      <td>{row.primaryMailboxAddress ?? "—"}</td>
+                      <td>{formatNumber(row.inboundCount)}</td>
+                      <td>{formatNumber(row.sentCount)}</td>
+                      <td>
+                        <button
+                          type="button"
+                          className="admin-button-secondary admin-button-compact"
+                          disabled={ediscoveryBusyId === row.organizationId}
+                          onClick={async () => {
+                            if (!accessToken) {
+                              return;
+                            }
+                            setEdiscoveryBusyId(row.organizationId);
+                            try {
+                              const payload =
+                                await PlatformAdminApiClient.downloadMailEdiscoveryExport(
+                                  accessToken,
+                                  row.organizationId,
+                                );
+                              const blob = new Blob(
+                                [JSON.stringify(payload, null, 2)],
+                                { type: "application/json" },
+                              );
+                              const url = URL.createObjectURL(blob);
+                              const anchor = document.createElement("a");
+                              anchor.href = url;
+                              anchor.download = `lerta-mail-ediscovery-${row.organizationId.slice(0, 8)}.json`;
+                              anchor.click();
+                              URL.revokeObjectURL(url);
+                            } finally {
+                              setEdiscoveryBusyId(null);
+                            }
+                          }}
+                        >
+                          {ediscoveryBusyId === row.organizationId
+                            ? "İndiriliyor…"
+                            : "JSON"}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </section>
 
         <section className="admin-panel-card admin-users-detail-wide">

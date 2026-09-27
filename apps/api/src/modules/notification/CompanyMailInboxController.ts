@@ -75,6 +75,11 @@ import { MailCalendarIcsFeedService } from "./MailCalendarIcsFeedService";
 import { MailCalendarCalDavService } from "./MailCalendarCalDavService";
 import { MailContactCardDavService } from "./MailContactCardDavService";
 import {
+  MailIdentityAuditAction,
+  type MailIdentityAuditActionCode,
+  MailIdentityAuditService,
+} from "./MailIdentityAuditService";
+import {
   CreateMailCalendarEventRequestDto,
   CreateMailOrgContactRequestDto,
   ImportMailCalendarIcsRequestDto,
@@ -112,6 +117,7 @@ export class CompanyMailInboxController {
     private readonly mailCalendarIcsFeedService: MailCalendarIcsFeedService,
     private readonly mailCalendarCalDavService: MailCalendarCalDavService,
     private readonly mailContactCardDavService: MailContactCardDavService,
+    private readonly mailIdentityAuditService: MailIdentityAuditService,
   ) {}
 
   @Get("preferences")
@@ -628,6 +634,12 @@ export class CompanyMailInboxController {
       user.userId,
       draftId,
     );
+    await this.recordInboxMailAudit(user, MailIdentityAuditAction.InboxDraftSent, {
+      subject: payload.subject,
+      to: payload.to,
+      sentId: result.sentId,
+      draftId,
+    });
     return { ok: true, ...result };
   }
 
@@ -835,6 +847,9 @@ export class CompanyMailInboxController {
       user.companyId,
       messageId,
     );
+    await this.recordInboxMailAudit(user, MailIdentityAuditAction.InboxMessageDeleted, {
+      messageId,
+    });
     return { ok: true };
   }
 
@@ -869,6 +884,11 @@ export class CompanyMailInboxController {
     const result = await this.mailMailboxComposeService.compose({
       organizationId: user.companyId,
       ...payload,
+    });
+    await this.recordInboxMailAudit(user, MailIdentityAuditAction.InboxComposeSent, {
+      subject: body.subject,
+      to: body.to,
+      sentId: result.sentId,
     });
     return { ok: true, ...result };
   }
@@ -932,6 +952,11 @@ export class CompanyMailInboxController {
       bcc: body.bcc,
       replyAll: body.replyAll,
       attachments: body.attachments,
+    });
+    await this.recordInboxMailAudit(user, MailIdentityAuditAction.InboxReplySent, {
+      inboundMessageId: messageId,
+      sentId: result.sentId,
+      replyAll: body.replyAll ?? false,
     });
     return { ok: true, ...result };
   }
@@ -1006,7 +1031,28 @@ export class CompanyMailInboxController {
       includeOriginal: body.includeOriginal,
       attachments: body.attachments,
     });
+    await this.recordInboxMailAudit(user, MailIdentityAuditAction.InboxForwardSent, {
+      inboundMessageId: messageId,
+      to: body.to,
+      sentId: result.sentId,
+    });
     return { ok: true, ...result };
+  }
+
+  private async recordInboxMailAudit(
+    user: AuthenticatedUserContext,
+    actionCode: MailIdentityAuditActionCode,
+    metadata: Record<string, unknown>,
+  ): Promise<void> {
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      actionCode,
+      {
+        organizationId: user.companyId,
+        ...metadata,
+      },
+      "/company/mail-inbox",
+    );
   }
 
   private parseFolder(folder?: string): InboxFolder {
