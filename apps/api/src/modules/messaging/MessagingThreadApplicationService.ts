@@ -4,6 +4,7 @@ import { In, IsNull, Repository } from "typeorm";
 import {
   AuthenticatedUserContext,
   AuthorizationException,
+  MessagingThreadMessageView,
   MessagingThreadNotFoundException,
   MessagingThreadReference,
   SubscriptionModuleCode,
@@ -11,6 +12,7 @@ import {
 } from "@nakliyeborsasi/core";
 import { MessageThreadEntity } from "../../infrastructure/database/entities/MessageThreadEntity";
 import { MessageEntity } from "../../infrastructure/database/entities/MessageEntity";
+import { MessageThreadReadStateEntity } from "../../infrastructure/database/entities/MessageThreadReadStateEntity";
 import { OpenMessagingThreadRequestDto } from "./OpenMessagingThreadRequestDto";
 import { ModularSubscriptionEntitlementService } from "../subscription/ModularSubscriptionEntitlementService";
 import { OperationalNotificationService } from "../notification/OperationalNotificationService";
@@ -23,6 +25,8 @@ export class MessagingThreadApplicationService {
     private readonly messageThreadRepository: Repository<MessageThreadEntity>,
     @InjectRepository(MessageEntity)
     private readonly messageRepository: Repository<MessageEntity>,
+    @InjectRepository(MessageThreadReadStateEntity)
+    private readonly readStateRepository: Repository<MessageThreadReadStateEntity>,
     @InjectRepository(CompanyEntity)
     private readonly companyRepository: Repository<CompanyEntity>,
     private readonly modularSubscriptionEntitlementService: ModularSubscriptionEntitlementService,
@@ -96,6 +100,19 @@ export class MessagingThreadApplicationService {
     const companyNameById = new Map(
       companies.map((row) => [row.id, row.legalName]),
     );
+    const threadIds = threads.map((thread) => thread.id);
+    const readStates =
+      threadIds.length > 0
+        ? await this.readStateRepository.find({
+            where: {
+              threadId: In(threadIds),
+              companyId: authenticatedUser.companyId,
+            },
+          })
+        : [];
+    const lastReadAtByThreadId = new Map(
+      readStates.map((row) => [row.threadId, row.lastReadAt]),
+    );
     const enriched: MessagingThreadReference[] = [];
     for (const thread of threads) {
       const counterpartyCompanyId =
@@ -106,6 +123,12 @@ export class MessagingThreadApplicationService {
         where: { threadId: thread.id },
         order: { createdAt: "DESC" },
       });
+      const lastReadAt = lastReadAtByThreadId.get(thread.id) ?? null;
+      const unreadCount = await this.countUnreadMessages(
+        thread.id,
+        authenticatedUser.companyId,
+        lastReadAt,
+      );
       enriched.push(
         new MessagingThreadReference({
           threadId: thread.id,
@@ -115,6 +138,7 @@ export class MessagingThreadApplicationService {
           lastMessagePreview: lastMessage?.bodyText?.slice(0, 120) ?? null,
           lastMessageAt: lastMessage?.createdAt?.toISOString() ?? null,
           freightListingId: thread.freightListingId,
+          unreadCount,
         }),
       );
     }
@@ -130,16 +154,47 @@ export class MessagingThreadApplicationService {
     authenticatedUser: AuthenticatedUserContext,
     threadId: string,
     locale: string,
-  ): Promise<MessageEntity[]> {
+  ): Promise<MessagingThreadMessageView[]> {
     const thread = await this.requireParticipantThread(
       authenticatedUser,
       threadId,
       locale,
     );
-    return this.messageRepository.find({
+    const messages = await this.messageRepository.find({
       where: { threadId: thread.id },
       order: { createdAt: "ASC" },
     });
+    const counterpartyCompanyId =
+      thread.companyAId === authenticatedUser.companyId
+        ? thread.companyBId
+        : thread.companyAId;
+    const counterpartyRead = await this.readStateRepository.findOne({
+      where: { threadId: thread.id, companyId: counterpartyCompanyId },
+    });
+    const counterpartyLastReadAt = counterpartyRead?.lastReadAt ?? null;
+    const views = messages.map((message) => {
+      const isMine = message.senderCompanyId === authenticatedUser.companyId;
+      const readByRecipient =
+        isMine &&
+        counterpartyLastReadAt !== null &&
+        message.createdAt.getTime() <= counterpartyLastReadAt.getTime();
+      return new MessagingThreadMessageView({
+        id: message.id,
+        senderCompanyId: message.senderCompanyId,
+        bodyText: message.bodyText,
+        createdAt: message.createdAt.toISOString(),
+        readByRecipient,
+      });
+    });
+    const latest = messages.at(-1);
+    if (latest) {
+      await this.upsertReadState(
+        thread.id,
+        authenticatedUser.companyId,
+        latest.createdAt,
+      );
+    }
+    return views;
   }
 
   public async sendMessage(
@@ -204,6 +259,50 @@ export class MessagingThreadApplicationService {
       throw new AuthorizationException("Thread access denied");
     }
     return thread;
+  }
+
+  private async countUnreadMessages(
+    threadId: string,
+    viewerCompanyId: string,
+    lastReadAt: Date | null | undefined,
+  ): Promise<number> {
+    const qb = this.messageRepository
+      .createQueryBuilder("message")
+      .where("message.threadId = :threadId", { threadId })
+      .andWhere("message.senderCompanyId != :viewerCompanyId", {
+        viewerCompanyId,
+      });
+    if (lastReadAt) {
+      qb.andWhere("message.createdAt > :lastReadAt", { lastReadAt });
+    }
+    return qb.getCount();
+  }
+
+  private async upsertReadState(
+    threadId: string,
+    companyId: string,
+    lastReadAt: Date,
+  ): Promise<void> {
+    const existing = await this.readStateRepository.findOne({
+      where: { threadId, companyId },
+    });
+    if (existing) {
+      if (
+        !existing.lastReadAt ||
+        existing.lastReadAt.getTime() < lastReadAt.getTime()
+      ) {
+        existing.lastReadAt = lastReadAt;
+        await this.readStateRepository.save(existing);
+      }
+      return;
+    }
+    await this.readStateRepository.save(
+      this.readStateRepository.create({
+        threadId,
+        companyId,
+        lastReadAt,
+      }),
+    );
   }
 
   private normalizeCompanyPair(

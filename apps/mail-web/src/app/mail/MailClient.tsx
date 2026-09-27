@@ -181,7 +181,7 @@ export function MailClient() {
   const [inboxBranding, setInboxBranding] = useState<MailInboxBranding | null>(
     null,
   );
-  const [composeRich, setComposeRich] = useState(false);
+  const [composeRich, setComposeRich] = useState(true);
   const [composeHtml, setComposeHtml] = useState("");
   const [customFolders, setCustomFolders] = useState<MailCustomFolder[]>([]);
   const [activeCustomFolderId, setActiveCustomFolderId] = useState<

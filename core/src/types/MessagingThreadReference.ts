@@ -11,6 +11,8 @@ export class MessagingThreadReference {
 
   public readonly freightListingId: string | null;
 
+  public readonly unreadCount: number;
+
   public constructor(params: {
     threadId: string;
     counterpartyCompanyId: string;
@@ -18,6 +20,7 @@ export class MessagingThreadReference {
     lastMessagePreview?: string | null;
     lastMessageAt?: string | null;
     freightListingId?: string | null;
+    unreadCount?: number;
   }) {
     this.threadId = params.threadId;
     this.counterpartyCompanyId = params.counterpartyCompanyId;
@@ -25,5 +28,6 @@ export class MessagingThreadReference {
     this.lastMessagePreview = params.lastMessagePreview ?? null;
     this.lastMessageAt = params.lastMessageAt ?? null;
     this.freightListingId = params.freightListingId ?? null;
+    this.unreadCount = params.unreadCount ?? 0;
   }
 }
