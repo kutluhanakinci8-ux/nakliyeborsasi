@@ -9,9 +9,17 @@ export function resolveMailWebPublicUrl(): string {
 
 export function buildMailWebSsoHandoffUrl(
   accessToken: string,
-  options?: { embed?: boolean },
+  options?: { embed?: boolean; composeTo?: string },
 ): string {
   const base = resolveMailWebPublicUrl();
-  const embedQuery = options?.embed ? "?embed=1" : "";
-  return `${base}/auth/consume${embedQuery}#access_token=${encodeURIComponent(accessToken)}`;
+  const params = new URLSearchParams();
+  if (options?.embed) {
+    params.set("embed", "1");
+  }
+  const composeTo = options?.composeTo?.trim();
+  if (composeTo) {
+    params.set("composeTo", composeTo);
+  }
+  const qs = params.toString();
+  return `${base}/auth/consume${qs ? `?${qs}` : ""}#access_token=${encodeURIComponent(accessToken)}`;
 }

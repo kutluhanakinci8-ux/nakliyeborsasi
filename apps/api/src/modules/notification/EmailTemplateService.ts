@@ -265,6 +265,29 @@ export class EmailTemplateService {
       [NotificationEventCode.MessagingNewMessage]: "Yeni mesaj",
     };
     const title = titles[eventCode] ?? "Operasyon bildirimi";
+    if (eventCode === NotificationEventCode.MessagingNewMessage) {
+      const messagingUrl = payload.messagingUrl ?? "#";
+      const preview = payload.messagePreview ?? "";
+      const sender =
+        payload.senderCompanyName ?? payload.bidderCompanyName ?? "—";
+      return {
+        subject: `[${PLATFORM_EMAIL_SUBJECT_TAG}] ${title} — ${sender}`,
+        html: wrapCorporateEmail(
+          title,
+          `${leadParagraph(
+            `<strong>${escapeHtml(sender)}</strong> firma sohbetinde yeni mesaj gönderdi.`,
+          )}
+          ${preview ? mutedParagraph(escapeHtml(preview)) : ""}
+          ${detailTable([
+            { label: "Alıcı firma", value: payload.companyLegalName ?? "—" },
+            { label: "Zaman", value: formatOccurredAt(payload.occurredAt ?? "") },
+          ])}
+          ${primaryButton(messagingUrl, "Mesajları aç")}`,
+          { eyebrow: "Mesajlar", preheader: preview.slice(0, 80) || title },
+        ),
+        text: `${title} — ${sender}: ${preview}\n${messagingUrl}`,
+      };
+    }
     const auctionUrl = payload.auctionUrl ?? "#";
     return {
       subject: `[${PLATFORM_EMAIL_SUBJECT_TAG}] ${title} — ${payload.companyLegalName ?? ""}`,

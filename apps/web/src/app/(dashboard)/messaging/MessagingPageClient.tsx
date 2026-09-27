@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { OrganizationMailInboxPanel } from "../../../components/account/OrganizationMailInboxPanel";
 import { MessagingMailWebEmbed } from "../../../components/messaging/MessagingMailWebEmbed";
 import { EmptyState } from "../../../components/EmptyState";
 import { ModulePageShell } from "../../../components/ModulePageShell";
@@ -55,15 +54,31 @@ export function MessagingPageClient() {
   const [messages, setMessages] = useState<ThreadMessageRecord[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [isBusy, setIsBusy] = useState(false);
+  const [mailEmbedFullscreen, setMailEmbedFullscreen] = useState(false);
 
   useEffect(() => {
     const chatLink =
       Boolean(searchParams.get("companyId")) ||
       Boolean(searchParams.get("threadId"));
-    setMode(parseMode(searchParams.get("tab"), chatLink));
+    const mailComposeLink =
+      Boolean(searchParams.get("composeTo")) ||
+      Boolean(searchParams.get("email"));
+    if (mailComposeLink) {
+      setMode("email");
+    } else {
+      setMode(parseMode(searchParams.get("tab"), chatLink));
+    }
     const tab = searchParams.get("tab");
-    if (!tab && !chatLink) {
+    if (!tab && !chatLink && !mailComposeLink) {
       router.replace("/messaging?tab=email", { scroll: false });
+    }
+    const rawEmail = searchParams.get("email")?.trim();
+    if (rawEmail && !searchParams.get("composeTo")) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("tab", "email");
+      params.set("composeTo", rawEmail);
+      params.delete("email");
+      router.replace(`/messaging?${params.toString()}`, { scroll: false });
     }
   }, [searchParams, router]);
 
@@ -115,10 +130,12 @@ export function MessagingPageClient() {
     setIsBusy(true);
     setErrorMessage("");
     try {
+      const listingId = searchParams.get("listingId")?.trim();
       const payload = await MessagingApiClient.openThread(
         accessToken,
         locale,
         counterpartyId.trim(),
+        listingId || undefined,
       );
       const threadId =
         (payload.thread as { id?: string; threadId?: string }).id ??
@@ -185,7 +202,7 @@ export function MessagingPageClient() {
           ? [
               { value: String(threads.length), label: "Aktif sohbet" },
               { value: String(messages.length), label: "Bu sohbette mesaj" },
-              { value: "Şifreli", label: "Oturum koruması", highlight: true },
+              { value: "JWT", label: "Oturum koruması", highlight: true },
             ]
           : undefined
       }
@@ -226,19 +243,35 @@ export function MessagingPageClient() {
 
       {errorMessage ? <p className="error banner error--light">{errorMessage}</p> : null}
 
+      {mode === "chat" && searchParams.get("listingId") ? (
+        <p className="module-hint" style={{ marginBottom: "0.75rem" }}>
+          Bu sohbet ilan{" "}
+          <code>{searchParams.get("listingId")?.slice(0, 8)}…</code> bağlamında
+          açılır. Karşı firma ID girip <strong>Aç</strong> kullanın.
+        </p>
+      ) : null}
+
       {mode === "email" ? (
-        <>
-          <MessagingMailWebEmbed />
-          <details className="module-panel messaging-mail-panel" style={{ marginTop: "1rem" }}>
-            <summary className="module-panel-title" style={{ cursor: "pointer" }}>
-              Hızlı gelen kutusu (uygulama içi)
-            </summary>
-            <OrganizationMailInboxPanel
-              variant="messaging"
-              primaryAddressDisplay="technical"
-            />
-          </details>
-        </>
+        <div
+          className={
+            mailEmbedFullscreen
+              ? "messaging-mail-embed-wrap messaging-mail-embed-wrap--fullscreen"
+              : "messaging-mail-embed-wrap"
+          }
+        >
+          <div className="messaging-mail-embed-toolbar">
+            <button
+              type="button"
+              className="btn-account-secondary"
+              onClick={() => setMailEmbedFullscreen((value) => !value)}
+            >
+              {mailEmbedFullscreen ? "Tam ekrandan çık" : "Tam ekran"}
+            </button>
+          </div>
+          <MessagingMailWebEmbed
+            composeTo={searchParams.get("composeTo") ?? undefined}
+          />
+        </div>
       ) : (
         <div className="chat-layout">
           <aside className="chat-sidebar module-panel">
@@ -275,9 +308,16 @@ export function MessagingPageClient() {
                       onClick={() => void loadMessages(thread.threadId)}
                     >
                       <span className="chat-thread-title">
-                        {shortCompanyId(thread.counterpartyCompanyId)}
+                        {thread.counterpartyLegalName?.trim() ||
+                          shortCompanyId(thread.counterpartyCompanyId)}
                       </span>
-                      <span className="chat-thread-sub">Firma sohbeti</span>
+                      <span className="chat-thread-sub">
+                        {thread.lastMessagePreview
+                          ? thread.lastMessagePreview
+                          : thread.freightListingId
+                            ? `İlan ${thread.freightListingId.slice(0, 8)}…`
+                            : "Firma sohbeti"}
+                      </span>
                     </button>
                   </li>
                 ))}
@@ -288,7 +328,8 @@ export function MessagingPageClient() {
           <section className="chat-main module-panel">
             <h2 className="module-panel-title">
               {activeThread
-                ? shortCompanyId(activeThread.counterpartyCompanyId)
+                ? activeThread.counterpartyLegalName?.trim() ||
+                  shortCompanyId(activeThread.counterpartyCompanyId)
                 : "Mesaj kutusu"}
             </h2>
             <div className="chat-messages">

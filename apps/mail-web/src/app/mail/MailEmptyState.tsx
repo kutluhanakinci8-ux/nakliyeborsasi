@@ -6,11 +6,11 @@ const COPY: Record<
 > = {
   inbox: {
     title: "Gelen kutusu boş",
-    body: "Bu adrese gelen postalar burada listelenir. Pilot kutunuz dışarıdan test için kullanılabilir.",
+    body: "Bu adrese gelen kurumsal postalar burada listelenir.",
     tips: [
       "Başka bir hesaptan kendinize test e-postası gönderin.",
-      "Thunderbird veya telefon için: Ayarlar → IMAP bilgileri.",
-      "Kurumsal domain: yonetim.lerta.com.tr üzerinden DNS doğrulayın.",
+      "Telefon veya Thunderbird için: Ayarlar → IMAP bilgileri.",
+      "Kutu ve gönderen kimliği: Lerta Logistics → Hesap → Organizasyon → E-posta kimliği.",
     ],
   },
   sent: {
@@ -69,8 +69,12 @@ export function MailEmptyState({
         </ul>
       ) : null}
       <p className="mail-empty-links">
-        <a href="https://yonetim.lerta.com.tr" target="_blank" rel="noreferrer">
-          Yönetim konsolu
+        <a
+          href="https://app.lerta.com.tr/hesap/organizasyon#org-eposta"
+          target="_blank"
+          rel="noreferrer"
+        >
+          E-posta kimliği
         </a>
         {" · "}
         <a
