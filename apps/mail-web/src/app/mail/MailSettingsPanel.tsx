@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   beginTotpSetup,
   confirmTotpSetup,
@@ -25,17 +25,117 @@ import {
   playMailNotifyBeep,
   setMailNotifySoundEnabled,
 } from "@/lib/mailNotifySound";
+import {
+  applyMailTheme,
+  initMailTheme,
+  type MailTheme,
+} from "@/lib/mailTheme";
+
+type SettingsView =
+  | "hub"
+  | "display"
+  | "signature"
+  | "autoReply"
+  | "notifications"
+  | "imap"
+  | "rules"
+  | "security"
+  | "privacy"
+  | "help";
+
+type HubItem = {
+  id: SettingsView;
+  section: "quick" | "general" | "other";
+  label: string;
+  subtitle: string;
+  keywords: string;
+  disabled?: boolean;
+};
+
+const HUB_ITEMS: HubItem[] = [
+  {
+    id: "display",
+    section: "quick",
+    label: "Ekran ve görünüm",
+    subtitle: "Açık ve koyu tema",
+    keywords: "tema görünüm dark light",
+  },
+  {
+    id: "signature",
+    section: "quick",
+    label: "İmza ve şablon",
+    subtitle: "Gönderim ön ayarları",
+    keywords: "imza şablon compose",
+  },
+  {
+    id: "autoReply",
+    section: "quick",
+    label: "Otomatik yanıtlar",
+    subtitle: "Faz S-A2 — yakında",
+    keywords: "tatil toplantı oof vacation",
+    disabled: true,
+  },
+  {
+    id: "notifications",
+    section: "quick",
+    label: "Bildirimler ve sesler",
+    subtitle: "Push, ses, günlük özet",
+    keywords: "bildirim push ses digest",
+  },
+  {
+    id: "imap",
+    section: "general",
+    label: "IMAP ve SMTP",
+    subtitle: "Thunderbird, Outlook masaüstü",
+    keywords: "imap smtp thunderbird outlook hesap",
+  },
+  {
+    id: "rules",
+    section: "general",
+    label: "Posta kuralları",
+    subtitle: "Gelen kutusu otomasyonu",
+    keywords: "kural filtre yönlendir",
+  },
+  {
+    id: "security",
+    section: "general",
+    label: "Güvenlik",
+    subtitle: "İki adımlı doğrulama (TOTP)",
+    keywords: "2fa totp güvenlik",
+  },
+  {
+    id: "privacy",
+    section: "general",
+    label: "Gizlilik",
+    subtitle: "KVKK ve veri hakları",
+    keywords: "kvkk gizlilik veri",
+  },
+  {
+    id: "help",
+    section: "other",
+    label: "Yardım",
+    subtitle: "IMAP kurulum rehberi",
+    keywords: "yardım destek imap",
+  },
+];
 
 type Props = {
   accessToken: string;
   onClose: () => void;
+  onOpenCalendar?: () => void;
+  onOpenContacts?: () => void;
 };
 
-export function MailSettingsPanel({ accessToken, onClose }: Props) {
-  const [tab, setTab] = useState<
-    "imap" | "presets" | "security" | "notifications" | "rules"
-  >("imap");
-  const [pushStatus, setPushStatus] = useState<string>("");
+export function MailSettingsPanel({
+  accessToken,
+  onClose,
+  onOpenCalendar,
+  onOpenContacts,
+}: Props) {
+  const [view, setView] = useState<SettingsView>("hub");
+  const [query, setQuery] = useState("");
+  const [theme, setTheme] = useState<MailTheme>("light");
+  const [pushStatus, setPushStatus] = useState("");
   const [pushConfigured, setPushConfigured] = useState(false);
   const [notifySound, setNotifySound] = useState(false);
   const [dailyDigest, setDailyDigest] = useState(true);
@@ -49,6 +149,7 @@ export function MailSettingsPanel({ accessToken, onClose }: Props) {
   const [copyHint, setCopyHint] = useState("");
 
   useEffect(() => {
+    setTheme(initMailTheme());
     setNotifySound(isMailNotifySoundEnabled());
   }, []);
 
@@ -63,10 +164,29 @@ export function MailSettingsPanel({ accessToken, onClose }: Props) {
         const prefs = await fetchInboxPreferences(accessToken);
         setDailyDigest(prefs.preferences.dailyDigestEnabled);
       } catch {
-        setError("IMAP ayarları yüklenemedi.");
+        setError("Ayarlar yüklenemedi.");
       }
     })();
   }, [accessToken]);
+
+  const filteredItems = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) {
+      return HUB_ITEMS;
+    }
+    return HUB_ITEMS.filter(
+      (item) =>
+        item.label.toLowerCase().includes(q) ||
+        item.subtitle.toLowerCase().includes(q) ||
+        item.keywords.includes(q),
+    );
+  }, [query]);
+
+  const hubSections: { key: HubItem["section"]; title: string }[] = [
+    { key: "quick", title: "Hızlı ayarlar" },
+    { key: "general", title: "Genel" },
+    { key: "other", title: "Diğer" },
+  ];
 
   async function onRotate() {
     setError("");
@@ -97,325 +217,533 @@ export function MailSettingsPanel({ accessToken, onClose }: Props) {
     }
   }
 
+  function openHubItem(item: HubItem) {
+    if (item.disabled) {
+      setView("autoReply");
+      return;
+    }
+    if (item.id === "help") {
+      window.open("/help/imap", "_blank", "noopener,noreferrer");
+      return;
+    }
+    setView(item.id);
+  }
+
+  function renderHub() {
+    return (
+      <>
+        <div className="mail-settings-header mail-settings-header--hub">
+          <button
+            type="button"
+            className="mail-settings-close"
+            onClick={onClose}
+            aria-label="Kapat"
+          >
+            ×
+          </button>
+          <h2 className="mail-settings-title">Ayarlar</h2>
+        </div>
+        <input
+          className="mail-settings-search"
+          type="search"
+          placeholder="Ara"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          aria-label="Ayarları ara"
+        />
+        <div className="mail-settings-scroll">
+          {onOpenCalendar || onOpenContacts ? (
+            <section className="mail-settings-group">
+              <h3 className="mail-settings-group-title">Posta ve takvim</h3>
+              <ul className="mail-settings-list">
+                {onOpenCalendar ? (
+                  <li>
+                    <button
+                      type="button"
+                      className="mail-settings-row"
+                      onClick={() => {
+                        onOpenCalendar();
+                        onClose();
+                      }}
+                    >
+                      <span className="mail-settings-row-icon" aria-hidden>
+                        📅
+                      </span>
+                      <span className="mail-settings-row-text">
+                        <strong>Takvim</strong>
+                        <small>CalDAV ve ICS beslemeleri</small>
+                      </span>
+                      <span className="mail-settings-chevron" aria-hidden>
+                        ›
+                      </span>
+                    </button>
+                  </li>
+                ) : null}
+                {onOpenContacts ? (
+                  <li>
+                    <button
+                      type="button"
+                      className="mail-settings-row"
+                      onClick={() => {
+                        onOpenContacts();
+                        onClose();
+                      }}
+                    >
+                      <span className="mail-settings-row-icon" aria-hidden>
+                        👥
+                      </span>
+                      <span className="mail-settings-row-text">
+                        <strong>Kişiler</strong>
+                        <small>CardDAV ve rehber</small>
+                      </span>
+                      <span className="mail-settings-chevron" aria-hidden>
+                        ›
+                      </span>
+                    </button>
+                  </li>
+                ) : null}
+              </ul>
+            </section>
+          ) : null}
+          {hubSections.map((section) => {
+            const items = filteredItems.filter((i) => i.section === section.key);
+            if (items.length === 0) {
+              return null;
+            }
+            return (
+              <section key={section.key} className="mail-settings-group">
+                <h3 className="mail-settings-group-title">{section.title}</h3>
+                <ul className="mail-settings-list">
+                  {items.map((item) => (
+                    <li key={item.id}>
+                      <button
+                        type="button"
+                        className={
+                          item.disabled
+                            ? "mail-settings-row mail-settings-row--muted"
+                            : "mail-settings-row"
+                        }
+                        onClick={() => openHubItem(item)}
+                      >
+                        <span className="mail-settings-row-icon" aria-hidden>
+                          {settingsRowIcon(item.id)}
+                        </span>
+                        <span className="mail-settings-row-text">
+                          <strong>{item.label}</strong>
+                          <small>
+                            {item.id === "notifications" && pushConfigured
+                              ? "Push yapılandırıldı"
+                              : item.id === "security"
+                                ? totpEnabled
+                                  ? "TOTP açık"
+                                  : "TOTP kapalı"
+                                : item.subtitle}
+                          </small>
+                        </span>
+                        <span className="mail-settings-chevron" aria-hidden>
+                          ›
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            );
+          })}
+          {filteredItems.length === 0 ? (
+            <p className="mail-settings-empty">Sonuç bulunamadı.</p>
+          ) : null}
+        </div>
+      </>
+    );
+  }
+
+  function renderDetail(title: string, body: ReactNode) {
+    return (
+      <>
+        <div className="mail-settings-header">
+          <button
+            type="button"
+            className="mail-settings-back"
+            onClick={() => setView("hub")}
+            aria-label="Geri"
+          >
+            ←
+          </button>
+          <h2 className="mail-settings-title">{title}</h2>
+          <button
+            type="button"
+            className="mail-settings-close"
+            onClick={onClose}
+            aria-label="Kapat"
+          >
+            ×
+          </button>
+        </div>
+        <div className="mail-settings-scroll mail-settings-detail">{body}</div>
+      </>
+    );
+  }
+
+  let content: ReactNode;
+  switch (view) {
+    case "hub":
+      content = renderHub();
+      break;
+    case "display":
+      content = renderDetail(
+        "Ekran ve görünüm",
+        <>
+          <p className="mail-settings-lead">
+            Webmail teması. Tercih tarayıcıda saklanır.
+          </p>
+          <div className="mail-settings-theme-options">
+            {(["light", "dark"] as MailTheme[]).map((option) => (
+              <button
+                key={option}
+                type="button"
+                className={
+                  theme === option
+                    ? "mail-settings-theme-btn active"
+                    : "mail-settings-theme-btn"
+                }
+                onClick={() => {
+                  applyMailTheme(option);
+                  setTheme(option);
+                }}
+              >
+                {option === "light" ? "Açık" : "Koyu"}
+              </button>
+            ))}
+          </div>
+        </>,
+      );
+      break;
+    case "signature":
+      content = renderDetail(
+        "İmza ve şablon",
+        <MailComposePresetsPanel accessToken={accessToken} />,
+      );
+      break;
+    case "autoReply":
+      content = renderDetail(
+        "Otomatik yanıtlar",
+        <>
+          <p className="mail-settings-lead">
+            Outlook’taki «Otomatik yanıtlar» özelliği <strong>Faz S-A2</strong>{" "}
+            ile gelecek: tatilde veya toplantıda gelen postaya özel metin, tarih
+            aralığı ve aç/kapa.
+          </p>
+        </>,
+      );
+      break;
+    case "notifications":
+      content = renderDetail(
+        "Bildirimler ve sesler",
+        <>
+          <p className="mail-settings-lead">
+            Yeni gelen posta için tarayıcı bildirimi (Web Push). HTTPS ve izin
+            gerekir.
+          </p>
+          {!pushConfigured ? (
+            <p>Sunucuda push henüz yapılandırılmamış (VAPID anahtarları).</p>
+          ) : null}
+          <div className="mail-settings-callout">
+            <strong>iPhone / iPad (Safari)</strong>
+            <p>
+              Bildirimler tarayıcı <em>sekmede</em> çalışmaz. Paylaş →{" "}
+              <strong>Ana Ekrana Ekle</strong>, uygulamayı ana ekrandan açın,
+              sonra buradan bildirimleri açın.
+            </p>
+          </div>
+          {pushStatus ? <p>{pushStatus}</p> : null}
+          <label className="mail-settings-check">
+            <input
+              type="checkbox"
+              checked={notifySound}
+              onChange={(e) => {
+                const on = e.target.checked;
+                setNotifySound(on);
+                setMailNotifySoundEnabled(on);
+                if (on) {
+                  playMailNotifyBeep();
+                }
+              }}
+            />
+            Yeni posta bildiriminde ses (sekme açıkken)
+          </label>
+          <label className="mail-settings-check">
+            <input
+              type="checkbox"
+              checked={dailyDigest}
+              onChange={(e) => {
+                const on = e.target.checked;
+                setDailyDigest(on);
+                void updateInboxPreferences(accessToken, {
+                  dailyDigestEnabled: on,
+                }).catch(() => {
+                  setPushStatus("Özet ayarı kaydedilemedi.");
+                  setDailyDigest(!on);
+                });
+              }}
+            />
+            Günlük özet e-postası (08:00, okunmamış varsa)
+          </label>
+          <div className="compose-actions">
+            <button
+              type="button"
+              disabled={!pushConfigured}
+              onClick={() =>
+                void (async () => {
+                  setPushStatus("");
+                  try {
+                    const result = await subscribeMailWebPush(accessToken);
+                    if (result === "enabled") {
+                      setPushStatus("Bildirimler açıldı.");
+                    } else if (result === "denied") {
+                      setPushStatus("Tarayıcı bildirim izni reddedildi.");
+                    } else if (result === "unsupported") {
+                      setPushStatus("Bu tarayıcı Web Push desteklemiyor.");
+                    } else {
+                      setPushStatus("Push sunucuda kapalı.");
+                    }
+                  } catch (err) {
+                    setPushStatus(
+                      err instanceof Error
+                        ? err.message
+                        : "Abonelik başarısız.",
+                    );
+                  }
+                })()
+              }
+            >
+              Bildirimleri aç
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                void (async () => {
+                  try {
+                    await unsubscribeMailWebPush(accessToken);
+                    setPushStatus("Bildirimler kapatıldı.");
+                  } catch {
+                    setPushStatus("Kapatılamadı.");
+                  }
+                })()
+              }
+            >
+              Bildirimleri kapat
+            </button>
+          </div>
+        </>,
+      );
+      break;
+    case "security":
+      content = renderDetail(
+        "Güvenlik",
+        <>
+          <p className="mail-settings-lead">
+            İki adımlı doğrulama (TOTP). Kapatmak için yönetim konsolu güvenlik
+            sayfasını kullanın.
+          </p>
+          <p>{totpEnabled ? "TOTP açık." : "TOTP kapalı."}</p>
+          {!totpEnabled && !totpSecret ? (
+            <button
+              type="button"
+              onClick={() =>
+                void (async () => {
+                  const data = await beginTotpSetup(accessToken);
+                  setTotpSecret(data.setup.secret);
+                })()
+              }
+            >
+              TOTP kur
+            </button>
+          ) : null}
+          {totpSecret ? (
+            <div style={{ marginTop: 12 }}>
+              <p>
+                Secret: <code>{totpSecret}</code>
+              </p>
+              <input
+                placeholder="6 haneli kod"
+                value={totpCode}
+                onChange={(e) => setTotpCode(e.target.value)}
+              />
+              <button
+                type="button"
+                style={{ marginLeft: 8 }}
+                onClick={() =>
+                  void (async () => {
+                    await confirmTotpSetup(accessToken, totpCode);
+                    setTotpSecret(null);
+                    setTotpEnabled(true);
+                  })()
+                }
+              >
+                Etkinleştir
+              </button>
+            </div>
+          ) : null}
+        </>,
+      );
+      break;
+    case "privacy":
+      content = renderDetail(
+        "Gizlilik",
+        <>
+          <p className="mail-settings-lead">
+            KVKK veri dışa aktarımı ve silme talepleri firma yöneticisi için{" "}
+            <strong>Lerta yönetim konsolu</strong> ve kurumsal posta kimlik
+            panelinde yönetilir (Faz S-A3: buradan doğrudan bağlantı).
+          </p>
+        </>,
+      );
+      break;
+    case "rules":
+      content = renderDetail(
+        "Posta kuralları",
+        <MailRulesPanel accessToken={accessToken} />,
+      );
+      break;
+    case "imap":
+      content = renderDetail(
+        "IMAP ve SMTP",
+        <>
+          <p className="mail-settings-lead">
+            Masaüstü istemci (Thunderbird, Outlook) ile kutunuza bağlanın.{" "}
+            <a href="/help/imap" target="_blank" rel="noopener noreferrer">
+              Kurulum rehberi
+            </a>
+          </p>
+          {copyHint ? <p style={{ fontSize: "0.85rem" }}>{copyHint}</p> : null}
+          {error ? <p className="login-error">{error}</p> : null}
+          {settings ? (
+            <dl className="imap-dl">
+              <dt>Durum</dt>
+              <dd>{settings.enabled ? "Aktif" : "Sunucuda kapalı"}</dd>
+              <dt>Sunucu</dt>
+              <dd>
+                {settings.imapHost}:{settings.imapPort}{" "}
+                {settings.imapTls ? "(SSL/TLS)" : ""}
+                {settings.enabled ? (
+                  <button
+                    type="button"
+                    className="mail-copy-inline"
+                    onClick={() =>
+                      void copyText(
+                        "Sunucu",
+                        `${settings.imapHost}:${settings.imapPort}`,
+                      )
+                    }
+                  >
+                    Kopyala
+                  </button>
+                ) : null}
+              </dd>
+              <dt>Kullanıcı</dt>
+              <dd>
+                {settings.username ?? "—"}
+                {settings.username ? (
+                  <button
+                    type="button"
+                    className="mail-copy-inline"
+                    onClick={() => void copyText("Kullanıcı", settings.username!)}
+                  >
+                    Kopyala
+                  </button>
+                ) : null}
+              </dd>
+              <dt>Giden (SMTP)</dt>
+              <dd>
+                {settings.smtpHost}:{settings.smtpPort}{" "}
+                {settings.smtpSecurity === "ssl" ? "(SSL)" : "(STARTTLS)"}
+                {settings.enabled ? (
+                  <button
+                    type="button"
+                    className="mail-copy-inline"
+                    onClick={() =>
+                      void copyText(
+                        "SMTP sunucu",
+                        `${settings.smtpHost}:${settings.smtpPort}`,
+                      )
+                    }
+                  >
+                    Kopyala
+                  </button>
+                ) : null}
+                <div className="mail-imap-hint">
+                  Kimlik doğrulama: IMAP ile aynı kullanıcı ve şifre.
+                </div>
+              </dd>
+              <dt>Şifre</dt>
+              <dd>
+                {settings.hasCredential
+                  ? "Kayıtlı (güvenlik için gösterilmez)"
+                  : "Henüz oluşturulmadı"}
+              </dd>
+              <dt>Gönderilen (IMAP)</dt>
+              <dd className="mail-imap-hint">{settings.sentFolderImapHint}</dd>
+            </dl>
+          ) : (
+            <p>Yükleniyor…</p>
+          )}
+          {newPassword ? (
+            <p className="mail-settings-password-once">
+              Yeni şifre (bir kez gösterilir): <strong>{newPassword}</strong>
+            </p>
+          ) : null}
+          <div className="compose-actions">
+            <button
+              type="button"
+              disabled={loading || !settings?.enabled}
+              onClick={() => void onRotate()}
+            >
+              {loading ? "…" : "IMAP şifresi oluştur / yenile"}
+            </button>
+          </div>
+        </>,
+      );
+      break;
+    default:
+      content = renderHub();
+  }
+
   return (
-    <div
-      className="compose-overlay"
-      role="presentation"
-      onClick={onClose}
-    >
+    <div className="compose-overlay" role="presentation" onClick={onClose}>
       <div
-        className="compose-dialog"
+        className="compose-dialog mail-settings-dialog"
         role="dialog"
+        aria-label="Ayarlar"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2>Ayarlar</h2>
-        <div className="settings-tabs">
-          <button
-            type="button"
-            className={tab === "imap" ? "active" : ""}
-            onClick={() => setTab("imap")}
-          >
-            IMAP
-          </button>
-          <button
-            type="button"
-            className={tab === "presets" ? "active" : ""}
-            onClick={() => setTab("presets")}
-          >
-            İmza / şablon
-          </button>
-          <button
-            type="button"
-            className={tab === "security" ? "active" : ""}
-            onClick={() => setTab("security")}
-          >
-            2FA
-          </button>
-          <button
-            type="button"
-            className={tab === "notifications" ? "active" : ""}
-            onClick={() => setTab("notifications")}
-          >
-            Bildirim
-          </button>
-          <button
-            type="button"
-            className={tab === "rules" ? "active" : ""}
-            onClick={() => setTab("rules")}
-          >
-            Kurallar
-          </button>
-        </div>
-        {tab === "presets" ? (
-          <MailComposePresetsPanel accessToken={accessToken} />
-        ) : null}
-        {tab === "rules" ? (
-          <>
-            <MailRulesPanel accessToken={accessToken} />
-            <div className="compose-actions">
-              <button type="button" onClick={onClose}>Kapat</button>
-            </div>
-          </>
-        ) : null}
-        {tab === "notifications" ? (
-          <>
-            <p style={{ color: "var(--muted)", fontSize: "0.9rem" }}>
-              Yeni gelen posta için tarayıcı bildirimi (Web Push). HTTPS ve
-              izin gerekir.
-            </p>
-            {!pushConfigured ? (
-              <p>Sunucuda push henüz yapılandırılmamış (VAPID anahtarları).</p>
-            ) : null}
-            <div className="mail-settings-callout">
-              <strong>iPhone / iPad (Safari)</strong>
-              <p>
-                Bildirimler tarayıcı <em>sekmede</em> çalışmaz. Paylaş →{" "}
-                <strong>Ana Ekrana Ekle</strong>, uygulamayı ana ekrandan açın,
-                sonra buradan bildirimleri açın.
-              </p>
-            </div>
-            {pushStatus ? <p>{pushStatus}</p> : null}
-            <label style={{ display: "block", marginTop: "0.75rem" }}>
-              <input
-                type="checkbox"
-                checked={notifySound}
-                onChange={(e) => {
-                  const on = e.target.checked;
-                  setNotifySound(on);
-                  setMailNotifySoundEnabled(on);
-                  if (on) {
-                    playMailNotifyBeep();
-                  }
-                }}
-              />
-              Yeni posta bildiriminde ses (sekme açıkken)
-            </label>
-            <label style={{ display: "block", marginTop: "0.75rem" }}>
-              <input
-                type="checkbox"
-                checked={dailyDigest}
-                onChange={(e) => {
-                  const on = e.target.checked;
-                  setDailyDigest(on);
-                  void updateInboxPreferences(accessToken, {
-                    dailyDigestEnabled: on,
-                  }).catch(() => {
-                    setPushStatus("Özet ayarı kaydedilemedi.");
-                    setDailyDigest(!on);
-                  });
-                }}
-              />
-              Günlük özet e-postası (08:00, okunmamış varsa)
-            </label>
-            <div className="compose-actions">
-              <button type="button" onClick={onClose}>Kapat</button>
-              <button
-                type="button"
-                disabled={!pushConfigured}
-                onClick={() =>
-                  void (async () => {
-                    setPushStatus("");
-                    try {
-                      const result = await subscribeMailWebPush(accessToken);
-                      if (result === "enabled") {
-                        setPushStatus("Bildirimler açıldı.");
-                      } else if (result === "denied") {
-                        setPushStatus("Tarayıcı bildirim izni reddedildi.");
-                      } else if (result === "unsupported") {
-                        setPushStatus("Bu tarayıcı Web Push desteklemiyor.");
-                      } else {
-                        setPushStatus("Push sunucuda kapalı.");
-                      }
-                    } catch (err) {
-                      setPushStatus(
-                        err instanceof Error
-                          ? err.message
-                          : "Abonelik başarısız.",
-                      );
-                    }
-                  })()
-                }
-              >
-                Bildirimleri aç
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  void (async () => {
-                    try {
-                      await unsubscribeMailWebPush(accessToken);
-                      setPushStatus("Bildirimler kapatıldı.");
-                    } catch {
-                      setPushStatus("Kapatılamadı.");
-                    }
-                  })()
-                }
-              >
-                Bildirimleri kapat
-              </button>
-            </div>
-          </>
-        ) : null}
-        {tab === "security" ? (
-          <>
-            <p style={{ color: "var(--muted)", fontSize: "0.9rem" }}>
-              İki adımlı doğrulama (TOTP). Kapatmak için yönetim konsolu
-              güvenlik sayfasını kullanın.
-            </p>
-            <p>{totpEnabled ? "TOTP açık." : "TOTP kapalı."}</p>
-            {!totpEnabled && !totpSecret ? (
-              <button
-                type="button"
-                onClick={() =>
-                  void (async () => {
-                    const data = await beginTotpSetup(accessToken);
-                    setTotpSecret(data.setup.secret);
-                  })()
-                }
-              >
-                TOTP kur
-              </button>
-            ) : null}
-            {totpSecret ? (
-              <div style={{ marginTop: 12 }}>
-                <p>
-                  Secret: <code>{totpSecret}</code>
-                </p>
-                <input
-                  placeholder="6 haneli kod"
-                  value={totpCode}
-                  onChange={(e) => setTotpCode(e.target.value)}
-                />
-                <button
-                  type="button"
-                  style={{ marginLeft: 8 }}
-                  onClick={() =>
-                    void (async () => {
-                      await confirmTotpSetup(accessToken, totpCode);
-                      setTotpSecret(null);
-                      setTotpEnabled(true);
-                    })()
-                  }
-                >
-                  Etkinleştir
-                </button>
-              </div>
-            ) : null}
-            <div className="compose-actions">
-              <button type="button" onClick={onClose}>Kapat</button>
-            </div>
-          </>
-        ) : null}
-        {tab === "imap" ? (
-          <>
-        <p style={{ color: "var(--muted)", fontSize: "0.9rem" }}>
-          Masaüstü istemci (Thunderbird, Outlook) ile kutunuza bağlanın.{" "}
-          <a href="/help/imap" target="_blank" rel="noopener noreferrer">
-            Kurulum rehberi
-          </a>
-        </p>
-        {copyHint ? <p style={{ fontSize: "0.85rem" }}>{copyHint}</p> : null}
-        {error ? <p className="login-error">{error}</p> : null}
-        {settings ? (
-          <dl className="imap-dl">
-            <dt>Durum</dt>
-            <dd>{settings.enabled ? "Aktif" : "Sunucuda kapalı"}</dd>
-            <dt>Sunucu</dt>
-            <dd>
-              {settings.imapHost}:{settings.imapPort}{" "}
-              {settings.imapTls ? "(SSL/TLS)" : ""}
-              {settings.enabled ? (
-                <button
-                  type="button"
-                  className="mail-copy-inline"
-                  onClick={() =>
-                    void copyText(
-                      "Sunucu",
-                      `${settings.imapHost}:${settings.imapPort}`,
-                    )
-                  }
-                >
-                  Kopyala
-                </button>
-              ) : null}
-            </dd>
-            <dt>Kullanıcı</dt>
-            <dd>
-              {settings.username ?? "—"}
-              {settings.username ? (
-                <button
-                  type="button"
-                  className="mail-copy-inline"
-                  onClick={() => void copyText("Kullanıcı", settings.username!)}
-                >
-                  Kopyala
-                </button>
-              ) : null}
-            </dd>
-            <dt>Giden (SMTP)</dt>
-            <dd>
-              {settings.smtpHost}:{settings.smtpPort}{" "}
-              {settings.smtpSecurity === "ssl" ? "(SSL)" : "(STARTTLS)"}
-              {settings.enabled ? (
-                <button
-                  type="button"
-                  className="mail-copy-inline"
-                  onClick={() =>
-                    void copyText(
-                      "SMTP sunucu",
-                      `${settings.smtpHost}:${settings.smtpPort}`,
-                    )
-                  }
-                >
-                  Kopyala
-                </button>
-              ) : null}
-              <div className="mail-imap-hint">
-                Kimlik doğrulama: IMAP ile aynı kullanıcı ve şifre.
-              </div>
-            </dd>
-            <dt>Şifre</dt>
-            <dd>
-              {settings.hasCredential
-                ? "Kayıtlı (güvenlik için gösterilmez)"
-                : "Henüz oluşturulmadı"}
-            </dd>
-            <dt>Gönderilen (IMAP)</dt>
-            <dd className="mail-imap-hint">{settings.sentFolderImapHint}</dd>
-          </dl>
-        ) : (
-          <p>Yükleniyor…</p>
-        )}
-        {newPassword ? (
-          <p
-            style={{
-              background: "#fff8e1",
-              padding: 12,
-              borderRadius: 8,
-              wordBreak: "break-all",
-            }}
-          >
-            Yeni şifre (bir kez gösterilir): <strong>{newPassword}</strong>
-          </p>
-        ) : null}
-        <div className="compose-actions">
-          <button type="button" onClick={onClose}>Kapat</button>
-          <button
-            type="button"
-            disabled={loading || !settings?.enabled}
-            onClick={() => void onRotate()}
-          >
-            {loading ? "…" : "IMAP şifresi oluştur / yenile"}
-          </button>
-        </div>
-          </>
-        ) : null}
-        {tab === "presets" ? (
-          <div className="compose-actions">
-            <button type="button" onClick={onClose}>Kapat</button>
-          </div>
-        ) : null}
+        {content}
       </div>
     </div>
   );
+}
+
+function settingsRowIcon(id: SettingsView): string {
+  switch (id) {
+    case "display":
+      return "🎨";
+    case "signature":
+      return "✒️";
+    case "autoReply":
+      return "↩️";
+    case "notifications":
+      return "🔔";
+    case "imap":
+      return "📬";
+    case "rules":
+      return "⚡";
+    case "security":
+      return "🔒";
+    case "privacy":
+      return "🛡️";
+    case "help":
+      return "❓";
+    default:
+      return "•";
+  }
 }
