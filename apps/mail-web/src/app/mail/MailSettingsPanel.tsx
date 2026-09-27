@@ -12,9 +12,16 @@ import {
 import { MailComposePresetsPanel } from "./MailComposePresetsPanel";
 import { MailRulesPanel } from "./MailRulesPanel";
 import {
+  downloadMailPrivacyExport,
+  fetchCalendarCalDavAccounts,
+  fetchContactCardDavAccounts,
   fetchInboxPreferences,
   fetchMailPushConfig,
+  resolveMailConsoleUrl,
+  syncAllCalendarCalDavAccounts,
+  syncAllContactCardDavAccounts,
   updateInboxPreferences,
+  type MailInboxListDensity,
 } from "@/lib/mailApi";
 import {
   subscribeMailWebPush,
@@ -34,6 +41,7 @@ import {
 type SettingsView =
   | "hub"
   | "display"
+  | "mailPrefs"
   | "signature"
   | "autoReply"
   | "notifications"
@@ -41,6 +49,8 @@ type SettingsView =
   | "rules"
   | "security"
   | "privacy"
+  | "calendarSettings"
+  | "contactsSettings"
   | "help";
 
 type HubItem = {
@@ -59,6 +69,13 @@ const HUB_ITEMS: HubItem[] = [
     label: "Ekran ve görünüm",
     subtitle: "Açık ve koyu tema",
     keywords: "tema görünüm dark light",
+  },
+  {
+    id: "mailPrefs",
+    section: "quick",
+    label: "Posta",
+    subtitle: "Gelen kutusu liste yoğunluğu",
+    keywords: "posta liste yoğunluk sıkı rahat compact",
   },
   {
     id: "signature",
@@ -96,6 +113,20 @@ const HUB_ITEMS: HubItem[] = [
     keywords: "kural filtre yönlendir",
   },
   {
+    id: "calendarSettings",
+    section: "general",
+    label: "Takvim",
+    subtitle: "CalDAV hesapları ve senkron",
+    keywords: "takvim caldav ics senkron",
+  },
+  {
+    id: "contactsSettings",
+    section: "general",
+    label: "Kişiler",
+    subtitle: "CardDAV hesapları ve senkron",
+    keywords: "kişi rehber carddav senkron",
+  },
+  {
     id: "security",
     section: "general",
     label: "Güvenlik",
@@ -123,6 +154,7 @@ type Props = {
   onClose: () => void;
   onOpenCalendar?: () => void;
   onOpenContacts?: () => void;
+  onInboxListDensityChange?: (density: MailInboxListDensity) => void;
 };
 
 export function MailSettingsPanel({
@@ -130,6 +162,7 @@ export function MailSettingsPanel({
   onClose,
   onOpenCalendar,
   onOpenContacts,
+  onInboxListDensityChange,
 }: Props) {
   const [view, setView] = useState<SettingsView>("hub");
   const [query, setQuery] = useState("");
@@ -144,6 +177,20 @@ export function MailSettingsPanel({
   const [autoReplyActiveUntil, setAutoReplyActiveUntil] = useState("");
   const [autoReplyStatus, setAutoReplyStatus] = useState("");
   const [autoReplySaving, setAutoReplySaving] = useState(false);
+  const [inboxListDensity, setInboxListDensity] =
+    useState<MailInboxListDensity>("comfortable");
+  const [mailPrefsStatus, setMailPrefsStatus] = useState("");
+  const [mailPrefsSaving, setMailPrefsSaving] = useState(false);
+  const [privacyStatus, setPrivacyStatus] = useState("");
+  const [privacyExporting, setPrivacyExporting] = useState(false);
+  const [calDavAccounts, setCalDavAccounts] = useState<
+    { id: string; label: string; lastSyncedAt: string | null }[]
+  >([]);
+  const [cardDavAccounts, setCardDavAccounts] = useState<
+    { id: string; label: string; lastSyncedAt: string | null }[]
+  >([]);
+  const [syncStatus, setSyncStatus] = useState("");
+  const [syncBusy, setSyncBusy] = useState(false);
   const [totpEnabled, setTotpEnabled] = useState(false);
   const [totpSecret, setTotpSecret] = useState<string | null>(null);
   const [totpCode, setTotpCode] = useState("");
@@ -176,11 +223,45 @@ export function MailSettingsPanel({
         setAutoReplyActiveUntil(
           toDatetimeLocalValue(prefs.preferences.autoReplyActiveUntil),
         );
+        const density = prefs.preferences.inboxListDensity ?? "comfortable";
+        setInboxListDensity(density);
+        onInboxListDensityChange?.(density);
       } catch {
         setError("Ayarlar yüklenemedi.");
       }
     })();
-  }, [accessToken]);
+  }, [accessToken, onInboxListDensityChange]);
+
+  useEffect(() => {
+    if (view !== "calendarSettings" && view !== "contactsSettings") {
+      return;
+    }
+    void (async () => {
+      try {
+        if (view === "calendarSettings") {
+          const { accounts } = await fetchCalendarCalDavAccounts(accessToken);
+          setCalDavAccounts(
+            accounts.map((a) => ({
+              id: a.id,
+              label: a.label || a.calendarUrl || a.id,
+              lastSyncedAt: a.lastSyncedAt,
+            })),
+          );
+        } else {
+          const { accounts } = await fetchContactCardDavAccounts(accessToken);
+          setCardDavAccounts(
+            accounts.map((a) => ({
+              id: a.id,
+              label: a.label || a.addressbookUrl || a.id,
+              lastSyncedAt: a.lastSyncedAt,
+            })),
+          );
+        }
+      } catch {
+        setSyncStatus("Hesaplar yüklenemedi.");
+      }
+    })();
+  }, [accessToken, view]);
 
   const filteredItems = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -353,6 +434,10 @@ export function MailSettingsPanel({
                                   ? autoReplyEnabled
                                     ? "Açık"
                                     : "Kapalı"
+                                  : item.id === "mailPrefs"
+                                    ? inboxListDensity === "compact"
+                                      ? "Sıkı liste"
+                                      : "Rahat liste"
                                 : item.subtitle}
                           </small>
                         </span>
@@ -405,6 +490,70 @@ export function MailSettingsPanel({
   switch (view) {
     case "hub":
       content = renderHub();
+      break;
+    case "mailPrefs":
+      content = renderDetail(
+        "Posta",
+        <>
+          <p className="mail-settings-lead">
+            Gelen kutusu satır aralığı (Outlook «Posta» yoğunluğu). Tercih
+            kurumsal posta kutusu için sunucuda saklanır.
+          </p>
+          <div className="mail-settings-theme-options">
+            {(
+              [
+                { id: "comfortable" as MailInboxListDensity, label: "Rahat" },
+                { id: "compact" as MailInboxListDensity, label: "Sıkı" },
+              ] as const
+            ).map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                className={
+                  inboxListDensity === option.id
+                    ? "mail-settings-theme-btn active"
+                    : "mail-settings-theme-btn"
+                }
+                onClick={() => setInboxListDensity(option.id)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          {mailPrefsStatus ? <p>{mailPrefsStatus}</p> : null}
+          <div className="compose-actions">
+            <button
+              type="button"
+              disabled={mailPrefsSaving}
+              onClick={() =>
+                void (async () => {
+                  setMailPrefsSaving(true);
+                  setMailPrefsStatus("");
+                  try {
+                    const result = await updateInboxPreferences(accessToken, {
+                      inboxListDensity,
+                    });
+                    const saved = result.preferences.inboxListDensity;
+                    setInboxListDensity(saved);
+                    onInboxListDensityChange?.(saved);
+                    setMailPrefsStatus("Kaydedildi.");
+                  } catch (error) {
+                    setMailPrefsStatus(
+                      error instanceof Error
+                        ? error.message
+                        : "Kaydedilemedi.",
+                    );
+                  } finally {
+                    setMailPrefsSaving(false);
+                  }
+                })()
+              }
+            >
+              {mailPrefsSaving ? "Kaydediliyor…" : "Kaydet"}
+            </button>
+          </div>
+        </>,
+      );
       break;
     case "display":
       content = renderDetail(
@@ -684,10 +833,208 @@ export function MailSettingsPanel({
         "Gizlilik",
         <>
           <p className="mail-settings-lead">
-            KVKK veri dışa aktarımı ve silme talepleri firma yöneticisi için{" "}
-            <strong>Lerta yönetim konsolu</strong> ve kurumsal posta kimlik
-            panelinde yönetilir (Faz S-A3: buradan doğrudan bağlantı).
+            KVKK kapsamında kurumsal posta kimliği verilerinizi indirin. Silme
+            talebi ve durum takibi firma yöneticisi için yönetim konsolunda
+            yapılır.
           </p>
+          {privacyStatus ? <p>{privacyStatus}</p> : null}
+          <div className="compose-actions">
+            <button
+              type="button"
+              disabled={privacyExporting}
+              onClick={() =>
+                void (async () => {
+                  setPrivacyExporting(true);
+                  setPrivacyStatus("");
+                  try {
+                    const { blob, filename } =
+                      await downloadMailPrivacyExport(accessToken);
+                    const url = URL.createObjectURL(blob);
+                    const anchor = document.createElement("a");
+                    anchor.href = url;
+                    anchor.download = filename;
+                    anchor.click();
+                    URL.revokeObjectURL(url);
+                    setPrivacyStatus("JSON indirildi.");
+                  } catch (error) {
+                    setPrivacyStatus(
+                      error instanceof Error
+                        ? error.message
+                        : "Dışa aktarım başarısız.",
+                    );
+                  } finally {
+                    setPrivacyExporting(false);
+                  }
+                })()
+              }
+            >
+              {privacyExporting ? "Hazırlanıyor…" : "Verilerimi indir (JSON)"}
+            </button>
+          </div>
+          <p className="mail-settings-lead" style={{ marginTop: 16 }}>
+            <a
+              href={resolveMailConsoleUrl()}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Lerta yönetim konsolu
+            </a>
+            — silme talebi, DNS ve posta kimliği ayarları.
+          </p>
+        </>,
+      );
+      break;
+    case "calendarSettings":
+      content = renderDetail(
+        "Takvim",
+        <>
+          <p className="mail-settings-lead">
+            Harici CalDAV hesapları. Hesap ekleme ve ICS beslemeleri tam ekran
+            takvim görünümünde yapılır.
+          </p>
+          {syncStatus ? <p>{syncStatus}</p> : null}
+          {calDavAccounts.length === 0 ? (
+            <p>Henüz CalDAV hesabı yok.</p>
+          ) : (
+            <ul className="mail-settings-sync-list">
+              {calDavAccounts.map((account) => (
+                <li key={account.id}>
+                  <strong>{account.label}</strong>
+                  <small>
+                    {account.lastSyncedAt
+                      ? `Son senkron: ${new Date(account.lastSyncedAt).toLocaleString("tr-TR")}`
+                      : "Henüz senkronlanmadı"}
+                  </small>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="compose-actions">
+            {onOpenCalendar ? (
+              <button
+                type="button"
+                onClick={() => {
+                  onOpenCalendar();
+                  onClose();
+                }}
+              >
+                Takvimi aç
+              </button>
+            ) : null}
+            <button
+              type="button"
+              disabled={syncBusy || calDavAccounts.length === 0}
+              onClick={() =>
+                void (async () => {
+                  setSyncBusy(true);
+                  setSyncStatus("");
+                  try {
+                    const result =
+                      await syncAllCalendarCalDavAccounts(accessToken);
+                    setSyncStatus(
+                      `Senkron: ${result.succeeded}/${result.accounts} hesap · +${result.imported} / ~${result.updated} etkinlik.`,
+                    );
+                    const { accounts } =
+                      await fetchCalendarCalDavAccounts(accessToken);
+                    setCalDavAccounts(
+                      accounts.map((a) => ({
+                        id: a.id,
+                        label: a.label || a.calendarUrl || a.id,
+                        lastSyncedAt: a.lastSyncedAt,
+                      })),
+                    );
+                  } catch (error) {
+                    setSyncStatus(
+                      error instanceof Error
+                        ? error.message
+                        : "Senkron başarısız.",
+                    );
+                  } finally {
+                    setSyncBusy(false);
+                  }
+                })()
+              }
+            >
+              {syncBusy ? "Senkron…" : "Tümünü senkronla"}
+            </button>
+          </div>
+        </>,
+      );
+      break;
+    case "contactsSettings":
+      content = renderDetail(
+        "Kişiler",
+        <>
+          <p className="mail-settings-lead">
+            Harici CardDAV rehberleri. Yeni hesap ekleme tam ekran kişiler
+            görünümünde yapılır.
+          </p>
+          {syncStatus ? <p>{syncStatus}</p> : null}
+          {cardDavAccounts.length === 0 ? (
+            <p>Henüz CardDAV hesabı yok.</p>
+          ) : (
+            <ul className="mail-settings-sync-list">
+              {cardDavAccounts.map((account) => (
+                <li key={account.id}>
+                  <strong>{account.label}</strong>
+                  <small>
+                    {account.lastSyncedAt
+                      ? `Son senkron: ${new Date(account.lastSyncedAt).toLocaleString("tr-TR")}`
+                      : "Henüz senkronlanmadı"}
+                  </small>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="compose-actions">
+            {onOpenContacts ? (
+              <button
+                type="button"
+                onClick={() => {
+                  onOpenContacts();
+                  onClose();
+                }}
+              >
+                Kişileri aç
+              </button>
+            ) : null}
+            <button
+              type="button"
+              disabled={syncBusy || cardDavAccounts.length === 0}
+              onClick={() =>
+                void (async () => {
+                  setSyncBusy(true);
+                  setSyncStatus("");
+                  try {
+                    const result =
+                      await syncAllContactCardDavAccounts(accessToken);
+                    setSyncStatus(
+                      `Senkron: ${result.succeeded}/${result.accounts} hesap · +${result.imported} / ~${result.updated} kişi.`,
+                    );
+                    const { accounts } =
+                      await fetchContactCardDavAccounts(accessToken);
+                    setCardDavAccounts(
+                      accounts.map((a) => ({
+                        id: a.id,
+                        label: a.label || a.addressbookUrl || a.id,
+                        lastSyncedAt: a.lastSyncedAt,
+                      })),
+                    );
+                  } catch (error) {
+                    setSyncStatus(
+                      error instanceof Error
+                        ? error.message
+                        : "Senkron başarısız.",
+                    );
+                  } finally {
+                    setSyncBusy(false);
+                  }
+                })()
+              }
+            >
+              {syncBusy ? "Senkron…" : "Tümünü senkronla"}
+            </button>
+          </div>
         </>,
       );
       break;
@@ -841,6 +1188,8 @@ function settingsRowIcon(id: SettingsView): string {
   switch (id) {
     case "display":
       return "🎨";
+    case "mailPrefs":
+      return "📨";
     case "signature":
       return "✒️";
     case "autoReply":
@@ -851,6 +1200,10 @@ function settingsRowIcon(id: SettingsView): string {
       return "📬";
     case "rules":
       return "⚡";
+    case "calendarSettings":
+      return "📅";
+    case "contactsSettings":
+      return "👥";
     case "security":
       return "🔒";
     case "privacy":

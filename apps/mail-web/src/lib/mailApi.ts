@@ -763,12 +763,15 @@ export type ComposeMailResult =
   | { ok: true; sentId: string; smtpMessageId: string | null }
   | MailDelayedSendResult;
 
+export type MailInboxListDensity = "comfortable" | "compact";
+
 export type MailInboxPreferences = {
   dailyDigestEnabled: boolean;
   autoReplyEnabled: boolean;
   autoReplyBodyText: string | null;
   autoReplyActiveFrom: string | null;
   autoReplyActiveUntil: string | null;
+  inboxListDensity: MailInboxListDensity;
 };
 
 export async function fetchInboxPreferences(accessToken: string) {
@@ -787,6 +790,35 @@ export async function updateInboxPreferences(
     "company/mail-inbox/preferences",
     { method: "PATCH", body: JSON.stringify(body) },
   );
+}
+
+const MAIL_CONSOLE_PUBLIC_URL =
+  process.env.NEXT_PUBLIC_MAIL_CONSOLE_URL ?? "https://yonetim.lerta.com.tr";
+
+export function resolveMailConsoleUrl(path = ""): string {
+  const base = MAIL_CONSOLE_PUBLIC_URL.replace(/\/$/, "");
+  if (!path) {
+    return base;
+  }
+  return `${base}${path.startsWith("/") ? path : `/${path}`}`;
+}
+
+export async function downloadMailPrivacyExport(accessToken: string) {
+  const response = await fetch(
+    `${resolveApiBaseUrl()}/company/mail-identity/privacy/export`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    },
+  );
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || "Veri dışa aktarımı başarısız");
+  }
+  const blob = await response.blob();
+  const disposition = response.headers.get("Content-Disposition");
+  const match = disposition?.match(/filename="([^"]+)"/);
+  const filename = match?.[1] ?? "lerta-mail-export.json";
+  return { blob, filename };
 }
 
 export async function composeMail(

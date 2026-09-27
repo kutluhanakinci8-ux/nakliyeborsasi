@@ -692,6 +692,24 @@ a {
   text-overflow: ellipsis;
 }
 
+.mail-app.mail-app--list-compact .mail-list-item {
+  padding: 6px 12px;
+  gap: 6px;
+}
+
+.mail-app.mail-app--list-compact .mail-list-from {
+  font-size: 0.78rem;
+}
+
+.mail-app.mail-app--list-compact .mail-list-subject {
+  font-size: 0.85rem;
+  margin: 2px 0;
+}
+
+.mail-app.mail-app--list-compact .mail-list-snippet {
+  font-size: 0.72rem;
+}
+
 .mail-read {
   background: var(--panel);
   display: flex;
@@ -1712,6 +1730,27 @@ a {
   display: block;
   margin: 12px 0;
   font-size: 0.9rem;
+}
+
+.mail-settings-sync-list {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+}
+
+.mail-settings-sync-list li {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.mail-settings-sync-list li strong {
+  display: block;
+  font-size: 0.95rem;
+}
+
+.mail-settings-sync-list li small {
+  color: var(--muted);
+  font-size: 0.8rem;
 }
 
 .mail-settings-theme-options {
