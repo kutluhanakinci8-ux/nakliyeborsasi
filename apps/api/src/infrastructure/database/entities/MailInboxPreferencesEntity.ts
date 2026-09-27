@@ -26,6 +26,10 @@ export class MailInboxPreferencesEntity {
   @Column({ type: "timestamptz", nullable: true })
   public autoReplyActiveUntil!: Date | null;
 
+  /** comfortable | compact */
+  @Column({ type: "varchar", length: 16, default: "comfortable" })
+  public inboxListDensity!: string;
+
   /** Europe/Istanbul takvim günü (YYYY-MM-DD) */
   @Column({ type: "varchar", length: 10, nullable: true })
   public lastDigestSentOn!: string | null;

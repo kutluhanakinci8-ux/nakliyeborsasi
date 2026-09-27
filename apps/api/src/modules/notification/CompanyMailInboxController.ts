@@ -138,7 +138,14 @@ export class CompanyMailInboxController {
     this.assertMailInboxWriter(user);
     const preferences = await this.mailInboxPreferencesService.update(
       user.companyId,
-      { dailyDigestEnabled: body.dailyDigestEnabled },
+      {
+        dailyDigestEnabled: body.dailyDigestEnabled,
+        autoReplyEnabled: body.autoReplyEnabled,
+        autoReplyBodyText: body.autoReplyBodyText,
+        autoReplyActiveFrom: body.autoReplyActiveFrom,
+        autoReplyActiveUntil: body.autoReplyActiveUntil,
+        inboxListDensity: body.inboxListDensity,
+      },
     );
     return { preferences };
   }

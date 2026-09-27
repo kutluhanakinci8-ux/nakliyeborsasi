@@ -3,12 +3,15 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { MailInboxPreferencesEntity } from "../../infrastructure/database/entities/MailInboxPreferencesEntity";
 
+export type MailInboxListDensity = "comfortable" | "compact";
+
 export type MailInboxPreferencesDto = {
   dailyDigestEnabled: boolean;
   autoReplyEnabled: boolean;
   autoReplyBodyText: string | null;
   autoReplyActiveFrom: string | null;
   autoReplyActiveUntil: string | null;
+  inboxListDensity: MailInboxListDensity;
 };
 
 export type MailAutoReplyConfig = {
@@ -54,6 +57,7 @@ export class MailInboxPreferencesService {
       autoReplyBodyText?: string | null;
       autoReplyActiveFrom?: string | null;
       autoReplyActiveUntil?: string | null;
+      inboxListDensity?: MailInboxListDensity;
     },
   ): Promise<MailInboxPreferencesDto> {
     let row = await this.preferencesRepository.findOne({
@@ -67,6 +71,7 @@ export class MailInboxPreferencesService {
         autoReplyBodyText: null,
         autoReplyActiveFrom: null,
         autoReplyActiveUntil: null,
+        inboxListDensity: "comfortable",
         lastDigestSentOn: null,
       });
     }
@@ -90,6 +95,10 @@ export class MailInboxPreferencesService {
         input.autoReplyActiveUntil,
       );
     }
+    if (input.inboxListDensity !== undefined) {
+      row.inboxListDensity =
+        input.inboxListDensity === "compact" ? "compact" : "comfortable";
+    }
     await this.preferencesRepository.save(row);
     return this.get(organizationId);
   }
@@ -103,6 +112,8 @@ export class MailInboxPreferencesService {
       autoReplyBodyText: row?.autoReplyBodyText ?? null,
       autoReplyActiveFrom: row?.autoReplyActiveFrom?.toISOString() ?? null,
       autoReplyActiveUntil: row?.autoReplyActiveUntil?.toISOString() ?? null,
+      inboxListDensity:
+        row?.inboxListDensity === "compact" ? "compact" : "comfortable",
     };
   }
 
@@ -138,6 +149,7 @@ export class MailInboxPreferencesService {
         autoReplyBodyText: null,
         autoReplyActiveFrom: null,
         autoReplyActiveUntil: null,
+        inboxListDensity: "comfortable",
         lastDigestSentOn: istanbulDate,
       });
     } else {

@@ -13,6 +13,7 @@ import {
   fetchComposePresets,
   fetchDrafts,
   fetchInbox,
+  fetchInboxPreferences,
   fetchCustomFolders,
   createCustomFolder,
   deleteCustomFolder,
@@ -55,6 +56,7 @@ import {
   type MailSentItem,
   type MailSentMessageDetail,
   type ComposeAttachment,
+  type MailInboxListDensity,
 } from "@/lib/mailApi";
 import { useMailSession } from "@/lib/session";
 import { MailSettingsPanel } from "./MailSettingsPanel";
@@ -161,6 +163,8 @@ export function MailClient() {
   const [draftPreview, setDraftPreview] = useState<MailDraftItem | null>(null);
   const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [inboxListDensity, setInboxListDensity] =
+    useState<MailInboxListDensity>("comfortable");
   const [threadView, setThreadView] = useState(false);
   const [threads, setThreads] = useState<MailInboxThreadRow[]>([]);
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
@@ -243,6 +247,11 @@ export function MailClient() {
       .then((data) => setInboxBranding(data.branding))
       .catch(() => setInboxBranding(null));
     void refreshCustomFolders();
+    void fetchInboxPreferences(accessToken)
+      .then((data) =>
+        setInboxListDensity(data.preferences.inboxListDensity ?? "comfortable"),
+      )
+      .catch(() => undefined);
   }, [accessToken, refresh, refreshDrafts, refreshCustomFolders, router]);
 
   useEffect(() => {
@@ -1255,7 +1264,7 @@ export function MailClient() {
 
   return (
     <div
-      className={`mail-app mobile-pane-${mobilePane}${embedMode ? " mail-app--embed" : ""}`}
+      className={`mail-app mobile-pane-${mobilePane}${embedMode ? " mail-app--embed" : ""}${inboxListDensity === "compact" ? " mail-app--list-compact" : ""}`}
     >
       <div className="mail-mobile-bar">
         <button type="button" onClick={() => setMobilePane("nav")}>
@@ -2699,6 +2708,7 @@ export function MailClient() {
           onClose={() => setSettingsOpen(false)}
           onOpenCalendar={() => switchView("calendar")}
           onOpenContacts={() => switchView("contacts")}
+          onInboxListDensityChange={setInboxListDensity}
         />
       ) : null}
       {shortcutsOpen ? (

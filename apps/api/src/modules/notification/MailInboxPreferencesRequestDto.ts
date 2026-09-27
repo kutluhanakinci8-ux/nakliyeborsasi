@@ -1,5 +1,6 @@
 import {
   IsBoolean,
+  IsIn,
   IsISO8601,
   IsOptional,
   IsString,
@@ -27,4 +28,8 @@ export class UpdateMailInboxPreferencesRequestDto {
   @IsOptional()
   @IsISO8601()
   public autoReplyActiveUntil?: string | null;
+
+  @IsOptional()
+  @IsIn(["comfortable", "compact"])
+  public inboxListDensity?: "comfortable" | "compact";
 }
