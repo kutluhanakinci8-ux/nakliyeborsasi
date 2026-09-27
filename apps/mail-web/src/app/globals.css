@@ -446,6 +446,29 @@ a {
   color: var(--text);
 }
 
+.mail-nav-imap--icon {
+  width: 40px;
+  height: 40px;
+  margin: 4px 12px 0;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.mail-nav-imap--icon:hover {
+  color: var(--accent);
+  border-color: rgba(37, 99, 235, 0.35);
+  background: rgba(37, 99, 235, 0.08);
+}
+
+.mail-nav-imap-icon {
+  display: block;
+}
+
 .imap-dl {
   display: grid;
   grid-template-columns: 100px 1fr;

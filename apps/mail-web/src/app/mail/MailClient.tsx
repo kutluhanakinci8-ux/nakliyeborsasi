@@ -1521,10 +1521,24 @@ export function MailClient() {
         ) : null}
         <button
           type="button"
-          className="mail-nav-imap"
+          className="mail-nav-imap mail-nav-imap--icon"
           onClick={() => setSettingsOpen(true)}
+          aria-label="Ayarlar: IMAP, imza, iki adımlı doğrulama"
+          title="Ayarlar (IMAP · imza · 2FA)"
         >
-          Ayarlar (IMAP · imza · 2FA)
+          <svg
+            className="mail-nav-imap-icon"
+            viewBox="0 0 24 24"
+            width="20"
+            height="20"
+            aria-hidden
+            focusable="false"
+          >
+            <path
+              fill="currentColor"
+              d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96a7.03 7.03 0 0 0-1.63-.94l-.36-2.54A.49.49 0 0 0 14 2h-4a.49.49 0 0 0-.49.42l-.36 2.54a7.03 7.03 0 0 0-1.63.94l-2.39-.96a.49.49 0 0 0-.59.22L2.71 8.04a.49.49 0 0 0 .12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.13.22.39.3.59.22l2.39-.96c.5.38 1.04.69 1.63.94l.36 2.54c.05.24.26.42.49.42h4c.24 0 .44-.18.49-.42l.36-2.54c.59-.25 1.13-.56 1.63-.94l2.39.96c.2.08.46 0 .59-.22l1.92-3.32a.49.49 0 0 0-.12-.61l-2.03-1.58ZM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7Z"
+            />
+          </svg>
         </button>
         {summary?.storageQuota ? (
           <div className="mail-storage-quota">
