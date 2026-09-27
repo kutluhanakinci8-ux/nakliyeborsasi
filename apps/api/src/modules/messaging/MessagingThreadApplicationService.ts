@@ -13,7 +13,13 @@ import {
   ValidationException,
 } from "@nakliyeborsasi/core";
 import { MessageThreadEntity } from "../../infrastructure/database/entities/MessageThreadEntity";
-import { MessageEntity } from "../../infrastructure/database/entities/MessageEntity";
+import {
+  MessageEntity,
+  type MessageAttachmentMeta,
+} from "../../infrastructure/database/entities/MessageEntity";
+import { MessagingAttachmentStorageService } from "./MessagingAttachmentStorageService";
+import type { MessagingAttachmentInput } from "./MessagingAttachmentStorageService";
+import { MessagingWebPushService } from "./MessagingWebPushService";
 import { MessageThreadReadStateEntity } from "../../infrastructure/database/entities/MessageThreadReadStateEntity";
 import { OpenMessagingThreadRequestDto } from "./OpenMessagingThreadRequestDto";
 import { ModularSubscriptionEntitlementService } from "../subscription/ModularSubscriptionEntitlementService";
@@ -37,6 +43,8 @@ export class MessagingThreadApplicationService {
     private readonly freightListingRepository: Repository<FreightListingEntity>,
     private readonly modularSubscriptionEntitlementService: ModularSubscriptionEntitlementService,
     private readonly operationalNotificationService: OperationalNotificationService,
+    private readonly messagingAttachmentStorageService: MessagingAttachmentStorageService,
+    private readonly messagingWebPushService: MessagingWebPushService,
   ) {}
 
   public async assertMessagingModule(
@@ -201,6 +209,7 @@ export class MessagingThreadApplicationService {
         bodyText: message.bodyText,
         createdAt: message.createdAt.toISOString(),
         readByRecipient,
+        attachments: this.publicAttachments(message.attachments),
       });
     });
     const latest = messages.at(-1);
@@ -219,20 +228,34 @@ export class MessagingThreadApplicationService {
     threadId: string,
     bodyText: string,
     locale: string,
+    attachmentsInput?: MessagingAttachmentInput[],
   ): Promise<MessageEntity> {
     const thread = await this.requireParticipantThread(
       authenticatedUser,
       threadId,
       locale,
     );
-    const saved = await this.messageRepository.save(
-      this.messageRepository.create({
-        threadId: thread.id,
-        senderCompanyId: authenticatedUser.companyId,
-        senderUserId: authenticatedUser.userId,
-        bodyText,
-      }),
+    const trimmed = bodyText.trim();
+    if (!trimmed && (!attachmentsInput || attachmentsInput.length === 0)) {
+      throw new ValidationException("Mesaj metni veya ek gerekli");
+    }
+    const draft = this.messageRepository.create({
+      threadId: thread.id,
+      senderCompanyId: authenticatedUser.companyId,
+      senderUserId: authenticatedUser.userId,
+      bodyText: trimmed || "📎 Ek dosya",
+      attachments: null,
+    });
+    const saved = await this.messageRepository.save(draft);
+    const stored = await this.messagingAttachmentStorageService.persistForMessage(
+      thread.id,
+      saved.id,
+      attachmentsInput,
     );
+    if (stored) {
+      saved.attachments = stored;
+      await this.messageRepository.save(saved);
+    }
     const counterpartyCompanyId =
       thread.companyAId === authenticatedUser.companyId
         ? thread.companyBId
@@ -240,6 +263,11 @@ export class MessagingThreadApplicationService {
     const senderCompany = await this.companyRepository.findOne({
       where: { id: authenticatedUser.companyId },
     });
+    const preview =
+      trimmed.length > 0
+        ? trimmed.slice(0, 280)
+        : stored?.map((item) => item.filename).join(", ").slice(0, 280) ??
+          "Ek dosya";
     void this.operationalNotificationService.afterMessagingMessageSent({
       threadId: thread.id,
       counterpartyCompanyId,
@@ -247,10 +275,57 @@ export class MessagingThreadApplicationService {
       senderCompanyName:
         senderCompany?.legalName?.trim() || authenticatedUser.companyId,
       messageId: saved.id,
-      bodyPreview: bodyText.trim().slice(0, 280),
+      bodyPreview: preview,
+      freightListingId: thread.freightListingId,
+    });
+    void this.messagingWebPushService.notifyNewChatMessage({
+      companyId: counterpartyCompanyId,
+      threadId: thread.id,
+      senderCompanyName:
+        senderCompany?.legalName?.trim() || authenticatedUser.companyId,
+      bodyPreview: preview,
       freightListingId: thread.freightListingId,
     });
     return saved;
+  }
+
+  public async getMessageAttachment(
+    authenticatedUser: AuthenticatedUserContext,
+    threadId: string,
+    messageId: string,
+    attachmentIndex: number,
+    locale: string,
+  ): Promise<{ buffer: Buffer; contentType: string; filename: string }> {
+    await this.requireParticipantThread(authenticatedUser, threadId, locale);
+    const message = await this.messageRepository.findOne({
+      where: { id: messageId, threadId },
+    });
+    if (!message?.attachments?.length) {
+      throw new MessagingThreadNotFoundException(messageId);
+    }
+    const meta = message.attachments.find((row) => row.index === attachmentIndex);
+    if (!meta) {
+      throw new MessagingThreadNotFoundException(messageId);
+    }
+    return this.messagingAttachmentStorageService.readAttachment(
+      threadId,
+      messageId,
+      meta,
+    );
+  }
+
+  private publicAttachments(
+    attachments: MessageAttachmentMeta[] | null,
+  ): { index: number; filename: string; contentType: string; sizeBytes: number }[] {
+    if (!attachments?.length) {
+      return [];
+    }
+    return attachments.map((row) => ({
+      index: row.index,
+      filename: row.filename,
+      contentType: row.contentType,
+      sizeBytes: row.sizeBytes,
+    }));
   }
 
   public async getThreadSummary(
@@ -345,6 +420,7 @@ export class MessagingThreadApplicationService {
           senderUserId: message.senderUserId,
           bodyText: message.bodyText,
           createdAt: message.createdAt.toISOString(),
+          attachments: this.publicAttachments(message.attachments),
         })),
       });
     }

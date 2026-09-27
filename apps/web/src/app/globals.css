@@ -4770,6 +4770,48 @@ button.btn-secondary {
   flex: 1;
 }
 
+.chat-file-picker input[type="file"] {
+  display: none;
+}
+
+.chat-pending-attachments {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.chat-pending-attachments li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chat-attachment-remove {
+  border: none;
+  background: transparent;
+  color: #2563eb;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.chat-attachment-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+
+.chat-attachment-link {
+  border: none;
+  background: transparent;
+  color: #1d4ed8;
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+  font-size: 0.85rem;
+}
+
 .chat-thread-list {
   list-style: none;
   margin: 0;

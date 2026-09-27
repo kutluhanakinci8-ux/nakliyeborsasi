@@ -12,6 +12,10 @@ import { NotificationModule } from "../notification/NotificationModule";
 import { CompanyEntity } from "../../infrastructure/database/entities/CompanyEntity";
 import { FreightListingEntity } from "../../infrastructure/database/entities/FreightListingEntity";
 import { MessagingTranslationService } from "./MessagingTranslationService";
+import { MessagingAttachmentStorageService } from "./MessagingAttachmentStorageService";
+import { MessagingWebPushService } from "./MessagingWebPushService";
+import { MessagingWebPushSubscriptionEntity } from "../../infrastructure/database/entities/MessagingWebPushSubscriptionEntity";
+import { MessagingPushController } from "./MessagingPushController";
 
 @Module({
   imports: [
@@ -19,6 +23,7 @@ import { MessagingTranslationService } from "./MessagingTranslationService";
       MessageThreadEntity,
       MessageEntity,
       MessageThreadReadStateEntity,
+      MessagingWebPushSubscriptionEntity,
       CompanyEntity,
       FreightListingEntity,
     ]),
@@ -26,8 +31,17 @@ import { MessagingTranslationService } from "./MessagingTranslationService";
     AuthModule,
     NotificationModule,
   ],
-  controllers: [MessagingModuleStatusController, MessagingThreadController],
-  providers: [MessagingThreadApplicationService, MessagingTranslationService],
+  controllers: [
+    MessagingModuleStatusController,
+    MessagingThreadController,
+    MessagingPushController,
+  ],
+  providers: [
+    MessagingThreadApplicationService,
+    MessagingTranslationService,
+    MessagingAttachmentStorageService,
+    MessagingWebPushService,
+  ],
   exports: [MessagingThreadApplicationService],
 })
 export class MessagingModule {}

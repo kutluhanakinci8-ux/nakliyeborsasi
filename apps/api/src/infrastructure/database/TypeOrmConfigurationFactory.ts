@@ -13,6 +13,7 @@ import { AuctionBidEntity } from "./entities/AuctionBidEntity";
 import { MessageThreadEntity } from "./entities/MessageThreadEntity";
 import { MessageEntity } from "./entities/MessageEntity";
 import { MessageThreadReadStateEntity } from "./entities/MessageThreadReadStateEntity";
+import { MessagingWebPushSubscriptionEntity } from "./entities/MessagingWebPushSubscriptionEntity";
 import { CompanyTrustReviewEntity } from "./entities/CompanyTrustReviewEntity";
 import { FleetDriverEntity } from "./entities/FleetDriverEntity";
 import { FleetVehicleEntity } from "./entities/FleetVehicleEntity";
@@ -88,6 +89,7 @@ export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
         MessageThreadEntity,
         MessageEntity,
         MessageThreadReadStateEntity,
+        MessagingWebPushSubscriptionEntity,
         CompanyTrustReviewEntity,
         FleetDriverEntity,
         FleetVehicleEntity,
