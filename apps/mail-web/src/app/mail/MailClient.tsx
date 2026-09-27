@@ -49,6 +49,7 @@ import {
   type MailInboxListItem,
   type MailInboxMessageDetail,
   type MailInboxSummary,
+  type MailSendReadiness,
   type MailCustomFolder,
   type MailInboxThreadRow,
   type MailSentItem,
@@ -110,10 +111,9 @@ export function MailClient() {
     searchParams.get("embed") === "1" || searchParams.get("embedded") === "1";
   const [view, setView] = useState<View>("inbox");
   const [summary, setSummary] = useState<MailInboxSummary | null>(null);
-  const [sendReadiness, setSendReadiness] = useState<{
-    canSend: boolean;
-    reasonTr: string | null;
-  } | null>(null);
+  const [sendReadiness, setSendReadiness] = useState<MailSendReadiness | null>(
+    null,
+  );
   const [messages, setMessages] = useState<MailInboxListItem[]>([]);
   const [sent, setSent] = useState<MailSentItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -1264,7 +1264,15 @@ export function MailClient() {
               className="mail-brand-logo"
             />
           ) : null}
-          {inboxBranding?.allowed && inboxBranding.emailBrandTitle ? (
+          {embedMode &&
+          (inboxBranding?.hidePlatformEmailChrome ||
+            inboxBranding?.emailBrandTitle) ? (
+            <span className="mail-brand-title-only mail-brand-title-only--embed">
+              {inboxBranding?.emailBrandTitle?.trim() ||
+                summary?.primaryAddress ||
+                "Kurumsal e-posta"}
+            </span>
+          ) : inboxBranding?.allowed && inboxBranding.emailBrandTitle ? (
             <span className="mail-brand-title-only">
               {inboxBranding.emailBrandTitle}
             </span>
@@ -1503,6 +1511,14 @@ export function MailClient() {
         </nav>
         </div>
         <div className="mail-sidebar-footer">
+        {sendReadiness && !sendReadiness.canSend && sendReadiness.reasonTr ? (
+          <p className="mail-storage-warn mail-storage-warn--danger">
+            {sendReadiness.reasonTr}
+          </p>
+        ) : null}
+        {sendReadiness?.billingWarningTr ? (
+          <p className="mail-storage-warn">{sendReadiness.billingWarningTr}</p>
+        ) : null}
         <button
           type="button"
           className="mail-nav-imap"
@@ -2009,6 +2025,11 @@ export function MailClient() {
               Geri al
             </button>
           </div>
+        ) : null}
+        {sendReadiness?.billingWarningTr ? (
+          <p className="mail-read-toast mail-read-toast--warn">
+            {sendReadiness.billingWarningTr}
+          </p>
         ) : null}
         {sendReadiness && !sendReadiness.canSend && sendReadiness.reasonTr ? (
           <p className="mail-read-toast mail-read-toast--warn">

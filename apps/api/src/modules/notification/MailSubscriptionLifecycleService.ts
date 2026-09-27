@@ -15,6 +15,7 @@ import {
   MailOrganizationBillingStateEntity,
 } from "../../infrastructure/database/entities/MailOrganizationBillingStateEntity";
 import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
+import { MailTenantSuspensionService } from "./MailTenantSuspensionService";
 const PILOT_PLAN = "lerta_mail_pilot_tr";
 
 export type MailBillingLifecycleView = {
@@ -39,6 +40,7 @@ export class MailSubscriptionLifecycleService {
     @Inject(forwardRef(() => MailSaasSubscriptionService))
     private readonly mailSaasSubscriptionService: MailSaasSubscriptionService,
     private readonly configService: ConfigService,
+    private readonly mailTenantSuspensionService: MailTenantSuspensionService,
   ) {}
 
   public async getLifecycleView(
@@ -73,6 +75,9 @@ export class MailSubscriptionLifecycleService {
     row.graceEndsAt = null;
     row.lastPaymentFailedAt = null;
     await this.stateRepository.save(row);
+    await this.mailTenantSuspensionService.clearBillingAutomatedSuspend(
+      params.organizationId,
+    );
     await this.mailSaasSubscriptionService.activateMailPlanForBilling(
       params.organizationId,
       params.planCode,
@@ -88,6 +93,9 @@ export class MailSubscriptionLifecycleService {
     row.graceEndsAt = null;
     row.lastPaymentFailedAt = null;
     await this.stateRepository.save(row);
+    await this.mailTenantSuspensionService.clearBillingAutomatedSuspend(
+      organizationId,
+    );
   }
 
   public async recordStripePaymentFailed(
@@ -247,6 +255,10 @@ export class MailSubscriptionLifecycleService {
     row.cancelAtPeriodEnd = false;
     row.currentPeriodEnd = null;
     await this.stateRepository.save(row);
+    await this.mailTenantSuspensionService.setBillingAutomatedSuspend(
+      organizationId,
+      `billing: ${reason === "canceled" ? "Abonelik sonlandı" : "Ödeme gecikmesi — Pilot plan"}`,
+    );
     this.logger.warn(
       `Mail plan downgraded to pilot org=${organizationId} reason=${reason}`,
     );

@@ -4,7 +4,7 @@
 |-----|--------|--------|
 | **E-P0** | Platform DNS durumu UI, Reply-To → kurumsal kutu | ✅ kod |
 | **E-P1** | Embed marka (sürüm/çıkış gizle), SSO origin env, tema postMessage | ✅ kod |
-| **E-P2** | IMAP Sent Maildir, billing suspend otomasyon, tam white-label başlık | |
+| **E-P2** | IMAP Sent Maildir, billing suspend otomasyon, tam white-label başlık | ✅ kod |
 | **E-P3** | JMAP, eDiscovery mail, geniş audit | |
 
 **Operatör DNS:** `bash scripts/print-instant-post-dns-isimtescil.sh` · doğrulama: `scripts/verify-lerta-post-dns.sh`

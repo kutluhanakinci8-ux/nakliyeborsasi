@@ -2371,6 +2371,12 @@ a {
   font-weight: 600;
 }
 
+.mail-brand-title-only--embed {
+  font-size: 0.95rem;
+  font-weight: 650;
+  color: var(--text);
+}
+
 .mail-storage-warn--danger {
   color: #b91c1c;
   font-weight: 600;

@@ -22,6 +22,52 @@ export class MailTenantSuspensionService {
     }
   }
 
+  public async setBillingAutomatedSuspend(
+    organizationId: string,
+    reason: string,
+  ): Promise<void> {
+    const row = await this.findOrCreate(organizationId);
+    row.suspended = true;
+    row.suspendReason = reason.trim() || "Ödeme gecikmesi — gönderim askıda";
+    row.suspendedAt = new Date();
+    await this.stateRepository.save(row);
+  }
+
+  public async clearBillingAutomatedSuspend(
+    organizationId: string,
+  ): Promise<void> {
+    const row = await this.stateRepository.findOne({
+      where: { organizationId },
+    });
+    if (!row?.suspended) {
+      return;
+    }
+    const reason = row.suspendReason?.trim() ?? "";
+    if (
+      reason.startsWith("billing:") ||
+      reason.includes("Ödeme gecikmesi")
+    ) {
+      row.suspended = false;
+      row.suspendReason = null;
+      row.suspendedAt = null;
+      await this.stateRepository.save(row);
+    }
+  }
+
+  private async findOrCreate(
+    organizationId: string,
+  ): Promise<MailOrganizationOperatorStateEntity> {
+    const existing = await this.stateRepository.findOne({
+      where: { organizationId },
+    });
+    if (existing) {
+      return existing;
+    }
+    return this.stateRepository.save(
+      this.stateRepository.create({ organizationId, suspended: false }),
+    );
+  }
+
   public async getOperatorState(organizationId: string) {
     const row = await this.stateRepository.findOne({
       where: { organizationId },
