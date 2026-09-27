@@ -4867,6 +4867,63 @@ button.btn-secondary {
   border: 1px solid #fed7aa;
 }
 
+.chat-export-btn {
+  width: 100%;
+}
+
+.chat-summary-panel {
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #c7d2fe;
+  background: #f5f3ff;
+}
+
+.chat-summary-title {
+  margin: 0 0 8px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #312e81;
+}
+
+.chat-summary-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.82rem;
+  color: #3730a3;
+}
+
+.chat-summary-meta {
+  margin: 8px 0 0;
+  font-size: 0.72rem;
+  color: #6366f1;
+}
+
+.chat-translation {
+  margin: 6px 0 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(15, 118, 110, 0.08);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.chat-translate-btn {
+  margin-top: 6px;
+  border: none;
+  background: transparent;
+  color: #0f766e;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.chat-translate-btn:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
 .chat-main {
   display: flex;
   flex-direction: column;

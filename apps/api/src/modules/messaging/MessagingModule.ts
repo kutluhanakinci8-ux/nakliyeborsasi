@@ -10,6 +10,8 @@ import { SubscriptionModule } from "../subscription/SubscriptionModule";
 import { AuthModule } from "../auth/AuthModule";
 import { NotificationModule } from "../notification/NotificationModule";
 import { CompanyEntity } from "../../infrastructure/database/entities/CompanyEntity";
+import { FreightListingEntity } from "../../infrastructure/database/entities/FreightListingEntity";
+import { MessagingTranslationService } from "./MessagingTranslationService";
 
 @Module({
   imports: [
@@ -18,13 +20,14 @@ import { CompanyEntity } from "../../infrastructure/database/entities/CompanyEnt
       MessageEntity,
       MessageThreadReadStateEntity,
       CompanyEntity,
+      FreightListingEntity,
     ]),
     SubscriptionModule,
     AuthModule,
     NotificationModule,
   ],
   controllers: [MessagingModuleStatusController, MessagingThreadController],
-  providers: [MessagingThreadApplicationService],
+  providers: [MessagingThreadApplicationService, MessagingTranslationService],
   exports: [MessagingThreadApplicationService],
 })
 export class MessagingModule {}

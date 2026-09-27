@@ -7,6 +7,8 @@ import {
   MessagingThreadMessageView,
   MessagingThreadNotFoundException,
   MessagingThreadReference,
+  MessagingThreadSummary,
+  CompanyRoleCode,
   SubscriptionModuleCode,
   ValidationException,
 } from "@nakliyeborsasi/core";
@@ -17,6 +19,8 @@ import { OpenMessagingThreadRequestDto } from "./OpenMessagingThreadRequestDto";
 import { ModularSubscriptionEntitlementService } from "../subscription/ModularSubscriptionEntitlementService";
 import { OperationalNotificationService } from "../notification/OperationalNotificationService";
 import { CompanyEntity } from "../../infrastructure/database/entities/CompanyEntity";
+import { FreightListingEntity } from "../../infrastructure/database/entities/FreightListingEntity";
+import { buildStructuredThreadSummary } from "./MessagingThreadSummaryBuilder";
 
 @Injectable()
 export class MessagingThreadApplicationService {
@@ -29,9 +33,22 @@ export class MessagingThreadApplicationService {
     private readonly readStateRepository: Repository<MessageThreadReadStateEntity>,
     @InjectRepository(CompanyEntity)
     private readonly companyRepository: Repository<CompanyEntity>,
+    @InjectRepository(FreightListingEntity)
+    private readonly freightListingRepository: Repository<FreightListingEntity>,
     private readonly modularSubscriptionEntitlementService: ModularSubscriptionEntitlementService,
     private readonly operationalNotificationService: OperationalNotificationService,
   ) {}
+
+  public async assertMessagingModule(
+    authenticatedUser: AuthenticatedUserContext,
+    locale: string,
+  ): Promise<void> {
+    await this.modularSubscriptionEntitlementService.assertModuleAccess(
+      authenticatedUser.companyId,
+      SubscriptionModuleCode.Messaging,
+      locale,
+    );
+  }
 
   public async openThread(
     authenticatedUser: AuthenticatedUserContext,
@@ -234,6 +251,108 @@ export class MessagingThreadApplicationService {
       freightListingId: thread.freightListingId,
     });
     return saved;
+  }
+
+  public async getThreadSummary(
+    authenticatedUser: AuthenticatedUserContext,
+    threadId: string,
+    locale: string,
+  ): Promise<MessagingThreadSummary> {
+    const thread = await this.requireParticipantThread(
+      authenticatedUser,
+      threadId,
+      locale,
+    );
+    const messages = await this.messageRepository.find({
+      where: { threadId: thread.id },
+      order: { createdAt: "ASC" },
+    });
+    const counterpartyCompanyId =
+      thread.companyAId === authenticatedUser.companyId
+        ? thread.companyBId
+        : thread.companyAId;
+    const counterparty = await this.companyRepository.findOne({
+      where: { id: counterpartyCompanyId },
+    });
+    const listing =
+      thread.freightListingId
+        ? await this.freightListingRepository.findOne({
+            where: { id: thread.freightListingId },
+          })
+        : null;
+    return buildStructuredThreadSummary({
+      messages,
+      listing,
+      counterpartyLegalName: counterparty?.legalName ?? null,
+    });
+  }
+
+  public async exportCompanyArchive(
+    authenticatedUser: AuthenticatedUserContext,
+    locale: string,
+  ): Promise<{
+    exportedAt: string;
+    companyId: string;
+    threads: {
+      threadId: string;
+      counterpartyCompanyId: string;
+      freightListingId: string | null;
+      createdAt: string;
+      messages: {
+        id: string;
+        senderCompanyId: string;
+        senderUserId: string;
+        bodyText: string;
+        createdAt: string;
+      }[];
+    }[];
+  }> {
+    if (!authenticatedUser.roleCodes.includes(CompanyRoleCode.CompanyOwner)) {
+      throw new AuthorizationException(
+        "Messaging export requires company owner role",
+      );
+    }
+    await this.modularSubscriptionEntitlementService.assertModuleAccess(
+      authenticatedUser.companyId,
+      SubscriptionModuleCode.Messaging,
+      locale,
+    );
+    const threads = await this.messageThreadRepository
+      .createQueryBuilder("thread")
+      .where("thread.companyAId = :companyId OR thread.companyBId = :companyId", {
+        companyId: authenticatedUser.companyId,
+      })
+      .orderBy("thread.createdAt", "ASC")
+      .getMany();
+    const payloadThreads = [];
+    for (const thread of threads) {
+      const messages = await this.messageRepository.find({
+        where: { threadId: thread.id },
+        order: { createdAt: "ASC" },
+      });
+      const counterpartyCompanyId =
+        thread.companyAId === authenticatedUser.companyId
+          ? thread.companyBId
+          : thread.companyAId;
+      payloadThreads.push({
+        threadId: thread.id,
+        counterpartyCompanyId,
+        freightListingId: thread.freightListingId,
+        createdAt: thread.createdAt.toISOString(),
+        messages: messages.map((message) => ({
+          id: message.id,
+          senderCompanyId: message.senderCompanyId,
+          senderUserId: message.senderUserId,
+          bodyText: message.bodyText,
+          createdAt: message.createdAt.toISOString(),
+        })),
+      });
+    }
+    return {
+      exportedAt: new Date().toISOString(),
+      companyId: authenticatedUser.companyId,
+      threads: payloadThreads,
+    };
   }
 
   private async requireParticipantThread(

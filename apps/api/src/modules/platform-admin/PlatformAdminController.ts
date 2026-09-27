@@ -67,4 +67,11 @@ export class PlatformAdminController {
       logs: await this.platformAdminApplicationService.listAuditLogs(),
     };
   }
+
+  @Get("message-threads")
+  public async messageThreads() {
+    return {
+      threads: await this.platformAdminApplicationService.listMessageThreads(),
+    };
+  }
 }

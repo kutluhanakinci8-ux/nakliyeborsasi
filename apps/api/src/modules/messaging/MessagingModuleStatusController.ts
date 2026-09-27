@@ -10,12 +10,17 @@ export class MessagingModuleStatusController {
   } {
     return {
       module: "messaging",
-      phase: "beta",
+      phase: "ga",
       features: [
         "company_threads",
         "freight_listing_threads",
         "email_notifications",
         "deep_links",
+        "read_receipts",
+        "structured_summary",
+        "translate_api",
+        "company_export",
+        "platform_ediscovery",
       ],
     };
   }

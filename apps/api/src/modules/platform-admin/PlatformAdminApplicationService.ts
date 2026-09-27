@@ -9,6 +9,7 @@ import { FreightListingEntity } from "../../infrastructure/database/entities/Fre
 import { AuctionSessionEntity } from "../../infrastructure/database/entities/AuctionSessionEntity";
 import { CompanyTrustReviewEntity } from "../../infrastructure/database/entities/CompanyTrustReviewEntity";
 import { MessageThreadEntity } from "../../infrastructure/database/entities/MessageThreadEntity";
+import { MessageEntity } from "../../infrastructure/database/entities/MessageEntity";
 import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogEntity";
 import { FleetDriverEntity } from "../../infrastructure/database/entities/FleetDriverEntity";
 import { FleetVehicleEntity } from "../../infrastructure/database/entities/FleetVehicleEntity";
@@ -33,6 +34,8 @@ export class PlatformAdminApplicationService {
     private readonly trustRepository: Repository<CompanyTrustReviewEntity>,
     @InjectRepository(MessageThreadEntity)
     private readonly threadRepository: Repository<MessageThreadEntity>,
+    @InjectRepository(MessageEntity)
+    private readonly messageRepository: Repository<MessageEntity>,
     @InjectRepository(AuditLogEntity)
     private readonly auditRepository: Repository<AuditLogEntity>,
     @InjectRepository(FleetDriverEntity)
@@ -361,6 +364,45 @@ export class PlatformAdminApplicationService {
       scoreValue: r.scoreValue,
       commentText: r.commentText,
       createdAt: r.createdAt.toISOString(),
+    }));
+  }
+
+  public async listMessageThreads(): Promise<
+    {
+      id: string;
+      companyAId: string;
+      companyBId: string;
+      freightListingId: string | null;
+      messageCount: number;
+      createdAt: string;
+    }[]
+  > {
+    const threads = await this.threadRepository.find({
+      order: { createdAt: "DESC" },
+      take: 250,
+    });
+    const counts = new Map<string, number>();
+    if (threads.length > 0) {
+      const rows = await this.messageRepository
+        .createQueryBuilder("message")
+        .select("message.threadId", "threadId")
+        .addSelect("COUNT(*)", "count")
+        .where("message.threadId IN (:...ids)", {
+          ids: threads.map((thread) => thread.id),
+        })
+        .groupBy("message.threadId")
+        .getRawMany<{ threadId: string; count: string }>();
+      for (const row of rows) {
+        counts.set(row.threadId, Number(row.count));
+      }
+    }
+    return threads.map((thread) => ({
+      id: thread.id,
+      companyAId: thread.companyAId,
+      companyBId: thread.companyBId,
+      freightListingId: thread.freightListingId,
+      messageCount: counts.get(thread.id) ?? 0,
+      createdAt: thread.createdAt.toISOString(),
     }));
   }
 

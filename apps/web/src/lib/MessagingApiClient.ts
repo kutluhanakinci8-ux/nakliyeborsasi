@@ -18,6 +18,14 @@ export type ThreadMessageRecord = {
   readByRecipient?: boolean;
 };
 
+export type MessagingThreadSummaryRecord = {
+  headline: string;
+  bullets: string[];
+  messageCount: number;
+  generatedAt: string;
+  source: "structured";
+};
+
 export class MessagingApiClient {
   public static async listThreads(
     accessToken: string,
@@ -57,6 +65,43 @@ export class MessagingApiClient {
       accessToken,
       `/messaging/threads/${threadId}/messages?lang=${locale}`,
     ) as Promise<{ messages: ThreadMessageRecord[] }>;
+  }
+
+  public static async fetchThreadSummary(
+    accessToken: string,
+    locale: string,
+    threadId: string,
+  ): Promise<{ summary: MessagingThreadSummaryRecord }> {
+    return AuthenticatedApiClient.fetchJson(
+      accessToken,
+      `/messaging/threads/${threadId}/summary?lang=${locale}`,
+    ) as Promise<{ summary: MessagingThreadSummaryRecord }>;
+  }
+
+  public static async translateMessage(
+    accessToken: string,
+    locale: string,
+    text: string,
+    targetLocale: string,
+  ): Promise<{ translatedText: string; provider: string }> {
+    return AuthenticatedApiClient.fetchJson(
+      accessToken,
+      `/messaging/translate?lang=${locale}`,
+      {
+        method: "POST",
+        body: JSON.stringify({ text, targetLocale }),
+      },
+    ) as Promise<{ translatedText: string; provider: string }>;
+  }
+
+  public static async exportArchive(
+    accessToken: string,
+    locale: string,
+  ): Promise<{ export: unknown }> {
+    return AuthenticatedApiClient.fetchJson(
+      accessToken,
+      `/messaging/export?lang=${locale}`,
+    ) as Promise<{ export: unknown }>;
   }
 
   public static async sendMessage(

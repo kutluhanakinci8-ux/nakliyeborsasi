@@ -10,6 +10,7 @@ import { FreightListingEntity } from "../../infrastructure/database/entities/Fre
 import { AuctionSessionEntity } from "../../infrastructure/database/entities/AuctionSessionEntity";
 import { CompanyTrustReviewEntity } from "../../infrastructure/database/entities/CompanyTrustReviewEntity";
 import { MessageThreadEntity } from "../../infrastructure/database/entities/MessageThreadEntity";
+import { MessageEntity } from "../../infrastructure/database/entities/MessageEntity";
 import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogEntity";
 import { FleetDriverEntity } from "../../infrastructure/database/entities/FleetDriverEntity";
 import { FleetVehicleEntity } from "../../infrastructure/database/entities/FleetVehicleEntity";
@@ -30,6 +31,7 @@ import { PlatformAdminGuard } from "./PlatformAdminGuard";
       AuctionSessionEntity,
       CompanyTrustReviewEntity,
       MessageThreadEntity,
+      MessageEntity,
       AuditLogEntity,
       FleetDriverEntity,
       FleetVehicleEntity,
