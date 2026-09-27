@@ -7,7 +7,11 @@ export function resolveMailWebPublicUrl(): string {
   return "https://posta.lerta.com.tr";
 }
 
-export function buildMailWebSsoHandoffUrl(accessToken: string): string {
+export function buildMailWebSsoHandoffUrl(
+  accessToken: string,
+  options?: { embed?: boolean },
+): string {
   const base = resolveMailWebPublicUrl();
-  return `${base}/auth/consume#access_token=${encodeURIComponent(accessToken)}`;
+  const embedQuery = options?.embed ? "?embed=1" : "";
+  return `${base}/auth/consume${embedQuery}#access_token=${encodeURIComponent(accessToken)}`;
 }

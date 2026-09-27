@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMailSession } from "@/lib/session";
+import { parseEmbedFromSearch } from "@/lib/embeddedParentSession";
 
 function ConsumeHandoff() {
   const router = useRouter();
@@ -21,6 +22,19 @@ function ConsumeHandoff() {
       return;
     }
     setAccessToken(token);
+    const embedded =
+      parseEmbedFromSearch(window.location.search) ||
+      window.parent !== window;
+    if (embedded) {
+      try {
+        window.parent.postMessage(
+          { type: "lerta-mail-request-token" },
+          "https://app.lerta.com.tr",
+        );
+      } catch {
+        /* ignore */
+      }
+    }
     const target = fromAddress
       ? `/mail?welcome=${encodeURIComponent(fromAddress)}`
       : "/mail";

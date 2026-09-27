@@ -23,14 +23,22 @@ export function MailSessionProvider({ children }: { children: React.ReactNode })
   const [accessToken, setTokenState] = useState<string | null>(null);
 
   useEffect(() => {
-    setTokenState(localStorage.getItem(STORAGE_KEY));
+    try {
+      setTokenState(localStorage.getItem(STORAGE_KEY));
+    } catch {
+      setTokenState(null);
+    }
   }, []);
 
   const setAccessToken = useCallback((token: string | null) => {
-    if (token) {
-      localStorage.setItem(STORAGE_KEY, token);
-    } else {
-      localStorage.removeItem(STORAGE_KEY);
+    try {
+      if (token) {
+        localStorage.setItem(STORAGE_KEY, token);
+      } else {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    } catch {
+      /* üçüncü taraf iframe — localStorage kapalı olabilir */
     }
     setTokenState(token);
   }, []);

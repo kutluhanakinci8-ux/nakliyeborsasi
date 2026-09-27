@@ -11,6 +11,7 @@ import { MailSessionProvider } from "@/lib/session";
 import { MailThemeProvider } from "@/components/MailThemeProvider";
 import { MailPwaRegister } from "@/components/MailPwaRegister";
 import { MailHttpsRedirect } from "@/components/MailHttpsRedirect";
+import { MailEmbeddedSessionBridge } from "@/components/MailEmbeddedSessionBridge";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://posta.lerta.com.tr"),
@@ -41,6 +42,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <MailSessionProvider>
           <MailThemeProvider>
+            <MailEmbeddedSessionBridge />
             <MailPwaRegister />
             <MailHttpsRedirect />
             {children}
