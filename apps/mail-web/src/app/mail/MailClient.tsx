@@ -2697,6 +2697,8 @@ export function MailClient() {
         <MailSettingsPanel
           accessToken={accessToken}
           onClose={() => setSettingsOpen(false)}
+          onOpenCalendar={() => switchView("calendar")}
+          onOpenContacts={() => switchView("contacts")}
         />
       ) : null}
       {shortcutsOpen ? (
