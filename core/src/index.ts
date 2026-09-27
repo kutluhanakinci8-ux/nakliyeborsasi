@@ -31,6 +31,7 @@ export * from "./types/SubscriptionTypes";
 export * from "./types/AuctionSessionSummary";
 export * from "./types/MessagingThreadReference";
 export * from "./types/MessagingThreadMessageView";
+export * from "./types/MessagingThreadSummary";
 export * from "./types/TrustScoreSnapshot";
 export * from "./types/FleetTypes";
 export * from "./types/DriverPortalTypes";

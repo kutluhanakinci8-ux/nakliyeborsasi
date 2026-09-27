@@ -33,6 +33,9 @@ function formatNumber(value: number): string {
 export function AdminSystemPageClient() {
   const { accessToken, session } = useWebSession();
   const [overview, setOverview] = useState<PlatformAdminOverview | null>(null);
+  const [messageThreads, setMessageThreads] = useState<
+    Awaited<ReturnType<typeof PlatformAdminApiClient.fetchMessageThreads>>
+  >([]);
   const [loading, setLoading] = useState(true);
 
   const modules = flattenPlatformAdminNav().filter((item) => item.href !== "/admin");
@@ -43,8 +46,12 @@ export function AdminSystemPageClient() {
     }
     setLoading(true);
     try {
-      const ov = await PlatformAdminApiClient.fetchOverview(accessToken);
+      const [ov, threads] = await Promise.all([
+        PlatformAdminApiClient.fetchOverview(accessToken),
+        PlatformAdminApiClient.fetchMessageThreads(accessToken),
+      ]);
       setOverview(ov);
+      setMessageThreads(threads);
     } finally {
       setLoading(false);
     }
@@ -236,6 +243,55 @@ export function AdminSystemPageClient() {
               </li>
             ))}
           </ul>
+        </section>
+
+        <section className="admin-panel-card admin-users-detail-wide">
+          <header className="admin-panel-card-head">
+            <div>
+              <h2>Firma sohbeti eDiscovery</h2>
+              <p>Son 250 thread — uyumluluk incelemesi (salt okunur)</p>
+            </div>
+          </header>
+          {messageThreads.length === 0 ? (
+            <p className="admin-meta-line">Henüz kayıtlı sohbet yok.</p>
+          ) : (
+            <div className="admin-table-scroll">
+              <table className="admin-data-table">
+                <thead>
+                  <tr>
+                    <th>Thread</th>
+                    <th>Firma A</th>
+                    <th>Firma B</th>
+                    <th>Mesaj</th>
+                    <th>İlan</th>
+                    <th>Oluşturma</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {messageThreads.slice(0, 40).map((row) => (
+                    <tr key={row.id}>
+                      <td>
+                        <code>{row.id.slice(0, 8)}…</code>
+                      </td>
+                      <td>
+                        <code>{row.companyAId.slice(0, 8)}…</code>
+                      </td>
+                      <td>
+                        <code>{row.companyBId.slice(0, 8)}…</code>
+                      </td>
+                      <td>{row.messageCount}</td>
+                      <td>
+                        {row.freightListingId
+                          ? `${row.freightListingId.slice(0, 8)}…`
+                          : "—"}
+                      </td>
+                      <td>{new Date(row.createdAt).toLocaleString("tr-TR")}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </section>
 
         <section className="admin-panel-card admin-users-detail-wide">

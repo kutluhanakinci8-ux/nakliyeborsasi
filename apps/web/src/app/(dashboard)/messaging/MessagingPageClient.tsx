@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MessagingMailWebEmbed } from "../../../components/messaging/MessagingMailWebEmbed";
@@ -10,6 +10,7 @@ import { useWebSession } from "../../../context/WebSessionProvider";
 import {
   MessagingApiClient,
   MessagingThreadRecord,
+  MessagingThreadSummaryRecord,
   ThreadMessageRecord,
 } from "../../../lib/MessagingApiClient";
 import {
@@ -64,6 +65,12 @@ export function MessagingPageClient() {
   const [counterpartyTrust, setCounterpartyTrust] =
     useState<TrustScoreRecord | null>(null);
   const [moduleBlocked, setModuleBlocked] = useState(false);
+  const [threadSummary, setThreadSummary] =
+    useState<MessagingThreadSummaryRecord | null>(null);
+  const [translations, setTranslations] = useState<Record<string, string>>({});
+  const [translateBusyId, setTranslateBusyId] = useState("");
+  const isCompanyOwner =
+    session?.roleCodes?.includes("COMPANY_OWNER") ?? false;
 
   useEffect(() => {
     const chatLink =
@@ -168,18 +175,66 @@ export function MessagingPageClient() {
     }
   }
 
-  async function loadMessages(threadId: string): Promise<void> {
-    setActiveThreadId(threadId);
+  const loadMessages = useCallback(
+    async (threadId: string): Promise<void> => {
+      setActiveThreadId(threadId);
+      try {
+        const payload = await MessagingApiClient.listMessages(
+          accessToken,
+          locale,
+          threadId,
+        );
+        setMessages(payload.messages ?? []);
+        void loadThreads();
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : "Mesaj hatası");
+      }
+    },
+    [accessToken, locale],
+  );
+
+  async function handleExportArchive(): Promise<void> {
     try {
-      const payload = await MessagingApiClient.listMessages(
+      const payload = await MessagingApiClient.exportArchive(
         accessToken,
         locale,
-        threadId,
       );
-      setMessages(payload.messages ?? []);
-      void loadThreads();
+      const blob = new Blob([JSON.stringify(payload.export, null, 2)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `lerta-messaging-export-${Date.now()}.json`;
+      anchor.click();
+      URL.revokeObjectURL(url);
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Mesaj hatası");
+      setErrorMessage(
+        error instanceof Error ? error.message : "Dışa aktarma hatası",
+      );
+    }
+  }
+
+  async function handleTranslateMessage(message: ThreadMessageRecord): Promise<void> {
+    setTranslateBusyId(message.id);
+    try {
+      const target = locale.startsWith("tr") ? "en" : "tr";
+      const result = await MessagingApiClient.translateMessage(
+        accessToken,
+        locale,
+        message.bodyText,
+        target,
+      );
+      setTranslations((current) => ({
+        ...current,
+        [message.id]: result.translatedText,
+      }));
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Çeviri yapılamadı",
+      );
+    } finally {
+      setTranslateBusyId("");
     }
   }
 
@@ -221,6 +276,26 @@ export function MessagingPageClient() {
       return haystack.includes(query);
     });
   }, [threads, threadSearch]);
+
+  useEffect(() => {
+    if (!activeThreadId || mode !== "chat") {
+      setThreadSummary(null);
+      return;
+    }
+    void MessagingApiClient.fetchThreadSummary(accessToken, locale, activeThreadId)
+      .then((payload) => setThreadSummary(payload.summary))
+      .catch(() => setThreadSummary(null));
+  }, [activeThreadId, accessToken, locale, mode]);
+
+  useEffect(() => {
+    if (mode !== "chat" || !activeThreadId) {
+      return;
+    }
+    const timer = window.setInterval(() => {
+      void loadMessages(activeThreadId);
+    }, 12_000);
+    return () => window.clearInterval(timer);
+  }, [mode, activeThreadId, loadMessages]);
 
   useEffect(() => {
     const companyId = activeThread?.counterpartyCompanyId;
@@ -347,6 +422,15 @@ export function MessagingPageClient() {
               onChange={(event) => setThreadSearch(event.target.value)}
               aria-label="Sohbet ara"
             />
+            {isCompanyOwner ? (
+              <button
+                type="button"
+                className="btn-account-secondary chat-export-btn"
+                onClick={() => void handleExportArchive()}
+              >
+                KVKK dışa aktar (JSON)
+              </button>
+            ) : null}
             <div className="chat-compose-row">
               <input
                 className="input-light"
@@ -434,6 +518,19 @@ export function MessagingPageClient() {
                 </div>
               ) : null}
             </div>
+            {threadSummary ? (
+              <aside className="chat-summary-panel" aria-label="Sohbet özet">
+                <p className="chat-summary-title">{threadSummary.headline}</p>
+                <ul className="chat-summary-list">
+                  {threadSummary.bullets.map((line) => (
+                    <li key={line}>{line}</li>
+                  ))}
+                </ul>
+                <p className="chat-summary-meta">
+                  Yapılandırılmış özet · {threadSummary.messageCount} mesaj
+                </p>
+              </aside>
+            ) : null}
             <div className="chat-messages">
               {messages.length === 0 ? (
                 <EmptyState message="Soldan sohbet seçin veya yeni sohbet açın." />
@@ -456,6 +553,33 @@ export function MessagingPageClient() {
                           ) : null}
                         </span>
                         <p>{message.bodyText}</p>
+                        {translations[message.id] ? (
+                          <p className="chat-translation">
+                            {translations[message.id]}
+                          </p>
+                        ) : null}
+                        <button
+                          type="button"
+                          className="chat-translate-btn"
+                          disabled={translateBusyId === message.id}
+                          onClick={() => {
+                            if (translations[message.id]) {
+                              setTranslations((current) => {
+                                const next = { ...current };
+                                delete next[message.id];
+                                return next;
+                              });
+                              return;
+                            }
+                            void handleTranslateMessage(message);
+                          }}
+                        >
+                          {translations[message.id]
+                            ? "Çeviriyi gizle"
+                            : locale.startsWith("tr")
+                              ? "İngilizce çevir"
+                              : "Türkçe çevir"}
+                        </button>
                       </li>
                     );
                   })}
