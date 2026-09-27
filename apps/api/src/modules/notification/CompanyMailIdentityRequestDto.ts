@@ -51,6 +51,13 @@ export class ClaimMailAddressDto {
   public displayName?: string;
 }
 
+export class UpdateCompanyMailDisplayNameDto {
+  @IsString()
+  @MinLength(1)
+  @MaxLength(120)
+  public displayName!: string;
+}
+
 export class PilotQuickStartDto {
   @IsString()
   @MinLength(2)

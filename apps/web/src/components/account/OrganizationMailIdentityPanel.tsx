@@ -230,12 +230,21 @@ export function OrganizationMailIdentityPanel({
     }
     setMessage("");
     setError("");
+    const trimmed = displayName.trim();
+    if (!trimmed) {
+      setError("Görünen ad boş olamaz.");
+      return;
+    }
     try {
-      await updateCompanyMailDisplayName(accessToken, displayName.trim());
+      await updateCompanyMailDisplayName(accessToken, trimmed);
+      setDisplayName(trimmed);
       setMessage("Görünen ad güncellendi.");
       await refresh();
-    } catch {
-      setError("Görünen ad kaydedilemedi.");
+    } catch (error) {
+      const raw = error instanceof Error ? error.message : "";
+      setError(
+        raw ? formatMailIdentityApiError(raw) : "Görünen ad kaydedilemedi.",
+      );
     }
   }
 

@@ -42,6 +42,7 @@ import {
   PilotQuickStartDto,
   RegisterCustomDomainDto,
   SelectMailPlanRequestDto,
+  UpdateCompanyMailDisplayNameDto,
 } from "./CompanyMailIdentityRequestDto";
 import { MailPilotOnboardingService } from "./MailPilotOnboardingService";
 import { MailAddressOnboardingService } from "./MailAddressOnboardingService";
@@ -64,10 +65,6 @@ import {
   canManageMailIdentity,
   canManageCompanyTeamRoles,
 } from "./MailCompanyRoleAuthorization";
-
-class UpdateCompanyMailDisplayNameDto {
-  public displayName!: string;
-}
 
 @Controller("company/mail-identity")
 @UseGuards(JwtAuthenticationGuard, MailConsoleAccessGuard)
