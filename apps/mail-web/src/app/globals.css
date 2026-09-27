@@ -1743,6 +1743,29 @@ a {
   font-size: 0.9rem;
 }
 
+.mail-settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 12px 0;
+  font-size: 0.88rem;
+}
+
+.mail-settings-field input,
+.mail-settings-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font: inherit;
+  background: var(--panel);
+}
+
+.mail-settings-textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
 .compose-preset-row {
   display: flex;
   flex-wrap: wrap;

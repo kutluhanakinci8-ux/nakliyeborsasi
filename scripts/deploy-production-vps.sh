@@ -21,6 +21,10 @@ if [[ -x scripts/apply-messaging-p4-schema.sh ]]; then
   bash scripts/apply-messaging-p4-schema.sh "$INSTALL_DIR" || true
 fi
 
+if [[ -x scripts/apply-mail-sa2-auto-reply-schema.sh ]]; then
+  bash scripts/apply-mail-sa2-auto-reply-schema.sh "$INSTALL_DIR" || true
+fi
+
 if [[ -x scripts/deploy-lerta-post-vanity-from.sh ]]; then
   bash scripts/deploy-lerta-post-vanity-from.sh "$INSTALL_DIR" || true
 fi

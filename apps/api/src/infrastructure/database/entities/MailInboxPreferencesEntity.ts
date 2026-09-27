@@ -14,6 +14,18 @@ export class MailInboxPreferencesEntity {
   @Column({ type: "boolean", default: true })
   public dailyDigestEnabled!: boolean;
 
+  @Column({ type: "boolean", default: false })
+  public autoReplyEnabled!: boolean;
+
+  @Column({ type: "text", nullable: true })
+  public autoReplyBodyText!: string | null;
+
+  @Column({ type: "timestamptz", nullable: true })
+  public autoReplyActiveFrom!: Date | null;
+
+  @Column({ type: "timestamptz", nullable: true })
+  public autoReplyActiveUntil!: Date | null;
+
   /** Europe/Istanbul takvim günü (YYYY-MM-DD) */
   @Column({ type: "varchar", length: 10, nullable: true })
   public lastDigestSentOn!: string | null;

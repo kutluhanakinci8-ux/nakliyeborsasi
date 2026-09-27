@@ -765,6 +765,10 @@ export type ComposeMailResult =
 
 export type MailInboxPreferences = {
   dailyDigestEnabled: boolean;
+  autoReplyEnabled: boolean;
+  autoReplyBodyText: string | null;
+  autoReplyActiveFrom: string | null;
+  autoReplyActiveUntil: string | null;
 };
 
 export async function fetchInboxPreferences(accessToken: string) {

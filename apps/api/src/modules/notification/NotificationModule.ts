@@ -138,6 +138,8 @@ import { MailContactCardDavSyncScheduler } from "./MailContactCardDavSyncSchedul
 import { MailOrganizationCalendarService } from "./MailOrganizationCalendarService";
 import { MailOrganizationContactService } from "./MailOrganizationContactService";
 import { MailInboxPreferencesService } from "./MailInboxPreferencesService";
+import { MailAutoReplyService } from "./MailAutoReplyService";
+import { MailAutoReplyThrottleEntity } from "../../infrastructure/database/entities/MailAutoReplyThrottleEntity";
 import { MailInboxDigestService } from "./MailInboxDigestService";
 import { MailInboxDigestScheduler } from "./MailInboxDigestScheduler";
 import { MailSnoozeWakeProcessor } from "./MailSnoozeWakeProcessor";
@@ -198,6 +200,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
       MailInboxRuleEntity,
       MailDelayedComposeEntity,
       MailInboxPreferencesEntity,
+      MailAutoReplyThrottleEntity,
       MailCalendarEventEntity,
       MailCalendarRecurrenceExceptionEntity,
       MailOrgContactEntity,
@@ -304,6 +307,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     MailDelayedComposeService,
     MailDelayedComposeProcessor,
     MailInboxPreferencesService,
+    MailAutoReplyService,
     MailInboxDigestService,
     MailInboxDigestScheduler,
     MailSnoozeWakeProcessor,

@@ -5,6 +5,17 @@ import { MailInboxPreferencesEntity } from "../../infrastructure/database/entiti
 
 export type MailInboxPreferencesDto = {
   dailyDigestEnabled: boolean;
+  autoReplyEnabled: boolean;
+  autoReplyBodyText: string | null;
+  autoReplyActiveFrom: string | null;
+  autoReplyActiveUntil: string | null;
+};
+
+export type MailAutoReplyConfig = {
+  enabled: boolean;
+  bodyText: string | null;
+  activeFrom: Date | null;
+  activeUntil: Date | null;
 };
 
 @Injectable()
@@ -18,14 +29,32 @@ export class MailInboxPreferencesService {
     const row = await this.preferencesRepository.findOne({
       where: { organizationId },
     });
+    return this.toDto(row);
+  }
+
+  public async getAutoReplyConfig(
+    organizationId: string,
+  ): Promise<MailAutoReplyConfig> {
+    const row = await this.preferencesRepository.findOne({
+      where: { organizationId },
+    });
     return {
-      dailyDigestEnabled: row?.dailyDigestEnabled ?? true,
+      enabled: row?.autoReplyEnabled ?? false,
+      bodyText: row?.autoReplyBodyText ?? null,
+      activeFrom: row?.autoReplyActiveFrom ?? null,
+      activeUntil: row?.autoReplyActiveUntil ?? null,
     };
   }
 
   public async update(
     organizationId: string,
-    input: { dailyDigestEnabled?: boolean },
+    input: {
+      dailyDigestEnabled?: boolean;
+      autoReplyEnabled?: boolean;
+      autoReplyBodyText?: string | null;
+      autoReplyActiveFrom?: string | null;
+      autoReplyActiveUntil?: string | null;
+    },
   ): Promise<MailInboxPreferencesDto> {
     let row = await this.preferencesRepository.findOne({
       where: { organizationId },
@@ -34,14 +63,55 @@ export class MailInboxPreferencesService {
       row = this.preferencesRepository.create({
         organizationId,
         dailyDigestEnabled: true,
+        autoReplyEnabled: false,
+        autoReplyBodyText: null,
+        autoReplyActiveFrom: null,
+        autoReplyActiveUntil: null,
         lastDigestSentOn: null,
       });
     }
     if (input.dailyDigestEnabled !== undefined) {
       row.dailyDigestEnabled = Boolean(input.dailyDigestEnabled);
     }
+    if (input.autoReplyEnabled !== undefined) {
+      row.autoReplyEnabled = Boolean(input.autoReplyEnabled);
+    }
+    if (input.autoReplyBodyText !== undefined) {
+      const text = input.autoReplyBodyText?.trim() ?? "";
+      row.autoReplyBodyText = text.length > 0 ? text.slice(0, 4000) : null;
+    }
+    if (input.autoReplyActiveFrom !== undefined) {
+      row.autoReplyActiveFrom = this.parseOptionalDate(
+        input.autoReplyActiveFrom,
+      );
+    }
+    if (input.autoReplyActiveUntil !== undefined) {
+      row.autoReplyActiveUntil = this.parseOptionalDate(
+        input.autoReplyActiveUntil,
+      );
+    }
     await this.preferencesRepository.save(row);
     return this.get(organizationId);
+  }
+
+  private toDto(
+    row: MailInboxPreferencesEntity | null,
+  ): MailInboxPreferencesDto {
+    return {
+      dailyDigestEnabled: row?.dailyDigestEnabled ?? true,
+      autoReplyEnabled: row?.autoReplyEnabled ?? false,
+      autoReplyBodyText: row?.autoReplyBodyText ?? null,
+      autoReplyActiveFrom: row?.autoReplyActiveFrom?.toISOString() ?? null,
+      autoReplyActiveUntil: row?.autoReplyActiveUntil?.toISOString() ?? null,
+    };
+  }
+
+  private parseOptionalDate(value: string | null): Date | null {
+    if (!value?.trim()) {
+      return null;
+    }
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
   }
 
   public async getLastDigestSentOn(
@@ -64,6 +134,10 @@ export class MailInboxPreferencesService {
       row = this.preferencesRepository.create({
         organizationId,
         dailyDigestEnabled: true,
+        autoReplyEnabled: false,
+        autoReplyBodyText: null,
+        autoReplyActiveFrom: null,
+        autoReplyActiveUntil: null,
         lastDigestSentOn: istanbulDate,
       });
     } else {
