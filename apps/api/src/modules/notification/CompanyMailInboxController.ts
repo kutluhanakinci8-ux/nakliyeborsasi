@@ -438,8 +438,12 @@ export class CompanyMailInboxController {
     const storageQuota = await this.mailOrganizationStorageService.getSnapshot(
       user.companyId,
     );
+    const sendReadiness = await this.mailMailboxComposeService.resolveSendReadiness(
+      user.companyId,
+    );
     return {
       summary: { ...summary, storageQuota },
+      sendReadiness,
       messages,
       sent,
       folder: resolvedFolder,

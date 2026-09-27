@@ -19,6 +19,9 @@ import {
   resolveMailSenderAddresses,
 } from "@nakliyeborsasi/core";
 import { resolveTenantReplyToAddress } from "./MailTenantEmailBranding";
+import { MailDomainEntity } from "../../infrastructure/database/entities/MailDomainEntity";
+import { MailOrganizationIdentityService } from "./MailOrganizationIdentityService";
+import { MailTenantSubdomainService } from "./MailTenantSubdomainService";
 
 export type ComposeAttachmentInput = {
   filename: string;
@@ -35,8 +38,12 @@ export class MailMailboxComposeService {
     private readonly mailOrganizationSendRateService: MailOrganizationSendRateService,
     private readonly mailOrganizationStorageService: MailOrganizationStorageService,
     private readonly mailTenantSuspensionService: MailTenantSuspensionService,
+    private readonly mailOrganizationIdentityService: MailOrganizationIdentityService,
+    private readonly mailTenantSubdomainService: MailTenantSubdomainService,
     @InjectRepository(MailSenderIdentityEntity)
     private readonly senderRepository: Repository<MailSenderIdentityEntity>,
+    @InjectRepository(MailDomainEntity)
+    private readonly mailDomainRepository: Repository<MailDomainEntity>,
     @InjectRepository(MailMailboxEntity)
     private readonly mailboxRepository: Repository<MailMailboxEntity>,
     @InjectRepository(MailInboundMessageEntity)
@@ -258,6 +265,31 @@ export class MailMailboxComposeService {
     return { sentId: sent.id, smtpMessageId };
   }
 
+  public async resolveSendReadiness(organizationId: string): Promise<{
+    canSend: boolean;
+    reasonTr: string | null;
+    displayAddress: string | null;
+  }> {
+    try {
+      await this.resolveSenderMailbox(organizationId);
+      const primary =
+        await this.mailOrganizationIdentityService.getPrimaryIdentity(
+          organizationId,
+        );
+      return {
+        canSend: true,
+        reasonTr: null,
+        displayAddress: primary.displayAddress ?? primary.fromAddress,
+      };
+    } catch (error) {
+      const reason =
+        error instanceof BadRequestException
+          ? String(error.message)
+          : "Gönderim şu an kullanılamıyor.";
+      return { canSend: false, reasonTr: reason, displayAddress: null };
+    }
+  }
+
   public async listSent(organizationId: string, limit = 40) {
     const rows = await this.sentRepository.find({
       where: { organizationId },
@@ -290,15 +322,34 @@ export class MailMailboxComposeService {
   }
 
   private async resolveSenderMailbox(organizationId: string) {
+    await this.mailTenantSubdomainService
+      .syncTenantDomainVerificationFromDns()
+      .catch(() => undefined);
+
     const identity = await this.senderRepository.findOne({
       where: { organizationId, isDefault: true },
       relations: { mailDomain: true },
     });
-    if (!identity?.mailDomain || identity.mailDomain.verificationStatus !== "verified") {
+    if (!identity?.mailDomain) {
+      throw new BadRequestException(
+        "Kurumsal posta kutusu tanımlı değil. Hesap → Organizasyon → E-posta kimliği veya yonetim.lerta.com.tr üzerinden adres alın.",
+      );
+    }
+
+    await this.ensurePlatformManagedDomainVerified(
+      organizationId,
+      identity.mailDomain,
+    );
+
+    const refreshed = await this.mailDomainRepository.findOne({
+      where: { id: identity.mailDomain.id },
+    });
+    if (!refreshed || refreshed.verificationStatus !== "verified") {
       throw new BadRequestException(
         "Doğrulanmış kurumsal gönderen kimliği gerekli.",
       );
     }
+    identity.mailDomain = refreshed;
     const { publicAddress, technicalAddress } = resolveMailSenderAddresses(
       identity.localPart,
       identity.mailDomain,
@@ -329,6 +380,37 @@ export class MailMailboxComposeService {
       technicalEmail: technicalAddress,
       mailbox,
     };
+  }
+
+  private async ensurePlatformManagedDomainVerified(
+    organizationId: string,
+    mailDomain: MailDomainEntity,
+  ): Promise<void> {
+    if (mailDomain.verificationStatus === "verified") {
+      return;
+    }
+    const snapshot = mailDomain.dnsSnapshot ?? {};
+    if (
+      snapshot.managedByPlatform === true ||
+      snapshot.product === "lerta_post"
+    ) {
+      mailDomain.verificationStatus = "verified";
+      await this.mailDomainRepository.save(mailDomain);
+      return;
+    }
+    const primary =
+      await this.mailOrganizationIdentityService.getPrimaryIdentity(
+        organizationId,
+      );
+    const platformManaged =
+      primary.platformDnsReady &&
+      (primary.channel === "instant_post" ||
+        primary.channel === "tenant_subdomain" ||
+        primary.channel === "platform");
+    if (platformManaged) {
+      mailDomain.verificationStatus = "verified";
+      await this.mailDomainRepository.save(mailDomain);
+    }
   }
 
   private async assertRateLimit(organizationId: string): Promise<void> {

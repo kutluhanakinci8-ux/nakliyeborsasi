@@ -107,6 +107,10 @@ export function MailClient() {
   const { accessToken, logout } = useMailSession();
   const [view, setView] = useState<View>("inbox");
   const [summary, setSummary] = useState<MailInboxSummary | null>(null);
+  const [sendReadiness, setSendReadiness] = useState<{
+    canSend: boolean;
+    reasonTr: string | null;
+  } | null>(null);
   const [messages, setMessages] = useState<MailInboxListItem[]>([]);
   const [sent, setSent] = useState<MailSentItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -203,6 +207,7 @@ export function MailClient() {
     if (view === "calendar" || view === "contacts") {
       const data = await fetchInbox(accessToken, "inbox");
       setSummary(data.summary);
+      setSendReadiness(data.sendReadiness ?? null);
       return;
     }
     const folder = inboxFolderForView(view);
@@ -212,6 +217,7 @@ export function MailClient() {
       folder === "inbox" ? inboxCustomFolderId : undefined,
     );
     setSummary(data.summary);
+    setSendReadiness(data.sendReadiness ?? null);
     setMessages(data.messages);
     setSent(data.sent);
   }, [accessToken, view, inboxCustomFolderId]);
@@ -246,11 +252,14 @@ export function MailClient() {
     if (!composeOpen || !accessToken) {
       return;
     }
+    if (sendReadiness && !sendReadiness.canSend && sendReadiness.reasonTr) {
+      setComposeError(sendReadiness.reasonTr);
+    }
     void fetchComposePresets(accessToken).then((data) => {
       setComposeSignatures(data.signatures);
       setComposeTemplates(data.templates);
     });
-  }, [composeOpen, accessToken]);
+  }, [composeOpen, accessToken, sendReadiness]);
 
   useEffect(() => {
     if (!pendingUndo) {
@@ -1972,6 +1981,11 @@ export function MailClient() {
               Geri al
             </button>
           </div>
+        ) : null}
+        {sendReadiness && !sendReadiness.canSend && sendReadiness.reasonTr ? (
+          <p className="mail-read-toast mail-read-toast--warn">
+            {sendReadiness.reasonTr}
+          </p>
         ) : null}
         {toast && !pendingUndo ? (
           <p className="mail-read-toast">{toast}</p>

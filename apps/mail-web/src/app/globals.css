@@ -748,6 +748,11 @@ a {
   border-bottom: 1px solid var(--border);
 }
 
+.mail-read-toast--warn {
+  color: #9f1239;
+  background: #fff1f2;
+}
+
 .mail-read-header--premium {
   padding: 18px 24px 16px;
   background: var(--panel);

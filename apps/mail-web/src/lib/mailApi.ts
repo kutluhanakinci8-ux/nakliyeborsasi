@@ -23,6 +23,12 @@ export type MailStorageQuota = {
   windowLabelTr: string;
 };
 
+export type MailSendReadiness = {
+  canSend: boolean;
+  reasonTr: string | null;
+  displayAddress: string | null;
+};
+
 export type MailInboxSummary = {
   primaryAddress: string | null;
   mailboxId: string | null;
@@ -434,6 +440,7 @@ export async function fetchInbox(
   }
   return apiFetch<{
     summary: MailInboxSummary;
+    sendReadiness?: MailSendReadiness;
     messages: MailInboxListItem[];
     sent: MailSentItem[];
   }>(accessToken, `company/mail-inbox?${params.toString()}`);
