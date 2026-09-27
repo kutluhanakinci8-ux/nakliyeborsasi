@@ -1,6 +1,7 @@
 import {
   formatMailFromHeader,
   resolveMailSenderAddresses,
+  resolveSmtpFromEmailAddress,
 } from "@nakliyeborsasi/core";
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
@@ -41,9 +42,13 @@ export class MailSenderResolutionService {
     if (identity.mailDomain.verificationStatus !== "verified") {
       return { from: fallback, tenantOrganizationId: null };
     }
-    const { publicAddress } = resolveMailSenderAddresses(
+    const addresses = resolveMailSenderAddresses(
       identity.localPart,
       identity.mailDomain,
+    );
+    const smtpFromEmail = resolveSmtpFromEmailAddress(
+      addresses,
+      this.notificationConfigurationService.resolveInstantPostFromMode(),
     );
     const brandingName =
       await this.mailOrganizationBrandingService.resolveDefaultFromDisplayName(
@@ -51,7 +56,7 @@ export class MailSenderResolutionService {
       );
     const displayName =
       brandingName?.trim() || identity.displayName?.trim() || "";
-    const from = formatMailFromHeader(publicAddress, displayName);
+    const from = formatMailFromHeader(smtpFromEmail, displayName);
     return { from, tenantOrganizationId: companyId };
   }
 }

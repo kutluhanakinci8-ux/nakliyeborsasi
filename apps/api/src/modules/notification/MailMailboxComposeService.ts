@@ -17,7 +17,9 @@ import { MailTenantSuspensionService } from "./MailTenantSuspensionService";
 import {
   formatMailFromHeader,
   resolveMailSenderAddresses,
+  resolveSmtpFromEmailAddress,
 } from "@nakliyeborsasi/core";
+import { NotificationConfigurationService } from "./NotificationConfigurationService";
 import { resolveTenantReplyToAddress } from "./MailTenantEmailBranding";
 import { MailDomainEntity } from "../../infrastructure/database/entities/MailDomainEntity";
 import { MailOrganizationIdentityService } from "./MailOrganizationIdentityService";
@@ -40,6 +42,7 @@ export class MailMailboxComposeService {
     private readonly mailTenantSuspensionService: MailTenantSuspensionService,
     private readonly mailOrganizationIdentityService: MailOrganizationIdentityService,
     private readonly mailTenantSubdomainService: MailTenantSubdomainService,
+    private readonly notificationConfigurationService: NotificationConfigurationService,
     @InjectRepository(MailSenderIdentityEntity)
     private readonly senderRepository: Repository<MailSenderIdentityEntity>,
     @InjectRepository(MailDomainEntity)
@@ -354,8 +357,12 @@ export class MailMailboxComposeService {
       identity.localPart,
       identity.mailDomain,
     );
+    const smtpFromEmail = resolveSmtpFromEmailAddress(
+      { publicAddress, technicalAddress },
+      this.notificationConfigurationService.resolveInstantPostFromMode(),
+    );
     const fromHeader = formatMailFromHeader(
-      publicAddress,
+      smtpFromEmail,
       identity.displayName,
     );
     const envelopeMailFrom =

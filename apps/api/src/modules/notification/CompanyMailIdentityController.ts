@@ -59,6 +59,8 @@ import {
 import { MailAddressAliasService } from "./MailAddressAliasService";
 import { CreateMailAliasRequestDto } from "./MailAliasRequestDto";
 import { MailInboundRoutingService } from "./MailInboundRoutingService";
+import { MailInstantPostDomainService } from "./MailInstantPostDomainService";
+import { NotificationConfigurationService } from "./NotificationConfigurationService";
 import {
   assertMailConsoleAccess,
   canManageMailDomain,
@@ -89,6 +91,8 @@ export class CompanyMailIdentityController {
     private readonly mailOrganizationIntegrationService: MailOrganizationIntegrationService,
     private readonly mailAddressAliasService: MailAddressAliasService,
     private readonly mailInboundRoutingService: MailInboundRoutingService,
+    private readonly mailInstantPostDomainService: MailInstantPostDomainService,
+    private readonly notificationConfigurationService: NotificationConfigurationService,
   ) {}
 
   private refreshInboundRouting(): void {
@@ -224,9 +228,20 @@ export class CompanyMailIdentityController {
       await this.mailOrganizationIdentityService.getPrimaryIdentity(
         user.companyId,
       );
+    const fromMode =
+      this.notificationConfigurationService.resolveInstantPostFromMode();
+    const deliverability =
+      identity.channel === "instant_post" && identity.sender?.mailDomain
+        ? this.mailInstantPostDomainService.buildDeliverabilityHints({
+            localPart: identity.sender.localPart,
+            mailDomain: identity.sender.mailDomain,
+            fromMode,
+          })
+        : null;
     return {
       message: "OK",
       identity,
+      deliverability,
       sendRate: await this.mailOrganizationSendRateService.getSnapshot(
         user.companyId,
       ),

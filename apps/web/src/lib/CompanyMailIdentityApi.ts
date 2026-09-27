@@ -20,6 +20,16 @@ export type CustomDomainBundle = {
   fromAddress: string | null;
 };
 
+export type MailDeliverabilityHints = {
+  fromHeaderMode: "vanity" | "aligned";
+  vanityAddress: string;
+  technicalAddress: string;
+  smtpFromAddress: string;
+  outlookHintTr: string;
+  zoneDnsRecords: { host: string; type: string; value: string }[];
+  tenantDnsRecords: { host: string; type: string; value: string }[];
+};
+
 export type CompanyMailIdentitySnapshot = {
   domain: string;
   channel?: string;
@@ -123,13 +133,22 @@ export async function provisionCustomDomainSender(
   return { fromAddress: payload.fromAddress };
 }
 
+export type CompanyMailIdentityBundle = {
+  identity: CompanyMailIdentitySnapshot;
+  deliverability: MailDeliverabilityHints | null;
+};
+
 export async function fetchCompanyMailIdentity(
   accessToken: string,
-): Promise<CompanyMailIdentitySnapshot> {
+): Promise<CompanyMailIdentityBundle> {
   const payload = await apiFetch<{
     identity: CompanyMailIdentitySnapshot;
+    deliverability: MailDeliverabilityHints | null;
   }>(accessToken, "company/mail-identity");
-  return payload.identity;
+  return {
+    identity: payload.identity,
+    deliverability: payload.deliverability ?? null,
+  };
 }
 
 export async function claimCompanyMailAddress(

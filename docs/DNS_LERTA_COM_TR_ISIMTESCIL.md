@@ -41,7 +41,10 @@ Müşteri DNS yapmaz. Satış yüzü: **`info@abayer.post`** (ön ek: info, sati
 |-----|------|--------|
 | **MX** | `*.post.lerta.com.tr` (wildcard) | `10 mail.lerta.com.tr` |
 | TXT | `post.lerta.com.tr` | `v=spf1 ip4:168.231.109.27 -all` |
-| TXT | `default._domainkey.firma.post.lerta.com.tr` | Kutu açılışında API üretir (OpenDKIM) |
+| TXT | `_dmarc.post.lerta.com.tr` | `v=DMARC1; p=none; rua=mailto:dmarc@lerta.com.tr; adkim=r; aspf=r` |
+| TXT | `default._domainkey.firma.post.lerta.com.tr` | Kutu açılışında API üretir (OpenDKIM) — `bash scripts/print-instant-post-dns-isimtescil.sh` |
+
+**Outlook «Doğrulanmamış gönderen»:** `info@firma.post` için internette DNS yok; üretimde `MAIL_INSTANT_POST_FROM_MODE=aligned` ile SMTP From teknik FQDN + görünen ad başlıkta. DNS bölgesi `post.lerta.com.tr` isimtescil’de **yayınlanmalı** (`verify-lerta-post-dns.sh`).
 
 PTR (Hostinger, IP): `mail.lerta.com.tr`
 

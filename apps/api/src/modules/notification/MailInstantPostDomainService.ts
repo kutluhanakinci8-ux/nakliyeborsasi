@@ -7,10 +7,13 @@ import { ConfigService } from "@nestjs/config";
 import { InjectRepository } from "@nestjs/typeorm";
 import { In, Repository } from "typeorm";
 import {
+  InstantPostFromMode,
   PLATFORM_MAIL_INSTANT_POST_ZONE,
   formatInstantPostVanityEmail,
   instantPostOrgSlugFromMailDomain,
   isInstantPostMailDomain,
+  resolveMailSenderAddresses,
+  resolveSmtpFromEmailAddress,
 } from "@nakliyeborsasi/core";
 import { MailCustomDomainOpenDkimInstaller } from "./MailCustomDomainOpenDkimInstaller";
 import { MailDomainDkimMaterialService } from "./MailDomainDkimMaterialService";
@@ -367,5 +370,95 @@ export class MailInstantPostDomainService {
       oldRow.emailAddress = newEmail;
       await this.mailboxRepository.save(oldRow);
     }
+  }
+
+  public buildDeliverabilityHints(params: {
+    localPart: string;
+    mailDomain: MailDomainEntity;
+    fromMode: InstantPostFromMode;
+  }): {
+    fromHeaderMode: InstantPostFromMode;
+    vanityAddress: string;
+    technicalAddress: string;
+    smtpFromAddress: string;
+    outlookHintTr: string;
+    zoneDnsRecords: { host: string; type: string; value: string }[];
+    tenantDnsRecords: { host: string; type: string; value: string }[];
+  } {
+    const addresses = resolveMailSenderAddresses(
+      params.localPart,
+      params.mailDomain,
+    );
+    const smtpFromAddress = resolveSmtpFromEmailAddress(
+      addresses,
+      params.fromMode,
+    );
+    const snap = params.mailDomain.dnsSnapshot ?? {};
+    const ipv4 =
+      this.configService.get<string>("MAIL_PLATFORM_SPF_IPV4")?.trim() ||
+      "168.231.109.27";
+    const zone = this.resolveZone();
+    const mxHost =
+      this.mailDomainDnsVerificationService.resolvePlatformMxHost();
+    const tenantDnsRecords: { host: string; type: string; value: string }[] =
+      [];
+    if (typeof snap.spfHost === "string" && typeof snap.spfValue === "string") {
+      tenantDnsRecords.push({
+        host: snap.spfHost as string,
+        type: "TXT",
+        value: snap.spfValue as string,
+      });
+    } else {
+      tenantDnsRecords.push({
+        host: params.mailDomain.domain,
+        type: "TXT",
+        value: `v=spf1 ip4:${ipv4} -all`,
+      });
+    }
+    if (typeof snap.dkimHost === "string" && typeof snap.dkimTxt === "string") {
+      tenantDnsRecords.push({
+        host: snap.dkimHost as string,
+        type: "TXT",
+        value: snap.dkimTxt as string,
+      });
+    }
+    if (typeof snap.dmarcHost === "string" && typeof snap.dmarcValue === "string") {
+      tenantDnsRecords.push({
+        host: snap.dmarcHost as string,
+        type: "TXT",
+        value: snap.dmarcValue as string,
+      });
+    }
+    const zoneDnsRecords = [
+      {
+        host: zone,
+        type: "TXT",
+        value: `v=spf1 ip4:${ipv4} -all`,
+      },
+      {
+        host: `*.${zone}`,
+        type: "MX",
+        value: `10 ${mxHost}`,
+      },
+      {
+        host: `_dmarc.${zone}`,
+        type: "TXT",
+        value:
+          "v=DMARC1; p=none; rua=mailto:dmarc@lerta.com.tr; adkim=r; aspf=r",
+      },
+    ];
+    const outlookHintTr =
+      params.fromMode === "vanity"
+        ? "From adresi info@firma.post olduğunda Outlook/Hotmail «doğrulanmamış gönderen» uyarısı sık görülür; platform varsayılanı DKIM hizalı teknik From (görünen ad başlıkta kalır). isimtescil’de post.lerta.com.tr DNS kayıtlarını yayınlayın."
+        : "Gönderim adresi teknik FQDN (DKIM hizalı); alıcı listede görünen adınızı görür. post.lerta.com.tr bölgesi DNS’te yoksa isimtescil kayıtlarını ekleyin (aşağıdaki tablo).";
+    return {
+      fromHeaderMode: params.fromMode,
+      vanityAddress: addresses.publicAddress,
+      technicalAddress: addresses.technicalAddress,
+      smtpFromAddress,
+      outlookHintTr,
+      zoneDnsRecords,
+      tenantDnsRecords,
+    };
   }
 }
