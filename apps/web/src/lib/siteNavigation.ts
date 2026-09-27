@@ -6,7 +6,7 @@ export const DRIVER_PORTAL_NAV_ITEM = {
 export const PLATFORM_NAV_ITEMS = [
   { href: "/marketplace", label: "Yük arama" },
   { href: "/auctions", label: "İhaleler" },
-  { href: "/messaging", label: "Mesajlar" },
+  { href: "/messaging?tab=email", label: "Mesajlar" },
   { href: "/trust", label: "Güven" },
   { href: "/integrations", label: "Entegrasyon" },
 ] as const;
