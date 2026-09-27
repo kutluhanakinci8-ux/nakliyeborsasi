@@ -6,6 +6,7 @@ import {
   fetchCompanyMailIdentity,
   fetchCustomDomainBundle,
   fetchOrgSuppressions,
+  claimCompanyMailAddress,
   provisionCompanyMailIdentity,
   provisionCustomDomainSender,
   registerCustomDomain,
@@ -25,6 +26,27 @@ function slugifyLocalPart(input: string): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 48);
+}
+
+function slugifyPostOrg(input: string): string {
+  const base = input
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "")
+    .slice(0, 48);
+  if (base.length >= 3) {
+    return base;
+  }
+  return slugifyLocalPart(input).replace(/-/g, "") || "firma";
+}
+
+function normalizeCustomDomainInput(raw: string): string {
+  const trimmed = raw.trim().toLowerCase();
+  if (trimmed.includes("@")) {
+    const domain = trimmed.slice(trimmed.indexOf("@") + 1);
+    return domain.replace(/\.$/, "");
+  }
+  return trimmed.replace(/\.$/, "");
 }
 
 type OrganizationMailIdentityPanelProps = {
@@ -51,6 +73,8 @@ export function OrganizationMailIdentityPanel({
   );
   const [customDomainInput, setCustomDomainInput] = useState("");
   const [customLocalPart, setCustomLocalPart] = useState("bildirim");
+  const [postOrgSlug, setPostOrgSlug] = useState("");
+  const [postLocalPart, setPostLocalPart] = useState("info");
 
   const refresh = useCallback(async () => {
     if (!accessToken) {
@@ -68,6 +92,9 @@ export function OrganizationMailIdentityPanel({
       if (!next.sender && !localPart) {
         setLocalPart(slugifyLocalPart(companyTradeName));
       }
+      if (!postOrgSlug) {
+        setPostOrgSlug(slugifyPostOrg(companyTradeName));
+      }
       if (next.sender?.displayName) {
         setDisplayName(next.sender.displayName);
       } else if (!displayName) {
@@ -83,6 +110,32 @@ export function OrganizationMailIdentityPanel({
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  async function handleClaimLertaPost(): Promise<void> {
+    if (!accessToken || !postOrgSlug.trim() || !postLocalPart.trim()) {
+      return;
+    }
+    const slug = postOrgSlug.trim().toLowerCase();
+    const local = postLocalPart.trim().toLowerCase();
+    const desiredAddress = `${local}@${slug}.post`;
+    setMessage("");
+    setError("");
+    try {
+      const result = await claimCompanyMailAddress(accessToken, {
+        desiredAddress,
+        displayName: displayName.trim() || companyTradeName,
+      });
+      setMessage(
+        result.nextStepTr ||
+          `Lerta Post kutusu hazır: ${result.vanityAddress ?? result.fromAddress}`,
+      );
+      await refresh();
+    } catch {
+      setError(
+        "Lerta Post adresi oluşturulamadı — slug kullanımda veya geçersiz. Farklı firma kısa adı deneyin.",
+      );
+    }
+  }
 
   async function handleProvision(): Promise<void> {
     if (!accessToken || !localPart.trim()) {
@@ -131,9 +184,10 @@ export function OrganizationMailIdentityPanel({
       <p className="account-verify-eyebrow">Faz B — Kurumsal kimlik</p>
       <h2 className="account-card-title">E-posta gönderen kimliği</h2>
       <p className="account-card-lead">
-        İhale ve bildirim e-postaları firmanız adına{" "}
-        <strong>@{identity?.domain ?? "kullanici.lerta.tr"}</strong> adresinden
-        gider. Tam posta kutusu (gelen mail) ileride eklenecek. Kimlik
+        Kurumsal posta ve Mesajlar sekmesi için önerilen adres:{" "}
+        <strong>info@firma.post</strong> (teknik:{" "}
+        <code>info@firma.post.lerta.com.tr</code>). Pilot tenant:{" "}
+        <code>@{identity?.domain ?? "kullanici.lerta.com.tr"}</code>. Kimlik
         değişiklikleri denetim günlüğüne kaydedilir (KVKK).
       </p>
 
@@ -164,13 +218,69 @@ export function OrganizationMailIdentityPanel({
             </span>
           </div>
 
-          {identity.fromAddress ? (
+          {identity.fromAddress || identity.displayAddress ? (
             <p className="account-card-lead">
-              Gönderen: <code>{identity.fromAddress}</code>
+              Gönderen:{" "}
+              <code>{identity.displayAddress ?? identity.fromAddress}</code>
+              {identity.vanityAddress &&
+              identity.vanityAddress !== identity.displayAddress ? (
+                <>
+                  {" "}
+                  (teknik: <code>{identity.fromAddress}</code>)
+                </>
+              ) : null}
               {identity.sender?.displayName
-                ? ` (${identity.sender.displayName})`
+                ? ` — ${identity.sender.displayName}`
                 : null}
             </p>
+          ) : null}
+
+          {!identity.fromAddress &&
+          !identity.displayAddress &&
+          identity.platformDnsReady &&
+          isOwner ? (
+            <div
+              className="account-form-row"
+              style={{
+                marginTop: "1rem",
+                padding: "1rem",
+                borderRadius: "12px",
+                background: "#ecfdf5",
+                border: "1px solid #a7f3d0",
+              }}
+            >
+              <p className="account-verify-eyebrow">Lerta Post (önerilen)</p>
+              <p className="module-hint">
+                DNS sizden istenmez. Görünen adres{" "}
+                <code>{postLocalPart || "info"}@{postOrgSlug || "firma"}.post</code>
+                ; Mesajlar ve posta.lerta.com.tr aynı kutuyu kullanır.
+              </p>
+              <label className="account-label">
+                Firma kısa adı (slug)
+                <input
+                  className="account-input"
+                  value={postOrgSlug}
+                  onChange={(e) => setPostOrgSlug(e.target.value)}
+                  placeholder="abayer"
+                />
+              </label>
+              <label className="account-label">
+                Kutu ön eki
+                <input
+                  className="account-input"
+                  value={postLocalPart}
+                  onChange={(e) => setPostLocalPart(e.target.value)}
+                  placeholder="info"
+                />
+              </label>
+              <button
+                type="button"
+                className="btn-account-primary"
+                onClick={() => void handleClaimLertaPost()}
+              >
+                Lerta Post kutusu oluştur
+              </button>
+            </div>
           ) : null}
 
           {!identity.platformDnsReady ? (
@@ -201,10 +311,11 @@ export function OrganizationMailIdentityPanel({
           ) : null}
 
           {!identity.fromAddress &&
+          !identity.displayAddress &&
           identity.platformDnsReady &&
-          identity.domainVerified &&
           isOwner ? (
             <div className="account-form-row" style={{ marginTop: "1rem" }}>
+              <p className="account-verify-eyebrow">Pilot tenant (lerta.com.tr)</p>
               <label className="account-label">
                 Adres ön eki (local-part)
                 <input
@@ -254,9 +365,9 @@ export function OrganizationMailIdentityPanel({
             Kendi alan adınız (@musteri.com)
           </h3>
           <p className="module-hint">
-            Bildirimler <code>bildirim@sizin-domain.com</code> gibi adreslerden
-            gider. DNS (SPF + DKIM) doğrulandıktan sonra gönderen oluşturulur;
-            paylaşımlı <code>kullanici.lerta.tr</code> kimliğinin yerini alır.
+            Sadece <strong>alan adı</strong> girin (ör. <code>musteri.com.tr</code>
+            ), e-posta adresi değil. Lerta Post için yukarıdaki yeşil kutuyu
+            kullanın; <code>info@lerta.com.tr</code> buraya yazılmaz.
           </p>
 
           {!customDomain?.mailDomain ? (
@@ -279,10 +390,14 @@ export function OrganizationMailIdentityPanel({
                   }
                   setMessage("");
                   setError("");
-                  void registerCustomDomain(
-                    accessToken,
-                    customDomainInput.trim(),
-                  )
+                  const domain = normalizeCustomDomainInput(customDomainInput);
+                  if (!domain || domain.includes("@")) {
+                    setError(
+                      "Geçerli alan adı girin (ör. musteri.com) — @ işareti olmadan.",
+                    );
+                    return;
+                  }
+                  void registerCustomDomain(accessToken, domain)
                     .then((bundle) => {
                       setCustomDomain(bundle);
                       setMessage(

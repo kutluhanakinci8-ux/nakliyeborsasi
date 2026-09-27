@@ -22,6 +22,9 @@ export type CustomDomainBundle = {
 
 export type CompanyMailIdentitySnapshot = {
   domain: string;
+  channel?: string;
+  displayAddress?: string | null;
+  vanityAddress?: string | null;
   platformDnsReady: boolean;
   domainVerified: boolean;
   dnsCheck: {
@@ -112,6 +115,24 @@ export async function fetchCompanyMailIdentity(
     identity: CompanyMailIdentitySnapshot;
   }>(accessToken, "company/mail-identity");
   return payload.identity;
+}
+
+export async function claimCompanyMailAddress(
+  accessToken: string,
+  body: { desiredAddress: string; displayName?: string },
+): Promise<{
+  fromAddress: string;
+  vanityAddress: string | null;
+  nextStepTr: string;
+}> {
+  return apiFetch(
+    accessToken,
+    "company/mail-identity/onboarding/claim-address",
+    {
+      method: "POST",
+      body: JSON.stringify(body),
+    },
+  );
 }
 
 export async function provisionCompanyMailIdentity(
