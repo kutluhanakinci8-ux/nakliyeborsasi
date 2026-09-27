@@ -22,19 +22,31 @@ function shortCompanyId(companyId: string): string {
   return `${companyId.slice(0, 8)}…${companyId.slice(-4)}`;
 }
 
-function parseMode(raw: string | null): MessagingMode {
+function parseMode(
+  raw: string | null,
+  preferChat: boolean,
+): MessagingMode {
+  if (raw === "chat" || raw === "sohbet") {
+    return "chat";
+  }
   if (raw === "email" || raw === "posta" || raw === "mail") {
     return "email";
   }
-  return "chat";
+  if (preferChat) {
+    return "chat";
+  }
+  return "email";
 }
 
 export function MessagingPageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { accessToken, locale, session } = useWebSession();
+  const preferChat =
+    Boolean(searchParams.get("companyId")) ||
+    Boolean(searchParams.get("threadId"));
   const [mode, setMode] = useState<MessagingMode>(() =>
-    parseMode(searchParams.get("tab")),
+    parseMode(searchParams.get("tab"), preferChat),
   );
   const [threads, setThreads] = useState<MessagingThreadRecord[]>([]);
   const [activeThreadId, setActiveThreadId] = useState("");
@@ -45,8 +57,15 @@ export function MessagingPageClient() {
   const [isBusy, setIsBusy] = useState(false);
 
   useEffect(() => {
-    setMode(parseMode(searchParams.get("tab")));
-  }, [searchParams]);
+    const chatLink =
+      Boolean(searchParams.get("companyId")) ||
+      Boolean(searchParams.get("threadId"));
+    setMode(parseMode(searchParams.get("tab"), chatLink));
+    const tab = searchParams.get("tab");
+    if (!tab && !chatLink) {
+      router.replace("/messaging?tab=email", { scroll: false });
+    }
+  }, [searchParams, router]);
 
   useEffect(() => {
     const companyId = searchParams.get("companyId");
@@ -65,7 +84,7 @@ export function MessagingPageClient() {
     if (next === "email") {
       params.set("tab", "email");
     } else {
-      params.delete("tab");
+      params.set("tab", "chat");
     }
     const query = params.toString();
     router.replace(query ? `/messaging?${query}` : "/messaging", {
@@ -187,6 +206,19 @@ export function MessagingPageClient() {
         <button
           type="button"
           role="tab"
+          aria-selected={mode === "email"}
+          className={
+            mode === "email"
+              ? "account-status-pill account-status-pill--ok"
+              : "account-status-pill account-status-pill--pending"
+          }
+          onClick={() => switchMode("email")}
+        >
+          Kurumsal e-posta (posta)
+        </button>
+        <button
+          type="button"
+          role="tab"
           aria-selected={mode === "chat"}
           className={
             mode === "chat"
@@ -197,25 +229,19 @@ export function MessagingPageClient() {
         >
           Firma sohbeti
         </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={mode === "email"}
-          className={
-            mode === "email"
-              ? "account-status-pill account-status-pill--ok"
-              : "account-status-pill account-status-pill--pending"
-          }
-          onClick={() => switchMode("email")}
-        >
-          Kurumsal e-posta
-        </button>
       </div>
 
       {errorMessage ? <p className="error banner error--light">{errorMessage}</p> : null}
 
       {mode === "email" ? (
         <>
+          <p className="module-hint" style={{ marginBottom: "0.75rem" }}>
+            Bu sekme kurumsal postanız (Lerta Post). Kutu henüz yoksa{" "}
+            <a href="/hesap/organizasyon#org-eposta">
+              Hesap → Organizasyon → E-posta kimliği
+            </a>
+            → «Lerta Post kutusu oluştur».
+          </p>
           <MessagingMailWebEmbed />
           <details className="module-panel messaging-mail-panel" style={{ marginTop: "1rem" }}>
             <summary className="module-panel-title" style={{ cursor: "pointer" }}>
@@ -228,21 +254,6 @@ export function MessagingPageClient() {
           </details>
         </>
       ) : (
-        <>
-          <p className="messaging-email-hint">
-            <strong>Kurumsal e-posta</strong> (Lerta Post,{" "}
-            <code>*.post.lerta.com.tr</code>) bu sayfada — yeşil{" "}
-            <button
-              type="button"
-              className="btn-accent"
-              style={{ display: "inline", padding: "0.2rem 0.6rem", marginLeft: "0.25rem" }}
-              onClick={() => switchMode("email")}
-            >
-              Kurumsal e-posta
-            </button>{" "}
-            sekmesine tıklayın veya{" "}
-            <a href="/messaging?tab=email">/messaging?tab=email</a> adresini açın.
-          </p>
         <div className="chat-layout">
           <aside className="chat-sidebar module-panel">
             <h2 className="module-panel-title">Sohbetler</h2>
@@ -343,7 +354,6 @@ export function MessagingPageClient() {
             </div>
           </section>
         </div>
-        </>
       )}
     </ModulePageShell>
   );
