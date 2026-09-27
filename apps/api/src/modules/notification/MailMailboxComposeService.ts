@@ -20,7 +20,6 @@ import {
   resolveSmtpFromEmailAddress,
 } from "@nakliyeborsasi/core";
 import { NotificationConfigurationService } from "./NotificationConfigurationService";
-import { resolveTenantReplyToAddress } from "./MailTenantEmailBranding";
 import { MailDomainEntity } from "../../infrastructure/database/entities/MailDomainEntity";
 import { MailOrganizationIdentityService } from "./MailOrganizationIdentityService";
 import { MailTenantSubdomainService } from "./MailTenantSubdomainService";
@@ -80,7 +79,10 @@ export class MailMailboxComposeService {
       params.text.length +
         nodemailerAttachments.reduce((sum, file) => sum + file.content.length, 0),
     );
-    const replyTo = resolveTenantReplyToAddress();
+    const replyTo =
+      await this.mailOrganizationIdentityService.resolveOutboundReplyTo(
+        params.organizationId,
+      );
     const smtpMessageId = await this.smtpEmailSender.send({
       from: fromHeader,
       envelopeMailFrom,
@@ -153,7 +155,10 @@ export class MailMailboxComposeService {
       params.text.length +
         nodemailerAttachments.reduce((sum, file) => sum + file.content.length, 0),
     );
-    const replyTo = resolveTenantReplyToAddress();
+    const replyTo =
+      await this.mailOrganizationIdentityService.resolveOutboundReplyTo(
+        params.organizationId,
+      );
     const inReplyTo = inbound.internetMessageId
       ? `<${inbound.internetMessageId}>`
       : undefined;
@@ -241,7 +246,10 @@ export class MailMailboxComposeService {
       text.length +
         nodemailerAttachments.reduce((sum, file) => sum + file.content.length, 0),
     );
-    const replyTo = resolveTenantReplyToAddress();
+    const replyTo =
+      await this.mailOrganizationIdentityService.resolveOutboundReplyTo(
+        params.organizationId,
+      );
     const smtpMessageId = await this.smtpEmailSender.send({
       from: fromHeader,
       envelopeMailFrom,

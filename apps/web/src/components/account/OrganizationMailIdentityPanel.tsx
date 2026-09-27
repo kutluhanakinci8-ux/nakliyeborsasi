@@ -92,6 +92,8 @@ export function OrganizationMailIdentityPanel({
   );
   const [deliverability, setDeliverability] =
     useState<MailDeliverabilityHints | null>(null);
+  const [platformPostDnsReady, setPlatformPostDnsReady] = useState(true);
+  const [replyToHintTr, setReplyToHintTr] = useState<string | null>(null);
   const [localPart, setLocalPart] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(true);
@@ -128,6 +130,8 @@ export function OrganizationMailIdentityPanel({
       const next = bundle.identity;
       setIdentity(next);
       setDeliverability(bundle.deliverability);
+      setPlatformPostDnsReady(bundle.platformPostDnsReady);
+      setReplyToHintTr(bundle.replyToHintTr);
       if (isOwner) {
         setSuppressions(await fetchOrgSuppressions(accessToken));
         setCustomDomain(await fetchCustomDomainBundle(accessToken));
@@ -313,6 +317,20 @@ export function OrganizationMailIdentityPanel({
               {identity.sender?.displayName
                 ? ` — ${identity.sender.displayName}`
                 : null}
+            </p>
+          ) : null}
+
+          {!platformPostDnsReady && identity.channel === "instant_post" ? (
+            <p className="error banner error--light" style={{ marginTop: "1rem" }}>
+              <strong>post.lerta.com.tr</strong> bölgesi DNS&apos;te henüz tam
+              değil — Outlook «doğrulanmamış gönderen» uyarısı görülebilir.
+              Operatör: <code>scripts/print-instant-post-dns-isimtescil.sh</code>
+            </p>
+          ) : null}
+
+          {replyToHintTr ? (
+            <p className="module-hint" style={{ marginTop: "0.75rem" }}>
+              {replyToHintTr}
             </p>
           ) : null}
 

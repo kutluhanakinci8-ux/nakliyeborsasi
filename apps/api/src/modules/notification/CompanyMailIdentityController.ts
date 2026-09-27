@@ -238,15 +238,25 @@ export class CompanyMailIdentityController {
             fromMode,
           })
         : null;
+    const platformPostDnsReady =
+      await this.mailInstantPostDomainService.platformPostDnsReady();
+    const replyToAddress =
+      await this.mailOrganizationIdentityService.resolveOutboundReplyTo(
+        user.companyId,
+      );
     return {
       message: "OK",
       identity,
       deliverability,
+      platformPostDnsReady,
       sendRate: await this.mailOrganizationSendRateService.getSnapshot(
         user.companyId,
       ),
+      replyToAddress,
       replyToHintTr:
-        "Yanıtlar şimdilik platform destek hattına yönlendirilir; tam posta kutusu Faz C.",
+        replyToAddress.includes("@")
+          ? `Giden postada Reply-To: ${replyToAddress} — yanıtlar kurumsal kutunuza düşer.`
+          : "Yanıtlar platform destek hattına yönlendirilir.",
     };
   }
 

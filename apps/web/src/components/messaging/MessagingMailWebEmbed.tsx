@@ -37,6 +37,10 @@ export function MessagingMailWebEmbed({
       return;
     }
     const childOrigin = LERTA_MAIL_EMBED_CHILD_ORIGIN;
+    const parentTheme =
+      document.documentElement.getAttribute("data-mail-theme") === "dark"
+        ? "dark"
+        : "light";
 
     const pushToken = () => {
       const win = iframeRef.current?.contentWindow;
@@ -59,9 +63,24 @@ export function MessagingMailWebEmbed({
       }
     };
 
+    const pushTheme = () => {
+      const win = iframeRef.current?.contentWindow;
+      if (!win) {
+        return;
+      }
+      win.postMessage(
+        { type: "lerta-mail-set-theme", theme: parentTheme },
+        childOrigin,
+      );
+    };
+
     window.addEventListener("message", onMessage);
-    const interval = window.setInterval(pushToken, 45_000);
+    const interval = window.setInterval(() => {
+      pushToken();
+      pushTheme();
+    }, 45_000);
     pushToken();
+    pushTheme();
 
     return () => {
       window.removeEventListener("message", onMessage);

@@ -136,6 +136,9 @@ export async function provisionCustomDomainSender(
 export type CompanyMailIdentityBundle = {
   identity: CompanyMailIdentitySnapshot;
   deliverability: MailDeliverabilityHints | null;
+  platformPostDnsReady: boolean;
+  replyToAddress: string | null;
+  replyToHintTr: string | null;
 };
 
 export async function fetchCompanyMailIdentity(
@@ -144,10 +147,16 @@ export async function fetchCompanyMailIdentity(
   const payload = await apiFetch<{
     identity: CompanyMailIdentitySnapshot;
     deliverability: MailDeliverabilityHints | null;
+    platformPostDnsReady?: boolean;
+    replyToAddress?: string;
+    replyToHintTr?: string;
   }>(accessToken, "company/mail-identity");
   return {
     identity: payload.identity,
     deliverability: payload.deliverability ?? null,
+    platformPostDnsReady: payload.platformPostDnsReady ?? true,
+    replyToAddress: payload.replyToAddress ?? null,
+    replyToHintTr: payload.replyToHintTr ?? null,
   };
 }
 
