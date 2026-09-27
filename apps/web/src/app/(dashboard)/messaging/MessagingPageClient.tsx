@@ -171,18 +171,15 @@ export function MessagingPageClient() {
 
   const activeThread = threads.find((t) => t.threadId === activeThreadId);
 
-  const pageTitle =
-    mode === "email" ? "Kurumsal e-posta" : "Firma mesajlaşması";
-  const pageLead =
-    mode === "email"
-      ? "Lerta Post kurumsal kutunuz — gelen ve giden posta, aynı oturumda. Adresleriniz *.post.lerta.com.tr uzantılı teknik formatta görünür."
-      : "Taşıyıcı ve yük veren firmalar arasında güvenli sohbet. Kurumsal Lerta Post kutusu için üstte «Kurumsal e-posta» sekmesine geçin.";
-
   return (
     <ModulePageShell
-      eyebrow="Mesajlar"
-      title={pageTitle}
-      lead={pageLead}
+      eyebrow={mode === "chat" ? "Mesajlar" : undefined}
+      title={mode === "chat" ? "Firma mesajlaşması" : undefined}
+      lead={
+        mode === "chat"
+          ? "Taşıyıcı ve yük veren firmalar arasında güvenli sohbet. Kurumsal Lerta Post kutusu için üstte «Kurumsal e-posta» sekmesine geçin."
+          : undefined
+      }
       stats={
         mode === "chat"
           ? [
@@ -190,11 +187,7 @@ export function MessagingPageClient() {
               { value: String(messages.length), label: "Bu sohbette mesaj" },
               { value: "Şifreli", label: "Oturum koruması", highlight: true },
             ]
-          : [
-              { value: "Lerta Post", label: "Kurumsal kutu", highlight: true },
-              { value: session?.companyId ? shortCompanyId(session.companyId) : "—", label: "Firma" },
-              { value: "SSO", label: "posta.lerta.com.tr" },
-            ]
+          : undefined
       }
     >
       <div
