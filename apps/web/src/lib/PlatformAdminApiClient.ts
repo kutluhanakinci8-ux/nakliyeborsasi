@@ -565,6 +565,23 @@ export class PlatformAdminApiClient {
     return payload.logs;
   }
 
+  public static async fetchMailEdiscoveryOrganizations(accessToken: string) {
+    const payload = await adminFetch<{
+      organizations: MailEdiscoveryOrganizationRow[];
+    }>(accessToken, "mail/ediscovery/organizations");
+    return payload.organizations;
+  }
+
+  public static async downloadMailEdiscoveryExport(
+    accessToken: string,
+    organizationId: string,
+  ): Promise<Record<string, unknown>> {
+    return adminFetch<Record<string, unknown>>(
+      accessToken,
+      `mail/ediscovery/export/${organizationId}`,
+    );
+  }
+
   public static async fetchMailInboundMessages(
     accessToken: string,
   ): Promise<MailInboundMessageRow[]> {
@@ -781,6 +798,13 @@ export type MailDomainRow = {
   notes: string | null;
   senderIdentities?: MailSenderIdentityRow[];
   createdAt: string;
+};
+
+export type MailEdiscoveryOrganizationRow = {
+  organizationId: string;
+  primaryMailboxAddress: string | null;
+  inboundCount: number;
+  sentCount: number;
 };
 
 export type MailIdentityAuditLogRow = {

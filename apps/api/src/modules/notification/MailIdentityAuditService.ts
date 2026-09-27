@@ -92,7 +92,7 @@ export class MailIdentityAuditService {
     }[]
   > {
     const rows = await this.auditLogRepository.find({
-      where: { actionCode: Like("MAIL_IDENTITY_%") },
+      where: { actionCode: Like("MAIL_%") },
       order: { createdAt: "DESC" },
       take: limit,
     });

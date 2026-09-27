@@ -33,6 +33,13 @@ const LABELS: Record<string, string> = {
   [MailIdentityAuditAction.IntegrationWebhookUpdated]: "Webhook güncellendi",
   [MailIdentityAuditAction.MailAliasCreated]: "Paylaşımlı alias oluşturuldu",
   [MailIdentityAuditAction.MailAliasRemoved]: "Alias kaldırıldı",
+  [MailIdentityAuditAction.InboxComposeSent]: "E-posta gönderildi",
+  [MailIdentityAuditAction.InboxReplySent]: "Yanıt gönderildi",
+  [MailIdentityAuditAction.InboxForwardSent]: "İleti gönderildi",
+  [MailIdentityAuditAction.InboxDraftSent]: "Taslaktan gönderildi",
+  [MailIdentityAuditAction.InboxMessageDeleted]: "Gelen kutusu mesajı silindi",
+  [MailIdentityAuditAction.AdminEdiscoveryExport]:
+    "Platform eDiscovery dışa aktarımı",
   [MailIdentityAuditAction.SecurityRequireTotpUpdated]:
     "2FA zorunluluğu güncellendi",
   [MailIdentityAuditAction.SecurityTotpEnabled]: "TOTP etkinleştirildi",
@@ -95,6 +102,25 @@ export function mailAuditSummaryTr(
       return readString(metadata, "executeAfter")
         ? `En erken: ${readString(metadata, "executeAfter")}`
         : "Silme talebi";
+    case MailIdentityAuditAction.InboxComposeSent:
+    case MailIdentityAuditAction.InboxReplySent:
+    case MailIdentityAuditAction.InboxForwardSent:
+    case MailIdentityAuditAction.InboxDraftSent: {
+      const subject = readString(metadata, "subject");
+      const to = readString(metadata, "to");
+      if (subject && to) {
+        return `${subject} → ${to}`;
+      }
+      return subject ?? to ?? "Gönderim";
+    }
+    case MailIdentityAuditAction.InboxMessageDeleted:
+      return readString(metadata, "messageId")
+        ? `Mesaj: ${readString(metadata, "messageId")?.slice(0, 8)}…`
+        : "Kalıcı silme";
+    case MailIdentityAuditAction.AdminEdiscoveryExport:
+      return readString(metadata, "organizationId")
+        ? `Firma: ${readString(metadata, "organizationId")?.slice(0, 8)}…`
+        : "eDiscovery paketi";
     default:
       return domain ?? fromAddress ?? email ?? "";
   }
