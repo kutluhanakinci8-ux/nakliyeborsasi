@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MessagingMailWebEmbed } from "../../../components/messaging/MessagingMailWebEmbed";
 import { EmptyState } from "../../../components/EmptyState";
@@ -11,6 +12,10 @@ import {
   MessagingThreadRecord,
   ThreadMessageRecord,
 } from "../../../lib/MessagingApiClient";
+import {
+  TrustScoreApiClient,
+  TrustScoreRecord,
+} from "../../../lib/TrustScoreApiClient";
 
 type MessagingMode = "chat" | "email";
 
@@ -55,6 +60,10 @@ export function MessagingPageClient() {
   const [errorMessage, setErrorMessage] = useState("");
   const [isBusy, setIsBusy] = useState(false);
   const [mailEmbedFullscreen, setMailEmbedFullscreen] = useState(false);
+  const [threadSearch, setThreadSearch] = useState("");
+  const [counterpartyTrust, setCounterpartyTrust] =
+    useState<TrustScoreRecord | null>(null);
+  const [moduleBlocked, setModuleBlocked] = useState(false);
 
   useEffect(() => {
     const chatLink =
@@ -112,7 +121,12 @@ export function MessagingPageClient() {
       const payload = await MessagingApiClient.listThreads(accessToken, locale);
       setThreads(payload.threads ?? []);
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Yükleme hatası");
+      const message =
+        error instanceof Error ? error.message : "Yükleme hatası";
+      if (/messaging|modül|entitlement|abonelik/i.test(message)) {
+        setModuleBlocked(true);
+      }
+      setErrorMessage(message);
     }
   }
 
@@ -163,6 +177,7 @@ export function MessagingPageClient() {
         threadId,
       );
       setMessages(payload.messages ?? []);
+      void loadThreads();
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Mesaj hatası");
     }
@@ -188,6 +203,41 @@ export function MessagingPageClient() {
 
   const activeThread = threads.find((t) => t.threadId === activeThreadId);
 
+  const filteredThreads = useMemo(() => {
+    const query = threadSearch.trim().toLowerCase();
+    if (!query) {
+      return threads;
+    }
+    return threads.filter((thread) => {
+      const haystack = [
+        thread.counterpartyLegalName,
+        thread.lastMessagePreview,
+        thread.counterpartyCompanyId,
+        thread.freightListingId,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(query);
+    });
+  }, [threads, threadSearch]);
+
+  useEffect(() => {
+    const companyId = activeThread?.counterpartyCompanyId;
+    if (!companyId) {
+      setCounterpartyTrust(null);
+      return;
+    }
+    void TrustScoreApiClient.fetchSnapshot(companyId)
+      .then((payload) => setCounterpartyTrust(payload.snapshot))
+      .catch(() => setCounterpartyTrust(null));
+  }, [activeThread?.counterpartyCompanyId]);
+
+  const totalUnread = threads.reduce(
+    (sum, thread) => sum + (thread.unreadCount ?? 0),
+    0,
+  );
+
   return (
     <ModulePageShell
       eyebrow={mode === "chat" ? "Mesajlar" : undefined}
@@ -201,6 +251,11 @@ export function MessagingPageClient() {
         mode === "chat"
           ? [
               { value: String(threads.length), label: "Aktif sohbet" },
+              {
+                value: String(totalUnread),
+                label: "Okunmamış",
+                highlight: totalUnread > 0,
+              },
               { value: String(messages.length), label: "Bu sohbette mesaj" },
               { value: "JWT", label: "Oturum koruması", highlight: true },
             ]
@@ -241,7 +296,16 @@ export function MessagingPageClient() {
         </button>
       </div>
 
-      {errorMessage ? <p className="error banner error--light">{errorMessage}</p> : null}
+      {moduleBlocked ? (
+        <p className="module-hint messaging-module-blocked">
+          Firma sohbeti modülü bu hesapta kapalı. Abonelik veya paket ayarlarını
+          kontrol edin; kurumsal e-posta sekmesi ayrı çalışabilir.
+        </p>
+      ) : null}
+
+      {errorMessage && !moduleBlocked ? (
+        <p className="error banner error--light">{errorMessage}</p>
+      ) : null}
 
       {mode === "chat" && searchParams.get("listingId") ? (
         <p className="module-hint" style={{ marginBottom: "0.75rem" }}>
@@ -276,6 +340,13 @@ export function MessagingPageClient() {
         <div className="chat-layout">
           <aside className="chat-sidebar module-panel">
             <h2 className="module-panel-title">Sohbetler</h2>
+            <input
+              className="input-light chat-thread-search"
+              placeholder="Firma veya mesaj ara…"
+              value={threadSearch}
+              onChange={(event) => setThreadSearch(event.target.value)}
+              aria-label="Sohbet ara"
+            />
             <div className="chat-compose-row">
               <input
                 className="input-light"
@@ -292,11 +363,17 @@ export function MessagingPageClient() {
                 Aç
               </button>
             </div>
-            {threads.length === 0 ? (
-              <EmptyState message="Henüz sohbet yok. Firma ID ile yeni sohbet açın." />
+            {filteredThreads.length === 0 ? (
+              <EmptyState
+                message={
+                  threads.length === 0
+                    ? "Henüz sohbet yok. Firma ID ile yeni sohbet açın."
+                    : "Aramanızla eşleşen sohbet yok."
+                }
+              />
             ) : (
               <ul className="chat-thread-list">
-                {threads.map((thread) => (
+                {filteredThreads.map((thread) => (
                   <li key={thread.threadId}>
                     <button
                       type="button"
@@ -310,6 +387,11 @@ export function MessagingPageClient() {
                       <span className="chat-thread-title">
                         {thread.counterpartyLegalName?.trim() ||
                           shortCompanyId(thread.counterpartyCompanyId)}
+                        {(thread.unreadCount ?? 0) > 0 ? (
+                          <span className="chat-unread-badge">
+                            {thread.unreadCount}
+                          </span>
+                        ) : null}
                       </span>
                       <span className="chat-thread-sub">
                         {thread.lastMessagePreview
@@ -326,12 +408,32 @@ export function MessagingPageClient() {
           </aside>
 
           <section className="chat-main module-panel">
-            <h2 className="module-panel-title">
-              {activeThread
-                ? activeThread.counterpartyLegalName?.trim() ||
-                  shortCompanyId(activeThread.counterpartyCompanyId)
-                : "Mesaj kutusu"}
-            </h2>
+            <div className="chat-main-header">
+              <h2 className="module-panel-title">
+                {activeThread
+                  ? activeThread.counterpartyLegalName?.trim() ||
+                    shortCompanyId(activeThread.counterpartyCompanyId)
+                  : "Mesaj kutusu"}
+              </h2>
+              {activeThread && counterpartyTrust ? (
+                <div className="chat-trust-row">
+                  <span className="chat-trust-badge" title="Lerta güven skoru">
+                    Güven {counterpartyTrust.scoreValue.toFixed(1)}
+                    {counterpartyTrust.reviewCount > 0
+                      ? ` · ${counterpartyTrust.reviewCount} değerlendirme`
+                      : ""}
+                  </span>
+                  <Link
+                    className="chat-trust-link"
+                    href={`/trust?companyId=${encodeURIComponent(
+                      activeThread.counterpartyCompanyId,
+                    )}`}
+                  >
+                    Profil
+                  </Link>
+                </div>
+              ) : null}
+            </div>
             <div className="chat-messages">
               {messages.length === 0 ? (
                 <EmptyState message="Soldan sohbet seçin veya yeni sohbet açın." />
@@ -349,6 +451,9 @@ export function MessagingPageClient() {
                         <span className="chat-bubble-meta">
                           {shortCompanyId(message.senderCompanyId)} ·{" "}
                           {new Date(message.createdAt).toLocaleString(locale)}
+                          {isMine && message.readByRecipient ? (
+                            <> · Okundu</>
+                          ) : null}
                         </span>
                         <p>{message.bodyText}</p>
                       </li>

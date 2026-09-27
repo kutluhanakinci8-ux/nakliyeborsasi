@@ -53,6 +53,8 @@ export function OrganizationMailInboxPanel({
   const { accessToken, session } = useWebSession();
   const inMessaging = variant === "messaging";
   const isOwner = session?.roleCodes?.includes("COMPANY_OWNER") ?? false;
+  const canWriteMail =
+    isOwner || (session?.roleCodes?.includes("MAIL_ADMIN") ?? false);
   const [folder, setFolder] = useState<Folder>("inbox");
   const [summary, setSummary] = useState<MailInboxSummary | null>(null);
   const [messages, setMessages] = useState<MailInboxListItem[]>([]);
@@ -80,13 +82,13 @@ export function OrganizationMailInboxPanel({
       setSummary(inbox.summary);
       setMessages(inbox.messages);
       setSent(inbox.sent);
-      if (isOwner) {
+      if (canWriteMail) {
         setImap(await fetchMailImapSettings(accessToken));
       }
     } finally {
       setLoading(false);
     }
-  }, [accessToken, folder, isOwner]);
+  }, [accessToken, folder, canWriteMail]);
 
   useEffect(() => {
     void refresh();
@@ -107,7 +109,7 @@ export function OrganizationMailInboxPanel({
   }
 
   async function sendCompose(): Promise<void> {
-    if (!accessToken || !isOwner) {
+    if (!accessToken || !canWriteMail) {
       return;
     }
     setToast("");
@@ -132,7 +134,7 @@ export function OrganizationMailInboxPanel({
   }
 
   async function sendReply(): Promise<void> {
-    if (!accessToken || !isOwner || !selectedId) {
+    if (!accessToken || !canWriteMail || !selectedId) {
       return;
     }
     const attachments =
@@ -233,7 +235,7 @@ export function OrganizationMailInboxPanel({
             {f === "inbox" ? "Gelen" : f === "spam" ? "Spam" : "Tümü"}
           </button>
         ))}
-        {isOwner ? (
+        {canWriteMail ? (
           <button
             type="button"
             className="btn-account-secondary"
@@ -244,7 +246,7 @@ export function OrganizationMailInboxPanel({
         ) : null}
       </div>
 
-      {isOwner && imap?.enabled ? (
+      {canWriteMail && imap?.enabled ? (
         <div className="module-hint" style={{ marginBottom: "0.75rem" }}>
           IMAP: <code>{imap.imapHost}:{imap.imapPort}</code> — kullanıcı{" "}
           <code>{imap.username ?? "—"}</code>
@@ -272,7 +274,7 @@ export function OrganizationMailInboxPanel({
         </div>
       ) : null}
 
-      {composeOpen && isOwner ? (
+      {composeOpen && canWriteMail ? (
         <div className="account-form-row" style={{ marginBottom: "1rem" }}>
           <input
             className="account-input"
@@ -432,7 +434,7 @@ export function OrganizationMailInboxPanel({
                   ))}
                 </ul>
               ) : null}
-              {isOwner && folder !== "spam" ? (
+              {canWriteMail && folder !== "spam" ? (
                 <div style={{ marginTop: "1rem" }}>
                   <textarea
                     className="account-input"

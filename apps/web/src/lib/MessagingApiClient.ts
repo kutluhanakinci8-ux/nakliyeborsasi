@@ -7,6 +7,7 @@ export type MessagingThreadRecord = {
   lastMessagePreview?: string | null;
   lastMessageAt?: string | null;
   freightListingId?: string | null;
+  unreadCount?: number;
 };
 
 export type ThreadMessageRecord = {
@@ -14,6 +15,7 @@ export type ThreadMessageRecord = {
   senderCompanyId: string;
   bodyText: string;
   createdAt: string;
+  readByRecipient?: boolean;
 };
 
 export class MessagingApiClient {
