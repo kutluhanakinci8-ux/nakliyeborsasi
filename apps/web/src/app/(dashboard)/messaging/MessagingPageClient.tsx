@@ -374,38 +374,52 @@ export function MessagingPageClient() {
           : undefined
       }
     >
-      <div
-        className="account-verify-badges messaging-mode-tabs"
-        style={{ marginBottom: "1rem" }}
-        role="tablist"
-        aria-label="Mesajlar görünümü"
-      >
-        <button
-          type="button"
-          role="tab"
-          aria-selected={mode === "email"}
-          className={
-            mode === "email"
-              ? "account-status-pill account-status-pill--ok"
-              : "account-status-pill account-status-pill--pending"
-          }
-          onClick={() => switchMode("email")}
+      <div className="messaging-mode-bar">
+        <div
+          className="messaging-mode-tabs"
+          role="tablist"
+          aria-label="Mesajlar görünümü"
         >
-          Kurumsal e-posta (posta)
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={mode === "chat"}
-          className={
-            mode === "chat"
-              ? "account-status-pill account-status-pill--ok"
-              : "account-status-pill account-status-pill--pending"
-          }
-          onClick={() => switchMode("chat")}
-        >
-          Firma sohbeti
-        </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === "email"}
+            className={
+              mode === "email"
+                ? "messaging-mode-tab messaging-mode-tab--active"
+                : "messaging-mode-tab"
+            }
+            onClick={() => switchMode("email")}
+          >
+            Kurumsal e-posta (posta)
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === "chat"}
+            className={
+              mode === "chat"
+                ? "messaging-mode-tab messaging-mode-tab--active"
+                : "messaging-mode-tab"
+            }
+            onClick={() => switchMode("chat")}
+          >
+            Firma sohbeti
+          </button>
+        </div>
+        {mode === "email" && !mailEmbedFullscreen ? (
+          <button
+            type="button"
+            className="messaging-mode-action"
+            onClick={() => setMailEmbedFullscreen(true)}
+            aria-label="Posta görünümünü tam ekran aç"
+          >
+            <span className="messaging-mode-action-icon" aria-hidden>
+              ⛶
+            </span>
+            Tam ekran
+          </button>
+        ) : null}
       </div>
 
       {moduleBlocked ? (
@@ -435,15 +449,20 @@ export function MessagingPageClient() {
               : "messaging-mail-embed-wrap"
           }
         >
-          <div className="messaging-mail-embed-toolbar">
-            <button
-              type="button"
-              className="btn-account-secondary"
-              onClick={() => setMailEmbedFullscreen((value) => !value)}
-            >
-              {mailEmbedFullscreen ? "Tam ekrandan çık" : "Tam ekran"}
-            </button>
-          </div>
+          {mailEmbedFullscreen ? (
+            <div className="messaging-mail-embed-toolbar">
+              <button
+                type="button"
+                className="messaging-mode-action messaging-mode-action--overlay"
+                onClick={() => setMailEmbedFullscreen(false)}
+              >
+                <span className="messaging-mode-action-icon" aria-hidden>
+                  ✕
+                </span>
+                Tam ekrandan çık
+              </button>
+            </div>
+          ) : null}
           <MessagingMailWebEmbed
             composeTo={searchParams.get("composeTo") ?? undefined}
           />
