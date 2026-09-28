@@ -126,6 +126,7 @@ Her faz: kod + dokümantasyon + (varsa) `scripts/verify-*` · deploy checklist.
 
 | Tarih | Dal | Not |
 |-------|-----|-----|
-| 2026-09-28 | `cursor/mail-messaging-parity-100-519e` → **main** (#129) | VPS deploy OK · checklist PASS · push VAPID OK · PM-5 maildir iskeleti `nakliyeborsasi@lerta.com.tr` · Dovecot passwd sync → org IMAP rotate + admin sync |
+| 2026-09-28 | `cursor/mail-messaging-parity-100-519e` → **main** (#129) | VPS deploy OK · checklist PASS · push VAPID OK |
+| 2026-09-28 | PM-5 ops (#131–#134) | `provision-pm5-imap-dovecot-vps.sh` deploy hook · 21× `@lerta.com.tr` Dovecot passwd · verify `nakliyeborsasi@lerta.com.tr` OK · şifreler VPS: `/root/lerta-imap-credentials-bootstrap.txt` |
 
-**Sıradaki ops:** PM-5 `provision-pm5-imap-dovecot-vps.sh` (deploy ile) · PM-4 push abonelik testi · `LERTA_MAIL_AI_COMPOSE_ENABLED` opsiyonel.
+**Sıradaki sıra:** **PM-4** (PWA offline IndexedDB + push prod testi) · PM-9 LLM env · PM-10 webhook derinliği.
