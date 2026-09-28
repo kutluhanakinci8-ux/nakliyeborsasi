@@ -168,6 +168,7 @@ export function MailClient() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [inboxListDensity, setInboxListDensity] =
     useState<MailInboxListDensity>("comfortable");
+  const [activeSwipeRowId, setActiveSwipeRowId] = useState<string | null>(null);
   const [threadView, setThreadView] = useState(false);
   const [threads, setThreads] = useState<MailInboxThreadRow[]>([]);
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
@@ -2046,6 +2047,9 @@ export function MailClient() {
               return (
                 <MailListSwipeRow
                   key={m.id}
+                  rowKey={m.id}
+                  activeSwipeKey={activeSwipeRowId}
+                  onActiveSwipeKeyChange={setActiveSwipeRowId}
                   archiveLabel={swipeArchiveLabel}
                   onArchive={() =>
                     void swipeRowArchive(m.id, relatedInbound)
@@ -2087,6 +2091,10 @@ export function MailClient() {
             return (
             <MailListSwipeRow
               key={m.id}
+              rowKey={m.id}
+              activeSwipeKey={activeSwipeRowId}
+              onActiveSwipeKeyChange={setActiveSwipeRowId}
+              showArchive={view !== "sent"}
               archiveLabel={swipeArchiveLabel}
               onArchive={() => void swipeRowArchive(m.id, relatedInbound)}
               onDelete={() => void swipeRowDelete(m.id)}

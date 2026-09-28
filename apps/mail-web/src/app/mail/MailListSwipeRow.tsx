@@ -15,6 +15,9 @@ const DRAG_START_PX = 8;
 
 type Props = {
   children: ReactNode;
+  rowKey: string;
+  activeSwipeKey: string | null;
+  onActiveSwipeKeyChange: (key: string | null) => void;
   showArchive?: boolean;
   archiveLabel?: string;
   onArchive: () => void;
@@ -23,6 +26,9 @@ type Props = {
 
 export function MailListSwipeRow({
   children,
+  rowKey,
+  activeSwipeKey,
+  onActiveSwipeKeyChange,
   showArchive = true,
   archiveLabel = "Arşivle",
   onArchive,
@@ -63,11 +69,20 @@ export function MailListSwipeRow({
         setOffsetSynced(next);
         if (next < 0) {
           blockClickUntilRef.current = Date.now() + 400;
+          onActiveSwipeKeyChange(rowKey);
+        } else {
+          onActiveSwipeKeyChange(null);
         }
       }
     },
-    [setOffsetSynced, snapOffset],
+    [onActiveSwipeKeyChange, rowKey, setOffsetSynced, snapOffset],
   );
+
+  useEffect(() => {
+    if (activeSwipeKey !== rowKey && offsetRef.current !== 0) {
+      setOffsetSynced(0);
+    }
+  }, [activeSwipeKey, rowKey, setOffsetSynced]);
 
   useEffect(() => {
     const onDocPointerUp = (event: PointerEvent) => {
@@ -143,6 +158,9 @@ export function MailListSwipeRow({
 
   function close() {
     setOffsetSynced(0);
+    if (activeSwipeKey === rowKey) {
+      onActiveSwipeKeyChange(null);
+    }
   }
 
   const actionsOpen = offset < -8;
