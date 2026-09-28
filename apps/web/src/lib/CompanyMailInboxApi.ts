@@ -52,6 +52,8 @@ export type MailImapSettings = {
   username: string | null;
   maildirPath: string | null;
   hasCredential: boolean;
+  needsImapClientPassword?: boolean;
+  credentialUpdatedAt?: string | null;
 };
 
 export type MailSentItem = {
@@ -170,6 +172,18 @@ export async function rotateMailImapPassword(accessToken: string): Promise<{
   const payload = await apiFetch<{
     credentials: { username: string; password: string };
   }>(accessToken, "company/mail-inbox/imap-credentials/rotate", {
+    method: "POST",
+  });
+  return payload.credentials;
+}
+
+export async function provisionMailImapPassword(accessToken: string): Promise<{
+  username: string;
+  password: string;
+}> {
+  const payload = await apiFetch<{
+    credentials: { username: string; password: string };
+  }>(accessToken, "company/mail-inbox/imap-credentials/provision", {
     method: "POST",
   });
   return payload.credentials;

@@ -14,14 +14,17 @@ export default function ImapHelpPage() {
       <h1>Thunderbird / Outlook — IMAP</h1>
       <p>
         Kurumsal kutunuzu masaüstü istemciye bağlamak için webmail{" "}
-        <strong>Ayarlar → IMAP</strong> bölümünden şifre oluşturun.
+        <strong>Ayarlar → IMAP ve SMTP</strong> bölümünden{" "}
+        <strong>IMAP şifresi oluştur</strong> (ilk kurulum) veya{" "}
+        <strong>yenile</strong>. Şifre e-posta ile gönderilmez; yalnızca bu ekranda
+        bir kez görünür — <strong>Tüm bilgileri kopyala</strong> ile kaydedin.
       </p>
 
       <h2>Sunucu ayarları</h2>
       <ul>
         <li>
           <strong>Gelen (IMAP):</strong> sunucu adı Ayarlar ekranında görünür
-          (genelde <code>mail.lerta.tr</code>), port <code>993</code>, SSL/TLS
+          (genelde <code>mail.lerta.com.tr</code>), port <code>993</code>, SSL/TLS
         </li>
         <li>
           <strong>Kullanıcı:</strong> tam e-posta adresiniz

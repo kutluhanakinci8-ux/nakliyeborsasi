@@ -262,6 +262,8 @@ export type MailImapSettings = {
   username: string | null;
   maildirPath: string | null;
   hasCredential: boolean;
+  needsImapClientPassword?: boolean;
+  credentialUpdatedAt?: string | null;
 };
 
 export type ComposeAttachment = {
@@ -1577,6 +1579,16 @@ export async function rotateImapPassword(accessToken: string) {
   const payload = await apiFetch<{
     credentials: { username: string; password: string };
   }>(accessToken, "company/mail-inbox/imap-credentials/rotate", {
+    method: "POST",
+    body: JSON.stringify({}),
+  });
+  return payload.credentials;
+}
+
+export async function provisionImapPassword(accessToken: string) {
+  const payload = await apiFetch<{
+    credentials: { username: string; password: string };
+  }>(accessToken, "company/mail-inbox/imap-credentials/provision", {
     method: "POST",
     body: JSON.stringify({}),
   });

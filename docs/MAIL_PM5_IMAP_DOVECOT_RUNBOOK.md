@@ -8,8 +8,8 @@ Thunderbird / Apple Mail ile **Gelen, Gönderilen, Arşiv, Çöp, Spam** klasör
 1. `bash scripts/setup-dovecot-c4.sh` (ilk kurulum)
 2. `.env`: `MAIL_IMAP_MAILDIR_ROOT=/var/mail/vhosts` (örnek)
 3. Platform admin → Mail → **IMAP Dovecot sync** veya `POST /platform-admin/mail/imap/sync-dovecot`
-4. Otomatik (deploy): `bash scripts/provision-pm5-imap-dovecot-vps.sh` — eksik credential + passwd + maildir (şifreler `/root/lerta-imap-credentials-bootstrap.txt`)
-5. Manuel: Org ayarları → **IMAP şifresi yenile**; platform **sync-dovecot**
+4. Otomatik (deploy): `bash scripts/provision-pm5-imap-dovecot-vps.sh` — maildir + DB’den passwd senkronu (**şifre oluşturmaz**; self-servis: [MAIL_IMAP_SELF_SERVICE.md](./MAIL_IMAP_SELF_SERVICE.md))
+5. Müşteri: webmail **Ayarlar → IMAP ve SMTP** → şifre oluştur / yenile; platform **sync-dovecot** gerekmez (API otomatik)
 6. Doğrulama: `bash scripts/verify-dovecot-imap-pm5.sh nakliyeborsasi@lerta.com.tr`
 
 **Prod deploy (2026-09-28):** PR #129 → `VPS_BRANCH=cursor/mail-messaging-parity-100-519e` deploy; `main` merge sonrası varsayılan `deploy-vps-ssh.sh` yeterli.
