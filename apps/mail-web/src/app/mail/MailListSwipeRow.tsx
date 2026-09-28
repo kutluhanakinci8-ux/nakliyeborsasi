@@ -11,6 +11,7 @@ import {
 
 const REVEAL_PX = 152;
 const OPEN_THRESHOLD = 56;
+const DRAG_START_PX = 10;
 
 type Props = {
   children: ReactNode;
@@ -30,6 +31,7 @@ export function MailListSwipeRow({
   const [offset, setOffset] = useState(0);
   const dragRef = useRef({
     active: false,
+    dragging: false,
     startX: 0,
     startOffset: 0,
     pointerId: -1,
@@ -52,6 +54,7 @@ export function MailListSwipeRow({
         return;
       }
       dragRef.current.active = false;
+      dragRef.current.dragging = false;
       setOffset((current) => snapOffset(current));
     };
     document.addEventListener("pointerup", onDocPointerUp);
@@ -74,11 +77,11 @@ export function MailListSwipeRow({
     }
     dragRef.current = {
       active: true,
+      dragging: false,
       startX: event.clientX,
       startOffset: offset,
       pointerId: event.pointerId,
     };
-    event.currentTarget.setPointerCapture(event.pointerId);
   }
 
   function onPointerMove(event: ReactPointerEvent<HTMLDivElement>) {
@@ -86,6 +89,14 @@ export function MailListSwipeRow({
       return;
     }
     const delta = event.clientX - dragRef.current.startX;
+    if (!dragRef.current.dragging) {
+      if (Math.abs(delta) < DRAG_START_PX) {
+        return;
+      }
+      dragRef.current.dragging = true;
+      event.currentTarget.setPointerCapture(event.pointerId);
+    }
+    event.preventDefault();
     setOffset(clampOffset(dragRef.current.startOffset + delta));
   }
 
@@ -93,11 +104,16 @@ export function MailListSwipeRow({
     if (!dragRef.current.active || dragRef.current.pointerId !== event.pointerId) {
       return;
     }
+    const wasDrag = dragRef.current.dragging;
     dragRef.current.active = false;
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+    dragRef.current.dragging = false;
+    if (
+      wasDrag &&
+      event.currentTarget.hasPointerCapture(event.pointerId)
+    ) {
       event.currentTarget.releasePointerCapture(event.pointerId);
+      setOffset((current) => snapOffset(current));
     }
-    setOffset((current) => snapOffset(current));
   }
 
   function close() {
@@ -146,7 +162,6 @@ export function MailListSwipeRow({
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
-        role="presentation"
       >
         {children}
       </div>
