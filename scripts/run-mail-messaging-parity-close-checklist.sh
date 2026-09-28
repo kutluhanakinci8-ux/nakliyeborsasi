@@ -46,15 +46,15 @@ else
   echo "SKIP: MAIL_JMAP_JWT yok — JMAP Email/query smoke atlandı"
 fi
 
-if [[ -n "${IMAP_GOLD_PASSWORD:-}" ]] && [[ -n "${IMAP_GOLD_EMAIL:-${PARITY_IMAP_TEST_EMAIL:-}}" ]]; then
+if [[ -f /etc/dovecot/conf.d/99-lerta-mail.conf ]] && [[ -x "${ROOT}/scripts/smoke-imap-gold.sh" ]]; then
   run_step "IMAP gold smoke" \
-    env IMAP_GOLD_EMAIL="${IMAP_GOLD_EMAIL:-${PARITY_IMAP_TEST_EMAIL}}" \
-    IMAP_GOLD_PASSWORD="${IMAP_GOLD_PASSWORD}" \
+    env IMAP_GOLD_EMAIL="${IMAP_GOLD_EMAIL:-${PARITY_IMAP_TEST_EMAIL:-nakliyeborsasi@lerta.com.tr}}" \
+    IMAP_GOLD_PASSWORD="${IMAP_GOLD_PASSWORD:-}" \
     INSTALL_DIR="${INSTALL_DIR:-${ROOT}}" \
     bash "${ROOT}/scripts/smoke-imap-gold.sh"
 else
   echo ""
-  echo "SKIP: IMAP_GOLD_PASSWORD yok — smoke-imap-gold atlandı (docs/MAIL_IMAP_GOLD_SMOKE.md)"
+  echo "SKIP: Dovecot / smoke-imap-gold yok"
 fi
 
 echo ""

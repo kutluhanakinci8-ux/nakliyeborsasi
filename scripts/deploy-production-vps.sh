@@ -62,6 +62,10 @@ fi
 
 bash scripts/restart-web.sh "$INSTALL_DIR" 3011 "https://app.lerta.com.tr/api/v1"
 
+if [[ -x scripts/ensure-imap-gold-smoke-deploy.sh ]]; then
+  INSTALL_DIR="$INSTALL_DIR" bash scripts/ensure-imap-gold-smoke-deploy.sh || true
+fi
+
 if [[ -x scripts/nginx-app-lerta-com-tr.sh ]]; then
   bash scripts/nginx-app-lerta-com-tr.sh || true
 fi
