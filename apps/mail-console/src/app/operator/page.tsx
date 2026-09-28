@@ -42,6 +42,10 @@ export default function OperatorPage() {
     ready: boolean;
     checklist: MailBillingA1ChecklistItem[];
   } | null>(null);
+  const [billingProduction, setBillingProduction] = useState<{
+    ready: boolean;
+    checklist: MailBillingA1ChecklistItem[];
+  } | null>(null);
   const [tenants, setTenants] = useState<MailOperatorTenantRow[]>([]);
   const [tenantBusyId, setTenantBusyId] = useState<string | null>(null);
   const [monitoring, setMonitoring] = useState<MailPlatformMonitoring | null>(
@@ -79,9 +83,11 @@ export default function OperatorPage() {
         const billing = await fetchMailPlatformBillingHealth(accessToken);
         setBillingStatus(billing.status);
         setBillingA1(billing.a1);
+        setBillingProduction(billing.production);
       } catch {
         setBillingStatus(null);
         setBillingA1(null);
+        setBillingProduction(null);
       }
       try {
         const mon = await fetchMailPlatformMonitoring(accessToken);
@@ -317,7 +323,38 @@ export default function OperatorPage() {
           ) : null}
           <p style={{ margin: "0 0 8px" }}>
             Sağlayıcı: <strong>{billingStatus.provider}</strong>
+            {" · "}
+            Mod: <strong>{billingStatus.mode}</strong>
+            {billingStatus.productionReady ? (
+              <span style={{ color: "var(--success)", marginLeft: 8 }}>
+                prod hazır
+              </span>
+            ) : billingStatus.sandboxReady ? (
+              <span style={{ color: "#b45309", marginLeft: 8 }}>sandbox hazır</span>
+            ) : null}
           </p>
+          {billingProduction ? (
+            <p
+              style={{
+                margin: "0 0 12px",
+                fontWeight: 600,
+                color: billingProduction.ready ? "var(--success)" : "#b45309",
+              }}
+            >
+              Canlı tahsilat:{" "}
+              {billingProduction.ready ? "HAZIR" : "eksik adımlar var"}
+            </p>
+          ) : null}
+          {billingProduction?.checklist.length ? (
+            <ul style={{ margin: "0 0 12px", paddingLeft: 20, fontSize: 14 }}>
+              {billingProduction.checklist.map((item) => (
+                <li key={item.key} style={{ color: item.ok ? "var(--muted)" : "#b45309" }}>
+                  {item.ok ? "✓" : "○"} {item.label}
+                  {item.detail ? ` — ${item.detail}` : ""}
+                </li>
+              ))}
+            </ul>
+          ) : null}
           {billingStatus.checkout.blockers.length > 0 ? (
             <ul style={{ margin: "0 0 8px", paddingLeft: 20, color: "#b45309" }}>
               {billingStatus.checkout.blockers.map((line) => (

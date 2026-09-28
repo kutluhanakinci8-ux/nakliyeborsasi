@@ -21,6 +21,9 @@ const BILLABLE_MAIL_PLANS = new Set([
 
 export type MailBillingStatus = {
   provider: string;
+  mode: "unconfigured" | "sandbox" | "production";
+  productionReady: boolean;
+  sandboxReady: boolean;
   checkout: {
     canStartCorporate: boolean;
     canStartEnterprise: boolean;
@@ -54,6 +57,11 @@ export type MailBillingA1ChecklistItem = {
 };
 
 export type MailBillingA1Acceptance = {
+  ready: boolean;
+  checklist: MailBillingA1ChecklistItem[];
+};
+
+export type MailBillingProductionAcceptance = {
   ready: boolean;
   checklist: MailBillingA1ChecklistItem[];
 };
@@ -395,8 +403,31 @@ export class MailBillingService {
               enterprisePriceValid,
           );
 
+    const stripeTestMode = Boolean(stripeKey?.startsWith("sk_test_"));
+    const iyzicoBase =
+      this.configService.get<string>("IYZICO_BASE_URL")?.trim() ||
+      "https://sandbox-api.iyzipay.com";
+    const iyzicoSandbox = iyzicoBase.includes("sandbox");
+    let mode: MailBillingStatus["mode"] = "unconfigured";
+    if (provider === "stripe" && stripeKey) {
+      mode = stripeTestMode ? "sandbox" : "production";
+    } else if (provider === "iyzico" && this.mailIyzicoBillingService.isConfigured()) {
+      mode = iyzicoSandbox ? "sandbox" : "production";
+    }
+    const sandboxReady =
+      mode === "sandbox" &&
+      blockers.length === 0 &&
+      (canStartCorporate || canStartEnterprise);
+    const productionReady =
+      mode === "production" &&
+      blockers.length === 0 &&
+      (canStartCorporate || canStartEnterprise);
+
     return {
       provider,
+      mode,
+      productionReady,
+      sandboxReady,
       checkout: {
         canStartCorporate,
         canStartEnterprise,
@@ -471,6 +502,70 @@ export class MailBillingService {
 
     const ready =
       checklist.every((item) => item.ok) && status.checkout.blockers.length === 0;
+
+    return { ready, checklist };
+  }
+
+  /** Canlı tahsilat (sk_live_ veya iyzico prod API) hazırlık özeti. */
+  public buildProductionAcceptance(
+    status: MailBillingStatus,
+  ): MailBillingProductionAcceptance {
+    const checklist: MailBillingA1ChecklistItem[] = [
+      {
+        key: "mode_production",
+        label: "Faturalama modu: production",
+        ok: status.mode === "production",
+        detail:
+          status.mode !== "production"
+            ? `Aktif mod: ${status.mode}`
+            : undefined,
+      },
+      {
+        key: "checkout_corporate",
+        label: "Kurumsal checkout başlatılabilir",
+        ok: status.checkout.canStartCorporate,
+      },
+      {
+        key: "checkout_enterprise",
+        label: "Enterprise checkout başlatılabilir",
+        ok: status.checkout.canStartEnterprise,
+      },
+      {
+        key: "stripe_live_key",
+        label: "Stripe canlı secret (sk_live_…)",
+        ok:
+          status.provider !== "stripe" ||
+          (status.stripe.configured && !status.stripe.testMode),
+        detail:
+          status.provider === "stripe" && status.stripe.testMode
+            ? "Test anahtarı — prod için sk_live gerekir"
+            : undefined,
+      },
+      {
+        key: "stripe_webhook",
+        label: "STRIPE_WEBHOOK_SECRET tanımlı",
+        ok:
+          status.provider !== "stripe" || status.stripe.webhookConfigured,
+      },
+      {
+        key: "iyzico_prod_api",
+        label: "iyzico canlı API",
+        ok:
+          status.provider !== "iyzico" || status.iyzico.apiConfigured,
+      },
+      {
+        key: "blockers_clear",
+        label: "Yapılandırma engeli yok",
+        ok: status.checkout.blockers.length === 0,
+        detail:
+          status.checkout.blockers.length > 0
+            ? status.checkout.blockers.join("; ")
+            : undefined,
+      },
+    ];
+    const ready =
+      status.productionReady &&
+      checklist.every((item) => item.ok);
 
     return { ready, checklist };
   }

@@ -21,7 +21,10 @@ const emptyGroup = (): MailInboxRuleConditionGroup => ({
   fromContains: "",
   subjectContains: "",
   toContains: "",
+  bodyContains: "",
   requireAttachment: false,
+  minAttachmentBytes: null,
+  maxAttachmentBytes: null,
 });
 
 function groupSummary(group: MailInboxRuleConditionGroup): string {
@@ -35,8 +38,17 @@ function groupSummary(group: MailInboxRuleConditionGroup): string {
   if (group.toContains?.trim()) {
     parts.push(`alıcı: ${group.toContains.trim()}`);
   }
+  if (group.bodyContains?.trim()) {
+    parts.push(`gövde: ${group.bodyContains.trim()}`);
+  }
   if (group.requireAttachment) {
     parts.push("ek");
+  }
+  if (group.minAttachmentBytes != null) {
+    parts.push(`ek≥${group.minAttachmentBytes}B`);
+  }
+  if (group.maxAttachmentBytes != null) {
+    parts.push(`ek≤${group.maxAttachmentBytes}B`);
   }
   const inner = parts.length ? parts.join(", ") : "—";
   return group.matchAny ? `(${inner} — VEYA)` : `(${inner} — VE)`;
@@ -47,7 +59,7 @@ function formatConditionGroups(groups: MailInboxRuleConditionGroups): string {
   return groups.groups.map(groupSummary).join(between);
 }
 
-const MAX_CONDITION_GROUPS = 3;
+const MAX_CONDITION_GROUPS = 5;
 
 function defaultConditionGroupSlots(): MailInboxRuleConditionGroup[] {
   return Array.from({ length: MAX_CONDITION_GROUPS }, () => emptyGroup());
@@ -63,7 +75,10 @@ function conditionGroupsFromRule(rule: MailInboxRule): MailInboxRuleConditionGro
       fromContains: g.fromContains ?? "",
       subjectContains: g.subjectContains ?? "",
       toContains: g.toContains ?? "",
+      bodyContains: g.bodyContains ?? "",
       requireAttachment: Boolean(g.requireAttachment),
+      minAttachmentBytes: g.minAttachmentBytes ?? null,
+      maxAttachmentBytes: g.maxAttachmentBytes ?? null,
     };
   }
   return slots;
@@ -119,14 +134,22 @@ export function MailRulesPanel({ accessToken }: Props) {
         fromContains: g.fromContains?.trim() || null,
         subjectContains: g.subjectContains?.trim() || null,
         toContains: g.toContains?.trim() || null,
+        bodyContains: g.bodyContains?.trim() || null,
         requireAttachment: Boolean(g.requireAttachment),
+        minAttachmentBytes:
+          g.minAttachmentBytes != null ? Number(g.minAttachmentBytes) : null,
+        maxAttachmentBytes:
+          g.maxAttachmentBytes != null ? Number(g.maxAttachmentBytes) : null,
       }))
       .filter(
         (g) =>
           g.fromContains ||
           g.subjectContains ||
           g.toContains ||
-          g.requireAttachment,
+          g.bodyContains ||
+          g.requireAttachment ||
+          g.minAttachmentBytes != null ||
+          g.maxAttachmentBytes != null,
       );
     if (groups.length === 0) {
       return null;
@@ -400,7 +423,7 @@ export function MailRulesPanel({ accessToken }: Props) {
           checked={useConditionGroups}
           onChange={(e) => setUseConditionGroups(e.target.checked)}
         />
-        Gelişmiş koşul grupları (en fazla 3 grup)
+        Gelişmiş koşul grupları (en fazla 5 grup, iç içe VE/VEYA)
       </label>
       {useConditionGroups ? (
         <div className="mail-rules-groups">
@@ -451,6 +474,45 @@ export function MailRulesPanel({ accessToken }: Props) {
                 onChange={(e) => {
                   const next = [...conditionGroups];
                   next[gi] = { ...group, toContains: e.target.value };
+                  setConditionGroups(next);
+                }}
+              />
+              <input
+                placeholder="Gövde metni içerir (| alternatif)"
+                value={group.bodyContains ?? ""}
+                onChange={(e) => {
+                  const next = [...conditionGroups];
+                  next[gi] = { ...group, bodyContains: e.target.value };
+                  setConditionGroups(next);
+                }}
+              />
+              <input
+                type="number"
+                min={0}
+                placeholder="Min ek boyutu (byte, toplam)"
+                value={group.minAttachmentBytes ?? ""}
+                onChange={(e) => {
+                  const next = [...conditionGroups];
+                  const raw = e.target.value.trim();
+                  next[gi] = {
+                    ...group,
+                    minAttachmentBytes: raw === "" ? null : Number(raw),
+                  };
+                  setConditionGroups(next);
+                }}
+              />
+              <input
+                type="number"
+                min={0}
+                placeholder="Max ek boyutu (byte, toplam)"
+                value={group.maxAttachmentBytes ?? ""}
+                onChange={(e) => {
+                  const next = [...conditionGroups];
+                  const raw = e.target.value.trim();
+                  next[gi] = {
+                    ...group,
+                    maxAttachmentBytes: raw === "" ? null : Number(raw),
+                  };
                   setConditionGroups(next);
                 }}
               />

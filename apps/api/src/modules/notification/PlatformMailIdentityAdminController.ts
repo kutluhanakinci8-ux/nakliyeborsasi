@@ -63,7 +63,8 @@ export class PlatformMailIdentityAdminController {
   public async billingHealth() {
     const status = await this.mailBillingService.getBillingStatus();
     const a1 = this.mailBillingService.buildA1Acceptance(status);
-    return { message: "OK", status, a1 };
+    const production = this.mailBillingService.buildProductionAcceptance(status);
+    return { message: "OK", status, a1, production };
   }
 
   @Get("kpi")

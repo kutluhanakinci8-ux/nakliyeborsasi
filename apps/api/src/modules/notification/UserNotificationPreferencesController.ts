@@ -27,19 +27,26 @@ export class UserNotificationPreferencesController {
   public async matrix(@AuthenticatedUserParam() user: AuthenticatedUserContext) {
     const preferences =
       await this.userNotificationPreferenceService.getForUser(user.userId);
-    const events = NOTIFICATION_EVENT_CATALOG.filter(
-      (row) => row.userPreferenceKey !== null,
-    ).map((row) => ({
-      eventCode: row.code,
-      category: row.category,
-      labelTr: row.labelTr,
-      preferenceKey: row.userPreferenceKey,
-      emailEnabled: preferences[row.userPreferenceKey!],
-      channels: {
-        email: preferences[row.userPreferenceKey!],
-        push: null as boolean | null,
-      },
-    }));
+    const events = NOTIFICATION_EVENT_CATALOG.map((row) => {
+      const key = row.userPreferenceKey;
+      const userToggle = key ? preferences[key] : row.defaultUserEnabled;
+      const pushEligible =
+        key === "notifyNewOffers" ||
+        key === "notifyMessages" ||
+        key === "notifyAuctions";
+      return {
+        eventCode: row.code,
+        category: row.category,
+        labelTr: row.labelTr,
+        preferenceKey: key,
+        editable: key !== null,
+        emailEnabled: userToggle,
+        channels: {
+          email: userToggle,
+          push: pushEligible ? userToggle : null,
+        },
+      };
+    });
     return { preferences, events };
   }
 

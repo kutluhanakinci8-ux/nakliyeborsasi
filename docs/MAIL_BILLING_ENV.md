@@ -41,6 +41,15 @@ Vitrin fiyatları (EUR + TRY): `GET /api/v1/subscriptions/mail-plans` — katalo
 MAIL_BILLING_JWT='<yonetim JWT>' ./scripts/verify-mail-billing-config.sh
 ```
 
+Canlı tahsilat (prod) hazırlık:
+
+```bash
+./scripts/verify-mail-billing-prod.sh
+OPERATOR_JWT='<platform operatör JWT>' ./scripts/verify-mail-billing-prod.sh
+```
+
+`GET /api/v1/company/mail-billing/status` ve `GET platform-admin/mail/billing-health` yanıtlarında `mode` (`sandbox` | `production` | `unconfigured`), `productionReady` ve `sandboxReady` alanları operatör panosunda gösterilir.
+
 ## Stripe Dashboard
 
 Webhook endpoint: `https://yonetim.lerta.com.tr/api/v1/webhooks/mail-billing/stripe`  

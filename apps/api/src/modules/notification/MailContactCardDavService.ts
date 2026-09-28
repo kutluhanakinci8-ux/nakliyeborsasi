@@ -257,6 +257,8 @@ export class MailContactCardDavService {
       email: contact.email,
       phone: contact.phone,
       notes: contact.notes,
+      groupNames: contact.groupNames,
+      photoDataUrl: contact.photoDataUrl,
     });
     const resourceHref =
       contact.carddavAccountId === accountId && contact.carddavResourceHref
@@ -368,6 +370,8 @@ export class MailContactCardDavService {
           found.email = row.email;
           found.phone = row.phone;
           found.notes = row.notes;
+          found.groupNames = row.groupNames.length > 0 ? row.groupNames : null;
+          found.photoDataUrl = row.photoDataUrl;
           await this.contactRepository.save(found);
           updated += 1;
         } else {
@@ -378,6 +382,8 @@ export class MailContactCardDavService {
               email: row.email,
               phone: row.phone,
               notes: row.notes,
+              groupNames: row.groupNames.length > 0 ? row.groupNames : null,
+              photoDataUrl: row.photoDataUrl,
               carddavAccountId: accountId,
               externalUid,
               carddavResourceHref: null,

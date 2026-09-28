@@ -951,6 +951,9 @@ export async function fetchMailBillingStatus(accessToken: string) {
   return apiFetch<{
     status: {
       provider: string;
+      mode: "unconfigured" | "sandbox" | "production";
+      productionReady: boolean;
+      sandboxReady: boolean;
       checkout: {
         canStartCorporate: boolean;
         canStartEnterprise: boolean;
@@ -989,6 +992,7 @@ export async function fetchMailPlatformBillingHealth(accessToken: string) {
   return apiFetch<{
     status: Awaited<ReturnType<typeof fetchMailBillingStatus>>["status"];
     a1: { ready: boolean; checklist: MailBillingA1ChecklistItem[] };
+    production: { ready: boolean; checklist: MailBillingA1ChecklistItem[] };
   }>(accessToken, "platform-admin/mail/billing-health");
 }
 

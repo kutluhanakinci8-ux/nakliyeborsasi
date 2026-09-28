@@ -64,7 +64,10 @@ export type MailInboxRuleConditionGroup = {
   fromContains?: string | null;
   subjectContains?: string | null;
   toContains?: string | null;
+  bodyContains?: string | null;
   requireAttachment?: boolean;
+  minAttachmentBytes?: number | null;
+  maxAttachmentBytes?: number | null;
 };
 
 export type MailInboxRuleConditionGroups = {

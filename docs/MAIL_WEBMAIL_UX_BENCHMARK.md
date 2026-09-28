@@ -45,7 +45,7 @@ KOBİ pilot için **üretim hazır webmail**; kalan açık: tam LLM özet, haric
 | Yanıtla / tümüne yanıt | ✓ | ✓ | ✓ | — |
 | İlet (forward) | ✓ (G3) | ✓ | ✓ | — |
 | BCC alanı | ✓ (G3) | ✓ | ✓ | — |
-| Zengin metin compose | ✓ (PM-2 RTE) | ✓ | ✓ | Tablo/video embed |
+| Zengin metin compose | ✓ tablo + video embed | ✓ | ✓ | — |
 | Toplu seç + sil/arşiv | ✓ (G2) | ✓ | ✓ | — |
 | Okundu / okunmadı işaretle | ✓ | ✓ | ✓ | — |
 | Yıldız / bayrak | ✓ (G5) | ✓ | ✓ | — |
@@ -56,8 +56,8 @@ KOBİ pilot için **üretim hazır webmail**; kalan açık: tam LLM özet, haric
 | IMAP / şifre döndürme | ✓ + Dovecot sync | ✓ | ✓ | [MAIL_IMAP_GOLD_SMOKE.md](./MAIL_IMAP_GOLD_SMOKE.md) |
 | TOTP (webmail) | ✓ | ✓ | ✓ | — |
 | Özel klasör / etiket | ✓ (G5) | ✓ | ✓ | — |
-| Kurallar / filtre | ✓ G5+ | ✓ | ✓ | Nested OR derinleştirme |
-| Takvim / kişiler | ✓ MVP (D6) | ✓ | ✓ | Harici CalDAV iki yön |
+| Kurallar / filtre | ✓ G5+ (5 grup, gövde, ek boyutu) | ✓ | ✓ | — |
+| Takvim / kişiler | ✓ D6 + CardDAV grup/foto | ✓ | ✓ | Tam RRULE istemci paritesi |
 | Web push / ses | ✓ (G6) | ✓ | ✓ | [MAIL_WEB_PUSH_IOS.md](./MAIL_WEB_PUSH_IOS.md) |
 | PWA offline okuma | ✓ (PM-4) | kısmi | kısmi | — |
 | Karanlık tema | ✓ (G4) | ✓ | ✓ | — |

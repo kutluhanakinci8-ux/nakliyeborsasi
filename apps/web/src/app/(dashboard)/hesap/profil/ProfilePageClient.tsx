@@ -114,6 +114,7 @@ export function ProfilePageClient() {
   const [notifyMatrix, setNotifyMatrix] = useState<
     NotificationPreferenceMatrixEvent[]
   >([]);
+  const [matrixBusy, setMatrixBusy] = useState(false);
 
   useEffect(() => {
     if (!userId) {
@@ -182,8 +183,79 @@ export function ProfilePageClient() {
           () => undefined,
         );
       }
+      void refreshMatrixFromPrefs(next);
       return next;
     });
+  }
+
+  function refreshMatrixFromPrefs(prefs: UserProfile): void {
+    setNotifyMatrix((rows) =>
+      rows.map((row) => {
+        if (!row.preferenceKey) {
+          return row;
+        }
+        const on = prefs[row.preferenceKey];
+        const pushEligible = row.channels.push !== null;
+        return {
+          ...row,
+          emailEnabled: on,
+          channels: {
+            email: on,
+            push: pushEligible ? on : null,
+          },
+        };
+      }),
+    );
+  }
+
+  async function setMatrixPreference(
+    key: keyof Pick<
+      UserProfile,
+      "notifyNewOffers" | "notifyMessages" | "notifyAuctions" | "notifyWeeklyDigest"
+    >,
+    enabled: boolean,
+  ): Promise<void> {
+    if (!accessToken) {
+      return;
+    }
+    setMatrixBusy(true);
+    try {
+      const prefs = await updateNotificationPreferences(accessToken, {
+        [key]: enabled,
+      });
+      setProfile((current) => {
+        const next = { ...current, ...prefs };
+        persistProfile(next);
+        return next;
+      });
+      refreshMatrixFromPrefs({ ...profile, ...prefs });
+    } finally {
+      setMatrixBusy(false);
+    }
+  }
+
+  async function bulkMatrixEmail(enable: boolean): Promise<void> {
+    if (!accessToken) {
+      return;
+    }
+    const patch = {
+      notifyNewOffers: enable,
+      notifyMessages: enable,
+      notifyAuctions: enable,
+      notifyWeeklyDigest: enable,
+    };
+    setMatrixBusy(true);
+    try {
+      const prefs = await updateNotificationPreferences(accessToken, patch);
+      setProfile((current) => {
+        const next = { ...current, ...prefs };
+        persistProfile(next);
+        return next;
+      });
+      refreshMatrixFromPrefs({ ...profile, ...prefs });
+    } finally {
+      setMatrixBusy(false);
+    }
   }
 
   const initials = resolveAccountInitials(emailAddress);
@@ -410,13 +482,36 @@ export function ProfilePageClient() {
             </ul>
             {notifyMatrix.length > 0 ? (
               <div className="account-profile-matrix-wrap">
-                <h3 className="account-profile-matrix-title">Olay matrisi (e-posta)</h3>
+                <div className="account-profile-matrix-toolbar">
+                  <h3 className="account-profile-matrix-title">
+                    Olay × kanal matrisi
+                  </h3>
+                  <div className="account-profile-matrix-bulk">
+                    <button
+                      type="button"
+                      className="account-profile-matrix-bulk-btn"
+                      disabled={matrixBusy}
+                      onClick={() => void bulkMatrixEmail(true)}
+                    >
+                      Tüm e-postayı aç
+                    </button>
+                    <button
+                      type="button"
+                      className="account-profile-matrix-bulk-btn"
+                      disabled={matrixBusy}
+                      onClick={() => void bulkMatrixEmail(false)}
+                    >
+                      Tüm e-postayı kapat
+                    </button>
+                  </div>
+                </div>
                 <table className="account-profile-matrix">
                   <thead>
                     <tr>
                       <th>Olay</th>
                       <th>Kategori</th>
                       <th>E-posta</th>
+                      <th>Push</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -424,13 +519,54 @@ export function ProfilePageClient() {
                       <tr key={row.eventCode}>
                         <td>{row.labelTr}</td>
                         <td>{row.category}</td>
-                        <td>{row.emailEnabled ? "Açık" : "Kapalı"}</td>
+                        <td>
+                          {row.editable && row.preferenceKey ? (
+                            <button
+                              type="button"
+                              className={
+                                row.emailEnabled
+                                  ? "account-profile-matrix-cell account-profile-matrix-cell--on"
+                                  : "account-profile-matrix-cell"
+                              }
+                              disabled={matrixBusy}
+                              aria-pressed={row.emailEnabled}
+                              onClick={() =>
+                                void setMatrixPreference(
+                                  row.preferenceKey!,
+                                  !row.emailEnabled,
+                                )
+                              }
+                            >
+                              {row.emailEnabled ? "Açık" : "Kapalı"}
+                            </button>
+                          ) : (
+                            <span className="account-profile-matrix-locked">
+                              {row.emailEnabled ? "Sistem" : "Kapalı"}
+                            </span>
+                          )}
+                        </td>
+                        <td>
+                          {row.channels.push === null ? (
+                            <span className="account-profile-matrix-locked">—</span>
+                          ) : (
+                            <span
+                              className={
+                                row.channels.push
+                                  ? "account-profile-matrix-cell account-profile-matrix-cell--on account-profile-matrix-cell--readonly"
+                                  : "account-profile-matrix-cell account-profile-matrix-cell--readonly"
+                              }
+                            >
+                              {row.channels.push ? "Açık" : "Kapalı"}
+                            </span>
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
                 <p className="account-profile-matrix-hint">
-                  Ana anahtarlar yukarıdaki düğmelerle senkron; detay satırlar bilgi amaçlıdır.
+                  E-posta hücreleri tıklanabilir; push mobil kanalı e-posta anahtarıyla
+                  senkron (haftalık özet yalnızca e-posta).
                 </p>
               </div>
             ) : null}

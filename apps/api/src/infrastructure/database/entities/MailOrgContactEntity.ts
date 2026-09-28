@@ -28,6 +28,12 @@ export class MailOrgContactEntity {
   @Column({ type: "varchar", length: 500, nullable: true })
   public notes!: string | null;
 
+  @Column({ name: "group_names", type: "jsonb", nullable: true })
+  public groupNames!: string[] | null;
+
+  @Column({ name: "photo_data_url", type: "text", nullable: true })
+  public photoDataUrl!: string | null;
+
   @Column({ name: "carddav_account_id", type: "uuid", nullable: true })
   public carddavAccountId!: string | null;
 

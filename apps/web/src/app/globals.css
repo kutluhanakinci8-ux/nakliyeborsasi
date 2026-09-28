@@ -7690,6 +7690,53 @@ button.btn-secondary {
   color: #64748b;
 }
 
+.account-profile-matrix-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.account-profile-matrix-bulk {
+  display: flex;
+  gap: 8px;
+}
+
+.account-profile-matrix-bulk-btn {
+  font-size: 0.75rem;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  cursor: pointer;
+}
+
+.account-profile-matrix-cell {
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  cursor: pointer;
+}
+
+.account-profile-matrix-cell--on {
+  background: #dcfce7;
+  border-color: #86efac;
+  color: #166534;
+}
+
+.account-profile-matrix-cell--readonly {
+  cursor: default;
+}
+
+.account-profile-matrix-locked {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
 .account-profile-toggle-row {
   display: flex;
   align-items: center;

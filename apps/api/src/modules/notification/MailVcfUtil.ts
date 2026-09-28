@@ -4,6 +4,8 @@ export type ParsedVcfContact = {
   email: string | null;
   phone: string | null;
   notes: string | null;
+  groupNames: string[];
+  photoDataUrl: string | null;
 };
 
 function unfoldVcfLines(text: string): string[] {
@@ -23,6 +25,23 @@ function unescapeVcf(value: string): string {
   return value.replace(/\\n/g, "\n").replace(/\\,/g, ",");
 }
 
+function parsePhotoValue(linePrefix: string, value: string): string | null {
+  const upper = linePrefix.toUpperCase();
+  if (upper.startsWith("PHOTO;") && upper.includes("ENCODING=B")) {
+    const mimeMatch = upper.match(/TYPE=([^;]+)/);
+    const mime = mimeMatch?.[1]?.toLowerCase() ?? "jpeg";
+    const trimmed = value.replace(/\s/g, "");
+    if (trimmed.length < 8) {
+      return null;
+    }
+    return `data:image/${mime};base64,${trimmed}`;
+  }
+  if (upper.startsWith("PHOTO:") && value.startsWith("data:")) {
+    return value.trim();
+  }
+  return null;
+}
+
 export function parseVcfContacts(vcfText: string): ParsedVcfContact[] {
   const lines = unfoldVcfLines(vcfText);
   const contacts: ParsedVcfContact[] = [];
@@ -33,6 +52,8 @@ export function parseVcfContacts(vcfText: string): ParsedVcfContact[] {
   let phone: string | null = null;
   let note: string | null = null;
   let uid: string | null = null;
+  const groupNames: string[] = [];
+  let photoDataUrl: string | null = null;
 
   for (const line of lines) {
     if (line === "BEGIN:VCARD") {
@@ -43,6 +64,8 @@ export function parseVcfContacts(vcfText: string): ParsedVcfContact[] {
       phone = null;
       note = null;
       uid = null;
+      groupNames.length = 0;
+      photoDataUrl = null;
       continue;
     }
     if (line === "END:VCARD" && inCard) {
@@ -57,6 +80,8 @@ export function parseVcfContacts(vcfText: string): ParsedVcfContact[] {
         email: email?.trim().toLowerCase() || null,
         phone: phone?.trim() || null,
         notes: note?.trim() || null,
+        groupNames: [...groupNames],
+        photoDataUrl,
       });
       inCard = false;
       continue;
@@ -68,7 +93,8 @@ export function parseVcfContacts(vcfText: string): ParsedVcfContact[] {
     if (colon < 0) {
       continue;
     }
-    const key = line.slice(0, colon).split(";")[0]?.toUpperCase() ?? "";
+    const linePrefix = line.slice(0, colon);
+    const key = linePrefix.split(";")[0]?.toUpperCase() ?? "";
     const value = unescapeVcf(line.slice(colon + 1));
     if (key === "FN") {
       fn = value;
@@ -82,6 +108,15 @@ export function parseVcfContacts(vcfText: string): ParsedVcfContact[] {
       note = value;
     } else if (key === "UID" && !uid) {
       uid = value;
+    } else if (key === "CATEGORIES") {
+      for (const part of value.split(",")) {
+        const t = part.trim();
+        if (t && !groupNames.includes(t)) {
+          groupNames.push(t);
+        }
+      }
+    } else if (key === "PHOTO" && !photoDataUrl) {
+      photoDataUrl = parsePhotoValue(linePrefix, value);
     }
   }
   return contacts;
@@ -91,12 +126,24 @@ function escapeVcfField(value: string): string {
   return value.replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/,/g, "\\,");
 }
 
+function photoLineFromDataUrl(dataUrl: string): string | null {
+  const match = /^data:image\/([^;]+);base64,(.+)$/i.exec(dataUrl.trim());
+  if (!match) {
+    return null;
+  }
+  const mime = match[1].toUpperCase();
+  const payload = match[2].replace(/\s/g, "");
+  return `PHOTO;ENCODING=b;TYPE=${mime}:${payload}`;
+}
+
 export function buildSingleVcard(contact: {
   uid: string;
   displayName: string;
   email: string | null;
   phone: string | null;
   notes: string | null;
+  groupNames?: string[] | null;
+  photoDataUrl?: string | null;
 }): string {
   const lines = [
     "BEGIN:VCARD",
@@ -112,6 +159,16 @@ export function buildSingleVcard(contact: {
   }
   if (contact.notes) {
     lines.push(`NOTE:${escapeVcfField(contact.notes)}`);
+  }
+  const groups = (contact.groupNames ?? []).map((g) => g.trim()).filter(Boolean);
+  if (groups.length > 0) {
+    lines.push(`CATEGORIES:${groups.map(escapeVcfField).join(",")}`);
+  }
+  if (contact.photoDataUrl) {
+    const photoLine = photoLineFromDataUrl(contact.photoDataUrl);
+    if (photoLine) {
+      lines.push(photoLine);
+    }
   }
   lines.push("END:VCARD");
   return `${lines.join("\r\n")}\r\n`;

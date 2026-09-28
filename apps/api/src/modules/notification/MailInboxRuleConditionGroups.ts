@@ -3,7 +3,10 @@ export type MailInboxRuleConditionGroup = {
   fromContains?: string | null;
   subjectContains?: string | null;
   toContains?: string | null;
+  bodyContains?: string | null;
   requireAttachment?: boolean;
+  minAttachmentBytes?: number | null;
+  maxAttachmentBytes?: number | null;
 };
 
 export type MailInboxRuleConditionGroups = {
@@ -11,7 +14,8 @@ export type MailInboxRuleConditionGroups = {
   groups: MailInboxRuleConditionGroup[];
 };
 
-const MAX_GROUPS = 3;
+export const MAX_INBOX_RULE_CONDITION_GROUPS = 5;
+const MAX_GROUPS = MAX_INBOX_RULE_CONDITION_GROUPS;
 
 export function parseConditionGroupsJson(
   raw: string | null,
@@ -51,7 +55,10 @@ function normalizeConditionGroups(
     fromContains: trimOrNull(g.fromContains),
     subjectContains: trimOrNull(g.subjectContains),
     toContains: trimOrNull(g.toContains),
+    bodyContains: trimOrNull(g.bodyContains),
     requireAttachment: Boolean(g.requireAttachment),
+    minAttachmentBytes: normalizeByteLimit(g.minAttachmentBytes),
+    maxAttachmentBytes: normalizeByteLimit(g.maxAttachmentBytes),
   }));
   return {
     matchAnyBetweenGroups: Boolean(input.matchAnyBetweenGroups),
@@ -64,12 +71,26 @@ function trimOrNull(value?: string | null): string | null {
   return t.length > 0 ? t : null;
 }
 
+function normalizeByteLimit(value?: number | null): number | null {
+  if (value === null || value === undefined) {
+    return null;
+  }
+  const n = Number(value);
+  if (!Number.isFinite(n) || n < 0) {
+    return null;
+  }
+  return Math.floor(n);
+}
+
 export function groupHasAnyCondition(group: MailInboxRuleConditionGroup): boolean {
   return Boolean(
     group.fromContains ||
       group.subjectContains ||
       group.toContains ||
-      group.requireAttachment,
+      group.bodyContains ||
+      group.requireAttachment ||
+      group.minAttachmentBytes != null ||
+      group.maxAttachmentBytes != null,
   );
 }
 
@@ -91,8 +112,17 @@ function describeGroupConditions(group: MailInboxRuleConditionGroup): string {
   if (group.toContains) {
     parts.push(`alıcı “${group.toContains}”`);
   }
+  if (group.bodyContains) {
+    parts.push(`gövde “${group.bodyContains}”`);
+  }
   if (group.requireAttachment) {
     parts.push("ek var");
+  }
+  if (group.minAttachmentBytes != null) {
+    parts.push(`ek ≥ ${group.minAttachmentBytes} B`);
+  }
+  if (group.maxAttachmentBytes != null) {
+    parts.push(`ek ≤ ${group.maxAttachmentBytes} B`);
   }
   const joined = parts.join(group.matchAny ? " VEYA " : " VE ");
   return group.matchAny ? `(${joined})` : joined;

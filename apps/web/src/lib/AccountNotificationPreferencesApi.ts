@@ -41,7 +41,8 @@ export type NotificationPreferenceMatrixEvent = {
   eventCode: string;
   category: string;
   labelTr: string;
-  preferenceKey: keyof AccountNotificationPreferences;
+  preferenceKey: keyof AccountNotificationPreferences | null;
+  editable: boolean;
   emailEnabled: boolean;
   channels: { email: boolean; push: boolean | null };
 };

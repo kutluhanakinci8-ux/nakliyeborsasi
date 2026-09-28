@@ -624,6 +624,7 @@ export class MailInboxRuleService {
     const fromNeedle = group.fromContains?.toLowerCase() ?? "";
     const subjectNeedle = group.subjectContains?.toLowerCase() ?? "";
     const toNeedle = group.toContains?.toLowerCase() ?? "";
+    const bodyNeedle = group.bodyContains?.toLowerCase() ?? "";
     const fromOk =
       !fromNeedle ||
       this.fieldMatchesAlternatives(message.fromAddress, fromNeedle);
@@ -634,17 +635,33 @@ export class MailInboxRuleService {
     const toOk =
       !toNeedle ||
       toList.some((addr) => this.fieldMatchesAlternatives(addr, toNeedle));
+    const bodyHaystack = `${message.bodyText ?? ""}\n${message.snippet ?? ""}`;
+    const bodyOk =
+      !bodyNeedle || this.fieldMatchesAlternatives(bodyHaystack, bodyNeedle);
     const hasAttachment = (message.attachments?.length ?? 0) > 0;
+    const totalAttachmentBytes = (message.attachments ?? []).reduce(
+      (sum, row) => sum + (row.sizeBytes ?? 0),
+      0,
+    );
+    const minBytes = group.minAttachmentBytes ?? null;
+    const maxBytes = group.maxAttachmentBytes ?? null;
+    const sizeOk =
+      (minBytes == null || totalAttachmentBytes >= minBytes) &&
+      (maxBytes == null || totalAttachmentBytes <= maxBytes);
     if (group.matchAny) {
       const parts: boolean[] = [];
       if (fromNeedle) parts.push(fromOk);
       if (subjectNeedle) parts.push(subjectOk);
       if (toNeedle) parts.push(toOk);
+      if (bodyNeedle) parts.push(bodyOk);
       if (group.requireAttachment) parts.push(hasAttachment);
+      if (minBytes != null || maxBytes != null) parts.push(sizeOk);
       return parts.length > 0 && parts.some(Boolean);
     }
     const attachmentOk = !group.requireAttachment || hasAttachment;
-    return fromOk && subjectOk && toOk && attachmentOk;
+    const byteRuleActive = minBytes != null || maxBytes != null;
+    const bytesOk = !byteRuleActive || sizeOk;
+    return fromOk && subjectOk && toOk && bodyOk && attachmentOk && bytesOk;
   }
 
   private fieldMatchesAlternatives(haystack: string, needle: string): boolean {
