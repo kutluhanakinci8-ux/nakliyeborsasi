@@ -26,6 +26,7 @@ import { MailTenantSubdomainService } from "./MailTenantSubdomainService";
 import { MailImapMaildirService } from "./MailImapMaildirService";
 import { buildOutgoingSentMime } from "./MailSentMimeBuilder";
 import { MailSubscriptionLifecycleService } from "./MailSubscriptionLifecycleService";
+import { MailOrganizationWebhookDispatcherService } from "./MailOrganizationWebhookDispatcherService";
 
 export type ComposeAttachmentInput = {
   filename: string;
@@ -47,6 +48,7 @@ export class MailMailboxComposeService {
     private readonly mailImapMaildirService: MailImapMaildirService,
     private readonly mailSubscriptionLifecycleService: MailSubscriptionLifecycleService,
     private readonly notificationConfigurationService: NotificationConfigurationService,
+    private readonly mailOrganizationWebhookDispatcherService: MailOrganizationWebhookDispatcherService,
     @InjectRepository(MailSenderIdentityEntity)
     private readonly senderRepository: Repository<MailSenderIdentityEntity>,
     @InjectRepository(MailDomainEntity)
@@ -88,22 +90,45 @@ export class MailMailboxComposeService {
       await this.mailOrganizationIdentityService.resolveOutboundReplyTo(
         params.organizationId,
       );
-    const smtpMessageId = await this.smtpEmailSender.send({
-      from: fromHeader,
-      envelopeMailFrom,
-      to: normalizeRecipientList(params.to),
-      cc: normalizeOptionalRecipients(params.cc),
-      bcc: normalizeOptionalRecipients(params.bcc),
-      subject: params.subject.trim(),
-      text: params.text,
-      html: resolveOutboundHtml(params.text, params.html),
-      replyTo,
-      attachments: nodemailerAttachments,
-    });
+    const subject = params.subject.trim();
+    const toAddress = params.to.trim().toLowerCase();
+    let smtpMessageId: string | null;
+    try {
+      smtpMessageId = await this.smtpEmailSender.send({
+        from: fromHeader,
+        envelopeMailFrom,
+        to: normalizeRecipientList(params.to),
+        cc: normalizeOptionalRecipients(params.cc),
+        bcc: normalizeOptionalRecipients(params.bcc),
+        subject,
+        text: params.text,
+        html: resolveOutboundHtml(params.text, params.html),
+        replyTo,
+        attachments: nodemailerAttachments,
+      });
+    } catch (error) {
+      this.dispatchMailboxSendWebhook(params.organizationId, "message.failed", {
+        recipientEmail: toAddress,
+        subject,
+        lastError: error instanceof Error ? error.message : String(error),
+        providerMessageId: null,
+        mailboxId: mailbox.id,
+        channel: "compose",
+      });
+      throw error;
+    }
     if (!smtpMessageId) {
-      throw new BadRequestException(
-        "E-posta gönderimi kapalı (EMAIL_ENABLED) veya SMTP yanıt vermedi.",
-      );
+      const reason =
+        "E-posta gönderimi kapalı (EMAIL_ENABLED) veya SMTP yanıt vermedi.";
+      this.dispatchMailboxSendWebhook(params.organizationId, "message.failed", {
+        recipientEmail: toAddress,
+        subject,
+        lastError: reason,
+        providerMessageId: null,
+        mailboxId: mailbox.id,
+        channel: "compose",
+      });
+      throw new BadRequestException(reason);
     }
     this.mailOrganizationSendRateService.recordSend(params.organizationId);
     const sent = await this.sentRepository.save(
@@ -111,18 +136,30 @@ export class MailMailboxComposeService {
         organizationId: params.organizationId,
         mailboxId: mailbox.id,
         fromAddress: fromEmail,
-        toAddress: params.to.trim().toLowerCase(),
-        subject: params.subject.trim(),
+        toAddress,
+        subject,
         bodyText: params.text,
         relatedInboundMessageId: null,
         smtpMessageId,
       }),
     );
+    this.dispatchMailboxSendWebhook(params.organizationId, "message.sent", {
+      messageId: sent.id,
+      recipientEmail: toAddress,
+      subject,
+      status: "sent",
+      sentAt: sent.sentAt.toISOString(),
+      lastError: null,
+      providerMessageId: smtpMessageId,
+      mailboxId: mailbox.id,
+      channel: "compose",
+      source: "mail_webmail",
+    });
     this.mirrorSentToImap({
       technicalEmail,
       fromHeader,
       to: params.to.trim(),
-      subject: params.subject.trim(),
+      subject,
       text: params.text,
       smtpMessageId,
     });
@@ -181,20 +218,35 @@ export class MailMailboxComposeService {
       params.replyAll,
       params.cc,
     );
-    const smtpMessageId = await this.smtpEmailSender.send({
-      from: fromHeader,
-      envelopeMailFrom,
-      to: replyAll.to,
-      cc: normalizeOptionalRecipients(replyAll.cc),
-      bcc: normalizeOptionalRecipients(params.bcc),
-      subject,
-      text: params.text,
-      html: `<pre>${escapeHtml(params.text)}</pre>`,
-      replyTo,
-      inReplyTo,
-      references: inReplyTo,
-      attachments: nodemailerAttachments,
-    });
+    const toAddress = inbound.fromAddress.toLowerCase();
+    let smtpMessageId: string | null;
+    try {
+      smtpMessageId = await this.smtpEmailSender.send({
+        from: fromHeader,
+        envelopeMailFrom,
+        to: replyAll.to,
+        cc: normalizeOptionalRecipients(replyAll.cc),
+        bcc: normalizeOptionalRecipients(params.bcc),
+        subject,
+        text: params.text,
+        html: `<pre>${escapeHtml(params.text)}</pre>`,
+        replyTo,
+        inReplyTo,
+        references: inReplyTo,
+        attachments: nodemailerAttachments,
+      });
+    } catch (error) {
+      this.dispatchMailboxSendWebhook(params.organizationId, "message.failed", {
+        recipientEmail: toAddress,
+        subject,
+        lastError: error instanceof Error ? error.message : String(error),
+        providerMessageId: null,
+        mailboxId: mailbox.id,
+        channel: "reply",
+        relatedInboundMessageId: inbound.id,
+      });
+      throw error;
+    }
     this.mailOrganizationSendRateService.recordSend(params.organizationId);
     const sent = await this.sentRepository.save(
       this.sentRepository.create({
@@ -208,6 +260,21 @@ export class MailMailboxComposeService {
         smtpMessageId,
       }),
     );
+    if (smtpMessageId) {
+      this.dispatchMailboxSendWebhook(params.organizationId, "message.sent", {
+        messageId: sent.id,
+        recipientEmail: toAddress,
+        subject,
+        status: "sent",
+        sentAt: sent.sentAt.toISOString(),
+        lastError: null,
+        providerMessageId: smtpMessageId,
+        mailboxId: mailbox.id,
+        channel: "reply",
+        source: "mail_webmail",
+        relatedInboundMessageId: inbound.id,
+      });
+    }
     this.mirrorSentToImap({
       technicalEmail,
       fromHeader,
@@ -271,33 +338,64 @@ export class MailMailboxComposeService {
       await this.mailOrganizationIdentityService.resolveOutboundReplyTo(
         params.organizationId,
       );
-    const smtpMessageId = await this.smtpEmailSender.send({
-      from: fromHeader,
-      envelopeMailFrom,
-      to: normalizeRecipientList(params.to),
-      subject,
-      text,
-      html: `<pre>${escapeHtml(text)}</pre>`,
-      replyTo,
-      attachments: nodemailerAttachments,
-    });
+    const toList = normalizeRecipientList(params.to);
+    const toAddress = toList.toLowerCase();
+    let smtpMessageId: string | null;
+    try {
+      smtpMessageId = await this.smtpEmailSender.send({
+        from: fromHeader,
+        envelopeMailFrom,
+        to: toList,
+        subject,
+        text,
+        html: `<pre>${escapeHtml(text)}</pre>`,
+        replyTo,
+        attachments: nodemailerAttachments,
+      });
+    } catch (error) {
+      this.dispatchMailboxSendWebhook(params.organizationId, "message.failed", {
+        recipientEmail: toAddress,
+        subject,
+        lastError: error instanceof Error ? error.message : String(error),
+        providerMessageId: null,
+        mailboxId: mailbox.id,
+        channel: "forward",
+        relatedInboundMessageId: inbound.id,
+      });
+      throw error;
+    }
     this.mailOrganizationSendRateService.recordSend(params.organizationId);
     const sent = await this.sentRepository.save(
       this.sentRepository.create({
         organizationId: params.organizationId,
         mailboxId: mailbox.id,
         fromAddress: fromEmail,
-        toAddress: normalizeRecipientList(params.to).toLowerCase(),
+        toAddress,
         subject,
         bodyText: text,
         relatedInboundMessageId: inbound.id,
         smtpMessageId,
       }),
     );
+    if (smtpMessageId) {
+      this.dispatchMailboxSendWebhook(params.organizationId, "message.sent", {
+        messageId: sent.id,
+        recipientEmail: toAddress,
+        subject,
+        status: "sent",
+        sentAt: sent.sentAt.toISOString(),
+        lastError: null,
+        providerMessageId: smtpMessageId,
+        mailboxId: mailbox.id,
+        channel: "forward",
+        source: "mail_webmail",
+        relatedInboundMessageId: inbound.id,
+      });
+    }
     this.mirrorSentToImap({
       technicalEmail,
       fromHeader,
-      to: normalizeRecipientList(params.to),
+      to: toList,
       subject,
       text,
       smtpMessageId,
@@ -679,6 +777,18 @@ export class MailMailboxComposeService {
       to: inbound.fromAddress,
       cc: ccOverride ?? (ccList.length > 0 ? ccList.join(", ") : undefined),
     };
+  }
+
+  private dispatchMailboxSendWebhook(
+    organizationId: string,
+    event: "message.sent" | "message.failed",
+    data: Record<string, unknown>,
+  ): void {
+    this.mailOrganizationWebhookDispatcherService.dispatch(
+      organizationId,
+      event,
+      data,
+    );
   }
 }
 

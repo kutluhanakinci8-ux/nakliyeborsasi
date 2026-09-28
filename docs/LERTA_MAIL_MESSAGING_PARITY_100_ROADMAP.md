@@ -129,5 +129,7 @@ Her faz: kod + dokümantasyon + (varsa) `scripts/verify-*` · deploy checklist.
 | 2026-09-28 | `cursor/mail-messaging-parity-100-519e` → **main** (#129) | VPS deploy OK · checklist PASS · push VAPID OK |
 | 2026-09-28 | PM-5 ops (#131–#134) | `provision-pm5-imap-dovecot-vps.sh` deploy hook · 21× `@lerta.com.tr` Dovecot passwd · verify `nakliyeborsasi@lerta.com.tr` OK · şifreler VPS: `/root/lerta-imap-credentials-bootstrap.txt` |
 | 2026-09-28 | PM-4 (#136) | SW v7 + IndexedDB offline · `verify-mail-web-pwa-prod.sh` |
+| 2026-09-28 | PM-9/10 (#137) | AI compose env (şablon) · engagement CSV |
+| 2026-09-28 | PM-10 webhook | Webmail compose/reply/forward → `message.sent` / `message.failed` |
 
-**Sıradaki sıra:** `LERTA_MAIL_AI_COMPOSE_API_KEY` (LLM) · org webhook `message.sent` genişletmesi.
+**Sıradaki sıra:** JMAP bridge genişletme dokümantasyonu · parity kapanış doğrulama checklist.
