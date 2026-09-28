@@ -10,8 +10,8 @@ import {
 } from "react";
 
 const REVEAL_PX = 152;
-const OPEN_THRESHOLD = 56;
-const DRAG_START_PX = 10;
+const OPEN_THRESHOLD = 48;
+const DRAG_START_PX = 8;
 
 type Props = {
   children: ReactNode;
@@ -29,6 +29,9 @@ export function MailListSwipeRow({
   onDelete,
 }: Props) {
   const [offset, setOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const offsetRef = useRef(0);
+  const blockClickUntilRef = useRef(0);
   const dragRef = useRef({
     active: false,
     dragging: false,
@@ -37,8 +40,10 @@ export function MailListSwipeRow({
     pointerId: -1,
   });
 
-  const clampOffset = useCallback((value: number) => {
-    return Math.max(-REVEAL_PX, Math.min(0, value));
+  const setOffsetSynced = useCallback((value: number) => {
+    const clamped = Math.max(-REVEAL_PX, Math.min(0, value));
+    offsetRef.current = clamped;
+    setOffset(clamped);
   }, []);
 
   const snapOffset = useCallback((value: number) => {
@@ -48,14 +53,30 @@ export function MailListSwipeRow({
     return 0;
   }, []);
 
+  const finishDrag = useCallback(
+    (snap: boolean) => {
+      dragRef.current.active = false;
+      dragRef.current.dragging = false;
+      setIsDragging(false);
+      if (snap) {
+        const next = snapOffset(offsetRef.current);
+        setOffsetSynced(next);
+        if (next < 0) {
+          blockClickUntilRef.current = Date.now() + 400;
+        }
+      }
+    },
+    [setOffsetSynced, snapOffset],
+  );
+
   useEffect(() => {
-    const onDocPointerUp = () => {
+    const onDocPointerUp = (event: PointerEvent) => {
       if (!dragRef.current.active) {
         return;
       }
-      dragRef.current.active = false;
-      dragRef.current.dragging = false;
-      setOffset((current) => snapOffset(current));
+      if (dragRef.current.pointerId === event.pointerId) {
+        finishDrag(true);
+      }
     };
     document.addEventListener("pointerup", onDocPointerUp);
     document.addEventListener("pointercancel", onDocPointerUp);
@@ -63,10 +84,14 @@ export function MailListSwipeRow({
       document.removeEventListener("pointerup", onDocPointerUp);
       document.removeEventListener("pointercancel", onDocPointerUp);
     };
-  }, [snapOffset]);
+  }, [finishDrag]);
+
+  function shouldBlockClick() {
+    return Date.now() < blockClickUntilRef.current;
+  }
 
   function onPointerDown(event: ReactPointerEvent<HTMLDivElement>) {
-    if (event.button !== 0) {
+    if (event.button !== 0 || shouldBlockClick()) {
       return;
     }
     const target = event.target as HTMLElement;
@@ -79,7 +104,7 @@ export function MailListSwipeRow({
       active: true,
       dragging: false,
       startX: event.clientX,
-      startOffset: offset,
+      startOffset: offsetRef.current,
       pointerId: event.pointerId,
     };
   }
@@ -94,10 +119,11 @@ export function MailListSwipeRow({
         return;
       }
       dragRef.current.dragging = true;
+      setIsDragging(true);
       event.currentTarget.setPointerCapture(event.pointerId);
     }
     event.preventDefault();
-    setOffset(clampOffset(dragRef.current.startOffset + delta));
+    setOffsetSynced(dragRef.current.startOffset + delta);
   }
 
   function onPointerUp(event: ReactPointerEvent<HTMLDivElement>) {
@@ -105,25 +131,29 @@ export function MailListSwipeRow({
       return;
     }
     const wasDrag = dragRef.current.dragging;
-    dragRef.current.active = false;
-    dragRef.current.dragging = false;
     if (
       wasDrag &&
       event.currentTarget.hasPointerCapture(event.pointerId)
     ) {
+      event.preventDefault();
       event.currentTarget.releasePointerCapture(event.pointerId);
-      setOffset((current) => snapOffset(current));
     }
+    finishDrag(wasDrag);
   }
 
   function close() {
-    setOffset(0);
+    setOffsetSynced(0);
   }
 
   return (
     <div
       className="mail-swipe-row"
       onClick={(e) => {
+        if (shouldBlockClick()) {
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
         if (offset < -8) {
           e.preventDefault();
           e.stopPropagation();
@@ -156,12 +186,22 @@ export function MailListSwipeRow({
         </button>
       </div>
       <div
-        className="mail-swipe-content"
+        className={
+          isDragging
+            ? "mail-swipe-content is-dragging"
+            : "mail-swipe-content"
+        }
         style={{ transform: `translateX(${offset}px)` }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
+        onClickCapture={(e) => {
+          if (shouldBlockClick()) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        }}
       >
         {children}
       </div>
