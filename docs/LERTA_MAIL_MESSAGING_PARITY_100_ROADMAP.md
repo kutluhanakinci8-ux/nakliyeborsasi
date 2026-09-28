@@ -2,7 +2,8 @@
 
 **Amaç:** [MAIL_WEBMAIL_UX_BENCHMARK.md](./MAIL_WEBMAIL_UX_BENCHMARK.md) ve mesajlaşma envanterindeki açıkları faz faz kapatmak.  
 **Hedef skor:** Her boyutta **≥95/100** (pratik “%100 ürün” — Gmail/Slack’in tüm ekosistem API’leri kapsam dışı).  
-**Başlangıç (2026-09-28):** Webmail ~72, sohbet ~58, ESP analitik ~15, bildirim matrisi ~55.
+**Başlangıç (2026-09-28):** Webmail ~72, sohbet ~58, ESP analitik ~15, bildirim matrisi ~55.  
+**Sprint sonu (2026-09-28, main #129–#142):** Webmail **~82** (Gmail **~%92**), mesajlaşma **~84** (Slack **~%88**), admin ESP **~61** (Postmark **~%69**) — [MAIL_WEBMAIL_UX_BENCHMARK.md](./MAIL_WEBMAIL_UX_BENCHMARK.md) · [MAIL_ADMIN_BENCHMARK_REPORT.md](./MAIL_ADMIN_BENCHMARK_REPORT.md).
 
 ---
 
@@ -118,9 +119,9 @@ Her faz: kod + dokümantasyon + (varsa) `scripts/verify-*` · deploy checklist.
 
 | Metrik | Kaynak |
 |--------|--------|
-| Webmail boyut skorları | `MAIL_WEBMAIL_UX_BENCHMARK.md` güncelle |
-| Mesajlaşma checklist | Bu dosyada faz ✅ |
-| Admin ESP | `MAIL_ADMIN_BENCHMARK_REPORT.md` B/C boyutları |
+| Webmail boyut skorları | `MAIL_WEBMAIL_UX_BENCHMARK.md` ✅ 2026-09-28 |
+| Mesajlaşma checklist | Bu dosyada faz ✅ · admin rapor §3.3 |
+| Admin ESP | `MAIL_ADMIN_BENCHMARK_REPORT.md` ✅ 2026-09-28 |
 
 ## Deploy kaydı
 

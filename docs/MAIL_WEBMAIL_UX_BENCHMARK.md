@@ -1,26 +1,35 @@
 # Lerta Posta — rakip karşılaştırma (webmail)
 
 **Kapsam:** `posta.lerta.com.tr` (`apps/mail-web`) — günlük kullanım vs Gmail, Outlook Web, Zoho Mail, Proton Mail.  
-**Referans ekran:** 3 sütun (sol menü · liste · okuma), pilot `kullanici.lerta.com.tr` kutusu.  
-**Son güncelleme:** D6 MVP (org takvim + kişiler, iCal/vCard).
+**Referans ekran:** 3 sütun (sol menü · liste · okuma), pilot `*@lerta.com.tr` kutusu.  
+**Son güncelleme:** 2026-09-28 — **PM-1…PM-10** parity sprint (#129–#142), IMAP gold smoke prod, PWA v7.
+
+**Doğrulama:** `bash scripts/run-mail-messaging-parity-close-checklist.sh` · `bash scripts/smoke-imap-gold.sh` (VPS).
 
 ---
 
 ## 1. Özet skor (webmail UX, 0–100)
 
-| Boyut | Ağırlık | Lerta (bugün) | Gmail | Outlook | Not |
-|-------|---------|---------------|-------|---------|-----|
-| Güven & TLS | 12% | **88** | 98 | 98 | G0: HSTS + HTTP→HTTPS; canlıda `verify-posta-https.sh` |
-| Temel kutu (okuma/yazma) | 20% | **78** | 95 | 94 | Klasörler, ek, taslak, arama, snooze klasörü |
-| Üretkenlik (toplu, kısayol) | 15% | **78** | 92 | 90 | G2 toplu; G5 yıldız/kurallar; snooze + toplu erteleme |
-| Konuşma & iletme | 10% | **82** | 95 | 93 | Thread, ilet, tümüne yanıt (To/Cc meta) |
-| Yazma deneyimi | 12% | **72** | 90 | 88 | Cc/Bcc, HTML; tam WYSIWYG değil |
-| Mobil / PWA | 10% | **68** | 85 | 82 | Paneller + SW; iOS push sadece PWA ([iOS doc](./MAIL_WEB_PUSH_IOS.md)) |
-| Kurumsal (marka, alias) | 8% | **65** | 70 | 75 | G4 logo/başlık; alias/IMAP paneli |
-| Entegrasyon (IMAP, takvim) | 8% | **62** | 90 | 92 | IMAP; org takvim/kişi MVP (harici CalDAV sonra) |
-| Akıllı özellikler | 5% | **35** | 80 | 75 | Gelen kuralları MVP; AI özet yok |
+| Boyut | Ağırlık | Lerta (sprint sonu) | Gmail | Outlook | vs Gmail | vs Outlook | Not |
+|-------|---------|---------------------|-------|---------|----------|------------|-----|
+| Güven & TLS | 12% | **90** | 98 | 98 | **92%** | **92%** | Posta HTTPS + IMAP LE `mail.lerta.com.tr` |
+| Temel kutu (okuma/yazma) | 20% | **80** | 95 | 94 | **84%** | **85%** | Klasörler, swipe, ek, taslak, arama, snooze |
+| Üretkenlik (toplu, kısayol) | 15% | **80** | 92 | 90 | **87%** | **89%** | G2 toplu; G5 yıldız/kurallar; snooze |
+| Konuşma & iletme | 10% | **82** | 95 | 93 | **86%** | **88%** | Thread, ilet, tümüne yanıt |
+| Yazma deneyimi | 12% | **84** | 90 | 88 | **93%** | **95%** | PM-2: RTE araç çubuğu + org şablonlar |
+| Mobil / PWA | 10% | **82** | 85 | 82 | **96%** | **100%** | PM-4: shell v7, IndexedDB offline liste/detay |
+| Kurumsal (marka, alias) | 8% | **84** | 70 | 75 | **120%** | **112%** | PM-3: S-A4 gönderen/alias hub |
+| Entegrasyon (IMAP, takvim) | 8% | **82** | 90 | 92 | **91%** | **89%** | PM-5: Dovecot gold SPECIAL-USE; D6 takvim/kişi MVP |
+| Akıllı özellikler | 5% | **68** | 80 | 75 | **85%** | **91%** | PM-9: şablon AI compose; G5+ kurallar (LLM API opsiyonel) |
 
-**Ağırlıklı Lerta skoru ≈ 72/100** — KOBİ pilot için **güçlü MVP**; Gmail/Outlook ile **takvim/kişi + AI** açığı sürer.
+**Ağırlıklı Lerta skoru ≈ 82/100** (önceki ≈72).
+
+| Kıyas | Parite (Lerta ÷ rakip ağırlıklı skor) |
+|-------|----------------------------------------|
+| **vs Gmail (webmail)** | **≈ 92%** (82 ÷ 89) |
+| **vs Outlook Web** | **≈ 93%** (82 ÷ 88) |
+
+KOBİ pilot için **üretim hazır webmail**; kalan açık: tam LLM özet, harici CalDAV/CardDAV iki yön, native mobil uygulama.
 
 ---
 
@@ -28,7 +37,7 @@
 
 | Özellik | Lerta | Gmail | Outlook | Öncelik |
 |---------|-------|-------|---------|---------|
-| HTTPS + geçerli sertifika | ✓ (G0) | ✓ | ✓ | Sürdür |
+| HTTPS + geçerli sertifika | ✓ (G0 + IMAP LE) | ✓ | ✓ | Sürdür |
 | Gelen / gönderilen / spam / taslak | ✓ | ✓ | ✓ | — |
 | Arşiv / çöp | ✓ | ✓ | ✓ | — |
 | Konuşma görünümü | ✓ | ✓ varsayılan | ✓ | — |
@@ -36,7 +45,7 @@
 | Yanıtla / tümüne yanıt | ✓ | ✓ | ✓ | — |
 | İlet (forward) | ✓ (G3) | ✓ | ✓ | — |
 | BCC alanı | ✓ (G3) | ✓ | ✓ | — |
-| Zengin metin compose | ✓ (G4) | ✓ | ✓ | RTE iyileştirme |
+| Zengin metin compose | ✓ (PM-2 RTE) | ✓ | ✓ | Tablo/video embed |
 | Toplu seç + sil/arşiv | ✓ (G2) | ✓ | ✓ | — |
 | Okundu / okunmadı işaretle | ✓ | ✓ | ✓ | — |
 | Yıldız / bayrak | ✓ (G5) | ✓ | ✓ | — |
@@ -44,16 +53,17 @@
 | Klavye kısayolları | ✓ (`?`) | ✓ | ✓ | — |
 | Depolama kotası çubuğu | ✓ | ✓ | ✓ | — |
 | İmza / şablon | ✓ | ✓ | ✓ | — |
-| IMAP / şifre döndürme | ✓ | ✓ | ✓ | — |
+| IMAP / şifre döndürme | ✓ + Dovecot sync | ✓ | ✓ | [MAIL_IMAP_GOLD_SMOKE.md](./MAIL_IMAP_GOLD_SMOKE.md) |
 | TOTP (webmail) | ✓ | ✓ | ✓ | — |
 | Özel klasör / etiket | ✓ (G5) | ✓ | ✓ | — |
-| Kurallar / filtre | ✓ MVP (G5) | ✓ | ✓ | G5+ derinleştirme |
-| Takvim / kişiler | ✓ MVP (D6) | ✓ | ✓ | Harici CalDAV |
-| Web push / ses | ✓ (G6) | ✓ | ✓ | iOS PWA doc |
+| Kurallar / filtre | ✓ G5+ | ✓ | ✓ | Nested OR derinleştirme |
+| Takvim / kişiler | ✓ MVP (D6) | ✓ | ✓ | Harici CalDAV iki yön |
+| Web push / ses | ✓ (G6) | ✓ | ✓ | [MAIL_WEB_PUSH_IOS.md](./MAIL_WEB_PUSH_IOS.md) |
+| PWA offline okuma | ✓ (PM-4) | kısmi | kısmi | — |
 | Karanlık tema | ✓ (G4) | ✓ | ✓ | — |
 | Kurumsal logo (tenant) | ✓ (G4) | kısmi | ✓ | — |
 | Geri al (undo send) | ✓ (5s) | ✓ | ✓ | — |
-| Harici istemci (Thunderbird) | ✓ rehber + ayarlar | ✓ | ✓ | — |
+| Harici istemci (Thunderbird) | ✓ gold smoke prod | ✓ | ✓ | Manuel arşiv/sil senkron |
 
 ---
 
@@ -62,6 +72,7 @@
 | Kontrol | Aksiyon |
 |--------|--------|
 | **Güvenli değil** (HTTP) | `https://posta.lerta.com.tr/mail` kullanın; `bash scripts/verify-posta-https.sh` |
+| IMAP / Thunderbird | `bash scripts/smoke-imap-gold.sh` · `configure-dovecot-imap-gold-folders.sh` |
 | Eski UI | Sidebar **Sürüm** SHA; hard refresh / PWA yeniden aç |
 | Push yok (iOS) | [MAIL_WEB_PUSH_IOS.md](./MAIL_WEB_PUSH_IOS.md) — Ana ekrana ekle |
 
@@ -69,6 +80,8 @@
 
 ## 4. Strateji
 
-Lerta Mail **tam Gmail klonu** olmayacak; hedef: **Türkiye KOBİ + pilot** için güvenilir, sade, IMAP uyumlu kutu. Rekabet avantajı: **aynı ekosistem** (yonetim DNS, kota, KVKK) — bunları webmail içinde **görünür** yapmak (durum, kota, konsol linki).
+Lerta Mail **tam Gmail klonu** olmayacak; hedef: **Türkiye KOBİ + pilot** için güvenilir, sade, IMAP uyumlu kutu. Sprint sonrası **Gmail/Outlook webmail paritesi ~%92–93** bandında.
 
-Uygulama fazları: [MAIL_WEBMAIL_UX_ROADMAP.md](./MAIL_WEBMAIL_UX_ROADMAP.md)
+Rekabet avantajı: **aynı ekosistem** (yonetim DNS, kota, KVKK, TMS mesajlaşma) — bunları webmail içinde **görünür** yapmak (durum, kota, konsol linki).
+
+Uygulama fazları: [MAIL_WEBMAIL_UX_ROADMAP.md](./MAIL_WEBMAIL_UX_ROADMAP.md) · parity: [LERTA_MAIL_MESSAGING_PARITY_100_ROADMAP.md](./LERTA_MAIL_MESSAGING_PARITY_100_ROADMAP.md)
