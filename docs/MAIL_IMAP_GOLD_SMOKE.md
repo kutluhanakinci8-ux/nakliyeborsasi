@@ -8,7 +8,8 @@
 # 1) Özel klasör namespace (bir kez)
 bash scripts/configure-dovecot-imap-gold-folders.sh
 
-# 2) Şifre: webmail IMAP rotate veya bootstrap dosyası (root)
+# 2) Şifre: webmail IMAP rotate, bootstrap (/root/lerta-imap-credentials-bootstrap.txt) veya:
+#    bash scripts/rotate-imap-credential-vps.sh kullanici@lerta.com.tr
 export IMAP_GOLD_EMAIL='kullanici@lerta.com.tr'
 export IMAP_GOLD_PASSWORD='...'
 bash scripts/smoke-imap-gold.sh
