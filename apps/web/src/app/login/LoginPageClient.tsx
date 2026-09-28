@@ -134,7 +134,7 @@ export function LoginPageClient() {
         companyWebsiteUrl,
       );
       await refreshSession();
-      router.replace("/hesap/organizasyon");
+      router.replace("/hesap/posta-adresi?welcome=1");
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Kayıt başarısız");
     } finally {

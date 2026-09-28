@@ -56,3 +56,4 @@ export * from "./telemetry/PolylineSimplifier";
 export * from "./telemetry/OsrmShardResolver";
 export * from "./text/decodeHtmlEntities";
 export * from "./ports/ExternalFreightDataPort";
+export * from "./mail/lertaComTrLocalPart";

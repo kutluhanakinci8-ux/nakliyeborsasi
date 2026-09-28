@@ -30,6 +30,7 @@ import { PlatformMailTenantAdminService } from "./PlatformMailTenantAdminService
 import { MailTenantSuspensionService } from "./MailTenantSuspensionService";
 import { MailPilotOnboardingService } from "./MailPilotOnboardingService";
 import { MailAddressOnboardingService } from "./MailAddressOnboardingService";
+import { MailLertaComTrOnboardingService } from "./MailLertaComTrOnboardingService";
 import { MailOrganizationIdentityService } from "./MailOrganizationIdentityService";
 import { MailInstantPostDomainService } from "./MailInstantPostDomainService";
 import { CompanySubscriptionEntity } from "../../infrastructure/database/entities/CompanySubscriptionEntity";
@@ -299,6 +300,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     MailTenantSuspensionService,
     MailPilotOnboardingService,
     MailAddressOnboardingService,
+    MailLertaComTrOnboardingService,
     MailOrganizationIdentityService,
     MailInstantPostDomainService,
     MailWebPushService,

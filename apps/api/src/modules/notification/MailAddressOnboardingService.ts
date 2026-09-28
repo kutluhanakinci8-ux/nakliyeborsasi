@@ -1,10 +1,8 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
-import { parseInstantPostVanityEmail } from "@nakliyeborsasi/core";
 import {
   CustomDomainBundle,
   MailCustomDomainService,
 } from "./MailCustomDomainService";
-import { MailInstantPostDomainService } from "./MailInstantPostDomainService";
 import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
 import { MailTenantSubdomainService } from "./MailTenantSubdomainService";
 import { MailDomainDnsVerificationService } from "./MailDomainDnsVerificationService";
@@ -27,7 +25,6 @@ export type ClaimMailAddressResult = {
 export class MailAddressOnboardingService {
   public constructor(
     private readonly mailCustomDomainService: MailCustomDomainService,
-    private readonly mailInstantPostDomainService: MailInstantPostDomainService,
     private readonly mailSaasSubscriptionService: MailSaasSubscriptionService,
     private readonly mailTenantSubdomainService: MailTenantSubdomainService,
     private readonly mailDomainDnsVerificationService: MailDomainDnsVerificationService,
@@ -36,27 +33,28 @@ export class MailAddressOnboardingService {
   public parseDesiredAddress(raw: string): {
     localPart: string;
     domain: string;
-    instantPostOrgSlug?: string;
   } {
-    const instant = parseInstantPostVanityEmail(raw);
-    if (instant) {
-      return {
-        localPart: instant.localPart,
-        domain: instant.fqdn,
-        instantPostOrgSlug: instant.orgSlug,
-      };
-    }
     const trimmed = raw.trim().toLowerCase();
+    if (trimmed.endsWith(".post") || trimmed.includes(".post@")) {
+      throw new BadRequestException(
+        "Lerta Post (@firma.post) kapatıldı. Adresinizi örnek: kutluhanlogistics@lerta.com.tr olarak seçin.",
+      );
+    }
     const at = trimmed.lastIndexOf("@");
     if (at <= 0 || at === trimmed.length - 1) {
       throw new BadRequestException(
-        "Geçerli bir e-posta adresi girin (ör. info@firma.com.tr veya info@firma.post).",
+        "Geçerli bir e-posta adresi girin (ör. kutluhanlogistics@lerta.com.tr).",
       );
     }
     const localPart = trimmed.slice(0, at);
     const domain = this.mailCustomDomainService.normalizeDomain(
       trimmed.slice(at + 1),
     );
+    if (domain.endsWith(".post") || domain === "post") {
+      throw new BadRequestException(
+        "Lerta Post (@firma.post) kapatıldı. Örnek: antalyalogistics@lerta.com.tr",
+      );
+    }
     const tenantDomain =
       this.mailDomainDnsVerificationService.resolveTenantMailDomain();
     if (domain === tenantDomain) {
@@ -86,31 +84,6 @@ export class MailAddressOnboardingService {
     const tenantDomain =
       this.mailDomainDnsVerificationService.resolveTenantMailDomain();
 
-    if (parsed.instantPostOrgSlug) {
-      const post = await this.mailInstantPostDomainService.provisionMailbox({
-        organizationId: params.organizationId,
-        orgSlug: parsed.instantPostOrgSlug,
-        localPart,
-        displayName: params.displayName,
-        makeDefault: true,
-      });
-      const publicDnsReady =
-        await this.mailInstantPostDomainService.platformPostDnsReady();
-      return {
-        fromAddress: post.fromAddress,
-        vanityAddress: post.vanityAddress,
-        localPart,
-        domain: post.mailDomain.domain,
-        channel: "instant_post",
-        mailboxProvisioned: true,
-        publicDnsReady,
-        bundle: null,
-        nextStepTr: publicDnsReady
-          ? `${post.vanityAddress} hazır — Posta DNS Lerta tarafında; webmail kullanabilirsiniz.`
-          : `${post.vanityAddress} oluşturuldu; platform post DNS (wildcard) henüz doğrulanmadı.`,
-      };
-    }
-
     if (domain === tenantDomain) {
       const result = await this.mailTenantSubdomainService.provisionPilotSender({
         organizationId: params.organizationId,
@@ -132,8 +105,8 @@ export class MailAddressOnboardingService {
         publicDnsReady: identity.dnsCheck.ok,
         bundle: null,
         nextStepTr: identity.dnsCheck.ok
-          ? "Webmail ile giriş yapıp posta gönderebilirsiniz."
-          : "Platform DNS hazırlanıyor; birkaç dakika sonra tekrar deneyin.",
+          ? `${result.fromAddress} hazır — posta.lerta.com.tr üzerinden kullanabilirsiniz. Giriş e-postanız (platform hesabı) ayrı kalır.`
+          : "Kutu oluşturuldu; platform MX/SPF yayına alındığında dışarıdan gelen posta açılır.",
       };
     }
 
