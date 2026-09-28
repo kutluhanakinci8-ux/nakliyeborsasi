@@ -48,7 +48,7 @@ export function MailInboxMessageRow({
     <div
       role="button"
       tabIndex={0}
-      className={`mail-inbox-row ${selected ? "selected" : ""} ${unread ? "unread" : ""}`}
+      className={`mail-inbox-row ${selected ? "selected" : ""} ${unread ? "unread" : "read"}`}
       onClick={onOpen}
       onKeyDown={(e) => {
         if (e.key === "Enter") {
