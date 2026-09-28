@@ -33,6 +33,12 @@ export class MessageEntity {
   @Column({ type: "text" })
   public bodyText!: string;
 
+  @Column({ type: "varchar", length: 16, default: "user" })
+  public senderKind!: "user" | "bot";
+
+  @Column({ type: "varchar", length: 128, nullable: true })
+  public senderLabel!: string | null;
+
   @Column({ type: "jsonb", nullable: true })
   public attachments!: MessageAttachmentMeta[] | null;
 

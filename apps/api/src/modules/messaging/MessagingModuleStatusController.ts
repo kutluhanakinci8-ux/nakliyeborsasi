@@ -21,6 +21,9 @@ export class MessagingModuleStatusController {
         "translate_api",
         "company_export",
         "platform_ediscovery",
+        "org_channels",
+        "enterprise_search",
+        "incoming_bot_webhook",
       ],
     };
   }

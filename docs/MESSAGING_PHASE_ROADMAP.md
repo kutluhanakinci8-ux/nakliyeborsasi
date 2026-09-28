@@ -7,6 +7,7 @@
 | **P2** | Okundu, MailAdmin compose, güven rozeti, HTML compose (varsayılan zengin), sohbet arama | ✅ kod |
 | **P3** | Yapılandırılmış özet, çeviri API, KVKK export, admin eDiscovery, canlı yenileme | ✅ kod |
 | **P4** | Sohbet dosya ekleri (2×2,5 MB), web push bildirimleri (`messaging-push-sw.js`) | ✅ kod |
+| **P5** | Slack derinliği: org kanalları, bot webhook, kurumsal arama | ✅ kod · `MESSAGING_SLACK_DEPTH.md` |
 
 **Çeviri (ops):** `MESSAGING_TRANSLATE_API_URL` → LibreTranslate uyumlu POST (ör. `https://libretranslate.com/translate`)
 

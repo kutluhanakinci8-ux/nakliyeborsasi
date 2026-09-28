@@ -19,6 +19,10 @@ export class MessagingThreadMessageView {
 
   public readonly attachments: MessagingMessageAttachmentView[];
 
+  public readonly senderKind: "user" | "bot";
+
+  public readonly senderLabel: string | null;
+
   public constructor(params: {
     id: string;
     senderCompanyId: string;
@@ -26,6 +30,8 @@ export class MessagingThreadMessageView {
     createdAt: string;
     readByRecipient: boolean;
     attachments?: MessagingMessageAttachmentView[];
+    senderKind?: "user" | "bot";
+    senderLabel?: string | null;
   }) {
     this.id = params.id;
     this.senderCompanyId = params.senderCompanyId;
@@ -33,5 +39,7 @@ export class MessagingThreadMessageView {
     this.createdAt = params.createdAt;
     this.readByRecipient = params.readByRecipient;
     this.attachments = params.attachments ?? [];
+    this.senderKind = params.senderKind ?? "user";
+    this.senderLabel = params.senderLabel ?? null;
   }
 }
