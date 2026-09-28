@@ -37,11 +37,11 @@ if [[ -x scripts/deploy-lerta-post-vanity-from.sh ]]; then
   bash scripts/deploy-lerta-post-vanity-from.sh "$INSTALL_DIR" || true
 fi
 
+DEPLOY_BRANCH="$BRANCH" bash scripts/deploy-posta-lerta-com-tr.sh "$INSTALL_DIR"
+
 if [[ -x scripts/provision-pm5-imap-dovecot-vps.sh ]]; then
   INSTALL_DIR="$INSTALL_DIR" bash scripts/provision-pm5-imap-dovecot-vps.sh || true
 fi
-
-DEPLOY_BRANCH="$BRANCH" bash scripts/deploy-posta-lerta-com-tr.sh "$INSTALL_DIR"
 
 bash scripts/restart-web.sh "$INSTALL_DIR" 3011 "https://app.lerta.com.tr/api/v1"
 
