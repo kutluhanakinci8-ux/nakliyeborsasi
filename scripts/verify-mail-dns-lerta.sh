@@ -34,7 +34,7 @@ echo "MX: ${MX:-<yok>}"
 if [[ -n "${MX}" ]]; then
   echo "OK: MX kaydı var"
 else
-  echo "UYARI: MX yok — isimtescil: 10 mail.lerta.tr"
+  echo "UYARI: MX yok — isimtescil: 10 mail.lerta.com.tr"
 fi
 TDMARC=$(dig +short TXT "_dmarc.${TENANT}" | head -1)
 echo "DMARC (_dmarc.${TENANT}): ${TDMARC:-<yok>}"
