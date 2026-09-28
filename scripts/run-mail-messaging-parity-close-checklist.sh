@@ -27,7 +27,8 @@ run_step "PWA shell v7" bash "${ROOT}/scripts/verify-mail-web-pwa-prod.sh"
 run_step "JMAP bridge mount" bash "${ROOT}/scripts/verify-mail-jmap-bridge-prod.sh"
 
 if [[ -f "${ENV_FILE}" ]]; then
-  run_step "Push VAPID" bash "${ROOT}/scripts/verify-mail-web-push-prod.sh" "${ENV_FILE}"
+  run_step "Mail push VAPID" bash "${ROOT}/scripts/verify-mail-web-push-prod.sh" "${ENV_FILE}"
+  run_step "Messaging push VAPID (izole)" bash "${ROOT}/scripts/verify-messaging-web-push-prod.sh" "${ENV_FILE}"
   run_step "AI compose flags" bash "${ROOT}/scripts/verify-mail-ai-compose-prod.sh" "${ENV_FILE}"
 else
   echo ""

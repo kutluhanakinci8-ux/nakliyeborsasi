@@ -17,6 +17,14 @@ git log -1 --oneline
 
 bash scripts/install-deps.sh
 
+if [[ -x scripts/apply-mail-web-push-vps-env.sh ]]; then
+  bash scripts/apply-mail-web-push-vps-env.sh "$INSTALL_DIR" || true
+fi
+
+if [[ -x scripts/apply-messaging-web-push-vps-env.sh ]]; then
+  bash scripts/apply-messaging-web-push-vps-env.sh "$INSTALL_DIR" || true
+fi
+
 if [[ -x scripts/apply-messaging-p4-schema.sh ]]; then
   bash scripts/apply-messaging-p4-schema.sh "$INSTALL_DIR" || true
 fi

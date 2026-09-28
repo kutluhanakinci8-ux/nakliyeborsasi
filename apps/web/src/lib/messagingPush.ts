@@ -13,7 +13,11 @@ function urlBase64ToUint8Array(base64: string): Uint8Array {
 
 async function fetchPushConfig(accessToken: string) {
   return AuthenticatedApiClient.fetchJson(accessToken, "/messaging/push/config") as Promise<{
-    config: { enabled: boolean; publicKey: string | null };
+    config: {
+      enabled: boolean;
+      publicKey: string | null;
+      isolatedVapid?: boolean;
+    };
   }>;
 }
 

@@ -1,7 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import webpush from "web-push";
+import { sendWebPushNotification } from "../../infrastructure/push/sendWebPush";
 import { MailWebPushSubscriptionEntity } from "../../infrastructure/database/entities/MailWebPushSubscriptionEntity";
 
 export type MailWebPushConfig = {
@@ -12,7 +12,6 @@ export type MailWebPushConfig = {
 @Injectable()
 export class MailWebPushService {
   private readonly logger = new Logger(MailWebPushService.name);
-  private vapidConfigured = false;
 
   public constructor(
     @InjectRepository(MailWebPushSubscriptionEntity)
@@ -28,20 +27,20 @@ export class MailWebPushService {
     };
   }
 
-  private ensureVapid(): boolean {
+  private readMailVapid(): {
+    subject: string;
+    publicKey: string;
+    privateKey: string;
+  } | null {
     const publicKey = process.env.MAIL_WEB_PUSH_VAPID_PUBLIC_KEY?.trim() ?? "";
     const privateKey = process.env.MAIL_WEB_PUSH_VAPID_PRIVATE_KEY?.trim() ?? "";
     const subject =
       process.env.MAIL_WEB_PUSH_VAPID_SUBJECT?.trim() ??
       "mailto:admin@lerta.tr";
     if (!publicKey || !privateKey) {
-      return false;
+      return null;
     }
-    if (!this.vapidConfigured) {
-      webpush.setVapidDetails(subject, publicKey, privateKey);
-      this.vapidConfigured = true;
-    }
-    return true;
+    return { subject, publicKey, privateKey };
   }
 
   public async registerSubscription(params: {
@@ -87,7 +86,8 @@ export class MailWebPushService {
     messageId: string;
     subject: string;
   }): Promise<void> {
-    if (!this.ensureVapid()) {
+    const vapid = this.readMailVapid();
+    if (!vapid) {
       return;
     }
     const subs = await this.subscriptionRepository.find({
@@ -105,12 +105,13 @@ export class MailWebPushService {
     });
     for (const row of subs) {
       try {
-        await webpush.sendNotification(
+        await sendWebPushNotification(
           {
             endpoint: row.endpoint,
             keys: { p256dh: row.p256dh, auth: row.auth },
           },
           payload,
+          vapid,
         );
       } catch (error) {
         const status = (error as { statusCode?: number }).statusCode;
@@ -127,7 +128,8 @@ export class MailWebPushService {
     fromAddress: string;
     subject: string;
   }): Promise<void> {
-    if (!this.ensureVapid()) {
+    const vapid = this.readMailVapid();
+    if (!vapid) {
       return;
     }
     const subs = await this.subscriptionRepository.find({
@@ -145,12 +147,13 @@ export class MailWebPushService {
     });
     for (const row of subs) {
       try {
-        await webpush.sendNotification(
+        await sendWebPushNotification(
           {
             endpoint: row.endpoint,
             keys: { p256dh: row.p256dh, auth: row.auth },
           },
           payload,
+          vapid,
         );
       } catch (error) {
         const status = (error as { statusCode?: number }).statusCode;
