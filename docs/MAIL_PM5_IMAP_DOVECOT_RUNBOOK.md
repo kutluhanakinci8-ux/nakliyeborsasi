@@ -22,5 +22,8 @@ Thunderbird / Apple Mail ile **Gelen, Gönderilen, Arşiv, Çöp, Spam** klasör
 - `GET company/mail-inbox/imap-health` — maildir + klasör iskeleti durumu
 
 ## Smoke test
-1. Webmail’den arşivle → IMAP’te `.Archive` dolmalı
-2. Thunderbird’dan sil → web çöp ile uyumlu (tek yön gecikme TTL)
+1. `bash scripts/configure-dovecot-imap-gold-folders.sh` (SPECIAL-USE)
+2. `bash scripts/smoke-imap-gold.sh email@lerta.com.tr` — otomatik LOGIN/LIST
+3. Manuel: [MAIL_IMAP_GOLD_SMOKE.md](./MAIL_IMAP_GOLD_SMOKE.md)
+4. Webmail’den arşivle → IMAP’te Arşiv dolmalı
+5. Thunderbird’dan sil → web çöp ile uyumlu (tek yön gecikme TTL)

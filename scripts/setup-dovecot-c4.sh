@@ -13,7 +13,8 @@ apt-get install -y dovecot-imapd dovecot-core
 mkdir -p "${MAILDIR_ROOT}"
 mkdir -p "$(dirname "${PASSWD_FILE}")"
 touch "${PASSWD_FILE}"
-chmod 600 "${PASSWD_FILE}"
+chown root:dovecot "${PASSWD_FILE}" 2>/dev/null || true
+chmod 640 "${PASSWD_FILE}"
 
 cat >/etc/dovecot/conf.d/99-lerta-mail.conf <<EOF
 protocols = imap
@@ -25,7 +26,7 @@ passdb {
 }
 userdb {
   driver = static
-  args = uid=vmail gid=vmail home=${MAILDIR_ROOT}/%d/%n
+  args = uid=vmail gid=mail home=${MAILDIR_ROOT}/%d/%n
 }
 ssl = yes
 EOF
@@ -35,6 +36,10 @@ chown -R vmail:mail "${MAILDIR_ROOT}"
 
 systemctl enable dovecot
 systemctl restart dovecot
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [[ -x "${SCRIPT_DIR}/configure-dovecot-imap-gold-folders.sh" ]]; then
+  bash "${SCRIPT_DIR}/configure-dovecot-imap-gold-folders.sh"
+fi
 echo "Dovecot IMAP hazır. Maildir: ${MAILDIR_ROOT}, passwd: ${PASSWD_FILE}"
 echo "Admin: POST platform-admin/mail/imap/sync-dovecot (MAIL_IMAP_APPLY_DOVECOT=true)"
 echo "Org: POST company/mail-inbox/imap-credentials/rotate"
