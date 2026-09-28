@@ -32,19 +32,12 @@ export function formatMailListDate(iso: string): string {
   const now = new Date();
   const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const startThat = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  const dayDiff =
-    (startToday.getTime() - startThat.getTime()) / (24 * 60 * 60 * 1000);
-  if (dayDiff === 0) {
+  const sameCalendarDay = startToday.getTime() === startThat.getTime();
+  if (sameCalendarDay) {
     return d.toLocaleTimeString("tr-TR", {
       hour: "2-digit",
       minute: "2-digit",
     });
-  }
-  if (dayDiff === 1) {
-    return "Dün";
-  }
-  if (dayDiff < 7) {
-    return d.toLocaleDateString("tr-TR", { weekday: "short" });
   }
   return d.toLocaleDateString("tr-TR", {
     day: "numeric",
