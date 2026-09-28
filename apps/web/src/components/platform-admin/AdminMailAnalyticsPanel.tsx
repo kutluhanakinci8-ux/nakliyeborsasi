@@ -20,6 +20,10 @@ const EVENT_LABELS: Record<string, string> = {
   LISTING_PUBLISHED: "İlan yayın",
   MESSAGING_NEW_MESSAGE: "Yeni sohbet mesajı",
   WEEKLY_DIGEST: "Haftalık özet",
+  MAIL_INBOUND_RECEIVED: "Kurumsal — gelen",
+  MAIL_SENT_TRANSACTIONAL: "Kurumsal — gönderilen",
+  LERTA_MAIL_BILLING: "Mail faturalama",
+  LERTA_MAIL_WELCOME: "Mail karşılama",
 };
 
 type RangeDays = 7 | 30;
@@ -50,6 +54,7 @@ export function AdminMailAnalyticsPanel() {
   const [events, setEvents] = useState<EmailOutboxEventBreakdownRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const [exportingEngagement, setExportingEngagement] = useState(false);
 
   const refresh = useCallback(async () => {
     if (!accessToken) {
@@ -81,6 +86,27 @@ export function AdminMailAnalyticsPanel() {
     }
     return max;
   }, [series]);
+
+  async function downloadEngagementCsv(): Promise<void> {
+    if (!accessToken) {
+      return;
+    }
+    setExportingEngagement(true);
+    try {
+      const blob = await PlatformAdminApiClient.fetchEmailEngagementExportBlob(
+        accessToken,
+        { days: range },
+      );
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `lerta-engagement-${range}d.csv`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setExportingEngagement(false);
+    }
+  }
 
   async function downloadCsv(): Promise<void> {
     if (!accessToken) {
@@ -128,7 +154,15 @@ export function AdminMailAnalyticsPanel() {
           disabled={exporting}
           onClick={() => void downloadCsv()}
         >
-          {exporting ? "İndiriliyor…" : "CSV dışa aktar"}
+          {exporting ? "İndiriliyor…" : "Outbox CSV"}
+        </button>
+        <button
+          type="button"
+          className="pa-btn pa-btn--secondary"
+          disabled={exportingEngagement}
+          onClick={() => void downloadEngagementCsv()}
+        >
+          {exportingEngagement ? "İndiriliyor…" : "Engagement CSV"}
         </button>
         <button
           type="button"

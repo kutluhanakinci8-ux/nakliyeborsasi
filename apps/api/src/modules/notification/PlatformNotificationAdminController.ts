@@ -26,6 +26,7 @@ import { NOTIFICATION_EVENT_CATALOG } from "./NotificationEventCatalog";
 import { PlatformMailSendingService } from "./PlatformMailSendingService";
 import { buildAdminTestNotificationPayload } from "./NotificationTestPayloadFactory";
 import { MailOrganizationSendRateService } from "./MailOrganizationSendRateService";
+import { EmailEngagementService } from "./EmailEngagementService";
 
 @Controller("platform-admin/notifications")
 @UseGuards(JwtAuthenticationGuard, PlatformAdminGuard)
@@ -40,6 +41,7 @@ export class PlatformNotificationAdminController {
     private readonly emailDeliveryService: EmailDeliveryService,
     private readonly platformMailSendingService: PlatformMailSendingService,
     private readonly mailOrganizationSendRateService: MailOrganizationSendRateService,
+    private readonly emailEngagementService: EmailEngagementService,
   ) {}
 
   @Get("platform-sending")
@@ -216,6 +218,23 @@ export class PlatformNotificationAdminController {
       days: resolved,
       events: await this.emailOutboxAnalyticsService.getEventBreakdown(resolved),
     };
+  }
+
+  @Get("analytics/engagement-export")
+  @Header("Content-Type", "text/csv; charset=utf-8")
+  public async engagementExport(
+    @Query("days") days?: string,
+    @Query("limit") limit?: string,
+  ): Promise<string> {
+    const resolvedDays = this.emailOutboxAnalyticsService.resolveDays(days);
+    const since = new Date();
+    since.setUTCDate(since.getUTCDate() - (resolvedDays - 1));
+    since.setUTCHours(0, 0, 0, 0);
+    const parsedLimit = limit ? Number.parseInt(limit, 10) : 5000;
+    return await this.emailEngagementService.buildEngagementExportCsv(
+      since,
+      Number.isFinite(parsedLimit) ? parsedLimit : 5000,
+    );
   }
 
   @Get("outbox/export")
