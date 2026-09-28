@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { IsNull, Not, Repository } from "typeorm";
 import { MailSenderIdentityEntity } from "../../infrastructure/database/entities/MailSenderIdentityEntity";
 import { MailMailboxEntity } from "../../infrastructure/database/entities/MailMailboxEntity";
 import { MailInboundMessageEntity } from "../../infrastructure/database/entities/MailInboundMessageEntity";
@@ -425,17 +425,61 @@ export class MailMailboxComposeService {
 
   public async listSent(organizationId: string, limit = 40) {
     const rows = await this.sentRepository.find({
-      where: { organizationId },
+      where: { organizationId, trashedAt: IsNull() },
       order: { sentAt: "DESC" },
       take: limit,
     });
-    return rows.map((row) => ({
+    return rows.map((row) => this.toSentListItem(row));
+  }
+
+  public async listTrashedSent(organizationId: string, limit = 50) {
+    const rows = await this.sentRepository.find({
+      where: { organizationId, trashedAt: Not(IsNull()) },
+      order: { trashedAt: "DESC" },
+      take: limit,
+    });
+    return rows.map((row) => this.toSentListItem(row));
+  }
+
+  public async countTrashedSent(organizationId: string): Promise<number> {
+    return this.sentRepository.count({
+      where: { organizationId, trashedAt: Not(IsNull()) },
+    });
+  }
+
+  public async trashSentMessage(
+    organizationId: string,
+    sentId: string,
+  ): Promise<void> {
+    const row = await this.sentRepository.findOne({ where: { id: sentId } });
+    if (!row || row.organizationId !== organizationId) {
+      throw new NotFoundException("Gönderilen mesaj bulunamadı");
+    }
+    row.trashedAt = new Date();
+    await this.sentRepository.save(row);
+  }
+
+  public async restoreSentFromTrash(
+    organizationId: string,
+    sentId: string,
+  ): Promise<void> {
+    const row = await this.sentRepository.findOne({ where: { id: sentId } });
+    if (!row || row.organizationId !== organizationId) {
+      throw new NotFoundException("Gönderilen mesaj bulunamadı");
+    }
+    row.trashedAt = null;
+    await this.sentRepository.save(row);
+  }
+
+  private toSentListItem(row: MailMailboxSentEntity) {
+    return {
       id: row.id,
       toAddress: row.toAddress,
       subject: row.subject,
       sentAt: row.sentAt.toISOString(),
       relatedInboundMessageId: row.relatedInboundMessageId,
-    }));
+      trashedAt: row.trashedAt?.toISOString() ?? null,
+    };
   }
 
   public async getSentMessage(organizationId: string, sentId: string) {
@@ -462,6 +506,11 @@ export class MailMailboxComposeService {
     const row = await this.sentRepository.findOne({ where: { id: sentId } });
     if (!row || row.organizationId !== organizationId) {
       throw new NotFoundException("Gönderilen mesaj bulunamadı");
+    }
+    if (!row.trashedAt) {
+      throw new BadRequestException(
+        "Kalıcı silmek için önce çöp kutusuna taşıyın.",
+      );
     }
     await this.sentRepository.delete({ id: sentId, organizationId });
   }
