@@ -19,6 +19,24 @@ export class MessagingAttachmentStorageService {
   private static readonly maxAttachments = 5;
   private static readonly maxBytes = 10_000_000;
 
+  public static maxAttachmentsPublic(): number {
+    return MessagingAttachmentStorageService.maxAttachments;
+  }
+
+  public static maxBytesPublic(): number {
+    return MessagingAttachmentStorageService.maxBytes;
+  }
+
+  public static allowedContentTypesPublic(): string[] {
+    return [
+      "application/pdf",
+      "text/plain",
+      "image/*",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/vnd.ms-excel",
+    ];
+  }
+
   public async persistForMessage(
     threadId: string,
     messageId: string,
@@ -48,7 +66,9 @@ export class MessagingAttachmentStorageService {
         throw new BadRequestException("Boş ek dosyası.");
       }
       if (content.length > MessagingAttachmentStorageService.maxBytes) {
-        throw new BadRequestException("Ek dosya boyutu sınırı aşıldı (2,5 MB).");
+        throw new BadRequestException(
+          "Ek dosya boyutu sınırı aşıldı (10 MB).",
+        );
       }
       const storagePath = join(dir, `${index}-${randomUUID()}-${filename}`);
       await writeFile(storagePath, content);
@@ -111,6 +131,13 @@ export class MessagingAttachmentStorageService {
       return true;
     }
     if (lower.startsWith("image/")) {
+      return true;
+    }
+    if (
+      lower ===
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+      lower === "application/vnd.ms-excel"
+    ) {
       return true;
     }
     return false;

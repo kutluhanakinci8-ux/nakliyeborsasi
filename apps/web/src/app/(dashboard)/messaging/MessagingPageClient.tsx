@@ -403,46 +403,93 @@ export function MessagingPageClient() {
       return;
     }
     let pollTimer: number | undefined;
+    let reconnectTimer: number | undefined;
     let eventSource: EventSource | null = null;
     let closed = false;
+    let sseConnected = false;
+    let reconnectAttempt = 0;
+    const maxReconnectDelayMs = 60_000;
+    const pollIntervalMs = 12_000;
 
-    function startPolling(): void {
-      if (pollTimer) {
-        return;
+    function stopPolling(): void {
+      if (pollTimer !== undefined) {
+        window.clearInterval(pollTimer);
+        pollTimer = undefined;
       }
-      pollTimer = window.setInterval(() => {
-        void loadThreads();
-        if (activeThreadId) {
-          void loadMessages(activeThreadId);
-        }
-      }, 12_000);
     }
 
-    void MessagingApiClient.createStreamTicket(accessToken, locale)
-      .then(({ ticket }) => {
-        if (closed) {
-          return;
-        }
-        eventSource = new EventSource(MessagingApiClient.streamUrl(ticket));
-        eventSource.addEventListener("message", () => {
-          void loadThreads();
-          if (activeThreadId) {
-            void loadMessages(activeThreadId);
+    function refreshFromServer(): void {
+      void loadThreads();
+      if (activeThreadId) {
+        void loadMessages(activeThreadId);
+      }
+    }
+
+    function startPolling(): void {
+      if (pollTimer !== undefined || sseConnected) {
+        return;
+      }
+      pollTimer = window.setInterval(refreshFromServer, pollIntervalMs);
+    }
+
+    function scheduleSseReconnect(): void {
+      if (closed || reconnectTimer !== undefined) {
+        return;
+      }
+      const delay = Math.min(
+        1000 * 2 ** reconnectAttempt,
+        maxReconnectDelayMs,
+      );
+      reconnectAttempt += 1;
+      reconnectTimer = window.setTimeout(() => {
+        reconnectTimer = undefined;
+        connectSse();
+      }, delay);
+    }
+
+    function onSseDown(): void {
+      sseConnected = false;
+      eventSource?.close();
+      eventSource = null;
+      startPolling();
+      scheduleSseReconnect();
+    }
+
+    function connectSse(): void {
+      if (closed) {
+        return;
+      }
+      void MessagingApiClient.createStreamTicket(accessToken, locale)
+        .then(({ ticket }) => {
+          if (closed) {
+            return;
           }
-        });
-        eventSource.onerror = () => {
           eventSource?.close();
-          eventSource = null;
-          startPolling();
-        };
-      })
-      .catch(() => startPolling());
+          eventSource = new EventSource(MessagingApiClient.streamUrl(ticket));
+          eventSource.onopen = () => {
+            sseConnected = true;
+            reconnectAttempt = 0;
+            stopPolling();
+          };
+          eventSource.addEventListener("message", refreshFromServer);
+          eventSource.onerror = () => {
+            onSseDown();
+          };
+        })
+        .catch(() => {
+          onSseDown();
+        });
+    }
+
+    connectSse();
 
     return () => {
       closed = true;
+      sseConnected = false;
       eventSource?.close();
-      if (pollTimer !== undefined) {
-        window.clearInterval(pollTimer);
+      stopPolling();
+      if (reconnectTimer !== undefined) {
+        window.clearTimeout(reconnectTimer);
       }
     };
   }, [mode, accessToken, locale, activeThreadId, loadMessages, loadThreads]);
@@ -829,7 +876,7 @@ export function MessagingPageClient() {
                 <span className="btn-secondary">Dosya</span>
                 <input
                   type="file"
-                  accept="image/*,application/pdf,text/plain"
+                  accept="image/*,application/pdf,text/plain,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
                   disabled={!activeThreadId || pendingAttachments.length >= 5}
                   onChange={(event) => {
                     const file = event.target.files?.[0];
