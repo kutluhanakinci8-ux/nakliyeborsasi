@@ -274,7 +274,10 @@ export function LoginPageClient() {
                   <h2>Yeni kurumsal üyelik</h2>
                   <p className="auth-card-lead">
                     Firma sahibi olarak kayıt olun; web adresiniz kayıt sonrası
-                    organizasyon profilinizde otomatik taranır.
+                    organizasyon profilinizde otomatik taranır. Aşağıdaki e-posta
+                    platforma giriş için kullanılır;{" "}
+                    <strong>@lerta.com.tr</strong> posta kutunuzu bir sonraki
+                    adımda seçeceksiniz.
                   </p>
                   <form onSubmit={(event) => void handleRegister(event)}>
                     <label className="label-light">
