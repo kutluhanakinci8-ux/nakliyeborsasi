@@ -12,6 +12,10 @@ bash "${ROOT}/scripts/verify-mail-billing-config.sh"
 
 if [[ -z "$JWT" ]]; then
   echo ""
+  if [[ "${PARITY_STRICT:-}" == "1" ]]; then
+    echo "FAIL: PARITY_STRICT=1 — OPERATOR_JWT veya MAIL_BILLING_JWT zorunlu." >&2
+    exit 2
+  fi
   echo "SKIP: Canlı API A1 checklist için OPERATOR_JWT veya MAIL_BILLING_JWT gerekli."
   echo "Operatör oturum token + platform-admin/mail/billing-health"
   exit 0

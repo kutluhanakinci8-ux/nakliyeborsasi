@@ -44,6 +44,10 @@ import {
   forwardMail,
   fetchMailInboxBranding,
   fetchSuggestReply,
+  fetchAiMailConsent,
+  patchAiMailConsent,
+  fetchSummarizeMessage,
+  fetchClassifyMessage,
   type MailInboxBranding,
   searchInbox,
   sendDraft,
@@ -155,6 +159,31 @@ export function MailClient() {
   const [replyBcc, setReplyBcc] = useState("");
   const [replyAllMode, setReplyAllMode] = useState(false);
   const [aiSuggestBusy, setAiSuggestBusy] = useState(false);
+  const [aiMailConsent, setAiMailConsent] = useState(false);
+
+  useEffect(() => {
+    if (!accessToken) {
+      return;
+    }
+    void fetchAiMailConsent(accessToken)
+      .then((payload) => setAiMailConsent(payload.aiMailAssistConsent))
+      .catch(() => undefined);
+  }, [accessToken]);
+
+  async function ensureAiMailConsent(): Promise<boolean> {
+    if (aiMailConsent) {
+      return true;
+    }
+    const ok = window.confirm(
+      "AI posta asistanı metinlerinizi işler. KVKK kapsamında onay veriyor musunuz?",
+    );
+    if (!ok || !accessToken) {
+      return false;
+    }
+    await patchAiMailConsent(accessToken, true);
+    setAiMailConsent(true);
+    return true;
+  }
   const [composeSubject, setComposeSubject] = useState("");
   const [composeText, setComposeText] = useState("");
   const [composeFiles, setComposeFiles] = useState<File[]>([]);
@@ -2644,8 +2673,17 @@ export function MailClient() {
                           return;
                         }
                         setAiSuggestBusy(true);
-                        void fetchSuggestReply(accessToken!, selectedId, "tr")
+                        void ensureAiMailConsent()
+                          .then((allowed) => {
+                            if (!allowed) {
+                              return null;
+                            }
+                            return fetchSuggestReply(accessToken!, selectedId, "tr");
+                          })
                           .then((result) => {
+                            if (!result) {
+                              return;
+                            }
                             setReplyText(result.suggestion);
                             setToast(
                               result.provider === "llm"
@@ -2658,6 +2696,58 @@ export function MailClient() {
                       }}
                     >
                       {aiSuggestBusy ? "Öneri…" : "Yanıt öner"}
+                    </button>
+                    <button
+                      type="button"
+                      className="compose-btn compose-btn--secondary"
+                      disabled={!selectedId || aiSuggestBusy}
+                      onClick={() => {
+                        if (!selectedId || !accessToken) {
+                          return;
+                        }
+                        setAiSuggestBusy(true);
+                        void ensureAiMailConsent()
+                          .then((allowed) =>
+                            allowed
+                              ? fetchSummarizeMessage(accessToken, selectedId, "tr")
+                              : null,
+                          )
+                          .then((result) => {
+                            if (result) {
+                              setToast(`Özet (${result.provider}): ${result.summary.slice(0, 120)}…`);
+                            }
+                          })
+                          .catch(() => setToast("Özet alınamadı."))
+                          .finally(() => setAiSuggestBusy(false));
+                      }}
+                    >
+                      Özet
+                    </button>
+                    <button
+                      type="button"
+                      className="compose-btn compose-btn--secondary"
+                      disabled={!selectedId || aiSuggestBusy}
+                      onClick={() => {
+                        if (!selectedId || !accessToken) {
+                          return;
+                        }
+                        setAiSuggestBusy(true);
+                        void ensureAiMailConsent()
+                          .then((allowed) =>
+                            allowed
+                              ? fetchClassifyMessage(accessToken, selectedId)
+                              : null,
+                          )
+                          .then((result) => {
+                            if (result) {
+                              setToast(`Sınıf: ${result.label} (${result.provider})`);
+                            }
+                          })
+                          .catch(() => setToast("Sınıflandırma başarısız."))
+                          .finally(() => setAiSuggestBusy(false));
+                      }}
+                    >
+                      Sınıfla
                     </button>
                     <button
                       type="button"

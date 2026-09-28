@@ -29,6 +29,15 @@ export class UserNotificationPreferenceEntity {
   @Column({ name: "ai_mail_assent_at", type: "timestamptz", nullable: true })
   public aiMailAssentAt!: Date | null;
 
+  @Column({ name: "notify_push_new_offers", type: "boolean", default: true })
+  public notifyPushNewOffers!: boolean;
+
+  @Column({ name: "notify_push_messages", type: "boolean", default: true })
+  public notifyPushMessages!: boolean;
+
+  @Column({ name: "notify_push_auctions", type: "boolean", default: true })
+  public notifyPushAuctions!: boolean;
+
   @CreateDateColumn({ type: "timestamptz" })
   public createdAt!: Date;
 

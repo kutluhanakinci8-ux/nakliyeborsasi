@@ -39,6 +39,16 @@ fi
 
 run_step "DNS legacy" bash "${ROOT}/scripts/verify-dns-legacy-cleanup.sh" "${DNS_LEGACY_DOMAIN:-lerta.com.tr}" || true
 
+if [[ -f "${ENV_FILE}" ]]; then
+  run_step "Messaging push VAPID izolasyon" bash "${ROOT}/scripts/verify-messaging-web-push-prod.sh" "${ENV_FILE}" || true
+  run_step "Multi-VPS mail rolü" bash "${ROOT}/scripts/verify-multi-vps-mail-role.sh" || true
+  if [[ "${SKIP_DR_DRILL:-}" != "1" ]]; then
+    run_step "DR tatbikat kanıtı" bash "${ROOT}/scripts/verify-dr-drill-evidence.sh" || true
+  fi
+fi
+
+run_step "SSE smoke" bash "${ROOT}/scripts/smoke-messaging-sse-load.sh" || true
+
 if [[ "${SKIP_LIGHTHOUSE:-}" != "1" ]]; then
   run_step "Lighthouse PWA" bash "${ROOT}/scripts/verify-lighthouse-mail-pwa.sh" || true
 fi

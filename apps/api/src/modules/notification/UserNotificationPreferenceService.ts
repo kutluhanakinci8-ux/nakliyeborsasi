@@ -15,9 +15,17 @@ export type UserNotificationPreferencesDto = {
   notifyMessages: boolean;
   notifyAuctions: boolean;
   notifyWeeklyDigest: boolean;
+  notifyPushNewOffers: boolean;
+  notifyPushMessages: boolean;
+  notifyPushAuctions: boolean;
   aiMailAssistConsent: boolean;
   aiMailAssentAt: string | null;
 };
+
+export type UserPushPreferenceKey =
+  | "notifyPushNewOffers"
+  | "notifyPushMessages"
+  | "notifyPushAuctions";
 
 @Injectable()
 export class UserNotificationPreferenceService {
@@ -40,7 +48,26 @@ export class UserNotificationPreferenceService {
       notifyWeeklyDigest: row.notifyWeeklyDigest,
       aiMailAssistConsent: row.aiMailAssistConsent ?? false,
       aiMailAssentAt: row.aiMailAssentAt?.toISOString() ?? null,
+      notifyPushNewOffers: row.notifyPushNewOffers ?? true,
+      notifyPushMessages: row.notifyPushMessages ?? true,
+      notifyPushAuctions: row.notifyPushAuctions ?? true,
     };
+  }
+
+  public resolvePushPreference(
+    prefs: UserNotificationPreferencesDto,
+    emailKey: UserPreferenceKey,
+  ): boolean | null {
+    if (emailKey === "notifyNewOffers") {
+      return prefs.notifyPushNewOffers;
+    }
+    if (emailKey === "notifyMessages") {
+      return prefs.notifyPushMessages;
+    }
+    if (emailKey === "notifyAuctions") {
+      return prefs.notifyPushAuctions;
+    }
+    return null;
   }
 
   public async hasAiMailAssistConsent(userId: string): Promise<boolean> {
@@ -93,6 +120,9 @@ export class UserNotificationPreferenceService {
       notifyMessages: true,
       notifyAuctions: true,
       notifyWeeklyDigest: false,
+      notifyPushNewOffers: true,
+      notifyPushMessages: true,
+      notifyPushAuctions: true,
       aiMailAssistConsent: false,
       aiMailAssentAt: null,
     };

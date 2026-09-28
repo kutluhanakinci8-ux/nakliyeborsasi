@@ -100,6 +100,7 @@ import {
 } from "./MailCalendarContactRequestDto";
 import { MailAiComposeService } from "./MailAiComposeService";
 import { MailDeliverabilityHubService } from "./MailDeliverabilityHubService";
+import { UserNotificationPreferenceService } from "./UserNotificationPreferenceService";
 
 @Controller("company/mail-inbox")
 @UseGuards(JwtAuthenticationGuard, MailProductTotpPolicyGuard)
@@ -127,6 +128,7 @@ export class CompanyMailInboxController {
     private readonly mailAddressAliasService: MailAddressAliasService,
     private readonly mailAiComposeService: MailAiComposeService,
     private readonly mailDeliverabilityHubService: MailDeliverabilityHubService,
+    private readonly userNotificationPreferenceService: UserNotificationPreferenceService,
   ) {}
 
   @Get("imap-health")
@@ -161,9 +163,45 @@ export class CompanyMailInboxController {
       aiCompose: {
         enabled: this.mailAiComposeService.isEnabled(),
         llmConfigured: this.mailAiComposeService.isLlmConfigured(),
+        consentRequired: true,
         suggestReplyPath: "/api/v1/company/mail-inbox/messages/:id/suggest-reply",
+        summarizePath: "/api/v1/company/mail-inbox/messages/:id/summarize",
+        classifyPath: "/api/v1/company/mail-inbox/messages/:id/classify",
       },
     };
+  }
+
+  @Get("ai-mail-consent")
+  public async getAiMailConsent(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    const preferences =
+      await this.userNotificationPreferenceService.getForUser(user.userId);
+    return {
+      aiMailAssistConsent: preferences.aiMailAssistConsent,
+      aiMailAssentAt: preferences.aiMailAssentAt,
+    };
+  }
+
+  @Patch("ai-mail-consent")
+  public async patchAiMailConsent(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: { consent: boolean },
+  ) {
+    const preferences =
+      await this.userNotificationPreferenceService.setAiMailAssistConsent(
+        user.userId,
+        Boolean(body.consent),
+      );
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      body.consent
+        ? MailIdentityAuditAction.AiMailAssistConsentGranted
+        : MailIdentityAuditAction.AiMailAssistConsentRevoked,
+      { consent: Boolean(body.consent) },
+      "/company/mail-inbox/ai-mail-consent",
+    );
+    return { preferences };
   }
 
   @Post("messages/:messageId/suggest-reply")
@@ -176,13 +214,20 @@ export class CompanyMailInboxController {
       user.companyId,
       messageId,
     );
-    return await this.mailAiComposeService.suggestReply({
+    const result = await this.mailAiComposeService.suggestReply({
       userId: user.userId,
       subject: detail.subject,
       fromAddress: detail.fromAddress,
       bodySnippet: detail.bodyText ?? detail.snippet ?? "",
       locale,
     });
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.AiMailSuggestReply,
+      { messageId, provider: result.provider },
+      `/company/mail-inbox/messages/${messageId}/suggest-reply`,
+    );
+    return result;
   }
 
   @Post("messages/:messageId/summarize")
@@ -195,12 +240,19 @@ export class CompanyMailInboxController {
       user.companyId,
       messageId,
     );
-    return await this.mailAiComposeService.summarizeMessage({
+    const result = await this.mailAiComposeService.summarizeMessage({
       userId: user.userId,
       subject: detail.subject,
       bodySnippet: detail.bodyText ?? detail.snippet ?? "",
       locale,
     });
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.AiMailSummarize,
+      { messageId, provider: result.provider },
+      `/company/mail-inbox/messages/${messageId}/summarize`,
+    );
+    return result;
   }
 
   @Post("messages/:messageId/classify")
@@ -212,11 +264,18 @@ export class CompanyMailInboxController {
       user.companyId,
       messageId,
     );
-    return await this.mailAiComposeService.classifyInbound({
+    const result = await this.mailAiComposeService.classifyInbound({
       userId: user.userId,
       subject: detail.subject,
       bodySnippet: detail.bodyText ?? detail.snippet ?? "",
     });
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.AiMailClassify,
+      { messageId, label: result.label, provider: result.provider },
+      `/company/mail-inbox/messages/${messageId}/classify`,
+    );
+    return result;
   }
 
   @Get("deliverability-hub")

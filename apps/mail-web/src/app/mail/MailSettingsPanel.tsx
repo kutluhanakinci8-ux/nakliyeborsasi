@@ -4,12 +4,15 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   beginTotpSetup,
   confirmTotpSetup,
+  fetchAiMailConsent,
   fetchImapSettings,
   fetchTotpStatus,
+  patchAiMailConsent,
   provisionImapPassword,
   rotateImapPassword,
   type MailImapSettings,
 } from "@/lib/mailApi";
+import { MailDeliverabilityPanel } from "./MailDeliverabilityPanel";
 import { MailImapClientSetup } from "./MailImapClientSetup";
 import { MailComposePresetsPanel } from "./MailComposePresetsPanel";
 import { MailAccountsSettingsPanel } from "./MailAccountsSettingsPanel";
@@ -53,6 +56,7 @@ type SettingsView =
   | "rules"
   | "security"
   | "privacy"
+  | "deliverability"
   | "calendarSettings"
   | "contactsSettings"
   | "help";
@@ -115,6 +119,13 @@ const HUB_ITEMS: HubItem[] = [
     label: "IMAP ve SMTP",
     subtitle: "Thunderbird, Outlook masaüstü",
     keywords: "imap smtp thunderbird outlook hesap",
+  },
+  {
+    id: "deliverability",
+    section: "general",
+    label: "Teslimat ve itibar",
+    subtitle: "SPF, DKIM, bounce özeti",
+    keywords: "spf dkim dmarc bounce deliverability",
   },
   {
     id: "rules",
@@ -194,6 +205,8 @@ export function MailSettingsPanel({
   const [mailPrefsSaving, setMailPrefsSaving] = useState(false);
   const [privacyStatus, setPrivacyStatus] = useState("");
   const [privacyExporting, setPrivacyExporting] = useState(false);
+  const [aiMailConsent, setAiMailConsent] = useState(false);
+  const [aiConsentBusy, setAiConsentBusy] = useState(false);
   const [calDavAccounts, setCalDavAccounts] = useState<
     { id: string; label: string; lastSyncedAt: string | null }[]
   >([]);
@@ -889,6 +902,30 @@ export function MailSettingsPanel({
             talebi ve durum takibi firma yöneticisi için yönetim konsolunda
             yapılır.
           </p>
+          <label className="mail-settings-toggle">
+            <input
+              type="checkbox"
+              checked={aiMailConsent}
+              disabled={aiConsentBusy}
+              onChange={(e) => {
+                const next = e.target.checked;
+                setAiConsentBusy(true);
+                void patchAiMailConsent(accessToken, next)
+                  .then(() => {
+                    setAiMailConsent(next);
+                  })
+                  .finally(() => setAiConsentBusy(false));
+              }}
+              onFocus={() => {
+                if (!aiMailConsent && !aiConsentBusy) {
+                  void fetchAiMailConsent(accessToken)
+                    .then((p) => setAiMailConsent(p.aiMailAssistConsent))
+                    .catch(() => undefined);
+                }
+              }}
+            />
+            AI posta asistanı (yanıt önerisi, özet, sınıflandırma) — KVKK onayı
+          </label>
           {privacyStatus ? <p>{privacyStatus}</p> : null}
           <div className="compose-actions">
             <button
@@ -1088,6 +1125,12 @@ export function MailSettingsPanel({
             </button>
           </div>
         </>,
+      );
+      break;
+    case "deliverability":
+      content = renderDetail(
+        "Teslimat ve itibar",
+        <MailDeliverabilityPanel accessToken={accessToken} />,
       );
       break;
     case "rules":

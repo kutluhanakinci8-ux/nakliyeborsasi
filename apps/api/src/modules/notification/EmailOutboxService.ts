@@ -164,7 +164,7 @@ export class EmailOutboxService {
         textBody: rendered.text,
         status: "pending",
         idempotencyKey: params.idempotencyKey,
-        metadata: params.metadata ?? null,
+        metadata: this.normalizeOutboxMetadata(params.metadata),
         providerMessageId: null,
         lastError: null,
         sentAt: null,
@@ -267,15 +267,46 @@ export class EmailOutboxService {
     }
   }
 
+  private normalizeOutboxMetadata(
+    metadata?: Record<string, unknown> | null,
+  ): Record<string, unknown> | null {
+    if (!metadata) {
+      return null;
+    }
+    const org =
+      (typeof metadata.organizationId === "string" && metadata.organizationId) ||
+      (typeof metadata.companyId === "string" && metadata.companyId) ||
+      null;
+    if (!org) {
+      return metadata;
+    }
+    return { ...metadata, organizationId: org, companyId: org };
+  }
+
   private maybeDispatchPublicApiWebhook(
     row: EmailOutboxEntity,
     organizationId: string | null,
     event: "message.sent" | "message.failed",
   ): void {
-    if (row.metadata?.source !== "mail_public_api" || !organizationId) {
+    const orgId =
+      organizationId ??
+      (typeof row.metadata?.organizationId === "string"
+        ? row.metadata.organizationId
+        : null);
+    const source = row.metadata?.source;
+    const webhookSources = new Set([
+      "mail_public_api",
+      "mail_webmail",
+      "marketing_campaign",
+      "MARKETING_CAMPAIGN",
+    ]);
+    if (!orgId) {
       return;
     }
-    this.mailOrganizationWebhookDispatcherService.dispatch(organizationId, event, {
+    if (source && !webhookSources.has(String(source))) {
+      return;
+    }
+    this.mailOrganizationWebhookDispatcherService.dispatch(orgId, event, {
       messageId: row.id,
       recipientEmail: row.recipientEmail,
       subject: row.subject,

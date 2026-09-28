@@ -40,6 +40,13 @@ export const MailIdentityAuditAction = {
   InboxDraftSent: "MAIL_INBOX_DRAFT_SENT",
   InboxMessageDeleted: "MAIL_INBOX_MESSAGE_DELETED",
   AdminEdiscoveryExport: "MAIL_ADMIN_EDISCOVERY_EXPORT",
+  AiMailAssistConsentGranted: "MAIL_AI_ASSIST_CONSENT_GRANTED",
+  AiMailAssistConsentRevoked: "MAIL_AI_ASSIST_CONSENT_REVOKED",
+  AiMailSuggestReply: "MAIL_AI_SUGGEST_REPLY",
+  AiMailSummarize: "MAIL_AI_SUMMARIZE",
+  AiMailClassify: "MAIL_AI_CLASSIFY",
+  LegalHoldEnabled: "MAIL_LEGAL_HOLD_ENABLED",
+  LegalHoldReleased: "MAIL_LEGAL_HOLD_RELEASED",
 } as const;
 
 export type MailIdentityAuditActionCode =

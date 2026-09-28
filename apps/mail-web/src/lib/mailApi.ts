@@ -1597,3 +1597,67 @@ export async function provisionImapPassword(accessToken: string) {
   });
   return payload.credentials;
 }
+
+export async function fetchAiMailConsent(accessToken: string) {
+  return apiFetch<{
+    aiMailAssistConsent: boolean;
+    aiMailAssentAt: string | null;
+  }>(accessToken, "company/mail-inbox/ai-mail-consent");
+}
+
+export async function patchAiMailConsent(accessToken: string, consent: boolean) {
+  return apiFetch<{ preferences: { aiMailAssistConsent: boolean } }>(
+    accessToken,
+    "company/mail-inbox/ai-mail-consent",
+    { method: "PATCH", body: JSON.stringify({ consent }) },
+  );
+}
+
+export async function fetchSummarizeMessage(
+  accessToken: string,
+  messageId: string,
+  locale = "tr",
+) {
+  return apiFetch<{ summary: string; provider: string }>(
+    accessToken,
+    `company/mail-inbox/messages/${messageId}/summarize?lang=${encodeURIComponent(locale)}`,
+    { method: "POST" },
+  );
+}
+
+export async function fetchClassifyMessage(
+  accessToken: string,
+  messageId: string,
+) {
+  return apiFetch<{ label: string; provider: string }>(
+    accessToken,
+    `company/mail-inbox/messages/${messageId}/classify`,
+    { method: "POST" },
+  );
+}
+
+export type MailDeliverabilityHub = {
+  dns: {
+    domain: string | null;
+    ok: boolean;
+    mx: boolean;
+    spf: boolean;
+    dkim: boolean;
+  } | null;
+  engagement30d: {
+    sentInPeriod: number;
+    bounceRatePercent: number | null;
+    openRatePercent: number | null;
+  };
+  suppressionCount: number;
+  dmarcReports90d: number;
+  score: number;
+  hintsTr: string[];
+};
+
+export async function fetchDeliverabilityHub(accessToken: string) {
+  return apiFetch<{ hub: MailDeliverabilityHub }>(
+    accessToken,
+    "company/mail-inbox/deliverability-hub",
+  );
+}

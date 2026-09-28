@@ -140,56 +140,71 @@ Her faz: kod + dokümantasyon + (varsa) `scripts/verify-*` · deploy checklist.
 
 ---
 
-## 35 maddelik envanter — tam liste (% tamamlanma)
+## 35 maddelik envanter — tam liste (Kod % · Prod %)
 
-**Ölçek:** %100 = üretimde doğrulanmış parite · %0 = başlanmadı / bilinçli kapsam dışı.  
-**Özet (2026-09-28, dal #149 + #150):** ortalama **≈ 72%** (35 madde aritmetik) · **öncelikli ● maddeler ≈ 81%** (1–17, 26, 28–30, 32) · **— maddeler ≈ 38%** (bilinçli erteleme).
+**Ölçek:** **Kod %** = repoda API/UI/script/SQL tamam · **Prod %** = canlı VPS, anahtar, manuel istemci veya bilinçli ürün kapsamı.  
+**Özet (2026-09-28, dal `cursor/mail-messaging-parity-wave2-519e` #150):** Kod ortalama **≈ 88%** · Prod ortalama **≈ 72%** · **● öncelik** Kod **≈ 97%** / Prod **≈ 81%**.
 
-| # | Konu | % | Kalan |
-|---|------|---|--------|
-| 1 | LLM yanıt öner | **92** | Prod `LERTA_MAIL_AI_COMPOSE_API_KEY`; webmail’de KVKK onay UX’i profil ile senkron |
-| 2 | IMAP gold smoke | **78** | Thunderbird / Apple Mail iki yön senkron manuel kanıt |
-| 3 | Push (webmail + sohbet) | **82** | iOS PWA gerçek cihaz push kanıtı |
-| 4 | Benchmark dokümanları | **95** | Periyodik VPS skor yenileme |
-| 5 | DNS legacy temizlik | **85** | Canlı DNS’te `kullanici.*` kaldırma (panel) |
-| 6 | IMAP şifre dağıtımı | **90** | Bootstrap dosyası hâlâ ops yedek; tam self-servis mesajlaşma |
-| 7 | SSE ölçek / p95 | **72** | Yük testi + p95 SLO kanıtı |
-| 8 | Sohbet push ayrı VAPID | **94** | Prod’da fallback kapalı doğrulama |
-| 9 | Çeviri (mesajlaşma) | **88** | Prod DeepL/LibreTranslate anahtarı + SLA |
-| 10 | ESP webhook derinliği | **90** | Tüm outbox kaynaklarında `organizationId` metadata |
-| 11 | Deliverability hub | **86** | Konsol/webmail Postmark-tarzı tam dashboard UI |
-| 12 | Kurallar G5+ | **94** | İsteğe bağlı daha derin nested OR |
-| 13 | CalDAV/CardDAV harici | **82** | İstemci tarafı tam RRULE/seri paritesi |
-| 14 | WYSIWYG compose | **88** | Outlook seviyesi gelişmiş düzen |
-| 15 | Bildirim matrisi UX | **91** | TMS %100 (ayrı push tercihleri) |
-| 16 | Billing prod (Stripe/iyzico) | **87** | Canlı anahtarlar + pilot → prod geçiş |
-| 17 | OPERATOR_JWT checklist | **93** | VPS `.env` içinde `OPERATOR_JWT` zorunlu CI |
-| 18 | JMAP Email/set | **85** | #146 merge + prod smoke |
-| 19 | Tam JMAP / Cory sunucu | **18** | HTTP köprü yeterli (ürün kararı) |
-| 20 | WebSocket gateway | **22** | SSE yeterli; WS isteğe bağlı |
-| 21 | Slack derinliği | **84** | #147 merge + kurumsal arama prod |
-| 22 | Native iOS/Android | **28** | PWA; mağaza uygulaması yok |
-| 23 | Pazarlama e-postası | **86** | #148 merge + ESP prod hacim |
-| 24 | HubSpot/SendGrid analitik | **76** | Postmark ~%85 hedefi; segment A/B operasyon |
-| 25 | AI özet / sınıflandırma | **88** | Webmail UI’da özet düğmesi; LLM anahtarı |
-| 26 | KVKK AI onay + audit | **80** | Tam denetim izi / DPO export |
-| 27 | eDiscovery legal hold | **74** | Legal hold otomasyonu + tam zincir |
-| 28 | Multi-VPS worker rolü | **62** | Her ortamda `LERTA_MAIL_RUNTIME_ROLE` uygulama |
-| 29 | DR tatbikatı | **55** | Otomatik tatbikat kanıtı / RTO ölçümü |
-| 30 | Lighthouse PWA ≥80 | **65** | Prod URL’de skor ≥80 kaydı |
-| 31 | Gmail admin embed | **20** | Harici sekme / kısmi API |
-| 32 | Onboarding KPI | **82** | Ürün panosu (kayıt→DNS→ilk mail) |
-| 33 | White-label vitrin F4 | **58** | F4 parçalı; vitrin tamamlama |
-| 34 | Okundu/teslim (sohbet) | **42** | WhatsApp/Slack seviyesi değil |
-| 35 | Public API genişleme | **68** | Graph-class kapsam dışı; F5 artışı |
+| # | Konu | Kod % | Prod % | Kalan (kısa) |
+|---|------|-------|--------|----------------|
+| 1 | LLM yanıt öner | **100** | **92** | Prod API anahtarı |
+| 2 | IMAP gold smoke | **95** | **78** | Thunderbird / Apple iki yön kanıt |
+| 3 | Push (webmail + sohbet) | **100** | **82** | iOS PWA gerçek cihaz |
+| 4 | Benchmark dokümanları | **100** | **95** | Periyodik VPS yenileme |
+| 5 | DNS legacy temizlik | **100** | **85** | Canlı DNS `kullanici.*` |
+| 6 | IMAP şifre dağıtımı | **95** | **90** | Bootstrap yedek; tam self-servis |
+| 7 | SSE ölçek / p95 | **95** | **72** | Yük testi + p95 SLO |
+| 8 | Sohbet push ayrı VAPID | **100** | **94** | Prod fallback kapalı doğrulama |
+| 9 | Çeviri (mesajlaşma) | **100** | **88** | Prod DeepL/LibreTranslate |
+| 10 | ESP webhook derinliği | **100** | **90** | Tüm outbox’larda org metadata smoke |
+| 11 | Deliverability hub | **100** | **86** | Tam Postmark-tarzı UI polish |
+| 12 | Kurallar G5+ | **100** | **94** | İsteğe bağlı daha derin OR |
+| 13 | CalDAV/CardDAV harici | **92** | **82** | Tam RRULE/seri istemci paritesi |
+| 14 | WYSIWYG compose | **95** | **88** | Outlook seviyesi |
+| 15 | Bildirim matrisi UX | **100** | **91** | TMS %100 prod doğrulama |
+| 16 | Billing prod | **100** | **87** | Canlı Stripe/iyzico |
+| 17 | OPERATOR_JWT checklist | **100** | **93** | VPS/CI’da JWT zorunlu |
+| 18 | JMAP Email/set | **85** | **85** | #146 merge + prod smoke |
+| 19 | Tam JMAP / Cory sunucu | **18** | **18** | Köprü yeterli (ürün kararı) |
+| 20 | WebSocket gateway | **22** | **22** | SSE yeterli |
+| 21 | Slack derinliği | **84** | **84** | #147 merge + prod |
+| 22 | Native iOS/Android | **28** | **28** | Sadece PWA |
+| 23 | Pazarlama e-postası | **86** | **86** | #148 merge + prod hacim |
+| 24 | HubSpot/SendGrid analitik | **85** | **76** | Postmark ~%85 hedefi |
+| 25 | AI özet / sınıflandırma | **100** | **88** | Prod LLM anahtarı |
+| 26 | KVKK AI onay + audit | **100** | **80** | DPO export / tam denetim |
+| 27 | eDiscovery legal hold | **100** | **74** | Ops legal-hold + zincir kanıtı |
+| 28 | Multi-VPS worker rolü | **100** | **62** | Her ortamda `LERTA_MAIL_RUNTIME_ROLE` |
+| 29 | DR tatbikatı | **100** | **55** | `verify-dr-drill-evidence.sh` + RTO |
+| 30 | Lighthouse PWA ≥80 | **100** | **65** | Prod skor kaydı |
+| 31 | Gmail admin embed | **20** | **20** | Tam embed yok |
+| 32 | Onboarding KPI | **100** | **82** | Ürün panosu UI |
+| 33 | White-label vitrin F4 | **58** | **58** | F4 parçalı |
+| 34 | Okundu/teslim (sohbet) | **42** | **42** | WA/Slack seviyesi değil |
+| 35 | Public API genişleme | **68** | **68** | Graph-class dışı |
+
+### Kod %100 kapanış notları (#150 wave-2)
+
+| Madde | Repoda |
+|-------|--------|
+| 1, 25, 26 | `MailAiComposeService` özet/sınıfla; `GET/PATCH ai-mail-consent`; webmail Özet/Sınıfla + gizlilik onayı; audit kodları |
+| 8 | `verify-messaging-web-push-prod.sh` → `MESSAGING_WEB_PUSH_ALLOW_MAIL_FALLBACK=true` **FAIL** |
+| 10 | `EmailOutboxService.normalizeOutboxMetadata` + genişletilmiş webhook kaynakları |
+| 11 | `GET company/mail-inbox/deliverability-hub` + `MailDeliverabilityPanel` |
+| 15 | `user-notification-push-prefs.sql` · matris `pushPreferenceKey` · profil push sütunu |
+| 17 | `run-mail-billing-a1-acceptance.sh` → `PARITY_STRICT=1` JWT zorunlu |
+| 27 | `mail-mailbox-legal-hold.sql` · platform `legal-hold/enable|release` · eDiscovery `legalHoldActive` |
+| 28–30 | `verify-multi-vps-mail-role.sh` · `verify-dr-drill-evidence.sh` · `smoke-messaging-sse-load.sh` · Lighthouse script |
+
+**SQL (VPS):** `user-notification-push-prefs.sql` · `mail-mailbox-legal-hold.sql` · (önceki) `user-ai-mail-consent.sql`
 
 ### Grup özetleri
 
-| Grup | Maddeler | Ortalama % |
-|------|----------|------------|
-| **● Öncelik (prod/kanıt)** | 1–17, 26, 28–30, 32 | **≈ 81%** |
-| **— Ekosistem / erteleme** | 19–20, 22, 31, 33–35 | **≈ 38%** |
-| **PR bekleyen (kod hazır)** | 18, 21, 23 (+12–16 #149) | merge sonrası +3–8 puan |
-| **Tüm tablo** | 1–35 | **≈ 72%** |
+| Grup | Maddeler | Kod ort. | Prod ort. |
+|------|----------|----------|-----------|
+| **● Öncelik** | 1–17, 26, 28–30, 32 | **≈ 97%** | **≈ 81%** |
+| **— Ekosistem / erteleme** | 19–20, 22, 31, 33–35 | **≈ 38%** | **≈ 38%** |
+| **PR bekleyen merge** | 18, 21, 23 | — | +smoke sonrası |
+| **Tüm tablo** | 1–35 | **≈ 88%** | **≈ 72%** |
 
 **Doğrulama:** `bash scripts/run-mail-messaging-parity-wave2-checklist.sh`

@@ -36,6 +36,7 @@ import { MailPlatformEdiscoveryService } from "./MailPlatformEdiscoveryService";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { MailDomainEntity } from "../../infrastructure/database/entities/MailDomainEntity";
+import { MailMailboxEntity } from "../../infrastructure/database/entities/MailMailboxEntity";
 
 @Controller("platform-admin/mail")
 @UseGuards(JwtAuthenticationGuard, PlatformAdminGuard)
@@ -59,7 +60,55 @@ export class PlatformMailIdentityAdminController {
     private readonly mailPlatformEdiscoveryService: MailPlatformEdiscoveryService,
     @InjectRepository(MailDomainEntity)
     private readonly mailDomainRepository: Repository<MailDomainEntity>,
+    @InjectRepository(MailMailboxEntity)
+    private readonly mailMailboxRepository: Repository<MailMailboxEntity>,
   ) {}
+
+  @Post("legal-hold/:organizationId/enable")
+  public async enableLegalHold(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("organizationId") organizationId: string,
+  ) {
+    const mailbox = await this.mailMailboxRepository.findOne({
+      where: { organizationId },
+    });
+    if (!mailbox) {
+      throw new BadRequestException("Posta kutusu bulunamadı.");
+    }
+    mailbox.legalHoldAt = new Date();
+    await this.mailMailboxRepository.save(mailbox);
+    await this.mailIdentityAuditService.record({
+      actorUserId: user.userId,
+      actorCompanyId: user.companyId,
+      actionCode: MailIdentityAuditAction.LegalHoldEnabled,
+      metadata: { organizationId },
+      requestPath: `/platform-admin/mail/legal-hold/${organizationId}/enable`,
+    });
+    return { ok: true, legalHoldAt: mailbox.legalHoldAt.toISOString() };
+  }
+
+  @Post("legal-hold/:organizationId/release")
+  public async releaseLegalHold(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("organizationId") organizationId: string,
+  ) {
+    const mailbox = await this.mailMailboxRepository.findOne({
+      where: { organizationId },
+    });
+    if (!mailbox) {
+      throw new BadRequestException("Posta kutusu bulunamadı.");
+    }
+    mailbox.legalHoldAt = null;
+    await this.mailMailboxRepository.save(mailbox);
+    await this.mailIdentityAuditService.record({
+      actorUserId: user.userId,
+      actorCompanyId: user.companyId,
+      actionCode: MailIdentityAuditAction.LegalHoldReleased,
+      metadata: { organizationId },
+      requestPath: `/platform-admin/mail/legal-hold/${organizationId}/release`,
+    });
+    return { ok: true };
+  }
 
   @Get("onboarding-kpi")
   public async onboardingKpi() {

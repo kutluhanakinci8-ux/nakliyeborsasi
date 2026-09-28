@@ -30,20 +30,27 @@ export class UserNotificationPreferencesController {
     const events = NOTIFICATION_EVENT_CATALOG.map((row) => {
       const key = row.userPreferenceKey;
       const userToggle = key ? preferences[key] : row.defaultUserEnabled;
-      const pushEligible =
-        key === "notifyNewOffers" ||
-        key === "notifyMessages" ||
-        key === "notifyAuctions";
+      const pushKey =
+        key === "notifyNewOffers"
+          ? "notifyPushNewOffers"
+          : key === "notifyMessages"
+            ? "notifyPushMessages"
+            : key === "notifyAuctions"
+              ? "notifyPushAuctions"
+              : null;
+      const pushToggle =
+        pushKey != null ? preferences[pushKey] : null;
       return {
         eventCode: row.code,
         category: row.category,
         labelTr: row.labelTr,
         preferenceKey: key,
+        pushPreferenceKey: pushKey,
         editable: key !== null,
         emailEnabled: userToggle,
         channels: {
           email: userToggle,
-          push: pushEligible ? userToggle : null,
+          push: pushToggle,
         },
       };
     });

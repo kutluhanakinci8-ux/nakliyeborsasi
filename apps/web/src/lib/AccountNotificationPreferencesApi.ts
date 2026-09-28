@@ -5,7 +5,18 @@ export type AccountNotificationPreferences = {
   notifyMessages: boolean;
   notifyAuctions: boolean;
   notifyWeeklyDigest: boolean;
+  notifyPushNewOffers?: boolean;
+  notifyPushMessages?: boolean;
+  notifyPushAuctions?: boolean;
+  aiMailAssistConsent?: boolean;
 };
+
+/** E-posta kanalı matris anahtarları (push / AI alanları hariç). */
+export type AccountEmailNotificationPreferenceKey =
+  | "notifyNewOffers"
+  | "notifyMessages"
+  | "notifyAuctions"
+  | "notifyWeeklyDigest";
 
 async function apiFetch<T>(
   accessToken: string,
@@ -41,7 +52,12 @@ export type NotificationPreferenceMatrixEvent = {
   eventCode: string;
   category: string;
   labelTr: string;
-  preferenceKey: keyof AccountNotificationPreferences | null;
+  preferenceKey: AccountEmailNotificationPreferenceKey | null;
+  pushPreferenceKey?:
+    | "notifyPushNewOffers"
+    | "notifyPushMessages"
+    | "notifyPushAuctions"
+    | null;
   editable: boolean;
   emailEnabled: boolean;
   channels: { email: boolean; push: boolean | null };

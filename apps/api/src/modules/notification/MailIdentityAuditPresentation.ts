@@ -40,6 +40,15 @@ const LABELS: Record<string, string> = {
   [MailIdentityAuditAction.InboxMessageDeleted]: "Gelen kutusu mesajı silindi",
   [MailIdentityAuditAction.AdminEdiscoveryExport]:
     "Platform eDiscovery dışa aktarımı",
+  [MailIdentityAuditAction.AiMailAssistConsentGranted]:
+    "AI posta asistanı KVKK onayı",
+  [MailIdentityAuditAction.AiMailAssistConsentRevoked]:
+    "AI posta asistanı onayı geri alındı",
+  [MailIdentityAuditAction.AiMailSuggestReply]: "AI yanıt önerisi",
+  [MailIdentityAuditAction.AiMailSummarize]: "AI özet",
+  [MailIdentityAuditAction.AiMailClassify]: "AI sınıflandırma",
+  [MailIdentityAuditAction.LegalHoldEnabled]: "Legal hold etkin",
+  [MailIdentityAuditAction.LegalHoldReleased]: "Legal hold kaldırıldı",
   [MailIdentityAuditAction.SecurityRequireTotpUpdated]:
     "2FA zorunluluğu güncellendi",
   [MailIdentityAuditAction.SecurityTotpEnabled]: "TOTP etkinleştirildi",

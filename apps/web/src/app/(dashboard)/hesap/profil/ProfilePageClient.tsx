@@ -13,6 +13,8 @@ import {
   fetchNotificationPreferences,
   type NotificationPreferenceMatrixEvent,
   updateNotificationPreferences,
+  type AccountEmailNotificationPreferenceKey,
+  type AccountNotificationPreferences,
 } from "../../../../lib/AccountNotificationPreferencesApi";
 
 type UserProfile = {
@@ -130,6 +132,7 @@ export function ProfilePageClient() {
         .then((payload) => {
           setProfile((current) => ({ ...current, ...payload.preferences }));
           setNotifyMatrix(payload.events);
+          refreshMatrixFromApiPrefs(payload.preferences);
         })
         .catch(() => {
           void fetchNotificationPreferences(accessToken)
@@ -183,25 +186,29 @@ export function ProfilePageClient() {
           () => undefined,
         );
       }
-      void refreshMatrixFromPrefs(next);
       return next;
     });
   }
 
-  function refreshMatrixFromPrefs(prefs: UserProfile): void {
+  function refreshMatrixFromApiPrefs(
+    prefs: AccountNotificationPreferences,
+  ): void {
     setNotifyMatrix((rows) =>
       rows.map((row) => {
-        if (!row.preferenceKey) {
-          return row;
-        }
-        const on = prefs[row.preferenceKey];
-        const pushEligible = row.channels.push !== null;
+        const emailOn =
+          row.preferenceKey != null
+            ? Boolean(prefs[row.preferenceKey])
+            : row.emailEnabled;
+        const pushOn =
+          row.pushPreferenceKey != null
+            ? Boolean(prefs[row.pushPreferenceKey])
+            : row.channels.push;
         return {
           ...row,
-          emailEnabled: on,
+          emailEnabled: emailOn,
           channels: {
-            email: on,
-            push: pushEligible ? on : null,
+            email: emailOn,
+            push: pushOn,
           },
         };
       }),
@@ -209,10 +216,7 @@ export function ProfilePageClient() {
   }
 
   async function setMatrixPreference(
-    key: keyof Pick<
-      UserProfile,
-      "notifyNewOffers" | "notifyMessages" | "notifyAuctions" | "notifyWeeklyDigest"
-    >,
+    key: AccountEmailNotificationPreferenceKey,
     enabled: boolean,
   ): Promise<void> {
     if (!accessToken) {
@@ -228,7 +232,25 @@ export function ProfilePageClient() {
         persistProfile(next);
         return next;
       });
-      refreshMatrixFromPrefs({ ...profile, ...prefs });
+      refreshMatrixFromApiPrefs(prefs);
+    } finally {
+      setMatrixBusy(false);
+    }
+  }
+
+  async function setMatrixPushPreference(
+    key: "notifyPushNewOffers" | "notifyPushMessages" | "notifyPushAuctions",
+    enabled: boolean,
+  ): Promise<void> {
+    if (!accessToken) {
+      return;
+    }
+    setMatrixBusy(true);
+    try {
+      const prefs = await updateNotificationPreferences(accessToken, {
+        [key]: enabled,
+      });
+      refreshMatrixFromApiPrefs(prefs);
     } finally {
       setMatrixBusy(false);
     }
@@ -252,7 +274,7 @@ export function ProfilePageClient() {
         persistProfile(next);
         return next;
       });
-      refreshMatrixFromPrefs({ ...profile, ...prefs });
+      refreshMatrixFromApiPrefs(prefs);
     } finally {
       setMatrixBusy(false);
     }
@@ -546,18 +568,27 @@ export function ProfilePageClient() {
                           )}
                         </td>
                         <td>
-                          {row.channels.push === null ? (
-                            <span className="account-profile-matrix-locked">—</span>
-                          ) : (
-                            <span
+                          {row.pushPreferenceKey ? (
+                            <button
+                              type="button"
                               className={
                                 row.channels.push
-                                  ? "account-profile-matrix-cell account-profile-matrix-cell--on account-profile-matrix-cell--readonly"
-                                  : "account-profile-matrix-cell account-profile-matrix-cell--readonly"
+                                  ? "account-profile-matrix-cell account-profile-matrix-cell--on"
+                                  : "account-profile-matrix-cell"
+                              }
+                              disabled={matrixBusy}
+                              aria-pressed={Boolean(row.channels.push)}
+                              onClick={() =>
+                                void setMatrixPushPreference(
+                                  row.pushPreferenceKey!,
+                                  !row.channels.push,
+                                )
                               }
                             >
                               {row.channels.push ? "Açık" : "Kapalı"}
-                            </span>
+                            </button>
+                          ) : (
+                            <span className="account-profile-matrix-locked">—</span>
                           )}
                         </td>
                       </tr>
@@ -565,8 +596,8 @@ export function ProfilePageClient() {
                   </tbody>
                 </table>
                 <p className="account-profile-matrix-hint">
-                  E-posta hücreleri tıklanabilir; push mobil kanalı e-posta anahtarıyla
-                  senkron (haftalık özet yalnızca e-posta).
+                  E-posta ve push hücreleri ayrı ayrı tıklanabilir (haftalık özet yalnızca
+                  e-posta).
                 </p>
               </div>
             ) : null}

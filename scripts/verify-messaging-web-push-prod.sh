@@ -27,6 +27,7 @@ if [[ -n "${MAIL_WEB_PUSH_VAPID_PUBLIC_KEY:-}" ]]; then
   echo "OK: Mail VAPID ile ayrı (izolasyon)"
 fi
 if [[ "${MESSAGING_WEB_PUSH_ALLOW_MAIL_FALLBACK:-false}" == "true" ]]; then
-  echo "UYARI: MESSAGING_WEB_PUSH_ALLOW_MAIL_FALLBACK=true — prod izolasyonu kapalı"
+  echo "FAIL: MESSAGING_WEB_PUSH_ALLOW_MAIL_FALLBACK=true — prod izolasyonu kapalı" >&2
+  exit 2
 fi
 echo "OK: messaging push verify"

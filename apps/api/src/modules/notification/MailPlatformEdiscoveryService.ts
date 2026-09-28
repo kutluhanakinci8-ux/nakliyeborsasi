@@ -80,6 +80,8 @@ export class MailPlatformEdiscoveryService {
         exportVersion: "2026-09-wave2",
         includesInbound: true,
         includesSent: true,
+        legalHoldActive: Boolean(mailbox.legalHoldAt),
+        legalHoldAt: mailbox.legalHoldAt?.toISOString() ?? null,
         legalHoldRespected: true,
         operatorAttestationTr:
           "Paket platform operatörü tarafından üretildi; müşteri KVKK export ile karıştırılmamalıdır.",
