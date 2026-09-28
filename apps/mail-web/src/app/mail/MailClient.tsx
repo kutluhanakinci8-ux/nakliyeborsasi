@@ -3,6 +3,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { formatMailListDate } from "@/lib/mailDisplay";
 import { syncMailUnreadBadge } from "@/lib/mailUnreadBadge";
+import {
+  fetchInboxWithOfflineCache,
+  fetchMessageWithOfflineCache,
+} from "@/lib/mailOfflineCache";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   cancelDelayedCompose,
@@ -16,7 +20,6 @@ import {
   downloadMailAttachment,
   fetchComposePresets,
   fetchDrafts,
-  fetchInbox,
   fetchInboxPreferences,
   fetchCustomFolders,
   createCustomFolder,
@@ -197,6 +200,11 @@ export function MailClient() {
   );
   const [composeRich, setComposeRich] = useState(true);
   const [composeHtml, setComposeHtml] = useState("");
+  const [inboxOffline, setInboxOffline] = useState(false);
+  const [inboxOfflineCachedAt, setInboxOfflineCachedAt] = useState<
+    number | null
+  >(null);
+  const [detailOffline, setDetailOffline] = useState(false);
   const [customFolders, setCustomFolders] = useState<MailCustomFolder[]>([]);
   const [activeCustomFolderId, setActiveCustomFolderId] = useState<
     string | null
@@ -220,13 +228,15 @@ export function MailClient() {
       return;
     }
     if (view === "calendar" || view === "contacts") {
-      const data = await fetchInbox(accessToken, "inbox");
+      const data = await fetchInboxWithOfflineCache(accessToken, "inbox");
       setSummary(data.summary);
       setSendReadiness(data.sendReadiness ?? null);
+      setInboxOffline(data.fromOfflineCache);
+      setInboxOfflineCachedAt(data.cachedAt);
       return;
     }
     const folder = inboxFolderForView(view);
-    const data = await fetchInbox(
+    const data = await fetchInboxWithOfflineCache(
       accessToken,
       folder,
       folder === "inbox" ? inboxCustomFolderId : undefined,
@@ -235,6 +245,8 @@ export function MailClient() {
     setSendReadiness(data.sendReadiness ?? null);
     setMessages(data.messages);
     setSent(data.sent);
+    setInboxOffline(data.fromOfflineCache);
+    setInboxOfflineCachedAt(data.cachedAt);
   }, [accessToken, view, inboxCustomFolderId]);
 
   const refreshDrafts = useCallback(async () => {
@@ -482,7 +494,11 @@ export function MailClient() {
     setMobilePane("read");
     setSelectedId(id);
     setSentPreview(null);
-    const message = await fetchMessage(accessToken, id);
+    const { message, fromOfflineCache } = await fetchMessageWithOfflineCache(
+      accessToken,
+      id,
+    );
+    setDetailOffline(fromOfflineCache);
     setReplyText("");
     setReplyFiles([]);
     if (!message.readAt) {
@@ -1425,6 +1441,14 @@ export function MailClient() {
     <div
       className={`mail-app mobile-pane-${mobilePane}${embedMode ? " mail-app--embed" : ""}${inboxListDensity === "compact" ? " mail-app--list-compact" : ""}`}
     >
+      {(inboxOffline || detailOffline) ? (
+        <div className="mail-offline-banner" role="status">
+          Çevrimdışı önbellek — salt okunur
+          {inboxOfflineCachedAt
+            ? ` · ${new Date(inboxOfflineCachedAt).toLocaleString("tr-TR")}`
+            : ""}
+        </div>
+      ) : null}
       <div className="mail-mobile-bar">
         <button type="button" onClick={() => setMobilePane("nav")}>
           Menü

@@ -1,5 +1,6 @@
-/* Lerta Posta — G6 offline shell (network-first; deploy sonrası eski UI önlenir). */
-const CACHE = "lerta-mail-shell-v6";
+/* Lerta Posta — PM-4 offline shell + IndexedDB snapshot ping (client-owned DB). */
+const CACHE = "lerta-mail-shell-v7";
+const OFFLINE_DB_NAME = "lerta-mail-offline-v1";
 const PRECACHE = ["/manifest.webmanifest", "/offline.html"];
 
 self.addEventListener("install", (event) => {
@@ -106,6 +107,33 @@ self.addEventListener("push", (event) => {
     })(),
   );
 });
+
+self.addEventListener("message", (event) => {
+  const data = event.data;
+  if (!data || typeof data !== "object") {
+    return;
+  }
+  if (data.type === "lerta-mail-offline-snapshot" && data.key) {
+    event.waitUntil(
+      (async () => {
+        try {
+          const db = await openOfflineDb();
+          db.close();
+        } catch {
+          /* client DB; SW sadece hazır olduğunu doğrular */
+        }
+      })(),
+    );
+  }
+});
+
+function openOfflineDb() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(OFFLINE_DB_NAME, 1);
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+  });
+}
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
