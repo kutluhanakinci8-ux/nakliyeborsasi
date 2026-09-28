@@ -447,6 +447,29 @@ export function MailClient() {
     inboxCustomFolderId,
   ]);
 
+  function applyMessageReadLocal(messageId: string, readAt: string) {
+    setMessages((prev) =>
+      prev.map((m) => (m.id === messageId ? { ...m, readAt } : m)),
+    );
+    setSearchResults((prev) =>
+      prev
+        ? prev.map((m) => (m.id === messageId ? { ...m, readAt } : m))
+        : prev,
+    );
+    setThreads((prev) =>
+      prev.map((t) =>
+        t.latestMessageId === messageId && t.unreadCount > 0
+          ? { ...t, unreadCount: 0 }
+          : t,
+      ),
+    );
+    setSummary((prev) =>
+      prev && prev.unreadCount > 0
+        ? { ...prev, unreadCount: Math.max(0, prev.unreadCount - 1) }
+        : prev,
+    );
+  }
+
   async function openMessage(id: string) {
     if (!accessToken) {
       return;
@@ -455,13 +478,20 @@ export function MailClient() {
     setSelectedId(id);
     setSentPreview(null);
     const message = await fetchMessage(accessToken, id);
-    setDetail(message);
     setReplyText("");
     setReplyFiles([]);
     if (!message.readAt) {
-      await markRead(accessToken, id);
-      void refresh();
+      const readAt = new Date().toISOString();
+      setDetail({ ...message, readAt });
+      applyMessageReadLocal(id, readAt);
+      try {
+        await markRead(accessToken, id);
+      } finally {
+        void refresh();
+      }
+      return;
     }
+    setDetail(message);
   }
 
   useEffect(() => {
@@ -2047,7 +2077,7 @@ export function MailClient() {
             <div
               role="button"
               tabIndex={0}
-              className={`mail-list-item ${selectedId === m.id ? "selected" : ""} ${unread ? "unread" : ""}`}
+              className={`mail-list-item ${selectedId === m.id ? "selected" : ""} ${unread ? "unread" : "read"}`}
               onClick={() => {
                 if (view === "drafts") {
                   const d = drafts.find((x) => x.id === m.id);
@@ -2151,6 +2181,9 @@ export function MailClient() {
                 >
                   {"starredAt" in m && m.starredAt ? "★" : "☆"}
                 </button>
+              ) : null}
+              {unread ? (
+                <span className="mail-list-unread-dot" aria-hidden="true" />
               ) : null}
               <div className="mail-list-item-body">
                 <div className="mail-list-meta-row">
