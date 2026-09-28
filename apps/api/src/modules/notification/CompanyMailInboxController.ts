@@ -479,6 +479,18 @@ export class CompanyMailInboxController {
     };
   }
 
+  @Post("imap-credentials/provision")
+  public async provisionImapCredentials(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    this.assertMailInboxWriter(user);
+    const credentials =
+      await this.mailImapAccessService.provisionPasswordIfMissing(
+        user.companyId,
+      );
+    return { ok: true, credentials, created: true };
+  }
+
   @Post("imap-credentials/rotate")
   public async rotateImapCredentials(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
@@ -487,8 +499,7 @@ export class CompanyMailInboxController {
     const credentials = await this.mailImapAccessService.rotatePassword(
       user.companyId,
     );
-    await this.mailImapAccessService.syncDovecotPasswdFile();
-    return { ok: true, credentials };
+    return { ok: true, credentials, created: false };
   }
 
   @Get("custom-folders")

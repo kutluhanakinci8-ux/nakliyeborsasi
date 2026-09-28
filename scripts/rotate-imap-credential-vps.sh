@@ -59,12 +59,15 @@ chown root:dovecot "${PASSWD_FILE}"
 chmod 640 "${PASSWD_FILE}"
 systemctl reload dovecot 2>/dev/null || systemctl restart dovecot
 
-{
-  echo "$(date -Is) ${EMAIL} ${pass}"
-} >> "${CRED_OUT}"
-chmod 600 "${CRED_OUT}"
-
-echo "OK: IMAP rotated ${EMAIL} (şifre → ${CRED_OUT} son satır)"
+if [[ "${MAIL_IMAP_BOOTSTRAP_PLAINTEXT:-}" == "true" ]]; then
+  {
+    echo "$(date -Is) ${EMAIL} ${pass}"
+  } >> "${CRED_OUT}"
+  chmod 600 "${CRED_OUT}"
+  echo "OK: IMAP rotated ${EMAIL} (şifre → ${CRED_OUT} son satır)"
+else
+  echo "OK: IMAP rotated ${EMAIL} (şifre yazdırılmadı — webmail self-servis önerilir)"
+fi
 if [[ "${PRINT_IMAP_GOLD_PASSWORD:-}" == "1" ]]; then
   echo "${pass}"
 fi

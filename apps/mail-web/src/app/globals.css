@@ -1977,6 +1977,82 @@ a {
   font-size: 0.9rem;
 }
 
+.mail-imap-status {
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  margin: 12px 0;
+  line-height: 1.45;
+}
+
+.mail-imap-status--warn {
+  background: #fff8e1;
+  border: 1px solid #f9a825;
+}
+
+.mail-imap-status--ok {
+  background: #e8f5e9;
+  border: 1px solid #81c784;
+}
+
+.mail-imap-password-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  margin: 14px 0;
+}
+
+.mail-imap-password-title {
+  font-weight: 600;
+  margin: 0 0 8px;
+  font-size: 0.9rem;
+}
+
+.mail-imap-password-value {
+  display: block;
+  word-break: break-all;
+  padding: 10px;
+  background: #fff8e1;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  margin-bottom: 10px;
+}
+
+.mail-imap-password-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.mail-imap-actions {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mail-imap-primary-btn {
+  font-weight: 600;
+}
+
+.mail-imap-ghost-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+}
+
+.mail-imap-copy-hint {
+  font-size: 0.85rem;
+  color: #1a73e8;
+  margin: 0 0 8px;
+}
+
+.mail-settings-row-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #c62828;
+  margin-left: 6px;
+}
+
 .mail-settings-field {
   display: flex;
   flex-direction: column;

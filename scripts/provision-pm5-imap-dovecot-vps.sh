@@ -8,6 +8,8 @@ INSTALL_DIR="${INSTALL_DIR:-${ROOT}}"
 ENV_FILE="${ENV_FILE:-${INSTALL_DIR}/.env}"
 TENANT_DOMAIN="${MAIL_PLATFORM_TENANT_DOMAIN:-lerta.com.tr}"
 FORCE_ROTATE="${FORCE_ROTATE:-0}"
+AUTO_PROVISION_CREDENTIALS="${MAIL_IMAP_AUTO_PROVISION_CREDENTIALS:-false}"
+BOOTSTRAP_PLAINTEXT="${MAIL_IMAP_BOOTSTRAP_PLAINTEXT:-false}"
 CRED_OUT="${CRED_OUT:-/root/lerta-imap-credentials-bootstrap.txt}"
 
 if [[ ! -f "${ENV_FILE}" ]]; then
@@ -95,6 +97,11 @@ for row in "${ROWS[@]}"; do
     continue
   fi
 
+  if [[ "${AUTO_PROVISION_CREDENTIALS}" != "true" && "${FORCE_ROTATE}" != "1" ]]; then
+    echo "skip credential (self-service webmail): ${email}"
+    continue
+  fi
+
   pass="$(random_pass)"
   hash="$(bcrypt_hash "${pass}")"
   hash_escaped="${hash//\'/\'\'}"
@@ -109,10 +116,14 @@ ON CONFLICT ("organizationId") DO UPDATE SET
   "updatedAt" = now();
 SQL
 
-  {
-    echo "$(date -Is) ${email} ${pass}"
-  } >> "${CRED_OUT}"
-  echo "OK new/rotated IMAP: ${email} (şifre → ${CRED_OUT})"
+  if [[ "${BOOTSTRAP_PLAINTEXT}" == "true" ]]; then
+    {
+      echo "$(date -Is) ${email} ${pass}"
+    } >> "${CRED_OUT}"
+    echo "OK new/rotated IMAP: ${email} (şifre → ${CRED_OUT})"
+  else
+    echo "OK new/rotated IMAP: ${email} (şifre yalnızca webmail self-servis / rotate API)"
+  fi
   new_lines=$((new_lines + 1))
 done
 

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { InjectRepository } from "@nestjs/typeorm";
 import { execFileSync } from "node:child_process";
@@ -34,6 +38,8 @@ export class MailImapAccessService {
     username: string | null;
     maildirPath: string | null;
     hasCredential: boolean;
+    needsImapClientPassword: boolean;
+    credentialUpdatedAt: string | null;
   }> {
     const email = await this.resolvePrimaryEmail(organizationId);
     const row = await this.credentialRepository.findOne({
@@ -75,10 +81,40 @@ export class MailImapAccessService {
         ? this.mailImapMaildirService.resolveMaildirForAddress(email)
         : null,
       hasCredential: Boolean(row),
+      needsImapClientPassword: !row,
+      credentialUpdatedAt: row?.updatedAt?.toISOString() ?? null,
     };
   }
 
+  public async provisionPasswordIfMissing(organizationId: string): Promise<{
+    username: string;
+    password: string;
+  }> {
+    const existing = await this.credentialRepository.findOne({
+      where: { organizationId },
+    });
+    if (existing) {
+      throw new ConflictException({
+        code: "IMAP_CREDENTIAL_EXISTS",
+        message:
+          "IMAP şifresi zaten tanımlı. Yenilemek için şifre yenileme kullanın.",
+      });
+    }
+    const credentials = await this.issueNewPassword(organizationId);
+    await this.syncDovecotPasswdFile();
+    return credentials;
+  }
+
   public async rotatePassword(organizationId: string): Promise<{
+    username: string;
+    password: string;
+  }> {
+    const credentials = await this.issueNewPassword(organizationId);
+    await this.syncDovecotPasswdFile();
+    return credentials;
+  }
+
+  private async issueNewPassword(organizationId: string): Promise<{
     username: string;
     password: string;
   }> {

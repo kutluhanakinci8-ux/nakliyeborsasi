@@ -9,7 +9,6 @@ import {
   markCompanyMailInboxRead,
   replyCompanyMail,
   fetchMailImapSettings,
-  rotateMailImapPassword,
   type MailImapSettings,
   type ComposeAttachment,
   type MailInboxListItem,
@@ -70,7 +69,6 @@ export function OrganizationMailInboxPanel({
   const [attachFiles, setAttachFiles] = useState<File[]>([]);
   const [toast, setToast] = useState("");
   const [imap, setImap] = useState<MailImapSettings | null>(null);
-  const [imapPassword, setImapPassword] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     if (!accessToken) {
@@ -250,27 +248,28 @@ export function OrganizationMailInboxPanel({
         <div className="module-hint" style={{ marginBottom: "0.75rem" }}>
           IMAP: <code>{imap.imapHost}:{imap.imapPort}</code> — kullanıcı{" "}
           <code>{imap.username ?? "—"}</code>
+          {imap.needsImapClientPassword || !imap.hasCredential ? (
+            <span style={{ marginLeft: "0.5rem", color: "#c62828" }}>
+              (Thunderbird için şifre gerekli)
+            </span>
+          ) : null}
           <button
             type="button"
             className="btn-account-ghost"
             style={{ marginLeft: "0.5rem" }}
             onClick={() => {
-              if (!accessToken) {
-                return;
-              }
-              void rotateMailImapPassword(accessToken).then((c) => {
-                setImapPassword(c.password);
-                setToast("IMAP şifresi oluşturuldu — kopyalayın (bir kez gösterilir).");
-              });
+              window.open(
+                "https://posta.lerta.com.tr/mail",
+                "_blank",
+                "noopener,noreferrer",
+              );
+              setToast(
+                "posta.lerta.com.tr → Ayarlar → IMAP ve SMTP bölümünden şifre oluşturun.",
+              );
             }}
           >
-            IMAP şifresi oluştur
+            IMAP ayarları (webmail)
           </button>
-          {imapPassword ? (
-            <p>
-              Şifre: <code>{imapPassword}</code>
-            </p>
-          ) : null}
         </div>
       ) : null}
 
