@@ -17,3 +17,5 @@
 **P0 DNS (operatör):** `bash scripts/print-instant-post-dns-isimtescil.sh` → isimtescil `post.lerta.com.tr` · doğrulama: `bash scripts/verify-lerta-post-dns.sh` (2026-09: zone henüz NXDOMAIN)
 
 **%100 parite (mail + mesaj):** [LERTA_MAIL_MESSAGING_PARITY_100_ROADMAP.md](./LERTA_MAIL_MESSAGING_PARITY_100_ROADMAP.md) — PM-1…PM-10
+
+**Üst seviye firma sohbeti (FS-1…FS-7):** [FIRMA_SOHBETI_COMPETITIVE_ROADMAP.md](./FIRMA_SOHBETI_COMPETITIVE_ROADMAP.md) — rakip analizi + faz planı (P0–P4 sonrası)
