@@ -33,11 +33,23 @@ bash scripts/smoke-imap-gold.sh kullanici@lerta.com.tr 'imap-sifresi'
 3. Gelişmiş: **Gereksiz**, **Çöp Kutusu**, **Arşiv** otomatik eşleşmeli (Dovecot `\Junk`, `\Trash`, `\Archive`).
 4. Gönderilen: webmail’den mail at → **Gönderilen** klasöründe (`.Sent/cur`).
 
+## TLS (Thunderbird / Apple)
+
+IMAP SSL sertifikası `MAIL_IMAP_HOST` (varsayılan `mail.lerta.com.tr`) ile eşleşmeli:
+
+```bash
+certbot certonly --nginx -d mail.lerta.com.tr   # veya DNS/standalone
+bash scripts/configure-dovecot-imap-tls-le.sh
+```
+
+Dovecot `userdb` Debian’da `gid=mail` olmalı (`fix-dovecot-lerta-userdb-gid.sh`).
+
 ## Başarısızlık
 
 | Belirti | Kontrol |
 |---------|---------|
-| LOGIN hata | `doveadm auth test email pass` · passwd sync · rotate IMAP |
+| LOGIN hata | `doveadm auth test email pass` · passwd sync · rotate IMAP · `journalctl -u dovecot` (Invalid gid vmail) |
+| SSL hostname | `openssl s_client -connect mail.lerta.com.tr:993` · `configure-dovecot-imap-tls-le.sh` |
 | Klasör eksik | `verify-dovecot-imap-pm5.sh` · `configure-dovecot-imap-gold-folders.sh` |
 | Mesaj yok | Inbound postfix · webmail gelen · maildir `new/` izinleri `vmail` |
 

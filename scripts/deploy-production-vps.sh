@@ -43,6 +43,19 @@ if [[ -x scripts/provision-pm5-imap-dovecot-vps.sh ]]; then
   INSTALL_DIR="$INSTALL_DIR" bash scripts/provision-pm5-imap-dovecot-vps.sh || true
 fi
 
+if [[ -x scripts/fix-dovecot-lerta-userdb-gid.sh ]]; then
+  bash scripts/fix-dovecot-lerta-userdb-gid.sh || true
+fi
+
+if [[ -x scripts/configure-dovecot-imap-gold-folders.sh ]] \
+  && [[ -f /etc/dovecot/conf.d/99-lerta-mail.conf ]]; then
+  bash scripts/configure-dovecot-imap-gold-folders.sh || true
+fi
+
+if [[ -x scripts/configure-dovecot-imap-tls-le.sh ]]; then
+  bash scripts/configure-dovecot-imap-tls-le.sh || true
+fi
+
 bash scripts/restart-web.sh "$INSTALL_DIR" 3011 "https://app.lerta.com.tr/api/v1"
 
 if [[ -x scripts/nginx-app-lerta-com-tr.sh ]]; then

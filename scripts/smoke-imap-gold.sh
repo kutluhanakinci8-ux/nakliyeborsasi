@@ -35,10 +35,14 @@ fi
 
 echo "== Dovecot auth =="
 if command -v doveadm >/dev/null 2>&1; then
-  if doveadm auth test "${EMAIL}" "${PASS}" 2>/dev/null | grep -q "auth succeeded"; then
+  auth_out="$(doveadm auth test "${EMAIL}" "${PASS}" 2>&1)" || true
+  if echo "${auth_out}" | grep -q "auth succeeded"; then
     echo "OK: doveadm auth"
+  elif echo "${auth_out}" | grep -q "Couldn't connect to auth socket"; then
+    echo "UYARI: doveadm auth socket yok — IMAP LOGIN ile doğrulanacak"
   else
     echo "NOT: doveadm auth başarısız" >&2
+    echo "${auth_out}" | sed 's/'"${PASS}"'/***REDACTED***/g' >&2
     exit 3
   fi
 fi
@@ -57,7 +61,11 @@ port = int(os.environ.get("IMAP_GOLD_PORT", "993"))
 user = os.environ["IMAP_GOLD_EMAIL"]
 password = os.environ["IMAP_GOLD_PASS"]
 
+insecure = os.environ.get("IMAP_GOLD_SSL_INSECURE", "").lower() in ("1", "true", "yes")
 ctx = ssl.create_default_context()
+if insecure:
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
 try:
     client = imaplib.IMAP4_SSL(host, port, ssl_context=ctx)
 except OSError as exc:

@@ -25,7 +25,7 @@ passdb {
 }
 userdb {
   driver = static
-  args = uid=vmail gid=vmail home=${MAILDIR_ROOT}/%d/%n
+  args = uid=vmail gid=mail home=${MAILDIR_ROOT}/%d/%n
 }
 ssl = yes
 EOF
