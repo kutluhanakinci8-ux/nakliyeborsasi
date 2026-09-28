@@ -19,6 +19,12 @@ import { MessagingPushController } from "./MessagingPushController";
 import { MessagingRealtimeHubService } from "./MessagingRealtimeHubService";
 import { MessagingStreamTicketService } from "./MessagingStreamTicketService";
 import { MessagingStreamController } from "./MessagingStreamController";
+import { MessagingCompanyBotEntity } from "../../infrastructure/database/entities/MessagingCompanyBotEntity";
+import { MessagingOrgChannelService } from "./MessagingOrgChannelService";
+import { MessagingEnterpriseSearchService } from "./MessagingEnterpriseSearchService";
+import { MessagingBotApplicationService } from "./MessagingBotApplicationService";
+import { MessagingSlackDepthController } from "./MessagingSlackDepthController";
+import { MessagingBotIncomingController } from "./MessagingBotIncomingController";
 
 @Module({
   imports: [
@@ -27,6 +33,7 @@ import { MessagingStreamController } from "./MessagingStreamController";
       MessageEntity,
       MessageThreadReadStateEntity,
       MessagingWebPushSubscriptionEntity,
+      MessagingCompanyBotEntity,
       CompanyEntity,
       FreightListingEntity,
     ]),
@@ -39,9 +46,14 @@ import { MessagingStreamController } from "./MessagingStreamController";
     MessagingThreadController,
     MessagingPushController,
     MessagingStreamController,
+    MessagingSlackDepthController,
+    MessagingBotIncomingController,
   ],
   providers: [
     MessagingThreadApplicationService,
+    MessagingOrgChannelService,
+    MessagingEnterpriseSearchService,
+    MessagingBotApplicationService,
     MessagingTranslationService,
     MessagingAttachmentStorageService,
     MessagingWebPushService,

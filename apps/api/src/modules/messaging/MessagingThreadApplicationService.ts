@@ -28,6 +28,7 @@ import { CompanyEntity } from "../../infrastructure/database/entities/CompanyEnt
 import { FreightListingEntity } from "../../infrastructure/database/entities/FreightListingEntity";
 import { buildStructuredThreadSummary } from "./MessagingThreadSummaryBuilder";
 import { MessagingRealtimeHubService } from "./MessagingRealtimeHubService";
+import { MessagingOrgChannelService } from "./MessagingOrgChannelService";
 
 @Injectable()
 export class MessagingThreadApplicationService {
@@ -47,6 +48,7 @@ export class MessagingThreadApplicationService {
     private readonly messagingAttachmentStorageService: MessagingAttachmentStorageService,
     private readonly messagingWebPushService: MessagingWebPushService,
     private readonly messagingRealtimeHubService: MessagingRealtimeHubService,
+    private readonly messagingOrgChannelService: MessagingOrgChannelService,
   ) {}
 
   public async assertMessagingModule(
@@ -106,6 +108,9 @@ export class MessagingThreadApplicationService {
       SubscriptionModuleCode.Messaging,
       locale,
     );
+    await this.messagingOrgChannelService.ensureDefaultChannels(
+      authenticatedUser.companyId,
+    );
     const threads = await this.messageThreadRepository
       .createQueryBuilder("thread")
       .where("thread.companyAId = :companyId OR thread.companyBId = :companyId", {
@@ -142,6 +147,7 @@ export class MessagingThreadApplicationService {
     );
     const enriched: MessagingThreadReference[] = [];
     for (const thread of threads) {
+      const isOrgChannel = this.messagingOrgChannelService.isOrgChannel(thread);
       const counterpartyCompanyId =
         thread.companyAId === authenticatedUser.companyId
           ? thread.companyBId
@@ -151,21 +157,30 @@ export class MessagingThreadApplicationService {
         order: { createdAt: "DESC" },
       });
       const lastReadAt = lastReadAtByThreadId.get(thread.id) ?? null;
-      const unreadCount = await this.countUnreadMessages(
-        thread.id,
-        authenticatedUser.companyId,
+      const unreadCount = await this.countUnreadMessages({
+        threadId: thread.id,
+        viewerCompanyId: authenticatedUser.companyId,
+        viewerUserId: authenticatedUser.userId,
+        isOrgChannel,
         lastReadAt,
-      );
+      });
+      const channelTitle =
+        thread.channelName?.trim() ||
+        (thread.channelSlug ? `#${thread.channelSlug}` : null);
       enriched.push(
         new MessagingThreadReference({
           threadId: thread.id,
           counterpartyCompanyId,
-          counterpartyLegalName:
-            companyNameById.get(counterpartyCompanyId) ?? null,
+          counterpartyLegalName: isOrgChannel
+            ? channelTitle
+            : (companyNameById.get(counterpartyCompanyId) ?? null),
           lastMessagePreview: lastMessage?.bodyText?.slice(0, 120) ?? null,
           lastMessageAt: lastMessage?.createdAt?.toISOString() ?? null,
           freightListingId: thread.freightListingId,
           unreadCount,
+          threadKind: thread.threadKind ?? "b2b",
+          channelSlug: thread.channelSlug,
+          channelName: thread.channelName,
         }),
       );
     }
@@ -191,17 +206,23 @@ export class MessagingThreadApplicationService {
       where: { threadId: thread.id },
       order: { createdAt: "ASC" },
     });
+    const isOrgChannel = this.messagingOrgChannelService.isOrgChannel(thread);
     const counterpartyCompanyId =
       thread.companyAId === authenticatedUser.companyId
         ? thread.companyBId
         : thread.companyAId;
-    const counterpartyRead = await this.readStateRepository.findOne({
-      where: { threadId: thread.id, companyId: counterpartyCompanyId },
-    });
+    const counterpartyRead = isOrgChannel
+      ? null
+      : await this.readStateRepository.findOne({
+          where: { threadId: thread.id, companyId: counterpartyCompanyId },
+        });
     const counterpartyLastReadAt = counterpartyRead?.lastReadAt ?? null;
     const views = messages.map((message) => {
-      const isMine = message.senderCompanyId === authenticatedUser.companyId;
+      const isMine =
+        message.senderUserId === authenticatedUser.userId &&
+        message.senderKind !== "bot";
       const readByRecipient =
+        !isOrgChannel &&
         isMine &&
         counterpartyLastReadAt !== null &&
         message.createdAt.getTime() <= counterpartyLastReadAt.getTime();
@@ -212,6 +233,8 @@ export class MessagingThreadApplicationService {
         createdAt: message.createdAt.toISOString(),
         readByRecipient,
         attachments: this.publicAttachments(message.attachments),
+        senderKind: message.senderKind ?? "user",
+        senderLabel: message.senderLabel,
       });
     });
     const latest = messages.at(-1);
@@ -246,6 +269,8 @@ export class MessagingThreadApplicationService {
       senderCompanyId: authenticatedUser.companyId,
       senderUserId: authenticatedUser.userId,
       bodyText: trimmed || "📎 Ek dosya",
+      senderKind: "user",
+      senderLabel: null,
       attachments: null,
     });
     const saved = await this.messageRepository.save(draft);
@@ -258,6 +283,7 @@ export class MessagingThreadApplicationService {
       saved.attachments = stored;
       await this.messageRepository.save(saved);
     }
+    const isOrgChannel = this.messagingOrgChannelService.isOrgChannel(thread);
     const counterpartyCompanyId =
       thread.companyAId === authenticatedUser.companyId
         ? thread.companyBId
@@ -270,27 +296,39 @@ export class MessagingThreadApplicationService {
         ? trimmed.slice(0, 280)
         : stored?.map((item) => item.filename).join(", ").slice(0, 280) ??
           "Ek dosya";
-    void this.operationalNotificationService.afterMessagingMessageSent({
-      threadId: thread.id,
-      counterpartyCompanyId,
-      senderCompanyId: authenticatedUser.companyId,
-      senderCompanyName:
-        senderCompany?.legalName?.trim() || authenticatedUser.companyId,
-      messageId: saved.id,
-      bodyPreview: preview,
-      freightListingId: thread.freightListingId,
-    });
-    void this.messagingWebPushService.notifyNewChatMessage({
-      companyId: counterpartyCompanyId,
-      threadId: thread.id,
-      senderCompanyName:
-        senderCompany?.legalName?.trim() || authenticatedUser.companyId,
-      bodyPreview: preview,
-      freightListingId: thread.freightListingId,
-    });
+    const senderLabel =
+      senderCompany?.legalName?.trim() || authenticatedUser.companyId;
+    if (!isOrgChannel) {
+      void this.operationalNotificationService.afterMessagingMessageSent({
+        threadId: thread.id,
+        counterpartyCompanyId,
+        senderCompanyId: authenticatedUser.companyId,
+        senderCompanyName: senderLabel,
+        messageId: saved.id,
+        bodyPreview: preview,
+        freightListingId: thread.freightListingId,
+      });
+      void this.messagingWebPushService.notifyNewChatMessage({
+        companyId: counterpartyCompanyId,
+        threadId: thread.id,
+        senderCompanyName: senderLabel,
+        bodyPreview: preview,
+        freightListingId: thread.freightListingId,
+      });
+    } else {
+      void this.messagingWebPushService.notifyNewChatMessage({
+        companyId: authenticatedUser.companyId,
+        threadId: thread.id,
+        senderCompanyName: thread.channelName ?? "Kanal",
+        bodyPreview: preview,
+        freightListingId: null,
+      });
+    }
     const event = { type: "message", threadId: thread.id };
     this.messagingRealtimeHubService.publish(thread.companyAId, event);
-    this.messagingRealtimeHubService.publish(thread.companyBId, event);
+    if (!isOrgChannel) {
+      this.messagingRealtimeHubService.publish(thread.companyBId, event);
+    }
     return saved;
   }
 
@@ -452,6 +490,12 @@ export class MessagingThreadApplicationService {
     if (!thread) {
       throw new MessagingThreadNotFoundException(threadId);
     }
+    if (thread.threadKind === "org_channel") {
+      if (thread.companyAId !== authenticatedUser.companyId) {
+        throw new AuthorizationException("Thread access denied");
+      }
+      return thread;
+    }
     const isParticipant =
       thread.companyAId === authenticatedUser.companyId ||
       thread.companyBId === authenticatedUser.companyId;
@@ -461,19 +505,29 @@ export class MessagingThreadApplicationService {
     return thread;
   }
 
-  private async countUnreadMessages(
-    threadId: string,
-    viewerCompanyId: string,
-    lastReadAt: Date | null | undefined,
-  ): Promise<number> {
+  private async countUnreadMessages(params: {
+    threadId: string;
+    viewerCompanyId: string;
+    viewerUserId: string;
+    isOrgChannel: boolean;
+    lastReadAt: Date | null | undefined;
+  }): Promise<number> {
     const qb = this.messageRepository
       .createQueryBuilder("message")
-      .where("message.threadId = :threadId", { threadId })
-      .andWhere("message.senderCompanyId != :viewerCompanyId", {
-        viewerCompanyId,
+      .where("message.threadId = :threadId", { threadId: params.threadId });
+    if (params.isOrgChannel) {
+      qb.andWhere("message.senderUserId != :viewerUserId", {
+        viewerUserId: params.viewerUserId,
       });
-    if (lastReadAt) {
-      qb.andWhere("message.createdAt > :lastReadAt", { lastReadAt });
+    } else {
+      qb.andWhere("message.senderCompanyId != :viewerCompanyId", {
+        viewerCompanyId: params.viewerCompanyId,
+      });
+    }
+    if (params.lastReadAt) {
+      qb.andWhere("message.createdAt > :lastReadAt", {
+        lastReadAt: params.lastReadAt,
+      });
     }
     return qb.getCount();
   }

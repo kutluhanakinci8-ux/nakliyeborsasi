@@ -107,11 +107,11 @@ Parçalı güçlü alanlar:
 |-------|---------|-------|-------|--------|
 | Canlılık (SSE / push) | 25% | **85** | 98 | 87% |
 | UX (deep link, badge, toolbar) | 25% | **84** | 92 | 91% |
-| Ekler ve arama | 20% | **80** | 90 | 89% |
+| Ekler ve arama | 20% | **86** | 90 | 96% |
 | Entegrasyon (ihale/TMS) | 20% | **88** | 70 | 126% |
-| Kurumsal (export, KVKK) | 10% | **78** | 85 | 92% |
+| Kurumsal (export, KVKK, kanal/bot/arama P5) | 10% | **82** | 92 | 89% |
 
-**Ağırlıklı ≈ 84/100** · **vs Slack ≈ 88%** (84 ÷ 95).
+**Ağırlıklı ≈ 85/100** · **vs Slack ≈ 89%** · Slack derinliği: `MESSAGING_SLACK_DEPTH.md`.
 
 ---
 

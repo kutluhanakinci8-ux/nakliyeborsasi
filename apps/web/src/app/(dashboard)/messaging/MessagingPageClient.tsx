@@ -9,6 +9,7 @@ import { ModulePageShell } from "../../../components/ModulePageShell";
 import { useWebSession } from "../../../context/WebSessionProvider";
 import {
   MessagingApiClient,
+  MessagingSearchHit,
   MessagingThreadRecord,
   MessagingThreadSummaryRecord,
   ThreadMessageRecord,
@@ -94,6 +95,11 @@ export function MessagingPageClient() {
     PendingAttachment[]
   >([]);
   const [translateBusyId, setTranslateBusyId] = useState("");
+  const [enterpriseHits, setEnterpriseHits] = useState<MessagingSearchHit[]>(
+    [],
+  );
+  const [enterpriseBusy, setEnterpriseBusy] = useState(false);
+  const [botWebhookToken, setBotWebhookToken] = useState<string | null>(null);
   const deepLinkHandledKey = useRef<string | null>(null);
   const isCompanyOwner =
     session?.roleCodes?.includes("COMPANY_OWNER") ?? false;
@@ -380,6 +386,9 @@ export function MessagingPageClient() {
         thread.lastMessagePreview,
         thread.counterpartyCompanyId,
         thread.freightListingId,
+        thread.channelSlug,
+        thread.channelName,
+        thread.threadKind,
       ]
         .filter(Boolean)
         .join(" ")
@@ -599,13 +608,86 @@ export function MessagingPageClient() {
               aria-label="Sohbet ara"
             />
             {isCompanyOwner ? (
-              <button
-                type="button"
-                className="btn-account-secondary chat-export-btn"
-                onClick={() => void handleExportArchive()}
-              >
-                KVKK dışa aktar (JSON)
-              </button>
+              <div className="chat-owner-tools">
+                <button
+                  type="button"
+                  className="btn-account-secondary chat-export-btn"
+                  onClick={() => void handleExportArchive()}
+                >
+                  KVKK dışa aktar (JSON)
+                </button>
+                <button
+                  type="button"
+                  className="btn-account-secondary chat-export-btn"
+                  disabled={enterpriseBusy || threadSearch.trim().length < 2}
+                  onClick={() => {
+                    const q = threadSearch.trim();
+                    if (q.length < 2) {
+                      return;
+                    }
+                    setEnterpriseBusy(true);
+                    void MessagingApiClient.enterpriseSearch(
+                      accessToken,
+                      locale,
+                      q,
+                    )
+                      .then((payload) => setEnterpriseHits(payload.hits ?? []))
+                      .catch(() => setEnterpriseHits([]))
+                      .finally(() => setEnterpriseBusy(false));
+                  }}
+                >
+                  {enterpriseBusy ? "Aranıyor…" : "Kurumsal ara (tüm mesajlar)"}
+                </button>
+                <button
+                  type="button"
+                  className="btn-account-secondary chat-export-btn"
+                  onClick={() => {
+                    void MessagingApiClient.rotateBotToken(accessToken)
+                      .then((payload) =>
+                        setBotWebhookToken(payload.config.webhookToken),
+                      )
+                      .catch((error) => {
+                        setErrorMessage(
+                          error instanceof Error
+                            ? error.message
+                            : "Bot token oluşturulamadı",
+                        );
+                      });
+                  }}
+                >
+                  Bot webhook token
+                </button>
+                {botWebhookToken ? (
+                  <p className="module-hint chat-bot-token-hint">
+                    Token (bir kez gösterilir):{" "}
+                    <code>{botWebhookToken}</code> — POST{" "}
+                    <code>/api/v1/messaging/bot/incoming</code> header{" "}
+                    <code>X-Messaging-Bot-Token</code>
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
+            {enterpriseHits.length > 0 ? (
+              <ul className="chat-enterprise-hits">
+                {enterpriseHits.map((hit) => (
+                  <li key={hit.messageId}>
+                    <button
+                      type="button"
+                      className="chat-thread-item"
+                      onClick={() => void loadMessages(hit.threadId)}
+                    >
+                      <span className="chat-thread-title">
+                        {hit.threadKind === "org_channel"
+                          ? hit.channelName ?? `#${hit.channelSlug}`
+                          : hit.counterpartyLegalName ?? "Sohbet"}
+                      </span>
+                      <span className="chat-thread-preview">
+                        {hit.bodySnippet}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
             ) : null}
             <div className="chat-compose-row">
               <input
@@ -645,6 +727,9 @@ export function MessagingPageClient() {
                       onClick={() => void loadMessages(thread.threadId)}
                     >
                       <span className="chat-thread-title">
+                        {thread.threadKind === "org_channel" ? (
+                          <span className="chat-channel-badge">Kanal</span>
+                        ) : null}
                         {thread.counterpartyLegalName?.trim() ||
                           shortCompanyId(thread.counterpartyCompanyId)}
                         {(thread.unreadCount ?? 0) > 0 ? (
@@ -713,16 +798,27 @@ export function MessagingPageClient() {
               ) : (
                 <ul className="chat-message-list">
                   {messages.map((message) => {
+                    const isBot = message.senderKind === "bot";
                     const isMine =
-                      session?.companyId &&
+                      !isBot &&
+                      Boolean(session?.companyId) &&
                       message.senderCompanyId === session.companyId;
                     return (
                       <li
                         key={message.id}
-                        className={isMine ? "chat-bubble chat-bubble--mine" : "chat-bubble"}
+                        className={
+                          isMine
+                            ? "chat-bubble chat-bubble--mine"
+                            : isBot
+                              ? "chat-bubble chat-bubble--bot"
+                              : "chat-bubble"
+                        }
                       >
                         <span className="chat-bubble-meta">
-                          {shortCompanyId(message.senderCompanyId)} ·{" "}
+                          {isBot
+                            ? (message.senderLabel ?? "Bot")
+                            : shortCompanyId(message.senderCompanyId)}{" "}
+                          ·{" "}
                           {new Date(message.createdAt).toLocaleString(locale)}
                           {isMine && message.readByRecipient ? (
                             <> · Okundu</>

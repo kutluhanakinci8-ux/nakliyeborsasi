@@ -9,6 +9,9 @@ export type MessagingThreadRecord = {
   lastMessageAt?: string | null;
   freightListingId?: string | null;
   unreadCount?: number;
+  threadKind?: "b2b" | "org_channel";
+  channelSlug?: string | null;
+  channelName?: string | null;
 };
 
 export type ThreadMessageAttachmentRecord = {
@@ -25,6 +28,19 @@ export type ThreadMessageRecord = {
   createdAt: string;
   readByRecipient?: boolean;
   attachments?: ThreadMessageAttachmentRecord[];
+  senderKind?: "user" | "bot";
+  senderLabel?: string | null;
+};
+
+export type MessagingSearchHit = {
+  threadId: string;
+  messageId: string;
+  threadKind: "b2b" | "org_channel";
+  channelSlug: string | null;
+  channelName: string | null;
+  counterpartyLegalName: string | null;
+  bodySnippet: string;
+  createdAt: string;
 };
 
 export type MessagingThreadSummaryRecord = {
@@ -117,6 +133,26 @@ export class MessagingApiClient {
         body: JSON.stringify({ text, targetLocale }),
       },
     ) as Promise<{ translatedText: string; provider: string }>;
+  }
+
+  public static async enterpriseSearch(
+    accessToken: string,
+    locale: string,
+    query: string,
+  ): Promise<{ hits: MessagingSearchHit[]; query: string }> {
+    const q = encodeURIComponent(query);
+    return AuthenticatedApiClient.fetchJson(
+      accessToken,
+      `/messaging/search?q=${q}&lang=${locale}`,
+    ) as Promise<{ hits: MessagingSearchHit[]; query: string }>;
+  }
+
+  public static async rotateBotToken(
+    accessToken: string,
+  ): Promise<{ config: { botDisplayName: string; webhookToken: string } }> {
+    return AuthenticatedApiClient.fetchJson(accessToken, `/messaging/bot/rotate-token`, {
+      method: "POST",
+    }) as Promise<{ config: { botDisplayName: string; webhookToken: string } }>;
   }
 
   public static async exportArchive(
