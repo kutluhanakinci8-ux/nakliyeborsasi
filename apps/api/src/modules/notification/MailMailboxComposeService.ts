@@ -451,7 +451,19 @@ export class MailMailboxComposeService {
       bodyText: row.bodyText,
       sentAt: row.sentAt.toISOString(),
       smtpMessageId: row.smtpMessageId,
+      relatedInboundMessageId: row.relatedInboundMessageId,
     };
+  }
+
+  public async deleteSentMessage(
+    organizationId: string,
+    sentId: string,
+  ): Promise<void> {
+    const row = await this.sentRepository.findOne({ where: { id: sentId } });
+    if (!row || row.organizationId !== organizationId) {
+      throw new NotFoundException("Gönderilen mesaj bulunamadı");
+    }
+    await this.sentRepository.delete({ id: sentId, organizationId });
   }
 
   private async resolveSenderMailbox(organizationId: string) {

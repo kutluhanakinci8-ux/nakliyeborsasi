@@ -229,6 +229,7 @@ export type MailSentItem = {
   toAddress: string;
   subject: string;
   sentAt: string;
+  relatedInboundMessageId?: string | null;
 };
 
 export type MailSentMessageDetail = MailSentItem & {
@@ -571,6 +572,12 @@ export async function searchInbox(
     accessToken,
     `company/mail-inbox/search?${params.toString()}`,
   );
+}
+
+export async function deleteSentMessage(accessToken: string, sentId: string) {
+  await apiFetch(accessToken, `company/mail-inbox/sent/${sentId}`, {
+    method: "DELETE",
+  });
 }
 
 export async function fetchSentMessage(accessToken: string, id: string) {
