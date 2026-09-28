@@ -110,7 +110,7 @@ Her faz: kod + dokümantasyon + (varsa) `scripts/verify-*` · deploy checklist.
 
 - Outbox event pipeline: delivered, bounce (hard/soft), open, click (pixel/link wrap).
 - Admin: tarih aralığı, olay tipi, CSV.
-- JMAP: ya bridge genişletme (Email/set, Mailbox/*) ya da Fastmail Cory kararı dokümante.
+- JMAP: HTTP köprü v2 (`Email/set`, `Mailbox/*`) — tam Cory sunucu kapsam dışı (`MAIL_JMAP_BRIDGE.md`).
 - **Kabul:** Postmark yetkinliğinin ~%85’i (pazarlama segmentasyonu hariç).
 
 ---
