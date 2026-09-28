@@ -645,6 +645,51 @@ a {
   border-radius: 6px;
 }
 
+.mail-swipe-row {
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border);
+}
+
+.mail-swipe-actions {
+  position: absolute;
+  inset: 0 0 0 auto;
+  display: flex;
+  width: 152px;
+  z-index: 0;
+}
+
+.mail-swipe-action {
+  flex: 1;
+  border: none;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+  padding: 0 6px;
+}
+
+.mail-swipe-action--archive {
+  background: #5b6b7c;
+}
+
+.mail-swipe-action--delete {
+  background: #c62828;
+}
+
+.mail-swipe-content {
+  position: relative;
+  z-index: 1;
+  background: var(--panel);
+  touch-action: pan-y;
+  will-change: transform;
+}
+
+.mail-swipe-row .mail-list-item,
+.mail-swipe-row .mail-inbox-row {
+  border-bottom: none;
+}
+
 .mail-list-item {
   display: flex;
   align-items: flex-start;

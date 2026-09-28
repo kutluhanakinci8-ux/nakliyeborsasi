@@ -9,6 +9,7 @@ import {
   composeMail,
   createDraft,
   deleteDraft,
+  deleteSentMessage,
   downloadMailAttachment,
   fetchComposePresets,
   fetchDrafts,
@@ -67,6 +68,7 @@ import { MailContactsPanel } from "./MailContactsPanel";
 import { useMailKeyboardShortcuts } from "./useMailKeyboardShortcuts";
 import { ComposeRichEditor } from "./ComposeRichEditor";
 import { MailInboxMessageRow } from "./MailInboxMessageRow";
+import { MailListSwipeRow } from "./MailListSwipeRow";
 
 type View =
   | "inbox"
@@ -978,6 +980,94 @@ export function MailClient() {
     }
   }
 
+  function clearRowSelectionAfterSwipe(messageId: string) {
+    if (selectedId === messageId) {
+      setDetail(null);
+      setSelectedId(null);
+      setSentPreview(null);
+      setDraftPreview(null);
+      setMobilePane("list");
+    }
+    setCheckedIds((prev) => {
+      if (!prev.has(messageId)) {
+        return prev;
+      }
+      const next = new Set(prev);
+      next.delete(messageId);
+      return next;
+    });
+  }
+
+  async function swipeRowArchive(
+    messageId: string,
+    relatedInboundMessageId?: string | null,
+  ) {
+    if (!accessToken) {
+      return;
+    }
+    try {
+      if (view === "sent") {
+        if (!relatedInboundMessageId) {
+          setToast("Bu gönderim için arşivlenecek gelen mesaj yok.");
+          return;
+        }
+        await setMessageMailboxFolder(
+          accessToken,
+          relatedInboundMessageId,
+          "archive",
+        );
+        setToast("İlişkili mesaj arşivlendi.");
+      } else if (view === "drafts") {
+        setToast("Taslaklar arşivlenemez.");
+        return;
+      } else if (view === "trash") {
+        await setMessageMailboxFolder(accessToken, messageId, "inbox");
+        setToast("Gelen kutusuna alındı.");
+      } else {
+        const folder: MailMailboxFolder =
+          view === "archive" ? "inbox" : "archive";
+        await setMessageMailboxFolder(accessToken, messageId, folder);
+        setToast(
+          folder === "archive" ? "Arşivlendi." : "Gelen kutusuna alındı.",
+        );
+      }
+      clearRowSelectionAfterSwipe(messageId);
+      void refresh();
+    } catch (error) {
+      setToast(
+        error instanceof Error ? error.message : "Arşivlenemedi.",
+      );
+    }
+  }
+
+  async function swipeRowDelete(messageId: string) {
+    if (!accessToken) {
+      return;
+    }
+    try {
+      if (view === "sent") {
+        await deleteSentMessage(accessToken, messageId);
+        setToast("Gönderilen kaydı silindi.");
+      } else if (view === "drafts") {
+        await deleteDraft(accessToken, messageId);
+        setToast("Taslak silindi.");
+      } else if (view === "trash") {
+        await deleteMessagePermanently(accessToken, messageId);
+        setToast("Kalıcı olarak silindi.");
+      } else {
+        await setMessageMailboxFolder(accessToken, messageId, "trash");
+        setToast("Çöp kutusuna taşındı.");
+      }
+      clearRowSelectionAfterSwipe(messageId);
+      void refresh();
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : "Silinemedi.");
+    }
+  }
+
+  const swipeArchiveLabel =
+    view === "archive" || view === "trash" ? "Gelen kutusu" : "Arşivle";
+
   useEffect(() => {
     if (!accessToken || !threadView || !canUseThreads) {
       setThreads([]);
@@ -1027,6 +1117,7 @@ export function MailClient() {
           snippet: s.toAddress,
           receivedAt: s.sentAt,
           readAt: s.sentAt,
+          relatedInboundMessageId: s.relatedInboundMessageId ?? null,
           spamStatus: "clean",
           attachmentCount: 0,
         }))
@@ -1899,37 +1990,60 @@ export function MailClient() {
                 }
                 void openMessage(m.id);
               };
+              const relatedInbound =
+                "relatedInboundMessageId" in m &&
+                typeof m.relatedInboundMessageId === "string"
+                  ? m.relatedInboundMessageId
+                  : null;
               return (
-                <MailInboxMessageRow
+                <MailListSwipeRow
                   key={m.id}
-                  message={{
-                    ...m,
-                    starredAt:
-                      "starredAt" in m ? m.starredAt ?? null : null,
-                  }}
-                  selected={selectedId === m.id}
-                  unread={unread}
-                  showStar={
-                    !threadView || !canUseThreads || searchActive
+                  archiveLabel={swipeArchiveLabel}
+                  onArchive={() =>
+                    void swipeRowArchive(m.id, relatedInbound)
                   }
-                  showCheckbox={canBulkSelect}
-                  checked={checkedIds.has(m.id)}
-                  onOpen={openRow}
-                  onToggleStar={() => {
-                    const starred =
-                      "starredAt" in m && Boolean(m.starredAt);
-                    void toggleMessageStarred(m.id, !starred);
-                  }}
-                  onToggleCheck={(shiftKey) =>
-                    toggleChecked(m.id, shiftKey)
-                  }
-                />
+                  onDelete={() => void swipeRowDelete(m.id)}
+                >
+                  <MailInboxMessageRow
+                    message={{
+                      ...m,
+                      starredAt:
+                        "starredAt" in m ? m.starredAt ?? null : null,
+                    }}
+                    selected={selectedId === m.id}
+                    unread={unread}
+                    showStar={
+                      !threadView || !canUseThreads || searchActive
+                    }
+                    showCheckbox={canBulkSelect}
+                    checked={checkedIds.has(m.id)}
+                    onOpen={openRow}
+                    onToggleStar={() => {
+                      const starred =
+                        "starredAt" in m && Boolean(m.starredAt);
+                      void toggleMessageStarred(m.id, !starred);
+                    }}
+                    onToggleCheck={(shiftKey) =>
+                      toggleChecked(m.id, shiftKey)
+                    }
+                  />
+                </MailListSwipeRow>
               );
             }
 
+            const relatedInbound =
+              "relatedInboundMessageId" in m &&
+              typeof m.relatedInboundMessageId === "string"
+                ? m.relatedInboundMessageId
+                : null;
             return (
-            <div
+            <MailListSwipeRow
               key={m.id}
+              archiveLabel={swipeArchiveLabel}
+              onArchive={() => void swipeRowArchive(m.id, relatedInbound)}
+              onDelete={() => void swipeRowDelete(m.id)}
+            >
+            <div
               role="button"
               tabIndex={0}
               className={`mail-list-item ${selectedId === m.id ? "selected" : ""} ${unread ? "unread" : ""}`}
@@ -2046,6 +2160,7 @@ export function MailClient() {
                 <div className="mail-list-snippet">{m.snippet}</div>
               </div>
             </div>
+            </MailListSwipeRow>
             );
           })
         )}

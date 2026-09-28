@@ -662,6 +662,19 @@ export class CompanyMailInboxController {
     return { message };
   }
 
+  @Delete("sent/:sentId")
+  public async deleteSentMessage(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("sentId") sentId: string,
+  ) {
+    this.assertMailInboxWriter(user);
+    await this.mailMailboxComposeService.deleteSentMessage(
+      user.companyId,
+      sentId,
+    );
+    return { ok: true };
+  }
+
   @Get("messages/:messageId")
   public async getMessage(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
