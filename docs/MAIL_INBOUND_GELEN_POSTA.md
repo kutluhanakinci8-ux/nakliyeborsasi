@@ -22,7 +22,7 @@ bash scripts/verify-mail-dns-lerta.sh               # lerta.com.tr tenant MX
 
 - `.env`: `MAIL_INBOUND_APPLY_POSTFIX=true`, `MAIL_INBOUND_VIRTUAL_DOMAINS=lerta.com.tr,post.lerta.com.tr`
 - API açılışında `MailInboundPostfixSyncBootstrap` virtual haritayı yazır.
-- IMAP kurulumu `virtual_transport=virtual` bırakmışsa inbound pipe kırılır:
+- IMAP kurulumu `virtual_transport=virtual` (maildir) bırakmışsa inbound pipe kırılır; ingest için `virtual_transport = local:` gerekir:
 
 ```bash
 bash scripts/fix-postfix-inbound-pipe-transport.sh

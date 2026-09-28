@@ -200,7 +200,9 @@ export class MailInboundRoutingService {
     execFileSync("postconf", ["-e", `virtual_mailbox_domains = ${zones}`], {
       stdio: "pipe",
     });
-    execFileSync("postconf", ["-#", "virtual_transport"], { stdio: "pipe" });
+    execFileSync("postconf", ["-e", "virtual_transport = local:"], {
+      stdio: "pipe",
+    });
     execFileSync("postconf", ["-#", "virtual_mailbox_base"], { stdio: "pipe" });
   }
 }

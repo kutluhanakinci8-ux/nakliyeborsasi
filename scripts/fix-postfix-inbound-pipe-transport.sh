@@ -15,7 +15,7 @@ fi
 
 echo "==> virtual_mailbox_domains=${VIRTUAL_DOMAINS}"
 postconf -e "virtual_mailbox_domains = ${VIRTUAL_DOMAINS}"
-postconf -# virtual_transport 2>/dev/null || true
+postconf -e "virtual_transport = local:"
 postconf -# virtual_mailbox_base 2>/dev/null || true
 postconf -e "local_transport = local:"
 

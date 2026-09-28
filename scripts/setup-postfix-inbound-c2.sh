@@ -20,7 +20,7 @@ postconf -e "virtual_mailbox_domains = ${VIRTUAL_DOMAINS}"
 postconf -e "virtual_alias_maps = hash:${VIRTUAL_PATH}"
 postconf -e "alias_maps = hash:/etc/aliases, hash:${ALIASES_PATH}"
 postconf -e "local_transport = local:"
-postconf -# virtual_transport 2>/dev/null || true
+postconf -e "virtual_transport = local:"
 postconf -# virtual_mailbox_base 2>/dev/null || true
 touch "${ALIASES_PATH}"
 postalias "${ALIASES_PATH}" 2>/dev/null || true
