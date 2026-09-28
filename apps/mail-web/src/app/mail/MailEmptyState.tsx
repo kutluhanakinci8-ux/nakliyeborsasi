@@ -1,4 +1,13 @@
-type Variant = "inbox" | "sent" | "drafts" | "search" | "read" | "starred";
+type Variant =
+  | "inbox"
+  | "sent"
+  | "drafts"
+  | "search"
+  | "read"
+  | "starred"
+  | "trash"
+  | "archive"
+  | "spam";
 
 const COPY: Record<
   Variant,
@@ -40,6 +49,22 @@ const COPY: Record<
     tips: [
       "Konuşma görünümü: liste üstündeki düğme ile aynı konudaki yanıtları gruplar.",
     ],
+  },
+  trash: {
+    title: "Çöp kutusu boş",
+    body: "Silinen gelen ve gönderilen postalar burada görünür.",
+    tips: [
+      "Gelen postada Sil → çöp; Gönderilen'de Sil → çöp.",
+      "Çöp'te Geri al ile gelen kutusuna veya gönderilene döner.",
+    ],
+  },
+  archive: {
+    title: "Arşiv boş",
+    body: "Arşivlediğiniz gelen postalar burada saklanır.",
+  },
+  spam: {
+    title: "Spam yok",
+    body: "Şüpheli veya engellenen postalar burada listelenir.",
   },
 };
 

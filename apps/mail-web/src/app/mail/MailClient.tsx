@@ -11,6 +11,8 @@ import {
   createDraft,
   deleteDraft,
   deleteSentMessage,
+  trashSentMessage,
+  restoreSentFromTrash,
   downloadMailAttachment,
   fetchComposePresets,
   fetchDrafts,
@@ -1044,12 +1046,17 @@ export function MailClient() {
   async function swipeRowArchive(
     messageId: string,
     relatedInboundMessageId?: string | null,
+    messageKind: "inbound" | "sent" = view === "sent" ? "sent" : "inbound",
   ) {
     if (!accessToken) {
       return;
     }
+    const kind = messageKind;
     try {
-      if (view === "sent") {
+      if (view === "trash" && kind === "sent") {
+        await restoreSentFromTrash(accessToken, messageId);
+        setToast("Gönderilen klasörüne geri alındı.");
+      } else if (view === "sent") {
         if (!relatedInboundMessageId) {
           setToast("Bu gönderim için arşivlenecek gelen mesaj yok.");
           return;
@@ -1086,14 +1093,23 @@ export function MailClient() {
     }
   }
 
-  async function swipeRowDelete(messageId: string) {
+  async function swipeRowDelete(
+    messageId: string,
+    messageKind: "inbound" | "sent" = view === "sent" ? "sent" : "inbound",
+  ) {
     if (!accessToken) {
       return;
     }
+    const kind = messageKind;
     try {
-      if (view === "sent") {
-        await deleteSentMessage(accessToken, messageId);
-        setToast("Gönderilen kaydı silindi.");
+      if (kind === "sent" || view === "sent") {
+        if (view === "trash") {
+          await deleteSentMessage(accessToken, messageId);
+          setToast("Kalıcı olarak silindi.");
+        } else {
+          await trashSentMessage(accessToken, messageId);
+          setToast("Çöp kutusuna taşındı.");
+        }
       } else if (view === "drafts") {
         await deleteDraft(accessToken, messageId);
         setToast("Taslak silindi.");
@@ -1115,7 +1131,7 @@ export function MailClient() {
   }
 
   const swipeArchiveLabel =
-    view === "archive" || view === "trash" ? "Gelen kutusu" : "Arşivle";
+    view === "trash" ? "Geri al" : view === "archive" ? "Gelen kutusu" : "Arşivle";
 
   useEffect(() => {
     if (!accessToken || !threadView || !canUseThreads) {
@@ -1167,6 +1183,7 @@ export function MailClient() {
           receivedAt: s.sentAt,
           readAt: s.sentAt,
           relatedInboundMessageId: s.relatedInboundMessageId ?? null,
+          messageKind: "sent" as const,
           spamStatus: "clean",
           attachmentCount: 0,
         }))
@@ -2015,7 +2032,13 @@ export function MailClient() {
                     ? "drafts"
                     : view === "starred"
                       ? "starred"
-                      : "inbox"
+                      : view === "trash"
+                        ? "trash"
+                        : view === "archive"
+                          ? "archive"
+                          : view === "spam"
+                            ? "spam"
+                            : "inbox"
             }
           />
         ) : (
@@ -2088,16 +2111,24 @@ export function MailClient() {
               typeof m.relatedInboundMessageId === "string"
                 ? m.relatedInboundMessageId
                 : null;
+            const rowMessageKind: "inbound" | "sent" =
+              "messageKind" in m && m.messageKind === "sent"
+                ? "sent"
+                : view === "sent"
+                  ? "sent"
+                  : "inbound";
             return (
             <MailListSwipeRow
               key={m.id}
               rowKey={m.id}
               activeSwipeKey={activeSwipeRowId}
               onActiveSwipeKeyChange={setActiveSwipeRowId}
-              showArchive={view !== "sent"}
+              showArchive={view === "trash" ? true : view !== "sent"}
               archiveLabel={swipeArchiveLabel}
-              onArchive={() => void swipeRowArchive(m.id, relatedInbound)}
-              onDelete={() => void swipeRowDelete(m.id)}
+              onArchive={() =>
+                void swipeRowArchive(m.id, relatedInbound, rowMessageKind)
+              }
+              onDelete={() => void swipeRowDelete(m.id, rowMessageKind)}
             >
             <div
               role="button"

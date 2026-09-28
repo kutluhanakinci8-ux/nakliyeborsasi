@@ -901,6 +901,7 @@ export class MailOrganizationInboxService {
       attachmentCount: row.attachments?.length ?? 0,
       starredAt: row.starredAt?.toISOString() ?? null,
       customFolderId: row.customFolderId,
+      messageKind: "inbound" as const,
     };
   }
 }

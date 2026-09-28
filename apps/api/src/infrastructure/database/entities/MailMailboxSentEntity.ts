@@ -36,4 +36,7 @@ export class MailMailboxSentEntity {
 
   @CreateDateColumn({ type: "timestamptz" })
   public sentAt!: Date;
+
+  @Column({ type: "timestamptz", nullable: true })
+  public trashedAt!: Date | null;
 }

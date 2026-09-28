@@ -441,12 +441,39 @@ export class CompanyMailInboxController {
     const summary = await this.mailOrganizationInboxService.getSummary(
       user.companyId,
     );
-    const messages = await this.mailOrganizationInboxService.listMessages(
+    const trashedSentCount =
+      await this.mailMailboxComposeService.countTrashedSent(user.companyId);
+    let messages = await this.mailOrganizationInboxService.listMessages(
       user.companyId,
       resolvedFolder,
       50,
       resolvedCustomFolderId,
     );
+    if (resolvedFolder === "trash") {
+      const trashedSent = await this.mailMailboxComposeService.listTrashedSent(
+        user.companyId,
+      );
+      const sentTrashRows = trashedSent.map((row) => ({
+        id: row.id,
+        fromAddress: `Gönderilen · ${row.toAddress}`,
+        subject: row.subject,
+        snippet: row.toAddress,
+        receivedAt: row.trashedAt ?? row.sentAt,
+        readAt: row.sentAt,
+        spamStatus: "clean",
+        spamReason: null,
+        attachmentCount: 0,
+        starredAt: null,
+        customFolderId: null,
+        messageKind: "sent" as const,
+      }));
+      messages = [...messages, ...sentTrashRows]
+        .sort(
+          (a, b) =>
+            new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime(),
+        )
+        .slice(0, 50);
+    }
     const sent = await this.mailMailboxComposeService.listSent(user.companyId);
     const storageQuota = await this.mailOrganizationStorageService.getSnapshot(
       user.companyId,
@@ -455,7 +482,11 @@ export class CompanyMailInboxController {
       user.companyId,
     );
     return {
-      summary: { ...summary, storageQuota },
+      summary: {
+        ...summary,
+        storageQuota,
+        trashCount: summary.trashCount + trashedSentCount,
+      },
       sendReadiness,
       messages,
       sent,
@@ -672,6 +703,27 @@ export class CompanyMailInboxController {
       user.companyId,
       sentId,
     );
+    return { ok: true };
+  }
+
+  @Patch("sent/:sentId/trash")
+  public async setSentMessageTrashed(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("sentId") sentId: string,
+    @Body() body: { trashed?: boolean },
+  ) {
+    this.assertMailInboxWriter(user);
+    if (body.trashed === false) {
+      await this.mailMailboxComposeService.restoreSentFromTrash(
+        user.companyId,
+        sentId,
+      );
+    } else {
+      await this.mailMailboxComposeService.trashSentMessage(
+        user.companyId,
+        sentId,
+      );
+    }
     return { ok: true };
   }
 

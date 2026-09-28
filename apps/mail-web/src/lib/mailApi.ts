@@ -56,6 +56,7 @@ export type MailInboxListItem = {
   attachmentCount?: number;
   starredAt?: string | null;
   customFolderId?: string | null;
+  messageKind?: "inbound" | "sent";
 };
 
 export type MailInboxRuleConditionGroup = {
@@ -577,6 +578,20 @@ export async function searchInbox(
 export async function deleteSentMessage(accessToken: string, sentId: string) {
   await apiFetch(accessToken, `company/mail-inbox/sent/${sentId}`, {
     method: "DELETE",
+  });
+}
+
+export async function trashSentMessage(accessToken: string, sentId: string) {
+  await apiFetch(accessToken, `company/mail-inbox/sent/${sentId}/trash`, {
+    method: "PATCH",
+    body: JSON.stringify({ trashed: true }),
+  });
+}
+
+export async function restoreSentFromTrash(accessToken: string, sentId: string) {
+  await apiFetch(accessToken, `company/mail-inbox/sent/${sentId}/trash`, {
+    method: "PATCH",
+    body: JSON.stringify({ trashed: false }),
   });
 }
 
