@@ -592,6 +592,23 @@ export class MailOrganizationInboxService {
     return { updated };
   }
 
+  public async setInboundSpamStatus(
+    organizationId: string,
+    messageId: string,
+    blocked: boolean,
+  ): Promise<{ spamStatus: "clean" | "blocked" }> {
+    const row = await this.assertMessageAccess(organizationId, messageId);
+    if (row.mailboxFolder === "trash") {
+      throw new ForbiddenException(
+        "Çöp kutusundaki mesaj için spam işlemi yapılamaz.",
+      );
+    }
+    row.spamStatus = blocked ? "blocked" : "clean";
+    row.spamReason = blocked ? "Kullanıcı spam olarak işaretledi" : null;
+    await this.inboundRepository.save(row);
+    return { spamStatus: blocked ? "blocked" : "clean" };
+  }
+
   public async setMailboxFolder(
     organizationId: string,
     messageId: string,
