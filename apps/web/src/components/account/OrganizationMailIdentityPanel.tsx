@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   addOrgSuppression,
   formatMailIdentityApiError,
@@ -8,8 +8,6 @@ import {
   type MailDeliverabilityHints,
   fetchCustomDomainBundle,
   fetchOrgSuppressions,
-  claimCompanyMailAddress,
-  provisionCompanyMailIdentity,
   provisionCustomDomainSender,
   registerCustomDomain,
   removeOrgSuppression,
@@ -19,55 +17,8 @@ import {
   type CustomDomainBundle,
   type OrgSuppressionRow,
 } from "../../lib/CompanyMailIdentityApi";
+import { LertaComTrMailAddressPicker } from "./LertaComTrMailAddressPicker";
 import { useWebSession } from "../../context/WebSessionProvider";
-
-function slugifyLocalPart(input: string): string {
-  return input
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 48);
-}
-
-function slugifyPostOrg(input: string): string {
-  const base = input
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "")
-    .slice(0, 48);
-  if (base.length >= 3) {
-    return base;
-  }
-  return slugifyLocalPart(input).replace(/-/g, "") || "firma";
-}
-
-/** Kutu ön eki: yalnızca `info` — tam e-posta yazılırsa @ öncesi alınır. */
-function normalizePostLocalPart(raw: string): string {
-  let value = raw.trim().toLowerCase();
-  if (value.includes("@")) {
-    value = value.split("@")[0] ?? value;
-  }
-  value = value.replace(/[^a-z0-9._-]/g, "");
-  return value.slice(0, 48);
-}
-
-function normalizePostOrgSlug(raw: string): string {
-  return raw
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9-]/g, "")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 50);
-}
-
-function isValidPostOrgSlug(slug: string): boolean {
-  return /^[a-z0-9][a-z0-9-]{1,48}[a-z0-9]$/.test(slug);
-}
-
-function isValidPostLocalPart(local: string): boolean {
-  return /^[a-z0-9][a-z0-9._-]{0,48}[a-z0-9]$|^[a-z0-9]$/.test(local);
-}
 
 function normalizeCustomDomainInput(raw: string): string {
   const trimmed = raw.trim().toLowerCase();
@@ -92,9 +43,7 @@ export function OrganizationMailIdentityPanel({
   );
   const [deliverability, setDeliverability] =
     useState<MailDeliverabilityHints | null>(null);
-  const [platformPostDnsReady, setPlatformPostDnsReady] = useState(true);
   const [replyToHintTr, setReplyToHintTr] = useState<string | null>(null);
-  const [localPart, setLocalPart] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
@@ -106,19 +55,6 @@ export function OrganizationMailIdentityPanel({
   );
   const [customDomainInput, setCustomDomainInput] = useState("");
   const [customLocalPart, setCustomLocalPart] = useState("bildirim");
-  const [postOrgSlug, setPostOrgSlug] = useState("");
-  const [postLocalPart, setPostLocalPart] = useState("info");
-  const [claimingPost, setClaimingPost] = useState(false);
-
-  const lertaPostPreview = useMemo(() => {
-    const slug = normalizePostOrgSlug(postOrgSlug);
-    const local = normalizePostLocalPart(postLocalPart);
-    if (!slug || !local) {
-      return null;
-    }
-    return `${local}@${slug}.post`;
-  }, [postOrgSlug, postLocalPart]);
-
   const refresh = useCallback(async () => {
     if (!accessToken) {
       return;
@@ -130,17 +66,10 @@ export function OrganizationMailIdentityPanel({
       const next = bundle.identity;
       setIdentity(next);
       setDeliverability(bundle.deliverability);
-      setPlatformPostDnsReady(bundle.platformPostDnsReady);
       setReplyToHintTr(bundle.replyToHintTr);
       if (isOwner) {
         setSuppressions(await fetchOrgSuppressions(accessToken));
         setCustomDomain(await fetchCustomDomainBundle(accessToken));
-      }
-      if (!next.sender && !localPart) {
-        setLocalPart(slugifyLocalPart(companyTradeName));
-      }
-      if (!postOrgSlug) {
-        setPostOrgSlug(slugifyPostOrg(companyTradeName));
       }
       if (next.sender?.displayName) {
         setDisplayName(next.sender.displayName);
@@ -157,81 +86,6 @@ export function OrganizationMailIdentityPanel({
   useEffect(() => {
     void refresh();
   }, [refresh]);
-
-  async function handleClaimLertaPost(): Promise<void> {
-    setMessage("");
-    setError("");
-    if (!accessToken) {
-      setError("Oturum bulunamadı — sayfayı yenileyip tekrar giriş yapın.");
-      return;
-    }
-    if (!isOwner) {
-      setError("Lerta Post kutusu yalnızca firma sahibi oluşturabilir.");
-      return;
-    }
-    const slug = normalizePostOrgSlug(postOrgSlug);
-    const local = normalizePostLocalPart(postLocalPart);
-    if (!slug || !local) {
-      setError("Firma kısa adı ve kutu ön eki zorunlu.");
-      return;
-    }
-    if (!isValidPostOrgSlug(slug)) {
-      setError(
-        "Firma kısa adı: 3–50 karakter, küçük harf/rakam/tire (ör. abayer).",
-      );
-      return;
-    }
-    if (!isValidPostLocalPart(local)) {
-      setError(
-        "Kutu ön eki yalnızca info gibi tek parça olmalı — tam e-posta yazmayın.",
-      );
-      return;
-    }
-    const desiredAddress = `${local}@${slug}.post`;
-    setClaimingPost(true);
-    try {
-      const result = await claimCompanyMailAddress(accessToken, {
-        desiredAddress,
-        displayName: displayName.trim() || companyTradeName,
-      });
-      setPostLocalPart(local);
-      setPostOrgSlug(slug);
-      setMessage(
-        result.nextStepTr ||
-          `Lerta Post kutusu hazır: ${result.vanityAddress ?? result.fromAddress}`,
-      );
-      await refresh();
-    } catch (error) {
-      const raw = error instanceof Error ? error.message : "";
-      setError(
-        raw
-          ? formatMailIdentityApiError(raw)
-          : "Lerta Post adresi oluşturulamadı — slug kullanımda veya geçersiz.",
-      );
-    } finally {
-      setClaimingPost(false);
-    }
-  }
-
-  async function handleProvision(): Promise<void> {
-    if (!accessToken || !localPart.trim()) {
-      return;
-    }
-    setMessage("");
-    setError("");
-    try {
-      const result = await provisionCompanyMailIdentity(accessToken, {
-        localPart: localPart.trim(),
-        displayName: displayName.trim() || undefined,
-      });
-      setMessage(`Kurumsal gönderen adresi hazır: ${result.fromAddress}`);
-      await refresh();
-    } catch {
-      setError(
-        "Adres oluşturulamadı. DNS doğrulaması veya adres kullanımda olabilir.",
-      );
-    }
-  }
 
   async function handleDisplayNameSave(): Promise<void> {
     if (!accessToken || !identity?.sender) {
@@ -269,11 +123,9 @@ export function OrganizationMailIdentityPanel({
       <p className="account-verify-eyebrow">Faz B — Kurumsal kimlik</p>
       <h2 className="account-card-title">E-posta gönderen kimliği</h2>
       <p className="account-card-lead">
-        Kurumsal posta ve Mesajlar sekmesi için önerilen adres:{" "}
-        <strong>info@firma.post</strong> (teknik:{" "}
-        <code>info@firma.post.lerta.com.tr</code>). Pilot tenant:{" "}
-        <code>@{identity?.domain ?? "kullanici.lerta.com.tr"}</code>. Kimlik
-        değişiklikleri denetim günlüğüne kaydedilir (KVKK).
+        Kurumsal posta adresi: <strong>önek@lerta.com.tr</strong> (ör.{" "}
+        <code>kutluhanlogistics@lerta.com.tr</code>). Platform giriş e-postanız
+        ayrıdır. Kimlik değişiklikleri denetim günlüğüne kaydedilir (KVKK).
       </p>
 
       {loading && !identity ? (
@@ -317,14 +169,6 @@ export function OrganizationMailIdentityPanel({
               {identity.sender?.displayName
                 ? ` — ${identity.sender.displayName}`
                 : null}
-            </p>
-          ) : null}
-
-          {!platformPostDnsReady && identity.channel === "instant_post" ? (
-            <p className="error banner error--light" style={{ marginTop: "1rem" }}>
-              <strong>post.lerta.com.tr</strong> bölgesi DNS&apos;te henüz tam
-              değil — Outlook «doğrulanmamış gönderen» uyarısı görülebilir.
-              Operatör: <code>scripts/print-instant-post-dns-isimtescil.sh</code>
             </p>
           ) : null}
 
@@ -389,68 +233,25 @@ export function OrganizationMailIdentityPanel({
 
           {!identity.fromAddress &&
           !identity.displayAddress &&
-          identity.platformDnsReady &&
-          isOwner ? (
-            <div
-              className="account-form-row"
-              style={{
-                marginTop: "1rem",
-                padding: "1rem",
-                borderRadius: "12px",
-                background: "#ecfdf5",
-                border: "1px solid #a7f3d0",
-              }}
-            >
-              <p className="account-verify-eyebrow">Lerta Post (önerilen)</p>
-              <p className="module-hint">
-                DNS sizden istenmez. Görünen adres{" "}
-                <code>{lertaPostPreview ?? "info@firma.post"}</code> (teknik:{" "}
-                <code>
-                  {lertaPostPreview
-                    ? `${normalizePostLocalPart(postLocalPart)}@${normalizePostOrgSlug(postOrgSlug)}.post.lerta.com.tr`
-                    : "info@firma.post.lerta.com.tr"}
-                </code>
-                ). <strong>Kutu ön eki</strong> sadece <code>info</code> olmalı;
-                <code>info@lerta.com.tr</code> yazmayın.
-              </p>
-              <label className="account-label">
-                Firma kısa adı (slug)
-                <input
-                  className="account-input"
-                  value={postOrgSlug}
-                  onChange={(e) => setPostOrgSlug(e.target.value)}
-                  onBlur={() => setPostOrgSlug(normalizePostOrgSlug(postOrgSlug))}
-                  placeholder="abayer"
-                />
-              </label>
-              <label className="account-label">
-                Kutu ön eki (local-part)
-                <input
-                  className="account-input"
-                  value={postLocalPart}
-                  onChange={(e) => setPostLocalPart(e.target.value)}
-                  onBlur={() =>
-                    setPostLocalPart(normalizePostLocalPart(postLocalPart))
-                  }
-                  placeholder="info"
-                  autoComplete="off"
-                />
-              </label>
-              <button
-                type="button"
-                className="btn-account-primary"
-                disabled={claimingPost}
-                onClick={() => void handleClaimLertaPost()}
-              >
-                {claimingPost ? "Oluşturuluyor…" : "Lerta Post kutusu oluştur"}
-              </button>
+          isOwner &&
+          accessToken ? (
+            <div style={{ marginTop: "1rem" }}>
+              <LertaComTrMailAddressPicker
+                accessToken={accessToken}
+                companyLegalName={companyTradeName}
+                displayNameDefault={companyTradeName}
+                onSuccess={(from) => {
+                  setMessage(`Kurumsal posta adresi hazır: ${from}`);
+                  void refresh();
+                }}
+              />
             </div>
           ) : null}
 
           {!identity.platformDnsReady ? (
             <p className="module-hint">
-              Paylaşımlı alan DNS kayıtları henüz doğrulanmadı. Lerta operatörü
-              kurulumu tamamladığında buradan adres alabilirsiniz.
+              Platform MX/SPF kayıtları henüz doğrulanmadı. Kutu oluşturulabilir;
+              dışarıdan gelen posta DNS tamamlandığında açılır.
             </p>
           ) : null}
 
@@ -474,44 +275,7 @@ export function OrganizationMailIdentityPanel({
             </div>
           ) : null}
 
-          {!identity.fromAddress &&
-          !identity.displayAddress &&
-          identity.platformDnsReady &&
-          isOwner ? (
-            <div className="account-form-row" style={{ marginTop: "1rem" }}>
-              <p className="account-verify-eyebrow">Pilot tenant (lerta.com.tr)</p>
-              <label className="account-label">
-                Adres ön eki (local-part)
-                <input
-                  className="account-input"
-                  value={localPart}
-                  onChange={(e) => setLocalPart(e.target.value)}
-                  placeholder="ornek-lojistik"
-                />
-              </label>
-              <p className="module-hint">
-                Örnek: <code>{localPart || "firma"}@{identity.domain}</code> —
-                küçük harf, rakam ve tire; 3–50 karakter.
-              </p>
-              <label className="account-label">
-                Görünen ad
-                <input
-                  className="account-input"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                />
-              </label>
-              <button
-                type="button"
-                className="btn-account-primary"
-                onClick={() => void handleProvision()}
-              >
-                Kurumsal gönderen oluştur
-              </button>
-            </div>
-          ) : null}
-
-          {!identity.fromAddress && identity.platformDnsReady && !isOwner ? (
+          {!identity.fromAddress && !isOwner ? (
             <p className="module-hint">
               Kurumsal gönderen adresi yalnızca firma sahibi oluşturabilir.
             </p>
@@ -530,8 +294,8 @@ export function OrganizationMailIdentityPanel({
           </h3>
           <p className="module-hint">
             Sadece <strong>alan adı</strong> girin (ör. <code>musteri.com.tr</code>
-            ), e-posta adresi değil. Lerta Post için yukarıdaki yeşil kutuyu
-            kullanın; <code>info@lerta.com.tr</code> buraya yazılmaz.
+            ), e-posta adresi değil. Paylaşımlı <code>@lerta.com.tr</code> adresi
+            için yukarıdaki formu kullanın.
           </p>
 
           {!customDomain?.mailDomain ? (

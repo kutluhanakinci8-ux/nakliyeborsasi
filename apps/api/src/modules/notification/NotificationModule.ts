@@ -30,6 +30,7 @@ import { PlatformMailTenantAdminService } from "./PlatformMailTenantAdminService
 import { MailTenantSuspensionService } from "./MailTenantSuspensionService";
 import { MailPilotOnboardingService } from "./MailPilotOnboardingService";
 import { MailAddressOnboardingService } from "./MailAddressOnboardingService";
+import { MailLertaComTrOnboardingService } from "./MailLertaComTrOnboardingService";
 import { MailOrganizationIdentityService } from "./MailOrganizationIdentityService";
 import { MailInstantPostDomainService } from "./MailInstantPostDomainService";
 import { CompanySubscriptionEntity } from "../../infrastructure/database/entities/CompanySubscriptionEntity";
@@ -90,6 +91,7 @@ import { MailComposeDraftEntity } from "../../infrastructure/database/entities/M
 import { MailComposePresetEntity } from "../../infrastructure/database/entities/MailComposePresetEntity";
 import { MailComposeDraftService } from "./MailComposeDraftService";
 import { MailComposePresetService } from "./MailComposePresetService";
+import { MailAiComposeService } from "./MailAiComposeService";
 import { MailOrganizationStorageService } from "./MailOrganizationStorageService";
 import { MailOrganizationDeliveryService } from "./MailOrganizationDeliveryService";
 import { MailDmarcAggregateReportEntity } from "../../infrastructure/database/entities/MailDmarcAggregateReportEntity";
@@ -274,6 +276,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     MailImapAccessService,
     MailComposeDraftService,
     MailComposePresetService,
+    MailAiComposeService,
     MailOrganizationStorageService,
     MailOrganizationDeliveryService,
     MailDmarcAggregateService,
@@ -299,6 +302,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     MailTenantSuspensionService,
     MailPilotOnboardingService,
     MailAddressOnboardingService,
+    MailLertaComTrOnboardingService,
     MailOrganizationIdentityService,
     MailInstantPostDomainService,
     MailWebPushService,

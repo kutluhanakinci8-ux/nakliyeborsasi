@@ -10,8 +10,11 @@ import {
   CORPORATE_DROPDOWN_ITEMS,
   DRIVER_PORTAL_NAV_ITEM,
   HIZMETLER_NAV_ITEM,
+  isMessagingNavActive,
+  MESSAGING_NAV_HREF,
   PLATFORM_NAV_ITEMS,
 } from "../lib/siteNavigation";
+import { useMesajlarNavBadge } from "../hooks/useMesajlarNavBadge";
 
 type SiteHeaderProps = {
   variant?: "public" | "app";
@@ -19,7 +22,8 @@ type SiteHeaderProps = {
 
 export function SiteHeader({ variant = "app" }: SiteHeaderProps) {
   const pathname = usePathname();
-  const { session, locale, setLocale } = useWebSession();
+  const { session, locale, setLocale, accessToken } = useWebSession();
+  const mesajlarUnread = useMesajlarNavBadge(accessToken, locale);
   const [corporateOpen, setCorporateOpen] = useState(false);
   const corporateRef = useRef<HTMLDivElement>(null);
 
@@ -105,17 +109,30 @@ export function SiteHeader({ variant = "app" }: SiteHeaderProps) {
                   {DRIVER_PORTAL_NAV_ITEM.label}
                 </Link>
               ) : null}
-              {PLATFORM_NAV_ITEMS.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={
-                    isActive(item.href) ? "site-nav-link active" : "site-nav-link"
-                  }
-                >
-                  {item.label}
-                </Link>
-              ))}
+              {PLATFORM_NAV_ITEMS.map((item) => {
+                const isMesajlar = item.href === MESSAGING_NAV_HREF;
+                const active = isMesajlar
+                  ? isMessagingNavActive(pathname)
+                  : isActive(item.href);
+                const badge =
+                  isMesajlar && mesajlarUnread > 0 ? mesajlarUnread : 0;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={
+                      active ? "site-nav-link active" : "site-nav-link"
+                    }
+                  >
+                    {item.label}
+                    {badge > 0 ? (
+                      <span className="site-nav-badge" aria-label={`${badge} okunmamış`}>
+                        {badge > 99 ? "99+" : badge}
+                      </span>
+                    ) : null}
+                  </Link>
+                );
+              })}
               <Link
                 href={HIZMETLER_NAV_ITEM.href}
                 className={

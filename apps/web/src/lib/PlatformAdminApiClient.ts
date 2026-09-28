@@ -288,6 +288,13 @@ export class PlatformAdminApiClient {
     return payload.reviews;
   }
 
+  public static async exportMessagingThreads(accessToken: string) {
+    return adminFetch<{ export: unknown }>(
+      accessToken,
+      "message-threads/export",
+    );
+  }
+
   public static async fetchMessageThreads(accessToken: string) {
     const payload = await adminFetch<{
       threads: {

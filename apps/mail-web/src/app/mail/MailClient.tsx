@@ -40,6 +40,7 @@ import {
   unsnoozeMailMessage,
   forwardMail,
   fetchMailInboxBranding,
+  fetchSuggestReply,
   type MailInboxBranding,
   searchInbox,
   sendDraft,
@@ -150,6 +151,7 @@ export function MailClient() {
   const [forwardMessageId, setForwardMessageId] = useState<string | null>(null);
   const [replyBcc, setReplyBcc] = useState("");
   const [replyAllMode, setReplyAllMode] = useState(false);
+  const [aiSuggestBusy, setAiSuggestBusy] = useState(false);
   const [composeSubject, setComposeSubject] = useState("");
   const [composeText, setComposeText] = useState("");
   const [composeFiles, setComposeFiles] = useState<File[]>([]);
@@ -2609,6 +2611,30 @@ export function MailClient() {
                 ) : null}
                 <div className="mail-reply-premium-actions">
                   <div className="mail-reply-action-group">
+                    <button
+                      type="button"
+                      className="compose-btn compose-btn--secondary"
+                      disabled={!selectedId || aiSuggestBusy}
+                      onClick={() => {
+                        if (!selectedId) {
+                          return;
+                        }
+                        setAiSuggestBusy(true);
+                        void fetchSuggestReply(accessToken!, selectedId, "tr")
+                          .then((result) => {
+                            setReplyText(result.suggestion);
+                            setToast(
+                              result.provider === "llm"
+                                ? "AI yanıt önerisi eklendi."
+                                : "Yanıt şablonu eklendi.",
+                            );
+                          })
+                          .catch(() => setToast("Öneri alınamadı."))
+                          .finally(() => setAiSuggestBusy(false));
+                      }}
+                    >
+                      {aiSuggestBusy ? "Öneri…" : "Yanıt öner"}
+                    </button>
                     <button
                       type="button"
                       className="compose-btn compose-btn--primary"

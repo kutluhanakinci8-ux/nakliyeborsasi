@@ -46,6 +46,7 @@ import {
 } from "./CompanyMailIdentityRequestDto";
 import { MailPilotOnboardingService } from "./MailPilotOnboardingService";
 import { MailAddressOnboardingService } from "./MailAddressOnboardingService";
+import { MailLertaComTrOnboardingService } from "./MailLertaComTrOnboardingService";
 import { MailOrganizationIdentityService } from "./MailOrganizationIdentityService";
 import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
 import { MailOrganizationBrandingService } from "./MailOrganizationBrandingService";
@@ -86,6 +87,7 @@ export class CompanyMailIdentityController {
     private readonly mailSaasSubscriptionService: MailSaasSubscriptionService,
     private readonly mailPilotOnboardingService: MailPilotOnboardingService,
     private readonly mailAddressOnboardingService: MailAddressOnboardingService,
+    private readonly mailLertaComTrOnboardingService: MailLertaComTrOnboardingService,
     private readonly mailOrganizationIdentityService: MailOrganizationIdentityService,
     private readonly mailOrganizationBrandingService: MailOrganizationBrandingService,
     private readonly mailOrganizationIntegrationService: MailOrganizationIntegrationService,
@@ -99,6 +101,37 @@ export class CompanyMailIdentityController {
     void this.mailInboundRoutingService.writePostfixVirtualMap().catch(() => {
       /* best-effort */
     });
+  }
+
+  @Get("onboarding/lerta-com-tr/suggest")
+  public async suggestLertaComTrLocalPart(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Query("companyLegalName") companyLegalName?: string,
+  ) {
+    this.assertMailIdentityManager(user);
+    return {
+      message: "OK",
+      ...(await this.mailLertaComTrOnboardingService.suggestLocalParts(
+        companyLegalName ?? "",
+      )),
+    };
+  }
+
+  @Get("onboarding/lerta-com-tr/availability")
+  public async lertaComTrLocalPartAvailability(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Query("localPart") localPart?: string,
+  ) {
+    this.assertMailIdentityManager(user);
+    if (!localPart?.trim()) {
+      throw new BadRequestException("localPart gerekli");
+    }
+    return {
+      message: "OK",
+      ...(await this.mailLertaComTrOnboardingService.checkLocalPartAvailability(
+        localPart,
+      )),
+    };
   }
 
   @Post("onboarding/claim-address")

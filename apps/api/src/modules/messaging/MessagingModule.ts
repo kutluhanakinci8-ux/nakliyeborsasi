@@ -16,6 +16,9 @@ import { MessagingAttachmentStorageService } from "./MessagingAttachmentStorageS
 import { MessagingWebPushService } from "./MessagingWebPushService";
 import { MessagingWebPushSubscriptionEntity } from "../../infrastructure/database/entities/MessagingWebPushSubscriptionEntity";
 import { MessagingPushController } from "./MessagingPushController";
+import { MessagingRealtimeHubService } from "./MessagingRealtimeHubService";
+import { MessagingStreamTicketService } from "./MessagingStreamTicketService";
+import { MessagingStreamController } from "./MessagingStreamController";
 
 @Module({
   imports: [
@@ -35,12 +38,15 @@ import { MessagingPushController } from "./MessagingPushController";
     MessagingModuleStatusController,
     MessagingThreadController,
     MessagingPushController,
+    MessagingStreamController,
   ],
   providers: [
     MessagingThreadApplicationService,
     MessagingTranslationService,
     MessagingAttachmentStorageService,
     MessagingWebPushService,
+    MessagingRealtimeHubService,
+    MessagingStreamTicketService,
   ],
   exports: [MessagingThreadApplicationService],
 })

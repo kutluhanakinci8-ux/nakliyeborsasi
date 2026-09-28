@@ -1,5 +1,7 @@
 # isimtescil — Lerta Mail SaaS (`lerta.com.tr`)
 
+**Güncel kurumsal tek liste (zorunlu + isteğe bağlı):** [DNS_LERTA_COM_TR_KURUMSAL_ISIMTESCIL.md](./DNS_LERTA_COM_TR_KURUMSAL_ISIMTESCIL.md) · `bash scripts/print-lerta-com-tr-kurumsal-dns-isimtescil.sh`
+
 **Logistics = `lerta.tr` (ayrı).** Bu tablo yalnızca **satılacak posta programı** için.
 
 ## Uygulama

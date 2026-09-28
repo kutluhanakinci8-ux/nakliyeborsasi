@@ -35,8 +35,11 @@ import { SaveMailComposePresetRequestDto } from "./SaveMailComposePresetRequestD
 import { UpdateMailComposePresetRequestDto } from "./UpdateMailComposePresetRequestDto";
 import {
   assertMailConsoleAccess,
+  canManageMailIdentity,
   canManageMailInboxWrite,
 } from "./MailCompanyRoleAuthorization";
+import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
+import { MailAddressAliasService } from "./MailAddressAliasService";
 import {
   BulkMailInboxFolderDto,
   BulkMailInboxStarDto,
@@ -95,6 +98,7 @@ import {
   PushCalDavOccurrenceRequestDto,
   UpdateMailOrgContactRequestDto,
 } from "./MailCalendarContactRequestDto";
+import { MailAiComposeService } from "./MailAiComposeService";
 
 @Controller("company/mail-inbox")
 @UseGuards(JwtAuthenticationGuard, MailProductTotpPolicyGuard)
@@ -118,7 +122,107 @@ export class CompanyMailInboxController {
     private readonly mailCalendarCalDavService: MailCalendarCalDavService,
     private readonly mailContactCardDavService: MailContactCardDavService,
     private readonly mailIdentityAuditService: MailIdentityAuditService,
+    private readonly mailSaasSubscriptionService: MailSaasSubscriptionService,
+    private readonly mailAddressAliasService: MailAddressAliasService,
+    private readonly mailAiComposeService: MailAiComposeService,
   ) {}
+
+  @Get("imap-health")
+  public async imapHealth(@AuthenticatedUserParam() user: AuthenticatedUserContext) {
+    const settings = await this.mailImapAccessService.getSettings(
+      user.companyId,
+    );
+    return {
+      phase: "PM-5",
+      maildirEnabled: settings.enabled,
+      folders: [".Sent", ".Archive", ".Trash", ".Junk", "inbox"],
+      settings,
+    };
+  }
+
+  @Get("integration-status")
+  public async integrationStatus(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    const imap = await this.mailImapAccessService.getSettings(user.companyId);
+    return {
+      imap,
+      jmap: {
+        bridge: true,
+        sessionPath: "/api/v1/company/mail-jmap/session",
+        methods: ["Email/query", "Email/get"],
+        fullServer: false,
+      },
+      aiCompose: {
+        enabled: this.mailAiComposeService.isEnabled(),
+        suggestReplyPath: "/api/v1/company/mail-inbox/messages/:id/suggest-reply",
+      },
+    };
+  }
+
+  @Post("messages/:messageId/suggest-reply")
+  public async suggestReply(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("messageId") messageId: string,
+    @Query("lang") locale = "tr",
+  ) {
+    const detail = await this.mailOrganizationInboxService.getMessage(
+      user.companyId,
+      messageId,
+    );
+    return await this.mailAiComposeService.suggestReply({
+      subject: detail.subject,
+      fromAddress: detail.fromAddress,
+      bodySnippet: detail.bodyText ?? detail.snippet ?? "",
+      locale,
+    });
+  }
+
+  @Get("account-hub")
+  public async accountHub(@AuthenticatedUserParam() user: AuthenticatedUserContext) {
+    const summary = await this.mailOrganizationInboxService.getSummary(
+      user.companyId,
+    );
+    const senders =
+      await this.mailSaasSubscriptionService.listOrganizationSenders(
+        user.companyId,
+      );
+    const aliases = await this.mailAddressAliasService.listAliases(
+      user.companyId,
+    );
+    const branding = await this.mailOrganizationBrandingService.getSnapshot(
+      user.companyId,
+    );
+    return {
+      primaryAddress: summary.primaryAddress,
+      unreadCount: summary.unreadCount,
+      senders,
+      aliases,
+      branding,
+      canManageSenders: canManageMailIdentity(user),
+    };
+  }
+
+  @Post("senders/:senderId/default")
+  public async setDefaultSender(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("senderId") senderId: string,
+  ) {
+    if (!canManageMailIdentity(user)) {
+      throw new ForbiddenException(
+        "Varsayılan gönderen yalnızca posta yöneticisi tarafından değiştirilir.",
+      );
+    }
+    await this.mailSaasSubscriptionService.setDefaultSender(
+      user.companyId,
+      senderId,
+    );
+    const senders =
+      await this.mailSaasSubscriptionService.listOrganizationSenders(
+        user.companyId,
+      );
+    return { ok: true, senders };
+  }
 
   @Get("preferences")
   public async getInboxPreferences(

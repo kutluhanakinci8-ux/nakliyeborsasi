@@ -41,7 +41,7 @@ export class ClaimMailAddressDto {
   @MinLength(5)
   @MaxLength(255)
   @Matches(/^[^@\s]+@[^@\s]+\.[^@\s]+$/, {
-    message: "Geçerli bir e-posta adresi girin (ör. info@firma.com.tr)",
+    message: "Geçerli bir e-posta adresi girin (ör. kutluhanlogistics@lerta.com.tr)",
   })
   public desiredAddress!: string;
 

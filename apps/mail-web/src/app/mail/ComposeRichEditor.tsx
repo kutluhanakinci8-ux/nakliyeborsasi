@@ -77,6 +77,18 @@ export function ComposeRichEditor({
         <button type="button" onClick={() => exec("underline")} title="Altı çizili">
           <span className="compose-u">U</span>
         </button>
+        <button type="button" onClick={() => exec("insertUnorderedList")} title="Madde işaretli liste">
+          • Liste
+        </button>
+        <button type="button" onClick={() => exec("insertOrderedList")} title="Numaralı liste">
+          1. Liste
+        </button>
+        <button type="button" onClick={() => exec("strikeThrough")} title="Üstü çizili">
+          <s>S</s>
+        </button>
+        <button type="button" onClick={() => exec("removeFormat")} title="Biçimi temizle">
+          Temizle
+        </button>
         <button
           type="button"
           onClick={() => {

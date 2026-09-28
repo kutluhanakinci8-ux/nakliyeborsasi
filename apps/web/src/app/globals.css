@@ -3079,6 +3079,9 @@ a {
 }
 
 .site-nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 10px 18px;
   border-radius: 12px;
   color: var(--nb-footer-text);
@@ -3105,6 +3108,20 @@ a {
     0 2px 12px rgba(30, 64, 175, 0.12),
     inset 0 0 0 1px rgba(30, 64, 175, 0.16);
   font-weight: 800;
+}
+
+.site-nav-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #dc2626;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  line-height: 1.35;
 }
 
 .site-header--public .site-nav-link--menu {
@@ -7642,6 +7659,35 @@ button.btn-secondary {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.account-profile-matrix-wrap {
+  margin-top: 20px;
+  overflow-x: auto;
+}
+
+.account-profile-matrix-title {
+  font-size: 0.9rem;
+  margin: 0 0 8px;
+}
+
+.account-profile-matrix {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.account-profile-matrix th,
+.account-profile-matrix td {
+  border: 1px solid #e2e8f0;
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.account-profile-matrix-hint {
+  margin: 8px 0 0;
+  font-size: 0.75rem;
+  color: #64748b;
 }
 
 .account-profile-toggle-row {

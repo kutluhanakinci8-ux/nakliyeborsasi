@@ -12,7 +12,7 @@ Outlook mobil ayarlar ekranına göre mevcut durum ve faz planı.
 | **İmza** | İmza / şablon sekmesi | ✅ |
 | **Otomatik yanıtlar** | Ayarlar + inbound tetikleme | ✅ S-A2 |
 | **Bildirimler ve sesler** | Push, ses, günlük özet | ✅ (S-A1’de tek satır) |
-| **Hesaplar** | Tek kurumsal kutu + IMAP | ⚠️ kısmi |
+| **Hesaplar** | Ayarlar → Hesaplar ve gönderenler (S-A4 / PM-3) | ✅ |
 | **Posta** (yoğunluk, varsayılan) | Liste yoğunluğu + kurallar, klasörler | ✅ yoğunluk S-A3 |
 | **Takvim** ayarları | Ayarlarda CalDAV özet + senkron | ✅ S-A3 |
 | **Kişiler** ayarları | Ayarlarda CardDAV özet + senkron | ✅ S-A3 |
@@ -29,4 +29,4 @@ Outlook mobil ayarlar ekranına göre mevcut durum ve faz planı.
 | **S-A1** | Outlook tarzı ayar merkezi: arama, gruplar, drill-down; görünüm (açık/koyu) ayarlarda | ✅ kod |
 | **S-A2** | Otomatik yanıt (API + şablon + aç/kapa + tarih aralığı) | ✅ kod |
 | **S-A3** | Posta tercihleri (liste yoğunluğu), takvim/kişi kısayolları, gizlilik/yarım linkleri | ✅ kod |
-| **S-A4** | Hesaplar özeti (gönderen kimlikleri, alias), gelişmiş entegrasyonlar | |
+| **S-A4** | Hesaplar özeti (gönderen kimlikleri, alias), gelişmiş entegrasyonlar | ✅ PM-3 |

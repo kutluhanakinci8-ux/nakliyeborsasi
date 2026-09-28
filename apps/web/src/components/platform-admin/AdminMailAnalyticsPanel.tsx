@@ -15,6 +15,11 @@ const EVENT_LABELS: Record<string, string> = {
   USER_FIRST_LOGIN: "İlk giriş",
   EMAIL_VERIFICATION: "E-posta doğrulama",
   PASSWORD_RESET: "Şifre sıfırlama",
+  AUCTION_BID_PLACED: "İhale — teklif",
+  AUCTION_WON: "İhale — kazanan",
+  LISTING_PUBLISHED: "İlan yayın",
+  MESSAGING_NEW_MESSAGE: "Yeni sohbet mesajı",
+  WEEKLY_DIGEST: "Haftalık özet",
 };
 
 type RangeDays = 7 | 30;
