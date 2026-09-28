@@ -150,8 +150,11 @@ export class CompanyMailInboxController {
       jmap: {
         bridge: true,
         sessionPath: "/api/v1/company/mail-jmap/session",
+        invokePath: "/api/v1/company/mail-jmap",
         methods: ["Email/query", "Email/get"],
+        plannedMethods: ["Email/set", "Mailbox/query", "Mailbox/get"],
         fullServer: false,
+        documentation: "docs/MAIL_JMAP_BRIDGE.md",
       },
       aiCompose: {
         enabled: this.mailAiComposeService.isEnabled(),

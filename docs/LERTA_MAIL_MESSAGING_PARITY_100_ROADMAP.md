@@ -19,7 +19,7 @@
 | **PM-7** | `parity-p7` | Sohbet: 10 MB×5 ek, admin `message-threads/export` | Orta | Ekler/eDisc ✅ |
 | **PM-8** | `parity-p8` | `GET me/notification-preferences/matrix` + profil olay tablosu | Büyük | Matris 55→85% ✅ kod |
 | **PM-9** | `parity-p9` | `MailAiComposeService`, yanıt öner, enable/verify scriptleri | Büyük | Akıllı 35→75% ✅ · LLM anahtar ops |
-| **PM-10** | `parity-p10` | Engagement CSV export, olay etiketleri; JMAP köprü | Büyük | Analitik ~80% ✅ · org webhook genişletme sırada |
+| **PM-10** | `parity-p10` | Engagement CSV, webmail webhook, JMAP doküman + verify | Büyük | Analitik ~85% ✅ |
 
 Her faz: kod + dokümantasyon + (varsa) `scripts/verify-*` · deploy checklist.
 
@@ -130,6 +130,9 @@ Her faz: kod + dokümantasyon + (varsa) `scripts/verify-*` · deploy checklist.
 | 2026-09-28 | PM-5 ops (#131–#134) | `provision-pm5-imap-dovecot-vps.sh` deploy hook · 21× `@lerta.com.tr` Dovecot passwd · verify `nakliyeborsasi@lerta.com.tr` OK · şifreler VPS: `/root/lerta-imap-credentials-bootstrap.txt` |
 | 2026-09-28 | PM-4 (#136) | SW v7 + IndexedDB offline · `verify-mail-web-pwa-prod.sh` |
 | 2026-09-28 | PM-9/10 (#137) | AI compose env (şablon) · engagement CSV |
-| 2026-09-28 | PM-10 webhook | Webmail compose/reply/forward → `message.sent` / `message.failed` |
+| 2026-09-28 | PM-10 webhook (#138) | Webmail → `message.sent` / `message.failed` |
+| 2026-09-28 | Parity kapanış | `MAIL_JMAP_BRIDGE.md` · `run-mail-messaging-parity-close-checklist.sh` |
 
-**Sıradaki sıra:** JMAP bridge genişletme dokümantasyonu · parity kapanış doğrulama checklist.
+**PM-1…PM-10:** kod + prod deploy tamam. **Bakım:** `LERTA_MAIL_AI_COMPOSE_API_KEY` (opsiyonel) · `Email/set` JMAP (v2).
+
+**Kapanış doğrulama (VPS):** `bash scripts/run-mail-messaging-parity-close-checklist.sh`
