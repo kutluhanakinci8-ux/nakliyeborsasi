@@ -13,7 +13,7 @@
 | **PM-1** | `parity-p1` | Mesajlaşma UX: deep link, nav badge, `/messaging` aktif menü | Küçük | Sohbet UX ~62→75% ✅ |
 | **PM-2** | `parity-p2` | Yazma: RTE araç çubuğu, org şablon seed (4 adet) | Orta | Yazma 72→85% ✅ kod |
 | **PM-3** | `parity-p3` | **S-A4** gönderen/alias hub (`account-hub`) | Orta | Kurumsal 65→85% ✅ kod |
-| **PM-4** | `parity-p4` | PWA shell v6, `verify-mail-web-push-prod.sh` | Orta | Mobil 68→78% 🔄 ops |
+| **PM-4** | `parity-p4` | PWA shell v7, IndexedDB offline liste/detay, verify scriptleri | Orta | Mobil 68→85% ✅ kod · VPS doğrula |
 | **PM-5** | `parity-p5` | `.Junk` maildir, klasör iskeleti, `imap-health`, Dovecot runbook | Büyük | IMAP 62→82% ✅ kod · VPS doğrula |
 | **PM-6** | `parity-p6` | **SSE** canlı sohbet (`/messaging/stream`) + polling yedek | Büyük | Canlılık 25→88% ✅ |
 | **PM-7** | `parity-p7` | Sohbet: 10 MB×5 ek, admin `message-threads/export` | Orta | Ekler/eDisc ✅ |
@@ -129,4 +129,4 @@ Her faz: kod + dokümantasyon + (varsa) `scripts/verify-*` · deploy checklist.
 | 2026-09-28 | `cursor/mail-messaging-parity-100-519e` → **main** (#129) | VPS deploy OK · checklist PASS · push VAPID OK |
 | 2026-09-28 | PM-5 ops (#131–#134) | `provision-pm5-imap-dovecot-vps.sh` deploy hook · 21× `@lerta.com.tr` Dovecot passwd · verify `nakliyeborsasi@lerta.com.tr` OK · şifreler VPS: `/root/lerta-imap-credentials-bootstrap.txt` |
 
-**Sıradaki sıra:** **PM-4** (PWA offline IndexedDB + push prod testi) · PM-9 LLM env · PM-10 webhook derinliği.
+**Sıradaki sıra:** PM-4 push prod testi (panel) · PM-9 LLM env · PM-10 webhook derinliği.

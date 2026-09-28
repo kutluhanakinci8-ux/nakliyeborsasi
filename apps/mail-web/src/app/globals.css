@@ -1592,6 +1592,15 @@ a {
   }
 }
 
+.mail-offline-banner {
+  grid-column: 1 / -1;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  background: color-mix(in srgb, var(--accent) 12%, var(--panel));
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+
 .mail-mobile-bar {
   display: none;
 }
