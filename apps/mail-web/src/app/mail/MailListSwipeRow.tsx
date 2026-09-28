@@ -145,28 +145,37 @@ export function MailListSwipeRow({
     setOffsetSynced(0);
   }
 
+  const actionsOpen = offset < -8;
+
   return (
     <div
-      className="mail-swipe-row"
+      className={
+        actionsOpen ? "mail-swipe-row mail-swipe-row--open" : "mail-swipe-row"
+      }
       onClick={(e) => {
+        if ((e.target as HTMLElement).closest(".mail-swipe-action")) {
+          return;
+        }
         if (shouldBlockClick()) {
           e.preventDefault();
           e.stopPropagation();
           return;
         }
-        if (offset < -8) {
+        if (actionsOpen) {
           e.preventDefault();
           e.stopPropagation();
           close();
         }
       }}
     >
-      <div className="mail-swipe-actions" aria-hidden={offset === 0}>
+      <div className="mail-swipe-actions" aria-hidden={!actionsOpen}>
         {showArchive ? (
           <button
             type="button"
             className="mail-swipe-action mail-swipe-action--archive"
-            onClick={() => {
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
               close();
               onArchive();
             }}
@@ -177,7 +186,9 @@ export function MailListSwipeRow({
         <button
           type="button"
           className="mail-swipe-action mail-swipe-action--delete"
-          onClick={() => {
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
             close();
             onDelete();
           }}

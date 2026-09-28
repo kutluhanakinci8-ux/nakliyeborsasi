@@ -1011,6 +1011,17 @@ export function MailClient() {
     }
   }
 
+  function removeMessageFromLocalLists(messageId: string) {
+    setMessages((prev) => prev.filter((m) => m.id !== messageId));
+    setSearchResults((prev) =>
+      prev ? prev.filter((m) => m.id !== messageId) : prev,
+    );
+    setSent((prev) => prev.filter((s) => s.id !== messageId));
+    setThreads((prev) =>
+      prev.filter((t) => t.latestMessageId !== messageId),
+    );
+  }
+
   function clearRowSelectionAfterSwipe(messageId: string) {
     if (selectedId === messageId) {
       setDetail(null);
@@ -1063,6 +1074,9 @@ export function MailClient() {
         );
       }
       clearRowSelectionAfterSwipe(messageId);
+      if (view !== "sent" && view !== "drafts") {
+        removeMessageFromLocalLists(messageId);
+      }
       void refresh();
     } catch (error) {
       setToast(
@@ -1090,6 +1104,9 @@ export function MailClient() {
         setToast("Çöp kutusuna taşındı.");
       }
       clearRowSelectionAfterSwipe(messageId);
+      if (view !== "trash") {
+        removeMessageFromLocalLists(messageId);
+      }
       void refresh();
     } catch (error) {
       setToast(error instanceof Error ? error.message : "Silinemedi.");
