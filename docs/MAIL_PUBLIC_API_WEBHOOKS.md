@@ -35,7 +35,7 @@ Konsol: `/integration` veya `POST/PATCH company/mail-identity/integration/webhoo
 
 Olaylar:
 
-- `message.sent` / `message.failed` — Public API ile kuyruğa alınan mesajlar
+- `message.sent` / `message.failed` — Public API outbox **ve** webmail (compose / yanıt / ilet); `data.source` = `mail_public_api` | `mail_webmail`
 - `inbound.received` — Posta kutusuna gelen mesaj
 
 İstek gövdesi:
