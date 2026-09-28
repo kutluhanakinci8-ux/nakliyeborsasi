@@ -428,6 +428,23 @@ export class PlatformAdminApiClient {
     return response.blob();
   }
 
+  public static async fetchEmailEngagementExportBlob(
+    accessToken: string,
+    params: { days: 7 | 30 },
+  ): Promise<Blob> {
+    const query = new URLSearchParams({ days: String(params.days) });
+    const response = await fetch(
+      `${PublicApiConfiguration.resolveBaseUrl()}/platform-admin/notifications/analytics/engagement-export?${query}`,
+      {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      },
+    );
+    if (!response.ok) {
+      throw new Error("Engagement CSV export failed");
+    }
+    return response.blob();
+  }
+
   public static async fetchNotificationOutbox(
     accessToken: string,
     limit = 50,

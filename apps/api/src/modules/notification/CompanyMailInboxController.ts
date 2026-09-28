@@ -155,6 +155,7 @@ export class CompanyMailInboxController {
       },
       aiCompose: {
         enabled: this.mailAiComposeService.isEnabled(),
+        llmConfigured: this.mailAiComposeService.isLlmConfigured(),
         suggestReplyPath: "/api/v1/company/mail-inbox/messages/:id/suggest-reply",
       },
     };

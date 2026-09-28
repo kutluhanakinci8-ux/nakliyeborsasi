@@ -12,6 +12,34 @@ export class MailAiComposeService {
     );
   }
 
+  public isLlmConfigured(): boolean {
+    const apiKey = this.configService
+      .get<string>("LERTA_MAIL_AI_COMPOSE_API_KEY")
+      ?.trim();
+    const apiUrl = this.resolveApiUrl();
+    return Boolean(apiUrl && (apiKey || this.isOpenAiCompatibleUrl(apiUrl)));
+  }
+
+  private resolveApiUrl(): string | null {
+    const explicit = this.configService
+      .get<string>("LERTA_MAIL_AI_COMPOSE_API_URL")
+      ?.trim();
+    if (explicit) {
+      return explicit.replace(/\/$/, "");
+    }
+    const apiKey = this.configService
+      .get<string>("LERTA_MAIL_AI_COMPOSE_API_KEY")
+      ?.trim();
+    if (apiKey) {
+      return "https://api.openai.com/v1/chat/completions";
+    }
+    return null;
+  }
+
+  private isOpenAiCompatibleUrl(url: string): boolean {
+    return /openai\.com|azure\.com|api\.groq\.com/i.test(url);
+  }
+
   public async suggestReply(input: {
     subject: string;
     fromAddress: string;
@@ -25,9 +53,7 @@ export class MailAiComposeService {
         provider: "template",
       };
     }
-    const apiUrl = this.configService
-      .get<string>("LERTA_MAIL_AI_COMPOSE_API_URL")
-      ?.trim();
+    const apiUrl = this.resolveApiUrl();
     const apiKey = this.configService
       .get<string>("LERTA_MAIL_AI_COMPOSE_API_KEY")
       ?.trim();
@@ -37,7 +63,7 @@ export class MailAiComposeService {
         provider: "template",
       };
     }
-    const response = await fetch(apiUrl.replace(/\/$/, ""), {
+    const response = await fetch(apiUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

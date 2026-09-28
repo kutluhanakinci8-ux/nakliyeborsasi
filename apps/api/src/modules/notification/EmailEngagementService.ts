@@ -233,6 +233,66 @@ export class EmailEngagementService {
     };
   }
 
+  public async buildEngagementExportCsv(
+    since: Date,
+    limit = 5000,
+  ): Promise<string> {
+    const safeLimit = Math.min(Math.max(limit, 1), 10000);
+    const rows: Array<{
+      occurred_at: Date;
+      outbox_id: string;
+      recipient_email: string | null;
+      event_type: string;
+      link_url: string | null;
+      bounce_class: string | null;
+      smtp_code: string | null;
+      ip_address: string | null;
+    }> = await this.eventRepository.query(
+      `
+      SELECT
+        e."occurredAt" AS occurred_at,
+        e."outboxId" AS outbox_id,
+        o."recipientEmail" AS recipient_email,
+        e."eventType" AS event_type,
+        e."linkUrl" AS link_url,
+        e."bounceClass" AS bounce_class,
+        e."smtpCode" AS smtp_code,
+        e."ipAddress" AS ip_address
+      FROM email_outbox_engagement_events e
+      LEFT JOIN email_outbox o ON o.id = e."outboxId"
+      WHERE e."occurredAt" >= $1
+      ORDER BY e."occurredAt" DESC
+      LIMIT $2
+      `,
+      [since, safeLimit],
+    );
+    const escape = (value: string | null | undefined): string => {
+      const raw = value ?? "";
+      if (/[",\n]/.test(raw)) {
+        return `"${raw.replace(/"/g, '""')}"`;
+      }
+      return raw;
+    };
+    const lines = [
+      "occurredAt,outboxId,recipientEmail,eventType,linkUrl,bounceClass,smtpCode,ipAddress",
+    ];
+    for (const row of rows) {
+      lines.push(
+        [
+          row.occurred_at.toISOString(),
+          row.outbox_id,
+          escape(row.recipient_email),
+          row.event_type,
+          escape(row.link_url),
+          escape(row.bounce_class),
+          escape(row.smtp_code),
+          escape(row.ip_address),
+        ].join(","),
+      );
+    }
+    return `${lines.join("\n")}\n`;
+  }
+
   private readUserAgent(request: Request): string | null {
     const value = request.headers["user-agent"];
     return typeof value === "string" ? value.slice(0, 512) : null;
