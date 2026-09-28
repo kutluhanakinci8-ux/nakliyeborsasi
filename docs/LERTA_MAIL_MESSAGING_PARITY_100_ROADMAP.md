@@ -128,4 +128,4 @@ Her faz: kod + dokümantasyon + (varsa) `scripts/verify-*` · deploy checklist.
 |-------|-----|-----|
 | 2026-09-28 | `cursor/mail-messaging-parity-100-519e` → **main** (#129) | VPS deploy OK · checklist PASS · push VAPID OK · PM-5 maildir iskeleti `nakliyeborsasi@lerta.com.tr` · Dovecot passwd sync → org IMAP rotate + admin sync |
 
-**Sıradaki ops (kalıcı PM-4/5):** Webmail’de push aboneliği testi; ayarlardan IMAP rotate + platform **sync-dovecot**; isteğe bağlı `LERTA_MAIL_AI_COMPOSE_ENABLED=true`.
+**Sıradaki ops:** PM-5 `provision-pm5-imap-dovecot-vps.sh` (deploy ile) · PM-4 push abonelik testi · `LERTA_MAIL_AI_COMPOSE_ENABLED` opsiyonel.
