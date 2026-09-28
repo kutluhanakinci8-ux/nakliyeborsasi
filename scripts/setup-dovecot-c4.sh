@@ -35,6 +35,10 @@ chown -R vmail:mail "${MAILDIR_ROOT}"
 
 systemctl enable dovecot
 systemctl restart dovecot
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [[ -x "${SCRIPT_DIR}/configure-dovecot-imap-gold-folders.sh" ]]; then
+  bash "${SCRIPT_DIR}/configure-dovecot-imap-gold-folders.sh"
+fi
 echo "Dovecot IMAP hazır. Maildir: ${MAILDIR_ROOT}, passwd: ${PASSWD_FILE}"
 echo "Admin: POST platform-admin/mail/imap/sync-dovecot (MAIL_IMAP_APPLY_DOVECOT=true)"
 echo "Org: POST company/mail-inbox/imap-credentials/rotate"

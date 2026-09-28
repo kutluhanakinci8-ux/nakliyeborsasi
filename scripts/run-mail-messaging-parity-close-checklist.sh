@@ -46,6 +46,17 @@ else
   echo "SKIP: MAIL_JMAP_JWT yok — JMAP Email/query smoke atlandı"
 fi
 
+if [[ -n "${IMAP_GOLD_PASSWORD:-}" ]] && [[ -n "${IMAP_GOLD_EMAIL:-${PARITY_IMAP_TEST_EMAIL:-}}" ]]; then
+  run_step "IMAP gold smoke" \
+    env IMAP_GOLD_EMAIL="${IMAP_GOLD_EMAIL:-${PARITY_IMAP_TEST_EMAIL}}" \
+    IMAP_GOLD_PASSWORD="${IMAP_GOLD_PASSWORD}" \
+    INSTALL_DIR="${INSTALL_DIR:-${ROOT}}" \
+    bash "${ROOT}/scripts/smoke-imap-gold.sh"
+else
+  echo ""
+  echo "SKIP: IMAP_GOLD_PASSWORD yok — smoke-imap-gold atlandı (docs/MAIL_IMAP_GOLD_SMOKE.md)"
+fi
+
 echo ""
 if [[ "$FAIL" -eq 0 ]]; then
   echo "Parity close checklist: PASS"
