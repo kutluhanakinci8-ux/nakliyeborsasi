@@ -23,6 +23,12 @@ export class UserNotificationPreferenceEntity {
   @Column({ type: "boolean", default: false })
   public notifyWeeklyDigest!: boolean;
 
+  @Column({ name: "ai_mail_assist_consent", type: "boolean", default: false })
+  public aiMailAssistConsent!: boolean;
+
+  @Column({ name: "ai_mail_assent_at", type: "timestamptz", nullable: true })
+  public aiMailAssentAt!: Date | null;
+
   @CreateDateColumn({ type: "timestamptz" })
   public createdAt!: Date;
 

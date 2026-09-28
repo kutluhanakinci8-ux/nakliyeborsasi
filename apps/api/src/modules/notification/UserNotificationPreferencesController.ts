@@ -55,6 +55,15 @@ export class UserNotificationPreferencesController {
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
     @Body() body: Partial<UserNotificationPreferencesDto>,
   ) {
+    if (body.aiMailAssistConsent !== undefined) {
+      return {
+        preferences:
+          await this.userNotificationPreferenceService.setAiMailAssistConsent(
+            user.userId,
+            Boolean(body.aiMailAssistConsent),
+          ),
+      };
+    }
     return {
       preferences: await this.userNotificationPreferenceService.updateForUser(
         user.userId,

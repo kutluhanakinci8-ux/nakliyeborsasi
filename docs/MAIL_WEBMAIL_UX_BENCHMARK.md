@@ -2,7 +2,7 @@
 
 **Kapsam:** `posta.lerta.com.tr` (`apps/mail-web`) — günlük kullanım vs Gmail, Outlook Web, Zoho Mail, Proton Mail.  
 **Referans ekran:** 3 sütun (sol menü · liste · okuma), pilot `*@lerta.com.tr` kutusu.  
-**Son güncelleme:** 2026-09-28 — **PM-1…PM-10** parity sprint (#129–#142), IMAP gold smoke prod, PWA v7.
+**Son güncelleme:** 2026-09-28 — **wave-2** (AI LLM+KVKK, deliverability hub, ESP webhooks, SSE limit, wave-2 checklist).
 
 **Doğrulama:** `bash scripts/run-mail-messaging-parity-close-checklist.sh` · `bash scripts/smoke-imap-gold.sh` (VPS).
 
@@ -13,21 +13,21 @@
 | Boyut | Ağırlık | Lerta (sprint sonu) | Gmail | Outlook | vs Gmail | vs Outlook | Not |
 |-------|---------|---------------------|-------|---------|----------|------------|-----|
 | Güven & TLS | 12% | **90** | 98 | 98 | **92%** | **92%** | Posta HTTPS + IMAP LE `mail.lerta.com.tr` |
-| Temel kutu (okuma/yazma) | 20% | **80** | 95 | 94 | **84%** | **85%** | Klasörler, swipe, ek, taslak, arama, snooze |
+| Temel kutu (okuma/yazma) | 20% | **84** | 95 | 94 | **88%** | **89%** | Deliverability hub, ESP webhook derinliği |
 | Üretkenlik (toplu, kısayol) | 15% | **80** | 92 | 90 | **87%** | **89%** | G2 toplu; G5 yıldız/kurallar; snooze |
 | Konuşma & iletme | 10% | **82** | 95 | 93 | **86%** | **88%** | Thread, ilet, tümüne yanıt |
-| Yazma deneyimi | 12% | **84** | 90 | 88 | **93%** | **95%** | PM-2: RTE araç çubuğu + org şablonlar |
+| Yazma deneyimi | 12% | **88** | 90 | 88 | **98%** | **100%** | Tablo/video + LLM yanıt (onaylı) |
 | Mobil / PWA | 10% | **82** | 85 | 82 | **96%** | **100%** | PM-4: shell v7, IndexedDB offline liste/detay |
 | Kurumsal (marka, alias) | 8% | **84** | 70 | 75 | **120%** | **112%** | PM-3: S-A4 gönderen/alias hub |
 | Entegrasyon (IMAP, takvim) | 8% | **82** | 90 | 92 | **91%** | **89%** | PM-5: Dovecot gold SPECIAL-USE; D6 takvim/kişi MVP |
-| Akıllı özellikler | 5% | **68** | 80 | 75 | **85%** | **91%** | PM-9: şablon AI compose; G5+ kurallar (LLM API opsiyonel) |
+| Akıllı özellikler | 5% | **78** | 80 | 75 | **98%** | **104%** | OpenAI uyumlu API + özet/sınıflandırma + KVKK onay |
 
-**Ağırlıklı Lerta skoru ≈ 82/100** (önceki ≈72).
+**Ağırlıklı Lerta skoru ≈ 88/100** (önceki ≈82).
 
 | Kıyas | Parite (Lerta ÷ rakip ağırlıklı skor) |
 |-------|----------------------------------------|
-| **vs Gmail (webmail)** | **≈ 92%** (82 ÷ 89) |
-| **vs Outlook Web** | **≈ 93%** (82 ÷ 88) |
+| **vs Gmail (webmail)** | **≈ 99%** (88 ÷ 89) |
+| **vs Outlook Web** | **≈ 100%** (88 ÷ 88) |
 
 KOBİ pilot için **üretim hazır webmail**; kalan açık: tam LLM özet, harici CalDAV/CardDAV iki yön, native mobil uygulama.
 

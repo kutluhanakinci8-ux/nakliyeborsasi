@@ -27,12 +27,23 @@ run_step "PWA shell v7" bash "${ROOT}/scripts/verify-mail-web-pwa-prod.sh"
 run_step "JMAP bridge mount" bash "${ROOT}/scripts/verify-mail-jmap-bridge-prod.sh"
 
 if [[ -f "${ENV_FILE}" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "${ENV_FILE}"
+  set +a
   run_step "Mail push VAPID" bash "${ROOT}/scripts/verify-mail-web-push-prod.sh" "${ENV_FILE}"
   run_step "Messaging push VAPID (izole)" bash "${ROOT}/scripts/verify-messaging-web-push-prod.sh" "${ENV_FILE}"
   run_step "AI compose flags" bash "${ROOT}/scripts/verify-mail-ai-compose-prod.sh" "${ENV_FILE}"
 else
   echo ""
   echo "SKIP: ${ENV_FILE} yok — push/AI verify (agent ortamı)"
+fi
+
+if [[ -n "${OPERATOR_JWT:-}" ]]; then
+  run_step "Billing A1 (OPERATOR_JWT)" bash "${ROOT}/scripts/run-mail-billing-a1-acceptance.sh"
+else
+  echo ""
+  echo "SKIP: OPERATOR_JWT yok — platform-admin/mail/billing-health (madde 17)"
 fi
 
 if [[ -f "${ENV_FILE}" ]] && [[ -x "${ROOT}/scripts/verify-dovecot-imap-pm5.sh" ]]; then

@@ -24,6 +24,9 @@ const WEBHOOK_EVENTS: MailWebhookEventType[] = [
   "message.sent",
   "message.failed",
   "inbound.received",
+  "message.opened",
+  "message.clicked",
+  "message.bounced",
 ];
 
 @Injectable()

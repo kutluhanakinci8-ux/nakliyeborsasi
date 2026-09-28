@@ -99,6 +99,7 @@ import {
   UpdateMailOrgContactRequestDto,
 } from "./MailCalendarContactRequestDto";
 import { MailAiComposeService } from "./MailAiComposeService";
+import { MailDeliverabilityHubService } from "./MailDeliverabilityHubService";
 
 @Controller("company/mail-inbox")
 @UseGuards(JwtAuthenticationGuard, MailProductTotpPolicyGuard)
@@ -125,6 +126,7 @@ export class CompanyMailInboxController {
     private readonly mailSaasSubscriptionService: MailSaasSubscriptionService,
     private readonly mailAddressAliasService: MailAddressAliasService,
     private readonly mailAiComposeService: MailAiComposeService,
+    private readonly mailDeliverabilityHubService: MailDeliverabilityHubService,
   ) {}
 
   @Get("imap-health")
@@ -175,11 +177,55 @@ export class CompanyMailInboxController {
       messageId,
     );
     return await this.mailAiComposeService.suggestReply({
+      userId: user.userId,
       subject: detail.subject,
       fromAddress: detail.fromAddress,
       bodySnippet: detail.bodyText ?? detail.snippet ?? "",
       locale,
     });
+  }
+
+  @Post("messages/:messageId/summarize")
+  public async summarizeMessage(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("messageId") messageId: string,
+    @Query("lang") locale = "tr",
+  ) {
+    const detail = await this.mailOrganizationInboxService.getMessage(
+      user.companyId,
+      messageId,
+    );
+    return await this.mailAiComposeService.summarizeMessage({
+      userId: user.userId,
+      subject: detail.subject,
+      bodySnippet: detail.bodyText ?? detail.snippet ?? "",
+      locale,
+    });
+  }
+
+  @Post("messages/:messageId/classify")
+  public async classifyMessage(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("messageId") messageId: string,
+  ) {
+    const detail = await this.mailOrganizationInboxService.getMessage(
+      user.companyId,
+      messageId,
+    );
+    return await this.mailAiComposeService.classifyInbound({
+      userId: user.userId,
+      subject: detail.subject,
+      bodySnippet: detail.bodyText ?? detail.snippet ?? "",
+    });
+  }
+
+  @Get("deliverability-hub")
+  public async deliverabilityHub(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    return {
+      hub: await this.mailDeliverabilityHubService.buildHub(user.companyId),
+    };
   }
 
   @Get("account-hub")

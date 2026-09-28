@@ -137,3 +137,32 @@ Her faz: kod + dokümantasyon + (varsa) `scripts/verify-*` · deploy checklist.
 **PM-1…PM-10:** kod + prod deploy tamam. **Bakım:** `LERTA_MAIL_AI_COMPOSE_API_KEY` (opsiyonel) · `Email/set` JMAP (v2).
 
 **Kapanış doğrulama (VPS):** `bash scripts/run-mail-messaging-parity-close-checklist.sh`
+
+---
+
+## 35 maddelik envanter (wave-2, 2026-09-28)
+
+| # | Konu | Durum | Not |
+|---|------|--------|-----|
+| 1 | LLM yanıt öner | ✅ kod | OpenAI uyumlu API + KVKK `aiMailAssistConsent` |
+| 2 | IMAP gold smoke | ⚙️ VPS | `smoke-imap-gold.sh` + Thunderbird/Apple manuel |
+| 3 | Push webmail + sohbet | ⚙️ VPS | İzole VAPID verify scriptleri |
+| 4 | Benchmark dokümanları | ✅ | `MAIL_WEBMAIL_UX_BENCHMARK.md` ~88 |
+| 5 | DNS legacy | ✅ | `verify-dns-legacy-cleanup.sh` |
+| 6 | IMAP şifre dağıtımı | ✅ | Self-servis rotate UX (`MailImapClientSetup`) |
+| 7 | SSE ölçek / p95 | ✅ kod | Bağlantı limiti + `GET messaging/status` |
+| 8 | Sohbet push ayrı VAPID | ✅ | `MESSAGING_WEB_PUSH_*` izole |
+| 9 | Çeviri mesajlaşma | ✅ kod | DeepL + LibreTranslate env |
+| 10 | ESP webhook derinliği | ✅ | open/click/bounce → org webhook |
+| 11 | Deliverability hub | ✅ | `GET company/mail-inbox/deliverability-hub` |
+| 12–16 | G5+, CardDAV, compose, matris, billing | ✅ | #149 + wave-2 |
+| 17 | OPERATOR_JWT checklist | ✅ | parity-close + wave-2 script |
+| 18–24 | JMAP, Slack, pazarlama, analitik | ✅/PR | #146–#148 draft |
+| 25 | AI özet / sınıflandırma | ✅ | summarize/classify endpoints |
+| 26 | KVKK AI onay | ✅ | SQL + `PATCH me/notification-preferences` |
+| 27 | eDiscovery zincir | ✅ | `chainOfCustody` export meta |
+| 28–29 | Multi-VPS / DR | 📋 | runbook + wave-2 checklist hook |
+| 30 | Lighthouse PWA ≥80 | ⚙️ | `verify-lighthouse-mail-pwa.sh` |
+| 31–35 | Embed, white-label, WA read receipts, public API | — | Bilinçli kapsam dışı / F4 |
+
+**Wave-2 doğrulama:** `bash scripts/run-mail-messaging-parity-wave2-checklist.sh`

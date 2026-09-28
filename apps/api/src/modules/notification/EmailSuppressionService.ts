@@ -76,6 +76,12 @@ export class EmailSuppressionService {
     );
   }
 
+  public async countForOrganization(organizationId: string): Promise<number> {
+    return this.organizationRepository.count({
+      where: { organizationId: organizationId.trim() },
+    });
+  }
+
   public async addOrganizationSuppression(params: {
     organizationId: string;
     email: string;

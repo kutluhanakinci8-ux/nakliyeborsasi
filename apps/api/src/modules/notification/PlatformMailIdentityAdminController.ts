@@ -30,6 +30,7 @@ import { IngestDmarcReportRequestDto } from "./IngestDmarcReportRequestDto";
 import { MailPlatformMonitoringService } from "./MailPlatformMonitoringService";
 import { MailPlatformKpiService } from "./MailPlatformKpiService";
 import { MailBillingService } from "./MailBillingService";
+import { MailOnboardingKpiService } from "./MailOnboardingKpiService";
 import { MailInstantPostDomainService } from "./MailInstantPostDomainService";
 import { MailPlatformEdiscoveryService } from "./MailPlatformEdiscoveryService";
 import { InjectRepository } from "@nestjs/typeorm";
@@ -53,11 +54,19 @@ export class PlatformMailIdentityAdminController {
     private readonly mailPlatformMonitoringService: MailPlatformMonitoringService,
     private readonly mailPlatformKpiService: MailPlatformKpiService,
     private readonly mailBillingService: MailBillingService,
+    private readonly mailOnboardingKpiService: MailOnboardingKpiService,
     private readonly mailInstantPostDomainService: MailInstantPostDomainService,
     private readonly mailPlatformEdiscoveryService: MailPlatformEdiscoveryService,
     @InjectRepository(MailDomainEntity)
     private readonly mailDomainRepository: Repository<MailDomainEntity>,
   ) {}
+
+  @Get("onboarding-kpi")
+  public async onboardingKpi() {
+    return {
+      kpi: await this.mailOnboardingKpiService.buildSnapshot(),
+    };
+  }
 
   @Get("billing-health")
   public async billingHealth() {

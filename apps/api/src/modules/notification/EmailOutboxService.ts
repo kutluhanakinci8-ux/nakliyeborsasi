@@ -83,6 +83,7 @@ export class EmailOutboxService {
         idempotencyKey: params.idempotencyKey,
         metadata: {
           companyId: params.organizationId,
+          organizationId: params.organizationId,
           source: "mail_public_api",
           apiKeyId: params.apiKeyId,
         },

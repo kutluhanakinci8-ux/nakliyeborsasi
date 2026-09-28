@@ -9,8 +9,36 @@ type StreamClient = {
 @Injectable()
 export class MessagingRealtimeHubService {
   private readonly clientsByCompany = new Map<string, Set<StreamClient>>();
+  private readonly maxPerCompany = Number.parseInt(
+    process.env.MESSAGING_SSE_MAX_CONNECTIONS_PER_COMPANY ?? "80",
+    10,
+  );
+
+  public getStats(): {
+    companies: number;
+    connections: number;
+    maxPerCompany: number;
+  } {
+    let connections = 0;
+    for (const set of this.clientsByCompany.values()) {
+      connections += set.size;
+    }
+    return {
+      companies: this.clientsByCompany.size,
+      connections,
+      maxPerCompany: this.maxPerCompany,
+    };
+  }
 
   public attach(companyId: string, res: Response): void {
+    const set =
+      this.clientsByCompany.get(companyId) ?? new Set<StreamClient>();
+    if (set.size >= this.maxPerCompany) {
+      res.status(429).json({
+        message: "SSE bağlantı limiti aşıldı. Lütfen yeniden deneyin.",
+      });
+      return;
+    }
     res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
     res.setHeader("Cache-Control", "no-cache, no-transform");
     res.setHeader("Connection", "keep-alive");
@@ -22,8 +50,6 @@ export class MessagingRealtimeHubService {
     }, 25_000);
 
     const client: StreamClient = { res, heartbeat };
-    const set =
-      this.clientsByCompany.get(companyId) ?? new Set<StreamClient>();
     set.add(client);
     this.clientsByCompany.set(companyId, set);
 

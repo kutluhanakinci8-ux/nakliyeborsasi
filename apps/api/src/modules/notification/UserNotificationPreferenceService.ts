@@ -15,6 +15,8 @@ export type UserNotificationPreferencesDto = {
   notifyMessages: boolean;
   notifyAuctions: boolean;
   notifyWeeklyDigest: boolean;
+  aiMailAssistConsent: boolean;
+  aiMailAssentAt: string | null;
 };
 
 @Injectable()
@@ -36,7 +38,28 @@ export class UserNotificationPreferenceService {
       notifyMessages: row.notifyMessages,
       notifyAuctions: row.notifyAuctions,
       notifyWeeklyDigest: row.notifyWeeklyDigest,
+      aiMailAssistConsent: row.aiMailAssistConsent ?? false,
+      aiMailAssentAt: row.aiMailAssentAt?.toISOString() ?? null,
     };
+  }
+
+  public async hasAiMailAssistConsent(userId: string): Promise<boolean> {
+    const prefs = await this.getForUser(userId);
+    return prefs.aiMailAssistConsent;
+  }
+
+  public async setAiMailAssistConsent(
+    userId: string,
+    consent: boolean,
+  ): Promise<UserNotificationPreferencesDto> {
+    let row = await this.repository.findOne({ where: { userId } });
+    if (!row) {
+      row = this.repository.create({ userId, ...this.defaults() });
+    }
+    row.aiMailAssistConsent = consent;
+    row.aiMailAssentAt = consent ? new Date() : null;
+    await this.repository.save(row);
+    return this.getForUser(userId);
   }
 
   public async updateForUser(
@@ -70,6 +93,8 @@ export class UserNotificationPreferenceService {
       notifyMessages: true,
       notifyAuctions: true,
       notifyWeeklyDigest: false,
+      aiMailAssistConsent: false,
+      aiMailAssentAt: null,
     };
   }
 }

@@ -76,6 +76,14 @@ export class MailPlatformEdiscoveryService {
       organizationId,
       purposeTr:
         "Platform operatör eDiscovery — yasal uyum / şikayet incelemesi (sınırlı erişim)",
+      chainOfCustody: {
+        exportVersion: "2026-09-wave2",
+        includesInbound: true,
+        includesSent: true,
+        legalHoldRespected: true,
+        operatorAttestationTr:
+          "Paket platform operatörü tarafından üretildi; müşteri KVKK export ile karıştırılmamalıdır.",
+      },
       package: exportBody,
     };
   }

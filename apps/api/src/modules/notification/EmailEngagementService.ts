@@ -12,6 +12,8 @@ import {
   type BounceClass,
 } from "./SmtpDeliveryFailureClassifier";
 import { EmailSuppressionService } from "./EmailSuppressionService";
+import { MailOrganizationWebhookDispatcherService } from "./MailOrganizationWebhookDispatcherService";
+import type { MailWebhookEventType } from "../../infrastructure/database/entities/MailOrganizationWebhookEndpointEntity";
 
 @Injectable()
 export class EmailEngagementService {
@@ -24,6 +26,7 @@ export class EmailEngagementService {
     private readonly outboxRepository: Repository<EmailOutboxEntity>,
     private readonly emailTrackingSignatureService: EmailTrackingSignatureService,
     private readonly emailSuppressionService: EmailSuppressionService,
+    private readonly mailOrganizationWebhookDispatcherService: MailOrganizationWebhookDispatcherService,
   ) {}
 
   public async recordOpen(
@@ -54,6 +57,10 @@ export class EmailEngagementService {
         ipAddress: this.readIp(request),
       }),
     );
+    this.dispatchEngagementWebhook(row, "message.opened", {
+      openCount: row.openCount,
+      firstOpenedAt: row.firstOpenedAt?.toISOString() ?? null,
+    });
   }
 
   public async resolveClickRedirect(
@@ -85,6 +92,10 @@ export class EmailEngagementService {
         ipAddress: this.readIp(request),
       }),
     );
+    this.dispatchEngagementWebhook(outbox, "message.clicked", {
+      linkUrl: clickRow.targetUrl,
+      clickCount: outbox.clickCount,
+    });
     return clickRow.targetUrl;
   }
 
@@ -125,6 +136,37 @@ export class EmailEngagementService {
         organizationId: organizationIdForSuppression ?? null,
       });
     }
+    this.dispatchEngagementWebhook(row, "message.bounced", {
+      bounceClass: classified.bounceClass,
+      smtpCode: classified.smtpCode,
+      errorMessage: errorMessage.slice(0, 500),
+    });
+  }
+
+  private dispatchEngagementWebhook(
+    row: EmailOutboxEntity,
+    event: MailWebhookEventType,
+    extra: Record<string, unknown>,
+  ): void {
+    const organizationId = this.resolveOrganizationId(row);
+    if (!organizationId) {
+      return;
+    }
+    this.mailOrganizationWebhookDispatcherService.dispatch(organizationId, event, {
+      messageId: row.id,
+      recipientEmail: row.recipientEmail,
+      subject: row.subject,
+      eventCode: row.eventCode,
+      ...extra,
+    });
+  }
+
+  private resolveOrganizationId(row: EmailOutboxEntity): string | null {
+    const meta = row.metadata ?? {};
+    const org =
+      (meta.organizationId as string | undefined) ??
+      (meta.companyId as string | undefined);
+    return org?.trim() || null;
   }
 
   public async getEngagementSummary(since: Date): Promise<{

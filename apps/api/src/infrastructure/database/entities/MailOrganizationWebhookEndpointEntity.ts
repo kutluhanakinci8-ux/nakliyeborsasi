@@ -9,7 +9,10 @@ import {
 export type MailWebhookEventType =
   | "message.sent"
   | "message.failed"
-  | "inbound.received";
+  | "inbound.received"
+  | "message.opened"
+  | "message.clicked"
+  | "message.bounced";
 
 @Entity({ name: "mail_organization_webhook_endpoint" })
 export class MailOrganizationWebhookEndpointEntity {

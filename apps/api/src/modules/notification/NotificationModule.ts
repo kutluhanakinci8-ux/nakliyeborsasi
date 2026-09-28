@@ -137,6 +137,8 @@ import { MailCalendarCalDavSyncScheduler } from "./MailCalendarCalDavSyncSchedul
 import { MailContactCardDavAccountEntity } from "../../infrastructure/database/entities/MailContactCardDavAccountEntity";
 import { MailContactCardDavService } from "./MailContactCardDavService";
 import { MailContactCardDavSyncScheduler } from "./MailContactCardDavSyncScheduler";
+import { MailDeliverabilityHubService } from "./MailDeliverabilityHubService";
+import { MailOnboardingKpiService } from "./MailOnboardingKpiService";
 import { MailOrganizationCalendarService } from "./MailOrganizationCalendarService";
 import { MailOrganizationContactService } from "./MailOrganizationContactService";
 import { MailInboxPreferencesService } from "./MailInboxPreferencesService";
@@ -323,6 +325,8 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     MailCalendarCalDavSyncScheduler,
     MailContactCardDavService,
     MailContactCardDavSyncScheduler,
+    MailDeliverabilityHubService,
+    MailOnboardingKpiService,
   ],
   exports: [
     AuthNotificationService,

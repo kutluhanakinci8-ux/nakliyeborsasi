@@ -1,9 +1,15 @@
-import { Injectable } from "@nestjs/common";
+import { ForbiddenException, Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { UserNotificationPreferenceService } from "./UserNotificationPreferenceService";
 
 @Injectable()
 export class MailAiComposeService {
-  public constructor(private readonly configService: ConfigService) {}
+  private readonly logger = new Logger(MailAiComposeService.name);
+
+  public constructor(
+    private readonly configService: ConfigService,
+    private readonly userNotificationPreferenceService: UserNotificationPreferenceService,
+  ) {}
 
   public isEnabled(): boolean {
     return (
@@ -41,6 +47,7 @@ export class MailAiComposeService {
   }
 
   public async suggestReply(input: {
+    userId: string;
     subject: string;
     fromAddress: string;
     bodySnippet: string;
@@ -53,15 +60,130 @@ export class MailAiComposeService {
         provider: "template",
       };
     }
+    const llmAllowed = await this.canUseLlm(input.userId);
+    if (!llmAllowed) {
+      return {
+        suggestion: this.offlineTemplate(input.locale, input.fromAddress, snippet),
+        provider: "template-consent",
+      };
+    }
+    const text = await this.completeChat(
+      [
+        {
+          role: "system",
+          content:
+            "Kısa, profesyonel Türkçe e-posta yanıtı yaz. Sadece gövde metni, imza yok.",
+        },
+        {
+          role: "user",
+          content: `Konu: ${input.subject}\nGönderen: ${input.fromAddress}\n\n${snippet}`,
+        },
+      ],
+      400,
+    );
+    if (!text) {
+      return {
+        suggestion: this.offlineTemplate(input.locale, input.fromAddress, snippet),
+        provider: "template-fallback",
+      };
+    }
+    this.logger.log(`AI suggest-reply user=${input.userId} provider=llm`);
+    return { suggestion: text, provider: "llm" };
+  }
+
+  public async summarizeMessage(input: {
+    userId: string;
+    subject: string;
+    bodySnippet: string;
+    locale: string;
+  }): Promise<{ summary: string; provider: string }> {
+    const snippet = input.bodySnippet.trim().slice(0, 4000);
+    if (!this.isEnabled() || !(await this.canUseLlm(input.userId))) {
+      const tr = input.locale.toLowerCase().startsWith("tr");
+      const fallback = snippet
+        ? snippet.slice(0, 240)
+        : tr
+          ? "Özet için yeterli metin yok."
+          : "Not enough text to summarize.";
+      return { summary: fallback, provider: "template" };
+    }
+    const text = await this.completeChat(
+      [
+        {
+          role: "system",
+          content:
+            "E-postayı 2-3 cümleyle Türkçe özetle. Madde işareti kullanma.",
+        },
+        {
+          role: "user",
+          content: `Konu: ${input.subject}\n\n${snippet}`,
+        },
+      ],
+      220,
+    );
+    if (!text) {
+      return { summary: snippet.slice(0, 240), provider: "template-fallback" };
+    }
+    this.logger.log(`AI summarize user=${input.userId}`);
+    return { summary: text, provider: "llm" };
+  }
+
+  public async classifyInbound(input: {
+    userId: string;
+    subject: string;
+    bodySnippet: string;
+  }): Promise<{ label: string; provider: string }> {
+    const snippet = `${input.subject}\n${input.bodySnippet}`.slice(0, 2000);
+    if (!this.isEnabled() || !(await this.canUseLlm(input.userId))) {
+      const lower = snippet.toLowerCase();
+      if (/fatura|invoice|ödeme|payment/.test(lower)) {
+        return { label: "billing", provider: "rules" };
+      }
+      if (/teklif|offer|ihale|auction/.test(lower)) {
+        return { label: "commercial", provider: "rules" };
+      }
+      return { label: "general", provider: "rules" };
+    }
+    const text = await this.completeChat(
+      [
+        {
+          role: "system",
+          content:
+            'Gelen e-postayı tek kelimeyle sınıflandır: billing, support, commercial, spam_suspect veya general. Sadece kelimeyi yaz.',
+        },
+        { role: "user", content: snippet },
+      ],
+      16,
+    );
+    const label = text?.toLowerCase().replace(/[^a-z_]/g, "") || "general";
+    return { label, provider: "llm" };
+  }
+
+  private async canUseLlm(userId: string): Promise<boolean> {
+    if (!this.isLlmConfigured()) {
+      return false;
+    }
+    const requireConsent =
+      this.configService.get<string>("LERTA_MAIL_AI_REQUIRE_CONSENT")?.trim() !==
+      "false";
+    if (!requireConsent) {
+      return true;
+    }
+    return await this.userNotificationPreferenceService.hasAiMailAssistConsent(
+      userId,
+    );
+  }
+
+  private async completeChat(
+    messages: { role: string; content: string }[],
+    maxTokens: number,
+  ): Promise<string | null> {
     const apiUrl = this.resolveApiUrl();
     const apiKey = this.configService
       .get<string>("LERTA_MAIL_AI_COMPOSE_API_KEY")
       ?.trim();
     if (!apiUrl) {
-      return {
-        suggestion: this.offlineTemplate(input.locale, input.fromAddress, snippet),
-        provider: "template",
-      };
+      return null;
     }
     const response = await fetch(apiUrl, {
       method: "POST",
@@ -70,38 +192,20 @@ export class MailAiComposeService {
         ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
       },
       body: JSON.stringify({
-        model: this.configService.get<string>("LERTA_MAIL_AI_COMPOSE_MODEL") ?? "gpt-4o-mini",
-        messages: [
-          {
-            role: "system",
-            content:
-              "Kısa, profesyonel Türkçe e-posta yanıtı yaz. Sadece gövde metni, imza yok.",
-          },
-          {
-            role: "user",
-            content: `Konu: ${input.subject}\nGönderen: ${input.fromAddress}\n\n${snippet}`,
-          },
-        ],
-        max_tokens: 400,
+        model:
+          this.configService.get<string>("LERTA_MAIL_AI_COMPOSE_MODEL") ??
+          "gpt-4o-mini",
+        messages,
+        max_tokens: maxTokens,
       }),
     });
     if (!response.ok) {
-      return {
-        suggestion: this.offlineTemplate(input.locale, input.fromAddress, snippet),
-        provider: "template-fallback",
-      };
+      return null;
     }
     const payload = (await response.json()) as {
       choices?: { message?: { content?: string } }[];
     };
-    const text = payload.choices?.[0]?.message?.content?.trim();
-    if (!text) {
-      return {
-        suggestion: this.offlineTemplate(input.locale, input.fromAddress, snippet),
-        provider: "template-fallback",
-      };
-    }
-    return { suggestion: text, provider: "llm" };
+    return payload.choices?.[0]?.message?.content?.trim() ?? null;
   }
 
   private offlineTemplate(
