@@ -135,7 +135,12 @@ export class MailImapAccessService {
     mkdirSync(path.split("/").slice(0, -1).join("/") || "/etc/dovecot", {
       recursive: true,
     });
-    writeFileSync(path, body, { encoding: "utf8", mode: 0o600 });
+    writeFileSync(path, body, { encoding: "utf8", mode: 0o640 });
+    try {
+      execFileSync("chown", ["root:dovecot", path], { stdio: "ignore" });
+    } catch {
+      // non-root API process on dev — VPS provision fixes perms
+    }
     try {
       execFileSync("systemctl", ["reload", "dovecot"], { stdio: "ignore" });
     } catch {

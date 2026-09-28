@@ -487,6 +487,7 @@ export class CompanyMailInboxController {
     const credentials = await this.mailImapAccessService.rotatePassword(
       user.companyId,
     );
+    await this.mailImapAccessService.syncDovecotPasswdFile();
     return { ok: true, credentials };
   }
 
