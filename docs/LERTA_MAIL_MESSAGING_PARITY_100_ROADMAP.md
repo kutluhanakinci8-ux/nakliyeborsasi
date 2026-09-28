@@ -122,4 +122,10 @@ Her faz: kod + dokümantasyon + (varsa) `scripts/verify-*` · deploy checklist.
 | Mesajlaşma checklist | Bu dosyada faz ✅ |
 | Admin ESP | `MAIL_ADMIN_BENCHMARK_REPORT.md` B/C boyutları |
 
-**Sonraki commit:** PM-1 kod · sonra PM-2 compose spike.
+## Deploy kaydı
+
+| Tarih | Dal | Not |
+|-------|-----|-----|
+| 2026-09-28 | `cursor/mail-messaging-parity-100-519e` → **main** (#129) | VPS deploy OK · checklist PASS · push VAPID OK · PM-5 maildir iskeleti `nakliyeborsasi@lerta.com.tr` · Dovecot passwd sync → org IMAP rotate + admin sync |
+
+**Sıradaki ops (kalıcı PM-4/5):** Webmail’de push aboneliği testi; ayarlardan IMAP rotate + platform **sync-dovecot**; isteğe bağlı `LERTA_MAIL_AI_COMPOSE_ENABLED=true`.

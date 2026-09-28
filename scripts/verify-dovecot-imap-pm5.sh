@@ -26,7 +26,7 @@ for sub in new .Sent/cur .Archive/new .Trash/new .Junk/new; do
     missing=1
   fi
 done
-PASSWD="${MAIL_IMAP_DOVECOT_PASSWD_FILE:-/etc/dovecot/passwd-lerta}"
+PASSWD="${MAIL_IMAP_DOVECOT_PASSWD_PATH:-${MAIL_IMAP_DOVECOT_PASSWD_FILE:-/etc/dovecot/lerta-imap-passwd}}"
 if [[ -f "$PASSWD" ]]; then
   if grep -q "^${EMAIL}:" "$PASSWD" 2>/dev/null; then
     echo "OK: Dovecot passwd kaydı var ($EMAIL)"
