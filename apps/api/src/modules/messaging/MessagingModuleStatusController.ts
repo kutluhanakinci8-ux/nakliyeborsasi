@@ -1,13 +1,37 @@
 import { Controller, Get } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { resolveMessagingVapidFromEnv } from "../../infrastructure/push/messagingVapidEnv";
+import { MessagingAttachmentStorageService } from "./MessagingAttachmentStorageService";
+import { MessagingRealtimeHubService } from "./MessagingRealtimeHubService";
 
 @Controller("messaging")
 export class MessagingModuleStatusController {
+  public constructor(
+    private readonly configService: ConfigService,
+    private readonly messagingRealtimeHubService: MessagingRealtimeHubService,
+  ) {}
+
   @Get("status")
   public getStatus(): {
     module: string;
     phase: string;
     features: string[];
+    translate: { deepl: boolean; libretranslate: boolean };
+    attachments: {
+      maxCount: number;
+      maxBytesPerFile: number;
+      allowedContentTypes: string[];
+    };
+    webPush: { enabled: boolean; isolatedVapid: boolean };
+    sse: ReturnType<MessagingRealtimeHubService["getStats"]>;
   } {
+    const deepl = Boolean(
+      this.configService.get<string>("MESSAGING_DEEPL_API_KEY")?.trim(),
+    );
+    const libre = Boolean(
+      this.configService.get<string>("MESSAGING_TRANSLATE_API_URL")?.trim(),
+    );
+    const vapid = resolveMessagingVapidFromEnv();
     return {
       module: "messaging",
       phase: "ga",
@@ -21,7 +45,22 @@ export class MessagingModuleStatusController {
         "translate_api",
         "company_export",
         "platform_ediscovery",
+        "sse_stream",
+        "attachments",
+        "web_push",
       ],
+      translate: { deepl, libretranslate: libre },
+      attachments: {
+        maxCount: MessagingAttachmentStorageService.maxAttachmentsPublic(),
+        maxBytesPerFile: MessagingAttachmentStorageService.maxBytesPublic(),
+        allowedContentTypes:
+          MessagingAttachmentStorageService.allowedContentTypesPublic(),
+      },
+      webPush: {
+        enabled: vapid !== null,
+        isolatedVapid: vapid?.isolated ?? false,
+      },
+      sse: this.messagingRealtimeHubService.getStats(),
     };
   }
 }

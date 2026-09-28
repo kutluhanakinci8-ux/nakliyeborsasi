@@ -36,6 +36,20 @@ export class MessagingRealtimeHubService {
     });
   }
 
+  public getStats(): {
+    activeCompanyStreams: number;
+    activeConnections: number;
+  } {
+    let activeConnections = 0;
+    for (const set of this.clientsByCompany.values()) {
+      activeConnections += set.size;
+    }
+    return {
+      activeCompanyStreams: this.clientsByCompany.size,
+      activeConnections,
+    };
+  }
+
   public publish(
     companyId: string,
     payload: { type: string; threadId?: string },
