@@ -15,6 +15,11 @@ import { PlatformNotificationSettingsService } from "./PlatformNotificationSetti
 import { AuthNotificationService } from "./AuthNotificationService";
 import { EmailSecurityTokenService } from "./EmailSecurityTokenService";
 import { PlatformNotificationAdminController } from "./PlatformNotificationAdminController";
+import { PlatformMarketingEmailAdminController } from "./PlatformMarketingEmailAdminController";
+import { EmailMarketingSegmentEntity } from "../../infrastructure/database/entities/EmailMarketingSegmentEntity";
+import { EmailMarketingCampaignEntity } from "../../infrastructure/database/entities/EmailMarketingCampaignEntity";
+import { EmailMarketingApplicationService } from "./EmailMarketingApplicationService";
+import { EmailMarketingAudienceService } from "./EmailMarketingAudienceService";
 import { CompanyMailIdentityController } from "./CompanyMailIdentityController";
 import {
   CompanyMailTeamController,
@@ -213,10 +218,13 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
       MailOrganizationBillingStateEntity,
       MailOrganizationOperatorStateEntity,
       CompanySubscriptionEntity,
+      EmailMarketingSegmentEntity,
+      EmailMarketingCampaignEntity,
     ]),
   ],
   controllers: [
     PlatformNotificationAdminController,
+    PlatformMarketingEmailAdminController,
     PlatformMailIdentityAdminController,
     MailInboundWebhookController,
     CompanyMailIdentityController,
@@ -244,6 +252,8 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     EmailOutboxProcessor,
     EmailDeliveryHealthService,
     EmailOutboxAnalyticsService,
+    EmailMarketingApplicationService,
+    EmailMarketingAudienceService,
     EmailEngagementService,
     EmailHtmlTrackingService,
     EmailTrackingSignatureService,

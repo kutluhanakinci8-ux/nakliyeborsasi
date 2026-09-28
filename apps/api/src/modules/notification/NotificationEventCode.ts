@@ -11,6 +11,7 @@ export enum NotificationEventCode {
   ListingNewOffer = "LISTING_NEW_OFFER",
   MessagingNewMessage = "MESSAGING_NEW_MESSAGE",
   MailTeamInvite = "MAIL_TEAM_INVITE",
+  MarketingCampaign = "MARKETING_CAMPAIGN",
 }
 
 export enum EmailRecipientKind {

@@ -152,7 +152,49 @@ export type EmailOutboxAnalyticsSummary = {
     clickRatePercent: number | null;
     bounceRatePercent: number | null;
     bounceByClass: Record<string, number>;
+    marketing?: {
+      campaignsSent: number;
+      marketingSends: number;
+      marketingOpenRatePercent: number | null;
+      marketingClickRatePercent: number | null;
+    };
   };
+};
+
+export type EmailMarketingSegmentRecord = {
+  id: string;
+  name: string;
+  definition: Record<string, unknown>;
+};
+
+export type EmailMarketingCampaignRecord = {
+  id: string;
+  name: string;
+  segmentId: string;
+  subjectA: string;
+  subjectB: string | null;
+  abTestEnabled: boolean;
+  status: string;
+  recipientsTargeted: number;
+  recipientsEnqueued: number;
+  sentAt: string | null;
+};
+
+export type EmailMarketingCampaignAnalytics = {
+  campaignId: string;
+  sent: number;
+  uniqueOpens: number;
+  totalClicks: number;
+  openRatePercent: number | null;
+  clickRatePercent: number | null;
+  abVariants: {
+    variant: string;
+    sent: number;
+    uniqueOpens: number;
+    totalClicks: number;
+    openRatePercent: number | null;
+    clickRatePercent: number | null;
+  }[];
 };
 
 export type PlatformAdminOverview = {
@@ -759,6 +801,65 @@ export class PlatformAdminApiClient {
       method: "POST",
       body: JSON.stringify(body),
     });
+  }
+
+  public static async fetchMarketingSegments(
+    accessToken: string,
+  ): Promise<EmailMarketingSegmentRecord[]> {
+    const payload = await adminFetch<{ segments: EmailMarketingSegmentRecord[] }>(
+      accessToken,
+      "marketing-email/segments",
+    );
+    return payload.segments;
+  }
+
+  public static async fetchMarketingCampaigns(
+    accessToken: string,
+  ): Promise<EmailMarketingCampaignRecord[]> {
+    const payload = await adminFetch<{ campaigns: EmailMarketingCampaignRecord[] }>(
+      accessToken,
+      "marketing-email/campaigns",
+    );
+    return payload.campaigns;
+  }
+
+  public static async createMarketingCampaign(
+    accessToken: string,
+    body: {
+      name: string;
+      segmentId: string;
+      subjectA: string;
+      subjectB?: string;
+      abTestEnabled?: boolean;
+      htmlBody: string;
+      textBody: string;
+    },
+  ): Promise<EmailMarketingCampaignRecord> {
+    const payload = await adminFetch<{ campaign: EmailMarketingCampaignRecord }>(
+      accessToken,
+      "marketing-email/campaigns",
+      { method: "POST", body: JSON.stringify(body) },
+    );
+    return payload.campaign;
+  }
+
+  public static async sendMarketingCampaign(
+    accessToken: string,
+    campaignId: string,
+  ): Promise<void> {
+    await adminFetch(accessToken, `marketing-email/campaigns/${campaignId}/send`, {
+      method: "POST",
+    });
+  }
+
+  public static async fetchCampaignAnalytics(
+    accessToken: string,
+    campaignId: string,
+  ): Promise<EmailMarketingCampaignAnalytics> {
+    const payload = await adminFetch<{
+      analytics: EmailMarketingCampaignAnalytics;
+    }>(accessToken, `marketing-email/campaigns/${campaignId}/analytics`);
+    return payload.analytics;
   }
 }
 
