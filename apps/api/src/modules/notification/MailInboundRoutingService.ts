@@ -3,7 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { InjectRepository } from "@nestjs/typeorm";
 import { execFileSync } from "node:child_process";
 import { writeFileSync } from "node:fs";
-import { In, Repository } from "typeorm";
+import { Repository } from "typeorm";
 import { PLATFORM_MAIL_SAAS_TENANT_DOMAIN } from "@nakliyeborsasi/core";
 import { MailSenderIdentityEntity } from "../../infrastructure/database/entities/MailSenderIdentityEntity";
 import { MailDomainEntity } from "../../infrastructure/database/entities/MailDomainEntity";
@@ -43,6 +43,21 @@ export class MailInboundRoutingService {
       .filter(Boolean);
   }
 
+  /** `post.lerta.com.tr` → `firma.post.lerta.com.tr`, `lerta.com.tr` → `kullanici.lerta.com.tr`. */
+  public domainMatchesInboundZones(
+    domain: string,
+    inboundZones: string[],
+  ): boolean {
+    const normalized = domain.trim().toLowerCase().replace(/\.$/, "");
+    if (!normalized) {
+      return false;
+    }
+    return inboundZones.some((zone) => {
+      const z = zone.trim().toLowerCase().replace(/\.$/, "");
+      return normalized === z || normalized.endsWith(`.${z}`);
+    });
+  }
+
   /** Postfix virtual → local stub (pipe /etc/aliases üzerinden). */
   public inboundLocalStub(emailAddress: string): string {
     const slug = emailAddress
@@ -59,15 +74,12 @@ export class MailInboundRoutingService {
     pipeScript: string;
   }> {
     const inboundDomains = this.resolveInboundDomains();
-    const domains =
-      inboundDomains.length === 0
-        ? []
-        : await this.domainRepository.find({
-            where: {
-              domain: In(inboundDomains),
-              verificationStatus: "verified",
-            },
-          });
+    const allVerifiedDomains = await this.domainRepository.find({
+      where: { verificationStatus: "verified" },
+    });
+    const domains = allVerifiedDomains.filter((row) =>
+      this.domainMatchesInboundZones(row.domain, inboundDomains),
+    );
     const verifiedIds = new Set(domains.map((d) => d.id));
     const senders = await this.senderRepository.find({
       relations: { mailDomain: true },
@@ -97,7 +109,7 @@ export class MailInboundRoutingService {
     const aliasRows =
       await this.mailAddressAliasService.listAliasEmailsForRouting();
     for (const alias of aliasRows) {
-      if (!inboundDomains.includes(alias.domain.toLowerCase())) {
+      if (!this.domainMatchesInboundZones(alias.domain, inboundDomains)) {
         continue;
       }
       if (seen.has(alias.aliasEmail)) {
@@ -147,6 +159,7 @@ export class MailInboundRoutingService {
     writeFileSync(path, virtualBody, { encoding: "utf8" });
     writeFileSync(aliasesPath, aliasesBody, { encoding: "utf8" });
     try {
+      this.applyPostfixInboundTransportConfig(snapshot.inboundDomains);
       execFileSync("postmap", [path], { stdio: "pipe" });
       execFileSync("postalias", [aliasesPath], { stdio: "pipe" });
       execFileSync("systemctl", ["reload", "postfix"], { stdio: "pipe" });
@@ -173,5 +186,23 @@ export class MailInboundRoutingService {
       this.configService.get<string>("MAIL_INBOUND_PIPE_SCRIPT")?.trim() ||
       "/var/www/nakliyeborsasi/scripts/postfix-pipe-inbound-to-api.sh"
     );
+  }
+
+  /**
+   * Inbound pipe uses virtual_alias_maps + /etc/aliases — not virtual maildirs.
+   * Dovecot/IMAP may set virtual_transport=virtual elsewhere; clear it for MX ingest.
+   */
+  private applyPostfixInboundTransportConfig(inboundDomains: string[]): void {
+    const zones =
+      inboundDomains.length > 0
+        ? inboundDomains.join(", ")
+        : PLATFORM_MAIL_SAAS_TENANT_DOMAIN;
+    execFileSync("postconf", ["-e", `virtual_mailbox_domains = ${zones}`], {
+      stdio: "pipe",
+    });
+    execFileSync("postconf", ["-e", "virtual_transport = local:"], {
+      stdio: "pipe",
+    });
+    execFileSync("postconf", ["-#", "virtual_mailbox_base"], { stdio: "pipe" });
   }
 }

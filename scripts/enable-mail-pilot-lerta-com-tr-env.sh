@@ -30,7 +30,7 @@ set_kv "MAIL_PLATFORM_INSTANT_POST_ZONE" "post.lerta.com.tr"
 set_kv "MAIL_IMAP_HOST" "mail.lerta.com.tr"
 set_kv "WEB_PUBLIC_BASE_URL" "https://${APP_HOST}"
 set_kv "MAIL_SAAS_WEB_URL" "https://${APP_HOST}"
-set_kv "SMTP_FROM" "Lerta Logistics <notifications@mail.lerta.com.tr>"
+set_kv "SMTP_FROM" '"Lerta Logistics <notifications@mail.lerta.com.tr>"'
 set_kv "MAIL_PLATFORM_SPF_IPV4" "${VPS_IP}"
 set_kv "MAIL_SYNC_OPENDKIM" "true"
 set_kv "MAIL_INSTANT_POST_FROM_MODE" "aligned"
