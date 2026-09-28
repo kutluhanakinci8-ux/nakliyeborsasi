@@ -3079,6 +3079,9 @@ a {
 }
 
 .site-nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 10px 18px;
   border-radius: 12px;
   color: var(--nb-footer-text);
@@ -3105,6 +3108,20 @@ a {
     0 2px 12px rgba(30, 64, 175, 0.12),
     inset 0 0 0 1px rgba(30, 64, 175, 0.16);
   font-weight: 800;
+}
+
+.site-nav-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #dc2626;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  line-height: 1.35;
 }
 
 .site-header--public .site-nav-link--menu {

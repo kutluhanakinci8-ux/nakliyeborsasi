@@ -3,13 +3,20 @@ export const DRIVER_PORTAL_NAV_ITEM = {
   label: "Şoför paneli",
 } as const;
 
+export const MESSAGING_NAV_HREF = "/messaging?tab=email";
+
 export const PLATFORM_NAV_ITEMS = [
   { href: "/marketplace", label: "Yük arama" },
   { href: "/auctions", label: "İhaleler" },
-  { href: "/messaging?tab=email", label: "Mesajlar" },
+  { href: MESSAGING_NAV_HREF, label: "Mesajlar" },
   { href: "/trust", label: "Güven" },
   { href: "/integrations", label: "Entegrasyon" },
 ] as const;
+
+/** Mesajlar linki query içerdiği için pathname ile eşleşir. */
+export function isMessagingNavActive(pathname: string): boolean {
+  return pathname === "/messaging" || pathname.startsWith("/messaging/");
+}
 
 /** Ana menüde tek link */
 export const HIZMETLER_NAV_ITEM = {

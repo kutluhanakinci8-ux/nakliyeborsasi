@@ -29,4 +29,4 @@ Outlook mobil ayarlar ekranına göre mevcut durum ve faz planı.
 | **S-A1** | Outlook tarzı ayar merkezi: arama, gruplar, drill-down; görünüm (açık/koyu) ayarlarda | ✅ kod |
 | **S-A2** | Otomatik yanıt (API + şablon + aç/kapa + tarih aralığı) | ✅ kod |
 | **S-A3** | Posta tercihleri (liste yoğunluğu), takvim/kişi kısayolları, gizlilik/yarım linkleri | ✅ kod |
-| **S-A4** | Hesaplar özeti (gönderen kimlikleri, alias), gelişmiş entegrasyonlar | |
+| **S-A4** | Hesaplar özeti (gönderen kimlikleri, alias), gelişmiş entegrasyonlar | PM-3 ([parite planı](./LERTA_MAIL_MESSAGING_PARITY_100_ROADMAP.md)) |

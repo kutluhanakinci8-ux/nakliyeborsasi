@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MessagingMailWebEmbed } from "../../../components/messaging/MessagingMailWebEmbed";
@@ -94,6 +94,7 @@ export function MessagingPageClient() {
     PendingAttachment[]
   >([]);
   const [translateBusyId, setTranslateBusyId] = useState("");
+  const deepLinkHandledKey = useRef<string | null>(null);
   const isCompanyOwner =
     session?.roleCodes?.includes("COMPANY_OWNER") ?? false;
 
@@ -122,17 +123,6 @@ export function MessagingPageClient() {
       router.replace(`/messaging?${params.toString()}`, { scroll: false });
     }
   }, [searchParams, router]);
-
-  useEffect(() => {
-    const companyId = searchParams.get("companyId");
-    if (companyId) {
-      setCounterpartyId(companyId);
-    }
-    const threadId = searchParams.get("threadId");
-    if (threadId) {
-      void loadMessages(threadId);
-    }
-  }, [searchParams]);
 
   function switchMode(next: MessagingMode): void {
     setMode(next);
@@ -217,6 +207,97 @@ export function MessagingPageClient() {
     },
     [accessToken, locale],
   );
+
+  useEffect(() => {
+    const companyId = searchParams.get("companyId");
+    if (companyId) {
+      setCounterpartyId(companyId);
+    }
+    const threadId = searchParams.get("threadId");
+    if (threadId) {
+      void loadMessages(threadId);
+    }
+  }, [searchParams, loadMessages]);
+
+  useEffect(() => {
+    if (mode !== "chat" || !accessToken || moduleBlocked) {
+      return;
+    }
+    const threadIdParam = searchParams.get("threadId")?.trim();
+    if (threadIdParam) {
+      return;
+    }
+    const companyId = searchParams.get("companyId")?.trim();
+    if (!companyId) {
+      return;
+    }
+    const listingId = searchParams.get("listingId")?.trim() ?? "";
+    const deepKey = `${companyId}:${listingId}`;
+    if (deepLinkHandledKey.current === deepKey) {
+      return;
+    }
+    deepLinkHandledKey.current = deepKey;
+
+    void (async () => {
+      setIsBusy(true);
+      setErrorMessage("");
+      try {
+        const listed = await MessagingApiClient.listThreads(
+          accessToken,
+          locale,
+        );
+        const candidates = (listed.threads ?? []).filter(
+          (t) => t.counterpartyCompanyId === companyId,
+        );
+        const match =
+          candidates
+            .filter((t) => !listingId || t.freightListingId === listingId)
+            .sort((a, b) =>
+              (b.lastMessageAt ?? "").localeCompare(a.lastMessageAt ?? ""),
+            )[0] ?? null;
+
+        let resolvedThreadId = match?.threadId ?? "";
+        if (!resolvedThreadId) {
+          const opened = await MessagingApiClient.openThread(
+            accessToken,
+            locale,
+            companyId,
+            listingId || undefined,
+          );
+          resolvedThreadId =
+            (opened.thread as { id?: string; threadId?: string }).id ??
+            (opened.thread as { threadId?: string }).threadId ??
+            "";
+        }
+        if (!resolvedThreadId) {
+          throw new Error("Sohbet kimliği alınamadı");
+        }
+        await loadMessages(resolvedThreadId);
+        await loadThreads();
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("tab", "chat");
+        params.set("threadId", resolvedThreadId);
+        params.delete("companyId");
+        params.delete("listingId");
+        router.replace(`/messaging?${params.toString()}`, { scroll: false });
+      } catch (error) {
+        deepLinkHandledKey.current = null;
+        setErrorMessage(
+          error instanceof Error ? error.message : "Sohbet açılamadı",
+        );
+      } finally {
+        setIsBusy(false);
+      }
+    })();
+  }, [
+    mode,
+    accessToken,
+    locale,
+    moduleBlocked,
+    searchParams,
+    loadMessages,
+    router,
+  ]);
 
   async function handleExportArchive(): Promise<void> {
     try {
