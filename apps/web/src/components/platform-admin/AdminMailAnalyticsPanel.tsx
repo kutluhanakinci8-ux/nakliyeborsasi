@@ -24,6 +24,7 @@ const EVENT_LABELS: Record<string, string> = {
   MAIL_SENT_TRANSACTIONAL: "Kurumsal — gönderilen",
   LERTA_MAIL_BILLING: "Mail faturalama",
   LERTA_MAIL_WELCOME: "Mail karşılama",
+  MARKETING_CAMPAIGN: "Pazarlama kampanyası",
 };
 
 type RangeDays = 7 | 30;
@@ -189,6 +190,39 @@ export function AdminMailAnalyticsPanel() {
           <p className="pa-maturity-label">
             <strong>{summary.maturityScorePercent}%</strong> / {summary.maturityTargetPercent}% — {summary.maturityPhase}
           </p>
+        </section>
+      ) : null}
+
+      {summary?.engagement.marketing ? (
+        <section className="pa-metric-row" aria-label="Pazarlama kampanyaları">
+          <article className="pa-metric">
+            <p className="pa-metric-label">Kampanya (dönem)</p>
+            <p className="pa-metric-value">
+              {summary.engagement.marketing.campaignsSent}
+            </p>
+          </article>
+          <article className="pa-metric">
+            <p className="pa-metric-label">Pazarlama gönderim</p>
+            <p className="pa-metric-value">
+              {summary.engagement.marketing.marketingSends}
+            </p>
+          </article>
+          <article className="pa-metric">
+            <p className="pa-metric-label">Kampanya açılma</p>
+            <p className="pa-metric-value">
+              {formatPercent(
+                summary.engagement.marketing.marketingOpenRatePercent,
+              )}
+            </p>
+          </article>
+          <article className="pa-metric">
+            <p className="pa-metric-label">Kampanya tıklama</p>
+            <p className="pa-metric-value">
+              {formatPercent(
+                summary.engagement.marketing.marketingClickRatePercent,
+              )}
+            </p>
+          </article>
         </section>
       ) : null}
 

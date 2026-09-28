@@ -15,7 +15,7 @@
 | Gmail’i panel içine tam gömmek mümkün mü? | Hayır (Google iframe engeli). API + “Gmail’de aç” veya harici sekme. |
 | Lerta bugün ne seviyede? | **Güçlü transactional omurga** + **KOBİ webmail/IMAP**; **orta analitik** (CSV export, webhook olayları; tam open/click pixel hâlâ kısmi). |
 | Genel yetkinlik skoru (ağırlıklı, ESP boyutları) | **~61 / 100** (önceki **~42**) |
-| Tipik ESP (Postmark/SendGrid) | **~88–92 / 100** → Lerta ≈ **%69–70** seviyesinde (önceki ~%48) |
+| Tipik ESP (Postmark/SendGrid) | **~88–92 / 100** → Lerta ≈ **%76–78** (kampanya + segment + A/B analitik) |
 | Nakliye rakipleri (Emerge, Super Dispatch) | Operasyon bildirimleri **~65–72**; Lerta genel admin **~61** → TMS ile **parite ~%95–100** (operasyon paneli), ESP raporlamasında **hâlâ geride ama daraldı** |
 | Mesajlaşma (vs Slack) | Ağırlıklı **~84/100** → Slack **~95** referans → **≈ %88 parite** (SSE, ekler, deep link, nav badge) |
 
@@ -83,7 +83,7 @@ Her platform için boyut skoru **0–100** (sektör “tam donanım” = 100).
 
 | Kıyas | Lerta paritesi (sprint sonu) | Önceki |
 |-------|------------------------------|--------|
-| vs Postmark (transactional altın standart) | **~69%** | ~48% |
+| vs Postmark (transactional altın standart) | **~76%** | ~48% |
 | vs SendGrid | **~70%** | ~48% |
 | vs Mailgun | **~70%** | ~48% |
 | vs HubSpot (pazarlama rapor) | **~68%** | ~47% |
@@ -98,7 +98,7 @@ Parçalı güçlü alanlar:
 |----------|--------------|-----|
 | Transactional kuyruk + şablon + admin test | **~82%** | Webhook olayları eklendi |
 | Operasyon admin UI (tek sayfa) | **~72%** | Analytics panel + export |
-| Açılma/tıklama/bounce raporu | **~35–40%** | CSV/export var; pixel/link wrap kısmi |
+| Açılma/tıklama/bounce raporu | **~55–60%** | Kampanya + A/B kırılımı; tam click map hariç |
 | Kullanıcı/organizasyon bildirim matrisi | **~85%** vs TMS **~70%** | PM-8 matris |
 
 ### 3.3 Mesajlaşma (Slack referans, 0–100)
@@ -125,7 +125,9 @@ Parçalı güçlü alanlar:
 | Hard/soft bounce ayrımı | ✓ | ✓ | ✓ SMTP kodu | ✓ | Kısmi (Faz A otomasyon) |
 | Open / unique open | ✓ (opsiyonel) | ✓ | ✓ | ✓ | Kısmi / pipeline |
 | Click / link map | ✓ | ✓ | ✓ | ✓ click map | ✗ |
-| Tag / olay bazlı rapor | ✓ | ✓ | ✓ | ✓ kampanya | ✓ `eventCode` + export |
+| Tag / olay bazlı rapor | ✓ | ✓ | ✓ | ✓ kampanya | ✓ `eventCode` + kampanya segment |
+| Pazarlama kampanya / segment | ✓ | ✓ | ✓ | ✓ | ✓ platform-admin P5 |
+| A/B konu testi | ✓ | ✓ | Kısmi | ✓ | ✓ kampanya A/B analitik |
 | Webhook (delivered/bounce/open) | ✓ | ✓ | ✓ | ✓ | ✓ webmail sent/failed + public API |
 | Suppression list | ✓ | ✓ | ✓ | ✓ | Kısmi (bounce → suppression) |
 | Mailbox provider kırılımı | Kısıtlı | ✓ Insights | ✓ recipient domain | ✓ Delivery tab | ✗ |
@@ -159,7 +161,8 @@ Parçalı güçlü alanlar:
 | KPI + engagement CSV export (PM-10) | Trend grafikleri, önceki dönem karşılaştırma |
 | Olay politikaları + **kullanıcı matrisi** (PM-8) | Her ihale alt-tip için ince ayar |
 | SMTP verify, drain, retry, webhooks | ESP-native inbound webhook (SES/Mailgun) |
-| Kurumsal HTML şablonlar | Şablon A/B |
+| Pazarlama kampanya + segment (`MAIL_MARKETING_CAMPAIGNS.md`) | Görsel editör, otomasyon |
+| Kurumsal HTML şablonlar | Şablon A/B (kampanya konu A/B ✅) |
 | `@lerta.com.tr` inbound + Dovecot IMAP gold | Gmail API panel (opsiyonel) |
 | `providerMessageId` alanı | Sağlayıcı event ile zenginleştirme |
 | JMAP bridge doküman + verify | JMAP tam yazma |

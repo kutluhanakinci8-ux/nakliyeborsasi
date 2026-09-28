@@ -41,6 +41,49 @@ export class EmailOutboxService {
     private readonly companyRepository: Repository<CompanyEntity>,
   ) {}
 
+  public async enqueueMarketingCampaignMessage(params: {
+    recipientEmail: string;
+    subject: string;
+    htmlBody: string;
+    textBody: string;
+    idempotencyKey: string;
+    metadata: Record<string, unknown>;
+  }): Promise<EmailOutboxEntity | null> {
+    const existing = await this.outboxRepository.findOne({
+      where: { idempotencyKey: params.idempotencyKey },
+    });
+    if (existing) {
+      return existing;
+    }
+    if (await this.emailSuppressionService.isSuppressed(params.recipientEmail)) {
+      return null;
+    }
+    const row = await this.outboxRepository.save(
+      this.outboxRepository.create({
+        eventCode: "MARKETING_CAMPAIGN",
+        recipientKind: EmailRecipientKind.User,
+        recipientEmail: params.recipientEmail.toLowerCase(),
+        locale: "tr",
+        subject: params.subject,
+        htmlBody: params.htmlBody,
+        textBody: params.textBody,
+        status: "pending",
+        idempotencyKey: params.idempotencyKey,
+        metadata: {
+          ...params.metadata,
+          source: "marketing_campaign",
+        },
+        providerMessageId: null,
+        lastError: null,
+        sentAt: null,
+      }),
+    );
+    void this.processById(row.id).catch((error) => {
+      this.logger.error(`Outbox process failed: ${row.id}`, error);
+    });
+    return row;
+  }
+
   public async enqueueTenantApiMessage(params: {
     organizationId: string;
     recipientEmail: string;

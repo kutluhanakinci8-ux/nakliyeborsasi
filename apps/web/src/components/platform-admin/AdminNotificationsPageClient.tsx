@@ -10,6 +10,7 @@ import {
 import { useWebSession } from "../../context/WebSessionProvider";
 import { AdminPageHeader } from "./AdminPageHeader";
 import { AdminMailAnalyticsPanel } from "./AdminMailAnalyticsPanel";
+import { AdminMailMarketingPanel } from "./AdminMailMarketingPanel";
 import { AdminOutboxPreviewModal } from "./AdminOutboxPreviewModal";
 import { AdminMailPolicyPanel } from "./AdminMailPolicyPanel";
 import { AdminPlatformSendingPanel } from "./AdminPlatformSendingPanel";
@@ -76,6 +77,7 @@ export function AdminNotificationsPageClient() {
     | "domains"
     | "operations"
     | "analytics"
+    | "marketing"
     | "policy"
     | "identity-audit"
     | "inbound"
@@ -273,6 +275,17 @@ export function AdminNotificationsPageClient() {
         <button
           type="button"
           className={
+            activeTab === "marketing"
+              ? "pa-mail-tab is-active"
+              : "pa-mail-tab"
+          }
+          onClick={() => setActiveTab("marketing")}
+        >
+          Pazarlama
+        </button>
+        <button
+          type="button"
+          className={
             activeTab === "policy"
               ? "pa-mail-tab is-active"
               : "pa-mail-tab"
@@ -307,6 +320,7 @@ export function AdminNotificationsPageClient() {
       {activeTab === "platform" ? <AdminPlatformSendingPanel /> : null}
       {activeTab === "domains" ? <AdminMailDomainsPanel /> : null}
       {activeTab === "analytics" ? <AdminMailAnalyticsPanel /> : null}
+      {activeTab === "marketing" ? <AdminMailMarketingPanel /> : null}
       {activeTab === "policy" ? <AdminMailPolicyPanel /> : null}
       {activeTab === "identity-audit" ? <AdminMailIdentityAuditPanel /> : null}
       {activeTab === "inbound" ? <AdminMailInboundPanel /> : null}

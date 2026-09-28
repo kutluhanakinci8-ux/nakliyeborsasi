@@ -49,6 +49,12 @@ export type EmailOutboxAnalyticsSummary = {
     clickRatePercent: number | null;
     bounceRatePercent: number | null;
     bounceByClass: Record<string, number>;
+    marketing: {
+      campaignsSent: number;
+      marketingSends: number;
+      marketingOpenRatePercent: number | null;
+      marketingClickRatePercent: number | null;
+    };
   };
 };
 
@@ -91,9 +97,11 @@ export class EmailOutboxAnalyticsService {
 
     const avgQueueSeconds = await this.averageQueueSeconds(since);
 
-    const engagement = await this.emailEngagementService.getEngagementSummary(
+    const engagementBase = await this.emailEngagementService.getEngagementSummary(
       since,
     );
+    const marketing = await this.getMarketingEngagementSlice(since);
+    const engagement = { ...engagementBase, marketing };
 
     const smtpProfile =
       this.configService.get<string>("SMTP_PROFILE")?.trim().toLowerCase() ??
@@ -114,6 +122,8 @@ export class EmailOutboxAnalyticsService {
       hasSuppression: true,
       hasOrgPreferences: true,
       hasOwnMtaProduction: ownMtaProduction,
+      hasMarketingCampaigns: true,
+      hasCampaignAbAnalytics: true,
     });
 
     return {
@@ -132,7 +142,7 @@ export class EmailOutboxAnalyticsService {
       },
       maturityScorePercent,
       maturityTargetPercent: 100,
-      maturityPhase: "F3/F4 — Politika, suppression, kendi MTA",
+      maturityPhase: "F4 — Kampanya, segment, A/B, SendGrid sınıfı analitik",
       engagement,
     };
   }
@@ -296,6 +306,8 @@ export class EmailOutboxAnalyticsService {
     hasSuppression: boolean;
     hasOrgPreferences: boolean;
     hasOwnMtaProduction: boolean;
+    hasMarketingCampaigns: boolean;
+    hasCampaignAbAnalytics: boolean;
   }): number {
     const baseline = 42;
     const f1Ready =
@@ -323,7 +335,57 @@ export class EmailOutboxAnalyticsService {
     if (flags.hasOwnMtaProduction) {
       score += 10;
     }
+    if (flags.hasMarketingCampaigns) {
+      score += 6;
+    }
+    if (flags.hasCampaignAbAnalytics) {
+      score += 4;
+    }
     return Math.min(100, score);
+  }
+
+  private async getMarketingEngagementSlice(since: Date): Promise<{
+    campaignsSent: number;
+    marketingSends: number;
+    marketingOpenRatePercent: number | null;
+    marketingClickRatePercent: number | null;
+  }> {
+    const rows: Array<{
+      campaigns: string;
+      sends: string;
+      unique_opens: string;
+      with_clicks: string;
+    }> = await this.outboxRepository.query(
+      `
+      SELECT
+        COUNT(DISTINCT metadata->>'campaignId')::text AS campaigns,
+        COUNT(*)::text AS sends,
+        COUNT(*) FILTER (WHERE "openCount" > 0)::text AS unique_opens,
+        COUNT(*) FILTER (WHERE "clickCount" > 0)::text AS with_clicks
+      FROM email_outbox
+      WHERE "eventCode" = 'MARKETING_CAMPAIGN'
+        AND status = 'sent'
+        AND "sentAt" >= $1
+      `,
+      [since],
+    );
+    const row = rows[0];
+    const campaignsSent = Number.parseInt(row?.campaigns ?? "0", 10);
+    const marketingSends = Number.parseInt(row?.sends ?? "0", 10);
+    const uniqueOpens = Number.parseInt(row?.unique_opens ?? "0", 10);
+    const withClicks = Number.parseInt(row?.with_clicks ?? "0", 10);
+    return {
+      campaignsSent,
+      marketingSends,
+      marketingOpenRatePercent:
+        marketingSends > 0
+          ? Math.round((uniqueOpens / marketingSends) * 1000) / 10
+          : null,
+      marketingClickRatePercent:
+        marketingSends > 0
+          ? Math.round((withClicks / marketingSends) * 1000) / 10
+          : null,
+    };
   }
 
   private async periodCounts(

@@ -25,6 +25,8 @@ import { FleetMatchedRouteEntity } from "./entities/FleetMatchedRouteEntity";
 import { FleetRouteMatchingJobEntity } from "./entities/FleetRouteMatchingJobEntity";
 import { LogisticsPoiEntity } from "./entities/LogisticsPoiEntity";
 import { EmailOutboxEntity } from "./entities/EmailOutboxEntity";
+import { EmailMarketingSegmentEntity } from "./entities/EmailMarketingSegmentEntity";
+import { EmailMarketingCampaignEntity } from "./entities/EmailMarketingCampaignEntity";
 import { PlatformNotificationSettingEntity } from "./entities/PlatformNotificationSettingEntity";
 import { EmailVerificationTokenEntity } from "./entities/EmailVerificationTokenEntity";
 import { PasswordResetTokenEntity } from "./entities/PasswordResetTokenEntity";
@@ -102,6 +104,8 @@ export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
         FleetRouteMatchingJobEntity,
         LogisticsPoiEntity,
         EmailOutboxEntity,
+        EmailMarketingSegmentEntity,
+        EmailMarketingCampaignEntity,
         PlatformNotificationSettingEntity,
         EmailVerificationTokenEntity,
         PasswordResetTokenEntity,
