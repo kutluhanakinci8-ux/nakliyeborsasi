@@ -17,7 +17,7 @@ fi
 
 # shellcheck disable=SC1091
 set -a
-source <(grep -E '^(DATABASE_URL|MAIL_IMAP_|MAIL_PLATFORM_TENANT_DOMAIN)=' "${ENV_FILE}" || true)
+source <(grep -E '^(DATABASE_URL|MAIL_IMAP|MAIL_PLATFORM_TENANT_DOMAIN)=' "${ENV_FILE}" || true)
 set +a
 
 if [[ -z "${DATABASE_URL:-}" ]]; then
