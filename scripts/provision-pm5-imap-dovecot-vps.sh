@@ -32,14 +32,15 @@ fi
 
 MAILDIR_ROOT="${MAIL_IMAP_MAILDIR_ROOT:-/var/mail/vhosts}"
 PASSWD_FILE="${MAIL_IMAP_DOVECOT_PASSWD_PATH:-/etc/dovecot/lerta-imap-passwd}"
-API_NODE="${INSTALL_DIR}/apps/api"
-if [[ ! -d "${API_NODE}/node_modules/bcrypt" ]]; then
-  echo "bcrypt modülü yok — önce install-deps çalıştırın." >&2
+BCRYPT_MOD="${INSTALL_DIR}/node_modules/bcrypt"
+if [[ ! -d "${BCRYPT_MOD}" ]]; then
+  echo "bcrypt modülü yok (${BCRYPT_MOD}) — önce install-deps çalıştırın." >&2
   exit 1
 fi
 
 bcrypt_hash() {
-  node -e "process.stdout.write(require('bcrypt').hashSync(process.argv[1], 10))" "$1"
+  NODE_PATH="${INSTALL_DIR}/node_modules" node -e \
+    "process.stdout.write(require('bcrypt').hashSync(process.argv[1], 10))" "$1"
 }
 
 random_pass() {
