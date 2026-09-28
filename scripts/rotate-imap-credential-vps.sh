@@ -55,7 +55,8 @@ for cred in "${CREDS[@]}"; do
   lines+=("${em}:{BLF-CRYPT}${h}")
 done
 printf '%s\n' "${lines[@]}" > "${PASSWD_FILE}"
-chmod 600 "${PASSWD_FILE}"
+chown root:dovecot "${PASSWD_FILE}"
+chmod 640 "${PASSWD_FILE}"
 systemctl reload dovecot 2>/dev/null || systemctl restart dovecot
 
 {

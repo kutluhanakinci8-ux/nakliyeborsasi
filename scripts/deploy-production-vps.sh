@@ -47,6 +47,10 @@ if [[ -x scripts/fix-dovecot-lerta-userdb-gid.sh ]]; then
   bash scripts/fix-dovecot-lerta-userdb-gid.sh || true
 fi
 
+if [[ -x scripts/fix-dovecot-passwd-file-perms.sh ]]; then
+  bash scripts/fix-dovecot-passwd-file-perms.sh || true
+fi
+
 if [[ -x scripts/configure-dovecot-imap-gold-folders.sh ]] \
   && [[ -f /etc/dovecot/conf.d/99-lerta-mail.conf ]]; then
   bash scripts/configure-dovecot-imap-gold-folders.sh || true

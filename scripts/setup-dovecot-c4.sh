@@ -13,7 +13,8 @@ apt-get install -y dovecot-imapd dovecot-core
 mkdir -p "${MAILDIR_ROOT}"
 mkdir -p "$(dirname "${PASSWD_FILE}")"
 touch "${PASSWD_FILE}"
-chmod 600 "${PASSWD_FILE}"
+chown root:dovecot "${PASSWD_FILE}" 2>/dev/null || true
+chmod 640 "${PASSWD_FILE}"
 
 cat >/etc/dovecot/conf.d/99-lerta-mail.conf <<EOF
 protocols = imap

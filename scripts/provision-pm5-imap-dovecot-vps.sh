@@ -131,7 +131,8 @@ done
 
 mkdir -p "$(dirname "${PASSWD_FILE}")"
 printf '%s\n' "${lines[@]}" > "${PASSWD_FILE}"
-chmod 600 "${PASSWD_FILE}"
+chown root:dovecot "${PASSWD_FILE}"
+chmod 640 "${PASSWD_FILE}"
 
 if systemctl is-active --quiet dovecot 2>/dev/null; then
   systemctl reload dovecot || systemctl restart dovecot
