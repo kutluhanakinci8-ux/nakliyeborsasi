@@ -20,8 +20,3 @@ if [[ $missing -eq 1 ]]; then
   exit 1
 fi
 echo "OK: Mail web push VAPID tanımlı."
-if [[ -n "${MESSAGING_WEB_PUSH_VAPID_PUBLIC_KEY:-}" ]]; then
-  echo "OK: Messaging push VAPID (özel) tanımlı."
-else
-  echo "Bilgi: Sohbet push mail VAPID anahtarlarını paylaşır."
-fi

@@ -10,7 +10,7 @@
 
 **Çeviri (ops):** `MESSAGING_TRANSLATE_API_URL` → LibreTranslate uyumlu POST (ör. `https://libretranslate.com/translate`)
 
-**Push (ops):** `MESSAGING_WEB_PUSH_VAPID_*` veya mevcut `MAIL_WEB_PUSH_VAPID_*` anahtarları · `MESSAGING_WEB_PUBLIC_URL` (varsayılan `https://app.lerta.com.tr`)
+**Push (ops):** Ayrı `MESSAGING_WEB_PUSH_VAPID_*` — [MESSAGING_WEB_PUSH.md](./MESSAGING_WEB_PUSH.md) · `apply-messaging-web-push-vps-env.sh`
 
 **Ek depolama:** `MESSAGING_ATTACHMENT_ROOT` (varsayılan `data/messaging-attachments`)
 

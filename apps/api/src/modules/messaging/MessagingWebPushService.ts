@@ -1,18 +1,20 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import webpush from "web-push";
+import { resolveMessagingVapidFromEnv } from "../../infrastructure/push/messagingVapidEnv";
+import { sendWebPushNotification } from "../../infrastructure/push/sendWebPush";
 import { MessagingWebPushSubscriptionEntity } from "../../infrastructure/database/entities/MessagingWebPushSubscriptionEntity";
 
 export type MessagingWebPushConfig = {
   enabled: boolean;
   publicKey: string | null;
+  /** true = MESSAGING_WEB_PUSH_VAPID_* (mail ile paylaşılmıyor) */
+  isolatedVapid: boolean;
 };
 
 @Injectable()
 export class MessagingWebPushService {
   private readonly logger = new Logger(MessagingWebPushService.name);
-  private vapidConfigured = false;
 
   public constructor(
     @InjectRepository(MessagingWebPushSubscriptionEntity)
@@ -20,11 +22,11 @@ export class MessagingWebPushService {
   ) {}
 
   public getPublicConfig(): MessagingWebPushConfig {
-    const publicKey = this.readPublicKey();
-    const privateKey = this.readPrivateKey();
+    const vapid = resolveMessagingVapidFromEnv();
     return {
-      enabled: publicKey.length > 0 && privateKey.length > 0,
-      publicKey: publicKey.length > 0 ? publicKey : null,
+      enabled: Boolean(vapid),
+      publicKey: vapid?.publicKey ?? null,
+      isolatedVapid: vapid?.isolated ?? false,
     };
   }
 
@@ -73,7 +75,8 @@ export class MessagingWebPushService {
     bodyPreview: string;
     freightListingId: string | null;
   }): Promise<void> {
-    if (!this.ensureVapid()) {
+    const vapid = resolveMessagingVapidFromEnv();
+    if (!vapid) {
       return;
     }
     const subs = await this.subscriptionRepository.find({
@@ -96,12 +99,13 @@ export class MessagingWebPushService {
     });
     for (const row of subs) {
       try {
-        await webpush.sendNotification(
+        await sendWebPushNotification(
           {
             endpoint: row.endpoint,
             keys: { p256dh: row.p256dh, auth: row.auth },
           },
           payload,
+          vapid,
         );
       } catch (error) {
         const status = (error as { statusCode?: number }).statusCode;
@@ -116,36 +120,4 @@ export class MessagingWebPushService {
     }
   }
 
-  private ensureVapid(): boolean {
-    const publicKey = this.readPublicKey();
-    const privateKey = this.readPrivateKey();
-    const subject =
-      process.env.MESSAGING_WEB_PUSH_VAPID_SUBJECT?.trim() ??
-      process.env.MAIL_WEB_PUSH_VAPID_SUBJECT?.trim() ??
-      "mailto:admin@lerta.tr";
-    if (!publicKey || !privateKey) {
-      return false;
-    }
-    if (!this.vapidConfigured) {
-      webpush.setVapidDetails(subject, publicKey, privateKey);
-      this.vapidConfigured = true;
-    }
-    return true;
-  }
-
-  private readPublicKey(): string {
-    return (
-      process.env.MESSAGING_WEB_PUSH_VAPID_PUBLIC_KEY?.trim() ??
-      process.env.MAIL_WEB_PUSH_VAPID_PUBLIC_KEY?.trim() ??
-      ""
-    );
-  }
-
-  private readPrivateKey(): string {
-    return (
-      process.env.MESSAGING_WEB_PUSH_VAPID_PRIVATE_KEY?.trim() ??
-      process.env.MAIL_WEB_PUSH_VAPID_PRIVATE_KEY?.trim() ??
-      ""
-    );
-  }
 }
