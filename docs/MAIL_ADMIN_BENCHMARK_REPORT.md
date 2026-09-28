@@ -162,7 +162,7 @@ Parçalı güçlü alanlar:
 | Kurumsal HTML şablonlar | Şablon A/B |
 | `@lerta.com.tr` inbound + Dovecot IMAP gold | Gmail API panel (opsiyonel) |
 | `providerMessageId` alanı | Sağlayıcı event ile zenginleştirme |
-| JMAP bridge doküman + verify | JMAP tam yazma |
+| JMAP köprü v2 (query/get/set, Mailbox/*) | Tam Cory sunucu · `Email/changes` delta sync |
 
 ---
 
