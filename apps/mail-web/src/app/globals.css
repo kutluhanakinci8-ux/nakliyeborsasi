@@ -681,8 +681,13 @@ a {
   position: relative;
   z-index: 1;
   background: var(--panel);
-  touch-action: pan-y;
+  touch-action: manipulation;
   will-change: transform;
+  transition: transform 0.22s ease-out;
+}
+
+.mail-swipe-content.is-dragging {
+  transition: none;
 }
 
 .mail-swipe-row .mail-list-item,
