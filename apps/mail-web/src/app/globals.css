@@ -1861,6 +1861,57 @@ a {
   margin: 0 0 12px;
 }
 
+.mail-settings-subhead {
+  font-size: 0.95rem;
+  margin: 16px 0 8px;
+}
+
+.mail-accounts-list {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+}
+
+.mail-accounts-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+
+.mail-accounts-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.mail-settings-btn-secondary {
+  border: 1px solid var(--border);
+  background: var(--panel);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.mail-settings-ok {
+  color: #15803d;
+  font-size: 0.85rem;
+}
+
+.mail-settings-error {
+  color: #b91c1c;
+  font-size: 0.85rem;
+}
+
 .mail-settings-check {
   display: block;
   margin: 12px 0;

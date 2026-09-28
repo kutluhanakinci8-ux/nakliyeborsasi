@@ -16,8 +16,8 @@ export type MessagingAttachmentInput = {
 
 @Injectable()
 export class MessagingAttachmentStorageService {
-  private static readonly maxAttachments = 2;
-  private static readonly maxBytes = 2_500_000;
+  private static readonly maxAttachments = 5;
+  private static readonly maxBytes = 10_000_000;
 
   public async persistForMessage(
     threadId: string,

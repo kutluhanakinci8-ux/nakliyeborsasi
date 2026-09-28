@@ -1,5 +1,5 @@
 /* Lerta Posta — G6 offline shell (network-first; deploy sonrası eski UI önlenir). */
-const CACHE = "lerta-mail-shell-v5";
+const CACHE = "lerta-mail-shell-v6";
 const PRECACHE = ["/manifest.webmanifest", "/offline.html"];
 
 self.addEventListener("install", (event) => {

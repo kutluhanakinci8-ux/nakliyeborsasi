@@ -10,6 +10,7 @@ import {
   type MailImapSettings,
 } from "@/lib/mailApi";
 import { MailComposePresetsPanel } from "./MailComposePresetsPanel";
+import { MailAccountsSettingsPanel } from "./MailAccountsSettingsPanel";
 import { MailRulesPanel } from "./MailRulesPanel";
 import {
   downloadMailPrivacyExport,
@@ -40,6 +41,7 @@ import {
 
 type SettingsView =
   | "hub"
+  | "accounts"
   | "display"
   | "mailPrefs"
   | "signature"
@@ -76,6 +78,13 @@ const HUB_ITEMS: HubItem[] = [
     label: "Posta",
     subtitle: "Gelen kutusu liste yoğunluğu",
     keywords: "posta liste yoğunluk sıkı rahat compact",
+  },
+  {
+    id: "accounts",
+    section: "quick",
+    label: "Hesaplar ve gönderenler",
+    subtitle: "Kimlik, alias, varsayılan From",
+    keywords: "hesap gönderen alias kimlik from",
   },
   {
     id: "signature",
@@ -582,6 +591,12 @@ export function MailSettingsPanel({
             ))}
           </div>
         </>,
+      );
+      break;
+    case "accounts":
+      content = renderDetail(
+        "Hesaplar ve gönderenler",
+        <MailAccountsSettingsPanel accessToken={accessToken} />,
       );
       break;
     case "signature":
@@ -1190,6 +1205,8 @@ function settingsRowIcon(id: SettingsView): string {
       return "🎨";
     case "mailPrefs":
       return "📨";
+    case "accounts":
+      return "👤";
     case "signature":
       return "✒️";
     case "autoReply":

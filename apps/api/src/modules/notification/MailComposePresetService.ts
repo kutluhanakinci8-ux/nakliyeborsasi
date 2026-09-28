@@ -27,6 +27,7 @@ export class MailComposePresetService {
     signatures: ReturnType<MailComposePresetService["toDto"]>[];
     templates: ReturnType<MailComposePresetService["toDto"]>[];
   }> {
+    await this.ensureStarterTemplates(organizationId);
     const rows = await this.presetRepository.find({
       where: { organizationId },
       order: { updatedAt: "DESC" },
@@ -196,6 +197,58 @@ export class MailComposePresetService {
         row.isDefault = false;
         await this.presetRepository.save(row);
       }
+    }
+  }
+
+  private async ensureStarterTemplates(organizationId: string): Promise<void> {
+    const count = await this.presetRepository.count({
+      where: { organizationId, kind: "template" },
+    });
+    if (count > 0) {
+      return;
+    }
+    const starters: {
+      name: string;
+      subject: string;
+      bodyText: string;
+    }[] = [
+      {
+        name: "Yük teklifi",
+        subject: "Nakliye teklifimiz",
+        bodyText:
+          "Merhaba,\n\nİlanınız için teklifimiz:\n• Rota: \n• Araç tipi: \n• Fiyat: \n• Yükleme tarihi: \n\nDetayları görüşmek için yanıtlayabilirsiniz.\n\nSaygılarımızla,",
+      },
+      {
+        name: "Teklif kabul / onay",
+        subject: "Teklif onayı",
+        bodyText:
+          "Merhaba,\n\nTeklifinizi kabul ediyoruz. Operasyon için iletişim bilgilerinizi ve yükleme saatini paylaşır mısınız?\n\nTeşekkürler,",
+      },
+      {
+        name: "Evrak hatırlatma",
+        subject: "Evrak / CMR hatırlatması",
+        bodyText:
+          "Merhaba,\n\nSevkiyat tamamlandıysa CMR ve fatura evraklarını bu e-postaya ek olarak gönderebilir misiniz?\n\nİyi çalışmalar,",
+      },
+      {
+        name: "Gecikme bilgilendirme",
+        subject: "Sevkiyat güncellemesi",
+        bodyText:
+          "Merhaba,\n\nSevkiyatınızla ilgili güncelleme:\n\nTahmini varış / gecikme nedeni: \n\nBilginize sunarız.",
+      },
+    ];
+    for (const starter of starters) {
+      await this.presetRepository.save(
+        this.presetRepository.create({
+          organizationId,
+          ownerUserId: null,
+          kind: "template",
+          name: starter.name,
+          subject: starter.subject,
+          bodyText: starter.bodyText,
+          isDefault: false,
+        }),
+      );
     }
   }
 

@@ -74,4 +74,12 @@ export class PlatformAdminController {
       threads: await this.platformAdminApplicationService.listMessageThreads(),
     };
   }
+
+  @Get("message-threads/export")
+  public async exportMessageThreads() {
+    return {
+      export:
+        await this.platformAdminApplicationService.exportMessagingEdiscovery(),
+    };
+  }
 }

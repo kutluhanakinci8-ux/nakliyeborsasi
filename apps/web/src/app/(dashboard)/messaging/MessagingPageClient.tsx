@@ -138,7 +138,7 @@ export function MessagingPageClient() {
     });
   }
 
-  async function loadThreads(): Promise<void> {
+  const loadThreads = useCallback(async (): Promise<void> => {
     try {
       const payload = await MessagingApiClient.listThreads(accessToken, locale);
       setThreads(payload.threads ?? []);
@@ -150,13 +150,13 @@ export function MessagingPageClient() {
       }
       setErrorMessage(message);
     }
-  }
+  }, [accessToken, locale]);
 
   useEffect(() => {
     if (mode === "chat") {
       void loadThreads();
     }
-  }, [accessToken, locale, mode]);
+  }, [accessToken, locale, mode, loadThreads]);
 
   async function handleOpenThread(): Promise<void> {
     if (!counterpartyId.trim()) {
@@ -399,14 +399,53 @@ export function MessagingPageClient() {
   }, [activeThreadId, accessToken, locale, mode]);
 
   useEffect(() => {
-    if (mode !== "chat" || !activeThreadId) {
+    if (mode !== "chat" || !accessToken) {
       return;
     }
-    const timer = window.setInterval(() => {
-      void loadMessages(activeThreadId);
-    }, 12_000);
-    return () => window.clearInterval(timer);
-  }, [mode, activeThreadId, loadMessages]);
+    let pollTimer: number | undefined;
+    let eventSource: EventSource | null = null;
+    let closed = false;
+
+    function startPolling(): void {
+      if (pollTimer) {
+        return;
+      }
+      pollTimer = window.setInterval(() => {
+        void loadThreads();
+        if (activeThreadId) {
+          void loadMessages(activeThreadId);
+        }
+      }, 12_000);
+    }
+
+    void MessagingApiClient.createStreamTicket(accessToken, locale)
+      .then(({ ticket }) => {
+        if (closed) {
+          return;
+        }
+        eventSource = new EventSource(MessagingApiClient.streamUrl(ticket));
+        eventSource.addEventListener("message", () => {
+          void loadThreads();
+          if (activeThreadId) {
+            void loadMessages(activeThreadId);
+          }
+        });
+        eventSource.onerror = () => {
+          eventSource?.close();
+          eventSource = null;
+          startPolling();
+        };
+      })
+      .catch(() => startPolling());
+
+    return () => {
+      closed = true;
+      eventSource?.close();
+      if (pollTimer !== undefined) {
+        window.clearInterval(pollTimer);
+      }
+    };
+  }, [mode, accessToken, locale, activeThreadId, loadMessages, loadThreads]);
 
   useEffect(() => {
     if (mode !== "chat" || !accessToken) {
@@ -791,22 +830,27 @@ export function MessagingPageClient() {
                 <input
                   type="file"
                   accept="image/*,application/pdf,text/plain"
-                  disabled={!activeThreadId || pendingAttachments.length >= 2}
+                  disabled={!activeThreadId || pendingAttachments.length >= 5}
                   onChange={(event) => {
                     const file = event.target.files?.[0];
                     event.target.value = "";
                     if (!file) {
                       return;
                     }
+                    if (file.size > 10_000_000) {
+                      setErrorMessage("Tek dosya en fazla 10 MB olabilir.");
+                      return;
+                    }
                     void readFileAsAttachment(file)
                       .then((attachment) => {
-                        setPendingAttachments((current) => [
-                          ...current.slice(0, 1),
-                          attachment,
-                        ]);
+                        setPendingAttachments((current) =>
+                          [...current, attachment].slice(0, 5),
+                        );
                       })
                       .catch(() =>
-                        setErrorMessage("Dosya okunamadı (en fazla 2,5 MB)."),
+                        setErrorMessage(
+                          "Dosya okunamadı (en fazla 5 dosya, 10 MB).",
+                        ),
                       );
                   }}
                 />

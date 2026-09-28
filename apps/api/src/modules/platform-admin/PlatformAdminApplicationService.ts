@@ -406,6 +406,58 @@ export class PlatformAdminApplicationService {
     }));
   }
 
+  public async exportMessagingEdiscovery(limit = 200): Promise<{
+    exportedAt: string;
+    threadCount: number;
+    threads: {
+      id: string;
+      companyAId: string;
+      companyBId: string;
+      freightListingId: string | null;
+      createdAt: string;
+      messages: {
+        id: string;
+        senderCompanyId: string;
+        senderUserId: string;
+        bodyText: string;
+        createdAt: string;
+      }[];
+    }[];
+  }> {
+    const capped = Math.min(Math.max(limit, 1), 500);
+    const threads = await this.threadRepository.find({
+      order: { createdAt: "DESC" },
+      take: capped,
+    });
+    const payload = [];
+    for (const thread of threads) {
+      const messages = await this.messageRepository.find({
+        where: { threadId: thread.id },
+        order: { createdAt: "ASC" },
+        take: 500,
+      });
+      payload.push({
+        id: thread.id,
+        companyAId: thread.companyAId,
+        companyBId: thread.companyBId,
+        freightListingId: thread.freightListingId,
+        createdAt: thread.createdAt.toISOString(),
+        messages: messages.map((message) => ({
+          id: message.id,
+          senderCompanyId: message.senderCompanyId,
+          senderUserId: message.senderUserId,
+          bodyText: message.bodyText,
+          createdAt: message.createdAt.toISOString(),
+        })),
+      });
+    }
+    return {
+      exportedAt: new Date().toISOString(),
+      threadCount: payload.length,
+      threads: payload,
+    };
+  }
+
   public async listAuditLogs(): Promise<
     {
       id: string;

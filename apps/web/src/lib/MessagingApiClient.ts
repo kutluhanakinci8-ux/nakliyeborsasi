@@ -36,6 +36,22 @@ export type MessagingThreadSummaryRecord = {
 };
 
 export class MessagingApiClient {
+  public static async createStreamTicket(
+    accessToken: string,
+    locale: string,
+  ): Promise<{ ticket: string; expiresInSeconds: number }> {
+    return AuthenticatedApiClient.fetchJson(
+      accessToken,
+      `/messaging/stream/ticket?lang=${locale}`,
+      { method: "POST" },
+    ) as Promise<{ ticket: string; expiresInSeconds: number }>;
+  }
+
+  public static streamUrl(ticket: string): string {
+    const base = PublicApiConfiguration.resolveBaseUrl();
+    return `${base}/messaging/stream?ticket=${encodeURIComponent(ticket)}`;
+  }
+
   public static async listThreads(
     accessToken: string,
     locale: string,

@@ -27,6 +27,7 @@ import { OperationalNotificationService } from "../notification/OperationalNotif
 import { CompanyEntity } from "../../infrastructure/database/entities/CompanyEntity";
 import { FreightListingEntity } from "../../infrastructure/database/entities/FreightListingEntity";
 import { buildStructuredThreadSummary } from "./MessagingThreadSummaryBuilder";
+import { MessagingRealtimeHubService } from "./MessagingRealtimeHubService";
 
 @Injectable()
 export class MessagingThreadApplicationService {
@@ -45,6 +46,7 @@ export class MessagingThreadApplicationService {
     private readonly operationalNotificationService: OperationalNotificationService,
     private readonly messagingAttachmentStorageService: MessagingAttachmentStorageService,
     private readonly messagingWebPushService: MessagingWebPushService,
+    private readonly messagingRealtimeHubService: MessagingRealtimeHubService,
   ) {}
 
   public async assertMessagingModule(
@@ -286,6 +288,9 @@ export class MessagingThreadApplicationService {
       bodyPreview: preview,
       freightListingId: thread.freightListingId,
     });
+    const event = { type: "message", threadId: thread.id };
+    this.messagingRealtimeHubService.publish(thread.companyAId, event);
+    this.messagingRealtimeHubService.publish(thread.companyBId, event);
     return saved;
   }
 

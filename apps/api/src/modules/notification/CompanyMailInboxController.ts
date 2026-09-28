@@ -35,8 +35,11 @@ import { SaveMailComposePresetRequestDto } from "./SaveMailComposePresetRequestD
 import { UpdateMailComposePresetRequestDto } from "./UpdateMailComposePresetRequestDto";
 import {
   assertMailConsoleAccess,
+  canManageMailIdentity,
   canManageMailInboxWrite,
 } from "./MailCompanyRoleAuthorization";
+import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
+import { MailAddressAliasService } from "./MailAddressAliasService";
 import {
   BulkMailInboxFolderDto,
   BulkMailInboxStarDto,
@@ -118,7 +121,55 @@ export class CompanyMailInboxController {
     private readonly mailCalendarCalDavService: MailCalendarCalDavService,
     private readonly mailContactCardDavService: MailContactCardDavService,
     private readonly mailIdentityAuditService: MailIdentityAuditService,
+    private readonly mailSaasSubscriptionService: MailSaasSubscriptionService,
+    private readonly mailAddressAliasService: MailAddressAliasService,
   ) {}
+
+  @Get("account-hub")
+  public async accountHub(@AuthenticatedUserParam() user: AuthenticatedUserContext) {
+    const summary = await this.mailOrganizationInboxService.getSummary(
+      user.companyId,
+    );
+    const senders =
+      await this.mailSaasSubscriptionService.listOrganizationSenders(
+        user.companyId,
+      );
+    const aliases = await this.mailAddressAliasService.listAliases(
+      user.companyId,
+    );
+    const branding = await this.mailOrganizationBrandingService.getSnapshot(
+      user.companyId,
+    );
+    return {
+      primaryAddress: summary.primaryAddress,
+      unreadCount: summary.unreadCount,
+      senders,
+      aliases,
+      branding,
+      canManageSenders: canManageMailIdentity(user),
+    };
+  }
+
+  @Post("senders/:senderId/default")
+  public async setDefaultSender(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("senderId") senderId: string,
+  ) {
+    if (!canManageMailIdentity(user)) {
+      throw new ForbiddenException(
+        "Varsayılan gönderen yalnızca posta yöneticisi tarafından değiştirilir.",
+      );
+    }
+    await this.mailSaasSubscriptionService.setDefaultSender(
+      user.companyId,
+      senderId,
+    );
+    const senders =
+      await this.mailSaasSubscriptionService.listOrganizationSenders(
+        user.companyId,
+      );
+    return { ok: true, senders };
+  }
 
   @Get("preferences")
   public async getInboxPreferences(

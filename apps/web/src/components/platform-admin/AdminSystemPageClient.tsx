@@ -40,6 +40,7 @@ export function AdminSystemPageClient() {
     Awaited<ReturnType<typeof PlatformAdminApiClient.fetchMailEdiscoveryOrganizations>>
   >([]);
   const [ediscoveryBusyId, setEdiscoveryBusyId] = useState<string | null>(null);
+  const [messagingExportBusy, setMessagingExportBusy] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const modules = flattenPlatformAdminNav().filter((item) => item.href !== "/admin");
@@ -331,6 +332,30 @@ export function AdminSystemPageClient() {
               <h2>Firma sohbeti eDiscovery</h2>
               <p>Son 250 thread — uyumluluk incelemesi (salt okunur)</p>
             </div>
+            <button
+              type="button"
+              className="btn-secondary"
+              disabled={messagingExportBusy}
+              onClick={() => {
+                setMessagingExportBusy(true);
+                void PlatformAdminApiClient.exportMessagingThreads(accessToken)
+                  .then((payload) => {
+                    const blob = new Blob(
+                      [JSON.stringify(payload.export, null, 2)],
+                      { type: "application/json" },
+                    );
+                    const url = URL.createObjectURL(blob);
+                    const anchor = document.createElement("a");
+                    anchor.href = url;
+                    anchor.download = `lerta-messaging-ediscovery-${Date.now()}.json`;
+                    anchor.click();
+                    URL.revokeObjectURL(url);
+                  })
+                  .finally(() => setMessagingExportBusy(false));
+              }}
+            >
+              {messagingExportBusy ? "İndiriliyor…" : "Toplu JSON indir"}
+            </button>
           </header>
           {messageThreads.length === 0 ? (
             <p className="admin-meta-line">Henüz kayıtlı sohbet yok.</p>

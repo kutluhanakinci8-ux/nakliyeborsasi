@@ -1034,6 +1034,49 @@ export async function fetchComposePresets(accessToken: string) {
   }>(accessToken, "company/mail-inbox/compose-presets");
 }
 
+export type MailAccountHubSender = {
+  id: string;
+  fromAddress: string;
+  displayName: string | null;
+  isDefault: boolean;
+};
+
+export type MailAccountHubAlias = {
+  id: string;
+  aliasEmail: string;
+  targets: { emailAddress: string }[];
+};
+
+export type MailAccountHubPayload = {
+  primaryAddress: string | null;
+  unreadCount: number;
+  senders: MailAccountHubSender[];
+  aliases: MailAccountHubAlias[];
+  branding: {
+    emailBrandTitle: string | null;
+    logoUrl: string | null;
+  };
+  canManageSenders: boolean;
+};
+
+export async function fetchMailAccountHub(accessToken: string) {
+  return apiFetch<MailAccountHubPayload>(
+    accessToken,
+    "company/mail-inbox/account-hub",
+  );
+}
+
+export async function setDefaultMailSender(
+  accessToken: string,
+  senderId: string,
+) {
+  return apiFetch<{ ok: true; senders: MailAccountHubSender[] }>(
+    accessToken,
+    `company/mail-inbox/senders/${senderId}/default`,
+    { method: "POST" },
+  );
+}
+
 export async function createComposePreset(
   accessToken: string,
   body: {
