@@ -7661,6 +7661,35 @@ button.btn-secondary {
   gap: 10px;
 }
 
+.account-profile-matrix-wrap {
+  margin-top: 20px;
+  overflow-x: auto;
+}
+
+.account-profile-matrix-title {
+  font-size: 0.9rem;
+  margin: 0 0 8px;
+}
+
+.account-profile-matrix {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.account-profile-matrix th,
+.account-profile-matrix td {
+  border: 1px solid #e2e8f0;
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.account-profile-matrix-hint {
+  margin: 8px 0 0;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
 .account-profile-toggle-row {
   display: flex;
   align-items: center;

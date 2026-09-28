@@ -37,6 +37,24 @@ export async function fetchNotificationPreferences(
   return payload.preferences;
 }
 
+export type NotificationPreferenceMatrixEvent = {
+  eventCode: string;
+  category: string;
+  labelTr: string;
+  preferenceKey: keyof AccountNotificationPreferences;
+  emailEnabled: boolean;
+  channels: { email: boolean; push: boolean | null };
+};
+
+export async function fetchNotificationPreferenceMatrix(
+  accessToken: string,
+): Promise<{
+  preferences: AccountNotificationPreferences;
+  events: NotificationPreferenceMatrixEvent[];
+}> {
+  return apiFetch(accessToken, "me/notification-preferences/matrix");
+}
+
 export async function updateNotificationPreferences(
   accessToken: string,
   patch: Partial<AccountNotificationPreferences>,

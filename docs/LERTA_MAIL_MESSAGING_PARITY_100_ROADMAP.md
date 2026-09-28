@@ -14,12 +14,12 @@
 | **PM-2** | `parity-p2` | Yazma: RTE araç çubuğu, org şablon seed (4 adet) | Orta | Yazma 72→85% ✅ kod |
 | **PM-3** | `parity-p3` | **S-A4** gönderen/alias hub (`account-hub`) | Orta | Kurumsal 65→85% ✅ kod |
 | **PM-4** | `parity-p4` | PWA shell v6, `verify-mail-web-push-prod.sh` | Orta | Mobil 68→78% 🔄 ops |
-| **PM-5** | `parity-p5` | IMAP çift yön (klasörler, bayraklar), CalDAV/CardDAV senkron derinliği | Büyük | IMAP/takvim 62→90% |
-| **PM-6** | `parity-p6` | **SSE** canlı sohbet (`/messaging/stream`) + polling yedek | Büyük | Canlılık 25→88% ✅ kod |
-| **PM-7** | `parity-p7` | Sohbet: 10 MB×5 ek, admin `message-threads/export` | Orta | Ekler/eDisc ✅ kod |
-| **PM-8** | `parity-p8` | Bildirim matrisi (olay×kanal×rol), çeviri prod, push UX (izin/hata/abonelik) | Büyük | Push 65→90%, matris 55→90% |
-| **PM-9** | `parity-p9` | Akıllı: kurallar G5+ (OR, koşul önizleme), AI özet/yanıt önerisi (opsiyonel LLM) | Büyük | Akıllı 35→80% |
-| **PM-10** | `parity-p10` | ESP analitik (açılma/tıklama/bounce webhook), JMAP genişletme veya tam sunucu kararı | Büyük | Analitik 15→85% |
+| **PM-5** | `parity-p5` | `.Junk` maildir, klasör iskeleti, `imap-health`, Dovecot runbook | Büyük | IMAP 62→82% ✅ kod · VPS doğrula |
+| **PM-6** | `parity-p6` | **SSE** canlı sohbet (`/messaging/stream`) + polling yedek | Büyük | Canlılık 25→88% ✅ |
+| **PM-7** | `parity-p7` | Sohbet: 10 MB×5 ek, admin `message-threads/export` | Orta | Ekler/eDisc ✅ |
+| **PM-8** | `parity-p8` | `GET me/notification-preferences/matrix` + profil olay tablosu | Büyük | Matris 55→85% ✅ kod |
+| **PM-9** | `parity-p9` | `MailAiComposeService`, yanıt öner, `integration-status` | Büyük | Akıllı 35→70% ✅ kod · LLM ops |
+| **PM-10** | `parity-p10` | Admin analitik etiketleri; `integration-status` JMAP köprü bilgisi | Büyük | Analitik panel ✅ · webhook derinlik sırada |
 
 Her faz: kod + dokümantasyon + (varsa) `scripts/verify-*` · deploy checklist.
 

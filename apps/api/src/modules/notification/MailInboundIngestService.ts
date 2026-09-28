@@ -222,6 +222,19 @@ export class MailInboundIngestService {
       params.mailbox.organizationId,
       row,
     );
+    if (
+      afterRules.spamStatus === "blocked" &&
+      afterRules.maildirFilePath
+    ) {
+      const junkPath = this.mailImapMaildirService.relocateMailboxFile(
+        afterRules.maildirFilePath,
+        "junk",
+      );
+      if (junkPath !== afterRules.maildirFilePath) {
+        afterRules.maildirFilePath = junkPath;
+        await this.inboundRepository.save(afterRules);
+      }
+    }
     this.logger.log(
       `Inbound stored ${afterRules.id} → ${params.recipient} (mailbox ${params.mailbox.id})`,
     );

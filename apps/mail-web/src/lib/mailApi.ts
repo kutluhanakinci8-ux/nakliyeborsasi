@@ -1066,6 +1066,18 @@ export async function fetchMailAccountHub(accessToken: string) {
   );
 }
 
+export async function fetchSuggestReply(
+  accessToken: string,
+  messageId: string,
+  locale = "tr",
+): Promise<{ suggestion: string; provider: string }> {
+  return apiFetch<{ suggestion: string; provider: string }>(
+    accessToken,
+    `company/mail-inbox/messages/${messageId}/suggest-reply?lang=${encodeURIComponent(locale)}`,
+    { method: "POST" },
+  );
+}
+
 export async function setDefaultMailSender(
   accessToken: string,
   senderId: string,

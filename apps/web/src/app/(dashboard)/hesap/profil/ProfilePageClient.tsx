@@ -9,7 +9,9 @@ import {
 import { ProfileSectionNav } from "../../../../components/account/ProfileSectionNav";
 import { useWebSession } from "../../../../context/WebSessionProvider";
 import {
+  fetchNotificationPreferenceMatrix,
   fetchNotificationPreferences,
+  type NotificationPreferenceMatrixEvent,
   updateNotificationPreferences,
 } from "../../../../lib/AccountNotificationPreferencesApi";
 
@@ -109,6 +111,9 @@ export function ProfilePageClient() {
     defaultProfile(emailAddress),
   );
   const [saveMessage, setSaveMessage] = useState("");
+  const [notifyMatrix, setNotifyMatrix] = useState<
+    NotificationPreferenceMatrixEvent[]
+  >([]);
 
   useEffect(() => {
     if (!userId) {
@@ -120,11 +125,18 @@ export function ProfilePageClient() {
       setLocale(loaded.interfaceLocale);
     }
     if (accessToken) {
-      void fetchNotificationPreferences(accessToken)
-        .then((prefs) => {
-          setProfile((current) => ({ ...current, ...prefs }));
+      void fetchNotificationPreferenceMatrix(accessToken)
+        .then((payload) => {
+          setProfile((current) => ({ ...current, ...payload.preferences }));
+          setNotifyMatrix(payload.events);
         })
-        .catch(() => undefined);
+        .catch(() => {
+          void fetchNotificationPreferences(accessToken)
+            .then((prefs) => {
+              setProfile((current) => ({ ...current, ...prefs }));
+            })
+            .catch(() => undefined);
+        });
     }
   }, [userId, emailAddress, setLocale, accessToken]);
 
@@ -396,6 +408,32 @@ export function ProfilePageClient() {
                 );
               })}
             </ul>
+            {notifyMatrix.length > 0 ? (
+              <div className="account-profile-matrix-wrap">
+                <h3 className="account-profile-matrix-title">Olay matrisi (e-posta)</h3>
+                <table className="account-profile-matrix">
+                  <thead>
+                    <tr>
+                      <th>Olay</th>
+                      <th>Kategori</th>
+                      <th>E-posta</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {notifyMatrix.map((row) => (
+                      <tr key={row.eventCode}>
+                        <td>{row.labelTr}</td>
+                        <td>{row.category}</td>
+                        <td>{row.emailEnabled ? "Açık" : "Kapalı"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <p className="account-profile-matrix-hint">
+                  Ana anahtarlar yukarıdaki düğmelerle senkron; detay satırlar bilgi amaçlıdır.
+                </p>
+              </div>
+            ) : null}
           </section>
 
           <section

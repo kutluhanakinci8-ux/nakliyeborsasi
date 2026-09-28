@@ -3,7 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { existsSync, mkdirSync, renameSync, unlinkSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
 
-export type MaildirMailboxFolder = "inbox" | "archive" | "trash";
+export type MaildirMailboxFolder = "inbox" | "archive" | "trash" | "junk";
 
 @Injectable()
 export class MailImapMaildirService {
@@ -55,7 +55,9 @@ export class MailImapMaildirService {
         ? join("new")
         : target === "archive"
           ? join(".Archive", "new")
-          : join(".Trash", "new");
+          : target === "junk"
+            ? join(".Junk", "new")
+            : join(".Trash", "new");
     const destDir = join(maildirRoot, destSubdir);
     mkdirSync(destDir, { recursive: true });
     const destPath = join(destDir, basename(currentPath));
@@ -149,6 +151,37 @@ export class MailImapMaildirService {
     writeFileSync(path, params.rawMime, { encoding: "utf8" });
     this.logger.debug(`Maildir Sent append ${path}`);
     return path;
+  }
+
+  /** Dovecot/Thunderbird standart klasör iskeleti (PM-5). */
+  public ensureStandardFolders(mailboxEmail: string): string[] {
+    const root = this.resolveMaildirRoot();
+    if (!root) {
+      return [];
+    }
+    const at = mailboxEmail.lastIndexOf("@");
+    if (at < 1) {
+      return [];
+    }
+    const local = mailboxEmail.slice(0, at);
+    const domain = mailboxEmail.slice(at + 1);
+    const base = join(root, domain, local, "Maildir");
+    const created: string[] = [];
+    for (const sub of [
+      "new",
+      "cur",
+      "tmp",
+      ".Sent/cur",
+      ".Sent/new",
+      ".Archive/new",
+      ".Trash/new",
+      ".Junk/new",
+    ]) {
+      const dir = join(base, sub);
+      mkdirSync(dir, { recursive: true });
+      created.push(dir);
+    }
+    return created;
   }
 
   public resolveMaildirForAddress(email: string): string | null {

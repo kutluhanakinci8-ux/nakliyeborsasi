@@ -53,6 +53,9 @@ export class MailImapAccessService {
       (smtpPort === 465 ? "ssl" : "starttls");
     const smtpSecurity: "starttls" | "ssl" =
       securityRaw.toLowerCase() === "ssl" ? "ssl" : "starttls";
+    if (email && this.mailImapMaildirService.isEnabled()) {
+      this.mailImapMaildirService.ensureStandardFolders(email);
+    }
     return {
       enabled: this.mailImapMaildirService.isEnabled(),
       imapHost,
