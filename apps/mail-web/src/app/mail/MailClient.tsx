@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { formatMailListDate } from "@/lib/mailDisplay";
 import { syncMailUnreadBadge } from "@/lib/mailUnreadBadge";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -2152,9 +2153,18 @@ export function MailClient() {
                 </button>
               ) : null}
               <div className="mail-list-item-body">
-                <div className="mail-list-from">
-                  {m.fromAddress}
-                  {(m.attachmentCount ?? 0) > 0 ? " 📎" : ""}
+                <div className="mail-list-meta-row">
+                  <div className="mail-list-from">
+                    {m.fromAddress}
+                    {(m.attachmentCount ?? 0) > 0 ? " 📎" : ""}
+                  </div>
+                  <time
+                    className="mail-list-date"
+                    dateTime={m.receivedAt}
+                    title={new Date(m.receivedAt).toLocaleString("tr-TR")}
+                  >
+                    {formatMailListDate(m.receivedAt)}
+                  </time>
                 </div>
                 <div className="mail-list-subject">{m.subject}</div>
                 <div className="mail-list-snippet">{m.snippet}</div>
