@@ -28,8 +28,19 @@ if [[ -x "${ROOT}/scripts/verify-dovecot-imap-pm5.sh" ]]; then
 fi
 
 if [[ -z "${PASS}" ]]; then
-  echo "IMAP şifresi gerekli (arg2 veya IMAP_GOLD_PASSWORD)." >&2
-  echo "VPS bootstrap: /root/lerta-imap-credentials-bootstrap.txt (sadece root)" >&2
+  BOOTSTRAP="${LERTA_IMAP_BOOTSTRAP_FILE:-/root/lerta-imap-credentials-bootstrap.txt}"
+  if [[ -r "${BOOTSTRAP}" ]]; then
+    line="$(grep -F "${EMAIL}" "${BOOTSTRAP}" 2>/dev/null | tail -1 || true)"
+    if [[ -n "${line}" ]]; then
+      PASS="$(awk '{print $NF}' <<<"${line}")"
+      echo "OK: şifre bootstrap (${BOOTSTRAP})"
+    fi
+  fi
+fi
+
+if [[ -z "${PASS}" ]]; then
+  echo "IMAP şifresi gerekli (arg2, IMAP_GOLD_PASSWORD veya bootstrap)." >&2
+  echo "Webmail: Ayarlar → IMAP şifresi yenile · VPS: rotate-imap-credential-vps.sh" >&2
   exit 2
 fi
 

@@ -14,9 +14,18 @@ LE_DIR="/etc/letsencrypt/live/${HOST}"
 SNIPPET="/etc/dovecot/conf.d/99-lerta-mail-tls-le.conf"
 
 if [[ ! -f "${LE_DIR}/fullchain.pem" || ! -f "${LE_DIR}/privkey.pem" ]]; then
+  if command -v certbot >/dev/null 2>&1 && [[ "$(id -u)" -eq 0 ]]; then
+    echo "LE sertifika yok — certbot --nginx -d ${HOST} deneniyor…"
+    if certbot certonly --nginx -d "${HOST}" \
+      --non-interactive --agree-tos --register-unsafely-without-email 2>/dev/null; then
+      echo "OK: certbot sertifika alındı"
+    fi
+  fi
+fi
+
+if [[ ! -f "${LE_DIR}/fullchain.pem" || ! -f "${LE_DIR}/privkey.pem" ]]; then
   echo "Sertifika yok: ${LE_DIR}" >&2
   echo "Örnek: certbot certonly --nginx -d ${HOST}" >&2
-  echo "  veya: certbot certonly --standalone -d ${HOST} (80/tcp boş olmalı)" >&2
   exit 1
 fi
 
