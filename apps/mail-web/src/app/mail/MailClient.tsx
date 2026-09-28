@@ -1074,7 +1074,7 @@ export function MailClient() {
         );
       }
       clearRowSelectionAfterSwipe(messageId);
-      if (view !== "sent" && view !== "drafts") {
+      if (view !== "sent") {
         removeMessageFromLocalLists(messageId);
       }
       void refresh();
