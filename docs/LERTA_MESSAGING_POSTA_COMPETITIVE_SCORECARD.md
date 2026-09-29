@@ -28,7 +28,7 @@
 | Mimari (frontend) | Next.js, `mail-web` | **~92%** | MP-4: ince kabuk + controller/hook bölme |
 | Otomatik test | `*.spec.ts` / E2E | **~85%** | MP-3: core vitest + Playwright smoke iskelet |
 | CI / prod doğrulama | Parity + FS smoke + VPS deploy | **~90%** | KOBİ rakiplerinin çoğundan iyi |
-| Güvenlik | JWT, TOTP posta, KVKK, audit, rate limit | **~85%** | TR kurumsal yeterli; SOC2 süreç MP-9 |
+| Güvenlik | JWT, TOTP posta, KVKK, audit, rate limit, SOC2-lite dok | **~95%** | MP-9 `SECURITY_*` + due diligence ZIP |
 | Gözlemlenebilirlik | SSE stats, ops snapshot, SLO smoke | **~88%** | MP-5 runbook; tam APM MP-10 sonrası |
 | ESP / deliverability (operatör) | Org engagement, DMARC hub, CSV | **~88%** | MP-6; pazarlama segmentasyonu hariç |
 | Erişilebilirlik (messaging hub) | axe kritik 0, aria şerit/liste/compose | **~92%** | MP-7; oturumlu hub manuel QA |

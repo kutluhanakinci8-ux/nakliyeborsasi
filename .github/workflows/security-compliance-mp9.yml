@@ -1,0 +1,28 @@
+name: security-compliance-mp9
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/SECURITY_*.md"
+      - "scripts/verify-security-compliance-mp9.sh"
+      - "scripts/pack-customer-due-diligence-mp9.sh"
+  pull_request:
+    paths:
+      - "docs/SECURITY_*.md"
+      - "scripts/verify-security-compliance-mp9.sh"
+      - "scripts/pack-customer-due-diligence-mp9.sh"
+
+jobs:
+  mp9:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: chmod +x scripts/verify-security-compliance-mp9.sh scripts/pack-customer-due-diligence-mp9.sh
+      - run: SKIP_DR_DRILL=1 SKIP_NPM_AUDIT=1 bash scripts/verify-security-compliance-mp9.sh
+      - run: bash scripts/pack-customer-due-diligence-mp9.sh

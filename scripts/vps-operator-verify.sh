@@ -26,6 +26,8 @@ export SKIP_PLAYWRIGHT="${SKIP_PLAYWRIGHT:-1}"
 export SKIP_AXE="${SKIP_AXE:-1}"
 export SKIP_LIGHTHOUSE="${SKIP_LIGHTHOUSE:-1}"
 export SKIP_POSTA_PWA="${SKIP_POSTA_PWA:-0}"
+export SKIP_DR_DRILL="${SKIP_DR_DRILL:-0}"
+export SKIP_NPM_AUDIT="${SKIP_NPM_AUDIT:-1}"
 
 bash "${ROOT}/scripts/verify-typeorm-global-entities.sh"
 npm run test:unit --prefix "${ROOT}"
