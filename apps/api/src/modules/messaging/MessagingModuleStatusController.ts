@@ -78,6 +78,8 @@ export class MessagingModuleStatusController {
         "optional_ws_gateway",
         "group_threads_pilot",
         "whatsapp_notify_bridge",
+        "company_search",
+        "hub_default_tab",
         "native_shell_capacitor_docs",
       ],
       translate: { deepl, libretranslate: libre },

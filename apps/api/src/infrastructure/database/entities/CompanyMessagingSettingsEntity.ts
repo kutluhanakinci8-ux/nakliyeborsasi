@@ -25,6 +25,10 @@ export class CompanyMessagingSettingsEntity {
   @Column({ name: "whatsapp_bridge_enabled", type: "boolean", default: false })
   public whatsappBridgeEnabled!: boolean;
 
+  /** `email` | `chat` — Mesajlar hub varsayılan sekme */
+  @Column({ name: "default_hub_tab", type: "varchar", length: 16, default: "email" })
+  public defaultHubTab!: string;
+
   @UpdateDateColumn({ name: "updated_at", type: "timestamptz" })
   public updatedAt!: Date;
 }

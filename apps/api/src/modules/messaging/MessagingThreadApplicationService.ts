@@ -1,6 +1,6 @@
 import { Inject, Injectable, forwardRef } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { In, IsNull, Repository } from "typeorm";
+import { Brackets, In, IsNull, Repository } from "typeorm";
 import {
   AuthenticatedUserContext,
   AuthorizationException,
@@ -48,6 +48,15 @@ import { MessagingWhatsappBridgeService } from "./MessagingWhatsappBridgeService
 import { MessagingThreadParticipantService } from "./MessagingThreadParticipantService";
 import { OpenMessagingGroupThreadRequestDto } from "./OpenMessagingGroupThreadRequestDto";
 import { AuctionListingPriceActionService } from "../auction/AuctionListingPriceActionService";
+import { CompanyMessagingSettingsEntity } from "../../infrastructure/database/entities/CompanyMessagingSettingsEntity";
+import { TrustScoreApplicationService } from "../trust/TrustScoreApplicationService";
+
+const COMPANY_UUID_SEARCH_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function escapeIlikeFragment(value: string): string {
+  return value.replace(/[%_\\]/g, "\\$&");
+}
 
 @Injectable()
 export class MessagingThreadApplicationService {
@@ -68,6 +77,9 @@ export class MessagingThreadApplicationService {
     private readonly companyRepository: Repository<CompanyEntity>,
     @InjectRepository(FreightListingEntity)
     private readonly freightListingRepository: Repository<FreightListingEntity>,
+    @InjectRepository(CompanyMessagingSettingsEntity)
+    private readonly companyMessagingSettingsRepository: Repository<CompanyMessagingSettingsEntity>,
+    private readonly trustScoreApplicationService: TrustScoreApplicationService,
     private readonly modularSubscriptionEntitlementService: ModularSubscriptionEntitlementService,
     private readonly operationalNotificationService: OperationalNotificationService,
     private readonly messagingAttachmentStorageService: MessagingAttachmentStorageService,
@@ -666,6 +678,142 @@ export class MessagingThreadApplicationService {
   ): Promise<{ templates: ReturnType<typeof listMessagingQuickReplies> }> {
     await this.assertMessagingModule(authenticatedUser, locale);
     return { templates: listMessagingQuickReplies() };
+  }
+
+  public async getMessagingHubDefault(
+    authenticatedUser: AuthenticatedUserContext,
+    locale: string,
+  ): Promise<{ defaultTab: "email" | "chat" }> {
+    await this.assertMessagingModule(authenticatedUser, locale);
+    const row = await this.companyMessagingSettingsRepository.findOne({
+      where: { companyId: authenticatedUser.companyId },
+    });
+    const raw = row?.defaultHubTab?.trim().toLowerCase();
+    const defaultTab = raw === "chat" || raw === "sohbet" ? "chat" : "email";
+    return { defaultTab };
+  }
+
+  public async updateMessagingHubDefault(
+    authenticatedUser: AuthenticatedUserContext,
+    locale: string,
+    defaultTab: "email" | "chat",
+  ): Promise<{ defaultTab: "email" | "chat" }> {
+    if (!authenticatedUser.roleCodes.includes(CompanyRoleCode.CompanyOwner)) {
+      throw new AuthorizationException(
+        "Yalnızca şirket sahibi varsayılan sekme ayarını değiştirebilir",
+      );
+    }
+    await this.assertMessagingModule(authenticatedUser, locale);
+    const existing = await this.companyMessagingSettingsRepository.findOne({
+      where: { companyId: authenticatedUser.companyId },
+    });
+    if (existing) {
+      existing.defaultHubTab = defaultTab;
+      await this.companyMessagingSettingsRepository.save(existing);
+    } else {
+      await this.companyMessagingSettingsRepository.save(
+        this.companyMessagingSettingsRepository.create({
+          companyId: authenticatedUser.companyId,
+          defaultHubTab: defaultTab,
+        }),
+      );
+    }
+    return { defaultTab };
+  }
+
+  public async searchCompanies(
+    authenticatedUser: AuthenticatedUserContext,
+    locale: string,
+    query: string,
+    limit = 15,
+  ): Promise<{
+    query: string;
+    companies: {
+      companyId: string;
+      legalName: string;
+      countryCode: string;
+      participantTypeCode: string | null;
+      trustScoreValue: number;
+      trustReviewCount: number;
+      hasExistingThread: boolean;
+    }[];
+  }> {
+    await this.assertMessagingModule(authenticatedUser, locale);
+    const term = query.trim();
+    if (term.length < 3 && !COMPANY_UUID_SEARCH_RE.test(term)) {
+      throw new ValidationException("Firma araması en az 3 karakter olmalı");
+    }
+    const capped = Math.min(Math.max(limit, 1), 25);
+    const selfId = authenticatedUser.companyId;
+
+    const counterparties = await this.messageThreadRepository
+      .createQueryBuilder("thread")
+      .select(["thread.companyAId", "thread.companyBId"])
+      .where("thread.companyAId = :selfId OR thread.companyBId = :selfId", {
+        selfId,
+      })
+      .getMany();
+    const existingThreadPartnerIds = new Set<string>();
+    for (const thread of counterparties) {
+      const other =
+        thread.companyAId === selfId ? thread.companyBId : thread.companyAId;
+      if (other) {
+        existingThreadPartnerIds.add(other);
+      }
+    }
+
+    let companies: CompanyEntity[] = [];
+    if (COMPANY_UUID_SEARCH_RE.test(term)) {
+      const byId = await this.companyRepository.findOne({
+        where: { id: term },
+      });
+      if (byId && byId.id !== selfId) {
+        companies = [byId];
+      }
+    } else {
+      const escaped = escapeIlikeFragment(term);
+      const prefix = `${escaped}%`;
+      const contains = `%${escaped}%`;
+      companies = await this.companyRepository
+        .createQueryBuilder("company")
+        .where("company.id != :selfId", { selfId })
+        .andWhere(
+          new Brackets((qb) => {
+            qb.where("company.legalName ILIKE :prefix ESCAPE '\\'", {
+              prefix,
+            }).orWhere("company.legalName ILIKE :contains ESCAPE '\\'", {
+              contains,
+            });
+          }),
+        )
+        .orderBy("company.legalName", "ASC")
+        .take(capped)
+        .getMany();
+    }
+
+    const trustSnapshots = await Promise.all(
+      companies.map((row) =>
+        this.trustScoreApplicationService
+          .getCompanyTrustSnapshot(row.id)
+          .catch(() => null),
+      ),
+    );
+
+    return {
+      query: term,
+      companies: companies.map((row, index) => {
+        const trust = trustSnapshots[index];
+        return {
+          companyId: row.id,
+          legalName: row.legalName,
+          countryCode: row.countryCode,
+          participantTypeCode: row.participantTypeCode,
+          trustScoreValue: trust?.scoreValue ?? 0,
+          trustReviewCount: trust?.reviewCount ?? 0,
+          hasExistingThread: existingThreadPartnerIds.has(row.id),
+        };
+      }),
+    };
   }
 
   public async searchMessages(

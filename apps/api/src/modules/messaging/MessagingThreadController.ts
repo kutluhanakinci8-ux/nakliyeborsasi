@@ -175,6 +175,64 @@ export class MessagingThreadController {
     return { colleagues };
   }
 
+  @Get("companies/search")
+  public async searchCompanies(
+    @Query("q") query: string,
+    @Query("limit") limitRaw: string | undefined,
+    @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
+    @Headers("accept-language") acceptLanguage: string | undefined,
+    @Query("lang") queryLanguage: string | undefined,
+  ): Promise<{ query: string; companies: unknown[] }> {
+    const locale = this.localeResolutionService.resolveFromHeaders(
+      acceptLanguage,
+      queryLanguage,
+    );
+    const limit = limitRaw ? Number.parseInt(limitRaw, 10) : 15;
+    return this.messagingThreadApplicationService.searchCompanies(
+      authenticatedUser,
+      locale,
+      query ?? "",
+      Number.isFinite(limit) ? limit : 15,
+    );
+  }
+
+  @Get("hub-default")
+  public async messagingHubDefault(
+    @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
+    @Headers("accept-language") acceptLanguage: string | undefined,
+    @Query("lang") queryLanguage: string | undefined,
+  ): Promise<{ defaultTab: "email" | "chat" }> {
+    const locale = this.localeResolutionService.resolveFromHeaders(
+      acceptLanguage,
+      queryLanguage,
+    );
+    return this.messagingThreadApplicationService.getMessagingHubDefault(
+      authenticatedUser,
+      locale,
+    );
+  }
+
+  @Patch("hub-default")
+  public async updateMessagingHubDefault(
+    @Body() body: { defaultTab?: string },
+    @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
+    @Headers("accept-language") acceptLanguage: string | undefined,
+    @Query("lang") queryLanguage: string | undefined,
+  ): Promise<{ defaultTab: "email" | "chat" }> {
+    const locale = this.localeResolutionService.resolveFromHeaders(
+      acceptLanguage,
+      queryLanguage,
+    );
+    const raw = body.defaultTab?.trim().toLowerCase();
+    const defaultTab =
+      raw === "chat" || raw === "sohbet" ? "chat" : "email";
+    return this.messagingThreadApplicationService.updateMessagingHubDefault(
+      authenticatedUser,
+      locale,
+      defaultTab,
+    );
+  }
+
   @Patch("threads/:threadId/messages/:messageId")
   public async updateMessage(
     @Param("threadId") threadId: string,

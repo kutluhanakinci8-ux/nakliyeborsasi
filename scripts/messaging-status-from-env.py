@@ -44,5 +44,11 @@ if __name__ == "__main__":
         if missing:
             raise SystemExit(f"FAIL: eksik features: {sorted(missing)}")
         print("OK: FS-2 status features")
+    elif check == "fs8":
+        required = {"company_search", "hub_default_tab"}
+        missing = required - features
+        if missing:
+            raise SystemExit(f"FAIL: eksik features: {sorted(missing)}")
+        print("OK: FS-8 status features (company_search, hub_default_tab)")
     else:
         raise SystemExit(f"unknown check {check}")

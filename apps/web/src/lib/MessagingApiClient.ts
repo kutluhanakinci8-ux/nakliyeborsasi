@@ -78,6 +78,16 @@ export type MessagingSearchResultRecord = {
   createdAt: string;
 };
 
+export type MessagingCompanySearchRecord = {
+  companyId: string;
+  legalName: string;
+  countryCode: string;
+  participantTypeCode: string | null;
+  trustScoreValue: number;
+  trustReviewCount: number;
+  hasExistingThread: boolean;
+};
+
 export type MessagingQuickReplyRecord = {
   id: string;
   labelTr: string;
@@ -164,6 +174,27 @@ export class MessagingApiClient {
       accessToken,
       `/messaging/search?lang=${locale}&q=${encodeURIComponent(query)}`,
     ) as Promise<{ query: string; results: MessagingSearchResultRecord[] }>;
+  }
+
+  public static async searchCompanies(
+    accessToken: string,
+    locale: string,
+    query: string,
+  ): Promise<{ query: string; companies: MessagingCompanySearchRecord[] }> {
+    return AuthenticatedApiClient.fetchJson(
+      accessToken,
+      `/messaging/companies/search?lang=${locale}&q=${encodeURIComponent(query)}`,
+    ) as Promise<{ query: string; companies: MessagingCompanySearchRecord[] }>;
+  }
+
+  public static async fetchMessagingHubDefault(
+    accessToken: string,
+    locale: string,
+  ): Promise<{ defaultTab: "email" | "chat" }> {
+    return AuthenticatedApiClient.fetchJson(
+      accessToken,
+      `/messaging/hub-default?lang=${locale}`,
+    ) as Promise<{ defaultTab: "email" | "chat" }>;
   }
 
   public static async fetchQuickReplies(

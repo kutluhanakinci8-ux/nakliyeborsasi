@@ -48,6 +48,9 @@ fi
 if [[ -x scripts/apply-messaging-fs7-schema.sh ]]; then
   bash scripts/apply-messaging-fs7-schema.sh "$INSTALL_DIR" || true
 fi
+if [[ -x scripts/apply-messaging-fs8-schema.sh ]]; then
+  bash scripts/apply-messaging-fs8-schema.sh "$INSTALL_DIR" || true
+fi
 
 if [[ -x scripts/apply-mail-sa2-auto-reply-schema.sh ]]; then
   bash scripts/apply-mail-sa2-auto-reply-schema.sh "$INSTALL_DIR" || true

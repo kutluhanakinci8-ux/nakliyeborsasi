@@ -45,6 +45,7 @@ import { CompanyMessagingBotCredentialEntity } from "../../infrastructure/databa
 import { MessagingPublicApiReadService } from "./MessagingPublicApiReadService";
 import { MessagingRetentionScheduler } from "./MessagingRetentionScheduler";
 import { AuctionModule } from "../auction/AuctionModule";
+import { TrustScoreModule } from "../trust/TrustScoreModule";
 
 @Module({
   imports: [
@@ -67,6 +68,7 @@ import { AuctionModule } from "../auction/AuctionModule";
     AuthModule,
     NotificationModule,
     forwardRef(() => AuctionModule),
+    TrustScoreModule,
     RedisModule,
     AuditModule,
   ],

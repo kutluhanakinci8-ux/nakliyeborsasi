@@ -13,6 +13,7 @@ import {
   MessagingListingCardRecord,
   MessagingOfferTimelineEntryRecord,
   MessagingQuickReplyRecord,
+  MessagingCompanySearchRecord,
   MessagingSearchResultRecord,
   MessagingThreadRecord,
   MessagingThreadSummaryRecord,
@@ -50,6 +51,41 @@ function messageHasActiveMentionQuery(body: string): boolean {
 }
 
 type MessagingMode = "chat" | "email";
+
+const MESSAGING_TAB_STORAGE_KEY = "lerta.messaging.lastTab";
+
+function rememberMessagingTab(mode: MessagingMode): void {
+  try {
+    window.localStorage.setItem(MESSAGING_TAB_STORAGE_KEY, mode);
+  } catch {
+    /* ignore */
+  }
+}
+
+function readStoredMessagingTab(): MessagingMode | null {
+  try {
+    const raw = window.localStorage.getItem(MESSAGING_TAB_STORAGE_KEY);
+    if (raw === "chat" || raw === "email") {
+      return raw;
+    }
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
+function participantTypeLabel(code: string | null | undefined): string {
+  switch (code) {
+    case "LOAD_SHIPPER":
+      return "Yükveren";
+    case "LOAD_CARRIER":
+      return "Taşıyıcı";
+    case "LOAD_SEEKER":
+      return "Yük arayan";
+    default:
+      return "Firma";
+  }
+}
 
 function shortCompanyId(companyId: string): string {
   if (companyId.length <= 12) {
@@ -116,6 +152,9 @@ export function MessagingPageClient() {
   const [llmBusy, setLlmBusy] = useState(false);
   const [serverSearchHits, setServerSearchHits] = useState<
     MessagingSearchResultRecord[]
+  >([]);
+  const [companySearchHits, setCompanySearchHits] = useState<
+    MessagingCompanySearchRecord[]
   >([]);
   const [quickReplies, setQuickReplies] = useState<MessagingQuickReplyRecord[]>(
     [],
@@ -190,7 +229,23 @@ export function MessagingPageClient() {
     }
     const tab = searchParams.get("tab");
     if (!tab && !chatLink && !mailComposeLink) {
-      router.replace("/messaging?tab=email", { scroll: false });
+      const stored = readStoredMessagingTab();
+      const fallbackTab = stored === "chat" ? "sohbet" : "email";
+      if (!accessToken) {
+        router.replace(`/messaging?tab=${fallbackTab}`, { scroll: false });
+      } else {
+        void MessagingApiClient.fetchMessagingHubDefault(accessToken, locale)
+          .then((payload) => {
+            const next =
+              stored ??
+              (payload.defaultTab === "chat" ? "chat" : "email");
+            const tabParam = next === "chat" ? "sohbet" : "email";
+            router.replace(`/messaging?tab=${tabParam}`, { scroll: false });
+          })
+          .catch(() => {
+            router.replace(`/messaging?tab=${fallbackTab}`, { scroll: false });
+          });
+      }
     }
     const rawEmail = searchParams.get("email")?.trim();
     if (rawEmail && !searchParams.get("composeTo")) {
@@ -200,10 +255,11 @@ export function MessagingPageClient() {
       params.delete("email");
       router.replace(`/messaging?${params.toString()}`, { scroll: false });
     }
-  }, [searchParams, router]);
+  }, [searchParams, router, accessToken, locale]);
 
   function switchMode(next: MessagingMode): void {
     setMode(next);
+    rememberMessagingTab(next);
     const params = new URLSearchParams(searchParams.toString());
     if (next === "email") {
       params.set("tab", "email");
@@ -510,7 +566,9 @@ export function MessagingPageClient() {
   const showChatSearchPanel =
     chatSearchFocused &&
     threadSearch.trim().length > 0 &&
-    (companyUuidFromSearch !== null || serverSearchHits.length > 0);
+    (companyUuidFromSearch !== null ||
+      companySearchHits.length > 0 ||
+      serverSearchHits.length > 0);
 
   async function submitUnifiedChatSearch(): Promise<void> {
     const query = threadSearch.trim();
@@ -535,16 +593,26 @@ export function MessagingPageClient() {
       return;
     }
     if (filteredThreads.length > 1) {
-      setErrorMessage("Listeden bir sohbet seçin veya tam firma UUID girin.");
+      setErrorMessage("Listeden bir sohbet seçin veya firma adı yazın.");
+      return;
+    }
+    if (companySearchHits.length === 1) {
+      await openThreadWithCounterparty(companySearchHits[0].companyId);
+      return;
+    }
+    if (companySearchHits.length > 1) {
+      setErrorMessage("Firmalar listesinden birini seçin.");
       return;
     }
     if (query.length >= 2 && serverSearchHits.length > 0) {
       setErrorMessage("Mesaj sonuçlarından birini seçin.");
       return;
     }
-    setErrorMessage(
-      "Eşleşen sohbet yok. Karşı firmanın tam UUID değerini girin (ihale veya güven sayfasından).",
-    );
+    if (query.length >= 3) {
+      setErrorMessage("Eşleşen firma veya sohbet bulunamadı.");
+      return;
+    }
+    setErrorMessage("Aramak için en az 3 karakter yazın (firma adı).");
   }
 
   useEffect(() => {
@@ -593,6 +661,25 @@ export function MessagingPageClient() {
         .then((payload) => setServerSearchHits(payload.results ?? []))
         .catch(() => setServerSearchHits([]));
     }, 320);
+    return () => window.clearTimeout(timer);
+  }, [threadSearch, mode, accessToken, locale]);
+
+  useEffect(() => {
+    const query = threadSearch.trim();
+    const uuidCandidate = parseCompanyUuidCandidate(query);
+    if (mode !== "chat" || !accessToken || uuidCandidate) {
+      setCompanySearchHits([]);
+      return;
+    }
+    if (query.length < 3) {
+      setCompanySearchHits([]);
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      void MessagingApiClient.searchCompanies(accessToken, locale, query)
+        .then((payload) => setCompanySearchHits(payload.companies ?? []))
+        .catch(() => setCompanySearchHits([]));
+    }, 280);
     return () => window.clearTimeout(timer);
   }, [threadSearch, mode, accessToken, locale]);
 
@@ -850,7 +937,7 @@ export function MessagingPageClient() {
             <div className="chat-unified-search">
               <input
                 className="input-light chat-unified-search-input"
-                placeholder="Sohbet, firma adı veya firma UUID…"
+                placeholder="Sohbet veya firma adı ara…"
                 value={threadSearch}
                 onChange={(event) => setThreadSearch(event.target.value)}
                 onFocus={() => setChatSearchFocused(true)}
@@ -891,12 +978,53 @@ export function MessagingPageClient() {
                       }
                     >
                       <span className="chat-unified-search-option-kicker">
-                        Yeni sohbet
+                        Yeni sohbet (UUID)
                       </span>
                       <span className="chat-unified-search-option-title">
                         {shortCompanyId(companyUuidFromSearch)}
                       </span>
                     </button>
+                  ) : null}
+                  {companySearchHits.length > 0 ? (
+                    <div className="chat-unified-search-group">
+                      <p className="chat-unified-search-group-label">Firmalar</p>
+                      <ul className="chat-unified-search-list">
+                        {companySearchHits.slice(0, 8).map((company) => (
+                          <li key={company.companyId}>
+                            <button
+                              type="button"
+                              className="chat-unified-search-option chat-unified-search-option--company"
+                              role="option"
+                              disabled={isBusy}
+                              onMouseDown={(event) => event.preventDefault()}
+                              onClick={() =>
+                                void openThreadWithCounterparty(
+                                  company.companyId,
+                                )
+                              }
+                            >
+                              <span className="chat-unified-search-option-title">
+                                {company.legalName}
+                              </span>
+                              <span className="chat-unified-search-option-sub">
+                                {participantTypeLabel(
+                                  company.participantTypeCode,
+                                )}
+                                {company.countryCode
+                                  ? ` · ${company.countryCode}`
+                                  : ""}
+                                {company.trustReviewCount > 0
+                                  ? ` · Güven ${company.trustScoreValue}`
+                                  : ""}
+                                {company.hasExistingThread
+                                  ? " · Mevcut sohbet"
+                                  : " · Yeni sohbet"}
+                              </span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   ) : null}
                   {serverSearchHits.length > 0 ? (
                     <div className="chat-unified-search-group">
