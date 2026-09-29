@@ -22,7 +22,11 @@ done
 echo "Beklenen: posta → posta.lerta.com.tr · yonetim → konsol · mail MX → mail.lerta.com.tr"
 if [[ "$fail" -eq 0 ]]; then
   echo "OK: bilinen legacy prefix yok"
-else
-  echo "NOT: docs/MAIL_DNS_LEGACY_CLEANUP.md ile temizleyin" >&2
-  exit 1
+  exit 0
 fi
+echo "NOT: docs/MAIL_DNS_LEGACY_CLEANUP.md ile temizleyin" >&2
+if [[ "${DNS_LEGACY_SOFT:-0}" == "1" ]]; then
+  echo "WARN: DNS_LEGACY_SOFT=1 — deploy checklist devam ediyor"
+  exit 0
+fi
+exit 1

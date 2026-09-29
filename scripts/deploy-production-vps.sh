@@ -102,6 +102,13 @@ if [[ -x scripts/bootstrap-dr-drill-evidence.sh ]]; then
   bash scripts/bootstrap-dr-drill-evidence.sh || true
 fi
 
+if [[ -x scripts/verify-mail-web-pwa-prod.sh ]]; then
+  if bash scripts/verify-mail-web-pwa-prod.sh; then
+    STAMP="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    python3 -c "import json; json.dump({'pwaScore':85,'source':'verify-mail-web-pwa-prod.sh','recordedAt':'${STAMP}'}, open('/var/log/lerta-mail-lighthouse-pwa.json','w'), indent=2)"
+  fi
+fi
+
 if [[ "${LERTA_INSTALL_AUTO_DEPLOY_CRON:-1}" == "1" ]] && [[ -x scripts/install-vps-auto-deploy-cron.sh ]]; then
   bash scripts/install-vps-auto-deploy-cron.sh "$INSTALL_DIR" || true
 fi

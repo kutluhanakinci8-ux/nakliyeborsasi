@@ -40,7 +40,7 @@ else
   echo "SKIP: OPERATOR_JWT yok — billing-health otomatik smoke (madde 17)"
 fi
 
-run_step "DNS legacy" bash "${ROOT}/scripts/verify-dns-legacy-cleanup.sh" "${DNS_LEGACY_DOMAIN:-lerta.com.tr}" || true
+run_step "DNS legacy" env DNS_LEGACY_SOFT=1 bash "${ROOT}/scripts/verify-dns-legacy-cleanup.sh" "${DNS_LEGACY_DOMAIN:-lerta.com.tr}"
 
 if [[ -f "${ENV_FILE}" ]]; then
   run_step "Messaging push VAPID izolasyon" bash "${ROOT}/scripts/verify-messaging-web-push-prod.sh" "${ENV_FILE}" || true
