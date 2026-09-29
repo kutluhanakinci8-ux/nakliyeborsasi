@@ -19,6 +19,12 @@ export class CompanyMessagingSettingsEntity {
   @Column({ name: "slack_bridge_enabled", type: "boolean", default: false })
   public slackBridgeEnabled!: boolean;
 
+  @Column({ name: "whatsapp_notify_e164", type: "varchar", length: 24, nullable: true })
+  public whatsappNotifyE164!: string | null;
+
+  @Column({ name: "whatsapp_bridge_enabled", type: "boolean", default: false })
+  public whatsappBridgeEnabled!: boolean;
+
   @UpdateDateColumn({ name: "updated_at", type: "timestamptz" })
   public updatedAt!: Date;
 }

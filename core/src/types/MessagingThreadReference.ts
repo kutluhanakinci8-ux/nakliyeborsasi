@@ -13,6 +13,12 @@ export class MessagingThreadReference {
 
   public readonly unreadCount: number;
 
+  public readonly threadKind: "pair" | "group";
+
+  public readonly title: string | null;
+
+  public readonly participantCompanyIds: string[] | null;
+
   public constructor(params: {
     threadId: string;
     counterpartyCompanyId: string;
@@ -21,6 +27,9 @@ export class MessagingThreadReference {
     lastMessageAt?: string | null;
     freightListingId?: string | null;
     unreadCount?: number;
+    threadKind?: "pair" | "group";
+    title?: string | null;
+    participantCompanyIds?: string[] | null;
   }) {
     this.threadId = params.threadId;
     this.counterpartyCompanyId = params.counterpartyCompanyId;
@@ -29,5 +38,8 @@ export class MessagingThreadReference {
     this.lastMessageAt = params.lastMessageAt ?? null;
     this.freightListingId = params.freightListingId ?? null;
     this.unreadCount = params.unreadCount ?? 0;
+    this.threadKind = params.threadKind ?? "pair";
+    this.title = params.title ?? null;
+    this.participantCompanyIds = params.participantCompanyIds ?? null;
   }
 }

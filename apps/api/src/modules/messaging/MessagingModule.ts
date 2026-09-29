@@ -38,6 +38,9 @@ import { MessagingPublicApiAuthService } from "./MessagingPublicApiAuthService";
 import { MessagingSlackBridgeService } from "./MessagingSlackBridgeService";
 import { MessagingBotService } from "./MessagingBotService";
 import { MessagingOptionalWsService } from "./MessagingOptionalWsService";
+import { MessagingThreadParticipantService } from "./MessagingThreadParticipantService";
+import { MessagingWhatsappBridgeService } from "./MessagingWhatsappBridgeService";
+import { MessageThreadParticipantEntity } from "../../infrastructure/database/entities/MessageThreadParticipantEntity";
 import { CompanyMessagingBotCredentialEntity } from "../../infrastructure/database/entities/CompanyMessagingBotCredentialEntity";
 import { MessagingPublicApiReadService } from "./MessagingPublicApiReadService";
 import { MessagingRetentionScheduler } from "./MessagingRetentionScheduler";
@@ -51,6 +54,7 @@ import { AuctionModule } from "../auction/AuctionModule";
       CompanyMessagingWebhookEndpointEntity,
       CompanyMessagingSettingsEntity,
       CompanyMessagingBotCredentialEntity,
+      MessageThreadParticipantEntity,
       MessageThreadReadStateEntity,
       MessageThreadUserReadStateEntity,
       MessagingWebPushSubscriptionEntity,
@@ -93,6 +97,8 @@ import { AuctionModule } from "../auction/AuctionModule";
     MessagingSlackBridgeService,
     MessagingBotService,
     MessagingOptionalWsService,
+    MessagingThreadParticipantService,
+    MessagingWhatsappBridgeService,
   ],
   exports: [MessagingThreadApplicationService],
 })

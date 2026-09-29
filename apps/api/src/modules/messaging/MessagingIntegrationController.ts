@@ -56,6 +56,26 @@ export class MessagingIntegrationController {
     );
   }
 
+  @Patch("whatsapp-bridge")
+  public async updateWhatsappBridge(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body()
+    body: {
+      whatsappNotifyE164?: string | null;
+      enabled: boolean;
+    },
+  ) {
+    return {
+      whatsapp: await this.messagingCompanyIntegrationService.updateWhatsappBridge(
+        user,
+        {
+          whatsappNotifyE164: body.whatsappNotifyE164 ?? null,
+          enabled: body.enabled,
+        },
+      ),
+    };
+  }
+
   @Patch("slack-bridge")
   public async updateSlackBridge(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,

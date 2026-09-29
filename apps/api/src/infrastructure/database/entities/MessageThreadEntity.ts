@@ -15,6 +15,12 @@ export class MessageThreadEntity {
   @Column({ type: "uuid", nullable: true })
   public freightListingId!: string | null;
 
+  @Column({ name: "thread_kind", type: "varchar", length: 16, default: "pair" })
+  public threadKind!: "pair" | "group";
+
+  @Column({ type: "varchar", length: 120, nullable: true })
+  public title!: string | null;
+
   @OneToMany(() => MessageEntity, (message) => message.thread)
   public messages!: MessageEntity[];
 

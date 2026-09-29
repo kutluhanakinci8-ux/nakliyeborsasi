@@ -13,6 +13,7 @@
 | **FS-4** | Redis SSE fan-out, thread legal hold, mesaj CRUD audit (IP/UA), eDiscovery ZIP+SHA-256, rate limit/dk | ✅ kod · `verify-firma-sohbeti-fs4.sh` · `smoke-messaging-sse-load.sh` |
 | **FS-5** | Webhook HMAC, Public API `messaging:read`, retention job, sohbetten sabit fiyat kabul, push matris satırı | ✅ kod · `verify-firma-sohbeti-fs5.sh` |
 | **FS-6** | Slack köprüsü, Zapier/Make katalog, bot token, `messaging:write`, opsiyonel WS (`MESSAGING_WS_PORT`) | ✅ kod · `verify-firma-sohbeti-fs6.sh` · [MESSAGING_ZAPIER_MAKE.md](./MESSAGING_ZAPIER_MAKE.md) |
+| **FS-7** | Grup thread (3+ firma), WA bildirim köprüsü (Twilio/webhook), Capacitor doküman | ✅ kod · `verify-firma-sohbeti-fs7.sh` · [MESSAGING_NATIVE_SHELL_FS7.md](./MESSAGING_NATIVE_SHELL_FS7.md) |
 
 **Çeviri (ops):** `MESSAGING_TRANSLATE_API_URL` → LibreTranslate uyumlu POST (ör. `https://libretranslate.com/translate`)
 

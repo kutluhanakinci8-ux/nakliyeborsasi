@@ -14,6 +14,7 @@ import { MessageThreadEntity } from "./entities/MessageThreadEntity";
 import { CompanyMessagingWebhookEndpointEntity } from "./entities/CompanyMessagingWebhookEndpointEntity";
 import { CompanyMessagingSettingsEntity } from "./entities/CompanyMessagingSettingsEntity";
 import { CompanyMessagingBotCredentialEntity } from "./entities/CompanyMessagingBotCredentialEntity";
+import { MessageThreadParticipantEntity } from "./entities/MessageThreadParticipantEntity";
 import { MessageEntity } from "./entities/MessageEntity";
 import { MessageThreadReadStateEntity } from "./entities/MessageThreadReadStateEntity";
 import { MessagingWebPushSubscriptionEntity } from "./entities/MessagingWebPushSubscriptionEntity";
@@ -91,6 +92,7 @@ export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
         AuctionSessionEntity,
         AuctionBidEntity,
         MessageThreadEntity,
+        MessageThreadParticipantEntity,
         CompanyMessagingWebhookEndpointEntity,
         CompanyMessagingSettingsEntity,
         CompanyMessagingBotCredentialEntity,

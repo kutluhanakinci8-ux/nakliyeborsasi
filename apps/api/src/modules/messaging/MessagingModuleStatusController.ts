@@ -76,6 +76,9 @@ export class MessagingModuleStatusController {
         "messaging_bot_tokens",
         "public_api_messaging_write",
         "optional_ws_gateway",
+        "group_threads_pilot",
+        "whatsapp_notify_bridge",
+        "native_shell_capacitor_docs",
       ],
       translate: { deepl, libretranslate: libre },
       attachments: {

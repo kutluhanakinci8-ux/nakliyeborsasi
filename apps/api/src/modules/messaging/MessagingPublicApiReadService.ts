@@ -3,6 +3,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { MessageThreadEntity } from "../../infrastructure/database/entities/MessageThreadEntity";
 import { MessageEntity } from "../../infrastructure/database/entities/MessageEntity";
+import { MessagingThreadParticipantService } from "./MessagingThreadParticipantService";
 
 @Injectable()
 export class MessagingPublicApiReadService {
@@ -11,6 +12,7 @@ export class MessagingPublicApiReadService {
     private readonly threadRepository: Repository<MessageThreadEntity>,
     @InjectRepository(MessageEntity)
     private readonly messageRepository: Repository<MessageEntity>,
+    private readonly messagingThreadParticipantService: MessagingThreadParticipantService,
   ) {}
 
   public async listThreads(companyId: string, limit: number) {
@@ -31,6 +33,8 @@ export class MessagingPublicApiReadService {
         companyBId: thread.companyBId,
         freightListingId: thread.freightListingId,
         legalHoldAt: thread.legalHoldAt?.toISOString() ?? null,
+        threadKind: thread.threadKind ?? "pair",
+        title: thread.title,
         createdAt: thread.createdAt.toISOString(),
       })),
     };
@@ -46,7 +50,10 @@ export class MessagingPublicApiReadService {
     });
     if (
       !thread ||
-      (thread.companyAId !== companyId && thread.companyBId !== companyId)
+      !(await this.messagingThreadParticipantService.isParticipant(
+        thread,
+        companyId,
+      ))
     ) {
       throw new NotFoundException("Thread not found");
     }

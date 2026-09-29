@@ -52,6 +52,10 @@ export class MessagingCompanyIntegrationService {
         enabled: settings.slackBridgeEnabled,
         configured: Boolean(settings.slackIncomingWebhookUrl),
       },
+      whatsappBridge: {
+        enabled: settings.whatsappBridgeEnabled,
+        configured: Boolean(settings.whatsappNotifyE164),
+      },
       bots,
       automationCatalogPath: "/api/v1/messaging/integration/automation-catalog",
       publicApiBasePath: "/api/v1/public/lerta-messaging/v1",
@@ -247,7 +251,36 @@ export class MessagingCompanyIntegrationService {
       retentionMode: row?.retentionMode ?? "archive",
       slackBridgeEnabled: row?.slackBridgeEnabled ?? false,
       slackIncomingWebhookUrl: row?.slackIncomingWebhookUrl ?? null,
+      whatsappBridgeEnabled: row?.whatsappBridgeEnabled ?? false,
+      whatsappNotifyE164: row?.whatsappNotifyE164 ?? null,
     };
+  }
+
+  public async updateWhatsappBridge(
+    authenticatedUser: AuthenticatedUserContext,
+    params: { whatsappNotifyE164: string | null; enabled: boolean },
+  ) {
+    this.assertOwner(authenticatedUser);
+    let row = await this.settingsRepository.findOne({
+      where: { companyId: authenticatedUser.companyId },
+    });
+    if (!row) {
+      row = this.settingsRepository.create({
+        companyId: authenticatedUser.companyId,
+        retentionDays: null,
+        retentionMode: "archive",
+      });
+    }
+    if (params.whatsappNotifyE164 !== null) {
+      const phone = params.whatsappNotifyE164.trim();
+      if (phone && !/^\+[1-9]\d{7,14}$/.test(phone)) {
+        throw new BadRequestException("whatsappNotifyE164 E.164 formatında olmalı (+...).");
+      }
+      row.whatsappNotifyE164 = phone ? phone.slice(0, 24) : null;
+    }
+    row.whatsappBridgeEnabled = params.enabled;
+    await this.settingsRepository.save(row);
+    return this.getSettings(authenticatedUser.companyId);
   }
 
   private async listWebhooks(companyId: string) {

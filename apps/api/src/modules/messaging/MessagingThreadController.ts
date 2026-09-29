@@ -22,6 +22,7 @@ import { LocaleResolutionService } from "../localization/LocaleResolutionService
 import { MessagingThreadApplicationService } from "./MessagingThreadApplicationService";
 import { MessagingTranslationService } from "./MessagingTranslationService";
 import { OpenMessagingThreadRequestDto } from "./OpenMessagingThreadRequestDto";
+import { OpenMessagingGroupThreadRequestDto } from "./OpenMessagingGroupThreadRequestDto";
 import { SendThreadMessageRequestDto } from "./MessagingAttachmentRequestDto";
 import { TranslateMessagingTextRequestDto } from "./TranslateMessagingTextRequestDto";
 import { UpdateThreadMessageRequestDto } from "./UpdateThreadMessageRequestDto";
@@ -50,6 +51,25 @@ export class MessagingThreadController {
       locale,
     );
     return { threads };
+  }
+
+  @Post("threads/group")
+  public async openGroupThread(
+    @Body() body: OpenMessagingGroupThreadRequestDto,
+    @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
+    @Headers("accept-language") acceptLanguage: string | undefined,
+    @Query("lang") queryLanguage: string | undefined,
+  ): Promise<{ thread: unknown }> {
+    const locale = this.localeResolutionService.resolveFromHeaders(
+      acceptLanguage,
+      queryLanguage,
+    );
+    const thread = await this.messagingThreadApplicationService.openGroupThread(
+      authenticatedUser,
+      body,
+      locale,
+    );
+    return { thread };
   }
 
   @Post("threads")

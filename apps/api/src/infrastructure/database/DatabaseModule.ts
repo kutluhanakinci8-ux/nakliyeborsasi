@@ -14,6 +14,7 @@ import { MessageThreadEntity } from "./entities/MessageThreadEntity";
 import { CompanyMessagingWebhookEndpointEntity } from "./entities/CompanyMessagingWebhookEndpointEntity";
 import { CompanyMessagingSettingsEntity } from "./entities/CompanyMessagingSettingsEntity";
 import { CompanyMessagingBotCredentialEntity } from "./entities/CompanyMessagingBotCredentialEntity";
+import { MessageThreadParticipantEntity } from "./entities/MessageThreadParticipantEntity";
 import { MessageEntity } from "./entities/MessageEntity";
 import { CompanyTrustReviewEntity } from "./entities/CompanyTrustReviewEntity";
 import { FleetDriverEntity } from "./entities/FleetDriverEntity";
@@ -61,6 +62,7 @@ import { SubscriptionCatalogModule } from "../../modules/subscription/Subscripti
       AuctionSessionEntity,
       AuctionBidEntity,
       MessageThreadEntity,
+      MessageThreadParticipantEntity,
       CompanyMessagingWebhookEndpointEntity,
       CompanyMessagingSettingsEntity,
       CompanyMessagingBotCredentialEntity,

@@ -44,6 +44,9 @@ import { MessagingCompanyMessageRateLimitService } from "./MessagingCompanyMessa
 import type { MessagingClientRequestContext } from "./MessagingClientRequestContext";
 import { MessagingWebhookDispatcherService } from "./MessagingWebhookDispatcherService";
 import { MessagingSlackBridgeService } from "./MessagingSlackBridgeService";
+import { MessagingWhatsappBridgeService } from "./MessagingWhatsappBridgeService";
+import { MessagingThreadParticipantService } from "./MessagingThreadParticipantService";
+import { OpenMessagingGroupThreadRequestDto } from "./OpenMessagingGroupThreadRequestDto";
 import { AuctionListingPriceActionService } from "../auction/AuctionListingPriceActionService";
 
 @Injectable()
@@ -75,6 +78,8 @@ export class MessagingThreadApplicationService {
     private readonly messagingCompanyMessageRateLimitService: MessagingCompanyMessageRateLimitService,
     private readonly messagingWebhookDispatcherService: MessagingWebhookDispatcherService,
     private readonly messagingSlackBridgeService: MessagingSlackBridgeService,
+    private readonly messagingWhatsappBridgeService: MessagingWhatsappBridgeService,
+    private readonly messagingThreadParticipantService: MessagingThreadParticipantService,
     @Inject(forwardRef(() => AuctionListingPriceActionService))
     private readonly auctionListingPriceActionService: AuctionListingPriceActionService,
   ) {}
@@ -123,8 +128,14 @@ export class MessagingThreadApplicationService {
         companyAId: pair.companyAId,
         companyBId: pair.companyBId,
         freightListingId: payload.freightListingId ?? null,
+        threadKind: "pair",
+        title: null,
       }),
     );
+    await this.messagingThreadParticipantService.addParticipants(created.id, [
+      created.companyAId,
+      created.companyBId,
+    ]);
     const openedPayload = {
       threadId: created.id,
       companyAId: created.companyAId,
@@ -133,16 +144,67 @@ export class MessagingThreadApplicationService {
       openedByCompanyId: authenticatedUser.companyId,
       openedByUserId: authenticatedUser.userId,
     };
-    this.messagingWebhookDispatcherService.dispatch(
-      created.companyAId,
-      "thread.opened",
-      openedPayload,
+    await this.fanOutWebhook(created, "thread.opened", openedPayload);
+    return created;
+  }
+
+  public async openGroupThread(
+    authenticatedUser: AuthenticatedUserContext,
+    payload: OpenMessagingGroupThreadRequestDto,
+    locale: string,
+  ): Promise<MessageThreadEntity> {
+    await this.modularSubscriptionEntitlementService.assertModuleAccess(
+      authenticatedUser.companyId,
+      SubscriptionModuleCode.Messaging,
+      locale,
     );
-    this.messagingWebhookDispatcherService.dispatch(
-      created.companyBId,
-      "thread.opened",
-      openedPayload,
+    const participantIds = [
+      ...new Set([
+        authenticatedUser.companyId,
+        ...payload.participantCompanyIds,
+      ]),
+    ];
+    if (participantIds.length < 3) {
+      throw new ValidationException(
+        "Grup sohbet için en az 3 farklı firma gerekir.",
+      );
+    }
+    const listingFilter = payload.freightListingId ?? null;
+    const title = payload.title?.trim().slice(0, 120) ?? null;
+    const existing =
+      await this.messagingThreadParticipantService.findGroupThreadsForCompanies(
+        participantIds,
+        listingFilter,
+        title,
+      );
+    if (existing) {
+      return existing;
+    }
+    const sorted = [...participantIds].sort();
+    const pair = this.normalizeCompanyPair(sorted[0], sorted[1]);
+    const created = await this.messageThreadRepository.save(
+      this.messageThreadRepository.create({
+        companyAId: pair.companyAId,
+        companyBId: pair.companyBId,
+        freightListingId: listingFilter,
+        threadKind: "group",
+        title,
+      }),
     );
+    await this.messagingThreadParticipantService.addParticipants(
+      created.id,
+      participantIds,
+    );
+    const openedPayload = {
+      threadId: created.id,
+      threadKind: "group",
+      title,
+      participantCompanyIds: participantIds,
+      freightListingId: created.freightListingId,
+      openedByCompanyId: authenticatedUser.companyId,
+      openedByUserId: authenticatedUser.userId,
+    };
+    await this.fanOutWebhook(created, "thread.opened", openedPayload);
     return created;
   }
 
@@ -189,17 +251,31 @@ export class MessagingThreadApplicationService {
       SubscriptionModuleCode.Messaging,
       locale,
     );
-    const threads = await this.messageThreadRepository
+    const pairThreads = await this.messageThreadRepository
       .createQueryBuilder("thread")
       .where("thread.companyAId = :companyId OR thread.companyBId = :companyId", {
         companyId: authenticatedUser.companyId,
       })
+      .andWhere("(thread.threadKind = 'pair' OR thread.threadKind IS NULL)")
       .orderBy("thread.createdAt", "DESC")
       .getMany();
+    const groupIds =
+      await this.messagingThreadParticipantService.listGroupThreadIdsForCompany(
+        authenticatedUser.companyId,
+      );
+    const groupThreads =
+      groupIds.length > 0
+        ? await this.messageThreadRepository.find({
+            where: { id: In(groupIds), threadKind: "group" },
+          })
+        : [];
+    const seen = new Set(pairThreads.map((thread) => thread.id));
+    const threads = [
+      ...pairThreads,
+      ...groupThreads.filter((thread) => !seen.has(thread.id)),
+    ];
     const counterpartyIds = threads.map((thread) =>
-      thread.companyAId === authenticatedUser.companyId
-        ? thread.companyBId
-        : thread.companyAId,
+      this.resolveCounterpartyCompanyId(thread, authenticatedUser.companyId),
     );
     const companies =
       counterpartyIds.length > 0
@@ -225,10 +301,16 @@ export class MessagingThreadApplicationService {
     );
     const enriched: MessagingThreadReference[] = [];
     for (const thread of threads) {
-      const counterpartyCompanyId =
-        thread.companyAId === authenticatedUser.companyId
-          ? thread.companyBId
-          : thread.companyAId;
+      const counterpartyCompanyId = this.resolveCounterpartyCompanyId(
+        thread,
+        authenticatedUser.companyId,
+      );
+      const participantCompanyIds =
+        thread.threadKind === "group"
+          ? await this.messagingThreadParticipantService.listParticipants(
+              thread.id,
+            )
+          : null;
       const lastMessage = await this.messageRepository.findOne({
         where: { threadId: thread.id },
         order: { createdAt: "DESC" },
@@ -244,11 +326,17 @@ export class MessagingThreadApplicationService {
           threadId: thread.id,
           counterpartyCompanyId,
           counterpartyLegalName:
-            companyNameById.get(counterpartyCompanyId) ?? null,
+            thread.threadKind === "group"
+              ? thread.title ??
+                `Grup sohbet (${participantCompanyIds?.length ?? 0} firma)`
+              : companyNameById.get(counterpartyCompanyId) ?? null,
           lastMessagePreview: lastMessage?.bodyText?.slice(0, 120) ?? null,
           lastMessageAt: lastMessage?.createdAt?.toISOString() ?? null,
           freightListingId: thread.freightListingId,
           unreadCount,
+          threadKind: thread.threadKind ?? "pair",
+          title: thread.title,
+          participantCompanyIds,
         }),
       );
     }
@@ -427,8 +515,7 @@ export class MessagingThreadApplicationService {
       });
     }
     const event = { type: "message", threadId: thread.id };
-    this.messagingRealtimeHubService.publish(thread.companyAId, event);
-    this.messagingRealtimeHubService.publish(thread.companyBId, event);
+    await this.fanOutRealtime(thread, event);
     const createdPayload = {
       threadId: thread.id,
       messageId: saved.id,
@@ -438,25 +525,9 @@ export class MessagingThreadApplicationService {
       freightListingId: thread.freightListingId,
       bodyPreview: preview,
     };
-    this.messagingWebhookDispatcherService.dispatch(
-      thread.companyAId,
-      "message.created",
-      createdPayload,
-    );
-    this.messagingWebhookDispatcherService.dispatch(
-      thread.companyBId,
-      "message.created",
-      createdPayload,
-    );
+    await this.fanOutWebhook(thread, "message.created", createdPayload);
     if (messageKind !== "internal") {
-      this.messagingSlackBridgeService.notifyMessageCreated(thread.companyAId, {
-        threadId: thread.id,
-        messageId: saved.id,
-        bodyPreview: preview,
-        senderCompanyId: saved.senderCompanyId,
-        freightListingId: thread.freightListingId,
-      });
-      this.messagingSlackBridgeService.notifyMessageCreated(thread.companyBId, {
+      await this.fanOutNotifyBridges(thread, {
         threadId: thread.id,
         messageId: saved.id,
         bodyPreview: preview,
@@ -782,8 +853,7 @@ export class MessagingThreadApplicationService {
     message.mentionUserIds = parseMessagingMentionUserIds(trimmed);
     const saved = await this.messageRepository.save(message);
     const event = { type: "message", threadId: thread.id };
-    this.messagingRealtimeHubService.publish(thread.companyAId, event);
-    this.messagingRealtimeHubService.publish(thread.companyBId, event);
+    await this.fanOutRealtime(thread, event);
     if (clientContext) {
       void this.messagingAuditService.recordMessageMutation(
         MessagingAuditActionCode.MessageUpdate,
@@ -832,8 +902,7 @@ export class MessagingThreadApplicationService {
     message.deletedAt = new Date();
     await this.messageRepository.save(message);
     const event = { type: "message", threadId: thread.id };
-    this.messagingRealtimeHubService.publish(thread.companyAId, event);
-    this.messagingRealtimeHubService.publish(thread.companyBId, event);
+    await this.fanOutRealtime(thread, event);
     if (clientContext) {
       void this.messagingAuditService.recordMessageMutation(
         MessagingAuditActionCode.MessageDelete,
@@ -867,7 +936,8 @@ export class MessagingThreadApplicationService {
       userId: authenticatedUser.userId,
       companyId: authenticatedUser.companyId,
     };
-    const targets = [thread.companyAId, thread.companyBId];
+    const targets =
+      await this.messagingThreadParticipantService.listCompanyIds(thread);
     for (const companyId of targets) {
       if (companyId !== authenticatedUser.companyId) {
         this.messagingRealtimeHubService.publish(companyId, payload);
@@ -944,12 +1014,72 @@ export class MessagingThreadApplicationService {
       throw new MessagingThreadNotFoundException(threadId);
     }
     const isParticipant =
-      thread.companyAId === authenticatedUser.companyId ||
-      thread.companyBId === authenticatedUser.companyId;
+      await this.messagingThreadParticipantService.isParticipant(
+        thread,
+        authenticatedUser.companyId,
+      );
     if (!isParticipant) {
       throw new AuthorizationException("Thread access denied");
     }
     return thread;
+  }
+
+  private resolveCounterpartyCompanyId(
+    thread: MessageThreadEntity,
+    viewerCompanyId: string,
+  ): string {
+    if (thread.threadKind === "group") {
+      return thread.companyAId === viewerCompanyId
+        ? thread.companyBId
+        : thread.companyAId;
+    }
+    return thread.companyAId === viewerCompanyId
+      ? thread.companyBId
+      : thread.companyAId;
+  }
+
+  private async fanOutRealtime(
+    thread: MessageThreadEntity,
+    event: { type: string; threadId?: string },
+  ): Promise<void> {
+    const companyIds =
+      await this.messagingThreadParticipantService.listCompanyIds(thread);
+    for (const companyId of companyIds) {
+      this.messagingRealtimeHubService.publish(companyId, event);
+    }
+  }
+
+  private async fanOutWebhook(
+    thread: MessageThreadEntity,
+    event: "message.created" | "thread.opened",
+    payload: Record<string, unknown>,
+  ): Promise<void> {
+    const companyIds =
+      await this.messagingThreadParticipantService.listCompanyIds(thread);
+    for (const companyId of companyIds) {
+      this.messagingWebhookDispatcherService.dispatch(companyId, event, payload);
+    }
+  }
+
+  private async fanOutNotifyBridges(
+    thread: MessageThreadEntity,
+    payload: {
+      threadId: string;
+      messageId: string;
+      bodyPreview: string;
+      senderCompanyId: string;
+      freightListingId: string | null;
+    },
+  ): Promise<void> {
+    const companyIds =
+      await this.messagingThreadParticipantService.listCompanyIds(thread);
+    for (const companyId of companyIds) {
+      this.messagingSlackBridgeService.notifyMessageCreated(companyId, payload);
+      this.messagingWhatsappBridgeService.notifyMessageCreated(companyId, {
+        threadId: payload.threadId,
+        bodyPreview: payload.bodyPreview,
+      });
+    }
   }
 
   private async countUnreadMessages(
