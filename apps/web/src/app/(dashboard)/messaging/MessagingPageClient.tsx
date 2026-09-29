@@ -1271,7 +1271,7 @@ export function MessagingPageClient() {
         <p className="module-hint" style={{ marginBottom: "0.75rem" }}>
           Bu sohbet ilan{" "}
           <code>{searchParams.get("listingId")?.slice(0, 8)}…</code> bağlamında
-          açılır. Karşı firma ID girip <strong>Aç</strong> kullanın.
+          açılır. Üstte arama alanına firma UUID yazıp Enter kullanın.
         </p>
       ) : null}
 
