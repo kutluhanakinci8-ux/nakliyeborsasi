@@ -210,6 +210,18 @@ export function IconShieldLock({ className, size = defaultSize }: IconProps) {
   );
 }
 
+export function IconPalette({ className, size = defaultSize }: IconProps) {
+  return (
+    <svg className={className} aria-hidden {...strokeProps(size)}>
+      <path d="M12 3a9 9 0 109 9c0-1.5-.4-2.9-1-4.1" />
+      <circle cx="8" cy="10" r="1.25" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="7" r="1.25" fill="currentColor" stroke="none" />
+      <circle cx="16" cy="11" r="1.25" fill="currentColor" stroke="none" />
+      <circle cx="11" cy="14" r="1.25" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 export function IconMaximize({ className, size = defaultSize }: IconProps) {
   return (
     <svg className={className} aria-hidden {...strokeProps(size)}>

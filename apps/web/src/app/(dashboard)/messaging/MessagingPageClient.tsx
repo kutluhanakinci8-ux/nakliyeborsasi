@@ -36,6 +36,11 @@ import {
 } from "../../../components/messaging/ChatMessagingModals";
 import { EmptyState } from "../../../components/EmptyState";
 import { ModulePageShell } from "../../../components/ModulePageShell";
+import {
+  readStoredChatBackground,
+  rememberChatBackground,
+  type ChatConversationBackgroundId,
+} from "../../../lib/messagingChatBackground";
 import { useWebSession } from "../../../context/WebSessionProvider";
 import {
   MessagingApiClient,
@@ -172,6 +177,11 @@ export function MessagingPageClient() {
   const [mode, setMode] = useState<MessagingMode>(() =>
     parseMode(searchParams.get("tab"), preferChat),
   );
+  const [chatBackgroundId, setChatBackgroundId] =
+    useState<ChatConversationBackgroundId>(() =>
+      typeof window === "undefined" ? "default" : readStoredChatBackground(),
+    );
+  const [chatBackgroundPickerOpen, setChatBackgroundPickerOpen] = useState(false);
   const [threads, setThreads] = useState<MessagingThreadRecord[]>([]);
   const [activeThreadId, setActiveThreadId] = useState("");
   const [messageBody, setMessageBody] = useState("");
@@ -396,7 +406,12 @@ export function MessagingPageClient() {
     }
   }, [searchParams, router, accessToken, locale]);
 
+  useEffect(() => {
+    rememberChatBackground(chatBackgroundId);
+  }, [chatBackgroundId]);
+
   function switchMode(next: MessagingMode): void {
+    setChatBackgroundPickerOpen(false);
     setMode(next);
     rememberMessagingTab(next);
     const params = new URLSearchParams(searchParams.toString());
@@ -1665,7 +1680,7 @@ export function MessagingPageClient() {
                 <span>İç notlar</span>
               </button>
             </div>
-            <div className="chat-messages">
+            <div className="chat-messages" data-chat-bg={chatBackgroundId}>
               {displayedMessages.length === 0 ? (
                 <EmptyState
                   message={
@@ -2250,6 +2265,15 @@ export function MessagingPageClient() {
             onExportKvkk={() => void handleExportArchive()}
             showMailFullscreen={mode === "email"}
             onMailFullscreen={() => setMailEmbedFullscreen(true)}
+            chatBackgroundId={chatBackgroundId}
+            chatBackgroundPickerOpen={chatBackgroundPickerOpen}
+            onToggleChatBackgroundPicker={() =>
+              setChatBackgroundPickerOpen((open) => !open)
+            }
+            onChatBackgroundChange={setChatBackgroundId}
+            onCloseChatBackgroundPicker={() =>
+              setChatBackgroundPickerOpen(false)
+            }
           />
         ) : null}
       </div>
