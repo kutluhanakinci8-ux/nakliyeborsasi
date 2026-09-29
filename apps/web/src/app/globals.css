@@ -4863,7 +4863,7 @@ button.btn-secondary {
 
 .chat-layout {
   display: grid;
-  grid-template-columns: 320px 1fr 76px;
+  grid-template-columns: 320px 1fr;
   gap: 12px;
   align-items: stretch;
 }
@@ -4881,6 +4881,61 @@ button.btn-secondary {
   box-shadow:
     0 1px 2px rgba(15, 23, 42, 0.04),
     0 12px 32px rgba(15, 23, 42, 0.05);
+}
+
+.messaging-page-layout {
+  display: grid;
+  grid-template-columns: 1fr 76px;
+  gap: 12px;
+  align-items: stretch;
+  min-height: 420px;
+}
+
+.messaging-page-layout--fullscreen {
+  display: block;
+}
+
+.messaging-page-main {
+  min-width: 0;
+}
+
+.chat-rail-mode-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chat-rail-divider {
+  height: 1px;
+  margin: 6px 4px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #e2e8f0 20%,
+    #e2e8f0 80%,
+    transparent
+  );
+}
+
+.chat-rail-tile--mode-active {
+  border-color: #6ee7b7;
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  box-shadow:
+    0 0 0 1px rgba(16, 185, 129, 0.28),
+    0 4px 14px rgba(16, 185, 129, 0.14);
+}
+
+.chat-rail-tile--mode-active .chat-rail-tile-icon {
+  color: #059669;
+}
+
+.chat-rail-tile--mode-active .chat-rail-tile-value--label {
+  color: #047857;
+}
+
+.chat-rail-tile-value--label {
+  font-size: 0.72rem;
+  letter-spacing: 0.01em;
 }
 
 .chat-stats-rail-heading {
@@ -6605,7 +6660,7 @@ button.btn-secondary {
   }
 
   .chat-layout--mobile-thread .chat-sidebar,
-  .chat-layout--mobile-thread .chat-stats-rail {
+  .chat-layout--mobile-thread .messaging-page-layout .chat-stats-rail {
     display: none;
   }
 
@@ -7820,14 +7875,32 @@ button.btn-secondary {
     grid-template-columns: 1fr;
   }
 
+  .messaging-page-layout {
+    grid-template-columns: 1fr;
+  }
+
   .chat-stats-rail {
     flex-direction: row;
     flex-wrap: wrap;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 8px;
     min-height: 0;
     padding: 10px;
-    order: 3;
+    order: -1;
+  }
+
+  .chat-rail-mode-group {
+    flex-direction: row;
+    flex: 1 1 100%;
+    gap: 8px;
+  }
+
+  .chat-rail-mode-group .chat-rail-tile {
+    flex: 1;
+  }
+
+  .chat-rail-divider {
+    display: none;
   }
 
   .chat-stats-rail-heading {
