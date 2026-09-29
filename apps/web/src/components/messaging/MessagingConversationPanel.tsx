@@ -768,6 +768,11 @@ export function MessagingConversationPanel({
                 <textarea
                   ref={messageInputRef}
                   className="chat-compose-textarea"
+                  aria-label={
+                    internalNote
+                      ? "Ekip içi not yazın"
+                      : "Karşı firmaya mesaj yazın"
+                  }
                   placeholder={
                     internalNote
                       ? "Ekip içi notunuzu yazın…"

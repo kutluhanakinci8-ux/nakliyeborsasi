@@ -23,6 +23,7 @@ if [[ -z "${API_BASE:-}" ]]; then
 fi
 export API_BASE
 export SKIP_PLAYWRIGHT="${SKIP_PLAYWRIGHT:-1}"
+export SKIP_AXE="${SKIP_AXE:-1}"
 
 bash "${ROOT}/scripts/verify-typeorm-global-entities.sh"
 npm run test:unit --prefix "${ROOT}"

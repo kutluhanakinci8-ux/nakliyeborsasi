@@ -6333,6 +6333,24 @@ button.btn-secondary {
   color: #94a3b8;
 }
 
+/* MP-7: açık zemin temalarında boş durum / meta kontrastı (WCAG AA metin) */
+.chat-messages[data-chat-bg="sand"] .chat-empty,
+.chat-messages[data-chat-bg="sand"] .empty-state,
+.chat-messages[data-chat-bg="lavender"] .chat-empty,
+.chat-messages[data-chat-bg="lavender"] .empty-state,
+.chat-messages[data-chat-bg="brand"] .chat-empty,
+.chat-messages[data-chat-bg="brand"] .empty-state,
+.chat-messages[data-chat-bg="sky"] .chat-empty,
+.chat-messages[data-chat-bg="sky"] .empty-state {
+  color: #334155;
+}
+
+.chat-messages[data-chat-bg="sand"] .chat-bubble-meta,
+.chat-messages[data-chat-bg="lavender"] .chat-bubble-meta,
+.chat-messages[data-chat-bg="brand"] .chat-bubble-meta {
+  color: #475569;
+}
+
 .chat-messages[data-chat-bg="night"] .chat-empty,
 .chat-messages[data-chat-bg="night"] .empty-state {
   color: #cbd5e1;

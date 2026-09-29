@@ -20,7 +20,7 @@
 | **MP-4** | `maturity-p4` | `MessagingPageClient` / `MailClient` bölme | FE mimari **70→92%** | MP-3 ✅ sohbet + posta giriş |
 | **MP-5** | `maturity-p5` | Gözlemlenebilirlik (metrik, SLO, dashboard) | Obs **72→88%** | MP-1 ✅ |
 | **MP-6** | `maturity-p6` | ESP analitik & deliverability UI | Postmark **69→88%** | MP-5 ◐ |
-| **MP-7** | `maturity-p7` | Erişilebilirlik (axe → WCAG AA kritik) | A11y **75→92%** | MP-4 |
+| **MP-7** | `maturity-p7` | Erişilebilirlik (axe → WCAG AA kritik) | A11y **75→92%** | MP-4 ◐ |
 | **MP-8** | `maturity-p8` | PWA polish + native shell kararı | Mobil **75→88%** | MP-4 |
 | **MP-9** | `maturity-p9` | SOC2-lite runbook + güvenlik dokümanı | Güvenlik **85→95%** dok | MP-5 |
 | **MP-10** | `maturity-p10` | Parite kapanış kapısı + skor yenileme | Tüm tablo hedefleri | MP-2…MP-9 |
@@ -140,17 +140,20 @@
 
 ---
 
-## MP-7 — Erişilebilirlik
+## MP-7 — Erişilebilirlik ◐
 
 **Amaç:** Kurumsal ihale kullanıcıları için klavye + ekran okuyucu.
 
-| Görev | Not |
-|-------|-----|
-| `verify-axe-messaging` kritik 0 | CI |
-| Şerit butonları, thread list, compose `aria-*` | `MessagingSideRail`, liste |
-| Kontrast (premium zemin temaları) | `globals.css` |
+| Görev | Durum | Not |
+|-------|--------|-----|
+| `verify-axe-messaging` / `verify-messaging-a11y-mp7.sh` | ✅ | maturity checklist · VPS `SKIP_AXE=1` |
+| Şerit `tablist` + `aria-selected` | ✅ | `MessagingSideRail` |
+| Thread list `aria-label` / `aria-current` | ✅ | `ChatThreadListItem`, liste `ul` |
+| Compose `textarea` `aria-label` | ✅ | `MessagingConversationPanel` |
+| Kontrast (premium zemin) | ✅ | `globals.css` MP-7 bloğu |
+| CI workflow (axe job) | ◐ | prod URL; isteğe bağlı workflow genişletme |
 
-**Kabul:** axe kritik **0** · skor **≥92%** (Slack kıyası).
+**Kabul:** axe kritik **0** · skor **≥92%** — `bash scripts/verify-messaging-a11y-mp7.sh` (SKIP_AXE=0).
 
 ---
 

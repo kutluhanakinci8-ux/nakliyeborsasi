@@ -25,6 +25,7 @@ run_step "MP-3 core unit tests" npm run test:unit --prefix "${ROOT}"
 
 run_step "MP-5 communications ops" bash "${ROOT}/scripts/verify-communications-ops-snapshot.sh"
 run_step "MP-6 deliverability" bash "${ROOT}/scripts/verify-mail-deliverability-mp6.sh"
+run_step "MP-7 a11y (axe)" bash "${ROOT}/scripts/verify-messaging-a11y-mp7.sh"
 
 if [[ "${SKIP_PLAYWRIGHT:-}" != "1" ]]; then
   run_step "MP-3 Playwright smoke (public)" bash "${ROOT}/scripts/verify-messaging-playwright-e2e.sh"

@@ -41,6 +41,10 @@ export function ChatThreadListItem({
       : "Firma sohbeti";
   const timeLabel = formatThreadListTime(thread.lastMessageAt, locale);
   const unread = thread.unreadCount ?? 0;
+  const threadLabel =
+    unread > 0
+      ? `${displayName}, ${unread} okunmamış mesaj`
+      : displayName;
 
   return (
     <li>
@@ -49,6 +53,8 @@ export function ChatThreadListItem({
         className={
           active ? "chat-thread-item chat-thread-item--active" : "chat-thread-item"
         }
+        aria-label={threadLabel}
+        aria-current={active ? "true" : undefined}
         onClick={onSelect}
       >
         <span

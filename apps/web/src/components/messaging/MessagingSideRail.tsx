@@ -23,6 +23,8 @@ type RailTileProps = {
   title: string;
   variant?: "default" | "alert" | "secure" | "action" | "mode-active";
   onClick?: () => void;
+  role?: "tab";
+  ariaSelected?: boolean;
 };
 
 function ChatRailTile({
@@ -32,6 +34,8 @@ function ChatRailTile({
   title,
   variant = "default",
   onClick,
+  role,
+  ariaSelected,
 }: RailTileProps) {
   const className = [
     "chat-rail-tile",
@@ -63,6 +67,8 @@ function ChatRailTile({
         className={className}
         title={title}
         aria-label={title}
+        role={role}
+        aria-selected={role === "tab" ? ariaSelected : undefined}
         onClick={onClick}
       >
         {body}
@@ -127,6 +133,8 @@ export function MessagingSideRail({
           label="Posta"
           title="Kurumsal e-posta (posta)"
           variant={mode === "email" ? "mode-active" : "default"}
+          role="tab"
+          ariaSelected={mode === "email"}
           onClick={() => onSwitchMode("email")}
         />
         <ChatRailTile
@@ -134,6 +142,8 @@ export function MessagingSideRail({
           label="Sohbet"
           title="Firma sohbeti"
           variant={mode === "chat" ? "mode-active" : "default"}
+          role="tab"
+          ariaSelected={mode === "chat"}
           onClick={() => onSwitchMode("chat")}
         />
       </div>
