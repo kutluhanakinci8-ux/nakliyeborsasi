@@ -14768,3 +14768,361 @@ button.btn-secondary {
     white-space: nowrap;
   }
 }
+
+/* —— Entegrasyon merkezi (premium) —— */
+.integrations-center-premium .exchange-hero {
+  background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 45%, #ecfdf5 100%);
+  border: 1px solid rgba(37, 99, 235, 0.1);
+  border-radius: 20px;
+  padding: 28px 32px;
+}
+
+.integrations-premium-panel {
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 18px;
+  padding: 22px 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.04);
+}
+
+.integrations-premium-panel--hub {
+  background: linear-gradient(165deg, #f0fdfa 0%, #fff 42%);
+  border-color: rgba(13, 148, 136, 0.15);
+}
+
+.integrations-panel-head {
+  margin-bottom: 18px;
+}
+
+.integrations-panel-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.integrations-panel-sub {
+  margin: 6px 0 0;
+  font-size: 0.88rem;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+.integrations-panel-hint {
+  font-size: 0.88rem;
+  color: #475569;
+  margin: 0 0 14px;
+}
+
+.integrations-hub-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.integrations-hub-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 100%;
+}
+
+.integrations-hub-card-kicker {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #0d9488;
+}
+
+.integrations-hub-card-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.integrations-hub-card-text {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #64748b;
+  line-height: 1.45;
+  flex: 1;
+}
+
+.integrations-hub-warn {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #b45309;
+  background: #fffbeb;
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.integrations-code-block {
+  display: block;
+  font-size: 0.72rem;
+  padding: 8px 10px;
+  background: #f1f5f9;
+  border-radius: 8px;
+  word-break: break-all;
+}
+
+.integrations-copy-btn {
+  align-self: flex-start;
+  margin-top: 4px;
+}
+
+.integrations-status-pill {
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.integrations-status-pill--ok {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.integrations-status-pill--warn {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.integrations-hub-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.integrations-corridor-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.integrations-corridor-chip {
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+}
+
+.integrations-corridor-chip--on {
+  border-color: #0d9488;
+  background: #ecfdf5;
+  color: #0f766e;
+}
+
+.integrations-provider-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.integrations-provider-card {
+  text-align: left;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: #fafafa;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.integrations-provider-card--on {
+  border-color: #2563eb;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.08);
+}
+
+.integrations-provider-card--ok {
+  border-color: rgba(16, 185, 129, 0.45);
+}
+
+.integrations-provider-card--error {
+  border-color: rgba(239, 68, 68, 0.45);
+}
+
+.integrations-provider-card-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+}
+
+.integrations-provider-card-name {
+  font-weight: 800;
+  font-size: 0.88rem;
+  color: #0f172a;
+}
+
+.integrations-provider-health {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.integrations-provider-health--ok {
+  color: #059669;
+}
+
+.integrations-provider-health--error {
+  color: #dc2626;
+}
+
+.integrations-provider-card-blurb {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.75rem;
+  color: #64748b;
+  line-height: 1.35;
+}
+
+.integrations-search-row {
+  display: grid;
+  grid-template-columns: 72px 72px 1fr auto;
+  gap: 10px;
+  align-items: end;
+  margin-bottom: 16px;
+}
+
+.integrations-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.integrations-field-input {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 0.9rem;
+}
+
+.integrations-search-btn {
+  white-space: nowrap;
+}
+
+.integrations-alert-list {
+  margin: 0 0 14px;
+  padding: 12px 16px;
+  background: #fff7ed;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  color: #9a3412;
+}
+
+.integrations-offer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.integrations-offer-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.integrations-offer-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.integrations-offer-provider {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #1d4ed8;
+  background: #eff6ff;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.integrations-offer-meta {
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.integrations-offer-dates {
+  margin: 6px 0 0;
+  font-size: 0.82rem;
+  color: #64748b;
+}
+
+.integrations-offer-side {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.integrations-offer-price {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.integrations-offer-price-hint {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+@media (max-width: 1100px) {
+  .integrations-provider-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .integrations-hub-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .integrations-search-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .integrations-field--sort,
+  .integrations-search-btn {
+    grid-column: span 2;
+  }
+
+  .integrations-offer-card {
+    flex-direction: column;
+  }
+
+  .integrations-offer-side {
+    text-align: left;
+  }
+}

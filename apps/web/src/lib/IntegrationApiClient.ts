@@ -9,6 +9,7 @@ export class IntegrationApiClient {
       originCountryCode?: string;
       destinationCountryCode?: string;
       limit?: number;
+      providers?: string[];
     },
   ): Promise<IntegrationSearchResponse> {
     const params = new URLSearchParams({ lang: locale });
@@ -17,6 +18,11 @@ export class IntegrationApiClient {
     }
     if (query?.destinationCountryCode) {
       params.set("destinationCountryCode", query.destinationCountryCode);
+    }
+    if (query?.providers?.length) {
+      for (const code of query.providers) {
+        params.append("providers", code);
+      }
     }
     params.set("limit", String(query?.limit ?? 12));
 
