@@ -1,0 +1,44 @@
+name: Messaging Excellence verify
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/verify-firma-sohbeti-*.sh"
+      - "scripts/report-firma-sohbeti-pilot-nps.sh"
+      - "scripts/messaging-status-from-env.py"
+      - "scripts/fixtures/messaging-status-excellence.json"
+      - "data/firma-sohbeti-pilot-nps.json"
+      - ".github/workflows/messaging-excellence-verify.yml"
+      - "apps/api/src/modules/messaging/**"
+  pull_request:
+    paths:
+      - "scripts/verify-firma-sohbeti-*.sh"
+      - "scripts/report-firma-sohbeti-pilot-nps.sh"
+      - "scripts/messaging-status-from-env.py"
+      - "scripts/fixtures/messaging-status-excellence.json"
+      - "data/firma-sohbeti-pilot-nps.json"
+      - ".github/workflows/messaging-excellence-verify.yml"
+      - "apps/api/src/modules/messaging/**"
+  workflow_dispatch:
+
+jobs:
+  status-fixtures:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: FS-8…FS-12 status fixture checks
+        run: |
+          export MESSAGING_STATUS_JSON="$(cat scripts/fixtures/messaging-status-excellence.json)"
+          for phase in fs8 fs9 fs10 fs11 fs12; do
+            echo "== messaging-status-from-env.py ${phase} =="
+            python3 scripts/messaging-status-from-env.py "${phase}"
+          done
+
+      - name: Pilot NPS report (draft data)
+        run: bash scripts/report-firma-sohbeti-pilot-nps.sh
+
+      - name: Pilot NPS strict mode (expect skip path without data)
+        run: |
+          PILOT_NPS_STRICT=0 bash scripts/verify-firma-sohbeti-pilot-nps.sh

@@ -1,0 +1,51 @@
+{
+  "wave": "2026-09",
+  "updatedAt": null,
+  "firms": [
+    {
+      "slot": 1,
+      "legalName": "",
+      "role": "shipper",
+      "contact": "",
+      "wauActive": null,
+      "npsScore": null,
+      "qualitativeNote": ""
+    },
+    {
+      "slot": 2,
+      "legalName": "",
+      "role": "carrier",
+      "contact": "",
+      "wauActive": null,
+      "npsScore": null,
+      "qualitativeNote": ""
+    },
+    {
+      "slot": 3,
+      "legalName": "",
+      "role": "agent",
+      "contact": "",
+      "wauActive": null,
+      "npsScore": null,
+      "qualitativeNote": ""
+    },
+    {
+      "slot": 4,
+      "legalName": "",
+      "role": "other",
+      "contact": "",
+      "wauActive": null,
+      "npsScore": null,
+      "qualitativeNote": ""
+    },
+    {
+      "slot": 5,
+      "legalName": "",
+      "role": "other",
+      "contact": "",
+      "wauActive": null,
+      "npsScore": null,
+      "qualitativeNote": ""
+    }
+  ]
+}
