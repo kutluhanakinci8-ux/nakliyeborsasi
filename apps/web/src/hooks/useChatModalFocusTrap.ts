@@ -7,8 +7,8 @@ const FOCUSABLE =
 export function useChatModalFocusTrap(
   open: boolean,
   onClose: () => void,
-): RefObject<HTMLDivElement | null> {
-  const panelRef = useRef<HTMLDivElement | null>(null);
+): RefObject<HTMLDivElement> {
+  const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) {
