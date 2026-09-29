@@ -21,7 +21,9 @@ import {
   AuctionSessionLiveSnapshotResponse,
 } from "./AuctionSessionDetailMapper";
 import { AuctionListingPriceActionService } from "./AuctionListingPriceActionService";
+import { AuctionTransportCompletionService } from "./AuctionTransportCompletionService";
 import { FreightListingPriceOfferRequestDto } from "./FreightListingPriceOfferRequestDto";
+import { ConfirmTransportCompletionRequestDto } from "./ConfirmTransportCompletionRequestDto";
 
 @Controller("auctions")
 @UseGuards(JwtAuthenticationGuard)
@@ -29,6 +31,7 @@ export class AuctionSessionController {
   public constructor(
     private readonly auctionSessionApplicationService: AuctionSessionApplicationService,
     private readonly auctionListingPriceActionService: AuctionListingPriceActionService,
+    private readonly auctionTransportCompletionService: AuctionTransportCompletionService,
     private readonly localeResolutionService: LocaleResolutionService,
   ) {}
 
@@ -136,6 +139,22 @@ export class AuctionSessionController {
       locale,
     );
     return { session };
+  }
+
+  @Post("sessions/:auctionSessionId/confirm-transport")
+  public async confirmTransport(
+    @Param("auctionSessionId") auctionSessionId: string,
+    @Body() body: ConfirmTransportCompletionRequestDto,
+    @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
+  ): Promise<{ transportCompletedAt: string | null }> {
+    const result = await this.auctionTransportCompletionService.confirmTransport(
+      authenticatedUser,
+      auctionSessionId,
+      body,
+    );
+    return {
+      transportCompletedAt: result.session.transportCompletedAt?.toISOString() ?? null,
+    };
   }
 
   @Post("sessions/:auctionSessionId/bids")

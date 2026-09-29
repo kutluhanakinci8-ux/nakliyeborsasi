@@ -14,6 +14,7 @@ import { AuthModule } from "../auth/AuthModule";
 import { MessagingModule } from "../messaging/MessagingModule";
 import { NotificationModule } from "../notification/NotificationModule";
 import { AuctionListingPriceActionService } from "./AuctionListingPriceActionService";
+import { AuctionTransportCompletionService } from "./AuctionTransportCompletionService";
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { AuctionListingPriceActionService } from "./AuctionListingPriceActionSer
     AuctionSessionFinalizationService,
     AuctionExpiredSessionSweepTask,
     AuctionListingPriceActionService,
+    AuctionTransportCompletionService,
   ],
   exports: [AuctionListingPriceActionService],
 })

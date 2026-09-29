@@ -54,8 +54,8 @@ export class TrustReviewInviteService {
       where: { id: session.freightListingId },
     });
     const contextLabel = listing
-      ? `İhale · ${listing.originCityName} → ${listing.destinationCityName}`
-      : "Tamamlanan ihale";
+      ? `Taşıma onayı · ${listing.originCityName} → ${listing.destinationCityName}`
+      : "Taşıma onayı · tamamlanan ihale";
 
     await this.upsertInvite({
       authorCompanyId: ownerCompanyId,

@@ -78,6 +78,18 @@ export class AuctionSessionEntity {
   @Column({ type: "uuid", nullable: true })
   public fleetOperatorCompanyId!: string | null;
 
+  @Column({ type: "timestamptz", nullable: true })
+  public transportCompletedAt!: Date | null;
+
+  @Column({ type: "uuid", nullable: true })
+  public transportCompletedByCompanyId!: string | null;
+
+  @Column({ type: "varchar", length: 512, nullable: true })
+  public transportCompletionNote!: string | null;
+
+  @Column({ type: "timestamptz", nullable: true })
+  public transportConfirmReminderSentAt!: Date | null;
+
   @OneToMany(() => AuctionBidEntity, (bid) => bid.auctionSession)
   public bids!: AuctionBidEntity[];
 

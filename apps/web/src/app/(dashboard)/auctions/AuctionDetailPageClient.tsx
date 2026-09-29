@@ -50,6 +50,9 @@ export function AuctionDetailPageClient({ sessionId }: AuctionDetailPageClientPr
   const [bidDialogOpen, setBidDialogOpen] = useState(false);
   const [bidError, setBidError] = useState("");
   const [bidSubmitting, setBidSubmitting] = useState(false);
+  const [transportNote, setTransportNote] = useState("");
+  const [transportSubmitting, setTransportSubmitting] = useState(false);
+  const [transportError, setTransportError] = useState("");
 
   const loadDetail = useCallback(async (): Promise<void> => {
     setErrorMessage("");
@@ -134,8 +137,24 @@ export function AuctionDetailPageClient({ sessionId }: AuctionDetailPageClientPr
   const isOpen = session?.statusCode === "OPEN";
   const listingPrice = listing?.price;
 
+  const isAuctionParticipant =
+    detail &&
+    session &&
+    authSession?.companyId &&
+    (authSession.companyId === owner?.companyId ||
+      session.bids.some((bid) => bid.bidderCompanyId === authSession.companyId));
+
+  const needsTransportConfirm =
+    Boolean(
+      session &&
+        !isOpen &&
+        session.winningBidId &&
+        !session.transportCompletedAt &&
+        isAuctionParticipant,
+    );
+
   const trustReviewPartnerId =
-    detail && session && owner && authSession?.companyId && !isOpen && session.winningBidId
+    detail && session && owner && authSession?.companyId && !isOpen && session.winningBidId && session.transportCompletedAt
       ? (() => {
           const winningBid = session.bids.find((bid) => bid.id === session.winningBidId);
           if (!winningBid) {
@@ -181,6 +200,61 @@ export function AuctionDetailPageClient({ sessionId }: AuctionDetailPageClientPr
 
       {detail && listing && session && owner ? (
         <>
+          {needsTransportConfirm ? (
+            <div className="trust-invite-banner trust-invite-banner--auction trust-invite-banner--confirm">
+              <div>
+                <p className="trust-invite-banner-title">Taşıma / CMR onayı</p>
+                <p className="trust-invite-banner-text">
+                  Teslimat ve evrak süreci tamamlandığında onay verin; ardından karşı firmayı
+                  güven merkezinde değerlendirebilirsiniz.
+                </p>
+                <label className="trust-field transport-confirm-note">
+                  <span className="trust-field-label">CMR / referans (isteğe bağlı)</span>
+                  <input
+                    className="trust-field-input"
+                    value={transportNote}
+                    onChange={(event) => setTransportNote(event.target.value)}
+                    placeholder="Örn. CMR no, irsaliye tarihi"
+                  />
+                </label>
+                {transportError ? (
+                  <p className="error banner error--light">{transportError}</p>
+                ) : null}
+              </div>
+              <button
+                type="button"
+                className="btn-accent btn-accent--compact"
+                disabled={transportSubmitting}
+                onClick={() => {
+                  setTransportError("");
+                  setTransportSubmitting(true);
+                  void AuctionApiClient.confirmTransport(
+                    accessToken,
+                    session.id,
+                    transportNote,
+                  )
+                    .then(() => loadDetail())
+                    .catch((error) =>
+                      setTransportError(
+                        error instanceof Error ? error.message : "Onay hatası",
+                      ),
+                    )
+                    .finally(() => setTransportSubmitting(false));
+                }}
+              >
+                {transportSubmitting ? "Kaydediliyor…" : "Taşıma tamamlandı"}
+              </button>
+            </div>
+          ) : null}
+          {session.transportCompletedAt ? (
+            <p className="module-hint auction-transport-confirmed">
+              Taşıma onayı:{" "}
+              {new Date(session.transportCompletedAt).toLocaleString(locale)}
+              {session.transportCompletionNote
+                ? ` · ${session.transportCompletionNote}`
+                : ""}
+            </p>
+          ) : null}
           {trustReviewPartnerId ? (
             <div className="trust-invite-banner trust-invite-banner--auction">
               <div>

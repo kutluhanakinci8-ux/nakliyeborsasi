@@ -13,7 +13,10 @@ export enum NotificationEventCode {
   MessagingUserMention = "MESSAGING_USER_MENTION",
   MessagingChatWebPush = "MESSAGING_CHAT_WEB_PUSH",
   MailTeamInvite = "MAIL_TEAM_INVITE",
+  TrustTransportConfirmRequest = "TRUST_TRANSPORT_CONFIRM_REQUEST",
+  TrustReviewReminder = "TRUST_REVIEW_REMINDER",
 }
+
 
 export enum EmailRecipientKind {
   Admin = "ADMIN",

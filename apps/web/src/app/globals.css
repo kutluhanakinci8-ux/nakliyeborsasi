@@ -13559,6 +13559,20 @@ button.btn-secondary {
   margin-top: 4px;
 }
 
+.trust-invite-banner--confirm {
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.transport-confirm-note {
+  margin-top: 10px;
+  max-width: 360px;
+}
+
+.auction-transport-confirmed {
+  margin-bottom: 12px;
+}
+
 .trust-invite-banner-title {
   margin: 0;
   font-weight: 800;
