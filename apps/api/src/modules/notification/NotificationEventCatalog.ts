@@ -139,6 +139,22 @@ export const NOTIFICATION_EVENT_CATALOG: NotificationEventDefinition[] = [
     defaultUserEnabled: true,
     labelTr: "Firma sohbeti — tarayıcı push",
   },
+  {
+    code: NotificationEventCode.TrustTransportConfirmRequest,
+    category: "auction",
+    userPreferenceKey: "notifyAuctions",
+    defaultAdminEnabled: false,
+    defaultUserEnabled: true,
+    labelTr: "Taşıma tamamlandı — onay isteği",
+  },
+  {
+    code: NotificationEventCode.TrustReviewReminder,
+    category: "auction",
+    userPreferenceKey: "notifyAuctions",
+    defaultAdminEnabled: false,
+    defaultUserEnabled: true,
+    labelTr: "Güven değerlendirme hatırlatması",
+  },
 ];
 
 export function resolveEventDefinition(

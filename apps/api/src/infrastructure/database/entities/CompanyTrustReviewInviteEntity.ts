@@ -41,4 +41,7 @@ export class CompanyTrustReviewInviteEntity {
 
   @Column({ type: "timestamptz", nullable: true })
   public dismissedAt!: Date | null;
+
+  @Column({ type: "timestamptz", nullable: true })
+  public reminderSentAt!: Date | null;
 }

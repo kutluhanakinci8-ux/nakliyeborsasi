@@ -7,7 +7,8 @@ import {
 } from "@nakliyeborsasi/core";
 import { AuctionSessionEntity } from "../../infrastructure/database/entities/AuctionSessionEntity";
 import { AuctionBidEntity } from "../../infrastructure/database/entities/AuctionBidEntity";
-import { TrustReviewInviteService } from "../trust/TrustReviewInviteService";
+import { FreightListingEntity } from "../../infrastructure/database/entities/FreightListingEntity";
+import { TrustReviewNotificationService } from "../trust/TrustReviewNotificationService";
 
 @Injectable()
 export class AuctionSessionFinalizationService {
@@ -16,7 +17,9 @@ export class AuctionSessionFinalizationService {
     private readonly auctionSessionRepository: Repository<AuctionSessionEntity>,
     @InjectRepository(AuctionBidEntity)
     private readonly auctionBidRepository: Repository<AuctionBidEntity>,
-    private readonly trustReviewInviteService: TrustReviewInviteService,
+    @InjectRepository(FreightListingEntity)
+    private readonly freightListingRepository: Repository<FreightListingEntity>,
+    private readonly trustReviewNotificationService: TrustReviewNotificationService,
   ) {}
 
   public async closeAllExpiredOpenSessions(): Promise<number> {
@@ -52,8 +55,22 @@ export class AuctionSessionFinalizationService {
     session.statusCode = AuctionSessionStatusCode.Closed;
     session.winningBidId = winningBid?.id ?? null;
     const saved = await this.auctionSessionRepository.save(session);
-    if (saved.winningBidId) {
-      await this.trustReviewInviteService.issueForClosedAuction(saved);
+    if (saved.winningBidId && winningBid) {
+      const listing = await this.freightListingRepository.findOne({
+        where: { id: saved.freightListingId },
+      });
+      const routeLabel = listing
+        ? `${listing.originCityName} → ${listing.destinationCityName}`
+        : "İhale";
+      void this.trustReviewNotificationService
+        .notifyTransportConfirmNeeded(
+          saved,
+          routeLabel,
+          saved.ownerCompanyId,
+          winningBid.bidderCompanyId,
+          "initial",
+        )
+        .catch(() => undefined);
     }
     return saved;
   }

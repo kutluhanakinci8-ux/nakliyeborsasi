@@ -93,6 +93,8 @@ export class EmailTemplateService {
       case NotificationEventCode.AuctionPublished:
       case NotificationEventCode.ListingNewOffer:
       case NotificationEventCode.MessagingNewMessage:
+      case NotificationEventCode.TrustTransportConfirmRequest:
+      case NotificationEventCode.TrustReviewReminder:
         return this.renderOperationalAdminTr(eventCode, payload);
       case NotificationEventCode.UserFirstLogin:
         return {
@@ -134,6 +136,8 @@ export class EmailTemplateService {
       case NotificationEventCode.AuctionPublished:
       case NotificationEventCode.ListingNewOffer:
       case NotificationEventCode.MessagingNewMessage:
+      case NotificationEventCode.TrustTransportConfirmRequest:
+      case NotificationEventCode.TrustReviewReminder:
         return this.renderOperationalAdminTr(eventCode, payload);
       case NotificationEventCode.UserRegistered:
         return {
@@ -263,8 +267,45 @@ export class EmailTemplateService {
       [NotificationEventCode.AuctionPublished]: "Yeni ihale yayınlandı",
       [NotificationEventCode.ListingNewOffer]: "Yeni teklif / ilan",
       [NotificationEventCode.MessagingNewMessage]: "Yeni mesaj",
+      [NotificationEventCode.TrustTransportConfirmRequest]: "Taşıma onayı",
+      [NotificationEventCode.TrustReviewReminder]: "Güven hatırlatması",
     };
     const title = titles[eventCode] ?? "Operasyon bildirimi";
+    if (eventCode === NotificationEventCode.TrustTransportConfirmRequest) {
+      const auctionUrl = payload.auctionUrl ?? "#";
+      return {
+        subject: `${PLATFORM_PRODUCT_NAME} — taşıma tamamlandı mı?`,
+        html: wrapCorporateEmail(
+          "CMR / teslim onayı",
+          `${leadParagraph(
+            "İhaleniz kapandı. Taşıma ve evrak süreci tamamlandığında onay vererek partner değerlendirmesini açabilirsiniz.",
+          )}
+          ${detailTable([
+            { label: "Güzergah", value: payload.routeLabel ?? "—" },
+            { label: "İhale", value: payload.auctionSessionId ?? "—" },
+          ])}
+          ${primaryButton(auctionUrl, "Taşımayı onayla")}`,
+          { eyebrow: "Güven merkezi", preheader: "Taşıma onayı bekleniyor" },
+        ),
+        text: `Taşıma onayı: ${auctionUrl}`,
+      };
+    }
+    if (eventCode === NotificationEventCode.TrustReviewReminder) {
+      const trustUrl = payload.trustUrl ?? "#";
+      return {
+        subject: `${PLATFORM_PRODUCT_NAME} — partner değerlendirmesi bekliyor`,
+        html: wrapCorporateEmail(
+          "Güven değerlendirmesi",
+          `${leadParagraph(
+            `<strong>${escapeHtml(payload.partnerLegalName ?? "Partner")}</strong> için B2B değerlendirme henüz tamamlanmadı.`,
+          )}
+          ${primaryButton(trustUrl, "Değerlendirme yap")}
+          ${mutedParagraph("Tamamlanan taşıma sonrası puanlar marketplace ve mesajlarda görünür.")}`,
+          { eyebrow: "Güven merkezi", preheader: "Değerlendirme hatırlatması" },
+        ),
+        text: `Değerlendirme: ${trustUrl}`,
+      };
+    }
     if (eventCode === NotificationEventCode.MessagingNewMessage) {
       const messagingUrl = payload.messagingUrl ?? "#";
       const preview = payload.messagePreview ?? "";

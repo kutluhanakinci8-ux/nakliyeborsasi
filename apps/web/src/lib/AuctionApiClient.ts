@@ -77,6 +77,8 @@ export type AuctionSessionDetail = {
       auctionTypeCode: string;
       autoExtendMinutes: number;
       autoExtendWindowMinutes: number;
+      transportCompletedAt: string | null;
+      transportCompletionNote: string | null;
       bids: (AuctionBidRecord & { createdAt: string })[];
     };
   listing: {
@@ -215,5 +217,20 @@ export class AuctionApiClient {
         body: JSON.stringify({ bidAmount }),
       },
     );
+  }
+
+  public static async confirmTransport(
+    accessToken: string,
+    auctionSessionId: string,
+    completionNote?: string,
+  ): Promise<{ transportCompletedAt: string | null }> {
+    return AuthenticatedApiClient.fetchJson(
+      accessToken,
+      `/auctions/sessions/${encodeURIComponent(auctionSessionId)}/confirm-transport`,
+      {
+        method: "POST",
+        body: JSON.stringify({ completionNote: completionNote?.trim() || undefined }),
+      },
+    ) as Promise<{ transportCompletedAt: string | null }>;
   }
 }

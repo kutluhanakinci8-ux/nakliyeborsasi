@@ -130,4 +130,53 @@ export class MessagingWebPushService {
     }
   }
 
+  public async notifyTrustPrompt(params: {
+    companyId: string;
+    title: string;
+    body: string;
+    url: string;
+  }): Promise<void> {
+    const vapid = resolveMessagingVapidFromEnv();
+    if (!vapid) {
+      return;
+    }
+    const subs = await this.subscriptionRepository.find({
+      where: { companyId: params.companyId },
+    });
+    if (subs.length === 0) {
+      return;
+    }
+    const payload = JSON.stringify({
+      title: params.title,
+      body: params.body.slice(0, 180),
+      url: params.url,
+    });
+    for (const row of subs) {
+      const prefs = await this.userNotificationPreferenceService.getForUser(
+        row.userId,
+      );
+      if (!prefs.notifyPushAuctions) {
+        continue;
+      }
+      try {
+        await sendWebPushNotification(
+          {
+            endpoint: row.endpoint,
+            keys: { p256dh: row.p256dh, auth: row.auth },
+          },
+          payload,
+          vapid,
+        );
+      } catch (error) {
+        const status = (error as { statusCode?: number }).statusCode;
+        if (status === 404 || status === 410) {
+          await this.subscriptionRepository.delete({ id: row.id });
+        } else {
+          this.logger.warn(
+            `Trust push failed user=${row.userId} status=${status ?? "?"}`,
+          );
+        }
+      }
+    }
+  }
 }
