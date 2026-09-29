@@ -24,3 +24,24 @@ bash scripts/report-firma-sohbeti-pilot-nps.sh
 ```
 
 Mac’ten tek seferde güncelleme: repo kökünde `bash scripts/deploy-vps-ssh.sh` (`VPS_SSH_PRIVATE_KEY` veya şifre ile).
+
+**FS-8.3 iki API:** Port **3012** = `lerta-mail-web`. İkinci `nakliyeborsasi-api` için:
+
+```bash
+bash scripts/start-messaging-api-smoke-instance.sh   # PORT=3015
+SMOKE_SECOND_API_PORT=3015 API_BASE=https://app.lerta.com.tr/api/v1 \
+  bash scripts/run-prod-fs83-two-instance-smoke.sh
+```
+
+**Showcase FAIL** ise (deploy sonrası):
+
+```bash
+API_BASE=https://app.lerta.com.tr/api/v1 \
+  MESSAGING_TEST_EMAIL=yukveren01@test.nakliyeborsasi.local \
+  MESSAGING_TEST_PASSWORD='TestPass123!' \
+  bash scripts/seed-firma-sohbeti-excellence-showcase.sh
+# gerekirse: FORCE_EXCELLENCE_DEMO=1 ...
+bash scripts/ensure-firma-sohbeti-excellence-showcase.sh
+```
+
+**Mail dalı:** Firma sohbeti `main` (69e21f7+); Lerta Post için `cursor/mail-instant-box-dns-519e` ayrı tutun — deploy sonrası `git checkout main` doğrulayın.

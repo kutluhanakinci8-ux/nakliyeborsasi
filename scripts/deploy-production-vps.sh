@@ -152,7 +152,9 @@ if [[ -x "${INSTALL_DIR}/scripts/verify-firma-sohbeti-pilot-nps.sh" ]]; then
   PILOT_NPS_STRICT="${PILOT_NPS_STRICT:-1}" bash "${INSTALL_DIR}/scripts/verify-firma-sohbeti-pilot-nps.sh" || echo "UYARI: pilot NPS verify"
 fi
 
-if [[ -x "${INSTALL_DIR}/scripts/verify-firma-sohbeti-excellence-showcase.sh" ]]; then
+if [[ -x "${INSTALL_DIR}/scripts/ensure-firma-sohbeti-excellence-showcase.sh" ]]; then
+  API_BASE="${API_BASE}" bash "${INSTALL_DIR}/scripts/ensure-firma-sohbeti-excellence-showcase.sh" || echo "UYARI: excellence showcase verify"
+elif [[ -x "${INSTALL_DIR}/scripts/verify-firma-sohbeti-excellence-showcase.sh" ]]; then
   API_BASE="${API_BASE}" bash "${INSTALL_DIR}/scripts/verify-firma-sohbeti-excellence-showcase.sh" || echo "UYARI: excellence showcase verify"
 fi
 

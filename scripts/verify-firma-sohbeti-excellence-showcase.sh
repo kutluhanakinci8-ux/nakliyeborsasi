@@ -9,6 +9,7 @@ source "${ROOT}/scripts/resolve-messaging-test-jwt.sh" || true
 
 MARKER="[DEMO_EXCELLENCE_V1]"
 SEARCH_TOKEN="DEMO_EXCELLENCE_ARAMA_TOKEN"
+EXCELLENCE_SHOWCASE_THREAD_ID="${EXCELLENCE_SHOWCASE_THREAD_ID:-}"
 
 echo "== Firma sohbeti excellence showcase verify =="
 
@@ -73,23 +74,34 @@ echo "== Showcase thread içerik =="
 threads_json="$(curl -fsS "${auth_hdr[@]}" "${API_BASE}/messaging/threads?lang=tr")"
 search_json="$(curl -fsS "${auth_hdr[@]}" \
   "${API_BASE}/messaging/search?q=${SEARCH_TOKEN}&limit=3&lang=tr")"
-thread_id="$(THREADS_JSON="${threads_json}" SEARCH_JSON="${search_json}" MARKER="${MARKER}" python3 - <<'PY'
+if [[ -n "${EXCELLENCE_SHOWCASE_THREAD_ID}" ]]; then
+  thread_id="${EXCELLENCE_SHOWCASE_THREAD_ID}"
+else
+  thread_id="$(THREADS_JSON="${threads_json}" SEARCH_JSON="${search_json}" MARKER="${MARKER}" python3 - <<'PY'
 import json, os
 marker = os.environ["MARKER"]
 threads = json.loads(os.environ["THREADS_JSON"])
 search = json.loads(os.environ["SEARCH_JSON"])
+by_id = {t.get("threadId"): t for t in threads.get("threads") or [] if t.get("threadId")}
 for r in search.get("results") or []:
-    if r.get("threadId"):
-        print(r["threadId"])
-        raise SystemExit(0)
+    tid = r.get("threadId")
+    if not tid:
+        continue
+    meta = by_id.get(tid) or {}
+    if meta.get("threadKind") == "group":
+        continue
+    print(tid)
+    raise SystemExit(0)
 for t in threads.get("threads") or []:
+    if t.get("threadKind") == "group":
+        continue
     prev = t.get("lastMessagePreview") or ""
-    title = t.get("title") or ""
-    if marker in prev or marker in title:
+    if marker in prev:
         print(t.get("threadId") or "")
         break
 PY
 )"
+fi
 
 if [[ -z "${thread_id}" ]]; then
   echo "FAIL: showcase thread bulunamadı — bash scripts/seed-firma-sohbeti-excellence-showcase.sh"
@@ -98,8 +110,9 @@ fi
 
 messages_json="$(curl -fsS "${auth_hdr[@]}" \
   "${API_BASE}/messaging/threads/${thread_id}/messages?lang=tr")"
-MESSAGES_JSON="${messages_json}" python3 - <<'PY'
-import json, os
+MESSAGES_JSON="${messages_json}" MARKER="${MARKER}" python3 - <<'PY'
+import json, os, sys
+marker = os.environ.get("MARKER", "")
 data = json.loads(os.environ["MESSAGES_JSON"])
 messages = data.get("messages") or []
 if not messages:
@@ -124,6 +137,21 @@ checks = [
 ]
 failed = [name for name, ok in checks if not ok]
 if failed:
+    has_marker = any(marker in (m.get("bodyText") or "") for m in messages)
+    print(f"DIAG: thread mesaj sayısı={len(messages)} marker_in_body={has_marker}", file=sys.stderr)
+    if not has_marker:
+        print(
+            "İpucu: API_BASE + MESSAGING_TEST_EMAIL=yukveren01@test.nakliyeborsasi.local ile seed çalıştırın",
+            file=sys.stderr,
+        )
+        print(
+            "  bash scripts/seed-firma-sohbeti-excellence-showcase.sh",
+            file=sys.stderr,
+        )
+        print(
+            "  FORCE_EXCELLENCE_DEMO=1 bash scripts/seed-firma-sohbeti-excellence-showcase.sh",
+            file=sys.stderr,
+        )
     raise SystemExit(f"FAIL: eksik showcase özellikleri: {failed}")
 print("OK: showcase messages", len(messages), "—", ", ".join(n for n, _ in checks))
 PY

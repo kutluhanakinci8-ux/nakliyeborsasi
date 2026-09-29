@@ -13,11 +13,11 @@ CREATE INDEX IF NOT EXISTS idx_message_thread_participants_company
   ON message_thread_participants (company_id);
 
 INSERT INTO message_thread_participants (thread_id, company_id)
-SELECT id, company_a_id FROM message_threads
+SELECT id, "companyAId" FROM message_threads
 ON CONFLICT DO NOTHING;
 
 INSERT INTO message_thread_participants (thread_id, company_id)
-SELECT id, company_b_id FROM message_threads
+SELECT id, "companyBId" FROM message_threads
 ON CONFLICT DO NOTHING;
 
 ALTER TABLE company_messaging_settings
