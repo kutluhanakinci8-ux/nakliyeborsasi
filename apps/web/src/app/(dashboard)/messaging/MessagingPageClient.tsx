@@ -649,13 +649,6 @@ export function MessagingPageClient() {
 
   return (
     <ModulePageShell
-      eyebrow={mode === "chat" ? "Mesajlar" : undefined}
-      title={mode === "chat" ? "Firma mesajlaşması" : undefined}
-      lead={
-        mode === "chat"
-          ? "Taşıyıcı ve yük veren firmalar arasında güvenli sohbet. Kurumsal Lerta Post kutusu için üstte «Kurumsal e-posta» sekmesine geçin."
-          : undefined
-      }
       stats={
         mode === "chat"
           ? [
