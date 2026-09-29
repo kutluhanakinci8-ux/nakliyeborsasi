@@ -73,8 +73,8 @@ if [[ -x scripts/apply-mail-sent-trash-schema.sh ]]; then
   bash scripts/apply-mail-sent-trash-schema.sh "$INSTALL_DIR" || true
 fi
 
-if [[ -x scripts/deploy-lerta-post-vanity-from.sh ]]; then
-  bash scripts/deploy-lerta-post-vanity-from.sh "$INSTALL_DIR" || true
+if [[ "${SKIP_LERTA_POST_VANITY_DEPLOY:-0}" != "1" ]] && [[ -x scripts/deploy-lerta-post-vanity-from.sh ]]; then
+  DEPLOY_BRANCH="${BRANCH}" bash scripts/deploy-lerta-post-vanity-from.sh "$INSTALL_DIR" || true
 fi
 
 DEPLOY_BRANCH="$BRANCH" bash scripts/deploy-posta-lerta-com-tr.sh "$INSTALL_DIR"
@@ -152,14 +152,26 @@ if [[ -x "${INSTALL_DIR}/scripts/verify-firma-sohbeti-pilot-nps.sh" ]]; then
   PILOT_NPS_STRICT="${PILOT_NPS_STRICT:-1}" bash "${INSTALL_DIR}/scripts/verify-firma-sohbeti-pilot-nps.sh" || echo "UYARI: pilot NPS verify"
 fi
 
+SHOWCASE_API_BASE="${MESSAGING_SHOWCASE_API_BASE:-https://app.lerta.com.tr/api/v1}"
 if [[ -x "${INSTALL_DIR}/scripts/ensure-firma-sohbeti-excellence-showcase.sh" ]]; then
-  API_BASE="${API_BASE}" bash "${INSTALL_DIR}/scripts/ensure-firma-sohbeti-excellence-showcase.sh" || echo "UYARI: excellence showcase verify"
+  set -a
+  # shellcheck disable=SC1090
+  [[ -f "${INSTALL_DIR}/.env" ]] && source "${INSTALL_DIR}/.env"
+  set +a
+  API_BASE="${SHOWCASE_API_BASE}" bash "${INSTALL_DIR}/scripts/ensure-firma-sohbeti-excellence-showcase.sh" || echo "UYARI: excellence showcase verify"
 elif [[ -x "${INSTALL_DIR}/scripts/verify-firma-sohbeti-excellence-showcase.sh" ]]; then
-  API_BASE="${API_BASE}" bash "${INSTALL_DIR}/scripts/verify-firma-sohbeti-excellence-showcase.sh" || echo "UYARI: excellence showcase verify"
+  set -a
+  # shellcheck disable=SC1090
+  [[ -f "${INSTALL_DIR}/.env" ]] && source "${INSTALL_DIR}/.env"
+  set +a
+  API_BASE="${SHOWCASE_API_BASE}" bash "${INSTALL_DIR}/scripts/verify-firma-sohbeti-excellence-showcase.sh" || echo "UYARI: excellence showcase verify"
 fi
 
 if [[ -x "${INSTALL_DIR}/scripts/run-prod-fs83-two-instance-smoke.sh" ]]; then
-  bash "${INSTALL_DIR}/scripts/run-prod-fs83-two-instance-smoke.sh" || echo "UYARI: FS-8.3 smoke"
+  if [[ -z "${SMOKE_SECOND_API_PORT:-}" ]] && curl -fsS "http://127.0.0.1:3015/api/v1/health" >/dev/null 2>&1; then
+    export SMOKE_SECOND_API_PORT=3015
+  fi
+  API_BASE="${SHOWCASE_API_BASE}" bash "${INSTALL_DIR}/scripts/run-prod-fs83-two-instance-smoke.sh" || echo "UYARI: FS-8.3 smoke"
 fi
 
 if [[ -x "${INSTALL_DIR}/scripts/run-mail-messaging-parity-wave2-checklist.sh" ]]; then

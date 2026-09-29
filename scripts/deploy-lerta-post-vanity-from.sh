@@ -4,9 +4,10 @@ set -euo pipefail
 
 INSTALL_DIR="${1:-/var/www/nakliyeborsasi}"
 BRANCH="${BRANCH:-cursor/mail-instant-box-dns-519e}"
+RESTORE_BRANCH="${DEPLOY_BRANCH:-main}"
 
 cd "${INSTALL_DIR}"
-git fetch origin "${BRANCH}"
+git fetch origin "${BRANCH}" "${RESTORE_BRANCH}"
 git checkout "${BRANCH}"
 git pull origin "${BRANCH}"
 
@@ -35,3 +36,8 @@ bash "${INSTALL_DIR}/scripts/vps-diagnose-outbound-mail.sh" "${INSTALL_DIR}" || 
 
 echo "Deploy tamam. Test: webmailden mail gönderin."
 echo "Kimden: info@abayer.post · MAIL FROM (teknik): info@abayer.post.lerta.com.tr"
+
+git fetch origin "${RESTORE_BRANCH}"
+git checkout "${RESTORE_BRANCH}"
+git pull origin "${RESTORE_BRANCH}" || true
+echo "Git: ${RESTORE_BRANCH} (firma sohbeti / main deploy dalı)"
