@@ -7,6 +7,7 @@ import {
 } from "@nakliyeborsasi/core";
 import { AuctionSessionEntity } from "../../infrastructure/database/entities/AuctionSessionEntity";
 import { AuctionBidEntity } from "../../infrastructure/database/entities/AuctionBidEntity";
+import { TrustReviewInviteService } from "../trust/TrustReviewInviteService";
 
 @Injectable()
 export class AuctionSessionFinalizationService {
@@ -15,6 +16,7 @@ export class AuctionSessionFinalizationService {
     private readonly auctionSessionRepository: Repository<AuctionSessionEntity>,
     @InjectRepository(AuctionBidEntity)
     private readonly auctionBidRepository: Repository<AuctionBidEntity>,
+    private readonly trustReviewInviteService: TrustReviewInviteService,
   ) {}
 
   public async closeAllExpiredOpenSessions(): Promise<number> {
@@ -49,6 +51,10 @@ export class AuctionSessionFinalizationService {
       .getOne();
     session.statusCode = AuctionSessionStatusCode.Closed;
     session.winningBidId = winningBid?.id ?? null;
-    return this.auctionSessionRepository.save(session);
+    const saved = await this.auctionSessionRepository.save(session);
+    if (saved.winningBidId) {
+      await this.trustReviewInviteService.issueForClosedAuction(saved);
+    }
+    return saved;
   }
 }

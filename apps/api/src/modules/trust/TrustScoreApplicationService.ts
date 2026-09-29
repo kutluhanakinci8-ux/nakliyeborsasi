@@ -14,6 +14,7 @@ import { CompanyEntity } from "../../infrastructure/database/entities/CompanyEnt
 import { SubmitCompanyTrustReviewRequestDto } from "./SubmitCompanyTrustReviewRequestDto";
 import { ModularSubscriptionEntitlementService } from "../subscription/ModularSubscriptionEntitlementService";
 import { CompanySubscriptionPersistenceService } from "../subscription/CompanySubscriptionPersistenceService";
+import { TrustReviewInviteService } from "./TrustReviewInviteService";
 
 @Injectable()
 export class TrustScoreApplicationService {
@@ -24,6 +25,7 @@ export class TrustScoreApplicationService {
     private readonly companyRepository: Repository<CompanyEntity>,
     private readonly modularSubscriptionEntitlementService: ModularSubscriptionEntitlementService,
     private readonly companySubscriptionPersistenceService: CompanySubscriptionPersistenceService,
+    private readonly trustReviewInviteService: TrustReviewInviteService,
   ) {}
 
   public async getCompanyTrustSnapshot(
@@ -131,18 +133,25 @@ export class TrustScoreApplicationService {
         authorCompanyId: authenticatedUser.companyId,
       },
     });
+    let saved: CompanyTrustReviewEntity;
     if (existing) {
       existing.scoreValue = payload.scoreValue;
       existing.commentText = payload.commentText;
-      return this.companyTrustReviewRepository.save(existing);
+      saved = await this.companyTrustReviewRepository.save(existing);
+    } else {
+      saved = await this.companyTrustReviewRepository.save(
+        this.companyTrustReviewRepository.create({
+          targetCompanyId,
+          authorCompanyId: authenticatedUser.companyId,
+          scoreValue: payload.scoreValue,
+          commentText: payload.commentText,
+        }),
+      );
     }
-    return this.companyTrustReviewRepository.save(
-      this.companyTrustReviewRepository.create({
-        targetCompanyId,
-        authorCompanyId: authenticatedUser.companyId,
-        scoreValue: payload.scoreValue,
-        commentText: payload.commentText,
-      }),
+    await this.trustReviewInviteService.markFulfilledForReview(
+      authenticatedUser.companyId,
+      targetCompanyId,
     );
+    return saved;
   }
 }

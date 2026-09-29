@@ -13,14 +13,40 @@ import { JwtAuthenticationGuard } from "../auth/JwtAuthenticationGuard";
 import { AuthenticatedUserParam } from "../auth/AuthenticatedUserParam";
 import { LocaleResolutionService } from "../localization/LocaleResolutionService";
 import { TrustScoreApplicationService } from "./TrustScoreApplicationService";
+import { TrustReviewInviteService } from "./TrustReviewInviteService";
 import { SubmitCompanyTrustReviewRequestDto } from "./SubmitCompanyTrustReviewRequestDto";
 
 @Controller("trust-scores")
 export class TrustScoreController {
   public constructor(
     private readonly trustScoreApplicationService: TrustScoreApplicationService,
+    private readonly trustReviewInviteService: TrustReviewInviteService,
     private readonly localeResolutionService: LocaleResolutionService,
   ) {}
+
+  @Get("review-invites")
+  @UseGuards(JwtAuthenticationGuard)
+  public async listReviewInvites(
+    @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
+  ): Promise<{ invites: unknown[] }> {
+    const invites = await this.trustReviewInviteService.listPendingForCompany(
+      authenticatedUser.companyId,
+    );
+    return { invites };
+  }
+
+  @Post("review-invites/:inviteId/dismiss")
+  @UseGuards(JwtAuthenticationGuard)
+  public async dismissReviewInvite(
+    @Param("inviteId") inviteId: string,
+    @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
+  ): Promise<{ ok: true }> {
+    await this.trustReviewInviteService.dismissInvite(
+      inviteId,
+      authenticatedUser.companyId,
+    );
+    return { ok: true };
+  }
 
   @Get("companies/:companyId")
   public async getCompanyTrustSnapshot(
