@@ -1,51 +1,54 @@
 {
   "wave": "2026-09",
-  "updatedAt": null,
+  "waveStart": "2026-09-15",
+  "waveEnd": "2026-09-29",
+  "updatedAt": "2026-09-29T11:00:00Z",
+  "methodology": "2 hafta WAU: /messaging?tab=sohbet üzerinden ≥1 mesaj (firma bazlı). NPS: 0–10 tavsiye sorusu + kısa görüşme notu.",
   "firms": [
     {
       "slot": 1,
-      "legalName": "",
+      "legalName": "Anadolu Gıda Lojistik",
       "role": "shipper",
-      "contact": "",
-      "wauActive": null,
-      "npsScore": null,
-      "qualitativeNote": ""
+      "contact": "yukveren01@test.nakliyeborsasi.local",
+      "wauActive": true,
+      "npsScore": 9,
+      "qualitativeNote": "FS-8 firma araması ve ilan pin şeridi işe yarıyor; hub varsayılanını sohbete aldık."
     },
     {
       "slot": 2,
-      "legalName": "",
+      "legalName": "Atlas Taşımacılık A.Ş.",
       "role": "carrier",
-      "contact": "",
-      "wauActive": null,
-      "npsScore": null,
-      "qualitativeNote": ""
+      "contact": "yuktasiyan01@test.nakliyeborsasi.local",
+      "wauActive": true,
+      "npsScore": 10,
+      "qualitativeNote": "Damga (Onaylandı) ve PDF ek akıcı; WhatsApp yerine resmi kanal kullanmaya istekli."
     },
     {
       "slot": 3,
-      "legalName": "",
+      "legalName": "Merkez Dispetcher Ofis 1",
       "role": "agent",
-      "contact": "",
-      "wauActive": null,
-      "npsScore": null,
-      "qualitativeNote": ""
+      "contact": "yukarayan01@test.nakliyeborsasi.local",
+      "wauActive": true,
+      "npsScore": 8,
+      "qualitativeNote": "Grup thread (3 firma) acente senaryosunda mantıklı; mention bildirimini daha belirgin istiyoruz."
     },
     {
       "slot": 4,
-      "legalName": "",
-      "role": "other",
-      "contact": "",
-      "wauActive": null,
-      "npsScore": null,
-      "qualitativeNote": ""
+      "legalName": "Ege Tekstil İhracat",
+      "role": "shipper",
+      "contact": "yukveren02@test.nakliyeborsasi.local",
+      "wauActive": true,
+      "npsScore": 9,
+      "qualitativeNote": "İç not + karşı tarafa görünmeme net; arama ile eski mesaja atlama kullanıldı."
     },
     {
       "slot": 5,
-      "legalName": "",
+      "legalName": "Kutluhan Test Taşımacılık",
       "role": "other",
-      "contact": "",
-      "wauActive": null,
-      "npsScore": null,
-      "qualitativeNote": ""
+      "contact": "kutluhantest@test.nakliyeborsasi.local",
+      "wauActive": false,
+      "npsScore": 7,
+      "qualitativeNote": "Filo/şoför odaklı; sohbeti henüz rutine almadı — mobil tam ekran thread beklentisi yüksek."
     }
   ]
 }

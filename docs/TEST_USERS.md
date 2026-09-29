@@ -89,4 +89,14 @@ bash scripts/seed-firma-sohbeti-demo-conversations.sh
 Giriş: `yukveren01`…`05` veya `yuktasiyan01`…`05` @ `test.nakliyeborsasi.local` · şifre `TestPass123!`  
 UI: https://app.lerta.com.tr/messaging?tab=sohbet
 
+### Excellence özellik turu (`[DEMO_EXCELLENCE_V1]`)
+
+FS-8…12 UI kontrolü: mention, damga, düzenle/sil, grup thread, org şablonları, arama token `DEMO_EXCELLENCE_ARAMA_TOKEN`.
+
+```bash
+bash scripts/seed-firma-sohbeti-excellence-showcase.sh
+MESSAGING_TEST_EMAIL=yukveren01@test.nakliyeborsasi.local MESSAGING_TEST_PASSWORD=TestPass123! \
+  bash scripts/verify-firma-sohbeti-excellence-showcase.sh
+```
+
 Platform konsolu (`/admin`) bu verileri `GET /api/v1/platform-admin/*` ile listeler (yalnızca `admin@nakliyeborsasi.local`).
