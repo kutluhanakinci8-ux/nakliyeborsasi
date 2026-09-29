@@ -7,10 +7,10 @@ source "${ROOT}/scripts/resolve-local-api-base.sh" "${ROOT}"
 
 echo "== MP-5 communications ops verify =="
 
-live="$(curl -fsS "${API_BASE}/health/live")"
+live="$(curl -fsS --connect-timeout 5 --max-time 30 "${API_BASE}/health/live")"
 python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('status')=='ok'; sse=d.get('messagingSse') or {}; assert 'connections' in sse; print('OK: /health/live sse.connections=', sse.get('connections'))" <<<"${live}"
 
-status="$(curl -fsS "${API_BASE}/messaging/status")"
+status="$(curl -fsS --connect-timeout 5 --max-time 60 "${API_BASE}/messaging/status")"
 python3 -c "import json,sys; d=json.load(sys.stdin); assert 'whatsappBridge' in d; assert d['whatsappBridge'].get('channel') in ('twilio','webhook','none'); print('OK: /messaging/status whatsappBridge')"
 
 JWT="${OPERATOR_JWT:-${MESSAGING_TEST_JWT:-}}"
