@@ -18,7 +18,8 @@
     "start:web": "npm run start -w @nakliyeborsasi/web",
     "start:dev": "npm run verify-root && npm run start:dev -w @nakliyeborsasi/api",
     "lint": "npm run lint -w @nakliyeborsasi/api",
-    "test:unit": "npm run test -w @nakliyeborsasi/core"
+    "test:unit": "npm run test -w @nakliyeborsasi/core",
+    "test:e2e": "npm run test:e2e -w @nakliyeborsasi/web"
   },
   "engines": {
     "node": ">=20"
@@ -27,12 +28,17 @@
     "react": "18.3.1",
     "react-dom": "18.3.1"
   },
+  "devDependencies": {
+    "@playwright/test": "^1.51.0"
+  },
   "optionalDependencies": {
     "@next/swc-linux-x64-gnu": "14.2.15",
     "@next/swc-linux-x64-musl": "14.2.15"
   },
   "overrides": {
     "react": "18.3.1",
-    "react-dom": "18.3.1"
+    "react-dom": "18.3.1",
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.1"
   }
 }

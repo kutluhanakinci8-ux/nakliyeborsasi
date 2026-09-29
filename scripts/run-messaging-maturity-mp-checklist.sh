@@ -23,6 +23,13 @@ echo "== Messaging / Posta maturity (MP) checklist =="
 run_step "MP-1 TypeORM entities" bash "${ROOT}/scripts/verify-typeorm-global-entities.sh"
 run_step "MP-3 core unit tests" npm run test:unit --prefix "${ROOT}"
 
+if [[ "${SKIP_PLAYWRIGHT:-}" != "1" ]]; then
+  run_step "MP-3 Playwright smoke (public)" bash "${ROOT}/scripts/verify-messaging-playwright-e2e.sh"
+else
+  echo ""
+  echo "SKIP: SKIP_PLAYWRIGHT=1"
+fi
+
 if curl -fsS -o /dev/null --connect-timeout 2 "${API_BASE:-http://127.0.0.1:3001/api/v1}/messaging/status" 2>/dev/null; then
   run_step "MP-2 FS-12 WA sandbox" bash "${ROOT}/scripts/verify-messaging-wa-bridge-sandbox.sh"
 else
