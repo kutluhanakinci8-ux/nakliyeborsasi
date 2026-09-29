@@ -1,6 +1,6 @@
 import { Inject, Injectable, forwardRef } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { In, IsNull, Repository } from "typeorm";
+import { Brackets, In, IsNull, Repository } from "typeorm";
 import {
   AuthenticatedUserContext,
   AuthorizationException,
@@ -48,6 +48,24 @@ import { MessagingWhatsappBridgeService } from "./MessagingWhatsappBridgeService
 import { MessagingThreadParticipantService } from "./MessagingThreadParticipantService";
 import { OpenMessagingGroupThreadRequestDto } from "./OpenMessagingGroupThreadRequestDto";
 import { AuctionListingPriceActionService } from "../auction/AuctionListingPriceActionService";
+import {
+  CompanyMessagingSettingsEntity,
+  type CompanyOrgQuickReplyTemplate,
+} from "../../infrastructure/database/entities/CompanyMessagingSettingsEntity";
+import {
+  MessageOperationStampEntity,
+  type MessagingOperationStampType,
+} from "../../infrastructure/database/entities/MessageOperationStampEntity";
+import type { MessagingGroupParticipantRole } from "../../infrastructure/database/entities/MessageThreadParticipantEntity";
+import { TrustScoreApplicationService } from "../trust/TrustScoreApplicationService";
+import { randomUUID } from "node:crypto";
+
+const COMPANY_UUID_SEARCH_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function escapeIlikeFragment(value: string): string {
+  return value.replace(/[%_\\]/g, "\\$&");
+}
 
 @Injectable()
 export class MessagingThreadApplicationService {
@@ -68,6 +86,11 @@ export class MessagingThreadApplicationService {
     private readonly companyRepository: Repository<CompanyEntity>,
     @InjectRepository(FreightListingEntity)
     private readonly freightListingRepository: Repository<FreightListingEntity>,
+    @InjectRepository(CompanyMessagingSettingsEntity)
+    private readonly companyMessagingSettingsRepository: Repository<CompanyMessagingSettingsEntity>,
+    @InjectRepository(MessageOperationStampEntity)
+    private readonly messageOperationStampRepository: Repository<MessageOperationStampEntity>,
+    private readonly trustScoreApplicationService: TrustScoreApplicationService,
     private readonly modularSubscriptionEntitlementService: ModularSubscriptionEntitlementService,
     private readonly operationalNotificationService: OperationalNotificationService,
     private readonly messagingAttachmentStorageService: MessagingAttachmentStorageService,
@@ -191,9 +214,14 @@ export class MessagingThreadApplicationService {
         title,
       }),
     );
+    const roleMap: Record<string, MessagingGroupParticipantRole> = {
+      [authenticatedUser.companyId]: "agent",
+      ...(payload.participantRoles ?? {}),
+    };
     await this.messagingThreadParticipantService.addParticipants(
       created.id,
       participantIds,
+      roleMap,
     );
     const openedPayload = {
       threadId: created.id,
@@ -378,8 +406,57 @@ export class MessagingThreadApplicationService {
     const counterpartyUserReads = await this.userReadStateRepository.find({
       where: { threadId: thread.id, companyId: counterpartyCompanyId },
     });
+    const counterpartyUserIds = [
+      ...new Set(counterpartyUserReads.map((row) => row.userId)),
+    ];
+    const counterpartyUsers =
+      counterpartyUserIds.length > 0
+        ? await this.userAccountRepository.find({
+            where: { id: In(counterpartyUserIds) },
+          })
+        : [];
+    const counterpartyUserNameById = new Map(
+      counterpartyUsers.map((row) => [
+        row.id,
+        row.displayName?.trim() ||
+          row.emailAddress?.trim() ||
+          row.id.slice(0, 8),
+      ]),
+    );
     const messageCreatedMs = (value: Date | string): number =>
       value instanceof Date ? value.getTime() : new Date(value).getTime();
+
+    const visibleIds = visible.map((row) => row.id);
+    const stampRows =
+      visibleIds.length > 0
+        ? await this.messageOperationStampRepository.find({
+            where: { messageId: In(visibleIds) },
+            order: { createdAt: "ASC" },
+          })
+        : [];
+    const stampUserIds = [
+      ...new Set(stampRows.map((row) => row.stampedByUserId)),
+    ];
+    const stampUsers =
+      stampUserIds.length > 0
+        ? await this.userAccountRepository.find({
+            where: { id: In(stampUserIds) },
+          })
+        : [];
+    const stampUserNameById = new Map(
+      stampUsers.map((row) => [
+        row.id,
+        row.displayName?.trim() ||
+          row.emailAddress?.trim() ||
+          row.id.slice(0, 8),
+      ]),
+    );
+    const stampsByMessageId = new Map<string, MessageOperationStampEntity[]>();
+    for (const stamp of stampRows) {
+      const bucket = stampsByMessageId.get(stamp.messageId) ?? [];
+      bucket.push(stamp);
+      stampsByMessageId.set(stamp.messageId, bucket);
+    }
 
     const views = visible.map((message) => {
       const isMine = message.senderCompanyId === authenticatedUser.companyId;
@@ -393,12 +470,30 @@ export class MessagingThreadApplicationService {
             )
             .map((row) => row.userId)
         : [];
+      const readByCounterpartyReaders = readByCounterpartyUserIds.map(
+        (userId) => ({
+          userId,
+          displayName:
+            counterpartyUserNameById.get(userId) ?? userId.slice(0, 8),
+        }),
+      );
       const readByRecipient =
         isMine &&
         (readByCounterpartyUserIds.length > 0 ||
           (counterpartyLastReadAt !== null &&
             createdMs <= messageCreatedMs(counterpartyLastReadAt)));
       const deleted = Boolean(message.deletedAt);
+      const operationStamps = (stampsByMessageId.get(message.id) ?? []).map(
+        (stamp) => ({
+          stampType: stamp.stampType,
+          stampedByCompanyId: stamp.stampedByCompanyId,
+          stampedByUserId: stamp.stampedByUserId,
+          stampedByDisplayName:
+            stampUserNameById.get(stamp.stampedByUserId) ??
+            stamp.stampedByUserId.slice(0, 8),
+          createdAt: stamp.createdAt.toISOString(),
+        }),
+      );
       return new MessagingThreadMessageView({
         id: message.id,
         senderCompanyId: message.senderCompanyId,
@@ -406,11 +501,13 @@ export class MessagingThreadApplicationService {
         createdAt: message.createdAt.toISOString(),
         readByRecipient,
         readByCounterpartyUserIds,
+        readByCounterpartyReaders,
         messageKind: message.kind ?? "public",
         editedAt: message.editedAt?.toISOString() ?? null,
         deleted,
         mentionUserIds: message.mentionUserIds ?? [],
         attachments: deleted ? [] : this.publicAttachments(message.attachments),
+        operationStamps,
       });
     });
     const latest = visible.at(-1);
@@ -665,7 +762,373 @@ export class MessagingThreadApplicationService {
     locale: string,
   ): Promise<{ templates: ReturnType<typeof listMessagingQuickReplies> }> {
     await this.assertMessagingModule(authenticatedUser, locale);
-    return { templates: listMessagingQuickReplies() };
+    const orgExtras = await this.loadOrgQuickReplyTemplates(
+      authenticatedUser.companyId,
+    );
+    return { templates: listMessagingQuickReplies(orgExtras) };
+  }
+
+  public async getOrgQuickReplies(
+    authenticatedUser: AuthenticatedUserContext,
+    locale: string,
+  ): Promise<{ templates: CompanyOrgQuickReplyTemplate[] }> {
+    if (!authenticatedUser.roleCodes.includes(CompanyRoleCode.CompanyOwner)) {
+      throw new AuthorizationException(
+        "Yalnızca şirket sahibi şablonları yönetebilir",
+      );
+    }
+    await this.assertMessagingModule(authenticatedUser, locale);
+    const templates = await this.loadOrgQuickReplyTemplates(
+      authenticatedUser.companyId,
+    );
+    return { templates };
+  }
+
+  public async replaceOrgQuickReplies(
+    authenticatedUser: AuthenticatedUserContext,
+    locale: string,
+    templatesInput: CompanyOrgQuickReplyTemplate[],
+  ): Promise<{ templates: CompanyOrgQuickReplyTemplate[] }> {
+    if (!authenticatedUser.roleCodes.includes(CompanyRoleCode.CompanyOwner)) {
+      throw new AuthorizationException(
+        "Yalnızca şirket sahibi şablonları yönetebilir",
+      );
+    }
+    await this.assertMessagingModule(authenticatedUser, locale);
+    const sanitized = this.sanitizeOrgQuickReplyTemplates(templatesInput);
+    const existing = await this.companyMessagingSettingsRepository.findOne({
+      where: { companyId: authenticatedUser.companyId },
+    });
+    if (existing) {
+      existing.orgQuickReplyTemplates = sanitized;
+      await this.companyMessagingSettingsRepository.save(existing);
+    } else {
+      await this.companyMessagingSettingsRepository.save(
+        this.companyMessagingSettingsRepository.create({
+          companyId: authenticatedUser.companyId,
+          orgQuickReplyTemplates: sanitized,
+        }),
+      );
+    }
+    return { templates: sanitized };
+  }
+
+  public async applyOperationStamp(
+    authenticatedUser: AuthenticatedUserContext,
+    threadId: string,
+    messageId: string,
+    stampType: MessagingOperationStampType,
+    locale: string,
+    clientContext?: MessagingClientRequestContext,
+    auditPath?: string,
+  ): Promise<{ stampType: MessagingOperationStampType; messageId: string }> {
+    const thread = await this.requireParticipantThread(
+      authenticatedUser,
+      threadId,
+      locale,
+    );
+    const message = await this.messageRepository.findOne({
+      where: { id: messageId, threadId: thread.id },
+    });
+    if (!message) {
+      throw new MessagingThreadNotFoundException(messageId);
+    }
+    if (message.deletedAt) {
+      throw new ValidationException("Silinmiş mesaja damga eklenemez");
+    }
+    if (message.kind === "internal") {
+      throw new ValidationException("İç notlara damga eklenemez");
+    }
+    if (message.senderCompanyId === authenticatedUser.companyId) {
+      throw new ValidationException(
+        "Kendi mesajınıza işlem damgası ekleyemezsiniz",
+      );
+    }
+    const allowed: MessagingOperationStampType[] = [
+      "approved",
+      "rejected",
+      "acknowledged",
+    ];
+    if (!allowed.includes(stampType)) {
+      throw new ValidationException("Geçersiz damga türü");
+    }
+    const existing = await this.messageOperationStampRepository.findOne({
+      where: {
+        messageId: message.id,
+        stampedByCompanyId: authenticatedUser.companyId,
+      },
+    });
+    if (existing) {
+      existing.stampType = stampType;
+      existing.stampedByUserId = authenticatedUser.userId;
+      await this.messageOperationStampRepository.save(existing);
+    } else {
+      await this.messageOperationStampRepository.save(
+        this.messageOperationStampRepository.create({
+          messageId: message.id,
+          threadId: thread.id,
+          stampType,
+          stampedByUserId: authenticatedUser.userId,
+          stampedByCompanyId: authenticatedUser.companyId,
+        }),
+      );
+    }
+    if (clientContext) {
+      await this.messagingAuditService.recordMessageMutation(
+        MessagingAuditActionCode.MessageStamp,
+        authenticatedUser,
+        clientContext,
+        {
+          threadId: thread.id,
+          messageId: message.id,
+          httpMethod: "POST",
+          requestPath:
+            auditPath ??
+            `/messaging/threads/${threadId}/messages/${messageId}/stamp`,
+          extra: { stampType },
+        },
+      );
+    }
+    const event = { type: "message", threadId: thread.id };
+    await this.fanOutRealtime(thread, event);
+    await this.fanOutWebhook(thread, "message.stamped", {
+      threadId: thread.id,
+      messageId: message.id,
+      stampType,
+      stampedByCompanyId: authenticatedUser.companyId,
+      stampedByUserId: authenticatedUser.userId,
+    });
+    return { stampType, messageId: message.id };
+  }
+
+  public async listThreadParticipants(
+    authenticatedUser: AuthenticatedUserContext,
+    threadId: string,
+    locale: string,
+  ): Promise<{
+    participants: {
+      companyId: string;
+      legalName: string | null;
+      participantRole: string;
+    }[];
+  }> {
+    const thread = await this.requireParticipantThread(
+      authenticatedUser,
+      threadId,
+      locale,
+    );
+    let rows: { companyId: string; participantRole: string }[];
+    if (thread.threadKind === "group") {
+      const detailed =
+        await this.messagingThreadParticipantService.listParticipantsDetailed(
+          thread.id,
+        );
+      rows = detailed.map((row) => ({
+        companyId: row.companyId,
+        participantRole: row.participantRole,
+      }));
+    } else {
+      rows = [
+        { companyId: thread.companyAId, participantRole: "observer" },
+        { companyId: thread.companyBId, participantRole: "observer" },
+      ];
+    }
+    const companies =
+      rows.length > 0
+        ? await this.companyRepository.find({
+            where: { id: In(rows.map((row) => row.companyId)) },
+          })
+        : [];
+    const nameById = new Map(
+      companies.map((row) => [
+        row.id,
+        row.legalName?.trim() || row.id.slice(0, 8),
+      ]),
+    );
+    return {
+      participants: rows.map((row) => ({
+        companyId: row.companyId,
+        legalName: nameById.get(row.companyId) ?? null,
+        participantRole: row.participantRole,
+      })),
+    };
+  }
+
+  private async loadOrgQuickReplyTemplates(
+    companyId: string,
+  ): Promise<ReturnType<typeof listMessagingQuickReplies>> {
+    const row = await this.companyMessagingSettingsRepository.findOne({
+      where: { companyId },
+    });
+    const org = row?.orgQuickReplyTemplates ?? [];
+    return org.map((template) => ({
+      id: template.id,
+      labelTr: template.labelTr,
+      bodyText: template.bodyText,
+      scope: "organization" as const,
+    }));
+  }
+
+  private sanitizeOrgQuickReplyTemplates(
+    templatesInput: CompanyOrgQuickReplyTemplate[],
+  ): CompanyOrgQuickReplyTemplate[] {
+    const list = Array.isArray(templatesInput) ? templatesInput : [];
+    const sanitized: CompanyOrgQuickReplyTemplate[] = [];
+    for (const raw of list.slice(0, 20)) {
+      const labelTr = raw.labelTr?.trim() ?? "";
+      const bodyText = raw.bodyText?.trim() ?? "";
+      if (!labelTr || !bodyText) {
+        continue;
+      }
+      const id =
+        typeof raw.id === "string" && raw.id.trim().length > 0
+          ? raw.id.trim()
+          : randomUUID();
+      sanitized.push({
+        id,
+        labelTr: labelTr.slice(0, 80),
+        labelEn: raw.labelEn?.trim().slice(0, 80) || undefined,
+        bodyText: bodyText.slice(0, 4000),
+        category: raw.category?.trim().slice(0, 40) || undefined,
+      });
+    }
+    return sanitized;
+  }
+
+  public async getMessagingHubDefault(
+    authenticatedUser: AuthenticatedUserContext,
+    locale: string,
+  ): Promise<{ defaultTab: "email" | "chat" }> {
+    await this.assertMessagingModule(authenticatedUser, locale);
+    const row = await this.companyMessagingSettingsRepository.findOne({
+      where: { companyId: authenticatedUser.companyId },
+    });
+    const raw = row?.defaultHubTab?.trim().toLowerCase();
+    const defaultTab = raw === "chat" || raw === "sohbet" ? "chat" : "email";
+    return { defaultTab };
+  }
+
+  public async updateMessagingHubDefault(
+    authenticatedUser: AuthenticatedUserContext,
+    locale: string,
+    defaultTab: "email" | "chat",
+  ): Promise<{ defaultTab: "email" | "chat" }> {
+    if (!authenticatedUser.roleCodes.includes(CompanyRoleCode.CompanyOwner)) {
+      throw new AuthorizationException(
+        "Yalnızca şirket sahibi varsayılan sekme ayarını değiştirebilir",
+      );
+    }
+    await this.assertMessagingModule(authenticatedUser, locale);
+    const existing = await this.companyMessagingSettingsRepository.findOne({
+      where: { companyId: authenticatedUser.companyId },
+    });
+    if (existing) {
+      existing.defaultHubTab = defaultTab;
+      await this.companyMessagingSettingsRepository.save(existing);
+    } else {
+      await this.companyMessagingSettingsRepository.save(
+        this.companyMessagingSettingsRepository.create({
+          companyId: authenticatedUser.companyId,
+          defaultHubTab: defaultTab,
+        }),
+      );
+    }
+    return { defaultTab };
+  }
+
+  public async searchCompanies(
+    authenticatedUser: AuthenticatedUserContext,
+    locale: string,
+    query: string,
+    limit = 15,
+  ): Promise<{
+    query: string;
+    companies: {
+      companyId: string;
+      legalName: string;
+      countryCode: string;
+      participantTypeCode: string | null;
+      trustScoreValue: number;
+      trustReviewCount: number;
+      hasExistingThread: boolean;
+    }[];
+  }> {
+    await this.assertMessagingModule(authenticatedUser, locale);
+    const term = query.trim();
+    if (term.length < 3 && !COMPANY_UUID_SEARCH_RE.test(term)) {
+      throw new ValidationException("Firma araması en az 3 karakter olmalı");
+    }
+    const capped = Math.min(Math.max(limit, 1), 25);
+    const selfId = authenticatedUser.companyId;
+
+    const counterparties = await this.messageThreadRepository
+      .createQueryBuilder("thread")
+      .select(["thread.companyAId", "thread.companyBId"])
+      .where("thread.companyAId = :selfId OR thread.companyBId = :selfId", {
+        selfId,
+      })
+      .getMany();
+    const existingThreadPartnerIds = new Set<string>();
+    for (const thread of counterparties) {
+      const other =
+        thread.companyAId === selfId ? thread.companyBId : thread.companyAId;
+      if (other) {
+        existingThreadPartnerIds.add(other);
+      }
+    }
+
+    let companies: CompanyEntity[] = [];
+    if (COMPANY_UUID_SEARCH_RE.test(term)) {
+      const byId = await this.companyRepository.findOne({
+        where: { id: term },
+      });
+      if (byId && byId.id !== selfId) {
+        companies = [byId];
+      }
+    } else {
+      const escaped = escapeIlikeFragment(term);
+      const prefix = `${escaped}%`;
+      const contains = `%${escaped}%`;
+      companies = await this.companyRepository
+        .createQueryBuilder("company")
+        .where("company.id != :selfId", { selfId })
+        .andWhere(
+          new Brackets((qb) => {
+            qb.where("company.legalName ILIKE :prefix ESCAPE '\\'", {
+              prefix,
+            }).orWhere("company.legalName ILIKE :contains ESCAPE '\\'", {
+              contains,
+            });
+          }),
+        )
+        .orderBy("company.legalName", "ASC")
+        .take(capped)
+        .getMany();
+    }
+
+    const trustSnapshots = await Promise.all(
+      companies.map((row) =>
+        this.trustScoreApplicationService
+          .getCompanyTrustSnapshot(row.id)
+          .catch(() => null),
+      ),
+    );
+
+    return {
+      query: term,
+      companies: companies.map((row, index) => {
+        const trust = trustSnapshots[index];
+        return {
+          companyId: row.id,
+          legalName: row.legalName,
+          countryCode: row.countryCode,
+          participantTypeCode: row.participantTypeCode,
+          trustScoreValue: trust?.scoreValue ?? 0,
+          trustReviewCount: trust?.reviewCount ?? 0,
+          hasExistingThread: existingThreadPartnerIds.has(row.id),
+        };
+      }),
+    };
   }
 
   public async searchMessages(
@@ -1055,7 +1518,7 @@ export class MessagingThreadApplicationService {
 
   private async fanOutWebhook(
     thread: MessageThreadEntity,
-    event: "message.created" | "thread.opened",
+    event: "message.created" | "thread.opened" | "message.stamped",
     payload: Record<string, unknown>,
   ): Promise<void> {
     const companyIds =

@@ -28,11 +28,13 @@ export type ThreadMessageRecord = {
   createdAt: string;
   readByRecipient?: boolean;
   readByCounterpartyUserIds?: string[];
+  readByCounterpartyReaders?: { userId: string; displayName: string }[];
   messageKind?: "public" | "internal";
   editedAt?: string | null;
   deleted?: boolean;
   mentionUserIds?: string[];
   attachments?: ThreadMessageAttachmentRecord[];
+  operationStamps?: MessagingOperationStampRecord[];
 };
 
 export type MessagingThreadSummaryRecord = {
@@ -78,11 +80,37 @@ export type MessagingSearchResultRecord = {
   createdAt: string;
 };
 
+export type MessagingCompanySearchRecord = {
+  companyId: string;
+  legalName: string;
+  countryCode: string;
+  participantTypeCode: string | null;
+  trustScoreValue: number;
+  trustReviewCount: number;
+  hasExistingThread: boolean;
+};
+
 export type MessagingQuickReplyRecord = {
   id: string;
   labelTr: string;
   bodyText: string;
   scope: "system" | "organization";
+};
+
+export type MessagingOrgQuickReplyRecord = {
+  id: string;
+  labelTr: string;
+  labelEn?: string;
+  bodyText: string;
+  category?: string;
+};
+
+export type MessagingOperationStampRecord = {
+  stampType: "approved" | "rejected" | "acknowledged";
+  stampedByCompanyId: string;
+  stampedByUserId: string;
+  stampedByDisplayName: string;
+  createdAt: string;
 };
 
 export class MessagingApiClient {
@@ -131,6 +159,28 @@ export class MessagingApiClient {
     ) as Promise<{ thread: { id: string } }>;
   }
 
+  public static async openGroupThread(
+    accessToken: string,
+    locale: string,
+    participantCompanyIds: string[],
+    options?: { title?: string; freightListingId?: string },
+  ): Promise<{ thread: { id: string } }> {
+    return AuthenticatedApiClient.fetchJson(
+      accessToken,
+      `/messaging/threads/group?lang=${locale}`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          participantCompanyIds,
+          ...(options?.title ? { title: options.title } : {}),
+          ...(options?.freightListingId
+            ? { freightListingId: options.freightListingId }
+            : {}),
+        }),
+      },
+    ) as Promise<{ thread: { id: string } }>;
+  }
+
   public static async listMessages(
     accessToken: string,
     locale: string,
@@ -166,6 +216,27 @@ export class MessagingApiClient {
     ) as Promise<{ query: string; results: MessagingSearchResultRecord[] }>;
   }
 
+  public static async searchCompanies(
+    accessToken: string,
+    locale: string,
+    query: string,
+  ): Promise<{ query: string; companies: MessagingCompanySearchRecord[] }> {
+    return AuthenticatedApiClient.fetchJson(
+      accessToken,
+      `/messaging/companies/search?lang=${locale}&q=${encodeURIComponent(query)}`,
+    ) as Promise<{ query: string; companies: MessagingCompanySearchRecord[] }>;
+  }
+
+  public static async fetchMessagingHubDefault(
+    accessToken: string,
+    locale: string,
+  ): Promise<{ defaultTab: "email" | "chat" }> {
+    return AuthenticatedApiClient.fetchJson(
+      accessToken,
+      `/messaging/hub-default?lang=${locale}`,
+    ) as Promise<{ defaultTab: "email" | "chat" }>;
+  }
+
   public static async fetchQuickReplies(
     accessToken: string,
     locale: string,
@@ -174,6 +245,71 @@ export class MessagingApiClient {
       accessToken,
       `/messaging/quick-replies?lang=${locale}`,
     ) as Promise<{ templates: MessagingQuickReplyRecord[] }>;
+  }
+
+  public static async fetchOrgQuickReplies(
+    accessToken: string,
+    locale: string,
+  ): Promise<{ templates: MessagingOrgQuickReplyRecord[] }> {
+    return AuthenticatedApiClient.fetchJson(
+      accessToken,
+      `/messaging/quick-replies/org?lang=${locale}`,
+    ) as Promise<{ templates: MessagingOrgQuickReplyRecord[] }>;
+  }
+
+  public static async saveOrgQuickReplies(
+    accessToken: string,
+    locale: string,
+    templates: MessagingOrgQuickReplyRecord[],
+  ): Promise<{ templates: MessagingOrgQuickReplyRecord[] }> {
+    return AuthenticatedApiClient.fetchJson(
+      accessToken,
+      `/messaging/quick-replies/org?lang=${locale}`,
+      {
+        method: "PUT",
+        body: JSON.stringify({ templates }),
+      },
+    ) as Promise<{ templates: MessagingOrgQuickReplyRecord[] }>;
+  }
+
+  public static async listThreadParticipants(
+    accessToken: string,
+    locale: string,
+    threadId: string,
+  ): Promise<{
+    participants: {
+      companyId: string;
+      legalName: string | null;
+      participantRole: string;
+    }[];
+  }> {
+    return AuthenticatedApiClient.fetchJson(
+      accessToken,
+      `/messaging/threads/${threadId}/participants?lang=${locale}`,
+    ) as Promise<{
+      participants: {
+        companyId: string;
+        legalName: string | null;
+        participantRole: string;
+      }[];
+    }>;
+  }
+
+  public static async stampMessage(
+    accessToken: string,
+    locale: string,
+    threadId: string,
+    messageId: string,
+    stampType: "approved" | "rejected" | "acknowledged",
+  ): Promise<{ stampType: string; messageId: string }> {
+    return AuthenticatedApiClient.fetchJson(
+      accessToken,
+      `/messaging/threads/${threadId}/messages/${messageId}/stamp?lang=${locale}`,
+      {
+        method: "POST",
+        body: JSON.stringify({ stampType }),
+      },
+    ) as Promise<{ stampType: string; messageId: string }>;
   }
 
   public static async translateMessage(

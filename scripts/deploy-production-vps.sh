@@ -48,6 +48,15 @@ fi
 if [[ -x scripts/apply-messaging-fs7-schema.sh ]]; then
   bash scripts/apply-messaging-fs7-schema.sh "$INSTALL_DIR" || true
 fi
+if [[ -x scripts/apply-messaging-fs8-schema.sh ]]; then
+  bash scripts/apply-messaging-fs8-schema.sh "$INSTALL_DIR" || true
+fi
+if [[ -x scripts/apply-messaging-fs11-schema.sh ]]; then
+  bash scripts/apply-messaging-fs11-schema.sh "$INSTALL_DIR" || true
+fi
+if [[ -x scripts/apply-messaging-fs12-schema.sh ]]; then
+  bash scripts/apply-messaging-fs12-schema.sh "$INSTALL_DIR" || true
+fi
 
 if [[ -x scripts/apply-mail-sa2-auto-reply-schema.sh ]]; then
   bash scripts/apply-mail-sa2-auto-reply-schema.sh "$INSTALL_DIR" || true
@@ -119,11 +128,18 @@ export API_BASE INSTALL_DIR ENV_FILE="${INSTALL_DIR}/.env"
 
 echo "=== Post-deploy doğrulama (API_BASE=${API_BASE}) ==="
 for verify in verify-firma-sohbeti-fs1.sh verify-firma-sohbeti-fs2.sh verify-firma-sohbeti-fs3.sh \
-  verify-firma-sohbeti-fs4.sh verify-firma-sohbeti-fs5.sh verify-firma-sohbeti-fs6.sh verify-firma-sohbeti-fs7.sh; do
+  verify-firma-sohbeti-fs4.sh verify-firma-sohbeti-fs5.sh verify-firma-sohbeti-fs6.sh verify-firma-sohbeti-fs7.sh \
+  verify-firma-sohbeti-fs8.sh verify-firma-sohbeti-fs9.sh verify-firma-sohbeti-fs10.sh \
+  verify-firma-sohbeti-fs11.sh verify-firma-sohbeti-fs12.sh; do
   if [[ -x "${INSTALL_DIR}/scripts/${verify}" ]]; then
     API_BASE="${API_BASE}" bash "${INSTALL_DIR}/scripts/${verify}" || echo "UYARI: ${verify} başarısız"
   fi
 done
+
+if [[ -x "${INSTALL_DIR}/scripts/verify-firma-sohbeti-fs8-prod-checklist.sh" ]]; then
+  API_BASE="${API_BASE}" INSTALL_DIR="${INSTALL_DIR}" \
+    bash "${INSTALL_DIR}/scripts/verify-firma-sohbeti-fs8-prod-checklist.sh" || echo "UYARI: FS-8 prod checklist başarısız"
+fi
 
 if [[ -x "${INSTALL_DIR}/scripts/run-mail-messaging-parity-wave2-checklist.sh" ]]; then
   SKIP_LIGHTHOUSE="${SKIP_LIGHTHOUSE:-1}" API_BASE="${API_BASE}" \

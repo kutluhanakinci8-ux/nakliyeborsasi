@@ -28,6 +28,7 @@ import { MessagingAuditService } from "./MessagingAuditService";
 import { MessagingCompanyMessageRateLimitService } from "./MessagingCompanyMessageRateLimitService";
 import { CompanyMessagingWebhookEndpointEntity } from "../../infrastructure/database/entities/CompanyMessagingWebhookEndpointEntity";
 import { CompanyMessagingSettingsEntity } from "../../infrastructure/database/entities/CompanyMessagingSettingsEntity";
+import { MessageOperationStampEntity } from "../../infrastructure/database/entities/MessageOperationStampEntity";
 import { MessagingWebhookDispatcherService } from "./MessagingWebhookDispatcherService";
 import { MessagingCompanyIntegrationService } from "./MessagingCompanyIntegrationService";
 import { MessagingIntegrationController } from "./MessagingIntegrationController";
@@ -45,12 +46,14 @@ import { CompanyMessagingBotCredentialEntity } from "../../infrastructure/databa
 import { MessagingPublicApiReadService } from "./MessagingPublicApiReadService";
 import { MessagingRetentionScheduler } from "./MessagingRetentionScheduler";
 import { AuctionModule } from "../auction/AuctionModule";
+import { TrustScoreModule } from "../trust/TrustScoreModule";
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       MessageThreadEntity,
       MessageEntity,
+      MessageOperationStampEntity,
       CompanyMessagingWebhookEndpointEntity,
       CompanyMessagingSettingsEntity,
       CompanyMessagingBotCredentialEntity,
@@ -67,6 +70,7 @@ import { AuctionModule } from "../auction/AuctionModule";
     AuthModule,
     NotificationModule,
     forwardRef(() => AuctionModule),
+    TrustScoreModule,
     RedisModule,
     AuditModule,
   ],

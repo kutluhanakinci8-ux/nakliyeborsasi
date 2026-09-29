@@ -2,7 +2,10 @@ import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { In, Repository } from "typeorm";
 import { MessageThreadEntity } from "../../infrastructure/database/entities/MessageThreadEntity";
-import { MessageThreadParticipantEntity } from "../../infrastructure/database/entities/MessageThreadParticipantEntity";
+import {
+  MessageThreadParticipantEntity,
+  type MessagingGroupParticipantRole,
+} from "../../infrastructure/database/entities/MessageThreadParticipantEntity";
 
 @Injectable()
 export class MessagingThreadParticipantService {
@@ -42,6 +45,7 @@ export class MessagingThreadParticipantService {
   public async addParticipants(
     threadId: string,
     companyIds: string[],
+    roleByCompanyId?: Record<string, MessagingGroupParticipantRole>,
   ): Promise<void> {
     const unique = [...new Set(companyIds)];
     if (unique.length === 0) {
@@ -49,9 +53,47 @@ export class MessagingThreadParticipantService {
     }
     await this.participantRepository.save(
       unique.map((companyId) =>
-        this.participantRepository.create({ threadId, companyId }),
+        this.participantRepository.create({
+          threadId,
+          companyId,
+          participantRole: this.resolveParticipantRole(
+            companyId,
+            roleByCompanyId,
+          ),
+        }),
       ),
     );
+  }
+
+  public async listParticipantsDetailed(
+    threadId: string,
+  ): Promise<
+    { companyId: string; participantRole: MessagingGroupParticipantRole }[]
+  > {
+    const rows = await this.participantRepository.find({
+      where: { threadId },
+      order: { joinedAt: "ASC" },
+    });
+    return rows.map((row) => ({
+      companyId: row.companyId,
+      participantRole: row.participantRole ?? "observer",
+    }));
+  }
+
+  private resolveParticipantRole(
+    companyId: string,
+    roleByCompanyId?: Record<string, MessagingGroupParticipantRole>,
+  ): MessagingGroupParticipantRole {
+    const raw = roleByCompanyId?.[companyId];
+    if (
+      raw === "shipper" ||
+      raw === "carrier" ||
+      raw === "agent" ||
+      raw === "observer"
+    ) {
+      return raw;
+    }
+    return "observer";
   }
 
   public async listGroupThreadIdsForCompany(companyId: string): Promise<string[]> {

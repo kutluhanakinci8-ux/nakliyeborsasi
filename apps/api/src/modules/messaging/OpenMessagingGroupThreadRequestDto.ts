@@ -1,4 +1,12 @@
-import { ArrayMinSize, IsArray, IsOptional, IsString, IsUUID, MaxLength } from "class-validator";
+import {
+  ArrayMinSize,
+  IsArray,
+  IsObject,
+  IsOptional,
+  IsString,
+  IsUUID,
+  MaxLength,
+} from "class-validator";
 
 export class OpenMessagingGroupThreadRequestDto {
   @IsArray()
@@ -14,4 +22,12 @@ export class OpenMessagingGroupThreadRequestDto {
   @IsString()
   @MaxLength(120)
   public title?: string;
+
+  /** FS-12: firma kimliği → rol (yükleyici/nakliyeci/acente/gözlemci) */
+  @IsOptional()
+  @IsObject()
+  public participantRoles?: Record<
+    string,
+    "shipper" | "carrier" | "agent" | "observer"
+  >;
 }

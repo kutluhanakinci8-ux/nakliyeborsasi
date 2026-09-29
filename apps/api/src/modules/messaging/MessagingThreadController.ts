@@ -7,6 +7,7 @@ import {
   Param,
   ParseIntPipe,
   Patch,
+  Put,
   Post,
   Query,
   Req,
@@ -51,6 +52,24 @@ export class MessagingThreadController {
       locale,
     );
     return { threads };
+  }
+
+  @Get("threads/:threadId/participants")
+  public async listThreadParticipants(
+    @Param("threadId") threadId: string,
+    @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
+    @Headers("accept-language") acceptLanguage: string | undefined,
+    @Query("lang") queryLanguage: string | undefined,
+  ): Promise<{ participants: unknown[] }> {
+    const locale = this.localeResolutionService.resolveFromHeaders(
+      acceptLanguage,
+      queryLanguage,
+    );
+    return this.messagingThreadApplicationService.listThreadParticipants(
+      authenticatedUser,
+      threadId,
+      locale,
+    );
   }
 
   @Post("threads/group")
@@ -173,6 +192,64 @@ export class MessagingThreadController {
         locale,
       );
     return { colleagues };
+  }
+
+  @Get("companies/search")
+  public async searchCompanies(
+    @Query("q") query: string,
+    @Query("limit") limitRaw: string | undefined,
+    @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
+    @Headers("accept-language") acceptLanguage: string | undefined,
+    @Query("lang") queryLanguage: string | undefined,
+  ): Promise<{ query: string; companies: unknown[] }> {
+    const locale = this.localeResolutionService.resolveFromHeaders(
+      acceptLanguage,
+      queryLanguage,
+    );
+    const limit = limitRaw ? Number.parseInt(limitRaw, 10) : 15;
+    return this.messagingThreadApplicationService.searchCompanies(
+      authenticatedUser,
+      locale,
+      query ?? "",
+      Number.isFinite(limit) ? limit : 15,
+    );
+  }
+
+  @Get("hub-default")
+  public async messagingHubDefault(
+    @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
+    @Headers("accept-language") acceptLanguage: string | undefined,
+    @Query("lang") queryLanguage: string | undefined,
+  ): Promise<{ defaultTab: "email" | "chat" }> {
+    const locale = this.localeResolutionService.resolveFromHeaders(
+      acceptLanguage,
+      queryLanguage,
+    );
+    return this.messagingThreadApplicationService.getMessagingHubDefault(
+      authenticatedUser,
+      locale,
+    );
+  }
+
+  @Patch("hub-default")
+  public async updateMessagingHubDefault(
+    @Body() body: { defaultTab?: string },
+    @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
+    @Headers("accept-language") acceptLanguage: string | undefined,
+    @Query("lang") queryLanguage: string | undefined,
+  ): Promise<{ defaultTab: "email" | "chat" }> {
+    const locale = this.localeResolutionService.resolveFromHeaders(
+      acceptLanguage,
+      queryLanguage,
+    );
+    const raw = body.defaultTab?.trim().toLowerCase();
+    const defaultTab =
+      raw === "chat" || raw === "sohbet" ? "chat" : "email";
+    return this.messagingThreadApplicationService.updateMessagingHubDefault(
+      authenticatedUser,
+      locale,
+      defaultTab,
+    );
   }
 
   @Patch("threads/:threadId/messages/:messageId")
@@ -329,6 +406,72 @@ export class MessagingThreadController {
     return this.messagingThreadApplicationService.listQuickReplies(
       authenticatedUser,
       locale,
+    );
+  }
+
+  @Get("quick-replies/org")
+  public async orgQuickReplies(
+    @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
+    @Headers("accept-language") acceptLanguage: string | undefined,
+    @Query("lang") queryLanguage: string | undefined,
+  ): Promise<{ templates: unknown[] }> {
+    const locale = this.localeResolutionService.resolveFromHeaders(
+      acceptLanguage,
+      queryLanguage,
+    );
+    return this.messagingThreadApplicationService.getOrgQuickReplies(
+      authenticatedUser,
+      locale,
+    );
+  }
+
+  @Put("quick-replies/org")
+  public async replaceOrgQuickReplies(
+    @Body() body: { templates?: unknown[] },
+    @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
+    @Headers("accept-language") acceptLanguage: string | undefined,
+    @Query("lang") queryLanguage: string | undefined,
+  ): Promise<{ templates: unknown[] }> {
+    const locale = this.localeResolutionService.resolveFromHeaders(
+      acceptLanguage,
+      queryLanguage,
+    );
+    const templates = Array.isArray(body.templates) ? body.templates : [];
+    return this.messagingThreadApplicationService.replaceOrgQuickReplies(
+      authenticatedUser,
+      locale,
+      templates as import("../../infrastructure/database/entities/CompanyMessagingSettingsEntity").CompanyOrgQuickReplyTemplate[],
+    );
+  }
+
+  @Post("threads/:threadId/messages/:messageId/stamp")
+  public async stampMessage(
+    @Param("threadId") threadId: string,
+    @Param("messageId") messageId: string,
+    @Body() body: { stampType?: string },
+    @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
+    @Req() request: Request,
+    @Headers("accept-language") acceptLanguage: string | undefined,
+    @Query("lang") queryLanguage: string | undefined,
+  ): Promise<{ stampType: string; messageId: string }> {
+    const locale = this.localeResolutionService.resolveFromHeaders(
+      acceptLanguage,
+      queryLanguage,
+    );
+    const clientContext = resolveMessagingClientRequestContext(request);
+    const raw = body.stampType?.trim().toLowerCase();
+    const stampType =
+      raw === "approved" || raw === "rejected" || raw === "acknowledged"
+        ? raw
+        : "acknowledged";
+    return this.messagingThreadApplicationService.applyOperationStamp(
+      authenticatedUser,
+      threadId,
+      messageId,
+      stampType,
+      locale,
+      clientContext,
+      request.path,
     );
   }
 

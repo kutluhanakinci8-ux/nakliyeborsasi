@@ -367,9 +367,143 @@ bash scripts/verify-messaging-web-push-prod.sh /var/www/nakliyeborsasi/.env
 
 ## 10. Sonraki adım
 
-1. **Ürün onayı:** FS-1 maddeleri (varsayılan sekme, polling, XLSX).  
-2. **Dal:** `cursor/firma-sohbeti-fs1-519e` ile FS-1 uygulama.  
-3. **Parity tablosu:** #21 Slack derinliği, #34 okundu — her faz sonunda güncelle.
+1. **FS-1…FS-7** kod tamam — odak **prod kapanışı** + **FS-8…FS-12 (Excellence)**.  
+2. Her faz sonunda: parity **#21**, **#34**, **#7** güncelle · `verify-firma-sohbeti-fs*.sh` + VPS checklist.  
+3. Ürün hedefi: **TMS sohbetinde TR/EU #1** · Slack günlük UX **~%92** · WA bildirim beklentisi **~%70** (kayıt Lerta’da).
+
+---
+
+## 11. Excellence yol haritası (FS-8 … FS-12)
+
+**Başlangıç (2026-09):** Kod FS-1…7 ✅ · Prod ortalama **~%72** · Firma sohbeti UX son cilalar (compose dock) prod’a alındı.  
+**18 ay üst hedef:** TMS referans **~%98** · Slack ağırlıklı **~%92** · WA tüketici UX **~%65** (bilinçli: E2E/kanal klonu değil).
+
+### Hedef skor tablosu (faz sonları)
+
+| Faz | Süre (teknik kapsam) | vs TMS (işlem sohbeti) | vs Slack (UX) | vs WA (mobil/okundu) | Prod parity (sohbet odak) |
+|-----|----------------------|-------------------------|---------------|----------------------|---------------------------|
+| **FS-8** | 4–6 hf | 92→**96** | 86→**88** | 55→**58** | 72→**82** |
+| **FS-9** | 6–8 hf | 96→**98** | 88→**90** | 58→**65** | 82→**86** |
+| **FS-10** | 6–8 hf | 98→**99** | 90→**91** | 65→**68** | 86→**89** |
+| **FS-11** | 4–6 hf | 99→**99** | 91→**92** | 68→**70** | 89→**91** |
+| **FS-12** | 8–12 hf (ürün kararı) | **99+** | 92→**93** | 70→**72** | 91→**93** |
+
+---
+
+### FS-8 — “Günlük kullanım sürtünmesi sıfır” (P0)
+
+**Amaç:** Kullanıcı UUID görmez; prod canlılık kurumsal satışa hazır.
+
+| # | İş | Kabul kriteri |
+|---|-----|----------------|
+| 8.1 | **Firma arama API** — `GET /messaging/companies/search?q=` (legal name, unvan, opsiyonel vergi no; org scope + güven filtresi) | 3+ karakter, &lt;300 ms staging |
+| 8.2 | **Birleşik arama UI** — UUID yedek; “Yeni sohbet” panelinde firma kartı (unvan, güven, son işlem) | UX test 5 pilot firma |
+| 8.3 | **Prod SSE ölçek** — `REDIS_URL` + `MESSAGING_SSE_REDIS_FANOUT=1` zorunlu checklist | 2 API instance smoke PASS |
+| 8.4 | **Push prod kapanış** — sohbet VAPID, fallback kapalı doğrulama | `verify-messaging-web-push-prod.sh` PASS |
+| 8.5 | **Hub politikası** — `?tab=sohbet` veya org ayarı “varsayılan firma sohbeti” | Ayarlar + doküman |
+| 8.6 | `scripts/verify-firma-sohbeti-fs8.sh` | CI opsiyonel |
+
+**Parity:** #7 SSE · #8 push · compose/search UX.
+
+---
+
+### FS-9 — “Kurumsal sohbet kalitesi” (P0–P1)
+
+**Amaç:** TMS + Slack günlük kullanımda eksik kalan “güven ve işbirliği” katmanı.
+
+| # | İş | Kabul kriteri |
+|---|-----|----------------|
+| 9.1 | **Okundu paneli** — mesajda ✓ / ✓✓; “Kim okudu” (karşı şirket iş hesapları, GDPR metni) | Parity **#34** → **%75+** |
+| 9.2 | **Grup thread UI** — 3+ firma; mevcut `openGroupThread` API’ye compose + liste | Acente senaryosu demo |
+| 9.3 | **Düzenle / sil UX** — modal, süre limiti gösterimi, audit görünür | `window.prompt` kaldırılır |
+| 9.4 | **@mention bildirim** — push + e-posta özeti; mention highlight render | FS-3 tam kapanış |
+| 9.5 | **İç not** — balon stili ayrı; listede filtre “sadece iç notlar” | Karşı taraf API negative test |
+| 9.6 | `verify-firma-sohbeti-fs9.sh` | |
+
+**Parity:** #21 Slack **~%90** · #34 **%75**.
+
+---
+
+### FS-10 — “Premium görünüm ve mobil” (P1–P2)
+
+**Amaç:** Trans.eu / WA kullanıcısının “bu ucuz değil” demesi.
+
+| # | İş | Kabul kriteri |
+|---|-----|----------------|
+| 10.1 | **Ekler** — sürükle-bırak, küçük resim/PDF önizleme, indirme progress | 5×10 MB regresyon |
+| 10.2 | **Mesaj listesi** — gün ayırıcı, avatar/initials, alıntılı yanıt (quote) | Mobil 390px |
+| 10.3 | **Arama 2.0** — thread içi highlight, sonuçta scroll-to-message | Sunucu arama FS-2 üstü |
+| 10.4 | **Bağlam kartı** — sabit üst şerit: rota, tonaj, fiyat, güven (collapse) | İlan thread’de zorunlu |
+| 10.5 | **Mobil sohbet** — `/messaging` tam ekran thread, geri jesti, compose dock sticky | Lighthouse mobil ≥75 |
+| 10.6 | **Erişilebilirlik** — mention klavye, focus trap modal, `aria` audit | axe kritik 0 |
+
+---
+
+### FS-11 — “Operasyon hızı” (P2)
+
+**Amaç:** Nakliyede karar verdirici mikro özellikler (Slack’in hafif yüzü).
+
+| # | İş | Kabul kriteri |
+|---|-----|----------------|
+| 11.1 | **Hızlı reaksiyon** — Onaylandı / Reddedildi / Görüldü (işlem damgası, audit) | Teklif thread’inde 1 tık |
+| 11.2 | **Şablon yönetimi** — şirket admin CRUD (TR/EN), compose’da kategoriler | 20 şablon/org |
+| 11.3 | **Klavye** — `/` şablon, `@` mention, `Esc` panel | Power user test |
+| 11.4 | **Bildirim matrisi** — sohbet mention / iç not / grup ayrı satır prod doğrulama | TMS **%100** |
+| 11.5 | **eDiscovery prod** — legal hold + ZIP kanıt paketi (DPO örnek) | Parity **#27** prod **%85+** |
+| 11.6 | `verify-firma-sohbeti-fs11.sh` | |
+
+**Hedef:** TMS **~%99** · Slack UX **~%92**.
+
+---
+
+### FS-12 — “Kanal ve mağaza” (P3, ürün onayı)
+
+**Amaç:** TR pazarında WA alışkanlığını **kayıt dışına kaçırmadan** tamamlamak.
+
+| Seçenek | İş | Kabul | Risk |
+|---------|-----|--------|------|
+| **12A** | WA / SMS **sadece bildirim köprüsü** (“yeni mesaj” → deep link) | Meta/Twilio sandbox + KVKK metni | Maliyet |
+| **12B** | **Capacitor** shell (FS-7C uygulama) — push FCM/APNs | Mağaza beta 1 koridor | Bakım |
+| **12C** | **Partner API** `messaging:write` + webhook genişletme | 1 entegratör pilot | Güvenlik review |
+| **12D** | Gelişmiş grup — rol (yükleyici/nakliyeci/acente) + davet | Veri modeli review | Kapsam |
+
+**Bilinçli erteleme:** Tam Slack (huddle, canvas), tüketici WA sohbetinin yerine geçme, sınırsız kamu kanalları.
+
+---
+
+### Fazlar arası bağımlılık
+
+```mermaid
+flowchart LR
+  FS8[FS-8 Sürtünme + prod]
+  FS9[FS-9 Kalite + grup]
+  FS10[FS-10 Premium UI]
+  FS11[FS-11 Operasyon hızı]
+  FS12[FS-12 Kanal]
+  FS8 --> FS9 --> FS10 --> FS11 --> FS12
+```
+
+---
+
+### Her faz sonu ölçüm (zorunlu)
+
+| Metrik | Araç |
+|--------|------|
+| Slack/TMS skor güncelleme | Bu doküman §3 + [MAIL_ADMIN_BENCHMARK_REPORT.md](./MAIL_ADMIN_BENCHMARK_REPORT.md) §3.3 |
+| Prod parity | [LERTA_MAIL_MESSAGING_PARITY_100_ROADMAP.md](./LERTA_MAIL_MESSAGING_PARITY_100_ROADMAP.md) #21 #34 #7 #8 |
+| Canlılık p95 | `smoke-messaging-sse-load.sh` |
+| Push | `verify-messaging-web-push-prod.sh` |
+| Pilot NPS | 5 firma, sohbet haftalık aktif kullanıcı |
+
+---
+
+### Öncelik sırası (ürün onayı için tek sayfa)
+
+1. **FS-8** — firma adıyla sohbet + prod SSE/push (satış blokajı).  
+2. **FS-9** — okundu + grup UI + düzenleme (kurumsal güven).  
+3. **FS-10** — görünüm + mobil (WA algısına yaklaşma).  
+4. **FS-11** — reaksiyon/şablon/eDiscovery prod (TMS #1).  
+5. **FS-12** — WA bildirim / native (pazar opsiyonu).
 
 ---
 

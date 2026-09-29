@@ -63,6 +63,7 @@ export class MessagingIntegrationController {
     body: {
       whatsappNotifyE164?: string | null;
       enabled: boolean;
+      kvkkNoticeAccepted?: boolean;
     },
   ) {
     return {
@@ -71,6 +72,7 @@ export class MessagingIntegrationController {
         {
           whatsappNotifyE164: body.whatsappNotifyE164 ?? null,
           enabled: body.enabled,
+          kvkkNoticeAccepted: body.kvkkNoticeAccepted,
         },
       ),
     };

@@ -5,6 +5,14 @@ export type MessagingMessageAttachmentView = {
   sizeBytes: number;
 };
 
+export type MessagingOperationStampView = {
+  stampType: "approved" | "rejected" | "acknowledged";
+  stampedByCompanyId: string;
+  stampedByUserId: string;
+  stampedByDisplayName: string;
+  createdAt: string;
+};
+
 export class MessagingThreadMessageView {
   public readonly id: string;
 
@@ -20,6 +28,12 @@ export class MessagingThreadMessageView {
   /** Karşı şirkette okuyan kullanıcı kimlikleri (iş hesabı). */
   public readonly readByCounterpartyUserIds: string[];
 
+  /** Okuyan karşı taraf kullanıcıları (görünen ad). */
+  public readonly readByCounterpartyReaders: {
+    userId: string;
+    displayName: string;
+  }[];
+
   public readonly messageKind: "public" | "internal";
 
   public readonly editedAt: string | null;
@@ -30,6 +44,8 @@ export class MessagingThreadMessageView {
 
   public readonly attachments: MessagingMessageAttachmentView[];
 
+  public readonly operationStamps: MessagingOperationStampView[];
+
   public constructor(params: {
     id: string;
     senderCompanyId: string;
@@ -37,11 +53,13 @@ export class MessagingThreadMessageView {
     createdAt: string;
     readByRecipient: boolean;
     readByCounterpartyUserIds?: string[];
+    readByCounterpartyReaders?: { userId: string; displayName: string }[];
     messageKind?: "public" | "internal";
     editedAt?: string | null;
     deleted?: boolean;
     mentionUserIds?: string[];
     attachments?: MessagingMessageAttachmentView[];
+    operationStamps?: MessagingOperationStampView[];
   }) {
     this.id = params.id;
     this.senderCompanyId = params.senderCompanyId;
@@ -49,10 +67,17 @@ export class MessagingThreadMessageView {
     this.createdAt = params.createdAt;
     this.readByRecipient = params.readByRecipient;
     this.readByCounterpartyUserIds = params.readByCounterpartyUserIds ?? [];
+    this.readByCounterpartyReaders =
+      params.readByCounterpartyReaders ??
+      (params.readByCounterpartyUserIds ?? []).map((userId) => ({
+        userId,
+        displayName: userId.slice(0, 8),
+      }));
     this.messageKind = params.messageKind ?? "public";
     this.editedAt = params.editedAt ?? null;
     this.deleted = params.deleted ?? false;
     this.mentionUserIds = params.mentionUserIds ?? [];
     this.attachments = params.attachments ?? [];
+    this.operationStamps = params.operationStamps ?? [];
   }
 }

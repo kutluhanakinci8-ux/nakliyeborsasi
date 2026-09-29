@@ -1,10 +1,24 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MessagingMailWebEmbed } from "../../../components/messaging/MessagingMailWebEmbed";
 import { ChatMessageBody } from "../../../components/messaging/ChatMessageBody";
+import { MessagingChannelSettingsPanel } from "../../../components/messaging/MessagingChannelSettingsPanel";
+import {
+  ChatGroupThreadModal,
+  ChatMessageDeleteModal,
+  ChatMessageEditModal,
+  ChatQuickReplyAdminModal,
+} from "../../../components/messaging/ChatMessagingModals";
 import { EmptyState } from "../../../components/EmptyState";
 import { ModulePageShell } from "../../../components/ModulePageShell";
 import { useWebSession } from "../../../context/WebSessionProvider";
@@ -12,7 +26,9 @@ import {
   MessagingApiClient,
   MessagingListingCardRecord,
   MessagingOfferTimelineEntryRecord,
+  MessagingOrgQuickReplyRecord,
   MessagingQuickReplyRecord,
+  MessagingCompanySearchRecord,
   MessagingSearchResultRecord,
   MessagingThreadRecord,
   MessagingThreadSummaryRecord,
@@ -23,11 +39,21 @@ import {
   TrustScoreRecord,
 } from "../../../lib/TrustScoreApiClient";
 import { ensureMessagingWebPush } from "../../../lib/messagingPush";
+import {
+  companyInitials,
+  dayKeyFromIso,
+  formatChatDayLabel,
+  groupParticipantRoleLabel,
+  highlightSearchSnippet,
+  operationStampLabel,
+  type MessagingOperationStampType,
+} from "../../../lib/messagingChatUi";
 
 type PendingAttachment = {
   filename: string;
   contentType: string;
   contentBase64: string;
+  previewUrl?: string;
 };
 
 async function readFileAsAttachment(file: File): Promise<PendingAttachment> {
@@ -38,20 +64,71 @@ async function readFileAsAttachment(file: File): Promise<PendingAttachment> {
   for (let offset = 0; offset < bytes.length; offset += chunk) {
     binary += String.fromCharCode(...bytes.subarray(offset, offset + chunk));
   }
+  const contentType = file.type || "application/octet-stream";
+  const previewUrl =
+    contentType.startsWith("image/") ? URL.createObjectURL(file) : undefined;
   return {
     filename: file.name,
-    contentType: file.type || "application/octet-stream",
+    contentType,
     contentBase64: btoa(binary),
+    previewUrl,
   };
 }
 
+function messageHasActiveMentionQuery(body: string): boolean {
+  return /@([^\s]*)$/.test(body);
+}
+
 type MessagingMode = "chat" | "email";
+
+const MESSAGING_TAB_STORAGE_KEY = "lerta.messaging.lastTab";
+
+function rememberMessagingTab(mode: MessagingMode): void {
+  try {
+    window.localStorage.setItem(MESSAGING_TAB_STORAGE_KEY, mode);
+  } catch {
+    /* ignore */
+  }
+}
+
+function readStoredMessagingTab(): MessagingMode | null {
+  try {
+    const raw = window.localStorage.getItem(MESSAGING_TAB_STORAGE_KEY);
+    if (raw === "chat" || raw === "email") {
+      return raw;
+    }
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
+function participantTypeLabel(code: string | null | undefined): string {
+  switch (code) {
+    case "LOAD_SHIPPER":
+      return "Yükveren";
+    case "LOAD_CARRIER":
+      return "Taşıyıcı";
+    case "LOAD_SEEKER":
+      return "Yük arayan";
+    default:
+      return "Firma";
+  }
+}
 
 function shortCompanyId(companyId: string): string {
   if (companyId.length <= 12) {
     return companyId;
   }
   return `${companyId.slice(0, 8)}…${companyId.slice(-4)}`;
+}
+
+const COMPANY_UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function parseCompanyUuidCandidate(raw: string): string | null {
+  const trimmed = raw.trim();
+  return COMPANY_UUID_RE.test(trimmed) ? trimmed : null;
 }
 
 function parseMode(
@@ -82,7 +159,6 @@ export function MessagingPageClient() {
   );
   const [threads, setThreads] = useState<MessagingThreadRecord[]>([]);
   const [activeThreadId, setActiveThreadId] = useState("");
-  const [counterpartyId, setCounterpartyId] = useState("");
   const [messageBody, setMessageBody] = useState("");
   const [messages, setMessages] = useState<ThreadMessageRecord[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
@@ -90,6 +166,7 @@ export function MessagingPageClient() {
   const [acceptOfferBusy, setAcceptOfferBusy] = useState(false);
   const [mailEmbedFullscreen, setMailEmbedFullscreen] = useState(false);
   const [threadSearch, setThreadSearch] = useState("");
+  const [chatSearchFocused, setChatSearchFocused] = useState(false);
   const [counterpartyTrust, setCounterpartyTrust] =
     useState<TrustScoreRecord | null>(null);
   const [moduleBlocked, setModuleBlocked] = useState(false);
@@ -105,6 +182,9 @@ export function MessagingPageClient() {
   const [serverSearchHits, setServerSearchHits] = useState<
     MessagingSearchResultRecord[]
   >([]);
+  const [companySearchHits, setCompanySearchHits] = useState<
+    MessagingCompanySearchRecord[]
+  >([]);
   const [quickReplies, setQuickReplies] = useState<MessagingQuickReplyRecord[]>(
     [],
   );
@@ -114,14 +194,145 @@ export function MessagingPageClient() {
     { userId: string; displayName: string; mentionToken: string }[]
   >([]);
   const typingPingRef = useRef(0);
+  const messageInputRef = useRef<HTMLTextAreaElement>(null);
+  const [mentionMenuOpen, setMentionMenuOpen] = useState(false);
+  const [mentionPickIndex, setMentionPickIndex] = useState(0);
+  const templateSelectRef = useRef<HTMLSelectElement>(null);
+  const [internalNotesOnly, setInternalNotesOnly] = useState(false);
+  const [editMessage, setEditMessage] = useState<{
+    id: string;
+    bodyText: string;
+  } | null>(null);
+  const [deleteMessageId, setDeleteMessageId] = useState<string | null>(null);
+  const [messageActionBusy, setMessageActionBusy] = useState(false);
+  const [groupModalOpen, setGroupModalOpen] = useState(false);
+  const [groupTitle, setGroupTitle] = useState("");
+  const [groupSearchQuery, setGroupSearchQuery] = useState("");
+  const [groupSearchHits, setGroupSearchHits] = useState<
+    MessagingCompanySearchRecord[]
+  >([]);
+  const [groupSelected, setGroupSelected] = useState<
+    MessagingCompanySearchRecord[]
+  >([]);
+  const [scrollToMessageId, setScrollToMessageId] = useState<string | null>(
+    null,
+  );
+  const [contextPinCollapsed, setContextPinCollapsed] = useState(false);
+  const [quotedMessage, setQuotedMessage] = useState<{
+    id: string;
+    preview: string;
+  } | null>(null);
+  const [composeDragActive, setComposeDragActive] = useState(false);
+  const [mobileThreadOpen, setMobileThreadOpen] = useState(false);
   const [translations, setTranslations] = useState<Record<string, string>>({});
   const [pendingAttachments, setPendingAttachments] = useState<
     PendingAttachment[]
   >([]);
   const [translateBusyId, setTranslateBusyId] = useState("");
+  const [stampBusyId, setStampBusyId] = useState("");
+  const [quickReplyAdminOpen, setQuickReplyAdminOpen] = useState(false);
+  const [orgQuickReplyDrafts, setOrgQuickReplyDrafts] = useState<
+    MessagingOrgQuickReplyRecord[]
+  >([]);
+  const [quickReplyAdminBusy, setQuickReplyAdminBusy] = useState(false);
+  const [channelSettingsOpen, setChannelSettingsOpen] = useState(false);
+  const [groupParticipants, setGroupParticipants] = useState<
+    {
+      companyId: string;
+      legalName: string | null;
+      participantRole: string;
+    }[]
+  >([]);
   const deepLinkHandledKey = useRef<string | null>(null);
   const isCompanyOwner =
     session?.roleCodes?.includes("COMPANY_OWNER") ?? false;
+
+  const mentionNameByUserId = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const colleague of colleagues) {
+      const match = colleague.mentionToken.match(
+        /@\{([0-9a-f-]{36})\}/i,
+      );
+      if (match) {
+        map[match[1].toLowerCase()] = colleague.displayName;
+      }
+    }
+    return map;
+  }, [colleagues]);
+
+  const displayedMessages = useMemo(() => {
+    if (!internalNotesOnly) {
+      return messages;
+    }
+    return messages.filter((row) => row.messageKind === "internal");
+  }, [messages, internalNotesOnly]);
+
+  useEffect(() => {
+    if (!scrollToMessageId) {
+      return;
+    }
+    const element = document.getElementById(`chat-msg-${scrollToMessageId}`);
+    if (!element) {
+      return;
+    }
+    element.scrollIntoView({ behavior: "smooth", block: "center" });
+    const timer = window.setTimeout(() => setScrollToMessageId(null), 2600);
+    return () => window.clearTimeout(timer);
+  }, [messages, scrollToMessageId]);
+
+  useEffect(() => {
+    return () => {
+      for (const file of pendingAttachments) {
+        if (file.previewUrl) {
+          URL.revokeObjectURL(file.previewUrl);
+        }
+      }
+    };
+  }, [pendingAttachments]);
+
+  const mentionDropdownOpen = useMemo(() => {
+    if (colleagues.length === 0) {
+      return false;
+    }
+    return mentionMenuOpen || messageHasActiveMentionQuery(messageBody);
+  }, [colleagues.length, mentionMenuOpen, messageBody]);
+
+  const mentionSuggestions = useMemo(() => {
+    const match = messageBody.match(/@([^\s]*)$/);
+    const query = match ? match[1].toLowerCase() : "";
+    return colleagues
+      .filter((row) => {
+        if (!query) {
+          return true;
+        }
+        return (
+          row.displayName.toLowerCase().includes(query) ||
+          row.mentionToken.toLowerCase().includes(query)
+        );
+      })
+      .slice(0, 8);
+  }, [colleagues, messageBody]);
+
+  function applyColleagueMention(colleague: {
+    displayName: string;
+    mentionToken: string;
+  }): void {
+    setMessageBody((current) => {
+      if (messageHasActiveMentionQuery(current)) {
+        return current.replace(/@([^\s]*)$/, `${colleague.mentionToken} `);
+      }
+      const spacer =
+        current.length > 0 && !current.endsWith(" ") ? " " : "";
+      return `${current}${spacer}${colleague.mentionToken} `;
+    });
+    setMentionMenuOpen(false);
+    setMentionPickIndex(0);
+    requestAnimationFrame(() => messageInputRef.current?.focus());
+  }
+
+  useEffect(() => {
+    setMentionPickIndex(0);
+  }, [mentionSuggestions]);
 
   useEffect(() => {
     const chatLink =
@@ -137,7 +348,23 @@ export function MessagingPageClient() {
     }
     const tab = searchParams.get("tab");
     if (!tab && !chatLink && !mailComposeLink) {
-      router.replace("/messaging?tab=email", { scroll: false });
+      const stored = readStoredMessagingTab();
+      const fallbackTab = stored === "chat" ? "sohbet" : "email";
+      if (!accessToken) {
+        router.replace(`/messaging?tab=${fallbackTab}`, { scroll: false });
+      } else {
+        void MessagingApiClient.fetchMessagingHubDefault(accessToken, locale)
+          .then((payload) => {
+            const next =
+              stored ??
+              (payload.defaultTab === "chat" ? "chat" : "email");
+            const tabParam = next === "chat" ? "sohbet" : "email";
+            router.replace(`/messaging?tab=${tabParam}`, { scroll: false });
+          })
+          .catch(() => {
+            router.replace(`/messaging?tab=${fallbackTab}`, { scroll: false });
+          });
+      }
     }
     const rawEmail = searchParams.get("email")?.trim();
     if (rawEmail && !searchParams.get("composeTo")) {
@@ -147,10 +374,11 @@ export function MessagingPageClient() {
       params.delete("email");
       router.replace(`/messaging?${params.toString()}`, { scroll: false });
     }
-  }, [searchParams, router]);
+  }, [searchParams, router, accessToken, locale]);
 
   function switchMode(next: MessagingMode): void {
     setMode(next);
+    rememberMessagingTab(next);
     const params = new URLSearchParams(searchParams.toString());
     if (next === "email") {
       params.set("tab", "email");
@@ -183,8 +411,9 @@ export function MessagingPageClient() {
     }
   }, [accessToken, locale, mode, loadThreads]);
 
-  async function handleOpenThread(): Promise<void> {
-    if (!counterpartyId.trim()) {
+  async function openThreadWithCounterparty(companyId: string): Promise<void> {
+    const normalized = companyId.trim();
+    if (!normalized) {
       setErrorMessage("Karşı firma kimliği girin.");
       return;
     }
@@ -195,7 +424,7 @@ export function MessagingPageClient() {
       const payload = await MessagingApiClient.openThread(
         accessToken,
         locale,
-        counterpartyId.trim(),
+        normalized,
         listingId || undefined,
       );
       const threadId =
@@ -206,6 +435,8 @@ export function MessagingPageClient() {
         throw new Error("Sohbet kimliği alınamadı");
       }
       setActiveThreadId(threadId);
+      setThreadSearch("");
+      setChatSearchFocused(false);
       await loadThreads();
       await loadMessages(threadId);
     } catch (error) {
@@ -213,6 +444,194 @@ export function MessagingPageClient() {
     } finally {
       setIsBusy(false);
     }
+  }
+
+  async function createGroupThread(): Promise<void> {
+    if (groupSelected.length < 2) {
+      setErrorMessage("Grup için en az iki karşı firma seçin.");
+      return;
+    }
+    setIsBusy(true);
+    setErrorMessage("");
+    try {
+      const payload = await MessagingApiClient.openGroupThread(
+        accessToken,
+        locale,
+        groupSelected.map((row) => row.companyId),
+        {
+          title: groupTitle.trim() || undefined,
+          freightListingId: searchParams.get("listingId")?.trim() || undefined,
+        },
+      );
+      const threadId =
+        (payload.thread as { id?: string }).id ??
+        (payload.thread as { threadId?: string }).threadId ??
+        "";
+      if (!threadId) {
+        throw new Error("Grup sohbet kimliği alınamadı");
+      }
+      setGroupModalOpen(false);
+      setGroupTitle("");
+      setGroupSearchQuery("");
+      setGroupSelected([]);
+      setActiveThreadId(threadId);
+      await loadThreads();
+      await loadMessages(threadId);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Grup sohbet hatası",
+      );
+    } finally {
+      setIsBusy(false);
+    }
+  }
+
+  async function saveEditedMessage(): Promise<void> {
+    if (!editMessage?.bodyText.trim() || !activeThreadId) {
+      return;
+    }
+    setMessageActionBusy(true);
+    try {
+      await MessagingApiClient.updateMessage(
+        accessToken,
+        locale,
+        activeThreadId,
+        editMessage.id,
+        editMessage.bodyText.trim(),
+      );
+      setEditMessage(null);
+      await loadMessages(activeThreadId);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Düzenleme hatası",
+      );
+    } finally {
+      setMessageActionBusy(false);
+    }
+  }
+
+  async function confirmDeleteMessage(): Promise<void> {
+    if (!deleteMessageId || !activeThreadId) {
+      return;
+    }
+    setMessageActionBusy(true);
+    try {
+      await MessagingApiClient.deleteMessage(
+        accessToken,
+        locale,
+        activeThreadId,
+        deleteMessageId,
+      );
+      setDeleteMessageId(null);
+      await loadMessages(activeThreadId);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Silme hatası");
+    } finally {
+      setMessageActionBusy(false);
+    }
+  }
+
+  async function addPendingFiles(fileList: FileList | File[]): Promise<void> {
+    if (!activeThreadId) {
+      return;
+    }
+    for (const file of Array.from(fileList)) {
+      if (pendingAttachments.length >= 5) {
+        setErrorMessage("En fazla 5 dosya ekleyebilirsiniz.");
+        break;
+      }
+      if (file.size > 10_000_000) {
+        setErrorMessage("Tek dosya en fazla 10 MB olabilir.");
+        continue;
+      }
+      try {
+        const attachment = await readFileAsAttachment(file);
+        setPendingAttachments((current) =>
+          [...current, attachment].slice(0, 5),
+        );
+      } catch {
+        setErrorMessage("Dosya okunamadı (en fazla 5 dosya, 10 MB).");
+      }
+    }
+  }
+
+  async function handleOperationStamp(
+    messageId: string,
+    stampType: MessagingOperationStampType,
+  ): Promise<void> {
+    if (!activeThreadId) {
+      return;
+    }
+    setStampBusyId(messageId);
+    try {
+      await MessagingApiClient.stampMessage(
+        accessToken,
+        locale,
+        activeThreadId,
+        messageId,
+        stampType,
+      );
+      await loadMessages(activeThreadId);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Damga eklenemedi",
+      );
+    } finally {
+      setStampBusyId("");
+    }
+  }
+
+  async function openQuickReplyAdmin(): Promise<void> {
+    setQuickReplyAdminBusy(true);
+    try {
+      const payload = await MessagingApiClient.fetchOrgQuickReplies(
+        accessToken,
+        locale,
+      );
+      setOrgQuickReplyDrafts(payload.templates ?? []);
+      setQuickReplyAdminOpen(true);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Şablonlar yüklenemedi",
+      );
+    } finally {
+      setQuickReplyAdminBusy(false);
+    }
+  }
+
+  async function saveOrgQuickReplies(): Promise<void> {
+    setQuickReplyAdminBusy(true);
+    try {
+      const payload = await MessagingApiClient.saveOrgQuickReplies(
+        accessToken,
+        locale,
+        orgQuickReplyDrafts,
+      );
+      setOrgQuickReplyDrafts(payload.templates ?? []);
+      setQuickReplyAdminOpen(false);
+      const quick = await MessagingApiClient.fetchQuickReplies(
+        accessToken,
+        locale,
+      );
+      setQuickReplies(quick.templates ?? []);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Şablonlar kaydedilemedi",
+      );
+    } finally {
+      setQuickReplyAdminBusy(false);
+    }
+  }
+
+  async function jumpToSearchHit(
+    hit: MessagingSearchResultRecord,
+  ): Promise<void> {
+    setScrollToMessageId(hit.messageId);
+    setActiveThreadId(hit.threadId);
+    setMobileThreadOpen(true);
+    setThreadSearch("");
+    setChatSearchFocused(false);
+    await loadMessages(hit.threadId);
   }
 
   const loadMessages = useCallback(
@@ -236,7 +655,7 @@ export function MessagingPageClient() {
   useEffect(() => {
     const companyId = searchParams.get("companyId");
     if (companyId) {
-      setCounterpartyId(companyId);
+      setThreadSearch(companyId);
     }
     const threadId = searchParams.get("threadId");
     if (threadId) {
@@ -379,16 +798,31 @@ export function MessagingPageClient() {
       return;
     }
     try {
+      let outbound = messageBody.trim();
+      if (quotedMessage) {
+        const quoteBlock = quotedMessage.preview
+          .split("\n")
+          .slice(0, 4)
+          .map((line) => `> ${line}`)
+          .join("\n");
+        outbound = `${quoteBlock}\n\n${outbound}`;
+      }
       await MessagingApiClient.sendMessage(
         accessToken,
         locale,
         activeThreadId,
-        messageBody.trim(),
+        outbound,
         pendingAttachments.length > 0 ? pendingAttachments : undefined,
         internalNote ? "internal" : "public",
       );
       setMessageBody("");
+      setQuotedMessage(null);
       setInternalNote(false);
+      for (const file of pendingAttachments) {
+        if (file.previewUrl) {
+          URL.revokeObjectURL(file.previewUrl);
+        }
+      }
       setPendingAttachments([]);
       await loadMessages(activeThreadId);
     } catch (error) {
@@ -427,6 +861,22 @@ export function MessagingPageClient() {
 
   const activeThread = threads.find((t) => t.threadId === activeThreadId);
 
+  const companyLabelById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const thread of threads) {
+      if (thread.counterpartyLegalName) {
+        map.set(thread.counterpartyCompanyId, thread.counterpartyLegalName);
+      }
+    }
+    if (activeThread?.counterpartyLegalName) {
+      map.set(
+        activeThread.counterpartyCompanyId,
+        activeThread.counterpartyLegalName,
+      );
+    }
+    return map;
+  }, [threads, activeThread]);
+
   const filteredThreads = useMemo(() => {
     const query = threadSearch.trim().toLowerCase();
     if (!query) {
@@ -445,6 +895,63 @@ export function MessagingPageClient() {
       return haystack.includes(query);
     });
   }, [threads, threadSearch]);
+
+  const companyUuidFromSearch = useMemo(
+    () => parseCompanyUuidCandidate(threadSearch),
+    [threadSearch],
+  );
+
+  const showChatSearchPanel =
+    chatSearchFocused &&
+    threadSearch.trim().length > 0 &&
+    (companyUuidFromSearch !== null ||
+      companySearchHits.length > 0 ||
+      serverSearchHits.length > 0);
+
+  async function submitUnifiedChatSearch(): Promise<void> {
+    const query = threadSearch.trim();
+    if (!query) {
+      return;
+    }
+    const uuid = parseCompanyUuidCandidate(query);
+    if (uuid) {
+      await openThreadWithCounterparty(uuid);
+      return;
+    }
+    if (serverSearchHits.length === 1) {
+      await loadMessages(serverSearchHits[0].threadId);
+      setThreadSearch("");
+      setChatSearchFocused(false);
+      return;
+    }
+    if (filteredThreads.length === 1) {
+      await loadMessages(filteredThreads[0].threadId);
+      setThreadSearch("");
+      setChatSearchFocused(false);
+      return;
+    }
+    if (filteredThreads.length > 1) {
+      setErrorMessage("Listeden bir sohbet seçin veya firma adı yazın.");
+      return;
+    }
+    if (companySearchHits.length === 1) {
+      await openThreadWithCounterparty(companySearchHits[0].companyId);
+      return;
+    }
+    if (companySearchHits.length > 1) {
+      setErrorMessage("Firmalar listesinden birini seçin.");
+      return;
+    }
+    if (query.length >= 2 && serverSearchHits.length > 0) {
+      setErrorMessage("Mesaj sonuçlarından birini seçin.");
+      return;
+    }
+    if (query.length >= 3) {
+      setErrorMessage("Eşleşen firma veya sohbet bulunamadı.");
+      return;
+    }
+    setErrorMessage("Aramak için en az 3 karakter yazın (firma adı).");
+  }
 
   useEffect(() => {
     if (!activeThreadId || mode !== "chat") {
@@ -482,6 +989,25 @@ export function MessagingPageClient() {
   }, [mode, accessToken, locale]);
 
   useEffect(() => {
+    if (
+      mode !== "chat" ||
+      !accessToken ||
+      !activeThreadId ||
+      activeThread?.threadKind !== "group"
+    ) {
+      setGroupParticipants([]);
+      return;
+    }
+    void MessagingApiClient.listThreadParticipants(
+      accessToken,
+      locale,
+      activeThreadId,
+    )
+      .then((payload) => setGroupParticipants(payload.participants ?? []))
+      .catch(() => setGroupParticipants([]));
+  }, [mode, accessToken, locale, activeThreadId, activeThread?.threadKind]);
+
+  useEffect(() => {
     const query = threadSearch.trim();
     if (mode !== "chat" || !accessToken || query.length < 2) {
       setServerSearchHits([]);
@@ -494,6 +1020,39 @@ export function MessagingPageClient() {
     }, 320);
     return () => window.clearTimeout(timer);
   }, [threadSearch, mode, accessToken, locale]);
+
+  useEffect(() => {
+    const query = threadSearch.trim();
+    const uuidCandidate = parseCompanyUuidCandidate(query);
+    if (mode !== "chat" || !accessToken || uuidCandidate) {
+      setCompanySearchHits([]);
+      return;
+    }
+    if (query.length < 3) {
+      setCompanySearchHits([]);
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      void MessagingApiClient.searchCompanies(accessToken, locale, query)
+        .then((payload) => setCompanySearchHits(payload.companies ?? []))
+        .catch(() => setCompanySearchHits([]));
+    }, 280);
+    return () => window.clearTimeout(timer);
+  }, [threadSearch, mode, accessToken, locale]);
+
+  useEffect(() => {
+    const query = groupSearchQuery.trim();
+    if (!groupModalOpen || !accessToken || query.length < 3) {
+      setGroupSearchHits([]);
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      void MessagingApiClient.searchCompanies(accessToken, locale, query)
+        .then((payload) => setGroupSearchHits(payload.companies ?? []))
+        .catch(() => setGroupSearchHits([]));
+    }, 280);
+    return () => window.clearTimeout(timer);
+  }, [groupSearchQuery, groupModalOpen, accessToken, locale]);
 
   async function refreshLlmSummary(): Promise<void> {
     if (!activeThreadId) {
@@ -743,56 +1302,160 @@ export function MessagingPageClient() {
           />
         </div>
       ) : (
-        <div className="chat-layout">
+        <div
+          className={
+            mobileThreadOpen && activeThreadId
+              ? "chat-layout chat-layout--mobile-thread"
+              : "chat-layout"
+          }
+        >
           <aside className="chat-sidebar module-panel">
-            <h2 className="module-panel-title">Sohbetler</h2>
-            <input
-              className="input-light chat-thread-search"
-              placeholder="Firma veya mesaj ara (sunucu, 2+ karakter)…"
-              value={threadSearch}
-              onChange={(event) => setThreadSearch(event.target.value)}
-              aria-label="Sohbet ara"
-            />
-            {serverSearchHits.length > 0 ? (
-              <ul className="chat-server-search-hits">
-                {serverSearchHits.map((hit) => (
-                  <li key={hit.messageId}>
-                    <button
-                      type="button"
-                      className="chat-server-search-hit"
-                      onClick={() => void loadMessages(hit.threadId)}
-                    >
-                      <strong>
-                        {hit.counterpartyLegalName?.trim() ||
-                          shortCompanyId(hit.counterpartyCompanyId)}
-                      </strong>
-                      <span>{hit.snippet}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-            <div className="chat-compose-row">
-              <input
-                className="input-light"
-                placeholder="Karşı firma ID"
-                value={counterpartyId}
-                onChange={(event) => setCounterpartyId(event.target.value)}
-              />
+            <div className="chat-sidebar-header">
+              <h2 className="module-panel-title">Sohbetler</h2>
               <button
                 type="button"
-                className="btn-accent"
+                className="chat-compose-tool-btn"
                 disabled={isBusy}
-                onClick={() => void handleOpenThread()}
+                onClick={() => {
+                  setGroupModalOpen(true);
+                  setGroupSearchQuery("");
+                  setGroupSearchHits([]);
+                }}
               >
-                Aç
+                + Grup
               </button>
+            </div>
+            <div className="chat-unified-search">
+              <input
+                className="input-light chat-unified-search-input"
+                placeholder="Sohbet veya firma adı ara…"
+                value={threadSearch}
+                onChange={(event) => setThreadSearch(event.target.value)}
+                onFocus={() => setChatSearchFocused(true)}
+                onBlur={() => {
+                  window.setTimeout(() => setChatSearchFocused(false), 160);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    void submitUnifiedChatSearch();
+                  }
+                  if (event.key === "Escape") {
+                    setThreadSearch("");
+                    setChatSearchFocused(false);
+                  }
+                }}
+                aria-label="Sohbet ara veya yeni sohbet aç"
+                aria-expanded={showChatSearchPanel}
+                aria-controls="chat-unified-search-panel"
+                role="combobox"
+                autoComplete="off"
+              />
+              {showChatSearchPanel ? (
+                <div
+                  id="chat-unified-search-panel"
+                  className="chat-unified-search-panel"
+                  role="listbox"
+                >
+                  {companyUuidFromSearch ? (
+                    <button
+                      type="button"
+                      className="chat-unified-search-option chat-unified-search-option--new"
+                      role="option"
+                      disabled={isBusy}
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() =>
+                        void openThreadWithCounterparty(companyUuidFromSearch)
+                      }
+                    >
+                      <span className="chat-unified-search-option-kicker">
+                        Yeni sohbet (UUID)
+                      </span>
+                      <span className="chat-unified-search-option-title">
+                        {shortCompanyId(companyUuidFromSearch)}
+                      </span>
+                    </button>
+                  ) : null}
+                  {companySearchHits.length > 0 ? (
+                    <div className="chat-unified-search-group">
+                      <p className="chat-unified-search-group-label">Firmalar</p>
+                      <ul className="chat-unified-search-list">
+                        {companySearchHits.slice(0, 8).map((company) => (
+                          <li key={company.companyId}>
+                            <button
+                              type="button"
+                              className="chat-unified-search-option chat-unified-search-option--company"
+                              role="option"
+                              disabled={isBusy}
+                              onMouseDown={(event) => event.preventDefault()}
+                              onClick={() =>
+                                void openThreadWithCounterparty(
+                                  company.companyId,
+                                )
+                              }
+                            >
+                              <span className="chat-unified-search-option-title">
+                                {company.legalName}
+                              </span>
+                              <span className="chat-unified-search-option-sub">
+                                {participantTypeLabel(
+                                  company.participantTypeCode,
+                                )}
+                                {company.countryCode
+                                  ? ` · ${company.countryCode}`
+                                  : ""}
+                                {company.trustReviewCount > 0
+                                  ? ` · Güven ${company.trustScoreValue}`
+                                  : ""}
+                                {company.hasExistingThread
+                                  ? " · Mevcut sohbet"
+                                  : " · Yeni sohbet"}
+                              </span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+                  {serverSearchHits.length > 0 ? (
+                    <div className="chat-unified-search-group">
+                      <p className="chat-unified-search-group-label">
+                        Mesajlarda
+                      </p>
+                      <ul className="chat-unified-search-list">
+                        {serverSearchHits.slice(0, 6).map((hit) => (
+                          <li key={hit.messageId}>
+                            <button
+                              type="button"
+                              className="chat-unified-search-option"
+                              role="option"
+                              onMouseDown={(event) => event.preventDefault()}
+                              onClick={() => void jumpToSearchHit(hit)}
+                            >
+                              <span className="chat-unified-search-option-title">
+                                {hit.counterpartyLegalName?.trim() ||
+                                  shortCompanyId(hit.counterpartyCompanyId)}
+                              </span>
+                              <span className="chat-unified-search-option-sub">
+                                {highlightSearchSnippet(
+                                  hit.snippet,
+                                  threadSearch.trim(),
+                                )}
+                              </span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
             {filteredThreads.length === 0 ? (
               <EmptyState
                 message={
                   threads.length === 0
-                    ? "Henüz sohbet yok. Firma ID ile yeni sohbet açın."
+                    ? "Henüz sohbet yok. Üstte firma adı ile yeni sohbet açın."
                     : "Aramanızla eşleşen sohbet yok."
                 }
               />
@@ -807,10 +1470,15 @@ export function MessagingPageClient() {
                           ? "chat-thread-item active"
                           : "chat-thread-item"
                       }
-                      onClick={() => void loadMessages(thread.threadId)}
+                      onClick={() => {
+                        setMobileThreadOpen(true);
+                        void loadMessages(thread.threadId);
+                      }}
                     >
                       <span className="chat-thread-title">
+                        {thread.threadKind === "group" ? "👥 " : ""}
                         {thread.counterpartyLegalName?.trim() ||
+                          thread.title?.trim() ||
                           shortCompanyId(thread.counterpartyCompanyId)}
                         {(thread.unreadCount ?? 0) > 0 ? (
                           <span className="chat-unread-badge">
@@ -830,54 +1498,121 @@ export function MessagingPageClient() {
                 ))}
               </ul>
             )}
+            {isCompanyOwner && channelSettingsOpen ? (
+              <MessagingChannelSettingsPanel
+                accessToken={accessToken}
+                visible={channelSettingsOpen}
+              />
+            ) : null}
           </aside>
 
           <section className="chat-main module-panel">
             <div className="chat-main-header">
+              {mobileThreadOpen && activeThreadId ? (
+                <button
+                  type="button"
+                  className="chat-mobile-back"
+                  onClick={() => {
+                    setMobileThreadOpen(false);
+                    setActiveThreadId("");
+                  }}
+                >
+                  ← Sohbetler
+                </button>
+              ) : null}
               <h2 className="module-panel-title">
                 {activeThread
-                  ? activeThread.counterpartyLegalName?.trim() ||
-                    shortCompanyId(activeThread.counterpartyCompanyId)
+                  ? activeThread.threadKind === "group"
+                    ? activeThread.title?.trim() ||
+                      activeThread.counterpartyLegalName?.trim() ||
+                      "Grup sohbet"
+                    : activeThread.counterpartyLegalName?.trim() ||
+                      shortCompanyId(activeThread.counterpartyCompanyId)
                   : "Mesaj kutusu"}
               </h2>
-              {activeThread && counterpartyTrust ? (
-                <div className="chat-trust-row">
-                  <span className="chat-trust-badge" title="Lerta güven skoru">
-                    Güven {counterpartyTrust.scoreValue.toFixed(1)}
-                    {counterpartyTrust.reviewCount > 0
-                      ? ` · ${counterpartyTrust.reviewCount} değerlendirme`
-                      : ""}
-                  </span>
-                  <Link
-                    className="chat-trust-link"
-                    href={`/trust?companyId=${encodeURIComponent(
-                      activeThread.counterpartyCompanyId,
-                    )}`}
-                  >
-                    Profil
-                  </Link>
-                </div>
+              {activeThread?.threadKind === "group" &&
+              groupParticipants.length > 0 ? (
+                <ul
+                  className="chat-group-participants"
+                  aria-label="Grup katılımcıları"
+                >
+                  {groupParticipants.map((row) => (
+                    <li key={row.companyId} className="chat-group-participant">
+                      <span className="chat-group-participant-name">
+                        {row.legalName ?? row.companyId.slice(0, 8)}
+                      </span>
+                      <span className="chat-group-participant-role">
+                        {groupParticipantRoleLabel(row.participantRole)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
               ) : null}
             </div>
-            {listingCard ? (
-              <div className="chat-listing-card" aria-label="İlan kartı">
-                <p className="chat-listing-card-route">{listingCard.routeLabel}</p>
-                <p className="chat-listing-card-meta">
-                  {listingCard.equipmentTypeCode} · {listingCard.weightTonnes} t
-                  · yükleme {listingCard.loadingDateStart}
-                  {listingCard.priceAmount
-                    ? ` · ${listingCard.priceAmount} ${listingCard.priceCurrencyCode}`
-                    : ""}
-                </p>
-                {listingCard.priceAmount ? (
-                  <button
-                    type="button"
-                    className="btn-account-primary chat-listing-accept-btn"
-                    disabled={acceptOfferBusy || isBusy}
-                    onClick={() => void acceptListingFixedPrice()}
-                  >
-                    {acceptOfferBusy ? "Kabul ediliyor…" : "Sabit fiyatı kabul et"}
-                  </button>
+            {activeThreadId &&
+            (listingCard ||
+              (counterpartyTrust && activeThread?.threadKind !== "group")) ? (
+              <div className="chat-context-pin" aria-label="İş bağlamı">
+                <button
+                  type="button"
+                  className="chat-context-pin-toggle"
+                  aria-expanded={!contextPinCollapsed}
+                  onClick={() => setContextPinCollapsed((value) => !value)}
+                >
+                  İş bağlamı {contextPinCollapsed ? "▸" : "▾"}
+                </button>
+                {!contextPinCollapsed ? (
+                  <div className="chat-context-pin-body">
+                    {listingCard ? (
+                      <div className="chat-listing-card chat-listing-card--inline">
+                        <p className="chat-listing-card-route">
+                          {listingCard.routeLabel}
+                        </p>
+                        <p className="chat-listing-card-meta">
+                          {listingCard.equipmentTypeCode} ·{" "}
+                          {listingCard.weightTonnes} t · yükleme{" "}
+                          {listingCard.loadingDateStart}
+                          {listingCard.priceAmount
+                            ? ` · ${listingCard.priceAmount} ${listingCard.priceCurrencyCode}`
+                            : ""}
+                        </p>
+                        {listingCard.priceAmount ? (
+                          <button
+                            type="button"
+                            className="btn-account-primary chat-listing-accept-btn"
+                            disabled={acceptOfferBusy || isBusy}
+                            onClick={() => void acceptListingFixedPrice()}
+                          >
+                            {acceptOfferBusy
+                              ? "Kabul ediliyor…"
+                              : "Sabit fiyatı kabul et"}
+                          </button>
+                        ) : null}
+                      </div>
+                    ) : null}
+                    {counterpartyTrust &&
+                    activeThread?.threadKind !== "group" ? (
+                      <div className="chat-trust-row">
+                        <span
+                          className="chat-trust-badge"
+                          title="Lerta güven skoru"
+                        >
+                          Güven {counterpartyTrust.scoreValue.toFixed(1)}
+                          {counterpartyTrust.reviewCount > 0
+                            ? ` · ${counterpartyTrust.reviewCount} değerlendirme`
+                            : ""}
+                        </span>
+                        <Link
+                          className="chat-trust-link"
+                          href={`/trust?companyId=${encodeURIComponent(
+                            activeThread?.counterpartyCompanyId ?? "",
+                          )}`}
+                        >
+                          Profil
+                        </Link>
+                      </div>
+                    ) : null}
+                  </div>
                 ) : null}
               </div>
             ) : null}
@@ -922,39 +1657,146 @@ export function MessagingPageClient() {
                 </p>
               </aside>
             ) : null}
+            <div className="chat-messages-toolbar">
+              <label className="chat-internal-filter">
+                <input
+                  type="checkbox"
+                  checked={internalNotesOnly}
+                  onChange={(event) =>
+                    setInternalNotesOnly(event.target.checked)
+                  }
+                />
+                Yalnızca iç notlar
+              </label>
+            </div>
             <div className="chat-messages">
-              {messages.length === 0 ? (
-                <EmptyState message="Soldan sohbet seçin veya yeni sohbet açın." />
+              {displayedMessages.length === 0 ? (
+                <EmptyState
+                  message={
+                    internalNotesOnly
+                      ? "Bu sohbette iç not yok."
+                      : "Soldan sohbet seçin veya yeni sohbet açın."
+                  }
+                />
               ) : (
                 <ul className="chat-message-list">
-                  {messages.map((message) => {
+                  {displayedMessages.map((message, messageIndex) => {
                     const isMine =
                       session?.companyId &&
                       message.senderCompanyId === session.companyId;
+                    const dayKey = dayKeyFromIso(message.createdAt);
+                    const prevDay =
+                      messageIndex > 0
+                        ? dayKeyFromIso(
+                            displayedMessages[messageIndex - 1].createdAt,
+                          )
+                        : "";
+                    const showDay = dayKey !== prevDay;
+                    const companyLabel =
+                      companyLabelById.get(message.senderCompanyId) ??
+                      shortCompanyId(message.senderCompanyId);
+                    const bubbleClass = [
+                      "chat-bubble",
+                      isMine ? "chat-bubble--mine" : "",
+                      message.messageKind === "internal"
+                        ? "chat-bubble--internal"
+                        : "",
+                      scrollToMessageId === message.id
+                        ? "chat-bubble--highlight"
+                        : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ");
+                    const readers =
+                      message.readByCounterpartyReaders ??
+                      (message.readByCounterpartyUserIds ?? []).map(
+                        (userId) => ({
+                          userId,
+                          displayName: userId.slice(0, 8),
+                        }),
+                      );
                     return (
-                      <li
-                        key={message.id}
-                        className={isMine ? "chat-bubble chat-bubble--mine" : "chat-bubble"}
-                      >
+                      <Fragment key={message.id}>
+                        {showDay ? (
+                          <li
+                            key={`day-${dayKey}`}
+                            className="chat-day-separator"
+                            aria-hidden
+                          >
+                            {formatChatDayLabel(message.createdAt, locale)}
+                          </li>
+                        ) : null}
+                        <li
+                          key={message.id}
+                          id={`chat-msg-${message.id}`}
+                          className={bubbleClass}
+                        >
+                          <div className="chat-bubble-row">
+                            <span
+                              className={
+                                isMine
+                                  ? "chat-avatar chat-avatar--mine"
+                                  : "chat-avatar"
+                              }
+                              aria-hidden
+                            >
+                              {companyInitials(companyLabel)}
+                            </span>
+                            <div className="chat-bubble-content">
                         <span className="chat-bubble-meta">
-                          {shortCompanyId(message.senderCompanyId)} ·{" "}
-                          {new Date(message.createdAt).toLocaleString(locale)}
-                          {isMine && message.readByRecipient ? (
-                            <>
-                              {" "}
-                              · Okundu
-                              {(message.readByCounterpartyUserIds?.length ??
-                                0) > 0
-                                ? ` (${message.readByCounterpartyUserIds?.length} kullanıcı)`
-                                : ""}
-                            </>
+                          {companyLabel} ·{" "}
+                          {new Date(message.createdAt).toLocaleString(locale, {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                          {isMine ? (
+                            <span
+                              className={
+                                message.readByRecipient
+                                  ? "chat-read-ticks chat-read-ticks--read"
+                                  : "chat-read-ticks"
+                              }
+                              title={
+                                readers.length > 0
+                                  ? `Okuyan: ${readers
+                                      .map((row) => row.displayName)
+                                      .join(", ")}`
+                                  : message.readByRecipient
+                                    ? "Karşı firma gördü"
+                                    : "Henüz okunmadı"
+                              }
+                            >
+                              {message.readByRecipient ? " ✓✓" : " ✓"}
+                            </span>
                           ) : null}
                           {message.messageKind === "internal" ? (
-                            <> · İç not</>
+                            <span className="chat-internal-tag"> İç not</span>
                           ) : null}
                           {message.editedAt ? <> · düzenlendi</> : null}
                         </span>
-                        <ChatMessageBody text={message.bodyText} />
+                        <ChatMessageBody
+                          text={message.bodyText}
+                          mentionNameByUserId={mentionNameByUserId}
+                        />
+                        {message.operationStamps &&
+                        message.operationStamps.length > 0 ? (
+                          <ul
+                            className="chat-message-stamps"
+                            aria-label="İşlem damgaları"
+                          >
+                            {message.operationStamps.map((stamp) => (
+                              <li
+                                key={`${stamp.stampedByCompanyId}-${stamp.stampType}-${stamp.createdAt}`}
+                                className={`chat-message-stamp chat-message-stamp--${stamp.stampType}`}
+                              >
+                                {operationStampLabel(stamp.stampType)}
+                                <span className="chat-message-stamp-by">
+                                  {stamp.stampedByDisplayName}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : null}
                         {message.attachments && message.attachments.length > 0 ? (
                           <ul className="chat-attachment-list">
                             {message.attachments.map((attachment) => (
@@ -1003,6 +1845,46 @@ export function MessagingPageClient() {
                           </p>
                         ) : null}
                         <div className="chat-message-actions">
+                          {!isMine &&
+                          !message.deleted &&
+                          message.messageKind !== "internal" ? (
+                            <>
+                              <button
+                                type="button"
+                                className="chat-translate-btn"
+                                onClick={() =>
+                                  setQuotedMessage({
+                                    id: message.id,
+                                    preview: message.bodyText.slice(0, 240),
+                                  })
+                                }
+                              >
+                                Yanıtla
+                              </button>
+                              {(
+                                [
+                                  "approved",
+                                  "rejected",
+                                  "acknowledged",
+                                ] as MessagingOperationStampType[]
+                              ).map((stampType) => (
+                                <button
+                                  key={stampType}
+                                  type="button"
+                                  className="chat-stamp-btn"
+                                  disabled={stampBusyId === message.id}
+                                  onClick={() =>
+                                    void handleOperationStamp(
+                                      message.id,
+                                      stampType,
+                                    )
+                                  }
+                                >
+                                  {operationStampLabel(stampType)}
+                                </button>
+                              ))}
+                            </>
+                          ) : null}
                           {["en", "de", "ru"].map((target) => (
                             <button
                               key={target}
@@ -1021,186 +1903,384 @@ export function MessagingPageClient() {
                               <button
                                 type="button"
                                 className="chat-translate-btn"
-                                onClick={() => {
-                                  const next = window.prompt(
-                                    "Mesajı düzenle",
-                                    message.bodyText,
-                                  );
-                                  if (!next?.trim() || !activeThreadId) {
-                                    return;
-                                  }
-                                  void MessagingApiClient.updateMessage(
-                                    accessToken,
-                                    locale,
-                                    activeThreadId,
-                                    message.id,
-                                    next.trim(),
-                                  ).then(() => loadMessages(activeThreadId));
-                                }}
+                                onClick={() =>
+                                  setEditMessage({
+                                    id: message.id,
+                                    bodyText: message.bodyText,
+                                  })
+                                }
                               >
                                 Düzenle
                               </button>
                               <button
                                 type="button"
                                 className="chat-translate-btn"
-                                onClick={() => {
-                                  if (!activeThreadId) {
-                                    return;
-                                  }
-                                  void MessagingApiClient.deleteMessage(
-                                    accessToken,
-                                    locale,
-                                    activeThreadId,
-                                    message.id,
-                                  ).then(() => loadMessages(activeThreadId));
-                                }}
+                                onClick={() => setDeleteMessageId(message.id)}
                               >
                                 Sil
                               </button>
                             </>
                           ) : null}
                         </div>
-                      </li>
+                            </div>
+                          </div>
+                        </li>
+                      </Fragment>
                     );
                   })}
                 </ul>
               )}
             </div>
-            {pendingAttachments.length > 0 ? (
-              <ul className="chat-pending-attachments">
-                {pendingAttachments.map((file) => (
-                  <li key={file.filename}>
-                    {file.filename}
-                    <button
-                      type="button"
-                      className="chat-attachment-remove"
-                      onClick={() =>
-                        setPendingAttachments((current) =>
-                          current.filter((row) => row.filename !== file.filename),
-                        )
-                      }
-                    >
-                      Kaldır
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-            {typingHint ? (
-              <p className="chat-typing-hint" aria-live="polite">{typingHint}</p>
-            ) : null}
-            {colleagues.length > 0 ? (
-              <p className="chat-mention-hint">
-                @mention: ekip arkadaşı eklemek için mesaja{" "}
-                <code>{colleagues[0]?.mentionToken}</code> yazın.
-              </p>
-            ) : null}
-            <label className="chat-internal-note">
-              <input
-                type="checkbox"
-                checked={internalNote}
-                onChange={(event) => setInternalNote(event.target.checked)}
-              />
-              İç not (yalnızca şirketiniz görür)
-            </label>
-            {quickReplies.length > 0 ? (
-              <div className="chat-quick-replies">
-                <label className="chat-quick-replies-label" htmlFor="chat-quick-reply">
-                  Şablon
-                </label>
-                <select
-                  id="chat-quick-reply"
-                  className="input-light chat-quick-replies-select"
-                  defaultValue=""
-                  onChange={(event) => {
-                    const id = event.target.value;
-                    if (!id) {
-                      return;
-                    }
-                    const template = quickReplies.find((row) => row.id === id);
-                    if (template) {
-                      setMessageBody(template.bodyText);
-                    }
-                    event.target.value = "";
-                  }}
-                >
-                  <option value="">Şablon seçin…</option>
-                  {quickReplies.map((template) => (
-                    <option key={template.id} value={template.id}>
-                      {template.labelTr}
-                    </option>
+            <div
+              className={[
+                "chat-compose-dock",
+                internalNote ? "chat-compose-dock--internal" : "",
+                composeDragActive ? "chat-compose-dock--drag" : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              onDragOver={(event) => {
+                event.preventDefault();
+                if (activeThreadId) {
+                  setComposeDragActive(true);
+                }
+              }}
+              onDragLeave={() => setComposeDragActive(false)}
+              onDrop={(event) => {
+                event.preventDefault();
+                setComposeDragActive(false);
+                if (event.dataTransfer.files.length > 0) {
+                  void addPendingFiles(event.dataTransfer.files);
+                }
+              }}
+            >
+              {quotedMessage ? (
+                <div className="chat-quote-preview" role="status">
+                  <span className="chat-quote-preview-label">Yanıt</span>
+                  <p className="chat-quote-preview-text">
+                    {quotedMessage.preview}
+                  </p>
+                  <button
+                    type="button"
+                    className="chat-quote-preview-remove"
+                    aria-label="Alıntıyı kaldır"
+                    onClick={() => setQuotedMessage(null)}
+                  >
+                    ×
+                  </button>
+                </div>
+              ) : null}
+              {internalNote ? (
+                <p className="chat-compose-internal-banner" role="status">
+                  İç not modu — yalnızca şirketiniz görür, karşı tarafa gitmez.
+                </p>
+              ) : null}
+              {typingHint ? (
+                <p className="chat-typing-hint" aria-live="polite">
+                  {typingHint}
+                </p>
+              ) : null}
+              {pendingAttachments.length > 0 ? (
+                <ul className="chat-pending-attachments">
+                  {pendingAttachments.map((file) => (
+                    <li key={file.filename} className="chat-pending-chip">
+                      {file.previewUrl ? (
+                        <img
+                          className="chat-pending-thumb"
+                          src={file.previewUrl}
+                          alt=""
+                        />
+                      ) : file.contentType.includes("pdf") ? (
+                        <span className="chat-pending-pdf" aria-hidden>
+                          PDF
+                        </span>
+                      ) : null}
+                      <span className="chat-pending-chip-name" title={file.filename}>
+                        📎 {file.filename}
+                      </span>
+                      <button
+                        type="button"
+                        className="chat-pending-chip-remove"
+                        aria-label={`${file.filename} kaldır`}
+                        onClick={() =>
+                          setPendingAttachments((current) =>
+                            current.filter((row) => row.filename !== file.filename),
+                          )
+                        }
+                      >
+                        ×
+                      </button>
+                    </li>
                   ))}
-                </select>
+                </ul>
+              ) : null}
+              <div className="chat-compose-toolbar">
+                <div
+                  className="chat-compose-mode"
+                  role="group"
+                  aria-label="Mesaj türü"
+                >
+                  <button
+                    type="button"
+                    className={
+                      internalNote
+                        ? "chat-compose-mode-btn"
+                        : "chat-compose-mode-btn chat-compose-mode-btn--active"
+                    }
+                    aria-pressed={!internalNote}
+                    disabled={!activeThreadId}
+                    onClick={() => setInternalNote(false)}
+                  >
+                    Karşı firmaya
+                  </button>
+                  <button
+                    type="button"
+                    className={
+                      internalNote
+                        ? "chat-compose-mode-btn chat-compose-mode-btn--active chat-compose-mode-btn--internal"
+                        : "chat-compose-mode-btn"
+                    }
+                    aria-pressed={internalNote}
+                    disabled={!activeThreadId}
+                    onClick={() => setInternalNote(true)}
+                  >
+                    İç not
+                  </button>
+                </div>
+                <div className="chat-compose-toolbar-actions">
+                  {colleagues.length > 0 ? (
+                    <div className="chat-mention-anchor">
+                      <button
+                        type="button"
+                        className="chat-compose-tool-btn"
+                        disabled={!activeThreadId}
+                        aria-expanded={mentionDropdownOpen}
+                        aria-haspopup="listbox"
+                        onClick={() => setMentionMenuOpen((open) => !open)}
+                      >
+                        <span aria-hidden="true">@</span>
+                        Ekip
+                      </button>
+                      {mentionDropdownOpen ? (
+                        <ul
+                          className="chat-mention-menu"
+                          role="listbox"
+                          aria-label="Ekip üyesi etiketle"
+                        >
+                          {mentionSuggestions.length === 0 ? (
+                            <li className="chat-mention-menu-empty">
+                              Eşleşen ekip üyesi yok
+                            </li>
+                          ) : (
+                            mentionSuggestions.map((colleague, index) => (
+                              <li
+                                key={colleague.userId}
+                                role="option"
+                                aria-selected={index === mentionPickIndex}
+                              >
+                                <button
+                                  type="button"
+                                  className={
+                                    index === mentionPickIndex
+                                      ? "chat-mention-menu-item chat-mention-menu-item--active"
+                                      : "chat-mention-menu-item"
+                                  }
+                                  onMouseDown={(event) =>
+                                    event.preventDefault()
+                                  }
+                                  onClick={() =>
+                                    applyColleagueMention(colleague)
+                                  }
+                                >
+                                  <span className="chat-mention-menu-name">
+                                    {colleague.displayName}
+                                  </span>
+                                  <span className="chat-mention-menu-hint">
+                                    etiketle
+                                  </span>
+                                </button>
+                              </li>
+                            ))
+                          )}
+                        </ul>
+                      ) : null}
+                    </div>
+                  ) : null}
+                  {isCompanyOwner ? (
+                    <>
+                      <button
+                        type="button"
+                        className="chat-compose-tool-btn"
+                        disabled={quickReplyAdminBusy}
+                        onClick={() => void openQuickReplyAdmin()}
+                      >
+                        Şablon yönet
+                      </button>
+                      <button
+                        type="button"
+                        className="chat-compose-tool-btn"
+                        aria-expanded={channelSettingsOpen}
+                        onClick={() =>
+                          setChannelSettingsOpen((open) => !open)
+                        }
+                      >
+                        Kanallar
+                      </button>
+                    </>
+                  ) : null}
+                  {quickReplies.length > 0 ? (
+                    <label className="chat-compose-template">
+                      <span className="sr-only">Hazır şablon</span>
+                      <select
+                        ref={templateSelectRef}
+                        id="chat-quick-reply"
+                        className="chat-compose-template-select"
+                        defaultValue=""
+                        disabled={!activeThreadId}
+                        onChange={(event) => {
+                          const id = event.target.value;
+                          if (!id) {
+                            return;
+                          }
+                          const template = quickReplies.find(
+                            (row) => row.id === id,
+                          );
+                          if (template) {
+                            setMessageBody(template.bodyText);
+                            messageInputRef.current?.focus();
+                          }
+                          event.target.value = "";
+                        }}
+                      >
+                        <option value="">Şablon…</option>
+                        {quickReplies.map((template) => (
+                          <option key={template.id} value={template.id}>
+                            {template.labelTr}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : null}
+                </div>
               </div>
-            ) : null}
-            <div className="chat-input-row">
-              <label className="chat-file-picker">
-                <span className="btn-secondary">Dosya</span>
-                <input
-                  type="file"
-                  accept="image/*,application/pdf,text/plain,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
-                  disabled={!activeThreadId || pendingAttachments.length >= 5}
+              <div className="chat-compose-editor">
+                <label className="chat-compose-attach" title="Dosya ekle (en fazla 5, 10 MB)">
+                  <span className="chat-compose-attach-icon" aria-hidden="true">
+                    📎
+                  </span>
+                  <span className="sr-only">Dosya ekle</span>
+                  <input
+                    type="file"
+                    accept="image/*,application/pdf,text/plain,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+                    disabled={!activeThreadId || pendingAttachments.length >= 5}
+                    onChange={(event) => {
+                      const files = event.target.files;
+                      event.target.value = "";
+                      if (files && files.length > 0) {
+                        void addPendingFiles(files);
+                      }
+                    }}
+                  />
+                </label>
+                <textarea
+                  ref={messageInputRef}
+                  className="chat-compose-textarea"
+                  placeholder={
+                    internalNote
+                      ? "Ekip içi notunuzu yazın…"
+                      : "Mesajınızı yazın… (@ ile ekip etiketleyin)"
+                  }
+                  rows={2}
+                  value={messageBody}
+                  disabled={!activeThreadId}
                   onChange={(event) => {
-                    const file = event.target.files?.[0];
-                    event.target.value = "";
-                    if (!file) {
-                      return;
+                    setMessageBody(event.target.value);
+                    if (messageHasActiveMentionQuery(event.target.value)) {
+                      setMentionMenuOpen(true);
                     }
-                    if (file.size > 10_000_000) {
-                      setErrorMessage("Tek dosya en fazla 10 MB olabilir.");
-                      return;
-                    }
-                    void readFileAsAttachment(file)
-                      .then((attachment) => {
-                        setPendingAttachments((current) =>
-                          [...current, attachment].slice(0, 5),
-                        );
-                      })
-                      .catch(() =>
-                        setErrorMessage(
-                          "Dosya okunamadı (en fazla 5 dosya, 10 MB).",
-                        ),
+                    const now = Date.now();
+                    if (activeThreadId && now - typingPingRef.current > 2000) {
+                      typingPingRef.current = now;
+                      void MessagingApiClient.sendTyping(
+                        accessToken,
+                        locale,
+                        activeThreadId,
                       );
+                    }
+                  }}
+                  onKeyDown={(event) => {
+                    if (
+                      event.key === "/" &&
+                      !event.shiftKey &&
+                      !messageBody.trim() &&
+                      quickReplies.length > 0
+                    ) {
+                      event.preventDefault();
+                      templateSelectRef.current?.focus();
+                      return;
+                    }
+                    if (mentionDropdownOpen && mentionSuggestions.length > 0) {
+                      if (event.key === "ArrowDown") {
+                        event.preventDefault();
+                        setMentionPickIndex(
+                          (current) =>
+                            (current + 1) % mentionSuggestions.length,
+                        );
+                        return;
+                      }
+                      if (event.key === "ArrowUp") {
+                        event.preventDefault();
+                        setMentionPickIndex(
+                          (current) =>
+                            (current - 1 + mentionSuggestions.length) %
+                            mentionSuggestions.length,
+                        );
+                        return;
+                      }
+                      if (event.key === "Enter" && event.shiftKey === false) {
+                        const picked = mentionSuggestions[mentionPickIndex];
+                        if (picked && messageHasActiveMentionQuery(messageBody)) {
+                          event.preventDefault();
+                          applyColleagueMention(picked);
+                          return;
+                        }
+                      }
+                    }
+                    if (event.key === "Enter" && !event.shiftKey) {
+                      event.preventDefault();
+                      void handleSendMessage();
+                    }
+                    if (event.key === "Escape") {
+                      if (mentionDropdownOpen) {
+                        setMentionMenuOpen(false);
+                      }
+                      if (quotedMessage) {
+                        setQuotedMessage(null);
+                      }
+                    }
+                  }}
+                  onBlur={() => {
+                    window.setTimeout(() => setMentionMenuOpen(false), 160);
                   }}
                 />
-              </label>
-              <input
-                className="input-light"
-                placeholder="Mesajınızı yazın…"
-                value={messageBody}
-                disabled={!activeThreadId}
-                onChange={(event) => {
-                  setMessageBody(event.target.value);
-                  const now = Date.now();
-                  if (
-                    activeThreadId &&
-                    now - typingPingRef.current > 2000
-                  ) {
-                    typingPingRef.current = now;
-                    void MessagingApiClient.sendTyping(
-                      accessToken,
-                      locale,
-                      activeThreadId,
-                    );
+                <button
+                  type="button"
+                  className="chat-compose-send"
+                  disabled={
+                    !activeThreadId ||
+                    (!messageBody.trim() && pendingAttachments.length === 0)
                   }
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    void handleSendMessage();
-                  }
-                }}
-              />
-              <button
-                type="button"
-                className="btn-accent"
-                disabled={
-                  !activeThreadId ||
-                  (!messageBody.trim() && pendingAttachments.length === 0)
-                }
-                onClick={() => void handleSendMessage()}
-              >
-                Gönder
-              </button>
+                  onClick={() => void handleSendMessage()}
+                >
+                  Gönder
+                </button>
+              </div>
+              <p className="chat-compose-footnote">
+                Enter gönder · Shift+Enter yeni satır
+                {colleagues.length > 0 ? " · @ mention" : ""}
+                {quickReplies.length > 0 ? " · / şablon" : ""}
+                {" · Esc iptal"}
+              </p>
             </div>
           </section>
           <aside
@@ -1262,6 +2342,61 @@ export function MessagingPageClient() {
           </aside>
         </div>
       )}
+      <ChatMessageEditModal
+        open={editMessage !== null}
+        bodyText={editMessage?.bodyText ?? ""}
+        busy={messageActionBusy}
+        onBodyChange={(value) =>
+          setEditMessage((current) =>
+            current ? { ...current, bodyText: value } : current,
+          )
+        }
+        onCancel={() => setEditMessage(null)}
+        onSave={() => void saveEditedMessage()}
+      />
+      <ChatMessageDeleteModal
+        open={deleteMessageId !== null}
+        busy={messageActionBusy}
+        onCancel={() => setDeleteMessageId(null)}
+        onConfirm={() => void confirmDeleteMessage()}
+      />
+      <ChatGroupThreadModal
+        open={groupModalOpen}
+        busy={isBusy}
+        title={groupTitle}
+        searchQuery={groupSearchQuery}
+        searchHits={groupSearchHits}
+        selected={groupSelected}
+        onClose={() => {
+          setGroupModalOpen(false);
+          setGroupSelected([]);
+          setGroupSearchQuery("");
+        }}
+        onTitleChange={setGroupTitle}
+        onSearchChange={setGroupSearchQuery}
+        onAddCompany={(company) => {
+          setGroupSelected((current) => {
+            if (current.some((row) => row.companyId === company.companyId)) {
+              return current;
+            }
+            return [...current, company].slice(0, 8);
+          });
+        }}
+        onRemoveCompany={(companyId) =>
+          setGroupSelected((current) =>
+            current.filter((row) => row.companyId !== companyId),
+          )
+        }
+        onCreate={() => void createGroupThread()}
+      />
+      <ChatQuickReplyAdminModal
+        open={quickReplyAdminOpen}
+        busy={quickReplyAdminBusy}
+        templates={orgQuickReplyDrafts}
+        onClose={() => setQuickReplyAdminOpen(false)}
+        onChange={setOrgQuickReplyDrafts}
+        onSave={() => void saveOrgQuickReplies()}
+      />
     </ModulePageShell>
   );
 }
