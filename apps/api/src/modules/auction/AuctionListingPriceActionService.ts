@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { forwardRef, Inject, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import {
@@ -33,6 +33,7 @@ export class AuctionListingPriceActionService {
     @InjectRepository(AuctionBidEntity)
     private readonly auctionBidRepository: Repository<AuctionBidEntity>,
     private readonly modularSubscriptionEntitlementService: ModularSubscriptionEntitlementService,
+    @Inject(forwardRef(() => MessagingThreadApplicationService))
     private readonly messagingThreadApplicationService: MessagingThreadApplicationService,
     private readonly auctionSessionFinalizationService: AuctionSessionFinalizationService,
   ) {}
