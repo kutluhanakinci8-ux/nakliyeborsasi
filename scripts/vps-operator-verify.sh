@@ -24,6 +24,8 @@ fi
 export API_BASE
 export SKIP_PLAYWRIGHT="${SKIP_PLAYWRIGHT:-1}"
 export SKIP_AXE="${SKIP_AXE:-1}"
+export SKIP_LIGHTHOUSE="${SKIP_LIGHTHOUSE:-1}"
+export SKIP_POSTA_PWA="${SKIP_POSTA_PWA:-0}"
 
 bash "${ROOT}/scripts/verify-typeorm-global-entities.sh"
 npm run test:unit --prefix "${ROOT}"

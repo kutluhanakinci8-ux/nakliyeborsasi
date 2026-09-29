@@ -32,6 +32,7 @@
 | Gözlemlenebilirlik | SSE stats, ops snapshot, SLO smoke | **~88%** | MP-5 runbook; tam APM MP-10 sonrası |
 | ESP / deliverability (operatör) | Org engagement, DMARC hub, CSV | **~88%** | MP-6; pazarlama segmentasyonu hariç |
 | Erişilebilirlik (messaging hub) | axe kritik 0, aria şerit/liste/compose | **~92%** | MP-7; oturumlu hub manuel QA |
+| Mobil / PWA (hub + posta) | manifest, push SW, posta shell v7 | **~88%** | MP-8 PWA-first; native mağaza yok |
 | Dokümantasyon | `docs/MAIL_*`, `MESSAGING_*` | **~88%** | Eski §2.2 mention satırı güncellendi — MP-0 |
 | **Ağırlıklı kod kalitesi** | — | **~72%** | Refactor + unit test en büyük açık |
 

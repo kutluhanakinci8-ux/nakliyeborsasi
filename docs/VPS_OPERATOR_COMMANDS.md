@@ -44,6 +44,10 @@ bash scripts/verify-mail-deliverability-mp6.sh
 
 # MP-7 axe (VPS'te varsayılan kapalı — Chromium)
 SKIP_AXE=0 bash scripts/verify-messaging-a11y-mp7.sh
+
+# MP-8 PWA (posta shell + hub manifest; Lighthouse varsayılan kapalı)
+bash scripts/verify-messaging-hub-pwa-mp8.sh
+# SKIP_LIGHTHOUSE=0 LIGHTHOUSE_PWA_MIN=85 bash scripts/verify-messaging-hub-pwa-mp8.sh
 ```
 
 ## Playwright E2E (genelde VPS’te değil)

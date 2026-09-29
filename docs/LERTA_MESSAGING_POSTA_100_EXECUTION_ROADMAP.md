@@ -21,7 +21,7 @@
 | **MP-5** | `maturity-p5` | Gözlemlenebilirlik (metrik, SLO, dashboard) | Obs **72→88%** | MP-1 ✅ |
 | **MP-6** | `maturity-p6` | ESP analitik & deliverability UI | Postmark **69→88%** | MP-5 ◐ |
 | **MP-7** | `maturity-p7` | Erişilebilirlik (axe → WCAG AA kritik) | A11y **75→92%** | MP-4 ◐ |
-| **MP-8** | `maturity-p8` | PWA polish + native shell kararı | Mobil **75→88%** | MP-4 |
+| **MP-8** | `maturity-p8` | PWA polish + native shell kararı | Mobil **75→88%** | MP-4 ◐ |
 | **MP-9** | `maturity-p9` | SOC2-lite runbook + güvenlik dokümanı | Güvenlik **85→95%** dok | MP-5 |
 | **MP-10** | `maturity-p10` | Parite kapanış kapısı + skor yenileme | Tüm tablo hedefleri | MP-2…MP-9 |
 
@@ -157,17 +157,21 @@
 
 ---
 
-## MP-8 — Mobil & PWA
+## MP-8 — Mobil & PWA ◐
 
 **Amaç:** Native kararını dokümante et; PWA’yı WA/Slack mobil **kabul edilebilir** seviyeye çek.
 
-| Görev | Not |
-|-------|-----|
-| Lighthouse prod kaydı güncel | `verify-mail-web-pwa-prod.sh` |
-| iOS PWA push runbook | mevcut dok |
-| Native shell (Capacitor / RN) **ürün kararı** | yoksa explicit “PWA-only” |
+| Görev | Durum | Not |
+|-------|--------|-----|
+| Hub `manifest.webmanifest` + metadata | ✅ | `apps/web/public` · `layout.tsx` |
+| `messaging-push-sw.js` prod smoke | ✅ | `verify-messaging-hub-pwa-mp8.sh` |
+| Posta PWA shell | ✅ | `verify-mail-web-pwa-prod.sh` (mevcut) |
+| Ürün kararı **PWA-first** | ✅ | `docs/MESSAGING_MOBILE_MP8.md` |
+| iOS push runbook linki | ✅ | `MAIL_WEB_PUSH_IOS.md` · `MESSAGING_WEB_PUSH.md` |
+| Lighthouse PWA ≥85 | ◐ | `SKIP_LIGHTHOUSE=0` · evidence JSON |
+| Capacitor mağaza | ◐ | stub `capacitor.config.ts` — FS-7C+ |
 
-**Kabul:** PWA Lighthouse **≥85** prod · mobil parite **≥88%** (tanımlı kapsam).
+**Kabul:** `verify-messaging-hub-pwa-mp8.sh` PASS · mobil skor **≥88%** (PWA-only kapsam).
 
 ---
 

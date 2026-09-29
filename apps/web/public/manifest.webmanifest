@@ -1,0 +1,21 @@
+{
+  "name": "Lerta — Mesajlar ve lojistik",
+  "short_name": "Lerta",
+  "description": "Firma sohbeti, kurumsal posta ve ihale hub — app.lerta.com.tr",
+  "start_url": "/messaging?tab=sohbet",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f8fafc",
+  "theme_color": "#0f766e",
+  "lang": "tr",
+  "categories": ["business", "productivity"],
+  "icons": [
+    {
+      "src": "/corridor-hero.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
