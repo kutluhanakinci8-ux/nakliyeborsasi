@@ -8,6 +8,7 @@ import {
   updateComposePreset,
   type MailComposePreset,
 } from "@/lib/mailApi";
+import { mergeComposeTemplatesWithBuiltins } from "@/lib/mailComposePresets";
 
 type Props = {
   accessToken: string;
@@ -29,7 +30,7 @@ export function MailComposePresetsPanel({ accessToken }: Props) {
   const reload = useCallback(async () => {
     const data = await fetchComposePresets(accessToken);
     setSignatures(data.signatures);
-    setTemplates(data.templates);
+    setTemplates(mergeComposeTemplatesWithBuiltins(data.templates));
   }, [accessToken]);
 
   useEffect(() => {

@@ -73,6 +73,10 @@ if [[ -x scripts/apply-mail-sent-trash-schema.sh ]]; then
   bash scripts/apply-mail-sent-trash-schema.sh "$INSTALL_DIR" || true
 fi
 
+if [[ -x scripts/apply-mail-compose-preset-schema.sh ]]; then
+  bash scripts/apply-mail-compose-preset-schema.sh "$INSTALL_DIR" || true
+fi
+
 if [[ "${SKIP_LERTA_POST_VANITY_DEPLOY:-0}" != "1" ]] && [[ -x scripts/deploy-lerta-post-vanity-from.sh ]]; then
   DEPLOY_BRANCH="${BRANCH}" bash scripts/deploy-lerta-post-vanity-from.sh "$INSTALL_DIR" || true
 fi

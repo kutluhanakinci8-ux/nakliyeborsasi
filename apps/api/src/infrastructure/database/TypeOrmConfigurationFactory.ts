@@ -47,6 +47,7 @@ import { MailInboundMessageEntity } from "./entities/MailInboundMessageEntity";
 import { MailMailboxSentEntity } from "./entities/MailMailboxSentEntity";
 import { MailImapCredentialEntity } from "./entities/MailImapCredentialEntity";
 import { MailComposeDraftEntity } from "./entities/MailComposeDraftEntity";
+import { MailComposePresetEntity } from "./entities/MailComposePresetEntity";
 import { CompanyMailTeamInviteEntity } from "./entities/CompanyMailTeamInviteEntity";
 import { MailOrganizationBillingStateEntity } from "./entities/MailOrganizationBillingStateEntity";
 import { MailOrganizationOperatorStateEntity } from "./entities/MailOrganizationOperatorStateEntity";
@@ -130,6 +131,7 @@ export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
         MailMailboxSentEntity,
         MailImapCredentialEntity,
         MailComposeDraftEntity,
+        MailComposePresetEntity,
         CompanyMailTeamInviteEntity,
         MailOrganizationBillingStateEntity,
         MailOrganizationOperatorStateEntity,
