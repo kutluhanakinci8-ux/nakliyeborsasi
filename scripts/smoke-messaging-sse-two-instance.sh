@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # FS-8.3: İki API instance — farklı instanceId, redisFanout=true (aynı Redis).
 # Kullanım (VPS):
-#   SMOKE_SECOND_API_PORT=3012 MESSAGING_SSE_INSTANCE_ID_B=smoke-b \
+#   SMOKE_SECOND_API_PORT=3015 MESSAGING_SSE_INSTANCE_ID_B=smoke-b \
 #     bash scripts/smoke-messaging-sse-two-instance.sh
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
