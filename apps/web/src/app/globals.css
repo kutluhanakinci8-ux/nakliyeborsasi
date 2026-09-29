@@ -4862,9 +4862,65 @@ button.btn-secondary {
 
 .chat-layout {
   display: grid;
-  grid-template-columns: 320px 1fr;
-  gap: 16px;
+  grid-template-columns: 320px 1fr 48px;
+  gap: 12px;
   align-items: stretch;
+}
+
+.chat-stats-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  padding: 10px 6px;
+  min-height: 420px;
+}
+
+.chat-stat-glyph {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 8px 4px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #64748b;
+  min-height: 52px;
+}
+
+.chat-stat-glyph--highlight {
+  border-color: #fcd34d;
+  background: #fffbeb;
+}
+
+.chat-stat-glyph--highlight .chat-stat-glyph-value {
+  color: #b45309;
+}
+
+.chat-stat-glyph--secure {
+  border-color: #a7f3d0;
+  background: #ecfdf5;
+}
+
+.chat-stat-glyph-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.chat-stat-glyph-value {
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: #0f172a;
+  line-height: 1.1;
+}
+
+.chat-stat-glyph-value--tiny {
+  font-size: 0.55rem;
+  letter-spacing: 0.02em;
+  font-weight: 600;
+  color: #047857;
 }
 
 .chat-sidebar {
@@ -6450,7 +6506,24 @@ button.btn-secondary {
 }
 
 @media (max-width: 900px) {
-  .chat-layout,
+  .chat-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .chat-stats-rail {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    min-height: 0;
+    padding: 8px;
+    order: 3;
+  }
+
+  .chat-stat-glyph {
+    flex: 1 1 72px;
+    min-height: 44px;
+  }
+
   .trust-layout {
     grid-template-columns: 1fr;
   }

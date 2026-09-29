@@ -648,22 +648,7 @@ export function MessagingPageClient() {
   );
 
   return (
-    <ModulePageShell
-      stats={
-        mode === "chat"
-          ? [
-              { value: String(threads.length), label: "Aktif sohbet" },
-              {
-                value: String(totalUnread),
-                label: "Okunmamış",
-                highlight: totalUnread > 0,
-              },
-              { value: String(messages.length), label: "Bu sohbette mesaj" },
-              { value: "JWT", label: "Oturum koruması", highlight: true },
-            ]
-          : undefined
-      }
-    >
+    <ModulePageShell>
       <div className="messaging-mode-bar">
         <div
           className="messaging-mode-tabs"
@@ -1227,6 +1212,49 @@ export function MessagingPageClient() {
               </button>
             </div>
           </section>
+          <aside
+            className="chat-stats-rail module-panel"
+            aria-label="Sohbet özet göstergeleri"
+          >
+            <div
+              className="chat-stat-glyph"
+              title="Aktif sohbet"
+              aria-label={`Aktif sohbet: ${threads.length}`}
+            >
+              <span className="chat-stat-glyph-icon" aria-hidden>💬</span>
+              <span className="chat-stat-glyph-value">{threads.length}</span>
+            </div>
+            <div
+              className={
+                totalUnread > 0
+                  ? "chat-stat-glyph chat-stat-glyph--highlight"
+                  : "chat-stat-glyph"
+              }
+              title="Okunmamış"
+              aria-label={`Okunmamış: ${totalUnread}`}
+            >
+              <span className="chat-stat-glyph-icon" aria-hidden>●</span>
+              <span className="chat-stat-glyph-value">{totalUnread}</span>
+            </div>
+            <div
+              className="chat-stat-glyph"
+              title="Bu sohbette mesaj"
+              aria-label={`Bu sohbette mesaj: ${messages.length}`}
+            >
+              <span className="chat-stat-glyph-icon" aria-hidden>✉</span>
+              <span className="chat-stat-glyph-value">{messages.length}</span>
+            </div>
+            <div
+              className="chat-stat-glyph chat-stat-glyph--secure"
+              title="Oturum koruması (JWT)"
+              aria-label="Oturum koruması aktif"
+            >
+              <span className="chat-stat-glyph-icon" aria-hidden>🔒</span>
+              <span className="chat-stat-glyph-value chat-stat-glyph-value--tiny">
+                JWT
+              </span>
+            </div>
+          </aside>
         </div>
       )}
     </ModulePageShell>
