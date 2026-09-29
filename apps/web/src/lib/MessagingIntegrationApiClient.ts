@@ -13,10 +13,23 @@ export type MessagingWhatsappBridgeSnapshot = {
   kvkkAcceptedAt: string | null;
 };
 
+export type MessagingWebhookSnapshot = {
+  id: string;
+  url: string;
+  enabled: boolean;
+  events: string[];
+};
+
 export type MessagingIntegrationSnapshot = {
   companyId: string;
+  webhooks: MessagingWebhookSnapshot[];
+  availableWebhookEvents: string[];
+  slackBridge: { enabled: boolean; configured: boolean };
   whatsappBridge: MessagingWhatsappBridgeSnapshot;
   publicApiBasePath: string;
+  requiredOAuthScopes: string[];
+  automationCatalogPath: string;
+  botTokenPrefix?: string;
 };
 
 export class MessagingIntegrationApiClient {
