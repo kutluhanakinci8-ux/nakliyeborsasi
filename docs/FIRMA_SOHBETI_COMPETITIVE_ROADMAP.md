@@ -13,7 +13,7 @@
 | Bugün neyiz? | **Lojistik TMS’e gömülü B2B müzakere sohbeti** — firma çifti + opsiyonel `freightListingId`, e-posta/kurumsal posta ile **aynı Mesajlar hub’ında**. |
 | Rakip referans (genel ekip sohbeti) | **Slack ~95/100** — Lerta ağırlıklı **~84/100 (~%88 parite)**. |
 | Rakip referans (nakliye operasyon) | **Super Dispatch / Emerge** — bildirim kataloğu ve kanal tercihlerinde Lerta **eş/üstün**; **canlı sohbet derinliği** onlarda zayıf, bizde **orta-iyi**. |
-| WhatsApp Business? | **Ürün entegrasyonu yok**; sadece org profilinde WhatsApp numarası. Okundu/teslim beklentisi WA seviyesinde **karşılanmıyor (~%42)**. |
+| WhatsApp Business? | **FS-12 bildirim köprüsü** (Twilio / webhook); prod yapılandırma ve ContentSid gerekir. Tüketici WA yerine geçmez — parite **~%55–60** (MP-2 hedef **~%90**). |
 | Stratejik hedef | **Slack klonu değil** — **“Türkiye lojistik B2B işlem sohbeti”** kategorisinde **#1** (ihale, teklif, ek, güven skoru, KVKK, e-posta ile tek çatı). |
 | 18 ay hedef skor | **~92/100** vs Slack (günlük kullanım) · **~95/100** vs TMS rakipleri (operasyon entegrasyonu). |
 
@@ -38,21 +38,23 @@
 | **Entegrasyon** | Fiyat teklifi → thread + formatlı mesaj | Auction API |
 | **Hub UX** | Sohbet + kurumsal e-posta embed (posta) | Varsayılan sekme e-posta |
 
-### 2.2 Verilmeyen / zayıf hizmetler
+### 2.2 Verilmeyen / kısmi hizmetler (2026-09-29 güncel)
 
 | Beklenti (Slack / Teams / WA Business) | Durum |
 |----------------------------------------|--------|
-| Kanal, grup, @mention, reaksiyon | Yok |
-| Zengin metin, kod blok, snippet | Düz metin |
-| Global mesaj arama (sunucu) | Sadece liste filtresi |
-| Yazıyor / çevrimiçi | Yok |
-| Mesaj düzenle/sil, sabitle, anket | Yok |
-| Bot / webhook / slash command | Yok |
+| Kanal, huddle, Slack Connect | Yok (bilinçli — B2B iş sohbeti) |
+| Çoklu firma grup (3+) | ◐ pilot |
+| @mention, yazıyor, çevrimiçi | ✓ |
+| Sunucu tarafı mesaj arama | ✓ (liste filtresinden öte) |
+| Mesaj düzenle/sil, sabitle, anket | Kısmi / roadmap |
+| Zengin metin, kod blok | Düz metin + ekler |
+| Bot / webhook | ✓ (iç REST + firma webhook) |
 | Harici Graph API | İç REST |
-| Native mobil uygulama | PWA |
-| Okundu/teslim çift tik (kullanıcı) | ~%42 yol haritası |
-| Moderasyon, DLP, retention politikası | Sadece export |
-| Slack Connect / harici workspace | Yok |
+| Native mobil uygulama | PWA (MP-8) |
+| Okundu (şirket + kullanıcı) | ✓ |
+| WA bildirim köprüsü (FS-12) | ◐ prod yapılandırma (MP-2) |
+| Moderasyon, DLP, retention | Export + operatör araçları; tam DLP yok |
+| Reaksiyon (emoji) | Yok |
 
 ---
 
