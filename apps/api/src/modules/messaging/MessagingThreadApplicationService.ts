@@ -512,16 +512,18 @@ export class MessagingThreadApplicationService {
     });
     const latest = visible.at(-1);
     if (latest) {
+      const latestMs = messageCreatedMs(latest.createdAt);
+      const markReadAt = new Date(Math.max(latestMs, Date.now()));
       await this.upsertReadState(
         thread.id,
         authenticatedUser.companyId,
-        latest.createdAt,
+        markReadAt,
       );
       await this.upsertUserReadState(
         thread.id,
         authenticatedUser.userId,
         authenticatedUser.companyId,
-        latest.createdAt,
+        markReadAt,
       );
     }
     return views;

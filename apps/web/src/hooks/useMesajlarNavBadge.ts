@@ -52,9 +52,12 @@ export function useMesajlarNavBadge(
 
     void refresh();
     const timer = window.setInterval(() => void refresh(), POLL_MS);
+    const onInboxChanged = () => void refresh();
+    window.addEventListener("lerta-messaging-inbox-changed", onInboxChanged);
     return () => {
       cancelled = true;
       window.clearInterval(timer);
+      window.removeEventListener("lerta-messaging-inbox-changed", onInboxChanged);
     };
   }, [accessToken, locale]);
 

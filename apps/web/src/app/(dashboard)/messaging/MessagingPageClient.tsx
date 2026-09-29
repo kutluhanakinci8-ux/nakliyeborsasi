@@ -669,9 +669,18 @@ export function MessagingPageClient() {
     await loadMessages(hit.threadId);
   }
 
+  const clearThreadUnreadLocally = useCallback((threadId: string): void => {
+    setThreads((current) =>
+      current.map((row) =>
+        row.threadId === threadId ? { ...row, unreadCount: 0 } : row,
+      ),
+    );
+  }, []);
+
   const loadMessages = useCallback(
     async (threadId: string): Promise<void> => {
       setActiveThreadId(threadId);
+      clearThreadUnreadLocally(threadId);
       try {
         const payload = await MessagingApiClient.listMessages(
           accessToken,
@@ -679,12 +688,15 @@ export function MessagingPageClient() {
           threadId,
         );
         setMessages(payload.messages ?? []);
-        void loadThreads();
+        await loadThreads();
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("lerta-messaging-inbox-changed"));
+        }
       } catch (error) {
         setErrorMessage(error instanceof Error ? error.message : "Mesaj hatası");
       }
     },
-    [accessToken, locale],
+    [accessToken, locale, loadThreads, clearThreadUnreadLocally],
   );
 
   useEffect(() => {
@@ -1132,11 +1144,12 @@ export function MessagingPageClient() {
       }
     }
 
-    function refreshFromServer(): void {
-      void loadThreads();
+    async function refreshFromServer(): Promise<void> {
       if (activeThreadId) {
-        void loadMessages(activeThreadId);
+        await loadMessages(activeThreadId);
+        return;
       }
+      await loadThreads();
     }
 
     function startPolling(): void {
