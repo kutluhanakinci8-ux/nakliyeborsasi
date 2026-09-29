@@ -148,6 +148,10 @@ if [[ -x "${INSTALL_DIR}/scripts/verify-firma-sohbeti-fs8-prod-checklist.sh" ]];
     bash "${INSTALL_DIR}/scripts/verify-firma-sohbeti-fs8-prod-checklist.sh" || echo "UYARI: FS-8 prod checklist başarısız"
 fi
 
+if [[ -x "${INSTALL_DIR}/scripts/verify-firma-sohbeti-pilot-nps.sh" ]]; then
+  PILOT_NPS_STRICT="${PILOT_NPS_STRICT:-0}" bash "${INSTALL_DIR}/scripts/verify-firma-sohbeti-pilot-nps.sh" || true
+fi
+
 if [[ -x "${INSTALL_DIR}/scripts/run-mail-messaging-parity-wave2-checklist.sh" ]]; then
   SKIP_LIGHTHOUSE="${SKIP_LIGHTHOUSE:-1}" API_BASE="${API_BASE}" \
     bash "${INSTALL_DIR}/scripts/run-mail-messaging-parity-wave2-checklist.sh" || true
