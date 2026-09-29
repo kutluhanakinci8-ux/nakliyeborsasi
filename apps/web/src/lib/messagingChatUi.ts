@@ -1,3 +1,19 @@
+export type MessagingOperationStampType =
+  | "approved"
+  | "rejected"
+  | "acknowledged";
+
+export function operationStampLabel(stampType: MessagingOperationStampType): string {
+  switch (stampType) {
+    case "approved":
+      return "Onaylandı";
+    case "rejected":
+      return "Reddedildi";
+    default:
+      return "Görüldü";
+  }
+}
+
 export function companyInitials(label: string): string {
   const cleaned = label.replace(/[^A-Za-zÇĞİÖŞÜçğıöşü0-9\s]/g, " ").trim();
   if (!cleaned) {

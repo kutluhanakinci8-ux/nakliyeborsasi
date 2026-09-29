@@ -29,6 +29,18 @@ export class CompanyMessagingSettingsEntity {
   @Column({ name: "default_hub_tab", type: "varchar", length: 16, default: "email" })
   public defaultHubTab!: string;
 
+  /** FS-11: şirket özel hazır şablonlar (max 20, sistem şablonları ayrı). */
+  @Column({ name: "org_quick_reply_templates", type: "jsonb", nullable: true })
+  public orgQuickReplyTemplates!: CompanyOrgQuickReplyTemplate[] | null;
+
   @UpdateDateColumn({ name: "updated_at", type: "timestamptz" })
   public updatedAt!: Date;
 }
+
+export type CompanyOrgQuickReplyTemplate = {
+  id: string;
+  labelTr: string;
+  labelEn?: string;
+  bodyText: string;
+  category?: string;
+};

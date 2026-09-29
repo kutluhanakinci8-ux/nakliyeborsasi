@@ -5111,6 +5111,89 @@ button.btn-secondary {
   background: #ecfdf5;
 }
 
+.chat-mention-menu-item--active,
+.chat-mention-menu-item--active:hover {
+  background: #d1fae5;
+}
+
+.chat-message-stamps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chat-message-stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.chat-message-stamp--approved {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.chat-message-stamp--rejected {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.chat-message-stamp--acknowledged {
+  background: #e0f2fe;
+  color: #075985;
+}
+
+.chat-message-stamp-by {
+  font-weight: 500;
+  opacity: 0.85;
+}
+
+.chat-stamp-btn {
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #334155;
+  cursor: pointer;
+}
+
+.chat-stamp-btn:hover:not(:disabled) {
+  background: #f8fafc;
+}
+
+.chat-template-admin-list {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.chat-template-admin-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: start;
+}
+
+.chat-template-admin-body {
+  grid-column: 1 / -1;
+  min-height: 56px;
+}
+
 .chat-mention-menu-name {
   font-size: 0.82rem;
   font-weight: 600;

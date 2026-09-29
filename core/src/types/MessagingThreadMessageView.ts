@@ -5,6 +5,14 @@ export type MessagingMessageAttachmentView = {
   sizeBytes: number;
 };
 
+export type MessagingOperationStampView = {
+  stampType: "approved" | "rejected" | "acknowledged";
+  stampedByCompanyId: string;
+  stampedByUserId: string;
+  stampedByDisplayName: string;
+  createdAt: string;
+};
+
 export class MessagingThreadMessageView {
   public readonly id: string;
 
@@ -36,6 +44,8 @@ export class MessagingThreadMessageView {
 
   public readonly attachments: MessagingMessageAttachmentView[];
 
+  public readonly operationStamps: MessagingOperationStampView[];
+
   public constructor(params: {
     id: string;
     senderCompanyId: string;
@@ -49,6 +59,7 @@ export class MessagingThreadMessageView {
     deleted?: boolean;
     mentionUserIds?: string[];
     attachments?: MessagingMessageAttachmentView[];
+    operationStamps?: MessagingOperationStampView[];
   }) {
     this.id = params.id;
     this.senderCompanyId = params.senderCompanyId;
@@ -67,5 +78,6 @@ export class MessagingThreadMessageView {
     this.deleted = params.deleted ?? false;
     this.mentionUserIds = params.mentionUserIds ?? [];
     this.attachments = params.attachments ?? [];
+    this.operationStamps = params.operationStamps ?? [];
   }
 }

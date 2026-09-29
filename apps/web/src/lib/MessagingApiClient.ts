@@ -34,6 +34,7 @@ export type ThreadMessageRecord = {
   deleted?: boolean;
   mentionUserIds?: string[];
   attachments?: ThreadMessageAttachmentRecord[];
+  operationStamps?: MessagingOperationStampRecord[];
 };
 
 export type MessagingThreadSummaryRecord = {
@@ -94,6 +95,22 @@ export type MessagingQuickReplyRecord = {
   labelTr: string;
   bodyText: string;
   scope: "system" | "organization";
+};
+
+export type MessagingOrgQuickReplyRecord = {
+  id: string;
+  labelTr: string;
+  labelEn?: string;
+  bodyText: string;
+  category?: string;
+};
+
+export type MessagingOperationStampRecord = {
+  stampType: "approved" | "rejected" | "acknowledged";
+  stampedByCompanyId: string;
+  stampedByUserId: string;
+  stampedByDisplayName: string;
+  createdAt: string;
 };
 
 export class MessagingApiClient {
@@ -228,6 +245,48 @@ export class MessagingApiClient {
       accessToken,
       `/messaging/quick-replies?lang=${locale}`,
     ) as Promise<{ templates: MessagingQuickReplyRecord[] }>;
+  }
+
+  public static async fetchOrgQuickReplies(
+    accessToken: string,
+    locale: string,
+  ): Promise<{ templates: MessagingOrgQuickReplyRecord[] }> {
+    return AuthenticatedApiClient.fetchJson(
+      accessToken,
+      `/messaging/quick-replies/org?lang=${locale}`,
+    ) as Promise<{ templates: MessagingOrgQuickReplyRecord[] }>;
+  }
+
+  public static async saveOrgQuickReplies(
+    accessToken: string,
+    locale: string,
+    templates: MessagingOrgQuickReplyRecord[],
+  ): Promise<{ templates: MessagingOrgQuickReplyRecord[] }> {
+    return AuthenticatedApiClient.fetchJson(
+      accessToken,
+      `/messaging/quick-replies/org?lang=${locale}`,
+      {
+        method: "PUT",
+        body: JSON.stringify({ templates }),
+      },
+    ) as Promise<{ templates: MessagingOrgQuickReplyRecord[] }>;
+  }
+
+  public static async stampMessage(
+    accessToken: string,
+    locale: string,
+    threadId: string,
+    messageId: string,
+    stampType: "approved" | "rejected" | "acknowledged",
+  ): Promise<{ stampType: string; messageId: string }> {
+    return AuthenticatedApiClient.fetchJson(
+      accessToken,
+      `/messaging/threads/${threadId}/messages/${messageId}/stamp?lang=${locale}`,
+      {
+        method: "POST",
+        body: JSON.stringify({ stampType }),
+      },
+    ) as Promise<{ stampType: string; messageId: string }>;
   }
 
   public static async translateMessage(

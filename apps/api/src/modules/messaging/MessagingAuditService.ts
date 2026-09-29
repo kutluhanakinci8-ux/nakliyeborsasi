@@ -8,6 +8,7 @@ export const MessagingAuditActionCode = {
   MessageCreate: "MESSAGING_MSG_CREATE",
   MessageUpdate: "MESSAGING_MSG_UPDATE",
   MessageDelete: "MESSAGING_MSG_DELETE",
+  MessageStamp: "MESSAGING_MSG_STAMP",
 } as const;
 
 @Injectable()

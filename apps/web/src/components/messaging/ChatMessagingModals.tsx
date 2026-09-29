@@ -1,6 +1,10 @@
 "use client";
 
-import type { MessagingCompanySearchRecord } from "../../lib/MessagingApiClient";
+import type {
+  MessagingCompanySearchRecord,
+  MessagingOrgQuickReplyRecord,
+} from "../../lib/MessagingApiClient";
+import { useChatModalFocusTrap } from "../../hooks/useChatModalFocusTrap";
 
 type EditModalProps = {
   open: boolean;
@@ -19,14 +23,17 @@ export function ChatMessageEditModal({
   onCancel,
   onSave,
 }: EditModalProps) {
+  const panelRef = useChatModalFocusTrap(open, onCancel);
   if (!open) {
     return null;
   }
   return (
     <div className="chat-modal-backdrop" role="presentation" onClick={onCancel}>
       <div
+        ref={panelRef}
         className="chat-modal"
         role="dialog"
+        aria-modal="true"
         aria-labelledby="chat-edit-title"
         onClick={(event) => event.stopPropagation()}
       >
@@ -76,14 +83,17 @@ export function ChatMessageDeleteModal({
   onCancel,
   onConfirm,
 }: DeleteModalProps) {
+  const panelRef = useChatModalFocusTrap(open, onCancel);
   if (!open) {
     return null;
   }
   return (
     <div className="chat-modal-backdrop" role="presentation" onClick={onCancel}>
       <div
+        ref={panelRef}
         className="chat-modal chat-modal--compact"
         role="alertdialog"
+        aria-modal="true"
         aria-labelledby="chat-delete-title"
         onClick={(event) => event.stopPropagation()}
       >
@@ -145,6 +155,7 @@ export function ChatGroupThreadModal({
   onRemoveCompany,
   onCreate,
 }: GroupModalProps) {
+  const panelRef = useChatModalFocusTrap(open, onClose);
   if (!open) {
     return null;
   }
@@ -152,8 +163,10 @@ export function ChatGroupThreadModal({
   return (
     <div className="chat-modal-backdrop" role="presentation" onClick={onClose}>
       <div
+        ref={panelRef}
         className="chat-modal chat-modal--wide"
         role="dialog"
+        aria-modal="true"
         aria-labelledby="chat-group-title"
         onClick={(event) => event.stopPropagation()}
       >
@@ -233,6 +246,128 @@ export function ChatGroupThreadModal({
             onClick={onCreate}
           >
             Grup aç
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+type QuickReplyAdminModalProps = {
+  open: boolean;
+  busy: boolean;
+  templates: MessagingOrgQuickReplyRecord[];
+  onClose: () => void;
+  onChange: (templates: MessagingOrgQuickReplyRecord[]) => void;
+  onSave: () => void;
+};
+
+export function ChatQuickReplyAdminModal({
+  open,
+  busy,
+  templates,
+  onClose,
+  onChange,
+  onSave,
+}: QuickReplyAdminModalProps) {
+  const panelRef = useChatModalFocusTrap(open, onClose);
+  if (!open) {
+    return null;
+  }
+  return (
+    <div className="chat-modal-backdrop" role="presentation" onClick={onClose}>
+      <div
+        ref={panelRef}
+        className="chat-modal chat-modal--wide"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="chat-templates-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <h3 id="chat-templates-title" className="chat-modal-title">
+          Şirket şablonları
+        </h3>
+        <p className="chat-modal-hint">
+          En fazla 20 özel şablon. Sistem şablonları compose listesinde kalır.
+        </p>
+        <ul className="chat-template-admin-list">
+          {templates.map((row, index) => (
+            <li key={row.id || `row-${index}`} className="chat-template-admin-row">
+              <input
+                className="input-light"
+                value={row.labelTr}
+                placeholder="Kısa ad (TR)"
+                maxLength={80}
+                onChange={(event) => {
+                  const next = templates.map((item, i) =>
+                    i === index
+                      ? { ...item, labelTr: event.target.value }
+                      : item,
+                  );
+                  onChange(next);
+                }}
+              />
+              <textarea
+                className="chat-modal-textarea chat-template-admin-body"
+                rows={2}
+                value={row.bodyText}
+                placeholder="Mesaj metni"
+                maxLength={4000}
+                onChange={(event) => {
+                  const next = templates.map((item, i) =>
+                    i === index
+                      ? { ...item, bodyText: event.target.value }
+                      : item,
+                  );
+                  onChange(next);
+                }}
+              />
+              <button
+                type="button"
+                className="chat-pending-chip-remove"
+                aria-label="Şablonu kaldır"
+                onClick={() =>
+                  onChange(templates.filter((_, i) => i !== index))
+                }
+              >
+                ×
+              </button>
+            </li>
+          ))}
+        </ul>
+        <button
+          type="button"
+          className="btn-account-secondary"
+          disabled={templates.length >= 20 || busy}
+          onClick={() =>
+            onChange([
+              ...templates,
+              {
+                id: `org-${Date.now()}`,
+                labelTr: "",
+                bodyText: "",
+              },
+            ])
+          }
+        >
+          + Şablon ekle
+        </button>
+        <div className="chat-modal-actions">
+          <button
+            type="button"
+            className="btn-account-secondary"
+            disabled={busy}
+            onClick={onClose}
+          >
+            Vazgeç
+          </button>
+          <button
+            type="button"
+            className="btn-accent"
+            disabled={busy}
+            onClick={onSave}
+          >
+            Kaydet
           </button>
         </div>
       </div>

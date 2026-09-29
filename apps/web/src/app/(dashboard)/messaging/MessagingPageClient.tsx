@@ -16,6 +16,7 @@ import {
   ChatGroupThreadModal,
   ChatMessageDeleteModal,
   ChatMessageEditModal,
+  ChatQuickReplyAdminModal,
 } from "../../../components/messaging/ChatMessagingModals";
 import { EmptyState } from "../../../components/EmptyState";
 import { ModulePageShell } from "../../../components/ModulePageShell";
@@ -24,6 +25,7 @@ import {
   MessagingApiClient,
   MessagingListingCardRecord,
   MessagingOfferTimelineEntryRecord,
+  MessagingOrgQuickReplyRecord,
   MessagingQuickReplyRecord,
   MessagingCompanySearchRecord,
   MessagingSearchResultRecord,
@@ -41,6 +43,8 @@ import {
   dayKeyFromIso,
   formatChatDayLabel,
   highlightSearchSnippet,
+  operationStampLabel,
+  type MessagingOperationStampType,
 } from "../../../lib/messagingChatUi";
 
 type PendingAttachment = {
@@ -190,6 +194,8 @@ export function MessagingPageClient() {
   const typingPingRef = useRef(0);
   const messageInputRef = useRef<HTMLTextAreaElement>(null);
   const [mentionMenuOpen, setMentionMenuOpen] = useState(false);
+  const [mentionPickIndex, setMentionPickIndex] = useState(0);
+  const templateSelectRef = useRef<HTMLSelectElement>(null);
   const [internalNotesOnly, setInternalNotesOnly] = useState(false);
   const [editMessage, setEditMessage] = useState<{
     id: string;
@@ -221,6 +227,12 @@ export function MessagingPageClient() {
     PendingAttachment[]
   >([]);
   const [translateBusyId, setTranslateBusyId] = useState("");
+  const [stampBusyId, setStampBusyId] = useState("");
+  const [quickReplyAdminOpen, setQuickReplyAdminOpen] = useState(false);
+  const [orgQuickReplyDrafts, setOrgQuickReplyDrafts] = useState<
+    MessagingOrgQuickReplyRecord[]
+  >([]);
+  const [quickReplyAdminBusy, setQuickReplyAdminBusy] = useState(false);
   const deepLinkHandledKey = useRef<string | null>(null);
   const isCompanyOwner =
     session?.roleCodes?.includes("COMPANY_OWNER") ?? false;
@@ -304,8 +316,13 @@ export function MessagingPageClient() {
       return `${current}${spacer}${colleague.mentionToken} `;
     });
     setMentionMenuOpen(false);
+    setMentionPickIndex(0);
     requestAnimationFrame(() => messageInputRef.current?.focus());
   }
+
+  useEffect(() => {
+    setMentionPickIndex(0);
+  }, [mentionSuggestions]);
 
   useEffect(() => {
     const chatLink =
@@ -525,6 +542,74 @@ export function MessagingPageClient() {
       } catch {
         setErrorMessage("Dosya okunamadı (en fazla 5 dosya, 10 MB).");
       }
+    }
+  }
+
+  async function handleOperationStamp(
+    messageId: string,
+    stampType: MessagingOperationStampType,
+  ): Promise<void> {
+    if (!activeThreadId) {
+      return;
+    }
+    setStampBusyId(messageId);
+    try {
+      await MessagingApiClient.stampMessage(
+        accessToken,
+        locale,
+        activeThreadId,
+        messageId,
+        stampType,
+      );
+      await loadMessages(activeThreadId);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Damga eklenemedi",
+      );
+    } finally {
+      setStampBusyId("");
+    }
+  }
+
+  async function openQuickReplyAdmin(): Promise<void> {
+    setQuickReplyAdminBusy(true);
+    try {
+      const payload = await MessagingApiClient.fetchOrgQuickReplies(
+        accessToken,
+        locale,
+      );
+      setOrgQuickReplyDrafts(payload.templates ?? []);
+      setQuickReplyAdminOpen(true);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Şablonlar yüklenemedi",
+      );
+    } finally {
+      setQuickReplyAdminBusy(false);
+    }
+  }
+
+  async function saveOrgQuickReplies(): Promise<void> {
+    setQuickReplyAdminBusy(true);
+    try {
+      const payload = await MessagingApiClient.saveOrgQuickReplies(
+        accessToken,
+        locale,
+        orgQuickReplyDrafts,
+      );
+      setOrgQuickReplyDrafts(payload.templates ?? []);
+      setQuickReplyAdminOpen(false);
+      const quick = await MessagingApiClient.fetchQuickReplies(
+        accessToken,
+        locale,
+      );
+      setQuickReplies(quick.templates ?? []);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Şablonlar kaydedilemedi",
+      );
+    } finally {
+      setQuickReplyAdminBusy(false);
     }
   }
 
@@ -1640,6 +1725,25 @@ export function MessagingPageClient() {
                           text={message.bodyText}
                           mentionNameByUserId={mentionNameByUserId}
                         />
+                        {message.operationStamps &&
+                        message.operationStamps.length > 0 ? (
+                          <ul
+                            className="chat-message-stamps"
+                            aria-label="İşlem damgaları"
+                          >
+                            {message.operationStamps.map((stamp) => (
+                              <li
+                                key={`${stamp.stampedByCompanyId}-${stamp.stampType}-${stamp.createdAt}`}
+                                className={`chat-message-stamp chat-message-stamp--${stamp.stampType}`}
+                              >
+                                {operationStampLabel(stamp.stampType)}
+                                <span className="chat-message-stamp-by">
+                                  {stamp.stampedByDisplayName}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : null}
                         {message.attachments && message.attachments.length > 0 ? (
                           <ul className="chat-attachment-list">
                             {message.attachments.map((attachment) => (
@@ -1688,19 +1792,45 @@ export function MessagingPageClient() {
                           </p>
                         ) : null}
                         <div className="chat-message-actions">
-                          {!isMine && !message.deleted ? (
-                            <button
-                              type="button"
-                              className="chat-translate-btn"
-                              onClick={() =>
-                                setQuotedMessage({
-                                  id: message.id,
-                                  preview: message.bodyText.slice(0, 240),
-                                })
-                              }
-                            >
-                              Yanıtla
-                            </button>
+                          {!isMine &&
+                          !message.deleted &&
+                          message.messageKind !== "internal" ? (
+                            <>
+                              <button
+                                type="button"
+                                className="chat-translate-btn"
+                                onClick={() =>
+                                  setQuotedMessage({
+                                    id: message.id,
+                                    preview: message.bodyText.slice(0, 240),
+                                  })
+                                }
+                              >
+                                Yanıtla
+                              </button>
+                              {(
+                                [
+                                  "approved",
+                                  "rejected",
+                                  "acknowledged",
+                                ] as MessagingOperationStampType[]
+                              ).map((stampType) => (
+                                <button
+                                  key={stampType}
+                                  type="button"
+                                  className="chat-stamp-btn"
+                                  disabled={stampBusyId === message.id}
+                                  onClick={() =>
+                                    void handleOperationStamp(
+                                      message.id,
+                                      stampType,
+                                    )
+                                  }
+                                >
+                                  {operationStampLabel(stampType)}
+                                </button>
+                              ))}
+                            </>
                           ) : null}
                           {["en", "de", "ru"].map((target) => (
                             <button
@@ -1889,11 +2019,19 @@ export function MessagingPageClient() {
                               Eşleşen ekip üyesi yok
                             </li>
                           ) : (
-                            mentionSuggestions.map((colleague) => (
-                              <li key={colleague.userId} role="option">
+                            mentionSuggestions.map((colleague, index) => (
+                              <li
+                                key={colleague.userId}
+                                role="option"
+                                aria-selected={index === mentionPickIndex}
+                              >
                                 <button
                                   type="button"
-                                  className="chat-mention-menu-item"
+                                  className={
+                                    index === mentionPickIndex
+                                      ? "chat-mention-menu-item chat-mention-menu-item--active"
+                                      : "chat-mention-menu-item"
+                                  }
                                   onMouseDown={(event) =>
                                     event.preventDefault()
                                   }
@@ -1915,10 +2053,21 @@ export function MessagingPageClient() {
                       ) : null}
                     </div>
                   ) : null}
+                  {isCompanyOwner ? (
+                    <button
+                      type="button"
+                      className="chat-compose-tool-btn"
+                      disabled={quickReplyAdminBusy}
+                      onClick={() => void openQuickReplyAdmin()}
+                    >
+                      Şablon yönet
+                    </button>
+                  ) : null}
                   {quickReplies.length > 0 ? (
                     <label className="chat-compose-template">
                       <span className="sr-only">Hazır şablon</span>
                       <select
+                        ref={templateSelectRef}
                         id="chat-quick-reply"
                         className="chat-compose-template-select"
                         defaultValue=""
@@ -1995,12 +2144,54 @@ export function MessagingPageClient() {
                     }
                   }}
                   onKeyDown={(event) => {
+                    if (
+                      event.key === "/" &&
+                      !event.shiftKey &&
+                      !messageBody.trim() &&
+                      quickReplies.length > 0
+                    ) {
+                      event.preventDefault();
+                      templateSelectRef.current?.focus();
+                      return;
+                    }
+                    if (mentionDropdownOpen && mentionSuggestions.length > 0) {
+                      if (event.key === "ArrowDown") {
+                        event.preventDefault();
+                        setMentionPickIndex(
+                          (current) =>
+                            (current + 1) % mentionSuggestions.length,
+                        );
+                        return;
+                      }
+                      if (event.key === "ArrowUp") {
+                        event.preventDefault();
+                        setMentionPickIndex(
+                          (current) =>
+                            (current - 1 + mentionSuggestions.length) %
+                            mentionSuggestions.length,
+                        );
+                        return;
+                      }
+                      if (event.key === "Enter" && event.shiftKey === false) {
+                        const picked = mentionSuggestions[mentionPickIndex];
+                        if (picked && messageHasActiveMentionQuery(messageBody)) {
+                          event.preventDefault();
+                          applyColleagueMention(picked);
+                          return;
+                        }
+                      }
+                    }
                     if (event.key === "Enter" && !event.shiftKey) {
                       event.preventDefault();
                       void handleSendMessage();
                     }
-                    if (event.key === "Escape" && mentionDropdownOpen) {
-                      setMentionMenuOpen(false);
+                    if (event.key === "Escape") {
+                      if (mentionDropdownOpen) {
+                        setMentionMenuOpen(false);
+                      }
+                      if (quotedMessage) {
+                        setQuotedMessage(null);
+                      }
                     }
                   }}
                   onBlur={() => {
@@ -2021,7 +2212,9 @@ export function MessagingPageClient() {
               </div>
               <p className="chat-compose-footnote">
                 Enter gönder · Shift+Enter yeni satır
-                {colleagues.length > 0 ? " · @ ile ekip etiketle" : ""}
+                {colleagues.length > 0 ? " · @ mention" : ""}
+                {quickReplies.length > 0 ? " · / şablon" : ""}
+                {" · Esc iptal"}
               </p>
             </div>
           </section>
@@ -2130,6 +2323,14 @@ export function MessagingPageClient() {
           )
         }
         onCreate={() => void createGroupThread()}
+      />
+      <ChatQuickReplyAdminModal
+        open={quickReplyAdminOpen}
+        busy={quickReplyAdminBusy}
+        templates={orgQuickReplyDrafts}
+        onClose={() => setQuickReplyAdminOpen(false)}
+        onChange={setOrgQuickReplyDrafts}
+        onSave={() => void saveOrgQuickReplies()}
       />
     </ModulePageShell>
   );

@@ -48,8 +48,16 @@ import { MessagingWhatsappBridgeService } from "./MessagingWhatsappBridgeService
 import { MessagingThreadParticipantService } from "./MessagingThreadParticipantService";
 import { OpenMessagingGroupThreadRequestDto } from "./OpenMessagingGroupThreadRequestDto";
 import { AuctionListingPriceActionService } from "../auction/AuctionListingPriceActionService";
-import { CompanyMessagingSettingsEntity } from "../../infrastructure/database/entities/CompanyMessagingSettingsEntity";
+import {
+  CompanyMessagingSettingsEntity,
+  type CompanyOrgQuickReplyTemplate,
+} from "../../infrastructure/database/entities/CompanyMessagingSettingsEntity";
+import {
+  MessageOperationStampEntity,
+  type MessagingOperationStampType,
+} from "../../infrastructure/database/entities/MessageOperationStampEntity";
 import { TrustScoreApplicationService } from "../trust/TrustScoreApplicationService";
+import { randomUUID } from "node:crypto";
 
 const COMPANY_UUID_SEARCH_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -79,6 +87,8 @@ export class MessagingThreadApplicationService {
     private readonly freightListingRepository: Repository<FreightListingEntity>,
     @InjectRepository(CompanyMessagingSettingsEntity)
     private readonly companyMessagingSettingsRepository: Repository<CompanyMessagingSettingsEntity>,
+    @InjectRepository(MessageOperationStampEntity)
+    private readonly messageOperationStampRepository: Repository<MessageOperationStampEntity>,
     private readonly trustScoreApplicationService: TrustScoreApplicationService,
     private readonly modularSubscriptionEntitlementService: ModularSubscriptionEntitlementService,
     private readonly operationalNotificationService: OperationalNotificationService,
@@ -410,6 +420,38 @@ export class MessagingThreadApplicationService {
     const messageCreatedMs = (value: Date | string): number =>
       value instanceof Date ? value.getTime() : new Date(value).getTime();
 
+    const visibleIds = visible.map((row) => row.id);
+    const stampRows =
+      visibleIds.length > 0
+        ? await this.messageOperationStampRepository.find({
+            where: { messageId: In(visibleIds) },
+            order: { createdAt: "ASC" },
+          })
+        : [];
+    const stampUserIds = [
+      ...new Set(stampRows.map((row) => row.stampedByUserId)),
+    ];
+    const stampUsers =
+      stampUserIds.length > 0
+        ? await this.userAccountRepository.find({
+            where: { id: In(stampUserIds) },
+          })
+        : [];
+    const stampUserNameById = new Map(
+      stampUsers.map((row) => [
+        row.id,
+        row.displayName?.trim() ||
+          row.emailAddress?.trim() ||
+          row.id.slice(0, 8),
+      ]),
+    );
+    const stampsByMessageId = new Map<string, MessageOperationStampEntity[]>();
+    for (const stamp of stampRows) {
+      const bucket = stampsByMessageId.get(stamp.messageId) ?? [];
+      bucket.push(stamp);
+      stampsByMessageId.set(stamp.messageId, bucket);
+    }
+
     const views = visible.map((message) => {
       const isMine = message.senderCompanyId === authenticatedUser.companyId;
       const createdMs = messageCreatedMs(message.createdAt);
@@ -435,6 +477,17 @@ export class MessagingThreadApplicationService {
           (counterpartyLastReadAt !== null &&
             createdMs <= messageCreatedMs(counterpartyLastReadAt)));
       const deleted = Boolean(message.deletedAt);
+      const operationStamps = (stampsByMessageId.get(message.id) ?? []).map(
+        (stamp) => ({
+          stampType: stamp.stampType,
+          stampedByCompanyId: stamp.stampedByCompanyId,
+          stampedByUserId: stamp.stampedByUserId,
+          stampedByDisplayName:
+            stampUserNameById.get(stamp.stampedByUserId) ??
+            stamp.stampedByUserId.slice(0, 8),
+          createdAt: stamp.createdAt.toISOString(),
+        }),
+      );
       return new MessagingThreadMessageView({
         id: message.id,
         senderCompanyId: message.senderCompanyId,
@@ -448,6 +501,7 @@ export class MessagingThreadApplicationService {
         deleted,
         mentionUserIds: message.mentionUserIds ?? [],
         attachments: deleted ? [] : this.publicAttachments(message.attachments),
+        operationStamps,
       });
     });
     const latest = visible.at(-1);
@@ -702,7 +756,177 @@ export class MessagingThreadApplicationService {
     locale: string,
   ): Promise<{ templates: ReturnType<typeof listMessagingQuickReplies> }> {
     await this.assertMessagingModule(authenticatedUser, locale);
-    return { templates: listMessagingQuickReplies() };
+    const orgExtras = await this.loadOrgQuickReplyTemplates(
+      authenticatedUser.companyId,
+    );
+    return { templates: listMessagingQuickReplies(orgExtras) };
+  }
+
+  public async getOrgQuickReplies(
+    authenticatedUser: AuthenticatedUserContext,
+    locale: string,
+  ): Promise<{ templates: CompanyOrgQuickReplyTemplate[] }> {
+    if (!authenticatedUser.roleCodes.includes(CompanyRoleCode.CompanyOwner)) {
+      throw new AuthorizationException(
+        "Yalnızca şirket sahibi şablonları yönetebilir",
+      );
+    }
+    await this.assertMessagingModule(authenticatedUser, locale);
+    const templates = await this.loadOrgQuickReplyTemplates(
+      authenticatedUser.companyId,
+    );
+    return { templates };
+  }
+
+  public async replaceOrgQuickReplies(
+    authenticatedUser: AuthenticatedUserContext,
+    locale: string,
+    templatesInput: CompanyOrgQuickReplyTemplate[],
+  ): Promise<{ templates: CompanyOrgQuickReplyTemplate[] }> {
+    if (!authenticatedUser.roleCodes.includes(CompanyRoleCode.CompanyOwner)) {
+      throw new AuthorizationException(
+        "Yalnızca şirket sahibi şablonları yönetebilir",
+      );
+    }
+    await this.assertMessagingModule(authenticatedUser, locale);
+    const sanitized = this.sanitizeOrgQuickReplyTemplates(templatesInput);
+    const existing = await this.companyMessagingSettingsRepository.findOne({
+      where: { companyId: authenticatedUser.companyId },
+    });
+    if (existing) {
+      existing.orgQuickReplyTemplates = sanitized;
+      await this.companyMessagingSettingsRepository.save(existing);
+    } else {
+      await this.companyMessagingSettingsRepository.save(
+        this.companyMessagingSettingsRepository.create({
+          companyId: authenticatedUser.companyId,
+          orgQuickReplyTemplates: sanitized,
+        }),
+      );
+    }
+    return { templates: sanitized };
+  }
+
+  public async applyOperationStamp(
+    authenticatedUser: AuthenticatedUserContext,
+    threadId: string,
+    messageId: string,
+    stampType: MessagingOperationStampType,
+    locale: string,
+    clientContext?: MessagingClientRequestContext,
+    auditPath?: string,
+  ): Promise<{ stampType: MessagingOperationStampType; messageId: string }> {
+    const thread = await this.requireParticipantThread(
+      authenticatedUser,
+      threadId,
+      locale,
+    );
+    const message = await this.messageRepository.findOne({
+      where: { id: messageId, threadId: thread.id },
+    });
+    if (!message) {
+      throw new MessagingThreadNotFoundException(messageId);
+    }
+    if (message.deletedAt) {
+      throw new ValidationException("Silinmiş mesaja damga eklenemez");
+    }
+    if (message.kind === "internal") {
+      throw new ValidationException("İç notlara damga eklenemez");
+    }
+    if (message.senderCompanyId === authenticatedUser.companyId) {
+      throw new ValidationException(
+        "Kendi mesajınıza işlem damgası ekleyemezsiniz",
+      );
+    }
+    const allowed: MessagingOperationStampType[] = [
+      "approved",
+      "rejected",
+      "acknowledged",
+    ];
+    if (!allowed.includes(stampType)) {
+      throw new ValidationException("Geçersiz damga türü");
+    }
+    const existing = await this.messageOperationStampRepository.findOne({
+      where: {
+        messageId: message.id,
+        stampedByCompanyId: authenticatedUser.companyId,
+      },
+    });
+    if (existing) {
+      existing.stampType = stampType;
+      existing.stampedByUserId = authenticatedUser.userId;
+      await this.messageOperationStampRepository.save(existing);
+    } else {
+      await this.messageOperationStampRepository.save(
+        this.messageOperationStampRepository.create({
+          messageId: message.id,
+          threadId: thread.id,
+          stampType,
+          stampedByUserId: authenticatedUser.userId,
+          stampedByCompanyId: authenticatedUser.companyId,
+        }),
+      );
+    }
+    if (clientContext) {
+      await this.messagingAuditService.recordMessageMutation(
+        MessagingAuditActionCode.MessageStamp,
+        authenticatedUser,
+        clientContext,
+        {
+          threadId: thread.id,
+          messageId: message.id,
+          httpMethod: "POST",
+          requestPath:
+            auditPath ??
+            `/messaging/threads/${threadId}/messages/${messageId}/stamp`,
+          extra: { stampType },
+        },
+      );
+    }
+    const event = { type: "message", threadId: thread.id };
+    await this.fanOutRealtime(thread, event);
+    return { stampType, messageId: message.id };
+  }
+
+  private async loadOrgQuickReplyTemplates(
+    companyId: string,
+  ): Promise<ReturnType<typeof listMessagingQuickReplies>> {
+    const row = await this.companyMessagingSettingsRepository.findOne({
+      where: { companyId },
+    });
+    const org = row?.orgQuickReplyTemplates ?? [];
+    return org.map((template) => ({
+      id: template.id,
+      labelTr: template.labelTr,
+      bodyText: template.bodyText,
+      scope: "organization" as const,
+    }));
+  }
+
+  private sanitizeOrgQuickReplyTemplates(
+    templatesInput: CompanyOrgQuickReplyTemplate[],
+  ): CompanyOrgQuickReplyTemplate[] {
+    const list = Array.isArray(templatesInput) ? templatesInput : [];
+    const sanitized: CompanyOrgQuickReplyTemplate[] = [];
+    for (const raw of list.slice(0, 20)) {
+      const labelTr = raw.labelTr?.trim() ?? "";
+      const bodyText = raw.bodyText?.trim() ?? "";
+      if (!labelTr || !bodyText) {
+        continue;
+      }
+      const id =
+        typeof raw.id === "string" && raw.id.trim().length > 0
+          ? raw.id.trim()
+          : randomUUID();
+      sanitized.push({
+        id,
+        labelTr: labelTr.slice(0, 80),
+        labelEn: raw.labelEn?.trim().slice(0, 80) || undefined,
+        bodyText: bodyText.slice(0, 4000),
+        category: raw.category?.trim().slice(0, 40) || undefined,
+      });
+    }
+    return sanitized;
   }
 
   public async getMessagingHubDefault(

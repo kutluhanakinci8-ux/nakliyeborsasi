@@ -28,6 +28,7 @@ import { MessagingAuditService } from "./MessagingAuditService";
 import { MessagingCompanyMessageRateLimitService } from "./MessagingCompanyMessageRateLimitService";
 import { CompanyMessagingWebhookEndpointEntity } from "../../infrastructure/database/entities/CompanyMessagingWebhookEndpointEntity";
 import { CompanyMessagingSettingsEntity } from "../../infrastructure/database/entities/CompanyMessagingSettingsEntity";
+import { MessageOperationStampEntity } from "../../infrastructure/database/entities/MessageOperationStampEntity";
 import { MessagingWebhookDispatcherService } from "./MessagingWebhookDispatcherService";
 import { MessagingCompanyIntegrationService } from "./MessagingCompanyIntegrationService";
 import { MessagingIntegrationController } from "./MessagingIntegrationController";
@@ -52,6 +53,7 @@ import { TrustScoreModule } from "../trust/TrustScoreModule";
     TypeOrmModule.forFeature([
       MessageThreadEntity,
       MessageEntity,
+      MessageOperationStampEntity,
       CompanyMessagingWebhookEndpointEntity,
       CompanyMessagingSettingsEntity,
       CompanyMessagingBotCredentialEntity,
