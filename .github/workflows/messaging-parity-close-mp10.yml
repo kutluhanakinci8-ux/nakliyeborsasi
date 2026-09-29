@@ -1,0 +1,28 @@
+name: messaging-parity-close-mp10
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/MESSAGING_POSTA_MP10_SIGNOFF.md"
+      - "docs/LERTA_MESSAGING_POSTA_COMPETITIVE_SCORECARD.md"
+      - "scripts/verify-messaging-parity-close-mp10.sh"
+  pull_request:
+    paths:
+      - "docs/MESSAGING_POSTA_MP10_SIGNOFF.md"
+      - "scripts/verify-messaging-parity-close-mp10.sh"
+
+jobs:
+  mp10-signoff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: chmod +x scripts/verify-messaging-parity-close-mp10.sh
+      - run: MP10_FULL=0 bash scripts/verify-messaging-parity-close-mp10.sh
+        env:
+          API_BASE: https://app.lerta.com.tr/api/v1
