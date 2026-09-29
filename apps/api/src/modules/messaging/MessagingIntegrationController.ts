@@ -56,6 +56,13 @@ export class MessagingIntegrationController {
     );
   }
 
+  @Post("whatsapp-bridge/test")
+  public async testWhatsappBridge(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    return this.messagingCompanyIntegrationService.sendWhatsappBridgeTest(user);
+  }
+
   @Patch("whatsapp-bridge")
   public async updateWhatsappBridge(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,

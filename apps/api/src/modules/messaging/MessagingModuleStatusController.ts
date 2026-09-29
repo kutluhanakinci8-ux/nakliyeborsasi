@@ -4,6 +4,8 @@ import { resolveMessagingVapidFromEnv } from "../../infrastructure/push/messagin
 import { MessagingAttachmentStorageService } from "./MessagingAttachmentStorageService";
 import { MessagingRealtimeHubService } from "./MessagingRealtimeHubService";
 import { MessagingOptionalWsService } from "./MessagingOptionalWsService";
+import { MessagingWhatsappBridgeService } from "./MessagingWhatsappBridgeService";
+import type { WhatsappBridgeDeliverySnapshot } from "@nakliyeborsasi/core";
 
 @Controller("messaging")
 export class MessagingModuleStatusController {
@@ -11,6 +13,7 @@ export class MessagingModuleStatusController {
     private readonly configService: ConfigService,
     private readonly messagingRealtimeHubService: MessagingRealtimeHubService,
     private readonly messagingOptionalWsService: MessagingOptionalWsService,
+    private readonly messagingWhatsappBridgeService: MessagingWhatsappBridgeService,
   ) {}
 
   @Get("status")
@@ -27,6 +30,7 @@ export class MessagingModuleStatusController {
     webPush: { enabled: boolean; isolatedVapid: boolean };
     sse: ReturnType<MessagingRealtimeHubService["getStats"]>;
     ws: { enabled: boolean; port: number | null };
+    whatsappBridge: WhatsappBridgeDeliverySnapshot;
   } {
     const deepl = Boolean(
       this.configService.get<string>("MESSAGING_DEEPL_API_KEY")?.trim(),
@@ -119,6 +123,7 @@ export class MessagingModuleStatusController {
         enabled: this.messagingOptionalWsService.isEnabled(),
         port: this.messagingOptionalWsService.getPort(),
       },
+      whatsappBridge: this.messagingWhatsappBridgeService.getDeliverySnapshot(),
     };
   }
 }

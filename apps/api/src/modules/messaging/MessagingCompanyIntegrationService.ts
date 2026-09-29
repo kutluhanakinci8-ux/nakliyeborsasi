@@ -75,6 +75,7 @@ export class MessagingCompanyIntegrationService {
         notifyE164Masked: settings.whatsappNotifyE164
           ? maskWhatsappNotifyE164(settings.whatsappNotifyE164)
           : null,
+        ...this.messagingWhatsappBridgeService.getDeliverySnapshot(),
         deliveryConfigured:
           this.messagingWhatsappBridgeService.isDeliveryConfigured(),
         kvkkNoticeTr: MESSAGING_WHATSAPP_KVKK_NOTICE_TR,
@@ -289,6 +290,19 @@ export class MessagingCompanyIntegrationService {
       whatsappBridgeEnabled: row?.whatsappBridgeEnabled ?? false,
       whatsappNotifyE164: row?.whatsappNotifyE164 ?? null,
     };
+  }
+
+  public async sendWhatsappBridgeTest(
+    authenticatedUser: AuthenticatedUserContext,
+  ): Promise<{ ok: boolean; reason?: string }> {
+    this.assertOwner(authenticatedUser);
+    const result = await this.messagingWhatsappBridgeService.sendTestNotification(
+      authenticatedUser.companyId,
+    );
+    if (!result.ok) {
+      throw new BadRequestException(result.reason);
+    }
+    return { ok: true };
   }
 
   public async updateWhatsappBridge(

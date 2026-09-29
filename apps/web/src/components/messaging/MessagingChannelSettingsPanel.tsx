@@ -20,6 +20,7 @@ export function MessagingChannelSettingsPanel({ accessToken, visible }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
+  const [testMessage, setTestMessage] = useState("");
 
   useEffect(() => {
     if (!visible || !accessToken) {
@@ -79,11 +80,15 @@ export function MessagingChannelSettingsPanel({ accessToken, visible }: Props) {
           </span>
         </p>
       ) : null}
-      {bridge?.enabled && bridge.deliveryConfigured === false ? (
+      {bridge?.deliveryWarningTr ? (
         <p className="chat-channel-settings-delivery-warn" role="alert">
-          Sunucuda WhatsApp gönderim kanalı (Twilio veya operasyon webhook) henüz
-          tanımlı değil. Köprü etkin görünür ancak telefona bildirim{" "}
-          <strong>gönderilmez</strong> — platform yöneticinize bildirin.
+          {bridge.deliveryWarningTr}
+        </p>
+      ) : null}
+      {bridge?.channel && bridge.channel !== "none" ? (
+        <p className="chat-channel-settings-platform-hint" role="status">
+          Platform kanalı: <strong>{bridge.channel}</strong>
+          {bridge.twilioContentSidConfigured ? " · ContentSid tanımlı" : null}
         </p>
       ) : null}
       <label className="chat-channel-settings-field">
@@ -135,6 +140,32 @@ export function MessagingChannelSettingsPanel({ accessToken, visible }: Props) {
       ) : (
         <p className="chat-channel-settings-status">Durum: kapalı</p>
       )}
+      {bridge?.enabled && bridge.deliveryConfigured ? (
+        <button
+          type="button"
+          className="btn-account-secondary chat-channel-settings-test"
+          disabled={busy}
+          onClick={() => {
+            setBusy(true);
+            setTestMessage("");
+            void MessagingIntegrationApiClient.sendWhatsappBridgeTest(accessToken)
+              .then(() => setTestMessage("Test bildirimi gönderildi."))
+              .catch((err) =>
+                setTestMessage(
+                  err instanceof Error ? err.message : "Test gönderilemedi",
+                ),
+              )
+              .finally(() => setBusy(false));
+          }}
+        >
+          Test bildirimi gönder
+        </button>
+      ) : null}
+      {testMessage ? (
+        <p className="chat-channel-settings-test-result" role="status">
+          {testMessage}
+        </p>
+      ) : null}
       {error ? <p className="form-error">{error}</p> : null}
       {saved ? <p className="chat-channel-settings-ok">Kaydedildi.</p> : null}
     </section>

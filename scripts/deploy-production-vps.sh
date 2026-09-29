@@ -134,6 +134,9 @@ source "${INSTALL_DIR}/scripts/resolve-local-api-base.sh" "${INSTALL_DIR}"
 export API_BASE INSTALL_DIR ENV_FILE="${INSTALL_DIR}/.env"
 
 echo "=== Post-deploy doğrulama (API_BASE=${API_BASE}) ==="
+if [[ -x "${INSTALL_DIR}/scripts/verify-typeorm-global-entities.sh" ]]; then
+  bash "${INSTALL_DIR}/scripts/verify-typeorm-global-entities.sh" || echo "UYARI: verify-typeorm-global-entities başarısız"
+fi
 for verify in verify-firma-sohbeti-fs1.sh verify-firma-sohbeti-fs2.sh verify-firma-sohbeti-fs3.sh \
   verify-firma-sohbeti-fs4.sh verify-firma-sohbeti-fs5.sh verify-firma-sohbeti-fs6.sh verify-firma-sohbeti-fs7.sh \
   verify-firma-sohbeti-fs8.sh verify-firma-sohbeti-fs9.sh verify-firma-sohbeti-fs10.sh \

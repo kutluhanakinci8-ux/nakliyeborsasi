@@ -5382,6 +5382,21 @@ button.btn-secondary {
   font-weight: 400;
 }
 
+.chat-channel-settings-platform-hint {
+  margin: 0.35rem 0 0.5rem;
+  font-size: 0.75rem;
+  color: var(--text-muted, #64748b);
+}
+
+.chat-channel-settings-test {
+  margin-top: 0.65rem;
+}
+
+.chat-channel-settings-test-result {
+  margin-top: 0.35rem;
+  font-size: 0.8125rem;
+}
+
 .chat-channel-settings-delivery-warn {
   margin: 0 0 10px;
   padding: 10px 12px;
