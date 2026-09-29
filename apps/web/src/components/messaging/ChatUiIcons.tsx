@@ -173,6 +173,43 @@ export function IconStickyNote({ className, size = defaultSize }: IconProps) {
   );
 }
 
+export function IconMail({ className, size = defaultSize }: IconProps) {
+  return (
+    <svg className={className} aria-hidden {...strokeProps(size)}>
+      <path d="M4 6h16v12H4z" />
+      <path d="M4 8l8 6 8-6" />
+    </svg>
+  );
+}
+
+export function IconBell({ className, size = defaultSize }: IconProps) {
+  return (
+    <svg className={className} aria-hidden {...strokeProps(size)}>
+      <path d="M18 14v-2a6 6 0 10-12 0v2l-2 3h16l-2-3z" />
+      <path d="M10 18a2 2 0 004 0" />
+    </svg>
+  );
+}
+
+export function IconDownload({ className, size = defaultSize }: IconProps) {
+  return (
+    <svg className={className} aria-hidden {...strokeProps(size)}>
+      <path d="M12 4v10" />
+      <path d="M8 10l4 4 4-4" />
+      <path d="M5 18h14" />
+    </svg>
+  );
+}
+
+export function IconShieldLock({ className, size = defaultSize }: IconProps) {
+  return (
+    <svg className={className} aria-hidden {...strokeProps(size)}>
+      <path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z" />
+      <path d="M10 11v2a2 2 0 104 0v-2" />
+    </svg>
+  );
+}
+
 export function IconChevronDown({ className, size = 16 }: IconProps) {
   return (
     <svg className={className} aria-hidden {...strokeProps(size)}>
