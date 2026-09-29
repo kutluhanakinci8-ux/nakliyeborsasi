@@ -43,7 +43,7 @@ type AuctionDetailPageClientProps = {
 
 export function AuctionDetailPageClient({ sessionId }: AuctionDetailPageClientProps) {
   const router = useRouter();
-  const { accessToken, locale } = useWebSession();
+  const { accessToken, locale, session: authSession } = useWebSession();
   const [detail, setDetail] = useState<AuctionSessionDetail | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [isBusy, setIsBusy] = useState(false);
@@ -134,6 +134,23 @@ export function AuctionDetailPageClient({ sessionId }: AuctionDetailPageClientPr
   const isOpen = session?.statusCode === "OPEN";
   const listingPrice = listing?.price;
 
+  const trustReviewPartnerId =
+    detail && session && owner && authSession?.companyId && !isOpen && session.winningBidId
+      ? (() => {
+          const winningBid = session.bids.find((bid) => bid.id === session.winningBidId);
+          if (!winningBid) {
+            return null;
+          }
+          if (authSession.companyId === owner.companyId) {
+            return winningBid.bidderCompanyId;
+          }
+          if (authSession.companyId === winningBid.bidderCompanyId) {
+            return owner.companyId;
+          }
+          return null;
+        })()
+      : null;
+
   const bidDialogContext: AuctionPlaceBidContext | null =
     detail && listing && session && competition
       ? {
@@ -164,6 +181,28 @@ export function AuctionDetailPageClient({ sessionId }: AuctionDetailPageClientPr
 
       {detail && listing && session && owner ? (
         <>
+          {trustReviewPartnerId ? (
+            <div className="trust-invite-banner trust-invite-banner--auction">
+              <div>
+                <p className="trust-invite-banner-title">Partner değerlendirmesi</p>
+                <p className="trust-invite-banner-text">
+                  Bu ihale kapandı. Karşı firmanın güven profiline puan vererek B2B skor
+                  kartını güncelleyin.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="btn-accent btn-accent--compact"
+                onClick={() =>
+                  router.push(
+                    `/trust?companyId=${encodeURIComponent(trustReviewPartnerId)}`,
+                  )
+                }
+              >
+                Değerlendirme yap
+              </button>
+            </div>
+          ) : null}
           <div className="auction-detail-top">
             <div className="freight-row-badges freight-row-badges--top auction-detail-badges">
               <span className="badge badge--country">{sessionStatusLabel(session.statusCode)}</span>

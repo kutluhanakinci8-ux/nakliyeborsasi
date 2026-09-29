@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ModulePageShell } from "../../../components/ModulePageShell";
+import { TrustReviewInvitesPanel } from "../../../components/trust/TrustReviewInvitesPanel";
 import { TrustStarRating } from "../../../components/trust/TrustStarRating";
 import { useWebSession } from "../../../context/WebSessionProvider";
 import {
@@ -176,6 +177,14 @@ export function TrustPageClient() {
       >
         {errorMessage ? <p className="error banner error--light">{errorMessage}</p> : null}
         {successMessage ? <p className="success banner">{successMessage}</p> : null}
+
+        <TrustReviewInvitesPanel
+          accessToken={accessToken}
+          onSelectCompany={(companyId) => {
+            setTrustCompanyId(companyId);
+            void loadProfile(companyId);
+          }}
+        />
 
         <div className="trust-premium-grid">
           <section className="trust-premium-panel trust-premium-panel--profile">

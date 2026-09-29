@@ -24,7 +24,8 @@ for rel in \
   scripts/sql/user-notification-push-prefs.sql \
   scripts/sql/user-ai-mail-consent.sql \
   scripts/sql/mail-mailbox-legal-hold.sql \
-  scripts/sql/mail-org-contact-groups-photo.sql
+  scripts/sql/mail-org-contact-groups-photo.sql \
+  scripts/sql/trust-review-invite-table.sql
 do
   file="${INSTALL_DIR}/${rel}"
   if [[ ! -f "$file" ]]; then

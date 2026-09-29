@@ -13483,6 +13483,95 @@ button.btn-secondary {
   line-height: 1.45;
 }
 
+.trust-invites-panel {
+  margin-bottom: 20px;
+  padding: 18px 20px;
+  border-radius: 16px;
+  background: linear-gradient(120deg, #fffbeb, #f0fdfa);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.trust-invites-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.trust-invites-sub {
+  margin: 6px 0 0;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.trust-invites-list {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.trust-invite-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+}
+
+.trust-invite-partner {
+  margin: 0;
+  font-weight: 700;
+  color: #0f766e;
+}
+
+.trust-invite-context {
+  margin: 2px 0 0;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.trust-invite-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 10px;
+  align-items: center;
+}
+
+.trust-invite-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: linear-gradient(120deg, #ecfdf5, #fff);
+  border: 1px solid rgba(13, 148, 136, 0.2);
+}
+
+.trust-invite-banner--auction {
+  margin-top: 4px;
+}
+
+.trust-invite-banner-title {
+  margin: 0;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.trust-invite-banner-text {
+  margin: 4px 0 0;
+  font-size: 0.88rem;
+  color: #64748b;
+  max-width: 52ch;
+}
+
 @media (max-width: 960px) {
   .trust-premium-grid {
     grid-template-columns: 1fr;
@@ -13490,6 +13579,12 @@ button.btn-secondary {
 
   .trust-layout {
     grid-template-columns: 1fr;
+  }
+
+  .trust-invite-card,
+  .trust-invite-banner {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 

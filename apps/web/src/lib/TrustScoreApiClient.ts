@@ -13,6 +13,17 @@ export type TrustReviewPublicItem = {
   createdAt: string;
 };
 
+export type TrustReviewInvite = {
+  id: string;
+  targetCompanyId: string;
+  targetLegalName: string;
+  sourceCode: string;
+  sourceId: string;
+  contextLabel: string | null;
+  createdAt: string;
+  trustUrl: string;
+};
+
 export type TrustCompanyProfile = TrustScoreRecord & {
   legalName: string;
   participantTypeCode: string | null;
@@ -48,6 +59,27 @@ export class TrustScoreApiClient {
       throw new Error(errorBody || "Trust score request failed");
     }
     return response.json() as Promise<{ snapshot: TrustScoreRecord }>;
+  }
+
+  public static async fetchReviewInvites(
+    accessToken: string,
+  ): Promise<{ invites: TrustReviewInvite[] }> {
+    const payload = await AuthenticatedApiClient.fetchJson(
+      accessToken,
+      "/trust-scores/review-invites",
+    );
+    return payload as { invites: TrustReviewInvite[] };
+  }
+
+  public static async dismissReviewInvite(
+    accessToken: string,
+    inviteId: string,
+  ): Promise<void> {
+    await AuthenticatedApiClient.fetchJson(
+      accessToken,
+      `/trust-scores/review-invites/${inviteId}/dismiss`,
+      { method: "POST" },
+    );
   }
 
   public static async submitReview(

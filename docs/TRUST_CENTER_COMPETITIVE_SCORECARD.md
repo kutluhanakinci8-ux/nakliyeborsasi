@@ -20,7 +20,7 @@ Yüzde = rakibin tipik üründe özelliğin **ne kadar karşılandığı** (tahm
 | Son yorumlar akışı (anonim B2B) | 0% | **90%** | 25% | 20% | 15% | 90% | 0% |
 | Firma unvanı + rol (nakliyeci/yük sahibi) | 20% | **100%** | 70% | 90% | 50% | 40% | 0% |
 | Çok boyutlu ölçüt (zamanında, iletişim…) | 0% | **75%** (chip → yorum) | 15% | 25% | 10% | 0% | 0% |
-| Taşıma/ihale ile otomatik bağlı review | 0% | **25%** (yol haritası) | 40% | 70% | 60% | 0% | 0% |
+| Taşıma/ihale ile otomatik bağlı review | 0% | **~70%** (kapanış daveti) | 40% | 70% | 60% | 0% | 0% |
 | Doğrulanmış abonelik / paket rozeti | 50% | **100%** | 55% | 80% | 20% | 0% | 0% |
 | Admin eDiscovery / export | 78% | **85%** | 30% | 50% | 25% | 0% | 0% |
 | Premium görünüm (kurumsal UI) | 40% | **92%** | 65% | 70% | 50% | 60% | N/A |
@@ -41,7 +41,7 @@ Yüzde = rakibin tipik üründe özelliğin **ne kadar karşılandığı** (tahm
 
 | Konu | Lerta | Hedef | Not |
 |------|-------|-------|-----|
-| İşlem-tetikli review (sadece tamamlanan taşıma) | 25% | 85% | İhale/listing kapanış hook |
+| İşlem-tetikli review (sadece tamamlanan taşıma) | **~70%** | 85% | `company_trust_review_invites` · sabit fiyat kabul |
 | Sigorta / finans güven mührü | 0% | 50% | Partner entegrasyon |
 | Harici API (Timocom benzeri skor paylaşımı) | 10% | 40% | MP+ entegrasyon fazı |
 | AI sahte yorum tespiti | 15% | 60% | Platform admin anomali |
