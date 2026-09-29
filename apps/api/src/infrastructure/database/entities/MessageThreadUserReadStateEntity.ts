@@ -13,21 +13,21 @@ export class MessageThreadUserReadStateEntity {
   @PrimaryGeneratedColumn("uuid")
   public id!: string;
 
-  @Column({ type: "uuid" })
+  @Column({ type: "uuid", name: "thread_id" })
   public threadId!: string;
 
-  @Column({ type: "uuid" })
+  @Column({ type: "uuid", name: "user_id" })
   public userId!: string;
 
-  @Column({ type: "uuid" })
+  @Column({ type: "uuid", name: "company_id" })
   public companyId!: string;
 
-  @Column({ type: "timestamptz", nullable: true })
+  @Column({ type: "timestamptz", nullable: true, name: "last_read_at" })
   public lastReadAt!: Date | null;
 
-  @CreateDateColumn({ type: "timestamptz" })
+  @CreateDateColumn({ type: "timestamptz", name: "created_at" })
   public createdAt!: Date;
 
-  @UpdateDateColumn({ type: "timestamptz" })
+  @UpdateDateColumn({ type: "timestamptz", name: "updated_at" })
   public updatedAt!: Date;
 }
