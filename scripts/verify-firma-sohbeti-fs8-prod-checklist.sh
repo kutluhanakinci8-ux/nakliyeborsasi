@@ -11,6 +11,8 @@ if [[ -f "${ENV_FILE}" ]]; then
   # shellcheck disable=SC1090
   source "${ENV_FILE}"
 fi
+# shellcheck source=scripts/resolve-messaging-test-jwt.sh
+source "${ROOT}/scripts/resolve-messaging-test-jwt.sh" || true
 
 FAIL=0
 

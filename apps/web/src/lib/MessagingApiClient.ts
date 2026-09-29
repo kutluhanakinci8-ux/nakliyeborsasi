@@ -237,6 +237,23 @@ export class MessagingApiClient {
     ) as Promise<{ defaultTab: "email" | "chat" }>;
   }
 
+  public static async updateMessagingHubDefault(
+    accessToken: string,
+    locale: string,
+    defaultTab: "email" | "chat",
+  ): Promise<{ defaultTab: "email" | "chat" }> {
+    return AuthenticatedApiClient.fetchJson(
+      accessToken,
+      `/messaging/hub-default?lang=${locale}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({
+          defaultTab: defaultTab === "chat" ? "sohbet" : "email",
+        }),
+      },
+    ) as Promise<{ defaultTab: "email" | "chat" }>;
+  }
+
   public static async fetchQuickReplies(
     accessToken: string,
     locale: string,

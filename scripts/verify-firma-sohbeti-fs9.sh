@@ -4,6 +4,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=scripts/resolve-local-api-base.sh
 source "${ROOT}/scripts/resolve-local-api-base.sh" "${ROOT}"
+# shellcheck source=scripts/resolve-messaging-test-jwt.sh
+source "${ROOT}/scripts/resolve-messaging-test-jwt.sh" || true
 
 echo "== FS-9 firma sohbeti verify =="
 payload="$(curl -fsS "${API_BASE}/messaging/status")"
