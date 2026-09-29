@@ -10,6 +10,7 @@ export enum NotificationEventCode {
   AuctionPublished = "AUCTION_PUBLISHED",
   ListingNewOffer = "LISTING_NEW_OFFER",
   MessagingNewMessage = "MESSAGING_NEW_MESSAGE",
+  MessagingUserMention = "MESSAGING_USER_MENTION",
   MailTeamInvite = "MAIL_TEAM_INVITE",
 }
 

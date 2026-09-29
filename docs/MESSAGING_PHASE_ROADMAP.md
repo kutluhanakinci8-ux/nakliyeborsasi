@@ -9,6 +9,7 @@
 | **P4** | Sohbet dosya ekleri, web push bildirimleri (`messaging-push-sw.js`) | ✅ kod |
 | **FS-1** | SSE polling kapatma + exponential reconnect, XLSX ek, `/messaging/status` bayrakları | ✅ kod · `verify-firma-sohbeti-fs1.sh` |
 | **FS-2** | Sunucu arama, markdown, şablonlar, ilan kartı, teklif timeline, AI özet | ✅ kod · `verify-firma-sohbeti-fs2.sh` |
+| **FS-3** | Okundu (kullanıcı), typing, iç not, düzenle/sil, @mention, çeviri DE/RU | ✅ kod · `verify-firma-sohbeti-fs3.sh` |
 
 **Çeviri (ops):** `MESSAGING_TRANSLATE_API_URL` → LibreTranslate uyumlu POST (ör. `https://libretranslate.com/translate`)
 

@@ -39,4 +39,8 @@ export class SendThreadMessageRequestDto {
   @ValidateNested({ each: true })
   @Type(() => MessagingAttachmentInputDto)
   public attachments?: MessagingAttachmentInputDto[];
+
+  @IsOptional()
+  @IsString()
+  public messageKind?: "public" | "internal";
 }

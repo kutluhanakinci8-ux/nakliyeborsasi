@@ -32,6 +32,37 @@ export class OperationalNotificationService {
     private readonly membershipRepository: Repository<CompanyMembershipEntity>,
   ) {}
 
+  public async afterMessagingUserMention(params: {
+    companyId: string;
+    mentionedUserIds: string[];
+    threadId: string;
+    senderCompanyName: string;
+    bodyPreview: string;
+    messageId: string;
+    freightListingId: string | null;
+  }): Promise<void> {
+    if (params.mentionedUserIds.length === 0) {
+      return;
+    }
+    const baseUrl = this.notificationConfigurationService.resolveWebBaseUrl();
+    const listingQuery = params.freightListingId
+      ? `&listingId=${encodeURIComponent(params.freightListingId)}`
+      : "";
+    await this.emitToUserIds({
+      companyId: params.companyId,
+      userIds: params.mentionedUserIds,
+      eventCode: NotificationEventCode.MessagingUserMention,
+      payload: {
+        threadId: params.threadId,
+        senderCompanyName: params.senderCompanyName,
+        messagePreview: params.bodyPreview,
+        messagingUrl: `${baseUrl}/messaging?tab=chat&threadId=${encodeURIComponent(params.threadId)}${listingQuery}`,
+        occurredAt: new Date().toISOString(),
+      },
+      idempotencyPrefix: `MESSAGING_MENTION:${params.messageId}`,
+    });
+  }
+
   public async afterMessagingMessageSent(params: {
     threadId: string;
     counterpartyCompanyId: string;
@@ -96,6 +127,58 @@ export class OperationalNotificationService {
         eventCode: NotificationEventCode.AuctionOutbid,
         payload,
         idempotencyPrefix: `AUCTION_OUTBID:${params.session.id}:${params.bid.id}`,
+      });
+    }
+  }
+
+  private async emitToUserIds(params: {
+    companyId: string;
+    userIds: string[];
+    eventCode: NotificationEventCode;
+    payload: Record<string, string>;
+    idempotencyPrefix: string;
+  }): Promise<void> {
+    const uniqueIds = [...new Set(params.userIds)];
+    if (uniqueIds.length === 0) {
+      return;
+    }
+    const users = await this.userRepository.find({
+      where: { id: In(uniqueIds) },
+    });
+    const settings =
+      await this.platformNotificationSettingsService.getSetting(
+        params.eventCode,
+      );
+    if (!settings.userEmailEnabled) {
+      return;
+    }
+    for (const user of users) {
+      const membership = await this.membershipRepository.findOne({
+        where: { companyId: params.companyId, userId: user.id },
+      });
+      if (!membership) {
+        continue;
+      }
+      const allowed =
+        await this.userNotificationPreferenceService.isUserEmailAllowed(
+          user.id,
+          params.eventCode,
+        );
+      if (!allowed) {
+        continue;
+      }
+      await this.emailOutboxService.enqueue({
+        eventCode: params.eventCode,
+        recipientKind: EmailRecipientKind.User,
+        recipientEmail: user.emailAddress,
+        locale: user.preferredLocale ?? "tr",
+        payload: {
+          ...params.payload,
+          displayName: user.displayName,
+          emailAddress: user.emailAddress,
+        },
+        idempotencyKey: `${params.idempotencyPrefix}:user:${user.id}`,
+        metadata: { userId: user.id, companyId: params.companyId },
       });
     }
   }

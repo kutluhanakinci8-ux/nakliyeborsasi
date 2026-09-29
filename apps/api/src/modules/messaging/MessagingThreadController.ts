@@ -1,10 +1,12 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Headers,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Query,
   Res,
@@ -20,6 +22,7 @@ import { MessagingTranslationService } from "./MessagingTranslationService";
 import { OpenMessagingThreadRequestDto } from "./OpenMessagingThreadRequestDto";
 import { SendThreadMessageRequestDto } from "./MessagingAttachmentRequestDto";
 import { TranslateMessagingTextRequestDto } from "./TranslateMessagingTextRequestDto";
+import { UpdateThreadMessageRequestDto } from "./UpdateThreadMessageRequestDto";
 
 @Controller("messaging")
 @UseGuards(JwtAuthenticationGuard)
@@ -104,8 +107,90 @@ export class MessagingThreadController {
       body.bodyText ?? "",
       locale,
       body.attachments,
+      body.messageKind === "internal" ? "internal" : "public",
     );
     return { message };
+  }
+
+  @Post("threads/:threadId/typing")
+  public async typing(
+    @Param("threadId") threadId: string,
+    @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
+    @Headers("accept-language") acceptLanguage: string | undefined,
+    @Query("lang") queryLanguage: string | undefined,
+  ): Promise<{ ok: true }> {
+    const locale = this.localeResolutionService.resolveFromHeaders(
+      acceptLanguage,
+      queryLanguage,
+    );
+    await this.messagingThreadApplicationService.recordTyping(
+      authenticatedUser,
+      threadId,
+      locale,
+    );
+    return { ok: true };
+  }
+
+  @Get("colleagues")
+  public async colleagues(
+    @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
+    @Headers("accept-language") acceptLanguage: string | undefined,
+    @Query("lang") queryLanguage: string | undefined,
+  ): Promise<{ colleagues: unknown[] }> {
+    const locale = this.localeResolutionService.resolveFromHeaders(
+      acceptLanguage,
+      queryLanguage,
+    );
+    const colleagues =
+      await this.messagingThreadApplicationService.listColleagues(
+        authenticatedUser,
+        locale,
+      );
+    return { colleagues };
+  }
+
+  @Patch("threads/:threadId/messages/:messageId")
+  public async updateMessage(
+    @Param("threadId") threadId: string,
+    @Param("messageId") messageId: string,
+    @Body() body: UpdateThreadMessageRequestDto,
+    @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
+    @Headers("accept-language") acceptLanguage: string | undefined,
+    @Query("lang") queryLanguage: string | undefined,
+  ): Promise<{ message: unknown }> {
+    const locale = this.localeResolutionService.resolveFromHeaders(
+      acceptLanguage,
+      queryLanguage,
+    );
+    const message = await this.messagingThreadApplicationService.editMessage(
+      authenticatedUser,
+      threadId,
+      messageId,
+      body.bodyText ?? "",
+      locale,
+    );
+    return { message };
+  }
+
+  @Delete("threads/:threadId/messages/:messageId")
+  public async deleteMessage(
+    @Param("threadId") threadId: string,
+    @Param("messageId") messageId: string,
+    @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
+    @Headers("accept-language") acceptLanguage: string | undefined,
+    @Query("lang") queryLanguage: string | undefined,
+  ): Promise<{ ok: true }> {
+    const locale = this.localeResolutionService.resolveFromHeaders(
+      acceptLanguage,
+      queryLanguage,
+    );
+    await this.messagingThreadApplicationService.softDeleteMessage(
+      authenticatedUser,
+      threadId,
+      messageId,
+      locale,
+    );
+    return { ok: true };
   }
 
   @Get("threads/:threadId/messages/:messageId/attachments/:index")

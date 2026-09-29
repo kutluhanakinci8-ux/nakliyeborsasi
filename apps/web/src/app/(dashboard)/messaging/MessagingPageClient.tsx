@@ -107,6 +107,12 @@ export function MessagingPageClient() {
   const [quickReplies, setQuickReplies] = useState<MessagingQuickReplyRecord[]>(
     [],
   );
+  const [internalNote, setInternalNote] = useState(false);
+  const [typingHint, setTypingHint] = useState("");
+  const [colleagues, setColleagues] = useState<
+    { userId: string; displayName: string; mentionToken: string }[]
+  >([]);
+  const typingPingRef = useRef(0);
   const [translations, setTranslations] = useState<Record<string, string>>({});
   const [pendingAttachments, setPendingAttachments] = useState<
     PendingAttachment[]
@@ -339,15 +345,17 @@ export function MessagingPageClient() {
     }
   }
 
-  async function handleTranslateMessage(message: ThreadMessageRecord): Promise<void> {
+  async function handleTranslateMessage(
+    message: ThreadMessageRecord,
+    targetLocale: string,
+  ): Promise<void> {
     setTranslateBusyId(message.id);
     try {
-      const target = locale.startsWith("tr") ? "en" : "tr";
       const result = await MessagingApiClient.translateMessage(
         accessToken,
         locale,
         message.bodyText,
-        target,
+        targetLocale,
       );
       setTranslations((current) => ({
         ...current,
@@ -376,8 +384,10 @@ export function MessagingPageClient() {
         activeThreadId,
         messageBody.trim(),
         pendingAttachments.length > 0 ? pendingAttachments : undefined,
+        internalNote ? "internal" : "public",
       );
       setMessageBody("");
+      setInternalNote(false);
       setPendingAttachments([]);
       await loadMessages(activeThreadId);
     } catch (error) {
@@ -436,6 +446,9 @@ export function MessagingPageClient() {
     void MessagingApiClient.fetchQuickReplies(accessToken, locale)
       .then((payload) => setQuickReplies(payload.templates ?? []))
       .catch(() => setQuickReplies([]));
+    void MessagingApiClient.fetchColleagues(accessToken, locale)
+      .then((payload) => setColleagues(payload.colleagues ?? []))
+      .catch(() => setColleagues([]));
   }, [mode, accessToken, locale]);
 
   useEffect(() => {
@@ -543,7 +556,22 @@ export function MessagingPageClient() {
             reconnectAttempt = 0;
             stopPolling();
           };
-          eventSource.addEventListener("message", refreshFromServer);
+          eventSource.addEventListener("message", (event) => {
+            try {
+              const data = JSON.parse((event as MessageEvent).data) as {
+                type?: string;
+                threadId?: string;
+              };
+              if (data.type === "typing" && data.threadId === activeThreadId) {
+                setTypingHint("Karşı taraf yazıyor…");
+                window.setTimeout(() => setTypingHint(""), 3000);
+                return;
+              }
+            } catch {
+              /* not JSON */
+            }
+            refreshFromServer();
+          });
           eventSource.onerror = () => {
             onSseDown();
           };
@@ -903,8 +931,19 @@ export function MessagingPageClient() {
                           {shortCompanyId(message.senderCompanyId)} ·{" "}
                           {new Date(message.createdAt).toLocaleString(locale)}
                           {isMine && message.readByRecipient ? (
-                            <> · Okundu</>
+                            <>
+                              {" "}
+                              · Okundu
+                              {(message.readByCounterpartyUserIds?.length ??
+                                0) > 0
+                                ? ` (${message.readByCounterpartyUserIds?.length} kullanıcı)`
+                                : ""}
+                            </>
                           ) : null}
+                          {message.messageKind === "internal" ? (
+                            <> · İç not</>
+                          ) : null}
+                          {message.editedAt ? <> · düzenlendi</> : null}
                         </span>
                         <ChatMessageBody text={message.bodyText} />
                         {message.attachments && message.attachments.length > 0 ? (
@@ -954,28 +993,64 @@ export function MessagingPageClient() {
                             {translations[message.id]}
                           </p>
                         ) : null}
-                        <button
-                          type="button"
-                          className="chat-translate-btn"
-                          disabled={translateBusyId === message.id}
-                          onClick={() => {
-                            if (translations[message.id]) {
-                              setTranslations((current) => {
-                                const next = { ...current };
-                                delete next[message.id];
-                                return next;
-                              });
-                              return;
-                            }
-                            void handleTranslateMessage(message);
-                          }}
-                        >
-                          {translations[message.id]
-                            ? "Çeviriyi gizle"
-                            : locale.startsWith("tr")
-                              ? "İngilizce çevir"
-                              : "Türkçe çevir"}
-                        </button>
+                        <div className="chat-message-actions">
+                          {["en", "de", "ru"].map((target) => (
+                            <button
+                              key={target}
+                              type="button"
+                              className="chat-translate-btn"
+                              disabled={translateBusyId === message.id}
+                              onClick={() =>
+                                void handleTranslateMessage(message, target)
+                              }
+                            >
+                              {target.toUpperCase()}
+                            </button>
+                          ))}
+                          {isMine && !message.deleted ? (
+                            <>
+                              <button
+                                type="button"
+                                className="chat-translate-btn"
+                                onClick={() => {
+                                  const next = window.prompt(
+                                    "Mesajı düzenle",
+                                    message.bodyText,
+                                  );
+                                  if (!next?.trim() || !activeThreadId) {
+                                    return;
+                                  }
+                                  void MessagingApiClient.updateMessage(
+                                    accessToken,
+                                    locale,
+                                    activeThreadId,
+                                    message.id,
+                                    next.trim(),
+                                  ).then(() => loadMessages(activeThreadId));
+                                }}
+                              >
+                                Düzenle
+                              </button>
+                              <button
+                                type="button"
+                                className="chat-translate-btn"
+                                onClick={() => {
+                                  if (!activeThreadId) {
+                                    return;
+                                  }
+                                  void MessagingApiClient.deleteMessage(
+                                    accessToken,
+                                    locale,
+                                    activeThreadId,
+                                    message.id,
+                                  ).then(() => loadMessages(activeThreadId));
+                                }}
+                              >
+                                Sil
+                              </button>
+                            </>
+                          ) : null}
+                        </div>
                       </li>
                     );
                   })}
@@ -1002,6 +1077,23 @@ export function MessagingPageClient() {
                 ))}
               </ul>
             ) : null}
+            {typingHint ? (
+              <p className="chat-typing-hint" aria-live="polite">{typingHint}</p>
+            ) : null}
+            {colleagues.length > 0 ? (
+              <p className="chat-mention-hint">
+                @mention: ekip arkadaşı eklemek için mesaja{" "}
+                <code>{colleagues[0]?.mentionToken}</code> yazın.
+              </p>
+            ) : null}
+            <label className="chat-internal-note">
+              <input
+                type="checkbox"
+                checked={internalNote}
+                onChange={(event) => setInternalNote(event.target.checked)}
+              />
+              İç not (yalnızca şirketiniz görür)
+            </label>
             {quickReplies.length > 0 ? (
               <div className="chat-quick-replies">
                 <label className="chat-quick-replies-label" htmlFor="chat-quick-reply">
@@ -1068,7 +1160,21 @@ export function MessagingPageClient() {
                 placeholder="Mesajınızı yazın…"
                 value={messageBody}
                 disabled={!activeThreadId}
-                onChange={(event) => setMessageBody(event.target.value)}
+                onChange={(event) => {
+                  setMessageBody(event.target.value);
+                  const now = Date.now();
+                  if (
+                    activeThreadId &&
+                    now - typingPingRef.current > 2000
+                  ) {
+                    typingPingRef.current = now;
+                    void MessagingApiClient.sendTyping(
+                      accessToken,
+                      locale,
+                      activeThreadId,
+                    );
+                  }
+                }}
                 onKeyDown={(event) => {
                   if (event.key === "Enter") {
                     void handleSendMessage();

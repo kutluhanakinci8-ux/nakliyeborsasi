@@ -3,6 +3,9 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { MessageThreadEntity } from "../../infrastructure/database/entities/MessageThreadEntity";
 import { MessageEntity } from "../../infrastructure/database/entities/MessageEntity";
 import { MessageThreadReadStateEntity } from "../../infrastructure/database/entities/MessageThreadReadStateEntity";
+import { MessageThreadUserReadStateEntity } from "../../infrastructure/database/entities/MessageThreadUserReadStateEntity";
+import { UserAccountEntity } from "../../infrastructure/database/entities/UserAccountEntity";
+import { CompanyMembershipEntity } from "../../infrastructure/database/entities/CompanyMembershipEntity";
 import { MessagingModuleStatusController } from "./MessagingModuleStatusController";
 import { MessagingThreadController } from "./MessagingThreadController";
 import { MessagingThreadApplicationService } from "./MessagingThreadApplicationService";
@@ -26,9 +29,12 @@ import { MessagingStreamController } from "./MessagingStreamController";
       MessageThreadEntity,
       MessageEntity,
       MessageThreadReadStateEntity,
+      MessageThreadUserReadStateEntity,
       MessagingWebPushSubscriptionEntity,
       CompanyEntity,
       FreightListingEntity,
+      UserAccountEntity,
+      CompanyMembershipEntity,
     ]),
     SubscriptionModule,
     AuthModule,

@@ -24,6 +24,11 @@ export type ThreadMessageRecord = {
   bodyText: string;
   createdAt: string;
   readByRecipient?: boolean;
+  readByCounterpartyUserIds?: string[];
+  messageKind?: "public" | "internal";
+  editedAt?: string | null;
+  deleted?: boolean;
+  mentionUserIds?: string[];
   attachments?: ThreadMessageAttachmentRecord[];
 };
 
@@ -204,6 +209,7 @@ export class MessagingApiClient {
       contentType: string;
       contentBase64: string;
     }[],
+    messageKind?: "public" | "internal",
   ): Promise<void> {
     await AuthenticatedApiClient.fetchJson(
       accessToken,
@@ -213,9 +219,71 @@ export class MessagingApiClient {
         body: JSON.stringify({
           bodyText,
           ...(attachments?.length ? { attachments } : {}),
+          ...(messageKind === "internal" ? { messageKind: "internal" } : {}),
         }),
       },
     );
+  }
+
+  public static async sendTyping(
+    accessToken: string,
+    locale: string,
+    threadId: string,
+  ): Promise<void> {
+    await AuthenticatedApiClient.fetchJson(
+      accessToken,
+      `/messaging/threads/${threadId}/typing?lang=${locale}`,
+      { method: "POST" },
+    );
+  }
+
+  public static async updateMessage(
+    accessToken: string,
+    locale: string,
+    threadId: string,
+    messageId: string,
+    bodyText: string,
+  ): Promise<void> {
+    await AuthenticatedApiClient.fetchJson(
+      accessToken,
+      `/messaging/threads/${threadId}/messages/${messageId}?lang=${locale}`,
+      { method: "PATCH", body: JSON.stringify({ bodyText }) },
+    );
+  }
+
+  public static async deleteMessage(
+    accessToken: string,
+    locale: string,
+    threadId: string,
+    messageId: string,
+  ): Promise<void> {
+    await AuthenticatedApiClient.fetchJson(
+      accessToken,
+      `/messaging/threads/${threadId}/messages/${messageId}?lang=${locale}`,
+      { method: "DELETE" },
+    );
+  }
+
+  public static async fetchColleagues(
+    accessToken: string,
+    locale: string,
+  ): Promise<{
+    colleagues: {
+      userId: string;
+      displayName: string;
+      mentionToken: string;
+    }[];
+  }> {
+    return AuthenticatedApiClient.fetchJson(
+      accessToken,
+      `/messaging/colleagues?lang=${locale}`,
+    ) as Promise<{
+      colleagues: {
+        userId: string;
+        displayName: string;
+        mentionToken: string;
+      }[];
+    }>;
   }
 
   public static attachmentDownloadUrl(

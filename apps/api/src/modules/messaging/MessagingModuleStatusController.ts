@@ -53,6 +53,11 @@ export class MessagingModuleStatusController {
         "quick_replies",
         "thread_insights",
         "thread_llm_summary",
+        "user_read_receipts",
+        "typing_indicator",
+        "internal_notes",
+        "message_edit_delete",
+        "user_mentions",
       ],
       translate: { deepl, libretranslate: libre },
       attachments: {

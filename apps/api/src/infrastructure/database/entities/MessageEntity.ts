@@ -33,6 +33,18 @@ export class MessageEntity {
   @Column({ type: "text" })
   public bodyText!: string;
 
+  @Column({ type: "varchar", length: 16, default: "public" })
+  public kind!: "public" | "internal";
+
+  @Column({ type: "timestamptz", nullable: true })
+  public deletedAt!: Date | null;
+
+  @Column({ type: "timestamptz", nullable: true })
+  public editedAt!: Date | null;
+
+  @Column({ type: "jsonb", nullable: true })
+  public mentionUserIds!: string[] | null;
+
   @Column({ type: "jsonb", nullable: true })
   public attachments!: MessageAttachmentMeta[] | null;
 

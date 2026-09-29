@@ -5153,6 +5153,35 @@ button.btn-secondary {
   min-width: 0;
 }
 
+.chat-typing-hint {
+  margin: 0 0 8px;
+  font-size: 0.78rem;
+  color: #0f766e;
+  font-style: italic;
+}
+
+.chat-mention-hint {
+  margin: 0 0 8px;
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+.chat-internal-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 0.8rem;
+  color: #475569;
+}
+
+.chat-message-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
 .chat-bubble-body a {
   color: #0f766e;
   text-decoration: underline;

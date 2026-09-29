@@ -21,6 +21,10 @@ import { MessagingAttachmentStorageService } from "./MessagingAttachmentStorageS
 import type { MessagingAttachmentInput } from "./MessagingAttachmentStorageService";
 import { MessagingWebPushService } from "./MessagingWebPushService";
 import { MessageThreadReadStateEntity } from "../../infrastructure/database/entities/MessageThreadReadStateEntity";
+import { MessageThreadUserReadStateEntity } from "../../infrastructure/database/entities/MessageThreadUserReadStateEntity";
+import { UserAccountEntity } from "../../infrastructure/database/entities/UserAccountEntity";
+import { CompanyMembershipEntity } from "../../infrastructure/database/entities/CompanyMembershipEntity";
+import { parseMessagingMentionUserIds } from "./MessagingMentionParser";
 import { OpenMessagingThreadRequestDto } from "./OpenMessagingThreadRequestDto";
 import { ModularSubscriptionEntitlementService } from "../subscription/ModularSubscriptionEntitlementService";
 import { OperationalNotificationService } from "../notification/OperationalNotificationService";
@@ -42,6 +46,12 @@ export class MessagingThreadApplicationService {
     private readonly messageRepository: Repository<MessageEntity>,
     @InjectRepository(MessageThreadReadStateEntity)
     private readonly readStateRepository: Repository<MessageThreadReadStateEntity>,
+    @InjectRepository(MessageThreadUserReadStateEntity)
+    private readonly userReadStateRepository: Repository<MessageThreadUserReadStateEntity>,
+    @InjectRepository(UserAccountEntity)
+    private readonly userAccountRepository: Repository<UserAccountEntity>,
+    @InjectRepository(CompanyMembershipEntity)
+    private readonly companyMembershipRepository: Repository<CompanyMembershipEntity>,
     @InjectRepository(CompanyEntity)
     private readonly companyRepository: Repository<CompanyEntity>,
     @InjectRepository(FreightListingEntity)
@@ -196,6 +206,11 @@ export class MessagingThreadApplicationService {
       where: { threadId: thread.id },
       order: { createdAt: "ASC" },
     });
+    const visible = messages.filter(
+      (message) =>
+        message.kind !== "internal" ||
+        message.senderCompanyId === authenticatedUser.companyId,
+    );
     const counterpartyCompanyId =
       thread.companyAId === authenticatedUser.companyId
         ? thread.companyBId
@@ -204,25 +219,50 @@ export class MessagingThreadApplicationService {
       where: { threadId: thread.id, companyId: counterpartyCompanyId },
     });
     const counterpartyLastReadAt = counterpartyRead?.lastReadAt ?? null;
-    const views = messages.map((message) => {
+    const counterpartyUserReads = await this.userReadStateRepository.find({
+      where: { threadId: thread.id, companyId: counterpartyCompanyId },
+    });
+    const views = visible.map((message) => {
       const isMine = message.senderCompanyId === authenticatedUser.companyId;
+      const readByCounterpartyUserIds = isMine
+        ? counterpartyUserReads
+            .filter(
+              (row) =>
+                row.lastReadAt &&
+                message.createdAt.getTime() <= row.lastReadAt.getTime(),
+            )
+            .map((row) => row.userId)
+        : [];
       const readByRecipient =
         isMine &&
-        counterpartyLastReadAt !== null &&
-        message.createdAt.getTime() <= counterpartyLastReadAt.getTime();
+        (readByCounterpartyUserIds.length > 0 ||
+          (counterpartyLastReadAt !== null &&
+            message.createdAt.getTime() <= counterpartyLastReadAt.getTime()));
+      const deleted = Boolean(message.deletedAt);
       return new MessagingThreadMessageView({
         id: message.id,
         senderCompanyId: message.senderCompanyId,
-        bodyText: message.bodyText,
+        bodyText: deleted ? "[Mesaj silindi]" : message.bodyText,
         createdAt: message.createdAt.toISOString(),
         readByRecipient,
-        attachments: this.publicAttachments(message.attachments),
+        readByCounterpartyUserIds,
+        messageKind: message.kind ?? "public",
+        editedAt: message.editedAt?.toISOString() ?? null,
+        deleted,
+        mentionUserIds: message.mentionUserIds ?? [],
+        attachments: deleted ? [] : this.publicAttachments(message.attachments),
       });
     });
-    const latest = messages.at(-1);
+    const latest = visible.at(-1);
     if (latest) {
       await this.upsertReadState(
         thread.id,
+        authenticatedUser.companyId,
+        latest.createdAt,
+      );
+      await this.upsertUserReadState(
+        thread.id,
+        authenticatedUser.userId,
         authenticatedUser.companyId,
         latest.createdAt,
       );
@@ -236,6 +276,7 @@ export class MessagingThreadApplicationService {
     bodyText: string,
     locale: string,
     attachmentsInput?: MessagingAttachmentInput[],
+    messageKind: "public" | "internal" = "public",
   ): Promise<MessageEntity> {
     const thread = await this.requireParticipantThread(
       authenticatedUser,
@@ -246,11 +287,16 @@ export class MessagingThreadApplicationService {
     if (!trimmed && (!attachmentsInput || attachmentsInput.length === 0)) {
       throw new ValidationException("Mesaj metni veya ek gerekli");
     }
+    const mentionUserIds = parseMessagingMentionUserIds(trimmed);
     const draft = this.messageRepository.create({
       threadId: thread.id,
       senderCompanyId: authenticatedUser.companyId,
       senderUserId: authenticatedUser.userId,
       bodyText: trimmed || "📎 Ek dosya",
+      kind: messageKind === "internal" ? "internal" : "public",
+      mentionUserIds: mentionUserIds.length > 0 ? mentionUserIds : null,
+      deletedAt: null,
+      editedAt: null,
       attachments: null,
     });
     const saved = await this.messageRepository.save(draft);
@@ -275,24 +321,38 @@ export class MessagingThreadApplicationService {
         ? trimmed.slice(0, 280)
         : stored?.map((item) => item.filename).join(", ").slice(0, 280) ??
           "Ek dosya";
-    void this.operationalNotificationService.afterMessagingMessageSent({
-      threadId: thread.id,
-      counterpartyCompanyId,
-      senderCompanyId: authenticatedUser.companyId,
-      senderCompanyName:
-        senderCompany?.legalName?.trim() || authenticatedUser.companyId,
-      messageId: saved.id,
-      bodyPreview: preview,
-      freightListingId: thread.freightListingId,
-    });
-    void this.messagingWebPushService.notifyNewChatMessage({
-      companyId: counterpartyCompanyId,
-      threadId: thread.id,
-      senderCompanyName:
-        senderCompany?.legalName?.trim() || authenticatedUser.companyId,
-      bodyPreview: preview,
-      freightListingId: thread.freightListingId,
-    });
+    if (messageKind !== "internal") {
+      void this.operationalNotificationService.afterMessagingMessageSent({
+        threadId: thread.id,
+        counterpartyCompanyId,
+        senderCompanyId: authenticatedUser.companyId,
+        senderCompanyName:
+          senderCompany?.legalName?.trim() || authenticatedUser.companyId,
+        messageId: saved.id,
+        bodyPreview: preview,
+        freightListingId: thread.freightListingId,
+      });
+      void this.messagingWebPushService.notifyNewChatMessage({
+        companyId: counterpartyCompanyId,
+        threadId: thread.id,
+        senderCompanyName:
+          senderCompany?.legalName?.trim() || authenticatedUser.companyId,
+        bodyPreview: preview,
+        freightListingId: thread.freightListingId,
+      });
+    }
+    if (mentionUserIds.length > 0) {
+      void this.operationalNotificationService.afterMessagingUserMention({
+        companyId: authenticatedUser.companyId,
+        mentionedUserIds: mentionUserIds,
+        threadId: thread.id,
+        senderCompanyName:
+          senderCompany?.legalName?.trim() || authenticatedUser.companyId,
+        messageId: saved.id,
+        bodyPreview: preview,
+        freightListingId: thread.freightListingId,
+      });
+    }
     const event = { type: "message", threadId: thread.id };
     this.messagingRealtimeHubService.publish(thread.companyAId, event);
     this.messagingRealtimeHubService.publish(thread.companyBId, event);
@@ -559,6 +619,148 @@ export class MessagingThreadApplicationService {
       companyId: authenticatedUser.companyId,
       threads: payloadThreads,
     };
+  }
+
+  public async editMessage(
+    authenticatedUser: AuthenticatedUserContext,
+    threadId: string,
+    messageId: string,
+    bodyText: string,
+    locale: string,
+  ): Promise<MessageEntity> {
+    const thread = await this.requireParticipantThread(
+      authenticatedUser,
+      threadId,
+      locale,
+    );
+    const message = await this.messageRepository.findOne({
+      where: { id: messageId, threadId: thread.id },
+    });
+    if (!message || message.deletedAt) {
+      throw new MessagingThreadNotFoundException(messageId);
+    }
+    if (message.senderUserId !== authenticatedUser.userId) {
+      throw new AuthorizationException("Only sender can edit message");
+    }
+    const ageMs = Date.now() - message.createdAt.getTime();
+    if (ageMs > 5 * 60 * 1000) {
+      throw new ValidationException("Düzenleme süresi doldu (5 dk)");
+    }
+    const trimmed = bodyText.trim();
+    if (!trimmed) {
+      throw new ValidationException("Mesaj boş olamaz");
+    }
+    message.bodyText = trimmed;
+    message.editedAt = new Date();
+    message.mentionUserIds = parseMessagingMentionUserIds(trimmed);
+    const saved = await this.messageRepository.save(message);
+    const event = { type: "message", threadId: thread.id };
+    this.messagingRealtimeHubService.publish(thread.companyAId, event);
+    this.messagingRealtimeHubService.publish(thread.companyBId, event);
+    return saved;
+  }
+
+  public async softDeleteMessage(
+    authenticatedUser: AuthenticatedUserContext,
+    threadId: string,
+    messageId: string,
+    locale: string,
+  ): Promise<void> {
+    const thread = await this.requireParticipantThread(
+      authenticatedUser,
+      threadId,
+      locale,
+    );
+    const message = await this.messageRepository.findOne({
+      where: { id: messageId, threadId: thread.id },
+    });
+    if (!message || message.deletedAt) {
+      throw new MessagingThreadNotFoundException(messageId);
+    }
+    if (message.senderUserId !== authenticatedUser.userId) {
+      throw new AuthorizationException("Only sender can delete message");
+    }
+    message.deletedAt = new Date();
+    await this.messageRepository.save(message);
+    const event = { type: "message", threadId: thread.id };
+    this.messagingRealtimeHubService.publish(thread.companyAId, event);
+    this.messagingRealtimeHubService.publish(thread.companyBId, event);
+  }
+
+  public async recordTyping(
+    authenticatedUser: AuthenticatedUserContext,
+    threadId: string,
+    locale: string,
+  ): Promise<void> {
+    const thread = await this.requireParticipantThread(
+      authenticatedUser,
+      threadId,
+      locale,
+    );
+    const payload = {
+      type: "typing",
+      threadId: thread.id,
+      userId: authenticatedUser.userId,
+      companyId: authenticatedUser.companyId,
+    };
+    const targets = [thread.companyAId, thread.companyBId];
+    for (const companyId of targets) {
+      if (companyId !== authenticatedUser.companyId) {
+        this.messagingRealtimeHubService.publish(companyId, payload);
+      }
+    }
+  }
+
+  public async listColleagues(
+    authenticatedUser: AuthenticatedUserContext,
+    locale: string,
+  ): Promise<
+    { userId: string; displayName: string; mentionToken: string }[]
+  > {
+    await this.assertMessagingModule(authenticatedUser, locale);
+    const memberships = await this.companyMembershipRepository.find({
+      where: { companyId: authenticatedUser.companyId },
+    });
+    if (memberships.length === 0) {
+      return [];
+    }
+    const users = await this.userAccountRepository.find({
+      where: { id: In(memberships.map((row) => row.userId)) },
+    });
+    return users.map((user) => ({
+      userId: user.id,
+      displayName: user.displayName?.trim() || user.emailAddress,
+      mentionToken: `@{${user.id}}`,
+    }));
+  }
+
+  private async upsertUserReadState(
+    threadId: string,
+    userId: string,
+    companyId: string,
+    lastReadAt: Date,
+  ): Promise<void> {
+    const existing = await this.userReadStateRepository.findOne({
+      where: { threadId, userId },
+    });
+    if (existing) {
+      if (
+        !existing.lastReadAt ||
+        existing.lastReadAt.getTime() < lastReadAt.getTime()
+      ) {
+        existing.lastReadAt = lastReadAt;
+        await this.userReadStateRepository.save(existing);
+      }
+      return;
+    }
+    await this.userReadStateRepository.save(
+      this.userReadStateRepository.create({
+        threadId,
+        userId,
+        companyId,
+        lastReadAt,
+      }),
+    );
   }
 
   private async requireParticipantThread(

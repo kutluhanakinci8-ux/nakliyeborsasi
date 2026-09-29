@@ -119,6 +119,14 @@ export const NOTIFICATION_EVENT_CATALOG: NotificationEventDefinition[] = [
     defaultUserEnabled: true,
     labelTr: "Yeni mesaj",
   },
+  {
+    code: NotificationEventCode.MessagingUserMention,
+    category: "messaging",
+    userPreferenceKey: "notifyMessages",
+    defaultAdminEnabled: false,
+    defaultUserEnabled: true,
+    labelTr: "Sohbette @mention",
+  },
 ];
 
 export function resolveEventDefinition(
