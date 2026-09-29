@@ -235,7 +235,7 @@ export function TrustPageClient() {
                 </div>
                 <TrustStarRating value={profile.scoreValue} readOnly size="lg" />
                 <TrustDistribution
-                  distribution={profile.distribution}
+                  distribution={profile.distribution ?? []}
                   reviewCount={profile.reviewCount}
                 />
                 <div className="trust-profile-links">

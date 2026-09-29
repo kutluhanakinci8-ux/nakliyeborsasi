@@ -56,6 +56,13 @@ if command -v pm2 >/dev/null 2>&1; then
 fi
 
 sleep 3
+if [[ -x "${INSTALL_DIR}/scripts/smoke-messaging-web-chunks.sh" ]]; then
+  MESSAGING_WEB_PUBLIC_URL="http://127.0.0.1:${WEB_PORT}" \
+    bash "${INSTALL_DIR}/scripts/smoke-messaging-web-chunks.sh" || {
+    echo "HATA: messaging chunk smoke — HTML/build uyumsuz" >&2
+    exit 1
+  }
+fi
 HTTP_CODE="$(curl -sS -o /tmp/nakliyeborsasi-web-check.html -w "%{http_code}" "http://127.0.0.1:${WEB_PORT}/" || echo 000)"
 UI_CODE="$(curl -sS -o /dev/null -w "%{http_code}" "http://127.0.0.1:${WEB_PORT}/ui-ornekleri" || echo 000)"
 if [[ "${HTTP_CODE}" == "200" ]] || [[ "${HTTP_CODE}" == "307" ]] || [[ "${HTTP_CODE}" == "308" ]]; then
