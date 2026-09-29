@@ -5260,6 +5260,29 @@ button.btn-secondary {
   margin: 0 0 8px;
 }
 
+.chat-channel-settings-saved-phone {
+  margin: 0 0 8px;
+  font-size: 0.8rem;
+  color: #0f172a;
+}
+
+.chat-channel-settings-saved-hint {
+  font-size: 0.72rem;
+  color: #64748b;
+  font-weight: 400;
+}
+
+.chat-channel-settings-delivery-warn {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #fcd34d;
+  background: #fffbeb;
+  font-size: 0.75rem;
+  color: #92400e;
+  line-height: 1.45;
+}
+
 .chat-channel-settings-field {
   display: flex;
   flex-direction: column;

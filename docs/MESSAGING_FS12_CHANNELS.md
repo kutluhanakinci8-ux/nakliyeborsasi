@@ -6,7 +6,7 @@
 
 - Ayar: `PATCH /messaging/integration/whatsapp-bridge` (firma sahibi)
 - KVKK onayı: `kvkkNoticeAccepted: true` zorunlu
-- Twilio veya `MESSAGING_WHATSAPP_BRIDGE_WEBHOOK_URL` ile teslim
+- Twilio (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_FROM`) veya `MESSAGING_WHATSAPP_BRIDGE_WEBHOOK_URL` ile teslim — **sunucuda biri tanımlı değilse firma ayarı “etkin” olsa bile WhatsApp mesajı gitmez**
 - UI: Mesajlar → **Kanal ayarları** paneli (`MessagingChannelSettingsPanel`)
 
 ## 12B — Capacitor native shell
