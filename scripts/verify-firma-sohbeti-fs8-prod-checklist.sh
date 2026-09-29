@@ -25,6 +25,14 @@ if [[ "${MESSAGING_SSE_REDIS_FANOUT:-}" != "1" ]]; then
   echo "WARN: MESSAGING_SSE_REDIS_FANOUT=1 değil (tek instance için opsiyonel)"
 else
   echo "OK: MESSAGING_SSE_REDIS_FANOUT=1"
+  if [[ -x "${ROOT}/scripts/verify-messaging-sse-redis-fanout.sh" ]]; then
+    if bash "${ROOT}/scripts/verify-messaging-sse-redis-fanout.sh"; then
+      echo "OK: verify-messaging-sse-redis-fanout.sh"
+    else
+      echo "FAIL: verify-messaging-sse-redis-fanout.sh (redisFanout false)"
+      FAIL=1
+    fi
+  fi
 fi
 
 if [[ -x "${ROOT}/scripts/verify-messaging-web-push-prod.sh" ]]; then
