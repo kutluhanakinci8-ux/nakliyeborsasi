@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # MP-9: Müşteri due diligence ZIP (güvenlik + ops + DR referansları).
+# zip CLI gerekmez — python3 zipfile (minimal VPS imajları).
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT_DIR="${ROOT}/dist"
@@ -25,5 +26,22 @@ for rel in "${list[@]}"; do
     exit 1
   fi
 done
-zip -q -j "${ZIP}" "${list[@]}"
-echo "OK: ${ZIP} ($(zipinfo -t "${ZIP}" | tail -1))"
+
+if command -v zip >/dev/null 2>&1; then
+  zip -q -j "${ZIP}" "${list[@]}"
+else
+  python3 - "${ZIP}" "${list[@]}" <<'PY'
+import sys, zipfile
+from pathlib import Path
+
+out = Path(sys.argv[1])
+paths = [Path(p) for p in sys.argv[2:]]
+with zipfile.ZipFile(out, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+    for p in paths:
+        zf.write(p, arcname=p.name)
+PY
+fi
+
+count="$(python3 -c "import zipfile; print(len(zipfile.ZipFile('${ZIP}').namelist()))")"
+size="$(wc -c < "${ZIP}" | tr -d ' ')"
+echo "OK: ${ZIP} (${count} files, ${size} bytes)"
