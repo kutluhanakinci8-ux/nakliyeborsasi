@@ -7,8 +7,14 @@ import {
   IconMail,
   IconMaximize,
   IconMessageSquare,
+  IconPalette,
   IconShieldLock,
 } from "./ChatUiIcons";
+import { ChatConversationBackgroundPicker } from "./ChatConversationBackgroundPicker";
+import {
+  chatBackgroundLabel,
+  type ChatConversationBackgroundId,
+} from "../../lib/messagingChatBackground";
 
 type RailTileProps = {
   icon: ReactNode;
@@ -83,6 +89,11 @@ type Props = {
   onExportKvkk: () => void;
   onMailFullscreen?: () => void;
   showMailFullscreen?: boolean;
+  chatBackgroundId?: ChatConversationBackgroundId;
+  chatBackgroundPickerOpen?: boolean;
+  onToggleChatBackgroundPicker?: () => void;
+  onChatBackgroundChange?: (id: ChatConversationBackgroundId) => void;
+  onCloseChatBackgroundPicker?: () => void;
 };
 
 export function MessagingSideRail({
@@ -95,10 +106,17 @@ export function MessagingSideRail({
   onExportKvkk,
   onMailFullscreen,
   showMailFullscreen,
+  chatBackgroundId = "default",
+  chatBackgroundPickerOpen = false,
+  onToggleChatBackgroundPicker,
+  onChatBackgroundChange,
+  onCloseChatBackgroundPicker,
 }: Props) {
+  const bgLabel = chatBackgroundLabel(chatBackgroundId);
+
   return (
     <aside
-      className="chat-stats-rail"
+      className="chat-stats-rail chat-stats-rail--with-picker"
       aria-label="Mesajlar gezinme ve özet"
       role="navigation"
     >
@@ -130,6 +148,25 @@ export function MessagingSideRail({
       ) : null}
       {mode === "chat" ? (
         <>
+          <ChatRailTile
+            icon={<IconPalette size={17} />}
+            label="Zemin"
+            title={`Konuşma zemini: ${bgLabel}`}
+            variant={
+              chatBackgroundPickerOpen || chatBackgroundId !== "default"
+                ? "mode-active"
+                : "default"
+            }
+            onClick={onToggleChatBackgroundPicker}
+          />
+          {onChatBackgroundChange && onCloseChatBackgroundPicker ? (
+            <ChatConversationBackgroundPicker
+              open={chatBackgroundPickerOpen}
+              value={chatBackgroundId}
+              onChange={onChatBackgroundChange}
+              onClose={onCloseChatBackgroundPicker}
+            />
+          ) : null}
           <div className="chat-rail-divider" aria-hidden />
           <p className="chat-stats-rail-heading">Özet</p>
           <ChatRailTile

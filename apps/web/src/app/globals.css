@@ -6245,6 +6245,185 @@ button.btn-secondary {
   overflow: auto;
   margin-bottom: 12px;
   min-height: 240px;
+  border-radius: 14px;
+  padding: 12px 10px;
+  background: #fafbfc;
+  border: 1px solid #eef2f6;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.chat-messages[data-chat-bg="default"] {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border-color: #eef2f6;
+}
+
+.chat-messages[data-chat-bg="brand"] {
+  background: linear-gradient(165deg, #ecfdf5 0%, #d1fae5 45%, #f0fdf4 100%);
+  border-color: #a7f3d0;
+}
+
+.chat-messages[data-chat-bg="slate"] {
+  background: linear-gradient(165deg, #f8fafc 0%, #e2e8f0 100%);
+  border-color: #cbd5e1;
+}
+
+.chat-messages[data-chat-bg="sand"] {
+  background: linear-gradient(165deg, #fffbeb 0%, #fef3c7 55%, #fff7ed 100%);
+  border-color: #fde68a;
+}
+
+.chat-messages[data-chat-bg="sky"] {
+  background: linear-gradient(165deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-color: #bae6fd;
+}
+
+.chat-messages[data-chat-bg="lavender"] {
+  background: linear-gradient(165deg, #f5f3ff 0%, #ede9fe 100%);
+  border-color: #ddd6fe;
+}
+
+.chat-messages[data-chat-bg="grid"] {
+  background-color: #f8fafc;
+  background-image:
+    linear-gradient(#e2e8f0 1px, transparent 1px),
+    linear-gradient(90deg, #e2e8f0 1px, transparent 1px);
+  background-size: 22px 22px;
+  border-color: #e2e8f0;
+}
+
+.chat-messages[data-chat-bg="night"] {
+  background: linear-gradient(165deg, #1e293b 0%, #0f172a 100%);
+  border-color: #334155;
+}
+
+.chat-messages[data-chat-bg="night"] .chat-bubble {
+  background: #334155;
+  color: #f1f5f9;
+}
+
+.chat-messages[data-chat-bg="night"] .chat-bubble p {
+  color: #f1f5f9;
+}
+
+.chat-messages[data-chat-bg="night"] .chat-bubble--mine {
+  background: #0f766e;
+}
+
+.chat-messages[data-chat-bg="night"] .chat-bubble-meta {
+  color: #94a3b8;
+}
+
+.chat-messages[data-chat-bg="night"] .chat-empty,
+.chat-messages[data-chat-bg="night"] .empty-state {
+  color: #cbd5e1;
+}
+
+.chat-stats-rail--with-picker {
+  position: relative;
+}
+
+.chat-bg-picker {
+  position: absolute;
+  right: calc(100% + 10px);
+  top: 72px;
+  z-index: 40;
+  width: min(280px, calc(100vw - 48px));
+  padding: 14px 14px 12px;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  box-shadow:
+    0 4px 6px rgba(15, 23, 42, 0.04),
+    0 24px 48px rgba(15, 23, 42, 0.12);
+}
+
+.chat-bg-picker-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.chat-bg-picker-title {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.chat-bg-picker-lead {
+  margin: 0 0 12px;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: #64748b;
+}
+
+.chat-bg-picker-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: #f1f5f9;
+  border-radius: 8px;
+  width: 28px;
+  height: 28px;
+  color: #475569;
+  cursor: pointer;
+}
+
+.chat-bg-picker-close:hover {
+  background: #e2e8f0;
+}
+
+.chat-bg-picker-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.chat-bg-swatch {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  width: 100%;
+  padding: 8px;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  background: #f8fafc;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.chat-bg-swatch:hover {
+  border-color: #cbd5e1;
+}
+
+.chat-bg-swatch--active {
+  border-color: #10b981;
+  box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.25);
+}
+
+.chat-bg-swatch-preview {
+  display: block;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.chat-bg-swatch-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #334155;
 }
 
 .chat-message-list {
@@ -7913,6 +8092,17 @@ button.btn-secondary {
     flex: 1 1 calc(33% - 8px);
     min-width: 72px;
     min-height: 56px;
+  }
+
+  .chat-bg-picker {
+    position: fixed;
+    right: 12px;
+    left: 12px;
+    top: auto;
+    bottom: 88px;
+    width: auto;
+    max-width: 360px;
+    margin-left: auto;
   }
 
   .trust-layout {
