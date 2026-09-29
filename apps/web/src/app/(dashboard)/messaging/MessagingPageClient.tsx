@@ -1493,7 +1493,7 @@ export function MessagingPageClient() {
             ) : null}
           </aside>
 
-          <section className="chat-main module-panel">
+          <section className="chat-main module-panel chat-main--premium">
             <div className="chat-main-header">
               {mobileThreadOpen && activeThreadId ? (
                 <button
