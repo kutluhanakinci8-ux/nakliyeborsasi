@@ -31,6 +31,7 @@
 | Güvenlik | JWT, TOTP posta, KVKK, audit, rate limit | **~85%** | TR kurumsal yeterli; SOC2 süreç MP-9 |
 | Gözlemlenebilirlik | SSE stats, ops snapshot, SLO smoke | **~88%** | MP-5 runbook; tam APM MP-10 sonrası |
 | ESP / deliverability (operatör) | Org engagement, DMARC hub, CSV | **~88%** | MP-6; pazarlama segmentasyonu hariç |
+| Erişilebilirlik (messaging hub) | axe kritik 0, aria şerit/liste/compose | **~92%** | MP-7; oturumlu hub manuel QA |
 | Dokümantasyon | `docs/MAIL_*`, `MESSAGING_*` | **~88%** | Eski §2.2 mention satırı güncellendi — MP-0 |
 | **Ağırlıklı kod kalitesi** | — | **~72%** | Refactor + unit test en büyük açık |
 

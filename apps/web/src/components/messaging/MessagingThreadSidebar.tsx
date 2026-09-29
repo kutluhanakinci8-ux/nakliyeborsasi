@@ -43,7 +43,10 @@ export function MessagingThreadSidebar({ chat, locale, accessToken }: Props) {
     setGroupSearchHits,
   } = chat;
   return (
-          <aside className="chat-sidebar module-panel">
+          <aside
+            className="chat-sidebar module-panel"
+            aria-label="Sohbet listesi"
+          >
             <div className="chat-sidebar-header">
               <div className="chat-sidebar-heading">
                 <h2 className="chat-sidebar-title">Sohbetler</h2>
@@ -58,6 +61,7 @@ export function MessagingThreadSidebar({ chat, locale, accessToken }: Props) {
                 className="chat-sidebar-new-group"
                 disabled={isBusy}
                 title="Grup sohbet aç"
+                aria-label="Yeni grup sohbeti aç"
                 onClick={() => {
                   setGroupModalOpen(true);
                   setGroupSearchQuery("");
@@ -204,7 +208,7 @@ export function MessagingThreadSidebar({ chat, locale, accessToken }: Props) {
                 }
               />
             ) : (
-              <ul className="chat-thread-list">
+              <ul className="chat-thread-list" aria-label="Konuşmalar">
                 {filteredThreads.map((thread) => (
                   <ChatThreadListItem
                     key={thread.threadId}

@@ -41,6 +41,9 @@ API_BASE=https://app.lerta.com.tr/api/v1 bash scripts/verify-communications-ops-
 
 # MP-6 engagement export (aynı OPERATOR_JWT)
 bash scripts/verify-mail-deliverability-mp6.sh
+
+# MP-7 axe (VPS'te varsayılan kapalı — Chromium)
+SKIP_AXE=0 bash scripts/verify-messaging-a11y-mp7.sh
 ```
 
 ## Playwright E2E (genelde VPS’te değil)

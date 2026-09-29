@@ -1,0 +1,29 @@
+name: Messaging a11y (MP-7)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/web/src/components/messaging/**"
+      - "apps/web/src/app/globals.css"
+      - "scripts/verify-axe-messaging.sh"
+      - "scripts/verify-messaging-a11y-mp7.sh"
+      - ".github/workflows/messaging-a11y-mp7.yml"
+  pull_request:
+    paths:
+      - "apps/web/src/components/messaging/**"
+      - "apps/web/src/app/globals.css"
+      - "scripts/verify-axe-messaging.sh"
+      - "scripts/verify-messaging-a11y-mp7.sh"
+  workflow_dispatch:
+
+jobs:
+  axe-critical:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: axe messaging (prod login URL)
+        run: bash scripts/verify-messaging-a11y-mp7.sh
+        env:
+          SKIP_AXE: "0"
