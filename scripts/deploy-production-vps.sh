@@ -137,6 +137,10 @@ for verify in verify-firma-sohbeti-fs1.sh verify-firma-sohbeti-fs2.sh verify-fir
 done
 
 if [[ -x "${INSTALL_DIR}/scripts/verify-firma-sohbeti-fs8-prod-checklist.sh" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  [[ -f "${INSTALL_DIR}/.env" ]] && source "${INSTALL_DIR}/.env"
+  set +a
   API_BASE="${API_BASE}" INSTALL_DIR="${INSTALL_DIR}" \
     bash "${INSTALL_DIR}/scripts/verify-firma-sohbeti-fs8-prod-checklist.sh" || echo "UYARI: FS-8 prod checklist başarısız"
 fi

@@ -47,8 +47,8 @@ export class MessagingRealtimeHubService
       return;
     }
     try {
-      const base = this.redisConnectionProvider.getClient();
-      this.redisSubscriber = base.duplicate();
+      this.redisSubscriber = this.redisConnectionProvider.createSubscriberClient();
+      await this.waitForRedisReady(this.redisSubscriber);
       await this.redisSubscriber.subscribe(REDIS_SSE_CHANNEL);
       this.redisSubscriber.on("message", (_channel, raw) => {
         try {
@@ -226,5 +226,23 @@ export class MessagingRealtimeHubService
       process.env.HOSTNAME ||
       "local"
     );
+  }
+
+  private waitForRedisReady(client: Redis): Promise<void> {
+    if (client.status === "ready") {
+      return Promise.resolve();
+    }
+    return new Promise((resolve, reject) => {
+      const onReady = () => {
+        client.off("error", onError);
+        resolve();
+      };
+      const onError = (error: Error) => {
+        client.off("ready", onReady);
+        reject(error);
+      };
+      client.once("ready", onReady);
+      client.once("error", onError);
+    });
   }
 }
