@@ -1,0 +1,27 @@
+{
+  "title": "Lerta — Kurumsal iletişim (MP-5)",
+  "description": "Manuel veya Infinity datasource ile /health/live ve communications-ops snapshot alanları.",
+  "panels": [
+    {
+      "title": "SSE bağlantıları",
+      "type": "stat",
+      "targets": [{ "expr": "messaging_sse_connections", "legend": "connections" }]
+    },
+    {
+      "title": "SSE şirket sayısı",
+      "type": "stat",
+      "targets": [{ "expr": "messaging_sse_companies", "legend": "companies" }]
+    },
+    {
+      "title": "Outbox pending",
+      "type": "stat",
+      "targets": [{ "expr": "mail_outbox_pending", "legend": "pending" }]
+    },
+    {
+      "title": "Outbox failed",
+      "type": "stat",
+      "targets": [{ "expr": "mail_outbox_failed", "legend": "failed" }]
+    }
+  ],
+  "notes": "Prometheus metrikleri henüz export edilmediğinde operatör paneli: curl communications-ops/snapshot | jq"
+}

@@ -47,6 +47,8 @@ if not rows:
 rows.sort()
 p95 = rows[int(max(0, len(rows) * 0.95 - 1))]
 print(f"OK: {len(rows)} connections, p95={p95}ms max={max(rows)}ms")
-if p95 > 8000:
-    raise SystemExit(f"FAIL: p95 {p95}ms > 8000ms")
+p95_max="${MESSAGING_SSE_P95_MS_MAX:-8000}"
+if p95 > int(p95_max):
+    raise SystemExit(f"FAIL: p95 {p95}ms > {p95_max}ms (MESSAGING_SSE_P95_MS_MAX)")
+print(f"SLO: ticket+connect p95 <= {p95_max}ms (mesaj görünürlük hedefi ~2000ms ayrı)")
 PY

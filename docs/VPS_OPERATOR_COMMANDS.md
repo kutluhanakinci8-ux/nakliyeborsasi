@@ -27,6 +27,11 @@ SKIP_PLAYWRIGHT=1 bash scripts/run-messaging-maturity-mp-checklist.sh
 
 # Canlı API FS-12 / messaging status
 API_BASE=https://app.lerta.com.tr/api/v1 bash scripts/verify-messaging-wa-bridge-sandbox.sh
+
+# MP-5: /health/live + (opsiyonel) operatör communications snapshot
+API_BASE=https://app.lerta.com.tr/api/v1 bash scripts/verify-communications-ops-snapshot.sh
+# Tam snapshot için platform operatör JWT:
+# OPERATOR_JWT='<jwt>' API_BASE=https://app.lerta.com.tr/api/v1 bash scripts/verify-communications-ops-snapshot.sh
 ```
 
 ## Playwright E2E (genelde VPS’te değil)

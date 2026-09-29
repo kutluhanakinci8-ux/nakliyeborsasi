@@ -3,6 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import {
+  formatMessagingStructuredLog,
   resolveWhatsappBridgeDelivery,
   type WhatsappBridgeDeliverySnapshot,
 } from "@nakliyeborsasi/core";
@@ -45,7 +46,11 @@ export class MessagingWhatsappBridgeService {
     void this.deliver(companyId, payload).then((result) => {
       if (!result.ok) {
         this.logger.warn(
-          `WhatsApp bridge failed company=${companyId}: ${result.reason}`,
+          formatMessagingStructuredLog("whatsapp_bridge_delivery_failed", {
+            companyId,
+            threadId: payload.threadId,
+            reason: result.reason.slice(0, 200),
+          }),
         );
       }
     });

@@ -42,5 +42,12 @@
     "redisFanout": true,
     "instanceId": "ci-fixture",
     "wsConnections": 0
+  },
+  "whatsappBridge": {
+    "channel": "none",
+    "deliveryConfigured": false,
+    "twilioContentSidConfigured": false,
+    "twilioLikelyNeedsContentSid": false,
+    "deliveryWarningTr": "Sunucuda TWILIO_* veya MESSAGING_WHATSAPP_BRIDGE_WEBHOOK_URL tanımlı değil."
   }
 }

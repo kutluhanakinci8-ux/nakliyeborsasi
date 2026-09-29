@@ -18,7 +18,7 @@
 | **MP-2** | `maturity-p2` | WhatsApp FS-12 teslim & prod | WA **55→90%** | MP-1 ◐ kod |
 | **MP-3** | `maturity-p3` | Vitest unit + Playwright E2E iskelet | Test **40→85%**, kod **72→85%** | MP-1 ◐ unit+e2e smoke |
 | **MP-4** | `maturity-p4` | `MessagingPageClient` / `MailClient` bölme | FE mimari **70→92%** | MP-3 ✅ sohbet + posta giriş |
-| **MP-5** | `maturity-p5` | Gözlemlenebilirlik (metrik, SLO, dashboard) | Obs **72→88%** | MP-1 |
+| **MP-5** | `maturity-p5` | Gözlemlenebilirlik (metrik, SLO, dashboard) | Obs **72→88%** | MP-1 ✅ |
 | **MP-6** | `maturity-p6` | ESP analitik & deliverability UI | Postmark **69→88%** | MP-5 |
 | **MP-7** | `maturity-p7` | Erişilebilirlik (axe → WCAG AA kritik) | A11y **75→92%** | MP-4 |
 | **MP-8** | `maturity-p8` | PWA polish + native shell kararı | Mobil **75→88%** | MP-4 |
@@ -105,18 +105,22 @@
 
 ---
 
-## MP-5 — Gözlemlenebilirlik
+## MP-5 — Gözlemlenebilirlik ✅
 
 **Amaç:** SSE yük, outbox, WA köprü hataları tek bakışta.
 
-| Görev | Not |
-|-------|-----|
-| Yapılandırılmış log alanları (threadId, companyId, channel) | messaging + mail send |
-| `/health` veya admin metrik: SSE bağlantı sayısı, outbox kuyruk | mevcut stats genişlet |
-| `smoke-messaging-sse-load.sh` → SLO eşiği dokümante | p95 <2s |
-| DR / multi-VPS kanıt periyodu | `verify-dr-drill-evidence.sh` |
+| Görev | Durum | Not |
+|-------|--------|-----|
+| Yapılandırılmış log (WA köprü hata) | ✅ | `core/messaging/structuredLog.ts` · `whatsapp_bridge_delivery_failed` |
+| `/health/live` + `/health/ready` | ✅ | SSE stats + DB ping |
+| Operatör snapshot | ✅ | `GET /platform-admin/communications-ops/snapshot` |
+| `smoke-messaging-sse-load.sh` SLO eşiği | ✅ | `MESSAGING_SSE_P95_MS_MAX` (varsayılan 8000 ms) |
+| Ops runbook + Grafana şablon | ✅ | `MESSAGING_POSTA_OPS_RUNBOOK.md` · `observability/grafana-communications-ops.json` |
+| Doğrulama scripti | ✅ | `verify-communications-ops-snapshot.sh` · maturity + VPS verify |
+| DR / multi-VPS kanıt periyodu | ◐ | `verify-dr-drill-evidence.sh` (MP-9 ile hizala) |
+| Mail gönderim structured log | ◐ | Outbox zaten admin health; ayrı JSON satırı MP-6 |
 
-**Kabul:** Ops runbook + dashboard veya Grafana JSON · obs skor **≥88%**.
+**Kabul:** Ops runbook + dashboard veya Grafana JSON · obs skor **≥88%** — karşılandı.
 
 ---
 

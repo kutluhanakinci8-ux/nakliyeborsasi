@@ -331,6 +331,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
   exports: [
     AuthNotificationService,
     EmailSecurityTokenService,
+    EmailDeliveryHealthService,
     EmailOutboxService,
     PlatformNotificationSettingsService,
     OperationalNotificationService,
