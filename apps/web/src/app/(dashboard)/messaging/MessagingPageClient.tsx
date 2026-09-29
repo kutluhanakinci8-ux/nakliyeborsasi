@@ -4,11 +4,16 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MessagingMailWebEmbed } from "../../../components/messaging/MessagingMailWebEmbed";
+import { ChatMessageBody } from "../../../components/messaging/ChatMessageBody";
 import { EmptyState } from "../../../components/EmptyState";
 import { ModulePageShell } from "../../../components/ModulePageShell";
 import { useWebSession } from "../../../context/WebSessionProvider";
 import {
   MessagingApiClient,
+  MessagingListingCardRecord,
+  MessagingOfferTimelineEntryRecord,
+  MessagingQuickReplyRecord,
+  MessagingSearchResultRecord,
   MessagingThreadRecord,
   MessagingThreadSummaryRecord,
   ThreadMessageRecord,
@@ -89,6 +94,19 @@ export function MessagingPageClient() {
   const [moduleBlocked, setModuleBlocked] = useState(false);
   const [threadSummary, setThreadSummary] =
     useState<MessagingThreadSummaryRecord | null>(null);
+  const [listingCard, setListingCard] =
+    useState<MessagingListingCardRecord | null>(null);
+  const [offerTimeline, setOfferTimeline] = useState<
+    MessagingOfferTimelineEntryRecord[]
+  >([]);
+  const [llmSummary, setLlmSummary] = useState<string | null>(null);
+  const [llmBusy, setLlmBusy] = useState(false);
+  const [serverSearchHits, setServerSearchHits] = useState<
+    MessagingSearchResultRecord[]
+  >([]);
+  const [quickReplies, setQuickReplies] = useState<MessagingQuickReplyRecord[]>(
+    [],
+  );
   const [translations, setTranslations] = useState<Record<string, string>>({});
   const [pendingAttachments, setPendingAttachments] = useState<
     PendingAttachment[]
@@ -391,12 +409,66 @@ export function MessagingPageClient() {
   useEffect(() => {
     if (!activeThreadId || mode !== "chat") {
       setThreadSummary(null);
+      setListingCard(null);
+      setOfferTimeline([]);
+      setLlmSummary(null);
       return;
     }
-    void MessagingApiClient.fetchThreadSummary(accessToken, locale, activeThreadId)
-      .then((payload) => setThreadSummary(payload.summary))
-      .catch(() => setThreadSummary(null));
+    void MessagingApiClient.fetchThreadInsights(accessToken, locale, activeThreadId)
+      .then((payload) => {
+        setThreadSummary(payload.summary);
+        setListingCard(payload.listingCard);
+        setOfferTimeline(payload.offerTimeline ?? []);
+        setLlmSummary(payload.llmSummary?.text ?? null);
+      })
+      .catch(() => {
+        setThreadSummary(null);
+        setListingCard(null);
+        setOfferTimeline([]);
+        setLlmSummary(null);
+      });
   }, [activeThreadId, accessToken, locale, mode]);
+
+  useEffect(() => {
+    if (mode !== "chat" || !accessToken) {
+      return;
+    }
+    void MessagingApiClient.fetchQuickReplies(accessToken, locale)
+      .then((payload) => setQuickReplies(payload.templates ?? []))
+      .catch(() => setQuickReplies([]));
+  }, [mode, accessToken, locale]);
+
+  useEffect(() => {
+    const query = threadSearch.trim();
+    if (mode !== "chat" || !accessToken || query.length < 2) {
+      setServerSearchHits([]);
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      void MessagingApiClient.searchMessages(accessToken, locale, query)
+        .then((payload) => setServerSearchHits(payload.results ?? []))
+        .catch(() => setServerSearchHits([]));
+    }, 320);
+    return () => window.clearTimeout(timer);
+  }, [threadSearch, mode, accessToken, locale]);
+
+  async function refreshLlmSummary(): Promise<void> {
+    if (!activeThreadId) {
+      return;
+    }
+    setLlmBusy(true);
+    try {
+      const payload = await MessagingApiClient.fetchThreadInsights(
+        accessToken,
+        locale,
+        activeThreadId,
+        true,
+      );
+      setLlmSummary(payload.llmSummary?.text ?? null);
+    } finally {
+      setLlmBusy(false);
+    }
+  }
 
   useEffect(() => {
     if (mode !== "chat" || !accessToken) {
@@ -640,11 +712,30 @@ export function MessagingPageClient() {
             <h2 className="module-panel-title">Sohbetler</h2>
             <input
               className="input-light chat-thread-search"
-              placeholder="Firma veya mesaj ara…"
+              placeholder="Firma veya mesaj ara (sunucu, 2+ karakter)…"
               value={threadSearch}
               onChange={(event) => setThreadSearch(event.target.value)}
               aria-label="Sohbet ara"
             />
+            {serverSearchHits.length > 0 ? (
+              <ul className="chat-server-search-hits">
+                {serverSearchHits.map((hit) => (
+                  <li key={hit.messageId}>
+                    <button
+                      type="button"
+                      className="chat-server-search-hit"
+                      onClick={() => void loadMessages(hit.threadId)}
+                    >
+                      <strong>
+                        {hit.counterpartyLegalName?.trim() ||
+                          shortCompanyId(hit.counterpartyCompanyId)}
+                      </strong>
+                      <span>{hit.snippet}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
             {isCompanyOwner ? (
               <button
                 type="button"
@@ -741,6 +832,18 @@ export function MessagingPageClient() {
                 </div>
               ) : null}
             </div>
+            {listingCard ? (
+              <div className="chat-listing-card" aria-label="İlan kartı">
+                <p className="chat-listing-card-route">{listingCard.routeLabel}</p>
+                <p className="chat-listing-card-meta">
+                  {listingCard.equipmentTypeCode} · {listingCard.weightTonnes} t
+                  · yükleme {listingCard.loadingDateStart}
+                  {listingCard.priceAmount
+                    ? ` · ${listingCard.priceAmount} ${listingCard.priceCurrencyCode}`
+                    : ""}
+                </p>
+              </div>
+            ) : null}
             {threadSummary ? (
               <aside className="chat-summary-panel" aria-label="Sohbet özet">
                 <p className="chat-summary-title">{threadSummary.headline}</p>
@@ -749,6 +852,34 @@ export function MessagingPageClient() {
                     <li key={line}>{line}</li>
                   ))}
                 </ul>
+                {offerTimeline.length > 0 ? (
+                  <ul className="chat-offer-timeline" aria-label="Teklif zaman çizelgesi">
+                    {offerTimeline.map((entry) => (
+                      <li key={`${entry.at}-${entry.label}`}>
+                        <time dateTime={entry.at}>
+                          {new Date(entry.at).toLocaleString(locale)}
+                        </time>
+                        <span>
+                          {entry.label}
+                          {entry.amountText ? ` · ${entry.amountText}` : ""}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+                {llmSummary ? (
+                  <p className="chat-llm-summary">{llmSummary}</p>
+                ) : null}
+                <div className="chat-summary-actions">
+                  <button
+                    type="button"
+                    className="btn-account-secondary"
+                    disabled={llmBusy}
+                    onClick={() => void refreshLlmSummary()}
+                  >
+                    {llmBusy ? "AI özet…" : "AI özet (KVKK onaylı)"}
+                  </button>
+                </div>
                 <p className="chat-summary-meta">
                   Yapılandırılmış özet · {threadSummary.messageCount} mesaj
                 </p>
@@ -775,7 +906,7 @@ export function MessagingPageClient() {
                             <> · Okundu</>
                           ) : null}
                         </span>
-                        <p>{message.bodyText}</p>
+                        <ChatMessageBody text={message.bodyText} />
                         {message.attachments && message.attachments.length > 0 ? (
                           <ul className="chat-attachment-list">
                             {message.attachments.map((attachment) => (
@@ -870,6 +1001,36 @@ export function MessagingPageClient() {
                   </li>
                 ))}
               </ul>
+            ) : null}
+            {quickReplies.length > 0 ? (
+              <div className="chat-quick-replies">
+                <label className="chat-quick-replies-label" htmlFor="chat-quick-reply">
+                  Şablon
+                </label>
+                <select
+                  id="chat-quick-reply"
+                  className="input-light chat-quick-replies-select"
+                  defaultValue=""
+                  onChange={(event) => {
+                    const id = event.target.value;
+                    if (!id) {
+                      return;
+                    }
+                    const template = quickReplies.find((row) => row.id === id);
+                    if (template) {
+                      setMessageBody(template.bodyText);
+                    }
+                    event.target.value = "";
+                  }}
+                >
+                  <option value="">Şablon seçin…</option>
+                  {quickReplies.map((template) => (
+                    <option key={template.id} value={template.id}>
+                      {template.labelTr}
+                    </option>
+                  ))}
+                </select>
+              </div>
             ) : null}
             <div className="chat-input-row">
               <label className="chat-file-picker">

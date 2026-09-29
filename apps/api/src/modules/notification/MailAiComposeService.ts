@@ -128,6 +128,56 @@ export class MailAiComposeService {
     return { summary: text, provider: "llm" };
   }
 
+  public isMessagingSummaryLlmEnabled(): boolean {
+    return (
+      this.configService.get<string>("MESSAGING_SUMMARY_LLM")?.trim() ===
+        "true" && this.isEnabled()
+    );
+  }
+
+  public async summarizeMessagingThread(input: {
+    userId: string;
+    locale: string;
+    transcript: string;
+  }): Promise<{ summary: string; provider: string }> {
+    const transcript = input.transcript.trim().slice(0, 6000);
+    if (!transcript) {
+      return {
+        summary: input.locale.toLowerCase().startsWith("tr")
+          ? "Özet için henüz mesaj yok."
+          : "No messages to summarize yet.",
+        provider: "empty",
+      };
+    }
+    if (
+      !this.isMessagingSummaryLlmEnabled() ||
+      !(await this.canUseLlm(input.userId))
+    ) {
+      const lines = transcript.split("\n").filter(Boolean);
+      const tail = lines.slice(-6).join(" ");
+      return {
+        summary: tail.slice(0, 400),
+        provider: "template",
+      };
+    }
+    const text = await this.completeChat(
+      [
+        {
+          role: "system",
+          content:
+            "Lojistik firma sohbeti transkriptini Türkçe 3-5 cümleyle özetle: konu, fiyat/teklif durumu, sonraki adım.",
+        },
+        { role: "user", content: transcript },
+      ],
+      280,
+    );
+    if (!text) {
+      return { summary: transcript.slice(0, 400), provider: "template-fallback" };
+    }
+    this.logger.log(`AI messaging thread summary user=${input.userId}`);
+    return { summary: text, provider: "llm" };
+  }
+
   public async classifyInbound(input: {
     userId: string;
     subject: string;

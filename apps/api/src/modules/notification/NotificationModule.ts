@@ -334,6 +334,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     EmailOutboxService,
     PlatformNotificationSettingsService,
     OperationalNotificationService,
+    MailAiComposeService,
   ],
 })
 export class NotificationModule {}

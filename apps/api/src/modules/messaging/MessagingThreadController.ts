@@ -176,23 +176,67 @@ export class MessagingThreadController {
     );
   }
 
-  @Get("threads/:threadId/summary")
-  public async threadSummary(
-    @Param("threadId") threadId: string,
+  @Get("search")
+  public async search(
+    @Query("q") query: string,
+    @Query("limit") limitRaw: string | undefined,
     @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
     @Headers("accept-language") acceptLanguage: string | undefined,
     @Query("lang") queryLanguage: string | undefined,
-  ): Promise<{ summary: unknown }> {
+  ): Promise<{ query: string; results: unknown[] }> {
     const locale = this.localeResolutionService.resolveFromHeaders(
       acceptLanguage,
       queryLanguage,
     );
-    const summary =
+    const limit = limitRaw ? Number.parseInt(limitRaw, 10) : 40;
+    return this.messagingThreadApplicationService.searchMessages(
+      authenticatedUser,
+      locale,
+      query ?? "",
+      Number.isFinite(limit) ? limit : 40,
+    );
+  }
+
+  @Get("quick-replies")
+  public async quickReplies(
+    @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
+    @Headers("accept-language") acceptLanguage: string | undefined,
+    @Query("lang") queryLanguage: string | undefined,
+  ): Promise<{ templates: unknown[] }> {
+    const locale = this.localeResolutionService.resolveFromHeaders(
+      acceptLanguage,
+      queryLanguage,
+    );
+    return this.messagingThreadApplicationService.listQuickReplies(
+      authenticatedUser,
+      locale,
+    );
+  }
+
+  @Get("threads/:threadId/summary")
+  public async threadSummary(
+    @Param("threadId") threadId: string,
+    @Query("llm") llmFlag: string | undefined,
+    @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
+    @Headers("accept-language") acceptLanguage: string | undefined,
+    @Query("lang") queryLanguage: string | undefined,
+  ): Promise<{
+    summary: unknown;
+    listingCard: unknown;
+    offerTimeline: unknown;
+    llmSummary: unknown;
+  }> {
+    const locale = this.localeResolutionService.resolveFromHeaders(
+      acceptLanguage,
+      queryLanguage,
+    );
+    const payload =
       await this.messagingThreadApplicationService.getThreadSummary(
         authenticatedUser,
         threadId,
         locale,
+        { includeLlm: llmFlag === "1" || llmFlag === "true" },
       );
-    return { summary };
+    return payload;
   }
 }

@@ -28,6 +28,10 @@ import { CompanyEntity } from "../../infrastructure/database/entities/CompanyEnt
 import { FreightListingEntity } from "../../infrastructure/database/entities/FreightListingEntity";
 import { buildStructuredThreadSummary } from "./MessagingThreadSummaryBuilder";
 import { MessagingRealtimeHubService } from "./MessagingRealtimeHubService";
+import { listMessagingQuickReplies } from "./MessagingQuickReplyCatalog";
+import { buildOfferTimeline } from "./MessagingOfferTimelineBuilder";
+import { buildMessagingListingCard } from "./MessagingListingCardBuilder";
+import { MailAiComposeService } from "../notification/MailAiComposeService";
 
 @Injectable()
 export class MessagingThreadApplicationService {
@@ -47,6 +51,7 @@ export class MessagingThreadApplicationService {
     private readonly messagingAttachmentStorageService: MessagingAttachmentStorageService,
     private readonly messagingWebPushService: MessagingWebPushService,
     private readonly messagingRealtimeHubService: MessagingRealtimeHubService,
+    private readonly mailAiComposeService: MailAiComposeService,
   ) {}
 
   public async assertMessagingModule(
@@ -337,7 +342,13 @@ export class MessagingThreadApplicationService {
     authenticatedUser: AuthenticatedUserContext,
     threadId: string,
     locale: string,
-  ): Promise<MessagingThreadSummary> {
+    options?: { includeLlm?: boolean },
+  ): Promise<{
+    summary: MessagingThreadSummary;
+    listingCard: ReturnType<typeof buildMessagingListingCard>;
+    offerTimeline: ReturnType<typeof buildOfferTimeline>;
+    llmSummary: { text: string; provider: string } | null;
+  }> {
     const thread = await this.requireParticipantThread(
       authenticatedUser,
       threadId,
@@ -360,11 +371,125 @@ export class MessagingThreadApplicationService {
             where: { id: thread.freightListingId },
           })
         : null;
-    return buildStructuredThreadSummary({
+    const summary = buildStructuredThreadSummary({
       messages,
       listing,
       counterpartyLegalName: counterparty?.legalName ?? null,
     });
+    const listingCard = buildMessagingListingCard(listing);
+    const listingPrice =
+      listing?.priceAmount && listing.priceCurrencyCode
+        ? { amount: listing.priceAmount, currency: listing.priceCurrencyCode }
+        : null;
+    const offerTimeline = buildOfferTimeline(messages, listingPrice);
+
+    let llmSummary: { text: string; provider: string } | null = null;
+    if (options?.includeLlm) {
+      const transcript = messages
+        .map(
+          (row) =>
+            `[${row.createdAt.toISOString()}] ${row.senderCompanyId}: ${row.bodyText}`,
+        )
+        .join("\n");
+      const llm = await this.mailAiComposeService.summarizeMessagingThread({
+        userId: authenticatedUser.userId,
+        locale,
+        transcript,
+      });
+      llmSummary = { text: llm.summary, provider: llm.provider };
+    }
+
+    return { summary, listingCard, offerTimeline, llmSummary };
+  }
+
+  public async listQuickReplies(
+    authenticatedUser: AuthenticatedUserContext,
+    locale: string,
+  ): Promise<{ templates: ReturnType<typeof listMessagingQuickReplies> }> {
+    await this.assertMessagingModule(authenticatedUser, locale);
+    return { templates: listMessagingQuickReplies() };
+  }
+
+  public async searchMessages(
+    authenticatedUser: AuthenticatedUserContext,
+    locale: string,
+    query: string,
+    limit = 40,
+  ): Promise<{
+    query: string;
+    results: {
+      kind: "message";
+      threadId: string;
+      messageId: string;
+      snippet: string;
+      counterpartyCompanyId: string;
+      counterpartyLegalName: string | null;
+      createdAt: string;
+    }[];
+  }> {
+    await this.modularSubscriptionEntitlementService.assertModuleAccess(
+      authenticatedUser.companyId,
+      SubscriptionModuleCode.Messaging,
+      locale,
+    );
+    const term = query.trim();
+    if (term.length < 2) {
+      throw new ValidationException("Arama en az 2 karakter olmalı");
+    }
+    const capped = Math.min(Math.max(limit, 1), 80);
+    const rows = await this.messageRepository
+      .createQueryBuilder("message")
+      .innerJoin(MessageThreadEntity, "thread", "thread.id = message.threadId")
+      .where(
+        "(thread.companyAId = :companyId OR thread.companyBId = :companyId)",
+        { companyId: authenticatedUser.companyId },
+      )
+      .andWhere("message.bodyText ILIKE :q", { q: `%${term}%` })
+      .orderBy("message.createdAt", "DESC")
+      .take(capped)
+      .getMany();
+
+    const threadIds = [...new Set(rows.map((row) => row.threadId))];
+    const threads = threadIds.length
+      ? await this.messageThreadRepository.find({
+          where: { id: In(threadIds) },
+        })
+      : [];
+    const threadMap = new Map(threads.map((row) => [row.id, row]));
+    const counterpartyIds = threads.map((thread) =>
+      thread.companyAId === authenticatedUser.companyId
+        ? thread.companyBId
+        : thread.companyAId,
+    );
+    const companies = counterpartyIds.length
+      ? await this.companyRepository.find({
+          where: { id: In(counterpartyIds) },
+        })
+      : [];
+    const companyMap = new Map(companies.map((row) => [row.id, row]));
+
+    const results = rows.map((message) => {
+      const thread = threadMap.get(message.threadId);
+      const counterpartyId =
+        thread && thread.companyAId === authenticatedUser.companyId
+          ? thread.companyBId
+          : thread?.companyAId ?? "";
+      const company = companyMap.get(counterpartyId);
+      const idx = message.bodyText.toLowerCase().indexOf(term.toLowerCase());
+      const start = Math.max(0, idx - 40);
+      const snippet = message.bodyText.slice(start, start + 140);
+      return {
+        kind: "message" as const,
+        threadId: message.threadId,
+        messageId: message.id,
+        snippet,
+        counterpartyCompanyId: counterpartyId,
+        counterpartyLegalName: company?.legalName ?? null,
+        createdAt: message.createdAt.toISOString(),
+      };
+    });
+
+    return { query: term, results };
   }
 
   public async exportCompanyArchive(

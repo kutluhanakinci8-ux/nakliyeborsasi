@@ -35,6 +35,48 @@ export type MessagingThreadSummaryRecord = {
   source: "structured";
 };
 
+export type MessagingListingCardRecord = {
+  listingId: string;
+  routeLabel: string;
+  equipmentTypeCode: string;
+  weightTonnes: string;
+  loadingDateStart: string;
+  priceAmount: string | null;
+  priceCurrencyCode: string | null;
+  marketScopeCode: string;
+};
+
+export type MessagingOfferTimelineEntryRecord = {
+  at: string;
+  kind: string;
+  label: string;
+  amountText?: string;
+};
+
+export type MessagingThreadInsightsRecord = {
+  summary: MessagingThreadSummaryRecord;
+  listingCard: MessagingListingCardRecord | null;
+  offerTimeline: MessagingOfferTimelineEntryRecord[];
+  llmSummary: { text: string; provider: string } | null;
+};
+
+export type MessagingSearchResultRecord = {
+  kind: "message";
+  threadId: string;
+  messageId: string;
+  snippet: string;
+  counterpartyCompanyId: string;
+  counterpartyLegalName: string | null;
+  createdAt: string;
+};
+
+export type MessagingQuickReplyRecord = {
+  id: string;
+  labelTr: string;
+  bodyText: string;
+  scope: "system" | "organization";
+};
+
 export class MessagingApiClient {
   public static async createStreamTicket(
     accessToken: string,
@@ -92,15 +134,38 @@ export class MessagingApiClient {
     ) as Promise<{ messages: ThreadMessageRecord[] }>;
   }
 
-  public static async fetchThreadSummary(
+  public static async fetchThreadInsights(
     accessToken: string,
     locale: string,
     threadId: string,
-  ): Promise<{ summary: MessagingThreadSummaryRecord }> {
+    includeLlm = false,
+  ): Promise<MessagingThreadInsightsRecord> {
+    const llm = includeLlm ? "&llm=1" : "";
     return AuthenticatedApiClient.fetchJson(
       accessToken,
-      `/messaging/threads/${threadId}/summary?lang=${locale}`,
-    ) as Promise<{ summary: MessagingThreadSummaryRecord }>;
+      `/messaging/threads/${threadId}/summary?lang=${locale}${llm}`,
+    ) as Promise<MessagingThreadInsightsRecord>;
+  }
+
+  public static async searchMessages(
+    accessToken: string,
+    locale: string,
+    query: string,
+  ): Promise<{ query: string; results: MessagingSearchResultRecord[] }> {
+    return AuthenticatedApiClient.fetchJson(
+      accessToken,
+      `/messaging/search?lang=${locale}&q=${encodeURIComponent(query)}`,
+    ) as Promise<{ query: string; results: MessagingSearchResultRecord[] }>;
+  }
+
+  public static async fetchQuickReplies(
+    accessToken: string,
+    locale: string,
+  ): Promise<{ templates: MessagingQuickReplyRecord[] }> {
+    return AuthenticatedApiClient.fetchJson(
+      accessToken,
+      `/messaging/quick-replies?lang=${locale}`,
+    ) as Promise<{ templates: MessagingQuickReplyRecord[] }>;
   }
 
   public static async translateMessage(

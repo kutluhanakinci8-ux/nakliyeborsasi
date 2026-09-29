@@ -48,6 +48,11 @@ export class MessagingModuleStatusController {
         "sse_stream",
         "attachments",
         "web_push",
+        "server_search",
+        "markdown_messages",
+        "quick_replies",
+        "thread_insights",
+        "thread_llm_summary",
       ],
       translate: { deepl, libretranslate: libre },
       attachments: {
