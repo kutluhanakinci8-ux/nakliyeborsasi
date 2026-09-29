@@ -45,6 +45,10 @@ async function readFileAsAttachment(file: File): Promise<PendingAttachment> {
   };
 }
 
+function messageHasActiveMentionQuery(body: string): boolean {
+  return /@([^\s]*)$/.test(body);
+}
+
 type MessagingMode = "chat" | "email";
 
 function shortCompanyId(companyId: string): string {
@@ -122,6 +126,8 @@ export function MessagingPageClient() {
     { userId: string; displayName: string; mentionToken: string }[]
   >([]);
   const typingPingRef = useRef(0);
+  const messageInputRef = useRef<HTMLTextAreaElement>(null);
+  const [mentionMenuOpen, setMentionMenuOpen] = useState(false);
   const [translations, setTranslations] = useState<Record<string, string>>({});
   const [pendingAttachments, setPendingAttachments] = useState<
     PendingAttachment[]
@@ -130,6 +136,45 @@ export function MessagingPageClient() {
   const deepLinkHandledKey = useRef<string | null>(null);
   const isCompanyOwner =
     session?.roleCodes?.includes("COMPANY_OWNER") ?? false;
+
+  const mentionDropdownOpen = useMemo(() => {
+    if (colleagues.length === 0) {
+      return false;
+    }
+    return mentionMenuOpen || messageHasActiveMentionQuery(messageBody);
+  }, [colleagues.length, mentionMenuOpen, messageBody]);
+
+  const mentionSuggestions = useMemo(() => {
+    const match = messageBody.match(/@([^\s]*)$/);
+    const query = match ? match[1].toLowerCase() : "";
+    return colleagues
+      .filter((row) => {
+        if (!query) {
+          return true;
+        }
+        return (
+          row.displayName.toLowerCase().includes(query) ||
+          row.mentionToken.toLowerCase().includes(query)
+        );
+      })
+      .slice(0, 8);
+  }, [colleagues, messageBody]);
+
+  function applyColleagueMention(colleague: {
+    displayName: string;
+    mentionToken: string;
+  }): void {
+    setMessageBody((current) => {
+      if (messageHasActiveMentionQuery(current)) {
+        return current.replace(/@([^\s]*)$/, `${colleague.mentionToken} `);
+      }
+      const spacer =
+        current.length > 0 && !current.endsWith(" ") ? " " : "";
+      return `${current}${spacer}${colleague.mentionToken} `;
+    });
+    setMentionMenuOpen(false);
+    requestAnimationFrame(() => messageInputRef.current?.focus());
+  }
 
   useEffect(() => {
     const chatLink =
@@ -828,9 +873,6 @@ export function MessagingPageClient() {
                 role="combobox"
                 autoComplete="off"
               />
-              <p className="chat-unified-search-hint">
-                Enter: aç · 2+ karakter mesaj araması · tam UUID ile yeni sohbet
-              </p>
               {showChatSearchPanel ? (
                 <div
                   id="chat-unified-search-panel"
@@ -1169,141 +1211,253 @@ export function MessagingPageClient() {
                 </ul>
               )}
             </div>
-            {pendingAttachments.length > 0 ? (
-              <ul className="chat-pending-attachments">
-                {pendingAttachments.map((file) => (
-                  <li key={file.filename}>
-                    {file.filename}
-                    <button
-                      type="button"
-                      className="chat-attachment-remove"
-                      onClick={() =>
-                        setPendingAttachments((current) =>
-                          current.filter((row) => row.filename !== file.filename),
-                        )
-                      }
-                    >
-                      Kaldır
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-            {typingHint ? (
-              <p className="chat-typing-hint" aria-live="polite">{typingHint}</p>
-            ) : null}
-            {colleagues.length > 0 ? (
-              <p className="chat-mention-hint">
-                @mention: ekip arkadaşı eklemek için mesaja{" "}
-                <code>{colleagues[0]?.mentionToken}</code> yazın.
-              </p>
-            ) : null}
-            <label className="chat-internal-note">
-              <input
-                type="checkbox"
-                checked={internalNote}
-                onChange={(event) => setInternalNote(event.target.checked)}
-              />
-              İç not (yalnızca şirketiniz görür)
-            </label>
-            {quickReplies.length > 0 ? (
-              <div className="chat-quick-replies">
-                <label className="chat-quick-replies-label" htmlFor="chat-quick-reply">
-                  Şablon
-                </label>
-                <select
-                  id="chat-quick-reply"
-                  className="input-light chat-quick-replies-select"
-                  defaultValue=""
-                  onChange={(event) => {
-                    const id = event.target.value;
-                    if (!id) {
-                      return;
-                    }
-                    const template = quickReplies.find((row) => row.id === id);
-                    if (template) {
-                      setMessageBody(template.bodyText);
-                    }
-                    event.target.value = "";
-                  }}
-                >
-                  <option value="">Şablon seçin…</option>
-                  {quickReplies.map((template) => (
-                    <option key={template.id} value={template.id}>
-                      {template.labelTr}
-                    </option>
+            <div
+              className={
+                internalNote
+                  ? "chat-compose-dock chat-compose-dock--internal"
+                  : "chat-compose-dock"
+              }
+            >
+              {internalNote ? (
+                <p className="chat-compose-internal-banner" role="status">
+                  İç not modu — yalnızca şirketiniz görür, karşı tarafa gitmez.
+                </p>
+              ) : null}
+              {typingHint ? (
+                <p className="chat-typing-hint" aria-live="polite">
+                  {typingHint}
+                </p>
+              ) : null}
+              {pendingAttachments.length > 0 ? (
+                <ul className="chat-pending-attachments">
+                  {pendingAttachments.map((file) => (
+                    <li key={file.filename} className="chat-pending-chip">
+                      <span className="chat-pending-chip-name" title={file.filename}>
+                        📎 {file.filename}
+                      </span>
+                      <button
+                        type="button"
+                        className="chat-pending-chip-remove"
+                        aria-label={`${file.filename} kaldır`}
+                        onClick={() =>
+                          setPendingAttachments((current) =>
+                            current.filter((row) => row.filename !== file.filename),
+                          )
+                        }
+                      >
+                        ×
+                      </button>
+                    </li>
                   ))}
-                </select>
+                </ul>
+              ) : null}
+              <div className="chat-compose-toolbar">
+                <div
+                  className="chat-compose-mode"
+                  role="group"
+                  aria-label="Mesaj türü"
+                >
+                  <button
+                    type="button"
+                    className={
+                      internalNote
+                        ? "chat-compose-mode-btn"
+                        : "chat-compose-mode-btn chat-compose-mode-btn--active"
+                    }
+                    aria-pressed={!internalNote}
+                    disabled={!activeThreadId}
+                    onClick={() => setInternalNote(false)}
+                  >
+                    Karşı firmaya
+                  </button>
+                  <button
+                    type="button"
+                    className={
+                      internalNote
+                        ? "chat-compose-mode-btn chat-compose-mode-btn--active chat-compose-mode-btn--internal"
+                        : "chat-compose-mode-btn"
+                    }
+                    aria-pressed={internalNote}
+                    disabled={!activeThreadId}
+                    onClick={() => setInternalNote(true)}
+                  >
+                    İç not
+                  </button>
+                </div>
+                <div className="chat-compose-toolbar-actions">
+                  {colleagues.length > 0 ? (
+                    <div className="chat-mention-anchor">
+                      <button
+                        type="button"
+                        className="chat-compose-tool-btn"
+                        disabled={!activeThreadId}
+                        aria-expanded={mentionDropdownOpen}
+                        aria-haspopup="listbox"
+                        onClick={() => setMentionMenuOpen((open) => !open)}
+                      >
+                        <span aria-hidden="true">@</span>
+                        Ekip
+                      </button>
+                      {mentionDropdownOpen ? (
+                        <ul
+                          className="chat-mention-menu"
+                          role="listbox"
+                          aria-label="Ekip üyesi etiketle"
+                        >
+                          {mentionSuggestions.length === 0 ? (
+                            <li className="chat-mention-menu-empty">
+                              Eşleşen ekip üyesi yok
+                            </li>
+                          ) : (
+                            mentionSuggestions.map((colleague) => (
+                              <li key={colleague.userId} role="option">
+                                <button
+                                  type="button"
+                                  className="chat-mention-menu-item"
+                                  onMouseDown={(event) =>
+                                    event.preventDefault()
+                                  }
+                                  onClick={() =>
+                                    applyColleagueMention(colleague)
+                                  }
+                                >
+                                  <span className="chat-mention-menu-name">
+                                    {colleague.displayName}
+                                  </span>
+                                  <span className="chat-mention-menu-hint">
+                                    etiketle
+                                  </span>
+                                </button>
+                              </li>
+                            ))
+                          )}
+                        </ul>
+                      ) : null}
+                    </div>
+                  ) : null}
+                  {quickReplies.length > 0 ? (
+                    <label className="chat-compose-template">
+                      <span className="sr-only">Hazır şablon</span>
+                      <select
+                        id="chat-quick-reply"
+                        className="chat-compose-template-select"
+                        defaultValue=""
+                        disabled={!activeThreadId}
+                        onChange={(event) => {
+                          const id = event.target.value;
+                          if (!id) {
+                            return;
+                          }
+                          const template = quickReplies.find(
+                            (row) => row.id === id,
+                          );
+                          if (template) {
+                            setMessageBody(template.bodyText);
+                            messageInputRef.current?.focus();
+                          }
+                          event.target.value = "";
+                        }}
+                      >
+                        <option value="">Şablon…</option>
+                        {quickReplies.map((template) => (
+                          <option key={template.id} value={template.id}>
+                            {template.labelTr}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : null}
+                </div>
               </div>
-            ) : null}
-            <div className="chat-input-row">
-              <label className="chat-file-picker">
-                <span className="btn-secondary">Dosya</span>
-                <input
-                  type="file"
-                  accept="image/*,application/pdf,text/plain,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
-                  disabled={!activeThreadId || pendingAttachments.length >= 5}
-                  onChange={(event) => {
-                    const file = event.target.files?.[0];
-                    event.target.value = "";
-                    if (!file) {
-                      return;
-                    }
-                    if (file.size > 10_000_000) {
-                      setErrorMessage("Tek dosya en fazla 10 MB olabilir.");
-                      return;
-                    }
-                    void readFileAsAttachment(file)
-                      .then((attachment) => {
-                        setPendingAttachments((current) =>
-                          [...current, attachment].slice(0, 5),
+              <div className="chat-compose-editor">
+                <label className="chat-compose-attach" title="Dosya ekle (en fazla 5, 10 MB)">
+                  <span className="chat-compose-attach-icon" aria-hidden="true">
+                    📎
+                  </span>
+                  <span className="sr-only">Dosya ekle</span>
+                  <input
+                    type="file"
+                    accept="image/*,application/pdf,text/plain,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+                    disabled={!activeThreadId || pendingAttachments.length >= 5}
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      event.target.value = "";
+                      if (!file) {
+                        return;
+                      }
+                      if (file.size > 10_000_000) {
+                        setErrorMessage("Tek dosya en fazla 10 MB olabilir.");
+                        return;
+                      }
+                      void readFileAsAttachment(file)
+                        .then((attachment) => {
+                          setPendingAttachments((current) =>
+                            [...current, attachment].slice(0, 5),
+                          );
+                        })
+                        .catch(() =>
+                          setErrorMessage(
+                            "Dosya okunamadı (en fazla 5 dosya, 10 MB).",
+                          ),
                         );
-                      })
-                      .catch(() =>
-                        setErrorMessage(
-                          "Dosya okunamadı (en fazla 5 dosya, 10 MB).",
-                        ),
+                    }}
+                  />
+                </label>
+                <textarea
+                  ref={messageInputRef}
+                  className="chat-compose-textarea"
+                  placeholder={
+                    internalNote
+                      ? "Ekip içi notunuzu yazın…"
+                      : "Mesajınızı yazın… (@ ile ekip etiketleyin)"
+                  }
+                  rows={2}
+                  value={messageBody}
+                  disabled={!activeThreadId}
+                  onChange={(event) => {
+                    setMessageBody(event.target.value);
+                    if (messageHasActiveMentionQuery(event.target.value)) {
+                      setMentionMenuOpen(true);
+                    }
+                    const now = Date.now();
+                    if (activeThreadId && now - typingPingRef.current > 2000) {
+                      typingPingRef.current = now;
+                      void MessagingApiClient.sendTyping(
+                        accessToken,
+                        locale,
+                        activeThreadId,
                       );
+                    }
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" && !event.shiftKey) {
+                      event.preventDefault();
+                      void handleSendMessage();
+                    }
+                    if (event.key === "Escape" && mentionDropdownOpen) {
+                      setMentionMenuOpen(false);
+                    }
+                  }}
+                  onBlur={() => {
+                    window.setTimeout(() => setMentionMenuOpen(false), 160);
                   }}
                 />
-              </label>
-              <input
-                className="input-light"
-                placeholder="Mesajınızı yazın…"
-                value={messageBody}
-                disabled={!activeThreadId}
-                onChange={(event) => {
-                  setMessageBody(event.target.value);
-                  const now = Date.now();
-                  if (
-                    activeThreadId &&
-                    now - typingPingRef.current > 2000
-                  ) {
-                    typingPingRef.current = now;
-                    void MessagingApiClient.sendTyping(
-                      accessToken,
-                      locale,
-                      activeThreadId,
-                    );
+                <button
+                  type="button"
+                  className="chat-compose-send"
+                  disabled={
+                    !activeThreadId ||
+                    (!messageBody.trim() && pendingAttachments.length === 0)
                   }
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    void handleSendMessage();
-                  }
-                }}
-              />
-              <button
-                type="button"
-                className="btn-accent"
-                disabled={
-                  !activeThreadId ||
-                  (!messageBody.trim() && pendingAttachments.length === 0)
-                }
-                onClick={() => void handleSendMessage()}
-              >
-                Gönder
-              </button>
+                  onClick={() => void handleSendMessage()}
+                >
+                  Gönder
+                </button>
+              </div>
+              <p className="chat-compose-footnote">
+                Enter gönder · Shift+Enter yeni satır
+                {colleagues.length > 0 ? " · @ ile ekip etiketle" : ""}
+              </p>
             </div>
           </section>
           <aside
