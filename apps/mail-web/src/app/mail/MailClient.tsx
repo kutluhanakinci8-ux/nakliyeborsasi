@@ -2,6 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { formatMailListDate } from "@/lib/mailDisplay";
+import {
+  builtinComposeTemplatesFallback,
+  mergeComposeTemplatesWithBuiltins,
+} from "@/lib/mailComposePresets";
 import { syncMailUnreadBadge } from "@/lib/mailUnreadBadge";
 import {
   fetchInboxWithOfflineCache,
@@ -316,10 +320,16 @@ export function MailClient() {
     if (sendReadiness && !sendReadiness.canSend && sendReadiness.reasonTr) {
       setComposeError(sendReadiness.reasonTr);
     }
-    void fetchComposePresets(accessToken).then((data) => {
-      setComposeSignatures(data.signatures);
-      setComposeTemplates(data.templates);
-    });
+    void fetchComposePresets(accessToken)
+      .then((data) => {
+        setComposeSignatures(data.signatures);
+        setComposeTemplates(
+          mergeComposeTemplatesWithBuiltins(data.templates),
+        );
+      })
+      .catch(() => {
+        setComposeTemplates(builtinComposeTemplatesFallback());
+      });
   }, [composeOpen, accessToken, sendReadiness]);
 
   useEffect(() => {

@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
@@ -13,7 +14,7 @@ import {
 import {
   isBuiltinMailComposePresetId,
   listBuiltinMailComposeTemplateDtos,
-} from "./mailComposeBuiltinTemplates";
+} from "@nakliyeborsasi/core";
 
 type MailComposePresetDto = {
   id: string;
@@ -29,6 +30,7 @@ type MailComposePresetDto = {
 @Injectable()
 export class MailComposePresetService {
   private static readonly maxPerKind = 30;
+  private readonly logger = new Logger(MailComposePresetService.name);
 
   public constructor(
     @InjectRepository(MailComposePresetEntity)
@@ -42,25 +44,33 @@ export class MailComposePresetService {
     signatures: MailComposePresetDto[];
     templates: MailComposePresetDto[];
   }> {
-    const rows = await this.presetRepository.find({
-      where: { organizationId },
-      order: { updatedAt: "DESC" },
-      take: 200,
-    });
-    const signatures = rows
-      .filter(
-        (row) =>
-          row.kind === "signature" &&
-          (row.ownerUserId === userId || row.ownerUserId === null),
-      )
-      .map((row) => this.toDto(row));
-    const orgTemplates = rows
-      .filter((row) => row.kind === "template")
-      .map((row) => this.toDto(row));
-    const templates = [
-      ...listBuiltinMailComposeTemplateDtos(),
-      ...orgTemplates,
-    ];
+    const builtins = listBuiltinMailComposeTemplateDtos();
+    let signatures: MailComposePresetDto[] = [];
+    let orgTemplates: MailComposePresetDto[] = [];
+    try {
+      const rows = await this.presetRepository.find({
+        where: { organizationId },
+        order: { updatedAt: "DESC" },
+        take: 200,
+      });
+      signatures = rows
+        .filter(
+          (row) =>
+            row.kind === "signature" &&
+            (row.ownerUserId === userId || row.ownerUserId === null),
+        )
+        .map((row) => this.toDto(row));
+      orgTemplates = rows
+        .filter((row) => row.kind === "template")
+        .map((row) => this.toDto(row));
+    } catch (error) {
+      this.logger.warn(
+        `compose-presets DB read failed org=${organizationId}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+    const templates = [...builtins, ...orgTemplates];
     return { signatures, templates };
   }
 
