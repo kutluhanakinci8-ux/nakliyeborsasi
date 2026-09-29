@@ -16,6 +16,10 @@ Manuel adımlar:
 ```bash
 cd /var/www/nakliyeborsasi
 
+# API build — core önce (MP-6+ @nakliyeborsasi/core export); veya tek komut:
+npm run build -w @nakliyeborsasi/core && npm run build -w @nakliyeborsasi/api
+# (api `prebuild` artık core'u otomatik derler)
+
 # Posta web build (deploy zaten yapar; el ile test için)
 npm run build -w @lerta/mail-web
 
@@ -31,7 +35,12 @@ API_BASE=https://app.lerta.com.tr/api/v1 bash scripts/verify-messaging-wa-bridge
 # MP-5: /health/live + (opsiyonel) operatör communications snapshot
 API_BASE=https://app.lerta.com.tr/api/v1 bash scripts/verify-communications-ops-snapshot.sh
 # Tam snapshot için platform operatör JWT:
-# OPERATOR_JWT='<jwt>' API_BASE=https://app.lerta.com.tr/api/v1 bash scripts/verify-communications-ops-snapshot.sh
+# Tam snapshot — gerçek JWT (placeholder `<platform-admin-jwt>` 401 verir):
+# OPERATOR_JWT='eyJhbG…' bash scripts/verify-communications-ops-snapshot.sh
+# veya .env: OPERATOR_TEST_EMAIL + OPERATOR_TEST_PASSWORD (platform admin, TEST_USERS.md)
+
+# MP-6 engagement export (aynı OPERATOR_JWT)
+bash scripts/verify-mail-deliverability-mp6.sh
 ```
 
 ## Playwright E2E (genelde VPS’te değil)
