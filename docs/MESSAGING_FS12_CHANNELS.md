@@ -37,4 +37,9 @@
 ```bash
 bash scripts/apply-messaging-fs12-schema.sh
 bash scripts/verify-firma-sohbeti-fs12.sh
+# MP-2 sıkı teslim kanalı (Twilio+ContentSid veya webhook URL zorunlu):
+API_BASE=https://app.lerta.com.tr/api/v1 MP2_WA_STRICT=1 \
+  bash scripts/verify-messaging-wa-bridge-prod-mp2.sh
 ```
+
+Sunucu `.env` kontrolü (uyarı): `bash scripts/verify-vps-prod-env-hints.sh`

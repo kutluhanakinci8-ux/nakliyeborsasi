@@ -27,12 +27,22 @@ if [[ -z "${OPERATOR_TEST_PASSWORD:-}" && -z "${PLATFORM_OPERATOR_PASSWORD:-}" ]
   WARN=1
 fi
 
+twilio_ok=0
+if [[ -n "${TWILIO_ACCOUNT_SID:-}" && -n "${TWILIO_AUTH_TOKEN:-}" && -n "${TWILIO_WHATSAPP_FROM:-}" ]]; then
+  twilio_ok=1
+  echo "OK: Twilio WhatsApp üçlüsü tanımlı"
+  if [[ -z "${TWILIO_WHATSAPP_CONTENT_SID:-}" ]]; then
+    echo "NOT: TWILIO_WHATSAPP_CONTENT_SID boş — MP-2 prod için önerilir (şablon {{1}})"
+    WARN=1
+  fi
+fi
+
 bridge="${MESSAGING_WHATSAPP_BRIDGE_WEBHOOK_URL:-}"
-if [[ -z "${bridge}" ]]; then
-  echo "NOT: MESSAGING_WHATSAPP_BRIDGE_WEBHOOK_URL boş — MP-2 WA köprüsü webhook modunda değil (Twilio veya none)"
-  WARN=1
-else
+if [[ -n "${bridge}" ]]; then
   echo "OK: MESSAGING_WHATSAPP_BRIDGE_WEBHOOK_URL ayarlı"
+elif [[ "${twilio_ok}" -eq 0 ]]; then
+  echo "NOT: WA teslim yok — TWILIO_* veya MESSAGING_WHATSAPP_BRIDGE_WEBHOOK_URL gerekli (MP-2)"
+  WARN=1
 fi
 
 if [[ "${WARN}" -eq 0 ]]; then

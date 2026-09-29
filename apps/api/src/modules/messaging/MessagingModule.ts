@@ -71,7 +71,7 @@ import { TrustScoreModule } from "../trust/TrustScoreModule";
     AuthModule,
     NotificationModule,
     forwardRef(() => AuctionModule),
-    TrustScoreModule,
+    forwardRef(() => TrustScoreModule),
     RedisModule,
     AuditModule,
   ],
@@ -109,6 +109,7 @@ import { TrustScoreModule } from "../trust/TrustScoreModule";
   exports: [
     MessagingThreadApplicationService,
     MessagingRealtimeHubService,
+    MessagingWebPushService,
     MessagingWhatsappBridgeService,
   ],
 })

@@ -39,6 +39,12 @@ fi
 
 if curl -fsS -o /dev/null --connect-timeout 2 "${API_BASE:-http://127.0.0.1:3001/api/v1}/messaging/status" 2>/dev/null; then
   run_step "MP-2 FS-12 WA sandbox" bash "${ROOT}/scripts/verify-messaging-wa-bridge-sandbox.sh"
+  if [[ "${MP2_WA_STRICT:-}" == "1" ]]; then
+    run_step "MP-2 WA prod delivery" bash "${ROOT}/scripts/verify-messaging-wa-bridge-prod-mp2.sh"
+  else
+    echo ""
+    echo "SKIP: MP2_WA_STRICT≠1 — verify-messaging-wa-bridge-prod-mp2"
+  fi
 else
   echo ""
   echo "SKIP: API yok — verify-messaging-wa-bridge-sandbox"

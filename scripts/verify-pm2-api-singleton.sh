@@ -16,7 +16,7 @@ except Exception:
 names=[]
 for p in procs:
   n=(p.get('name') or '').lower()
-  if 'api' in n and ('nakliye' in n or 'lerta' in n or n.endswith('-api') or n=='api'):
+  if n.startswith('nakliyeborsasi-api'):
     names.append(p.get('name','?'))
 for x in names:
   print(x)
