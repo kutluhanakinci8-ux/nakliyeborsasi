@@ -58,3 +58,4 @@ export * from "./text/decodeHtmlEntities";
 export * from "./ports/ExternalFreightDataPort";
 export * from "./mail/lertaComTrLocalPart";
 export * from "./mail/mailComposeBuiltinTemplates";
+export * from "./messaging/whatsappBridgeDelivery";

@@ -208,3 +208,5 @@ Her faz: kod + dokümantasyon + (varsa) `scripts/verify-*` · deploy checklist.
 | **Tüm tablo** | 1–35 | **≈ 88%** | **≈ 72%** |
 
 **Doğrulama:** `bash scripts/run-mail-messaging-parity-wave2-checklist.sh`
+
+**Sonraki faz (mühendislik olgunluğu):** [LERTA_MESSAGING_POSTA_100_EXECUTION_ROADMAP.md](./LERTA_MESSAGING_POSTA_100_EXECUTION_ROADMAP.md) (MP-0…MP-10) · skor kartı [LERTA_MESSAGING_POSTA_COMPETITIVE_SCORECARD.md](./LERTA_MESSAGING_POSTA_COMPETITIVE_SCORECARD.md)

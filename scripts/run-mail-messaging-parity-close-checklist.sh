@@ -22,6 +22,9 @@ run_step() {
 
 echo "== Mail & Messaging parity close checklist =="
 
+run_step "TypeORM global entities (MP-1)" bash "${ROOT}/scripts/verify-typeorm-global-entities.sh"
+run_step "Unit tests (MP-3 core)" npm run test:unit --prefix "${ROOT}"
+
 run_step "VPS deploy smoke" bash "${ROOT}/scripts/run-lerta-mail-vps-deploy-checklist.sh"
 run_step "PWA shell v7" bash "${ROOT}/scripts/verify-mail-web-pwa-prod.sh"
 run_step "JMAP bridge mount" bash "${ROOT}/scripts/verify-mail-jmap-bridge-prod.sh"

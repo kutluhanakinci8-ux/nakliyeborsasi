@@ -99,6 +99,9 @@ if __name__ == "__main__":
         missing = required - features
         if missing:
             raise SystemExit(f"FAIL: eksik features: {sorted(missing)}")
-        print("OK: FS-12 status features")
+        wa = data.get("whatsappBridge") or {}
+        if wa.get("channel") not in ("twilio", "webhook", "none"):
+            raise SystemExit(f"FAIL: whatsappBridge.channel beklenen, gelen {wa.get('channel')}")
+        print("OK: FS-12 status features + whatsappBridge snapshot")
     else:
         raise SystemExit(f"unknown check {check}")

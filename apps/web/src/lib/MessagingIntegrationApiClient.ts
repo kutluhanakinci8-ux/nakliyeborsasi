@@ -5,6 +5,10 @@ export type MessagingWhatsappBridgeSnapshot = {
   configured: boolean;
   notifyE164Masked: string | null;
   deliveryConfigured: boolean;
+  channel?: "twilio" | "webhook" | "none";
+  twilioContentSidConfigured?: boolean;
+  twilioLikelyNeedsContentSid?: boolean;
+  deliveryWarningTr?: string | null;
   kvkkNoticeTr: string;
   kvkkAcceptedAt: string | null;
 };
@@ -41,5 +45,15 @@ export class MessagingIntegrationApiClient {
         body: JSON.stringify(params),
       },
     ) as Promise<{ whatsapp: unknown }>;
+  }
+
+  public static async sendWhatsappBridgeTest(
+    accessToken: string,
+  ): Promise<{ ok: boolean }> {
+    return AuthenticatedApiClient.fetchJson(
+      accessToken,
+      "/messaging/integration/whatsapp-bridge/test",
+      { method: "POST" },
+    ) as Promise<{ ok: boolean }>;
   }
 }
