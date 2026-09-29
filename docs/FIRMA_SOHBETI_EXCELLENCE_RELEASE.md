@@ -48,3 +48,10 @@ bash scripts/verify-firma-sohbeti-fs8.sh … fs12.sh
 ## Pilot NPS
 
 5 pilot firma için: `docs/FIRMA_SOHBETI_PILOT_NPS.md`
+
+## Ops kapanış (FS-8 prod)
+
+- `MESSAGING_SSE_REDIS_FANOUT=1` + `verify-messaging-sse-redis-fanout.sh`
+- `scripts/apply-messaging-prod-ops-env.sh` — `MESSAGING_SSE_INSTANCE_ID`
+- Auth smoke: `.env` içinde `MESSAGING_TEST_EMAIL` / `MESSAGING_TEST_PASSWORD` → `resolve-messaging-test-jwt.sh`
+- Hub varsayılan sekme UI: Hesap → Profil → **Mesajlar hub** (firma yöneticisi)

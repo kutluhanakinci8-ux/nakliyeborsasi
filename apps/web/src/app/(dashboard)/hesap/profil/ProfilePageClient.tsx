@@ -16,6 +16,7 @@ import {
   type AccountEmailNotificationPreferenceKey,
   type AccountNotificationPreferences,
 } from "../../../../lib/AccountNotificationPreferencesApi";
+import { MessagingApiClient } from "../../../../lib/MessagingApiClient";
 
 type UserProfile = {
   fullName: string;
@@ -117,6 +118,45 @@ export function ProfilePageClient() {
     NotificationPreferenceMatrixEvent[]
   >([]);
   const [matrixBusy, setMatrixBusy] = useState(false);
+  const [hubDefaultTab, setHubDefaultTab] = useState<"email" | "chat">("email");
+  const [hubDefaultBusy, setHubDefaultBusy] = useState(false);
+  const [hubDefaultMessage, setHubDefaultMessage] = useState("");
+  const isCompanyOwner =
+    session?.roleCodes?.includes("COMPANY_OWNER") ?? false;
+
+  useEffect(() => {
+    if (!accessToken || !isCompanyOwner) {
+      return;
+    }
+    void MessagingApiClient.fetchMessagingHubDefault(accessToken, locale)
+      .then((payload) => {
+        setHubDefaultTab(payload.defaultTab === "chat" ? "chat" : "email");
+      })
+      .catch(() => {
+        /* yerel varsayılan */
+      });
+  }, [accessToken, isCompanyOwner, locale]);
+
+  async function saveHubDefaultTab(next: "email" | "chat"): Promise<void> {
+    if (!accessToken) {
+      return;
+    }
+    setHubDefaultBusy(true);
+    setHubDefaultMessage("");
+    try {
+      const payload = await MessagingApiClient.updateMessagingHubDefault(
+        accessToken,
+        locale,
+        next,
+      );
+      setHubDefaultTab(payload.defaultTab === "chat" ? "chat" : "email");
+      setHubDefaultMessage("Mesajlar varsayılan sekmesi kaydedildi.");
+    } catch {
+      setHubDefaultMessage("Kaydedilemedi. Yalnızca firma yöneticisi değiştirebilir.");
+    } finally {
+      setHubDefaultBusy(false);
+    }
+  }
 
   useEffect(() => {
     if (!userId) {
@@ -362,7 +402,7 @@ export function ProfilePageClient() {
       </div>
 
       <div className="account-profile-layout">
-        <ProfileSectionNav />
+        <ProfileSectionNav showMessagingHub={isCompanyOwner} />
         <main className="account-profile-main">
           <form
             id="profile-identity"
@@ -462,6 +502,68 @@ export function ProfilePageClient() {
               })}
             </div>
           </section>
+
+          {isCompanyOwner ? (
+            <section
+              id="profile-messaging-hub"
+              className="account-profile-panel module-panel module-panel--elevated account-profile-section"
+            >
+              <header className="account-profile-panel-head">
+                <div>
+                  <p className="account-profile-panel-kicker">02b · Mesajlar</p>
+                  <h2 className="account-profile-panel-title">
+                    Mesajlar hub varsayılanı
+                  </h2>
+                  <p className="account-profile-panel-lead">
+                    Tüm kullanıcılar için /messaging açılış sekmesi (kurumsal e-posta
+                    veya firma sohbeti). Kişisel tarayıcı tercihi localStorage ile
+                    geçersiz kılınabilir.
+                  </p>
+                </div>
+              </header>
+              <div
+                className="account-profile-locale-grid"
+                role="radiogroup"
+                aria-label="Varsayılan Mesajlar sekmesi"
+              >
+                {(
+                  [
+                    { id: "email" as const, label: "Kurumsal e-posta", hint: "Posta önce" },
+                    { id: "chat" as const, label: "Firma sohbeti", hint: "Sohbet önce" },
+                  ] as const
+                ).map((option) => {
+                  const selected = hubDefaultTab === option.id;
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={selected}
+                      disabled={hubDefaultBusy}
+                      className={
+                        selected
+                          ? "account-profile-locale-card account-profile-locale-card--active"
+                          : "account-profile-locale-card"
+                      }
+                      onClick={() => void saveHubDefaultTab(option.id)}
+                    >
+                      <span className="account-profile-locale-name">
+                        {option.label}
+                      </span>
+                      <span className="account-profile-locale-region">
+                        {option.hint}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              {hubDefaultMessage ? (
+                <p className="account-profile-toast" role="status">
+                  {hubDefaultMessage}
+                </p>
+              ) : null}
+            </section>
+          ) : null}
 
           <section
             id="profile-notify"

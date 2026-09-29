@@ -1,18 +1,32 @@
 "use client";
 
-const PROFILE_SECTIONS = [
+type ProfileSection = {
+  id: string;
+  label: string;
+  ownerOnly?: boolean;
+};
+
+const PROFILE_SECTIONS: ProfileSection[] = [
   { id: "profile-identity", label: "Kimlik" },
   { id: "profile-locale", label: "Dil ve bölge" },
+  { id: "profile-messaging-hub", label: "Mesajlar hub", ownerOnly: true },
   { id: "profile-notify", label: "Bildirimler" },
   { id: "profile-security", label: "Güvenlik" },
-] as const;
+];
 
-export function ProfileSectionNav() {
+type Props = {
+  showMessagingHub?: boolean;
+};
+
+export function ProfileSectionNav({ showMessagingHub = false }: Props) {
+  const sections = PROFILE_SECTIONS.filter(
+    (section) => !section.ownerOnly || showMessagingHub,
+  );
   return (
     <nav className="account-profile-nav" aria-label="Profil bölümleri">
       <p className="account-profile-nav-title">Kişisel ayarlar</p>
       <ul className="account-profile-nav-list">
-        {PROFILE_SECTIONS.map((section) => (
+        {sections.map((section) => (
           <li key={section.id}>
             <a className="account-profile-nav-link" href={`#${section.id}`}>
               {section.label}
