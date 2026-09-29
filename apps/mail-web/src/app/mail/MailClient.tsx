@@ -2933,9 +2933,24 @@ export function MailClient() {
                     }}
                   >
                     <option value="">Seç…</option>
-                    {composeTemplates.map((t) => (
-                      <option key={t.id} value={t.id}>{t.name}</option>
-                    ))}
+                    {composeTemplates.some((t) => t.isSystem) ? (
+                      <optgroup label="Hazır şablonlar">
+                        {composeTemplates
+                          .filter((t) => t.isSystem)
+                          .map((t) => (
+                            <option key={t.id} value={t.id}>{t.name}</option>
+                          ))}
+                      </optgroup>
+                    ) : null}
+                    {composeTemplates.some((t) => !t.isSystem) ? (
+                      <optgroup label="Kurumsal">
+                        {composeTemplates
+                          .filter((t) => !t.isSystem)
+                          .map((t) => (
+                            <option key={t.id} value={t.id}>{t.name}</option>
+                          ))}
+                      </optgroup>
+                    ) : null}
                   </select>
                 </label>
                 <label className="compose-preset-label">

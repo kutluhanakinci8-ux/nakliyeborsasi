@@ -10,6 +10,21 @@ import {
   MailComposePresetEntity,
   MailComposePresetKind,
 } from "../../infrastructure/database/entities/MailComposePresetEntity";
+import {
+  isBuiltinMailComposePresetId,
+  listBuiltinMailComposeTemplateDtos,
+} from "./mailComposeBuiltinTemplates";
+
+type MailComposePresetDto = {
+  id: string;
+  kind: MailComposePresetKind;
+  name: string;
+  subject: string | null;
+  bodyText: string;
+  isDefault: boolean;
+  isSystem: boolean;
+  updatedAt: string;
+};
 
 @Injectable()
 export class MailComposePresetService {
@@ -24,10 +39,9 @@ export class MailComposePresetService {
     organizationId: string,
     userId: string,
   ): Promise<{
-    signatures: ReturnType<MailComposePresetService["toDto"]>[];
-    templates: ReturnType<MailComposePresetService["toDto"]>[];
+    signatures: MailComposePresetDto[];
+    templates: MailComposePresetDto[];
   }> {
-    await this.ensureStarterTemplates(organizationId);
     const rows = await this.presetRepository.find({
       where: { organizationId },
       order: { updatedAt: "DESC" },
@@ -40,9 +54,13 @@ export class MailComposePresetService {
           (row.ownerUserId === userId || row.ownerUserId === null),
       )
       .map((row) => this.toDto(row));
-    const templates = rows
+    const orgTemplates = rows
       .filter((row) => row.kind === "template")
       .map((row) => this.toDto(row));
+    const templates = [
+      ...listBuiltinMailComposeTemplateDtos(),
+      ...orgTemplates,
+    ];
     return { signatures, templates };
   }
 
@@ -57,7 +75,7 @@ export class MailComposePresetService {
       isDefault?: boolean;
     },
     canManageOrgTemplates: boolean,
-  ): Promise<ReturnType<MailComposePresetService["toDto"]>> {
+  ): Promise<MailComposePresetDto> {
     if (input.kind === "template" && !canManageOrgTemplates) {
       throw new ForbiddenException(
         "Şablon oluşturmak için posta yöneticisi yetkisi gerekir.",
@@ -107,7 +125,10 @@ export class MailComposePresetService {
       isDefault?: boolean;
     },
     canManageOrgTemplates: boolean,
-  ): Promise<ReturnType<MailComposePresetService["toDto"]>> {
+  ): Promise<MailComposePresetDto> {
+    if (isBuiltinMailComposePresetId(presetId)) {
+      throw new BadRequestException("Sistem şablonları düzenlenemez.");
+    }
     const row = await this.assertAccess(
       organizationId,
       userId,
@@ -143,6 +164,9 @@ export class MailComposePresetService {
     presetId: string,
     canManageOrgTemplates: boolean,
   ): Promise<void> {
+    if (isBuiltinMailComposePresetId(presetId)) {
+      throw new BadRequestException("Sistem şablonları silinemez.");
+    }
     const row = await this.assertAccess(
       organizationId,
       userId,
@@ -200,59 +224,7 @@ export class MailComposePresetService {
     }
   }
 
-  private async ensureStarterTemplates(organizationId: string): Promise<void> {
-    const count = await this.presetRepository.count({
-      where: { organizationId, kind: "template" },
-    });
-    if (count > 0) {
-      return;
-    }
-    const starters: {
-      name: string;
-      subject: string;
-      bodyText: string;
-    }[] = [
-      {
-        name: "Yük teklifi",
-        subject: "Nakliye teklifimiz",
-        bodyText:
-          "Merhaba,\n\nİlanınız için teklifimiz:\n• Rota: \n• Araç tipi: \n• Fiyat: \n• Yükleme tarihi: \n\nDetayları görüşmek için yanıtlayabilirsiniz.\n\nSaygılarımızla,",
-      },
-      {
-        name: "Teklif kabul / onay",
-        subject: "Teklif onayı",
-        bodyText:
-          "Merhaba,\n\nTeklifinizi kabul ediyoruz. Operasyon için iletişim bilgilerinizi ve yükleme saatini paylaşır mısınız?\n\nTeşekkürler,",
-      },
-      {
-        name: "Evrak hatırlatma",
-        subject: "Evrak / CMR hatırlatması",
-        bodyText:
-          "Merhaba,\n\nSevkiyat tamamlandıysa CMR ve fatura evraklarını bu e-postaya ek olarak gönderebilir misiniz?\n\nİyi çalışmalar,",
-      },
-      {
-        name: "Gecikme bilgilendirme",
-        subject: "Sevkiyat güncellemesi",
-        bodyText:
-          "Merhaba,\n\nSevkiyatınızla ilgili güncelleme:\n\nTahmini varış / gecikme nedeni: \n\nBilginize sunarız.",
-      },
-    ];
-    for (const starter of starters) {
-      await this.presetRepository.save(
-        this.presetRepository.create({
-          organizationId,
-          ownerUserId: null,
-          kind: "template",
-          name: starter.name,
-          subject: starter.subject,
-          bodyText: starter.bodyText,
-          isDefault: false,
-        }),
-      );
-    }
-  }
-
-  private toDto(row: MailComposePresetEntity) {
+  private toDto(row: MailComposePresetEntity): MailComposePresetDto {
     return {
       id: row.id,
       kind: row.kind,
@@ -260,6 +232,7 @@ export class MailComposePresetService {
       subject: row.subject,
       bodyText: row.bodyText,
       isDefault: row.isDefault,
+      isSystem: false,
       updatedAt: row.updatedAt.toISOString(),
     };
   }

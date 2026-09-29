@@ -1029,6 +1029,8 @@ export type MailComposePreset = {
   subject: string | null;
   bodyText: string;
   isDefault: boolean;
+  /** API: hazır sistem şablonları (düzenlenemez). */
+  isSystem?: boolean;
   updatedAt: string;
 };
 
