@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MessagingMailWebEmbed } from "../../../components/messaging/MessagingMailWebEmbed";
@@ -29,11 +36,18 @@ import {
   TrustScoreRecord,
 } from "../../../lib/TrustScoreApiClient";
 import { ensureMessagingWebPush } from "../../../lib/messagingPush";
+import {
+  companyInitials,
+  dayKeyFromIso,
+  formatChatDayLabel,
+  highlightSearchSnippet,
+} from "../../../lib/messagingChatUi";
 
 type PendingAttachment = {
   filename: string;
   contentType: string;
   contentBase64: string;
+  previewUrl?: string;
 };
 
 async function readFileAsAttachment(file: File): Promise<PendingAttachment> {
@@ -44,10 +58,14 @@ async function readFileAsAttachment(file: File): Promise<PendingAttachment> {
   for (let offset = 0; offset < bytes.length; offset += chunk) {
     binary += String.fromCharCode(...bytes.subarray(offset, offset + chunk));
   }
+  const contentType = file.type || "application/octet-stream";
+  const previewUrl =
+    contentType.startsWith("image/") ? URL.createObjectURL(file) : undefined;
   return {
     filename: file.name,
-    contentType: file.type || "application/octet-stream",
+    contentType,
     contentBase64: btoa(binary),
+    previewUrl,
   };
 }
 
@@ -188,6 +206,16 @@ export function MessagingPageClient() {
   const [groupSelected, setGroupSelected] = useState<
     MessagingCompanySearchRecord[]
   >([]);
+  const [scrollToMessageId, setScrollToMessageId] = useState<string | null>(
+    null,
+  );
+  const [contextPinCollapsed, setContextPinCollapsed] = useState(false);
+  const [quotedMessage, setQuotedMessage] = useState<{
+    id: string;
+    preview: string;
+  } | null>(null);
+  const [composeDragActive, setComposeDragActive] = useState(false);
+  const [mobileThreadOpen, setMobileThreadOpen] = useState(false);
   const [translations, setTranslations] = useState<Record<string, string>>({});
   const [pendingAttachments, setPendingAttachments] = useState<
     PendingAttachment[]
@@ -216,6 +244,29 @@ export function MessagingPageClient() {
     }
     return messages.filter((row) => row.messageKind === "internal");
   }, [messages, internalNotesOnly]);
+
+  useEffect(() => {
+    if (!scrollToMessageId) {
+      return;
+    }
+    const element = document.getElementById(`chat-msg-${scrollToMessageId}`);
+    if (!element) {
+      return;
+    }
+    element.scrollIntoView({ behavior: "smooth", block: "center" });
+    const timer = window.setTimeout(() => setScrollToMessageId(null), 2600);
+    return () => window.clearTimeout(timer);
+  }, [messages, scrollToMessageId]);
+
+  useEffect(() => {
+    return () => {
+      for (const file of pendingAttachments) {
+        if (file.previewUrl) {
+          URL.revokeObjectURL(file.previewUrl);
+        }
+      }
+    };
+  }, [pendingAttachments]);
 
   const mentionDropdownOpen = useMemo(() => {
     if (colleagues.length === 0) {
@@ -453,6 +504,41 @@ export function MessagingPageClient() {
     }
   }
 
+  async function addPendingFiles(fileList: FileList | File[]): Promise<void> {
+    if (!activeThreadId) {
+      return;
+    }
+    for (const file of Array.from(fileList)) {
+      if (pendingAttachments.length >= 5) {
+        setErrorMessage("En fazla 5 dosya ekleyebilirsiniz.");
+        break;
+      }
+      if (file.size > 10_000_000) {
+        setErrorMessage("Tek dosya en fazla 10 MB olabilir.");
+        continue;
+      }
+      try {
+        const attachment = await readFileAsAttachment(file);
+        setPendingAttachments((current) =>
+          [...current, attachment].slice(0, 5),
+        );
+      } catch {
+        setErrorMessage("Dosya okunamadı (en fazla 5 dosya, 10 MB).");
+      }
+    }
+  }
+
+  async function jumpToSearchHit(
+    hit: MessagingSearchResultRecord,
+  ): Promise<void> {
+    setScrollToMessageId(hit.messageId);
+    setActiveThreadId(hit.threadId);
+    setMobileThreadOpen(true);
+    setThreadSearch("");
+    setChatSearchFocused(false);
+    await loadMessages(hit.threadId);
+  }
+
   const loadMessages = useCallback(
     async (threadId: string): Promise<void> => {
       setActiveThreadId(threadId);
@@ -617,16 +703,31 @@ export function MessagingPageClient() {
       return;
     }
     try {
+      let outbound = messageBody.trim();
+      if (quotedMessage) {
+        const quoteBlock = quotedMessage.preview
+          .split("\n")
+          .slice(0, 4)
+          .map((line) => `> ${line}`)
+          .join("\n");
+        outbound = `${quoteBlock}\n\n${outbound}`;
+      }
       await MessagingApiClient.sendMessage(
         accessToken,
         locale,
         activeThreadId,
-        messageBody.trim(),
+        outbound,
         pendingAttachments.length > 0 ? pendingAttachments : undefined,
         internalNote ? "internal" : "public",
       );
       setMessageBody("");
+      setQuotedMessage(null);
       setInternalNote(false);
+      for (const file of pendingAttachments) {
+        if (file.previewUrl) {
+          URL.revokeObjectURL(file.previewUrl);
+        }
+      }
       setPendingAttachments([]);
       await loadMessages(activeThreadId);
     } catch (error) {
@@ -664,6 +765,22 @@ export function MessagingPageClient() {
   }
 
   const activeThread = threads.find((t) => t.threadId === activeThreadId);
+
+  const companyLabelById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const thread of threads) {
+      if (thread.counterpartyLegalName) {
+        map.set(thread.counterpartyCompanyId, thread.counterpartyLegalName);
+      }
+    }
+    if (activeThread?.counterpartyLegalName) {
+      map.set(
+        activeThread.counterpartyCompanyId,
+        activeThread.counterpartyLegalName,
+      );
+    }
+    return map;
+  }, [threads, activeThread]);
 
   const filteredThreads = useMemo(() => {
     const query = threadSearch.trim().toLowerCase();
@@ -1071,7 +1188,13 @@ export function MessagingPageClient() {
           />
         </div>
       ) : (
-        <div className="chat-layout">
+        <div
+          className={
+            mobileThreadOpen && activeThreadId
+              ? "chat-layout chat-layout--mobile-thread"
+              : "chat-layout"
+          }
+        >
           <aside className="chat-sidebar module-panel">
             <div className="chat-sidebar-header">
               <h2 className="module-panel-title">Sohbetler</h2>
@@ -1193,18 +1316,17 @@ export function MessagingPageClient() {
                               className="chat-unified-search-option"
                               role="option"
                               onMouseDown={(event) => event.preventDefault()}
-                              onClick={() => {
-                                void loadMessages(hit.threadId);
-                                setThreadSearch("");
-                                setChatSearchFocused(false);
-                              }}
+                              onClick={() => void jumpToSearchHit(hit)}
                             >
                               <span className="chat-unified-search-option-title">
                                 {hit.counterpartyLegalName?.trim() ||
                                   shortCompanyId(hit.counterpartyCompanyId)}
                               </span>
                               <span className="chat-unified-search-option-sub">
-                                {hit.snippet}
+                                {highlightSearchSnippet(
+                                  hit.snippet,
+                                  threadSearch.trim(),
+                                )}
                               </span>
                             </button>
                           </li>
@@ -1219,7 +1341,7 @@ export function MessagingPageClient() {
               <EmptyState
                 message={
                   threads.length === 0
-                    ? "Henüz sohbet yok. Üstte firma UUID ile yeni sohbet açın."
+                    ? "Henüz sohbet yok. Üstte firma adı ile yeni sohbet açın."
                     : "Aramanızla eşleşen sohbet yok."
                 }
               />
@@ -1234,7 +1356,10 @@ export function MessagingPageClient() {
                           ? "chat-thread-item active"
                           : "chat-thread-item"
                       }
-                      onClick={() => void loadMessages(thread.threadId)}
+                      onClick={() => {
+                        setMobileThreadOpen(true);
+                        void loadMessages(thread.threadId);
+                      }}
                     >
                       <span className="chat-thread-title">
                         {thread.threadKind === "group" ? "👥 " : ""}
@@ -1263,6 +1388,18 @@ export function MessagingPageClient() {
 
           <section className="chat-main module-panel">
             <div className="chat-main-header">
+              {mobileThreadOpen && activeThreadId ? (
+                <button
+                  type="button"
+                  className="chat-mobile-back"
+                  onClick={() => {
+                    setMobileThreadOpen(false);
+                    setActiveThreadId("");
+                  }}
+                >
+                  ← Sohbetler
+                </button>
+              ) : null}
               <h2 className="module-panel-title">
                 {activeThread
                   ? activeThread.threadKind === "group"
@@ -1273,46 +1410,71 @@ export function MessagingPageClient() {
                       shortCompanyId(activeThread.counterpartyCompanyId)
                   : "Mesaj kutusu"}
               </h2>
-              {activeThread &&
-              activeThread.threadKind !== "group" &&
-              counterpartyTrust ? (
-                <div className="chat-trust-row">
-                  <span className="chat-trust-badge" title="Lerta güven skoru">
-                    Güven {counterpartyTrust.scoreValue.toFixed(1)}
-                    {counterpartyTrust.reviewCount > 0
-                      ? ` · ${counterpartyTrust.reviewCount} değerlendirme`
-                      : ""}
-                  </span>
-                  <Link
-                    className="chat-trust-link"
-                    href={`/trust?companyId=${encodeURIComponent(
-                      activeThread.counterpartyCompanyId,
-                    )}`}
-                  >
-                    Profil
-                  </Link>
-                </div>
-              ) : null}
             </div>
-            {listingCard ? (
-              <div className="chat-listing-card" aria-label="İlan kartı">
-                <p className="chat-listing-card-route">{listingCard.routeLabel}</p>
-                <p className="chat-listing-card-meta">
-                  {listingCard.equipmentTypeCode} · {listingCard.weightTonnes} t
-                  · yükleme {listingCard.loadingDateStart}
-                  {listingCard.priceAmount
-                    ? ` · ${listingCard.priceAmount} ${listingCard.priceCurrencyCode}`
-                    : ""}
-                </p>
-                {listingCard.priceAmount ? (
-                  <button
-                    type="button"
-                    className="btn-account-primary chat-listing-accept-btn"
-                    disabled={acceptOfferBusy || isBusy}
-                    onClick={() => void acceptListingFixedPrice()}
-                  >
-                    {acceptOfferBusy ? "Kabul ediliyor…" : "Sabit fiyatı kabul et"}
-                  </button>
+            {activeThreadId &&
+            (listingCard ||
+              (counterpartyTrust && activeThread?.threadKind !== "group")) ? (
+              <div className="chat-context-pin" aria-label="İş bağlamı">
+                <button
+                  type="button"
+                  className="chat-context-pin-toggle"
+                  aria-expanded={!contextPinCollapsed}
+                  onClick={() => setContextPinCollapsed((value) => !value)}
+                >
+                  İş bağlamı {contextPinCollapsed ? "▸" : "▾"}
+                </button>
+                {!contextPinCollapsed ? (
+                  <div className="chat-context-pin-body">
+                    {listingCard ? (
+                      <div className="chat-listing-card chat-listing-card--inline">
+                        <p className="chat-listing-card-route">
+                          {listingCard.routeLabel}
+                        </p>
+                        <p className="chat-listing-card-meta">
+                          {listingCard.equipmentTypeCode} ·{" "}
+                          {listingCard.weightTonnes} t · yükleme{" "}
+                          {listingCard.loadingDateStart}
+                          {listingCard.priceAmount
+                            ? ` · ${listingCard.priceAmount} ${listingCard.priceCurrencyCode}`
+                            : ""}
+                        </p>
+                        {listingCard.priceAmount ? (
+                          <button
+                            type="button"
+                            className="btn-account-primary chat-listing-accept-btn"
+                            disabled={acceptOfferBusy || isBusy}
+                            onClick={() => void acceptListingFixedPrice()}
+                          >
+                            {acceptOfferBusy
+                              ? "Kabul ediliyor…"
+                              : "Sabit fiyatı kabul et"}
+                          </button>
+                        ) : null}
+                      </div>
+                    ) : null}
+                    {counterpartyTrust &&
+                    activeThread?.threadKind !== "group" ? (
+                      <div className="chat-trust-row">
+                        <span
+                          className="chat-trust-badge"
+                          title="Lerta güven skoru"
+                        >
+                          Güven {counterpartyTrust.scoreValue.toFixed(1)}
+                          {counterpartyTrust.reviewCount > 0
+                            ? ` · ${counterpartyTrust.reviewCount} değerlendirme`
+                            : ""}
+                        </span>
+                        <Link
+                          className="chat-trust-link"
+                          href={`/trust?companyId=${encodeURIComponent(
+                            activeThread?.counterpartyCompanyId ?? "",
+                          )}`}
+                        >
+                          Profil
+                        </Link>
+                      </div>
+                    ) : null}
+                  </div>
                 ) : null}
               </div>
             ) : null}
@@ -1380,15 +1542,29 @@ export function MessagingPageClient() {
                 />
               ) : (
                 <ul className="chat-message-list">
-                  {displayedMessages.map((message) => {
+                  {displayedMessages.map((message, messageIndex) => {
                     const isMine =
                       session?.companyId &&
                       message.senderCompanyId === session.companyId;
+                    const dayKey = dayKeyFromIso(message.createdAt);
+                    const prevDay =
+                      messageIndex > 0
+                        ? dayKeyFromIso(
+                            displayedMessages[messageIndex - 1].createdAt,
+                          )
+                        : "";
+                    const showDay = dayKey !== prevDay;
+                    const companyLabel =
+                      companyLabelById.get(message.senderCompanyId) ??
+                      shortCompanyId(message.senderCompanyId);
                     const bubbleClass = [
                       "chat-bubble",
                       isMine ? "chat-bubble--mine" : "",
                       message.messageKind === "internal"
                         ? "chat-bubble--internal"
+                        : "",
+                      scrollToMessageId === message.id
+                        ? "chat-bubble--highlight"
                         : "",
                     ]
                       .filter(Boolean)
@@ -1402,10 +1578,39 @@ export function MessagingPageClient() {
                         }),
                       );
                     return (
-                      <li key={message.id} className={bubbleClass}>
+                      <Fragment key={message.id}>
+                        {showDay ? (
+                          <li
+                            key={`day-${dayKey}`}
+                            className="chat-day-separator"
+                            aria-hidden
+                          >
+                            {formatChatDayLabel(message.createdAt, locale)}
+                          </li>
+                        ) : null}
+                        <li
+                          key={message.id}
+                          id={`chat-msg-${message.id}`}
+                          className={bubbleClass}
+                        >
+                          <div className="chat-bubble-row">
+                            <span
+                              className={
+                                isMine
+                                  ? "chat-avatar chat-avatar--mine"
+                                  : "chat-avatar"
+                              }
+                              aria-hidden
+                            >
+                              {companyInitials(companyLabel)}
+                            </span>
+                            <div className="chat-bubble-content">
                         <span className="chat-bubble-meta">
-                          {shortCompanyId(message.senderCompanyId)} ·{" "}
-                          {new Date(message.createdAt).toLocaleString(locale)}
+                          {companyLabel} ·{" "}
+                          {new Date(message.createdAt).toLocaleString(locale, {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
                           {isMine ? (
                             <span
                               className={
@@ -1483,6 +1688,20 @@ export function MessagingPageClient() {
                           </p>
                         ) : null}
                         <div className="chat-message-actions">
+                          {!isMine && !message.deleted ? (
+                            <button
+                              type="button"
+                              className="chat-translate-btn"
+                              onClick={() =>
+                                setQuotedMessage({
+                                  id: message.id,
+                                  preview: message.bodyText.slice(0, 240),
+                                })
+                              }
+                            >
+                              Yanıtla
+                            </button>
+                          ) : null}
                           {["en", "de", "ru"].map((target) => (
                             <button
                               key={target}
@@ -1520,19 +1739,54 @@ export function MessagingPageClient() {
                             </>
                           ) : null}
                         </div>
-                      </li>
+                            </div>
+                          </div>
+                        </li>
+                      </Fragment>
                     );
                   })}
                 </ul>
               )}
             </div>
             <div
-              className={
-                internalNote
-                  ? "chat-compose-dock chat-compose-dock--internal"
-                  : "chat-compose-dock"
-              }
+              className={[
+                "chat-compose-dock",
+                internalNote ? "chat-compose-dock--internal" : "",
+                composeDragActive ? "chat-compose-dock--drag" : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              onDragOver={(event) => {
+                event.preventDefault();
+                if (activeThreadId) {
+                  setComposeDragActive(true);
+                }
+              }}
+              onDragLeave={() => setComposeDragActive(false)}
+              onDrop={(event) => {
+                event.preventDefault();
+                setComposeDragActive(false);
+                if (event.dataTransfer.files.length > 0) {
+                  void addPendingFiles(event.dataTransfer.files);
+                }
+              }}
             >
+              {quotedMessage ? (
+                <div className="chat-quote-preview" role="status">
+                  <span className="chat-quote-preview-label">Yanıt</span>
+                  <p className="chat-quote-preview-text">
+                    {quotedMessage.preview}
+                  </p>
+                  <button
+                    type="button"
+                    className="chat-quote-preview-remove"
+                    aria-label="Alıntıyı kaldır"
+                    onClick={() => setQuotedMessage(null)}
+                  >
+                    ×
+                  </button>
+                </div>
+              ) : null}
               {internalNote ? (
                 <p className="chat-compose-internal-banner" role="status">
                   İç not modu — yalnızca şirketiniz görür, karşı tarafa gitmez.
@@ -1547,6 +1801,17 @@ export function MessagingPageClient() {
                 <ul className="chat-pending-attachments">
                   {pendingAttachments.map((file) => (
                     <li key={file.filename} className="chat-pending-chip">
+                      {file.previewUrl ? (
+                        <img
+                          className="chat-pending-thumb"
+                          src={file.previewUrl}
+                          alt=""
+                        />
+                      ) : file.contentType.includes("pdf") ? (
+                        <span className="chat-pending-pdf" aria-hidden>
+                          PDF
+                        </span>
+                      ) : null}
                       <span className="chat-pending-chip-name" title={file.filename}>
                         📎 {file.filename}
                       </span>
@@ -1695,26 +1960,11 @@ export function MessagingPageClient() {
                     accept="image/*,application/pdf,text/plain,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
                     disabled={!activeThreadId || pendingAttachments.length >= 5}
                     onChange={(event) => {
-                      const file = event.target.files?.[0];
+                      const files = event.target.files;
                       event.target.value = "";
-                      if (!file) {
-                        return;
+                      if (files && files.length > 0) {
+                        void addPendingFiles(files);
                       }
-                      if (file.size > 10_000_000) {
-                        setErrorMessage("Tek dosya en fazla 10 MB olabilir.");
-                        return;
-                      }
-                      void readFileAsAttachment(file)
-                        .then((attachment) => {
-                          setPendingAttachments((current) =>
-                            [...current, attachment].slice(0, 5),
-                          );
-                        })
-                        .catch(() =>
-                          setErrorMessage(
-                            "Dosya okunamadı (en fazla 5 dosya, 10 MB).",
-                          ),
-                        );
                     }}
                   />
                 </label>
