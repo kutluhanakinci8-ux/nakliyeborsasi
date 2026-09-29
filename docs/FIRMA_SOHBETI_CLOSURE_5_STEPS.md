@@ -8,11 +8,19 @@
 | 4 | FS-8.3 SSE | `API_BASE=… bash scripts/run-prod-fs83-two-instance-smoke.sh` | İkinci instance: `SMOKE_SECOND_API_PORT=3012` |
 | 5 | FS-12 WA sandbox | `verify-messaging-wa-bridge-sandbox.sh` | Ops: `MESSAGING_WHATSAPP_BRIDGE_WEBHOOK_URL` |
 
-Tek özet:
+Tek özet (**VPS’te önce kurulum dizinine geçin** — `~/` veya `/root` içinde script yok):
 
 ```bash
+cd /var/www/nakliyeborsasi
+git fetch origin main && git reset --hard origin/main
+# Tam deploy (önerilen): DEPLOY_BRANCH=main bash scripts/deploy-production-vps.sh /var/www/nakliyeborsasi
+
 API_BASE=https://app.lerta.com.tr/api/v1 \
   MESSAGING_TEST_EMAIL=yukveren01@test.nakliyeborsasi.local \
   MESSAGING_TEST_PASSWORD='TestPass123!' \
   bash scripts/verify-firma-sohbeti-closure-5.sh
+
+bash scripts/report-firma-sohbeti-pilot-nps.sh
 ```
+
+Mac’ten tek seferde güncelleme: repo kökünde `bash scripts/deploy-vps-ssh.sh` (`VPS_SSH_PRIVATE_KEY` veya şifre ile).
