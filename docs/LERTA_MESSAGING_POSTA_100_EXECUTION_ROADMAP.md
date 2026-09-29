@@ -17,7 +17,7 @@
 | **MP-1** | `maturity-p1` | API mimari sağlık (TypeORM global) | API **82→95%** | MP-0 ✅ |
 | **MP-2** | `maturity-p2` | WhatsApp FS-12 teslim & prod | WA **55→90%** | MP-1 ◐ kod |
 | **MP-3** | `maturity-p3` | Vitest unit + Playwright E2E iskelet | Test **40→85%**, kod **72→85%** | MP-1 ◐ core unit |
-| **MP-4** | `maturity-p4` | `MessagingPageClient` / `MailClient` bölme | FE mimari **70→92%** | MP-3 (smoke) |
+| **MP-4** | `maturity-p4` | `MessagingPageClient` / `MailClient` bölme | FE mimari **70→92%** | MP-3 ◐ sohbet |
 | **MP-5** | `maturity-p5` | Gözlemlenebilirlik (metrik, SLO, dashboard) | Obs **72→88%** | MP-1 |
 | **MP-6** | `maturity-p6` | ESP analitik & deliverability UI | Postmark **69→88%** | MP-5 |
 | **MP-7** | `maturity-p7` | Erişilebilirlik (axe → WCAG AA kritik) | A11y **75→92%** | MP-4 |
@@ -90,12 +90,15 @@
 
 **Amaç:** Bakım riskini düşür; premium UI sprint’ini sürdürülebilir kıl.
 
-| Parça | Hedef modül |
-|-------|-------------|
-| Thread list + selection | `messaging/ThreadListPanel.tsx` + `useMessagingThreads.ts` |
-| Message pane + compose | `messaging/ConversationPanel.tsx` + `useMessagingMessages.ts` |
-| Deep link / URL state | `useMessagingRouteState.ts` |
-| MailClient | `mail-web` altında benzer bölme (inbox / reading / compose) |
+| Parça | Modül | Durum |
+|-------|--------|--------|
+| Route / sekme / zemin | `hooks/useMessagingPageRoute.ts` | ✅ |
+| Sohbet state + API | `hooks/useMessagingChatController.ts` | ✅ |
+| Yardımcılar | `lib/messagingPageHelpers.ts` | ✅ |
+| Thread listesi | `components/messaging/MessagingThreadSidebar.tsx` | ✅ |
+| Konuşma + compose | `components/messaging/MessagingConversationPanel.tsx` | ✅ |
+| Sayfa kabuğu | `MessagingPageClient.tsx` (**~245** satır) | ✅ |
+| `mail-web` MailClient | inbox / reading / compose bölme | ◐ sırada |
 
 **Kabul:** `MessagingPageClient.tsx` **<800** satır · davranış değişmez · MP-3 E2E yeşil.
 
