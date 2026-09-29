@@ -116,9 +116,11 @@ export function MailComposePresetsPanel({ accessToken }: Props) {
                   {item.isDefault ? "Varsayılanı kaldır" : "Varsayılan yap"}
                 </button>
               ) : null}
-              <button type="button" onClick={() => void onDelete(item.id)}>
-                Sil
-              </button>
+              {item.isSystem ? null : (
+                <button type="button" onClick={() => void onDelete(item.id)}>
+                  Sil
+                </button>
+              )}
             </div>
           </li>
         ))}
@@ -132,11 +134,17 @@ export function MailComposePresetsPanel({ accessToken }: Props) {
       <h3>İmzalar</h3>
       <p className="preset-hint">Kişisel imzalarınız; yaz ekranından seçilebilir.</p>
       {renderList(signatures, true)}
-      <h3>Şablonlar</h3>
+      <h3>Hazır şablonlar</h3>
       <p className="preset-hint">
-        Kurumsal şablonlar (posta yöneticisi oluşturur).
+        Tüm kullanıcılar için nakliye odaklı sistem şablonları (yaz ekranından
+        seçilir).
       </p>
-      {renderList(templates, false)}
+      {renderList(templates.filter((row) => row.isSystem), false)}
+      <h3>Kurumsal şablonlar</h3>
+      <p className="preset-hint">
+        Posta yöneticisi ek şablon tanımlayabilir.
+      </p>
+      {renderList(templates.filter((row) => !row.isSystem), false)}
       <h3>Yeni kayıt</h3>
       <div className="preset-form">
         <label>
