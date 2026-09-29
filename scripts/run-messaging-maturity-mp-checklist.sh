@@ -27,6 +27,7 @@ run_step "MP-5 communications ops" bash "${ROOT}/scripts/verify-communications-o
 run_step "MP-6 deliverability" bash "${ROOT}/scripts/verify-mail-deliverability-mp6.sh"
 run_step "MP-7 a11y (axe)" bash "${ROOT}/scripts/verify-messaging-a11y-mp7.sh"
 run_step "MP-8 hub PWA" bash "${ROOT}/scripts/verify-messaging-hub-pwa-mp8.sh"
+run_step "MP-9 security compliance" bash "${ROOT}/scripts/verify-security-compliance-mp9.sh"
 
 if [[ "${SKIP_PLAYWRIGHT:-}" != "1" ]]; then
   run_step "MP-3 Playwright smoke (public)" bash "${ROOT}/scripts/verify-messaging-playwright-e2e.sh"

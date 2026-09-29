@@ -48,6 +48,11 @@ SKIP_AXE=0 bash scripts/verify-messaging-a11y-mp7.sh
 # MP-8 PWA (posta shell + hub manifest; Lighthouse varsayılan kapalı)
 bash scripts/verify-messaging-hub-pwa-mp8.sh
 # SKIP_LIGHTHOUSE=0 LIGHTHOUSE_PWA_MIN=85 bash scripts/verify-messaging-hub-pwa-mp8.sh
+
+# MP-9 güvenlik dok + due diligence ZIP
+bash scripts/verify-security-compliance-mp9.sh
+bash scripts/pack-customer-due-diligence-mp9.sh
+# Çeyreklik: SKIP_NPM_AUDIT=0 bash scripts/verify-security-compliance-mp9.sh
 ```
 
 ## Playwright E2E (genelde VPS’te değil)

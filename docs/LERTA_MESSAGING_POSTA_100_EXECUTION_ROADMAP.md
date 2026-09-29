@@ -157,7 +157,7 @@
 
 ---
 
-## MP-8 — Mobil & PWA ◐
+## MP-8 — Mobil & PWA ✅
 
 **Amaç:** Native kararını dokümante et; PWA’yı WA/Slack mobil **kabul edilebilir** seviyeye çek.
 
@@ -175,17 +175,21 @@
 
 ---
 
-## MP-9 — Güvenlik & uyumluluk dokümantasyonu
+## MP-9 — Güvenlik & uyumluluk dokümantasyonu ◐
 
 **Amaç:** TR KVKK yeterliliğini **süreç** tarafında görünür kıl (SOC2 Type II değil).
 
-| Görev | Not |
-|-------|-----|
-| Incident response + veri işleme envanteri | `docs/SECURITY_*` |
-| Audit log saklama + export SLA | operatör |
-| Pen-test / dependency cadence | quarterly checklist |
+| Görev | Durum | Not |
+|-------|--------|-----|
+| SOC2-lite indeks | ✅ | `docs/SECURITY_SOC2_LITE_OVERVIEW.md` |
+| Incident response | ✅ | `SECURITY_INCIDENT_RESPONSE.md` |
+| Veri işleme envanteri (KVKK) | ✅ | `SECURITY_DATA_PROCESSING_INVENTORY.md` |
+| Audit saklama + export SLA | ✅ | `SECURITY_AUDIT_RETENTION_EXPORT.md` |
+| Çeyreklik pen-test / npm audit | ✅ | `SECURITY_QUARTERLY_CHECKLIST.md` |
+| DR evidence hizası | ✅ | `verify-dr-drill-evidence.sh` (VPS) |
+| Müşteri due diligence ZIP | ✅ | `pack-customer-due-diligence-mp9.sh` |
 
-**Kabul:** Güvenlik dok **≥95%** · müşteri due diligence paketi ZIP.
+**Kabul:** `verify-security-compliance-mp9.sh` PASS · güvenlik dok **≥95%** · ZIP üretilebilir.
 
 ---
 
