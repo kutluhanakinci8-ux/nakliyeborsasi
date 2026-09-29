@@ -19,7 +19,7 @@
 | **MP-3** | `maturity-p3` | Vitest unit + Playwright E2E iskelet | Test **40→85%**, kod **72→85%** | MP-1 ◐ unit+e2e smoke |
 | **MP-4** | `maturity-p4` | `MessagingPageClient` / `MailClient` bölme | FE mimari **70→92%** | MP-3 ✅ sohbet + posta giriş |
 | **MP-5** | `maturity-p5` | Gözlemlenebilirlik (metrik, SLO, dashboard) | Obs **72→88%** | MP-1 ✅ |
-| **MP-6** | `maturity-p6` | ESP analitik & deliverability UI | Postmark **69→88%** | MP-5 |
+| **MP-6** | `maturity-p6` | ESP analitik & deliverability UI | Postmark **69→88%** | MP-5 ◐ |
 | **MP-7** | `maturity-p7` | Erişilebilirlik (axe → WCAG AA kritik) | A11y **75→92%** | MP-4 |
 | **MP-8** | `maturity-p8` | PWA polish + native shell kararı | Mobil **75→88%** | MP-4 |
 | **MP-9** | `maturity-p9` | SOC2-lite runbook + güvenlik dokümanı | Güvenlik **85→95%** dok | MP-5 |
@@ -124,17 +124,19 @@
 
 ---
 
-## MP-6 — ESP analitik & deliverability
+## MP-6 — ESP analitik & deliverability ◐
 
 **Amaç:** Postmark/SendGrid **operatör** seviyesine yaklaş (pazarlama segmentasyonu hariç).
 
-| Görev | Not |
-|-------|-----|
-| Open/click pipeline doğrulama (tüm org metadata) | PM-10 devamı |
-| Deliverability hub UI polish | bounce oranı, DMARC aggregate |
-| CSV export + tarih filtresi smoke | admin |
+| Görev | Durum | Not |
+|-------|--------|-----|
+| Org metadata ile engagement özet | ✅ | `getEngagementSummary(since, organizationId)` |
+| Engagement CSV `organizationId` kolonu + filtre | ✅ | `engagement-export?organizationId=` |
+| Deliverability hub (org + DMARC + dönem) | ✅ | `deliverability-hub?days=` · `MailDeliverabilityPanel` |
+| Doğrulama | ✅ | `verify-mail-deliverability-mp6.sh` |
+| Admin trend grafikleri (önceki dönem Δ) | ◐ | `AdminMailAnalyticsPanel` 7/30 — 90g isteğe bağlı |
 
-**Kabul:** Benchmark admin **≥88%** · DMARC entity global kayıt (MP-1).
+**Kabul:** Benchmark admin **≥88%** · DMARC entity global kayıt (MP-1) ✅
 
 ---
 

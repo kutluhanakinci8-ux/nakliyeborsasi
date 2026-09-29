@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   fetchDeliverabilityHub,
   type MailDeliverabilityHub,
@@ -10,15 +10,27 @@ type Props = {
   accessToken: string;
 };
 
+const PERIOD_OPTIONS = [7, 30, 90] as const;
+
 export function MailDeliverabilityPanel({ accessToken }: Props) {
+  const [days, setDays] = useState<number>(30);
   const [hub, setHub] = useState<MailDeliverabilityHub | null>(null);
   const [error, setError] = useState("");
 
+  const load = useCallback(async () => {
+    setError("");
+    try {
+      const payload = await fetchDeliverabilityHub(accessToken, days);
+      setHub(payload.hub);
+    } catch {
+      setError("Teslimat özeti yüklenemedi.");
+      setHub(null);
+    }
+  }, [accessToken, days]);
+
   useEffect(() => {
-    void fetchDeliverabilityHub(accessToken)
-      .then((payload) => setHub(payload.hub))
-      .catch(() => setError("Teslimat özeti yüklenemedi."));
-  }, [accessToken]);
+    void load();
+  }, [load]);
 
   if (error) {
     return <p className="login-error">{error}</p>;
@@ -27,13 +39,36 @@ export function MailDeliverabilityPanel({ accessToken }: Props) {
     return <p>Yükleniyor…</p>;
   }
 
+  const engagement = hub.engagement ?? hub.engagement30d;
+
   return (
     <div className="mail-deliverability-panel">
       <p className="mail-settings-lead">
-        SPF, DKIM, bounce ve suppression özeti (son 30 gün gönderim istatistikleri).
+        Kurumsal gönderim itibarı: DNS, engagement (açılma/tıklama/bounce), DMARC
+        aggregate ve suppression — yalnızca bu organizasyonun outbox kayıtları.
       </p>
+      <div className="mail-deliverability-period">
+        {PERIOD_OPTIONS.map((option) => (
+          <button
+            key={option}
+            type="button"
+            className={
+              days === option
+                ? "mail-deliverability-period-btn is-active"
+                : "mail-deliverability-period-btn"
+            }
+            onClick={() => setDays(option)}
+          >
+            {option} gün
+          </button>
+        ))}
+      </div>
       <p>
         Skor: <strong>{hub.score}/100</strong>
+        <span className="mail-deliverability-muted">
+          {" "}
+          (son {hub.periodDays ?? days} gün)
+        </span>
       </p>
       {hub.dns ? (
         <ul className="mail-deliverability-dns">
@@ -45,12 +80,31 @@ export function MailDeliverabilityPanel({ accessToken }: Props) {
       ) : (
         <p>Özel domain bağlı değil.</p>
       )}
+      <h4 className="mail-deliverability-subhead">Engagement</h4>
       <ul>
-        <li>Gönderim (30g): {hub.engagement30d.sentInPeriod}</li>
-        <li>Bounce: {hub.engagement30d.bounceRatePercent ?? "—"}%</li>
-        <li>Açılma: {hub.engagement30d.openRatePercent ?? "—"}%</li>
+        <li>Gönderim: {engagement?.sentInPeriod ?? "—"}</li>
+        <li>Bounce: {engagement?.bounceRatePercent ?? "—"}%</li>
+        <li>Açılma: {engagement?.openRatePercent ?? "—"}%</li>
+        <li>Tıklama: {engagement?.clickRatePercent ?? "—"}%</li>
         <li>Suppression: {hub.suppressionCount}</li>
-        <li>DMARC rapor (90g): {hub.dmarcReports90d}</li>
+      </ul>
+      {engagement?.bounceByClass &&
+      Object.keys(engagement.bounceByClass).length > 0 ? (
+        <ul className="mail-deliverability-bounce-class">
+          {Object.entries(engagement.bounceByClass).map(([cls, count]) => (
+            <li key={cls}>
+              Bounce ({cls}): {count}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      <h4 className="mail-deliverability-subhead">DMARC aggregate</h4>
+      <ul>
+        <li>Rapor satırı ({hub.periodDays ?? days}g): {hub.dmarc?.reportRows ?? 0}</li>
+        <li>İleti sayısı: {hub.dmarc?.messageCount ?? 0}</li>
+        <li>DKIM pass: {hub.dmarc?.dkimPassRatePercent ?? "—"}%</li>
+        <li>SPF pass: {hub.dmarc?.spfPassRatePercent ?? "—"}%</li>
+        <li>Toplam rapor (tüm dönemler): {hub.dmarcReports90d}</li>
       </ul>
       {hub.hintsTr.length > 0 ? (
         <ul className="mail-deliverability-hints">

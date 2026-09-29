@@ -281,9 +281,14 @@ export class CompanyMailInboxController {
   @Get("deliverability-hub")
   public async deliverabilityHub(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Query("days") daysRaw?: string,
   ) {
+    const days = daysRaw ? Number.parseInt(daysRaw, 10) : 30;
     return {
-      hub: await this.mailDeliverabilityHubService.buildHub(user.companyId),
+      hub: await this.mailDeliverabilityHubService.buildHub(
+        user.companyId,
+        Number.isFinite(days) ? days : 30,
+      ),
     };
   }
 

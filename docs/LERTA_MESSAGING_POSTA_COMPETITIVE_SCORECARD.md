@@ -30,6 +30,7 @@
 | CI / prod doğrulama | Parity + FS smoke + VPS deploy | **~90%** | KOBİ rakiplerinin çoğundan iyi |
 | Güvenlik | JWT, TOTP posta, KVKK, audit, rate limit | **~85%** | TR kurumsal yeterli; SOC2 süreç MP-9 |
 | Gözlemlenebilirlik | SSE stats, ops snapshot, SLO smoke | **~88%** | MP-5 runbook; tam APM MP-10 sonrası |
+| ESP / deliverability (operatör) | Org engagement, DMARC hub, CSV | **~88%** | MP-6; pazarlama segmentasyonu hariç |
 | Dokümantasyon | `docs/MAIL_*`, `MESSAGING_*` | **~88%** | Eski §2.2 mention satırı güncellendi — MP-0 |
 | **Ağırlıklı kod kalitesi** | — | **~72%** | Refactor + unit test en büyük açık |
 
