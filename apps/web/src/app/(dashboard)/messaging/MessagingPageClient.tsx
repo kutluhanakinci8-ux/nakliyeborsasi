@@ -13,6 +13,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { MessagingMailWebEmbed } from "../../../components/messaging/MessagingMailWebEmbed";
 import { ChatMessageBody } from "../../../components/messaging/ChatMessageBody";
 import { ChatMessageActionBar } from "../../../components/messaging/ChatMessageActionBar";
+import { ChatStatsRail } from "../../../components/messaging/ChatStatsRail";
 import { ChatThreadListItem } from "../../../components/messaging/ChatThreadListItem";
 import {
   IconChannels,
@@ -2275,63 +2276,13 @@ export function MessagingPageClient() {
               </p>
             </div>
           </section>
-          <aside
-            className="chat-stats-rail module-panel"
-            aria-label="Sohbet özet göstergeleri"
-          >
-            <div
-              className="chat-stat-glyph"
-              title="Aktif sohbet"
-              aria-label={`Aktif sohbet: ${threads.length}`}
-            >
-              <span className="chat-stat-glyph-icon" aria-hidden>💬</span>
-              <span className="chat-stat-glyph-value">{threads.length}</span>
-            </div>
-            <div
-              className={
-                totalUnread > 0
-                  ? "chat-stat-glyph chat-stat-glyph--highlight"
-                  : "chat-stat-glyph"
-              }
-              title="Okunmamış"
-              aria-label={`Okunmamış: ${totalUnread}`}
-            >
-              <span className="chat-stat-glyph-icon" aria-hidden>●</span>
-              <span className="chat-stat-glyph-value">{totalUnread}</span>
-            </div>
-            <div
-              className="chat-stat-glyph"
-              title="Bu sohbette mesaj"
-              aria-label={`Bu sohbette mesaj: ${messages.length}`}
-            >
-              <span className="chat-stat-glyph-icon" aria-hidden>✉</span>
-              <span className="chat-stat-glyph-value">{messages.length}</span>
-            </div>
-            <div
-              className="chat-stat-glyph chat-stat-glyph--secure"
-              title="Oturum koruması (JWT)"
-              aria-label="Oturum koruması aktif"
-            >
-              <span className="chat-stat-glyph-icon" aria-hidden>🔒</span>
-              <span className="chat-stat-glyph-value chat-stat-glyph-value--tiny">
-                JWT
-              </span>
-            </div>
-            {isCompanyOwner ? (
-              <button
-                type="button"
-                className="chat-stat-glyph chat-stat-glyph--action"
-                title="KVKK dışa aktar (JSON)"
-                aria-label="KVKK dışa aktar JSON"
-                onClick={() => void handleExportArchive()}
-              >
-                <span className="chat-stat-glyph-icon" aria-hidden>⬇</span>
-                <span className="chat-stat-glyph-value chat-stat-glyph-value--tiny">
-                  KVKK
-                </span>
-              </button>
-            ) : null}
-          </aside>
+          <ChatStatsRail
+            threadCount={threads.length}
+            totalUnread={totalUnread}
+            activeMessageCount={messages.length}
+            isCompanyOwner={isCompanyOwner}
+            onExportKvkk={() => void handleExportArchive()}
+          />
         </div>
       )}
       <ChatMessageEditModal
