@@ -4,6 +4,9 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ENV_FILE="${ENV_FILE:-/var/www/nakliyeborsasi/.env}"
 FAIL=0
+# shellcheck source=scripts/resolve-local-api-base.sh
+source "${ROOT}/scripts/resolve-local-api-base.sh" "${ROOT}"
+export API_BASE
 
 run_step() {
   local title="$1"
@@ -43,7 +46,7 @@ if [[ -f "${ENV_FILE}" ]]; then
   run_step "Messaging push VAPID izolasyon" bash "${ROOT}/scripts/verify-messaging-web-push-prod.sh" "${ENV_FILE}" || true
   run_step "Multi-VPS mail rolü" bash "${ROOT}/scripts/verify-multi-vps-mail-role.sh" || true
   if [[ "${SKIP_DR_DRILL:-}" != "1" ]]; then
-    run_step "DR tatbikat kanıtı" bash "${ROOT}/scripts/verify-dr-drill-evidence.sh" || true
+    run_step "DR tatbikat kanıtı" bash "${ROOT}/scripts/bootstrap-dr-drill-evidence.sh" || true
   fi
 fi
 

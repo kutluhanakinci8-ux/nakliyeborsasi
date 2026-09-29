@@ -2,7 +2,8 @@
 # FS-1: üretim güveni — status bayrakları, XLSX ek politikası, SSE smoke.
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-API_BASE="${API_BASE:-http://127.0.0.1:3000/api/v1}"
+# shellcheck source=scripts/resolve-local-api-base.sh
+source "${ROOT}/scripts/resolve-local-api-base.sh" "${ROOT}"
 
 echo "== FS-1 firma sohbeti verify =="
 echo "API: ${API_BASE}/messaging/status"

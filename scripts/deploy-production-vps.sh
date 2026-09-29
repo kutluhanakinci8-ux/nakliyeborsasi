@@ -98,6 +98,31 @@ if [[ -x scripts/nginx-app-lerta-com-tr.sh ]]; then
   bash scripts/nginx-app-lerta-com-tr.sh || true
 fi
 
+if [[ -x scripts/bootstrap-dr-drill-evidence.sh ]]; then
+  bash scripts/bootstrap-dr-drill-evidence.sh || true
+fi
+
+if [[ "${LERTA_INSTALL_AUTO_DEPLOY_CRON:-1}" == "1" ]] && [[ -x scripts/install-vps-auto-deploy-cron.sh ]]; then
+  bash scripts/install-vps-auto-deploy-cron.sh "$INSTALL_DIR" || true
+fi
+
+# shellcheck source=scripts/resolve-local-api-base.sh
+source "${INSTALL_DIR}/scripts/resolve-local-api-base.sh" "${INSTALL_DIR}"
+export API_BASE INSTALL_DIR ENV_FILE="${INSTALL_DIR}/.env"
+
+echo "=== Post-deploy doğrulama (API_BASE=${API_BASE}) ==="
+for verify in verify-firma-sohbeti-fs1.sh verify-firma-sohbeti-fs2.sh verify-firma-sohbeti-fs3.sh \
+  verify-firma-sohbeti-fs4.sh verify-firma-sohbeti-fs5.sh verify-firma-sohbeti-fs6.sh verify-firma-sohbeti-fs7.sh; do
+  if [[ -x "${INSTALL_DIR}/scripts/${verify}" ]]; then
+    API_BASE="${API_BASE}" bash "${INSTALL_DIR}/scripts/${verify}" || echo "UYARI: ${verify} başarısız"
+  fi
+done
+
+if [[ -x "${INSTALL_DIR}/scripts/run-mail-messaging-parity-wave2-checklist.sh" ]]; then
+  SKIP_LIGHTHOUSE="${SKIP_LIGHTHOUSE:-1}" API_BASE="${API_BASE}" \
+    bash "${INSTALL_DIR}/scripts/run-mail-messaging-parity-wave2-checklist.sh" || true
+fi
+
 echo "=== Production deploy bitti ==="
 echo "  app:    https://app.lerta.com.tr/messaging?tab=email"
 echo "  posta:  https://posta.lerta.com.tr/login"

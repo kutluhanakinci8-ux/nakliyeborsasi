@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
-API_BASE="${API_BASE:-http://127.0.0.1:3000/api/v1}"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck source=scripts/resolve-local-api-base.sh
+source "${ROOT}/scripts/resolve-local-api-base.sh" "${ROOT}"
 echo "== FS-7 verify =="
 payload="$(curl -fsS "${API_BASE}/messaging/status")"
 python3 <<'PY' "${payload}"

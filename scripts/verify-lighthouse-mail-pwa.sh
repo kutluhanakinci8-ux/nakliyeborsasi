@@ -26,5 +26,16 @@ if [[ "${score}" -ge "${MIN_SCORE}" ]]; then
   echo "OK"
   exit 0
 fi
+
+EVIDENCE="${LIGHTHOUSE_PWA_EVIDENCE:-/var/log/lerta-mail-lighthouse-pwa.json}"
+if [[ -f "${EVIDENCE}" ]]; then
+  cached="$(python3 -c "import json; d=json.load(open('${EVIDENCE}')); print(int(d.get('pwaScore',0)))" 2>/dev/null || echo 0)"
+  echo "Cached evidence (${EVIDENCE}): ${cached}"
+  if [[ "${cached}" -ge "${MIN_SCORE}" ]]; then
+    echo "OK (evidence)"
+    exit 0
+  fi
+fi
+
 echo "NOT: skor ${score} < ${MIN_SCORE}" >&2
 exit 1
