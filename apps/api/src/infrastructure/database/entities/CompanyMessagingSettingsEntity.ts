@@ -13,6 +13,12 @@ export class CompanyMessagingSettingsEntity {
   @Column({ name: "retention_mode", type: "varchar", length: 16, default: "archive" })
   public retentionMode!: MessagingRetentionMode;
 
+  @Column({ name: "slack_incoming_webhook_url", type: "varchar", length: 2048, nullable: true })
+  public slackIncomingWebhookUrl!: string | null;
+
+  @Column({ name: "slack_bridge_enabled", type: "boolean", default: false })
+  public slackBridgeEnabled!: boolean;
+
   @UpdateDateColumn({ name: "updated_at", type: "timestamptz" })
   public updatedAt!: Date;
 }

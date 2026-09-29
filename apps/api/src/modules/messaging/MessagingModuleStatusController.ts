@@ -3,12 +3,14 @@ import { ConfigService } from "@nestjs/config";
 import { resolveMessagingVapidFromEnv } from "../../infrastructure/push/messagingVapidEnv";
 import { MessagingAttachmentStorageService } from "./MessagingAttachmentStorageService";
 import { MessagingRealtimeHubService } from "./MessagingRealtimeHubService";
+import { MessagingOptionalWsService } from "./MessagingOptionalWsService";
 
 @Controller("messaging")
 export class MessagingModuleStatusController {
   public constructor(
     private readonly configService: ConfigService,
     private readonly messagingRealtimeHubService: MessagingRealtimeHubService,
+    private readonly messagingOptionalWsService: MessagingOptionalWsService,
   ) {}
 
   @Get("status")
@@ -24,6 +26,7 @@ export class MessagingModuleStatusController {
     };
     webPush: { enabled: boolean; isolatedVapid: boolean };
     sse: ReturnType<MessagingRealtimeHubService["getStats"]>;
+    ws: { enabled: boolean; port: number | null };
   } {
     const deepl = Boolean(
       this.configService.get<string>("MESSAGING_DEEPL_API_KEY")?.trim(),
@@ -68,6 +71,11 @@ export class MessagingModuleStatusController {
         "retention_policy_job",
         "chat_accept_fixed_price",
         "notify_push_messaging_chat",
+        "slack_incoming_bridge",
+        "automation_catalog_zapier_make",
+        "messaging_bot_tokens",
+        "public_api_messaging_write",
+        "optional_ws_gateway",
       ],
       translate: { deepl, libretranslate: libre },
       attachments: {
@@ -81,6 +89,10 @@ export class MessagingModuleStatusController {
         isolatedVapid: vapid?.isolated ?? false,
       },
       sse: this.messagingRealtimeHubService.getStats(),
+      ws: {
+        enabled: this.messagingOptionalWsService.isEnabled(),
+        port: this.messagingOptionalWsService.getPort(),
+      },
     };
   }
 }

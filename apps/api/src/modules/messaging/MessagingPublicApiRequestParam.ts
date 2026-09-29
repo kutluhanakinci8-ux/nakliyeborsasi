@@ -1,6 +1,6 @@
 import { createParamDecorator, ExecutionContext } from "@nestjs/common";
 import type { Request } from "express";
-import type { MessagingPublicApiRequestContext } from "./MessagingPublicApiGuard";
+import type { MessagingPublicApiRequestContext } from "./MessagingPublicApiAuthService";
 
 export const MessagingPublicApiContextParam = createParamDecorator(
   (_data: unknown, context: ExecutionContext): MessagingPublicApiRequestContext => {

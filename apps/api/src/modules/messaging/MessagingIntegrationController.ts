@@ -3,6 +3,7 @@ import { JwtAuthenticationGuard } from "../auth/JwtAuthenticationGuard";
 import { AuthenticatedUserParam } from "../auth/AuthenticatedUserParam";
 import { AuthenticatedUserContext } from "@nakliyeborsasi/core";
 import { MessagingCompanyIntegrationService } from "./MessagingCompanyIntegrationService";
+import { MessagingBotService } from "./MessagingBotService";
 import type { MessagingWebhookEventType } from "../../infrastructure/database/entities/CompanyMessagingWebhookEndpointEntity";
 import type { MessagingRetentionMode } from "../../infrastructure/database/entities/CompanyMessagingSettingsEntity";
 
@@ -11,6 +12,7 @@ import type { MessagingRetentionMode } from "../../infrastructure/database/entit
 export class MessagingIntegrationController {
   public constructor(
     private readonly messagingCompanyIntegrationService: MessagingCompanyIntegrationService,
+    private readonly messagingBotService: MessagingBotService,
   ) {}
 
   @Get()
@@ -52,6 +54,43 @@ export class MessagingIntegrationController {
       webhookId,
       body,
     );
+  }
+
+  @Patch("slack-bridge")
+  public async updateSlackBridge(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body()
+    body: {
+      slackIncomingWebhookUrl?: string | null;
+      enabled: boolean;
+    },
+  ) {
+    return {
+      slack: await this.messagingCompanyIntegrationService.updateSlackBridge(
+        user,
+        {
+          slackIncomingWebhookUrl: body.slackIncomingWebhookUrl ?? null,
+          enabled: body.enabled,
+        },
+      ),
+    };
+  }
+
+  @Post("bots")
+  public async createBot(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: { label: string },
+  ) {
+    return this.messagingBotService.createBot(user, body.label ?? "Bot");
+  }
+
+  @Post("bots/:botId/revoke")
+  public async revokeBot(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("botId") botId: string,
+  ) {
+    const ok = await this.messagingBotService.revokeBot(user, botId);
+    return { ok };
   }
 
   @Patch("retention")

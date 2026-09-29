@@ -31,8 +31,14 @@ import { CompanyMessagingSettingsEntity } from "../../infrastructure/database/en
 import { MessagingWebhookDispatcherService } from "./MessagingWebhookDispatcherService";
 import { MessagingCompanyIntegrationService } from "./MessagingCompanyIntegrationService";
 import { MessagingIntegrationController } from "./MessagingIntegrationController";
+import { MessagingAutomationCatalogController } from "./MessagingAutomationCatalogController";
 import { MessagingPublicApiController } from "./MessagingPublicApiController";
-import { MessagingPublicApiGuard } from "./MessagingPublicApiGuard";
+import { MessagingPublicApiScopeGuard } from "./MessagingPublicApiScopeGuard";
+import { MessagingPublicApiAuthService } from "./MessagingPublicApiAuthService";
+import { MessagingSlackBridgeService } from "./MessagingSlackBridgeService";
+import { MessagingBotService } from "./MessagingBotService";
+import { MessagingOptionalWsService } from "./MessagingOptionalWsService";
+import { CompanyMessagingBotCredentialEntity } from "../../infrastructure/database/entities/CompanyMessagingBotCredentialEntity";
 import { MessagingPublicApiReadService } from "./MessagingPublicApiReadService";
 import { MessagingRetentionScheduler } from "./MessagingRetentionScheduler";
 import { AuctionModule } from "../auction/AuctionModule";
@@ -44,6 +50,7 @@ import { AuctionModule } from "../auction/AuctionModule";
       MessageEntity,
       CompanyMessagingWebhookEndpointEntity,
       CompanyMessagingSettingsEntity,
+      CompanyMessagingBotCredentialEntity,
       MessageThreadReadStateEntity,
       MessageThreadUserReadStateEntity,
       MessagingWebPushSubscriptionEntity,
@@ -65,6 +72,7 @@ import { AuctionModule } from "../auction/AuctionModule";
     MessagingPushController,
     MessagingStreamController,
     MessagingIntegrationController,
+    MessagingAutomationCatalogController,
     MessagingPublicApiController,
   ],
   providers: [
@@ -78,9 +86,13 @@ import { AuctionModule } from "../auction/AuctionModule";
     MessagingCompanyMessageRateLimitService,
     MessagingWebhookDispatcherService,
     MessagingCompanyIntegrationService,
-    MessagingPublicApiGuard,
+    MessagingPublicApiScopeGuard,
+    MessagingPublicApiAuthService,
     MessagingPublicApiReadService,
     MessagingRetentionScheduler,
+    MessagingSlackBridgeService,
+    MessagingBotService,
+    MessagingOptionalWsService,
   ],
   exports: [MessagingThreadApplicationService],
 })

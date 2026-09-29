@@ -19,6 +19,7 @@ import {
   type MessagingRetentionMode,
 } from "../../infrastructure/database/entities/CompanyMessagingSettingsEntity";
 import { generateWebhookSigningSecret } from "../notification/MailIntegrationCrypto";
+import { MessagingBotService } from "./MessagingBotService";
 
 const WEBHOOK_EVENTS: MessagingWebhookEventType[] = [
   "message.created",
@@ -32,20 +33,103 @@ export class MessagingCompanyIntegrationService {
     private readonly webhookRepository: Repository<CompanyMessagingWebhookEndpointEntity>,
     @InjectRepository(CompanyMessagingSettingsEntity)
     private readonly settingsRepository: Repository<CompanyMessagingSettingsEntity>,
+    private readonly messagingBotService: MessagingBotService,
   ) {}
 
   public async getSnapshot(authenticatedUser: AuthenticatedUserContext) {
     this.assertOwner(authenticatedUser);
     const webhooks = await this.listWebhooks(authenticatedUser.companyId);
     const settings = await this.getSettings(authenticatedUser.companyId);
+    const bots = await this.messagingBotService.listBots(
+      authenticatedUser.companyId,
+    );
     return {
       companyId: authenticatedUser.companyId,
       webhooks,
       availableWebhookEvents: WEBHOOK_EVENTS,
       retention: settings,
+      slackBridge: {
+        enabled: settings.slackBridgeEnabled,
+        configured: Boolean(settings.slackIncomingWebhookUrl),
+      },
+      bots,
+      automationCatalogPath: "/api/v1/messaging/integration/automation-catalog",
       publicApiBasePath: "/api/v1/public/lerta-messaging/v1",
-      requiredOAuthScope: "messaging:read",
+      requiredOAuthScopes: ["messaging:read", "messaging:write"],
+      botTokenPrefix: "lerta_msg_bot_live_",
     };
+  }
+
+  public getAutomationCatalog() {
+    return {
+      version: "2026-09-fs6",
+      platforms: ["zapier", "make", "custom"],
+      triggers: [
+        {
+          event: "message.created",
+          descriptionTr: "Yeni firma sohbet mesajı",
+          subscribeVia: "POST /messaging/integration/webhooks",
+        },
+        {
+          event: "thread.opened",
+          descriptionTr: "Yeni sohbet kanalı",
+          subscribeVia: "POST /messaging/integration/webhooks",
+        },
+      ],
+      actions: [
+        {
+          scope: "messaging:write",
+          method: "POST",
+          path: "/public/lerta-messaging/v1/threads/{threadId}/messages",
+        },
+        {
+          scope: "messaging:read",
+          method: "GET",
+          path: "/public/lerta-messaging/v1/threads",
+        },
+      ],
+      zapier: {
+        hookUrlPattern: "https://hooks.zapier.com/hooks/catch/...",
+        noteTr: "Zapier Webhooks by Zapier → Catch Hook; Lerta webhook events alanına message.created ekleyin.",
+      },
+      make: {
+        noteTr: "Make Custom webhook modülü; Lerta imzalı webhook çıktısını HTTP modülü ile doğrulayın.",
+      },
+    };
+  }
+
+  public async updateSlackBridge(
+    authenticatedUser: AuthenticatedUserContext,
+    params: {
+      slackIncomingWebhookUrl: string | null;
+      enabled: boolean;
+    },
+  ) {
+    this.assertOwner(authenticatedUser);
+    let row = await this.settingsRepository.findOne({
+      where: { companyId: authenticatedUser.companyId },
+    });
+    if (!row) {
+      row = this.settingsRepository.create({
+        companyId: authenticatedUser.companyId,
+        retentionDays: null,
+        retentionMode: "archive",
+        slackIncomingWebhookUrl: null,
+        slackBridgeEnabled: false,
+      });
+    }
+    if (params.slackIncomingWebhookUrl !== null) {
+      const url = params.slackIncomingWebhookUrl.trim();
+      if (url && !/^https:\/\/hooks\.slack\.com\//i.test(url)) {
+        throw new BadRequestException(
+          "Slack incoming webhook hooks.slack.com ile başlamalı.",
+        );
+      }
+      row.slackIncomingWebhookUrl = url ? url.slice(0, 2048) : null;
+    }
+    row.slackBridgeEnabled = params.enabled;
+    await this.settingsRepository.save(row);
+    return this.getSettings(authenticatedUser.companyId);
   }
 
   public async createWebhook(
@@ -161,6 +245,8 @@ export class MessagingCompanyIntegrationService {
     return {
       retentionDays: row?.retentionDays ?? null,
       retentionMode: row?.retentionMode ?? "archive",
+      slackBridgeEnabled: row?.slackBridgeEnabled ?? false,
+      slackIncomingWebhookUrl: row?.slackIncomingWebhookUrl ?? null,
     };
   }
 

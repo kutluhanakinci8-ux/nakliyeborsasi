@@ -43,6 +43,7 @@ import {
 import { MessagingCompanyMessageRateLimitService } from "./MessagingCompanyMessageRateLimitService";
 import type { MessagingClientRequestContext } from "./MessagingClientRequestContext";
 import { MessagingWebhookDispatcherService } from "./MessagingWebhookDispatcherService";
+import { MessagingSlackBridgeService } from "./MessagingSlackBridgeService";
 import { AuctionListingPriceActionService } from "../auction/AuctionListingPriceActionService";
 
 @Injectable()
@@ -73,6 +74,7 @@ export class MessagingThreadApplicationService {
     private readonly messagingAuditService: MessagingAuditService,
     private readonly messagingCompanyMessageRateLimitService: MessagingCompanyMessageRateLimitService,
     private readonly messagingWebhookDispatcherService: MessagingWebhookDispatcherService,
+    private readonly messagingSlackBridgeService: MessagingSlackBridgeService,
     @Inject(forwardRef(() => AuctionListingPriceActionService))
     private readonly auctionListingPriceActionService: AuctionListingPriceActionService,
   ) {}
@@ -446,6 +448,22 @@ export class MessagingThreadApplicationService {
       "message.created",
       createdPayload,
     );
+    if (messageKind !== "internal") {
+      this.messagingSlackBridgeService.notifyMessageCreated(thread.companyAId, {
+        threadId: thread.id,
+        messageId: saved.id,
+        bodyPreview: preview,
+        senderCompanyId: saved.senderCompanyId,
+        freightListingId: thread.freightListingId,
+      });
+      this.messagingSlackBridgeService.notifyMessageCreated(thread.companyBId, {
+        threadId: thread.id,
+        messageId: saved.id,
+        bodyPreview: preview,
+        senderCompanyId: saved.senderCompanyId,
+        freightListingId: thread.freightListingId,
+      });
+    }
     if (clientContext) {
       void this.messagingAuditService.recordMessageMutation(
         MessagingAuditActionCode.MessageCreate,

@@ -175,6 +175,7 @@ export class MailOrganizationIntegrationService {
       "mail:send",
       "mail:read",
       "messaging:read",
+      "messaging:write",
     ]);
     const input = scopes?.length
       ? scopes

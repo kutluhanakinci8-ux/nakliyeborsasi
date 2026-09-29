@@ -9,6 +9,11 @@ type StreamClient = {
   heartbeat: ReturnType<typeof setInterval>;
 };
 
+type WsStreamClient = {
+  socket: { send: (data: string) => void; close: (code?: number) => void; readyState: number };
+  heartbeat: ReturnType<typeof setInterval>;
+};
+
 const REDIS_SSE_CHANNEL = "messaging:sse:fanout";
 
 @Injectable()
@@ -17,6 +22,7 @@ export class MessagingRealtimeHubService
 {
   private readonly logger = new Logger(MessagingRealtimeHubService.name);
   private readonly clientsByCompany = new Map<string, Set<StreamClient>>();
+  private readonly wsClientsByCompany = new Map<string, Set<WsStreamClient>>();
   private readonly maxPerCompany = Number.parseInt(
     process.env.MESSAGING_SSE_MAX_CONNECTIONS_PER_COMPANY ?? "80",
     10,
@@ -84,10 +90,15 @@ export class MessagingRealtimeHubService
     maxPerCompany: number;
     redisFanout: boolean;
     instanceId: string;
+    wsConnections: number;
   } {
     let connections = 0;
     for (const set of this.clientsByCompany.values()) {
       connections += set.size;
+    }
+    let wsConnections = 0;
+    for (const set of this.wsClientsByCompany.values()) {
+      wsConnections += set.size;
     }
     return {
       companies: this.clientsByCompany.size,
@@ -95,7 +106,34 @@ export class MessagingRealtimeHubService
       maxPerCompany: this.maxPerCompany,
       redisFanout: this.redisFanoutEnabled,
       instanceId: this.instanceId(),
+      wsConnections,
     };
+  }
+
+  public attachWebSocket(companyId: string, socket: import("ws").WebSocket): void {
+    const set =
+      this.wsClientsByCompany.get(companyId) ?? new Set<WsStreamClient>();
+    if (set.size >= this.maxPerCompany) {
+      socket.close(4429);
+      return;
+    }
+    const heartbeat = setInterval(() => {
+      if (socket.readyState === 1) {
+        socket.send(JSON.stringify({ type: "ping" }));
+      }
+    }, 25_000);
+    const client: WsStreamClient = { socket, heartbeat };
+    set.add(client);
+    this.wsClientsByCompany.set(companyId, set);
+    socket.send(JSON.stringify({ type: "connected" }));
+    const dispose = () => {
+      clearInterval(heartbeat);
+      set.delete(client);
+      if (set.size === 0) {
+        this.wsClientsByCompany.delete(companyId);
+      }
+    };
+    socket.on("close", dispose);
   }
 
   public attach(companyId: string, res: Response): void {
@@ -157,16 +195,27 @@ export class MessagingRealtimeHubService
     companyId: string,
     payload: { type: string; threadId?: string },
   ): void {
-    const set = this.clientsByCompany.get(companyId);
-    if (!set?.size) {
-      return;
-    }
     const data = JSON.stringify(payload);
-    for (const client of set) {
-      try {
-        client.res.write(`event: message\ndata: ${data}\n\n`);
-      } catch {
-        /* bağlantı kapanmış olabilir */
+    const set = this.clientsByCompany.get(companyId);
+    if (set?.size) {
+      for (const client of set) {
+        try {
+          client.res.write(`event: message\ndata: ${data}\n\n`);
+        } catch {
+          /* bağlantı kapanmış olabilir */
+        }
+      }
+    }
+    const wsSet = this.wsClientsByCompany.get(companyId);
+    if (wsSet?.size) {
+      for (const client of wsSet) {
+        try {
+          if (client.socket.readyState === 1) {
+            client.socket.send(data);
+          }
+        } catch {
+          /* ignore */
+        }
       }
     }
   }
