@@ -10,8 +10,8 @@ source "${ROOT}/scripts/resolve-local-api-base.sh" "${ROOT}"
 
 PRIMARY_PORT="${SMOKE_PRIMARY_API_PORT:-3010}"
 SECOND_PORT="${SMOKE_SECOND_API_PORT:-}"
-PRIMARY_BASE="http://127.0.0.1:${PRIMARY_PORT}/api/v1"
-SECOND_BASE="http://127.0.0.1:${SECOND_PORT}/api/v1"
+PRIMARY_BASE="${SMOKE_PRIMARY_API_BASE:-http://127.0.0.1:${PRIMARY_PORT}/api/v1}"
+SECOND_BASE="${SMOKE_SECOND_API_BASE:-http://127.0.0.1:${SECOND_PORT}/api/v1}"
 
 echo "== FS-8.3 iki instance SSE smoke =="
 

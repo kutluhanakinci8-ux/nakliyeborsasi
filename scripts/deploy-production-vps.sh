@@ -149,7 +149,15 @@ if [[ -x "${INSTALL_DIR}/scripts/verify-firma-sohbeti-fs8-prod-checklist.sh" ]];
 fi
 
 if [[ -x "${INSTALL_DIR}/scripts/verify-firma-sohbeti-pilot-nps.sh" ]]; then
-  PILOT_NPS_STRICT="${PILOT_NPS_STRICT:-0}" bash "${INSTALL_DIR}/scripts/verify-firma-sohbeti-pilot-nps.sh" || true
+  PILOT_NPS_STRICT="${PILOT_NPS_STRICT:-1}" bash "${INSTALL_DIR}/scripts/verify-firma-sohbeti-pilot-nps.sh" || echo "UYARI: pilot NPS verify"
+fi
+
+if [[ -x "${INSTALL_DIR}/scripts/verify-firma-sohbeti-excellence-showcase.sh" ]]; then
+  API_BASE="${API_BASE}" bash "${INSTALL_DIR}/scripts/verify-firma-sohbeti-excellence-showcase.sh" || echo "UYARI: excellence showcase verify"
+fi
+
+if [[ -x "${INSTALL_DIR}/scripts/run-prod-fs83-two-instance-smoke.sh" ]]; then
+  bash "${INSTALL_DIR}/scripts/run-prod-fs83-two-instance-smoke.sh" || echo "UYARI: FS-8.3 smoke"
 fi
 
 if [[ -x "${INSTALL_DIR}/scripts/run-mail-messaging-parity-wave2-checklist.sh" ]]; then

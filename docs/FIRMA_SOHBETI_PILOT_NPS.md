@@ -6,11 +6,13 @@
 
 | # | Firma | Rol | İletişim |
 |---|--------|-----|----------|
-| 1 | | Yükleyici | |
-| 2 | | Nakliyeci | |
-| 3 | | Acente | |
-| 4 | | | |
-| 5 | | | |
+| 1 | Anadolu Gıda Lojistik | Yükleyici | yukveren01@test… |
+| 2 | Atlas Taşımacılık A.Ş. | Nakliyeci | yuktasiyan01@test… |
+| 3 | Merkez Dispetcher Ofis 1 | Acente | yukarayan01@test… |
+| 4 | Ege Tekstil İhracat | Yükleyici | yukveren02@test… |
+| 5 | Kutluhan Test Taşımacılık | Diğer | kutluhantest@test… |
+
+Kayıt: `data/firma-sohbeti-pilot-nps.json` · dalga **2026-09** (15–29 Eylül WAU penceresi).
 
 ## Ölçüm (2 hafta)
 
