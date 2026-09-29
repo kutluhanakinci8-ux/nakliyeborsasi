@@ -13,7 +13,7 @@ export function renderMessagingMarkdown(
     (_match, userId: string) => {
       const label = mentionNameByUserId?.[userId.toLowerCase()] ??
         mentionNameByUserId?.[userId];
-      const text = label ? `@${escapeHtml(label)}` : `@{${userId}}`;
+      const text = label ? `@${escapeHtml(label)}` : "@Ekip";
       return `<span class="chat-mention">${text}</span>`;
     },
   );
