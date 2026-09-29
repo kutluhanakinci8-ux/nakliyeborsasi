@@ -18,6 +18,8 @@
 
 **Ek depolama:** `MESSAGING_ATTACHMENT_ROOT` (varsayılan `data/messaging-attachments`) — en fazla **5×10 MB**; PDF, görsel, metin, **XLSX/XLS**
 
+**FS-4 (ops):** `REDIS_URL` + isteğe bağlı `MESSAGING_SSE_REDIS_FANOUT=1` · `MESSAGING_RATE_LIMIT_PER_MINUTE` (varsayılan 120) · `scripts/apply-messaging-fs4-schema.sh`
+
 **P0 DNS (operatör):** `bash scripts/print-instant-post-dns-isimtescil.sh` → isimtescil `post.lerta.com.tr` · doğrulama: `bash scripts/verify-lerta-post-dns.sh` (2026-09: zone henüz NXDOMAIN)
 
 **%100 parite (mail + mesaj):** [LERTA_MAIL_MESSAGING_PARITY_100_ROADMAP.md](./LERTA_MAIL_MESSAGING_PARITY_100_ROADMAP.md) — PM-1…PM-10
