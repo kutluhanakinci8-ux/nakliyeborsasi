@@ -5,6 +5,7 @@ import {
   AuthenticatedUserContext,
   ResourceNotFoundException,
   SubscriptionModuleCode,
+  TrustCompanyPublicProfile,
   TrustScoreSnapshot,
   ValidationException,
 } from "@nakliyeborsasi/core";
@@ -12,6 +13,7 @@ import { CompanyTrustReviewEntity } from "../../infrastructure/database/entities
 import { CompanyEntity } from "../../infrastructure/database/entities/CompanyEntity";
 import { SubmitCompanyTrustReviewRequestDto } from "./SubmitCompanyTrustReviewRequestDto";
 import { ModularSubscriptionEntitlementService } from "../subscription/ModularSubscriptionEntitlementService";
+import { CompanySubscriptionPersistenceService } from "../subscription/CompanySubscriptionPersistenceService";
 
 @Injectable()
 export class TrustScoreApplicationService {
@@ -21,31 +23,85 @@ export class TrustScoreApplicationService {
     @InjectRepository(CompanyEntity)
     private readonly companyRepository: Repository<CompanyEntity>,
     private readonly modularSubscriptionEntitlementService: ModularSubscriptionEntitlementService,
+    private readonly companySubscriptionPersistenceService: CompanySubscriptionPersistenceService,
   ) {}
 
   public async getCompanyTrustSnapshot(
     companyId: string,
   ): Promise<TrustScoreSnapshot> {
+    const profile = await this.getCompanyPublicProfile(companyId);
+    return new TrustScoreSnapshot({
+      companyId: profile.companyId,
+      scoreValue: profile.scoreValue,
+      reviewCount: profile.reviewCount,
+    });
+  }
+
+  public async getCompanyPublicProfile(
+    companyId: string,
+  ): Promise<TrustCompanyPublicProfile> {
     const company = await this.companyRepository.findOne({
       where: { id: companyId },
     });
     if (!company) {
       throw new ResourceNotFoundException("Company", companyId);
     }
+
     const aggregate = await this.companyTrustReviewRepository
       .createQueryBuilder("review")
       .select("AVG(review.scoreValue)", "averageScore")
       .addSelect("COUNT(review.id)", "reviewCount")
       .where("review.targetCompanyId = :companyId", { companyId })
       .getRawOne<{ averageScore: string | null; reviewCount: string }>();
+
     const reviewCount = Number(aggregate?.reviewCount ?? 0);
     const averageScore = Number(aggregate?.averageScore ?? 0);
     const scoreValue =
       reviewCount === 0 ? 0 : Math.round(averageScore * 10) / 10;
-    return new TrustScoreSnapshot({
+
+    const distributionRows = await this.companyTrustReviewRepository
+      .createQueryBuilder("review")
+      .select("review.scoreValue", "scoreValue")
+      .addSelect("COUNT(review.id)", "count")
+      .where("review.targetCompanyId = :companyId", { companyId })
+      .groupBy("review.scoreValue")
+      .getRawMany<{ scoreValue: string; count: string }>();
+
+    const distribution = [1, 2, 3, 4, 5].map((score) => {
+      const row = distributionRows.find(
+        (item) => Number(item.scoreValue) === score,
+      );
+      return { scoreValue: score, count: Number(row?.count ?? 0) };
+    });
+
+    const recentEntities = await this.companyTrustReviewRepository.find({
+      where: { targetCompanyId: companyId },
+      order: { createdAt: "DESC" },
+      take: 8,
+    });
+
+    const subscriptionSnapshot =
+      await this.companySubscriptionPersistenceService.getSnapshot(companyId);
+    const trustProfileActive = Boolean(
+      subscriptionSnapshot?.activePlan.includedModules.includes(
+        SubscriptionModuleCode.TrustProfile,
+      ),
+    );
+
+    return new TrustCompanyPublicProfile({
       companyId,
       scoreValue,
       reviewCount,
+      legalName: company.legalName,
+      participantTypeCode: company.participantTypeCode,
+      countryCode: company.countryCode,
+      trustProfileActive,
+      distribution,
+      recentReviews: recentEntities.map((review) => ({
+        scoreValue: review.scoreValue,
+        commentText: review.commentText,
+        createdAt: review.createdAt.toISOString(),
+      })),
     });
   }
 
