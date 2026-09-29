@@ -18,6 +18,9 @@ export class MessageThreadEntity {
   @OneToMany(() => MessageEntity, (message) => message.thread)
   public messages!: MessageEntity[];
 
+  @Column({ name: "legal_hold_at", type: "timestamptz", nullable: true })
+  public legalHoldAt!: Date | null;
+
   @CreateDateColumn({ type: "timestamptz" })
   public createdAt!: Date;
 }

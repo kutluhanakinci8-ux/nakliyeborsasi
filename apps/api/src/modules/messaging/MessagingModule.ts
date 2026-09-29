@@ -22,6 +22,10 @@ import { MessagingPushController } from "./MessagingPushController";
 import { MessagingRealtimeHubService } from "./MessagingRealtimeHubService";
 import { MessagingStreamTicketService } from "./MessagingStreamTicketService";
 import { MessagingStreamController } from "./MessagingStreamController";
+import { RedisModule } from "../../infrastructure/redis/RedisModule";
+import { AuditModule } from "../../infrastructure/audit/AuditModule";
+import { MessagingAuditService } from "./MessagingAuditService";
+import { MessagingCompanyMessageRateLimitService } from "./MessagingCompanyMessageRateLimitService";
 
 @Module({
   imports: [
@@ -39,6 +43,8 @@ import { MessagingStreamController } from "./MessagingStreamController";
     SubscriptionModule,
     AuthModule,
     NotificationModule,
+    RedisModule,
+    AuditModule,
   ],
   controllers: [
     MessagingModuleStatusController,
@@ -53,6 +59,8 @@ import { MessagingStreamController } from "./MessagingStreamController";
     MessagingWebPushService,
     MessagingRealtimeHubService,
     MessagingStreamTicketService,
+    MessagingAuditService,
+    MessagingCompanyMessageRateLimitService,
   ],
   exports: [MessagingThreadApplicationService],
 })

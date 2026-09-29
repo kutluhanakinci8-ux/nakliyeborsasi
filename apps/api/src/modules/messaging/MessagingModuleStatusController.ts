@@ -58,6 +58,11 @@ export class MessagingModuleStatusController {
         "internal_notes",
         "message_edit_delete",
         "user_mentions",
+        "sse_redis_fanout",
+        "thread_legal_hold",
+        "messaging_crud_audit",
+        "ediscovery_zip_sha256",
+        "company_message_rate_limit",
       ],
       translate: { deepl, libretranslate: libre },
       attachments: {

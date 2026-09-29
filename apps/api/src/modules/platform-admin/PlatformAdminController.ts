@@ -1,4 +1,12 @@
-import { Controller, Get, UseGuards } from "@nestjs/common";
+import {
+  Controller,
+  Get,
+  Param,
+  Post,
+  Res,
+  UseGuards,
+} from "@nestjs/common";
+import { Response } from "express";
 import { JwtAuthenticationGuard } from "../auth/JwtAuthenticationGuard";
 import { PlatformAdminGuard } from "./PlatformAdminGuard";
 import { PlatformAdminApplicationService } from "./PlatformAdminApplicationService";
@@ -80,6 +88,38 @@ export class PlatformAdminController {
     return {
       export:
         await this.platformAdminApplicationService.exportMessagingEdiscovery(),
+    };
+  }
+
+  @Get("message-threads/export.zip")
+  public async exportMessageThreadsZip(@Res() response: Response): Promise<void> {
+    const packageBody =
+      await this.platformAdminApplicationService.exportMessagingEdiscoveryZip();
+    response.setHeader("Content-Type", "application/zip");
+    response.setHeader(
+      "Content-Disposition",
+      'attachment; filename="messaging-ediscovery.zip"',
+    );
+    response.setHeader("X-Export-Sha256", packageBody.sha256);
+    response.setHeader("X-Export-Generated-At", packageBody.exportedAt);
+    response.send(packageBody.zipBuffer);
+  }
+
+  @Post("message-threads/:threadId/legal-hold/enable")
+  public async enableThreadLegalHold(@Param("threadId") threadId: string) {
+    return this.platformAdminApplicationService.enableThreadLegalHold(threadId);
+  }
+
+  @Post("message-threads/:threadId/legal-hold/release")
+  public async releaseThreadLegalHold(@Param("threadId") threadId: string) {
+    return this.platformAdminApplicationService.releaseThreadLegalHold(threadId);
+  }
+
+  @Get("messaging-audit-logs")
+  public async messagingAuditLogs() {
+    return {
+      logs:
+        await this.platformAdminApplicationService.listMessagingCrudAuditLogs(),
     };
   }
 }

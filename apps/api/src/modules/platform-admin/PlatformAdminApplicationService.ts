@@ -1,6 +1,8 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { createHash } from "node:crypto";
+import { In, Repository } from "typeorm";
+import { createStoreZipArchive } from "../../infrastructure/zip/createStoreZipArchive";
 import { CompanyEntity } from "../../infrastructure/database/entities/CompanyEntity";
 import { UserAccountEntity } from "../../infrastructure/database/entities/UserAccountEntity";
 import { CompanyMembershipEntity } from "../../infrastructure/database/entities/CompanyMembershipEntity";
@@ -375,6 +377,7 @@ export class PlatformAdminApplicationService {
       freightListingId: string | null;
       messageCount: number;
       createdAt: string;
+      legalHoldAt: string | null;
     }[]
   > {
     const threads = await this.threadRepository.find({
@@ -403,24 +406,62 @@ export class PlatformAdminApplicationService {
       freightListingId: thread.freightListingId,
       messageCount: counts.get(thread.id) ?? 0,
       createdAt: thread.createdAt.toISOString(),
+      legalHoldAt: thread.legalHoldAt?.toISOString() ?? null,
     }));
+  }
+
+  public async enableThreadLegalHold(threadId: string): Promise<{
+    ok: true;
+    legalHoldAt: string;
+  }> {
+    const thread = await this.threadRepository.findOne({
+      where: { id: threadId },
+    });
+    if (!thread) {
+      throw new NotFoundException("Sohbet bulunamadı.");
+    }
+    thread.legalHoldAt = new Date();
+    await this.threadRepository.save(thread);
+    return { ok: true, legalHoldAt: thread.legalHoldAt.toISOString() };
+  }
+
+  public async releaseThreadLegalHold(threadId: string): Promise<{ ok: true }> {
+    const thread = await this.threadRepository.findOne({
+      where: { id: threadId },
+    });
+    if (!thread) {
+      throw new NotFoundException("Sohbet bulunamadı.");
+    }
+    thread.legalHoldAt = null;
+    await this.threadRepository.save(thread);
+    return { ok: true };
   }
 
   public async exportMessagingEdiscovery(limit = 200): Promise<{
     exportedAt: string;
     threadCount: number;
+    chainOfCustody: {
+      exportVersion: string;
+      legalHoldThreadsIncluded: number;
+      manifestAlgorithm: "SHA-256";
+    };
     threads: {
       id: string;
       companyAId: string;
       companyBId: string;
       freightListingId: string | null;
       createdAt: string;
+      legalHoldActive: boolean;
+      legalHoldAt: string | null;
       messages: {
         id: string;
         senderCompanyId: string;
         senderUserId: string;
         bodyText: string;
         createdAt: string;
+        deletedAt: string | null;
+        editedAt: string | null;
+        kind: string;
       }[];
     }[];
   }> {
@@ -442,20 +483,99 @@ export class PlatformAdminApplicationService {
         companyBId: thread.companyBId,
         freightListingId: thread.freightListingId,
         createdAt: thread.createdAt.toISOString(),
+        legalHoldActive: Boolean(thread.legalHoldAt),
+        legalHoldAt: thread.legalHoldAt?.toISOString() ?? null,
         messages: messages.map((message) => ({
           id: message.id,
           senderCompanyId: message.senderCompanyId,
           senderUserId: message.senderUserId,
           bodyText: message.bodyText,
           createdAt: message.createdAt.toISOString(),
+          deletedAt: message.deletedAt?.toISOString() ?? null,
+          editedAt: message.editedAt?.toISOString() ?? null,
+          kind: message.kind ?? "public",
         })),
       });
     }
+    const legalHoldThreadsIncluded = payload.filter(
+      (row) => row.legalHoldActive,
+    ).length;
     return {
       exportedAt: new Date().toISOString(),
       threadCount: payload.length,
+      chainOfCustody: {
+        exportVersion: "2026-09-fs4",
+        legalHoldThreadsIncluded,
+        manifestAlgorithm: "SHA-256",
+      },
       threads: payload,
     };
+  }
+
+  public async exportMessagingEdiscoveryZip(limit = 200): Promise<{
+    zipBuffer: Buffer;
+    sha256: string;
+    exportedAt: string;
+  }> {
+    const exportBody = await this.exportMessagingEdiscovery(limit);
+    const exportJson = Buffer.from(JSON.stringify(exportBody, null, 2), "utf8");
+    const sha256 = createHash("sha256").update(exportJson).digest("hex");
+    const manifest = Buffer.from(
+      JSON.stringify(
+        {
+          exportedAt: exportBody.exportedAt,
+          algorithm: "SHA-256",
+          exportJsonSha256: sha256,
+          files: ["export.json"],
+        },
+        null,
+        2,
+      ),
+      "utf8",
+    );
+    const zipBuffer = createStoreZipArchive([
+      { name: "export.json", data: exportJson },
+      { name: "manifest.json", data: manifest },
+    ]);
+    const zipSha256 = createHash("sha256").update(zipBuffer).digest("hex");
+    return {
+      zipBuffer,
+      sha256: zipSha256,
+      exportedAt: exportBody.exportedAt,
+    };
+  }
+
+  public async listMessagingCrudAuditLogs(limit = 100): Promise<
+    {
+      id: string;
+      actorUserId: string | null;
+      actorCompanyId: string | null;
+      actionCode: string;
+      requestPath: string;
+      metadata: Record<string, unknown> | null;
+      createdAt: string;
+    }[]
+  > {
+    const capped = Math.min(Math.max(limit, 1), 500);
+    const codes = [
+      "MESSAGING_MSG_CREATE",
+      "MESSAGING_MSG_UPDATE",
+      "MESSAGING_MSG_DELETE",
+    ];
+    const logs = await this.auditRepository.find({
+      where: { actionCode: In(codes) },
+      order: { createdAt: "DESC" },
+      take: capped,
+    });
+    return logs.map((row) => ({
+      id: row.id,
+      actorUserId: row.actorUserId,
+      actorCompanyId: row.actorCompanyId,
+      actionCode: row.actionCode,
+      requestPath: row.requestPath,
+      metadata: row.metadata,
+      createdAt: row.createdAt.toISOString(),
+    }));
   }
 
   public async listAuditLogs(): Promise<

@@ -36,6 +36,12 @@ import { listMessagingQuickReplies } from "./MessagingQuickReplyCatalog";
 import { buildOfferTimeline } from "./MessagingOfferTimelineBuilder";
 import { buildMessagingListingCard } from "./MessagingListingCardBuilder";
 import { MailAiComposeService } from "../notification/MailAiComposeService";
+import {
+  MessagingAuditActionCode,
+  MessagingAuditService,
+} from "./MessagingAuditService";
+import { MessagingCompanyMessageRateLimitService } from "./MessagingCompanyMessageRateLimitService";
+import type { MessagingClientRequestContext } from "./MessagingClientRequestContext";
 
 @Injectable()
 export class MessagingThreadApplicationService {
@@ -62,6 +68,8 @@ export class MessagingThreadApplicationService {
     private readonly messagingWebPushService: MessagingWebPushService,
     private readonly messagingRealtimeHubService: MessagingRealtimeHubService,
     private readonly mailAiComposeService: MailAiComposeService,
+    private readonly messagingAuditService: MessagingAuditService,
+    private readonly messagingCompanyMessageRateLimitService: MessagingCompanyMessageRateLimitService,
   ) {}
 
   public async assertMessagingModule(
@@ -277,11 +285,16 @@ export class MessagingThreadApplicationService {
     locale: string,
     attachmentsInput?: MessagingAttachmentInput[],
     messageKind: "public" | "internal" = "public",
+    clientContext?: MessagingClientRequestContext,
+    auditPath?: string,
   ): Promise<MessageEntity> {
     const thread = await this.requireParticipantThread(
       authenticatedUser,
       threadId,
       locale,
+    );
+    await this.messagingCompanyMessageRateLimitService.assertWithinLimit(
+      authenticatedUser.companyId,
     );
     const trimmed = bodyText.trim();
     if (!trimmed && (!attachmentsInput || attachmentsInput.length === 0)) {
@@ -356,6 +369,21 @@ export class MessagingThreadApplicationService {
     const event = { type: "message", threadId: thread.id };
     this.messagingRealtimeHubService.publish(thread.companyAId, event);
     this.messagingRealtimeHubService.publish(thread.companyBId, event);
+    if (clientContext) {
+      void this.messagingAuditService.recordMessageMutation(
+        MessagingAuditActionCode.MessageCreate,
+        authenticatedUser,
+        clientContext,
+        {
+          threadId: thread.id,
+          messageId: saved.id,
+          httpMethod: "POST",
+          requestPath:
+            auditPath ?? `/messaging/threads/${threadId}/messages`,
+          extra: { messageKind },
+        },
+      );
+    }
     return saved;
   }
 
@@ -604,6 +632,8 @@ export class MessagingThreadApplicationService {
         counterpartyCompanyId,
         freightListingId: thread.freightListingId,
         createdAt: thread.createdAt.toISOString(),
+        legalHoldActive: Boolean(thread.legalHoldAt),
+        legalHoldAt: thread.legalHoldAt?.toISOString() ?? null,
         messages: messages.map((message) => ({
           id: message.id,
           senderCompanyId: message.senderCompanyId,
@@ -627,6 +657,8 @@ export class MessagingThreadApplicationService {
     messageId: string,
     bodyText: string,
     locale: string,
+    clientContext?: MessagingClientRequestContext,
+    auditPath?: string,
   ): Promise<MessageEntity> {
     const thread = await this.requireParticipantThread(
       authenticatedUser,
@@ -657,6 +689,21 @@ export class MessagingThreadApplicationService {
     const event = { type: "message", threadId: thread.id };
     this.messagingRealtimeHubService.publish(thread.companyAId, event);
     this.messagingRealtimeHubService.publish(thread.companyBId, event);
+    if (clientContext) {
+      void this.messagingAuditService.recordMessageMutation(
+        MessagingAuditActionCode.MessageUpdate,
+        authenticatedUser,
+        clientContext,
+        {
+          threadId: thread.id,
+          messageId: saved.id,
+          httpMethod: "PATCH",
+          requestPath:
+            auditPath ??
+            `/messaging/threads/${threadId}/messages/${messageId}`,
+        },
+      );
+    }
     return saved;
   }
 
@@ -665,6 +712,8 @@ export class MessagingThreadApplicationService {
     threadId: string,
     messageId: string,
     locale: string,
+    clientContext?: MessagingClientRequestContext,
+    auditPath?: string,
   ): Promise<void> {
     const thread = await this.requireParticipantThread(
       authenticatedUser,
@@ -680,11 +729,31 @@ export class MessagingThreadApplicationService {
     if (message.senderUserId !== authenticatedUser.userId) {
       throw new AuthorizationException("Only sender can delete message");
     }
+    if (thread.legalHoldAt) {
+      throw new ValidationException(
+        "Bu sohbet legal hold altında; mesaj silinemez.",
+      );
+    }
     message.deletedAt = new Date();
     await this.messageRepository.save(message);
     const event = { type: "message", threadId: thread.id };
     this.messagingRealtimeHubService.publish(thread.companyAId, event);
     this.messagingRealtimeHubService.publish(thread.companyBId, event);
+    if (clientContext) {
+      void this.messagingAuditService.recordMessageMutation(
+        MessagingAuditActionCode.MessageDelete,
+        authenticatedUser,
+        clientContext,
+        {
+          threadId: thread.id,
+          messageId: message.id,
+          httpMethod: "DELETE",
+          requestPath:
+            auditPath ??
+            `/messaging/threads/${threadId}/messages/${messageId}`,
+        },
+      );
+    }
   }
 
   public async recordTyping(

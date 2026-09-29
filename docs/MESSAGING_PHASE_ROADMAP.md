@@ -10,6 +10,7 @@
 | **FS-1** | SSE polling kapatma + exponential reconnect, XLSX ek, `/messaging/status` bayrakları | ✅ kod · `verify-firma-sohbeti-fs1.sh` |
 | **FS-2** | Sunucu arama, markdown, şablonlar, ilan kartı, teklif timeline, AI özet | ✅ kod · `verify-firma-sohbeti-fs2.sh` |
 | **FS-3** | Okundu (kullanıcı), typing, iç not, düzenle/sil, @mention, çeviri DE/RU | ✅ kod · `verify-firma-sohbeti-fs3.sh` |
+| **FS-4** | Redis SSE fan-out, thread legal hold, mesaj CRUD audit (IP/UA), eDiscovery ZIP+SHA-256, rate limit/dk | ✅ kod · `verify-firma-sohbeti-fs4.sh` · `smoke-messaging-sse-load.sh` |
 
 **Çeviri (ops):** `MESSAGING_TRANSLATE_API_URL` → LibreTranslate uyumlu POST (ör. `https://libretranslate.com/translate`)
 

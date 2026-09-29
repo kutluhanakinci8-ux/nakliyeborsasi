@@ -9,10 +9,12 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   Res,
   UseGuards,
 } from "@nestjs/common";
-import { Response } from "express";
+import { Request, Response } from "express";
+import { resolveMessagingClientRequestContext } from "./MessagingClientRequestContext";
 import { AuthenticatedUserContext } from "@nakliyeborsasi/core";
 import { JwtAuthenticationGuard } from "../auth/JwtAuthenticationGuard";
 import { AuthenticatedUserParam } from "../auth/AuthenticatedUserParam";
@@ -94,6 +96,7 @@ export class MessagingThreadController {
     @Param("threadId") threadId: string,
     @Body() body: SendThreadMessageRequestDto,
     @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
+    @Req() request: Request,
     @Headers("accept-language") acceptLanguage: string | undefined,
     @Query("lang") queryLanguage: string | undefined,
   ): Promise<{ message: unknown }> {
@@ -101,6 +104,7 @@ export class MessagingThreadController {
       acceptLanguage,
       queryLanguage,
     );
+    const clientContext = resolveMessagingClientRequestContext(request);
     const message = await this.messagingThreadApplicationService.sendMessage(
       authenticatedUser,
       threadId,
@@ -108,6 +112,8 @@ export class MessagingThreadController {
       locale,
       body.attachments,
       body.messageKind === "internal" ? "internal" : "public",
+      clientContext,
+      request.path,
     );
     return { message };
   }
@@ -155,6 +161,7 @@ export class MessagingThreadController {
     @Param("messageId") messageId: string,
     @Body() body: UpdateThreadMessageRequestDto,
     @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
+    @Req() request: Request,
     @Headers("accept-language") acceptLanguage: string | undefined,
     @Query("lang") queryLanguage: string | undefined,
   ): Promise<{ message: unknown }> {
@@ -162,12 +169,15 @@ export class MessagingThreadController {
       acceptLanguage,
       queryLanguage,
     );
+    const clientContext = resolveMessagingClientRequestContext(request);
     const message = await this.messagingThreadApplicationService.editMessage(
       authenticatedUser,
       threadId,
       messageId,
       body.bodyText ?? "",
       locale,
+      clientContext,
+      request.path,
     );
     return { message };
   }
@@ -177,6 +187,7 @@ export class MessagingThreadController {
     @Param("threadId") threadId: string,
     @Param("messageId") messageId: string,
     @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
+    @Req() request: Request,
     @Headers("accept-language") acceptLanguage: string | undefined,
     @Query("lang") queryLanguage: string | undefined,
   ): Promise<{ ok: true }> {
@@ -184,11 +195,14 @@ export class MessagingThreadController {
       acceptLanguage,
       queryLanguage,
     );
+    const clientContext = resolveMessagingClientRequestContext(request);
     await this.messagingThreadApplicationService.softDeleteMessage(
       authenticatedUser,
       threadId,
       messageId,
       locale,
+      clientContext,
+      request.path,
     );
     return { ok: true };
   }
