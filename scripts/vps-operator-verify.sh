@@ -13,7 +13,15 @@ fi
 echo "== VPS operator verify (ROOT=${ROOT}) =="
 echo "Branch/commit: $(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo '?') $(git log -1 --oneline 2>/dev/null || true)"
 
-export API_BASE="${API_BASE:-https://app.lerta.com.tr/api/v1}"
+if [[ -z "${API_BASE:-}" ]]; then
+  if curl -fsS -o /dev/null --connect-timeout 2 --max-time 5 \
+    "http://127.0.0.1:3010/api/v1/health" 2>/dev/null; then
+    API_BASE="http://127.0.0.1:3010/api/v1"
+  else
+    API_BASE="https://app.lerta.com.tr/api/v1"
+  fi
+fi
+export API_BASE
 export SKIP_PLAYWRIGHT="${SKIP_PLAYWRIGHT:-1}"
 
 bash "${ROOT}/scripts/verify-typeorm-global-entities.sh"
