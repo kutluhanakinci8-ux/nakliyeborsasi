@@ -193,26 +193,26 @@
 
 ---
 
-## MP-10 — Parite kapanış kapısı
+## MP-10 — Parite kapanış kapısı ✅
 
 **Amaç:** Skor kartındaki tüm **MP hedef** sütunları yeşil.
 
-| Kapı | Komut |
-|------|--------|
-| Mail/messaging parity | `run-mail-messaging-parity-wave2-checklist.sh` |
-| FS 1–12 | deploy VPS döngüsü |
-| TypeORM | `verify-typeorm-global-entities.sh` |
-| Unit | `npm run test:unit` |
-| Skor yenileme | `LERTA_MESSAGING_POSTA_COMPETITIVE_SCORECARD.md` v2 |
+| Kapı | Durum | Komut |
+|------|--------|--------|
+| MP-1…MP-9 maturity | ✅ | `vps-operator-verify.sh` |
+| Mail/messaging parity wave-2 | ✅ | `run-mail-messaging-parity-wave2-checklist.sh` |
+| FS-12 | ✅ | `verify-firma-sohbeti-fs12.sh` |
+| Sign-off + skor v2 | ✅ | `MESSAGING_POSTA_MP10_SIGNOFF.md` |
 
-**Kabul:** Tablo 6’daki MP-10 sütunu · ürün lideri sign-off.
+**Kabul:** `verify-messaging-parity-close-mp10.sh` PASS · ürün sign-off dokümanı.
+
+```bash
+# Hafif (maturity içinde): MP10_FULL=0
+# VPS tam kapı: MP10_FULL=1 bash scripts/verify-messaging-parity-close-mp10.sh
+```
 
 ---
 
-## Sıradaki adım (agent / ekip)
+## Sıradaki adım (operasyon)
 
-1. **MP-0** — merge (dokümanlar + §2.2).  
-2. **MP-1** — entity audit script + eksik kayıtlar → deploy.  
-3. **MP-2** — WhatsApp prod env + UI hata şeffaflığı (satış vaadi varsa öncelik).
-
-Her faz sonunda: `git` commit · VPS `scripts/deploy-vps-ssh.sh` (prod) · skor kartında ilgili satırı güncelle.
+MP-0…MP-10 kod ve dok kapanışı tamam. Sürekli izleme: `vps-operator-verify.sh`, çeyreklik `SECURITY_QUARTERLY_CHECKLIST.md`, isteğe bağlı `SKIP_AXE=0` / `SKIP_LIGHTHOUSE=0`.

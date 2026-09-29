@@ -53,6 +53,9 @@ bash scripts/verify-messaging-hub-pwa-mp8.sh
 bash scripts/verify-security-compliance-mp9.sh
 bash scripts/pack-customer-due-diligence-mp9.sh   # zip CLI gerekmez (python3 yedek)
 # Çeyreklik: SKIP_NPM_AUDIT=0 bash scripts/verify-security-compliance-mp9.sh
+
+# MP-10 parite kapanış (tam: maturity + wave-2 — birkaç dakika)
+MP10_FULL=1 bash scripts/verify-messaging-parity-close-mp10.sh
 ```
 
 ## Playwright E2E (genelde VPS’te değil)

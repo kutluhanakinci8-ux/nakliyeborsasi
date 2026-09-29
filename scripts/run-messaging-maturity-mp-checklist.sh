@@ -28,6 +28,7 @@ run_step "MP-6 deliverability" bash "${ROOT}/scripts/verify-mail-deliverability-
 run_step "MP-7 a11y (axe)" bash "${ROOT}/scripts/verify-messaging-a11y-mp7.sh"
 run_step "MP-8 hub PWA" bash "${ROOT}/scripts/verify-messaging-hub-pwa-mp8.sh"
 run_step "MP-9 security compliance" bash "${ROOT}/scripts/verify-security-compliance-mp9.sh"
+run_step "MP-10 parity sign-off" env MP10_FULL=0 bash "${ROOT}/scripts/verify-messaging-parity-close-mp10.sh"
 
 if [[ "${SKIP_PLAYWRIGHT:-}" != "1" ]]; then
   run_step "MP-3 Playwright smoke (public)" bash "${ROOT}/scripts/verify-messaging-playwright-e2e.sh"
