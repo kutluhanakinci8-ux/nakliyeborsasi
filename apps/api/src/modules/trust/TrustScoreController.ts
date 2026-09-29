@@ -25,7 +25,15 @@ export class TrustScoreController {
   @Get("companies/:companyId")
   public async getCompanyTrustSnapshot(
     @Param("companyId") companyId: string,
+    @Query("profile") profileQuery: string | undefined,
   ): Promise<{ snapshot: unknown }> {
+    if (profileQuery === "full" || profileQuery === "1") {
+      const profile =
+        await this.trustScoreApplicationService.getCompanyPublicProfile(
+          companyId,
+        );
+      return { snapshot: profile };
+    }
     const snapshot =
       await this.trustScoreApplicationService.getCompanyTrustSnapshot(
         companyId,

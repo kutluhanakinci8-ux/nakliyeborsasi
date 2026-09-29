@@ -7,7 +7,36 @@ export type TrustScoreRecord = {
   reviewCount: number;
 };
 
+export type TrustReviewPublicItem = {
+  scoreValue: number;
+  commentText: string;
+  createdAt: string;
+};
+
+export type TrustCompanyProfile = TrustScoreRecord & {
+  legalName: string;
+  participantTypeCode: string | null;
+  countryCode: string;
+  trustProfileActive: boolean;
+  distribution: { scoreValue: number; count: number }[];
+  recentReviews: TrustReviewPublicItem[];
+};
+
 export class TrustScoreApiClient {
+  public static async fetchProfile(
+    companyId: string,
+  ): Promise<{ snapshot: TrustCompanyProfile }> {
+    const response = await fetch(
+      `${PublicApiConfiguration.resolveBaseUrl()}/trust-scores/companies/${companyId}?profile=full`,
+    );
+    if (!response.ok) {
+      const errorBody = await response.text();
+      throw new Error(errorBody || "Trust score request failed");
+    }
+    return response.json() as Promise<{ snapshot: TrustCompanyProfile }>;
+  }
+
+  /** @deprecated Use fetchProfile — kept for thin snapshots */
   public static async fetchSnapshot(
     companyId: string,
   ): Promise<{ snapshot: TrustScoreRecord }> {

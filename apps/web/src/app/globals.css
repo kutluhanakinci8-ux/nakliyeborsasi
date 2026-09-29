@@ -13181,6 +13181,318 @@ button.btn-secondary {
   margin-top: 2px;
 }
 
+/* —— Güven merkezi (premium) —— */
+.trust-center-premium .exchange-hero {
+  background: linear-gradient(135deg, #f0fdfa 0%, #f8fafc 48%, #eff6ff 100%);
+  border: 1px solid rgba(13, 148, 136, 0.12);
+  border-radius: 20px;
+  padding: 28px 32px;
+}
+
+.trust-hero-action {
+  white-space: nowrap;
+}
+
+.trust-premium-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.trust-premium-panel {
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 18px;
+  padding: 22px 24px;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.04);
+}
+
+.trust-panel-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.trust-panel-sub {
+  margin: 6px 0 0;
+  font-size: 0.88rem;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+.trust-panel-head {
+  margin-bottom: 18px;
+}
+
+.trust-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.trust-field-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.trust-field-input {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+}
+
+.trust-field-textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.trust-load-btn,
+.trust-submit-btn {
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.trust-profile-card {
+  margin-top: 18px;
+  padding: 18px;
+  border-radius: 16px;
+  background: linear-gradient(165deg, #ecfdf5, #fff 55%);
+  border: 1px solid rgba(16, 185, 129, 0.22);
+}
+
+.trust-profile-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.trust-profile-name {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #0f766e;
+}
+
+.trust-profile-meta {
+  margin: 4px 0 0;
+  font-size: 0.82rem;
+  color: #64748b;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.trust-badge {
+  display: inline-flex;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.trust-badge--verified {
+  background: #ccfbf1;
+  color: #0f766e;
+  border: 1px solid #5eead4;
+}
+
+.trust-profile-score-ring {
+  text-align: right;
+  line-height: 1;
+}
+
+.trust-profile-score-num {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #0d9488;
+}
+
+.trust-profile-score-of {
+  font-size: 0.9rem;
+  color: #94a3b8;
+  margin-left: 2px;
+}
+
+.trust-stars--lg {
+  font-size: 1.65rem;
+  margin: 12px 0;
+}
+
+.trust-star-btn {
+  background: none;
+  border: none;
+  padding: 0 2px;
+  cursor: pointer;
+  font-size: inherit;
+  color: #cbd5e1;
+  line-height: 1;
+}
+
+.trust-star-btn--on {
+  color: #eab308;
+}
+
+.trust-distribution {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.trust-distribution-row {
+  display: grid;
+  grid-template-columns: 16px 1fr 72px;
+  gap: 8px;
+  align-items: center;
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.trust-distribution-track {
+  height: 8px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+
+.trust-distribution-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #14b8a6, #0d9488);
+}
+
+.trust-profile-links {
+  display: flex;
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.trust-inline-link {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #0d9488;
+  text-decoration: none;
+}
+
+.trust-inline-link:hover {
+  text-decoration: underline;
+}
+
+.trust-empty-hint {
+  margin-top: 16px;
+  font-size: 0.88rem;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.trust-reviews-feed {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.trust-feed-title {
+  margin: 0 0 12px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.trust-feed-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.trust-feed-item {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.trust-feed-item-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.trust-feed-item-head time {
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.trust-feed-comment {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  color: #334155;
+  white-space: pre-wrap;
+}
+
+.trust-star-picker {
+  margin-bottom: 16px;
+}
+
+.trust-highlights {
+  margin-bottom: 16px;
+}
+
+.trust-highlight-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.trust-chip {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+}
+
+.trust-chip--on {
+  border-color: #14b8a6;
+  background: #ecfdf5;
+  color: #0f766e;
+}
+
+.trust-legal-hint {
+  margin: 14px 0 0;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  line-height: 1.45;
+}
+
+@media (max-width: 960px) {
+  .trust-premium-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .trust-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
 .admin-payments-detail-plan {
   margin: 4px 0 0;
   font-size: 0.95rem;
