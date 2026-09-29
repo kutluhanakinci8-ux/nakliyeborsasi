@@ -13,11 +13,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { MessagingMailWebEmbed } from "../../../components/messaging/MessagingMailWebEmbed";
 import { ChatMessageBody } from "../../../components/messaging/ChatMessageBody";
 import { ChatMessageActionBar } from "../../../components/messaging/ChatMessageActionBar";
+import { ChatThreadListItem } from "../../../components/messaging/ChatThreadListItem";
 import {
   IconChannels,
   IconLockNote,
   IconMessageSquare,
   IconPaperclip,
+  IconSearch,
   IconSend,
   IconSparkles,
   IconStickyNote,
@@ -1333,21 +1335,31 @@ export function MessagingPageClient() {
         >
           <aside className="chat-sidebar module-panel">
             <div className="chat-sidebar-header">
-              <h2 className="module-panel-title">Sohbetler</h2>
+              <div className="chat-sidebar-heading">
+                <h2 className="chat-sidebar-title">Sohbetler</h2>
+                <p className="chat-sidebar-subtitle">
+                  {filteredThreads.length > 0
+                    ? `${filteredThreads.length} konuşma`
+                    : "Firma mesajları"}
+                </p>
+              </div>
               <button
                 type="button"
-                className="chat-compose-tool-btn"
+                className="chat-sidebar-new-group"
                 disabled={isBusy}
+                title="Grup sohbet aç"
                 onClick={() => {
                   setGroupModalOpen(true);
                   setGroupSearchQuery("");
                   setGroupSearchHits([]);
                 }}
               >
-                + Grup
+                <IconUsers size={16} />
+                <span>Grup</span>
               </button>
             </div>
             <div className="chat-unified-search">
+              <IconSearch className="chat-unified-search-icon" />
               <input
                 className="input-light chat-unified-search-input"
                 placeholder="Sohbet veya firma adı ara…"
@@ -1484,39 +1496,16 @@ export function MessagingPageClient() {
             ) : (
               <ul className="chat-thread-list">
                 {filteredThreads.map((thread) => (
-                  <li key={thread.threadId}>
-                    <button
-                      type="button"
-                      className={
-                        activeThreadId === thread.threadId
-                          ? "chat-thread-item active"
-                          : "chat-thread-item"
-                      }
-                      onClick={() => {
-                        setMobileThreadOpen(true);
-                        void loadMessages(thread.threadId);
-                      }}
-                    >
-                      <span className="chat-thread-title">
-                        {thread.threadKind === "group" ? "👥 " : ""}
-                        {thread.counterpartyLegalName?.trim() ||
-                          thread.title?.trim() ||
-                          shortCompanyId(thread.counterpartyCompanyId)}
-                        {(thread.unreadCount ?? 0) > 0 ? (
-                          <span className="chat-unread-badge">
-                            {thread.unreadCount}
-                          </span>
-                        ) : null}
-                      </span>
-                      <span className="chat-thread-sub">
-                        {thread.lastMessagePreview
-                          ? thread.lastMessagePreview
-                          : thread.freightListingId
-                            ? `İlan ${thread.freightListingId.slice(0, 8)}…`
-                            : "Firma sohbeti"}
-                      </span>
-                    </button>
-                  </li>
+                  <ChatThreadListItem
+                    key={thread.threadId}
+                    thread={thread}
+                    active={activeThreadId === thread.threadId}
+                    locale={locale}
+                    onSelect={() => {
+                      setMobileThreadOpen(true);
+                      void loadMessages(thread.threadId);
+                    }}
+                  />
                 ))}
               </ul>
             )}

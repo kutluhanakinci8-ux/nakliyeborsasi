@@ -66,6 +66,54 @@ export function dayKeyFromIso(iso: string): string {
   return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
 }
 
+export function formatThreadListPreview(raw: string, maxLength = 96): string {
+  let text = raw
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/\*([^*]+)\*/g, "$1")
+    .replace(/@\{[0-9a-f-]{36}\}/gi, "@ekip")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (text.length > maxLength) {
+    text = `${text.slice(0, maxLength - 1)}…`;
+  }
+  return text;
+}
+
+export function formatThreadListTime(
+  iso: string | null | undefined,
+  locale: string,
+): string {
+  if (!iso) {
+    return "";
+  }
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+  const now = new Date();
+  const startOfDay = (value: Date): number =>
+    new Date(value.getFullYear(), value.getMonth(), value.getDate()).getTime();
+  const diffDays = Math.round(
+    (startOfDay(now) - startOfDay(date)) / (24 * 60 * 60 * 1000),
+  );
+  if (diffDays === 0) {
+    return date.toLocaleTimeString(locale, {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+  if (diffDays === 1) {
+    return "Dün";
+  }
+  if (diffDays < 7) {
+    return date.toLocaleDateString(locale, { weekday: "short" });
+  }
+  return date.toLocaleDateString(locale, {
+    day: "numeric",
+    month: "short",
+  });
+}
+
 export function highlightSearchSnippet(
   snippet: string,
   query: string,

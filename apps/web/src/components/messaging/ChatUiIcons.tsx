@@ -100,6 +100,15 @@ export function IconTrash({ className, size = defaultSize }: IconProps) {
   );
 }
 
+export function IconSearch({ className, size = defaultSize }: IconProps) {
+  return (
+    <svg className={className} aria-hidden {...strokeProps(size)}>
+      <circle cx="11" cy="11" r="7" />
+      <path d="M20 20l-3.5-3.5" />
+    </svg>
+  );
+}
+
 export function IconUsers({ className, size = defaultSize }: IconProps) {
   return (
     <svg className={className} aria-hidden {...strokeProps(size)}>
