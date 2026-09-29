@@ -110,13 +110,15 @@ if [[ -n "${EXCELLENCE_SHOWCASE_THREAD_ID}" ]]; then
 else
   thread_id=""
   messages_json=""
+  best_id=""
+  best_json=""
+  best_score=0
   while IFS= read -r cand; do
     [[ -z "${cand}" ]] && continue
     cand_json="$(curl -fsS "${auth_hdr[@]}" \
       "${API_BASE}/messaging/threads/${cand}/messages?lang=tr")"
-    if MESSAGES_JSON="${cand_json}" MARKER="${MARKER}" SEARCH_TOKEN="${SEARCH_TOKEN}" python3 - <<'PY'
+    score="$(MESSAGES_JSON="${cand_json}" SEARCH_TOKEN="${SEARCH_TOKEN}" python3 - <<'PY'
 import json, os, sys
-marker = os.environ.get("MARKER", "")
 token = os.environ.get("SEARCH_TOKEN", "")
 data = json.loads(os.environ["MESSAGES_JSON"])
 messages = data.get("messages") or []
@@ -124,23 +126,36 @@ if not messages:
     sys.exit(1)
 if not any(token in (m.get("bodyText") or "") for m in messages):
     sys.exit(1)
-has_internal = any(m.get("messageKind") == "internal" for m in messages)
-has_attachment = any(m.get("attachments") for m in messages)
-if not (has_internal and has_attachment):
-    sys.exit(1)
-sys.exit(0)
+score = 0
+if any(m.get("messageKind") == "internal" for m in messages):
+    score += 10
+if any(m.get("attachments") for m in messages):
+    score += 10
+if any(m.get("mentionUserIds") for m in messages):
+    score += 2
+if any(m.get("editedAt") for m in messages):
+    score += 2
+if any(m.get("deleted") for m in messages):
+    score += 2
+print(score)
 PY
-    then
-      thread_id="${cand}"
-      messages_json="${cand_json}"
-      break
+)" || continue
+    if [[ "${score}" -gt "${best_score}" ]]; then
+      best_score="${score}"
+      best_id="${cand}"
+      best_json="${cand_json}"
     fi
   done <<< "${candidate_ids}"
+  if [[ -n "${best_id}" && "${best_score}" -ge 20 ]]; then
+    thread_id="${best_id}"
+    messages_json="${best_json}"
+  fi
 fi
 
 if [[ -z "${thread_id}" ]]; then
-  echo "FAIL: showcase thread bulunamadı — bash scripts/seed-firma-sohbeti-excellence-showcase.sh"
-  echo "  veya: FORCE_EXCELLENCE_DEMO=1 bash scripts/seed-firma-sohbeti-excellence-showcase.sh"
+  echo "FAIL: showcase thread bulunamadi"
+  echo "  API_BASE=${API_BASE} FORCE_EXCELLENCE_DEMO=1 bash scripts/seed-firma-sohbeti-excellence-showcase.sh"
+  echo "  bash scripts/ensure-firma-sohbeti-excellence-showcase.sh"
   exit 1
 fi
 
