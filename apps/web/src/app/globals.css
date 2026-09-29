@@ -5839,35 +5839,13 @@ button.btn-secondary {
 }
 
 .chat-bubble .chat-message-actions {
-<<<<<<< Updated upstream
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(2px);
-  transition:
-    opacity 0.15s ease,
-    transform 0.15s ease;
-=======
   opacity: 0.72;
   transition: opacity 0.15s ease;
->>>>>>> Stashed changes
 }
 
 .chat-bubble:hover .chat-message-actions,
 .chat-bubble:focus-within .chat-message-actions {
   opacity: 1;
-<<<<<<< Updated upstream
-  pointer-events: auto;
-  transform: translateY(0);
-}
-
-@media (hover: none) {
-  .chat-bubble .chat-message-actions {
-    opacity: 1;
-    pointer-events: auto;
-    transform: none;
-  }
-=======
->>>>>>> Stashed changes
 }
 
 .chat-message-actions {
