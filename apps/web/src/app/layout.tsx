@@ -14,6 +14,17 @@ export const metadata: Metadata = {
   title: "Lerta Logistics",
   description:
     "LERTA LOGISTICS — TR · UA · EU koridorunda yük arama, ihale ve lojistik iş birliği platformu.",
+  manifest: "/manifest.webmanifest",
+  themeColor: "#0f766e",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Lerta",
+  },
+  icons: {
+    icon: "/corridor-hero.svg",
+    apple: "/corridor-hero.svg",
+  },
 };
 
 export const dynamic = "force-dynamic";
