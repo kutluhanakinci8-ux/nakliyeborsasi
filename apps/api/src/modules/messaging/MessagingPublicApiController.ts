@@ -71,4 +71,35 @@ export class MessagingPublicApiController {
       createdAt: message.createdAt.toISOString(),
     };
   }
+
+  @Post("threads/:threadId/messages/:messageId/stamp")
+  @MessagingPublicApiScope("messaging:write")
+  public async stampMessage(
+    @MessagingPublicApiContextParam() ctx: MessagingPublicApiRequestContext,
+    @Param("threadId") threadId: string,
+    @Param("messageId") messageId: string,
+    @Body() body: { stampType?: string; locale?: string },
+  ) {
+    const actor = new AuthenticatedUserContext({
+      userId: ctx.actorUserId,
+      companyId: ctx.companyId,
+      emailAddress:
+        ctx.credentialType === "bot"
+          ? "messaging-bot@bots.lerta.internal"
+          : "api-key@integration.lerta.internal",
+      roleCodes: [CompanyRoleCode.Viewer],
+    });
+    const raw = body.stampType?.trim().toLowerCase();
+    const stampType =
+      raw === "approved" || raw === "rejected" || raw === "acknowledged"
+        ? raw
+        : "acknowledged";
+    return this.messagingThreadApplicationService.applyOperationStamp(
+      actor,
+      threadId,
+      messageId,
+      stampType,
+      body.locale ?? "tr",
+    );
+  }
 }

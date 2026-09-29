@@ -54,6 +54,24 @@ export class MessagingThreadController {
     return { threads };
   }
 
+  @Get("threads/:threadId/participants")
+  public async listThreadParticipants(
+    @Param("threadId") threadId: string,
+    @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
+    @Headers("accept-language") acceptLanguage: string | undefined,
+    @Query("lang") queryLanguage: string | undefined,
+  ): Promise<{ participants: unknown[] }> {
+    const locale = this.localeResolutionService.resolveFromHeaders(
+      acceptLanguage,
+      queryLanguage,
+    );
+    return this.messagingThreadApplicationService.listThreadParticipants(
+      authenticatedUser,
+      threadId,
+      locale,
+    );
+  }
+
   @Post("threads/group")
   public async openGroupThread(
     @Body() body: OpenMessagingGroupThreadRequestDto,

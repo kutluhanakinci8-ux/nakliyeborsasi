@@ -272,6 +272,29 @@ export class MessagingApiClient {
     ) as Promise<{ templates: MessagingOrgQuickReplyRecord[] }>;
   }
 
+  public static async listThreadParticipants(
+    accessToken: string,
+    locale: string,
+    threadId: string,
+  ): Promise<{
+    participants: {
+      companyId: string;
+      legalName: string | null;
+      participantRole: string;
+    }[];
+  }> {
+    return AuthenticatedApiClient.fetchJson(
+      accessToken,
+      `/messaging/threads/${threadId}/participants?lang=${locale}`,
+    ) as Promise<{
+      participants: {
+        companyId: string;
+        legalName: string | null;
+        participantRole: string;
+      }[];
+    }>;
+  }
+
   public static async stampMessage(
     accessToken: string,
     locale: string,

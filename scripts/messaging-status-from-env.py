@@ -87,5 +87,18 @@ if __name__ == "__main__":
         if missing:
             raise SystemExit(f"FAIL: eksik features: {sorted(missing)}")
         print("OK: FS-11 status features")
+    elif check == "fs12":
+        required = {
+            "whatsapp_notify_bridge",
+            "whatsapp_notify_bridge_kvkk",
+            "webhook_message_stamped",
+            "group_participant_roles",
+            "partner_api_messaging_stamp",
+            "native_shell_capacitor_ready",
+        }
+        missing = required - features
+        if missing:
+            raise SystemExit(f"FAIL: eksik features: {sorted(missing)}")
+        print("OK: FS-12 status features")
     else:
         raise SystemExit(f"unknown check {check}")

@@ -24,7 +24,11 @@ import { MessagingBotService } from "./MessagingBotService";
 const WEBHOOK_EVENTS: MessagingWebhookEventType[] = [
   "message.created",
   "thread.opened",
+  "message.stamped",
 ];
+
+export const MESSAGING_WHATSAPP_KVKK_NOTICE_TR =
+  "WhatsApp bildirim köprüsü yalnızca yeni mesaj uyarısı ve deep link gönderir; tam mesaj geçmişi Meta/WhatsApp altyapısına aktarılmaz. Operasyonel kayıt Lerta firma sohbetinde saklanır. Etkinleştirmek için firma yetkilisi onayı gerekir.";
 
 @Injectable()
 export class MessagingCompanyIntegrationService {
@@ -40,6 +44,9 @@ export class MessagingCompanyIntegrationService {
     this.assertOwner(authenticatedUser);
     const webhooks = await this.listWebhooks(authenticatedUser.companyId);
     const settings = await this.getSettings(authenticatedUser.companyId);
+    const settingsRow = await this.settingsRepository.findOne({
+      where: { companyId: authenticatedUser.companyId },
+    });
     const bots = await this.messagingBotService.listBots(
       authenticatedUser.companyId,
     );
@@ -55,6 +62,9 @@ export class MessagingCompanyIntegrationService {
       whatsappBridge: {
         enabled: settings.whatsappBridgeEnabled,
         configured: Boolean(settings.whatsappNotifyE164),
+        kvkkNoticeTr: MESSAGING_WHATSAPP_KVKK_NOTICE_TR,
+        kvkkAcceptedAt:
+          settingsRow?.whatsappBridgeKvkkAcceptedAt?.toISOString() ?? null,
       },
       bots,
       automationCatalogPath: "/api/v1/messaging/integration/automation-catalog",
@@ -79,12 +89,22 @@ export class MessagingCompanyIntegrationService {
           descriptionTr: "Yeni sohbet kanalı",
           subscribeVia: "POST /messaging/integration/webhooks",
         },
+        {
+          event: "message.stamped",
+          descriptionTr: "İşlem damgası (onay/red/görüldü)",
+          subscribeVia: "POST /messaging/integration/webhooks",
+        },
       ],
       actions: [
         {
           scope: "messaging:write",
           method: "POST",
           path: "/public/lerta-messaging/v1/threads/{threadId}/messages",
+        },
+        {
+          scope: "messaging:write",
+          method: "POST",
+          path: "/public/lerta-messaging/v1/threads/{threadId}/messages/{messageId}/stamp",
         },
         {
           scope: "messaging:read",
@@ -258,7 +278,11 @@ export class MessagingCompanyIntegrationService {
 
   public async updateWhatsappBridge(
     authenticatedUser: AuthenticatedUserContext,
-    params: { whatsappNotifyE164: string | null; enabled: boolean },
+    params: {
+      whatsappNotifyE164: string | null;
+      enabled: boolean;
+      kvkkNoticeAccepted?: boolean;
+    },
   ) {
     this.assertOwner(authenticatedUser);
     let row = await this.settingsRepository.findOne({
@@ -278,7 +302,24 @@ export class MessagingCompanyIntegrationService {
       }
       row.whatsappNotifyE164 = phone ? phone.slice(0, 24) : null;
     }
-    row.whatsappBridgeEnabled = params.enabled;
+    if (params.enabled) {
+      if (!params.kvkkNoticeAccepted) {
+        throw new BadRequestException(
+          "WhatsApp köprüsü için KVKK bilgilendirme onayı gerekir (kvkkNoticeAccepted).",
+        );
+      }
+      if (!row.whatsappNotifyE164?.trim()) {
+        throw new BadRequestException(
+          "Etkinleştirmeden önce whatsappNotifyE164 (+E.164) girin.",
+        );
+      }
+      row.whatsappBridgeKvkkAcceptedAt = new Date();
+    } else {
+      row.whatsappBridgeEnabled = false;
+      await this.settingsRepository.save(row);
+      return this.getSettings(authenticatedUser.companyId);
+    }
+    row.whatsappBridgeEnabled = true;
     await this.settingsRepository.save(row);
     return this.getSettings(authenticatedUser.companyId);
   }

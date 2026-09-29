@@ -5194,6 +5194,76 @@ button.btn-secondary {
   min-height: 56px;
 }
 
+.chat-group-participants {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chat-group-participant {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #f1f5f9;
+}
+
+.chat-group-participant-role {
+  font-weight: 600;
+  color: #0f766e;
+}
+
+.chat-channel-settings {
+  margin-top: 12px;
+  padding: 12px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.chat-channel-settings-title {
+  font-size: 0.9rem;
+  margin: 0 0 6px;
+}
+
+.chat-channel-settings-hint,
+.chat-channel-settings-kvkk {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin: 0 0 8px;
+}
+
+.chat-channel-settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.78rem;
+  margin-bottom: 8px;
+}
+
+.chat-channel-settings-check {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 0.75rem;
+  margin-bottom: 10px;
+}
+
+.chat-channel-settings-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chat-channel-settings-status,
+.chat-channel-settings-ok {
+  font-size: 0.75rem;
+  margin: 8px 0 0;
+}
+
 .chat-mention-menu-name {
   font-size: 0.82rem;
   font-weight: 600;

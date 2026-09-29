@@ -6,7 +6,10 @@ import {
   UpdateDateColumn,
 } from "typeorm";
 
-export type MessagingWebhookEventType = "message.created" | "thread.opened";
+export type MessagingWebhookEventType =
+  | "message.created"
+  | "thread.opened"
+  | "message.stamped";
 
 @Entity({ name: "company_messaging_webhook_endpoint" })
 export class CompanyMessagingWebhookEndpointEntity {

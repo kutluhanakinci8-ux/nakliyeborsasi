@@ -56,6 +56,7 @@ import {
   MessageOperationStampEntity,
   type MessagingOperationStampType,
 } from "../../infrastructure/database/entities/MessageOperationStampEntity";
+import type { MessagingGroupParticipantRole } from "../../infrastructure/database/entities/MessageThreadParticipantEntity";
 import { TrustScoreApplicationService } from "../trust/TrustScoreApplicationService";
 import { randomUUID } from "node:crypto";
 
@@ -213,9 +214,14 @@ export class MessagingThreadApplicationService {
         title,
       }),
     );
+    const roleMap: Record<string, MessagingGroupParticipantRole> = {
+      [authenticatedUser.companyId]: "agent",
+      ...(payload.participantRoles ?? {}),
+    };
     await this.messagingThreadParticipantService.addParticipants(
       created.id,
       participantIds,
+      roleMap,
     );
     const openedPayload = {
       threadId: created.id,
@@ -885,7 +891,67 @@ export class MessagingThreadApplicationService {
     }
     const event = { type: "message", threadId: thread.id };
     await this.fanOutRealtime(thread, event);
+    await this.fanOutWebhook(thread, "message.stamped", {
+      threadId: thread.id,
+      messageId: message.id,
+      stampType,
+      stampedByCompanyId: authenticatedUser.companyId,
+      stampedByUserId: authenticatedUser.userId,
+    });
     return { stampType, messageId: message.id };
+  }
+
+  public async listThreadParticipants(
+    authenticatedUser: AuthenticatedUserContext,
+    threadId: string,
+    locale: string,
+  ): Promise<{
+    participants: {
+      companyId: string;
+      legalName: string | null;
+      participantRole: string;
+    }[];
+  }> {
+    const thread = await this.requireParticipantThread(
+      authenticatedUser,
+      threadId,
+      locale,
+    );
+    let rows: { companyId: string; participantRole: string }[];
+    if (thread.threadKind === "group") {
+      const detailed =
+        await this.messagingThreadParticipantService.listParticipantsDetailed(
+          thread.id,
+        );
+      rows = detailed.map((row) => ({
+        companyId: row.companyId,
+        participantRole: row.participantRole,
+      }));
+    } else {
+      rows = [
+        { companyId: thread.companyAId, participantRole: "observer" },
+        { companyId: thread.companyBId, participantRole: "observer" },
+      ];
+    }
+    const companies =
+      rows.length > 0
+        ? await this.companyRepository.find({
+            where: { id: In(rows.map((row) => row.companyId)) },
+          })
+        : [];
+    const nameById = new Map(
+      companies.map((row) => [
+        row.id,
+        row.legalName?.trim() || row.id.slice(0, 8),
+      ]),
+    );
+    return {
+      participants: rows.map((row) => ({
+        companyId: row.companyId,
+        legalName: nameById.get(row.companyId) ?? null,
+        participantRole: row.participantRole,
+      })),
+    };
   }
 
   private async loadOrgQuickReplyTemplates(
@@ -1452,7 +1518,7 @@ export class MessagingThreadApplicationService {
 
   private async fanOutWebhook(
     thread: MessageThreadEntity,
-    event: "message.created" | "thread.opened",
+    event: "message.created" | "thread.opened" | "message.stamped",
     payload: Record<string, unknown>,
   ): Promise<void> {
     const companyIds =

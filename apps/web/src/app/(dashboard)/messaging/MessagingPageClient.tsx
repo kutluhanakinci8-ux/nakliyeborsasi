@@ -12,6 +12,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MessagingMailWebEmbed } from "../../../components/messaging/MessagingMailWebEmbed";
 import { ChatMessageBody } from "../../../components/messaging/ChatMessageBody";
+import { MessagingChannelSettingsPanel } from "../../../components/messaging/MessagingChannelSettingsPanel";
 import {
   ChatGroupThreadModal,
   ChatMessageDeleteModal,
@@ -42,6 +43,7 @@ import {
   companyInitials,
   dayKeyFromIso,
   formatChatDayLabel,
+  groupParticipantRoleLabel,
   highlightSearchSnippet,
   operationStampLabel,
   type MessagingOperationStampType,
@@ -233,6 +235,14 @@ export function MessagingPageClient() {
     MessagingOrgQuickReplyRecord[]
   >([]);
   const [quickReplyAdminBusy, setQuickReplyAdminBusy] = useState(false);
+  const [channelSettingsOpen, setChannelSettingsOpen] = useState(false);
+  const [groupParticipants, setGroupParticipants] = useState<
+    {
+      companyId: string;
+      legalName: string | null;
+      participantRole: string;
+    }[]
+  >([]);
   const deepLinkHandledKey = useRef<string | null>(null);
   const isCompanyOwner =
     session?.roleCodes?.includes("COMPANY_OWNER") ?? false;
@@ -979,6 +989,25 @@ export function MessagingPageClient() {
   }, [mode, accessToken, locale]);
 
   useEffect(() => {
+    if (
+      mode !== "chat" ||
+      !accessToken ||
+      !activeThreadId ||
+      activeThread?.threadKind !== "group"
+    ) {
+      setGroupParticipants([]);
+      return;
+    }
+    void MessagingApiClient.listThreadParticipants(
+      accessToken,
+      locale,
+      activeThreadId,
+    )
+      .then((payload) => setGroupParticipants(payload.participants ?? []))
+      .catch(() => setGroupParticipants([]));
+  }, [mode, accessToken, locale, activeThreadId, activeThread?.threadKind]);
+
+  useEffect(() => {
     const query = threadSearch.trim();
     if (mode !== "chat" || !accessToken || query.length < 2) {
       setServerSearchHits([]);
@@ -1469,6 +1498,12 @@ export function MessagingPageClient() {
                 ))}
               </ul>
             )}
+            {isCompanyOwner && channelSettingsOpen ? (
+              <MessagingChannelSettingsPanel
+                accessToken={accessToken}
+                visible={channelSettingsOpen}
+              />
+            ) : null}
           </aside>
 
           <section className="chat-main module-panel">
@@ -1495,6 +1530,24 @@ export function MessagingPageClient() {
                       shortCompanyId(activeThread.counterpartyCompanyId)
                   : "Mesaj kutusu"}
               </h2>
+              {activeThread?.threadKind === "group" &&
+              groupParticipants.length > 0 ? (
+                <ul
+                  className="chat-group-participants"
+                  aria-label="Grup katılımcıları"
+                >
+                  {groupParticipants.map((row) => (
+                    <li key={row.companyId} className="chat-group-participant">
+                      <span className="chat-group-participant-name">
+                        {row.legalName ?? row.companyId.slice(0, 8)}
+                      </span>
+                      <span className="chat-group-participant-role">
+                        {groupParticipantRoleLabel(row.participantRole)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
             </div>
             {activeThreadId &&
             (listingCard ||
@@ -2054,14 +2107,26 @@ export function MessagingPageClient() {
                     </div>
                   ) : null}
                   {isCompanyOwner ? (
-                    <button
-                      type="button"
-                      className="chat-compose-tool-btn"
-                      disabled={quickReplyAdminBusy}
-                      onClick={() => void openQuickReplyAdmin()}
-                    >
-                      Şablon yönet
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        className="chat-compose-tool-btn"
+                        disabled={quickReplyAdminBusy}
+                        onClick={() => void openQuickReplyAdmin()}
+                      >
+                        Şablon yönet
+                      </button>
+                      <button
+                        type="button"
+                        className="chat-compose-tool-btn"
+                        aria-expanded={channelSettingsOpen}
+                        onClick={() =>
+                          setChannelSettingsOpen((open) => !open)
+                        }
+                      >
+                        Kanallar
+                      </button>
+                    </>
                   ) : null}
                   {quickReplies.length > 0 ? (
                     <label className="chat-compose-template">

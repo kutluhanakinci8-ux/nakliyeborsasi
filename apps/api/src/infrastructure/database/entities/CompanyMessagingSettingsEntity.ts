@@ -33,6 +33,9 @@ export class CompanyMessagingSettingsEntity {
   @Column({ name: "org_quick_reply_templates", type: "jsonb", nullable: true })
   public orgQuickReplyTemplates!: CompanyOrgQuickReplyTemplate[] | null;
 
+  @Column({ name: "whatsapp_bridge_kvkk_accepted_at", type: "timestamptz", nullable: true })
+  public whatsappBridgeKvkkAcceptedAt!: Date | null;
+
   @UpdateDateColumn({ name: "updated_at", type: "timestamptz" })
   public updatedAt!: Date;
 }

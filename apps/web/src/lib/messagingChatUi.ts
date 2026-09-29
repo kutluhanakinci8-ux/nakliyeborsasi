@@ -3,6 +3,19 @@ export type MessagingOperationStampType =
   | "rejected"
   | "acknowledged";
 
+export function groupParticipantRoleLabel(role: string): string {
+  switch (role) {
+    case "shipper":
+      return "Yükleyici";
+    case "carrier":
+      return "Nakliyeci";
+    case "agent":
+      return "Acente";
+    default:
+      return "Gözlemci";
+  }
+}
+
 export function operationStampLabel(stampType: MessagingOperationStampType): string {
   switch (stampType) {
     case "approved":
