@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { Module, forwardRef } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { MessageThreadEntity } from "../../infrastructure/database/entities/MessageThreadEntity";
 import { MessageEntity } from "../../infrastructure/database/entities/MessageEntity";
@@ -26,12 +26,24 @@ import { RedisModule } from "../../infrastructure/redis/RedisModule";
 import { AuditModule } from "../../infrastructure/audit/AuditModule";
 import { MessagingAuditService } from "./MessagingAuditService";
 import { MessagingCompanyMessageRateLimitService } from "./MessagingCompanyMessageRateLimitService";
+import { CompanyMessagingWebhookEndpointEntity } from "../../infrastructure/database/entities/CompanyMessagingWebhookEndpointEntity";
+import { CompanyMessagingSettingsEntity } from "../../infrastructure/database/entities/CompanyMessagingSettingsEntity";
+import { MessagingWebhookDispatcherService } from "./MessagingWebhookDispatcherService";
+import { MessagingCompanyIntegrationService } from "./MessagingCompanyIntegrationService";
+import { MessagingIntegrationController } from "./MessagingIntegrationController";
+import { MessagingPublicApiController } from "./MessagingPublicApiController";
+import { MessagingPublicApiGuard } from "./MessagingPublicApiGuard";
+import { MessagingPublicApiReadService } from "./MessagingPublicApiReadService";
+import { MessagingRetentionScheduler } from "./MessagingRetentionScheduler";
+import { AuctionModule } from "../auction/AuctionModule";
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       MessageThreadEntity,
       MessageEntity,
+      CompanyMessagingWebhookEndpointEntity,
+      CompanyMessagingSettingsEntity,
       MessageThreadReadStateEntity,
       MessageThreadUserReadStateEntity,
       MessagingWebPushSubscriptionEntity,
@@ -43,6 +55,7 @@ import { MessagingCompanyMessageRateLimitService } from "./MessagingCompanyMessa
     SubscriptionModule,
     AuthModule,
     NotificationModule,
+    forwardRef(() => AuctionModule),
     RedisModule,
     AuditModule,
   ],
@@ -51,6 +64,8 @@ import { MessagingCompanyMessageRateLimitService } from "./MessagingCompanyMessa
     MessagingThreadController,
     MessagingPushController,
     MessagingStreamController,
+    MessagingIntegrationController,
+    MessagingPublicApiController,
   ],
   providers: [
     MessagingThreadApplicationService,
@@ -61,6 +76,11 @@ import { MessagingCompanyMessageRateLimitService } from "./MessagingCompanyMessa
     MessagingStreamTicketService,
     MessagingAuditService,
     MessagingCompanyMessageRateLimitService,
+    MessagingWebhookDispatcherService,
+    MessagingCompanyIntegrationService,
+    MessagingPublicApiGuard,
+    MessagingPublicApiReadService,
+    MessagingRetentionScheduler,
   ],
   exports: [MessagingThreadApplicationService],
 })

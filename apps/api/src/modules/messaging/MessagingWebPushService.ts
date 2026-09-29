@@ -4,6 +4,7 @@ import { Repository } from "typeorm";
 import { resolveMessagingVapidFromEnv } from "../../infrastructure/push/messagingVapidEnv";
 import { sendWebPushNotification } from "../../infrastructure/push/sendWebPush";
 import { MessagingWebPushSubscriptionEntity } from "../../infrastructure/database/entities/MessagingWebPushSubscriptionEntity";
+import { UserNotificationPreferenceService } from "../notification/UserNotificationPreferenceService";
 
 export type MessagingWebPushConfig = {
   enabled: boolean;
@@ -19,6 +20,7 @@ export class MessagingWebPushService {
   public constructor(
     @InjectRepository(MessagingWebPushSubscriptionEntity)
     private readonly subscriptionRepository: Repository<MessagingWebPushSubscriptionEntity>,
+    private readonly userNotificationPreferenceService: UserNotificationPreferenceService,
   ) {}
 
   public getPublicConfig(): MessagingWebPushConfig {
@@ -98,6 +100,14 @@ export class MessagingWebPushService {
       url: `${webBase.replace(/\/$/, "")}/messaging?tab=chat&threadId=${encodeURIComponent(params.threadId)}${listingQuery}`,
     });
     for (const row of subs) {
+      const prefs = await this.userNotificationPreferenceService.getForUser(
+        row.userId,
+      );
+      const chatPush =
+        prefs.notifyPushMessagingChat && prefs.notifyPushMessages;
+      if (!chatPush) {
+        continue;
+      }
       try {
         await sendWebPushNotification(
           {

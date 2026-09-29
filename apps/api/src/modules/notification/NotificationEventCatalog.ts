@@ -6,6 +6,8 @@ export type UserPreferenceKey =
   | "notifyAuctions"
   | "notifyWeeklyDigest";
 
+export type UserPushOnlyPreferenceKey = "notifyPushMessagingChat";
+
 export type NotificationEventCategory =
   | "auth"
   | "auction"
@@ -17,6 +19,7 @@ export type NotificationEventDefinition = {
   code: NotificationEventCode;
   category: NotificationEventCategory;
   userPreferenceKey: UserPreferenceKey | null;
+  pushOnlyPreferenceKey?: UserPushOnlyPreferenceKey | null;
   defaultAdminEnabled: boolean;
   defaultUserEnabled: boolean;
   labelTr: string;
@@ -126,6 +129,15 @@ export const NOTIFICATION_EVENT_CATALOG: NotificationEventDefinition[] = [
     defaultAdminEnabled: false,
     defaultUserEnabled: true,
     labelTr: "Sohbette @mention",
+  },
+  {
+    code: NotificationEventCode.MessagingChatWebPush,
+    category: "messaging",
+    userPreferenceKey: null,
+    pushOnlyPreferenceKey: "notifyPushMessagingChat",
+    defaultAdminEnabled: false,
+    defaultUserEnabled: true,
+    labelTr: "Firma sohbeti — tarayıcı push",
   },
 ];
 

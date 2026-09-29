@@ -89,7 +89,11 @@ export class MailOrganizationIntegrationService {
 
   public async authenticateApiKey(
     plaintext: string,
-  ): Promise<{ organizationId: string; apiKeyId: string } | null> {
+  ): Promise<{
+    organizationId: string;
+    apiKeyId: string;
+    scopes: string[];
+  } | null> {
     const trimmed = plaintext.trim();
     if (!trimmed.startsWith("lerta_mail_live_")) {
       return null;
@@ -112,10 +116,17 @@ export class MailOrganizationIntegrationService {
     }
     row.lastUsedAt = new Date();
     await this.apiKeyRepository.save(row);
-    return { organizationId: row.organizationId, apiKeyId: row.id };
+    const scopes = Array.isArray(row.scopes) && row.scopes.length > 0
+      ? row.scopes
+      : ["mail:send", "mail:read"];
+    return { organizationId: row.organizationId, apiKeyId: row.id, scopes };
   }
 
-  public async createApiKey(organizationId: string, label: string) {
+  public async createApiKey(
+    organizationId: string,
+    label: string,
+    scopes?: string[],
+  ) {
     await this.assertPublicApiAllowed(organizationId);
     const { plaintext, prefix } = generateApiKeyPlaintext();
     const row = await this.apiKeyRepository.save(
@@ -126,15 +137,53 @@ export class MailOrganizationIntegrationService {
         keyHash: hashIntegrationSecret(plaintext),
         lastUsedAt: null,
         revokedAt: null,
+        scopes: this.normalizeApiKeyScopes(scopes),
       }),
     );
     return {
       id: row.id,
       label: row.label,
       keyPrefix: row.keyPrefix,
+      scopes: row.scopes,
       createdAt: row.createdAt.toISOString(),
       apiKey: plaintext,
     };
+  }
+
+  public async updateApiKeyScopes(
+    organizationId: string,
+    keyId: string,
+    scopes: string[],
+  ) {
+    await this.assertPublicApiAllowed(organizationId);
+    const row = await this.apiKeyRepository.findOne({
+      where: { id: keyId, organizationId, revokedAt: IsNull() },
+    });
+    if (!row) {
+      throw new NotFoundException("API anahtarı bulunamadı.");
+    }
+    row.scopes = this.normalizeApiKeyScopes(scopes);
+    await this.apiKeyRepository.save(row);
+    return {
+      id: row.id,
+      scopes: row.scopes,
+    };
+  }
+
+  private normalizeApiKeyScopes(scopes?: string[]): string[] {
+    const allowed = new Set([
+      "mail:send",
+      "mail:read",
+      "messaging:read",
+    ]);
+    const input = scopes?.length
+      ? scopes
+      : ["mail:send", "mail:read"];
+    const normalized = [...new Set(input.filter((scope) => allowed.has(scope)))];
+    if (!normalized.length) {
+      throw new BadRequestException("Geçerli scope gerekli.");
+    }
+    return normalized;
   }
 
   public async listApiKeys(organizationId: string) {
@@ -148,6 +197,7 @@ export class MailOrganizationIntegrationService {
       keyPrefix: row.keyPrefix,
       lastUsedAt: row.lastUsedAt?.toISOString() ?? null,
       createdAt: row.createdAt.toISOString(),
+      scopes: Array.isArray(row.scopes) ? row.scopes : ["mail:send", "mail:read"],
     }));
   }
 

@@ -31,15 +31,18 @@ export class UserNotificationPreferencesController {
       const key = row.userPreferenceKey;
       const userToggle = key ? preferences[key] : row.defaultUserEnabled;
       const pushKey =
-        key === "notifyNewOffers"
+        row.pushOnlyPreferenceKey ??
+        (key === "notifyNewOffers"
           ? "notifyPushNewOffers"
           : key === "notifyMessages"
             ? "notifyPushMessages"
             : key === "notifyAuctions"
               ? "notifyPushAuctions"
-              : null;
+              : null);
       const pushToggle =
-        pushKey != null ? preferences[pushKey] : null;
+        pushKey != null
+          ? preferences[pushKey as keyof typeof preferences] === true
+          : null;
       return {
         eventCode: row.code,
         category: row.category,

@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { Module, forwardRef } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { AuctionSessionEntity } from "../../infrastructure/database/entities/AuctionSessionEntity";
 import { AuctionBidEntity } from "../../infrastructure/database/entities/AuctionBidEntity";
@@ -26,7 +26,7 @@ import { AuctionListingPriceActionService } from "./AuctionListingPriceActionSer
     SubscriptionModule,
     AuthModule,
     TrustScoreModule,
-    MessagingModule,
+    forwardRef(() => MessagingModule),
     NotificationModule,
   ],
   controllers: [AuctionSessionController],
@@ -36,5 +36,6 @@ import { AuctionListingPriceActionService } from "./AuctionListingPriceActionSer
     AuctionExpiredSessionSweepTask,
     AuctionListingPriceActionService,
   ],
+  exports: [AuctionListingPriceActionService],
 })
 export class AuctionModule {}

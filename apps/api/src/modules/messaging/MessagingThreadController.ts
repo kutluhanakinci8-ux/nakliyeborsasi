@@ -312,6 +312,24 @@ export class MessagingThreadController {
     );
   }
 
+  @Post("threads/:threadId/actions/accept-fixed-price")
+  public async acceptFixedPrice(
+    @Param("threadId") threadId: string,
+    @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
+    @Headers("accept-language") acceptLanguage: string | undefined,
+    @Query("lang") queryLanguage: string | undefined,
+  ): Promise<{ sessionId: string; bidId: string; systemMessageId: string }> {
+    const locale = this.localeResolutionService.resolveFromHeaders(
+      acceptLanguage,
+      queryLanguage,
+    );
+    return this.messagingThreadApplicationService.acceptFixedPriceFromThread(
+      authenticatedUser,
+      threadId,
+      locale,
+    );
+  }
+
   @Get("threads/:threadId/summary")
   public async threadSummary(
     @Param("threadId") threadId: string,

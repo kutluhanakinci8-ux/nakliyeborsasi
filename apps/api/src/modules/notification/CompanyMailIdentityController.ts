@@ -795,6 +795,7 @@ export class CompanyMailIdentityController {
     const created = await this.mailOrganizationIntegrationService.createApiKey(
       user.companyId,
       body.label,
+      body.scopes,
     );
     await this.mailIdentityAuditService.recordFromUser(
       user,

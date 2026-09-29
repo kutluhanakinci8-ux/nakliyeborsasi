@@ -39,6 +39,9 @@ fi
 if [[ -x scripts/apply-messaging-fs4-schema.sh ]]; then
   bash scripts/apply-messaging-fs4-schema.sh "$INSTALL_DIR" || true
 fi
+if [[ -x scripts/apply-messaging-fs5-schema.sh ]]; then
+  bash scripts/apply-messaging-fs5-schema.sh "$INSTALL_DIR" || true
+fi
 
 if [[ -x scripts/apply-mail-sa2-auto-reply-schema.sh ]]; then
   bash scripts/apply-mail-sa2-auto-reply-schema.sh "$INSTALL_DIR" || true

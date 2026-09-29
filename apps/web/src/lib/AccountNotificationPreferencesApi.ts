@@ -8,6 +8,7 @@ export type AccountNotificationPreferences = {
   notifyPushNewOffers?: boolean;
   notifyPushMessages?: boolean;
   notifyPushAuctions?: boolean;
+  notifyPushMessagingChat?: boolean;
   aiMailAssistConsent?: boolean;
 };
 
@@ -57,6 +58,7 @@ export type NotificationPreferenceMatrixEvent = {
     | "notifyPushNewOffers"
     | "notifyPushMessages"
     | "notifyPushAuctions"
+    | "notifyPushMessagingChat"
     | null;
   editable: boolean;
   emailEnabled: boolean;

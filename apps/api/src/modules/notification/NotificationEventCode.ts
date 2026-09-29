@@ -11,6 +11,7 @@ export enum NotificationEventCode {
   ListingNewOffer = "LISTING_NEW_OFFER",
   MessagingNewMessage = "MESSAGING_NEW_MESSAGE",
   MessagingUserMention = "MESSAGING_USER_MENTION",
+  MessagingChatWebPush = "MESSAGING_CHAT_WEB_PUSH",
   MailTeamInvite = "MAIL_TEAM_INVITE",
 }
 

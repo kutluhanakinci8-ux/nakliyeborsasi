@@ -21,6 +21,11 @@ export class CreateMailApiKeyRequestDto {
   @MinLength(1)
   @MaxLength(80)
   public label!: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  public scopes?: string[];
 }
 
 export class CreateMailWebhookRequestDto {

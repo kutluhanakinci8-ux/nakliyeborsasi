@@ -63,6 +63,11 @@ export class MessagingModuleStatusController {
         "messaging_crud_audit",
         "ediscovery_zip_sha256",
         "company_message_rate_limit",
+        "outbound_webhooks",
+        "public_api_messaging_read",
+        "retention_policy_job",
+        "chat_accept_fixed_price",
+        "notify_push_messaging_chat",
       ],
       translate: { deepl, libretranslate: libre },
       attachments: {

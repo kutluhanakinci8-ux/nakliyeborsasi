@@ -87,6 +87,7 @@ export function MessagingPageClient() {
   const [messages, setMessages] = useState<ThreadMessageRecord[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [isBusy, setIsBusy] = useState(false);
+  const [acceptOfferBusy, setAcceptOfferBusy] = useState(false);
   const [mailEmbedFullscreen, setMailEmbedFullscreen] = useState(false);
   const [threadSearch, setThreadSearch] = useState("");
   const [counterpartyTrust, setCounterpartyTrust] =
@@ -392,6 +393,35 @@ export function MessagingPageClient() {
       await loadMessages(activeThreadId);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Gönderim hatası");
+    }
+  }
+
+  async function acceptListingFixedPrice(): Promise<void> {
+    if (!accessToken || !activeThreadId || !listingCard?.priceAmount) {
+      return;
+    }
+    setAcceptOfferBusy(true);
+    setErrorMessage("");
+    try {
+      await MessagingApiClient.acceptFixedPriceFromThread(
+        accessToken,
+        locale,
+        activeThreadId,
+      );
+      await loadMessages(activeThreadId);
+      const insights = await MessagingApiClient.fetchThreadInsights(
+        accessToken,
+        locale,
+        activeThreadId,
+      );
+      setListingCard(insights.listingCard);
+      setOfferTimeline(insights.offerTimeline);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Teklif kabul edilemedi",
+      );
+    } finally {
+      setAcceptOfferBusy(false);
     }
   }
 
@@ -870,6 +900,16 @@ export function MessagingPageClient() {
                     ? ` · ${listingCard.priceAmount} ${listingCard.priceCurrencyCode}`
                     : ""}
                 </p>
+                {listingCard.priceAmount ? (
+                  <button
+                    type="button"
+                    className="btn-account-primary chat-listing-accept-btn"
+                    disabled={acceptOfferBusy || isBusy}
+                    onClick={() => void acceptListingFixedPrice()}
+                  >
+                    {acceptOfferBusy ? "Kabul ediliyor…" : "Sabit fiyatı kabul et"}
+                  </button>
+                ) : null}
               </div>
             ) : null}
             {threadSummary ? (

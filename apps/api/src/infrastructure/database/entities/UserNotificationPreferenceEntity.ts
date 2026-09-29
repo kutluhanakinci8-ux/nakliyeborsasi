@@ -38,6 +38,9 @@ export class UserNotificationPreferenceEntity {
   @Column({ name: "notify_push_auctions", type: "boolean", default: true })
   public notifyPushAuctions!: boolean;
 
+  @Column({ name: "notify_push_messaging_chat", type: "boolean", default: true })
+  public notifyPushMessagingChat!: boolean;
+
   @CreateDateColumn({ type: "timestamptz" })
   public createdAt!: Date;
 

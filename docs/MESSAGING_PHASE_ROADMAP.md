@@ -11,6 +11,7 @@
 | **FS-2** | Sunucu arama, markdown, şablonlar, ilan kartı, teklif timeline, AI özet | ✅ kod · `verify-firma-sohbeti-fs2.sh` |
 | **FS-3** | Okundu (kullanıcı), typing, iç not, düzenle/sil, @mention, çeviri DE/RU | ✅ kod · `verify-firma-sohbeti-fs3.sh` |
 | **FS-4** | Redis SSE fan-out, thread legal hold, mesaj CRUD audit (IP/UA), eDiscovery ZIP+SHA-256, rate limit/dk | ✅ kod · `verify-firma-sohbeti-fs4.sh` · `smoke-messaging-sse-load.sh` |
+| **FS-5** | Webhook HMAC, Public API `messaging:read`, retention job, sohbetten sabit fiyat kabul, push matris satırı | ✅ kod · `verify-firma-sohbeti-fs5.sh` |
 
 **Çeviri (ops):** `MESSAGING_TRANSLATE_API_URL` → LibreTranslate uyumlu POST (ör. `https://libretranslate.com/translate`)
 

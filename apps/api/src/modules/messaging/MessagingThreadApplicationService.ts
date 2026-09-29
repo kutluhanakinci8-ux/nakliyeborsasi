@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable, forwardRef } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { In, IsNull, Repository } from "typeorm";
 import {
@@ -42,6 +42,8 @@ import {
 } from "./MessagingAuditService";
 import { MessagingCompanyMessageRateLimitService } from "./MessagingCompanyMessageRateLimitService";
 import type { MessagingClientRequestContext } from "./MessagingClientRequestContext";
+import { MessagingWebhookDispatcherService } from "./MessagingWebhookDispatcherService";
+import { AuctionListingPriceActionService } from "../auction/AuctionListingPriceActionService";
 
 @Injectable()
 export class MessagingThreadApplicationService {
@@ -70,6 +72,9 @@ export class MessagingThreadApplicationService {
     private readonly mailAiComposeService: MailAiComposeService,
     private readonly messagingAuditService: MessagingAuditService,
     private readonly messagingCompanyMessageRateLimitService: MessagingCompanyMessageRateLimitService,
+    private readonly messagingWebhookDispatcherService: MessagingWebhookDispatcherService,
+    @Inject(forwardRef(() => AuctionListingPriceActionService))
+    private readonly auctionListingPriceActionService: AuctionListingPriceActionService,
   ) {}
 
   public async assertMessagingModule(
@@ -111,13 +116,66 @@ export class MessagingThreadApplicationService {
     if (existing) {
       return existing;
     }
-    return this.messageThreadRepository.save(
+    const created = await this.messageThreadRepository.save(
       this.messageThreadRepository.create({
         companyAId: pair.companyAId,
         companyBId: pair.companyBId,
         freightListingId: payload.freightListingId ?? null,
       }),
     );
+    const openedPayload = {
+      threadId: created.id,
+      companyAId: created.companyAId,
+      companyBId: created.companyBId,
+      freightListingId: created.freightListingId,
+      openedByCompanyId: authenticatedUser.companyId,
+      openedByUserId: authenticatedUser.userId,
+    };
+    this.messagingWebhookDispatcherService.dispatch(
+      created.companyAId,
+      "thread.opened",
+      openedPayload,
+    );
+    this.messagingWebhookDispatcherService.dispatch(
+      created.companyBId,
+      "thread.opened",
+      openedPayload,
+    );
+    return created;
+  }
+
+  public async acceptFixedPriceFromThread(
+    authenticatedUser: AuthenticatedUserContext,
+    threadId: string,
+    locale: string,
+  ): Promise<{ sessionId: string; bidId: string; systemMessageId: string }> {
+    const thread = await this.requireParticipantThread(
+      authenticatedUser,
+      threadId,
+      locale,
+    );
+    if (!thread.freightListingId) {
+      throw new ValidationException("Bu sohbet bir yük ilanına bağlı değil.");
+    }
+    const result =
+      await this.auctionListingPriceActionService.acceptListingFixedPrice(
+        authenticatedUser,
+        thread.freightListingId,
+        locale,
+      );
+    const systemMessage = await this.sendMessage(
+      authenticatedUser,
+      thread.id,
+      "✅ **Sabit fiyat teklifi kabul edildi** — ihale kaydı güncellendi.",
+      locale,
+      undefined,
+      "public",
+    );
+    return {
+      sessionId: result.sessionId,
+      bidId: result.bidId,
+      systemMessageId: systemMessage.id,
+    };
   }
 
   public async listThreads(
@@ -369,6 +427,25 @@ export class MessagingThreadApplicationService {
     const event = { type: "message", threadId: thread.id };
     this.messagingRealtimeHubService.publish(thread.companyAId, event);
     this.messagingRealtimeHubService.publish(thread.companyBId, event);
+    const createdPayload = {
+      threadId: thread.id,
+      messageId: saved.id,
+      senderCompanyId: saved.senderCompanyId,
+      senderUserId: saved.senderUserId,
+      messageKind: saved.kind ?? "public",
+      freightListingId: thread.freightListingId,
+      bodyPreview: preview,
+    };
+    this.messagingWebhookDispatcherService.dispatch(
+      thread.companyAId,
+      "message.created",
+      createdPayload,
+    );
+    this.messagingWebhookDispatcherService.dispatch(
+      thread.companyBId,
+      "message.created",
+      createdPayload,
+    );
     if (clientContext) {
       void this.messagingAuditService.recordMessageMutation(
         MessagingAuditActionCode.MessageCreate,

@@ -29,6 +29,9 @@ export class MailOrganizationApiKeyEntity {
   @Column({ type: "timestamptz", nullable: true })
   public revokedAt!: Date | null;
 
+  @Column({ type: "jsonb", default: () => `'["mail:send","mail:read"]'` })
+  public scopes!: string[];
+
   @CreateDateColumn({ type: "timestamptz" })
   public createdAt!: Date;
 }

@@ -18,6 +18,7 @@ export type UserNotificationPreferencesDto = {
   notifyPushNewOffers: boolean;
   notifyPushMessages: boolean;
   notifyPushAuctions: boolean;
+  notifyPushMessagingChat: boolean;
   aiMailAssistConsent: boolean;
   aiMailAssentAt: string | null;
 };
@@ -51,6 +52,7 @@ export class UserNotificationPreferenceService {
       notifyPushNewOffers: row.notifyPushNewOffers ?? true,
       notifyPushMessages: row.notifyPushMessages ?? true,
       notifyPushAuctions: row.notifyPushAuctions ?? true,
+      notifyPushMessagingChat: row.notifyPushMessagingChat ?? true,
     };
   }
 
@@ -123,6 +125,7 @@ export class UserNotificationPreferenceService {
       notifyPushNewOffers: true,
       notifyPushMessages: true,
       notifyPushAuctions: true,
+      notifyPushMessagingChat: true,
       aiMailAssistConsent: false,
       aiMailAssentAt: null,
     };

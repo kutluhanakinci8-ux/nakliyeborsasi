@@ -239,7 +239,11 @@ export function ProfilePageClient() {
   }
 
   async function setMatrixPushPreference(
-    key: "notifyPushNewOffers" | "notifyPushMessages" | "notifyPushAuctions",
+    key:
+      | "notifyPushNewOffers"
+      | "notifyPushMessages"
+      | "notifyPushAuctions"
+      | "notifyPushMessagingChat",
     enabled: boolean,
   ): Promise<void> {
     if (!accessToken) {

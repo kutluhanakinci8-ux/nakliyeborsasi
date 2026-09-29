@@ -264,6 +264,18 @@ export class MessagingApiClient {
     );
   }
 
+  public static async acceptFixedPriceFromThread(
+    accessToken: string,
+    locale: string,
+    threadId: string,
+  ): Promise<{ sessionId: string; bidId: string; systemMessageId: string }> {
+    return AuthenticatedApiClient.fetchJson(
+      accessToken,
+      `/messaging/threads/${threadId}/actions/accept-fixed-price?lang=${locale}`,
+      { method: "POST" },
+    ) as Promise<{ sessionId: string; bidId: string; systemMessageId: string }>;
+  }
+
   public static async fetchColleagues(
     accessToken: string,
     locale: string,
