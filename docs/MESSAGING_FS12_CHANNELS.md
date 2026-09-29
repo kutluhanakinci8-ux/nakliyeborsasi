@@ -7,6 +7,8 @@
 - Ayar: `PATCH /messaging/integration/whatsapp-bridge` (firma sahibi)
 - KVKK onayı: `kvkkNoticeAccepted: true` zorunlu
 - Twilio (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_FROM`) veya `MESSAGING_WHATSAPP_BRIDGE_WEBHOOK_URL` ile teslim — **sunucuda biri tanımlı değilse firma ayarı “etkin” olsa bile WhatsApp mesajı gitmez**
+- Yeni/trial Twilio hesaplarında WhatsApp için çoğu zaman **`TWILIO_WHATSAPP_CONTENT_SID`** (Content Template, tek alan `{{1}}` = bildirim metni) gerekir; `Body` ile 400 `21654` alınabilir
+- Sandbox: alıcı telefon `join …` mesajını Twilio sandbox numarasına göndermeli
 - UI: Mesajlar → **Kanal ayarları** paneli (`MessagingChannelSettingsPanel`)
 
 ## 12B — Capacitor native shell
