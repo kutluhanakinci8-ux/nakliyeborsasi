@@ -20,6 +20,12 @@ export class MessagingThreadMessageView {
   /** Karşı şirkette okuyan kullanıcı kimlikleri (iş hesabı). */
   public readonly readByCounterpartyUserIds: string[];
 
+  /** Okuyan karşı taraf kullanıcıları (görünen ad). */
+  public readonly readByCounterpartyReaders: {
+    userId: string;
+    displayName: string;
+  }[];
+
   public readonly messageKind: "public" | "internal";
 
   public readonly editedAt: string | null;
@@ -37,6 +43,7 @@ export class MessagingThreadMessageView {
     createdAt: string;
     readByRecipient: boolean;
     readByCounterpartyUserIds?: string[];
+    readByCounterpartyReaders?: { userId: string; displayName: string }[];
     messageKind?: "public" | "internal";
     editedAt?: string | null;
     deleted?: boolean;
@@ -49,6 +56,12 @@ export class MessagingThreadMessageView {
     this.createdAt = params.createdAt;
     this.readByRecipient = params.readByRecipient;
     this.readByCounterpartyUserIds = params.readByCounterpartyUserIds ?? [];
+    this.readByCounterpartyReaders =
+      params.readByCounterpartyReaders ??
+      (params.readByCounterpartyUserIds ?? []).map((userId) => ({
+        userId,
+        displayName: userId.slice(0, 8),
+      }));
     this.messageKind = params.messageKind ?? "public";
     this.editedAt = params.editedAt ?? null;
     this.deleted = params.deleted ?? false;

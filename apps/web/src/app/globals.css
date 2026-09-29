@@ -5701,6 +5701,144 @@ button.btn-secondary {
   color: #0f172a;
 }
 
+.chat-bubble--internal {
+  background: #fffbeb;
+  border: 1px dashed #fbbf24;
+}
+
+.chat-bubble--mine.chat-bubble--internal {
+  background: #fef3c7;
+}
+
+.chat-internal-tag {
+  font-weight: 700;
+  color: #b45309;
+}
+
+.chat-read-ticks {
+  color: #94a3b8;
+  font-weight: 700;
+}
+
+.chat-read-ticks--read {
+  color: #0f766e;
+}
+
+.chat-mention {
+  display: inline;
+  padding: 0 4px;
+  border-radius: 4px;
+  background: rgba(15, 118, 110, 0.12);
+  color: #0f766e;
+  font-weight: 600;
+}
+
+.chat-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.chat-messages-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.chat-internal-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.chat-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.chat-modal {
+  width: min(480px, 100%);
+  max-height: 90vh;
+  overflow: auto;
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px 22px;
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.2);
+}
+
+.chat-modal--wide {
+  width: min(560px, 100%);
+}
+
+.chat-modal--compact {
+  width: min(400px, 100%);
+}
+
+.chat-modal-title {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+  color: #0f172a;
+}
+
+.chat-modal-hint {
+  margin: 0 0 14px;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.chat-modal-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.chat-modal-textarea {
+  width: 100%;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  margin-bottom: 14px;
+  resize: vertical;
+}
+
+.chat-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.chat-group-search-hits,
+.chat-group-selected {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.chat-group-selected {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
 .trust-layout {
   display: grid;
   grid-template-columns: 1fr 1fr;

@@ -28,6 +28,7 @@ export type ThreadMessageRecord = {
   createdAt: string;
   readByRecipient?: boolean;
   readByCounterpartyUserIds?: string[];
+  readByCounterpartyReaders?: { userId: string; displayName: string }[];
   messageKind?: "public" | "internal";
   editedAt?: string | null;
   deleted?: boolean;
@@ -136,6 +137,28 @@ export class MessagingApiClient {
         body: JSON.stringify({
           counterpartyCompanyId,
           ...(freightListingId ? { freightListingId } : {}),
+        }),
+      },
+    ) as Promise<{ thread: { id: string } }>;
+  }
+
+  public static async openGroupThread(
+    accessToken: string,
+    locale: string,
+    participantCompanyIds: string[],
+    options?: { title?: string; freightListingId?: string },
+  ): Promise<{ thread: { id: string } }> {
+    return AuthenticatedApiClient.fetchJson(
+      accessToken,
+      `/messaging/threads/group?lang=${locale}`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          participantCompanyIds,
+          ...(options?.title ? { title: options.title } : {}),
+          ...(options?.freightListingId
+            ? { freightListingId: options.freightListingId }
+            : {}),
         }),
       },
     ) as Promise<{ thread: { id: string } }>;

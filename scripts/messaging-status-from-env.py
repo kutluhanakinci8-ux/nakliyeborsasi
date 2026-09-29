@@ -50,5 +50,17 @@ if __name__ == "__main__":
         if missing:
             raise SystemExit(f"FAIL: eksik features: {sorted(missing)}")
         print("OK: FS-8 status features (company_search, hub_default_tab)")
+    elif check == "fs9":
+        required = {
+            "read_receipt_panel",
+            "group_thread_ui",
+            "message_edit_modal",
+            "mention_highlight",
+            "internal_note_filter",
+        }
+        missing = required - features
+        if missing:
+            raise SystemExit(f"FAIL: eksik features: {sorted(missing)}")
+        print("OK: FS-9 status features")
     else:
         raise SystemExit(f"unknown check {check}")

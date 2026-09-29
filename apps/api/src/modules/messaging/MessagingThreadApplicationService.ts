@@ -390,6 +390,23 @@ export class MessagingThreadApplicationService {
     const counterpartyUserReads = await this.userReadStateRepository.find({
       where: { threadId: thread.id, companyId: counterpartyCompanyId },
     });
+    const counterpartyUserIds = [
+      ...new Set(counterpartyUserReads.map((row) => row.userId)),
+    ];
+    const counterpartyUsers =
+      counterpartyUserIds.length > 0
+        ? await this.userAccountRepository.find({
+            where: { id: In(counterpartyUserIds) },
+          })
+        : [];
+    const counterpartyUserNameById = new Map(
+      counterpartyUsers.map((row) => [
+        row.id,
+        row.displayName?.trim() ||
+          row.emailAddress?.trim() ||
+          row.id.slice(0, 8),
+      ]),
+    );
     const messageCreatedMs = (value: Date | string): number =>
       value instanceof Date ? value.getTime() : new Date(value).getTime();
 
@@ -405,6 +422,13 @@ export class MessagingThreadApplicationService {
             )
             .map((row) => row.userId)
         : [];
+      const readByCounterpartyReaders = readByCounterpartyUserIds.map(
+        (userId) => ({
+          userId,
+          displayName:
+            counterpartyUserNameById.get(userId) ?? userId.slice(0, 8),
+        }),
+      );
       const readByRecipient =
         isMine &&
         (readByCounterpartyUserIds.length > 0 ||
@@ -418,6 +442,7 @@ export class MessagingThreadApplicationService {
         createdAt: message.createdAt.toISOString(),
         readByRecipient,
         readByCounterpartyUserIds,
+        readByCounterpartyReaders,
         messageKind: message.kind ?? "public",
         editedAt: message.editedAt?.toISOString() ?? null,
         deleted,

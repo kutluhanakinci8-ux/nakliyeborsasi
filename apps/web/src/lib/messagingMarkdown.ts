@@ -1,9 +1,22 @@
 /**
  * Kısıtlı markdown → güvenli HTML (XSS kaçınır).
  */
-export function renderMessagingMarkdown(source: string): string {
+export function renderMessagingMarkdown(
+  source: string,
+  mentionNameByUserId?: Record<string, string>,
+): string {
   const escaped = escapeHtml(source);
   let html = escaped;
+
+  html = html.replace(
+    /@\{([0-9a-f-]{36})\}/gi,
+    (_match, userId: string) => {
+      const label = mentionNameByUserId?.[userId.toLowerCase()] ??
+        mentionNameByUserId?.[userId];
+      const text = label ? `@${escapeHtml(label)}` : `@{${userId}}`;
+      return `<span class="chat-mention">${text}</span>`;
+    },
+  );
 
   html = html.replace(
     /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,

@@ -5,6 +5,11 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MessagingMailWebEmbed } from "../../../components/messaging/MessagingMailWebEmbed";
 import { ChatMessageBody } from "../../../components/messaging/ChatMessageBody";
+import {
+  ChatGroupThreadModal,
+  ChatMessageDeleteModal,
+  ChatMessageEditModal,
+} from "../../../components/messaging/ChatMessagingModals";
 import { EmptyState } from "../../../components/EmptyState";
 import { ModulePageShell } from "../../../components/ModulePageShell";
 import { useWebSession } from "../../../context/WebSessionProvider";
@@ -167,6 +172,22 @@ export function MessagingPageClient() {
   const typingPingRef = useRef(0);
   const messageInputRef = useRef<HTMLTextAreaElement>(null);
   const [mentionMenuOpen, setMentionMenuOpen] = useState(false);
+  const [internalNotesOnly, setInternalNotesOnly] = useState(false);
+  const [editMessage, setEditMessage] = useState<{
+    id: string;
+    bodyText: string;
+  } | null>(null);
+  const [deleteMessageId, setDeleteMessageId] = useState<string | null>(null);
+  const [messageActionBusy, setMessageActionBusy] = useState(false);
+  const [groupModalOpen, setGroupModalOpen] = useState(false);
+  const [groupTitle, setGroupTitle] = useState("");
+  const [groupSearchQuery, setGroupSearchQuery] = useState("");
+  const [groupSearchHits, setGroupSearchHits] = useState<
+    MessagingCompanySearchRecord[]
+  >([]);
+  const [groupSelected, setGroupSelected] = useState<
+    MessagingCompanySearchRecord[]
+  >([]);
   const [translations, setTranslations] = useState<Record<string, string>>({});
   const [pendingAttachments, setPendingAttachments] = useState<
     PendingAttachment[]
@@ -175,6 +196,26 @@ export function MessagingPageClient() {
   const deepLinkHandledKey = useRef<string | null>(null);
   const isCompanyOwner =
     session?.roleCodes?.includes("COMPANY_OWNER") ?? false;
+
+  const mentionNameByUserId = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const colleague of colleagues) {
+      const match = colleague.mentionToken.match(
+        /@\{([0-9a-f-]{36})\}/i,
+      );
+      if (match) {
+        map[match[1].toLowerCase()] = colleague.displayName;
+      }
+    }
+    return map;
+  }, [colleagues]);
+
+  const displayedMessages = useMemo(() => {
+    if (!internalNotesOnly) {
+      return messages;
+    }
+    return messages.filter((row) => row.messageKind === "internal");
+  }, [messages, internalNotesOnly]);
 
   const mentionDropdownOpen = useMemo(() => {
     if (colleagues.length === 0) {
@@ -324,6 +365,91 @@ export function MessagingPageClient() {
       setErrorMessage(error instanceof Error ? error.message : "Sohbet hatası");
     } finally {
       setIsBusy(false);
+    }
+  }
+
+  async function createGroupThread(): Promise<void> {
+    if (groupSelected.length < 2) {
+      setErrorMessage("Grup için en az iki karşı firma seçin.");
+      return;
+    }
+    setIsBusy(true);
+    setErrorMessage("");
+    try {
+      const payload = await MessagingApiClient.openGroupThread(
+        accessToken,
+        locale,
+        groupSelected.map((row) => row.companyId),
+        {
+          title: groupTitle.trim() || undefined,
+          freightListingId: searchParams.get("listingId")?.trim() || undefined,
+        },
+      );
+      const threadId =
+        (payload.thread as { id?: string }).id ??
+        (payload.thread as { threadId?: string }).threadId ??
+        "";
+      if (!threadId) {
+        throw new Error("Grup sohbet kimliği alınamadı");
+      }
+      setGroupModalOpen(false);
+      setGroupTitle("");
+      setGroupSearchQuery("");
+      setGroupSelected([]);
+      setActiveThreadId(threadId);
+      await loadThreads();
+      await loadMessages(threadId);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Grup sohbet hatası",
+      );
+    } finally {
+      setIsBusy(false);
+    }
+  }
+
+  async function saveEditedMessage(): Promise<void> {
+    if (!editMessage?.bodyText.trim() || !activeThreadId) {
+      return;
+    }
+    setMessageActionBusy(true);
+    try {
+      await MessagingApiClient.updateMessage(
+        accessToken,
+        locale,
+        activeThreadId,
+        editMessage.id,
+        editMessage.bodyText.trim(),
+      );
+      setEditMessage(null);
+      await loadMessages(activeThreadId);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Düzenleme hatası",
+      );
+    } finally {
+      setMessageActionBusy(false);
+    }
+  }
+
+  async function confirmDeleteMessage(): Promise<void> {
+    if (!deleteMessageId || !activeThreadId) {
+      return;
+    }
+    setMessageActionBusy(true);
+    try {
+      await MessagingApiClient.deleteMessage(
+        accessToken,
+        locale,
+        activeThreadId,
+        deleteMessageId,
+      );
+      setDeleteMessageId(null);
+      await loadMessages(activeThreadId);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Silme hatası");
+    } finally {
+      setMessageActionBusy(false);
     }
   }
 
@@ -683,6 +809,20 @@ export function MessagingPageClient() {
     return () => window.clearTimeout(timer);
   }, [threadSearch, mode, accessToken, locale]);
 
+  useEffect(() => {
+    const query = groupSearchQuery.trim();
+    if (!groupModalOpen || !accessToken || query.length < 3) {
+      setGroupSearchHits([]);
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      void MessagingApiClient.searchCompanies(accessToken, locale, query)
+        .then((payload) => setGroupSearchHits(payload.companies ?? []))
+        .catch(() => setGroupSearchHits([]));
+    }, 280);
+    return () => window.clearTimeout(timer);
+  }, [groupSearchQuery, groupModalOpen, accessToken, locale]);
+
   async function refreshLlmSummary(): Promise<void> {
     if (!activeThreadId) {
       return;
@@ -933,7 +1073,21 @@ export function MessagingPageClient() {
       ) : (
         <div className="chat-layout">
           <aside className="chat-sidebar module-panel">
-            <h2 className="module-panel-title">Sohbetler</h2>
+            <div className="chat-sidebar-header">
+              <h2 className="module-panel-title">Sohbetler</h2>
+              <button
+                type="button"
+                className="chat-compose-tool-btn"
+                disabled={isBusy}
+                onClick={() => {
+                  setGroupModalOpen(true);
+                  setGroupSearchQuery("");
+                  setGroupSearchHits([]);
+                }}
+              >
+                + Grup
+              </button>
+            </div>
             <div className="chat-unified-search">
               <input
                 className="input-light chat-unified-search-input"
@@ -1083,7 +1237,9 @@ export function MessagingPageClient() {
                       onClick={() => void loadMessages(thread.threadId)}
                     >
                       <span className="chat-thread-title">
+                        {thread.threadKind === "group" ? "👥 " : ""}
                         {thread.counterpartyLegalName?.trim() ||
+                          thread.title?.trim() ||
                           shortCompanyId(thread.counterpartyCompanyId)}
                         {(thread.unreadCount ?? 0) > 0 ? (
                           <span className="chat-unread-badge">
@@ -1109,11 +1265,17 @@ export function MessagingPageClient() {
             <div className="chat-main-header">
               <h2 className="module-panel-title">
                 {activeThread
-                  ? activeThread.counterpartyLegalName?.trim() ||
-                    shortCompanyId(activeThread.counterpartyCompanyId)
+                  ? activeThread.threadKind === "group"
+                    ? activeThread.title?.trim() ||
+                      activeThread.counterpartyLegalName?.trim() ||
+                      "Grup sohbet"
+                    : activeThread.counterpartyLegalName?.trim() ||
+                      shortCompanyId(activeThread.counterpartyCompanyId)
                   : "Mesaj kutusu"}
               </h2>
-              {activeThread && counterpartyTrust ? (
+              {activeThread &&
+              activeThread.threadKind !== "group" &&
+              counterpartyTrust ? (
                 <div className="chat-trust-row">
                   <span className="chat-trust-badge" title="Lerta güven skoru">
                     Güven {counterpartyTrust.scoreValue.toFixed(1)}
@@ -1195,39 +1357,84 @@ export function MessagingPageClient() {
                 </p>
               </aside>
             ) : null}
+            <div className="chat-messages-toolbar">
+              <label className="chat-internal-filter">
+                <input
+                  type="checkbox"
+                  checked={internalNotesOnly}
+                  onChange={(event) =>
+                    setInternalNotesOnly(event.target.checked)
+                  }
+                />
+                Yalnızca iç notlar
+              </label>
+            </div>
             <div className="chat-messages">
-              {messages.length === 0 ? (
-                <EmptyState message="Soldan sohbet seçin veya yeni sohbet açın." />
+              {displayedMessages.length === 0 ? (
+                <EmptyState
+                  message={
+                    internalNotesOnly
+                      ? "Bu sohbette iç not yok."
+                      : "Soldan sohbet seçin veya yeni sohbet açın."
+                  }
+                />
               ) : (
                 <ul className="chat-message-list">
-                  {messages.map((message) => {
+                  {displayedMessages.map((message) => {
                     const isMine =
                       session?.companyId &&
                       message.senderCompanyId === session.companyId;
+                    const bubbleClass = [
+                      "chat-bubble",
+                      isMine ? "chat-bubble--mine" : "",
+                      message.messageKind === "internal"
+                        ? "chat-bubble--internal"
+                        : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ");
+                    const readers =
+                      message.readByCounterpartyReaders ??
+                      (message.readByCounterpartyUserIds ?? []).map(
+                        (userId) => ({
+                          userId,
+                          displayName: userId.slice(0, 8),
+                        }),
+                      );
                     return (
-                      <li
-                        key={message.id}
-                        className={isMine ? "chat-bubble chat-bubble--mine" : "chat-bubble"}
-                      >
+                      <li key={message.id} className={bubbleClass}>
                         <span className="chat-bubble-meta">
                           {shortCompanyId(message.senderCompanyId)} ·{" "}
                           {new Date(message.createdAt).toLocaleString(locale)}
-                          {isMine && message.readByRecipient ? (
-                            <>
-                              {" "}
-                              · Okundu
-                              {(message.readByCounterpartyUserIds?.length ??
-                                0) > 0
-                                ? ` (${message.readByCounterpartyUserIds?.length} kullanıcı)`
-                                : ""}
-                            </>
+                          {isMine ? (
+                            <span
+                              className={
+                                message.readByRecipient
+                                  ? "chat-read-ticks chat-read-ticks--read"
+                                  : "chat-read-ticks"
+                              }
+                              title={
+                                readers.length > 0
+                                  ? `Okuyan: ${readers
+                                      .map((row) => row.displayName)
+                                      .join(", ")}`
+                                  : message.readByRecipient
+                                    ? "Karşı firma gördü"
+                                    : "Henüz okunmadı"
+                              }
+                            >
+                              {message.readByRecipient ? " ✓✓" : " ✓"}
+                            </span>
                           ) : null}
                           {message.messageKind === "internal" ? (
-                            <> · İç not</>
+                            <span className="chat-internal-tag"> İç not</span>
                           ) : null}
                           {message.editedAt ? <> · düzenlendi</> : null}
                         </span>
-                        <ChatMessageBody text={message.bodyText} />
+                        <ChatMessageBody
+                          text={message.bodyText}
+                          mentionNameByUserId={mentionNameByUserId}
+                        />
                         {message.attachments && message.attachments.length > 0 ? (
                           <ul className="chat-attachment-list">
                             {message.attachments.map((attachment) => (
@@ -1294,39 +1501,19 @@ export function MessagingPageClient() {
                               <button
                                 type="button"
                                 className="chat-translate-btn"
-                                onClick={() => {
-                                  const next = window.prompt(
-                                    "Mesajı düzenle",
-                                    message.bodyText,
-                                  );
-                                  if (!next?.trim() || !activeThreadId) {
-                                    return;
-                                  }
-                                  void MessagingApiClient.updateMessage(
-                                    accessToken,
-                                    locale,
-                                    activeThreadId,
-                                    message.id,
-                                    next.trim(),
-                                  ).then(() => loadMessages(activeThreadId));
-                                }}
+                                onClick={() =>
+                                  setEditMessage({
+                                    id: message.id,
+                                    bodyText: message.bodyText,
+                                  })
+                                }
                               >
                                 Düzenle
                               </button>
                               <button
                                 type="button"
                                 className="chat-translate-btn"
-                                onClick={() => {
-                                  if (!activeThreadId) {
-                                    return;
-                                  }
-                                  void MessagingApiClient.deleteMessage(
-                                    accessToken,
-                                    locale,
-                                    activeThreadId,
-                                    message.id,
-                                  ).then(() => loadMessages(activeThreadId));
-                                }}
+                                onClick={() => setDeleteMessageId(message.id)}
                               >
                                 Sil
                               </button>
@@ -1647,6 +1834,53 @@ export function MessagingPageClient() {
           </aside>
         </div>
       )}
+      <ChatMessageEditModal
+        open={editMessage !== null}
+        bodyText={editMessage?.bodyText ?? ""}
+        busy={messageActionBusy}
+        onBodyChange={(value) =>
+          setEditMessage((current) =>
+            current ? { ...current, bodyText: value } : current,
+          )
+        }
+        onCancel={() => setEditMessage(null)}
+        onSave={() => void saveEditedMessage()}
+      />
+      <ChatMessageDeleteModal
+        open={deleteMessageId !== null}
+        busy={messageActionBusy}
+        onCancel={() => setDeleteMessageId(null)}
+        onConfirm={() => void confirmDeleteMessage()}
+      />
+      <ChatGroupThreadModal
+        open={groupModalOpen}
+        busy={isBusy}
+        title={groupTitle}
+        searchQuery={groupSearchQuery}
+        searchHits={groupSearchHits}
+        selected={groupSelected}
+        onClose={() => {
+          setGroupModalOpen(false);
+          setGroupSelected([]);
+          setGroupSearchQuery("");
+        }}
+        onTitleChange={setGroupTitle}
+        onSearchChange={setGroupSearchQuery}
+        onAddCompany={(company) => {
+          setGroupSelected((current) => {
+            if (current.some((row) => row.companyId === company.companyId)) {
+              return current;
+            }
+            return [...current, company].slice(0, 8);
+          });
+        }}
+        onRemoveCompany={(companyId) =>
+          setGroupSelected((current) =>
+            current.filter((row) => row.companyId !== companyId),
+          )
+        }
+        onCreate={() => void createGroupThread()}
+      />
     </ModulePageShell>
   );
 }
