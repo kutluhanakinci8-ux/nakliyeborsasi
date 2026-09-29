@@ -13,7 +13,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { MessagingMailWebEmbed } from "../../../components/messaging/MessagingMailWebEmbed";
 import { ChatMessageBody } from "../../../components/messaging/ChatMessageBody";
 import { ChatMessageActionBar } from "../../../components/messaging/ChatMessageActionBar";
-import { ChatStatsRail } from "../../../components/messaging/ChatStatsRail";
+import { MessagingSideRail } from "../../../components/messaging/MessagingSideRail";
 import { ChatThreadListItem } from "../../../components/messaging/ChatThreadListItem";
 import {
   IconChannels,
@@ -1233,54 +1233,6 @@ export function MessagingPageClient() {
 
   return (
     <ModulePageShell>
-      <div className="messaging-mode-bar">
-        <div
-          className="messaging-mode-tabs"
-          role="tablist"
-          aria-label="Mesajlar görünümü"
-        >
-          <button
-            type="button"
-            role="tab"
-            aria-selected={mode === "email"}
-            className={
-              mode === "email"
-                ? "messaging-mode-tab messaging-mode-tab--active"
-                : "messaging-mode-tab"
-            }
-            onClick={() => switchMode("email")}
-          >
-            Kurumsal e-posta (posta)
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={mode === "chat"}
-            className={
-              mode === "chat"
-                ? "messaging-mode-tab messaging-mode-tab--active"
-                : "messaging-mode-tab"
-            }
-            onClick={() => switchMode("chat")}
-          >
-            Firma sohbeti
-          </button>
-        </div>
-        {mode === "email" && !mailEmbedFullscreen ? (
-          <button
-            type="button"
-            className="messaging-mode-action"
-            onClick={() => setMailEmbedFullscreen(true)}
-            aria-label="Posta görünümünü tam ekran aç"
-          >
-            <span className="messaging-mode-action-icon" aria-hidden>
-              ⛶
-            </span>
-            Tam ekran
-          </button>
-        ) : null}
-      </div>
-
       {moduleBlocked ? (
         <p className="module-hint messaging-module-blocked">
           Firma sohbeti modülü bu hesapta kapalı. Abonelik veya paket ayarlarını
@@ -1300,6 +1252,14 @@ export function MessagingPageClient() {
         </p>
       ) : null}
 
+      <div
+        className={
+          mailEmbedFullscreen
+            ? "messaging-page-layout messaging-page-layout--fullscreen"
+            : "messaging-page-layout"
+        }
+      >
+        <div className="messaging-page-main">
       {mode === "email" ? (
         <div
           className={
@@ -2276,15 +2236,23 @@ export function MessagingPageClient() {
               </p>
             </div>
           </section>
-          <ChatStatsRail
+        </div>
+      )}
+        </div>
+        {!mailEmbedFullscreen ? (
+          <MessagingSideRail
+            mode={mode}
+            onSwitchMode={switchMode}
             threadCount={threads.length}
             totalUnread={totalUnread}
             activeMessageCount={messages.length}
             isCompanyOwner={isCompanyOwner}
             onExportKvkk={() => void handleExportArchive()}
+            showMailFullscreen={mode === "email"}
+            onMailFullscreen={() => setMailEmbedFullscreen(true)}
           />
-        </div>
-      )}
+        ) : null}
+      </div>
       <ChatMessageEditModal
         open={editMessage !== null}
         bodyText={editMessage?.bodyText ?? ""}

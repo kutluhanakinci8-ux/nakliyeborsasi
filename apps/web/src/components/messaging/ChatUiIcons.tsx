@@ -210,6 +210,14 @@ export function IconShieldLock({ className, size = defaultSize }: IconProps) {
   );
 }
 
+export function IconMaximize({ className, size = defaultSize }: IconProps) {
+  return (
+    <svg className={className} aria-hidden {...strokeProps(size)}>
+      <path d="M8 4H4v4M20 4h-4v4M4 16v4h4M16 20h4v-4" />
+    </svg>
+  );
+}
+
 export function IconChevronDown({ className, size = 16 }: IconProps) {
   return (
     <svg className={className} aria-hidden {...strokeProps(size)}>
