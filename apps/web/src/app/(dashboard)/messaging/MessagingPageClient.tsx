@@ -772,15 +772,6 @@ export function MessagingPageClient() {
                 ))}
               </ul>
             ) : null}
-            {isCompanyOwner ? (
-              <button
-                type="button"
-                className="btn-account-secondary chat-export-btn"
-                onClick={() => void handleExportArchive()}
-              >
-                KVKK dışa aktar (JSON)
-              </button>
-            ) : null}
             <div className="chat-compose-row">
               <input
                 className="input-light"
@@ -1254,6 +1245,20 @@ export function MessagingPageClient() {
                 JWT
               </span>
             </div>
+            {isCompanyOwner ? (
+              <button
+                type="button"
+                className="chat-stat-glyph chat-stat-glyph--action"
+                title="KVKK dışa aktar (JSON)"
+                aria-label="KVKK dışa aktar JSON"
+                onClick={() => void handleExportArchive()}
+              >
+                <span className="chat-stat-glyph-icon" aria-hidden>⬇</span>
+                <span className="chat-stat-glyph-value chat-stat-glyph-value--tiny">
+                  KVKK
+                </span>
+              </button>
+            ) : null}
           </aside>
         </div>
       )}
