@@ -12,6 +12,18 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MessagingMailWebEmbed } from "../../../components/messaging/MessagingMailWebEmbed";
 import { ChatMessageBody } from "../../../components/messaging/ChatMessageBody";
+import { ChatMessageActionBar } from "../../../components/messaging/ChatMessageActionBar";
+import {
+  IconChannels,
+  IconLockNote,
+  IconMessageSquare,
+  IconPaperclip,
+  IconSend,
+  IconSparkles,
+  IconStickyNote,
+  IconTemplate,
+  IconUsers,
+} from "../../../components/messaging/ChatUiIcons";
 import { MessagingChannelSettingsPanel } from "../../../components/messaging/MessagingChannelSettingsPanel";
 import {
   ChatGroupThreadModal,
@@ -236,6 +248,7 @@ export function MessagingPageClient() {
   >([]);
   const [quickReplyAdminBusy, setQuickReplyAdminBusy] = useState(false);
   const [channelSettingsOpen, setChannelSettingsOpen] = useState(false);
+  const [offerTimelineOpen, setOfferTimelineOpen] = useState(false);
   const [groupParticipants, setGroupParticipants] = useState<
     {
       companyId: string;
@@ -266,6 +279,10 @@ export function MessagingPageClient() {
     }
     return messages.filter((row) => row.messageKind === "internal");
   }, [messages, internalNotesOnly]);
+
+  useEffect(() => {
+    setOfferTimelineOpen(false);
+  }, [activeThreadId]);
 
   useEffect(() => {
     if (!scrollToMessageId) {
@@ -874,8 +891,13 @@ export function MessagingPageClient() {
         activeThread.counterpartyLegalName,
       );
     }
+    for (const row of groupParticipants) {
+      if (row.legalName) {
+        map.set(row.companyId, row.legalName);
+      }
+    }
     return map;
-  }, [threads, activeThread]);
+  }, [threads, activeThread, groupParticipants]);
 
   const filteredThreads = useMemo(() => {
     const query = threadSearch.trim().toLowerCase();
@@ -1625,19 +1647,37 @@ export function MessagingPageClient() {
                   ))}
                 </ul>
                 {offerTimeline.length > 0 ? (
-                  <ul className="chat-offer-timeline" aria-label="Teklif zaman çizelgesi">
-                    {offerTimeline.map((entry) => (
-                      <li key={`${entry.at}-${entry.label}`}>
-                        <time dateTime={entry.at}>
-                          {new Date(entry.at).toLocaleString(locale)}
-                        </time>
-                        <span>
-                          {entry.label}
-                          {entry.amountText ? ` · ${entry.amountText}` : ""}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="chat-offer-timeline-wrap">
+                    <button
+                      type="button"
+                      className="chat-offer-timeline-toggle"
+                      aria-expanded={offerTimelineOpen}
+                      onClick={() => setOfferTimelineOpen((open) => !open)}
+                    >
+                      Teklif geçmişi ({offerTimeline.length})
+                    </button>
+                    {offerTimelineOpen ? (
+                      <ul
+                        className="chat-offer-timeline"
+                        aria-label="Teklif zaman çizelgesi"
+                      >
+                        {offerTimeline.map((entry) => (
+                          <li key={`${entry.at}-${entry.label}`}>
+                            <time dateTime={entry.at}>
+                              {new Date(entry.at).toLocaleString(locale, {
+                                dateStyle: "short",
+                                timeStyle: "short",
+                              })}
+                            </time>
+                            <span>
+                              {entry.label}
+                              {entry.amountText ? ` · ${entry.amountText}` : ""}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </div>
                 ) : null}
                 {llmSummary ? (
                   <p className="chat-llm-summary">{llmSummary}</p>
@@ -1645,11 +1685,14 @@ export function MessagingPageClient() {
                 <div className="chat-summary-actions">
                   <button
                     type="button"
-                    className="btn-account-secondary"
+                    className="chat-summary-ai-btn"
                     disabled={llmBusy}
                     onClick={() => void refreshLlmSummary()}
                   >
-                    {llmBusy ? "AI özet…" : "AI özet (KVKK onaylı)"}
+                    <IconSparkles size={17} />
+                    <span>
+                      {llmBusy ? "AI özet…" : "AI özet (KVKK onaylı)"}
+                    </span>
                   </button>
                 </div>
                 <p className="chat-summary-meta">
@@ -1658,16 +1701,19 @@ export function MessagingPageClient() {
               </aside>
             ) : null}
             <div className="chat-messages-toolbar">
-              <label className="chat-internal-filter">
-                <input
-                  type="checkbox"
-                  checked={internalNotesOnly}
-                  onChange={(event) =>
-                    setInternalNotesOnly(event.target.checked)
-                  }
-                />
-                Yalnızca iç notlar
-              </label>
+              <button
+                type="button"
+                className={
+                  internalNotesOnly
+                    ? "chat-internal-filter-btn chat-internal-filter-btn--active"
+                    : "chat-internal-filter-btn"
+                }
+                aria-pressed={internalNotesOnly}
+                onClick={() => setInternalNotesOnly((value) => !value)}
+              >
+                <IconStickyNote size={16} />
+                <span>İç notlar</span>
+              </button>
             </div>
             <div className="chat-messages">
               {displayedMessages.length === 0 ? (
@@ -1744,7 +1790,7 @@ export function MessagingPageClient() {
                             </span>
                             <div className="chat-bubble-content">
                         <span className="chat-bubble-meta">
-                          {companyLabel} ·{" "}
+                          {isMine ? "Siz" : companyLabel} ·{" "}
                           {new Date(message.createdAt).toLocaleString(locale, {
                             hour: "2-digit",
                             minute: "2-digit",
@@ -1844,84 +1890,32 @@ export function MessagingPageClient() {
                             {translations[message.id]}
                           </p>
                         ) : null}
-                        <div className="chat-message-actions">
-                          {!isMine &&
-                          !message.deleted &&
-                          message.messageKind !== "internal" ? (
-                            <>
-                              <button
-                                type="button"
-                                className="chat-translate-btn"
-                                onClick={() =>
-                                  setQuotedMessage({
-                                    id: message.id,
-                                    preview: message.bodyText.slice(0, 240),
-                                  })
-                                }
-                              >
-                                Yanıtla
-                              </button>
-                              {(
-                                [
-                                  "approved",
-                                  "rejected",
-                                  "acknowledged",
-                                ] as MessagingOperationStampType[]
-                              ).map((stampType) => (
-                                <button
-                                  key={stampType}
-                                  type="button"
-                                  className="chat-stamp-btn"
-                                  disabled={stampBusyId === message.id}
-                                  onClick={() =>
-                                    void handleOperationStamp(
-                                      message.id,
-                                      stampType,
-                                    )
-                                  }
-                                >
-                                  {operationStampLabel(stampType)}
-                                </button>
-                              ))}
-                            </>
-                          ) : null}
-                          {["en", "de", "ru"].map((target) => (
-                            <button
-                              key={target}
-                              type="button"
-                              className="chat-translate-btn"
-                              disabled={translateBusyId === message.id}
-                              onClick={() =>
-                                void handleTranslateMessage(message, target)
-                              }
-                            >
-                              {target.toUpperCase()}
-                            </button>
-                          ))}
-                          {isMine && !message.deleted ? (
-                            <>
-                              <button
-                                type="button"
-                                className="chat-translate-btn"
-                                onClick={() =>
-                                  setEditMessage({
-                                    id: message.id,
-                                    bodyText: message.bodyText,
-                                  })
-                                }
-                              >
-                                Düzenle
-                              </button>
-                              <button
-                                type="button"
-                                className="chat-translate-btn"
-                                onClick={() => setDeleteMessageId(message.id)}
-                              >
-                                Sil
-                              </button>
-                            </>
-                          ) : null}
-                        </div>
+                        <ChatMessageActionBar
+                          isMine={Boolean(isMine)}
+                          deleted={Boolean(message.deleted)}
+                          isInternal={message.messageKind === "internal"}
+                          translateBusy={translateBusyId === message.id}
+                          stampBusy={stampBusyId === message.id}
+                          onReply={() =>
+                            setQuotedMessage({
+                              id: message.id,
+                              preview: message.bodyText.slice(0, 240),
+                            })
+                          }
+                          onStamp={(stampType) =>
+                            void handleOperationStamp(message.id, stampType)
+                          }
+                          onTranslate={(target) =>
+                            void handleTranslateMessage(message, target)
+                          }
+                          onEdit={() =>
+                            setEditMessage({
+                              id: message.id,
+                              bodyText: message.bodyText,
+                            })
+                          }
+                          onDelete={() => setDeleteMessageId(message.id)}
+                        />
                             </div>
                           </div>
                         </li>
@@ -2029,9 +2023,11 @@ export function MessagingPageClient() {
                     }
                     aria-pressed={!internalNote}
                     disabled={!activeThreadId}
+                    title="Karşı firmaya"
                     onClick={() => setInternalNote(false)}
                   >
-                    Karşı firmaya
+                    <IconMessageSquare size={16} />
+                    <span className="chat-compose-mode-label">Karşı firma</span>
                   </button>
                   <button
                     type="button"
@@ -2042,9 +2038,11 @@ export function MessagingPageClient() {
                     }
                     aria-pressed={internalNote}
                     disabled={!activeThreadId}
+                    title="İç not"
                     onClick={() => setInternalNote(true)}
                   >
-                    İç not
+                    <IconLockNote size={16} />
+                    <span className="chat-compose-mode-label">İç not</span>
                   </button>
                 </div>
                 <div className="chat-compose-toolbar-actions">
@@ -2056,10 +2054,11 @@ export function MessagingPageClient() {
                         disabled={!activeThreadId}
                         aria-expanded={mentionDropdownOpen}
                         aria-haspopup="listbox"
+                        title="Ekip etiketle"
                         onClick={() => setMentionMenuOpen((open) => !open)}
                       >
-                        <span aria-hidden="true">@</span>
-                        Ekip
+                        <IconUsers size={16} />
+                        <span className="sr-only">Ekip etiketle</span>
                       </button>
                       {mentionDropdownOpen ? (
                         <ul
@@ -2112,19 +2111,23 @@ export function MessagingPageClient() {
                         type="button"
                         className="chat-compose-tool-btn"
                         disabled={quickReplyAdminBusy}
+                        title="Şablon yönet"
                         onClick={() => void openQuickReplyAdmin()}
                       >
-                        Şablon yönet
+                        <IconTemplate size={16} />
+                        <span className="sr-only">Şablon yönet</span>
                       </button>
                       <button
                         type="button"
                         className="chat-compose-tool-btn"
                         aria-expanded={channelSettingsOpen}
+                        title="Kanallar"
                         onClick={() =>
                           setChannelSettingsOpen((open) => !open)
                         }
                       >
-                        Kanallar
+                        <IconChannels size={16} />
+                        <span className="sr-only">Kanallar</span>
                       </button>
                     </>
                   ) : null}
@@ -2165,9 +2168,7 @@ export function MessagingPageClient() {
               </div>
               <div className="chat-compose-editor">
                 <label className="chat-compose-attach" title="Dosya ekle (en fazla 5, 10 MB)">
-                  <span className="chat-compose-attach-icon" aria-hidden="true">
-                    📎
-                  </span>
+                  <IconPaperclip className="chat-compose-attach-icon" />
                   <span className="sr-only">Dosya ekle</span>
                   <input
                     type="file"
@@ -2270,9 +2271,11 @@ export function MessagingPageClient() {
                     !activeThreadId ||
                     (!messageBody.trim() && pendingAttachments.length === 0)
                   }
+                  title="Gönder"
+                  aria-label="Gönder"
                   onClick={() => void handleSendMessage()}
                 >
-                  Gönder
+                  <IconSend size={18} />
                 </button>
               </div>
               <p className="chat-compose-footnote">
