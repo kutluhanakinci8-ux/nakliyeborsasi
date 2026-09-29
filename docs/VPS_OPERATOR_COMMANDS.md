@@ -51,7 +51,7 @@ bash scripts/verify-messaging-hub-pwa-mp8.sh
 
 # MP-9 güvenlik dok + due diligence ZIP
 bash scripts/verify-security-compliance-mp9.sh
-bash scripts/pack-customer-due-diligence-mp9.sh
+bash scripts/pack-customer-due-diligence-mp9.sh   # zip CLI gerekmez (python3 yedek)
 # Çeyreklik: SKIP_NPM_AUDIT=0 bash scripts/verify-security-compliance-mp9.sh
 ```
 
