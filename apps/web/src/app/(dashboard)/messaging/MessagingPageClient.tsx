@@ -768,7 +768,7 @@ export function MessagingPageClient() {
         <p className="module-hint" style={{ marginBottom: "0.75rem" }}>
           Bu sohbet ilan{" "}
           <code>{searchParams.get("listingId")?.slice(0, 8)}…</code> bağlamında
-          açılır. Karşı firma ID girip <strong>Aç</strong> kullanın.
+          açılır. Üstte arama alanına firma UUID yazıp Enter kullanın.
         </p>
       ) : null}
 
@@ -828,9 +828,6 @@ export function MessagingPageClient() {
                 role="combobox"
                 autoComplete="off"
               />
-              <p className="chat-unified-search-hint">
-                Enter: aç · 2+ karakter mesaj araması · tam UUID ile yeni sohbet
-              </p>
               {showChatSearchPanel ? (
                 <div
                   id="chat-unified-search-panel"

@@ -5052,13 +5052,6 @@ button.btn-secondary {
   width: 100%;
 }
 
-.chat-unified-search-hint {
-  margin: 0;
-  font-size: 0.68rem;
-  line-height: 1.35;
-  color: #94a3b8;
-}
-
 .chat-unified-search-panel {
   position: absolute;
   top: calc(100% + 2px);
