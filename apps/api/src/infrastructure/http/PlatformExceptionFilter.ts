@@ -30,6 +30,8 @@ export class PlatformExceptionFilter implements ExceptionFilter {
       );
       return;
     }
+    // eslint-disable-next-line no-console -- prod hata ayıklama (PM2 error log)
+    console.error("[PlatformExceptionFilter]", exception);
     response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
       errorCode: "INTERNAL_ERROR",
       message: "Unexpected server error",

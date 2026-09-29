@@ -378,14 +378,18 @@ export class MessagingThreadApplicationService {
     const counterpartyUserReads = await this.userReadStateRepository.find({
       where: { threadId: thread.id, companyId: counterpartyCompanyId },
     });
+    const messageCreatedMs = (value: Date | string): number =>
+      value instanceof Date ? value.getTime() : new Date(value).getTime();
+
     const views = visible.map((message) => {
       const isMine = message.senderCompanyId === authenticatedUser.companyId;
+      const createdMs = messageCreatedMs(message.createdAt);
       const readByCounterpartyUserIds = isMine
         ? counterpartyUserReads
             .filter(
               (row) =>
                 row.lastReadAt &&
-                message.createdAt.getTime() <= row.lastReadAt.getTime(),
+                createdMs <= messageCreatedMs(row.lastReadAt),
             )
             .map((row) => row.userId)
         : [];
@@ -393,7 +397,7 @@ export class MessagingThreadApplicationService {
         isMine &&
         (readByCounterpartyUserIds.length > 0 ||
           (counterpartyLastReadAt !== null &&
-            message.createdAt.getTime() <= counterpartyLastReadAt.getTime()));
+            createdMs <= messageCreatedMs(counterpartyLastReadAt)));
       const deleted = Boolean(message.deletedAt);
       return new MessagingThreadMessageView({
         id: message.id,

@@ -77,4 +77,16 @@ API her başlatıldığında (eksikse):
 - **5 mesaj kanalı** (yük veren ↔ taşıyıcı)
 - **5 güven değerlendirmesi**
 
+### Firma sohbeti UI paketi (`[DEMO_UI_PACK_V1]`)
+
+Zengin test konuşmaları (markdown, ek, iç not, okunmamış, EN/TR):
+
+```bash
+bash scripts/seed-firma-sohbeti-demo-conversations.sh
+# yeniden: FORCE_DEMO_SOHBET=1 bash scripts/seed-firma-sohbeti-demo-conversations.sh
+```
+
+Giriş: `yukveren01`…`05` veya `yuktasiyan01`…`05` @ `test.nakliyeborsasi.local` · şifre `TestPass123!`  
+UI: https://app.lerta.com.tr/messaging?tab=sohbet
+
 Platform konsolu (`/admin`) bu verileri `GET /api/v1/platform-admin/*` ile listeler (yalnızca `admin@nakliyeborsasi.local`).

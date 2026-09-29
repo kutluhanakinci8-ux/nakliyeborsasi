@@ -17,6 +17,7 @@ import { CompanyMessagingBotCredentialEntity } from "./entities/CompanyMessaging
 import { MessageThreadParticipantEntity } from "./entities/MessageThreadParticipantEntity";
 import { MessageEntity } from "./entities/MessageEntity";
 import { MessageThreadReadStateEntity } from "./entities/MessageThreadReadStateEntity";
+import { MessageThreadUserReadStateEntity } from "./entities/MessageThreadUserReadStateEntity";
 import { MessagingWebPushSubscriptionEntity } from "./entities/MessagingWebPushSubscriptionEntity";
 import { CompanyTrustReviewEntity } from "./entities/CompanyTrustReviewEntity";
 import { FleetDriverEntity } from "./entities/FleetDriverEntity";
@@ -98,6 +99,7 @@ export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
         CompanyMessagingBotCredentialEntity,
         MessageEntity,
         MessageThreadReadStateEntity,
+        MessageThreadUserReadStateEntity,
         MessagingWebPushSubscriptionEntity,
         CompanyTrustReviewEntity,
         FleetDriverEntity,
