@@ -42,7 +42,7 @@ function SocialSvg({ id }: { id: SocialNetworkId }) {
 
 export function SocialMediaLinks() {
   return (
-    <div className="social-media-row social-media-row--elevated" role="list">
+    <div className="social-media-row social-media-row--elevated">
       {SOCIAL_NETWORKS.map((network) => (
         <a
           key={network.id}
@@ -50,7 +50,6 @@ export function SocialMediaLinks() {
           className={`social-media-chip social-media-chip--icon-only social-media-chip--${network.id}`}
           target="_blank"
           rel="noopener noreferrer"
-          role="listitem"
           aria-label={network.label}
           title={network.label}
         >

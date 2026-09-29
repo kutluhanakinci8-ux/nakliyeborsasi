@@ -29,6 +29,10 @@ bash "${ROOT}/scripts/verify-axe-messaging.sh" || true
 
 echo ""
 echo "== 4/5 FS-8.3 SSE two-instance =="
+if [[ -z "${SMOKE_SECOND_API_PORT:-}" ]] && curl -fsS "http://127.0.0.1:3015/api/v1/health" >/dev/null 2>&1; then
+  export SMOKE_SECOND_API_PORT=3015
+  echo "OK: smoke API 3015 algilandi"
+fi
 bash "${ROOT}/scripts/run-prod-fs83-two-instance-smoke.sh"
 
 echo ""

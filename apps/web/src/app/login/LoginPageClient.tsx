@@ -168,7 +168,7 @@ export function LoginPageClient() {
             <div className="auth-promo-cards">
               {CORPORATE_VALUE_BLOCKS.map((block) => (
                 <article key={block.title} className="auth-promo-card">
-                  <h3>{block.title}</h3>
+                  <h2 className="auth-promo-card-title">{block.title}</h2>
                   <p>{block.body}</p>
                 </article>
               ))}

@@ -65,7 +65,6 @@ export function SocialPlatformIconLink({
     return (
       <span
         className={`${socialPlatformChipClass(id)} admin-corp-social-icon--missing`}
-        role="listitem"
         aria-label={`${label} — kayıtlı değil`}
         title={`${label} — kayıtlı değil`}
       >
@@ -82,7 +81,6 @@ export function SocialPlatformIconLink({
       className={socialPlatformChipClass(id)}
       target="_blank"
       rel="noopener noreferrer"
-      role="listitem"
       aria-label={label}
       title={label}
     >
