@@ -38,6 +38,17 @@ echo "Web build: ${BUILD_SHA} @ ${BUILD_TIME}"
 bash scripts/build-web.sh
 
 if command -v pm2 >/dev/null 2>&1; then
+  WEB_NODE_MODULES="$INSTALL_DIR/apps/web/node_modules"
+  mkdir -p "$WEB_NODE_MODULES"
+  for pkg in next react react-dom; do
+    if [[ -d "$INSTALL_DIR/node_modules/$pkg" ]]; then
+      ln -sfn "../../../node_modules/$pkg" "$WEB_NODE_MODULES/$pkg"
+    fi
+  done
+  if [[ ! -x "$WEB_NODE_MODULES/next/dist/bin/next" ]]; then
+    echo "HATA: apps/web için next binary yok — kökte npm install çalıştırın." >&2
+    exit 1
+  fi
   pm2 delete nakliyeborsasi-web 2>/dev/null || true
   PORT="$WEB_PORT" HOSTNAME="0.0.0.0" pm2 start ./node_modules/next/dist/bin/next --name nakliyeborsasi-web --cwd "$INSTALL_DIR/apps/web" -- start -H 0.0.0.0 -p "$WEB_PORT"
   pm2 save
