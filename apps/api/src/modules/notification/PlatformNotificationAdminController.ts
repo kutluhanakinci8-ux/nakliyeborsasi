@@ -225,15 +225,18 @@ export class PlatformNotificationAdminController {
   public async engagementExport(
     @Query("days") days?: string,
     @Query("limit") limit?: string,
+    @Query("organizationId") organizationId?: string,
   ): Promise<string> {
     const resolvedDays = this.emailOutboxAnalyticsService.resolveDays(days);
     const since = new Date();
     since.setUTCDate(since.getUTCDate() - (resolvedDays - 1));
     since.setUTCHours(0, 0, 0, 0);
     const parsedLimit = limit ? Number.parseInt(limit, 10) : 5000;
+    const org = organizationId?.trim() || null;
     return await this.emailEngagementService.buildEngagementExportCsv(
       since,
       Number.isFinite(parsedLimit) ? parsedLimit : 5000,
+      org,
     );
   }
 

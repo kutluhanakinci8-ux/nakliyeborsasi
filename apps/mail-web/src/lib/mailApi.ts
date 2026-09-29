@@ -1638,7 +1638,16 @@ export async function fetchClassifyMessage(
   );
 }
 
+export type MailDeliverabilityEngagement = {
+  sentInPeriod: number;
+  bounceRatePercent: number | null;
+  openRatePercent: number | null;
+  clickRatePercent: number | null;
+  bounceByClass?: Record<string, number>;
+};
+
 export type MailDeliverabilityHub = {
+  periodDays?: number;
   dns: {
     domain: string | null;
     ok: boolean;
@@ -1646,20 +1655,28 @@ export type MailDeliverabilityHub = {
     spf: boolean;
     dkim: boolean;
   } | null;
-  engagement30d: {
-    sentInPeriod: number;
-    bounceRatePercent: number | null;
-    openRatePercent: number | null;
-  };
+  engagement?: MailDeliverabilityEngagement;
+  /** @deprecated API eski alan adı — engagement ile aynı */
+  engagement30d?: MailDeliverabilityEngagement;
   suppressionCount: number;
   dmarcReports90d: number;
+  dmarc?: {
+    reportRows: number;
+    messageCount: number;
+    dkimPassRatePercent: number | null;
+    spfPassRatePercent: number | null;
+  };
   score: number;
   hintsTr: string[];
 };
 
-export async function fetchDeliverabilityHub(accessToken: string) {
+export async function fetchDeliverabilityHub(
+  accessToken: string,
+  days = 30,
+) {
+  const safeDays = days >= 7 && days <= 90 ? days : 30;
   return apiFetch<{ hub: MailDeliverabilityHub }>(
     accessToken,
-    "company/mail-inbox/deliverability-hub",
+    `company/mail-inbox/deliverability-hub?days=${safeDays}`,
   );
 }

@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Request } from "express";
 import { Repository } from "typeorm";
+import { readOrganizationIdFromOutboxMetadata } from "@nakliyeborsasi/core";
 import { EmailOutboxEngagementEventEntity } from "../../infrastructure/database/entities/EmailOutboxEngagementEventEntity";
 import { EmailOutboxClickTokenEntity } from "../../infrastructure/database/entities/EmailOutboxClickTokenEntity";
 import { EmailOutboxEntity } from "../../infrastructure/database/entities/EmailOutboxEntity";
@@ -162,14 +163,20 @@ export class EmailEngagementService {
   }
 
   private resolveOrganizationId(row: EmailOutboxEntity): string | null {
-    const meta = row.metadata ?? {};
-    const org =
-      (meta.organizationId as string | undefined) ??
-      (meta.companyId as string | undefined);
-    return org?.trim() || null;
+    return readOrganizationIdFromOutboxMetadata(row.metadata);
   }
 
-  public async getEngagementSummary(since: Date): Promise<{
+  private outboxOrganizationSql(
+    tableOrAlias: string,
+    paramIndex: number,
+  ): string {
+    return ` AND (${tableOrAlias}.metadata->>'organizationId' = $${paramIndex} OR ${tableOrAlias}.metadata->>'companyId' = $${paramIndex})`;
+  }
+
+  public async getEngagementSummary(
+    since: Date,
+    organizationId?: string | null,
+  ): Promise<{
     sentInPeriod: number;
     uniqueOpens: number;
     totalOpens: number;
@@ -181,13 +188,17 @@ export class EmailEngagementService {
     bounceRatePercent: number | null;
     bounceByClass: Record<string, number>;
   }> {
+    const org = organizationId?.trim() || null;
+    const outboxOrg = org ? this.outboxOrganizationSql("email_outbox", 2) : "";
+    const params: (Date | string)[] = org ? [since, org] : [since];
+
     const sentRows: Array<{ count: string }> = await this.outboxRepository.query(
       `
       SELECT COUNT(*)::text AS count
       FROM email_outbox
-      WHERE status = 'sent' AND "sentAt" >= $1
+      WHERE status = 'sent' AND "sentAt" >= $1${outboxOrg}
       `,
-      [since],
+      params,
     );
     const sentInPeriod = Number.parseInt(sentRows[0]?.count ?? "0", 10);
 
@@ -198,9 +209,9 @@ export class EmailEngagementService {
           COUNT(*) FILTER (WHERE "openCount" > 0)::text AS unique_opens,
           COALESCE(SUM("openCount"), 0)::text AS total_opens
         FROM email_outbox
-        WHERE status = 'sent' AND "sentAt" >= $1
+        WHERE status = 'sent' AND "sentAt" >= $1${outboxOrg}
         `,
-        [since],
+        params,
       );
     const uniqueOpens = Number.parseInt(
       openRows[0]?.unique_opens ?? "0",
@@ -215,9 +226,9 @@ export class EmailEngagementService {
           COALESCE(SUM("clickCount"), 0)::text AS total_clicks,
           COUNT(*) FILTER (WHERE "clickCount" > 0)::text AS messages
         FROM email_outbox
-        WHERE status = 'sent' AND "sentAt" >= $1
+        WHERE status = 'sent' AND "sentAt" >= $1${outboxOrg}
         `,
-        [since],
+        params,
       );
     const totalClicks = Number.parseInt(
       clickRows[0]?.total_clicks ?? "0",
@@ -228,25 +239,31 @@ export class EmailEngagementService {
       10,
     );
 
+    const bounceJoin = org
+      ? `INNER JOIN email_outbox o ON o.id = e."outboxId"`
+      : "";
+    const bounceOrg = org ? this.outboxOrganizationSql("o", 2) : "";
     const bounceRows: Array<{ count: string }> = await this.eventRepository.query(
       `
-      SELECT COUNT(DISTINCT "outboxId")::text AS count
-      FROM email_outbox_engagement_events
-      WHERE "eventType" = 'bounce' AND "occurredAt" >= $1
+      SELECT COUNT(DISTINCT e."outboxId")::text AS count
+      FROM email_outbox_engagement_events e
+      ${bounceJoin}
+      WHERE e."eventType" = 'bounce' AND e."occurredAt" >= $1${bounceOrg}
       `,
-      [since],
+      params,
     );
     const bounces = Number.parseInt(bounceRows[0]?.count ?? "0", 10);
 
     const classRows: Array<{ bounce_class: string; count: string }> =
       await this.eventRepository.query(
         `
-        SELECT "bounceClass" AS bounce_class, COUNT(*)::text AS count
-        FROM email_outbox_engagement_events
-        WHERE "eventType" = 'bounce' AND "occurredAt" >= $1 AND "bounceClass" IS NOT NULL
-        GROUP BY "bounceClass"
+        SELECT e."bounceClass" AS bounce_class, COUNT(*)::text AS count
+        FROM email_outbox_engagement_events e
+        ${bounceJoin}
+        WHERE e."eventType" = 'bounce' AND e."occurredAt" >= $1 AND e."bounceClass" IS NOT NULL${bounceOrg}
+        GROUP BY e."bounceClass"
         `,
-        [since],
+        params,
       );
     const bounceByClass: Record<string, number> = {};
     for (const row of classRows) {
@@ -278,11 +295,19 @@ export class EmailEngagementService {
   public async buildEngagementExportCsv(
     since: Date,
     limit = 5000,
+    organizationId?: string | null,
   ): Promise<string> {
     const safeLimit = Math.min(Math.max(limit, 1), 10000);
+    const org = organizationId?.trim() || null;
+    const orgSql = org ? this.outboxOrganizationSql("o", 2) : "";
+    const exportParams: (Date | string | number)[] = org
+      ? [since, org, safeLimit]
+      : [since, safeLimit];
+    const limitIndex = org ? 3 : 2;
     const rows: Array<{
       occurred_at: Date;
       outbox_id: string;
+      organization_id: string | null;
       recipient_email: string | null;
       event_type: string;
       link_url: string | null;
@@ -294,6 +319,7 @@ export class EmailEngagementService {
       SELECT
         e."occurredAt" AS occurred_at,
         e."outboxId" AS outbox_id,
+        COALESCE(o.metadata->>'organizationId', o.metadata->>'companyId') AS organization_id,
         o."recipientEmail" AS recipient_email,
         e."eventType" AS event_type,
         e."linkUrl" AS link_url,
@@ -302,11 +328,11 @@ export class EmailEngagementService {
         e."ipAddress" AS ip_address
       FROM email_outbox_engagement_events e
       LEFT JOIN email_outbox o ON o.id = e."outboxId"
-      WHERE e."occurredAt" >= $1
+      WHERE e."occurredAt" >= $1${orgSql}
       ORDER BY e."occurredAt" DESC
-      LIMIT $2
+      LIMIT $${limitIndex}
       `,
-      [since, safeLimit],
+      exportParams,
     );
     const escape = (value: string | null | undefined): string => {
       const raw = value ?? "";
@@ -316,13 +342,14 @@ export class EmailEngagementService {
       return raw;
     };
     const lines = [
-      "occurredAt,outboxId,recipientEmail,eventType,linkUrl,bounceClass,smtpCode,ipAddress",
+      "occurredAt,outboxId,organizationId,recipientEmail,eventType,linkUrl,bounceClass,smtpCode,ipAddress",
     ];
     for (const row of rows) {
       lines.push(
         [
           row.occurred_at.toISOString(),
           row.outbox_id,
+          escape(row.organization_id),
           escape(row.recipient_email),
           row.event_type,
           escape(row.link_url),
