@@ -17,6 +17,8 @@ export type AuctionSessionDetailResponse = {
     minimumBidAmount: string;
     currencyCode: string;
     winningBidId: string | null;
+    transportOwnerConfirmedAt: string | null;
+    transportCarrierConfirmedAt: string | null;
     transportCompletedAt: string | null;
     transportCompletionNote: string | null;
     createdAt: string;
@@ -190,6 +192,8 @@ export function mapSessionDetail(
       minimumBidAmount: session.minimumBidAmount,
       currencyCode: session.currencyCode,
       winningBidId: session.winningBidId,
+      transportOwnerConfirmedAt: session.transportOwnerConfirmedAt?.toISOString() ?? null,
+      transportCarrierConfirmedAt: session.transportCarrierConfirmedAt?.toISOString() ?? null,
       transportCompletedAt: session.transportCompletedAt?.toISOString() ?? null,
       transportCompletionNote: session.transportCompletionNote,
       createdAt: session.createdAt.toISOString(),

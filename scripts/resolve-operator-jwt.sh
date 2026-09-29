@@ -5,7 +5,7 @@ set -euo pipefail
 
 if [[ -n "${OPERATOR_JWT:-}" ]]; then
   case "${OPERATOR_JWT}" in
-    *"<platform-admin-jwt>"* | *"<jwt>"* | *"eyJ…"* | *"eyJ..."*)
+    *"<platform-admin-jwt>"* | *"<jwt>"* | *"eyJ…"*)
       echo "NOT: OPERATOR_JWT placeholder — gerçek JWT veya .env OPERATOR_TEST_EMAIL/PASSWORD kullanın" >&2
       unset OPERATOR_JWT
       ;;

@@ -77,6 +77,8 @@ export type AuctionSessionDetail = {
       auctionTypeCode: string;
       autoExtendMinutes: number;
       autoExtendWindowMinutes: number;
+      transportOwnerConfirmedAt: string | null;
+      transportCarrierConfirmedAt: string | null;
       transportCompletedAt: string | null;
       transportCompletionNote: string | null;
       bids: (AuctionBidRecord & { createdAt: string })[];
