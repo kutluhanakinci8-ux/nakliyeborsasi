@@ -74,42 +74,76 @@ echo "== Showcase thread içerik =="
 threads_json="$(curl -fsS "${auth_hdr[@]}" "${API_BASE}/messaging/threads?lang=tr")"
 search_json="$(curl -fsS "${auth_hdr[@]}" \
   "${API_BASE}/messaging/search?q=${SEARCH_TOKEN}&limit=3&lang=tr")"
-if [[ -n "${EXCELLENCE_SHOWCASE_THREAD_ID}" ]]; then
-  thread_id="${EXCELLENCE_SHOWCASE_THREAD_ID}"
-else
-  thread_id="$(THREADS_JSON="${threads_json}" SEARCH_JSON="${search_json}" MARKER="${MARKER}" python3 - <<'PY'
+candidate_ids="$(THREADS_JSON="${threads_json}" SEARCH_JSON="${search_json}" MARKER="${MARKER}" SEARCH_TOKEN="${SEARCH_TOKEN}" python3 - <<'PY'
 import json, os
 marker = os.environ["MARKER"]
+token = os.environ["SEARCH_TOKEN"]
 threads = json.loads(os.environ["THREADS_JSON"])
 search = json.loads(os.environ["SEARCH_JSON"])
 by_id = {t.get("threadId"): t for t in threads.get("threads") or [] if t.get("threadId")}
+seen = []
 for r in search.get("results") or []:
     tid = r.get("threadId")
-    if not tid:
+    if not tid or tid in seen:
         continue
     meta = by_id.get(tid) or {}
     if meta.get("threadKind") == "group":
         continue
-    print(tid)
-    raise SystemExit(0)
+    seen.append(tid)
 for t in threads.get("threads") or []:
     if t.get("threadKind") == "group":
         continue
+    tid = t.get("threadId")
+    if not tid or tid in seen:
+        continue
     prev = t.get("lastMessagePreview") or ""
-    if marker in prev:
-        print(t.get("threadId") or "")
-        break
+    if marker in prev or token in prev:
+        seen.append(tid)
+print("\n".join(seen))
 PY
 )"
+
+if [[ -n "${EXCELLENCE_SHOWCASE_THREAD_ID}" ]]; then
+  thread_id="${EXCELLENCE_SHOWCASE_THREAD_ID}"
+  messages_json="$(curl -fsS "${auth_hdr[@]}" \
+    "${API_BASE}/messaging/threads/${thread_id}/messages?lang=tr")"
+else
+  thread_id=""
+  messages_json=""
+  while IFS= read -r cand; do
+    [[ -z "${cand}" ]] && continue
+    cand_json="$(curl -fsS "${auth_hdr[@]}" \
+      "${API_BASE}/messaging/threads/${cand}/messages?lang=tr")"
+    if MESSAGES_JSON="${cand_json}" MARKER="${MARKER}" SEARCH_TOKEN="${SEARCH_TOKEN}" python3 - <<'PY'
+import json, os, sys
+marker = os.environ.get("MARKER", "")
+token = os.environ.get("SEARCH_TOKEN", "")
+data = json.loads(os.environ["MESSAGES_JSON"])
+messages = data.get("messages") or []
+if not messages:
+    sys.exit(1)
+if not any(token in (m.get("bodyText") or "") for m in messages):
+    sys.exit(1)
+has_internal = any(m.get("messageKind") == "internal" for m in messages)
+has_attachment = any(m.get("attachments") for m in messages)
+if not (has_internal and has_attachment):
+    sys.exit(1)
+sys.exit(0)
+PY
+    then
+      thread_id="${cand}"
+      messages_json="${cand_json}"
+      break
+    fi
+  done <<< "${candidate_ids}"
 fi
 
 if [[ -z "${thread_id}" ]]; then
   echo "FAIL: showcase thread bulunamadı — bash scripts/seed-firma-sohbeti-excellence-showcase.sh"
+  echo "  veya: FORCE_EXCELLENCE_DEMO=1 bash scripts/seed-firma-sohbeti-excellence-showcase.sh"
   exit 1
 fi
 
-messages_json="$(curl -fsS "${auth_hdr[@]}" \
-  "${API_BASE}/messaging/threads/${thread_id}/messages?lang=tr")"
 MESSAGES_JSON="${messages_json}" MARKER="${MARKER}" python3 - <<'PY'
 import json, os, sys
 marker = os.environ.get("MARKER", "")

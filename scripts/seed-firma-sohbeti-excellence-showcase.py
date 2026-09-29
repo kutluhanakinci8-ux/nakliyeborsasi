@@ -70,15 +70,49 @@ def jwt_company_id(token: str) -> str:
     return cid
 
 
+def showcase_thread_complete(token: str, thread_id: str) -> bool:
+    messages = (
+        api("GET", f"/messaging/threads/{thread_id}/messages?lang=tr", token=token).get(
+            "messages"
+        )
+        or []
+    )
+    if not messages:
+        return False
+    has_token = any(SEARCH_TOKEN in (m.get("bodyText") or "") for m in messages)
+    has_internal = any(m.get("messageKind") == "internal" for m in messages)
+    has_attachment = any(m.get("attachments") for m in messages)
+    return has_token and has_internal and has_attachment
+
+
 def already_seeded(token: str) -> bool:
+    search = api(
+        "GET",
+        f"/messaging/search?q={SEARCH_TOKEN}&limit=8&lang=tr",
+        token=token,
+    )
     threads = api("GET", "/messaging/threads?lang=tr", token=token).get("threads") or []
+    group_titles_only = any(
+        (t.get("title") or "").find(MARKER) >= 0 and t.get("threadKind") == "group"
+        for t in threads
+    )
+    for r in search.get("results") or []:
+        tid = r.get("threadId")
+        if not tid:
+            continue
+        meta = next((t for t in threads if t.get("threadId") == tid), {})
+        if meta.get("threadKind") == "group":
+            continue
+        if showcase_thread_complete(token, tid):
+            return True
+    if group_titles_only:
+        return False
     for t in threads:
         prev = t.get("lastMessagePreview") or ""
-        if MARKER in prev or SEARCH_TOKEN in prev:
-            return True
-        title = t.get("title") or ""
-        if MARKER in title:
-            return True
+        if SEARCH_TOKEN in prev and t.get("threadKind") != "group":
+            tid = t.get("threadId")
+            if tid and showcase_thread_complete(token, tid):
+                return True
     return False
 
 
