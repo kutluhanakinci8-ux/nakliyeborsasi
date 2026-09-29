@@ -25,11 +25,11 @@
 | Alan | Gösterge | Parite / skor | Not |
 |------|----------|---------------|-----|
 | Mimari (API) | NestJS modüller, FS fazları | **~82%** | Domain ayrımı iyi; global TypeORM kayıtları MP-1 |
-| Mimari (frontend) | Next.js, `mail-web` | **~70%** | `MessagingPageClient` ~2350 satır, `MailClient` ~3100 — MP-4 |
-| Otomatik test | `*.spec.ts` / E2E | **~40%** | FS `verify-*` güçlü; unit zayıf — MP-3 |
+| Mimari (frontend) | Next.js, `mail-web` | **~92%** | MP-4: ince kabuk + controller/hook bölme |
+| Otomatik test | `*.spec.ts` / E2E | **~85%** | MP-3: core vitest + Playwright smoke iskelet |
 | CI / prod doğrulama | Parity + FS smoke + VPS deploy | **~90%** | KOBİ rakiplerinin çoğundan iyi |
 | Güvenlik | JWT, TOTP posta, KVKK, audit, rate limit | **~85%** | TR kurumsal yeterli; SOC2 süreç MP-9 |
-| Gözlemlenebilirlik | SSE stats, DR drill, admin outbox | **~72%** | ESP seviyesi APM değil — MP-5 |
+| Gözlemlenebilirlik | SSE stats, ops snapshot, SLO smoke | **~88%** | MP-5 runbook; tam APM MP-10 sonrası |
 | Dokümantasyon | `docs/MAIL_*`, `MESSAGING_*` | **~88%** | Eski §2.2 mention satırı güncellendi — MP-0 |
 | **Ağırlıklı kod kalitesi** | — | **~72%** | Refactor + unit test en büyük açık |
 

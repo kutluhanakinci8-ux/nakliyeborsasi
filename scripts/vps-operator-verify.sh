@@ -19,6 +19,7 @@ export SKIP_PLAYWRIGHT="${SKIP_PLAYWRIGHT:-1}"
 bash "${ROOT}/scripts/verify-typeorm-global-entities.sh"
 npm run test:unit --prefix "${ROOT}"
 SKIP_PLAYWRIGHT="${SKIP_PLAYWRIGHT}" bash "${ROOT}/scripts/run-messaging-maturity-mp-checklist.sh"
+bash "${ROOT}/scripts/verify-communications-ops-snapshot.sh"
 
 echo ""
 echo "OK: vps-operator-verify tamam (Playwright: SKIP_PLAYWRIGHT=${SKIP_PLAYWRIGHT})"

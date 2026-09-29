@@ -23,6 +23,8 @@ echo "== Messaging / Posta maturity (MP) checklist =="
 run_step "MP-1 TypeORM entities" bash "${ROOT}/scripts/verify-typeorm-global-entities.sh"
 run_step "MP-3 core unit tests" npm run test:unit --prefix "${ROOT}"
 
+run_step "MP-5 communications ops" bash "${ROOT}/scripts/verify-communications-ops-snapshot.sh"
+
 if [[ "${SKIP_PLAYWRIGHT:-}" != "1" ]]; then
   run_step "MP-3 Playwright smoke (public)" bash "${ROOT}/scripts/verify-messaging-playwright-e2e.sh"
 else
