@@ -79,6 +79,12 @@ export class AuctionSessionEntity {
   public fleetOperatorCompanyId!: string | null;
 
   @Column({ type: "timestamptz", nullable: true })
+  public transportOwnerConfirmedAt!: Date | null;
+
+  @Column({ type: "timestamptz", nullable: true })
+  public transportCarrierConfirmedAt!: Date | null;
+
+  @Column({ type: "timestamptz", nullable: true })
   public transportCompletedAt!: Date | null;
 
   @Column({ type: "uuid", nullable: true })

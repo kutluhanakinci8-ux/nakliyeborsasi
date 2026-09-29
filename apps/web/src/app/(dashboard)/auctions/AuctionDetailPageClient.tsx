@@ -144,13 +144,42 @@ export function AuctionDetailPageClient({ sessionId }: AuctionDetailPageClientPr
     (authSession.companyId === owner?.companyId ||
       session.bids.some((bid) => bid.bidderCompanyId === authSession.companyId));
 
+  const winningBidForTransport =
+    session?.winningBidId && session.bids
+      ? session.bids.find((bid) => bid.id === session.winningBidId)
+      : null;
+  const isTransportOwner =
+    Boolean(
+      authSession?.companyId &&
+        owner &&
+        authSession.companyId === owner.companyId,
+    );
+  const isTransportCarrier = Boolean(
+    authSession?.companyId &&
+      winningBidForTransport &&
+      authSession.companyId === winningBidForTransport.bidderCompanyId,
+  );
+  const myTransportSideConfirmed = isTransportOwner
+    ? Boolean(session?.transportOwnerConfirmedAt)
+    : isTransportCarrier
+      ? Boolean(session?.transportCarrierConfirmedAt)
+      : false;
   const needsTransportConfirm =
     Boolean(
       session &&
         !isOpen &&
         session.winningBidId &&
         !session.transportCompletedAt &&
-        isAuctionParticipant,
+        isAuctionParticipant &&
+        (isTransportOwner || isTransportCarrier) &&
+        !myTransportSideConfirmed,
+    );
+  const awaitingPartnerTransportConfirm =
+    Boolean(
+      session &&
+        !session.transportCompletedAt &&
+        myTransportSideConfirmed &&
+        (isTransportOwner || isTransportCarrier),
     );
 
   const trustReviewPartnerId =
@@ -246,9 +275,14 @@ export function AuctionDetailPageClient({ sessionId }: AuctionDetailPageClientPr
               </button>
             </div>
           ) : null}
+          {awaitingPartnerTransportConfirm ? (
+            <p className="module-hint auction-transport-pending-partner">
+              Sizin CMR / taşıma onayınız kaydedildi. Karşı tarafın onayı bekleniyor.
+            </p>
+          ) : null}
           {session.transportCompletedAt ? (
             <p className="module-hint auction-transport-confirmed">
-              Taşıma onayı:{" "}
+              Taşıma onayı (iki taraf):{" "}
               {new Date(session.transportCompletedAt).toLocaleString(locale)}
               {session.transportCompletionNote
                 ? ` · ${session.transportCompletionNote}`

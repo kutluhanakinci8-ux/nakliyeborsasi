@@ -29,6 +29,30 @@ export SKIP_POSTA_PWA="${SKIP_POSTA_PWA:-0}"
 export SKIP_DR_DRILL="${SKIP_DR_DRILL:-0}"
 export SKIP_NPM_AUDIT="${SKIP_NPM_AUDIT:-1}"
 
+# Operatör JWT: .env OPERATOR_TEST_* veya geçerli OPERATOR_JWT → MP-5/6 snapshot tam koşar
+# shellcheck source=scripts/resolve-operator-jwt.sh
+source "${ROOT}/scripts/resolve-operator-jwt.sh" || true
+if [[ -n "${OPERATOR_JWT:-}" ]]; then
+  export OPERATOR_JWT
+  echo "OK: OPERATOR_JWT hazır (MP-5/6 operatör snapshot)"
+else
+  echo "NOT: OPERATOR_JWT yok — communications/deliverability snapshot adımları SKIP olabilir"
+fi
+
+bash "${ROOT}/scripts/verify-vps-prod-env-hints.sh"
+bash "${ROOT}/scripts/verify-pm2-api-singleton.sh"
+
+if curl -fsS -o /dev/null --connect-timeout 2 --max-time 5 \
+  "http://127.0.0.1:3010/api/v1/health/live" 2>/dev/null; then
+  echo "OK: yerel API /health/live (127.0.0.1:3010)"
+elif curl -fsS -o /dev/null --connect-timeout 3 --max-time 10 \
+  "https://app.lerta.com.tr/api/v1/health/live" 2>/dev/null; then
+  echo "OK: prod API /health/live (app.lerta.com.tr)"
+else
+  echo "NOT: /health/live yanıt vermedi — deploy veya PM2 kontrol edin" >&2
+  exit 1
+fi
+
 bash "${ROOT}/scripts/verify-typeorm-global-entities.sh"
 npm run test:unit --prefix "${ROOT}"
 SKIP_PLAYWRIGHT="${SKIP_PLAYWRIGHT}" bash "${ROOT}/scripts/run-messaging-maturity-mp-checklist.sh"

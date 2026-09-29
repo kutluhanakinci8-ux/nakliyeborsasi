@@ -8,7 +8,17 @@
 ```bash
 cd /var/www/nakliyeborsasi
 git log -1 --oneline
+# .env içinde OPERATOR_TEST_EMAIL + OPERATOR_TEST_PASSWORD → MP-5/6 JWT otomatik
 bash scripts/vps-operator-verify.sh
+```
+
+`vps-operator-verify` sırası: env ipuçları · PM2 API tekillik uyarısı · `/health/live` · unit test · MP checklist.
+
+Prod ortam kontrolleri (uyarı, FAIL değil):
+
+```bash
+bash scripts/verify-vps-prod-env-hints.sh   # WA webhook, operatör .env
+bash scripts/verify-pm2-api-singleton.sh    # çift API süreci uyarısı
 ```
 
 Manuel adımlar:

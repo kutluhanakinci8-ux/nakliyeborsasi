@@ -41,7 +41,7 @@ Yüzde = rakibin tipik üründe özelliğin **ne kadar karşılandığı** (tahm
 
 | Konu | Lerta | Hedef | Not |
 |------|-------|-------|-----|
-| İşlem-tetikli review (sadece tamamlanan taşıma) | **~85%** | 90% | `confirm-transport` · e-posta/push hatırlatma |
+| İşlem-tetikli review (sadece tamamlanan taşıma) | **~88%** | 90% | İki taraflı `confirm-transport` · e-posta/push hatırlatma |
 | Sigorta / finans güven mührü | 0% | 50% | Partner entegrasyon |
 | Harici API (Timocom benzeri skor paylaşımı) | 10% | 40% | MP+ entegrasyon fazı |
 | AI sahte yorum tespiti | 15% | 60% | Platform admin anomali |

@@ -47,9 +47,6 @@ export class AuctionTransportCompletionService {
     if (!session.winningBidId) {
       throw new ValidationException("No winning bid");
     }
-    if (session.transportCompletedAt) {
-      return { session };
-    }
 
     const winningBid = await this.auctionBidRepository.findOne({
       where: { id: session.winningBidId },
@@ -66,9 +63,47 @@ export class AuctionTransportCompletionService {
       throw new ValidationException("Only auction participants can confirm transport");
     }
 
-    session.transportCompletedAt = new Date();
-    session.transportCompletedByCompanyId = authenticatedUser.companyId;
-    session.transportCompletionNote = body.completionNote?.trim() || null;
+    if (session.transportCompletedAt) {
+      return { session };
+    }
+
+    const isOwner = authenticatedUser.companyId === session.ownerCompanyId;
+    const isCarrier = authenticatedUser.companyId === winningBid.bidderCompanyId;
+    const now = new Date();
+
+    if (isOwner && !session.transportOwnerConfirmedAt) {
+      session.transportOwnerConfirmedAt = now;
+      session.transportCompletedByCompanyId = authenticatedUser.companyId;
+    } else if (isCarrier && !session.transportCarrierConfirmedAt) {
+      session.transportCarrierConfirmedAt = now;
+      session.transportCompletedByCompanyId = authenticatedUser.companyId;
+    }
+
+    if (body.completionNote?.trim()) {
+      session.transportCompletionNote = body.completionNote.trim();
+    }
+
+    const saved = await this.auctionSessionRepository.save(session);
+    const finalized = await this.finalizeIfBothPartiesConfirmed(saved, winningBid);
+    return { session: finalized };
+  }
+
+  private async finalizeIfBothPartiesConfirmed(
+    session: AuctionSessionEntity,
+    winningBid: AuctionBidEntity,
+  ): Promise<AuctionSessionEntity> {
+    if (session.transportCompletedAt) {
+      return session;
+    }
+    if (!session.transportOwnerConfirmedAt || !session.transportCarrierConfirmedAt) {
+      return session;
+    }
+
+    const completedAt =
+      session.transportOwnerConfirmedAt > session.transportCarrierConfirmedAt
+        ? session.transportOwnerConfirmedAt
+        : session.transportCarrierConfirmedAt;
+    session.transportCompletedAt = completedAt;
     const saved = await this.auctionSessionRepository.save(session);
 
     await this.trustReviewInviteService.issueForClosedAuction(saved);
@@ -93,6 +128,6 @@ export class AuctionTransportCompletionService {
       auctionSessionId: session.id,
     });
 
-    return { session: saved };
+    return saved;
   }
 }
