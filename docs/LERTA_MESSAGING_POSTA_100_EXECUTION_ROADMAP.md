@@ -90,12 +90,15 @@
 
 **Amaç:** Bakım riskini düşür; premium UI sprint’ini sürdürülebilir kıl.
 
-| Parça | Hedef modül |
-|-------|-------------|
-| Thread list + selection | `messaging/ThreadListPanel.tsx` + `useMessagingThreads.ts` |
-| Message pane + compose | `messaging/ConversationPanel.tsx` + `useMessagingMessages.ts` |
-| Deep link / URL state | `useMessagingRouteState.ts` |
-| MailClient | `mail-web` altında benzer bölme (inbox / reading / compose) |
+| Parça | Modül | Durum |
+|-------|--------|--------|
+| Route / sekme / zemin | `hooks/useMessagingPageRoute.ts` | ✅ |
+| Sohbet state + API | `hooks/useMessagingChatController.ts` | ✅ |
+| Yardımcılar | `lib/messagingPageHelpers.ts` | ✅ |
+| Thread listesi | `components/messaging/MessagingThreadSidebar.tsx` | ✅ |
+| Konuşma + compose | `components/messaging/MessagingConversationPanel.tsx` | ✅ |
+| Sayfa kabuğu | `MessagingPageClient.tsx` (**~245** satır) | ✅ |
+| `mail-web` MailClient | inbox / reading / compose bölme | ◐ sırada |
 
 **Kabul:** `MessagingPageClient.tsx` **<800** satır · davranış değişmez · MP-3 E2E yeşil.
 
