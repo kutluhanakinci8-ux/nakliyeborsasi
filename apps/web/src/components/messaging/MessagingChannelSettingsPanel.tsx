@@ -42,8 +42,9 @@ export function MessagingChannelSettingsPanel({ accessToken, visible }: Props) {
     setError("");
     setSaved(false);
     try {
+      const trimmedPhone = phone.trim();
       await MessagingIntegrationApiClient.updateWhatsappBridge(accessToken, {
-        whatsappNotifyE164: phone.trim() || null,
+        ...(trimmedPhone ? { whatsappNotifyE164: trimmedPhone } : {}),
         enabled,
         kvkkNoticeAccepted: enabled ? kvkkChecked : undefined,
       });
@@ -69,8 +70,28 @@ export function MessagingChannelSettingsPanel({ accessToken, visible }: Props) {
       {bridge?.kvkkNoticeTr ? (
         <p className="chat-channel-settings-kvkk">{bridge.kvkkNoticeTr}</p>
       ) : null}
+      {bridge?.configured && bridge.notifyE164Masked ? (
+        <p className="chat-channel-settings-saved-phone" role="status">
+          Kayıtlı numara: <strong>{bridge.notifyE164Masked}</strong>
+          <span className="chat-channel-settings-saved-hint">
+            {" "}
+            (değiştirmek için yeni numarayı altta yazın)
+          </span>
+        </p>
+      ) : null}
+      {bridge?.enabled && bridge.deliveryConfigured === false ? (
+        <p className="chat-channel-settings-delivery-warn" role="alert">
+          Sunucuda WhatsApp gönderim kanalı (Twilio veya operasyon webhook) henüz
+          tanımlı değil. Köprü etkin görünür ancak telefona bildirim{" "}
+          <strong>gönderilmez</strong> — platform yöneticinize bildirin.
+        </p>
+      ) : null}
       <label className="chat-channel-settings-field">
-        <span>WhatsApp numarası (E.164)</span>
+        <span>
+          {bridge?.configured
+            ? "Yeni WhatsApp numarası (E.164, isteğe bağlı)"
+            : "WhatsApp numarası (E.164)"}
+        </span>
         <input
           className="input-light"
           type="tel"
@@ -91,7 +112,11 @@ export function MessagingChannelSettingsPanel({ accessToken, visible }: Props) {
         <button
           type="button"
           className="btn-accent"
-          disabled={busy || !kvkkChecked || !phone.trim()}
+          disabled={
+            busy ||
+            !kvkkChecked ||
+            (!phone.trim() && !bridge?.configured)
+          }
           onClick={() => void save(true)}
         >
           Etkinleştir

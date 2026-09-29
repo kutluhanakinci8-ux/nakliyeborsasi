@@ -70,7 +70,7 @@ export class MessagingIntegrationController {
       whatsapp: await this.messagingCompanyIntegrationService.updateWhatsappBridge(
         user,
         {
-          whatsappNotifyE164: body.whatsappNotifyE164 ?? null,
+          whatsappNotifyE164: body.whatsappNotifyE164,
           enabled: body.enabled,
           kvkkNoticeAccepted: body.kvkkNoticeAccepted,
         },

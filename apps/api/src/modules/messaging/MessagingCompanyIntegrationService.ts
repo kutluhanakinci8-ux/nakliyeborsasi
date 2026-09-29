@@ -20,6 +20,15 @@ import {
 } from "../../infrastructure/database/entities/CompanyMessagingSettingsEntity";
 import { generateWebhookSigningSecret } from "../notification/MailIntegrationCrypto";
 import { MessagingBotService } from "./MessagingBotService";
+import { MessagingWhatsappBridgeService } from "./MessagingWhatsappBridgeService";
+
+export function maskWhatsappNotifyE164(e164: string): string {
+  const normalized = e164.replace(/\s/g, "");
+  if (normalized.length <= 6) {
+    return "••••••";
+  }
+  return `${normalized.slice(0, 4)}•••${normalized.slice(-4)}`;
+}
 
 const WEBHOOK_EVENTS: MessagingWebhookEventType[] = [
   "message.created",
@@ -38,6 +47,7 @@ export class MessagingCompanyIntegrationService {
     @InjectRepository(CompanyMessagingSettingsEntity)
     private readonly settingsRepository: Repository<CompanyMessagingSettingsEntity>,
     private readonly messagingBotService: MessagingBotService,
+    private readonly messagingWhatsappBridgeService: MessagingWhatsappBridgeService,
   ) {}
 
   public async getSnapshot(authenticatedUser: AuthenticatedUserContext) {
@@ -62,6 +72,11 @@ export class MessagingCompanyIntegrationService {
       whatsappBridge: {
         enabled: settings.whatsappBridgeEnabled,
         configured: Boolean(settings.whatsappNotifyE164),
+        notifyE164Masked: settings.whatsappNotifyE164
+          ? maskWhatsappNotifyE164(settings.whatsappNotifyE164)
+          : null,
+        deliveryConfigured:
+          this.messagingWhatsappBridgeService.isDeliveryConfigured(),
         kvkkNoticeTr: MESSAGING_WHATSAPP_KVKK_NOTICE_TR,
         kvkkAcceptedAt:
           settingsRow?.whatsappBridgeKvkkAcceptedAt?.toISOString() ?? null,
@@ -279,7 +294,7 @@ export class MessagingCompanyIntegrationService {
   public async updateWhatsappBridge(
     authenticatedUser: AuthenticatedUserContext,
     params: {
-      whatsappNotifyE164: string | null;
+      whatsappNotifyE164?: string | null;
       enabled: boolean;
       kvkkNoticeAccepted?: boolean;
     },
@@ -295,7 +310,7 @@ export class MessagingCompanyIntegrationService {
         retentionMode: "archive",
       });
     }
-    if (params.whatsappNotifyE164 !== null) {
+    if (params.whatsappNotifyE164 !== undefined && params.whatsappNotifyE164 !== null) {
       const phone = params.whatsappNotifyE164.trim();
       if (phone && !/^\+[1-9]\d{7,14}$/.test(phone)) {
         throw new BadRequestException("whatsappNotifyE164 E.164 formatında olmalı (+...).");

@@ -14,6 +14,21 @@ export class MessagingWhatsappBridgeService {
     private readonly configService: ConfigService,
   ) {}
 
+  public isDeliveryConfigured(): boolean {
+    const accountSid = this.configService
+      .get<string>("TWILIO_ACCOUNT_SID")
+      ?.trim();
+    const authToken = this.configService.get<string>("TWILIO_AUTH_TOKEN")?.trim();
+    const from = this.configService.get<string>("TWILIO_WHATSAPP_FROM")?.trim();
+    if (accountSid && authToken && from) {
+      return true;
+    }
+    const hook = this.configService
+      .get<string>("MESSAGING_WHATSAPP_BRIDGE_WEBHOOK_URL")
+      ?.trim();
+    return Boolean(hook);
+  }
+
   public notifyMessageCreated(
     companyId: string,
     payload: { threadId: string; bodyPreview: string },
@@ -76,6 +91,9 @@ export class MessagingWhatsappBridgeService {
       .get<string>("MESSAGING_WHATSAPP_BRIDGE_WEBHOOK_URL")
       ?.trim();
     if (!hook) {
+      this.logger.warn(
+        `WhatsApp bridge delivery skipped company=${companyId}: Twilio/webhook yapılandırılmadı`,
+      );
       return;
     }
     await fetch(hook, {
