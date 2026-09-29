@@ -54,6 +54,14 @@ function shortCompanyId(companyId: string): string {
   return `${companyId.slice(0, 8)}…${companyId.slice(-4)}`;
 }
 
+const COMPANY_UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function parseCompanyUuidCandidate(raw: string): string | null {
+  const trimmed = raw.trim();
+  return COMPANY_UUID_RE.test(trimmed) ? trimmed : null;
+}
+
 function parseMode(
   raw: string | null,
   preferChat: boolean,
@@ -82,7 +90,6 @@ export function MessagingPageClient() {
   );
   const [threads, setThreads] = useState<MessagingThreadRecord[]>([]);
   const [activeThreadId, setActiveThreadId] = useState("");
-  const [counterpartyId, setCounterpartyId] = useState("");
   const [messageBody, setMessageBody] = useState("");
   const [messages, setMessages] = useState<ThreadMessageRecord[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
@@ -90,6 +97,7 @@ export function MessagingPageClient() {
   const [acceptOfferBusy, setAcceptOfferBusy] = useState(false);
   const [mailEmbedFullscreen, setMailEmbedFullscreen] = useState(false);
   const [threadSearch, setThreadSearch] = useState("");
+  const [chatSearchFocused, setChatSearchFocused] = useState(false);
   const [counterpartyTrust, setCounterpartyTrust] =
     useState<TrustScoreRecord | null>(null);
   const [moduleBlocked, setModuleBlocked] = useState(false);
@@ -183,8 +191,9 @@ export function MessagingPageClient() {
     }
   }, [accessToken, locale, mode, loadThreads]);
 
-  async function handleOpenThread(): Promise<void> {
-    if (!counterpartyId.trim()) {
+  async function openThreadWithCounterparty(companyId: string): Promise<void> {
+    const normalized = companyId.trim();
+    if (!normalized) {
       setErrorMessage("Karşı firma kimliği girin.");
       return;
     }
@@ -195,7 +204,7 @@ export function MessagingPageClient() {
       const payload = await MessagingApiClient.openThread(
         accessToken,
         locale,
-        counterpartyId.trim(),
+        normalized,
         listingId || undefined,
       );
       const threadId =
@@ -206,6 +215,8 @@ export function MessagingPageClient() {
         throw new Error("Sohbet kimliği alınamadı");
       }
       setActiveThreadId(threadId);
+      setThreadSearch("");
+      setChatSearchFocused(false);
       await loadThreads();
       await loadMessages(threadId);
     } catch (error) {
@@ -236,7 +247,7 @@ export function MessagingPageClient() {
   useEffect(() => {
     const companyId = searchParams.get("companyId");
     if (companyId) {
-      setCounterpartyId(companyId);
+      setThreadSearch(companyId);
     }
     const threadId = searchParams.get("threadId");
     if (threadId) {
@@ -445,6 +456,51 @@ export function MessagingPageClient() {
       return haystack.includes(query);
     });
   }, [threads, threadSearch]);
+
+  const companyUuidFromSearch = useMemo(
+    () => parseCompanyUuidCandidate(threadSearch),
+    [threadSearch],
+  );
+
+  const showChatSearchPanel =
+    chatSearchFocused &&
+    threadSearch.trim().length > 0 &&
+    (companyUuidFromSearch !== null || serverSearchHits.length > 0);
+
+  async function submitUnifiedChatSearch(): Promise<void> {
+    const query = threadSearch.trim();
+    if (!query) {
+      return;
+    }
+    const uuid = parseCompanyUuidCandidate(query);
+    if (uuid) {
+      await openThreadWithCounterparty(uuid);
+      return;
+    }
+    if (serverSearchHits.length === 1) {
+      await loadMessages(serverSearchHits[0].threadId);
+      setThreadSearch("");
+      setChatSearchFocused(false);
+      return;
+    }
+    if (filteredThreads.length === 1) {
+      await loadMessages(filteredThreads[0].threadId);
+      setThreadSearch("");
+      setChatSearchFocused(false);
+      return;
+    }
+    if (filteredThreads.length > 1) {
+      setErrorMessage("Listeden bir sohbet seçin veya tam firma UUID girin.");
+      return;
+    }
+    if (query.length >= 2 && serverSearchHits.length > 0) {
+      setErrorMessage("Mesaj sonuçlarından birini seçin.");
+      return;
+    }
+    setErrorMessage(
+      "Eşleşen sohbet yok. Karşı firmanın tam UUID değerini girin (ihale veya güven sayfasından).",
+    );
+  }
 
   useEffect(() => {
     if (!activeThreadId || mode !== "chat") {
@@ -746,53 +802,100 @@ export function MessagingPageClient() {
         <div className="chat-layout">
           <aside className="chat-sidebar module-panel">
             <h2 className="module-panel-title">Sohbetler</h2>
-            <input
-              className="input-light chat-thread-search"
-              placeholder="Firma veya mesaj ara (sunucu, 2+ karakter)…"
-              value={threadSearch}
-              onChange={(event) => setThreadSearch(event.target.value)}
-              aria-label="Sohbet ara"
-            />
-            {serverSearchHits.length > 0 ? (
-              <ul className="chat-server-search-hits">
-                {serverSearchHits.map((hit) => (
-                  <li key={hit.messageId}>
+            <div className="chat-unified-search">
+              <input
+                className="input-light chat-unified-search-input"
+                placeholder="Sohbet, firma adı veya firma UUID…"
+                value={threadSearch}
+                onChange={(event) => setThreadSearch(event.target.value)}
+                onFocus={() => setChatSearchFocused(true)}
+                onBlur={() => {
+                  window.setTimeout(() => setChatSearchFocused(false), 160);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    void submitUnifiedChatSearch();
+                  }
+                  if (event.key === "Escape") {
+                    setThreadSearch("");
+                    setChatSearchFocused(false);
+                  }
+                }}
+                aria-label="Sohbet ara veya yeni sohbet aç"
+                aria-expanded={showChatSearchPanel}
+                aria-controls="chat-unified-search-panel"
+                role="combobox"
+                autoComplete="off"
+              />
+              <p className="chat-unified-search-hint">
+                Enter: aç · 2+ karakter mesaj araması · tam UUID ile yeni sohbet
+              </p>
+              {showChatSearchPanel ? (
+                <div
+                  id="chat-unified-search-panel"
+                  className="chat-unified-search-panel"
+                  role="listbox"
+                >
+                  {companyUuidFromSearch ? (
                     <button
                       type="button"
-                      className="chat-server-search-hit"
-                      onClick={() => void loadMessages(hit.threadId)}
+                      className="chat-unified-search-option chat-unified-search-option--new"
+                      role="option"
+                      disabled={isBusy}
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() =>
+                        void openThreadWithCounterparty(companyUuidFromSearch)
+                      }
                     >
-                      <strong>
-                        {hit.counterpartyLegalName?.trim() ||
-                          shortCompanyId(hit.counterpartyCompanyId)}
-                      </strong>
-                      <span>{hit.snippet}</span>
+                      <span className="chat-unified-search-option-kicker">
+                        Yeni sohbet
+                      </span>
+                      <span className="chat-unified-search-option-title">
+                        {shortCompanyId(companyUuidFromSearch)}
+                      </span>
                     </button>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-            <div className="chat-compose-row">
-              <input
-                className="input-light"
-                placeholder="Karşı firma ID"
-                value={counterpartyId}
-                onChange={(event) => setCounterpartyId(event.target.value)}
-              />
-              <button
-                type="button"
-                className="btn-accent"
-                disabled={isBusy}
-                onClick={() => void handleOpenThread()}
-              >
-                Aç
-              </button>
+                  ) : null}
+                  {serverSearchHits.length > 0 ? (
+                    <div className="chat-unified-search-group">
+                      <p className="chat-unified-search-group-label">
+                        Mesajlarda
+                      </p>
+                      <ul className="chat-unified-search-list">
+                        {serverSearchHits.slice(0, 6).map((hit) => (
+                          <li key={hit.messageId}>
+                            <button
+                              type="button"
+                              className="chat-unified-search-option"
+                              role="option"
+                              onMouseDown={(event) => event.preventDefault()}
+                              onClick={() => {
+                                void loadMessages(hit.threadId);
+                                setThreadSearch("");
+                                setChatSearchFocused(false);
+                              }}
+                            >
+                              <span className="chat-unified-search-option-title">
+                                {hit.counterpartyLegalName?.trim() ||
+                                  shortCompanyId(hit.counterpartyCompanyId)}
+                              </span>
+                              <span className="chat-unified-search-option-sub">
+                                {hit.snippet}
+                              </span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
             {filteredThreads.length === 0 ? (
               <EmptyState
                 message={
                   threads.length === 0
-                    ? "Henüz sohbet yok. Firma ID ile yeni sohbet açın."
+                    ? "Henüz sohbet yok. Üstte firma UUID ile yeni sohbet açın."
                     : "Aramanızla eşleşen sohbet yok."
                 }
               />
