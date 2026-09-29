@@ -64,11 +64,23 @@ export class MessagingWhatsappBridgeService {
     const authToken = this.configService.get<string>("TWILIO_AUTH_TOKEN")?.trim();
     const from = this.configService.get<string>("TWILIO_WHATSAPP_FROM")?.trim();
     if (accountSid && authToken && from) {
-      const body = new URLSearchParams({
-        To: to.startsWith("whatsapp:") ? to : `whatsapp:${to}`,
+      const toWhatsApp = to.startsWith("whatsapp:") ? to : `whatsapp:${to}`;
+      const contentSid = this.configService
+        .get<string>("TWILIO_WHATSAPP_CONTENT_SID")
+        ?.trim();
+      const params = new URLSearchParams({
+        To: toWhatsApp,
         From: from,
-        Body: text,
       });
+      if (contentSid) {
+        params.set("ContentSid", contentSid);
+        params.set(
+          "ContentVariables",
+          JSON.stringify({ "1": text.slice(0, 1600) }),
+        );
+      } else {
+        params.set("Body", text);
+      }
       const response = await fetch(
         `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
         {
@@ -77,12 +89,24 @@ export class MessagingWhatsappBridgeService {
             Authorization: `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString("base64")}`,
             "content-type": "application/x-www-form-urlencoded",
           },
-          body,
+          body: params,
           signal: AbortSignal.timeout(15_000),
         },
       );
       if (!response.ok) {
-        this.logger.warn(`Twilio WhatsApp HTTP ${response.status}`);
+        const detail = await response.text();
+        this.logger.warn(
+          `Twilio WhatsApp HTTP ${response.status}: ${detail.slice(0, 400)}`,
+        );
+        if (
+          !contentSid &&
+          detail.includes("21654") &&
+          detail.includes("ContentSid")
+        ) {
+          this.logger.warn(
+            "Twilio WhatsApp: TWILIO_WHATSAPP_CONTENT_SID gerekli (trial/yeni hesaplar Body desteklemez). Content Template: tek değişken {{1}}.",
+          );
+        }
       }
       return;
     }
