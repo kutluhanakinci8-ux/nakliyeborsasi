@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "prebuild": "npm run build -w @nakliyeborsasi/core",
     "build": "rm -rf dist tsconfig.build.tsbuildinfo && nest build && test -f dist/main.js",
     "prestart": "test -f dist/main.js || (echo 'Missing dist/main.js — run: npm run build' >&2 && exit 1)",
     "start": "node dist/main.js",
