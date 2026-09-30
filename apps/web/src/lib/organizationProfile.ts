@@ -227,6 +227,22 @@ export function loadOrganizationProfile(
   }
 }
 
+/** Oturumdaki (veritabanı) web adresini boş local profile ile senkronize eder. */
+export function syncOrganizationWebsiteFromServer(
+  companyId: string,
+  primaryEmail: string,
+  serverWebsiteUrl: string | null | undefined,
+): OrganizationProfile {
+  const trimmed = serverWebsiteUrl?.trim() ?? "";
+  const profile = loadOrganizationProfile(companyId, primaryEmail);
+  if (!companyId || !trimmed || profile.website.trim()) {
+    return profile;
+  }
+  const next = { ...profile, website: trimmed };
+  saveOrganizationProfile(companyId, next);
+  return next;
+}
+
 export function applyRegistrationOrganizationProfile(
   companyId: string,
   payload: {

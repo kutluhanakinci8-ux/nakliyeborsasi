@@ -104,6 +104,7 @@ export class UserCredentialAuthenticationService {
       emailAddress: base.emailAddress,
       roleCodes: base.roleCodes,
       companyParticipantTypeCode: participantCode ?? null,
+      companyWebsiteUrl: company?.websiteUrl ?? null,
     });
   }
 

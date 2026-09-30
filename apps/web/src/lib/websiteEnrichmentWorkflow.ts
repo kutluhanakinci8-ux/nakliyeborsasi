@@ -143,6 +143,21 @@ export function mergeEnrichmentIntoProfile(
   };
 }
 
+export function queueWebsiteEnrichmentIfNotCompleted(
+  companyId: string,
+  websiteUrl: string,
+  profile: OrganizationProfile,
+): void {
+  const trimmed = websiteUrl.trim();
+  if (!trimmed || profile.websiteEnrichmentCompletedAt) {
+    return;
+  }
+  if (getPendingWebsiteEnrichmentUrl(companyId)) {
+    return;
+  }
+  queueWebsiteEnrichmentAfterRegistration(companyId, trimmed);
+}
+
 export function queueWebsiteEnrichmentAfterRegistration(
   companyId: string,
   websiteUrl: string,
