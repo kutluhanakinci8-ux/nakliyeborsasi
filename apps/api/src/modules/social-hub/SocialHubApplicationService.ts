@@ -34,6 +34,9 @@ import {
 } from "./SocialHubAuditService";
 import { getSocialHubProviderCapabilities } from "./socialHubProviderCapabilities";
 import { parseSocialHubConnectionMetadata } from "./oauth/SocialHubConnectionMetadata";
+import { SocialHubConnectionHealthService } from "./SocialHubConnectionHealthService";
+import { SocialHubTokenRefreshService } from "./oauth/SocialHubTokenRefreshService";
+import { SocialHubOutboundDeliveryLogService } from "./SocialHubOutboundDeliveryLogService";
 
 export const INVITABLE_SOCIAL_TEAM_ROLES: readonly CompanyRoleCode[] = [
   CompanyRoleCode.SocialAdmin,
@@ -67,6 +70,9 @@ export class SocialHubApplicationService {
     private readonly membershipRepository: Repository<CompanyMembershipEntity>,
     private readonly socialHubAuditService: SocialHubAuditService,
     private readonly modularSubscriptionEntitlementService: ModularSubscriptionEntitlementService,
+    private readonly connectionHealthService: SocialHubConnectionHealthService,
+    private readonly tokenRefreshService: SocialHubTokenRefreshService,
+    private readonly outboundDeliveryLogService: SocialHubOutboundDeliveryLogService,
   ) {}
 
   private async assertSocialHubSubscription(companyId: string): Promise<void> {
@@ -151,6 +157,72 @@ export class SocialHubApplicationService {
             ? "Sosyal konuşmalar Mesajlar’da kanal rozetiyle listelenir; yanıtlar bağlı hesap üzerinden gider. Gönderim hatası konuşma başlığında görünür."
             : "Kanal bağlayın veya demo oluşturun; konuşmalar Mesajlar ekranında listelenir.",
       },
+    };
+  }
+
+  public async getConnectionHealth(user: AuthenticatedUserContext) {
+    assertSocialHubRead(user);
+    await this.assertSocialHubSubscription(user.companyId);
+    const health = await this.connectionHealthService.buildHealthDashboard(
+      user.companyId,
+    );
+    return { health };
+  }
+
+  public async refreshConnectionToken(
+    user: AuthenticatedUserContext,
+    platformCode: string,
+  ) {
+    assertSocialHubAdmin(user);
+    await this.assertSocialHubSubscription(user.companyId);
+    const provider = this.socialProviderRegistry.resolve(platformCode);
+    const result = await this.tokenRefreshService.refreshConnectionToken(
+      user.companyId,
+      provider.platformCode,
+    );
+    this.socialHubAuditService.record(
+      user,
+      SocialHubAuditActionCode.ConnectionTokenRefresh,
+      `/company/social-hub/connections/${platformCode}/refresh-token`,
+      { refreshed: result.refreshed, platformCode: provider.platformCode },
+    );
+    const row = await this.connectionRepository.findOne({
+      where: { companyId: user.companyId, platformCode: provider.platformCode },
+    });
+    return {
+      refresh: result,
+      connection: row
+        ? this.mapConnection(row, this.listProviderMeta())
+        : null,
+    };
+  }
+
+  public async listOutboundDeliveries(
+    user: AuthenticatedUserContext,
+    query: { threadId?: string; limit?: number },
+  ) {
+    assertSocialHubRead(user);
+    await this.assertSocialHubSubscription(user.companyId);
+    const limit = Math.min(Math.max(query.limit ?? 40, 1), 100);
+    const rows = await this.outboundDeliveryLogService.listForCompany({
+      companyId: user.companyId,
+      messageThreadId: query.threadId,
+      limit,
+    });
+    return {
+      deliveries: rows.map((row) => ({
+        id: row.id,
+        messageThreadId: row.messageThreadId,
+        messageId: row.messageId,
+        platformCode: row.platformCode,
+        platformLabel:
+          PLATFORM_LABELS[row.platformCode as SocialPlatformCode] ??
+          row.platformCode,
+        status: row.status,
+        errorMessage: row.errorMessage,
+        externalMessageId: row.externalMessageId,
+        createdAt: row.createdAt.toISOString(),
+      })),
     };
   }
 

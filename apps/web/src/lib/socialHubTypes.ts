@@ -110,6 +110,39 @@ export type SocialHubAnalytics = {
   }>;
 };
 
+export type SocialHubHealthChannel = {
+  platformCode: string;
+  label: string;
+  statusCode: string;
+  tokenHealth: "ok" | "expiring_soon" | "expired" | "missing";
+  tokenExpiresAt: string | null;
+  setupWarnings: string[];
+  openThreadCount: number;
+  lastOutboundStatus: "ok" | "failed" | null;
+  lastOutboundAt: string | null;
+  recentOutboundFailures24h: number;
+  oauthServerReady: boolean;
+  canRefreshToken: boolean;
+};
+
+export type SocialHubHealth = {
+  generatedAt: string;
+  overallStatus: "healthy" | "attention" | "critical";
+  channels: SocialHubHealthChannel[];
+};
+
+export type SocialHubOutboundDelivery = {
+  id: string;
+  messageThreadId: string;
+  messageId: string | null;
+  platformCode: string;
+  platformLabel: string;
+  status: "ok" | "failed";
+  errorMessage: string | null;
+  externalMessageId: string | null;
+  createdAt: string;
+};
+
 export type SocialHubSnapshot = {
   subscription: SocialHubSubscriptionInfo;
   permissions: SocialHubPermissions;

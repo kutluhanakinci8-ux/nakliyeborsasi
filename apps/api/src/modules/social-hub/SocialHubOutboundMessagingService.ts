@@ -5,11 +5,13 @@ import { SocialPlatformCode } from "@nakliyeborsasi/core";
 import { CompanySocialThreadLinkEntity } from "../../infrastructure/database/entities/CompanySocialThreadLinkEntity";
 import { SocialHubMetaGraphService } from "./oauth/SocialHubMetaGraphService";
 import { SocialHubTokenVaultService } from "./oauth/SocialHubTokenVaultService";
+import { SocialHubOutboundDeliveryLogService } from "./SocialHubOutboundDeliveryLogService";
 
 export type SocialOutboundDispatchResult = {
   attempted: boolean;
   ok: boolean;
   message: string;
+  externalMessageId?: string;
 };
 
 @Injectable()
@@ -21,11 +23,13 @@ export class SocialHubOutboundMessagingService {
     private readonly linkRepository: Repository<CompanySocialThreadLinkEntity>,
     private readonly tokenVault: SocialHubTokenVaultService,
     private readonly metaGraphService: SocialHubMetaGraphService,
+    private readonly deliveryLogService: SocialHubOutboundDeliveryLogService,
   ) {}
 
   public async tryDispatchOutbound(params: {
     companyId: string;
     messageThreadId: string;
+    messageId: string | null;
     bodyText: string;
   }): Promise<SocialOutboundDispatchResult> {
     const trimmed = params.bodyText.trim();
@@ -46,7 +50,13 @@ export class SocialHubOutboundMessagingService {
     if (link.externalThreadId.startsWith("demo-")) {
       const demoMessage =
         "Demo konuşması — gerçek kanala gönderilmez. OAuth ile bağlı hesaptan yanıtlayın.";
-      await this.recordOutbound(link, false, demoMessage);
+      await this.recordOutbound({
+        link,
+        companyId: params.companyId,
+        messageId: params.messageId,
+        ok: false,
+        errorMessage: demoMessage,
+      });
       return { attempted: true, ok: false, message: demoMessage };
     }
     try {
@@ -62,18 +72,42 @@ export class SocialHubOutboundMessagingService {
         bodyText: trimmed,
       });
       if (!result.ok) {
-        await this.recordOutbound(link, false, result.message);
+        await this.recordOutbound({
+          link,
+          companyId: params.companyId,
+          messageId: params.messageId,
+          ok: false,
+          errorMessage: result.message,
+        });
         this.logger.warn(
           `Social outbound failed thread=${params.messageThreadId} platform=${platform}: ${result.message}`,
         );
         return { attempted: true, ok: false, message: result.message };
       }
-      await this.recordOutbound(link, true, null);
-      return { attempted: true, ok: true, message: result.message };
+      await this.recordOutbound({
+        link,
+        companyId: params.companyId,
+        messageId: params.messageId,
+        ok: true,
+        errorMessage: null,
+        externalMessageId: result.externalMessageId,
+      });
+      return {
+        attempted: true,
+        ok: true,
+        message: result.message,
+        externalMessageId: result.externalMessageId,
+      };
     } catch (error) {
       const message =
         error instanceof Error ? error.message : String(error);
-      await this.recordOutbound(link, false, message);
+      await this.recordOutbound({
+        link,
+        companyId: params.companyId,
+        messageId: params.messageId,
+        ok: false,
+        errorMessage: message,
+      });
       this.logger.warn(
         `Social outbound error thread=${params.messageThreadId}: ${message}`,
       );
@@ -81,14 +115,28 @@ export class SocialHubOutboundMessagingService {
     }
   }
 
-  private async recordOutbound(
-    link: CompanySocialThreadLinkEntity,
-    ok: boolean,
-    errorMessage: string | null,
-  ): Promise<void> {
-    link.lastOutboundAt = new Date();
-    link.lastOutboundStatus = ok ? "ok" : "failed";
-    link.lastOutboundErrorMessage = ok ? null : errorMessage?.slice(0, 512) ?? null;
-    await this.linkRepository.save(link);
+  private async recordOutbound(params: {
+    link: CompanySocialThreadLinkEntity;
+    companyId: string;
+    messageId: string | null;
+    ok: boolean;
+    errorMessage: string | null;
+    externalMessageId?: string;
+  }): Promise<void> {
+    params.link.lastOutboundAt = new Date();
+    params.link.lastOutboundStatus = params.ok ? "ok" : "failed";
+    params.link.lastOutboundErrorMessage = params.ok
+      ? null
+      : params.errorMessage?.slice(0, 512) ?? null;
+    await this.linkRepository.save(params.link);
+    await this.deliveryLogService.record({
+      companyId: params.companyId,
+      messageThreadId: params.link.messageThreadId,
+      messageId: params.messageId,
+      platformCode: params.link.platformCode,
+      status: params.ok ? "ok" : "failed",
+      errorMessage: params.errorMessage,
+      externalMessageId: params.externalMessageId,
+    });
   }
 }

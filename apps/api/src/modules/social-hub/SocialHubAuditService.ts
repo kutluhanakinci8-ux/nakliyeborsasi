@@ -12,6 +12,7 @@ export const SocialHubAuditActionCode = {
   PostApprove: "SOCIAL_HUB_POST_APPROVE",
   PostSubmitApproval: "SOCIAL_HUB_POST_SUBMIT_APPROVAL",
   MemberRoleUpdate: "SOCIAL_HUB_MEMBER_ROLE_UPDATE",
+  ConnectionTokenRefresh: "SOCIAL_HUB_CONNECTION_TOKEN_REFRESH",
 } as const;
 
 @Injectable()

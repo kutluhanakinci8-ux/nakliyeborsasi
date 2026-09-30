@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import {
   SocialAnalyticsPanel,
   SocialConnectionsPanel,
+  SocialHealthPanel,
   SocialInboxPanel,
   SocialPublishingPanel,
   SocialTeamPanel,
@@ -21,6 +22,8 @@ import { formatSocialHubOAuthReason } from "../../../../lib/formatSocialHubOAuth
 import type {
   SocialHubAnalytics,
   SocialHubAuditEntry,
+  SocialHubHealth,
+  SocialHubOutboundDelivery,
   SocialHubSnapshot,
   SocialHubTeamMember,
 } from "../../../../lib/socialHubTypes";
@@ -44,6 +47,8 @@ export function SocialHubPageClient() {
   const [analytics, setAnalytics] = useState<SocialHubAnalytics | null>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [subscriptionBlocked, setSubscriptionBlocked] = useState(false);
+  const [health, setHealth] = useState<SocialHubHealth | null>(null);
+  const [deliveries, setDeliveries] = useState<SocialHubOutboundDelivery[]>([]);
 
   const canAccess =
     session?.roleCodes?.some((code) =>
@@ -86,6 +91,25 @@ export function SocialHubPageClient() {
       }
     });
   }, [accessToken, canAccess, reload]);
+
+  const loadHealthData = useCallback(async () => {
+    if (!accessToken) {
+      return;
+    }
+    const [healthPayload, deliveryRows] = await Promise.all([
+      SocialHubApiClient.fetchHealth(accessToken),
+      SocialHubApiClient.fetchDeliveryLog(accessToken, { limit: 50 }),
+    ]);
+    setHealth(healthPayload);
+    setDeliveries(deliveryRows);
+  }, [accessToken]);
+
+  useEffect(() => {
+    if (!accessToken || activeTab !== "health" || !snapshot || subscriptionBlocked) {
+      return;
+    }
+    void loadHealthData().catch(() => setError("Sağlık verisi yüklenemedi."));
+  }, [accessToken, activeTab, snapshot, subscriptionBlocked, loadHealthData]);
 
   useEffect(() => {
     if (!accessToken || activeTab !== "analytics" || !snapshot || subscriptionBlocked) {
@@ -184,6 +208,30 @@ export function SocialHubPageClient() {
                   void runAction(async () => {
                     await SocialHubApiClient.disconnectPlatform(accessToken, code);
                     setStatus("Bağlantı kesildi.");
+                  })
+                }
+              />
+            ) : null}
+            {activeTab === "health" ? (
+              <SocialHealthPanel
+                health={health}
+                deliveries={deliveries}
+                busy={busy}
+                canManage={snapshot.permissions.canManageConnections}
+                onReload={() =>
+                  void runAction(async () => {
+                    await loadHealthData();
+                    setStatus("Sağlık verisi güncellendi.");
+                  })
+                }
+                onRefreshToken={(code) =>
+                  void runAction(async () => {
+                    const result = await SocialHubApiClient.refreshConnectionToken(
+                      accessToken,
+                      code,
+                    );
+                    setStatus(result.refresh.message);
+                    await loadHealthData();
                   })
                 }
               />

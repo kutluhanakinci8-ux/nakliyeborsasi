@@ -2,6 +2,7 @@
 
 export type SocialHubTabId =
   | "connections"
+  | "health"
   | "inbox"
   | "publishing"
   | "templates"
@@ -10,6 +11,7 @@ export type SocialHubTabId =
 
 const TABS: { id: SocialHubTabId; label: string }[] = [
   { id: "connections", label: "Bağlı hesaplar" },
+  { id: "health", label: "Sağlık & gönderim" },
   { id: "inbox", label: "Gelen kutusu" },
   { id: "publishing", label: "Yayınlar" },
   { id: "templates", label: "Şablonlar" },

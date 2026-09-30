@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from "@nestjs/common";
 import { AuthenticatedUserContext } from "@nakliyeborsasi/core";
@@ -154,6 +155,35 @@ export class SocialHubController {
     @Param("templateId") templateId: string,
   ) {
     return this.socialHubApplicationService.deleteTemplate(user, templateId);
+  }
+
+  @Get("health")
+  public async health(@AuthenticatedUserParam() user: AuthenticatedUserContext) {
+    return this.socialHubApplicationService.getConnectionHealth(user);
+  }
+
+  @Post("connections/:platformCode/refresh-token")
+  public async refreshToken(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("platformCode") platformCode: string,
+  ) {
+    return this.socialHubApplicationService.refreshConnectionToken(
+      user,
+      platformCode,
+    );
+  }
+
+  @Get("delivery-log")
+  public async deliveryLog(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Query("threadId") threadId?: string,
+    @Query("limit") limit?: string,
+  ) {
+    const parsedLimit = limit ? Number.parseInt(limit, 10) : undefined;
+    return this.socialHubApplicationService.listOutboundDeliveries(user, {
+      threadId: threadId?.trim() || undefined,
+      limit: Number.isFinite(parsedLimit) ? parsedLimit : undefined,
+    });
   }
 
   @Get("analytics")
