@@ -80,7 +80,8 @@ export function SocialConnectionsPanel({
         <h2 className="account-card-title">Bağlı hesaplar</h2>
         <p className="account-card-lead">
           Instagram, Facebook Messenger, WhatsApp Business ve LinkedIn bağlantıları.
-          OAuth ve webhook adımları sonraki fazda açılacak. Genel API anahtarları için{" "}
+          Meta / LinkedIn OAuth sunucu ortam değişkenleriyle açılır; webhook URL:
+          <code>/api/v1/company/social-hub/webhooks/meta</code>. Genel API anahtarları için{" "}
           <Link href="/hesap/uygulamalar">Uygulamalar / entegrasyonlar</Link>.
         </p>
       </header>
