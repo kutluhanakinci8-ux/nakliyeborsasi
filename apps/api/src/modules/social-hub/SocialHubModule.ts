@@ -21,11 +21,14 @@ import { AuditModule } from "../../infrastructure/audit/AuditModule";
 import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogEntity";
 import { CompanyMembershipEntity } from "../../infrastructure/database/entities/CompanyMembershipEntity";
 import { SocialHubAuditService } from "./SocialHubAuditService";
+import { SubscriptionModule } from "../subscription/SubscriptionModule";
+import { SocialHubModuleStatusController } from "./SocialHubModuleStatusController";
 
 @Module({
   imports: [
     AuthModule,
     AuditModule,
+    SubscriptionModule,
     forwardRef(() => MessagingModule),
     TypeOrmModule.forFeature([
       CompanySocialConnectionEntity,
@@ -38,7 +41,7 @@ import { SocialHubAuditService } from "./SocialHubAuditService";
       AuditLogEntity,
     ]),
   ],
-  controllers: [SocialHubController],
+  controllers: [SocialHubController, SocialHubModuleStatusController],
   providers: [
     SocialHubApplicationService,
     SocialHubMessagingBridgeService,

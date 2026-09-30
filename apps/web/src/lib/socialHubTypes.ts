@@ -78,7 +78,28 @@ export type SocialHubAuditEntry = {
   createdAt: string;
 };
 
+export type SocialHubSubscriptionInfo = {
+  moduleCode: string;
+  upgradeHintPath: string;
+};
+
+export type SocialHubAnalytics = {
+  generatedAt: string;
+  postsByStatus: Record<string, number>;
+  publishedLast30Days: number;
+  scheduledUpcoming: number;
+  pendingApproval: number;
+  openInboxThreads: number;
+  connectedChannels: number;
+  templateCount: number;
+  providerReadiness: Array<{
+    platformCode: string;
+    implementationStatus: string;
+  }>;
+};
+
 export type SocialHubSnapshot = {
+  subscription: SocialHubSubscriptionInfo;
   permissions: SocialHubPermissions;
   settings: SocialHubSettings;
   providers: SocialHubProviderInfo[];

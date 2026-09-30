@@ -4,12 +4,15 @@ import { Repository } from "typeorm";
 import {
   AuthenticatedUserContext,
   CompanyRoleCode,
+  DEFAULT_LOCALE,
   ResourceNotFoundException,
   SocialConnectionStatusCode,
   SocialPlatformCode,
   SocialPostStatusCode,
+  SubscriptionModuleCode,
   ValidationException,
 } from "@nakliyeborsasi/core";
+import { ModularSubscriptionEntitlementService } from "../subscription/ModularSubscriptionEntitlementService";
 import { CompanySocialConnectionEntity } from "../../infrastructure/database/entities/CompanySocialConnectionEntity";
 import { CompanySocialPostEntity } from "../../infrastructure/database/entities/CompanySocialPostEntity";
 import { CompanySocialReplyTemplateEntity } from "../../infrastructure/database/entities/CompanySocialReplyTemplateEntity";
@@ -61,7 +64,23 @@ export class SocialHubApplicationService {
     @InjectRepository(CompanyMembershipEntity)
     private readonly membershipRepository: Repository<CompanyMembershipEntity>,
     private readonly socialHubAuditService: SocialHubAuditService,
+    private readonly modularSubscriptionEntitlementService: ModularSubscriptionEntitlementService,
   ) {}
+
+  private async assertSocialHubSubscription(companyId: string): Promise<void> {
+    await this.modularSubscriptionEntitlementService.assertModuleAccess(
+      companyId,
+      SubscriptionModuleCode.SocialHub,
+      DEFAULT_LOCALE,
+    );
+  }
+
+  private subscriptionMeta(companyId: string) {
+    return {
+      moduleCode: SubscriptionModuleCode.SocialHub,
+      upgradeHintPath: "/hesap/abonelik",
+    };
+  }
 
   private assertInboxOperationsAllowed(
     settings: CompanySocialSettingsEntity,
@@ -78,6 +97,7 @@ export class SocialHubApplicationService {
 
   public async getHubSnapshot(user: AuthenticatedUserContext) {
     assertSocialHubRead(user);
+    await this.assertSocialHubSubscription(user.companyId);
     const settings = await this.ensureSettings(user.companyId);
     const connections = await this.listConnectionRows(user.companyId);
     const posts = await this.postRepository.find({
@@ -104,9 +124,9 @@ export class SocialHubApplicationService {
     });
 
     return {
+      subscription: this.subscriptionMeta(user.companyId),
       permissions,
       settings: this.mapSettings(settings),
-      providers,
       connections: connections.map((row) => this.mapConnection(row)),
       recentPosts: posts.map((row) => this.mapPost(row)),
       templates: templates.map((row) => this.mapTemplate(row)),
@@ -128,10 +148,68 @@ export class SocialHubApplicationService {
     };
   }
 
+  public async getAnalytics(user: AuthenticatedUserContext) {
+    assertSocialHubRead(user);
+    await this.assertSocialHubSubscription(user.companyId);
+    const companyId = user.companyId;
+    const posts = await this.postRepository.find({ where: { companyId } });
+    const postsByStatus: Record<string, number> = {};
+    for (const post of posts) {
+      postsByStatus[post.statusCode] = (postsByStatus[post.statusCode] ?? 0) + 1;
+    }
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const publishedLast30Days = posts.filter(
+      (p) =>
+        p.statusCode === SocialPostStatusCode.Published &&
+        p.publishedAt &&
+        p.publishedAt >= thirtyDaysAgo,
+    ).length;
+    const openLinks = await this.threadLinkRepository.count({
+      where: { companyId, isOpen: true },
+    });
+    const connections = await this.connectionRepository.find({
+      where: { companyId },
+    });
+    const connectedChannels = connections.filter(
+      (c) => c.statusCode === SocialConnectionStatusCode.Connected,
+    ).length;
+    const templates = await this.templateRepository.count({
+      where: { companyId },
+    });
+    const scheduledUpcoming = posts.filter(
+      (p) =>
+        p.statusCode === SocialPostStatusCode.Scheduled &&
+        p.scheduledAt &&
+        p.scheduledAt.getTime() > Date.now(),
+    ).length;
+    const pendingApproval = postsByStatus[SocialPostStatusCode.PendingApproval] ?? 0;
+
+    return {
+      analytics: {
+        generatedAt: new Date().toISOString(),
+        postsByStatus,
+        publishedLast30Days,
+        scheduledUpcoming,
+        pendingApproval,
+        openInboxThreads: openLinks,
+        connectedChannels,
+        templateCount: templates,
+        providerReadiness: this.socialProviderRegistry
+          .listPlatforms()
+          .map((code) => ({
+            platformCode: code,
+            implementationStatus:
+              this.socialProviderRegistry.resolve(code).getImplementationStatus(),
+          })),
+      },
+    };
+  }
+
   public async seedDemoInbox(user: AuthenticatedUserContext): Promise<{
     createdThreadIds: string[];
   }> {
     assertSocialHubAdmin(user);
+    await this.assertSocialHubSubscription(user.companyId);
     const settings = await this.ensureSettings(user.companyId);
     this.assertInboxOperationsAllowed(settings);
 
@@ -172,6 +250,7 @@ export class SocialHubApplicationService {
     platformCode: string,
   ) {
     assertSocialHubAdmin(user);
+    await this.assertSocialHubSubscription(user.companyId);
     const provider = this.socialProviderRegistry.resolve(platformCode);
     const oauth = await provider.startOAuthConnect(user.companyId);
     const row = await this.ensureConnectionRow(user.companyId, provider.platformCode);
@@ -187,6 +266,7 @@ export class SocialHubApplicationService {
 
   public async disconnect(user: AuthenticatedUserContext, platformCode: string) {
     assertSocialHubAdmin(user);
+    await this.assertSocialHubSubscription(user.companyId);
     const provider = this.socialProviderRegistry.resolve(platformCode);
     await provider.disconnect(user.companyId);
     const row = await this.connectionRepository.findOne({
@@ -215,6 +295,7 @@ export class SocialHubApplicationService {
     },
   ) {
     assertSocialHubRead(user);
+    await this.assertSocialHubSubscription(user.companyId);
     const settings = await this.ensureSettings(user.companyId);
     if (!settings.publishingEnabled) {
       throw new ValidationException("Yayınlama bu firma için kapalı.");
@@ -246,6 +327,7 @@ export class SocialHubApplicationService {
     },
   ) {
     assertSocialHubRead(user);
+    await this.assertSocialHubSubscription(user.companyId);
     const settings = await this.ensureSettings(user.companyId);
     const post = await this.findPostForCompany(user.companyId, postId);
     if (!this.isPostEditable(post.statusCode)) {
@@ -283,6 +365,7 @@ export class SocialHubApplicationService {
 
   public async deletePost(user: AuthenticatedUserContext, postId: string) {
     assertSocialHubRead(user);
+    await this.assertSocialHubSubscription(user.companyId);
     const post = await this.findPostForCompany(user.companyId, postId);
     if (!this.isPostEditable(post.statusCode)) {
       throw new ValidationException("Bu gönderi silinemez.");
@@ -296,6 +379,7 @@ export class SocialHubApplicationService {
     postId: string,
   ) {
     assertSocialHubRead(user);
+    await this.assertSocialHubSubscription(user.companyId);
     const settings = await this.ensureSettings(user.companyId);
     if (!settings.ownerApprovalRequired) {
       throw new ValidationException("Onay akışı kapalı.");
@@ -319,6 +403,7 @@ export class SocialHubApplicationService {
   }
 
   public async approvePost(user: AuthenticatedUserContext, postId: string) {
+    await this.assertSocialHubSubscription(user.companyId);
     if (!canSocialHubApprovePosts(user)) {
       throw new ValidationException("Onay yetkiniz yok.");
     }
@@ -343,6 +428,7 @@ export class SocialHubApplicationService {
 
   public async cancelPost(user: AuthenticatedUserContext, postId: string) {
     assertSocialHubRead(user);
+    await this.assertSocialHubSubscription(user.companyId);
     const post = await this.findPostForCompany(user.companyId, postId);
     const cancellable = [
       SocialPostStatusCode.Draft,
@@ -361,6 +447,7 @@ export class SocialHubApplicationService {
   }
 
   public async publishPost(user: AuthenticatedUserContext, postId: string) {
+    await this.assertSocialHubSubscription(user.companyId);
     const settings = await this.ensureSettings(user.companyId);
     if (!canSocialHubPublish(user, settings)) {
       throw new ValidationException("Yayınlama yetkiniz yok.");
@@ -483,6 +570,7 @@ export class SocialHubApplicationService {
     body: { title: string; bodyText: string; channelScopeCode?: string | null },
   ) {
     assertSocialHubAdmin(user);
+    await this.assertSocialHubSubscription(user.companyId);
     const template = await this.templateRepository.save(
       this.templateRepository.create({
         companyId: user.companyId,
@@ -506,6 +594,7 @@ export class SocialHubApplicationService {
     },
   ) {
     assertSocialHubAdmin(user);
+    await this.assertSocialHubSubscription(user.companyId);
     const template = await this.templateRepository.findOne({
       where: { id: templateId, companyId: user.companyId },
     });
@@ -530,6 +619,7 @@ export class SocialHubApplicationService {
 
   public async deleteTemplate(user: AuthenticatedUserContext, templateId: string) {
     assertSocialHubAdmin(user);
+    await this.assertSocialHubSubscription(user.companyId);
     await this.templateRepository.delete({
       id: templateId,
       companyId: user.companyId,
@@ -549,6 +639,7 @@ export class SocialHubApplicationService {
     },
   ) {
     assertSocialHubAdmin(user);
+    await this.assertSocialHubSubscription(user.companyId);
     const settings = await this.ensureSettings(user.companyId);
     if (patch.inboxEnabled !== undefined) {
       settings.inboxEnabled = patch.inboxEnabled;
@@ -580,6 +671,7 @@ export class SocialHubApplicationService {
 
   public async listTeam(user: AuthenticatedUserContext) {
     assertSocialHubAdmin(user);
+    await this.assertSocialHubSubscription(user.companyId);
     const memberships = await this.membershipRepository.find({
       where: { companyId: user.companyId },
       relations: { user: true },
@@ -605,6 +697,7 @@ export class SocialHubApplicationService {
     roleCode: string,
   ) {
     assertSocialHubAdmin(user);
+    await this.assertSocialHubSubscription(user.companyId);
     const normalized = roleCode as CompanyRoleCode;
     if (!INVITABLE_SOCIAL_TEAM_ROLES.includes(normalized)) {
       throw new ValidationException("Bu rol atanamaz.");
@@ -647,12 +740,14 @@ export class SocialHubApplicationService {
 
   public async listAuditLog(user: AuthenticatedUserContext) {
     assertSocialHubAdmin(user);
+    await this.assertSocialHubSubscription(user.companyId);
     const entries = await this.socialHubAuditService.listRecent(user.companyId);
     return { entries };
   }
 
   public async syncInbox(user: AuthenticatedUserContext, platformCode: string) {
     assertSocialHubRead(user);
+    await this.assertSocialHubSubscription(user.companyId);
     const settings = await this.ensureSettings(user.companyId);
     this.assertInboxOperationsAllowed(settings);
     const provider = this.socialProviderRegistry.resolve(platformCode);

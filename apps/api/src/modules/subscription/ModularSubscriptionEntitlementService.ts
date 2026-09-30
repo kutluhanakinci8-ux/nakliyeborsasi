@@ -41,6 +41,18 @@ export class ModularSubscriptionEntitlementService {
     }
   }
 
+  public async companyHasModule(
+    companyId: string,
+    moduleCode: SubscriptionModuleCode,
+  ): Promise<boolean> {
+    const snapshot =
+      await this.companySubscriptionPersistenceService.getSnapshot(companyId);
+    if (!snapshot) {
+      return false;
+    }
+    return snapshot.activePlan.includedModules.includes(moduleCode);
+  }
+
   public async getSearchTabLimit(companyId: string): Promise<number> {
     const snapshot =
       await this.companySubscriptionPersistenceService.getSnapshot(companyId);

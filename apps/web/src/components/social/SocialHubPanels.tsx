@@ -6,6 +6,7 @@ import type {
   SocialHubPermissions,
   SocialHubPost,
   SocialHubSettings,
+  SocialHubAnalytics,
   SocialHubSnapshot,
   SocialHubTeamMember,
   SocialHubTemplate,
@@ -502,30 +503,77 @@ export function SocialTemplatesPanel({
   );
 }
 
-export function SocialAnalyticsPanel({ snapshot }: { snapshot: SocialHubSnapshot }) {
+type AnalyticsProps = {
+  snapshot: SocialHubSnapshot;
+  analytics: SocialHubAnalytics | null;
+  loading: boolean;
+};
+
+export function SocialAnalyticsPanel({
+  snapshot,
+  analytics,
+  loading,
+}: AnalyticsProps) {
+  const fallbackOpen = snapshot.inboxSummary.totalOpenThreads;
   return (
     <section className="social-hub-panel module-panel module-panel--elevated">
       <header className="social-hub-panel-head">
         <h2 className="account-card-title">İstatistikler</h2>
         <p className="account-card-lead">
-          Kanal bağlandığında erişim, yanıt süresi ve gönderi performansı burada
-          toplanacak.
+          Gönderi durumları, gelen kutusu ve kanal hazırlığı. Harici API metrikleri
+          bağlantı fazında eklenecek.
         </p>
       </header>
+      {loading ? <p className="module-hint">Analitik yükleniyor…</p> : null}
       <div className="social-hub-stats-grid">
         <div className="social-hub-stat-card">
-          <span className="social-hub-stat-value">{snapshot.connections.filter((c) => c.statusCode === "CONNECTED").length}</span>
+          <span className="social-hub-stat-value">
+            {analytics?.connectedChannels ??
+              snapshot.connections.filter((c) => c.statusCode === "CONNECTED").length}
+          </span>
           <span className="social-hub-stat-label">Bağlı kanal</span>
         </div>
         <div className="social-hub-stat-card">
-          <span className="social-hub-stat-value">{snapshot.recentPosts.length}</span>
-          <span className="social-hub-stat-label">Son gönderiler</span>
+          <span className="social-hub-stat-value">
+            {analytics?.publishedLast30Days ?? "—"}
+          </span>
+          <span className="social-hub-stat-label">Yayın (30 gün)</span>
         </div>
         <div className="social-hub-stat-card">
-          <span className="social-hub-stat-value">{snapshot.templates.length}</span>
+          <span className="social-hub-stat-value">
+            {analytics?.openInboxThreads ?? fallbackOpen}
+          </span>
+          <span className="social-hub-stat-label">Açık gelen kutusu</span>
+        </div>
+        <div className="social-hub-stat-card">
+          <span className="social-hub-stat-value">
+            {analytics?.scheduledUpcoming ?? "—"}
+          </span>
+          <span className="social-hub-stat-label">Yaklaşan zamanlama</span>
+        </div>
+        <div className="social-hub-stat-card">
+          <span className="social-hub-stat-value">
+            {analytics?.pendingApproval ?? "—"}
+          </span>
+          <span className="social-hub-stat-label">Onay bekleyen</span>
+        </div>
+        <div className="social-hub-stat-card">
+          <span className="social-hub-stat-value">
+            {analytics?.templateCount ?? snapshot.templates.length}
+          </span>
           <span className="social-hub-stat-label">Şablon</span>
         </div>
       </div>
+      {analytics?.postsByStatus && Object.keys(analytics.postsByStatus).length > 0 ? (
+        <ul className="social-hub-audit-list">
+          {Object.entries(analytics.postsByStatus).map(([code, count]) => (
+            <li key={code}>
+              <span>{postStatusLabel(code)}</span>
+              <span>{count}</span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </section>
   );
 }

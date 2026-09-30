@@ -19,6 +19,8 @@ const MODULE_LABELS: Record<string, string> = {
   LANE_ANALYTICS: "Koridor analitiği",
   EXTERNAL_FEEDS: "Harici akışlar",
   API_ACCESS: "API erişimi",
+  SOCIAL_HUB: "Sosyal medya hub",
+  LERTA_MAIL: "Lerta Mail",
 };
 
 function formatEur(amount: number | null): string {

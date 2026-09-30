@@ -156,6 +156,11 @@ export class SocialHubController {
     return this.socialHubApplicationService.deleteTemplate(user, templateId);
   }
 
+  @Get("analytics")
+  public async analytics(@AuthenticatedUserParam() user: AuthenticatedUserContext) {
+    return this.socialHubApplicationService.getAnalytics(user);
+  }
+
   @Get("team")
   public async listTeam(@AuthenticatedUserParam() user: AuthenticatedUserContext) {
     return this.socialHubApplicationService.listTeam(user);

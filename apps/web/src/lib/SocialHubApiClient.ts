@@ -1,5 +1,6 @@
 import { PublicApiConfiguration } from "./PublicApiConfiguration";
 import type {
+  SocialHubAnalytics,
   SocialHubAuditEntry,
   SocialHubSnapshot,
   SocialHubTeamMember,
@@ -29,6 +30,16 @@ async function socialHubFetch<T>(
 }
 
 export class SocialHubApiClient {
+  public static async fetchAnalytics(
+    accessToken: string,
+  ): Promise<SocialHubAnalytics> {
+    const payload = await socialHubFetch<{ analytics: SocialHubAnalytics }>(
+      accessToken,
+      "/analytics",
+    );
+    return payload.analytics;
+  }
+
   public static async fetchSnapshot(
     accessToken: string,
   ): Promise<SocialHubSnapshot> {

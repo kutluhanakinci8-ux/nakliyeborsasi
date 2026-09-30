@@ -10,6 +10,8 @@ export enum SubscriptionModuleCode {
   ApiAccess = "API_ACCESS",
   /** Lerta Mail SaaS (lerta.com.tr) — webmail, kutular, özel domain */
   LertaMail = "LERTA_MAIL",
+  /** Sosyal medya hub — kanallar, gelen kutusu, yayınlar */
+  SocialHub = "SOCIAL_HUB",
 }
 
 export enum SubscriptionTierCode {
