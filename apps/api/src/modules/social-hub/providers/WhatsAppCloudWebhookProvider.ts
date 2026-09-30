@@ -11,8 +11,8 @@ import type {
   SocialPublishResult,
 } from "./SocialProviderPort";
 
-const PENDING_MESSAGE =
-  "WhatsApp Cloud webhook mesaj işleme tenant eşlemesi sonraki adımda.";
+const PENDING_PUBLISH_MESSAGE =
+  "WhatsApp üzerinden feed yayını desteklenmiyor; Mesajlar’dan giden metin aktif.";
 
 @Injectable()
 export class WhatsAppCloudWebhookProvider implements SocialProviderPort {
@@ -46,7 +46,7 @@ export class WhatsAppCloudWebhookProvider implements SocialProviderPort {
     return {
       implementationStatus: "pending",
       externalPostId: null,
-      message: PENDING_MESSAGE,
+      message: PENDING_PUBLISH_MESSAGE,
     };
   }
 

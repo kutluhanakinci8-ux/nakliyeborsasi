@@ -62,6 +62,7 @@ import { TrustScoreApplicationService } from "../trust/TrustScoreApplicationServ
 import { randomUUID } from "node:crypto";
 import { CompanySocialReplyTemplateEntity } from "../../infrastructure/database/entities/CompanySocialReplyTemplateEntity";
 import { CompanySocialThreadLinkEntity } from "../../infrastructure/database/entities/CompanySocialThreadLinkEntity";
+import { SocialHubOutboundMessagingService } from "../social-hub/SocialHubOutboundMessagingService";
 const EXTERNAL_CHANNEL_LABELS: Record<string, string> = {
   [SocialPlatformCode.Instagram]: "Instagram",
   [SocialPlatformCode.FacebookMessenger]: "Facebook Messenger",
@@ -120,6 +121,8 @@ export class MessagingThreadApplicationService {
     private readonly messagingThreadParticipantService: MessagingThreadParticipantService,
     @Inject(forwardRef(() => AuctionListingPriceActionService))
     private readonly auctionListingPriceActionService: AuctionListingPriceActionService,
+    @Inject(forwardRef(() => SocialHubOutboundMessagingService))
+    private readonly socialHubOutboundMessagingService: SocialHubOutboundMessagingService,
   ) {}
 
   public async assertMessagingModule(
@@ -687,6 +690,13 @@ export class MessagingThreadApplicationService {
         senderCompanyId: saved.senderCompanyId,
         freightListingId: thread.freightListingId,
       });
+      if (thread.threadKind === "external_social" && trimmed.length > 0) {
+        void this.socialHubOutboundMessagingService.tryDispatchOutbound({
+          companyId: authenticatedUser.companyId,
+          messageThreadId: thread.id,
+          bodyText: trimmed,
+        });
+      }
     }
     if (clientContext) {
       void this.messagingAuditService.recordMessageMutation(

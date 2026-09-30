@@ -36,6 +36,7 @@ import { SocialHubPublishApplicationService } from "./SocialHubPublishApplicatio
 import { SocialHubInboxSyncApplicationService } from "./SocialHubInboxSyncApplicationService";
 import { SocialHubLinkedInGraphService } from "./oauth/SocialHubLinkedInGraphService";
 import { SocialHubMetaInboxHistoryService } from "./oauth/SocialHubMetaInboxHistoryService";
+import { SocialHubOutboundMessagingService } from "./SocialHubOutboundMessagingService";
 
 @Module({
   imports: [
@@ -74,6 +75,7 @@ import { SocialHubMetaInboxHistoryService } from "./oauth/SocialHubMetaInboxHist
     SocialHubMetaInboxHistoryService,
     SocialHubApplicationService,
     SocialHubMessagingBridgeService,
+    SocialHubOutboundMessagingService,
     SocialProviderRegistry,
     MetaInstagramMessagingProvider,
     MetaFacebookMessengerProvider,
@@ -82,6 +84,6 @@ import { SocialHubMetaInboxHistoryService } from "./oauth/SocialHubMetaInboxHist
     SocialPostPublishScheduler,
     SocialHubAuditService,
   ],
-  exports: [SocialHubApplicationService],
+  exports: [SocialHubApplicationService, SocialHubOutboundMessagingService],
 })
 export class SocialHubModule {}

@@ -51,6 +51,7 @@ import { AuctionModule } from "../auction/AuctionModule";
 import { TrustScoreModule } from "../trust/TrustScoreModule";
 import { CompanySocialReplyTemplateEntity } from "../../infrastructure/database/entities/CompanySocialReplyTemplateEntity";
 import { CompanySocialThreadLinkEntity } from "../../infrastructure/database/entities/CompanySocialThreadLinkEntity";
+import { SocialHubModule } from "../social-hub/SocialHubModule";
 
 @Module({
   imports: [
@@ -77,6 +78,7 @@ import { CompanySocialThreadLinkEntity } from "../../infrastructure/database/ent
     NotificationModule,
     forwardRef(() => AuctionModule),
     forwardRef(() => TrustScoreModule),
+    forwardRef(() => SocialHubModule),
     RedisModule,
     AuditModule,
   ],
