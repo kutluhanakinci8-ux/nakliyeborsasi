@@ -55,6 +55,7 @@ export function SocialHubPageClient() {
     }
     const hub = await SocialHubApiClient.fetchSnapshot(accessToken);
     setSnapshot(hub);
+    setSubscriptionBlocked(false);
   }, [accessToken]);
 
   useEffect(() => {
@@ -74,6 +75,7 @@ export function SocialHubPageClient() {
       return;
     }
     void reload().catch((err) => {
+      setSnapshot(null);
       const text = err instanceof Error ? err.message : "";
       if (text.includes("SUBSCRIPTION_ENTITLEMENT") || text.includes("subscription")) {
         setSubscriptionBlocked(true);
@@ -126,9 +128,10 @@ export function SocialHubPageClient() {
     }
   }
 
-  const platformOptions =
-    snapshot?.providers.map((p) => ({ code: p.platformCode, label: p.label })) ??
-    [];
+  const platformOptions = (snapshot?.providers ?? []).map((p) => ({
+    code: p.platformCode,
+    label: p.label,
+  }));
 
   return (
     <div className="social-hub-page">
