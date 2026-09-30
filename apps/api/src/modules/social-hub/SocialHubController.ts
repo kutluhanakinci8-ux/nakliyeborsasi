@@ -274,6 +274,9 @@ export class SocialHubController {
       healthAlertMinSeverity?: "attention" | "critical";
       healthAlertFailureThreshold?: number;
       healthAlertPlatformThresholdsJson?: string | null;
+      socialSlackWebhookUrl?: string | null;
+      socialSlackUseMessagingFallback?: boolean;
+      socialSlackNotifyOutboundFailures?: boolean;
     },
   ) {
     return this.socialHubApplicationService.updateSettings(user, body);

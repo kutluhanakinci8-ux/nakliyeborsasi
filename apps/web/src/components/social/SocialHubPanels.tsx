@@ -852,6 +852,15 @@ type HealthPanelProps = {
     healthAlertFailureThreshold?: number;
     healthAlertPlatformThresholdsJson?: string;
   }) => void;
+  socialSlackWebhookUrl: string;
+  socialSlackUseMessagingFallback: boolean;
+  socialSlackNotifyOutboundFailures: boolean;
+  onSlackSettingsPatch: (patch: {
+    socialSlackWebhookUrl?: string;
+    socialSlackUseMessagingFallback?: boolean;
+    socialSlackNotifyOutboundFailures?: boolean;
+  }) => void;
+  onSaveSlackSettings: () => void;
   onRefreshToken: (platformCode: string) => void;
   onReload: () => void;
 };
@@ -872,6 +881,11 @@ export function SocialHealthPanel({
   onToggleHealthAlerts,
   onSaveAlertThresholds,
   onAlertThresholdPatch,
+  socialSlackWebhookUrl,
+  socialSlackUseMessagingFallback,
+  socialSlackNotifyOutboundFailures,
+  onSlackSettingsPatch,
+  onSaveSlackSettings,
   onRefreshToken,
   onReload,
 }: HealthPanelProps) {
@@ -888,8 +902,8 @@ export function SocialHealthPanel({
         <h2 className="account-card-title">Bağlantı sağlığı</h2>
         <p className="account-card-lead">
           Token durumu, kurulum uyarıları ve son 24 saatteki kanal gönderim hataları.
-          Kritik durumda firma sahiplerine e-posta ve (Mesajlar ayarlarında) Slack
-          webhook ile uyarı gider.
+          Kritik durumda firma sahiplerine e-posta gider; Slack için aşağıdaki
+          sosyal hub webhook veya (isteğe bağlı) Mesajlar köprüsü kullanılır.
         </p>
         {canManage ? (
           <label className="social-hub-check">
@@ -901,6 +915,57 @@ export function SocialHealthPanel({
             />
             Sağlık uyarıları (e-posta + Slack)
           </label>
+        ) : null}
+        {canManage ? (
+          <div className="social-hub-alert-thresholds social-hub-slack-settings">
+            <label className="social-hub-threshold-field social-hub-threshold-field--wide">
+              Slack webhook (sosyal hub)
+              <input
+                className="input-light"
+                type="url"
+                placeholder="https://hooks.slack.com/services/…"
+                value={socialSlackWebhookUrl}
+                disabled={busy}
+                onChange={(e) =>
+                  onSlackSettingsPatch({ socialSlackWebhookUrl: e.target.value })
+                }
+              />
+            </label>
+            <label className="social-hub-check">
+              <input
+                type="checkbox"
+                checked={socialSlackUseMessagingFallback}
+                disabled={busy}
+                onChange={(e) =>
+                  onSlackSettingsPatch({
+                    socialSlackUseMessagingFallback: e.target.checked,
+                  })
+                }
+              />
+              Özel webhook yoksa Mesajlar Slack köprüsünü kullan
+            </label>
+            <label className="social-hub-check">
+              <input
+                type="checkbox"
+                checked={socialSlackNotifyOutboundFailures}
+                disabled={busy}
+                onChange={(e) =>
+                  onSlackSettingsPatch({
+                    socialSlackNotifyOutboundFailures: e.target.checked,
+                  })
+                }
+              />
+              Kanal gönderim hatalarında Slack bildirimi
+            </label>
+            <button
+              type="button"
+              className="btn-account-primary"
+              disabled={busy}
+              onClick={onSaveSlackSettings}
+            >
+              Slack ayarlarını kaydet
+            </button>
+          </div>
         ) : null}
         {canManage ? (
           <div className="social-hub-alert-thresholds">
@@ -1089,6 +1154,9 @@ export function SocialHealthPanel({
               >
                 {row.status === "ok" ? "OK" : "Hata"}
               </span>
+              {row.bodyTextPreview ? (
+                <p className="social-hub-delivery-preview">{row.bodyTextPreview}</p>
+              ) : null}
               {row.errorMessage ? (
                 <p className="social-hub-delivery-error">{row.errorMessage}</p>
               ) : null}

@@ -19,6 +19,9 @@ export type SocialHubSettings = {
   healthAlertMinSeverity?: "attention" | "critical";
   healthAlertFailureThreshold?: number;
   healthAlertPlatformThresholdsJson?: string | null;
+  socialSlackWebhookUrl?: string | null;
+  socialSlackUseMessagingFallback?: boolean;
+  socialSlackNotifyOutboundFailures?: boolean;
 };
 
 export type SocialHubProviderCapabilities = {
@@ -145,6 +148,7 @@ export type SocialHubOutboundDelivery = {
   status: "ok" | "failed";
   errorMessage: string | null;
   externalMessageId: string | null;
+  bodyTextPreview: string | null;
   createdAt: string;
 };
 

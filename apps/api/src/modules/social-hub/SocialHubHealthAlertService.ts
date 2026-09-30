@@ -1,8 +1,7 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { CompanyRoleCode, SocialConnectionStatusCode } from "@nakliyeborsasi/core";
-import { CompanyMessagingSettingsEntity } from "../../infrastructure/database/entities/CompanyMessagingSettingsEntity";
 import { CompanySocialConnectionEntity } from "../../infrastructure/database/entities/CompanySocialConnectionEntity";
 import { CompanySocialSettingsEntity } from "../../infrastructure/database/entities/CompanySocialSettingsEntity";
 import { CompanyMembershipEntity } from "../../infrastructure/database/entities/CompanyMembershipEntity";
@@ -13,22 +12,20 @@ import {
   shouldSendHealthAlert,
   type HealthAlertThresholdSettings,
 } from "./socialHubHealthAlertThresholds";
+import { SocialHubSlackNotificationService } from "./SocialHubSlackNotificationService";
 
 @Injectable()
 export class SocialHubHealthAlertService {
-  private readonly logger = new Logger(SocialHubHealthAlertService.name);
-
   public constructor(
     private readonly connectionHealthService: SocialHubConnectionHealthService,
     @InjectRepository(CompanySocialSettingsEntity)
     private readonly socialSettingsRepository: Repository<CompanySocialSettingsEntity>,
-    @InjectRepository(CompanyMessagingSettingsEntity)
-    private readonly messagingSettingsRepository: Repository<CompanyMessagingSettingsEntity>,
     @InjectRepository(CompanySocialConnectionEntity)
     private readonly connectionRepository: Repository<CompanySocialConnectionEntity>,
     @InjectRepository(CompanyMembershipEntity)
     private readonly membershipRepository: Repository<CompanyMembershipEntity>,
     private readonly operationalNotificationService: OperationalNotificationService,
+    private readonly slackNotificationService: SocialHubSlackNotificationService,
   ) {}
 
   public async runSweep(): Promise<number> {
@@ -112,7 +109,12 @@ export class SocialHubHealthAlertService {
     const webBase =
       process.env.WEB_PUBLIC_BASE_URL?.trim() ?? "https://app.lerta.com.tr";
     const hubUrl = `${webBase.replace(/\/$/, "")}/hesap/sosyal-medya`;
-    await this.notifySlack(companyId, effectiveOverall, summary, hubUrl);
+    await this.slackNotificationService.postHealthAlert({
+      companyId,
+      overallStatus: effectiveOverall,
+      summary,
+      hubUrl,
+    });
     await this.notifyOwnersEmail(companyId, effectiveOverall, summary, hubUrl);
     const row =
       settings ??
@@ -135,55 +137,6 @@ export class SocialHubHealthAlertService {
     row.lastHealthAlertStatus = effectiveOverall;
     await this.socialSettingsRepository.save(row);
     return true;
-  }
-
-  private async notifySlack(
-    companyId: string,
-    overallStatus: string,
-    summary: string,
-    hubUrl: string,
-  ): Promise<void> {
-    const messaging = await this.messagingSettingsRepository.findOne({
-      where: { companyId },
-    });
-    if (!messaging?.slackBridgeEnabled || !messaging.slackIncomingWebhookUrl) {
-      return;
-    }
-    const text = `Sosyal hub sağlık: *${overallStatus}*${summary ? `\n${summary}` : ""}`;
-    try {
-      const response = await fetch(messaging.slackIncomingWebhookUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text,
-          blocks: [
-            {
-              type: "section",
-              text: { type: "mrkdwn", text },
-            },
-            {
-              type: "actions",
-              elements: [
-                {
-                  type: "button",
-                  text: { type: "plain_text", text: "Sosyal hub" },
-                  url: hubUrl,
-                },
-              ],
-            },
-          ],
-        }),
-      });
-      if (!response.ok) {
-        this.logger.warn(`Slack health alert HTTP ${response.status}`);
-      }
-    } catch (error) {
-      this.logger.warn(
-        `Slack health alert failed: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
-      );
-    }
   }
 
   private async notifyOwnersEmail(

@@ -63,6 +63,11 @@ export function SocialHubPageClient() {
     healthAlertFailureThreshold: 1,
     healthAlertPlatformThresholdsJson: "",
   });
+  const [slackSettingsDraft, setSlackSettingsDraft] = useState({
+    socialSlackWebhookUrl: "",
+    socialSlackUseMessagingFallback: true,
+    socialSlackNotifyOutboundFailures: false,
+  });
 
   const canAccess =
     session?.roleCodes?.some((code) =>
@@ -141,6 +146,13 @@ export function SocialHubPageClient() {
         snapshot.settings.healthAlertFailureThreshold ?? 1,
       healthAlertPlatformThresholdsJson:
         snapshot.settings.healthAlertPlatformThresholdsJson ?? "",
+    });
+    setSlackSettingsDraft({
+      socialSlackWebhookUrl: snapshot.settings.socialSlackWebhookUrl ?? "",
+      socialSlackUseMessagingFallback:
+        snapshot.settings.socialSlackUseMessagingFallback ?? true,
+      socialSlackNotifyOutboundFailures:
+        snapshot.settings.socialSlackNotifyOutboundFailures ?? false,
     });
     void loadHealthData().catch(() => setError("Sağlık verisi yüklenemedi."));
   }, [accessToken, activeTab, snapshot, subscriptionBlocked, loadHealthData]);
@@ -277,6 +289,31 @@ export function SocialHubPageClient() {
                     });
                     await reload();
                     setStatus("Uyarı eşikleri kaydedildi.");
+                  })
+                }
+                socialSlackWebhookUrl={slackSettingsDraft.socialSlackWebhookUrl}
+                socialSlackUseMessagingFallback={
+                  slackSettingsDraft.socialSlackUseMessagingFallback
+                }
+                socialSlackNotifyOutboundFailures={
+                  slackSettingsDraft.socialSlackNotifyOutboundFailures
+                }
+                onSlackSettingsPatch={(patch) =>
+                  setSlackSettingsDraft((current) => ({ ...current, ...patch }))
+                }
+                onSaveSlackSettings={() =>
+                  void runAction(async () => {
+                    await SocialHubApiClient.updateSettings(accessToken, {
+                      socialSlackWebhookUrl:
+                        slackSettingsDraft.socialSlackWebhookUrl.trim() ||
+                        null,
+                      socialSlackUseMessagingFallback:
+                        slackSettingsDraft.socialSlackUseMessagingFallback,
+                      socialSlackNotifyOutboundFailures:
+                        slackSettingsDraft.socialSlackNotifyOutboundFailures,
+                    });
+                    await reload();
+                    setStatus("Slack ayarları kaydedildi.");
                   })
                 }
                 onDeliveryFiltersChange={(patch) =>
