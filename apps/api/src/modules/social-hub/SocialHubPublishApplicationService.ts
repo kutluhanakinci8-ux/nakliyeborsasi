@@ -4,6 +4,7 @@ import { Repository } from "typeorm";
 import { SocialPlatformCode } from "@nakliyeborsasi/core";
 import { CompanySocialConnectionEntity } from "../../infrastructure/database/entities/CompanySocialConnectionEntity";
 import { SocialHubMetaGraphService } from "./oauth/SocialHubMetaGraphService";
+import { SocialHubLinkedInGraphService } from "./oauth/SocialHubLinkedInGraphService";
 import { SocialHubTokenVaultService } from "./oauth/SocialHubTokenVaultService";
 import type {
   SocialPublishRequest,
@@ -15,6 +16,7 @@ export class SocialHubPublishApplicationService {
   public constructor(
     private readonly tokenVault: SocialHubTokenVaultService,
     private readonly metaGraphService: SocialHubMetaGraphService,
+    private readonly linkedInGraphService: SocialHubLinkedInGraphService,
     @InjectRepository(CompanySocialConnectionEntity)
     private readonly connectionRepository: Repository<CompanySocialConnectionEntity>,
   ) {}
@@ -66,11 +68,30 @@ export class SocialHubPublishApplicationService {
       };
     }
     if (platformCode === SocialPlatformCode.LinkedIn) {
+      const authorUrn = await this.linkedInGraphService.resolveAuthorUrn(token);
+      if (!authorUrn) {
+        return {
+          implementationStatus: "pending",
+          externalPostId: null,
+          message: "LinkedIn kullanıcı URN alınamadı; OAuth yenileyin.",
+        };
+      }
+      const result = await this.linkedInGraphService.publishTextPost({
+        accessToken: token,
+        authorUrn,
+        bodyText: request.bodyText,
+      });
+      if (!result.externalPostId) {
+        return {
+          implementationStatus: "pending",
+          externalPostId: null,
+          message: result.message,
+        };
+      }
       return {
-        implementationStatus: "pending",
-        externalPostId: null,
-        message:
-          "LinkedIn UGC post API bir sonraki adımda (token mevcut).",
+        implementationStatus: "ready",
+        externalPostId: result.externalPostId,
+        message: result.message,
       };
     }
     if (platformCode === SocialPlatformCode.WhatsAppCloud) {

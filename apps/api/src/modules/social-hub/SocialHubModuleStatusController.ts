@@ -12,7 +12,7 @@ export class SocialHubModuleStatusController {
   } {
     return {
       module: "social_hub",
-      phase: "f",
+      phase: "g",
       subscriptionModuleCode: SubscriptionModuleCode.SocialHub,
       features: [
         "connections_skeleton",
@@ -32,6 +32,9 @@ export class SocialHubModuleStatusController {
         "meta_page_routing",
         "graph_feed_publish",
         "webhook_message_dedup",
+        "linkedin_ugc_publish",
+        "meta_messenger_history_sync",
+        "prod_schema_apply_script",
       ],
     };
   }

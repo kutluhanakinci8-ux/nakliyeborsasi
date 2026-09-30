@@ -57,6 +57,9 @@ fi
 if [[ -x scripts/apply-messaging-fs12-schema.sh ]]; then
   bash scripts/apply-messaging-fs12-schema.sh "$INSTALL_DIR" || true
 fi
+if [[ -x scripts/apply-social-hub-prod-schema.sh ]]; then
+  bash scripts/apply-social-hub-prod-schema.sh "$INSTALL_DIR" || true
+fi
 if [[ -x scripts/apply-messaging-prod-ops-env.sh ]]; then
   bash scripts/apply-messaging-prod-ops-env.sh "$INSTALL_DIR" || true
 fi
