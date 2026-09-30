@@ -3,6 +3,16 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { CompanySocialOutboundDeliveryEntity } from "../../infrastructure/database/entities/CompanySocialOutboundDeliveryEntity";
 
+export type OutboundDeliveryListFilters = {
+  companyId: string;
+  messageThreadId?: string;
+  platformCode?: string;
+  status?: "ok" | "failed";
+  since?: Date;
+  until?: Date;
+  limit: number;
+};
+
 @Injectable()
 export class SocialHubOutboundDeliveryLogService {
   public constructor(
@@ -32,20 +42,32 @@ export class SocialHubOutboundDeliveryLogService {
     );
   }
 
-  public async listForCompany(params: {
-    companyId: string;
-    messageThreadId?: string;
-    limit: number;
-  }): Promise<CompanySocialOutboundDeliveryEntity[]> {
+  public async list(
+    filters: OutboundDeliveryListFilters,
+  ): Promise<CompanySocialOutboundDeliveryEntity[]> {
     const qb = this.deliveryRepository
       .createQueryBuilder("delivery")
-      .where("delivery.companyId = :companyId", { companyId: params.companyId })
+      .where("delivery.companyId = :companyId", { companyId: filters.companyId })
       .orderBy("delivery.createdAt", "DESC")
-      .take(params.limit);
-    if (params.messageThreadId) {
+      .take(filters.limit);
+    if (filters.messageThreadId) {
       qb.andWhere("delivery.messageThreadId = :threadId", {
-        threadId: params.messageThreadId,
+        threadId: filters.messageThreadId,
       });
+    }
+    if (filters.platformCode) {
+      qb.andWhere("delivery.platformCode = :platformCode", {
+        platformCode: filters.platformCode,
+      });
+    }
+    if (filters.status) {
+      qb.andWhere("delivery.status = :status", { status: filters.status });
+    }
+    if (filters.since) {
+      qb.andWhere("delivery.createdAt >= :since", { since: filters.since });
+    }
+    if (filters.until) {
+      qb.andWhere("delivery.createdAt <= :until", { until: filters.until });
     }
     return qb.getMany();
   }
@@ -62,5 +84,29 @@ export class SocialHubOutboundDeliveryLogService {
       .andWhere("delivery.status = :status", { status: "failed" })
       .andWhere("delivery.createdAt >= :since", { since })
       .getCount();
+  }
+
+  public buildCsv(rows: CompanySocialOutboundDeliveryEntity[]): string {
+    const header =
+      "createdAt,platformCode,status,messageThreadId,messageId,errorMessage,externalMessageId";
+    const lines = rows.map((row) => {
+      const escape = (value: string | null) => {
+        const text = value ?? "";
+        if (text.includes(",") || text.includes('"') || text.includes("\n")) {
+          return `"${text.replace(/"/g, '""')}"`;
+        }
+        return text;
+      };
+      return [
+        row.createdAt.toISOString(),
+        row.platformCode,
+        row.status,
+        row.messageThreadId,
+        row.messageId ?? "",
+        escape(row.errorMessage),
+        row.externalMessageId ?? "",
+      ].join(",");
+    });
+    return [header, ...lines].join("\n");
   }
 }

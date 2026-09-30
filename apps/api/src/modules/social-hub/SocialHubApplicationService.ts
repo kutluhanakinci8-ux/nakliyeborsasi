@@ -199,14 +199,25 @@ export class SocialHubApplicationService {
 
   public async listOutboundDeliveries(
     user: AuthenticatedUserContext,
-    query: { threadId?: string; limit?: number },
+    query: {
+      threadId?: string;
+      limit?: number;
+      platformCode?: string;
+      status?: "ok" | "failed";
+      since?: string;
+      until?: string;
+    },
   ) {
     assertSocialHubRead(user);
     await this.assertSocialHubSubscription(user.companyId);
-    const limit = Math.min(Math.max(query.limit ?? 40, 1), 100);
-    const rows = await this.outboundDeliveryLogService.listForCompany({
+    const limit = Math.min(Math.max(query.limit ?? 40, 1), 200);
+    const rows = await this.outboundDeliveryLogService.list({
       companyId: user.companyId,
       messageThreadId: query.threadId,
+      platformCode: query.platformCode,
+      status: query.status,
+      since: query.since ? new Date(query.since) : undefined,
+      until: query.until ? new Date(query.until) : undefined,
       limit,
     });
     return {
@@ -224,6 +235,32 @@ export class SocialHubApplicationService {
         createdAt: row.createdAt.toISOString(),
       })),
     };
+  }
+
+  public async exportOutboundDeliveriesCsv(
+    user: AuthenticatedUserContext,
+    query: {
+      threadId?: string;
+      platformCode?: string;
+      status?: "ok" | "failed";
+      since?: string;
+      until?: string;
+      limit?: number;
+    },
+  ): Promise<string> {
+    assertSocialHubRead(user);
+    await this.assertSocialHubSubscription(user.companyId);
+    const limit = Math.min(Math.max(query.limit ?? 500, 1), 2000);
+    const rows = await this.outboundDeliveryLogService.list({
+      companyId: user.companyId,
+      messageThreadId: query.threadId,
+      platformCode: query.platformCode,
+      status: query.status,
+      since: query.since ? new Date(query.since) : undefined,
+      until: query.until ? new Date(query.until) : undefined,
+      limit,
+    });
+    return this.outboundDeliveryLogService.buildCsv(rows);
   }
 
   public async getAnalytics(user: AuthenticatedUserContext) {
@@ -717,6 +754,7 @@ export class SocialHubApplicationService {
       dispatcherCanPublish?: boolean;
       ownerApprovalRequired?: boolean;
       acceptKvkk?: boolean;
+      healthAlertsEnabled?: boolean;
     },
   ) {
     assertSocialHubAdmin(user);
@@ -739,6 +777,9 @@ export class SocialHubApplicationService {
     }
     if (patch.acceptKvkk) {
       settings.kvkkAcceptedAt = new Date();
+    }
+    if (patch.healthAlertsEnabled !== undefined) {
+      settings.healthAlertsEnabled = patch.healthAlertsEnabled;
     }
     await this.settingsRepository.save(settings);
     this.socialHubAuditService.record(
@@ -852,6 +893,9 @@ export class SocialHubApplicationService {
         dispatcherCanPublish: false,
         ownerApprovalRequired: true,
         kvkkAcceptedAt: null,
+        healthAlertsEnabled: true,
+        healthAlertLastSentAt: null,
+        lastHealthAlertStatus: null,
       }),
     );
   }
@@ -940,6 +984,7 @@ export class SocialHubApplicationService {
       dispatcherCanPublish: row.dispatcherCanPublish,
       ownerApprovalRequired: row.ownerApprovalRequired,
       kvkkAcceptedAt: row.kvkkAcceptedAt?.toISOString() ?? null,
+      healthAlertsEnabled: row.healthAlertsEnabled ?? true,
     };
   }
 

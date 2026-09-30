@@ -825,11 +825,24 @@ function tokenHealthLabel(
   }
 }
 
+export type SocialDeliveryLogFilters = {
+  platformCode: string;
+  status: "" | "ok" | "failed";
+  since: string;
+  until: string;
+};
+
 type HealthPanelProps = {
   health: SocialHubHealth | null;
   deliveries: SocialHubOutboundDelivery[];
+  deliveryFilters: SocialDeliveryLogFilters;
   busy: boolean;
   canManage: boolean;
+  healthAlertsEnabled: boolean;
+  onDeliveryFiltersChange: (patch: Partial<SocialDeliveryLogFilters>) => void;
+  onApplyDeliveryFilters: () => void;
+  onExportDeliveries: () => void;
+  onToggleHealthAlerts: (enabled: boolean) => void;
   onRefreshToken: (platformCode: string) => void;
   onReload: () => void;
 };
@@ -837,8 +850,14 @@ type HealthPanelProps = {
 export function SocialHealthPanel({
   health,
   deliveries,
+  deliveryFilters,
   busy,
   canManage,
+  healthAlertsEnabled,
+  onDeliveryFiltersChange,
+  onApplyDeliveryFilters,
+  onExportDeliveries,
+  onToggleHealthAlerts,
   onRefreshToken,
   onReload,
 }: HealthPanelProps) {
@@ -855,8 +874,20 @@ export function SocialHealthPanel({
         <h2 className="account-card-title">Bağlantı sağlığı</h2>
         <p className="account-card-lead">
           Token durumu, kurulum uyarıları ve son 24 saatteki kanal gönderim hataları.
-          Meta kanalları için otomatik token yenileme arka planda çalışır.
+          Kritik durumda firma sahiplerine e-posta ve (Mesajlar ayarlarında) Slack
+          webhook ile uyarı gider.
         </p>
+        {canManage ? (
+          <label className="social-hub-check">
+            <input
+              type="checkbox"
+              checked={healthAlertsEnabled}
+              disabled={busy}
+              onChange={(e) => onToggleHealthAlerts(e.target.checked)}
+            />
+            Sağlık uyarıları (e-posta + Slack)
+          </label>
+        ) : null}
         <button
           type="button"
           className="btn-account-ghost"
@@ -901,9 +932,66 @@ export function SocialHealthPanel({
       <header className="social-hub-panel-head">
         <h3 className="account-card-title">Gönderim geçmişi</h3>
         <p className="account-card-lead">
-          Mesajlar’dan kanala giden metin denemeleri (son kayıtlar).
+          Mesajlar’dan kanala giden metin denemeleri — filtreleyin veya CSV indirin.
         </p>
       </header>
+      <div className="social-hub-delivery-filters">
+        <select
+          className="input-light"
+          value={deliveryFilters.platformCode}
+          onChange={(e) =>
+            onDeliveryFiltersChange({ platformCode: e.target.value })
+          }
+        >
+          <option value="">Tüm kanallar</option>
+          {health.channels.map((channel) => (
+            <option key={channel.platformCode} value={channel.platformCode}>
+              {channel.label}
+            </option>
+          ))}
+        </select>
+        <select
+          className="input-light"
+          value={deliveryFilters.status}
+          onChange={(e) =>
+            onDeliveryFiltersChange({
+              status: e.target.value as SocialDeliveryLogFilters["status"],
+            })
+          }
+        >
+          <option value="">Tüm durumlar</option>
+          <option value="ok">Başarılı</option>
+          <option value="failed">Hatalı</option>
+        </select>
+        <input
+          className="input-light"
+          type="date"
+          value={deliveryFilters.since}
+          onChange={(e) => onDeliveryFiltersChange({ since: e.target.value })}
+        />
+        <input
+          className="input-light"
+          type="date"
+          value={deliveryFilters.until}
+          onChange={(e) => onDeliveryFiltersChange({ until: e.target.value })}
+        />
+        <button
+          type="button"
+          className="btn-account-primary"
+          disabled={busy}
+          onClick={onApplyDeliveryFilters}
+        >
+          Filtrele
+        </button>
+        <button
+          type="button"
+          className="btn-account-ghost"
+          disabled={busy}
+          onClick={onExportDeliveries}
+        >
+          CSV indir
+        </button>
+      </div>
       <ul className="social-hub-delivery-log">
         {deliveries.length === 0 ? (
           <li className="module-hint">Henüz kayıt yok.</li>

@@ -60,9 +60,47 @@ export class SocialHubApiClient {
     return payload.health;
   }
 
+  public static buildDeliveryExportUrl(params?: {
+    threadId?: string;
+    platformCode?: string;
+    status?: "ok" | "failed";
+    since?: string;
+    until?: string;
+    limit?: number;
+  }): string {
+    const query = new URLSearchParams();
+    if (params?.threadId) {
+      query.set("threadId", params.threadId);
+    }
+    if (params?.platformCode) {
+      query.set("platformCode", params.platformCode);
+    }
+    if (params?.status) {
+      query.set("status", params.status);
+    }
+    if (params?.since) {
+      query.set("since", params.since);
+    }
+    if (params?.until) {
+      query.set("until", params.until);
+    }
+    if (params?.limit) {
+      query.set("limit", String(params.limit));
+    }
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return `${PublicApiConfiguration.resolveBaseUrl()}/company/social-hub/delivery-log/export${suffix}`;
+  }
+
   public static async fetchDeliveryLog(
     accessToken: string,
-    params?: { threadId?: string; limit?: number },
+    params?: {
+      threadId?: string;
+      limit?: number;
+      platformCode?: string;
+      status?: "ok" | "failed";
+      since?: string;
+      until?: string;
+    },
   ): Promise<SocialHubOutboundDelivery[]> {
     const query = new URLSearchParams();
     if (params?.threadId) {
@@ -71,11 +109,50 @@ export class SocialHubApiClient {
     if (params?.limit) {
       query.set("limit", String(params.limit));
     }
+    if (params?.platformCode) {
+      query.set("platformCode", params.platformCode);
+    }
+    if (params?.status) {
+      query.set("status", params.status);
+    }
+    if (params?.since) {
+      query.set("since", params.since);
+    }
+    if (params?.until) {
+      query.set("until", params.until);
+    }
     const suffix = query.toString() ? `?${query.toString()}` : "";
     const payload = await socialHubFetch<{
       deliveries: SocialHubOutboundDelivery[];
     }>(accessToken, `/delivery-log${suffix}`);
     return payload.deliveries;
+  }
+
+  public static async downloadDeliveryExport(
+    accessToken: string,
+    params?: {
+      threadId?: string;
+      platformCode?: string;
+      status?: "ok" | "failed";
+      since?: string;
+      until?: string;
+      limit?: number;
+    },
+  ): Promise<void> {
+    const url = SocialHubApiClient.buildDeliveryExportUrl(params);
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!response.ok) {
+      throw new Error("CSV export failed");
+    }
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = objectUrl;
+    anchor.download = "social-hub-deliveries.csv";
+    anchor.click();
+    URL.revokeObjectURL(objectUrl);
   }
 
   public static async refreshConnectionToken(
