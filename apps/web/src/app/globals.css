@@ -15346,9 +15346,61 @@ button.btn-secondary {
 .social-hub-post-item {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
   gap: 1rem;
   padding: 0.75rem 0;
   border-bottom: 1px solid #e2e8f0;
+}
+
+.social-hub-post-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.social-hub-post-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.social-hub-schedule-field {
+  margin-top: 0.5rem;
+  font-size: 0.8125rem;
+}
+
+.social-hub-calendar-strip {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.social-hub-calendar-title {
+  font-size: 0.875rem;
+  margin: 0 0 0.5rem;
+}
+
+.social-hub-calendar-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.8125rem;
+}
+
+.social-hub-calendar-list li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: baseline;
+}
+
+.social-hub-calendar-snippet {
+  color: #64748b;
 }
 
 .social-hub-post-meta {

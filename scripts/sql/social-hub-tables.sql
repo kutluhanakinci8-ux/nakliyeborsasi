@@ -43,6 +43,8 @@ CREATE TABLE IF NOT EXISTS company_social_posts (
   external_post_id VARCHAR(128) NULL,
   last_error_message VARCHAR(512) NULL,
   created_by_user_id UUID NOT NULL,
+  approved_at TIMESTAMPTZ NULL,
+  approved_by_user_id UUID NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

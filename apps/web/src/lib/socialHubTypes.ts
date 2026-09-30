@@ -1,6 +1,8 @@
 export type SocialHubPermissions = {
   canManageConnections: boolean;
   canPublish: boolean;
+  canApprovePosts: boolean;
+  canSubmitForApproval: boolean;
   canReply: boolean;
   canManageTemplates: boolean;
   canManageSettings: boolean;
@@ -44,6 +46,8 @@ export type SocialHubPost = {
   publishedAt: string | null;
   externalPostId: string | null;
   lastErrorMessage: string | null;
+  approvedAt: string | null;
+  approvedByUserId: string | null;
   createdAt: string;
   updatedAt: string;
 };

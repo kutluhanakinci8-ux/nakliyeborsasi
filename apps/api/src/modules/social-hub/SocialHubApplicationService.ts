@@ -16,6 +16,7 @@ import { CompanySocialSettingsEntity } from "../../infrastructure/database/entit
 import {
   assertSocialHubAdmin,
   assertSocialHubRead,
+  canSocialHubApprovePosts,
   canSocialHubPublish,
   resolveSocialHubPermissions,
 } from "./SocialCompanyAuthorization";
@@ -67,7 +68,7 @@ export class SocialHubApplicationService {
     const posts = await this.postRepository.find({
       where: { companyId: user.companyId },
       order: { updatedAt: "DESC" },
-      take: 20,
+      take: 50,
     });
     const templates = await this.templateRepository.find({
       where: { companyId: user.companyId },
@@ -230,12 +231,10 @@ export class SocialHubApplicationService {
     },
   ) {
     assertSocialHubRead(user);
+    const settings = await this.ensureSettings(user.companyId);
     const post = await this.findPostForCompany(user.companyId, postId);
-    if (
-      post.statusCode === SocialPostStatusCode.Published ||
-      post.statusCode === SocialPostStatusCode.Publishing
-    ) {
-      throw new ValidationException("Yayınlanmış gönderi düzenlenemez.");
+    if (!this.isPostEditable(post.statusCode)) {
+      throw new ValidationException("Bu gönderi düzenlenemez.");
     }
     if (patch.bodyText !== undefined) {
       post.bodyText = patch.bodyText.trim();
@@ -250,10 +249,86 @@ export class SocialHubApplicationService {
     }
     if (patch.scheduledAt !== undefined) {
       post.scheduledAt = patch.scheduledAt ? new Date(patch.scheduledAt) : null;
-      post.statusCode = patch.scheduledAt
-        ? SocialPostStatusCode.Scheduled
-        : SocialPostStatusCode.Draft;
+      post.approvedAt = null;
+      post.approvedByUserId = null;
+      if (!patch.scheduledAt) {
+        post.statusCode = SocialPostStatusCode.Draft;
+      } else if (
+        settings.ownerApprovalRequired &&
+        !canSocialHubApprovePosts(user)
+      ) {
+        post.statusCode = SocialPostStatusCode.PendingApproval;
+      } else if (post.scheduledAt) {
+        post.statusCode = this.resolveStatusAfterSchedule(post.scheduledAt);
+      }
     }
+    await this.postRepository.save(post);
+    return { post: this.mapPost(post) };
+  }
+
+  public async deletePost(user: AuthenticatedUserContext, postId: string) {
+    assertSocialHubRead(user);
+    const post = await this.findPostForCompany(user.companyId, postId);
+    if (!this.isPostEditable(post.statusCode)) {
+      throw new ValidationException("Bu gönderi silinemez.");
+    }
+    await this.postRepository.delete({ id: postId, companyId: user.companyId });
+    return { deleted: true };
+  }
+
+  public async submitPostForApproval(
+    user: AuthenticatedUserContext,
+    postId: string,
+  ) {
+    assertSocialHubRead(user);
+    const settings = await this.ensureSettings(user.companyId);
+    if (!settings.ownerApprovalRequired) {
+      throw new ValidationException("Onay akışı kapalı.");
+    }
+    const post = await this.findPostForCompany(user.companyId, postId);
+    if (
+      post.statusCode !== SocialPostStatusCode.Draft &&
+      post.statusCode !== SocialPostStatusCode.Failed
+    ) {
+      throw new ValidationException("Bu gönderi onaya gönderilemez.");
+    }
+    post.statusCode = SocialPostStatusCode.PendingApproval;
+    await this.postRepository.save(post);
+    return { post: this.mapPost(post) };
+  }
+
+  public async approvePost(user: AuthenticatedUserContext, postId: string) {
+    if (!canSocialHubApprovePosts(user)) {
+      throw new ValidationException("Onay yetkiniz yok.");
+    }
+    const post = await this.findPostForCompany(user.companyId, postId);
+    if (post.statusCode !== SocialPostStatusCode.PendingApproval) {
+      throw new ValidationException("Gönderi onay beklemiyor.");
+    }
+    post.approvedAt = new Date();
+    post.approvedByUserId = user.userId;
+    post.statusCode = post.scheduledAt
+      ? this.resolveStatusAfterSchedule(post.scheduledAt)
+      : SocialPostStatusCode.Approved;
+    await this.postRepository.save(post);
+    return { post: this.mapPost(post) };
+  }
+
+  public async cancelPost(user: AuthenticatedUserContext, postId: string) {
+    assertSocialHubRead(user);
+    const post = await this.findPostForCompany(user.companyId, postId);
+    const cancellable = [
+      SocialPostStatusCode.Draft,
+      SocialPostStatusCode.PendingApproval,
+      SocialPostStatusCode.Approved,
+      SocialPostStatusCode.Scheduled,
+      SocialPostStatusCode.Failed,
+    ];
+    if (!cancellable.includes(post.statusCode as SocialPostStatusCode)) {
+      throw new ValidationException("Bu gönderi iptal edilemez.");
+    }
+    post.statusCode = SocialPostStatusCode.Cancelled;
+    post.scheduledAt = null;
     await this.postRepository.save(post);
     return { post: this.mapPost(post) };
   }
@@ -264,6 +339,54 @@ export class SocialHubApplicationService {
       throw new ValidationException("Yayınlama yetkiniz yok.");
     }
     const post = await this.findPostForCompany(user.companyId, postId);
+    this.assertPostReadyToPublish(post, settings, user);
+    return this.executePostPublish(post);
+  }
+
+  /** Zamanlanmış gönderiler için arka plan işi (kullanıcı bağlamı yok). */
+  public async publishPostScheduled(post: CompanySocialPostEntity) {
+    if (post.statusCode !== SocialPostStatusCode.Scheduled) {
+      return { post: this.mapPost(post) };
+    }
+    if (post.scheduledAt && post.scheduledAt.getTime() > Date.now()) {
+      return { post: this.mapPost(post) };
+    }
+    return this.executePostPublish(post);
+  }
+
+  private assertPostReadyToPublish(
+    post: CompanySocialPostEntity,
+    settings: CompanySocialSettingsEntity,
+    user: AuthenticatedUserContext,
+  ): void {
+    const allowed = [
+      SocialPostStatusCode.Draft,
+      SocialPostStatusCode.Approved,
+      SocialPostStatusCode.Scheduled,
+      SocialPostStatusCode.Failed,
+    ];
+    if (!allowed.includes(post.statusCode as SocialPostStatusCode)) {
+      throw new ValidationException("Bu gönderi yayınlanamaz.");
+    }
+    if (
+      settings.ownerApprovalRequired &&
+      !canSocialHubApprovePosts(user) &&
+      post.statusCode !== SocialPostStatusCode.Approved
+    ) {
+      throw new ValidationException(
+        "Yayın için firma sahibi / sosyal yönetici onayı gerekli.",
+      );
+    }
+    if (
+      post.statusCode === SocialPostStatusCode.Scheduled &&
+      post.scheduledAt &&
+      post.scheduledAt.getTime() > Date.now()
+    ) {
+      throw new ValidationException("Zamanlanmış yayın henüz gelmedi.");
+    }
+  }
+
+  private async executePostPublish(post: CompanySocialPostEntity) {
     const platforms = post.platformCodes.split(",").filter(Boolean);
     if (platforms.length === 0) {
       throw new ValidationException("En az bir kanal seçin.");
@@ -278,8 +401,8 @@ export class SocialHubApplicationService {
     let externalId: string | null = null;
     for (const platformCode of platforms) {
       const provider = this.socialProviderRegistry.resolve(platformCode);
-      const result = await provider.publishPost(user.companyId, {
-        companyId: user.companyId,
+      const result = await provider.publishPost(post.companyId, {
+        companyId: post.companyId,
         bodyText: post.bodyText,
         mediaUrls,
       });
@@ -301,8 +424,25 @@ export class SocialHubApplicationService {
     post.publishedAt = new Date();
     post.externalPostId = externalId;
     post.lastErrorMessage = null;
+    post.scheduledAt = null;
     await this.postRepository.save(post);
     return { post: this.mapPost(post) };
+  }
+
+  private isPostEditable(statusCode: string): boolean {
+    return [
+      SocialPostStatusCode.Draft,
+      SocialPostStatusCode.PendingApproval,
+      SocialPostStatusCode.Approved,
+      SocialPostStatusCode.Scheduled,
+      SocialPostStatusCode.Failed,
+    ].includes(statusCode as SocialPostStatusCode);
+  }
+
+  private resolveStatusAfterSchedule(scheduledAt: Date): SocialPostStatusCode {
+    return scheduledAt.getTime() > Date.now()
+      ? SocialPostStatusCode.Scheduled
+      : SocialPostStatusCode.Approved;
   }
 
   public async createTemplate(
@@ -534,6 +674,8 @@ export class SocialHubApplicationService {
       publishedAt: row.publishedAt?.toISOString() ?? null,
       externalPostId: row.externalPostId,
       lastErrorMessage: row.lastErrorMessage,
+      approvedAt: row.approvedAt?.toISOString() ?? null,
+      approvedByUserId: row.approvedByUserId,
       createdAt: row.createdAt.toISOString(),
       updatedAt: row.updatedAt.toISOString(),
     };

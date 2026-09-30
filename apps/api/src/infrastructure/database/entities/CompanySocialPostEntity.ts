@@ -45,6 +45,12 @@ export class CompanySocialPostEntity {
   @Column({ type: "uuid" })
   public createdByUserId!: string;
 
+  @Column({ type: "timestamptz", nullable: true })
+  public approvedAt!: Date | null;
+
+  @Column({ type: "uuid", nullable: true })
+  public approvedByUserId!: string | null;
+
   @CreateDateColumn({ type: "timestamptz" })
   public createdAt!: Date;
 
