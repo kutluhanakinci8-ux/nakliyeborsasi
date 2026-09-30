@@ -31,6 +31,7 @@ const EVENT_LABELS: Record<string, string> = {
   AUCTION_PUBLISHED: "İhale yayınlandı",
   LISTING_NEW_OFFER: "Yeni teklif / ilan",
   MESSAGING_NEW_MESSAGE: "Yeni mesaj",
+  SOCIAL_HUB_HEALTH_DEGRADED: "Sosyal hub sağlık uyarısı",
 };
 
 type OutboxStats = {

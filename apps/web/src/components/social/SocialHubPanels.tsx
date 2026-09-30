@@ -839,10 +839,19 @@ type HealthPanelProps = {
   busy: boolean;
   canManage: boolean;
   healthAlertsEnabled: boolean;
+  healthAlertMinSeverity: "attention" | "critical";
+  healthAlertFailureThreshold: number;
+  healthAlertPlatformThresholdsJson: string;
   onDeliveryFiltersChange: (patch: Partial<SocialDeliveryLogFilters>) => void;
   onApplyDeliveryFilters: () => void;
   onExportDeliveries: () => void;
   onToggleHealthAlerts: (enabled: boolean) => void;
+  onSaveAlertThresholds: () => void;
+  onAlertThresholdPatch: (patch: {
+    healthAlertMinSeverity?: "attention" | "critical";
+    healthAlertFailureThreshold?: number;
+    healthAlertPlatformThresholdsJson?: string;
+  }) => void;
   onRefreshToken: (platformCode: string) => void;
   onReload: () => void;
 };
@@ -854,10 +863,15 @@ export function SocialHealthPanel({
   busy,
   canManage,
   healthAlertsEnabled,
+  healthAlertMinSeverity,
+  healthAlertFailureThreshold,
+  healthAlertPlatformThresholdsJson,
   onDeliveryFiltersChange,
   onApplyDeliveryFilters,
   onExportDeliveries,
   onToggleHealthAlerts,
+  onSaveAlertThresholds,
+  onAlertThresholdPatch,
   onRefreshToken,
   onReload,
 }: HealthPanelProps) {
@@ -887,6 +901,70 @@ export function SocialHealthPanel({
             />
             Sağlık uyarıları (e-posta + Slack)
           </label>
+        ) : null}
+        {canManage ? (
+          <div className="social-hub-alert-thresholds">
+            <label className="social-hub-threshold-field">
+              Uyarı minimum seviye
+              <select
+                className="input-light"
+                value={healthAlertMinSeverity}
+                disabled={busy}
+                onChange={(e) =>
+                  onAlertThresholdPatch({
+                    healthAlertMinSeverity: e.target.value as
+                      | "attention"
+                      | "critical",
+                  })
+                }
+              >
+                <option value="attention">Dikkat ve kritik</option>
+                <option value="critical">Yalnızca kritik</option>
+              </select>
+            </label>
+            <label className="social-hub-threshold-field">
+              24s hata eşiği (varsayılan)
+              <input
+                className="input-light"
+                type="number"
+                min={1}
+                max={100}
+                value={healthAlertFailureThreshold}
+                disabled={busy}
+                onChange={(e) =>
+                  onAlertThresholdPatch({
+                    healthAlertFailureThreshold: Number.parseInt(
+                      e.target.value,
+                      10,
+                    ),
+                  })
+                }
+              />
+            </label>
+            <label className="social-hub-threshold-field social-hub-threshold-field--wide">
+              Kanal bazlı eşik (JSON)
+              <input
+                className="input-light"
+                type="text"
+                placeholder='{"WHATSAPP_CLOUD":3,"INSTAGRAM":1}'
+                value={healthAlertPlatformThresholdsJson}
+                disabled={busy}
+                onChange={(e) =>
+                  onAlertThresholdPatch({
+                    healthAlertPlatformThresholdsJson: e.target.value,
+                  })
+                }
+              />
+            </label>
+            <button
+              type="button"
+              className="btn-account-primary"
+              disabled={busy}
+              onClick={onSaveAlertThresholds}
+            >
+              Eşikleri kaydet
+            </button>
+          </div>
         ) : null}
         <button
           type="button"

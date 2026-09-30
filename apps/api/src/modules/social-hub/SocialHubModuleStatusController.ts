@@ -12,7 +12,7 @@ export class SocialHubModuleStatusController {
   } {
     return {
       module: "social_hub",
-      phase: "l",
+      phase: "m",
       subscriptionModuleCode: SubscriptionModuleCode.SocialHub,
       features: [
         "connections_skeleton",
@@ -51,6 +51,8 @@ export class SocialHubModuleStatusController {
         "linkedin_refresh_token",
         "health_alerts_slack_email",
         "delivery_log_filters_export",
+        "social_hub_health_email_template",
+        "health_alert_thresholds",
       ],
     };
   }

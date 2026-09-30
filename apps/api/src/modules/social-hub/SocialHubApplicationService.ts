@@ -755,6 +755,9 @@ export class SocialHubApplicationService {
       ownerApprovalRequired?: boolean;
       acceptKvkk?: boolean;
       healthAlertsEnabled?: boolean;
+      healthAlertMinSeverity?: "attention" | "critical";
+      healthAlertFailureThreshold?: number;
+      healthAlertPlatformThresholdsJson?: string | null;
     },
   ) {
     assertSocialHubAdmin(user);
@@ -780,6 +783,29 @@ export class SocialHubApplicationService {
     }
     if (patch.healthAlertsEnabled !== undefined) {
       settings.healthAlertsEnabled = patch.healthAlertsEnabled;
+    }
+    if (patch.healthAlertMinSeverity !== undefined) {
+      settings.healthAlertMinSeverity = patch.healthAlertMinSeverity;
+    }
+    if (patch.healthAlertFailureThreshold !== undefined) {
+      const value = Math.min(Math.max(Math.floor(patch.healthAlertFailureThreshold), 1), 100);
+      settings.healthAlertFailureThreshold = value;
+    }
+    if (patch.healthAlertPlatformThresholdsJson !== undefined) {
+      const raw = patch.healthAlertPlatformThresholdsJson?.trim() || null;
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw) as Record<string, unknown>;
+          if (!parsed || typeof parsed !== "object") {
+            throw new ValidationException("Kanal eşik JSON geçersiz.");
+          }
+        } catch {
+          throw new ValidationException(
+            "Kanal eşik JSON geçersiz. Örnek: {\"WHATSAPP_CLOUD\":3}",
+          );
+        }
+      }
+      settings.healthAlertPlatformThresholdsJson = raw;
     }
     await this.settingsRepository.save(settings);
     this.socialHubAuditService.record(
@@ -896,6 +922,9 @@ export class SocialHubApplicationService {
         healthAlertsEnabled: true,
         healthAlertLastSentAt: null,
         lastHealthAlertStatus: null,
+        healthAlertMinSeverity: "attention",
+        healthAlertFailureThreshold: 1,
+        healthAlertPlatformThresholdsJson: null,
       }),
     );
   }
@@ -985,6 +1014,10 @@ export class SocialHubApplicationService {
       ownerApprovalRequired: row.ownerApprovalRequired,
       kvkkAcceptedAt: row.kvkkAcceptedAt?.toISOString() ?? null,
       healthAlertsEnabled: row.healthAlertsEnabled ?? true,
+      healthAlertMinSeverity: row.healthAlertMinSeverity ?? "attention",
+      healthAlertFailureThreshold: row.healthAlertFailureThreshold ?? 1,
+      healthAlertPlatformThresholdsJson:
+        row.healthAlertPlatformThresholdsJson ?? null,
     };
   }
 

@@ -58,6 +58,11 @@ export function SocialHubPageClient() {
       until: "",
     },
   );
+  const [alertThresholdDraft, setAlertThresholdDraft] = useState({
+    healthAlertMinSeverity: "attention" as "attention" | "critical",
+    healthAlertFailureThreshold: 1,
+    healthAlertPlatformThresholdsJson: "",
+  });
 
   const canAccess =
     session?.roleCodes?.some((code) =>
@@ -129,6 +134,14 @@ export function SocialHubPageClient() {
     if (!accessToken || activeTab !== "health" || !snapshot || subscriptionBlocked) {
       return;
     }
+    setAlertThresholdDraft({
+      healthAlertMinSeverity:
+        snapshot.settings.healthAlertMinSeverity ?? "attention",
+      healthAlertFailureThreshold:
+        snapshot.settings.healthAlertFailureThreshold ?? 1,
+      healthAlertPlatformThresholdsJson:
+        snapshot.settings.healthAlertPlatformThresholdsJson ?? "",
+    });
     void loadHealthData().catch(() => setError("Sağlık verisi yüklenemedi."));
   }, [accessToken, activeTab, snapshot, subscriptionBlocked, loadHealthData]);
 
@@ -241,6 +254,31 @@ export function SocialHubPageClient() {
                 busy={busy}
                 canManage={snapshot.permissions.canManageConnections}
                 healthAlertsEnabled={snapshot.settings.healthAlertsEnabled ?? true}
+                healthAlertMinSeverity={alertThresholdDraft.healthAlertMinSeverity}
+                healthAlertFailureThreshold={
+                  alertThresholdDraft.healthAlertFailureThreshold
+                }
+                healthAlertPlatformThresholdsJson={
+                  alertThresholdDraft.healthAlertPlatformThresholdsJson
+                }
+                onAlertThresholdPatch={(patch) =>
+                  setAlertThresholdDraft((current) => ({ ...current, ...patch }))
+                }
+                onSaveAlertThresholds={() =>
+                  void runAction(async () => {
+                    await SocialHubApiClient.updateSettings(accessToken, {
+                      healthAlertMinSeverity:
+                        alertThresholdDraft.healthAlertMinSeverity,
+                      healthAlertFailureThreshold:
+                        alertThresholdDraft.healthAlertFailureThreshold,
+                      healthAlertPlatformThresholdsJson:
+                        alertThresholdDraft.healthAlertPlatformThresholdsJson ||
+                        undefined,
+                    });
+                    await reload();
+                    setStatus("Uyarı eşikleri kaydedildi.");
+                  })
+                }
                 onDeliveryFiltersChange={(patch) =>
                   setDeliveryFilters((current) => ({ ...current, ...patch }))
                 }

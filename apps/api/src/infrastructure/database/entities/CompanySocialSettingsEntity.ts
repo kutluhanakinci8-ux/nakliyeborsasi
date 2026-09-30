@@ -37,6 +37,15 @@ export class CompanySocialSettingsEntity {
   @Column({ type: "varchar", length: 24, nullable: true })
   public lastHealthAlertStatus!: string | null;
 
+  @Column({ type: "varchar", length: 16, default: "attention" })
+  public healthAlertMinSeverity!: "attention" | "critical";
+
+  @Column({ type: "int", default: 1 })
+  public healthAlertFailureThreshold!: number;
+
+  @Column({ type: "text", nullable: true })
+  public healthAlertPlatformThresholdsJson!: string | null;
+
   @UpdateDateColumn({ type: "timestamptz" })
   public updatedAt!: Date;
 }
