@@ -153,13 +153,13 @@ export class AuctionListingPriceActionService {
       .filter(Boolean)
       .join("\n");
 
-    const message = await this.messagingThreadApplicationService.sendMessage(
+    const sendResult = await this.messagingThreadApplicationService.sendMessage(
       authenticatedUser,
       thread.id,
       bodyText,
       locale,
     );
 
-    return { threadId: thread.id, messageId: message.id };
+    return { threadId: thread.id, messageId: sendResult.message.id };
   }
 }

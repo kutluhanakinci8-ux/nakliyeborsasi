@@ -59,12 +59,13 @@ export class MessagingPublicApiController {
           : "api-key@integration.lerta.internal",
       roleCodes: [CompanyRoleCode.Viewer],
     });
-    const message = await this.messagingThreadApplicationService.sendMessage(
+    const sendResult = await this.messagingThreadApplicationService.sendMessage(
       actor,
       threadId,
       body.bodyText ?? "",
       body.locale ?? "tr",
     );
+    const message = sendResult.message;
     return {
       messageId: message.id,
       threadId: message.threadId,

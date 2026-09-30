@@ -40,7 +40,10 @@ export function normalizeSocialHubSnapshot(payload: unknown): SocialHubSnapshot 
     ? (hub.providers as SocialHubSnapshot["providers"])
     : [];
   const connections = Array.isArray(hub.connections)
-    ? (hub.connections as SocialHubSnapshot["connections"])
+    ? (hub.connections as SocialHubSnapshot["connections"]).map((row) => ({
+        ...row,
+        setupWarnings: Array.isArray(row.setupWarnings) ? row.setupWarnings : [],
+      }))
     : [];
   const inboxRaw = hub.inboxSummary as SocialHubSnapshot["inboxSummary"] | undefined;
   const inboxSummary: SocialHubSnapshot["inboxSummary"] = {

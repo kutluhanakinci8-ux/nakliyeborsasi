@@ -72,6 +72,16 @@ const EXTERNAL_CHANNEL_LABELS: Record<string, string> = {
 
 const EXTERNAL_INBOUND_SENDER_USER_ID = "00000000-0000-0000-0000-000000000001";
 
+export type MessagingChannelDeliveryResult = {
+  status: "ok" | "failed";
+  errorMessage: string | null;
+};
+
+export type MessagingSendMessageResult = {
+  message: MessageEntity;
+  channelDelivery?: MessagingChannelDeliveryResult;
+};
+
 const COMPANY_UUID_SEARCH_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -273,7 +283,7 @@ export class MessagingThreadApplicationService {
         thread.freightListingId,
         locale,
       );
-    const systemMessage = await this.sendMessage(
+    const systemMessageResult = await this.sendMessage(
       authenticatedUser,
       thread.id,
       "✅ **Sabit fiyat teklifi kabul edildi** — ihale kaydı güncellendi.",
@@ -284,7 +294,7 @@ export class MessagingThreadApplicationService {
     return {
       sessionId: result.sessionId,
       bidId: result.bidId,
-      systemMessageId: systemMessage.id,
+      systemMessageId: systemMessageResult.message.id,
     };
   }
 
@@ -413,6 +423,10 @@ export class MessagingThreadApplicationService {
           title: thread.title,
           participantCompanyIds,
           externalChannelCode,
+          externalOutboundStatus: socialLink?.lastOutboundStatus ?? null,
+          externalOutboundError: socialLink?.lastOutboundErrorMessage ?? null,
+          externalOutboundAt:
+            socialLink?.lastOutboundAt?.toISOString() ?? null,
           externalChannelLabel:
             externalChannelCode
               ? EXTERNAL_CHANNEL_LABELS[externalChannelCode] ??
@@ -591,7 +605,7 @@ export class MessagingThreadApplicationService {
     messageKind: "public" | "internal" = "public",
     clientContext?: MessagingClientRequestContext,
     auditPath?: string,
-  ): Promise<MessageEntity> {
+  ): Promise<MessagingSendMessageResult> {
     const thread = await this.requireParticipantThread(
       authenticatedUser,
       threadId,
@@ -690,12 +704,24 @@ export class MessagingThreadApplicationService {
         senderCompanyId: saved.senderCompanyId,
         freightListingId: thread.freightListingId,
       });
-      if (thread.threadKind === "external_social" && trimmed.length > 0) {
-        void this.socialHubOutboundMessagingService.tryDispatchOutbound({
+    }
+    let channelDelivery: MessagingChannelDeliveryResult | undefined;
+    if (
+      messageKind !== "internal" &&
+      thread.threadKind === "external_social" &&
+      trimmed.length > 0
+    ) {
+      const outbound =
+        await this.socialHubOutboundMessagingService.tryDispatchOutbound({
           companyId: authenticatedUser.companyId,
           messageThreadId: thread.id,
           bodyText: trimmed,
         });
+      if (outbound.attempted) {
+        channelDelivery = {
+          status: outbound.ok ? "ok" : "failed",
+          errorMessage: outbound.ok ? null : outbound.message,
+        };
       }
     }
     if (clientContext) {
@@ -713,7 +739,7 @@ export class MessagingThreadApplicationService {
         },
       );
     }
-    return saved;
+    return { message: saved, channelDelivery };
   }
 
   public async getMessageAttachment(

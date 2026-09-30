@@ -44,6 +44,15 @@ export class CompanySocialThreadLinkEntity {
   @Column({ type: "varchar", length: 128, nullable: true })
   public lastExternalMessageId!: string | null;
 
+  @Column({ type: "timestamptz", nullable: true })
+  public lastOutboundAt!: Date | null;
+
+  @Column({ type: "varchar", length: 16, nullable: true })
+  public lastOutboundStatus!: "ok" | "failed" | null;
+
+  @Column({ type: "varchar", length: 512, nullable: true })
+  public lastOutboundErrorMessage!: string | null;
+
   @CreateDateColumn({ type: "timestamptz" })
   public createdAt!: Date;
 

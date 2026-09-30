@@ -14,6 +14,14 @@ export type MessagingThreadRecord = {
   participantCompanyIds?: string[] | null;
   externalChannelCode?: string | null;
   externalChannelLabel?: string | null;
+  externalOutboundStatus?: "ok" | "failed" | null;
+  externalOutboundError?: string | null;
+  externalOutboundAt?: string | null;
+};
+
+export type MessagingChannelDeliveryRecord = {
+  status: "ok" | "failed";
+  errorMessage: string | null;
 };
 
 export type ThreadMessageAttachmentRecord = {
@@ -377,8 +385,8 @@ export class MessagingApiClient {
       contentBase64: string;
     }[],
     messageKind?: "public" | "internal",
-  ): Promise<void> {
-    await AuthenticatedApiClient.fetchJson(
+  ): Promise<{ channelDelivery?: MessagingChannelDeliveryRecord }> {
+    return AuthenticatedApiClient.fetchJson(
       accessToken,
       `/messaging/threads/${threadId}/messages?lang=${locale}`,
       {
@@ -389,7 +397,7 @@ export class MessagingApiClient {
           ...(messageKind === "internal" ? { messageKind: "internal" } : {}),
         }),
       },
-    );
+    ) as Promise<{ channelDelivery?: MessagingChannelDeliveryRecord }>;
   }
 
   public static async sendTyping(

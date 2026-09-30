@@ -17,10 +17,19 @@ export type SocialHubSettings = {
   kvkkAcceptedAt: string | null;
 };
 
+export type SocialHubProviderCapabilities = {
+  oauthConnect: boolean;
+  inboxWebhook: boolean;
+  inboxHistorySync: boolean;
+  outboundMessaging: boolean;
+  feedPublish: boolean;
+};
+
 export type SocialHubProviderInfo = {
   platformCode: string;
   label: string;
   implementationStatus: "pending" | "ready";
+  capabilities?: SocialHubProviderCapabilities;
 };
 
 export type SocialHubConnection = {
@@ -34,6 +43,9 @@ export type SocialHubConnection = {
   lastErrorMessage: string | null;
   connectedAt: string | null;
   tokenExpiresAt: string | null;
+  capabilities?: SocialHubProviderCapabilities;
+  setupWarnings?: string[];
+  oauthReady?: boolean;
 };
 
 export type SocialHubPost = {

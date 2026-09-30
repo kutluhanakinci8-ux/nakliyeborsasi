@@ -17,6 +17,7 @@ import {
 } from "../../../../components/social/SocialHubSectionNav";
 import { useWebSession } from "../../../../context/WebSessionProvider";
 import { SocialHubApiClient } from "../../../../lib/SocialHubApiClient";
+import { formatSocialHubOAuthReason } from "../../../../lib/formatSocialHubOAuthReason";
 import type {
   SocialHubAnalytics,
   SocialHubAuditEntry,
@@ -65,7 +66,7 @@ export function SocialHubPageClient() {
       setActiveTab("connections");
     } else if (oauth === "error") {
       const reason = searchParams.get("reason") ?? "bilinmeyen";
-      setError(`OAuth hatası: ${reason}`);
+      setError(`OAuth: ${formatSocialHubOAuthReason(reason)}`);
       setActiveTab("connections");
     }
   }, [searchParams]);
@@ -138,8 +139,8 @@ export function SocialHubPageClient() {
       <header className="social-hub-intro">
         <h2 className="social-hub-intro-title">Sosyal medya & kanallar</h2>
         <p className="social-hub-intro-lead">
-          Hesap bağlantıları, sosyal gelen kutusu, yayınlar ve ekip izinleri. Harici
-          API (Meta, WhatsApp, LinkedIn) sonraki fazda açılacak.
+          Kanal bağlantıları (Meta, WhatsApp, LinkedIn), gelen kutusu, yayın onayı ve
+          ekip izinleri. Yanıtlar Mesajlar üzerinden bağlı hesaplara gider.
         </p>
       </header>
       <SocialHubSectionNav activeTab={activeTab} onTabChange={setActiveTab} />

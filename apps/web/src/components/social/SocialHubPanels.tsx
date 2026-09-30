@@ -12,6 +12,28 @@ import type {
   SocialHubTemplate,
 } from "../../lib/socialHubTypes";
 
+function capabilitySummary(
+  caps: SocialHubSnapshot["providers"][number]["capabilities"],
+): string[] {
+  if (!caps) {
+    return [];
+  }
+  const items: string[] = [];
+  if (caps.inboxWebhook) {
+    items.push("Gelen webhook");
+  }
+  if (caps.outboundMessaging) {
+    items.push("Giden mesaj");
+  }
+  if (caps.feedPublish) {
+    items.push("Feed yayını");
+  }
+  if (caps.inboxHistorySync) {
+    items.push("Geçmiş sync");
+  }
+  return items;
+}
+
 function statusLabel(code: string): string {
   const map: Record<string, string> = {
     DISCONNECTED: "Bağlı değil",
@@ -89,25 +111,47 @@ export function SocialConnectionsPanel({
       <header className="social-hub-panel-head">
         <h2 className="account-card-title">Bağlı hesaplar</h2>
         <p className="account-card-lead">
-          Instagram, Facebook Messenger, WhatsApp Business ve LinkedIn bağlantıları.
-          Meta / LinkedIn OAuth sunucu ortam değişkenleriyle açılır; webhook URL:
-          <code>/api/v1/company/social-hub/webhooks/meta</code>. Genel API anahtarları için{" "}
+          Meta (Instagram, Messenger, WhatsApp) ve LinkedIn OAuth ile bağlanın. Webhook:
+          <code>/api/v1/company/social-hub/webhooks/meta</code>. Mesajlar ekranından
+          yanıtlar bağlı kanala gider. Genel API anahtarları:{" "}
           <Link href="/hesap/uygulamalar">Uygulamalar / entegrasyonlar</Link>.
         </p>
       </header>
       <ul className="social-hub-connection-grid">
         {connections.map((row) => {
           const provider = providers.find((p) => p.platformCode === row.platformCode);
+          const caps = row.capabilities ?? provider?.capabilities;
+          const capLabels = capabilitySummary(caps);
+          const connectLabel =
+            row.statusCode === "CONNECTED" ? "Yeniden bağlan" : "Bağla";
           return (
             <li key={row.id} className="social-hub-connection-card">
               <div className="social-hub-connection-main">
                 <h3>{row.label}</h3>
+                {row.displayName ? (
+                  <p className="module-hint">{row.displayName}</p>
+                ) : null}
                 <p className="social-hub-connection-status">
                   {statusLabel(row.statusCode)}
-                  {provider?.implementationStatus === "pending" ? (
-                    <span className="social-hub-pill">API hazırlanıyor</span>
+                  {provider?.implementationStatus === "pending" ||
+                  row.oauthReady === false ? (
+                    <span className="social-hub-pill">OAuth yapılandırması eksik</span>
                   ) : null}
                 </p>
+                {capLabels.length > 0 ? (
+                  <ul className="social-hub-capability-list">
+                    {capLabels.map((label) => (
+                      <li key={label} className="social-hub-pill social-hub-pill--muted">
+                        {label}
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+                {row.setupWarnings?.map((warning) => (
+                  <p key={warning} className="error banner error--light social-hub-setup-warn">
+                    {warning}
+                  </p>
+                ))}
                 {row.lastErrorMessage ? (
                   <p className="module-hint">{row.lastErrorMessage}</p>
                 ) : null}
@@ -118,10 +162,10 @@ export function SocialConnectionsPanel({
                     <button
                       type="button"
                       className="btn-account-primary"
-                      disabled={busy}
+                      disabled={busy || row.oauthReady === false}
                       onClick={() => onConnect(row.platformCode)}
                     >
-                      Bağla
+                      {connectLabel}
                     </button>
                     <button
                       type="button"

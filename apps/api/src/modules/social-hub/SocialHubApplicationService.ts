@@ -32,6 +32,8 @@ import {
   SocialHubAuditActionCode,
   SocialHubAuditService,
 } from "./SocialHubAuditService";
+import { getSocialHubProviderCapabilities } from "./socialHubProviderCapabilities";
+import { parseSocialHubConnectionMetadata } from "./oauth/SocialHubConnectionMetadata";
 
 export const INVITABLE_SOCIAL_TEAM_ROLES: readonly CompanyRoleCode[] = [
   CompanyRoleCode.SocialAdmin,
@@ -116,6 +118,7 @@ export class SocialHubApplicationService {
         platformCode: code,
         label: PLATFORM_LABELS[code],
         implementationStatus: provider.getImplementationStatus(),
+        capabilities: getSocialHubProviderCapabilities(code),
       };
     });
 
@@ -127,7 +130,10 @@ export class SocialHubApplicationService {
       subscription: this.subscriptionMeta(user.companyId),
       permissions,
       settings: this.mapSettings(settings),
-      connections: connections.map((row) => this.mapConnection(row)),
+      providers,
+      connections: connections.map((row) =>
+        this.mapConnection(row, providers),
+      ),
       recentPosts: posts.map((row) => this.mapPost(row)),
       templates: templates.map((row) => this.mapTemplate(row)),
       inboxSummary: {
@@ -142,8 +148,8 @@ export class SocialHubApplicationService {
         messagingDeepLink: "/messaging?tab=sohbet&filter=social",
         note:
           openLinks.length > 0
-            ? "Sosyal konuşmalar Mesajlar listesinde kanal rozetiyle görünür. Harici API bağlantısı sonraki fazda."
-            : "Demo veya API ile konuşma oluşturulunca Mesajlar ekranında listelenir.",
+            ? "Sosyal konuşmalar Mesajlar’da kanal rozetiyle listelenir; yanıtlar bağlı hesap üzerinden gider. Gönderim hatası konuşma başlığında görünür."
+            : "Kanal bağlayın veya demo oluşturun; konuşmalar Mesajlar ekranında listelenir.",
       },
     };
   }
@@ -258,7 +264,10 @@ export class SocialHubApplicationService {
     row.lastErrorMessage =
       oauth.implementationStatus === "pending" ? oauth.message : null;
     await this.connectionRepository.save(row);
-    return { oauth, connection: this.mapConnection(row) };
+    return {
+      oauth,
+      connection: this.mapConnection(row, this.listProviderMeta()),
+    };
   }
 
   public async disconnect(user: AuthenticatedUserContext, platformCode: string) {
@@ -281,7 +290,9 @@ export class SocialHubApplicationService {
       row.accessTokenCiphertext = null;
       await this.connectionRepository.save(row);
     }
-    return { connection: row ? this.mapConnection(row) : null };
+    return {
+      connection: row ? this.mapConnection(row, this.listProviderMeta()) : null,
+    };
   }
 
   public async createPost(
@@ -838,6 +849,17 @@ export class SocialHubApplicationService {
     return [...unique];
   }
 
+  private listProviderMeta(): Array<{
+    platformCode: SocialPlatformCode;
+    implementationStatus: "pending" | "ready";
+  }> {
+    return this.socialProviderRegistry.listPlatforms().map((code) => ({
+      platformCode: code,
+      implementationStatus:
+        this.socialProviderRegistry.resolve(code).getImplementationStatus(),
+    }));
+  }
+
   private mapSettings(row: CompanySocialSettingsEntity) {
     return {
       inboxEnabled: row.inboxEnabled,
@@ -849,13 +871,45 @@ export class SocialHubApplicationService {
     };
   }
 
-  private mapConnection(row: CompanySocialConnectionEntity) {
+  private mapConnection(
+    row: CompanySocialConnectionEntity,
+    providers: Array<{
+      platformCode: SocialPlatformCode;
+      implementationStatus: "pending" | "ready";
+    }>,
+  ) {
+    const platform = row.platformCode as SocialPlatformCode;
+    const providerMeta = providers.find((p) => p.platformCode === platform);
+    const metadata = parseSocialHubConnectionMetadata(row.grantedScopes);
+    const setupWarnings: string[] = [];
+    if (row.statusCode === SocialConnectionStatusCode.Connected) {
+      if (platform === SocialPlatformCode.WhatsAppCloud && !metadata.phoneNumberId) {
+        setupWarnings.push(
+          "WhatsApp phone_number_id eksik — bağlantıyı yenileyin (OAuth).",
+        );
+      }
+      if (
+        platform === SocialPlatformCode.Instagram &&
+        !metadata.instagramBusinessAccountId
+      ) {
+        setupWarnings.push(
+          "Instagram işletme hesabı tanımlı değil — sayfa bağlantısını yenileyin.",
+        );
+      }
+      if (
+        row.tokenExpiresAt &&
+        row.tokenExpiresAt.getTime() < Date.now() + 7 * 24 * 60 * 60 * 1000
+      ) {
+        setupWarnings.push("Erişim tokenı yakında sona eriyor — yeniden bağlanın.");
+      }
+    }
+    if (providerMeta?.implementationStatus === "pending") {
+      setupWarnings.push("Sunucu OAuth yapılandırması eksik.");
+    }
     return {
       id: row.id,
       platformCode: row.platformCode,
-      label:
-        PLATFORM_LABELS[row.platformCode as SocialPlatformCode] ??
-        row.platformCode,
+      label: PLATFORM_LABELS[platform] ?? row.platformCode,
       statusCode: row.statusCode,
       externalAccountId: row.externalAccountId,
       displayName: row.displayName,
@@ -863,6 +917,9 @@ export class SocialHubApplicationService {
       lastErrorMessage: row.lastErrorMessage,
       connectedAt: row.connectedAt?.toISOString() ?? null,
       tokenExpiresAt: row.tokenExpiresAt?.toISOString() ?? null,
+      capabilities: getSocialHubProviderCapabilities(platform),
+      setupWarnings,
+      oauthReady: providerMeta?.implementationStatus === "ready",
     };
   }
 

@@ -23,6 +23,12 @@ export class MessagingThreadReference {
 
   public readonly externalChannelLabel: string | null;
 
+  public readonly externalOutboundStatus: "ok" | "failed" | null;
+
+  public readonly externalOutboundError: string | null;
+
+  public readonly externalOutboundAt: string | null;
+
   public constructor(params: {
     threadId: string;
     counterpartyCompanyId: string;
@@ -36,6 +42,9 @@ export class MessagingThreadReference {
     participantCompanyIds?: string[] | null;
     externalChannelCode?: string | null;
     externalChannelLabel?: string | null;
+    externalOutboundStatus?: "ok" | "failed" | null;
+    externalOutboundError?: string | null;
+    externalOutboundAt?: string | null;
   }) {
     this.threadId = params.threadId;
     this.counterpartyCompanyId = params.counterpartyCompanyId;
@@ -49,5 +58,8 @@ export class MessagingThreadReference {
     this.participantCompanyIds = params.participantCompanyIds ?? null;
     this.externalChannelCode = params.externalChannelCode ?? null;
     this.externalChannelLabel = params.externalChannelLabel ?? null;
+    this.externalOutboundStatus = params.externalOutboundStatus ?? null;
+    this.externalOutboundError = params.externalOutboundError ?? null;
+    this.externalOutboundAt = params.externalOutboundAt ?? null;
   }
 }

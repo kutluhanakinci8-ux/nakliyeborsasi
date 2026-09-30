@@ -15274,6 +15274,57 @@ button.btn-secondary {
   border-radius: 6px;
 }
 
+.social-hub-pill--muted {
+  color: #475569;
+  background: #f1f5f9;
+}
+
+.social-hub-capability-list {
+  list-style: none;
+  margin: 0.35rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.social-hub-capability-list .social-hub-pill {
+  margin-left: 0;
+}
+
+.social-hub-setup-warn {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.chat-social-channel-banner {
+  margin: 0 1rem 0.75rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.chat-social-channel-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+}
+
+.chat-social-outbound-error {
+  margin: 0.35rem 0 0;
+  font-size: 0.88rem;
+  color: #b91c1c;
+}
+
+.chat-social-outbound-ok {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  color: #15803d;
+}
+
 .social-hub-compose {
   display: flex;
   flex-direction: column;
