@@ -13,6 +13,7 @@ export type NotificationEventCategory =
   | "auction"
   | "listing"
   | "messaging"
+  | "social"
   | "digest";
 
 export type NotificationEventDefinition = {
@@ -154,6 +155,14 @@ export const NOTIFICATION_EVENT_CATALOG: NotificationEventDefinition[] = [
     defaultAdminEnabled: false,
     defaultUserEnabled: true,
     labelTr: "Güven değerlendirme hatırlatması",
+  },
+  {
+    code: NotificationEventCode.SocialHubHealthDegraded,
+    category: "social",
+    userPreferenceKey: null,
+    defaultAdminEnabled: false,
+    defaultUserEnabled: true,
+    labelTr: "Sosyal hub sağlık uyarısı",
   },
 ];
 

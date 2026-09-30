@@ -19,6 +19,7 @@ const EVENT_LABELS: Record<string, string> = {
   AUCTION_WON: "İhale — kazanan",
   LISTING_PUBLISHED: "İlan yayın",
   MESSAGING_NEW_MESSAGE: "Yeni sohbet mesajı",
+  SOCIAL_HUB_HEALTH_DEGRADED: "Sosyal hub sağlık",
   WEEKLY_DIGEST: "Haftalık özet",
   MAIL_INBOUND_RECEIVED: "Kurumsal — gelen",
   MAIL_SENT_TRANSACTIONAL: "Kurumsal — gönderilen",

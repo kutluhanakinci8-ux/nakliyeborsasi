@@ -8,7 +8,11 @@ import { CompanySocialSettingsEntity } from "../../infrastructure/database/entit
 import { CompanyMembershipEntity } from "../../infrastructure/database/entities/CompanyMembershipEntity";
 import { SocialHubConnectionHealthService } from "./SocialHubConnectionHealthService";
 import { OperationalNotificationService } from "../notification/OperationalNotificationService";
-import { NotificationEventCode } from "../notification/NotificationEventCode";
+import {
+  adjustOverallForFailureThresholds,
+  shouldSendHealthAlert,
+  type HealthAlertThresholdSettings,
+} from "./socialHubHealthAlertThresholds";
 
 @Injectable()
 export class SocialHubHealthAlertService {
@@ -55,7 +59,21 @@ export class SocialHubHealthAlertService {
     const health = await this.connectionHealthService.buildHealthDashboard(
       companyId,
     );
-    if (health.overallStatus === "healthy") {
+    const thresholdSettings: HealthAlertThresholdSettings = {
+      healthAlertMinSeverity: settings?.healthAlertMinSeverity ?? "attention",
+      healthAlertFailureThreshold: settings?.healthAlertFailureThreshold ?? 1,
+      healthAlertPlatformThresholdsJson:
+        settings?.healthAlertPlatformThresholdsJson ?? null,
+    };
+    const effectiveOverall = adjustOverallForFailureThresholds({
+      overallStatus: health.overallStatus,
+      channels: health.channels,
+      settings: thresholdSettings,
+    });
+    if (
+      !shouldSendHealthAlert(effectiveOverall, thresholdSettings) ||
+      effectiveOverall === "healthy"
+    ) {
       if (settings?.lastHealthAlertStatus) {
         settings.lastHealthAlertStatus = null;
         await this.socialSettingsRepository.save(settings);
@@ -64,19 +82,38 @@ export class SocialHubHealthAlertService {
     }
     const now = Date.now();
     const lastSent = settings?.healthAlertLastSentAt?.getTime() ?? 0;
-    const sameStatus = settings?.lastHealthAlertStatus === health.overallStatus;
+    const sameStatus = settings?.lastHealthAlertStatus === effectiveOverall;
     if (sameStatus && now - lastSent < 24 * 60 * 60 * 1000) {
       return false;
     }
-    const summary = health.channels
-      .filter((channel) => channel.setupWarnings.length > 0)
-      .map((channel) => `${channel.label}: ${channel.setupWarnings.join("; ")}`)
-      .join(" | ");
+    const summaryParts = health.channels
+      .filter(
+        (channel) =>
+          channel.setupWarnings.length > 0 ||
+          channel.tokenHealth === "expired" ||
+          channel.tokenHealth === "expiring_soon",
+      )
+      .map((channel) => {
+        const warnings = [...channel.setupWarnings];
+        if (channel.tokenHealth === "expired") {
+          warnings.push("Token süresi doldu");
+        } else if (channel.tokenHealth === "expiring_soon") {
+          warnings.push("Token süresi yakın");
+        }
+        return `${channel.label}: ${warnings.join("; ")}`;
+      });
+    const failureParts = health.channels
+      .filter((channel) => channel.recentOutboundFailures24h > 0)
+      .map(
+        (channel) =>
+          `${channel.label}: ${channel.recentOutboundFailures24h} gönderim hatası (24s)`,
+      );
+    const summary = [...summaryParts, ...failureParts].join(" | ");
     const webBase =
       process.env.WEB_PUBLIC_BASE_URL?.trim() ?? "https://app.lerta.com.tr";
     const hubUrl = `${webBase.replace(/\/$/, "")}/hesap/sosyal-medya`;
-    await this.notifySlack(companyId, health.overallStatus, summary, hubUrl);
-    await this.notifyOwnersEmail(companyId, health.overallStatus, summary, hubUrl);
+    await this.notifySlack(companyId, effectiveOverall, summary, hubUrl);
+    await this.notifyOwnersEmail(companyId, effectiveOverall, summary, hubUrl);
     const row =
       settings ??
       this.socialSettingsRepository.create({
@@ -90,9 +127,12 @@ export class SocialHubHealthAlertService {
         healthAlertsEnabled: true,
         healthAlertLastSentAt: null,
         lastHealthAlertStatus: null,
+        healthAlertMinSeverity: "attention",
+        healthAlertFailureThreshold: 1,
+        healthAlertPlatformThresholdsJson: null,
       });
     row.healthAlertLastSentAt = new Date();
-    row.lastHealthAlertStatus = health.overallStatus;
+    row.lastHealthAlertStatus = effectiveOverall;
     await this.socialSettingsRepository.save(row);
     return true;
   }

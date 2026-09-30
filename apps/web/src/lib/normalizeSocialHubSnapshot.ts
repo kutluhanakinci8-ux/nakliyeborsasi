@@ -18,6 +18,9 @@ const DEFAULT_SETTINGS: SocialHubSnapshot["settings"] = {
   ownerApprovalRequired: true,
   kvkkAcceptedAt: null,
   healthAlertsEnabled: true,
+  healthAlertMinSeverity: "attention",
+  healthAlertFailureThreshold: 1,
+  healthAlertPlatformThresholdsJson: null,
 };
 
 export function normalizeSocialHubSnapshot(payload: unknown): SocialHubSnapshot {

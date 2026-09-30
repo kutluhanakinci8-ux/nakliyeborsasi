@@ -271,6 +271,9 @@ export class SocialHubController {
       ownerApprovalRequired?: boolean;
       acceptKvkk?: boolean;
       healthAlertsEnabled?: boolean;
+      healthAlertMinSeverity?: "attention" | "critical";
+      healthAlertFailureThreshold?: number;
+      healthAlertPlatformThresholdsJson?: string | null;
     },
   ) {
     return this.socialHubApplicationService.updateSettings(user, body);

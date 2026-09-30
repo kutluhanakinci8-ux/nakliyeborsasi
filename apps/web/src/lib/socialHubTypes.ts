@@ -16,6 +16,9 @@ export type SocialHubSettings = {
   ownerApprovalRequired: boolean;
   kvkkAcceptedAt: string | null;
   healthAlertsEnabled?: boolean;
+  healthAlertMinSeverity?: "attention" | "critical";
+  healthAlertFailureThreshold?: number;
+  healthAlertPlatformThresholdsJson?: string | null;
 };
 
 export type SocialHubProviderCapabilities = {

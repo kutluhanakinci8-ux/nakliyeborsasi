@@ -288,7 +288,7 @@ export class SocialHubApiClient {
 
   public static async updateSettings(
     accessToken: string,
-    body: Record<string, boolean | undefined>,
+    body: Record<string, boolean | string | number | null | undefined>,
   ): Promise<void> {
     await socialHubFetch(accessToken, "/settings", {
       method: "PATCH",

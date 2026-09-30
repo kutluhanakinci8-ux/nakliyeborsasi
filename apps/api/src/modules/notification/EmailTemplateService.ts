@@ -95,6 +95,7 @@ export class EmailTemplateService {
       case NotificationEventCode.MessagingNewMessage:
       case NotificationEventCode.TrustTransportConfirmRequest:
       case NotificationEventCode.TrustReviewReminder:
+      case NotificationEventCode.SocialHubHealthDegraded:
         return this.renderOperationalAdminTr(eventCode, payload);
       case NotificationEventCode.UserFirstLogin:
         return {
@@ -138,6 +139,7 @@ export class EmailTemplateService {
       case NotificationEventCode.MessagingNewMessage:
       case NotificationEventCode.TrustTransportConfirmRequest:
       case NotificationEventCode.TrustReviewReminder:
+      case NotificationEventCode.SocialHubHealthDegraded:
         return this.renderOperationalAdminTr(eventCode, payload);
       case NotificationEventCode.UserRegistered:
         return {
@@ -269,6 +271,7 @@ export class EmailTemplateService {
       [NotificationEventCode.MessagingNewMessage]: "Yeni mesaj",
       [NotificationEventCode.TrustTransportConfirmRequest]: "Taşıma onayı",
       [NotificationEventCode.TrustReviewReminder]: "Güven hatırlatması",
+      [NotificationEventCode.SocialHubHealthDegraded]: "Sosyal hub sağlığı",
     };
     const title = titles[eventCode] ?? "Operasyon bildirimi";
     if (eventCode === NotificationEventCode.TrustTransportConfirmRequest) {
@@ -304,6 +307,32 @@ export class EmailTemplateService {
           { eyebrow: "Güven merkezi", preheader: "Değerlendirme hatırlatması" },
         ),
         text: `Değerlendirme: ${trustUrl}`,
+      };
+    }
+    if (eventCode === NotificationEventCode.SocialHubHealthDegraded) {
+      const hubUrl = payload.hubUrl ?? payload.messagingUrl ?? "#";
+      const preview = payload.messagePreview ?? "";
+      const statusLabel =
+        payload.overallStatus === "critical" ? "Kritik" : "Dikkat gerekli";
+      return {
+        subject: `${PLATFORM_PRODUCT_NAME} — sosyal kanal sağlığı (${statusLabel})`,
+        html: wrapCorporateEmail(
+          "Sosyal medya hub",
+          `${leadParagraph(
+            `Bağlı kanallarınızda <strong>${escapeHtml(statusLabel)}</strong> durum tespit edildi.`,
+          )}
+          ${preview ? mutedParagraph(escapeHtml(preview)) : ""}
+          ${detailTable([
+            { label: "Firma", value: payload.companyLegalName ?? "—" },
+            { label: "Zaman", value: formatOccurredAt(payload.occurredAt ?? "") },
+          ])}
+          ${primaryButton(hubUrl, "Sağlık panelini aç")}`,
+          {
+            eyebrow: "Sosyal hub",
+            preheader: preview.slice(0, 80) || "Kanal sağlığı uyarısı",
+          },
+        ),
+        text: `Sosyal hub sağlık (${statusLabel}): ${preview}\n${hubUrl}`,
       };
     }
     if (eventCode === NotificationEventCode.MessagingNewMessage) {
