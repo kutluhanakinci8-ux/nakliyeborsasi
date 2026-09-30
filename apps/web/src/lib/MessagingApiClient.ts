@@ -9,9 +9,11 @@ export type MessagingThreadRecord = {
   lastMessageAt?: string | null;
   freightListingId?: string | null;
   unreadCount?: number;
-  threadKind?: "pair" | "group";
+  threadKind?: "pair" | "group" | "external_social";
   title?: string | null;
   participantCompanyIds?: string[] | null;
+  externalChannelCode?: string | null;
+  externalChannelLabel?: string | null;
 };
 
 export type ThreadMessageAttachmentRecord = {

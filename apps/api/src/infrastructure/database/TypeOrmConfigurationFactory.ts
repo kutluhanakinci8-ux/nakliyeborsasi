@@ -26,6 +26,7 @@ import { CompanySocialConnectionEntity } from "./entities/CompanySocialConnectio
 import { CompanySocialPostEntity } from "./entities/CompanySocialPostEntity";
 import { CompanySocialReplyTemplateEntity } from "./entities/CompanySocialReplyTemplateEntity";
 import { CompanySocialSettingsEntity } from "./entities/CompanySocialSettingsEntity";
+import { CompanySocialThreadLinkEntity } from "./entities/CompanySocialThreadLinkEntity";
 import { FleetDriverEntity } from "./entities/FleetDriverEntity";
 import { FleetVehicleEntity } from "./entities/FleetVehicleEntity";
 import { FleetDriverVehicleAssignmentEntity } from "./entities/FleetDriverVehicleAssignmentEntity";
@@ -165,6 +166,7 @@ export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
         CompanySocialPostEntity,
         CompanySocialReplyTemplateEntity,
         CompanySocialSettingsEntity,
+        CompanySocialThreadLinkEntity,
       ],
       synchronize,
       logging: false,

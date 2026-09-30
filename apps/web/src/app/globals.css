@@ -5774,6 +5774,20 @@ button.btn-secondary {
   white-space: nowrap;
 }
 
+.chat-thread-channel-pill {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  background: #eff6ff;
+  color: #1d4ed8;
+  vertical-align: middle;
+}
+
 .chat-thread-time {
   flex-shrink: 0;
   font-size: 0.68rem;

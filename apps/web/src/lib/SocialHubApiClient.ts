@@ -53,6 +53,12 @@ export class SocialHubApiClient {
     });
   }
 
+  public static async seedDemoInbox(
+    accessToken: string,
+  ): Promise<{ createdThreadIds: string[] }> {
+    return socialHubFetch(accessToken, "/inbox/seed-demo", { method: "POST" });
+  }
+
   public static async syncInbox(
     accessToken: string,
     platformCode: string,

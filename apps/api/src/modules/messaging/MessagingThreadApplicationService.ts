@@ -9,6 +9,7 @@ import {
   MessagingThreadReference,
   MessagingThreadSummary,
   CompanyRoleCode,
+  SocialPlatformCode,
   SubscriptionModuleCode,
   ValidationException,
 } from "@nakliyeborsasi/core";
@@ -59,6 +60,16 @@ import {
 import type { MessagingGroupParticipantRole } from "../../infrastructure/database/entities/MessageThreadParticipantEntity";
 import { TrustScoreApplicationService } from "../trust/TrustScoreApplicationService";
 import { randomUUID } from "node:crypto";
+import { CompanySocialReplyTemplateEntity } from "../../infrastructure/database/entities/CompanySocialReplyTemplateEntity";
+import { CompanySocialThreadLinkEntity } from "../../infrastructure/database/entities/CompanySocialThreadLinkEntity";
+const EXTERNAL_CHANNEL_LABELS: Record<string, string> = {
+  [SocialPlatformCode.Instagram]: "Instagram",
+  [SocialPlatformCode.FacebookMessenger]: "Facebook Messenger",
+  [SocialPlatformCode.WhatsAppCloud]: "WhatsApp",
+  [SocialPlatformCode.LinkedIn]: "LinkedIn",
+};
+
+const EXTERNAL_INBOUND_SENDER_USER_ID = "00000000-0000-0000-0000-000000000001";
 
 const COMPANY_UUID_SEARCH_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -90,6 +101,10 @@ export class MessagingThreadApplicationService {
     private readonly companyMessagingSettingsRepository: Repository<CompanyMessagingSettingsEntity>,
     @InjectRepository(MessageOperationStampEntity)
     private readonly messageOperationStampRepository: Repository<MessageOperationStampEntity>,
+    @InjectRepository(CompanySocialReplyTemplateEntity)
+    private readonly socialReplyTemplateRepository: Repository<CompanySocialReplyTemplateEntity>,
+    @InjectRepository(CompanySocialThreadLinkEntity)
+    private readonly socialThreadLinkRepository: Repository<CompanySocialThreadLinkEntity>,
     private readonly trustScoreApplicationService: TrustScoreApplicationService,
     private readonly modularSubscriptionEntitlementService: ModularSubscriptionEntitlementService,
     private readonly operationalNotificationService: OperationalNotificationService,
@@ -298,13 +313,35 @@ export class MessagingThreadApplicationService {
           })
         : [];
     const seen = new Set(pairThreads.map((thread) => thread.id));
+    const externalThreads = await this.messageThreadRepository.find({
+      where: {
+        companyAId: authenticatedUser.companyId,
+        threadKind: "external_social",
+      },
+      order: { createdAt: "DESC" },
+    });
     const threads = [
       ...pairThreads,
       ...groupThreads.filter((thread) => !seen.has(thread.id)),
+      ...externalThreads.filter((thread) => !seen.has(thread.id)),
     ];
-    const counterpartyIds = threads.map((thread) =>
-      this.resolveCounterpartyCompanyId(thread, authenticatedUser.companyId),
+    const socialLinks =
+      externalThreads.length > 0
+        ? await this.socialThreadLinkRepository.find({
+            where: {
+              companyId: authenticatedUser.companyId,
+              messageThreadId: In(externalThreads.map((thread) => thread.id)),
+            },
+          })
+        : [];
+    const socialLinkByThreadId = new Map(
+      socialLinks.map((link) => [link.messageThreadId, link]),
     );
+    const counterpartyIds = threads
+      .filter((thread) => thread.threadKind !== "external_social")
+      .map((thread) =>
+        this.resolveCounterpartyCompanyId(thread, authenticatedUser.companyId),
+      );
     const companies =
       counterpartyIds.length > 0
         ? await this.companyRepository.find({
@@ -339,6 +376,7 @@ export class MessagingThreadApplicationService {
               thread.id,
             )
           : null;
+      const socialLink = socialLinkByThreadId.get(thread.id);
       const lastMessage = await this.messageRepository.findOne({
         where: { threadId: thread.id },
         order: { createdAt: "DESC" },
@@ -349,15 +387,21 @@ export class MessagingThreadApplicationService {
         authenticatedUser.companyId,
         lastReadAt,
       );
+      const externalChannelCode = socialLink?.platformCode ?? null;
       enriched.push(
         new MessagingThreadReference({
           threadId: thread.id,
-          counterpartyCompanyId,
+          counterpartyCompanyId:
+            thread.threadKind === "external_social"
+              ? thread.companyBId
+              : counterpartyCompanyId,
           counterpartyLegalName:
-            thread.threadKind === "group"
-              ? thread.title ??
-                `Grup sohbet (${participantCompanyIds?.length ?? 0} firma)`
-              : companyNameById.get(counterpartyCompanyId) ?? null,
+            thread.threadKind === "external_social"
+              ? socialLink?.displayLabel ?? thread.title
+              : thread.threadKind === "group"
+                ? thread.title ??
+                  `Grup sohbet (${participantCompanyIds?.length ?? 0} firma)`
+                : companyNameById.get(counterpartyCompanyId) ?? null,
           lastMessagePreview: lastMessage?.bodyText?.slice(0, 120) ?? null,
           lastMessageAt: lastMessage?.createdAt?.toISOString() ?? null,
           freightListingId: thread.freightListingId,
@@ -365,6 +409,12 @@ export class MessagingThreadApplicationService {
           threadKind: thread.threadKind ?? "pair",
           title: thread.title,
           participantCompanyIds,
+          externalChannelCode,
+          externalChannelLabel:
+            externalChannelCode
+              ? EXTERNAL_CHANNEL_LABELS[externalChannelCode] ??
+                externalChannelCode
+              : null,
         }),
       );
     }
@@ -767,7 +817,20 @@ export class MessagingThreadApplicationService {
     const orgExtras = await this.loadOrgQuickReplyTemplates(
       authenticatedUser.companyId,
     );
-    return { templates: listMessagingQuickReplies(orgExtras) };
+    const socialTemplates = await this.socialReplyTemplateRepository.find({
+      where: { companyId: authenticatedUser.companyId },
+      order: { sortOrder: "ASC", title: "ASC" },
+      take: 30,
+    });
+    const socialExtras = socialTemplates.map((row) => ({
+      id: `social-hub-${row.id}`,
+      labelTr: row.title,
+      bodyText: row.bodyText,
+      scope: "organization" as const,
+    }));
+    return {
+      templates: listMessagingQuickReplies([...orgExtras, ...socialExtras]),
+    };
   }
 
   public async getOrgQuickReplies(
@@ -1466,6 +1529,50 @@ export class MessagingThreadApplicationService {
     );
   }
 
+  public async recordExternalChannelInbound(params: {
+    companyId: string;
+    threadId: string;
+    bodyText: string;
+    senderDisplayName: string;
+  }): Promise<MessageEntity> {
+    const thread = await this.messageThreadRepository.findOne({
+      where: { id: params.threadId },
+    });
+    if (
+      !thread ||
+      thread.threadKind !== "external_social" ||
+      thread.companyAId !== params.companyId
+    ) {
+      throw new ValidationException("Geçersiz sosyal konuşma");
+    }
+    const trimmed = params.bodyText.trim();
+    const saved = await this.messageRepository.save(
+      this.messageRepository.create({
+        threadId: thread.id,
+        senderCompanyId: thread.companyBId,
+        senderUserId: EXTERNAL_INBOUND_SENDER_USER_ID,
+        bodyText: trimmed,
+        kind: "public",
+        deletedAt: null,
+        editedAt: null,
+        mentionUserIds: null,
+        attachments: null,
+      }),
+    );
+    void this.messagingWebPushService.notifyNewChatMessage({
+      companyId: thread.companyAId,
+      threadId: thread.id,
+      senderCompanyName: params.senderDisplayName,
+      bodyPreview: trimmed.slice(0, 280),
+      freightListingId: thread.freightListingId,
+    });
+    void this.fanOutRealtime(thread, {
+      type: "message.created",
+      threadId: thread.id,
+    });
+    return saved;
+  }
+
   private async requireParticipantThread(
     authenticatedUser: AuthenticatedUserContext,
     threadId: string,
@@ -1497,6 +1604,9 @@ export class MessagingThreadApplicationService {
     thread: MessageThreadEntity,
     viewerCompanyId: string,
   ): string {
+    if (thread.threadKind === "external_social") {
+      return thread.companyBId;
+    }
     if (thread.threadKind === "group") {
       return thread.companyAId === viewerCompanyId
         ? thread.companyBId

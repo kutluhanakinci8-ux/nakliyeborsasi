@@ -43,6 +43,11 @@ export class SocialHubController {
     return this.socialHubApplicationService.disconnect(user, platformCode);
   }
 
+  @Post("inbox/seed-demo")
+  public async seedDemoInbox(@AuthenticatedUserParam() user: AuthenticatedUserContext) {
+    return this.socialHubApplicationService.seedDemoInbox(user);
+  }
+
   @Post("connections/:platformCode/sync-inbox")
   public async syncInbox(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,

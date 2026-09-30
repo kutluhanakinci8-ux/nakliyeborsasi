@@ -15,6 +15,9 @@ export class MessagingThreadParticipantService {
   ) {}
 
   public async listCompanyIds(thread: MessageThreadEntity): Promise<string[]> {
+    if (thread.threadKind === "external_social") {
+      return [thread.companyAId];
+    }
     if (thread.threadKind !== "group") {
       return [thread.companyAId, thread.companyBId];
     }
@@ -31,6 +34,9 @@ export class MessagingThreadParticipantService {
     thread: MessageThreadEntity,
     companyId: string,
   ): Promise<boolean> {
+    if (thread.threadKind === "external_social") {
+      return thread.companyAId === companyId;
+    }
     if (thread.threadKind !== "group") {
       return (
         thread.companyAId === companyId || thread.companyBId === companyId

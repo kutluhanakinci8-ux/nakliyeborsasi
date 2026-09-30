@@ -20,6 +20,8 @@ import {
   resolveSocialHubPermissions,
 } from "./SocialCompanyAuthorization";
 import { SocialProviderRegistry } from "./providers/SocialProviderRegistry";
+import { CompanySocialThreadLinkEntity } from "../../infrastructure/database/entities/CompanySocialThreadLinkEntity";
+import { SocialHubMessagingBridgeService } from "./SocialHubMessagingBridgeService";
 
 const PLATFORM_LABELS: Record<SocialPlatformCode, string> = {
   [SocialPlatformCode.Instagram]: "Instagram",
@@ -39,8 +41,24 @@ export class SocialHubApplicationService {
     private readonly templateRepository: Repository<CompanySocialReplyTemplateEntity>,
     @InjectRepository(CompanySocialSettingsEntity)
     private readonly settingsRepository: Repository<CompanySocialSettingsEntity>,
+    @InjectRepository(CompanySocialThreadLinkEntity)
+    private readonly threadLinkRepository: Repository<CompanySocialThreadLinkEntity>,
     private readonly socialProviderRegistry: SocialProviderRegistry,
+    private readonly socialHubMessagingBridgeService: SocialHubMessagingBridgeService,
   ) {}
+
+  private assertInboxOperationsAllowed(
+    settings: CompanySocialSettingsEntity,
+  ): void {
+    if (!settings.inboxEnabled) {
+      throw new ValidationException("Sosyal gelen kutusu kapalı.");
+    }
+    if (!settings.kvkkAcceptedAt) {
+      throw new ValidationException(
+        "Sosyal gelen kutusu için KVKK / kanal kullanım onayı gerekli.",
+      );
+    }
+  }
 
   public async getHubSnapshot(user: AuthenticatedUserContext) {
     assertSocialHubRead(user);
@@ -65,6 +83,10 @@ export class SocialHubApplicationService {
       };
     });
 
+    const openLinks = await this.threadLinkRepository.find({
+      where: { companyId: user.companyId, isOpen: true },
+    });
+
     return {
       permissions,
       settings: this.mapSettings(settings),
@@ -73,17 +95,60 @@ export class SocialHubApplicationService {
       recentPosts: posts.map((row) => this.mapPost(row)),
       templates: templates.map((row) => this.mapTemplate(row)),
       inboxSummary: {
-        totalOpenThreads: 0,
+        totalOpenThreads: openLinks.length,
         byPlatform: providers.map((p) => ({
           platformCode: p.platformCode,
-          openCount: 0,
+          openCount: openLinks.filter(
+            (link) => link.platformCode === p.platformCode,
+          ).length,
           implementationStatus: p.implementationStatus,
         })),
-        messagingDeepLink: "/messaging?tab=sohbet",
+        messagingDeepLink: "/messaging?tab=sohbet&filter=social",
         note:
-          "Sosyal kanal mesajları Mesajlar ekranına bağlanacak; webhook ingest henüz kapalı.",
+          openLinks.length > 0
+            ? "Sosyal konuşmalar Mesajlar listesinde kanal rozetiyle görünür. Harici API bağlantısı sonraki fazda."
+            : "Demo veya API ile konuşma oluşturulunca Mesajlar ekranında listelenir.",
       },
     };
+  }
+
+  public async seedDemoInbox(user: AuthenticatedUserContext): Promise<{
+    createdThreadIds: string[];
+  }> {
+    assertSocialHubAdmin(user);
+    const settings = await this.ensureSettings(user.companyId);
+    this.assertInboxOperationsAllowed(settings);
+
+    const samples = [
+      {
+        platform: SocialPlatformCode.Instagram,
+        externalId: "demo-ig-001",
+        label: "@musteri_demo",
+        message: "Merhaba, İstanbul–Denizli için fiyat alabilir miyim?",
+      },
+      {
+        platform: SocialPlatformCode.WhatsAppCloud,
+        externalId: "demo-wa-001",
+        label: "+90 555 000 00 00",
+        message: "Kamyonum yarın boş, yük var mı?",
+      },
+    ];
+    const createdThreadIds: string[] = [];
+    for (const sample of samples) {
+      const link = await this.socialHubMessagingBridgeService.ensureExternalThread({
+        companyId: user.companyId,
+        platformCode: sample.platform,
+        externalThreadId: sample.externalId,
+        displayLabel: sample.label,
+      });
+      await this.socialHubMessagingBridgeService.ingestInboundMessage(
+        user.companyId,
+        link.id,
+        sample.message,
+      );
+      createdThreadIds.push(link.messageThreadId);
+    }
+    return { createdThreadIds };
   }
 
   public async startConnect(
@@ -337,9 +402,7 @@ export class SocialHubApplicationService {
   public async syncInbox(user: AuthenticatedUserContext, platformCode: string) {
     assertSocialHubRead(user);
     const settings = await this.ensureSettings(user.companyId);
-    if (!settings.inboxEnabled) {
-      throw new ValidationException("Gelen kutusu bu firma için kapalı.");
-    }
+    this.assertInboxOperationsAllowed(settings);
     const provider = this.socialProviderRegistry.resolve(platformCode);
     const result = await provider.syncInbox(user.companyId);
     return { sync: result };

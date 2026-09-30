@@ -49,6 +49,8 @@ import { MessagingPublicApiReadService } from "./MessagingPublicApiReadService";
 import { MessagingRetentionScheduler } from "./MessagingRetentionScheduler";
 import { AuctionModule } from "../auction/AuctionModule";
 import { TrustScoreModule } from "../trust/TrustScoreModule";
+import { CompanySocialReplyTemplateEntity } from "../../infrastructure/database/entities/CompanySocialReplyTemplateEntity";
+import { CompanySocialThreadLinkEntity } from "../../infrastructure/database/entities/CompanySocialThreadLinkEntity";
 
 @Module({
   imports: [
@@ -67,6 +69,8 @@ import { TrustScoreModule } from "../trust/TrustScoreModule";
       FreightListingEntity,
       UserAccountEntity,
       CompanyMembershipEntity,
+      CompanySocialReplyTemplateEntity,
+      CompanySocialThreadLinkEntity,
     ]),
     SubscriptionModule,
     AuthModule,

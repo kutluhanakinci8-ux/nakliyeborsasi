@@ -109,6 +109,17 @@ export function SocialHubPageClient() {
               <SocialInboxPanel
                 snapshot={snapshot}
                 busy={busy}
+                canSeedDemo={snapshot.permissions.canManageConnections}
+                onSeedDemo={() =>
+                  void runAction(async () => {
+                    const result = await SocialHubApiClient.seedDemoInbox(
+                      accessToken,
+                    );
+                    setStatus(
+                      `Demo oluşturuldu (${result.createdThreadIds.length} konuşma). Mesajlar sekmesine bakın.`,
+                    );
+                  })
+                }
                 onSync={(code) =>
                   void runAction(async () => {
                     const result = await SocialHubApiClient.syncInbox(
