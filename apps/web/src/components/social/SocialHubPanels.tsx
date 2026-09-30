@@ -20,6 +20,43 @@ function statusLabel(code: string): string {
   return map[code] ?? code;
 }
 
+function postStatusLabel(code: string): string {
+  const map: Record<string, string> = {
+    DRAFT: "Taslak",
+    PENDING_APPROVAL: "Onay bekliyor",
+    APPROVED: "Onaylandı",
+    SCHEDULED: "Zamanlandı",
+    PUBLISHING: "Yayınlanıyor",
+    PUBLISHED: "Yayınlandı",
+    FAILED: "Başarısız",
+    CANCELLED: "İptal",
+  };
+  return map[code] ?? code;
+}
+
+function formatSchedule(iso: string | null): string {
+  if (!iso) {
+    return "—";
+  }
+  try {
+    return new Date(iso).toLocaleString("tr-TR", {
+      dateStyle: "short",
+      timeStyle: "short",
+    });
+  } catch {
+    return iso;
+  }
+}
+
+function toDatetimeLocalValue(iso: string | null): string {
+  if (!iso) {
+    return "";
+  }
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 type ConnectionsProps = {
   snapshot: SocialHubSnapshot;
   busy: boolean;
@@ -177,6 +214,7 @@ export function SocialInboxPanel({
 type PublishingProps = {
   posts: SocialHubPost[];
   permissions: SocialHubPermissions;
+  ownerApprovalRequired: boolean;
   draftText: string;
   draftPlatforms: string[];
   busy: boolean;
@@ -184,12 +222,18 @@ type PublishingProps = {
   onTogglePlatform: (code: string) => void;
   onCreateDraft: () => void;
   onPublish: (postId: string) => void;
+  onSchedule: (postId: string, scheduledAt: string | null) => void;
+  onSubmitApproval: (postId: string) => void;
+  onApprove: (postId: string) => void;
+  onCancel: (postId: string) => void;
+  onDelete: (postId: string) => void;
   platformOptions: { code: string; label: string }[];
 };
 
 export function SocialPublishingPanel({
   posts,
   permissions,
+  ownerApprovalRequired,
   draftText,
   draftPlatforms,
   busy,
@@ -197,17 +241,60 @@ export function SocialPublishingPanel({
   onTogglePlatform,
   onCreateDraft,
   onPublish,
+  onSchedule,
+  onSubmitApproval,
+  onApprove,
+  onCancel,
+  onDelete,
   platformOptions,
 }: PublishingProps) {
+  const scheduledUpcoming = posts
+    .filter(
+      (p) =>
+        p.scheduledAt &&
+        (p.statusCode === "SCHEDULED" || p.statusCode === "PENDING_APPROVAL"),
+    )
+    .sort(
+      (a, b) =>
+        new Date(a.scheduledAt!).getTime() - new Date(b.scheduledAt!).getTime(),
+    );
+
+  const editableStatuses = new Set([
+    "DRAFT",
+    "PENDING_APPROVAL",
+    "APPROVED",
+    "SCHEDULED",
+    "FAILED",
+  ]);
+
   return (
     <section className="social-hub-panel module-panel module-panel--elevated">
       <header className="social-hub-panel-head">
         <h2 className="account-card-title">Yayınlar</h2>
         <p className="account-card-lead">
-          Taslak oluşturun; gerçek kanal yayını API fazında devreye girecek.
+          Taslak, onay ve zamanlama; kanal API yayını sonraki fazda. Zamanı gelen
+          gönderiler sunucuda otomatik denenir.
         </p>
       </header>
-      {permissions.canPublish ? (
+      {scheduledUpcoming.length > 0 ? (
+        <div className="social-hub-calendar-strip">
+          <h3 className="social-hub-calendar-title">Yaklaşan zamanlamalar</h3>
+          <ul className="social-hub-calendar-list">
+            {scheduledUpcoming.slice(0, 6).map((post) => (
+              <li key={post.id}>
+                <time dateTime={post.scheduledAt!}>
+                  {formatSchedule(post.scheduledAt)}
+                </time>
+                <span>{postStatusLabel(post.statusCode)}</span>
+                <span className="social-hub-calendar-snippet">
+                  {post.bodyText.slice(0, 48)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+      {permissions.canPublish || permissions.canSubmitForApproval ? (
         <div className="social-hub-compose">
           <label className="label-light">
             Gönderi metni
@@ -243,32 +330,101 @@ export function SocialPublishingPanel({
       ) : (
         <p className="module-hint">Yayınlama yetkiniz yok (rol / firma ayarı).</p>
       )}
+      {ownerApprovalRequired ? (
+        <p className="module-hint">
+          Firma ayarı: yayınlar için sahip / sosyal yönetici onayı gerekli.
+        </p>
+      ) : null}
       <ul className="social-hub-post-list">
         {posts.length === 0 ? (
           <li className="module-hint">Henüz gönderi yok.</li>
         ) : (
           posts.map((post) => (
             <li key={post.id} className="social-hub-post-item">
-              <div>
+              <div className="social-hub-post-body">
                 <p className="social-hub-post-meta">
-                  {post.statusCode} · {post.platformCodes.join(", ")}
+                  {postStatusLabel(post.statusCode)} · {post.platformCodes.join(", ")}
+                  {post.scheduledAt ? (
+                    <> · {formatSchedule(post.scheduledAt)}</>
+                  ) : null}
                 </p>
-                <p>{post.bodyText.slice(0, 160)}</p>
+                <p>{post.bodyText.slice(0, 200)}</p>
                 {post.lastErrorMessage ? (
                   <p className="module-hint">{post.lastErrorMessage}</p>
                 ) : null}
+                {editableStatuses.has(post.statusCode) ? (
+                  <label className="label-light social-hub-schedule-field">
+                    Zamanla
+                    <input
+                      type="datetime-local"
+                      className="input-light"
+                      disabled={busy}
+                      value={toDatetimeLocalValue(post.scheduledAt)}
+                      onChange={(e) => {
+                        const raw = e.target.value;
+                        onSchedule(post.id, raw ? new Date(raw).toISOString() : null);
+                      }}
+                    />
+                  </label>
+                ) : null}
               </div>
-              {permissions.canPublish &&
-              (post.statusCode === "DRAFT" || post.statusCode === "SCHEDULED") ? (
-                <button
-                  type="button"
-                  className="btn-account-ghost"
-                  disabled={busy}
-                  onClick={() => onPublish(post.id)}
-                >
-                  Yayınla (dene)
-                </button>
-              ) : null}
+              <div className="social-hub-post-actions">
+                {permissions.canApprovePosts &&
+                post.statusCode === "PENDING_APPROVAL" ? (
+                  <button
+                    type="button"
+                    className="btn-account-primary"
+                    disabled={busy}
+                    onClick={() => onApprove(post.id)}
+                  >
+                    Onayla
+                  </button>
+                ) : null}
+                {permissions.canSubmitForApproval &&
+                (post.statusCode === "DRAFT" || post.statusCode === "FAILED") ? (
+                  <button
+                    type="button"
+                    className="btn-account-ghost"
+                    disabled={busy}
+                    onClick={() => onSubmitApproval(post.id)}
+                  >
+                    Onaya gönder
+                  </button>
+                ) : null}
+                {permissions.canPublish &&
+                ["DRAFT", "APPROVED", "SCHEDULED", "FAILED"].includes(
+                  post.statusCode,
+                ) ? (
+                  <button
+                    type="button"
+                    className="btn-account-ghost"
+                    disabled={busy}
+                    onClick={() => onPublish(post.id)}
+                  >
+                    Yayınla (dene)
+                  </button>
+                ) : null}
+                {editableStatuses.has(post.statusCode) ? (
+                  <>
+                    <button
+                      type="button"
+                      className="btn-account-ghost"
+                      disabled={busy}
+                      onClick={() => onCancel(post.id)}
+                    >
+                      İptal
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-account-ghost"
+                      disabled={busy}
+                      onClick={() => onDelete(post.id)}
+                    >
+                      Sil
+                    </button>
+                  </>
+                ) : null}
+              </div>
             </li>
           ))
         )}

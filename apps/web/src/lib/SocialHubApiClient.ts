@@ -80,6 +80,55 @@ export class SocialHubApiClient {
     });
   }
 
+  public static async updatePost(
+    accessToken: string,
+    postId: string,
+    body: {
+      bodyText?: string;
+      platformCodes?: string[];
+      scheduledAt?: string | null;
+    },
+  ): Promise<{ post: unknown }> {
+    return socialHubFetch(accessToken, `/posts/${postId}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    });
+  }
+
+  public static async deletePost(
+    accessToken: string,
+    postId: string,
+  ): Promise<void> {
+    await socialHubFetch(accessToken, `/posts/${postId}`, { method: "DELETE" });
+  }
+
+  public static async submitPostForApproval(
+    accessToken: string,
+    postId: string,
+  ): Promise<{ post: unknown }> {
+    return socialHubFetch(accessToken, `/posts/${postId}/submit-approval`, {
+      method: "POST",
+    });
+  }
+
+  public static async approvePost(
+    accessToken: string,
+    postId: string,
+  ): Promise<{ post: unknown }> {
+    return socialHubFetch(accessToken, `/posts/${postId}/approve`, {
+      method: "POST",
+    });
+  }
+
+  public static async cancelPost(
+    accessToken: string,
+    postId: string,
+  ): Promise<{ post: unknown }> {
+    return socialHubFetch(accessToken, `/posts/${postId}/cancel`, {
+      method: "POST",
+    });
+  }
+
   public static async publishPost(
     accessToken: string,
     postId: string,

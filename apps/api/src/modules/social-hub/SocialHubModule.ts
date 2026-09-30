@@ -16,6 +16,7 @@ import { MetaInstagramMessagingProvider } from "./providers/MetaInstagramMessagi
 import { MetaFacebookMessengerProvider } from "./providers/MetaFacebookMessengerProvider";
 import { WhatsAppCloudWebhookProvider } from "./providers/WhatsAppCloudWebhookProvider";
 import { LinkedInMarketingPostsProvider } from "./providers/LinkedInMarketingPostsProvider";
+import { SocialPostPublishScheduler } from "./SocialPostPublishScheduler";
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { LinkedInMarketingPostsProvider } from "./providers/LinkedInMarketingPos
     MetaFacebookMessengerProvider,
     WhatsAppCloudWebhookProvider,
     LinkedInMarketingPostsProvider,
+    SocialPostPublishScheduler,
   ],
   exports: [SocialHubApplicationService],
 })

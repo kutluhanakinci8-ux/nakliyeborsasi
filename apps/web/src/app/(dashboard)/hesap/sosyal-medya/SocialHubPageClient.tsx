@@ -135,6 +135,7 @@ export function SocialHubPageClient() {
               <SocialPublishingPanel
                 posts={snapshot.recentPosts}
                 permissions={snapshot.permissions}
+                ownerApprovalRequired={snapshot.settings.ownerApprovalRequired}
                 draftText={draftText}
                 draftPlatforms={draftPlatforms}
                 busy={busy}
@@ -155,6 +156,45 @@ export function SocialHubPageClient() {
                     });
                     setDraftText("");
                     setStatus("Taslak kaydedildi.");
+                  })
+                }
+                onSchedule={(postId, scheduledAt) =>
+                  void runAction(async () => {
+                    await SocialHubApiClient.updatePost(accessToken, postId, {
+                      scheduledAt,
+                    });
+                    setStatus(
+                      scheduledAt
+                        ? "Yayın zamanlandı."
+                        : "Zamanlama kaldırıldı.",
+                    );
+                  })
+                }
+                onSubmitApproval={(postId) =>
+                  void runAction(async () => {
+                    await SocialHubApiClient.submitPostForApproval(
+                      accessToken,
+                      postId,
+                    );
+                    setStatus("Onaya gönderildi.");
+                  })
+                }
+                onApprove={(postId) =>
+                  void runAction(async () => {
+                    await SocialHubApiClient.approvePost(accessToken, postId);
+                    setStatus("Gönderi onaylandı.");
+                  })
+                }
+                onCancel={(postId) =>
+                  void runAction(async () => {
+                    await SocialHubApiClient.cancelPost(accessToken, postId);
+                    setStatus("Gönderi iptal edildi.");
+                  })
+                }
+                onDelete={(postId) =>
+                  void runAction(async () => {
+                    await SocialHubApiClient.deletePost(accessToken, postId);
+                    setStatus("Gönderi silindi.");
                   })
                 }
                 onPublish={(postId) =>

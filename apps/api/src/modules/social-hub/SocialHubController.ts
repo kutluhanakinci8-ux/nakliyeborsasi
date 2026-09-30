@@ -92,6 +92,38 @@ export class SocialHubController {
     return this.socialHubApplicationService.publishPost(user, postId);
   }
 
+  @Delete("posts/:postId")
+  public async deletePost(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("postId") postId: string,
+  ) {
+    return this.socialHubApplicationService.deletePost(user, postId);
+  }
+
+  @Post("posts/:postId/submit-approval")
+  public async submitForApproval(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("postId") postId: string,
+  ) {
+    return this.socialHubApplicationService.submitPostForApproval(user, postId);
+  }
+
+  @Post("posts/:postId/approve")
+  public async approvePost(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("postId") postId: string,
+  ) {
+    return this.socialHubApplicationService.approvePost(user, postId);
+  }
+
+  @Post("posts/:postId/cancel")
+  public async cancelPost(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("postId") postId: string,
+  ) {
+    return this.socialHubApplicationService.cancelPost(user, postId);
+  }
+
   @Post("templates")
   public async createTemplate(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,

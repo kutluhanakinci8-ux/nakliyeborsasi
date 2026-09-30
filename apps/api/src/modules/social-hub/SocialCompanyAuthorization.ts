@@ -72,6 +72,15 @@ export function canSocialHubReply(
   );
 }
 
+export function canSocialHubApprovePosts(
+  user: AuthenticatedUserContext,
+): boolean {
+  return hasAnyRole(user, [
+    CompanyRoleCode.CompanyOwner,
+    CompanyRoleCode.SocialAdmin,
+  ]);
+}
+
 export function resolveSocialHubPermissions(
   user: AuthenticatedUserContext,
   settings: {
@@ -82,6 +91,8 @@ export function resolveSocialHubPermissions(
 ): {
   canManageConnections: boolean;
   canPublish: boolean;
+  canApprovePosts: boolean;
+  canSubmitForApproval: boolean;
   canReply: boolean;
   canManageTemplates: boolean;
   canManageSettings: boolean;
@@ -90,9 +101,15 @@ export function resolveSocialHubPermissions(
     CompanyRoleCode.CompanyOwner,
     CompanyRoleCode.SocialAdmin,
   ]);
+  const isDispatcher = user.roleCodes.includes(CompanyRoleCode.Dispatcher);
   return {
     canManageConnections: isAdmin,
     canPublish: canSocialHubPublish(user, settings),
+    canApprovePosts: isAdmin,
+    canSubmitForApproval:
+      settings.ownerApprovalRequired &&
+      (isDispatcher || isAdmin) &&
+      !canSocialHubPublish(user, settings),
     canReply: canSocialHubReply(user, settings),
     canManageTemplates: isAdmin,
     canManageSettings: isAdmin,
