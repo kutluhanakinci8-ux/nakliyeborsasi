@@ -19,6 +19,7 @@ import { TrustScoreModule } from "./modules/trust/TrustScoreModule";
 import { PlatformAdminModule } from "./modules/platform-admin/PlatformAdminModule";
 import { FleetModule } from "./modules/fleet/FleetModule";
 import { NotificationModule } from "./modules/notification/NotificationModule";
+import { SocialHubModule } from "./modules/social-hub/SocialHubModule";
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { NotificationModule } from "./modules/notification/NotificationModule";
     PlatformAdminModule,
     FleetModule,
     NotificationModule,
+    SocialHubModule,
     PanelModule,
     HealthModule,
   ],

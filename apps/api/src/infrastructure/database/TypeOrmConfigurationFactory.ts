@@ -22,6 +22,10 @@ import { MessageThreadUserReadStateEntity } from "./entities/MessageThreadUserRe
 import { MessagingWebPushSubscriptionEntity } from "./entities/MessagingWebPushSubscriptionEntity";
 import { CompanyTrustReviewEntity } from "./entities/CompanyTrustReviewEntity";
 import { CompanyTrustReviewInviteEntity } from "./entities/CompanyTrustReviewInviteEntity";
+import { CompanySocialConnectionEntity } from "./entities/CompanySocialConnectionEntity";
+import { CompanySocialPostEntity } from "./entities/CompanySocialPostEntity";
+import { CompanySocialReplyTemplateEntity } from "./entities/CompanySocialReplyTemplateEntity";
+import { CompanySocialSettingsEntity } from "./entities/CompanySocialSettingsEntity";
 import { FleetDriverEntity } from "./entities/FleetDriverEntity";
 import { FleetVehicleEntity } from "./entities/FleetVehicleEntity";
 import { FleetDriverVehicleAssignmentEntity } from "./entities/FleetDriverVehicleAssignmentEntity";
@@ -157,6 +161,10 @@ export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
         MailCalendarCalDavAccountEntity,
         MailContactCardDavAccountEntity,
         MailDmarcAggregateReportEntity,
+        CompanySocialConnectionEntity,
+        CompanySocialPostEntity,
+        CompanySocialReplyTemplateEntity,
+        CompanySocialSettingsEntity,
       ],
       synchronize,
       logging: false,

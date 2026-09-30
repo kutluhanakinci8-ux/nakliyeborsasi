@@ -81,6 +81,14 @@ export function AccountMenuIcon({ id }: { id: AccountMenuIconId | "logout" }) {
           <path d="M5 18h14" />
         </svg>
       );
+    case "socialHub":
+      return (
+        <svg {...common}>
+          <rect x="3" y="3" width="18" height="18" rx="4" />
+          <circle cx="12" cy="10" r="2.5" />
+          <path d="M8 16c.5-2 2.2-3 4-3s3.5 1 4 3" />
+        </svg>
+      );
     case "profile":
       return (
         <svg {...common}>

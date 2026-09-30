@@ -7,7 +7,8 @@ export type AccountMenuIconId =
   | "applications"
   | "payments"
   | "partners"
-  | "profile";
+  | "profile"
+  | "socialHub";
 
 export type AccountMenuItem = {
   href: string;
@@ -19,6 +20,14 @@ export type AccountMenuItem = {
 };
 
 export const ACCOUNT_MENU_ITEMS: readonly AccountMenuItem[] = [
+  {
+    href: "/hesap/sosyal-medya",
+    label: "Sosyal medya & kanallar",
+    lead:
+      "Instagram, WhatsApp, LinkedIn bağlantıları; sosyal gelen kutusu, yayınlar ve ekip izinleri.",
+    icon: "socialHub",
+    hidePageHero: true,
+  },
   {
     href: "/hesap/organizasyon",
     label: "Benim organizasyonum",

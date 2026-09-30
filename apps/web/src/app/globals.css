@@ -15164,3 +15164,164 @@ button.btn-secondary {
     text-align: left;
   }
 }
+
+/* —— Social hub (hesap / sosyal-medya) —— */
+.social-hub-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.social-hub-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+}
+
+.social-hub-tab {
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #334155;
+  border-radius: 999px;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.social-hub-tab--active {
+  border-color: #1d4ed8;
+  background: #eff6ff;
+  color: #1e40af;
+}
+
+.social-hub-panel {
+  padding: 1.25rem 1.35rem;
+}
+
+.social-hub-panel-head {
+  margin-bottom: 1rem;
+}
+
+.social-hub-connection-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.social-hub-connection-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.social-hub-connection-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.social-hub-pill {
+  margin-left: 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #b45309;
+  background: #fffbeb;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.social-hub-compose {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.social-hub-platform-picks {
+  border: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+}
+
+.social-hub-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.88rem;
+}
+
+.social-hub-post-list,
+.social-hub-template-list,
+.social-hub-inbox-platforms,
+.social-hub-settings-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.social-hub-post-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.social-hub-post-meta {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin: 0 0 0.25rem;
+}
+
+.social-hub-panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.social-hub-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.social-hub-stat-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1rem;
+  text-align: center;
+  background: #f8fafc;
+}
+
+.social-hub-stat-value {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.social-hub-stat-label {
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.social-hub-stat-line {
+  margin: 0 0 0.75rem;
+}
