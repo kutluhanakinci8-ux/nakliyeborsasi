@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { AccountPageShell } from "../../../../components/AccountPageShell";
 import {
   SocialAnalyticsPanel,
   SocialConnectionsPanel,
@@ -68,13 +67,15 @@ export function SocialHubPageClient() {
     [];
 
   return (
-    <AccountPageShell
-      title="Sosyal medya & kanallar"
-      lead="Hesap bağlantıları, sosyal gelen kutusu, yayınlar ve ekip izinleri — harici API adımları sonraki fazda."
-      hidePageHero
-    >
-      <div className="social-hub-page">
-        <SocialHubSectionNav activeTab={activeTab} onTabChange={setActiveTab} />
+    <div className="social-hub-page">
+      <header className="social-hub-intro">
+        <h2 className="social-hub-intro-title">Sosyal medya & kanallar</h2>
+        <p className="social-hub-intro-lead">
+          Hesap bağlantıları, sosyal gelen kutusu, yayınlar ve ekip izinleri. Harici
+          API (Meta, WhatsApp, LinkedIn) sonraki fazda açılacak.
+        </p>
+      </header>
+      <SocialHubSectionNav activeTab={activeTab} onTabChange={setActiveTab} />
         {error ? <p className="error banner error--light">{error}</p> : null}
         {status ? <p className="account-save-hint">{status}</p> : null}
         {!canAccess ? (
@@ -199,7 +200,6 @@ export function SocialHubPageClient() {
             ) : null}
           </>
         )}
-      </div>
-    </AccountPageShell>
+    </div>
   );
 }
