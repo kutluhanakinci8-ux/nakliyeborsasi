@@ -1,0 +1,31 @@
+name: Social hub smoke
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/smoke-social-hub.sh"
+      - "apps/api/src/modules/social-hub/**"
+      - ".github/workflows/social-hub-smoke.yml"
+  pull_request:
+    paths:
+      - "scripts/smoke-social-hub.sh"
+      - "apps/api/src/modules/social-hub/**"
+      - ".github/workflows/social-hub-smoke.yml"
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * *"
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Public social hub smoke
+        env:
+          SOCIAL_HUB_API_BASE: https://app.lerta.com.tr/api/v1
+          SOCIAL_HUB_WEB_PUBLIC_URL: https://app.lerta.com.tr
+          SOCIAL_HUB_JWT: ${{ secrets.SOCIAL_HUB_SMOKE_JWT }}
+          SOCIAL_META_WEBHOOK_VERIFY_TOKEN: ${{ secrets.SOCIAL_META_WEBHOOK_VERIFY_TOKEN }}
+        run: bash scripts/smoke-social-hub.sh
