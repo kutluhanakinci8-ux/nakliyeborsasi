@@ -1,5 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { SocialPlatformCode } from "@nakliyeborsasi/core";
+import { SocialHubOAuthApplicationService } from "../oauth/SocialHubOAuthApplicationService";
+import { SocialHubOAuthConfigService } from "../oauth/SocialHubOAuthConfigService";
 import type {
   SocialInboxSyncResult,
   SocialOAuthStartResult,
@@ -9,23 +11,26 @@ import type {
 } from "./SocialProviderPort";
 
 const PENDING_MESSAGE =
-  "Meta Graph API (Instagram Messaging) entegrasyonu sonraki fazda etkinleştirilecek.";
+  "Instagram yayın / gelen kutusu API çağrıları token ile sonraki adımda açılacak.";
 
 @Injectable()
 export class MetaInstagramMessagingProvider implements SocialProviderPort {
   public readonly platformCode = SocialPlatformCode.Instagram;
 
-  public getImplementationStatus(): "pending" {
-    return "pending";
+  public constructor(
+    private readonly socialHubOAuthApplicationService: SocialHubOAuthApplicationService,
+    private readonly socialHubOAuthConfigService: SocialHubOAuthConfigService,
+  ) {}
+
+  public getImplementationStatus(): "pending" | "ready" {
+    return this.socialHubOAuthConfigService.getMetaConfig() ? "ready" : "pending";
   }
 
   public async startOAuthConnect(companyId: string): Promise<SocialOAuthStartResult> {
-    return {
-      implementationStatus: "pending",
-      authorizationUrl: null,
-      state: `meta-ig-${companyId}`,
-      message: PENDING_MESSAGE,
-    };
+    return this.socialHubOAuthApplicationService.startOAuth(
+      companyId,
+      this.platformCode,
+    );
   }
 
   public async disconnect(_companyId: string): Promise<void> {

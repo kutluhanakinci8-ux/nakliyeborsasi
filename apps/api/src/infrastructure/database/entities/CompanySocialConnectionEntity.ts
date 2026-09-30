@@ -45,6 +45,9 @@ export class CompanySocialConnectionEntity {
   @Column({ type: "timestamptz", nullable: true })
   public tokenExpiresAt!: Date | null;
 
+  @Column({ type: "text", nullable: true })
+  public accessTokenCiphertext!: string | null;
+
   @CreateDateColumn({ type: "timestamptz" })
   public createdAt!: Date;
 

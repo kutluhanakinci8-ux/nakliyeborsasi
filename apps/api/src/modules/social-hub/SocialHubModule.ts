@@ -23,6 +23,12 @@ import { CompanyMembershipEntity } from "../../infrastructure/database/entities/
 import { SocialHubAuditService } from "./SocialHubAuditService";
 import { SubscriptionModule } from "../subscription/SubscriptionModule";
 import { SocialHubModuleStatusController } from "./SocialHubModuleStatusController";
+import { CompanySocialOAuthStateEntity } from "../../infrastructure/database/entities/CompanySocialOAuthStateEntity";
+import { SocialHubOAuthConfigService } from "./oauth/SocialHubOAuthConfigService";
+import { SocialHubOAuthStateService } from "./oauth/SocialHubOAuthStateService";
+import { SocialHubOAuthApplicationService } from "./oauth/SocialHubOAuthApplicationService";
+import { SocialHubWebhookIngestService } from "./oauth/SocialHubWebhookIngestService";
+import { SocialHubPublicIntegrationController } from "./SocialHubPublicIntegrationController";
 
 @Module({
   imports: [
@@ -39,10 +45,19 @@ import { SocialHubModuleStatusController } from "./SocialHubModuleStatusControll
       MessageThreadEntity,
       CompanyMembershipEntity,
       AuditLogEntity,
+      CompanySocialOAuthStateEntity,
     ]),
   ],
-  controllers: [SocialHubController, SocialHubModuleStatusController],
+  controllers: [
+    SocialHubController,
+    SocialHubModuleStatusController,
+    SocialHubPublicIntegrationController,
+  ],
   providers: [
+    SocialHubOAuthConfigService,
+    SocialHubOAuthStateService,
+    SocialHubOAuthApplicationService,
+    SocialHubWebhookIngestService,
     SocialHubApplicationService,
     SocialHubMessagingBridgeService,
     SocialProviderRegistry,
