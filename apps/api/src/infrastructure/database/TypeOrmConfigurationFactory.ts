@@ -23,6 +23,7 @@ import { MessagingWebPushSubscriptionEntity } from "./entities/MessagingWebPushS
 import { CompanyTrustReviewEntity } from "./entities/CompanyTrustReviewEntity";
 import { CompanyTrustReviewInviteEntity } from "./entities/CompanyTrustReviewInviteEntity";
 import { CompanySocialConnectionEntity } from "./entities/CompanySocialConnectionEntity";
+import { CompanySocialOAuthStateEntity } from "./entities/CompanySocialOAuthStateEntity";
 import { CompanySocialPostEntity } from "./entities/CompanySocialPostEntity";
 import { CompanySocialReplyTemplateEntity } from "./entities/CompanySocialReplyTemplateEntity";
 import { CompanySocialSettingsEntity } from "./entities/CompanySocialSettingsEntity";
@@ -167,6 +168,7 @@ export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
         CompanySocialReplyTemplateEntity,
         CompanySocialSettingsEntity,
         CompanySocialThreadLinkEntity,
+        CompanySocialOAuthStateEntity,
       ],
       synchronize,
       logging: false,

@@ -254,10 +254,7 @@ export class SocialHubApplicationService {
     const provider = this.socialProviderRegistry.resolve(platformCode);
     const oauth = await provider.startOAuthConnect(user.companyId);
     const row = await this.ensureConnectionRow(user.companyId, provider.platformCode);
-    row.statusCode =
-      oauth.implementationStatus === "pending"
-        ? SocialConnectionStatusCode.PendingOAuth
-        : SocialConnectionStatusCode.PendingOAuth;
+    row.statusCode = SocialConnectionStatusCode.PendingOAuth;
     row.lastErrorMessage =
       oauth.implementationStatus === "pending" ? oauth.message : null;
     await this.connectionRepository.save(row);
@@ -281,6 +278,7 @@ export class SocialHubApplicationService {
       row.tokenExpiresAt = null;
       row.grantedScopes = null;
       row.lastErrorMessage = null;
+      row.accessTokenCiphertext = null;
       await this.connectionRepository.save(row);
     }
     return { connection: row ? this.mapConnection(row) : null };

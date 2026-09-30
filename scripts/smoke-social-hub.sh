@@ -40,4 +40,25 @@ else
   echo "SKIP: SOCIAL_HUB_JWT yok — authenticated snapshot"
 fi
 
+if [[ -n "${SOCIAL_META_WEBHOOK_VERIFY_TOKEN:-}" ]]; then
+  echo "== Meta webhook verify =="
+  challenge="smoke-$(date +%s)"
+  verify_code="$(curl -sS -o /tmp/social-hub-wh.json -w "%{http_code}" \
+    "${API_BASE}/company/social-hub/webhooks/meta?hub.mode=subscribe&hub.verify_token=${SOCIAL_META_WEBHOOK_VERIFY_TOKEN}&hub.challenge=${challenge}")"
+  if [[ "${verify_code}" != "200" ]]; then
+    echo "FAIL: meta webhook verify HTTP ${verify_code}"
+    exit 1
+  fi
+  if ! grep -q "${challenge}" /tmp/social-hub-wh.json 2>/dev/null; then
+    body="$(cat /tmp/social-hub-wh.json 2>/dev/null || true)"
+    if [[ "${body}" != "${challenge}" ]]; then
+      echo "FAIL: challenge mismatch"
+      exit 1
+    fi
+  fi
+  echo "OK: meta webhook verify"
+else
+  echo "SKIP: SOCIAL_META_WEBHOOK_VERIFY_TOKEN yok"
+fi
+
 echo "smoke-social-hub: PASS"

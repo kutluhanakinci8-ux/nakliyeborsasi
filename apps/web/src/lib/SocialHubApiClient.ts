@@ -53,7 +53,14 @@ export class SocialHubApiClient {
   public static async connectPlatform(
     accessToken: string,
     platformCode: string,
-  ): Promise<{ oauth: { message: string }; connection: unknown }> {
+  ): Promise<{
+    oauth: {
+      message: string;
+      authorizationUrl?: string | null;
+      implementationStatus?: string;
+    };
+    connection: unknown;
+  }> {
     return socialHubFetch(accessToken, `/connections/${platformCode}/connect`, {
       method: "POST",
     });

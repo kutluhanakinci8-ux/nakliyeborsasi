@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   SocialAnalyticsPanel,
   SocialConnectionsPanel,
@@ -25,6 +26,7 @@ import type {
 
 export function SocialHubPageClient() {
   const { accessToken, session } = useWebSession();
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<SocialHubTabId>("connections");
   const [snapshot, setSnapshot] = useState<SocialHubSnapshot | null>(null);
   const [error, setError] = useState("");
@@ -54,6 +56,18 @@ export function SocialHubPageClient() {
     const hub = await SocialHubApiClient.fetchSnapshot(accessToken);
     setSnapshot(hub);
   }, [accessToken]);
+
+  useEffect(() => {
+    const oauth = searchParams.get("oauth");
+    if (oauth === "success") {
+      setStatus("Kanal bağlantısı tamamlandı.");
+      setActiveTab("connections");
+    } else if (oauth === "error") {
+      const reason = searchParams.get("reason") ?? "bilinmeyen";
+      setError(`OAuth hatası: ${reason}`);
+      setActiveTab("connections");
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (!accessToken || !canAccess) {
@@ -155,6 +169,10 @@ export function SocialHubPageClient() {
                       accessToken,
                       code,
                     );
+                    if (result.oauth.authorizationUrl) {
+                      window.location.href = result.oauth.authorizationUrl;
+                      return;
+                    }
                     setStatus(result.oauth.message);
                   })
                 }

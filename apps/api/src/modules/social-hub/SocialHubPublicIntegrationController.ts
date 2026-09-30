@@ -1,0 +1,97 @@
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Query,
+  Req,
+  Res,
+} from "@nestjs/common";
+import type { Request, Response } from "express";
+import { SocialHubOAuthApplicationService } from "./oauth/SocialHubOAuthApplicationService";
+import { SocialHubOAuthConfigService } from "./oauth/SocialHubOAuthConfigService";
+import { SocialHubWebhookIngestService } from "./oauth/SocialHubWebhookIngestService";
+
+@Controller("company/social-hub")
+export class SocialHubPublicIntegrationController {
+  public constructor(
+    private readonly socialHubOAuthApplicationService: SocialHubOAuthApplicationService,
+    private readonly socialHubOAuthConfigService: SocialHubOAuthConfigService,
+    private readonly socialHubWebhookIngestService: SocialHubWebhookIngestService,
+  ) {}
+
+  @Get("oauth/callback")
+  public async oauthCallback(
+    @Query("code") code: string | undefined,
+    @Query("state") state: string | undefined,
+    @Query("error") error: string | undefined,
+    @Res() response: Response,
+  ): Promise<void> {
+    const result = await this.socialHubOAuthApplicationService.completeCallback({
+      code: code ?? null,
+      state: state ?? null,
+      error: error ?? null,
+    });
+    response.redirect(302, result.redirectUrl);
+  }
+
+  @Get("webhooks/meta")
+  public metaWebhookVerify(
+    @Query("hub.mode") mode: string | undefined,
+    @Query("hub.verify_token") verifyToken: string | undefined,
+    @Query("hub.challenge") challenge: string | undefined,
+    @Res() response: Response,
+  ): void {
+    const config = this.socialHubOAuthConfigService.getMetaConfig();
+    const expected = config?.webhookVerifyToken ?? "";
+    if (
+      mode === "subscribe" &&
+      verifyToken &&
+      expected &&
+      verifyToken === expected &&
+      challenge
+    ) {
+      response.status(200).send(challenge);
+      return;
+    }
+    response.status(403).send("Forbidden");
+  }
+
+  @Post("webhooks/meta")
+  public async metaWebhook(
+    @Req() request: Request,
+    @Body() body: Record<string, unknown>,
+  ): Promise<{ received: boolean }> {
+    const rawBody = (request as Request & { rawBody?: Buffer }).rawBody;
+    await this.socialHubWebhookIngestService.ingestMetaPayload(
+      request.headers["x-hub-signature-256"] as string | undefined,
+      body,
+      rawBody,
+    );
+    return { received: true };
+  }
+
+  @Get("webhooks/whatsapp")
+  public whatsappWebhookVerify(
+    @Query("hub.mode") mode: string | undefined,
+    @Query("hub.verify_token") verifyToken: string | undefined,
+    @Query("hub.challenge") challenge: string | undefined,
+    @Res() response: Response,
+  ): void {
+    this.metaWebhookVerify(mode, verifyToken, challenge, response);
+  }
+
+  @Post("webhooks/whatsapp")
+  public async whatsappWebhook(
+    @Req() request: Request,
+    @Body() body: Record<string, unknown>,
+  ): Promise<{ received: boolean }> {
+    const rawBody = (request as Request & { rawBody?: Buffer }).rawBody;
+    await this.socialHubWebhookIngestService.ingestWhatsAppPayload(
+      request.headers["x-hub-signature-256"] as string | undefined,
+      body,
+      rawBody,
+    );
+    return { received: true };
+  }
+}
