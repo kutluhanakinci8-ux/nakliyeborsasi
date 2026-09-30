@@ -41,6 +41,9 @@ export class CompanySocialThreadLinkEntity {
   @Column({ type: "timestamptz", nullable: true })
   public lastInboundAt!: Date | null;
 
+  @Column({ type: "varchar", length: 128, nullable: true })
+  public lastExternalMessageId!: string | null;
+
   @CreateDateColumn({ type: "timestamptz" })
   public createdAt!: Date;
 

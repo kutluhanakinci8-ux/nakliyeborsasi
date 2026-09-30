@@ -29,6 +29,11 @@ import { SocialHubOAuthStateService } from "./oauth/SocialHubOAuthStateService";
 import { SocialHubOAuthApplicationService } from "./oauth/SocialHubOAuthApplicationService";
 import { SocialHubWebhookIngestService } from "./oauth/SocialHubWebhookIngestService";
 import { SocialHubPublicIntegrationController } from "./SocialHubPublicIntegrationController";
+import { SocialHubTokenVaultService } from "./oauth/SocialHubTokenVaultService";
+import { SocialHubWebhookRoutingService } from "./oauth/SocialHubWebhookRoutingService";
+import { SocialHubMetaGraphService } from "./oauth/SocialHubMetaGraphService";
+import { SocialHubPublishApplicationService } from "./SocialHubPublishApplicationService";
+import { SocialHubInboxSyncApplicationService } from "./SocialHubInboxSyncApplicationService";
 
 @Module({
   imports: [
@@ -58,6 +63,11 @@ import { SocialHubPublicIntegrationController } from "./SocialHubPublicIntegrati
     SocialHubOAuthStateService,
     SocialHubOAuthApplicationService,
     SocialHubWebhookIngestService,
+    SocialHubTokenVaultService,
+    SocialHubWebhookRoutingService,
+    SocialHubMetaGraphService,
+    SocialHubPublishApplicationService,
+    SocialHubInboxSyncApplicationService,
     SocialHubApplicationService,
     SocialHubMessagingBridgeService,
     SocialProviderRegistry,
