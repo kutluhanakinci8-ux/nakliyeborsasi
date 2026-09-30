@@ -515,6 +515,17 @@ export function useMessagingChatController({
   }, [searchParams, loadMessages]);
 
   useEffect(() => {
+    const draft = searchParams.get("draft")?.trim();
+    if (!draft) {
+      return;
+    }
+    setMessageBody(draft);
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("draft");
+    router.replace(`/messaging?${params.toString()}`, { scroll: false });
+  }, [searchParams, router]);
+
+  useEffect(() => {
     if (mode !== "chat" || !accessToken || moduleBlocked) {
       return;
     }
