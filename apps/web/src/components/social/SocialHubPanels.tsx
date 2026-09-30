@@ -100,9 +100,17 @@ type InboxProps = {
   snapshot: SocialHubSnapshot;
   busy: boolean;
   onSync: (platformCode: string) => void;
+  onSeedDemo?: () => void;
+  canSeedDemo?: boolean;
 };
 
-export function SocialInboxPanel({ snapshot, busy, onSync }: InboxProps) {
+export function SocialInboxPanel({
+  snapshot,
+  busy,
+  onSync,
+  onSeedDemo,
+  canSeedDemo,
+}: InboxProps) {
   const { inboxSummary, permissions, connections, providers } = snapshot;
   return (
     <section className="social-hub-panel module-panel module-panel--elevated">
@@ -126,10 +134,26 @@ export function SocialInboxPanel({ snapshot, busy, onSync }: InboxProps) {
           );
         })}
       </ul>
+      {!snapshot.settings.kvkkAcceptedAt ? (
+        <p className="module-hint">
+          Demo veya senkron için önce <strong>Ekip &amp; izinler</strong> sekmesinden
+          KVKK onayını verin.
+        </p>
+      ) : null}
       <div className="social-hub-panel-actions social-hub-panel-actions--stack">
         <Link href={inboxSummary.messagingDeepLink} className="btn-account-primary">
           Mesajlar&apos;a git
         </Link>
+        {canSeedDemo && onSeedDemo ? (
+          <button
+            type="button"
+            className="btn-account-ghost"
+            disabled={busy || !snapshot.settings.kvkkAcceptedAt}
+            onClick={onSeedDemo}
+          >
+            Demo gelen kutusu oluştur (Instagram + WhatsApp)
+          </button>
+        ) : null}
         {permissions.canReply ? (
           <div className="social-hub-sync-grid">
             {connections.map((c) => (

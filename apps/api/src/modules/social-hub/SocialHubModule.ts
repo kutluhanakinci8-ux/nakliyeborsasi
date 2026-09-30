@@ -1,6 +1,10 @@
-import { Module } from "@nestjs/common";
+import { Module, forwardRef } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { AuthModule } from "../auth/AuthModule";
+import { MessagingModule } from "../messaging/MessagingModule";
+import { MessageThreadEntity } from "../../infrastructure/database/entities/MessageThreadEntity";
+import { CompanySocialThreadLinkEntity } from "../../infrastructure/database/entities/CompanySocialThreadLinkEntity";
+import { SocialHubMessagingBridgeService } from "./SocialHubMessagingBridgeService";
 import { CompanySocialConnectionEntity } from "../../infrastructure/database/entities/CompanySocialConnectionEntity";
 import { CompanySocialPostEntity } from "../../infrastructure/database/entities/CompanySocialPostEntity";
 import { CompanySocialReplyTemplateEntity } from "../../infrastructure/database/entities/CompanySocialReplyTemplateEntity";
@@ -16,16 +20,20 @@ import { LinkedInMarketingPostsProvider } from "./providers/LinkedInMarketingPos
 @Module({
   imports: [
     AuthModule,
+    forwardRef(() => MessagingModule),
     TypeOrmModule.forFeature([
       CompanySocialConnectionEntity,
       CompanySocialPostEntity,
       CompanySocialReplyTemplateEntity,
       CompanySocialSettingsEntity,
+      CompanySocialThreadLinkEntity,
+      MessageThreadEntity,
     ]),
   ],
   controllers: [SocialHubController],
   providers: [
     SocialHubApplicationService,
+    SocialHubMessagingBridgeService,
     SocialProviderRegistry,
     MetaInstagramMessagingProvider,
     MetaFacebookMessengerProvider,

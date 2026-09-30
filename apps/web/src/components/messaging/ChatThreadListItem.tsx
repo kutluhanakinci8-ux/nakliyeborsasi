@@ -29,6 +29,8 @@ export function ChatThreadListItem({
   onSelect,
 }: Props) {
   const isGroup = thread.threadKind === "group";
+  const isSocial = thread.threadKind === "external_social";
+  const channelLabel = thread.externalChannelLabel?.trim();
   const displayName =
     thread.counterpartyLegalName?.trim() ||
     thread.title?.trim() ||
@@ -74,6 +76,9 @@ export function ChatThreadListItem({
         <span className="chat-thread-body">
           <span className="chat-thread-top">
             <span className="chat-thread-title" title={displayName}>
+              {channelLabel ? (
+                <span className="chat-thread-channel-pill">{channelLabel}</span>
+              ) : null}
               {displayName}
             </span>
             {timeLabel ? (
