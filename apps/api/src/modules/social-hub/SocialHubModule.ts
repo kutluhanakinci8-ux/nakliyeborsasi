@@ -17,10 +17,15 @@ import { MetaFacebookMessengerProvider } from "./providers/MetaFacebookMessenger
 import { WhatsAppCloudWebhookProvider } from "./providers/WhatsAppCloudWebhookProvider";
 import { LinkedInMarketingPostsProvider } from "./providers/LinkedInMarketingPostsProvider";
 import { SocialPostPublishScheduler } from "./SocialPostPublishScheduler";
+import { AuditModule } from "../../infrastructure/audit/AuditModule";
+import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogEntity";
+import { CompanyMembershipEntity } from "../../infrastructure/database/entities/CompanyMembershipEntity";
+import { SocialHubAuditService } from "./SocialHubAuditService";
 
 @Module({
   imports: [
     AuthModule,
+    AuditModule,
     forwardRef(() => MessagingModule),
     TypeOrmModule.forFeature([
       CompanySocialConnectionEntity,
@@ -29,6 +34,8 @@ import { SocialPostPublishScheduler } from "./SocialPostPublishScheduler";
       CompanySocialSettingsEntity,
       CompanySocialThreadLinkEntity,
       MessageThreadEntity,
+      CompanyMembershipEntity,
+      AuditLogEntity,
     ]),
   ],
   controllers: [SocialHubController],
@@ -41,6 +48,7 @@ import { SocialPostPublishScheduler } from "./SocialPostPublishScheduler";
     WhatsAppCloudWebhookProvider,
     LinkedInMarketingPostsProvider,
     SocialPostPublishScheduler,
+    SocialHubAuditService,
   ],
   exports: [SocialHubApplicationService],
 })

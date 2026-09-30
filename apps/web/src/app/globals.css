@@ -15403,6 +15403,40 @@ button.btn-secondary {
   color: #64748b;
 }
 
+.social-hub-team-list {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.social-hub-team-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.social-hub-audit-list {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  font-size: 0.8125rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.social-hub-audit-list li {
+  display: flex;
+  gap: 0.75rem;
+  color: #475569;
+}
+
 .social-hub-post-meta {
   font-size: 0.75rem;
   color: #64748b;

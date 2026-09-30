@@ -3,6 +3,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import {
   AuthenticatedUserContext,
+  CompanyRoleCode,
   ResourceNotFoundException,
   SocialConnectionStatusCode,
   SocialPlatformCode,
@@ -23,6 +24,17 @@ import {
 import { SocialProviderRegistry } from "./providers/SocialProviderRegistry";
 import { CompanySocialThreadLinkEntity } from "../../infrastructure/database/entities/CompanySocialThreadLinkEntity";
 import { SocialHubMessagingBridgeService } from "./SocialHubMessagingBridgeService";
+import { CompanyMembershipEntity } from "../../infrastructure/database/entities/CompanyMembershipEntity";
+import {
+  SocialHubAuditActionCode,
+  SocialHubAuditService,
+} from "./SocialHubAuditService";
+
+export const INVITABLE_SOCIAL_TEAM_ROLES: readonly CompanyRoleCode[] = [
+  CompanyRoleCode.SocialAdmin,
+  CompanyRoleCode.Dispatcher,
+  CompanyRoleCode.Viewer,
+];
 
 const PLATFORM_LABELS: Record<SocialPlatformCode, string> = {
   [SocialPlatformCode.Instagram]: "Instagram",
@@ -46,6 +58,9 @@ export class SocialHubApplicationService {
     private readonly threadLinkRepository: Repository<CompanySocialThreadLinkEntity>,
     private readonly socialProviderRegistry: SocialProviderRegistry,
     private readonly socialHubMessagingBridgeService: SocialHubMessagingBridgeService,
+    @InjectRepository(CompanyMembershipEntity)
+    private readonly membershipRepository: Repository<CompanyMembershipEntity>,
+    private readonly socialHubAuditService: SocialHubAuditService,
   ) {}
 
   private assertInboxOperationsAllowed(
@@ -294,6 +309,12 @@ export class SocialHubApplicationService {
     }
     post.statusCode = SocialPostStatusCode.PendingApproval;
     await this.postRepository.save(post);
+    this.socialHubAuditService.record(
+      user,
+      SocialHubAuditActionCode.PostSubmitApproval,
+      `/company/social-hub/posts/${postId}/submit-approval`,
+      { postId },
+    );
     return { post: this.mapPost(post) };
   }
 
@@ -311,6 +332,12 @@ export class SocialHubApplicationService {
       ? this.resolveStatusAfterSchedule(post.scheduledAt)
       : SocialPostStatusCode.Approved;
     await this.postRepository.save(post);
+    this.socialHubAuditService.record(
+      user,
+      SocialHubAuditActionCode.PostApprove,
+      `/company/social-hub/posts/${postId}/approve`,
+      { postId },
+    );
     return { post: this.mapPost(post) };
   }
 
@@ -340,6 +367,12 @@ export class SocialHubApplicationService {
     }
     const post = await this.findPostForCompany(user.companyId, postId);
     this.assertPostReadyToPublish(post, settings, user);
+    this.socialHubAuditService.record(
+      user,
+      SocialHubAuditActionCode.PostPublish,
+      `/company/social-hub/posts/${postId}/publish`,
+      { postId },
+    );
     return this.executePostPublish(post);
   }
 
@@ -536,7 +569,86 @@ export class SocialHubApplicationService {
       settings.kvkkAcceptedAt = new Date();
     }
     await this.settingsRepository.save(settings);
+    this.socialHubAuditService.record(
+      user,
+      SocialHubAuditActionCode.SettingsUpdate,
+      "/company/social-hub/settings",
+      { patch },
+    );
     return { settings: this.mapSettings(settings) };
+  }
+
+  public async listTeam(user: AuthenticatedUserContext) {
+    assertSocialHubAdmin(user);
+    const memberships = await this.membershipRepository.find({
+      where: { companyId: user.companyId },
+      relations: { user: true },
+      order: { createdAt: "ASC" },
+    });
+    return {
+      members: memberships.map((row) => ({
+        membershipId: row.id,
+        userId: row.userId,
+        emailAddress: row.user.emailAddress,
+        displayName: row.user.displayName,
+        roleCode: row.roleCode,
+        isSelf: row.userId === user.userId,
+      })),
+      assignableRoleCodes: INVITABLE_SOCIAL_TEAM_ROLES,
+      integrationsPath: "/hesap/uygulamalar",
+    };
+  }
+
+  public async updateMemberRole(
+    user: AuthenticatedUserContext,
+    targetUserId: string,
+    roleCode: string,
+  ) {
+    assertSocialHubAdmin(user);
+    const normalized = roleCode as CompanyRoleCode;
+    if (!INVITABLE_SOCIAL_TEAM_ROLES.includes(normalized)) {
+      throw new ValidationException("Bu rol atanamaz.");
+    }
+    const membership = await this.membershipRepository.findOne({
+      where: { companyId: user.companyId, userId: targetUserId },
+      relations: { user: true },
+    });
+    if (!membership) {
+      throw new ResourceNotFoundException("CompanyMembership", targetUserId);
+    }
+    if (membership.roleCode === CompanyRoleCode.CompanyOwner) {
+      throw new ValidationException("Firma sahibi rolü değiştirilemez.");
+    }
+    if (membership.userId === user.userId) {
+      throw new ValidationException("Kendi rolünüzü buradan değiştiremezsiniz.");
+    }
+    const previousRole = membership.roleCode;
+    membership.roleCode = normalized;
+    await this.membershipRepository.save(membership);
+    this.socialHubAuditService.record(
+      user,
+      SocialHubAuditActionCode.MemberRoleUpdate,
+      `/company/social-hub/team/${targetUserId}/role`,
+      {
+        targetUserId,
+        previousRoleCode: previousRole,
+        roleCode: normalized,
+      },
+    );
+    return {
+      member: {
+        userId: membership.userId,
+        emailAddress: membership.user.emailAddress,
+        displayName: membership.user.displayName,
+        roleCode: membership.roleCode,
+      },
+    };
+  }
+
+  public async listAuditLog(user: AuthenticatedUserContext) {
+    assertSocialHubAdmin(user);
+    const entries = await this.socialHubAuditService.listRecent(user.companyId);
+    return { entries };
   }
 
   public async syncInbox(user: AuthenticatedUserContext, platformCode: string) {

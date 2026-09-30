@@ -15,7 +15,11 @@ import {
 } from "../../../../components/social/SocialHubSectionNav";
 import { useWebSession } from "../../../../context/WebSessionProvider";
 import { SocialHubApiClient } from "../../../../lib/SocialHubApiClient";
-import type { SocialHubSnapshot } from "../../../../lib/socialHubTypes";
+import type {
+  SocialHubAuditEntry,
+  SocialHubSnapshot,
+  SocialHubTeamMember,
+} from "../../../../lib/socialHubTypes";
 
 export function SocialHubPageClient() {
   const { accessToken, session } = useWebSession();
@@ -28,6 +32,10 @@ export function SocialHubPageClient() {
   const [draftPlatforms, setDraftPlatforms] = useState<string[]>(["INSTAGRAM"]);
   const [templateTitle, setTemplateTitle] = useState("");
   const [templateBody, setTemplateBody] = useState("");
+  const [teamMembers, setTeamMembers] = useState<SocialHubTeamMember[]>([]);
+  const [assignableRoles, setAssignableRoles] = useState<string[]>([]);
+  const [integrationsPath, setIntegrationsPath] = useState("/hesap/uygulamalar");
+  const [auditEntries, setAuditEntries] = useState<SocialHubAuditEntry[]>([]);
 
   const canAccess =
     session?.roleCodes?.some((code) =>
@@ -48,6 +56,24 @@ export function SocialHubPageClient() {
     }
     void reload().catch(() => setError("Sosyal medya hub verisi yüklenemedi."));
   }, [accessToken, canAccess, reload]);
+
+  useEffect(() => {
+    if (!accessToken || activeTab !== "team" || !snapshot?.permissions.canManageSettings) {
+      return;
+    }
+    void (async () => {
+      try {
+        const team = await SocialHubApiClient.fetchTeam(accessToken);
+        setTeamMembers(team.members);
+        setAssignableRoles(team.assignableRoleCodes);
+        setIntegrationsPath(team.integrationsPath);
+        const audit = await SocialHubApiClient.fetchAuditLog(accessToken);
+        setAuditEntries(audit.entries);
+      } catch {
+        setError("Ekip verisi yüklenemedi.");
+      }
+    })();
+  }, [accessToken, activeTab, snapshot?.permissions.canManageSettings]);
 
   async function runAction(action: () => Promise<void>): Promise<void> {
     setBusy(true);
@@ -240,11 +266,29 @@ export function SocialHubPageClient() {
               <SocialTeamPanel
                 settings={snapshot.settings}
                 permissions={snapshot.permissions}
+                members={teamMembers}
+                assignableRoleCodes={assignableRoles}
+                auditEntries={auditEntries}
+                integrationsPath={integrationsPath}
                 busy={busy}
                 onPatchSettings={(patch) =>
                   void runAction(async () => {
                     await SocialHubApiClient.updateSettings(accessToken, patch);
                     setStatus("Ayarlar güncellendi.");
+                  })
+                }
+                onRoleChange={(userId, roleCode) =>
+                  void runAction(async () => {
+                    await SocialHubApiClient.updateMemberRole(
+                      accessToken,
+                      userId,
+                      roleCode,
+                    );
+                    const team = await SocialHubApiClient.fetchTeam(accessToken);
+                    setTeamMembers(team.members);
+                    const audit = await SocialHubApiClient.fetchAuditLog(accessToken);
+                    setAuditEntries(audit.entries);
+                    setStatus("Rol güncellendi.");
                   })
                 }
               />

@@ -1,5 +1,9 @@
 import { PublicApiConfiguration } from "./PublicApiConfiguration";
-import type { SocialHubSnapshot } from "./socialHubTypes";
+import type {
+  SocialHubAuditEntry,
+  SocialHubSnapshot,
+  SocialHubTeamMember,
+} from "./socialHubTypes";
 
 async function socialHubFetch<T>(
   accessToken: string,
@@ -156,5 +160,30 @@ export class SocialHubApiClient {
       method: "PATCH",
       body: JSON.stringify(body),
     });
+  }
+
+  public static async fetchTeam(accessToken: string): Promise<{
+    members: SocialHubTeamMember[];
+    assignableRoleCodes: string[];
+    integrationsPath: string;
+  }> {
+    return socialHubFetch(accessToken, "/team");
+  }
+
+  public static async updateMemberRole(
+    accessToken: string,
+    userId: string,
+    roleCode: string,
+  ): Promise<void> {
+    await socialHubFetch(accessToken, `/team/${userId}/role`, {
+      method: "PATCH",
+      body: JSON.stringify({ roleCode }),
+    });
+  }
+
+  public static async fetchAuditLog(accessToken: string): Promise<{
+    entries: SocialHubAuditEntry[];
+  }> {
+    return socialHubFetch(accessToken, "/audit-log");
   }
 }

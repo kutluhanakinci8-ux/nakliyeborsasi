@@ -27,6 +27,7 @@ export function EmployeesPageClient() {
   const [vehicles, setVehicles] = useState<readonly FleetVehicleSummary[]>([]);
   const [fleetError, setFleetError] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRoleLabel, setInviteRoleLabel] = useState("Görüntüleme");
   const [message, setMessage] = useState("");
 
   const loadFleet = useCallback(async (): Promise<void> => {
@@ -87,7 +88,7 @@ export function EmployeesPageClient() {
       employeeId: `emp-${Date.now()}`,
       name: email.split("@")[0] ?? "Yeni kullanıcı",
       email,
-      roleLabel: "Görüntüleme",
+      roleLabel: inviteRoleLabel,
       status: "invited",
     };
     persist([record, ...employees]);
@@ -138,7 +139,7 @@ export function EmployeesPageClient() {
           </div>
           <button type="submit" className="btn-account-primary">Davet gönder</button>
         </header>
-        <label className="label-light account-form-span-2">
+        <label className="label-light">
           E-posta
           <input
             className="input-light"
@@ -148,6 +149,18 @@ export function EmployeesPageClient() {
             onChange={(event) => setInviteEmail(event.target.value)}
             placeholder="kullanici@firma.com"
           />
+        </label>
+        <label className="label-light">
+          Rol (taslak)
+          <select
+            className="input-light"
+            value={inviteRoleLabel}
+            onChange={(event) => setInviteRoleLabel(event.target.value)}
+          >
+            <option value="Görüntüleme">Görüntüleme</option>
+            <option value="Dispatcher">Dispatcher</option>
+            <option value="Sosyal yönetici">Sosyal yönetici</option>
+          </select>
         </label>
         {message ? <p className="account-save-hint">{message}</p> : null}
       </form>
