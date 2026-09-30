@@ -5,6 +5,7 @@ import type {
   SocialHubSnapshot,
   SocialHubTeamMember,
 } from "./socialHubTypes";
+import { normalizeSocialHubSnapshot } from "./normalizeSocialHubSnapshot";
 
 async function socialHubFetch<T>(
   accessToken: string,
@@ -43,11 +44,8 @@ export class SocialHubApiClient {
   public static async fetchSnapshot(
     accessToken: string,
   ): Promise<SocialHubSnapshot> {
-    const payload = await socialHubFetch<{ hub: SocialHubSnapshot }>(
-      accessToken,
-      "",
-    );
-    return payload.hub;
+    const payload = await socialHubFetch<unknown>(accessToken, "");
+    return normalizeSocialHubSnapshot(payload);
   }
 
   public static async connectPlatform(

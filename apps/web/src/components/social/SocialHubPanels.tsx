@@ -73,7 +73,17 @@ export function SocialConnectionsPanel({
   onConnect,
   onDisconnect,
 }: ConnectionsProps) {
-  const { permissions, connections, providers } = snapshot;
+  const permissions = snapshot.permissions ?? {
+    canManageConnections: false,
+    canPublish: false,
+    canApprovePosts: false,
+    canSubmitForApproval: false,
+    canReply: false,
+    canManageTemplates: false,
+    canManageSettings: false,
+  };
+  const connections = snapshot.connections ?? [];
+  const providers = snapshot.providers ?? [];
   return (
     <section className="social-hub-panel module-panel module-panel--elevated">
       <header className="social-hub-panel-head">
@@ -153,7 +163,23 @@ export function SocialInboxPanel({
   onSeedDemo,
   canSeedDemo,
 }: InboxProps) {
-  const { inboxSummary, permissions, connections, providers } = snapshot;
+  const inboxSummary = snapshot.inboxSummary ?? {
+    totalOpenThreads: 0,
+    byPlatform: [],
+    messagingDeepLink: "/messaging?tab=sohbet&filter=social",
+    note: "Sosyal konuşmalar Mesajlar listesinde listelenir.",
+  };
+  const permissions = snapshot.permissions ?? {
+    canManageConnections: false,
+    canPublish: false,
+    canApprovePosts: false,
+    canSubmitForApproval: false,
+    canReply: false,
+    canManageTemplates: false,
+    canManageSettings: false,
+  };
+  const connections = snapshot.connections ?? [];
+  const providers = snapshot.providers ?? [];
   return (
     <section className="social-hub-panel module-panel module-panel--elevated">
       <header className="social-hub-panel-head">
@@ -515,7 +541,7 @@ export function SocialAnalyticsPanel({
   analytics,
   loading,
 }: AnalyticsProps) {
-  const fallbackOpen = snapshot.inboxSummary.totalOpenThreads;
+  const fallbackOpen = snapshot.inboxSummary?.totalOpenThreads ?? 0;
   return (
     <section className="social-hub-panel module-panel module-panel--elevated">
       <header className="social-hub-panel-head">
