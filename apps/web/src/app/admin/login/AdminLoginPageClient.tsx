@@ -7,6 +7,7 @@ import { AuthApiClient } from "../../../lib/AuthApiClient";
 import { isPlatformAdmin } from "../../../lib/platformAdmin";
 import { SessionApiClient } from "../../../lib/SessionApiClient";
 import { WebAccessTokenStorage } from "../../../lib/WebAccessTokenStorage";
+import { PasswordField } from "../../../components/PasswordField";
 import { useWebSession } from "../../../context/WebSessionProvider";
 
 export function AdminLoginPageClient() {
@@ -74,11 +75,9 @@ export function AdminLoginPageClient() {
           </label>
           <label className="label-light">
             Şifre
-            <input
-              className="input-light"
-              type="password"
+            <PasswordField
               value={password}
-              onChange={(event) => setPassword(event.target.value)}
+              onChange={setPassword}
               autoComplete="current-password"
             />
           </label>

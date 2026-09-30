@@ -11,6 +11,7 @@ import {
 } from "../../lib/countryDisplay";
 import { applyRegistrationOrganizationProfile } from "../../lib/organizationProfile";
 import { queueWebsiteEnrichmentAfterRegistration } from "../../lib/websiteEnrichmentWorkflow";
+import { PasswordField } from "../../components/PasswordField";
 import { SiteLayout } from "../../components/SiteLayout";
 import { useWebSession } from "../../context/WebSessionProvider";
 
@@ -235,12 +236,10 @@ export function LoginPageClient() {
                     </label>
                     <label className="label-light">
                       Şifre
-                      <input
-                        className="input-light"
-                        type="password"
+                      <PasswordField
                         autoComplete="current-password"
                         value={password}
-                        onChange={(event) => setPassword(event.target.value)}
+                        onChange={setPassword}
                         required
                       />
                     </label>
@@ -380,16 +379,14 @@ export function LoginPageClient() {
                       </label>
                       <label className="label-light">
                         Şifre
-                      <input
-                        className="input-light"
-                        type="password"
-                        name="new-password"
-                        autoComplete="new-password"
-                        value={password}
-                        onChange={(event) => setPassword(event.target.value)}
-                        required
-                        minLength={8}
-                      />
+                        <PasswordField
+                          name="new-password"
+                          autoComplete="new-password"
+                          value={password}
+                          onChange={setPassword}
+                          required
+                          minLength={8}
+                        />
                       </label>
                     </div>
                     <label className="auth-terms">
