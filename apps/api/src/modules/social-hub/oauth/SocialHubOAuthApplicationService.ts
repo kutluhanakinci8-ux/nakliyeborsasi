@@ -11,6 +11,7 @@ import { CompanySocialConnectionEntity } from "../../../infrastructure/database/
 import { SocialHubOAuthConfigService } from "./SocialHubOAuthConfigService";
 import { SocialHubOAuthStateService } from "./SocialHubOAuthStateService";
 import { SocialHubMetaGraphService } from "./SocialHubMetaGraphService";
+import { SocialHubLinkedInGraphService } from "./SocialHubLinkedInGraphService";
 import type { SocialOAuthStartResult } from "../providers/SocialProviderPort";
 
 const META_SCOPES: Record<string, string> = {
@@ -32,6 +33,7 @@ export class SocialHubOAuthApplicationService {
     @InjectRepository(CompanySocialConnectionEntity)
     private readonly connectionRepository: Repository<CompanySocialConnectionEntity>,
     private readonly metaGraphService: SocialHubMetaGraphService,
+    private readonly linkedInGraphService: SocialHubLinkedInGraphService,
   ) {}
 
   public async startOAuth(
@@ -221,10 +223,13 @@ export class SocialHubOAuthApplicationService {
         payload.error_description ?? "LinkedIn token alınamadı.",
       );
     }
+    const authorUrn = await this.linkedInGraphService.resolveAuthorUrn(
+      payload.access_token,
+    );
     await this.persistConnection(companyId, platformCode, {
       accessToken: payload.access_token,
       expiresInSec: payload.expires_in ?? null,
-      externalAccountId: null,
+      externalAccountId: authorUrn?.replace("urn:li:person:", "") ?? null,
       displayName: "LinkedIn bağlantısı",
     });
   }

@@ -34,6 +34,8 @@ import { SocialHubWebhookRoutingService } from "./oauth/SocialHubWebhookRoutingS
 import { SocialHubMetaGraphService } from "./oauth/SocialHubMetaGraphService";
 import { SocialHubPublishApplicationService } from "./SocialHubPublishApplicationService";
 import { SocialHubInboxSyncApplicationService } from "./SocialHubInboxSyncApplicationService";
+import { SocialHubLinkedInGraphService } from "./oauth/SocialHubLinkedInGraphService";
+import { SocialHubMetaInboxHistoryService } from "./oauth/SocialHubMetaInboxHistoryService";
 
 @Module({
   imports: [
@@ -68,6 +70,8 @@ import { SocialHubInboxSyncApplicationService } from "./SocialHubInboxSyncApplic
     SocialHubMetaGraphService,
     SocialHubPublishApplicationService,
     SocialHubInboxSyncApplicationService,
+    SocialHubLinkedInGraphService,
+    SocialHubMetaInboxHistoryService,
     SocialHubApplicationService,
     SocialHubMessagingBridgeService,
     SocialProviderRegistry,
