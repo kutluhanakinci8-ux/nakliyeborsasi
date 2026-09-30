@@ -669,7 +669,7 @@ export function useMessagingChatController({
           .join("\n");
         outbound = `${quoteBlock}\n\n${outbound}`;
       }
-      await MessagingApiClient.sendMessage(
+      const sendResult = await MessagingApiClient.sendMessage(
         accessToken,
         locale,
         activeThreadId,
@@ -677,6 +677,14 @@ export function useMessagingChatController({
         pendingAttachments.length > 0 ? pendingAttachments : undefined,
         internalNote ? "internal" : "public",
       );
+      if (sendResult.channelDelivery?.status === "failed") {
+        setErrorMessage(
+          sendResult.channelDelivery.errorMessage ??
+            "Mesaj kaydedildi ancak kanala gönderilemedi.",
+        );
+      } else {
+        setErrorMessage("");
+      }
       setMessageBody("");
       setQuotedMessage(null);
       setInternalNote(false);
@@ -687,6 +695,7 @@ export function useMessagingChatController({
       }
       setPendingAttachments([]);
       await loadMessages(activeThreadId);
+      await loadThreads();
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Gönderim hatası");
     }

@@ -153,6 +153,25 @@ export function MessagingConversationPanel({
                 </ul>
               ) : null}
             </div>
+            {activeThread?.threadKind === "external_social" ? (
+              <div className="chat-social-channel-banner" role="status">
+                <span className="chat-social-channel-label">
+                  {activeThread.externalChannelLabel ?? "Sosyal kanal"}
+                </span>
+                {activeThread.externalOutboundStatus === "failed" &&
+                activeThread.externalOutboundError ? (
+                  <p className="chat-social-outbound-error">
+                    Son kanal gönderimi başarısız: {activeThread.externalOutboundError}
+                  </p>
+                ) : activeThread.externalOutboundStatus === "ok" ? (
+                  <p className="chat-social-outbound-ok">Son yanıt kanala iletildi.</p>
+                ) : (
+                  <p className="module-hint">
+                    Yanıtlar bağlı hesap üzerinden gönderilir.
+                  </p>
+                )}
+              </div>
+            ) : null}
             {activeThreadId &&
             (listingCard ||
               (counterpartyTrust && activeThread?.threadKind !== "group")) ? (

@@ -12,7 +12,7 @@ export class SocialHubModuleStatusController {
   } {
     return {
       module: "social_hub",
-      phase: "h",
+      phase: "i",
       subscriptionModuleCode: SubscriptionModuleCode.SocialHub,
       features: [
         "connections_skeleton",
@@ -40,6 +40,9 @@ export class SocialHubModuleStatusController {
         "messaging_outbound_bridge",
         "instagram_dm_history_sync",
         "smoke_ci_workflow",
+        "oauth_provider_polish",
+        "connection_setup_warnings",
+        "outbound_delivery_ui",
       ],
     };
   }

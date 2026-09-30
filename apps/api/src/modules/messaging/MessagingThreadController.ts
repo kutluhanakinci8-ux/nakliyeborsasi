@@ -153,7 +153,7 @@ export class MessagingThreadController {
       queryLanguage,
     );
     const clientContext = resolveMessagingClientRequestContext(request);
-    const message = await this.messagingThreadApplicationService.sendMessage(
+    const result = await this.messagingThreadApplicationService.sendMessage(
       authenticatedUser,
       threadId,
       body.bodyText ?? "",
@@ -163,7 +163,12 @@ export class MessagingThreadController {
       clientContext,
       request.path,
     );
-    return { message };
+    return {
+      message: result.message,
+      ...(result.channelDelivery
+        ? { channelDelivery: result.channelDelivery }
+        : {}),
+    };
   }
 
   @Post("threads/:threadId/typing")
