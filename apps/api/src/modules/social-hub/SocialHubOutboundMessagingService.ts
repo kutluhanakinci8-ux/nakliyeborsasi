@@ -6,6 +6,7 @@ import { CompanySocialThreadLinkEntity } from "../../infrastructure/database/ent
 import { SocialHubMetaGraphService } from "./oauth/SocialHubMetaGraphService";
 import { SocialHubTokenVaultService } from "./oauth/SocialHubTokenVaultService";
 import { SocialHubOutboundDeliveryLogService } from "./SocialHubOutboundDeliveryLogService";
+import { SocialHubSlackNotificationService } from "./SocialHubSlackNotificationService";
 
 export type SocialOutboundDispatchResult = {
   attempted: boolean;
@@ -24,6 +25,7 @@ export class SocialHubOutboundMessagingService {
     private readonly tokenVault: SocialHubTokenVaultService,
     private readonly metaGraphService: SocialHubMetaGraphService,
     private readonly deliveryLogService: SocialHubOutboundDeliveryLogService,
+    private readonly slackNotificationService: SocialHubSlackNotificationService,
   ) {}
 
   public async tryDispatchOutbound(params: {
@@ -36,6 +38,7 @@ export class SocialHubOutboundMessagingService {
     if (!trimmed) {
       return { attempted: false, ok: true, message: "" };
     }
+    const bodyPreview = trimmed.slice(0, 280);
     const link = await this.linkRepository.findOne({
       where: {
         companyId: params.companyId,
@@ -56,6 +59,7 @@ export class SocialHubOutboundMessagingService {
         messageId: params.messageId,
         ok: false,
         errorMessage: demoMessage,
+        bodyTextPreview: bodyPreview,
       });
       return { attempted: true, ok: false, message: demoMessage };
     }
@@ -78,6 +82,14 @@ export class SocialHubOutboundMessagingService {
           messageId: params.messageId,
           ok: false,
           errorMessage: result.message,
+          bodyTextPreview: bodyPreview,
+        });
+        await this.slackNotificationService.postOutboundFailure({
+          companyId: params.companyId,
+          platformCode: platform,
+          bodyPreview: bodyPreview,
+          errorMessage: result.message,
+          threadId: params.messageThreadId,
         });
         this.logger.warn(
           `Social outbound failed thread=${params.messageThreadId} platform=${platform}: ${result.message}`,
@@ -91,6 +103,7 @@ export class SocialHubOutboundMessagingService {
         ok: true,
         errorMessage: null,
         externalMessageId: result.externalMessageId,
+        bodyTextPreview: bodyPreview,
       });
       return {
         attempted: true,
@@ -107,6 +120,14 @@ export class SocialHubOutboundMessagingService {
         messageId: params.messageId,
         ok: false,
         errorMessage: message,
+        bodyTextPreview: bodyPreview,
+      });
+      await this.slackNotificationService.postOutboundFailure({
+        companyId: params.companyId,
+        platformCode: platform,
+        bodyPreview: bodyPreview,
+        errorMessage: message,
+        threadId: params.messageThreadId,
       });
       this.logger.warn(
         `Social outbound error thread=${params.messageThreadId}: ${message}`,
@@ -122,6 +143,7 @@ export class SocialHubOutboundMessagingService {
     ok: boolean;
     errorMessage: string | null;
     externalMessageId?: string;
+    bodyTextPreview: string;
   }): Promise<void> {
     params.link.lastOutboundAt = new Date();
     params.link.lastOutboundStatus = params.ok ? "ok" : "failed";
@@ -137,6 +159,7 @@ export class SocialHubOutboundMessagingService {
       status: params.ok ? "ok" : "failed",
       errorMessage: params.errorMessage,
       externalMessageId: params.externalMessageId,
+      bodyTextPreview: params.bodyTextPreview,
     });
   }
 }

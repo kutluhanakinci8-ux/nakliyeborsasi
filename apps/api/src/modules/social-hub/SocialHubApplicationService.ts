@@ -232,6 +232,7 @@ export class SocialHubApplicationService {
         status: row.status,
         errorMessage: row.errorMessage,
         externalMessageId: row.externalMessageId,
+        bodyTextPreview: row.bodyTextPreview,
         createdAt: row.createdAt.toISOString(),
       })),
     };
@@ -758,6 +759,9 @@ export class SocialHubApplicationService {
       healthAlertMinSeverity?: "attention" | "critical";
       healthAlertFailureThreshold?: number;
       healthAlertPlatformThresholdsJson?: string | null;
+      socialSlackWebhookUrl?: string | null;
+      socialSlackUseMessagingFallback?: boolean;
+      socialSlackNotifyOutboundFailures?: boolean;
     },
   ) {
     assertSocialHubAdmin(user);
@@ -806,6 +810,18 @@ export class SocialHubApplicationService {
         }
       }
       settings.healthAlertPlatformThresholdsJson = raw;
+    }
+    if (patch.socialSlackWebhookUrl !== undefined) {
+      const trimmed = patch.socialSlackWebhookUrl?.trim() || null;
+      settings.socialSlackWebhookUrl = trimmed;
+    }
+    if (patch.socialSlackUseMessagingFallback !== undefined) {
+      settings.socialSlackUseMessagingFallback =
+        patch.socialSlackUseMessagingFallback;
+    }
+    if (patch.socialSlackNotifyOutboundFailures !== undefined) {
+      settings.socialSlackNotifyOutboundFailures =
+        patch.socialSlackNotifyOutboundFailures;
     }
     await this.settingsRepository.save(settings);
     this.socialHubAuditService.record(
@@ -925,6 +941,9 @@ export class SocialHubApplicationService {
         healthAlertMinSeverity: "attention",
         healthAlertFailureThreshold: 1,
         healthAlertPlatformThresholdsJson: null,
+        socialSlackWebhookUrl: null,
+        socialSlackUseMessagingFallback: true,
+        socialSlackNotifyOutboundFailures: false,
       }),
     );
   }
@@ -1018,6 +1037,11 @@ export class SocialHubApplicationService {
       healthAlertFailureThreshold: row.healthAlertFailureThreshold ?? 1,
       healthAlertPlatformThresholdsJson:
         row.healthAlertPlatformThresholdsJson ?? null,
+      socialSlackWebhookUrl: row.socialSlackWebhookUrl ?? null,
+      socialSlackUseMessagingFallback:
+        row.socialSlackUseMessagingFallback ?? true,
+      socialSlackNotifyOutboundFailures:
+        row.socialSlackNotifyOutboundFailures ?? false,
     };
   }
 

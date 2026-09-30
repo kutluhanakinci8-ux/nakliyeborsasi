@@ -40,6 +40,9 @@ export class CompanySocialOutboundDeliveryEntity {
   @Column({ type: "varchar", length: 128, nullable: true })
   public externalMessageId!: string | null;
 
+  @Column({ type: "varchar", length: 280, nullable: true })
+  public bodyTextPreview!: string | null;
+
   @CreateDateColumn({ type: "timestamptz" })
   public createdAt!: Date;
 }

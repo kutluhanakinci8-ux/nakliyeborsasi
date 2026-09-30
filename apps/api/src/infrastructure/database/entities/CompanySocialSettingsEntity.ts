@@ -46,6 +46,15 @@ export class CompanySocialSettingsEntity {
   @Column({ type: "text", nullable: true })
   public healthAlertPlatformThresholdsJson!: string | null;
 
+  @Column({ type: "varchar", length: 512, nullable: true })
+  public socialSlackWebhookUrl!: string | null;
+
+  @Column({ type: "boolean", default: true })
+  public socialSlackUseMessagingFallback!: boolean;
+
+  @Column({ type: "boolean", default: false })
+  public socialSlackNotifyOutboundFailures!: boolean;
+
   @UpdateDateColumn({ type: "timestamptz" })
   public updatedAt!: Date;
 }

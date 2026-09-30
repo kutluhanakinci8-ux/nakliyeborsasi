@@ -21,6 +21,9 @@ const DEFAULT_SETTINGS: SocialHubSnapshot["settings"] = {
   healthAlertMinSeverity: "attention",
   healthAlertFailureThreshold: 1,
   healthAlertPlatformThresholdsJson: null,
+  socialSlackWebhookUrl: null,
+  socialSlackUseMessagingFallback: true,
+  socialSlackNotifyOutboundFailures: false,
 };
 
 export function normalizeSocialHubSnapshot(payload: unknown): SocialHubSnapshot {

@@ -28,6 +28,7 @@ export class SocialHubOutboundDeliveryLogService {
     status: "ok" | "failed";
     errorMessage: string | null;
     externalMessageId?: string | null;
+    bodyTextPreview?: string | null;
   }): Promise<void> {
     await this.deliveryRepository.save(
       this.deliveryRepository.create({
@@ -38,6 +39,7 @@ export class SocialHubOutboundDeliveryLogService {
         status: params.status,
         errorMessage: params.errorMessage?.slice(0, 512) ?? null,
         externalMessageId: params.externalMessageId ?? null,
+        bodyTextPreview: params.bodyTextPreview?.slice(0, 280) ?? null,
       }),
     );
   }
@@ -88,7 +90,7 @@ export class SocialHubOutboundDeliveryLogService {
 
   public buildCsv(rows: CompanySocialOutboundDeliveryEntity[]): string {
     const header =
-      "createdAt,platformCode,status,messageThreadId,messageId,errorMessage,externalMessageId";
+      "createdAt,platformCode,status,messageThreadId,messageId,bodyTextPreview,errorMessage,externalMessageId";
     const lines = rows.map((row) => {
       const escape = (value: string | null) => {
         const text = value ?? "";
@@ -103,6 +105,7 @@ export class SocialHubOutboundDeliveryLogService {
         row.status,
         row.messageThreadId,
         row.messageId ?? "",
+        escape(row.bodyTextPreview),
         escape(row.errorMessage),
         row.externalMessageId ?? "",
       ].join(",");
