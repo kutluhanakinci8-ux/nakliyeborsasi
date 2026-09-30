@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import {
   SocialAnalyticsPanel,
@@ -16,6 +17,7 @@ import {
 import { useWebSession } from "../../../../context/WebSessionProvider";
 import { SocialHubApiClient } from "../../../../lib/SocialHubApiClient";
 import type {
+  SocialHubAnalytics,
   SocialHubAuditEntry,
   SocialHubSnapshot,
   SocialHubTeamMember,
@@ -36,6 +38,9 @@ export function SocialHubPageClient() {
   const [assignableRoles, setAssignableRoles] = useState<string[]>([]);
   const [integrationsPath, setIntegrationsPath] = useState("/hesap/uygulamalar");
   const [auditEntries, setAuditEntries] = useState<SocialHubAuditEntry[]>([]);
+  const [analytics, setAnalytics] = useState<SocialHubAnalytics | null>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [subscriptionBlocked, setSubscriptionBlocked] = useState(false);
 
   const canAccess =
     session?.roleCodes?.some((code) =>
@@ -54,8 +59,27 @@ export function SocialHubPageClient() {
     if (!accessToken || !canAccess) {
       return;
     }
-    void reload().catch(() => setError("Sosyal medya hub verisi yüklenemedi."));
+    void reload().catch((err) => {
+      const text = err instanceof Error ? err.message : "";
+      if (text.includes("SUBSCRIPTION_ENTITLEMENT") || text.includes("subscription")) {
+        setSubscriptionBlocked(true);
+        setError("");
+      } else {
+        setError("Sosyal medya hub verisi yüklenemedi.");
+      }
+    });
   }, [accessToken, canAccess, reload]);
+
+  useEffect(() => {
+    if (!accessToken || activeTab !== "analytics" || !snapshot || subscriptionBlocked) {
+      return;
+    }
+    setAnalyticsLoading(true);
+    void SocialHubApiClient.fetchAnalytics(accessToken)
+      .then(setAnalytics)
+      .catch(() => setError("Analitik yüklenemedi."))
+      .finally(() => setAnalyticsLoading(false));
+  }, [accessToken, activeTab, snapshot, subscriptionBlocked]);
 
   useEffect(() => {
     if (!accessToken || activeTab !== "team" || !snapshot?.permissions.canManageSettings) {
@@ -106,6 +130,17 @@ export function SocialHubPageClient() {
         {status ? <p className="account-save-hint">{status}</p> : null}
         {!canAccess ? (
           <p className="module-hint">Bu alan için firma rolü gerekli.</p>
+        ) : subscriptionBlocked ? (
+          <section className="social-hub-panel module-panel module-panel--elevated">
+            <h2 className="account-card-title">Sosyal medya modülü</h2>
+            <p className="account-card-lead">
+              Bu özellik aboneliğinizde <strong>SOCIAL_HUB</strong> modülünü gerektirir.
+              Professional veya Enterprise lojistik planlarında yer alır.
+            </p>
+            <Link href="/hesap/abonelik" className="btn-account-primary">
+              Abonelik ve planlar
+            </Link>
+          </section>
         ) : !snapshot ? (
           <p className="module-hint">Yükleniyor…</p>
         ) : (
@@ -260,7 +295,11 @@ export function SocialHubPageClient() {
               />
             ) : null}
             {activeTab === "analytics" ? (
-              <SocialAnalyticsPanel snapshot={snapshot} />
+              <SocialAnalyticsPanel
+                snapshot={snapshot}
+                analytics={analytics}
+                loading={analyticsLoading}
+              />
             ) : null}
             {activeTab === "team" ? (
               <SocialTeamPanel
