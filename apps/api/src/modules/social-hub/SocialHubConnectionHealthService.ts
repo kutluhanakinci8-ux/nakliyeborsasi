@@ -11,6 +11,7 @@ import { SocialProviderRegistry } from "./providers/SocialProviderRegistry";
 import { parseSocialHubConnectionMetadata } from "./oauth/SocialHubConnectionMetadata";
 import { getSocialHubProviderCapabilities } from "./socialHubProviderCapabilities";
 import { SocialHubOutboundDeliveryLogService } from "./SocialHubOutboundDeliveryLogService";
+import { hasLinkedInRefreshToken } from "./oauth/socialHubLinkedInRefreshToken";
 
 const PLATFORM_LABELS: Record<SocialPlatformCode, string> = {
   [SocialPlatformCode.Instagram]: "Instagram",
@@ -77,8 +78,12 @@ export class SocialHubConnectionHealthService {
           oauthServerReady,
           capabilities: getSocialHubProviderCapabilities(platformCode),
           canRefreshToken:
-            platformCode !== SocialPlatformCode.LinkedIn &&
-            row?.statusCode === SocialConnectionStatusCode.Connected,
+            row?.statusCode === SocialConnectionStatusCode.Connected &&
+            (platformCode !== SocialPlatformCode.LinkedIn ||
+              hasLinkedInRefreshToken(row?.grantedScopes)),
+          linkedInRefreshAvailable:
+            platformCode === SocialPlatformCode.LinkedIn &&
+            hasLinkedInRefreshToken(row?.grantedScopes),
         };
       },
     );
@@ -173,6 +178,14 @@ export class SocialHubConnectionHealthService {
       !metadata.instagramBusinessAccountId
     ) {
       warnings.push("Instagram işletme hesabı tanımlı değil.");
+    }
+    if (
+      platform === SocialPlatformCode.LinkedIn &&
+      !hasLinkedInRefreshToken(row.grantedScopes)
+    ) {
+      warnings.push(
+        "LinkedIn refresh token yok — süre dolunca yeniden bağlanmanız gerekir.",
+      );
     }
     if (
       row.tokenExpiresAt &&

@@ -15,6 +15,7 @@ export enum NotificationEventCode {
   MailTeamInvite = "MAIL_TEAM_INVITE",
   TrustTransportConfirmRequest = "TRUST_TRANSPORT_CONFIRM_REQUEST",
   TrustReviewReminder = "TRUST_REVIEW_REMINDER",
+  SocialHubHealthDegraded = "SOCIAL_HUB_HEALTH_DEGRADED",
 }
 
 

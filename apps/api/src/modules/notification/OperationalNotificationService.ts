@@ -63,6 +63,32 @@ export class OperationalNotificationService {
     });
   }
 
+  public async afterSocialHubHealthDegraded(params: {
+    companyId: string;
+    ownerUserIds: string[];
+    overallStatus: string;
+    summary: string;
+    hubUrl: string;
+  }): Promise<void> {
+    if (params.ownerUserIds.length === 0) {
+      return;
+    }
+    const dayKey = new Date().toISOString().slice(0, 10);
+    await this.emitToUserIds({
+      companyId: params.companyId,
+      userIds: params.ownerUserIds,
+      eventCode: NotificationEventCode.SocialHubHealthDegraded,
+      payload: {
+        overallStatus: params.overallStatus,
+        messagePreview: params.summary,
+        messagingUrl: params.hubUrl,
+        hubUrl: params.hubUrl,
+        occurredAt: new Date().toISOString(),
+      },
+      idempotencyPrefix: `SOCIAL_HUB_HEALTH:${params.companyId}:${dayKey}:${params.overallStatus}`,
+    });
+  }
+
   public async afterMessagingMessageSent(params: {
     threadId: string;
     counterpartyCompanyId: string;

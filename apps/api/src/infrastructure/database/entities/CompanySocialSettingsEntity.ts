@@ -28,6 +28,15 @@ export class CompanySocialSettingsEntity {
   @Column({ type: "timestamptz", nullable: true })
   public kvkkAcceptedAt!: Date | null;
 
+  @Column({ type: "boolean", default: true })
+  public healthAlertsEnabled!: boolean;
+
+  @Column({ type: "timestamptz", nullable: true })
+  public healthAlertLastSentAt!: Date | null;
+
+  @Column({ type: "varchar", length: 24, nullable: true })
+  public lastHealthAlertStatus!: string | null;
+
   @UpdateDateColumn({ type: "timestamptz" })
   public updatedAt!: Date;
 }

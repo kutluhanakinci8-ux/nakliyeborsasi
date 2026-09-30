@@ -22,6 +22,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
 import { CompanyMembershipEntity } from "../../infrastructure/database/entities/CompanyMembershipEntity";
 import { SocialHubAuditService } from "./SocialHubAuditService";
 import { SubscriptionModule } from "../subscription/SubscriptionModule";
+import { NotificationModule } from "../notification/NotificationModule";
 import { SocialHubModuleStatusController } from "./SocialHubModuleStatusController";
 import { CompanySocialOAuthStateEntity } from "../../infrastructure/database/entities/CompanySocialOAuthStateEntity";
 import { SocialHubOAuthConfigService } from "./oauth/SocialHubOAuthConfigService";
@@ -42,12 +43,16 @@ import { SocialHubOutboundDeliveryLogService } from "./SocialHubOutboundDelivery
 import { SocialHubConnectionHealthService } from "./SocialHubConnectionHealthService";
 import { SocialHubTokenRefreshService } from "./oauth/SocialHubTokenRefreshService";
 import { SocialHubTokenRefreshScheduler } from "./SocialHubTokenRefreshScheduler";
+import { SocialHubHealthAlertService } from "./SocialHubHealthAlertService";
+import { SocialHubHealthAlertScheduler } from "./SocialHubHealthAlertScheduler";
+import { CompanyMessagingSettingsEntity } from "../../infrastructure/database/entities/CompanyMessagingSettingsEntity";
 
 @Module({
   imports: [
     AuthModule,
     AuditModule,
     SubscriptionModule,
+    NotificationModule,
     forwardRef(() => MessagingModule),
     TypeOrmModule.forFeature([
       CompanySocialConnectionEntity,
@@ -60,6 +65,7 @@ import { SocialHubTokenRefreshScheduler } from "./SocialHubTokenRefreshScheduler
       AuditLogEntity,
       CompanySocialOAuthStateEntity,
       CompanySocialOutboundDeliveryEntity,
+      CompanyMessagingSettingsEntity,
     ]),
   ],
   controllers: [
@@ -86,6 +92,8 @@ import { SocialHubTokenRefreshScheduler } from "./SocialHubTokenRefreshScheduler
     SocialHubConnectionHealthService,
     SocialHubTokenRefreshService,
     SocialHubTokenRefreshScheduler,
+    SocialHubHealthAlertService,
+    SocialHubHealthAlertScheduler,
     SocialProviderRegistry,
     MetaInstagramMessagingProvider,
     MetaFacebookMessengerProvider,

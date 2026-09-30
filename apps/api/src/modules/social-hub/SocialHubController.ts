@@ -7,8 +7,10 @@ import {
   Patch,
   Post,
   Query,
+  Res,
   UseGuards,
 } from "@nestjs/common";
+import type { Response } from "express";
 import { AuthenticatedUserContext } from "@nakliyeborsasi/core";
 import { JwtAuthenticationGuard } from "../auth/JwtAuthenticationGuard";
 import { AuthenticatedUserParam } from "../auth/AuthenticatedUserParam";
@@ -178,12 +180,55 @@ export class SocialHubController {
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
     @Query("threadId") threadId?: string,
     @Query("limit") limit?: string,
+    @Query("platformCode") platformCode?: string,
+    @Query("status") status?: string,
+    @Query("since") since?: string,
+    @Query("until") until?: string,
   ) {
     const parsedLimit = limit ? Number.parseInt(limit, 10) : undefined;
+    const normalizedStatus =
+      status === "ok" || status === "failed" ? status : undefined;
     return this.socialHubApplicationService.listOutboundDeliveries(user, {
       threadId: threadId?.trim() || undefined,
       limit: Number.isFinite(parsedLimit) ? parsedLimit : undefined,
+      platformCode: platformCode?.trim() || undefined,
+      status: normalizedStatus,
+      since: since?.trim() || undefined,
+      until: until?.trim() || undefined,
     });
+  }
+
+  @Get("delivery-log/export")
+  public async exportDeliveryLog(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Res() response: Response,
+    @Query("threadId") threadId?: string,
+    @Query("platformCode") platformCode?: string,
+    @Query("status") status?: string,
+    @Query("since") since?: string,
+    @Query("until") until?: string,
+    @Query("limit") limit?: string,
+  ): Promise<void> {
+    const parsedLimit = limit ? Number.parseInt(limit, 10) : undefined;
+    const normalizedStatus =
+      status === "ok" || status === "failed" ? status : undefined;
+    const csv = await this.socialHubApplicationService.exportOutboundDeliveriesCsv(
+      user,
+      {
+        threadId: threadId?.trim() || undefined,
+        platformCode: platformCode?.trim() || undefined,
+        status: normalizedStatus,
+        since: since?.trim() || undefined,
+        until: until?.trim() || undefined,
+        limit: Number.isFinite(parsedLimit) ? parsedLimit : undefined,
+      },
+    );
+    response.setHeader("Content-Type", "text/csv; charset=utf-8");
+    response.setHeader(
+      "Content-Disposition",
+      'attachment; filename="social-hub-deliveries.csv"',
+    );
+    response.send(csv);
   }
 
   @Get("analytics")
@@ -225,6 +270,7 @@ export class SocialHubController {
       dispatcherCanPublish?: boolean;
       ownerApprovalRequired?: boolean;
       acceptKvkk?: boolean;
+      healthAlertsEnabled?: boolean;
     },
   ) {
     return this.socialHubApplicationService.updateSettings(user, body);

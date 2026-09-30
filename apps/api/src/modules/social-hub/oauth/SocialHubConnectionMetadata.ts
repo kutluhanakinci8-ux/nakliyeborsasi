@@ -3,6 +3,8 @@ export type SocialHubConnectionMetadata = {
   phoneNumberId?: string;
   wabaId?: string;
   instagramBusinessAccountId?: string;
+  /** encryptTotpSecret ile şifrelenmiş LinkedIn refresh token */
+  linkedInRefreshTokenCipher?: string;
 };
 
 export function parseSocialHubConnectionMetadata(

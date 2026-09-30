@@ -17,6 +17,7 @@ const DEFAULT_SETTINGS: SocialHubSnapshot["settings"] = {
   dispatcherCanPublish: false,
   ownerApprovalRequired: true,
   kvkkAcceptedAt: null,
+  healthAlertsEnabled: true,
 };
 
 export function normalizeSocialHubSnapshot(payload: unknown): SocialHubSnapshot {

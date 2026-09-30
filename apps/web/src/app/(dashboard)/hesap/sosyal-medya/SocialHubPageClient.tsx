@@ -7,6 +7,7 @@ import {
   SocialAnalyticsPanel,
   SocialConnectionsPanel,
   SocialHealthPanel,
+  type SocialDeliveryLogFilters,
   SocialInboxPanel,
   SocialPublishingPanel,
   SocialTeamPanel,
@@ -49,6 +50,14 @@ export function SocialHubPageClient() {
   const [subscriptionBlocked, setSubscriptionBlocked] = useState(false);
   const [health, setHealth] = useState<SocialHubHealth | null>(null);
   const [deliveries, setDeliveries] = useState<SocialHubOutboundDelivery[]>([]);
+  const [deliveryFilters, setDeliveryFilters] = useState<SocialDeliveryLogFilters>(
+    {
+      platformCode: "",
+      status: "",
+      since: "",
+      until: "",
+    },
+  );
 
   const canAccess =
     session?.roleCodes?.some((code) =>
@@ -96,13 +105,25 @@ export function SocialHubPageClient() {
     if (!accessToken) {
       return;
     }
+    const sinceIso = deliveryFilters.since
+      ? new Date(`${deliveryFilters.since}T00:00:00`).toISOString()
+      : undefined;
+    const untilIso = deliveryFilters.until
+      ? new Date(`${deliveryFilters.until}T23:59:59`).toISOString()
+      : undefined;
     const [healthPayload, deliveryRows] = await Promise.all([
       SocialHubApiClient.fetchHealth(accessToken),
-      SocialHubApiClient.fetchDeliveryLog(accessToken, { limit: 50 }),
+      SocialHubApiClient.fetchDeliveryLog(accessToken, {
+        limit: 80,
+        platformCode: deliveryFilters.platformCode || undefined,
+        status: deliveryFilters.status || undefined,
+        since: sinceIso,
+        until: untilIso,
+      }),
     ]);
     setHealth(healthPayload);
     setDeliveries(deliveryRows);
-  }, [accessToken]);
+  }, [accessToken, deliveryFilters]);
 
   useEffect(() => {
     if (!accessToken || activeTab !== "health" || !snapshot || subscriptionBlocked) {
@@ -216,8 +237,49 @@ export function SocialHubPageClient() {
               <SocialHealthPanel
                 health={health}
                 deliveries={deliveries}
+                deliveryFilters={deliveryFilters}
                 busy={busy}
                 canManage={snapshot.permissions.canManageConnections}
+                healthAlertsEnabled={snapshot.settings.healthAlertsEnabled ?? true}
+                onDeliveryFiltersChange={(patch) =>
+                  setDeliveryFilters((current) => ({ ...current, ...patch }))
+                }
+                onApplyDeliveryFilters={() =>
+                  void runAction(async () => {
+                    await loadHealthData();
+                  })
+                }
+                onExportDeliveries={() =>
+                  void runAction(async () => {
+                    const sinceIso = deliveryFilters.since
+                      ? new Date(`${deliveryFilters.since}T00:00:00`).toISOString()
+                      : undefined;
+                    const untilIso = deliveryFilters.until
+                      ? new Date(`${deliveryFilters.until}T23:59:59`).toISOString()
+                      : undefined;
+                    await SocialHubApiClient.downloadDeliveryExport(accessToken, {
+                      platformCode: deliveryFilters.platformCode || undefined,
+                      status: deliveryFilters.status || undefined,
+                      since: sinceIso,
+                      until: untilIso,
+                      limit: 500,
+                    });
+                    setStatus("CSV indirildi.");
+                  })
+                }
+                onToggleHealthAlerts={(enabled) =>
+                  void runAction(async () => {
+                    await SocialHubApiClient.updateSettings(accessToken, {
+                      healthAlertsEnabled: enabled,
+                    });
+                    await reload();
+                    setStatus(
+                      enabled
+                        ? "Sağlık uyarıları açıldı."
+                        : "Sağlık uyarıları kapatıldı.",
+                    );
+                  })
+                }
                 onReload={() =>
                   void runAction(async () => {
                     await loadHealthData();

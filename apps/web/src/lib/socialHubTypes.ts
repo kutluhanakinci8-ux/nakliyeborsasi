@@ -15,6 +15,7 @@ export type SocialHubSettings = {
   dispatcherCanPublish: boolean;
   ownerApprovalRequired: boolean;
   kvkkAcceptedAt: string | null;
+  healthAlertsEnabled?: boolean;
 };
 
 export type SocialHubProviderCapabilities = {
@@ -123,6 +124,7 @@ export type SocialHubHealthChannel = {
   recentOutboundFailures24h: number;
   oauthServerReady: boolean;
   canRefreshToken: boolean;
+  linkedInRefreshAvailable?: boolean;
 };
 
 export type SocialHubHealth = {

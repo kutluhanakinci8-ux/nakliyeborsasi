@@ -12,6 +12,7 @@ import { SocialHubOAuthConfigService } from "./SocialHubOAuthConfigService";
 import { SocialHubOAuthStateService } from "./SocialHubOAuthStateService";
 import { SocialHubMetaGraphService } from "./SocialHubMetaGraphService";
 import { SocialHubLinkedInGraphService } from "./SocialHubLinkedInGraphService";
+import { mergeLinkedInRefreshToken } from "./socialHubLinkedInRefreshToken";
 import type { SocialOAuthStartResult } from "../providers/SocialProviderPort";
 
 const META_SCOPES: Record<string, string> = {
@@ -216,6 +217,8 @@ export class SocialHubOAuthApplicationService {
     const payload = (await response.json()) as {
       access_token?: string;
       expires_in?: number;
+      refresh_token?: string;
+      refresh_token_expires_in?: number;
       error_description?: string;
     };
     if (!response.ok || !payload.access_token) {
@@ -231,6 +234,7 @@ export class SocialHubOAuthApplicationService {
       expiresInSec: payload.expires_in ?? null,
       externalAccountId: authorUrn?.replace("urn:li:person:", "") ?? null,
       displayName: "LinkedIn bağlantısı",
+      refreshToken: payload.refresh_token ?? null,
     });
   }
 
@@ -242,6 +246,7 @@ export class SocialHubOAuthApplicationService {
       expiresInSec: number | null;
       externalAccountId: string | null;
       displayName: string;
+      refreshToken?: string | null;
     },
   ): Promise<void> {
     const encKey = this.oauthConfig.getOAuthEncryptionKey();
@@ -277,6 +282,17 @@ export class SocialHubOAuthApplicationService {
     row.tokenExpiresAt = tokens.expiresInSec
       ? new Date(Date.now() + tokens.expiresInSec * 1000)
       : null;
+    if (
+      platformCode === SocialPlatformCode.LinkedIn &&
+      tokens.refreshToken &&
+      encKey
+    ) {
+      row.grantedScopes = mergeLinkedInRefreshToken(
+        row.grantedScopes,
+        tokens.refreshToken,
+        encKey,
+      );
+    }
     await this.connectionRepository.save(row);
   }
 }
