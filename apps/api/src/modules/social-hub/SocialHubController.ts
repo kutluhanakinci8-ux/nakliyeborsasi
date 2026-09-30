@@ -156,6 +156,29 @@ export class SocialHubController {
     return this.socialHubApplicationService.deleteTemplate(user, templateId);
   }
 
+  @Get("team")
+  public async listTeam(@AuthenticatedUserParam() user: AuthenticatedUserContext) {
+    return this.socialHubApplicationService.listTeam(user);
+  }
+
+  @Patch("team/:userId/role")
+  public async updateMemberRole(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("userId") userId: string,
+    @Body() body: { roleCode: string },
+  ) {
+    return this.socialHubApplicationService.updateMemberRole(
+      user,
+      userId,
+      body.roleCode,
+    );
+  }
+
+  @Get("audit-log")
+  public async listAuditLog(@AuthenticatedUserParam() user: AuthenticatedUserContext) {
+    return this.socialHubApplicationService.listAuditLog(user);
+  }
+
   @Patch("settings")
   public async updateSettings(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,

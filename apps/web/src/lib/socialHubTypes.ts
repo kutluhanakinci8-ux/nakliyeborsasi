@@ -60,6 +60,24 @@ export type SocialHubTemplate = {
   sortOrder: number;
 };
 
+export type SocialHubTeamMember = {
+  membershipId: string;
+  userId: string;
+  emailAddress: string;
+  displayName: string;
+  roleCode: string;
+  isSelf: boolean;
+};
+
+export type SocialHubAuditEntry = {
+  id: string;
+  actionCode: string;
+  requestPath: string;
+  actorUserId: string | null;
+  metadata: Record<string, unknown> | null;
+  createdAt: string;
+};
+
 export type SocialHubSnapshot = {
   permissions: SocialHubPermissions;
   settings: SocialHubSettings;

@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import type {
+  SocialHubAuditEntry,
   SocialHubPermissions,
   SocialHubPost,
   SocialHubSettings,
   SocialHubSnapshot,
+  SocialHubTeamMember,
   SocialHubTemplate,
 } from "../../lib/socialHubTypes";
 
@@ -77,7 +79,8 @@ export function SocialConnectionsPanel({
         <h2 className="account-card-title">Bağlı hesaplar</h2>
         <p className="account-card-lead">
           Instagram, Facebook Messenger, WhatsApp Business ve LinkedIn bağlantıları.
-          OAuth ve webhook adımları sonraki fazda açılacak.
+          OAuth ve webhook adımları sonraki fazda açılacak. Genel API anahtarları için{" "}
+          <Link href="/hesap/uygulamalar">Uygulamalar / entegrasyonlar</Link>.
         </p>
       </header>
       <ul className="social-hub-connection-grid">
@@ -527,18 +530,46 @@ export function SocialAnalyticsPanel({ snapshot }: { snapshot: SocialHubSnapshot
   );
 }
 
+const SOCIAL_ROLE_LABELS: Record<string, string> = {
+  SOCIAL_ADMIN: "Sosyal yönetici",
+  DISPATCHER: "Dispatcher",
+  VIEWER: "Görüntüleme",
+  COMPANY_OWNER: "Firma sahibi",
+};
+
+function auditActionLabel(code: string): string {
+  const map: Record<string, string> = {
+    SOCIAL_HUB_SETTINGS_UPDATE: "Ayar güncelleme",
+    SOCIAL_HUB_POST_PUBLISH: "Yayın denemesi",
+    SOCIAL_HUB_POST_APPROVE: "Gönderi onayı",
+    SOCIAL_HUB_POST_SUBMIT_APPROVAL: "Onaya gönderim",
+    SOCIAL_HUB_MEMBER_ROLE_UPDATE: "Rol değişikliği",
+  };
+  return map[code] ?? code;
+}
+
 type TeamProps = {
   settings: SocialHubSettings;
   permissions: SocialHubPermissions;
+  members: SocialHubTeamMember[];
+  assignableRoleCodes: string[];
+  auditEntries: SocialHubAuditEntry[];
+  integrationsPath: string;
   busy: boolean;
   onPatchSettings: (patch: Record<string, boolean>) => void;
+  onRoleChange: (userId: string, roleCode: string) => void;
 };
 
 export function SocialTeamPanel({
   settings,
   permissions,
+  members,
+  assignableRoleCodes,
+  auditEntries,
+  integrationsPath,
   busy,
   onPatchSettings,
+  onRoleChange,
 }: TeamProps) {
   if (!permissions.canManageSettings) {
     return (
@@ -559,9 +590,42 @@ export function SocialTeamPanel({
       <header className="social-hub-panel-head">
         <h2 className="account-card-title">Ekip & izinler</h2>
         <p className="account-card-lead">
-          Rol: <code>SOCIAL_ADMIN</code> (yeni) ve <code>COMPANY_OWNER</code> tam yetki.
+          <code>SOCIAL_ADMIN</code> sosyal hub yönetimi; <code>COMPANY_OWNER</code> tam yetki.
+          Entegrasyon API: <Link href={integrationsPath}>Uygulamalar</Link>.
         </p>
       </header>
+      {members.length > 0 ? (
+        <ul className="social-hub-team-list">
+          {members.map((member) => (
+            <li key={member.membershipId} className="social-hub-team-row">
+              <div>
+                <strong>{member.displayName || member.emailAddress}</strong>
+                <p className="social-hub-post-meta">{member.emailAddress}</p>
+              </div>
+              {member.roleCode === "COMPANY_OWNER" || member.isSelf ? (
+                <span className="social-hub-pill">
+                  {SOCIAL_ROLE_LABELS[member.roleCode] ?? member.roleCode}
+                </span>
+              ) : (
+                <select
+                  className="input-light"
+                  disabled={busy}
+                  value={member.roleCode}
+                  onChange={(e) => onRoleChange(member.userId, e.target.value)}
+                >
+                  {assignableRoleCodes.map((code) => (
+                    <option key={code} value={code}>
+                      {SOCIAL_ROLE_LABELS[code] ?? code}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="module-hint">Ekip üyesi bulunamadı.</p>
+      )}
       <ul className="social-hub-settings-list">
         {toggles.map((row) => (
           <li key={row.key}>
@@ -591,6 +655,21 @@ export function SocialTeamPanel({
           KVKK onayı: {new Date(settings.kvkkAcceptedAt).toLocaleString("tr-TR")}
         </p>
       )}
+      <h3 className="social-hub-calendar-title">Son işlemler (denetim)</h3>
+      <ul className="social-hub-audit-list">
+        {auditEntries.length === 0 ? (
+          <li className="module-hint">Henüz kayıt yok.</li>
+        ) : (
+          auditEntries.map((entry) => (
+            <li key={entry.id}>
+              <time dateTime={entry.createdAt}>
+                {new Date(entry.createdAt).toLocaleString("tr-TR")}
+              </time>
+              <span>{auditActionLabel(entry.actionCode)}</span>
+            </li>
+          ))
+        )}
+      </ul>
     </section>
   );
 }
