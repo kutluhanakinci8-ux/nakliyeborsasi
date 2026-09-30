@@ -21,6 +21,7 @@ import { OrganizationSectionNav } from "../../../../components/account/Organizat
 import { CompanySubscriptionPanel } from "../../../../components/account/CompanySubscriptionPanel";
 import { OrganizationMailIdentityPanel } from "../../../../components/account/OrganizationMailIdentityPanel";
 import { OrganizationMailInboxPanel } from "../../../../components/account/OrganizationMailInboxPanel";
+import { PlatformSupportChatButton } from "../../../../components/account/PlatformSupportChatButton";
 
 export function OrganizationPageClient() {
   const { session } = useWebSession();
@@ -136,7 +137,9 @@ export function OrganizationPageClient() {
           Kurumsal profil platform yöneticisi tarafından donduruldu. Destek ile
           iletişime geçin.
         </p>
-        <Link href="/iletisim" className="btn-account-primary">Destek</Link>
+        <PlatformSupportChatButton className="btn-account-primary">
+          Destek
+        </PlatformSupportChatButton>
       </section>
     );
   }
@@ -218,9 +221,12 @@ export function OrganizationPageClient() {
             <button type="button" className="btn-account-primary">
               Doğrulamayı başlat
             </button>
-            <Link href="/iletisim" className="btn-account-ghost">
+            <PlatformSupportChatButton
+              className="btn-account-ghost"
+              suggestedDraft="Merhaba, kurumsal doğrulama (firma belgesi) süreci için destek rica ediyorum."
+            >
               Destek ile görüş
-            </Link>
+            </PlatformSupportChatButton>
           </div>
         </div>
         <div className="account-verify-aside" aria-hidden>

@@ -22,6 +22,7 @@ import { AuthenticatedUserParam } from "../auth/AuthenticatedUserParam";
 import { LocaleResolutionService } from "../localization/LocaleResolutionService";
 import { MessagingThreadApplicationService } from "./MessagingThreadApplicationService";
 import { MessagingTranslationService } from "./MessagingTranslationService";
+import { PlatformSupportService } from "./PlatformSupportService";
 import { OpenMessagingThreadRequestDto } from "./OpenMessagingThreadRequestDto";
 import { OpenMessagingGroupThreadRequestDto } from "./OpenMessagingGroupThreadRequestDto";
 import { SendThreadMessageRequestDto } from "./MessagingAttachmentRequestDto";
@@ -35,7 +36,15 @@ export class MessagingThreadController {
     private readonly messagingThreadApplicationService: MessagingThreadApplicationService,
     private readonly messagingTranslationService: MessagingTranslationService,
     private readonly localeResolutionService: LocaleResolutionService,
+    private readonly platformSupportService: PlatformSupportService,
   ) {}
+
+  @Get("platform-support")
+  public async platformSupport(
+    @AuthenticatedUserParam() _authenticatedUser: AuthenticatedUserContext,
+  ): Promise<{ supportCompanyId: string; legalName: string }> {
+    return this.platformSupportService.resolveSupportCounterparty();
+  }
 
   @Get("threads")
   public async listThreads(

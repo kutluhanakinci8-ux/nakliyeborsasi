@@ -130,6 +130,15 @@ export class MessagingApiClient {
     return `${base}/messaging/stream?ticket=${encodeURIComponent(ticket)}`;
   }
 
+  public static async fetchPlatformSupport(
+    accessToken: string,
+  ): Promise<{ supportCompanyId: string; legalName: string }> {
+    return AuthenticatedApiClient.fetchJson(
+      accessToken,
+      "/messaging/platform-support",
+    ) as Promise<{ supportCompanyId: string; legalName: string }>;
+  }
+
   public static async listThreads(
     accessToken: string,
     locale: string,

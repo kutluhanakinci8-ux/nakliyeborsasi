@@ -41,6 +41,7 @@ import { MessagingBotService } from "./MessagingBotService";
 import { MessagingOptionalWsService } from "./MessagingOptionalWsService";
 import { MessagingThreadParticipantService } from "./MessagingThreadParticipantService";
 import { MessagingWhatsappBridgeService } from "./MessagingWhatsappBridgeService";
+import { PlatformSupportService } from "./PlatformSupportService";
 import { PlatformCommunicationsOpsController } from "./PlatformCommunicationsOpsController";
 import { MessageThreadParticipantEntity } from "../../infrastructure/database/entities/MessageThreadParticipantEntity";
 import { CompanyMessagingBotCredentialEntity } from "../../infrastructure/database/entities/CompanyMessagingBotCredentialEntity";
@@ -105,6 +106,7 @@ import { TrustScoreModule } from "../trust/TrustScoreModule";
     MessagingOptionalWsService,
     MessagingThreadParticipantService,
     MessagingWhatsappBridgeService,
+    PlatformSupportService,
   ],
   exports: [
     MessagingThreadApplicationService,
