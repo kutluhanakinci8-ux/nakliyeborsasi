@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import type {
-  SocialHubConnection,
   SocialHubPermissions,
   SocialHubPost,
   SocialHubSettings,
@@ -75,7 +74,11 @@ export function SocialConnectionsPanel({
                     <button
                       type="button"
                       className="btn-account-ghost"
-                      disabled={busy}
+                      disabled={
+                        busy ||
+                        row.statusCode === "DISCONNECTED" ||
+                        row.statusCode === "PENDING_OAUTH"
+                      }
                       onClick={() => onDisconnect(row.platformCode)}
                     >
                       Kes
@@ -100,7 +103,7 @@ type InboxProps = {
 };
 
 export function SocialInboxPanel({ snapshot, busy, onSync }: InboxProps) {
-  const { inboxSummary, permissions, connections } = snapshot;
+  const { inboxSummary, permissions, connections, providers } = snapshot;
   return (
     <section className="social-hub-panel module-panel module-panel--elevated">
       <header className="social-hub-panel-head">
@@ -111,29 +114,36 @@ export function SocialInboxPanel({ snapshot, busy, onSync }: InboxProps) {
         Açık konuşmalar: <strong>{inboxSummary.totalOpenThreads}</strong>
       </p>
       <ul className="social-hub-inbox-platforms">
-        {inboxSummary.byPlatform.map((row) => (
-          <li key={row.platformCode}>
-            <span>{row.platformCode}</span>
-            <span>{row.openCount} açık</span>
-          </li>
-        ))}
+        {inboxSummary.byPlatform.map((row) => {
+          const label =
+            providers.find((p) => p.platformCode === row.platformCode)?.label ??
+            row.platformCode;
+          return (
+            <li key={row.platformCode} className="social-hub-inbox-row">
+              <span className="social-hub-inbox-platform">{label}</span>
+              <span className="social-hub-inbox-count">{row.openCount} açık</span>
+            </li>
+          );
+        })}
       </ul>
-      <div className="social-hub-panel-actions">
+      <div className="social-hub-panel-actions social-hub-panel-actions--stack">
         <Link href={inboxSummary.messagingDeepLink} className="btn-account-primary">
           Mesajlar&apos;a git
         </Link>
         {permissions.canReply ? (
-          connections.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              className="btn-account-ghost"
-              disabled={busy}
-              onClick={() => onSync(c.platformCode)}
-            >
-              {c.label} senkron (iskelet)
-            </button>
-          ))
+          <div className="social-hub-sync-grid">
+            {connections.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                className="btn-account-ghost"
+                disabled={busy}
+                onClick={() => onSync(c.platformCode)}
+              >
+                {c.label} · senkron
+              </button>
+            ))}
+          </div>
         ) : null}
       </div>
     </section>

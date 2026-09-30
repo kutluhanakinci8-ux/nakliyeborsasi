@@ -15169,7 +15169,27 @@ button.btn-secondary {
 .social-hub-page {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1rem;
+  max-width: 960px;
+}
+
+.social-hub-intro {
+  margin: 0 0 4px;
+}
+
+.social-hub-intro-title {
+  margin: 0 0 6px;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--nb-navy-deep, #0f2444);
+}
+
+.social-hub-intro-lead {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: #64748b;
+  max-width: 52rem;
 }
 
 .social-hub-tabs {
@@ -15273,6 +15293,40 @@ button.btn-secondary {
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
+}
+
+.social-hub-inbox-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.social-hub-inbox-platform {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.social-hub-inbox-count {
+  font-size: 0.85rem;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.social-hub-sync-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.social-hub-panel-actions--stack {
+  flex-direction: column;
+  align-items: stretch;
 }
 
 .social-hub-post-item {
