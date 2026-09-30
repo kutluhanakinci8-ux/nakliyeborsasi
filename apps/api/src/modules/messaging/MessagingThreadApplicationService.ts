@@ -715,6 +715,7 @@ export class MessagingThreadApplicationService {
         await this.socialHubOutboundMessagingService.tryDispatchOutbound({
           companyId: authenticatedUser.companyId,
           messageThreadId: thread.id,
+          messageId: saved.id,
           bodyText: trimmed,
         });
       if (outbound.attempted) {

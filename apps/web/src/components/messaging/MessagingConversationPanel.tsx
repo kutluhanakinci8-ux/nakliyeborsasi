@@ -1,6 +1,8 @@
 "use client";
 
-import { Fragment } from "react";
+import { Fragment, useEffect, useState } from "react";
+import { SocialHubApiClient } from "../../lib/SocialHubApiClient";
+import type { SocialHubOutboundDelivery } from "../../lib/socialHubTypes";
 import Link from "next/link";
 import { ChatMessageBody } from "./ChatMessageBody";
 import { ChatMessageActionBar } from "./ChatMessageActionBar";
@@ -109,6 +111,27 @@ export function MessagingConversationPanel({
     handleSendMessage,
     setErrorMessage,
   } = chat;
+  const [threadDeliveries, setThreadDeliveries] = useState<
+    SocialHubOutboundDelivery[]
+  >([]);
+
+  useEffect(() => {
+    if (
+      !accessToken ||
+      !activeThreadId ||
+      activeThread?.threadKind !== "external_social"
+    ) {
+      setThreadDeliveries([]);
+      return;
+    }
+    void SocialHubApiClient.fetchDeliveryLog(accessToken, {
+      threadId: activeThreadId,
+      limit: 8,
+    })
+      .then(setThreadDeliveries)
+      .catch(() => setThreadDeliveries([]));
+  }, [accessToken, activeThreadId, activeThread?.threadKind, chat.messages.length]);
+
   return (
           <section className="chat-main module-panel chat-main--premium">
             <div className="chat-main-header">
@@ -170,6 +193,22 @@ export function MessagingConversationPanel({
                     Yanıtlar bağlı hesap üzerinden gönderilir.
                   </p>
                 )}
+                {threadDeliveries.length > 0 ? (
+                  <ul className="chat-social-delivery-log" aria-label="Gönderim geçmişi">
+                    {threadDeliveries.map((row) => (
+                      <li key={row.id}>
+                        <time dateTime={row.createdAt}>
+                          {new Date(row.createdAt).toLocaleString("tr-TR", {
+                            dateStyle: "short",
+                            timeStyle: "short",
+                          })}
+                        </time>
+                        {" — "}
+                        {row.status === "ok" ? "Kanala iletildi" : row.errorMessage}
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
               </div>
             ) : null}
             {activeThreadId &&

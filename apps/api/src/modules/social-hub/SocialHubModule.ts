@@ -37,6 +37,11 @@ import { SocialHubInboxSyncApplicationService } from "./SocialHubInboxSyncApplic
 import { SocialHubLinkedInGraphService } from "./oauth/SocialHubLinkedInGraphService";
 import { SocialHubMetaInboxHistoryService } from "./oauth/SocialHubMetaInboxHistoryService";
 import { SocialHubOutboundMessagingService } from "./SocialHubOutboundMessagingService";
+import { CompanySocialOutboundDeliveryEntity } from "../../infrastructure/database/entities/CompanySocialOutboundDeliveryEntity";
+import { SocialHubOutboundDeliveryLogService } from "./SocialHubOutboundDeliveryLogService";
+import { SocialHubConnectionHealthService } from "./SocialHubConnectionHealthService";
+import { SocialHubTokenRefreshService } from "./oauth/SocialHubTokenRefreshService";
+import { SocialHubTokenRefreshScheduler } from "./SocialHubTokenRefreshScheduler";
 
 @Module({
   imports: [
@@ -54,6 +59,7 @@ import { SocialHubOutboundMessagingService } from "./SocialHubOutboundMessagingS
       CompanyMembershipEntity,
       AuditLogEntity,
       CompanySocialOAuthStateEntity,
+      CompanySocialOutboundDeliveryEntity,
     ]),
   ],
   controllers: [
@@ -76,6 +82,10 @@ import { SocialHubOutboundMessagingService } from "./SocialHubOutboundMessagingS
     SocialHubApplicationService,
     SocialHubMessagingBridgeService,
     SocialHubOutboundMessagingService,
+    SocialHubOutboundDeliveryLogService,
+    SocialHubConnectionHealthService,
+    SocialHubTokenRefreshService,
+    SocialHubTokenRefreshScheduler,
     SocialProviderRegistry,
     MetaInstagramMessagingProvider,
     MetaFacebookMessengerProvider,

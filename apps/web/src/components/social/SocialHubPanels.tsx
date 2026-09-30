@@ -7,6 +7,8 @@ import type {
   SocialHubPost,
   SocialHubSettings,
   SocialHubAnalytics,
+  SocialHubHealth,
+  SocialHubOutboundDelivery,
   SocialHubSnapshot,
   SocialHubTeamMember,
   SocialHubTemplate,
@@ -785,6 +787,145 @@ export function SocialTeamPanel({
                 {new Date(entry.createdAt).toLocaleString("tr-TR")}
               </time>
               <span>{auditActionLabel(entry.actionCode)}</span>
+            </li>
+          ))
+        )}
+      </ul>
+    </section>
+  );
+}
+
+function healthOverallLabel(status: SocialHubHealth["overallStatus"]): string {
+  switch (status) {
+    case "healthy":
+      return "Sağlıklı";
+    case "attention":
+      return "Dikkat gerekli";
+    case "critical":
+      return "Kritik";
+    default:
+      return status;
+  }
+}
+
+function tokenHealthLabel(
+  code: SocialHubHealth["channels"][number]["tokenHealth"],
+): string {
+  switch (code) {
+    case "ok":
+      return "Token OK";
+    case "expiring_soon":
+      return "Token süresi yakın";
+    case "expired":
+      return "Token süresi doldu";
+    case "missing":
+      return "Bağlı değil";
+    default:
+      return code;
+  }
+}
+
+type HealthPanelProps = {
+  health: SocialHubHealth | null;
+  deliveries: SocialHubOutboundDelivery[];
+  busy: boolean;
+  canManage: boolean;
+  onRefreshToken: (platformCode: string) => void;
+  onReload: () => void;
+};
+
+export function SocialHealthPanel({
+  health,
+  deliveries,
+  busy,
+  canManage,
+  onRefreshToken,
+  onReload,
+}: HealthPanelProps) {
+  if (!health) {
+    return (
+      <section className="social-hub-panel module-panel module-panel--elevated">
+        <p className="module-hint">Sağlık verisi yükleniyor…</p>
+      </section>
+    );
+  }
+  return (
+    <section className="social-hub-panel module-panel module-panel--elevated">
+      <header className="social-hub-panel-head">
+        <h2 className="account-card-title">Bağlantı sağlığı</h2>
+        <p className="account-card-lead">
+          Token durumu, kurulum uyarıları ve son 24 saatteki kanal gönderim hataları.
+          Meta kanalları için otomatik token yenileme arka planda çalışır.
+        </p>
+        <button
+          type="button"
+          className="btn-account-ghost"
+          disabled={busy}
+          onClick={onReload}
+        >
+          Yenile
+        </button>
+      </header>
+      <p
+        className={`social-hub-health-overall social-hub-health-overall--${health.overallStatus}`}
+      >
+        Genel durum: <strong>{healthOverallLabel(health.overallStatus)}</strong>
+      </p>
+      <ul className="social-hub-health-grid">
+        {health.channels.map((channel) => (
+          <li key={channel.platformCode} className="social-hub-health-card">
+            <h3>{channel.label}</h3>
+            <p className="social-hub-health-meta">
+              {statusLabel(channel.statusCode)} · {tokenHealthLabel(channel.tokenHealth)}
+            </p>
+            <p className="module-hint">
+              Açık konuşma: {channel.openThreadCount} · 24s hata:{" "}
+              {channel.recentOutboundFailures24h}
+            </p>
+            {channel.setupWarnings.map((warning) => (
+              <p key={warning} className="social-hub-setup-warn">{warning}</p>
+            ))}
+            {canManage && channel.canRefreshToken ? (
+              <button
+                type="button"
+                className="btn-account-primary"
+                disabled={busy}
+                onClick={() => onRefreshToken(channel.platformCode)}
+              >
+                Token yenile
+              </button>
+            ) : null}
+          </li>
+        ))}
+      </ul>
+      <header className="social-hub-panel-head">
+        <h3 className="account-card-title">Gönderim geçmişi</h3>
+        <p className="account-card-lead">
+          Mesajlar’dan kanala giden metin denemeleri (son kayıtlar).
+        </p>
+      </header>
+      <ul className="social-hub-delivery-log">
+        {deliveries.length === 0 ? (
+          <li className="module-hint">Henüz kayıt yok.</li>
+        ) : (
+          deliveries.map((row) => (
+            <li key={row.id} className="social-hub-delivery-row">
+              <time dateTime={row.createdAt}>
+                {new Date(row.createdAt).toLocaleString("tr-TR")}
+              </time>
+              <span className="social-hub-delivery-platform">{row.platformLabel}</span>
+              <span
+                className={
+                  row.status === "ok"
+                    ? "social-hub-delivery-status social-hub-delivery-status--ok"
+                    : "social-hub-delivery-status social-hub-delivery-status--failed"
+                }
+              >
+                {row.status === "ok" ? "OK" : "Hata"}
+              </span>
+              {row.errorMessage ? (
+                <p className="social-hub-delivery-error">{row.errorMessage}</p>
+              ) : null}
             </li>
           ))
         )}

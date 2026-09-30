@@ -12,7 +12,7 @@ export class SocialHubModuleStatusController {
   } {
     return {
       module: "social_hub",
-      phase: "i",
+      phase: "k",
       subscriptionModuleCode: SubscriptionModuleCode.SocialHub,
       features: [
         "connections_skeleton",
@@ -43,6 +43,11 @@ export class SocialHubModuleStatusController {
         "oauth_provider_polish",
         "connection_setup_warnings",
         "outbound_delivery_ui",
+        "connection_health_dashboard",
+        "meta_token_refresh",
+        "token_refresh_scheduler",
+        "outbound_delivery_log",
+        "delivery_history_ui",
       ],
     };
   }

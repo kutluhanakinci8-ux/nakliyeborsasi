@@ -15,6 +15,7 @@ SQL_FILES=(
   social-hub-oauth-states.sql
   social-hub-phase-f.sql
   social-hub-phase-i.sql
+  social-hub-phase-jk.sql
 )
 
 for name in "${SQL_FILES[@]}"; do

@@ -2,6 +2,8 @@ import { PublicApiConfiguration } from "./PublicApiConfiguration";
 import type {
   SocialHubAnalytics,
   SocialHubAuditEntry,
+  SocialHubHealth,
+  SocialHubOutboundDelivery,
   SocialHubSnapshot,
   SocialHubTeamMember,
 } from "./socialHubTypes";
@@ -46,6 +48,45 @@ export class SocialHubApiClient {
   ): Promise<SocialHubSnapshot> {
     const payload = await socialHubFetch<unknown>(accessToken, "");
     return normalizeSocialHubSnapshot(payload);
+  }
+
+  public static async fetchHealth(
+    accessToken: string,
+  ): Promise<SocialHubHealth> {
+    const payload = await socialHubFetch<{ health: SocialHubHealth }>(
+      accessToken,
+      "/health",
+    );
+    return payload.health;
+  }
+
+  public static async fetchDeliveryLog(
+    accessToken: string,
+    params?: { threadId?: string; limit?: number },
+  ): Promise<SocialHubOutboundDelivery[]> {
+    const query = new URLSearchParams();
+    if (params?.threadId) {
+      query.set("threadId", params.threadId);
+    }
+    if (params?.limit) {
+      query.set("limit", String(params.limit));
+    }
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    const payload = await socialHubFetch<{
+      deliveries: SocialHubOutboundDelivery[];
+    }>(accessToken, `/delivery-log${suffix}`);
+    return payload.deliveries;
+  }
+
+  public static async refreshConnectionToken(
+    accessToken: string,
+    platformCode: string,
+  ): Promise<{ refresh: { refreshed: boolean; message: string } }> {
+    return socialHubFetch(
+      accessToken,
+      `/connections/${platformCode}/refresh-token`,
+      { method: "POST" },
+    );
   }
 
   public static async connectPlatform(

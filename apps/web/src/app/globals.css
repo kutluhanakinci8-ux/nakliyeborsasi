@@ -15325,6 +15325,93 @@ button.btn-secondary {
   color: #15803d;
 }
 
+.chat-social-delivery-log {
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.chat-social-delivery-log li {
+  margin-top: 0.2rem;
+}
+
+.social-hub-health-overall {
+  font-size: 0.95rem;
+  margin: 0 0 1rem;
+}
+
+.social-hub-health-overall--healthy strong {
+  color: #15803d;
+}
+
+.social-hub-health-overall--attention strong {
+  color: #b45309;
+}
+
+.social-hub-health-overall--critical strong {
+  color: #b91c1c;
+}
+
+.social-hub-health-grid {
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
+.social-hub-health-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  background: #fff;
+}
+
+.social-hub-health-meta {
+  font-size: 0.85rem;
+  margin: 0.25rem 0;
+}
+
+.social-hub-delivery-log {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.social-hub-delivery-row {
+  border-bottom: 1px solid #f1f5f9;
+  padding: 0.65rem 0;
+  font-size: 0.88rem;
+}
+
+.social-hub-delivery-platform {
+  margin-left: 0.5rem;
+  font-weight: 600;
+}
+
+.social-hub-delivery-status {
+  margin-left: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.social-hub-delivery-status--ok {
+  color: #15803d;
+}
+
+.social-hub-delivery-status--failed {
+  color: #b91c1c;
+}
+
+.social-hub-delivery-error {
+  margin: 0.25rem 0 0;
+  font-size: 0.82rem;
+  color: #64748b;
+}
+
 .social-hub-compose {
   display: flex;
   flex-direction: column;
