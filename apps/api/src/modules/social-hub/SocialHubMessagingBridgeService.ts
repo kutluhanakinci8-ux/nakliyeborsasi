@@ -92,4 +92,36 @@ export class SocialHubMessagingBridgeService {
     await this.linkRepository.save(link);
     return { messageId: message.id, threadId: link.messageThreadId };
   }
+
+  public async ingestWebhookInbound(params: {
+    companyId: string;
+    platformCode: SocialPlatformCode;
+    externalThreadId: string;
+    displayLabel: string;
+    bodyText: string;
+    externalMessageId: string | null;
+  }): Promise<{ ingested: boolean; threadId?: string }> {
+    const link = await this.ensureExternalThread({
+      companyId: params.companyId,
+      platformCode: params.platformCode,
+      externalThreadId: params.externalThreadId,
+      displayLabel: params.displayLabel,
+    });
+    if (
+      params.externalMessageId &&
+      link.lastExternalMessageId === params.externalMessageId
+    ) {
+      return { ingested: false, threadId: link.messageThreadId };
+    }
+    await this.ingestInboundMessage(
+      params.companyId,
+      link.id,
+      params.bodyText,
+    );
+    if (params.externalMessageId) {
+      link.lastExternalMessageId = params.externalMessageId;
+      await this.linkRepository.save(link);
+    }
+    return { ingested: true, threadId: link.messageThreadId };
+  }
 }

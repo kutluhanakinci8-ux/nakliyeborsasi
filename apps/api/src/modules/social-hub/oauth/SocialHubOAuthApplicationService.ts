@@ -10,6 +10,7 @@ import { encryptTotpSecret } from "../../auth/TotpSecretCipher";
 import { CompanySocialConnectionEntity } from "../../../infrastructure/database/entities/CompanySocialConnectionEntity";
 import { SocialHubOAuthConfigService } from "./SocialHubOAuthConfigService";
 import { SocialHubOAuthStateService } from "./SocialHubOAuthStateService";
+import { SocialHubMetaGraphService } from "./SocialHubMetaGraphService";
 import type { SocialOAuthStartResult } from "../providers/SocialProviderPort";
 
 const META_SCOPES: Record<string, string> = {
@@ -30,6 +31,7 @@ export class SocialHubOAuthApplicationService {
     private readonly oauthStateService: SocialHubOAuthStateService,
     @InjectRepository(CompanySocialConnectionEntity)
     private readonly connectionRepository: Repository<CompanySocialConnectionEntity>,
+    private readonly metaGraphService: SocialHubMetaGraphService,
   ) {}
 
   public async startOAuth(
@@ -175,11 +177,16 @@ export class SocialHubOAuthApplicationService {
         payload.error?.message ?? "Meta token alınamadı.",
       );
     }
+    const enriched = await this.metaGraphService.enrichConnectionAfterOAuth(
+      companyId,
+      platformCode,
+      payload.access_token,
+    );
     await this.persistConnection(companyId, platformCode, {
       accessToken: payload.access_token,
       expiresInSec: payload.expires_in ?? null,
-      externalAccountId: null,
-      displayName: "Meta bağlantısı",
+      externalAccountId: enriched.externalAccountId,
+      displayName: enriched.displayName,
     });
   }
 

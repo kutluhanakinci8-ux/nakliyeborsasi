@@ -1,13 +1,19 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import { Injectable, Logger } from "@nestjs/common";
 import { SocialHubOAuthConfigService } from "./SocialHubOAuthConfigService";
-import { SocialPlatformCode } from "@nakliyeborsasi/core";
+import { parseMetaWebhookBody } from "./SocialHubMetaWebhookParser";
+import { SocialHubWebhookRoutingService } from "./SocialHubWebhookRoutingService";
+import { SocialHubMessagingBridgeService } from "../SocialHubMessagingBridgeService";
 
 @Injectable()
 export class SocialHubWebhookIngestService {
   private readonly logger = new Logger(SocialHubWebhookIngestService.name);
 
-  public constructor(private readonly oauthConfig: SocialHubOAuthConfigService) {}
+  public constructor(
+    private readonly oauthConfig: SocialHubOAuthConfigService,
+    private readonly routingService: SocialHubWebhookRoutingService,
+    private readonly messagingBridgeService: SocialHubMessagingBridgeService,
+  ) {}
 
   public async ingestMetaPayload(
     signatureHeader: string | undefined,
@@ -15,9 +21,33 @@ export class SocialHubWebhookIngestService {
     rawBody: Buffer | undefined,
   ): Promise<void> {
     this.verifyMetaSignature(signatureHeader, rawBody);
-    const entries = (body.entry as unknown[]) ?? [];
-    this.logger.log(`Meta webhook entries=${entries.length}`);
-    await this.tryIngestMessagingSample(body, SocialPlatformCode.Instagram);
+    const { object, messages } = parseMetaWebhookBody(body);
+    this.logger.log(`Meta webhook object=${object} messages=${messages.length}`);
+    for (const message of messages) {
+      const route = await this.routingService.resolveFromMetaPayload({
+        object,
+        entryId: message.entryId,
+      });
+      if (!route) {
+        this.logger.warn(
+          `Webhook route missing entry=${message.entryId} object=${object}`,
+        );
+        continue;
+      }
+      const result = await this.messagingBridgeService.ingestWebhookInbound({
+        companyId: route.companyId,
+        platformCode: route.platformCode,
+        externalThreadId: message.externalThreadId,
+        displayLabel: message.displayLabel,
+        bodyText: message.bodyText,
+        externalMessageId: message.externalMessageId,
+      });
+      if (result.ingested) {
+        this.logger.log(
+          `Ingested social message company=${route.companyId} thread=${result.threadId}`,
+        );
+      }
+    }
   }
 
   public async ingestWhatsAppPayload(
@@ -25,10 +55,7 @@ export class SocialHubWebhookIngestService {
     body: Record<string, unknown>,
     rawBody: Buffer | undefined,
   ): Promise<void> {
-    this.verifyMetaSignature(signatureHeader, rawBody);
-    const entries = (body.entry as unknown[]) ?? [];
-    this.logger.log(`WhatsApp webhook entries=${entries.length}`);
-    await this.tryIngestMessagingSample(body, SocialPlatformCode.WhatsAppCloud);
+    await this.ingestMetaPayload(signatureHeader, body, rawBody);
   }
 
   private verifyMetaSignature(
@@ -52,13 +79,5 @@ export class SocialHubWebhookIngestService {
     } catch {
       this.logger.warn("Meta webhook signature parse failed");
     }
-  }
-
-  /** MVP: gerçek tenant eşlemesi Faz E+ ile; şimdilik yalnızca log + şema doğrulama. */
-  private async tryIngestMessagingSample(
-    _body: Record<string, unknown>,
-    platform: SocialPlatformCode,
-  ): Promise<void> {
-    this.logger.debug(`Webhook ingest placeholder platform=${platform}`);
   }
 }

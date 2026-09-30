@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { SocialPlatformCode } from "@nakliyeborsasi/core";
 import { SocialHubOAuthApplicationService } from "../oauth/SocialHubOAuthApplicationService";
 import { SocialHubOAuthConfigService } from "../oauth/SocialHubOAuthConfigService";
+import { SocialHubInboxSyncApplicationService } from "../SocialHubInboxSyncApplicationService";
 import type {
   SocialInboxSyncResult,
   SocialOAuthStartResult,
@@ -20,6 +21,7 @@ export class WhatsAppCloudWebhookProvider implements SocialProviderPort {
   public constructor(
     private readonly socialHubOAuthApplicationService: SocialHubOAuthApplicationService,
     private readonly socialHubOAuthConfigService: SocialHubOAuthConfigService,
+    private readonly socialHubInboxSyncApplicationService: SocialHubInboxSyncApplicationService,
   ) {}
 
   public getImplementationStatus(): "pending" | "ready" {
@@ -48,11 +50,10 @@ export class WhatsAppCloudWebhookProvider implements SocialProviderPort {
     };
   }
 
-  public async syncInbox(_companyId: string): Promise<SocialInboxSyncResult> {
-    return {
-      implementationStatus: "pending",
-      importedThreadCount: 0,
-      message: PENDING_MESSAGE,
-    };
+  public async syncInbox(companyId: string): Promise<SocialInboxSyncResult> {
+    return this.socialHubInboxSyncApplicationService.sync(
+      companyId,
+      this.platformCode,
+    );
   }
 }

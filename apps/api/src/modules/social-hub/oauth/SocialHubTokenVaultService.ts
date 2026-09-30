@@ -1,0 +1,71 @@
+import { Injectable } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import {
+  SocialConnectionStatusCode,
+  SocialPlatformCode,
+  ValidationException,
+} from "@nakliyeborsasi/core";
+import { decryptTotpSecret } from "../../auth/TotpSecretCipher";
+import { CompanySocialConnectionEntity } from "../../../infrastructure/database/entities/CompanySocialConnectionEntity";
+import { SocialHubOAuthConfigService } from "./SocialHubOAuthConfigService";
+
+@Injectable()
+export class SocialHubTokenVaultService {
+  public constructor(
+    @InjectRepository(CompanySocialConnectionEntity)
+    private readonly connectionRepository: Repository<CompanySocialConnectionEntity>,
+    private readonly oauthConfig: SocialHubOAuthConfigService,
+  ) {}
+
+  public async getAccessToken(
+    companyId: string,
+    platformCode: SocialPlatformCode,
+  ): Promise<string | null> {
+    const row = await this.connectionRepository.findOne({
+      where: {
+        companyId,
+        platformCode,
+        statusCode: SocialConnectionStatusCode.Connected,
+      },
+    });
+    if (!row?.accessTokenCiphertext) {
+      return null;
+    }
+    const key = this.oauthConfig.getOAuthEncryptionKey();
+    if (!key) {
+      return null;
+    }
+    try {
+      return decryptTotpSecret(row.accessTokenCiphertext, key);
+    } catch {
+      return null;
+    }
+  }
+
+  public async requireAccessToken(
+    companyId: string,
+    platformCode: SocialPlatformCode,
+  ): Promise<string> {
+    const token = await this.getAccessToken(companyId, platformCode);
+    if (!token) {
+      throw new ValidationException(
+        "Kanal erişim tokenı yok; önce OAuth bağlantısı yapın.",
+      );
+    }
+    return token;
+  }
+
+  public async findConnectedByExternalAccount(
+    platformCode: SocialPlatformCode,
+    externalAccountId: string,
+  ): Promise<CompanySocialConnectionEntity | null> {
+    return this.connectionRepository.findOne({
+      where: {
+        platformCode,
+        externalAccountId,
+        statusCode: SocialConnectionStatusCode.Connected,
+      },
+    });
+  }
+}
