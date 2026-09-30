@@ -9,11 +9,13 @@ import {
   loadOrganizationAdminSettings,
   loadOrganizationProfile,
   saveOrganizationProfile,
+  syncOrganizationWebsiteFromServer,
   type OrganizationProfile,
 } from "../../../../lib/organizationProfile";
 import {
   enrichOrganizationFromWebsite,
   getPendingWebsiteEnrichmentUrl,
+  queueWebsiteEnrichmentIfNotCompleted,
   runPendingWebsiteEnrichment,
 } from "../../../../lib/websiteEnrichmentWorkflow";
 import { useWebSession } from "../../../../context/WebSessionProvider";
@@ -24,7 +26,7 @@ import { OrganizationMailInboxPanel } from "../../../../components/account/Organ
 import { PlatformSupportChatButton } from "../../../../components/account/PlatformSupportChatButton";
 
 export function OrganizationPageClient() {
-  const { session } = useWebSession();
+  const { session, refreshSession } = useWebSession();
   const companyId = session?.companyId ?? "";
   const emailAddress = session?.emailAddress ?? "";
   const [profile, setProfile] = useState<OrganizationProfile>(() =>
@@ -38,14 +40,28 @@ export function OrganizationPageClient() {
   const [pendingWebsiteUrl, setPendingWebsiteUrl] = useState<string | null>(null);
   const enrichmentStartedForCompany = useRef<string | null>(null);
 
+  const serverWebsiteUrl = session?.companyWebsiteUrl?.trim() ?? "";
+
+  useEffect(() => {
+    void refreshSession();
+  }, [refreshSession]);
+
   useEffect(() => {
     if (!companyId) {
       return;
     }
-    setProfile(loadOrganizationProfile(companyId, emailAddress));
+    const synced = syncOrganizationWebsiteFromServer(
+      companyId,
+      emailAddress,
+      serverWebsiteUrl || null,
+    );
+    setProfile(synced);
     setAdminSettings(loadOrganizationAdminSettings(companyId));
+    if (serverWebsiteUrl) {
+      queueWebsiteEnrichmentIfNotCompleted(companyId, serverWebsiteUrl, synced);
+    }
     setPendingWebsiteUrl(getPendingWebsiteEnrichmentUrl(companyId));
-  }, [companyId, emailAddress]);
+  }, [companyId, emailAddress, serverWebsiteUrl]);
 
   useEffect(() => {
     if (!companyId || !pendingWebsiteUrl) {
@@ -102,12 +118,23 @@ export function OrganizationPageClient() {
     setProfile((current) => ({ ...current, ...patch }));
   }
 
+  function resolveWebsiteUrlForScan(): string {
+    return profile.website.trim() || serverWebsiteUrl;
+  }
+
   async function rescanWebsite(): Promise<void> {
-    const url = profile.website.trim();
+    const url = resolveWebsiteUrlForScan();
     if (!companyId || !url) {
-      setSaveMessage("Önce bir web sitesi adresi girin.");
-      window.setTimeout(() => setSaveMessage(""), 5000);
+      setSaveMessage(
+        "Web sitesi adresi bulunamadı. İletişim bölümüne adres girin veya kayıt sırasında girdiğiniz adresin oturumda yüklendiğinden emin olun.",
+      );
+      window.setTimeout(() => setSaveMessage(""), 8000);
       return;
+    }
+    if (!profile.website.trim() && url) {
+      const next = { ...profile, website: url };
+      saveOrganizationProfile(companyId, next);
+      setProfile(next);
     }
     setIsEnrichingWebsite(true);
     setSaveMessage("Web sitesi yeniden taranıyor…");
@@ -117,11 +144,11 @@ export function OrganizationPageClient() {
       url,
     );
     setIsEnrichingWebsite(false);
-    if (outcome === "success") {
+    if (outcome.status === "success") {
       setProfile(loadOrganizationProfile(companyId, emailAddress));
-      setSaveMessage("Tarama tamamlandı; yeni alanlar güncellendi.");
+      setSaveMessage("Tarama tamamlandı; logo, açıklama ve iletişim alanları güncellendi.");
     } else {
-      setSaveMessage("Tarama başarısız. Adresi kontrol edip tekrar deneyin.");
+      setSaveMessage(outcome.message);
     }
     window.setTimeout(() => setSaveMessage(""), 8000);
   }
@@ -176,6 +203,16 @@ export function OrganizationPageClient() {
       <div className="account-org-layout">
         <OrganizationSectionNav />
         <div className="account-org-main">
+      {saveMessage ? (
+        <p className="account-save-hint account-org-status-banner" role="status">
+          {saveMessage}
+        </p>
+      ) : null}
+      {isEnrichingWebsite ? (
+        <p className="account-enrichment-banner module-hint" role="status">
+          Web sitesi taranıyor…
+        </p>
+      ) : null}
       <section
         id="org-dogrulama"
         className="account-verify-banner module-panel module-panel--elevated account-org-section"
@@ -346,7 +383,6 @@ export function OrganizationPageClient() {
             />
           </label>
         </div>
-        {saveMessage ? <p className="account-save-hint">{saveMessage}</p> : null}
       </section>
 
       <section
@@ -380,6 +416,30 @@ export function OrganizationPageClient() {
           </div>
         </header>
         <div className="account-form-grid">
+          <label className="label-light account-form-span-2">
+            Taranacak web sitesi
+            <input
+              className="input-light"
+              type="text"
+              inputMode="url"
+              name="nb-web-scan-url"
+              autoComplete="url"
+              data-lpignore="true"
+              data-1p-ignore
+              placeholder="https://cengizhanlojistik.com.tr"
+              value={profile.website}
+              onChange={(event) =>
+                updateProfile({ website: event.target.value })
+              }
+            />
+            <span className="module-hint">
+              Kayıt sırasında girdiğiniz adres otomatik gelir. Boşsa buraya yazıp
+              &quot;Web sitesini yeniden tara&quot; deyin.
+              {serverWebsiteUrl && serverWebsiteUrl !== profile.website.trim()
+                ? ` Veritabanında kayıtlı: ${serverWebsiteUrl}`
+                : ""}
+            </span>
+          </label>
           <div className="account-logo-field account-form-span-2">
             <p className="label-light">Şirket logosu</p>
             <div className="account-logo-preview-row">

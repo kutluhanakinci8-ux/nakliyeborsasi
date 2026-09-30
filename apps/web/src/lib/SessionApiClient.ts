@@ -6,6 +6,7 @@ export type AuthSessionRecord = {
   emailAddress: string;
   roleCodes: string[];
   companyParticipantTypeCode?: string | null;
+  companyWebsiteUrl?: string | null;
 };
 
 export class SessionApiClient {
