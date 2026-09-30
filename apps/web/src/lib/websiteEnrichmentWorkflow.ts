@@ -183,14 +183,18 @@ export function clearPendingWebsiteEnrichment(companyId: string): void {
   window.localStorage.removeItem(`${PENDING_ENRICHMENT_PREFIX}${companyId}`);
 }
 
+export type WebsiteEnrichmentOutcome =
+  | { status: "success" }
+  | { status: "error"; message: string };
+
 export async function enrichOrganizationFromWebsite(
   companyId: string,
   primaryEmail: string,
   websiteUrl: string,
-): Promise<"success" | "error"> {
+): Promise<WebsiteEnrichmentOutcome> {
   const trimmed = websiteUrl.trim();
   if (!companyId || !trimmed) {
-    return "error";
+    return { status: "error", message: "Firma kimliği veya web adresi eksik." };
   }
   try {
     const enrichment = await AuthApiClient.enrichCompanyWebsite(trimmed);
@@ -198,16 +202,20 @@ export async function enrichOrganizationFromWebsite(
     const merged = mergeEnrichmentIntoProfile(profile, enrichment);
     saveOrganizationProfile(companyId, merged);
     if (merged.instagramUrl.trim()) {
-      await refreshInstagramStatsForOrganization(
+      void refreshInstagramStatsForOrganization(
         companyId,
         primaryEmail,
         merged.instagramUrl,
         false,
       );
     }
-    return "success";
-  } catch {
-    return "error";
+    return { status: "success" };
+  } catch (error) {
+    const message =
+      error instanceof Error && error.message.trim()
+        ? error.message
+        : "Web sitesi bilgileri alınamadı.";
+    return { status: "error", message };
   }
 }
 
@@ -224,8 +232,9 @@ export async function runPendingWebsiteEnrichment(
     primaryEmail,
     pendingUrl,
   );
-  if (outcome === "success") {
+  if (outcome.status === "success") {
     clearPendingWebsiteEnrichment(companyId);
+    return "success";
   }
-  return outcome;
+  return "error";
 }

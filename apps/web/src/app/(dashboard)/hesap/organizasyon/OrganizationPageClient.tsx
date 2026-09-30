@@ -26,7 +26,7 @@ import { OrganizationMailInboxPanel } from "../../../../components/account/Organ
 import { PlatformSupportChatButton } from "../../../../components/account/PlatformSupportChatButton";
 
 export function OrganizationPageClient() {
-  const { session } = useWebSession();
+  const { session, refreshSession } = useWebSession();
   const companyId = session?.companyId ?? "";
   const emailAddress = session?.emailAddress ?? "";
   const [profile, setProfile] = useState<OrganizationProfile>(() =>
@@ -41,6 +41,10 @@ export function OrganizationPageClient() {
   const enrichmentStartedForCompany = useRef<string | null>(null);
 
   const serverWebsiteUrl = session?.companyWebsiteUrl?.trim() ?? "";
+
+  useEffect(() => {
+    void refreshSession();
+  }, [refreshSession]);
 
   useEffect(() => {
     if (!companyId) {
@@ -140,11 +144,11 @@ export function OrganizationPageClient() {
       url,
     );
     setIsEnrichingWebsite(false);
-    if (outcome === "success") {
+    if (outcome.status === "success") {
       setProfile(loadOrganizationProfile(companyId, emailAddress));
-      setSaveMessage("Tarama tamamlandı; yeni alanlar güncellendi.");
+      setSaveMessage("Tarama tamamlandı; logo, açıklama ve iletişim alanları güncellendi.");
     } else {
-      setSaveMessage("Tarama başarısız. Adresi kontrol edip tekrar deneyin.");
+      setSaveMessage(outcome.message);
     }
     window.setTimeout(() => setSaveMessage(""), 8000);
   }
@@ -411,13 +415,31 @@ export function OrganizationPageClient() {
             </button>
           </div>
         </header>
-        {serverWebsiteUrl && !profile.website.trim() ? (
-          <p className="module-hint">
-            Kayıtlı web adresi: <code>{serverWebsiteUrl}</code> (veritabanından;
-            tarama bu adresi kullanır.)
-          </p>
-        ) : null}
         <div className="account-form-grid">
+          <label className="label-light account-form-span-2">
+            Taranacak web sitesi
+            <input
+              className="input-light"
+              type="text"
+              inputMode="url"
+              name="nb-web-scan-url"
+              autoComplete="url"
+              data-lpignore="true"
+              data-1p-ignore
+              placeholder="https://cengizhanlojistik.com.tr"
+              value={profile.website}
+              onChange={(event) =>
+                updateProfile({ website: event.target.value })
+              }
+            />
+            <span className="module-hint">
+              Kayıt sırasında girdiğiniz adres otomatik gelir. Boşsa buraya yazıp
+              &quot;Web sitesini yeniden tara&quot; deyin.
+              {serverWebsiteUrl && serverWebsiteUrl !== profile.website.trim()
+                ? ` Veritabanında kayıtlı: ${serverWebsiteUrl}`
+                : ""}
+            </span>
+          </label>
           <div className="account-logo-field account-form-span-2">
             <p className="label-light">Şirket logosu</p>
             <div className="account-logo-preview-row">
