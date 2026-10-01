@@ -40,6 +40,8 @@ export function AdminSocialHubRoadmapPanel() {
     return null;
   }
 
+  const betaOps = snapshot.betaOps;
+
   return (
     <section className="pa-panel" style={{ marginTop: "1.25rem" }}>
       <h2 className="pa-panel-title">Sosyal hub — yol haritası ilgi</h2>
@@ -67,6 +69,59 @@ export function AdminSocialHubRoadmapPanel() {
           ))}
         </tbody>
       </table>
+
+      {betaOps ? (
+        <>
+          <h3 className="pa-panel-title" style={{ marginTop: "1.5rem" }}>
+            Beta kanal operasyonları
+          </h3>
+          <p className="pa-panel-lead">
+            Bağlı firmalar, açık Mesajlar köprüsü konuşmaları ve son 24 saat giden
+            denemeleri. Sunucu webhook hazırlığı: TikTok köprü{" "}
+            {betaOps.integrationWebhookReadiness.tiktok.webhookBridgeEnabled
+              ? "açık"
+              : "kapalı"}
+            , YouTube köprü{" "}
+            {betaOps.integrationWebhookReadiness.youtube.webhookBridgeEnabled
+              ? "açık"
+              : "kapalı"}
+            .
+          </p>
+          <table className="pa-table">
+            <thead>
+              <tr>
+                <th>Kanal</th>
+                <th>Bağlı firma</th>
+                <th>Açık konuşma</th>
+                <th>24s giden (ok)</th>
+                <th>24s giden (hata)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {betaOps.platforms.map((row) => (
+                <tr key={row.platformCode}>
+                  <td>{row.label}</td>
+                  <td>{row.connectedCompanyCount}</td>
+                  <td>{row.openThreadCount}</td>
+                  <td>{row.outboundOk24h}</td>
+                  <td>{row.outboundFailed24h}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <ul className="pa-kv-list module-hint">
+            <li>
+              <span>TikTok webhook</span>
+              <span>{betaOps.integrationWebhooks.tiktok}</span>
+            </li>
+            <li>
+              <span>YouTube webhook</span>
+              <span>{betaOps.integrationWebhooks.youtube}</span>
+            </li>
+          </ul>
+        </>
+      ) : null}
+
       <button type="button" className="btn-account-ghost" onClick={() => void refresh()}>
         Yenile
       </button>

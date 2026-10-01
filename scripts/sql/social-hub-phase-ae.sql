@@ -1,0 +1,1 @@
+-- Faz AE: şema değişikliği yok (admin beta ops, YouTube OIDC aud beta, UI filtreler)

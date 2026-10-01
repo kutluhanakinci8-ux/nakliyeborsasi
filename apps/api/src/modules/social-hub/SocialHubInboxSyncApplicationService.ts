@@ -64,7 +64,7 @@ export class SocialHubInboxSyncApplicationService {
         implementationStatus: "pending",
         importedThreadCount: 0,
         message:
-          "LinkedIn gelen kutusu henüz desteklenmiyor; feed yayını aktif. Mesajlaşma yol haritasında.",
+          "LinkedIn gelen kutusu henüz desteklenmiyor; feed yayını aktif. TikTok/YouTube beta webhook köprüsü ayrı yol haritası kanallarında.",
       };
     }
     if (platformCode === SocialPlatformCode.Instagram) {

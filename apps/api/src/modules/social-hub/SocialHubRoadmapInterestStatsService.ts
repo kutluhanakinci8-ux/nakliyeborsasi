@@ -5,6 +5,10 @@ import { CompanySocialSettingsEntity } from "../../infrastructure/database/entit
 import { SOCIAL_HUB_ROADMAP_PROVIDERS } from "./socialHubRoadmapProviders";
 import { parseRoadmapInterestPlatformCodes } from "./socialHubRoadmapInterest";
 import { isRoadmapOAuthEnvConfigured } from "./socialHubRoadmapOAuthReadiness";
+import {
+  SocialHubRoadmapBetaOpsStatsService,
+  type SocialHubRoadmapBetaOpsSnapshot,
+} from "./SocialHubRoadmapBetaOpsStatsService";
 
 export type SocialHubRoadmapInterestPlatformStat = {
   platformCode: string;
@@ -16,6 +20,7 @@ export type SocialHubRoadmapInterestPlatformStat = {
 export type SocialHubRoadmapInterestStatsSnapshot = {
   interestedCompanyCount: number;
   platforms: SocialHubRoadmapInterestPlatformStat[];
+  betaOps: SocialHubRoadmapBetaOpsSnapshot;
 };
 
 @Injectable()
@@ -23,6 +28,7 @@ export class SocialHubRoadmapInterestStatsService {
   public constructor(
     @InjectRepository(CompanySocialSettingsEntity)
     private readonly settingsRepository: Repository<CompanySocialSettingsEntity>,
+    private readonly roadmapBetaOpsStatsService: SocialHubRoadmapBetaOpsStatsService,
   ) {}
 
   public async buildSnapshot(): Promise<SocialHubRoadmapInterestStatsSnapshot> {
@@ -46,6 +52,7 @@ export class SocialHubRoadmapInterestStatsService {
         counts.set(code, (counts.get(code) ?? 0) + 1);
       }
     }
+    const betaOps = await this.roadmapBetaOpsStatsService.buildSnapshot();
     return {
       interestedCompanyCount: companiesWithInterest.size,
       platforms: SOCIAL_HUB_ROADMAP_PROVIDERS.map((provider) => ({
@@ -54,6 +61,7 @@ export class SocialHubRoadmapInterestStatsService {
         interestedCompanyCount: counts.get(provider.platformCode) ?? 0,
         oauthEnvConfigured: isRoadmapOAuthEnvConfigured(provider.platformCode),
       })),
+      betaOps,
     };
   }
 }
