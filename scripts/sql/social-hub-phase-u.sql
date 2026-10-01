@@ -1,0 +1,1 @@
+-- Faz U: şema değişikliği yok (30g istatistik, manuel bildirim bekleme, yol haritası)

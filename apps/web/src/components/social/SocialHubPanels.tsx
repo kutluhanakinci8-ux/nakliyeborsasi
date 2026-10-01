@@ -999,14 +999,24 @@ export function SocialHealthPanel({
           </label>
         ) : null}
         {canManage ? (
-          <button
-            type="button"
-            className="btn-account-ghost"
-            disabled={busy}
-            onClick={onSendWeeklyEmailNow}
-          >
-            Haftalık özet gönder (şimdi)
-          </button>
+          <>
+            <button
+              type="button"
+              className="btn-account-ghost"
+              disabled={busy}
+              onClick={onSendWeeklyEmailNow}
+            >
+              Haftalık özet gönder (şimdi)
+            </button>
+            {notificationInsights &&
+            notificationInsights.manualNotifyCooldownMinutes > 0 ? (
+              <p className="module-hint">
+                Manuel Slack özet ve haftalık e-posta için{" "}
+                {notificationInsights.manualNotifyCooldownMinutes} dakikalık
+                bekleme uygulanır.
+              </p>
+            ) : null}
+          </>
         ) : null}
         {canManage ? (
           <div className="social-hub-alert-thresholds social-hub-slack-settings">
@@ -1333,6 +1343,34 @@ export function SocialHealthPanel({
                   >
                     <div
                       className="social-hub-channel-bar-fill"
+                      style={{ width: `${row.successRatePercent}%` }}
+                    />
+                  </div>
+                  <span className="social-hub-channel-bar-pct">
+                    %{row.successRatePercent}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : null}
+          {notificationInsights.channelOutbound30d.length > 0 ? (
+            <div className="social-hub-channel-bars social-hub-channel-bars--30d">
+              <p className="module-hint">
+                30 gün: {notificationInsights.outboundDeliveriesLast30d.ok} başarılı ·{" "}
+                {notificationInsights.outboundDeliveriesLast30d.failed} hatalı
+              </p>
+              {notificationInsights.channelOutbound30d.map((row) => (
+                <div
+                  key={`30d-${row.platformCode}`}
+                  className="social-hub-channel-bar-row"
+                >
+                  <span className="social-hub-channel-bar-label">{row.label}</span>
+                  <div
+                    className="social-hub-channel-bar-track"
+                    role="presentation"
+                  >
+                    <div
+                      className="social-hub-channel-bar-fill social-hub-channel-bar-fill--30d"
                       style={{ width: `${row.successRatePercent}%` }}
                     />
                   </div>
