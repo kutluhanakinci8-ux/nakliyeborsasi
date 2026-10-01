@@ -10,6 +10,7 @@ import { OperationalNotificationService } from "../notification/OperationalNotif
 import { labelSocialPlatform } from "./socialHubPlatformLabels";
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+const MONTH_MS = 30 * 24 * 60 * 60 * 1000;
 
 @Injectable()
 export class SocialHubWeeklyEmailService {
@@ -75,24 +76,34 @@ export class SocialHubWeeklyEmailService {
     }
     try {
       const since7d = new Date(Date.now() - WEEK_MS);
+      const since30d = new Date(Date.now() - MONTH_MS);
       const health = await this.connectionHealthService.buildHealthDashboard(
         companyId,
       );
-      const platformStats =
-        await this.deliveryLogService.summarizeRecentByPlatform(
-          companyId,
-          since7d,
-        );
-      const channelLines = [...platformStats.entries()].map(([code, stats]) => {
+      const [platformStats7d, platformStats30d] = await Promise.all([
+        this.deliveryLogService.summarizeRecentByPlatform(companyId, since7d),
+        this.deliveryLogService.summarizeRecentByPlatform(companyId, since30d),
+      ]);
+      const channelLines7d = [...platformStats7d.entries()].map(([code, stats]) => {
         const total = stats.ok + stats.failed;
         const rate = total > 0 ? Math.round((stats.ok / total) * 100) : 100;
         return `${labelSocialPlatform(code)}: ${stats.ok}/${total} başarılı (%${rate})`;
       });
+      const channelLines30d = [...platformStats30d.entries()].map(
+        ([code, stats]) => {
+          const total = stats.ok + stats.failed;
+          const rate = total > 0 ? Math.round((stats.ok / total) * 100) : 100;
+          return `${labelSocialPlatform(code)}: ${stats.ok}/${total} (%${rate})`;
+        },
+      );
       const summaryParts = [
         `Genel durum: ${health.overallStatus}`,
-        channelLines.length > 0
-          ? `7g kanal gönderimi — ${channelLines.join(" | ")}`
+        channelLines7d.length > 0
+          ? `7g kanal gönderimi — ${channelLines7d.join(" | ")}`
           : "7g içinde kayıtlı kanal gönderimi yok.",
+        channelLines30d.length > 0
+          ? `30g kanal gönderimi — ${channelLines30d.join(" | ")}`
+          : "30g içinde kayıtlı kanal gönderimi yok.",
       ];
       const webBase =
         process.env.WEB_PUBLIC_BASE_URL?.trim() ?? "https://app.lerta.com.tr";

@@ -12,6 +12,7 @@ import { labelSocialPlatform } from "./socialHubPlatformLabels";
 
 const DIGEST_INTERVAL_MS = 24 * 60 * 60 * 1000;
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+const MONTH_MS = 30 * 24 * 60 * 60 * 1000;
 
 const PLATFORM_LABELS: Record<SocialPlatformCode, string> = {
   [SocialPlatformCode.Instagram]: "Instagram",
@@ -101,6 +102,7 @@ export class SocialHubSlackDigestService {
       const statsSection = await this.buildDeliveryStatsSection(companyId);
       const ratesSection = await this.buildChannelRatesSection(companyId);
       const rates7dSection = await this.buildChannelRates7dSection(companyId);
+      const rates30dSection = await this.buildChannelRates30dSection(companyId);
       const channelSummary = this.buildChannelSummary(health);
       const failureSection = await this.buildRecentFailureSection(companyId);
       const summaryParts = [statsSection];
@@ -109,6 +111,9 @@ export class SocialHubSlackDigestService {
       }
       if (rates7dSection) {
         summaryParts.push(rates7dSection);
+      }
+      if (rates30dSection) {
+        summaryParts.push(rates30dSection);
       }
       summaryParts.push(channelSummary);
       if (failureSection) {
@@ -177,6 +182,24 @@ export class SocialHubSlackDigestService {
       return `• ${labelSocialPlatform(code)}: %${rate} (${stats.ok}/${total})`;
     });
     return `*Kanal başarı oranı (7g)*\n${lines.join("\n")}`;
+  }
+
+  private async buildChannelRates30dSection(companyId: string): Promise<string> {
+    const since30d = new Date(Date.now() - MONTH_MS);
+    const platformMap =
+      await this.deliveryLogService.summarizeRecentByPlatform(
+        companyId,
+        since30d,
+      );
+    if (platformMap.size === 0) {
+      return "";
+    }
+    const lines = [...platformMap.entries()].map(([code, stats]) => {
+      const total = stats.ok + stats.failed;
+      const rate = total > 0 ? Math.round((stats.ok / total) * 100) : 100;
+      return `• ${labelSocialPlatform(code)}: %${rate} (${stats.ok}/${total})`;
+    });
+    return `*Kanal başarı oranı (30g)*\n${lines.join("\n")}`;
   }
 
   private async buildDeliveryStatsSection(companyId: string): Promise<string> {

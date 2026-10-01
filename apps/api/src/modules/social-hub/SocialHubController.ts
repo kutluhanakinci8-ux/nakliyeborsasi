@@ -323,4 +323,17 @@ export class SocialHubController {
   ) {
     return this.socialHubApplicationService.sendWeeklyEmailNow(user);
   }
+
+  @Post("roadmap/:platformCode/interest")
+  public async setRoadmapInterest(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("platformCode") platformCode: string,
+    @Body() body: { interested: boolean },
+  ) {
+    return this.socialHubApplicationService.setRoadmapInterest(
+      user,
+      platformCode,
+      body.interested === true,
+    );
+  }
 }

@@ -32,6 +32,7 @@ export type SocialHubSettings = {
   socialSlackDigestHourEnd?: number;
   socialHubWeeklyEmailEnabled?: boolean;
   socialHubWeeklyEmailLastSentAt?: string | null;
+  roadmapInterestPlatformCodes?: string[];
 };
 
 export type SocialHubProviderCapabilities = {
@@ -55,6 +56,7 @@ export type SocialHubRoadmapProvider = {
   implementationStatus: "roadmap";
   roadmapNote: string;
   capabilities: SocialHubProviderCapabilities;
+  roadmapInterested?: boolean;
 };
 
 export type SocialHubConnection = {
