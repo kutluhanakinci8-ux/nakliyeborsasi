@@ -25,6 +25,13 @@ if [[ -n "${SOCIAL_HUB_SMOKE_EXPECT_PHASE:-}" ]]; then
     }
     echo "OK: status analytics_meta_platform_insights feature"
   fi
+  if [[ "${SOCIAL_HUB_SMOKE_EXPECT_PHASE}" == "ap" ]]; then
+    echo "${status_json}" | grep -q '"analytics_linkedin_org_insights"' || {
+      echo "FAIL: status missing analytics_linkedin_org_insights feature"
+      exit 1
+    }
+    echo "OK: status analytics_linkedin_org_insights feature"
+  fi
 fi
 if [[ "${SOCIAL_HUB_SMOKE_WEBHOOK_READINESS:-0}" == "1" ]]; then
   echo "${status_json}" | grep -q '"integrationWebhookReadiness"' || {

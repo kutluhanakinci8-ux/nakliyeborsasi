@@ -5,6 +5,8 @@ export type SocialHubConnectionMetadata = {
   instagramBusinessAccountId?: string;
   /** encryptTotpSecret ile şifrelenmiş LinkedIn refresh token */
   linkedInRefreshTokenCipher?: string;
+  /** urn:li:organization:{id} — sayfa istatistikleri için */
+  linkedInOrganizationUrn?: string;
   /** TikTok / YouTube (Google) yol haritası refresh token */
   roadmapRefreshTokenCipher?: string;
 };

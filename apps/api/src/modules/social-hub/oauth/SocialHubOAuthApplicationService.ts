@@ -13,6 +13,10 @@ import { SocialHubOAuthStateService } from "./SocialHubOAuthStateService";
 import { SocialHubMetaGraphService } from "./SocialHubMetaGraphService";
 import { SocialHubLinkedInGraphService } from "./SocialHubLinkedInGraphService";
 import { mergeLinkedInRefreshToken } from "./socialHubLinkedInRefreshToken";
+import {
+  parseSocialHubConnectionMetadata,
+  serializeSocialHubConnectionMetadata,
+} from "./SocialHubConnectionMetadata";
 import type { SocialOAuthStartResult } from "../providers/SocialProviderPort";
 import { SocialHubRoadmapOAuthApplicationService } from "./SocialHubRoadmapOAuthApplicationService";
 import { isRoadmapPlatformCode } from "../socialHubRoadmapInterest";
@@ -246,12 +250,17 @@ export class SocialHubOAuthApplicationService {
     const authorUrn = await this.linkedInGraphService.resolveAuthorUrn(
       payload.access_token,
     );
+    const organizationUrn =
+      await this.linkedInGraphService.resolvePrimaryOrganizationUrn(
+        payload.access_token,
+      );
     await this.persistConnection(companyId, platformCode, {
       accessToken: payload.access_token,
       expiresInSec: payload.expires_in ?? null,
       externalAccountId: authorUrn?.replace("urn:li:person:", "") ?? null,
       displayName: "LinkedIn bağlantısı",
       refreshToken: payload.refresh_token ?? null,
+      linkedInOrganizationUrn: organizationUrn,
     });
   }
 
@@ -264,6 +273,7 @@ export class SocialHubOAuthApplicationService {
       externalAccountId: string | null;
       displayName: string;
       refreshToken?: string | null;
+      linkedInOrganizationUrn?: string | null;
     },
   ): Promise<void> {
     const encKey = this.oauthConfig.getOAuthEncryptionKey();
@@ -299,16 +309,23 @@ export class SocialHubOAuthApplicationService {
     row.tokenExpiresAt = tokens.expiresInSec
       ? new Date(Date.now() + tokens.expiresInSec * 1000)
       : null;
-    if (
-      platformCode === SocialPlatformCode.LinkedIn &&
-      tokens.refreshToken &&
-      encKey
-    ) {
-      row.grantedScopes = mergeLinkedInRefreshToken(
-        row.grantedScopes,
-        tokens.refreshToken,
-        encKey,
-      );
+    if (platformCode === SocialPlatformCode.LinkedIn && encKey) {
+      let metadata = parseSocialHubConnectionMetadata(row.grantedScopes);
+      if (tokens.refreshToken) {
+        row.grantedScopes = mergeLinkedInRefreshToken(
+          row.grantedScopes,
+          tokens.refreshToken,
+          encKey,
+        );
+        metadata = parseSocialHubConnectionMetadata(row.grantedScopes);
+      }
+      if (tokens.linkedInOrganizationUrn) {
+        metadata = {
+          ...metadata,
+          linkedInOrganizationUrn: tokens.linkedInOrganizationUrn,
+        };
+        row.grantedScopes = serializeSocialHubConnectionMetadata(metadata);
+      }
     }
     await this.connectionRepository.save(row);
   }
