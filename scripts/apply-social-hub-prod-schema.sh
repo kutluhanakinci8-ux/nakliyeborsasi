@@ -21,6 +21,7 @@ SQL_FILES=(
   social-hub-phase-n.sql
   social-hub-phase-o.sql
   social-hub-phase-p.sql
+  social-hub-phase-q.sql
 )
 
 for name in "${SQL_FILES[@]}"; do

@@ -64,6 +64,9 @@ export class CompanySocialSettingsEntity {
   @Column({ type: "timestamptz", nullable: true })
   public socialSlackDailyDigestLastSentAt!: Date | null;
 
+  @Column({ type: "int", default: 1440 })
+  public healthAlertSlackCooldownMinutes!: number;
+
   @UpdateDateColumn({ type: "timestamptz" })
   public updatedAt!: Date;
 }

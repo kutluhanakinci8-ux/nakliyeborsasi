@@ -27,6 +27,7 @@ const DEFAULT_SETTINGS: SocialHubSnapshot["settings"] = {
   socialSlackOutboundFailureCooldownMinutes: 15,
   socialSlackDailyDigestEnabled: false,
   socialSlackDailyDigestLastSentAt: null,
+  healthAlertSlackCooldownMinutes: 1440,
 };
 
 export function normalizeSocialHubSnapshot(payload: unknown): SocialHubSnapshot {

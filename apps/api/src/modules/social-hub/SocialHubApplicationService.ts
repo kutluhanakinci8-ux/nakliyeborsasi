@@ -38,6 +38,7 @@ import { SocialHubConnectionHealthService } from "./SocialHubConnectionHealthSer
 import { SocialHubTokenRefreshService } from "./oauth/SocialHubTokenRefreshService";
 import { SocialHubOutboundDeliveryLogService } from "./SocialHubOutboundDeliveryLogService";
 import { SocialHubSlackNotificationService } from "./SocialHubSlackNotificationService";
+import { SocialHubSlackDigestService } from "./SocialHubSlackDigestService";
 import { normalizeSocialHubSlackWebhookUrl } from "./socialHubSlackWebhook";
 
 export const INVITABLE_SOCIAL_TEAM_ROLES: readonly CompanyRoleCode[] = [
@@ -76,6 +77,7 @@ export class SocialHubApplicationService {
     private readonly tokenRefreshService: SocialHubTokenRefreshService,
     private readonly outboundDeliveryLogService: SocialHubOutboundDeliveryLogService,
     private readonly slackNotificationService: SocialHubSlackNotificationService,
+    private readonly slackDigestService: SocialHubSlackDigestService,
   ) {}
 
   private async assertSocialHubSubscription(companyId: string): Promise<void> {
@@ -779,6 +781,7 @@ export class SocialHubApplicationService {
       socialSlackNotifyOutboundFailures?: boolean;
       socialSlackOutboundFailureCooldownMinutes?: number;
       socialSlackDailyDigestEnabled?: boolean;
+      healthAlertSlackCooldownMinutes?: number;
     },
   ) {
     assertSocialHubAdmin(user);
@@ -851,6 +854,13 @@ export class SocialHubApplicationService {
     if (patch.socialSlackDailyDigestEnabled !== undefined) {
       settings.socialSlackDailyDigestEnabled = patch.socialSlackDailyDigestEnabled;
     }
+    if (patch.healthAlertSlackCooldownMinutes !== undefined) {
+      const value = Math.min(
+        Math.max(Math.floor(patch.healthAlertSlackCooldownMinutes), 15),
+        7 * 24 * 60,
+      );
+      settings.healthAlertSlackCooldownMinutes = value;
+    }
     await this.settingsRepository.save(settings);
     this.socialHubAuditService.record(
       user,
@@ -859,6 +869,25 @@ export class SocialHubApplicationService {
       { patch },
     );
     return { settings: this.mapSettings(settings) };
+  }
+
+  public async sendSlackDigestNow(user: AuthenticatedUserContext) {
+    assertSocialHubAdmin(user);
+    await this.assertSocialHubSubscription(user.companyId);
+    const result = await this.slackDigestService.sendDigestForCompany(
+      user.companyId,
+      { requireDigestEnabled: false, enforceDailyInterval: false },
+    );
+    if (!result.sent) {
+      throw new ValidationException(result.message);
+    }
+    this.socialHubAuditService.record(
+      user,
+      SocialHubAuditActionCode.SettingsUpdate,
+      "/company/social-hub/settings/slack-digest-now",
+      { slackDigestNow: true },
+    );
+    return result;
   }
 
   public async sendSlackTest(user: AuthenticatedUserContext) {
@@ -1002,6 +1031,7 @@ export class SocialHubApplicationService {
         socialSlackOutboundFailureCooldownMinutes: 15,
         socialSlackDailyDigestEnabled: false,
         socialSlackDailyDigestLastSentAt: null,
+        healthAlertSlackCooldownMinutes: 1440,
       }),
     );
   }
@@ -1119,6 +1149,8 @@ export class SocialHubApplicationService {
       socialSlackDailyDigestEnabled: row.socialSlackDailyDigestEnabled ?? false,
       socialSlackDailyDigestLastSentAt:
         row.socialSlackDailyDigestLastSentAt?.toISOString() ?? null,
+      healthAlertSlackCooldownMinutes:
+        row.healthAlertSlackCooldownMinutes ?? 1440,
     };
   }
 
