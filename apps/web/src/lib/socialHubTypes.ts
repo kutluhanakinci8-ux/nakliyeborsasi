@@ -64,9 +64,10 @@ export type SocialHubProviderInfo = {
 export type SocialHubRoadmapProvider = {
   platformCode: string;
   label: string;
-  implementationStatus: "roadmap" | "ready";
+  implementationStatus: "roadmap" | "ready" | "pending";
   roadmapNote: string;
   capabilities: SocialHubProviderCapabilities;
+  isPendingSkeleton?: boolean;
   roadmapInterested?: boolean;
   oauthEnvConfigured?: boolean;
   oauthImplementationStatus?: "ready" | "pending";

@@ -14,6 +14,7 @@ import {
   assertRoadmapPlatformCode,
   isRoadmapPlatformCode,
 } from "../socialHubRoadmapInterest";
+import { isRoadmapPendingSkeletonPlatform } from "../socialHubRoadmapPendingProviders";
 import { mergeRoadmapRefreshToken } from "./socialHubRoadmapRefreshToken";
 
 const TIKTOK_AUTH_URL = "https://www.tiktok.com/v2/auth/authorize/";
@@ -40,6 +41,15 @@ export class SocialHubRoadmapOAuthApplicationService {
     platformCode: string,
   ): Promise<SocialOAuthStartResult> {
     const code = assertRoadmapPlatformCode(platformCode);
+    if (isRoadmapPendingSkeletonPlatform(code)) {
+      return {
+        implementationStatus: "pending",
+        authorizationUrl: null,
+        state: null,
+        message:
+          "Bu kanal pending provider iskeletinde — OAuth henüz açılmadı. Öncelik bildirimi ile sıraya alın.",
+      };
+    }
     if (code === "TIKTOK") {
       return this.startTikTok(companyId, code);
     }

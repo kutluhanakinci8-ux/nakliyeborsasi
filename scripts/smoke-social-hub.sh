@@ -81,6 +81,25 @@ if [[ -n "${SOCIAL_HUB_SMOKE_EXPECT_PHASE:-}" ]]; then
     }
     echo "OK: status youtube_prod_provider_path feature"
   fi
+  if [[ "${SOCIAL_HUB_SMOKE_EXPECT_PHASE}" == "ay" ]]; then
+    echo "${status_json}" | grep -q '"roadmap_pending_x_google_business"' || {
+      echo "FAIL: status missing roadmap_pending_x_google_business feature"
+      exit 1
+    }
+    echo "${status_json}" | grep -q '"roadmapPendingProviders"' || {
+      echo "FAIL: status missing roadmapPendingProviders"
+      exit 1
+    }
+    echo "${status_json}" | grep -q 'GOOGLE_BUSINESS' || {
+      echo "FAIL: roadmapPendingProviders missing GOOGLE_BUSINESS"
+      exit 1
+    }
+    echo "${status_json}" | grep -q '"X"' || {
+      echo "FAIL: roadmapPendingProviders missing X"
+      exit 1
+    }
+    echo "OK: status roadmap_pending_x_google_business"
+  fi
   if [[ "${SOCIAL_HUB_SMOKE_EXPECT_PHASE}" == "ax" ]]; then
     echo "${status_json}" | grep -q '"linkedin_dm_v2_explicit_gate"' || {
       echo "FAIL: status missing linkedin_dm_v2_explicit_gate feature"
@@ -229,6 +248,17 @@ if [[ -n "${SOCIAL_HUB_JWT:-}" ]]; then
       exit 1
     }
     echo "OK: templates variables + preview"
+  fi
+  if [[ "${SOCIAL_HUB_SMOKE_ROADMAP_PENDING:-0}" == "1" ]]; then
+    grep -q '"roadmapProviders"' /tmp/social-hub-snap.json || grep -q '"X"' /tmp/social-hub-snap.json || {
+      echo "FAIL: snapshot missing roadmap providers"
+      exit 1
+    }
+    grep -q 'GOOGLE_BUSINESS' /tmp/social-hub-snap.json || {
+      echo "FAIL: snapshot missing GOOGLE_BUSINESS roadmap provider"
+      exit 1
+    }
+    echo "OK: snapshot roadmap pending providers"
   fi
   if [[ "${SOCIAL_HUB_SMOKE_LINKEDIN_DM_GATE:-0}" == "1" ]]; then
     grep -q '"linkedinDmInboxGate"' /tmp/social-hub-snap.json || {

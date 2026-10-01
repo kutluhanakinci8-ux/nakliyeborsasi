@@ -65,6 +65,7 @@ import { buildSocialHubIntegrationOpsHints } from "./socialHubIntegrationOpsHint
 import { getRoadmapProviderCapabilities } from "./socialHubRoadmapCapabilities";
 import { isRoadmapProdProviderPlatform } from "./socialHubRoadmapProdProviders";
 import { buildSocialHubLinkedInDmInboxGate } from "./socialHubLinkedInDmCapability";
+import { isRoadmapPendingSkeletonPlatform } from "./socialHubRoadmapPendingProviders";
 import { roadmapConnectedHint } from "./socialHubRoadmapHints";
 import { SocialHubRoadmapInboxSyncService } from "./SocialHubRoadmapInboxSyncService";
 import { mapWebhookBridgedByPlatform } from "./socialHubWebhookBridgeSnapshot";
@@ -1890,17 +1891,26 @@ export class SocialHubApplicationService {
         provider.platformCode,
       );
       const prodPath = isRoadmapProdProviderPlatform(provider.platformCode);
+      const pendingSkeleton = isRoadmapPendingSkeletonPlatform(
+        provider.platformCode,
+      );
       const oauthImplementationStatus =
         prodPath && oauthEnvConfigured ? "ready" : "pending";
+      const implementationStatus =
+        prodPath && oauthEnvConfigured
+          ? "ready"
+          : provider.implementationStatus === "pending"
+            ? "pending"
+            : "roadmap";
       return {
         ...provider,
-        implementationStatus:
-          prodPath && oauthEnvConfigured ? "ready" : "roadmap",
+        implementationStatus,
         capabilities: getRoadmapProviderCapabilities(provider.platformCode),
         roadmapInterested: interested.has(provider.platformCode),
         oauthEnvConfigured,
         oauthImplementationStatus,
         isRoadmapBeta: !prodPath,
+        isPendingSkeleton: pendingSkeleton,
         roadmapConnectionStatusCode: conn?.statusCode ?? null,
         roadmapHasRefreshToken: conn
           ? hasRoadmapRefreshToken(conn.grantedScopes)

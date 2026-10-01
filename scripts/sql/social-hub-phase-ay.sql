@@ -1,0 +1,1 @@
+-- Faz AY: şema değişikliği yok (X + Google Business pending roadmap provider iskeleti)
