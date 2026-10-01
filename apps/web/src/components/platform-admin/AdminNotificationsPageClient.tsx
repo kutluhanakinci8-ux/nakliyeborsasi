@@ -14,6 +14,7 @@ import { AdminOutboxPreviewModal } from "./AdminOutboxPreviewModal";
 import { AdminMailPolicyPanel } from "./AdminMailPolicyPanel";
 import { AdminPlatformSendingPanel } from "./AdminPlatformSendingPanel";
 import { AdminMailRoadmapPanel } from "./AdminMailRoadmapPanel";
+import { AdminSocialHubRoadmapPanel } from "./AdminSocialHubRoadmapPanel";
 import { AdminMailDomainsPanel } from "./AdminMailDomainsPanel";
 import { AdminMailIdentityAuditPanel } from "./AdminMailIdentityAuditPanel";
 import { AdminMailInboundPanel } from "./AdminMailInboundPanel";
@@ -305,7 +306,12 @@ export function AdminNotificationsPageClient() {
         </button>
       </nav>
 
-      {activeTab === "roadmap" ? <AdminMailRoadmapPanel /> : null}
+      {activeTab === "roadmap" ? (
+        <>
+          <AdminMailRoadmapPanel />
+          <AdminSocialHubRoadmapPanel />
+        </>
+      ) : null}
       {activeTab === "platform" ? <AdminPlatformSendingPanel /> : null}
       {activeTab === "domains" ? <AdminMailDomainsPanel /> : null}
       {activeTab === "analytics" ? <AdminMailAnalyticsPanel /> : null}

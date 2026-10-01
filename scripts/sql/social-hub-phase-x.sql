@@ -1,0 +1,1 @@
+-- Faz X: şema değişikliği yok (TikTok OAuth iskeleti, roadmap bağlantı)

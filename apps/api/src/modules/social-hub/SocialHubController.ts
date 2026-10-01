@@ -324,6 +324,28 @@ export class SocialHubController {
     return this.socialHubApplicationService.sendWeeklyEmailNow(user);
   }
 
+  @Post("roadmap/:platformCode/connect")
+  public async roadmapConnect(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("platformCode") platformCode: string,
+  ) {
+    return this.socialHubApplicationService.startRoadmapConnect(
+      user,
+      platformCode,
+    );
+  }
+
+  @Post("roadmap/:platformCode/disconnect")
+  public async roadmapDisconnect(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("platformCode") platformCode: string,
+  ) {
+    return this.socialHubApplicationService.disconnectRoadmapPlatform(
+      user,
+      platformCode,
+    );
+  }
+
   @Post("roadmap/:platformCode/interest")
   public async setRoadmapInterest(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
