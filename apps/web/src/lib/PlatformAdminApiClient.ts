@@ -588,6 +588,26 @@ export class PlatformAdminApiClient {
     return payload.snapshot;
   }
 
+  public static async downloadSocialHubRoadmapInterestCsv(
+    accessToken: string,
+  ): Promise<void> {
+    const response = await fetch(
+      `${PublicApiConfiguration.resolveBaseUrl()}/platform-admin/social-hub/roadmap-interest.csv`,
+      { headers: { Authorization: `Bearer ${accessToken}` } },
+    );
+    if (!response.ok) {
+      throw new Error("İlgi istatistik CSV indirilemedi.");
+    }
+    const csv = await response.text();
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "social-hub-roadmap-interest.csv";
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
   public static async downloadSocialHubRoadmapBetaOpsCsv(
     accessToken: string,
   ): Promise<void> {

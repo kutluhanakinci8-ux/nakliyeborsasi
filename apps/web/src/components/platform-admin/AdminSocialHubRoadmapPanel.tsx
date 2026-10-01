@@ -127,18 +127,32 @@ export function AdminSocialHubRoadmapPanel() {
           Yenile
         </button>
         {accessToken ? (
-          <button
-            type="button"
-            className="btn-account-ghost"
-            disabled={loading}
-            onClick={() =>
-              void PlatformAdminApiClient.downloadSocialHubRoadmapBetaOpsCsv(
-                accessToken,
-              )
-            }
-          >
-            Beta ops CSV
-          </button>
+          <>
+            <button
+              type="button"
+              className="btn-account-ghost"
+              disabled={loading}
+              onClick={() =>
+                void PlatformAdminApiClient.downloadSocialHubRoadmapInterestCsv(
+                  accessToken,
+                )
+              }
+            >
+              İlgi CSV
+            </button>
+            <button
+              type="button"
+              className="btn-account-ghost"
+              disabled={loading}
+              onClick={() =>
+                void PlatformAdminApiClient.downloadSocialHubRoadmapBetaOpsCsv(
+                  accessToken,
+                )
+              }
+            >
+              Beta ops CSV
+            </button>
+          </>
         ) : null}
       </div>
     </section>

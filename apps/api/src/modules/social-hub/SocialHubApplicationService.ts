@@ -62,6 +62,7 @@ import { buildSocialHubPublicWebhookUrls } from "./socialHubIntegrationUrls";
 import { buildSocialHubIntegrationWebhookReadiness } from "./socialHubIntegrationWebhookReadiness";
 import { getRoadmapProviderCapabilities } from "./socialHubRoadmapCapabilities";
 import { roadmapConnectedHint } from "./socialHubRoadmapHints";
+import { SocialHubRoadmapInboxSyncService } from "./SocialHubRoadmapInboxSyncService";
 
 export const INVITABLE_SOCIAL_TEAM_ROLES: readonly CompanyRoleCode[] = [
   CompanyRoleCode.SocialAdmin,
@@ -104,6 +105,7 @@ export class SocialHubApplicationService {
     private readonly weeklyEmailService: SocialHubWeeklyEmailService,
     private readonly roadmapOAuthApplicationService: SocialHubRoadmapOAuthApplicationService,
     private readonly roadmapTokenRefreshService: SocialHubRoadmapTokenRefreshService,
+    private readonly roadmapInboxSyncService: SocialHubRoadmapInboxSyncService,
   ) {}
 
   private async assertSocialHubSubscription(companyId: string): Promise<void> {
@@ -245,7 +247,23 @@ export class SocialHubApplicationService {
     const insights = await this.slackInsightsService.buildInsights(
       user.companyId,
     );
-    return this.slackInsightsService.buildInsightsCsv(insights);
+    const health = await this.connectionHealthService.buildHealthDashboard(
+      user.companyId,
+    );
+    const roadmapBetaChannelHealth = (health.roadmapChannels ?? []).map(
+      (channel) => ({
+        platformCode: channel.platformCode,
+        label: channel.label,
+        statusCode: channel.statusCode,
+        openThreadCount: channel.openThreadCount,
+        recentOutboundFailures24h: channel.recentOutboundFailures24h,
+        tokenHealth: channel.tokenHealth,
+      }),
+    );
+    return this.slackInsightsService.buildInsightsCsv({
+      ...insights,
+      roadmapBetaChannelHealth,
+    });
   }
 
   public async refreshConnectionToken(
@@ -1270,6 +1288,13 @@ export class SocialHubApplicationService {
     await this.assertSocialHubSubscription(user.companyId);
     const settings = await this.ensureSettings(user.companyId);
     this.assertInboxOperationsAllowed(settings);
+    if (isRoadmapPlatformCode(platformCode)) {
+      const result = await this.roadmapInboxSyncService.summarize(
+        user.companyId,
+        platformCode,
+      );
+      return { sync: result };
+    }
     const provider = this.socialProviderRegistry.resolve(platformCode);
     const result = await provider.syncInbox(user.companyId);
     return { sync: result };

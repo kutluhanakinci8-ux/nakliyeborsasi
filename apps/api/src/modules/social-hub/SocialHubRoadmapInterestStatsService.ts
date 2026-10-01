@@ -64,4 +64,24 @@ export class SocialHubRoadmapInterestStatsService {
       betaOps,
     };
   }
+
+  public buildInterestCsv(snapshot: SocialHubRoadmapInterestStatsSnapshot): string {
+    const header = "platformCode,label,interestedCompanyCount,oauthEnvConfigured";
+    const lines = snapshot.platforms.map((row) =>
+      [
+        row.platformCode,
+        escapeCsv(row.label),
+        row.interestedCompanyCount,
+        row.oauthEnvConfigured ? "1" : "0",
+      ].join(","),
+    );
+    return [header, `summary,interestedCompanies,${snapshot.interestedCompanyCount},`].concat(lines).join("\n");
+  }
+}
+
+function escapeCsv(value: string): string {
+  if (value.includes(",") || value.includes('"') || value.includes("\n")) {
+    return `"${value.replace(/"/g, '""')}"`;
+  }
+  return value;
 }

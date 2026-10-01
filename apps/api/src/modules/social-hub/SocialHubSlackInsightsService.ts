@@ -23,6 +23,15 @@ export type SocialHubChannelOutboundStat = {
   successRatePercent: number;
 };
 
+export type SocialHubRoadmapBetaChannelHealthInsight = {
+  platformCode: string;
+  label: string;
+  statusCode: string;
+  openThreadCount: number;
+  recentOutboundFailures24h: number;
+  tokenHealth: string;
+};
+
 @Injectable()
 export class SocialHubSlackInsightsService {
   public constructor(
@@ -96,7 +105,11 @@ export class SocialHubSlackInsightsService {
   }
 
   public buildInsightsCsv(
-    insights: Awaited<ReturnType<SocialHubSlackInsightsService["buildInsights"]>>,
+    insights: Awaited<
+      ReturnType<SocialHubSlackInsightsService["buildInsights"]>
+    > & {
+      roadmapBetaChannelHealth?: SocialHubRoadmapBetaChannelHealthInsight[];
+    },
   ): string {
     const header = "section,key,value";
     const lines: string[] = [header];
@@ -169,6 +182,13 @@ export class SocialHubSlackInsightsService {
       "interestLabels",
       insights.roadmapInterestLabels.join("; "),
     );
+    for (const row of insights.roadmapBetaChannelHealth ?? []) {
+      push(
+        "roadmapBetaHealth",
+        row.platformCode,
+        `${row.statusCode} open=${row.openThreadCount} fail24h=${row.recentOutboundFailures24h}`,
+      );
+    }
     return lines.join("\n");
   }
 
