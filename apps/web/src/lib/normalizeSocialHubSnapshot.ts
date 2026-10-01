@@ -32,6 +32,8 @@ const DEFAULT_SETTINGS: SocialHubSnapshot["settings"] = {
   socialSlackDigestTimezone: "Europe/Istanbul",
   socialSlackDigestHourStart: 9,
   socialSlackDigestHourEnd: 18,
+  socialHubWeeklyEmailEnabled: false,
+  socialHubWeeklyEmailLastSentAt: null,
 };
 
 export function normalizeSocialHubSnapshot(payload: unknown): SocialHubSnapshot {

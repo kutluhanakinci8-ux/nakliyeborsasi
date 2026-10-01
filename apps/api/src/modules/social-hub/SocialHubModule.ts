@@ -51,6 +51,8 @@ import { SocialHubSlackNotificationService } from "./SocialHubSlackNotificationS
 import { SocialHubSlackDigestService } from "./SocialHubSlackDigestService";
 import { SocialHubSlackDigestScheduler } from "./SocialHubSlackDigestScheduler";
 import { SocialHubSlackInsightsService } from "./SocialHubSlackInsightsService";
+import { SocialHubWeeklyEmailService } from "./SocialHubWeeklyEmailService";
+import { SocialHubWeeklyEmailScheduler } from "./SocialHubWeeklyEmailScheduler";
 
 @Module({
   imports: [
@@ -104,6 +106,8 @@ import { SocialHubSlackInsightsService } from "./SocialHubSlackInsightsService";
     SocialHubSlackDigestService,
     SocialHubSlackDigestScheduler,
     SocialHubSlackInsightsService,
+    SocialHubWeeklyEmailService,
+    SocialHubWeeklyEmailScheduler,
     SocialProviderRegistry,
     MetaInstagramMessagingProvider,
     MetaFacebookMessengerProvider,

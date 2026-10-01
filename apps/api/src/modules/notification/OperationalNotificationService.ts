@@ -63,6 +63,29 @@ export class OperationalNotificationService {
     });
   }
 
+  public async afterSocialHubWeeklyDigest(params: {
+    companyId: string;
+    ownerUserIds: string[];
+    summary: string;
+    hubUrl: string;
+  }): Promise<void> {
+    if (params.ownerUserIds.length === 0) {
+      return;
+    }
+    const weekKey = new Date().toISOString().slice(0, 10);
+    await this.emitToUserIds({
+      companyId: params.companyId,
+      userIds: params.ownerUserIds,
+      eventCode: NotificationEventCode.SocialHubWeeklyDigest,
+      payload: {
+        messagePreview: params.summary,
+        hubUrl: params.hubUrl,
+        occurredAt: new Date().toISOString(),
+      },
+      idempotencyPrefix: `SOCIAL_HUB_WEEKLY:${params.companyId}:${weekKey}`,
+    });
+  }
+
   public async afterSocialHubHealthDegraded(params: {
     companyId: string;
     ownerUserIds: string[];

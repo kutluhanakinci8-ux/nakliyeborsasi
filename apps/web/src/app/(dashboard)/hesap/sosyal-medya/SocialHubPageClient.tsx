@@ -443,6 +443,28 @@ export function SocialHubPageClient() {
                     );
                   })
                 }
+                socialHubWeeklyEmailEnabled={
+                  snapshot.settings.socialHubWeeklyEmailEnabled ?? false
+                }
+                onToggleWeeklyEmail={(enabled) =>
+                  void runAction(async () => {
+                    await SocialHubApiClient.updateSettings(accessToken, {
+                      socialHubWeeklyEmailEnabled: enabled,
+                    });
+                    await reload();
+                    setStatus(
+                      enabled
+                        ? "Haftalık e-posta özet açıldı."
+                        : "Haftalık e-posta özet kapatıldı.",
+                    );
+                  })
+                }
+                onExportInsights={() =>
+                  void runAction(async () => {
+                    await SocialHubApiClient.downloadInsightsExport(accessToken);
+                    setStatus("Bildirim özet CSV indirildi.");
+                  })
+                }
                 onReload={() =>
                   void runAction(async () => {
                     await loadHealthData();

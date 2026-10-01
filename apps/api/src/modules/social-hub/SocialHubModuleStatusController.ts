@@ -12,7 +12,7 @@ export class SocialHubModuleStatusController {
   } {
     return {
       module: "social_hub",
-      phase: "r",
+      phase: "s",
       subscriptionModuleCode: SubscriptionModuleCode.SocialHub,
       features: [
         "connections_skeleton",
@@ -68,6 +68,9 @@ export class SocialHubModuleStatusController {
         "slack_digest_business_hours",
         "slack_notification_insights",
         "digest_outbound_success_stats",
+        "channel_outbound_success_rates",
+        "notification_insights_csv",
+        "weekly_email_digest",
       ],
     };
   }

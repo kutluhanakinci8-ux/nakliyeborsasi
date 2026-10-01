@@ -164,6 +164,14 @@ export const NOTIFICATION_EVENT_CATALOG: NotificationEventDefinition[] = [
     defaultUserEnabled: true,
     labelTr: "Sosyal hub sağlık uyarısı",
   },
+  {
+    code: NotificationEventCode.SocialHubWeeklyDigest,
+    category: "social",
+    userPreferenceKey: null,
+    defaultAdminEnabled: false,
+    defaultUserEnabled: true,
+    labelTr: "Sosyal hub haftalık özet",
+  },
 ];
 
 export function resolveEventDefinition(

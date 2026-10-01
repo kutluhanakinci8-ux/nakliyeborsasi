@@ -68,8 +68,29 @@ export class SocialHubApiClient {
         slackHealthAlertLastSentAt: null,
         slackOutboundFailureLastSentAt: null,
         outboundDeliveriesLast24h: { ok: 0, failed: 0 },
+        weeklyEmailLastSentAt: null,
+        channelOutbound24h: [],
       },
     };
+  }
+
+  public static buildInsightsExportUrl(): string {
+    return `${PublicApiConfiguration.resolveBaseUrl()}/company/social-hub/health/insights/export`;
+  }
+
+  public static async downloadInsightsExport(accessToken: string): Promise<void> {
+    const response = await fetch(this.buildInsightsExportUrl(), {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!response.ok) {
+      throw new Error("Insights CSV indirilemedi.");
+    }
+    const blob = await response.blob();
+    const anchor = document.createElement("a");
+    anchor.href = URL.createObjectURL(blob);
+    anchor.download = "social-hub-insights.csv";
+    anchor.click();
+    URL.revokeObjectURL(anchor.href);
   }
 
   public static buildDeliveryExportUrl(params?: {

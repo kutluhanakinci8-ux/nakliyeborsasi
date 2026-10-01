@@ -164,6 +164,21 @@ export class SocialHubController {
     return this.socialHubApplicationService.getConnectionHealth(user);
   }
 
+  @Get("health/insights/export")
+  public async exportHealthInsights(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Res() response: Response,
+  ): Promise<void> {
+    const csv =
+      await this.socialHubApplicationService.exportNotificationInsightsCsv(user);
+    response.setHeader("Content-Type", "text/csv; charset=utf-8");
+    response.setHeader(
+      "Content-Disposition",
+      'attachment; filename="social-hub-insights.csv"',
+    );
+    response.send(csv);
+  }
+
   @Post("connections/:platformCode/refresh-token")
   public async refreshToken(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
@@ -284,6 +299,7 @@ export class SocialHubController {
       socialSlackDigestTimezone?: string;
       socialSlackDigestHourStart?: number;
       socialSlackDigestHourEnd?: number;
+      socialHubWeeklyEmailEnabled?: boolean;
     },
   ) {
     return this.socialHubApplicationService.updateSettings(user, body);

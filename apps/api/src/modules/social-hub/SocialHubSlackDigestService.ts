@@ -8,6 +8,7 @@ import { SocialHubConnectionHealthService } from "./SocialHubConnectionHealthSer
 import { SocialHubOutboundDeliveryLogService } from "./SocialHubOutboundDeliveryLogService";
 import { SocialHubSlackNotificationService } from "./SocialHubSlackNotificationService";
 import { isDigestWithinBusinessHours } from "./socialHubDigestBusinessHours";
+import { labelSocialPlatform } from "./socialHubPlatformLabels";
 
 const DIGEST_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
@@ -97,9 +98,14 @@ export class SocialHubSlackDigestService {
         companyId,
       );
       const statsSection = await this.buildDeliveryStatsSection(companyId);
+      const ratesSection = await this.buildChannelRatesSection(companyId);
       const channelSummary = this.buildChannelSummary(health);
       const failureSection = await this.buildRecentFailureSection(companyId);
-      const summaryParts = [statsSection, channelSummary];
+      const summaryParts = [statsSection];
+      if (ratesSection) {
+        summaryParts.push(ratesSection);
+      }
+      summaryParts.push(channelSummary);
       if (failureSection) {
         summaryParts.push(failureSection);
       }
@@ -130,6 +136,24 @@ export class SocialHubSlackDigestService {
         message: "Özet gönderilemedi. Webhook ve kanal erişimini kontrol edin.",
       };
     }
+  }
+
+  private async buildChannelRatesSection(companyId: string): Promise<string> {
+    const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const platformMap =
+      await this.deliveryLogService.summarizeRecentByPlatform(
+        companyId,
+        since24h,
+      );
+    if (platformMap.size === 0) {
+      return "";
+    }
+    const lines = [...platformMap.entries()].map(([code, stats]) => {
+      const total = stats.ok + stats.failed;
+      const rate = total > 0 ? Math.round((stats.ok / total) * 100) : 100;
+      return `• ${labelSocialPlatform(code)}: %${rate} (${stats.ok}/${total})`;
+    });
+    return `*Kanal başarı oranı (24s)*\n${lines.join("\n")}`;
   }
 
   private async buildDeliveryStatsSection(companyId: string): Promise<string> {
