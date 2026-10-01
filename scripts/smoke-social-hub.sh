@@ -82,4 +82,24 @@ else
   echo "SKIP: SOCIAL_HUB_SMOKE_TIKTOK_WEBHOOK=0"
 fi
 
+if [[ "${SOCIAL_HUB_SMOKE_YOUTUBE_WEBHOOK:-1}" != "0" ]]; then
+  echo "== YouTube webhook POST (skeleton) =="
+  yt_code="$(curl -sS -o /tmp/social-hub-yt-wh.json -w "%{http_code}" \
+    -X POST \
+    -H "Content-Type: application/json" \
+    -d '{"kind":"smoke_ping"}' \
+    "${API_BASE}/company/social-hub/webhooks/youtube")"
+  if [[ "${yt_code}" != "200" ]]; then
+    echo "FAIL: youtube webhook HTTP ${yt_code}"
+    exit 1
+  fi
+  grep -q '"received":true' /tmp/social-hub-yt-wh.json || {
+    echo "FAIL: youtube webhook body"
+    exit 1
+  }
+  echo "OK: youtube webhook"
+else
+  echo "SKIP: SOCIAL_HUB_SMOKE_YOUTUBE_WEBHOOK=0"
+fi
+
 echo "smoke-social-hub: PASS"

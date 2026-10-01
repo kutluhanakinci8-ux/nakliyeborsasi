@@ -7,6 +7,9 @@ import { SocialHubMetaGraphService } from "./oauth/SocialHubMetaGraphService";
 import { SocialHubTokenVaultService } from "./oauth/SocialHubTokenVaultService";
 import { SocialHubOutboundDeliveryLogService } from "./SocialHubOutboundDeliveryLogService";
 import { SocialHubSlackNotificationService } from "./SocialHubSlackNotificationService";
+import { SocialHubTikTokOutboundService } from "./oauth/SocialHubTikTokOutboundService";
+import { isRoadmapPlatformCode } from "./socialHubRoadmapInterest";
+import { CompanySocialConnectionEntity } from "../../infrastructure/database/entities/CompanySocialConnectionEntity";
 
 export type SocialOutboundDispatchResult = {
   attempted: boolean;
@@ -22,10 +25,13 @@ export class SocialHubOutboundMessagingService {
   public constructor(
     @InjectRepository(CompanySocialThreadLinkEntity)
     private readonly linkRepository: Repository<CompanySocialThreadLinkEntity>,
+    @InjectRepository(CompanySocialConnectionEntity)
+    private readonly connectionRepository: Repository<CompanySocialConnectionEntity>,
     private readonly tokenVault: SocialHubTokenVaultService,
     private readonly metaGraphService: SocialHubMetaGraphService,
     private readonly deliveryLogService: SocialHubOutboundDeliveryLogService,
     private readonly slackNotificationService: SocialHubSlackNotificationService,
+    private readonly tikTokOutboundService: SocialHubTikTokOutboundService,
   ) {}
 
   public async tryDispatchOutbound(params: {
@@ -49,7 +55,7 @@ export class SocialHubOutboundMessagingService {
     if (!link) {
       return { attempted: false, ok: true, message: "" };
     }
-    const platform = link.platformCode as SocialPlatformCode;
+    const platformCode = link.platformCode;
     if (link.externalThreadId.startsWith("demo-")) {
       const demoMessage =
         "Demo konuşması — gerçek kanala gönderilmez. OAuth ile bağlı hesaptan yanıtlayın.";
@@ -64,17 +70,38 @@ export class SocialHubOutboundMessagingService {
       return { attempted: true, ok: false, message: demoMessage };
     }
     try {
+      if (isRoadmapPlatformCode(platformCode) && platformCode !== "TIKTOK") {
+        const betaMessage =
+          "Bu beta kanal için giden mesaj henüz desteklenmiyor.";
+        await this.recordOutbound({
+          link,
+          companyId: params.companyId,
+          messageId: params.messageId,
+          ok: false,
+          errorMessage: betaMessage,
+          bodyTextPreview: bodyPreview,
+        });
+        return { attempted: true, ok: false, message: betaMessage };
+      }
       const token = await this.tokenVault.requireAccessToken(
         params.companyId,
-        platform,
+        platformCode,
       );
-      const result = await this.metaGraphService.sendChannelTextMessage({
-        companyId: params.companyId,
-        platformCode: platform,
-        accessToken: token,
-        recipientExternalId: link.externalThreadId,
-        bodyText: trimmed,
-      });
+      const result =
+        platformCode === "TIKTOK"
+          ? await this.dispatchTikTokOutbound({
+              companyId: params.companyId,
+              accessToken: token,
+              externalThreadId: link.externalThreadId,
+              bodyText: trimmed,
+            })
+          : await this.metaGraphService.sendChannelTextMessage({
+              companyId: params.companyId,
+              platformCode: platformCode as SocialPlatformCode,
+              accessToken: token,
+              recipientExternalId: link.externalThreadId,
+              bodyText: trimmed,
+            });
       if (!result.ok) {
         await this.recordOutbound({
           link,
@@ -86,13 +113,13 @@ export class SocialHubOutboundMessagingService {
         });
         await this.slackNotificationService.postOutboundFailure({
           companyId: params.companyId,
-          platformCode: platform,
+          platformCode,
           bodyPreview: bodyPreview,
           errorMessage: result.message,
           threadId: params.messageThreadId,
         });
         this.logger.warn(
-          `Social outbound failed thread=${params.messageThreadId} platform=${platform}: ${result.message}`,
+          `Social outbound failed thread=${params.messageThreadId} platform=${platformCode}: ${result.message}`,
         );
         return { attempted: true, ok: false, message: result.message };
       }
@@ -124,7 +151,7 @@ export class SocialHubOutboundMessagingService {
       });
       await this.slackNotificationService.postOutboundFailure({
         companyId: params.companyId,
-        platformCode: platform,
+        platformCode,
         bodyPreview: bodyPreview,
         errorMessage: message,
         threadId: params.messageThreadId,
@@ -134,6 +161,35 @@ export class SocialHubOutboundMessagingService {
       );
       return { attempted: true, ok: false, message };
     }
+  }
+
+  private async dispatchTikTokOutbound(params: {
+    companyId: string;
+    accessToken: string;
+    externalThreadId: string;
+    bodyText: string;
+  }): Promise<{ ok: boolean; message: string; externalMessageId?: string }> {
+    const connection = await this.connectionRepository.findOne({
+      where: { companyId: params.companyId, platformCode: "TIKTOK" },
+    });
+    const businessOpenId = connection?.externalAccountId;
+    if (!businessOpenId) {
+      return {
+        ok: false,
+        message: "TikTok işletme open_id yok — yeniden OAuth bağlayın.",
+      };
+    }
+    const send = await this.tikTokOutboundService.sendTextMessage({
+      accessToken: params.accessToken,
+      businessOpenId,
+      recipientExternalId: params.externalThreadId,
+      bodyText: params.bodyText,
+    });
+    return {
+      ok: send.ok,
+      message: send.message,
+      externalMessageId: send.externalMessageId,
+    };
   }
 
   private async recordOutbound(params: {

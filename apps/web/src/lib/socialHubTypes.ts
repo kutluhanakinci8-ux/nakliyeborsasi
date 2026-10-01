@@ -218,6 +218,7 @@ export type SocialHubSnapshot = {
     meta: string;
     whatsapp: string;
     tiktok: string;
+    youtube: string;
   };
   inboxSummary: {
     totalOpenThreads: number;

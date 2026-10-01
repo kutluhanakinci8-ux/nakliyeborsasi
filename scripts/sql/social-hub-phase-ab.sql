@@ -1,0 +1,1 @@
+-- Faz AB: şema değişikliği yok (TikTok giden mesaj iskelet, webhook imza, YouTube webhook)

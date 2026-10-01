@@ -20,12 +20,12 @@ export class SocialHubTokenVaultService {
 
   public async getAccessToken(
     companyId: string,
-    platformCode: SocialPlatformCode,
+    platformCode: SocialPlatformCode | string,
   ): Promise<string | null> {
     const row = await this.connectionRepository.findOne({
       where: {
         companyId,
-        platformCode,
+        platformCode: String(platformCode),
         statusCode: SocialConnectionStatusCode.Connected,
       },
     });
@@ -45,7 +45,7 @@ export class SocialHubTokenVaultService {
 
   public async requireAccessToken(
     companyId: string,
-    platformCode: SocialPlatformCode,
+    platformCode: SocialPlatformCode | string,
   ): Promise<string> {
     const token = await this.getAccessToken(companyId, platformCode);
     if (!token) {

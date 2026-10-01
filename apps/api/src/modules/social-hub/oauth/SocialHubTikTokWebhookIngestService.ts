@@ -5,6 +5,8 @@ import { SocialConnectionStatusCode } from "@nakliyeborsasi/core";
 import { CompanySocialConnectionEntity } from "../../../infrastructure/database/entities/CompanySocialConnectionEntity";
 import { SocialHubMessagingBridgeService } from "../SocialHubMessagingBridgeService";
 import { parseTikTokWebhookInbound } from "./socialHubTikTokWebhookParser";
+import { verifyTikTokWebhookSignature } from "./socialHubTikTokWebhookSignature";
+import { SocialHubOAuthConfigService } from "./SocialHubOAuthConfigService";
 
 const ROADMAP_TIKTOK = "TIKTOK";
 
@@ -16,9 +18,29 @@ export class SocialHubTikTokWebhookIngestService {
     @InjectRepository(CompanySocialConnectionEntity)
     private readonly connectionRepository: Repository<CompanySocialConnectionEntity>,
     private readonly messagingBridgeService: SocialHubMessagingBridgeService,
+    private readonly oauthConfig: SocialHubOAuthConfigService,
   ) {}
 
-  public async ingestPayload(body: Record<string, unknown>): Promise<void> {
+  public async ingestPayload(
+    body: Record<string, unknown>,
+    options?: {
+      signatureHeader?: string;
+      rawBody?: Buffer;
+    },
+  ): Promise<void> {
+    const secret =
+      process.env.SOCIAL_TIKTOK_WEBHOOK_SECRET?.trim() ??
+      this.oauthConfig.getTikTokConfig()?.clientSecret;
+    if (
+      !verifyTikTokWebhookSignature({
+        signatureHeader: options?.signatureHeader,
+        rawBody: options?.rawBody,
+        secret,
+      })
+    ) {
+      this.logger.warn("TikTok webhook signature verification failed");
+      return;
+    }
     const event = typeof body.event === "string" ? body.event : "unknown";
     const clientKey =
       typeof body.client_key === "string" ? body.client_key : undefined;
