@@ -240,6 +240,12 @@ export type SocialHubSnapshot = {
     tiktok: SocialHubBetaWebhookReadiness;
     youtube: SocialHubBetaWebhookReadiness;
   };
+  integrationOpsHints?: {
+    webhookInboundDedupSeconds: number;
+    webhookBridgeAuditEnabled: boolean;
+    tiktokSignatureRequired: boolean;
+    youtubePushAuthRequired: boolean;
+  };
   inboxSummary: {
     totalOpenThreads: number;
     byPlatform: Array<{

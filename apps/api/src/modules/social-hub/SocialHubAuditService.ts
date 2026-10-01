@@ -13,6 +13,8 @@ export const SocialHubAuditActionCode = {
   PostSubmitApproval: "SOCIAL_HUB_POST_SUBMIT_APPROVAL",
   MemberRoleUpdate: "SOCIAL_HUB_MEMBER_ROLE_UPDATE",
   ConnectionTokenRefresh: "SOCIAL_HUB_CONNECTION_TOKEN_REFRESH",
+  WebhookInboundBridged: "SOCIAL_HUB_WEBHOOK_INBOUND_BRIDGED",
+  RoadmapInboxSync: "SOCIAL_HUB_ROADMAP_INBOX_SYNC",
 } as const;
 
 @Injectable()
@@ -29,15 +31,57 @@ export class SocialHubAuditService {
     requestPath: string,
     metadata?: Record<string, unknown>,
   ): void {
+    this.appendEntry({
+      actorUserId: user.userId,
+      actorCompanyId: user.companyId,
+      actionCode,
+      requestPath,
+      metadata: metadata ?? null,
+    });
+  }
+
+  public recordCompanySystemEvent(
+    companyId: string,
+    actionCode: string,
+    requestPath: string,
+    metadata?: Record<string, unknown>,
+  ): void {
+    this.appendEntry({
+      actorUserId: null,
+      actorCompanyId: companyId,
+      actionCode,
+      requestPath,
+      metadata: metadata ?? null,
+    });
+  }
+
+  public async countRecentByAction(
+    actionCode: string,
+    since: Date,
+  ): Promise<number> {
+    return this.auditLogRepository
+      .createQueryBuilder("log")
+      .where("log.actionCode = :actionCode", { actionCode })
+      .andWhere("log.createdAt >= :since", { since })
+      .getCount();
+  }
+
+  private appendEntry(params: {
+    actorUserId: string | null;
+    actorCompanyId: string | null;
+    actionCode: string;
+    requestPath: string;
+    metadata: Record<string, unknown> | null;
+  }): void {
     void this.auditLogPersistenceService.appendEntry(
       new AuditLogWriteRequest({
-        actorUserId: user.userId,
-        actorCompanyId: user.companyId,
+        actorUserId: params.actorUserId,
+        actorCompanyId: params.actorCompanyId,
         httpMethod: "POST",
-        requestPath,
+        requestPath: params.requestPath,
         responseStatusCode: 200,
-        actionCode,
-        metadata: metadata ?? null,
+        actionCode: params.actionCode,
+        metadata: params.metadata,
       }),
     );
   }

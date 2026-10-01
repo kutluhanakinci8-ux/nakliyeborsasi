@@ -1,0 +1,1 @@
+-- Faz AI: şema değişikliği yok (webhook köprü denetim kaydı, ops hints, admin metrik)

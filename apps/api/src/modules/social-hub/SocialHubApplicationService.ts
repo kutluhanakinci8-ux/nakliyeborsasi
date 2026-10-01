@@ -60,6 +60,7 @@ import { SocialHubWeeklyEmailService } from "./SocialHubWeeklyEmailService";
 import { normalizeSocialHubSlackWebhookUrl } from "./socialHubSlackWebhook";
 import { buildSocialHubPublicWebhookUrls } from "./socialHubIntegrationUrls";
 import { buildSocialHubIntegrationWebhookReadiness } from "./socialHubIntegrationWebhookReadiness";
+import { buildSocialHubIntegrationOpsHints } from "./socialHubIntegrationOpsHints";
 import { getRoadmapProviderCapabilities } from "./socialHubRoadmapCapabilities";
 import { roadmapConnectedHint } from "./socialHubRoadmapHints";
 import { SocialHubRoadmapInboxSyncService } from "./SocialHubRoadmapInboxSyncService";
@@ -184,6 +185,7 @@ export class SocialHubApplicationService {
       templates: templates.map((row) => this.mapTemplate(row)),
       integrationWebhooks: buildSocialHubPublicWebhookUrls(),
       integrationWebhookReadiness: buildSocialHubIntegrationWebhookReadiness(),
+      integrationOpsHints: buildSocialHubIntegrationOpsHints(),
       inboxSummary: {
         totalOpenThreads: openLinks.length,
         byPlatform: [
@@ -1292,6 +1294,15 @@ export class SocialHubApplicationService {
       const result = await this.roadmapInboxSyncService.summarize(
         user.companyId,
         platformCode,
+      );
+      this.socialHubAuditService.record(
+        user,
+        SocialHubAuditActionCode.RoadmapInboxSync,
+        `/company/social-hub/connections/${platformCode}/sync-inbox`,
+        {
+          platformCode,
+          openThreadCount: result.importedThreadCount,
+        },
       );
       return { sync: result };
     }

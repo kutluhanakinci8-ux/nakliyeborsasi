@@ -9,6 +9,7 @@ import {
   parseYouTubeWebhookInbound,
 } from "./socialHubYouTubeWebhookParser";
 import { verifyYouTubePubSubPushAuth } from "./socialHubYouTubePubSubPushAuth";
+import { SocialHubWebhookBridgeAuditService } from "../SocialHubWebhookBridgeAuditService";
 
 const ROADMAP_YOUTUBE = "YOUTUBE";
 
@@ -20,6 +21,7 @@ export class SocialHubYouTubeWebhookIngestService {
     @InjectRepository(CompanySocialConnectionEntity)
     private readonly connectionRepository: Repository<CompanySocialConnectionEntity>,
     private readonly messagingBridgeService: SocialHubMessagingBridgeService,
+    private readonly webhookBridgeAuditService: SocialHubWebhookBridgeAuditService,
   ) {}
 
   public async ingestPayload(
@@ -87,6 +89,13 @@ export class SocialHubYouTubeWebhookIngestService {
       this.logger.log(
         `YouTube message bridged company=${connection.companyId} thread=${result.threadId}`,
       );
+      this.webhookBridgeAuditService.recordInboundBridged({
+        companyId: connection.companyId,
+        platformCode: ROADMAP_YOUTUBE,
+        threadId: result.threadId,
+        externalThreadId: parsed.externalThreadId,
+        externalMessageId: parsed.externalMessageId,
+      });
     }
   }
 }

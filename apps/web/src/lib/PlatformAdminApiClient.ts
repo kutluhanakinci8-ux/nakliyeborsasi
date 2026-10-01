@@ -872,6 +872,13 @@ export type SocialHubRoadmapBetaOpsSnapshot = {
       signatureOrPushAuthRequired: boolean;
     };
   };
+  integrationOpsHints: {
+    webhookInboundDedupSeconds: number;
+    webhookBridgeAuditEnabled: boolean;
+    tiktokSignatureRequired: boolean;
+    youtubePushAuthRequired: boolean;
+  };
+  webhookInboundBridged24h: number;
   platforms: SocialHubRoadmapBetaPlatformOpsStat[];
 };
 

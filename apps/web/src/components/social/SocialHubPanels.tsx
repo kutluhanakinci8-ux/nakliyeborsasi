@@ -121,6 +121,7 @@ export function SocialConnectionsPanel({
   const roadmapProviders = snapshot.roadmapProviders ?? [];
   const integrationWebhooks = snapshot.integrationWebhooks;
   const webhookReadiness = snapshot.integrationWebhookReadiness;
+  const opsHints = snapshot.integrationOpsHints;
   return (
     <section className="social-hub-panel module-panel module-panel--elevated">
       <header className="social-hub-panel-head">
@@ -172,6 +173,15 @@ export function SocialConnectionsPanel({
               ) : null}
             </li>
           </ul>
+        ) : null}
+        {opsHints ? (
+          <p className="module-hint">
+            Sunucu: webhook denetim kaydı{" "}
+            {opsHints.webhookBridgeAuditEnabled ? "açık" : "kapalı"}
+            {opsHints.webhookInboundDedupSeconds > 0
+              ? ` · gelen dedup ${opsHints.webhookInboundDedupSeconds}s`
+              : ""}
+          </p>
         ) : null}
       </header>
       <ul className="social-hub-connection-grid">
@@ -832,6 +842,8 @@ function auditActionLabel(code: string): string {
     SOCIAL_HUB_POST_APPROVE: "Gönderi onayı",
     SOCIAL_HUB_POST_SUBMIT_APPROVAL: "Onaya gönderim",
     SOCIAL_HUB_MEMBER_ROLE_UPDATE: "Rol değişikliği",
+    SOCIAL_HUB_WEBHOOK_INBOUND_BRIDGED: "Webhook → Mesajlar köprüsü",
+    SOCIAL_HUB_ROADMAP_INBOX_SYNC: "Beta gelen kutusu özet",
   };
   return map[code] ?? code;
 }

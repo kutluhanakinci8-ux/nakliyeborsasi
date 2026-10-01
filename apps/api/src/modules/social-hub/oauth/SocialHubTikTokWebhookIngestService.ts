@@ -7,6 +7,7 @@ import { SocialHubMessagingBridgeService } from "../SocialHubMessagingBridgeServ
 import { parseTikTokWebhookInbound } from "./socialHubTikTokWebhookParser";
 import { verifyTikTokWebhookSignature } from "./socialHubTikTokWebhookSignature";
 import { SocialHubOAuthConfigService } from "./SocialHubOAuthConfigService";
+import { SocialHubWebhookBridgeAuditService } from "../SocialHubWebhookBridgeAuditService";
 
 const ROADMAP_TIKTOK = "TIKTOK";
 
@@ -19,6 +20,7 @@ export class SocialHubTikTokWebhookIngestService {
     private readonly connectionRepository: Repository<CompanySocialConnectionEntity>,
     private readonly messagingBridgeService: SocialHubMessagingBridgeService,
     private readonly oauthConfig: SocialHubOAuthConfigService,
+    private readonly webhookBridgeAuditService: SocialHubWebhookBridgeAuditService,
   ) {}
 
   public async ingestPayload(
@@ -88,6 +90,13 @@ export class SocialHubTikTokWebhookIngestService {
       this.logger.log(
         `TikTok message bridged company=${connection.companyId} thread=${result.threadId}`,
       );
+      this.webhookBridgeAuditService.recordInboundBridged({
+        companyId: connection.companyId,
+        platformCode: ROADMAP_TIKTOK,
+        threadId: result.threadId,
+        externalThreadId: parsed.externalThreadId,
+        externalMessageId: parsed.externalMessageId,
+      });
     }
   }
 }
