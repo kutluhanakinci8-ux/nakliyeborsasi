@@ -624,6 +624,7 @@ export function SocialHubPageClient() {
                       code,
                     );
                     setStatus(result.sync.message);
+                    await reload();
                   })
                 }
               />

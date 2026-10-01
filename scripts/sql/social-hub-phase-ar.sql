@@ -1,0 +1,1 @@
+-- Faz AR: şema değişikliği yok (inbox sync summary + denetim SOCIAL_HUB_INBOX_SYNC)

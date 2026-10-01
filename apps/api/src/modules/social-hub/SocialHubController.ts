@@ -51,6 +51,13 @@ export class SocialHubController {
     return this.socialHubApplicationService.seedDemoInbox(user);
   }
 
+  @Get("inbox/sync-summary")
+  public async inboxSyncSummary(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    return this.socialHubApplicationService.getInboxSyncSummary(user);
+  }
+
   @Get("inbox/threads-preview")
   public async inboxThreadsPreview(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
