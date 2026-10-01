@@ -60,7 +60,10 @@ export class SocialHubApiClient {
       notificationInsights: SocialHubNotificationInsights;
     }>(accessToken, "/health");
     return {
-      health: payload.health,
+      health: {
+        ...payload.health,
+        roadmapChannels: payload.health.roadmapChannels ?? [],
+      },
       notificationInsights: payload.notificationInsights ?? {
         healthAlertEmailLastSentAt: null,
         lastHealthAlertStatus: null,

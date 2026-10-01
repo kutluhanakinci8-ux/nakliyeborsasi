@@ -1,0 +1,1 @@
+-- Faz Z: şema değişikliği yok (roadmap token job, sağlık beta kanallar, TikTok webhook iskelet)

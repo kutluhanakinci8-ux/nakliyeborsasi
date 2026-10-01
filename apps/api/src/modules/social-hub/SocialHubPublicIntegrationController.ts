@@ -11,6 +11,7 @@ import type { Request, Response } from "express";
 import { SocialHubOAuthApplicationService } from "./oauth/SocialHubOAuthApplicationService";
 import { SocialHubOAuthConfigService } from "./oauth/SocialHubOAuthConfigService";
 import { SocialHubWebhookIngestService } from "./oauth/SocialHubWebhookIngestService";
+import { SocialHubTikTokWebhookIngestService } from "./oauth/SocialHubTikTokWebhookIngestService";
 
 @Controller("company/social-hub")
 export class SocialHubPublicIntegrationController {
@@ -18,6 +19,7 @@ export class SocialHubPublicIntegrationController {
     private readonly socialHubOAuthApplicationService: SocialHubOAuthApplicationService,
     private readonly socialHubOAuthConfigService: SocialHubOAuthConfigService,
     private readonly socialHubWebhookIngestService: SocialHubWebhookIngestService,
+    private readonly socialHubTikTokWebhookIngestService: SocialHubTikTokWebhookIngestService,
   ) {}
 
   @Get("oauth/callback")
@@ -79,6 +81,14 @@ export class SocialHubPublicIntegrationController {
     @Res() response: Response,
   ): void {
     this.metaWebhookVerify(mode, verifyToken, challenge, response);
+  }
+
+  @Post("webhooks/tiktok")
+  public async tiktokWebhook(
+    @Body() body: Record<string, unknown>,
+  ): Promise<{ received: boolean }> {
+    await this.socialHubTikTokWebhookIngestService.ingestPayload(body);
+    return { received: true };
   }
 
   @Post("webhooks/whatsapp")

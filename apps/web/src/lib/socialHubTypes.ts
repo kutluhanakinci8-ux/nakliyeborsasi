@@ -154,12 +154,14 @@ export type SocialHubHealthChannel = {
   oauthServerReady: boolean;
   canRefreshToken: boolean;
   linkedInRefreshAvailable?: boolean;
+  isRoadmapBeta?: boolean;
 };
 
 export type SocialHubHealth = {
   generatedAt: string;
   overallStatus: "healthy" | "attention" | "critical";
   channels: SocialHubHealthChannel[];
+  roadmapChannels?: SocialHubHealthChannel[];
 };
 
 export type SocialHubChannelOutboundStat = {

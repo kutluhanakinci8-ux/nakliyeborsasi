@@ -550,10 +550,17 @@ export function SocialHubPageClient() {
                 }
                 onRefreshToken={(code) =>
                   void runAction(async () => {
-                    const result = await SocialHubApiClient.refreshConnectionToken(
-                      accessToken,
-                      code,
-                    );
+                    const isRoadmap =
+                      code === "TIKTOK" || code === "YOUTUBE";
+                    const result = isRoadmap
+                      ? await SocialHubApiClient.refreshRoadmapToken(
+                          accessToken,
+                          code,
+                        )
+                      : await SocialHubApiClient.refreshConnectionToken(
+                          accessToken,
+                          code,
+                        );
                     setStatus(result.refresh.message);
                     await loadHealthData();
                   })
