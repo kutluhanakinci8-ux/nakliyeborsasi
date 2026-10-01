@@ -66,7 +66,7 @@ export class SocialHubModuleStatusController {
     ]);
     return {
       module: "social_hub",
-      phase: "aq",
+      phase: "ar",
       subscriptionModuleCode: SubscriptionModuleCode.SocialHub,
       features: [
         "connections_skeleton",
@@ -209,6 +209,7 @@ export class SocialHubModuleStatusController {
         "analytics_meta_platform_insights",
         "analytics_linkedin_org_insights",
         "inbox_threads_preview_panel",
+        "inbox_sync_summary_by_platform",
       ],
       integrationWebhookReadiness: buildSocialHubIntegrationWebhookReadiness(),
       integrationWebhooks: buildSocialHubPublicWebhookUrls(),

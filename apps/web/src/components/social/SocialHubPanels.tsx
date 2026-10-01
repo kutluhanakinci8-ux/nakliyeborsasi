@@ -498,6 +498,52 @@ export function SocialInboxPanel({
           oluşturun.
         </p>
       )}
+      {snapshot.inboxSyncSummary?.channels?.length ? (
+        <div className="social-hub-inbox-sync-summary">
+          <h3 className="social-hub-subsection-title">Kanal sync & webhook hizası</h3>
+          <p className="module-hint">
+            Açık konuşma sayısı, son sync denemesi ve 24s webhook köprü — prod ve beta
+            kanallar.
+          </p>
+          <ul className="social-hub-inbox-sync-list">
+            {snapshot.inboxSyncSummary.channels.map((row) => (
+              <li key={row.platformCode} className="social-hub-inbox-sync-row">
+                <div className="social-hub-inbox-sync-head">
+                  <strong>{row.label}</strong>
+                  <span className="module-hint">
+                    {row.openCount} açık · webhook {row.webhookInboundBridged24h}{" "}
+                    (24s)
+                  </span>
+                </div>
+                <p className="social-hub-inbox-sync-meta">
+                  {row.inboxHistorySync
+                    ? "Geçmiş sync destekli"
+                    : row.inboxWebhook
+                      ? "Webhook gelen kutusu"
+                      : "Yayın / özet"}
+                  {row.connectionStatusCode
+                    ? ` · bağlantı ${row.connectionStatusCode}`
+                    : ""}
+                </p>
+                {row.lastSyncAt ? (
+                  <p className="module-hint">
+                    Son sync:{" "}
+                    {new Date(row.lastSyncAt).toLocaleString("tr-TR")}
+                    {row.lastSyncImplementationStatus
+                      ? ` (${row.lastSyncImplementationStatus})`
+                      : ""}
+                  </p>
+                ) : (
+                  <p className="module-hint">Henüz sync denemesi kaydı yok.</p>
+                )}
+                {row.lastSyncMessage ? (
+                  <p className="social-hub-inbox-sync-message">{row.lastSyncMessage}</p>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
       <ul className="social-hub-inbox-platforms">
         {inboxSummary.byPlatform.map((row) => {
           const label = platformLabel(row.platformCode);
@@ -1047,6 +1093,7 @@ function auditActionLabel(code: string): string {
     SOCIAL_HUB_MEMBER_ROLE_UPDATE: "Rol değişikliği",
     SOCIAL_HUB_WEBHOOK_INBOUND_BRIDGED: "Webhook → Mesajlar köprüsü",
     SOCIAL_HUB_ROADMAP_INBOX_SYNC: "Beta gelen kutusu özet",
+    SOCIAL_HUB_INBOX_SYNC: "Gelen kutusu senkron",
   };
   return map[code] ?? code;
 }

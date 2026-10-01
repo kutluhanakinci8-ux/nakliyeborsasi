@@ -39,6 +39,13 @@ if [[ -n "${SOCIAL_HUB_SMOKE_EXPECT_PHASE:-}" ]]; then
     }
     echo "OK: status inbox_threads_preview_panel feature"
   fi
+  if [[ "${SOCIAL_HUB_SMOKE_EXPECT_PHASE}" == "ar" ]]; then
+    echo "${status_json}" | grep -q '"inbox_sync_summary_by_platform"' || {
+      echo "FAIL: status missing inbox_sync_summary_by_platform feature"
+      exit 1
+    }
+    echo "OK: status inbox_sync_summary_by_platform feature"
+  fi
 fi
 if [[ "${SOCIAL_HUB_SMOKE_WEBHOOK_READINESS:-0}" == "1" ]]; then
   echo "${status_json}" | grep -q '"integrationWebhookReadiness"' || {
@@ -101,6 +108,20 @@ if [[ -n "${SOCIAL_HUB_JWT:-}" ]]; then
       exit 1
     }
     echo "OK: snapshot webhookActivity"
+  fi
+  if [[ "${SOCIAL_HUB_SMOKE_INBOX_SYNC_SUMMARY:-0}" == "1" ]]; then
+    sync_code="$(curl -sS -o /tmp/social-hub-inbox-sync.json -w "%{http_code}" \
+      -H "Authorization: Bearer ${SOCIAL_HUB_JWT}" \
+      "${API_BASE}/company/social-hub/inbox/sync-summary")"
+    if [[ "${sync_code}" != "200" ]]; then
+      echo "FAIL: inbox sync-summary HTTP ${sync_code}"
+      exit 1
+    fi
+    grep -q '"channels"' /tmp/social-hub-inbox-sync.json || {
+      echo "FAIL: inbox sync-summary missing channels"
+      exit 1
+    }
+    echo "OK: inbox sync-summary"
   fi
   if [[ "${SOCIAL_HUB_SMOKE_INBOX_PREVIEW:-0}" == "1" ]]; then
     preview_code="$(curl -sS -o /tmp/social-hub-inbox-preview.json -w "%{http_code}" \

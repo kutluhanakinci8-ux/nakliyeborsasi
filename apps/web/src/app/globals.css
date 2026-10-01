@@ -15901,3 +15901,43 @@ button.btn-secondary {
   font-weight: 600;
   color: #b45309;
 }
+
+.social-hub-inbox-sync-summary {
+  margin: 1.25rem 0;
+}
+
+.social-hub-inbox-sync-list {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.social-hub-inbox-sync-row {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+}
+
+.social-hub-inbox-sync-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem;
+}
+
+.social-hub-inbox-sync-meta {
+  margin: 0.35rem 0 0;
+  font-size: 0.82rem;
+  color: #475569;
+}
+
+.social-hub-inbox-sync-message {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  color: #0f172a;
+}

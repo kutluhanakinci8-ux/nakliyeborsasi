@@ -15,6 +15,7 @@ export const SocialHubAuditActionCode = {
   ConnectionTokenRefresh: "SOCIAL_HUB_CONNECTION_TOKEN_REFRESH",
   WebhookInboundBridged: "SOCIAL_HUB_WEBHOOK_INBOUND_BRIDGED",
   RoadmapInboxSync: "SOCIAL_HUB_ROADMAP_INBOX_SYNC",
+  InboxSync: "SOCIAL_HUB_INBOX_SYNC",
 } as const;
 
 @Injectable()
@@ -176,6 +177,69 @@ export class SocialHubAuditService {
         metadata: params.metadata,
       }),
     );
+  }
+
+  public async listLatestInboxSyncByPlatform(
+    companyId: string,
+    limit = 80,
+  ): Promise<
+    Map<
+      string,
+      {
+        createdAt: Date;
+        message: string | null;
+        implementationStatus: "ready" | "pending" | null;
+        importedThreadCount: number | null;
+      }
+    >
+  > {
+    const rows = await this.auditLogRepository
+      .createQueryBuilder("log")
+      .where("log.actorCompanyId = :companyId", { companyId })
+      .andWhere("log.actionCode IN (:...codes)", {
+        codes: [
+          SocialHubAuditActionCode.InboxSync,
+          SocialHubAuditActionCode.RoadmapInboxSync,
+        ],
+      })
+      .orderBy("log.createdAt", "DESC")
+      .take(limit)
+      .getMany();
+    const byPlatform = new Map<
+      string,
+      {
+        createdAt: Date;
+        message: string | null;
+        implementationStatus: "ready" | "pending" | null;
+        importedThreadCount: number | null;
+      }
+    >();
+    for (const row of rows) {
+      const meta = row.metadata as Record<string, unknown> | null;
+      const platformCode =
+        typeof meta?.platformCode === "string" ? meta.platformCode : null;
+      if (!platformCode || byPlatform.has(platformCode)) {
+        continue;
+      }
+      const statusRaw = meta?.implementationStatus;
+      const implementationStatus =
+        statusRaw === "ready" || statusRaw === "pending" ? statusRaw : null;
+      const imported =
+        typeof meta?.importedThreadCount === "number"
+          ? meta.importedThreadCount
+          : typeof meta?.openThreadCount === "number"
+            ? meta.openThreadCount
+            : null;
+      const message =
+        typeof meta?.message === "string" ? meta.message : null;
+      byPlatform.set(platformCode, {
+        createdAt: row.createdAt,
+        message,
+        implementationStatus,
+        importedThreadCount: imported,
+      });
+    }
+    return byPlatform;
   }
 
   public async listRecent(

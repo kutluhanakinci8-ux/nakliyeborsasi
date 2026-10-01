@@ -70,6 +70,7 @@ import { buildSocialHubAnalyticsCsv } from "./socialHubAnalyticsCsv";
 import { buildSocialHubAuditLogCsv } from "./socialHubAuditLogCsv";
 import { SocialHubMetaPlatformInsightsService } from "./SocialHubMetaPlatformInsightsService";
 import { SocialHubLinkedInOrgInsightsService } from "./SocialHubLinkedInOrgInsightsService";
+import { SocialHubInboxSyncSummaryService } from "./SocialHubInboxSyncSummaryService";
 
 export const INVITABLE_SOCIAL_TEAM_ROLES: readonly CompanyRoleCode[] = [
   CompanyRoleCode.SocialAdmin,
@@ -115,6 +116,7 @@ export class SocialHubApplicationService {
     private readonly roadmapInboxSyncService: SocialHubRoadmapInboxSyncService,
     private readonly metaPlatformInsightsService: SocialHubMetaPlatformInsightsService,
     private readonly linkedInOrgInsightsService: SocialHubLinkedInOrgInsightsService,
+    private readonly inboxSyncSummaryService: SocialHubInboxSyncSummaryService,
   ) {}
 
   private async assertSocialHubSubscription(companyId: string): Promise<void> {
@@ -212,6 +214,9 @@ export class SocialHubApplicationService {
       webhookInboundBridged24h: bridgedCountByCode.get(platformCode) ?? 0,
     });
 
+    const inboxSyncSummary =
+      await this.inboxSyncSummaryService.buildForCompany(user.companyId);
+
     return {
       subscription: this.subscriptionMeta(user.companyId),
       permissions,
@@ -258,7 +263,16 @@ export class SocialHubApplicationService {
             : "Kanal bağlayın veya demo oluşturun; konuşmalar Mesajlar ekranında listelenir.",
         webhookInboundBridged24h: inboundBridged24h,
       },
+      inboxSyncSummary,
     };
+  }
+
+  public async getInboxSyncSummary(user: AuthenticatedUserContext) {
+    assertSocialHubRead(user);
+    await this.assertSocialHubSubscription(user.companyId);
+    const settings = await this.ensureSettings(user.companyId);
+    this.assertInboxOperationsAllowed(settings);
+    return this.inboxSyncSummaryService.buildForCompany(user.companyId);
   }
 
   public async getConnectionHealth(user: AuthenticatedUserContext) {
@@ -1491,12 +1505,26 @@ export class SocialHubApplicationService {
         {
           platformCode,
           openThreadCount: result.importedThreadCount,
+          importedThreadCount: result.importedThreadCount,
+          implementationStatus: result.implementationStatus,
+          message: result.message,
         },
       );
       return { sync: result };
     }
     const provider = this.socialProviderRegistry.resolve(platformCode);
     const result = await provider.syncInbox(user.companyId);
+    this.socialHubAuditService.record(
+      user,
+      SocialHubAuditActionCode.InboxSync,
+      `/company/social-hub/connections/${platformCode}/sync-inbox`,
+      {
+        platformCode,
+        importedThreadCount: result.importedThreadCount,
+        implementationStatus: result.implementationStatus,
+        message: result.message,
+      },
+    );
     return { sync: result };
   }
 
