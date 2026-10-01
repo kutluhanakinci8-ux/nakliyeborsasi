@@ -75,7 +75,7 @@ export class SocialHubModuleStatusController {
     ]);
     return {
       module: "social_hub",
-      phase: "az",
+      phase: "ba",
       subscriptionModuleCode: SubscriptionModuleCode.SocialHub,
       features: buildSocialHubModuleStatusFeatures(),
       integrationWebhookReadiness: buildSocialHubIntegrationWebhookReadiness(),

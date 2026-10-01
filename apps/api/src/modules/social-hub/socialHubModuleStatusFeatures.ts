@@ -151,6 +151,11 @@ const PHASE_MILESTONE_FEATURES = [
 
 const AZ_FEATURES = ["social_hub_code_complete_az"] as const;
 
+const BA_FEATURES = [
+  "social_hub_mock_webhook_fixtures",
+  "social_hub_ci_workflow_ba",
+] as const;
+
 export const SOCIAL_HUB_PHASE_MILESTONE_CODES = [
   "ao",
   "ap",
@@ -164,6 +169,7 @@ export const SOCIAL_HUB_PHASE_MILESTONE_CODES = [
   "ax",
   "ay",
   "az",
+  "ba",
 ] as const;
 
 export function buildSocialHubModuleStatusFeatures(): string[] {
@@ -171,5 +177,6 @@ export function buildSocialHubModuleStatusFeatures(): string[] {
     ...CORE_FEATURES,
     ...PHASE_MILESTONE_FEATURES,
     ...AZ_FEATURES,
+    ...BA_FEATURES,
   ];
 }

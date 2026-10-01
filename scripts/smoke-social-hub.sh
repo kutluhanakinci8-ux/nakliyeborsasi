@@ -81,6 +81,17 @@ if [[ -n "${SOCIAL_HUB_SMOKE_EXPECT_PHASE:-}" ]]; then
     }
     echo "OK: status youtube_prod_provider_path feature"
   fi
+  if [[ "${SOCIAL_HUB_SMOKE_EXPECT_PHASE}" == "ba" ]]; then
+    echo "${status_json}" | grep -q '"social_hub_mock_webhook_fixtures"' || {
+      echo "FAIL: status missing social_hub_mock_webhook_fixtures feature"
+      exit 1
+    }
+    echo "${status_json}" | grep -q '"social_hub_ci_workflow_ba"' || {
+      echo "FAIL: status missing social_hub_ci_workflow_ba feature"
+      exit 1
+    }
+    echo "OK: status social_hub_ci_workflow_ba"
+  fi
   if [[ "${SOCIAL_HUB_SMOKE_EXPECT_PHASE}" == "az" ]]; then
     echo "${status_json}" | grep -q '"social_hub_code_complete_az"' || {
       echo "FAIL: status missing social_hub_code_complete_az feature"
