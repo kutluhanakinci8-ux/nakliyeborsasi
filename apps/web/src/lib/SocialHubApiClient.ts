@@ -47,10 +47,39 @@ export class SocialHubApiClient {
       webhookBridge: analytics.webhookBridge ?? {
         inboundBridged24h: 0,
         inboundBridged7d: 0,
+        inboundBridged30d: 0,
         lastInboundBridgedAt: null,
         byPlatform24h: [],
+        byPlatform7d: [],
       },
     };
+  }
+
+  public static buildAuditLogExportUrl(focus?: "webhook" | "all"): string {
+    const query =
+      focus === "webhook" ? "?focus=webhook" : "";
+    return `${PublicApiConfiguration.resolveBaseUrl()}/company/social-hub/audit-log/export${query}`;
+  }
+
+  public static async downloadAuditLogExport(
+    accessToken: string,
+    focus?: "webhook" | "all",
+  ): Promise<void> {
+    const response = await fetch(this.buildAuditLogExportUrl(focus), {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!response.ok) {
+      throw new Error("Denetim CSV indirilemedi.");
+    }
+    const blob = await response.blob();
+    const anchor = document.createElement("a");
+    anchor.href = URL.createObjectURL(blob);
+    anchor.download =
+      focus === "webhook"
+        ? "social-hub-audit-webhook.csv"
+        : "social-hub-audit-log.csv";
+    anchor.click();
+    URL.revokeObjectURL(anchor.href);
   }
 
   public static async fetchSnapshot(

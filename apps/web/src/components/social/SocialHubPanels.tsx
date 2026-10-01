@@ -447,6 +447,11 @@ export function SocialInboxPanel({
           return (
             <li key={row.platformCode} className="social-hub-inbox-row">
               <span className="social-hub-inbox-platform">{label}</span>
+              {(row.webhookInboundBridged24h ?? 0) > 0 ? (
+                <span className="module-hint">
+                  webhook {row.webhookInboundBridged24h} (24s)
+                </span>
+              ) : null}
               <span className="social-hub-inbox-count">{row.openCount} açık</span>
             </li>
           );
@@ -867,6 +872,12 @@ export function SocialAnalyticsPanel({
           </span>
           <span className="social-hub-stat-label">Webhook köprü (7g)</span>
         </div>
+        <div className="social-hub-stat-card">
+          <span className="social-hub-stat-value">
+            {analytics?.webhookBridge?.inboundBridged30d ?? "—"}
+          </span>
+          <span className="social-hub-stat-label">Webhook köprü (30g)</span>
+        </div>
       </div>
       {analytics?.webhookBridge &&
       (analytics.webhookBridge.byPlatform24h.length > 0 ||
@@ -931,6 +942,7 @@ type TeamProps = {
   onPatchSettings: (patch: Record<string, boolean>) => void;
   onRoleChange: (userId: string, roleCode: string) => void;
   onAuditFocusChange: (focus: "all" | "webhook") => void;
+  onExportAuditLog: () => void;
 };
 
 export function SocialTeamPanel({
@@ -945,6 +957,7 @@ export function SocialTeamPanel({
   onPatchSettings,
   onRoleChange,
   onAuditFocusChange,
+  onExportAuditLog,
 }: TeamProps) {
   if (!permissions.canManageSettings) {
     return (
@@ -1049,6 +1062,14 @@ export function SocialTeamPanel({
           onClick={() => onAuditFocusChange("webhook")}
         >
           Webhook köprü
+        </button>
+        <button
+          type="button"
+          className="btn-account-ghost"
+          disabled={busy}
+          onClick={onExportAuditLog}
+        >
+          Denetim CSV
         </button>
       </div>
       <ul className="social-hub-audit-list">

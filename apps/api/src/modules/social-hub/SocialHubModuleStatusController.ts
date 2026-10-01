@@ -29,9 +29,22 @@ export class SocialHubModuleStatusController {
       companiesActive24h: number;
       byPlatform: ReturnType<typeof mapWebhookBridgedByPlatform>;
     };
+    webhookBridge7d: {
+      total: number;
+      companiesActive7d: number;
+      byPlatform: ReturnType<typeof mapWebhookBridgedByPlatform>;
+    };
   }> {
     const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const [total, bridgedByPlatform, companiesActive24h] = await Promise.all([
+    const since7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const [
+      total24h,
+      bridgedByPlatform24h,
+      companiesActive24h,
+      total7d,
+      bridgedByPlatform7d,
+      companiesActive7d,
+    ] = await Promise.all([
       this.auditService.countRecentByAction(
         SocialHubAuditActionCode.WebhookInboundBridged,
         since24h,
@@ -41,10 +54,19 @@ export class SocialHubModuleStatusController {
         SocialHubAuditActionCode.WebhookInboundBridged,
         since24h,
       ),
+      this.auditService.countRecentByAction(
+        SocialHubAuditActionCode.WebhookInboundBridged,
+        since7d,
+      ),
+      this.auditService.summarizeWebhookBridgedByPlatform(since7d),
+      this.auditService.countDistinctCompaniesRecentByAction(
+        SocialHubAuditActionCode.WebhookInboundBridged,
+        since7d,
+      ),
     ]);
     return {
       module: "social_hub",
-      phase: "am",
+      phase: "an",
       subscriptionModuleCode: SubscriptionModuleCode.SocialHub,
       features: [
         "connections_skeleton",
@@ -179,14 +201,24 @@ export class SocialHubModuleStatusController {
         "inbox_summary_webhook_bridged_24h",
         "public_status_webhook_companies_active_24h",
         "admin_webhook_active_companies_24h",
+        "inbox_by_platform_webhook_bridged_24h",
+        "analytics_webhook_30d_and_7d_platform",
+        "company_audit_log_csv_export",
+        "public_status_webhook_bridge_7d",
+        "admin_webhook_bridged_7d_metrics",
       ],
       integrationWebhookReadiness: buildSocialHubIntegrationWebhookReadiness(),
       integrationWebhooks: buildSocialHubPublicWebhookUrls(),
       integrationOpsHints: buildSocialHubIntegrationOpsHints(),
       webhookBridge24h: {
-        total,
+        total: total24h,
         companiesActive24h,
-        byPlatform: mapWebhookBridgedByPlatform(bridgedByPlatform),
+        byPlatform: mapWebhookBridgedByPlatform(bridgedByPlatform24h),
+      },
+      webhookBridge7d: {
+        total: total7d,
+        companiesActive7d,
+        byPlatform: mapWebhookBridgedByPlatform(bridgedByPlatform7d),
       },
     };
   }

@@ -306,6 +306,24 @@ export class SocialHubController {
     return this.socialHubApplicationService.listAuditLog(user, focus);
   }
 
+  @Get("audit-log/export")
+  public async exportAuditLog(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Res() response: Response,
+    @Query("focus") focus?: string,
+  ): Promise<void> {
+    const csv = await this.socialHubApplicationService.exportAuditLogCsv(
+      user,
+      focus,
+    );
+    response.setHeader("Content-Type", "text/csv; charset=utf-8");
+    response.setHeader(
+      "Content-Disposition",
+      'attachment; filename="social-hub-audit-log.csv"',
+    );
+    response.send(csv);
+  }
+
   @Patch("settings")
   public async updateSettings(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,

@@ -737,6 +737,15 @@ export function SocialHubPageClient() {
                 integrationsPath={integrationsPath}
                 busy={busy}
                 onAuditFocusChange={(focus) => setAuditFocus(focus)}
+                onExportAuditLog={() =>
+                  void runAction(async () => {
+                    await SocialHubApiClient.downloadAuditLogExport(
+                      accessToken,
+                      auditFocus === "webhook" ? "webhook" : undefined,
+                    );
+                    setStatus("Denetim CSV indirildi.");
+                  })
+                }
                 onPatchSettings={(patch) =>
                   void runAction(async () => {
                     await SocialHubApiClient.updateSettings(accessToken, patch);
