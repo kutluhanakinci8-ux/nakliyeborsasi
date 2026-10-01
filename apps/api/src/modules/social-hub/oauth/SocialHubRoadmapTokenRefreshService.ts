@@ -8,7 +8,11 @@ import {
 import { encryptTotpSecret } from "../../auth/TotpSecretCipher";
 import { CompanySocialConnectionEntity } from "../../../infrastructure/database/entities/CompanySocialConnectionEntity";
 import { SocialHubOAuthConfigService } from "./SocialHubOAuthConfigService";
-import { assertRoadmapPlatformCode } from "../socialHubRoadmapInterest";
+import {
+  assertRoadmapPlatformCode,
+  isRoadmapPlatformCode,
+} from "../socialHubRoadmapInterest";
+import { SOCIAL_HUB_ROADMAP_PROVIDERS } from "../socialHubRoadmapProviders";
 import {
   hasRoadmapRefreshToken,
   mergeRoadmapRefreshToken,
@@ -17,6 +21,8 @@ import {
 
 const TIKTOK_TOKEN_URL = "https://open.tiktokapis.com/v2/oauth/token/";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
+const ROADMAP_CODES = SOCIAL_HUB_ROADMAP_PROVIDERS.map((row) => row.platformCode);
+const EXPIRY_LOOKAHEAD_MS = 7 * 24 * 60 * 60 * 1000;
 
 @Injectable()
 export class SocialHubRoadmapTokenRefreshService {
@@ -149,5 +155,39 @@ export class SocialHubRoadmapTokenRefreshService {
 
   public connectionHasRefreshToken(row: CompanySocialConnectionEntity): boolean {
     return hasRoadmapRefreshToken(row.grantedScopes);
+  }
+
+  public async refreshExpiringRoadmapConnections(): Promise<number> {
+    const threshold = new Date(Date.now() + EXPIRY_LOOKAHEAD_MS);
+    const candidates = await this.connectionRepository
+      .createQueryBuilder("connection")
+      .where("connection.statusCode = :connected", {
+        connected: SocialConnectionStatusCode.Connected,
+      })
+      .andWhere("connection.platformCode IN (:...codes)", {
+        codes: ROADMAP_CODES,
+      })
+      .andWhere("connection.tokenExpiresAt IS NOT NULL")
+      .andWhere("connection.tokenExpiresAt < :threshold", { threshold })
+      .orderBy("connection.tokenExpiresAt", "ASC")
+      .take(40)
+      .getMany();
+    let refreshed = 0;
+    for (const row of candidates) {
+      if (!isRoadmapPlatformCode(row.platformCode)) {
+        continue;
+      }
+      if (!hasRoadmapRefreshToken(row.grantedScopes)) {
+        continue;
+      }
+      const result = await this.refreshRoadmapToken(
+        row.companyId,
+        row.platformCode,
+      );
+      if (result.refreshed) {
+        refreshed += 1;
+      }
+    }
+    return refreshed;
   }
 }

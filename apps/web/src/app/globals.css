@@ -15370,6 +15370,11 @@ button.btn-secondary {
   background: #fff;
 }
 
+.social-hub-health-card--roadmap {
+  border-style: dashed;
+  background: rgba(99, 102, 241, 0.04);
+}
+
 .social-hub-health-meta {
   font-size: 0.85rem;
   margin: 0.25rem 0;

@@ -1505,6 +1505,31 @@ export function SocialHealthPanel({
             ) : null}
           </li>
         ))}
+        {(health.roadmapChannels ?? []).map((channel) => (
+          <li
+            key={`roadmap-${channel.platformCode}`}
+            className="social-hub-health-card social-hub-health-card--roadmap"
+          >
+            <h3>{channel.label}</h3>
+            <span className="social-hub-pill">Beta yol haritası</span>
+            <p className="social-hub-health-meta">
+              {statusLabel(channel.statusCode)} · {tokenHealthLabel(channel.tokenHealth)}
+            </p>
+            {channel.setupWarnings.map((warning) => (
+              <p key={warning} className="social-hub-setup-warn">{warning}</p>
+            ))}
+            {canManage && channel.canRefreshToken ? (
+              <button
+                type="button"
+                className="btn-account-primary"
+                disabled={busy}
+                onClick={() => onRefreshToken(channel.platformCode)}
+              >
+                Token yenile
+              </button>
+            ) : null}
+          </li>
+        ))}
       </ul>
       <header className="social-hub-panel-head">
         <h3 className="account-card-title">Gönderim geçmişi</h3>

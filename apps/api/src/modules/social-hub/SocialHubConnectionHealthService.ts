@@ -12,6 +12,11 @@ import { parseSocialHubConnectionMetadata } from "./oauth/SocialHubConnectionMet
 import { getSocialHubProviderCapabilities } from "./socialHubProviderCapabilities";
 import { SocialHubOutboundDeliveryLogService } from "./SocialHubOutboundDeliveryLogService";
 import { hasLinkedInRefreshToken } from "./oauth/socialHubLinkedInRefreshToken";
+import { SOCIAL_HUB_ROADMAP_PROVIDERS } from "./socialHubRoadmapProviders";
+import { isRoadmapOAuthEnvConfigured } from "./socialHubRoadmapOAuthReadiness";
+import { hasRoadmapRefreshToken } from "./oauth/socialHubRoadmapRefreshToken";
+
+const EXPIRY_LOOKAHEAD_MS = 7 * 24 * 60 * 60 * 1000;
 
 const PLATFORM_LABELS: Record<SocialPlatformCode, string> = {
   [SocialPlatformCode.Instagram]: "Instagram",
@@ -97,11 +102,65 @@ export class SocialHubConnectionHealthService {
           );
       }
     }
-    const overallStatus = this.resolveOverallStatus(channels);
+    const roadmapChannels = SOCIAL_HUB_ROADMAP_PROVIDERS.map((provider) => {
+      const row = connections.find(
+        (c) => c.platformCode === provider.platformCode,
+      );
+      const tokenHealth = this.resolveTokenHealth(row);
+      const setupWarnings: string[] = [];
+      if (!isRoadmapOAuthEnvConfigured(provider.platformCode)) {
+        setupWarnings.push("Platform OAuth ortam değişkenleri eksik.");
+      }
+      if (row?.statusCode === SocialConnectionStatusCode.Connected) {
+        setupWarnings.push(
+          "Beta kanal — mesajlaşma ve yayın API’leri henüz aktif değil.",
+        );
+      }
+      if (
+        row &&
+        row.statusCode === SocialConnectionStatusCode.Connected &&
+        !hasRoadmapRefreshToken(row.grantedScopes)
+      ) {
+        setupWarnings.push(
+          "Refresh token yok — süre dolunca yeniden OAuth gerekir.",
+        );
+      }
+      if (row?.lastErrorMessage) {
+        setupWarnings.push(row.lastErrorMessage);
+      }
+      if (
+        row?.tokenExpiresAt &&
+        row.tokenExpiresAt.getTime() < Date.now() + EXPIRY_LOOKAHEAD_MS
+      ) {
+        setupWarnings.push("Token yakında sona eriyor — yenileyin.");
+      }
+      return {
+        platformCode: provider.platformCode,
+        label: provider.label,
+        statusCode: row?.statusCode ?? SocialConnectionStatusCode.Disconnected,
+        tokenHealth,
+        tokenExpiresAt: row?.tokenExpiresAt?.toISOString() ?? null,
+        setupWarnings,
+        openThreadCount: 0,
+        lastOutboundStatus: null,
+        lastOutboundAt: null,
+        recentOutboundFailures24h: 0,
+        oauthServerReady: isRoadmapOAuthEnvConfigured(provider.platformCode),
+        canRefreshToken:
+          row?.statusCode === SocialConnectionStatusCode.Connected &&
+          hasRoadmapRefreshToken(row.grantedScopes),
+        isRoadmapBeta: true,
+      };
+    });
+    const overallStatus = this.resolveOverallStatus([
+      ...channels,
+      ...roadmapChannels,
+    ]);
     return {
       generatedAt: new Date().toISOString(),
       overallStatus,
       channels,
+      roadmapChannels,
     };
   }
 
