@@ -49,6 +49,14 @@ export type SocialHubProviderInfo = {
   capabilities?: SocialHubProviderCapabilities;
 };
 
+export type SocialHubRoadmapProvider = {
+  platformCode: string;
+  label: string;
+  implementationStatus: "roadmap";
+  roadmapNote: string;
+  capabilities: SocialHubProviderCapabilities;
+};
+
 export type SocialHubConnection = {
   id: string;
   platformCode: string;
@@ -166,6 +174,8 @@ export type SocialHubNotificationInsights = {
   weeklyEmailLastSentAt: string | null;
   outboundDeliveriesLast24h: { ok: number; failed: number };
   channelOutbound24h: SocialHubChannelOutboundStat[];
+  channelOutbound7d: SocialHubChannelOutboundStat[];
+  outboundDeliveriesLast7d: { ok: number; failed: number };
 };
 
 export type SocialHubOutboundDelivery = {
@@ -188,6 +198,7 @@ export type SocialHubSnapshot = {
   permissions: SocialHubPermissions;
   settings: SocialHubSettings;
   providers: SocialHubProviderInfo[];
+  roadmapProviders?: SocialHubRoadmapProvider[];
   connections: SocialHubConnection[];
   recentPosts: SocialHubPost[];
   templates: SocialHubTemplate[];

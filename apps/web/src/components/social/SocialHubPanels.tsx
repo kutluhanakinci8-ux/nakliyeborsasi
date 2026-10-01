@@ -11,6 +11,7 @@ import type {
   SocialHubNotificationInsights,
   SocialHubOutboundDelivery,
   SocialHubSnapshot,
+  SocialHubRoadmapProvider,
   SocialHubTeamMember,
   SocialHubTemplate,
 } from "../../lib/socialHubTypes";
@@ -109,6 +110,7 @@ export function SocialConnectionsPanel({
   };
   const connections = snapshot.connections ?? [];
   const providers = snapshot.providers ?? [];
+  const roadmapProviders = snapshot.roadmapProviders ?? [];
   return (
     <section className="social-hub-panel module-panel module-panel--elevated">
       <header className="social-hub-panel-head">
@@ -191,6 +193,27 @@ export function SocialConnectionsPanel({
           );
         })}
       </ul>
+      {roadmapProviders.length > 0 ? (
+        <>
+          <h3 className="account-card-title">Yol haritası</h3>
+          <p className="account-card-lead">
+            Henüz OAuth ile bağlanamayan kanallar — entegrasyon sırası netleştiğinde
+            burada açılacak.
+          </p>
+          <ul className="social-hub-connection-grid">
+            {roadmapProviders.map((row: SocialHubRoadmapProvider) => (
+              <li
+                key={row.platformCode}
+                className="social-hub-connection-card social-hub-connection-card--roadmap"
+              >
+                <h3>{row.label}</h3>
+                <span className="social-hub-pill">Yakında</span>
+                <p className="module-hint">{row.roadmapNote}</p>
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : null}
     </section>
   );
 }
@@ -890,6 +913,7 @@ type HealthPanelProps = {
   onSaveHealthSlackCooldown: () => void;
   socialHubWeeklyEmailEnabled: boolean;
   onToggleWeeklyEmail: (enabled: boolean) => void;
+  onSendWeeklyEmailNow: () => void;
   onExportInsights: () => void;
   onRefreshToken: (platformCode: string) => void;
   onReload: () => void;
@@ -931,6 +955,7 @@ export function SocialHealthPanel({
   onSaveHealthSlackCooldown,
   socialHubWeeklyEmailEnabled,
   onToggleWeeklyEmail,
+  onSendWeeklyEmailNow,
   onExportInsights,
   onRefreshToken,
   onReload,
@@ -972,6 +997,16 @@ export function SocialHealthPanel({
             />
             Haftalık e-posta özet (firma sahipleri, 7 günde bir)
           </label>
+        ) : null}
+        {canManage ? (
+          <button
+            type="button"
+            className="btn-account-ghost"
+            disabled={busy}
+            onClick={onSendWeeklyEmailNow}
+          >
+            Haftalık özet gönder (şimdi)
+          </button>
         ) : null}
         {canManage ? (
           <div className="social-hub-alert-thresholds social-hub-slack-settings">
@@ -1277,10 +1312,36 @@ export function SocialHealthPanel({
             <ul className="social-hub-channel-rates">
               {notificationInsights.channelOutbound24h.map((row) => (
                 <li key={row.platformCode}>
-                  {row.label}: %{row.successRatePercent} ({row.ok}/{row.ok + row.failed})
+                  24s · {row.label}: %{row.successRatePercent} ({row.ok}/
+                  {row.ok + row.failed})
                 </li>
               ))}
             </ul>
+          ) : null}
+          {notificationInsights.channelOutbound7d.length > 0 ? (
+            <div className="social-hub-channel-bars">
+              <p className="module-hint">
+                7 gün: {notificationInsights.outboundDeliveriesLast7d.ok} başarılı ·{" "}
+                {notificationInsights.outboundDeliveriesLast7d.failed} hatalı
+              </p>
+              {notificationInsights.channelOutbound7d.map((row) => (
+                <div key={row.platformCode} className="social-hub-channel-bar-row">
+                  <span className="social-hub-channel-bar-label">{row.label}</span>
+                  <div
+                    className="social-hub-channel-bar-track"
+                    role="presentation"
+                  >
+                    <div
+                      className="social-hub-channel-bar-fill"
+                      style={{ width: `${row.successRatePercent}%` }}
+                    />
+                  </div>
+                  <span className="social-hub-channel-bar-pct">
+                    %{row.successRatePercent}
+                  </span>
+                </div>
+              ))}
+            </div>
           ) : null}
           <button
             type="button"

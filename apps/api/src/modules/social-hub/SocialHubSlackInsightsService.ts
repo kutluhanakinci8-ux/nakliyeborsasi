@@ -8,6 +8,7 @@ import { labelSocialPlatform } from "./socialHubPlatformLabels";
 
 const HEALTH_ALERT_DEDUP_PREFIX = "health_alert:";
 const OUTBOUND_FAILURE_DEDUP_PREFIX = "outbound_fail:";
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 export type SocialHubChannelOutboundStat = {
   platformCode: string;
@@ -32,12 +33,13 @@ export class SocialHubSlackInsightsService {
       where: { companyId },
     });
     const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const platformMap =
-      await this.deliveryLogService.summarizeRecentByPlatform(
-        companyId,
-        since24h,
-      );
-    const channelOutbound24h = this.mapPlatformStats(platformMap);
+    const since7d = new Date(Date.now() - WEEK_MS);
+    const [platformMap24h, platformMap7d] = await Promise.all([
+      this.deliveryLogService.summarizeRecentByPlatform(companyId, since24h),
+      this.deliveryLogService.summarizeRecentByPlatform(companyId, since7d),
+    ]);
+    const channelOutbound24h = this.mapPlatformStats(platformMap24h);
+    const channelOutbound7d = this.mapPlatformStats(platformMap7d);
     const okCount = channelOutbound24h.reduce((sum, row) => sum + row.ok, 0);
     const failedCount = channelOutbound24h.reduce(
       (sum, row) => sum + row.failed,
@@ -62,6 +64,11 @@ export class SocialHubSlackInsightsService {
         failed: failedCount,
       },
       channelOutbound24h,
+      channelOutbound7d,
+      outboundDeliveriesLast7d: {
+        ok: channelOutbound7d.reduce((sum, row) => sum + row.ok, 0),
+        failed: channelOutbound7d.reduce((sum, row) => sum + row.failed, 0),
+      },
     };
   }
 
@@ -108,6 +115,11 @@ export class SocialHubSlackInsightsService {
     for (const row of insights.channelOutbound24h) {
       push("channel24h", row.platformCode, `${row.ok}/${row.failed} (${row.successRatePercent}%)`);
     }
+    for (const row of insights.channelOutbound7d) {
+      push("channel7d", row.platformCode, `${row.ok}/${row.failed} (${row.successRatePercent}%)`);
+    }
+    push("summary", "ok7d", insights.outboundDeliveriesLast7d.ok);
+    push("summary", "failed7d", insights.outboundDeliveriesLast7d.failed);
     return lines.join("\n");
   }
 

@@ -43,6 +43,8 @@ import { SocialHubSlackInsightsService } from "./SocialHubSlackInsightsService";
 import {
   normalizeSocialHubDigestTimezone,
 } from "./socialHubDigestBusinessHours";
+import { SOCIAL_HUB_ROADMAP_PROVIDERS } from "./socialHubRoadmapProviders";
+import { SocialHubWeeklyEmailService } from "./SocialHubWeeklyEmailService";
 import { normalizeSocialHubSlackWebhookUrl } from "./socialHubSlackWebhook";
 
 export const INVITABLE_SOCIAL_TEAM_ROLES: readonly CompanyRoleCode[] = [
@@ -83,6 +85,7 @@ export class SocialHubApplicationService {
     private readonly slackNotificationService: SocialHubSlackNotificationService,
     private readonly slackDigestService: SocialHubSlackDigestService,
     private readonly slackInsightsService: SocialHubSlackInsightsService,
+    private readonly weeklyEmailService: SocialHubWeeklyEmailService,
   ) {}
 
   private async assertSocialHubSubscription(companyId: string): Promise<void> {
@@ -147,6 +150,7 @@ export class SocialHubApplicationService {
       permissions,
       settings: this.mapSettings(settings),
       providers,
+      roadmapProviders: SOCIAL_HUB_ROADMAP_PROVIDERS,
       connections: connections.map((row) =>
         this.mapConnection(row, providers),
       ),
@@ -917,6 +921,25 @@ export class SocialHubApplicationService {
       { patch },
     );
     return { settings: this.mapSettings(settings) };
+  }
+
+  public async sendWeeklyEmailNow(user: AuthenticatedUserContext) {
+    assertSocialHubAdmin(user);
+    await this.assertSocialHubSubscription(user.companyId);
+    const result = await this.weeklyEmailService.sendWeeklyForCompany(
+      user.companyId,
+      { requireEnabled: false },
+    );
+    if (!result.sent) {
+      throw new ValidationException(result.message);
+    }
+    this.socialHubAuditService.record(
+      user,
+      SocialHubAuditActionCode.SettingsUpdate,
+      "/company/social-hub/settings/weekly-email-now",
+      { weeklyEmailNow: true },
+    );
+    return result;
   }
 
   public async sendSlackDigestNow(user: AuthenticatedUserContext) {

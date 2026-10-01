@@ -459,6 +459,16 @@ export function SocialHubPageClient() {
                     );
                   })
                 }
+                onSendWeeklyEmailNow={() =>
+                  void runAction(async () => {
+                    const result = await SocialHubApiClient.sendWeeklyEmailNow(
+                      accessToken,
+                    );
+                    await reload();
+                    await loadHealthData();
+                    setStatus(result.message);
+                  })
+                }
                 onExportInsights={() =>
                   void runAction(async () => {
                     await SocialHubApiClient.downloadInsightsExport(accessToken);

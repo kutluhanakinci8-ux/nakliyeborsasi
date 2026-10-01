@@ -1,0 +1,28 @@
+import type { SocialHubProviderCapabilities } from "./socialHubProviderCapabilities";
+
+const EMPTY_CAPS: SocialHubProviderCapabilities = {
+  oauthConnect: false,
+  inboxWebhook: false,
+  inboxHistorySync: false,
+  outboundMessaging: false,
+  feedPublish: false,
+};
+
+export type SocialHubRoadmapProvider = {
+  platformCode: string;
+  label: string;
+  implementationStatus: "roadmap";
+  roadmapNote: string;
+  capabilities: SocialHubProviderCapabilities;
+};
+
+export const SOCIAL_HUB_ROADMAP_PROVIDERS: SocialHubRoadmapProvider[] = [
+  {
+    platformCode: "TIKTOK",
+    label: "TikTok",
+    implementationStatus: "roadmap",
+    roadmapNote:
+      "İşletme mesajları ve kısa video yayını — OAuth entegrasyonu yol haritasında.",
+    capabilities: EMPTY_CAPS,
+  },
+];

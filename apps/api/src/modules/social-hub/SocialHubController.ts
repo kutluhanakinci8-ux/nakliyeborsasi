@@ -316,4 +316,11 @@ export class SocialHubController {
   ) {
     return this.socialHubApplicationService.sendSlackDigestNow(user);
   }
+
+  @Post("settings/weekly-email-now")
+  public async weeklyEmailNow(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    return this.socialHubApplicationService.sendWeeklyEmailNow(user);
+  }
 }
