@@ -1,0 +1,1 @@
+-- Faz AZ: şema değişikliği yok (kod tamamlama, status feature sadeleştirme)

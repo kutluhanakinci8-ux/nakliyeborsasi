@@ -81,6 +81,21 @@ if [[ -n "${SOCIAL_HUB_SMOKE_EXPECT_PHASE:-}" ]]; then
     }
     echo "OK: status youtube_prod_provider_path feature"
   fi
+  if [[ "${SOCIAL_HUB_SMOKE_EXPECT_PHASE}" == "az" ]]; then
+    echo "${status_json}" | grep -q '"social_hub_code_complete_az"' || {
+      echo "FAIL: status missing social_hub_code_complete_az feature"
+      exit 1
+    }
+    echo "${status_json}" | grep -q '"phaseMilestones"' || {
+      echo "FAIL: status missing phaseMilestones"
+      exit 1
+    }
+    echo "${status_json}" | grep -q '"az"' || {
+      echo "FAIL: phaseMilestones missing az"
+      exit 1
+    }
+    echo "OK: status social_hub_code_complete_az"
+  fi
   if [[ "${SOCIAL_HUB_SMOKE_EXPECT_PHASE}" == "ay" ]]; then
     echo "${status_json}" | grep -q '"roadmap_pending_x_google_business"' || {
       echo "FAIL: status missing roadmap_pending_x_google_business feature"
