@@ -69,6 +69,7 @@ import { buildCompanyWebhookActivityCsv } from "./socialHubWebhookActivityCsv";
 import { buildSocialHubAnalyticsCsv } from "./socialHubAnalyticsCsv";
 import { buildSocialHubAuditLogCsv } from "./socialHubAuditLogCsv";
 import { SocialHubMetaPlatformInsightsService } from "./SocialHubMetaPlatformInsightsService";
+import { SocialHubLinkedInOrgInsightsService } from "./SocialHubLinkedInOrgInsightsService";
 
 export const INVITABLE_SOCIAL_TEAM_ROLES: readonly CompanyRoleCode[] = [
   CompanyRoleCode.SocialAdmin,
@@ -113,6 +114,7 @@ export class SocialHubApplicationService {
     private readonly roadmapTokenRefreshService: SocialHubRoadmapTokenRefreshService,
     private readonly roadmapInboxSyncService: SocialHubRoadmapInboxSyncService,
     private readonly metaPlatformInsightsService: SocialHubMetaPlatformInsightsService,
+    private readonly linkedInOrgInsightsService: SocialHubLinkedInOrgInsightsService,
   ) {}
 
   private async assertSocialHubSubscription(companyId: string): Promise<void> {
@@ -499,7 +501,8 @@ export class SocialHubApplicationService {
       bridgedByPlatform24h,
       bridgedByPlatform7d,
       lastWebhookBridgedAt,
-      platformInsightsRows,
+      platformInsightsMetaRows,
+      platformInsightLinkedInRow,
     ] = await Promise.all([
       this.socialHubAuditService.countRecentByActionForCompany(
         companyId,
@@ -529,9 +532,13 @@ export class SocialHubApplicationService {
         SocialHubAuditActionCode.WebhookInboundBridged,
       ),
       this.metaPlatformInsightsService.buildForCompany(companyId),
+      this.linkedInOrgInsightsService.buildForCompany(companyId),
     ]);
 
-    const platformInsights = platformInsightsRows;
+    const platformInsights = [
+      ...platformInsightsMetaRows,
+      platformInsightLinkedInRow,
+    ];
 
     return {
       analytics: {

@@ -808,8 +808,8 @@ export function SocialAnalyticsPanel({
       <header className="social-hub-panel-head">
         <h2 className="account-card-title">İstatistikler</h2>
         <p className="account-card-lead">
-          Gönderi durumları, gelen kutusu, webhook köprü denetimi, Meta kanal Graph
-          özetleri ve kanal hazırlığı.
+          Gönderi durumları, gelen kutusu, webhook köprü denetimi, Meta / LinkedIn
+          kanal özetleri ve kanal hazırlığı.
         </p>
         {onExportAnalytics ? (
           <button
@@ -899,10 +899,10 @@ export function SocialAnalyticsPanel({
       ) : null}
       {analytics?.platformInsights && analytics.platformInsights.length > 0 ? (
         <div className="social-hub-platform-insights">
-          <h3 className="social-hub-subsection-title">Meta kanal özetleri (Graph)</h3>
+          <h3 className="social-hub-subsection-title">Kanal platform özetleri</h3>
           <p className="module-hint">
-            Firma OAuth ile Instagram ve Facebook sayfa metrikleri; bağlı değilse veya
-            izin yoksa satır durumu gösterilir.
+            Meta (Instagram / Facebook) ve LinkedIn şirket sayfası metrikleri; bağlı
+            değilse veya izin yoksa satır durumu gösterilir.
           </p>
           <ul className="social-hub-platform-insight-list">
             {analytics.platformInsights.map((row) => (
