@@ -15,6 +15,7 @@ import {
   SOCIAL_HUB_PHASE_MILESTONE_CODES,
 } from "./socialHubModuleStatusFeatures";
 import { buildSocialHubPwaConfig } from "./socialHubPwaConfig";
+import { buildSocialHubIntegrationGate } from "./socialHubIntegrationGate";
 
 @Controller("company/social-hub")
 export class SocialHubModuleStatusController {
@@ -45,6 +46,7 @@ export class SocialHubModuleStatusController {
     roadmapPendingProviders: string[];
     phaseMilestones: string[];
     pwa: ReturnType<typeof buildSocialHubPwaConfig>;
+    integrationGate: ReturnType<typeof buildSocialHubIntegrationGate>;
   }> {
     const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const since7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
@@ -77,7 +79,7 @@ export class SocialHubModuleStatusController {
     ]);
     return {
       module: "social_hub",
-      phase: "bb",
+      phase: "bc",
       subscriptionModuleCode: SubscriptionModuleCode.SocialHub,
       features: buildSocialHubModuleStatusFeatures(),
       integrationWebhookReadiness: buildSocialHubIntegrationWebhookReadiness(),
@@ -97,6 +99,10 @@ export class SocialHubModuleStatusController {
       roadmapPendingProviders: [...ROADMAP_PENDING_SKELETON_PLATFORM_CODES],
       phaseMilestones: [...SOCIAL_HUB_PHASE_MILESTONE_CODES],
       pwa: buildSocialHubPwaConfig(),
+      integrationGate: buildSocialHubIntegrationGate({
+        inboundBridged24h: total24h,
+        inboundBridged7d: total7d,
+      }),
     };
   }
 }

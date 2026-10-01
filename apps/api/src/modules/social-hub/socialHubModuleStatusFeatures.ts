@@ -161,6 +161,11 @@ const BB_FEATURES = [
   "social_hub_health_push_hook_skeleton",
 ] as const;
 
+const BC_FEATURES = [
+  "social_hub_integration_gate_checklist",
+  "social_hub_post_code_integration_bc",
+] as const;
+
 export const SOCIAL_HUB_PHASE_MILESTONE_CODES = [
   "ao",
   "ap",
@@ -176,6 +181,7 @@ export const SOCIAL_HUB_PHASE_MILESTONE_CODES = [
   "az",
   "ba",
   "bb",
+  "bc",
 ] as const;
 
 export function buildSocialHubModuleStatusFeatures(): string[] {
@@ -185,5 +191,6 @@ export function buildSocialHubModuleStatusFeatures(): string[] {
     ...AZ_FEATURES,
     ...BA_FEATURES,
     ...BB_FEATURES,
+    ...BC_FEATURES,
   ];
 }

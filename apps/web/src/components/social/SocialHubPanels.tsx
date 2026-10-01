@@ -16,6 +16,7 @@ import type {
   SocialHubTemplate,
   SocialHubInboxThreadPreview,
   SocialHubPwaConfig,
+  SocialHubIntegrationGate,
 } from "../../lib/socialHubTypes";
 import {
   buildMonthGrid,
@@ -130,6 +131,36 @@ function formatSchedule(iso: string | null): string {
   } catch {
     return iso;
   }
+}
+
+function integrationGateStatusLabel(
+  status: SocialHubIntegrationGate["steps"][number]["status"],
+): string {
+  switch (status) {
+    case "ready":
+      return "Hazır";
+    case "partial":
+      return "Kısmi";
+    case "pending":
+      return "Bekliyor";
+    default:
+      return "Manuel";
+  }
+}
+
+function integrationGatePillClass(
+  status: SocialHubIntegrationGate["steps"][number]["status"],
+): string {
+  if (status === "ready") {
+    return "social-hub-pill social-hub-pill--ok";
+  }
+  if (status === "partial") {
+    return "social-hub-pill";
+  }
+  if (status === "pending") {
+    return "social-hub-pill social-hub-pill--muted";
+  }
+  return "social-hub-pill social-hub-pill--muted";
 }
 
 function toDatetimeLocalValue(iso: string | null): string {
@@ -456,6 +487,33 @@ export function SocialConnectionsPanel({
             })}
           </ul>
         </>
+      ) : null}
+      {snapshot.integrationGate ? (
+        <div className="social-hub-integration-gate">
+          <h3 className="account-card-title">Entegrasyon kapısı (BB sonrası)</h3>
+          <p className="account-card-lead">{snapshot.integrationGate.note}</p>
+          <p className="social-hub-stat-line">
+            Otomatik adımlar:{" "}
+            <strong>
+              {snapshot.integrationGate.automatedReadyCount}/
+              {snapshot.integrationGate.automatedStepCount}
+            </strong>
+            {snapshot.integrationGate.allAutomatedReady
+              ? " — tüm otomatik adımlar yeşil."
+              : null}
+          </p>
+          <ul className="social-hub-integration-gate-list">
+            {snapshot.integrationGate.steps.map((step) => (
+              <li key={step.code} className="social-hub-integration-gate-row">
+                <span className={integrationGatePillClass(step.status)}>
+                  {step.code} · {integrationGateStatusLabel(step.status)}
+                </span>
+                <strong>{step.title}</strong>
+                <p className="module-hint">{step.detail}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
       ) : null}
     </section>
   );
