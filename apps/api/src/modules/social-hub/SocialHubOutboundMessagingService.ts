@@ -8,6 +8,7 @@ import { SocialHubTokenVaultService } from "./oauth/SocialHubTokenVaultService";
 import { SocialHubOutboundDeliveryLogService } from "./SocialHubOutboundDeliveryLogService";
 import { SocialHubSlackNotificationService } from "./SocialHubSlackNotificationService";
 import { SocialHubTikTokOutboundService } from "./oauth/SocialHubTikTokOutboundService";
+import { SocialHubYouTubeOutboundService } from "./oauth/SocialHubYouTubeOutboundService";
 import { isRoadmapPlatformCode } from "./socialHubRoadmapInterest";
 import { CompanySocialConnectionEntity } from "../../infrastructure/database/entities/CompanySocialConnectionEntity";
 
@@ -32,6 +33,7 @@ export class SocialHubOutboundMessagingService {
     private readonly deliveryLogService: SocialHubOutboundDeliveryLogService,
     private readonly slackNotificationService: SocialHubSlackNotificationService,
     private readonly tikTokOutboundService: SocialHubTikTokOutboundService,
+    private readonly youTubeOutboundService: SocialHubYouTubeOutboundService,
   ) {}
 
   public async tryDispatchOutbound(params: {
@@ -70,7 +72,11 @@ export class SocialHubOutboundMessagingService {
       return { attempted: true, ok: false, message: demoMessage };
     }
     try {
-      if (isRoadmapPlatformCode(platformCode) && platformCode !== "TIKTOK") {
+      if (
+        isRoadmapPlatformCode(platformCode) &&
+        platformCode !== "TIKTOK" &&
+        platformCode !== "YOUTUBE"
+      ) {
         const betaMessage =
           "Bu beta kanal için giden mesaj henüz desteklenmiyor.";
         await this.recordOutbound({
@@ -95,13 +101,20 @@ export class SocialHubOutboundMessagingService {
               externalThreadId: link.externalThreadId,
               bodyText: trimmed,
             })
-          : await this.metaGraphService.sendChannelTextMessage({
-              companyId: params.companyId,
-              platformCode: platformCode as SocialPlatformCode,
-              accessToken: token,
-              recipientExternalId: link.externalThreadId,
-              bodyText: trimmed,
-            });
+          : platformCode === "YOUTUBE"
+            ? await this.dispatchYouTubeOutbound({
+                companyId: params.companyId,
+                accessToken: token,
+                externalThreadId: link.externalThreadId,
+                bodyText: trimmed,
+              })
+            : await this.metaGraphService.sendChannelTextMessage({
+                companyId: params.companyId,
+                platformCode: platformCode as SocialPlatformCode,
+                accessToken: token,
+                recipientExternalId: link.externalThreadId,
+                bodyText: trimmed,
+              });
       if (!result.ok) {
         await this.recordOutbound({
           link,
@@ -182,6 +195,35 @@ export class SocialHubOutboundMessagingService {
     const send = await this.tikTokOutboundService.sendTextMessage({
       accessToken: params.accessToken,
       businessOpenId,
+      recipientExternalId: params.externalThreadId,
+      bodyText: params.bodyText,
+    });
+    return {
+      ok: send.ok,
+      message: send.message,
+      externalMessageId: send.externalMessageId,
+    };
+  }
+
+  private async dispatchYouTubeOutbound(params: {
+    companyId: string;
+    accessToken: string;
+    externalThreadId: string;
+    bodyText: string;
+  }): Promise<{ ok: boolean; message: string; externalMessageId?: string }> {
+    const connection = await this.connectionRepository.findOne({
+      where: { companyId: params.companyId, platformCode: "YOUTUBE" },
+    });
+    const channelId = connection?.externalAccountId;
+    if (!channelId) {
+      return {
+        ok: false,
+        message: "YouTube kanal kimliği yok — yeniden OAuth bağlayın.",
+      };
+    }
+    const send = await this.youTubeOutboundService.sendTextMessage({
+      accessToken: params.accessToken,
+      channelId,
       recipientExternalId: params.externalThreadId,
       bodyText: params.bodyText,
     });

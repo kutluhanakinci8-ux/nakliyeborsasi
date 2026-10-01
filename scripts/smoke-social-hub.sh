@@ -11,6 +11,14 @@ echo "${status_json}" | grep -q '"module":"social_hub"' || {
   echo "FAIL: unexpected status payload"
   exit 1
 }
+if [[ -n "${SOCIAL_HUB_SMOKE_EXPECT_PHASE:-}" ]]; then
+  echo "${status_json}" | grep -q "\"phase\":\"${SOCIAL_HUB_SMOKE_EXPECT_PHASE}\"" || {
+    echo "FAIL: expected phase ${SOCIAL_HUB_SMOKE_EXPECT_PHASE}"
+    echo "${status_json}"
+    exit 1
+  }
+  echo "OK: phase ${SOCIAL_HUB_SMOKE_EXPECT_PHASE}"
+fi
 echo "OK: status endpoint"
 
 echo "== Social hub web route =="
@@ -98,6 +106,22 @@ if [[ "${SOCIAL_HUB_SMOKE_YOUTUBE_WEBHOOK:-1}" != "0" ]]; then
     exit 1
   }
   echo "OK: youtube webhook"
+  echo "== YouTube webhook POST (Pub/Sub decode) =="
+  yt_pubsub_b64="$(printf '%s' '{"channelId":"UCsmoke","text":"smoke_pubsub"}' | base64 -w0 2>/dev/null || printf '%s' '{"channelId":"UCsmoke","text":"smoke_pubsub"}' | base64)"
+  yt_pubsub_code="$(curl -sS -o /tmp/social-hub-yt-pubsub.json -w "%{http_code}" \
+    -X POST \
+    -H "Content-Type: application/json" \
+    -d "{\"message\":{\"data\":\"${yt_pubsub_b64}\"}}" \
+    "${API_BASE}/company/social-hub/webhooks/youtube")"
+  if [[ "${yt_pubsub_code}" != "200" ]]; then
+    echo "FAIL: youtube pubsub webhook HTTP ${yt_pubsub_code}"
+    exit 1
+  fi
+  grep -q '"received":true' /tmp/social-hub-yt-pubsub.json || {
+    echo "FAIL: youtube pubsub webhook body"
+    exit 1
+  }
+  echo "OK: youtube pubsub webhook"
 else
   echo "SKIP: SOCIAL_HUB_SMOKE_YOUTUBE_WEBHOOK=0"
 fi

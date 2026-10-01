@@ -1,0 +1,1 @@
+-- Faz AC: şema değişikliği yok (YouTube webhook köprüsü, Pub/Sub decode, outbound iskelet, TikTok imza zorunlu modu)

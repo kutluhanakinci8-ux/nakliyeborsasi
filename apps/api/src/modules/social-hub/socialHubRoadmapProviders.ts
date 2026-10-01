@@ -26,7 +26,7 @@ export const SOCIAL_HUB_ROADMAP_PROVIDERS: SocialHubRoadmapProvider[] = [
     label: "TikTok",
     implementationStatus: "roadmap",
     roadmapNote:
-      "İşletme mesajları ve kısa video yayını — OAuth entegrasyonu yol haritasında.",
+      "Beta OAuth — gelen webhook Mesajlar köprüsü; giden mesaj SOCIAL_TIKTOK_OUTBOUND_ENABLED ile.",
     capabilities: EMPTY_CAPS,
   },
   {
@@ -34,7 +34,7 @@ export const SOCIAL_HUB_ROADMAP_PROVIDERS: SocialHubRoadmapProvider[] = [
     label: "YouTube",
     implementationStatus: "roadmap",
     roadmapNote:
-      "Shorts ve kanal mesajları — API bağlantısı planlanan sırada (TikTok sonrası).",
+      "Beta OAuth — Pub/Sub webhook Mesajlar köprüsü; giden mesaj SOCIAL_YOUTUBE_OUTBOUND_ENABLED ile.",
     capabilities: EMPTY_CAPS,
   },
 ];
