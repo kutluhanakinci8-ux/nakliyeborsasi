@@ -134,5 +134,8 @@ export function normalizeSocialHubSnapshot(payload: unknown): SocialHubSnapshot 
     integrationWebhookReadiness,
     integrationOpsHints,
     webhookActivity,
+    linkedinDmInboxGate: hub.linkedinDmInboxGate as
+      | SocialHubSnapshot["linkedinDmInboxGate"]
+      | undefined,
   };
 }

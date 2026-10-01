@@ -9,6 +9,7 @@ import { getSocialHubProviderCapabilities } from "./socialHubProviderCapabilitie
 import { getRoadmapProviderCapabilities } from "./socialHubRoadmapCapabilities";
 import { SOCIAL_HUB_ROADMAP_PROVIDERS } from "./socialHubRoadmapProviders";
 import { labelSocialPlatform } from "./socialHubPlatformLabels";
+import { buildSocialHubLinkedInDmInboxGate } from "./socialHubLinkedInDmCapability";
 import { SocialHubAuditService } from "./SocialHubAuditService";
 import { mapWebhookBridgedByPlatform } from "./socialHubWebhookBridgeSnapshot";
 import type {
@@ -72,6 +73,10 @@ export class SocialHubInboxSyncSummaryService {
               : { inboxWebhook: false, inboxHistorySync: false };
         const connection = connectionByCode.get(platformCode);
         const lastSync = lastSyncByPlatform.get(platformCode);
+        const linkedInGate =
+          platformCode === SocialPlatformCode.LinkedIn
+            ? buildSocialHubLinkedInDmInboxGate()
+            : null;
         return {
           platformCode,
           label: labelSocialPlatform(platformCode),
@@ -88,6 +93,7 @@ export class SocialHubInboxSyncSummaryService {
           lastSyncAt: lastSync?.createdAt.toISOString() ?? null,
           lastSyncMessage: lastSync?.message ?? null,
           lastSyncImplementationStatus: lastSync?.implementationStatus ?? null,
+          dmInboxGateLabel: linkedInGate?.userFacingLabel ?? null,
         };
       },
     );

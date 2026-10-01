@@ -270,11 +270,22 @@ export function SocialConnectionsPanel({
                 ) : null}
                 <p className="social-hub-connection-status">
                   {statusLabel(row.statusCode)}
+                  {row.linkedinDmInboxGate ? (
+                    <span
+                      className="social-hub-pill social-hub-pill--muted"
+                      title={row.linkedinDmInboxGate.userFacingNote}
+                    >
+                      {row.linkedinDmInboxGate.userFacingLabel}
+                    </span>
+                  ) : null}
                   {provider?.implementationStatus === "pending" ||
                   row.oauthReady === false ? (
                     <span className="social-hub-pill">OAuth yapılandırması eksik</span>
                   ) : null}
                 </p>
+                {row.linkedinDmInboxGate ? (
+                  <p className="module-hint">{row.linkedinDmInboxGate.userFacingNote}</p>
+                ) : null}
                 {capLabels.length > 0 ? (
                   <ul className="social-hub-capability-list">
                     {capLabels.map((label) => (
@@ -487,6 +498,12 @@ export function SocialInboxPanel({
       <header className="social-hub-panel-head">
         <h2 className="account-card-title">Sosyal gelen kutusu</h2>
         <p className="account-card-lead">{inboxSummary.note}</p>
+        {snapshot.linkedinDmInboxGate ? (
+          <p className="module-hint social-hub-linkedin-dm-gate">
+            <strong>{snapshot.linkedinDmInboxGate.userFacingLabel}:</strong>{" "}
+            {snapshot.linkedinDmInboxGate.userFacingNote}
+          </p>
+        ) : null}
       </header>
       <p className="social-hub-stat-line">
         Açık konuşmalar: <strong>{inboxSummary.totalOpenThreads}</strong>
@@ -568,11 +585,13 @@ export function SocialInboxPanel({
                   </span>
                 </div>
                 <p className="social-hub-inbox-sync-meta">
-                  {row.inboxHistorySync
-                    ? "Geçmiş sync destekli"
-                    : row.inboxWebhook
-                      ? "Webhook gelen kutusu"
-                      : "Yayın / özet"}
+                  {row.dmInboxGateLabel
+                    ? row.dmInboxGateLabel
+                    : row.inboxHistorySync
+                      ? "Geçmiş sync destekli"
+                      : row.inboxWebhook
+                        ? "Webhook gelen kutusu"
+                        : "Yayın / özet"}
                   {row.connectionStatusCode
                     ? ` · bağlantı ${row.connectionStatusCode}`
                     : ""}

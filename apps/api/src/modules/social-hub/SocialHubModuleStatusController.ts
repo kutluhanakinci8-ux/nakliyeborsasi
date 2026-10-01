@@ -8,6 +8,7 @@ import {
   SocialHubAuditService,
 } from "./SocialHubAuditService";
 import { mapWebhookBridgedByPlatform } from "./socialHubWebhookBridgeSnapshot";
+import { buildSocialHubLinkedInDmInboxGate } from "./socialHubLinkedInDmCapability";
 
 @Controller("company/social-hub")
 export class SocialHubModuleStatusController {
@@ -34,6 +35,7 @@ export class SocialHubModuleStatusController {
       companiesActive7d: number;
       byPlatform: ReturnType<typeof mapWebhookBridgedByPlatform>;
     };
+    linkedinDmInboxGate: ReturnType<typeof buildSocialHubLinkedInDmInboxGate>;
   }> {
     const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const since7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
@@ -66,7 +68,7 @@ export class SocialHubModuleStatusController {
     ]);
     return {
       module: "social_hub",
-      phase: "aw",
+      phase: "ax",
       subscriptionModuleCode: SubscriptionModuleCode.SocialHub,
       features: [
         "connections_skeleton",
@@ -216,6 +218,7 @@ export class SocialHubModuleStatusController {
         "messaging_quick_reply_template_render",
         "tiktok_prod_provider_path",
         "youtube_prod_provider_path",
+        "linkedin_dm_v2_explicit_gate",
       ],
       integrationWebhookReadiness: buildSocialHubIntegrationWebhookReadiness(),
       integrationWebhooks: buildSocialHubPublicWebhookUrls(),
@@ -230,6 +233,7 @@ export class SocialHubModuleStatusController {
         companiesActive7d,
         byPlatform: mapWebhookBridgedByPlatform(bridgedByPlatform7d),
       },
+      linkedinDmInboxGate: buildSocialHubLinkedInDmInboxGate(),
     };
   }
 }

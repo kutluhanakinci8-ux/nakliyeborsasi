@@ -64,6 +64,7 @@ import { buildSocialHubIntegrationWebhookReadiness } from "./socialHubIntegratio
 import { buildSocialHubIntegrationOpsHints } from "./socialHubIntegrationOpsHints";
 import { getRoadmapProviderCapabilities } from "./socialHubRoadmapCapabilities";
 import { isRoadmapProdProviderPlatform } from "./socialHubRoadmapProdProviders";
+import { buildSocialHubLinkedInDmInboxGate } from "./socialHubLinkedInDmCapability";
 import { roadmapConnectedHint } from "./socialHubRoadmapHints";
 import { SocialHubRoadmapInboxSyncService } from "./SocialHubRoadmapInboxSyncService";
 import { mapWebhookBridgedByPlatform } from "./socialHubWebhookBridgeSnapshot";
@@ -180,6 +181,7 @@ export class SocialHubApplicationService {
       order: { sortOrder: "ASC", title: "ASC" },
     });
     const permissions = resolveSocialHubPermissions(user, settings);
+    const linkedInDmInboxGate = buildSocialHubLinkedInDmInboxGate();
     const providers = this.socialProviderRegistry.listPlatforms().map((code) => {
       const provider = this.socialProviderRegistry.resolve(code);
       return {
@@ -187,6 +189,9 @@ export class SocialHubApplicationService {
         label: PLATFORM_LABELS[code],
         implementationStatus: provider.getImplementationStatus(),
         capabilities: getSocialHubProviderCapabilities(code),
+        ...(code === SocialPlatformCode.LinkedIn
+          ? { linkedinDmInboxGate: linkedInDmInboxGate }
+          : {}),
       };
     });
 
@@ -276,6 +281,7 @@ export class SocialHubApplicationService {
         webhookInboundBridged24h: inboundBridged24h,
       },
       inboxSyncSummary,
+      linkedinDmInboxGate: linkedInDmInboxGate,
     };
   }
 
@@ -2010,6 +2016,11 @@ export class SocialHubApplicationService {
       capabilities,
       setupWarnings,
       oauthReady,
+      ...(platform === SocialPlatformCode.LinkedIn
+        ? {
+            linkedinDmInboxGate: buildSocialHubLinkedInDmInboxGate(),
+          }
+        : {}),
     };
   }
 

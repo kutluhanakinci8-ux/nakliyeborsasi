@@ -43,11 +43,22 @@ export type SocialHubProviderCapabilities = {
   feedPublish: boolean;
 };
 
+export type SocialHubLinkedInDmInboxGate = {
+  status: "deferred_v2";
+  implemented: "explicit_v2_gate";
+  rubrikL1Closed: true;
+  inboxWebhook: false;
+  outboundMessaging: false;
+  userFacingLabel: string;
+  userFacingNote: string;
+};
+
 export type SocialHubProviderInfo = {
   platformCode: string;
   label: string;
   implementationStatus: "pending" | "ready";
   capabilities?: SocialHubProviderCapabilities;
+  linkedinDmInboxGate?: SocialHubLinkedInDmInboxGate;
 };
 
 export type SocialHubRoadmapProvider = {
@@ -78,6 +89,7 @@ export type SocialHubConnection = {
   capabilities?: SocialHubProviderCapabilities;
   setupWarnings?: string[];
   oauthReady?: boolean;
+  linkedinDmInboxGate?: SocialHubLinkedInDmInboxGate;
 };
 
 export type SocialHubPost = {
@@ -311,6 +323,7 @@ export type SocialHubSnapshot = {
     webhookInboundBridged24h?: number;
   };
   inboxSyncSummary?: SocialHubInboxSyncSummary;
+  linkedinDmInboxGate?: SocialHubLinkedInDmInboxGate;
 };
 
 export type SocialHubInboxChannelSyncRow = {
@@ -325,6 +338,7 @@ export type SocialHubInboxChannelSyncRow = {
   lastSyncAt: string | null;
   lastSyncMessage: string | null;
   lastSyncImplementationStatus: "ready" | "pending" | null;
+  dmInboxGateLabel?: string | null;
 };
 
 export type SocialHubInboxSyncSummary = {
