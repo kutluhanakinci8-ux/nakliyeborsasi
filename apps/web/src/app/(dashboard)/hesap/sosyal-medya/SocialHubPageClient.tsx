@@ -717,6 +717,13 @@ export function SocialHubPageClient() {
                 snapshot={snapshot}
                 analytics={analytics}
                 loading={analyticsLoading}
+                busy={busy}
+                onExportAnalytics={() =>
+                  void runAction(async () => {
+                    await SocialHubApiClient.downloadAnalyticsExport(accessToken);
+                    setStatus("Analitik CSV indirildi.");
+                  })
+                }
               />
             ) : null}
             {activeTab === "team" ? (

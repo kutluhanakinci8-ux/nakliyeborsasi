@@ -35,6 +35,7 @@ export type SocialHubRoadmapBetaOpsSnapshot = {
   webhookInboundBridgedByPlatform24h: ReturnType<
     typeof mapWebhookBridgedByPlatform
   >;
+  companiesWithWebhookBridged24h: number;
   platforms: SocialHubRoadmapBetaPlatformOpsStat[];
 };
 
@@ -76,13 +77,18 @@ export class SocialHubRoadmapBetaOpsStatsService {
         outboundFailed24h: outbound.failed,
       });
     }
-    const [webhookInboundBridged24h, bridgedByPlatform] = await Promise.all([
-      this.auditService.countRecentByAction(
-        SocialHubAuditActionCode.WebhookInboundBridged,
-        since24h,
-      ),
-      this.auditService.summarizeWebhookBridgedByPlatform(since24h),
-    ]);
+    const [webhookInboundBridged24h, bridgedByPlatform, companiesWithWebhookBridged24h] =
+      await Promise.all([
+        this.auditService.countRecentByAction(
+          SocialHubAuditActionCode.WebhookInboundBridged,
+          since24h,
+        ),
+        this.auditService.summarizeWebhookBridgedByPlatform(since24h),
+        this.auditService.countDistinctCompaniesRecentByAction(
+          SocialHubAuditActionCode.WebhookInboundBridged,
+          since24h,
+        ),
+      ]);
     return {
       generatedAt: new Date().toISOString(),
       integrationWebhooks: buildSocialHubPublicWebhookUrls(),
@@ -91,6 +97,7 @@ export class SocialHubRoadmapBetaOpsStatsService {
       webhookInboundBridged24h,
       webhookInboundBridgedByPlatform24h:
         mapWebhookBridgedByPlatform(bridgedByPlatform),
+      companiesWithWebhookBridged24h,
       platforms,
     };
   }
@@ -146,6 +153,12 @@ export class SocialHubRoadmapBetaOpsStatsService {
         ].join(","),
       ),
       ["total", "", "", snapshot.webhookInboundBridged24h].join(","),
+      [
+        "companiesActive24h",
+        "",
+        "",
+        snapshot.companiesWithWebhookBridged24h,
+      ].join(","),
     ];
     return [header, ...lines, ...webhookLines].join("\n");
   }

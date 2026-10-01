@@ -66,6 +66,7 @@ import { roadmapConnectedHint } from "./socialHubRoadmapHints";
 import { SocialHubRoadmapInboxSyncService } from "./SocialHubRoadmapInboxSyncService";
 import { mapWebhookBridgedByPlatform } from "./socialHubWebhookBridgeSnapshot";
 import { buildCompanyWebhookActivityCsv } from "./socialHubWebhookActivityCsv";
+import { buildSocialHubAnalyticsCsv } from "./socialHubAnalyticsCsv";
 
 export const INVITABLE_SOCIAL_TEAM_ROLES: readonly CompanyRoleCode[] = [
   CompanyRoleCode.SocialAdmin,
@@ -234,6 +235,7 @@ export class SocialHubApplicationService {
           openLinks.length > 0
             ? "Sosyal konuşmalar Mesajlar’da kanal rozetiyle listelenir; yanıtlar bağlı hesap üzerinden gider. Gönderim hatası konuşma başlığında görünür."
             : "Kanal bağlayın veya demo oluşturun; konuşmalar Mesajlar ekranında listelenir.",
+        webhookInboundBridged24h: inboundBridged24h,
       },
     };
   }
@@ -468,6 +470,34 @@ export class SocialHubApplicationService {
     ).length;
     const pendingApproval = postsByStatus[SocialPostStatusCode.PendingApproval] ?? 0;
 
+    const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const since7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const [
+      webhookInboundBridged24h,
+      webhookInboundBridged7d,
+      bridgedByPlatform24h,
+      lastWebhookBridgedAt,
+    ] = await Promise.all([
+      this.socialHubAuditService.countRecentByActionForCompany(
+        companyId,
+        SocialHubAuditActionCode.WebhookInboundBridged,
+        since24h,
+      ),
+      this.socialHubAuditService.countRecentByActionForCompany(
+        companyId,
+        SocialHubAuditActionCode.WebhookInboundBridged,
+        since7d,
+      ),
+      this.socialHubAuditService.summarizeWebhookBridgedByPlatform(
+        since24h,
+        companyId,
+      ),
+      this.socialHubAuditService.latestCompanyActionAt(
+        companyId,
+        SocialHubAuditActionCode.WebhookInboundBridged,
+      ),
+    ]);
+
     return {
       analytics: {
         generatedAt: new Date().toISOString(),
@@ -485,8 +515,29 @@ export class SocialHubApplicationService {
             implementationStatus:
               this.socialProviderRegistry.resolve(code).getImplementationStatus(),
           })),
+        webhookBridge: {
+          inboundBridged24h: webhookInboundBridged24h,
+          inboundBridged7d: webhookInboundBridged7d,
+          lastInboundBridgedAt: lastWebhookBridgedAt?.toISOString() ?? null,
+          byPlatform24h: mapWebhookBridgedByPlatform(bridgedByPlatform24h),
+        },
       },
     };
+  }
+
+  public async exportAnalyticsCsv(
+    user: AuthenticatedUserContext,
+  ): Promise<string> {
+    const { analytics } = await this.getAnalytics(user);
+    return buildSocialHubAnalyticsCsv({
+      generatedAt: analytics.generatedAt,
+      connectedChannels: analytics.connectedChannels,
+      openInboxThreads: analytics.openInboxThreads,
+      publishedLast30Days: analytics.publishedLast30Days,
+      webhookInboundBridged24h: analytics.webhookBridge.inboundBridged24h,
+      webhookInboundBridged7d: analytics.webhookBridge.inboundBridged7d,
+      webhookByPlatform24h: analytics.webhookBridge.byPlatform24h,
+    });
   }
 
   public async seedDemoInbox(user: AuthenticatedUserContext): Promise<{

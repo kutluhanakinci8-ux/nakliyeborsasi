@@ -41,7 +41,16 @@ export class SocialHubApiClient {
       accessToken,
       "/analytics",
     );
-    return payload.analytics;
+    const analytics = payload.analytics;
+    return {
+      ...analytics,
+      webhookBridge: analytics.webhookBridge ?? {
+        inboundBridged24h: 0,
+        inboundBridged7d: 0,
+        lastInboundBridgedAt: null,
+        byPlatform24h: [],
+      },
+    };
   }
 
   public static async fetchSnapshot(
@@ -126,6 +135,25 @@ export class SocialHubApiClient {
 
   public static buildInsightsExportUrl(): string {
     return `${PublicApiConfiguration.resolveBaseUrl()}/company/social-hub/health/insights/export`;
+  }
+
+  public static buildAnalyticsExportUrl(): string {
+    return `${PublicApiConfiguration.resolveBaseUrl()}/company/social-hub/analytics/export`;
+  }
+
+  public static async downloadAnalyticsExport(accessToken: string): Promise<void> {
+    const response = await fetch(this.buildAnalyticsExportUrl(), {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!response.ok) {
+      throw new Error("Analitik CSV indirilemedi.");
+    }
+    const blob = await response.blob();
+    const anchor = document.createElement("a");
+    anchor.href = URL.createObjectURL(blob);
+    anchor.download = "social-hub-analytics.csv";
+    anchor.click();
+    URL.revokeObjectURL(anchor.href);
   }
 
   public static buildWebhookActivityExportUrl(): string {
