@@ -217,6 +217,12 @@ export function SocialConnectionsPanel({
                   </span>
                 ) : null}
                 <p className="module-hint">{row.roadmapNote}</p>
+                <p className="module-hint social-hub-roadmap-oauth-hint">
+                  Platform OAuth:{" "}
+                  {row.oauthEnvConfigured
+                    ? "ortam değişkenleri tanımlı (entegrasyon sırada)"
+                    : "henüz yapılandırılmadı"}
+                </p>
                 {permissions.canManageConnections && onRoadmapInterest ? (
                   <button
                     type="button"
@@ -1341,6 +1347,12 @@ export function SocialHealthPanel({
               Haftalık e-posta özet:{" "}
               {formatInsightTime(notificationInsights.weeklyEmailLastSentAt)}
             </li>
+            {notificationInsights.roadmapInterestLabels.length > 0 ? (
+              <li>
+                Yol haritası önceliği:{" "}
+                {notificationInsights.roadmapInterestLabels.join(", ")}
+              </li>
+            ) : null}
           </ul>
           {notificationInsights.channelOutbound24h.length > 0 ? (
             <ul className="social-hub-channel-rates">

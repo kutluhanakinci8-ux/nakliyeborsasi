@@ -53,6 +53,9 @@ import { SocialHubSlackDigestScheduler } from "./SocialHubSlackDigestScheduler";
 import { SocialHubSlackInsightsService } from "./SocialHubSlackInsightsService";
 import { SocialHubWeeklyEmailService } from "./SocialHubWeeklyEmailService";
 import { SocialHubWeeklyEmailScheduler } from "./SocialHubWeeklyEmailScheduler";
+import { SocialHubRoadmapInterestStatsService } from "./SocialHubRoadmapInterestStatsService";
+import { SocialHubPlatformAdminController } from "./SocialHubPlatformAdminController";
+import { PlatformAdminGuard } from "../platform-admin/PlatformAdminGuard";
 
 @Module({
   imports: [
@@ -80,6 +83,7 @@ import { SocialHubWeeklyEmailScheduler } from "./SocialHubWeeklyEmailScheduler";
     SocialHubController,
     SocialHubModuleStatusController,
     SocialHubPublicIntegrationController,
+    SocialHubPlatformAdminController,
   ],
   providers: [
     SocialHubOAuthConfigService,
@@ -115,6 +119,8 @@ import { SocialHubWeeklyEmailScheduler } from "./SocialHubWeeklyEmailScheduler";
     LinkedInMarketingPostsProvider,
     SocialPostPublishScheduler,
     SocialHubAuditService,
+    SocialHubRoadmapInterestStatsService,
+    PlatformAdminGuard,
   ],
   exports: [SocialHubApplicationService, SocialHubOutboundMessagingService],
 })

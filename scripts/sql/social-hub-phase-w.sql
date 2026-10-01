@@ -1,0 +1,1 @@
+-- Faz W: şema değişikliği yok (özet + admin istatistik + OAuth hazırlık)

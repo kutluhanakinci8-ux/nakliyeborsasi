@@ -9,6 +9,8 @@ import { SocialHubOutboundDeliveryLogService } from "./SocialHubOutboundDelivery
 import { SocialHubSlackNotificationService } from "./SocialHubSlackNotificationService";
 import { isDigestWithinBusinessHours } from "./socialHubDigestBusinessHours";
 import { labelSocialPlatform } from "./socialHubPlatformLabels";
+import { parseRoadmapInterestPlatformCodes } from "./socialHubRoadmapInterest";
+import { buildRoadmapInterestDigestSection } from "./socialHubRoadmapDigest";
 
 const DIGEST_INTERVAL_MS = 24 * 60 * 60 * 1000;
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
@@ -116,6 +118,12 @@ export class SocialHubSlackDigestService {
         summaryParts.push(rates30dSection);
       }
       summaryParts.push(channelSummary);
+      const roadmapSection = buildRoadmapInterestDigestSection(
+        parseRoadmapInterestPlatformCodes(settings.roadmapInterestPlatformCodesJson),
+      );
+      if (roadmapSection) {
+        summaryParts.push(roadmapSection);
+      }
       if (failureSection) {
         summaryParts.push(failureSection);
       }

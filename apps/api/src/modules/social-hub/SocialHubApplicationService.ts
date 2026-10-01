@@ -50,6 +50,7 @@ import {
   serializeRoadmapInterestPlatformCodes,
 } from "./socialHubRoadmapInterest";
 import { SOCIAL_HUB_ROADMAP_PROVIDERS } from "./socialHubRoadmapProviders";
+import { isRoadmapOAuthEnvConfigured } from "./socialHubRoadmapOAuthReadiness";
 import { SocialHubWeeklyEmailService } from "./SocialHubWeeklyEmailService";
 import { normalizeSocialHubSlackWebhookUrl } from "./socialHubSlackWebhook";
 
@@ -1266,6 +1267,7 @@ export class SocialHubApplicationService {
     return SOCIAL_HUB_ROADMAP_PROVIDERS.map((provider) => ({
       ...provider,
       roadmapInterested: interested.has(provider.platformCode),
+      oauthEnvConfigured: isRoadmapOAuthEnvConfigured(provider.platformCode),
     }));
   }
 

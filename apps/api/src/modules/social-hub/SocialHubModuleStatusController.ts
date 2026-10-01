@@ -12,7 +12,7 @@ export class SocialHubModuleStatusController {
   } {
     return {
       module: "social_hub",
-      phase: "v",
+      phase: "w",
       subscriptionModuleCode: SubscriptionModuleCode.SocialHub,
       features: [
         "connections_skeleton",
@@ -81,6 +81,10 @@ export class SocialHubModuleStatusController {
         "roadmap_channel_interest",
         "weekly_email_30d_summary",
         "slack_digest_30d_channel_rates",
+        "roadmap_interest_digest_summaries",
+        "roadmap_oauth_env_readiness",
+        "platform_admin_roadmap_interest_stats",
+        "linkedin_inbox_roadmap_message",
       ],
     };
   }

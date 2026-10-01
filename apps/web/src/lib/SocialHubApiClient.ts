@@ -75,6 +75,8 @@ export class SocialHubApiClient {
         outboundDeliveriesLast7d: { ok: 0, failed: 0 },
         outboundDeliveriesLast30d: { ok: 0, failed: 0 },
         manualNotifyCooldownMinutes: 15,
+        roadmapInterestPlatformCodes: [],
+        roadmapInterestLabels: [],
       },
     };
   }

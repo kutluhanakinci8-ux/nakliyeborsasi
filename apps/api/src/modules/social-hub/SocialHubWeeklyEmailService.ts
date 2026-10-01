@@ -8,6 +8,8 @@ import { SocialHubConnectionHealthService } from "./SocialHubConnectionHealthSer
 import { SocialHubOutboundDeliveryLogService } from "./SocialHubOutboundDeliveryLogService";
 import { OperationalNotificationService } from "../notification/OperationalNotificationService";
 import { labelSocialPlatform } from "./socialHubPlatformLabels";
+import { parseRoadmapInterestPlatformCodes } from "./socialHubRoadmapInterest";
+import { buildRoadmapInterestEmailClause } from "./socialHubRoadmapDigest";
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 const MONTH_MS = 30 * 24 * 60 * 60 * 1000;
@@ -96,6 +98,9 @@ export class SocialHubWeeklyEmailService {
           return `${labelSocialPlatform(code)}: ${stats.ok}/${total} (%${rate})`;
         },
       );
+      const roadmapClause = buildRoadmapInterestEmailClause(
+        parseRoadmapInterestPlatformCodes(settings.roadmapInterestPlatformCodesJson),
+      );
       const summaryParts = [
         `Genel durum: ${health.overallStatus}`,
         channelLines7d.length > 0
@@ -105,6 +110,9 @@ export class SocialHubWeeklyEmailService {
           ? `30g kanal gönderimi — ${channelLines30d.join(" | ")}`
           : "30g içinde kayıtlı kanal gönderimi yok.",
       ];
+      if (roadmapClause) {
+        summaryParts.push(roadmapClause);
+      }
       const webBase =
         process.env.WEB_PUBLIC_BASE_URL?.trim() ?? "https://app.lerta.com.tr";
       const hubUrl = `${webBase.replace(/\/$/, "")}/hesap/sosyal-medya`;

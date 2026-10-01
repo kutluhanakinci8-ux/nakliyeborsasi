@@ -15470,6 +15470,11 @@ button.btn-secondary {
   margin-left: 0.35rem;
 }
 
+.social-hub-roadmap-oauth-hint {
+  font-size: 0.8rem;
+  margin-top: 0.35rem;
+}
+
 .social-hub-channel-bars {
   margin: 0.75rem 0;
 }

@@ -57,6 +57,7 @@ export type SocialHubRoadmapProvider = {
   roadmapNote: string;
   capabilities: SocialHubProviderCapabilities;
   roadmapInterested?: boolean;
+  oauthEnvConfigured?: boolean;
 };
 
 export type SocialHubConnection = {
@@ -181,6 +182,8 @@ export type SocialHubNotificationInsights = {
   outboundDeliveriesLast7d: { ok: number; failed: number };
   outboundDeliveriesLast30d: { ok: number; failed: number };
   manualNotifyCooldownMinutes: number;
+  roadmapInterestPlatformCodes: string[];
+  roadmapInterestLabels: string[];
 };
 
 export type SocialHubOutboundDelivery = {

@@ -6,6 +6,8 @@ import { CompanySocialSlackNotifyDedupEntity } from "../../infrastructure/databa
 import { SocialHubOutboundDeliveryLogService } from "./SocialHubOutboundDeliveryLogService";
 import { labelSocialPlatform } from "./socialHubPlatformLabels";
 import { socialHubManualNotifyCooldownMinutes } from "./socialHubManualNotifyCooldown";
+import { parseRoadmapInterestPlatformCodes } from "./socialHubRoadmapInterest";
+import { formatRoadmapInterestLabels } from "./socialHubRoadmapDigest";
 
 const HEALTH_ALERT_DEDUP_PREFIX = "health_alert:";
 const OUTBOUND_FAILURE_DEDUP_PREFIX = "outbound_fail:";
@@ -54,6 +56,9 @@ export class SocialHubSlackInsightsService {
       this.latestDedup(companyId, `${HEALTH_ALERT_DEDUP_PREFIX}%`),
       this.latestDedup(companyId, `${OUTBOUND_FAILURE_DEDUP_PREFIX}%`),
     ]);
+    const roadmapCodes = parseRoadmapInterestPlatformCodes(
+      settings?.roadmapInterestPlatformCodesJson,
+    );
     return {
       healthAlertEmailLastSentAt:
         settings?.healthAlertLastSentAt?.toISOString() ?? null,
@@ -80,6 +85,8 @@ export class SocialHubSlackInsightsService {
         failed: channelOutbound30d.reduce((sum, row) => sum + row.failed, 0),
       },
       manualNotifyCooldownMinutes: socialHubManualNotifyCooldownMinutes(),
+      roadmapInterestPlatformCodes: roadmapCodes,
+      roadmapInterestLabels: formatRoadmapInterestLabels(roadmapCodes),
     };
   }
 
@@ -144,6 +151,11 @@ export class SocialHubSlackInsightsService {
       "config",
       "manualNotifyCooldownMinutes",
       insights.manualNotifyCooldownMinutes,
+    );
+    push(
+      "roadmap",
+      "interestLabels",
+      insights.roadmapInterestLabels.join("; "),
     );
     return lines.join("\n");
   }
