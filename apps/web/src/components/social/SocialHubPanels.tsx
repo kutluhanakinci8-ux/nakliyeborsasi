@@ -433,6 +433,13 @@ export function SocialInboxPanel({
       </header>
       <p className="social-hub-stat-line">
         Açık konuşmalar: <strong>{inboxSummary.totalOpenThreads}</strong>
+        {(inboxSummary.webhookInboundBridged24h ?? 0) > 0 ? (
+          <>
+            {" "}
+            · webhook köprü (24s):{" "}
+            <strong>{inboxSummary.webhookInboundBridged24h}</strong>
+          </>
+        ) : null}
       </p>
       <ul className="social-hub-inbox-platforms">
         {inboxSummary.byPlatform.map((row) => {
@@ -779,12 +786,16 @@ type AnalyticsProps = {
   snapshot: SocialHubSnapshot;
   analytics: SocialHubAnalytics | null;
   loading: boolean;
+  busy?: boolean;
+  onExportAnalytics?: () => void;
 };
 
 export function SocialAnalyticsPanel({
   snapshot,
   analytics,
   loading,
+  busy = false,
+  onExportAnalytics,
 }: AnalyticsProps) {
   const fallbackOpen = snapshot.inboxSummary?.totalOpenThreads ?? 0;
   return (
@@ -792,9 +803,18 @@ export function SocialAnalyticsPanel({
       <header className="social-hub-panel-head">
         <h2 className="account-card-title">İstatistikler</h2>
         <p className="account-card-lead">
-          Gönderi durumları, gelen kutusu ve kanal hazırlığı. Harici API metrikleri
-          bağlantı fazında eklenecek.
+          Gönderi durumları, gelen kutusu, webhook köprü denetimi ve kanal hazırlığı.
         </p>
+        {onExportAnalytics ? (
+          <button
+            type="button"
+            className="btn-account-ghost"
+            disabled={busy || loading}
+            onClick={onExportAnalytics}
+          >
+            Analitik CSV indir
+          </button>
+        ) : null}
       </header>
       {loading ? <p className="module-hint">Analitik yükleniyor…</p> : null}
       <div className="social-hub-stats-grid">
@@ -835,7 +855,36 @@ export function SocialAnalyticsPanel({
           </span>
           <span className="social-hub-stat-label">Şablon</span>
         </div>
+        <div className="social-hub-stat-card">
+          <span className="social-hub-stat-value">
+            {analytics?.webhookBridge?.inboundBridged24h ?? "—"}
+          </span>
+          <span className="social-hub-stat-label">Webhook köprü (24s)</span>
+        </div>
+        <div className="social-hub-stat-card">
+          <span className="social-hub-stat-value">
+            {analytics?.webhookBridge?.inboundBridged7d ?? "—"}
+          </span>
+          <span className="social-hub-stat-label">Webhook köprü (7g)</span>
+        </div>
       </div>
+      {analytics?.webhookBridge &&
+      (analytics.webhookBridge.byPlatform24h.length > 0 ||
+        analytics.webhookBridge.lastInboundBridgedAt) ? (
+        <p className="module-hint">
+          Son webhook köprü:{" "}
+          {analytics.webhookBridge.lastInboundBridgedAt
+            ? new Date(analytics.webhookBridge.lastInboundBridgedAt).toLocaleString(
+                "tr-TR",
+              )
+            : "—"}
+          {analytics.webhookBridge.byPlatform24h.length > 0
+            ? ` · ${analytics.webhookBridge.byPlatform24h
+                .map((row) => `${row.label}: ${row.inboundBridged24h}`)
+                .join(" · ")}`
+            : ""}
+        </p>
+      ) : null}
       {analytics?.postsByStatus && Object.keys(analytics.postsByStatus).length > 0 ? (
         <ul className="social-hub-audit-list">
           {Object.entries(analytics.postsByStatus).map(([code, count]) => (

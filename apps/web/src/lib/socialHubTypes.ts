@@ -138,6 +138,16 @@ export type SocialHubAnalytics = {
     platformCode: string;
     implementationStatus: string;
   }>;
+  webhookBridge?: {
+    inboundBridged24h: number;
+    inboundBridged7d: number;
+    lastInboundBridgedAt: string | null;
+    byPlatform24h: Array<{
+      platformCode: string;
+      label: string;
+      inboundBridged24h: number;
+    }>;
+  };
 };
 
 export type SocialHubBetaWebhookReadiness = {
@@ -274,5 +284,6 @@ export type SocialHubSnapshot = {
     }>;
     messagingDeepLink: string;
     note: string;
+    webhookInboundBridged24h?: number;
   };
 };

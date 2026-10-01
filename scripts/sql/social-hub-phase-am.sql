@@ -1,0 +1,1 @@
+-- Faz AM: şema değişikliği yok (analitik webhook köprü, aktif firma sayımı)

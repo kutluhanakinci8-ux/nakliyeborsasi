@@ -89,7 +89,8 @@ export function AdminSocialHubRoadmapPanel() {
                 )
               </>
             ) : null}
-            . Sunucu webhook
+            . Aktif firma (24s webhook köprü):{" "}
+            <strong>{betaOps.companiesWithWebhookBridged24h}</strong>. Sunucu webhook
             hazırlığı: TikTok köprü{" "}
             {betaOps.integrationWebhookReadiness.tiktok.webhookBridgeEnabled
               ? "açık"

@@ -26,20 +26,25 @@ export class SocialHubModuleStatusController {
     integrationOpsHints: ReturnType<typeof buildSocialHubIntegrationOpsHints>;
     webhookBridge24h: {
       total: number;
+      companiesActive24h: number;
       byPlatform: ReturnType<typeof mapWebhookBridgedByPlatform>;
     };
   }> {
     const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const [total, bridgedByPlatform] = await Promise.all([
+    const [total, bridgedByPlatform, companiesActive24h] = await Promise.all([
       this.auditService.countRecentByAction(
         SocialHubAuditActionCode.WebhookInboundBridged,
         since24h,
       ),
       this.auditService.summarizeWebhookBridgedByPlatform(since24h),
+      this.auditService.countDistinctCompaniesRecentByAction(
+        SocialHubAuditActionCode.WebhookInboundBridged,
+        since24h,
+      ),
     ]);
     return {
       module: "social_hub",
-      phase: "al",
+      phase: "am",
       subscriptionModuleCode: SubscriptionModuleCode.SocialHub,
       features: [
         "connections_skeleton",
@@ -169,12 +174,18 @@ export class SocialHubModuleStatusController {
         "health_alerts_webhook_bridge_summary",
         "company_webhook_activity_csv_export",
         "webhook_inactivity_health_hint_env",
+        "analytics_webhook_bridge_snapshot",
+        "analytics_webhook_csv_export",
+        "inbox_summary_webhook_bridged_24h",
+        "public_status_webhook_companies_active_24h",
+        "admin_webhook_active_companies_24h",
       ],
       integrationWebhookReadiness: buildSocialHubIntegrationWebhookReadiness(),
       integrationWebhooks: buildSocialHubPublicWebhookUrls(),
       integrationOpsHints: buildSocialHubIntegrationOpsHints(),
       webhookBridge24h: {
         total,
+        companiesActive24h,
         byPlatform: mapWebhookBridgedByPlatform(bridgedByPlatform),
       },
     };

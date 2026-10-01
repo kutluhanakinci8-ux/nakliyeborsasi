@@ -905,6 +905,7 @@ export type SocialHubRoadmapBetaOpsSnapshot = {
     label: string;
     inboundBridged24h: number;
   }>;
+  companiesWithWebhookBridged24h: number;
   platforms: SocialHubRoadmapBetaPlatformOpsStat[];
 };
 

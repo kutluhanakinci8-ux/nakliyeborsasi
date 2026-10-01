@@ -266,6 +266,20 @@ export class SocialHubController {
     return this.socialHubApplicationService.getAnalytics(user);
   }
 
+  @Get("analytics/export")
+  public async exportAnalytics(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Res() response: Response,
+  ): Promise<void> {
+    const csv = await this.socialHubApplicationService.exportAnalyticsCsv(user);
+    response.setHeader("Content-Type", "text/csv; charset=utf-8");
+    response.setHeader(
+      "Content-Disposition",
+      'attachment; filename="social-hub-analytics.csv"',
+    );
+    response.send(csv);
+  }
+
   @Get("team")
   public async listTeam(@AuthenticatedUserParam() user: AuthenticatedUserContext) {
     return this.socialHubApplicationService.listTeam(user);

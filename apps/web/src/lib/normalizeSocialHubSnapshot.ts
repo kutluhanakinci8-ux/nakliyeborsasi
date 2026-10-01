@@ -101,6 +101,7 @@ export function normalizeSocialHubSnapshot(payload: unknown): SocialHubSnapshot 
     note:
       inboxRaw?.note ??
       "Sosyal konuşmalar Mesajlar listesinde kanal rozetiyle görünür.",
+    webhookInboundBridged24h: inboxRaw?.webhookInboundBridged24h ?? 0,
   };
   const subscription = (hub.subscription as SocialHubSnapshot["subscription"]) ?? {
     moduleCode: "SOCIAL_HUB",

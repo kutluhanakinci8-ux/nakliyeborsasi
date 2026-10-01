@@ -66,6 +66,20 @@ export class SocialHubAuditService {
       .getCount();
   }
 
+  public async countDistinctCompaniesRecentByAction(
+    actionCode: string,
+    since: Date,
+  ): Promise<number> {
+    const row = await this.auditLogRepository
+      .createQueryBuilder("log")
+      .select("COUNT(DISTINCT log.actorCompanyId)", "count")
+      .where("log.actionCode = :actionCode", { actionCode })
+      .andWhere("log.createdAt >= :since", { since })
+      .andWhere("log.actorCompanyId IS NOT NULL")
+      .getRawOne<{ count: string }>();
+    return Number.parseInt(row?.count ?? "0", 10) || 0;
+  }
+
   public async countRecentByActionForCompany(
     companyId: string,
     actionCode: string,
