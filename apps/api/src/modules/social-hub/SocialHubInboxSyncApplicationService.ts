@@ -59,6 +59,14 @@ export class SocialHubInboxSyncApplicationService {
             : "Yeni geçmiş mesaj bulunamadı (webhook aktif).",
       };
     }
+    if (platformCode === SocialPlatformCode.LinkedIn) {
+      return {
+        implementationStatus: "pending",
+        importedThreadCount: 0,
+        message:
+          "LinkedIn gelen kutusu henüz desteklenmiyor; feed yayını aktif. Mesajlaşma yol haritasında.",
+      };
+    }
     if (platformCode === SocialPlatformCode.Instagram) {
       const connection = await this.connectionRepository.findOne({
         where: { companyId, platformCode },
