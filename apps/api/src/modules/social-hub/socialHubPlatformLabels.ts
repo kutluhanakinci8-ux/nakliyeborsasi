@@ -7,8 +7,14 @@ export const SOCIAL_HUB_PLATFORM_LABELS: Record<SocialPlatformCode, string> = {
   [SocialPlatformCode.LinkedIn]: "LinkedIn",
 };
 
+const EXTRA_PLATFORM_LABELS: Record<string, string> = {
+  TIKTOK: "TikTok",
+};
+
 export function labelSocialPlatform(code: string): string {
   return (
-    SOCIAL_HUB_PLATFORM_LABELS[code as SocialPlatformCode] ?? code
+    SOCIAL_HUB_PLATFORM_LABELS[code as SocialPlatformCode] ??
+    EXTRA_PLATFORM_LABELS[code] ??
+    code
   );
 }

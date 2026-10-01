@@ -70,8 +70,19 @@ export class SocialHubApiClient {
         outboundDeliveriesLast24h: { ok: 0, failed: 0 },
         weeklyEmailLastSentAt: null,
         channelOutbound24h: [],
+        channelOutbound7d: [],
+        outboundDeliveriesLast7d: { ok: 0, failed: 0 },
       },
     };
+  }
+
+  public static async sendWeeklyEmailNow(accessToken: string): Promise<{
+    sent: boolean;
+    message: string;
+  }> {
+    return socialHubFetch(accessToken, "/settings/weekly-email-now", {
+      method: "POST",
+    });
   }
 
   public static buildInsightsExportUrl(): string {

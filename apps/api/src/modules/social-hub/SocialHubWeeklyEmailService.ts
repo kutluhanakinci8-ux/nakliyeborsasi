@@ -41,25 +41,37 @@ export class SocialHubWeeklyEmailService {
       if (now - last < WEEK_MS) {
         continue;
       }
-      if (await this.sendWeeklyForCompany(settings.companyId)) {
+      const result = await this.sendWeeklyForCompany(settings.companyId, {
+        requireEnabled: true,
+      });
+      if (result.sent) {
         sent += 1;
       }
     }
     return sent;
   }
 
-  public async sendWeeklyForCompany(companyId: string): Promise<boolean> {
+  public async sendWeeklyForCompany(
+    companyId: string,
+    options: { requireEnabled?: boolean },
+  ): Promise<{ sent: boolean; message: string }> {
     const settings = await this.settingsRepository.findOne({
       where: { companyId },
     });
-    if (!settings?.socialHubWeeklyEmailEnabled) {
-      return false;
+    if (!settings) {
+      return { sent: false, message: "Sosyal hub ayarları bulunamadı." };
+    }
+    if (options.requireEnabled && !settings.socialHubWeeklyEmailEnabled) {
+      return { sent: false, message: "Haftalık e-posta özet kapalı." };
     }
     const owners = await this.membershipRepository.find({
       where: { companyId, roleCode: CompanyRoleCode.CompanyOwner },
     });
     if (owners.length === 0) {
-      return false;
+      return {
+        sent: false,
+        message: "Firma sahibi bulunamadı — özet gönderilemedi.",
+      };
     }
     try {
       const since7d = new Date(Date.now() - WEEK_MS);
@@ -73,8 +85,7 @@ export class SocialHubWeeklyEmailService {
         );
       const channelLines = [...platformStats.entries()].map(([code, stats]) => {
         const total = stats.ok + stats.failed;
-        const rate =
-          total > 0 ? Math.round((stats.ok / total) * 100) : 100;
+        const rate = total > 0 ? Math.round((stats.ok / total) * 100) : 100;
         return `${labelSocialPlatform(code)}: ${stats.ok}/${total} başarılı (%${rate})`;
       });
       const summaryParts = [
@@ -94,14 +105,17 @@ export class SocialHubWeeklyEmailService {
       });
       settings.socialHubWeeklyEmailLastSentAt = new Date();
       await this.settingsRepository.save(settings);
-      return true;
+      return { sent: true, message: "Haftalık özet e-postası gönderildi." };
     } catch (error) {
       this.logger.warn(
         `Weekly email failed company=${companyId}: ${
           error instanceof Error ? error.message : String(error)
         }`,
       );
-      return false;
+      return {
+        sent: false,
+        message: "Haftalık özet gönderilemedi. E-posta yapılandırmasını kontrol edin.",
+      };
     }
   }
 }

@@ -1,0 +1,1 @@
+-- Faz T: şema değişikliği yok (API + UI özellikleri)

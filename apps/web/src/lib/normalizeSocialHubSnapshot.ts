@@ -56,6 +56,9 @@ export function normalizeSocialHubSnapshot(payload: unknown): SocialHubSnapshot 
   const providers = Array.isArray(hub.providers)
     ? (hub.providers as SocialHubSnapshot["providers"])
     : [];
+  const roadmapProviders = Array.isArray(hub.roadmapProviders)
+    ? (hub.roadmapProviders as SocialHubSnapshot["roadmapProviders"])
+    : [];
   const connections = Array.isArray(hub.connections)
     ? (hub.connections as SocialHubSnapshot["connections"]).map((row) => ({
         ...row,
@@ -80,6 +83,7 @@ export function normalizeSocialHubSnapshot(payload: unknown): SocialHubSnapshot 
     permissions,
     settings,
     providers,
+    roadmapProviders,
     connections,
     recentPosts: Array.isArray(hub.recentPosts)
       ? (hub.recentPosts as SocialHubSnapshot["recentPosts"])
