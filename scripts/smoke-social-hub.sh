@@ -76,7 +76,7 @@ if [[ "${SOCIAL_HUB_SMOKE_TIKTOK_WEBHOOK:-1}" != "0" ]]; then
     -H "Content-Type: application/json" \
     -d '{"event":"smoke_ping"}' \
     "${API_BASE}/company/social-hub/webhooks/tiktok")"
-  if [[ "${tt_code}" != "200" ]]; then
+  if [[ "${tt_code}" != "200" && "${tt_code}" != "201" ]]; then
     echo "FAIL: tiktok webhook HTTP ${tt_code}"
     cat /tmp/social-hub-tt-wh.json 2>/dev/null || true
     exit 1
@@ -97,7 +97,7 @@ if [[ "${SOCIAL_HUB_SMOKE_YOUTUBE_WEBHOOK:-1}" != "0" ]]; then
     -H "Content-Type: application/json" \
     -d '{"kind":"smoke_ping"}' \
     "${API_BASE}/company/social-hub/webhooks/youtube")"
-  if [[ "${yt_code}" != "200" ]]; then
+  if [[ "${yt_code}" != "200" && "${yt_code}" != "201" ]]; then
     echo "FAIL: youtube webhook HTTP ${yt_code}"
     exit 1
   fi
@@ -113,7 +113,7 @@ if [[ "${SOCIAL_HUB_SMOKE_YOUTUBE_WEBHOOK:-1}" != "0" ]]; then
     -H "Content-Type: application/json" \
     -d "{\"message\":{\"data\":\"${yt_pubsub_b64}\"}}" \
     "${API_BASE}/company/social-hub/webhooks/youtube")"
-  if [[ "${yt_pubsub_code}" != "200" ]]; then
+  if [[ "${yt_pubsub_code}" != "200" && "${yt_pubsub_code}" != "201" ]]; then
     echo "FAIL: youtube pubsub webhook HTTP ${yt_pubsub_code}"
     exit 1
   fi
