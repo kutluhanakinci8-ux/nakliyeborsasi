@@ -1463,6 +1463,17 @@ export function SocialHealthPanel({
               ))}
             </ul>
           ) : null}
+          {(notificationInsights.roadmapBetaOutbound24h ?? []).length > 0 ? (
+            <p className="module-hint">
+              Beta kanallar (24s):{" "}
+              {(notificationInsights.roadmapBetaOutbound24h ?? [])
+                .map(
+                  (row) =>
+                    `${row.label} %${row.successRatePercent} (${row.ok}/${row.ok + row.failed})`,
+                )
+                .join(" · ")}
+            </p>
+          ) : null}
           {notificationInsights.channelOutbound7d.length > 0 ? (
             <div className="social-hub-channel-bars">
               <p className="module-hint">

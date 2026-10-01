@@ -16,17 +16,9 @@ import { SOCIAL_HUB_ROADMAP_PROVIDERS } from "./socialHubRoadmapProviders";
 import { isRoadmapOAuthEnvConfigured } from "./socialHubRoadmapOAuthReadiness";
 import { hasRoadmapRefreshToken } from "./oauth/socialHubRoadmapRefreshToken";
 
-const EXPIRY_LOOKAHEAD_MS = 7 * 24 * 60 * 60 * 1000;
+import { roadmapConnectedHint } from "./socialHubRoadmapHints";
 
-function roadmapConnectedHint(platformCode: string): string {
-  if (platformCode === "TIKTOK") {
-    return "Beta — gelen TikTok webhook Mesajlar köprüsüne aktarılabilir; giden mesaj ortam bayrağı ile.";
-  }
-  if (platformCode === "YOUTUBE") {
-    return "Beta — YouTube Pub/Sub webhook Mesajlar köprüsüne aktarılabilir; giden mesaj ortam bayrağı ile.";
-  }
-  return "Beta kanal — mesajlaşma ve yayın API’leri henüz aktif değil.";
-}
+const EXPIRY_LOOKAHEAD_MS = 7 * 24 * 60 * 60 * 1000;
 
 const PLATFORM_LABELS: Record<SocialPlatformCode, string> = {
   [SocialPlatformCode.Instagram]: "Instagram",

@@ -188,6 +188,7 @@ export type SocialHubNotificationInsights = {
   weeklyEmailLastSentAt: string | null;
   outboundDeliveriesLast24h: { ok: number; failed: number };
   channelOutbound24h: SocialHubChannelOutboundStat[];
+  roadmapBetaOutbound24h?: SocialHubChannelOutboundStat[];
   channelOutbound7d: SocialHubChannelOutboundStat[];
   channelOutbound30d: SocialHubChannelOutboundStat[];
   outboundDeliveriesLast7d: { ok: number; failed: number };

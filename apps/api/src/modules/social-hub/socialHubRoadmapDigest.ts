@@ -28,3 +28,46 @@ export function buildRoadmapInterestEmailClause(platformCodes: string[]): string
   const labels = formatRoadmapInterestLabels(platformCodes);
   return `Yol haritası önceliği: ${labels.join(", ")}.`;
 }
+
+export function buildRoadmapBetaOpsDigestSection(
+  roadmapChannels: Array<{
+    platformCode: string;
+    label: string;
+    statusCode: string;
+    openThreadCount: number;
+    recentOutboundFailures24h: number;
+  }>,
+): string {
+  const connected = roadmapChannels.filter(
+    (channel) => channel.statusCode === "CONNECTED",
+  );
+  if (connected.length === 0) {
+    return "";
+  }
+  const lines = connected.map(
+    (channel) =>
+      `• ${channel.label} (beta): ${channel.openThreadCount} açık · ${channel.recentOutboundFailures24h} giden hata (24s)`,
+  );
+  return `*Beta kanallar*\n${lines.join("\n")}`;
+}
+
+export function buildRoadmapBetaOpsEmailClause(
+  roadmapChannels: Array<{
+    label: string;
+    statusCode: string;
+    openThreadCount: number;
+    recentOutboundFailures24h: number;
+  }>,
+): string {
+  const connected = roadmapChannels.filter(
+    (channel) => channel.statusCode === "CONNECTED",
+  );
+  if (connected.length === 0) {
+    return "";
+  }
+  const parts = connected.map(
+    (channel) =>
+      `${channel.label}: ${channel.openThreadCount} açık konuşma, ${channel.recentOutboundFailures24h} hatalı giden (24s)`,
+  );
+  return `Beta kanallar — ${parts.join("; ")}.`;
+}
