@@ -1,0 +1,1 @@
+-- Faz AG: şema değişikliği yok (sağlık uyarıları beta, webhook 200, admin CSV, OIDC iss)

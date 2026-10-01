@@ -23,6 +23,7 @@ export function verifyYouTubePubSubPushAuth(params: {
     verifyYouTubePubSubOidcAudience({
       authorizationHeader: params.authorizationHeader,
       expectedAudience: oidcAudience,
+      expectedIssuer: process.env.SOCIAL_YOUTUBE_WEBHOOK_OIDC_ISSUER?.trim(),
     })
   ) {
     return true;

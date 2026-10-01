@@ -85,6 +85,8 @@ export class SocialHubApiClient {
         channelOutbound24h: payload.notificationInsights?.channelOutbound24h ?? [],
         roadmapBetaOutbound24h:
           payload.notificationInsights?.roadmapBetaOutbound24h ?? [],
+        roadmapBetaChannelHealth:
+          payload.notificationInsights?.roadmapBetaChannelHealth ?? [],
         channelOutbound7d: payload.notificationInsights?.channelOutbound7d ?? [],
         channelOutbound30d:
           payload.notificationInsights?.channelOutbound30d ?? [],

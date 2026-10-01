@@ -122,9 +122,25 @@ export function AdminSocialHubRoadmapPanel() {
         </>
       ) : null}
 
-      <button type="button" className="btn-account-ghost" onClick={() => void refresh()}>
-        Yenile
-      </button>
+      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+        <button type="button" className="btn-account-ghost" onClick={() => void refresh()}>
+          Yenile
+        </button>
+        {accessToken ? (
+          <button
+            type="button"
+            className="btn-account-ghost"
+            disabled={loading}
+            onClick={() =>
+              void PlatformAdminApiClient.downloadSocialHubRoadmapBetaOpsCsv(
+                accessToken,
+              )
+            }
+          >
+            Beta ops CSV
+          </button>
+        ) : null}
+      </div>
     </section>
   );
 }

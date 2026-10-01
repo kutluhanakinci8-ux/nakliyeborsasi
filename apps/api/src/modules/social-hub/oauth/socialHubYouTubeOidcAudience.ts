@@ -2,6 +2,7 @@
 export function verifyYouTubePubSubOidcAudience(params: {
   authorizationHeader: string | undefined;
   expectedAudience: string;
+  expectedIssuer?: string;
 }): boolean {
   const expected = params.expectedAudience.trim();
   if (!expected) {
@@ -21,12 +22,17 @@ export function verifyYouTubePubSubOidcAudience(params: {
     const payload = JSON.parse(payloadJson) as {
       aud?: string | string[];
       exp?: number;
+      iss?: string;
     };
     const aud = payload.aud;
     const audOk = Array.isArray(aud)
       ? aud.includes(expected)
       : aud === expected;
     if (!audOk) {
+      return false;
+    }
+    const issuer = params.expectedIssuer?.trim();
+    if (issuer && payload.iss !== issuer) {
       return false;
     }
     if (typeof payload.exp === "number" && payload.exp * 1000 < Date.now()) {

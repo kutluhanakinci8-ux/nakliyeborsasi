@@ -218,7 +218,23 @@ export class SocialHubApplicationService {
     const notificationInsights = await this.slackInsightsService.buildInsights(
       user.companyId,
     );
-    return { health, notificationInsights };
+    const roadmapBetaChannelHealth = (health.roadmapChannels ?? []).map(
+      (channel) => ({
+        platformCode: channel.platformCode,
+        label: channel.label,
+        statusCode: channel.statusCode,
+        openThreadCount: channel.openThreadCount,
+        recentOutboundFailures24h: channel.recentOutboundFailures24h,
+        tokenHealth: channel.tokenHealth,
+      }),
+    );
+    return {
+      health,
+      notificationInsights: {
+        ...notificationInsights,
+        roadmapBetaChannelHealth,
+      },
+    };
   }
 
   public async exportNotificationInsightsCsv(

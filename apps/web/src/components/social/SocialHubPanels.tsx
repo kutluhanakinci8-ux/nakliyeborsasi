@@ -267,6 +267,18 @@ export function SocialConnectionsPanel({
                   </span>
                 ) : null}
                 <p className="module-hint">{row.roadmapNote}</p>
+                {capabilitySummary(row.capabilities).length > 0 ? (
+                  <ul className="social-hub-capability-list">
+                    {capabilitySummary(row.capabilities).map((label) => (
+                      <li
+                        key={label}
+                        className="social-hub-pill social-hub-pill--muted"
+                      >
+                        {label}
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
                 <p className="module-hint social-hub-roadmap-oauth-hint">
                   Platform OAuth:{" "}
                   {row.oauthEnvConfigured
@@ -1377,11 +1389,11 @@ export function SocialHealthPanel({
               />
             </label>
             <label className="social-hub-threshold-field social-hub-threshold-field--wide">
-              Kanal bazlı eşik (JSON)
+              Kanal bazlı eşik (JSON) — TIKTOK / YOUTUBE beta kodları desteklenir
               <input
                 className="input-light"
                 type="text"
-                placeholder='{"WHATSAPP_CLOUD":3,"INSTAGRAM":1}'
+                placeholder='{"WHATSAPP_CLOUD":3,"TIKTOK":2,"YOUTUBE":2}'
                 value={healthAlertPlatformThresholdsJson}
                 disabled={busy}
                 onChange={(e) =>
@@ -1473,6 +1485,20 @@ export function SocialHealthPanel({
                 )
                 .join(" · ")}
             </p>
+          ) : null}
+          {(notificationInsights.roadmapBetaChannelHealth ?? []).some(
+            (row) => row.statusCode === "CONNECTED",
+          ) ? (
+            <ul className="social-hub-insights-list">
+              {(notificationInsights.roadmapBetaChannelHealth ?? [])
+                .filter((row) => row.statusCode === "CONNECTED")
+                .map((row) => (
+                  <li key={row.platformCode}>
+                    {row.label} (beta): {row.openThreadCount} açık konuşma ·{" "}
+                    {row.recentOutboundFailures24h} giden hata (24s)
+                  </li>
+                ))}
+            </ul>
           ) : null}
           {notificationInsights.channelOutbound7d.length > 0 ? (
             <div className="social-hub-channel-bars">
