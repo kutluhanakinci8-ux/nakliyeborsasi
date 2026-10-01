@@ -71,7 +71,10 @@ export class SocialHubApiClient {
         weeklyEmailLastSentAt: null,
         channelOutbound24h: [],
         channelOutbound7d: [],
+        channelOutbound30d: [],
         outboundDeliveriesLast7d: { ok: 0, failed: 0 },
+        outboundDeliveriesLast30d: { ok: 0, failed: 0 },
+        manualNotifyCooldownMinutes: 15,
       },
     };
   }

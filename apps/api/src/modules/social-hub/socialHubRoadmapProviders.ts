@@ -25,4 +25,12 @@ export const SOCIAL_HUB_ROADMAP_PROVIDERS: SocialHubRoadmapProvider[] = [
       "İşletme mesajları ve kısa video yayını — OAuth entegrasyonu yol haritasında.",
     capabilities: EMPTY_CAPS,
   },
+  {
+    platformCode: "YOUTUBE",
+    label: "YouTube",
+    implementationStatus: "roadmap",
+    roadmapNote:
+      "Shorts ve kanal mesajları — API bağlantısı planlanan sırada (TikTok sonrası).",
+    capabilities: EMPTY_CAPS,
+  },
 ];

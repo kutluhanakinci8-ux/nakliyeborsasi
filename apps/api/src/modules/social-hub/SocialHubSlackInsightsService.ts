@@ -5,10 +5,12 @@ import { CompanySocialSettingsEntity } from "../../infrastructure/database/entit
 import { CompanySocialSlackNotifyDedupEntity } from "../../infrastructure/database/entities/CompanySocialSlackNotifyDedupEntity";
 import { SocialHubOutboundDeliveryLogService } from "./SocialHubOutboundDeliveryLogService";
 import { labelSocialPlatform } from "./socialHubPlatformLabels";
+import { socialHubManualNotifyCooldownMinutes } from "./socialHubManualNotifyCooldown";
 
 const HEALTH_ALERT_DEDUP_PREFIX = "health_alert:";
 const OUTBOUND_FAILURE_DEDUP_PREFIX = "outbound_fail:";
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+const MONTH_MS = 30 * 24 * 60 * 60 * 1000;
 
 export type SocialHubChannelOutboundStat = {
   platformCode: string;
@@ -34,12 +36,15 @@ export class SocialHubSlackInsightsService {
     });
     const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const since7d = new Date(Date.now() - WEEK_MS);
-    const [platformMap24h, platformMap7d] = await Promise.all([
+    const since30d = new Date(Date.now() - MONTH_MS);
+    const [platformMap24h, platformMap7d, platformMap30d] = await Promise.all([
       this.deliveryLogService.summarizeRecentByPlatform(companyId, since24h),
       this.deliveryLogService.summarizeRecentByPlatform(companyId, since7d),
+      this.deliveryLogService.summarizeRecentByPlatform(companyId, since30d),
     ]);
     const channelOutbound24h = this.mapPlatformStats(platformMap24h);
     const channelOutbound7d = this.mapPlatformStats(platformMap7d);
+    const channelOutbound30d = this.mapPlatformStats(platformMap30d);
     const okCount = channelOutbound24h.reduce((sum, row) => sum + row.ok, 0);
     const failedCount = channelOutbound24h.reduce(
       (sum, row) => sum + row.failed,
@@ -65,10 +70,16 @@ export class SocialHubSlackInsightsService {
       },
       channelOutbound24h,
       channelOutbound7d,
+      channelOutbound30d,
       outboundDeliveriesLast7d: {
         ok: channelOutbound7d.reduce((sum, row) => sum + row.ok, 0),
         failed: channelOutbound7d.reduce((sum, row) => sum + row.failed, 0),
       },
+      outboundDeliveriesLast30d: {
+        ok: channelOutbound30d.reduce((sum, row) => sum + row.ok, 0),
+        failed: channelOutbound30d.reduce((sum, row) => sum + row.failed, 0),
+      },
+      manualNotifyCooldownMinutes: socialHubManualNotifyCooldownMinutes(),
     };
   }
 
@@ -120,6 +131,20 @@ export class SocialHubSlackInsightsService {
     }
     push("summary", "ok7d", insights.outboundDeliveriesLast7d.ok);
     push("summary", "failed7d", insights.outboundDeliveriesLast7d.failed);
+    for (const row of insights.channelOutbound30d) {
+      push(
+        "channel30d",
+        row.platformCode,
+        `${row.ok}/${row.failed} (${row.successRatePercent}%)`,
+      );
+    }
+    push("summary", "ok30d", insights.outboundDeliveriesLast30d.ok);
+    push("summary", "failed30d", insights.outboundDeliveriesLast30d.failed);
+    push(
+      "config",
+      "manualNotifyCooldownMinutes",
+      insights.manualNotifyCooldownMinutes,
+    );
     return lines.join("\n");
   }
 

@@ -15490,6 +15490,16 @@ button.btn-secondary {
   background: linear-gradient(90deg, #0d9488, #14b8a6);
 }
 
+.social-hub-channel-bar-fill--30d {
+  background: linear-gradient(90deg, #6366f1, #818cf8);
+}
+
+.social-hub-channel-bars--30d {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed rgba(15, 23, 42, 0.12);
+}
+
 .social-hub-channel-bar-pct {
   text-align: right;
   color: #475569;

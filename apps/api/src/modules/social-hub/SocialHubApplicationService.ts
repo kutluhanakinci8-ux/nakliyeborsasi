@@ -43,6 +43,7 @@ import { SocialHubSlackInsightsService } from "./SocialHubSlackInsightsService";
 import {
   normalizeSocialHubDigestTimezone,
 } from "./socialHubDigestBusinessHours";
+import { manualNotifyCooldownMessage } from "./socialHubManualNotifyCooldown";
 import { SOCIAL_HUB_ROADMAP_PROVIDERS } from "./socialHubRoadmapProviders";
 import { SocialHubWeeklyEmailService } from "./SocialHubWeeklyEmailService";
 import { normalizeSocialHubSlackWebhookUrl } from "./socialHubSlackWebhook";
@@ -926,6 +927,16 @@ export class SocialHubApplicationService {
   public async sendWeeklyEmailNow(user: AuthenticatedUserContext) {
     assertSocialHubAdmin(user);
     await this.assertSocialHubSubscription(user.companyId);
+    const settings = await this.settingsRepository.findOne({
+      where: { companyId: user.companyId },
+    });
+    const cooldownMsg = manualNotifyCooldownMessage(
+      settings?.socialHubWeeklyEmailLastSentAt,
+      "Haftalık e-posta özet",
+    );
+    if (cooldownMsg) {
+      throw new ValidationException(cooldownMsg);
+    }
     const result = await this.weeklyEmailService.sendWeeklyForCompany(
       user.companyId,
       { requireEnabled: false },
@@ -945,6 +956,16 @@ export class SocialHubApplicationService {
   public async sendSlackDigestNow(user: AuthenticatedUserContext) {
     assertSocialHubAdmin(user);
     await this.assertSocialHubSubscription(user.companyId);
+    const settings = await this.settingsRepository.findOne({
+      where: { companyId: user.companyId },
+    });
+    const cooldownMsg = manualNotifyCooldownMessage(
+      settings?.socialSlackDailyDigestLastSentAt,
+      "Slack günlük özet",
+    );
+    if (cooldownMsg) {
+      throw new ValidationException(cooldownMsg);
+    }
     const result = await this.slackDigestService.sendDigestForCompany(
       user.companyId,
       { requireDigestEnabled: false, enforceDailyInterval: false },

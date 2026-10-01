@@ -175,7 +175,10 @@ export type SocialHubNotificationInsights = {
   outboundDeliveriesLast24h: { ok: number; failed: number };
   channelOutbound24h: SocialHubChannelOutboundStat[];
   channelOutbound7d: SocialHubChannelOutboundStat[];
+  channelOutbound30d: SocialHubChannelOutboundStat[];
   outboundDeliveriesLast7d: { ok: number; failed: number };
+  outboundDeliveriesLast30d: { ok: number; failed: number };
+  manualNotifyCooldownMinutes: number;
 };
 
 export type SocialHubOutboundDelivery = {
