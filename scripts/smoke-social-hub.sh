@@ -53,6 +53,13 @@ if [[ -n "${SOCIAL_HUB_SMOKE_EXPECT_PHASE:-}" ]]; then
     }
     echo "OK: status publishing_media_upload_graph feature"
   fi
+  if [[ "${SOCIAL_HUB_SMOKE_EXPECT_PHASE}" == "at" ]]; then
+    echo "${status_json}" | grep -q '"publishing_calendar_grid"' || {
+      echo "FAIL: status missing publishing_calendar_grid feature"
+      exit 1
+    }
+    echo "OK: status publishing_calendar_grid feature"
+  fi
 fi
 if [[ "${SOCIAL_HUB_SMOKE_WEBHOOK_READINESS:-0}" == "1" ]]; then
   echo "${status_json}" | grep -q '"integrationWebhookReadiness"' || {
@@ -115,6 +122,22 @@ if [[ -n "${SOCIAL_HUB_JWT:-}" ]]; then
       exit 1
     }
     echo "OK: snapshot webhookActivity"
+  fi
+  if [[ "${SOCIAL_HUB_SMOKE_POSTS_RANGE:-0}" == "1" ]]; then
+    range_from="$(date -u -d '1 day ago' +%Y-%m-%dT00:00:00.000Z 2>/dev/null || date -u -v-1d +%Y-%m-%dT00:00:00.000Z)"
+    range_to="$(date -u -d '+60 days' +%Y-%m-%dT23:59:59.999Z 2>/dev/null || date -u -v+60d +%Y-%m-%dT23:59:59.999Z)"
+    posts_code="$(curl -sS -o /tmp/social-hub-posts.json -w "%{http_code}" \
+      -H "Authorization: Bearer ${SOCIAL_HUB_JWT}" \
+      "${API_BASE}/company/social-hub/posts?from=${range_from}&to=${range_to}")"
+    if [[ "${posts_code}" != "200" ]]; then
+      echo "FAIL: posts range HTTP ${posts_code}"
+      exit 1
+    fi
+    grep -q '"posts"' /tmp/social-hub-posts.json || {
+      echo "FAIL: posts range missing posts array"
+      exit 1
+    }
+    echo "OK: posts range query"
   fi
   if [[ "${SOCIAL_HUB_SMOKE_INBOX_SYNC_SUMMARY:-0}" == "1" ]]; then
     sync_code="$(curl -sS -o /tmp/social-hub-inbox-sync.json -w "%{http_code}" \

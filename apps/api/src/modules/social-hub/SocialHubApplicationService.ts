@@ -756,6 +756,99 @@ export class SocialHubApplicationService {
     };
   }
 
+  public async listPosts(
+    user: AuthenticatedUserContext,
+    query: { from?: string; to?: string },
+  ) {
+    assertSocialHubRead(user);
+    await this.assertSocialHubSubscription(user.companyId);
+    const qb = this.postRepository
+      .createQueryBuilder("post")
+      .where("post.companyId = :companyId", { companyId: user.companyId })
+      .andWhere("post.scheduledAt IS NOT NULL")
+      .andWhere("post.statusCode != :cancelled", {
+        cancelled: SocialPostStatusCode.Cancelled,
+      });
+    if (query.from) {
+      qb.andWhere("post.scheduledAt >= :from", { from: new Date(query.from) });
+    }
+    if (query.to) {
+      qb.andWhere("post.scheduledAt <= :to", { to: new Date(query.to) });
+    }
+    qb.orderBy("post.scheduledAt", "ASC").take(500);
+    const rows = await qb.getMany();
+    return { posts: rows.map((row) => this.mapPost(row)) };
+  }
+
+  public async bulkCancelPosts(
+    user: AuthenticatedUserContext,
+    postIds: string[],
+  ): Promise<{ cancelledIds: string[]; errors: string[] }> {
+    assertSocialHubRead(user);
+    await this.assertSocialHubSubscription(user.companyId);
+    const cancelledIds: string[] = [];
+    const errors: string[] = [];
+    for (const postId of postIds.slice(0, 40)) {
+      try {
+        await this.cancelPost(user, postId);
+        cancelledIds.push(postId);
+      } catch (error) {
+        errors.push(
+          `${postId}: ${
+            error instanceof Error ? error.message : "İptal edilemedi"
+          }`,
+        );
+      }
+    }
+    return { cancelledIds, errors };
+  }
+
+  public async bulkRetryPublishPosts(
+    user: AuthenticatedUserContext,
+    postIds: string[],
+  ): Promise<{
+    publishedIds: string[];
+    failed: Array<{ postId: string; message: string }>;
+  }> {
+    await this.assertSocialHubSubscription(user.companyId);
+    const settings = await this.ensureSettings(user.companyId);
+    if (!canSocialHubPublish(user, settings)) {
+      throw new ValidationException("Yayınlama yetkiniz yok.");
+    }
+    const publishedIds: string[] = [];
+    const failed: Array<{ postId: string; message: string }> = [];
+    for (const postId of postIds.slice(0, 20)) {
+      try {
+        const post = await this.findPostForCompany(user.companyId, postId);
+        if (post.statusCode !== SocialPostStatusCode.Failed) {
+          failed.push({
+            postId,
+            message: "Yalnızca başarısız gönderiler yeniden denenebilir.",
+          });
+          continue;
+        }
+        const result = await this.publishPost(user, postId);
+        if (result.post.statusCode === SocialPostStatusCode.Published) {
+          publishedIds.push(postId);
+        } else {
+          failed.push({
+            postId,
+            message:
+              result.providerMessage ??
+              result.post.lastErrorMessage ??
+              "Yayın başarısız.",
+          });
+        }
+      } catch (error) {
+        failed.push({
+          postId,
+          message: error instanceof Error ? error.message : "Yayın hatası",
+        });
+      }
+    }
+    return { publishedIds, failed };
+  }
+
   public async createPost(
     user: AuthenticatedUserContext,
     body: {
