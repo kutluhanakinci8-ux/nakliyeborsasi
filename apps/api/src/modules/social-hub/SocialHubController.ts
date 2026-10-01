@@ -164,6 +164,21 @@ export class SocialHubController {
     return this.socialHubApplicationService.getConnectionHealth(user);
   }
 
+  @Get("health/webhook-activity/export")
+  public async exportWebhookActivity(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Res() response: Response,
+  ): Promise<void> {
+    const csv =
+      await this.socialHubApplicationService.exportWebhookActivityCsv(user);
+    response.setHeader("Content-Type", "text/csv; charset=utf-8");
+    response.setHeader(
+      "Content-Disposition",
+      'attachment; filename="social-hub-webhook-activity.csv"',
+    );
+    response.send(csv);
+  }
+
   @Get("health/insights/export")
   public async exportHealthInsights(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,

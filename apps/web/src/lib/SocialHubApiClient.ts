@@ -128,6 +128,27 @@ export class SocialHubApiClient {
     return `${PublicApiConfiguration.resolveBaseUrl()}/company/social-hub/health/insights/export`;
   }
 
+  public static buildWebhookActivityExportUrl(): string {
+    return `${PublicApiConfiguration.resolveBaseUrl()}/company/social-hub/health/webhook-activity/export`;
+  }
+
+  public static async downloadWebhookActivityExport(
+    accessToken: string,
+  ): Promise<void> {
+    const response = await fetch(this.buildWebhookActivityExportUrl(), {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!response.ok) {
+      throw new Error("Webhook aktivite CSV indirilemedi.");
+    }
+    const blob = await response.blob();
+    const anchor = document.createElement("a");
+    anchor.href = URL.createObjectURL(blob);
+    anchor.download = "social-hub-webhook-activity.csv";
+    anchor.click();
+    URL.revokeObjectURL(anchor.href);
+  }
+
   public static async downloadInsightsExport(accessToken: string): Promise<void> {
     const response = await fetch(this.buildInsightsExportUrl(), {
       headers: { Authorization: `Bearer ${accessToken}` },

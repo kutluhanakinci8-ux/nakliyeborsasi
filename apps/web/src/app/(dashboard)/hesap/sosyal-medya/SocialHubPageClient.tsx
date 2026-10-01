@@ -551,6 +551,14 @@ export function SocialHubPageClient() {
                     setStatus("Bildirim özet CSV indirildi.");
                   })
                 }
+                onExportWebhookActivity={() =>
+                  void runAction(async () => {
+                    await SocialHubApiClient.downloadWebhookActivityExport(
+                      accessToken,
+                    );
+                    setStatus("Webhook aktivite CSV indirildi.");
+                  })
+                }
                 onReload={() =>
                   void runAction(async () => {
                     await loadHealthData();

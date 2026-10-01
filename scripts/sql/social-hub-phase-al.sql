@@ -1,0 +1,1 @@
+-- Faz AL: şema değişikliği yok (sağlık webhook köprü metrikleri, CSV export)

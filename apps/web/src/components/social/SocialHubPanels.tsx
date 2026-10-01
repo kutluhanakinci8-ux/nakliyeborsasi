@@ -182,6 +182,9 @@ export function SocialConnectionsPanel({
             {opsHints.webhookInboundDedupSeconds > 0
               ? ` · gelen dedup ${opsHints.webhookInboundDedupSeconds}s`
               : ""}
+            {opsHints.webhookInactivityHealthHintsEnabled
+              ? " · sağlık uyarısı: webhook hareketsizliği"
+              : ""}
           </p>
         ) : null}
         {webhookActivity ? (
@@ -1118,6 +1121,7 @@ type HealthPanelProps = {
   onToggleWeeklyEmail: (enabled: boolean) => void;
   onSendWeeklyEmailNow: () => void;
   onExportInsights: () => void;
+  onExportWebhookActivity: () => void;
   onRefreshToken: (platformCode: string) => void;
   onReload: () => void;
 };
@@ -1160,6 +1164,7 @@ export function SocialHealthPanel({
   onToggleWeeklyEmail,
   onSendWeeklyEmailNow,
   onExportInsights,
+  onExportWebhookActivity,
   onRefreshToken,
   onReload,
 }: HealthPanelProps) {
@@ -1569,7 +1574,8 @@ export function SocialHealthPanel({
                 .map((row) => (
                   <li key={row.platformCode}>
                     {row.label} (beta): {row.openThreadCount} açık konuşma ·{" "}
-                    {row.recentOutboundFailures24h} giden hata (24s)
+                    {row.recentOutboundFailures24h} giden hata (24s) · webhook{" "}
+                    {row.webhookInboundBridged24h ?? 0} (24s)
                   </li>
                 ))}
             </ul>
@@ -1627,14 +1633,24 @@ export function SocialHealthPanel({
               ))}
             </div>
           ) : null}
-          <button
-            type="button"
-            className="btn-account-ghost"
-            disabled={busy}
-            onClick={onExportInsights}
-          >
-            Bildirim özetini CSV indir
-          </button>
+          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+            <button
+              type="button"
+              className="btn-account-ghost"
+              disabled={busy}
+              onClick={onExportInsights}
+            >
+              Bildirim özetini CSV indir
+            </button>
+            <button
+              type="button"
+              className="btn-account-ghost"
+              disabled={busy}
+              onClick={onExportWebhookActivity}
+            >
+              Webhook aktivite CSV
+            </button>
+          </div>
         </div>
       ) : null}
       <ul className="social-hub-health-grid">
@@ -1647,6 +1663,12 @@ export function SocialHealthPanel({
             <p className="module-hint">
               Açık konuşma: {channel.openThreadCount} · 24s hata:{" "}
               {channel.recentOutboundFailures24h}
+              {channel.inboxWebhookCapable ? (
+                <>
+                  {" "}
+                  · webhook köprü (24s): {channel.webhookInboundBridged24h ?? 0}
+                </>
+              ) : null}
             </p>
             {channel.setupWarnings.map((warning) => (
               <p key={warning} className="social-hub-setup-warn">{warning}</p>
@@ -1676,6 +1698,12 @@ export function SocialHealthPanel({
             <p className="module-hint">
               Açık konuşma: {channel.openThreadCount} · 24s hata:{" "}
               {channel.recentOutboundFailures24h}
+              {channel.inboxWebhookCapable ? (
+                <>
+                  {" "}
+                  · webhook köprü (24s): {channel.webhookInboundBridged24h ?? 0}
+                </>
+              ) : null}
             </p>
             {channel.setupWarnings.map((warning) => (
               <p key={warning} className="social-hub-setup-warn">{warning}</p>

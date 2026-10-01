@@ -39,7 +39,7 @@ export class SocialHubModuleStatusController {
     ]);
     return {
       module: "social_hub",
-      phase: "ak",
+      phase: "al",
       subscriptionModuleCode: SubscriptionModuleCode.SocialHub,
       features: [
         "connections_skeleton",
@@ -165,6 +165,10 @@ export class SocialHubModuleStatusController {
         "notification_insights_webhook_by_platform",
         "admin_webhook_bridged_by_platform_24h",
         "audit_log_webhook_filter_ui",
+        "health_channel_webhook_bridged_24h",
+        "health_alerts_webhook_bridge_summary",
+        "company_webhook_activity_csv_export",
+        "webhook_inactivity_health_hint_env",
       ],
       integrationWebhookReadiness: buildSocialHubIntegrationWebhookReadiness(),
       integrationWebhooks: buildSocialHubPublicWebhookUrls(),

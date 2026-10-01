@@ -13,7 +13,11 @@ import {
   type HealthAlertThresholdSettings,
 } from "./socialHubHealthAlertThresholds";
 import { SocialHubSlackNotificationService } from "./SocialHubSlackNotificationService";
-import { mergeHealthAlertChannels } from "./socialHubHealthAlertChannels";
+import {
+  mergeHealthAlertChannels,
+  type HealthAlertChannelRow,
+} from "./socialHubHealthAlertChannels";
+import { buildSocialHubIntegrationOpsHints } from "./socialHubIntegrationOpsHints";
 
 @Injectable()
 export class SocialHubHealthAlertService {
@@ -108,7 +112,18 @@ export class SocialHubHealthAlertService {
         (channel) =>
           `${channel.label}${channel.isRoadmapBeta ? " (beta)" : ""}: ${channel.recentOutboundFailures24h} gönderim hatası (24s)`,
       );
-    const summary = [...summaryParts, ...failureParts].join(" | ");
+    const webhookParts = buildWebhookBridgeHealthAlertParts(alertChannels);
+    const opsHints = buildSocialHubIntegrationOpsHints();
+    const webhookInactivityParts =
+      settings?.inboxEnabled && opsHints.webhookInactivityHealthHintsEnabled
+        ? buildWebhookInactivityAlertParts(alertChannels)
+        : [];
+    const summary = [
+      ...summaryParts,
+      ...failureParts,
+      ...webhookParts,
+      ...webhookInactivityParts,
+    ].join(" | ");
     const webBase =
       process.env.WEB_PUBLIC_BASE_URL?.trim() ?? "https://app.lerta.com.tr";
     const hubUrl = `${webBase.replace(/\/$/, "")}/hesap/sosyal-medya`;
@@ -166,4 +181,31 @@ export class SocialHubHealthAlertService {
       hubUrl,
     });
   }
+}
+
+function buildWebhookBridgeHealthAlertParts(
+  channels: HealthAlertChannelRow[],
+): string[] {
+  return channels
+    .filter((channel) => (channel.webhookInboundBridged24h ?? 0) > 0)
+    .map(
+      (channel) =>
+        `${channel.label}${channel.isRoadmapBeta ? " (beta)" : ""}: ${channel.webhookInboundBridged24h} webhook köprü (24s)`,
+    );
+}
+
+function buildWebhookInactivityAlertParts(
+  channels: HealthAlertChannelRow[],
+): string[] {
+  return channels
+    .filter(
+      (channel) =>
+        channel.statusCode === SocialConnectionStatusCode.Connected &&
+        channel.inboxWebhookCapable &&
+        (channel.webhookInboundBridged24h ?? 0) === 0,
+    )
+    .map(
+      (channel) =>
+        `${channel.label}${channel.isRoadmapBeta ? " (beta)" : ""}: son 24s webhook köprü yok`,
+    );
 }

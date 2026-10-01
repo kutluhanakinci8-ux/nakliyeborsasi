@@ -4,6 +4,9 @@ export type HealthAlertChannelRow = {
   tokenHealth: string;
   setupWarnings: string[];
   recentOutboundFailures24h: number;
+  webhookInboundBridged24h?: number;
+  inboxWebhookCapable?: boolean;
+  statusCode?: string;
   isRoadmapBeta?: boolean;
 };
 
