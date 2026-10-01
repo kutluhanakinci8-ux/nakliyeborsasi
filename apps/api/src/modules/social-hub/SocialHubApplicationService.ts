@@ -64,6 +64,7 @@ import { buildSocialHubIntegrationOpsHints } from "./socialHubIntegrationOpsHint
 import { getRoadmapProviderCapabilities } from "./socialHubRoadmapCapabilities";
 import { roadmapConnectedHint } from "./socialHubRoadmapHints";
 import { SocialHubRoadmapInboxSyncService } from "./SocialHubRoadmapInboxSyncService";
+import { mapWebhookBridgedByPlatform } from "./socialHubWebhookBridgeSnapshot";
 
 export const INVITABLE_SOCIAL_TEAM_ROLES: readonly CompanyRoleCode[] = [
   CompanyRoleCode.SocialAdmin,
@@ -173,17 +174,22 @@ export class SocialHubApplicationService {
     });
 
     const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const [inboundBridged24h, lastInboundBridgedAt] = await Promise.all([
-      this.socialHubAuditService.countRecentByActionForCompany(
-        user.companyId,
-        SocialHubAuditActionCode.WebhookInboundBridged,
-        since24h,
-      ),
-      this.socialHubAuditService.latestCompanyActionAt(
-        user.companyId,
-        SocialHubAuditActionCode.WebhookInboundBridged,
-      ),
-    ]);
+    const [inboundBridged24h, lastInboundBridgedAt, bridgedByPlatform] =
+      await Promise.all([
+        this.socialHubAuditService.countRecentByActionForCompany(
+          user.companyId,
+          SocialHubAuditActionCode.WebhookInboundBridged,
+          since24h,
+        ),
+        this.socialHubAuditService.latestCompanyActionAt(
+          user.companyId,
+          SocialHubAuditActionCode.WebhookInboundBridged,
+        ),
+        this.socialHubAuditService.summarizeWebhookBridgedByPlatform(
+          since24h,
+          user.companyId,
+        ),
+      ]);
 
     return {
       subscription: this.subscriptionMeta(user.companyId),
@@ -202,6 +208,7 @@ export class SocialHubApplicationService {
       webhookActivity: {
         inboundBridged24h,
         lastInboundBridgedAt: lastInboundBridgedAt?.toISOString() ?? null,
+        byPlatform: mapWebhookBridgedByPlatform(bridgedByPlatform),
       },
       inboxSummary: {
         totalOpenThreads: openLinks.length,

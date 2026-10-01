@@ -1,0 +1,1 @@
+-- Faz AK: şema değişikliği yok (webhook köprü kanal kırılımı, status webhookBridge24h)

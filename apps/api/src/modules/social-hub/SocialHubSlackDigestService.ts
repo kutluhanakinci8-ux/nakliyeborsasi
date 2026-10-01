@@ -9,6 +9,7 @@ import { SocialHubOutboundDeliveryLogService } from "./SocialHubOutboundDelivery
 import { SocialHubSlackNotificationService } from "./SocialHubSlackNotificationService";
 import { isDigestWithinBusinessHours } from "./socialHubDigestBusinessHours";
 import { labelSocialPlatform } from "./socialHubPlatformLabels";
+import { mapWebhookBridgedByPlatform } from "./socialHubWebhookBridgeSnapshot";
 import { parseRoadmapInterestPlatformCodes } from "./socialHubRoadmapInterest";
 import {
   buildRoadmapBetaOpsDigestSection,
@@ -119,14 +120,22 @@ export class SocialHubSlackDigestService {
         health.roadmapChannels ?? [],
       );
       const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
-      const webhookBridged24h =
-        await this.auditService.countRecentByActionForCompany(
-          companyId,
-          SocialHubAuditActionCode.WebhookInboundBridged,
+      const bridgedByPlatform =
+        await this.auditService.summarizeWebhookBridgedByPlatform(
           since24h,
+          companyId,
         );
-      const webhookBridgeSection =
-        buildWebhookBridgeDigestSection(webhookBridged24h);
+      const webhookBridged24h = bridgedByPlatform.reduce(
+        (sum, row) => sum + row.count,
+        0,
+      );
+      const webhookBridgeSection = buildWebhookBridgeDigestSection(
+        webhookBridged24h,
+        mapWebhookBridgedByPlatform(bridgedByPlatform).map((row) => ({
+          label: row.label,
+          count: row.inboundBridged24h,
+        })),
+      );
       const failureSection = await this.buildRecentFailureSection(companyId);
       const summaryParts = [statsSection];
       if (ratesSection) {

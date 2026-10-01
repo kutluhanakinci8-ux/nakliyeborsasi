@@ -35,6 +35,11 @@ if [[ "${SOCIAL_HUB_SMOKE_WEBHOOK_READINESS:-0}" == "1" ]]; then
     exit 1
   }
   echo "OK: status integrationOpsHints"
+  echo "${status_json}" | grep -q '"webhookBridge24h"' || {
+    echo "FAIL: status missing webhookBridge24h"
+    exit 1
+  }
+  echo "OK: status webhookBridge24h"
 fi
 echo "OK: status endpoint"
 

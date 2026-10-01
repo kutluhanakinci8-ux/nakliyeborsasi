@@ -205,6 +205,11 @@ export type SocialHubNotificationInsights = {
   roadmapInterestPlatformCodes: string[];
   roadmapInterestLabels: string[];
   webhookInboundBridged24h?: number;
+  webhookInboundBridgedByPlatform24h?: Array<{
+    platformCode: string;
+    label: string;
+    inboundBridged24h: number;
+  }>;
 };
 
 export type SocialHubOutboundDelivery = {
@@ -250,6 +255,11 @@ export type SocialHubSnapshot = {
   webhookActivity?: {
     inboundBridged24h: number;
     lastInboundBridgedAt: string | null;
+    byPlatform?: Array<{
+      platformCode: string;
+      label: string;
+      inboundBridged24h: number;
+    }>;
   };
   inboxSummary: {
     totalOpenThreads: number;

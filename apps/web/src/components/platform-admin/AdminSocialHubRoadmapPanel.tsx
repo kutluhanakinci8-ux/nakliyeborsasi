@@ -77,8 +77,19 @@ export function AdminSocialHubRoadmapPanel() {
           </h3>
           <p className="pa-panel-lead">
             Bağlı firmalar, açık Mesajlar köprüsü konuşmaları ve son 24 saat giden
-            denemeleri. Webhook köprü denetim kaydı (24s):{" "}
-            <strong>{betaOps.webhookInboundBridged24h}</strong>. Sunucu webhook
+            denemeleri.             Webhook köprü denetim kaydı (24s):{" "}
+            <strong>{betaOps.webhookInboundBridged24h}</strong>
+            {(betaOps.webhookInboundBridgedByPlatform24h ?? []).length > 0 ? (
+              <>
+                {" "}
+                (
+                {(betaOps.webhookInboundBridgedByPlatform24h ?? [])
+                  .map((row) => `${row.label}: ${row.inboundBridged24h}`)
+                  .join(", ")}
+                )
+              </>
+            ) : null}
+            . Sunucu webhook
             hazırlığı: TikTok köprü{" "}
             {betaOps.integrationWebhookReadiness.tiktok.webhookBridgeEnabled
               ? "açık"

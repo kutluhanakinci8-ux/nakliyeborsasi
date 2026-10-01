@@ -13,6 +13,7 @@ import {
   SocialHubAuditService,
 } from "./SocialHubAuditService";
 import { buildSocialHubIntegrationOpsHints } from "./socialHubIntegrationOpsHints";
+import { mapWebhookBridgedByPlatform } from "./socialHubWebhookBridgeSnapshot";
 
 export type SocialHubRoadmapBetaPlatformOpsStat = {
   platformCode: string;
@@ -31,6 +32,9 @@ export type SocialHubRoadmapBetaOpsSnapshot = {
   >;
   integrationOpsHints: ReturnType<typeof buildSocialHubIntegrationOpsHints>;
   webhookInboundBridged24h: number;
+  webhookInboundBridgedByPlatform24h: ReturnType<
+    typeof mapWebhookBridgedByPlatform
+  >;
   platforms: SocialHubRoadmapBetaPlatformOpsStat[];
 };
 
@@ -72,16 +76,21 @@ export class SocialHubRoadmapBetaOpsStatsService {
         outboundFailed24h: outbound.failed,
       });
     }
-    const webhookInboundBridged24h = await this.auditService.countRecentByAction(
-      SocialHubAuditActionCode.WebhookInboundBridged,
-      since24h,
-    );
+    const [webhookInboundBridged24h, bridgedByPlatform] = await Promise.all([
+      this.auditService.countRecentByAction(
+        SocialHubAuditActionCode.WebhookInboundBridged,
+        since24h,
+      ),
+      this.auditService.summarizeWebhookBridgedByPlatform(since24h),
+    ]);
     return {
       generatedAt: new Date().toISOString(),
       integrationWebhooks: buildSocialHubPublicWebhookUrls(),
       integrationWebhookReadiness: buildSocialHubIntegrationWebhookReadiness(),
       integrationOpsHints: buildSocialHubIntegrationOpsHints(),
       webhookInboundBridged24h,
+      webhookInboundBridgedByPlatform24h:
+        mapWebhookBridgedByPlatform(bridgedByPlatform),
       platforms,
     };
   }
@@ -125,7 +134,20 @@ export class SocialHubRoadmapBetaOpsStatsService {
         row.outboundFailed24h,
       ].join(","),
     );
-    return [header, ...lines].join("\n");
+    const webhookLines = [
+      "",
+      "webhookBridge24h,platformCode,label,count",
+      ...snapshot.webhookInboundBridgedByPlatform24h.map((row) =>
+        [
+          "platform",
+          row.platformCode,
+          escapeCsv(row.label),
+          row.inboundBridged24h,
+        ].join(","),
+      ),
+      ["total", "", "", snapshot.webhookInboundBridged24h].join(","),
+    ];
+    return [header, ...lines, ...webhookLines].join("\n");
   }
 }
 
