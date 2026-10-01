@@ -1,0 +1,1 @@
+-- Faz AD: şema değişikliği yok (YouTube push auth, webhook readiness snapshot, roadmap sağlık metrikleri)

@@ -1,4 +1,4 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { ForbiddenException, Injectable, Logger } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { SocialConnectionStatusCode } from "@nakliyeborsasi/core";
@@ -8,6 +8,7 @@ import {
   expandYouTubePubSubWebhookBody,
   parseYouTubeWebhookInbound,
 } from "./socialHubYouTubeWebhookParser";
+import { verifyYouTubePubSubPushAuth } from "./socialHubYouTubePubSubPushAuth";
 
 const ROADMAP_YOUTUBE = "YOUTUBE";
 
@@ -21,7 +22,25 @@ export class SocialHubYouTubeWebhookIngestService {
     private readonly messagingBridgeService: SocialHubMessagingBridgeService,
   ) {}
 
-  public async ingestPayload(body: Record<string, unknown>): Promise<void> {
+  public async ingestPayload(
+    body: Record<string, unknown>,
+    options?: {
+      channelTokenHeader?: string;
+      authorizationHeader?: string;
+    },
+  ): Promise<void> {
+    if (
+      !verifyYouTubePubSubPushAuth({
+        channelTokenHeader: options?.channelTokenHeader,
+        authorizationHeader: options?.authorizationHeader,
+      })
+    ) {
+      if (process.env.SOCIAL_YOUTUBE_WEBHOOK_PUSH_AUTH_REQUIRED === "1") {
+        throw new ForbiddenException("YouTube webhook push auth invalid");
+      }
+      this.logger.warn("YouTube webhook push auth verification failed");
+      return;
+    }
     const expanded = expandYouTubePubSubWebhookBody(body);
     const kind =
       typeof expanded.kind === "string"

@@ -140,6 +140,13 @@ export type SocialHubAnalytics = {
   }>;
 };
 
+export type SocialHubBetaWebhookReadiness = {
+  webhookBridgeEnabled: boolean;
+  outboundEnabled: boolean;
+  signatureOrPushAuthConfigured: boolean;
+  signatureOrPushAuthRequired: boolean;
+};
+
 export type SocialHubHealthChannel = {
   platformCode: string;
   label: string;
@@ -219,6 +226,10 @@ export type SocialHubSnapshot = {
     whatsapp: string;
     tiktok: string;
     youtube: string;
+  };
+  integrationWebhookReadiness?: {
+    tiktok: SocialHubBetaWebhookReadiness;
+    youtube: SocialHubBetaWebhookReadiness;
   };
   inboxSummary: {
     totalOpenThreads: number;

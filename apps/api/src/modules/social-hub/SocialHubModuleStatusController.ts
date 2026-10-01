@@ -12,7 +12,7 @@ export class SocialHubModuleStatusController {
   } {
     return {
       module: "social_hub",
-      phase: "ac",
+      phase: "ad",
       subscriptionModuleCode: SubscriptionModuleCode.SocialHub,
       features: [
         "connections_skeleton",
@@ -101,6 +101,10 @@ export class SocialHubModuleStatusController {
         "youtube_pubsub_push_decode",
         "youtube_outbound_beta_skeleton",
         "tiktok_webhook_signature_required_mode",
+        "youtube_pubsub_push_auth_verify",
+        "youtube_webhook_push_auth_required_mode",
+        "integration_webhook_readiness_snapshot",
+        "roadmap_health_open_threads",
       ],
     };
   }

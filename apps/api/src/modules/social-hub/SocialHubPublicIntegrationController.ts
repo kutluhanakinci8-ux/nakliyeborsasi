@@ -103,9 +103,16 @@ export class SocialHubPublicIntegrationController {
 
   @Post("webhooks/youtube")
   public async youtubeWebhook(
+    @Req() request: Request,
     @Body() body: Record<string, unknown>,
   ): Promise<{ received: boolean }> {
-    await this.socialHubYouTubeWebhookIngestService.ingestPayload(body);
+    const channelToken =
+      (request.headers["x-goog-channel-token"] as string | undefined) ??
+      (request.headers["x-social-hub-youtube-token"] as string | undefined);
+    await this.socialHubYouTubeWebhookIngestService.ingestPayload(body, {
+      channelTokenHeader: channelToken,
+      authorizationHeader: request.headers.authorization,
+    });
     return { received: true };
   }
 
