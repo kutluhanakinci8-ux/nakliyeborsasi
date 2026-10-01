@@ -214,6 +214,11 @@ export type SocialHubSnapshot = {
   connections: SocialHubConnection[];
   recentPosts: SocialHubPost[];
   templates: SocialHubTemplate[];
+  integrationWebhooks?: {
+    meta: string;
+    whatsapp: string;
+    tiktok: string;
+  };
   inboxSummary: {
     totalOpenThreads: number;
     byPlatform: Array<{

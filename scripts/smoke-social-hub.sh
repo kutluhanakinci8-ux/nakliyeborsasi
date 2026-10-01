@@ -61,4 +61,25 @@ else
   echo "SKIP: SOCIAL_META_WEBHOOK_VERIFY_TOKEN yok"
 fi
 
+if [[ "${SOCIAL_HUB_SMOKE_TIKTOK_WEBHOOK:-1}" != "0" ]]; then
+  echo "== TikTok webhook POST (skeleton) =="
+  tt_code="$(curl -sS -o /tmp/social-hub-tt-wh.json -w "%{http_code}" \
+    -X POST \
+    -H "Content-Type: application/json" \
+    -d '{"event":"smoke_ping"}' \
+    "${API_BASE}/company/social-hub/webhooks/tiktok")"
+  if [[ "${tt_code}" != "200" ]]; then
+    echo "FAIL: tiktok webhook HTTP ${tt_code}"
+    cat /tmp/social-hub-tt-wh.json 2>/dev/null || true
+    exit 1
+  fi
+  grep -q '"received":true' /tmp/social-hub-tt-wh.json || {
+    echo "FAIL: tiktok webhook body"
+    exit 1
+  }
+  echo "OK: tiktok webhook"
+else
+  echo "SKIP: SOCIAL_HUB_SMOKE_TIKTOK_WEBHOOK=0"
+fi
+
 echo "smoke-social-hub: PASS"

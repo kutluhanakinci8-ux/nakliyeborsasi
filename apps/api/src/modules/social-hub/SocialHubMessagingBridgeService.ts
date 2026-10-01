@@ -3,6 +3,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { randomUUID } from "node:crypto";
 import { Repository } from "typeorm";
 import { SocialPlatformCode, ValidationException } from "@nakliyeborsasi/core";
+import { labelSocialPlatform } from "./socialHubPlatformLabels";
 import { CompanySocialThreadLinkEntity } from "../../infrastructure/database/entities/CompanySocialThreadLinkEntity";
 import { MessageThreadEntity } from "../../infrastructure/database/entities/MessageThreadEntity";
 import { MessagingThreadApplicationService } from "../messaging/MessagingThreadApplicationService";
@@ -26,7 +27,7 @@ export class SocialHubMessagingBridgeService {
 
   public async ensureExternalThread(params: {
     companyId: string;
-    platformCode: SocialPlatformCode;
+    platformCode: SocialPlatformCode | string;
     externalThreadId: string;
     displayLabel: string;
   }): Promise<CompanySocialThreadLinkEntity> {
@@ -41,7 +42,9 @@ export class SocialHubMessagingBridgeService {
       return existing;
     }
     const virtualCounterpartyId = randomUUID();
-    const platformLabel = PLATFORM_LABELS[params.platformCode] ?? params.platformCode;
+    const platformLabel =
+      PLATFORM_LABELS[params.platformCode as SocialPlatformCode] ??
+      labelSocialPlatform(String(params.platformCode));
     const thread = await this.messageThreadRepository.save(
       this.messageThreadRepository.create({
         companyAId: params.companyId,
@@ -95,7 +98,7 @@ export class SocialHubMessagingBridgeService {
 
   public async ingestWebhookInbound(params: {
     companyId: string;
-    platformCode: SocialPlatformCode;
+    platformCode: SocialPlatformCode | string;
     externalThreadId: string;
     displayLabel: string;
     bodyText: string;

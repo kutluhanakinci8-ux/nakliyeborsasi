@@ -58,6 +58,7 @@ import { hasRoadmapRefreshToken } from "./oauth/socialHubRoadmapRefreshToken";
 import { labelSocialPlatform } from "./socialHubPlatformLabels";
 import { SocialHubWeeklyEmailService } from "./SocialHubWeeklyEmailService";
 import { normalizeSocialHubSlackWebhookUrl } from "./socialHubSlackWebhook";
+import { buildSocialHubPublicWebhookUrls } from "./socialHubIntegrationUrls";
 
 export const INVITABLE_SOCIAL_TEAM_ROLES: readonly CompanyRoleCode[] = [
   CompanyRoleCode.SocialAdmin,
@@ -176,6 +177,7 @@ export class SocialHubApplicationService {
       ),
       recentPosts: posts.map((row) => this.mapPost(row)),
       templates: templates.map((row) => this.mapTemplate(row)),
+      integrationWebhooks: buildSocialHubPublicWebhookUrls(),
       inboxSummary: {
         totalOpenThreads: openLinks.length,
         byPlatform: providers.map((p) => ({
