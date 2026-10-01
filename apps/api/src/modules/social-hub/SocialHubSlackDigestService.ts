@@ -7,6 +7,7 @@ import { CompanySocialThreadLinkEntity } from "../../infrastructure/database/ent
 import { SocialHubConnectionHealthService } from "./SocialHubConnectionHealthService";
 import { SocialHubOutboundDeliveryLogService } from "./SocialHubOutboundDeliveryLogService";
 import { SocialHubSlackNotificationService } from "./SocialHubSlackNotificationService";
+import { isDigestWithinBusinessHours } from "./socialHubDigestBusinessHours";
 
 const DIGEST_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
@@ -50,6 +51,7 @@ export class SocialHubSlackDigestService {
       const result = await this.sendDigestForCompany(settings.companyId, {
         requireDigestEnabled: true,
         enforceDailyInterval: true,
+        respectBusinessHours: true,
       });
       if (result.sent) {
         sent += 1;
@@ -63,6 +65,7 @@ export class SocialHubSlackDigestService {
     options: {
       requireDigestEnabled?: boolean;
       enforceDailyInterval?: boolean;
+      respectBusinessHours?: boolean;
     },
   ): Promise<{ sent: boolean; message: string }> {
     const settings = await this.settingsRepository.findOne({
@@ -83,15 +86,24 @@ export class SocialHubSlackDigestService {
         };
       }
     }
+    if (
+      options.respectBusinessHours &&
+      !isDigestWithinBusinessHours(settings)
+    ) {
+      return { sent: false, message: "İş saatleri dışında — otomatik özet atlandı." };
+    }
     try {
       const health = await this.connectionHealthService.buildHealthDashboard(
         companyId,
       );
+      const statsSection = await this.buildDeliveryStatsSection(companyId);
       const channelSummary = this.buildChannelSummary(health);
       const failureSection = await this.buildRecentFailureSection(companyId);
-      const summary = failureSection
-        ? `${channelSummary}\n\n${failureSection}`
-        : channelSummary;
+      const summaryParts = [statsSection, channelSummary];
+      if (failureSection) {
+        summaryParts.push(failureSection);
+      }
+      const summary = summaryParts.join("\n\n");
       const posted = await this.slackNotificationService.postDailyDigest({
         companyId,
         overallStatus: health.overallStatus,
@@ -118,6 +130,19 @@ export class SocialHubSlackDigestService {
         message: "Özet gönderilemedi. Webhook ve kanal erişimini kontrol edin.",
       };
     }
+  }
+
+  private async buildDeliveryStatsSection(companyId: string): Promise<string> {
+    const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const [okCount, failedCount] = await Promise.all([
+      this.deliveryLogService.countRecentByStatus(companyId, "ok", since24h),
+      this.deliveryLogService.countRecentByStatus(
+        companyId,
+        "failed",
+        since24h,
+      ),
+    ]);
+    return `*24s kanal gönderimi:* ${okCount} başarılı · ${failedCount} hatalı`;
   }
 
   private buildChannelSummary(health: {

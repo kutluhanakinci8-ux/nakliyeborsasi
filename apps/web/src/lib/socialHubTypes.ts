@@ -26,6 +26,10 @@ export type SocialHubSettings = {
   socialSlackDailyDigestEnabled?: boolean;
   socialSlackDailyDigestLastSentAt?: string | null;
   healthAlertSlackCooldownMinutes?: number;
+  socialSlackDigestBusinessHoursOnly?: boolean;
+  socialSlackDigestTimezone?: string;
+  socialSlackDigestHourStart?: number;
+  socialSlackDigestHourEnd?: number;
 };
 
 export type SocialHubProviderCapabilities = {
@@ -141,6 +145,15 @@ export type SocialHubHealth = {
   generatedAt: string;
   overallStatus: "healthy" | "attention" | "critical";
   channels: SocialHubHealthChannel[];
+};
+
+export type SocialHubNotificationInsights = {
+  healthAlertEmailLastSentAt: string | null;
+  lastHealthAlertStatus: string | null;
+  slackDailyDigestLastSentAt: string | null;
+  slackHealthAlertLastSentAt: string | null;
+  slackOutboundFailureLastSentAt: string | null;
+  outboundDeliveriesLast24h: { ok: number; failed: number };
 };
 
 export type SocialHubOutboundDelivery = {

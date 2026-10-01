@@ -74,6 +74,19 @@ export class SocialHubOutboundDeliveryLogService {
     return qb.getMany();
   }
 
+  public async countRecentByStatus(
+    companyId: string,
+    status: "ok" | "failed",
+    since: Date,
+  ): Promise<number> {
+    return this.deliveryRepository
+      .createQueryBuilder("delivery")
+      .where("delivery.companyId = :companyId", { companyId })
+      .andWhere("delivery.status = :status", { status })
+      .andWhere("delivery.createdAt >= :since", { since })
+      .getCount();
+  }
+
   public async countRecentFailures(
     companyId: string,
     platformCode: string,

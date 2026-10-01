@@ -3,6 +3,7 @@ import type {
   SocialHubAnalytics,
   SocialHubAuditEntry,
   SocialHubHealth,
+  SocialHubNotificationInsights,
   SocialHubOutboundDelivery,
   SocialHubSnapshot,
   SocialHubTeamMember,
@@ -50,14 +51,25 @@ export class SocialHubApiClient {
     return normalizeSocialHubSnapshot(payload);
   }
 
-  public static async fetchHealth(
-    accessToken: string,
-  ): Promise<SocialHubHealth> {
-    const payload = await socialHubFetch<{ health: SocialHubHealth }>(
-      accessToken,
-      "/health",
-    );
-    return payload.health;
+  public static async fetchHealth(accessToken: string): Promise<{
+    health: SocialHubHealth;
+    notificationInsights: SocialHubNotificationInsights;
+  }> {
+    const payload = await socialHubFetch<{
+      health: SocialHubHealth;
+      notificationInsights: SocialHubNotificationInsights;
+    }>(accessToken, "/health");
+    return {
+      health: payload.health,
+      notificationInsights: payload.notificationInsights ?? {
+        healthAlertEmailLastSentAt: null,
+        lastHealthAlertStatus: null,
+        slackDailyDigestLastSentAt: null,
+        slackHealthAlertLastSentAt: null,
+        slackOutboundFailureLastSentAt: null,
+        outboundDeliveriesLast24h: { ok: 0, failed: 0 },
+      },
+    };
   }
 
   public static buildDeliveryExportUrl(params?: {

@@ -50,6 +50,7 @@ import { CompanyMessagingSettingsEntity } from "../../infrastructure/database/en
 import { SocialHubSlackNotificationService } from "./SocialHubSlackNotificationService";
 import { SocialHubSlackDigestService } from "./SocialHubSlackDigestService";
 import { SocialHubSlackDigestScheduler } from "./SocialHubSlackDigestScheduler";
+import { SocialHubSlackInsightsService } from "./SocialHubSlackInsightsService";
 
 @Module({
   imports: [
@@ -102,6 +103,7 @@ import { SocialHubSlackDigestScheduler } from "./SocialHubSlackDigestScheduler";
     SocialHubSlackNotificationService,
     SocialHubSlackDigestService,
     SocialHubSlackDigestScheduler,
+    SocialHubSlackInsightsService,
     SocialProviderRegistry,
     MetaInstagramMessagingProvider,
     MetaFacebookMessengerProvider,

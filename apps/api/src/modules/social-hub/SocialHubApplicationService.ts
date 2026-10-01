@@ -39,6 +39,10 @@ import { SocialHubTokenRefreshService } from "./oauth/SocialHubTokenRefreshServi
 import { SocialHubOutboundDeliveryLogService } from "./SocialHubOutboundDeliveryLogService";
 import { SocialHubSlackNotificationService } from "./SocialHubSlackNotificationService";
 import { SocialHubSlackDigestService } from "./SocialHubSlackDigestService";
+import { SocialHubSlackInsightsService } from "./SocialHubSlackInsightsService";
+import {
+  normalizeSocialHubDigestTimezone,
+} from "./socialHubDigestBusinessHours";
 import { normalizeSocialHubSlackWebhookUrl } from "./socialHubSlackWebhook";
 
 export const INVITABLE_SOCIAL_TEAM_ROLES: readonly CompanyRoleCode[] = [
@@ -78,6 +82,7 @@ export class SocialHubApplicationService {
     private readonly outboundDeliveryLogService: SocialHubOutboundDeliveryLogService,
     private readonly slackNotificationService: SocialHubSlackNotificationService,
     private readonly slackDigestService: SocialHubSlackDigestService,
+    private readonly slackInsightsService: SocialHubSlackInsightsService,
   ) {}
 
   private async assertSocialHubSubscription(companyId: string): Promise<void> {
@@ -171,7 +176,10 @@ export class SocialHubApplicationService {
     const health = await this.connectionHealthService.buildHealthDashboard(
       user.companyId,
     );
-    return { health };
+    const notificationInsights = await this.slackInsightsService.buildInsights(
+      user.companyId,
+    );
+    return { health, notificationInsights };
   }
 
   public async refreshConnectionToken(
@@ -782,6 +790,10 @@ export class SocialHubApplicationService {
       socialSlackOutboundFailureCooldownMinutes?: number;
       socialSlackDailyDigestEnabled?: boolean;
       healthAlertSlackCooldownMinutes?: number;
+      socialSlackDigestBusinessHoursOnly?: boolean;
+      socialSlackDigestTimezone?: string;
+      socialSlackDigestHourStart?: number;
+      socialSlackDigestHourEnd?: number;
     },
   ) {
     assertSocialHubAdmin(user);
@@ -860,6 +872,27 @@ export class SocialHubApplicationService {
         7 * 24 * 60,
       );
       settings.healthAlertSlackCooldownMinutes = value;
+    }
+    if (patch.socialSlackDigestBusinessHoursOnly !== undefined) {
+      settings.socialSlackDigestBusinessHoursOnly =
+        patch.socialSlackDigestBusinessHoursOnly;
+    }
+    if (patch.socialSlackDigestTimezone !== undefined) {
+      settings.socialSlackDigestTimezone = normalizeSocialHubDigestTimezone(
+        patch.socialSlackDigestTimezone,
+      );
+    }
+    if (patch.socialSlackDigestHourStart !== undefined) {
+      settings.socialSlackDigestHourStart = Math.min(
+        Math.max(Math.floor(patch.socialSlackDigestHourStart), 0),
+        23,
+      );
+    }
+    if (patch.socialSlackDigestHourEnd !== undefined) {
+      settings.socialSlackDigestHourEnd = Math.min(
+        Math.max(Math.floor(patch.socialSlackDigestHourEnd), 0),
+        23,
+      );
     }
     await this.settingsRepository.save(settings);
     this.socialHubAuditService.record(
@@ -1032,6 +1065,10 @@ export class SocialHubApplicationService {
         socialSlackDailyDigestEnabled: false,
         socialSlackDailyDigestLastSentAt: null,
         healthAlertSlackCooldownMinutes: 1440,
+        socialSlackDigestBusinessHoursOnly: false,
+        socialSlackDigestTimezone: "Europe/Istanbul",
+        socialSlackDigestHourStart: 9,
+        socialSlackDigestHourEnd: 18,
       }),
     );
   }
@@ -1151,6 +1188,11 @@ export class SocialHubApplicationService {
         row.socialSlackDailyDigestLastSentAt?.toISOString() ?? null,
       healthAlertSlackCooldownMinutes:
         row.healthAlertSlackCooldownMinutes ?? 1440,
+      socialSlackDigestBusinessHoursOnly:
+        row.socialSlackDigestBusinessHoursOnly ?? false,
+      socialSlackDigestTimezone: row.socialSlackDigestTimezone ?? "Europe/Istanbul",
+      socialSlackDigestHourStart: row.socialSlackDigestHourStart ?? 9,
+      socialSlackDigestHourEnd: row.socialSlackDigestHourEnd ?? 18,
     };
   }
 
