@@ -15279,6 +15279,11 @@ button.btn-secondary {
   background: #f1f5f9;
 }
 
+.social-hub-pill--ok {
+  color: #166534;
+  background: #ecfdf5;
+}
+
 .social-hub-capability-list {
   list-style: none;
   margin: 0.35rem 0 0;

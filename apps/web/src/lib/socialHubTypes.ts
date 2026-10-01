@@ -53,11 +53,13 @@ export type SocialHubProviderInfo = {
 export type SocialHubRoadmapProvider = {
   platformCode: string;
   label: string;
-  implementationStatus: "roadmap";
+  implementationStatus: "roadmap" | "ready";
   roadmapNote: string;
   capabilities: SocialHubProviderCapabilities;
   roadmapInterested?: boolean;
   oauthEnvConfigured?: boolean;
+  oauthImplementationStatus?: "ready" | "pending";
+  isRoadmapBeta?: boolean;
   roadmapConnectionStatusCode?: string | null;
   roadmapHasRefreshToken?: boolean;
 };

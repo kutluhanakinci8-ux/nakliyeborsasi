@@ -66,7 +66,7 @@ export class SocialHubModuleStatusController {
     ]);
     return {
       module: "social_hub",
-      phase: "au",
+      phase: "av",
       subscriptionModuleCode: SubscriptionModuleCode.SocialHub,
       features: [
         "connections_skeleton",
@@ -214,6 +214,7 @@ export class SocialHubModuleStatusController {
         "publishing_calendar_grid",
         "templates_variables_render_preview",
         "messaging_quick_reply_template_render",
+        "tiktok_prod_provider_path",
       ],
       integrationWebhookReadiness: buildSocialHubIntegrationWebhookReadiness(),
       integrationWebhooks: buildSocialHubPublicWebhookUrls(),

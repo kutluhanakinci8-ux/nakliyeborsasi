@@ -70,6 +70,33 @@ function statusLabel(code: string): string {
   return map[code] ?? code;
 }
 
+function roadmapPrimaryPill(row: SocialHubRoadmapProvider): {
+  label: string;
+  className: string;
+} {
+  if (
+    row.platformCode === "TIKTOK" &&
+    row.roadmapConnectionStatusCode === "CONNECTED"
+  ) {
+    return { label: "Bağlı", className: "social-hub-pill social-hub-pill--ok" };
+  }
+  if (
+    row.platformCode === "TIKTOK" &&
+    (row.oauthImplementationStatus === "ready" ||
+      row.implementationStatus === "ready")
+  ) {
+    return { label: "Prod kanal", className: "social-hub-pill social-hub-pill--ok" };
+  }
+  return { label: "Yakında", className: "social-hub-pill" };
+}
+
+function roadmapConnectLabel(row: SocialHubRoadmapProvider): string {
+  if (row.platformCode === "TIKTOK" && row.isRoadmapBeta === false) {
+    return `${row.label} bağla`;
+  }
+  return `${row.label} bağla (beta)`;
+}
+
 function postStatusLabel(code: string): string {
   const map: Record<string, string> = {
     DRAFT: "Taslak",
@@ -160,7 +187,7 @@ export function SocialConnectionsPanel({
               Meta / WhatsApp: <code>{integrationWebhooks.meta}</code>
             </li>
             <li>
-              TikTok (beta): <code>{integrationWebhooks.tiktok}</code>
+              TikTok: <code>{integrationWebhooks.tiktok}</code>
               {webhookReadiness?.tiktok ? (
                 <span className="module-hint">
                   {" "}
@@ -302,18 +329,19 @@ export function SocialConnectionsPanel({
         <>
           <h3 className="account-card-title">Yol haritası</h3>
           <p className="account-card-lead">
-            Henüz OAuth ile bağlanamayan kanallar — entegrasyon sırası netleştiğinde
-            burada açılacak. Öncelik vermek için ilgi bildirin; sıralama planlamasında
-            kullanılır.
+            TikTok prod OAuth yolu açık; YouTube beta yol haritasında. Öncelik vermek için
+            ilgi bildirin; sıralama planlamasında kullanılır.
           </p>
           <ul className="social-hub-connection-grid">
-            {roadmapProviders.map((row: SocialHubRoadmapProvider) => (
+            {roadmapProviders.map((row: SocialHubRoadmapProvider) => {
+              const primaryPill = roadmapPrimaryPill(row);
+              return (
               <li
                 key={row.platformCode}
                 className="social-hub-connection-card social-hub-connection-card--roadmap"
               >
                 <h3>{row.label}</h3>
-                <span className="social-hub-pill">Yakında</span>
+                <span className={primaryPill.className}>{primaryPill.label}</span>
                 {row.roadmapInterested ? (
                   <span className="social-hub-pill social-hub-pill--interest">
                     İlgi bildirildi
@@ -334,9 +362,12 @@ export function SocialConnectionsPanel({
                 ) : null}
                 <p className="module-hint social-hub-roadmap-oauth-hint">
                   Platform OAuth:{" "}
-                  {row.oauthEnvConfigured
-                    ? "ortam değişkenleri tanımlı (entegrasyon sırada)"
-                    : "henüz yapılandırılmadı"}
+                  {row.oauthImplementationStatus === "ready" ||
+                  (row.oauthEnvConfigured && row.platformCode === "TIKTOK")
+                    ? "sunucu hazır — bağlanabilir"
+                    : row.oauthEnvConfigured
+                      ? "ortam değişkenleri tanımlı (entegrasyon sırada)"
+                      : "henüz yapılandırılmadı"}
                 </p>
                 {row.roadmapConnectionStatusCode ? (
                   <p className="social-hub-connection-status">
@@ -372,7 +403,7 @@ export function SocialConnectionsPanel({
                     }
                     onClick={() => onRoadmapConnect(row.platformCode)}
                   >
-                    {row.label} bağla (beta)
+                    {roadmapConnectLabel(row)}
                   </button>
                 ) : null}
                 {permissions.canManageConnections &&
@@ -401,7 +432,8 @@ export function SocialConnectionsPanel({
                   </button>
                 ) : null}
               </li>
-            ))}
+              );
+            })}
           </ul>
         </>
       ) : null}
@@ -2232,7 +2264,15 @@ export function SocialHealthPanel({
             className="social-hub-health-card social-hub-health-card--roadmap"
           >
             <h3>{channel.label}</h3>
-            <span className="social-hub-pill">Beta yol haritası</span>
+            <span
+              className={
+                channel.isRoadmapBeta
+                  ? "social-hub-pill"
+                  : "social-hub-pill social-hub-pill--ok"
+              }
+            >
+              {channel.isRoadmapBeta ? "Beta yol haritası" : "Prod kanal"}
+            </span>
             <p className="social-hub-health-meta">
               {statusLabel(channel.statusCode)} · {tokenHealthLabel(channel.tokenHealth)}
             </p>
@@ -2284,7 +2324,8 @@ export function SocialHealthPanel({
           ))}
           {(health.roadmapChannels ?? []).map((channel) => (
             <option key={channel.platformCode} value={channel.platformCode}>
-              {channel.label} (beta)
+              {channel.label}
+              {channel.isRoadmapBeta ? " (beta)" : ""}
             </option>
           ))}
         </select>

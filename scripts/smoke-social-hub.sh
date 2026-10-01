@@ -67,6 +67,13 @@ if [[ -n "${SOCIAL_HUB_SMOKE_EXPECT_PHASE:-}" ]]; then
     }
     echo "OK: status templates_variables_render_preview feature"
   fi
+  if [[ "${SOCIAL_HUB_SMOKE_EXPECT_PHASE}" == "av" ]]; then
+    echo "${status_json}" | grep -q '"tiktok_prod_provider_path"' || {
+      echo "FAIL: status missing tiktok_prod_provider_path feature"
+      exit 1
+    }
+    echo "OK: status tiktok_prod_provider_path feature"
+  fi
 fi
 if [[ "${SOCIAL_HUB_SMOKE_WEBHOOK_READINESS:-0}" == "1" ]]; then
   echo "${status_json}" | grep -q '"integrationWebhookReadiness"' || {
@@ -239,6 +246,35 @@ if [[ -n "${SOCIAL_META_WEBHOOK_VERIFY_TOKEN:-}" ]]; then
   echo "OK: meta webhook verify"
 else
   echo "SKIP: SOCIAL_META_WEBHOOK_VERIFY_TOKEN yok"
+fi
+
+if [[ "${SOCIAL_HUB_SMOKE_TIKTOK_SIGNATURE:-0}" == "1" && -n "${SOCIAL_TIKTOK_WEBHOOK_SECRET:-}" ]]; then
+  echo "== TikTok webhook signature contract =="
+  tt_body='{"event":"sig_smoke"}'
+  tt_sig="$(printf '%s' "${tt_body}" | openssl dgst -sha256 -hmac "${SOCIAL_TIKTOK_WEBHOOK_SECRET}" | awk '{print $2}')"
+  tt_bad_code="$(curl -sS -o /tmp/social-hub-tt-bad.json -w "%{http_code}" \
+    -X POST \
+    -H "Content-Type: application/json" \
+    -d "${tt_body}" \
+    "${API_BASE}/company/social-hub/webhooks/tiktok")"
+  if [[ "${SOCIAL_HUB_SMOKE_TIKTOK_SIGNATURE_REQUIRED:-0}" == "1" ]]; then
+    if [[ "${tt_bad_code}" == "200" || "${tt_bad_code}" == "201" ]]; then
+      echo "FAIL: expected non-2xx for unsigned tiktok webhook when signature required"
+      exit 1
+    fi
+    echo "OK: unsigned tiktok webhook rejected (HTTP ${tt_bad_code})"
+  fi
+  tt_good_code="$(curl -sS -o /tmp/social-hub-tt-good.json -w "%{http_code}" \
+    -X POST \
+    -H "Content-Type: application/json" \
+    -H "x-tiktok-signature: sha256=${tt_sig}" \
+    -d "${tt_body}" \
+    "${API_BASE}/company/social-hub/webhooks/tiktok")"
+  if [[ "${tt_good_code}" != "200" && "${tt_good_code}" != "201" ]]; then
+    echo "FAIL: signed tiktok webhook HTTP ${tt_good_code}"
+    exit 1
+  fi
+  echo "OK: signed tiktok webhook"
 fi
 
 if [[ "${SOCIAL_HUB_SMOKE_TIKTOK_WEBHOOK:-1}" != "0" ]]; then
