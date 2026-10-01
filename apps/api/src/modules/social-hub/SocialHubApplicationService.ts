@@ -44,6 +44,11 @@ import {
   normalizeSocialHubDigestTimezone,
 } from "./socialHubDigestBusinessHours";
 import { manualNotifyCooldownMessage } from "./socialHubManualNotifyCooldown";
+import {
+  assertRoadmapPlatformCode,
+  parseRoadmapInterestPlatformCodes,
+  serializeRoadmapInterestPlatformCodes,
+} from "./socialHubRoadmapInterest";
 import { SOCIAL_HUB_ROADMAP_PROVIDERS } from "./socialHubRoadmapProviders";
 import { SocialHubWeeklyEmailService } from "./SocialHubWeeklyEmailService";
 import { normalizeSocialHubSlackWebhookUrl } from "./socialHubSlackWebhook";
@@ -151,7 +156,7 @@ export class SocialHubApplicationService {
       permissions,
       settings: this.mapSettings(settings),
       providers,
-      roadmapProviders: SOCIAL_HUB_ROADMAP_PROVIDERS,
+      roadmapProviders: this.mapRoadmapProviders(settings),
       connections: connections.map((row) =>
         this.mapConnection(row, providers),
       ),
@@ -924,6 +929,36 @@ export class SocialHubApplicationService {
     return { settings: this.mapSettings(settings) };
   }
 
+  public async setRoadmapInterest(
+    user: AuthenticatedUserContext,
+    platformCode: string,
+    interested: boolean,
+  ) {
+    assertSocialHubAdmin(user);
+    await this.assertSocialHubSubscription(user.companyId);
+    const code = assertRoadmapPlatformCode(platformCode);
+    const settings = await this.ensureSettings(user.companyId);
+    const current = parseRoadmapInterestPlatformCodes(
+      settings.roadmapInterestPlatformCodesJson,
+    );
+    const next = interested
+      ? [...new Set([...current, code])].sort()
+      : current.filter((row) => row !== code);
+    settings.roadmapInterestPlatformCodesJson =
+      serializeRoadmapInterestPlatformCodes(next);
+    await this.settingsRepository.save(settings);
+    this.socialHubAuditService.record(
+      user,
+      SocialHubAuditActionCode.SettingsUpdate,
+      `/company/social-hub/roadmap/${code}/interest`,
+      { platformCode: code, interested },
+    );
+    return {
+      roadmapProviders: this.mapRoadmapProviders(settings),
+      settings: this.mapSettings(settings),
+    };
+  }
+
   public async sendWeeklyEmailNow(user: AuthenticatedUserContext) {
     assertSocialHubAdmin(user);
     await this.assertSocialHubSubscription(user.companyId);
@@ -1224,6 +1259,16 @@ export class SocialHubApplicationService {
     }));
   }
 
+  private mapRoadmapProviders(settings: CompanySocialSettingsEntity) {
+    const interested = new Set(
+      parseRoadmapInterestPlatformCodes(settings.roadmapInterestPlatformCodesJson),
+    );
+    return SOCIAL_HUB_ROADMAP_PROVIDERS.map((provider) => ({
+      ...provider,
+      roadmapInterested: interested.has(provider.platformCode),
+    }));
+  }
+
   private mapSettings(row: CompanySocialSettingsEntity) {
     return {
       inboxEnabled: row.inboxEnabled,
@@ -1257,6 +1302,9 @@ export class SocialHubApplicationService {
       socialHubWeeklyEmailEnabled: row.socialHubWeeklyEmailEnabled ?? false,
       socialHubWeeklyEmailLastSentAt:
         row.socialHubWeeklyEmailLastSentAt?.toISOString() ?? null,
+      roadmapInterestPlatformCodes: parseRoadmapInterestPlatformCodes(
+        row.roadmapInterestPlatformCodesJson,
+      ),
     };
   }
 

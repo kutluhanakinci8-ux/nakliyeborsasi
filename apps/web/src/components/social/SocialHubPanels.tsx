@@ -91,6 +91,7 @@ type ConnectionsProps = {
   busy: boolean;
   onConnect: (platformCode: string) => void;
   onDisconnect: (platformCode: string) => void;
+  onRoadmapInterest?: (platformCode: string, interested: boolean) => void;
 };
 
 export function SocialConnectionsPanel({
@@ -98,6 +99,7 @@ export function SocialConnectionsPanel({
   busy,
   onConnect,
   onDisconnect,
+  onRoadmapInterest,
 }: ConnectionsProps) {
   const permissions = snapshot.permissions ?? {
     canManageConnections: false,
@@ -198,7 +200,8 @@ export function SocialConnectionsPanel({
           <h3 className="account-card-title">Yol haritası</h3>
           <p className="account-card-lead">
             Henüz OAuth ile bağlanamayan kanallar — entegrasyon sırası netleştiğinde
-            burada açılacak.
+            burada açılacak. Öncelik vermek için ilgi bildirin; sıralama planlamasında
+            kullanılır.
           </p>
           <ul className="social-hub-connection-grid">
             {roadmapProviders.map((row: SocialHubRoadmapProvider) => (
@@ -208,7 +211,28 @@ export function SocialConnectionsPanel({
               >
                 <h3>{row.label}</h3>
                 <span className="social-hub-pill">Yakında</span>
+                {row.roadmapInterested ? (
+                  <span className="social-hub-pill social-hub-pill--interest">
+                    İlgi bildirildi
+                  </span>
+                ) : null}
                 <p className="module-hint">{row.roadmapNote}</p>
+                {permissions.canManageConnections && onRoadmapInterest ? (
+                  <button
+                    type="button"
+                    className={
+                      row.roadmapInterested
+                        ? "btn-account-ghost"
+                        : "btn-account-primary"
+                    }
+                    disabled={busy}
+                    onClick={() =>
+                      onRoadmapInterest(row.platformCode, !row.roadmapInterested)
+                    }
+                  >
+                    {row.roadmapInterested ? "İlgiyi kaldır" : "Öncelik ver"}
+                  </button>
+                ) : null}
               </li>
             ))}
           </ul>

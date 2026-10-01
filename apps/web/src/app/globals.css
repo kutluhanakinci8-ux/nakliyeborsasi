@@ -15464,6 +15464,12 @@ button.btn-secondary {
   border-style: dashed;
 }
 
+.social-hub-pill--interest {
+  background: rgba(99, 102, 241, 0.12);
+  color: #4338ca;
+  margin-left: 0.35rem;
+}
+
 .social-hub-channel-bars {
   margin: 0.75rem 0;
 }

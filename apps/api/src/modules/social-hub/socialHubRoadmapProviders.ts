@@ -14,6 +14,7 @@ export type SocialHubRoadmapProvider = {
   implementationStatus: "roadmap";
   roadmapNote: string;
   capabilities: SocialHubProviderCapabilities;
+  roadmapInterested?: boolean;
 };
 
 export const SOCIAL_HUB_ROADMAP_PROVIDERS: SocialHubRoadmapProvider[] = [

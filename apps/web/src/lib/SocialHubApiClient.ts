@@ -352,6 +352,20 @@ export class SocialHubApiClient {
     });
   }
 
+  public static async setRoadmapInterest(
+    accessToken: string,
+    platformCode: string,
+    interested: boolean,
+  ): Promise<{
+    roadmapProviders: SocialHubSnapshot["roadmapProviders"];
+    settings: SocialHubSnapshot["settings"];
+  }> {
+    return socialHubFetch(accessToken, `/roadmap/${platformCode}/interest`, {
+      method: "POST",
+      body: JSON.stringify({ interested }),
+    });
+  }
+
   public static async sendSlackTest(accessToken: string): Promise<{
     ok: boolean;
     message: string;

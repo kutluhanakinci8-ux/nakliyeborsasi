@@ -280,6 +280,29 @@ export function SocialHubPageClient() {
                     setStatus("Bağlantı kesildi.");
                   })
                 }
+                onRoadmapInterest={(code, interested) =>
+                  void runAction(async () => {
+                    const result = await SocialHubApiClient.setRoadmapInterest(
+                      accessToken,
+                      code,
+                      interested,
+                    );
+                    setSnapshot((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            roadmapProviders: result.roadmapProviders ?? prev.roadmapProviders,
+                            settings: result.settings ?? prev.settings,
+                          }
+                        : prev,
+                    );
+                    setStatus(
+                      interested
+                        ? `${code} için öncelik kaydedildi.`
+                        : "Yol haritası ilgisi kaldırıldı.",
+                    );
+                  })
+                }
               />
             ) : null}
             {activeTab === "health" ? (

@@ -85,6 +85,9 @@ export class CompanySocialSettingsEntity {
   @Column({ type: "timestamptz", nullable: true })
   public socialHubWeeklyEmailLastSentAt!: Date | null;
 
+  @Column({ type: "text", nullable: true })
+  public roadmapInterestPlatformCodesJson!: string | null;
+
   @UpdateDateColumn({ type: "timestamptz" })
   public updatedAt!: Date;
 }
