@@ -9,7 +9,10 @@ import { SocialHubOutboundDeliveryLogService } from "./SocialHubOutboundDelivery
 import { OperationalNotificationService } from "../notification/OperationalNotificationService";
 import { labelSocialPlatform } from "./socialHubPlatformLabels";
 import { parseRoadmapInterestPlatformCodes } from "./socialHubRoadmapInterest";
-import { buildRoadmapInterestEmailClause } from "./socialHubRoadmapDigest";
+import {
+  buildRoadmapBetaOpsEmailClause,
+  buildRoadmapInterestEmailClause,
+} from "./socialHubRoadmapDigest";
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 const MONTH_MS = 30 * 24 * 60 * 60 * 1000;
@@ -112,6 +115,12 @@ export class SocialHubWeeklyEmailService {
       ];
       if (roadmapClause) {
         summaryParts.push(roadmapClause);
+      }
+      const betaClause = buildRoadmapBetaOpsEmailClause(
+        health.roadmapChannels ?? [],
+      );
+      if (betaClause) {
+        summaryParts.push(betaClause);
       }
       const webBase =
         process.env.WEB_PUBLIC_BASE_URL?.trim() ?? "https://app.lerta.com.tr";

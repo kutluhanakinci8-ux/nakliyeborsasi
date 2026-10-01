@@ -64,22 +64,46 @@ export class SocialHubApiClient {
         ...payload.health,
         roadmapChannels: payload.health.roadmapChannels ?? [],
       },
-      notificationInsights: payload.notificationInsights ?? {
-        healthAlertEmailLastSentAt: null,
-        lastHealthAlertStatus: null,
-        slackDailyDigestLastSentAt: null,
-        slackHealthAlertLastSentAt: null,
-        slackOutboundFailureLastSentAt: null,
-        outboundDeliveriesLast24h: { ok: 0, failed: 0 },
-        weeklyEmailLastSentAt: null,
-        channelOutbound24h: [],
-        channelOutbound7d: [],
-        channelOutbound30d: [],
-        outboundDeliveriesLast7d: { ok: 0, failed: 0 },
-        outboundDeliveriesLast30d: { ok: 0, failed: 0 },
-        manualNotifyCooldownMinutes: 15,
-        roadmapInterestPlatformCodes: [],
-        roadmapInterestLabels: [],
+      notificationInsights: {
+        healthAlertEmailLastSentAt:
+          payload.notificationInsights?.healthAlertEmailLastSentAt ?? null,
+        lastHealthAlertStatus:
+          payload.notificationInsights?.lastHealthAlertStatus ?? null,
+        slackDailyDigestLastSentAt:
+          payload.notificationInsights?.slackDailyDigestLastSentAt ?? null,
+        slackHealthAlertLastSentAt:
+          payload.notificationInsights?.slackHealthAlertLastSentAt ?? null,
+        slackOutboundFailureLastSentAt:
+          payload.notificationInsights?.slackOutboundFailureLastSentAt ?? null,
+        weeklyEmailLastSentAt:
+          payload.notificationInsights?.weeklyEmailLastSentAt ?? null,
+        outboundDeliveriesLast24h:
+          payload.notificationInsights?.outboundDeliveriesLast24h ?? {
+            ok: 0,
+            failed: 0,
+          },
+        channelOutbound24h: payload.notificationInsights?.channelOutbound24h ?? [],
+        roadmapBetaOutbound24h:
+          payload.notificationInsights?.roadmapBetaOutbound24h ?? [],
+        channelOutbound7d: payload.notificationInsights?.channelOutbound7d ?? [],
+        channelOutbound30d:
+          payload.notificationInsights?.channelOutbound30d ?? [],
+        outboundDeliveriesLast7d:
+          payload.notificationInsights?.outboundDeliveriesLast7d ?? {
+            ok: 0,
+            failed: 0,
+          },
+        outboundDeliveriesLast30d:
+          payload.notificationInsights?.outboundDeliveriesLast30d ?? {
+            ok: 0,
+            failed: 0,
+          },
+        manualNotifyCooldownMinutes:
+          payload.notificationInsights?.manualNotifyCooldownMinutes ?? 15,
+        roadmapInterestPlatformCodes:
+          payload.notificationInsights?.roadmapInterestPlatformCodes ?? [],
+        roadmapInterestLabels:
+          payload.notificationInsights?.roadmapInterestLabels ?? [],
       },
     };
   }

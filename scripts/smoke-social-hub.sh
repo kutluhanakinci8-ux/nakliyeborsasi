@@ -19,6 +19,13 @@ if [[ -n "${SOCIAL_HUB_SMOKE_EXPECT_PHASE:-}" ]]; then
   }
   echo "OK: phase ${SOCIAL_HUB_SMOKE_EXPECT_PHASE}"
 fi
+if [[ "${SOCIAL_HUB_SMOKE_WEBHOOK_READINESS:-0}" == "1" ]]; then
+  echo "${status_json}" | grep -q '"integrationWebhookReadiness"' || {
+    echo "FAIL: status missing integrationWebhookReadiness"
+    exit 1
+  }
+  echo "OK: status integrationWebhookReadiness"
+fi
 echo "OK: status endpoint"
 
 echo "== Social hub web route =="

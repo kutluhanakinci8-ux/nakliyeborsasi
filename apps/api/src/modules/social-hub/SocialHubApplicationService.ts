@@ -60,6 +60,8 @@ import { SocialHubWeeklyEmailService } from "./SocialHubWeeklyEmailService";
 import { normalizeSocialHubSlackWebhookUrl } from "./socialHubSlackWebhook";
 import { buildSocialHubPublicWebhookUrls } from "./socialHubIntegrationUrls";
 import { buildSocialHubIntegrationWebhookReadiness } from "./socialHubIntegrationWebhookReadiness";
+import { getRoadmapProviderCapabilities } from "./socialHubRoadmapCapabilities";
+import { roadmapConnectedHint } from "./socialHubRoadmapHints";
 
 export const INVITABLE_SOCIAL_TEAM_ROLES: readonly CompanyRoleCode[] = [
   CompanyRoleCode.SocialAdmin,
@@ -1409,6 +1411,7 @@ export class SocialHubApplicationService {
       const conn = rowByCode.get(provider.platformCode);
       return {
         ...provider,
+        capabilities: getRoadmapProviderCapabilities(provider.platformCode),
         roadmapInterested: interested.has(provider.platformCode),
         oauthEnvConfigured: isRoadmapOAuthEnvConfigured(provider.platformCode),
         roadmapConnectionStatusCode: conn?.statusCode ?? null,
@@ -1502,13 +1505,11 @@ export class SocialHubApplicationService {
       roadmapProvider &&
       row.statusCode === SocialConnectionStatusCode.Connected
     ) {
-      setupWarnings.push(
-        "Beta OAuth bağlı — mesajlaşma ve yayın API’leri henüz aktif değil.",
-      );
+      setupWarnings.push(roadmapConnectedHint(row.platformCode));
     }
-    const capabilities =
-      roadmapProvider?.capabilities ??
-      getSocialHubProviderCapabilities(platform);
+    const capabilities = roadmapProvider
+      ? getRoadmapProviderCapabilities(row.platformCode)
+      : getSocialHubProviderCapabilities(platform);
     const oauthReady = roadmapProvider
       ? isRoadmapOAuthEnvConfigured(row.platformCode)
       : providerMeta?.implementationStatus === "ready";

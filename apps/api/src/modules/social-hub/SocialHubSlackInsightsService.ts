@@ -8,6 +8,7 @@ import { labelSocialPlatform } from "./socialHubPlatformLabels";
 import { socialHubManualNotifyCooldownMinutes } from "./socialHubManualNotifyCooldown";
 import { parseRoadmapInterestPlatformCodes } from "./socialHubRoadmapInterest";
 import { formatRoadmapInterestLabels } from "./socialHubRoadmapDigest";
+import { isRoadmapPlatformCode } from "./socialHubRoadmapInterest";
 
 const HEALTH_ALERT_DEDUP_PREFIX = "health_alert:";
 const OUTBOUND_FAILURE_DEDUP_PREFIX = "outbound_fail:";
@@ -47,6 +48,9 @@ export class SocialHubSlackInsightsService {
     const channelOutbound24h = this.mapPlatformStats(platformMap24h);
     const channelOutbound7d = this.mapPlatformStats(platformMap7d);
     const channelOutbound30d = this.mapPlatformStats(platformMap30d);
+    const roadmapBetaOutbound24h = channelOutbound24h.filter((row) =>
+      isRoadmapPlatformCode(row.platformCode),
+    );
     const okCount = channelOutbound24h.reduce((sum, row) => sum + row.ok, 0);
     const failedCount = channelOutbound24h.reduce(
       (sum, row) => sum + row.failed,
@@ -74,6 +78,7 @@ export class SocialHubSlackInsightsService {
         failed: failedCount,
       },
       channelOutbound24h,
+      roadmapBetaOutbound24h,
       channelOutbound7d,
       channelOutbound30d,
       outboundDeliveriesLast7d: {
@@ -132,6 +137,13 @@ export class SocialHubSlackInsightsService {
     );
     for (const row of insights.channelOutbound24h) {
       push("channel24h", row.platformCode, `${row.ok}/${row.failed} (${row.successRatePercent}%)`);
+    }
+    for (const row of insights.roadmapBetaOutbound24h) {
+      push(
+        "roadmapBeta24h",
+        row.platformCode,
+        `${row.ok}/${row.failed} (${row.successRatePercent}%)`,
+      );
     }
     for (const row of insights.channelOutbound7d) {
       push("channel7d", row.platformCode, `${row.ok}/${row.failed} (${row.successRatePercent}%)`);

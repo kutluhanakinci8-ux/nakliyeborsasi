@@ -1,0 +1,1 @@
+-- Faz AF: şema değişikliği yok (roadmap capabilities, digest/e-posta beta ops, public readiness)
