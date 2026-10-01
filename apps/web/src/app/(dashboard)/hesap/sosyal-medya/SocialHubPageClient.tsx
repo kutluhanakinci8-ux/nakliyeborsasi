@@ -318,8 +318,9 @@ export function SocialHubPageClient() {
       <header className="social-hub-intro">
         <h2 className="social-hub-intro-title">Sosyal medya & kanallar</h2>
         <p className="social-hub-intro-lead">
-          Kanal bağlantıları (Meta, WhatsApp, LinkedIn), gelen kutusu, yayın onayı ve
-          ekip izinleri. Yanıtlar Mesajlar üzerinden bağlı hesaplara gider.
+          Meta, WhatsApp, LinkedIn (yayın), TikTok/YouTube prod yolları ve X / Google
+          Business yol haritası. Gelen kutusu, yayın onayı ve ekip izinleri; yanıtlar
+          Mesajlar üzerinden bağlı hesaplara gider.
         </p>
       </header>
       <SocialHubSectionNav activeTab={activeTab} onTabChange={setActiveTab} />

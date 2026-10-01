@@ -12,9 +12,6 @@ import type {
   SocialPublishResult,
 } from "./SocialProviderPort";
 
-const PENDING_MESSAGE =
-  "LinkedIn gönderi API çağrıları bağlı token ile sonraki adımda.";
-
 @Injectable()
 export class LinkedInMarketingPostsProvider implements SocialProviderPort {
   public readonly platformCode = SocialPlatformCode.LinkedIn;

@@ -579,8 +579,8 @@ export function SocialInboxPanel({
         <div className="social-hub-inbox-sync-summary">
           <h3 className="social-hub-subsection-title">Kanal sync & webhook hizası</h3>
           <p className="module-hint">
-            Açık konuşma sayısı, son sync denemesi ve 24s webhook köprü — prod ve beta
-            kanallar.
+            Açık konuşma sayısı, son sync denemesi ve 24s webhook köprü — prod ve yol
+            haritası kanalları.
           </p>
           <ul className="social-hub-inbox-sync-list">
             {snapshot.inboxSyncSummary.channels.map((row) => (
@@ -2056,7 +2056,7 @@ export function SocialHealthPanel({
               />
             </label>
             <label className="social-hub-threshold-field social-hub-threshold-field--wide">
-              Kanal bazlı eşik (JSON) — TIKTOK / YOUTUBE beta kodları desteklenir
+              Kanal bazlı eşik (JSON) — TIKTOK, YOUTUBE ve yol haritası kodları
               <input
                 className="input-light"
                 type="text"

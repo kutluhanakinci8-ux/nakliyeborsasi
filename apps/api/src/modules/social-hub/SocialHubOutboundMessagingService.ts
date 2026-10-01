@@ -78,7 +78,7 @@ export class SocialHubOutboundMessagingService {
         platformCode !== "YOUTUBE"
       ) {
         const betaMessage =
-          "Bu beta kanal için giden mesaj henüz desteklenmiyor.";
+          "Bu yol haritası kanalı için giden mesaj henüz desteklenmiyor.";
         await this.recordOutbound({
           link,
           companyId: params.companyId,
