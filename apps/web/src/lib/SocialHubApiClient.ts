@@ -369,6 +369,18 @@ export class SocialHubApiClient {
     });
   }
 
+  public static async refreshRoadmapToken(
+    accessToken: string,
+    platformCode: string,
+  ): Promise<{
+    refresh: { refreshed: boolean; message: string };
+    roadmapProviders?: SocialHubSnapshot["roadmapProviders"];
+  }> {
+    return socialHubFetch(accessToken, `/roadmap/${platformCode}/refresh-token`, {
+      method: "POST",
+    });
+  }
+
   public static async disconnectRoadmapPlatform(
     accessToken: string,
     platformCode: string,

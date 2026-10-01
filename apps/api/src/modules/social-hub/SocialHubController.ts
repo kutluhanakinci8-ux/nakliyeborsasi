@@ -335,6 +335,17 @@ export class SocialHubController {
     );
   }
 
+  @Post("roadmap/:platformCode/refresh-token")
+  public async roadmapRefreshToken(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("platformCode") platformCode: string,
+  ) {
+    return this.socialHubApplicationService.refreshRoadmapToken(
+      user,
+      platformCode,
+    );
+  }
+
   @Post("roadmap/:platformCode/disconnect")
   public async roadmapDisconnect(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
