@@ -1,0 +1,1 @@
+-- Faz Y: şema değişikliği yok (YouTube OAuth beta, roadmap token yenileme)

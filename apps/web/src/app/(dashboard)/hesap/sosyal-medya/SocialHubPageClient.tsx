@@ -327,6 +327,26 @@ export function SocialHubPageClient() {
                     await reload();
                   })
                 }
+                onRoadmapRefreshToken={(code) =>
+                  void runAction(async () => {
+                    const result = await SocialHubApiClient.refreshRoadmapToken(
+                      accessToken,
+                      code,
+                    );
+                    if (result.roadmapProviders) {
+                      setSnapshot((prev) =>
+                        prev
+                          ? {
+                              ...prev,
+                              roadmapProviders: result.roadmapProviders,
+                            }
+                          : prev,
+                      );
+                    }
+                    setStatus(result.refresh.message);
+                    await reload();
+                  })
+                }
               />
             ) : null}
             {activeTab === "health" ? (

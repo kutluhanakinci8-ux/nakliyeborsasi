@@ -17,6 +17,7 @@ export type SocialHubRoadmapProvider = {
   roadmapInterested?: boolean;
   oauthEnvConfigured?: boolean;
   roadmapConnectionStatusCode?: string | null;
+  roadmapHasRefreshToken?: boolean;
 };
 
 export const SOCIAL_HUB_ROADMAP_PROVIDERS: SocialHubRoadmapProvider[] = [

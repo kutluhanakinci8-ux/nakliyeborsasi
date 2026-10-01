@@ -14,10 +14,15 @@ import {
   assertRoadmapPlatformCode,
   isRoadmapPlatformCode,
 } from "../socialHubRoadmapInterest";
+import { mergeRoadmapRefreshToken } from "./socialHubRoadmapRefreshToken";
 
 const TIKTOK_AUTH_URL = "https://www.tiktok.com/v2/auth/authorize/";
 const TIKTOK_TOKEN_URL = "https://open.tiktokapis.com/v2/oauth/token/";
 const TIKTOK_SCOPES = "user.info.basic";
+const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
+const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
+const YOUTUBE_SCOPES =
+  "https://www.googleapis.com/auth/youtube.readonly openid email profile";
 
 @Injectable()
 export class SocialHubRoadmapOAuthApplicationService {
@@ -38,11 +43,14 @@ export class SocialHubRoadmapOAuthApplicationService {
     if (code === "TIKTOK") {
       return this.startTikTok(companyId, code);
     }
+    if (code === "YOUTUBE") {
+      return this.startYouTube(companyId, code);
+    }
     return {
       implementationStatus: "pending",
       authorizationUrl: null,
       state: null,
-      message: `${code} OAuth entegrasyonu henüz açılmadı (TikTok sonrası).`,
+      message: `${code} OAuth entegrasyonu henüz açılmadı.`,
     };
   }
 
@@ -57,6 +65,10 @@ export class SocialHubRoadmapOAuthApplicationService {
     const code = assertRoadmapPlatformCode(platformCode);
     if (code === "TIKTOK") {
       await this.exchangeTikTok(companyId, code, authorizationCode);
+      return;
+    }
+    if (code === "YOUTUBE") {
+      await this.exchangeYouTube(companyId, code, authorizationCode);
       return;
     }
     throw new ValidationException(`${code} OAuth henüz desteklenmiyor.`);
@@ -117,6 +129,7 @@ export class SocialHubRoadmapOAuthApplicationService {
       access_token?: string;
       expires_in?: number;
       open_id?: string;
+      refresh_token?: string;
       error_description?: string;
       message?: string;
     };
@@ -133,6 +146,98 @@ export class SocialHubRoadmapOAuthApplicationService {
       expiresInSec: payload.expires_in ?? null,
       externalAccountId: payload.open_id ?? null,
       displayName: "TikTok (beta)",
+      refreshToken: payload.refresh_token ?? null,
+    });
+  }
+
+  private async startYouTube(
+    companyId: string,
+    platformCode: string,
+  ): Promise<SocialOAuthStartResult> {
+    const config = this.oauthConfig.getYouTubeConfig();
+    if (!config) {
+      return {
+        implementationStatus: "pending",
+        authorizationUrl: null,
+        state: null,
+        message:
+          "YouTube OAuth yapılandırılmadı (SOCIAL_YOUTUBE_OAUTH_CLIENT_ID / SECRET / redirect).",
+      };
+    }
+    await this.ensureConnectionRow(companyId, platformCode);
+    const state = await this.oauthStateService.issueState(companyId, platformCode);
+    const url = new URL(GOOGLE_AUTH_URL);
+    url.searchParams.set("client_id", config.clientId);
+    url.searchParams.set("redirect_uri", config.redirectUri);
+    url.searchParams.set("response_type", "code");
+    url.searchParams.set("scope", YOUTUBE_SCOPES);
+    url.searchParams.set("state", state);
+    url.searchParams.set("access_type", "offline");
+    url.searchParams.set("prompt", "consent");
+    return {
+      implementationStatus: "ready",
+      authorizationUrl: url.toString(),
+      state,
+      message: "YouTube OAuth (beta) yönlendirmesi hazır.",
+    };
+  }
+
+  private async exchangeYouTube(
+    companyId: string,
+    platformCode: string,
+    authorizationCode: string,
+  ): Promise<void> {
+    const config = this.oauthConfig.getYouTubeConfig();
+    if (!config) {
+      throw new ValidationException("YouTube OAuth yapılandırması eksik.");
+    }
+    const body = new URLSearchParams({
+      code: authorizationCode,
+      client_id: config.clientId,
+      client_secret: config.clientSecret,
+      redirect_uri: config.redirectUri,
+      grant_type: "authorization_code",
+    });
+    const response = await fetch(GOOGLE_TOKEN_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body,
+    });
+    const payload = (await response.json()) as {
+      access_token?: string;
+      expires_in?: number;
+      refresh_token?: string;
+      error_description?: string;
+    };
+    if (!response.ok || !payload.access_token) {
+      throw new ValidationException(
+        payload.error_description ?? "YouTube token alınamadı.",
+      );
+    }
+    let channelTitle = "YouTube (beta)";
+    let channelId: string | null = null;
+    try {
+      const channelRes = await fetch(
+        "https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true",
+        { headers: { Authorization: `Bearer ${payload.access_token}` } },
+      );
+      const channelPayload = (await channelRes.json()) as {
+        items?: Array<{ id?: string; snippet?: { title?: string } }>;
+      };
+      const item = channelPayload.items?.[0];
+      if (item?.snippet?.title) {
+        channelTitle = item.snippet.title;
+      }
+      channelId = item?.id ?? null;
+    } catch {
+      // channel lookup optional
+    }
+    await this.persistConnection(companyId, platformCode, {
+      accessToken: payload.access_token,
+      expiresInSec: payload.expires_in ?? null,
+      externalAccountId: channelId,
+      displayName: channelTitle,
+      refreshToken: payload.refresh_token ?? null,
     });
   }
 
@@ -144,6 +249,7 @@ export class SocialHubRoadmapOAuthApplicationService {
       expiresInSec: number | null;
       externalAccountId: string | null;
       displayName: string;
+      refreshToken?: string | null;
     },
   ): Promise<void> {
     const encKey = this.oauthConfig.getOAuthEncryptionKey();
@@ -160,6 +266,13 @@ export class SocialHubRoadmapOAuthApplicationService {
     row.tokenExpiresAt = tokens.expiresInSec
       ? new Date(Date.now() + tokens.expiresInSec * 1000)
       : null;
+    if (tokens.refreshToken) {
+      row.grantedScopes = mergeRoadmapRefreshToken(
+        row.grantedScopes,
+        tokens.refreshToken,
+        encKey,
+      );
+    }
     await this.connectionRepository.save(row);
   }
 

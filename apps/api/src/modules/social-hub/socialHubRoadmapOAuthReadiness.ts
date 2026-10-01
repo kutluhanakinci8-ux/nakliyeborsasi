@@ -7,7 +7,10 @@ export function isRoadmapOAuthEnvConfigured(platformCode: string): boolean {
     );
   }
   if (code === "YOUTUBE") {
-    return Boolean(process.env.SOCIAL_YOUTUBE_OAUTH_CLIENT_ID?.trim());
+    return Boolean(
+      process.env.SOCIAL_YOUTUBE_OAUTH_CLIENT_ID?.trim() &&
+        process.env.SOCIAL_YOUTUBE_OAUTH_CLIENT_SECRET?.trim(),
+    );
   }
   return false;
 }

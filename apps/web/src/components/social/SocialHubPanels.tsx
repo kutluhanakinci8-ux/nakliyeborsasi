@@ -94,6 +94,7 @@ type ConnectionsProps = {
   onRoadmapInterest?: (platformCode: string, interested: boolean) => void;
   onRoadmapConnect?: (platformCode: string) => void;
   onRoadmapDisconnect?: (platformCode: string) => void;
+  onRoadmapRefreshToken?: (platformCode: string) => void;
 };
 
 export function SocialConnectionsPanel({
@@ -104,6 +105,7 @@ export function SocialConnectionsPanel({
   onRoadmapInterest,
   onRoadmapConnect,
   onRoadmapDisconnect,
+  onRoadmapRefreshToken,
 }: ConnectionsProps) {
   const permissions = snapshot.permissions ?? {
     canManageConnections: false,
@@ -250,7 +252,6 @@ export function SocialConnectionsPanel({
                 ) : null}
                 {permissions.canManageConnections &&
                 onRoadmapConnect &&
-                row.platformCode === "TIKTOK" &&
                 row.oauthEnvConfigured ? (
                   <button
                     type="button"
@@ -262,7 +263,20 @@ export function SocialConnectionsPanel({
                     }
                     onClick={() => onRoadmapConnect(row.platformCode)}
                   >
-                    TikTok bağla (beta)
+                    {row.label} bağla (beta)
+                  </button>
+                ) : null}
+                {permissions.canManageConnections &&
+                onRoadmapRefreshToken &&
+                row.roadmapConnectionStatusCode === "CONNECTED" &&
+                row.roadmapHasRefreshToken ? (
+                  <button
+                    type="button"
+                    className="btn-account-ghost"
+                    disabled={busy}
+                    onClick={() => onRoadmapRefreshToken(row.platformCode)}
+                  >
+                    Token yenile
                   </button>
                 ) : null}
                 {permissions.canManageConnections &&

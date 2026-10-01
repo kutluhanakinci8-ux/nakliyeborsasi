@@ -20,6 +20,12 @@ export type TikTokOAuthConfig = {
   redirectUri: string;
 };
 
+export type YouTubeOAuthConfig = {
+  clientId: string;
+  clientSecret: string;
+  redirectUri: string;
+};
+
 @Injectable()
 export class SocialHubOAuthConfigService {
   public constructor(private readonly configService: ConfigService) {}
@@ -41,6 +47,22 @@ export class SocialHubOAuthConfigService {
         this.configService.get<string>("SOCIAL_META_WEBHOOK_VERIFY_TOKEN")?.trim() ??
         "",
     };
+  }
+
+  public getYouTubeConfig(): YouTubeOAuthConfig | null {
+    const clientId = this.configService
+      .get<string>("SOCIAL_YOUTUBE_OAUTH_CLIENT_ID")
+      ?.trim();
+    const clientSecret = this.configService
+      .get<string>("SOCIAL_YOUTUBE_OAUTH_CLIENT_SECRET")
+      ?.trim();
+    const redirectUri = this.resolveRedirectUri(
+      "SOCIAL_YOUTUBE_OAUTH_REDIRECT_URI",
+    );
+    if (!clientId || !clientSecret || !redirectUri) {
+      return null;
+    }
+    return { clientId, clientSecret, redirectUri };
   }
 
   public getTikTokConfig(): TikTokOAuthConfig | null {

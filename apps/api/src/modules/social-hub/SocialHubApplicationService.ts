@@ -53,6 +53,8 @@ import {
 import { SOCIAL_HUB_ROADMAP_PROVIDERS } from "./socialHubRoadmapProviders";
 import { isRoadmapOAuthEnvConfigured } from "./socialHubRoadmapOAuthReadiness";
 import { SocialHubRoadmapOAuthApplicationService } from "./oauth/SocialHubRoadmapOAuthApplicationService";
+import { SocialHubRoadmapTokenRefreshService } from "./oauth/SocialHubRoadmapTokenRefreshService";
+import { hasRoadmapRefreshToken } from "./oauth/socialHubRoadmapRefreshToken";
 import { labelSocialPlatform } from "./socialHubPlatformLabels";
 import { SocialHubWeeklyEmailService } from "./SocialHubWeeklyEmailService";
 import { normalizeSocialHubSlackWebhookUrl } from "./socialHubSlackWebhook";
@@ -97,6 +99,7 @@ export class SocialHubApplicationService {
     private readonly slackInsightsService: SocialHubSlackInsightsService,
     private readonly weeklyEmailService: SocialHubWeeklyEmailService,
     private readonly roadmapOAuthApplicationService: SocialHubRoadmapOAuthApplicationService,
+    private readonly roadmapTokenRefreshService: SocialHubRoadmapTokenRefreshService,
   ) {}
 
   private async assertSocialHubSubscription(companyId: string): Promise<void> {
@@ -940,6 +943,44 @@ export class SocialHubApplicationService {
     return { settings: this.mapSettings(settings) };
   }
 
+  public async refreshRoadmapToken(
+    user: AuthenticatedUserContext,
+    platformCode: string,
+  ) {
+    assertSocialHubAdmin(user);
+    await this.assertSocialHubSubscription(user.companyId);
+    const code = assertRoadmapPlatformCode(platformCode);
+    const result = await this.roadmapTokenRefreshService.refreshRoadmapToken(
+      user.companyId,
+      code,
+    );
+    if (!result.refreshed) {
+      throw new ValidationException(result.message);
+    }
+    this.socialHubAuditService.record(
+      user,
+      SocialHubAuditActionCode.ConnectionTokenRefresh,
+      `/company/social-hub/roadmap/${code}/refresh-token`,
+      { refreshed: true, platformCode: code },
+    );
+    const row = await this.connectionRepository.findOne({
+      where: { companyId: user.companyId, platformCode: code },
+    });
+    const connectionRows = await this.connectionRepository.find({
+      where: { companyId: user.companyId },
+    });
+    return {
+      refresh: result,
+      connection: row
+        ? this.mapConnection(row, this.listProviderMeta())
+        : null,
+      roadmapProviders: this.mapRoadmapProviders(
+        await this.ensureSettings(user.companyId),
+        connectionRows,
+      ),
+    };
+  }
+
   public async startRoadmapConnect(
     user: AuthenticatedUserContext,
     platformCode: string,
@@ -1348,16 +1389,21 @@ export class SocialHubApplicationService {
     const interested = new Set(
       parseRoadmapInterestPlatformCodes(settings.roadmapInterestPlatformCodesJson),
     );
-    const statusByCode = new Map(
-      connectionRows.map((row) => [row.platformCode, row.statusCode]),
+    const rowByCode = new Map(
+      connectionRows.map((row) => [row.platformCode, row]),
     );
-    return SOCIAL_HUB_ROADMAP_PROVIDERS.map((provider) => ({
-      ...provider,
-      roadmapInterested: interested.has(provider.platformCode),
-      oauthEnvConfigured: isRoadmapOAuthEnvConfigured(provider.platformCode),
-      roadmapConnectionStatusCode:
-        statusByCode.get(provider.platformCode) ?? null,
-    }));
+    return SOCIAL_HUB_ROADMAP_PROVIDERS.map((provider) => {
+      const conn = rowByCode.get(provider.platformCode);
+      return {
+        ...provider,
+        roadmapInterested: interested.has(provider.platformCode),
+        oauthEnvConfigured: isRoadmapOAuthEnvConfigured(provider.platformCode),
+        roadmapConnectionStatusCode: conn?.statusCode ?? null,
+        roadmapHasRefreshToken: conn
+          ? hasRoadmapRefreshToken(conn.grantedScopes)
+          : false,
+      };
+    });
   }
 
   private mapSettings(row: CompanySocialSettingsEntity) {

@@ -59,6 +59,7 @@ export type SocialHubRoadmapProvider = {
   roadmapInterested?: boolean;
   oauthEnvConfigured?: boolean;
   roadmapConnectionStatusCode?: string | null;
+  roadmapHasRefreshToken?: boolean;
 };
 
 export type SocialHubConnection = {
