@@ -191,6 +191,15 @@ export function SocialConnectionsPanel({
             {webhookActivity.lastInboundBridgedAt
               ? ` · son: ${new Date(webhookActivity.lastInboundBridgedAt).toLocaleString("tr-TR")}`
               : ""}
+            {(webhookActivity.byPlatform ?? []).length > 0 ? (
+              <>
+                {" "}
+                —{" "}
+                {(webhookActivity.byPlatform ?? [])
+                  .map((row) => `${row.label}: ${row.inboundBridged24h}`)
+                  .join(" · ")}
+              </>
+            ) : null}
           </p>
         ) : null}
       </header>
@@ -864,10 +873,12 @@ type TeamProps = {
   members: SocialHubTeamMember[];
   assignableRoleCodes: string[];
   auditEntries: SocialHubAuditEntry[];
+  auditFocus: "all" | "webhook";
   integrationsPath: string;
   busy: boolean;
   onPatchSettings: (patch: Record<string, boolean>) => void;
   onRoleChange: (userId: string, roleCode: string) => void;
+  onAuditFocusChange: (focus: "all" | "webhook") => void;
 };
 
 export function SocialTeamPanel({
@@ -876,10 +887,12 @@ export function SocialTeamPanel({
   members,
   assignableRoleCodes,
   auditEntries,
+  auditFocus,
   integrationsPath,
   busy,
   onPatchSettings,
   onRoleChange,
+  onAuditFocusChange,
 }: TeamProps) {
   if (!permissions.canManageSettings) {
     return (
@@ -966,6 +979,26 @@ export function SocialTeamPanel({
         </p>
       )}
       <h3 className="social-hub-calendar-title">Son işlemler (denetim)</h3>
+      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "0.5rem" }}>
+        <button
+          type="button"
+          className={auditFocus === "all" ? "btn-account-primary" : "btn-account-ghost"}
+          disabled={busy}
+          onClick={() => onAuditFocusChange("all")}
+        >
+          Tümü
+        </button>
+        <button
+          type="button"
+          className={
+            auditFocus === "webhook" ? "btn-account-primary" : "btn-account-ghost"
+          }
+          disabled={busy}
+          onClick={() => onAuditFocusChange("webhook")}
+        >
+          Webhook köprü
+        </button>
+      </div>
       <ul className="social-hub-audit-list">
         {auditEntries.length === 0 ? (
           <li className="module-hint">Henüz kayıt yok.</li>
@@ -976,6 +1009,11 @@ export function SocialTeamPanel({
                 {new Date(entry.createdAt).toLocaleString("tr-TR")}
               </time>
               <span>{auditActionLabel(entry.actionCode)}</span>
+              {entry.actionCode === "SOCIAL_HUB_WEBHOOK_INBOUND_BRIDGED" &&
+              entry.metadata &&
+              typeof entry.metadata.platformCode === "string" ? (
+                <span className="module-hint"> ({entry.metadata.platformCode})</span>
+              ) : null}
             </li>
           ))
         )}
@@ -1461,6 +1499,12 @@ export function SocialHealthPanel({
               <>
                 {" "}
                 · webhook köprü: {notificationInsights.webhookInboundBridged24h}
+                {(notificationInsights.webhookInboundBridgedByPlatform24h ?? [])
+                  .length > 0
+                  ? ` (${(notificationInsights.webhookInboundBridgedByPlatform24h ?? [])
+                      .map((row) => `${row.label}: ${row.inboundBridged24h}`)
+                      .join(", ")})`
+                  : ""}
               </>
             ) : null}
           </p>

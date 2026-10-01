@@ -46,6 +46,7 @@ export function SocialHubPageClient() {
   const [assignableRoles, setAssignableRoles] = useState<string[]>([]);
   const [integrationsPath, setIntegrationsPath] = useState("/hesap/uygulamalar");
   const [auditEntries, setAuditEntries] = useState<SocialHubAuditEntry[]>([]);
+  const [auditFocus, setAuditFocus] = useState<"all" | "webhook">("all");
   const [analytics, setAnalytics] = useState<SocialHubAnalytics | null>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [subscriptionBlocked, setSubscriptionBlocked] = useState(false);
@@ -202,13 +203,21 @@ export function SocialHubPageClient() {
         setTeamMembers(team.members);
         setAssignableRoles(team.assignableRoleCodes);
         setIntegrationsPath(team.integrationsPath);
-        const audit = await SocialHubApiClient.fetchAuditLog(accessToken);
+        const audit = await SocialHubApiClient.fetchAuditLog(
+          accessToken,
+          auditFocus === "webhook" ? "webhook" : undefined,
+        );
         setAuditEntries(audit.entries);
       } catch {
         setError("Ekip verisi yüklenemedi.");
       }
     })();
-  }, [accessToken, activeTab, snapshot?.permissions.canManageSettings]);
+  }, [
+    accessToken,
+    activeTab,
+    snapshot?.permissions.canManageSettings,
+    auditFocus,
+  ]);
 
   async function runAction(action: () => Promise<void>): Promise<void> {
     setBusy(true);
@@ -709,8 +718,10 @@ export function SocialHubPageClient() {
                 members={teamMembers}
                 assignableRoleCodes={assignableRoles}
                 auditEntries={auditEntries}
+                auditFocus={auditFocus}
                 integrationsPath={integrationsPath}
                 busy={busy}
+                onAuditFocusChange={(focus) => setAuditFocus(focus)}
                 onPatchSettings={(patch) =>
                   void runAction(async () => {
                     await SocialHubApiClient.updateSettings(accessToken, patch);
@@ -726,7 +737,10 @@ export function SocialHubPageClient() {
                     );
                     const team = await SocialHubApiClient.fetchTeam(accessToken);
                     setTeamMembers(team.members);
-                    const audit = await SocialHubApiClient.fetchAuditLog(accessToken);
+                    const audit = await SocialHubApiClient.fetchAuditLog(
+                      accessToken,
+                      auditFocus === "webhook" ? "webhook" : undefined,
+                    );
                     setAuditEntries(audit.entries);
                     setStatus("Rol güncellendi.");
                   })

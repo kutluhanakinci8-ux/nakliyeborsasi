@@ -79,6 +79,9 @@ export function normalizeSocialHubSnapshot(payload: unknown): SocialHubSnapshot 
       ? {
           inboundBridged24h: webhookActivityRaw.inboundBridged24h ?? 0,
           lastInboundBridgedAt: webhookActivityRaw.lastInboundBridgedAt ?? null,
+          byPlatform: Array.isArray(webhookActivityRaw.byPlatform)
+            ? webhookActivityRaw.byPlatform
+            : [],
         }
       : undefined;
   const roadmapProviders = Array.isArray(hub.roadmapProviders)

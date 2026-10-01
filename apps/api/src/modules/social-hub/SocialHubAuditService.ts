@@ -92,6 +92,33 @@ export class SocialHubAuditService {
     return row?.createdAt ?? null;
   }
 
+  public async summarizeWebhookBridgedByPlatform(
+    since: Date,
+    companyId?: string,
+  ): Promise<Array<{ platformCode: string; count: number }>> {
+    const qb = this.auditLogRepository
+      .createQueryBuilder("log")
+      .select("log.metadata->>'platformCode'", "platformCode")
+      .addSelect("COUNT(*)", "count")
+      .where("log.actionCode = :actionCode", {
+        actionCode: SocialHubAuditActionCode.WebhookInboundBridged,
+      })
+      .andWhere("log.createdAt >= :since", { since });
+    if (companyId) {
+      qb.andWhere("log.actorCompanyId = :companyId", { companyId });
+    }
+    const rows = await qb
+      .groupBy("log.metadata->>'platformCode'")
+      .getRawMany<{ platformCode: string | null; count: string }>();
+    return rows
+      .filter((row) => row.platformCode)
+      .map((row) => ({
+        platformCode: row.platformCode!,
+        count: Number.parseInt(row.count, 10) || 0,
+      }))
+      .sort((a, b) => a.platformCode.localeCompare(b.platformCode));
+  }
+
   public async listGlobalRecentByAction(
     actionCode: string,
     limit: number,

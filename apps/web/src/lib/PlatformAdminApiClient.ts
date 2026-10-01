@@ -899,6 +899,11 @@ export type SocialHubRoadmapBetaOpsSnapshot = {
     youtubePushAuthRequired: boolean;
   };
   webhookInboundBridged24h: number;
+  webhookInboundBridgedByPlatform24h: Array<{
+    platformCode: string;
+    label: string;
+    inboundBridged24h: number;
+  }>;
   platforms: SocialHubRoadmapBetaPlatformOpsStat[];
 };
 

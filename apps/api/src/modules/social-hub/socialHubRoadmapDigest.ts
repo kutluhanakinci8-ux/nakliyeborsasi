@@ -51,11 +51,32 @@ export function buildRoadmapBetaOpsDigestSection(
   return `*Beta kanallar*\n${lines.join("\n")}`;
 }
 
-export function buildWebhookBridgeDigestSection(inboundBridged24h: number): string {
+export function buildWebhookBridgeEmailClause(
+  inboundBridged7d: number,
+  byPlatform: Array<{ label: string; count: number }>,
+): string {
+  if (inboundBridged7d <= 0) {
+    return "";
+  }
+  const platformPart =
+    byPlatform.length > 0
+      ? ` (${byPlatform.map((row) => `${row.label}: ${row.count}`).join(", ")})`
+      : "";
+  return `Webhook köprü (7g): ${inboundBridged7d} gelen mesaj Mesajlar’a aktarıldı${platformPart}.`;
+}
+
+export function buildWebhookBridgeDigestSection(
+  inboundBridged24h: number,
+  byPlatform: Array<{ label: string; count: number }> = [],
+): string {
   if (inboundBridged24h <= 0) {
     return "";
   }
-  return `*Webhook köprü (24s):* ${inboundBridged24h} gelen mesaj Mesajlar’a aktarıldı (denetim kaydı).`;
+  const platformPart =
+    byPlatform.length > 0
+      ? ` — ${byPlatform.map((row) => `${row.label}: ${row.count}`).join(", ")}`
+      : "";
+  return `*Webhook köprü (24s):* ${inboundBridged24h} gelen mesaj Mesajlar’a aktarıldı${platformPart}.`;
 }
 
 export function buildRoadmapBetaOpsEmailClause(

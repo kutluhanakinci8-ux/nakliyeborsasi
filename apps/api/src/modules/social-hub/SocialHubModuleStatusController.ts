@@ -3,11 +3,18 @@ import { SubscriptionModuleCode } from "@nakliyeborsasi/core";
 import { buildSocialHubIntegrationWebhookReadiness } from "./socialHubIntegrationWebhookReadiness";
 import { buildSocialHubPublicWebhookUrls } from "./socialHubIntegrationUrls";
 import { buildSocialHubIntegrationOpsHints } from "./socialHubIntegrationOpsHints";
+import {
+  SocialHubAuditActionCode,
+  SocialHubAuditService,
+} from "./SocialHubAuditService";
+import { mapWebhookBridgedByPlatform } from "./socialHubWebhookBridgeSnapshot";
 
 @Controller("company/social-hub")
 export class SocialHubModuleStatusController {
+  public constructor(private readonly auditService: SocialHubAuditService) {}
+
   @Get("status")
-  public getStatus(): {
+  public async getStatus(): Promise<{
     module: string;
     phase: string;
     subscriptionModuleCode: string;
@@ -17,10 +24,22 @@ export class SocialHubModuleStatusController {
     >;
     integrationWebhooks: ReturnType<typeof buildSocialHubPublicWebhookUrls>;
     integrationOpsHints: ReturnType<typeof buildSocialHubIntegrationOpsHints>;
-  } {
+    webhookBridge24h: {
+      total: number;
+      byPlatform: ReturnType<typeof mapWebhookBridgedByPlatform>;
+    };
+  }> {
+    const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const [total, bridgedByPlatform] = await Promise.all([
+      this.auditService.countRecentByAction(
+        SocialHubAuditActionCode.WebhookInboundBridged,
+        since24h,
+      ),
+      this.auditService.summarizeWebhookBridgedByPlatform(since24h),
+    ]);
     return {
       module: "social_hub",
-      phase: "aj",
+      phase: "ak",
       subscriptionModuleCode: SubscriptionModuleCode.SocialHub,
       features: [
         "connections_skeleton",
@@ -140,10 +159,20 @@ export class SocialHubModuleStatusController {
         "slack_digest_webhook_bridge_stats",
         "audit_log_webhook_focus_filter",
         "platform_admin_webhook_bridge_audit_csv",
+        "hub_webhook_activity_by_platform",
+        "weekly_email_webhook_bridge_clause",
+        "public_status_webhook_bridge_24h",
+        "notification_insights_webhook_by_platform",
+        "admin_webhook_bridged_by_platform_24h",
+        "audit_log_webhook_filter_ui",
       ],
       integrationWebhookReadiness: buildSocialHubIntegrationWebhookReadiness(),
       integrationWebhooks: buildSocialHubPublicWebhookUrls(),
       integrationOpsHints: buildSocialHubIntegrationOpsHints(),
+      webhookBridge24h: {
+        total,
+        byPlatform: mapWebhookBridgedByPlatform(bridgedByPlatform),
+      },
     };
   }
 }

@@ -13,6 +13,7 @@ import {
   SocialHubAuditActionCode,
   SocialHubAuditService,
 } from "./SocialHubAuditService";
+import { mapWebhookBridgedByPlatform } from "./socialHubWebhookBridgeSnapshot";
 
 const HEALTH_ALERT_DEDUP_PREFIX = "health_alert:";
 const OUTBOUND_FAILURE_DEDUP_PREFIX = "outbound_fail:";
@@ -54,17 +55,23 @@ export class SocialHubSlackInsightsService {
     const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const since7d = new Date(Date.now() - WEEK_MS);
     const since30d = new Date(Date.now() - MONTH_MS);
-    const [platformMap24h, platformMap7d, platformMap30d, webhookInboundBridged24h] =
-      await Promise.all([
-        this.deliveryLogService.summarizeRecentByPlatform(companyId, since24h),
-        this.deliveryLogService.summarizeRecentByPlatform(companyId, since7d),
-        this.deliveryLogService.summarizeRecentByPlatform(companyId, since30d),
-        this.auditService.countRecentByActionForCompany(
-          companyId,
-          SocialHubAuditActionCode.WebhookInboundBridged,
-          since24h,
-        ),
-      ]);
+    const [
+      platformMap24h,
+      platformMap7d,
+      platformMap30d,
+      webhookInboundBridged24h,
+      bridgedByPlatform,
+    ] = await Promise.all([
+      this.deliveryLogService.summarizeRecentByPlatform(companyId, since24h),
+      this.deliveryLogService.summarizeRecentByPlatform(companyId, since7d),
+      this.deliveryLogService.summarizeRecentByPlatform(companyId, since30d),
+      this.auditService.countRecentByActionForCompany(
+        companyId,
+        SocialHubAuditActionCode.WebhookInboundBridged,
+        since24h,
+      ),
+      this.auditService.summarizeWebhookBridgedByPlatform(since24h, companyId),
+    ]);
     const channelOutbound24h = this.mapPlatformStats(platformMap24h);
     const channelOutbound7d = this.mapPlatformStats(platformMap7d);
     const channelOutbound30d = this.mapPlatformStats(platformMap30d);
@@ -113,6 +120,8 @@ export class SocialHubSlackInsightsService {
       roadmapInterestPlatformCodes: roadmapCodes,
       roadmapInterestLabels: formatRoadmapInterestLabels(roadmapCodes),
       webhookInboundBridged24h,
+      webhookInboundBridgedByPlatform24h:
+        mapWebhookBridgedByPlatform(bridgedByPlatform),
     };
   }
 
@@ -199,6 +208,9 @@ export class SocialHubSlackInsightsService {
       "inboundBridged24h",
       insights.webhookInboundBridged24h,
     );
+    for (const row of insights.webhookInboundBridgedByPlatform24h ?? []) {
+      push("webhookPlatform24h", row.platformCode, row.inboundBridged24h);
+    }
     for (const row of insights.roadmapBetaChannelHealth ?? []) {
       push(
         "roadmapBetaHealth",

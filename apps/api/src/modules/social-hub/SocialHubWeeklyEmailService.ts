@@ -12,7 +12,9 @@ import { parseRoadmapInterestPlatformCodes } from "./socialHubRoadmapInterest";
 import {
   buildRoadmapBetaOpsEmailClause,
   buildRoadmapInterestEmailClause,
+  buildWebhookBridgeEmailClause,
 } from "./socialHubRoadmapDigest";
+import { SocialHubAuditService } from "./SocialHubAuditService";
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 const MONTH_MS = 30 * 24 * 60 * 60 * 1000;
@@ -29,6 +31,7 @@ export class SocialHubWeeklyEmailService {
     private readonly connectionHealthService: SocialHubConnectionHealthService,
     private readonly deliveryLogService: SocialHubOutboundDeliveryLogService,
     private readonly operationalNotificationService: OperationalNotificationService,
+    private readonly auditService: SocialHubAuditService,
   ) {}
 
   public async runSweep(): Promise<number> {
@@ -121,6 +124,25 @@ export class SocialHubWeeklyEmailService {
       );
       if (betaClause) {
         summaryParts.push(betaClause);
+      }
+      const bridgedByPlatform =
+        await this.auditService.summarizeWebhookBridgedByPlatform(
+          since7d,
+          companyId,
+        );
+      const inboundBridged7d = bridgedByPlatform.reduce(
+        (sum, row) => sum + row.count,
+        0,
+      );
+      const webhookClause = buildWebhookBridgeEmailClause(
+        inboundBridged7d,
+        bridgedByPlatform.map((row) => ({
+          label: labelSocialPlatform(row.platformCode),
+          count: row.count,
+        })),
+      );
+      if (webhookClause) {
+        summaryParts.push(webhookClause);
       }
       const webBase =
         process.env.WEB_PUBLIC_BASE_URL?.trim() ?? "https://app.lerta.com.tr";

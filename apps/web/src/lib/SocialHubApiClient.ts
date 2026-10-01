@@ -108,6 +108,9 @@ export class SocialHubApiClient {
           payload.notificationInsights?.roadmapInterestLabels ?? [],
         webhookInboundBridged24h:
           payload.notificationInsights?.webhookInboundBridged24h ?? 0,
+        webhookInboundBridgedByPlatform24h:
+          payload.notificationInsights?.webhookInboundBridgedByPlatform24h ??
+          [],
       },
     };
   }
