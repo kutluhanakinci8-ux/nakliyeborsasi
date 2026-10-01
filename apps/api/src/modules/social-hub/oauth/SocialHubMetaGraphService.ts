@@ -123,6 +123,97 @@ export class SocialHubMetaGraphService {
     };
   }
 
+  public async publishPhotoToPageFeed(params: {
+    pageId: string;
+    accessToken: string;
+    bodyText: string;
+    imageBuffer: Buffer;
+    filename: string;
+    contentType: string;
+  }): Promise<{ externalPostId: string | null; message: string }> {
+    const form = new FormData();
+    form.append("message", params.bodyText);
+    form.append("access_token", params.accessToken);
+    form.append(
+      "source",
+      new Blob([new Uint8Array(params.imageBuffer)], {
+        type: params.contentType,
+      }),
+      params.filename,
+    );
+    const url = `https://graph.facebook.com/v21.0/${params.pageId}/photos`;
+    const response = await fetch(url, { method: "POST", body: form });
+    const payload = (await response.json()) as {
+      id?: string;
+      post_id?: string;
+      error?: { message: string };
+    };
+    if (!response.ok) {
+      return {
+        externalPostId: null,
+        message: payload.error?.message ?? "Meta fotoğraf yayını başarısız.",
+      };
+    }
+    return {
+      externalPostId: payload.post_id ?? payload.id ?? null,
+      message: "Meta sayfa fotoğrafı yayınlandı.",
+    };
+  }
+
+  public async publishPhotoToInstagram(params: {
+    instagramBusinessAccountId: string;
+    accessToken: string;
+    caption: string;
+    imageBuffer: Buffer;
+    filename: string;
+    contentType: string;
+  }): Promise<{ externalPostId: string | null; message: string }> {
+    const mediaForm = new FormData();
+    mediaForm.append("caption", params.caption);
+    mediaForm.append("access_token", params.accessToken);
+    mediaForm.append(
+      "image",
+      new Blob([new Uint8Array(params.imageBuffer)], {
+        type: params.contentType,
+      }),
+      params.filename,
+    );
+    const mediaUrl = `https://graph.facebook.com/v21.0/${params.instagramBusinessAccountId}/media`;
+    const mediaRes = await fetch(mediaUrl, { method: "POST", body: mediaForm });
+    const mediaPayload = (await mediaRes.json()) as {
+      id?: string;
+      error?: { message: string };
+    };
+    if (!mediaRes.ok || !mediaPayload.id) {
+      return {
+        externalPostId: null,
+        message:
+          mediaPayload.error?.message ?? "Instagram medya konteyneri oluşturulamadı.",
+      };
+    }
+    const publishUrl = new URL(
+      `https://graph.facebook.com/v21.0/${params.instagramBusinessAccountId}/media_publish`,
+    );
+    publishUrl.searchParams.set("creation_id", mediaPayload.id);
+    publishUrl.searchParams.set("access_token", params.accessToken);
+    const publishRes = await fetch(publishUrl.toString(), { method: "POST" });
+    const publishPayload = (await publishRes.json()) as {
+      id?: string;
+      error?: { message: string };
+    };
+    if (!publishRes.ok) {
+      return {
+        externalPostId: null,
+        message:
+          publishPayload.error?.message ?? "Instagram yayın tamamlanamadı.",
+      };
+    }
+    return {
+      externalPostId: publishPayload.id ?? mediaPayload.id ?? null,
+      message: "Instagram gönderisi yayınlandı.",
+    };
+  }
+
   public async resolvePageAccessToken(
     userAccessToken: string,
     pageId: string,

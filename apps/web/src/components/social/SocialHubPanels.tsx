@@ -608,9 +608,12 @@ type PublishingProps = {
   ownerApprovalRequired: boolean;
   draftText: string;
   draftPlatforms: string[];
+  draftMedia: Array<{ mediaRef: string; previewUrl: string; filename: string }>;
   busy: boolean;
   onDraftText: (value: string) => void;
   onTogglePlatform: (code: string) => void;
+  onAddMediaFiles: (files: FileList | null) => void;
+  onRemoveDraftMedia: (mediaRef: string) => void;
   onCreateDraft: () => void;
   onPublish: (postId: string) => void;
   onSchedule: (postId: string, scheduledAt: string | null) => void;
@@ -627,9 +630,12 @@ export function SocialPublishingPanel({
   ownerApprovalRequired,
   draftText,
   draftPlatforms,
+  draftMedia,
   busy,
   onDraftText,
   onTogglePlatform,
+  onAddMediaFiles,
+  onRemoveDraftMedia,
   onCreateDraft,
   onPublish,
   onSchedule,
@@ -663,8 +669,8 @@ export function SocialPublishingPanel({
       <header className="social-hub-panel-head">
         <h2 className="account-card-title">Yayınlar</h2>
         <p className="account-card-lead">
-          Taslak, onay ve zamanlama; kanal API yayını sonraki fazda. Zamanı gelen
-          gönderiler sunucuda otomatik denenir.
+          Taslak, onay, zamanlama ve Meta Graph yayını (metin + görsel). Zamanı gelen
+          gönderiler sunucuda otomatik denenir; sonuç mesajı burada görünür.
         </p>
       </header>
       {scheduledUpcoming.length > 0 ? (
@@ -709,6 +715,37 @@ export function SocialPublishingPanel({
               </label>
             ))}
           </fieldset>
+          <label className="label-light">
+            Görsel (JPEG/PNG/GIF/WebP, en fazla 4)
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/gif,image/webp"
+              multiple
+              disabled={busy || draftMedia.length >= 4}
+              onChange={(e) => {
+                onAddMediaFiles(e.target.files);
+                e.target.value = "";
+              }}
+            />
+          </label>
+          {draftMedia.length > 0 ? (
+            <ul className="social-hub-draft-media-list">
+              {draftMedia.map((item) => (
+                <li key={item.mediaRef} className="social-hub-draft-media-item">
+                  <img src={item.previewUrl} alt={item.filename} />
+                  <span className="module-hint">{item.filename}</span>
+                  <button
+                    type="button"
+                    className="btn-account-ghost"
+                    disabled={busy}
+                    onClick={() => onRemoveDraftMedia(item.mediaRef)}
+                  >
+                    Kaldır
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
           <button
             type="button"
             className="btn-account-primary"
@@ -740,8 +777,15 @@ export function SocialPublishingPanel({
                   ) : null}
                 </p>
                 <p>{post.bodyText.slice(0, 200)}</p>
+                {post.mediaUrls?.length ? (
+                  <p className="module-hint">
+                    {post.mediaUrls.length} medya dosyası ekli
+                  </p>
+                ) : null}
                 {post.lastErrorMessage ? (
-                  <p className="module-hint">{post.lastErrorMessage}</p>
+                  <p className="social-hub-publish-error">{post.lastErrorMessage}</p>
+                ) : post.statusCode === "PUBLISHED" ? (
+                  <p className="social-hub-publish-ok">Kanallarda yayınlandı.</p>
                 ) : null}
                 {editableStatuses.has(post.statusCode) ? (
                   <label className="label-light social-hub-schedule-field">
