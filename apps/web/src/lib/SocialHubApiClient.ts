@@ -381,9 +381,36 @@ export class SocialHubApiClient {
     );
   }
 
+  public static async uploadPublishMedia(
+    accessToken: string,
+    body: { filename: string; contentType: string; contentBase64: string },
+  ): Promise<{
+    media: {
+      mediaRef: string;
+      mediaId: string;
+      filename: string;
+      contentType: string;
+      sizeBytes: number;
+      previewPath: string;
+    };
+  }> {
+    return socialHubFetch(accessToken, "/publishing/media", {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+  }
+
+  public static buildPublishMediaPreviewUrl(mediaId: string): string {
+    return `${PublicApiConfiguration.resolveBaseUrl()}/company/social-hub/publishing/media/${mediaId}`;
+  }
+
   public static async createPost(
     accessToken: string,
-    body: { bodyText: string; platformCodes: string[] },
+    body: {
+      bodyText: string;
+      platformCodes: string[];
+      mediaUrls?: string[];
+    },
   ): Promise<{ post: { id: string } }> {
     return socialHubFetch(accessToken, "/posts", {
       method: "POST",
@@ -443,7 +470,13 @@ export class SocialHubApiClient {
   public static async publishPost(
     accessToken: string,
     postId: string,
-  ): Promise<{ post: unknown; providerMessage?: string }> {
+  ): Promise<{
+    post: {
+      statusCode: string;
+      lastErrorMessage?: string | null;
+    };
+    providerMessage?: string;
+  }> {
     return socialHubFetch(accessToken, `/posts/${postId}/publish`, {
       method: "POST",
     });

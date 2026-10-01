@@ -1,0 +1,1 @@
+-- Faz AS: şema değişikliği yok (yayın medya upload + Meta Graph fotoğraf)

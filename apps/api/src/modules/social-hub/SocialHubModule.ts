@@ -60,6 +60,7 @@ import { SocialHubWebhookBridgeAuditService } from "./SocialHubWebhookBridgeAudi
 import { SocialHubMetaPlatformInsightsService } from "./SocialHubMetaPlatformInsightsService";
 import { SocialHubLinkedInOrgInsightsService } from "./SocialHubLinkedInOrgInsightsService";
 import { SocialHubInboxSyncSummaryService } from "./SocialHubInboxSyncSummaryService";
+import { SocialHubPublishMediaStorageService } from "./SocialHubPublishMediaStorageService";
 import { SocialHubRoadmapOAuthApplicationService } from "./oauth/SocialHubRoadmapOAuthApplicationService";
 import { SocialHubRoadmapTokenRefreshService } from "./oauth/SocialHubRoadmapTokenRefreshService";
 import { SocialHubRoadmapTokenRefreshScheduler } from "./SocialHubRoadmapTokenRefreshScheduler";
@@ -146,6 +147,7 @@ import { PlatformAdminGuard } from "../platform-admin/PlatformAdminGuard";
     SocialHubMetaPlatformInsightsService,
     SocialHubLinkedInOrgInsightsService,
     SocialHubInboxSyncSummaryService,
+    SocialHubPublishMediaStorageService,
     PlatformAdminGuard,
   ],
   exports: [SocialHubApplicationService, SocialHubOutboundMessagingService],

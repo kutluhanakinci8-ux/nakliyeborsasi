@@ -71,6 +71,7 @@ import { buildSocialHubAuditLogCsv } from "./socialHubAuditLogCsv";
 import { SocialHubMetaPlatformInsightsService } from "./SocialHubMetaPlatformInsightsService";
 import { SocialHubLinkedInOrgInsightsService } from "./SocialHubLinkedInOrgInsightsService";
 import { SocialHubInboxSyncSummaryService } from "./SocialHubInboxSyncSummaryService";
+import { SocialHubPublishMediaStorageService } from "./SocialHubPublishMediaStorageService";
 
 export const INVITABLE_SOCIAL_TEAM_ROLES: readonly CompanyRoleCode[] = [
   CompanyRoleCode.SocialAdmin,
@@ -117,6 +118,7 @@ export class SocialHubApplicationService {
     private readonly metaPlatformInsightsService: SocialHubMetaPlatformInsightsService,
     private readonly linkedInOrgInsightsService: SocialHubLinkedInOrgInsightsService,
     private readonly inboxSyncSummaryService: SocialHubInboxSyncSummaryService,
+    private readonly publishMediaStorageService: SocialHubPublishMediaStorageService,
   ) {}
 
   private async assertSocialHubSubscription(companyId: string): Promise<void> {
@@ -709,6 +711,51 @@ export class SocialHubApplicationService {
     };
   }
 
+  public async uploadPublishMedia(
+    user: AuthenticatedUserContext,
+    body: {
+      filename: string;
+      contentType: string;
+      contentBase64: string;
+    },
+  ) {
+    assertSocialHubRead(user);
+    await this.assertSocialHubSubscription(user.companyId);
+    const settings = await this.ensureSettings(user.companyId);
+    if (!settings.publishingEnabled) {
+      throw new ValidationException("Yayınlama bu firma için kapalı.");
+    }
+    const saved = await this.publishMediaStorageService.saveUpload({
+      companyId: user.companyId,
+      filename: body.filename,
+      contentType: body.contentType,
+      contentBase64: body.contentBase64,
+    });
+    return {
+      media: {
+        ...saved,
+        previewPath: `/company/social-hub/publishing/media/${saved.mediaId}`,
+      },
+    };
+  }
+
+  public async readPublishMedia(
+    user: AuthenticatedUserContext,
+    mediaId: string,
+  ): Promise<{ buffer: Buffer; contentType: string; filename: string }> {
+    assertSocialHubRead(user);
+    await this.assertSocialHubSubscription(user.companyId);
+    const { buffer, meta } = await this.publishMediaStorageService.readForCompany(
+      user.companyId,
+      mediaId,
+    );
+    return {
+      buffer,
+      contentType: meta.contentType,
+      filename: meta.filename,
+    };
+  }
+
   public async createPost(
     user: AuthenticatedUserContext,
     body: {
@@ -941,6 +988,7 @@ export class SocialHubApplicationService {
       ? (JSON.parse(post.mediaUrlsJson) as string[])
       : [];
     const errors: string[] = [];
+    const successMessages: string[] = [];
     let externalId: string | null = null;
     for (const platformCode of platforms) {
       const provider = this.socialProviderRegistry.resolve(platformCode);
@@ -953,6 +1001,9 @@ export class SocialHubApplicationService {
         errors.push(`${platformCode}: ${result.message}`);
       } else if (result.externalPostId) {
         externalId = result.externalPostId;
+        successMessages.push(`${platformCode}: ${result.message}`);
+      } else {
+        successMessages.push(`${platformCode}: ${result.message}`);
       }
     }
 
@@ -969,7 +1020,13 @@ export class SocialHubApplicationService {
     post.lastErrorMessage = null;
     post.scheduledAt = null;
     await this.postRepository.save(post);
-    return { post: this.mapPost(post) };
+    return {
+      post: this.mapPost(post),
+      providerMessage:
+        successMessages.length > 0
+          ? successMessages.join(" · ")
+          : "Gönderi kanallara yayınlandı.",
+    };
   }
 
   private isPostEditable(statusCode: string): boolean {

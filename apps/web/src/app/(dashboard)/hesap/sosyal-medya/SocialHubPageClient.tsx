@@ -19,6 +19,7 @@ import {
 } from "../../../../components/social/SocialHubSectionNav";
 import { useWebSession } from "../../../../context/WebSessionProvider";
 import { SocialHubApiClient } from "../../../../lib/SocialHubApiClient";
+import { readFileAsAttachment } from "../../../../lib/messagingPageHelpers";
 import { formatSocialHubOAuthReason } from "../../../../lib/formatSocialHubOAuthReason";
 import type {
   SocialHubAnalytics,
@@ -41,6 +42,9 @@ export function SocialHubPageClient() {
   const [busy, setBusy] = useState(false);
   const [draftText, setDraftText] = useState("");
   const [draftPlatforms, setDraftPlatforms] = useState<string[]>(["INSTAGRAM"]);
+  const [draftMedia, setDraftMedia] = useState<
+    Array<{ mediaRef: string; previewUrl: string; filename: string }>
+  >([]);
   const [templateTitle, setTemplateTitle] = useState("");
   const [templateBody, setTemplateBody] = useState("");
   const [teamMembers, setTeamMembers] = useState<SocialHubTeamMember[]>([]);
@@ -636,9 +640,51 @@ export function SocialHubPageClient() {
                 ownerApprovalRequired={snapshot.settings.ownerApprovalRequired}
                 draftText={draftText}
                 draftPlatforms={draftPlatforms}
+                draftMedia={draftMedia}
                 busy={busy}
                 platformOptions={platformOptions}
                 onDraftText={setDraftText}
+                onAddMediaFiles={(files) =>
+                  void runAction(async () => {
+                    if (!files?.length || !accessToken) {
+                      return;
+                    }
+                    const remaining = 4 - draftMedia.length;
+                    const slice = Array.from(files).slice(0, remaining);
+                    const uploaded: Array<{
+                      mediaRef: string;
+                      previewUrl: string;
+                      filename: string;
+                    }> = [];
+                    for (const file of slice) {
+                      const attachment = await readFileAsAttachment(file);
+                      const result = await SocialHubApiClient.uploadPublishMedia(
+                        accessToken,
+                        {
+                          filename: attachment.filename,
+                          contentType: attachment.contentType,
+                          contentBase64: attachment.contentBase64,
+                        },
+                      );
+                      uploaded.push({
+                        mediaRef: result.media.mediaRef,
+                        previewUrl:
+                          attachment.previewUrl ??
+                          SocialHubApiClient.buildPublishMediaPreviewUrl(
+                            result.media.mediaId,
+                          ),
+                        filename: result.media.filename,
+                      });
+                    }
+                    setDraftMedia((current) => [...current, ...uploaded]);
+                    setStatus(`${uploaded.length} görsel yüklendi.`);
+                  })
+                }
+                onRemoveDraftMedia={(mediaRef) =>
+                  setDraftMedia((current) =>
+                    current.filter((row) => row.mediaRef !== mediaRef),
+                  )
+                }
                 onTogglePlatform={(code) =>
                   setDraftPlatforms((current) =>
                     current.includes(code)
@@ -651,8 +697,10 @@ export function SocialHubPageClient() {
                     await SocialHubApiClient.createPost(accessToken, {
                       bodyText: draftText,
                       platformCodes: draftPlatforms,
+                      mediaUrls: draftMedia.map((row) => row.mediaRef),
                     });
                     setDraftText("");
+                    setDraftMedia([]);
                     setStatus("Taslak kaydedildi.");
                   })
                 }
@@ -701,10 +749,17 @@ export function SocialHubPageClient() {
                       accessToken,
                       postId,
                     );
-                    setStatus(
-                      result.providerMessage ??
-                        "Yayın denemesi tamamlandı (API fazı bekleniyor).",
-                    );
+                    if (result.post.statusCode === "PUBLISHED") {
+                      setStatus(
+                        result.providerMessage ?? "Gönderi kanallarda yayınlandı.",
+                      );
+                    } else {
+                      setStatus(
+                        result.post.lastErrorMessage ??
+                          result.providerMessage ??
+                          "Yayın başarısız; gönderi listesindeki hatayı kontrol edin.",
+                      );
+                    }
                   })
                 }
               />

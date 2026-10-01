@@ -10,6 +10,9 @@ import type {
   SocialPublishRequest,
   SocialPublishResult,
 } from "./providers/SocialProviderPort";
+import { SocialHubPublishMediaStorageService } from "./SocialHubPublishMediaStorageService";
+import { parseSocialHubMediaRef } from "./socialHubPublishMedia";
+import { parseSocialHubConnectionMetadata } from "./oauth/SocialHubConnectionMetadata";
 
 @Injectable()
 export class SocialHubPublishApplicationService {
@@ -17,9 +20,32 @@ export class SocialHubPublishApplicationService {
     private readonly tokenVault: SocialHubTokenVaultService,
     private readonly metaGraphService: SocialHubMetaGraphService,
     private readonly linkedInGraphService: SocialHubLinkedInGraphService,
+    private readonly publishMediaStorage: SocialHubPublishMediaStorageService,
     @InjectRepository(CompanySocialConnectionEntity)
     private readonly connectionRepository: Repository<CompanySocialConnectionEntity>,
   ) {}
+
+  private async resolveFirstMediaAsset(
+    companyId: string,
+    mediaUrls: string[],
+  ): Promise<{ buffer: Buffer; contentType: string; filename: string } | null> {
+    for (const ref of mediaUrls) {
+      const parsed = parseSocialHubMediaRef(ref);
+      if (!parsed) {
+        continue;
+      }
+      const { buffer, meta } = await this.publishMediaStorage.readForCompany(
+        companyId,
+        parsed.mediaId,
+      );
+      return {
+        buffer,
+        contentType: meta.contentType,
+        filename: meta.filename,
+      };
+    }
+    return null;
+  }
 
   public async publish(
     companyId: string,
@@ -34,6 +60,10 @@ export class SocialHubPublishApplicationService {
         message: "OAuth token yok; yayın API çağrısı yapılamadı.",
       };
     }
+    const mediaAsset = await this.resolveFirstMediaAsset(
+      companyId,
+      request.mediaUrls,
+    );
     if (
       platformCode === SocialPlatformCode.FacebookMessenger ||
       platformCode === SocialPlatformCode.Instagram
@@ -41,7 +71,8 @@ export class SocialHubPublishApplicationService {
       const connection = await this.connectionRepository.findOne({
         where: { companyId, platformCode },
       });
-      const pageId = connection?.externalAccountId;
+      const metadata = parseSocialHubConnectionMetadata(connection?.grantedScopes);
+      const pageId = metadata.pageId ?? connection?.externalAccountId;
       if (!pageId) {
         return {
           implementationStatus: "pending",
@@ -49,11 +80,61 @@ export class SocialHubPublishApplicationService {
           message: "Meta sayfa kimliği bulunamadı; OAuth yenileyin.",
         };
       }
-      const result = await this.metaGraphService.publishTextToPageFeed({
-        pageId,
-        accessToken: token,
-        bodyText: request.bodyText,
-      });
+      const pageToken =
+        (await this.metaGraphService.resolvePageAccessToken(token, pageId)) ??
+        token;
+      if (platformCode === SocialPlatformCode.Instagram) {
+        const igId = metadata.instagramBusinessAccountId;
+        if (!igId) {
+          return {
+            implementationStatus: "pending",
+            externalPostId: null,
+            message: "Instagram Business hesap kimliği yok; OAuth yenileyin.",
+          };
+        }
+        if (!mediaAsset) {
+          return {
+            implementationStatus: "pending",
+            externalPostId: null,
+            message:
+              "Instagram feed yayını için en az bir görsel ekleyin (Metin + medya).",
+          };
+        }
+        const result = await this.metaGraphService.publishPhotoToInstagram({
+          instagramBusinessAccountId: igId,
+          accessToken: pageToken,
+          caption: request.bodyText,
+          imageBuffer: mediaAsset.buffer,
+          filename: mediaAsset.filename,
+          contentType: mediaAsset.contentType,
+        });
+        if (!result.externalPostId) {
+          return {
+            implementationStatus: "pending",
+            externalPostId: null,
+            message: result.message,
+          };
+        }
+        return {
+          implementationStatus: "ready",
+          externalPostId: result.externalPostId,
+          message: result.message,
+        };
+      }
+      const result = mediaAsset
+        ? await this.metaGraphService.publishPhotoToPageFeed({
+            pageId,
+            accessToken: pageToken,
+            bodyText: request.bodyText,
+            imageBuffer: mediaAsset.buffer,
+            filename: mediaAsset.filename,
+            contentType: mediaAsset.contentType,
+          })
+        : await this.metaGraphService.publishTextToPageFeed({
+            pageId,
+            accessToken: pageToken,
+            bodyText: request.bodyText,
+          });
       if (!result.externalPostId) {
         return {
           implementationStatus: "pending",
@@ -68,6 +149,14 @@ export class SocialHubPublishApplicationService {
       };
     }
     if (platformCode === SocialPlatformCode.LinkedIn) {
+      if (mediaAsset) {
+        return {
+          implementationStatus: "pending",
+          externalPostId: null,
+          message:
+            "LinkedIn görsel yayını henüz desteklenmiyor; metin gönderisi için görseli kaldırın.",
+        };
+      }
       const authorUrn = await this.linkedInGraphService.resolveAuthorUrn(token);
       if (!authorUrn) {
         return {

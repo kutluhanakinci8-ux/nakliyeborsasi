@@ -81,6 +81,37 @@ export class SocialHubController {
     return this.socialHubApplicationService.syncInbox(user, platformCode);
   }
 
+  @Post("publishing/media")
+  public async uploadPublishMedia(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body()
+    body: {
+      filename: string;
+      contentType: string;
+      contentBase64: string;
+    },
+  ) {
+    return this.socialHubApplicationService.uploadPublishMedia(user, body);
+  }
+
+  @Get("publishing/media/:mediaId")
+  public async readPublishMedia(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("mediaId") mediaId: string,
+    @Res() response: Response,
+  ) {
+    const file = await this.socialHubApplicationService.readPublishMedia(
+      user,
+      mediaId,
+    );
+    response.setHeader("Content-Type", file.contentType);
+    response.setHeader(
+      "Content-Disposition",
+      `inline; filename="${file.filename.replace(/"/g, "")}"`,
+    );
+    response.send(file.buffer);
+  }
+
   @Post("posts")
   public async createPost(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
