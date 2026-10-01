@@ -753,12 +753,19 @@ export function useMessagingChatController({
     return map;
   }, [threads, activeThread, groupParticipants]);
 
+  const socialInboxFilterOnly =
+    searchParams.get("filter")?.toLowerCase() === "social";
+
   const filteredThreads = useMemo(() => {
+    let list = threads;
+    if (socialInboxFilterOnly) {
+      list = list.filter((thread) => thread.threadKind === "external_social");
+    }
     const query = threadSearch.trim().toLowerCase();
     if (!query) {
-      return threads;
+      return list;
     }
-    return threads.filter((thread) => {
+    return list.filter((thread) => {
       const haystack = [
         thread.counterpartyLegalName,
         thread.lastMessagePreview,
@@ -770,7 +777,7 @@ export function useMessagingChatController({
         .toLowerCase();
       return haystack.includes(query);
     });
-  }, [threads, threadSearch]);
+  }, [threads, threadSearch, socialInboxFilterOnly]);
 
   const companyUuidFromSearch = useMemo(
     () => parseCompanyUuidCandidate(threadSearch),

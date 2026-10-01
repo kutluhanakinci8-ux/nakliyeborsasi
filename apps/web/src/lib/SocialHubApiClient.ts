@@ -3,6 +3,7 @@ import type {
   SocialHubAnalytics,
   SocialHubAuditEntry,
   SocialHubHealth,
+  SocialHubInboxThreadPreview,
   SocialHubNotificationInsights,
   SocialHubOutboundDelivery,
   SocialHubSnapshot,
@@ -87,6 +88,17 @@ export class SocialHubApiClient {
   ): Promise<SocialHubSnapshot> {
     const payload = await socialHubFetch<unknown>(accessToken, "");
     return normalizeSocialHubSnapshot(payload);
+  }
+
+  public static async fetchInboxThreadsPreview(
+    accessToken: string,
+    limit = 10,
+  ): Promise<SocialHubInboxThreadPreview[]> {
+    const payload = await socialHubFetch<{ threads: SocialHubInboxThreadPreview[] }>(
+      accessToken,
+      `/inbox/threads-preview?limit=${limit}`,
+    );
+    return payload.threads ?? [];
   }
 
   public static async fetchHealth(accessToken: string): Promise<{

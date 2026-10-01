@@ -28,6 +28,7 @@ import type {
   SocialHubOutboundDelivery,
   SocialHubSnapshot,
   SocialHubTeamMember,
+  SocialHubInboxThreadPreview,
 } from "../../../../lib/socialHubTypes";
 
 export function SocialHubPageClient() {
@@ -49,6 +50,10 @@ export function SocialHubPageClient() {
   const [auditFocus, setAuditFocus] = useState<"all" | "webhook">("all");
   const [analytics, setAnalytics] = useState<SocialHubAnalytics | null>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [inboxThreadsPreview, setInboxThreadsPreview] = useState<
+    SocialHubInboxThreadPreview[]
+  >([]);
+  const [inboxPreviewLoading, setInboxPreviewLoading] = useState(false);
   const [subscriptionBlocked, setSubscriptionBlocked] = useState(false);
   const [health, setHealth] = useState<SocialHubHealth | null>(null);
   const [notificationInsights, setNotificationInsights] =
@@ -181,6 +186,17 @@ export function SocialHubPageClient() {
     });
     void loadHealthData().catch(() => setError("Sağlık verisi yüklenemedi."));
   }, [accessToken, activeTab, snapshot, subscriptionBlocked, loadHealthData]);
+
+  useEffect(() => {
+    if (!accessToken || activeTab !== "inbox" || !snapshot || subscriptionBlocked) {
+      return;
+    }
+    setInboxPreviewLoading(true);
+    void SocialHubApiClient.fetchInboxThreadsPreview(accessToken, 10)
+      .then(setInboxThreadsPreview)
+      .catch(() => setError("Gelen kutusu önizleme yüklenemedi."))
+      .finally(() => setInboxPreviewLoading(false));
+  }, [accessToken, activeTab, snapshot, subscriptionBlocked]);
 
   useEffect(() => {
     if (!accessToken || activeTab !== "analytics" || !snapshot || subscriptionBlocked) {
@@ -587,6 +603,8 @@ export function SocialHubPageClient() {
             {activeTab === "inbox" ? (
               <SocialInboxPanel
                 snapshot={snapshot}
+                threadsPreview={inboxThreadsPreview}
+                threadsPreviewLoading={inboxPreviewLoading}
                 busy={busy}
                 canSeedDemo={snapshot.permissions.canManageConnections}
                 onSeedDemo={() =>

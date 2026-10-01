@@ -1,12 +1,21 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { createHash, randomUUID } from "node:crypto";
-import { Repository } from "typeorm";
-import { SocialPlatformCode, ValidationException } from "@nakliyeborsasi/core";
+import { In, Repository } from "typeorm";
+import {
+  AuthenticatedUserContext,
+  DEFAULT_LOCALE,
+  SocialPlatformCode,
+  ValidationException,
+} from "@nakliyeborsasi/core";
 import { labelSocialPlatform } from "./socialHubPlatformLabels";
 import { CompanySocialThreadLinkEntity } from "../../infrastructure/database/entities/CompanySocialThreadLinkEntity";
 import { MessageThreadEntity } from "../../infrastructure/database/entities/MessageThreadEntity";
 import { MessagingThreadApplicationService } from "../messaging/MessagingThreadApplicationService";
+import {
+  buildSocialInboxThreadDeepLink,
+  type SocialHubInboxThreadPreviewRow,
+} from "./socialHubInboxThreadPreview";
 
 const PLATFORM_LABELS: Record<SocialPlatformCode, string> = {
   [SocialPlatformCode.Instagram]: "Instagram",
@@ -94,6 +103,61 @@ export class SocialHubMessagingBridgeService {
     link.lastInboundAt = new Date();
     await this.linkRepository.save(link);
     return { messageId: message.id, threadId: link.messageThreadId };
+  }
+
+  public async listInboxThreadsPreview(
+    user: AuthenticatedUserContext,
+    limit = 10,
+  ): Promise<{ threads: SocialHubInboxThreadPreviewRow[] }> {
+    const capped = Math.min(Math.max(limit, 1), 20);
+    const listed = await this.messagingThreadApplicationService.listThreads(
+      user,
+      DEFAULT_LOCALE,
+    );
+    const socialThreads = listed
+      .filter((thread) => thread.threadKind === "external_social")
+      .slice(0, capped);
+    const threadIds = socialThreads.map((thread) => thread.threadId);
+    const links =
+      threadIds.length > 0
+        ? await this.linkRepository.find({
+            where: {
+              companyId: user.companyId,
+              messageThreadId: In(threadIds),
+            },
+          })
+        : [];
+    const openByThreadId = new Map(
+      links.map((link) => [link.messageThreadId, link.isOpen]),
+    );
+    const displayByThreadId = new Map(
+      links.map((link) => [link.messageThreadId, link.displayLabel]),
+    );
+    const threads: SocialHubInboxThreadPreviewRow[] = socialThreads.map(
+      (thread) => {
+        const platformCode = thread.externalChannelCode ?? "UNKNOWN";
+        const platformLabel =
+          thread.externalChannelLabel ??
+          PLATFORM_LABELS[platformCode as SocialPlatformCode] ??
+          labelSocialPlatform(platformCode);
+        return {
+          threadId: thread.threadId,
+          platformCode,
+          platformLabel,
+          displayLabel:
+            displayByThreadId.get(thread.threadId) ??
+            thread.counterpartyLegalName ??
+            thread.title ??
+            platformLabel,
+          lastMessagePreview: thread.lastMessagePreview,
+          lastMessageAt: thread.lastMessageAt,
+          unreadCount: thread.unreadCount,
+          isOpen: openByThreadId.get(thread.threadId) ?? true,
+          messagingDeepLink: buildSocialInboxThreadDeepLink(thread.threadId),
+        };
+      },
+    );
+    return { threads };
   }
 
   public async ingestWebhookInbound(params: {

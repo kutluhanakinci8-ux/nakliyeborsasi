@@ -51,6 +51,21 @@ export class SocialHubController {
     return this.socialHubApplicationService.seedDemoInbox(user);
   }
 
+  @Get("inbox/threads-preview")
+  public async inboxThreadsPreview(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Query("limit") limit?: string,
+  ) {
+    const parsed =
+      limit !== undefined && limit !== ""
+        ? Number.parseInt(limit, 10)
+        : undefined;
+    return this.socialHubApplicationService.getInboxThreadsPreview(
+      user,
+      Number.isFinite(parsed) ? parsed : undefined,
+    );
+  }
+
   @Post("connections/:platformCode/sync-inbox")
   public async syncInbox(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
