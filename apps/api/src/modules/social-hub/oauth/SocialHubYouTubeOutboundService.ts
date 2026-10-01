@@ -1,4 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
+import { isYouTubeOutboundDeployEnabled } from "../socialHubYouTubeProdProvider";
 
 const DEFAULT_SEND_URL =
   "https://www.googleapis.com/youtube/v3/placeholderOutboundMessage";
@@ -19,11 +20,11 @@ export class SocialHubYouTubeOutboundService {
     recipientExternalId: string;
     bodyText: string;
   }): Promise<YouTubeOutboundSendResult> {
-    if (process.env.SOCIAL_YOUTUBE_OUTBOUND_ENABLED !== "1") {
+    if (!isYouTubeOutboundDeployEnabled()) {
       return {
         ok: false,
         message:
-          "YouTube giden mesaj beta kapalı — SOCIAL_YOUTUBE_OUTBOUND_ENABLED=1 ve API URL gerekir.",
+          "YouTube giden mesaj kapalı — SOCIAL_YOUTUBE_OUTBOUND_ENABLED=1 ve API URL gerekir.",
       };
     }
     const url =
@@ -53,7 +54,7 @@ export class SocialHubYouTubeOutboundService {
       }
       return {
         ok: true,
-        message: "YouTube mesajı gönderildi (beta).",
+        message: "YouTube mesajı gönderildi.",
         externalMessageId: payload.id ?? undefined,
       };
     } catch (error) {

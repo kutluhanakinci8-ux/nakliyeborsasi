@@ -19,7 +19,7 @@ import { hasRoadmapRefreshToken } from "./oauth/socialHubRoadmapRefreshToken";
 import { roadmapConnectedHint } from "./socialHubRoadmapHints";
 import { SocialHubAuditService } from "./SocialHubAuditService";
 import { getRoadmapProviderCapabilities } from "./socialHubRoadmapCapabilities";
-import { isTikTokProdProviderPlatform } from "./socialHubTikTokProdProvider";
+import { isRoadmapProdProviderPlatform } from "./socialHubRoadmapProdProviders";
 
 const EXPIRY_LOOKAHEAD_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -166,7 +166,7 @@ export class SocialHubConnectionHealthService {
         canRefreshToken:
           row?.statusCode === SocialConnectionStatusCode.Connected &&
           hasRoadmapRefreshToken(row.grantedScopes),
-        isRoadmapBeta: !isTikTokProdProviderPlatform(provider.platformCode),
+        isRoadmapBeta: !isRoadmapProdProviderPlatform(provider.platformCode),
         webhookInboundBridged24h: 0,
         inboxWebhookCapable: getRoadmapProviderCapabilities(
           provider.platformCode,

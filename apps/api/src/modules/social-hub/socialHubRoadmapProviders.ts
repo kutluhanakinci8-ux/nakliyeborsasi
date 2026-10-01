@@ -36,7 +36,7 @@ export const SOCIAL_HUB_ROADMAP_PROVIDERS: SocialHubRoadmapProvider[] = [
     label: "YouTube",
     implementationStatus: "roadmap",
     roadmapNote:
-      "Beta OAuth — Pub/Sub webhook Mesajlar köprüsü; giden mesaj SOCIAL_YOUTUBE_OUTBOUND_ENABLED ile.",
+      "Prod OAuth yolu — Pub/Sub push webhook Mesajlar köprüsü; giden mesaj deploy’da SOCIAL_YOUTUBE_OUTBOUND_ENABLED=1 ile açılır.",
     capabilities: EMPTY_CAPS,
   },
 ];
