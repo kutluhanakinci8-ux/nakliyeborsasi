@@ -1,4 +1,4 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { ForbiddenException, Injectable, Logger } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { SocialConnectionStatusCode } from "@nakliyeborsasi/core";
@@ -38,6 +38,9 @@ export class SocialHubTikTokWebhookIngestService {
         secret,
       })
     ) {
+      if (process.env.SOCIAL_TIKTOK_WEBHOOK_SIGNATURE_REQUIRED === "1") {
+        throw new ForbiddenException("TikTok webhook signature invalid");
+      }
       this.logger.warn("TikTok webhook signature verification failed");
       return;
     }

@@ -18,6 +18,16 @@ import { hasRoadmapRefreshToken } from "./oauth/socialHubRoadmapRefreshToken";
 
 const EXPIRY_LOOKAHEAD_MS = 7 * 24 * 60 * 60 * 1000;
 
+function roadmapConnectedHint(platformCode: string): string {
+  if (platformCode === "TIKTOK") {
+    return "Beta — gelen TikTok webhook Mesajlar köprüsüne aktarılabilir; giden mesaj ortam bayrağı ile.";
+  }
+  if (platformCode === "YOUTUBE") {
+    return "Beta — YouTube Pub/Sub webhook Mesajlar köprüsüne aktarılabilir; giden mesaj ortam bayrağı ile.";
+  }
+  return "Beta kanal — mesajlaşma ve yayın API’leri henüz aktif değil.";
+}
+
 const PLATFORM_LABELS: Record<SocialPlatformCode, string> = {
   [SocialPlatformCode.Instagram]: "Instagram",
   [SocialPlatformCode.FacebookMessenger]: "Facebook Messenger",
@@ -112,9 +122,7 @@ export class SocialHubConnectionHealthService {
         setupWarnings.push("Platform OAuth ortam değişkenleri eksik.");
       }
       if (row?.statusCode === SocialConnectionStatusCode.Connected) {
-        setupWarnings.push(
-          "Beta kanal — mesajlaşma ve yayın API’leri henüz aktif değil.",
-        );
+        setupWarnings.push(roadmapConnectedHint(provider.platformCode));
       }
       if (
         row &&

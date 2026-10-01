@@ -139,7 +139,12 @@ export function SocialConnectionsPanel({
               TikTok (beta): <code>{integrationWebhooks.tiktok}</code>
             </li>
             <li>
-              YouTube (beta): <code>{integrationWebhooks.youtube}</code>
+              YouTube (beta, Pub/Sub push):{" "}
+              <code>{integrationWebhooks.youtube}</code>
+              <span className="module-hint">
+                {" "}
+                — message.data içinde base64 JSON (kanal kimliği + metin)
+              </span>
             </li>
           </ul>
         ) : null}
