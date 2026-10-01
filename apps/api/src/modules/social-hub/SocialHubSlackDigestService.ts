@@ -16,10 +16,7 @@ import {
   buildRoadmapInterestDigestSection,
   buildWebhookBridgeDigestSection,
 } from "./socialHubRoadmapDigest";
-import {
-  SocialHubAuditActionCode,
-  SocialHubAuditService,
-} from "./SocialHubAuditService";
+import { SocialHubAuditService } from "./SocialHubAuditService";
 
 const DIGEST_INTERVAL_MS = 24 * 60 * 60 * 1000;
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
