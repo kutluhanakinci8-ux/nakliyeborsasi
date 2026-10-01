@@ -182,6 +182,17 @@ export class SocialHubApplicationService {
     return { health, notificationInsights };
   }
 
+  public async exportNotificationInsightsCsv(
+    user: AuthenticatedUserContext,
+  ): Promise<string> {
+    assertSocialHubRead(user);
+    await this.assertSocialHubSubscription(user.companyId);
+    const insights = await this.slackInsightsService.buildInsights(
+      user.companyId,
+    );
+    return this.slackInsightsService.buildInsightsCsv(insights);
+  }
+
   public async refreshConnectionToken(
     user: AuthenticatedUserContext,
     platformCode: string,
@@ -794,6 +805,7 @@ export class SocialHubApplicationService {
       socialSlackDigestTimezone?: string;
       socialSlackDigestHourStart?: number;
       socialSlackDigestHourEnd?: number;
+      socialHubWeeklyEmailEnabled?: boolean;
     },
   ) {
     assertSocialHubAdmin(user);
@@ -893,6 +905,9 @@ export class SocialHubApplicationService {
         Math.max(Math.floor(patch.socialSlackDigestHourEnd), 0),
         23,
       );
+    }
+    if (patch.socialHubWeeklyEmailEnabled !== undefined) {
+      settings.socialHubWeeklyEmailEnabled = patch.socialHubWeeklyEmailEnabled;
     }
     await this.settingsRepository.save(settings);
     this.socialHubAuditService.record(
@@ -1069,6 +1084,8 @@ export class SocialHubApplicationService {
         socialSlackDigestTimezone: "Europe/Istanbul",
         socialSlackDigestHourStart: 9,
         socialSlackDigestHourEnd: 18,
+        socialHubWeeklyEmailEnabled: false,
+        socialHubWeeklyEmailLastSentAt: null,
       }),
     );
   }
@@ -1193,6 +1210,9 @@ export class SocialHubApplicationService {
       socialSlackDigestTimezone: row.socialSlackDigestTimezone ?? "Europe/Istanbul",
       socialSlackDigestHourStart: row.socialSlackDigestHourStart ?? 9,
       socialSlackDigestHourEnd: row.socialSlackDigestHourEnd ?? 18,
+      socialHubWeeklyEmailEnabled: row.socialHubWeeklyEmailEnabled ?? false,
+      socialHubWeeklyEmailLastSentAt:
+        row.socialHubWeeklyEmailLastSentAt?.toISOString() ?? null,
     };
   }
 

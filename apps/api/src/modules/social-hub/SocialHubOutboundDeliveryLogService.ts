@@ -74,6 +74,34 @@ export class SocialHubOutboundDeliveryLogService {
     return qb.getMany();
   }
 
+  public async summarizeRecentByPlatform(
+    companyId: string,
+    since: Date,
+  ): Promise<Map<string, { ok: number; failed: number }>> {
+    const rows = await this.deliveryRepository
+      .createQueryBuilder("delivery")
+      .select("delivery.platformCode", "platformCode")
+      .addSelect("delivery.status", "status")
+      .addSelect("COUNT(*)", "count")
+      .where("delivery.companyId = :companyId", { companyId })
+      .andWhere("delivery.createdAt >= :since", { since })
+      .groupBy("delivery.platformCode")
+      .addGroupBy("delivery.status")
+      .getRawMany<{ platformCode: string; status: string; count: string }>();
+    const map = new Map<string, { ok: number; failed: number }>();
+    for (const row of rows) {
+      const bucket = map.get(row.platformCode) ?? { ok: 0, failed: 0 };
+      const count = Number.parseInt(row.count, 10);
+      if (row.status === "ok") {
+        bucket.ok += count;
+      } else {
+        bucket.failed += count;
+      }
+      map.set(row.platformCode, bucket);
+    }
+    return map;
+  }
+
   public async countRecentByStatus(
     companyId: string,
     status: "ok" | "failed",

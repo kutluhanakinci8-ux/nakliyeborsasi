@@ -79,6 +79,12 @@ export class CompanySocialSettingsEntity {
   @Column({ type: "int", default: 18 })
   public socialSlackDigestHourEnd!: number;
 
+  @Column({ type: "boolean", default: false })
+  public socialHubWeeklyEmailEnabled!: boolean;
+
+  @Column({ type: "timestamptz", nullable: true })
+  public socialHubWeeklyEmailLastSentAt!: Date | null;
+
   @UpdateDateColumn({ type: "timestamptz" })
   public updatedAt!: Date;
 }

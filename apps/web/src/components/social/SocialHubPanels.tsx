@@ -888,6 +888,9 @@ type HealthPanelProps = {
   healthAlertSlackCooldownMinutes: number;
   onHealthSlackCooldownChange: (minutes: number) => void;
   onSaveHealthSlackCooldown: () => void;
+  socialHubWeeklyEmailEnabled: boolean;
+  onToggleWeeklyEmail: (enabled: boolean) => void;
+  onExportInsights: () => void;
   onRefreshToken: (platformCode: string) => void;
   onReload: () => void;
 };
@@ -926,6 +929,9 @@ export function SocialHealthPanel({
   healthAlertSlackCooldownMinutes,
   onHealthSlackCooldownChange,
   onSaveHealthSlackCooldown,
+  socialHubWeeklyEmailEnabled,
+  onToggleWeeklyEmail,
+  onExportInsights,
   onRefreshToken,
   onReload,
 }: HealthPanelProps) {
@@ -954,6 +960,17 @@ export function SocialHealthPanel({
               onChange={(e) => onToggleHealthAlerts(e.target.checked)}
             />
             Sağlık uyarıları (e-posta + Slack)
+          </label>
+        ) : null}
+        {canManage ? (
+          <label className="social-hub-check">
+            <input
+              type="checkbox"
+              checked={socialHubWeeklyEmailEnabled}
+              disabled={busy}
+              onChange={(e) => onToggleWeeklyEmail(e.target.checked)}
+            />
+            Haftalık e-posta özet (firma sahipleri, 7 günde bir)
           </label>
         ) : null}
         {canManage ? (
@@ -1251,7 +1268,28 @@ export function SocialHealthPanel({
               Slack gönderim hatası:{" "}
               {formatInsightTime(notificationInsights.slackOutboundFailureLastSentAt)}
             </li>
+            <li>
+              Haftalık e-posta özet:{" "}
+              {formatInsightTime(notificationInsights.weeklyEmailLastSentAt)}
+            </li>
           </ul>
+          {notificationInsights.channelOutbound24h.length > 0 ? (
+            <ul className="social-hub-channel-rates">
+              {notificationInsights.channelOutbound24h.map((row) => (
+                <li key={row.platformCode}>
+                  {row.label}: %{row.successRatePercent} ({row.ok}/{row.ok + row.failed})
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          <button
+            type="button"
+            className="btn-account-ghost"
+            disabled={busy}
+            onClick={onExportInsights}
+          >
+            Bildirim özetini CSV indir
+          </button>
         </div>
       ) : null}
       <ul className="social-hub-health-grid">

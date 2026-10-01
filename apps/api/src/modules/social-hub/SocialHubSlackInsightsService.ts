@@ -4,9 +4,18 @@ import { Repository } from "typeorm";
 import { CompanySocialSettingsEntity } from "../../infrastructure/database/entities/CompanySocialSettingsEntity";
 import { CompanySocialSlackNotifyDedupEntity } from "../../infrastructure/database/entities/CompanySocialSlackNotifyDedupEntity";
 import { SocialHubOutboundDeliveryLogService } from "./SocialHubOutboundDeliveryLogService";
+import { labelSocialPlatform } from "./socialHubPlatformLabels";
 
 const HEALTH_ALERT_DEDUP_PREFIX = "health_alert:";
 const OUTBOUND_FAILURE_DEDUP_PREFIX = "outbound_fail:";
+
+export type SocialHubChannelOutboundStat = {
+  platformCode: string;
+  label: string;
+  ok: number;
+  failed: number;
+  successRatePercent: number;
+};
 
 @Injectable()
 export class SocialHubSlackInsightsService {
@@ -23,13 +32,18 @@ export class SocialHubSlackInsightsService {
       where: { companyId },
     });
     const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const [okCount, failedCount, healthSlack, outboundSlack] = await Promise.all([
-      this.deliveryLogService.countRecentByStatus(companyId, "ok", since24h),
-      this.deliveryLogService.countRecentByStatus(
+    const platformMap =
+      await this.deliveryLogService.summarizeRecentByPlatform(
         companyId,
-        "failed",
         since24h,
-      ),
+      );
+    const channelOutbound24h = this.mapPlatformStats(platformMap);
+    const okCount = channelOutbound24h.reduce((sum, row) => sum + row.ok, 0);
+    const failedCount = channelOutbound24h.reduce(
+      (sum, row) => sum + row.failed,
+      0,
+    );
+    const [healthSlack, outboundSlack] = await Promise.all([
       this.latestDedup(companyId, `${HEALTH_ALERT_DEDUP_PREFIX}%`),
       this.latestDedup(companyId, `${OUTBOUND_FAILURE_DEDUP_PREFIX}%`),
     ]);
@@ -41,11 +55,79 @@ export class SocialHubSlackInsightsService {
         settings?.socialSlackDailyDigestLastSentAt?.toISOString() ?? null,
       slackHealthAlertLastSentAt: healthSlack?.toISOString() ?? null,
       slackOutboundFailureLastSentAt: outboundSlack?.toISOString() ?? null,
+      weeklyEmailLastSentAt:
+        settings?.socialHubWeeklyEmailLastSentAt?.toISOString() ?? null,
       outboundDeliveriesLast24h: {
         ok: okCount,
         failed: failedCount,
       },
+      channelOutbound24h,
     };
+  }
+
+  public buildInsightsCsv(
+    insights: Awaited<ReturnType<SocialHubSlackInsightsService["buildInsights"]>>,
+  ): string {
+    const header = "section,key,value";
+    const lines: string[] = [header];
+    const push = (section: string, key: string, value: string | number) => {
+      const text = String(value).replace(/"/g, '""');
+      const needsQuote =
+        text.includes(",") || text.includes("\n") || text.includes('"');
+      lines.push(
+        `${section},${key},${needsQuote ? `"${text}"` : text}`,
+      );
+    };
+    push("summary", "ok24h", insights.outboundDeliveriesLast24h.ok);
+    push("summary", "failed24h", insights.outboundDeliveriesLast24h.failed);
+    push(
+      "timestamps",
+      "healthAlertEmailLastSentAt",
+      insights.healthAlertEmailLastSentAt ?? "",
+    );
+    push(
+      "timestamps",
+      "slackDailyDigestLastSentAt",
+      insights.slackDailyDigestLastSentAt ?? "",
+    );
+    push(
+      "timestamps",
+      "slackHealthAlertLastSentAt",
+      insights.slackHealthAlertLastSentAt ?? "",
+    );
+    push(
+      "timestamps",
+      "slackOutboundFailureLastSentAt",
+      insights.slackOutboundFailureLastSentAt ?? "",
+    );
+    push(
+      "timestamps",
+      "weeklyEmailLastSentAt",
+      insights.weeklyEmailLastSentAt ?? "",
+    );
+    for (const row of insights.channelOutbound24h) {
+      push("channel24h", row.platformCode, `${row.ok}/${row.failed} (${row.successRatePercent}%)`);
+    }
+    return lines.join("\n");
+  }
+
+  public mapPlatformStats(
+    platformMap: Map<string, { ok: number; failed: number }>,
+  ): SocialHubChannelOutboundStat[] {
+    return [...platformMap.entries()]
+      .map(([platformCode, stats]) => {
+        const total = stats.ok + stats.failed;
+        const successRatePercent =
+          total > 0 ? Math.round((stats.ok / total) * 100) : 100;
+        return {
+          platformCode,
+          label: labelSocialPlatform(platformCode),
+          ok: stats.ok,
+          failed: stats.failed,
+          successRatePercent,
+        };
+      })
+      .sort((a, b) => a.label.localeCompare(b.label, "tr"));
   }
 
   private async latestDedup(

@@ -96,6 +96,7 @@ export class EmailTemplateService {
       case NotificationEventCode.TrustTransportConfirmRequest:
       case NotificationEventCode.TrustReviewReminder:
       case NotificationEventCode.SocialHubHealthDegraded:
+      case NotificationEventCode.SocialHubWeeklyDigest:
         return this.renderOperationalAdminTr(eventCode, payload);
       case NotificationEventCode.UserFirstLogin:
         return {
@@ -140,6 +141,7 @@ export class EmailTemplateService {
       case NotificationEventCode.TrustTransportConfirmRequest:
       case NotificationEventCode.TrustReviewReminder:
       case NotificationEventCode.SocialHubHealthDegraded:
+      case NotificationEventCode.SocialHubWeeklyDigest:
         return this.renderOperationalAdminTr(eventCode, payload);
       case NotificationEventCode.UserRegistered:
         return {
@@ -272,6 +274,7 @@ export class EmailTemplateService {
       [NotificationEventCode.TrustTransportConfirmRequest]: "Taşıma onayı",
       [NotificationEventCode.TrustReviewReminder]: "Güven hatırlatması",
       [NotificationEventCode.SocialHubHealthDegraded]: "Sosyal hub sağlığı",
+      [NotificationEventCode.SocialHubWeeklyDigest]: "Sosyal hub haftalık özet",
     };
     const title = titles[eventCode] ?? "Operasyon bildirimi";
     if (eventCode === NotificationEventCode.TrustTransportConfirmRequest) {
@@ -307,6 +310,30 @@ export class EmailTemplateService {
           { eyebrow: "Güven merkezi", preheader: "Değerlendirme hatırlatması" },
         ),
         text: `Değerlendirme: ${trustUrl}`,
+      };
+    }
+    if (eventCode === NotificationEventCode.SocialHubWeeklyDigest) {
+      const hubUrl = payload.hubUrl ?? "#";
+      const preview = payload.messagePreview ?? "";
+      return {
+        subject: `${PLATFORM_PRODUCT_NAME} — sosyal hub haftalık özet`,
+        html: wrapCorporateEmail(
+          "Haftalık sosyal hub özet",
+          `${leadParagraph(
+            "Bağlı kanallarınızın son 7 günlük gönderim ve sağlık özeti aşağıda.",
+          )}
+          ${preview ? mutedParagraph(escapeHtml(preview)) : ""}
+          ${detailTable([
+            { label: "Firma", value: payload.companyLegalName ?? "—" },
+            { label: "Zaman", value: formatOccurredAt(payload.occurredAt ?? "") },
+          ])}
+          ${primaryButton(hubUrl, "Sosyal hub paneli")}`,
+          {
+            eyebrow: "Sosyal hub",
+            preheader: preview.slice(0, 80) || "Haftalık özet",
+          },
+        ),
+        text: `Sosyal hub haftalık özet:\n${preview}\n${hubUrl}`,
       };
     }
     if (eventCode === NotificationEventCode.SocialHubHealthDegraded) {
