@@ -25,6 +25,7 @@ export type SocialHubSettings = {
   socialSlackOutboundFailureCooldownMinutes?: number;
   socialSlackDailyDigestEnabled?: boolean;
   socialSlackDailyDigestLastSentAt?: string | null;
+  healthAlertSlackCooldownMinutes?: number;
 };
 
 export type SocialHubProviderCapabilities = {

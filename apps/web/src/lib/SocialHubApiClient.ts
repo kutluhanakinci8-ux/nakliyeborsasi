@@ -296,6 +296,15 @@ export class SocialHubApiClient {
     });
   }
 
+  public static async sendSlackDigestNow(accessToken: string): Promise<{
+    ok: boolean;
+    message: string;
+  }> {
+    return socialHubFetch(accessToken, "/settings/slack-digest-now", {
+      method: "POST",
+    });
+  }
+
   public static async sendSlackTest(accessToken: string): Promise<{
     ok: boolean;
     message: string;

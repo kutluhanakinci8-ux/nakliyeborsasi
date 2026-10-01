@@ -6,6 +6,7 @@ import { CompanySocialSettingsEntity } from "../../infrastructure/database/entit
 import { CompanySocialSlackNotifyDedupEntity } from "../../infrastructure/database/entities/CompanySocialSlackNotifyDedupEntity";
 
 const OUTBOUND_FAILURE_DEDUP_PREFIX = "outbound_fail:";
+const HEALTH_ALERT_DEDUP_PREFIX = "health_alert:";
 
 @Injectable()
 export class SocialHubSlackNotificationService {
@@ -26,6 +27,23 @@ export class SocialHubSlackNotificationService {
     summary: string;
     hubUrl: string;
   }): Promise<void> {
+    const settings = await this.socialSettingsRepository.findOne({
+      where: { companyId: params.companyId },
+    });
+    const cooldownMinutes = Math.min(
+      Math.max(settings?.healthAlertSlackCooldownMinutes ?? 1440, 15),
+      7 * 24 * 60,
+    );
+    const dedupKey = `${HEALTH_ALERT_DEDUP_PREFIX}${params.overallStatus}`;
+    if (
+      !(await this.canSendDedup(
+        params.companyId,
+        dedupKey,
+        cooldownMinutes,
+      ))
+    ) {
+      return;
+    }
     const webhook = await this.resolveWebhookUrl(params.companyId);
     if (!webhook) {
       return;
@@ -49,6 +67,7 @@ export class SocialHubSlackNotificationService {
         },
       ],
     });
+    await this.recordDedup(params.companyId, dedupKey);
   }
 
   public async postOutboundFailure(params: {
@@ -69,13 +88,12 @@ export class SocialHubSlackNotificationService {
       24 * 60,
     );
     const dedupKey = `${OUTBOUND_FAILURE_DEDUP_PREFIX}${params.threadId}`;
-    const existing = await this.dedupRepository.findOne({
-      where: { companyId: params.companyId, dedupKey },
-    });
-    const now = Date.now();
     if (
-      existing &&
-      now - existing.lastSentAt.getTime() < cooldownMinutes * 60 * 1000
+      !(await this.canSendDedup(
+        params.companyId,
+        dedupKey,
+        cooldownMinutes,
+      ))
     ) {
       return;
     }
@@ -101,13 +119,7 @@ export class SocialHubSlackNotificationService {
         },
       ],
     });
-    await this.dedupRepository.save(
-      this.dedupRepository.create({
-        companyId: params.companyId,
-        dedupKey,
-        lastSentAt: new Date(),
-      }),
-    );
+    await this.recordDedup(params.companyId, dedupKey);
   }
 
   public async postDailyDigest(params: {
@@ -214,6 +226,31 @@ export class SocialHubSlackNotificationService {
       return messaging.slackIncomingWebhookUrl;
     }
     return null;
+  }
+
+  private async canSendDedup(
+    companyId: string,
+    dedupKey: string,
+    cooldownMinutes: number,
+  ): Promise<boolean> {
+    const existing = await this.dedupRepository.findOne({
+      where: { companyId, dedupKey },
+    });
+    if (!existing) {
+      return true;
+    }
+    const elapsed = Date.now() - existing.lastSentAt.getTime();
+    return elapsed >= cooldownMinutes * 60 * 1000;
+  }
+
+  private async recordDedup(companyId: string, dedupKey: string): Promise<void> {
+    await this.dedupRepository.save(
+      this.dedupRepository.create({
+        companyId,
+        dedupKey,
+        lastSentAt: new Date(),
+      }),
+    );
   }
 
   private async postWebhook(

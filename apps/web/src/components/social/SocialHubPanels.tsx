@@ -867,6 +867,10 @@ type HealthPanelProps = {
   }) => void;
   onSaveSlackSettings: () => void;
   onTestSlack: () => void;
+  onSendDigestNow: () => void;
+  healthAlertSlackCooldownMinutes: number;
+  onHealthSlackCooldownChange: (minutes: number) => void;
+  onSaveHealthSlackCooldown: () => void;
   onRefreshToken: (platformCode: string) => void;
   onReload: () => void;
 };
@@ -896,6 +900,10 @@ export function SocialHealthPanel({
   onSlackSettingsPatch,
   onSaveSlackSettings,
   onTestSlack,
+  onSendDigestNow,
+  healthAlertSlackCooldownMinutes,
+  onHealthSlackCooldownChange,
+  onSaveHealthSlackCooldown,
   onRefreshToken,
   onReload,
 }: HealthPanelProps) {
@@ -1020,6 +1028,38 @@ export function SocialHealthPanel({
               onClick={onTestSlack}
             >
               Slack test mesajı
+            </button>
+            <button
+              type="button"
+              className="btn-account-ghost"
+              disabled={busy}
+              onClick={onSendDigestNow}
+            >
+              Özet gönder (şimdi)
+            </button>
+            <label className="social-hub-threshold-field">
+              Sağlık Slack tekrar (dk)
+              <input
+                className="input-light"
+                type="number"
+                min={15}
+                max={10080}
+                value={healthAlertSlackCooldownMinutes}
+                disabled={busy}
+                onChange={(e) =>
+                  onHealthSlackCooldownChange(
+                    Number.parseInt(e.target.value, 10),
+                  )
+                }
+              />
+            </label>
+            <button
+              type="button"
+              className="btn-account-primary"
+              disabled={busy}
+              onClick={onSaveHealthSlackCooldown}
+            >
+              Sağlık Slack süresini kaydet
             </button>
           </div>
         ) : null}

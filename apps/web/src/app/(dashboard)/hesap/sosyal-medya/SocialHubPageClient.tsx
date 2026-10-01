@@ -62,6 +62,7 @@ export function SocialHubPageClient() {
     healthAlertMinSeverity: "attention" as "attention" | "critical",
     healthAlertFailureThreshold: 1,
     healthAlertPlatformThresholdsJson: "",
+    healthAlertSlackCooldownMinutes: 1440,
   });
   const [slackSettingsDraft, setSlackSettingsDraft] = useState({
     socialSlackWebhookUrl: "",
@@ -148,6 +149,8 @@ export function SocialHubPageClient() {
         snapshot.settings.healthAlertFailureThreshold ?? 1,
       healthAlertPlatformThresholdsJson:
         snapshot.settings.healthAlertPlatformThresholdsJson ?? "",
+      healthAlertSlackCooldownMinutes:
+        snapshot.settings.healthAlertSlackCooldownMinutes ?? 1440,
     });
     setSlackSettingsDraft({
       socialSlackWebhookUrl: snapshot.settings.socialSlackWebhookUrl ?? "",
@@ -341,6 +344,34 @@ export function SocialHubPageClient() {
                       accessToken,
                     );
                     setStatus(result.message);
+                  })
+                }
+                onSendDigestNow={() =>
+                  void runAction(async () => {
+                    const result = await SocialHubApiClient.sendSlackDigestNow(
+                      accessToken,
+                    );
+                    await reload();
+                    setStatus(result.message);
+                  })
+                }
+                healthAlertSlackCooldownMinutes={
+                  alertThresholdDraft.healthAlertSlackCooldownMinutes
+                }
+                onHealthSlackCooldownChange={(minutes) =>
+                  setAlertThresholdDraft((current) => ({
+                    ...current,
+                    healthAlertSlackCooldownMinutes: minutes,
+                  }))
+                }
+                onSaveHealthSlackCooldown={() =>
+                  void runAction(async () => {
+                    await SocialHubApiClient.updateSettings(accessToken, {
+                      healthAlertSlackCooldownMinutes:
+                        alertThresholdDraft.healthAlertSlackCooldownMinutes,
+                    });
+                    await reload();
+                    setStatus("Sağlık Slack tekrar süresi kaydedildi.");
                   })
                 }
                 onDeliveryFiltersChange={(patch) =>

@@ -279,6 +279,7 @@ export class SocialHubController {
       socialSlackNotifyOutboundFailures?: boolean;
       socialSlackOutboundFailureCooldownMinutes?: number;
       socialSlackDailyDigestEnabled?: boolean;
+      healthAlertSlackCooldownMinutes?: number;
     },
   ) {
     return this.socialHubApplicationService.updateSettings(user, body);
@@ -287,5 +288,12 @@ export class SocialHubController {
   @Post("settings/slack-test")
   public async slackTest(@AuthenticatedUserParam() user: AuthenticatedUserContext) {
     return this.socialHubApplicationService.sendSlackTest(user);
+  }
+
+  @Post("settings/slack-digest-now")
+  public async slackDigestNow(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    return this.socialHubApplicationService.sendSlackDigestNow(user);
   }
 }
