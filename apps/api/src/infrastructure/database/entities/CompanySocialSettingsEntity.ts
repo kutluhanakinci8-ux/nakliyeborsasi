@@ -55,6 +55,9 @@ export class CompanySocialSettingsEntity {
   @Column({ type: "boolean", default: false })
   public socialSlackNotifyOutboundFailures!: boolean;
 
+  @Column({ type: "int", default: 15 })
+  public socialSlackOutboundFailureCooldownMinutes!: number;
+
   @UpdateDateColumn({ type: "timestamptz" })
   public updatedAt!: Date;
 }

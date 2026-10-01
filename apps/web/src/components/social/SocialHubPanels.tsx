@@ -855,12 +855,15 @@ type HealthPanelProps = {
   socialSlackWebhookUrl: string;
   socialSlackUseMessagingFallback: boolean;
   socialSlackNotifyOutboundFailures: boolean;
+  socialSlackOutboundFailureCooldownMinutes: number;
   onSlackSettingsPatch: (patch: {
     socialSlackWebhookUrl?: string;
     socialSlackUseMessagingFallback?: boolean;
     socialSlackNotifyOutboundFailures?: boolean;
+    socialSlackOutboundFailureCooldownMinutes?: number;
   }) => void;
   onSaveSlackSettings: () => void;
+  onTestSlack: () => void;
   onRefreshToken: (platformCode: string) => void;
   onReload: () => void;
 };
@@ -884,8 +887,10 @@ export function SocialHealthPanel({
   socialSlackWebhookUrl,
   socialSlackUseMessagingFallback,
   socialSlackNotifyOutboundFailures,
+  socialSlackOutboundFailureCooldownMinutes,
   onSlackSettingsPatch,
   onSaveSlackSettings,
+  onTestSlack,
   onRefreshToken,
   onReload,
 }: HealthPanelProps) {
@@ -957,6 +962,25 @@ export function SocialHealthPanel({
               />
               Kanal gönderim hatalarında Slack bildirimi
             </label>
+            <label className="social-hub-threshold-field">
+              Hata bildirimi bekleme (dk / konuşma)
+              <input
+                className="input-light"
+                type="number"
+                min={1}
+                max={1440}
+                value={socialSlackOutboundFailureCooldownMinutes}
+                disabled={busy}
+                onChange={(e) =>
+                  onSlackSettingsPatch({
+                    socialSlackOutboundFailureCooldownMinutes: Number.parseInt(
+                      e.target.value,
+                      10,
+                    ),
+                  })
+                }
+              />
+            </label>
             <button
               type="button"
               className="btn-account-primary"
@@ -964,6 +988,14 @@ export function SocialHealthPanel({
               onClick={onSaveSlackSettings}
             >
               Slack ayarlarını kaydet
+            </button>
+            <button
+              type="button"
+              className="btn-account-ghost"
+              disabled={busy}
+              onClick={onTestSlack}
+            >
+              Slack test mesajı
             </button>
           </div>
         ) : null}
@@ -1157,6 +1189,15 @@ export function SocialHealthPanel({
               {row.bodyTextPreview ? (
                 <p className="social-hub-delivery-preview">{row.bodyTextPreview}</p>
               ) : null}
+              <Link
+                href={
+                  row.messagingThreadUrl ??
+                  `/messaging?threadId=${encodeURIComponent(row.messageThreadId)}`
+                }
+                className="social-hub-delivery-thread-link"
+              >
+                Konuşmayı Mesajlar’da aç
+              </Link>
               {row.errorMessage ? (
                 <p className="social-hub-delivery-error">{row.errorMessage}</p>
               ) : null}

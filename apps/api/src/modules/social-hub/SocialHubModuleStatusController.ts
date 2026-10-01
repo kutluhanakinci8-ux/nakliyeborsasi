@@ -12,7 +12,7 @@ export class SocialHubModuleStatusController {
   } {
     return {
       module: "social_hub",
-      phase: "n",
+      phase: "o",
       subscriptionModuleCode: SubscriptionModuleCode.SocialHub,
       features: [
         "connections_skeleton",
@@ -56,6 +56,10 @@ export class SocialHubModuleStatusController {
         "social_hub_dedicated_slack",
         "outbound_delivery_body_preview",
         "outbound_failure_slack",
+        "slack_webhook_validation",
+        "slack_test_ping",
+        "outbound_failure_slack_dedup",
+        "delivery_log_messaging_deep_link",
       ],
     };
   }
