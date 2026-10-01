@@ -8,6 +8,11 @@ import { SOCIAL_HUB_ROADMAP_PROVIDERS } from "./socialHubRoadmapProviders";
 import { buildSocialHubIntegrationWebhookReadiness } from "./socialHubIntegrationWebhookReadiness";
 import { buildSocialHubPublicWebhookUrls } from "./socialHubIntegrationUrls";
 import { SocialHubOutboundDeliveryLogService } from "./SocialHubOutboundDeliveryLogService";
+import {
+  SocialHubAuditActionCode,
+  SocialHubAuditService,
+} from "./SocialHubAuditService";
+import { buildSocialHubIntegrationOpsHints } from "./socialHubIntegrationOpsHints";
 
 export type SocialHubRoadmapBetaPlatformOpsStat = {
   platformCode: string;
@@ -24,6 +29,8 @@ export type SocialHubRoadmapBetaOpsSnapshot = {
   integrationWebhookReadiness: ReturnType<
     typeof buildSocialHubIntegrationWebhookReadiness
   >;
+  integrationOpsHints: ReturnType<typeof buildSocialHubIntegrationOpsHints>;
+  webhookInboundBridged24h: number;
   platforms: SocialHubRoadmapBetaPlatformOpsStat[];
 };
 
@@ -35,6 +42,7 @@ export class SocialHubRoadmapBetaOpsStatsService {
     @InjectRepository(CompanySocialThreadLinkEntity)
     private readonly threadLinkRepository: Repository<CompanySocialThreadLinkEntity>,
     private readonly deliveryLogService: SocialHubOutboundDeliveryLogService,
+    private readonly auditService: SocialHubAuditService,
   ) {}
 
   public async buildSnapshot(): Promise<SocialHubRoadmapBetaOpsSnapshot> {
@@ -64,10 +72,16 @@ export class SocialHubRoadmapBetaOpsStatsService {
         outboundFailed24h: outbound.failed,
       });
     }
+    const webhookInboundBridged24h = await this.auditService.countRecentByAction(
+      SocialHubAuditActionCode.WebhookInboundBridged,
+      since24h,
+    );
     return {
       generatedAt: new Date().toISOString(),
       integrationWebhooks: buildSocialHubPublicWebhookUrls(),
       integrationWebhookReadiness: buildSocialHubIntegrationWebhookReadiness(),
+      integrationOpsHints: buildSocialHubIntegrationOpsHints(),
+      webhookInboundBridged24h,
       platforms,
     };
   }

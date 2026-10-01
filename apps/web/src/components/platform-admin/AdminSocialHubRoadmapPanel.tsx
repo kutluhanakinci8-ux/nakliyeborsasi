@@ -77,7 +77,9 @@ export function AdminSocialHubRoadmapPanel() {
           </h3>
           <p className="pa-panel-lead">
             Bağlı firmalar, açık Mesajlar köprüsü konuşmaları ve son 24 saat giden
-            denemeleri. Sunucu webhook hazırlığı: TikTok köprü{" "}
+            denemeleri. Webhook köprü denetim kaydı (24s):{" "}
+            <strong>{betaOps.webhookInboundBridged24h}</strong>. Sunucu webhook
+            hazırlığı: TikTok köprü{" "}
             {betaOps.integrationWebhookReadiness.tiktok.webhookBridgeEnabled
               ? "açık"
               : "kapalı"}

@@ -67,6 +67,10 @@ export function normalizeSocialHubSnapshot(payload: unknown): SocialHubSnapshot 
     typeof hub.integrationWebhookReadiness === "object"
       ? (hub.integrationWebhookReadiness as SocialHubSnapshot["integrationWebhookReadiness"])
       : undefined;
+  const integrationOpsHints =
+    hub.integrationOpsHints && typeof hub.integrationOpsHints === "object"
+      ? (hub.integrationOpsHints as SocialHubSnapshot["integrationOpsHints"])
+      : undefined;
   const roadmapProviders = Array.isArray(hub.roadmapProviders)
     ? (hub.roadmapProviders as SocialHubSnapshot["roadmapProviders"])
     : [];
@@ -105,5 +109,6 @@ export function normalizeSocialHubSnapshot(payload: unknown): SocialHubSnapshot 
     inboxSummary,
     integrationWebhooks,
     integrationWebhookReadiness,
+    integrationOpsHints,
   };
 }

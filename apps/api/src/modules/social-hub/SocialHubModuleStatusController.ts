@@ -2,6 +2,7 @@ import { Controller, Get } from "@nestjs/common";
 import { SubscriptionModuleCode } from "@nakliyeborsasi/core";
 import { buildSocialHubIntegrationWebhookReadiness } from "./socialHubIntegrationWebhookReadiness";
 import { buildSocialHubPublicWebhookUrls } from "./socialHubIntegrationUrls";
+import { buildSocialHubIntegrationOpsHints } from "./socialHubIntegrationOpsHints";
 
 @Controller("company/social-hub")
 export class SocialHubModuleStatusController {
@@ -15,10 +16,11 @@ export class SocialHubModuleStatusController {
       typeof buildSocialHubIntegrationWebhookReadiness
     >;
     integrationWebhooks: ReturnType<typeof buildSocialHubPublicWebhookUrls>;
+    integrationOpsHints: ReturnType<typeof buildSocialHubIntegrationOpsHints>;
   } {
     return {
       module: "social_hub",
-      phase: "ah",
+      phase: "ai",
       subscriptionModuleCode: SubscriptionModuleCode.SocialHub,
       features: [
         "connections_skeleton",
@@ -128,9 +130,14 @@ export class SocialHubModuleStatusController {
         "webhook_inbound_body_dedup_window",
         "public_status_integration_webhooks",
         "platform_admin_roadmap_interest_csv",
+        "webhook_bridge_audit_log",
+        "roadmap_inbox_sync_audit",
+        "integration_ops_hints_snapshot",
+        "admin_webhook_bridged_24h_metric",
       ],
       integrationWebhookReadiness: buildSocialHubIntegrationWebhookReadiness(),
       integrationWebhooks: buildSocialHubPublicWebhookUrls(),
+      integrationOpsHints: buildSocialHubIntegrationOpsHints(),
     };
   }
 }
