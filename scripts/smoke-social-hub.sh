@@ -60,6 +60,13 @@ if [[ -n "${SOCIAL_HUB_SMOKE_EXPECT_PHASE:-}" ]]; then
     }
     echo "OK: status publishing_calendar_grid feature"
   fi
+  if [[ "${SOCIAL_HUB_SMOKE_EXPECT_PHASE}" == "au" ]]; then
+    echo "${status_json}" | grep -q '"templates_variables_render_preview"' || {
+      echo "FAIL: status missing templates_variables_render_preview feature"
+      exit 1
+    }
+    echo "OK: status templates_variables_render_preview feature"
+  fi
 fi
 if [[ "${SOCIAL_HUB_SMOKE_WEBHOOK_READINESS:-0}" == "1" ]]; then
   echo "${status_json}" | grep -q '"integrationWebhookReadiness"' || {
@@ -166,6 +173,33 @@ if [[ -n "${SOCIAL_HUB_JWT:-}" ]]; then
       exit 1
     }
     echo "OK: inbox threads-preview"
+  fi
+  if [[ "${SOCIAL_HUB_SMOKE_TEMPLATES:-0}" == "1" ]]; then
+    vars_code="$(curl -sS -o /tmp/social-hub-template-vars.json -w "%{http_code}" \
+      -H "Authorization: Bearer ${SOCIAL_HUB_JWT}" \
+      "${API_BASE}/company/social-hub/templates/variables")"
+    if [[ "${vars_code}" != "200" ]]; then
+      echo "FAIL: templates/variables HTTP ${vars_code}"
+      exit 1
+    fi
+    grep -q '"variables"' /tmp/social-hub-template-vars.json || {
+      echo "FAIL: templates/variables missing variables array"
+      exit 1
+    }
+    preview_code="$(curl -sS -o /tmp/social-hub-template-preview.json -w "%{http_code}" \
+      -H "Authorization: Bearer ${SOCIAL_HUB_JWT}" \
+      -H "Content-Type: application/json" \
+      -d '{"bodyText":"Merhaba {{companyName}} — {{today}}"}' \
+      "${API_BASE}/company/social-hub/templates/preview")"
+    if [[ "${preview_code}" != "200" ]]; then
+      echo "FAIL: templates/preview HTTP ${preview_code}"
+      exit 1
+    fi
+    grep -q '"renderedText"' /tmp/social-hub-template-preview.json || {
+      echo "FAIL: templates/preview missing renderedText"
+      exit 1
+    }
+    echo "OK: templates variables + preview"
   fi
   if [[ "${SOCIAL_HUB_SMOKE_PLATFORM_INSIGHTS:-0}" == "1" ]]; then
     analytics_code="$(curl -sS -o /tmp/social-hub-analytics.json -w "%{http_code}" \

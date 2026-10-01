@@ -9,6 +9,7 @@ import type {
   SocialHubPost,
   SocialHubSnapshot,
   SocialHubTeamMember,
+  SocialHubTemplate,
 } from "./socialHubTypes";
 import { normalizeSocialHubSnapshot } from "./normalizeSocialHubSnapshot";
 
@@ -515,9 +516,46 @@ export class SocialHubApiClient {
     });
   }
 
+  public static async listTemplateVariables(accessToken: string): Promise<{
+    variables: Array<{
+      key: string;
+      placeholder: string;
+      description: string;
+    }>;
+  }> {
+    return socialHubFetch(accessToken, "/templates/variables");
+  }
+
+  public static async previewTemplate(
+    accessToken: string,
+    bodyText: string,
+  ): Promise<{ renderedText: string; variables: Record<string, string> }> {
+    return socialHubFetch(accessToken, "/templates/preview", {
+      method: "POST",
+      body: JSON.stringify({ bodyText }),
+    });
+  }
+
+  public static async renderTemplate(
+    accessToken: string,
+    templateId: string,
+  ): Promise<{
+    template: SocialHubTemplate;
+    renderedText: string;
+    variables: Record<string, string>;
+  }> {
+    return socialHubFetch(accessToken, `/templates/${templateId}/render`, {
+      method: "POST",
+    });
+  }
+
   public static async createTemplate(
     accessToken: string,
-    body: { title: string; bodyText: string },
+    body: {
+      title: string;
+      bodyText: string;
+      channelScopeCode?: string | null;
+    },
   ): Promise<void> {
     await socialHubFetch(accessToken, "/templates", {
       method: "POST",

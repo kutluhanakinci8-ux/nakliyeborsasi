@@ -47,6 +47,10 @@ import { MessagingWebhookDispatcherService } from "./MessagingWebhookDispatcherS
 import { MessagingSlackBridgeService } from "./MessagingSlackBridgeService";
 import { MessagingWhatsappBridgeService } from "./MessagingWhatsappBridgeService";
 import { MessagingThreadParticipantService } from "./MessagingThreadParticipantService";
+import {
+  formatSocialHubTemplateToday,
+  renderSocialHubTemplate,
+} from "../social-hub/socialHubTemplateRender";
 import { OpenMessagingGroupThreadRequestDto } from "./OpenMessagingGroupThreadRequestDto";
 import { AuctionListingPriceActionService } from "../auction/AuctionListingPriceActionService";
 import {
@@ -859,10 +863,21 @@ export class MessagingThreadApplicationService {
       order: { sortOrder: "ASC", title: "ASC" },
       take: 30,
     });
+    const company = await this.companyRepository.findOne({
+      where: { id: authenticatedUser.companyId },
+    });
+    const templateVars = {
+      companyName: company?.legalName?.trim() || "Firma",
+      userDisplayName:
+        authenticatedUser.emailAddress.split("@")[0] || "Kullanıcı",
+      today: formatSocialHubTemplateToday(),
+    };
     const socialExtras = socialTemplates.map((row) => ({
       id: `social-hub-${row.id}`,
-      labelTr: row.title,
-      bodyText: row.bodyText,
+      labelTr: row.channelScopeCode
+        ? `${row.title} (${row.channelScopeCode})`
+        : row.title,
+      bodyText: renderSocialHubTemplate(row.bodyText, templateVars),
       scope: "organization" as const,
     }));
     return {

@@ -211,6 +211,27 @@ export class SocialHubController {
     return this.socialHubApplicationService.cancelPost(user, postId);
   }
 
+  @Get("templates/variables")
+  public listTemplateVariables() {
+    return this.socialHubApplicationService.listTemplateVariables();
+  }
+
+  @Post("templates/preview")
+  public async previewTemplate(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: { bodyText: string },
+  ) {
+    return this.socialHubApplicationService.previewTemplate(user, body);
+  }
+
+  @Post("templates/:templateId/render")
+  public async renderTemplate(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("templateId") templateId: string,
+  ) {
+    return this.socialHubApplicationService.renderTemplateById(user, templateId);
+  }
+
   @Post("templates")
   public async createTemplate(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,

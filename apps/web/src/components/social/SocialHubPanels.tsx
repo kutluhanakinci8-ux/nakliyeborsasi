@@ -22,6 +22,20 @@ import {
   monthLabelTr,
   toDateKey,
 } from "../../lib/socialHubCalendar";
+import {
+  renderSocialHubTemplatePreview,
+  SOCIAL_HUB_TEMPLATE_VARIABLE_HINTS,
+} from "../../lib/socialHubTemplateRender";
+
+const TEMPLATE_CHANNEL_SCOPE_OPTIONS: Array<{ code: string; label: string }> = [
+  { code: "", label: "Tüm kanallar" },
+  { code: "INSTAGRAM", label: "Instagram" },
+  { code: "FACEBOOK_MESSENGER", label: "Facebook Messenger" },
+  { code: "WHATSAPP_CLOUD", label: "WhatsApp Business" },
+  { code: "LINKEDIN", label: "LinkedIn" },
+  { code: "TIKTOK", label: "TikTok" },
+  { code: "YOUTUBE", label: "YouTube" },
+];
 
 function capabilitySummary(
   caps: SocialHubSnapshot["providers"][number]["capabilities"],
@@ -1047,10 +1061,16 @@ type TemplatesProps = {
   permissions: SocialHubPermissions;
   title: string;
   body: string;
+  channelScope: string;
+  serverPreview: string | null;
+  messagingDeepLink: string;
   busy: boolean;
   onTitle: (v: string) => void;
   onBody: (v: string) => void;
+  onChannelScope: (v: string) => void;
+  onInsertPlaceholder: (placeholder: string) => void;
   onSave: () => void;
+  onCopyRendered: (templateId: string) => void;
 };
 
 export function SocialTemplatesPanel({
@@ -1058,21 +1078,63 @@ export function SocialTemplatesPanel({
   permissions,
   title,
   body,
+  channelScope,
+  serverPreview,
+  messagingDeepLink,
   busy,
   onTitle,
   onBody,
+  onChannelScope,
+  onInsertPlaceholder,
   onSave,
+  onCopyRendered,
 }: TemplatesProps) {
+  const localPreview = renderSocialHubTemplatePreview(body, {});
+  const previewText = serverPreview ?? localPreview;
+
   return (
     <section className="social-hub-panel module-panel module-panel--elevated">
       <header className="social-hub-panel-head">
         <h2 className="account-card-title">Hazır yanıtlar</h2>
         <p className="account-card-lead">
-          DM ve yorumlarda kullanılacak şablonlar (Mesajlar ile paylaşılacak).
+          <code>{`{{degisken}}`}</code> ile kişiselleştirin; kayıtlı şablonlar Mesajlar’da
+          hızlı yanıt olarak görünür (değişkenler gönderimde çözülür).
         </p>
+        <Link className="btn-account-ghost" href={messagingDeepLink}>
+          Mesajlar’da kullan
+        </Link>
       </header>
+      <div className="social-hub-template-vars module-hint">
+        <span>Değişkenler: </span>
+        {SOCIAL_HUB_TEMPLATE_VARIABLE_HINTS.map((hint) => (
+          <button
+            key={hint.placeholder}
+            type="button"
+            className="btn-account-ghost social-hub-chip-btn"
+            disabled={!permissions.canManageTemplates}
+            title={hint.description}
+            onClick={() => onInsertPlaceholder(hint.placeholder)}
+          >
+            {hint.placeholder}
+          </button>
+        ))}
+      </div>
       {permissions.canManageTemplates ? (
         <div className="social-hub-compose">
+          <label className="label-light">
+            Kanal kapsamı
+            <select
+              className="input-light"
+              value={channelScope}
+              onChange={(e) => onChannelScope(e.target.value)}
+            >
+              {TEMPLATE_CHANNEL_SCOPE_OPTIONS.map((opt) => (
+                <option key={opt.code || "all"} value={opt.code}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </label>
           <label className="label-light">
             Başlık
             <input className="input-light" value={title} onChange={(e) => onTitle(e.target.value)} />
@@ -1086,6 +1148,12 @@ export function SocialTemplatesPanel({
               onChange={(e) => onBody(e.target.value)}
             />
           </label>
+          {body.trim() ? (
+            <div className="social-hub-template-preview">
+              <span className="social-hub-stat-label">Önizleme</span>
+              <p>{previewText}</p>
+            </div>
+          ) : null}
           <button
             type="button"
             className="btn-account-primary"
@@ -1099,8 +1167,25 @@ export function SocialTemplatesPanel({
       <ul className="social-hub-template-list">
         {templates.map((t) => (
           <li key={t.id}>
-            <strong>{t.title}</strong>
-            <p>{t.bodyText}</p>
+            <div className="social-hub-template-row-head">
+              <strong>{t.title}</strong>
+              {t.channelScopeLabel || t.channelScopeCode ? (
+                <span className="social-hub-badge">
+                  {t.channelScopeLabel ?? t.channelScopeCode}
+                </span>
+              ) : null}
+            </div>
+            <p className="social-hub-template-raw">{t.bodyText}</p>
+            <div className="social-hub-template-actions">
+              <button
+                type="button"
+                className="btn-account-ghost"
+                disabled={busy}
+                onClick={() => onCopyRendered(t.id)}
+              >
+                Kopyala (çözülmüş)
+              </button>
+            </div>
           </li>
         ))}
       </ul>
