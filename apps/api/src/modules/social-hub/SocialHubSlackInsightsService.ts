@@ -9,6 +9,10 @@ import { socialHubManualNotifyCooldownMinutes } from "./socialHubManualNotifyCoo
 import { parseRoadmapInterestPlatformCodes } from "./socialHubRoadmapInterest";
 import { formatRoadmapInterestLabels } from "./socialHubRoadmapDigest";
 import { isRoadmapPlatformCode } from "./socialHubRoadmapInterest";
+import {
+  SocialHubAuditActionCode,
+  SocialHubAuditService,
+} from "./SocialHubAuditService";
 
 const HEALTH_ALERT_DEDUP_PREFIX = "health_alert:";
 const OUTBOUND_FAILURE_DEDUP_PREFIX = "outbound_fail:";
@@ -40,6 +44,7 @@ export class SocialHubSlackInsightsService {
     @InjectRepository(CompanySocialSlackNotifyDedupEntity)
     private readonly dedupRepository: Repository<CompanySocialSlackNotifyDedupEntity>,
     private readonly deliveryLogService: SocialHubOutboundDeliveryLogService,
+    private readonly auditService: SocialHubAuditService,
   ) {}
 
   public async buildInsights(companyId: string) {
@@ -49,11 +54,17 @@ export class SocialHubSlackInsightsService {
     const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const since7d = new Date(Date.now() - WEEK_MS);
     const since30d = new Date(Date.now() - MONTH_MS);
-    const [platformMap24h, platformMap7d, platformMap30d] = await Promise.all([
-      this.deliveryLogService.summarizeRecentByPlatform(companyId, since24h),
-      this.deliveryLogService.summarizeRecentByPlatform(companyId, since7d),
-      this.deliveryLogService.summarizeRecentByPlatform(companyId, since30d),
-    ]);
+    const [platformMap24h, platformMap7d, platformMap30d, webhookInboundBridged24h] =
+      await Promise.all([
+        this.deliveryLogService.summarizeRecentByPlatform(companyId, since24h),
+        this.deliveryLogService.summarizeRecentByPlatform(companyId, since7d),
+        this.deliveryLogService.summarizeRecentByPlatform(companyId, since30d),
+        this.auditService.countRecentByActionForCompany(
+          companyId,
+          SocialHubAuditActionCode.WebhookInboundBridged,
+          since24h,
+        ),
+      ]);
     const channelOutbound24h = this.mapPlatformStats(platformMap24h);
     const channelOutbound7d = this.mapPlatformStats(platformMap7d);
     const channelOutbound30d = this.mapPlatformStats(platformMap30d);
@@ -101,6 +112,7 @@ export class SocialHubSlackInsightsService {
       manualNotifyCooldownMinutes: socialHubManualNotifyCooldownMinutes(),
       roadmapInterestPlatformCodes: roadmapCodes,
       roadmapInterestLabels: formatRoadmapInterestLabels(roadmapCodes),
+      webhookInboundBridged24h,
     };
   }
 
@@ -181,6 +193,11 @@ export class SocialHubSlackInsightsService {
       "roadmap",
       "interestLabels",
       insights.roadmapInterestLabels.join("; "),
+    );
+    push(
+      "webhook",
+      "inboundBridged24h",
+      insights.webhookInboundBridged24h,
     );
     for (const row of insights.roadmapBetaChannelHealth ?? []) {
       push(

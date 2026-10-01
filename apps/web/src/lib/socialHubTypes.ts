@@ -204,6 +204,7 @@ export type SocialHubNotificationInsights = {
   manualNotifyCooldownMinutes: number;
   roadmapInterestPlatformCodes: string[];
   roadmapInterestLabels: string[];
+  webhookInboundBridged24h?: number;
 };
 
 export type SocialHubOutboundDelivery = {
@@ -245,6 +246,10 @@ export type SocialHubSnapshot = {
     webhookBridgeAuditEnabled: boolean;
     tiktokSignatureRequired: boolean;
     youtubePushAuthRequired: boolean;
+  };
+  webhookActivity?: {
+    inboundBridged24h: number;
+    lastInboundBridgedAt: string | null;
   };
   inboxSummary: {
     totalOpenThreads: number;

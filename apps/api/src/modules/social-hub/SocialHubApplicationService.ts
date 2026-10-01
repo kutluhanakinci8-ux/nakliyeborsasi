@@ -172,6 +172,19 @@ export class SocialHubApplicationService {
       where: { companyId: user.companyId, isOpen: true },
     });
 
+    const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const [inboundBridged24h, lastInboundBridgedAt] = await Promise.all([
+      this.socialHubAuditService.countRecentByActionForCompany(
+        user.companyId,
+        SocialHubAuditActionCode.WebhookInboundBridged,
+        since24h,
+      ),
+      this.socialHubAuditService.latestCompanyActionAt(
+        user.companyId,
+        SocialHubAuditActionCode.WebhookInboundBridged,
+      ),
+    ]);
+
     return {
       subscription: this.subscriptionMeta(user.companyId),
       permissions,
@@ -186,6 +199,10 @@ export class SocialHubApplicationService {
       integrationWebhooks: buildSocialHubPublicWebhookUrls(),
       integrationWebhookReadiness: buildSocialHubIntegrationWebhookReadiness(),
       integrationOpsHints: buildSocialHubIntegrationOpsHints(),
+      webhookActivity: {
+        inboundBridged24h,
+        lastInboundBridgedAt: lastInboundBridgedAt?.toISOString() ?? null,
+      },
       inboxSummary: {
         totalOpenThreads: openLinks.length,
         byPlatform: [
@@ -1278,11 +1295,21 @@ export class SocialHubApplicationService {
     };
   }
 
-  public async listAuditLog(user: AuthenticatedUserContext) {
+  public async listAuditLog(
+    user: AuthenticatedUserContext,
+    focus?: string,
+  ) {
     assertSocialHubAdmin(user);
     await this.assertSocialHubSubscription(user.companyId);
-    const entries = await this.socialHubAuditService.listRecent(user.companyId);
-    return { entries };
+    const webhookFocus = focus === "webhook";
+    const entries = await this.socialHubAuditService.listRecent(
+      user.companyId,
+      webhookFocus ? 50 : 25,
+      webhookFocus
+        ? SocialHubAuditActionCode.WebhookInboundBridged
+        : undefined,
+    );
+    return { entries, focus: webhookFocus ? "webhook" : "all" };
   }
 
   public async syncInbox(user: AuthenticatedUserContext, platformCode: string) {

@@ -66,6 +66,57 @@ export class SocialHubAuditService {
       .getCount();
   }
 
+  public async countRecentByActionForCompany(
+    companyId: string,
+    actionCode: string,
+    since: Date,
+  ): Promise<number> {
+    return this.auditLogRepository
+      .createQueryBuilder("log")
+      .where("log.actorCompanyId = :companyId", { companyId })
+      .andWhere("log.actionCode = :actionCode", { actionCode })
+      .andWhere("log.createdAt >= :since", { since })
+      .getCount();
+  }
+
+  public async latestCompanyActionAt(
+    companyId: string,
+    actionCode: string,
+  ): Promise<Date | null> {
+    const row = await this.auditLogRepository
+      .createQueryBuilder("log")
+      .where("log.actorCompanyId = :companyId", { companyId })
+      .andWhere("log.actionCode = :actionCode", { actionCode })
+      .orderBy("log.createdAt", "DESC")
+      .getOne();
+    return row?.createdAt ?? null;
+  }
+
+  public async listGlobalRecentByAction(
+    actionCode: string,
+    limit: number,
+  ): Promise<
+    Array<{
+      id: string;
+      actorCompanyId: string | null;
+      metadata: Record<string, unknown> | null;
+      createdAt: string;
+    }>
+  > {
+    const rows = await this.auditLogRepository
+      .createQueryBuilder("log")
+      .where("log.actionCode = :actionCode", { actionCode })
+      .orderBy("log.createdAt", "DESC")
+      .take(limit)
+      .getMany();
+    return rows.map((row) => ({
+      id: row.id,
+      actorCompanyId: row.actorCompanyId,
+      metadata: row.metadata,
+      createdAt: row.createdAt.toISOString(),
+    }));
+  }
+
   private appendEntry(params: {
     actorUserId: string | null;
     actorCompanyId: string | null;
@@ -86,14 +137,20 @@ export class SocialHubAuditService {
     );
   }
 
-  public async listRecent(companyId: string, limit = 25) {
-    const rows = await this.auditLogRepository
+  public async listRecent(
+    companyId: string,
+    limit = 25,
+    actionCodePrefix?: string,
+  ) {
+    const qb = this.auditLogRepository
       .createQueryBuilder("log")
       .where("log.actorCompanyId = :companyId", { companyId })
-      .andWhere("log.actionCode LIKE :prefix", { prefix: "SOCIAL_HUB_%" })
+      .andWhere("log.actionCode LIKE :prefix", {
+        prefix: actionCodePrefix ?? "SOCIAL_HUB_%",
+      })
       .orderBy("log.createdAt", "DESC")
-      .take(limit)
-      .getMany();
+      .take(limit);
+    const rows = await qb.getMany();
     return rows.map((row) => ({
       id: row.id,
       actionCode: row.actionCode,

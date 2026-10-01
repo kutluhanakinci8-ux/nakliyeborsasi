@@ -60,6 +60,13 @@ if [[ -n "${SOCIAL_HUB_JWT:-}" ]]; then
     echo "FAIL: snapshot body"
     exit 1
   }
+  if [[ "${SOCIAL_HUB_SMOKE_WEBHOOK_ACTIVITY:-0}" == "1" ]]; then
+    grep -q '"webhookActivity"' /tmp/social-hub-snap.json || {
+      echo "FAIL: snapshot missing webhookActivity"
+      exit 1
+    }
+    echo "OK: snapshot webhookActivity"
+  fi
   echo "OK: snapshot"
 else
   echo "SKIP: SOCIAL_HUB_JWT yok — authenticated snapshot"

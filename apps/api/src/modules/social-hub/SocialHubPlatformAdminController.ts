@@ -33,4 +33,10 @@ export class SocialHubPlatformAdminController {
     const snapshot = await this.roadmapInterestStatsService.buildSnapshot();
     return this.roadmapInterestStatsService.buildInterestCsv(snapshot);
   }
+
+  @Get("webhook-bridge-audit.csv")
+  @Header("Content-Type", "text/csv; charset=utf-8")
+  public async webhookBridgeAuditCsv(): Promise<string> {
+    return this.roadmapBetaOpsStatsService.buildWebhookBridgeAuditCsv();
+  }
 }

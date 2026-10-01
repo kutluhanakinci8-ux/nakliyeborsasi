@@ -270,8 +270,11 @@ export class SocialHubController {
   }
 
   @Get("audit-log")
-  public async listAuditLog(@AuthenticatedUserParam() user: AuthenticatedUserContext) {
-    return this.socialHubApplicationService.listAuditLog(user);
+  public async listAuditLog(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Query("focus") focus?: string,
+  ) {
+    return this.socialHubApplicationService.listAuditLog(user, focus);
   }
 
   @Patch("settings")

@@ -1,0 +1,1 @@
+-- Faz AJ: şema değişikliği yok (Meta webhook köprü denetimi, firma webhook aktivitesi, admin CSV)

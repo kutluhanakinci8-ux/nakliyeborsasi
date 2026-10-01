@@ -628,6 +628,26 @@ export class PlatformAdminApiClient {
     URL.revokeObjectURL(url);
   }
 
+  public static async downloadSocialHubWebhookBridgeAuditCsv(
+    accessToken: string,
+  ): Promise<void> {
+    const response = await fetch(
+      `${PublicApiConfiguration.resolveBaseUrl()}/platform-admin/social-hub/webhook-bridge-audit.csv`,
+      { headers: { Authorization: `Bearer ${accessToken}` } },
+    );
+    if (!response.ok) {
+      throw new Error("Webhook köprü denetim CSV indirilemedi.");
+    }
+    const csv = await response.text();
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "social-hub-webhook-bridge-audit.csv";
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
   public static async fetchMailIdentityAudit(
     accessToken: string,
   ): Promise<MailIdentityAuditLogRow[]> {

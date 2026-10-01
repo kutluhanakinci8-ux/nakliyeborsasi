@@ -13,7 +13,12 @@ import { parseRoadmapInterestPlatformCodes } from "./socialHubRoadmapInterest";
 import {
   buildRoadmapBetaOpsDigestSection,
   buildRoadmapInterestDigestSection,
+  buildWebhookBridgeDigestSection,
 } from "./socialHubRoadmapDigest";
+import {
+  SocialHubAuditActionCode,
+  SocialHubAuditService,
+} from "./SocialHubAuditService";
 
 const DIGEST_INTERVAL_MS = 24 * 60 * 60 * 1000;
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
@@ -38,6 +43,7 @@ export class SocialHubSlackDigestService {
     private readonly connectionHealthService: SocialHubConnectionHealthService,
     private readonly deliveryLogService: SocialHubOutboundDeliveryLogService,
     private readonly slackNotificationService: SocialHubSlackNotificationService,
+    private readonly auditService: SocialHubAuditService,
   ) {}
 
   public async runSweep(): Promise<number> {
@@ -112,6 +118,15 @@ export class SocialHubSlackDigestService {
       const roadmapBetaSection = buildRoadmapBetaOpsDigestSection(
         health.roadmapChannels ?? [],
       );
+      const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const webhookBridged24h =
+        await this.auditService.countRecentByActionForCompany(
+          companyId,
+          SocialHubAuditActionCode.WebhookInboundBridged,
+          since24h,
+        );
+      const webhookBridgeSection =
+        buildWebhookBridgeDigestSection(webhookBridged24h);
       const failureSection = await this.buildRecentFailureSection(companyId);
       const summaryParts = [statsSection];
       if (ratesSection) {
@@ -126,6 +141,9 @@ export class SocialHubSlackDigestService {
       summaryParts.push(channelSummary);
       if (roadmapBetaSection) {
         summaryParts.push(roadmapBetaSection);
+      }
+      if (webhookBridgeSection) {
+        summaryParts.push(webhookBridgeSection);
       }
       const roadmapSection = buildRoadmapInterestDigestSection(
         parseRoadmapInterestPlatformCodes(settings.roadmapInterestPlatformCodesJson),

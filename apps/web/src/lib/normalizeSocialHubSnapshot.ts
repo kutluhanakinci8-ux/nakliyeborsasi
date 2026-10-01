@@ -71,6 +71,16 @@ export function normalizeSocialHubSnapshot(payload: unknown): SocialHubSnapshot 
     hub.integrationOpsHints && typeof hub.integrationOpsHints === "object"
       ? (hub.integrationOpsHints as SocialHubSnapshot["integrationOpsHints"])
       : undefined;
+  const webhookActivityRaw = hub.webhookActivity as
+    | SocialHubSnapshot["webhookActivity"]
+    | undefined;
+  const webhookActivity =
+    webhookActivityRaw && typeof webhookActivityRaw === "object"
+      ? {
+          inboundBridged24h: webhookActivityRaw.inboundBridged24h ?? 0,
+          lastInboundBridgedAt: webhookActivityRaw.lastInboundBridgedAt ?? null,
+        }
+      : undefined;
   const roadmapProviders = Array.isArray(hub.roadmapProviders)
     ? (hub.roadmapProviders as SocialHubSnapshot["roadmapProviders"])
     : [];
@@ -110,5 +120,6 @@ export function normalizeSocialHubSnapshot(payload: unknown): SocialHubSnapshot 
     integrationWebhooks,
     integrationWebhookReadiness,
     integrationOpsHints,
+    webhookActivity,
   };
 }

@@ -4,6 +4,7 @@ import { SocialHubOAuthConfigService } from "./SocialHubOAuthConfigService";
 import { parseMetaWebhookBody } from "./SocialHubMetaWebhookParser";
 import { SocialHubWebhookRoutingService } from "./SocialHubWebhookRoutingService";
 import { SocialHubMessagingBridgeService } from "../SocialHubMessagingBridgeService";
+import { SocialHubWebhookBridgeAuditService } from "../SocialHubWebhookBridgeAuditService";
 
 @Injectable()
 export class SocialHubWebhookIngestService {
@@ -13,6 +14,7 @@ export class SocialHubWebhookIngestService {
     private readonly oauthConfig: SocialHubOAuthConfigService,
     private readonly routingService: SocialHubWebhookRoutingService,
     private readonly messagingBridgeService: SocialHubMessagingBridgeService,
+    private readonly webhookBridgeAuditService: SocialHubWebhookBridgeAuditService,
   ) {}
 
   public async ingestMetaPayload(
@@ -46,6 +48,13 @@ export class SocialHubWebhookIngestService {
         this.logger.log(
           `Ingested social message company=${route.companyId} thread=${result.threadId}`,
         );
+        this.webhookBridgeAuditService.recordInboundBridged({
+          companyId: route.companyId,
+          platformCode: route.platformCode,
+          threadId: result.threadId,
+          externalThreadId: message.externalThreadId,
+          externalMessageId: message.externalMessageId,
+        });
       }
     }
   }

@@ -106,6 +106,8 @@ export class SocialHubApiClient {
           payload.notificationInsights?.roadmapInterestPlatformCodes ?? [],
         roadmapInterestLabels:
           payload.notificationInsights?.roadmapInterestLabels ?? [],
+        webhookInboundBridged24h:
+          payload.notificationInsights?.webhookInboundBridged24h ?? 0,
       },
     };
   }
@@ -462,9 +464,14 @@ export class SocialHubApiClient {
     });
   }
 
-  public static async fetchAuditLog(accessToken: string): Promise<{
+  public static async fetchAuditLog(
+    accessToken: string,
+    focus?: "webhook" | "all",
+  ): Promise<{
     entries: SocialHubAuditEntry[];
+    focus?: string;
   }> {
-    return socialHubFetch(accessToken, "/audit-log");
+    const query = focus === "webhook" ? "?focus=webhook" : "";
+    return socialHubFetch(accessToken, `/audit-log${query}`);
   }
 }
