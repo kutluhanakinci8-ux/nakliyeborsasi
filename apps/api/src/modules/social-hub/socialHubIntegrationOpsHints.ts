@@ -3,6 +3,7 @@ export type SocialHubIntegrationOpsHints = {
   webhookBridgeAuditEnabled: boolean;
   tiktokSignatureRequired: boolean;
   youtubePushAuthRequired: boolean;
+  webhookInactivityHealthHintsEnabled: boolean;
 };
 
 export function buildSocialHubIntegrationOpsHints(): SocialHubIntegrationOpsHints {
@@ -17,6 +18,8 @@ export function buildSocialHubIntegrationOpsHints(): SocialHubIntegrationOpsHint
       process.env.SOCIAL_TIKTOK_WEBHOOK_SIGNATURE_REQUIRED?.trim() === "1",
     youtubePushAuthRequired:
       process.env.SOCIAL_YOUTUBE_WEBHOOK_PUSH_AUTH_REQUIRED?.trim() === "1",
+    webhookInactivityHealthHintsEnabled:
+      process.env.SOCIAL_HUB_WEBHOOK_INACTIVITY_HEALTH_HINT?.trim() === "1",
   };
 }
 

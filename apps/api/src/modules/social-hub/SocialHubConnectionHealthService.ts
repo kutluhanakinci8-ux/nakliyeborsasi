@@ -17,6 +17,8 @@ import { isRoadmapOAuthEnvConfigured } from "./socialHubRoadmapOAuthReadiness";
 import { hasRoadmapRefreshToken } from "./oauth/socialHubRoadmapRefreshToken";
 
 import { roadmapConnectedHint } from "./socialHubRoadmapHints";
+import { SocialHubAuditService } from "./SocialHubAuditService";
+import { getRoadmapProviderCapabilities } from "./socialHubRoadmapCapabilities";
 
 const EXPIRY_LOOKAHEAD_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -38,6 +40,7 @@ export class SocialHubConnectionHealthService {
     private readonly threadLinkRepository: Repository<CompanySocialThreadLinkEntity>,
     private readonly socialProviderRegistry: SocialProviderRegistry,
     private readonly deliveryLogService: SocialHubOutboundDeliveryLogService,
+    private readonly auditService: SocialHubAuditService,
   ) {}
 
   public async buildHealthDashboard(companyId: string) {
@@ -91,6 +94,9 @@ export class SocialHubConnectionHealthService {
           linkedInRefreshAvailable:
             platformCode === SocialPlatformCode.LinkedIn &&
             hasLinkedInRefreshToken(row?.grantedScopes),
+          webhookInboundBridged24h: 0,
+          inboxWebhookCapable:
+            getSocialHubProviderCapabilities(platformCode).inboxWebhook,
         };
       },
     );
@@ -160,8 +166,24 @@ export class SocialHubConnectionHealthService {
           row?.statusCode === SocialConnectionStatusCode.Connected &&
           hasRoadmapRefreshToken(row.grantedScopes),
         isRoadmapBeta: true,
+        webhookInboundBridged24h: 0,
+        inboxWebhookCapable: getRoadmapProviderCapabilities(
+          provider.platformCode,
+        ).inboxWebhook,
       };
     });
+    const bridgedByPlatform =
+      await this.auditService.summarizeWebhookBridgedByPlatform(
+        since24h,
+        companyId,
+      );
+    const bridgedMap = new Map(
+      bridgedByPlatform.map((row) => [row.platformCode, row.count]),
+    );
+    for (const channel of [...channels, ...roadmapChannels]) {
+      channel.webhookInboundBridged24h =
+        bridgedMap.get(channel.platformCode) ?? 0;
+    }
     for (const channel of roadmapChannels) {
       if (channel.statusCode === SocialConnectionStatusCode.Connected) {
         channel.recentOutboundFailures24h =

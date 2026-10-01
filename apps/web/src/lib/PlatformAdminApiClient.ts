@@ -897,6 +897,7 @@ export type SocialHubRoadmapBetaOpsSnapshot = {
     webhookBridgeAuditEnabled: boolean;
     tiktokSignatureRequired: boolean;
     youtubePushAuthRequired: boolean;
+    webhookInactivityHealthHintsEnabled: boolean;
   };
   webhookInboundBridged24h: number;
   webhookInboundBridgedByPlatform24h: Array<{

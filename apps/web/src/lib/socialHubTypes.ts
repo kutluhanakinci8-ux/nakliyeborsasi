@@ -158,6 +158,8 @@ export type SocialHubHealthChannel = {
   lastOutboundStatus: "ok" | "failed" | null;
   lastOutboundAt: string | null;
   recentOutboundFailures24h: number;
+  webhookInboundBridged24h?: number;
+  inboxWebhookCapable?: boolean;
   oauthServerReady: boolean;
   canRefreshToken: boolean;
   linkedInRefreshAvailable?: boolean;
@@ -196,6 +198,7 @@ export type SocialHubNotificationInsights = {
     openThreadCount: number;
     recentOutboundFailures24h: number;
     tokenHealth: string;
+    webhookInboundBridged24h?: number;
   }>;
   channelOutbound7d: SocialHubChannelOutboundStat[];
   channelOutbound30d: SocialHubChannelOutboundStat[];
@@ -251,6 +254,7 @@ export type SocialHubSnapshot = {
     webhookBridgeAuditEnabled: boolean;
     tiktokSignatureRequired: boolean;
     youtubePushAuthRequired: boolean;
+    webhookInactivityHealthHintsEnabled?: boolean;
   };
   webhookActivity?: {
     inboundBridged24h: number;

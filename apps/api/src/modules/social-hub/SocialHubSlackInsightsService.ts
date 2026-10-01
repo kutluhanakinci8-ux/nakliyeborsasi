@@ -35,6 +35,7 @@ export type SocialHubRoadmapBetaChannelHealthInsight = {
   openThreadCount: number;
   recentOutboundFailures24h: number;
   tokenHealth: string;
+  webhookInboundBridged24h?: number;
 };
 
 @Injectable()
@@ -215,7 +216,7 @@ export class SocialHubSlackInsightsService {
       push(
         "roadmapBetaHealth",
         row.platformCode,
-        `${row.statusCode} open=${row.openThreadCount} fail24h=${row.recentOutboundFailures24h}`,
+        `${row.statusCode} open=${row.openThreadCount} fail24h=${row.recentOutboundFailures24h} webhook24h=${row.webhookInboundBridged24h ?? 0}`,
       );
     }
     return lines.join("\n");

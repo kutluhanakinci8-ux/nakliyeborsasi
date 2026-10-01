@@ -65,6 +65,7 @@ import { getRoadmapProviderCapabilities } from "./socialHubRoadmapCapabilities";
 import { roadmapConnectedHint } from "./socialHubRoadmapHints";
 import { SocialHubRoadmapInboxSyncService } from "./SocialHubRoadmapInboxSyncService";
 import { mapWebhookBridgedByPlatform } from "./socialHubWebhookBridgeSnapshot";
+import { buildCompanyWebhookActivityCsv } from "./socialHubWebhookActivityCsv";
 
 export const INVITABLE_SOCIAL_TEAM_ROLES: readonly CompanyRoleCode[] = [
   CompanyRoleCode.SocialAdmin,
@@ -254,6 +255,7 @@ export class SocialHubApplicationService {
         openThreadCount: channel.openThreadCount,
         recentOutboundFailures24h: channel.recentOutboundFailures24h,
         tokenHealth: channel.tokenHealth,
+        webhookInboundBridged24h: channel.webhookInboundBridged24h ?? 0,
       }),
     );
     return {
@@ -263,6 +265,36 @@ export class SocialHubApplicationService {
         roadmapBetaChannelHealth,
       },
     };
+  }
+
+  public async exportWebhookActivityCsv(
+    user: AuthenticatedUserContext,
+  ): Promise<string> {
+    assertSocialHubRead(user);
+    await this.assertSocialHubSubscription(user.companyId);
+    const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const [inboundBridged24h, lastInboundBridgedAt, bridgedByPlatform] =
+      await Promise.all([
+        this.socialHubAuditService.countRecentByActionForCompany(
+          user.companyId,
+          SocialHubAuditActionCode.WebhookInboundBridged,
+          since24h,
+        ),
+        this.socialHubAuditService.latestCompanyActionAt(
+          user.companyId,
+          SocialHubAuditActionCode.WebhookInboundBridged,
+        ),
+        this.socialHubAuditService.summarizeWebhookBridgedByPlatform(
+          since24h,
+          user.companyId,
+        ),
+      ]);
+    return buildCompanyWebhookActivityCsv({
+      generatedAt: new Date().toISOString(),
+      inboundBridged24h,
+      lastInboundBridgedAt: lastInboundBridgedAt?.toISOString() ?? null,
+      byPlatform: mapWebhookBridgedByPlatform(bridgedByPlatform),
+    });
   }
 
   public async exportNotificationInsightsCsv(
@@ -284,6 +316,7 @@ export class SocialHubApplicationService {
         openThreadCount: channel.openThreadCount,
         recentOutboundFailures24h: channel.recentOutboundFailures24h,
         tokenHealth: channel.tokenHealth,
+        webhookInboundBridged24h: channel.webhookInboundBridged24h ?? 0,
       }),
     );
     return this.slackInsightsService.buildInsightsCsv({
