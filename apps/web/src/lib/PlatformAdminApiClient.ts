@@ -801,9 +801,44 @@ export type SocialHubRoadmapInterestPlatformStat = {
   oauthEnvConfigured: boolean;
 };
 
+export type SocialHubRoadmapBetaPlatformOpsStat = {
+  platformCode: string;
+  label: string;
+  connectedCompanyCount: number;
+  openThreadCount: number;
+  outboundOk24h: number;
+  outboundFailed24h: number;
+};
+
+export type SocialHubRoadmapBetaOpsSnapshot = {
+  generatedAt: string;
+  integrationWebhooks: {
+    meta: string;
+    whatsapp: string;
+    tiktok: string;
+    youtube: string;
+  };
+  integrationWebhookReadiness: {
+    tiktok: {
+      webhookBridgeEnabled: boolean;
+      outboundEnabled: boolean;
+      signatureOrPushAuthConfigured: boolean;
+      signatureOrPushAuthRequired: boolean;
+    };
+    youtube: {
+      webhookBridgeEnabled: boolean;
+      outboundEnabled: boolean;
+      signatureOrPushAuthConfigured: boolean;
+      signatureOrPushAuthRequired: boolean;
+    };
+  };
+  platforms: SocialHubRoadmapBetaPlatformOpsStat[];
+};
+
 export type SocialHubRoadmapInterestStatsSnapshot = {
   interestedCompanyCount: number;
   platforms: SocialHubRoadmapInterestPlatformStat[];
+  betaOps: SocialHubRoadmapBetaOpsSnapshot;
 };
 
 export type MailSenderIdentityRow = {

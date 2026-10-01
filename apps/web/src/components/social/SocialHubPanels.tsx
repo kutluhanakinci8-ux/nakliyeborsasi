@@ -376,6 +376,11 @@ export function SocialInboxPanel({
   };
   const connections = snapshot.connections ?? [];
   const providers = snapshot.providers ?? [];
+  const roadmapProviders = snapshot.roadmapProviders ?? [];
+  const platformLabel = (code: string) =>
+    providers.find((p) => p.platformCode === code)?.label ??
+    roadmapProviders.find((p) => p.platformCode === code)?.label ??
+    code;
   return (
     <section className="social-hub-panel module-panel module-panel--elevated">
       <header className="social-hub-panel-head">
@@ -387,9 +392,7 @@ export function SocialInboxPanel({
       </p>
       <ul className="social-hub-inbox-platforms">
         {inboxSummary.byPlatform.map((row) => {
-          const label =
-            providers.find((p) => p.platformCode === row.platformCode)?.label ??
-            row.platformCode;
+          const label = platformLabel(row.platformCode);
           return (
             <li key={row.platformCode} className="social-hub-inbox-row">
               <span className="social-hub-inbox-platform">{label}</span>
@@ -1597,6 +1600,11 @@ export function SocialHealthPanel({
           {health.channels.map((channel) => (
             <option key={channel.platformCode} value={channel.platformCode}>
               {channel.label}
+            </option>
+          ))}
+          {(health.roadmapChannels ?? []).map((channel) => (
+            <option key={channel.platformCode} value={channel.platformCode}>
+              {channel.label} (beta)
             </option>
           ))}
         </select>

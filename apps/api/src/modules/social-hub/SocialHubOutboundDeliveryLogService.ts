@@ -115,6 +115,30 @@ export class SocialHubOutboundDeliveryLogService {
       .getCount();
   }
 
+  public async summarizeGlobalRecentByPlatform(
+    platformCode: string,
+    since: Date,
+  ): Promise<{ ok: number; failed: number }> {
+    const rows = await this.deliveryRepository
+      .createQueryBuilder("delivery")
+      .select("delivery.status", "status")
+      .addSelect("COUNT(*)", "count")
+      .where("delivery.platformCode = :platformCode", { platformCode })
+      .andWhere("delivery.createdAt >= :since", { since })
+      .groupBy("delivery.status")
+      .getRawMany<{ status: string; count: string }>();
+    const result = { ok: 0, failed: 0 };
+    for (const row of rows) {
+      const count = Number.parseInt(row.count, 10);
+      if (row.status === "ok") {
+        result.ok += count;
+      } else {
+        result.failed += count;
+      }
+    }
+    return result;
+  }
+
   public async countRecentFailures(
     companyId: string,
     platformCode: string,
