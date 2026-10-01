@@ -579,6 +579,15 @@ export class PlatformAdminApiClient {
     return payload.snapshot;
   }
 
+  public static async fetchSocialHubRoadmapInterestStats(
+    accessToken: string,
+  ): Promise<SocialHubRoadmapInterestStatsSnapshot> {
+    const payload = await adminFetch<{
+      snapshot: SocialHubRoadmapInterestStatsSnapshot;
+    }>(accessToken, "social-hub/roadmap-interest-stats");
+    return payload.snapshot;
+  }
+
   public static async fetchMailIdentityAudit(
     accessToken: string,
   ): Promise<MailIdentityAuditLogRow[]> {
@@ -783,6 +792,18 @@ export type MailRoadmapSnapshot = {
   };
   smtpProfile: string;
   checkedAt: string;
+};
+
+export type SocialHubRoadmapInterestPlatformStat = {
+  platformCode: string;
+  label: string;
+  interestedCompanyCount: number;
+  oauthEnvConfigured: boolean;
+};
+
+export type SocialHubRoadmapInterestStatsSnapshot = {
+  interestedCompanyCount: number;
+  platforms: SocialHubRoadmapInterestPlatformStat[];
 };
 
 export type MailSenderIdentityRow = {

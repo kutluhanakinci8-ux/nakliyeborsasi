@@ -14,6 +14,8 @@ import { SocialHubMetaGraphService } from "./SocialHubMetaGraphService";
 import { SocialHubLinkedInGraphService } from "./SocialHubLinkedInGraphService";
 import { mergeLinkedInRefreshToken } from "./socialHubLinkedInRefreshToken";
 import type { SocialOAuthStartResult } from "../providers/SocialProviderPort";
+import { SocialHubRoadmapOAuthApplicationService } from "./SocialHubRoadmapOAuthApplicationService";
+import { isRoadmapPlatformCode } from "../socialHubRoadmapInterest";
 
 const META_SCOPES: Record<string, string> = {
   [SocialPlatformCode.Instagram]:
@@ -35,6 +37,7 @@ export class SocialHubOAuthApplicationService {
     private readonly connectionRepository: Repository<CompanySocialConnectionEntity>,
     private readonly metaGraphService: SocialHubMetaGraphService,
     private readonly linkedInGraphService: SocialHubLinkedInGraphService,
+    private readonly roadmapOAuthApplicationService: SocialHubRoadmapOAuthApplicationService,
   ) {}
 
   public async startOAuth(
@@ -76,12 +79,26 @@ export class SocialHubOAuthApplicationService {
       };
     }
     const stateRow = await this.oauthStateService.consumeState(params.state);
-    const platform = stateRow.platformCode as SocialPlatformCode;
+    const platform = stateRow.platformCode;
     try {
-      if (platform === SocialPlatformCode.LinkedIn) {
-        await this.exchangeLinkedIn(stateRow.companyId, platform, params.code);
+      if (isRoadmapPlatformCode(platform)) {
+        await this.roadmapOAuthApplicationService.completeExchange(
+          stateRow.companyId,
+          platform,
+          params.code,
+        );
+      } else if (platform === SocialPlatformCode.LinkedIn) {
+        await this.exchangeLinkedIn(
+          stateRow.companyId,
+          platform as SocialPlatformCode,
+          params.code,
+        );
       } else {
-        await this.exchangeMeta(stateRow.companyId, platform, params.code);
+        await this.exchangeMeta(
+          stateRow.companyId,
+          platform as SocialPlatformCode,
+          params.code,
+        );
       }
       return { redirectUrl: `${returnBase}&oauth=success&platform=${platform}` };
     } catch (error) {

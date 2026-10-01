@@ -92,6 +92,8 @@ type ConnectionsProps = {
   onConnect: (platformCode: string) => void;
   onDisconnect: (platformCode: string) => void;
   onRoadmapInterest?: (platformCode: string, interested: boolean) => void;
+  onRoadmapConnect?: (platformCode: string) => void;
+  onRoadmapDisconnect?: (platformCode: string) => void;
 };
 
 export function SocialConnectionsPanel({
@@ -100,6 +102,8 @@ export function SocialConnectionsPanel({
   onConnect,
   onDisconnect,
   onRoadmapInterest,
+  onRoadmapConnect,
+  onRoadmapDisconnect,
 }: ConnectionsProps) {
   const permissions = snapshot.permissions ?? {
     canManageConnections: false,
@@ -223,6 +227,11 @@ export function SocialConnectionsPanel({
                     ? "ortam değişkenleri tanımlı (entegrasyon sırada)"
                     : "henüz yapılandırılmadı"}
                 </p>
+                {row.roadmapConnectionStatusCode ? (
+                  <p className="social-hub-connection-status">
+                    {statusLabel(row.roadmapConnectionStatusCode)}
+                  </p>
+                ) : null}
                 {permissions.canManageConnections && onRoadmapInterest ? (
                   <button
                     type="button"
@@ -237,6 +246,35 @@ export function SocialConnectionsPanel({
                     }
                   >
                     {row.roadmapInterested ? "İlgiyi kaldır" : "Öncelik ver"}
+                  </button>
+                ) : null}
+                {permissions.canManageConnections &&
+                onRoadmapConnect &&
+                row.platformCode === "TIKTOK" &&
+                row.oauthEnvConfigured ? (
+                  <button
+                    type="button"
+                    className="btn-account-primary"
+                    disabled={
+                      busy ||
+                      row.roadmapConnectionStatusCode === "CONNECTED" ||
+                      row.roadmapConnectionStatusCode === "PENDING_OAUTH"
+                    }
+                    onClick={() => onRoadmapConnect(row.platformCode)}
+                  >
+                    TikTok bağla (beta)
+                  </button>
+                ) : null}
+                {permissions.canManageConnections &&
+                onRoadmapDisconnect &&
+                row.roadmapConnectionStatusCode === "CONNECTED" ? (
+                  <button
+                    type="button"
+                    className="btn-account-ghost"
+                    disabled={busy}
+                    onClick={() => onRoadmapDisconnect(row.platformCode)}
+                  >
+                    Bağlantıyı kes
                   </button>
                 ) : null}
               </li>

@@ -14,6 +14,12 @@ export type LinkedInOAuthConfig = {
   redirectUri: string;
 };
 
+export type TikTokOAuthConfig = {
+  clientKey: string;
+  clientSecret: string;
+  redirectUri: string;
+};
+
 @Injectable()
 export class SocialHubOAuthConfigService {
   public constructor(private readonly configService: ConfigService) {}
@@ -35,6 +41,22 @@ export class SocialHubOAuthConfigService {
         this.configService.get<string>("SOCIAL_META_WEBHOOK_VERIFY_TOKEN")?.trim() ??
         "",
     };
+  }
+
+  public getTikTokConfig(): TikTokOAuthConfig | null {
+    const clientKey = this.configService
+      .get<string>("SOCIAL_TIKTOK_OAUTH_CLIENT_ID")
+      ?.trim();
+    const clientSecret = this.configService
+      .get<string>("SOCIAL_TIKTOK_OAUTH_CLIENT_SECRET")
+      ?.trim();
+    const redirectUri = this.resolveRedirectUri(
+      "SOCIAL_TIKTOK_OAUTH_REDIRECT_URI",
+    );
+    if (!clientKey || !clientSecret || !redirectUri) {
+      return null;
+    }
+    return { clientKey, clientSecret, redirectUri };
   }
 
   public getLinkedInConfig(): LinkedInOAuthConfig | null {

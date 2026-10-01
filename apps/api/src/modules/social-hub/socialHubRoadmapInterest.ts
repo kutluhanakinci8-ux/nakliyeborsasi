@@ -44,6 +44,11 @@ export function serializeRoadmapInterestPlatformCodes(codes: string[]): string {
   return JSON.stringify(list);
 }
 
+export function isRoadmapPlatformCode(platformCode: string): boolean {
+  const code = platformCode.trim().toUpperCase();
+  return ALLOWED.has(code);
+}
+
 export function assertRoadmapPlatformCode(platformCode: string): string {
   const code = platformCode.trim().toUpperCase();
   if (!ALLOWED.has(code)) {

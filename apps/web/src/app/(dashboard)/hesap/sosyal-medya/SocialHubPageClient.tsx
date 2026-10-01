@@ -303,6 +303,30 @@ export function SocialHubPageClient() {
                     );
                   })
                 }
+                onRoadmapConnect={(code) =>
+                  void runAction(async () => {
+                    const result = await SocialHubApiClient.connectRoadmapPlatform(
+                      accessToken,
+                      code,
+                    );
+                    if (result.oauth.authorizationUrl) {
+                      window.location.href = result.oauth.authorizationUrl;
+                      return;
+                    }
+                    setStatus(result.oauth.message);
+                    await reload();
+                  })
+                }
+                onRoadmapDisconnect={(code) =>
+                  void runAction(async () => {
+                    await SocialHubApiClient.disconnectRoadmapPlatform(
+                      accessToken,
+                      code,
+                    );
+                    setStatus("Yol haritası bağlantısı kesildi.");
+                    await reload();
+                  })
+                }
               />
             ) : null}
             {activeTab === "health" ? (

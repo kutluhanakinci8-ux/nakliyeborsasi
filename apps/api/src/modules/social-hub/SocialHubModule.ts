@@ -54,6 +54,7 @@ import { SocialHubSlackInsightsService } from "./SocialHubSlackInsightsService";
 import { SocialHubWeeklyEmailService } from "./SocialHubWeeklyEmailService";
 import { SocialHubWeeklyEmailScheduler } from "./SocialHubWeeklyEmailScheduler";
 import { SocialHubRoadmapInterestStatsService } from "./SocialHubRoadmapInterestStatsService";
+import { SocialHubRoadmapOAuthApplicationService } from "./oauth/SocialHubRoadmapOAuthApplicationService";
 import { SocialHubPlatformAdminController } from "./SocialHubPlatformAdminController";
 import { PlatformAdminGuard } from "../platform-admin/PlatformAdminGuard";
 
@@ -88,6 +89,7 @@ import { PlatformAdminGuard } from "../platform-admin/PlatformAdminGuard";
   providers: [
     SocialHubOAuthConfigService,
     SocialHubOAuthStateService,
+    SocialHubRoadmapOAuthApplicationService,
     SocialHubOAuthApplicationService,
     SocialHubWebhookIngestService,
     SocialHubTokenVaultService,

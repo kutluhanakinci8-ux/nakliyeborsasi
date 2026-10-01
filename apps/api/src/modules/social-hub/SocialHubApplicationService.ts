@@ -46,11 +46,14 @@ import {
 import { manualNotifyCooldownMessage } from "./socialHubManualNotifyCooldown";
 import {
   assertRoadmapPlatformCode,
+  isRoadmapPlatformCode,
   parseRoadmapInterestPlatformCodes,
   serializeRoadmapInterestPlatformCodes,
 } from "./socialHubRoadmapInterest";
 import { SOCIAL_HUB_ROADMAP_PROVIDERS } from "./socialHubRoadmapProviders";
 import { isRoadmapOAuthEnvConfigured } from "./socialHubRoadmapOAuthReadiness";
+import { SocialHubRoadmapOAuthApplicationService } from "./oauth/SocialHubRoadmapOAuthApplicationService";
+import { labelSocialPlatform } from "./socialHubPlatformLabels";
 import { SocialHubWeeklyEmailService } from "./SocialHubWeeklyEmailService";
 import { normalizeSocialHubSlackWebhookUrl } from "./socialHubSlackWebhook";
 
@@ -93,6 +96,7 @@ export class SocialHubApplicationService {
     private readonly slackDigestService: SocialHubSlackDigestService,
     private readonly slackInsightsService: SocialHubSlackInsightsService,
     private readonly weeklyEmailService: SocialHubWeeklyEmailService,
+    private readonly roadmapOAuthApplicationService: SocialHubRoadmapOAuthApplicationService,
   ) {}
 
   private async assertSocialHubSubscription(companyId: string): Promise<void> {
@@ -127,7 +131,13 @@ export class SocialHubApplicationService {
     assertSocialHubRead(user);
     await this.assertSocialHubSubscription(user.companyId);
     const settings = await this.ensureSettings(user.companyId);
-    const connections = await this.listConnectionRows(user.companyId);
+    const connectionRows = await this.connectionRepository.find({
+      where: { companyId: user.companyId },
+    });
+    const connections = await this.listConnectionRows(
+      user.companyId,
+      connectionRows,
+    );
     const posts = await this.postRepository.find({
       where: { companyId: user.companyId },
       order: { updatedAt: "DESC" },
@@ -157,7 +167,7 @@ export class SocialHubApplicationService {
       permissions,
       settings: this.mapSettings(settings),
       providers,
-      roadmapProviders: this.mapRoadmapProviders(settings),
+      roadmapProviders: this.mapRoadmapProviders(settings, connectionRows),
       connections: connections.map((row) =>
         this.mapConnection(row, providers),
       ),
@@ -930,6 +940,65 @@ export class SocialHubApplicationService {
     return { settings: this.mapSettings(settings) };
   }
 
+  public async startRoadmapConnect(
+    user: AuthenticatedUserContext,
+    platformCode: string,
+  ) {
+    assertSocialHubAdmin(user);
+    await this.assertSocialHubSubscription(user.companyId);
+    const code = assertRoadmapPlatformCode(platformCode);
+    const oauth = await this.roadmapOAuthApplicationService.startConnect(
+      user.companyId,
+      code,
+    );
+    const row = await this.connectionRepository.findOne({
+      where: { companyId: user.companyId, platformCode: code },
+    });
+    if (row && oauth.implementationStatus === "ready") {
+      row.statusCode = SocialConnectionStatusCode.PendingOAuth;
+      row.lastErrorMessage = null;
+      await this.connectionRepository.save(row);
+    }
+    if (row && oauth.implementationStatus === "pending") {
+      row.lastErrorMessage = oauth.message;
+      await this.connectionRepository.save(row);
+    }
+    this.socialHubAuditService.record(
+      user,
+      SocialHubAuditActionCode.SettingsUpdate,
+      `/company/social-hub/roadmap/${code}/connect`,
+      { roadmapConnect: true },
+    );
+    return { oauth };
+  }
+
+  public async disconnectRoadmapPlatform(
+    user: AuthenticatedUserContext,
+    platformCode: string,
+  ) {
+    assertSocialHubAdmin(user);
+    await this.assertSocialHubSubscription(user.companyId);
+    const code = assertRoadmapPlatformCode(platformCode);
+    const row = await this.connectionRepository.findOne({
+      where: { companyId: user.companyId, platformCode: code },
+    });
+    if (row) {
+      row.statusCode = SocialConnectionStatusCode.Disconnected;
+      row.accessTokenCiphertext = null;
+      row.tokenExpiresAt = null;
+      row.connectedAt = null;
+      row.lastErrorMessage = null;
+      await this.connectionRepository.save(row);
+    }
+    this.socialHubAuditService.record(
+      user,
+      SocialHubAuditActionCode.SettingsUpdate,
+      `/company/social-hub/roadmap/${code}/disconnect`,
+      { roadmapDisconnect: true },
+    );
+    return { disconnected: true };
+  }
+
   public async setRoadmapInterest(
     user: AuthenticatedUserContext,
     platformCode: string,
@@ -948,6 +1017,9 @@ export class SocialHubApplicationService {
     settings.roadmapInterestPlatformCodesJson =
       serializeRoadmapInterestPlatformCodes(next);
     await this.settingsRepository.save(settings);
+    const connectionRows = await this.connectionRepository.find({
+      where: { companyId: user.companyId },
+    });
     this.socialHubAuditService.record(
       user,
       SocialHubAuditActionCode.SettingsUpdate,
@@ -955,7 +1027,7 @@ export class SocialHubApplicationService {
       { platformCode: code, interested },
     );
     return {
-      roadmapProviders: this.mapRoadmapProviders(settings),
+      roadmapProviders: this.mapRoadmapProviders(settings, connectionRows),
       settings: this.mapSettings(settings),
     };
   }
@@ -1186,17 +1258,26 @@ export class SocialHubApplicationService {
 
   private async listConnectionRows(
     companyId: string,
+    existing?: CompanySocialConnectionEntity[],
   ): Promise<CompanySocialConnectionEntity[]> {
-    const existing = await this.connectionRepository.find({
-      where: { companyId },
-    });
-    const byPlatform = new Map(existing.map((row) => [row.platformCode, row]));
+    const allExisting =
+      existing ??
+      (await this.connectionRepository.find({
+        where: { companyId },
+      }));
+    const byPlatform = new Map(allExisting.map((row) => [row.platformCode, row]));
     const rows: CompanySocialConnectionEntity[] = [];
     for (const platform of this.socialProviderRegistry.listPlatforms()) {
       const row =
         byPlatform.get(platform) ??
         (await this.ensureConnectionRow(companyId, platform));
       rows.push(row);
+    }
+    for (const provider of SOCIAL_HUB_ROADMAP_PROVIDERS) {
+      const row = byPlatform.get(provider.platformCode);
+      if (row) {
+        rows.push(row);
+      }
     }
     return rows;
   }
@@ -1260,14 +1341,22 @@ export class SocialHubApplicationService {
     }));
   }
 
-  private mapRoadmapProviders(settings: CompanySocialSettingsEntity) {
+  private mapRoadmapProviders(
+    settings: CompanySocialSettingsEntity,
+    connectionRows: CompanySocialConnectionEntity[],
+  ) {
     const interested = new Set(
       parseRoadmapInterestPlatformCodes(settings.roadmapInterestPlatformCodesJson),
+    );
+    const statusByCode = new Map(
+      connectionRows.map((row) => [row.platformCode, row.statusCode]),
     );
     return SOCIAL_HUB_ROADMAP_PROVIDERS.map((provider) => ({
       ...provider,
       roadmapInterested: interested.has(provider.platformCode),
       oauthEnvConfigured: isRoadmapOAuthEnvConfigured(provider.platformCode),
+      roadmapConnectionStatusCode:
+        statusByCode.get(provider.platformCode) ?? null,
     }));
   }
 
@@ -1345,10 +1434,31 @@ export class SocialHubApplicationService {
     if (providerMeta?.implementationStatus === "pending") {
       setupWarnings.push("Sunucu OAuth yapılandırması eksik.");
     }
+    const roadmapProvider = isRoadmapPlatformCode(row.platformCode)
+      ? SOCIAL_HUB_ROADMAP_PROVIDERS.find(
+          (item) => item.platformCode === row.platformCode,
+        )
+      : null;
+    if (
+      roadmapProvider &&
+      row.statusCode === SocialConnectionStatusCode.Connected
+    ) {
+      setupWarnings.push(
+        "Beta OAuth bağlı — mesajlaşma ve yayın API’leri henüz aktif değil.",
+      );
+    }
+    const capabilities =
+      roadmapProvider?.capabilities ??
+      getSocialHubProviderCapabilities(platform);
+    const oauthReady = roadmapProvider
+      ? isRoadmapOAuthEnvConfigured(row.platformCode)
+      : providerMeta?.implementationStatus === "ready";
     return {
       id: row.id,
       platformCode: row.platformCode,
-      label: PLATFORM_LABELS[platform] ?? row.platformCode,
+      label:
+        PLATFORM_LABELS[platform as SocialPlatformCode] ??
+        labelSocialPlatform(row.platformCode),
       statusCode: row.statusCode,
       externalAccountId: row.externalAccountId,
       displayName: row.displayName,
@@ -1356,9 +1466,9 @@ export class SocialHubApplicationService {
       lastErrorMessage: row.lastErrorMessage,
       connectedAt: row.connectedAt?.toISOString() ?? null,
       tokenExpiresAt: row.tokenExpiresAt?.toISOString() ?? null,
-      capabilities: getSocialHubProviderCapabilities(platform),
+      capabilities,
       setupWarnings,
-      oauthReady: providerMeta?.implementationStatus === "ready",
+      oauthReady,
     };
   }
 

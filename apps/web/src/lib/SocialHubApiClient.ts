@@ -354,6 +354,30 @@ export class SocialHubApiClient {
     });
   }
 
+  public static async connectRoadmapPlatform(
+    accessToken: string,
+    platformCode: string,
+  ): Promise<{
+    oauth: {
+      implementationStatus: string;
+      authorizationUrl: string | null;
+      message: string;
+    };
+  }> {
+    return socialHubFetch(accessToken, `/roadmap/${platformCode}/connect`, {
+      method: "POST",
+    });
+  }
+
+  public static async disconnectRoadmapPlatform(
+    accessToken: string,
+    platformCode: string,
+  ): Promise<{ disconnected: boolean }> {
+    return socialHubFetch(accessToken, `/roadmap/${platformCode}/disconnect`, {
+      method: "POST",
+    });
+  }
+
   public static async setRoadmapInterest(
     accessToken: string,
     platformCode: string,
