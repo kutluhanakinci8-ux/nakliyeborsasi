@@ -142,6 +142,16 @@ export class SocialHubConnectionHealthService {
       ) {
         setupWarnings.push("Token yakında sona eriyor — yenileyin.");
       }
+      const platformLinks = openLinks.filter(
+        (link) => link.platformCode === provider.platformCode,
+      );
+      const lastOutboundLink = platformLinks
+        .filter((link) => link.lastOutboundAt)
+        .sort(
+          (a, b) =>
+            (b.lastOutboundAt?.getTime() ?? 0) -
+            (a.lastOutboundAt?.getTime() ?? 0),
+        )[0];
       return {
         platformCode: provider.platformCode,
         label: provider.label,
@@ -149,9 +159,9 @@ export class SocialHubConnectionHealthService {
         tokenHealth,
         tokenExpiresAt: row?.tokenExpiresAt?.toISOString() ?? null,
         setupWarnings,
-        openThreadCount: 0,
-        lastOutboundStatus: null,
-        lastOutboundAt: null,
+        openThreadCount: platformLinks.length,
+        lastOutboundStatus: lastOutboundLink?.lastOutboundStatus ?? null,
+        lastOutboundAt: lastOutboundLink?.lastOutboundAt?.toISOString() ?? null,
         recentOutboundFailures24h: 0,
         oauthServerReady: isRoadmapOAuthEnvConfigured(provider.platformCode),
         canRefreshToken:
@@ -160,6 +170,16 @@ export class SocialHubConnectionHealthService {
         isRoadmapBeta: true,
       };
     });
+    for (const channel of roadmapChannels) {
+      if (channel.statusCode === SocialConnectionStatusCode.Connected) {
+        channel.recentOutboundFailures24h =
+          await this.deliveryLogService.countRecentFailures(
+            companyId,
+            channel.platformCode,
+            since24h,
+          );
+      }
+    }
     const overallStatus = this.resolveOverallStatus([
       ...channels,
       ...roadmapChannels,

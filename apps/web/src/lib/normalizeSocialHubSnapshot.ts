@@ -62,6 +62,11 @@ export function normalizeSocialHubSnapshot(payload: unknown): SocialHubSnapshot 
     typeof (hub.integrationWebhooks as { tiktok?: string }).tiktok === "string"
       ? (hub.integrationWebhooks as SocialHubSnapshot["integrationWebhooks"])
       : undefined;
+  const integrationWebhookReadiness =
+    hub.integrationWebhookReadiness &&
+    typeof hub.integrationWebhookReadiness === "object"
+      ? (hub.integrationWebhookReadiness as SocialHubSnapshot["integrationWebhookReadiness"])
+      : undefined;
   const roadmapProviders = Array.isArray(hub.roadmapProviders)
     ? (hub.roadmapProviders as SocialHubSnapshot["roadmapProviders"])
     : [];
@@ -99,5 +104,6 @@ export function normalizeSocialHubSnapshot(payload: unknown): SocialHubSnapshot 
       : [],
     inboxSummary,
     integrationWebhooks,
+    integrationWebhookReadiness,
   };
 }

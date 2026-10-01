@@ -120,6 +120,7 @@ export function SocialConnectionsPanel({
   const providers = snapshot.providers ?? [];
   const roadmapProviders = snapshot.roadmapProviders ?? [];
   const integrationWebhooks = snapshot.integrationWebhooks;
+  const webhookReadiness = snapshot.integrationWebhookReadiness;
   return (
     <section className="social-hub-panel module-panel module-panel--elevated">
       <header className="social-hub-panel-head">
@@ -137,6 +138,18 @@ export function SocialConnectionsPanel({
             </li>
             <li>
               TikTok (beta): <code>{integrationWebhooks.tiktok}</code>
+              {webhookReadiness?.tiktok ? (
+                <span className="module-hint">
+                  {" "}
+                  — köprü:{" "}
+                  {webhookReadiness.tiktok.webhookBridgeEnabled ? "açık" : "kapalı"}
+                  , giden:{" "}
+                  {webhookReadiness.tiktok.outboundEnabled ? "açık" : "kapalı"}
+                  {webhookReadiness.tiktok.signatureOrPushAuthRequired
+                    ? " · imza zorunlu"
+                    : ""}
+                </span>
+              ) : null}
             </li>
             <li>
               YouTube (beta, Pub/Sub push):{" "}
@@ -145,6 +158,18 @@ export function SocialConnectionsPanel({
                 {" "}
                 — message.data içinde base64 JSON (kanal kimliği + metin)
               </span>
+              {webhookReadiness?.youtube ? (
+                <span className="module-hint">
+                  {" "}
+                  · köprü:{" "}
+                  {webhookReadiness.youtube.webhookBridgeEnabled ? "açık" : "kapalı"}
+                  , giden:{" "}
+                  {webhookReadiness.youtube.outboundEnabled ? "açık" : "kapalı"}
+                  {webhookReadiness.youtube.signatureOrPushAuthRequired
+                    ? " · push auth zorunlu"
+                    : ""}
+                </span>
+              ) : null}
             </li>
           </ul>
         ) : null}
@@ -1533,6 +1558,10 @@ export function SocialHealthPanel({
             <span className="social-hub-pill">Beta yol haritası</span>
             <p className="social-hub-health-meta">
               {statusLabel(channel.statusCode)} · {tokenHealthLabel(channel.tokenHealth)}
+            </p>
+            <p className="module-hint">
+              Açık konuşma: {channel.openThreadCount} · 24s hata:{" "}
+              {channel.recentOutboundFailures24h}
             </p>
             {channel.setupWarnings.map((warning) => (
               <p key={warning} className="social-hub-setup-warn">{warning}</p>

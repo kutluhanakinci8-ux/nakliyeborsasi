@@ -91,10 +91,15 @@ else
 fi
 
 if [[ "${SOCIAL_HUB_SMOKE_YOUTUBE_WEBHOOK:-1}" != "0" ]]; then
+  yt_auth_args=()
+  if [[ -n "${SOCIAL_YOUTUBE_WEBHOOK_SMOKE_TOKEN:-}" ]]; then
+    yt_auth_args+=(-H "X-Social-Hub-YouTube-Token: ${SOCIAL_YOUTUBE_WEBHOOK_SMOKE_TOKEN}")
+  fi
   echo "== YouTube webhook POST (skeleton) =="
   yt_code="$(curl -sS -o /tmp/social-hub-yt-wh.json -w "%{http_code}" \
     -X POST \
     -H "Content-Type: application/json" \
+    "${yt_auth_args[@]}" \
     -d '{"kind":"smoke_ping"}' \
     "${API_BASE}/company/social-hub/webhooks/youtube")"
   if [[ "${yt_code}" != "200" && "${yt_code}" != "201" ]]; then
@@ -111,6 +116,7 @@ if [[ "${SOCIAL_HUB_SMOKE_YOUTUBE_WEBHOOK:-1}" != "0" ]]; then
   yt_pubsub_code="$(curl -sS -o /tmp/social-hub-yt-pubsub.json -w "%{http_code}" \
     -X POST \
     -H "Content-Type: application/json" \
+    "${yt_auth_args[@]}" \
     -d "{\"message\":{\"data\":\"${yt_pubsub_b64}\"}}" \
     "${API_BASE}/company/social-hub/webhooks/youtube")"
   if [[ "${yt_pubsub_code}" != "200" && "${yt_pubsub_code}" != "201" ]]; then
