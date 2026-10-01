@@ -99,6 +99,7 @@ export type SocialHubTemplate = {
   title: string;
   bodyText: string;
   channelScopeCode: string | null;
+  channelScopeLabel?: string;
   sortOrder: number;
 };
 

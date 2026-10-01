@@ -28,6 +28,7 @@ import { SocialProviderRegistry } from "./providers/SocialProviderRegistry";
 import { CompanySocialThreadLinkEntity } from "../../infrastructure/database/entities/CompanySocialThreadLinkEntity";
 import { SocialHubMessagingBridgeService } from "./SocialHubMessagingBridgeService";
 import { CompanyMembershipEntity } from "../../infrastructure/database/entities/CompanyMembershipEntity";
+import { CompanyEntity } from "../../infrastructure/database/entities/CompanyEntity";
 import {
   SocialHubAuditActionCode,
   SocialHubAuditService,
@@ -72,6 +73,12 @@ import { SocialHubMetaPlatformInsightsService } from "./SocialHubMetaPlatformIns
 import { SocialHubLinkedInOrgInsightsService } from "./SocialHubLinkedInOrgInsightsService";
 import { SocialHubInboxSyncSummaryService } from "./SocialHubInboxSyncSummaryService";
 import { SocialHubPublishMediaStorageService } from "./SocialHubPublishMediaStorageService";
+import {
+  formatSocialHubTemplateToday,
+  listSocialHubTemplateVariableHints,
+  renderSocialHubTemplate,
+} from "./socialHubTemplateRender";
+import { normalizeSocialHubTemplateChannelScope } from "./socialHubTemplateChannelScope";
 
 export const INVITABLE_SOCIAL_TEAM_ROLES: readonly CompanyRoleCode[] = [
   CompanyRoleCode.SocialAdmin,
@@ -103,6 +110,8 @@ export class SocialHubApplicationService {
     private readonly socialHubMessagingBridgeService: SocialHubMessagingBridgeService,
     @InjectRepository(CompanyMembershipEntity)
     private readonly membershipRepository: Repository<CompanyMembershipEntity>,
+    @InjectRepository(CompanyEntity)
+    private readonly companyRepository: Repository<CompanyEntity>,
     private readonly socialHubAuditService: SocialHubAuditService,
     private readonly modularSubscriptionEntitlementService: ModularSubscriptionEntitlementService,
     private readonly connectionHealthService: SocialHubConnectionHealthService,
@@ -1138,18 +1147,58 @@ export class SocialHubApplicationService {
       : SocialPostStatusCode.Approved;
   }
 
+  public listTemplateVariables() {
+    return { variables: listSocialHubTemplateVariableHints() };
+  }
+
+  public async previewTemplate(
+    user: AuthenticatedUserContext,
+    body: { bodyText: string },
+  ) {
+    assertSocialHubRead(user);
+    await this.assertSocialHubSubscription(user.companyId);
+    const variables = await this.buildTemplateRenderVariables(user);
+    return {
+      renderedText: renderSocialHubTemplate(body.bodyText, variables),
+      variables,
+    };
+  }
+
+  public async renderTemplateById(
+    user: AuthenticatedUserContext,
+    templateId: string,
+  ) {
+    assertSocialHubRead(user);
+    await this.assertSocialHubSubscription(user.companyId);
+    const template = await this.templateRepository.findOne({
+      where: { id: templateId, companyId: user.companyId },
+    });
+    if (!template) {
+      throw new ResourceNotFoundException("SocialReplyTemplate", templateId);
+    }
+    const variables = await this.buildTemplateRenderVariables(user);
+    return {
+      template: this.mapTemplate(template),
+      renderedText: renderSocialHubTemplate(template.bodyText, variables),
+      variables,
+    };
+  }
+
   public async createTemplate(
     user: AuthenticatedUserContext,
     body: { title: string; bodyText: string; channelScopeCode?: string | null },
   ) {
     assertSocialHubAdmin(user);
     await this.assertSocialHubSubscription(user.companyId);
+    const channelScopeCode = normalizeSocialHubTemplateChannelScope(
+      body.channelScopeCode,
+    );
     const template = await this.templateRepository.save(
       this.templateRepository.create({
         companyId: user.companyId,
         title: body.title.trim(),
         bodyText: body.bodyText.trim(),
-        channelScopeCode: body.channelScopeCode?.trim() || null,
+        channelScopeCode,
         sortOrder: 0,
       }),
     );
@@ -1181,7 +1230,9 @@ export class SocialHubApplicationService {
       template.bodyText = patch.bodyText.trim();
     }
     if (patch.channelScopeCode !== undefined) {
-      template.channelScopeCode = patch.channelScopeCode?.trim() || null;
+      template.channelScopeCode = normalizeSocialHubTemplateChannelScope(
+        patch.channelScopeCode,
+      );
     }
     if (patch.sortOrder !== undefined) {
       template.sortOrder = patch.sortOrder;
@@ -1971,12 +2022,30 @@ export class SocialHubApplicationService {
     };
   }
 
+  private async buildTemplateRenderVariables(
+    user: AuthenticatedUserContext,
+  ): Promise<Record<string, string>> {
+    const company = await this.companyRepository.findOne({
+      where: { id: user.companyId },
+    });
+    return {
+      companyName: company?.legalName?.trim() || "Firma",
+      userDisplayName: user.emailAddress.split("@")[0] || "Kullanıcı",
+      today: formatSocialHubTemplateToday(),
+    };
+  }
+
   private mapTemplate(row: CompanySocialReplyTemplateEntity) {
+    const scope = row.channelScopeCode;
     return {
       id: row.id,
       title: row.title,
       bodyText: row.bodyText,
-      channelScopeCode: row.channelScopeCode,
+      channelScopeCode: scope,
+      channelScopeLabel: scope
+        ? (PLATFORM_LABELS[scope as SocialPlatformCode] ??
+          labelSocialPlatform(scope))
+        : "Tüm kanallar",
       sortOrder: row.sortOrder,
     };
   }

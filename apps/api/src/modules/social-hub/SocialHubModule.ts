@@ -21,6 +21,7 @@ import { SocialPostPublishScheduler } from "./SocialPostPublishScheduler";
 import { AuditModule } from "../../infrastructure/audit/AuditModule";
 import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogEntity";
 import { CompanyMembershipEntity } from "../../infrastructure/database/entities/CompanyMembershipEntity";
+import { CompanyEntity } from "../../infrastructure/database/entities/CompanyEntity";
 import { SocialHubAuditService } from "./SocialHubAuditService";
 import { SubscriptionModule } from "../subscription/SubscriptionModule";
 import { NotificationModule } from "../notification/NotificationModule";
@@ -87,6 +88,7 @@ import { PlatformAdminGuard } from "../platform-admin/PlatformAdminGuard";
       CompanySocialThreadLinkEntity,
       MessageThreadEntity,
       CompanyMembershipEntity,
+      CompanyEntity,
       AuditLogEntity,
       CompanySocialOAuthStateEntity,
       CompanySocialOutboundDeliveryEntity,

@@ -1,0 +1,1 @@
+-- Faz AU: şema değişikliği yok (şablon {{degisken}}, kanal kapsamı, önizleme, Mesajlar hızlı yanıt)

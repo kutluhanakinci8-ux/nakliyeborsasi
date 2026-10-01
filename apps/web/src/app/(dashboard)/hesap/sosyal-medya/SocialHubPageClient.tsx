@@ -57,6 +57,10 @@ export function SocialHubPageClient() {
   const [calendarSelection, setCalendarSelection] = useState<string[]>([]);
   const [templateTitle, setTemplateTitle] = useState("");
   const [templateBody, setTemplateBody] = useState("");
+  const [templateChannelScope, setTemplateChannelScope] = useState("");
+  const [templateServerPreview, setTemplateServerPreview] = useState<string | null>(
+    null,
+  );
   const [teamMembers, setTeamMembers] = useState<SocialHubTeamMember[]>([]);
   const [assignableRoles, setAssignableRoles] = useState<string[]>([]);
   const [integrationsPath, setIntegrationsPath] = useState("/hesap/uygulamalar");
@@ -272,6 +276,24 @@ export function SocialHubPageClient() {
     snapshot?.permissions.canManageSettings,
     auditFocus,
   ]);
+
+  useEffect(() => {
+    if (!accessToken || activeTab !== "templates" || subscriptionBlocked) {
+      setTemplateServerPreview(null);
+      return;
+    }
+    const text = templateBody.trim();
+    if (!text) {
+      setTemplateServerPreview(null);
+      return;
+    }
+    const handle = window.setTimeout(() => {
+      void SocialHubApiClient.previewTemplate(accessToken, text)
+        .then((result) => setTemplateServerPreview(result.renderedText))
+        .catch(() => setTemplateServerPreview(null));
+    }, 400);
+    return () => window.clearTimeout(handle);
+  }, [accessToken, activeTab, subscriptionBlocked, templateBody]);
 
   async function runAction(action: () => Promise<void>): Promise<void> {
     setBusy(true);
@@ -846,18 +868,42 @@ export function SocialHubPageClient() {
                 permissions={snapshot.permissions}
                 title={templateTitle}
                 body={templateBody}
+                channelScope={templateChannelScope}
+                serverPreview={templateServerPreview}
+                messagingDeepLink={
+                  snapshot.inboxSummary?.messagingDeepLink ??
+                  "/messaging?tab=sohbet&filter=social"
+                }
                 busy={busy}
                 onTitle={setTemplateTitle}
                 onBody={setTemplateBody}
+                onChannelScope={setTemplateChannelScope}
+                onInsertPlaceholder={(placeholder) =>
+                  setTemplateBody((prev) =>
+                    prev ? `${prev} ${placeholder}` : placeholder,
+                  )
+                }
                 onSave={() =>
                   void runAction(async () => {
                     await SocialHubApiClient.createTemplate(accessToken, {
                       title: templateTitle,
                       bodyText: templateBody,
+                      channelScopeCode: templateChannelScope || null,
                     });
                     setTemplateTitle("");
                     setTemplateBody("");
+                    setTemplateChannelScope("");
                     setStatus("Şablon eklendi.");
+                  })
+                }
+                onCopyRendered={(templateId) =>
+                  void runAction(async () => {
+                    const result = await SocialHubApiClient.renderTemplate(
+                      accessToken,
+                      templateId,
+                    );
+                    await navigator.clipboard.writeText(result.renderedText);
+                    setStatus("Çözülmüş metin panoya kopyalandı.");
                   })
                 }
               />
