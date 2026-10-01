@@ -67,6 +67,18 @@ export class CompanySocialSettingsEntity {
   @Column({ type: "int", default: 1440 })
   public healthAlertSlackCooldownMinutes!: number;
 
+  @Column({ type: "boolean", default: false })
+  public socialSlackDigestBusinessHoursOnly!: boolean;
+
+  @Column({ type: "varchar", length: 64, default: "Europe/Istanbul" })
+  public socialSlackDigestTimezone!: string;
+
+  @Column({ type: "int", default: 9 })
+  public socialSlackDigestHourStart!: number;
+
+  @Column({ type: "int", default: 18 })
+  public socialSlackDigestHourEnd!: number;
+
   @UpdateDateColumn({ type: "timestamptz" })
   public updatedAt!: Date;
 }

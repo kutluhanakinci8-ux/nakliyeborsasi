@@ -24,6 +24,7 @@ import type {
   SocialHubAnalytics,
   SocialHubAuditEntry,
   SocialHubHealth,
+  SocialHubNotificationInsights,
   SocialHubOutboundDelivery,
   SocialHubSnapshot,
   SocialHubTeamMember,
@@ -49,6 +50,8 @@ export function SocialHubPageClient() {
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [subscriptionBlocked, setSubscriptionBlocked] = useState(false);
   const [health, setHealth] = useState<SocialHubHealth | null>(null);
+  const [notificationInsights, setNotificationInsights] =
+    useState<SocialHubNotificationInsights | null>(null);
   const [deliveries, setDeliveries] = useState<SocialHubOutboundDelivery[]>([]);
   const [deliveryFilters, setDeliveryFilters] = useState<SocialDeliveryLogFilters>(
     {
@@ -70,6 +73,10 @@ export function SocialHubPageClient() {
     socialSlackNotifyOutboundFailures: false,
     socialSlackOutboundFailureCooldownMinutes: 15,
     socialSlackDailyDigestEnabled: false,
+    socialSlackDigestBusinessHoursOnly: false,
+    socialSlackDigestTimezone: "Europe/Istanbul",
+    socialSlackDigestHourStart: 9,
+    socialSlackDigestHourEnd: 18,
   });
 
   const canAccess =
@@ -124,7 +131,7 @@ export function SocialHubPageClient() {
     const untilIso = deliveryFilters.until
       ? new Date(`${deliveryFilters.until}T23:59:59`).toISOString()
       : undefined;
-    const [healthPayload, deliveryRows] = await Promise.all([
+    const [healthBundle, deliveryRows] = await Promise.all([
       SocialHubApiClient.fetchHealth(accessToken),
       SocialHubApiClient.fetchDeliveryLog(accessToken, {
         limit: 80,
@@ -134,7 +141,8 @@ export function SocialHubPageClient() {
         until: untilIso,
       }),
     ]);
-    setHealth(healthPayload);
+    setHealth(healthBundle.health);
+    setNotificationInsights(healthBundle.notificationInsights);
     setDeliveries(deliveryRows);
   }, [accessToken, deliveryFilters]);
 
@@ -162,6 +170,13 @@ export function SocialHubPageClient() {
         snapshot.settings.socialSlackOutboundFailureCooldownMinutes ?? 15,
       socialSlackDailyDigestEnabled:
         snapshot.settings.socialSlackDailyDigestEnabled ?? false,
+      socialSlackDigestBusinessHoursOnly:
+        snapshot.settings.socialSlackDigestBusinessHoursOnly ?? false,
+      socialSlackDigestTimezone:
+        snapshot.settings.socialSlackDigestTimezone ?? "Europe/Istanbul",
+      socialSlackDigestHourStart:
+        snapshot.settings.socialSlackDigestHourStart ?? 9,
+      socialSlackDigestHourEnd: snapshot.settings.socialSlackDigestHourEnd ?? 18,
     });
     void loadHealthData().catch(() => setError("Sağlık verisi yüklenemedi."));
   }, [accessToken, activeTab, snapshot, subscriptionBlocked, loadHealthData]);
@@ -270,6 +285,7 @@ export function SocialHubPageClient() {
             {activeTab === "health" ? (
               <SocialHealthPanel
                 health={health}
+                notificationInsights={notificationInsights}
                 deliveries={deliveries}
                 deliveryFilters={deliveryFilters}
                 busy={busy}
@@ -316,6 +332,12 @@ export function SocialHubPageClient() {
                 socialSlackDailyDigestLastSentAt={
                   snapshot.settings.socialSlackDailyDigestLastSentAt ?? null
                 }
+                socialSlackDigestBusinessHoursOnly={
+                  slackSettingsDraft.socialSlackDigestBusinessHoursOnly
+                }
+                socialSlackDigestTimezone={slackSettingsDraft.socialSlackDigestTimezone}
+                socialSlackDigestHourStart={slackSettingsDraft.socialSlackDigestHourStart}
+                socialSlackDigestHourEnd={slackSettingsDraft.socialSlackDigestHourEnd}
                 onSlackSettingsPatch={(patch) =>
                   setSlackSettingsDraft((current) => ({ ...current, ...patch }))
                 }
@@ -333,6 +355,14 @@ export function SocialHubPageClient() {
                         slackSettingsDraft.socialSlackOutboundFailureCooldownMinutes,
                       socialSlackDailyDigestEnabled:
                         slackSettingsDraft.socialSlackDailyDigestEnabled,
+                      socialSlackDigestBusinessHoursOnly:
+                        slackSettingsDraft.socialSlackDigestBusinessHoursOnly,
+                      socialSlackDigestTimezone:
+                        slackSettingsDraft.socialSlackDigestTimezone,
+                      socialSlackDigestHourStart:
+                        slackSettingsDraft.socialSlackDigestHourStart,
+                      socialSlackDigestHourEnd:
+                        slackSettingsDraft.socialSlackDigestHourEnd,
                     });
                     await reload();
                     setStatus("Slack ayarları kaydedildi.");

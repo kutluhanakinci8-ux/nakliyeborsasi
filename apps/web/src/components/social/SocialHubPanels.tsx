@@ -8,6 +8,7 @@ import type {
   SocialHubSettings,
   SocialHubAnalytics,
   SocialHubHealth,
+  SocialHubNotificationInsights,
   SocialHubOutboundDelivery,
   SocialHubSnapshot,
   SocialHubTeamMember,
@@ -832,8 +833,16 @@ export type SocialDeliveryLogFilters = {
   until: string;
 };
 
+function formatInsightTime(iso: string | null | undefined): string {
+  if (!iso) {
+    return "—";
+  }
+  return new Date(iso).toLocaleString("tr-TR");
+}
+
 type HealthPanelProps = {
   health: SocialHubHealth | null;
+  notificationInsights: SocialHubNotificationInsights | null;
   deliveries: SocialHubOutboundDelivery[];
   deliveryFilters: SocialDeliveryLogFilters;
   busy: boolean;
@@ -858,12 +867,20 @@ type HealthPanelProps = {
   socialSlackOutboundFailureCooldownMinutes: number;
   socialSlackDailyDigestEnabled: boolean;
   socialSlackDailyDigestLastSentAt: string | null;
+  socialSlackDigestBusinessHoursOnly: boolean;
+  socialSlackDigestTimezone: string;
+  socialSlackDigestHourStart: number;
+  socialSlackDigestHourEnd: number;
   onSlackSettingsPatch: (patch: {
     socialSlackWebhookUrl?: string;
     socialSlackUseMessagingFallback?: boolean;
     socialSlackNotifyOutboundFailures?: boolean;
     socialSlackOutboundFailureCooldownMinutes?: number;
     socialSlackDailyDigestEnabled?: boolean;
+    socialSlackDigestBusinessHoursOnly?: boolean;
+    socialSlackDigestTimezone?: string;
+    socialSlackDigestHourStart?: number;
+    socialSlackDigestHourEnd?: number;
   }) => void;
   onSaveSlackSettings: () => void;
   onTestSlack: () => void;
@@ -877,6 +894,7 @@ type HealthPanelProps = {
 
 export function SocialHealthPanel({
   health,
+  notificationInsights,
   deliveries,
   deliveryFilters,
   busy,
@@ -897,6 +915,10 @@ export function SocialHealthPanel({
   socialSlackOutboundFailureCooldownMinutes,
   socialSlackDailyDigestEnabled,
   socialSlackDailyDigestLastSentAt,
+  socialSlackDigestBusinessHoursOnly,
+  socialSlackDigestTimezone,
+  socialSlackDigestHourStart,
+  socialSlackDigestHourEnd,
   onSlackSettingsPatch,
   onSaveSlackSettings,
   onTestSlack,
@@ -994,6 +1016,67 @@ export function SocialHealthPanel({
                 {new Date(socialSlackDailyDigestLastSentAt).toLocaleString("tr-TR")}
               </p>
             ) : null}
+            <label className="social-hub-check">
+              <input
+                type="checkbox"
+                checked={socialSlackDigestBusinessHoursOnly}
+                disabled={busy}
+                onChange={(e) =>
+                  onSlackSettingsPatch({
+                    socialSlackDigestBusinessHoursOnly: e.target.checked,
+                  })
+                }
+              />
+              Otomatik özet yalnızca iş saatleri (manuel özet her zaman)
+            </label>
+            <label className="social-hub-threshold-field">
+              Saat dilimi
+              <select
+                className="input-light"
+                value={socialSlackDigestTimezone}
+                disabled={busy}
+                onChange={(e) =>
+                  onSlackSettingsPatch({ socialSlackDigestTimezone: e.target.value })
+                }
+              >
+                <option value="Europe/Istanbul">Europe/Istanbul</option>
+                <option value="Europe/Berlin">Europe/Berlin</option>
+                <option value="Europe/London">Europe/London</option>
+                <option value="UTC">UTC</option>
+              </select>
+            </label>
+            <label className="social-hub-threshold-field">
+              İş saati başlangıç
+              <input
+                className="input-light"
+                type="number"
+                min={0}
+                max={23}
+                value={socialSlackDigestHourStart}
+                disabled={busy}
+                onChange={(e) =>
+                  onSlackSettingsPatch({
+                    socialSlackDigestHourStart: Number.parseInt(e.target.value, 10),
+                  })
+                }
+              />
+            </label>
+            <label className="social-hub-threshold-field">
+              İş saati bitiş
+              <input
+                className="input-light"
+                type="number"
+                min={0}
+                max={23}
+                value={socialSlackDigestHourEnd}
+                disabled={busy}
+                onChange={(e) =>
+                  onSlackSettingsPatch({
+                    socialSlackDigestHourEnd: Number.parseInt(e.target.value, 10),
+                  })
+                }
+              />
+            </label>
             <label className="social-hub-threshold-field">
               Hata bildirimi bekleme (dk / konuşma)
               <input
@@ -1141,6 +1224,36 @@ export function SocialHealthPanel({
       >
         Genel durum: <strong>{healthOverallLabel(health.overallStatus)}</strong>
       </p>
+      {notificationInsights ? (
+        <div className="social-hub-notification-insights">
+          <h3 className="account-card-title">Bildirim özeti</h3>
+          <p className="module-hint">
+            24s gönderim: {notificationInsights.outboundDeliveriesLast24h.ok}{" "}
+            başarılı · {notificationInsights.outboundDeliveriesLast24h.failed} hatalı
+          </p>
+          <ul className="social-hub-insights-list">
+            <li>
+              E-posta sağlık uyarısı:{" "}
+              {formatInsightTime(notificationInsights.healthAlertEmailLastSentAt)}
+              {notificationInsights.lastHealthAlertStatus
+                ? ` (${notificationInsights.lastHealthAlertStatus})`
+                : ""}
+            </li>
+            <li>
+              Slack günlük özet:{" "}
+              {formatInsightTime(notificationInsights.slackDailyDigestLastSentAt)}
+            </li>
+            <li>
+              Slack sağlık uyarısı:{" "}
+              {formatInsightTime(notificationInsights.slackHealthAlertLastSentAt)}
+            </li>
+            <li>
+              Slack gönderim hatası:{" "}
+              {formatInsightTime(notificationInsights.slackOutboundFailureLastSentAt)}
+            </li>
+          </ul>
+        </div>
+      ) : null}
       <ul className="social-hub-health-grid">
         {health.channels.map((channel) => (
           <li key={channel.platformCode} className="social-hub-health-card">

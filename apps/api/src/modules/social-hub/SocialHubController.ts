@@ -280,6 +280,10 @@ export class SocialHubController {
       socialSlackOutboundFailureCooldownMinutes?: number;
       socialSlackDailyDigestEnabled?: boolean;
       healthAlertSlackCooldownMinutes?: number;
+      socialSlackDigestBusinessHoursOnly?: boolean;
+      socialSlackDigestTimezone?: string;
+      socialSlackDigestHourStart?: number;
+      socialSlackDigestHourEnd?: number;
     },
   ) {
     return this.socialHubApplicationService.updateSettings(user, body);

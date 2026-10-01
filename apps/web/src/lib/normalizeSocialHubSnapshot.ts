@@ -28,6 +28,10 @@ const DEFAULT_SETTINGS: SocialHubSnapshot["settings"] = {
   socialSlackDailyDigestEnabled: false,
   socialSlackDailyDigestLastSentAt: null,
   healthAlertSlackCooldownMinutes: 1440,
+  socialSlackDigestBusinessHoursOnly: false,
+  socialSlackDigestTimezone: "Europe/Istanbul",
+  socialSlackDigestHourStart: 9,
+  socialSlackDigestHourEnd: 18,
 };
 
 export function normalizeSocialHubSnapshot(payload: unknown): SocialHubSnapshot {
