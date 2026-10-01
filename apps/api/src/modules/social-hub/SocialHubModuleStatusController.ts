@@ -12,7 +12,7 @@ export class SocialHubModuleStatusController {
   } {
     return {
       module: "social_hub",
-      phase: "z",
+      phase: "aa",
       subscriptionModuleCode: SubscriptionModuleCode.SocialHub,
       features: [
         "connections_skeleton",
@@ -92,6 +92,8 @@ export class SocialHubModuleStatusController {
         "roadmap_token_refresh_job",
         "health_roadmap_beta_channels",
         "tiktok_webhook_skeleton",
+        "tiktok_webhook_messaging_bridge",
+        "integration_webhook_urls_snapshot",
       ],
     };
   }

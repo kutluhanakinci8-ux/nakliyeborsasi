@@ -119,6 +119,7 @@ export function SocialConnectionsPanel({
   const connections = snapshot.connections ?? [];
   const providers = snapshot.providers ?? [];
   const roadmapProviders = snapshot.roadmapProviders ?? [];
+  const integrationWebhooks = snapshot.integrationWebhooks;
   return (
     <section className="social-hub-panel module-panel module-panel--elevated">
       <header className="social-hub-panel-head">
@@ -129,6 +130,16 @@ export function SocialConnectionsPanel({
           yanıtlar bağlı kanala gider. Genel API anahtarları:{" "}
           <Link href="/hesap/uygulamalar">Uygulamalar / entegrasyonlar</Link>.
         </p>
+        {integrationWebhooks ? (
+          <ul className="social-hub-webhook-urls module-hint">
+            <li>
+              Meta / WhatsApp: <code>{integrationWebhooks.meta}</code>
+            </li>
+            <li>
+              TikTok (beta): <code>{integrationWebhooks.tiktok}</code>
+            </li>
+          </ul>
+        ) : null}
       </header>
       <ul className="social-hub-connection-grid">
         {connections.map((row) => {

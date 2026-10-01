@@ -1,0 +1,1 @@
+-- Faz AA: şema değişikliği yok (TikTok webhook → Mesajlar köprüsü iskelet)
