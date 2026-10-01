@@ -63,6 +63,7 @@ import { buildSocialHubPublicWebhookUrls } from "./socialHubIntegrationUrls";
 import { buildSocialHubIntegrationWebhookReadiness } from "./socialHubIntegrationWebhookReadiness";
 import { buildSocialHubIntegrationOpsHints } from "./socialHubIntegrationOpsHints";
 import { getRoadmapProviderCapabilities } from "./socialHubRoadmapCapabilities";
+import { isTikTokProdProviderPlatform } from "./socialHubTikTokProdProvider";
 import { roadmapConnectedHint } from "./socialHubRoadmapHints";
 import { SocialHubRoadmapInboxSyncService } from "./SocialHubRoadmapInboxSyncService";
 import { mapWebhookBridgedByPlatform } from "./socialHubWebhookBridgeSnapshot";
@@ -1879,11 +1880,21 @@ export class SocialHubApplicationService {
     );
     return SOCIAL_HUB_ROADMAP_PROVIDERS.map((provider) => {
       const conn = rowByCode.get(provider.platformCode);
+      const oauthEnvConfigured = isRoadmapOAuthEnvConfigured(
+        provider.platformCode,
+      );
+      const tiktokProd = isTikTokProdProviderPlatform(provider.platformCode);
+      const oauthImplementationStatus =
+        tiktokProd && oauthEnvConfigured ? "ready" : "pending";
       return {
         ...provider,
+        implementationStatus:
+          tiktokProd && oauthEnvConfigured ? "ready" : "roadmap",
         capabilities: getRoadmapProviderCapabilities(provider.platformCode),
         roadmapInterested: interested.has(provider.platformCode),
-        oauthEnvConfigured: isRoadmapOAuthEnvConfigured(provider.platformCode),
+        oauthEnvConfigured,
+        oauthImplementationStatus,
+        isRoadmapBeta: !tiktokProd,
         roadmapConnectionStatusCode: conn?.statusCode ?? null,
         roadmapHasRefreshToken: conn
           ? hasRoadmapRefreshToken(conn.grantedScopes)

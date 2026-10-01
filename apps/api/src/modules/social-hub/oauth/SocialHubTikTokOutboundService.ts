@@ -1,4 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
+import { isTikTokOutboundDeployEnabled } from "../socialHubTikTokProdProvider";
 
 const DEFAULT_SEND_URL =
   "https://business-api.tiktok.com/open_api/v1.3/business/message/send/";
@@ -19,11 +20,11 @@ export class SocialHubTikTokOutboundService {
     recipientExternalId: string;
     bodyText: string;
   }): Promise<TikTokOutboundSendResult> {
-    if (process.env.SOCIAL_TIKTOK_OUTBOUND_ENABLED !== "1") {
+    if (!isTikTokOutboundDeployEnabled()) {
       return {
         ok: false,
         message:
-          "TikTok giden mesaj beta kapalı — SOCIAL_TIKTOK_OUTBOUND_ENABLED=1 ve API URL gerekir.",
+          "TikTok giden mesaj kapalı — SOCIAL_TIKTOK_OUTBOUND_ENABLED=1 ve API URL gerekir.",
       };
     }
     const url =
@@ -56,7 +57,7 @@ export class SocialHubTikTokOutboundService {
       }
       return {
         ok: true,
-        message: "TikTok mesajı gönderildi (beta).",
+        message: "TikTok mesajı gönderildi.",
         externalMessageId: payload.data?.message_id ?? undefined,
       };
     } catch (error) {

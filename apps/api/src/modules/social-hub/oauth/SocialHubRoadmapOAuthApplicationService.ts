@@ -100,7 +100,7 @@ export class SocialHubRoadmapOAuthApplicationService {
       implementationStatus: "ready",
       authorizationUrl: url.toString(),
       state,
-      message: "TikTok OAuth (beta) yönlendirmesi hazır.",
+      message: "TikTok OAuth yönlendirmesi hazır.",
     };
   }
 
@@ -145,7 +145,7 @@ export class SocialHubRoadmapOAuthApplicationService {
       accessToken: payload.access_token,
       expiresInSec: payload.expires_in ?? null,
       externalAccountId: payload.open_id ?? null,
-      displayName: "TikTok (beta)",
+      displayName: "TikTok",
       refreshToken: payload.refresh_token ?? null,
     });
   }

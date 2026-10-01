@@ -11,11 +11,13 @@ const EMPTY_CAPS: SocialHubProviderCapabilities = {
 export type SocialHubRoadmapProvider = {
   platformCode: string;
   label: string;
-  implementationStatus: "roadmap";
+  implementationStatus: "roadmap" | "ready";
   roadmapNote: string;
   capabilities: SocialHubProviderCapabilities;
   roadmapInterested?: boolean;
   oauthEnvConfigured?: boolean;
+  oauthImplementationStatus?: "ready" | "pending";
+  isRoadmapBeta?: boolean;
   roadmapConnectionStatusCode?: string | null;
   roadmapHasRefreshToken?: boolean;
 };
@@ -26,7 +28,7 @@ export const SOCIAL_HUB_ROADMAP_PROVIDERS: SocialHubRoadmapProvider[] = [
     label: "TikTok",
     implementationStatus: "roadmap",
     roadmapNote:
-      "Beta OAuth — gelen webhook Mesajlar köprüsü; giden mesaj SOCIAL_TIKTOK_OUTBOUND_ENABLED ile.",
+      "Prod OAuth yolu — gelen webhook Mesajlar köprüsü; giden mesaj deploy’da SOCIAL_TIKTOK_OUTBOUND_ENABLED=1 ile açılır.",
     capabilities: EMPTY_CAPS,
   },
   {
