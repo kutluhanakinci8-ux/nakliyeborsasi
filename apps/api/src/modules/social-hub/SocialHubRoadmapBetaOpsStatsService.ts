@@ -71,4 +71,27 @@ export class SocialHubRoadmapBetaOpsStatsService {
       platforms,
     };
   }
+
+  public buildCsv(snapshot: SocialHubRoadmapBetaOpsSnapshot): string {
+    const header =
+      "platformCode,label,connectedCompanyCount,openThreadCount,outboundOk24h,outboundFailed24h";
+    const lines = snapshot.platforms.map((row) =>
+      [
+        row.platformCode,
+        escapeCsv(row.label),
+        row.connectedCompanyCount,
+        row.openThreadCount,
+        row.outboundOk24h,
+        row.outboundFailed24h,
+      ].join(","),
+    );
+    return [header, ...lines].join("\n");
+  }
+}
+
+function escapeCsv(value: string): string {
+  if (value.includes(",") || value.includes('"') || value.includes("\n")) {
+    return `"${value.replace(/"/g, '""')}"`;
+  }
+  return value;
 }

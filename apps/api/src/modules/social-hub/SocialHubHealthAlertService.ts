@@ -13,6 +13,7 @@ import {
   type HealthAlertThresholdSettings,
 } from "./socialHubHealthAlertThresholds";
 import { SocialHubSlackNotificationService } from "./SocialHubSlackNotificationService";
+import { mergeHealthAlertChannels } from "./socialHubHealthAlertChannels";
 
 @Injectable()
 export class SocialHubHealthAlertService {
@@ -62,9 +63,10 @@ export class SocialHubHealthAlertService {
       healthAlertPlatformThresholdsJson:
         settings?.healthAlertPlatformThresholdsJson ?? null,
     };
+    const alertChannels = mergeHealthAlertChannels(health);
     const effectiveOverall = adjustOverallForFailureThresholds({
       overallStatus: health.overallStatus,
-      channels: health.channels,
+      channels: alertChannels,
       settings: thresholdSettings,
     });
     if (
@@ -83,7 +85,7 @@ export class SocialHubHealthAlertService {
     if (sameStatus && now - lastSent < 24 * 60 * 60 * 1000) {
       return false;
     }
-    const summaryParts = health.channels
+    const summaryParts = alertChannels
       .filter(
         (channel) =>
           channel.setupWarnings.length > 0 ||
@@ -97,13 +99,14 @@ export class SocialHubHealthAlertService {
         } else if (channel.tokenHealth === "expiring_soon") {
           warnings.push("Token süresi yakın");
         }
-        return `${channel.label}: ${warnings.join("; ")}`;
+        const betaTag = channel.isRoadmapBeta ? " (beta)" : "";
+        return `${channel.label}${betaTag}: ${warnings.join("; ")}`;
       });
-    const failureParts = health.channels
+    const failureParts = alertChannels
       .filter((channel) => channel.recentOutboundFailures24h > 0)
       .map(
         (channel) =>
-          `${channel.label}: ${channel.recentOutboundFailures24h} gönderim hatası (24s)`,
+          `${channel.label}${channel.isRoadmapBeta ? " (beta)" : ""}: ${channel.recentOutboundFailures24h} gönderim hatası (24s)`,
       );
     const summary = [...summaryParts, ...failureParts].join(" | ");
     const webBase =

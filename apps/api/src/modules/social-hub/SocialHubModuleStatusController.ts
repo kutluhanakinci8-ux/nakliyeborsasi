@@ -16,7 +16,7 @@ export class SocialHubModuleStatusController {
   } {
     return {
       module: "social_hub",
-      phase: "af",
+      phase: "ag",
       subscriptionModuleCode: SubscriptionModuleCode.SocialHub,
       features: [
         "connections_skeleton",
@@ -117,6 +117,11 @@ export class SocialHubModuleStatusController {
         "weekly_email_roadmap_beta_ops",
         "insights_roadmap_beta_outbound_24h",
         "public_status_webhook_readiness",
+        "health_alerts_roadmap_channels",
+        "webhook_post_http_200",
+        "youtube_webhook_oidc_issuer_beta",
+        "platform_admin_roadmap_beta_ops_csv",
+        "insights_roadmap_beta_channel_health",
       ],
       integrationWebhookReadiness: buildSocialHubIntegrationWebhookReadiness(),
     };

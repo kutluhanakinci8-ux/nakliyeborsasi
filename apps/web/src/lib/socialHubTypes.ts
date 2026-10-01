@@ -189,6 +189,14 @@ export type SocialHubNotificationInsights = {
   outboundDeliveriesLast24h: { ok: number; failed: number };
   channelOutbound24h: SocialHubChannelOutboundStat[];
   roadmapBetaOutbound24h?: SocialHubChannelOutboundStat[];
+  roadmapBetaChannelHealth?: Array<{
+    platformCode: string;
+    label: string;
+    statusCode: string;
+    openThreadCount: number;
+    recentOutboundFailures24h: number;
+    tokenHealth: string;
+  }>;
   channelOutbound7d: SocialHubChannelOutboundStat[];
   channelOutbound30d: SocialHubChannelOutboundStat[];
   outboundDeliveriesLast7d: { ok: number; failed: number };

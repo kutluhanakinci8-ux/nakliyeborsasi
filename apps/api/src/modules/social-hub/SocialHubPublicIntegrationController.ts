@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
   Post,
   Query,
   Req,
@@ -62,6 +63,7 @@ export class SocialHubPublicIntegrationController {
   }
 
   @Post("webhooks/meta")
+  @HttpCode(200)
   public async metaWebhook(
     @Req() request: Request,
     @Body() body: Record<string, unknown>,
@@ -86,6 +88,7 @@ export class SocialHubPublicIntegrationController {
   }
 
   @Post("webhooks/tiktok")
+  @HttpCode(200)
   public async tiktokWebhook(
     @Req() request: Request,
     @Body() body: Record<string, unknown>,
@@ -102,6 +105,7 @@ export class SocialHubPublicIntegrationController {
   }
 
   @Post("webhooks/youtube")
+  @HttpCode(200)
   public async youtubeWebhook(
     @Req() request: Request,
     @Body() body: Record<string, unknown>,
@@ -117,6 +121,7 @@ export class SocialHubPublicIntegrationController {
   }
 
   @Post("webhooks/whatsapp")
+  @HttpCode(200)
   public async whatsappWebhook(
     @Req() request: Request,
     @Body() body: Record<string, unknown>,
