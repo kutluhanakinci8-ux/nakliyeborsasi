@@ -18,6 +18,13 @@ if [[ -n "${SOCIAL_HUB_SMOKE_EXPECT_PHASE:-}" ]]; then
     exit 1
   }
   echo "OK: phase ${SOCIAL_HUB_SMOKE_EXPECT_PHASE}"
+  if [[ "${SOCIAL_HUB_SMOKE_EXPECT_PHASE}" == "ao" ]]; then
+    echo "${status_json}" | grep -q '"analytics_meta_platform_insights"' || {
+      echo "FAIL: status missing analytics_meta_platform_insights feature"
+      exit 1
+    }
+    echo "OK: status analytics_meta_platform_insights feature"
+  fi
 fi
 if [[ "${SOCIAL_HUB_SMOKE_WEBHOOK_READINESS:-0}" == "1" ]]; then
   echo "${status_json}" | grep -q '"integrationWebhookReadiness"' || {
@@ -80,6 +87,20 @@ if [[ -n "${SOCIAL_HUB_JWT:-}" ]]; then
       exit 1
     }
     echo "OK: snapshot webhookActivity"
+  fi
+  if [[ "${SOCIAL_HUB_SMOKE_PLATFORM_INSIGHTS:-0}" == "1" ]]; then
+    analytics_code="$(curl -sS -o /tmp/social-hub-analytics.json -w "%{http_code}" \
+      -H "Authorization: Bearer ${SOCIAL_HUB_JWT}" \
+      "${API_BASE}/company/social-hub/analytics")"
+    if [[ "${analytics_code}" != "200" ]]; then
+      echo "FAIL: analytics HTTP ${analytics_code}"
+      exit 1
+    fi
+    grep -q '"platformInsights"' /tmp/social-hub-analytics.json || {
+      echo "FAIL: analytics missing platformInsights"
+      exit 1
+    }
+    echo "OK: analytics platformInsights"
   fi
   echo "OK: snapshot"
 else

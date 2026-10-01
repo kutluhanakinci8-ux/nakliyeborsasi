@@ -808,7 +808,8 @@ export function SocialAnalyticsPanel({
       <header className="social-hub-panel-head">
         <h2 className="account-card-title">İstatistikler</h2>
         <p className="account-card-lead">
-          Gönderi durumları, gelen kutusu, webhook köprü denetimi ve kanal hazırlığı.
+          Gönderi durumları, gelen kutusu, webhook köprü denetimi, Meta kanal Graph
+          özetleri ve kanal hazırlığı.
         </p>
         {onExportAnalytics ? (
           <button
@@ -895,6 +896,69 @@ export function SocialAnalyticsPanel({
                 .join(" · ")}`
             : ""}
         </p>
+      ) : null}
+      {analytics?.platformInsights && analytics.platformInsights.length > 0 ? (
+        <div className="social-hub-platform-insights">
+          <h3 className="social-hub-subsection-title">Meta kanal özetleri (Graph)</h3>
+          <p className="module-hint">
+            Firma OAuth ile Instagram ve Facebook sayfa metrikleri; bağlı değilse veya
+            izin yoksa satır durumu gösterilir.
+          </p>
+          <ul className="social-hub-platform-insight-list">
+            {analytics.platformInsights.map((row) => (
+              <li key={row.platformCode} className="social-hub-platform-insight-card">
+                <div className="social-hub-platform-insight-head">
+                  <strong>{row.label}</strong>
+                  <span
+                    className={`social-hub-platform-insight-status social-hub-platform-insight-status--${row.status}`}
+                  >
+                    {row.status === "ok"
+                      ? "Güncel"
+                      : row.status === "not_connected"
+                        ? "Bağlı değil"
+                        : "Kullanılamıyor"}
+                  </span>
+                </div>
+                {row.status === "ok" ? (
+                  <dl className="social-hub-platform-insight-metrics">
+                    {row.followersCount != null ? (
+                      <>
+                        <dt>Takipçi</dt>
+                        <dd>{row.followersCount.toLocaleString("tr-TR")}</dd>
+                      </>
+                    ) : null}
+                    {row.followingCount != null ? (
+                      <>
+                        <dt>Takip</dt>
+                        <dd>{row.followingCount.toLocaleString("tr-TR")}</dd>
+                      </>
+                    ) : null}
+                    {row.mediaOrPostsCount != null ? (
+                      <>
+                        <dt>Gönderi</dt>
+                        <dd>{row.mediaOrPostsCount.toLocaleString("tr-TR")}</dd>
+                      </>
+                    ) : null}
+                    {row.impressions28d != null ? (
+                      <>
+                        <dt>Gösterim (28g)</dt>
+                        <dd>{row.impressions28d.toLocaleString("tr-TR")}</dd>
+                      </>
+                    ) : null}
+                    {row.engagedUsers28d != null ? (
+                      <>
+                        <dt>Erişim / etkileşim (28g)</dt>
+                        <dd>{row.engagedUsers28d.toLocaleString("tr-TR")}</dd>
+                      </>
+                    ) : null}
+                  </dl>
+                ) : row.errorMessage ? (
+                  <p className="module-hint">{row.errorMessage}</p>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </div>
       ) : null}
       {analytics?.postsByStatus && Object.keys(analytics.postsByStatus).length > 0 ? (
         <ul className="social-hub-audit-list">

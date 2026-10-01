@@ -1,0 +1,1 @@
+-- Faz AO: şema değişikliği yok (Meta Graph platform insights — İstatistikler)

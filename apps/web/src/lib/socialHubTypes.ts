@@ -125,6 +125,19 @@ export type SocialHubSubscriptionInfo = {
   upgradeHintPath: string;
 };
 
+export type SocialHubPlatformInsightRow = {
+  platformCode: string;
+  label: string;
+  status: "ok" | "unavailable" | "not_connected";
+  followersCount: number | null;
+  followingCount: number | null;
+  mediaOrPostsCount: number | null;
+  impressions28d: number | null;
+  engagedUsers28d: number | null;
+  errorMessage: string | null;
+  fetchedAt: string;
+};
+
 export type SocialHubAnalytics = {
   generatedAt: string;
   postsByStatus: Record<string, number>;
@@ -154,6 +167,7 @@ export type SocialHubAnalytics = {
       inboundBridged24h: number;
     }>;
   };
+  platformInsights?: SocialHubPlatformInsightRow[];
 };
 
 export type SocialHubBetaWebhookReadiness = {

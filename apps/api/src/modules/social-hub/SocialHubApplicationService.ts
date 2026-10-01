@@ -68,6 +68,7 @@ import { mapWebhookBridgedByPlatform } from "./socialHubWebhookBridgeSnapshot";
 import { buildCompanyWebhookActivityCsv } from "./socialHubWebhookActivityCsv";
 import { buildSocialHubAnalyticsCsv } from "./socialHubAnalyticsCsv";
 import { buildSocialHubAuditLogCsv } from "./socialHubAuditLogCsv";
+import { SocialHubMetaPlatformInsightsService } from "./SocialHubMetaPlatformInsightsService";
 
 export const INVITABLE_SOCIAL_TEAM_ROLES: readonly CompanyRoleCode[] = [
   CompanyRoleCode.SocialAdmin,
@@ -111,6 +112,7 @@ export class SocialHubApplicationService {
     private readonly roadmapOAuthApplicationService: SocialHubRoadmapOAuthApplicationService,
     private readonly roadmapTokenRefreshService: SocialHubRoadmapTokenRefreshService,
     private readonly roadmapInboxSyncService: SocialHubRoadmapInboxSyncService,
+    private readonly metaPlatformInsightsService: SocialHubMetaPlatformInsightsService,
   ) {}
 
   private async assertSocialHubSubscription(companyId: string): Promise<void> {
@@ -497,6 +499,7 @@ export class SocialHubApplicationService {
       bridgedByPlatform24h,
       bridgedByPlatform7d,
       lastWebhookBridgedAt,
+      platformInsightsRows,
     ] = await Promise.all([
       this.socialHubAuditService.countRecentByActionForCompany(
         companyId,
@@ -525,7 +528,10 @@ export class SocialHubApplicationService {
         companyId,
         SocialHubAuditActionCode.WebhookInboundBridged,
       ),
+      this.metaPlatformInsightsService.buildForCompany(companyId),
     ]);
+
+    const platformInsights = platformInsightsRows;
 
     return {
       analytics: {
@@ -552,6 +558,7 @@ export class SocialHubApplicationService {
           byPlatform24h: mapWebhookBridgedByPlatform(bridgedByPlatform24h),
           byPlatform7d: mapWebhookBridgedByPlatform(bridgedByPlatform7d),
         },
+        platformInsights,
       },
     };
   }
@@ -579,6 +586,7 @@ export class SocialHubApplicationService {
       webhookInboundBridged30d: analytics.webhookBridge.inboundBridged30d,
       webhookByPlatform24h: analytics.webhookBridge.byPlatform24h,
       webhookByPlatform7d: analytics.webhookBridge.byPlatform7d,
+      platformInsights: analytics.platformInsights ?? [],
     });
   }
 
