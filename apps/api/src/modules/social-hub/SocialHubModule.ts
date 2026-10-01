@@ -58,6 +58,8 @@ import { SocialHubRoadmapOAuthApplicationService } from "./oauth/SocialHubRoadma
 import { SocialHubRoadmapTokenRefreshService } from "./oauth/SocialHubRoadmapTokenRefreshService";
 import { SocialHubRoadmapTokenRefreshScheduler } from "./SocialHubRoadmapTokenRefreshScheduler";
 import { SocialHubTikTokWebhookIngestService } from "./oauth/SocialHubTikTokWebhookIngestService";
+import { SocialHubTikTokOutboundService } from "./oauth/SocialHubTikTokOutboundService";
+import { SocialHubYouTubeWebhookIngestService } from "./oauth/SocialHubYouTubeWebhookIngestService";
 import { SocialHubPlatformAdminController } from "./SocialHubPlatformAdminController";
 import { PlatformAdminGuard } from "../platform-admin/PlatformAdminGuard";
 
@@ -96,6 +98,8 @@ import { PlatformAdminGuard } from "../platform-admin/PlatformAdminGuard";
     SocialHubRoadmapTokenRefreshService,
     SocialHubRoadmapTokenRefreshScheduler,
     SocialHubTikTokWebhookIngestService,
+    SocialHubTikTokOutboundService,
+    SocialHubYouTubeWebhookIngestService,
     SocialHubOAuthApplicationService,
     SocialHubWebhookIngestService,
     SocialHubTokenVaultService,

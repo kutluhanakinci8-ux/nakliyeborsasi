@@ -138,6 +138,9 @@ export function SocialConnectionsPanel({
             <li>
               TikTok (beta): <code>{integrationWebhooks.tiktok}</code>
             </li>
+            <li>
+              YouTube (beta): <code>{integrationWebhooks.youtube}</code>
+            </li>
           </ul>
         ) : null}
       </header>

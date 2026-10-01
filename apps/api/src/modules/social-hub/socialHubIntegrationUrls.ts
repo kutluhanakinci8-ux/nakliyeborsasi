@@ -2,6 +2,7 @@ export function buildSocialHubPublicWebhookUrls(): {
   meta: string;
   whatsapp: string;
   tiktok: string;
+  youtube: string;
 } {
   const apiBase =
     process.env.API_PUBLIC_BASE_URL?.trim() ??
@@ -11,5 +12,6 @@ export function buildSocialHubPublicWebhookUrls(): {
     meta: `${prefix}/meta`,
     whatsapp: `${prefix}/whatsapp`,
     tiktok: `${prefix}/tiktok`,
+    youtube: `${prefix}/youtube`,
   };
 }

@@ -12,6 +12,7 @@ import { SocialHubOAuthApplicationService } from "./oauth/SocialHubOAuthApplicat
 import { SocialHubOAuthConfigService } from "./oauth/SocialHubOAuthConfigService";
 import { SocialHubWebhookIngestService } from "./oauth/SocialHubWebhookIngestService";
 import { SocialHubTikTokWebhookIngestService } from "./oauth/SocialHubTikTokWebhookIngestService";
+import { SocialHubYouTubeWebhookIngestService } from "./oauth/SocialHubYouTubeWebhookIngestService";
 
 @Controller("company/social-hub")
 export class SocialHubPublicIntegrationController {
@@ -20,6 +21,7 @@ export class SocialHubPublicIntegrationController {
     private readonly socialHubOAuthConfigService: SocialHubOAuthConfigService,
     private readonly socialHubWebhookIngestService: SocialHubWebhookIngestService,
     private readonly socialHubTikTokWebhookIngestService: SocialHubTikTokWebhookIngestService,
+    private readonly socialHubYouTubeWebhookIngestService: SocialHubYouTubeWebhookIngestService,
   ) {}
 
   @Get("oauth/callback")
@@ -85,9 +87,25 @@ export class SocialHubPublicIntegrationController {
 
   @Post("webhooks/tiktok")
   public async tiktokWebhook(
+    @Req() request: Request,
     @Body() body: Record<string, unknown>,
   ): Promise<{ received: boolean }> {
-    await this.socialHubTikTokWebhookIngestService.ingestPayload(body);
+    const rawBody = (request as Request & { rawBody?: Buffer }).rawBody;
+    const signature =
+      (request.headers["x-tiktok-signature"] as string | undefined) ??
+      (request.headers["tiktok-signature"] as string | undefined);
+    await this.socialHubTikTokWebhookIngestService.ingestPayload(body, {
+      signatureHeader: signature,
+      rawBody,
+    });
+    return { received: true };
+  }
+
+  @Post("webhooks/youtube")
+  public async youtubeWebhook(
+    @Body() body: Record<string, unknown>,
+  ): Promise<{ received: boolean }> {
+    await this.socialHubYouTubeWebhookIngestService.ingestPayload(body);
     return { received: true };
   }
 
