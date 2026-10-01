@@ -15,6 +15,7 @@ import type {
   SocialHubTeamMember,
   SocialHubTemplate,
   SocialHubInboxThreadPreview,
+  SocialHubPwaConfig,
 } from "../../lib/socialHubTypes";
 import {
   buildMonthGrid,
@@ -1724,6 +1725,8 @@ type HealthPanelProps = {
   onExportWebhookActivity: () => void;
   onRefreshToken: (platformCode: string) => void;
   onReload: () => void;
+  pwa?: SocialHubPwaConfig;
+  healthPushHookStatus?: string;
 };
 
 export function SocialHealthPanel({
@@ -1767,6 +1770,8 @@ export function SocialHealthPanel({
   onExportWebhookActivity,
   onRefreshToken,
   onReload,
+  pwa,
+  healthPushHookStatus,
 }: HealthPanelProps) {
   if (!health) {
     return (
@@ -1784,6 +1789,17 @@ export function SocialHealthPanel({
           Kritik durumda firma sahiplerine e-posta gider; Slack için aşağıdaki
           sosyal hub webhook veya (isteğe bağlı) Mesajlar köprüsü kullanılır.
         </p>
+        {pwa ? (
+          <p className="module-hint social-hub-pwa-hint">
+            PWA: <code>{pwa.manifestPath}</code> (scope{" "}
+            <code>{pwa.scope}</code>). {pwa.healthPushHook.note}
+            {healthPushHookStatus === "skeleton_registered"
+              ? " · Push iskeleti: tarayıcı hazır."
+              : healthPushHookStatus === "unsupported"
+                ? " · Push: tarayıcı desteklemiyor."
+                : null}
+          </p>
+        ) : null}
         {canManage ? (
           <label className="social-hub-check">
             <input

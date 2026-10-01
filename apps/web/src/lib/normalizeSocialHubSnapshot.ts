@@ -137,5 +137,6 @@ export function normalizeSocialHubSnapshot(payload: unknown): SocialHubSnapshot 
     linkedinDmInboxGate: hub.linkedinDmInboxGate as
       | SocialHubSnapshot["linkedinDmInboxGate"]
       | undefined,
+    pwa: hub.pwa as SocialHubSnapshot["pwa"] | undefined,
   };
 }

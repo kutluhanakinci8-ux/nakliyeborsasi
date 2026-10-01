@@ -43,6 +43,19 @@ export type SocialHubProviderCapabilities = {
   feedPublish: boolean;
 };
 
+export type SocialHubPwaConfig = {
+  manifestPath: string;
+  startUrl: string;
+  scope: string;
+  display: "standalone";
+  healthPushHook: {
+    status: "skeleton";
+    channel: string;
+    preferenceCode: string;
+    note: string;
+  };
+};
+
 export type SocialHubLinkedInDmInboxGate = {
   status: "deferred_v2";
   implemented: "explicit_v2_gate";
@@ -325,6 +338,7 @@ export type SocialHubSnapshot = {
   };
   inboxSyncSummary?: SocialHubInboxSyncSummary;
   linkedinDmInboxGate?: SocialHubLinkedInDmInboxGate;
+  pwa?: SocialHubPwaConfig;
 };
 
 export type SocialHubInboxChannelSyncRow = {

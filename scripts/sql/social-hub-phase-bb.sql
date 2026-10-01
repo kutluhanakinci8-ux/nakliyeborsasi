@@ -1,0 +1,1 @@
+-- Faz BB: şema değişikliği yok (PWA manifest scope + sağlık push hook iskeleti)
