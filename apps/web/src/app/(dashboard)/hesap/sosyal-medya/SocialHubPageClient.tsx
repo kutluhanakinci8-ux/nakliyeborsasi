@@ -67,6 +67,7 @@ export function SocialHubPageClient() {
     socialSlackWebhookUrl: "",
     socialSlackUseMessagingFallback: true,
     socialSlackNotifyOutboundFailures: false,
+    socialSlackOutboundFailureCooldownMinutes: 15,
   });
 
   const canAccess =
@@ -153,6 +154,8 @@ export function SocialHubPageClient() {
         snapshot.settings.socialSlackUseMessagingFallback ?? true,
       socialSlackNotifyOutboundFailures:
         snapshot.settings.socialSlackNotifyOutboundFailures ?? false,
+      socialSlackOutboundFailureCooldownMinutes:
+        snapshot.settings.socialSlackOutboundFailureCooldownMinutes ?? 15,
     });
     void loadHealthData().catch(() => setError("Sağlık verisi yüklenemedi."));
   }, [accessToken, activeTab, snapshot, subscriptionBlocked, loadHealthData]);
@@ -298,6 +301,9 @@ export function SocialHubPageClient() {
                 socialSlackNotifyOutboundFailures={
                   slackSettingsDraft.socialSlackNotifyOutboundFailures
                 }
+                socialSlackOutboundFailureCooldownMinutes={
+                  slackSettingsDraft.socialSlackOutboundFailureCooldownMinutes
+                }
                 onSlackSettingsPatch={(patch) =>
                   setSlackSettingsDraft((current) => ({ ...current, ...patch }))
                 }
@@ -311,9 +317,19 @@ export function SocialHubPageClient() {
                         slackSettingsDraft.socialSlackUseMessagingFallback,
                       socialSlackNotifyOutboundFailures:
                         slackSettingsDraft.socialSlackNotifyOutboundFailures,
+                      socialSlackOutboundFailureCooldownMinutes:
+                        slackSettingsDraft.socialSlackOutboundFailureCooldownMinutes,
                     });
                     await reload();
                     setStatus("Slack ayarları kaydedildi.");
+                  })
+                }
+                onTestSlack={() =>
+                  void runAction(async () => {
+                    const result = await SocialHubApiClient.sendSlackTest(
+                      accessToken,
+                    );
+                    setStatus(result.message);
                   })
                 }
                 onDeliveryFiltersChange={(patch) =>

@@ -24,6 +24,7 @@ const DEFAULT_SETTINGS: SocialHubSnapshot["settings"] = {
   socialSlackWebhookUrl: null,
   socialSlackUseMessagingFallback: true,
   socialSlackNotifyOutboundFailures: false,
+  socialSlackOutboundFailureCooldownMinutes: 15,
 };
 
 export function normalizeSocialHubSnapshot(payload: unknown): SocialHubSnapshot {

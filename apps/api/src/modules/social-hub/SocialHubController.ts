@@ -277,8 +277,14 @@ export class SocialHubController {
       socialSlackWebhookUrl?: string | null;
       socialSlackUseMessagingFallback?: boolean;
       socialSlackNotifyOutboundFailures?: boolean;
+      socialSlackOutboundFailureCooldownMinutes?: number;
     },
   ) {
     return this.socialHubApplicationService.updateSettings(user, body);
+  }
+
+  @Post("settings/slack-test")
+  public async slackTest(@AuthenticatedUserParam() user: AuthenticatedUserContext) {
+    return this.socialHubApplicationService.sendSlackTest(user);
   }
 }

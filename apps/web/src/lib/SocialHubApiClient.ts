@@ -296,6 +296,16 @@ export class SocialHubApiClient {
     });
   }
 
+  public static async sendSlackTest(accessToken: string): Promise<{
+    ok: boolean;
+    message: string;
+    usedDedicatedWebhook: boolean;
+  }> {
+    return socialHubFetch(accessToken, "/settings/slack-test", {
+      method: "POST",
+    });
+  }
+
   public static async fetchTeam(accessToken: string): Promise<{
     members: SocialHubTeamMember[];
     assignableRoleCodes: string[];

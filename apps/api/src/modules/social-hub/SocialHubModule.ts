@@ -9,6 +9,7 @@ import { CompanySocialConnectionEntity } from "../../infrastructure/database/ent
 import { CompanySocialPostEntity } from "../../infrastructure/database/entities/CompanySocialPostEntity";
 import { CompanySocialReplyTemplateEntity } from "../../infrastructure/database/entities/CompanySocialReplyTemplateEntity";
 import { CompanySocialSettingsEntity } from "../../infrastructure/database/entities/CompanySocialSettingsEntity";
+import { CompanySocialSlackNotifyDedupEntity } from "../../infrastructure/database/entities/CompanySocialSlackNotifyDedupEntity";
 import { SocialHubController } from "./SocialHubController";
 import { SocialHubApplicationService } from "./SocialHubApplicationService";
 import { SocialProviderRegistry } from "./providers/SocialProviderRegistry";
@@ -60,6 +61,7 @@ import { SocialHubSlackNotificationService } from "./SocialHubSlackNotificationS
       CompanySocialPostEntity,
       CompanySocialReplyTemplateEntity,
       CompanySocialSettingsEntity,
+      CompanySocialSlackNotifyDedupEntity,
       CompanySocialThreadLinkEntity,
       MessageThreadEntity,
       CompanyMembershipEntity,

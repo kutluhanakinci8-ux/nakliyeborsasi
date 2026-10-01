@@ -37,6 +37,8 @@ import { parseSocialHubConnectionMetadata } from "./oauth/SocialHubConnectionMet
 import { SocialHubConnectionHealthService } from "./SocialHubConnectionHealthService";
 import { SocialHubTokenRefreshService } from "./oauth/SocialHubTokenRefreshService";
 import { SocialHubOutboundDeliveryLogService } from "./SocialHubOutboundDeliveryLogService";
+import { SocialHubSlackNotificationService } from "./SocialHubSlackNotificationService";
+import { normalizeSocialHubSlackWebhookUrl } from "./socialHubSlackWebhook";
 
 export const INVITABLE_SOCIAL_TEAM_ROLES: readonly CompanyRoleCode[] = [
   CompanyRoleCode.SocialAdmin,
@@ -73,6 +75,7 @@ export class SocialHubApplicationService {
     private readonly connectionHealthService: SocialHubConnectionHealthService,
     private readonly tokenRefreshService: SocialHubTokenRefreshService,
     private readonly outboundDeliveryLogService: SocialHubOutboundDeliveryLogService,
+    private readonly slackNotificationService: SocialHubSlackNotificationService,
   ) {}
 
   private async assertSocialHubSubscription(companyId: string): Promise<void> {
@@ -233,6 +236,9 @@ export class SocialHubApplicationService {
         errorMessage: row.errorMessage,
         externalMessageId: row.externalMessageId,
         bodyTextPreview: row.bodyTextPreview,
+        messagingThreadUrl: this.slackNotificationService.buildMessagingThreadUrl(
+          row.messageThreadId,
+        ),
         createdAt: row.createdAt.toISOString(),
       })),
     };
@@ -762,6 +768,7 @@ export class SocialHubApplicationService {
       socialSlackWebhookUrl?: string | null;
       socialSlackUseMessagingFallback?: boolean;
       socialSlackNotifyOutboundFailures?: boolean;
+      socialSlackOutboundFailureCooldownMinutes?: number;
     },
   ) {
     assertSocialHubAdmin(user);
@@ -812,8 +819,9 @@ export class SocialHubApplicationService {
       settings.healthAlertPlatformThresholdsJson = raw;
     }
     if (patch.socialSlackWebhookUrl !== undefined) {
-      const trimmed = patch.socialSlackWebhookUrl?.trim() || null;
-      settings.socialSlackWebhookUrl = trimmed;
+      settings.socialSlackWebhookUrl = normalizeSocialHubSlackWebhookUrl(
+        patch.socialSlackWebhookUrl,
+      );
     }
     if (patch.socialSlackUseMessagingFallback !== undefined) {
       settings.socialSlackUseMessagingFallback =
@@ -823,6 +831,13 @@ export class SocialHubApplicationService {
       settings.socialSlackNotifyOutboundFailures =
         patch.socialSlackNotifyOutboundFailures;
     }
+    if (patch.socialSlackOutboundFailureCooldownMinutes !== undefined) {
+      const value = Math.min(
+        Math.max(Math.floor(patch.socialSlackOutboundFailureCooldownMinutes), 1),
+        24 * 60,
+      );
+      settings.socialSlackOutboundFailureCooldownMinutes = value;
+    }
     await this.settingsRepository.save(settings);
     this.socialHubAuditService.record(
       user,
@@ -831,6 +846,33 @@ export class SocialHubApplicationService {
       { patch },
     );
     return { settings: this.mapSettings(settings) };
+  }
+
+  public async sendSlackTest(user: AuthenticatedUserContext) {
+    assertSocialHubAdmin(user);
+    await this.assertSocialHubSubscription(user.companyId);
+    try {
+      const result = await this.slackNotificationService.postTestMessage(
+        user.companyId,
+      );
+      if (!result.ok) {
+        throw new ValidationException(result.message);
+      }
+      this.socialHubAuditService.record(
+        user,
+        SocialHubAuditActionCode.SettingsUpdate,
+        "/company/social-hub/settings/slack-test",
+        { slackTest: true },
+      );
+      return result;
+    } catch (error) {
+      if (error instanceof ValidationException) {
+        throw error;
+      }
+      throw new ValidationException(
+        "Slack test mesajı gönderilemedi. Webhook URL'sini kontrol edin.",
+      );
+    }
   }
 
   public async listTeam(user: AuthenticatedUserContext) {
@@ -944,6 +986,7 @@ export class SocialHubApplicationService {
         socialSlackWebhookUrl: null,
         socialSlackUseMessagingFallback: true,
         socialSlackNotifyOutboundFailures: false,
+        socialSlackOutboundFailureCooldownMinutes: 15,
       }),
     );
   }
@@ -1042,6 +1085,8 @@ export class SocialHubApplicationService {
         row.socialSlackUseMessagingFallback ?? true,
       socialSlackNotifyOutboundFailures:
         row.socialSlackNotifyOutboundFailures ?? false,
+      socialSlackOutboundFailureCooldownMinutes:
+        row.socialSlackOutboundFailureCooldownMinutes ?? 15,
     };
   }
 
