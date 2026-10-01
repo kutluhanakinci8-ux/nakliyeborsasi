@@ -88,9 +88,12 @@ export class SocialHubOutboundDeliveryLogService {
       .getCount();
   }
 
-  public buildCsv(rows: CompanySocialOutboundDeliveryEntity[]): string {
+  public buildCsv(
+    rows: CompanySocialOutboundDeliveryEntity[],
+    threadLabels?: Map<string, string>,
+  ): string {
     const header =
-      "createdAt,platformCode,status,messageThreadId,messageId,bodyTextPreview,errorMessage,externalMessageId";
+      "createdAt,platformCode,status,threadDisplayLabel,messageThreadId,messageId,bodyTextPreview,errorMessage,externalMessageId";
     const lines = rows.map((row) => {
       const escape = (value: string | null) => {
         const text = value ?? "";
@@ -103,6 +106,7 @@ export class SocialHubOutboundDeliveryLogService {
         row.createdAt.toISOString(),
         row.platformCode,
         row.status,
+        escape(threadLabels?.get(row.messageThreadId) ?? null),
         row.messageThreadId,
         row.messageId ?? "",
         escape(row.bodyTextPreview),

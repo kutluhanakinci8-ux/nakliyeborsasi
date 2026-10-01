@@ -48,6 +48,8 @@ import { SocialHubHealthAlertService } from "./SocialHubHealthAlertService";
 import { SocialHubHealthAlertScheduler } from "./SocialHubHealthAlertScheduler";
 import { CompanyMessagingSettingsEntity } from "../../infrastructure/database/entities/CompanyMessagingSettingsEntity";
 import { SocialHubSlackNotificationService } from "./SocialHubSlackNotificationService";
+import { SocialHubSlackDigestService } from "./SocialHubSlackDigestService";
+import { SocialHubSlackDigestScheduler } from "./SocialHubSlackDigestScheduler";
 
 @Module({
   imports: [
@@ -98,6 +100,8 @@ import { SocialHubSlackNotificationService } from "./SocialHubSlackNotificationS
     SocialHubHealthAlertService,
     SocialHubHealthAlertScheduler,
     SocialHubSlackNotificationService,
+    SocialHubSlackDigestService,
+    SocialHubSlackDigestScheduler,
     SocialProviderRegistry,
     MetaInstagramMessagingProvider,
     MetaFacebookMessengerProvider,

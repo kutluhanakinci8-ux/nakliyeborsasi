@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { In, Repository } from "typeorm";
 import {
   AuthenticatedUserContext,
   CompanyRoleCode,
@@ -223,6 +223,10 @@ export class SocialHubApplicationService {
       until: query.until ? new Date(query.until) : undefined,
       limit,
     });
+    const threadLabels = await this.resolveThreadDisplayLabels(
+      user.companyId,
+      rows.map((row) => row.messageThreadId),
+    );
     return {
       deliveries: rows.map((row) => ({
         id: row.id,
@@ -239,6 +243,7 @@ export class SocialHubApplicationService {
         messagingThreadUrl: this.slackNotificationService.buildMessagingThreadUrl(
           row.messageThreadId,
         ),
+        threadDisplayLabel: threadLabels.get(row.messageThreadId) ?? null,
         createdAt: row.createdAt.toISOString(),
       })),
     };
@@ -267,7 +272,11 @@ export class SocialHubApplicationService {
       until: query.until ? new Date(query.until) : undefined,
       limit,
     });
-    return this.outboundDeliveryLogService.buildCsv(rows);
+    const threadLabels = await this.resolveThreadDisplayLabels(
+      user.companyId,
+      rows.map((row) => row.messageThreadId),
+    );
+    return this.outboundDeliveryLogService.buildCsv(rows, threadLabels);
   }
 
   public async getAnalytics(user: AuthenticatedUserContext) {
@@ -769,6 +778,7 @@ export class SocialHubApplicationService {
       socialSlackUseMessagingFallback?: boolean;
       socialSlackNotifyOutboundFailures?: boolean;
       socialSlackOutboundFailureCooldownMinutes?: number;
+      socialSlackDailyDigestEnabled?: boolean;
     },
   ) {
     assertSocialHubAdmin(user);
@@ -837,6 +847,9 @@ export class SocialHubApplicationService {
         24 * 60,
       );
       settings.socialSlackOutboundFailureCooldownMinutes = value;
+    }
+    if (patch.socialSlackDailyDigestEnabled !== undefined) {
+      settings.socialSlackDailyDigestEnabled = patch.socialSlackDailyDigestEnabled;
     }
     await this.settingsRepository.save(settings);
     this.socialHubAuditService.record(
@@ -987,8 +1000,24 @@ export class SocialHubApplicationService {
         socialSlackUseMessagingFallback: true,
         socialSlackNotifyOutboundFailures: false,
         socialSlackOutboundFailureCooldownMinutes: 15,
+        socialSlackDailyDigestEnabled: false,
+        socialSlackDailyDigestLastSentAt: null,
       }),
     );
+  }
+
+  private async resolveThreadDisplayLabels(
+    companyId: string,
+    threadIds: string[],
+  ): Promise<Map<string, string>> {
+    const unique = [...new Set(threadIds.filter(Boolean))];
+    if (unique.length === 0) {
+      return new Map();
+    }
+    const links = await this.threadLinkRepository.find({
+      where: { companyId, messageThreadId: In(unique) },
+    });
+    return new Map(links.map((link) => [link.messageThreadId, link.displayLabel]));
   }
 
   private async listConnectionRows(
@@ -1087,6 +1116,9 @@ export class SocialHubApplicationService {
         row.socialSlackNotifyOutboundFailures ?? false,
       socialSlackOutboundFailureCooldownMinutes:
         row.socialSlackOutboundFailureCooldownMinutes ?? 15,
+      socialSlackDailyDigestEnabled: row.socialSlackDailyDigestEnabled ?? false,
+      socialSlackDailyDigestLastSentAt:
+        row.socialSlackDailyDigestLastSentAt?.toISOString() ?? null,
     };
   }
 
