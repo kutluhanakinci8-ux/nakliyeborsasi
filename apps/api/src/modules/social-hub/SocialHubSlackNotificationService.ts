@@ -110,6 +110,36 @@ export class SocialHubSlackNotificationService {
     );
   }
 
+  public async postDailyDigest(params: {
+    companyId: string;
+    overallStatus: string;
+    summary: string;
+  }): Promise<boolean> {
+    const webhook = await this.resolveWebhookUrl(params.companyId);
+    if (!webhook) {
+      return false;
+    }
+    const hubUrl = this.buildSocialHubUrl();
+    const text = `Sosyal hub günlük özet — *${params.overallStatus}*\n${params.summary}`;
+    await this.postWebhook(webhook, {
+      text,
+      blocks: [
+        { type: "section", text: { type: "mrkdwn", text } },
+        {
+          type: "actions",
+          elements: [
+            {
+              type: "button",
+              text: { type: "plain_text", text: "Sağlık paneli" },
+              url: hubUrl,
+            },
+          ],
+        },
+      ],
+    });
+    return true;
+  }
+
   public async postTestMessage(companyId: string): Promise<{
     ok: boolean;
     message: string;

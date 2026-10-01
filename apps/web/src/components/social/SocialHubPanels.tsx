@@ -856,11 +856,14 @@ type HealthPanelProps = {
   socialSlackUseMessagingFallback: boolean;
   socialSlackNotifyOutboundFailures: boolean;
   socialSlackOutboundFailureCooldownMinutes: number;
+  socialSlackDailyDigestEnabled: boolean;
+  socialSlackDailyDigestLastSentAt: string | null;
   onSlackSettingsPatch: (patch: {
     socialSlackWebhookUrl?: string;
     socialSlackUseMessagingFallback?: boolean;
     socialSlackNotifyOutboundFailures?: boolean;
     socialSlackOutboundFailureCooldownMinutes?: number;
+    socialSlackDailyDigestEnabled?: boolean;
   }) => void;
   onSaveSlackSettings: () => void;
   onTestSlack: () => void;
@@ -888,6 +891,8 @@ export function SocialHealthPanel({
   socialSlackUseMessagingFallback,
   socialSlackNotifyOutboundFailures,
   socialSlackOutboundFailureCooldownMinutes,
+  socialSlackDailyDigestEnabled,
+  socialSlackDailyDigestLastSentAt,
   onSlackSettingsPatch,
   onSaveSlackSettings,
   onTestSlack,
@@ -962,6 +967,25 @@ export function SocialHealthPanel({
               />
               Kanal gönderim hatalarında Slack bildirimi
             </label>
+            <label className="social-hub-check">
+              <input
+                type="checkbox"
+                checked={socialSlackDailyDigestEnabled}
+                disabled={busy}
+                onChange={(e) =>
+                  onSlackSettingsPatch({
+                    socialSlackDailyDigestEnabled: e.target.checked,
+                  })
+                }
+              />
+              Günlük Slack özet (24 saatte bir, bağlı kanallar)
+            </label>
+            {socialSlackDailyDigestLastSentAt ? (
+              <p className="module-hint">
+                Son özet:{" "}
+                {new Date(socialSlackDailyDigestLastSentAt).toLocaleString("tr-TR")}
+              </p>
+            ) : null}
             <label className="social-hub-threshold-field">
               Hata bildirimi bekleme (dk / konuşma)
               <input
@@ -1176,7 +1200,10 @@ export function SocialHealthPanel({
               <time dateTime={row.createdAt}>
                 {new Date(row.createdAt).toLocaleString("tr-TR")}
               </time>
-              <span className="social-hub-delivery-platform">{row.platformLabel}</span>
+              <span className="social-hub-delivery-platform">
+                {row.platformLabel}
+                {row.threadDisplayLabel ? ` · ${row.threadDisplayLabel}` : ""}
+              </span>
               <span
                 className={
                   row.status === "ok"

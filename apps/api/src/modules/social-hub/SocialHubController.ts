@@ -278,6 +278,7 @@ export class SocialHubController {
       socialSlackUseMessagingFallback?: boolean;
       socialSlackNotifyOutboundFailures?: boolean;
       socialSlackOutboundFailureCooldownMinutes?: number;
+      socialSlackDailyDigestEnabled?: boolean;
     },
   ) {
     return this.socialHubApplicationService.updateSettings(user, body);

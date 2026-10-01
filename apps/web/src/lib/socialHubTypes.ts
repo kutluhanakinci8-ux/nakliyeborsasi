@@ -23,6 +23,8 @@ export type SocialHubSettings = {
   socialSlackUseMessagingFallback?: boolean;
   socialSlackNotifyOutboundFailures?: boolean;
   socialSlackOutboundFailureCooldownMinutes?: number;
+  socialSlackDailyDigestEnabled?: boolean;
+  socialSlackDailyDigestLastSentAt?: string | null;
 };
 
 export type SocialHubProviderCapabilities = {
@@ -151,6 +153,7 @@ export type SocialHubOutboundDelivery = {
   externalMessageId: string | null;
   bodyTextPreview: string | null;
   messagingThreadUrl?: string;
+  threadDisplayLabel?: string | null;
   createdAt: string;
 };
 

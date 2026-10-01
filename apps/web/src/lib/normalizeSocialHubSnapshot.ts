@@ -25,6 +25,8 @@ const DEFAULT_SETTINGS: SocialHubSnapshot["settings"] = {
   socialSlackUseMessagingFallback: true,
   socialSlackNotifyOutboundFailures: false,
   socialSlackOutboundFailureCooldownMinutes: 15,
+  socialSlackDailyDigestEnabled: false,
+  socialSlackDailyDigestLastSentAt: null,
 };
 
 export function normalizeSocialHubSnapshot(payload: unknown): SocialHubSnapshot {

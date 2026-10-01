@@ -68,6 +68,7 @@ export function SocialHubPageClient() {
     socialSlackUseMessagingFallback: true,
     socialSlackNotifyOutboundFailures: false,
     socialSlackOutboundFailureCooldownMinutes: 15,
+    socialSlackDailyDigestEnabled: false,
   });
 
   const canAccess =
@@ -156,6 +157,8 @@ export function SocialHubPageClient() {
         snapshot.settings.socialSlackNotifyOutboundFailures ?? false,
       socialSlackOutboundFailureCooldownMinutes:
         snapshot.settings.socialSlackOutboundFailureCooldownMinutes ?? 15,
+      socialSlackDailyDigestEnabled:
+        snapshot.settings.socialSlackDailyDigestEnabled ?? false,
     });
     void loadHealthData().catch(() => setError("Sağlık verisi yüklenemedi."));
   }, [accessToken, activeTab, snapshot, subscriptionBlocked, loadHealthData]);
@@ -304,6 +307,12 @@ export function SocialHubPageClient() {
                 socialSlackOutboundFailureCooldownMinutes={
                   slackSettingsDraft.socialSlackOutboundFailureCooldownMinutes
                 }
+                socialSlackDailyDigestEnabled={
+                  slackSettingsDraft.socialSlackDailyDigestEnabled
+                }
+                socialSlackDailyDigestLastSentAt={
+                  snapshot.settings.socialSlackDailyDigestLastSentAt ?? null
+                }
                 onSlackSettingsPatch={(patch) =>
                   setSlackSettingsDraft((current) => ({ ...current, ...patch }))
                 }
@@ -319,6 +328,8 @@ export function SocialHubPageClient() {
                         slackSettingsDraft.socialSlackNotifyOutboundFailures,
                       socialSlackOutboundFailureCooldownMinutes:
                         slackSettingsDraft.socialSlackOutboundFailureCooldownMinutes,
+                      socialSlackDailyDigestEnabled:
+                        slackSettingsDraft.socialSlackDailyDigestEnabled,
                     });
                     await reload();
                     setStatus("Slack ayarları kaydedildi.");

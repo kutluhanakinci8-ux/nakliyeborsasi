@@ -58,6 +58,12 @@ export class CompanySocialSettingsEntity {
   @Column({ type: "int", default: 15 })
   public socialSlackOutboundFailureCooldownMinutes!: number;
 
+  @Column({ type: "boolean", default: false })
+  public socialSlackDailyDigestEnabled!: boolean;
+
+  @Column({ type: "timestamptz", nullable: true })
+  public socialSlackDailyDigestLastSentAt!: Date | null;
+
   @UpdateDateColumn({ type: "timestamptz" })
   public updatedAt!: Date;
 }
