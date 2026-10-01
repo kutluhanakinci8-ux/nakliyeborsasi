@@ -178,7 +178,7 @@ export class SocialHubRoadmapOAuthApplicationService {
       implementationStatus: "ready",
       authorizationUrl: url.toString(),
       state,
-      message: "YouTube OAuth (beta) yönlendirmesi hazır.",
+      message: "YouTube OAuth yönlendirmesi hazır.",
     };
   }
 
@@ -214,7 +214,7 @@ export class SocialHubRoadmapOAuthApplicationService {
         payload.error_description ?? "YouTube token alınamadı.",
       );
     }
-    let channelTitle = "YouTube (beta)";
+    let channelTitle = "YouTube";
     let channelId: string | null = null;
     try {
       const channelRes = await fetch(

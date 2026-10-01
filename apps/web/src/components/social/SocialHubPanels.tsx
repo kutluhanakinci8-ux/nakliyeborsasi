@@ -75,13 +75,13 @@ function roadmapPrimaryPill(row: SocialHubRoadmapProvider): {
   className: string;
 } {
   if (
-    row.platformCode === "TIKTOK" &&
+    row.isRoadmapBeta === false &&
     row.roadmapConnectionStatusCode === "CONNECTED"
   ) {
     return { label: "Bağlı", className: "social-hub-pill social-hub-pill--ok" };
   }
   if (
-    row.platformCode === "TIKTOK" &&
+    row.isRoadmapBeta === false &&
     (row.oauthImplementationStatus === "ready" ||
       row.implementationStatus === "ready")
   ) {
@@ -91,7 +91,7 @@ function roadmapPrimaryPill(row: SocialHubRoadmapProvider): {
 }
 
 function roadmapConnectLabel(row: SocialHubRoadmapProvider): string {
-  if (row.platformCode === "TIKTOK" && row.isRoadmapBeta === false) {
+  if (row.isRoadmapBeta === false) {
     return `${row.label} bağla`;
   }
   return `${row.label} bağla (beta)`;
@@ -202,7 +202,7 @@ export function SocialConnectionsPanel({
               ) : null}
             </li>
             <li>
-              YouTube (beta, Pub/Sub push):{" "}
+              YouTube (Pub/Sub push):{" "}
               <code>{integrationWebhooks.youtube}</code>
               <span className="module-hint">
                 {" "}
@@ -329,8 +329,8 @@ export function SocialConnectionsPanel({
         <>
           <h3 className="account-card-title">Yol haritası</h3>
           <p className="account-card-lead">
-            TikTok prod OAuth yolu açık; YouTube beta yol haritasında. Öncelik vermek için
-            ilgi bildirin; sıralama planlamasında kullanılır.
+            TikTok ve YouTube prod OAuth yolları açık. Öncelik vermek için ilgi bildirin;
+            sıralama planlamasında kullanılır.
           </p>
           <ul className="social-hub-connection-grid">
             {roadmapProviders.map((row: SocialHubRoadmapProvider) => {
@@ -363,7 +363,7 @@ export function SocialConnectionsPanel({
                 <p className="module-hint social-hub-roadmap-oauth-hint">
                   Platform OAuth:{" "}
                   {row.oauthImplementationStatus === "ready" ||
-                  (row.oauthEnvConfigured && row.platformCode === "TIKTOK")
+                  (row.oauthEnvConfigured && row.isRoadmapBeta === false)
                     ? "sunucu hazır — bağlanabilir"
                     : row.oauthEnvConfigured
                       ? "ortam değişkenleri tanımlı (entegrasyon sırada)"

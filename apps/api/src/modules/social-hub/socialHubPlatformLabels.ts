@@ -9,6 +9,7 @@ export const SOCIAL_HUB_PLATFORM_LABELS: Record<SocialPlatformCode, string> = {
 
 const EXTRA_PLATFORM_LABELS: Record<string, string> = {
   TIKTOK: "TikTok",
+  YOUTUBE: "YouTube",
 };
 
 export function labelSocialPlatform(code: string): string {

@@ -74,6 +74,13 @@ if [[ -n "${SOCIAL_HUB_SMOKE_EXPECT_PHASE:-}" ]]; then
     }
     echo "OK: status tiktok_prod_provider_path feature"
   fi
+  if [[ "${SOCIAL_HUB_SMOKE_EXPECT_PHASE}" == "aw" ]]; then
+    echo "${status_json}" | grep -q '"youtube_prod_provider_path"' || {
+      echo "FAIL: status missing youtube_prod_provider_path feature"
+      exit 1
+    }
+    echo "OK: status youtube_prod_provider_path feature"
+  fi
 fi
 if [[ "${SOCIAL_HUB_SMOKE_WEBHOOK_READINESS:-0}" == "1" ]]; then
   echo "${status_json}" | grep -q '"integrationWebhookReadiness"' || {
@@ -296,6 +303,34 @@ if [[ "${SOCIAL_HUB_SMOKE_TIKTOK_WEBHOOK:-1}" != "0" ]]; then
   echo "OK: tiktok webhook"
 else
   echo "SKIP: SOCIAL_HUB_SMOKE_TIKTOK_WEBHOOK=0"
+fi
+
+if [[ "${SOCIAL_HUB_SMOKE_YOUTUBE_PUSH_AUTH:-0}" == "1" && -n "${SOCIAL_YOUTUBE_WEBHOOK_SMOKE_TOKEN:-}" ]]; then
+  echo "== YouTube Pub/Sub push auth contract =="
+  yt_body='{"kind":"push_auth_smoke"}'
+  yt_bad_code="$(curl -sS -o /tmp/social-hub-yt-auth-bad.json -w "%{http_code}" \
+    -X POST \
+    -H "Content-Type: application/json" \
+    -d "${yt_body}" \
+    "${API_BASE}/company/social-hub/webhooks/youtube")"
+  if [[ "${SOCIAL_HUB_SMOKE_YOUTUBE_PUSH_AUTH_REQUIRED:-0}" == "1" ]]; then
+    if [[ "${yt_bad_code}" == "200" || "${yt_bad_code}" == "201" ]]; then
+      echo "FAIL: expected non-2xx for unauthenticated youtube webhook when push auth required"
+      exit 1
+    fi
+    echo "OK: unauthenticated youtube webhook rejected (HTTP ${yt_bad_code})"
+  fi
+  yt_good_code="$(curl -sS -o /tmp/social-hub-yt-auth-good.json -w "%{http_code}" \
+    -X POST \
+    -H "Content-Type: application/json" \
+    -H "X-Social-Hub-YouTube-Token: ${SOCIAL_YOUTUBE_WEBHOOK_SMOKE_TOKEN}" \
+    -d "${yt_body}" \
+    "${API_BASE}/company/social-hub/webhooks/youtube")"
+  if [[ "${yt_good_code}" != "200" && "${yt_good_code}" != "201" ]]; then
+    echo "FAIL: authenticated youtube webhook HTTP ${yt_good_code}"
+    exit 1
+  fi
+  echo "OK: authenticated youtube webhook"
 fi
 
 if [[ "${SOCIAL_HUB_SMOKE_YOUTUBE_WEBHOOK:-1}" != "0" ]]; then
