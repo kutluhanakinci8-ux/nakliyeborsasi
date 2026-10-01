@@ -8,6 +8,7 @@ import { SocialHubMetaInboxHistoryService } from "./oauth/SocialHubMetaInboxHist
 import { SocialHubMetaGraphService } from "./oauth/SocialHubMetaGraphService";
 import { parseSocialHubConnectionMetadata } from "./oauth/SocialHubConnectionMetadata";
 import type { SocialInboxSyncResult } from "./providers/SocialProviderPort";
+import { linkedInInboxSyncDeferredMessage } from "./socialHubLinkedInDmCapability";
 
 @Injectable()
 export class SocialHubInboxSyncApplicationService {
@@ -63,8 +64,7 @@ export class SocialHubInboxSyncApplicationService {
       return {
         implementationStatus: "pending",
         importedThreadCount: 0,
-        message:
-          "LinkedIn gelen kutusu henüz desteklenmiyor; feed yayını aktif. TikTok/YouTube beta webhook köprüsü ayrı yol haritası kanallarında.",
+        message: linkedInInboxSyncDeferredMessage(),
       };
     }
     if (platformCode === SocialPlatformCode.Instagram) {

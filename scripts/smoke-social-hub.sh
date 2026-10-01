@@ -81,6 +81,21 @@ if [[ -n "${SOCIAL_HUB_SMOKE_EXPECT_PHASE:-}" ]]; then
     }
     echo "OK: status youtube_prod_provider_path feature"
   fi
+  if [[ "${SOCIAL_HUB_SMOKE_EXPECT_PHASE}" == "ax" ]]; then
+    echo "${status_json}" | grep -q '"linkedin_dm_v2_explicit_gate"' || {
+      echo "FAIL: status missing linkedin_dm_v2_explicit_gate feature"
+      exit 1
+    }
+    echo "${status_json}" | grep -q '"linkedinDmInboxGate"' || {
+      echo "FAIL: status missing linkedinDmInboxGate"
+      exit 1
+    }
+    echo "${status_json}" | grep -q '"explicit_v2_gate"' || {
+      echo "FAIL: linkedinDmInboxGate missing explicit_v2_gate"
+      exit 1
+    }
+    echo "OK: status linkedin_dm_v2_explicit_gate"
+  fi
 fi
 if [[ "${SOCIAL_HUB_SMOKE_WEBHOOK_READINESS:-0}" == "1" ]]; then
   echo "${status_json}" | grep -q '"integrationWebhookReadiness"' || {
@@ -214,6 +229,17 @@ if [[ -n "${SOCIAL_HUB_JWT:-}" ]]; then
       exit 1
     }
     echo "OK: templates variables + preview"
+  fi
+  if [[ "${SOCIAL_HUB_SMOKE_LINKEDIN_DM_GATE:-0}" == "1" ]]; then
+    grep -q '"linkedinDmInboxGate"' /tmp/social-hub-snap.json || {
+      echo "FAIL: snapshot missing linkedinDmInboxGate"
+      exit 1
+    }
+    grep -q '"deferred_v2"' /tmp/social-hub-snap.json || {
+      echo "FAIL: linkedinDmInboxGate missing deferred_v2 status"
+      exit 1
+    }
+    echo "OK: snapshot linkedinDmInboxGate"
   fi
   if [[ "${SOCIAL_HUB_SMOKE_PLATFORM_INSIGHTS:-0}" == "1" ]]; then
     analytics_code="$(curl -sS -o /tmp/social-hub-analytics.json -w "%{http_code}" \

@@ -1,0 +1,1 @@
+-- Faz AX: şema değişikliği yok (LinkedIn DM v2 explicit gate — yayın only)

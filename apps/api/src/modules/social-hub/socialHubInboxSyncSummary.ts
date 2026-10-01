@@ -10,6 +10,7 @@ export type SocialHubInboxChannelSyncRow = {
   lastSyncAt: string | null;
   lastSyncMessage: string | null;
   lastSyncImplementationStatus: "ready" | "pending" | null;
+  dmInboxGateLabel?: string | null;
 };
 
 export type SocialHubInboxSyncSummary = {
