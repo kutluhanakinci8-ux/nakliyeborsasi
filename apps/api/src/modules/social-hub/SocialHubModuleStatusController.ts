@@ -20,7 +20,7 @@ export class SocialHubModuleStatusController {
   } {
     return {
       module: "social_hub",
-      phase: "ai",
+      phase: "aj",
       subscriptionModuleCode: SubscriptionModuleCode.SocialHub,
       features: [
         "connections_skeleton",
@@ -134,6 +134,12 @@ export class SocialHubModuleStatusController {
         "roadmap_inbox_sync_audit",
         "integration_ops_hints_snapshot",
         "admin_webhook_bridged_24h_metric",
+        "meta_webhook_bridge_audit",
+        "hub_webhook_activity_snapshot",
+        "notification_insights_webhook_bridged_24h",
+        "slack_digest_webhook_bridge_stats",
+        "audit_log_webhook_focus_filter",
+        "platform_admin_webhook_bridge_audit_csv",
       ],
       integrationWebhookReadiness: buildSocialHubIntegrationWebhookReadiness(),
       integrationWebhooks: buildSocialHubPublicWebhookUrls(),

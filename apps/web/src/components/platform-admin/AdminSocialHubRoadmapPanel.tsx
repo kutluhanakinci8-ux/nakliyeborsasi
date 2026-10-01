@@ -154,6 +154,18 @@ export function AdminSocialHubRoadmapPanel() {
             >
               Beta ops CSV
             </button>
+            <button
+              type="button"
+              className="btn-account-ghost"
+              disabled={loading}
+              onClick={() =>
+                void PlatformAdminApiClient.downloadSocialHubWebhookBridgeAuditCsv(
+                  accessToken,
+                )
+              }
+            >
+              Webhook köprü CSV
+            </button>
           </>
         ) : null}
       </div>

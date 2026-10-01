@@ -86,6 +86,32 @@ export class SocialHubRoadmapBetaOpsStatsService {
     };
   }
 
+  public async buildWebhookBridgeAuditCsv(limit = 500): Promise<string> {
+    const rows = await this.auditService.listGlobalRecentByAction(
+      SocialHubAuditActionCode.WebhookInboundBridged,
+      limit,
+    );
+    const header =
+      "id,companyId,platformCode,threadId,externalThreadId,createdAt";
+    const lines = rows.map((row) => {
+      const meta = row.metadata ?? {};
+      const platformCode =
+        typeof meta.platformCode === "string" ? meta.platformCode : "";
+      const threadId = typeof meta.threadId === "string" ? meta.threadId : "";
+      const externalThreadId =
+        typeof meta.externalThreadId === "string" ? meta.externalThreadId : "";
+      return [
+        row.id,
+        row.actorCompanyId ?? "",
+        escapeCsv(platformCode),
+        threadId,
+        escapeCsv(externalThreadId),
+        row.createdAt,
+      ].join(",");
+    });
+    return [header, ...lines].join("\n");
+  }
+
   public buildCsv(snapshot: SocialHubRoadmapBetaOpsSnapshot): string {
     const header =
       "platformCode,label,connectedCompanyCount,openThreadCount,outboundOk24h,outboundFailed24h";

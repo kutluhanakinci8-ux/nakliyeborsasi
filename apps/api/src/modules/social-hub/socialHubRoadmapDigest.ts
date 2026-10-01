@@ -51,6 +51,13 @@ export function buildRoadmapBetaOpsDigestSection(
   return `*Beta kanallar*\n${lines.join("\n")}`;
 }
 
+export function buildWebhookBridgeDigestSection(inboundBridged24h: number): string {
+  if (inboundBridged24h <= 0) {
+    return "";
+  }
+  return `*Webhook köprü (24s):* ${inboundBridged24h} gelen mesaj Mesajlar’a aktarıldı (denetim kaydı).`;
+}
+
 export function buildRoadmapBetaOpsEmailClause(
   roadmapChannels: Array<{
     label: string;

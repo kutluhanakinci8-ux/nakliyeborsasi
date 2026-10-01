@@ -122,6 +122,7 @@ export function SocialConnectionsPanel({
   const integrationWebhooks = snapshot.integrationWebhooks;
   const webhookReadiness = snapshot.integrationWebhookReadiness;
   const opsHints = snapshot.integrationOpsHints;
+  const webhookActivity = snapshot.webhookActivity;
   return (
     <section className="social-hub-panel module-panel module-panel--elevated">
       <header className="social-hub-panel-head">
@@ -180,6 +181,15 @@ export function SocialConnectionsPanel({
             {opsHints.webhookBridgeAuditEnabled ? "açık" : "kapalı"}
             {opsHints.webhookInboundDedupSeconds > 0
               ? ` · gelen dedup ${opsHints.webhookInboundDedupSeconds}s`
+              : ""}
+          </p>
+        ) : null}
+        {webhookActivity ? (
+          <p className="module-hint">
+            Webhook → Mesajlar (24s):{" "}
+            <strong>{webhookActivity.inboundBridged24h}</strong>
+            {webhookActivity.lastInboundBridgedAt
+              ? ` · son: ${new Date(webhookActivity.lastInboundBridgedAt).toLocaleString("tr-TR")}`
               : ""}
           </p>
         ) : null}
@@ -1447,6 +1457,12 @@ export function SocialHealthPanel({
           <p className="module-hint">
             24s gönderim: {notificationInsights.outboundDeliveriesLast24h.ok}{" "}
             başarılı · {notificationInsights.outboundDeliveriesLast24h.failed} hatalı
+            {(notificationInsights.webhookInboundBridged24h ?? 0) > 0 ? (
+              <>
+                {" "}
+                · webhook köprü: {notificationInsights.webhookInboundBridged24h}
+              </>
+            ) : null}
           </p>
           <ul className="social-hub-insights-list">
             <li>
