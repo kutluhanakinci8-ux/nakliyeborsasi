@@ -112,6 +112,37 @@ export class SocialHubController {
     response.send(file.buffer);
   }
 
+  @Get("posts")
+  public async listPosts(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Query("from") from?: string,
+    @Query("to") to?: string,
+  ) {
+    return this.socialHubApplicationService.listPosts(user, { from, to });
+  }
+
+  @Post("posts/bulk-cancel")
+  public async bulkCancelPosts(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: { postIds: string[] },
+  ) {
+    return this.socialHubApplicationService.bulkCancelPosts(
+      user,
+      body.postIds ?? [],
+    );
+  }
+
+  @Post("posts/bulk-retry")
+  public async bulkRetryPosts(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: { postIds: string[] },
+  ) {
+    return this.socialHubApplicationService.bulkRetryPublishPosts(
+      user,
+      body.postIds ?? [],
+    );
+  }
+
   @Post("posts")
   public async createPost(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,

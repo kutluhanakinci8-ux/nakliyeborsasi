@@ -15655,6 +15655,102 @@ button.btn-secondary {
   font-size: 0.8125rem;
 }
 
+.social-hub-calendar-grid-wrap {
+  margin: 1rem 0 1.25rem;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.social-hub-calendar-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.social-hub-calendar-toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.social-hub-calendar-month-label {
+  min-width: 9rem;
+  text-align: center;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.social-hub-calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+  margin-bottom: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #64748b;
+  text-align: center;
+}
+
+.social-hub-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.social-hub-calendar-grid--week {
+  min-height: 120px;
+}
+
+.social-hub-calendar-day {
+  min-height: 88px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.35rem;
+  background: #f8fafc;
+  font-size: 0.75rem;
+}
+
+.social-hub-calendar-day--muted {
+  opacity: 0.45;
+  background: #f1f5f9;
+}
+
+.social-hub-calendar-day-num {
+  font-weight: 700;
+  color: #334155;
+}
+
+.social-hub-calendar-day-posts {
+  list-style: none;
+  margin: 0.25rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.social-hub-calendar-post-chip {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.25rem;
+  cursor: pointer;
+  line-height: 1.25;
+}
+
+.social-hub-calendar-bulk {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
 .social-hub-calendar-strip {
   margin-bottom: 1rem;
   padding: 0.75rem 1rem;

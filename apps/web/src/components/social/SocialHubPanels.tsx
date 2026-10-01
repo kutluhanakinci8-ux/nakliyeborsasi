@@ -16,6 +16,12 @@ import type {
   SocialHubTemplate,
   SocialHubInboxThreadPreview,
 } from "../../lib/socialHubTypes";
+import {
+  buildMonthGrid,
+  buildWeekGrid,
+  monthLabelTr,
+  toDateKey,
+} from "../../lib/socialHubCalendar";
 
 function capabilitySummary(
   caps: SocialHubSnapshot["providers"][number]["capabilities"],
@@ -622,6 +628,16 @@ type PublishingProps = {
   onCancel: (postId: string) => void;
   onDelete: (postId: string) => void;
   platformOptions: { code: string; label: string }[];
+  calendarPosts: SocialHubPost[];
+  calendarLoading: boolean;
+  calendarAnchor: Date;
+  calendarMode: "month" | "week";
+  calendarSelection: string[];
+  onCalendarAnchorChange: (next: Date) => void;
+  onCalendarModeChange: (mode: "month" | "week") => void;
+  onToggleCalendarSelect: (postId: string) => void;
+  onBulkCancelSelected: () => void;
+  onBulkRetrySelected: () => void;
 };
 
 export function SocialPublishingPanel({
@@ -644,7 +660,31 @@ export function SocialPublishingPanel({
   onCancel,
   onDelete,
   platformOptions,
+  calendarPosts,
+  calendarLoading,
+  calendarAnchor,
+  calendarMode,
+  calendarSelection,
+  onCalendarAnchorChange,
+  onCalendarModeChange,
+  onToggleCalendarSelect,
+  onBulkCancelSelected,
+  onBulkRetrySelected,
 }: PublishingProps) {
+  const gridCells =
+    calendarMode === "month"
+      ? buildMonthGrid(calendarAnchor)
+      : buildWeekGrid(calendarAnchor);
+  const postsByDay = new Map<string, SocialHubPost[]>();
+  for (const post of calendarPosts) {
+    if (!post.scheduledAt) {
+      continue;
+    }
+    const key = toDateKey(new Date(post.scheduledAt));
+    const bucket = postsByDay.get(key) ?? [];
+    bucket.push(post);
+    postsByDay.set(key, bucket);
+  }
   const scheduledUpcoming = posts
     .filter(
       (p) =>
@@ -673,6 +713,140 @@ export function SocialPublishingPanel({
           gönderiler sunucuda otomatik denenir; sonuç mesajı burada görünür.
         </p>
       </header>
+      <div className="social-hub-calendar-grid-wrap">
+        <div className="social-hub-calendar-toolbar">
+          <h3 className="social-hub-calendar-title">Yayın takvimi</h3>
+          <div className="social-hub-calendar-toolbar-actions">
+            <button
+              type="button"
+              className="btn-account-ghost"
+              disabled={busy}
+              onClick={() => {
+                const prev = new Date(calendarAnchor);
+                prev.setMonth(prev.getMonth() - 1);
+                onCalendarAnchorChange(prev);
+              }}
+            >
+              ←
+            </button>
+            <span className="social-hub-calendar-month-label">
+              {monthLabelTr(calendarAnchor)}
+            </span>
+            <button
+              type="button"
+              className="btn-account-ghost"
+              disabled={busy}
+              onClick={() => {
+                const next = new Date(calendarAnchor);
+                next.setMonth(next.getMonth() + 1);
+                onCalendarAnchorChange(next);
+              }}
+            >
+              →
+            </button>
+            <button
+              type="button"
+              className={
+                calendarMode === "month"
+                  ? "btn-account-primary"
+                  : "btn-account-ghost"
+              }
+              disabled={busy}
+              onClick={() => onCalendarModeChange("month")}
+            >
+              Ay
+            </button>
+            <button
+              type="button"
+              className={
+                calendarMode === "week"
+                  ? "btn-account-primary"
+                  : "btn-account-ghost"
+              }
+              disabled={busy}
+              onClick={() => onCalendarModeChange("week")}
+            >
+              Hafta
+            </button>
+          </div>
+        </div>
+        {calendarLoading ? (
+          <p className="module-hint">Takvim yükleniyor…</p>
+        ) : (
+          <>
+            <div className="social-hub-calendar-weekdays">
+              {["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"].map((label) => (
+                <span key={label}>{label}</span>
+              ))}
+            </div>
+            <div
+              className={
+                calendarMode === "month"
+                  ? "social-hub-calendar-grid"
+                  : "social-hub-calendar-grid social-hub-calendar-grid--week"
+              }
+            >
+              {gridCells.map((cell) => {
+                const dayPosts = postsByDay.get(cell.dateKey) ?? [];
+                return (
+                  <div
+                    key={cell.dateKey}
+                    className={
+                      cell.inMonth
+                        ? "social-hub-calendar-day"
+                        : "social-hub-calendar-day social-hub-calendar-day--muted"
+                    }
+                  >
+                    <span className="social-hub-calendar-day-num">
+                      {cell.date.getDate()}
+                    </span>
+                    <ul className="social-hub-calendar-day-posts">
+                      {dayPosts.map((post) => (
+                        <li key={post.id}>
+                          <label className="social-hub-calendar-post-chip">
+                            <input
+                              type="checkbox"
+                              checked={calendarSelection.includes(post.id)}
+                              onChange={() => onToggleCalendarSelect(post.id)}
+                            />
+                            <span title={post.bodyText}>
+                              {postStatusLabel(post.statusCode)} ·{" "}
+                              {post.bodyText.slice(0, 24)}
+                            </span>
+                          </label>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
+        {calendarSelection.length > 0 ? (
+          <div className="social-hub-calendar-bulk">
+            <span className="module-hint">{calendarSelection.length} seçili</span>
+            <button
+              type="button"
+              className="btn-account-ghost"
+              disabled={busy}
+              onClick={onBulkCancelSelected}
+            >
+              Toplu iptal
+            </button>
+            {permissions.canPublish ? (
+              <button
+                type="button"
+                className="btn-account-primary"
+                disabled={busy}
+                onClick={onBulkRetrySelected}
+              >
+                Başarısızları yeniden dene
+              </button>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
       {scheduledUpcoming.length > 0 ? (
         <div className="social-hub-calendar-strip">
           <h3 className="social-hub-calendar-title">Yaklaşan zamanlamalar</h3>

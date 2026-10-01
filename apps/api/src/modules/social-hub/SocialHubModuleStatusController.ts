@@ -66,7 +66,7 @@ export class SocialHubModuleStatusController {
     ]);
     return {
       module: "social_hub",
-      phase: "as",
+      phase: "at",
       subscriptionModuleCode: SubscriptionModuleCode.SocialHub,
       features: [
         "connections_skeleton",
@@ -211,6 +211,7 @@ export class SocialHubModuleStatusController {
         "inbox_threads_preview_panel",
         "inbox_sync_summary_by_platform",
         "publishing_media_upload_graph",
+        "publishing_calendar_grid",
       ],
       integrationWebhookReadiness: buildSocialHubIntegrationWebhookReadiness(),
       integrationWebhooks: buildSocialHubPublicWebhookUrls(),

@@ -20,6 +20,10 @@ import {
 import { useWebSession } from "../../../../context/WebSessionProvider";
 import { SocialHubApiClient } from "../../../../lib/SocialHubApiClient";
 import { readFileAsAttachment } from "../../../../lib/messagingPageHelpers";
+import {
+  endOfMonth,
+  startOfMonth,
+} from "../../../../lib/socialHubCalendar";
 import { formatSocialHubOAuthReason } from "../../../../lib/formatSocialHubOAuthReason";
 import type {
   SocialHubAnalytics,
@@ -27,6 +31,7 @@ import type {
   SocialHubHealth,
   SocialHubNotificationInsights,
   SocialHubOutboundDelivery,
+  SocialHubPost,
   SocialHubSnapshot,
   SocialHubTeamMember,
   SocialHubInboxThreadPreview,
@@ -45,6 +50,11 @@ export function SocialHubPageClient() {
   const [draftMedia, setDraftMedia] = useState<
     Array<{ mediaRef: string; previewUrl: string; filename: string }>
   >([]);
+  const [calendarAnchor, setCalendarAnchor] = useState(() => new Date());
+  const [calendarMode, setCalendarMode] = useState<"month" | "week">("month");
+  const [calendarPosts, setCalendarPosts] = useState<SocialHubPost[]>([]);
+  const [calendarLoading, setCalendarLoading] = useState(false);
+  const [calendarSelection, setCalendarSelection] = useState<string[]>([]);
   const [templateTitle, setTemplateTitle] = useState("");
   const [templateBody, setTemplateBody] = useState("");
   const [teamMembers, setTeamMembers] = useState<SocialHubTeamMember[]>([]);
@@ -190,6 +200,30 @@ export function SocialHubPageClient() {
     });
     void loadHealthData().catch(() => setError("Sağlık verisi yüklenemedi."));
   }, [accessToken, activeTab, snapshot, subscriptionBlocked, loadHealthData]);
+
+  useEffect(() => {
+    if (
+      !accessToken ||
+      activeTab !== "publishing" ||
+      !snapshot ||
+      subscriptionBlocked
+    ) {
+      return;
+    }
+    const from = startOfMonth(calendarAnchor).toISOString();
+    const to = endOfMonth(calendarAnchor).toISOString();
+    setCalendarLoading(true);
+    void SocialHubApiClient.fetchScheduledPosts(accessToken, from, to)
+      .then((payload) => setCalendarPosts(payload.posts))
+      .catch(() => setError("Yayın takvimi yüklenemedi."))
+      .finally(() => setCalendarLoading(false));
+  }, [
+    accessToken,
+    activeTab,
+    snapshot,
+    subscriptionBlocked,
+    calendarAnchor,
+  ]);
 
   useEffect(() => {
     if (!accessToken || activeTab !== "inbox" || !snapshot || subscriptionBlocked) {
@@ -643,6 +677,48 @@ export function SocialHubPageClient() {
                 draftMedia={draftMedia}
                 busy={busy}
                 platformOptions={platformOptions}
+                calendarPosts={calendarPosts}
+                calendarLoading={calendarLoading}
+                calendarAnchor={calendarAnchor}
+                calendarMode={calendarMode}
+                calendarSelection={calendarSelection}
+                onCalendarAnchorChange={setCalendarAnchor}
+                onCalendarModeChange={setCalendarMode}
+                onToggleCalendarSelect={(postId) =>
+                  setCalendarSelection((current) =>
+                    current.includes(postId)
+                      ? current.filter((id) => id !== postId)
+                      : [...current, postId],
+                  )
+                }
+                onBulkCancelSelected={() =>
+                  void runAction(async () => {
+                    const result = await SocialHubApiClient.bulkCancelPosts(
+                      accessToken,
+                      calendarSelection,
+                    );
+                    setCalendarSelection([]);
+                    setStatus(
+                      result.errors.length > 0
+                        ? `${result.cancelledIds.length} iptal · ${result.errors[0]}`
+                        : `${result.cancelledIds.length} gönderi iptal edildi.`,
+                    );
+                  })
+                }
+                onBulkRetrySelected={() =>
+                  void runAction(async () => {
+                    const result = await SocialHubApiClient.bulkRetryPosts(
+                      accessToken,
+                      calendarSelection,
+                    );
+                    setCalendarSelection([]);
+                    setStatus(
+                      result.failed.length > 0
+                        ? `${result.publishedIds.length} yayın · ${result.failed[0]?.message}`
+                        : `${result.publishedIds.length} gönderi yeniden yayınlandı.`,
+                    );
+                  })
+                }
                 onDraftText={setDraftText}
                 onAddMediaFiles={(files) =>
                   void runAction(async () => {

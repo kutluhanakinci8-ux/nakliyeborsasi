@@ -6,6 +6,7 @@ import type {
   SocialHubInboxThreadPreview,
   SocialHubNotificationInsights,
   SocialHubOutboundDelivery,
+  SocialHubPost,
   SocialHubSnapshot,
   SocialHubTeamMember,
 } from "./socialHubTypes";
@@ -379,6 +380,38 @@ export class SocialHubApiClient {
       `/connections/${platformCode}/sync-inbox`,
       { method: "POST" },
     );
+  }
+
+  public static async fetchScheduledPosts(
+    accessToken: string,
+    from: string,
+    to: string,
+  ): Promise<{ posts: SocialHubPost[] }> {
+    const query = new URLSearchParams({ from, to });
+    return socialHubFetch(accessToken, `/posts?${query.toString()}`);
+  }
+
+  public static async bulkCancelPosts(
+    accessToken: string,
+    postIds: string[],
+  ): Promise<{ cancelledIds: string[]; errors: string[] }> {
+    return socialHubFetch(accessToken, "/posts/bulk-cancel", {
+      method: "POST",
+      body: JSON.stringify({ postIds }),
+    });
+  }
+
+  public static async bulkRetryPosts(
+    accessToken: string,
+    postIds: string[],
+  ): Promise<{
+    publishedIds: string[];
+    failed: Array<{ postId: string; message: string }>;
+  }> {
+    return socialHubFetch(accessToken, "/posts/bulk-retry", {
+      method: "POST",
+      body: JSON.stringify({ postIds }),
+    });
   }
 
   public static async uploadPublishMedia(
