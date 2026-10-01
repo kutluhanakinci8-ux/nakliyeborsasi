@@ -9,6 +9,7 @@ import {
 } from "./SocialHubAuditService";
 import { mapWebhookBridgedByPlatform } from "./socialHubWebhookBridgeSnapshot";
 import { buildSocialHubLinkedInDmInboxGate } from "./socialHubLinkedInDmCapability";
+import { ROADMAP_PENDING_SKELETON_PLATFORM_CODES } from "./socialHubRoadmapPendingProviders";
 
 @Controller("company/social-hub")
 export class SocialHubModuleStatusController {
@@ -36,6 +37,7 @@ export class SocialHubModuleStatusController {
       byPlatform: ReturnType<typeof mapWebhookBridgedByPlatform>;
     };
     linkedinDmInboxGate: ReturnType<typeof buildSocialHubLinkedInDmInboxGate>;
+    roadmapPendingProviders: string[];
   }> {
     const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const since7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
@@ -68,7 +70,7 @@ export class SocialHubModuleStatusController {
     ]);
     return {
       module: "social_hub",
-      phase: "ax",
+      phase: "ay",
       subscriptionModuleCode: SubscriptionModuleCode.SocialHub,
       features: [
         "connections_skeleton",
@@ -219,6 +221,7 @@ export class SocialHubModuleStatusController {
         "tiktok_prod_provider_path",
         "youtube_prod_provider_path",
         "linkedin_dm_v2_explicit_gate",
+        "roadmap_pending_x_google_business",
       ],
       integrationWebhookReadiness: buildSocialHubIntegrationWebhookReadiness(),
       integrationWebhooks: buildSocialHubPublicWebhookUrls(),
@@ -234,6 +237,7 @@ export class SocialHubModuleStatusController {
         byPlatform: mapWebhookBridgedByPlatform(bridgedByPlatform7d),
       },
       linkedinDmInboxGate: buildSocialHubLinkedInDmInboxGate(),
+      roadmapPendingProviders: [...ROADMAP_PENDING_SKELETON_PLATFORM_CODES],
     };
   }
 }

@@ -74,6 +74,12 @@ function roadmapPrimaryPill(row: SocialHubRoadmapProvider): {
   label: string;
   className: string;
 } {
+  if (row.isPendingSkeleton || row.implementationStatus === "pending") {
+    return {
+      label: "Pending iskelet",
+      className: "social-hub-pill social-hub-pill--muted",
+    };
+  }
   if (
     row.isRoadmapBeta === false &&
     row.roadmapConnectionStatusCode === "CONNECTED"
@@ -340,8 +346,8 @@ export function SocialConnectionsPanel({
         <>
           <h3 className="account-card-title">Yol haritası</h3>
           <p className="account-card-lead">
-            TikTok ve YouTube prod OAuth yolları açık. Öncelik vermek için ilgi bildirin;
-            sıralama planlamasında kullanılır.
+            TikTok ve YouTube prod OAuth; X ve Google Business pending iskelet kartları.
+            Öncelik vermek için ilgi bildirin; sıralama planlamasında kullanılır.
           </p>
           <ul className="social-hub-connection-grid">
             {roadmapProviders.map((row: SocialHubRoadmapProvider) => {
@@ -373,12 +379,14 @@ export function SocialConnectionsPanel({
                 ) : null}
                 <p className="module-hint social-hub-roadmap-oauth-hint">
                   Platform OAuth:{" "}
-                  {row.oauthImplementationStatus === "ready" ||
-                  (row.oauthEnvConfigured && row.isRoadmapBeta === false)
-                    ? "sunucu hazır — bağlanabilir"
-                    : row.oauthEnvConfigured
-                      ? "ortam değişkenleri tanımlı (entegrasyon sırada)"
-                      : "henüz yapılandırılmadı"}
+                  {row.isPendingSkeleton
+                    ? "OAuth kapalı (pending provider)"
+                    : row.oauthImplementationStatus === "ready" ||
+                        (row.oauthEnvConfigured && row.isRoadmapBeta === false)
+                      ? "sunucu hazır — bağlanabilir"
+                      : row.oauthEnvConfigured
+                        ? "ortam değişkenleri tanımlı (entegrasyon sırada)"
+                        : "henüz yapılandırılmadı"}
                 </p>
                 {row.roadmapConnectionStatusCode ? (
                   <p className="social-hub-connection-status">
