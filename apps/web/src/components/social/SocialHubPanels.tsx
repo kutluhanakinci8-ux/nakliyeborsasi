@@ -205,92 +205,10 @@ export function SocialConnectionsPanel({
   const connections = snapshot.connections ?? [];
   const providers = snapshot.providers ?? [];
   const roadmapProviders = snapshot.roadmapProviders ?? [];
-  const integrationWebhooks = snapshot.integrationWebhooks;
-  const webhookReadiness = snapshot.integrationWebhookReadiness;
-  const opsHints = snapshot.integrationOpsHints;
-  const webhookActivity = snapshot.webhookActivity;
   return (
     <section className="social-hub-panel module-panel module-panel--elevated">
       <header className="social-hub-panel-head">
         <h2 className="account-card-title">Bağlı hesaplar</h2>
-        <p className="account-card-lead">
-          Meta (Instagram, Messenger, WhatsApp) ve LinkedIn OAuth ile bağlanın. Webhook:
-          <code>/api/v1/company/social-hub/webhooks/meta</code>. Mesajlar ekranından
-          yanıtlar bağlı kanala gider. Genel API anahtarları:{" "}
-          <Link href="/hesap/uygulamalar">Uygulamalar / entegrasyonlar</Link>.
-        </p>
-        {integrationWebhooks ? (
-          <ul className="social-hub-webhook-urls module-hint">
-            <li>
-              Meta / WhatsApp: <code>{integrationWebhooks.meta}</code>
-            </li>
-            <li>
-              TikTok: <code>{integrationWebhooks.tiktok}</code>
-              {webhookReadiness?.tiktok ? (
-                <span className="module-hint">
-                  {" "}
-                  — köprü:{" "}
-                  {webhookReadiness.tiktok.webhookBridgeEnabled ? "açık" : "kapalı"}
-                  , giden:{" "}
-                  {webhookReadiness.tiktok.outboundEnabled ? "açık" : "kapalı"}
-                  {webhookReadiness.tiktok.signatureOrPushAuthRequired
-                    ? " · imza zorunlu"
-                    : ""}
-                </span>
-              ) : null}
-            </li>
-            <li>
-              YouTube (Pub/Sub push):{" "}
-              <code>{integrationWebhooks.youtube}</code>
-              <span className="module-hint">
-                {" "}
-                — message.data içinde base64 JSON (kanal kimliği + metin)
-              </span>
-              {webhookReadiness?.youtube ? (
-                <span className="module-hint">
-                  {" "}
-                  · köprü:{" "}
-                  {webhookReadiness.youtube.webhookBridgeEnabled ? "açık" : "kapalı"}
-                  , giden:{" "}
-                  {webhookReadiness.youtube.outboundEnabled ? "açık" : "kapalı"}
-                  {webhookReadiness.youtube.signatureOrPushAuthRequired
-                    ? " · push auth zorunlu"
-                    : ""}
-                </span>
-              ) : null}
-            </li>
-          </ul>
-        ) : null}
-        {opsHints ? (
-          <p className="module-hint">
-            Sunucu: webhook denetim kaydı{" "}
-            {opsHints.webhookBridgeAuditEnabled ? "açık" : "kapalı"}
-            {opsHints.webhookInboundDedupSeconds > 0
-              ? ` · gelen dedup ${opsHints.webhookInboundDedupSeconds}s`
-              : ""}
-            {opsHints.webhookInactivityHealthHintsEnabled
-              ? " · sağlık uyarısı: webhook hareketsizliği"
-              : ""}
-          </p>
-        ) : null}
-        {webhookActivity ? (
-          <p className="module-hint">
-            Webhook → Mesajlar (24s):{" "}
-            <strong>{webhookActivity.inboundBridged24h}</strong>
-            {webhookActivity.lastInboundBridgedAt
-              ? ` · son: ${new Date(webhookActivity.lastInboundBridgedAt).toLocaleString("tr-TR")}`
-              : ""}
-            {(webhookActivity.byPlatform ?? []).length > 0 ? (
-              <>
-                {" "}
-                —{" "}
-                {(webhookActivity.byPlatform ?? [])
-                  .map((row) => `${row.label}: ${row.inboundBridged24h}`)
-                  .join(" · ")}
-              </>
-            ) : null}
-          </p>
-        ) : null}
       </header>
       <ul className="social-hub-connection-grid">
         {connections.map((row) => {
