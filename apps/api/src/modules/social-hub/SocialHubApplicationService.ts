@@ -597,6 +597,20 @@ export class SocialHubApplicationService {
     });
   }
 
+  public async getInboxThreadsPreview(
+    user: AuthenticatedUserContext,
+    limit?: number,
+  ) {
+    assertSocialHubRead(user);
+    await this.assertSocialHubSubscription(user.companyId);
+    const settings = await this.ensureSettings(user.companyId);
+    this.assertInboxOperationsAllowed(settings);
+    return this.socialHubMessagingBridgeService.listInboxThreadsPreview(
+      user,
+      limit,
+    );
+  }
+
   public async seedDemoInbox(user: AuthenticatedUserContext): Promise<{
     createdThreadIds: string[];
   }> {

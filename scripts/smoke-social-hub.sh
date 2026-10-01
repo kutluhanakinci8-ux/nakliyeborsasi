@@ -32,6 +32,13 @@ if [[ -n "${SOCIAL_HUB_SMOKE_EXPECT_PHASE:-}" ]]; then
     }
     echo "OK: status analytics_linkedin_org_insights feature"
   fi
+  if [[ "${SOCIAL_HUB_SMOKE_EXPECT_PHASE}" == "aq" ]]; then
+    echo "${status_json}" | grep -q '"inbox_threads_preview_panel"' || {
+      echo "FAIL: status missing inbox_threads_preview_panel feature"
+      exit 1
+    }
+    echo "OK: status inbox_threads_preview_panel feature"
+  fi
 fi
 if [[ "${SOCIAL_HUB_SMOKE_WEBHOOK_READINESS:-0}" == "1" ]]; then
   echo "${status_json}" | grep -q '"integrationWebhookReadiness"' || {
@@ -94,6 +101,20 @@ if [[ -n "${SOCIAL_HUB_JWT:-}" ]]; then
       exit 1
     }
     echo "OK: snapshot webhookActivity"
+  fi
+  if [[ "${SOCIAL_HUB_SMOKE_INBOX_PREVIEW:-0}" == "1" ]]; then
+    preview_code="$(curl -sS -o /tmp/social-hub-inbox-preview.json -w "%{http_code}" \
+      -H "Authorization: Bearer ${SOCIAL_HUB_JWT}" \
+      "${API_BASE}/company/social-hub/inbox/threads-preview?limit=10")"
+    if [[ "${preview_code}" != "200" ]]; then
+      echo "FAIL: inbox threads-preview HTTP ${preview_code}"
+      exit 1
+    fi
+    grep -q '"threads"' /tmp/social-hub-inbox-preview.json || {
+      echo "FAIL: inbox preview missing threads"
+      exit 1
+    }
+    echo "OK: inbox threads-preview"
   fi
   if [[ "${SOCIAL_HUB_SMOKE_PLATFORM_INSIGHTS:-0}" == "1" ]]; then
     analytics_code="$(curl -sS -o /tmp/social-hub-analytics.json -w "%{http_code}" \

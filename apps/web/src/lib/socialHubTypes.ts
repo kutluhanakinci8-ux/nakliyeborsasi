@@ -308,3 +308,15 @@ export type SocialHubSnapshot = {
     webhookInboundBridged24h?: number;
   };
 };
+
+export type SocialHubInboxThreadPreview = {
+  threadId: string;
+  platformCode: string;
+  platformLabel: string;
+  displayLabel: string;
+  lastMessagePreview: string | null;
+  lastMessageAt: string | null;
+  unreadCount: number;
+  isOpen: boolean;
+  messagingDeepLink: string;
+};

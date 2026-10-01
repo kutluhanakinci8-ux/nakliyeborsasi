@@ -14,6 +14,7 @@ import type {
   SocialHubRoadmapProvider,
   SocialHubTeamMember,
   SocialHubTemplate,
+  SocialHubInboxThreadPreview,
 } from "../../lib/socialHubTypes";
 
 function capabilitySummary(
@@ -390,6 +391,8 @@ export function SocialConnectionsPanel({
 
 type InboxProps = {
   snapshot: SocialHubSnapshot;
+  threadsPreview: SocialHubInboxThreadPreview[];
+  threadsPreviewLoading: boolean;
   busy: boolean;
   onSync: (platformCode: string) => void;
   onSeedDemo?: () => void;
@@ -398,6 +401,8 @@ type InboxProps = {
 
 export function SocialInboxPanel({
   snapshot,
+  threadsPreview,
+  threadsPreviewLoading,
   busy,
   onSync,
   onSeedDemo,
@@ -441,6 +446,58 @@ export function SocialInboxPanel({
           </>
         ) : null}
       </p>
+      {threadsPreviewLoading ? (
+        <p className="module-hint">Son konuşmalar yükleniyor…</p>
+      ) : threadsPreview.length > 0 ? (
+        <div className="social-hub-inbox-preview">
+          <h3 className="social-hub-subsection-title">Son sosyal konuşmalar</h3>
+          <ul className="social-hub-inbox-preview-list">
+            {threadsPreview.map((row) => (
+              <li key={row.threadId} className="social-hub-inbox-preview-row">
+                <div className="social-hub-inbox-preview-main">
+                  <span className="social-hub-inbox-preview-channel">
+                    {row.platformLabel}
+                  </span>
+                  <strong className="social-hub-inbox-preview-label">
+                    {row.displayLabel}
+                  </strong>
+                  {row.lastMessagePreview ? (
+                    <p className="social-hub-inbox-preview-snippet">
+                      {row.lastMessagePreview}
+                    </p>
+                  ) : null}
+                  {row.lastMessageAt ? (
+                    <time
+                      className="module-hint"
+                      dateTime={row.lastMessageAt}
+                    >
+                      {new Date(row.lastMessageAt).toLocaleString("tr-TR")}
+                    </time>
+                  ) : null}
+                </div>
+                <div className="social-hub-inbox-preview-actions">
+                  {row.unreadCount > 0 ? (
+                    <span className="social-hub-inbox-preview-unread">
+                      {row.unreadCount} okunmamış
+                    </span>
+                  ) : null}
+                  <Link
+                    href={row.messagingDeepLink}
+                    className="btn-account-ghost"
+                  >
+                    Mesajlar&apos;da aç
+                  </Link>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <p className="module-hint">
+          Henüz sosyal konuşma yok. Kanal bağlayın, webhook bekleyin veya demo
+          oluşturun.
+        </p>
+      )}
       <ul className="social-hub-inbox-platforms">
         {inboxSummary.byPlatform.map((row) => {
           const label = platformLabel(row.platformCode);
