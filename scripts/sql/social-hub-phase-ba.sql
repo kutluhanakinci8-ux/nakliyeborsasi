@@ -1,0 +1,1 @@
+-- Faz BA: şema değişikliği yok (mock webhook fixtures + social-hub-ci workflow)

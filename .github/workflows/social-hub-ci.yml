@@ -1,0 +1,49 @@
+name: Social hub CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/api/src/modules/social-hub/**"
+      - "scripts/social-hub-ci-mock.sh"
+      - "scripts/smoke-social-hub.sh"
+      - ".github/workflows/social-hub-ci.yml"
+  pull_request:
+    paths:
+      - "apps/api/src/modules/social-hub/**"
+      - "scripts/social-hub-ci-mock.sh"
+      - "scripts/smoke-social-hub.sh"
+      - ".github/workflows/social-hub-ci.yml"
+  workflow_dispatch:
+
+jobs:
+  build-and-mock-fixtures:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build and run mock webhook fixtures
+        run: bash scripts/social-hub-ci-mock.sh
+
+  public-smoke-no-secrets:
+    runs-on: ubuntu-latest
+    needs: build-and-mock-fixtures
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Public smoke (no JWT / Meta secrets)
+        env:
+          SOCIAL_HUB_API_BASE: https://app.lerta.com.tr/api/v1
+          SOCIAL_HUB_WEB_PUBLIC_URL: https://app.lerta.com.tr
+          SOCIAL_HUB_SMOKE_EXPECT_PHASE: ba
+          SOCIAL_HUB_SMOKE_TIKTOK_WEBHOOK: "0"
+          SOCIAL_HUB_SMOKE_YOUTUBE_WEBHOOK: "0"
+        run: bash scripts/smoke-social-hub.sh
