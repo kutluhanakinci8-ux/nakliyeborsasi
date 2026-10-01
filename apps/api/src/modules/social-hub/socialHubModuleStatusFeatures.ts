@@ -156,6 +156,11 @@ const BA_FEATURES = [
   "social_hub_ci_workflow_ba",
 ] as const;
 
+const BB_FEATURES = [
+  "social_hub_pwa_manifest_scope",
+  "social_hub_health_push_hook_skeleton",
+] as const;
+
 export const SOCIAL_HUB_PHASE_MILESTONE_CODES = [
   "ao",
   "ap",
@@ -170,6 +175,7 @@ export const SOCIAL_HUB_PHASE_MILESTONE_CODES = [
   "ay",
   "az",
   "ba",
+  "bb",
 ] as const;
 
 export function buildSocialHubModuleStatusFeatures(): string[] {
@@ -178,5 +184,6 @@ export function buildSocialHubModuleStatusFeatures(): string[] {
     ...PHASE_MILESTONE_FEATURES,
     ...AZ_FEATURES,
     ...BA_FEATURES,
+    ...BB_FEATURES,
   ];
 }

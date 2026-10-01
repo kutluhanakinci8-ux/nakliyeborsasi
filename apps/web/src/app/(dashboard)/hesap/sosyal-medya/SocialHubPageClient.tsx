@@ -25,6 +25,7 @@ import {
   startOfMonth,
 } from "../../../../lib/socialHubCalendar";
 import { formatSocialHubOAuthReason } from "../../../../lib/formatSocialHubOAuthReason";
+import { runSocialHubHealthPushHookSkeleton } from "../../../../lib/socialHubHealthPushHook";
 import type {
   SocialHubAnalytics,
   SocialHubAuditEntry,
@@ -73,6 +74,7 @@ export function SocialHubPageClient() {
   >([]);
   const [inboxPreviewLoading, setInboxPreviewLoading] = useState(false);
   const [subscriptionBlocked, setSubscriptionBlocked] = useState(false);
+  const [healthPushHookStatus, setHealthPushHookStatus] = useState("");
   const [health, setHealth] = useState<SocialHubHealth | null>(null);
   const [notificationInsights, setNotificationInsights] =
     useState<SocialHubNotificationInsights | null>(null);
@@ -144,6 +146,15 @@ export function SocialHubPageClient() {
       }
     });
   }, [accessToken, canAccess, reload]);
+
+  useEffect(() => {
+    if (!snapshot?.pwa) {
+      return;
+    }
+    void runSocialHubHealthPushHookSkeleton(snapshot.pwa).then((result) =>
+      setHealthPushHookStatus(result),
+    );
+  }, [snapshot?.pwa]);
 
   const loadHealthData = useCallback(async () => {
     if (!accessToken) {
@@ -642,6 +653,8 @@ export function SocialHubPageClient() {
                     setStatus("Sağlık verisi güncellendi.");
                   })
                 }
+                pwa={snapshot.pwa}
+                healthPushHookStatus={healthPushHookStatus}
                 onRefreshToken={(code) =>
                   void runAction(async () => {
                     const isRoadmap =

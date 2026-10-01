@@ -81,6 +81,25 @@ if [[ -n "${SOCIAL_HUB_SMOKE_EXPECT_PHASE:-}" ]]; then
     }
     echo "OK: status youtube_prod_provider_path feature"
   fi
+  if [[ "${SOCIAL_HUB_SMOKE_EXPECT_PHASE}" == "bb" ]]; then
+    echo "${status_json}" | grep -q '"social_hub_pwa_manifest_scope"' || {
+      echo "FAIL: status missing social_hub_pwa_manifest_scope feature"
+      exit 1
+    }
+    echo "${status_json}" | grep -q '"social_hub_health_push_hook_skeleton"' || {
+      echo "FAIL: status missing social_hub_health_push_hook_skeleton feature"
+      exit 1
+    }
+    echo "${status_json}" | grep -q '"pwa"' || {
+      echo "FAIL: status missing pwa block"
+      exit 1
+    }
+    echo "${status_json}" | grep -q 'manifest-social-hub.webmanifest' || {
+      echo "FAIL: pwa manifestPath missing"
+      exit 1
+    }
+    echo "OK: status social_hub_pwa_manifest_scope"
+  fi
   if [[ "${SOCIAL_HUB_SMOKE_EXPECT_PHASE}" == "ba" ]]; then
     echo "${status_json}" | grep -q '"social_hub_mock_webhook_fixtures"' || {
       echo "FAIL: status missing social_hub_mock_webhook_fixtures feature"
@@ -177,6 +196,12 @@ echo "OK: status endpoint"
 
 echo "== Social hub web route =="
 code="$(curl -sS -o /dev/null -w "%{http_code}" "${WEB_BASE}/hesap/sosyal-medya")"
+manifest_code="$(curl -sS -o /dev/null -w "%{http_code}" "${WEB_BASE}/manifest-social-hub.webmanifest")"
+if [[ "${manifest_code}" != "200" ]]; then
+  echo "FAIL: manifest-social-hub.webmanifest HTTP ${manifest_code}"
+  exit 1
+fi
+echo "OK: manifest-social-hub.webmanifest HTTP ${manifest_code}"
 if [[ "${code}" != "200" && "${code}" != "307" && "${code}" != "308" ]]; then
   echo "FAIL: /hesap/sosyal-medya HTTP ${code}"
   exit 1

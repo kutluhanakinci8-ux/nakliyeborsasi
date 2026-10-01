@@ -17,5 +17,20 @@
       "type": "image/svg+xml",
       "purpose": "any"
     }
+  ],
+  "shortcuts": [
+    {
+      "name": "Sosyal medya & kanallar",
+      "short_name": "Sosyal hub",
+      "description": "Bağlı hesaplar, gelen kutusu ve yayınlar",
+      "url": "/hesap/sosyal-medya",
+      "icons": [
+        {
+          "src": "/corridor-hero.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
   ]
 }

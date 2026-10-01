@@ -66,6 +66,7 @@ import { getRoadmapProviderCapabilities } from "./socialHubRoadmapCapabilities";
 import { isRoadmapProdProviderPlatform } from "./socialHubRoadmapProdProviders";
 import { buildSocialHubLinkedInDmInboxGate } from "./socialHubLinkedInDmCapability";
 import { isRoadmapPendingSkeletonPlatform } from "./socialHubRoadmapPendingProviders";
+import { buildSocialHubPwaConfig } from "./socialHubPwaConfig";
 import { roadmapConnectedHint } from "./socialHubRoadmapHints";
 import { SocialHubRoadmapInboxSyncService } from "./SocialHubRoadmapInboxSyncService";
 import { mapWebhookBridgedByPlatform } from "./socialHubWebhookBridgeSnapshot";
@@ -283,6 +284,7 @@ export class SocialHubApplicationService {
       },
       inboxSyncSummary,
       linkedinDmInboxGate: linkedInDmInboxGate,
+      pwa: buildSocialHubPwaConfig(),
     };
   }
 
