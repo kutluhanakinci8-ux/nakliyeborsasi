@@ -15765,3 +15765,77 @@ button.btn-secondary {
 .social-hub-stat-line {
   margin: 0 0 0.75rem;
 }
+
+.social-hub-platform-insights {
+  margin-top: 1.25rem;
+}
+
+.social-hub-subsection-title {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.social-hub-platform-insight-list {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.social-hub-platform-insight-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  background: #fff;
+}
+
+.social-hub-platform-insight-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.social-hub-platform-insight-status {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.social-hub-platform-insight-status--ok {
+  color: #15803d;
+}
+
+.social-hub-platform-insight-status--not_connected {
+  color: #64748b;
+}
+
+.social-hub-platform-insight-status--unavailable {
+  color: #b45309;
+}
+
+.social-hub-platform-insight-metrics {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.25rem 0.75rem;
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.social-hub-platform-insight-metrics dt {
+  margin: 0;
+  color: #64748b;
+}
+
+.social-hub-platform-insight-metrics dd {
+  margin: 0;
+  font-weight: 600;
+  color: #0f172a;
+  text-align: right;
+}
