@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { Repository } from "typeorm";
 import { SocialPlatformCode, ValidationException } from "@nakliyeborsasi/core";
 import { labelSocialPlatform } from "./socialHubPlatformLabels";
@@ -110,21 +110,57 @@ export class SocialHubMessagingBridgeService {
       externalThreadId: params.externalThreadId,
       displayLabel: params.displayLabel,
     });
-    if (
-      params.externalMessageId &&
-      link.lastExternalMessageId === params.externalMessageId
-    ) {
-      return { ingested: false, threadId: link.messageThreadId };
+    const dedupKey = resolveInboundDedupKey(params);
+    if (dedupKey && link.lastExternalMessageId === dedupKey) {
+      if (params.externalMessageId?.trim()) {
+        return { ingested: false, threadId: link.messageThreadId };
+      }
+      const dedupSeconds = webhookInboundDedupSeconds();
+      if (
+        dedupSeconds > 0 &&
+        link.lastInboundAt &&
+        Date.now() - link.lastInboundAt.getTime() < dedupSeconds * 1000
+      ) {
+        return { ingested: false, threadId: link.messageThreadId };
+      }
     }
     await this.ingestInboundMessage(
       params.companyId,
       link.id,
       params.bodyText,
     );
-    if (params.externalMessageId) {
-      link.lastExternalMessageId = params.externalMessageId;
+    if (dedupKey) {
+      link.lastExternalMessageId = dedupKey;
       await this.linkRepository.save(link);
     }
     return { ingested: true, threadId: link.messageThreadId };
   }
+}
+
+function webhookInboundDedupSeconds(): number {
+  const raw = process.env.SOCIAL_HUB_WEBHOOK_INBOUND_DEDUP_SECONDS?.trim();
+  if (!raw) {
+    return 0;
+  }
+  const parsed = Number.parseInt(raw, 10);
+  return parsed > 0 ? parsed : 0;
+}
+
+function resolveInboundDedupKey(params: {
+  externalThreadId: string;
+  bodyText: string;
+  externalMessageId: string | null;
+}): string | null {
+  if (params.externalMessageId?.trim()) {
+    return params.externalMessageId.trim();
+  }
+  const window = webhookInboundDedupSeconds();
+  if (window <= 0) {
+    return null;
+  }
+  const hash = createHash("sha256")
+    .update(`${params.externalThreadId}\n${params.bodyText.trim()}`)
+    .digest("hex")
+    .slice(0, 40);
+  return `body:${hash}`;
 }

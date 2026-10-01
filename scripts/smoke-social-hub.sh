@@ -24,7 +24,12 @@ if [[ "${SOCIAL_HUB_SMOKE_WEBHOOK_READINESS:-0}" == "1" ]]; then
     echo "FAIL: status missing integrationWebhookReadiness"
     exit 1
   }
+  echo "${status_json}" | grep -q '"integrationWebhooks"' || {
+    echo "FAIL: status missing integrationWebhooks"
+    exit 1
+  }
   echo "OK: status integrationWebhookReadiness"
+  echo "OK: status integrationWebhooks"
 fi
 echo "OK: status endpoint"
 

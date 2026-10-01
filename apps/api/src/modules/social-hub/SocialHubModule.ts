@@ -55,6 +55,7 @@ import { SocialHubWeeklyEmailService } from "./SocialHubWeeklyEmailService";
 import { SocialHubWeeklyEmailScheduler } from "./SocialHubWeeklyEmailScheduler";
 import { SocialHubRoadmapInterestStatsService } from "./SocialHubRoadmapInterestStatsService";
 import { SocialHubRoadmapBetaOpsStatsService } from "./SocialHubRoadmapBetaOpsStatsService";
+import { SocialHubRoadmapInboxSyncService } from "./SocialHubRoadmapInboxSyncService";
 import { SocialHubRoadmapOAuthApplicationService } from "./oauth/SocialHubRoadmapOAuthApplicationService";
 import { SocialHubRoadmapTokenRefreshService } from "./oauth/SocialHubRoadmapTokenRefreshService";
 import { SocialHubRoadmapTokenRefreshScheduler } from "./SocialHubRoadmapTokenRefreshScheduler";
@@ -136,6 +137,7 @@ import { PlatformAdminGuard } from "../platform-admin/PlatformAdminGuard";
     SocialHubAuditService,
     SocialHubRoadmapInterestStatsService,
     SocialHubRoadmapBetaOpsStatsService,
+    SocialHubRoadmapInboxSyncService,
     PlatformAdminGuard,
   ],
   exports: [SocialHubApplicationService, SocialHubOutboundMessagingService],

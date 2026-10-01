@@ -1,0 +1,1 @@
+-- Faz AH: şema değişikliği yok (roadmap inbox sync, webhook body dedup, status URLs, admin ilgi CSV)

@@ -26,4 +26,11 @@ export class SocialHubPlatformAdminController {
     const snapshot = await this.roadmapBetaOpsStatsService.buildSnapshot();
     return this.roadmapBetaOpsStatsService.buildCsv(snapshot);
   }
+
+  @Get("roadmap-interest.csv")
+  @Header("Content-Type", "text/csv; charset=utf-8")
+  public async roadmapInterestCsv(): Promise<string> {
+    const snapshot = await this.roadmapInterestStatsService.buildSnapshot();
+    return this.roadmapInterestStatsService.buildInterestCsv(snapshot);
+  }
 }

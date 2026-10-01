@@ -435,17 +435,19 @@ export function SocialInboxPanel({
         ) : null}
         {permissions.canReply ? (
           <div className="social-hub-sync-grid">
-            {connections.map((c) => (
-              <button
-                key={c.id}
-                type="button"
-                className="btn-account-ghost"
-                disabled={busy}
-                onClick={() => onSync(c.platformCode)}
-              >
-                {c.label} · senkron
-              </button>
-            ))}
+            {connections
+              .filter((c) => c.statusCode === "CONNECTED")
+              .map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  className="btn-account-ghost"
+                  disabled={busy}
+                  onClick={() => onSync(c.platformCode)}
+                >
+                  {c.label} · senkron
+                </button>
+              ))}
           </div>
         ) : null}
       </div>
