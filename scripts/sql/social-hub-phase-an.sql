@@ -1,0 +1,1 @@
+-- Faz AN: şema değişikliği yok (gelen kutusu kanal webhook, denetim CSV, 7g/30g analitik)

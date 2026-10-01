@@ -36,6 +36,8 @@ export type SocialHubRoadmapBetaOpsSnapshot = {
     typeof mapWebhookBridgedByPlatform
   >;
   companiesWithWebhookBridged24h: number;
+  webhookInboundBridged7d: number;
+  companiesWithWebhookBridged7d: number;
   platforms: SocialHubRoadmapBetaPlatformOpsStat[];
 };
 
@@ -52,6 +54,7 @@ export class SocialHubRoadmapBetaOpsStatsService {
 
   public async buildSnapshot(): Promise<SocialHubRoadmapBetaOpsSnapshot> {
     const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const since7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     const platforms: SocialHubRoadmapBetaPlatformOpsStat[] = [];
     for (const provider of SOCIAL_HUB_ROADMAP_PROVIDERS) {
       const code = provider.platformCode;
@@ -77,18 +80,31 @@ export class SocialHubRoadmapBetaOpsStatsService {
         outboundFailed24h: outbound.failed,
       });
     }
-    const [webhookInboundBridged24h, bridgedByPlatform, companiesWithWebhookBridged24h] =
-      await Promise.all([
-        this.auditService.countRecentByAction(
-          SocialHubAuditActionCode.WebhookInboundBridged,
-          since24h,
-        ),
-        this.auditService.summarizeWebhookBridgedByPlatform(since24h),
-        this.auditService.countDistinctCompaniesRecentByAction(
-          SocialHubAuditActionCode.WebhookInboundBridged,
-          since24h,
-        ),
-      ]);
+    const [
+      webhookInboundBridged24h,
+      bridgedByPlatform,
+      companiesWithWebhookBridged24h,
+      webhookInboundBridged7d,
+      companiesWithWebhookBridged7d,
+    ] = await Promise.all([
+      this.auditService.countRecentByAction(
+        SocialHubAuditActionCode.WebhookInboundBridged,
+        since24h,
+      ),
+      this.auditService.summarizeWebhookBridgedByPlatform(since24h),
+      this.auditService.countDistinctCompaniesRecentByAction(
+        SocialHubAuditActionCode.WebhookInboundBridged,
+        since24h,
+      ),
+      this.auditService.countRecentByAction(
+        SocialHubAuditActionCode.WebhookInboundBridged,
+        since7d,
+      ),
+      this.auditService.countDistinctCompaniesRecentByAction(
+        SocialHubAuditActionCode.WebhookInboundBridged,
+        since7d,
+      ),
+    ]);
     return {
       generatedAt: new Date().toISOString(),
       integrationWebhooks: buildSocialHubPublicWebhookUrls(),
@@ -98,6 +114,8 @@ export class SocialHubRoadmapBetaOpsStatsService {
       webhookInboundBridgedByPlatform24h:
         mapWebhookBridgedByPlatform(bridgedByPlatform),
       companiesWithWebhookBridged24h,
+      webhookInboundBridged7d,
+      companiesWithWebhookBridged7d,
       platforms,
     };
   }
@@ -158,6 +176,15 @@ export class SocialHubRoadmapBetaOpsStatsService {
         "",
         "",
         snapshot.companiesWithWebhookBridged24h,
+      ].join(","),
+      ["webhookBridge7d", "total", "", snapshot.webhookInboundBridged7d].join(
+        ",",
+      ),
+      [
+        "companiesActive7d",
+        "",
+        "",
+        snapshot.companiesWithWebhookBridged7d,
       ].join(","),
     ];
     return [header, ...lines, ...webhookLines].join("\n");

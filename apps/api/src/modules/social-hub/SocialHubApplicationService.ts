@@ -67,6 +67,7 @@ import { SocialHubRoadmapInboxSyncService } from "./SocialHubRoadmapInboxSyncSer
 import { mapWebhookBridgedByPlatform } from "./socialHubWebhookBridgeSnapshot";
 import { buildCompanyWebhookActivityCsv } from "./socialHubWebhookActivityCsv";
 import { buildSocialHubAnalyticsCsv } from "./socialHubAnalyticsCsv";
+import { buildSocialHubAuditLogCsv } from "./socialHubAuditLogCsv";
 
 export const INVITABLE_SOCIAL_TEAM_ROLES: readonly CompanyRoleCode[] = [
   CompanyRoleCode.SocialAdmin,
@@ -176,7 +177,7 @@ export class SocialHubApplicationService {
     });
 
     const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const [inboundBridged24h, lastInboundBridgedAt, bridgedByPlatform] =
+    const [inboundBridged24h, lastInboundBridgedAt, bridgedByPlatformRaw] =
       await Promise.all([
         this.socialHubAuditService.countRecentByActionForCompany(
           user.companyId,
@@ -192,6 +193,20 @@ export class SocialHubApplicationService {
           user.companyId,
         ),
       ]);
+    const bridgedByPlatform = mapWebhookBridgedByPlatform(bridgedByPlatformRaw);
+    const bridgedCountByCode = new Map(
+      bridgedByPlatform.map((row) => [row.platformCode, row.inboundBridged24h]),
+    );
+    const inboxPlatformRow = (
+      platformCode: string,
+      openCount: number,
+      implementationStatus: string,
+    ) => ({
+      platformCode,
+      openCount,
+      implementationStatus,
+      webhookInboundBridged24h: bridgedCountByCode.get(platformCode) ?? 0,
+    });
 
     return {
       subscription: this.subscriptionMeta(user.companyId),
@@ -210,25 +225,27 @@ export class SocialHubApplicationService {
       webhookActivity: {
         inboundBridged24h,
         lastInboundBridgedAt: lastInboundBridgedAt?.toISOString() ?? null,
-        byPlatform: mapWebhookBridgedByPlatform(bridgedByPlatform),
+        byPlatform: bridgedByPlatform,
       },
       inboxSummary: {
         totalOpenThreads: openLinks.length,
         byPlatform: [
-          ...providers.map((p) => ({
-            platformCode: p.platformCode,
-            openCount: openLinks.filter(
-              (link) => link.platformCode === p.platformCode,
-            ).length,
-            implementationStatus: p.implementationStatus,
-          })),
-          ...SOCIAL_HUB_ROADMAP_PROVIDERS.map((p) => ({
-            platformCode: p.platformCode,
-            openCount: openLinks.filter(
-              (link) => link.platformCode === p.platformCode,
-            ).length,
-            implementationStatus: p.implementationStatus,
-          })),
+          ...providers.map((p) =>
+            inboxPlatformRow(
+              p.platformCode,
+              openLinks.filter((link) => link.platformCode === p.platformCode)
+                .length,
+              p.implementationStatus,
+            ),
+          ),
+          ...SOCIAL_HUB_ROADMAP_PROVIDERS.map((p) =>
+            inboxPlatformRow(
+              p.platformCode,
+              openLinks.filter((link) => link.platformCode === p.platformCode)
+                .length,
+              p.implementationStatus,
+            ),
+          ),
         ],
         messagingDeepLink: "/messaging?tab=sohbet&filter=social",
         note:
@@ -472,10 +489,13 @@ export class SocialHubApplicationService {
 
     const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const since7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const since30d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const [
       webhookInboundBridged24h,
       webhookInboundBridged7d,
+      webhookInboundBridged30d,
       bridgedByPlatform24h,
+      bridgedByPlatform7d,
       lastWebhookBridgedAt,
     ] = await Promise.all([
       this.socialHubAuditService.countRecentByActionForCompany(
@@ -488,8 +508,17 @@ export class SocialHubApplicationService {
         SocialHubAuditActionCode.WebhookInboundBridged,
         since7d,
       ),
+      this.socialHubAuditService.countRecentByActionForCompany(
+        companyId,
+        SocialHubAuditActionCode.WebhookInboundBridged,
+        since30d,
+      ),
       this.socialHubAuditService.summarizeWebhookBridgedByPlatform(
         since24h,
+        companyId,
+      ),
+      this.socialHubAuditService.summarizeWebhookBridgedByPlatform(
+        since7d,
         companyId,
       ),
       this.socialHubAuditService.latestCompanyActionAt(
@@ -518,11 +547,22 @@ export class SocialHubApplicationService {
         webhookBridge: {
           inboundBridged24h: webhookInboundBridged24h,
           inboundBridged7d: webhookInboundBridged7d,
+          inboundBridged30d: webhookInboundBridged30d,
           lastInboundBridgedAt: lastWebhookBridgedAt?.toISOString() ?? null,
           byPlatform24h: mapWebhookBridgedByPlatform(bridgedByPlatform24h),
+          byPlatform7d: mapWebhookBridgedByPlatform(bridgedByPlatform7d),
         },
       },
     };
+  }
+
+  public async exportAuditLogCsv(
+    user: AuthenticatedUserContext,
+    focus?: string,
+  ): Promise<string> {
+    const webhookFocus = focus === "webhook";
+    const { entries } = await this.listAuditLog(user, webhookFocus ? "webhook" : undefined);
+    return buildSocialHubAuditLogCsv(entries, webhookFocus ? "webhook" : "all");
   }
 
   public async exportAnalyticsCsv(
@@ -536,7 +576,9 @@ export class SocialHubApplicationService {
       publishedLast30Days: analytics.publishedLast30Days,
       webhookInboundBridged24h: analytics.webhookBridge.inboundBridged24h,
       webhookInboundBridged7d: analytics.webhookBridge.inboundBridged7d,
+      webhookInboundBridged30d: analytics.webhookBridge.inboundBridged30d,
       webhookByPlatform24h: analytics.webhookBridge.byPlatform24h,
+      webhookByPlatform7d: analytics.webhookBridge.byPlatform7d,
     });
   }
 
