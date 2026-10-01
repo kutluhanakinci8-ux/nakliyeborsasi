@@ -43,6 +43,24 @@ export type SocialHubProviderCapabilities = {
   feedPublish: boolean;
 };
 
+export type SocialHubIntegrationGateStep = {
+  code: "E1" | "E2" | "E3" | "E4" | "E5" | "E6";
+  title: string;
+  status: "ready" | "partial" | "pending" | "manual";
+  detail: string;
+};
+
+export type SocialHubIntegrationGate = {
+  checklistVersion: number;
+  codeCompletePhase: string;
+  integrationGatePhase: string;
+  steps: SocialHubIntegrationGateStep[];
+  automatedReadyCount: number;
+  automatedStepCount: number;
+  allAutomatedReady: boolean;
+  note: string;
+};
+
 export type SocialHubPwaConfig = {
   manifestPath: string;
   startUrl: string;
@@ -339,6 +357,7 @@ export type SocialHubSnapshot = {
   inboxSyncSummary?: SocialHubInboxSyncSummary;
   linkedinDmInboxGate?: SocialHubLinkedInDmInboxGate;
   pwa?: SocialHubPwaConfig;
+  integrationGate?: SocialHubIntegrationGate;
 };
 
 export type SocialHubInboxChannelSyncRow = {

@@ -81,6 +81,21 @@ if [[ -n "${SOCIAL_HUB_SMOKE_EXPECT_PHASE:-}" ]]; then
     }
     echo "OK: status youtube_prod_provider_path feature"
   fi
+  if [[ "${SOCIAL_HUB_SMOKE_EXPECT_PHASE}" == "bc" ]]; then
+    echo "${status_json}" | grep -q '"social_hub_integration_gate_checklist"' || {
+      echo "FAIL: status missing social_hub_integration_gate_checklist feature"
+      exit 1
+    }
+    echo "${status_json}" | grep -q '"integrationGate"' || {
+      echo "FAIL: status missing integrationGate block"
+      exit 1
+    }
+    echo "${status_json}" | grep -q '"integrationGatePhase":"bc"' || {
+      echo "FAIL: integrationGatePhase not bc"
+      exit 1
+    }
+    echo "OK: status social_hub_integration_gate_checklist"
+  fi
   if [[ "${SOCIAL_HUB_SMOKE_EXPECT_PHASE}" == "bb" ]]; then
     echo "${status_json}" | grep -q '"social_hub_pwa_manifest_scope"' || {
       echo "FAIL: status missing social_hub_pwa_manifest_scope feature"
