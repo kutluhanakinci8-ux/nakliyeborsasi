@@ -205,11 +205,51 @@ export function SocialConnectionsPanel({
   const connections = snapshot.connections ?? [];
   const providers = snapshot.providers ?? [];
   const roadmapProviders = snapshot.roadmapProviders ?? [];
+  const metaOauthReady = connections.some(
+    (row) =>
+      row.oauthReady &&
+      (row.platformCode === "INSTAGRAM" ||
+        row.platformCode === "FACEBOOK_MESSENGER" ||
+        row.platformCode === "WHATSAPP_CLOUD"),
+  );
   return (
     <section className="social-hub-panel module-panel module-panel--elevated">
       <header className="social-hub-panel-head">
         <h2 className="account-card-title">Bağlı hesaplar</h2>
       </header>
+      {metaOauthReady ? (
+        <div
+          className="module-panel module-panel--soft social-hub-meta-dev-hint"
+          role="note"
+        >
+          <p className="account-card-lead">
+            <strong>Lerta sunucusu hazır</strong> (E1); bağlantı Meta Developer
+            uygulama tipine bağlıdır. Yalnızca &quot;Facebook Login&quot; ile
+            oluşturulan uygulamada Instagram, Messenger ve WhatsApp izinleri{" "}
+            <strong>Invalid Scopes</strong> verir — bu Lerta hatası değildir.
+          </p>
+          <ul className="module-hint">
+            <li>
+              <strong>WhatsApp:</strong> Use case &quot;Connect with customers
+              through WhatsApp&quot; veya WhatsApp ürünü gerekir.
+            </li>
+            <li>
+              <strong>Messenger:</strong> Use case &quot;Engage with customers
+              on Messenger&quot; gerekir (<code>pages_*</code> izinleri).
+            </li>
+            <li>
+              <strong>Instagram DM:</strong> Messenger veya Instagram izinleri +
+              ilgili use case; tek başına Facebook Login yetmez.
+            </li>
+          </ul>
+          <p className="module-hint">
+            Öneri: Business Manager&apos;daki WABA için yeni bir Meta uygulaması
+            açın; oluştururken <strong>önce WhatsApp use case</strong> seçin,
+            sonra aynı redirect URI ve webhook&apos;u tanımlayın. App ID/Secret
+            değişince VPS ortamını güncelleyin.
+          </p>
+        </div>
+      ) : null}
       <ul className="social-hub-connection-grid">
         {connections.map((row) => {
           const provider = providers.find((p) => p.platformCode === row.platformCode);
