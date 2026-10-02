@@ -69,6 +69,10 @@ set_kv "SOCIAL_META_OAUTH_REDIRECT_URI" "${REDIRECT_URI}"
 set_kv "SOCIAL_META_WEBHOOK_VERIFY_TOKEN" "${WEBHOOK_TOKEN}"
 set_kv "SOCIAL_OAUTH_ENCRYPTION_KEY" "${OAUTH_ENC_KEY}"
 set_kv "API_PUBLIC_BASE_URL" "${API_PUBLIC}"
+set_kv "SOCIAL_HUB_WEB_RETURN_URL" "${SOCIAL_HUB_WEB_RETURN_URL:-https://app.lerta.com.tr}"
+if [[ -n "${SOCIAL_META_OAUTH_CONFIG_ID:-}" ]]; then
+  set_kv "SOCIAL_META_OAUTH_CONFIG_ID" "${SOCIAL_META_OAUTH_CONFIG_ID}"
+fi
 
 if command -v pm2 >/dev/null 2>&1 && pm2 describe nakliyeborsasi-api >/dev/null 2>&1; then
   pm2 restart nakliyeborsasi-api --update-env
