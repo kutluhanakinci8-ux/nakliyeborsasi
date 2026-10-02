@@ -209,6 +209,15 @@ export class SocialHubOAuthApplicationService {
       externalAccountId: enriched.externalAccountId,
       displayName: enriched.displayName,
     });
+    if (
+      platformCode === SocialPlatformCode.WhatsAppCloud &&
+      enriched.externalAccountId
+    ) {
+      await this.metaGraphService.subscribeWhatsAppBusinessAccountWebhooks(
+        enriched.externalAccountId,
+        payload.access_token,
+      );
+    }
   }
 
   private async exchangeLinkedIn(

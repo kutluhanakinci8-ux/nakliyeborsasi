@@ -42,6 +42,35 @@ export class SocialHubMetaGraphService {
     );
   }
 
+  /** Meta: WABA must subscribe the app or inbound message webhooks are not delivered. */
+  public async subscribeWhatsAppBusinessAccountWebhooks(
+    wabaId: string,
+    userAccessToken: string,
+  ): Promise<void> {
+    const trimmed = wabaId.trim();
+    if (!trimmed) {
+      return;
+    }
+    const url = new URL(
+      `https://graph.facebook.com/v21.0/${trimmed}/subscribed_apps`,
+    );
+    url.searchParams.set("access_token", userAccessToken);
+    const response = await fetch(url.toString(), { method: "POST" });
+    const payload = (await response.json()) as {
+      success?: boolean;
+      error?: { message: string };
+    };
+    if (!response.ok || payload.success !== true) {
+      this.logger.warn(
+        `WABA subscribed_apps failed waba=${trimmed}: ${
+          payload.error?.message ?? String(response.status)
+        }`,
+      );
+      return;
+    }
+    this.logger.log(`WABA subscribed_apps ok waba=${trimmed}`);
+  }
+
   public async sendChannelTextMessage(params: {
     companyId: string;
     platformCode: SocialPlatformCode;
