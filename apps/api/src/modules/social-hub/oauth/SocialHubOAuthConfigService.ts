@@ -105,6 +105,11 @@ export class SocialHubOAuthConfigService {
     return `${base.replace(/\/$/, "")}/hesap/sosyal-medya?tab=connections`;
   }
 
+  public getMetaOAuthConfigId(): string | null {
+    return this.configService.get<string>("SOCIAL_META_OAUTH_CONFIG_ID")?.trim() ??
+      null;
+  }
+
   public getOAuthEncryptionKey(): string | null {
     const key =
       this.configService.get<string>("SOCIAL_OAUTH_ENCRYPTION_KEY")?.trim() ??

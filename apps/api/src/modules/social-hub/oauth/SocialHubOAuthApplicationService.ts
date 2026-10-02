@@ -20,15 +20,7 @@ import {
 import type { SocialOAuthStartResult } from "../providers/SocialProviderPort";
 import { SocialHubRoadmapOAuthApplicationService } from "./SocialHubRoadmapOAuthApplicationService";
 import { isRoadmapPlatformCode } from "../socialHubRoadmapInterest";
-
-const META_SCOPES: Record<string, string> = {
-  [SocialPlatformCode.Instagram]:
-    "instagram_basic,instagram_manage_messages,pages_show_list,pages_messaging",
-  [SocialPlatformCode.FacebookMessenger]:
-    "pages_messaging,pages_show_list,pages_read_engagement",
-  [SocialPlatformCode.WhatsAppCloud]:
-    "whatsapp_business_management,whatsapp_business_messaging,business_management",
-};
+import { resolveMetaOAuthScopes } from "./socialHubMetaOAuthScopes";
 
 @Injectable()
 export class SocialHubOAuthApplicationService {
@@ -130,13 +122,17 @@ export class SocialHubOAuthApplicationService {
       };
     }
     const state = await this.oauthStateService.issueState(companyId, platformCode);
-    const scope = META_SCOPES[platformCode] ?? "pages_show_list";
+    const scope = resolveMetaOAuthScopes(platformCode);
     const url = new URL("https://www.facebook.com/v21.0/dialog/oauth");
     url.searchParams.set("client_id", config.appId);
     url.searchParams.set("redirect_uri", config.redirectUri);
     url.searchParams.set("state", state);
     url.searchParams.set("scope", scope);
     url.searchParams.set("response_type", "code");
+    const configId = this.oauthConfig.getMetaOAuthConfigId();
+    if (configId) {
+      url.searchParams.set("config_id", configId);
+    }
     return {
       implementationStatus: "ready",
       authorizationUrl: url.toString(),
