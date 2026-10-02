@@ -127,11 +127,12 @@ export class SocialHubOAuthApplicationService {
     url.searchParams.set("client_id", config.appId);
     url.searchParams.set("redirect_uri", config.redirectUri);
     url.searchParams.set("state", state);
-    url.searchParams.set("scope", scope);
     url.searchParams.set("response_type", "code");
     const configId = this.oauthConfig.getMetaOAuthConfigId();
     if (configId) {
       url.searchParams.set("config_id", configId);
+    } else {
+      url.searchParams.set("scope", scope);
     }
     return {
       implementationStatus: "ready",
