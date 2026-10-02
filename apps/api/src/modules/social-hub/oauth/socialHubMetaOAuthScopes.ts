@@ -7,7 +7,7 @@ const META_OAUTH_SCOPES_DEFAULT: Record<SocialPlatformCode, string> = {
   [SocialPlatformCode.FacebookMessenger]:
     "business_management,pages_manage_metadata,pages_messaging,pages_show_list,pages_read_engagement",
   [SocialPlatformCode.WhatsAppCloud]:
-    "whatsapp_business_management,whatsapp_business_messaging,business_management",
+    "public_profile,whatsapp_business_management,whatsapp_business_messaging,business_management",
   [SocialPlatformCode.LinkedIn]: "",
 };
 
