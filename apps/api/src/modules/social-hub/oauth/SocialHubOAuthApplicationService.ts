@@ -128,7 +128,7 @@ export class SocialHubOAuthApplicationService {
     url.searchParams.set("redirect_uri", config.redirectUri);
     url.searchParams.set("state", state);
     url.searchParams.set("response_type", "code");
-    const configId = this.oauthConfig.getMetaOAuthConfigId();
+    const configId = this.oauthConfig.getMetaOAuthConfigId(platformCode);
     if (configId) {
       url.searchParams.set("config_id", configId);
     } else {
@@ -217,6 +217,21 @@ export class SocialHubOAuthApplicationService {
         enriched.externalAccountId,
         payload.access_token,
       );
+    }
+    if (
+      platformCode === SocialPlatformCode.FacebookMessenger &&
+      enriched.externalAccountId
+    ) {
+      const pageToken = await this.metaGraphService.resolvePageAccessToken(
+        payload.access_token,
+        enriched.externalAccountId,
+      );
+      if (pageToken) {
+        await this.metaGraphService.subscribeFacebookPageWebhooks(
+          enriched.externalAccountId,
+          pageToken,
+        );
+      }
     }
   }
 

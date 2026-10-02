@@ -71,6 +71,36 @@ export class SocialHubMetaGraphService {
     this.logger.log(`WABA subscribed_apps ok waba=${trimmed}`);
   }
 
+  /** Meta: Page must subscribe the app for Messenger `page` webhooks. */
+  public async subscribeFacebookPageWebhooks(
+    pageId: string,
+    pageAccessToken: string,
+  ): Promise<void> {
+    const trimmedPage = pageId.trim();
+    const trimmedToken = pageAccessToken.trim();
+    if (!trimmedPage || !trimmedToken) {
+      return;
+    }
+    const url = new URL(
+      `https://graph.facebook.com/v21.0/${trimmedPage}/subscribed_apps`,
+    );
+    url.searchParams.set("access_token", trimmedToken);
+    const response = await fetch(url.toString(), { method: "POST" });
+    const payload = (await response.json()) as {
+      success?: boolean;
+      error?: { message: string };
+    };
+    if (!response.ok || payload.success !== true) {
+      this.logger.warn(
+        `Page subscribed_apps failed page=${trimmedPage}: ${
+          payload.error?.message ?? String(response.status)
+        }`,
+      );
+      return;
+    }
+    this.logger.log(`Page subscribed_apps ok page=${trimmedPage}`);
+  }
+
   public async sendChannelTextMessage(params: {
     companyId: string;
     platformCode: SocialPlatformCode;

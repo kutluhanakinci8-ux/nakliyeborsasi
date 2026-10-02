@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { SocialPlatformCode } from "@nakliyeborsasi/core";
 
 export type MetaOAuthConfig = {
   appId: string;
@@ -105,9 +106,28 @@ export class SocialHubOAuthConfigService {
     return `${base.replace(/\/$/, "")}/hesap/sosyal-medya?tab=connections`;
   }
 
-  public getMetaOAuthConfigId(): string | null {
-    return this.configService.get<string>("SOCIAL_META_OAUTH_CONFIG_ID")?.trim() ??
-      null;
+  public getMetaOAuthConfigId(platformCode: SocialPlatformCode): string | null {
+    const envByPlatform: Partial<Record<SocialPlatformCode, string>> = {
+      [SocialPlatformCode.WhatsAppCloud]:
+        "SOCIAL_META_OAUTH_CONFIG_ID_WHATSAPP_CLOUD",
+      [SocialPlatformCode.FacebookMessenger]:
+        "SOCIAL_META_OAUTH_CONFIG_ID_FACEBOOK_MESSENGER",
+      [SocialPlatformCode.Instagram]: "SOCIAL_META_OAUTH_CONFIG_ID_INSTAGRAM",
+    };
+    const platformKey = envByPlatform[platformCode];
+    if (platformKey) {
+      const explicit = this.configService.get<string>(platformKey)?.trim();
+      if (explicit) {
+        return explicit;
+      }
+    }
+    if (platformCode === SocialPlatformCode.WhatsAppCloud) {
+      return (
+        this.configService.get<string>("SOCIAL_META_OAUTH_CONFIG_ID")?.trim() ??
+        null
+      );
+    }
+    return null;
   }
 
   public getOAuthEncryptionKey(): string | null {
