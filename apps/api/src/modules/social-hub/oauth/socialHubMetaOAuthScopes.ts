@@ -3,7 +3,7 @@ import { SocialPlatformCode } from "@nakliyeborsasi/core";
 /** Meta use-case uyumlu varsayılan scope setleri (Messenger / IG / WA ayrı). */
 const META_OAUTH_SCOPES_DEFAULT: Record<SocialPlatformCode, string> = {
   [SocialPlatformCode.Instagram]:
-    "business_management,instagram_basic,instagram_manage_messages,pages_manage_metadata,pages_show_list,pages_messaging",
+    "business_management,instagram_basic,instagram_manage_messages",
   [SocialPlatformCode.FacebookMessenger]:
     "business_management,pages_manage_metadata,pages_messaging,pages_show_list,pages_read_engagement",
   [SocialPlatformCode.WhatsAppCloud]:

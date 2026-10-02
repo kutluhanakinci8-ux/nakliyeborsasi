@@ -1,7 +1,8 @@
 export function formatSocialHubOAuthReason(reason: string): string {
   const decoded = decodeURIComponent(reason.replace(/\+/g, " "));
   const map: Record<string, string> = {
-    missing_code: "OAuth kodu alınamadı. Bağlantıyı tekrar deneyin.",
+    missing_code:
+      "Meta izin ekranı tamamlanmadı (geçersiz scope veya iptal). Önce WhatsApp kartından deneyin; Instagram/Messenger için Meta uygulamasına Messenger use case eklemeniz gerekir.",
     access_denied: "Meta veya LinkedIn erişim iznini reddetti.",
     oauth_exchange_failed: "Token alınamadı. Sunucu yapılandırmasını kontrol edin.",
   };
