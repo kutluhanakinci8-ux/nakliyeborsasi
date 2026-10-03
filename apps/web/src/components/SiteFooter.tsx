@@ -6,6 +6,7 @@ import { CORPORATE_NAV_ITEMS, PLATFORM_NAV_ITEMS } from "../lib/siteNavigation";
 
 const LEGAL_LINKS = [
   { href: "/kisisel-verilerin-korunmasi", label: "Kişisel Verilerin Korunması" },
+  { href: "/veri-silme", label: "Veri silme talimatları" },
   { href: "/kullanim-kosullari", label: "Kullanım Koşullarımız" },
   { href: "/cerez-ayarlari", label: "Çerez Ayarları" },
 ] as const;

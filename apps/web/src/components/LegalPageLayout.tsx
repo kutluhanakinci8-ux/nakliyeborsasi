@@ -20,6 +20,7 @@ type LegalPageLayoutProps = {
 
 const LEGAL_RELATED = [
   { href: "/kisisel-verilerin-korunmasi", label: "KVKK / Aydınlatma" },
+  { href: "/veri-silme", label: "Veri silme talimatları" },
   { href: "/cerez-ayarlari", label: "Çerez ayarları" },
   { href: "/iletisim", label: "İletişim" },
 ] as const;
