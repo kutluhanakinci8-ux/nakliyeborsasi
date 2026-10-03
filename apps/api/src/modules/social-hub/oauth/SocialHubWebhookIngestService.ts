@@ -26,8 +26,11 @@ export class SocialHubWebhookIngestService {
     this.verifyMetaSignature(signatureHeader, rawBody);
     const { object, messages } = parseMetaWebhookBody(body);
     this.logger.log(`Meta webhook object=${object} messages=${messages.length}`);
-    if (object === "instagram" && messages.length === 0) {
-      this.logInstagramWebhookShape(body);
+    if (
+      messages.length === 0 &&
+      (object === "instagram" || object === "user" || object === "page")
+    ) {
+      this.logMetaWebhookShape(object, body);
     }
     for (const message of messages) {
       const route = await this.routingService.resolveFromMetaPayload({
@@ -76,7 +79,10 @@ export class SocialHubWebhookIngestService {
     await this.ingestMetaPayload(signatureHeader, body, rawBody);
   }
 
-  private logInstagramWebhookShape(body: Record<string, unknown>): void {
+  private logMetaWebhookShape(
+    object: string | undefined,
+    body: Record<string, unknown>,
+  ): void {
     const entries = Array.isArray(body.entry) ? body.entry : [];
     const shapes: string[] = [];
     for (const entry of entries) {
@@ -110,7 +116,14 @@ export class SocialHubWebhookIngestService {
         }
         const ev = item as Record<string, unknown>;
         if (ev.message) {
-          eventKinds.push("message");
+          const msg = ev.message as Record<string, unknown>;
+          if (msg.is_echo === true) {
+            eventKinds.push("message_echo");
+          } else if (msg.is_deleted === true) {
+            eventKinds.push("message_deleted");
+          } else {
+            eventKinds.push("message");
+          }
         } else if (ev.reaction) {
           eventKinds.push("reaction");
         } else if (ev.postback) {
@@ -128,7 +141,9 @@ export class SocialHubWebhookIngestService {
       );
     }
     if (shapes.length > 0) {
-      this.logger.log(`Instagram webhook shape: ${shapes.join(" | ")}`);
+      this.logger.log(
+        `Meta webhook shape object=${object ?? "?"}: ${shapes.join(" | ")}`,
+      );
     }
   }
 
