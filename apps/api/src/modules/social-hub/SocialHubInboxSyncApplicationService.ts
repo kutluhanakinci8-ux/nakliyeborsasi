@@ -97,20 +97,23 @@ export class SocialHubInboxSyncApplicationService {
         pageId,
       );
       const accessToken = pageToken ?? token;
-      const imported =
+      const importResult =
         await this.metaInboxHistoryService.importRecentInstagramThreads({
           companyId,
+          pageId,
           instagramBusinessAccountId: igId,
           accessToken,
           maxThreads: 8,
         });
+      const imported = importResult.imported;
       return {
-        implementationStatus: "ready",
+        implementationStatus: importResult.graphError ? "pending" : "ready",
         importedThreadCount: imported,
         message:
-          imported > 0
+          importResult.graphError ??
+          (imported > 0
             ? `${imported} Instagram DM Mesajlar’a aktarıldı.`
-            : "Yeni Instagram DM bulunamadı (webhook aktif).",
+            : "Yeni Instagram DM bulunamadı (webhook veya müşteri test mesajı bekleniyor)."),
       };
     }
     return {

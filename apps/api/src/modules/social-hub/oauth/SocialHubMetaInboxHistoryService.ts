@@ -80,13 +80,15 @@ export class SocialHubMetaInboxHistoryService {
 
   public async importRecentInstagramThreads(params: {
     companyId: string;
+    pageId: string;
     instagramBusinessAccountId: string;
     accessToken: string;
     maxThreads: number;
-  }): Promise<number> {
+  }): Promise<{ imported: number; graphError?: string }> {
     const url = new URL(
-      `https://graph.facebook.com/v21.0/${params.instagramBusinessAccountId}/conversations`,
+      `https://graph.facebook.com/v21.0/${params.pageId}/conversations`,
     );
+    url.searchParams.set("platform", "instagram");
     url.searchParams.set(
       "fields",
       "participants,messages.limit(3){id,message,from,created_time}",
@@ -95,16 +97,20 @@ export class SocialHubMetaInboxHistoryService {
     url.searchParams.set("access_token", params.accessToken);
     const response = await fetch(url.toString());
     const payload = (await response.json()) as ConversationsResponse;
-    if (!response.ok || !payload.data?.length) {
-      this.logger.warn(
-        `Instagram conversations import: ${payload.error?.message ?? "empty"}`,
-      );
-      return 0;
+    if (!response.ok) {
+      const graphError = payload.error?.message ?? `HTTP ${response.status}`;
+      this.logger.warn(`Instagram conversations import: ${graphError}`);
+      return { imported: 0, graphError };
+    }
+    if (!payload.data?.length) {
+      return { imported: 0 };
     }
     let imported = 0;
     for (const conversation of payload.data) {
       const participant = conversation.participants?.data?.find(
-        (p) => p.id !== params.instagramBusinessAccountId,
+        (p) =>
+          p.id !== params.instagramBusinessAccountId &&
+          p.id !== params.pageId,
       );
       const scopedId = participant?.id ?? conversation.id;
       const label = participant?.name ?? scopedId;
@@ -131,6 +137,6 @@ export class SocialHubMetaInboxHistoryService {
         }
       }
     }
-    return imported;
+    return { imported };
   }
 }
