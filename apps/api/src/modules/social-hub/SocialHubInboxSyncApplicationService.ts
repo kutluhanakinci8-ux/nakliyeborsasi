@@ -74,7 +74,10 @@ export class SocialHubInboxSyncApplicationService {
         where: { companyId, platformCode },
       });
       const metadata = parseSocialHubConnectionMetadata(connection?.grantedScopes);
-      const pageId = metadata.pageId;
+      const pageId =
+        metadata.pageId ??
+        this.oauthConfig.getLinkedFacebookPageId()?.trim() ??
+        null;
       const knownIgId =
         this.oauthConfig.getKnownInstagramBusinessAccountId()?.trim() ?? null;
       const igId =
@@ -92,13 +95,18 @@ export class SocialHubInboxSyncApplicationService {
             "Instagram işletme hesabı kimliği eksik — OAuth veya SOCIAL_META_INSTAGRAM_BUSINESS_ACCOUNT_ID.",
         };
       }
-      let accessToken = token;
+      const messengerToken = await this.tokenVault.getAccessToken(
+        companyId,
+        SocialPlatformCode.FacebookMessenger,
+      );
+      const userTokenForPage = messengerToken ?? token;
+      let accessToken = userTokenForPage;
       if (pageId) {
         const pageToken = await this.metaGraphService.resolvePageAccessToken(
-          token,
+          userTokenForPage,
           pageId,
         );
-        accessToken = pageToken ?? token;
+        accessToken = pageToken ?? userTokenForPage;
       }
       const importResult = pageId
         ? await this.metaInboxHistoryService.importRecentInstagramThreads({

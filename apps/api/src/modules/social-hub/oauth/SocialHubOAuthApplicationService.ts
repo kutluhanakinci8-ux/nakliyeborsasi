@@ -7,7 +7,10 @@ import {
   SocialPlatformCode,
   ValidationException,
 } from "@nakliyeborsasi/core";
-import { encryptTotpSecret } from "../../auth/TotpSecretCipher";
+import {
+  decryptTotpSecret,
+  encryptTotpSecret,
+} from "../../auth/TotpSecretCipher";
 import { CompanySocialConnectionEntity } from "../../../infrastructure/database/entities/CompanySocialConnectionEntity";
 import { SocialHubOAuthConfigService } from "./SocialHubOAuthConfigService";
 import { SocialHubOAuthStateService } from "./SocialHubOAuthStateService";
@@ -499,6 +502,50 @@ export class SocialHubOAuthApplicationService {
       return;
     }
     await this.metaGraphService.applyInstagramLoginMetadata(companyId, patch);
+    const pageId = linkedPageId ?? patch.pageId;
+    if (pageId) {
+      const messengerToken = await this.connectionRepository.findOne({
+        where: {
+          companyId,
+          platformCode: SocialPlatformCode.FacebookMessenger,
+        },
+      });
+      const igToken = await this.connectionRepository.findOne({
+        where: { companyId, platformCode: SocialPlatformCode.Instagram },
+      });
+      const userRow = messengerToken ?? igToken;
+      if (userRow?.accessTokenCiphertext) {
+        const key = this.oauthConfig.getOAuthEncryptionKey();
+        if (key) {
+          try {
+            const userAccess = decryptTotpSecret(
+              userRow.accessTokenCiphertext,
+              key,
+            );
+            const pageToken = await this.metaGraphService.resolvePageAccessToken(
+              userAccess,
+              pageId,
+            );
+            if (pageToken) {
+              await this.metaGraphService.subscribeFacebookPageWebhooks(
+                pageId,
+                pageToken,
+              );
+              const igBiz =
+                knownIgId ?? patch.instagramBusinessAccountId ?? null;
+              if (igBiz) {
+                await this.metaGraphService.subscribeInstagramBusinessWebhooks(
+                  igBiz,
+                  pageToken,
+                );
+              }
+            }
+          } catch {
+            // best-effort webhook subscribe on boot
+          }
+        }
+      }
+    }
     this.logger.log(
       `Instagram metadata repaired from env company=${companyId} keys=${Object.keys(patch).join(",")}`,
     );

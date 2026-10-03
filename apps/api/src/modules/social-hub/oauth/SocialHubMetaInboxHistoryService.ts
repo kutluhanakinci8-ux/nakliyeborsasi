@@ -103,13 +103,7 @@ export class SocialHubMetaInboxHistoryService {
       return { imported: 0, graphError };
     }
     if (!payload.data?.length) {
-      const loginImported = await this.importRecentInstagramLoginThreads({
-        companyId: params.companyId,
-        instagramBusinessAccountId: params.instagramBusinessAccountId,
-        accessToken: params.accessToken,
-        maxThreads: params.maxThreads,
-      });
-      return { imported: loginImported };
+      return { imported: 0 };
     }
     let imported = 0;
     for (const conversation of payload.data) {
