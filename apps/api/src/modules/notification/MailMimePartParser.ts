@@ -36,32 +36,71 @@ export type MimePart = {
   body: string;
 };
 
+/** RFC 5322 header value (unfolded); avoids false matches inside DKIM `h=` lists. */
+export function readMimeHeaderValue(
+  head: string,
+  headerName: string,
+): string | null {
+  const target = headerName.toLowerCase();
+  const lines = head.split(/\r?\n/);
+  let value = "";
+  let collecting = false;
+  for (const line of lines) {
+    if (/^[ \t]/.test(line)) {
+      if (collecting) {
+        value += ` ${line.trim()}`;
+      }
+      continue;
+    }
+    if (collecting) {
+      break;
+    }
+    const colon = line.indexOf(":");
+    if (colon < 0) {
+      continue;
+    }
+    const name = line.slice(0, colon).trim().toLowerCase();
+    if (name === target) {
+      value = line.slice(colon + 1).trim();
+      collecting = true;
+    }
+  }
+  return value.length > 0 ? value : null;
+}
+
+function primaryContentType(contentTypeHeader: string | null): string {
+  const raw = contentTypeHeader?.split(";")[0]?.trim().toLowerCase();
+  return raw && raw.includes("/") ? raw : "text/plain";
+}
+
 export function listMimeParts(rawMime: string): MimePart[] {
-  const boundaryMatch = rawMime.match(/boundary="?([^"\s;]+)"?/i);
+  const headEnd = rawMime.search(/\r?\n\r?\n/);
+  const head = headEnd >= 0 ? rawMime.slice(0, headEnd) : "";
+  const boundaryHeader = readMimeHeaderValue(head, "Content-Type");
+  const boundaryMatch = boundaryHeader?.match(/boundary="?([^"\s;]+)"?/i);
   if (!boundaryMatch) {
-    const headEnd = rawMime.search(/\r?\n\r?\n/);
     if (headEnd < 0) {
       return [];
     }
-    const head = rawMime.slice(0, headEnd);
     const body = rawMime.slice(headEnd).replace(/^\r?\n\r?\n/, "");
-    const typeMatch = head.match(/content-type:\s*([^;\r\n]+)/i);
-    const encMatch = head.match(/content-transfer-encoding:\s*(\S+)/i);
-    const contentType = (typeMatch?.[1] ?? "text/plain").trim().toLowerCase();
+    const contentTypeHeader = readMimeHeaderValue(head, "Content-Type");
+    const contentType = primaryContentType(contentTypeHeader);
+    const encoding =
+      readMimeHeaderValue(head, "Content-Transfer-Encoding")?.toLowerCase() ??
+      "";
     return [
       {
         contentType,
-        charset: charsetFromContentType(head),
+        charset: charsetFromContentType(contentTypeHeader ?? ""),
         headers: head,
         contentDisposition: null,
         filename: null,
-        encoding: (encMatch?.[1] ?? "").toLowerCase(),
+        encoding,
         body,
       },
     ];
   }
   const boundary = boundaryMatch[1];
-  const headEnd = rawMime.search(/\r?\n\r?\n/);
   const body =
     headEnd >= 0 ? rawMime.slice(headEnd).replace(/^\r?\n\r?\n/, "") : rawMime;
   const segments = body.split(`--${boundary}`);
@@ -185,12 +224,17 @@ export function extractPlainBodyFromMime(rawMime: string): string | null {
       !part.contentDisposition?.includes("attachment")
     ) {
       const text = decodePartBody(part).trim();
-      if (text) {
+      if (text && !looksLikeHtmlDocument(text)) {
         return text.slice(0, 200_000);
       }
     }
   }
   return null;
+}
+
+function looksLikeHtmlDocument(text: string): boolean {
+  const head = text.slice(0, 512).trimStart().toLowerCase();
+  return head.startsWith("<!doctype") || head.startsWith("<html");
 }
 
 export function extractHtmlBodyFromMime(rawMime: string): string | null {

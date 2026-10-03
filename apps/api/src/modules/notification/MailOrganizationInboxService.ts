@@ -27,6 +27,7 @@ import {
   reparseInboundDisplayFromRawMime,
 } from "./MailInboundMimeParse";
 import { decodeMimeEncodedWords } from "./MailMimeCharset";
+import { sanitizeInboundHtml } from "./MailHtmlSanitize";
 
 export type InboxFolder =
   | "inbox"
@@ -319,7 +320,7 @@ export class MailOrganizationInboxService {
           bodyText = reparsed.bodyText;
         }
         if (reparsed.bodyHtml) {
-          bodyHtml = reparsed.bodyHtml;
+          bodyHtml = sanitizeInboundHtml(reparsed.bodyHtml);
         }
         if (reparsed.snippet) {
           snippet = reparsed.snippet;
