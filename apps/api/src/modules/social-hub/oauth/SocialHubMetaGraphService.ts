@@ -85,6 +85,10 @@ export class SocialHubMetaGraphService {
       `https://graph.facebook.com/v21.0/${trimmedPage}/subscribed_apps`,
     );
     url.searchParams.set("access_token", trimmedToken);
+    url.searchParams.set(
+      "subscribed_fields",
+      "messages,messaging_postbacks,message_deliveries,message_reads",
+    );
     const response = await fetch(url.toString(), { method: "POST" });
     const payload = (await response.json()) as {
       success?: boolean;
