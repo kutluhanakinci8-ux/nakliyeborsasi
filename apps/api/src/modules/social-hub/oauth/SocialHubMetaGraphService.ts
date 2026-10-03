@@ -138,6 +138,36 @@ export class SocialHubMetaGraphService {
     this.logger.log(`IG subscribed_apps ok ig=${trimmedIg}`);
   }
 
+  /** Instagram Business Login user token — graph.instagram.com/me/subscribed_apps (Developer Adım 2). */
+  public async subscribeInstagramLoginUserWebhooks(
+    accessToken: string,
+  ): Promise<void> {
+    const trimmedToken = accessToken.trim();
+    if (!trimmedToken) {
+      return;
+    }
+    const url = new URL("https://graph.instagram.com/v21.0/me/subscribed_apps");
+    url.searchParams.set("access_token", trimmedToken);
+    url.searchParams.set(
+      "subscribed_fields",
+      "messages,messaging_postbacks,messaging_seen,message_reactions",
+    );
+    const response = await fetch(url.toString(), { method: "POST" });
+    const payload = (await response.json()) as {
+      success?: boolean;
+      error?: { message: string };
+    };
+    if (!response.ok || payload.success !== true) {
+      this.logger.warn(
+        `Instagram Login subscribed_apps failed: ${
+          payload.error?.message ?? String(response.status)
+        }`,
+      );
+      return;
+    }
+    this.logger.log("Instagram Login subscribed_apps ok (me)");
+  }
+
   public async syncInstagramExternalAccountId(companyId: string): Promise<void> {
     const row = await this.connectionRepository.findOne({
       where: { companyId, platformCode: SocialPlatformCode.Instagram },

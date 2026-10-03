@@ -400,6 +400,8 @@ export class SocialHubOAuthApplicationService {
       externalAccountId: igUserId,
       displayName,
     });
+    await this.metaGraphService.subscribeInstagramLoginUserWebhooks(accessToken);
+    await this.syncInboxQuietlyAfterOAuth(companyId, SocialPlatformCode.Instagram);
   }
 
   private async exchangeLinkedIn(
