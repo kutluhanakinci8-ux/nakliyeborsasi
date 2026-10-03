@@ -106,6 +106,27 @@ export class SocialHubOAuthConfigService {
     return `${base.replace(/\/$/, "")}/hesap/sosyal-medya?tab=connections`;
   }
 
+  public getInstagramLoginConfig(): { appId: string; appSecret: string } | null {
+    const appId = this.configService
+      .get<string>("SOCIAL_META_INSTAGRAM_APP_ID")
+      ?.trim();
+    const appSecret = this.configService
+      .get<string>("SOCIAL_META_INSTAGRAM_APP_SECRET")
+      ?.trim();
+    if (!appId || !appSecret) {
+      return null;
+    }
+    return { appId, appSecret };
+  }
+
+  public useInstagramLoginOAuth(): boolean {
+    const flag = this.configService
+      .get<string>("SOCIAL_META_INSTAGRAM_OAUTH_USE_LOGIN")
+      ?.trim()
+      .toLowerCase();
+    return flag === "1" || flag === "true" || flag === "yes";
+  }
+
   public getMetaOAuthConfigId(platformCode: SocialPlatformCode): string | null {
     const envByPlatform: Partial<Record<SocialPlatformCode, string>> = {
       [SocialPlatformCode.WhatsAppCloud]:

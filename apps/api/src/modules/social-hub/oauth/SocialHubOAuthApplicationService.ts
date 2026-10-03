@@ -122,6 +122,28 @@ export class SocialHubOAuthApplicationService {
       };
     }
     const state = await this.oauthStateService.issueState(companyId, platformCode);
+    if (
+      platformCode === SocialPlatformCode.Instagram &&
+      this.oauthConfig.useInstagramLoginOAuth() &&
+      this.oauthConfig.getInstagramLoginConfig()
+    ) {
+      const ig = this.oauthConfig.getInstagramLoginConfig()!;
+      const url = new URL("https://www.instagram.com/oauth/authorize");
+      url.searchParams.set("client_id", ig.appId);
+      url.searchParams.set("redirect_uri", config.redirectUri);
+      url.searchParams.set("state", state);
+      url.searchParams.set("response_type", "code");
+      url.searchParams.set(
+        "scope",
+        "instagram_business_basic,instagram_business_manage_messages,instagram_business_manage_comments",
+      );
+      return {
+        implementationStatus: "ready",
+        authorizationUrl: url.toString(),
+        state,
+        message: "Instagram Business Login yönlendirmesi hazır.",
+      };
+    }
     const scope = resolveMetaOAuthScopes(platformCode);
     const url = new URL("https://www.facebook.com/v21.0/dialog/oauth");
     url.searchParams.set("client_id", config.appId);
@@ -176,6 +198,14 @@ export class SocialHubOAuthApplicationService {
     platformCode: SocialPlatformCode,
     code: string,
   ): Promise<void> {
+    if (
+      platformCode === SocialPlatformCode.Instagram &&
+      this.oauthConfig.useInstagramLoginOAuth() &&
+      this.oauthConfig.getInstagramLoginConfig()
+    ) {
+      await this.exchangeInstagramBusinessLogin(companyId, code);
+      return;
+    }
     const config = this.oauthConfig.getMetaConfig();
     if (!config) {
       throw new ValidationException("Meta OAuth yapılandırması eksik.");
@@ -252,6 +282,88 @@ export class SocialHubOAuthApplicationService {
         }
       }
     }
+  }
+
+  private async exchangeInstagramBusinessLogin(
+    companyId: string,
+    code: string,
+  ): Promise<void> {
+    const meta = this.oauthConfig.getMetaConfig();
+    const ig = this.oauthConfig.getInstagramLoginConfig();
+    if (!meta || !ig) {
+      throw new ValidationException("Instagram Login OAuth yapılandırması eksik.");
+    }
+    const body = new URLSearchParams({
+      client_id: ig.appId,
+      client_secret: ig.appSecret,
+      grant_type: "authorization_code",
+      redirect_uri: meta.redirectUri,
+      code,
+    });
+    const shortRes = await fetch("https://api.instagram.com/oauth/access_token", {
+      method: "POST",
+      body,
+    });
+    const shortPayload = (await shortRes.json()) as {
+      access_token?: string;
+      user_id?: string | number;
+      error_message?: string;
+      error_type?: string;
+    };
+    if (!shortRes.ok || !shortPayload.access_token) {
+      throw new ValidationException(
+        shortPayload.error_message ?? "Instagram token alınamadı.",
+      );
+    }
+    let accessToken = shortPayload.access_token;
+    let expiresInSec: number | null = null;
+    const longUrl = new URL("https://graph.instagram.com/access_token");
+    longUrl.searchParams.set("grant_type", "ig_exchange_token");
+    longUrl.searchParams.set("client_secret", ig.appSecret);
+    longUrl.searchParams.set("access_token", accessToken);
+    const longRes = await fetch(longUrl.toString());
+    const longPayload = (await longRes.json()) as {
+      access_token?: string;
+      expires_in?: number;
+      error?: { message: string };
+    };
+    if (longRes.ok && longPayload.access_token) {
+      accessToken = longPayload.access_token;
+      expiresInSec = longPayload.expires_in ?? null;
+    }
+    const igUserId = shortPayload.user_id
+      ? String(shortPayload.user_id)
+      : null;
+    let displayName = "Instagram";
+    try {
+      const meUrl = new URL("https://graph.instagram.com/v21.0/me");
+      meUrl.searchParams.set("fields", "id,username,name");
+      meUrl.searchParams.set("access_token", accessToken);
+      const meRes = await fetch(meUrl.toString());
+      const me = (await meRes.json()) as {
+        id?: string;
+        username?: string;
+        name?: string;
+      };
+      if (me.username) {
+        displayName = `@${me.username}`;
+      } else if (me.name) {
+        displayName = me.name;
+      }
+    } catch {
+      // keep default label
+    }
+    if (igUserId) {
+      await this.metaGraphService.applyInstagramLoginMetadata(companyId, {
+        instagramBusinessAccountId: igUserId,
+      });
+    }
+    await this.persistConnection(companyId, SocialPlatformCode.Instagram, {
+      accessToken,
+      expiresInSec,
+      externalAccountId: igUserId,
+      displayName,
+    });
   }
 
   private async exchangeLinkedIn(

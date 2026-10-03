@@ -474,6 +474,16 @@ export class SocialHubMetaGraphService {
     return { id: ig.id, username: ig.username, name: ig.name };
   }
 
+  public async applyInstagramLoginMetadata(
+    companyId: string,
+    patch: Pick<
+      SocialHubConnectionMetadata,
+      "instagramBusinessAccountId" | "pageId"
+    >,
+  ): Promise<void> {
+    await this.mergeConnectionMetadata(companyId, SocialPlatformCode.Instagram, patch);
+  }
+
   private async mergeConnectionMetadata(
     companyId: string,
     platformCode: SocialPlatformCode,

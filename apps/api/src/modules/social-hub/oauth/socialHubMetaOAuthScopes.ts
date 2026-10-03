@@ -2,8 +2,9 @@ import { SocialPlatformCode } from "@nakliyeborsasi/core";
 
 /** Meta use-case uyumlu varsayılan scope setleri (Messenger / IG / WA ayrı). */
 const META_OAUTH_SCOPES_DEFAULT: Record<SocialPlatformCode, string> = {
+  /** Facebook Login dialog only — instagram_business_* belong on instagram.com/oauth/authorize. */
   [SocialPlatformCode.Instagram]:
-    "business_management,pages_show_list,pages_read_engagement,pages_manage_metadata,instagram_basic,instagram_manage_messages,instagram_business_basic,instagram_business_manage_messages",
+    "business_management,pages_show_list,pages_read_engagement,pages_manage_metadata,instagram_manage_comments",
   [SocialPlatformCode.FacebookMessenger]:
     "business_management,pages_manage_metadata,pages_messaging,pages_show_list,pages_read_engagement",
   [SocialPlatformCode.WhatsAppCloud]:
