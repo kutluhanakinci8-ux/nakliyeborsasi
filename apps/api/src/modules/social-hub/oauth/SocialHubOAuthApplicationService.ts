@@ -233,6 +233,25 @@ export class SocialHubOAuthApplicationService {
         );
       }
     }
+    if (platformCode === SocialPlatformCode.Instagram) {
+      const connection = await this.connectionRepository.findOne({
+        where: { companyId, platformCode },
+      });
+      const metadata = parseSocialHubConnectionMetadata(connection?.grantedScopes);
+      const pageId = metadata.pageId;
+      if (pageId) {
+        const pageToken = await this.metaGraphService.resolvePageAccessToken(
+          payload.access_token,
+          pageId,
+        );
+        if (pageToken) {
+          await this.metaGraphService.subscribeFacebookPageWebhooks(
+            pageId,
+            pageToken,
+          );
+        }
+      }
+    }
   }
 
   private async exchangeLinkedIn(

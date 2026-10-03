@@ -319,13 +319,27 @@ export class SocialHubMetaGraphService {
       const page = payload.data[0];
       const metadata: SocialHubConnectionMetadata = { pageId: page.id };
       if (platformCode === SocialPlatformCode.Instagram) {
-        const igId = await this.fetchInstagramBusinessAccountId(
+        const igProfile = await this.fetchInstagramBusinessProfile(
           page.id,
           page.access_token ?? userAccessToken,
         );
-        if (igId) {
-          metadata.instagramBusinessAccountId = igId;
+        if (igProfile?.id) {
+          metadata.instagramBusinessAccountId = igProfile.id;
         }
+        await this.mergeConnectionMetadata(companyId, platformCode, metadata);
+        if (igProfile?.id) {
+          return {
+            externalAccountId: igProfile.id,
+            displayName:
+              igProfile.username
+                ? `@${igProfile.username}`
+                : igProfile.name ?? page.name ?? "Instagram",
+          };
+        }
+        return {
+          externalAccountId: page.id,
+          displayName: page.name ?? "Instagram (sayfa)",
+        };
       }
       await this.mergeConnectionMetadata(companyId, platformCode, metadata);
       return {
@@ -415,18 +429,29 @@ export class SocialHubMetaGraphService {
     }
   }
 
-  private async fetchInstagramBusinessAccountId(
+  private async fetchInstagramBusinessProfile(
     pageId: string,
     accessToken: string,
-  ): Promise<string | null> {
+  ): Promise<{ id: string; username?: string; name?: string } | null> {
     const url = new URL(`https://graph.facebook.com/v21.0/${pageId}`);
-    url.searchParams.set("fields", "instagram_business_account");
+    url.searchParams.set(
+      "fields",
+      "instagram_business_account{id,username,name}",
+    );
     url.searchParams.set("access_token", accessToken);
     const response = await fetch(url.toString());
     const payload = (await response.json()) as {
-      instagram_business_account?: { id?: string };
+      instagram_business_account?: {
+        id?: string;
+        username?: string;
+        name?: string;
+      };
     };
-    return payload.instagram_business_account?.id ?? null;
+    const ig = payload.instagram_business_account;
+    if (!ig?.id) {
+      return null;
+    }
+    return { id: ig.id, username: ig.username, name: ig.name };
   }
 
   private async mergeConnectionMetadata(
