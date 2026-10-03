@@ -3,6 +3,8 @@ export type SocialHubConnectionMetadata = {
   phoneNumberId?: string;
   wabaId?: string;
   instagramBusinessAccountId?: string;
+  /** Instagram Business Login `user_id` / graph.instagram.com/me id (webhook entry.id) */
+  instagramLoginUserId?: string;
   /** encryptTotpSecret ile şifrelenmiş LinkedIn refresh token */
   linkedInRefreshTokenCipher?: string;
   /** urn:li:organization:{id} — sayfa istatistikleri için */

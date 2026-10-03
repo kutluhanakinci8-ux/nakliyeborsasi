@@ -84,27 +84,40 @@ export class SocialHubInboxSyncApplicationService {
           ? connection.externalAccountId
           : null) ??
         knownIgId;
-      if (!igId || !pageId) {
+      if (!igId) {
         return {
           implementationStatus: "pending",
           importedThreadCount: 0,
           message:
-            "Instagram işletme hesabı veya sayfa kimliği eksik — OAuth’ta «Ayarları düzenle» ile yenileyin.",
+            "Instagram işletme hesabı kimliği eksik — OAuth veya SOCIAL_META_INSTAGRAM_BUSINESS_ACCOUNT_ID.",
         };
       }
-      const pageToken = await this.metaGraphService.resolvePageAccessToken(
-        token,
-        pageId,
-      );
-      const accessToken = pageToken ?? token;
-      const importResult =
-        await this.metaInboxHistoryService.importRecentInstagramThreads({
-          companyId,
+      let accessToken = token;
+      if (pageId) {
+        const pageToken = await this.metaGraphService.resolvePageAccessToken(
+          token,
           pageId,
-          instagramBusinessAccountId: igId,
-          accessToken,
-          maxThreads: 8,
-        });
+        );
+        accessToken = pageToken ?? token;
+      }
+      const importResult = pageId
+        ? await this.metaInboxHistoryService.importRecentInstagramThreads({
+            companyId,
+            pageId,
+            instagramBusinessAccountId: igId,
+            accessToken,
+            maxThreads: 8,
+          })
+        : {
+            imported: await this.metaInboxHistoryService.importRecentInstagramLoginThreads(
+              {
+                companyId,
+                instagramBusinessAccountId: igId,
+                accessToken,
+                maxThreads: 8,
+              },
+            ),
+          };
       const imported = importResult.imported;
       return {
         implementationStatus: importResult.graphError ? "pending" : "ready",

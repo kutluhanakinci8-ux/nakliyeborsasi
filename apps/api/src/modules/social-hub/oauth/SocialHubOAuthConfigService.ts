@@ -136,6 +136,15 @@ export class SocialHubOAuthConfigService {
     );
   }
 
+  /** Facebook Page linked to the Instagram professional account (DM via Page inbox). */
+  public getLinkedFacebookPageId(): string | null {
+    return (
+      this.configService.get<string>("SOCIAL_META_FACEBOOK_PAGE_ID")?.trim() ??
+      this.configService.get<string>("SOCIAL_META_LINKED_PAGE_ID")?.trim() ??
+      null
+    );
+  }
+
   /**
    * Meta Developer → API setup → Generate token (Instagram user access token).
    * VPS `.env` only — never commit. Overrides vault token on API boot when set.

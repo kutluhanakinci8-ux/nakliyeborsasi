@@ -391,9 +391,15 @@ export class SocialHubOAuthApplicationService {
     } catch {
       // keep default label
     }
-    if (igUserId) {
+    const knownIgId =
+      this.oauthConfig.getKnownInstagramBusinessAccountId()?.trim() ?? null;
+    const linkedPageId =
+      this.oauthConfig.getLinkedFacebookPageId()?.trim() ?? null;
+    if (igUserId || knownIgId || linkedPageId) {
       await this.metaGraphService.applyInstagramLoginMetadata(companyId, {
-        instagramBusinessAccountId: igUserId,
+        instagramLoginUserId: igUserId ?? undefined,
+        instagramBusinessAccountId: knownIgId ?? undefined,
+        pageId: linkedPageId ?? undefined,
       });
     }
     await this.persistConnection(companyId, SocialPlatformCode.Instagram, {
@@ -425,6 +431,7 @@ export class SocialHubOAuthApplicationService {
       return;
     }
     await this.metaGraphService.subscribeInstagramLoginUserWebhooks(token);
+    await this.repairInstagramEnvMetadata(companyId);
     const forceVault =
       this.configService
         .get<string>("SOCIAL_META_INSTAGRAM_SERVICE_ACCESS_TOKEN_FORCE_VAULT")
@@ -438,6 +445,7 @@ export class SocialHubOAuthApplicationService {
       },
     });
     if (existing?.accessTokenCiphertext && !forceVault) {
+      await this.repairInstagramEnvMetadata(companyId);
       this.logger.log(
         `Instagram service token: webhook subscribe only (vault korundu, company=${companyId})`,
       );
@@ -453,6 +461,47 @@ export class SocialHubOAuthApplicationService {
     });
     this.logger.log(
       `Instagram service access token vault'a yazıldı (company=${companyId} ig=${igId ?? "—"})`,
+    );
+  }
+
+  /** VPS env: IG business id + linked Facebook Page for DM routing without re-OAuth. */
+  private async repairInstagramEnvMetadata(companyId: string): Promise<void> {
+    const knownIgId =
+      this.oauthConfig.getKnownInstagramBusinessAccountId()?.trim() ?? null;
+    const linkedPageId =
+      this.oauthConfig.getLinkedFacebookPageId()?.trim() ?? null;
+    if (!knownIgId && !linkedPageId) {
+      return;
+    }
+    const connection = await this.connectionRepository.findOne({
+      where: { companyId, platformCode: SocialPlatformCode.Instagram },
+    });
+    if (!connection) {
+      return;
+    }
+    const metadata = parseSocialHubConnectionMetadata(connection.grantedScopes);
+    const patch: Partial<typeof metadata> = {};
+    if (knownIgId && metadata.instagramBusinessAccountId !== knownIgId) {
+      patch.instagramBusinessAccountId = knownIgId;
+    }
+    if (linkedPageId && metadata.pageId !== linkedPageId) {
+      patch.pageId = linkedPageId;
+    }
+    const external = connection.externalAccountId?.trim();
+    if (
+      external &&
+      knownIgId &&
+      external !== knownIgId &&
+      !metadata.instagramLoginUserId
+    ) {
+      patch.instagramLoginUserId = external;
+    }
+    if (Object.keys(patch).length === 0) {
+      return;
+    }
+    await this.metaGraphService.applyInstagramLoginMetadata(companyId, patch);
+    this.logger.log(
+      `Instagram metadata repaired from env company=${companyId} keys=${Object.keys(patch).join(",")}`,
     );
   }
 

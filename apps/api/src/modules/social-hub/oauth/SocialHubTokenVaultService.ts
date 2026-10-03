@@ -87,6 +87,7 @@ export class SocialHubTokenVaultService {
       const metadata = parseSocialHubConnectionMetadata(row.grantedScopes);
       if (
         metadata.instagramBusinessAccountId === trimmed ||
+        metadata.instagramLoginUserId === trimmed ||
         metadata.pageId === trimmed ||
         (knownIgId &&
           (row.externalAccountId === knownIgId ||

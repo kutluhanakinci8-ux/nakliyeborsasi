@@ -180,7 +180,20 @@ export class SocialHubMetaGraphService {
       metadata.instagramBusinessAccountId ??
       this.oauthConfig.getKnownInstagramBusinessAccountId()?.trim() ??
       null;
-    if (!igId || row.externalAccountId === igId) {
+    if (!igId) {
+      return;
+    }
+    const loginUserId = metadata.instagramLoginUserId?.trim();
+    if (
+      row.externalAccountId &&
+      row.externalAccountId !== igId &&
+      !loginUserId
+    ) {
+      metadata.instagramLoginUserId = row.externalAccountId;
+      row.grantedScopes = serializeSocialHubConnectionMetadata(metadata);
+    }
+    if (row.externalAccountId === igId) {
+      await this.connectionRepository.save(row);
       return;
     }
     row.externalAccountId = igId;
@@ -568,7 +581,7 @@ export class SocialHubMetaGraphService {
     companyId: string,
     patch: Pick<
       SocialHubConnectionMetadata,
-      "instagramBusinessAccountId" | "pageId"
+      "instagramBusinessAccountId" | "instagramLoginUserId" | "pageId"
     >,
   ): Promise<void> {
     await this.mergeConnectionMetadata(companyId, SocialPlatformCode.Instagram, patch);
