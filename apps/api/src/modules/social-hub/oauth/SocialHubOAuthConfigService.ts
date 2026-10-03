@@ -106,6 +106,17 @@ export class SocialHubOAuthConfigService {
     return `${base.replace(/\/$/, "")}/hesap/sosyal-medya?tab=connections`;
   }
 
+  /** Instagram App ID + secret from Meta → Instagram → Business login settings (≠ Meta App ID). */
+  public hasDedicatedInstagramLoginApp(): boolean {
+    const appId = this.configService
+      .get<string>("SOCIAL_META_INSTAGRAM_APP_ID")
+      ?.trim();
+    const appSecret = this.configService
+      .get<string>("SOCIAL_META_INSTAGRAM_APP_SECRET")
+      ?.trim();
+    return Boolean(appId && appSecret);
+  }
+
   public getInstagramLoginConfig(): { appId: string; appSecret: string } | null {
     const appId = this.configService
       .get<string>("SOCIAL_META_INSTAGRAM_APP_ID")
@@ -113,14 +124,10 @@ export class SocialHubOAuthConfigService {
     const appSecret = this.configService
       .get<string>("SOCIAL_META_INSTAGRAM_APP_SECRET")
       ?.trim();
-    if (appId && appSecret) {
-      return { appId, appSecret };
+    if (!appId || !appSecret) {
+      return null;
     }
-    const meta = this.getMetaConfig();
-    if (meta?.appId && meta.appSecret) {
-      return { appId: meta.appId, appSecret: meta.appSecret };
-    }
-    return null;
+    return { appId, appSecret };
   }
 
   /** Force legacy facebook.com/dialog/oauth + config_id for Instagram (often disabled on Meta apps). */
@@ -140,16 +147,16 @@ export class SocialHubOAuthConfigService {
     return flag === "1" || flag === "true" || flag === "yes";
   }
 
-  /**
-   * Instagram → instagram.com/oauth/authorize (Business Login).
-   * Default on: Facebook Login dialog is often “özellik kullanılmıyor” for messaging-only apps.
-   */
+  /** Instagram → instagram.com/oauth/authorize only with dedicated Instagram App ID (never Meta App ID). */
   public preferInstagramBusinessLoginOAuth(): boolean {
     if (this.useFacebookDialogForInstagramOAuth()) {
       return false;
     }
+    if (!this.hasDedicatedInstagramLoginApp()) {
+      return false;
+    }
     if (this.useInstagramLoginOAuth()) {
-      return this.getInstagramLoginConfig() !== null;
+      return true;
     }
     const explicitOff = this.configService
       .get<string>("SOCIAL_META_INSTAGRAM_OAUTH_USE_LOGIN")
@@ -158,7 +165,7 @@ export class SocialHubOAuthConfigService {
     if (explicitOff === "0" || explicitOff === "false" || explicitOff === "no") {
       return false;
     }
-    return this.getInstagramLoginConfig() !== null;
+    return true;
   }
 
   /** Fallback when Graph does not return instagram_business_account on the Page. */

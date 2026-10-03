@@ -146,6 +146,7 @@ export class SocialHubOAuthApplicationService {
         "instagram_business_basic,instagram_business_manage_messages,instagram_business_manage_comments",
       );
       url.searchParams.set("force_reauth", "true");
+      url.searchParams.set("enable_fb_login", "false");
       return {
         implementationStatus: "ready",
         authorizationUrl: url.toString(),
