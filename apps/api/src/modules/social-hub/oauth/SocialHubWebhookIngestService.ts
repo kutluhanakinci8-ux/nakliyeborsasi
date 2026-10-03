@@ -136,22 +136,33 @@ export class SocialHubWebhookIngestService {
     signatureHeader: string | undefined,
     rawBody: Buffer | undefined,
   ): void {
-    const config = this.oauthConfig.getMetaConfig();
-    if (!config?.appSecret || !rawBody || !signatureHeader?.startsWith("sha256=")) {
+    if (!rawBody || !signatureHeader?.startsWith("sha256=")) {
       return;
     }
-    const expected = createHmac("sha256", config.appSecret)
-      .update(rawBody)
-      .digest("hex");
+    const secrets = [
+      this.oauthConfig.getMetaConfig()?.appSecret,
+      this.oauthConfig.getInstagramLoginConfig()?.appSecret,
+    ].filter((value): value is string => Boolean(value?.trim()));
+    if (secrets.length === 0) {
+      return;
+    }
     const provided = signatureHeader.slice("sha256=".length);
-    try {
-      const a = Buffer.from(expected, "hex");
-      const b = Buffer.from(provided, "hex");
-      if (a.length !== b.length || !timingSafeEqual(a, b)) {
-        this.logger.warn("Meta webhook signature mismatch");
+    let matched = false;
+    for (const secret of secrets) {
+      const expected = createHmac("sha256", secret).update(rawBody).digest("hex");
+      try {
+        const a = Buffer.from(expected, "hex");
+        const b = Buffer.from(provided, "hex");
+        if (a.length === b.length && timingSafeEqual(a, b)) {
+          matched = true;
+          break;
+        }
+      } catch {
+        continue;
       }
-    } catch {
-      this.logger.warn("Meta webhook signature parse failed");
+    }
+    if (!matched) {
+      this.logger.warn("Meta webhook signature mismatch");
     }
   }
 }
