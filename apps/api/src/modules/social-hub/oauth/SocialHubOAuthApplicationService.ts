@@ -293,6 +293,9 @@ export class SocialHubOAuthApplicationService {
       }
     }
     if (platformCode === SocialPlatformCode.Instagram) {
+      await this.metaGraphService.applyInstagramLoginMetadata(companyId, {
+        instagramAuthMode: "facebook_page",
+      });
       await this.metaGraphService.syncInstagramExternalAccountId(companyId);
       const connection = await this.connectionRepository.findOne({
         where: { companyId, platformCode },
@@ -400,8 +403,9 @@ export class SocialHubOAuthApplicationService {
     if (igUserId || knownIgId || linkedPageId) {
       await this.metaGraphService.applyInstagramLoginMetadata(companyId, {
         instagramLoginUserId: igUserId ?? undefined,
-        instagramBusinessAccountId: knownIgId ?? undefined,
+        instagramBusinessAccountId: knownIgId ?? igUserId ?? undefined,
         pageId: linkedPageId ?? undefined,
+        instagramAuthMode: "instagram_login",
       });
     }
     await this.persistConnection(companyId, SocialPlatformCode.Instagram, {

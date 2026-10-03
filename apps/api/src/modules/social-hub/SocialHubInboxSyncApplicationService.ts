@@ -6,7 +6,10 @@ import { CompanySocialConnectionEntity } from "../../infrastructure/database/ent
 import { SocialHubTokenVaultService } from "./oauth/SocialHubTokenVaultService";
 import { SocialHubMetaInboxHistoryService } from "./oauth/SocialHubMetaInboxHistoryService";
 import { SocialHubMetaGraphService } from "./oauth/SocialHubMetaGraphService";
-import { parseSocialHubConnectionMetadata } from "./oauth/SocialHubConnectionMetadata";
+import {
+  parseSocialHubConnectionMetadata,
+  usesInstagramLoginApi,
+} from "./oauth/SocialHubConnectionMetadata";
 import { SocialHubOAuthConfigService } from "./oauth/SocialHubOAuthConfigService";
 import type { SocialInboxSyncResult } from "./providers/SocialProviderPort";
 import { linkedInInboxSyncDeferredMessage } from "./socialHubLinkedInDmCapability";
@@ -93,6 +96,23 @@ export class SocialHubInboxSyncApplicationService {
           importedThreadCount: 0,
           message:
             "Instagram işletme hesabı kimliği eksik — OAuth veya SOCIAL_META_INSTAGRAM_BUSINESS_ACCOUNT_ID.",
+        };
+      }
+      if (usesInstagramLoginApi(metadata)) {
+        const loginImported =
+          await this.metaInboxHistoryService.importRecentInstagramLoginThreads({
+            companyId,
+            instagramBusinessAccountId: igId,
+            accessToken: token,
+            maxThreads: 8,
+          });
+        return {
+          implementationStatus: "ready",
+          importedThreadCount: loginImported,
+          message:
+            loginImported > 0
+              ? `${loginImported} Instagram DM Mesajlar’a aktarıldı.`
+              : "Yeni Instagram DM bulunamadı (webhook veya müşteri test mesajı bekleniyor).",
         };
       }
       const messengerToken = await this.tokenVault.getAccessToken(

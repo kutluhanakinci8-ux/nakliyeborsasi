@@ -6,6 +6,7 @@ import { CompanySocialConnectionEntity } from "../../../infrastructure/database/
 import {
   parseSocialHubConnectionMetadata,
   serializeSocialHubConnectionMetadata,
+  usesInstagramLoginApi,
   type SocialHubConnectionMetadata,
 } from "./SocialHubConnectionMetadata";
 import { SocialHubOAuthConfigService } from "./SocialHubOAuthConfigService";
@@ -220,6 +221,22 @@ export class SocialHubMetaGraphService {
         accessToken: params.accessToken,
         to: params.recipientExternalId,
         bodyText: params.bodyText,
+      });
+    }
+    if (
+      params.platformCode === SocialPlatformCode.Instagram &&
+      usesInstagramLoginApi(metadata)
+    ) {
+      const igProfessionalId =
+        metadata.instagramBusinessAccountId ??
+        metadata.instagramLoginUserId ??
+        connection?.externalAccountId ??
+        undefined;
+      return this.sendInstagramLoginText({
+        accessToken: params.accessToken,
+        recipientId: params.recipientExternalId,
+        bodyText: params.bodyText,
+        igProfessionalId,
       });
     }
     const pageId =
@@ -581,7 +598,10 @@ export class SocialHubMetaGraphService {
     companyId: string,
     patch: Pick<
       SocialHubConnectionMetadata,
-      "instagramBusinessAccountId" | "instagramLoginUserId" | "pageId"
+      | "instagramBusinessAccountId"
+      | "instagramLoginUserId"
+      | "pageId"
+      | "instagramAuthMode"
     >,
   ): Promise<void> {
     await this.mergeConnectionMetadata(companyId, SocialPlatformCode.Instagram, patch);
@@ -604,6 +624,46 @@ export class SocialHubMetaGraphService {
       ...patch,
     });
     await this.connectionRepository.save(row);
+  }
+
+  /** Instagram API with Instagram Login — graph.instagram.com (no Facebook Page). */
+  private async sendInstagramLoginText(params: {
+    accessToken: string;
+    recipientId: string;
+    bodyText: string;
+    igProfessionalId?: string;
+  }): Promise<{ ok: boolean; message: string; externalMessageId?: string }> {
+    const pathSegment = params.igProfessionalId?.trim()
+      ? `${params.igProfessionalId.trim()}/messages`
+      : "me/messages";
+    const url = new URL(`https://graph.instagram.com/v21.0/${pathSegment}`);
+    const response = await fetch(url.toString(), {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${params.accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        recipient: { id: params.recipientId },
+        message: { text: params.bodyText },
+      }),
+    });
+    const payload = (await response.json()) as {
+      id?: string;
+      message_id?: string;
+      error?: { message: string };
+    };
+    if (!response.ok) {
+      return {
+        ok: false,
+        message: payload.error?.message ?? "Instagram mesaj gönderimi başarısız.",
+      };
+    }
+    return {
+      ok: true,
+      message: "Mesaj kanala gönderildi.",
+      externalMessageId: payload.message_id ?? payload.id,
+    };
   }
 
   private async sendMessengerStyleText(params: {
