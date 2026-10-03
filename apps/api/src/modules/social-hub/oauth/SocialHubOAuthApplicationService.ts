@@ -21,6 +21,11 @@ import type { SocialOAuthStartResult } from "../providers/SocialProviderPort";
 import { SocialHubRoadmapOAuthApplicationService } from "./SocialHubRoadmapOAuthApplicationService";
 import { isRoadmapPlatformCode } from "../socialHubRoadmapInterest";
 import { resolveMetaOAuthScopes } from "./socialHubMetaOAuthScopes";
+import { SocialHubInboxSyncApplicationService } from "../SocialHubInboxSyncApplicationService";
+import {
+  SocialHubAuditActionCode,
+  SocialHubAuditService,
+} from "../SocialHubAuditService";
 
 @Injectable()
 export class SocialHubOAuthApplicationService {
@@ -34,6 +39,8 @@ export class SocialHubOAuthApplicationService {
     private readonly metaGraphService: SocialHubMetaGraphService,
     private readonly linkedInGraphService: SocialHubLinkedInGraphService,
     private readonly roadmapOAuthApplicationService: SocialHubRoadmapOAuthApplicationService,
+    private readonly inboxSyncApplicationService: SocialHubInboxSyncApplicationService,
+    private readonly socialHubAuditService: SocialHubAuditService,
   ) {}
 
   public async startOAuth(
@@ -252,6 +259,12 @@ export class SocialHubOAuthApplicationService {
       await this.metaGraphService.syncInstagramExternalAccountId(companyId);
     }
     if (
+      platformCode === SocialPlatformCode.FacebookMessenger ||
+      platformCode === SocialPlatformCode.Instagram
+    ) {
+      await this.syncInboxQuietlyAfterOAuth(companyId, platformCode);
+    }
+    if (
       platformCode === SocialPlatformCode.WhatsAppCloud &&
       enriched.externalAccountId
     ) {
@@ -437,6 +450,39 @@ export class SocialHubOAuthApplicationService {
       refreshToken: payload.refresh_token ?? null,
       linkedInOrganizationUrn: organizationUrn,
     });
+  }
+
+  private async syncInboxQuietlyAfterOAuth(
+    companyId: string,
+    platformCode: SocialPlatformCode,
+  ): Promise<void> {
+    try {
+      const result = await this.inboxSyncApplicationService.sync(
+        companyId,
+        platformCode,
+      );
+      this.socialHubAuditService.recordCompanySystemEvent(
+        companyId,
+        SocialHubAuditActionCode.InboxSync,
+        `/company/social-hub/oauth/callback (${platformCode})`,
+        {
+          platformCode,
+          importedThreadCount: result.importedThreadCount,
+          implementationStatus: result.implementationStatus,
+          message: result.message,
+          trigger: "post_oauth",
+        },
+      );
+      this.logger.log(
+        `Post-OAuth inbox sync ${platformCode}: ${result.message}`,
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Post-OAuth inbox sync failed ${platformCode}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
   }
 
   private async persistConnection(

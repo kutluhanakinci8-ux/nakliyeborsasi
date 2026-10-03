@@ -35,6 +35,7 @@ import {
 } from "./SocialHubAuditService";
 import { getSocialHubProviderCapabilities } from "./socialHubProviderCapabilities";
 import { parseSocialHubConnectionMetadata } from "./oauth/SocialHubConnectionMetadata";
+import { SocialHubOAuthConfigService } from "./oauth/SocialHubOAuthConfigService";
 import { SocialHubConnectionHealthService } from "./SocialHubConnectionHealthService";
 import { SocialHubTokenRefreshService } from "./oauth/SocialHubTokenRefreshService";
 import { SocialHubOutboundDeliveryLogService } from "./SocialHubOutboundDeliveryLogService";
@@ -133,6 +134,7 @@ export class SocialHubApplicationService {
     private readonly linkedInOrgInsightsService: SocialHubLinkedInOrgInsightsService,
     private readonly inboxSyncSummaryService: SocialHubInboxSyncSummaryService,
     private readonly publishMediaStorageService: SocialHubPublishMediaStorageService,
+    private readonly oauthConfig: SocialHubOAuthConfigService,
   ) {}
 
   private async assertSocialHubSubscription(companyId: string): Promise<void> {
@@ -244,7 +246,13 @@ export class SocialHubApplicationService {
       providers,
       roadmapProviders: this.mapRoadmapProviders(settings, connectionRows),
       connections: connections.map((row) =>
-        this.mapConnection(row, providers),
+        this.mapConnection(row, providers, {
+          webhookInboundBridged24h:
+            bridgedCountByCode.get(row.platformCode) ?? 0,
+          openThreadCount: openLinks.filter(
+            (link) => link.platformCode === row.platformCode,
+          ).length,
+        }),
       ),
       recentPosts: posts.map((row) => this.mapPost(row)),
       templates: templates.map((row) => this.mapTemplate(row)),
@@ -1970,6 +1978,10 @@ export class SocialHubApplicationService {
       platformCode: SocialPlatformCode;
       implementationStatus: "pending" | "ready";
     }>,
+    activity?: {
+      webhookInboundBridged24h: number;
+      openThreadCount: number;
+    },
   ) {
     const platform = row.platformCode as SocialPlatformCode;
     const providerMeta = providers.find((p) => p.platformCode === platform);
@@ -1983,10 +1995,22 @@ export class SocialHubApplicationService {
       }
       if (
         platform === SocialPlatformCode.Instagram &&
-        !metadata.instagramBusinessAccountId
+        !metadata.instagramBusinessAccountId &&
+        row.externalAccountId !==
+          this.oauthConfig.getKnownInstagramBusinessAccountId()?.trim()
       ) {
         setupWarnings.push(
           "Instagram işletme hesabı tanımlı değil — sayfa bağlantısını yenileyin.",
+        );
+      }
+      if (
+        platform === SocialPlatformCode.Instagram &&
+        metadata.instagramBusinessAccountId &&
+        (activity?.openThreadCount ?? 0) === 0 &&
+        (activity?.webhookInboundBridged24h ?? 0) === 0
+      ) {
+        setupWarnings.push(
+          "Bağlı görünüyor ancak son 24 saatte webhook veya açık Instagram konuşması yok. Meta OAuth’ta «Ayarları düzenle» (Devam değil) ile izinleri yenileyin; Gelen kutusu → «Instagram · senkron» deneyin. Test için kişisel hesaptan @lertalogistics’e DM atın.",
         );
       }
       if (

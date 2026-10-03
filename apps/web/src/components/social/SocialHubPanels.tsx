@@ -283,13 +283,22 @@ export function SocialConnectionsPanel({
                   <p className="module-hint">{row.linkedinDmInboxGate.userFacingNote}</p>
                 ) : null}
                 {capLabels.length > 0 ? (
-                  <ul className="social-hub-capability-list">
-                    {capLabels.map((label) => (
-                      <li key={label} className="social-hub-pill social-hub-pill--muted">
-                        {label}
-                      </li>
-                    ))}
-                  </ul>
+                  <>
+                    <p className="module-hint social-hub-capability-hint">
+                      Desteklenen özellikler (gri rozet = kapalı değil; canlı
+                      durum Gelen kutusu / Sağlık).
+                    </p>
+                    <ul className="social-hub-capability-list">
+                      {capLabels.map((label) => (
+                        <li
+                          key={label}
+                          className="social-hub-pill social-hub-pill--muted"
+                        >
+                          {label}
+                        </li>
+                      ))}
+                    </ul>
+                  </>
                 ) : null}
                 {row.setupWarnings?.map((warning) => (
                   <p key={warning} className="error banner error--light social-hub-setup-warn">
@@ -629,6 +638,12 @@ export function SocialInboxPanel({
                       ? ` (${row.lastSyncImplementationStatus})`
                       : ""}
                   </p>
+                ) : row.connectionStatusCode === "CONNECTED" &&
+                  row.inboxHistorySync ? (
+                  <p className="module-hint">
+                    Henüz sync kaydı yok — altta «{row.label} · senkron» ile
+                    deneyin veya yeniden bağlanın (OAuth sonrası otomatik sync).
+                  </p>
                 ) : (
                   <p className="module-hint">Henüz sync denemesi kaydı yok.</p>
                 )}
@@ -676,7 +691,7 @@ export function SocialInboxPanel({
             Demo gelen kutusu oluştur (Instagram + WhatsApp)
           </button>
         ) : null}
-        {permissions.canReply ? (
+        {permissions.canReply || permissions.canManageConnections ? (
           <div className="social-hub-sync-grid">
             {connections
               .filter((c) => c.statusCode === "CONNECTED")

@@ -7,6 +7,7 @@ import { SocialHubTokenVaultService } from "./oauth/SocialHubTokenVaultService";
 import { SocialHubMetaInboxHistoryService } from "./oauth/SocialHubMetaInboxHistoryService";
 import { SocialHubMetaGraphService } from "./oauth/SocialHubMetaGraphService";
 import { parseSocialHubConnectionMetadata } from "./oauth/SocialHubConnectionMetadata";
+import { SocialHubOAuthConfigService } from "./oauth/SocialHubOAuthConfigService";
 import type { SocialInboxSyncResult } from "./providers/SocialProviderPort";
 import { linkedInInboxSyncDeferredMessage } from "./socialHubLinkedInDmCapability";
 
@@ -16,6 +17,7 @@ export class SocialHubInboxSyncApplicationService {
     private readonly tokenVault: SocialHubTokenVaultService,
     private readonly metaInboxHistoryService: SocialHubMetaInboxHistoryService,
     private readonly metaGraphService: SocialHubMetaGraphService,
+    private readonly oauthConfig: SocialHubOAuthConfigService,
     @InjectRepository(CompanySocialConnectionEntity)
     private readonly connectionRepository: Repository<CompanySocialConnectionEntity>,
   ) {}
@@ -72,13 +74,22 @@ export class SocialHubInboxSyncApplicationService {
         where: { companyId, platformCode },
       });
       const metadata = parseSocialHubConnectionMetadata(connection?.grantedScopes);
-      const igId = metadata.instagramBusinessAccountId;
-      const pageId = metadata.pageId ?? connection?.externalAccountId;
+      const pageId = metadata.pageId;
+      const knownIgId =
+        this.oauthConfig.getKnownInstagramBusinessAccountId()?.trim() ?? null;
+      const igId =
+        metadata.instagramBusinessAccountId ??
+        (connection?.externalAccountId &&
+        connection.externalAccountId !== pageId
+          ? connection.externalAccountId
+          : null) ??
+        knownIgId;
       if (!igId || !pageId) {
         return {
           implementationStatus: "pending",
           importedThreadCount: 0,
-          message: "Instagram işletme hesabı yok; OAuth yenileyin.",
+          message:
+            "Instagram işletme hesabı veya sayfa kimliği eksik — OAuth’ta «Ayarları düzenle» ile yenileyin.",
         };
       }
       const pageToken = await this.metaGraphService.resolvePageAccessToken(
