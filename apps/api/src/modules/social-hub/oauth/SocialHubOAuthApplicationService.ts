@@ -137,6 +137,7 @@ export class SocialHubOAuthApplicationService {
         "scope",
         "instagram_business_basic,instagram_business_manage_messages,instagram_business_manage_comments",
       );
+      url.searchParams.set("force_reauth", "true");
       return {
         implementationStatus: "ready",
         authorizationUrl: url.toString(),
@@ -153,6 +154,14 @@ export class SocialHubOAuthApplicationService {
     const configId = this.oauthConfig.getMetaOAuthConfigId(platformCode);
     if (configId) {
       url.searchParams.set("config_id", configId);
+      if (platformCode === SocialPlatformCode.Instagram) {
+        // Önceki “Devam” akışı sayfa seçimini atlar; yeniden varlık/izin ekranı iste.
+        url.searchParams.set("auth_type", "reauthorize");
+        url.searchParams.set(
+          "extras",
+          JSON.stringify({ setup: { channel: "IG_API_ONBOARDING" } }),
+        );
+      }
     } else {
       url.searchParams.set("scope", scope);
     }
