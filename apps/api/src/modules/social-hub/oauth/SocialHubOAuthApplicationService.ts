@@ -424,6 +424,25 @@ export class SocialHubOAuthApplicationService {
       );
       return;
     }
+    await this.metaGraphService.subscribeInstagramLoginUserWebhooks(token);
+    const forceVault =
+      this.configService
+        .get<string>("SOCIAL_META_INSTAGRAM_SERVICE_ACCESS_TOKEN_FORCE_VAULT")
+        ?.trim()
+        .toLowerCase() === "1";
+    const existing = await this.connectionRepository.findOne({
+      where: {
+        companyId,
+        platformCode: SocialPlatformCode.Instagram,
+        statusCode: SocialConnectionStatusCode.Connected,
+      },
+    });
+    if (existing?.accessTokenCiphertext && !forceVault) {
+      this.logger.log(
+        `Instagram service token: webhook subscribe only (vault korundu, company=${companyId})`,
+      );
+      return;
+    }
     const igId =
       this.oauthConfig.getKnownInstagramBusinessAccountId()?.trim() ?? null;
     await this.persistConnection(companyId, SocialPlatformCode.Instagram, {
@@ -432,9 +451,8 @@ export class SocialHubOAuthApplicationService {
       externalAccountId: igId,
       displayName: "lertalogistics",
     });
-    await this.metaGraphService.subscribeInstagramLoginUserWebhooks(token);
     this.logger.log(
-      `Instagram service access token applied (company=${companyId} ig=${igId ?? "—"})`,
+      `Instagram service access token vault'a yazıldı (company=${companyId} ig=${igId ?? "—"})`,
     );
   }
 
