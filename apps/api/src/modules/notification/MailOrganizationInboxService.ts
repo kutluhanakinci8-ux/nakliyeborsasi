@@ -27,6 +27,7 @@ import {
   reparseInboundDisplayFromRawMime,
 } from "./MailInboundMimeParse";
 import { decodeMimeEncodedWords } from "./MailMimeCharset";
+import { extractInstagramVerificationCode } from "./instagramVerificationMail";
 import { sanitizeInboundHtml } from "./MailHtmlSanitize";
 
 export type InboxFolder =
@@ -298,6 +299,7 @@ export class MailOrganizationInboxService {
       contentType: string;
       sizeBytes: number;
     }[];
+    instagramVerificationCode: string | null;
   }> {
     const row = await this.assertMessageAccess(organizationId, messageId);
     const mailbox = await this.mailboxRepository.findOne({
@@ -345,12 +347,19 @@ export class MailOrganizationInboxService {
     } else {
       subject = decodeMimeEncodedWords(subject);
     }
+    const resolvedBodyText = bodyText ?? snippet ?? row.snippet;
+    const instagramVerificationCode = extractInstagramVerificationCode({
+      fromAddress: row.fromAddress,
+      subject,
+      bodyText: resolvedBodyText,
+      bodyHtml,
+    });
     return {
       id: row.id,
       fromAddress: row.fromAddress,
       subject,
       snippet,
-      bodyText: bodyText ?? snippet ?? row.snippet,
+      bodyText: resolvedBodyText,
       bodyHtml,
       receivedAt: row.receivedAt.toISOString(),
       readAt: row.readAt?.toISOString() ?? null,
@@ -368,6 +377,7 @@ export class MailOrganizationInboxService {
         contentType: file.contentType,
         sizeBytes: file.sizeBytes,
       })),
+      instagramVerificationCode,
     };
   }
 

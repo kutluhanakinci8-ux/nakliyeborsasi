@@ -201,8 +201,11 @@ export function OrganizationMailInboxPanel({
       </p>
 
       {inMessaging ? (
-        <p className="module-hint" style={{ marginBottom: "0.75rem" }}>
-          Gelen ve giden posta bu sekmede; tam webmail (takvim, kurallar, arşiv) için{" "}
+        <p className="module-hint messaging-email-hint" style={{ marginBottom: "0.75rem" }}>
+          Instagram / Meta doğrulama kodları kurumsal gelen kutusuna düşer (
+          <strong>lerta@lerta.com.tr</strong>,{" "}
+          <strong>nakliyeborsasi@lerta.com.tr</strong> yönlendirmeli). Kodu
+          alttaki listeden açın; tam webmail için alttaki panel veya{" "}
           <a
             href={buildMailWebSsoHandoffUrl(accessToken)}
             target="_blank"
@@ -376,6 +379,26 @@ export function OrganizationMailInboxPanel({
               <p className="module-hint">
                 {detail.fromAddress} → {detail.emailAddress}
               </p>
+              {detail.instagramVerificationCode ? (
+                <div
+                  className="account-status-pill account-status-pill--ok"
+                  style={{
+                    marginTop: "0.75rem",
+                    padding: "0.75rem 1rem",
+                    fontSize: "1.1rem",
+                  }}
+                >
+                  Instagram doğrulama kodu:{" "}
+                  <strong
+                    style={{
+                      fontFamily: "ui-monospace, monospace",
+                      letterSpacing: "0.2em",
+                    }}
+                  >
+                    {detail.instagramVerificationCode}
+                  </strong>
+                </div>
+              ) : null}
               {detail.spamReason ? (
                 <p className="module-hint">Spam: {detail.spamReason}</p>
               ) : null}

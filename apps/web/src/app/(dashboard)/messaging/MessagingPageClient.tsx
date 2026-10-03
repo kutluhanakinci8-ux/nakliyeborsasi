@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { MessagingMailWebEmbed } from "../../../components/messaging/MessagingMailWebEmbed";
+import { OrganizationMailInboxPanel } from "../../../components/account/OrganizationMailInboxPanel";
 import { MessagingSideRail } from "../../../components/messaging/MessagingSideRail";
 import { MessagingThreadSidebar } from "../../../components/messaging/MessagingThreadSidebar";
 import { MessagingConversationPanel } from "../../../components/messaging/MessagingConversationPanel";
@@ -114,30 +115,35 @@ export function MessagingPageClient() {
       >
         <div className="messaging-page-main">
           {mode === "email" ? (
-            <div
-              className={
-                mailEmbedFullscreen
-                  ? "messaging-mail-embed-wrap messaging-mail-embed-wrap--fullscreen"
-                  : "messaging-mail-embed-wrap"
-              }
-            >
-              {mailEmbedFullscreen ? (
-                <div className="messaging-mail-embed-toolbar">
-                  <button
-                    type="button"
-                    className="messaging-mode-action messaging-mode-action--overlay"
-                    onClick={() => setMailEmbedFullscreen(false)}
-                  >
-                    <span className="messaging-mode-action-icon" aria-hidden>
-                      ✕
-                    </span>
-                    Tam ekrandan çık
-                  </button>
-                </div>
+            <div className="messaging-email-stack">
+              {!mailEmbedFullscreen ? (
+                <OrganizationMailInboxPanel variant="messaging" />
               ) : null}
-              <MessagingMailWebEmbed
-                composeTo={searchParams.get("composeTo") ?? undefined}
-              />
+              <div
+                className={
+                  mailEmbedFullscreen
+                    ? "messaging-mail-embed-wrap messaging-mail-embed-wrap--fullscreen"
+                    : "messaging-mail-embed-wrap"
+                }
+              >
+                {mailEmbedFullscreen ? (
+                  <div className="messaging-mail-embed-toolbar">
+                    <button
+                      type="button"
+                      className="messaging-mode-action messaging-mode-action--overlay"
+                      onClick={() => setMailEmbedFullscreen(false)}
+                    >
+                      <span className="messaging-mode-action-icon" aria-hidden>
+                        ✕
+                      </span>
+                      Tam ekrandan çık
+                    </button>
+                  </div>
+                ) : null}
+                <MessagingMailWebEmbed
+                  composeTo={searchParams.get("composeTo") ?? undefined}
+                />
+              </div>
             </div>
           ) : (
             <div
