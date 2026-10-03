@@ -374,7 +374,7 @@ export class SocialHubOAuthApplicationService {
       accessToken = longPayload.access_token;
       expiresInSec = longPayload.expires_in ?? null;
     }
-    const igUserId = shortPayload.user_id
+    let igUserId = shortPayload.user_id
       ? String(shortPayload.user_id)
       : null;
     let displayName = "Instagram";
@@ -393,6 +393,9 @@ export class SocialHubOAuthApplicationService {
       } else if (me.name) {
         displayName = me.name;
       }
+      if (me.id) {
+        igUserId = me.id;
+      }
     } catch {
       // keep default label
     }
@@ -403,7 +406,7 @@ export class SocialHubOAuthApplicationService {
     if (igUserId || knownIgId || linkedPageId) {
       await this.metaGraphService.applyInstagramLoginMetadata(companyId, {
         instagramLoginUserId: igUserId ?? undefined,
-        instagramBusinessAccountId: knownIgId ?? igUserId ?? undefined,
+        instagramBusinessAccountId: knownIgId ?? undefined,
         pageId: linkedPageId ?? undefined,
         instagramAuthMode: "instagram_login",
       });
@@ -411,7 +414,7 @@ export class SocialHubOAuthApplicationService {
     await this.persistConnection(companyId, SocialPlatformCode.Instagram, {
       accessToken,
       expiresInSec,
-      externalAccountId: igUserId,
+      externalAccountId: igUserId ?? knownIgId,
       displayName,
     });
     await this.metaGraphService.subscribeInstagramLoginUserWebhooks(accessToken);

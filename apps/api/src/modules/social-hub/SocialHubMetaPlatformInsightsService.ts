@@ -8,7 +8,10 @@ import {
 import { CompanySocialConnectionEntity } from "../../infrastructure/database/entities/CompanySocialConnectionEntity";
 import { SocialHubTokenVaultService } from "./oauth/SocialHubTokenVaultService";
 import { SocialHubMetaGraphService } from "./oauth/SocialHubMetaGraphService";
-import { parseSocialHubConnectionMetadata } from "./oauth/SocialHubConnectionMetadata";
+import {
+  parseSocialHubConnectionMetadata,
+  usesInstagramLoginApi,
+} from "./oauth/SocialHubConnectionMetadata";
 import { labelSocialPlatform } from "./socialHubPlatformLabels";
 
 export type SocialHubPlatformInsightRow = {
@@ -95,6 +98,35 @@ export class SocialHubMetaPlatformInsightsService {
       };
     }
     const metadata = parseSocialHubConnectionMetadata(connection.grantedScopes);
+    try {
+      if (
+        platformCode === SocialPlatformCode.Instagram &&
+        usesInstagramLoginApi(metadata)
+      ) {
+        const igStats = await this.fetchInstagramLoginProfileStats(userToken);
+        if (!igStats.ok) {
+          return {
+            ...base,
+            status: "unavailable",
+            followersCount: null,
+            followingCount: null,
+            mediaOrPostsCount: null,
+            impressions28d: null,
+            engagedUsers28d: null,
+            errorMessage: igStats.errorMessage,
+          };
+        }
+        return {
+          ...base,
+          status: "ok",
+          followersCount: igStats.followersCount,
+          followingCount: igStats.followingCount,
+          mediaOrPostsCount: igStats.mediaCount,
+          impressions28d: null,
+          engagedUsers28d: null,
+          errorMessage: null,
+        };
+      }
     const pageId = metadata.pageId ?? connection.externalAccountId ?? null;
     if (!pageId) {
       return {
@@ -111,7 +143,6 @@ export class SocialHubMetaPlatformInsightsService {
     const pageToken =
       (await this.metaGraphService.resolvePageAccessToken(userToken, pageId)) ??
       userToken;
-    try {
       if (platformCode === SocialPlatformCode.Instagram) {
         const igId = metadata.instagramBusinessAccountId;
         if (!igId) {
@@ -180,6 +211,46 @@ export class SocialHubMetaPlatformInsightsService {
         errorMessage: "Meta Graph isteği başarısız.",
       };
     }
+  }
+
+  /** Instagram API with Instagram Login — graph.instagram.com/me */
+  private async fetchInstagramLoginProfileStats(accessToken: string): Promise<{
+    ok: boolean;
+    followersCount: number | null;
+    followingCount: number | null;
+    mediaCount: number | null;
+    errorMessage: string | null;
+  }> {
+    const url = new URL(`https://graph.instagram.com/${GRAPH_VERSION}/me`);
+    url.searchParams.set(
+      "fields",
+      "followers_count,follows_count,media_count,username",
+    );
+    url.searchParams.set("access_token", accessToken);
+    const response = await fetch(url.toString());
+    const payload = (await response.json()) as {
+      followers_count?: number;
+      follows_count?: number;
+      media_count?: number;
+      error?: { message?: string };
+    };
+    if (!response.ok || payload.error) {
+      return {
+        ok: false,
+        followersCount: null,
+        followingCount: null,
+        mediaCount: null,
+        errorMessage:
+          payload.error?.message ?? "Instagram profil istatistikleri alınamadı.",
+      };
+    }
+    return {
+      ok: true,
+      followersCount: payload.followers_count ?? null,
+      followingCount: payload.follows_count ?? null,
+      mediaCount: payload.media_count ?? null,
+      errorMessage: null,
+    };
   }
 
   private async fetchInstagramUserStats(
