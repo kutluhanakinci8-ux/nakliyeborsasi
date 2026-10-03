@@ -73,6 +73,12 @@ set_kv "SOCIAL_HUB_WEB_RETURN_URL" "${SOCIAL_HUB_WEB_RETURN_URL:-https://app.ler
 if [[ -n "${SOCIAL_META_OAUTH_CONFIG_ID:-}" ]]; then
   set_kv "SOCIAL_META_OAUTH_CONFIG_ID" "${SOCIAL_META_OAUTH_CONFIG_ID}"
 fi
+if [[ -n "${SOCIAL_META_INSTAGRAM_BUSINESS_ACCOUNT_ID:-}" ]]; then
+  set_kv "SOCIAL_META_INSTAGRAM_BUSINESS_ACCOUNT_ID" "${SOCIAL_META_INSTAGRAM_BUSINESS_ACCOUNT_ID}"
+fi
+if [[ -n "${SOCIAL_META_INSTAGRAM_SERVICE_ACCESS_TOKEN:-}" ]]; then
+  set_kv "SOCIAL_META_INSTAGRAM_SERVICE_ACCESS_TOKEN" "${SOCIAL_META_INSTAGRAM_SERVICE_ACCESS_TOKEN}"
+fi
 
 if command -v pm2 >/dev/null 2>&1 && pm2 describe nakliyeborsasi-api >/dev/null 2>&1; then
   pm2 restart nakliyeborsasi-api --update-env

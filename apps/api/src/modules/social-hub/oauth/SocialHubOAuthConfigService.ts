@@ -136,6 +136,18 @@ export class SocialHubOAuthConfigService {
     );
   }
 
+  /**
+   * Meta Developer → API setup → Generate token (Instagram user access token).
+   * VPS `.env` only — never commit. Overrides vault token on API boot when set.
+   */
+  public getInstagramServiceAccessToken(): string | null {
+    return (
+      this.configService
+        .get<string>("SOCIAL_META_INSTAGRAM_SERVICE_ACCESS_TOKEN")
+        ?.trim() ?? null
+    );
+  }
+
   public getMetaOAuthConfigId(platformCode: SocialPlatformCode): string | null {
     const envByPlatform: Partial<Record<SocialPlatformCode, string>> = {
       [SocialPlatformCode.WhatsAppCloud]:

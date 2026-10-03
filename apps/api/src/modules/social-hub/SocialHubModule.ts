@@ -30,6 +30,7 @@ import { CompanySocialOAuthStateEntity } from "../../infrastructure/database/ent
 import { SocialHubOAuthConfigService } from "./oauth/SocialHubOAuthConfigService";
 import { SocialHubOAuthStateService } from "./oauth/SocialHubOAuthStateService";
 import { SocialHubOAuthApplicationService } from "./oauth/SocialHubOAuthApplicationService";
+import { SocialHubInstagramServiceTokenBootstrap } from "./oauth/SocialHubInstagramServiceTokenBootstrap";
 import { SocialHubWebhookIngestService } from "./oauth/SocialHubWebhookIngestService";
 import { SocialHubPublicIntegrationController } from "./SocialHubPublicIntegrationController";
 import { SocialHubTokenVaultService } from "./oauth/SocialHubTokenVaultService";
@@ -112,6 +113,7 @@ import { PlatformAdminGuard } from "../platform-admin/PlatformAdminGuard";
     SocialHubYouTubeWebhookIngestService,
     SocialHubYouTubeOutboundService,
     SocialHubOAuthApplicationService,
+    SocialHubInstagramServiceTokenBootstrap,
     SocialHubWebhookIngestService,
     SocialHubTokenVaultService,
     SocialHubWebhookRoutingService,

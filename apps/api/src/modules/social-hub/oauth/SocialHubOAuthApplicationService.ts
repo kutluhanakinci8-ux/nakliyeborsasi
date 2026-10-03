@@ -1,4 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import {
@@ -32,6 +33,7 @@ export class SocialHubOAuthApplicationService {
   private readonly logger = new Logger(SocialHubOAuthApplicationService.name);
 
   public constructor(
+    private readonly configService: ConfigService,
     private readonly oauthConfig: SocialHubOAuthConfigService,
     private readonly oauthStateService: SocialHubOAuthStateService,
     @InjectRepository(CompanySocialConnectionEntity)
@@ -402,6 +404,38 @@ export class SocialHubOAuthApplicationService {
     });
     await this.metaGraphService.subscribeInstagramLoginUserWebhooks(accessToken);
     await this.syncInboxQuietlyAfterOAuth(companyId, SocialPlatformCode.Instagram);
+  }
+
+  /**
+   * Meta Developer “Generate token” → VPS `SOCIAL_META_INSTAGRAM_SERVICE_ACCESS_TOKEN`.
+   * Updates the firm Instagram connection vault + webhook subscription on each API boot.
+   */
+  public async bootstrapInstagramServiceAccessTokenFromEnv(): Promise<void> {
+    const token = this.oauthConfig.getInstagramServiceAccessToken();
+    if (!token) {
+      return;
+    }
+    const companyId = this.configService
+      .get<string>("SOCIAL_HUB_WEBHOOK_DEFAULT_COMPANY_ID")
+      ?.trim();
+    if (!companyId) {
+      this.logger.warn(
+        "SOCIAL_META_INSTAGRAM_SERVICE_ACCESS_TOKEN tanımlı; SOCIAL_HUB_WEBHOOK_DEFAULT_COMPANY_ID eksik — atlanıyor.",
+      );
+      return;
+    }
+    const igId =
+      this.oauthConfig.getKnownInstagramBusinessAccountId()?.trim() ?? null;
+    await this.persistConnection(companyId, SocialPlatformCode.Instagram, {
+      accessToken: token,
+      expiresInSec: null,
+      externalAccountId: igId,
+      displayName: "lertalogistics",
+    });
+    await this.metaGraphService.subscribeInstagramLoginUserWebhooks(token);
+    this.logger.log(
+      `Instagram service access token applied (company=${companyId} ig=${igId ?? "—"})`,
+    );
   }
 
   private async exchangeLinkedIn(
