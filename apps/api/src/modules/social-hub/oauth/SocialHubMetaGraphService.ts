@@ -316,13 +316,31 @@ export class SocialHubMetaGraphService {
           displayName: me.name ?? "Meta bağlantısı",
         };
       }
-      const page = payload.data[0];
-      const metadata: SocialHubConnectionMetadata = { pageId: page.id };
       if (platformCode === SocialPlatformCode.Instagram) {
-        const igProfile = await this.fetchInstagramBusinessProfile(
-          page.id,
-          page.access_token ?? userAccessToken,
-        );
+        let chosenPage = payload.data[0];
+        let igProfile: { id: string; username?: string; name?: string } | null =
+          null;
+        for (const candidate of payload.data) {
+          const token = candidate.access_token ?? userAccessToken;
+          const profile = await this.fetchInstagramBusinessProfile(
+            candidate.id,
+            token,
+          );
+          if (profile?.id) {
+            chosenPage = candidate;
+            igProfile = profile;
+            break;
+          }
+        }
+        if (!igProfile) {
+          igProfile = await this.fetchInstagramBusinessProfile(
+            chosenPage.id,
+            chosenPage.access_token ?? userAccessToken,
+          );
+        }
+        const metadata: SocialHubConnectionMetadata = {
+          pageId: chosenPage.id,
+        };
         if (igProfile?.id) {
           metadata.instagramBusinessAccountId = igProfile.id;
         }
@@ -333,14 +351,16 @@ export class SocialHubMetaGraphService {
             displayName:
               igProfile.username
                 ? `@${igProfile.username}`
-                : igProfile.name ?? page.name ?? "Instagram",
+                : igProfile.name ?? chosenPage.name ?? "Instagram",
           };
         }
         return {
-          externalAccountId: page.id,
-          displayName: page.name ?? "Instagram (sayfa)",
+          externalAccountId: chosenPage.id,
+          displayName: chosenPage.name ?? "Instagram (sayfa)",
         };
       }
+      const page = payload.data[0];
+      const metadata: SocialHubConnectionMetadata = { pageId: page.id };
       await this.mergeConnectionMetadata(companyId, platformCode, metadata);
       return {
         externalAccountId: page.id,
