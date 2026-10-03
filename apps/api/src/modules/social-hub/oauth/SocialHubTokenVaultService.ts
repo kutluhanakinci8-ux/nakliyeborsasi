@@ -9,6 +9,7 @@ import {
 import { decryptTotpSecret } from "../../auth/TotpSecretCipher";
 import { CompanySocialConnectionEntity } from "../../../infrastructure/database/entities/CompanySocialConnectionEntity";
 import { SocialHubOAuthConfigService } from "./SocialHubOAuthConfigService";
+import { parseSocialHubConnectionMetadata } from "./SocialHubConnectionMetadata";
 
 @Injectable()
 export class SocialHubTokenVaultService {
@@ -60,12 +61,41 @@ export class SocialHubTokenVaultService {
     platformCode: SocialPlatformCode,
     externalAccountId: string,
   ): Promise<CompanySocialConnectionEntity | null> {
-    return this.connectionRepository.findOne({
+    const trimmed = externalAccountId.trim();
+    const direct = await this.connectionRepository.findOne({
       where: {
         platformCode,
-        externalAccountId,
+        externalAccountId: trimmed,
         statusCode: SocialConnectionStatusCode.Connected,
       },
     });
+    if (direct) {
+      return direct;
+    }
+    if (platformCode !== SocialPlatformCode.Instagram) {
+      return null;
+    }
+    const knownIgId =
+      this.oauthConfig.getKnownInstagramBusinessAccountId()?.trim() ?? null;
+    const rows = await this.connectionRepository.find({
+      where: {
+        platformCode,
+        statusCode: SocialConnectionStatusCode.Connected,
+      },
+    });
+    for (const row of rows) {
+      const metadata = parseSocialHubConnectionMetadata(row.grantedScopes);
+      if (
+        metadata.instagramBusinessAccountId === trimmed ||
+        metadata.pageId === trimmed ||
+        (knownIgId &&
+          (row.externalAccountId === knownIgId ||
+            metadata.instagramBusinessAccountId === knownIgId) &&
+          trimmed === knownIgId)
+      ) {
+        return row;
+      }
+    }
+    return null;
   }
 }

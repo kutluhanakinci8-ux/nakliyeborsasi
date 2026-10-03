@@ -248,6 +248,9 @@ export class SocialHubOAuthApplicationService {
       externalAccountId: enriched.externalAccountId,
       displayName: enriched.displayName,
     });
+    if (platformCode === SocialPlatformCode.Instagram) {
+      await this.metaGraphService.syncInstagramExternalAccountId(companyId);
+    }
     if (
       platformCode === SocialPlatformCode.WhatsAppCloud &&
       enriched.externalAccountId
@@ -273,11 +276,16 @@ export class SocialHubOAuthApplicationService {
       }
     }
     if (platformCode === SocialPlatformCode.Instagram) {
+      await this.metaGraphService.syncInstagramExternalAccountId(companyId);
       const connection = await this.connectionRepository.findOne({
         where: { companyId, platformCode },
       });
       const metadata = parseSocialHubConnectionMetadata(connection?.grantedScopes);
       const pageId = metadata.pageId;
+      const igId =
+        metadata.instagramBusinessAccountId ??
+        this.oauthConfig.getKnownInstagramBusinessAccountId()?.trim() ??
+        null;
       if (pageId) {
         const pageToken = await this.metaGraphService.resolvePageAccessToken(
           payload.access_token,
@@ -288,6 +296,12 @@ export class SocialHubOAuthApplicationService {
             pageId,
             pageToken,
           );
+          if (igId) {
+            await this.metaGraphService.subscribeInstagramBusinessWebhooks(
+              igId,
+              pageToken,
+            );
+          }
         }
       }
     }

@@ -8,6 +8,7 @@ import {
   serializeSocialHubConnectionMetadata,
   type SocialHubConnectionMetadata,
 } from "./SocialHubConnectionMetadata";
+import { SocialHubOAuthConfigService } from "./SocialHubOAuthConfigService";
 
 type AccountsResponse = {
   data?: Array<{ id: string; name: string; access_token?: string }>;
@@ -25,6 +26,7 @@ export class SocialHubMetaGraphService {
   public constructor(
     @InjectRepository(CompanySocialConnectionEntity)
     private readonly connectionRepository: Repository<CompanySocialConnectionEntity>,
+    private readonly oauthConfig: SocialHubOAuthConfigService,
   ) {}
 
   public async enrichConnectionAfterOAuth(
@@ -103,6 +105,59 @@ export class SocialHubMetaGraphService {
       return;
     }
     this.logger.log(`Page subscribed_apps ok page=${trimmedPage}`);
+  }
+
+  /** Meta: IG business account must subscribe the app for `object=instagram` webhooks. */
+  public async subscribeInstagramBusinessWebhooks(
+    instagramBusinessAccountId: string,
+    accessToken: string,
+  ): Promise<void> {
+    const trimmedIg = instagramBusinessAccountId.trim();
+    const trimmedToken = accessToken.trim();
+    if (!trimmedIg || !trimmedToken) {
+      return;
+    }
+    const url = new URL(
+      `https://graph.facebook.com/v21.0/${trimmedIg}/subscribed_apps`,
+    );
+    url.searchParams.set("access_token", trimmedToken);
+    url.searchParams.set("subscribed_fields", "messages");
+    const response = await fetch(url.toString(), { method: "POST" });
+    const payload = (await response.json()) as {
+      success?: boolean;
+      error?: { message: string };
+    };
+    if (!response.ok || payload.success !== true) {
+      this.logger.warn(
+        `IG subscribed_apps failed ig=${trimmedIg}: ${
+          payload.error?.message ?? String(response.status)
+        }`,
+      );
+      return;
+    }
+    this.logger.log(`IG subscribed_apps ok ig=${trimmedIg}`);
+  }
+
+  public async syncInstagramExternalAccountId(companyId: string): Promise<void> {
+    const row = await this.connectionRepository.findOne({
+      where: { companyId, platformCode: SocialPlatformCode.Instagram },
+    });
+    if (!row) {
+      return;
+    }
+    const metadata = parseSocialHubConnectionMetadata(row.grantedScopes);
+    const igId =
+      metadata.instagramBusinessAccountId ??
+      this.oauthConfig.getKnownInstagramBusinessAccountId()?.trim() ??
+      null;
+    if (!igId || row.externalAccountId === igId) {
+      return;
+    }
+    row.externalAccountId = igId;
+    await this.connectionRepository.save(row);
+    this.logger.log(
+      `Instagram externalAccountId synced company=${companyId} ig=${igId}`,
+    );
   }
 
   public async sendChannelTextMessage(params: {
@@ -341,17 +396,22 @@ export class SocialHubMetaGraphService {
         const metadata: SocialHubConnectionMetadata = {
           pageId: chosenPage.id,
         };
+        const knownIgId =
+          this.oauthConfig.getKnownInstagramBusinessAccountId()?.trim() ?? null;
         if (igProfile?.id) {
           metadata.instagramBusinessAccountId = igProfile.id;
+        } else if (knownIgId) {
+          metadata.instagramBusinessAccountId = knownIgId;
         }
         await this.mergeConnectionMetadata(companyId, platformCode, metadata);
-        if (igProfile?.id) {
+        if (igProfile?.id || knownIgId) {
+          const igId = igProfile?.id ?? knownIgId!;
           return {
-            externalAccountId: igProfile.id,
+            externalAccountId: igId,
             displayName:
-              igProfile.username
+              igProfile?.username
                 ? `@${igProfile.username}`
-                : igProfile.name ?? chosenPage.name ?? "Instagram",
+                : igProfile?.name ?? chosenPage.name ?? "Instagram",
           };
         }
         return {

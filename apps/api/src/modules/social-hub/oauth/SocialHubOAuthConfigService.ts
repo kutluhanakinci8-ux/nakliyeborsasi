@@ -127,6 +127,15 @@ export class SocialHubOAuthConfigService {
     return flag === "1" || flag === "true" || flag === "yes";
   }
 
+  /** Fallback when Graph does not return instagram_business_account on the Page. */
+  public getKnownInstagramBusinessAccountId(): string | null {
+    return (
+      this.configService
+        .get<string>("SOCIAL_META_INSTAGRAM_BUSINESS_ACCOUNT_ID")
+        ?.trim() ?? null
+    );
+  }
+
   public getMetaOAuthConfigId(platformCode: SocialPlatformCode): string | null {
     const envByPlatform: Partial<Record<SocialPlatformCode, string>> = {
       [SocialPlatformCode.WhatsAppCloud]:
