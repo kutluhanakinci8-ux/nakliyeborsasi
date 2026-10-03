@@ -133,8 +133,7 @@ export class SocialHubOAuthApplicationService {
     const state = await this.oauthStateService.issueState(companyId, platformCode);
     if (
       platformCode === SocialPlatformCode.Instagram &&
-      this.oauthConfig.useInstagramLoginOAuth() &&
-      this.oauthConfig.getInstagramLoginConfig()
+      this.oauthConfig.preferInstagramBusinessLoginOAuth()
     ) {
       const ig = this.oauthConfig.getInstagramLoginConfig()!;
       const url = new URL("https://www.instagram.com/oauth/authorize");
@@ -218,8 +217,7 @@ export class SocialHubOAuthApplicationService {
   ): Promise<void> {
     if (
       platformCode === SocialPlatformCode.Instagram &&
-      this.oauthConfig.useInstagramLoginOAuth() &&
-      this.oauthConfig.getInstagramLoginConfig()
+      this.oauthConfig.preferInstagramBusinessLoginOAuth()
     ) {
       await this.exchangeInstagramBusinessLogin(companyId, code);
       return;

@@ -113,10 +113,23 @@ export class SocialHubOAuthConfigService {
     const appSecret = this.configService
       .get<string>("SOCIAL_META_INSTAGRAM_APP_SECRET")
       ?.trim();
-    if (!appId || !appSecret) {
-      return null;
+    if (appId && appSecret) {
+      return { appId, appSecret };
     }
-    return { appId, appSecret };
+    const meta = this.getMetaConfig();
+    if (meta?.appId && meta.appSecret) {
+      return { appId: meta.appId, appSecret: meta.appSecret };
+    }
+    return null;
+  }
+
+  /** Force legacy facebook.com/dialog/oauth + config_id for Instagram (often disabled on Meta apps). */
+  public useFacebookDialogForInstagramOAuth(): boolean {
+    const flag = this.configService
+      .get<string>("SOCIAL_META_INSTAGRAM_OAUTH_USE_FACEBOOK_DIALOG")
+      ?.trim()
+      .toLowerCase();
+    return flag === "1" || flag === "true" || flag === "yes";
   }
 
   public useInstagramLoginOAuth(): boolean {
@@ -125,6 +138,27 @@ export class SocialHubOAuthConfigService {
       ?.trim()
       .toLowerCase();
     return flag === "1" || flag === "true" || flag === "yes";
+  }
+
+  /**
+   * Instagram → instagram.com/oauth/authorize (Business Login).
+   * Default on: Facebook Login dialog is often “özellik kullanılmıyor” for messaging-only apps.
+   */
+  public preferInstagramBusinessLoginOAuth(): boolean {
+    if (this.useFacebookDialogForInstagramOAuth()) {
+      return false;
+    }
+    if (this.useInstagramLoginOAuth()) {
+      return this.getInstagramLoginConfig() !== null;
+    }
+    const explicitOff = this.configService
+      .get<string>("SOCIAL_META_INSTAGRAM_OAUTH_USE_LOGIN")
+      ?.trim()
+      .toLowerCase();
+    if (explicitOff === "0" || explicitOff === "false" || explicitOff === "no") {
+      return false;
+    }
+    return this.getInstagramLoginConfig() !== null;
   }
 
   /** Fallback when Graph does not return instagram_business_account on the Page. */
