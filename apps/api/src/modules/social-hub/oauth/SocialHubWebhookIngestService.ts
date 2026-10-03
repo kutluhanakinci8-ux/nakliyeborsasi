@@ -5,6 +5,7 @@ import { parseMetaWebhookBody } from "./SocialHubMetaWebhookParser";
 import { SocialHubWebhookRoutingService } from "./SocialHubWebhookRoutingService";
 import { SocialHubMessagingBridgeService } from "../SocialHubMessagingBridgeService";
 import { SocialHubWebhookBridgeAuditService } from "../SocialHubWebhookBridgeAuditService";
+import { SocialPlatformCode } from "@nakliyeborsasi/core";
 
 @Injectable()
 export class SocialHubWebhookIngestService {
@@ -36,9 +37,14 @@ export class SocialHubWebhookIngestService {
         );
         continue;
       }
+      const platformCode =
+        message.channel === "instagram" ||
+        object === "instagram"
+          ? SocialPlatformCode.Instagram
+          : route.platformCode;
       const result = await this.messagingBridgeService.ingestWebhookInbound({
         companyId: route.companyId,
-        platformCode: route.platformCode,
+        platformCode,
         externalThreadId: message.externalThreadId,
         displayLabel: message.displayLabel,
         bodyText: message.bodyText,
@@ -50,7 +56,7 @@ export class SocialHubWebhookIngestService {
         );
         this.webhookBridgeAuditService.recordInboundBridged({
           companyId: route.companyId,
-          platformCode: route.platformCode,
+          platformCode,
           threadId: result.threadId,
           externalThreadId: message.externalThreadId,
           externalMessageId: message.externalMessageId,

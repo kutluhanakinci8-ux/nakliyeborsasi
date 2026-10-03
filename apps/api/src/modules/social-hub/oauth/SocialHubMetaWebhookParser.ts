@@ -1,9 +1,12 @@
+export type SocialMetaMessagingChannel = "instagram" | "messenger";
+
 export type ParsedInboundSocialMessage = {
   entryId: string;
   externalThreadId: string;
   displayLabel: string;
   bodyText: string;
   externalMessageId: string | null;
+  channel: SocialMetaMessagingChannel;
 };
 
 export function parseMetaWebhookBody(body: Record<string, unknown>): {
@@ -34,7 +37,9 @@ export function parseMetaWebhookBody(body: Record<string, unknown>): {
     }
     const changes = Array.isArray(entryRecord.changes) ? entryRecord.changes : [];
     for (const change of changes) {
-      const parsed = parseWhatsAppChange(entryId, change);
+      const parsed =
+        parseWhatsAppChange(entryId, change) ??
+        parseInstagramMessagingChange(entryId, change);
       if (parsed) {
         messages.push(parsed);
       }
@@ -69,12 +74,75 @@ function parseMessagingEvent(
   }
   const mid =
     typeof message.mid === "string" ? message.mid : null;
+  const messagingProduct =
+    typeof event.messaging_product === "string"
+      ? event.messaging_product
+      : undefined;
+  const channel: SocialMetaMessagingChannel =
+    messagingProduct === "instagram" ? "instagram" : "messenger";
   return {
     entryId,
     externalThreadId: senderId,
     displayLabel: senderId,
     bodyText: text.trim(),
     externalMessageId: mid,
+    channel,
+  };
+}
+
+function parseInstagramMessagingChange(
+  entryId: string,
+  raw: unknown,
+): ParsedInboundSocialMessage | null {
+  if (!raw || typeof raw !== "object") {
+    return null;
+  }
+  const change = raw as Record<string, unknown>;
+  if (change.field !== "messages") {
+    return null;
+  }
+  const value = change.value as Record<string, unknown> | undefined;
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+  const nestedMessage = value.message as Record<string, unknown> | undefined;
+  if (nestedMessage?.is_echo === true) {
+    return null;
+  }
+  const sender = value.sender as Record<string, unknown> | undefined;
+  const senderId =
+    typeof sender?.id === "string"
+      ? sender.id
+      : typeof value.from === "string"
+        ? value.from
+        : null;
+  const text =
+    typeof nestedMessage?.text === "string"
+      ? nestedMessage.text
+      : typeof (value.message as Record<string, unknown> | undefined)?.text ===
+          "string"
+        ? (value.message as { text: string }).text
+        : typeof value.text === "string"
+          ? value.text
+          : "";
+  if (!senderId || !text.trim()) {
+    return null;
+  }
+  const mid =
+    typeof nestedMessage?.mid === "string"
+      ? nestedMessage.mid
+      : typeof value.mid === "string"
+        ? value.mid
+        : null;
+  const username =
+    typeof sender?.username === "string" ? sender.username : null;
+  return {
+    entryId,
+    externalThreadId: senderId,
+    displayLabel: username ? `@${username}` : senderId,
+    bodyText: text.trim(),
+    externalMessageId: mid,
+    channel: "instagram",
   };
 }
 
@@ -109,6 +177,7 @@ function parseWhatsAppChange(
       displayLabel: from,
       bodyText: body.trim(),
       externalMessageId: id,
+      channel: "messenger",
     };
   }
   return null;

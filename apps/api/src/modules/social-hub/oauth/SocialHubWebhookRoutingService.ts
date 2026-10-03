@@ -30,6 +30,18 @@ export class SocialHubWebhookRoutingService {
     if (connection) {
       return { companyId: connection.companyId, platformCode: platform };
     }
+    if (platform === SocialPlatformCode.Instagram) {
+      const messenger = await this.tokenVault.findConnectedByExternalAccount(
+        SocialPlatformCode.FacebookMessenger,
+        params.entryId,
+      );
+      if (messenger) {
+        return {
+          companyId: messenger.companyId,
+          platformCode: SocialPlatformCode.Instagram,
+        };
+      }
+    }
     return this.defaultRoute(platform);
   }
 
