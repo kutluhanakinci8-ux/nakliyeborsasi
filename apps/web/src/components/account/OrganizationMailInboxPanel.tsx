@@ -344,6 +344,12 @@ export function OrganizationMailInboxPanel({
                     {row.spamStatus === "suspected" ? "⚠ " : ""}
                     {row.subject}
                   </strong>
+                  {/instagram code|verify your profile/i.test(row.subject) ||
+                  row.fromAddress.toLowerCase().includes("mail.instagram.com") ? (
+                    <span className="module-hint" style={{ display: "block" }}>
+                      Instagram doğrulama — maili açın
+                    </span>
+                  ) : null}
                   <br />
                   <span style={{ fontSize: "0.85rem" }}>
                     {row.fromAddress}

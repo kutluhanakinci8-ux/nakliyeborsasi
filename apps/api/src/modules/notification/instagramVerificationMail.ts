@@ -7,11 +7,21 @@ export function extractInstagramVerificationCode(input: {
 }): string | null {
   const from = input.fromAddress.toLowerCase();
   const subject = input.subject.trim();
+  const subjectCode = subject.match(/^(\d{6,8})\s+is your Instagram code/i);
+  if (subjectCode?.[1]) {
+    return subjectCode[1];
+  }
+  const subjectCodeTr = subject.match(/^(\d{6,8})\s+Instagram kodunuz/i);
+  if (subjectCodeTr?.[1]) {
+    return subjectCodeTr[1];
+  }
+
   const looksLikeIgVerify =
     from.includes("mail.instagram.com") ||
     from.includes("facebookmail.com") ||
     /verify your profile/i.test(subject) ||
-    /profilinizi doğrula/i.test(subject);
+    /profilinizi doğrula/i.test(subject) ||
+    /instagram code/i.test(subject);
 
   if (!looksLikeIgVerify) {
     return null;

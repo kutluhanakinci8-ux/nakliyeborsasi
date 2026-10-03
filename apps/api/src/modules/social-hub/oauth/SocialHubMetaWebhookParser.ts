@@ -29,8 +29,10 @@ export function parseMetaWebhookBody(body: Record<string, unknown>): {
     const messaging = Array.isArray(entryRecord.messaging)
       ? entryRecord.messaging
       : [];
+    const defaultChannel: SocialMetaMessagingChannel | undefined =
+      object === "instagram" ? "instagram" : undefined;
     for (const item of messaging) {
-      const parsed = parseMessagingEvent(entryId, item);
+      const parsed = parseMessagingEvent(entryId, item, defaultChannel);
       if (parsed) {
         messages.push(parsed);
       }
@@ -51,6 +53,7 @@ export function parseMetaWebhookBody(body: Record<string, unknown>): {
 function parseMessagingEvent(
   entryId: string,
   raw: unknown,
+  defaultChannel?: SocialMetaMessagingChannel,
 ): ParsedInboundSocialMessage | null {
   if (!raw || typeof raw !== "object") {
     return null;
@@ -79,7 +82,9 @@ function parseMessagingEvent(
       ? event.messaging_product
       : undefined;
   const channel: SocialMetaMessagingChannel =
-    messagingProduct === "instagram" ? "instagram" : "messenger";
+    messagingProduct === "instagram" || defaultChannel === "instagram"
+      ? "instagram"
+      : "messenger";
   return {
     entryId,
     externalThreadId: senderId,
