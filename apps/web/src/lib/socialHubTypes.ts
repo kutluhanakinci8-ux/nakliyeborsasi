@@ -343,6 +343,7 @@ export type SocialHubSnapshot = {
     tiktokSignatureRequired: boolean;
     youtubePushAuthRequired: boolean;
     webhookInactivityHealthHintsEnabled?: boolean;
+    defaultWebhookCompanyConfigured?: boolean;
   };
   webhookActivity?: {
     inboundBridged24h: number;

@@ -715,6 +715,13 @@ export class SocialHubMetaGraphService {
         message: "WhatsApp phone_number_id yok; OAuth yenileyin.",
       };
     }
+    const toDigits = params.to.replace(/\D/g, "");
+    if (!toDigits) {
+      return {
+        ok: false,
+        message: "WhatsApp alıcı numarası geçersiz.",
+      };
+    }
     const url = new URL(
       `https://graph.facebook.com/v21.0/${params.phoneNumberId}/messages`,
     );
@@ -726,7 +733,7 @@ export class SocialHubMetaGraphService {
       },
       body: JSON.stringify({
         messaging_product: "whatsapp",
-        to: params.to,
+        to: toDigits,
         type: "text",
         text: { body: params.bodyText },
       }),
