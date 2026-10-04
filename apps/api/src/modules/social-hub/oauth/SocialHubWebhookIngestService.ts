@@ -30,40 +30,48 @@ export class SocialHubWebhookIngestService {
       this.logInstagramWebhookShape(body);
     }
     for (const message of messages) {
-      const route = await this.routingService.resolveFromMetaPayload({
-        object,
-        entryId: message.entryId,
-      });
-      if (!route) {
-        this.logger.warn(
-          `Webhook route missing entry=${message.entryId} object=${object}`,
-        );
-        continue;
-      }
-      const platformCode =
-        message.channel === "instagram" ||
-        object === "instagram"
-          ? SocialPlatformCode.Instagram
-          : route.platformCode;
-      const result = await this.messagingBridgeService.ingestWebhookInbound({
-        companyId: route.companyId,
-        platformCode,
-        externalThreadId: message.externalThreadId,
-        displayLabel: message.displayLabel,
-        bodyText: message.bodyText,
-        externalMessageId: message.externalMessageId,
-      });
-      if (result.ingested) {
-        this.logger.log(
-          `Ingested social message company=${route.companyId} thread=${result.threadId}`,
-        );
-        this.webhookBridgeAuditService.recordInboundBridged({
+      try {
+        const route = await this.routingService.resolveFromMetaPayload({
+          object,
+          entryId: message.entryId,
+          whatsAppPhoneNumberId: message.whatsAppPhoneNumberId,
+        });
+        if (!route) {
+          this.logger.warn(
+            `Webhook route missing entry=${message.entryId} object=${object}`,
+          );
+          continue;
+        }
+        const platformCode =
+          message.channel === "instagram" || object === "instagram"
+            ? SocialPlatformCode.Instagram
+            : route.platformCode;
+        const result = await this.messagingBridgeService.ingestWebhookInbound({
           companyId: route.companyId,
           platformCode,
-          threadId: result.threadId,
           externalThreadId: message.externalThreadId,
+          displayLabel: message.displayLabel,
+          bodyText: message.bodyText,
           externalMessageId: message.externalMessageId,
         });
+        if (result.ingested) {
+          this.logger.log(
+            `Ingested social message company=${route.companyId} thread=${result.threadId}`,
+          );
+          this.webhookBridgeAuditService.recordInboundBridged({
+            companyId: route.companyId,
+            platformCode,
+            threadId: result.threadId,
+            externalThreadId: message.externalThreadId,
+            externalMessageId: message.externalMessageId,
+          });
+        }
+      } catch (error) {
+        this.logger.error(
+          `Meta webhook ingest failed entry=${message.entryId} from=${message.externalThreadId}: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
       }
     }
   }

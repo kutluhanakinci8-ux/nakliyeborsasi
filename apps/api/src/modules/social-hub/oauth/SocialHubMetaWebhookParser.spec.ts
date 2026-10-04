@@ -70,6 +70,72 @@ describe("SocialHubMetaWebhookParser", () => {
     expect(messages[0]?.bodyText).toBe("DM");
   });
 
+  it("parses whatsapp business account text message", () => {
+    const body = {
+      object: "whatsapp_business_account",
+      entry: [
+        {
+          id: "1016724694765291",
+          changes: [
+            {
+              field: "messages",
+              value: {
+                messaging_product: "whatsapp",
+                metadata: {
+                  display_phone_number: "15556309023",
+                  phone_number_id: "1359460837248586",
+                },
+                contacts: [{ profile: { name: "Test User" }, wa_id: "905546902543" }],
+                messages: [
+                  {
+                    from: "905546902543",
+                    id: "wamid.test",
+                    timestamp: "1700000000",
+                    type: "text",
+                    text: { body: "tst" },
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      ],
+    };
+    const { object, messages } = parseMetaWebhookBody(body);
+    expect(object).toBe("whatsapp_business_account");
+    expect(messages).toHaveLength(1);
+    expect(messages[0]?.bodyText).toBe("tst");
+    expect(messages[0]?.displayLabel).toBe("Test User");
+    expect(messages[0]?.whatsAppPhoneNumberId).toBe("1359460837248586");
+  });
+
+  it("parses whatsapp image without caption as placeholder", () => {
+    const body = {
+      object: "whatsapp_business_account",
+      entry: [
+        {
+          id: "waba",
+          changes: [
+            {
+              field: "messages",
+              value: {
+                messages: [
+                  {
+                    from: "9055",
+                    id: "wamid.img",
+                    type: "image",
+                    image: { mime_type: "image/jpeg", sha256: "x", id: "media" },
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      ],
+    };
+    expect(parseMetaWebhookBody(body).messages[0]?.bodyText).toBe("[image]");
+  });
+
   it("skips instagram echo messages", () => {
     const body = {
       object: "instagram",

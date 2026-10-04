@@ -48,6 +48,17 @@ export class SocialHubMessagingBridgeService {
       },
     });
     if (existing) {
+      if (!existing.isOpen) {
+        existing.isOpen = true;
+        await this.linkRepository.save(existing);
+      }
+      if (
+        params.displayLabel.trim() &&
+        existing.displayLabel !== params.displayLabel.trim()
+      ) {
+        existing.displayLabel = params.displayLabel.trim();
+        await this.linkRepository.save(existing);
+      }
       return existing;
     }
     const virtualCounterpartyId = randomUUID();
