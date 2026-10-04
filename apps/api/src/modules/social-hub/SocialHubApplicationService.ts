@@ -404,6 +404,9 @@ export class SocialHubApplicationService {
   ) {
     assertSocialHubAdmin(user);
     await this.assertSocialHubSubscription(user.companyId);
+    if (isRoadmapPlatformCode(platformCode)) {
+      return this.refreshRoadmapToken(user, platformCode);
+    }
     const provider = this.socialProviderRegistry.resolve(platformCode);
     const result = await this.tokenRefreshService.refreshConnectionToken(
       user.companyId,
@@ -707,6 +710,19 @@ export class SocialHubApplicationService {
   ) {
     assertSocialHubAdmin(user);
     await this.assertSocialHubSubscription(user.companyId);
+    if (isRoadmapPlatformCode(platformCode)) {
+      const roadmap = await this.startRoadmapConnect(user, platformCode);
+      const code = assertRoadmapPlatformCode(platformCode);
+      const row = await this.connectionRepository.findOne({
+        where: { companyId: user.companyId, platformCode: code },
+      });
+      return {
+        oauth: roadmap.oauth,
+        connection: row
+          ? this.mapConnection(row, this.listProviderMeta())
+          : null,
+      };
+    }
     const provider = this.socialProviderRegistry.resolve(platformCode);
     const oauth = await provider.startOAuthConnect(user.companyId);
     const row = await this.ensureConnectionRow(user.companyId, provider.platformCode);
@@ -723,6 +739,16 @@ export class SocialHubApplicationService {
   public async disconnect(user: AuthenticatedUserContext, platformCode: string) {
     assertSocialHubAdmin(user);
     await this.assertSocialHubSubscription(user.companyId);
+    if (isRoadmapPlatformCode(platformCode)) {
+      await this.disconnectRoadmapPlatform(user, platformCode);
+      const code = assertRoadmapPlatformCode(platformCode);
+      const row = await this.connectionRepository.findOne({
+        where: { companyId: user.companyId, platformCode: code },
+      });
+      return {
+        connection: row ? this.mapConnection(row, this.listProviderMeta()) : null,
+      };
+    }
     const provider = this.socialProviderRegistry.resolve(platformCode);
     await provider.disconnect(user.companyId);
     const row = await this.connectionRepository.findOne({
