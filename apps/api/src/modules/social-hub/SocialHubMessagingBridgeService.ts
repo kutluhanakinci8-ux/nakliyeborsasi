@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { createHash, randomUUID } from "node:crypto";
 import { In, Repository } from "typeorm";
@@ -26,6 +26,8 @@ const PLATFORM_LABELS: Record<SocialPlatformCode, string> = {
 
 @Injectable()
 export class SocialHubMessagingBridgeService {
+  private readonly logger = new Logger(SocialHubMessagingBridgeService.name);
+
   public constructor(
     @InjectRepository(CompanySocialThreadLinkEntity)
     private readonly linkRepository: Repository<CompanySocialThreadLinkEntity>,
@@ -179,10 +181,16 @@ export class SocialHubMessagingBridgeService {
     bodyText: string;
     externalMessageId: string | null;
   }): Promise<{ ingested: boolean; threadId?: string }> {
-    const link = await this.ensureExternalThread({
+    let link = await this.ensureExternalThread({
       companyId: params.companyId,
       platformCode: params.platformCode,
       externalThreadId: params.externalThreadId,
+      displayLabel: params.displayLabel,
+    });
+    link = await this.repairLinkMessageThreadIfNeeded({
+      link,
+      companyId: params.companyId,
+      platformCode: params.platformCode,
       displayLabel: params.displayLabel,
     });
     const dedupKey = resolveInboundDedupKey(params);
@@ -209,6 +217,46 @@ export class SocialHubMessagingBridgeService {
       await this.linkRepository.save(link);
     }
     return { ingested: true, threadId: link.messageThreadId };
+  }
+
+  private async repairLinkMessageThreadIfNeeded(params: {
+    link: CompanySocialThreadLinkEntity;
+    companyId: string;
+    platformCode: SocialPlatformCode | string;
+    displayLabel: string;
+  }): Promise<CompanySocialThreadLinkEntity> {
+    const thread = await this.messageThreadRepository.findOne({
+      where: { id: params.link.messageThreadId },
+    });
+    if (
+      thread &&
+      thread.threadKind === "external_social" &&
+      thread.companyAId === params.companyId
+    ) {
+      return params.link;
+    }
+    this.logger.warn(
+      `Repairing social thread link=${params.link.id} thread=${params.link.messageThreadId} platform=${params.platformCode}`,
+    );
+    const virtualCounterpartyId = randomUUID();
+    const platformLabel =
+      PLATFORM_LABELS[params.platformCode as SocialPlatformCode] ??
+      labelSocialPlatform(String(params.platformCode));
+    const label = params.displayLabel.trim() || params.link.displayLabel;
+    const newThread = await this.messageThreadRepository.save(
+      this.messageThreadRepository.create({
+        companyAId: params.companyId,
+        companyBId: virtualCounterpartyId,
+        freightListingId: null,
+        threadKind: "external_social",
+        title: `${platformLabel} · ${label}`,
+        legalHoldAt: null,
+      }),
+    );
+    params.link.messageThreadId = newThread.id;
+    params.link.virtualCounterpartyId = virtualCounterpartyId;
+    params.link.isOpen = true;
+    return this.linkRepository.save(params.link);
   }
 }
 
