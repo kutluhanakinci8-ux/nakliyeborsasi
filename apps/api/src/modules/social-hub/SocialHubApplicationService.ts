@@ -66,6 +66,7 @@ import { buildSocialHubIntegrationOpsHints } from "./socialHubIntegrationOpsHint
 import { getRoadmapProviderCapabilities } from "./socialHubRoadmapCapabilities";
 import { isRoadmapProdProviderPlatform } from "./socialHubRoadmapProdProviders";
 import { buildSocialHubLinkedInDmInboxGate } from "./socialHubLinkedInDmCapability";
+import { buildSocialHubXDmInboxGate } from "./socialHubXDmCapability";
 import { isRoadmapPendingSkeletonPlatform } from "./socialHubRoadmapPendingProviders";
 import { buildSocialHubPwaConfig } from "./socialHubPwaConfig";
 import { buildSocialHubIntegrationGate } from "./socialHubIntegrationGate";
@@ -1929,6 +1930,9 @@ export class SocialHubApplicationService {
         roadmapHasRefreshToken: conn
           ? hasRoadmapRefreshToken(conn.grantedScopes)
           : false,
+        ...(provider.platformCode === "X"
+          ? { xDmInboxGate: buildSocialHubXDmInboxGate() }
+          : {}),
       };
     });
   }
@@ -2060,6 +2064,9 @@ export class SocialHubApplicationService {
         ? {
             linkedinDmInboxGate: buildSocialHubLinkedInDmInboxGate(),
           }
+        : {}),
+      ...(row.platformCode === "X"
+        ? { xDmInboxGate: buildSocialHubXDmInboxGate() }
         : {}),
     };
   }

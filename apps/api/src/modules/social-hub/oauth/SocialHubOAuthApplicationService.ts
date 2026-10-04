@@ -94,6 +94,7 @@ export class SocialHubOAuthApplicationService {
           stateRow.companyId,
           platform,
           params.code,
+          { codeVerifier: stateRow.pkceVerifier },
         );
       } else if (platform === SocialPlatformCode.LinkedIn) {
         await this.exchangeLinkedIn(

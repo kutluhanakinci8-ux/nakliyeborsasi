@@ -84,6 +84,15 @@ export type SocialHubLinkedInDmInboxGate = {
   userFacingNote: string;
 };
 
+export type SocialHubXDmInboxGate = {
+  status: "deferred_v2";
+  implemented: "explicit_v2_gate";
+  inboxWebhook: false;
+  outboundMessaging: false;
+  userFacingLabel: string;
+  userFacingNote: string;
+};
+
 export type SocialHubProviderInfo = {
   platformCode: string;
   label: string;
@@ -105,6 +114,7 @@ export type SocialHubRoadmapProvider = {
   isRoadmapBeta?: boolean;
   roadmapConnectionStatusCode?: string | null;
   roadmapHasRefreshToken?: boolean;
+  xDmInboxGate?: SocialHubXDmInboxGate;
 };
 
 export type SocialHubConnection = {
@@ -122,6 +132,7 @@ export type SocialHubConnection = {
   setupWarnings?: string[];
   oauthReady?: boolean;
   linkedinDmInboxGate?: SocialHubLinkedInDmInboxGate;
+  xDmInboxGate?: SocialHubXDmInboxGate;
 };
 
 export type SocialHubPost = {

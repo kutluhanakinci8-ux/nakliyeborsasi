@@ -27,6 +27,13 @@ export type YouTubeOAuthConfig = {
   redirectUri: string;
 };
 
+export type XOAuthConfig = {
+  clientId: string;
+  clientSecret: string;
+  redirectUri: string;
+  scopes: string;
+};
+
 @Injectable()
 export class SocialHubOAuthConfigService {
   public constructor(private readonly configService: ConfigService) {}
@@ -64,6 +71,23 @@ export class SocialHubOAuthConfigService {
       return null;
     }
     return { clientId, clientSecret, redirectUri };
+  }
+
+  public getXConfig(): XOAuthConfig | null {
+    const clientId = this.configService
+      .get<string>("SOCIAL_X_OAUTH_CLIENT_ID")
+      ?.trim();
+    const clientSecret = this.configService
+      .get<string>("SOCIAL_X_OAUTH_CLIENT_SECRET")
+      ?.trim();
+    const redirectUri = this.resolveRedirectUri("SOCIAL_X_OAUTH_REDIRECT_URI");
+    const scopes =
+      this.configService.get<string>("SOCIAL_X_OAUTH_SCOPES")?.trim() ??
+      "tweet.read tweet.write users.read offline.access";
+    if (!clientId || !clientSecret || !redirectUri) {
+      return null;
+    }
+    return { clientId, clientSecret, redirectUri, scopes };
   }
 
   public getTikTokConfig(): TikTokOAuthConfig | null {

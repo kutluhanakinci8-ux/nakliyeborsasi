@@ -1,5 +1,6 @@
 import type { SocialHubProviderCapabilities } from "./socialHubProviderCapabilities";
 import { getTikTokProdCodePathCapabilities } from "./socialHubTikTokProdProvider";
+import { getXProdCodePathCapabilities } from "./socialHubXProdProvider";
 import { getYouTubeProdCodePathCapabilities } from "./socialHubYouTubeProdProvider";
 
 export function getRoadmapProviderCapabilities(
@@ -11,6 +12,9 @@ export function getRoadmapProviderCapabilities(
   }
   if (code === "YOUTUBE") {
     return getYouTubeProdCodePathCapabilities();
+  }
+  if (code === "X") {
+    return getXProdCodePathCapabilities();
   }
   return {
     oauthConnect: false,

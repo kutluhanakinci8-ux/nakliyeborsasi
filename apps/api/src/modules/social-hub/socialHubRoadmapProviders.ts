@@ -43,10 +43,9 @@ export const SOCIAL_HUB_ROADMAP_PROVIDERS: SocialHubRoadmapProvider[] = [
   {
     platformCode: "X",
     label: "X (Twitter)",
-    implementationStatus: "pending",
-    isPendingSkeleton: true,
+    implementationStatus: "roadmap",
     roadmapNote:
-      "Pending provider iskeleti — OAuth ve gelen kutusu sonraki sprintte. Şimdilik öncelik bildirimi toplanır.",
+      "Prod OAuth (PKCE) — @lertalogistics bağlantısı; token yenileme. DM / Account Activity webhook ücretli X API katmanında sonraki faz.",
     capabilities: EMPTY_CAPS,
   },
   {
