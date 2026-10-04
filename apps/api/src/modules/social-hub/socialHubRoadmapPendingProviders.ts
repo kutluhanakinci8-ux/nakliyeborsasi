@@ -1,5 +1,4 @@
 export const ROADMAP_PENDING_SKELETON_PLATFORM_CODES = [
-  "X",
   "GOOGLE_BUSINESS",
 ] as const;
 

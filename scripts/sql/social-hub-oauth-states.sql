@@ -12,5 +12,8 @@ CREATE TABLE IF NOT EXISTS company_social_oauth_states (
 CREATE INDEX IF NOT EXISTS idx_social_oauth_state_company
   ON company_social_oauth_states (company_id);
 
+ALTER TABLE company_social_oauth_states
+  ADD COLUMN IF NOT EXISTS pkce_verifier VARCHAR(128) NULL;
+
 ALTER TABLE company_social_connections
   ADD COLUMN IF NOT EXISTS access_token_ciphertext TEXT NULL;

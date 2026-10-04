@@ -16,6 +16,10 @@ import {
 } from "../socialHubRoadmapInterest";
 import { isRoadmapPendingSkeletonPlatform } from "../socialHubRoadmapPendingProviders";
 import { mergeRoadmapRefreshToken } from "./socialHubRoadmapRefreshToken";
+import {
+  generatePkceVerifier,
+  pkceChallengeS256,
+} from "./socialHubOAuthPkce";
 
 const TIKTOK_AUTH_URL = "https://www.tiktok.com/v2/auth/authorize/";
 const TIKTOK_TOKEN_URL = "https://open.tiktokapis.com/v2/oauth/token/";
@@ -24,6 +28,9 @@ const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const YOUTUBE_SCOPES =
   "https://www.googleapis.com/auth/youtube.readonly openid email profile";
+const X_AUTH_URL = "https://twitter.com/i/oauth2/authorize";
+const X_TOKEN_URL = "https://api.twitter.com/2/oauth2/token";
+const X_USERS_ME_URL = "https://api.twitter.com/2/users/me";
 
 @Injectable()
 export class SocialHubRoadmapOAuthApplicationService {
@@ -56,6 +63,9 @@ export class SocialHubRoadmapOAuthApplicationService {
     if (code === "YOUTUBE") {
       return this.startYouTube(companyId, code);
     }
+    if (code === "X") {
+      return this.startX(companyId, code);
+    }
     return {
       implementationStatus: "pending",
       authorizationUrl: null,
@@ -68,6 +78,7 @@ export class SocialHubRoadmapOAuthApplicationService {
     companyId: string,
     platformCode: string,
     authorizationCode: string,
+    options?: { codeVerifier?: string | null },
   ): Promise<void> {
     if (!isRoadmapPlatformCode(platformCode)) {
       throw new ValidationException("Geçersiz yol haritası platformu.");
@@ -79,6 +90,10 @@ export class SocialHubRoadmapOAuthApplicationService {
     }
     if (code === "YOUTUBE") {
       await this.exchangeYouTube(companyId, code, authorizationCode);
+      return;
+    }
+    if (code === "X") {
+      await this.exchangeX(companyId, code, authorizationCode, options?.codeVerifier);
       return;
     }
     throw new ValidationException(`${code} OAuth henüz desteklenmiyor.`);
@@ -157,6 +172,121 @@ export class SocialHubRoadmapOAuthApplicationService {
       externalAccountId: payload.open_id ?? null,
       displayName: "TikTok",
       refreshToken: payload.refresh_token ?? null,
+    });
+  }
+
+  private async startX(
+    companyId: string,
+    platformCode: string,
+  ): Promise<SocialOAuthStartResult> {
+    const config = this.oauthConfig.getXConfig();
+    if (!config) {
+      return {
+        implementationStatus: "pending",
+        authorizationUrl: null,
+        state: null,
+        message:
+          "X OAuth yapılandırılmadı (SOCIAL_X_OAUTH_CLIENT_ID / SECRET / redirect).",
+      };
+    }
+    await this.ensureConnectionRow(companyId, platformCode);
+    const pkceVerifier = generatePkceVerifier();
+    const state = await this.oauthStateService.issueState(companyId, platformCode, {
+      pkceVerifier,
+    });
+    const url = new URL(X_AUTH_URL);
+    url.searchParams.set("response_type", "code");
+    url.searchParams.set("client_id", config.clientId);
+    url.searchParams.set("redirect_uri", config.redirectUri);
+    url.searchParams.set("scope", config.scopes);
+    url.searchParams.set("state", state);
+    url.searchParams.set("code_challenge", pkceChallengeS256(pkceVerifier));
+    url.searchParams.set("code_challenge_method", "S256");
+    return {
+      implementationStatus: "ready",
+      authorizationUrl: url.toString(),
+      state,
+      message: "X OAuth yönlendirmesi hazır (@lertalogistics ile giriş yapın).",
+    };
+  }
+
+  private async exchangeX(
+    companyId: string,
+    platformCode: string,
+    authorizationCode: string,
+    codeVerifier: string | null | undefined,
+  ): Promise<void> {
+    const config = this.oauthConfig.getXConfig();
+    if (!config) {
+      throw new ValidationException("X OAuth yapılandırması eksik.");
+    }
+    if (!codeVerifier?.trim()) {
+      throw new ValidationException(
+        "X OAuth PKCE doğrulaması eksik — bağlantıyı yeniden başlatın.",
+      );
+    }
+    const body = new URLSearchParams({
+      code: authorizationCode,
+      grant_type: "authorization_code",
+      client_id: config.clientId,
+      redirect_uri: config.redirectUri,
+      code_verifier: codeVerifier.trim(),
+    });
+    const basic = Buffer.from(
+      `${config.clientId}:${config.clientSecret}`,
+    ).toString("base64");
+    const response = await fetch(X_TOKEN_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Authorization: `Basic ${basic}`,
+      },
+      body,
+    });
+    const payload = (await response.json()) as {
+      access_token?: string;
+      expires_in?: number;
+      refresh_token?: string;
+      error_description?: string;
+      error?: string;
+    };
+    if (!response.ok || !payload.access_token) {
+      const detail =
+        payload.error_description ??
+        payload.error ??
+        "X token alınamadı.";
+      this.logger.warn(`X token exchange failed: ${detail}`);
+      throw new ValidationException(detail);
+    }
+    let displayName = "X";
+    let externalAccountId: string | null = null;
+    let profileUrl: string | null = null;
+    try {
+      const userRes = await fetch(
+        `${X_USERS_ME_URL}?user.fields=username,name`,
+        { headers: { Authorization: `Bearer ${payload.access_token}` } },
+      );
+      const userPayload = (await userRes.json()) as {
+        data?: { id?: string; username?: string; name?: string };
+      };
+      const user = userPayload.data;
+      if (user?.username) {
+        displayName = `@${user.username}`;
+        profileUrl = `https://x.com/${user.username}`;
+      } else if (user?.name) {
+        displayName = user.name;
+      }
+      externalAccountId = user?.id ?? null;
+    } catch {
+      // user lookup optional
+    }
+    await this.persistConnection(companyId, platformCode, {
+      accessToken: payload.access_token,
+      expiresInSec: payload.expires_in ?? null,
+      externalAccountId,
+      displayName,
+      refreshToken: payload.refresh_token ?? null,
+      profileUrl,
     });
   }
 
@@ -260,6 +390,7 @@ export class SocialHubRoadmapOAuthApplicationService {
       externalAccountId: string | null;
       displayName: string;
       refreshToken?: string | null;
+      profileUrl?: string | null;
     },
   ): Promise<void> {
     const encKey = this.oauthConfig.getOAuthEncryptionKey();
@@ -272,6 +403,9 @@ export class SocialHubRoadmapOAuthApplicationService {
     row.lastErrorMessage = null;
     row.displayName = tokens.displayName;
     row.externalAccountId = tokens.externalAccountId;
+    if (tokens.profileUrl !== undefined) {
+      row.profileUrl = tokens.profileUrl;
+    }
     row.accessTokenCiphertext = encryptTotpSecret(tokens.accessToken, encKey);
     row.tokenExpiresAt = tokens.expiresInSec
       ? new Date(Date.now() + tokens.expiresInSec * 1000)

@@ -345,7 +345,7 @@ export function SocialConnectionsPanel({
         <>
           <h3 className="account-card-title">Yol haritası</h3>
           <p className="account-card-lead">
-            TikTok ve YouTube prod OAuth; X ve Google Business pending iskelet kartları.
+            TikTok, YouTube ve X prod OAuth; Google Business pending iskelet.
             Öncelik vermek için ilgi bildirin; sıralama planlamasında kullanılır.
           </p>
           <ul className="social-hub-connection-grid">
@@ -364,6 +364,9 @@ export function SocialConnectionsPanel({
                   </span>
                 ) : null}
                 <p className="module-hint">{row.roadmapNote}</p>
+                {row.xDmInboxGate ? (
+                  <p className="module-hint">{row.xDmInboxGate.userFacingNote}</p>
+                ) : null}
                 {capabilitySummary(row.capabilities).length > 0 ? (
                   <ul className="social-hub-capability-list">
                     {capabilitySummary(row.capabilities).map((label) => (

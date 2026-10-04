@@ -21,6 +21,10 @@ export class CompanySocialOAuthStateEntity {
   @Column({ type: "varchar", length: 48 })
   public platformCode!: string;
 
+  /** Ephemeral PKCE verifier (X OAuth 2.0), single-use within TTL. */
+  @Column({ type: "varchar", length: 128, nullable: true })
+  public pkceVerifier!: string | null;
+
   @Column({ type: "timestamptz" })
   public expiresAt!: Date;
 
