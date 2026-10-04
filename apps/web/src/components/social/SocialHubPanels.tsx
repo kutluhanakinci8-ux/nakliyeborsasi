@@ -1,6 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo } from "react";
+import { SocialHubOpsLogRail } from "./SocialHubOpsLogRail";
+import {
+  buildConnectionsOpsLog,
+  connectionUserSummary,
+} from "../../lib/socialHubConnectionsOpsLog";
 import type {
   SocialHubAuditEntry,
   SocialHubPermissions,
@@ -16,7 +22,6 @@ import type {
   SocialHubTemplate,
   SocialHubInboxThreadPreview,
   SocialHubPwaConfig,
-  SocialHubIntegrationGate,
 } from "../../lib/socialHubTypes";
 import {
   buildMonthGrid,
@@ -76,6 +81,20 @@ function statusLabel(code: string): string {
     TOKEN_EXPIRED: "Token süresi doldu",
   };
   return map[code] ?? code;
+}
+
+function connectionStatusBadgeClass(code: string): string {
+  switch (code) {
+    case "CONNECTED":
+      return "social-hub-status-badge social-hub-status-badge--ok";
+    case "ERROR":
+    case "TOKEN_EXPIRED":
+      return "social-hub-status-badge social-hub-status-badge--error";
+    case "PENDING_OAUTH":
+      return "social-hub-status-badge social-hub-status-badge--pending";
+    default:
+      return "social-hub-status-badge social-hub-status-badge--muted";
+  }
 }
 
 function roadmapPrimaryPill(row: SocialHubRoadmapProvider): {
@@ -211,299 +230,234 @@ export function SocialConnectionsPanel({
   const connections = snapshot.connections ?? [];
   const providers = snapshot.providers ?? [];
   const roadmapProviders = snapshot.roadmapProviders ?? [];
-  const metaOauthReady = connections.some(
-    (row) =>
-      row.oauthReady &&
-      (row.platformCode === "INSTAGRAM" ||
-        row.platformCode === "FACEBOOK_MESSENGER" ||
-        row.platformCode === "WHATSAPP_CLOUD"),
+  const opsLogEntries = useMemo(
+    () => buildConnectionsOpsLog(snapshot),
+    [snapshot],
   );
+  const gateSummary = snapshot.integrationGate
+    ? `${snapshot.integrationGate.automatedReadyCount}/${snapshot.integrationGate.automatedStepCount} otomatik adım`
+    : null;
+
   return (
-    <section className="social-hub-panel module-panel module-panel--elevated">
-      <header className="social-hub-panel-head">
-        <h2 className="account-card-title">Bağlı hesaplar</h2>
-      </header>
-      {metaOauthReady ? (
-        <div
-          className="module-panel module-panel--soft social-hub-meta-dev-hint"
-          role="note"
-        >
-          <p className="account-card-lead">
-            <strong>Lerta sunucusu hazır</strong> (E1); bağlantı Meta Developer
-            uygulama tipine bağlıdır. Yalnızca &quot;Facebook Login&quot; ile
-            oluşturulan uygulamada Instagram, Messenger ve WhatsApp izinleri{" "}
-            <strong>Invalid Scopes</strong> verir — bu Lerta hatası değildir.
-          </p>
-          <ul className="module-hint">
-            <li>
-              <strong>WhatsApp:</strong> Use case &quot;Connect with customers
-              through WhatsApp&quot; veya WhatsApp ürünü gerekir.
-            </li>
-            <li>
-              <strong>Messenger:</strong> Use case &quot;Engage with customers
-              on Messenger&quot; gerekir (<code>pages_*</code> izinleri).
-            </li>
-            <li>
-              <strong>Instagram DM:</strong> Messenger veya Instagram izinleri +
-              ilgili use case; tek başına Facebook Login yetmez.
-            </li>
-          </ul>
-          <p className="module-hint">
-            Öneri: Business Manager&apos;daki WABA için yeni bir Meta uygulaması
-            açın; oluştururken <strong>önce WhatsApp use case</strong> seçin,
-            sonra aynı redirect URI ve webhook&apos;u tanımlayın. App ID/Secret
-            değişince VPS ortamını güncelleyin.
-          </p>
-        </div>
-      ) : null}
-      <ul className="social-hub-connection-grid">
-        {connections.map((row) => {
-          const provider = providers.find((p) => p.platformCode === row.platformCode);
-          const caps = row.capabilities ?? provider?.capabilities;
-          const capLabels = capabilitySummary(caps);
-          const connectLabel =
-            row.statusCode === "CONNECTED" ? "Yeniden bağlan" : "Bağla";
-          const isRoadmapConnection = ROADMAP_CONNECTION_PLATFORM_CODES.has(
-            row.platformCode,
-          );
-          const canRoadmapOAuth =
-            isRoadmapConnection && onRoadmapConnect && row.oauthReady !== false;
-          return (
-            <li key={row.id} className="social-hub-connection-card">
-              <div className="social-hub-connection-main">
-                <h3>{row.label}</h3>
-                {row.displayName ? (
-                  <p className="module-hint">{row.displayName}</p>
-                ) : null}
-                <p className="social-hub-connection-status">
-                  {statusLabel(row.statusCode)}
-                  {row.linkedinDmInboxGate ? (
-                    <span
-                      className="social-hub-pill social-hub-pill--muted"
-                      title={row.linkedinDmInboxGate.userFacingNote}
-                    >
-                      {row.linkedinDmInboxGate.userFacingLabel}
-                    </span>
-                  ) : null}
-                  {provider?.implementationStatus === "pending" ||
-                  row.oauthReady === false ? (
-                    <span className="social-hub-pill">OAuth yapılandırması eksik</span>
-                  ) : null}
-                </p>
-                {row.linkedinDmInboxGate ? (
-                  <p className="module-hint">{row.linkedinDmInboxGate.userFacingNote}</p>
-                ) : null}
-                {capLabels.length > 0 ? (
-                  <>
-                    <p className="module-hint social-hub-capability-hint">
-                      Desteklenen özellikler (gri rozet = kapalı değil; canlı
-                      durum Gelen kutusu / Sağlık).
-                    </p>
-                    <ul className="social-hub-capability-list">
-                      {capLabels.map((label) => (
-                        <li
-                          key={label}
-                          className="social-hub-pill social-hub-pill--muted"
-                        >
-                          {label}
-                        </li>
-                      ))}
-                    </ul>
-                  </>
-                ) : null}
-                {row.setupWarnings?.map((warning) => (
-                  <p key={warning} className="error banner error--light social-hub-setup-warn">
-                    {warning}
-                  </p>
-                ))}
-                {row.lastErrorMessage ? (
-                  <p className="module-hint">{row.lastErrorMessage}</p>
-                ) : null}
-              </div>
-              <div className="social-hub-connection-actions">
-                {permissions.canManageConnections ? (
-                  <>
-                    <button
-                      type="button"
-                      className="btn-account-primary"
-                      disabled={busy || row.oauthReady === false}
-                      onClick={() =>
-                        canRoadmapOAuth
-                          ? onRoadmapConnect!(row.platformCode)
-                          : onConnect(row.platformCode)
-                      }
-                    >
-                      {connectLabel}
-                    </button>
-                    <button
-                      type="button"
-                      className="btn-account-ghost"
-                      disabled={
-                        busy ||
-                        row.statusCode === "DISCONNECTED" ||
-                        row.statusCode === "PENDING_OAUTH"
-                      }
-                      onClick={() =>
-                        isRoadmapConnection && onRoadmapDisconnect
-                          ? onRoadmapDisconnect(row.platformCode)
-                          : onDisconnect(row.platformCode)
-                      }
-                    >
-                      Kes
-                    </button>
-                  </>
-                ) : (
-                  <p className="module-hint">Yalnızca firma sahibi / sosyal yönetici.</p>
-                )}
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-      {roadmapProviders.length > 0 ? (
-        <>
-          <h3 className="account-card-title">Yol haritası</h3>
-          <p className="account-card-lead">
-            TikTok, YouTube ve X prod OAuth; Google Business pending iskelet.
-            Öncelik vermek için ilgi bildirin; sıralama planlamasında kullanılır.
-          </p>
-          <ul className="social-hub-connection-grid">
-            {roadmapProviders.map((row: SocialHubRoadmapProvider) => {
-              const primaryPill = roadmapPrimaryPill(row);
-              return (
-              <li
-                key={row.platformCode}
-                className="social-hub-connection-card social-hub-connection-card--roadmap"
-              >
-                <h3>{row.label}</h3>
-                <span className={primaryPill.className}>{primaryPill.label}</span>
-                {row.roadmapInterested ? (
-                  <span className="social-hub-pill social-hub-pill--interest">
-                    İlgi bildirildi
-                  </span>
-                ) : null}
-                <p className="module-hint">{row.roadmapNote}</p>
-                {row.xDmInboxGate ? (
-                  <p className="module-hint">{row.xDmInboxGate.userFacingNote}</p>
-                ) : null}
-                {capabilitySummary(row.capabilities).length > 0 ? (
-                  <ul className="social-hub-capability-list">
-                    {capabilitySummary(row.capabilities).map((label) => (
-                      <li
-                        key={label}
-                        className="social-hub-pill social-hub-pill--muted"
-                      >
-                        {label}
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-                <p className="module-hint social-hub-roadmap-oauth-hint">
-                  Platform OAuth:{" "}
-                  {row.isPendingSkeleton
-                    ? "OAuth kapalı (pending provider)"
-                    : row.oauthImplementationStatus === "ready" ||
-                        (row.oauthEnvConfigured && row.isRoadmapBeta === false)
-                      ? "sunucu hazır — bağlanabilir"
-                      : row.oauthEnvConfigured
-                        ? "ortam değişkenleri tanımlı (entegrasyon sırada)"
-                        : "henüz yapılandırılmadı"}
-                </p>
-                {row.roadmapConnectionStatusCode ? (
-                  <p className="social-hub-connection-status">
-                    {statusLabel(row.roadmapConnectionStatusCode)}
-                  </p>
-                ) : null}
-                {permissions.canManageConnections && onRoadmapInterest ? (
-                  <button
-                    type="button"
-                    className={
-                      row.roadmapInterested
-                        ? "btn-account-ghost"
-                        : "btn-account-primary"
-                    }
-                    disabled={busy}
-                    onClick={() =>
-                      onRoadmapInterest(row.platformCode, !row.roadmapInterested)
-                    }
-                  >
-                    {row.roadmapInterested ? "İlgiyi kaldır" : "Öncelik ver"}
-                  </button>
-                ) : null}
-                {permissions.canManageConnections &&
+    <section className="social-hub-connections-shell module-panel module-panel--elevated">
+      <div className="social-hub-connections-layout">
+        <div className="social-hub-connections-main">
+          <header className="social-hub-panel-head social-hub-panel-head--premium">
+            <div>
+              <h2 className="account-card-title">Bağlı hesaplar</h2>
+              <p className="social-hub-connections-lead">
+                Kanallarınızı bağlayın; mesajlar ve yayınlar tek yerden yönetilir.
+              </p>
+            </div>
+            {gateSummary ? (
+              <p className="social-hub-gate-chip" title="Detaylar operasyon günlüğünde">
+                Entegrasyon: <strong>{gateSummary}</strong>
+              </p>
+            ) : null}
+          </header>
+
+          <ul className="social-hub-connection-grid social-hub-connection-grid--premium">
+            {connections.map((row) => {
+              const provider = providers.find(
+                (p) => p.platformCode === row.platformCode,
+              );
+              const connectLabel =
+                row.statusCode === "CONNECTED" ? "Yeniden bağlan" : "Bağla";
+              const isRoadmapConnection = ROADMAP_CONNECTION_PLATFORM_CODES.has(
+                row.platformCode,
+              );
+              const canRoadmapOAuth =
+                isRoadmapConnection &&
                 onRoadmapConnect &&
-                row.oauthEnvConfigured ? (
-                  <button
-                    type="button"
-                    className="btn-account-primary"
-                    disabled={
-                      busy ||
-                      row.roadmapConnectionStatusCode === "CONNECTED" ||
-                      row.roadmapConnectionStatusCode === "PENDING_OAUTH"
-                    }
-                    onClick={() => onRoadmapConnect(row.platformCode)}
-                  >
-                    {roadmapConnectLabel(row)}
-                  </button>
-                ) : null}
-                {permissions.canManageConnections &&
-                onRoadmapRefreshToken &&
-                row.roadmapConnectionStatusCode === "CONNECTED" &&
-                row.roadmapHasRefreshToken ? (
-                  <button
-                    type="button"
-                    className="btn-account-ghost"
-                    disabled={busy}
-                    onClick={() => onRoadmapRefreshToken(row.platformCode)}
-                  >
-                    Token yenile
-                  </button>
-                ) : null}
-                {permissions.canManageConnections &&
-                onRoadmapDisconnect &&
-                row.roadmapConnectionStatusCode === "CONNECTED" ? (
-                  <button
-                    type="button"
-                    className="btn-account-ghost"
-                    disabled={busy}
-                    onClick={() => onRoadmapDisconnect(row.platformCode)}
-                  >
-                    Bağlantıyı kes
-                  </button>
-                ) : null}
-              </li>
+                row.oauthReady !== false;
+              const hasWarnings = (row.setupWarnings?.length ?? 0) > 0;
+              const hasError = Boolean(row.lastErrorMessage?.trim());
+              const needsOAuthConfig =
+                provider?.implementationStatus === "pending" ||
+                row.oauthReady === false;
+              return (
+                <li
+                  key={row.id}
+                  className="social-hub-connection-card social-hub-connection-card--premium"
+                >
+                  <div className="social-hub-connection-main">
+                    <div className="social-hub-connection-title-row">
+                      <h3>{row.label}</h3>
+                      <span className={connectionStatusBadgeClass(row.statusCode)}>
+                        {statusLabel(row.statusCode)}
+                      </span>
+                    </div>
+                    {row.displayName ? (
+                      <p className="social-hub-connection-account">
+                        {row.displayName}
+                      </p>
+                    ) : null}
+                    <p className="social-hub-connection-summary">
+                      {connectionUserSummary(
+                        row.statusCode,
+                        hasWarnings || needsOAuthConfig,
+                        hasError,
+                      )}
+                    </p>
+                  </div>
+                  <div className="social-hub-connection-actions">
+                    {permissions.canManageConnections ? (
+                      <>
+                        <button
+                          type="button"
+                          className="btn-account-primary"
+                          disabled={busy || row.oauthReady === false}
+                          onClick={() =>
+                            canRoadmapOAuth
+                              ? onRoadmapConnect!(row.platformCode)
+                              : onConnect(row.platformCode)
+                          }
+                        >
+                          {connectLabel}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-account-ghost"
+                          disabled={
+                            busy ||
+                            row.statusCode === "DISCONNECTED" ||
+                            row.statusCode === "PENDING_OAUTH"
+                          }
+                          onClick={() =>
+                            isRoadmapConnection && onRoadmapDisconnect
+                              ? onRoadmapDisconnect(row.platformCode)
+                              : onDisconnect(row.platformCode)
+                          }
+                        >
+                          Kes
+                        </button>
+                      </>
+                    ) : (
+                      <p className="module-hint">Yalnızca firma sahibi / sosyal yönetici.</p>
+                    )}
+                  </div>
+                </li>
               );
             })}
           </ul>
-        </>
-      ) : null}
-      {snapshot.integrationGate ? (
-        <div className="social-hub-integration-gate">
-          <h3 className="account-card-title">Entegrasyon kapısı (BB sonrası)</h3>
-          <p className="account-card-lead">{snapshot.integrationGate.note}</p>
-          <p className="social-hub-stat-line">
-            Otomatik adımlar:{" "}
-            <strong>
-              {snapshot.integrationGate.automatedReadyCount}/
-              {snapshot.integrationGate.automatedStepCount}
-            </strong>
-            {snapshot.integrationGate.allAutomatedReady
-              ? " — tüm otomatik adımlar yeşil."
-              : null}
-          </p>
-          <ul className="social-hub-integration-gate-list">
-            {snapshot.integrationGate.steps.map((step) => (
-              <li key={step.code} className="social-hub-integration-gate-row">
-                <span className={integrationGatePillClass(step.status)}>
-                  {step.code} · {integrationGateStatusLabel(step.status)}
-                </span>
-                <strong>{step.title}</strong>
-                <p className="module-hint">{step.detail}</p>
-              </li>
-            ))}
-          </ul>
+
+          {roadmapProviders.length > 0 ? (
+            <>
+              <h3 className="social-hub-subsection-heading">Yakında</h3>
+              <p className="social-hub-connections-lead social-hub-connections-lead--compact">
+                Yeni kanallar için öncelik bildirin; teknik detaylar günlükte.
+              </p>
+              <ul className="social-hub-connection-grid social-hub-connection-grid--premium">
+                {roadmapProviders.map((row: SocialHubRoadmapProvider) => {
+                  const primaryPill = roadmapPrimaryPill(row);
+                  const connected =
+                    row.roadmapConnectionStatusCode === "CONNECTED";
+                  return (
+                    <li
+                      key={row.platformCode}
+                      className="social-hub-connection-card social-hub-connection-card--premium social-hub-connection-card--roadmap"
+                    >
+                      <div className="social-hub-connection-main">
+                        <div className="social-hub-connection-title-row">
+                          <h3>{row.label}</h3>
+                          <span className={primaryPill.className}>
+                            {primaryPill.label}
+                          </span>
+                        </div>
+                        {row.roadmapConnectionStatusCode ? (
+                          <span
+                            className={connectionStatusBadgeClass(
+                              row.roadmapConnectionStatusCode,
+                            )}
+                          >
+                            {statusLabel(row.roadmapConnectionStatusCode)}
+                          </span>
+                        ) : null}
+                        {row.roadmapInterested ? (
+                          <span className="social-hub-pill social-hub-pill--interest">
+                            Öncelik bildirildi
+                          </span>
+                        ) : null}
+                        <p className="social-hub-connection-summary">
+                          {connected
+                            ? "Bağlı — Mesajlar ve yayınlar için kullanılabilir."
+                            : row.oauthEnvConfigured
+                              ? "Bağlanmaya hazır — «Bağla» ile devam edin."
+                              : "Hazırlanıyor — öncelik verebilirsiniz."}
+                        </p>
+                      </div>
+                      <div className="social-hub-connection-actions social-hub-connection-actions--stack">
+                        {permissions.canManageConnections && onRoadmapInterest ? (
+                          <button
+                            type="button"
+                            className={
+                              row.roadmapInterested
+                                ? "btn-account-ghost"
+                                : "btn-account-primary"
+                            }
+                            disabled={busy}
+                            onClick={() =>
+                              onRoadmapInterest(
+                                row.platformCode,
+                                !row.roadmapInterested,
+                              )
+                            }
+                          >
+                            {row.roadmapInterested ? "Önceliği kaldır" : "Öncelik ver"}
+                          </button>
+                        ) : null}
+                        {permissions.canManageConnections &&
+                        onRoadmapConnect &&
+                        row.oauthEnvConfigured ? (
+                          <button
+                            type="button"
+                            className="btn-account-primary"
+                            disabled={
+                              busy ||
+                              row.roadmapConnectionStatusCode === "CONNECTED" ||
+                              row.roadmapConnectionStatusCode === "PENDING_OAUTH"
+                            }
+                            onClick={() => onRoadmapConnect(row.platformCode)}
+                          >
+                            {roadmapConnectLabel(row)}
+                          </button>
+                        ) : null}
+                        {permissions.canManageConnections &&
+                        onRoadmapRefreshToken &&
+                        row.roadmapConnectionStatusCode === "CONNECTED" &&
+                        row.roadmapHasRefreshToken ? (
+                          <button
+                            type="button"
+                            className="btn-account-ghost"
+                            disabled={busy}
+                            onClick={() => onRoadmapRefreshToken(row.platformCode)}
+                          >
+                            Token yenile
+                          </button>
+                        ) : null}
+                        {permissions.canManageConnections &&
+                        onRoadmapDisconnect &&
+                        row.roadmapConnectionStatusCode === "CONNECTED" ? (
+                          <button
+                            type="button"
+                            className="btn-account-ghost"
+                            disabled={busy}
+                            onClick={() => onRoadmapDisconnect(row.platformCode)}
+                          >
+                            Bağlantıyı kes
+                          </button>
+                        ) : null}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
+          ) : null}
         </div>
-      ) : null}
+
+        <SocialHubOpsLogRail entries={opsLogEntries} />
+      </div>
     </section>
   );
 }
