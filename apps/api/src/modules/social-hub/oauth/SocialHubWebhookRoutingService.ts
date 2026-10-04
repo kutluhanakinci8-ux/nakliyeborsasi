@@ -70,9 +70,7 @@ export class SocialHubWebhookRoutingService {
     if (!platform) {
       return null;
     }
-    const companyId = this.configService
-      .get<string>("SOCIAL_HUB_WEBHOOK_DEFAULT_COMPANY_ID")
-      ?.trim();
+    const companyId = this.readDefaultWebhookCompanyId();
     if (companyId) {
       return { companyId, platformCode: platform };
     }
@@ -81,5 +79,16 @@ export class SocialHubWebhookRoutingService {
       return { companyId: sole.companyId, platformCode: platform };
     }
     return null;
+  }
+
+  private readDefaultWebhookCompanyId(): string | null {
+    const fromConfig = this.configService
+      .get<string>("SOCIAL_HUB_WEBHOOK_DEFAULT_COMPANY_ID")
+      ?.trim();
+    if (fromConfig) {
+      return fromConfig;
+    }
+    const fromEnv = process.env.SOCIAL_HUB_WEBHOOK_DEFAULT_COMPANY_ID?.trim();
+    return fromEnv || null;
   }
 }

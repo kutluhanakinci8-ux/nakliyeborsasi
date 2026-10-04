@@ -29,6 +29,11 @@ export class SocialHubWebhookIngestService {
     if (object === "instagram" && messages.length === 0) {
       this.logInstagramWebhookShape(body);
     }
+    if (object === "whatsapp_business_account" && messages.length === 0) {
+      this.logger.warn(
+        "WhatsApp webhook: 0 parseable inbound messages (status-only veya desteklenmeyen tip olabilir)",
+      );
+    }
     for (const message of messages) {
       try {
         const route = await this.routingService.resolveFromMetaPayload({
@@ -65,6 +70,10 @@ export class SocialHubWebhookIngestService {
             externalThreadId: message.externalThreadId,
             externalMessageId: message.externalMessageId,
           });
+        } else {
+          this.logger.warn(
+            `Meta webhook skipped ingest (dedup) company=${route.companyId} platform=${platformCode} from=${message.externalThreadId}`,
+          );
         }
       } catch (error) {
         this.logger.error(
