@@ -158,36 +158,6 @@ function formatSchedule(iso: string | null): string {
   }
 }
 
-function integrationGateStatusLabel(
-  status: SocialHubIntegrationGate["steps"][number]["status"],
-): string {
-  switch (status) {
-    case "ready":
-      return "Hazır";
-    case "partial":
-      return "Kısmi";
-    case "pending":
-      return "Bekliyor";
-    default:
-      return "Manuel";
-  }
-}
-
-function integrationGatePillClass(
-  status: SocialHubIntegrationGate["steps"][number]["status"],
-): string {
-  if (status === "ready") {
-    return "social-hub-pill social-hub-pill--ok";
-  }
-  if (status === "partial") {
-    return "social-hub-pill";
-  }
-  if (status === "pending") {
-    return "social-hub-pill social-hub-pill--muted";
-  }
-  return "social-hub-pill social-hub-pill--muted";
-}
-
 function toDatetimeLocalValue(iso: string | null): string {
   if (!iso) {
     return "";
