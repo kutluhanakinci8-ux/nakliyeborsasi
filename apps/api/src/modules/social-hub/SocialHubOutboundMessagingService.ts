@@ -9,6 +9,7 @@ import { SocialHubOutboundDeliveryLogService } from "./SocialHubOutboundDelivery
 import { SocialHubSlackNotificationService } from "./SocialHubSlackNotificationService";
 import { SocialHubTikTokOutboundService } from "./oauth/SocialHubTikTokOutboundService";
 import { SocialHubYouTubeOutboundService } from "./oauth/SocialHubYouTubeOutboundService";
+import { SocialHubXOutboundService } from "./oauth/SocialHubXOutboundService";
 import { isRoadmapPlatformCode } from "./socialHubRoadmapInterest";
 import { CompanySocialConnectionEntity } from "../../infrastructure/database/entities/CompanySocialConnectionEntity";
 
@@ -34,6 +35,7 @@ export class SocialHubOutboundMessagingService {
     private readonly slackNotificationService: SocialHubSlackNotificationService,
     private readonly tikTokOutboundService: SocialHubTikTokOutboundService,
     private readonly youTubeOutboundService: SocialHubYouTubeOutboundService,
+    private readonly xOutboundService: SocialHubXOutboundService,
   ) {}
 
   public async tryDispatchOutbound(params: {
@@ -75,7 +77,8 @@ export class SocialHubOutboundMessagingService {
       if (
         isRoadmapPlatformCode(platformCode) &&
         platformCode !== "TIKTOK" &&
-        platformCode !== "YOUTUBE"
+        platformCode !== "YOUTUBE" &&
+        platformCode !== "X"
       ) {
         const betaMessage =
           "Bu yol haritası kanalı için giden mesaj henüz desteklenmiyor.";
@@ -108,6 +111,12 @@ export class SocialHubOutboundMessagingService {
                 externalThreadId: link.externalThreadId,
                 bodyText: trimmed,
               })
+            : platformCode === "X"
+              ? await this.dispatchXOutbound({
+                  accessToken: token,
+                  externalThreadId: link.externalThreadId,
+                  bodyText: trimmed,
+                })
             : await this.metaGraphService.sendChannelTextMessage({
                 companyId: params.companyId,
                 platformCode: platformCode as SocialPlatformCode,
@@ -225,6 +234,23 @@ export class SocialHubOutboundMessagingService {
       accessToken: params.accessToken,
       channelId,
       recipientExternalId: params.externalThreadId,
+      bodyText: params.bodyText,
+    });
+    return {
+      ok: send.ok,
+      message: send.message,
+      externalMessageId: send.externalMessageId,
+    };
+  }
+
+  private async dispatchXOutbound(params: {
+    accessToken: string;
+    externalThreadId: string;
+    bodyText: string;
+  }): Promise<{ ok: boolean; message: string; externalMessageId?: string }> {
+    const send = await this.xOutboundService.sendDirectMessage({
+      accessToken: params.accessToken,
+      participantUserId: params.externalThreadId,
       bodyText: params.bodyText,
     });
     return {

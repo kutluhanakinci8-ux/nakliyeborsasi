@@ -3,6 +3,7 @@ export function buildSocialHubPublicWebhookUrls(): {
   whatsapp: string;
   tiktok: string;
   youtube: string;
+  x: string;
 } {
   const apiBase =
     process.env.API_PUBLIC_BASE_URL?.trim() ??
@@ -13,5 +14,6 @@ export function buildSocialHubPublicWebhookUrls(): {
     whatsapp: `${prefix}/whatsapp`,
     tiktok: `${prefix}/tiktok`,
     youtube: `${prefix}/youtube`,
+    x: `${prefix}/x`,
   };
 }

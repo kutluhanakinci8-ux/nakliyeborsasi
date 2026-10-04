@@ -83,7 +83,7 @@ export class SocialHubOAuthConfigService {
     const redirectUri = this.resolveRedirectUri("SOCIAL_X_OAUTH_REDIRECT_URI");
     const scopes =
       this.configService.get<string>("SOCIAL_X_OAUTH_SCOPES")?.trim() ??
-      "tweet.read tweet.write users.read offline.access";
+      "tweet.read tweet.write users.read offline.access dm.read dm.write";
     if (!clientId || !clientSecret || !redirectUri) {
       return null;
     }

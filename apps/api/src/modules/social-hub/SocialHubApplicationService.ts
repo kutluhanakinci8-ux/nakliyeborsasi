@@ -72,6 +72,7 @@ import { buildSocialHubPwaConfig } from "./socialHubPwaConfig";
 import { buildSocialHubIntegrationGate } from "./socialHubIntegrationGate";
 import { roadmapConnectedHint } from "./socialHubRoadmapHints";
 import { SocialHubRoadmapInboxSyncService } from "./SocialHubRoadmapInboxSyncService";
+import { SocialHubRoadmapPublishApplicationService } from "./SocialHubRoadmapPublishApplicationService";
 import { mapWebhookBridgedByPlatform } from "./socialHubWebhookBridgeSnapshot";
 import { buildCompanyWebhookActivityCsv } from "./socialHubWebhookActivityCsv";
 import { buildSocialHubAnalyticsCsv } from "./socialHubAnalyticsCsv";
@@ -131,6 +132,7 @@ export class SocialHubApplicationService {
     private readonly roadmapOAuthApplicationService: SocialHubRoadmapOAuthApplicationService,
     private readonly roadmapTokenRefreshService: SocialHubRoadmapTokenRefreshService,
     private readonly roadmapInboxSyncService: SocialHubRoadmapInboxSyncService,
+    private readonly roadmapPublishApplicationService: SocialHubRoadmapPublishApplicationService,
     private readonly metaPlatformInsightsService: SocialHubMetaPlatformInsightsService,
     private readonly linkedInOrgInsightsService: SocialHubLinkedInOrgInsightsService,
     private readonly inboxSyncSummaryService: SocialHubInboxSyncSummaryService,
@@ -1116,12 +1118,23 @@ export class SocialHubApplicationService {
     const successMessages: string[] = [];
     let externalId: string | null = null;
     for (const platformCode of platforms) {
-      const provider = this.socialProviderRegistry.resolve(platformCode);
-      const result = await provider.publishPost(post.companyId, {
-        companyId: post.companyId,
-        bodyText: post.bodyText,
-        mediaUrls,
-      });
+      const result = isRoadmapPlatformCode(platformCode)
+        ? await this.roadmapPublishApplicationService.publish(
+            post.companyId,
+            platformCode,
+            {
+              companyId: post.companyId,
+              bodyText: post.bodyText,
+              mediaUrls,
+            },
+          )
+        : await this.socialProviderRegistry
+            .resolve(platformCode)
+            .publishPost(post.companyId, {
+              companyId: post.companyId,
+              bodyText: post.bodyText,
+              mediaUrls,
+            });
       if (result.implementationStatus === "pending") {
         errors.push(`${platformCode}: ${result.message}`);
       } else if (result.externalPostId) {

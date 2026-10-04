@@ -319,10 +319,19 @@ export function SocialHubPageClient() {
     }
   }
 
-  const platformOptions = (snapshot?.providers ?? []).map((p) => ({
-    code: p.platformCode,
-    label: p.label,
-  }));
+  const platformOptions = [
+    ...(snapshot?.providers ?? []).map((p) => ({
+      code: p.platformCode,
+      label: p.label,
+    })),
+    ...(snapshot?.roadmapProviders ?? [])
+      .filter(
+        (p) =>
+          p.capabilities?.feedPublish &&
+          p.roadmapConnectionStatusCode === "CONNECTED",
+      )
+      .map((p) => ({ code: p.platformCode, label: p.label })),
+  ];
 
   return (
     <div className="social-hub-page">
