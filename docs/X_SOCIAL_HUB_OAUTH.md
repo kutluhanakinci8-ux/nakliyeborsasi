@@ -33,8 +33,38 @@ Prod DB: `scripts/sql/social-hub-oauth-states.sql` içindeki `pkce_verifier` kol
 
 Başarılı bağlantıda durum **CONNECTED**, görünen ad `@lertalogistics`, profil `https://x.com/lertalogistics`.
 
-## 4. Sonraki faz (DM / Mesajlar)
+## 4. Tweet yayını (VPS bayrakları)
 
-- `dm.read` / `dm.write` ve Account Activity webhook
-- X API **Basic/Pro** abonelik ve uygulama onayı
-- Kodda `socialHubXDmCapability` kapısı kaldırılınca webhook ingest eklenecek
+```bash
+SOCIAL_X_PUBLISH_ENABLED=1
+pm2 restart nakliyeborsasi-api --update-env
+```
+
+Panel → **Yayınlar** → kanallarda **X** (bağlı + bayrak açık) → metin tweet (görsel henüz yok).
+
+OAuth scope: `tweet.read tweet.write` (varsayılan `SOCIAL_X_OAUTH_SCOPES` içinde).
+
+## 5. DM webhook + giden mesaj
+
+**Webhook URL (CRC + events):**
+
+`https://app.lerta.com.tr/api/v1/company/social-hub/webhooks/x`
+
+X Developer → **Toolbox → Webhooks** → bu URL, **Account Activity** / DM olayları, kullanıcı **@lertalogistics** (`for_user_id` = bağlantıdaki `externalAccountId`).
+
+VPS:
+
+```bash
+SOCIAL_X_WEBHOOK_BRIDGE_ENABLED=1   # varsayılan: 0 değilse açık
+SOCIAL_X_OUTBOUND_ENABLED=1
+# Opsiyonel CRC secret (yoksa Client Secret kullanılır)
+# SOCIAL_X_WEBHOOK_CRC_SECRET=
+```
+
+OAuth’u **yeniden bağlayın** (`dm.read dm.write` scope — varsayılan scopes güncellendi).
+
+Gelen DM → Mesajlar; yanıt → X DM API.
+
+## 6. X API planı
+
+Yoğun kullanım ve bazı DM özellikleri için X **Pay per use / Pro** kredisi gerekebilir; geliştirme modunda kendi hesabınızla test edin.

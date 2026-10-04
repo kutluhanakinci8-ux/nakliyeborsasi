@@ -85,8 +85,8 @@ export type SocialHubLinkedInDmInboxGate = {
 };
 
 export type SocialHubXDmInboxGate = {
-  status: "deferred_v2";
-  implemented: "explicit_v2_gate";
+  status: "deferred_v2" | "ready_v1";
+  implemented: "explicit_v2_gate" | "deploy_flags";
   inboxWebhook: false;
   outboundMessaging: false;
   userFacingLabel: string;

@@ -14,6 +14,8 @@ import { SocialHubOAuthConfigService } from "./oauth/SocialHubOAuthConfigService
 import { SocialHubWebhookIngestService } from "./oauth/SocialHubWebhookIngestService";
 import { SocialHubTikTokWebhookIngestService } from "./oauth/SocialHubTikTokWebhookIngestService";
 import { SocialHubYouTubeWebhookIngestService } from "./oauth/SocialHubYouTubeWebhookIngestService";
+import { SocialHubXWebhookIngestService } from "./oauth/SocialHubXWebhookIngestService";
+import { buildXWebhookCrcResponse } from "./oauth/socialHubXWebhookCrc";
 
 @Controller("company/social-hub")
 export class SocialHubPublicIntegrationController {
@@ -23,6 +25,7 @@ export class SocialHubPublicIntegrationController {
     private readonly socialHubWebhookIngestService: SocialHubWebhookIngestService,
     private readonly socialHubTikTokWebhookIngestService: SocialHubTikTokWebhookIngestService,
     private readonly socialHubYouTubeWebhookIngestService: SocialHubYouTubeWebhookIngestService,
+    private readonly socialHubXWebhookIngestService: SocialHubXWebhookIngestService,
   ) {}
 
   @Get("oauth/callback")
@@ -101,6 +104,30 @@ export class SocialHubPublicIntegrationController {
       signatureHeader: signature,
       rawBody,
     });
+    return { received: true };
+  }
+
+  @Get("webhooks/x")
+  public xWebhookCrc(
+    @Query("crc_token") crcToken: string | undefined,
+    @Res() response: Response,
+  ): void {
+    const secret = this.socialHubXWebhookIngestService.resolveWebhookConsumerSecret();
+    if (!crcToken?.trim() || !secret) {
+      response.status(403).send("Forbidden");
+      return;
+    }
+    response.status(200).json({
+      response_token: buildXWebhookCrcResponse(crcToken.trim(), secret),
+    });
+  }
+
+  @Post("webhooks/x")
+  @HttpCode(200)
+  public async xWebhook(
+    @Body() body: Record<string, unknown>,
+  ): Promise<{ received: boolean }> {
+    await this.socialHubXWebhookIngestService.ingestPayload(body);
     return { received: true };
   }
 

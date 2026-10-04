@@ -70,6 +70,10 @@ import { SocialHubTikTokWebhookIngestService } from "./oauth/SocialHubTikTokWebh
 import { SocialHubTikTokOutboundService } from "./oauth/SocialHubTikTokOutboundService";
 import { SocialHubYouTubeWebhookIngestService } from "./oauth/SocialHubYouTubeWebhookIngestService";
 import { SocialHubYouTubeOutboundService } from "./oauth/SocialHubYouTubeOutboundService";
+import { SocialHubXPublishService } from "./oauth/SocialHubXPublishService";
+import { SocialHubXOutboundService } from "./oauth/SocialHubXOutboundService";
+import { SocialHubXWebhookIngestService } from "./oauth/SocialHubXWebhookIngestService";
+import { SocialHubRoadmapPublishApplicationService } from "./SocialHubRoadmapPublishApplicationService";
 import { SocialHubPlatformAdminController } from "./SocialHubPlatformAdminController";
 import { PlatformAdminGuard } from "../platform-admin/PlatformAdminGuard";
 
@@ -112,6 +116,10 @@ import { PlatformAdminGuard } from "../platform-admin/PlatformAdminGuard";
     SocialHubTikTokOutboundService,
     SocialHubYouTubeWebhookIngestService,
     SocialHubYouTubeOutboundService,
+    SocialHubXPublishService,
+    SocialHubXOutboundService,
+    SocialHubXWebhookIngestService,
+    SocialHubRoadmapPublishApplicationService,
     SocialHubOAuthApplicationService,
     SocialHubInstagramServiceTokenBootstrap,
     SocialHubWebhookIngestService,

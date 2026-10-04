@@ -42,7 +42,13 @@ export class SocialHubRoadmapInboxSyncService {
     });
     const urls = buildSocialHubPublicWebhookUrls();
     const webhookUrl =
-      code === "TIKTOK" ? urls.tiktok : code === "YOUTUBE" ? urls.youtube : "";
+      code === "TIKTOK"
+        ? urls.tiktok
+        : code === "YOUTUBE"
+          ? urls.youtube
+          : code === "X"
+            ? urls.x
+            : "";
     return {
       implementationStatus: "ready",
       importedThreadCount: openCount,
