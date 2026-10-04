@@ -142,4 +142,20 @@ export class SocialHubTokenVaultService {
     }
     return null;
   }
+
+  /** Tek kiracı / pilot: varsayılan company id yoksa webhook yönlendirmesi */
+  public async findSoleConnectedPlatform(
+    platformCode: SocialPlatformCode,
+  ): Promise<CompanySocialConnectionEntity | null> {
+    const rows = await this.connectionRepository.find({
+      where: {
+        platformCode,
+        statusCode: SocialConnectionStatusCode.Connected,
+      },
+    });
+    if (rows.length !== 1) {
+      return null;
+    }
+    return rows[0] ?? null;
+  }
 }

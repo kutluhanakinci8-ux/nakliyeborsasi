@@ -21,7 +21,7 @@ export class SocialHubWebhookRoutingService {
   }): Promise<WebhookRoute | null> {
     const platform = this.mapMetaObject(params.object);
     if (!platform || !params.entryId) {
-      return this.defaultRoute(platform);
+      return await this.resolveFallbackRoute(platform);
     }
     const connection =
       platform === SocialPlatformCode.WhatsAppCloud
@@ -48,7 +48,7 @@ export class SocialHubWebhookRoutingService {
         };
       }
     }
-    return this.defaultRoute(platform);
+    return await this.resolveFallbackRoute(platform);
   }
 
   private mapMetaObject(object: string | undefined): SocialPlatformCode | null {
@@ -64,15 +64,22 @@ export class SocialHubWebhookRoutingService {
     }
   }
 
-  private defaultRoute(
+  private async resolveFallbackRoute(
     platform: SocialPlatformCode | null,
-  ): WebhookRoute | null {
+  ): Promise<WebhookRoute | null> {
+    if (!platform) {
+      return null;
+    }
     const companyId = this.configService
       .get<string>("SOCIAL_HUB_WEBHOOK_DEFAULT_COMPANY_ID")
       ?.trim();
-    if (!companyId || !platform) {
-      return null;
+    if (companyId) {
+      return { companyId, platformCode: platform };
     }
-    return { companyId, platformCode: platform };
+    const sole = await this.tokenVault.findSoleConnectedPlatform(platform);
+    if (sole) {
+      return { companyId: sole.companyId, platformCode: platform };
+    }
+    return null;
   }
 }

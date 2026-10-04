@@ -91,6 +91,9 @@ fi
 if [[ -n "${SOCIAL_META_INSTAGRAM_SERVICE_ACCESS_TOKEN:-}" ]]; then
   set_kv "SOCIAL_META_INSTAGRAM_SERVICE_ACCESS_TOKEN" "${SOCIAL_META_INSTAGRAM_SERVICE_ACCESS_TOKEN}"
 fi
+if [[ -n "${SOCIAL_HUB_WEBHOOK_DEFAULT_COMPANY_ID:-}" ]]; then
+  set_kv "SOCIAL_HUB_WEBHOOK_DEFAULT_COMPANY_ID" "${SOCIAL_HUB_WEBHOOK_DEFAULT_COMPANY_ID}"
+fi
 
 if command -v pm2 >/dev/null 2>&1 && pm2 describe nakliyeborsasi-api >/dev/null 2>&1; then
   pm2 restart nakliyeborsasi-api --update-env
