@@ -2,7 +2,6 @@ import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { SocialPlatformCode } from "@nakliyeborsasi/core";
 import { SocialHubTokenVaultService } from "./SocialHubTokenVaultService";
-
 export type WebhookRoute = {
   companyId: string;
   platformCode: SocialPlatformCode;
@@ -18,15 +17,22 @@ export class SocialHubWebhookRoutingService {
   public async resolveFromMetaPayload(params: {
     object: string | undefined;
     entryId: string | undefined;
+    whatsAppPhoneNumberId?: string | null;
   }): Promise<WebhookRoute | null> {
     const platform = this.mapMetaObject(params.object);
     if (!platform || !params.entryId) {
       return this.defaultRoute(platform);
     }
-    const connection = await this.tokenVault.findConnectedByExternalAccount(
-      platform,
-      params.entryId,
-    );
+    const connection =
+      platform === SocialPlatformCode.WhatsAppCloud
+        ? await this.tokenVault.findConnectedWhatsAppWebhookTarget({
+            wabaId: params.entryId,
+            phoneNumberId: params.whatsAppPhoneNumberId ?? null,
+          })
+        : await this.tokenVault.findConnectedByExternalAccount(
+            platform,
+            params.entryId,
+          );
     if (connection) {
       return { companyId: connection.companyId, platformCode: platform };
     }

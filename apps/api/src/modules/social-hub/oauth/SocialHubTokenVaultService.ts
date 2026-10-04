@@ -99,4 +99,47 @@ export class SocialHubTokenVaultService {
     }
     return null;
   }
+
+  public async findConnectedWhatsAppWebhookTarget(params: {
+    wabaId: string;
+    phoneNumberId: string | null;
+  }): Promise<CompanySocialConnectionEntity | null> {
+    const wabaId = params.wabaId.trim();
+    const phoneNumberId = params.phoneNumberId?.trim() ?? null;
+    const byWabaExternal = await this.findConnectedByExternalAccount(
+      SocialPlatformCode.WhatsAppCloud,
+      wabaId,
+    );
+    if (byWabaExternal) {
+      return byWabaExternal;
+    }
+    if (phoneNumberId) {
+      const byPhoneExternal = await this.findConnectedByExternalAccount(
+        SocialPlatformCode.WhatsAppCloud,
+        phoneNumberId,
+      );
+      if (byPhoneExternal) {
+        return byPhoneExternal;
+      }
+    }
+    const rows = await this.connectionRepository.find({
+      where: {
+        platformCode: SocialPlatformCode.WhatsAppCloud,
+        statusCode: SocialConnectionStatusCode.Connected,
+      },
+    });
+    for (const row of rows) {
+      const metadata = parseSocialHubConnectionMetadata(row.grantedScopes);
+      if (
+        metadata.wabaId === wabaId ||
+        row.externalAccountId === wabaId ||
+        (phoneNumberId &&
+          (metadata.phoneNumberId === phoneNumberId ||
+            row.externalAccountId === phoneNumberId))
+      ) {
+        return row;
+      }
+    }
+    return null;
+  }
 }

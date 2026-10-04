@@ -7,6 +7,8 @@ export type ParsedInboundSocialMessage = {
   bodyText: string;
   externalMessageId: string | null;
   channel: SocialMetaMessagingChannel;
+  /** WhatsApp Cloud: value.metadata.phone_number_id — webhook routing */
+  whatsAppPhoneNumberId?: string | null;
 };
 
 export function parseMetaWebhookBody(body: Record<string, unknown>): {
@@ -248,26 +250,108 @@ function parseWhatsAppChange(
   }
   const value = change.value as Record<string, unknown> | undefined;
   const waMessages = Array.isArray(value?.messages) ? value.messages : [];
+  const metadata = value?.metadata as Record<string, unknown> | undefined;
+  const phoneNumberId =
+    typeof metadata?.phone_number_id === "string"
+      ? metadata.phone_number_id
+      : null;
+  const contacts = Array.isArray(value?.contacts) ? value.contacts : [];
+  const contactNameByWaId = new Map<string, string>();
+  for (const rawContact of contacts) {
+    if (!rawContact || typeof rawContact !== "object") {
+      continue;
+    }
+    const contact = rawContact as Record<string, unknown>;
+    const waId = typeof contact.wa_id === "string" ? contact.wa_id : null;
+    const profile = contact.profile as Record<string, unknown> | undefined;
+    const name =
+      typeof profile?.name === "string" ? profile.name.trim() : "";
+    if (waId && name) {
+      contactNameByWaId.set(waId, name);
+    }
+  }
   for (const wa of waMessages) {
     if (!wa || typeof wa !== "object") {
       continue;
     }
     const msg = wa as Record<string, unknown>;
     const from = typeof msg.from === "string" ? msg.from : null;
-    const textBody = (msg.text as Record<string, unknown> | undefined)?.body;
-    const body = typeof textBody === "string" ? textBody : "";
+    const body = extractWhatsAppMessageBody(msg);
     if (!from || !body.trim()) {
       continue;
     }
     const id = typeof msg.id === "string" ? msg.id : null;
+    const displayLabel = contactNameByWaId.get(from) ?? from;
     return {
       entryId,
       externalThreadId: from,
-      displayLabel: from,
+      displayLabel,
       bodyText: body.trim(),
       externalMessageId: id,
       channel: "messenger",
+      whatsAppPhoneNumberId: phoneNumberId,
     };
   }
   return null;
+}
+
+function extractWhatsAppMessageBody(msg: Record<string, unknown>): string {
+  const textBody = (msg.text as Record<string, unknown> | undefined)?.body;
+  if (typeof textBody === "string" && textBody.trim()) {
+    return textBody.trim();
+  }
+  const type = typeof msg.type === "string" ? msg.type.trim() : "";
+  if (type === "button") {
+    const button = msg.button as Record<string, unknown> | undefined;
+    const label =
+      typeof button?.text === "string"
+        ? button.text.trim()
+        : typeof button?.payload === "string"
+          ? button.payload.trim()
+          : "";
+    if (label) {
+      return label;
+    }
+  }
+  if (type === "interactive") {
+    const interactive = msg.interactive as Record<string, unknown> | undefined;
+    const buttonReply = interactive?.button_reply as
+      | Record<string, unknown>
+      | undefined;
+    const listReply = interactive?.list_reply as
+      | Record<string, unknown>
+      | undefined;
+    const title =
+      typeof buttonReply?.title === "string"
+        ? buttonReply.title.trim()
+        : typeof listReply?.title === "string"
+          ? listReply.title.trim()
+          : "";
+    if (title) {
+      return title;
+    }
+  }
+  const mediaTypes = ["image", "video", "audio", "document", "sticker"];
+  for (const mediaType of mediaTypes) {
+    if (type !== mediaType) {
+      continue;
+    }
+    const media = msg[mediaType] as Record<string, unknown> | undefined;
+    const caption =
+      typeof media?.caption === "string" ? media.caption.trim() : "";
+    if (caption) {
+      return caption;
+    }
+    return `[${mediaType}]`;
+  }
+  if (type === "location") {
+    return "[konum]";
+  }
+  if (type === "contacts") {
+    return "[kişi kartı]";
+  }
+  if (type === "unsupported") {
+    return "[desteklenmeyen medya]";
+  }
+  return "";
 }
