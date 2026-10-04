@@ -15,6 +15,7 @@ import {
   mergeLinkedInRefreshToken,
   readLinkedInRefreshToken,
 } from "./socialHubLinkedInRefreshToken";
+import { isRoadmapPlatformCode } from "../socialHubRoadmapInterest";
 
 @Injectable()
 export class SocialHubTokenRefreshService {
@@ -108,6 +109,9 @@ export class SocialHubTokenRefreshService {
       .getMany();
     let refreshed = 0;
     for (const row of rows) {
+      if (isRoadmapPlatformCode(row.platformCode)) {
+        continue;
+      }
       const platform = row.platformCode as SocialPlatformCode;
       if (
         platform === SocialPlatformCode.LinkedIn &&

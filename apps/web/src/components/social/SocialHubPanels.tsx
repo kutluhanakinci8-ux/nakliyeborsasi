@@ -29,6 +29,12 @@ import {
   SOCIAL_HUB_TEMPLATE_VARIABLE_HINTS,
 } from "../../lib/socialHubTemplateRender";
 
+const ROADMAP_CONNECTION_PLATFORM_CODES = new Set([
+  "TIKTOK",
+  "YOUTUBE",
+  "X",
+]);
+
 const TEMPLATE_CHANNEL_SCOPE_OPTIONS: Array<{ code: string; label: string }> = [
   { code: "", label: "Tüm kanallar" },
   { code: "INSTAGRAM", label: "Instagram" },
@@ -257,6 +263,11 @@ export function SocialConnectionsPanel({
           const capLabels = capabilitySummary(caps);
           const connectLabel =
             row.statusCode === "CONNECTED" ? "Yeniden bağlan" : "Bağla";
+          const isRoadmapConnection = ROADMAP_CONNECTION_PLATFORM_CODES.has(
+            row.platformCode,
+          );
+          const canRoadmapOAuth =
+            isRoadmapConnection && onRoadmapConnect && row.oauthReady !== false;
           return (
             <li key={row.id} className="social-hub-connection-card">
               <div className="social-hub-connection-main">
@@ -316,7 +327,11 @@ export function SocialConnectionsPanel({
                       type="button"
                       className="btn-account-primary"
                       disabled={busy || row.oauthReady === false}
-                      onClick={() => onConnect(row.platformCode)}
+                      onClick={() =>
+                        canRoadmapOAuth
+                          ? onRoadmapConnect!(row.platformCode)
+                          : onConnect(row.platformCode)
+                      }
                     >
                       {connectLabel}
                     </button>
@@ -328,7 +343,11 @@ export function SocialConnectionsPanel({
                         row.statusCode === "DISCONNECTED" ||
                         row.statusCode === "PENDING_OAUTH"
                       }
-                      onClick={() => onDisconnect(row.platformCode)}
+                      onClick={() =>
+                        isRoadmapConnection && onRoadmapDisconnect
+                          ? onRoadmapDisconnect(row.platformCode)
+                          : onDisconnect(row.platformCode)
+                      }
                     >
                       Kes
                     </button>

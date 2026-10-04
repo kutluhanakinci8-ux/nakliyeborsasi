@@ -662,7 +662,7 @@ export function SocialHubPageClient() {
                 onRefreshToken={(code) =>
                   void runAction(async () => {
                     const isRoadmap =
-                      code === "TIKTOK" || code === "YOUTUBE";
+                      code === "TIKTOK" || code === "YOUTUBE" || code === "X";
                     const result = isRoadmap
                       ? await SocialHubApiClient.refreshRoadmapToken(
                           accessToken,
