@@ -15576,6 +15576,129 @@ button.btn-secondary {
   word-break: break-word;
 }
 
+.social-hub-health-main .social-hub-health-overall {
+  margin: 0.75rem 0 1rem;
+}
+
+.social-hub-health-quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1.25rem;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  border: 1px solid #e8edf4;
+  background: #f8fafc;
+}
+
+.social-hub-health-settings-details {
+  margin-bottom: 1.25rem;
+  border: 1px solid #e8edf4;
+  border-radius: 14px;
+  background: #fff;
+  padding: 0.35rem 0.85rem 0.85rem;
+}
+
+.social-hub-health-settings-summary {
+  cursor: pointer;
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: var(--nb-navy-deep, #0f2444);
+  padding: 0.65rem 0.25rem;
+  list-style: none;
+}
+
+.social-hub-health-settings-summary::-webkit-details-marker {
+  display: none;
+}
+
+.social-hub-health-insights-premium {
+  margin: 0 0 1.35rem;
+  padding: 1.1rem 1.15rem;
+  border-radius: 16px;
+  border: 1px solid #e8edf4;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 36, 68, 0.04);
+}
+
+.social-hub-health-insights-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  margin-bottom: 0.85rem;
+}
+
+.social-hub-health-insights-head .account-card-title {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.social-hub-stat-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.social-hub-stat-chip {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  color: #475569;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+}
+
+.social-hub-stat-chip--ok {
+  color: #166534;
+  background: #ecfdf5;
+  border-color: #bbf7d0;
+}
+
+.social-hub-stat-chip--warn {
+  color: #b45309;
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+.social-hub-health-grid--premium {
+  gap: 0.85rem;
+}
+
+.social-hub-health-card--premium {
+  background: #fff;
+  border: 1px solid #e8edf4;
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(15, 36, 68, 0.04);
+  padding: 1.1rem 1.15rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.45rem;
+}
+
+.social-hub-health-card--premium h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.social-hub-health-token-chip {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.social-hub-delivery-error-hint {
+  margin: 0.25rem 0 0;
+  font-size: 0.75rem;
+  color: #b45309;
+}
+
 .social-hub-connection-actions {
   display: flex;
   flex-wrap: wrap;
