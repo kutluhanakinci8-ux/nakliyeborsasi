@@ -15849,6 +15849,25 @@ button.btn-secondary {
   margin-bottom: 1rem;
 }
 
+.social-hub-team-main .social-hub-team-settings {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.social-hub-team-role-select {
+  width: 100%;
+  max-width: 220px;
+  margin-top: 0.35rem;
+}
+
+.social-hub-team-audit-bar {
+  margin-top: 1.25rem;
+}
+
+.social-hub-team-audit-bar .social-hub-inbox-actions-premium {
+  margin: 0.75rem 0 0;
+}
+
 .social-hub-connection-actions {
   display: flex;
   flex-wrap: wrap;

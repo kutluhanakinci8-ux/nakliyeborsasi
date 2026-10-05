@@ -28,6 +28,11 @@ import {
   templateCardSummary,
   templatesPanelLead,
 } from "../../lib/socialHubTemplatesOpsLog";
+import {
+  buildTeamOpsLog,
+  memberCardSummary,
+  teamPanelLead,
+} from "../../lib/socialHubTeamOpsLog";
 import type {
   SocialHubAuditEntry,
   SocialHubPermissions,
@@ -1591,20 +1596,6 @@ const SOCIAL_ROLE_LABELS: Record<string, string> = {
   COMPANY_OWNER: "Firma sahibi",
 };
 
-function auditActionLabel(code: string): string {
-  const map: Record<string, string> = {
-    SOCIAL_HUB_SETTINGS_UPDATE: "Ayar güncelleme",
-    SOCIAL_HUB_POST_PUBLISH: "Yayın denemesi",
-    SOCIAL_HUB_POST_APPROVE: "Gönderi onayı",
-    SOCIAL_HUB_POST_SUBMIT_APPROVAL: "Onaya gönderim",
-    SOCIAL_HUB_MEMBER_ROLE_UPDATE: "Rol değişikliği",
-    SOCIAL_HUB_WEBHOOK_INBOUND_BRIDGED: "Webhook → Mesajlar köprüsü",
-    SOCIAL_HUB_ROADMAP_INBOX_SYNC: "Beta gelen kutusu özet",
-    SOCIAL_HUB_INBOX_SYNC: "Gelen kutusu senkron",
-  };
-  return map[code] ?? code;
-}
-
 type TeamProps = {
   settings: SocialHubSettings;
   permissions: SocialHubPermissions;
@@ -1634,13 +1625,27 @@ export function SocialTeamPanel({
   onAuditFocusChange,
   onExportAuditLog,
 }: TeamProps) {
-  if (!permissions.canManageSettings) {
-    return (
-      <section className="social-hub-panel module-panel module-panel--elevated">
-        <p className="module-hint">Ekip ve izin ayarları yalnızca firma sahibi / sosyal yönetici.</p>
-      </section>
-    );
-  }
+  const canManage = permissions.canManageSettings;
+  const kvkkAccepted = Boolean(settings.kvkkAcceptedAt);
+  const opsLogEntries = useMemo(
+    () =>
+      buildTeamOpsLog({
+        settings,
+        permissions,
+        members,
+        auditEntries,
+        auditFocus,
+        integrationsPath,
+      }),
+    [
+      settings,
+      permissions,
+      members,
+      auditEntries,
+      auditFocus,
+      integrationsPath,
+    ],
+  );
   const toggles: { key: keyof SocialHubSettings; label: string }[] = [
     { key: "inboxEnabled", label: "Sosyal gelen kutusu açık" },
     { key: "publishingEnabled", label: "Yayınlama açık" },
@@ -1648,124 +1653,178 @@ export function SocialTeamPanel({
     { key: "dispatcherCanPublish", label: "Dispatcher yayınlayabilir" },
     { key: "ownerApprovalRequired", label: "Yayın için sahip onayı" },
   ];
+
   return (
-    <section className="social-hub-panel module-panel module-panel--elevated">
-      <header className="social-hub-panel-head">
-        <h2 className="account-card-title">Ekip & izinler</h2>
-        <p className="account-card-lead">
-          <code>SOCIAL_ADMIN</code> sosyal hub yönetimi; <code>COMPANY_OWNER</code> tam yetki.
-          Entegrasyon API: <Link href={integrationsPath}>Uygulamalar</Link>.
-        </p>
-      </header>
-      {members.length > 0 ? (
-        <ul className="social-hub-team-list">
-          {members.map((member) => (
-            <li key={member.membershipId} className="social-hub-team-row">
-              <div>
-                <strong>{member.displayName || member.emailAddress}</strong>
-                <p className="social-hub-post-meta">{member.emailAddress}</p>
-              </div>
-              {member.roleCode === "COMPANY_OWNER" || member.isSelf ? (
-                <span className="social-hub-pill">
-                  {SOCIAL_ROLE_LABELS[member.roleCode] ?? member.roleCode}
+    <section className="social-hub-connections-shell module-panel module-panel--elevated">
+      <div className="social-hub-connections-layout">
+        <div className="social-hub-connections-main social-hub-team-main">
+          <header className="social-hub-panel-head social-hub-panel-head--premium">
+            <div>
+              <h2 className="account-card-title">Ekip &amp; izinler</h2>
+              <p className="social-hub-connections-lead">
+                {canManage
+                  ? teamPanelLead(members.length, kvkkAccepted)
+                  : "Bu sayfa yalnızca yetkili kullanıcılar içindir."}
+              </p>
+            </div>
+            {canManage ? (
+              <div className="social-hub-stat-chips">
+                <span className="social-hub-stat-chip social-hub-stat-chip--ok">
+                  {members.length} üye
                 </span>
-              ) : (
-                <select
-                  className="input-light"
-                  disabled={busy}
-                  value={member.roleCode}
-                  onChange={(e) => onRoleChange(member.userId, e.target.value)}
+                <span
+                  className={
+                    kvkkAccepted
+                      ? "social-hub-stat-chip social-hub-stat-chip--ok"
+                      : "social-hub-stat-chip social-hub-stat-chip--warn"
+                  }
                 >
-                  {assignableRoleCodes.map((code) => (
-                    <option key={code} value={code}>
-                      {SOCIAL_ROLE_LABELS[code] ?? code}
-                    </option>
+                  {kvkkAccepted ? "KVKK onaylı" : "KVKK bekliyor"}
+                </span>
+                <span className="social-hub-stat-chip">
+                  {auditEntries.length} denetim kaydı
+                </span>
+              </div>
+            ) : null}
+          </header>
+
+          {!canManage ? (
+            <p className="social-hub-connection-summary">
+              Firma sahibi veya sosyal yönetici ile giriş yapın — ayrıntı operasyon
+              günlüğünde.
+            </p>
+          ) : (
+            <>
+              <div className="social-hub-inbox-actions-premium">
+                <Link className="btn-account-ghost" href={integrationsPath}>
+                  Uygulamalar / API
+                </Link>
+              </div>
+              <h3 className="social-hub-subsection-heading">Ekip</h3>
+              {members.length > 0 ? (
+                <ul className="social-hub-health-grid social-hub-health-grid--premium">
+                  {members.map((member) => (
+                    <li
+                      key={member.membershipId}
+                      className="social-hub-health-card social-hub-health-card--premium"
+                    >
+                      <div className="social-hub-connection-title-row">
+                        <strong>
+                          {member.displayName || member.emailAddress}
+                        </strong>
+                        <span className="social-hub-stat-chip">
+                          {memberCardSummary(member)}
+                        </span>
+                      </div>
+                      <p className="social-hub-connection-summary">
+                        {member.emailAddress}
+                      </p>
+                      {member.roleCode !== "COMPANY_OWNER" && !member.isSelf ? (
+                        <select
+                          className="input-light social-hub-team-role-select"
+                          disabled={busy}
+                          value={member.roleCode}
+                          onChange={(e) =>
+                            onRoleChange(member.userId, e.target.value)
+                          }
+                        >
+                          {assignableRoleCodes.map((code) => (
+                            <option key={code} value={code}>
+                              {SOCIAL_ROLE_LABELS[code] ?? code}
+                            </option>
+                          ))}
+                        </select>
+                      ) : null}
+                    </li>
                   ))}
-                </select>
+                </ul>
+              ) : (
+                <div className="social-hub-inbox-empty-premium">
+                  <p className="social-hub-connection-summary">
+                    Ekip üyesi bulunamadı.
+                  </p>
+                </div>
               )}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="module-hint">Ekip üyesi bulunamadı.</p>
-      )}
-      <ul className="social-hub-settings-list">
-        {toggles.map((row) => (
-          <li key={row.key}>
-            <label className="social-hub-check">
-              <input
-                type="checkbox"
-                checked={Boolean(settings[row.key])}
-                disabled={busy}
-                onChange={(e) => onPatchSettings({ [row.key]: e.target.checked })}
-              />
-              {row.label}
-            </label>
-          </li>
-        ))}
-      </ul>
-      {!settings.kvkkAcceptedAt ? (
-        <button
-          type="button"
-          className="btn-account-primary"
-          disabled={busy}
-          onClick={() => onPatchSettings({ acceptKvkk: true })}
-        >
-          KVKK / kanal kullanım onayı
-        </button>
-      ) : (
-        <p className="module-hint">
-          KVKK onayı: {new Date(settings.kvkkAcceptedAt).toLocaleString("tr-TR")}
-        </p>
-      )}
-      <h3 className="social-hub-calendar-title">Son işlemler (denetim)</h3>
-      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "0.5rem" }}>
-        <button
-          type="button"
-          className={auditFocus === "all" ? "btn-account-primary" : "btn-account-ghost"}
-          disabled={busy}
-          onClick={() => onAuditFocusChange("all")}
-        >
-          Tümü
-        </button>
-        <button
-          type="button"
-          className={
-            auditFocus === "webhook" ? "btn-account-primary" : "btn-account-ghost"
-          }
-          disabled={busy}
-          onClick={() => onAuditFocusChange("webhook")}
-        >
-          Webhook köprü
-        </button>
-        <button
-          type="button"
-          className="btn-account-ghost"
-          disabled={busy}
-          onClick={onExportAuditLog}
-        >
-          Denetim CSV
-        </button>
+
+              <h3 className="social-hub-subsection-heading">Firma ayarları</h3>
+              <div className="social-hub-health-quick-actions social-hub-team-settings">
+                {toggles.map((row) => (
+                  <label key={row.key} className="social-hub-check">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(settings[row.key])}
+                      disabled={busy}
+                      onChange={(e) =>
+                        onPatchSettings({ [row.key]: e.target.checked })
+                      }
+                    />
+                    {row.label}
+                  </label>
+                ))}
+              </div>
+
+              {!kvkkAccepted ? (
+                <button
+                  type="button"
+                  className="btn-account-primary"
+                  disabled={busy}
+                  onClick={() => onPatchSettings({ acceptKvkk: true })}
+                >
+                  KVKK / kanal kullanım onayı ver
+                </button>
+              ) : (
+                <p className="social-hub-connection-summary">
+                  KVKK onayı tamam — tarih operasyon günlüğünde.
+                </p>
+              )}
+
+              <div className="social-hub-health-insights-premium social-hub-team-audit-bar">
+                <div className="social-hub-health-insights-head">
+                  <h3 className="account-card-title">Denetim</h3>
+                  <p className="social-hub-connection-summary">
+                    Son işlemler günlükte; CSV dışa aktarın.
+                  </p>
+                </div>
+                <div className="social-hub-inbox-actions-premium">
+                  <button
+                    type="button"
+                    className={
+                      auditFocus === "all"
+                        ? "btn-account-primary"
+                        : "btn-account-ghost"
+                    }
+                    disabled={busy}
+                    onClick={() => onAuditFocusChange("all")}
+                  >
+                    Tümü
+                  </button>
+                  <button
+                    type="button"
+                    className={
+                      auditFocus === "webhook"
+                        ? "btn-account-primary"
+                        : "btn-account-ghost"
+                    }
+                    disabled={busy}
+                    onClick={() => onAuditFocusChange("webhook")}
+                  >
+                    Webhook
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-account-ghost"
+                    disabled={busy}
+                    onClick={onExportAuditLog}
+                  >
+                    CSV indir
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+        <SocialHubOpsLogRail entries={opsLogEntries} />
       </div>
-      <ul className="social-hub-audit-list">
-        {auditEntries.length === 0 ? (
-          <li className="module-hint">Henüz kayıt yok.</li>
-        ) : (
-          auditEntries.map((entry) => (
-            <li key={entry.id}>
-              <time dateTime={entry.createdAt}>
-                {new Date(entry.createdAt).toLocaleString("tr-TR")}
-              </time>
-              <span>{auditActionLabel(entry.actionCode)}</span>
-              {entry.actionCode === "SOCIAL_HUB_WEBHOOK_INBOUND_BRIDGED" &&
-              entry.metadata &&
-              typeof entry.metadata.platformCode === "string" ? (
-                <span className="module-hint"> ({entry.metadata.platformCode})</span>
-              ) : null}
-            </li>
-          ))
-        )}
-      </ul>
     </section>
   );
 }
