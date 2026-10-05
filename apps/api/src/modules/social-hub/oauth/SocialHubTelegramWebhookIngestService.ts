@@ -11,6 +11,8 @@ import { SocialHubMessagingBridgeService } from "../SocialHubMessagingBridgeServ
 import { SocialHubWebhookBridgeAuditService } from "../SocialHubWebhookBridgeAuditService";
 import { parseSocialHubConnectionMetadata } from "./SocialHubConnectionMetadata";
 import { parseTelegramInboundMessage } from "./socialHubTelegramWebhookParser";
+import { SocialHubTokenVaultService } from "./SocialHubTokenVaultService";
+import { SocialHubTelegramFileService } from "./SocialHubTelegramFileService";
 
 @Injectable()
 export class SocialHubTelegramWebhookIngestService {
@@ -21,6 +23,8 @@ export class SocialHubTelegramWebhookIngestService {
     private readonly connectionRepository: Repository<CompanySocialConnectionEntity>,
     private readonly messagingBridgeService: SocialHubMessagingBridgeService,
     private readonly webhookBridgeAuditService: SocialHubWebhookBridgeAuditService,
+    private readonly tokenVault: SocialHubTokenVaultService,
+    private readonly telegramFileService: SocialHubTelegramFileService,
   ) {}
 
   public async ingestPayload(params: {
@@ -58,6 +62,24 @@ export class SocialHubTelegramWebhookIngestService {
       return;
     }
 
+    let attachmentsInput:
+      | Awaited<
+          ReturnType<SocialHubTelegramFileService["downloadMediaAsAttachments"]>
+        >
+      | undefined;
+    if (parsed.media.length > 0) {
+      const botToken = await this.tokenVault.getAccessToken(
+        connection.companyId,
+        SocialPlatformCode.Telegram,
+      );
+      if (botToken) {
+        attachmentsInput = await this.telegramFileService.downloadMediaAsAttachments(
+          botToken,
+          parsed.media,
+        );
+      }
+    }
+
     const result = await this.messagingBridgeService.ingestWebhookInbound({
       companyId: connection.companyId,
       platformCode: SocialPlatformCode.Telegram,
@@ -65,6 +87,10 @@ export class SocialHubTelegramWebhookIngestService {
       displayLabel: parsed.displayLabel,
       bodyText: parsed.bodyText,
       externalMessageId: parsed.externalMessageId,
+      attachmentsInput:
+        attachmentsInput && attachmentsInput.length > 0
+          ? attachmentsInput
+          : undefined,
     });
     if (result.ingested) {
       this.logger.log(

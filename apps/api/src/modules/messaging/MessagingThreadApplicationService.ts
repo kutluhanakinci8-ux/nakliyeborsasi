@@ -714,7 +714,7 @@ export class MessagingThreadApplicationService {
     if (
       messageKind !== "internal" &&
       thread.threadKind === "external_social" &&
-      trimmed.length > 0
+      (trimmed.length > 0 || (stored && stored.length > 0))
     ) {
       const outbound =
         await this.socialHubOutboundMessagingService.tryDispatchOutbound({
@@ -1587,6 +1587,7 @@ export class MessagingThreadApplicationService {
     threadId: string;
     bodyText: string;
     senderDisplayName: string;
+    attachmentsInput?: MessagingAttachmentInput[];
   }): Promise<MessageEntity> {
     const thread = await this.messageThreadRepository.findOne({
       where: { id: params.threadId },
@@ -1604,7 +1605,7 @@ export class MessagingThreadApplicationService {
         threadId: thread.id,
         senderCompanyId: thread.companyBId,
         senderUserId: EXTERNAL_INBOUND_SENDER_USER_ID,
-        bodyText: trimmed,
+        bodyText: trimmed || "📎 Ek dosya",
         kind: "public",
         deletedAt: null,
         editedAt: null,
@@ -1612,11 +1613,25 @@ export class MessagingThreadApplicationService {
         attachments: null,
       }),
     );
+    const stored = await this.messagingAttachmentStorageService.persistForMessage(
+      thread.id,
+      saved.id,
+      params.attachmentsInput,
+    );
+    if (stored) {
+      saved.attachments = stored;
+      await this.messageRepository.save(saved);
+    }
+    const preview =
+      trimmed.length > 0
+        ? trimmed.slice(0, 280)
+        : stored?.map((item) => item.filename).join(", ").slice(0, 280) ??
+          "Ek dosya";
     void this.messagingWebPushService.notifyNewChatMessage({
       companyId: thread.companyAId,
       threadId: thread.id,
       senderCompanyName: params.senderDisplayName,
-      bodyPreview: trimmed.slice(0, 280),
+      bodyPreview: preview,
       freightListingId: thread.freightListingId,
     });
     void this.fanOutRealtime(thread, {

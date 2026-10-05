@@ -42,7 +42,7 @@ const CAPABILITIES: Record<SocialPlatformCode, SocialHubProviderCapabilities> = 
     inboxWebhook: true,
     inboxHistorySync: false,
     outboundMessaging: true,
-    feedPublish: false,
+    feedPublish: true,
   },
 };
 

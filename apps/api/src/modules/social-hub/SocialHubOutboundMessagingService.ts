@@ -13,6 +13,8 @@ import { SocialHubXOutboundService } from "./oauth/SocialHubXOutboundService";
 import { SocialHubTelegramOutboundService } from "./oauth/SocialHubTelegramOutboundService";
 import { isRoadmapPlatformCode } from "./socialHubRoadmapInterest";
 import { CompanySocialConnectionEntity } from "../../infrastructure/database/entities/CompanySocialConnectionEntity";
+import { MessageEntity } from "../../infrastructure/database/entities/MessageEntity";
+import { MessagingAttachmentStorageService } from "../messaging/MessagingAttachmentStorageService";
 
 export type SocialOutboundDispatchResult = {
   attempted: boolean;
@@ -38,6 +40,9 @@ export class SocialHubOutboundMessagingService {
     private readonly youTubeOutboundService: SocialHubYouTubeOutboundService,
     private readonly xOutboundService: SocialHubXOutboundService,
     private readonly telegramOutboundService: SocialHubTelegramOutboundService,
+    @InjectRepository(MessageEntity)
+    private readonly messageRepository: Repository<MessageEntity>,
+    private readonly messagingAttachmentStorageService: MessagingAttachmentStorageService,
   ) {}
 
   public async tryDispatchOutbound(params: {
@@ -47,10 +52,6 @@ export class SocialHubOutboundMessagingService {
     bodyText: string;
   }): Promise<SocialOutboundDispatchResult> {
     const trimmed = params.bodyText.trim();
-    if (!trimmed) {
-      return { attempted: false, ok: true, message: "" };
-    }
-    const bodyPreview = trimmed.slice(0, 280);
     const link = await this.linkRepository.findOne({
       where: {
         companyId: params.companyId,
@@ -61,6 +62,20 @@ export class SocialHubOutboundMessagingService {
     if (!link) {
       return { attempted: false, ok: true, message: "" };
     }
+    const telegramAttachments =
+      link.platformCode === SocialPlatformCode.Telegram && params.messageId
+        ? await this.loadTelegramOutboundAttachments(
+            params.messageThreadId,
+            params.messageId,
+          )
+        : [];
+    if (!trimmed && telegramAttachments.length === 0) {
+      return { attempted: false, ok: true, message: "" };
+    }
+    const bodyPreview =
+      trimmed.length > 0
+        ? trimmed.slice(0, 280)
+        : telegramAttachments.map((item) => item.filename).join(", ").slice(0, 280);
     const platformCode = link.platformCode;
     if (link.externalThreadId.startsWith("demo-")) {
       const demoMessage =
@@ -124,6 +139,7 @@ export class SocialHubOutboundMessagingService {
                     accessToken: token,
                     externalThreadId: link.externalThreadId,
                     bodyText: trimmed,
+                    attachments: telegramAttachments,
                   })
             : await this.metaGraphService.sendChannelTextMessage({
                 companyId: params.companyId,
@@ -251,16 +267,57 @@ export class SocialHubOutboundMessagingService {
     };
   }
 
+  private async loadTelegramOutboundAttachments(
+    messageThreadId: string,
+    messageId: string,
+  ): Promise<
+    Array<{ buffer: Buffer; contentType: string; filename: string }>
+  > {
+    const message = await this.messageRepository.findOne({
+      where: { id: messageId, threadId: messageThreadId },
+    });
+    if (!message?.attachments?.length) {
+      return [];
+    }
+    const loaded: Array<{
+      buffer: Buffer;
+      contentType: string;
+      filename: string;
+    }> = [];
+    for (const meta of message.attachments) {
+      try {
+        const file = await this.messagingAttachmentStorageService.readAttachment(
+          messageThreadId,
+          messageId,
+          meta,
+        );
+        loaded.push(file);
+      } catch {
+        // skip missing attachment
+      }
+    }
+    return loaded;
+  }
+
   private async dispatchTelegramOutbound(params: {
     accessToken: string;
     externalThreadId: string;
     bodyText: string;
+    attachments: Array<{ buffer: Buffer; contentType: string; filename: string }>;
   }): Promise<{ ok: boolean; message: string; externalMessageId?: string }> {
-    const send = await this.telegramOutboundService.sendTextMessage({
-      botToken: params.accessToken,
-      chatId: params.externalThreadId,
-      bodyText: params.bodyText,
-    });
+    const send =
+      params.attachments.length > 0
+        ? await this.telegramOutboundService.sendWithAttachments({
+            botToken: params.accessToken,
+            chatId: params.externalThreadId,
+            bodyText: params.bodyText,
+            attachments: params.attachments,
+          })
+        : await this.telegramOutboundService.sendTextMessage({
+            botToken: params.accessToken,
+            chatId: params.externalThreadId,
+            bodyText: params.bodyText,
+          });
     return {
       ok: send.ok,
       message: send.message,

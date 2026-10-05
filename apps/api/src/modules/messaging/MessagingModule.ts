@@ -119,6 +119,7 @@ import { SocialHubModule } from "../social-hub/SocialHubModule";
     MessagingRealtimeHubService,
     MessagingWebPushService,
     MessagingWhatsappBridgeService,
+    MessagingAttachmentStorageService,
   ],
 })
 export class MessagingModule {}

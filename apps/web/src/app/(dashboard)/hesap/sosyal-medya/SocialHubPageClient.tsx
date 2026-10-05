@@ -71,6 +71,8 @@ export function SocialHubPageClient() {
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [telegramConnectOpen, setTelegramConnectOpen] = useState(false);
   const [telegramTokenDraft, setTelegramTokenDraft] = useState("");
+  const [telegramChannelOpen, setTelegramChannelOpen] = useState(false);
+  const [telegramChannelDraft, setTelegramChannelDraft] = useState("");
   const [inboxThreadsPreview, setInboxThreadsPreview] = useState<
     SocialHubInboxThreadPreview[]
   >([]);
@@ -382,10 +384,21 @@ export function SocialHubPageClient() {
                     setStatus(result.oauth.message);
                   });
                 }}
+                onTelegramChannelSetup={() => {
+                  const tg = snapshot?.connections?.find(
+                    (c) => c.platformCode === "TELEGRAM",
+                  );
+                  setTelegramChannelDraft(
+                    tg?.telegramPublishChannel?.username?.replace(/^@/, "") ??
+                      "",
+                  );
+                  setTelegramChannelOpen(true);
+                }}
                 onDisconnect={(code) =>
                   void runAction(async () => {
                     await SocialHubApiClient.disconnectPlatform(accessToken, code);
                     setStatus("Bağlantı kesildi.");
+                    await reload();
                   })
                 }
                 onRoadmapInterest={(code, interested) =>
@@ -996,6 +1009,69 @@ export function SocialHubPageClient() {
             ) : null}
           </>
         )}
+      {telegramChannelOpen ? (
+        <div
+          className="social-hub-modal-backdrop"
+          role="presentation"
+          onClick={() => !busy && setTelegramChannelOpen(false)}
+        >
+          <div
+            className="social-hub-modal"
+            role="dialog"
+            aria-labelledby="telegram-channel-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2 id="telegram-channel-title" className="social-hub-modal-title">
+              Telegram kanal yayını
+            </h2>
+            <p className="module-hint">
+              Botu kanala <strong>admin</strong> ekleyin (mesaj gönderme yetkisi).
+              Kanal kullanıcı adı (@…) veya chat id girin. Yayınlar sekmesinden
+              TELEGRAM seçerek gönderi planlayabilirsiniz.
+            </p>
+            <label className="social-hub-modal-label" htmlFor="telegram-channel-ref">
+              Kanal
+            </label>
+            <input
+              id="telegram-channel-ref"
+              type="text"
+              className="social-hub-modal-input"
+              autoComplete="off"
+              value={telegramChannelDraft}
+              onChange={(event) => setTelegramChannelDraft(event.target.value)}
+              placeholder="@lerta_haber veya -100123456789"
+            />
+            <div className="social-hub-modal-actions">
+              <button
+                type="button"
+                className="btn-account-secondary"
+                disabled={busy}
+                onClick={() => setTelegramChannelOpen(false)}
+              >
+                İptal
+              </button>
+              <button
+                type="button"
+                className="btn-account-primary"
+                disabled={busy || !telegramChannelDraft.trim()}
+                onClick={() =>
+                  void runAction(async () => {
+                    await SocialHubApiClient.setTelegramPublishChannel(
+                      accessToken,
+                      telegramChannelDraft.trim(),
+                    );
+                    setTelegramChannelOpen(false);
+                    setStatus("Telegram yayın kanalı kaydedildi.");
+                    await reload();
+                  })
+                }
+              >
+                Kaydet
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
       {telegramConnectOpen ? (
         <div
           className="social-hub-modal-backdrop"

@@ -49,6 +49,17 @@ export class SocialHubController {
     );
   }
 
+  @Post("connections/TELEGRAM/publish-channel")
+  public async setTelegramPublishChannel(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: { channelRef: string },
+  ) {
+    return this.socialHubApplicationService.setTelegramPublishChannel(
+      user,
+      body.channelRef ?? "",
+    );
+  }
+
   @Post("connections/:platformCode/disconnect")
   public async disconnect(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
