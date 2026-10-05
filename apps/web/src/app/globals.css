@@ -15699,6 +15699,70 @@ button.btn-secondary {
   color: #b45309;
 }
 
+.social-hub-inbox-main .social-hub-panel-head--premium {
+  margin-bottom: 0.5rem;
+}
+
+.social-hub-inbox-preview--premium {
+  margin-bottom: 1.25rem;
+}
+
+.social-hub-inbox-preview-row--premium {
+  border: 1px solid #e8edf4;
+  border-radius: 14px;
+  padding: 0.85rem 1rem;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 36, 68, 0.04);
+}
+
+.social-hub-inbox-preview-row--premium .social-hub-inbox-preview-channel {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+}
+
+.social-hub-inbox-preview-row--premium .social-hub-inbox-preview-label {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--nb-navy-deep, #0f2444);
+}
+
+.social-hub-inbox-preview-unread {
+  min-width: 1.5rem;
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #fff;
+  background: #dc2626;
+  border-radius: 999px;
+  padding: 0.15rem 0.45rem;
+}
+
+.social-hub-inbox-empty-premium {
+  margin: 0.5rem 0 1.25rem;
+  padding: 1rem 1.1rem;
+  border-radius: 14px;
+  border: 1px dashed #e2e8f0;
+  background: #f8fafc;
+}
+
+.social-hub-inbox-actions-premium {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1.25rem 0 0.75rem;
+}
+
+.social-hub-kvkk-hint {
+  margin: 0.75rem 0 0;
+  font-size: 0.82rem;
+  color: #b45309;
+  line-height: 1.45;
+}
+
 .social-hub-connection-actions {
   display: flex;
   flex-wrap: wrap;

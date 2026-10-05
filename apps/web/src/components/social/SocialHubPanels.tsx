@@ -12,6 +12,11 @@ import {
   healthChannelUserSummary,
   healthTokenBadgeLabel,
 } from "../../lib/socialHubHealthOpsLog";
+import {
+  buildInboxOpsLog,
+  inboxPanelLead,
+  inboxPlatformSummary,
+} from "../../lib/socialHubInboxOpsLog";
 import type {
   SocialHubAuditEntry,
   SocialHubPermissions,
@@ -478,187 +483,179 @@ export function SocialInboxPanel({
     providers.find((p) => p.platformCode === code)?.label ??
     roadmapProviders.find((p) => p.platformCode === code)?.label ??
     code;
+  const opsLogEntries = useMemo(
+    () => buildInboxOpsLog({ snapshot, threadsPreview }),
+    [snapshot, threadsPreview],
+  );
+  const unreadTotal = threadsPreview.reduce(
+    (sum, row) => sum + (row.unreadCount > 0 ? row.unreadCount : 0),
+    0,
+  );
+
   return (
-    <section className="social-hub-panel module-panel module-panel--elevated">
-      <header className="social-hub-panel-head">
-        <h2 className="account-card-title">Sosyal gelen kutusu</h2>
-        <p className="account-card-lead">{inboxSummary.note}</p>
-        {snapshot.linkedinDmInboxGate ? (
-          <p className="module-hint social-hub-linkedin-dm-gate">
-            <strong>{snapshot.linkedinDmInboxGate.userFacingLabel}:</strong>{" "}
-            {snapshot.linkedinDmInboxGate.userFacingNote}
-          </p>
-        ) : null}
-      </header>
-      <p className="social-hub-stat-line">
-        Açık konuşmalar: <strong>{inboxSummary.totalOpenThreads}</strong>
-        {(inboxSummary.webhookInboundBridged24h ?? 0) > 0 ? (
-          <>
-            {" "}
-            · webhook köprü (24s):{" "}
-            <strong>{inboxSummary.webhookInboundBridged24h}</strong>
-          </>
-        ) : null}
-      </p>
-      {threadsPreviewLoading ? (
-        <p className="module-hint">Son konuşmalar yükleniyor…</p>
-      ) : threadsPreview.length > 0 ? (
-        <div className="social-hub-inbox-preview">
-          <h3 className="social-hub-subsection-title">Son sosyal konuşmalar</h3>
-          <ul className="social-hub-inbox-preview-list">
-            {threadsPreview.map((row) => (
-              <li key={row.threadId} className="social-hub-inbox-preview-row">
-                <div className="social-hub-inbox-preview-main">
-                  <span className="social-hub-inbox-preview-channel">
-                    {row.platformLabel}
-                  </span>
-                  <strong className="social-hub-inbox-preview-label">
-                    {row.displayLabel}
-                  </strong>
-                  {row.lastMessagePreview ? (
-                    <p className="social-hub-inbox-preview-snippet">
-                      {row.lastMessagePreview}
-                    </p>
-                  ) : null}
-                  {row.lastMessageAt ? (
-                    <time
-                      className="module-hint"
-                      dateTime={row.lastMessageAt}
-                    >
-                      {new Date(row.lastMessageAt).toLocaleString("tr-TR")}
-                    </time>
-                  ) : null}
-                </div>
-                <div className="social-hub-inbox-preview-actions">
-                  {row.unreadCount > 0 ? (
-                    <span className="social-hub-inbox-preview-unread">
-                      {row.unreadCount} okunmamış
-                    </span>
-                  ) : null}
-                  <Link
-                    href={row.messagingDeepLink}
-                    className="btn-account-ghost"
-                  >
-                    Mesajlar&apos;da aç
-                  </Link>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : (
-        <p className="module-hint">
-          Henüz sosyal konuşma yok. Kanal bağlayın, webhook bekleyin veya demo
-          oluşturun.
-        </p>
-      )}
-      {snapshot.inboxSyncSummary?.channels?.length ? (
-        <div className="social-hub-inbox-sync-summary">
-          <h3 className="social-hub-subsection-title">Kanal sync & webhook hizası</h3>
-          <p className="module-hint">
-            Açık konuşma sayısı, son sync denemesi ve 24s webhook köprü — prod ve yol
-            haritası kanalları.
-          </p>
-          <ul className="social-hub-inbox-sync-list">
-            {snapshot.inboxSyncSummary.channels.map((row) => (
-              <li key={row.platformCode} className="social-hub-inbox-sync-row">
-                <div className="social-hub-inbox-sync-head">
-                  <strong>{row.label}</strong>
-                  <span className="module-hint">
-                    {row.openCount} açık · webhook {row.webhookInboundBridged24h}{" "}
-                    (24s)
-                  </span>
-                </div>
-                <p className="social-hub-inbox-sync-meta">
-                  {row.dmInboxGateLabel
-                    ? row.dmInboxGateLabel
-                    : row.inboxHistorySync
-                      ? "Geçmiş sync destekli"
-                      : row.inboxWebhook
-                        ? "Webhook gelen kutusu"
-                        : "Yayın / özet"}
-                  {row.connectionStatusCode
-                    ? ` · bağlantı ${row.connectionStatusCode}`
-                    : ""}
-                </p>
-                {row.lastSyncAt ? (
-                  <p className="module-hint">
-                    Son sync:{" "}
-                    {new Date(row.lastSyncAt).toLocaleString("tr-TR")}
-                    {row.lastSyncImplementationStatus
-                      ? ` (${row.lastSyncImplementationStatus})`
-                      : ""}
-                  </p>
-                ) : row.connectionStatusCode === "CONNECTED" &&
-                  row.inboxHistorySync ? (
-                  <p className="module-hint">
-                    Henüz sync kaydı yok — altta «{row.label} · senkron» ile
-                    deneyin veya yeniden bağlanın (OAuth sonrası otomatik sync).
-                  </p>
-                ) : (
-                  <p className="module-hint">Henüz sync denemesi kaydı yok.</p>
-                )}
-                {row.lastSyncMessage ? (
-                  <p className="social-hub-inbox-sync-message">{row.lastSyncMessage}</p>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
-      <ul className="social-hub-inbox-platforms">
-        {inboxSummary.byPlatform.map((row) => {
-          const label = platformLabel(row.platformCode);
-          return (
-            <li key={row.platformCode} className="social-hub-inbox-row">
-              <span className="social-hub-inbox-platform">{label}</span>
-              {(row.webhookInboundBridged24h ?? 0) > 0 ? (
-                <span className="module-hint">
-                  webhook {row.webhookInboundBridged24h} (24s)
+    <section className="social-hub-connections-shell module-panel module-panel--elevated">
+      <div className="social-hub-connections-layout">
+        <div className="social-hub-connections-main social-hub-inbox-main">
+          <header className="social-hub-panel-head social-hub-panel-head--premium">
+            <div>
+              <h2 className="account-card-title">Sosyal gelen kutusu</h2>
+              <p className="social-hub-connections-lead">
+                {inboxPanelLead(inboxSummary.totalOpenThreads)}
+              </p>
+            </div>
+            <div className="social-hub-stat-chips">
+              <span className="social-hub-stat-chip social-hub-stat-chip--ok">
+                {inboxSummary.totalOpenThreads} açık konuşma
+              </span>
+              {unreadTotal > 0 ? (
+                <span className="social-hub-stat-chip social-hub-stat-chip--warn">
+                  {unreadTotal} okunmamış
                 </span>
               ) : null}
-              <span className="social-hub-inbox-count">{row.openCount} açık</span>
-            </li>
-          );
-        })}
-      </ul>
-      {!snapshot.settings.kvkkAcceptedAt ? (
-        <p className="module-hint">
-          Demo veya senkron için önce <strong>Ekip &amp; izinler</strong> sekmesinden
-          KVKK onayını verin.
-        </p>
-      ) : null}
-      <div className="social-hub-panel-actions social-hub-panel-actions--stack">
-        <Link href={inboxSummary.messagingDeepLink} className="btn-account-primary">
-          Mesajlar&apos;a git
-        </Link>
-        {canSeedDemo && onSeedDemo ? (
-          <button
-            type="button"
-            className="btn-account-ghost"
-            disabled={busy || !snapshot.settings.kvkkAcceptedAt}
-            onClick={onSeedDemo}
-          >
-            Demo gelen kutusu oluştur (Instagram + WhatsApp)
-          </button>
-        ) : null}
-        {permissions.canReply || permissions.canManageConnections ? (
-          <div className="social-hub-sync-grid">
-            {connections
-              .filter((c) => c.statusCode === "CONNECTED")
-              .map((c) => (
-                <button
-                  key={c.id}
-                  type="button"
-                  className="btn-account-ghost"
-                  disabled={busy}
-                  onClick={() => onSync(c.platformCode)}
-                >
-                  {c.label} · senkron
-                </button>
-              ))}
+            </div>
+          </header>
+
+          {threadsPreviewLoading ? (
+            <p className="module-hint">Son konuşmalar yükleniyor…</p>
+          ) : threadsPreview.length > 0 ? (
+            <div className="social-hub-inbox-preview social-hub-inbox-preview--premium">
+              <h3 className="social-hub-subsection-heading">Son konuşmalar</h3>
+              <ul className="social-hub-inbox-preview-list">
+                {threadsPreview.map((row) => (
+                  <li
+                    key={row.threadId}
+                    className="social-hub-inbox-preview-row social-hub-inbox-preview-row--premium"
+                  >
+                    <div className="social-hub-inbox-preview-main">
+                      <div className="social-hub-connection-title-row">
+                        <strong className="social-hub-inbox-preview-label">
+                          {row.displayLabel}
+                        </strong>
+                        <span className="social-hub-inbox-preview-channel">
+                          {row.platformLabel}
+                        </span>
+                      </div>
+                      {row.lastMessagePreview ? (
+                        <p className="social-hub-inbox-preview-snippet">
+                          {row.lastMessagePreview}
+                        </p>
+                      ) : null}
+                    </div>
+                    <div className="social-hub-inbox-preview-actions">
+                      {row.unreadCount > 0 ? (
+                        <span className="social-hub-inbox-preview-unread">
+                          {row.unreadCount}
+                        </span>
+                      ) : null}
+                      <Link
+                        href={row.messagingDeepLink}
+                        className="btn-account-primary"
+                      >
+                        Aç
+                      </Link>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <div className="social-hub-inbox-empty-premium">
+              <p className="social-hub-connection-summary">
+                Henüz sosyal konuşma yok. Bağlı hesaplardan kanal ekleyin veya
+                demo ile deneyin.
+              </p>
+            </div>
+          )}
+
+          {inboxSummary.byPlatform.length > 0 ? (
+            <>
+              <h3 className="social-hub-subsection-heading">Kanallara göre</h3>
+              <ul className="social-hub-health-grid social-hub-health-grid--premium">
+                {inboxSummary.byPlatform.map((row) => {
+                  const label = platformLabel(row.platformCode);
+                  return (
+                    <li
+                      key={row.platformCode}
+                      className="social-hub-health-card social-hub-health-card--premium"
+                    >
+                      <div className="social-hub-connection-title-row">
+                        <h3>{label}</h3>
+                        <span
+                          className={
+                            row.openCount > 0
+                              ? "social-hub-stat-chip social-hub-stat-chip--ok"
+                              : "social-hub-stat-chip"
+                          }
+                        >
+                          {row.openCount} açık
+                        </span>
+                      </div>
+                      <p className="social-hub-connection-summary">
+                        {inboxPlatformSummary(row.openCount)}
+                      </p>
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
+          ) : null}
+
+          {!snapshot.settings.kvkkAcceptedAt ? (
+            <p className="social-hub-kvkk-hint">
+              Demo veya senkron için{" "}
+              <strong>Ekip &amp; izinler</strong> sekmesinden KVKK onayı gerekir
+              (ayrıntı günlükte).
+            </p>
+          ) : null}
+
+          <div className="social-hub-inbox-actions-premium">
+            <Link
+              href={inboxSummary.messagingDeepLink}
+              className="btn-account-primary"
+            >
+              Mesajlar&apos;a git
+            </Link>
+            {canSeedDemo && onSeedDemo ? (
+              <button
+                type="button"
+                className="btn-account-ghost"
+                disabled={busy || !snapshot.settings.kvkkAcceptedAt}
+                onClick={onSeedDemo}
+              >
+                Demo gelen kutusu
+              </button>
+            ) : null}
           </div>
-        ) : null}
+
+          {permissions.canReply || permissions.canManageConnections ? (
+            <details className="social-hub-health-settings-details">
+              <summary className="social-hub-health-settings-summary">
+                Kanal senkronu
+              </summary>
+              <p className="social-hub-connection-summary">
+                Bağlı kanallar için geçmiş mesaj senkronu. Teknik sync notları
+                operasyon günlüğünde.
+              </p>
+              <div className="social-hub-sync-grid">
+                {connections
+                  .filter((c) => c.statusCode === "CONNECTED")
+                  .map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      className="btn-account-ghost"
+                      disabled={busy}
+                      onClick={() => onSync(c.platformCode)}
+                    >
+                      {c.label} · senkron
+                    </button>
+                  ))}
+              </div>
+            </details>
+          ) : null}
+        </div>
+
+        <SocialHubOpsLogRail entries={opsLogEntries} />
       </div>
     </section>
   );
