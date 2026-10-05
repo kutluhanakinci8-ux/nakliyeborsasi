@@ -1647,43 +1647,48 @@ export function SocialTeamPanel({
     ],
   );
   const toggles: { key: keyof SocialHubSettings; label: string }[] = [
-    { key: "inboxEnabled", label: "Sosyal gelen kutusu açık" },
-    { key: "publishingEnabled", label: "Yayınlama açık" },
-    { key: "dispatcherCanReply", label: "Dispatcher yanıtlayabilir" },
-    { key: "dispatcherCanPublish", label: "Dispatcher yayınlayabilir" },
+    { key: "inboxEnabled", label: "Sosyal gelen kutusu" },
+    { key: "publishingEnabled", label: "Yayınlama" },
+    { key: "dispatcherCanReply", label: "Dispatcher yanıt" },
+    { key: "dispatcherCanPublish", label: "Dispatcher yayın" },
     { key: "ownerApprovalRequired", label: "Yayın için sahip onayı" },
   ];
 
   return (
     <section className="social-hub-connections-shell module-panel module-panel--elevated">
-      <div className="social-hub-connections-layout">
+      <div className="social-hub-connections-layout social-hub-connections-layout--team">
         <div className="social-hub-connections-main social-hub-team-main">
-          <header className="social-hub-panel-head social-hub-panel-head--premium">
-            <div>
+          <header className="social-hub-team-toolbar">
+            <div className="social-hub-team-toolbar-copy">
               <h2 className="account-card-title">Ekip &amp; izinler</h2>
-              <p className="social-hub-connections-lead">
+              <p className="social-hub-connections-lead social-hub-connections-lead--compact">
                 {canManage
                   ? teamPanelLead(members.length, kvkkAccepted)
                   : "Bu sayfa yalnızca yetkili kullanıcılar içindir."}
               </p>
             </div>
             {canManage ? (
-              <div className="social-hub-stat-chips">
-                <span className="social-hub-stat-chip social-hub-stat-chip--ok">
-                  {members.length} üye
-                </span>
-                <span
-                  className={
-                    kvkkAccepted
-                      ? "social-hub-stat-chip social-hub-stat-chip--ok"
-                      : "social-hub-stat-chip social-hub-stat-chip--warn"
-                  }
-                >
-                  {kvkkAccepted ? "KVKK onaylı" : "KVKK bekliyor"}
-                </span>
-                <span className="social-hub-stat-chip">
-                  {auditEntries.length} denetim kaydı
-                </span>
+              <div className="social-hub-team-toolbar-actions">
+                <div className="social-hub-stat-chips">
+                  <span className="social-hub-stat-chip social-hub-stat-chip--ok">
+                    {members.length} üye
+                  </span>
+                  <span
+                    className={
+                      kvkkAccepted
+                        ? "social-hub-stat-chip social-hub-stat-chip--ok"
+                        : "social-hub-stat-chip social-hub-stat-chip--warn"
+                    }
+                  >
+                    {kvkkAccepted ? "KVKK onaylı" : "KVKK bekliyor"}
+                  </span>
+                  <span className="social-hub-stat-chip">
+                    {auditEntries.length} kayıt
+                  </span>
+                </div>
+                <Link className="btn-account-ghost" href={integrationsPath}>
+                  Uygulamalar
+                </Link>
               </div>
             ) : null}
           </header>
@@ -1695,97 +1700,118 @@ export function SocialTeamPanel({
             </p>
           ) : (
             <>
-              <div className="social-hub-inbox-actions-premium">
-                <Link className="btn-account-ghost" href={integrationsPath}>
-                  Uygulamalar / API
-                </Link>
-              </div>
-              <h3 className="social-hub-subsection-heading">Ekip</h3>
-              {members.length > 0 ? (
-                <ul className="social-hub-health-grid social-hub-health-grid--premium">
-                  {members.map((member) => (
-                    <li
-                      key={member.membershipId}
-                      className="social-hub-health-card social-hub-health-card--premium"
-                    >
-                      <div className="social-hub-connection-title-row">
-                        <strong>
-                          {member.displayName || member.emailAddress}
-                        </strong>
-                        <span className="social-hub-stat-chip">
-                          {memberCardSummary(member)}
-                        </span>
-                      </div>
-                      <p className="social-hub-connection-summary">
-                        {member.emailAddress}
-                      </p>
-                      {member.roleCode !== "COMPANY_OWNER" && !member.isSelf ? (
-                        <select
-                          className="input-light social-hub-team-role-select"
-                          disabled={busy}
-                          value={member.roleCode}
-                          onChange={(e) =>
-                            onRoleChange(member.userId, e.target.value)
-                          }
-                        >
-                          {assignableRoleCodes.map((code) => (
-                            <option key={code} value={code}>
-                              {SOCIAL_ROLE_LABELS[code] ?? code}
-                            </option>
+              <div className="social-hub-team-columns">
+                <section className="social-hub-team-panel" aria-label="Ekip">
+                  <h3 className="social-hub-team-panel-title">Ekip</h3>
+                  {members.length > 0 ? (
+                    <div className="social-hub-team-table-wrap">
+                      <table className="social-hub-team-table">
+                        <thead>
+                          <tr>
+                            <th scope="col">Üye</th>
+                            <th scope="col">E-posta</th>
+                            <th scope="col">Rol</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {members.map((member) => (
+                            <tr key={member.membershipId}>
+                              <td className="social-hub-team-table-name">
+                                {member.displayName || member.emailAddress}
+                              </td>
+                              <td className="social-hub-team-table-email">
+                                {member.emailAddress}
+                              </td>
+                              <td className="social-hub-team-table-role">
+                                {member.roleCode === "COMPANY_OWNER" ||
+                                member.isSelf ? (
+                                  <span className="social-hub-status-badge social-hub-status-badge--muted">
+                                    {memberCardSummary(member)}
+                                  </span>
+                                ) : (
+                                  <select
+                                    className="input-light social-hub-team-role-select"
+                                    disabled={busy}
+                                    value={member.roleCode}
+                                    onChange={(e) =>
+                                      onRoleChange(member.userId, e.target.value)
+                                    }
+                                    aria-label={`${member.displayName || member.emailAddress} rolü`}
+                                  >
+                                    {assignableRoleCodes.map((code) => (
+                                      <option key={code} value={code}>
+                                        {SOCIAL_ROLE_LABELS[code] ?? code}
+                                      </option>
+                                    ))}
+                                  </select>
+                                )}
+                              </td>
+                            </tr>
                           ))}
-                        </select>
-                      ) : null}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <div className="social-hub-inbox-empty-premium">
-                  <p className="social-hub-connection-summary">
-                    Ekip üyesi bulunamadı.
-                  </p>
-                </div>
-              )}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="social-hub-connection-summary">
+                      Ekip üyesi bulunamadı.
+                    </p>
+                  )}
+                </section>
 
-              <h3 className="social-hub-subsection-heading">Firma ayarları</h3>
-              <div className="social-hub-health-quick-actions social-hub-team-settings">
-                {toggles.map((row) => (
-                  <label key={row.key} className="social-hub-check">
-                    <input
-                      type="checkbox"
-                      checked={Boolean(settings[row.key])}
-                      disabled={busy}
-                      onChange={(e) =>
-                        onPatchSettings({ [row.key]: e.target.checked })
-                      }
-                    />
-                    {row.label}
-                  </label>
-                ))}
+                <section
+                  className="social-hub-team-panel"
+                  aria-label="Firma ayarları"
+                >
+                  <h3 className="social-hub-team-panel-title">Firma ayarları</h3>
+                  <div className="social-hub-team-toggle-grid">
+                    {toggles.map((row) => (
+                      <label
+                        key={row.key}
+                        className="social-hub-team-toggle-card"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={Boolean(settings[row.key])}
+                          disabled={busy}
+                          onChange={(e) =>
+                            onPatchSettings({ [row.key]: e.target.checked })
+                          }
+                        />
+                        <span>{row.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <div className="social-hub-team-kvkk-row">
+                    {!kvkkAccepted ? (
+                      <button
+                        type="button"
+                        className="btn-account-primary"
+                        disabled={busy}
+                        onClick={() => onPatchSettings({ acceptKvkk: true })}
+                      >
+                        KVKK onayı ver
+                      </button>
+                    ) : (
+                      <span className="social-hub-team-kvkk-ok">
+                        KVKK onayı tamam
+                      </span>
+                    )}
+                  </div>
+                </section>
               </div>
 
-              {!kvkkAccepted ? (
-                <button
-                  type="button"
-                  className="btn-account-primary"
-                  disabled={busy}
-                  onClick={() => onPatchSettings({ acceptKvkk: true })}
-                >
-                  KVKK / kanal kullanım onayı ver
-                </button>
-              ) : (
-                <p className="social-hub-connection-summary">
-                  KVKK onayı tamam — tarih operasyon günlüğünde.
-                </p>
-              )}
-
-              <div className="social-hub-health-insights-premium social-hub-team-audit-bar">
-                <div className="social-hub-health-insights-head">
-                  <h3 className="account-card-title">Denetim</h3>
-                  <p className="social-hub-connection-summary">
-                    Son işlemler günlükte; CSV dışa aktarın.
+              <div className="social-hub-team-audit-toolbar">
+                <div className="social-hub-team-audit-copy">
+                  <h3 className="social-hub-team-panel-title">Denetim</h3>
+                  <p className="social-hub-team-audit-hint">
+                    Detaylar operasyon günlüğünde · CSV dışa aktarma
                   </p>
                 </div>
-                <div className="social-hub-inbox-actions-premium">
+                <div
+                  className="social-hub-team-audit-actions"
+                  role="group"
+                  aria-label="Denetim filtresi"
+                >
                   <button
                     type="button"
                     className={
@@ -1816,7 +1842,7 @@ export function SocialTeamPanel({
                     disabled={busy}
                     onClick={onExportAuditLog}
                   >
-                    CSV indir
+                    CSV
                   </button>
                 </div>
               </div>
