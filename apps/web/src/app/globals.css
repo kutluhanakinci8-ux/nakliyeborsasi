@@ -15763,6 +15763,63 @@ button.btn-secondary {
   line-height: 1.45;
 }
 
+.social-hub-publishing-main .social-hub-approval-chip {
+  margin: 0 0 1rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #1d4ed8;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  display: inline-block;
+}
+
+.social-hub-calendar-grid-wrap--premium {
+  margin-bottom: 1.25rem;
+  padding: 1rem 1.1rem;
+  border-radius: 16px;
+  border: 1px solid #e8edf4;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 36, 68, 0.04);
+}
+
+.social-hub-compose-premium {
+  margin: 1.25rem 0;
+  padding: 1.1rem 1.15rem;
+  border-radius: 16px;
+  border: 1px solid #e8edf4;
+  background: #f8fafc;
+}
+
+.social-hub-compose-premium .social-hub-subsection-heading {
+  margin-top: 0;
+}
+
+.social-hub-post-list--premium {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem;
+}
+
+.social-hub-post-item--premium {
+  border: 1px solid #e8edf4;
+  border-radius: 16px;
+  padding: 1rem 1.1rem;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 36, 68, 0.04);
+}
+
+.social-hub-post-preview {
+  margin: 0.5rem 0 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: #334155;
+}
+
 .social-hub-connection-actions {
   display: flex;
   flex-wrap: wrap;
