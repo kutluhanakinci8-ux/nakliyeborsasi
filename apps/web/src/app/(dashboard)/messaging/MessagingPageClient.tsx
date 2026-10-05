@@ -2,7 +2,6 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { MessagingMailWebEmbed } from "../../../components/messaging/MessagingMailWebEmbed";
-import { OrganizationMailInboxPanel } from "../../../components/account/OrganizationMailInboxPanel";
 import { MessagingSideRail } from "../../../components/messaging/MessagingSideRail";
 import { MessagingThreadSidebar } from "../../../components/messaging/MessagingThreadSidebar";
 import { MessagingConversationPanel } from "../../../components/messaging/MessagingConversationPanel";
@@ -115,15 +114,18 @@ export function MessagingPageClient() {
       >
         <div className="messaging-page-main">
           {mode === "email" ? (
-            <div className="messaging-email-stack">
-              {!mailEmbedFullscreen ? (
-                <OrganizationMailInboxPanel variant="messaging" />
-              ) : null}
+            <div
+              className={
+                mailEmbedFullscreen
+                  ? "messaging-email-stack messaging-email-stack--fullscreen"
+                  : "messaging-email-stack"
+              }
+            >
               <div
                 className={
                   mailEmbedFullscreen
                     ? "messaging-mail-embed-wrap messaging-mail-embed-wrap--fullscreen"
-                    : "messaging-mail-embed-wrap"
+                    : "messaging-mail-embed-wrap messaging-mail-embed-wrap--primary"
                 }
               >
                 {mailEmbedFullscreen ? (
