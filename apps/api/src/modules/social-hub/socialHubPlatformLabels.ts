@@ -5,6 +5,7 @@ export const SOCIAL_HUB_PLATFORM_LABELS: Record<SocialPlatformCode, string> = {
   [SocialPlatformCode.FacebookMessenger]: "Facebook Messenger",
   [SocialPlatformCode.WhatsAppCloud]: "WhatsApp Business",
   [SocialPlatformCode.LinkedIn]: "LinkedIn",
+  [SocialPlatformCode.Telegram]: "Telegram",
 };
 
 const EXTRA_PLATFORM_LABELS: Record<string, string> = {

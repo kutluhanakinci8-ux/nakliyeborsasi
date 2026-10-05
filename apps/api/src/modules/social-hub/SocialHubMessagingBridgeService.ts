@@ -22,6 +22,7 @@ const PLATFORM_LABELS: Record<SocialPlatformCode, string> = {
   [SocialPlatformCode.FacebookMessenger]: "Facebook Messenger",
   [SocialPlatformCode.WhatsAppCloud]: "WhatsApp",
   [SocialPlatformCode.LinkedIn]: "LinkedIn",
+  [SocialPlatformCode.Telegram]: "Telegram",
 };
 
 @Injectable()

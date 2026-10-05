@@ -87,6 +87,7 @@ import {
   renderSocialHubTemplate,
 } from "./socialHubTemplateRender";
 import { normalizeSocialHubTemplateChannelScope } from "./socialHubTemplateChannelScope";
+import { SocialHubTelegramApplicationService } from "./oauth/SocialHubTelegramApplicationService";
 
 export const INVITABLE_SOCIAL_TEAM_ROLES: readonly CompanyRoleCode[] = [
   CompanyRoleCode.SocialAdmin,
@@ -99,6 +100,7 @@ const PLATFORM_LABELS: Record<SocialPlatformCode, string> = {
   [SocialPlatformCode.FacebookMessenger]: "Facebook Messenger",
   [SocialPlatformCode.WhatsAppCloud]: "WhatsApp Business",
   [SocialPlatformCode.LinkedIn]: "LinkedIn",
+  [SocialPlatformCode.Telegram]: "Telegram",
 };
 
 @Injectable()
@@ -138,6 +140,7 @@ export class SocialHubApplicationService {
     private readonly inboxSyncSummaryService: SocialHubInboxSyncSummaryService,
     private readonly publishMediaStorageService: SocialHubPublishMediaStorageService,
     private readonly oauthConfig: SocialHubOAuthConfigService,
+    private readonly telegramApplicationService: SocialHubTelegramApplicationService,
   ) {}
 
   private async assertSocialHubSubscription(companyId: string): Promise<void> {
@@ -702,6 +705,27 @@ export class SocialHubApplicationService {
       createdThreadIds.push(link.messageThreadId);
     }
     return { createdThreadIds };
+  }
+
+  public async connectTelegramBot(
+    user: AuthenticatedUserContext,
+    botToken: string,
+  ) {
+    assertSocialHubAdmin(user);
+    await this.assertSocialHubSubscription(user.companyId);
+    const result = await this.telegramApplicationService.connectBot(
+      user.companyId,
+      botToken,
+    );
+    this.socialHubAuditService.record(
+      user,
+      SocialHubAuditActionCode.SettingsUpdate,
+      "/company/social-hub/connections/TELEGRAM/connect-bot",
+      { telegramConnect: true },
+    );
+    return {
+      connection: this.mapConnection(result.connection, this.listProviderMeta()),
+    };
   }
 
   public async startConnect(

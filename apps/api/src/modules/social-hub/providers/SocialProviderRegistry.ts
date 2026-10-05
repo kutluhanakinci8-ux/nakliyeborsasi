@@ -5,6 +5,7 @@ import { MetaInstagramMessagingProvider } from "./MetaInstagramMessagingProvider
 import { MetaFacebookMessengerProvider } from "./MetaFacebookMessengerProvider";
 import { WhatsAppCloudWebhookProvider } from "./WhatsAppCloudWebhookProvider";
 import { LinkedInMarketingPostsProvider } from "./LinkedInMarketingPostsProvider";
+import { TelegramBotProvider } from "./TelegramBotProvider";
 
 @Injectable()
 export class SocialProviderRegistry {
@@ -15,12 +16,14 @@ export class SocialProviderRegistry {
     facebookProvider: MetaFacebookMessengerProvider,
     whatsappProvider: WhatsAppCloudWebhookProvider,
     linkedInProvider: LinkedInMarketingPostsProvider,
+    telegramProvider: TelegramBotProvider,
   ) {
     this.byPlatform = new Map<SocialPlatformCode, SocialProviderPort>([
       [SocialPlatformCode.Instagram, instagramProvider],
       [SocialPlatformCode.FacebookMessenger, facebookProvider],
       [SocialPlatformCode.WhatsAppCloud, whatsappProvider],
       [SocialPlatformCode.LinkedIn, linkedInProvider],
+      [SocialPlatformCode.Telegram, telegramProvider],
     ]);
   }
 

@@ -15290,6 +15290,56 @@ button.btn-secondary {
   overflow: hidden;
 }
 
+.social-hub-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.social-hub-modal {
+  width: min(440px, 100%);
+  background: #fff;
+  border-radius: 16px;
+  padding: 1.25rem 1.35rem 1.1rem;
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.2);
+}
+
+.social-hub-modal-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.social-hub-modal-label {
+  display: block;
+  margin: 1rem 0 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #334155;
+}
+
+.social-hub-modal-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 0.9rem;
+}
+
+.social-hub-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1.15rem;
+}
+
 .social-hub-connections-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);

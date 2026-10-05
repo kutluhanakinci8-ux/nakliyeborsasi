@@ -17,6 +17,10 @@ import { MetaInstagramMessagingProvider } from "./providers/MetaInstagramMessagi
 import { MetaFacebookMessengerProvider } from "./providers/MetaFacebookMessengerProvider";
 import { WhatsAppCloudWebhookProvider } from "./providers/WhatsAppCloudWebhookProvider";
 import { LinkedInMarketingPostsProvider } from "./providers/LinkedInMarketingPostsProvider";
+import { TelegramBotProvider } from "./providers/TelegramBotProvider";
+import { SocialHubTelegramApplicationService } from "./oauth/SocialHubTelegramApplicationService";
+import { SocialHubTelegramWebhookIngestService } from "./oauth/SocialHubTelegramWebhookIngestService";
+import { SocialHubTelegramOutboundService } from "./oauth/SocialHubTelegramOutboundService";
 import { SocialPostPublishScheduler } from "./SocialPostPublishScheduler";
 import { AuditModule } from "../../infrastructure/audit/AuditModule";
 import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogEntity";
@@ -119,6 +123,9 @@ import { PlatformAdminGuard } from "../platform-admin/PlatformAdminGuard";
     SocialHubXPublishService,
     SocialHubXOutboundService,
     SocialHubXWebhookIngestService,
+    SocialHubTelegramApplicationService,
+    SocialHubTelegramWebhookIngestService,
+    SocialHubTelegramOutboundService,
     SocialHubRoadmapPublishApplicationService,
     SocialHubOAuthApplicationService,
     SocialHubInstagramServiceTokenBootstrap,
@@ -150,6 +157,7 @@ import { PlatformAdminGuard } from "../platform-admin/PlatformAdminGuard";
     MetaFacebookMessengerProvider,
     WhatsAppCloudWebhookProvider,
     LinkedInMarketingPostsProvider,
+    TelegramBotProvider,
     SocialPostPublishScheduler,
     SocialHubAuditService,
     SocialHubRoadmapInterestStatsService,

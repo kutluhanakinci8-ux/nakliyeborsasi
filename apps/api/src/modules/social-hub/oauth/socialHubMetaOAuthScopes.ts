@@ -10,6 +10,7 @@ const META_OAUTH_SCOPES_DEFAULT: Record<SocialPlatformCode, string> = {
   [SocialPlatformCode.WhatsAppCloud]:
     "public_profile,whatsapp_business_management,whatsapp_business_messaging,business_management",
   [SocialPlatformCode.LinkedIn]: "",
+  [SocialPlatformCode.Telegram]: "",
 };
 
 const META_OAUTH_SCOPES_ENV_KEY: Partial<Record<SocialPlatformCode, string>> = {

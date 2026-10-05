@@ -3,4 +3,5 @@ export enum SocialPlatformCode {
   FacebookMessenger = "FACEBOOK_MESSENGER",
   WhatsAppCloud = "WHATSAPP_CLOUD",
   LinkedIn = "LINKEDIN",
+  Telegram = "TELEGRAM",
 }

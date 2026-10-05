@@ -29,6 +29,7 @@ const PLATFORM_LABELS: Record<SocialPlatformCode, string> = {
   [SocialPlatformCode.FacebookMessenger]: "Facebook Messenger",
   [SocialPlatformCode.WhatsAppCloud]: "WhatsApp Business",
   [SocialPlatformCode.LinkedIn]: "LinkedIn",
+  [SocialPlatformCode.Telegram]: "Telegram",
 };
 
 export type TokenHealthCode = "ok" | "expiring_soon" | "expired" | "missing";

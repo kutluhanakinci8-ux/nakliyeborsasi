@@ -37,6 +37,13 @@ const CAPABILITIES: Record<SocialPlatformCode, SocialHubProviderCapabilities> = 
     outboundMessaging: false,
     feedPublish: true,
   },
+  [SocialPlatformCode.Telegram]: {
+    oauthConnect: true,
+    inboxWebhook: true,
+    inboxHistorySync: false,
+    outboundMessaging: true,
+    feedPublish: false,
+  },
 };
 
 export function getSocialHubProviderCapabilities(

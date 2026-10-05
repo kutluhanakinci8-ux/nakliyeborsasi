@@ -341,6 +341,16 @@ export class SocialHubApiClient {
     );
   }
 
+  public static async connectTelegramBot(
+    accessToken: string,
+    botToken: string,
+  ): Promise<{ connection: unknown }> {
+    return socialHubFetch(accessToken, "/connections/TELEGRAM/connect-bot", {
+      method: "POST",
+      body: JSON.stringify({ botToken }),
+    });
+  }
+
   public static async connectPlatform(
     accessToken: string,
     platformCode: string,
