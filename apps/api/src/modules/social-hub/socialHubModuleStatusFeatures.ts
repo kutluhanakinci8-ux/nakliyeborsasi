@@ -168,6 +168,11 @@ const BC_FEATURES = [
   "social_hub_post_code_integration_bc",
 ] as const;
 
+const BD_FEATURES = [
+  "social_hub_telegram_track_complete",
+  "social_hub_ci_workflow_bd",
+] as const;
+
 export const SOCIAL_HUB_PHASE_MILESTONE_CODES = [
   "ao",
   "ap",
@@ -184,6 +189,7 @@ export const SOCIAL_HUB_PHASE_MILESTONE_CODES = [
   "ba",
   "bb",
   "bc",
+  "bd",
 ] as const;
 
 export function buildSocialHubModuleStatusFeatures(): string[] {
@@ -194,5 +200,6 @@ export function buildSocialHubModuleStatusFeatures(): string[] {
     ...BA_FEATURES,
     ...BB_FEATURES,
     ...BC_FEATURES,
+    ...BD_FEATURES,
   ];
 }

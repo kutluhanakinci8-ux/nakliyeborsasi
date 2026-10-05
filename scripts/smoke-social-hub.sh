@@ -96,6 +96,29 @@ if [[ -n "${SOCIAL_HUB_SMOKE_EXPECT_PHASE:-}" ]]; then
     }
     echo "OK: status social_hub_integration_gate_checklist"
   fi
+  if [[ "${SOCIAL_HUB_SMOKE_EXPECT_PHASE}" == "bd" ]]; then
+    echo "${status_json}" | grep -q '"phase":"bd"' || {
+      echo "FAIL: phase not bd"
+      exit 1
+    }
+    echo "${status_json}" | grep -q '"social_hub_telegram_track_complete"' || {
+      echo "FAIL: status missing social_hub_telegram_track_complete"
+      exit 1
+    }
+    echo "${status_json}" | grep -q '"publishing_utm_link_tags"' || {
+      echo "FAIL: status missing publishing_utm_link_tags"
+      exit 1
+    }
+    echo "${status_json}" | grep -q '"analytics_utm_campaign_snapshot"' || {
+      echo "FAIL: status missing analytics_utm_campaign_snapshot"
+      exit 1
+    }
+    echo "${status_json}" | grep -q '"telegramWebhookPattern"' || {
+      echo "FAIL: status missing telegramWebhookPattern"
+      exit 1
+    }
+    echo "OK: status social_hub_telegram_track_complete (BD)"
+  fi
   if [[ "${SOCIAL_HUB_SMOKE_EXPECT_PHASE}" == "bb" ]]; then
     echo "${status_json}" | grep -q '"social_hub_pwa_manifest_scope"' || {
       echo "FAIL: status missing social_hub_pwa_manifest_scope feature"

@@ -170,6 +170,12 @@ export function buildConnectionsOpsLog(
       message:
         "Gruplar: BotFather /setjoingroups Enable ve /setprivacy Disable ile grup mesajları DM ile aynı köprüye düşebilir.",
     });
+    push(entries, {
+      level: "info",
+      channel: "Telegram",
+      message:
+        "10 MB üzeri DM ekleri: VPS .env MESSAGING_ATTACHMENT_S3_BUCKET + AWS kimlik bilgileri (isteğe bağlı kota: MESSAGING_ATTACHMENT_COMPANY_MONTHLY_QUOTA_BYTES).",
+    });
   }
 
   if (metaOauthReady) {
