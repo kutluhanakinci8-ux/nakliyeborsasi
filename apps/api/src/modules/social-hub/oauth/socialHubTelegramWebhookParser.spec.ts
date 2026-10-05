@@ -40,6 +40,22 @@ describe("parseTelegramInboundMessage", () => {
     expect(result?.mediaGroupId).toBe("abc-123");
   });
 
+  it("parses edited_message as edit", () => {
+    const result = parseTelegramInboundMessage({
+      edited_message: {
+        message_id: 55,
+        from: { id: 4, is_bot: false, first_name: "Zeynep" },
+        chat: { id: 102, type: "private" },
+        text: "Güncellendi",
+      },
+    });
+    expect(result).toMatchObject({
+      bodyText: "Güncellendi",
+      externalMessageId: "55",
+      isEdit: true,
+    });
+  });
+
   it("parses sticker as downloadable media", () => {
     const result = parseTelegramInboundMessage({
       message: {

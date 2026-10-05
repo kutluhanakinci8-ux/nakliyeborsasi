@@ -1,0 +1,1 @@
+-- Faz BI: Telegram edited_message → Mesajlar sync (şema değişikliği yok)

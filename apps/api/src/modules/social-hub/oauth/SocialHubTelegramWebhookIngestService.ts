@@ -71,6 +71,35 @@ export class SocialHubTelegramWebhookIngestService {
     }
     const parsed = this.applyDiscussionRouting(parsedRaw, metadata);
 
+    if (parsed.isEdit) {
+      if (parsed.mediaGroupId) {
+        this.logger.debug(
+          `Telegram album edit skipped connection=${connection.id} group=${parsed.mediaGroupId}`,
+        );
+        return;
+      }
+      const editResult = await this.messagingBridgeService.ingestWebhookInboundEdit(
+        {
+          companyId: connection.companyId,
+          platformCode: SocialPlatformCode.Telegram,
+          externalThreadId: parsed.externalThreadId,
+          displayLabel: parsed.displayLabel,
+          bodyText: parsed.bodyText,
+          externalMessageId: parsed.externalMessageId,
+        },
+      );
+      if (editResult.ingested && editResult.threadId) {
+        this.webhookBridgeAuditService.recordInboundBridged({
+          companyId: connection.companyId,
+          platformCode: SocialPlatformCode.Telegram,
+          threadId: editResult.threadId,
+          externalThreadId: parsed.externalThreadId,
+          externalMessageId: `edit:${parsed.externalMessageId}`,
+        });
+      }
+      return;
+    }
+
     if (parsed.mediaGroupId) {
       await this.mediaGroupBufferService.enqueue(
         {

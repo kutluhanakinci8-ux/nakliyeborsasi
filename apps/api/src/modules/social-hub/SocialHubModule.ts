@@ -5,6 +5,7 @@ import { MessagingModule } from "../messaging/MessagingModule";
 import { MessageThreadEntity } from "../../infrastructure/database/entities/MessageThreadEntity";
 import { CompanySocialThreadLinkEntity } from "../../infrastructure/database/entities/CompanySocialThreadLinkEntity";
 import { SocialHubMessagingBridgeService } from "./SocialHubMessagingBridgeService";
+import { SocialHubExternalInboundMessageMapService } from "./SocialHubExternalInboundMessageMapService";
 import { CompanySocialConnectionEntity } from "../../infrastructure/database/entities/CompanySocialConnectionEntity";
 import { CompanySocialPostEntity } from "../../infrastructure/database/entities/CompanySocialPostEntity";
 import { CompanySocialReplyTemplateEntity } from "../../infrastructure/database/entities/CompanySocialReplyTemplateEntity";
@@ -149,6 +150,7 @@ import { SocialHubTelegramMediaGroupBufferService } from "./oauth/SocialHubTeleg
     SocialHubMetaInboxHistoryService,
     SocialHubApplicationService,
     SocialHubMessagingBridgeService,
+    SocialHubExternalInboundMessageMapService,
     SocialHubOutboundMessagingService,
     SocialHubOutboundDeliveryLogService,
     SocialHubConnectionHealthService,

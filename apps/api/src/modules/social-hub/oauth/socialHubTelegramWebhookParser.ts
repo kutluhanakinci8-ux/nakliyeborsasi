@@ -25,6 +25,7 @@ export type TelegramInboundMessage = {
   media: TelegramParsedMedia[];
   mediaGroupId: string | null;
   rawMessage: Record<string, unknown>;
+  isEdit?: boolean;
 };
 
 function labelFromUser(user: TelegramUser): string {
@@ -231,6 +232,14 @@ function parseFromMessageRecord(
 export function parseTelegramInboundMessage(
   update: Record<string, unknown>,
 ): TelegramInboundMessage | null {
+  const edited = update.edited_message;
+  if (edited && typeof edited === "object") {
+    const parsed = parseFromMessageRecord(edited as Record<string, unknown>);
+    if (parsed) {
+      return { ...parsed, isEdit: true };
+    }
+    return null;
+  }
   const message = update.message;
   if (message && typeof message === "object") {
     return parseFromMessageRecord(message as Record<string, unknown>);

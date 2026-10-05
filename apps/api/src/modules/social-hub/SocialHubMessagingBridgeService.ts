@@ -17,6 +17,7 @@ import {
   buildSocialInboxThreadDeepLink,
   type SocialHubInboxThreadPreviewRow,
 } from "./socialHubInboxThreadPreview";
+import { SocialHubExternalInboundMessageMapService } from "./SocialHubExternalInboundMessageMapService";
 
 const PLATFORM_LABELS: Record<SocialPlatformCode, string> = {
   [SocialPlatformCode.Instagram]: "Instagram",
@@ -36,6 +37,7 @@ export class SocialHubMessagingBridgeService {
     @InjectRepository(MessageThreadEntity)
     private readonly messageThreadRepository: Repository<MessageThreadEntity>,
     private readonly messagingThreadApplicationService: MessagingThreadApplicationService,
+    private readonly externalInboundMessageMapService: SocialHubExternalInboundMessageMapService,
   ) {}
 
   public async ensureExternalThread(params: {
@@ -98,6 +100,10 @@ export class SocialHubMessagingBridgeService {
     linkId: string,
     bodyText: string,
     attachmentsInput?: MessagingAttachmentInput[],
+    mapContext?: {
+      platformCode: SocialPlatformCode | string;
+      externalMessageId: string | null;
+    },
   ): Promise<{ messageId: string; threadId: string }> {
     const link = await this.linkRepository.findOne({
       where: { id: linkId, companyId },
@@ -117,9 +123,69 @@ export class SocialHubMessagingBridgeService {
         senderDisplayName: link.displayLabel,
         attachmentsInput,
       });
+    if (mapContext?.externalMessageId?.trim()) {
+      await this.externalInboundMessageMapService.remember({
+        platformCode: mapContext.platformCode,
+        companyId,
+        threadId: link.messageThreadId,
+        externalMessageId: mapContext.externalMessageId.trim(),
+        messageId: message.id,
+      });
+    }
     link.lastInboundAt = new Date();
     await this.linkRepository.save(link);
     return { messageId: message.id, threadId: link.messageThreadId };
+  }
+
+  public async ingestWebhookInboundEdit(params: {
+    companyId: string;
+    platformCode: SocialPlatformCode | string;
+    externalThreadId: string;
+    displayLabel: string;
+    bodyText: string;
+    externalMessageId: string;
+  }): Promise<{ ingested: boolean; threadId?: string }> {
+    const link = await this.ensureExternalThread({
+      companyId: params.companyId,
+      platformCode: params.platformCode,
+      externalThreadId: params.externalThreadId,
+      displayLabel: params.displayLabel,
+    });
+    const repaired = await this.repairLinkMessageThreadIfNeeded({
+      link,
+      companyId: params.companyId,
+      platformCode: params.platformCode,
+      displayLabel: params.displayLabel,
+    });
+    const messageId = await this.externalInboundMessageMapService.resolveMessageId(
+      {
+        platformCode: String(params.platformCode),
+        companyId: params.companyId,
+        threadId: repaired.messageThreadId,
+        externalMessageId: params.externalMessageId,
+      },
+    );
+    if (!messageId) {
+      this.logger.warn(
+        `Inbound edit without map platform=${params.platformCode} externalMsg=${params.externalMessageId}`,
+      );
+      return { ingested: false, threadId: repaired.messageThreadId };
+    }
+    const updated =
+      await this.messagingThreadApplicationService.applyExternalChannelInboundEdit(
+        {
+          companyId: params.companyId,
+          threadId: repaired.messageThreadId,
+          messageId,
+          bodyText: params.bodyText,
+        },
+      );
+    if (!updated) {
+      return { ingested: false, threadId: repaired.messageThreadId };
+    }
+    repaired.lastInboundAt = new Date();
+    await this.linkRepository.save(repaired);
+    return { ingested: true, threadId: repaired.messageThreadId };
   }
 
   public async listInboxThreadsPreview(
@@ -212,17 +278,21 @@ export class SocialHubMessagingBridgeService {
         return { ingested: false, threadId: link.messageThreadId };
       }
     }
-    await this.ingestInboundMessage(
+    const inbound = await this.ingestInboundMessage(
       params.companyId,
       link.id,
       params.bodyText,
       params.attachmentsInput,
+      {
+        platformCode: params.platformCode,
+        externalMessageId: params.externalMessageId,
+      },
     );
     if (dedupKey) {
       link.lastExternalMessageId = dedupKey;
       await this.linkRepository.save(link);
     }
-    return { ingested: true, threadId: link.messageThreadId };
+    return { ingested: true, threadId: inbound.threadId };
   }
 
   private async repairLinkMessageThreadIfNeeded(params: {
