@@ -1,0 +1,1 @@
+-- Faz BG: Telegram giden albüm (sendMediaGroup) — şema değişikliği yok

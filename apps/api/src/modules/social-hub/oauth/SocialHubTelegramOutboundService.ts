@@ -4,6 +4,10 @@ import {
   callTelegramBotMultipart,
 } from "./socialHubTelegramApi";
 import { parseDiscussionExternalThreadId } from "./socialHubTelegramDiscussionRouting";
+import {
+  mapTelegramOutboundMediaItems,
+  type TelegramOutboundMediaInput,
+} from "./socialHubTelegramOutboundMedia";
 
 export type TelegramOutboundResult = {
   ok: boolean;
@@ -78,12 +82,22 @@ export class SocialHubTelegramOutboundService {
     attachments: TelegramOutboundAttachment[];
     replyToMessageId?: number | null;
   }): Promise<TelegramOutboundResult> {
+    if (params.attachments.length > 1) {
+      return this.sendMediaGroup({
+        botToken: params.botToken,
+        chatId: params.chatId,
+        bodyText: params.bodyText,
+        attachments: params.attachments,
+        replyToMessageId: params.replyToMessageId,
+      });
+    }
     const attachment = params.attachments[0];
     if (!attachment) {
       return this.sendTextMessage({
         botToken: params.botToken,
         chatId: params.chatId,
         bodyText: params.bodyText,
+        replyToMessageId: params.replyToMessageId,
       });
     }
     const caption = params.bodyText.trim();
@@ -128,6 +142,65 @@ export class SocialHubTelegramOutboundService {
       externalMessageId: response.result
         ? String(response.result.message_id)
         : undefined,
+    };
+  }
+
+  public async sendMediaGroup(params: {
+    botToken: string;
+    chatId: string;
+    bodyText: string;
+    attachments: TelegramOutboundMediaInput[];
+    replyToMessageId?: number | null;
+  }): Promise<TelegramOutboundResult> {
+    const items = mapTelegramOutboundMediaItems(params.attachments);
+    if (items.length < 2) {
+      return this.sendWithAttachments({
+        botToken: params.botToken,
+        chatId: params.chatId,
+        bodyText: params.bodyText,
+        attachments: params.attachments,
+        replyToMessageId: params.replyToMessageId,
+      });
+    }
+    const caption = params.bodyText.trim();
+    const mediaPayload = items.map((item, index) => {
+      const entry: Record<string, string> = {
+        type: item.type,
+        media: `attach://${item.attachName}`,
+      };
+      if (index === 0 && caption) {
+        entry.caption = caption;
+      }
+      return entry;
+    });
+    const form = new FormData();
+    form.append("chat_id", params.chatId);
+    form.append("media", JSON.stringify(mediaPayload));
+    if (params.replyToMessageId) {
+      form.append("reply_to_message_id", String(params.replyToMessageId));
+    }
+    for (const item of items) {
+      const blob = new Blob([Uint8Array.from(item.buffer)], {
+        type: item.contentType,
+      });
+      form.append(item.attachName, blob, item.filename);
+    }
+    const response = await callTelegramBotMultipart<Array<{ message_id: number }>>(
+      params.botToken,
+      "sendMediaGroup",
+      form,
+    );
+    if (!response.ok) {
+      const detail =
+        response.description ?? "Telegram albüm gönderimi başarısız.";
+      this.logger.warn(`Telegram media group outbound failed: ${detail}`);
+      return { ok: false, message: detail };
+    }
+    const firstId = response.result?.[0]?.message_id;
+    return {
+      ok: true,
+      message: `Telegram albümü gönderildi (${items.length} medya).`,
+      externalMessageId: firstId !== undefined ? String(firstId) : undefined,
     };
   }
 }
