@@ -110,7 +110,7 @@ Her faz: kod + dokümantasyon + (varsa) `scripts/verify-*` · deploy checklist.
 
 - Outbox event pipeline: delivered, bounce (hard/soft), open, click (pixel/link wrap).
 - Admin: tarih aralığı, olay tipi, CSV.
-- JMAP: ya bridge genişletme (Email/set, Mailbox/*) ya da Fastmail Cory kararı dokümante.
+- JMAP: HTTP köprü v2 (`Email/set`, `Mailbox/*`) — tam Cory sunucu kapsam dışı (`MAIL_JMAP_BRIDGE.md`).
 - **Kabul:** Postmark yetkinliğinin ~%85’i (pazarlama segmentasyonu hariç).
 
 ---
@@ -134,7 +134,7 @@ Her faz: kod + dokümantasyon + (varsa) `scripts/verify-*` · deploy checklist.
 | 2026-09-28 | PM-10 webhook (#138) | Webmail → `message.sent` / `message.failed` |
 | 2026-09-28 | Parity kapanış | `MAIL_JMAP_BRIDGE.md` · `run-mail-messaging-parity-close-checklist.sh` |
 
-**PM-1…PM-10:** kod + prod deploy tamam. **Bakım:** `LERTA_MAIL_AI_COMPOSE_API_KEY` (opsiyonel) · `Email/set` JMAP (v2).
+**PM-1…PM-10:** kod + prod deploy tamam. **Bakım:** `LERTA_MAIL_AI_COMPOSE_API_KEY` (opsiyonel) · JMAP v2 (`Email/set`, `Mailbox/*`) — `MAIL_JMAP_BRIDGE.md`.
 
 **Kapanış doğrulama (VPS):** `bash scripts/run-mail-messaging-parity-close-checklist.sh`
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# JWT ile JMAP session + Email/query smoke.
+# JWT ile JMAP session + Mailbox/query + Email/query smoke.
 set -euo pipefail
 TOKEN="${MAIL_JMAP_JWT:-${ACCESS_TOKEN:-}}"
 API_BASE="${API_BASE:-https://app.lerta.com.tr/api/v1}"
@@ -18,7 +18,10 @@ BODY="$(node -e "
 const org='${ORG_ID}';
 process.stdout.write(JSON.stringify({
   using: ['urn:ietf:params:jmap:core','urn:ietf:params:jmap:mail'],
-  methodCalls: [['Email/query',{accountId:org,filter:{inMailbox:'inbox'},limit:5},'q1']]
+  methodCalls: [
+    ['Mailbox/query',{accountId:org},'mb1'],
+    ['Email/query',{accountId:org,filter:{inMailbox:'inbox'},limit:5},'q1']
+  ]
 }));
 ")"
 RESP="$(curl -fsS -H "Authorization: Bearer ${TOKEN}" -H "Content-Type: application/json" \
@@ -26,7 +29,14 @@ RESP="$(curl -fsS -H "Authorization: Bearer ${TOKEN}" -H "Content-Type: applicat
 echo "${RESP}" | node -e "
 const r=JSON.parse(require('fs').readFileSync(0,'utf8'));
 const calls=r.methodResponses||[];
-const ok=calls.some(c=>Array.isArray(c)&&c[0]==='Email/query'&&c[1]?.ids);
-if(!ok){console.error('NOT: Email/query yanıtı eksik');process.exit(3);}
-console.log('OK: Email/query', (calls.find(c=>c[0]==='Email/query')[1].ids||[]).length, 'id');
+const mb=calls.find(c=>Array.isArray(c)&&c[0]==='Mailbox/query');
+const eq=calls.find(c=>Array.isArray(c)&&c[0]==='Email/query');
+if(!mb||!mb[1]?.ids?.length){
+  console.error('NOT: Mailbox/query yanıtı eksik');process.exit(3);
+}
+if(!eq||!Array.isArray(eq[1]?.ids)){
+  console.error('NOT: Email/query yanıtı eksik');process.exit(4);
+}
+console.log('OK: Mailbox/query', mb[1].ids.length, 'mailbox');
+console.log('OK: Email/query', eq[1].ids.length, 'id');
 "
