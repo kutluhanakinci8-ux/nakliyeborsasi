@@ -26,6 +26,7 @@ export type TelegramInboundMessage = {
   mediaGroupId: string | null;
   rawMessage: Record<string, unknown>;
   isEdit?: boolean;
+  isDelete?: boolean;
 };
 
 function labelFromUser(user: TelegramUser): string {
@@ -185,6 +186,7 @@ function parseMediaFromMessage(
 
 function parseFromMessageRecord(
   msg: Record<string, unknown>,
+  options?: { allowEmptyBody?: boolean },
 ): TelegramInboundMessage | null {
   const from = msg.from;
   if (!from || typeof from !== "object") {
@@ -207,7 +209,7 @@ function parseFromMessageRecord(
     return null;
   }
   const { bodyText, media } = parseMediaFromMessage(msg);
-  if (!bodyText.trim() && media.length === 0) {
+  if (!options?.allowEmptyBody && !bodyText.trim() && media.length === 0) {
     return null;
   }
   const mediaGroupRaw = msg.media_group_id;
@@ -221,7 +223,7 @@ function parseFromMessageRecord(
     chatId: chatIdStr,
     externalThreadId: chatIdStr,
     displayLabel: labelFromUser(fromUser),
-    bodyText: bodyText.trim() || "[medya]",
+    bodyText: bodyText.trim() || (media.length > 0 ? "[medya]" : ""),
     externalMessageId: String(messageId),
     media,
     mediaGroupId,
@@ -232,6 +234,16 @@ function parseFromMessageRecord(
 export function parseTelegramInboundMessage(
   update: Record<string, unknown>,
 ): TelegramInboundMessage | null {
+  const deleted = update.deleted_message;
+  if (deleted && typeof deleted === "object") {
+    const parsed = parseFromMessageRecord(deleted as Record<string, unknown>, {
+      allowEmptyBody: true,
+    });
+    if (parsed) {
+      return { ...parsed, isDelete: true };
+    }
+    return null;
+  }
   const edited = update.edited_message;
   if (edited && typeof edited === "object") {
     const parsed = parseFromMessageRecord(edited as Record<string, unknown>);

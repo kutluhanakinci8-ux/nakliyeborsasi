@@ -188,6 +188,55 @@ export class SocialHubMessagingBridgeService {
     return { ingested: true, threadId: repaired.messageThreadId };
   }
 
+  public async ingestWebhookInboundDelete(params: {
+    companyId: string;
+    platformCode: SocialPlatformCode | string;
+    externalThreadId: string;
+    displayLabel: string;
+    externalMessageId: string;
+  }): Promise<{ ingested: boolean; threadId?: string }> {
+    const link = await this.ensureExternalThread({
+      companyId: params.companyId,
+      platformCode: params.platformCode,
+      externalThreadId: params.externalThreadId,
+      displayLabel: params.displayLabel,
+    });
+    const repaired = await this.repairLinkMessageThreadIfNeeded({
+      link,
+      companyId: params.companyId,
+      platformCode: params.platformCode,
+      displayLabel: params.displayLabel,
+    });
+    const messageId = await this.externalInboundMessageMapService.resolveMessageId(
+      {
+        platformCode: String(params.platformCode),
+        companyId: params.companyId,
+        threadId: repaired.messageThreadId,
+        externalMessageId: params.externalMessageId,
+      },
+    );
+    if (!messageId) {
+      this.logger.warn(
+        `Inbound delete without map platform=${params.platformCode} externalMsg=${params.externalMessageId}`,
+      );
+      return { ingested: false, threadId: repaired.messageThreadId };
+    }
+    const updated =
+      await this.messagingThreadApplicationService.applyExternalChannelInboundDelete(
+        {
+          companyId: params.companyId,
+          threadId: repaired.messageThreadId,
+          messageId,
+        },
+      );
+    if (!updated) {
+      return { ingested: false, threadId: repaired.messageThreadId };
+    }
+    repaired.lastInboundAt = new Date();
+    await this.linkRepository.save(repaired);
+    return { ingested: true, threadId: repaired.messageThreadId };
+  }
+
   public async listInboxThreadsPreview(
     user: AuthenticatedUserContext,
     limit = 10,

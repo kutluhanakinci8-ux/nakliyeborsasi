@@ -40,6 +40,20 @@ describe("parseTelegramInboundMessage", () => {
     expect(result?.mediaGroupId).toBe("abc-123");
   });
 
+  it("parses deleted_message as delete", () => {
+    const result = parseTelegramInboundMessage({
+      deleted_message: {
+        message_id: 56,
+        from: { id: 5, is_bot: false, first_name: "Can" },
+        chat: { id: 103, type: "private" },
+      },
+    });
+    expect(result).toMatchObject({
+      externalMessageId: "56",
+      isDelete: true,
+    });
+  });
+
   it("parses edited_message as edit", () => {
     const result = parseTelegramInboundMessage({
       edited_message: {
