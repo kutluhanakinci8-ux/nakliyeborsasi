@@ -23,6 +23,11 @@ import {
   postUserSummary,
   publishingPanelLead,
 } from "../../lib/socialHubPublishingOpsLog";
+import {
+  buildTemplatesOpsLog,
+  templateCardSummary,
+  templatesPanelLead,
+} from "../../lib/socialHubTemplatesOpsLog";
 import type {
   SocialHubAuditEntry,
   SocialHubPermissions,
@@ -1229,104 +1234,165 @@ export function SocialTemplatesPanel({
 }: TemplatesProps) {
   const localPreview = renderSocialHubTemplatePreview(body, {});
   const previewText = serverPreview ?? localPreview;
+  const opsLogEntries = useMemo(
+    () =>
+      buildTemplatesOpsLog({
+        templates,
+        permissions,
+        serverPreview,
+        draftBody: body,
+      }),
+    [templates, permissions, serverPreview, body],
+  );
 
   return (
-    <section className="social-hub-panel module-panel module-panel--elevated">
-      <header className="social-hub-panel-head">
-        <h2 className="account-card-title">Hazır yanıtlar</h2>
-        <p className="account-card-lead">
-          <code>{`{{degisken}}`}</code> ile kişiselleştirin; kayıtlı şablonlar Mesajlar’da
-          hızlı yanıt olarak görünür (değişkenler gönderimde çözülür).
-        </p>
-        <Link className="btn-account-ghost" href={messagingDeepLink}>
-          Mesajlar’da kullan
-        </Link>
-      </header>
-      <div className="social-hub-template-vars module-hint">
-        <span>Değişkenler: </span>
-        {SOCIAL_HUB_TEMPLATE_VARIABLE_HINTS.map((hint) => (
-          <button
-            key={hint.placeholder}
-            type="button"
-            className="btn-account-ghost social-hub-chip-btn"
-            disabled={!permissions.canManageTemplates}
-            title={hint.description}
-            onClick={() => onInsertPlaceholder(hint.placeholder)}
-          >
-            {hint.placeholder}
-          </button>
-        ))}
-      </div>
-      {permissions.canManageTemplates ? (
-        <div className="social-hub-compose">
-          <label className="label-light">
-            Kanal kapsamı
-            <select
-              className="input-light"
-              value={channelScope}
-              onChange={(e) => onChannelScope(e.target.value)}
-            >
-              {TEMPLATE_CHANNEL_SCOPE_OPTIONS.map((opt) => (
-                <option key={opt.code || "all"} value={opt.code}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="label-light">
-            Başlık
-            <input className="input-light" value={title} onChange={(e) => onTitle(e.target.value)} />
-          </label>
-          <label className="label-light">
-            Metin
-            <textarea
-              className="input-light account-textarea"
-              rows={3}
-              value={body}
-              onChange={(e) => onBody(e.target.value)}
-            />
-          </label>
-          {body.trim() ? (
-            <div className="social-hub-template-preview">
-              <span className="social-hub-stat-label">Önizleme</span>
-              <p>{previewText}</p>
+    <section className="social-hub-connections-shell module-panel module-panel--elevated">
+      <div className="social-hub-connections-layout">
+        <div className="social-hub-connections-main social-hub-templates-main">
+          <header className="social-hub-panel-head social-hub-panel-head--premium">
+            <div>
+              <h2 className="account-card-title">Hazır yanıtlar</h2>
+              <p className="social-hub-connections-lead">
+                {templatesPanelLead(templates.length)}
+              </p>
             </div>
-          ) : null}
-          <button
-            type="button"
-            className="btn-account-primary"
-            disabled={busy || !title.trim() || !body.trim()}
-            onClick={onSave}
-          >
-            Şablon ekle
-          </button>
-        </div>
-      ) : null}
-      <ul className="social-hub-template-list">
-        {templates.map((t) => (
-          <li key={t.id}>
-            <div className="social-hub-template-row-head">
-              <strong>{t.title}</strong>
-              {t.channelScopeLabel || t.channelScopeCode ? (
-                <span className="social-hub-badge">
-                  {t.channelScopeLabel ?? t.channelScopeCode}
-                </span>
+            <div className="social-hub-stat-chips">
+              <span className="social-hub-stat-chip social-hub-stat-chip--ok">
+                {templates.length} şablon
+              </span>
+            </div>
+          </header>
+          <div className="social-hub-inbox-actions-premium">
+            <Link className="btn-account-primary" href={messagingDeepLink}>
+              Mesajlar&apos;da kullan
+            </Link>
+          </div>
+          {permissions.canManageTemplates ? (
+            <details className="social-hub-health-settings-details">
+              <summary className="social-hub-health-settings-summary">
+                Değişkenler
+              </summary>
+              <p className="social-hub-connection-summary">
+                Metne eklemek için bir değişken seçin. Açıklamalar operasyon
+                günlüğünde.
+              </p>
+              <div className="social-hub-template-vars social-hub-template-vars--premium">
+                {SOCIAL_HUB_TEMPLATE_VARIABLE_HINTS.map((hint) => (
+                  <button
+                    key={hint.placeholder}
+                    type="button"
+                    className="btn-account-ghost social-hub-chip-btn"
+                    disabled={busy}
+                    onClick={() => onInsertPlaceholder(hint.placeholder)}
+                  >
+                    {hint.placeholder}
+                  </button>
+                ))}
+              </div>
+            </details>
+          ) : (
+            <p className="social-hub-connection-summary">
+              Şablon düzenleme yetkiniz yok — ayrıntı operasyon günlüğünde.
+            </p>
+          )}
+          {permissions.canManageTemplates ? (
+            <div className="social-hub-compose social-hub-compose-premium">
+              <h3 className="social-hub-subsection-heading">Yeni şablon</h3>
+              <label className="label-light">
+                Kanal kapsamı
+                <select
+                  className="input-light"
+                  value={channelScope}
+                  onChange={(e) => onChannelScope(e.target.value)}
+                >
+                  {TEMPLATE_CHANNEL_SCOPE_OPTIONS.map((opt) => (
+                    <option key={opt.code || "all"} value={opt.code}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="label-light">
+                Başlık
+                <input
+                  className="input-light"
+                  value={title}
+                  onChange={(e) => onTitle(e.target.value)}
+                />
+              </label>
+              <label className="label-light">
+                Metin
+                <textarea
+                  className="input-light account-textarea"
+                  rows={3}
+                  value={body}
+                  onChange={(e) => onBody(e.target.value)}
+                />
+              </label>
+              {body.trim() ? (
+                <div className="social-hub-template-preview social-hub-template-preview--premium">
+                  <span className="social-hub-stat-label">Önizleme</span>
+                  <p>{previewText}</p>
+                </div>
               ) : null}
-            </div>
-            <p className="social-hub-template-raw">{t.bodyText}</p>
-            <div className="social-hub-template-actions">
               <button
                 type="button"
-                className="btn-account-ghost"
-                disabled={busy}
-                onClick={() => onCopyRendered(t.id)}
+                className="btn-account-primary"
+                disabled={busy || !title.trim() || !body.trim()}
+                onClick={onSave}
               >
-                Kopyala (çözülmüş)
+                Şablon ekle
               </button>
             </div>
-          </li>
-        ))}
-      </ul>
+          ) : null}
+          <h3 className="social-hub-subsection-heading">Kayıtlı şablonlar</h3>
+          <ul className="social-hub-template-list social-hub-template-list--premium">
+            {templates.length === 0 ? (
+              <li className="social-hub-inbox-empty-premium">
+                <p className="social-hub-connection-summary">
+                  Henüz şablon yok — yukarıdan ekleyin.
+                </p>
+              </li>
+            ) : (
+              templates.map((t) => {
+                const resolved = renderSocialHubTemplatePreview(t.bodyText, {});
+                return (
+                  <li
+                    key={t.id}
+                    className="social-hub-post-item social-hub-post-item--premium"
+                  >
+                    <div className="social-hub-connection-title-row">
+                      <strong>{t.title}</strong>
+                      {t.channelScopeLabel || t.channelScopeCode ? (
+                        <span className="social-hub-stat-chip">
+                          {t.channelScopeLabel ?? t.channelScopeCode}
+                        </span>
+                      ) : (
+                        <span className="social-hub-stat-chip">Tüm kanallar</span>
+                      )}
+                    </div>
+                    <p className="social-hub-connection-summary">
+                      {templateCardSummary(t)}
+                    </p>
+                    <p className="social-hub-post-preview">{resolved}</p>
+                    <div className="social-hub-template-actions">
+                      <button
+                        type="button"
+                        className="btn-account-ghost"
+                        disabled={busy}
+                        onClick={() => onCopyRendered(t.id)}
+                      >
+                        Kopyala
+                      </button>
+                    </div>
+                  </li>
+                );
+              })
+            )}
+          </ul>
+        </div>
+        <SocialHubOpsLogRail entries={opsLogEntries} />
+      </div>
     </section>
   );
 }

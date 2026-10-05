@@ -15820,6 +15820,35 @@ button.btn-secondary {
   color: #334155;
 }
 
+.social-hub-template-vars--premium {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+.social-hub-template-list--premium {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem;
+}
+
+.social-hub-template-preview--premium {
+  margin: 0.5rem 0 0.75rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid #e8edf4;
+}
+
+.social-hub-templates-main .social-hub-inbox-actions-premium {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
 .social-hub-connection-actions {
   display: flex;
   flex-wrap: wrap;
