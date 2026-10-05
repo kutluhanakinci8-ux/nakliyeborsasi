@@ -19,6 +19,7 @@ import {
   mapTelegramOutboundMediaItems,
   type TelegramOutboundMediaInput,
 } from "./socialHubTelegramOutboundMedia";
+import { formatTelegramApiFailureMessage } from "./socialHubTelegramFlood";
 
 export type TelegramPublishResult = {
   ok: boolean;
@@ -239,8 +240,10 @@ export class SocialHubTelegramPublishService {
         Array<{ message_id: number }>
       >(token, "sendMediaGroup", form);
       if (!response.ok) {
-        const detail =
-          response.description ?? "Telegram kanal albüm yayını başarısız.";
+        const detail = formatTelegramApiFailureMessage(
+          response,
+          "Telegram kanal albüm yayını başarısız.",
+        );
         this.logger.warn(detail);
         return { ok: false, message: detail };
       }
@@ -272,7 +275,10 @@ export class SocialHubTelegramPublishService {
         form,
       );
       if (!response.ok) {
-        const detail = response.description ?? "Telegram kanal yayını başarısız.";
+        const detail = formatTelegramApiFailureMessage(
+          response,
+          "Telegram kanal yayını başarısız.",
+        );
         this.logger.warn(detail);
         return { ok: false, message: detail };
       }
@@ -297,7 +303,10 @@ export class SocialHubTelegramPublishService {
       },
     );
     if (!response.ok) {
-      const detail = response.description ?? "Telegram kanal yayını başarısız.";
+      const detail = formatTelegramApiFailureMessage(
+        response,
+        "Telegram kanal yayını başarısız.",
+      );
       return { ok: false, message: detail };
     }
     return {

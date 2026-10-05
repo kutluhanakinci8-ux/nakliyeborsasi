@@ -185,6 +185,12 @@ export function buildConnectionsOpsLog(
       level: "info",
       channel: "Telegram",
       message:
+        "Flood limiti (429): API otomatik bekleyip yeniden dener; yine başarısızsa Mesajlar/Yayınlar’da Türkçe bekleme süresi gösterilir.",
+    });
+    push(entries, {
+      level: "info",
+      channel: "Telegram",
+      message:
         "Kanal yayını: bot admin → «Kanal yayını»; linked discussion grubu otomatik bağlanır.",
     });
     push(entries, {
