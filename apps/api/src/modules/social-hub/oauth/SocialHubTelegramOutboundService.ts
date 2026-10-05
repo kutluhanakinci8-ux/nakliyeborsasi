@@ -5,6 +5,7 @@ import {
 } from "./socialHubTelegramApi";
 import { parseDiscussionExternalThreadId } from "./socialHubTelegramDiscussionRouting";
 import {
+  buildTelegramSendMediaGroupForm,
   mapTelegramOutboundMediaItems,
   type TelegramOutboundMediaInput,
 } from "./socialHubTelegramOutboundMedia";
@@ -162,29 +163,12 @@ export class SocialHubTelegramOutboundService {
         replyToMessageId: params.replyToMessageId,
       });
     }
-    const caption = params.bodyText.trim();
-    const mediaPayload = items.map((item, index) => {
-      const entry: Record<string, string> = {
-        type: item.type,
-        media: `attach://${item.attachName}`,
-      };
-      if (index === 0 && caption) {
-        entry.caption = caption;
-      }
-      return entry;
+    const form = buildTelegramSendMediaGroupForm({
+      chatId: params.chatId,
+      caption: params.bodyText.trim(),
+      items,
+      replyToMessageId: params.replyToMessageId,
     });
-    const form = new FormData();
-    form.append("chat_id", params.chatId);
-    form.append("media", JSON.stringify(mediaPayload));
-    if (params.replyToMessageId) {
-      form.append("reply_to_message_id", String(params.replyToMessageId));
-    }
-    for (const item of items) {
-      const blob = new Blob([Uint8Array.from(item.buffer)], {
-        type: item.contentType,
-      });
-      form.append(item.attachName, blob, item.filename);
-    }
     const response = await callTelegramBotMultipart<Array<{ message_id: number }>>(
       params.botToken,
       "sendMediaGroup",

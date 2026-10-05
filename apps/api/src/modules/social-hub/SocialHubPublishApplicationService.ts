@@ -31,6 +31,19 @@ export class SocialHubPublishApplicationService {
     companyId: string,
     mediaUrls: string[],
   ): Promise<{ buffer: Buffer; contentType: string; filename: string } | null> {
+    const all = await this.resolveAllMediaAssets(companyId, mediaUrls);
+    return all[0] ?? null;
+  }
+
+  private async resolveAllMediaAssets(
+    companyId: string,
+    mediaUrls: string[],
+  ): Promise<Array<{ buffer: Buffer; contentType: string; filename: string }>> {
+    const assets: Array<{
+      buffer: Buffer;
+      contentType: string;
+      filename: string;
+    }> = [];
     for (const ref of mediaUrls) {
       const parsed = parseSocialHubMediaRef(ref);
       if (!parsed) {
@@ -40,13 +53,13 @@ export class SocialHubPublishApplicationService {
         companyId,
         parsed.mediaId,
       );
-      return {
+      assets.push({
         buffer,
         contentType: meta.contentType,
         filename: meta.filename,
-      };
+      });
     }
-    return null;
+    return assets;
   }
 
   public async publish(
@@ -193,13 +206,16 @@ export class SocialHubPublishApplicationService {
       };
     }
     if (platformCode === SocialPlatformCode.Telegram) {
-      const image =
-        mediaAsset &&
-        (mediaAsset.contentType.startsWith("image/") ||
-          mediaAsset.contentType.startsWith("video/"))
-          ? mediaAsset
-          : undefined;
-      if (mediaAsset && !image) {
+      const allMedia = await this.resolveAllMediaAssets(
+        companyId,
+        request.mediaUrls,
+      );
+      const visualMedia = allMedia.filter(
+        (item) =>
+          item.contentType.startsWith("image/") ||
+          item.contentType.startsWith("video/"),
+      );
+      if (allMedia.length > 0 && visualMedia.length === 0) {
         return {
           implementationStatus: "pending",
           externalPostId: null,
@@ -207,16 +223,18 @@ export class SocialHubPublishApplicationService {
             "Telegram kanal yayını için görsel veya video kullanın; diğer dosya türleri henüz desteklenmiyor.",
         };
       }
+      if (allMedia.length > visualMedia.length) {
+        return {
+          implementationStatus: "pending",
+          externalPostId: null,
+          message:
+            "Telegram kanal albümünde yalnızca görsel ve video desteklenir; desteklenmeyen dosyayı kaldırın.",
+        };
+      }
       const result = await this.telegramPublishService.publishToChannel({
         companyId,
         bodyText: request.bodyText,
-        image: image
-          ? {
-              buffer: image.buffer,
-              contentType: image.contentType,
-              filename: image.filename,
-            }
-          : undefined,
+        media: visualMedia,
       });
       if (!result.ok) {
         return {

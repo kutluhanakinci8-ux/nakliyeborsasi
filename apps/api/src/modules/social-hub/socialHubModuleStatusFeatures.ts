@@ -189,6 +189,11 @@ const BG_FEATURES = [
   "social_hub_ci_workflow_bg",
 ] as const;
 
+const BH_FEATURES = [
+  "social_hub_telegram_channel_media_group",
+  "social_hub_ci_workflow_bh",
+] as const;
+
 export const SOCIAL_HUB_PHASE_MILESTONE_CODES = [
   "ao",
   "ap",
@@ -209,6 +214,7 @@ export const SOCIAL_HUB_PHASE_MILESTONE_CODES = [
   "be",
   "bf",
   "bg",
+  "bh",
 ] as const;
 
 export function buildSocialHubModuleStatusFeatures(): string[] {
@@ -223,5 +229,6 @@ export function buildSocialHubModuleStatusFeatures(): string[] {
     ...BE_FEATURES,
     ...BF_FEATURES,
     ...BG_FEATURES,
+    ...BH_FEATURES,
   ];
 }

@@ -14,6 +14,11 @@ import {
   normalizeTelegramChannelRef,
   type TelegramChat,
 } from "./socialHubTelegramApi";
+import {
+  buildTelegramSendMediaGroupForm,
+  mapTelegramOutboundMediaItems,
+  type TelegramOutboundMediaInput,
+} from "./socialHubTelegramOutboundMedia";
 
 export type TelegramPublishResult = {
   ok: boolean;
@@ -202,7 +207,7 @@ export class SocialHubTelegramPublishService {
   public async publishToChannel(params: {
     companyId: string;
     bodyText: string;
-    image?: { buffer: Buffer; contentType: string; filename: string };
+    media?: TelegramOutboundMediaInput[];
   }): Promise<TelegramPublishResult> {
     const token = await this.tokenVault.requireAccessToken(
       params.companyId,
@@ -221,19 +226,45 @@ export class SocialHubTelegramPublishService {
       };
     }
     const caption = params.bodyText.trim();
+    const media = params.media ?? [];
 
-    if (params.image) {
+    if (media.length >= 2) {
+      const items = mapTelegramOutboundMediaItems(media);
+      const form = buildTelegramSendMediaGroupForm({
+        chatId: channelId,
+        caption,
+        items,
+      });
+      const response = await callTelegramBotMultipart<
+        Array<{ message_id: number }>
+      >(token, "sendMediaGroup", form);
+      if (!response.ok) {
+        const detail =
+          response.description ?? "Telegram kanal albüm yayını başarısız.";
+        this.logger.warn(detail);
+        return { ok: false, message: detail };
+      }
+      const firstId = response.result?.[0]?.message_id;
+      return {
+        ok: true,
+        message: `Telegram kanalına albüm yayınlandı (${items.length} medya).`,
+        externalPostId: firstId !== undefined ? String(firstId) : undefined,
+      };
+    }
+
+    const single = media[0];
+    if (single) {
       const form = new FormData();
       form.append("chat_id", channelId);
       if (caption) {
         form.append("caption", caption);
       }
-      const blob = new Blob([Uint8Array.from(params.image.buffer)], {
-        type: params.image.contentType,
+      const blob = new Blob([Uint8Array.from(single.buffer)], {
+        type: single.contentType,
       });
       const field =
-        params.image.contentType.startsWith("video/") ? "video" : "photo";
-      form.append(field, blob, params.image.filename);
+        single.contentType.startsWith("video/") ? "video" : "photo";
+      form.append(field, blob, single.filename);
       const method = field === "video" ? "sendVideo" : "sendPhoto";
       const response = await callTelegramBotMultipart<{ message_id: number }>(
         token,

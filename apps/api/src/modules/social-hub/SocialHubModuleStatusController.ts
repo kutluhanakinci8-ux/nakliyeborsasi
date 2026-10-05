@@ -79,7 +79,7 @@ export class SocialHubModuleStatusController {
     ]);
     return {
       module: "social_hub",
-      phase: "bg",
+      phase: "bh",
       subscriptionModuleCode: SubscriptionModuleCode.SocialHub,
       features: buildSocialHubModuleStatusFeatures(),
       integrationWebhookReadiness: buildSocialHubIntegrationWebhookReadiness(),

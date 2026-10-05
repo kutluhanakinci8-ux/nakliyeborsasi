@@ -1,0 +1,1 @@
+-- Faz BH: Telegram kanal sendMediaGroup — şema değişikliği yok
