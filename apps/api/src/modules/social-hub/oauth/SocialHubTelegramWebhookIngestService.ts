@@ -10,9 +10,14 @@ import { CompanySocialConnectionEntity } from "../../../infrastructure/database/
 import { SocialHubMessagingBridgeService } from "../SocialHubMessagingBridgeService";
 import { SocialHubWebhookBridgeAuditService } from "../SocialHubWebhookBridgeAuditService";
 import { parseSocialHubConnectionMetadata } from "./SocialHubConnectionMetadata";
-import { parseTelegramInboundMessage } from "./socialHubTelegramWebhookParser";
+import {
+  parseTelegramInboundMessage,
+  type TelegramInboundMessage,
+} from "./socialHubTelegramWebhookParser";
 import { SocialHubTokenVaultService } from "./SocialHubTokenVaultService";
 import { SocialHubTelegramFileService } from "./SocialHubTelegramFileService";
+import { SocialHubTelegramMediaGroupBufferService } from "./SocialHubTelegramMediaGroupBufferService";
+import type { TelegramMediaGroupBufferState } from "./socialHubTelegramMediaGroupTypes";
 
 @Injectable()
 export class SocialHubTelegramWebhookIngestService {
@@ -25,6 +30,7 @@ export class SocialHubTelegramWebhookIngestService {
     private readonly webhookBridgeAuditService: SocialHubWebhookBridgeAuditService,
     private readonly tokenVault: SocialHubTokenVaultService,
     private readonly telegramFileService: SocialHubTelegramFileService,
+    private readonly mediaGroupBufferService: SocialHubTelegramMediaGroupBufferService,
   ) {}
 
   public async ingestPayload(params: {
@@ -62,6 +68,47 @@ export class SocialHubTelegramWebhookIngestService {
       return;
     }
 
+    if (parsed.mediaGroupId) {
+      await this.mediaGroupBufferService.enqueue(
+        {
+          connectionId: connection.id,
+          companyId: connection.companyId,
+          mediaGroupId: parsed.mediaGroupId,
+          externalThreadId: parsed.externalThreadId,
+          displayLabel: parsed.displayLabel,
+          bodyText: parsed.bodyText,
+          media: parsed.media,
+          externalMessageId: parsed.externalMessageId,
+        },
+        async (merged) => {
+          await this.ingestMerged(connection.companyId, merged);
+        },
+      );
+      return;
+    }
+
+    await this.ingestSingle(connection.companyId, parsed);
+  }
+
+  private async ingestMerged(
+    companyId: string,
+    merged: TelegramMediaGroupBufferState,
+  ): Promise<void> {
+    const synthetic: TelegramInboundMessage = {
+      externalThreadId: merged.externalThreadId,
+      displayLabel: merged.displayLabel,
+      bodyText: merged.bodyText,
+      externalMessageId: `album:${merged.mediaGroupId}`,
+      media: merged.media,
+      mediaGroupId: merged.mediaGroupId,
+    };
+    await this.ingestSingle(companyId, synthetic);
+  }
+
+  private async ingestSingle(
+    companyId: string,
+    parsed: TelegramInboundMessage,
+  ): Promise<void> {
     let attachmentsInput:
       | Awaited<
           ReturnType<SocialHubTelegramFileService["downloadMediaAsAttachments"]>
@@ -69,7 +116,7 @@ export class SocialHubTelegramWebhookIngestService {
       | undefined;
     if (parsed.media.length > 0) {
       const botToken = await this.tokenVault.getAccessToken(
-        connection.companyId,
+        companyId,
         SocialPlatformCode.Telegram,
       );
       if (botToken) {
@@ -81,7 +128,7 @@ export class SocialHubTelegramWebhookIngestService {
     }
 
     const result = await this.messagingBridgeService.ingestWebhookInbound({
-      companyId: connection.companyId,
+      companyId,
       platformCode: SocialPlatformCode.Telegram,
       externalThreadId: parsed.externalThreadId,
       displayLabel: parsed.displayLabel,
@@ -94,10 +141,10 @@ export class SocialHubTelegramWebhookIngestService {
     });
     if (result.ingested) {
       this.logger.log(
-        `Telegram message bridged company=${connection.companyId} thread=${result.threadId}`,
+        `Telegram message bridged company=${companyId} thread=${result.threadId}`,
       );
       this.webhookBridgeAuditService.recordInboundBridged({
-        companyId: connection.companyId,
+        companyId,
         platformCode: SocialPlatformCode.Telegram,
         threadId: result.threadId,
         externalThreadId: parsed.externalThreadId,

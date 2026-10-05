@@ -83,6 +83,8 @@ import { SocialHubXWebhookIngestService } from "./oauth/SocialHubXWebhookIngestS
 import { SocialHubRoadmapPublishApplicationService } from "./SocialHubRoadmapPublishApplicationService";
 import { SocialHubPlatformAdminController } from "./SocialHubPlatformAdminController";
 import { PlatformAdminGuard } from "../platform-admin/PlatformAdminGuard";
+import { RedisModule } from "../../infrastructure/redis/RedisModule";
+import { SocialHubTelegramMediaGroupBufferService } from "./oauth/SocialHubTelegramMediaGroupBufferService";
 
 @Module({
   imports: [
@@ -90,6 +92,7 @@ import { PlatformAdminGuard } from "../platform-admin/PlatformAdminGuard";
     AuditModule,
     SubscriptionModule,
     NotificationModule,
+    RedisModule,
     forwardRef(() => MessagingModule),
     TypeOrmModule.forFeature([
       CompanySocialConnectionEntity,
@@ -132,6 +135,7 @@ import { PlatformAdminGuard } from "../platform-admin/PlatformAdminGuard";
     SocialHubTelegramOutboundService,
     SocialHubTelegramFileService,
     SocialHubTelegramPublishService,
+    SocialHubTelegramMediaGroupBufferService,
     SocialHubRoadmapPublishApplicationService,
     SocialHubOAuthApplicationService,
     SocialHubInstagramServiceTokenBootstrap,

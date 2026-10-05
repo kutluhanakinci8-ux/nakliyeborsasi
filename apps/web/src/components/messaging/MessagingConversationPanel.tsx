@@ -5,6 +5,7 @@ import { SocialHubApiClient } from "../../lib/SocialHubApiClient";
 import type { SocialHubOutboundDelivery } from "../../lib/socialHubTypes";
 import Link from "next/link";
 import { ChatMessageBody } from "./ChatMessageBody";
+import { MessagingChatAttachmentPreview } from "./MessagingChatAttachmentPreview";
 import { ChatMessageActionBar } from "./ChatMessageActionBar";
 import { EmptyState } from "../EmptyState";
 import { MessagingApiClient } from "../../lib/MessagingApiClient";
@@ -487,40 +488,19 @@ export function MessagingConversationPanel({
                           <ul className="chat-attachment-list">
                             {message.attachments.map((attachment) => (
                               <li key={attachment.index}>
-                                <button
-                                  type="button"
-                                  className="chat-attachment-link"
-                                  onClick={async () => {
-                                    if (!activeThreadId) {
-                                      return;
-                                    }
-                                    try {
-                                      const blob =
-                                        await MessagingApiClient.downloadAttachment(
-                                          accessToken,
-                                          locale,
-                                          activeThreadId,
-                                          message.id,
-                                          attachment.index,
-                                        );
-                                      const url = URL.createObjectURL(blob);
-                                      const anchor = document.createElement("a");
-                                      anchor.href = url;
-                                      anchor.download = attachment.filename;
-                                      anchor.click();
-                                      URL.revokeObjectURL(url);
-                                    } catch (error) {
-                                      setErrorMessage(
-                                        error instanceof Error
-                                          ? error.message
-                                          : "Ek indirilemedi",
-                                      );
-                                    }
-                                  }}
-                                >
-                                  📎 {attachment.filename} (
-                                  {Math.round(attachment.sizeBytes / 1024)} KB)
-                                </button>
+                                {activeThreadId ? (
+                                  <MessagingChatAttachmentPreview
+                                    accessToken={accessToken}
+                                    locale={locale}
+                                    threadId={activeThreadId}
+                                    messageId={message.id}
+                                    attachmentIndex={attachment.index}
+                                    contentType={attachment.contentType}
+                                    filename={attachment.filename}
+                                    sizeBytes={attachment.sizeBytes}
+                                    onError={(msg) => setErrorMessage(msg)}
+                                  />
+                                ) : null}
                               </li>
                             ))}
                           </ul>

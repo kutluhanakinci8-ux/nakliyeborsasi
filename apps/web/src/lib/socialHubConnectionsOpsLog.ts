@@ -150,7 +150,7 @@ export function buildConnectionsOpsLog(
       level: "info",
       channel: "Telegram",
       message:
-        "DM: fotoğraf, video, belge ve ses gelen kutusuna ek olarak düşer (10 MB sınırı). Giden yanıtta ek dosya desteklenir.",
+        "DM: fotoğraf, video, belge, ses ve sticker (önizleme) — albüm mesajları tek gönderide birleştirilir (10 MB/ek).",
     });
     push(entries, {
       level: "info",

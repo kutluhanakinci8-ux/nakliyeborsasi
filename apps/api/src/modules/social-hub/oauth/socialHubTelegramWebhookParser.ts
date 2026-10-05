@@ -6,7 +6,8 @@ export type TelegramMediaKind =
   | "document"
   | "voice"
   | "audio"
-  | "animation";
+  | "animation"
+  | "sticker";
 
 export type TelegramParsedMedia = {
   fileId: string;
@@ -21,6 +22,7 @@ export type TelegramInboundMessage = {
   bodyText: string;
   externalMessageId: string;
   media: TelegramParsedMedia[];
+  mediaGroupId: string | null;
 };
 
 function labelFromUser(user: TelegramUser): string {
@@ -125,6 +127,24 @@ function parseMediaFromMessage(
     }
   }
 
+  const sticker = msg.sticker;
+  if (sticker && typeof sticker === "object") {
+    const s = sticker as {
+      file_id?: string;
+      is_animated?: boolean;
+      is_video?: boolean;
+    };
+    if (s.file_id?.trim()) {
+      const animated = Boolean(s.is_animated || s.is_video);
+      media.push({
+        fileId: s.file_id.trim(),
+        filename: animated ? "sticker.webm" : "sticker.webp",
+        contentType: animated ? "video/webm" : "image/webp",
+        kind: "sticker",
+      });
+    }
+  }
+
   const audio = msg.audio;
   if (audio && typeof audio === "object") {
     const a = audio as {
@@ -152,11 +172,9 @@ function parseMediaFromMessage(
       voice: "[ses]",
       audio: "[ses dosyası]",
       animation: "[gif]",
+      sticker: "[sticker]",
     };
     bodyText = labels[media[0].kind] ?? "[medya]";
-  }
-  if (msg.sticker && media.length === 0 && !bodyText) {
-    bodyText = "[sticker]";
   }
 
   return { bodyText, media };
@@ -189,12 +207,19 @@ function parseFromMessageRecord(
   if (!bodyText.trim() && media.length === 0) {
     return null;
   }
+  const mediaGroupRaw = msg.media_group_id;
+  const mediaGroupId =
+    typeof mediaGroupRaw === "string" || typeof mediaGroupRaw === "number"
+      ? String(mediaGroupRaw)
+      : null;
+
   return {
     externalThreadId: String(chatId),
     displayLabel: labelFromUser(fromUser),
     bodyText: bodyText.trim() || "[medya]",
     externalMessageId: String(messageId),
     media,
+    mediaGroupId,
   };
 }
 
