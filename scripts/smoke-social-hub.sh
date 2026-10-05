@@ -174,6 +174,17 @@ if [[ -n "${SOCIAL_HUB_SMOKE_EXPECT_PHASE:-}" ]]; then
     }
     echo "OK: status social_hub_telegram_edited_message_sync (BI)"
   fi
+  if [[ "${SOCIAL_HUB_SMOKE_EXPECT_PHASE}" == "bj" ]]; then
+    echo "${status_json}" | grep -q '"phase":"bj"' || {
+      echo "FAIL: phase not bj"
+      exit 1
+    }
+    echo "${status_json}" | grep -q '"social_hub_telegram_flood_retry"' || {
+      echo "FAIL: status missing social_hub_telegram_flood_retry"
+      exit 1
+    }
+    echo "OK: status social_hub_telegram_flood_retry (BJ)"
+  fi
   if [[ "${SOCIAL_HUB_SMOKE_EXPECT_PHASE}" == "bb" ]]; then
     echo "${status_json}" | grep -q '"social_hub_pwa_manifest_scope"' || {
       echo "FAIL: status missing social_hub_pwa_manifest_scope feature"

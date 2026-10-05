@@ -1,0 +1,1 @@
+-- Faz BJ: Telegram flood / 429 retry + kullanıcı mesajları (şema değişikliği yok)

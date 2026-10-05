@@ -1,7 +1,13 @@
+import { callWithTelegramFloodRetry } from "./socialHubTelegramFlood";
+
 export type TelegramApiResponse<T> = {
   ok: boolean;
   result?: T;
   description?: string;
+  error_code?: number;
+  parameters?: {
+    retry_after?: number;
+  };
 };
 
 export type TelegramUser = {
@@ -34,6 +40,32 @@ export type TelegramFile = {
   file_path?: string;
 };
 
+async function parseTelegramHttpJson<T>(
+  response: Response,
+): Promise<TelegramApiResponse<T>> {
+  try {
+    return (await response.json()) as TelegramApiResponse<T>;
+  } catch {
+    if (response.status === 429) {
+      const retryHeader = response.headers.get("retry-after");
+      const retryAfter = retryHeader
+        ? Number.parseInt(retryHeader, 10)
+        : undefined;
+      return {
+        ok: false,
+        error_code: 429,
+        description: "Too Many Requests",
+        parameters:
+          retryAfter && retryAfter > 0 ? { retry_after: retryAfter } : undefined,
+      };
+    }
+    return {
+      ok: false,
+      description: `Telegram HTTP ${response.status}`,
+    };
+  }
+}
+
 export async function callTelegramBotApi<T>(
   botToken: string,
   method: string,
@@ -41,12 +73,18 @@ export async function callTelegramBotApi<T>(
 ): Promise<TelegramApiResponse<T>> {
   const trimmed = botToken.trim();
   const url = `https://api.telegram.org/bot${trimmed}/${method}`;
-  const response = await fetch(url, {
-    method: payload ? "POST" : "GET",
-    headers: payload ? { "Content-Type": "application/json" } : undefined,
-    body: payload ? JSON.stringify(payload) : undefined,
+  return callWithTelegramFloodRetry(async () => {
+    const response = await fetch(url, {
+      method: payload ? "POST" : "GET",
+      headers: payload ? { "Content-Type": "application/json" } : undefined,
+      body: payload ? JSON.stringify(payload) : undefined,
+    });
+    const body = await parseTelegramHttpJson<T>(response);
+    if (!body.ok && response.status === 429 && !body.error_code) {
+      body.error_code = 429;
+    }
+    return body;
   });
-  return (await response.json()) as TelegramApiResponse<T>;
 }
 
 export async function callTelegramBotMultipart<T>(
@@ -56,8 +94,14 @@ export async function callTelegramBotMultipart<T>(
 ): Promise<TelegramApiResponse<T>> {
   const trimmed = botToken.trim();
   const url = `https://api.telegram.org/bot${trimmed}/${method}`;
-  const response = await fetch(url, { method: "POST", body: form });
-  return (await response.json()) as TelegramApiResponse<T>;
+  return callWithTelegramFloodRetry(async () => {
+    const response = await fetch(url, { method: "POST", body: form });
+    const body = await parseTelegramHttpJson<T>(response);
+    if (!body.ok && response.status === 429 && !body.error_code) {
+      body.error_code = 429;
+    }
+    return body;
+  });
 }
 
 export function formatTelegramBotLabel(me: TelegramGetMeResult): string {

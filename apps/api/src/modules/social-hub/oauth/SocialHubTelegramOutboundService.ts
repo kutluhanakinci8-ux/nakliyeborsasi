@@ -3,6 +3,7 @@ import {
   callTelegramBotApi,
   callTelegramBotMultipart,
 } from "./socialHubTelegramApi";
+import { formatTelegramApiFailureMessage } from "./socialHubTelegramFlood";
 import { parseDiscussionExternalThreadId } from "./socialHubTelegramDiscussionRouting";
 import {
   buildTelegramSendMediaGroupForm,
@@ -49,7 +50,10 @@ export class SocialHubTelegramOutboundService {
       payload,
     );
     if (!response.ok) {
-      const detail = response.description ?? "Telegram mesajı gönderilemedi.";
+      const detail = formatTelegramApiFailureMessage(
+        response,
+        "Telegram mesajı gönderilemedi.",
+      );
       this.logger.warn(`Telegram outbound failed: ${detail}`);
       return { ok: false, message: detail };
     }
@@ -133,7 +137,10 @@ export class SocialHubTelegramOutboundService {
       form,
     );
     if (!response.ok) {
-      const detail = response.description ?? "Telegram medya gönderilemedi.";
+      const detail = formatTelegramApiFailureMessage(
+        response,
+        "Telegram medya gönderilemedi.",
+      );
       this.logger.warn(`Telegram media outbound failed: ${detail}`);
       return { ok: false, message: detail };
     }
@@ -175,8 +182,10 @@ export class SocialHubTelegramOutboundService {
       form,
     );
     if (!response.ok) {
-      const detail =
-        response.description ?? "Telegram albüm gönderimi başarısız.";
+      const detail = formatTelegramApiFailureMessage(
+        response,
+        "Telegram albüm gönderimi başarısız.",
+      );
       this.logger.warn(`Telegram media group outbound failed: ${detail}`);
       return { ok: false, message: detail };
     }
