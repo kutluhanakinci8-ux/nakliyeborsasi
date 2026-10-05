@@ -204,6 +204,11 @@ const BJ_FEATURES = [
   "social_hub_ci_workflow_bj",
 ] as const;
 
+const BK_FEATURES = [
+  "social_hub_telegram_deleted_message_sync",
+  "social_hub_ci_workflow_bk",
+] as const;
+
 export const SOCIAL_HUB_PHASE_MILESTONE_CODES = [
   "ao",
   "ap",
@@ -227,6 +232,7 @@ export const SOCIAL_HUB_PHASE_MILESTONE_CODES = [
   "bh",
   "bi",
   "bj",
+  "bk",
 ] as const;
 
 export function buildSocialHubModuleStatusFeatures(): string[] {
@@ -244,5 +250,6 @@ export function buildSocialHubModuleStatusFeatures(): string[] {
     ...BH_FEATURES,
     ...BI_FEATURES,
     ...BJ_FEATURES,
+    ...BK_FEATURES,
   ];
 }

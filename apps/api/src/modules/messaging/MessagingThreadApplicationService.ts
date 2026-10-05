@@ -1686,6 +1686,40 @@ export class MessagingThreadApplicationService {
     return true;
   }
 
+  public async applyExternalChannelInboundDelete(params: {
+    companyId: string;
+    threadId: string;
+    messageId: string;
+  }): Promise<boolean> {
+    const thread = await this.messageThreadRepository.findOne({
+      where: { id: params.threadId },
+    });
+    if (
+      !thread ||
+      thread.threadKind !== "external_social" ||
+      thread.companyAId !== params.companyId
+    ) {
+      return false;
+    }
+    const message = await this.messageRepository.findOne({
+      where: { id: params.messageId, threadId: thread.id },
+    });
+    if (
+      !message ||
+      message.deletedAt ||
+      message.senderUserId !== EXTERNAL_INBOUND_SENDER_USER_ID
+    ) {
+      return false;
+    }
+    message.deletedAt = new Date();
+    await this.messageRepository.save(message);
+    void this.fanOutRealtime(thread, {
+      type: "message",
+      threadId: thread.id,
+    });
+    return true;
+  }
+
   private async requireParticipantThread(
     authenticatedUser: AuthenticatedUserContext,
     threadId: string,

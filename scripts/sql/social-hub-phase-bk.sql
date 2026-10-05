@@ -1,0 +1,1 @@
+-- Faz BK: Telegram deleted_message → Mesajlar sync (şema değişikliği yok)

@@ -71,6 +71,27 @@ export class SocialHubTelegramWebhookIngestService {
     }
     const parsed = this.applyDiscussionRouting(parsedRaw, metadata);
 
+    if (parsed.isDelete) {
+      const deleteResult =
+        await this.messagingBridgeService.ingestWebhookInboundDelete({
+          companyId: connection.companyId,
+          platformCode: SocialPlatformCode.Telegram,
+          externalThreadId: parsed.externalThreadId,
+          displayLabel: parsed.displayLabel,
+          externalMessageId: parsed.externalMessageId,
+        });
+      if (deleteResult.ingested && deleteResult.threadId) {
+        this.webhookBridgeAuditService.recordInboundBridged({
+          companyId: connection.companyId,
+          platformCode: SocialPlatformCode.Telegram,
+          threadId: deleteResult.threadId,
+          externalThreadId: parsed.externalThreadId,
+          externalMessageId: `delete:${parsed.externalMessageId}`,
+        });
+      }
+      return;
+    }
+
     if (parsed.isEdit) {
       if (parsed.mediaGroupId) {
         this.logger.debug(
