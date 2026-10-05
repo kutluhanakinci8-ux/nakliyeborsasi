@@ -305,18 +305,23 @@ export class SocialHubOutboundMessagingService {
     bodyText: string;
     attachments: Array<{ buffer: Buffer; contentType: string; filename: string }>;
   }): Promise<{ ok: boolean; message: string; externalMessageId?: string }> {
+    const target = this.telegramOutboundService.resolveOutboundChatTarget(
+      params.externalThreadId,
+    );
     const send =
       params.attachments.length > 0
         ? await this.telegramOutboundService.sendWithAttachments({
             botToken: params.accessToken,
-            chatId: params.externalThreadId,
+            chatId: target.chatId,
             bodyText: params.bodyText,
             attachments: params.attachments,
+            replyToMessageId: target.replyToMessageId,
           })
         : await this.telegramOutboundService.sendTextMessage({
             botToken: params.accessToken,
-            chatId: params.externalThreadId,
+            chatId: target.chatId,
             bodyText: params.bodyText,
+            replyToMessageId: target.replyToMessageId,
           });
     return {
       ok: send.ok,

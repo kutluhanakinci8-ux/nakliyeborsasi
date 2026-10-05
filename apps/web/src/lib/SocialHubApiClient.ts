@@ -341,6 +341,21 @@ export class SocialHubApiClient {
     );
   }
 
+  public static async setTelegramDiscussionGroup(
+    accessToken: string,
+    groupRef: string,
+  ): Promise<{
+    discussionGroup: {
+      discussionGroupChatId: string;
+      discussionGroupTitle: string | null;
+    };
+  }> {
+    return socialHubFetch(accessToken, "/connections/TELEGRAM/discussion-group", {
+      method: "POST",
+      body: JSON.stringify({ groupRef }),
+    });
+  }
+
   public static async setTelegramPublishChannel(
     accessToken: string,
     channelRef: string,

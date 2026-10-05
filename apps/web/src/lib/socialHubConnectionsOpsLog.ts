@@ -156,7 +156,13 @@ export function buildConnectionsOpsLog(
       level: "info",
       channel: "Telegram",
       message:
-        "Kanal yayını: bot admin → Bağlı hesaplarda «Kanal yayını» → Sosyal Medya «Yayınlar»da TELEGRAM.",
+        "Kanal yayını: bot admin → «Kanal yayını»; linked discussion grubu otomatik bağlanır.",
+    });
+    push(entries, {
+      level: "info",
+      channel: "Telegram",
+      message:
+        "Kanal yorumları: discussion grubunda bot üye → Mesajlar’da gönderi başına thread (dg:…:post:…). «Yorum grubu» ile manuel chat id.",
     });
     push(entries, {
       level: "info",

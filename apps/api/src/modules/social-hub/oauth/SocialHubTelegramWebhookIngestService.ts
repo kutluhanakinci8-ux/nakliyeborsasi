@@ -18,6 +18,8 @@ import { SocialHubTokenVaultService } from "./SocialHubTokenVaultService";
 import { SocialHubTelegramFileService } from "./SocialHubTelegramFileService";
 import { SocialHubTelegramMediaGroupBufferService } from "./SocialHubTelegramMediaGroupBufferService";
 import type { TelegramMediaGroupBufferState } from "./socialHubTelegramMediaGroupTypes";
+import { resolveTelegramDiscussionRouting } from "./socialHubTelegramDiscussionRouting";
+import type { SocialHubConnectionMetadata } from "./SocialHubConnectionMetadata";
 
 @Injectable()
 export class SocialHubTelegramWebhookIngestService {
@@ -63,10 +65,11 @@ export class SocialHubTelegramWebhookIngestService {
       }
     }
 
-    const parsed = parseTelegramInboundMessage(params.body);
-    if (!parsed) {
+    const parsedRaw = parseTelegramInboundMessage(params.body);
+    if (!parsedRaw) {
       return;
     }
+    const parsed = this.applyDiscussionRouting(parsedRaw, metadata);
 
     if (parsed.mediaGroupId) {
       await this.mediaGroupBufferService.enqueue(
@@ -74,6 +77,7 @@ export class SocialHubTelegramWebhookIngestService {
           connectionId: connection.id,
           companyId: connection.companyId,
           mediaGroupId: parsed.mediaGroupId,
+          chatId: parsed.chatId,
           externalThreadId: parsed.externalThreadId,
           displayLabel: parsed.displayLabel,
           bodyText: parsed.bodyText,
@@ -90,17 +94,36 @@ export class SocialHubTelegramWebhookIngestService {
     await this.ingestSingle(connection.companyId, parsed);
   }
 
+  private applyDiscussionRouting(
+    parsed: TelegramInboundMessage,
+    metadata: SocialHubConnectionMetadata,
+  ): TelegramInboundMessage {
+    const routing = resolveTelegramDiscussionRouting({
+      chatId: parsed.chatId,
+      discussionGroupChatId: metadata.telegramDiscussionGroupChatId,
+      senderDisplayLabel: parsed.displayLabel.replace(/^Kanal yorumu · /, ""),
+      message: parsed.rawMessage,
+    });
+    return {
+      ...parsed,
+      externalThreadId: routing.externalThreadId,
+      displayLabel: routing.displayLabel,
+    };
+  }
+
   private async ingestMerged(
     companyId: string,
     merged: TelegramMediaGroupBufferState,
   ): Promise<void> {
     const synthetic: TelegramInboundMessage = {
+      chatId: merged.chatId,
       externalThreadId: merged.externalThreadId,
       displayLabel: merged.displayLabel,
       bodyText: merged.bodyText,
       externalMessageId: `album:${merged.mediaGroupId}`,
       media: merged.media,
       mediaGroupId: merged.mediaGroupId,
+      rawMessage: {},
     };
     await this.ingestSingle(companyId, synthetic);
   }

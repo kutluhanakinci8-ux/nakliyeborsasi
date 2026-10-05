@@ -34,7 +34,12 @@ export class SocialHubTelegramPublishService {
   public async setPublishChannel(
     companyId: string,
     channelRef: string,
-  ): Promise<{ channelChatId: string; channelTitle: string | null }> {
+  ): Promise<{
+    channelChatId: string;
+    channelTitle: string | null;
+    discussionGroupChatId: string | null;
+    discussionGroupTitle: string | null;
+  }> {
     const normalized = normalizeTelegramChannelRef(channelRef);
     if (!normalized) {
       throw new ValidationException("Kanal kullanıcı adı veya chat id gerekli.");
@@ -89,13 +94,109 @@ export class SocialHubTelegramPublishService {
     metadata.telegramChannelChatId = String(chat.id);
     metadata.telegramChannelUsername = chat.username ?? null;
     metadata.telegramChannelTitle = chat.title ?? null;
+    if (chat.linked_chat_id) {
+      await this.ensureDiscussionGroupMembership(
+        token,
+        botId,
+        String(chat.linked_chat_id),
+        metadata,
+      );
+    }
     row.grantedScopes = serializeSocialHubConnectionMetadata(metadata);
     await this.connectionRepository.save(row);
 
     return {
       channelChatId: String(chat.id),
       channelTitle: chat.title ?? chat.username ?? null,
+      discussionGroupChatId: metadata.telegramDiscussionGroupChatId ?? null,
+      discussionGroupTitle: metadata.telegramDiscussionGroupTitle ?? null,
     };
+  }
+
+  public async setDiscussionGroup(
+    companyId: string,
+    groupRef: string,
+  ): Promise<{
+    discussionGroupChatId: string;
+    discussionGroupTitle: string | null;
+  }> {
+    const normalized = normalizeTelegramChannelRef(groupRef);
+    if (!normalized) {
+      throw new ValidationException("Discussion group chat id veya @username gerekli.");
+    }
+    const token = await this.tokenVault.requireAccessToken(
+      companyId,
+      SocialPlatformCode.Telegram,
+    );
+    const chatResponse = await callTelegramBotApi<TelegramChat>(token, "getChat", {
+      chat_id: normalized,
+    });
+    if (!chatResponse.ok || !chatResponse.result) {
+      throw new ValidationException(
+        chatResponse.description ??
+          "Discussion grubu bulunamadı; bot gruba eklenmiş olmalı.",
+      );
+    }
+    const chat = chatResponse.result;
+    if (chat.type !== "supergroup" && chat.type !== "group") {
+      throw new ValidationException("Hedef bir grup veya süper grup olmalı.");
+    }
+    const me = await callTelegramBotApi<{ id: number }>(token, "getMe");
+    const botId = me.result?.id;
+    if (!botId) {
+      throw new ValidationException("Bot kimliği alınamadı.");
+    }
+    const row = await this.connectionRepository.findOne({
+      where: { companyId, platformCode: SocialPlatformCode.Telegram },
+    });
+    if (!row) {
+      throw new ValidationException("Önce Telegram bot bağlantısı yapın.");
+    }
+    const metadata = parseSocialHubConnectionMetadata(row.grantedScopes);
+    await this.ensureDiscussionGroupMembership(
+      token,
+      botId,
+      String(chat.id),
+      metadata,
+    );
+    row.grantedScopes = serializeSocialHubConnectionMetadata(metadata);
+    await this.connectionRepository.save(row);
+    return {
+      discussionGroupChatId: metadata.telegramDiscussionGroupChatId!,
+      discussionGroupTitle: metadata.telegramDiscussionGroupTitle ?? null,
+    };
+  }
+
+  private async ensureDiscussionGroupMembership(
+    token: string,
+    botId: number,
+    groupChatId: string,
+    metadata: ReturnType<typeof parseSocialHubConnectionMetadata>,
+  ): Promise<void> {
+    const member = await callTelegramBotApi<{ status: string }>(
+      token,
+      "getChatMember",
+      {
+        chat_id: groupChatId,
+        user_id: botId,
+      },
+    );
+    const status = member.result?.status;
+    if (
+      status !== "administrator" &&
+      status !== "member" &&
+      status !== "creator"
+    ) {
+      throw new ValidationException(
+        "Bot discussion grubunda üye veya admin olmalı; /setprivacy Disable önerilir.",
+      );
+    }
+    const groupChat = await callTelegramBotApi<TelegramChat>(token, "getChat", {
+      chat_id: groupChatId,
+    });
+    metadata.telegramDiscussionGroupChatId = groupChatId;
+    metadata.telegramDiscussionGroupTitle =
+      groupChat.result?.title ?? groupChat.result?.username ?? null;
   }
 
   public async publishToChannel(params: {

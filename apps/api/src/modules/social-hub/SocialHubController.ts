@@ -60,6 +60,17 @@ export class SocialHubController {
     );
   }
 
+  @Post("connections/TELEGRAM/discussion-group")
+  public async setTelegramDiscussionGroup(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: { groupRef: string },
+  ) {
+    return this.socialHubApplicationService.setTelegramDiscussionGroup(
+      user,
+      body.groupRef ?? "",
+    );
+  }
+
   @Post("connections/:platformCode/disconnect")
   public async disconnect(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,

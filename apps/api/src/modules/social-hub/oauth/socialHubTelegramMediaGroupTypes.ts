@@ -4,6 +4,7 @@ export type TelegramMediaGroupBufferState = {
   connectionId: string;
   companyId: string;
   mediaGroupId: string;
+  chatId: string;
   externalThreadId: string;
   displayLabel: string;
   bodyText: string;
@@ -17,6 +18,7 @@ export function mergeTelegramMediaGroupPart(
     connectionId: string;
     companyId: string;
     mediaGroupId: string;
+    chatId: string;
     externalThreadId: string;
     displayLabel: string;
     bodyText: string;
@@ -63,6 +65,7 @@ export function mergeTelegramMediaGroupPart(
     connectionId: part.connectionId,
     companyId: part.companyId,
     mediaGroupId: part.mediaGroupId,
+    chatId: part.chatId,
     externalThreadId: part.externalThreadId,
     displayLabel: part.displayLabel,
     bodyText: pickBody(existing?.bodyText ?? "", part.bodyText),

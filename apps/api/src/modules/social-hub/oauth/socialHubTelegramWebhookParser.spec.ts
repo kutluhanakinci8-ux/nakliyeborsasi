@@ -12,6 +12,7 @@ describe("parseTelegramInboundMessage", () => {
       },
     });
     expect(result).toMatchObject({
+      chatId: "99",
       externalThreadId: "99",
       bodyText: "Merhaba",
       externalMessageId: "42",
@@ -59,6 +60,7 @@ describe("mergeTelegramMediaGroupPart", () => {
       connectionId: "c1",
       companyId: "co1",
       mediaGroupId: "g1",
+      chatId: "99",
       externalThreadId: "99",
       displayLabel: "Ali",
       bodyText: "[fotoğraf]",

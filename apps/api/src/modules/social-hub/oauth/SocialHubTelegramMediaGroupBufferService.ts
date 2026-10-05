@@ -14,6 +14,7 @@ export type TelegramMediaGroupPart = {
   connectionId: string;
   companyId: string;
   mediaGroupId: string;
+  chatId: string;
   externalThreadId: string;
   displayLabel: string;
   bodyText: string;

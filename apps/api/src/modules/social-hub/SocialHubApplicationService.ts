@@ -709,6 +709,36 @@ export class SocialHubApplicationService {
     return { createdThreadIds };
   }
 
+  public async setTelegramDiscussionGroup(
+    user: AuthenticatedUserContext,
+    groupRef: string,
+  ) {
+    assertSocialHubAdmin(user);
+    await this.assertSocialHubSubscription(user.companyId);
+    const result = await this.telegramPublishService.setDiscussionGroup(
+      user.companyId,
+      groupRef,
+    );
+    const row = await this.connectionRepository.findOne({
+      where: {
+        companyId: user.companyId,
+        platformCode: SocialPlatformCode.Telegram,
+      },
+    });
+    this.socialHubAuditService.record(
+      user,
+      SocialHubAuditActionCode.SettingsUpdate,
+      "/company/social-hub/connections/TELEGRAM/discussion-group",
+      { telegramDiscussionGroup: result.discussionGroupChatId },
+    );
+    return {
+      discussionGroup: result,
+      connection: row
+        ? this.mapConnection(row, this.listProviderMeta())
+        : null,
+    };
+  }
+
   public async setTelegramPublishChannel(
     user: AuthenticatedUserContext,
     channelRef: string,
@@ -2170,6 +2200,12 @@ export class SocialHubApplicationService {
                   chatId: metadata.telegramChannelChatId,
                   username: metadata.telegramChannelUsername ?? null,
                   title: metadata.telegramChannelTitle ?? null,
+                }
+              : null,
+            telegramDiscussionGroup: metadata.telegramDiscussionGroupChatId
+              ? {
+                  chatId: metadata.telegramDiscussionGroupChatId,
+                  title: metadata.telegramDiscussionGroupTitle ?? null,
                 }
               : null,
           }
