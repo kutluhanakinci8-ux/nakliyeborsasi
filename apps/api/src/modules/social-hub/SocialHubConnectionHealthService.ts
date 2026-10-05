@@ -19,6 +19,8 @@ import { hasRoadmapRefreshToken } from "./oauth/socialHubRoadmapRefreshToken";
 import { roadmapConnectedHint } from "./socialHubRoadmapHints";
 import { SocialHubAuditService } from "./SocialHubAuditService";
 import { getRoadmapProviderCapabilities } from "./socialHubRoadmapCapabilities";
+import { isRoadmapProdProviderPlatform } from "./socialHubRoadmapProdProviders";
+import { isRoadmapPendingSkeletonPlatform } from "./socialHubRoadmapPendingProviders";
 
 const EXPIRY_LOOKAHEAD_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -116,7 +118,11 @@ export class SocialHubConnectionHealthService {
       );
       const tokenHealth = this.resolveTokenHealth(row);
       const setupWarnings: string[] = [];
-      if (!isRoadmapOAuthEnvConfigured(provider.platformCode)) {
+      if (isRoadmapPendingSkeletonPlatform(provider.platformCode)) {
+        setupWarnings.push(
+          "Pending provider iskeleti — OAuth kapalı; öncelik bildirimi kullanılabilir.",
+        );
+      } else if (!isRoadmapOAuthEnvConfigured(provider.platformCode)) {
         setupWarnings.push("Platform OAuth ortam değişkenleri eksik.");
       }
       if (row?.statusCode === SocialConnectionStatusCode.Connected) {
@@ -165,7 +171,7 @@ export class SocialHubConnectionHealthService {
         canRefreshToken:
           row?.statusCode === SocialConnectionStatusCode.Connected &&
           hasRoadmapRefreshToken(row.grantedScopes),
-        isRoadmapBeta: true,
+        isRoadmapBeta: !isRoadmapProdProviderPlatform(provider.platformCode),
         webhookInboundBridged24h: 0,
         inboxWebhookCapable: getRoadmapProviderCapabilities(
           provider.platformCode,

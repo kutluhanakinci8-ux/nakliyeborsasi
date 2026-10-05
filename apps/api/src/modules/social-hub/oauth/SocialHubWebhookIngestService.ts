@@ -5,6 +5,7 @@ import { parseMetaWebhookBody } from "./SocialHubMetaWebhookParser";
 import { SocialHubWebhookRoutingService } from "./SocialHubWebhookRoutingService";
 import { SocialHubMessagingBridgeService } from "../SocialHubMessagingBridgeService";
 import { SocialHubWebhookBridgeAuditService } from "../SocialHubWebhookBridgeAuditService";
+import { SocialPlatformCode } from "@nakliyeborsasi/core";
 
 @Injectable()
 export class SocialHubWebhookIngestService {
@@ -25,36 +26,61 @@ export class SocialHubWebhookIngestService {
     this.verifyMetaSignature(signatureHeader, rawBody);
     const { object, messages } = parseMetaWebhookBody(body);
     this.logger.log(`Meta webhook object=${object} messages=${messages.length}`);
+    if (object === "instagram" && messages.length === 0) {
+      this.logInstagramWebhookShape(body);
+    }
+    if (object === "whatsapp_business_account" && messages.length === 0) {
+      this.logger.warn(
+        "WhatsApp webhook: 0 parseable inbound messages (status-only veya desteklenmeyen tip olabilir)",
+      );
+    }
     for (const message of messages) {
-      const route = await this.routingService.resolveFromMetaPayload({
-        object,
-        entryId: message.entryId,
-      });
-      if (!route) {
-        this.logger.warn(
-          `Webhook route missing entry=${message.entryId} object=${object}`,
-        );
-        continue;
-      }
-      const result = await this.messagingBridgeService.ingestWebhookInbound({
-        companyId: route.companyId,
-        platformCode: route.platformCode,
-        externalThreadId: message.externalThreadId,
-        displayLabel: message.displayLabel,
-        bodyText: message.bodyText,
-        externalMessageId: message.externalMessageId,
-      });
-      if (result.ingested) {
-        this.logger.log(
-          `Ingested social message company=${route.companyId} thread=${result.threadId}`,
-        );
-        this.webhookBridgeAuditService.recordInboundBridged({
+      try {
+        const route = await this.routingService.resolveFromMetaPayload({
+          object,
+          entryId: message.entryId,
+          whatsAppPhoneNumberId: message.whatsAppPhoneNumberId,
+        });
+        if (!route) {
+          this.logger.warn(
+            `Webhook route missing entry=${message.entryId} object=${object}`,
+          );
+          continue;
+        }
+        const platformCode =
+          message.channel === "instagram" || object === "instagram"
+            ? SocialPlatformCode.Instagram
+            : route.platformCode;
+        const result = await this.messagingBridgeService.ingestWebhookInbound({
           companyId: route.companyId,
-          platformCode: route.platformCode,
-          threadId: result.threadId,
+          platformCode,
           externalThreadId: message.externalThreadId,
+          displayLabel: message.displayLabel,
+          bodyText: message.bodyText,
           externalMessageId: message.externalMessageId,
         });
+        if (result.ingested) {
+          this.logger.log(
+            `Ingested social message company=${route.companyId} thread=${result.threadId}`,
+          );
+          this.webhookBridgeAuditService.recordInboundBridged({
+            companyId: route.companyId,
+            platformCode,
+            threadId: result.threadId,
+            externalThreadId: message.externalThreadId,
+            externalMessageId: message.externalMessageId,
+          });
+        } else {
+          this.logger.warn(
+            `Meta webhook skipped ingest (dedup) company=${route.companyId} platform=${platformCode} from=${message.externalThreadId}`,
+          );
+        }
+      } catch (error) {
+        this.logger.error(
+          `Meta webhook ingest failed entry=${message.entryId} from=${message.externalThreadId}: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
       }
     }
   }
@@ -65,6 +91,62 @@ export class SocialHubWebhookIngestService {
     rawBody: Buffer | undefined,
   ): Promise<void> {
     await this.ingestMetaPayload(signatureHeader, body, rawBody);
+  }
+
+  private logInstagramWebhookShape(body: Record<string, unknown>): void {
+    const entries = Array.isArray(body.entry) ? body.entry : [];
+    const shapes: string[] = [];
+    for (const entry of entries) {
+      if (!entry || typeof entry !== "object") {
+        continue;
+      }
+      const record = entry as Record<string, unknown>;
+      const entryId = typeof record.id === "string" ? record.id : "?";
+      const messagingLen = Array.isArray(record.messaging)
+        ? record.messaging.length
+        : 0;
+      const standbyLen = Array.isArray(record.standby)
+        ? record.standby.length
+        : 0;
+      const entryField =
+        typeof record.field === "string" ? record.field : "";
+      const changeFields = Array.isArray(record.changes)
+        ? record.changes
+            .map((c) =>
+              c && typeof c === "object" && typeof (c as { field?: string }).field === "string"
+                ? (c as { field: string }).field
+                : "?",
+            )
+            .join(",")
+        : "";
+      const eventKinds: string[] = [];
+      const messaging = Array.isArray(record.messaging) ? record.messaging : [];
+      for (const item of messaging) {
+        if (!item || typeof item !== "object") {
+          continue;
+        }
+        const ev = item as Record<string, unknown>;
+        if (ev.message) {
+          eventKinds.push("message");
+        } else if (ev.reaction) {
+          eventKinds.push("reaction");
+        } else if (ev.postback) {
+          eventKinds.push("postback");
+        } else if (ev.read) {
+          eventKinds.push("read");
+        } else if (ev.delivery) {
+          eventKinds.push("delivery");
+        } else {
+          eventKinds.push("other");
+        }
+      }
+      shapes.push(
+        `entry=${entryId} messaging=${messagingLen} standby=${standbyLen} field=${entryField || "-"} changes=[${changeFields}] kinds=[${eventKinds.join(",")}]`,
+      );
+    }
+    if (shapes.length > 0) {
+      this.logger.log(`Instagram webhook shape: ${shapes.join(" | ")}`);
+    }
   }
 
   private verifyMetaSignature(

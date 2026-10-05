@@ -1,0 +1,1 @@
+-- Faz AV: şema değişikliği yok (TikTok prod provider kod yolu)

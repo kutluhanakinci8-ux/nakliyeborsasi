@@ -42,6 +42,8 @@ export type MailInboxMessageDetail = MailInboxListItem & {
   bodyHtml: string | null;
   emailAddress: string;
   attachments: MailInboxAttachmentMeta[];
+  /** Instagram «Verify your profile» e-postalarından çıkarılan kod */
+  instagramVerificationCode?: string | null;
 };
 
 export type MailImapSettings = {

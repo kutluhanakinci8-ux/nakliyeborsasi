@@ -19,15 +19,23 @@ import {
 } from "../../../../components/social/SocialHubSectionNav";
 import { useWebSession } from "../../../../context/WebSessionProvider";
 import { SocialHubApiClient } from "../../../../lib/SocialHubApiClient";
+import { readFileAsAttachment } from "../../../../lib/messagingPageHelpers";
+import {
+  endOfMonth,
+  startOfMonth,
+} from "../../../../lib/socialHubCalendar";
 import { formatSocialHubOAuthReason } from "../../../../lib/formatSocialHubOAuthReason";
+import { runSocialHubHealthPushHookSkeleton } from "../../../../lib/socialHubHealthPushHook";
 import type {
   SocialHubAnalytics,
   SocialHubAuditEntry,
   SocialHubHealth,
   SocialHubNotificationInsights,
   SocialHubOutboundDelivery,
+  SocialHubPost,
   SocialHubSnapshot,
   SocialHubTeamMember,
+  SocialHubInboxThreadPreview,
 } from "../../../../lib/socialHubTypes";
 
 export function SocialHubPageClient() {
@@ -40,8 +48,20 @@ export function SocialHubPageClient() {
   const [busy, setBusy] = useState(false);
   const [draftText, setDraftText] = useState("");
   const [draftPlatforms, setDraftPlatforms] = useState<string[]>(["INSTAGRAM"]);
+  const [draftMedia, setDraftMedia] = useState<
+    Array<{ mediaRef: string; previewUrl: string; filename: string }>
+  >([]);
+  const [calendarAnchor, setCalendarAnchor] = useState(() => new Date());
+  const [calendarMode, setCalendarMode] = useState<"month" | "week">("month");
+  const [calendarPosts, setCalendarPosts] = useState<SocialHubPost[]>([]);
+  const [calendarLoading, setCalendarLoading] = useState(false);
+  const [calendarSelection, setCalendarSelection] = useState<string[]>([]);
   const [templateTitle, setTemplateTitle] = useState("");
   const [templateBody, setTemplateBody] = useState("");
+  const [templateChannelScope, setTemplateChannelScope] = useState("");
+  const [templateServerPreview, setTemplateServerPreview] = useState<string | null>(
+    null,
+  );
   const [teamMembers, setTeamMembers] = useState<SocialHubTeamMember[]>([]);
   const [assignableRoles, setAssignableRoles] = useState<string[]>([]);
   const [integrationsPath, setIntegrationsPath] = useState("/hesap/uygulamalar");
@@ -49,7 +69,12 @@ export function SocialHubPageClient() {
   const [auditFocus, setAuditFocus] = useState<"all" | "webhook">("all");
   const [analytics, setAnalytics] = useState<SocialHubAnalytics | null>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [inboxThreadsPreview, setInboxThreadsPreview] = useState<
+    SocialHubInboxThreadPreview[]
+  >([]);
+  const [inboxPreviewLoading, setInboxPreviewLoading] = useState(false);
   const [subscriptionBlocked, setSubscriptionBlocked] = useState(false);
+  const [healthPushHookStatus, setHealthPushHookStatus] = useState("");
   const [health, setHealth] = useState<SocialHubHealth | null>(null);
   const [notificationInsights, setNotificationInsights] =
     useState<SocialHubNotificationInsights | null>(null);
@@ -122,6 +147,15 @@ export function SocialHubPageClient() {
     });
   }, [accessToken, canAccess, reload]);
 
+  useEffect(() => {
+    if (!snapshot?.pwa) {
+      return;
+    }
+    void runSocialHubHealthPushHookSkeleton(snapshot.pwa).then((result) =>
+      setHealthPushHookStatus(result),
+    );
+  }, [snapshot?.pwa]);
+
   const loadHealthData = useCallback(async () => {
     if (!accessToken) {
       return;
@@ -183,6 +217,41 @@ export function SocialHubPageClient() {
   }, [accessToken, activeTab, snapshot, subscriptionBlocked, loadHealthData]);
 
   useEffect(() => {
+    if (
+      !accessToken ||
+      activeTab !== "publishing" ||
+      !snapshot ||
+      subscriptionBlocked
+    ) {
+      return;
+    }
+    const from = startOfMonth(calendarAnchor).toISOString();
+    const to = endOfMonth(calendarAnchor).toISOString();
+    setCalendarLoading(true);
+    void SocialHubApiClient.fetchScheduledPosts(accessToken, from, to)
+      .then((payload) => setCalendarPosts(payload.posts))
+      .catch(() => setError("Yayın takvimi yüklenemedi."))
+      .finally(() => setCalendarLoading(false));
+  }, [
+    accessToken,
+    activeTab,
+    snapshot,
+    subscriptionBlocked,
+    calendarAnchor,
+  ]);
+
+  useEffect(() => {
+    if (!accessToken || activeTab !== "inbox" || !snapshot || subscriptionBlocked) {
+      return;
+    }
+    setInboxPreviewLoading(true);
+    void SocialHubApiClient.fetchInboxThreadsPreview(accessToken, 10)
+      .then(setInboxThreadsPreview)
+      .catch(() => setError("Gelen kutusu önizleme yüklenemedi."))
+      .finally(() => setInboxPreviewLoading(false));
+  }, [accessToken, activeTab, snapshot, subscriptionBlocked]);
+
+  useEffect(() => {
     if (!accessToken || activeTab !== "analytics" || !snapshot || subscriptionBlocked) {
       return;
     }
@@ -219,6 +288,24 @@ export function SocialHubPageClient() {
     auditFocus,
   ]);
 
+  useEffect(() => {
+    if (!accessToken || activeTab !== "templates" || subscriptionBlocked) {
+      setTemplateServerPreview(null);
+      return;
+    }
+    const text = templateBody.trim();
+    if (!text) {
+      setTemplateServerPreview(null);
+      return;
+    }
+    const handle = window.setTimeout(() => {
+      void SocialHubApiClient.previewTemplate(accessToken, text)
+        .then((result) => setTemplateServerPreview(result.renderedText))
+        .catch(() => setTemplateServerPreview(null));
+    }, 400);
+    return () => window.clearTimeout(handle);
+  }, [accessToken, activeTab, subscriptionBlocked, templateBody]);
+
   async function runAction(action: () => Promise<void>): Promise<void> {
     setBusy(true);
     setError("");
@@ -232,19 +319,24 @@ export function SocialHubPageClient() {
     }
   }
 
-  const platformOptions = (snapshot?.providers ?? []).map((p) => ({
-    code: p.platformCode,
-    label: p.label,
-  }));
+  const platformOptions = [
+    ...(snapshot?.providers ?? []).map((p) => ({
+      code: p.platformCode,
+      label: p.label,
+    })),
+    ...(snapshot?.roadmapProviders ?? [])
+      .filter(
+        (p) =>
+          p.capabilities?.feedPublish &&
+          p.roadmapConnectionStatusCode === "CONNECTED",
+      )
+      .map((p) => ({ code: p.platformCode, label: p.label })),
+  ];
 
   return (
     <div className="social-hub-page">
       <header className="social-hub-intro">
         <h2 className="social-hub-intro-title">Sosyal medya & kanallar</h2>
-        <p className="social-hub-intro-lead">
-          Kanal bağlantıları (Meta, WhatsApp, LinkedIn), gelen kutusu, yayın onayı ve
-          ekip izinleri. Yanıtlar Mesajlar üzerinden bağlı hesaplara gider.
-        </p>
       </header>
       <SocialHubSectionNav activeTab={activeTab} onTabChange={setActiveTab} />
         {error ? <p className="error banner error--light">{error}</p> : null}
@@ -565,10 +657,12 @@ export function SocialHubPageClient() {
                     setStatus("Sağlık verisi güncellendi.");
                   })
                 }
+                pwa={snapshot.pwa}
+                healthPushHookStatus={healthPushHookStatus}
                 onRefreshToken={(code) =>
                   void runAction(async () => {
                     const isRoadmap =
-                      code === "TIKTOK" || code === "YOUTUBE";
+                      code === "TIKTOK" || code === "YOUTUBE" || code === "X";
                     const result = isRoadmap
                       ? await SocialHubApiClient.refreshRoadmapToken(
                           accessToken,
@@ -587,6 +681,8 @@ export function SocialHubPageClient() {
             {activeTab === "inbox" ? (
               <SocialInboxPanel
                 snapshot={snapshot}
+                threadsPreview={inboxThreadsPreview}
+                threadsPreviewLoading={inboxPreviewLoading}
                 busy={busy}
                 canSeedDemo={snapshot.permissions.canManageConnections}
                 onSeedDemo={() =>
@@ -606,6 +702,7 @@ export function SocialHubPageClient() {
                       code,
                     );
                     setStatus(result.sync.message);
+                    await reload();
                   })
                 }
               />
@@ -617,9 +714,93 @@ export function SocialHubPageClient() {
                 ownerApprovalRequired={snapshot.settings.ownerApprovalRequired}
                 draftText={draftText}
                 draftPlatforms={draftPlatforms}
+                draftMedia={draftMedia}
                 busy={busy}
                 platformOptions={platformOptions}
+                calendarPosts={calendarPosts}
+                calendarLoading={calendarLoading}
+                calendarAnchor={calendarAnchor}
+                calendarMode={calendarMode}
+                calendarSelection={calendarSelection}
+                onCalendarAnchorChange={setCalendarAnchor}
+                onCalendarModeChange={setCalendarMode}
+                onToggleCalendarSelect={(postId) =>
+                  setCalendarSelection((current) =>
+                    current.includes(postId)
+                      ? current.filter((id) => id !== postId)
+                      : [...current, postId],
+                  )
+                }
+                onBulkCancelSelected={() =>
+                  void runAction(async () => {
+                    const result = await SocialHubApiClient.bulkCancelPosts(
+                      accessToken,
+                      calendarSelection,
+                    );
+                    setCalendarSelection([]);
+                    setStatus(
+                      result.errors.length > 0
+                        ? `${result.cancelledIds.length} iptal · ${result.errors[0]}`
+                        : `${result.cancelledIds.length} gönderi iptal edildi.`,
+                    );
+                  })
+                }
+                onBulkRetrySelected={() =>
+                  void runAction(async () => {
+                    const result = await SocialHubApiClient.bulkRetryPosts(
+                      accessToken,
+                      calendarSelection,
+                    );
+                    setCalendarSelection([]);
+                    setStatus(
+                      result.failed.length > 0
+                        ? `${result.publishedIds.length} yayın · ${result.failed[0]?.message}`
+                        : `${result.publishedIds.length} gönderi yeniden yayınlandı.`,
+                    );
+                  })
+                }
                 onDraftText={setDraftText}
+                onAddMediaFiles={(files) =>
+                  void runAction(async () => {
+                    if (!files?.length || !accessToken) {
+                      return;
+                    }
+                    const remaining = 4 - draftMedia.length;
+                    const slice = Array.from(files).slice(0, remaining);
+                    const uploaded: Array<{
+                      mediaRef: string;
+                      previewUrl: string;
+                      filename: string;
+                    }> = [];
+                    for (const file of slice) {
+                      const attachment = await readFileAsAttachment(file);
+                      const result = await SocialHubApiClient.uploadPublishMedia(
+                        accessToken,
+                        {
+                          filename: attachment.filename,
+                          contentType: attachment.contentType,
+                          contentBase64: attachment.contentBase64,
+                        },
+                      );
+                      uploaded.push({
+                        mediaRef: result.media.mediaRef,
+                        previewUrl:
+                          attachment.previewUrl ??
+                          SocialHubApiClient.buildPublishMediaPreviewUrl(
+                            result.media.mediaId,
+                          ),
+                        filename: result.media.filename,
+                      });
+                    }
+                    setDraftMedia((current) => [...current, ...uploaded]);
+                    setStatus(`${uploaded.length} görsel yüklendi.`);
+                  })
+                }
+                onRemoveDraftMedia={(mediaRef) =>
+                  setDraftMedia((current) =>
+                    current.filter((row) => row.mediaRef !== mediaRef),
+                  )
+                }
                 onTogglePlatform={(code) =>
                   setDraftPlatforms((current) =>
                     current.includes(code)
@@ -632,8 +813,10 @@ export function SocialHubPageClient() {
                     await SocialHubApiClient.createPost(accessToken, {
                       bodyText: draftText,
                       platformCodes: draftPlatforms,
+                      mediaUrls: draftMedia.map((row) => row.mediaRef),
                     });
                     setDraftText("");
+                    setDraftMedia([]);
                     setStatus("Taslak kaydedildi.");
                   })
                 }
@@ -682,10 +865,17 @@ export function SocialHubPageClient() {
                       accessToken,
                       postId,
                     );
-                    setStatus(
-                      result.providerMessage ??
-                        "Yayın denemesi tamamlandı (API fazı bekleniyor).",
-                    );
+                    if (result.post.statusCode === "PUBLISHED") {
+                      setStatus(
+                        result.providerMessage ?? "Gönderi kanallarda yayınlandı.",
+                      );
+                    } else {
+                      setStatus(
+                        result.post.lastErrorMessage ??
+                          result.providerMessage ??
+                          "Yayın başarısız; gönderi listesindeki hatayı kontrol edin.",
+                      );
+                    }
                   })
                 }
               />
@@ -696,18 +886,42 @@ export function SocialHubPageClient() {
                 permissions={snapshot.permissions}
                 title={templateTitle}
                 body={templateBody}
+                channelScope={templateChannelScope}
+                serverPreview={templateServerPreview}
+                messagingDeepLink={
+                  snapshot.inboxSummary?.messagingDeepLink ??
+                  "/messaging?tab=sohbet&filter=social"
+                }
                 busy={busy}
                 onTitle={setTemplateTitle}
                 onBody={setTemplateBody}
+                onChannelScope={setTemplateChannelScope}
+                onInsertPlaceholder={(placeholder) =>
+                  setTemplateBody((prev) =>
+                    prev ? `${prev} ${placeholder}` : placeholder,
+                  )
+                }
                 onSave={() =>
                   void runAction(async () => {
                     await SocialHubApiClient.createTemplate(accessToken, {
                       title: templateTitle,
                       bodyText: templateBody,
+                      channelScopeCode: templateChannelScope || null,
                     });
                     setTemplateTitle("");
                     setTemplateBody("");
+                    setTemplateChannelScope("");
                     setStatus("Şablon eklendi.");
+                  })
+                }
+                onCopyRendered={(templateId) =>
+                  void runAction(async () => {
+                    const result = await SocialHubApiClient.renderTemplate(
+                      accessToken,
+                      templateId,
+                    );
+                    await navigator.clipboard.writeText(result.renderedText);
+                    setStatus("Çözülmüş metin panoya kopyalandı.");
                   })
                 }
               />

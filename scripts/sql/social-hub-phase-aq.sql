@@ -1,0 +1,1 @@
+-- Faz AQ: şema değişikliği yok (gelen kutusu threads-preview — Mesajlar API)

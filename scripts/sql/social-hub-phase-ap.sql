@@ -1,0 +1,1 @@
+-- Faz AP: şema değişikliği yok (LinkedIn org insights — connection metadata JSON)

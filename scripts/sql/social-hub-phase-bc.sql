@@ -1,0 +1,1 @@
+-- Faz BC: şema değişikliği yok (entegrasyon kapısı checklist — status + hub snapshot)

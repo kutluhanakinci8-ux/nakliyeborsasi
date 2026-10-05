@@ -1,6 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo } from "react";
+import { SocialHubOpsLogRail } from "./SocialHubOpsLogRail";
+import {
+  buildConnectionsOpsLog,
+  connectionUserSummary,
+} from "../../lib/socialHubConnectionsOpsLog";
 import type {
   SocialHubAuditEntry,
   SocialHubPermissions,
@@ -14,7 +20,35 @@ import type {
   SocialHubRoadmapProvider,
   SocialHubTeamMember,
   SocialHubTemplate,
+  SocialHubInboxThreadPreview,
+  SocialHubPwaConfig,
 } from "../../lib/socialHubTypes";
+import {
+  buildMonthGrid,
+  buildWeekGrid,
+  monthLabelTr,
+  toDateKey,
+} from "../../lib/socialHubCalendar";
+import {
+  renderSocialHubTemplatePreview,
+  SOCIAL_HUB_TEMPLATE_VARIABLE_HINTS,
+} from "../../lib/socialHubTemplateRender";
+
+const ROADMAP_CONNECTION_PLATFORM_CODES = new Set([
+  "TIKTOK",
+  "YOUTUBE",
+  "X",
+]);
+
+const TEMPLATE_CHANNEL_SCOPE_OPTIONS: Array<{ code: string; label: string }> = [
+  { code: "", label: "Tüm kanallar" },
+  { code: "INSTAGRAM", label: "Instagram" },
+  { code: "FACEBOOK_MESSENGER", label: "Facebook Messenger" },
+  { code: "WHATSAPP_CLOUD", label: "WhatsApp Business" },
+  { code: "LINKEDIN", label: "LinkedIn" },
+  { code: "TIKTOK", label: "TikTok" },
+  { code: "YOUTUBE", label: "YouTube" },
+];
 
 function capabilitySummary(
   caps: SocialHubSnapshot["providers"][number]["capabilities"],
@@ -47,6 +81,53 @@ function statusLabel(code: string): string {
     TOKEN_EXPIRED: "Token süresi doldu",
   };
   return map[code] ?? code;
+}
+
+function connectionStatusBadgeClass(code: string): string {
+  switch (code) {
+    case "CONNECTED":
+      return "social-hub-status-badge social-hub-status-badge--ok";
+    case "ERROR":
+    case "TOKEN_EXPIRED":
+      return "social-hub-status-badge social-hub-status-badge--error";
+    case "PENDING_OAUTH":
+      return "social-hub-status-badge social-hub-status-badge--pending";
+    default:
+      return "social-hub-status-badge social-hub-status-badge--muted";
+  }
+}
+
+function roadmapPrimaryPill(row: SocialHubRoadmapProvider): {
+  label: string;
+  className: string;
+} {
+  if (row.isPendingSkeleton || row.implementationStatus === "pending") {
+    return {
+      label: "Pending iskelet",
+      className: "social-hub-pill social-hub-pill--muted",
+    };
+  }
+  if (
+    row.isRoadmapBeta === false &&
+    row.roadmapConnectionStatusCode === "CONNECTED"
+  ) {
+    return { label: "Bağlı", className: "social-hub-pill social-hub-pill--ok" };
+  }
+  if (
+    row.isRoadmapBeta === false &&
+    (row.oauthImplementationStatus === "ready" ||
+      row.implementationStatus === "ready")
+  ) {
+    return { label: "Prod kanal", className: "social-hub-pill social-hub-pill--ok" };
+  }
+  return { label: "Yakında", className: "social-hub-pill" };
+}
+
+function roadmapConnectLabel(row: SocialHubRoadmapProvider): string {
+  if (row.isRoadmapBeta === false) {
+    return `${row.label} bağla`;
+  }
+  return `${row.label} bağla (beta)`;
 }
 
 function postStatusLabel(code: string): string {
@@ -119,277 +200,242 @@ export function SocialConnectionsPanel({
   const connections = snapshot.connections ?? [];
   const providers = snapshot.providers ?? [];
   const roadmapProviders = snapshot.roadmapProviders ?? [];
-  const integrationWebhooks = snapshot.integrationWebhooks;
-  const webhookReadiness = snapshot.integrationWebhookReadiness;
-  const opsHints = snapshot.integrationOpsHints;
-  const webhookActivity = snapshot.webhookActivity;
+  const opsLogEntries = useMemo(
+    () => buildConnectionsOpsLog(snapshot),
+    [snapshot],
+  );
+  const gateSummary = snapshot.integrationGate
+    ? `${snapshot.integrationGate.automatedReadyCount}/${snapshot.integrationGate.automatedStepCount} otomatik adım`
+    : null;
+
   return (
-    <section className="social-hub-panel module-panel module-panel--elevated">
-      <header className="social-hub-panel-head">
-        <h2 className="account-card-title">Bağlı hesaplar</h2>
-        <p className="account-card-lead">
-          Meta (Instagram, Messenger, WhatsApp) ve LinkedIn OAuth ile bağlanın. Webhook:
-          <code>/api/v1/company/social-hub/webhooks/meta</code>. Mesajlar ekranından
-          yanıtlar bağlı kanala gider. Genel API anahtarları:{" "}
-          <Link href="/hesap/uygulamalar">Uygulamalar / entegrasyonlar</Link>.
-        </p>
-        {integrationWebhooks ? (
-          <ul className="social-hub-webhook-urls module-hint">
-            <li>
-              Meta / WhatsApp: <code>{integrationWebhooks.meta}</code>
-            </li>
-            <li>
-              TikTok (beta): <code>{integrationWebhooks.tiktok}</code>
-              {webhookReadiness?.tiktok ? (
-                <span className="module-hint">
-                  {" "}
-                  — köprü:{" "}
-                  {webhookReadiness.tiktok.webhookBridgeEnabled ? "açık" : "kapalı"}
-                  , giden:{" "}
-                  {webhookReadiness.tiktok.outboundEnabled ? "açık" : "kapalı"}
-                  {webhookReadiness.tiktok.signatureOrPushAuthRequired
-                    ? " · imza zorunlu"
-                    : ""}
-                </span>
-              ) : null}
-            </li>
-            <li>
-              YouTube (beta, Pub/Sub push):{" "}
-              <code>{integrationWebhooks.youtube}</code>
-              <span className="module-hint">
-                {" "}
-                — message.data içinde base64 JSON (kanal kimliği + metin)
-              </span>
-              {webhookReadiness?.youtube ? (
-                <span className="module-hint">
-                  {" "}
-                  · köprü:{" "}
-                  {webhookReadiness.youtube.webhookBridgeEnabled ? "açık" : "kapalı"}
-                  , giden:{" "}
-                  {webhookReadiness.youtube.outboundEnabled ? "açık" : "kapalı"}
-                  {webhookReadiness.youtube.signatureOrPushAuthRequired
-                    ? " · push auth zorunlu"
-                    : ""}
-                </span>
-              ) : null}
-            </li>
-          </ul>
-        ) : null}
-        {opsHints ? (
-          <p className="module-hint">
-            Sunucu: webhook denetim kaydı{" "}
-            {opsHints.webhookBridgeAuditEnabled ? "açık" : "kapalı"}
-            {opsHints.webhookInboundDedupSeconds > 0
-              ? ` · gelen dedup ${opsHints.webhookInboundDedupSeconds}s`
-              : ""}
-            {opsHints.webhookInactivityHealthHintsEnabled
-              ? " · sağlık uyarısı: webhook hareketsizliği"
-              : ""}
-          </p>
-        ) : null}
-        {webhookActivity ? (
-          <p className="module-hint">
-            Webhook → Mesajlar (24s):{" "}
-            <strong>{webhookActivity.inboundBridged24h}</strong>
-            {webhookActivity.lastInboundBridgedAt
-              ? ` · son: ${new Date(webhookActivity.lastInboundBridgedAt).toLocaleString("tr-TR")}`
-              : ""}
-            {(webhookActivity.byPlatform ?? []).length > 0 ? (
-              <>
-                {" "}
-                —{" "}
-                {(webhookActivity.byPlatform ?? [])
-                  .map((row) => `${row.label}: ${row.inboundBridged24h}`)
-                  .join(" · ")}
-              </>
+    <section className="social-hub-connections-shell module-panel module-panel--elevated">
+      <div className="social-hub-connections-layout">
+        <div className="social-hub-connections-main">
+          <header className="social-hub-panel-head social-hub-panel-head--premium">
+            <div>
+              <h2 className="account-card-title">Bağlı hesaplar</h2>
+              <p className="social-hub-connections-lead">
+                Kanallarınızı bağlayın; mesajlar ve yayınlar tek yerden yönetilir.
+              </p>
+            </div>
+            {gateSummary ? (
+              <p className="social-hub-gate-chip" title="Detaylar operasyon günlüğünde">
+                Entegrasyon: <strong>{gateSummary}</strong>
+              </p>
             ) : null}
-          </p>
-        ) : null}
-      </header>
-      <ul className="social-hub-connection-grid">
-        {connections.map((row) => {
-          const provider = providers.find((p) => p.platformCode === row.platformCode);
-          const caps = row.capabilities ?? provider?.capabilities;
-          const capLabels = capabilitySummary(caps);
-          const connectLabel =
-            row.statusCode === "CONNECTED" ? "Yeniden bağlan" : "Bağla";
-          return (
-            <li key={row.id} className="social-hub-connection-card">
-              <div className="social-hub-connection-main">
-                <h3>{row.label}</h3>
-                {row.displayName ? (
-                  <p className="module-hint">{row.displayName}</p>
-                ) : null}
-                <p className="social-hub-connection-status">
-                  {statusLabel(row.statusCode)}
-                  {provider?.implementationStatus === "pending" ||
-                  row.oauthReady === false ? (
-                    <span className="social-hub-pill">OAuth yapılandırması eksik</span>
-                  ) : null}
-                </p>
-                {capLabels.length > 0 ? (
-                  <ul className="social-hub-capability-list">
-                    {capLabels.map((label) => (
-                      <li key={label} className="social-hub-pill social-hub-pill--muted">
-                        {label}
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-                {row.setupWarnings?.map((warning) => (
-                  <p key={warning} className="error banner error--light social-hub-setup-warn">
-                    {warning}
-                  </p>
-                ))}
-                {row.lastErrorMessage ? (
-                  <p className="module-hint">{row.lastErrorMessage}</p>
-                ) : null}
-              </div>
-              <div className="social-hub-connection-actions">
-                {permissions.canManageConnections ? (
-                  <>
-                    <button
-                      type="button"
-                      className="btn-account-primary"
-                      disabled={busy || row.oauthReady === false}
-                      onClick={() => onConnect(row.platformCode)}
-                    >
-                      {connectLabel}
-                    </button>
-                    <button
-                      type="button"
-                      className="btn-account-ghost"
-                      disabled={
-                        busy ||
-                        row.statusCode === "DISCONNECTED" ||
-                        row.statusCode === "PENDING_OAUTH"
-                      }
-                      onClick={() => onDisconnect(row.platformCode)}
-                    >
-                      Kes
-                    </button>
-                  </>
-                ) : (
-                  <p className="module-hint">Yalnızca firma sahibi / sosyal yönetici.</p>
-                )}
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-      {roadmapProviders.length > 0 ? (
-        <>
-          <h3 className="account-card-title">Yol haritası</h3>
-          <p className="account-card-lead">
-            Henüz OAuth ile bağlanamayan kanallar — entegrasyon sırası netleştiğinde
-            burada açılacak. Öncelik vermek için ilgi bildirin; sıralama planlamasında
-            kullanılır.
-          </p>
-          <ul className="social-hub-connection-grid">
-            {roadmapProviders.map((row: SocialHubRoadmapProvider) => (
-              <li
-                key={row.platformCode}
-                className="social-hub-connection-card social-hub-connection-card--roadmap"
-              >
-                <h3>{row.label}</h3>
-                <span className="social-hub-pill">Yakında</span>
-                {row.roadmapInterested ? (
-                  <span className="social-hub-pill social-hub-pill--interest">
-                    İlgi bildirildi
-                  </span>
-                ) : null}
-                <p className="module-hint">{row.roadmapNote}</p>
-                {capabilitySummary(row.capabilities).length > 0 ? (
-                  <ul className="social-hub-capability-list">
-                    {capabilitySummary(row.capabilities).map((label) => (
-                      <li
-                        key={label}
-                        className="social-hub-pill social-hub-pill--muted"
-                      >
-                        {label}
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-                <p className="module-hint social-hub-roadmap-oauth-hint">
-                  Platform OAuth:{" "}
-                  {row.oauthEnvConfigured
-                    ? "ortam değişkenleri tanımlı (entegrasyon sırada)"
-                    : "henüz yapılandırılmadı"}
-                </p>
-                {row.roadmapConnectionStatusCode ? (
-                  <p className="social-hub-connection-status">
-                    {statusLabel(row.roadmapConnectionStatusCode)}
-                  </p>
-                ) : null}
-                {permissions.canManageConnections && onRoadmapInterest ? (
-                  <button
-                    type="button"
-                    className={
-                      row.roadmapInterested
-                        ? "btn-account-ghost"
-                        : "btn-account-primary"
-                    }
-                    disabled={busy}
-                    onClick={() =>
-                      onRoadmapInterest(row.platformCode, !row.roadmapInterested)
-                    }
-                  >
-                    {row.roadmapInterested ? "İlgiyi kaldır" : "Öncelik ver"}
-                  </button>
-                ) : null}
-                {permissions.canManageConnections &&
+          </header>
+
+          <ul className="social-hub-connection-grid social-hub-connection-grid--premium">
+            {connections.map((row) => {
+              const provider = providers.find(
+                (p) => p.platformCode === row.platformCode,
+              );
+              const connectLabel =
+                row.statusCode === "CONNECTED" ? "Yeniden bağlan" : "Bağla";
+              const isRoadmapConnection = ROADMAP_CONNECTION_PLATFORM_CODES.has(
+                row.platformCode,
+              );
+              const canRoadmapOAuth =
+                isRoadmapConnection &&
                 onRoadmapConnect &&
-                row.oauthEnvConfigured ? (
-                  <button
-                    type="button"
-                    className="btn-account-primary"
-                    disabled={
-                      busy ||
-                      row.roadmapConnectionStatusCode === "CONNECTED" ||
-                      row.roadmapConnectionStatusCode === "PENDING_OAUTH"
-                    }
-                    onClick={() => onRoadmapConnect(row.platformCode)}
-                  >
-                    {row.label} bağla (beta)
-                  </button>
-                ) : null}
-                {permissions.canManageConnections &&
-                onRoadmapRefreshToken &&
-                row.roadmapConnectionStatusCode === "CONNECTED" &&
-                row.roadmapHasRefreshToken ? (
-                  <button
-                    type="button"
-                    className="btn-account-ghost"
-                    disabled={busy}
-                    onClick={() => onRoadmapRefreshToken(row.platformCode)}
-                  >
-                    Token yenile
-                  </button>
-                ) : null}
-                {permissions.canManageConnections &&
-                onRoadmapDisconnect &&
-                row.roadmapConnectionStatusCode === "CONNECTED" ? (
-                  <button
-                    type="button"
-                    className="btn-account-ghost"
-                    disabled={busy}
-                    onClick={() => onRoadmapDisconnect(row.platformCode)}
-                  >
-                    Bağlantıyı kes
-                  </button>
-                ) : null}
-              </li>
-            ))}
+                row.oauthReady !== false;
+              const hasWarnings = (row.setupWarnings?.length ?? 0) > 0;
+              const hasError = Boolean(row.lastErrorMessage?.trim());
+              const needsOAuthConfig =
+                provider?.implementationStatus === "pending" ||
+                row.oauthReady === false;
+              return (
+                <li
+                  key={row.id}
+                  className="social-hub-connection-card social-hub-connection-card--premium"
+                >
+                  <div className="social-hub-connection-main">
+                    <div className="social-hub-connection-title-row">
+                      <h3>{row.label}</h3>
+                      <span className={connectionStatusBadgeClass(row.statusCode)}>
+                        {statusLabel(row.statusCode)}
+                      </span>
+                    </div>
+                    {row.displayName ? (
+                      <p className="social-hub-connection-account">
+                        {row.displayName}
+                      </p>
+                    ) : null}
+                    <p className="social-hub-connection-summary">
+                      {connectionUserSummary(
+                        row.statusCode,
+                        hasWarnings || needsOAuthConfig,
+                        hasError,
+                      )}
+                    </p>
+                  </div>
+                  <div className="social-hub-connection-actions">
+                    {permissions.canManageConnections ? (
+                      <>
+                        <button
+                          type="button"
+                          className="btn-account-primary"
+                          disabled={busy || row.oauthReady === false}
+                          onClick={() =>
+                            canRoadmapOAuth
+                              ? onRoadmapConnect!(row.platformCode)
+                              : onConnect(row.platformCode)
+                          }
+                        >
+                          {connectLabel}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-account-ghost"
+                          disabled={
+                            busy ||
+                            row.statusCode === "DISCONNECTED" ||
+                            row.statusCode === "PENDING_OAUTH"
+                          }
+                          onClick={() =>
+                            isRoadmapConnection && onRoadmapDisconnect
+                              ? onRoadmapDisconnect(row.platformCode)
+                              : onDisconnect(row.platformCode)
+                          }
+                        >
+                          Kes
+                        </button>
+                      </>
+                    ) : (
+                      <p className="module-hint">Yalnızca firma sahibi / sosyal yönetici.</p>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
           </ul>
-        </>
-      ) : null}
+
+          {roadmapProviders.length > 0 ? (
+            <>
+              <h3 className="social-hub-subsection-heading">Yakında</h3>
+              <p className="social-hub-connections-lead social-hub-connections-lead--compact">
+                Yeni kanallar için öncelik bildirin; teknik detaylar günlükte.
+              </p>
+              <ul className="social-hub-connection-grid social-hub-connection-grid--premium">
+                {roadmapProviders.map((row: SocialHubRoadmapProvider) => {
+                  const primaryPill = roadmapPrimaryPill(row);
+                  const connected =
+                    row.roadmapConnectionStatusCode === "CONNECTED";
+                  return (
+                    <li
+                      key={row.platformCode}
+                      className="social-hub-connection-card social-hub-connection-card--premium social-hub-connection-card--roadmap"
+                    >
+                      <div className="social-hub-connection-main">
+                        <div className="social-hub-connection-title-row">
+                          <h3>{row.label}</h3>
+                          <span className={primaryPill.className}>
+                            {primaryPill.label}
+                          </span>
+                        </div>
+                        {row.roadmapConnectionStatusCode ? (
+                          <span
+                            className={connectionStatusBadgeClass(
+                              row.roadmapConnectionStatusCode,
+                            )}
+                          >
+                            {statusLabel(row.roadmapConnectionStatusCode)}
+                          </span>
+                        ) : null}
+                        {row.roadmapInterested ? (
+                          <span className="social-hub-pill social-hub-pill--interest">
+                            Öncelik bildirildi
+                          </span>
+                        ) : null}
+                        <p className="social-hub-connection-summary">
+                          {connected
+                            ? "Bağlı — Mesajlar ve yayınlar için kullanılabilir."
+                            : row.oauthEnvConfigured
+                              ? "Bağlanmaya hazır — «Bağla» ile devam edin."
+                              : "Hazırlanıyor — öncelik verebilirsiniz."}
+                        </p>
+                      </div>
+                      <div className="social-hub-connection-actions social-hub-connection-actions--stack">
+                        {permissions.canManageConnections && onRoadmapInterest ? (
+                          <button
+                            type="button"
+                            className={
+                              row.roadmapInterested
+                                ? "btn-account-ghost"
+                                : "btn-account-primary"
+                            }
+                            disabled={busy}
+                            onClick={() =>
+                              onRoadmapInterest(
+                                row.platformCode,
+                                !row.roadmapInterested,
+                              )
+                            }
+                          >
+                            {row.roadmapInterested ? "Önceliği kaldır" : "Öncelik ver"}
+                          </button>
+                        ) : null}
+                        {permissions.canManageConnections &&
+                        onRoadmapConnect &&
+                        row.oauthEnvConfigured ? (
+                          <button
+                            type="button"
+                            className="btn-account-primary"
+                            disabled={
+                              busy ||
+                              row.roadmapConnectionStatusCode === "CONNECTED" ||
+                              row.roadmapConnectionStatusCode === "PENDING_OAUTH"
+                            }
+                            onClick={() => onRoadmapConnect(row.platformCode)}
+                          >
+                            {roadmapConnectLabel(row)}
+                          </button>
+                        ) : null}
+                        {permissions.canManageConnections &&
+                        onRoadmapRefreshToken &&
+                        row.roadmapConnectionStatusCode === "CONNECTED" &&
+                        row.roadmapHasRefreshToken ? (
+                          <button
+                            type="button"
+                            className="btn-account-ghost"
+                            disabled={busy}
+                            onClick={() => onRoadmapRefreshToken(row.platformCode)}
+                          >
+                            Token yenile
+                          </button>
+                        ) : null}
+                        {permissions.canManageConnections &&
+                        onRoadmapDisconnect &&
+                        row.roadmapConnectionStatusCode === "CONNECTED" ? (
+                          <button
+                            type="button"
+                            className="btn-account-ghost"
+                            disabled={busy}
+                            onClick={() => onRoadmapDisconnect(row.platformCode)}
+                          >
+                            Bağlantıyı kes
+                          </button>
+                        ) : null}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
+          ) : null}
+        </div>
+
+        <SocialHubOpsLogRail entries={opsLogEntries} />
+      </div>
     </section>
   );
 }
 
 type InboxProps = {
   snapshot: SocialHubSnapshot;
+  threadsPreview: SocialHubInboxThreadPreview[];
+  threadsPreviewLoading: boolean;
   busy: boolean;
   onSync: (platformCode: string) => void;
   onSeedDemo?: () => void;
@@ -398,6 +444,8 @@ type InboxProps = {
 
 export function SocialInboxPanel({
   snapshot,
+  threadsPreview,
+  threadsPreviewLoading,
   busy,
   onSync,
   onSeedDemo,
@@ -430,6 +478,12 @@ export function SocialInboxPanel({
       <header className="social-hub-panel-head">
         <h2 className="account-card-title">Sosyal gelen kutusu</h2>
         <p className="account-card-lead">{inboxSummary.note}</p>
+        {snapshot.linkedinDmInboxGate ? (
+          <p className="module-hint social-hub-linkedin-dm-gate">
+            <strong>{snapshot.linkedinDmInboxGate.userFacingLabel}:</strong>{" "}
+            {snapshot.linkedinDmInboxGate.userFacingNote}
+          </p>
+        ) : null}
       </header>
       <p className="social-hub-stat-line">
         Açık konuşmalar: <strong>{inboxSummary.totalOpenThreads}</strong>
@@ -441,6 +495,112 @@ export function SocialInboxPanel({
           </>
         ) : null}
       </p>
+      {threadsPreviewLoading ? (
+        <p className="module-hint">Son konuşmalar yükleniyor…</p>
+      ) : threadsPreview.length > 0 ? (
+        <div className="social-hub-inbox-preview">
+          <h3 className="social-hub-subsection-title">Son sosyal konuşmalar</h3>
+          <ul className="social-hub-inbox-preview-list">
+            {threadsPreview.map((row) => (
+              <li key={row.threadId} className="social-hub-inbox-preview-row">
+                <div className="social-hub-inbox-preview-main">
+                  <span className="social-hub-inbox-preview-channel">
+                    {row.platformLabel}
+                  </span>
+                  <strong className="social-hub-inbox-preview-label">
+                    {row.displayLabel}
+                  </strong>
+                  {row.lastMessagePreview ? (
+                    <p className="social-hub-inbox-preview-snippet">
+                      {row.lastMessagePreview}
+                    </p>
+                  ) : null}
+                  {row.lastMessageAt ? (
+                    <time
+                      className="module-hint"
+                      dateTime={row.lastMessageAt}
+                    >
+                      {new Date(row.lastMessageAt).toLocaleString("tr-TR")}
+                    </time>
+                  ) : null}
+                </div>
+                <div className="social-hub-inbox-preview-actions">
+                  {row.unreadCount > 0 ? (
+                    <span className="social-hub-inbox-preview-unread">
+                      {row.unreadCount} okunmamış
+                    </span>
+                  ) : null}
+                  <Link
+                    href={row.messagingDeepLink}
+                    className="btn-account-ghost"
+                  >
+                    Mesajlar&apos;da aç
+                  </Link>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <p className="module-hint">
+          Henüz sosyal konuşma yok. Kanal bağlayın, webhook bekleyin veya demo
+          oluşturun.
+        </p>
+      )}
+      {snapshot.inboxSyncSummary?.channels?.length ? (
+        <div className="social-hub-inbox-sync-summary">
+          <h3 className="social-hub-subsection-title">Kanal sync & webhook hizası</h3>
+          <p className="module-hint">
+            Açık konuşma sayısı, son sync denemesi ve 24s webhook köprü — prod ve yol
+            haritası kanalları.
+          </p>
+          <ul className="social-hub-inbox-sync-list">
+            {snapshot.inboxSyncSummary.channels.map((row) => (
+              <li key={row.platformCode} className="social-hub-inbox-sync-row">
+                <div className="social-hub-inbox-sync-head">
+                  <strong>{row.label}</strong>
+                  <span className="module-hint">
+                    {row.openCount} açık · webhook {row.webhookInboundBridged24h}{" "}
+                    (24s)
+                  </span>
+                </div>
+                <p className="social-hub-inbox-sync-meta">
+                  {row.dmInboxGateLabel
+                    ? row.dmInboxGateLabel
+                    : row.inboxHistorySync
+                      ? "Geçmiş sync destekli"
+                      : row.inboxWebhook
+                        ? "Webhook gelen kutusu"
+                        : "Yayın / özet"}
+                  {row.connectionStatusCode
+                    ? ` · bağlantı ${row.connectionStatusCode}`
+                    : ""}
+                </p>
+                {row.lastSyncAt ? (
+                  <p className="module-hint">
+                    Son sync:{" "}
+                    {new Date(row.lastSyncAt).toLocaleString("tr-TR")}
+                    {row.lastSyncImplementationStatus
+                      ? ` (${row.lastSyncImplementationStatus})`
+                      : ""}
+                  </p>
+                ) : row.connectionStatusCode === "CONNECTED" &&
+                  row.inboxHistorySync ? (
+                  <p className="module-hint">
+                    Henüz sync kaydı yok — altta «{row.label} · senkron» ile
+                    deneyin veya yeniden bağlanın (OAuth sonrası otomatik sync).
+                  </p>
+                ) : (
+                  <p className="module-hint">Henüz sync denemesi kaydı yok.</p>
+                )}
+                {row.lastSyncMessage ? (
+                  <p className="social-hub-inbox-sync-message">{row.lastSyncMessage}</p>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
       <ul className="social-hub-inbox-platforms">
         {inboxSummary.byPlatform.map((row) => {
           const label = platformLabel(row.platformCode);
@@ -477,7 +637,7 @@ export function SocialInboxPanel({
             Demo gelen kutusu oluştur (Instagram + WhatsApp)
           </button>
         ) : null}
-        {permissions.canReply ? (
+        {permissions.canReply || permissions.canManageConnections ? (
           <div className="social-hub-sync-grid">
             {connections
               .filter((c) => c.statusCode === "CONNECTED")
@@ -505,9 +665,12 @@ type PublishingProps = {
   ownerApprovalRequired: boolean;
   draftText: string;
   draftPlatforms: string[];
+  draftMedia: Array<{ mediaRef: string; previewUrl: string; filename: string }>;
   busy: boolean;
   onDraftText: (value: string) => void;
   onTogglePlatform: (code: string) => void;
+  onAddMediaFiles: (files: FileList | null) => void;
+  onRemoveDraftMedia: (mediaRef: string) => void;
   onCreateDraft: () => void;
   onPublish: (postId: string) => void;
   onSchedule: (postId: string, scheduledAt: string | null) => void;
@@ -516,6 +679,16 @@ type PublishingProps = {
   onCancel: (postId: string) => void;
   onDelete: (postId: string) => void;
   platformOptions: { code: string; label: string }[];
+  calendarPosts: SocialHubPost[];
+  calendarLoading: boolean;
+  calendarAnchor: Date;
+  calendarMode: "month" | "week";
+  calendarSelection: string[];
+  onCalendarAnchorChange: (next: Date) => void;
+  onCalendarModeChange: (mode: "month" | "week") => void;
+  onToggleCalendarSelect: (postId: string) => void;
+  onBulkCancelSelected: () => void;
+  onBulkRetrySelected: () => void;
 };
 
 export function SocialPublishingPanel({
@@ -524,9 +697,12 @@ export function SocialPublishingPanel({
   ownerApprovalRequired,
   draftText,
   draftPlatforms,
+  draftMedia,
   busy,
   onDraftText,
   onTogglePlatform,
+  onAddMediaFiles,
+  onRemoveDraftMedia,
   onCreateDraft,
   onPublish,
   onSchedule,
@@ -535,7 +711,31 @@ export function SocialPublishingPanel({
   onCancel,
   onDelete,
   platformOptions,
+  calendarPosts,
+  calendarLoading,
+  calendarAnchor,
+  calendarMode,
+  calendarSelection,
+  onCalendarAnchorChange,
+  onCalendarModeChange,
+  onToggleCalendarSelect,
+  onBulkCancelSelected,
+  onBulkRetrySelected,
 }: PublishingProps) {
+  const gridCells =
+    calendarMode === "month"
+      ? buildMonthGrid(calendarAnchor)
+      : buildWeekGrid(calendarAnchor);
+  const postsByDay = new Map<string, SocialHubPost[]>();
+  for (const post of calendarPosts) {
+    if (!post.scheduledAt) {
+      continue;
+    }
+    const key = toDateKey(new Date(post.scheduledAt));
+    const bucket = postsByDay.get(key) ?? [];
+    bucket.push(post);
+    postsByDay.set(key, bucket);
+  }
   const scheduledUpcoming = posts
     .filter(
       (p) =>
@@ -560,10 +760,144 @@ export function SocialPublishingPanel({
       <header className="social-hub-panel-head">
         <h2 className="account-card-title">Yayınlar</h2>
         <p className="account-card-lead">
-          Taslak, onay ve zamanlama; kanal API yayını sonraki fazda. Zamanı gelen
-          gönderiler sunucuda otomatik denenir.
+          Taslak, onay, zamanlama ve Meta Graph yayını (metin + görsel). Zamanı gelen
+          gönderiler sunucuda otomatik denenir; sonuç mesajı burada görünür.
         </p>
       </header>
+      <div className="social-hub-calendar-grid-wrap">
+        <div className="social-hub-calendar-toolbar">
+          <h3 className="social-hub-calendar-title">Yayın takvimi</h3>
+          <div className="social-hub-calendar-toolbar-actions">
+            <button
+              type="button"
+              className="btn-account-ghost"
+              disabled={busy}
+              onClick={() => {
+                const prev = new Date(calendarAnchor);
+                prev.setMonth(prev.getMonth() - 1);
+                onCalendarAnchorChange(prev);
+              }}
+            >
+              ←
+            </button>
+            <span className="social-hub-calendar-month-label">
+              {monthLabelTr(calendarAnchor)}
+            </span>
+            <button
+              type="button"
+              className="btn-account-ghost"
+              disabled={busy}
+              onClick={() => {
+                const next = new Date(calendarAnchor);
+                next.setMonth(next.getMonth() + 1);
+                onCalendarAnchorChange(next);
+              }}
+            >
+              →
+            </button>
+            <button
+              type="button"
+              className={
+                calendarMode === "month"
+                  ? "btn-account-primary"
+                  : "btn-account-ghost"
+              }
+              disabled={busy}
+              onClick={() => onCalendarModeChange("month")}
+            >
+              Ay
+            </button>
+            <button
+              type="button"
+              className={
+                calendarMode === "week"
+                  ? "btn-account-primary"
+                  : "btn-account-ghost"
+              }
+              disabled={busy}
+              onClick={() => onCalendarModeChange("week")}
+            >
+              Hafta
+            </button>
+          </div>
+        </div>
+        {calendarLoading ? (
+          <p className="module-hint">Takvim yükleniyor…</p>
+        ) : (
+          <>
+            <div className="social-hub-calendar-weekdays">
+              {["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"].map((label) => (
+                <span key={label}>{label}</span>
+              ))}
+            </div>
+            <div
+              className={
+                calendarMode === "month"
+                  ? "social-hub-calendar-grid"
+                  : "social-hub-calendar-grid social-hub-calendar-grid--week"
+              }
+            >
+              {gridCells.map((cell) => {
+                const dayPosts = postsByDay.get(cell.dateKey) ?? [];
+                return (
+                  <div
+                    key={cell.dateKey}
+                    className={
+                      cell.inMonth
+                        ? "social-hub-calendar-day"
+                        : "social-hub-calendar-day social-hub-calendar-day--muted"
+                    }
+                  >
+                    <span className="social-hub-calendar-day-num">
+                      {cell.date.getDate()}
+                    </span>
+                    <ul className="social-hub-calendar-day-posts">
+                      {dayPosts.map((post) => (
+                        <li key={post.id}>
+                          <label className="social-hub-calendar-post-chip">
+                            <input
+                              type="checkbox"
+                              checked={calendarSelection.includes(post.id)}
+                              onChange={() => onToggleCalendarSelect(post.id)}
+                            />
+                            <span title={post.bodyText}>
+                              {postStatusLabel(post.statusCode)} ·{" "}
+                              {post.bodyText.slice(0, 24)}
+                            </span>
+                          </label>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
+        {calendarSelection.length > 0 ? (
+          <div className="social-hub-calendar-bulk">
+            <span className="module-hint">{calendarSelection.length} seçili</span>
+            <button
+              type="button"
+              className="btn-account-ghost"
+              disabled={busy}
+              onClick={onBulkCancelSelected}
+            >
+              Toplu iptal
+            </button>
+            {permissions.canPublish ? (
+              <button
+                type="button"
+                className="btn-account-primary"
+                disabled={busy}
+                onClick={onBulkRetrySelected}
+              >
+                Başarısızları yeniden dene
+              </button>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
       {scheduledUpcoming.length > 0 ? (
         <div className="social-hub-calendar-strip">
           <h3 className="social-hub-calendar-title">Yaklaşan zamanlamalar</h3>
@@ -606,6 +940,37 @@ export function SocialPublishingPanel({
               </label>
             ))}
           </fieldset>
+          <label className="label-light">
+            Görsel (JPEG/PNG/GIF/WebP, en fazla 4)
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/gif,image/webp"
+              multiple
+              disabled={busy || draftMedia.length >= 4}
+              onChange={(e) => {
+                onAddMediaFiles(e.target.files);
+                e.target.value = "";
+              }}
+            />
+          </label>
+          {draftMedia.length > 0 ? (
+            <ul className="social-hub-draft-media-list">
+              {draftMedia.map((item) => (
+                <li key={item.mediaRef} className="social-hub-draft-media-item">
+                  <img src={item.previewUrl} alt={item.filename} />
+                  <span className="module-hint">{item.filename}</span>
+                  <button
+                    type="button"
+                    className="btn-account-ghost"
+                    disabled={busy}
+                    onClick={() => onRemoveDraftMedia(item.mediaRef)}
+                  >
+                    Kaldır
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
           <button
             type="button"
             className="btn-account-primary"
@@ -637,8 +1002,15 @@ export function SocialPublishingPanel({
                   ) : null}
                 </p>
                 <p>{post.bodyText.slice(0, 200)}</p>
+                {post.mediaUrls?.length ? (
+                  <p className="module-hint">
+                    {post.mediaUrls.length} medya dosyası ekli
+                  </p>
+                ) : null}
                 {post.lastErrorMessage ? (
-                  <p className="module-hint">{post.lastErrorMessage}</p>
+                  <p className="social-hub-publish-error">{post.lastErrorMessage}</p>
+                ) : post.statusCode === "PUBLISHED" ? (
+                  <p className="social-hub-publish-ok">Kanallarda yayınlandı.</p>
                 ) : null}
                 {editableStatuses.has(post.statusCode) ? (
                   <label className="label-light social-hub-schedule-field">
@@ -726,10 +1098,16 @@ type TemplatesProps = {
   permissions: SocialHubPermissions;
   title: string;
   body: string;
+  channelScope: string;
+  serverPreview: string | null;
+  messagingDeepLink: string;
   busy: boolean;
   onTitle: (v: string) => void;
   onBody: (v: string) => void;
+  onChannelScope: (v: string) => void;
+  onInsertPlaceholder: (placeholder: string) => void;
   onSave: () => void;
+  onCopyRendered: (templateId: string) => void;
 };
 
 export function SocialTemplatesPanel({
@@ -737,21 +1115,63 @@ export function SocialTemplatesPanel({
   permissions,
   title,
   body,
+  channelScope,
+  serverPreview,
+  messagingDeepLink,
   busy,
   onTitle,
   onBody,
+  onChannelScope,
+  onInsertPlaceholder,
   onSave,
+  onCopyRendered,
 }: TemplatesProps) {
+  const localPreview = renderSocialHubTemplatePreview(body, {});
+  const previewText = serverPreview ?? localPreview;
+
   return (
     <section className="social-hub-panel module-panel module-panel--elevated">
       <header className="social-hub-panel-head">
         <h2 className="account-card-title">Hazır yanıtlar</h2>
         <p className="account-card-lead">
-          DM ve yorumlarda kullanılacak şablonlar (Mesajlar ile paylaşılacak).
+          <code>{`{{degisken}}`}</code> ile kişiselleştirin; kayıtlı şablonlar Mesajlar’da
+          hızlı yanıt olarak görünür (değişkenler gönderimde çözülür).
         </p>
+        <Link className="btn-account-ghost" href={messagingDeepLink}>
+          Mesajlar’da kullan
+        </Link>
       </header>
+      <div className="social-hub-template-vars module-hint">
+        <span>Değişkenler: </span>
+        {SOCIAL_HUB_TEMPLATE_VARIABLE_HINTS.map((hint) => (
+          <button
+            key={hint.placeholder}
+            type="button"
+            className="btn-account-ghost social-hub-chip-btn"
+            disabled={!permissions.canManageTemplates}
+            title={hint.description}
+            onClick={() => onInsertPlaceholder(hint.placeholder)}
+          >
+            {hint.placeholder}
+          </button>
+        ))}
+      </div>
       {permissions.canManageTemplates ? (
         <div className="social-hub-compose">
+          <label className="label-light">
+            Kanal kapsamı
+            <select
+              className="input-light"
+              value={channelScope}
+              onChange={(e) => onChannelScope(e.target.value)}
+            >
+              {TEMPLATE_CHANNEL_SCOPE_OPTIONS.map((opt) => (
+                <option key={opt.code || "all"} value={opt.code}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </label>
           <label className="label-light">
             Başlık
             <input className="input-light" value={title} onChange={(e) => onTitle(e.target.value)} />
@@ -765,6 +1185,12 @@ export function SocialTemplatesPanel({
               onChange={(e) => onBody(e.target.value)}
             />
           </label>
+          {body.trim() ? (
+            <div className="social-hub-template-preview">
+              <span className="social-hub-stat-label">Önizleme</span>
+              <p>{previewText}</p>
+            </div>
+          ) : null}
           <button
             type="button"
             className="btn-account-primary"
@@ -778,8 +1204,25 @@ export function SocialTemplatesPanel({
       <ul className="social-hub-template-list">
         {templates.map((t) => (
           <li key={t.id}>
-            <strong>{t.title}</strong>
-            <p>{t.bodyText}</p>
+            <div className="social-hub-template-row-head">
+              <strong>{t.title}</strong>
+              {t.channelScopeLabel || t.channelScopeCode ? (
+                <span className="social-hub-badge">
+                  {t.channelScopeLabel ?? t.channelScopeCode}
+                </span>
+              ) : null}
+            </div>
+            <p className="social-hub-template-raw">{t.bodyText}</p>
+            <div className="social-hub-template-actions">
+              <button
+                type="button"
+                className="btn-account-ghost"
+                disabled={busy}
+                onClick={() => onCopyRendered(t.id)}
+              >
+                Kopyala (çözülmüş)
+              </button>
+            </div>
           </li>
         ))}
       </ul>
@@ -808,7 +1251,8 @@ export function SocialAnalyticsPanel({
       <header className="social-hub-panel-head">
         <h2 className="account-card-title">İstatistikler</h2>
         <p className="account-card-lead">
-          Gönderi durumları, gelen kutusu, webhook köprü denetimi ve kanal hazırlığı.
+          Gönderi durumları, gelen kutusu, webhook köprü denetimi, Meta / LinkedIn
+          kanal özetleri ve kanal hazırlığı.
         </p>
         {onExportAnalytics ? (
           <button
@@ -896,6 +1340,69 @@ export function SocialAnalyticsPanel({
             : ""}
         </p>
       ) : null}
+      {analytics?.platformInsights && analytics.platformInsights.length > 0 ? (
+        <div className="social-hub-platform-insights">
+          <h3 className="social-hub-subsection-title">Kanal platform özetleri</h3>
+          <p className="module-hint">
+            Meta (Instagram / Facebook) ve LinkedIn şirket sayfası metrikleri; bağlı
+            değilse veya izin yoksa satır durumu gösterilir.
+          </p>
+          <ul className="social-hub-platform-insight-list">
+            {analytics.platformInsights.map((row) => (
+              <li key={row.platformCode} className="social-hub-platform-insight-card">
+                <div className="social-hub-platform-insight-head">
+                  <strong>{row.label}</strong>
+                  <span
+                    className={`social-hub-platform-insight-status social-hub-platform-insight-status--${row.status}`}
+                  >
+                    {row.status === "ok"
+                      ? "Güncel"
+                      : row.status === "not_connected"
+                        ? "Bağlı değil"
+                        : "Kullanılamıyor"}
+                  </span>
+                </div>
+                {row.status === "ok" ? (
+                  <dl className="social-hub-platform-insight-metrics">
+                    {row.followersCount != null ? (
+                      <>
+                        <dt>Takipçi</dt>
+                        <dd>{row.followersCount.toLocaleString("tr-TR")}</dd>
+                      </>
+                    ) : null}
+                    {row.followingCount != null ? (
+                      <>
+                        <dt>Takip</dt>
+                        <dd>{row.followingCount.toLocaleString("tr-TR")}</dd>
+                      </>
+                    ) : null}
+                    {row.mediaOrPostsCount != null ? (
+                      <>
+                        <dt>Gönderi</dt>
+                        <dd>{row.mediaOrPostsCount.toLocaleString("tr-TR")}</dd>
+                      </>
+                    ) : null}
+                    {row.impressions28d != null ? (
+                      <>
+                        <dt>Gösterim (28g)</dt>
+                        <dd>{row.impressions28d.toLocaleString("tr-TR")}</dd>
+                      </>
+                    ) : null}
+                    {row.engagedUsers28d != null ? (
+                      <>
+                        <dt>Erişim / etkileşim (28g)</dt>
+                        <dd>{row.engagedUsers28d.toLocaleString("tr-TR")}</dd>
+                      </>
+                    ) : null}
+                  </dl>
+                ) : row.errorMessage ? (
+                  <p className="module-hint">{row.errorMessage}</p>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
       {analytics?.postsByStatus && Object.keys(analytics.postsByStatus).length > 0 ? (
         <ul className="social-hub-audit-list">
           {Object.entries(analytics.postsByStatus).map(([code, count]) => (
@@ -926,6 +1433,7 @@ function auditActionLabel(code: string): string {
     SOCIAL_HUB_MEMBER_ROLE_UPDATE: "Rol değişikliği",
     SOCIAL_HUB_WEBHOOK_INBOUND_BRIDGED: "Webhook → Mesajlar köprüsü",
     SOCIAL_HUB_ROADMAP_INBOX_SYNC: "Beta gelen kutusu özet",
+    SOCIAL_HUB_INBOX_SYNC: "Gelen kutusu senkron",
   };
   return map[code] ?? code;
 }
@@ -1194,6 +1702,8 @@ type HealthPanelProps = {
   onExportWebhookActivity: () => void;
   onRefreshToken: (platformCode: string) => void;
   onReload: () => void;
+  pwa?: SocialHubPwaConfig;
+  healthPushHookStatus?: string;
 };
 
 export function SocialHealthPanel({
@@ -1237,6 +1747,8 @@ export function SocialHealthPanel({
   onExportWebhookActivity,
   onRefreshToken,
   onReload,
+  pwa,
+  healthPushHookStatus,
 }: HealthPanelProps) {
   if (!health) {
     return (
@@ -1254,6 +1766,17 @@ export function SocialHealthPanel({
           Kritik durumda firma sahiplerine e-posta gider; Slack için aşağıdaki
           sosyal hub webhook veya (isteğe bağlı) Mesajlar köprüsü kullanılır.
         </p>
+        {pwa ? (
+          <p className="module-hint social-hub-pwa-hint">
+            PWA: <code>{pwa.manifestPath}</code> (scope{" "}
+            <code>{pwa.scope}</code>). {pwa.healthPushHook.note}
+            {healthPushHookStatus === "skeleton_registered"
+              ? " · Push iskeleti: tarayıcı hazır."
+              : healthPushHookStatus === "unsupported"
+                ? " · Push: tarayıcı desteklemiyor."
+                : null}
+          </p>
+        ) : null}
         {canManage ? (
           <label className="social-hub-check">
             <input
@@ -1526,7 +2049,7 @@ export function SocialHealthPanel({
               />
             </label>
             <label className="social-hub-threshold-field social-hub-threshold-field--wide">
-              Kanal bazlı eşik (JSON) — TIKTOK / YOUTUBE beta kodları desteklenir
+              Kanal bazlı eşik (JSON) — TIKTOK, YOUTUBE ve yol haritası kodları
               <input
                 className="input-light"
                 type="text"
@@ -1761,7 +2284,15 @@ export function SocialHealthPanel({
             className="social-hub-health-card social-hub-health-card--roadmap"
           >
             <h3>{channel.label}</h3>
-            <span className="social-hub-pill">Beta yol haritası</span>
+            <span
+              className={
+                channel.isRoadmapBeta
+                  ? "social-hub-pill"
+                  : "social-hub-pill social-hub-pill--ok"
+              }
+            >
+              {channel.isRoadmapBeta ? "Beta yol haritası" : "Prod kanal"}
+            </span>
             <p className="social-hub-health-meta">
               {statusLabel(channel.statusCode)} · {tokenHealthLabel(channel.tokenHealth)}
             </p>
@@ -1813,7 +2344,8 @@ export function SocialHealthPanel({
           ))}
           {(health.roadmapChannels ?? []).map((channel) => (
             <option key={channel.platformCode} value={channel.platformCode}>
-              {channel.label} (beta)
+              {channel.label}
+              {channel.isRoadmapBeta ? " (beta)" : ""}
             </option>
           ))}
         </select>

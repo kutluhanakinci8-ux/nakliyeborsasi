@@ -3,10 +3,13 @@ import type {
   SocialHubAnalytics,
   SocialHubAuditEntry,
   SocialHubHealth,
+  SocialHubInboxThreadPreview,
   SocialHubNotificationInsights,
   SocialHubOutboundDelivery,
+  SocialHubPost,
   SocialHubSnapshot,
   SocialHubTeamMember,
+  SocialHubTemplate,
 } from "./socialHubTypes";
 import { normalizeSocialHubSnapshot } from "./normalizeSocialHubSnapshot";
 
@@ -87,6 +90,17 @@ export class SocialHubApiClient {
   ): Promise<SocialHubSnapshot> {
     const payload = await socialHubFetch<unknown>(accessToken, "");
     return normalizeSocialHubSnapshot(payload);
+  }
+
+  public static async fetchInboxThreadsPreview(
+    accessToken: string,
+    limit = 10,
+  ): Promise<SocialHubInboxThreadPreview[]> {
+    const payload = await socialHubFetch<{ threads: SocialHubInboxThreadPreview[] }>(
+      accessToken,
+      `/inbox/threads-preview?limit=${limit}`,
+    );
+    return payload.threads ?? [];
   }
 
   public static async fetchHealth(accessToken: string): Promise<{
@@ -369,9 +383,68 @@ export class SocialHubApiClient {
     );
   }
 
+  public static async fetchScheduledPosts(
+    accessToken: string,
+    from: string,
+    to: string,
+  ): Promise<{ posts: SocialHubPost[] }> {
+    const query = new URLSearchParams({ from, to });
+    return socialHubFetch(accessToken, `/posts?${query.toString()}`);
+  }
+
+  public static async bulkCancelPosts(
+    accessToken: string,
+    postIds: string[],
+  ): Promise<{ cancelledIds: string[]; errors: string[] }> {
+    return socialHubFetch(accessToken, "/posts/bulk-cancel", {
+      method: "POST",
+      body: JSON.stringify({ postIds }),
+    });
+  }
+
+  public static async bulkRetryPosts(
+    accessToken: string,
+    postIds: string[],
+  ): Promise<{
+    publishedIds: string[];
+    failed: Array<{ postId: string; message: string }>;
+  }> {
+    return socialHubFetch(accessToken, "/posts/bulk-retry", {
+      method: "POST",
+      body: JSON.stringify({ postIds }),
+    });
+  }
+
+  public static async uploadPublishMedia(
+    accessToken: string,
+    body: { filename: string; contentType: string; contentBase64: string },
+  ): Promise<{
+    media: {
+      mediaRef: string;
+      mediaId: string;
+      filename: string;
+      contentType: string;
+      sizeBytes: number;
+      previewPath: string;
+    };
+  }> {
+    return socialHubFetch(accessToken, "/publishing/media", {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+  }
+
+  public static buildPublishMediaPreviewUrl(mediaId: string): string {
+    return `${PublicApiConfiguration.resolveBaseUrl()}/company/social-hub/publishing/media/${mediaId}`;
+  }
+
   public static async createPost(
     accessToken: string,
-    body: { bodyText: string; platformCodes: string[] },
+    body: {
+      bodyText: string;
+      platformCodes: string[];
+      mediaUrls?: string[];
+    },
   ): Promise<{ post: { id: string } }> {
     return socialHubFetch(accessToken, "/posts", {
       method: "POST",
@@ -431,15 +504,58 @@ export class SocialHubApiClient {
   public static async publishPost(
     accessToken: string,
     postId: string,
-  ): Promise<{ post: unknown; providerMessage?: string }> {
+  ): Promise<{
+    post: {
+      statusCode: string;
+      lastErrorMessage?: string | null;
+    };
+    providerMessage?: string;
+  }> {
     return socialHubFetch(accessToken, `/posts/${postId}/publish`, {
+      method: "POST",
+    });
+  }
+
+  public static async listTemplateVariables(accessToken: string): Promise<{
+    variables: Array<{
+      key: string;
+      placeholder: string;
+      description: string;
+    }>;
+  }> {
+    return socialHubFetch(accessToken, "/templates/variables");
+  }
+
+  public static async previewTemplate(
+    accessToken: string,
+    bodyText: string,
+  ): Promise<{ renderedText: string; variables: Record<string, string> }> {
+    return socialHubFetch(accessToken, "/templates/preview", {
+      method: "POST",
+      body: JSON.stringify({ bodyText }),
+    });
+  }
+
+  public static async renderTemplate(
+    accessToken: string,
+    templateId: string,
+  ): Promise<{
+    template: SocialHubTemplate;
+    renderedText: string;
+    variables: Record<string, string>;
+  }> {
+    return socialHubFetch(accessToken, `/templates/${templateId}/render`, {
       method: "POST",
     });
   }
 
   public static async createTemplate(
     accessToken: string,
-    body: { title: string; bodyText: string },
+    body: {
+      title: string;
+      bodyText: string;
+      channelScopeCode?: string | null;
+    },
   ): Promise<void> {
     await socialHubFetch(accessToken, "/templates", {
       method: "POST",

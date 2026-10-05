@@ -21,6 +21,7 @@ import {
 
 const TIKTOK_TOKEN_URL = "https://open.tiktokapis.com/v2/oauth/token/";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
+const X_TOKEN_URL = "https://api.twitter.com/2/oauth2/token";
 const ROADMAP_CODES = SOCIAL_HUB_ROADMAP_PROVIDERS.map((row) => row.platformCode);
 const EXPIRY_LOOKAHEAD_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -61,6 +62,9 @@ export class SocialHubRoadmapTokenRefreshService {
     }
     if (code === "YOUTUBE") {
       return this.refreshYouTube(row, refreshToken, encKey);
+    }
+    if (code === "X") {
+      return this.refreshX(row, refreshToken, encKey);
     }
     return { refreshed: false, message: "Bu kanal için yenileme desteklenmiyor." };
   }
@@ -112,6 +116,60 @@ export class SocialHubRoadmapTokenRefreshService {
     row.lastErrorMessage = null;
     await this.connectionRepository.save(row);
     return { refreshed: true, message: "TikTok erişim tokenı yenilendi." };
+  }
+
+  private async refreshX(
+    row: CompanySocialConnectionEntity,
+    refreshToken: string,
+    encKey: string,
+  ): Promise<{ refreshed: boolean; message: string }> {
+    const config = this.oauthConfig.getXConfig();
+    if (!config) {
+      return { refreshed: false, message: "X OAuth yapılandırması eksik." };
+    }
+    const body = new URLSearchParams({
+      grant_type: "refresh_token",
+      refresh_token: refreshToken,
+      client_id: config.clientId,
+    });
+    const basic = Buffer.from(
+      `${config.clientId}:${config.clientSecret}`,
+    ).toString("base64");
+    const response = await fetch(X_TOKEN_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Authorization: `Basic ${basic}`,
+      },
+      body,
+    });
+    const payload = (await response.json()) as {
+      access_token?: string;
+      expires_in?: number;
+      refresh_token?: string;
+      error_description?: string;
+      error?: string;
+    };
+    if (!response.ok || !payload.access_token) {
+      const detail =
+        payload.error_description ?? payload.error ?? "X yenileme başarısız.";
+      this.logger.warn(detail);
+      return { refreshed: false, message: detail };
+    }
+    row.accessTokenCiphertext = encryptTotpSecret(payload.access_token, encKey);
+    row.tokenExpiresAt = payload.expires_in
+      ? new Date(Date.now() + payload.expires_in * 1000)
+      : row.tokenExpiresAt;
+    if (payload.refresh_token) {
+      row.grantedScopes = mergeRoadmapRefreshToken(
+        row.grantedScopes,
+        payload.refresh_token,
+        encKey,
+      );
+    }
+    row.lastErrorMessage = null;
+    await this.connectionRepository.save(row);
+    return { refreshed: true, message: "X erişim tokenı yenilendi." };
   }
 
   private async refreshYouTube(

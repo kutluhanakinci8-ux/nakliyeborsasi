@@ -11,11 +11,14 @@ const EMPTY_CAPS: SocialHubProviderCapabilities = {
 export type SocialHubRoadmapProvider = {
   platformCode: string;
   label: string;
-  implementationStatus: "roadmap";
+  implementationStatus: "roadmap" | "ready" | "pending";
   roadmapNote: string;
   capabilities: SocialHubProviderCapabilities;
+  isPendingSkeleton?: boolean;
   roadmapInterested?: boolean;
   oauthEnvConfigured?: boolean;
+  oauthImplementationStatus?: "ready" | "pending";
+  isRoadmapBeta?: boolean;
   roadmapConnectionStatusCode?: string | null;
   roadmapHasRefreshToken?: boolean;
 };
@@ -26,7 +29,7 @@ export const SOCIAL_HUB_ROADMAP_PROVIDERS: SocialHubRoadmapProvider[] = [
     label: "TikTok",
     implementationStatus: "roadmap",
     roadmapNote:
-      "Beta OAuth — gelen webhook Mesajlar köprüsü; giden mesaj SOCIAL_TIKTOK_OUTBOUND_ENABLED ile.",
+      "Prod OAuth yolu — gelen webhook Mesajlar köprüsü; giden mesaj deploy’da SOCIAL_TIKTOK_OUTBOUND_ENABLED=1 ile açılır.",
     capabilities: EMPTY_CAPS,
   },
   {
@@ -34,7 +37,24 @@ export const SOCIAL_HUB_ROADMAP_PROVIDERS: SocialHubRoadmapProvider[] = [
     label: "YouTube",
     implementationStatus: "roadmap",
     roadmapNote:
-      "Beta OAuth — Pub/Sub webhook Mesajlar köprüsü; giden mesaj SOCIAL_YOUTUBE_OUTBOUND_ENABLED ile.",
+      "Prod OAuth yolu — Pub/Sub push webhook Mesajlar köprüsü; giden mesaj deploy’da SOCIAL_YOUTUBE_OUTBOUND_ENABLED=1 ile açılır.",
+    capabilities: EMPTY_CAPS,
+  },
+  {
+    platformCode: "X",
+    label: "X (Twitter)",
+    implementationStatus: "roadmap",
+    roadmapNote:
+      "Prod OAuth (PKCE) — @lertalogistics bağlantısı; token yenileme. DM / Account Activity webhook ücretli X API katmanında sonraki faz.",
+    capabilities: EMPTY_CAPS,
+  },
+  {
+    platformCode: "GOOGLE_BUSINESS",
+    label: "Google Business Profile",
+    implementationStatus: "pending",
+    isPendingSkeleton: true,
+    roadmapNote:
+      "Pending provider iskeleti — işletme profili ve mesajlar için yol haritası. Öncelik bildirimi planlamada kullanılır.",
     capabilities: EMPTY_CAPS,
   },
 ];

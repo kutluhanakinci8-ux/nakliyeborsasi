@@ -43,23 +43,78 @@ export type SocialHubProviderCapabilities = {
   feedPublish: boolean;
 };
 
+export type SocialHubIntegrationGateStep = {
+  code: "E1" | "E2" | "E3" | "E4" | "E5" | "E6";
+  title: string;
+  status: "ready" | "partial" | "pending" | "manual";
+  detail: string;
+};
+
+export type SocialHubIntegrationGate = {
+  checklistVersion: number;
+  codeCompletePhase: string;
+  integrationGatePhase: string;
+  steps: SocialHubIntegrationGateStep[];
+  automatedReadyCount: number;
+  automatedStepCount: number;
+  allAutomatedReady: boolean;
+  note: string;
+};
+
+export type SocialHubPwaConfig = {
+  manifestPath: string;
+  startUrl: string;
+  scope: string;
+  display: "standalone";
+  healthPushHook: {
+    status: "skeleton";
+    channel: string;
+    preferenceCode: string;
+    note: string;
+  };
+};
+
+export type SocialHubLinkedInDmInboxGate = {
+  status: "deferred_v2";
+  implemented: "explicit_v2_gate";
+  rubrikL1Closed: true;
+  inboxWebhook: false;
+  outboundMessaging: false;
+  userFacingLabel: string;
+  userFacingNote: string;
+};
+
+export type SocialHubXDmInboxGate = {
+  status: "deferred_v2" | "ready_v1";
+  implemented: "explicit_v2_gate" | "deploy_flags";
+  inboxWebhook: false;
+  outboundMessaging: false;
+  userFacingLabel: string;
+  userFacingNote: string;
+};
+
 export type SocialHubProviderInfo = {
   platformCode: string;
   label: string;
   implementationStatus: "pending" | "ready";
   capabilities?: SocialHubProviderCapabilities;
+  linkedinDmInboxGate?: SocialHubLinkedInDmInboxGate;
 };
 
 export type SocialHubRoadmapProvider = {
   platformCode: string;
   label: string;
-  implementationStatus: "roadmap";
+  implementationStatus: "roadmap" | "ready" | "pending";
   roadmapNote: string;
   capabilities: SocialHubProviderCapabilities;
+  isPendingSkeleton?: boolean;
   roadmapInterested?: boolean;
   oauthEnvConfigured?: boolean;
+  oauthImplementationStatus?: "ready" | "pending";
+  isRoadmapBeta?: boolean;
   roadmapConnectionStatusCode?: string | null;
   roadmapHasRefreshToken?: boolean;
+  xDmInboxGate?: SocialHubXDmInboxGate;
 };
 
 export type SocialHubConnection = {
@@ -76,6 +131,8 @@ export type SocialHubConnection = {
   capabilities?: SocialHubProviderCapabilities;
   setupWarnings?: string[];
   oauthReady?: boolean;
+  linkedinDmInboxGate?: SocialHubLinkedInDmInboxGate;
+  xDmInboxGate?: SocialHubXDmInboxGate;
 };
 
 export type SocialHubPost = {
@@ -99,6 +156,7 @@ export type SocialHubTemplate = {
   title: string;
   bodyText: string;
   channelScopeCode: string | null;
+  channelScopeLabel?: string;
   sortOrder: number;
 };
 
@@ -123,6 +181,19 @@ export type SocialHubAuditEntry = {
 export type SocialHubSubscriptionInfo = {
   moduleCode: string;
   upgradeHintPath: string;
+};
+
+export type SocialHubPlatformInsightRow = {
+  platformCode: string;
+  label: string;
+  status: "ok" | "unavailable" | "not_connected";
+  followersCount: number | null;
+  followingCount: number | null;
+  mediaOrPostsCount: number | null;
+  impressions28d: number | null;
+  engagedUsers28d: number | null;
+  errorMessage: string | null;
+  fetchedAt: string;
 };
 
 export type SocialHubAnalytics = {
@@ -154,6 +225,7 @@ export type SocialHubAnalytics = {
       inboundBridged24h: number;
     }>;
   };
+  platformInsights?: SocialHubPlatformInsightRow[];
 };
 
 export type SocialHubBetaWebhookReadiness = {
@@ -271,6 +343,7 @@ export type SocialHubSnapshot = {
     tiktokSignatureRequired: boolean;
     youtubePushAuthRequired: boolean;
     webhookInactivityHealthHintsEnabled?: boolean;
+    defaultWebhookCompanyConfigured?: boolean;
   };
   webhookActivity?: {
     inboundBridged24h: number;
@@ -293,4 +366,40 @@ export type SocialHubSnapshot = {
     note: string;
     webhookInboundBridged24h?: number;
   };
+  inboxSyncSummary?: SocialHubInboxSyncSummary;
+  linkedinDmInboxGate?: SocialHubLinkedInDmInboxGate;
+  pwa?: SocialHubPwaConfig;
+  integrationGate?: SocialHubIntegrationGate;
+};
+
+export type SocialHubInboxChannelSyncRow = {
+  platformCode: string;
+  label: string;
+  openCount: number;
+  webhookInboundBridged24h: number;
+  providerImplementationStatus: string;
+  connectionStatusCode: string | null;
+  inboxWebhook: boolean;
+  inboxHistorySync: boolean;
+  lastSyncAt: string | null;
+  lastSyncMessage: string | null;
+  lastSyncImplementationStatus: "ready" | "pending" | null;
+  dmInboxGateLabel?: string | null;
+};
+
+export type SocialHubInboxSyncSummary = {
+  generatedAt: string;
+  channels: SocialHubInboxChannelSyncRow[];
+};
+
+export type SocialHubInboxThreadPreview = {
+  threadId: string;
+  platformCode: string;
+  platformLabel: string;
+  displayLabel: string;
+  lastMessagePreview: string | null;
+  lastMessageAt: string | null;
+  unreadCount: number;
+  isOpen: boolean;
+  messagingDeepLink: string;
 };

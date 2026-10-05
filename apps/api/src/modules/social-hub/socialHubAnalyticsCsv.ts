@@ -1,4 +1,5 @@
 import type { SocialHubWebhookBridgePlatformStat } from "./socialHubWebhookBridgeSnapshot";
+import type { SocialHubPlatformInsightRow } from "./SocialHubMetaPlatformInsightsService";
 
 export function buildSocialHubAnalyticsCsv(params: {
   generatedAt: string;
@@ -10,6 +11,7 @@ export function buildSocialHubAnalyticsCsv(params: {
   webhookInboundBridged30d: number;
   webhookByPlatform24h: SocialHubWebhookBridgePlatformStat[];
   webhookByPlatform7d: SocialHubWebhookBridgePlatformStat[];
+  platformInsights: SocialHubPlatformInsightRow[];
 }): string {
   const header = "section,key,value";
   const lines: string[] = [header];
@@ -33,6 +35,26 @@ export function buildSocialHubAnalyticsCsv(params: {
   }
   for (const row of params.webhookByPlatform7d) {
     push("webhookPlatform7d", row.platformCode, row.inboundBridged24h);
+  }
+  for (const row of params.platformInsights) {
+    push("metaPlatformInsight", `${row.platformCode}.status`, row.status);
+    if (row.followersCount != null) {
+      push("metaPlatformInsight", `${row.platformCode}.followers`, row.followersCount);
+    }
+    if (row.impressions28d != null) {
+      push(
+        "metaPlatformInsight",
+        `${row.platformCode}.impressions28d`,
+        row.impressions28d,
+      );
+    }
+    if (row.engagedUsers28d != null) {
+      push(
+        "metaPlatformInsight",
+        `${row.platformCode}.engagedOrReach28d`,
+        row.engagedUsers28d,
+      );
+    }
   }
   return lines.join("\n");
 }

@@ -6,8 +6,10 @@ import { CompanySocialConnectionEntity } from "../../../infrastructure/database/
 import {
   parseSocialHubConnectionMetadata,
   serializeSocialHubConnectionMetadata,
+  usesInstagramLoginApi,
   type SocialHubConnectionMetadata,
 } from "./SocialHubConnectionMetadata";
+import { SocialHubOAuthConfigService } from "./SocialHubOAuthConfigService";
 
 type AccountsResponse = {
   data?: Array<{ id: string; name: string; access_token?: string }>;
@@ -25,6 +27,7 @@ export class SocialHubMetaGraphService {
   public constructor(
     @InjectRepository(CompanySocialConnectionEntity)
     private readonly connectionRepository: Repository<CompanySocialConnectionEntity>,
+    private readonly oauthConfig: SocialHubOAuthConfigService,
   ) {}
 
   public async enrichConnectionAfterOAuth(
@@ -39,6 +42,165 @@ export class SocialHubMetaGraphService {
       companyId,
       platformCode,
       userAccessToken,
+    );
+  }
+
+  /** Meta: WABA must subscribe the app or inbound message webhooks are not delivered. */
+  public async subscribeWhatsAppBusinessAccountWebhooks(
+    wabaId: string,
+    userAccessToken: string,
+  ): Promise<void> {
+    const trimmed = wabaId.trim();
+    if (!trimmed) {
+      return;
+    }
+    const url = new URL(
+      `https://graph.facebook.com/v21.0/${trimmed}/subscribed_apps`,
+    );
+    url.searchParams.set("access_token", userAccessToken);
+    const response = await fetch(url.toString(), { method: "POST" });
+    const payload = (await response.json()) as {
+      success?: boolean;
+      error?: { message: string };
+    };
+    if (!response.ok || payload.success !== true) {
+      this.logger.warn(
+        `WABA subscribed_apps failed waba=${trimmed}: ${
+          payload.error?.message ?? String(response.status)
+        }`,
+      );
+      return;
+    }
+    this.logger.log(`WABA subscribed_apps ok waba=${trimmed}`);
+  }
+
+  /** Meta: Page must subscribe the app for Messenger `page` webhooks. */
+  public async subscribeFacebookPageWebhooks(
+    pageId: string,
+    pageAccessToken: string,
+  ): Promise<void> {
+    const trimmedPage = pageId.trim();
+    const trimmedToken = pageAccessToken.trim();
+    if (!trimmedPage || !trimmedToken) {
+      return;
+    }
+    const url = new URL(
+      `https://graph.facebook.com/v21.0/${trimmedPage}/subscribed_apps`,
+    );
+    url.searchParams.set("access_token", trimmedToken);
+    url.searchParams.set(
+      "subscribed_fields",
+      "messages,messaging_postbacks,message_deliveries,message_reads",
+    );
+    const response = await fetch(url.toString(), { method: "POST" });
+    const payload = (await response.json()) as {
+      success?: boolean;
+      error?: { message: string };
+    };
+    if (!response.ok || payload.success !== true) {
+      this.logger.warn(
+        `Page subscribed_apps failed page=${trimmedPage}: ${
+          payload.error?.message ?? String(response.status)
+        }`,
+      );
+      return;
+    }
+    this.logger.log(`Page subscribed_apps ok page=${trimmedPage}`);
+  }
+
+  /** Meta: IG business account must subscribe the app for `object=instagram` webhooks. */
+  public async subscribeInstagramBusinessWebhooks(
+    instagramBusinessAccountId: string,
+    accessToken: string,
+  ): Promise<void> {
+    const trimmedIg = instagramBusinessAccountId.trim();
+    const trimmedToken = accessToken.trim();
+    if (!trimmedIg || !trimmedToken) {
+      return;
+    }
+    const url = new URL(
+      `https://graph.facebook.com/v21.0/${trimmedIg}/subscribed_apps`,
+    );
+    url.searchParams.set("access_token", trimmedToken);
+    url.searchParams.set("subscribed_fields", "messages");
+    const response = await fetch(url.toString(), { method: "POST" });
+    const payload = (await response.json()) as {
+      success?: boolean;
+      error?: { message: string };
+    };
+    if (!response.ok || payload.success !== true) {
+      this.logger.warn(
+        `IG subscribed_apps failed ig=${trimmedIg}: ${
+          payload.error?.message ?? String(response.status)
+        }`,
+      );
+      return;
+    }
+    this.logger.log(`IG subscribed_apps ok ig=${trimmedIg}`);
+  }
+
+  /** Instagram Business Login user token — graph.instagram.com/me/subscribed_apps (Developer Adım 2). */
+  public async subscribeInstagramLoginUserWebhooks(
+    accessToken: string,
+  ): Promise<void> {
+    const trimmedToken = accessToken.trim();
+    if (!trimmedToken) {
+      return;
+    }
+    const url = new URL("https://graph.instagram.com/v21.0/me/subscribed_apps");
+    url.searchParams.set("access_token", trimmedToken);
+    url.searchParams.set(
+      "subscribed_fields",
+      "messages,messaging_postbacks,messaging_seen,message_reactions",
+    );
+    const response = await fetch(url.toString(), { method: "POST" });
+    const payload = (await response.json()) as {
+      success?: boolean;
+      error?: { message: string };
+    };
+    if (!response.ok || payload.success !== true) {
+      this.logger.warn(
+        `Instagram Login subscribed_apps failed: ${
+          payload.error?.message ?? String(response.status)
+        }`,
+      );
+      return;
+    }
+    this.logger.log("Instagram Login subscribed_apps ok (me)");
+  }
+
+  public async syncInstagramExternalAccountId(companyId: string): Promise<void> {
+    const row = await this.connectionRepository.findOne({
+      where: { companyId, platformCode: SocialPlatformCode.Instagram },
+    });
+    if (!row) {
+      return;
+    }
+    const metadata = parseSocialHubConnectionMetadata(row.grantedScopes);
+    const igId =
+      metadata.instagramBusinessAccountId ??
+      this.oauthConfig.getKnownInstagramBusinessAccountId()?.trim() ??
+      null;
+    if (!igId) {
+      return;
+    }
+    const loginUserId = metadata.instagramLoginUserId?.trim();
+    if (
+      row.externalAccountId &&
+      row.externalAccountId !== igId &&
+      !loginUserId
+    ) {
+      metadata.instagramLoginUserId = row.externalAccountId;
+      row.grantedScopes = serializeSocialHubConnectionMetadata(metadata);
+    }
+    if (row.externalAccountId === igId) {
+      await this.connectionRepository.save(row);
+      return;
+    }
+    row.externalAccountId = igId;
+    await this.connectionRepository.save(row);
+    this.logger.log(
+      `Instagram externalAccountId synced company=${companyId} ig=${igId}`,
     );
   }
 
@@ -59,6 +221,22 @@ export class SocialHubMetaGraphService {
         accessToken: params.accessToken,
         to: params.recipientExternalId,
         bodyText: params.bodyText,
+      });
+    }
+    if (
+      params.platformCode === SocialPlatformCode.Instagram &&
+      usesInstagramLoginApi(metadata)
+    ) {
+      const igProfessionalId =
+        metadata.instagramBusinessAccountId ??
+        metadata.instagramLoginUserId ??
+        connection?.externalAccountId ??
+        undefined;
+      return this.sendInstagramLoginText({
+        accessToken: params.accessToken,
+        recipientId: params.recipientExternalId,
+        bodyText: params.bodyText,
+        igProfessionalId,
       });
     }
     const pageId =
@@ -123,6 +301,97 @@ export class SocialHubMetaGraphService {
     };
   }
 
+  public async publishPhotoToPageFeed(params: {
+    pageId: string;
+    accessToken: string;
+    bodyText: string;
+    imageBuffer: Buffer;
+    filename: string;
+    contentType: string;
+  }): Promise<{ externalPostId: string | null; message: string }> {
+    const form = new FormData();
+    form.append("message", params.bodyText);
+    form.append("access_token", params.accessToken);
+    form.append(
+      "source",
+      new Blob([new Uint8Array(params.imageBuffer)], {
+        type: params.contentType,
+      }),
+      params.filename,
+    );
+    const url = `https://graph.facebook.com/v21.0/${params.pageId}/photos`;
+    const response = await fetch(url, { method: "POST", body: form });
+    const payload = (await response.json()) as {
+      id?: string;
+      post_id?: string;
+      error?: { message: string };
+    };
+    if (!response.ok) {
+      return {
+        externalPostId: null,
+        message: payload.error?.message ?? "Meta fotoğraf yayını başarısız.",
+      };
+    }
+    return {
+      externalPostId: payload.post_id ?? payload.id ?? null,
+      message: "Meta sayfa fotoğrafı yayınlandı.",
+    };
+  }
+
+  public async publishPhotoToInstagram(params: {
+    instagramBusinessAccountId: string;
+    accessToken: string;
+    caption: string;
+    imageBuffer: Buffer;
+    filename: string;
+    contentType: string;
+  }): Promise<{ externalPostId: string | null; message: string }> {
+    const mediaForm = new FormData();
+    mediaForm.append("caption", params.caption);
+    mediaForm.append("access_token", params.accessToken);
+    mediaForm.append(
+      "image",
+      new Blob([new Uint8Array(params.imageBuffer)], {
+        type: params.contentType,
+      }),
+      params.filename,
+    );
+    const mediaUrl = `https://graph.facebook.com/v21.0/${params.instagramBusinessAccountId}/media`;
+    const mediaRes = await fetch(mediaUrl, { method: "POST", body: mediaForm });
+    const mediaPayload = (await mediaRes.json()) as {
+      id?: string;
+      error?: { message: string };
+    };
+    if (!mediaRes.ok || !mediaPayload.id) {
+      return {
+        externalPostId: null,
+        message:
+          mediaPayload.error?.message ?? "Instagram medya konteyneri oluşturulamadı.",
+      };
+    }
+    const publishUrl = new URL(
+      `https://graph.facebook.com/v21.0/${params.instagramBusinessAccountId}/media_publish`,
+    );
+    publishUrl.searchParams.set("creation_id", mediaPayload.id);
+    publishUrl.searchParams.set("access_token", params.accessToken);
+    const publishRes = await fetch(publishUrl.toString(), { method: "POST" });
+    const publishPayload = (await publishRes.json()) as {
+      id?: string;
+      error?: { message: string };
+    };
+    if (!publishRes.ok) {
+      return {
+        externalPostId: null,
+        message:
+          publishPayload.error?.message ?? "Instagram yayın tamamlanamadı.",
+      };
+    }
+    return {
+      externalPostId: publishPayload.id ?? mediaPayload.id ?? null,
+      message: "Instagram gönderisi yayınlandı.",
+    };
+  }
+
   public async resolvePageAccessToken(
     userAccessToken: string,
     pageId: string,
@@ -162,17 +431,56 @@ export class SocialHubMetaGraphService {
           displayName: me.name ?? "Meta bağlantısı",
         };
       }
+      if (platformCode === SocialPlatformCode.Instagram) {
+        let chosenPage = payload.data[0];
+        let igProfile: { id: string; username?: string; name?: string } | null =
+          null;
+        for (const candidate of payload.data) {
+          const token = candidate.access_token ?? userAccessToken;
+          const profile = await this.fetchInstagramBusinessProfile(
+            candidate.id,
+            token,
+          );
+          if (profile?.id) {
+            chosenPage = candidate;
+            igProfile = profile;
+            break;
+          }
+        }
+        if (!igProfile) {
+          igProfile = await this.fetchInstagramBusinessProfile(
+            chosenPage.id,
+            chosenPage.access_token ?? userAccessToken,
+          );
+        }
+        const metadata: SocialHubConnectionMetadata = {
+          pageId: chosenPage.id,
+        };
+        const knownIgId =
+          this.oauthConfig.getKnownInstagramBusinessAccountId()?.trim() ?? null;
+        if (igProfile?.id) {
+          metadata.instagramBusinessAccountId = igProfile.id;
+        } else if (knownIgId) {
+          metadata.instagramBusinessAccountId = knownIgId;
+        }
+        await this.mergeConnectionMetadata(companyId, platformCode, metadata);
+        if (igProfile?.id || knownIgId) {
+          const igId = igProfile?.id ?? knownIgId!;
+          return {
+            externalAccountId: igId,
+            displayName:
+              igProfile?.username
+                ? `@${igProfile.username}`
+                : igProfile?.name ?? chosenPage.name ?? "Instagram",
+          };
+        }
+        return {
+          externalAccountId: chosenPage.id,
+          displayName: chosenPage.name ?? "Instagram (sayfa)",
+        };
+      }
       const page = payload.data[0];
       const metadata: SocialHubConnectionMetadata = { pageId: page.id };
-      if (platformCode === SocialPlatformCode.Instagram) {
-        const igId = await this.fetchInstagramBusinessAccountId(
-          page.id,
-          page.access_token ?? userAccessToken,
-        );
-        if (igId) {
-          metadata.instagramBusinessAccountId = igId;
-        }
-      }
       await this.mergeConnectionMetadata(companyId, platformCode, metadata);
       return {
         externalAccountId: page.id,
@@ -261,18 +569,42 @@ export class SocialHubMetaGraphService {
     }
   }
 
-  private async fetchInstagramBusinessAccountId(
+  private async fetchInstagramBusinessProfile(
     pageId: string,
     accessToken: string,
-  ): Promise<string | null> {
+  ): Promise<{ id: string; username?: string; name?: string } | null> {
     const url = new URL(`https://graph.facebook.com/v21.0/${pageId}`);
-    url.searchParams.set("fields", "instagram_business_account");
+    url.searchParams.set(
+      "fields",
+      "instagram_business_account{id,username,name}",
+    );
     url.searchParams.set("access_token", accessToken);
     const response = await fetch(url.toString());
     const payload = (await response.json()) as {
-      instagram_business_account?: { id?: string };
+      instagram_business_account?: {
+        id?: string;
+        username?: string;
+        name?: string;
+      };
     };
-    return payload.instagram_business_account?.id ?? null;
+    const ig = payload.instagram_business_account;
+    if (!ig?.id) {
+      return null;
+    }
+    return { id: ig.id, username: ig.username, name: ig.name };
+  }
+
+  public async applyInstagramLoginMetadata(
+    companyId: string,
+    patch: Pick<
+      SocialHubConnectionMetadata,
+      | "instagramBusinessAccountId"
+      | "instagramLoginUserId"
+      | "pageId"
+      | "instagramAuthMode"
+    >,
+  ): Promise<void> {
+    await this.mergeConnectionMetadata(companyId, SocialPlatformCode.Instagram, patch);
   }
 
   private async mergeConnectionMetadata(
@@ -292,6 +624,46 @@ export class SocialHubMetaGraphService {
       ...patch,
     });
     await this.connectionRepository.save(row);
+  }
+
+  /** Instagram API with Instagram Login — graph.instagram.com (no Facebook Page). */
+  private async sendInstagramLoginText(params: {
+    accessToken: string;
+    recipientId: string;
+    bodyText: string;
+    igProfessionalId?: string;
+  }): Promise<{ ok: boolean; message: string; externalMessageId?: string }> {
+    const pathSegment = params.igProfessionalId?.trim()
+      ? `${params.igProfessionalId.trim()}/messages`
+      : "me/messages";
+    const url = new URL(`https://graph.instagram.com/v21.0/${pathSegment}`);
+    const response = await fetch(url.toString(), {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${params.accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        recipient: { id: params.recipientId },
+        message: { text: params.bodyText },
+      }),
+    });
+    const payload = (await response.json()) as {
+      id?: string;
+      message_id?: string;
+      error?: { message: string };
+    };
+    if (!response.ok) {
+      return {
+        ok: false,
+        message: payload.error?.message ?? "Instagram mesaj gönderimi başarısız.",
+      };
+    }
+    return {
+      ok: true,
+      message: "Mesaj kanala gönderildi.",
+      externalMessageId: payload.message_id ?? payload.id,
+    };
   }
 
   private async sendMessengerStyleText(params: {
@@ -343,6 +715,13 @@ export class SocialHubMetaGraphService {
         message: "WhatsApp phone_number_id yok; OAuth yenileyin.",
       };
     }
+    const toDigits = params.to.replace(/\D/g, "");
+    if (!toDigits) {
+      return {
+        ok: false,
+        message: "WhatsApp alıcı numarası geçersiz.",
+      };
+    }
     const url = new URL(
       `https://graph.facebook.com/v21.0/${params.phoneNumberId}/messages`,
     );
@@ -354,7 +733,7 @@ export class SocialHubMetaGraphService {
       },
       body: JSON.stringify({
         messaging_product: "whatsapp",
-        to: params.to,
+        to: toDigits,
         type: "text",
         text: { body: params.bodyText },
       }),

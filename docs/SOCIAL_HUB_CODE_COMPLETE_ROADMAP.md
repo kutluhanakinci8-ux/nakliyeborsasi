@@ -70,8 +70,9 @@ Ağırlıklar toplam **100**. Mevcut tahmini puan **72**. Kapanacak **28 puan** 
 | 12 | **AZ** | Kod tamamlama: eski UI metinleri, feature flag audit, `phase: az` | DoD #1 | 100 |
 | 13 | **BA** | Mock Graph/webhook + `social-hub` CI job (entegrasyon öncesi test) | O2 | 100 |
 | 14 | **BB** | PWA: `/hesap/sosyal-medya` manifest + bildirim hook iskeleti | M1 | 100 |
+| 15 | **BC** | Entegrasyon kapısı: E1–E6 checklist (ortam + köprü metrik), `phase: bc` | Integration Gate | 100 (canlı) |
 
-**Entegrasyon / canlı test (faz dışı kapı):** Meta App Review, prod webhook URL, gerçek WABA, müşteri pilotu — **BB sonrası** tek “Integration Gate” checklist.
+**Entegrasyon / canlı test:** BB sonrası **BC** fazında `integrationGate` (public status + firma snapshot) ve `scripts/smoke-social-hub-integration-gate.sh`.
 
 ---
 
@@ -129,6 +130,11 @@ Ağırlıklar toplam **100**. Mevcut tahmini puan **72**. Kapanacak **28 puan** 
 ### BB — PWA (hafif)
 - Manifest scope; opsiyonel web push “sosyal hub sağlık critical” hook.
 
+### BC — Entegrasyon kapısı (kod sonrası)
+- **API:** `buildSocialHubIntegrationGate()` — E1–E6; global metrikler `/status`, firma `inboundBridged24h` hub snapshot.
+- **Web:** Bağlantılar sekmesi checklist UI.
+- **Smoke:** `SOCIAL_HUB_SMOKE_EXPECT_PHASE=bc` veya `smoke-social-hub-integration-gate.sh`.
+
 ---
 
 ## Entegrasyon kapısı (kod %100 sonrası)
@@ -147,14 +153,12 @@ Ağırlıklar toplam **100**. Mevcut tahmini puan **72**. Kapanacak **28 puan** 
 ## Özet akış
 
 ```text
-[an] ──► AO ──► AP ──► AQ ──► AR ──► AS ──► AT ──► AU ──► AV ──► AW ──► AX ──► AZ ──► BA ──► BB
-         │         │         │         │         │         │         │         │         │
-         └─ analitik ────────┴─ inbox ─┴─ publish ───────┴─ channels ─┴─ polish ─┴─ CI ─┘
+[an] ──► AO ──► … ──► BA ──► BB ──► BC
                                                                                     │
-                                                                         Integration Gate
+                                                                         Integration Gate (E1–E6)
 ```
 
-**Sıradaki uygulama fazı:** **AO** (Meta insights → İstatistikler %32 → ~%80 sekme puanı).
+**Sıradaki uygulama fazı:** **BC** tamamlandıktan sonra canlı pilot (E5/E6 manuel UAT).
 
 ---
 

@@ -45,6 +45,21 @@ SQL_FILES=(
   social-hub-phase-al.sql
   social-hub-phase-am.sql
   social-hub-phase-an.sql
+  social-hub-phase-ao.sql
+  social-hub-phase-ap.sql
+  social-hub-phase-aq.sql
+  social-hub-phase-ar.sql
+  social-hub-phase-as.sql
+  social-hub-phase-at.sql
+  social-hub-phase-au.sql
+  social-hub-phase-av.sql
+  social-hub-phase-aw.sql
+  social-hub-phase-ax.sql
+  social-hub-phase-ay.sql
+  social-hub-phase-az.sql
+  social-hub-phase-ba.sql
+  social-hub-phase-bb.sql
+  social-hub-phase-bc.sql
 )
 
 for name in "${SQL_FILES[@]}"; do

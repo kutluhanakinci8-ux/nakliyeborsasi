@@ -1,0 +1,1 @@
+-- Faz AT: şema değişikliği yok (yayın takvim grid + posts aralık sorgusu)

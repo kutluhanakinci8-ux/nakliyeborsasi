@@ -28,12 +28,14 @@ import { SocialProviderRegistry } from "./providers/SocialProviderRegistry";
 import { CompanySocialThreadLinkEntity } from "../../infrastructure/database/entities/CompanySocialThreadLinkEntity";
 import { SocialHubMessagingBridgeService } from "./SocialHubMessagingBridgeService";
 import { CompanyMembershipEntity } from "../../infrastructure/database/entities/CompanyMembershipEntity";
+import { CompanyEntity } from "../../infrastructure/database/entities/CompanyEntity";
 import {
   SocialHubAuditActionCode,
   SocialHubAuditService,
 } from "./SocialHubAuditService";
 import { getSocialHubProviderCapabilities } from "./socialHubProviderCapabilities";
 import { parseSocialHubConnectionMetadata } from "./oauth/SocialHubConnectionMetadata";
+import { SocialHubOAuthConfigService } from "./oauth/SocialHubOAuthConfigService";
 import { SocialHubConnectionHealthService } from "./SocialHubConnectionHealthService";
 import { SocialHubTokenRefreshService } from "./oauth/SocialHubTokenRefreshService";
 import { SocialHubOutboundDeliveryLogService } from "./SocialHubOutboundDeliveryLogService";
@@ -62,12 +64,29 @@ import { buildSocialHubPublicWebhookUrls } from "./socialHubIntegrationUrls";
 import { buildSocialHubIntegrationWebhookReadiness } from "./socialHubIntegrationWebhookReadiness";
 import { buildSocialHubIntegrationOpsHints } from "./socialHubIntegrationOpsHints";
 import { getRoadmapProviderCapabilities } from "./socialHubRoadmapCapabilities";
+import { isRoadmapProdProviderPlatform } from "./socialHubRoadmapProdProviders";
+import { buildSocialHubLinkedInDmInboxGate } from "./socialHubLinkedInDmCapability";
+import { buildSocialHubXDmInboxGate } from "./socialHubXDmCapability";
+import { isRoadmapPendingSkeletonPlatform } from "./socialHubRoadmapPendingProviders";
+import { buildSocialHubPwaConfig } from "./socialHubPwaConfig";
+import { buildSocialHubIntegrationGate } from "./socialHubIntegrationGate";
 import { roadmapConnectedHint } from "./socialHubRoadmapHints";
 import { SocialHubRoadmapInboxSyncService } from "./SocialHubRoadmapInboxSyncService";
+import { SocialHubRoadmapPublishApplicationService } from "./SocialHubRoadmapPublishApplicationService";
 import { mapWebhookBridgedByPlatform } from "./socialHubWebhookBridgeSnapshot";
 import { buildCompanyWebhookActivityCsv } from "./socialHubWebhookActivityCsv";
 import { buildSocialHubAnalyticsCsv } from "./socialHubAnalyticsCsv";
 import { buildSocialHubAuditLogCsv } from "./socialHubAuditLogCsv";
+import { SocialHubMetaPlatformInsightsService } from "./SocialHubMetaPlatformInsightsService";
+import { SocialHubLinkedInOrgInsightsService } from "./SocialHubLinkedInOrgInsightsService";
+import { SocialHubInboxSyncSummaryService } from "./SocialHubInboxSyncSummaryService";
+import { SocialHubPublishMediaStorageService } from "./SocialHubPublishMediaStorageService";
+import {
+  formatSocialHubTemplateToday,
+  listSocialHubTemplateVariableHints,
+  renderSocialHubTemplate,
+} from "./socialHubTemplateRender";
+import { normalizeSocialHubTemplateChannelScope } from "./socialHubTemplateChannelScope";
 
 export const INVITABLE_SOCIAL_TEAM_ROLES: readonly CompanyRoleCode[] = [
   CompanyRoleCode.SocialAdmin,
@@ -99,6 +118,8 @@ export class SocialHubApplicationService {
     private readonly socialHubMessagingBridgeService: SocialHubMessagingBridgeService,
     @InjectRepository(CompanyMembershipEntity)
     private readonly membershipRepository: Repository<CompanyMembershipEntity>,
+    @InjectRepository(CompanyEntity)
+    private readonly companyRepository: Repository<CompanyEntity>,
     private readonly socialHubAuditService: SocialHubAuditService,
     private readonly modularSubscriptionEntitlementService: ModularSubscriptionEntitlementService,
     private readonly connectionHealthService: SocialHubConnectionHealthService,
@@ -111,6 +132,12 @@ export class SocialHubApplicationService {
     private readonly roadmapOAuthApplicationService: SocialHubRoadmapOAuthApplicationService,
     private readonly roadmapTokenRefreshService: SocialHubRoadmapTokenRefreshService,
     private readonly roadmapInboxSyncService: SocialHubRoadmapInboxSyncService,
+    private readonly roadmapPublishApplicationService: SocialHubRoadmapPublishApplicationService,
+    private readonly metaPlatformInsightsService: SocialHubMetaPlatformInsightsService,
+    private readonly linkedInOrgInsightsService: SocialHubLinkedInOrgInsightsService,
+    private readonly inboxSyncSummaryService: SocialHubInboxSyncSummaryService,
+    private readonly publishMediaStorageService: SocialHubPublishMediaStorageService,
+    private readonly oauthConfig: SocialHubOAuthConfigService,
   ) {}
 
   private async assertSocialHubSubscription(companyId: string): Promise<void> {
@@ -162,6 +189,7 @@ export class SocialHubApplicationService {
       order: { sortOrder: "ASC", title: "ASC" },
     });
     const permissions = resolveSocialHubPermissions(user, settings);
+    const linkedInDmInboxGate = buildSocialHubLinkedInDmInboxGate();
     const providers = this.socialProviderRegistry.listPlatforms().map((code) => {
       const provider = this.socialProviderRegistry.resolve(code);
       return {
@@ -169,6 +197,9 @@ export class SocialHubApplicationService {
         label: PLATFORM_LABELS[code],
         implementationStatus: provider.getImplementationStatus(),
         capabilities: getSocialHubProviderCapabilities(code),
+        ...(code === SocialPlatformCode.LinkedIn
+          ? { linkedinDmInboxGate: linkedInDmInboxGate }
+          : {}),
       };
     });
 
@@ -208,6 +239,9 @@ export class SocialHubApplicationService {
       webhookInboundBridged24h: bridgedCountByCode.get(platformCode) ?? 0,
     });
 
+    const inboxSyncSummary =
+      await this.inboxSyncSummaryService.buildForCompany(user.companyId);
+
     return {
       subscription: this.subscriptionMeta(user.companyId),
       permissions,
@@ -215,7 +249,13 @@ export class SocialHubApplicationService {
       providers,
       roadmapProviders: this.mapRoadmapProviders(settings, connectionRows),
       connections: connections.map((row) =>
-        this.mapConnection(row, providers),
+        this.mapConnection(row, providers, {
+          webhookInboundBridged24h:
+            bridgedCountByCode.get(row.platformCode) ?? 0,
+          openThreadCount: openLinks.filter(
+            (link) => link.platformCode === row.platformCode,
+          ).length,
+        }),
       ),
       recentPosts: posts.map((row) => this.mapPost(row)),
       templates: templates.map((row) => this.mapTemplate(row)),
@@ -254,7 +294,21 @@ export class SocialHubApplicationService {
             : "Kanal bağlayın veya demo oluşturun; konuşmalar Mesajlar ekranında listelenir.",
         webhookInboundBridged24h: inboundBridged24h,
       },
+      inboxSyncSummary,
+      linkedinDmInboxGate: linkedInDmInboxGate,
+      pwa: buildSocialHubPwaConfig(),
+      integrationGate: buildSocialHubIntegrationGate({
+        inboundBridged24h,
+      }),
     };
+  }
+
+  public async getInboxSyncSummary(user: AuthenticatedUserContext) {
+    assertSocialHubRead(user);
+    await this.assertSocialHubSubscription(user.companyId);
+    const settings = await this.ensureSettings(user.companyId);
+    this.assertInboxOperationsAllowed(settings);
+    return this.inboxSyncSummaryService.buildForCompany(user.companyId);
   }
 
   public async getConnectionHealth(user: AuthenticatedUserContext) {
@@ -350,6 +404,9 @@ export class SocialHubApplicationService {
   ) {
     assertSocialHubAdmin(user);
     await this.assertSocialHubSubscription(user.companyId);
+    if (isRoadmapPlatformCode(platformCode)) {
+      return this.refreshRoadmapToken(user, platformCode);
+    }
     const provider = this.socialProviderRegistry.resolve(platformCode);
     const result = await this.tokenRefreshService.refreshConnectionToken(
       user.companyId,
@@ -497,6 +554,8 @@ export class SocialHubApplicationService {
       bridgedByPlatform24h,
       bridgedByPlatform7d,
       lastWebhookBridgedAt,
+      platformInsightsMetaRows,
+      platformInsightLinkedInRow,
     ] = await Promise.all([
       this.socialHubAuditService.countRecentByActionForCompany(
         companyId,
@@ -525,7 +584,14 @@ export class SocialHubApplicationService {
         companyId,
         SocialHubAuditActionCode.WebhookInboundBridged,
       ),
+      this.metaPlatformInsightsService.buildForCompany(companyId),
+      this.linkedInOrgInsightsService.buildForCompany(companyId),
     ]);
+
+    const platformInsights = [
+      ...platformInsightsMetaRows,
+      platformInsightLinkedInRow,
+    ];
 
     return {
       analytics: {
@@ -552,6 +618,7 @@ export class SocialHubApplicationService {
           byPlatform24h: mapWebhookBridgedByPlatform(bridgedByPlatform24h),
           byPlatform7d: mapWebhookBridgedByPlatform(bridgedByPlatform7d),
         },
+        platformInsights,
       },
     };
   }
@@ -579,7 +646,22 @@ export class SocialHubApplicationService {
       webhookInboundBridged30d: analytics.webhookBridge.inboundBridged30d,
       webhookByPlatform24h: analytics.webhookBridge.byPlatform24h,
       webhookByPlatform7d: analytics.webhookBridge.byPlatform7d,
+      platformInsights: analytics.platformInsights ?? [],
     });
+  }
+
+  public async getInboxThreadsPreview(
+    user: AuthenticatedUserContext,
+    limit?: number,
+  ) {
+    assertSocialHubRead(user);
+    await this.assertSocialHubSubscription(user.companyId);
+    const settings = await this.ensureSettings(user.companyId);
+    this.assertInboxOperationsAllowed(settings);
+    return this.socialHubMessagingBridgeService.listInboxThreadsPreview(
+      user,
+      limit,
+    );
   }
 
   public async seedDemoInbox(user: AuthenticatedUserContext): Promise<{
@@ -628,6 +710,19 @@ export class SocialHubApplicationService {
   ) {
     assertSocialHubAdmin(user);
     await this.assertSocialHubSubscription(user.companyId);
+    if (isRoadmapPlatformCode(platformCode)) {
+      const roadmap = await this.startRoadmapConnect(user, platformCode);
+      const code = assertRoadmapPlatformCode(platformCode);
+      const row = await this.connectionRepository.findOne({
+        where: { companyId: user.companyId, platformCode: code },
+      });
+      return {
+        oauth: roadmap.oauth,
+        connection: row
+          ? this.mapConnection(row, this.listProviderMeta())
+          : null,
+      };
+    }
     const provider = this.socialProviderRegistry.resolve(platformCode);
     const oauth = await provider.startOAuthConnect(user.companyId);
     const row = await this.ensureConnectionRow(user.companyId, provider.platformCode);
@@ -644,6 +739,16 @@ export class SocialHubApplicationService {
   public async disconnect(user: AuthenticatedUserContext, platformCode: string) {
     assertSocialHubAdmin(user);
     await this.assertSocialHubSubscription(user.companyId);
+    if (isRoadmapPlatformCode(platformCode)) {
+      await this.disconnectRoadmapPlatform(user, platformCode);
+      const code = assertRoadmapPlatformCode(platformCode);
+      const row = await this.connectionRepository.findOne({
+        where: { companyId: user.companyId, platformCode: code },
+      });
+      return {
+        connection: row ? this.mapConnection(row, this.listProviderMeta()) : null,
+      };
+    }
     const provider = this.socialProviderRegistry.resolve(platformCode);
     await provider.disconnect(user.companyId);
     const row = await this.connectionRepository.findOne({
@@ -664,6 +769,144 @@ export class SocialHubApplicationService {
     return {
       connection: row ? this.mapConnection(row, this.listProviderMeta()) : null,
     };
+  }
+
+  public async uploadPublishMedia(
+    user: AuthenticatedUserContext,
+    body: {
+      filename: string;
+      contentType: string;
+      contentBase64: string;
+    },
+  ) {
+    assertSocialHubRead(user);
+    await this.assertSocialHubSubscription(user.companyId);
+    const settings = await this.ensureSettings(user.companyId);
+    if (!settings.publishingEnabled) {
+      throw new ValidationException("Yayınlama bu firma için kapalı.");
+    }
+    const saved = await this.publishMediaStorageService.saveUpload({
+      companyId: user.companyId,
+      filename: body.filename,
+      contentType: body.contentType,
+      contentBase64: body.contentBase64,
+    });
+    return {
+      media: {
+        ...saved,
+        previewPath: `/company/social-hub/publishing/media/${saved.mediaId}`,
+      },
+    };
+  }
+
+  public async readPublishMedia(
+    user: AuthenticatedUserContext,
+    mediaId: string,
+  ): Promise<{ buffer: Buffer; contentType: string; filename: string }> {
+    assertSocialHubRead(user);
+    await this.assertSocialHubSubscription(user.companyId);
+    const { buffer, meta } = await this.publishMediaStorageService.readForCompany(
+      user.companyId,
+      mediaId,
+    );
+    return {
+      buffer,
+      contentType: meta.contentType,
+      filename: meta.filename,
+    };
+  }
+
+  public async listPosts(
+    user: AuthenticatedUserContext,
+    query: { from?: string; to?: string },
+  ) {
+    assertSocialHubRead(user);
+    await this.assertSocialHubSubscription(user.companyId);
+    const qb = this.postRepository
+      .createQueryBuilder("post")
+      .where("post.companyId = :companyId", { companyId: user.companyId })
+      .andWhere("post.scheduledAt IS NOT NULL")
+      .andWhere("post.statusCode != :cancelled", {
+        cancelled: SocialPostStatusCode.Cancelled,
+      });
+    if (query.from) {
+      qb.andWhere("post.scheduledAt >= :from", { from: new Date(query.from) });
+    }
+    if (query.to) {
+      qb.andWhere("post.scheduledAt <= :to", { to: new Date(query.to) });
+    }
+    qb.orderBy("post.scheduledAt", "ASC").take(500);
+    const rows = await qb.getMany();
+    return { posts: rows.map((row) => this.mapPost(row)) };
+  }
+
+  public async bulkCancelPosts(
+    user: AuthenticatedUserContext,
+    postIds: string[],
+  ): Promise<{ cancelledIds: string[]; errors: string[] }> {
+    assertSocialHubRead(user);
+    await this.assertSocialHubSubscription(user.companyId);
+    const cancelledIds: string[] = [];
+    const errors: string[] = [];
+    for (const postId of postIds.slice(0, 40)) {
+      try {
+        await this.cancelPost(user, postId);
+        cancelledIds.push(postId);
+      } catch (error) {
+        errors.push(
+          `${postId}: ${
+            error instanceof Error ? error.message : "İptal edilemedi"
+          }`,
+        );
+      }
+    }
+    return { cancelledIds, errors };
+  }
+
+  public async bulkRetryPublishPosts(
+    user: AuthenticatedUserContext,
+    postIds: string[],
+  ): Promise<{
+    publishedIds: string[];
+    failed: Array<{ postId: string; message: string }>;
+  }> {
+    await this.assertSocialHubSubscription(user.companyId);
+    const settings = await this.ensureSettings(user.companyId);
+    if (!canSocialHubPublish(user, settings)) {
+      throw new ValidationException("Yayınlama yetkiniz yok.");
+    }
+    const publishedIds: string[] = [];
+    const failed: Array<{ postId: string; message: string }> = [];
+    for (const postId of postIds.slice(0, 20)) {
+      try {
+        const post = await this.findPostForCompany(user.companyId, postId);
+        if (post.statusCode !== SocialPostStatusCode.Failed) {
+          failed.push({
+            postId,
+            message: "Yalnızca başarısız gönderiler yeniden denenebilir.",
+          });
+          continue;
+        }
+        const result = await this.publishPost(user, postId);
+        if (result.post.statusCode === SocialPostStatusCode.Published) {
+          publishedIds.push(postId);
+        } else {
+          failed.push({
+            postId,
+            message:
+              result.providerMessage ??
+              result.post.lastErrorMessage ??
+              "Yayın başarısız.",
+          });
+        }
+      } catch (error) {
+        failed.push({
+          postId,
+          message: error instanceof Error ? error.message : "Yayın hatası",
+        });
+      }
+    }
+    return { publishedIds, failed };
   }
 
   public async createPost(
@@ -898,18 +1141,33 @@ export class SocialHubApplicationService {
       ? (JSON.parse(post.mediaUrlsJson) as string[])
       : [];
     const errors: string[] = [];
+    const successMessages: string[] = [];
     let externalId: string | null = null;
     for (const platformCode of platforms) {
-      const provider = this.socialProviderRegistry.resolve(platformCode);
-      const result = await provider.publishPost(post.companyId, {
-        companyId: post.companyId,
-        bodyText: post.bodyText,
-        mediaUrls,
-      });
+      const result = isRoadmapPlatformCode(platformCode)
+        ? await this.roadmapPublishApplicationService.publish(
+            post.companyId,
+            platformCode,
+            {
+              companyId: post.companyId,
+              bodyText: post.bodyText,
+              mediaUrls,
+            },
+          )
+        : await this.socialProviderRegistry
+            .resolve(platformCode)
+            .publishPost(post.companyId, {
+              companyId: post.companyId,
+              bodyText: post.bodyText,
+              mediaUrls,
+            });
       if (result.implementationStatus === "pending") {
         errors.push(`${platformCode}: ${result.message}`);
       } else if (result.externalPostId) {
         externalId = result.externalPostId;
+        successMessages.push(`${platformCode}: ${result.message}`);
+      } else {
+        successMessages.push(`${platformCode}: ${result.message}`);
       }
     }
 
@@ -926,7 +1184,13 @@ export class SocialHubApplicationService {
     post.lastErrorMessage = null;
     post.scheduledAt = null;
     await this.postRepository.save(post);
-    return { post: this.mapPost(post) };
+    return {
+      post: this.mapPost(post),
+      providerMessage:
+        successMessages.length > 0
+          ? successMessages.join(" · ")
+          : "Gönderi kanallara yayınlandı.",
+    };
   }
 
   private isPostEditable(statusCode: string): boolean {
@@ -945,18 +1209,58 @@ export class SocialHubApplicationService {
       : SocialPostStatusCode.Approved;
   }
 
+  public listTemplateVariables() {
+    return { variables: listSocialHubTemplateVariableHints() };
+  }
+
+  public async previewTemplate(
+    user: AuthenticatedUserContext,
+    body: { bodyText: string },
+  ) {
+    assertSocialHubRead(user);
+    await this.assertSocialHubSubscription(user.companyId);
+    const variables = await this.buildTemplateRenderVariables(user);
+    return {
+      renderedText: renderSocialHubTemplate(body.bodyText, variables),
+      variables,
+    };
+  }
+
+  public async renderTemplateById(
+    user: AuthenticatedUserContext,
+    templateId: string,
+  ) {
+    assertSocialHubRead(user);
+    await this.assertSocialHubSubscription(user.companyId);
+    const template = await this.templateRepository.findOne({
+      where: { id: templateId, companyId: user.companyId },
+    });
+    if (!template) {
+      throw new ResourceNotFoundException("SocialReplyTemplate", templateId);
+    }
+    const variables = await this.buildTemplateRenderVariables(user);
+    return {
+      template: this.mapTemplate(template),
+      renderedText: renderSocialHubTemplate(template.bodyText, variables),
+      variables,
+    };
+  }
+
   public async createTemplate(
     user: AuthenticatedUserContext,
     body: { title: string; bodyText: string; channelScopeCode?: string | null },
   ) {
     assertSocialHubAdmin(user);
     await this.assertSocialHubSubscription(user.companyId);
+    const channelScopeCode = normalizeSocialHubTemplateChannelScope(
+      body.channelScopeCode,
+    );
     const template = await this.templateRepository.save(
       this.templateRepository.create({
         companyId: user.companyId,
         title: body.title.trim(),
         bodyText: body.bodyText.trim(),
-        channelScopeCode: body.channelScopeCode?.trim() || null,
+        channelScopeCode,
         sortOrder: 0,
       }),
     );
@@ -988,7 +1292,9 @@ export class SocialHubApplicationService {
       template.bodyText = patch.bodyText.trim();
     }
     if (patch.channelScopeCode !== undefined) {
-      template.channelScopeCode = patch.channelScopeCode?.trim() || null;
+      template.channelScopeCode = normalizeSocialHubTemplateChannelScope(
+        patch.channelScopeCode,
+      );
     }
     if (patch.sortOrder !== undefined) {
       template.sortOrder = patch.sortOrder;
@@ -1462,12 +1768,26 @@ export class SocialHubApplicationService {
         {
           platformCode,
           openThreadCount: result.importedThreadCount,
+          importedThreadCount: result.importedThreadCount,
+          implementationStatus: result.implementationStatus,
+          message: result.message,
         },
       );
       return { sync: result };
     }
     const provider = this.socialProviderRegistry.resolve(platformCode);
     const result = await provider.syncInbox(user.companyId);
+    this.socialHubAuditService.record(
+      user,
+      SocialHubAuditActionCode.InboxSync,
+      `/company/social-hub/connections/${platformCode}/sync-inbox`,
+      {
+        platformCode,
+        importedThreadCount: result.importedThreadCount,
+        implementationStatus: result.implementationStatus,
+        message: result.message,
+      },
+    );
     return { sync: result };
   }
 
@@ -1621,15 +1941,37 @@ export class SocialHubApplicationService {
     );
     return SOCIAL_HUB_ROADMAP_PROVIDERS.map((provider) => {
       const conn = rowByCode.get(provider.platformCode);
+      const oauthEnvConfigured = isRoadmapOAuthEnvConfigured(
+        provider.platformCode,
+      );
+      const prodPath = isRoadmapProdProviderPlatform(provider.platformCode);
+      const pendingSkeleton = isRoadmapPendingSkeletonPlatform(
+        provider.platformCode,
+      );
+      const oauthImplementationStatus =
+        prodPath && oauthEnvConfigured ? "ready" : "pending";
+      const implementationStatus =
+        prodPath && oauthEnvConfigured
+          ? "ready"
+          : provider.implementationStatus === "pending"
+            ? "pending"
+            : "roadmap";
       return {
         ...provider,
+        implementationStatus,
         capabilities: getRoadmapProviderCapabilities(provider.platformCode),
         roadmapInterested: interested.has(provider.platformCode),
-        oauthEnvConfigured: isRoadmapOAuthEnvConfigured(provider.platformCode),
+        oauthEnvConfigured,
+        oauthImplementationStatus,
+        isRoadmapBeta: !prodPath,
+        isPendingSkeleton: pendingSkeleton,
         roadmapConnectionStatusCode: conn?.statusCode ?? null,
         roadmapHasRefreshToken: conn
           ? hasRoadmapRefreshToken(conn.grantedScopes)
           : false,
+        ...(provider.platformCode === "X"
+          ? { xDmInboxGate: buildSocialHubXDmInboxGate() }
+          : {}),
       };
     });
   }
@@ -1679,6 +2021,10 @@ export class SocialHubApplicationService {
       platformCode: SocialPlatformCode;
       implementationStatus: "pending" | "ready";
     }>,
+    activity?: {
+      webhookInboundBridged24h: number;
+      openThreadCount: number;
+    },
   ) {
     const platform = row.platformCode as SocialPlatformCode;
     const providerMeta = providers.find((p) => p.platformCode === platform);
@@ -1692,10 +2038,22 @@ export class SocialHubApplicationService {
       }
       if (
         platform === SocialPlatformCode.Instagram &&
-        !metadata.instagramBusinessAccountId
+        !metadata.instagramBusinessAccountId &&
+        row.externalAccountId !==
+          this.oauthConfig.getKnownInstagramBusinessAccountId()?.trim()
       ) {
         setupWarnings.push(
           "Instagram işletme hesabı tanımlı değil — sayfa bağlantısını yenileyin.",
+        );
+      }
+      if (
+        platform === SocialPlatformCode.Instagram &&
+        metadata.instagramBusinessAccountId &&
+        (activity?.openThreadCount ?? 0) === 0 &&
+        (activity?.webhookInboundBridged24h ?? 0) === 0
+      ) {
+        setupWarnings.push(
+          "Bağlı görünüyor ancak son 24 saatte webhook veya açık Instagram konuşması yok. Meta OAuth’ta «Ayarları düzenle» (Devam değil) ile izinleri yenileyin; Gelen kutusu → «Instagram · senkron» deneyin. Test için kişisel hesaptan @lertalogistics’e DM atın.",
         );
       }
       if (
@@ -1741,6 +2099,14 @@ export class SocialHubApplicationService {
       capabilities,
       setupWarnings,
       oauthReady,
+      ...(platform === SocialPlatformCode.LinkedIn
+        ? {
+            linkedinDmInboxGate: buildSocialHubLinkedInDmInboxGate(),
+          }
+        : {}),
+      ...(row.platformCode === "X"
+        ? { xDmInboxGate: buildSocialHubXDmInboxGate() }
+        : {}),
     };
   }
 
@@ -1764,12 +2130,30 @@ export class SocialHubApplicationService {
     };
   }
 
+  private async buildTemplateRenderVariables(
+    user: AuthenticatedUserContext,
+  ): Promise<Record<string, string>> {
+    const company = await this.companyRepository.findOne({
+      where: { id: user.companyId },
+    });
+    return {
+      companyName: company?.legalName?.trim() || "Firma",
+      userDisplayName: user.emailAddress.split("@")[0] || "Kullanıcı",
+      today: formatSocialHubTemplateToday(),
+    };
+  }
+
   private mapTemplate(row: CompanySocialReplyTemplateEntity) {
+    const scope = row.channelScopeCode;
     return {
       id: row.id,
       title: row.title,
       bodyText: row.bodyText,
-      channelScopeCode: row.channelScopeCode,
+      channelScopeCode: scope,
+      channelScopeLabel: scope
+        ? (PLATFORM_LABELS[scope as SocialPlatformCode] ??
+          labelSocialPlatform(scope))
+        : "Tüm kanallar",
       sortOrder: row.sortOrder,
     };
   }

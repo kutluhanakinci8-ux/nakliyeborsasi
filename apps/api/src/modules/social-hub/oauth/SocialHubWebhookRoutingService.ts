@@ -2,7 +2,6 @@ import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { SocialPlatformCode } from "@nakliyeborsasi/core";
 import { SocialHubTokenVaultService } from "./SocialHubTokenVaultService";
-
 export type WebhookRoute = {
   companyId: string;
   platformCode: SocialPlatformCode;
@@ -18,19 +17,38 @@ export class SocialHubWebhookRoutingService {
   public async resolveFromMetaPayload(params: {
     object: string | undefined;
     entryId: string | undefined;
+    whatsAppPhoneNumberId?: string | null;
   }): Promise<WebhookRoute | null> {
     const platform = this.mapMetaObject(params.object);
     if (!platform || !params.entryId) {
-      return this.defaultRoute(platform);
+      return await this.resolveFallbackRoute(platform);
     }
-    const connection = await this.tokenVault.findConnectedByExternalAccount(
-      platform,
-      params.entryId,
-    );
+    const connection =
+      platform === SocialPlatformCode.WhatsAppCloud
+        ? await this.tokenVault.findConnectedWhatsAppWebhookTarget({
+            wabaId: params.entryId,
+            phoneNumberId: params.whatsAppPhoneNumberId ?? null,
+          })
+        : await this.tokenVault.findConnectedByExternalAccount(
+            platform,
+            params.entryId,
+          );
     if (connection) {
       return { companyId: connection.companyId, platformCode: platform };
     }
-    return this.defaultRoute(platform);
+    if (platform === SocialPlatformCode.Instagram) {
+      const messenger = await this.tokenVault.findConnectedByExternalAccount(
+        SocialPlatformCode.FacebookMessenger,
+        params.entryId,
+      );
+      if (messenger) {
+        return {
+          companyId: messenger.companyId,
+          platformCode: SocialPlatformCode.Instagram,
+        };
+      }
+    }
+    return await this.resolveFallbackRoute(platform);
   }
 
   private mapMetaObject(object: string | undefined): SocialPlatformCode | null {
@@ -46,15 +64,31 @@ export class SocialHubWebhookRoutingService {
     }
   }
 
-  private defaultRoute(
+  private async resolveFallbackRoute(
     platform: SocialPlatformCode | null,
-  ): WebhookRoute | null {
-    const companyId = this.configService
-      .get<string>("SOCIAL_HUB_WEBHOOK_DEFAULT_COMPANY_ID")
-      ?.trim();
-    if (!companyId || !platform) {
+  ): Promise<WebhookRoute | null> {
+    if (!platform) {
       return null;
     }
-    return { companyId, platformCode: platform };
+    const companyId = this.readDefaultWebhookCompanyId();
+    if (companyId) {
+      return { companyId, platformCode: platform };
+    }
+    const sole = await this.tokenVault.findSoleConnectedPlatform(platform);
+    if (sole) {
+      return { companyId: sole.companyId, platformCode: platform };
+    }
+    return null;
+  }
+
+  private readDefaultWebhookCompanyId(): string | null {
+    const fromConfig = this.configService
+      .get<string>("SOCIAL_HUB_WEBHOOK_DEFAULT_COMPANY_ID")
+      ?.trim();
+    if (fromConfig) {
+      return fromConfig;
+    }
+    const fromEnv = process.env.SOCIAL_HUB_WEBHOOK_DEFAULT_COMPANY_ID?.trim();
+    return fromEnv || null;
   }
 }

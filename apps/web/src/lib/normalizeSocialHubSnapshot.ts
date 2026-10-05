@@ -103,6 +103,9 @@ export function normalizeSocialHubSnapshot(payload: unknown): SocialHubSnapshot 
       "Sosyal konuşmalar Mesajlar listesinde kanal rozetiyle görünür.",
     webhookInboundBridged24h: inboxRaw?.webhookInboundBridged24h ?? 0,
   };
+  const inboxSyncSummary = hub.inboxSyncSummary as
+    | SocialHubSnapshot["inboxSyncSummary"]
+    | undefined;
   const subscription = (hub.subscription as SocialHubSnapshot["subscription"]) ?? {
     moduleCode: "SOCIAL_HUB",
     upgradeHintPath: "/hesap/abonelik",
@@ -121,9 +124,22 @@ export function normalizeSocialHubSnapshot(payload: unknown): SocialHubSnapshot 
       ? (hub.templates as SocialHubSnapshot["templates"])
       : [],
     inboxSummary,
+    inboxSyncSummary: inboxSyncSummary?.channels
+      ? {
+          generatedAt: inboxSyncSummary.generatedAt ?? new Date().toISOString(),
+          channels: inboxSyncSummary.channels,
+        }
+      : undefined,
     integrationWebhooks,
     integrationWebhookReadiness,
     integrationOpsHints,
     webhookActivity,
+    linkedinDmInboxGate: hub.linkedinDmInboxGate as
+      | SocialHubSnapshot["linkedinDmInboxGate"]
+      | undefined,
+    pwa: hub.pwa as SocialHubSnapshot["pwa"] | undefined,
+    integrationGate: hub.integrationGate as
+      | SocialHubSnapshot["integrationGate"]
+      | undefined,
   };
 }

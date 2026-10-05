@@ -21,6 +21,7 @@ import { SocialPostPublishScheduler } from "./SocialPostPublishScheduler";
 import { AuditModule } from "../../infrastructure/audit/AuditModule";
 import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogEntity";
 import { CompanyMembershipEntity } from "../../infrastructure/database/entities/CompanyMembershipEntity";
+import { CompanyEntity } from "../../infrastructure/database/entities/CompanyEntity";
 import { SocialHubAuditService } from "./SocialHubAuditService";
 import { SubscriptionModule } from "../subscription/SubscriptionModule";
 import { NotificationModule } from "../notification/NotificationModule";
@@ -29,6 +30,7 @@ import { CompanySocialOAuthStateEntity } from "../../infrastructure/database/ent
 import { SocialHubOAuthConfigService } from "./oauth/SocialHubOAuthConfigService";
 import { SocialHubOAuthStateService } from "./oauth/SocialHubOAuthStateService";
 import { SocialHubOAuthApplicationService } from "./oauth/SocialHubOAuthApplicationService";
+import { SocialHubInstagramServiceTokenBootstrap } from "./oauth/SocialHubInstagramServiceTokenBootstrap";
 import { SocialHubWebhookIngestService } from "./oauth/SocialHubWebhookIngestService";
 import { SocialHubPublicIntegrationController } from "./SocialHubPublicIntegrationController";
 import { SocialHubTokenVaultService } from "./oauth/SocialHubTokenVaultService";
@@ -57,6 +59,10 @@ import { SocialHubRoadmapInterestStatsService } from "./SocialHubRoadmapInterest
 import { SocialHubRoadmapBetaOpsStatsService } from "./SocialHubRoadmapBetaOpsStatsService";
 import { SocialHubRoadmapInboxSyncService } from "./SocialHubRoadmapInboxSyncService";
 import { SocialHubWebhookBridgeAuditService } from "./SocialHubWebhookBridgeAuditService";
+import { SocialHubMetaPlatformInsightsService } from "./SocialHubMetaPlatformInsightsService";
+import { SocialHubLinkedInOrgInsightsService } from "./SocialHubLinkedInOrgInsightsService";
+import { SocialHubInboxSyncSummaryService } from "./SocialHubInboxSyncSummaryService";
+import { SocialHubPublishMediaStorageService } from "./SocialHubPublishMediaStorageService";
 import { SocialHubRoadmapOAuthApplicationService } from "./oauth/SocialHubRoadmapOAuthApplicationService";
 import { SocialHubRoadmapTokenRefreshService } from "./oauth/SocialHubRoadmapTokenRefreshService";
 import { SocialHubRoadmapTokenRefreshScheduler } from "./SocialHubRoadmapTokenRefreshScheduler";
@@ -64,6 +70,10 @@ import { SocialHubTikTokWebhookIngestService } from "./oauth/SocialHubTikTokWebh
 import { SocialHubTikTokOutboundService } from "./oauth/SocialHubTikTokOutboundService";
 import { SocialHubYouTubeWebhookIngestService } from "./oauth/SocialHubYouTubeWebhookIngestService";
 import { SocialHubYouTubeOutboundService } from "./oauth/SocialHubYouTubeOutboundService";
+import { SocialHubXPublishService } from "./oauth/SocialHubXPublishService";
+import { SocialHubXOutboundService } from "./oauth/SocialHubXOutboundService";
+import { SocialHubXWebhookIngestService } from "./oauth/SocialHubXWebhookIngestService";
+import { SocialHubRoadmapPublishApplicationService } from "./SocialHubRoadmapPublishApplicationService";
 import { SocialHubPlatformAdminController } from "./SocialHubPlatformAdminController";
 import { PlatformAdminGuard } from "../platform-admin/PlatformAdminGuard";
 
@@ -83,6 +93,7 @@ import { PlatformAdminGuard } from "../platform-admin/PlatformAdminGuard";
       CompanySocialThreadLinkEntity,
       MessageThreadEntity,
       CompanyMembershipEntity,
+      CompanyEntity,
       AuditLogEntity,
       CompanySocialOAuthStateEntity,
       CompanySocialOutboundDeliveryEntity,
@@ -105,7 +116,12 @@ import { PlatformAdminGuard } from "../platform-admin/PlatformAdminGuard";
     SocialHubTikTokOutboundService,
     SocialHubYouTubeWebhookIngestService,
     SocialHubYouTubeOutboundService,
+    SocialHubXPublishService,
+    SocialHubXOutboundService,
+    SocialHubXWebhookIngestService,
+    SocialHubRoadmapPublishApplicationService,
     SocialHubOAuthApplicationService,
+    SocialHubInstagramServiceTokenBootstrap,
     SocialHubWebhookIngestService,
     SocialHubTokenVaultService,
     SocialHubWebhookRoutingService,
@@ -140,6 +156,10 @@ import { PlatformAdminGuard } from "../platform-admin/PlatformAdminGuard";
     SocialHubRoadmapBetaOpsStatsService,
     SocialHubRoadmapInboxSyncService,
     SocialHubWebhookBridgeAuditService,
+    SocialHubMetaPlatformInsightsService,
+    SocialHubLinkedInOrgInsightsService,
+    SocialHubInboxSyncSummaryService,
+    SocialHubPublishMediaStorageService,
     PlatformAdminGuard,
   ],
   exports: [SocialHubApplicationService, SocialHubOutboundMessagingService],

@@ -4889,6 +4889,24 @@ button.btn-secondary {
   display: block;
 }
 
+.messaging-email-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: 0;
+}
+
+.messaging-email-stack .messaging-mail-panel {
+  max-height: min(42vh, 520px);
+  overflow: auto;
+  flex-shrink: 0;
+}
+
+.messaging-email-stack .messaging-mail-embed-wrap {
+  flex: 1;
+  min-height: min(50vh, 640px);
+}
+
 .messaging-email-hint {
   margin-bottom: 1rem;
   padding: 0.75rem 1rem;
@@ -15184,7 +15202,7 @@ button.btn-secondary {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  max-width: 960px;
+  max-width: 1180px;
 }
 
 .social-hub-intro {
@@ -15258,6 +15276,306 @@ button.btn-secondary {
   background: #f8fafc;
 }
 
+.social-hub-connections-shell {
+  padding: 0;
+  overflow: hidden;
+}
+
+.social-hub-connections-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+  gap: 0;
+  align-items: stretch;
+}
+
+@media (max-width: 960px) {
+  .social-hub-connections-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.social-hub-connections-main {
+  padding: 1.25rem 1.35rem;
+  min-width: 0;
+}
+
+.social-hub-panel-head--premium {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+}
+
+.social-hub-connections-lead {
+  margin: 0.35rem 0 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: #64748b;
+  max-width: 36rem;
+}
+
+.social-hub-connections-lead--compact {
+  margin-bottom: 0.75rem;
+}
+
+.social-hub-gate-chip {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #475569;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+}
+
+.social-hub-connection-grid--premium {
+  gap: 0.85rem;
+}
+
+.social-hub-connection-card--premium {
+  background: #fff;
+  border: 1px solid #e8edf4;
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(15, 36, 68, 0.04);
+  padding: 1.1rem 1.15rem;
+}
+
+.social-hub-connection-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.social-hub-connection-title-row h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--nb-navy-deep, #0f2444);
+}
+
+.social-hub-connection-account {
+  margin: 0.35rem 0 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.social-hub-connection-summary {
+  margin: 0.5rem 0 0;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  color: #64748b;
+}
+
+.social-hub-status-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.social-hub-status-badge--ok {
+  color: #166534;
+  background: #ecfdf5;
+}
+
+.social-hub-status-badge--error {
+  color: #b91c1c;
+  background: #fef2f2;
+}
+
+.social-hub-status-badge--pending {
+  color: #1d4ed8;
+  background: #eff6ff;
+}
+
+.social-hub-status-badge--muted {
+  color: #475569;
+  background: #f1f5f9;
+}
+
+.social-hub-subsection-heading {
+  margin: 1.5rem 0 0.35rem;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--nb-navy-deep, #0f2444);
+}
+
+.social-hub-connection-actions--stack {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.social-hub-connection-actions--stack .btn-account-primary,
+.social-hub-connection-actions--stack .btn-account-ghost {
+  width: 100%;
+  justify-content: center;
+}
+
+.social-hub-ops-log-rail {
+  border-left: 1px solid #e8edf4;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  display: flex;
+  flex-direction: column;
+  min-height: 320px;
+  max-height: min(72vh, 720px);
+}
+
+@media (max-width: 960px) {
+  .social-hub-ops-log-rail {
+    border-left: none;
+    border-top: 1px solid #e8edf4;
+    max-height: none;
+  }
+
+  .social-hub-ops-log-rail:not(.social-hub-ops-log-rail--open) .social-hub-ops-log-stream {
+    display: none;
+  }
+}
+
+.social-hub-ops-log-rail-head {
+  padding: 1rem 1rem 0.65rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.social-hub-ops-log-rail-title {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--nb-navy-deep, #0f2444);
+}
+
+.social-hub-ops-log-rail-sub {
+  margin: 0.25rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: #64748b;
+}
+
+.social-hub-ops-log-rail-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.social-hub-ops-log-count {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+}
+
+.social-hub-ops-log-count--warn {
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.social-hub-ops-log-count--error {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.social-hub-ops-log-mobile-toggle {
+  display: none;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  border-radius: 8px;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+}
+
+@media (max-width: 960px) {
+  .social-hub-ops-log-mobile-toggle {
+    display: inline-block;
+  }
+}
+
+.social-hub-ops-log-stream {
+  flex: 1;
+  overflow: auto;
+  padding: 0 0.75rem 1rem;
+}
+
+.social-hub-ops-log-empty {
+  margin: 0.5rem 0.25rem;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.social-hub-ops-log-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.social-hub-ops-log-item {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.55rem 0.65rem;
+  border-left-width: 3px;
+}
+
+.social-hub-ops-log-item--info {
+  border-left-color: #94a3b8;
+}
+
+.social-hub-ops-log-item--warn {
+  border-left-color: #f59e0b;
+}
+
+.social-hub-ops-log-item--error {
+  border-left-color: #ef4444;
+}
+
+.social-hub-ops-log-item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.social-hub-ops-log-level {
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+}
+
+.social-hub-ops-log-channel {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #1e40af;
+  background: #eff6ff;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+}
+
+.social-hub-ops-log-message {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.45;
+  color: #334155;
+  word-break: break-word;
+}
+
 .social-hub-connection-actions {
   display: flex;
   flex-wrap: wrap;
@@ -15277,6 +15595,11 @@ button.btn-secondary {
 .social-hub-pill--muted {
   color: #475569;
   background: #f1f5f9;
+}
+
+.social-hub-pill--ok {
+  color: #166534;
+  background: #ecfdf5;
 }
 
 .social-hub-capability-list {
@@ -15655,6 +15978,102 @@ button.btn-secondary {
   font-size: 0.8125rem;
 }
 
+.social-hub-calendar-grid-wrap {
+  margin: 1rem 0 1.25rem;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.social-hub-calendar-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.social-hub-calendar-toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.social-hub-calendar-month-label {
+  min-width: 9rem;
+  text-align: center;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.social-hub-calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+  margin-bottom: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #64748b;
+  text-align: center;
+}
+
+.social-hub-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.social-hub-calendar-grid--week {
+  min-height: 120px;
+}
+
+.social-hub-calendar-day {
+  min-height: 88px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.35rem;
+  background: #f8fafc;
+  font-size: 0.75rem;
+}
+
+.social-hub-calendar-day--muted {
+  opacity: 0.45;
+  background: #f1f5f9;
+}
+
+.social-hub-calendar-day-num {
+  font-weight: 700;
+  color: #334155;
+}
+
+.social-hub-calendar-day-posts {
+  list-style: none;
+  margin: 0.25rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.social-hub-calendar-post-chip {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.25rem;
+  cursor: pointer;
+  line-height: 1.25;
+}
+
+.social-hub-calendar-bulk {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
 .social-hub-calendar-strip {
   margin-bottom: 1rem;
   padding: 0.75rem 1rem;
@@ -15764,4 +16183,218 @@ button.btn-secondary {
 
 .social-hub-stat-line {
   margin: 0 0 0.75rem;
+}
+
+.social-hub-platform-insights {
+  margin-top: 1.25rem;
+}
+
+.social-hub-subsection-title {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.social-hub-platform-insight-list {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.social-hub-platform-insight-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  background: #fff;
+}
+
+.social-hub-platform-insight-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.social-hub-platform-insight-status {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.social-hub-platform-insight-status--ok {
+  color: #15803d;
+}
+
+.social-hub-platform-insight-status--not_connected {
+  color: #64748b;
+}
+
+.social-hub-platform-insight-status--unavailable {
+  color: #b45309;
+}
+
+.social-hub-platform-insight-metrics {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.25rem 0.75rem;
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.social-hub-platform-insight-metrics dt {
+  margin: 0;
+  color: #64748b;
+}
+
+.social-hub-platform-insight-metrics dd {
+  margin: 0;
+  font-weight: 600;
+  color: #0f172a;
+  text-align: right;
+}
+
+.social-hub-inbox-preview {
+  margin: 1rem 0;
+}
+
+.social-hub-inbox-preview-list {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.social-hub-inbox-preview-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  background: #fff;
+}
+
+.social-hub-inbox-preview-channel {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #6366f1;
+  margin-bottom: 0.2rem;
+}
+
+.social-hub-inbox-preview-label {
+  display: block;
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.social-hub-inbox-preview-snippet {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  color: #475569;
+  line-height: 1.4;
+}
+
+.social-hub-inbox-preview-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+  min-width: 8.5rem;
+}
+
+.social-hub-inbox-preview-unread {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #b45309;
+}
+
+.social-hub-inbox-sync-summary {
+  margin: 1.25rem 0;
+}
+
+.social-hub-inbox-sync-list {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.social-hub-inbox-sync-row {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+}
+
+.social-hub-inbox-sync-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem;
+}
+
+.social-hub-inbox-sync-meta {
+  margin: 0.35rem 0 0;
+  font-size: 0.82rem;
+  color: #475569;
+}
+
+.social-hub-inbox-sync-message {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  color: #0f172a;
+}
+
+.social-hub-draft-media-list {
+  list-style: none;
+  margin: 0.5rem 0 1rem;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.social-hub-draft-media-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  max-width: 120px;
+}
+
+.social-hub-draft-media-item img {
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.social-hub-publish-error {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  color: #b91c1c;
+}
+
+.social-hub-publish-ok {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  color: #15803d;
+  font-weight: 600;
 }

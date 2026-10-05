@@ -51,12 +51,96 @@ export class SocialHubController {
     return this.socialHubApplicationService.seedDemoInbox(user);
   }
 
+  @Get("inbox/sync-summary")
+  public async inboxSyncSummary(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    return this.socialHubApplicationService.getInboxSyncSummary(user);
+  }
+
+  @Get("inbox/threads-preview")
+  public async inboxThreadsPreview(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Query("limit") limit?: string,
+  ) {
+    const parsed =
+      limit !== undefined && limit !== ""
+        ? Number.parseInt(limit, 10)
+        : undefined;
+    return this.socialHubApplicationService.getInboxThreadsPreview(
+      user,
+      Number.isFinite(parsed) ? parsed : undefined,
+    );
+  }
+
   @Post("connections/:platformCode/sync-inbox")
   public async syncInbox(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
     @Param("platformCode") platformCode: string,
   ) {
     return this.socialHubApplicationService.syncInbox(user, platformCode);
+  }
+
+  @Post("publishing/media")
+  public async uploadPublishMedia(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body()
+    body: {
+      filename: string;
+      contentType: string;
+      contentBase64: string;
+    },
+  ) {
+    return this.socialHubApplicationService.uploadPublishMedia(user, body);
+  }
+
+  @Get("publishing/media/:mediaId")
+  public async readPublishMedia(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("mediaId") mediaId: string,
+    @Res() response: Response,
+  ) {
+    const file = await this.socialHubApplicationService.readPublishMedia(
+      user,
+      mediaId,
+    );
+    response.setHeader("Content-Type", file.contentType);
+    response.setHeader(
+      "Content-Disposition",
+      `inline; filename="${file.filename.replace(/"/g, "")}"`,
+    );
+    response.send(file.buffer);
+  }
+
+  @Get("posts")
+  public async listPosts(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Query("from") from?: string,
+    @Query("to") to?: string,
+  ) {
+    return this.socialHubApplicationService.listPosts(user, { from, to });
+  }
+
+  @Post("posts/bulk-cancel")
+  public async bulkCancelPosts(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: { postIds: string[] },
+  ) {
+    return this.socialHubApplicationService.bulkCancelPosts(
+      user,
+      body.postIds ?? [],
+    );
+  }
+
+  @Post("posts/bulk-retry")
+  public async bulkRetryPosts(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: { postIds: string[] },
+  ) {
+    return this.socialHubApplicationService.bulkRetryPublishPosts(
+      user,
+      body.postIds ?? [],
+    );
   }
 
   @Post("posts")
@@ -125,6 +209,27 @@ export class SocialHubController {
     @Param("postId") postId: string,
   ) {
     return this.socialHubApplicationService.cancelPost(user, postId);
+  }
+
+  @Get("templates/variables")
+  public listTemplateVariables() {
+    return this.socialHubApplicationService.listTemplateVariables();
+  }
+
+  @Post("templates/preview")
+  public async previewTemplate(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: { bodyText: string },
+  ) {
+    return this.socialHubApplicationService.previewTemplate(user, body);
+  }
+
+  @Post("templates/:templateId/render")
+  public async renderTemplate(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("templateId") templateId: string,
+  ) {
+    return this.socialHubApplicationService.renderTemplateById(user, templateId);
   }
 
   @Post("templates")

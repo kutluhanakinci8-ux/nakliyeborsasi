@@ -9,6 +9,7 @@ import {
 import { decryptTotpSecret } from "../../auth/TotpSecretCipher";
 import { CompanySocialConnectionEntity } from "../../../infrastructure/database/entities/CompanySocialConnectionEntity";
 import { SocialHubOAuthConfigService } from "./SocialHubOAuthConfigService";
+import { parseSocialHubConnectionMetadata } from "./SocialHubConnectionMetadata";
 
 @Injectable()
 export class SocialHubTokenVaultService {
@@ -60,12 +61,101 @@ export class SocialHubTokenVaultService {
     platformCode: SocialPlatformCode,
     externalAccountId: string,
   ): Promise<CompanySocialConnectionEntity | null> {
-    return this.connectionRepository.findOne({
+    const trimmed = externalAccountId.trim();
+    const direct = await this.connectionRepository.findOne({
       where: {
         platformCode,
-        externalAccountId,
+        externalAccountId: trimmed,
         statusCode: SocialConnectionStatusCode.Connected,
       },
     });
+    if (direct) {
+      return direct;
+    }
+    if (platformCode !== SocialPlatformCode.Instagram) {
+      return null;
+    }
+    const knownIgId =
+      this.oauthConfig.getKnownInstagramBusinessAccountId()?.trim() ?? null;
+    const rows = await this.connectionRepository.find({
+      where: {
+        platformCode,
+        statusCode: SocialConnectionStatusCode.Connected,
+      },
+    });
+    for (const row of rows) {
+      const metadata = parseSocialHubConnectionMetadata(row.grantedScopes);
+      if (
+        metadata.instagramBusinessAccountId === trimmed ||
+        metadata.instagramLoginUserId === trimmed ||
+        metadata.pageId === trimmed ||
+        (knownIgId &&
+          (row.externalAccountId === knownIgId ||
+            metadata.instagramBusinessAccountId === knownIgId) &&
+          trimmed === knownIgId)
+      ) {
+        return row;
+      }
+    }
+    return null;
+  }
+
+  public async findConnectedWhatsAppWebhookTarget(params: {
+    wabaId: string;
+    phoneNumberId: string | null;
+  }): Promise<CompanySocialConnectionEntity | null> {
+    const wabaId = params.wabaId.trim();
+    const phoneNumberId = params.phoneNumberId?.trim() ?? null;
+    const byWabaExternal = await this.findConnectedByExternalAccount(
+      SocialPlatformCode.WhatsAppCloud,
+      wabaId,
+    );
+    if (byWabaExternal) {
+      return byWabaExternal;
+    }
+    if (phoneNumberId) {
+      const byPhoneExternal = await this.findConnectedByExternalAccount(
+        SocialPlatformCode.WhatsAppCloud,
+        phoneNumberId,
+      );
+      if (byPhoneExternal) {
+        return byPhoneExternal;
+      }
+    }
+    const rows = await this.connectionRepository.find({
+      where: {
+        platformCode: SocialPlatformCode.WhatsAppCloud,
+        statusCode: SocialConnectionStatusCode.Connected,
+      },
+    });
+    for (const row of rows) {
+      const metadata = parseSocialHubConnectionMetadata(row.grantedScopes);
+      if (
+        metadata.wabaId === wabaId ||
+        row.externalAccountId === wabaId ||
+        (phoneNumberId &&
+          (metadata.phoneNumberId === phoneNumberId ||
+            row.externalAccountId === phoneNumberId))
+      ) {
+        return row;
+      }
+    }
+    return null;
+  }
+
+  /** Tek kiracı / pilot: varsayılan company id yoksa webhook yönlendirmesi */
+  public async findSoleConnectedPlatform(
+    platformCode: SocialPlatformCode,
+  ): Promise<CompanySocialConnectionEntity | null> {
+    const rows = await this.connectionRepository.find({
+      where: {
+        platformCode,
+        statusCode: SocialConnectionStatusCode.Connected,
+      },
+    });
+    if (rows.length !== 1) {
+      return null;
+    }
+    return rows[0] ?? null;
   }
 }

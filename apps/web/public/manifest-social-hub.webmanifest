@@ -1,0 +1,21 @@
+{
+  "name": "Lerta — Sosyal medya & kanallar",
+  "short_name": "Sosyal hub",
+  "description": "Kanal bağlantıları, gelen kutusu, yayınlar ve sosyal hub sağlığı — app.lerta.com.tr",
+  "start_url": "/hesap/sosyal-medya",
+  "scope": "/hesap/sosyal-medya",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f8fafc",
+  "theme_color": "#0f766e",
+  "lang": "tr",
+  "categories": ["business", "productivity"],
+  "icons": [
+    {
+      "src": "/corridor-hero.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
