@@ -184,6 +184,12 @@ export class SocialHubController {
       bodyText: string;
       platformCodes: string[];
       mediaUrls?: string[];
+      utm?: {
+        utmSource?: string | null;
+        utmMedium?: string | null;
+        utmCampaign?: string | null;
+        utmContent?: string | null;
+      };
     },
   ) {
     return this.socialHubApplicationService.createPost(user, body);
@@ -199,6 +205,12 @@ export class SocialHubController {
       platformCodes?: string[];
       mediaUrls?: string[];
       scheduledAt?: string | null;
+      utm?: {
+        utmSource?: string | null;
+        utmMedium?: string | null;
+        utmCampaign?: string | null;
+        utmContent?: string | null;
+      } | null;
     },
   ) {
     return this.socialHubApplicationService.updatePost(user, postId, body);

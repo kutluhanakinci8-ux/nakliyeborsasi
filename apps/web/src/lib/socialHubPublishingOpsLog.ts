@@ -97,6 +97,12 @@ export function buildPublishingOpsLog(
     message:
       "Taslak, onay, zamanlama ve Meta Graph yayını (metin + görsel). Zamanı gelen gönderiler sunucuda otomatik denenir; sonuç ve API hataları bu günlükte.",
   });
+  push(entries, {
+    level: "info",
+    channel: "UTM",
+    message:
+      "Yayın taslağında utm_campaign girildiğinde metindeki bağlantılara yayın anında utm_* eklenir; Analitik sekmesinde son 30 gün kampanya sayıları görünür.",
+  });
 
   if (ownerApprovalRequired) {
     push(entries, {

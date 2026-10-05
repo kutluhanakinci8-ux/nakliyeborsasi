@@ -87,6 +87,13 @@ import {
   renderSocialHubTemplate,
 } from "./socialHubTemplateRender";
 import { normalizeSocialHubTemplateChannelScope } from "./socialHubTemplateChannelScope";
+import {
+  normalizeSocialHubUtmInput,
+  parseSocialHubUtmParamsJson,
+  resolvePublishBodyText,
+  serializeSocialHubUtmParams,
+  type SocialHubUtmInput,
+} from "./socialHubUtm";
 import { SocialHubTelegramApplicationService } from "./oauth/SocialHubTelegramApplicationService";
 import { SocialHubTelegramPublishService } from "./oauth/SocialHubTelegramPublishService";
 
@@ -549,6 +556,33 @@ export class SocialHubApplicationService {
     ).length;
     const pendingApproval = postsByStatus[SocialPostStatusCode.PendingApproval] ?? 0;
 
+    const utmCampaignPublishedLast30Days: Array<{
+      utmCampaign: string;
+      count: number;
+    }> = [];
+    const utmCampaignCounts = new Map<string, number>();
+    for (const post of posts) {
+      if (
+        post.statusCode !== SocialPostStatusCode.Published ||
+        !post.publishedAt ||
+        post.publishedAt < thirtyDaysAgo
+      ) {
+        continue;
+      }
+      const utm = parseSocialHubUtmParamsJson(post.utmParamsJson);
+      if (!utm) {
+        continue;
+      }
+      utmCampaignCounts.set(
+        utm.utmCampaign,
+        (utmCampaignCounts.get(utm.utmCampaign) ?? 0) + 1,
+      );
+    }
+    for (const [utmCampaign, count] of utmCampaignCounts.entries()) {
+      utmCampaignPublishedLast30Days.push({ utmCampaign, count });
+    }
+    utmCampaignPublishedLast30Days.sort((a, b) => b.count - a.count);
+
     const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const since7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     const since30d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
@@ -624,6 +658,7 @@ export class SocialHubApplicationService {
           byPlatform7d: mapWebhookBridgedByPlatform(bridgedByPlatform7d),
         },
         platformInsights,
+        utmCampaignPublishedLast30Days,
       },
     };
   }
@@ -652,6 +687,8 @@ export class SocialHubApplicationService {
       webhookByPlatform24h: analytics.webhookBridge.byPlatform24h,
       webhookByPlatform7d: analytics.webhookBridge.byPlatform7d,
       platformInsights: analytics.platformInsights ?? [],
+      utmCampaignPublishedLast30Days:
+        analytics.utmCampaignPublishedLast30Days ?? [],
     });
   }
 
@@ -1001,6 +1038,7 @@ export class SocialHubApplicationService {
       bodyText: string;
       platformCodes: string[];
       mediaUrls?: string[];
+      utm?: SocialHubUtmInput;
     },
   ) {
     assertSocialHubRead(user);
@@ -1010,6 +1048,9 @@ export class SocialHubApplicationService {
       throw new ValidationException("Yayınlama bu firma için kapalı.");
     }
     const platforms = this.normalizePlatformList(body.platformCodes);
+    const utmParamsJson = serializeSocialHubUtmParams(
+      normalizeSocialHubUtmInput(body.utm),
+    );
     const post = await this.postRepository.save(
       this.postRepository.create({
         companyId: user.companyId,
@@ -1019,6 +1060,7 @@ export class SocialHubApplicationService {
         mediaUrlsJson: body.mediaUrls?.length
           ? JSON.stringify(body.mediaUrls)
           : null,
+        utmParamsJson,
         createdByUserId: user.userId,
       }),
     );
@@ -1033,6 +1075,7 @@ export class SocialHubApplicationService {
       platformCodes?: string[];
       mediaUrls?: string[];
       scheduledAt?: string | null;
+      utm?: SocialHubUtmInput | null;
     },
   ) {
     assertSocialHubRead(user);
@@ -1052,6 +1095,12 @@ export class SocialHubApplicationService {
       post.mediaUrlsJson = patch.mediaUrls.length
         ? JSON.stringify(patch.mediaUrls)
         : null;
+    }
+    if (patch.utm !== undefined) {
+      post.utmParamsJson =
+        patch.utm === null
+          ? null
+          : serializeSocialHubUtmParams(normalizeSocialHubUtmInput(patch.utm));
     }
     if (patch.scheduledAt !== undefined) {
       post.scheduledAt = patch.scheduledAt ? new Date(patch.scheduledAt) : null;
@@ -1226,6 +1275,10 @@ export class SocialHubApplicationService {
     const mediaUrls = post.mediaUrlsJson
       ? (JSON.parse(post.mediaUrlsJson) as string[])
       : [];
+    const publishBodyText = resolvePublishBodyText(
+      post.bodyText,
+      post.utmParamsJson,
+    );
     const errors: string[] = [];
     const successMessages: string[] = [];
     let externalId: string | null = null;
@@ -1236,7 +1289,7 @@ export class SocialHubApplicationService {
             platformCode,
             {
               companyId: post.companyId,
-              bodyText: post.bodyText,
+              bodyText: publishBodyText,
               mediaUrls,
             },
           )
@@ -1244,7 +1297,7 @@ export class SocialHubApplicationService {
             .resolve(platformCode)
             .publishPost(post.companyId, {
               companyId: post.companyId,
-              bodyText: post.bodyText,
+              bodyText: publishBodyText,
               mediaUrls,
             });
       if (result.implementationStatus === "pending") {
@@ -2222,6 +2275,7 @@ export class SocialHubApplicationService {
       mediaUrls: row.mediaUrlsJson
         ? (JSON.parse(row.mediaUrlsJson) as string[])
         : [],
+      utm: parseSocialHubUtmParamsJson(row.utmParamsJson),
       scheduledAt: row.scheduledAt?.toISOString() ?? null,
       publishedAt: row.publishedAt?.toISOString() ?? null,
       externalPostId: row.externalPostId,

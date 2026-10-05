@@ -732,8 +732,16 @@ type PublishingProps = {
   draftText: string;
   draftPlatforms: string[];
   draftMedia: Array<{ mediaRef: string; previewUrl: string; filename: string }>;
+  draftUtmCampaign: string;
+  draftUtmSource: string;
+  draftUtmMedium: string;
+  draftUtmContent: string;
   busy: boolean;
   onDraftText: (value: string) => void;
+  onDraftUtmCampaign: (value: string) => void;
+  onDraftUtmSource: (value: string) => void;
+  onDraftUtmMedium: (value: string) => void;
+  onDraftUtmContent: (value: string) => void;
   onTogglePlatform: (code: string) => void;
   onAddMediaFiles: (files: FileList | null) => void;
   onRemoveDraftMedia: (mediaRef: string) => void;
@@ -766,8 +774,16 @@ export function SocialPublishingPanel({
   draftText,
   draftPlatforms,
   draftMedia,
+  draftUtmCampaign,
+  draftUtmSource,
+  draftUtmMedium,
+  draftUtmContent,
   busy,
   onDraftText,
+  onDraftUtmCampaign,
+  onDraftUtmSource,
+  onDraftUtmMedium,
+  onDraftUtmContent,
   onTogglePlatform,
   onAddMediaFiles,
   onRemoveDraftMedia,
@@ -1117,6 +1133,49 @@ export function SocialPublishingPanel({
               ))}
             </ul>
           ) : null}
+          <details className="social-hub-utm-details">
+            <summary className="module-hint">Kampanya linkleri (UTM)</summary>
+            <p className="module-hint">
+              Metindeki https bağlantılarına yayın anında utm_* eklenir (Telegram Ads
+              paneli entegrasyonu değil).
+            </p>
+            <label className="label-light">
+              utm_campaign (zorunlu)
+              <input
+                className="input-light"
+                value={draftUtmCampaign}
+                onChange={(e) => onDraftUtmCampaign(e.target.value)}
+                placeholder="nakliye-kampanya-2026"
+              />
+            </label>
+            <label className="label-light">
+              utm_source
+              <input
+                className="input-light"
+                value={draftUtmSource}
+                onChange={(e) => onDraftUtmSource(e.target.value)}
+                placeholder="lerta"
+              />
+            </label>
+            <label className="label-light">
+              utm_medium
+              <input
+                className="input-light"
+                value={draftUtmMedium}
+                onChange={(e) => onDraftUtmMedium(e.target.value)}
+                placeholder="social"
+              />
+            </label>
+            <label className="label-light">
+              utm_content
+              <input
+                className="input-light"
+                value={draftUtmContent}
+                onChange={(e) => onDraftUtmContent(e.target.value)}
+                placeholder="opsiyonel"
+              />
+            </label>
+          </details>
           <button
             type="button"
             className="btn-account-primary"
@@ -1153,6 +1212,11 @@ export function SocialPublishingPanel({
                   {post.mediaUrls?.length ? (
                     <span className="social-hub-stat-chip">
                       {post.mediaUrls.length} görsel
+                    </span>
+                  ) : null}
+                  {post.utm?.utmCampaign ? (
+                    <span className="social-hub-stat-chip">
+                      UTM: {post.utm.utmCampaign}
                     </span>
                   ) : null}
                 </div>
@@ -1632,6 +1696,22 @@ export function SocialAnalyticsPanel({
             </li>
           ))}
         </ul>
+      ) : null}
+      {analytics?.utmCampaignPublishedLast30Days &&
+      analytics.utmCampaignPublishedLast30Days.length > 0 ? (
+        <div className="social-hub-analytics-utm">
+          <h3 className="social-hub-subsection-heading">
+            UTM kampanyaları (son 30 gün yayın)
+          </h3>
+          <ul className="social-hub-audit-list">
+            {analytics.utmCampaignPublishedLast30Days.map((row) => (
+              <li key={row.utmCampaign}>
+                <span>{row.utmCampaign}</span>
+                <span>{row.count}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       ) : null}
     </section>
   );

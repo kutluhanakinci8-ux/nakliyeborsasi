@@ -126,6 +126,8 @@ const CORE_FEATURES = [
   "admin_webhook_active_companies_24h",
   "inbox_by_platform_webhook_bridged_24h",
   "analytics_webhook_30d_and_7d_platform",
+  "analytics_utm_campaign_snapshot",
+  "publishing_utm_link_tags",
   "company_audit_log_csv_export",
   "public_status_webhook_bridge_7d",
   "admin_webhook_bridged_7d_metrics",

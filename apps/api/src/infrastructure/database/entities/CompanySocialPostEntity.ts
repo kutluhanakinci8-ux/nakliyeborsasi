@@ -30,6 +30,10 @@ export class CompanySocialPostEntity {
   @Column({ type: "text", nullable: true })
   public mediaUrlsJson!: string | null;
 
+  /** JSON: utmSource, utmMedium, utmCampaign, utmContent */
+  @Column({ type: "text", nullable: true })
+  public utmParamsJson!: string | null;
+
   @Column({ type: "timestamptz", nullable: true })
   public scheduledAt!: Date | null;
 

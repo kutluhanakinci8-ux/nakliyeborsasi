@@ -144,12 +144,20 @@ export type SocialHubConnection = {
   } | null;
 };
 
+export type SocialHubUtmParams = {
+  utmSource: string;
+  utmMedium: string;
+  utmCampaign: string;
+  utmContent?: string | null;
+};
+
 export type SocialHubPost = {
   id: string;
   platformCodes: string[];
   statusCode: string;
   bodyText: string;
   mediaUrls: string[];
+  utm?: SocialHubUtmParams | null;
   scheduledAt: string | null;
   publishedAt: string | null;
   externalPostId: string | null;
@@ -235,6 +243,10 @@ export type SocialHubAnalytics = {
     }>;
   };
   platformInsights?: SocialHubPlatformInsightRow[];
+  utmCampaignPublishedLast30Days?: Array<{
+    utmCampaign: string;
+    count: number;
+  }>;
 };
 
 export type SocialHubBetaWebhookReadiness = {

@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS company_social_posts (
   status_code VARCHAR(32) NOT NULL,
   body_text TEXT NOT NULL,
   media_urls_json TEXT NULL,
+  utm_params_json TEXT NULL,
   scheduled_at TIMESTAMPTZ NULL,
   published_at TIMESTAMPTZ NULL,
   external_post_id VARCHAR(128) NULL,
