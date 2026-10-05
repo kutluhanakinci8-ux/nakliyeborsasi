@@ -1,0 +1,1 @@
+-- Faz BF: Mesajlar S3 ek depolama prod probe (şema değişikliği yok)

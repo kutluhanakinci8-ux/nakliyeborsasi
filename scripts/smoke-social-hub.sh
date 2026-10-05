@@ -130,6 +130,17 @@ if [[ -n "${SOCIAL_HUB_SMOKE_EXPECT_PHASE:-}" ]]; then
     }
     echo "OK: status social_hub_campaign_landing_publish (BE)"
   fi
+  if [[ "${SOCIAL_HUB_SMOKE_EXPECT_PHASE}" == "bf" ]]; then
+    echo "${status_json}" | grep -q '"phase":"bf"' || {
+      echo "FAIL: phase not bf"
+      exit 1
+    }
+    echo "${status_json}" | grep -q '"social_hub_messaging_s3_prod_probe"' || {
+      echo "FAIL: status missing social_hub_messaging_s3_prod_probe"
+      exit 1
+    }
+    echo "OK: status social_hub_messaging_s3_prod_probe (BF)"
+  fi
   if [[ "${SOCIAL_HUB_SMOKE_EXPECT_PHASE}" == "bb" ]]; then
     echo "${status_json}" | grep -q '"social_hub_pwa_manifest_scope"' || {
       echo "FAIL: status missing social_hub_pwa_manifest_scope feature"

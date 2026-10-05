@@ -368,6 +368,9 @@ export type SocialHubSnapshot = {
     youtubePushAuthRequired: boolean;
     webhookInactivityHealthHintsEnabled?: boolean;
     defaultWebhookCompanyConfigured?: boolean;
+    messagingAttachmentLocalMaxBytes?: number;
+    messagingAttachmentS3MaxBytes?: number;
+    messagingAttachmentS3BucketConfigured?: boolean;
   };
   webhookActivity?: {
     inboundBridged24h: number;

@@ -179,6 +179,11 @@ const BE_FEATURES = [
   "social_hub_ci_workflow_be",
 ] as const;
 
+const BF_FEATURES = [
+  "social_hub_messaging_s3_prod_probe",
+  "social_hub_ci_workflow_bf",
+] as const;
+
 export const SOCIAL_HUB_PHASE_MILESTONE_CODES = [
   "ao",
   "ap",
@@ -197,6 +202,7 @@ export const SOCIAL_HUB_PHASE_MILESTONE_CODES = [
   "bc",
   "bd",
   "be",
+  "bf",
 ] as const;
 
 export function buildSocialHubModuleStatusFeatures(): string[] {
@@ -209,5 +215,6 @@ export function buildSocialHubModuleStatusFeatures(): string[] {
     ...BC_FEATURES,
     ...BD_FEATURES,
     ...BE_FEATURES,
+    ...BF_FEATURES,
   ];
 }
