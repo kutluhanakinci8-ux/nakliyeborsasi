@@ -154,6 +154,12 @@ export function buildConnectionsOpsLog(
       message:
         "Öneri: WABA için Business Manager’da yeni Meta uygulaması; önce WhatsApp use case. App ID/Secret değişince VPS .env güncellenmeli.",
     });
+    push(entries, {
+      level: "warn",
+      channel: "Meta",
+      message:
+        "«Facebook Girişi bu uygulama için şu anda kullanılamıyor» = Meta tarafı (Lerta hatası değil). Kontrol: uygulama devre dışı mı, Facebook Login ürünü kapalı mı, hesabınız App roles’ta Tester/Admin mi, WhatsApp use case seçili mi. Bağlı kanal token geçerliyse mesajlar «Yeniden bağlan» olmadan çalışabilir.",
+    });
   }
 
   for (const row of connections) {
