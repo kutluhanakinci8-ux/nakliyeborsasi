@@ -23,6 +23,8 @@ import {
   serializeSocialHubConnectionMetadata,
 } from "./SocialHubConnectionMetadata";
 import { buildTelegramConnectionWebhookUrl } from "../socialHubIntegrationUrls";
+import { SOCIAL_HUB_TELEGRAM_WEBHOOK_ALLOWED_UPDATES } from "./socialHubTelegramWebhookConfig";
+import { formatTelegramApiFailureMessage } from "./socialHubTelegramFlood";
 
 @Injectable()
 export class SocialHubTelegramApplicationService {
@@ -76,22 +78,15 @@ export class SocialHubTelegramApplicationService {
       );
     }
 
-    const webhookSecret = randomBytes(24).toString("hex");
-    const webhookUrl = buildTelegramConnectionWebhookUrl(row.id);
-    const setHook = await callTelegramBotApi<boolean>(token, "setWebhook", {
-      url: webhookUrl,
-      secret_token: webhookSecret,
-      allowed_updates: ["message", "edited_message"],
-      drop_pending_updates: false,
-    });
-    if (!setHook.ok) {
-      throw new ValidationException(
-        setHook.description ??
-          "Telegram webhook kaydı başarısız; API_PUBLIC_BASE_URL erişilebilir olmalı.",
-      );
-    }
-
     const metadata = parseSocialHubConnectionMetadata(row.grantedScopes);
+    const webhookSecret =
+      metadata.telegramWebhookSecret?.trim() || randomBytes(24).toString("hex");
+    await this.registerWebhook({
+      connectionId: row.id,
+      botToken: token,
+      webhookSecret,
+      failOnError: true,
+    });
     metadata.telegramWebhookSecret = webhookSecret;
     row.accessTokenCiphertext = encryptTotpSecret(token, encKey);
     row.externalAccountId = String(me.id);
@@ -110,6 +105,78 @@ export class SocialHubTelegramApplicationService {
       `Telegram bot connected company=${companyId} botId=${me.id}`,
     );
     return { connection: row };
+  }
+
+  public async syncConnectedBotWebhooks(): Promise<void> {
+    const encKey = this.oauthConfig.getOAuthEncryptionKey();
+    if (!encKey) {
+      return;
+    }
+    const rows = await this.connectionRepository.find({
+      where: {
+        platformCode: SocialPlatformCode.Telegram,
+        statusCode: SocialConnectionStatusCode.Connected,
+      },
+    });
+    for (const row of rows) {
+      if (!row.accessTokenCiphertext) {
+        continue;
+      }
+      const metadata = parseSocialHubConnectionMetadata(row.grantedScopes);
+      const webhookSecret = metadata.telegramWebhookSecret?.trim();
+      if (!webhookSecret) {
+        continue;
+      }
+      try {
+        const token = decryptTotpSecret(row.accessTokenCiphertext, encKey);
+        await this.registerWebhook({
+          connectionId: row.id,
+          botToken: token,
+          webhookSecret,
+          failOnError: false,
+        });
+      } catch (error) {
+        this.logger.warn(
+          `Telegram webhook sync failed connection=${row.id}: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+      }
+    }
+  }
+
+  private async registerWebhook(params: {
+    connectionId: string;
+    botToken: string;
+    webhookSecret: string;
+    failOnError: boolean;
+  }): Promise<void> {
+    const setHook = await callTelegramBotApi<boolean>(
+      params.botToken,
+      "setWebhook",
+      {
+        url: buildTelegramConnectionWebhookUrl(params.connectionId),
+        secret_token: params.webhookSecret,
+        allowed_updates: SOCIAL_HUB_TELEGRAM_WEBHOOK_ALLOWED_UPDATES,
+        drop_pending_updates: false,
+      },
+    );
+    if (!setHook.ok) {
+      const detail = formatTelegramApiFailureMessage(
+        setHook,
+        "Telegram webhook kaydı başarısız; API_PUBLIC_BASE_URL erişilebilir olmalı.",
+      );
+      if (params.failOnError) {
+        throw new ValidationException(detail);
+      }
+      this.logger.warn(
+        `Telegram setWebhook failed connection=${params.connectionId}: ${detail}`,
+      );
+      return;
+    }
+    this.logger.debug(
+      `Telegram webhook registered connection=${params.connectionId} updates=${SOCIAL_HUB_TELEGRAM_WEBHOOK_ALLOWED_UPDATES.join(",")}`,
+    );
   }
 
   public async disconnectBot(companyId: string): Promise<void> {

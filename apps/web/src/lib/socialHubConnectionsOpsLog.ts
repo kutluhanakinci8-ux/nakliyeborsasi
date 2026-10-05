@@ -185,6 +185,12 @@ export function buildConnectionsOpsLog(
       level: "info",
       channel: "Telegram",
       message:
+        "Webhook güncellemesi: API açılışında setWebhook allowed_updates (message, edited_message, deleted_message) bağlı botlarda yenilenir.",
+    });
+    push(entries, {
+      level: "info",
+      channel: "Telegram",
+      message:
         "Giden: Mesajlar’dan 2–5 ek Telegram sendMediaGroup (albüm) olarak gider; discussion yanıtlarında reply_to korunur.",
     });
     push(entries, {
