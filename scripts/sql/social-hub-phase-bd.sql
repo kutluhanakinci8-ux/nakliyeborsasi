@@ -1,0 +1,1 @@
+-- Faz BD: Telegram izi (albüm, discussion, S3 ekler, UTM yayın) — şema: social-hub-post-utm.sql

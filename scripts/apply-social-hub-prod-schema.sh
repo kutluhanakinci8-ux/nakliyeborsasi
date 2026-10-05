@@ -11,6 +11,7 @@ SQL_FILES=(
   social-hub-tables.sql
   social-hub-thread-links.sql
   social-hub-post-approval.sql
+  social-hub-post-utm.sql
   social-hub-subscription-module.sql
   social-hub-oauth-states.sql
   social-hub-phase-f.sql
@@ -60,6 +61,7 @@ SQL_FILES=(
   social-hub-phase-ba.sql
   social-hub-phase-bb.sql
   social-hub-phase-bc.sql
+  social-hub-phase-bd.sql
 )
 
 for name in "${SQL_FILES[@]}"; do
