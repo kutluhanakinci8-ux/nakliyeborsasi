@@ -15849,23 +15849,218 @@ button.btn-secondary {
   margin-bottom: 1rem;
 }
 
-.social-hub-team-main .social-hub-team-settings {
-  flex-direction: column;
+.social-hub-connections-layout--team {
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 300px);
+}
+
+@media (min-width: 1100px) {
+  .social-hub-connections-layout--team {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 320px);
+  }
+}
+
+.social-hub-team-toolbar {
+  display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e8edf4;
+}
+
+.social-hub-team-toolbar-copy {
+  flex: 1 1 280px;
+  min-width: 0;
+}
+
+.social-hub-team-toolbar-copy .account-card-title {
+  margin: 0;
+}
+
+.social-hub-team-toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.65rem 0.85rem;
+}
+
+.social-hub-team-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: 1rem 1.25rem;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 900px) {
+  .social-hub-team-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+.social-hub-team-panel {
+  border: 1px solid #e8edf4;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 36, 68, 0.04);
+  padding: 1rem 1.1rem 1.1rem;
+  min-width: 0;
+}
+
+.social-hub-team-panel-title {
+  margin: 0 0 0.85rem;
+  font-size: 0.92rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.social-hub-team-table-wrap {
+  overflow-x: auto;
+  margin: 0 -0.15rem;
+}
+
+.social-hub-team-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.social-hub-team-table th {
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+  padding: 0 0.5rem 0.55rem;
+  border-bottom: 1px solid #e8edf4;
+}
+
+.social-hub-team-table td {
+  padding: 0.65rem 0.5rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.social-hub-team-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.social-hub-team-table-name {
+  font-weight: 700;
+  color: var(--nb-navy-deep, #0f2444);
+  white-space: nowrap;
+}
+
+.social-hub-team-table-email {
+  color: #64748b;
+  max-width: 12rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.social-hub-team-table-role {
+  width: 11rem;
 }
 
 .social-hub-team-role-select {
   width: 100%;
-  max-width: 220px;
-  margin-top: 0.35rem;
+  min-width: 9.5rem;
+  font-size: 0.82rem;
 }
 
-.social-hub-team-audit-bar {
-  margin-top: 1.25rem;
+.social-hub-team-toggle-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
 }
 
-.social-hub-team-audit-bar .social-hub-inbox-actions-premium {
-  margin: 0.75rem 0 0;
+@media (max-width: 520px) {
+  .social-hub-team-toggle-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.social-hub-team-toggle-card {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 10px;
+  border: 1px solid #e8edf4;
+  background: #f8fafc;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  line-height: 1.3;
+}
+
+.social-hub-team-toggle-card input {
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--nb-navy-deep, #0f2444);
+}
+
+.social-hub-team-kvkk-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid #e8edf4;
+}
+
+.social-hub-team-kvkk-ok {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #166534;
+}
+
+.social-hub-team-audit-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  border: 1px solid #e8edf4;
+  background: linear-gradient(180deg, #f8fafc 0%, #fff 100%);
+}
+
+.social-hub-team-audit-copy {
+  min-width: 0;
+}
+
+.social-hub-team-audit-copy .social-hub-team-panel-title {
+  margin-bottom: 0.25rem;
+}
+
+.social-hub-team-audit-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.social-hub-team-audit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.social-hub-team-audit-actions .btn-account-primary,
+.social-hub-team-audit-actions .btn-account-ghost {
+  min-height: 2.25rem;
+  padding-left: 0.85rem;
+  padding-right: 0.85rem;
 }
 
 .social-hub-connection-actions {
