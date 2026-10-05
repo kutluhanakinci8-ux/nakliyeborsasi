@@ -43,7 +43,7 @@ jobs:
         env:
           SOCIAL_HUB_API_BASE: https://app.lerta.com.tr/api/v1
           SOCIAL_HUB_WEB_PUBLIC_URL: https://app.lerta.com.tr
-          SOCIAL_HUB_SMOKE_EXPECT_PHASE: bk
+          SOCIAL_HUB_SMOKE_EXPECT_PHASE: bl
           SOCIAL_HUB_SMOKE_TIKTOK_WEBHOOK: "0"
           SOCIAL_HUB_SMOKE_YOUTUBE_WEBHOOK: "0"
         run: bash scripts/smoke-social-hub.sh

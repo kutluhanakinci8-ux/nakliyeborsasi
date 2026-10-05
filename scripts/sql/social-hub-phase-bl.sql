@@ -1,0 +1,1 @@
+-- Faz BL: Telegram setWebhook allowed_updates (deleted_message) + boot sync (şema yok)

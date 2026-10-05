@@ -20,6 +20,7 @@ import { WhatsAppCloudWebhookProvider } from "./providers/WhatsAppCloudWebhookPr
 import { LinkedInMarketingPostsProvider } from "./providers/LinkedInMarketingPostsProvider";
 import { TelegramBotProvider } from "./providers/TelegramBotProvider";
 import { SocialHubTelegramApplicationService } from "./oauth/SocialHubTelegramApplicationService";
+import { SocialHubTelegramWebhookBootstrap } from "./oauth/SocialHubTelegramWebhookBootstrap";
 import { SocialHubTelegramWebhookIngestService } from "./oauth/SocialHubTelegramWebhookIngestService";
 import { SocialHubTelegramOutboundService } from "./oauth/SocialHubTelegramOutboundService";
 import { SocialHubTelegramFileService } from "./oauth/SocialHubTelegramFileService";
@@ -132,6 +133,7 @@ import { SocialHubTelegramMediaGroupBufferService } from "./oauth/SocialHubTeleg
     SocialHubXOutboundService,
     SocialHubXWebhookIngestService,
     SocialHubTelegramApplicationService,
+    SocialHubTelegramWebhookBootstrap,
     SocialHubTelegramWebhookIngestService,
     SocialHubTelegramOutboundService,
     SocialHubTelegramFileService,
