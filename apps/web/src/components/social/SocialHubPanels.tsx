@@ -7,6 +7,11 @@ import {
   buildConnectionsOpsLog,
   connectionUserSummary,
 } from "../../lib/socialHubConnectionsOpsLog";
+import {
+  buildHealthOpsLog,
+  healthChannelUserSummary,
+  healthTokenBadgeLabel,
+} from "../../lib/socialHubHealthOpsLog";
 import type {
   SocialHubAuditEntry,
   SocialHubPermissions,
@@ -1616,36 +1621,12 @@ function healthOverallLabel(status: SocialHubHealth["overallStatus"]): string {
   }
 }
 
-function tokenHealthLabel(
-  code: SocialHubHealth["channels"][number]["tokenHealth"],
-): string {
-  switch (code) {
-    case "ok":
-      return "Token OK";
-    case "expiring_soon":
-      return "Token süresi yakın";
-    case "expired":
-      return "Token süresi doldu";
-    case "missing":
-      return "Bağlı değil";
-    default:
-      return code;
-  }
-}
-
 export type SocialDeliveryLogFilters = {
   platformCode: string;
   status: "" | "ok" | "failed";
   since: string;
   until: string;
 };
-
-function formatInsightTime(iso: string | null | undefined): string {
-  if (!iso) {
-    return "—";
-  }
-  return new Date(iso).toLocaleString("tr-TR");
-}
 
 type HealthPanelProps = {
   health: SocialHubHealth | null;
@@ -1750,6 +1731,19 @@ export function SocialHealthPanel({
   pwa,
   healthPushHookStatus,
 }: HealthPanelProps) {
+  const opsLogEntries = useMemo(() => {
+    if (!health) {
+      return [];
+    }
+    return buildHealthOpsLog({
+      health,
+      notificationInsights,
+      deliveries,
+      pwa,
+      healthPushHookStatus,
+    });
+  }, [health, notificationInsights, deliveries, pwa, healthPushHookStatus]);
+
   if (!health) {
     return (
       <section className="social-hub-panel module-panel module-panel--elevated">
@@ -1757,26 +1751,35 @@ export function SocialHealthPanel({
       </section>
     );
   }
+
   return (
-    <section className="social-hub-panel module-panel module-panel--elevated">
-      <header className="social-hub-panel-head">
-        <h2 className="account-card-title">Bağlantı sağlığı</h2>
-        <p className="account-card-lead">
-          Token durumu, kurulum uyarıları ve son 24 saatteki kanal gönderim hataları.
-          Kritik durumda firma sahiplerine e-posta gider; Slack için aşağıdaki
-          sosyal hub webhook veya (isteğe bağlı) Mesajlar köprüsü kullanılır.
-        </p>
-        {pwa ? (
-          <p className="module-hint social-hub-pwa-hint">
-            PWA: <code>{pwa.manifestPath}</code> (scope{" "}
-            <code>{pwa.scope}</code>). {pwa.healthPushHook.note}
-            {healthPushHookStatus === "skeleton_registered"
-              ? " · Push iskeleti: tarayıcı hazır."
-              : healthPushHookStatus === "unsupported"
-                ? " · Push: tarayıcı desteklemiyor."
-                : null}
+    <section className="social-hub-connections-shell module-panel module-panel--elevated">
+      <div className="social-hub-connections-layout">
+        <div className="social-hub-connections-main social-hub-health-main">
+          <header className="social-hub-panel-head social-hub-panel-head--premium">
+            <div>
+              <h2 className="account-card-title">Bağlantı sağlığı</h2>
+              <p className="social-hub-connections-lead">
+                Kanal bağlantıları ve gönderim başarısı. Teknik ayrıntılar sağdaki
+                operasyon günlüğünde.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="btn-account-ghost"
+              disabled={busy}
+              onClick={onReload}
+            >
+              Yenile
+            </button>
+          </header>
+          <p
+            className={`social-hub-health-overall social-hub-health-overall--${health.overallStatus}`}
+          >
+            Genel durum:{" "}
+            <strong>{healthOverallLabel(health.overallStatus)}</strong>
           </p>
-        ) : null}
+          <div className="social-hub-health-quick-actions">
         {canManage ? (
           <label className="social-hub-check">
             <input
@@ -1809,17 +1812,14 @@ export function SocialHealthPanel({
             >
               Haftalık özet gönder (şimdi)
             </button>
-            {notificationInsights &&
-            notificationInsights.manualNotifyCooldownMinutes > 0 ? (
-              <p className="module-hint">
-                Manuel Slack özet ve haftalık e-posta için{" "}
-                {notificationInsights.manualNotifyCooldownMinutes} dakikalık
-                bekleme uygulanır.
-              </p>
-            ) : null}
           </>
         ) : null}
+          </div>
         {canManage ? (
+          <details className="social-hub-health-settings-details">
+            <summary className="social-hub-health-settings-summary">
+              Bildirim ve eşik ayarları
+            </summary>
           <div className="social-hub-alert-thresholds social-hub-slack-settings">
             <label className="social-hub-threshold-field social-hub-threshold-field--wide">
               Slack webhook (sosyal hub)
@@ -2008,8 +2008,6 @@ export function SocialHealthPanel({
               Sağlık Slack süresini kaydet
             </button>
           </div>
-        ) : null}
-        {canManage ? (
           <div className="social-hub-alert-thresholds">
             <label className="social-hub-threshold-field">
               Uyarı minimum seviye
@@ -2072,107 +2070,27 @@ export function SocialHealthPanel({
               Eşikleri kaydet
             </button>
           </div>
+          </details>
         ) : null}
-        <button
-          type="button"
-          className="btn-account-ghost"
-          disabled={busy}
-          onClick={onReload}
-        >
-          Yenile
-        </button>
-      </header>
-      <p
-        className={`social-hub-health-overall social-hub-health-overall--${health.overallStatus}`}
-      >
-        Genel durum: <strong>{healthOverallLabel(health.overallStatus)}</strong>
-      </p>
       {notificationInsights ? (
-        <div className="social-hub-notification-insights">
-          <h3 className="account-card-title">Bildirim özeti</h3>
-          <p className="module-hint">
-            24s gönderim: {notificationInsights.outboundDeliveriesLast24h.ok}{" "}
-            başarılı · {notificationInsights.outboundDeliveriesLast24h.failed} hatalı
-            {(notificationInsights.webhookInboundBridged24h ?? 0) > 0 ? (
-              <>
-                {" "}
-                · webhook köprü: {notificationInsights.webhookInboundBridged24h}
-                {(notificationInsights.webhookInboundBridgedByPlatform24h ?? [])
-                  .length > 0
-                  ? ` (${(notificationInsights.webhookInboundBridgedByPlatform24h ?? [])
-                      .map((row) => `${row.label}: ${row.inboundBridged24h}`)
-                      .join(", ")})`
-                  : ""}
-              </>
-            ) : null}
-          </p>
-          <ul className="social-hub-insights-list">
-            <li>
-              E-posta sağlık uyarısı:{" "}
-              {formatInsightTime(notificationInsights.healthAlertEmailLastSentAt)}
-              {notificationInsights.lastHealthAlertStatus
-                ? ` (${notificationInsights.lastHealthAlertStatus})`
-                : ""}
-            </li>
-            <li>
-              Slack günlük özet:{" "}
-              {formatInsightTime(notificationInsights.slackDailyDigestLastSentAt)}
-            </li>
-            <li>
-              Slack sağlık uyarısı:{" "}
-              {formatInsightTime(notificationInsights.slackHealthAlertLastSentAt)}
-            </li>
-            <li>
-              Slack gönderim hatası:{" "}
-              {formatInsightTime(notificationInsights.slackOutboundFailureLastSentAt)}
-            </li>
-            <li>
-              Haftalık e-posta özet:{" "}
-              {formatInsightTime(notificationInsights.weeklyEmailLastSentAt)}
-            </li>
-            {notificationInsights.roadmapInterestLabels.length > 0 ? (
-              <li>
-                Yol haritası önceliği:{" "}
-                {notificationInsights.roadmapInterestLabels.join(", ")}
-              </li>
-            ) : null}
-          </ul>
-          {notificationInsights.channelOutbound24h.length > 0 ? (
-            <ul className="social-hub-channel-rates">
-              {notificationInsights.channelOutbound24h.map((row) => (
-                <li key={row.platformCode}>
-                  24s · {row.label}: %{row.successRatePercent} ({row.ok}/
-                  {row.ok + row.failed})
-                </li>
-              ))}
-            </ul>
-          ) : null}
-          {(notificationInsights.roadmapBetaOutbound24h ?? []).length > 0 ? (
-            <p className="module-hint">
-              Beta kanallar (24s):{" "}
-              {(notificationInsights.roadmapBetaOutbound24h ?? [])
-                .map(
-                  (row) =>
-                    `${row.label} %${row.successRatePercent} (${row.ok}/${row.ok + row.failed})`,
-                )
-                .join(" · ")}
-            </p>
-          ) : null}
-          {(notificationInsights.roadmapBetaChannelHealth ?? []).some(
-            (row) => row.statusCode === "CONNECTED",
-          ) ? (
-            <ul className="social-hub-insights-list">
-              {(notificationInsights.roadmapBetaChannelHealth ?? [])
-                .filter((row) => row.statusCode === "CONNECTED")
-                .map((row) => (
-                  <li key={row.platformCode}>
-                    {row.label} (beta): {row.openThreadCount} açık konuşma ·{" "}
-                    {row.recentOutboundFailures24h} giden hata (24s) · webhook{" "}
-                    {row.webhookInboundBridged24h ?? 0} (24s)
-                  </li>
-                ))}
-            </ul>
-          ) : null}
+        <div className="social-hub-health-insights-premium">
+          <div className="social-hub-health-insights-head">
+            <h3 className="account-card-title">Gönderim özeti</h3>
+            <div className="social-hub-stat-chips">
+              <span className="social-hub-stat-chip social-hub-stat-chip--ok">
+                24s: {notificationInsights.outboundDeliveriesLast24h.ok} başarılı
+              </span>
+              <span
+                className={
+                  notificationInsights.outboundDeliveriesLast24h.failed > 0
+                    ? "social-hub-stat-chip social-hub-stat-chip--warn"
+                    : "social-hub-stat-chip"
+                }
+              >
+                {notificationInsights.outboundDeliveriesLast24h.failed} hatalı
+              </span>
+            </div>
+          </div>
           {notificationInsights.channelOutbound7d.length > 0 ? (
             <div className="social-hub-channel-bars">
               <p className="module-hint">
@@ -2246,26 +2164,25 @@ export function SocialHealthPanel({
           </div>
         </div>
       ) : null}
-      <ul className="social-hub-health-grid">
+      <h3 className="social-hub-subsection-heading">Kanallar</h3>
+      <ul className="social-hub-health-grid social-hub-health-grid--premium">
         {health.channels.map((channel) => (
-          <li key={channel.platformCode} className="social-hub-health-card">
-            <h3>{channel.label}</h3>
-            <p className="social-hub-health-meta">
-              {statusLabel(channel.statusCode)} · {tokenHealthLabel(channel.tokenHealth)}
+          <li
+            key={channel.platformCode}
+            className="social-hub-health-card social-hub-health-card--premium"
+          >
+            <div className="social-hub-connection-title-row">
+              <h3>{channel.label}</h3>
+              <span className={connectionStatusBadgeClass(channel.statusCode)}>
+                {statusLabel(channel.statusCode)}
+              </span>
+            </div>
+            <p className="social-hub-health-token-chip">
+              {healthTokenBadgeLabel(channel.tokenHealth)}
             </p>
-            <p className="module-hint">
-              Açık konuşma: {channel.openThreadCount} · 24s hata:{" "}
-              {channel.recentOutboundFailures24h}
-              {channel.inboxWebhookCapable ? (
-                <>
-                  {" "}
-                  · webhook köprü (24s): {channel.webhookInboundBridged24h ?? 0}
-                </>
-              ) : null}
+            <p className="social-hub-connection-summary">
+              {healthChannelUserSummary(channel)}
             </p>
-            {channel.setupWarnings.map((warning) => (
-              <p key={warning} className="social-hub-setup-warn">{warning}</p>
-            ))}
             {canManage && channel.canRefreshToken ? (
               <button
                 type="button"
@@ -2281,34 +2198,26 @@ export function SocialHealthPanel({
         {(health.roadmapChannels ?? []).map((channel) => (
           <li
             key={`roadmap-${channel.platformCode}`}
-            className="social-hub-health-card social-hub-health-card--roadmap"
+            className="social-hub-health-card social-hub-health-card--premium social-hub-health-card--roadmap"
           >
-            <h3>{channel.label}</h3>
-            <span
-              className={
-                channel.isRoadmapBeta
-                  ? "social-hub-pill"
-                  : "social-hub-pill social-hub-pill--ok"
-              }
-            >
-              {channel.isRoadmapBeta ? "Beta yol haritası" : "Prod kanal"}
-            </span>
-            <p className="social-hub-health-meta">
-              {statusLabel(channel.statusCode)} · {tokenHealthLabel(channel.tokenHealth)}
+            <div className="social-hub-connection-title-row">
+              <h3>{channel.label}</h3>
+              <span
+                className={
+                  channel.isRoadmapBeta
+                    ? "social-hub-pill"
+                    : "social-hub-pill social-hub-pill--ok"
+                }
+              >
+                {channel.isRoadmapBeta ? "Beta" : "Prod"}
+              </span>
+            </div>
+            <p className="social-hub-health-token-chip">
+              {healthTokenBadgeLabel(channel.tokenHealth)}
             </p>
-            <p className="module-hint">
-              Açık konuşma: {channel.openThreadCount} · 24s hata:{" "}
-              {channel.recentOutboundFailures24h}
-              {channel.inboxWebhookCapable ? (
-                <>
-                  {" "}
-                  · webhook köprü (24s): {channel.webhookInboundBridged24h ?? 0}
-                </>
-              ) : null}
+            <p className="social-hub-connection-summary">
+              {healthChannelUserSummary(channel)}
             </p>
-            {channel.setupWarnings.map((warning) => (
-              <p key={warning} className="social-hub-setup-warn">{warning}</p>
-            ))}
             {canManage && channel.canRefreshToken ? (
               <button
                 type="button"
@@ -2322,11 +2231,13 @@ export function SocialHealthPanel({
           </li>
         ))}
       </ul>
-      <header className="social-hub-panel-head">
-        <h3 className="account-card-title">Gönderim geçmişi</h3>
-        <p className="account-card-lead">
-          Mesajlar’dan kanala giden metin denemeleri — filtreleyin veya CSV indirin.
-        </p>
+      <header className="social-hub-panel-head social-hub-panel-head--premium">
+        <div>
+          <h3 className="account-card-title">Gönderim geçmişi</h3>
+          <p className="social-hub-connections-lead social-hub-connections-lead--compact">
+            Mesajlar’dan kanala giden denemeler — filtreleyin veya dışa aktarın.
+          </p>
+        </div>
       </header>
       <div className="social-hub-delivery-filters">
         <select
@@ -2426,12 +2337,17 @@ export function SocialHealthPanel({
                 Konuşmayı Mesajlar’da aç
               </Link>
               {row.errorMessage ? (
-                <p className="social-hub-delivery-error">{row.errorMessage}</p>
+                <p className="social-hub-delivery-error-hint">
+                  Gönderilemedi — ayrıntı operasyon günlüğünde.
+                </p>
               ) : null}
             </li>
           ))
         )}
       </ul>
+        </div>
+        <SocialHubOpsLogRail entries={opsLogEntries} />
+      </div>
     </section>
   );
 }
