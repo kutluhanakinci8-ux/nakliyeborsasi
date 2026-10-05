@@ -640,6 +640,7 @@ export class MessagingThreadApplicationService {
       thread.id,
       saved.id,
       attachmentsInput,
+      { companyId: authenticatedUser.companyId },
     );
     if (stored) {
       saved.attachments = stored;
@@ -1617,6 +1618,7 @@ export class MessagingThreadApplicationService {
       thread.id,
       saved.id,
       params.attachmentsInput,
+      { companyId: params.companyId },
     );
     if (stored) {
       saved.attachments = stored;

@@ -16,6 +16,7 @@ import { CompanyEntity } from "../../infrastructure/database/entities/CompanyEnt
 import { FreightListingEntity } from "../../infrastructure/database/entities/FreightListingEntity";
 import { MessagingTranslationService } from "./MessagingTranslationService";
 import { MessagingAttachmentStorageService } from "./MessagingAttachmentStorageService";
+import { MessagingAttachmentQuotaService } from "./MessagingAttachmentQuotaService";
 import { MessagingWebPushService } from "./MessagingWebPushService";
 import { MessagingWebPushSubscriptionEntity } from "../../infrastructure/database/entities/MessagingWebPushSubscriptionEntity";
 import { MessagingPushController } from "./MessagingPushController";
@@ -95,6 +96,7 @@ import { SocialHubModule } from "../social-hub/SocialHubModule";
   providers: [
     MessagingThreadApplicationService,
     MessagingTranslationService,
+    MessagingAttachmentQuotaService,
     MessagingAttachmentStorageService,
     MessagingWebPushService,
     MessagingRealtimeHubService,
