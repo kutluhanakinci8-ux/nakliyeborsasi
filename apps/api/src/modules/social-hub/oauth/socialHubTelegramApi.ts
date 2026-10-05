@@ -24,6 +24,7 @@ export type TelegramChat = {
   type: string;
   title?: string;
   username?: string;
+  linked_chat_id?: number;
 };
 
 export type TelegramFile = {

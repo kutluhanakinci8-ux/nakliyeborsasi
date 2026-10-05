@@ -17,12 +17,14 @@ export type TelegramParsedMedia = {
 };
 
 export type TelegramInboundMessage = {
+  chatId: string;
   externalThreadId: string;
   displayLabel: string;
   bodyText: string;
   externalMessageId: string;
   media: TelegramParsedMedia[];
   mediaGroupId: string | null;
+  rawMessage: Record<string, unknown>;
 };
 
 function labelFromUser(user: TelegramUser): string {
@@ -213,13 +215,16 @@ function parseFromMessageRecord(
       ? String(mediaGroupRaw)
       : null;
 
+  const chatIdStr = String(chatId);
   return {
-    externalThreadId: String(chatId),
+    chatId: chatIdStr,
+    externalThreadId: chatIdStr,
     displayLabel: labelFromUser(fromUser),
     bodyText: bodyText.trim() || "[medya]",
     externalMessageId: String(messageId),
     media,
     mediaGroupId,
+    rawMessage: msg,
   };
 }
 

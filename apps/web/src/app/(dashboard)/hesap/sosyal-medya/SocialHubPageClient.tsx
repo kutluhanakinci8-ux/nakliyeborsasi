@@ -73,6 +73,8 @@ export function SocialHubPageClient() {
   const [telegramTokenDraft, setTelegramTokenDraft] = useState("");
   const [telegramChannelOpen, setTelegramChannelOpen] = useState(false);
   const [telegramChannelDraft, setTelegramChannelDraft] = useState("");
+  const [telegramDiscussionOpen, setTelegramDiscussionOpen] = useState(false);
+  const [telegramDiscussionDraft, setTelegramDiscussionDraft] = useState("");
   const [inboxThreadsPreview, setInboxThreadsPreview] = useState<
     SocialHubInboxThreadPreview[]
   >([]);
@@ -393,6 +395,15 @@ export function SocialHubPageClient() {
                       "",
                   );
                   setTelegramChannelOpen(true);
+                }}
+                onTelegramDiscussionSetup={() => {
+                  const tg = snapshot?.connections?.find(
+                    (c) => c.platformCode === "TELEGRAM",
+                  );
+                  setTelegramDiscussionDraft(
+                    tg?.telegramDiscussionGroup?.chatId ?? "",
+                  );
+                  setTelegramDiscussionOpen(true);
                 }}
                 onDisconnect={(code) =>
                   void runAction(async () => {
@@ -1026,8 +1037,9 @@ export function SocialHubPageClient() {
             </h2>
             <p className="module-hint">
               Botu kanala <strong>admin</strong> ekleyin (mesaj gönderme yetkisi).
-              Kanal kullanıcı adı (@…) veya chat id girin. Yayınlar sekmesinden
-              TELEGRAM seçerek gönderi planlayabilirsiniz.
+              Kanal kullanıcı adı (@…) veya chat id girin. Bağlı discussion
+              grubu varsa otomatik kaydedilir. Yayınlar sekmesinden TELEGRAM
+              seçerek gönderi planlayabilirsiniz.
             </p>
             <label className="social-hub-modal-label" htmlFor="telegram-channel-ref">
               Kanal
@@ -1062,6 +1074,73 @@ export function SocialHubPageClient() {
                     );
                     setTelegramChannelOpen(false);
                     setStatus("Telegram yayın kanalı kaydedildi.");
+                    await reload();
+                  })
+                }
+              >
+                Kaydet
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+      {telegramDiscussionOpen ? (
+        <div
+          className="social-hub-modal-backdrop"
+          role="presentation"
+          onClick={() => !busy && setTelegramDiscussionOpen(false)}
+        >
+          <div
+            className="social-hub-modal"
+            role="dialog"
+            aria-labelledby="telegram-discussion-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2 id="telegram-discussion-title" className="social-hub-modal-title">
+              Telegram kanal yorum grubu
+            </h2>
+            <p className="module-hint">
+              Kanalın discussion supergroup chat id veya @adres. Bot grupta
+              üye olmalı; BotFather <code>/setprivacy</code> Disable önerilir.
+              Yorumlar Mesajlar&apos;da gönderi başına ayrı konuşma olarak
+              açılır.
+            </p>
+            <label
+              className="social-hub-modal-label"
+              htmlFor="telegram-discussion-ref"
+            >
+              Discussion grubu
+            </label>
+            <input
+              id="telegram-discussion-ref"
+              type="text"
+              className="social-hub-modal-input"
+              autoComplete="off"
+              value={telegramDiscussionDraft}
+              onChange={(event) => setTelegramDiscussionDraft(event.target.value)}
+              placeholder="-100123456789"
+            />
+            <div className="social-hub-modal-actions">
+              <button
+                type="button"
+                className="btn-account-secondary"
+                disabled={busy}
+                onClick={() => setTelegramDiscussionOpen(false)}
+              >
+                İptal
+              </button>
+              <button
+                type="button"
+                className="btn-account-primary"
+                disabled={busy || !telegramDiscussionDraft.trim()}
+                onClick={() =>
+                  void runAction(async () => {
+                    await SocialHubApiClient.setTelegramDiscussionGroup(
+                      accessToken,
+                      telegramDiscussionDraft.trim(),
+                    );
+                    setTelegramDiscussionOpen(false);
+                    setStatus("Telegram yorum grubu kaydedildi.");
                     await reload();
                   })
                 }

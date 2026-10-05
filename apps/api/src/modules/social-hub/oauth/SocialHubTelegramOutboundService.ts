@@ -3,6 +3,7 @@ import {
   callTelegramBotApi,
   callTelegramBotMultipart,
 } from "./socialHubTelegramApi";
+import { parseDiscussionExternalThreadId } from "./socialHubTelegramDiscussionRouting";
 
 export type TelegramOutboundResult = {
   ok: boolean;
@@ -24,18 +25,23 @@ export class SocialHubTelegramOutboundService {
     botToken: string;
     chatId: string;
     bodyText: string;
+    replyToMessageId?: number | null;
   }): Promise<TelegramOutboundResult> {
     const text = params.bodyText.trim();
     if (!text) {
       return { ok: false, message: "Mesaj metni boş." };
     }
+    const payload: Record<string, unknown> = {
+      chat_id: params.chatId,
+      text,
+    };
+    if (params.replyToMessageId) {
+      payload.reply_to_message_id = params.replyToMessageId;
+    }
     const response = await callTelegramBotApi<{ message_id: number }>(
       params.botToken,
       "sendMessage",
-      {
-        chat_id: params.chatId,
-        text,
-      },
+      payload,
     );
     if (!response.ok) {
       const detail = response.description ?? "Telegram mesajı gönderilemedi.";
@@ -51,11 +57,26 @@ export class SocialHubTelegramOutboundService {
     };
   }
 
+  public resolveOutboundChatTarget(externalThreadId: string): {
+    chatId: string;
+    replyToMessageId: number | null;
+  } {
+    const discussion = parseDiscussionExternalThreadId(externalThreadId);
+    if (discussion) {
+      return {
+        chatId: discussion.discussionGroupChatId,
+        replyToMessageId: discussion.postMessageId,
+      };
+    }
+    return { chatId: externalThreadId, replyToMessageId: null };
+  }
+
   public async sendWithAttachments(params: {
     botToken: string;
     chatId: string;
     bodyText: string;
     attachments: TelegramOutboundAttachment[];
+    replyToMessageId?: number | null;
   }): Promise<TelegramOutboundResult> {
     const attachment = params.attachments[0];
     if (!attachment) {
@@ -71,6 +92,9 @@ export class SocialHubTelegramOutboundService {
     form.append("chat_id", params.chatId);
     if (caption) {
       form.append("caption", caption);
+    }
+    if (params.replyToMessageId) {
+      form.append("reply_to_message_id", String(params.replyToMessageId));
     }
     const blob = new Blob([Uint8Array.from(attachment.buffer)], {
       type: attachment.contentType,

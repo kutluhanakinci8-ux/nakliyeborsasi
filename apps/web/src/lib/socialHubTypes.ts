@@ -138,6 +138,10 @@ export type SocialHubConnection = {
     username: string | null;
     title: string | null;
   } | null;
+  telegramDiscussionGroup?: {
+    chatId: string;
+    title: string | null;
+  } | null;
 };
 
 export type SocialHubPost = {

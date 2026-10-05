@@ -19,6 +19,9 @@ export type SocialHubConnectionMetadata = {
   telegramChannelChatId?: string;
   telegramChannelUsername?: string | null;
   telegramChannelTitle?: string | null;
+  /** Kanal discussion supergroup chat id */
+  telegramDiscussionGroupChatId?: string;
+  telegramDiscussionGroupTitle?: string | null;
 };
 
 export function parseSocialHubConnectionMetadata(

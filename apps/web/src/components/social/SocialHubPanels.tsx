@@ -204,6 +204,7 @@ type ConnectionsProps = {
   onRoadmapDisconnect?: (platformCode: string) => void;
   onRoadmapRefreshToken?: (platformCode: string) => void;
   onTelegramChannelSetup?: () => void;
+  onTelegramDiscussionSetup?: () => void;
 };
 
 export function SocialConnectionsPanel({
@@ -216,6 +217,7 @@ export function SocialConnectionsPanel({
   onRoadmapDisconnect,
   onRoadmapRefreshToken,
   onTelegramChannelSetup,
+  onTelegramDiscussionSetup,
 }: ConnectionsProps) {
   const permissions = snapshot.permissions ?? {
     canManageConnections: false,
@@ -293,13 +295,22 @@ export function SocialConnectionsPanel({
                     ) : null}
                     {row.platformCode === "TELEGRAM" &&
                     row.statusCode === "CONNECTED" ? (
-                      <p className="social-hub-connection-account">
-                        Yayın kanalı:{" "}
-                        {row.telegramPublishChannel?.username
-                          ? `@${row.telegramPublishChannel.username.replace(/^@/, "")}`
-                          : row.telegramPublishChannel?.title ??
-                            "Henüz tanımlı değil"}
-                      </p>
+                      <>
+                        <p className="social-hub-connection-account">
+                          Yayın kanalı:{" "}
+                          {row.telegramPublishChannel?.username
+                            ? `@${row.telegramPublishChannel.username.replace(/^@/, "")}`
+                            : row.telegramPublishChannel?.title ??
+                              "Henüz tanımlı değil"}
+                        </p>
+                        <p className="social-hub-connection-account">
+                          Kanal yorumları:{" "}
+                          {row.telegramDiscussionGroup?.title ??
+                            (row.telegramDiscussionGroup?.chatId
+                              ? row.telegramDiscussionGroup.chatId
+                              : "Kanal kaydında otomatik veya manuel bağlanır")}
+                        </p>
+                      </>
                     ) : null}
                     <p className="social-hub-connection-summary">
                       {connectionUserSummary(
@@ -334,6 +345,18 @@ export function SocialConnectionsPanel({
                             onClick={() => onTelegramChannelSetup()}
                           >
                             Kanal yayını
+                          </button>
+                        ) : null}
+                        {row.platformCode === "TELEGRAM" &&
+                        row.statusCode === "CONNECTED" &&
+                        onTelegramDiscussionSetup ? (
+                          <button
+                            type="button"
+                            className="btn-account-secondary"
+                            disabled={busy}
+                            onClick={() => onTelegramDiscussionSetup()}
+                          >
+                            Yorum grubu
                           </button>
                         ) : null}
                         <button
