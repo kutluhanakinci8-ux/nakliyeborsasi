@@ -109,6 +109,12 @@ export function buildPublishingOpsLog(
     message:
       "Ekip → Firma ayarları: kampanya landing URL + taslak UTM ile yayında otomatik 🔗 satırı (Telegram Ads paneli değil).",
   });
+  push(entries, {
+    level: "info",
+    channel: "Telegram",
+    message:
+      "Kanal yayını: Sosyal Hub taslakta 2–4 görsel/video + TELEGRAM seçiliyse sendMediaGroup ile kanala albüm gider.",
+  });
 
   if (ownerApprovalRequired) {
     push(entries, {
