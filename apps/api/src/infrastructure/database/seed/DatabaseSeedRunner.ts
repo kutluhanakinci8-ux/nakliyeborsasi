@@ -27,6 +27,9 @@ import {
   patchKutluhanTestDriverPhone,
   seedKutluhanTestFleet,
 } from "./KutluhanTestFleetSeed";
+import { seedKutluhanTelemetryDemo } from "./KutluhanTelemetryDemoSeed";
+import { FleetTelemetryDeviceEntity } from "../entities/FleetTelemetryDeviceEntity";
+import { FleetTelemetryEventEntity } from "../entities/FleetTelemetryEventEntity";
 import { LogisticsPoiEntity } from "../entities/LogisticsPoiEntity";
 import {
   seedLogisticsPoiCorridorSample,
@@ -67,6 +70,10 @@ export class DatabaseSeedRunner implements OnModuleInit {
     private readonly fleetAssignmentRepository: Repository<FleetDriverVehicleAssignmentEntity>,
     @InjectRepository(LogisticsPoiEntity)
     private readonly logisticsPoiRepository: Repository<LogisticsPoiEntity>,
+    @InjectRepository(FleetTelemetryDeviceEntity)
+    private readonly fleetTelemetryDeviceRepository: Repository<FleetTelemetryDeviceEntity>,
+    @InjectRepository(FleetTelemetryEventEntity)
+    private readonly fleetTelemetryEventRepository: Repository<FleetTelemetryEventEntity>,
     private readonly subscriptionPlanCatalog: SubscriptionPlanCatalog,
   ) {}
 
@@ -144,6 +151,16 @@ export class DatabaseSeedRunner implements OnModuleInit {
       );
     } catch {
       // Telefon senkronu atlanır.
+    }
+    try {
+      await seedKutluhanTelemetryDemo({
+        userAccountRepository: this.userAccountRepository,
+        driverRepository: this.fleetDriverRepository,
+        deviceRepository: this.fleetTelemetryDeviceRepository,
+        eventRepository: this.fleetTelemetryEventRepository,
+      });
+    } catch {
+      // Kutluhan telemetri demo atlanır.
     }
     try {
       await this.seedLogisticsPoi();
