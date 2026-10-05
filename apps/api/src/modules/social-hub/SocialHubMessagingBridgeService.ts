@@ -12,6 +12,7 @@ import { labelSocialPlatform } from "./socialHubPlatformLabels";
 import { CompanySocialThreadLinkEntity } from "../../infrastructure/database/entities/CompanySocialThreadLinkEntity";
 import { MessageThreadEntity } from "../../infrastructure/database/entities/MessageThreadEntity";
 import { MessagingThreadApplicationService } from "../messaging/MessagingThreadApplicationService";
+import type { MessagingAttachmentInput } from "../messaging/MessagingAttachmentStorageService";
 import {
   buildSocialInboxThreadDeepLink,
   type SocialHubInboxThreadPreviewRow,
@@ -96,6 +97,7 @@ export class SocialHubMessagingBridgeService {
     companyId: string,
     linkId: string,
     bodyText: string,
+    attachmentsInput?: MessagingAttachmentInput[],
   ): Promise<{ messageId: string; threadId: string }> {
     const link = await this.linkRepository.findOne({
       where: { id: linkId, companyId },
@@ -113,6 +115,7 @@ export class SocialHubMessagingBridgeService {
         threadId: link.messageThreadId,
         bodyText: trimmed,
         senderDisplayName: link.displayLabel,
+        attachmentsInput,
       });
     link.lastInboundAt = new Date();
     await this.linkRepository.save(link);
@@ -181,6 +184,7 @@ export class SocialHubMessagingBridgeService {
     displayLabel: string;
     bodyText: string;
     externalMessageId: string | null;
+    attachmentsInput?: MessagingAttachmentInput[];
   }): Promise<{ ingested: boolean; threadId?: string }> {
     let link = await this.ensureExternalThread({
       companyId: params.companyId,
@@ -212,6 +216,7 @@ export class SocialHubMessagingBridgeService {
       params.companyId,
       link.id,
       params.bodyText,
+      params.attachmentsInput,
     );
     if (dedupKey) {
       link.lastExternalMessageId = dedupKey;

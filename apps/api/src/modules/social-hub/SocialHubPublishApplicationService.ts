@@ -13,6 +13,7 @@ import type {
 import { SocialHubPublishMediaStorageService } from "./SocialHubPublishMediaStorageService";
 import { parseSocialHubMediaRef } from "./socialHubPublishMedia";
 import { parseSocialHubConnectionMetadata } from "./oauth/SocialHubConnectionMetadata";
+import { SocialHubTelegramPublishService } from "./oauth/SocialHubTelegramPublishService";
 
 @Injectable()
 export class SocialHubPublishApplicationService {
@@ -23,6 +24,7 @@ export class SocialHubPublishApplicationService {
     private readonly publishMediaStorage: SocialHubPublishMediaStorageService,
     @InjectRepository(CompanySocialConnectionEntity)
     private readonly connectionRepository: Repository<CompanySocialConnectionEntity>,
+    private readonly telegramPublishService: SocialHubTelegramPublishService,
   ) {}
 
   private async resolveFirstMediaAsset(
@@ -188,6 +190,45 @@ export class SocialHubPublishApplicationService {
         implementationStatus: "pending",
         externalPostId: null,
         message: "WhatsApp şablon yayını bu kanalda desteklenmiyor.",
+      };
+    }
+    if (platformCode === SocialPlatformCode.Telegram) {
+      const image =
+        mediaAsset &&
+        (mediaAsset.contentType.startsWith("image/") ||
+          mediaAsset.contentType.startsWith("video/"))
+          ? mediaAsset
+          : undefined;
+      if (mediaAsset && !image) {
+        return {
+          implementationStatus: "pending",
+          externalPostId: null,
+          message:
+            "Telegram kanal yayını için görsel veya video kullanın; diğer dosya türleri henüz desteklenmiyor.",
+        };
+      }
+      const result = await this.telegramPublishService.publishToChannel({
+        companyId,
+        bodyText: request.bodyText,
+        image: image
+          ? {
+              buffer: image.buffer,
+              contentType: image.contentType,
+              filename: image.filename,
+            }
+          : undefined,
+      });
+      if (!result.ok) {
+        return {
+          implementationStatus: "pending",
+          externalPostId: null,
+          message: result.message,
+        };
+      }
+      return {
+        implementationStatus: "ready",
+        externalPostId: result.externalPostId ?? null,
+        message: result.message,
       };
     }
     return {

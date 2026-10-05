@@ -203,6 +203,7 @@ type ConnectionsProps = {
   onRoadmapConnect?: (platformCode: string) => void;
   onRoadmapDisconnect?: (platformCode: string) => void;
   onRoadmapRefreshToken?: (platformCode: string) => void;
+  onTelegramChannelSetup?: () => void;
 };
 
 export function SocialConnectionsPanel({
@@ -214,6 +215,7 @@ export function SocialConnectionsPanel({
   onRoadmapConnect,
   onRoadmapDisconnect,
   onRoadmapRefreshToken,
+  onTelegramChannelSetup,
 }: ConnectionsProps) {
   const permissions = snapshot.permissions ?? {
     canManageConnections: false,
@@ -289,6 +291,16 @@ export function SocialConnectionsPanel({
                         {row.displayName}
                       </p>
                     ) : null}
+                    {row.platformCode === "TELEGRAM" &&
+                    row.statusCode === "CONNECTED" ? (
+                      <p className="social-hub-connection-account">
+                        Yayın kanalı:{" "}
+                        {row.telegramPublishChannel?.username
+                          ? `@${row.telegramPublishChannel.username.replace(/^@/, "")}`
+                          : row.telegramPublishChannel?.title ??
+                            "Henüz tanımlı değil"}
+                      </p>
+                    ) : null}
                     <p className="social-hub-connection-summary">
                       {connectionUserSummary(
                         row.statusCode,
@@ -312,6 +324,18 @@ export function SocialConnectionsPanel({
                         >
                           {connectLabel}
                         </button>
+                        {row.platformCode === "TELEGRAM" &&
+                        row.statusCode === "CONNECTED" &&
+                        onTelegramChannelSetup ? (
+                          <button
+                            type="button"
+                            className="btn-account-secondary"
+                            disabled={busy}
+                            onClick={() => onTelegramChannelSetup()}
+                          >
+                            Kanal yayını
+                          </button>
+                        ) : null}
                         <button
                           type="button"
                           className="btn-account-ghost"

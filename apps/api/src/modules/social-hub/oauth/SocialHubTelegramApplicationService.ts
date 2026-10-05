@@ -81,7 +81,7 @@ export class SocialHubTelegramApplicationService {
     const setHook = await callTelegramBotApi<boolean>(token, "setWebhook", {
       url: webhookUrl,
       secret_token: webhookSecret,
-      allowed_updates: ["message"],
+      allowed_updates: ["message", "edited_message"],
       drop_pending_updates: false,
     });
     if (!setHook.ok) {

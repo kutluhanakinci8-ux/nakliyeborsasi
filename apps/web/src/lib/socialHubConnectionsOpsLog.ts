@@ -150,7 +150,19 @@ export function buildConnectionsOpsLog(
       level: "info",
       channel: "Telegram",
       message:
-        "Bağlı bot için giden yanıtlar Mesajlar’dan Telegram sendMessage ile gönderilir.",
+        "DM: fotoğraf, video, belge ve ses gelen kutusuna ek olarak düşer (10 MB sınırı). Giden yanıtta ek dosya desteklenir.",
+    });
+    push(entries, {
+      level: "info",
+      channel: "Telegram",
+      message:
+        "Kanal yayını: bot admin → Bağlı hesaplarda «Kanal yayını» → Sosyal Medya «Yayınlar»da TELEGRAM.",
+    });
+    push(entries, {
+      level: "info",
+      channel: "Telegram",
+      message:
+        "Gruplar: BotFather /setjoingroups Enable ve /setprivacy Disable ile grup mesajları DM ile aynı köprüye düşebilir.",
     });
   }
 

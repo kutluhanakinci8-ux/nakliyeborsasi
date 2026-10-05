@@ -133,6 +133,12 @@ export class MessagingAttachmentStorageService {
     if (lower.startsWith("image/")) {
       return true;
     }
+    if (lower.startsWith("video/") || lower.startsWith("audio/")) {
+      return true;
+    }
+    if (lower === "application/octet-stream") {
+      return true;
+    }
     if (
       lower ===
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||

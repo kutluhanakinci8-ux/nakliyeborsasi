@@ -21,6 +21,9 @@ import { TelegramBotProvider } from "./providers/TelegramBotProvider";
 import { SocialHubTelegramApplicationService } from "./oauth/SocialHubTelegramApplicationService";
 import { SocialHubTelegramWebhookIngestService } from "./oauth/SocialHubTelegramWebhookIngestService";
 import { SocialHubTelegramOutboundService } from "./oauth/SocialHubTelegramOutboundService";
+import { SocialHubTelegramFileService } from "./oauth/SocialHubTelegramFileService";
+import { SocialHubTelegramPublishService } from "./oauth/SocialHubTelegramPublishService";
+import { MessageEntity } from "../../infrastructure/database/entities/MessageEntity";
 import { SocialPostPublishScheduler } from "./SocialPostPublishScheduler";
 import { AuditModule } from "../../infrastructure/audit/AuditModule";
 import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogEntity";
@@ -102,6 +105,7 @@ import { PlatformAdminGuard } from "../platform-admin/PlatformAdminGuard";
       CompanySocialOAuthStateEntity,
       CompanySocialOutboundDeliveryEntity,
       CompanyMessagingSettingsEntity,
+      MessageEntity,
     ]),
   ],
   controllers: [
@@ -126,6 +130,8 @@ import { PlatformAdminGuard } from "../platform-admin/PlatformAdminGuard";
     SocialHubTelegramApplicationService,
     SocialHubTelegramWebhookIngestService,
     SocialHubTelegramOutboundService,
+    SocialHubTelegramFileService,
+    SocialHubTelegramPublishService,
     SocialHubRoadmapPublishApplicationService,
     SocialHubOAuthApplicationService,
     SocialHubInstagramServiceTokenBootstrap,

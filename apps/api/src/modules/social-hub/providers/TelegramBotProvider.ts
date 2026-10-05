@@ -3,6 +3,7 @@ import { SocialPlatformCode } from "@nakliyeborsasi/core";
 import { SocialHubOAuthConfigService } from "../oauth/SocialHubOAuthConfigService";
 import { SocialHubTelegramApplicationService } from "../oauth/SocialHubTelegramApplicationService";
 import { SocialHubInboxSyncApplicationService } from "../SocialHubInboxSyncApplicationService";
+import { SocialHubPublishApplicationService } from "../SocialHubPublishApplicationService";
 import type {
   SocialInboxSyncResult,
   SocialOAuthStartResult,
@@ -11,8 +12,6 @@ import type {
   SocialPublishResult,
 } from "./SocialProviderPort";
 
-const PENDING_PUBLISH_MESSAGE =
-  "Telegram kanal yayını desteklenmiyor; Mesajlar üzerinden DM yanıtı kullanın.";
 
 @Injectable()
 export class TelegramBotProvider implements SocialProviderPort {
@@ -22,6 +21,7 @@ export class TelegramBotProvider implements SocialProviderPort {
     private readonly oauthConfig: SocialHubOAuthConfigService,
     private readonly telegramApplicationService: SocialHubTelegramApplicationService,
     private readonly socialHubInboxSyncApplicationService: SocialHubInboxSyncApplicationService,
+    private readonly socialHubPublishApplicationService: SocialHubPublishApplicationService,
   ) {}
 
   public getImplementationStatus(): "pending" | "ready" {
@@ -52,14 +52,14 @@ export class TelegramBotProvider implements SocialProviderPort {
   }
 
   public async publishPost(
-    _companyId: string,
-    _request: SocialPublishRequest,
+    companyId: string,
+    request: SocialPublishRequest,
   ): Promise<SocialPublishResult> {
-    return {
-      implementationStatus: "pending",
-      externalPostId: null,
-      message: PENDING_PUBLISH_MESSAGE,
-    };
+    return this.socialHubPublishApplicationService.publish(
+      companyId,
+      this.platformCode,
+      request,
+    );
   }
 
   public async syncInbox(companyId: string): Promise<SocialInboxSyncResult> {

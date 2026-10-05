@@ -341,6 +341,16 @@ export class SocialHubApiClient {
     );
   }
 
+  public static async setTelegramPublishChannel(
+    accessToken: string,
+    channelRef: string,
+  ): Promise<{ channel: { channelChatId: string; channelTitle: string | null } }> {
+    return socialHubFetch(accessToken, "/connections/TELEGRAM/publish-channel", {
+      method: "POST",
+      body: JSON.stringify({ channelRef }),
+    });
+  }
+
   public static async connectTelegramBot(
     accessToken: string,
     botToken: string,

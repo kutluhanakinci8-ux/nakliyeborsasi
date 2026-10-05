@@ -88,6 +88,7 @@ import {
 } from "./socialHubTemplateRender";
 import { normalizeSocialHubTemplateChannelScope } from "./socialHubTemplateChannelScope";
 import { SocialHubTelegramApplicationService } from "./oauth/SocialHubTelegramApplicationService";
+import { SocialHubTelegramPublishService } from "./oauth/SocialHubTelegramPublishService";
 
 export const INVITABLE_SOCIAL_TEAM_ROLES: readonly CompanyRoleCode[] = [
   CompanyRoleCode.SocialAdmin,
@@ -141,6 +142,7 @@ export class SocialHubApplicationService {
     private readonly publishMediaStorageService: SocialHubPublishMediaStorageService,
     private readonly oauthConfig: SocialHubOAuthConfigService,
     private readonly telegramApplicationService: SocialHubTelegramApplicationService,
+    private readonly telegramPublishService: SocialHubTelegramPublishService,
   ) {}
 
   private async assertSocialHubSubscription(companyId: string): Promise<void> {
@@ -705,6 +707,36 @@ export class SocialHubApplicationService {
       createdThreadIds.push(link.messageThreadId);
     }
     return { createdThreadIds };
+  }
+
+  public async setTelegramPublishChannel(
+    user: AuthenticatedUserContext,
+    channelRef: string,
+  ) {
+    assertSocialHubAdmin(user);
+    await this.assertSocialHubSubscription(user.companyId);
+    const result = await this.telegramPublishService.setPublishChannel(
+      user.companyId,
+      channelRef,
+    );
+    const row = await this.connectionRepository.findOne({
+      where: {
+        companyId: user.companyId,
+        platformCode: SocialPlatformCode.Telegram,
+      },
+    });
+    this.socialHubAuditService.record(
+      user,
+      SocialHubAuditActionCode.SettingsUpdate,
+      "/company/social-hub/connections/TELEGRAM/publish-channel",
+      { telegramChannel: result.channelChatId },
+    );
+    return {
+      channel: result,
+      connection: row
+        ? this.mapConnection(row, this.listProviderMeta())
+        : null,
+    };
   }
 
   public async connectTelegramBot(
@@ -2130,6 +2162,17 @@ export class SocialHubApplicationService {
         : {}),
       ...(row.platformCode === "X"
         ? { xDmInboxGate: buildSocialHubXDmInboxGate() }
+        : {}),
+      ...(platform === SocialPlatformCode.Telegram
+        ? {
+            telegramPublishChannel: metadata.telegramChannelChatId
+              ? {
+                  chatId: metadata.telegramChannelChatId,
+                  username: metadata.telegramChannelUsername ?? null,
+                  title: metadata.telegramChannelTitle ?? null,
+                }
+              : null,
+          }
         : {}),
     };
   }

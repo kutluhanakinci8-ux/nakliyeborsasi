@@ -133,6 +133,11 @@ export type SocialHubConnection = {
   oauthReady?: boolean;
   linkedinDmInboxGate?: SocialHubLinkedInDmInboxGate;
   xDmInboxGate?: SocialHubXDmInboxGate;
+  telegramPublishChannel?: {
+    chatId: string;
+    username: string | null;
+    title: string | null;
+  } | null;
 };
 
 export type SocialHubPost = {

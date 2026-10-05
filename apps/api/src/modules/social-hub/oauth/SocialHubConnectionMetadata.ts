@@ -15,6 +15,10 @@ export type SocialHubConnectionMetadata = {
   roadmapRefreshTokenCipher?: string;
   /** Telegram setWebhook secret_token doğrulaması */
   telegramWebhookSecret?: string;
+  /** Kanal yayını chat id (-100…) */
+  telegramChannelChatId?: string;
+  telegramChannelUsername?: string | null;
+  telegramChannelTitle?: string | null;
 };
 
 export function parseSocialHubConnectionMetadata(
