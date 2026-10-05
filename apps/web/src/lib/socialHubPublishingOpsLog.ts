@@ -103,6 +103,12 @@ export function buildPublishingOpsLog(
     message:
       "Yayın taslağında utm_campaign girildiğinde metindeki bağlantılara yayın anında utm_* eklenir; Analitik sekmesinde son 30 gün kampanya sayıları görünür.",
   });
+  push(entries, {
+    level: "info",
+    channel: "Kampanya",
+    message:
+      "Ekip → Firma ayarları: kampanya landing URL + taslak UTM ile yayında otomatik 🔗 satırı (Telegram Ads paneli değil).",
+  });
 
   if (ownerApprovalRequired) {
     push(entries, {

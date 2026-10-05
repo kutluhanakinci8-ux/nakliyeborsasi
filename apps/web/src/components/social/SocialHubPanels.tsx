@@ -1733,7 +1733,9 @@ type TeamProps = {
   auditFocus: "all" | "webhook";
   integrationsPath: string;
   busy: boolean;
-  onPatchSettings: (patch: Record<string, boolean>) => void;
+  onPatchSettings: (
+    patch: Record<string, boolean | string | null | undefined>,
+  ) => void;
   onRoleChange: (userId: string, roleCode: string) => void;
   onAuditFocusChange: (focus: "all" | "webhook") => void;
   onExportAuditLog: () => void;
@@ -1925,6 +1927,32 @@ export function SocialTeamPanel({
                       </span>
                     )}
                   </div>
+                  {permissions.canManageSettings ? (
+                    <label className="label-light social-hub-campaign-landing-field">
+                      Kampanya landing URL
+                      <input
+                        className="input-light"
+                        type="url"
+                        placeholder="https://lerta.com.tr/…"
+                        disabled={busy}
+                        defaultValue={settings.campaignLandingUrl ?? ""}
+                        key={settings.campaignLandingUrl ?? "empty"}
+                        onBlur={(e) => {
+                          const value = e.target.value.trim();
+                          if (value === (settings.campaignLandingUrl ?? "")) {
+                            return;
+                          }
+                          onPatchSettings({
+                            campaignLandingUrl: value.length > 0 ? value : null,
+                          });
+                        }}
+                      />
+                      <span className="module-hint">
+                        Yayında utm_campaign olan gönderilere UTM’li 🔗 satırı
+                        eklenir (metinde yoksa).
+                      </span>
+                    </label>
+                  ) : null}
                 </section>
               </div>
 

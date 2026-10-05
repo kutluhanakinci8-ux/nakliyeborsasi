@@ -99,3 +99,48 @@ export function resolvePublishBodyText(
   }
   return appendUtmToUrlsInText(bodyText, utm);
 }
+
+export function buildTaggedCampaignLink(
+  landingUrl: string,
+  utm: SocialHubUtmParams,
+): string {
+  return appendUtmToUrl(landingUrl.trim(), utm);
+}
+
+export function resolvePublishBodyForPost(
+  bodyText: string,
+  utmParamsJson: string | null,
+  campaignLandingUrl: string | null | undefined,
+): string {
+  const text = resolvePublishBodyText(bodyText, utmParamsJson);
+  const utm = parseSocialHubUtmParamsJson(utmParamsJson);
+  const landing = campaignLandingUrl?.trim();
+  if (!utm || !landing) {
+    return text;
+  }
+  const hostKey = landing.replace(/\/$/, "");
+  if (text.includes(hostKey)) {
+    return text;
+  }
+  const tagged = buildTaggedCampaignLink(landing, utm);
+  return `${text.trim()}\n\n🔗 ${tagged}`;
+}
+
+export function normalizeCampaignLandingUrl(
+  raw: string | null | undefined,
+): string | null {
+  const trimmed = raw?.trim();
+  if (!trimmed) {
+    return null;
+  }
+  let parsed: URL;
+  try {
+    parsed = new URL(trimmed);
+  } catch {
+    throw new Error("Geçersiz kampanya landing URL.");
+  }
+  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+    throw new Error("Kampanya landing URL http veya https olmalı.");
+  }
+  return parsed.toString().slice(0, 512);
+}
