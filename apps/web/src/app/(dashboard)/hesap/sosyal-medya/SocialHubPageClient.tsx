@@ -712,6 +712,8 @@ export function SocialHubPageClient() {
                 posts={snapshot.recentPosts}
                 permissions={snapshot.permissions}
                 ownerApprovalRequired={snapshot.settings.ownerApprovalRequired}
+                publishingEnabled={snapshot.settings.publishingEnabled}
+                integrationOpsHints={snapshot.integrationOpsHints}
                 draftText={draftText}
                 draftPlatforms={draftPlatforms}
                 draftMedia={draftMedia}

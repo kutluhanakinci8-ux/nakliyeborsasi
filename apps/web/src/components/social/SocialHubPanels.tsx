@@ -17,6 +17,12 @@ import {
   inboxPanelLead,
   inboxPlatformSummary,
 } from "../../lib/socialHubInboxOpsLog";
+import {
+  buildPublishingOpsLog,
+  postStatusBadgeClass,
+  postUserSummary,
+  publishingPanelLead,
+} from "../../lib/socialHubPublishingOpsLog";
 import type {
   SocialHubAuditEntry,
   SocialHubPermissions,
@@ -691,6 +697,8 @@ type PublishingProps = {
   onToggleCalendarSelect: (postId: string) => void;
   onBulkCancelSelected: () => void;
   onBulkRetrySelected: () => void;
+  publishingEnabled?: boolean;
+  integrationOpsHints?: SocialHubSnapshot["integrationOpsHints"];
 };
 
 export function SocialPublishingPanel({
@@ -723,7 +731,54 @@ export function SocialPublishingPanel({
   onToggleCalendarSelect,
   onBulkCancelSelected,
   onBulkRetrySelected,
+  publishingEnabled,
+  integrationOpsHints,
 }: PublishingProps) {
+  const platformLabelByCode = (code: string) =>
+    platformOptions.find((p) => p.code === code)?.label ?? code;
+  const opsLogEntries = useMemo(
+    () =>
+      buildPublishingOpsLog({
+        posts,
+        permissions,
+        ownerApprovalRequired,
+        publishingEnabled,
+        integrationOpsHints,
+        platformLabelByCode,
+      }),
+    [
+      posts,
+      permissions,
+      ownerApprovalRequired,
+      publishingEnabled,
+      integrationOpsHints,
+      platformOptions,
+    ],
+  );
+  const postStats = useMemo(() => {
+    let draft = 0;
+    let scheduled = 0;
+    let failed = 0;
+    let published = 0;
+    for (const post of posts) {
+      if (post.statusCode === "DRAFT") {
+        draft += 1;
+      }
+      if (
+        post.statusCode === "SCHEDULED" ||
+        post.statusCode === "PENDING_APPROVAL"
+      ) {
+        scheduled += 1;
+      }
+      if (post.statusCode === "FAILED") {
+        failed += 1;
+      }
+      if (post.statusCode === "PUBLISHED") {
+        published += 1;
+      }
+    }
+    return { draft, scheduled, failed, published };
+  }, [posts]);
   const gridCells =
     calendarMode === "month"
       ? buildMonthGrid(calendarAnchor)
@@ -758,15 +813,45 @@ export function SocialPublishingPanel({
   ]);
 
   return (
-    <section className="social-hub-panel module-panel module-panel--elevated">
-      <header className="social-hub-panel-head">
-        <h2 className="account-card-title">Yayınlar</h2>
-        <p className="account-card-lead">
-          Taslak, onay, zamanlama ve Meta Graph yayını (metin + görsel). Zamanı gelen
-          gönderiler sunucuda otomatik denenir; sonuç mesajı burada görünür.
-        </p>
-      </header>
-      <div className="social-hub-calendar-grid-wrap">
+    <section className="social-hub-connections-shell module-panel module-panel--elevated">
+      <div className="social-hub-connections-layout">
+        <div className="social-hub-connections-main social-hub-publishing-main">
+          <header className="social-hub-panel-head social-hub-panel-head--premium">
+            <div>
+              <h2 className="account-card-title">Yayınlar</h2>
+              <p className="social-hub-connections-lead">
+                {publishingPanelLead(scheduledUpcoming.length)}
+              </p>
+            </div>
+            <div className="social-hub-stat-chips">
+              {postStats.scheduled > 0 ? (
+                <span className="social-hub-stat-chip social-hub-stat-chip--ok">
+                  {postStats.scheduled} zamanlı / onay
+                </span>
+              ) : null}
+              {postStats.draft > 0 ? (
+                <span className="social-hub-stat-chip">
+                  {postStats.draft} taslak
+                </span>
+              ) : null}
+              {postStats.failed > 0 ? (
+                <span className="social-hub-stat-chip social-hub-stat-chip--warn">
+                  {postStats.failed} başarısız
+                </span>
+              ) : null}
+              {postStats.published > 0 ? (
+                <span className="social-hub-stat-chip social-hub-stat-chip--ok">
+                  {postStats.published} yayında
+                </span>
+              ) : null}
+            </div>
+          </header>
+          {ownerApprovalRequired ? (
+            <p className="social-hub-approval-chip">
+              Onay gerekli — sahip veya sosyal yönetici onaylar.
+            </p>
+          ) : null}
+      <div className="social-hub-calendar-grid-wrap social-hub-calendar-grid-wrap--premium">
         <div className="social-hub-calendar-toolbar">
           <h3 className="social-hub-calendar-title">Yayın takvimi</h3>
           <div className="social-hub-calendar-toolbar-actions">
@@ -919,7 +1004,8 @@ export function SocialPublishingPanel({
         </div>
       ) : null}
       {permissions.canPublish || permissions.canSubmitForApproval ? (
-        <div className="social-hub-compose">
+        <div className="social-hub-compose social-hub-compose-premium">
+          <h3 className="social-hub-subsection-heading">Yeni taslak</h3>
           <label className="label-light">
             Gönderi metni
             <textarea
@@ -983,34 +1069,43 @@ export function SocialPublishingPanel({
           </button>
         </div>
       ) : (
-        <p className="module-hint">Yayınlama yetkiniz yok (rol / firma ayarı).</p>
-      )}
-      {ownerApprovalRequired ? (
-        <p className="module-hint">
-          Firma ayarı: yayınlar için sahip / sosyal yönetici onayı gerekli.
+        <p className="social-hub-connection-summary">
+          Yayınlama yetkiniz yok — ayrıntı operasyon günlüğünde.
         </p>
-      ) : null}
-      <ul className="social-hub-post-list">
+      )}
+      <h3 className="social-hub-subsection-heading">Gönderiler</h3>
+      <ul className="social-hub-post-list social-hub-post-list--premium">
         {posts.length === 0 ? (
-          <li className="module-hint">Henüz gönderi yok.</li>
+          <li className="social-hub-inbox-empty-premium">
+            <p className="social-hub-connection-summary">Henüz gönderi yok.</p>
+          </li>
         ) : (
-          posts.map((post) => (
-            <li key={post.id} className="social-hub-post-item">
+          posts.map((post) => {
+            const platformLabels = post.platformCodes.map(platformLabelByCode);
+            return (
+            <li
+              key={post.id}
+              className="social-hub-post-item social-hub-post-item--premium"
+            >
               <div className="social-hub-post-body">
-                <p className="social-hub-post-meta">
-                  {postStatusLabel(post.statusCode)} · {post.platformCodes.join(", ")}
-                  {post.scheduledAt ? (
-                    <> · {formatSchedule(post.scheduledAt)}</>
+                <div className="social-hub-connection-title-row">
+                  <span className={postStatusBadgeClass(post.statusCode)}>
+                    {postStatusLabel(post.statusCode)}
+                  </span>
+                  {post.mediaUrls?.length ? (
+                    <span className="social-hub-stat-chip">
+                      {post.mediaUrls.length} görsel
+                    </span>
                   ) : null}
+                </div>
+                <p className="social-hub-connection-summary">
+                  {postUserSummary(post, platformLabels)}
                 </p>
-                <p>{post.bodyText.slice(0, 200)}</p>
-                {post.mediaUrls?.length ? (
-                  <p className="module-hint">
-                    {post.mediaUrls.length} medya dosyası ekli
-                  </p>
-                ) : null}
+                <p className="social-hub-post-preview">{post.bodyText.slice(0, 200)}</p>
                 {post.lastErrorMessage ? (
-                  <p className="social-hub-publish-error">{post.lastErrorMessage}</p>
+                  <p className="social-hub-delivery-error-hint">
+                    Yayın hatası — ayrıntı operasyon günlüğünde.
+                  </p>
                 ) : post.statusCode === "PUBLISHED" ? (
                   <p className="social-hub-publish-ok">Kanallarda yayınlandı.</p>
                 ) : null}
@@ -1088,9 +1183,13 @@ export function SocialPublishingPanel({
                 ) : null}
               </div>
             </li>
-          ))
+            );
+          })
         )}
       </ul>
+        </div>
+        <SocialHubOpsLogRail entries={opsLogEntries} />
+      </div>
     </section>
   );
 }
