@@ -63,6 +63,11 @@ fi
 if [[ -x scripts/apply-messaging-prod-ops-env.sh ]]; then
   bash scripts/apply-messaging-prod-ops-env.sh "$INSTALL_DIR" || true
 fi
+if [[ -f scripts/verify-messaging-attachment-s3.sh ]]; then
+  bash scripts/verify-messaging-attachment-s3.sh "$INSTALL_DIR" || {
+    echo "WARN: messaging attachment S3 verify failed (bucket/credentials?)" >&2
+  }
+fi
 
 if [[ -x scripts/apply-mail-sa2-auto-reply-schema.sh ]]; then
   bash scripts/apply-mail-sa2-auto-reply-schema.sh "$INSTALL_DIR" || true

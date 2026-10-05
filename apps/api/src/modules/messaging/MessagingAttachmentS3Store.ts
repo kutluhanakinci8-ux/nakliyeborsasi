@@ -1,8 +1,11 @@
 import {
+  DeleteObjectCommand,
   GetObjectCommand,
+  HeadBucketCommand,
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
+import { randomUUID } from "crypto";
 import type { MessagingAttachmentS3Config } from "./messagingAttachmentStorageConfig";
 
 export class MessagingAttachmentS3Store {
@@ -29,6 +32,35 @@ export class MessagingAttachmentS3Store {
         Key: params.key,
         Body: params.body,
         ContentType: params.contentType,
+      }),
+    );
+  }
+
+  public async headBucket(): Promise<void> {
+    await this.client.send(
+      new HeadBucketCommand({
+        Bucket: this.bucket,
+      }),
+    );
+  }
+
+  /** Put → get → delete; doğrulama için. */
+  public async probeWriteRead(): Promise<void> {
+    const key = `probe/messaging-attachment/${randomUUID()}.txt`;
+    const body = Buffer.from("lerta-messaging-attachment-probe", "utf8");
+    await this.putObject({
+      key,
+      body,
+      contentType: "text/plain",
+    });
+    const read = await this.getObject(key);
+    if (read.toString("utf8") !== body.toString("utf8")) {
+      throw new Error("S3 probe read mismatch");
+    }
+    await this.client.send(
+      new DeleteObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
       }),
     );
   }

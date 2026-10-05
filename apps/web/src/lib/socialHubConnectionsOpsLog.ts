@@ -145,6 +145,23 @@ export function buildConnectionsOpsLog(
         "API_PUBLIC_BASE_URL Telegram tarafından erişilebilir olmalı; aksi halde setWebhook başarısız olur.",
     });
   }
+  const attachHints = snapshot.integrationOpsHints;
+  if (
+    telegramConnected &&
+    attachHints &&
+    attachHints.messagingAttachmentS3BucketConfigured === false
+  ) {
+    const localMb = Math.round(
+      (attachHints.messagingAttachmentLocalMaxBytes ?? 10_000_000) / 1_000_000,
+    );
+    push(entries, {
+      level: "warn",
+      channel: "Telegram",
+      message:
+        `Büyük ekler: S3 henüz kapalı — DM ekleri en fazla ~${localMb} MB. VPS .env: MESSAGING_ATTACHMENT_S3_BUCKET + AWS; doğrulama: scripts/verify-messaging-attachment-s3.sh`,
+    });
+  }
+
   if (telegramConnected) {
     push(entries, {
       level: "info",

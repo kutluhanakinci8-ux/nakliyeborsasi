@@ -2,11 +2,7 @@ import { Controller, Get } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { resolveMessagingVapidFromEnv } from "../../infrastructure/push/messagingVapidEnv";
 import { MessagingAttachmentStorageService } from "./MessagingAttachmentStorageService";
-import {
-  messagingAttachmentLocalMaxBytes,
-  messagingAttachmentS3MaxBytes,
-  resolveMessagingAttachmentS3Config,
-} from "./messagingAttachmentStorageConfig";
+import { buildMessagingAttachmentOpsSnapshot } from "./messagingAttachmentOpsSnapshot";
 import { MessagingRealtimeHubService } from "./MessagingRealtimeHubService";
 import { MessagingOptionalWsService } from "./MessagingOptionalWsService";
 import { MessagingWhatsappBridgeService } from "./MessagingWhatsappBridgeService";
@@ -34,6 +30,7 @@ export class MessagingModuleStatusController {
       s3MaxBytesPerFile: number;
       s3BucketConfigured: boolean;
       allowedContentTypes: string[];
+      ops: ReturnType<typeof buildMessagingAttachmentOpsSnapshot>;
     };
     webPush: { enabled: boolean; isolatedVapid: boolean };
     sse: ReturnType<MessagingRealtimeHubService["getStats"]>;
@@ -116,15 +113,19 @@ export class MessagingModuleStatusController {
         "native_shell_capacitor_docs",
       ],
       translate: { deepl, libretranslate: libre },
-      attachments: {
-        maxCount: MessagingAttachmentStorageService.maxAttachmentsPublic(),
-        maxBytesPerFile: MessagingAttachmentStorageService.maxBytesPublic(),
-        localMaxBytesPerFile: messagingAttachmentLocalMaxBytes(),
-        s3MaxBytesPerFile: messagingAttachmentS3MaxBytes(),
-        s3BucketConfigured: Boolean(resolveMessagingAttachmentS3Config()),
-        allowedContentTypes:
-          MessagingAttachmentStorageService.allowedContentTypesPublic(),
-      },
+      attachments: (() => {
+        const ops = buildMessagingAttachmentOpsSnapshot();
+        return {
+          maxCount: MessagingAttachmentStorageService.maxAttachmentsPublic(),
+          maxBytesPerFile: MessagingAttachmentStorageService.maxBytesPublic(),
+          localMaxBytesPerFile: ops.localMaxBytesPerFile,
+          s3MaxBytesPerFile: ops.s3MaxBytesPerFile,
+          s3BucketConfigured: ops.s3BucketConfigured,
+          allowedContentTypes:
+            MessagingAttachmentStorageService.allowedContentTypesPublic(),
+          ops,
+        };
+      })(),
       webPush: {
         enabled: vapid !== null,
         isolatedVapid: vapid?.isolated ?? false,

@@ -6,6 +6,8 @@ import { MessagingWhatsappBridgeService } from "./MessagingWhatsappBridgeService
 import { MessagingOptionalWsService } from "./MessagingOptionalWsService";
 import { EmailOutboxService } from "../notification/EmailOutboxService";
 import { EmailDeliveryHealthService } from "../notification/EmailDeliveryHealthService";
+import { buildMessagingAttachmentOpsSnapshot } from "./messagingAttachmentOpsSnapshot";
+import { MessagingAttachmentS3ProbeService } from "./MessagingAttachmentS3ProbeService";
 
 @Controller("platform-admin/communications-ops")
 @UseGuards(JwtAuthenticationGuard, PlatformAdminGuard)
@@ -16,6 +18,7 @@ export class PlatformCommunicationsOpsController {
     private readonly messagingOptionalWsService: MessagingOptionalWsService,
     private readonly emailOutboxService: EmailOutboxService,
     private readonly emailDeliveryHealthService: EmailDeliveryHealthService,
+    private readonly messagingAttachmentS3ProbeService: MessagingAttachmentS3ProbeService,
   ) {}
 
   @Get("snapshot")
@@ -43,6 +46,12 @@ export class PlatformCommunicationsOpsController {
           EmailDeliveryHealthService["getSnapshot"]
         >["outboxOperations"];
       };
+    };
+    messagingAttachments: {
+      ops: ReturnType<typeof buildMessagingAttachmentOpsSnapshot>;
+      s3Probe: Awaited<
+        ReturnType<MessagingAttachmentS3ProbeService["probe"]>
+      >;
     };
   }> {
     const mailHealth = this.emailDeliveryHealthService.getSnapshot();
@@ -74,6 +83,10 @@ export class PlatformCommunicationsOpsController {
           lastVerifyError: mailHealth.lastVerifyError,
           outboxOperations: mailHealth.outboxOperations,
         },
+      },
+      messagingAttachments: {
+        ops: buildMessagingAttachmentOpsSnapshot(),
+        s3Probe: await this.messagingAttachmentS3ProbeService.probe(),
       },
     };
   }
