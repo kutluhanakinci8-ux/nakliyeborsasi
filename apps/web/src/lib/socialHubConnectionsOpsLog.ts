@@ -150,7 +150,7 @@ export function buildConnectionsOpsLog(
       level: "info",
       channel: "Telegram",
       message:
-        "DM: fotoğraf, video, belge, ses ve sticker (önizleme) — albüm mesajları tek gönderide birleştirilir (10 MB/ek).",
+        "DM: fotoğraf, video, belge, ses ve sticker (önizleme) — albüm mesajları tek gönderide birleştirilir. Yerel depo ≤10 MB/ek; S3 açıksa 50 MB/ek (MESSAGING_ATTACHMENT_S3_BUCKET).",
     });
     push(entries, {
       level: "info",
