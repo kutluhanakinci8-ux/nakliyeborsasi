@@ -33,6 +33,7 @@ export type SocialHubSettings = {
   socialHubWeeklyEmailEnabled?: boolean;
   socialHubWeeklyEmailLastSentAt?: string | null;
   roadmapInterestPlatformCodes?: string[];
+  campaignLandingUrl?: string | null;
 };
 
 export type SocialHubProviderCapabilities = {

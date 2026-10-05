@@ -88,9 +88,11 @@ import {
 } from "./socialHubTemplateRender";
 import { normalizeSocialHubTemplateChannelScope } from "./socialHubTemplateChannelScope";
 import {
+  buildTaggedCampaignLink,
+  normalizeCampaignLandingUrl,
   normalizeSocialHubUtmInput,
   parseSocialHubUtmParamsJson,
-  resolvePublishBodyText,
+  resolvePublishBodyForPost,
   serializeSocialHubUtmParams,
   type SocialHubUtmInput,
 } from "./socialHubUtm";
@@ -1275,9 +1277,11 @@ export class SocialHubApplicationService {
     const mediaUrls = post.mediaUrlsJson
       ? (JSON.parse(post.mediaUrlsJson) as string[])
       : [];
-    const publishBodyText = resolvePublishBodyText(
+    const companySettings = await this.ensureSettings(post.companyId);
+    const publishBodyText = resolvePublishBodyForPost(
       post.bodyText,
       post.utmParamsJson,
+      companySettings.campaignLandingUrl,
     );
     const errors: string[] = [];
     const successMessages: string[] = [];
@@ -1354,11 +1358,13 @@ export class SocialHubApplicationService {
 
   public async previewTemplate(
     user: AuthenticatedUserContext,
-    body: { bodyText: string },
+    body: { bodyText: string; utmCampaign?: string | null },
   ) {
     assertSocialHubRead(user);
     await this.assertSocialHubSubscription(user.companyId);
-    const variables = await this.buildTemplateRenderVariables(user);
+    const variables = await this.buildTemplateRenderVariables(user, {
+      utmCampaign: body.utmCampaign,
+    });
     return {
       renderedText: renderSocialHubTemplate(body.bodyText, variables),
       variables,
@@ -1476,6 +1482,7 @@ export class SocialHubApplicationService {
       socialSlackDigestHourStart?: number;
       socialSlackDigestHourEnd?: number;
       socialHubWeeklyEmailEnabled?: boolean;
+      campaignLandingUrl?: string | null;
     },
   ) {
     assertSocialHubAdmin(user);
@@ -1578,6 +1585,21 @@ export class SocialHubApplicationService {
     }
     if (patch.socialHubWeeklyEmailEnabled !== undefined) {
       settings.socialHubWeeklyEmailEnabled = patch.socialHubWeeklyEmailEnabled;
+    }
+    if (patch.campaignLandingUrl !== undefined) {
+      if (patch.campaignLandingUrl === null || patch.campaignLandingUrl === "") {
+        settings.campaignLandingUrl = null;
+      } else {
+        try {
+          settings.campaignLandingUrl = normalizeCampaignLandingUrl(
+            patch.campaignLandingUrl,
+          );
+        } catch {
+          throw new ValidationException(
+            "Kampanya landing URL geçersiz (https://…).",
+          );
+        }
+      }
     }
     await this.settingsRepository.save(settings);
     this.socialHubAuditService.record(
@@ -2151,6 +2173,7 @@ export class SocialHubApplicationService {
       roadmapInterestPlatformCodes: parseRoadmapInterestPlatformCodes(
         row.roadmapInterestPlatformCodesJson,
       ),
+      campaignLandingUrl: row.campaignLandingUrl ?? null,
     };
   }
 
@@ -2289,14 +2312,33 @@ export class SocialHubApplicationService {
 
   private async buildTemplateRenderVariables(
     user: AuthenticatedUserContext,
+    options?: { utmCampaign?: string | null },
   ): Promise<Record<string, string>> {
     const company = await this.companyRepository.findOne({
       where: { id: user.companyId },
     });
+    const settings = await this.ensureSettings(user.companyId);
+    const utmCampaign = options?.utmCampaign?.trim() || "";
+    const landing = settings.campaignLandingUrl?.trim();
+    let campaignLink = "";
+    if (landing && utmCampaign) {
+      const utm = normalizeSocialHubUtmInput({
+        utmCampaign,
+        utmSource: "lerta",
+        utmMedium: "social",
+      });
+      if (utm) {
+        campaignLink = buildTaggedCampaignLink(landing, utm);
+      }
+    } else if (landing) {
+      campaignLink = landing;
+    }
     return {
       companyName: company?.legalName?.trim() || "Firma",
       userDisplayName: user.emailAddress.split("@")[0] || "Kullanıcı",
       today: formatSocialHubTemplateToday(),
+      campaignLink,
+      utmCampaign,
     };
   }
 

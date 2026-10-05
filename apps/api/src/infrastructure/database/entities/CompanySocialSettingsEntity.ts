@@ -88,6 +88,9 @@ export class CompanySocialSettingsEntity {
   @Column({ type: "text", nullable: true })
   public roadmapInterestPlatformCodesJson!: string | null;
 
+  @Column({ type: "varchar", length: 512, nullable: true })
+  public campaignLandingUrl!: string | null;
+
   @UpdateDateColumn({ type: "timestamptz" })
   public updatedAt!: Date;
 }

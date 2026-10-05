@@ -2,6 +2,11 @@ import { Controller, Get } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { resolveMessagingVapidFromEnv } from "../../infrastructure/push/messagingVapidEnv";
 import { MessagingAttachmentStorageService } from "./MessagingAttachmentStorageService";
+import {
+  messagingAttachmentLocalMaxBytes,
+  messagingAttachmentS3MaxBytes,
+  resolveMessagingAttachmentS3Config,
+} from "./messagingAttachmentStorageConfig";
 import { MessagingRealtimeHubService } from "./MessagingRealtimeHubService";
 import { MessagingOptionalWsService } from "./MessagingOptionalWsService";
 import { MessagingWhatsappBridgeService } from "./MessagingWhatsappBridgeService";
@@ -25,6 +30,9 @@ export class MessagingModuleStatusController {
     attachments: {
       maxCount: number;
       maxBytesPerFile: number;
+      localMaxBytesPerFile: number;
+      s3MaxBytesPerFile: number;
+      s3BucketConfigured: boolean;
       allowedContentTypes: string[];
     };
     webPush: { enabled: boolean; isolatedVapid: boolean };
@@ -111,6 +119,9 @@ export class MessagingModuleStatusController {
       attachments: {
         maxCount: MessagingAttachmentStorageService.maxAttachmentsPublic(),
         maxBytesPerFile: MessagingAttachmentStorageService.maxBytesPublic(),
+        localMaxBytesPerFile: messagingAttachmentLocalMaxBytes(),
+        s3MaxBytesPerFile: messagingAttachmentS3MaxBytes(),
+        s3BucketConfigured: Boolean(resolveMessagingAttachmentS3Config()),
         allowedContentTypes:
           MessagingAttachmentStorageService.allowedContentTypesPublic(),
       },

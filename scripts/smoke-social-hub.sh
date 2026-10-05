@@ -119,6 +119,17 @@ if [[ -n "${SOCIAL_HUB_SMOKE_EXPECT_PHASE:-}" ]]; then
     }
     echo "OK: status social_hub_telegram_track_complete (BD)"
   fi
+  if [[ "${SOCIAL_HUB_SMOKE_EXPECT_PHASE}" == "be" ]]; then
+    echo "${status_json}" | grep -q '"phase":"be"' || {
+      echo "FAIL: phase not be"
+      exit 1
+    }
+    echo "${status_json}" | grep -q '"social_hub_campaign_landing_publish"' || {
+      echo "FAIL: status missing social_hub_campaign_landing_publish"
+      exit 1
+    }
+    echo "OK: status social_hub_campaign_landing_publish (BE)"
+  fi
   if [[ "${SOCIAL_HUB_SMOKE_EXPECT_PHASE}" == "bb" ]]; then
     echo "${status_json}" | grep -q '"social_hub_pwa_manifest_scope"' || {
       echo "FAIL: status missing social_hub_pwa_manifest_scope feature"

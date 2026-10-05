@@ -2,6 +2,8 @@ export const SOCIAL_HUB_TEMPLATE_VARIABLE_KEYS = [
   "companyName",
   "userDisplayName",
   "today",
+  "campaignLink",
+  "utmCampaign",
 ] as const;
 
 export type SocialHubTemplateVariableKey =
@@ -27,6 +29,17 @@ export function listSocialHubTemplateVariableHints(): Array<{
       key: "today",
       placeholder: "{{today}}",
       description: "Bugünün tarihi (tr-TR)",
+    },
+    {
+      key: "campaignLink",
+      placeholder: "{{campaignLink}}",
+      description:
+        "Firma kampanya landing URL (UTM ile; önizlemede utm_campaign gerekir)",
+    },
+    {
+      key: "utmCampaign",
+      placeholder: "{{utmCampaign}}",
+      description: "Kampanya adı (UTM utm_campaign)",
     },
   ];
 }

@@ -264,7 +264,7 @@ export class SocialHubController {
   @Post("templates/preview")
   public async previewTemplate(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
-    @Body() body: { bodyText: string },
+    @Body() body: { bodyText: string; utmCampaign?: string | null },
   ) {
     return this.socialHubApplicationService.previewTemplate(user, body);
   }
@@ -500,6 +500,7 @@ export class SocialHubController {
       socialSlackDigestHourStart?: number;
       socialSlackDigestHourEnd?: number;
       socialHubWeeklyEmailEnabled?: boolean;
+      campaignLandingUrl?: string | null;
     },
   ) {
     return this.socialHubApplicationService.updateSettings(user, body);
