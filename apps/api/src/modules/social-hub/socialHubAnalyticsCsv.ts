@@ -12,6 +12,10 @@ export function buildSocialHubAnalyticsCsv(params: {
   webhookByPlatform24h: SocialHubWebhookBridgePlatformStat[];
   webhookByPlatform7d: SocialHubWebhookBridgePlatformStat[];
   platformInsights: SocialHubPlatformInsightRow[];
+  utmCampaignPublishedLast30Days: Array<{
+    utmCampaign: string;
+    count: number;
+  }>;
 }): string {
   const header = "section,key,value";
   const lines: string[] = [header];
@@ -35,6 +39,9 @@ export function buildSocialHubAnalyticsCsv(params: {
   }
   for (const row of params.webhookByPlatform7d) {
     push("webhookPlatform7d", row.platformCode, row.inboundBridged24h);
+  }
+  for (const row of params.utmCampaignPublishedLast30Days) {
+    push("utmCampaign30d", row.utmCampaign, row.count);
   }
   for (const row of params.platformInsights) {
     push("metaPlatformInsight", `${row.platformCode}.status`, row.status);

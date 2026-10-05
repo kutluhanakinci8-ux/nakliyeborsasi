@@ -48,6 +48,10 @@ export function SocialHubPageClient() {
   const [busy, setBusy] = useState(false);
   const [draftText, setDraftText] = useState("");
   const [draftPlatforms, setDraftPlatforms] = useState<string[]>(["INSTAGRAM"]);
+  const [draftUtmCampaign, setDraftUtmCampaign] = useState("");
+  const [draftUtmSource, setDraftUtmSource] = useState("lerta");
+  const [draftUtmMedium, setDraftUtmMedium] = useState("social");
+  const [draftUtmContent, setDraftUtmContent] = useState("");
   const [draftMedia, setDraftMedia] = useState<
     Array<{ mediaRef: string; previewUrl: string; filename: string }>
   >([]);
@@ -748,7 +752,15 @@ export function SocialHubPageClient() {
                 draftText={draftText}
                 draftPlatforms={draftPlatforms}
                 draftMedia={draftMedia}
+                draftUtmCampaign={draftUtmCampaign}
+                draftUtmSource={draftUtmSource}
+                draftUtmMedium={draftUtmMedium}
+                draftUtmContent={draftUtmContent}
                 busy={busy}
+                onDraftUtmCampaign={setDraftUtmCampaign}
+                onDraftUtmSource={setDraftUtmSource}
+                onDraftUtmMedium={setDraftUtmMedium}
+                onDraftUtmContent={setDraftUtmContent}
                 platformOptions={platformOptions}
                 calendarPosts={calendarPosts}
                 calendarLoading={calendarLoading}
@@ -843,13 +855,26 @@ export function SocialHubPageClient() {
                 }
                 onCreateDraft={() =>
                   void runAction(async () => {
+                    const utmCampaign = draftUtmCampaign.trim();
                     await SocialHubApiClient.createPost(accessToken, {
                       bodyText: draftText,
                       platformCodes: draftPlatforms,
                       mediaUrls: draftMedia.map((row) => row.mediaRef),
+                      ...(utmCampaign
+                        ? {
+                            utm: {
+                              utmCampaign,
+                              utmSource: draftUtmSource.trim() || "lerta",
+                              utmMedium: draftUtmMedium.trim() || "social",
+                              utmContent: draftUtmContent.trim() || null,
+                            },
+                          }
+                        : {}),
                     });
                     setDraftText("");
                     setDraftMedia([]);
+                    setDraftUtmCampaign("");
+                    setDraftUtmContent("");
                     setStatus("Taslak kaydedildi.");
                   })
                 }

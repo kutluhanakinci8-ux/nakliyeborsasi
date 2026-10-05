@@ -479,6 +479,12 @@ export class SocialHubApiClient {
       bodyText: string;
       platformCodes: string[];
       mediaUrls?: string[];
+      utm?: {
+        utmSource?: string | null;
+        utmMedium?: string | null;
+        utmCampaign?: string | null;
+        utmContent?: string | null;
+      };
     },
   ): Promise<{ post: { id: string } }> {
     return socialHubFetch(accessToken, "/posts", {
