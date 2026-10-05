@@ -51,7 +51,9 @@ export class SocialHubTokenVaultService {
     const token = await this.getAccessToken(companyId, platformCode);
     if (!token) {
       throw new ValidationException(
-        "Kanal erişim tokenı yok; önce OAuth bağlantısı yapın.",
+        platformCode === SocialPlatformCode.Telegram
+          ? "Telegram bot token yok; Bağlı hesaplardan yeniden bağlayın."
+          : "Kanal erişim tokenı yok; önce OAuth bağlantısı yapın.",
       );
     }
     return token;

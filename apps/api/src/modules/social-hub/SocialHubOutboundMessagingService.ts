@@ -10,6 +10,7 @@ import { SocialHubSlackNotificationService } from "./SocialHubSlackNotificationS
 import { SocialHubTikTokOutboundService } from "./oauth/SocialHubTikTokOutboundService";
 import { SocialHubYouTubeOutboundService } from "./oauth/SocialHubYouTubeOutboundService";
 import { SocialHubXOutboundService } from "./oauth/SocialHubXOutboundService";
+import { SocialHubTelegramOutboundService } from "./oauth/SocialHubTelegramOutboundService";
 import { isRoadmapPlatformCode } from "./socialHubRoadmapInterest";
 import { CompanySocialConnectionEntity } from "../../infrastructure/database/entities/CompanySocialConnectionEntity";
 
@@ -36,6 +37,7 @@ export class SocialHubOutboundMessagingService {
     private readonly tikTokOutboundService: SocialHubTikTokOutboundService,
     private readonly youTubeOutboundService: SocialHubYouTubeOutboundService,
     private readonly xOutboundService: SocialHubXOutboundService,
+    private readonly telegramOutboundService: SocialHubTelegramOutboundService,
   ) {}
 
   public async tryDispatchOutbound(params: {
@@ -117,6 +119,12 @@ export class SocialHubOutboundMessagingService {
                   externalThreadId: link.externalThreadId,
                   bodyText: trimmed,
                 })
+              : platformCode === SocialPlatformCode.Telegram
+                ? await this.dispatchTelegramOutbound({
+                    accessToken: token,
+                    externalThreadId: link.externalThreadId,
+                    bodyText: trimmed,
+                  })
             : await this.metaGraphService.sendChannelTextMessage({
                 companyId: params.companyId,
                 platformCode: platformCode as SocialPlatformCode,
@@ -234,6 +242,23 @@ export class SocialHubOutboundMessagingService {
       accessToken: params.accessToken,
       channelId,
       recipientExternalId: params.externalThreadId,
+      bodyText: params.bodyText,
+    });
+    return {
+      ok: send.ok,
+      message: send.message,
+      externalMessageId: send.externalMessageId,
+    };
+  }
+
+  private async dispatchTelegramOutbound(params: {
+    accessToken: string;
+    externalThreadId: string;
+    bodyText: string;
+  }): Promise<{ ok: boolean; message: string; externalMessageId?: string }> {
+    const send = await this.telegramOutboundService.sendTextMessage({
+      botToken: params.accessToken,
+      chatId: params.externalThreadId,
       bodyText: params.bodyText,
     });
     return {

@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   HttpCode,
+  Param,
   Post,
   Query,
   Req,
@@ -15,6 +16,7 @@ import { SocialHubWebhookIngestService } from "./oauth/SocialHubWebhookIngestSer
 import { SocialHubTikTokWebhookIngestService } from "./oauth/SocialHubTikTokWebhookIngestService";
 import { SocialHubYouTubeWebhookIngestService } from "./oauth/SocialHubYouTubeWebhookIngestService";
 import { SocialHubXWebhookIngestService } from "./oauth/SocialHubXWebhookIngestService";
+import { SocialHubTelegramWebhookIngestService } from "./oauth/SocialHubTelegramWebhookIngestService";
 import { buildXWebhookCrcResponse } from "./oauth/socialHubXWebhookCrc";
 
 @Controller("company/social-hub")
@@ -26,6 +28,7 @@ export class SocialHubPublicIntegrationController {
     private readonly socialHubTikTokWebhookIngestService: SocialHubTikTokWebhookIngestService,
     private readonly socialHubYouTubeWebhookIngestService: SocialHubYouTubeWebhookIngestService,
     private readonly socialHubXWebhookIngestService: SocialHubXWebhookIngestService,
+    private readonly socialHubTelegramWebhookIngestService: SocialHubTelegramWebhookIngestService,
   ) {}
 
   @Get("oauth/callback")
@@ -143,6 +146,23 @@ export class SocialHubPublicIntegrationController {
     await this.socialHubYouTubeWebhookIngestService.ingestPayload(body, {
       channelTokenHeader: channelToken,
       authorizationHeader: request.headers.authorization,
+    });
+    return { received: true };
+  }
+
+  @Post("webhooks/telegram/connection/:connectionId")
+  @HttpCode(200)
+  public async telegramWebhook(
+    @Param("connectionId") connectionId: string,
+    @Req() request: Request,
+    @Body() body: Record<string, unknown>,
+  ): Promise<{ received: boolean }> {
+    await this.socialHubTelegramWebhookIngestService.ingestPayload({
+      connectionId,
+      secretTokenHeader: request.headers[
+        "x-telegram-bot-api-secret-token"
+      ] as string | undefined,
+      body,
     });
     return { received: true };
   }

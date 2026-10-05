@@ -13,6 +13,8 @@ export type SocialHubConnectionMetadata = {
   linkedInOrganizationUrn?: string;
   /** TikTok / YouTube (Google) yol haritası refresh token */
   roadmapRefreshTokenCipher?: string;
+  /** Telegram setWebhook secret_token doğrulaması */
+  telegramWebhookSecret?: string;
 };
 
 export function parseSocialHubConnectionMetadata(

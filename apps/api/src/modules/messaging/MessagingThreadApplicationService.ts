@@ -72,6 +72,7 @@ const EXTERNAL_CHANNEL_LABELS: Record<string, string> = {
   [SocialPlatformCode.FacebookMessenger]: "Facebook Messenger",
   [SocialPlatformCode.WhatsAppCloud]: "WhatsApp",
   [SocialPlatformCode.LinkedIn]: "LinkedIn",
+  [SocialPlatformCode.Telegram]: "Telegram",
 };
 
 const EXTERNAL_INBOUND_SENDER_USER_ID = "00000000-0000-0000-0000-000000000001";

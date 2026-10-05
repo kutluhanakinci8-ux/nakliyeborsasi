@@ -72,6 +72,7 @@ const TEMPLATE_CHANNEL_SCOPE_OPTIONS: Array<{ code: string; label: string }> = [
   { code: "FACEBOOK_MESSENGER", label: "Facebook Messenger" },
   { code: "WHATSAPP_CLOUD", label: "WhatsApp Business" },
   { code: "LINKEDIN", label: "LinkedIn" },
+  { code: "TELEGRAM", label: "Telegram" },
   { code: "TIKTOK", label: "TikTok" },
   { code: "YOUTUBE", label: "YouTube" },
 ];

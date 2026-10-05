@@ -115,6 +115,14 @@ export function buildConnectionsOpsLog(
   const entries: SocialHubOpsLogEntry[] = [];
   const connections = snapshot.connections ?? [];
   const providers = snapshot.providers ?? [];
+  const telegramReady = providers.some(
+    (p) => p.platformCode === "TELEGRAM" && p.implementationStatus === "ready",
+  );
+  const telegramConnected = connections.some(
+    (row) =>
+      row.platformCode === "TELEGRAM" && row.statusCode === "CONNECTED",
+  );
+
   const metaOauthReady = connections.some(
     (row) =>
       row.oauthReady &&
@@ -122,6 +130,29 @@ export function buildConnectionsOpsLog(
         row.platformCode === "FACEBOOK_MESSENGER" ||
         row.platformCode === "WHATSAPP_CLOUD"),
   );
+
+  if (telegramReady) {
+    push(entries, {
+      level: "info",
+      channel: "Telegram",
+      message:
+        "BotFather token ile bağlanın; webhook otomatik kaydedilir (bağlantı kimliğine özel URL). Pazarlama kanalı değil — kullanıcı DM’leri Mesajlar’a düşer.",
+    });
+    push(entries, {
+      level: "info",
+      channel: "Telegram",
+      message:
+        "API_PUBLIC_BASE_URL Telegram tarafından erişilebilir olmalı; aksi halde setWebhook başarısız olur.",
+    });
+  }
+  if (telegramConnected) {
+    push(entries, {
+      level: "info",
+      channel: "Telegram",
+      message:
+        "Bağlı bot için giden yanıtlar Mesajlar’dan Telegram sendMessage ile gönderilir.",
+    });
+  }
 
   if (metaOauthReady) {
     push(entries, {

@@ -332,6 +332,8 @@ export type SocialHubSnapshot = {
     whatsapp: string;
     tiktok: string;
     youtube: string;
+    x?: string;
+    telegramWebhookPattern?: string;
   };
   integrationWebhookReadiness?: {
     tiktok: SocialHubBetaWebhookReadiness;

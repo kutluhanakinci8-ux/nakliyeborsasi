@@ -69,6 +69,8 @@ export function SocialHubPageClient() {
   const [auditFocus, setAuditFocus] = useState<"all" | "webhook">("all");
   const [analytics, setAnalytics] = useState<SocialHubAnalytics | null>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [telegramConnectOpen, setTelegramConnectOpen] = useState(false);
+  const [telegramTokenDraft, setTelegramTokenDraft] = useState("");
   const [inboxThreadsPreview, setInboxThreadsPreview] = useState<
     SocialHubInboxThreadPreview[]
   >([]);
@@ -362,7 +364,12 @@ export function SocialHubPageClient() {
               <SocialConnectionsPanel
                 snapshot={snapshot}
                 busy={busy}
-                onConnect={(code) =>
+                onConnect={(code) => {
+                  if (code === "TELEGRAM") {
+                    setTelegramTokenDraft("");
+                    setTelegramConnectOpen(true);
+                    return;
+                  }
                   void runAction(async () => {
                     const result = await SocialHubApiClient.connectPlatform(
                       accessToken,
@@ -373,8 +380,8 @@ export function SocialHubPageClient() {
                       return;
                     }
                     setStatus(result.oauth.message);
-                  })
-                }
+                  });
+                }}
                 onDisconnect={(code) =>
                   void runAction(async () => {
                     await SocialHubApiClient.disconnectPlatform(accessToken, code);
@@ -989,6 +996,69 @@ export function SocialHubPageClient() {
             ) : null}
           </>
         )}
+      {telegramConnectOpen ? (
+        <div
+          className="social-hub-modal-backdrop"
+          role="presentation"
+          onClick={() => !busy && setTelegramConnectOpen(false)}
+        >
+          <div
+            className="social-hub-modal"
+            role="dialog"
+            aria-labelledby="telegram-connect-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2 id="telegram-connect-title" className="social-hub-modal-title">
+              Telegram bot bağlantısı
+            </h2>
+            <p className="module-hint">
+              @BotFather üzerinden aldığınız bot token&apos;ı girin. OAuth
+              kullanılmaz; webhook bağlantı kaydına otomatik tanımlanır.
+            </p>
+            <label className="social-hub-modal-label" htmlFor="telegram-bot-token">
+              Bot token
+            </label>
+            <input
+              id="telegram-bot-token"
+              type="password"
+              className="social-hub-modal-input"
+              autoComplete="off"
+              value={telegramTokenDraft}
+              onChange={(event) => setTelegramTokenDraft(event.target.value)}
+              placeholder="123456789:AA..."
+            />
+            <div className="social-hub-modal-actions">
+              <button
+                type="button"
+                className="btn-account-secondary"
+                disabled={busy}
+                onClick={() => setTelegramConnectOpen(false)}
+              >
+                İptal
+              </button>
+              <button
+                type="button"
+                className="btn-account-primary"
+                disabled={busy || !telegramTokenDraft.trim()}
+                onClick={() =>
+                  void runAction(async () => {
+                    await SocialHubApiClient.connectTelegramBot(
+                      accessToken,
+                      telegramTokenDraft.trim(),
+                    );
+                    setTelegramConnectOpen(false);
+                    setTelegramTokenDraft("");
+                    setStatus("Telegram bot bağlandı.");
+                    await reload();
+                  })
+                }
+              >
+                Bağla
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

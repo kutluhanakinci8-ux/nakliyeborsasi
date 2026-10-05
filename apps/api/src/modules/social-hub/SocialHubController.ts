@@ -38,6 +38,17 @@ export class SocialHubController {
     return this.socialHubApplicationService.startConnect(user, platformCode);
   }
 
+  @Post("connections/TELEGRAM/connect-bot")
+  public async connectTelegramBot(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: { botToken: string },
+  ) {
+    return this.socialHubApplicationService.connectTelegramBot(
+      user,
+      body.botToken ?? "",
+    );
+  }
+
   @Post("connections/:platformCode/disconnect")
   public async disconnect(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
