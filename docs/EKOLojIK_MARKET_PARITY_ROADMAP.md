@@ -82,7 +82,7 @@ Detay: kullanıcı onayı sonrası `docs/LERTA_MAIL_MESSAGING_PARITY_100_ROADMAP
 |-----|-----|--------|
 | S1 | ek-s1 | Hub embed (● EK-U1) |
 | S2 | ek-s2 | Bağlantılar + OAuth (● `tab=connections` + OAuth `webReturnQuery`) |
-| S3 | ek-s3 | Inbox özet + sync |
+| S3 | ek-s3 | Inbox özet + sync (● `tab=inbox` + sync özet paneli) |
 | S4 | ek-s4 | Yayınlar + UTM + medya |
 | S5 | ek-s5 | Şablonlar |
 | S6 | ek-s6 | Analitik |

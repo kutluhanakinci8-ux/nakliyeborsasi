@@ -685,6 +685,75 @@ export function SocialInboxPanel({
             </p>
           ) : null}
 
+          {snapshot.inboxSyncSummary?.channels?.length ? (
+            <div className="social-hub-inbox-sync-summary">
+              <h3 className="social-hub-subsection-heading">Kanal senkron özet</h3>
+              <p className="social-hub-connection-summary">
+                Son özet:{" "}
+                {new Date(snapshot.inboxSyncSummary.generatedAt).toLocaleString(
+                  "tr-TR",
+                )}
+              </p>
+              <ul className="social-hub-health-grid social-hub-health-grid--premium">
+                {snapshot.inboxSyncSummary.channels.map((row) => {
+                  const canSync =
+                    row.connectionStatusCode === "CONNECTED" &&
+                    (row.inboxHistorySync || row.inboxWebhook);
+                  return (
+                    <li
+                      key={row.platformCode}
+                      className="social-hub-health-card social-hub-health-card--premium"
+                    >
+                      <div className="social-hub-connection-title-row">
+                        <h3>{row.label}</h3>
+                        <span
+                          className={
+                            row.openCount > 0
+                              ? "social-hub-stat-chip social-hub-stat-chip--ok"
+                              : "social-hub-stat-chip"
+                          }
+                        >
+                          {row.openCount} açık
+                        </span>
+                      </div>
+                      <p className="social-hub-connection-summary">
+                        Webhook (24s): {row.webhookInboundBridged24h}
+                        {row.dmInboxGateLabel
+                          ? ` · ${row.dmInboxGateLabel}`
+                          : row.inboxHistorySync
+                            ? " · Geçmiş sync"
+                            : row.inboxWebhook
+                              ? " · Webhook gelen kutusu"
+                              : ""}
+                      </p>
+                      {row.lastSyncAt ? (
+                        <p className="module-hint social-hub-inbox-sync-last">
+                          Son sync:{" "}
+                          {new Date(row.lastSyncAt).toLocaleString("tr-TR")}
+                          {row.lastSyncMessage ? ` — ${row.lastSyncMessage}` : ""}
+                        </p>
+                      ) : (
+                        <p className="module-hint social-hub-inbox-sync-last">
+                          Henüz senkron kaydı yok.
+                        </p>
+                      )}
+                      {canSync ? (
+                        <button
+                          type="button"
+                          className="btn-account-ghost"
+                          disabled={busy}
+                          onClick={() => onSync(row.platformCode)}
+                        >
+                          Senkron
+                        </button>
+                      ) : null}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ) : null}
+
           <div className="social-hub-inbox-actions-premium">
             <Link
               href={inboxSummary.messagingDeepLink}

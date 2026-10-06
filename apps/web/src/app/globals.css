@@ -16625,6 +16625,14 @@ button.btn-secondary {
   white-space: nowrap;
 }
 
+.social-hub-inbox-sync-summary {
+  margin-top: 1.25rem;
+}
+
+.social-hub-inbox-sync-last {
+  margin: 0.35rem 0 0.5rem;
+}
+
 .social-hub-sync-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));

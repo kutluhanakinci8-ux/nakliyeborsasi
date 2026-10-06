@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { SocialHubPageClient } from "../../app/(dashboard)/hesap/sosyal-medya/SocialHubPageClient";
@@ -30,7 +31,11 @@ import {
   ekolojikSocialDmInboxHref,
   EKOLOJIK_HUB_PATH,
 } from "../../lib/ekolojikSocialMessagingDeepLink";
-import { EKOLOJIK_SOCIAL_OAUTH_WEB_RETURN_QUERY } from "../../lib/ekolojikSocialHubDeepLink";
+import {
+  EKOLOJIK_SOCIAL_OAUTH_WEB_RETURN_QUERY,
+  ekolojikSocialHubInboxHref,
+  isEkolojikSocialHubInboxTab,
+} from "../../lib/ekolojikSocialHubDeepLink";
 import {
   parseEkolojikHubSection,
   type EkolojikHubSection,
@@ -50,6 +55,10 @@ export function EkolojikCommunicationsHubClient() {
   const section = parseEkolojikHubSection(searchParams.get("bolum"));
   const socialDmInbox = isEkolojikSocialDmInbox(section, searchParams);
   const groupInbox = isEkolojikGroupInbox(section, searchParams);
+  const socialInboxHub = isEkolojikSocialHubInboxTab(
+    searchParams.get("bolum"),
+    searchParams.get("tab"),
+  );
   const [composeTo, setComposeTo] = useState<string | undefined>(undefined);
   const [openCompose, setOpenCompose] = useState(false);
 
@@ -162,6 +171,15 @@ export function EkolojikCommunicationsHubClient() {
     });
   };
 
+  const navigateSocialInboxHub = useCallback(() => {
+    const params = new URLSearchParams();
+    params.set("bolum", "sosyal");
+    params.set("tab", "inbox");
+    router.replace(`/marketim/posta-ve-mesaj?${params.toString()}`, {
+      scroll: false,
+    });
+  }, [router]);
+
   const switchMessagingRailMode = useCallback(
     (mode: "chat" | "email") => {
       setChatBackgroundPickerOpen(false);
@@ -257,6 +275,17 @@ export function EkolojikCommunicationsHubClient() {
           <button
             type="button"
             className={
+              socialInboxHub
+                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
+                : "ekolojik-comms-sidebar-item"
+            }
+            onClick={() => navigateSocialInboxHub()}
+          >
+            Sosyal gelen kutusu
+          </button>
+          <button
+            type="button"
+            className={
               section === "gonderilen"
                 ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
                 : "ekolojik-comms-sidebar-item"
@@ -312,7 +341,7 @@ export function EkolojikCommunicationsHubClient() {
           <button
             type="button"
             className={
-              section === "sosyal"
+              section === "sosyal" && !socialInboxHub
                 ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
                 : "ekolojik-comms-sidebar-item"
             }
@@ -335,7 +364,11 @@ export function EkolojikCommunicationsHubClient() {
           {showMessagingChat && socialDmInbox ? (
             <p className="module-hint ekolojik-comms-social-dm-hint">
               Instagram, WhatsApp, Telegram ve diğer bağlı kanallardan gelen DM
-              konuşmaları. Yanıtlar Social Hub köprüsü ile kanala iletilir.
+              konuşmaları. Yanıtlar Social Hub köprüsü ile kanala iletilir.{" "}
+              <Link href={ekolojikSocialHubInboxHref()}>
+                Sosyal gelen kutusu
+              </Link>{" "}
+              üzerinden kanal özet ve senkron.
             </p>
           ) : null}
           {showMessagingChat && groupInbox ? (

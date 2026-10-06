@@ -3,7 +3,7 @@
 set -euo pipefail
 API_BASE="${EKOLojIK_API_BASE:-${SOCIAL_HUB_API_BASE:-http://127.0.0.1:3000/api/v1}}"
 WEB_BASE="${EKOLojIK_WEB_PUBLIC_URL:-${SOCIAL_HUB_WEB_PUBLIC_URL:-http://127.0.0.1:3001}}"
-EXPECT_PHASE="${EKOLOJIK_SMOKE_EXPECT_PHASE:-ek-s2}"
+EXPECT_PHASE="${EKOLOJIK_SMOKE_EXPECT_PHASE:-ek-s3}"
 
 echo "== Ekolojik market public status =="
 status_json="$(curl -fsS "${API_BASE}/public/ekolojik-market/status")"
@@ -138,6 +138,16 @@ echo "${status_json}" | grep -q '"hubSection":"sosyal"' || {
   exit 1
 }
 echo "OK: socialHubConnections OAuth return path"
+echo "${status_json}" | grep -q '"ekolojik_social_hub_inbox_sync_summary"' || {
+  echo "FAIL: missing ekolojik_social_hub_inbox_sync_summary"
+  exit 1
+}
+echo "OK: feature ekolojik_social_hub_inbox_sync_summary (EK-S3)"
+echo "${status_json}" | grep -q '"hubTab":"inbox"' || {
+  echo "FAIL: missing socialHubInbox hubTab inbox"
+  exit 1
+}
+echo "OK: socialHubInbox hub deep link"
 
 echo "== Ekolojik hub web route =="
 code="$(curl -sS -o /dev/null -w "%{http_code}" "${WEB_BASE}/marketim/posta-ve-mesaj")"

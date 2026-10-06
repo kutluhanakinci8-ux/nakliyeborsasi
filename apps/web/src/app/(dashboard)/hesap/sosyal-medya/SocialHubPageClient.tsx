@@ -799,6 +799,12 @@ export function SocialHubPageClient({
                     );
                     setStatus(result.sync.message);
                     await reload();
+                    const preview =
+                      await SocialHubApiClient.fetchInboxThreadsPreview(
+                        accessToken,
+                        10,
+                      );
+                    setInboxThreadsPreview(preview);
                   })
                 }
               />
