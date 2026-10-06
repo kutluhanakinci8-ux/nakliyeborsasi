@@ -31,6 +31,7 @@ export function isEkolojikMailDnsDeliverabilityHub(
   bolum: string | null,
   mailSettings: string | null | undefined,
   mailDmarc: string | null,
+  mailEngagement?: string | null,
 ): boolean {
   if (bolum !== "posta" && bolum !== null && bolum !== "") {
     return false;
@@ -38,19 +39,30 @@ export function isEkolojikMailDnsDeliverabilityHub(
   if (mailSettings !== "deliverability") {
     return false;
   }
-  const raw = mailDmarc?.toLowerCase();
-  return raw !== "1" && raw !== "true";
+  const dmarcRaw = mailDmarc?.toLowerCase();
+  const engagementRaw = mailEngagement?.toLowerCase();
+  return (
+    dmarcRaw !== "1" &&
+    dmarcRaw !== "true" &&
+    engagementRaw !== "1" &&
+    engagementRaw !== "true"
+  );
 }
 
 export function isEkolojikMailDmarcHub(
   bolum: string | null,
   mailSettings: string | null | undefined,
   mailDmarc: string | null,
+  mailEngagement?: string | null,
 ): boolean {
   if (bolum !== "posta" && bolum !== null && bolum !== "") {
     return false;
   }
   if (mailSettings !== "deliverability") {
+    return false;
+  }
+  const engagementRaw = mailEngagement?.toLowerCase();
+  if (engagementRaw === "1" || engagementRaw === "true") {
     return false;
   }
   const raw = mailDmarc?.toLowerCase();

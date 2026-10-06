@@ -33,6 +33,8 @@ export type MailWebEmbedHandoff = {
   mailPwaAssist?: boolean;
   /** Yeni mesajda AI gövde önerisi (EK-P9, opsiyonel). */
   composeAiAssist?: boolean;
+  /** Teslimat panelinde engagement + webhook analitik (EK-P10). */
+  mailEngagementAssist?: boolean;
 };
 
 export function parseMailWebEmbedView(

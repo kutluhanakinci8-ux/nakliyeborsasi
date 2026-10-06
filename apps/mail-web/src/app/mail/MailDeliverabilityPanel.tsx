@@ -10,6 +10,8 @@ type Props = {
   accessToken: string;
   /** EK-P7 hub deep link — DMARC aggregate bölümüne odaklan. */
   highlightDmarc?: boolean;
+  /** EK-P10 hub deep link — engagement + webhook analitik. */
+  highlightEngagement?: boolean;
 };
 
 const PERIOD_OPTIONS = [7, 30, 90] as const;
@@ -17,8 +19,11 @@ const PERIOD_OPTIONS = [7, 30, 90] as const;
 export function MailDeliverabilityPanel({
   accessToken,
   highlightDmarc = false,
+  highlightEngagement = false,
 }: Props) {
-  const [days, setDays] = useState<number>(highlightDmarc ? 90 : 30);
+  const [days, setDays] = useState<number>(
+    highlightDmarc ? 90 : highlightEngagement ? 30 : 30,
+  );
   const [hub, setHub] = useState<MailDeliverabilityHub | null>(null);
   const [error, setError] = useState("");
 
@@ -45,6 +50,14 @@ export function MailDeliverabilityPanel({
     el?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [highlightDmarc, hub]);
 
+  useEffect(() => {
+    if (!highlightEngagement || !hub) {
+      return;
+    }
+    const el = document.getElementById("mail-engagement-analytics");
+    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [highlightEngagement, hub]);
+
   if (error) {
     return <p className="login-error">{error}</p>;
   }
@@ -53,6 +66,7 @@ export function MailDeliverabilityPanel({
   }
 
   const engagement = hub.engagement ?? hub.engagement30d;
+  const webhooks = hub.webhookAnalytics;
 
   return (
     <div className="mail-deliverability-panel">
@@ -60,6 +74,13 @@ export function MailDeliverabilityPanel({
         <p className="mail-parity-assist-banner" role="status">
           DMARC aggregate: SPF/DKIM geçiş oranları ve rapor satırları bu bölümde.
           DNS kayıtları yukarıda; dönem seçerek trendi inceleyin.
+        </p>
+      ) : null}
+      {highlightEngagement ? (
+        <p className="mail-parity-assist-banner" role="status">
+          Engagement: outbox açılma/tıklama/bounce oranları. Webhook uç noktaları
+          ile <code>message.opened</code>, <code>message.clicked</code> ve{" "}
+          <code>message.bounced</code> olaylarını harici sisteme aktarabilirsiniz.
         </p>
       ) : null}
       <p className="mail-settings-lead">
@@ -99,7 +120,16 @@ export function MailDeliverabilityPanel({
       ) : (
         <p>Özel domain bağlı değil.</p>
       )}
-      <h4 className="mail-deliverability-subhead">Engagement</h4>
+      <h4
+        id="mail-engagement-analytics"
+        className={
+          highlightEngagement
+            ? "mail-deliverability-subhead mail-deliverability-subhead--focus"
+            : "mail-deliverability-subhead"
+        }
+      >
+        Engagement
+      </h4>
       <ul>
         <li>Gönderim: {engagement?.sentInPeriod ?? "—"}</li>
         <li>Bounce: {engagement?.bounceRatePercent ?? "—"}%</li>
@@ -116,6 +146,38 @@ export function MailDeliverabilityPanel({
             </li>
           ))}
         </ul>
+      ) : null}
+      {webhooks ? (
+        <>
+          <h4
+            id="mail-webhook-analytics"
+            className="mail-deliverability-subhead"
+          >
+            Webhook analitik
+          </h4>
+          <ul>
+            <li>
+              Public API: {webhooks.publicApiAllowed ? "açık" : "plan gerekli"}
+            </li>
+            <li>
+              Uç nokta: {webhooks.enabledEndpointCount} aktif /{" "}
+              {webhooks.endpointCount} toplam
+            </li>
+            <li>
+              Abone olaylar:{" "}
+              {webhooks.subscribedEvents.length > 0
+                ? webhooks.subscribedEvents.join(", ")
+                : "—"}
+            </li>
+            <li>
+              Engagement olayları:{" "}
+              {webhooks.engagementWebhookEvents.join(", ")}
+            </li>
+            <li>
+              Yapılandırma API: <code>{webhooks.configureApiPath}</code>
+            </li>
+          </ul>
+        </>
       ) : null}
       <h4
         id="mail-dmarc-aggregate"

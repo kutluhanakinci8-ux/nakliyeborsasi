@@ -115,12 +115,15 @@ export function useMailClientController({
   const deepLinkMailDmarcHandled = useRef(false);
   const deepLinkMailPwaHandled = useRef(false);
   const deepLinkComposeAiHandled = useRef(false);
+  const deepLinkMailEngagementHandled = useRef(false);
   const [mailBulkAssistActive, setMailBulkAssistActive] = useState(false);
   const [mailSwipeAssistActive, setMailSwipeAssistActive] = useState(false);
   const [mailDmarcAssistActive, setMailDmarcAssistActive] = useState(false);
   const [mailPwaAssistActive, setMailPwaAssistActive] = useState(false);
   const [composeAiAssistActive, setComposeAiAssistActive] = useState(false);
   const [composeAiDraftBusy, setComposeAiDraftBusy] = useState(false);
+  const [mailEngagementAssistActive, setMailEngagementAssistActive] =
+    useState(false);
   const [view, setView] = useState<MailClientView>("inbox");
   const [summary, setSummary] = useState<MailInboxSummary | null>(null);
   const [sendReadiness, setSendReadiness] = useState<MailSendReadiness | null>(
@@ -740,6 +743,20 @@ export function useMailClientController({
     setComposeAiAssistActive(true);
     setComposeRich(true);
     setComposeOpen(true);
+  }, [accessToken, searchParams]);
+
+  useEffect(() => {
+    if (
+      !accessToken ||
+      searchParams.get("mailEngagement") !== "1" ||
+      deepLinkMailEngagementHandled.current
+    ) {
+      return;
+    }
+    deepLinkMailEngagementHandled.current = true;
+    setMailEngagementAssistActive(true);
+    setSettingsInitialView("deliverability");
+    setSettingsOpen(true);
   }, [accessToken, searchParams]);
 
   useEffect(() => {
@@ -1842,6 +1859,8 @@ export function useMailClientController({
     setComposeAiAssistActive,
     composeAiDraftBusy,
     setComposeAiDraftBusy,
+    mailEngagementAssistActive,
+    setMailEngagementAssistActive,
     setShortcutsOpen,
     setSummary,
     setThreadMessages,

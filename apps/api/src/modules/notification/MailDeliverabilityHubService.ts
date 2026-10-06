@@ -6,6 +6,7 @@ import { EmailEngagementService } from "./EmailEngagementService";
 import { EmailSuppressionService } from "./EmailSuppressionService";
 import { MailDmarcAggregateService } from "./MailDmarcAggregateService";
 import { MailDmarcAggregateReportEntity } from "../../infrastructure/database/entities/MailDmarcAggregateReportEntity";
+import { MailOrganizationIntegrationService } from "./MailOrganizationIntegrationService";
 
 @Injectable()
 export class MailDeliverabilityHubService {
@@ -14,6 +15,7 @@ export class MailDeliverabilityHubService {
     private readonly emailEngagementService: EmailEngagementService,
     private readonly emailSuppressionService: EmailSuppressionService,
     private readonly mailDmarcAggregateService: MailDmarcAggregateService,
+    private readonly mailOrganizationIntegrationService: MailOrganizationIntegrationService,
     @InjectRepository(MailDmarcAggregateReportEntity)
     private readonly dmarcRepository: Repository<MailDmarcAggregateReportEntity>,
   ) {}
@@ -43,6 +45,15 @@ export class MailDeliverabilityHubService {
     };
     score: number;
     hintsTr: string[];
+    webhookAnalytics: {
+      publicApiAllowed: boolean;
+      endpointCount: number;
+      enabledEndpointCount: number;
+      subscribedEvents: string[];
+      availableWebhookEvents: string[];
+      engagementWebhookEvents: string[];
+      configureApiPath: string;
+    };
   }> {
     const periodDays = days <= 0 || days > 90 ? 30 : days;
     const since = new Date(Date.now() - periodDays * 24 * 60 * 60 * 1000);
@@ -114,6 +125,24 @@ export class MailDeliverabilityHubService {
       score += 8;
     }
     score = Math.min(100, score);
+    const integration =
+      await this.mailOrganizationIntegrationService.getIntegrationSnapshot(
+        organizationId,
+      );
+    const subscribedEvents = [
+      ...new Set(
+        integration.webhooks.flatMap((endpoint) => endpoint.events ?? []),
+      ),
+    ].sort();
+    const engagementWebhookEvents = integration.availableWebhookEvents.filter(
+      (event) =>
+        event === "message.opened" ||
+        event === "message.clicked" ||
+        event === "message.bounced",
+    );
+    const enabledEndpointCount = integration.webhooks.filter(
+      (endpoint) => endpoint.enabled,
+    ).length;
     return {
       periodDays,
       dns: dnsBlock,
@@ -128,6 +157,16 @@ export class MailDeliverabilityHubService {
       },
       score,
       hintsTr,
+      webhookAnalytics: {
+        publicApiAllowed: integration.allowed,
+        endpointCount: integration.webhooks.length,
+        enabledEndpointCount,
+        subscribedEvents,
+        availableWebhookEvents: [...integration.availableWebhookEvents],
+        engagementWebhookEvents: [...engagementWebhookEvents],
+        configureApiPath:
+          "/api/v1/company/mail-identity/integration/webhooks",
+      },
     };
   }
 

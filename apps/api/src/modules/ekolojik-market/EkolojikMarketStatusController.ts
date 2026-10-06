@@ -1,7 +1,7 @@
 import { Controller, Get } from "@nestjs/common";
 import { MessagingAttachmentStorageService } from "../messaging/MessagingAttachmentStorageService";
 
-const EK_PHASE = "ek-p9";
+const EK_PHASE = "ek-p10";
 
 const EK_MAIL_PWA_NB_FEATURES = [
   "mail_web_pwa_manifest_scope",
@@ -73,6 +73,7 @@ const EK_FEATURES = [
   "ekolojik_mail_deliverability_dmarc_hub",
   "ekolojik_mail_pwa_offline_push_hub",
   "ekolojik_mail_ai_compose_hub",
+  "ekolojik_mail_engagement_webhook_analytics_hub",
   "ekolojik_messaging_full_chat",
   "ekolojik_messaging_sse_redis_fanout",
   "ekolojik_messaging_interactions_parity",
@@ -110,6 +111,7 @@ const EK_PHASE_MILESTONES = [
   "ek-p7",
   "ek-p8",
   "ek-p9",
+  "ek-p10",
   "ek-m1",
   "ek-m2",
   "ek-m3",
@@ -269,6 +271,16 @@ export class EkolojikMarketStatusController {
       nbSuggestComposeDraftApiPath: string;
       nbAiComposeCapabilityPath: string;
       optional: boolean;
+    };
+    mailEngagementWebhook: {
+      phaseCode: string;
+      hubSection: string;
+      engagementPanelPath: string;
+      embedQueryParams: string[];
+      nbMailWebSurfaces: string[];
+      nbDeliverabilityHubApiPath: string;
+      nbWebhookConfigureApiPath: string;
+      nbEngagementWebhookEvents: string[];
     };
     socialHubConnections: {
       hubSection: string;
@@ -612,6 +624,27 @@ export class EkolojikMarketStatusController {
         nbAiComposeCapabilityPath:
           "/api/v1/company/mail-inbox/account-hub#aiCompose",
         optional: true,
+      },
+      mailEngagementWebhook: {
+        phaseCode: "ek-p10",
+        hubSection: "posta",
+        engagementPanelPath:
+          "/marketim/posta-ve-mesaj?bolum=posta&mailSettings=deliverability&mailEngagement=1",
+        embedQueryParams: ["mailSettings", "mailEngagement"],
+        nbMailWebSurfaces: [
+          "mail-engagement-analytics",
+          "mail-webhook-analytics",
+          "MailDeliverabilityPanel",
+        ],
+        nbDeliverabilityHubApiPath:
+          "/api/v1/company/mail-inbox/deliverability-hub",
+        nbWebhookConfigureApiPath:
+          "/api/v1/company/mail-identity/integration/webhooks",
+        nbEngagementWebhookEvents: [
+          "message.opened",
+          "message.clicked",
+          "message.bounced",
+        ],
       },
       socialHubConnections: {
         hubSection: "sosyal",

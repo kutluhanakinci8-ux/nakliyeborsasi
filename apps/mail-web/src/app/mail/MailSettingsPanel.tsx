@@ -180,6 +180,7 @@ type Props = {
   initialView?: SettingsView;
   deliverabilityDmarcFocus?: boolean;
   notificationsPwaFocus?: boolean;
+  deliverabilityEngagementFocus?: boolean;
 };
 
 export function MailSettingsPanel({
@@ -191,6 +192,7 @@ export function MailSettingsPanel({
   initialView,
   deliverabilityDmarcFocus = false,
   notificationsPwaFocus = false,
+  deliverabilityEngagementFocus = false,
 }: Props) {
   const [view, setView] = useState<SettingsView>(initialView ?? "hub");
   const [query, setQuery] = useState("");
@@ -1157,6 +1159,7 @@ export function MailSettingsPanel({
         <MailDeliverabilityPanel
           accessToken={accessToken}
           highlightDmarc={deliverabilityDmarcFocus}
+          highlightEngagement={deliverabilityEngagementFocus}
         />,
       );
       break;

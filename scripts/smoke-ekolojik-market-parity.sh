@@ -3,7 +3,7 @@
 set -euo pipefail
 API_BASE="${EKOLojIK_API_BASE:-${SOCIAL_HUB_API_BASE:-http://127.0.0.1:3000/api/v1}}"
 WEB_BASE="${EKOLojIK_WEB_PUBLIC_URL:-${SOCIAL_HUB_WEB_PUBLIC_URL:-http://127.0.0.1:3001}}"
-EXPECT_PHASE="${EKOLOJIK_SMOKE_EXPECT_PHASE:-ek-p9}"
+EXPECT_PHASE="${EKOLOJIK_SMOKE_EXPECT_PHASE:-ek-p10}"
 
 echo "== Ekolojik market public status =="
 status_json="$(curl -fsS "${API_BASE}/public/ekolojik-market/status")"
@@ -139,6 +139,20 @@ echo "${status_json}" | grep -q 'compose/suggest-draft' || {
   exit 1
 }
 echo "OK: mailAiCompose deep links (optional LLM)"
+echo "${status_json}" | grep -q '"ekolojik_mail_engagement_webhook_analytics_hub"' || {
+  echo "FAIL: missing ekolojik_mail_engagement_webhook_analytics_hub"
+  exit 1
+}
+echo "OK: feature ekolojik_mail_engagement_webhook_analytics_hub (EK-P10)"
+echo "${status_json}" | grep -q '"mailEngagement=1"' || {
+  echo "FAIL: missing mailEngagementWebhook engagement panel path"
+  exit 1
+}
+echo "${status_json}" | grep -q 'message.opened' || {
+  echo "FAIL: missing mailEngagementWebhook engagement events"
+  exit 1
+}
+echo "OK: mailEngagementWebhook deep links"
 echo "${status_json}" | grep -q '"ekolojik_messaging_sse_redis_fanout"' || {
   echo "FAIL: missing ekolojik_messaging_sse_redis_fanout"
   exit 1

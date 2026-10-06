@@ -30,6 +30,7 @@ export function ekolojikSectionToMailHandoff(
       mailSwipeAssist: options.mailSwipeAssist,
       mailDmarcAssist: options.mailDmarcAssist,
       mailPwaAssist: options.mailPwaAssist,
+      mailEngagementAssist: options.mailEngagementAssist,
     };
   }
   if (
@@ -38,6 +39,7 @@ export function ekolojikSectionToMailHandoff(
     options?.mailSwipeAssist ||
     options?.mailDmarcAssist ||
     options?.mailPwaAssist ||
+    options?.mailEngagementAssist ||
     options?.mailView
   ) {
     return {
@@ -51,6 +53,7 @@ export function ekolojikSectionToMailHandoff(
       mailSwipeAssist: options.mailSwipeAssist,
       mailDmarcAssist: options.mailDmarcAssist,
       mailPwaAssist: options.mailPwaAssist,
+      mailEngagementAssist: options.mailEngagementAssist,
     };
   }
   switch (section) {

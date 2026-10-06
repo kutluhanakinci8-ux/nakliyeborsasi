@@ -203,6 +203,8 @@ export function MailClientShell({ mail }: Props) {
     setMailDmarcAssistActive,
     mailPwaAssistActive,
     setMailPwaAssistActive,
+    mailEngagementAssistActive,
+    setMailEngagementAssistActive,
     shortcutsOpen,
     snoozeSelected,
     startForwardFromDetail,
@@ -1916,11 +1918,13 @@ export function MailClientShell({ mail }: Props) {
           initialView={settingsInitialView ?? undefined}
           deliverabilityDmarcFocus={mailDmarcAssistActive}
           notificationsPwaFocus={mailPwaAssistActive}
+          deliverabilityEngagementFocus={mailEngagementAssistActive}
           onClose={() => {
             setSettingsOpen(false);
             setSettingsInitialView(null);
             setMailDmarcAssistActive(false);
             setMailPwaAssistActive(false);
+            setMailEngagementAssistActive(false);
           }}
           onOpenCalendar={() => switchView("calendar")}
           onOpenContacts={() => switchView("contacts")}

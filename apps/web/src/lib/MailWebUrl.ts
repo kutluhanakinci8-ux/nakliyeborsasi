@@ -56,6 +56,9 @@ export function buildMailWebSsoHandoffUrl(
   if (options?.mailPwaAssist) {
     params.set("mailPwa", "1");
   }
+  if (options?.mailEngagementAssist) {
+    params.set("mailEngagement", "1");
+  }
   if (options?.mailView) {
     params.set("mailView", options.mailView);
   }

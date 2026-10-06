@@ -1683,6 +1683,15 @@ export type MailDeliverabilityHub = {
   };
   score: number;
   hintsTr: string[];
+  webhookAnalytics?: {
+    publicApiAllowed: boolean;
+    endpointCount: number;
+    enabledEndpointCount: number;
+    subscribedEvents: string[];
+    availableWebhookEvents: string[];
+    engagementWebhookEvents: string[];
+    configureApiPath: string;
+  };
 };
 
 export async function fetchDeliverabilityHub(
