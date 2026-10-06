@@ -16625,6 +16625,13 @@ button.btn-secondary {
   white-space: nowrap;
 }
 
+.social-hub-analytics-utm-row--highlight {
+  background: #fff8e6;
+  border-radius: 8px;
+  padding: 0.25rem 0.5rem;
+  outline: 1px solid #f0c040;
+}
+
 .social-hub-inbox-sync-summary {
   margin-top: 1.25rem;
 }

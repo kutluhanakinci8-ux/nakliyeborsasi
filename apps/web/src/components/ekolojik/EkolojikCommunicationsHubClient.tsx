@@ -39,6 +39,8 @@ import {
   isEkolojikSocialHubPublishingTab,
   isEkolojikSocialHubTemplatesTab,
   ekolojikSocialHubTemplatesHref,
+  ekolojikSocialHubAnalyticsHref,
+  isEkolojikSocialHubAnalyticsTab,
 } from "../../lib/ekolojikSocialHubDeepLink";
 import {
   parseEkolojikHubSection,
@@ -68,6 +70,10 @@ export function EkolojikCommunicationsHubClient() {
     searchParams.get("tab"),
   );
   const socialTemplatesHub = isEkolojikSocialHubTemplatesTab(
+    searchParams.get("bolum"),
+    searchParams.get("tab"),
+  );
+  const socialAnalyticsHub = isEkolojikSocialHubAnalyticsTab(
     searchParams.get("bolum"),
     searchParams.get("tab"),
   );
@@ -200,6 +206,10 @@ export function EkolojikCommunicationsHubClient() {
     router.replace(ekolojikSocialHubTemplatesHref(), { scroll: false });
   }, [router]);
 
+  const navigateSocialAnalyticsHub = useCallback(() => {
+    router.replace(ekolojikSocialHubAnalyticsHref(), { scroll: false });
+  }, [router]);
+
   const switchMessagingRailMode = useCallback(
     (mode: "chat" | "email") => {
       setChatBackgroundPickerOpen(false);
@@ -328,6 +338,17 @@ export function EkolojikCommunicationsHubClient() {
           <button
             type="button"
             className={
+              socialAnalyticsHub
+                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
+                : "ekolojik-comms-sidebar-item"
+            }
+            onClick={() => navigateSocialAnalyticsHub()}
+          >
+            Sosyal analitik
+          </button>
+          <button
+            type="button"
+            className={
               section === "gonderilen"
                 ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
                 : "ekolojik-comms-sidebar-item"
@@ -386,7 +407,8 @@ export function EkolojikCommunicationsHubClient() {
               section === "sosyal" &&
               !socialInboxHub &&
               !socialPublishingHub &&
-              !socialTemplatesHub
+              !socialTemplatesHub &&
+              !socialAnalyticsHub
                 ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
                 : "ekolojik-comms-sidebar-item"
             }
@@ -480,6 +502,7 @@ export function EkolojikCommunicationsHubClient() {
                 syncTabsToUrl
                 prefillPublishingUtmFromUrl
                 prefillTemplateFromUrl
+                highlightAnalyticsUtmFromUrl
                 oauthWebReturnQuery={EKOLOJIK_SOCIAL_OAUTH_WEB_RETURN_QUERY}
               />
             </div>

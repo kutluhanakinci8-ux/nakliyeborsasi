@@ -25,7 +25,10 @@ import {
   startOfMonth,
 } from "../../../../lib/socialHubCalendar";
 import { formatSocialHubOAuthReason } from "../../../../lib/formatSocialHubOAuthReason";
-import { readEkolojikPublishingUtmFromSearchParams } from "../../../../lib/ekolojikSocialHubDeepLink";
+import {
+  readEkolojikAnalyticsUtmHighlight,
+  readEkolojikPublishingUtmFromSearchParams,
+} from "../../../../lib/ekolojikSocialHubDeepLink";
 import { runSocialHubHealthPushHookSkeleton } from "../../../../lib/socialHubHealthPushHook";
 import type {
   SocialHubAnalytics,
@@ -68,6 +71,8 @@ type SocialHubPageClientProps = {
   prefillPublishingUtmFromUrl?: boolean;
   /** Ekolojik hub: `templateId` query ile şablon editörünü doldur. */
   prefillTemplateFromUrl?: boolean;
+  /** Ekolojik hub: analitikte `utm_campaign` satırını vurgula. */
+  highlightAnalyticsUtmFromUrl?: boolean;
 };
 
 export function SocialHubPageClient({
@@ -78,6 +83,7 @@ export function SocialHubPageClient({
   oauthWebReturnQuery,
   prefillPublishingUtmFromUrl = false,
   prefillTemplateFromUrl = false,
+  highlightAnalyticsUtmFromUrl = false,
 }: SocialHubPageClientProps = {}) {
   const { accessToken, session } = useWebSession();
   const router = useRouter();
@@ -116,6 +122,9 @@ export function SocialHubPageClient({
   const [auditFocus, setAuditFocus] = useState<"all" | "webhook">("all");
   const [analytics, setAnalytics] = useState<SocialHubAnalytics | null>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [analyticsUtmHighlight, setAnalyticsUtmHighlight] = useState<
+    string | null
+  >(null);
   const [telegramConnectOpen, setTelegramConnectOpen] = useState(false);
   const [telegramTokenDraft, setTelegramTokenDraft] = useState("");
   const [telegramChannelOpen, setTelegramChannelOpen] = useState(false);
@@ -222,6 +231,22 @@ export function SocialHubPageClient({
     setTemplateBody(row.bodyText);
     setTemplateChannelScope(row.channelScopeCode ?? "");
   }, [searchParams, prefillTemplateFromUrl, snapshot]);
+
+  useEffect(() => {
+    if (!highlightAnalyticsUtmFromUrl) {
+      setAnalyticsUtmHighlight(null);
+      return;
+    }
+    if (parseSocialHubTab(searchParams.get("tab")) !== "analytics") {
+      setAnalyticsUtmHighlight(null);
+      return;
+    }
+    setAnalyticsUtmHighlight(
+      readEkolojikAnalyticsUtmHighlight(
+        new URLSearchParams(searchParams.toString()),
+      ),
+    );
+  }, [searchParams, highlightAnalyticsUtmFromUrl]);
 
   const handleTabChange = useCallback(
     (tab: SocialHubTabId) => {
@@ -1109,6 +1134,7 @@ export function SocialHubPageClient({
                 analytics={analytics}
                 loading={analyticsLoading}
                 busy={busy}
+                highlightUtmCampaign={analyticsUtmHighlight}
                 onExportAnalytics={() =>
                   void runAction(async () => {
                     await SocialHubApiClient.downloadAnalyticsExport(accessToken);

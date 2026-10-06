@@ -1601,6 +1601,7 @@ type AnalyticsProps = {
   analytics: SocialHubAnalytics | null;
   loading: boolean;
   busy?: boolean;
+  highlightUtmCampaign?: string | null;
   onExportAnalytics?: () => void;
 };
 
@@ -1609,6 +1610,7 @@ export function SocialAnalyticsPanel({
   analytics,
   loading,
   busy = false,
+  highlightUtmCampaign = null,
   onExportAnalytics,
 }: AnalyticsProps) {
   const fallbackOpen = snapshot.inboxSummary?.totalOpenThreads ?? 0;
@@ -1787,7 +1789,15 @@ export function SocialAnalyticsPanel({
           </h3>
           <ul className="social-hub-audit-list">
             {analytics.utmCampaignPublishedLast30Days.map((row) => (
-              <li key={row.utmCampaign}>
+              <li
+                key={row.utmCampaign}
+                className={
+                  highlightUtmCampaign &&
+                  row.utmCampaign === highlightUtmCampaign
+                    ? "social-hub-analytics-utm-row social-hub-analytics-utm-row--highlight"
+                    : "social-hub-analytics-utm-row"
+                }
+              >
                 <span>{row.utmCampaign}</span>
                 <span>{row.count}</span>
               </li>

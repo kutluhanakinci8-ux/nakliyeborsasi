@@ -3,7 +3,7 @@
 set -euo pipefail
 API_BASE="${EKOLojIK_API_BASE:-${SOCIAL_HUB_API_BASE:-http://127.0.0.1:3000/api/v1}}"
 WEB_BASE="${EKOLojIK_WEB_PUBLIC_URL:-${SOCIAL_HUB_WEB_PUBLIC_URL:-http://127.0.0.1:3001}}"
-EXPECT_PHASE="${EKOLOJIK_SMOKE_EXPECT_PHASE:-ek-s5}"
+EXPECT_PHASE="${EKOLOJIK_SMOKE_EXPECT_PHASE:-ek-s6}"
 
 echo "== Ekolojik market public status =="
 status_json="$(curl -fsS "${API_BASE}/public/ekolojik-market/status")"
@@ -168,6 +168,16 @@ echo "${status_json}" | grep -q '"hubTab":"templates"' || {
   exit 1
 }
 echo "OK: socialHubTemplates deep link + API paths"
+echo "${status_json}" | grep -q '"ekolojik_social_hub_analytics"' || {
+  echo "FAIL: missing ekolojik_social_hub_analytics"
+  exit 1
+}
+echo "OK: feature ekolojik_social_hub_analytics (EK-S6)"
+echo "${status_json}" | grep -q '"hubTab":"analytics"' || {
+  echo "FAIL: missing socialHubAnalytics hubTab analytics"
+  exit 1
+}
+echo "OK: socialHubAnalytics export + UTM highlight"
 
 echo "== Ekolojik hub web route =="
 code="$(curl -sS -o /dev/null -w "%{http_code}" "${WEB_BASE}/marketim/posta-ve-mesaj")"

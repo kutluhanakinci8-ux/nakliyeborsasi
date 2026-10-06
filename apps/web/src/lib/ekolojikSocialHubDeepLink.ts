@@ -61,6 +61,37 @@ export function ekolojikSocialHubTemplatesHref(templateId?: string): string {
   return `${EKOLOJIK_HUB_PATH}?${params.toString()}`;
 }
 
+export function isEkolojikSocialHubAnalyticsTab(
+  bolum: string | null,
+  tab: string | null,
+): boolean {
+  return isEkolojikSocialHubTab(bolum, tab, "analytics");
+}
+
+export const EKOLOJIK_SOCIAL_HUB_ANALYTICS_QUERY =
+  "bolum=sosyal&tab=analytics";
+
+export function ekolojikSocialHubAnalyticsHref(highlightUtmCampaign?: string): string {
+  const params = new URLSearchParams({
+    bolum: "sosyal",
+    tab: "analytics",
+  });
+  if (highlightUtmCampaign?.trim()) {
+    params.set("utm_campaign", highlightUtmCampaign.trim());
+  }
+  return `${EKOLOJIK_HUB_PATH}?${params.toString()}`;
+}
+
+export function readEkolojikAnalyticsUtmHighlight(
+  searchParams: URLSearchParams,
+): string | null {
+  return (
+    searchParams.get("utm_campaign")?.trim() ??
+    searchParams.get("utmCampaign")?.trim() ??
+    null
+  );
+}
+
 export type EkolojikSocialPublishingUtm = {
   utmCampaign?: string;
   utmSource?: string;
