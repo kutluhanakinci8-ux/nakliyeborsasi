@@ -20,7 +20,20 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
+      - name: VPS secrets gate
+        id: vps_gate
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          if [[ -z "${VPS_HOST}" || -z "${VPS_SSH_KEY}" ]]; then
+            echo "skip=true" >> "${GITHUB_OUTPUT}"
+            echo "SKIP: VPS secrets missing — use manual deploy (docs/EKOLojIK_MARKET_VPS_ROLLOUT.md)"
+          else
+            echo "skip=false" >> "${GITHUB_OUTPUT}"
+          fi
       - name: Deploy over SSH
+        if: steps.vps_gate.outputs.skip != 'true'
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.VPS_HOST }}
