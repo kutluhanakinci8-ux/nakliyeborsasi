@@ -308,6 +308,8 @@ export class EkolojikMarketStatusController {
       canonicalMergeBranch: string;
       phasePrCleanupVerifyScript: string;
       phasePrCleanupDoc: string;
+      phasePrCloseScript: string;
+      phasePrCloseEnvVar: string;
       defaultSmokeExpectPhase: string;
     };
     socialHubConnections: {
@@ -715,6 +717,9 @@ export class EkolojikMarketStatusController {
         phasePrCleanupVerifyScript:
           "scripts/verify-ekolojik-market-phase-pr-cleanup.sh",
         phasePrCleanupDoc: "docs/EKOLojIK_MARKET_PHASE_PR_CLEANUP.md",
+        phasePrCloseScript:
+          "scripts/run-ekolojik-market-close-stale-phase-prs.sh",
+        phasePrCloseEnvVar: "EK_CLOSE_STALE_PRS",
         defaultSmokeExpectPhase: "ek-u4",
       },
       socialHubConnections: {

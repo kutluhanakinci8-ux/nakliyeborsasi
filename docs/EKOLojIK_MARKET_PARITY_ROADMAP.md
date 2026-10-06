@@ -113,6 +113,12 @@ Detay: kullanıcı onayı sonrası `docs/LERTA_MAIL_MESSAGING_PARITY_100_ROADMAP
 - Public status `ekolojikCi.phasePrCleanupVerifyScript` / `phasePrCleanupDoc`
 - Roll manifest son adım: EK-CLEAN verify
 
+## EK-CLOSE — STALE PR kapatma (●)
+
+- `scripts/run-ekolojik-market-close-stale-phase-prs.sh` — `gh pr close` (dry-run; `EK_CLOSE_STALE_PRS=1` uygula)
+- `origin/main` rollup kontrolü (`EK_CLOSE_REQUIRE_MAIN_ROLLED=1` varsayılan)
+- Public status `ekolojikCi.phasePrCloseScript` / `phasePrCloseEnvVar`
+
 ## EK-LIVE — Deploy sonrası prod kapı (●)
 
 - `scripts/run-ekolojik-market-post-deploy-gate.sh` — prod smoke + EK-U4 close (`EK_LIVE_SKIP_CLOSE=1` ile sadece smoke)

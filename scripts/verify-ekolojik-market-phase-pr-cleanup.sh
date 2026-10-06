@@ -6,7 +6,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CONTROLLER="${ROOT}/apps/api/src/modules/ekolojik-market/EkolojikMarketStatusController.ts"
 DOC="${ROOT}/docs/EKOLojIK_MARKET_PHASE_PR_CLEANUP.md"
 PREFIX="cursor/ekolojik-market-parity-ek-"
-KEEP_SUFFIXES=("roll-5925" "live-5925" "clean-5925")
+KEEP_SUFFIXES=("roll-5925" "live-5925" "clean-5925" "close-5925")
 
 echo "== Ekolojik phase PR cleanup verify (EK-CLEAN) =="
 
@@ -41,6 +41,16 @@ grep -q "phasePrCleanupVerifyScript" "${CONTROLLER}" || {
   exit 1
 }
 echo "OK: status phasePrCleanupVerifyScript ref"
+
+test -x "${ROOT}/scripts/run-ekolojik-market-close-stale-phase-prs.sh" || {
+  echo "FAIL: missing run-ekolojik-market-close-stale-phase-prs.sh" >&2
+  exit 1
+}
+grep -q "phasePrCloseScript" "${CONTROLLER}" || {
+  echo "FAIL: ekolojikCi.phasePrCloseScript not in controller" >&2
+  exit 1
+}
+echo "OK: EK-CLOSE script + status ref"
 
 if [[ "${EK_CLEAN_LIST_OPEN:-0}" == "1" ]] && command -v gh >/dev/null 2>&1; then
   echo ""
