@@ -409,6 +409,11 @@ echo "${status_json}" | grep -q 'verify-ekolojik-market-roll-manifest.sh' || {
   exit 1
 }
 echo "OK: ekolojikCi roll manifest (EK-ROLL)"
+echo "${status_json}" | grep -q 'verify-ekolojik-market-phase-pr-cleanup.sh' || {
+  echo "FAIL: missing ekolojikCi phasePrCleanupVerifyScript"
+  exit 1
+}
+echo "OK: ekolojikCi phase PR cleanup (EK-CLEAN)"
 echo "${status_json}" | grep -q '"phaseCode":"ek-u4"' || {
   echo "FAIL: missing parityClose phaseCode ek-u4"
   exit 1
