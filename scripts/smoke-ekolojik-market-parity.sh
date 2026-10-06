@@ -394,6 +394,11 @@ echo "${status_json}" | grep -q '"ekolojik_parity_close_checklist"' || {
   exit 1
 }
 echo "OK: feature ekolojik_parity_close_checklist (EK-U4)"
+echo "${status_json}" | grep -q 'ekolojik-market-parity.yml' || {
+  echo "FAIL: missing ekolojikCi workflow path"
+  exit 1
+}
+echo "OK: ekolojikCi workflow (EK-0)"
 echo "${status_json}" | grep -q '"phaseCode":"ek-u4"' || {
   echo "FAIL: missing parityClose phaseCode ek-u4"
   exit 1

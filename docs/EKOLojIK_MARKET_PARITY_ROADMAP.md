@@ -27,6 +27,7 @@ Detay: kullanıcı onayı sonrası `docs/LERTA_MAIL_MESSAGING_PARITY_100_ROADMAP
 - Route: `/marketim/posta-ve-mesaj`
 - `GET /api/v1/public/ekolojik-market/status` → `phase`, `features[]`
 - `scripts/smoke-ekolojik-market-parity.sh`
+- CI: `.github/workflows/ekolojik-market-parity.yml` (build + prod public smoke; `workflow_dispatch` → EK-U4 close checklist)
 
 ## EK-U1 — Birleşik iletişim merkezi (● başlandı)
 

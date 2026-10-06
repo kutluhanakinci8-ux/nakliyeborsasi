@@ -298,6 +298,13 @@ export class EkolojikMarketStatusController {
       nbRunbookRefs: string[];
       nbVerifyScripts: string[];
     };
+    ekolojikCi: {
+      phaseCode: string;
+      workflowPath: string;
+      smokeScript: string;
+      closeChecklistScript: string;
+      defaultSmokeExpectPhase: string;
+    };
     socialHubConnections: {
       hubSection: string;
       hubPath: string;
@@ -685,6 +692,14 @@ export class EkolojikMarketStatusController {
           "scripts/verify-communications-ops-snapshot.sh",
           "scripts/run-ekolojik-market-parity-close-checklist.sh",
         ],
+      },
+      ekolojikCi: {
+        phaseCode: "ek-0",
+        workflowPath: ".github/workflows/ekolojik-market-parity.yml",
+        smokeScript: "scripts/smoke-ekolojik-market-parity.sh",
+        closeChecklistScript:
+          "scripts/run-ekolojik-market-parity-close-checklist.sh",
+        defaultSmokeExpectPhase: "ek-u4",
       },
       socialHubConnections: {
         hubSection: "sosyal",
