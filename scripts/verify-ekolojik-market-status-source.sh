@@ -41,6 +41,14 @@ test -f "${ROOT}/apps/web/src/components/ekolojik/EkolojikCommunicationsHubClien
 }
 echo "OK: hub client component"
 
+grep -q 'mergedCanonicalPullRequest: 341' "${CONTROLLER}" || {
+  echo "FAIL: mergedCanonicalPullRequest 341 not in controller" >&2
+  exit 1
+}
+grep -q 'canonicalMergeBranch: "main"' "${CONTROLLER}" || {
+  echo "FAIL: canonicalMergeBranch main not in controller" >&2
+  exit 1
+}
 grep -q 'EK_PHASE = "ek-u4"' "${CONTROLLER}" || {
   echo "FAIL: EK_PHASE not ek-u4 in controller" >&2
   exit 1
