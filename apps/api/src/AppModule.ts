@@ -20,6 +20,7 @@ import { PlatformAdminModule } from "./modules/platform-admin/PlatformAdminModul
 import { FleetModule } from "./modules/fleet/FleetModule";
 import { NotificationModule } from "./modules/notification/NotificationModule";
 import { SocialHubModule } from "./modules/social-hub/SocialHubModule";
+import { EkolojikMarketModule } from "./modules/ekolojik-market/EkolojikMarketModule";
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { SocialHubModule } from "./modules/social-hub/SocialHubModule";
     FleetModule,
     NotificationModule,
     SocialHubModule,
+    EkolojikMarketModule,
     PanelModule,
     HealthModule,
   ],

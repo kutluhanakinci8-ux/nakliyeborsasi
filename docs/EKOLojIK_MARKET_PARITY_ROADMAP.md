@@ -1,0 +1,97 @@
+# Ekolojik Market — NB/Lerta iletişim paritesi (faz planı)
+
+**Hedef:** Marketim «Ekolojik Posta & Mesaj» + sosyal kanallar = Nakliye Borsası `mail-web` + Mesajlar (FS-1…12) + Social Hub (AO…BL) ile **aynı kod yolları**, **ayrı tenant/veri** (NB ile paylaşılmaz).
+
+**Çalışma kuralı:** `cursor/ekolojik-market-<kod>-5925` → PR → merge → `scripts/smoke-ekolojik-market-parity.sh` + ilgili `verify-*`.
+
+---
+
+## Faz özeti (sıra zorunlu)
+
+| Faz | Kod | Odak | NB referans |
+|-----|-----|------|-------------|
+| **EK-0** | `ek-0` | Ürün kabuğu, env, public status, smoke | — |
+| **EK-U1** | `ek-u1` | Birleşik hub: Posta \| Mesajlar \| Sosyal | `/messaging` + `mail-web` + `/hesap/sosyal-medya` |
+| **EK-P1…P11** | `ek-p*` | Posta tam parite | PM-1…PM-10, `apps/mail-web` |
+| **EK-M1…M11** | `ek-m*` | Mesajlaşma tam parite | FS-1…12, P0–P4 |
+| **EK-S1…S10** | `ek-s*` | Sosyal hub tam parite | AO…BC, BD…BL |
+| **EK-U4** | `ek-u4` | Parite kapanış checklist | `run-mail-messaging-parity-close-checklist.sh` |
+
+Detay: kullanıcı onayı sonrası `docs/LERTA_MAIL_MESSAGING_PARITY_100_ROADMAP.md`, `MESSAGING_PHASE_ROADMAP.md`, `SOCIAL_HUB_CODE_COMPLETE_ROADMAP.md`.
+
+---
+
+## EK-0 — Altyapı (● başlandı)
+
+- `NEXT_PUBLIC_PRODUCT_SHELL=ekolojik` | `lerta`
+- Route: `/marketim/posta-ve-mesaj`
+- `GET /api/v1/public/ekolojik-market/status` → `phase`, `features[]`
+- `scripts/smoke-ekolojik-market-parity.sh`
+
+## EK-U1 — Birleşik iletişim merkezi (● başlandı)
+
+- Tam `MessagingMailWebEmbed` (posta)
+- Tam `MessagingThreadSidebar` + `MessagingConversationPanel` (mesajlar)
+- `SocialHubPageClient` gömülü (sosyal)
+- Marketim chrome (`EkolojikMarketShell`)
+
+---
+
+## Kabul (EK-U1)
+
+- Oturum açık kullanıcı `/marketim/posta-ve-mesaj` → üç sekme çalışır
+- Smoke: phase `ek-u1`, feature `ekolojik_communications_hub_unified`
+
+---
+
+## EK-P — Posta (`apps/mail-web`)
+
+| Faz | Kod | İçerik |
+|-----|-----|--------|
+| P1 | ek-p1 | Hub içi tam embed + SSO (● EK-U1) |
+| P2 | ek-p2 | Zengin compose, şablonlar, multipart |
+| P3 | ek-p3 | Hesaplar / alias / DNS hub |
+| P4 | ek-p4 | IMAP klasörleri: Fatura, Gönderilen, Arşiv sidebar eşlemesi |
+| P5 | ek-p5 | Kurallar, swipe, bulk |
+| P6 | ek-p6 | CalDAV / CardDAV |
+| P7 | ek-p7 | Deliverability + DMARC panel |
+| P8 | ek-p8 | PWA offline + push |
+| P9 | ek-p9 | AI compose (opsiyonel) |
+| P10 | ek-p10 | Engagement / webhook analitik |
+| P11 | ek-p11 | Ops snapshot + runbook |
+
+## EK-M — Mesajlar
+
+| Faz | Kod | İçerik |
+|-----|-----|--------|
+| M1 | ek-m1 | Hub chat UI (● EK-U1) |
+| M2 | ek-m2 | SSE + Redis fan-out |
+| M3 | ek-m3 | Düzenle/sil, mention, okundu, typing, şablon |
+| M4 | ek-m4 | 10 MB × 5 ek, audit, legal hold |
+| M5 | ek-m5 | Sosyal DM köprüsü (IG/WA/TG…) |
+| M6 | ek-m6 | WA bridge FS-12 |
+| M7 | ek-m7 | Public API, Slack, Zapier |
+| M8 | ek-m8 | Grup thread + roller |
+| M9 | ek-m9 | Push + çeviri + bildirim matrisi |
+| M10 | ek-m10 | KVKK export / retention |
+| M11 | ek-m11 | Premium UI parity |
+
+## EK-S — Sosyal hub
+
+| Faz | Kod | İçerik |
+|-----|-----|--------|
+| S1 | ek-s1 | Hub embed (● EK-U1) |
+| S2 | ek-s2 | Bağlantılar + OAuth |
+| S3 | ek-s3 | Inbox özet + sync |
+| S4 | ek-s4 | Yayınlar + UTM + medya |
+| S5 | ek-s5 | Şablonlar |
+| S6 | ek-s6 | Analitik |
+| S7 | ek-s7 | Telegram BD–BL (NB ile aynı kod) |
+| S8 | ek-s8 | Ops + integration gate |
+| S9 | ek-s9 | TikTok/YouTube/PWA |
+| S10 | ek-s10 | Telegram Ads API (son) |
+
+## EK-U4 — Kapanış
+
+- `scripts/run-mail-messaging-parity-close-checklist.sh` EK tenant
+- Rubrik: posta ≥95%, mesaj ≥95%, sosyal checklist BC

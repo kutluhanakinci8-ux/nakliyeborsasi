@@ -16965,3 +16965,167 @@ button.btn-secondary {
   color: #15803d;
   font-weight: 600;
 }
+
+/* —— Ekolojik Marketim iletişim hub (EK-0 / EK-U1) —— */
+.ekolojik-market-app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f4f7f4;
+}
+
+.ekolojik-market-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.65rem 1.25rem;
+  background: linear-gradient(90deg, #2d6a4f, #40916c);
+  color: #fff;
+}
+
+.ekolojik-market-topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.ekolojik-market-topnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.ekolojik-market-topnav-link {
+  color: rgba(255, 255, 255, 0.92);
+  text-decoration: none;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+}
+
+.ekolojik-market-topnav-link--active {
+  background: #fff;
+  color: #1b4332;
+  font-weight: 600;
+}
+
+.ekolojik-market-topnav-link--muted {
+  opacity: 0.65;
+  cursor: default;
+}
+
+.ekolojik-market-main {
+  flex: 1;
+  padding: 1rem 1.25rem 2rem;
+}
+
+.ekolojik-comms-hub-intro {
+  margin-bottom: 1rem;
+}
+
+.ekolojik-comms-hub-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.35rem;
+  color: #1b4332;
+}
+
+.ekolojik-comms-hub-lead {
+  margin: 0;
+  max-width: 72ch;
+  font-size: 0.92rem;
+  color: #495057;
+}
+
+.ekolojik-comms-hub-body {
+  display: grid;
+  grid-template-columns: minmax(160px, 200px) 1fr;
+  gap: 1rem;
+  min-height: calc(100vh - 11rem);
+}
+
+.ekolojik-comms-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.75rem;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #d8e2dc;
+}
+
+.ekolojik-comms-sidebar-primary {
+  margin-bottom: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-radius: 8px;
+  background: #40916c;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ekolojik-comms-sidebar-item {
+  text-align: left;
+  padding: 0.45rem 0.65rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #212529;
+}
+
+.ekolojik-comms-sidebar-item--active {
+  background: #d8f3dc;
+  font-weight: 600;
+  color: #1b4332;
+}
+
+.ekolojik-comms-sidebar-foot {
+  margin-top: auto;
+  padding-top: 0.75rem;
+  font-size: 0.75rem;
+}
+
+.ekolojik-comms-main {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #d8e2dc;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 520px;
+  overflow: hidden;
+}
+
+.ekolojik-comms-folder-hint {
+  margin: 0 0 0.5rem;
+  padding: 0.5rem 0.65rem;
+  background: #fff3cd;
+  border-radius: 8px;
+}
+
+.ekolojik-comms-mail-wrap {
+  flex: 1;
+  min-height: 480px;
+}
+
+.ekolojik-comms-chat-wrap {
+  flex: 1;
+  min-height: 480px;
+}
+
+.ekolojik-comms-social-wrap {
+  flex: 1;
+  overflow: auto;
+  max-height: calc(100vh - 12rem);
+}
+
+@media (max-width: 900px) {
+  .ekolojik-comms-hub-body {
+    grid-template-columns: 1fr;
+  }
+}
