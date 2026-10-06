@@ -1,7 +1,11 @@
 import { Controller, Get } from "@nestjs/common";
 import { MessagingAttachmentStorageService } from "../messaging/MessagingAttachmentStorageService";
 
-const EK_PHASE = "ek-p11";
+/** Program kapanış fazı (EK-U4); posta derin fazları `parityClose.postaPhaseComplete`. */
+const EK_PHASE = "ek-u4";
+const EK_POSTA_PHASE_COMPLETE = "ek-p11";
+const EK_MESSAGING_PHASE_COMPLETE = "ek-m11";
+const EK_SOCIAL_PHASE_COMPLETE = "ek-s10";
 
 const EK_MAIL_PWA_NB_FEATURES = [
   "mail_web_pwa_manifest_scope",
@@ -402,6 +406,9 @@ export class EkolojikMarketStatusController {
     };
     parityClose: {
       phaseCode: string;
+      postaPhaseComplete: string;
+      messagingPhaseComplete: string;
+      socialPhaseComplete: string;
       closeChecklistScript: string;
       smokeScript: string;
       nbMailMessagingCloseScript: string;
@@ -815,6 +822,9 @@ export class EkolojikMarketStatusController {
       },
       parityClose: {
         phaseCode: "ek-u4",
+        postaPhaseComplete: EK_POSTA_PHASE_COMPLETE,
+        messagingPhaseComplete: EK_MESSAGING_PHASE_COMPLETE,
+        socialPhaseComplete: EK_SOCIAL_PHASE_COMPLETE,
         closeChecklistScript:
           "scripts/run-ekolojik-market-parity-close-checklist.sh",
         smokeScript: "scripts/smoke-ekolojik-market-parity.sh",

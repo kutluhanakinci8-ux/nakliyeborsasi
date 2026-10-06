@@ -38,6 +38,33 @@ run_step "Public parity smoke (phase ek-u4)" \
   bash "${ROOT}/scripts/smoke-ekolojik-market-parity.sh"
 
 echo ""
+echo "== Posta P6–P11 hub features (status JSON) =="
+if ! status_json="$(curl -fsS "${API_BASE}/public/ekolojik-market/status")"; then
+  echo "FAIL: could not fetch ekolojik-market status for P6–P11 gate" >&2
+  FAIL=1
+else
+  for feat in \
+    ekolojik_mail_caldav_carddav_hub \
+    ekolojik_mail_deliverability_dmarc_hub \
+    ekolojik_mail_pwa_offline_push_hub \
+    ekolojik_mail_ai_compose_hub \
+    ekolojik_mail_engagement_webhook_analytics_hub \
+    ekolojik_mail_ops_snapshot_runbook_hub; do
+    echo "${status_json}" | grep -q "\"${feat}\"" || {
+      echo "FAIL: missing feature ${feat}" >&2
+      FAIL=1
+    }
+  done
+  echo "${status_json}" | grep -q '"postaPhaseComplete":"ek-p11"' || {
+    echo "FAIL: parityClose.postaPhaseComplete not ek-p11" >&2
+    FAIL=1
+  }
+  if [[ "$FAIL" -eq 0 ]]; then
+    echo "OK: posta P6–P11 features + postaPhaseComplete ek-p11"
+  fi
+fi
+
+echo ""
 echo "== Rubrik (public status) =="
 if ! status_json="$(curl -fsS "${API_BASE}/public/ekolojik-market/status")"; then
   echo "FAIL: could not fetch ekolojik-market status" >&2

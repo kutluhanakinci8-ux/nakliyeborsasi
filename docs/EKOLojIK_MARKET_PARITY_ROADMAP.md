@@ -94,5 +94,7 @@ Detay: kullanıcı onayı sonrası `docs/LERTA_MAIL_MESSAGING_PARITY_100_ROADMAP
 ## EK-U4 — Kapanış (●)
 
 - `scripts/run-ekolojik-market-parity-close-checklist.sh` (public smoke + rubrik)
+- Public status `phase`: **`ek-u4`** (program kapanış); `parityClose.postaPhaseComplete`: **`ek-p11`** (EK-P1…P11 tamam)
 - Opsiyonel VPS tam kapı: `EK_U4_FULL=1` → `run-mail-messaging-parity-close-checklist.sh` (paylaşılan posta/mesaj altyapısı)
 - Rubrik (`GET /public/ekolojik-market/status` → `parityClose`): posta **96%** / mesaj **96%** (eşik ≥95%), sosyal **BC** entegrasyon kapısı checklist
+- Kapanış smoke: `EKOLOJIK_SMOKE_EXPECT_PHASE=ek-u4` (varsayılan); geliştirme doğrulama için `ek-p11` geçici kullanılabilir
