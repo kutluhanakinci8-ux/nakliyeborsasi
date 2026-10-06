@@ -3,7 +3,7 @@
 set -euo pipefail
 API_BASE="${EKOLojIK_API_BASE:-${SOCIAL_HUB_API_BASE:-http://127.0.0.1:3000/api/v1}}"
 WEB_BASE="${EKOLojIK_WEB_PUBLIC_URL:-${SOCIAL_HUB_WEB_PUBLIC_URL:-http://127.0.0.1:3001}}"
-EXPECT_PHASE="${EKOLOJIK_SMOKE_EXPECT_PHASE:-ek-m3}"
+EXPECT_PHASE="${EKOLOJIK_SMOKE_EXPECT_PHASE:-ek-m4}"
 
 echo "== Ekolojik market public status =="
 status_json="$(curl -fsS "${API_BASE}/public/ekolojik-market/status")"
@@ -43,6 +43,21 @@ echo "${status_json}" | grep -q '"message_edit_delete"' || {
   exit 1
 }
 echo "OK: messagingInteractions parity list"
+echo "${status_json}" | grep -q '"ekolojik_messaging_attachments_audit_hold"' || {
+  echo "FAIL: missing ekolojik_messaging_attachments_audit_hold"
+  exit 1
+}
+echo "OK: feature ekolojik_messaging_attachments_audit_hold (EK-M4)"
+echo "${status_json}" | grep -q '"maxCount":5' || {
+  echo "FAIL: missing messagingAttachments maxCount 5"
+  exit 1
+}
+echo "OK: messagingAttachments 5x10MB policy"
+echo "${status_json}" | grep -q '"thread_legal_hold"' || {
+  echo "FAIL: missing messagingCompliance thread_legal_hold"
+  exit 1
+}
+echo "OK: messagingCompliance audit/hold"
 
 echo "== Ekolojik hub web route =="
 code="$(curl -sS -o /dev/null -w "%{http_code}" "${WEB_BASE}/marketim/posta-ve-mesaj")"

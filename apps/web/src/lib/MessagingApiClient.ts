@@ -17,6 +17,7 @@ export type MessagingThreadRecord = {
   externalOutboundStatus?: "ok" | "failed" | null;
   externalOutboundError?: string | null;
   externalOutboundAt?: string | null;
+  legalHoldAt?: string | null;
 };
 
 export type MessagingChannelDeliveryRecord = {

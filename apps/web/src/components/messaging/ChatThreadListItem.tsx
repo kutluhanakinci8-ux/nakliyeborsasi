@@ -43,6 +43,7 @@ export function ChatThreadListItem({
       : "Firma sohbeti";
   const timeLabel = formatThreadListTime(thread.lastMessageAt, locale);
   const unread = thread.unreadCount ?? 0;
+  const legalHold = Boolean(thread.legalHoldAt);
   const threadLabel =
     unread > 0
       ? `${displayName}, ${unread} okunmamış mesaj`
@@ -92,6 +93,11 @@ export function ChatThreadListItem({
           </span>
           <span className="chat-thread-bottom">
             <span className="chat-thread-sub" title={previewRaw ?? preview}>
+              {legalHold ? (
+                <span className="chat-thread-legal-hold-pill" title="Legal hold">
+                  Hold
+                </span>
+              ) : null}
               {preview}
             </span>
             {unread > 0 ? (

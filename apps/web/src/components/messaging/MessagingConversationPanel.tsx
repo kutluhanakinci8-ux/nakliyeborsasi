@@ -16,6 +16,10 @@ import {
   groupParticipantRoleLabel,
   operationStampLabel,
 } from "../../lib/messagingChatUi";
+import {
+  MESSAGING_ATTACHMENT_MAX_COUNT,
+  messagingAttachmentAttachTitle,
+} from "../../lib/messagingAttachmentPolicy";
 import { messageHasActiveMentionQuery, shortCompanyId } from "../../lib/messagingPageHelpers";
 import {
   IconChannels,
@@ -132,6 +136,8 @@ export function MessagingConversationPanel({
       .then(setThreadDeliveries)
       .catch(() => setThreadDeliveries([]));
   }, [accessToken, activeThreadId, activeThread?.threadKind, chat.messages.length]);
+
+  const threadLegalHold = Boolean(activeThread?.legalHoldAt);
 
   return (
           <section className="chat-main module-panel chat-main--premium">
@@ -341,6 +347,11 @@ export function MessagingConversationPanel({
                 </p>
               </aside>
             ) : null}
+            {threadLegalHold ? (
+              <p className="chat-legal-hold-inline" role="status">
+                Legal hold — mesaj silme kapalı; işlemler denetim kaydında.
+              </p>
+            ) : null}
             <div className="chat-messages-toolbar">
               <button
                 type="button"
@@ -534,7 +545,11 @@ export function MessagingConversationPanel({
                               bodyText: message.bodyText,
                             })
                           }
-                          onDelete={() => setDeleteMessageId(message.id)}
+                          onDelete={
+                            threadLegalHold
+                              ? undefined
+                              : () => setDeleteMessageId(message.id)
+                          }
                         />
                             </div>
                           </div>
@@ -787,13 +802,19 @@ export function MessagingConversationPanel({
                 </div>
               </div>
               <div className="chat-compose-editor">
-                <label className="chat-compose-attach" title="Dosya ekle (en fazla 5, 10 MB)">
+                <label
+                  className="chat-compose-attach"
+                  title={messagingAttachmentAttachTitle()}
+                >
                   <IconPaperclip className="chat-compose-attach-icon" />
                   <span className="sr-only">Dosya ekle</span>
                   <input
                     type="file"
                     accept="image/*,application/pdf,text/plain,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
-                    disabled={!activeThreadId || pendingAttachments.length >= 5}
+                    disabled={
+                      !activeThreadId ||
+                      pendingAttachments.length >= MESSAGING_ATTACHMENT_MAX_COUNT
+                    }
                     onChange={(event) => {
                       const files = event.target.files;
                       event.target.value = "";

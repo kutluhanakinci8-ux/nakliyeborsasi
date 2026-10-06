@@ -21,6 +21,10 @@ import {
 } from "../lib/TrustScoreApiClient";
 import { ensureMessagingWebPush } from "../lib/messagingPush";
 import {
+  MESSAGING_ATTACHMENT_MAX_BYTES,
+  MESSAGING_ATTACHMENT_MAX_COUNT,
+} from "../lib/messagingAttachmentPolicy";
+import {
   readFileAsAttachment,
   messageHasActiveMentionQuery,
   parseCompanyUuidCandidate,
@@ -380,18 +384,20 @@ export function useMessagingChatController({
       return;
     }
     for (const file of Array.from(fileList)) {
-      if (pendingAttachments.length >= 5) {
-        setErrorMessage("En fazla 5 dosya ekleyebilirsiniz.");
+      if (pendingAttachments.length >= MESSAGING_ATTACHMENT_MAX_COUNT) {
+        setErrorMessage(
+          `En fazla ${MESSAGING_ATTACHMENT_MAX_COUNT} dosya ekleyebilirsiniz.`,
+        );
         break;
       }
-      if (file.size > 10_000_000) {
+      if (file.size > MESSAGING_ATTACHMENT_MAX_BYTES) {
         setErrorMessage("Tek dosya en fazla 10 MB olabilir.");
         continue;
       }
       try {
         const attachment = await readFileAsAttachment(file);
         setPendingAttachments((current) =>
-          [...current, attachment].slice(0, 5),
+          [...current, attachment].slice(0, MESSAGING_ATTACHMENT_MAX_COUNT),
         );
       } catch {
         setErrorMessage("Dosya okunamadı (en fazla 5 dosya, 10 MB).");

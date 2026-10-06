@@ -1,6 +1,7 @@
 import { Controller, Get } from "@nestjs/common";
+import { MessagingAttachmentStorageService } from "../messaging/MessagingAttachmentStorageService";
 
-const EK_PHASE = "ek-m3";
+const EK_PHASE = "ek-m4";
 
 const EK_FEATURES = [
   "ekolojik_product_shell",
@@ -10,6 +11,7 @@ const EK_FEATURES = [
   "ekolojik_messaging_full_chat",
   "ekolojik_messaging_sse_redis_fanout",
   "ekolojik_messaging_interactions_parity",
+  "ekolojik_messaging_attachments_audit_hold",
   "ekolojik_social_hub_embed",
   "ekolojik_ci_workflow_ek_0",
 ] as const;
@@ -22,6 +24,7 @@ const EK_PHASE_MILESTONES = [
   "ek-m1",
   "ek-m2",
   "ek-m3",
+  "ek-m4",
   "ek-s1",
   "ek-u4",
 ] as const;
@@ -41,6 +44,12 @@ export class EkolojikMarketStatusController {
       nbModulePath: string;
     };
     messagingInteractions: string[];
+    messagingAttachments: {
+      maxCount: number;
+      maxBytesPerFile: number;
+      storageMode: string;
+    };
+    messagingCompliance: string[];
   } {
     return {
       module: "ekolojik_market",
@@ -60,6 +69,16 @@ export class EkolojikMarketStatusController {
         "typing_indicator",
         "quick_reply_templates",
         "group_thread_modal",
+      ],
+      messagingAttachments: {
+        maxCount: MessagingAttachmentStorageService.maxAttachmentsPublic(),
+        maxBytesPerFile: MessagingAttachmentStorageService.maxBytesPublic(),
+        storageMode: "local_10mb",
+      },
+      messagingCompliance: [
+        "messaging_crud_audit",
+        "thread_legal_hold",
+        "company_kvkk_export",
       ],
     };
   }

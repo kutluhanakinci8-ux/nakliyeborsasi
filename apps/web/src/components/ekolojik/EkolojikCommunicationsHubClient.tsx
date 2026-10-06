@@ -7,6 +7,7 @@ import { MessagingMailWebEmbed } from "../messaging/MessagingMailWebEmbed";
 import { MessagingConversationPanel } from "../messaging/MessagingConversationPanel";
 import { MessagingThreadSidebar } from "../messaging/MessagingThreadSidebar";
 import { MessagingChatModalsLayer } from "../messaging/MessagingChatModalsLayer";
+import { MessagingChatComplianceStrip } from "../messaging/MessagingChatComplianceStrip";
 import { useWebSession } from "../../context/WebSessionProvider";
 import { useMessagingChatController } from "../../hooks/useMessagingChatController";
 import { ekolojikSectionToMailHandoff } from "../../lib/ekolojikMailSectionHandoff";
@@ -195,6 +196,8 @@ export function EkolojikCommunicationsHubClient() {
             </div>
           ) : null}
           {section === "mesajlar" ? (
+            <>
+            <MessagingChatComplianceStrip chat={chat} />
             <div
               className={
                 mobileThreadOpen && activeThreadId
@@ -215,6 +218,7 @@ export function EkolojikCommunicationsHubClient() {
                 chatBackgroundId="default"
               />
             </div>
+            </>
           ) : null}
           {mailSection ? (
             <div className="ekolojik-comms-mail-wrap messaging-mail-embed-wrap messaging-mail-embed-wrap--primary">

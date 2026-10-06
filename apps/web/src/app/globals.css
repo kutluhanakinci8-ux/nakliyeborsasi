@@ -6888,6 +6888,77 @@ button.btn-secondary {
   max-width: 100%;
 }
 
+.messaging-chat-compliance-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin-bottom: 0.65rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.messaging-chat-compliance-policy {
+  margin: 0;
+  flex: 1 1 220px;
+}
+
+.messaging-chat-compliance-legal-hold {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  margin: 0;
+  flex: 1 1 100%;
+  font-size: 0.78rem;
+  color: #9a3412;
+}
+
+.messaging-chat-compliance-export {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #0f172a;
+  cursor: pointer;
+}
+
+.messaging-chat-compliance-export:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.chat-legal-hold-inline {
+  margin: 0 0 0.5rem;
+  padding: 0.4rem 0.65rem;
+  border-radius: 8px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #9a3412;
+}
+
+.chat-thread-legal-hold-pill {
+  display: inline-block;
+  margin-right: 0.35rem;
+  padding: 0 0.35rem;
+  border-radius: 4px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: #ffedd5;
+  color: #c2410c;
+  vertical-align: middle;
+}
+
 .chat-sidebar-new-group {
   flex-shrink: 0;
   display: inline-flex;
