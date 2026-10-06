@@ -6,7 +6,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CONTROLLER="${ROOT}/apps/api/src/modules/ekolojik-market/EkolojikMarketStatusController.ts"
 DOC="${ROOT}/docs/EKOLojIK_MARKET_PHASE_PR_CLEANUP.md"
 PREFIX="cursor/ekolojik-market-parity-ek-"
-KEEP_SUFFIXES=("roll-5925" "live-5925" "clean-5925" "close-5925")
+KEEP_SUFFIXES=("roll-5925" "live-5925" "clean-5925" "close-5925" "done-5925")
 
 echo "== Ekolojik phase PR cleanup verify (EK-CLEAN) =="
 

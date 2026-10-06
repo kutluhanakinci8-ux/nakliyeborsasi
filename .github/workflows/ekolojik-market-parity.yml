@@ -15,6 +15,7 @@ on:
       - "scripts/run-ekolojik-market-post-deploy-gate.sh"
       - "scripts/verify-ekolojik-market-phase-pr-cleanup.sh"
       - "scripts/run-ekolojik-market-close-stale-phase-prs.sh"
+      - "scripts/verify-ekolojik-market-program-done.sh"
       - "docs/EKOLojIK_MARKET_PHASE_PR_CLEANUP.md"
       - ".github/workflows/deploy-vps.yml"
       - "docs/EKOLojIK_MARKET_PARITY_ROADMAP.md"
@@ -34,6 +35,7 @@ on:
       - "scripts/run-ekolojik-market-post-deploy-gate.sh"
       - "scripts/verify-ekolojik-market-phase-pr-cleanup.sh"
       - "scripts/run-ekolojik-market-close-stale-phase-prs.sh"
+      - "scripts/verify-ekolojik-market-program-done.sh"
       - "docs/EKOLojIK_MARKET_PHASE_PR_CLEANUP.md"
       - ".github/workflows/deploy-vps.yml"
       - "docs/EKOLojIK_MARKET_PARITY_ROADMAP.md"
@@ -58,8 +60,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Ekolojik roll manifest + status source (no live API)
-        run: bash scripts/verify-ekolojik-market-roll-manifest.sh
+      - name: Ekolojik program done gate (no live API)
+        run: bash scripts/verify-ekolojik-market-program-done.sh
 
   build:
     runs-on: ubuntu-latest

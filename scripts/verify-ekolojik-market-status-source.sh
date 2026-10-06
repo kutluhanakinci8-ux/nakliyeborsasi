@@ -104,6 +104,10 @@ if "phasePrCloseScript" not in text:
     sys.exit("FAIL: ekolojikCi.phasePrCloseScript not declared")
 if 'phasePrCloseEnvVar: "EK_CLOSE_STALE_PRS"' not in text:
     sys.exit("FAIL: phasePrCloseEnvVar EK_CLOSE_STALE_PRS missing")
+if "programDone:" not in text:
+    sys.exit("FAIL: parityClose.programDone block missing")
+if "ekolojik_program_done_gate" not in text:
+    sys.exit("FAIL: ekolojik_program_done_gate feature missing")
 
 print(f"OK: EK_FEATURES count={len(features)}")
 PY
