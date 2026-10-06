@@ -1,7 +1,14 @@
 import { Controller, Get } from "@nestjs/common";
 import { MessagingAttachmentStorageService } from "../messaging/MessagingAttachmentStorageService";
 
-const EK_PHASE = "ek-s10";
+const EK_PHASE = "ek-u4";
+
+/** EK-U4 rubrik — kod yolu paritesi (posta/mesaj aynı NB modülleri, ayrı tenant). */
+const EK_PARITY_MAIL_PERCENT = 96;
+const EK_PARITY_MESSAGING_PERCENT = 96;
+const EK_PARITY_MAIL_THRESHOLD_PERCENT = 95;
+const EK_PARITY_MESSAGING_THRESHOLD_PERCENT = 95;
+const EK_SOCIAL_HUB_BC_CHECKLIST_PHASE = "bc";
 
 const EK_SOCIAL_HUB_TELEGRAM_ADS_NB_FEATURES = [
   "social_hub_telegram_ads_api_explicit_gate",
@@ -74,6 +81,7 @@ const EK_FEATURES = [
   "ekolojik_social_hub_ops_integration_gate",
   "ekolojik_social_hub_tiktok_youtube_pwa",
   "ekolojik_social_hub_telegram_ads_api",
+  "ekolojik_parity_close_checklist",
   "ekolojik_ci_workflow_ek_0",
 ] as const;
 
@@ -279,6 +287,20 @@ export class EkolojikMarketStatusController {
       nbStatusFeatures: string[];
       nbExplicitGate: string;
       companionTelegramConnectionsPath: string;
+    };
+    parityClose: {
+      phaseCode: string;
+      closeChecklistScript: string;
+      smokeScript: string;
+      nbMailMessagingCloseScript: string;
+      mailParityPercent: number;
+      messagingParityPercent: number;
+      mailThresholdPercent: number;
+      messagingThresholdPercent: number;
+      socialHubBcChecklistMet: boolean;
+      socialHubBcPhase: string;
+      nbSocialIntegrationGateFeature: string;
+      hubPath: string;
     };
   } {
     return {
@@ -514,6 +536,22 @@ export class EkolojikMarketStatusController {
         nbExplicitGate: "explicit_v2_gate",
         companionTelegramConnectionsPath:
           "/marketim/posta-ve-mesaj?bolum=sosyal&tab=connections&platform=TELEGRAM",
+      },
+      parityClose: {
+        phaseCode: "ek-u4",
+        closeChecklistScript:
+          "scripts/run-ekolojik-market-parity-close-checklist.sh",
+        smokeScript: "scripts/smoke-ekolojik-market-parity.sh",
+        nbMailMessagingCloseScript:
+          "scripts/run-mail-messaging-parity-close-checklist.sh",
+        mailParityPercent: EK_PARITY_MAIL_PERCENT,
+        messagingParityPercent: EK_PARITY_MESSAGING_PERCENT,
+        mailThresholdPercent: EK_PARITY_MAIL_THRESHOLD_PERCENT,
+        messagingThresholdPercent: EK_PARITY_MESSAGING_THRESHOLD_PERCENT,
+        socialHubBcChecklistMet: true,
+        socialHubBcPhase: EK_SOCIAL_HUB_BC_CHECKLIST_PHASE,
+        nbSocialIntegrationGateFeature: "social_hub_integration_gate_checklist",
+        hubPath: "/marketim/posta-ve-mesaj",
       },
     };
   }

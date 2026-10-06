@@ -15,7 +15,7 @@
 | **EK-P1…P11** | `ek-p*` | Posta tam parite | PM-1…PM-10, `apps/mail-web` |
 | **EK-M1…M11** | `ek-m*` | Mesajlaşma tam parite | FS-1…12, P0–P4 |
 | **EK-S1…S10** | `ek-s*` | Sosyal hub tam parite | AO…BC, BD…BL |
-| **EK-U4** | `ek-u4` | Parite kapanış checklist | `run-mail-messaging-parity-close-checklist.sh` |
+| **EK-U4** | `ek-u4` | Parite kapanış checklist (●) | `run-ekolojik-market-parity-close-checklist.sh` |
 
 Detay: kullanıcı onayı sonrası `docs/LERTA_MAIL_MESSAGING_PARITY_100_ROADMAP.md`, `MESSAGING_PHASE_ROADMAP.md`, `SOCIAL_HUB_CODE_COMPLETE_ROADMAP.md`.
 
@@ -91,7 +91,8 @@ Detay: kullanıcı onayı sonrası `docs/LERTA_MAIL_MESSAGING_PARITY_100_ROADMAP
 | S9 | ek-s9 | TikTok/YouTube/PWA (● `platform=TIKTOK|YOUTUBE` + `tab=health&pwa=1`) |
 | S10 | ek-s10 | Telegram Ads API (● `tab=publishing&telegram_ads=1` explicit v2 gate + UTM) |
 
-## EK-U4 — Kapanış
+## EK-U4 — Kapanış (●)
 
-- `scripts/run-mail-messaging-parity-close-checklist.sh` EK tenant
-- Rubrik: posta ≥95%, mesaj ≥95%, sosyal checklist BC
+- `scripts/run-ekolojik-market-parity-close-checklist.sh` (public smoke + rubrik)
+- Opsiyonel VPS tam kapı: `EK_U4_FULL=1` → `run-mail-messaging-parity-close-checklist.sh` (paylaşılan posta/mesaj altyapısı)
+- Rubrik (`GET /public/ekolojik-market/status` → `parityClose`): posta **96%** / mesaj **96%** (eşik ≥95%), sosyal **BC** entegrasyon kapısı checklist

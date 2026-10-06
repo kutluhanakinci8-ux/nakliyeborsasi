@@ -3,7 +3,7 @@
 set -euo pipefail
 API_BASE="${EKOLojIK_API_BASE:-${SOCIAL_HUB_API_BASE:-http://127.0.0.1:3000/api/v1}}"
 WEB_BASE="${EKOLojIK_WEB_PUBLIC_URL:-${SOCIAL_HUB_WEB_PUBLIC_URL:-http://127.0.0.1:3001}}"
-EXPECT_PHASE="${EKOLOJIK_SMOKE_EXPECT_PHASE:-ek-s10}"
+EXPECT_PHASE="${EKOLOJIK_SMOKE_EXPECT_PHASE:-ek-u4}"
 
 echo "== Ekolojik market public status =="
 status_json="$(curl -fsS "${API_BASE}/public/ekolojik-market/status")"
@@ -241,6 +241,35 @@ echo "${status_json}" | grep -q '"social_hub_telegram_ads_api_explicit_gate"' ||
   exit 1
 }
 echo "OK: socialHubTelegramAds explicit v2 gate"
+echo "${status_json}" | grep -q '"ekolojik_parity_close_checklist"' || {
+  echo "FAIL: missing ekolojik_parity_close_checklist"
+  exit 1
+}
+echo "OK: feature ekolojik_parity_close_checklist (EK-U4)"
+echo "${status_json}" | grep -q '"phaseCode":"ek-u4"' || {
+  echo "FAIL: missing parityClose phaseCode ek-u4"
+  exit 1
+}
+echo "OK: parityClose rubric block"
+echo "${status_json}" | grep -q '"mailParityPercent":96' || {
+  echo "FAIL: missing mailParityPercent 96"
+  exit 1
+}
+echo "${status_json}" | grep -q '"messagingParityPercent":96' || {
+  echo "FAIL: missing messagingParityPercent 96"
+  exit 1
+}
+echo "OK: mail/messaging rubric ≥95% targets"
+echo "${status_json}" | grep -q '"socialHubBcChecklistMet":true' || {
+  echo "FAIL: socialHubBcChecklistMet not true"
+  exit 1
+}
+echo "OK: social BC checklist rubric"
+echo "${status_json}" | grep -q 'run-ekolojik-market-parity-close-checklist.sh' || {
+  echo "FAIL: missing close checklist script ref"
+  exit 1
+}
+echo "OK: EK-U4 close checklist script ref"
 
 echo "== Ekolojik hub web route =="
 code="$(curl -sS -o /dev/null -w "%{http_code}" "${WEB_BASE}/marketim/posta-ve-mesaj")"
