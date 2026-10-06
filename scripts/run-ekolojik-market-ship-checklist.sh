@@ -15,6 +15,7 @@ git show "origin/main:apps/api/src/modules/ekolojik-market/EkolojikMarketStatusC
 echo "OK: rollup on origin/main"
 
 bash "${ROOT}/scripts/verify-ekolojik-market-program-done.sh"
+bash "${ROOT}/scripts/verify-ekolojik-market-prod-rollout.sh" || true
 
 echo ""
 echo "== Operatör (manuel) =="

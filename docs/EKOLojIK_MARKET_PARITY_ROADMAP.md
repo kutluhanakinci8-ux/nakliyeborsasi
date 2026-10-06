@@ -141,6 +141,13 @@ Detay: kullanıcı onayı sonrası `docs/LERTA_MAIL_MESSAGING_PARITY_100_ROADMAP
 - Rubrik (`GET /public/ekolojik-market/status` → `parityClose`): posta **96%** / mesaj **96%** (eşik ≥95%), sosyal **BC** entegrasyon kapısı checklist
 - Kapanış smoke: `EKOLOJIK_SMOKE_EXPECT_PHASE=ek-u4` (varsayılan); geliştirme doğrulama için `ek-p11` geçici kullanılabilir
 
+## EK-PROD — Prod rollout (●)
+
+- `docs/EKOLojIK_MARKET_VPS_ROLLOUT.md` — manuel VPS deploy + doğrulama
+- `scripts/verify-ekolojik-market-prod-rollout.sh` — 404 → NOT_DEPLOYED; 200 → prod smoke (`EK_PROD_ROLLOUT_STRICT=1`)
+- Deploy VPS workflow: secrets yoksa SSH adımı SKIP (main CI kırılmaz)
+- Public status `ekolojikCi.prodRolloutVerifyScript` / `prodRolloutDoc`
+
 ## EK-SHIP — Main merge sonrası (●)
 
 - **Merged:** PR **#341** → `main`

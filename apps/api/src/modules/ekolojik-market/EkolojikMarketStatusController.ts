@@ -310,6 +310,8 @@ export class EkolojikMarketStatusController {
       canonicalMergeBranch: string;
       mergedCanonicalPullRequest: number;
       shipChecklistScript: string;
+      prodRolloutVerifyScript: string;
+      prodRolloutDoc: string;
       phasePrCleanupVerifyScript: string;
       phasePrCleanupDoc: string;
       phasePrCloseScript: string;
@@ -726,6 +728,9 @@ export class EkolojikMarketStatusController {
         canonicalMergeBranch: "main",
         mergedCanonicalPullRequest: 341,
         shipChecklistScript: "scripts/run-ekolojik-market-ship-checklist.sh",
+        prodRolloutVerifyScript:
+          "scripts/verify-ekolojik-market-prod-rollout.sh",
+        prodRolloutDoc: "docs/EKOLojIK_MARKET_VPS_ROLLOUT.md",
         phasePrCleanupVerifyScript:
           "scripts/verify-ekolojik-market-phase-pr-cleanup.sh",
         phasePrCleanupDoc: "docs/EKOLojIK_MARKET_PHASE_PR_CLEANUP.md",

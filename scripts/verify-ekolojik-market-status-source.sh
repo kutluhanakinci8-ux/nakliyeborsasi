@@ -41,6 +41,14 @@ test -f "${ROOT}/apps/web/src/components/ekolojik/EkolojikCommunicationsHubClien
 }
 echo "OK: hub client component"
 
+test -f "${ROOT}/docs/EKOLojIK_MARKET_VPS_ROLLOUT.md" || {
+  echo "FAIL: missing EKOLojIK_MARKET_VPS_ROLLOUT.md" >&2
+  exit 1
+}
+grep -q "prodRolloutVerifyScript" "${CONTROLLER}" || {
+  echo "FAIL: prodRolloutVerifyScript missing" >&2
+  exit 1
+}
 grep -q 'mergedCanonicalPullRequest: 341' "${CONTROLLER}" || {
   echo "FAIL: mergedCanonicalPullRequest 341 not in controller" >&2
   exit 1
