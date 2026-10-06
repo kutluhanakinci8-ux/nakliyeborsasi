@@ -14,8 +14,11 @@ code="$(curl -sS -o /tmp/ekolojik-prod-status.json -w "%{http_code}" \
   --connect-timeout 8 --max-time 25 \
   "${API_BASE}/public/ekolojik-market/status" || echo "000")"
 
-if [[ "${code}" == "404" || "${code}" == "000" ]]; then
+if [[ "${code}" == "404" || "${code}" == "000" || "${code}" == "502" || "${code}" == "503" ]]; then
   echo "NOT_DEPLOYED: public status HTTP ${code} — VPS: DEPLOY_BRANCH=main bash scripts/deploy-production-vps.sh"
+  if [[ "${code}" == "502" || "${code}" == "503" ]]; then
+    echo "HINT: geçici gateway/ deploy — birkaç dakika sonra EK_PROD_ROLLOUT_STRICT=1 ile tekrar dene"
+  fi
   if [[ "${STRICT}" == "1" ]]; then
     exit 1
   fi

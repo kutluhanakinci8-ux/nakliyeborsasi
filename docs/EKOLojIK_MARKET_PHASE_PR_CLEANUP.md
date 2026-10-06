@@ -8,13 +8,12 @@ Rollup merge edildikten sonra aşağıdaki **draft/open faz PR’ları** kapatı
 
 `cursor/ekolojik-market-parity-ek-<faz>-5925` — **hariç:**
 
-| Tutulacak | Açıklama |
-|-----------|----------|
-| `ek-roll-5925` | Canonical rollup |
-| `ek-live-5925` | Roll + EK-LIVE (deploy kapı) |
-| `ek-clean-5925` | Temizlik doğrulama |
-| `ek-close-5925` | STALE PR kapatma (EK-CLOSE) |
-| `ek-done-5925` | Program kapanış manifesti (EK-DONE) |
+| Dal (EK-DEDUP) | PR |
+|----------------|-----|
+| `ek-roll-5925` | #337 |
+| `ek-live-5925` | #338 |
+| `ek-clean-5925` | #339 |
+| `ek-close-5925` | #340 |
 
 ## Faz dalları (kapatılabilir)
 
@@ -34,6 +33,10 @@ EK_CLEAN_LIST_OPEN=1 bash scripts/verify-ekolojik-market-phase-pr-cleanup.sh
 # EK-CLOSE — rollup main'e merge edildikten sonra (varsayılan dry-run)
 bash scripts/run-ekolojik-market-close-stale-phase-prs.sh
 EK_CLOSE_STALE_PRS=1 bash scripts/run-ekolojik-market-close-stale-phase-prs.sh
+
+# EK-DEDUP — duplicate canonical PR (#337–#340) after #341 on main
+bash scripts/run-ekolojik-market-close-duplicate-canonical-prs.sh
+EK_DEDUP_CANONICAL_PRS=1 bash scripts/run-ekolojik-market-close-duplicate-canonical-prs.sh
 ```
 
 `EK_CLOSE_REQUIRE_MAIN_ROLLED=0` yalnızca acil operatör senaryosu (önerilmez).
