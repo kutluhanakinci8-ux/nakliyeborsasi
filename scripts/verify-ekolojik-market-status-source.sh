@@ -88,6 +88,10 @@ if "verify-ekolojik-market-status-source.sh" not in text:
     sys.exit("FAIL: verify script path not in controller")
 if 'fullGateEnvVar: "EK_U4_FULL"' not in text:
     sys.exit("FAIL: parityClose.fullGateEnvVar EK_U4_FULL missing")
+if "rollManifestVerifyScript" not in text:
+    sys.exit("FAIL: ekolojikCi.rollManifestVerifyScript not declared")
+if "verify-ekolojik-market-roll-manifest.sh" not in text:
+    sys.exit("FAIL: roll manifest script path not in controller")
 
 print(f"OK: EK_FEATURES count={len(features)}")
 PY

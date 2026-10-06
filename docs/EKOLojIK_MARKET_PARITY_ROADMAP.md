@@ -99,6 +99,13 @@ Detay: kullanıcı onayı sonrası `docs/LERTA_MAIL_MESSAGING_PARITY_100_ROADMAP
 - Public status `ekolojikCi.statusSourceVerifyScript` ile referans
 - Close checklist ilk adım: source verify
 
+## EK-ROLL — Tek merge (●)
+
+- **Canonical branch:** `cursor/ekolojik-market-parity-ek-roll-5925` → `main` (EK-0…EK-U4 + EK-OPS + EK-FULL tek PR)
+- `scripts/verify-ekolojik-market-roll-manifest.sh` — modül kaydı, hub route, deep-link çekirdeği + source verify
+- Eski faz PR’ları (#303–#336) bu dal merge edildikten sonra kapatılabilir
+- Merge sonrası: `main` push → CI build + prod smoke; deploy → `run-ekolojik-market-parity-close-checklist.sh`
+
 ## EK-FULL — NB paylaşılan tam kapı (●)
 
 - `parityClose.fullGateEnvVar`: **`EK_U4_FULL`**
