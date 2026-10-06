@@ -1,10 +1,11 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { SocialHubPageClient } from "../../app/(dashboard)/hesap/sosyal-medya/SocialHubPageClient";
 import { MessagingMailWebEmbed } from "../messaging/MessagingMailWebEmbed";
 import { MessagingConversationPanel } from "../messaging/MessagingConversationPanel";
+import { MessagingSideRail } from "../messaging/MessagingSideRail";
 import { MessagingThreadSidebar } from "../messaging/MessagingThreadSidebar";
 import { MessagingChatModalsLayer } from "../messaging/MessagingChatModalsLayer";
 import { MessagingChatComplianceStrip } from "../messaging/MessagingChatComplianceStrip";
@@ -30,6 +31,11 @@ import {
   parseEkolojikHubSection,
   type EkolojikHubSection,
 } from "../../lib/ekolojikHubTypes";
+import {
+  readStoredChatBackground,
+  rememberChatBackground,
+  type ChatConversationBackgroundId,
+} from "../../lib/messagingChatBackground";
 
 export type { EkolojikHubSection };
 
@@ -109,6 +115,16 @@ export function EkolojikCommunicationsHubClient() {
     return null;
   }, [section]);
 
+  const [chatBackgroundId, setChatBackgroundId] =
+    useState<ChatConversationBackgroundId>(() =>
+      typeof window === "undefined" ? "default" : readStoredChatBackground(),
+    );
+  const [chatBackgroundPickerOpen, setChatBackgroundPickerOpen] = useState(false);
+
+  useEffect(() => {
+    rememberChatBackground(chatBackgroundId);
+  }, [chatBackgroundId]);
+
   const {
     moduleBlocked,
     errorMessage,
@@ -117,6 +133,10 @@ export function EkolojikCommunicationsHubClient() {
     isCompanyOwner,
     channelSettingsOpen,
     setChannelSettingsOpen,
+    threads,
+    messages,
+    totalUnread,
+    handleExportArchive,
   } = chat;
 
   const showMessagingChat = isEkolojikMessagingChatSection(section);
@@ -137,6 +157,20 @@ export function EkolojikCommunicationsHubClient() {
       scroll: false,
     });
   };
+
+  const switchMessagingRailMode = useCallback(
+    (mode: "chat" | "email") => {
+      setChatBackgroundPickerOpen(false);
+      const next: EkolojikHubSection =
+        mode === "email" ? "posta" : "mesajlar";
+      const params = new URLSearchParams(searchParams.toString());
+      applyEkolojikSectionQueryParams(params, next);
+      router.replace(`/marketim/posta-ve-mesaj?${params.toString()}`, {
+        scroll: false,
+      });
+    },
+    [searchParams, router],
+  );
 
   return (
     <div className="ekolojik-comms-hub">
@@ -368,27 +402,49 @@ export function EkolojikCommunicationsHubClient() {
                 channelSettingsOpen={channelSettingsOpen}
                 onOpenSettings={() => setChannelSettingsOpen(true)}
               />
-              <div
-                className={
-                  mobileThreadOpen && activeThreadId
-                    ? "ekolojik-comms-chat-wrap chat-layout chat-layout--mobile-thread"
-                    : "ekolojik-comms-chat-wrap chat-layout"
-                }
-              >
-                <MessagingThreadSidebar
-                  chat={chat}
-                  locale={locale}
-                  accessToken={accessToken}
-                  socialDmInboxOnly={socialDmInbox}
-                  groupInboxOnly={groupInbox}
-                  highlightWhatsappBridge
-                />
-                <MessagingConversationPanel
-                  chat={chat}
-                  accessToken={accessToken}
-                  locale={locale}
-                  session={session}
-                  chatBackgroundId="default"
+              <div className="ekolojik-comms-chat-layout messaging-page-layout">
+                <div className="messaging-page-main">
+                  <div
+                    className={
+                      mobileThreadOpen && activeThreadId
+                        ? "ekolojik-comms-chat-wrap chat-layout chat-layout--mobile-thread"
+                        : "ekolojik-comms-chat-wrap chat-layout"
+                    }
+                  >
+                    <MessagingThreadSidebar
+                      chat={chat}
+                      locale={locale}
+                      accessToken={accessToken}
+                      socialDmInboxOnly={socialDmInbox}
+                      groupInboxOnly={groupInbox}
+                      highlightWhatsappBridge
+                    />
+                    <MessagingConversationPanel
+                      chat={chat}
+                      accessToken={accessToken}
+                      locale={locale}
+                      session={session}
+                      chatBackgroundId={chatBackgroundId}
+                    />
+                  </div>
+                </div>
+                <MessagingSideRail
+                  mode="chat"
+                  onSwitchMode={switchMessagingRailMode}
+                  threadCount={threads.length}
+                  totalUnread={totalUnread}
+                  activeMessageCount={messages.length}
+                  isCompanyOwner={isCompanyOwner}
+                  onExportKvkk={() => void handleExportArchive()}
+                  chatBackgroundId={chatBackgroundId}
+                  chatBackgroundPickerOpen={chatBackgroundPickerOpen}
+                  onToggleChatBackgroundPicker={() =>
+                    setChatBackgroundPickerOpen((open) => !open)
+                  }
+                  onChatBackgroundChange={setChatBackgroundId}
+                  onCloseChatBackgroundPicker={() =>
+                    setChatBackgroundPickerOpen(false)
+                  }
                 />
               </div>
             </>

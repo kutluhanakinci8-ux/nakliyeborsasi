@@ -74,7 +74,7 @@ Detay: kullanıcı onayı sonrası `docs/LERTA_MAIL_MESSAGING_PARITY_100_ROADMAP
 | M8 | ek-m8 | Grup thread + roller (● `grup-sohbet` + rol seçici) |
 | M9 | ek-m9 | Push + çeviri + bildirim matrisi (● `bolum=bildirimler`) |
 | M10 | ek-m10 | KVKK export / retention (● `bolum=kvkk` panel) |
-| M11 | ek-m11 | Premium UI parity |
+| M11 | ek-m11 | Premium UI parity (● `MessagingSideRail` + zemin seçici) |
 
 ## EK-S — Sosyal hub
 

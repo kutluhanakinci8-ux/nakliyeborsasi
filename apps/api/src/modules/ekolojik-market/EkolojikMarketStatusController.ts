@@ -1,7 +1,7 @@
 import { Controller, Get } from "@nestjs/common";
 import { MessagingAttachmentStorageService } from "../messaging/MessagingAttachmentStorageService";
 
-const EK_PHASE = "ek-m10";
+const EK_PHASE = "ek-m11";
 
 const EK_SOCIAL_DM_PLATFORMS = [
   "INSTAGRAM",
@@ -26,6 +26,7 @@ const EK_FEATURES = [
   "ekolojik_messaging_group_threads_roles",
   "ekolojik_messaging_push_translate_notify_matrix",
   "ekolojik_messaging_kvkk_export_retention",
+  "ekolojik_messaging_premium_ui_rail",
   "ekolojik_social_hub_embed",
   "ekolojik_ci_workflow_ek_0",
 ] as const;
@@ -45,6 +46,7 @@ const EK_PHASE_MILESTONES = [
   "ek-m8",
   "ek-m9",
   "ek-m10",
+  "ek-m11",
   "ek-s1",
   "ek-u4",
 ] as const;
@@ -110,6 +112,12 @@ export class EkolojikMarketStatusController {
       exportApiPath: string;
       retentionApiPath: string;
       nbStatusFeatures: string[];
+    };
+    messagingPremiumUi: {
+      phaseCode: string;
+      hubChatSections: string[];
+      chatBackgroundStorageKey: string;
+      nbParityComponents: string[];
     };
   } {
     return {
@@ -200,6 +208,16 @@ export class EkolojikMarketStatusController {
           "retention_policy_job",
           "thread_legal_hold",
           "ediscovery_zip_sha256",
+        ],
+      },
+      messagingPremiumUi: {
+        phaseCode: "ek-m11",
+        hubChatSections: ["mesajlar", "sosyal-dm", "grup-sohbet"],
+        chatBackgroundStorageKey: "lerta.messaging.chatBackground",
+        nbParityComponents: [
+          "MessagingSideRail",
+          "ChatConversationBackgroundPicker",
+          "messaging-page-layout",
         ],
       },
     };

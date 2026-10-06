@@ -17521,6 +17521,15 @@ button.btn-secondary {
   min-height: 480px;
 }
 
+.ekolojik-comms-chat-layout {
+  flex: 1;
+  min-height: 480px;
+}
+
+.ekolojik-comms-chat-layout .ekolojik-comms-chat-wrap {
+  min-height: 420px;
+}
+
 .ekolojik-comms-chat-wrap {
   flex: 1;
   min-height: 480px;
