@@ -52,6 +52,8 @@ import {
   ekolojikSocialHubPwaHealthHref,
   isEkolojikSocialHubPwaHealth,
   parseEkolojikBetaPlatformHighlight,
+  ekolojikSocialHubTelegramAdsHref,
+  isEkolojikSocialHubTelegramAdsPublishing,
 } from "../../lib/ekolojikSocialHubDeepLink";
 import {
   parseEkolojikHubSection,
@@ -119,6 +121,11 @@ export function EkolojikCommunicationsHubClient() {
     searchParams.get("bolum"),
     searchParams.get("tab"),
     searchParams.get("pwa"),
+  );
+  const socialTelegramAdsHub = isEkolojikSocialHubTelegramAdsPublishing(
+    searchParams.get("bolum"),
+    searchParams.get("tab"),
+    searchParams.get("telegram_ads") ?? searchParams.get("telegramAds"),
   );
   const [composeTo, setComposeTo] = useState<string | undefined>(undefined);
   const [openCompose, setOpenCompose] = useState(false);
@@ -281,6 +288,10 @@ export function EkolojikCommunicationsHubClient() {
     router.replace(ekolojikSocialHubPwaHealthHref(), { scroll: false });
   }, [router]);
 
+  const navigateSocialTelegramAdsHub = useCallback(() => {
+    router.replace(ekolojikSocialHubTelegramAdsHref(), { scroll: false });
+  }, [router]);
+
   const switchMessagingRailMode = useCallback(
     (mode: "chat" | "email") => {
       setChatBackgroundPickerOpen(false);
@@ -387,13 +398,24 @@ export function EkolojikCommunicationsHubClient() {
           <button
             type="button"
             className={
-              socialPublishingHub
+              socialPublishingHub && !socialTelegramAdsHub
                 ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
                 : "ekolojik-comms-sidebar-item"
             }
             onClick={() => navigateSocialPublishingHub()}
           >
             Yayınlar &amp; UTM
+          </button>
+          <button
+            type="button"
+            className={
+              socialTelegramAdsHub
+                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
+                : "ekolojik-comms-sidebar-item"
+            }
+            onClick={() => navigateSocialTelegramAdsHub()}
+          >
+            Telegram Ads (v2)
           </button>
           <button
             type="button"
@@ -544,6 +566,7 @@ export function EkolojikCommunicationsHubClient() {
               section === "sosyal" &&
               !socialInboxHub &&
               !socialPublishingHub &&
+              !socialTelegramAdsHub &&
               !socialTemplatesHub &&
               !socialAnalyticsHub &&
               !socialTelegramHub &&
@@ -650,6 +673,7 @@ export function EkolojikCommunicationsHubClient() {
                 openIntegrationGateFromUrl
                 openBetaPlatformDeepLinkFromUrl
                 openPwaHealthFromUrl
+                openTelegramAdsFromUrl
                 oauthWebReturnQuery={EKOLOJIK_SOCIAL_OAUTH_WEB_RETURN_QUERY}
               />
             </div>

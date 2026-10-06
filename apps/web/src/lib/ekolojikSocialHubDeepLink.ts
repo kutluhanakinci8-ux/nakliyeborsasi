@@ -277,3 +277,28 @@ export function ekolojikSocialHubPwaHealthHref(): string {
   });
   return `${EKOLOJIK_HUB_PATH}?${params.toString()}`;
 }
+
+/** NB post-BL — Telegram Ads API explicit v2 gate (UTM kanal yayını). */
+export function isEkolojikSocialHubTelegramAdsPublishing(
+  bolum: string | null,
+  tab: string | null,
+  telegramAds: string | null,
+): boolean {
+  if (bolum !== "sosyal" || tab !== "publishing") {
+    return false;
+  }
+  const raw = telegramAds?.toLowerCase();
+  return raw === "1" || raw === "true";
+}
+
+export function ekolojikSocialHubTelegramAdsHref(utmCampaign?: string): string {
+  const params = new URLSearchParams({
+    bolum: "sosyal",
+    tab: "publishing",
+    telegram_ads: "1",
+  });
+  if (utmCampaign?.trim()) {
+    params.set("utm_campaign", utmCampaign.trim());
+  }
+  return `${EKOLOJIK_HUB_PATH}?${params.toString()}`;
+}

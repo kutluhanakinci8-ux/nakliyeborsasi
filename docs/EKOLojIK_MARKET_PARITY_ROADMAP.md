@@ -89,7 +89,7 @@ Detay: kullanıcı onayı sonrası `docs/LERTA_MAIL_MESSAGING_PARITY_100_ROADMAP
 | S7 | ek-s7 | Telegram BD–BL (● `platform=TELEGRAM` + bot/kanal sihirbazı) |
 | S8 | ek-s8 | Ops + integration gate (● `tab=health` + `integration_gate=1`) |
 | S9 | ek-s9 | TikTok/YouTube/PWA (● `platform=TIKTOK|YOUTUBE` + `tab=health&pwa=1`) |
-| S10 | ek-s10 | Telegram Ads API (son) |
+| S10 | ek-s10 | Telegram Ads API (● `tab=publishing&telegram_ads=1` explicit v2 gate + UTM) |
 
 ## EK-U4 — Kapanış
 

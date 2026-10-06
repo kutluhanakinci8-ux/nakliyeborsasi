@@ -1,7 +1,11 @@
 import { Controller, Get } from "@nestjs/common";
 import { MessagingAttachmentStorageService } from "../messaging/MessagingAttachmentStorageService";
 
-const EK_PHASE = "ek-s9";
+const EK_PHASE = "ek-s10";
+
+const EK_SOCIAL_HUB_TELEGRAM_ADS_NB_FEATURES = [
+  "social_hub_telegram_ads_api_explicit_gate",
+] as const;
 
 const EK_SOCIAL_HUB_BETA_PLATFORM_NB_FEATURES = [
   "tiktok_prod_provider_path",
@@ -69,6 +73,7 @@ const EK_FEATURES = [
   "ekolojik_social_hub_telegram_bd_bl",
   "ekolojik_social_hub_ops_integration_gate",
   "ekolojik_social_hub_tiktok_youtube_pwa",
+  "ekolojik_social_hub_telegram_ads_api",
   "ekolojik_ci_workflow_ek_0",
 ] as const;
 
@@ -97,6 +102,7 @@ const EK_PHASE_MILESTONES = [
   "ek-s7",
   "ek-s8",
   "ek-s9",
+  "ek-s10",
   "ek-u4",
 ] as const;
 
@@ -263,6 +269,16 @@ export class EkolojikMarketStatusController {
       manifestPath: string;
       nbPhaseCode: string;
       nbStatusFeatures: string[];
+    };
+    socialHubTelegramAds: {
+      hubSection: string;
+      hubTab: string;
+      hubPath: string;
+      telegramAdsQueryParam: string;
+      utmDeepLinkQueryParams: string[];
+      nbStatusFeatures: string[];
+      nbExplicitGate: string;
+      companionTelegramConnectionsPath: string;
     };
   } {
     return {
@@ -481,6 +497,23 @@ export class EkolojikMarketStatusController {
         manifestPath: "/manifest-social-hub.webmanifest",
         nbPhaseCode: "bb",
         nbStatusFeatures: [...EK_SOCIAL_HUB_PWA_NB_FEATURES],
+      },
+      socialHubTelegramAds: {
+        hubSection: "sosyal",
+        hubTab: "publishing",
+        hubPath:
+          "/marketim/posta-ve-mesaj?bolum=sosyal&tab=publishing&telegram_ads=1",
+        telegramAdsQueryParam: "telegram_ads",
+        utmDeepLinkQueryParams: [
+          "utm_campaign",
+          "utm_source",
+          "utm_medium",
+          "utm_content",
+        ],
+        nbStatusFeatures: [...EK_SOCIAL_HUB_TELEGRAM_ADS_NB_FEATURES],
+        nbExplicitGate: "explicit_v2_gate",
+        companionTelegramConnectionsPath:
+          "/marketim/posta-ve-mesaj?bolum=sosyal&tab=connections&platform=TELEGRAM",
       },
     };
   }

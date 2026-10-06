@@ -83,6 +83,8 @@ type SocialHubPageClientProps = {
   openBetaPlatformDeepLinkFromUrl?: boolean;
   /** Ekolojik hub: `tab=health&pwa=1` PWA / push hook bölümü. */
   openPwaHealthFromUrl?: boolean;
+  /** Ekolojik hub: `tab=publishing&telegram_ads=1` Telegram Ads v2 kapı + UTM. */
+  openTelegramAdsFromUrl?: boolean;
 };
 
 export function SocialHubPageClient({
@@ -98,6 +100,7 @@ export function SocialHubPageClient({
   openIntegrationGateFromUrl = false,
   openBetaPlatformDeepLinkFromUrl = false,
   openPwaHealthFromUrl = false,
+  openTelegramAdsFromUrl = false,
 }: SocialHubPageClientProps = {}) {
   const { accessToken, session } = useWebSession();
   const router = useRouter();
@@ -149,6 +152,8 @@ export function SocialHubPageClient({
   const [connectionsPlatformHighlight, setConnectionsPlatformHighlight] =
     useState<EkolojikSocialBetaPlatformCode | null>(null);
   const [pwaSectionExpanded, setPwaSectionExpanded] = useState(false);
+  const [telegramAdsSectionExpanded, setTelegramAdsSectionExpanded] =
+    useState(false);
   const [inboxThreadsPreview, setInboxThreadsPreview] = useState<
     SocialHubInboxThreadPreview[]
   >([]);
@@ -352,6 +357,40 @@ export function SocialHubPageClient({
       setPwaSectionExpanded(false);
     }
   }, [searchParams, openPwaHealthFromUrl]);
+
+  useEffect(() => {
+    if (!openTelegramAdsFromUrl) {
+      setTelegramAdsSectionExpanded(false);
+      return;
+    }
+    if (parseSocialHubTab(searchParams.get("tab")) !== "publishing") {
+      setTelegramAdsSectionExpanded(false);
+      return;
+    }
+    const raw =
+      searchParams.get("telegram_ads") ?? searchParams.get("telegramAds");
+    if (raw === "1" || raw?.toLowerCase() === "true") {
+      setActiveTab("publishing");
+      setTelegramAdsSectionExpanded(true);
+      const utm = readEkolojikPublishingUtmFromSearchParams(
+        new URLSearchParams(searchParams.toString()),
+      );
+      if (utm.utmCampaign) {
+        setDraftUtmCampaign(utm.utmCampaign);
+      }
+      if (!utm.utmMedium) {
+        setDraftUtmMedium("telegram_channel");
+      }
+      if (!utm.utmSource) {
+        setDraftUtmSource("lerta");
+      }
+      setDraftPlatforms((current) =>
+        current.includes("TELEGRAM") ? current : [...current, "TELEGRAM"],
+      );
+    } else {
+      setTelegramAdsSectionExpanded(false);
+    }
+  }, [searchParams, openTelegramAdsFromUrl]);
 
   const handleTabChange = useCallback(
     (tab: SocialHubTabId) => {
@@ -1000,6 +1039,8 @@ export function SocialHubPageClient({
                 ownerApprovalRequired={snapshot.settings.ownerApprovalRequired}
                 publishingEnabled={snapshot.settings.publishingEnabled}
                 integrationOpsHints={snapshot.integrationOpsHints}
+                telegramAdsGate={snapshot.telegramAdsGate}
+                telegramAdsSectionExpanded={telegramAdsSectionExpanded}
                 draftText={draftText}
                 draftPlatforms={draftPlatforms}
                 draftMedia={draftMedia}

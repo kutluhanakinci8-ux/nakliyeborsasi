@@ -85,6 +85,18 @@ export type SocialHubLinkedInDmInboxGate = {
   userFacingNote: string;
 };
 
+export type SocialHubTelegramAdsGate = {
+  status: "deferred_v2";
+  implemented: "explicit_v2_gate";
+  rubrikClosed: true;
+  adsApiIntegrated: false;
+  utmChannelPublishing: true;
+  userFacingLabel: string;
+  userFacingNote: string;
+  utmGuidance: string;
+  docsPath: string;
+};
+
 export type SocialHubXDmInboxGate = {
   status: "deferred_v2" | "ready_v1";
   implemented: "explicit_v2_gate" | "deploy_flags";
@@ -397,6 +409,7 @@ export type SocialHubSnapshot = {
   linkedinDmInboxGate?: SocialHubLinkedInDmInboxGate;
   pwa?: SocialHubPwaConfig;
   integrationGate?: SocialHubIntegrationGate;
+  telegramAdsGate?: SocialHubTelegramAdsGate;
 };
 
 export type SocialHubInboxChannelSyncRow = {

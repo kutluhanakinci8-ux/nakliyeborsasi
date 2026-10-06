@@ -70,6 +70,7 @@ import { buildSocialHubXDmInboxGate } from "./socialHubXDmCapability";
 import { isRoadmapPendingSkeletonPlatform } from "./socialHubRoadmapPendingProviders";
 import { buildSocialHubPwaConfig } from "./socialHubPwaConfig";
 import { buildSocialHubIntegrationGate } from "./socialHubIntegrationGate";
+import { buildSocialHubTelegramAdsGate } from "./socialHubTelegramAdsGate";
 import { roadmapConnectedHint } from "./socialHubRoadmapHints";
 import { SocialHubRoadmapInboxSyncService } from "./SocialHubRoadmapInboxSyncService";
 import { SocialHubRoadmapPublishApplicationService } from "./SocialHubRoadmapPublishApplicationService";
@@ -314,6 +315,7 @@ export class SocialHubApplicationService {
       integrationGate: buildSocialHubIntegrationGate({
         inboundBridged24h,
       }),
+      telegramAdsGate: buildSocialHubTelegramAdsGate(),
     };
   }
 

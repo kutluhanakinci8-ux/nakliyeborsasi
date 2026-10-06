@@ -141,5 +141,8 @@ export function normalizeSocialHubSnapshot(payload: unknown): SocialHubSnapshot 
     integrationGate: hub.integrationGate as
       | SocialHubSnapshot["integrationGate"]
       | undefined,
+    telegramAdsGate: hub.telegramAdsGate as
+      | SocialHubSnapshot["telegramAdsGate"]
+      | undefined,
   };
 }

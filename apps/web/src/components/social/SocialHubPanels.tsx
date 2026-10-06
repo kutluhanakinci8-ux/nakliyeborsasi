@@ -922,6 +922,8 @@ type PublishingProps = {
   onBulkRetrySelected: () => void;
   publishingEnabled?: boolean;
   integrationOpsHints?: SocialHubSnapshot["integrationOpsHints"];
+  telegramAdsGate?: SocialHubSnapshot["telegramAdsGate"];
+  telegramAdsSectionExpanded?: boolean;
 };
 
 export function SocialPublishingPanel({
@@ -964,6 +966,8 @@ export function SocialPublishingPanel({
   onBulkRetrySelected,
   publishingEnabled,
   integrationOpsHints,
+  telegramAdsGate,
+  telegramAdsSectionExpanded = false,
 }: PublishingProps) {
   const platformLabelByCode = (code: string) =>
     platformOptions.find((p) => p.code === code)?.label ?? code;
@@ -1077,6 +1081,24 @@ export function SocialPublishingPanel({
               ) : null}
             </div>
           </header>
+          {telegramAdsGate ? (
+            <details
+              className="social-hub-telegram-ads-details"
+              open={telegramAdsSectionExpanded}
+            >
+              <summary className="social-hub-health-settings-summary">
+                {telegramAdsGate.userFacingLabel}
+              </summary>
+              <p className="social-hub-connection-summary">
+                {telegramAdsGate.userFacingNote}
+              </p>
+              <p className="module-hint">{telegramAdsGate.utmGuidance}</p>
+              <p className="module-hint">
+                Organik kanal ölçümü: aşağıdaki <strong>Kampanya linkleri (UTM)</strong>{" "}
+                alanını kullanın; Telegram platformunu yayın hedefi olarak seçin.
+              </p>
+            </details>
+          ) : null}
           {ownerApprovalRequired ? (
             <p className="social-hub-approval-chip">
               Onay gerekli — sahip veya sosyal yönetici onaylar.
@@ -1290,7 +1312,10 @@ export function SocialPublishingPanel({
               ))}
             </ul>
           ) : null}
-          <details className="social-hub-utm-details">
+          <details
+            className="social-hub-utm-details"
+            open={telegramAdsSectionExpanded}
+          >
             <summary className="module-hint">Kampanya linkleri (UTM)</summary>
             <p className="module-hint">
               Metindeki https bağlantılarına yayın anında utm_* eklenir (Telegram Ads

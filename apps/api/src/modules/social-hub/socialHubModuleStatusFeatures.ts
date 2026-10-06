@@ -212,6 +212,7 @@ const BK_FEATURES = [
 const BL_FEATURES = [
   "social_hub_telegram_webhook_allowed_updates",
   "social_hub_ci_workflow_bl",
+  "social_hub_telegram_ads_api_explicit_gate",
 ] as const;
 
 export const SOCIAL_HUB_PHASE_MILESTONE_CODES = [

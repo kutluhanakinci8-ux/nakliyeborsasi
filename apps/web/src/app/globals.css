@@ -16666,6 +16666,14 @@ button.btn-secondary {
   background: #f8fafc;
 }
 
+.social-hub-telegram-ads-details {
+  margin: 0 0 1rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  background: #fffbeb;
+}
+
 .social-hub-analytics-utm-row--highlight {
   background: #fff8e6;
   border-radius: 8px;

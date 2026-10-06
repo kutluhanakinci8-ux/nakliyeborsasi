@@ -3,7 +3,7 @@
 set -euo pipefail
 API_BASE="${EKOLojIK_API_BASE:-${SOCIAL_HUB_API_BASE:-http://127.0.0.1:3000/api/v1}}"
 WEB_BASE="${EKOLojIK_WEB_PUBLIC_URL:-${SOCIAL_HUB_WEB_PUBLIC_URL:-http://127.0.0.1:3001}}"
-EXPECT_PHASE="${EKOLOJIK_SMOKE_EXPECT_PHASE:-ek-s9}"
+EXPECT_PHASE="${EKOLOJIK_SMOKE_EXPECT_PHASE:-ek-s10}"
 
 echo "== Ekolojik market public status =="
 status_json="$(curl -fsS "${API_BASE}/public/ekolojik-market/status")"
@@ -226,6 +226,21 @@ echo "${status_json}" | grep -q '"social_hub_pwa_manifest_scope"' || {
   echo "FAIL: missing socialHubPwa nb feature"
   exit 1
 }
+echo "${status_json}" | grep -q '"ekolojik_social_hub_telegram_ads_api"' || {
+  echo "FAIL: missing ekolojik_social_hub_telegram_ads_api"
+  exit 1
+}
+echo "OK: feature ekolojik_social_hub_telegram_ads_api (EK-S10)"
+echo "${status_json}" | grep -q '"telegram_ads=1"' || {
+  echo "FAIL: missing socialHubTelegramAds publishing deep link"
+  exit 1
+}
+echo "OK: socialHubTelegramAds deep link"
+echo "${status_json}" | grep -q '"social_hub_telegram_ads_api_explicit_gate"' || {
+  echo "FAIL: missing socialHubTelegramAds nb explicit gate feature"
+  exit 1
+}
+echo "OK: socialHubTelegramAds explicit v2 gate"
 
 echo "== Ekolojik hub web route =="
 code="$(curl -sS -o /dev/null -w "%{http_code}" "${WEB_BASE}/marketim/posta-ve-mesaj")"
