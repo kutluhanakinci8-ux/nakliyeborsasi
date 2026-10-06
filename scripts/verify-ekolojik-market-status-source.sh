@@ -49,6 +49,14 @@ grep -q "prodRolloutVerifyScript" "${CONTROLLER}" || {
   echo "FAIL: prodRolloutVerifyScript missing" >&2
   exit 1
 }
+grep -q 'prodRolloutStrictEnvVar: "EK_PROD_ROLLOUT_STRICT"' "${CONTROLLER}" || {
+  echo "FAIL: prodRolloutStrictEnvVar missing" >&2
+  exit 1
+}
+grep -q "verify-ekolojik-market-prod-rollout.sh" "${ROOT}/.github/workflows/ekolojik-market-parity.yml" || {
+  echo "FAIL: workflow smoke-public must use prod rollout verify" >&2
+  exit 1
+}
 grep -q 'mergedCanonicalPullRequest: 341' "${CONTROLLER}" || {
   echo "FAIL: mergedCanonicalPullRequest 341 not in controller" >&2
   exit 1

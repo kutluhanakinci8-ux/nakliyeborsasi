@@ -15,7 +15,8 @@ echo "== Ekolojik post-deploy gate (EK-LIVE) =="
 echo "API_BASE=${API_BASE}"
 echo "WEB_BASE=${WEB_BASE}"
 
-bash "${ROOT}/scripts/smoke-ekolojik-market-parity.sh"
+export EK_PROD_ROLLOUT_STRICT="${EK_PROD_ROLLOUT_STRICT:-1}"
+bash "${ROOT}/scripts/verify-ekolojik-market-prod-rollout.sh"
 
 if [[ "${EK_LIVE_SKIP_CLOSE:-0}" == "1" ]]; then
   echo "SKIP: EK_LIVE_SKIP_CLOSE=1 — close checklist atlandı"

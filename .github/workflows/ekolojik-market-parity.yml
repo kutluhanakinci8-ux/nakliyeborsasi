@@ -58,6 +58,10 @@ on:
         description: Prod public smoke (app.lerta.com.tr)
         type: boolean
         default: true
+      prod_rollout_strict:
+        description: EK_PROD_ROLLOUT_STRICT=1 (404 fail; deploy sonrası kullan)
+        type: boolean
+        default: false
   schedule:
     - cron: "30 6 * * *"
 
@@ -89,12 +93,13 @@ jobs:
       (github.event_name == 'workflow_dispatch' && inputs.run_prod_smoke != false)
     steps:
       - uses: actions/checkout@v4
-      - name: Public ekolojik parity smoke (prod API)
+      - name: Prod rollout verify (EK-PROD / EK-CI-LIVE)
         env:
           EKOLOJIK_API_BASE: https://app.lerta.com.tr/api/v1
           EKOLOJIK_WEB_PUBLIC_URL: https://app.lerta.com.tr
           EKOLOJIK_SMOKE_EXPECT_PHASE: ek-u4
-        run: bash scripts/smoke-ekolojik-market-parity.sh
+          EK_PROD_ROLLOUT_STRICT: ${{ github.event_name == 'workflow_dispatch' && inputs.prod_rollout_strict == true && '1' || '0' }}
+        run: bash scripts/verify-ekolojik-market-prod-rollout.sh
 
   close-checklist:
     runs-on: ubuntu-latest

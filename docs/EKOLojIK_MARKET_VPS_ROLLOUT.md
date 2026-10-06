@@ -21,6 +21,8 @@ EK_PROD_ROLLOUT_STRICT=1 bash scripts/verify-ekolojik-market-prod-rollout.sh
 bash scripts/run-ekolojik-market-post-deploy-gate.sh
 ```
 
+GitHub Actions: **Ekolojik market parity** → `workflow_dispatch` → `prod_rollout_strict` (deploy sonrası).
+
 ## GitHub Actions Deploy VPS
 
 `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY` secrets tanımlı değilse workflow deploy adımını **SKIP** eder (main kırmızı olmaz).

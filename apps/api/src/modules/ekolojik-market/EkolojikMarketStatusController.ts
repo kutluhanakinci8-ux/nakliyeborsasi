@@ -312,6 +312,7 @@ export class EkolojikMarketStatusController {
       shipChecklistScript: string;
       prodRolloutVerifyScript: string;
       prodRolloutDoc: string;
+      prodRolloutStrictEnvVar: string;
       phasePrCleanupVerifyScript: string;
       phasePrCleanupDoc: string;
       phasePrCloseScript: string;
@@ -731,6 +732,7 @@ export class EkolojikMarketStatusController {
         prodRolloutVerifyScript:
           "scripts/verify-ekolojik-market-prod-rollout.sh",
         prodRolloutDoc: "docs/EKOLojIK_MARKET_VPS_ROLLOUT.md",
+        prodRolloutStrictEnvVar: "EK_PROD_ROLLOUT_STRICT",
         phasePrCleanupVerifyScript:
           "scripts/verify-ekolojik-market-phase-pr-cleanup.sh",
         phasePrCleanupDoc: "docs/EKOLojIK_MARKET_PHASE_PR_CLEANUP.md",
