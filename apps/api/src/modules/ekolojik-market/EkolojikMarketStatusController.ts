@@ -306,6 +306,8 @@ export class EkolojikMarketStatusController {
       statusSourceVerifyScript: string;
       rollManifestVerifyScript: string;
       canonicalMergeBranch: string;
+      phasePrCleanupVerifyScript: string;
+      phasePrCleanupDoc: string;
       defaultSmokeExpectPhase: string;
     };
     socialHubConnections: {
@@ -710,6 +712,9 @@ export class EkolojikMarketStatusController {
         rollManifestVerifyScript:
           "scripts/verify-ekolojik-market-roll-manifest.sh",
         canonicalMergeBranch: "cursor/ekolojik-market-parity-ek-roll-5925",
+        phasePrCleanupVerifyScript:
+          "scripts/verify-ekolojik-market-phase-pr-cleanup.sh",
+        phasePrCleanupDoc: "docs/EKOLojIK_MARKET_PHASE_PR_CLEANUP.md",
         defaultSmokeExpectPhase: "ek-u4",
       },
       socialHubConnections: {

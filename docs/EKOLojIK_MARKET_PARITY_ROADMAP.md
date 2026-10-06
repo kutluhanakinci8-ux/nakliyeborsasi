@@ -106,6 +106,13 @@ Detay: kullanıcı onayı sonrası `docs/LERTA_MAIL_MESSAGING_PARITY_100_ROADMAP
 - Eski faz PR’ları (#303–#336) bu dal merge edildikten sonra kapatılabilir
 - Merge sonrası: `main` push → CI build + prod smoke; deploy → `run-ekolojik-market-parity-close-checklist.sh`
 
+## EK-CLEAN — Faz PR temizliği (●)
+
+- `docs/EKOLojIK_MARKET_PHASE_PR_CLEANUP.md` — superseded `cursor/ekolojik-market-parity-ek-*` dalları (#337/#338 merge sonrası kapat)
+- `scripts/verify-ekolojik-market-phase-pr-cleanup.sh` — canonical dal + belge; opsiyonel `EK_CLEAN_LIST_OPEN=1` + `gh`
+- Public status `ekolojikCi.phasePrCleanupVerifyScript` / `phasePrCleanupDoc`
+- Roll manifest son adım: EK-CLEAN verify
+
 ## EK-LIVE — Deploy sonrası prod kapı (●)
 
 - `scripts/run-ekolojik-market-post-deploy-gate.sh` — prod smoke + EK-U4 close (`EK_LIVE_SKIP_CLOSE=1` ile sadece smoke)
