@@ -5,7 +5,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DOC="${ROOT}/docs/EKOLojIK_MARKET_PHASE_PR_CLEANUP.md"
 BRANCH_PREFIX="cursor/ekolojik-market-parity-ek-"
-KEEP_SUFFIXES=("roll-5925" "live-5925" "clean-5925" "close-5925")
+KEEP_SUFFIXES=("roll-5925" "live-5925" "clean-5925" "close-5925" "done-5925")
 APPLY="${EK_CLOSE_STALE_PRS:-0}"
 REQUIRE_MAIN="${EK_CLOSE_REQUIRE_MAIN_ROLLED:-1}"
 

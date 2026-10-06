@@ -423,6 +423,20 @@ echo "${status_json}" | grep -q '"phasePrCloseEnvVar":"EK_CLOSE_STALE_PRS"' || {
   exit 1
 }
 echo "OK: ekolojikCi stale PR close (EK-CLOSE)"
+echo "${status_json}" | grep -q '"ekolojik_program_done_gate"' || {
+  echo "FAIL: missing ekolojik_program_done_gate feature"
+  exit 1
+}
+echo "OK: program done feature (EK-DONE)"
+echo "${status_json}" | grep -q '"programComplete":true' || {
+  echo "FAIL: parityClose.programDone.programComplete not true"
+  exit 1
+}
+echo "${status_json}" | grep -q 'verify-ekolojik-market-program-done.sh' || {
+  echo "FAIL: missing programDone.verifyScript"
+  exit 1
+}
+echo "OK: parityClose programDone manifest (EK-DONE)"
 echo "${status_json}" | grep -q '"phaseCode":"ek-u4"' || {
   echo "FAIL: missing parityClose phaseCode ek-u4"
   exit 1

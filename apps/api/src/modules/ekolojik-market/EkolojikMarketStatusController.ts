@@ -102,6 +102,7 @@ const EK_FEATURES = [
   "ekolojik_social_hub_telegram_ads_api",
   "ekolojik_parity_close_checklist",
   "ekolojik_ci_workflow_ek_0",
+  "ekolojik_program_done_gate",
 ] as const;
 
 const EK_PHASE_MILESTONES = [
@@ -140,6 +141,7 @@ const EK_PHASE_MILESTONES = [
   "ek-s9",
   "ek-s10",
   "ek-u4",
+  "ek-done",
 ] as const;
 
 @Controller("public/ekolojik-market")
@@ -437,6 +439,12 @@ export class EkolojikMarketStatusController {
       socialHubBcPhase: string;
       nbSocialIntegrationGateFeature: string;
       hubPath: string;
+      programDone: {
+        phaseCode: string;
+        programComplete: boolean;
+        verifyScript: string;
+        operatorSequence: string[];
+      };
     };
   } {
     return {
@@ -879,6 +887,17 @@ export class EkolojikMarketStatusController {
         socialHubBcPhase: EK_SOCIAL_HUB_BC_CHECKLIST_PHASE,
         nbSocialIntegrationGateFeature: "social_hub_integration_gate_checklist",
         hubPath: "/marketim/posta-ve-mesaj",
+        programDone: {
+          phaseCode: "ek-done",
+          programComplete: true,
+          verifyScript: "scripts/verify-ekolojik-market-program-done.sh",
+          operatorSequence: [
+            "merge cursor/ekolojik-market-parity-ek-roll-5925 (or ek-close-5925) to main",
+            "deploy-production-vps.sh → run-ekolojik-market-post-deploy-gate.sh",
+            "EK_CLOSE_STALE_PRS=1 run-ekolojik-market-close-stale-phase-prs.sh",
+            "workflow_dispatch ekolojik-market-parity optional ek_u4_full",
+          ],
+        },
       },
     };
   }
