@@ -1,7 +1,28 @@
 import { Controller, Get } from "@nestjs/common";
 import { MessagingAttachmentStorageService } from "../messaging/MessagingAttachmentStorageService";
 
-const EK_PHASE = "ek-s6";
+const EK_PHASE = "ek-s7";
+
+const EK_SOCIAL_HUB_TELEGRAM_NB_PHASES = [
+  "bd",
+  "be",
+  "bg",
+  "bh",
+  "bi",
+  "bj",
+  "bk",
+  "bl",
+] as const;
+
+const EK_SOCIAL_HUB_TELEGRAM_NB_FEATURES = [
+  "social_hub_telegram_track_complete",
+  "social_hub_telegram_outbound_media_group",
+  "social_hub_telegram_channel_media_group",
+  "social_hub_telegram_edited_message_sync",
+  "social_hub_telegram_flood_retry",
+  "social_hub_telegram_deleted_message_sync",
+  "social_hub_telegram_webhook_allowed_updates",
+] as const;
 
 const EK_SOCIAL_DM_PLATFORMS = [
   "INSTAGRAM",
@@ -33,6 +54,7 @@ const EK_FEATURES = [
   "ekolojik_social_hub_publishing_utm_media",
   "ekolojik_social_hub_templates",
   "ekolojik_social_hub_analytics",
+  "ekolojik_social_hub_telegram_bd_bl",
   "ekolojik_ci_workflow_ek_0",
 ] as const;
 
@@ -58,6 +80,7 @@ const EK_PHASE_MILESTONES = [
   "ek-s4",
   "ek-s5",
   "ek-s6",
+  "ek-s7",
   "ek-u4",
 ] as const;
 
@@ -172,6 +195,19 @@ export class EkolojikMarketStatusController {
       analyticsExportApiPath: string;
       utmHighlightQueryParam: string;
       nbTab: string;
+    };
+    socialHubTelegram: {
+      hubSection: string;
+      hubTab: string;
+      hubPath: string;
+      platformQuery: string;
+      telegramWizardQuery: string;
+      connectBotApiPath: string;
+      publishChannelApiPath: string;
+      discussionGroupApiPath: string;
+      nbSocialHubStatusPath: string;
+      nbPhaseCodes: string[];
+      nbStatusFeatures: string[];
     };
   } {
     return {
@@ -325,6 +361,23 @@ export class EkolojikMarketStatusController {
         analyticsExportApiPath: "/api/v1/company/social-hub/analytics/export",
         utmHighlightQueryParam: "utm_campaign",
         nbTab: "analytics",
+      },
+      socialHubTelegram: {
+        hubSection: "sosyal",
+        hubTab: "connections",
+        hubPath:
+          "/marketim/posta-ve-mesaj?bolum=sosyal&tab=connections&platform=TELEGRAM",
+        platformQuery: "platform=TELEGRAM",
+        telegramWizardQuery: "telegram=connect|channel|discussion",
+        connectBotApiPath:
+          "/api/v1/company/social-hub/connections/TELEGRAM/connect-bot",
+        publishChannelApiPath:
+          "/api/v1/company/social-hub/connections/TELEGRAM/publish-channel",
+        discussionGroupApiPath:
+          "/api/v1/company/social-hub/connections/TELEGRAM/discussion-group",
+        nbSocialHubStatusPath: "/api/v1/company/social-hub/status",
+        nbPhaseCodes: [...EK_SOCIAL_HUB_TELEGRAM_NB_PHASES],
+        nbStatusFeatures: [...EK_SOCIAL_HUB_TELEGRAM_NB_FEATURES],
       },
     };
   }

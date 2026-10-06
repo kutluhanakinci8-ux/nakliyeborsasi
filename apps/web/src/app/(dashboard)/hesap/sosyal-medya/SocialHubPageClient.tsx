@@ -73,6 +73,8 @@ type SocialHubPageClientProps = {
   prefillTemplateFromUrl?: boolean;
   /** Ekolojik hub: analitikte `utm_campaign` satırını vurgula. */
   highlightAnalyticsUtmFromUrl?: boolean;
+  /** Ekolojik hub: `platform=TELEGRAM` + `telegram=` sihirbaz deep link. */
+  openTelegramDeepLinkFromUrl?: boolean;
 };
 
 export function SocialHubPageClient({
@@ -84,6 +86,7 @@ export function SocialHubPageClient({
   prefillPublishingUtmFromUrl = false,
   prefillTemplateFromUrl = false,
   highlightAnalyticsUtmFromUrl = false,
+  openTelegramDeepLinkFromUrl = false,
 }: SocialHubPageClientProps = {}) {
   const { accessToken, session } = useWebSession();
   const router = useRouter();
@@ -247,6 +250,44 @@ export function SocialHubPageClient({
       ),
     );
   }, [searchParams, highlightAnalyticsUtmFromUrl]);
+
+  useEffect(() => {
+    if (!openTelegramDeepLinkFromUrl) {
+      return;
+    }
+    const platform = searchParams.get("platform")?.toUpperCase();
+    const telegram = searchParams.get("telegram")?.toLowerCase();
+    if (platform !== "TELEGRAM" && !telegram) {
+      return;
+    }
+    setActiveTab("connections");
+    if (telegram === "connect") {
+      setTelegramTokenDraft("");
+      setTelegramConnectOpen(true);
+    }
+  }, [searchParams, openTelegramDeepLinkFromUrl]);
+
+  useEffect(() => {
+    if (!openTelegramDeepLinkFromUrl || !snapshot) {
+      return;
+    }
+    const telegram = searchParams.get("telegram")?.toLowerCase();
+    if (telegram !== "channel" && telegram !== "discussion") {
+      return;
+    }
+    const tg = snapshot.connections?.find(
+      (c) => c.platformCode === "TELEGRAM",
+    );
+    if (telegram === "channel") {
+      setTelegramChannelDraft(
+        tg?.telegramPublishChannel?.username?.replace(/^@/, "") ?? "",
+      );
+      setTelegramChannelOpen(true);
+    } else {
+      setTelegramDiscussionDraft(tg?.telegramDiscussionGroup?.chatId ?? "");
+      setTelegramDiscussionOpen(true);
+    }
+  }, [searchParams, openTelegramDeepLinkFromUrl, snapshot]);
 
   const handleTabChange = useCallback(
     (tab: SocialHubTabId) => {

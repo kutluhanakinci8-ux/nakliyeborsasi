@@ -41,6 +41,8 @@ import {
   ekolojikSocialHubTemplatesHref,
   ekolojikSocialHubAnalyticsHref,
   isEkolojikSocialHubAnalyticsTab,
+  ekolojikSocialHubTelegramHref,
+  isEkolojikSocialHubTelegramConnections,
 } from "../../lib/ekolojikSocialHubDeepLink";
 import {
   parseEkolojikHubSection,
@@ -76,6 +78,11 @@ export function EkolojikCommunicationsHubClient() {
   const socialAnalyticsHub = isEkolojikSocialHubAnalyticsTab(
     searchParams.get("bolum"),
     searchParams.get("tab"),
+  );
+  const socialTelegramHub = isEkolojikSocialHubTelegramConnections(
+    searchParams.get("bolum"),
+    searchParams.get("tab"),
+    searchParams.get("platform"),
   );
   const [composeTo, setComposeTo] = useState<string | undefined>(undefined);
   const [openCompose, setOpenCompose] = useState(false);
@@ -208,6 +215,10 @@ export function EkolojikCommunicationsHubClient() {
 
   const navigateSocialAnalyticsHub = useCallback(() => {
     router.replace(ekolojikSocialHubAnalyticsHref(), { scroll: false });
+  }, [router]);
+
+  const navigateSocialTelegramHub = useCallback(() => {
+    router.replace(ekolojikSocialHubTelegramHref("connect"), { scroll: false });
   }, [router]);
 
   const switchMessagingRailMode = useCallback(
@@ -349,6 +360,17 @@ export function EkolojikCommunicationsHubClient() {
           <button
             type="button"
             className={
+              socialTelegramHub
+                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
+                : "ekolojik-comms-sidebar-item"
+            }
+            onClick={() => navigateSocialTelegramHub()}
+          >
+            Telegram
+          </button>
+          <button
+            type="button"
+            className={
               section === "gonderilen"
                 ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
                 : "ekolojik-comms-sidebar-item"
@@ -408,7 +430,8 @@ export function EkolojikCommunicationsHubClient() {
               !socialInboxHub &&
               !socialPublishingHub &&
               !socialTemplatesHub &&
-              !socialAnalyticsHub
+              !socialAnalyticsHub &&
+              !socialTelegramHub
                 ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
                 : "ekolojik-comms-sidebar-item"
             }
@@ -503,6 +526,7 @@ export function EkolojikCommunicationsHubClient() {
                 prefillPublishingUtmFromUrl
                 prefillTemplateFromUrl
                 highlightAnalyticsUtmFromUrl
+                openTelegramDeepLinkFromUrl
                 oauthWebReturnQuery={EKOLOJIK_SOCIAL_OAUTH_WEB_RETURN_QUERY}
               />
             </div>

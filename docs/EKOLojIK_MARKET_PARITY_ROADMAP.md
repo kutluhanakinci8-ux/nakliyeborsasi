@@ -86,7 +86,7 @@ Detay: kullanıcı onayı sonrası `docs/LERTA_MAIL_MESSAGING_PARITY_100_ROADMAP
 | S4 | ek-s4 | Yayınlar + UTM + medya (● `tab=publishing` + `utm_*` deep link) |
 | S5 | ek-s5 | Şablonlar (● `tab=templates` + `templateId` deep link) |
 | S6 | ek-s6 | Analitik (● `tab=analytics` + CSV export + `utm_campaign` vurgu) |
-| S7 | ek-s7 | Telegram BD–BL (NB ile aynı kod) |
+| S7 | ek-s7 | Telegram BD–BL (● `platform=TELEGRAM` + bot/kanal sihirbazı) |
 | S8 | ek-s8 | Ops + integration gate |
 | S9 | ek-s9 | TikTok/YouTube/PWA |
 | S10 | ek-s10 | Telegram Ads API (son) |

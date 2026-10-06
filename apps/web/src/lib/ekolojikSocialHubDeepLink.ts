@@ -92,6 +92,34 @@ export function readEkolojikAnalyticsUtmHighlight(
   );
 }
 
+export type EkolojikTelegramHubAction = "connect" | "channel" | "discussion";
+
+export function ekolojikSocialHubTelegramHref(
+  action?: EkolojikTelegramHubAction,
+): string {
+  const params = new URLSearchParams({
+    bolum: "sosyal",
+    tab: "connections",
+    platform: "TELEGRAM",
+  });
+  if (action) {
+    params.set("telegram", action);
+  }
+  return `${EKOLOJIK_HUB_PATH}?${params.toString()}`;
+}
+
+export function isEkolojikSocialHubTelegramConnections(
+  bolum: string | null,
+  tab: string | null,
+  platform: string | null,
+): boolean {
+  return (
+    bolum === "sosyal" &&
+    tab === "connections" &&
+    platform?.toUpperCase() === "TELEGRAM"
+  );
+}
+
 export type EkolojikSocialPublishingUtm = {
   utmCampaign?: string;
   utmSource?: string;
