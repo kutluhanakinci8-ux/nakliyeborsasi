@@ -19,6 +19,8 @@ bash scripts/verify-ekolojik-market-prod-rollout.sh
 # Deploy sonrası zorunlu yeşil
 EK_PROD_ROLLOUT_STRICT=1 bash scripts/verify-ekolojik-market-prod-rollout.sh
 bash scripts/run-ekolojik-market-post-deploy-gate.sh
+# veya tek komut:
+bash scripts/run-ekolojik-market-live-verify.sh
 ```
 
 GitHub Actions: **Ekolojik market parity** → `workflow_dispatch` → `prod_rollout_strict` (deploy sonrası).

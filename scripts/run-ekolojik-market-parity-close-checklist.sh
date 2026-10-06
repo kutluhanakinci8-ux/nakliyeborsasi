@@ -4,6 +4,10 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 API_BASE="${EKOLOJIK_API_BASE:-${SOCIAL_HUB_API_BASE:-http://127.0.0.1:3000/api/v1}}"
+WEB_BASE="${EKOLOJIK_WEB_PUBLIC_URL:-${SOCIAL_HUB_WEB_PUBLIC_URL:-http://127.0.0.1:3001}}"
+if [[ "${API_BASE}" == *"app.lerta.com.tr"* ]]; then
+  WEB_BASE="${EKOLOJIK_WEB_PUBLIC_URL:-${SOCIAL_HUB_WEB_PUBLIC_URL:-https://app.lerta.com.tr}}"
+fi
 ROADMAP="${ROOT}/docs/EKOLojIK_MARKET_PARITY_ROADMAP.md"
 MAIL_MIN="${EK_U4_MAIL_MIN_PERCENT:-95}"
 MSG_MIN="${EK_U4_MESSAGING_MIN_PERCENT:-95}"
@@ -38,6 +42,7 @@ fi
 run_step "Public parity smoke (phase ek-u4)" \
   env EKOLOJIK_SMOKE_EXPECT_PHASE=ek-u4 \
   EKOLOJIK_API_BASE="${API_BASE}" \
+  EKOLOJIK_WEB_PUBLIC_URL="${WEB_BASE}" \
   bash "${ROOT}/scripts/smoke-ekolojik-market-parity.sh"
 
 echo ""

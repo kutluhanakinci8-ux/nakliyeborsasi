@@ -53,6 +53,14 @@ grep -q 'prodRolloutStrictEnvVar: "EK_PROD_ROLLOUT_STRICT"' "${CONTROLLER}" || {
   echo "FAIL: prodRolloutStrictEnvVar missing" >&2
   exit 1
 }
+grep -q "liveVerifyScript" "${CONTROLLER}" || {
+  echo "FAIL: liveVerifyScript missing" >&2
+  exit 1
+}
+grep -q "EKOLOJIK_API_BASE" "${ROOT}/scripts/smoke-ekolojik-market-parity.sh" || {
+  echo "FAIL: smoke must accept EKOLOJIK_API_BASE" >&2
+  exit 1
+}
 grep -q "verify-ekolojik-market-prod-rollout.sh" "${ROOT}/.github/workflows/ekolojik-market-parity.yml" || {
   echo "FAIL: workflow smoke-public must use prod rollout verify" >&2
   exit 1

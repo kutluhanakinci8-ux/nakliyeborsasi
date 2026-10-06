@@ -319,6 +319,7 @@ export class EkolojikMarketStatusController {
       phasePrCloseEnvVar: string;
       duplicateCanonicalPrCloseScript: string;
       duplicateCanonicalPrCloseEnvVar: string;
+      liveVerifyScript: string;
       defaultSmokeExpectPhase: string;
     };
     socialHubConnections: {
@@ -744,6 +745,7 @@ export class EkolojikMarketStatusController {
         duplicateCanonicalPrCloseScript:
           "scripts/run-ekolojik-market-close-duplicate-canonical-prs.sh",
         duplicateCanonicalPrCloseEnvVar: "EK_DEDUP_CANONICAL_PRS",
+        liveVerifyScript: "scripts/run-ekolojik-market-live-verify.sh",
         defaultSmokeExpectPhase: "ek-u4",
       },
       socialHubConnections: {
