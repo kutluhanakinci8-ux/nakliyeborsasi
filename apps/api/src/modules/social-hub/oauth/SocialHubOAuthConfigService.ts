@@ -123,11 +123,47 @@ export class SocialHubOAuthConfigService {
   }
 
   public getWebAppReturnUrl(): string {
+    return this.resolveWebAppReturnUrl(null);
+  }
+
+  /** Whitelist query keys; Ekolojik returns require `bolum=sosyal`. */
+  public sanitizeWebReturnQuery(raw?: string | null): string | null {
+    if (!raw?.trim()) {
+      return null;
+    }
+    const params = new URLSearchParams(raw.trim().replace(/^\?/, ""));
+    const bolum = params.get("bolum");
+    if (bolum && bolum !== "sosyal") {
+      return null;
+    }
+    if (bolum === "sosyal") {
+      const allowed = ["bolum", "tab", "oauth", "reason", "platform"];
+      const out = new URLSearchParams();
+      for (const key of allowed) {
+        const value = params.get(key);
+        if (value) {
+          out.set(key, value);
+        }
+      }
+      if (!out.has("bolum")) {
+        out.set("bolum", "sosyal");
+      }
+      return out.toString();
+    }
+    return null;
+  }
+
+  public resolveWebAppReturnUrl(webReturnQuery?: string | null): string {
     const base =
       this.configService.get<string>("SOCIAL_HUB_WEB_RETURN_URL")?.trim() ??
       this.configService.get<string>("WEB_PUBLIC_APP_URL")?.trim() ??
       "https://app.lerta.com.tr";
-    return `${base.replace(/\/$/, "")}/hesap/sosyal-medya?tab=connections`;
+    const root = base.replace(/\/$/, "");
+    const sanitized = this.sanitizeWebReturnQuery(webReturnQuery);
+    if (sanitized) {
+      return `${root}/marketim/posta-ve-mesaj?${sanitized}`;
+    }
+    return `${root}/hesap/sosyal-medya?tab=connections`;
   }
 
   /** Instagram App ID + secret from Meta → Instagram → Business login settings (≠ Meta App ID). */

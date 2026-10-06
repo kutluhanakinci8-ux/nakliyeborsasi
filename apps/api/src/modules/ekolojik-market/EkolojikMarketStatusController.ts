@@ -1,7 +1,7 @@
 import { Controller, Get } from "@nestjs/common";
 import { MessagingAttachmentStorageService } from "../messaging/MessagingAttachmentStorageService";
 
-const EK_PHASE = "ek-m11";
+const EK_PHASE = "ek-s2";
 
 const EK_SOCIAL_DM_PLATFORMS = [
   "INSTAGRAM",
@@ -28,6 +28,7 @@ const EK_FEATURES = [
   "ekolojik_messaging_kvkk_export_retention",
   "ekolojik_messaging_premium_ui_rail",
   "ekolojik_social_hub_embed",
+  "ekolojik_social_hub_connections_oauth",
   "ekolojik_ci_workflow_ek_0",
 ] as const;
 
@@ -48,6 +49,7 @@ const EK_PHASE_MILESTONES = [
   "ek-m10",
   "ek-m11",
   "ek-s1",
+  "ek-s2",
   "ek-u4",
 ] as const;
 
@@ -118,6 +120,13 @@ export class EkolojikMarketStatusController {
       hubChatSections: string[];
       chatBackgroundStorageKey: string;
       nbParityComponents: string[];
+    };
+    socialHubConnections: {
+      hubSection: string;
+      hubPath: string;
+      oauthWebReturnQuery: string;
+      connectApiBodyField: string;
+      nbReturnPath: string;
     };
   } {
     return {
@@ -219,6 +228,13 @@ export class EkolojikMarketStatusController {
           "ChatConversationBackgroundPicker",
           "messaging-page-layout",
         ],
+      },
+      socialHubConnections: {
+        hubSection: "sosyal",
+        hubPath: "/marketim/posta-ve-mesaj?bolum=sosyal&tab=connections",
+        oauthWebReturnQuery: "bolum=sosyal&tab=connections",
+        connectApiBodyField: "webReturnQuery",
+        nbReturnPath: "/hesap/sosyal-medya?tab=connections",
       },
     };
   }

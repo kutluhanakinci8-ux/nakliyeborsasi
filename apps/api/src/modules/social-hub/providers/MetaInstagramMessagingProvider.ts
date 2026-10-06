@@ -6,6 +6,7 @@ import { SocialHubPublishApplicationService } from "../SocialHubPublishApplicati
 import { SocialHubInboxSyncApplicationService } from "../SocialHubInboxSyncApplicationService";
 import type {
   SocialInboxSyncResult,
+  SocialOAuthConnectContext,
   SocialOAuthStartResult,
   SocialProviderPort,
   SocialPublishRequest,
@@ -27,10 +28,14 @@ export class MetaInstagramMessagingProvider implements SocialProviderPort {
     return this.socialHubOAuthConfigService.getMetaConfig() ? "ready" : "pending";
   }
 
-  public async startOAuthConnect(companyId: string): Promise<SocialOAuthStartResult> {
+  public async startOAuthConnect(
+    companyId: string,
+    context?: SocialOAuthConnectContext,
+  ): Promise<SocialOAuthStartResult> {
     return this.socialHubOAuthApplicationService.startOAuth(
       companyId,
       this.platformCode,
+      context,
     );
   }
 

@@ -832,11 +832,15 @@ export class SocialHubApplicationService {
   public async startConnect(
     user: AuthenticatedUserContext,
     platformCode: string,
+    options?: { webReturnQuery?: string },
   ) {
     assertSocialHubAdmin(user);
     await this.assertSocialHubSubscription(user.companyId);
+    const oauthContext = {
+      webReturnQuery: options?.webReturnQuery,
+    };
     if (isRoadmapPlatformCode(platformCode)) {
-      const roadmap = await this.startRoadmapConnect(user, platformCode);
+      const roadmap = await this.startRoadmapConnect(user, platformCode, options);
       const code = assertRoadmapPlatformCode(platformCode);
       const row = await this.connectionRepository.findOne({
         where: { companyId: user.companyId, platformCode: code },
@@ -849,7 +853,7 @@ export class SocialHubApplicationService {
       };
     }
     const provider = this.socialProviderRegistry.resolve(platformCode);
-    const oauth = await provider.startOAuthConnect(user.companyId);
+    const oauth = await provider.startOAuthConnect(user.companyId, oauthContext);
     const row = await this.ensureConnectionRow(user.companyId, provider.platformCode);
     row.statusCode = SocialConnectionStatusCode.PendingOAuth;
     row.lastErrorMessage =
@@ -1652,6 +1656,7 @@ export class SocialHubApplicationService {
   public async startRoadmapConnect(
     user: AuthenticatedUserContext,
     platformCode: string,
+    options?: { webReturnQuery?: string },
   ) {
     assertSocialHubAdmin(user);
     await this.assertSocialHubSubscription(user.companyId);
@@ -1659,6 +1664,7 @@ export class SocialHubApplicationService {
     const oauth = await this.roadmapOAuthApplicationService.startConnect(
       user.companyId,
       code,
+      { webReturnQuery: options?.webReturnQuery },
     );
     const row = await this.connectionRepository.findOne({
       where: { companyId: user.companyId, platformCode: code },

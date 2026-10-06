@@ -9,6 +9,10 @@ export type SocialOAuthStartResult = {
   message: string;
 };
 
+export type SocialOAuthConnectContext = {
+  webReturnQuery?: string | null;
+};
+
 export type SocialPublishRequest = {
   companyId: string;
   bodyText: string;
@@ -32,7 +36,10 @@ export interface SocialProviderPort {
 
   getImplementationStatus(): SocialProviderImplementationStatus;
 
-  startOAuthConnect(companyId: string): Promise<SocialOAuthStartResult>;
+  startOAuthConnect(
+    companyId: string,
+    context?: SocialOAuthConnectContext,
+  ): Promise<SocialOAuthStartResult>;
 
   disconnect(companyId: string): Promise<void>;
 

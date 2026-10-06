@@ -26,7 +26,11 @@ import {
   isEkolojikGroupInbox,
   isEkolojikSocialDmInbox,
 } from "../../lib/ekolojikMessagingChatSection";
-import { ekolojikSocialDmInboxHref } from "../../lib/ekolojikSocialMessagingDeepLink";
+import {
+  ekolojikSocialDmInboxHref,
+  EKOLOJIK_HUB_PATH,
+} from "../../lib/ekolojikSocialMessagingDeepLink";
+import { EKOLOJIK_SOCIAL_OAUTH_WEB_RETURN_QUERY } from "../../lib/ekolojikSocialHubDeepLink";
 import {
   parseEkolojikHubSection,
   type EkolojikHubSection,
@@ -387,6 +391,9 @@ export function EkolojikCommunicationsHubClient() {
               <SocialHubPageClient
                 messagingInboxHref={ekolojikSocialDmInboxHref()}
                 threadMessagingHref={ekolojikSocialDmInboxHref}
+                hubBasePath={EKOLOJIK_HUB_PATH}
+                syncTabsToUrl
+                oauthWebReturnQuery={EKOLOJIK_SOCIAL_OAUTH_WEB_RETURN_QUERY}
               />
             </div>
           ) : null}

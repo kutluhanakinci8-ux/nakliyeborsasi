@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   SocialAnalyticsPanel,
   SocialConnectionsPanel,
@@ -38,19 +38,46 @@ import type {
   SocialHubInboxThreadPreview,
 } from "../../../../lib/socialHubTypes";
 
+const SOCIAL_HUB_TAB_IDS: SocialHubTabId[] = [
+  "connections",
+  "health",
+  "inbox",
+  "publishing",
+  "templates",
+  "analytics",
+  "team",
+];
+
+function parseSocialHubTab(raw: string | null): SocialHubTabId {
+  if (raw && SOCIAL_HUB_TAB_IDS.includes(raw as SocialHubTabId)) {
+    return raw as SocialHubTabId;
+  }
+  return "connections";
+}
+
 type SocialHubPageClientProps = {
   /** Ekolojik hub: `/marketim/posta-ve-mesaj?bolum=sosyal-dm` */
   messagingInboxHref?: string;
   threadMessagingHref?: (threadId: string) => string;
+  /** Ekolojik: `/marketim/posta-ve-mesaj` — sekme ve OAuth geri dönüşü için. */
+  hubBasePath?: string;
+  syncTabsToUrl?: boolean;
+  oauthWebReturnQuery?: string;
 };
 
 export function SocialHubPageClient({
   messagingInboxHref,
   threadMessagingHref,
+  hubBasePath,
+  syncTabsToUrl = false,
+  oauthWebReturnQuery,
 }: SocialHubPageClientProps = {}) {
   const { accessToken, session } = useWebSession();
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState<SocialHubTabId>("connections");
+  const [activeTab, setActiveTab] = useState<SocialHubTabId>(() =>
+    syncTabsToUrl ? parseSocialHubTab(searchParams.get("tab")) : "connections",
+  );
   const [snapshot, setSnapshot] = useState<SocialHubSnapshot | null>(null);
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
@@ -137,6 +164,27 @@ export function SocialHubPageClient({
     setSnapshot(hub);
     setSubscriptionBlocked(false);
   }, [accessToken]);
+
+  useEffect(() => {
+    if (!syncTabsToUrl) {
+      return;
+    }
+    setActiveTab(parseSocialHubTab(searchParams.get("tab")));
+  }, [searchParams, syncTabsToUrl]);
+
+  const handleTabChange = useCallback(
+    (tab: SocialHubTabId) => {
+      setActiveTab(tab);
+      if (!syncTabsToUrl || !hubBasePath) {
+        return;
+      }
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("bolum", "sosyal");
+      params.set("tab", tab);
+      router.replace(`${hubBasePath}?${params.toString()}`, { scroll: false });
+    },
+    [hubBasePath, router, searchParams, syncTabsToUrl],
+  );
 
   useEffect(() => {
     const oauth = searchParams.get("oauth");
@@ -357,7 +405,7 @@ export function SocialHubPageClient({
       <header className="social-hub-intro">
         <h2 className="social-hub-intro-title">Sosyal medya & kanallar</h2>
       </header>
-      <SocialHubSectionNav activeTab={activeTab} onTabChange={setActiveTab} />
+      <SocialHubSectionNav activeTab={activeTab} onTabChange={handleTabChange} />
         {error ? <p className="error banner error--light">{error}</p> : null}
         {status ? <p className="account-save-hint">{status}</p> : null}
         {!canAccess ? (
@@ -391,6 +439,7 @@ export function SocialHubPageClient({
                     const result = await SocialHubApiClient.connectPlatform(
                       accessToken,
                       code,
+                      oauthWebReturnQuery,
                     );
                     if (result.oauth.authorizationUrl) {
                       window.location.href = result.oauth.authorizationUrl;
@@ -453,6 +502,7 @@ export function SocialHubPageClient({
                     const result = await SocialHubApiClient.connectRoadmapPlatform(
                       accessToken,
                       code,
+                      oauthWebReturnQuery,
                     );
                     if (result.oauth.authorizationUrl) {
                       window.location.href = result.oauth.authorizationUrl;

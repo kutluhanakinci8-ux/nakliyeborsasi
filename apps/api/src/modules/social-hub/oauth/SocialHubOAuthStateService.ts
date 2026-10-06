@@ -17,7 +17,7 @@ export class SocialHubOAuthStateService {
   public async issueState(
     companyId: string,
     platformCode: string,
-    options?: { pkceVerifier?: string },
+    options?: { pkceVerifier?: string; webReturnQuery?: string | null },
   ): Promise<string> {
     await this.stateRepository.delete({
       companyId,
@@ -30,6 +30,7 @@ export class SocialHubOAuthStateService {
         companyId,
         platformCode,
         pkceVerifier: options?.pkceVerifier ?? null,
+        webReturnQuery: options?.webReturnQuery ?? null,
         expiresAt: new Date(Date.now() + STATE_TTL_MS),
       }),
     );
