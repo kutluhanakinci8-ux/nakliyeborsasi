@@ -5,6 +5,7 @@ export type EkolojikHubSection =
   | "grup-sohbet"
   | "sosyal"
   | "entegrasyon"
+  | "bildirimler"
   | "fatura"
   | "gonderilen"
   | "arsiv";
@@ -31,6 +32,9 @@ export function parseEkolojikHubSection(
     case "api":
     case "zapier":
       return "entegrasyon";
+    case "bildirimler":
+    case "bildirim":
+      return "bildirimler";
     case "fatura":
       return "fatura";
     case "gonderilen":

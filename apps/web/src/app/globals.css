@@ -17300,6 +17300,57 @@ button.btn-secondary {
   color: #15803d;
 }
 
+.ekolojik-comms-notifications-wrap {
+  min-height: 280px;
+}
+
+.messaging-chat-notifications-panel {
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+}
+
+.messaging-chat-notifications-title {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.messaging-chat-notifications-sub {
+  margin: 0 0 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.messaging-chat-notifications-block {
+  margin-bottom: 1rem;
+}
+
+.messaging-chat-notifications-push-btn {
+  margin-top: 0.35rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.messaging-chat-notifications-matrix {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.72rem;
+}
+
+.messaging-chat-notifications-matrix th,
+.messaging-chat-notifications-matrix td {
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid #f1f5f9;
+  text-align: left;
+}
+
 .ekolojik-comms-integrations-wrap {
   display: flex;
   flex-direction: column;

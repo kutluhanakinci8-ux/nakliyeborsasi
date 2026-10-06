@@ -51,7 +51,7 @@ export async function fetchNotificationPreferences(
 
 export type NotificationPreferenceMatrixEvent = {
   eventCode: string;
-  category: string;
+  category?: string;
   labelTr: string;
   preferenceKey: AccountEmailNotificationPreferenceKey | null;
   pushPreferenceKey?:

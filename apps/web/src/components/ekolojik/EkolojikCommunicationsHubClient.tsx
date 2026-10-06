@@ -13,6 +13,7 @@ import { MessagingSlackBridgeCard } from "../messaging/MessagingSlackBridgeCard"
 import { MessagingAutomationCatalogPanel } from "../messaging/MessagingAutomationCatalogPanel";
 import { IntegrationsMessagingHubPanel } from "../integrations/IntegrationsMessagingHubPanel";
 import { ekolojikMessagingChannelSettingsHref } from "../../lib/ekolojikIntegrationsDeepLink";
+import { MessagingChatNotificationsPanel } from "../messaging/MessagingChatNotificationsPanel";
 import { useWebSession } from "../../context/WebSessionProvider";
 import { useMessagingChatController } from "../../hooks/useMessagingChatController";
 import { ekolojikSectionToMailHandoff } from "../../lib/ekolojikMailSectionHandoff";
@@ -249,6 +250,17 @@ export function EkolojikCommunicationsHubClient() {
           <button
             type="button"
             className={
+              section === "bildirimler"
+                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
+                : "ekolojik-comms-sidebar-item"
+            }
+            onClick={() => navigateSection("bildirimler")}
+          >
+            Bildirimler
+          </button>
+          <button
+            type="button"
+            className={
               section === "sosyal"
                 ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
                 : "ekolojik-comms-sidebar-item"
@@ -290,6 +302,11 @@ export function EkolojikCommunicationsHubClient() {
           ) : null}
           {folderHint ? (
             <p className="module-hint ekolojik-comms-folder-hint">{folderHint}</p>
+          ) : null}
+          {section === "bildirimler" ? (
+            <div className="ekolojik-comms-notifications-wrap">
+              <MessagingChatNotificationsPanel accessToken={accessToken} />
+            </div>
           ) : null}
           {section === "entegrasyon" ? (
             <div className="ekolojik-comms-integrations-wrap">

@@ -72,7 +72,7 @@ Detay: kullanıcı onayı sonrası `docs/LERTA_MAIL_MESSAGING_PARITY_100_ROADMAP
 | M6 | ek-m6 | WA bridge FS-12 (● hub kart + `waBridge=1` + kanal paneli) |
 | M7 | ek-m7 | Public API, Slack, Zapier (● `bolum=entegrasyon` hub) |
 | M8 | ek-m8 | Grup thread + roller (● `grup-sohbet` + rol seçici) |
-| M9 | ek-m9 | Push + çeviri + bildirim matrisi |
+| M9 | ek-m9 | Push + çeviri + bildirim matrisi (● `bolum=bildirimler`) |
 | M10 | ek-m10 | KVKK export / retention |
 | M11 | ek-m11 | Premium UI parity |
 

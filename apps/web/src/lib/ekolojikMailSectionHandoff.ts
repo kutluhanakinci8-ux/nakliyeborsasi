@@ -10,7 +10,8 @@ export function ekolojikSectionToMailHandoff(
     section === "sosyal" ||
     section === "sosyal-dm" ||
     section === "entegrasyon" ||
-    section === "grup-sohbet"
+    section === "grup-sohbet" ||
+    section === "bildirimler"
   ) {
     return null;
   }
