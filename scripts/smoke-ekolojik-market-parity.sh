@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Ekolojik Market — NB iletişim paritesi public smoke (secret gerekmez).
 set -euo pipefail
-API_BASE="${EKOLojIK_API_BASE:-${SOCIAL_HUB_API_BASE:-http://127.0.0.1:3000/api/v1}}"
-WEB_BASE="${EKOLojIK_WEB_PUBLIC_URL:-${SOCIAL_HUB_WEB_PUBLIC_URL:-http://127.0.0.1:3001}}"
+API_BASE="${EKOLOJIK_API_BASE:-${EKOLojIK_API_BASE:-${SOCIAL_HUB_API_BASE:-http://127.0.0.1:3000/api/v1}}}"
+WEB_BASE="${EKOLOJIK_WEB_PUBLIC_URL:-${EKOLojIK_WEB_PUBLIC_URL:-${SOCIAL_HUB_WEB_PUBLIC_URL:-http://127.0.0.1:3001}}}"
 EXPECT_PHASE="${EKOLOJIK_SMOKE_EXPECT_PHASE:-ek-u4}"
 
 echo "== Ekolojik market public status =="
@@ -28,12 +28,12 @@ echo "${status_json}" | grep -q '"ekolojik_mail_rich_compose_templates_multipart
   exit 1
 }
 echo "OK: feature ekolojik_mail_rich_compose_templates_multipart (EK-P2)"
-echo "${status_json}" | grep -q '"composeTemplate=builtin:yuk-teklifi"' || {
+echo "${status_json}" | grep -q 'composeTemplate=builtin:yuk-teklifi' || {
   echo "FAIL: missing mailComposeRich template deep link"
   exit 1
 }
 echo "OK: mailComposeRich embed deep links"
-echo "${status_json}" | grep -q '"composeMultipart=1"' || {
+echo "${status_json}" | grep -q 'composeMultipart=1' || {
   echo "FAIL: missing mailComposeRich multipart deep link"
   exit 1
 }
@@ -43,12 +43,12 @@ echo "${status_json}" | grep -q '"ekolojik_mail_accounts_alias_dns_hub"' || {
   exit 1
 }
 echo "OK: feature ekolojik_mail_accounts_alias_dns_hub (EK-P3)"
-echo "${status_json}" | grep -q '"mailSettings=accounts"' || {
+echo "${status_json}" | grep -q 'mailSettings=accounts' || {
   echo "FAIL: missing mailAccountsDnsHub accounts path"
   exit 1
 }
 echo "OK: mailAccountsDnsHub accounts deep link"
-echo "${status_json}" | grep -q '"mailSettings=deliverability"' || {
+echo "${status_json}" | grep -q 'mailSettings=deliverability' || {
   echo "FAIL: missing mailAccountsDnsHub DNS path"
   exit 1
 }
@@ -58,15 +58,15 @@ echo "${status_json}" | grep -q '"ekolojik_mail_rules_swipe_bulk"' || {
   exit 1
 }
 echo "OK: feature ekolojik_mail_rules_swipe_bulk (EK-P5)"
-echo "${status_json}" | grep -q '"mailSettings=rules"' || {
+echo "${status_json}" | grep -q 'mailSettings=rules' || {
   echo "FAIL: missing mailRulesSwipeBulk rules path"
   exit 1
 }
-echo "${status_json}" | grep -q '"mailBulk=1"' || {
+echo "${status_json}" | grep -q 'mailBulk=1' || {
   echo "FAIL: missing mailRulesSwipeBulk bulk path"
   exit 1
 }
-echo "${status_json}" | grep -q '"mailSwipe=1"' || {
+echo "${status_json}" | grep -q 'mailSwipe=1' || {
   echo "FAIL: missing mailRulesSwipeBulk swipe path"
   exit 1
 }
@@ -76,19 +76,19 @@ echo "${status_json}" | grep -q '"ekolojik_mail_caldav_carddav_hub"' || {
   exit 1
 }
 echo "OK: feature ekolojik_mail_caldav_carddav_hub (EK-P6)"
-echo "${status_json}" | grep -q '"mailView=calendar"' || {
+echo "${status_json}" | grep -q 'mailView=calendar' || {
   echo "FAIL: missing mailCalDavCardDav calDav path"
   exit 1
 }
-echo "${status_json}" | grep -q '"mailSettings=calendarSettings"' || {
+echo "${status_json}" | grep -q 'mailSettings=calendarSettings' || {
   echo "FAIL: missing mailCalDavCardDav calendarSettings"
   exit 1
 }
-echo "${status_json}" | grep -q '"mailView=contacts"' || {
+echo "${status_json}" | grep -q 'mailView=contacts' || {
   echo "FAIL: missing mailCalDavCardDav cardDav path"
   exit 1
 }
-echo "${status_json}" | grep -q '"mailSettings=contactsSettings"' || {
+echo "${status_json}" | grep -q 'mailSettings=contactsSettings' || {
   echo "FAIL: missing mailCalDavCardDav contactsSettings"
   exit 1
 }
@@ -98,7 +98,7 @@ echo "${status_json}" | grep -q '"ekolojik_mail_deliverability_dmarc_hub"' || {
   exit 1
 }
 echo "OK: feature ekolojik_mail_deliverability_dmarc_hub (EK-P7)"
-echo "${status_json}" | grep -q '"mailDmarc=1"' || {
+echo "${status_json}" | grep -q 'mailDmarc=1' || {
   echo "FAIL: missing mailDeliverabilityDmarc dmarc panel path"
   exit 1
 }
@@ -112,11 +112,11 @@ echo "${status_json}" | grep -q '"ekolojik_mail_pwa_offline_push_hub"' || {
   exit 1
 }
 echo "OK: feature ekolojik_mail_pwa_offline_push_hub (EK-P8)"
-echo "${status_json}" | grep -q '"mailPwa=1"' || {
+echo "${status_json}" | grep -q 'mailPwa=1' || {
   echo "FAIL: missing mailPwaOfflinePush pwa panel path"
   exit 1
 }
-echo "${status_json}" | grep -q '"mailSettings=notifications"' || {
+echo "${status_json}" | grep -q 'mailSettings=notifications' || {
   echo "FAIL: missing mailPwaOfflinePush notifications settings"
   exit 1
 }
@@ -130,7 +130,7 @@ echo "${status_json}" | grep -q '"ekolojik_mail_ai_compose_hub"' || {
   exit 1
 }
 echo "OK: feature ekolojik_mail_ai_compose_hub (EK-P9)"
-echo "${status_json}" | grep -q '"composeAi=1"' || {
+echo "${status_json}" | grep -q 'composeAi=1' || {
   echo "FAIL: missing mailAiCompose hub path"
   exit 1
 }
@@ -144,7 +144,7 @@ echo "${status_json}" | grep -q '"ekolojik_mail_engagement_webhook_analytics_hub
   exit 1
 }
 echo "OK: feature ekolojik_mail_engagement_webhook_analytics_hub (EK-P10)"
-echo "${status_json}" | grep -q '"mailEngagement=1"' || {
+echo "${status_json}" | grep -q 'mailEngagement=1' || {
   echo "FAIL: missing mailEngagementWebhook engagement panel path"
   exit 1
 }
@@ -158,7 +158,7 @@ echo "${status_json}" | grep -q '"ekolojik_mail_ops_snapshot_runbook_hub"' || {
   exit 1
 }
 echo "OK: feature ekolojik_mail_ops_snapshot_runbook_hub (EK-P11)"
-echo "${status_json}" | grep -q '"mailSettings=ops"' || {
+echo "${status_json}" | grep -q 'mailSettings=ops' || {
   echo "FAIL: missing mailOpsSnapshotRunbook ops panel path"
   exit 1
 }
@@ -356,7 +356,7 @@ echo "${status_json}" | grep -q '"ekolojik_social_hub_tiktok_youtube_pwa"' || {
   exit 1
 }
 echo "OK: feature ekolojik_social_hub_tiktok_youtube_pwa (EK-S9)"
-echo "${status_json}" | grep -q '"platform=TIKTOK"' || {
+echo "${status_json}" | grep -q 'platform=TIKTOK' || {
   echo "FAIL: missing socialHubBetaPlatforms TIKTOK hub path"
   exit 1
 }
@@ -365,7 +365,7 @@ echo "${status_json}" | grep -q '"tiktok_prod_provider_path"' || {
   echo "FAIL: missing socialHubBetaPlatforms nb tiktok feature"
   exit 1
 }
-echo "${status_json}" | grep -q '"tab=health&pwa=1"' || {
+echo "${status_json}" | grep -q 'tab=health&pwa=1' || {
   echo "FAIL: missing socialHubPwa health deep link"
   exit 1
 }
@@ -379,7 +379,7 @@ echo "${status_json}" | grep -q '"ekolojik_social_hub_telegram_ads_api"' || {
   exit 1
 }
 echo "OK: feature ekolojik_social_hub_telegram_ads_api (EK-S10)"
-echo "${status_json}" | grep -q '"telegram_ads=1"' || {
+echo "${status_json}" | grep -q 'telegram_ads=1' || {
   echo "FAIL: missing socialHubTelegramAds publishing deep link"
   exit 1
 }
