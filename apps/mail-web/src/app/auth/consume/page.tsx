@@ -37,6 +37,7 @@ function ConsumeHandoff() {
     const composeRich = search.get("composeRich")?.trim();
     const composeTemplate = search.get("composeTemplate")?.trim();
     const composeMultipart = search.get("composeMultipart")?.trim();
+    const mailSettings = search.get("mailSettings")?.trim();
     const query = new URLSearchParams();
     if (fromAddress) {
       query.set("welcome", fromAddress);
@@ -61,6 +62,9 @@ function ConsumeHandoff() {
     }
     if (composeMultipart === "1") {
       query.set("composeMultipart", "1");
+    }
+    if (mailSettings) {
+      query.set("mailSettings", mailSettings);
     }
     const qs = query.toString();
     router.replace(qs ? `/mail?${qs}` : "/mail");

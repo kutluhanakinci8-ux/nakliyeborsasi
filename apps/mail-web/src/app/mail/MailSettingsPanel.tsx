@@ -44,7 +44,7 @@ import {
   type MailTheme,
 } from "@/lib/mailTheme";
 
-type SettingsView =
+export type SettingsView =
   | "hub"
   | "accounts"
   | "display"
@@ -177,6 +177,7 @@ type Props = {
   onOpenCalendar?: () => void;
   onOpenContacts?: () => void;
   onInboxListDensityChange?: (density: MailInboxListDensity) => void;
+  initialView?: SettingsView;
 };
 
 export function MailSettingsPanel({
@@ -185,8 +186,9 @@ export function MailSettingsPanel({
   onOpenCalendar,
   onOpenContacts,
   onInboxListDensityChange,
+  initialView,
 }: Props) {
-  const [view, setView] = useState<SettingsView>("hub");
+  const [view, setView] = useState<SettingsView>(initialView ?? "hub");
   const [query, setQuery] = useState("");
   const [theme, setTheme] = useState<MailTheme>("light");
   const [pushStatus, setPushStatus] = useState("");
@@ -223,6 +225,12 @@ export function MailSettingsPanel({
   const [newPassword, setNewPassword] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [copyHint, setCopyHint] = useState("");
+
+  useEffect(() => {
+    if (initialView) {
+      setView(initialView);
+    }
+  }, [initialView]);
 
   useEffect(() => {
     setTheme(initMailTheme());

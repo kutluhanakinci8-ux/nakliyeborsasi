@@ -188,6 +188,8 @@ export function MailClientShell({ mail }: Props) {
     setUndoSecondsLeft,
     setView,
     settingsOpen,
+    settingsInitialView,
+    setSettingsInitialView,
     shortcutsOpen,
     snoozeSelected,
     startForwardFromDetail,
@@ -1817,7 +1819,11 @@ export function MailClientShell({ mail }: Props) {
       {settingsOpen && accessToken ? (
         <MailSettingsPanel
           accessToken={accessToken}
-          onClose={() => setSettingsOpen(false)}
+          initialView={settingsInitialView ?? undefined}
+          onClose={() => {
+            setSettingsOpen(false);
+            setSettingsInitialView(null);
+          }}
           onOpenCalendar={() => switchView("calendar")}
           onOpenContacts={() => switchView("contacts")}
           onInboxListDensityChange={setInboxListDensity}

@@ -1,7 +1,7 @@
 import { Controller, Get } from "@nestjs/common";
 import { MessagingAttachmentStorageService } from "../messaging/MessagingAttachmentStorageService";
 
-const EK_PHASE = "ek-p2";
+const EK_PHASE = "ek-p3";
 
 /** EK-U4 rubrik — kod yolu paritesi (posta/mesaj aynı NB modülleri, ayrı tenant). */
 const EK_PARITY_MAIL_PERCENT = 96;
@@ -61,6 +61,7 @@ const EK_FEATURES = [
   "ekolojik_mail_web_embed",
   "ekolojik_mail_folder_deep_link",
   "ekolojik_mail_rich_compose_templates_multipart",
+  "ekolojik_mail_accounts_alias_dns_hub",
   "ekolojik_messaging_full_chat",
   "ekolojik_messaging_sse_redis_fanout",
   "ekolojik_messaging_interactions_parity",
@@ -91,6 +92,7 @@ const EK_PHASE_MILESTONES = [
   "ek-u1",
   "ek-p1",
   "ek-p2",
+  "ek-p3",
   "ek-p4",
   "ek-m1",
   "ek-m2",
@@ -193,6 +195,15 @@ export class EkolojikMarketStatusController {
       embedQueryParams: string[];
       defaultBuiltinTemplateId: string;
       nbMailWebSurfaces: string[];
+    };
+    mailAccountsDnsHub: {
+      phaseCode: string;
+      hubSection: string;
+      accountsPath: string;
+      dnsDeliverabilityPath: string;
+      embedSettingsQueryParam: string;
+      nbMailWebPanels: string[];
+      nbCompanyMailIdentityApiPath: string;
     };
     socialHubConnections: {
       hubSection: string;
@@ -437,6 +448,20 @@ export class EkolojikMarketStatusController {
           "MailComposePresetsPanel",
           "composeMail_multipart",
         ],
+      },
+      mailAccountsDnsHub: {
+        phaseCode: "ek-p3",
+        hubSection: "posta",
+        accountsPath:
+          "/marketim/posta-ve-mesaj?bolum=posta&mailSettings=accounts",
+        dnsDeliverabilityPath:
+          "/marketim/posta-ve-mesaj?bolum=posta&mailSettings=deliverability",
+        embedSettingsQueryParam: "mailSettings",
+        nbMailWebPanels: [
+          "MailAccountsSettingsPanel",
+          "MailDeliverabilityPanel",
+        ],
+        nbCompanyMailIdentityApiPath: "/api/v1/company/mail-identity",
       },
       socialHubConnections: {
         hubSection: "sosyal",

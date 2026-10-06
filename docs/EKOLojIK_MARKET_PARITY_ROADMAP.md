@@ -50,7 +50,7 @@ Detay: kullanıcı onayı sonrası `docs/LERTA_MAIL_MESSAGING_PARITY_100_ROADMAP
 |-----|-----|--------|
 | P1 | ek-p1 | Hub içi tam embed + SSO (● EK-U1) |
 | P2 | ek-p2 | Zengin compose, şablonlar, multipart (● `composeRich` + `composeTemplate` + `composeMultipart`) |
-| P3 | ek-p3 | Hesaplar / alias / DNS hub |
+| P3 | ek-p3 | Hesaplar / alias / DNS hub (● `mailSettings=accounts|deliverability`) |
 | P4 | ek-p4 | IMAP klasörleri: Fatura, Gönderilen, Arşiv sidebar eşlemesi (● deep link) |
 | P5 | ek-p5 | Kurallar, swipe, bulk |
 | P6 | ek-p6 | CalDAV / CardDAV |

@@ -19,6 +19,8 @@ export type MailWebEmbedHandoff = {
   composeTemplateId?: string;
   /** Cc/Bcc + ekler (multipart MIME yazım ekranı). */
   composeMultipart?: boolean;
+  /** Webmail ayarlar paneli (`accounts`, `deliverability`, …). */
+  mailSettingsTab?: string;
 };
 
 export function parseMailWebEmbedView(

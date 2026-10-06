@@ -109,6 +109,7 @@ export function useMailClientController({
   const deepLinkComposeRichHandled = useRef(false);
   const deepLinkComposeMultipartHandled = useRef(false);
   const deepLinkComposeTemplateHandled = useRef(false);
+  const deepLinkMailSettingsHandled = useRef(false);
   const [view, setView] = useState<MailClientView>("inbox");
   const [summary, setSummary] = useState<MailInboxSummary | null>(null);
   const [sendReadiness, setSendReadiness] = useState<MailSendReadiness | null>(
@@ -187,6 +188,9 @@ export function useMailClientController({
   const [draftPreview, setDraftPreview] = useState<MailDraftItem | null>(null);
   const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsInitialView, setSettingsInitialView] = useState<
+    import("./MailSettingsPanel").SettingsView | null
+  >(null);
   const [inboxListDensity, setInboxListDensity] =
     useState<MailInboxListDensity>("comfortable");
   const [activeSwipeRowId, setActiveSwipeRowId] = useState<string | null>(null);
@@ -626,6 +630,36 @@ export function useMailClientController({
     }
     setComposeText(preset.bodyText);
   }, [accessToken, searchParams, composeTemplates]);
+
+  useEffect(() => {
+    const raw = searchParams.get("mailSettings")?.trim();
+    if (!accessToken || !raw || deepLinkMailSettingsHandled.current) {
+      return;
+    }
+    const allowed = new Set([
+      "hub",
+      "accounts",
+      "deliverability",
+      "imap",
+      "signature",
+      "rules",
+      "security",
+      "privacy",
+      "notifications",
+      "display",
+      "mailPrefs",
+      "autoReply",
+      "calendarSettings",
+      "contactsSettings",
+      "help",
+    ]);
+    if (!allowed.has(raw)) {
+      return;
+    }
+    deepLinkMailSettingsHandled.current = true;
+    setSettingsInitialView(raw as import("./MailSettingsPanel").SettingsView);
+    setSettingsOpen(true);
+  }, [accessToken, searchParams]);
 
   useEffect(() => {
     const needle = searchParams.get("customFolder")?.trim();
@@ -1712,6 +1746,8 @@ export function useMailClientController({
     setSentLoading,
     setSentPreview,
     setSettingsOpen,
+    settingsInitialView,
+    setSettingsInitialView,
     setShortcutsOpen,
     setSummary,
     setThreadMessages,

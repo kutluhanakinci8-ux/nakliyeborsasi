@@ -27,6 +27,12 @@ import {
   readEkolojikMailComposeFromSearchParams,
 } from "../../lib/ekolojikMailComposeDeepLink";
 import {
+  ekolojikMailAccountsHubHref,
+  ekolojikMailDnsHubHref,
+  isEkolojikMailSettingsHub,
+  readEkolojikMailSettingsFromSearchParams,
+} from "../../lib/ekolojikMailAccountsDeepLink";
+import {
   applyEkolojikSectionQueryParams,
   isEkolojikMessagingChatSection,
   isEkolojikGroupInbox,
@@ -198,14 +204,36 @@ export function EkolojikCommunicationsHubClient() {
     new URLSearchParams(searchParams.toString()),
   );
 
+  const mailSettingsDeepLink = useMemo(
+    () =>
+      readEkolojikMailSettingsFromSearchParams(
+        new URLSearchParams(searchParams.toString()),
+      ),
+    [searchParams],
+  );
+
+  const mailAccountsHub = isEkolojikMailSettingsHub(
+    searchParams.get("bolum"),
+    mailSettingsDeepLink.mailSettingsTab === "accounts"
+      ? "accounts"
+      : null,
+  );
+  const mailDnsHub = isEkolojikMailSettingsHub(
+    searchParams.get("bolum"),
+    mailSettingsDeepLink.mailSettingsTab === "deliverability"
+      ? "deliverability"
+      : null,
+  );
+
   const mailHandoff = useMemo(
     () =>
       ekolojikSectionToMailHandoff(section, {
         ...mailComposeDeepLink,
+        ...mailSettingsDeepLink,
         openCompose: openCompose || mailComposeDeepLink.openCompose,
         composeTo: composeTo ?? mailComposeDeepLink.composeTo,
       }),
-    [section, openCompose, composeTo, mailComposeDeepLink],
+    [section, openCompose, composeTo, mailComposeDeepLink, mailSettingsDeepLink],
   );
 
   const folderHint = useMemo(() => {
@@ -358,13 +386,40 @@ export function EkolojikCommunicationsHubClient() {
           <button
             type="button"
             className={
-              section === "posta" && !mailRichComposeHub
+              section === "posta" &&
+              !mailRichComposeHub &&
+              !mailAccountsHub &&
+              !mailDnsHub
                 ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
                 : "ekolojik-comms-sidebar-item"
             }
             onClick={() => navigateSection("posta")}
           >
             Gelen
+          </button>
+          <button
+            type="button"
+            className={
+              mailAccountsHub
+                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
+                : "ekolojik-comms-sidebar-item"
+            }
+            onClick={() =>
+              navigateMailRichCompose(ekolojikMailAccountsHubHref())
+            }
+          >
+            Posta hesapları
+          </button>
+          <button
+            type="button"
+            className={
+              mailDnsHub
+                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
+                : "ekolojik-comms-sidebar-item"
+            }
+            onClick={() => navigateMailRichCompose(ekolojikMailDnsHubHref())}
+          >
+            DNS &amp; teslimat
           </button>
           <button
             type="button"

@@ -3,7 +3,7 @@
 set -euo pipefail
 API_BASE="${EKOLojIK_API_BASE:-${SOCIAL_HUB_API_BASE:-http://127.0.0.1:3000/api/v1}}"
 WEB_BASE="${EKOLojIK_WEB_PUBLIC_URL:-${SOCIAL_HUB_WEB_PUBLIC_URL:-http://127.0.0.1:3001}}"
-EXPECT_PHASE="${EKOLOJIK_SMOKE_EXPECT_PHASE:-ek-p2}"
+EXPECT_PHASE="${EKOLOJIK_SMOKE_EXPECT_PHASE:-ek-p3}"
 
 echo "== Ekolojik market public status =="
 status_json="$(curl -fsS "${API_BASE}/public/ekolojik-market/status")"
@@ -38,6 +38,21 @@ echo "${status_json}" | grep -q '"composeMultipart=1"' || {
   exit 1
 }
 echo "OK: mailComposeRich multipart handoff"
+echo "${status_json}" | grep -q '"ekolojik_mail_accounts_alias_dns_hub"' || {
+  echo "FAIL: missing ekolojik_mail_accounts_alias_dns_hub"
+  exit 1
+}
+echo "OK: feature ekolojik_mail_accounts_alias_dns_hub (EK-P3)"
+echo "${status_json}" | grep -q '"mailSettings=accounts"' || {
+  echo "FAIL: missing mailAccountsDnsHub accounts path"
+  exit 1
+}
+echo "OK: mailAccountsDnsHub accounts deep link"
+echo "${status_json}" | grep -q '"mailSettings=deliverability"' || {
+  echo "FAIL: missing mailAccountsDnsHub DNS path"
+  exit 1
+}
+echo "OK: mailAccountsDnsHub deliverability deep link"
 echo "${status_json}" | grep -q '"ekolojik_messaging_sse_redis_fanout"' || {
   echo "FAIL: missing ekolojik_messaging_sse_redis_fanout"
   exit 1
