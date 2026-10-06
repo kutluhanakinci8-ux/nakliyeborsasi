@@ -424,6 +424,7 @@ export class EkolojikMarketStatusController {
       smokeScript: string;
       nbMailMessagingCloseScript: string;
       fullGateEnvVar: string;
+      postDeployGateScript: string;
       mailParityPercent: number;
       messagingParityPercent: number;
       mailThresholdPercent: number;
@@ -858,6 +859,8 @@ export class EkolojikMarketStatusController {
         nbMailMessagingCloseScript:
           "scripts/run-mail-messaging-parity-close-checklist.sh",
         fullGateEnvVar: "EK_U4_FULL",
+        postDeployGateScript:
+          "scripts/run-ekolojik-market-post-deploy-gate.sh",
         mailParityPercent: EK_PARITY_MAIL_PERCENT,
         messagingParityPercent: EK_PARITY_MESSAGING_PERCENT,
         mailThresholdPercent: EK_PARITY_MAIL_THRESHOLD_PERCENT,

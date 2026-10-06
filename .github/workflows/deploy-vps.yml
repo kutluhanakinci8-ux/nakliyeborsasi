@@ -5,6 +5,11 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      skip_ekolojik_post_deploy:
+        description: EK-LIVE post-deploy smoke/close atlanır
+        type: boolean
+        default: false
 
 concurrency:
   group: deploy-vps-production
@@ -26,3 +31,19 @@ jobs:
             set -euo pipefail
             cd /var/www/nakliyeborsasi
             DEPLOY_BRANCH=main bash scripts/deploy-production-vps.sh /var/www/nakliyeborsasi
+
+  ekolojik-post-deploy:
+    needs: deploy
+    if: >-
+      always() && needs.deploy.result == 'success' &&
+      (github.event_name != 'workflow_dispatch' || inputs.skip_ekolojik_post_deploy != true)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: EK-LIVE prod gate (smoke + EK-U4 close)
+        env:
+          EKOLOJIK_API_BASE: https://app.lerta.com.tr/api/v1
+          EKOLOJIK_WEB_PUBLIC_URL: https://app.lerta.com.tr
+          EK_U4_FULL: "0"
+        run: bash scripts/run-ekolojik-market-post-deploy-gate.sh

@@ -438,6 +438,11 @@ echo "${status_json}" | grep -q '"fullGateEnvVar":"EK_U4_FULL"' || {
   exit 1
 }
 echo "OK: parityClose full gate env (EK-FULL)"
+echo "${status_json}" | grep -q 'run-ekolojik-market-post-deploy-gate.sh' || {
+  echo "FAIL: missing parityClose.postDeployGateScript"
+  exit 1
+}
+echo "OK: parityClose post-deploy gate (EK-LIVE)"
 
 echo "== Ekolojik hub web route =="
 code="$(curl -sS -o /dev/null -w "%{http_code}" "${WEB_BASE}/marketim/posta-ve-mesaj")"
