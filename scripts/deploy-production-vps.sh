@@ -197,8 +197,17 @@ fi
 if [[ -x "${INSTALL_DIR}/scripts/verify-ekolojik-market-status-source.sh" ]]; then
   bash "${INSTALL_DIR}/scripts/verify-ekolojik-market-status-source.sh" || echo "UYARI: ekolojik status source verify"
 fi
-if [[ -x "${INSTALL_DIR}/scripts/run-ekolojik-market-parity-close-checklist.sh" ]]; then
-  EK_U4_FULL="${EK_U4_FULL:-0}" EKOLOJIK_API_BASE="${API_BASE}" \
+if [[ -x "${INSTALL_DIR}/scripts/run-ekolojik-market-live-verify.sh" ]]; then
+  EK_U4_FULL="${EK_U4_FULL:-0}" \
+    EKOLOJIK_API_BASE="${API_BASE}" \
+    EKOLOJIK_WEB_PUBLIC_URL="${EKOLOJIK_WEB_PUBLIC_URL:-https://app.lerta.com.tr}" \
+    EK_PROD_ROLLOUT_STRICT="${EK_PROD_ROLLOUT_STRICT:-1}" \
+    bash "${INSTALL_DIR}/scripts/run-ekolojik-market-live-verify.sh" \
+    || echo "UYARI: ekolojik EK-LIVE-VERIFY (prod gate)"
+elif [[ -x "${INSTALL_DIR}/scripts/run-ekolojik-market-parity-close-checklist.sh" ]]; then
+  EK_U4_FULL="${EK_U4_FULL:-0}" \
+    EKOLOJIK_API_BASE="${API_BASE}" \
+    EKOLOJIK_WEB_PUBLIC_URL="${EKOLOJIK_WEB_PUBLIC_URL:-https://app.lerta.com.tr}" \
     bash "${INSTALL_DIR}/scripts/run-ekolojik-market-parity-close-checklist.sh" \
     || echo "UYARI: ekolojik EK-U4 close checklist (rubrik/API)"
 fi
