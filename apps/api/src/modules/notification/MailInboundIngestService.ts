@@ -23,7 +23,10 @@ import {
   parseMinimalMimeHeaders,
   reparseInboundDisplayFromRawMime,
 } from "./MailInboundMimeParse";
-import { decodeMimeEncodedWords } from "./MailMimeCharset";
+import {
+  decodeMimeEncodedWords,
+  repairUtf8Mojibake,
+} from "./MailMimeCharset";
 import { MailInboundSpamService } from "./MailInboundSpamService";
 import { sanitizeInboundHtml } from "./MailHtmlSanitize";
 import { MailImapMaildirService } from "./MailImapMaildirService";
@@ -80,9 +83,11 @@ export class MailInboundIngestService {
       : "unknown@inbound.local";
     let subject = decodeMimeEncodedWords(input.subject?.trim() ?? "") || "(konu yok)";
     let snippet =
-      input.text?.replace(/\s+/g, " ").trim().slice(0, 500) ?? null;
+      repairUtf8Mojibake(
+        input.text?.replace(/\s+/g, " ").trim().slice(0, 500) ?? null,
+      );
     let bodyText =
-      input.text?.trim().slice(0, 200_000) ?? null;
+      repairUtf8Mojibake(input.text?.trim().slice(0, 200_000) ?? null);
     let bodyHtml: string | null = null;
     let rawMime = input.rawMime ?? null;
 

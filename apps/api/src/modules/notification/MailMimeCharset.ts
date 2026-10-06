@@ -41,8 +41,11 @@ const ENCODED_WORD_RE =
 
 /** RFC 2047 encoded-words in Subject, From display names, etc. */
 export function decodeMimeEncodedWords(value: string): string {
-  if (!value || !value.includes("=?")) {
+  if (!value) {
     return value;
+  }
+  if (!value.includes("=?")) {
+    return repairUtf8Mojibake(value) ?? value;
   }
   let result = "";
   let lastIndex = 0;
@@ -73,5 +76,34 @@ export function decodeMimeEncodedWords(value: string): string {
     lastIndex = index + match[0].length;
   }
   result += value.slice(lastIndex);
-  return result.replace(/[ \t]+/g, " ").trim();
+  return repairUtf8Mojibake(result.replace(/[ \t]+/g, " ").trim());
+}
+
+const MOJIBAKE_HINT_RE = /[ÃÂÄÅÆÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ]/;
+
+/**
+ * UTF-8 baytları Latin-1/ISO-8859-1 olarak okunmuş metni düzeltir (liste önizleme).
+ */
+export function repairUtf8Mojibake(value: string | null | undefined): string | null {
+  if (value == null || value === "") {
+    return value ?? null;
+  }
+  if (!MOJIBAKE_HINT_RE.test(value)) {
+    return value;
+  }
+  try {
+    const repaired = Buffer.from(value, "latin1").toString("utf8");
+    if (repaired.includes("\uFFFD")) {
+      return value;
+    }
+    if (repaired !== value && /[ğüşöçıİĞÜŞÖÇ]/.test(repaired)) {
+      return repaired;
+    }
+    if (repaired !== value && !MOJIBAKE_HINT_RE.test(repaired)) {
+      return repaired;
+    }
+  } catch {
+    return value;
+  }
+  return value;
 }

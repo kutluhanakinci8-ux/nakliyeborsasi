@@ -92,6 +92,7 @@ type Params = {
   router: AppRouterInstance;
   searchParams: ReadonlyURLSearchParams;
   embedMode: boolean;
+  embedHubShell?: boolean;
 };
 
 export function useMailClientController({
@@ -100,6 +101,7 @@ export function useMailClientController({
   router,
   searchParams,
   embedMode,
+  embedHubShell = false,
 }: Params) {
   const deepLinkMessageHandled = useRef(false);
   const deepLinkComposeHandled = useRef(false);
@@ -1750,6 +1752,7 @@ export function useMailClientController({
     drafts,
     editingDraftId,
     embedMode,
+    embedHubShell,
     ensureAiMailConsent,
     filteredSent,
     forwardMessageId,

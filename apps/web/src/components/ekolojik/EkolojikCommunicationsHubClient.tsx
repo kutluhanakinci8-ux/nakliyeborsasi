@@ -1300,6 +1300,7 @@ export function EkolojikCommunicationsHubClient() {
                   ) : null}
                   <MessagingMailWebEmbed
                     key={`${section}-${openCompose ? "compose" : "view"}-${mailFolderView ?? "inbox"}-${mailMessageId ?? ""}`}
+                    hubShell
                     handoff={mailHandoff ?? { mailView: "inbox" }}
                   />
                 </div>

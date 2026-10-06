@@ -70,6 +70,7 @@ export function MailClientShell({ mail }: Props) {
     drafts,
     editingDraftId,
     embedMode,
+    embedHubShell,
     ensureAiMailConsent,
     filteredSent,
     forwardMessageId,
@@ -230,7 +231,7 @@ export function MailClientShell({ mail }: Props) {
 
   return (
     <div
-      className={`mail-app mobile-pane-${mobilePane}${embedMode ? " mail-app--embed" : ""}${inboxListDensity === "compact" ? " mail-app--list-compact" : ""}`}
+      className={`mail-app mobile-pane-${mobilePane}${embedMode ? " mail-app--embed" : ""}${embedHubShell ? " mail-app--embed-hub" : ""}${inboxListDensity === "compact" ? " mail-app--list-compact" : ""}`}
     >
       {(inboxOffline || detailOffline) ? (
         <div className="mail-offline-banner" role="status">

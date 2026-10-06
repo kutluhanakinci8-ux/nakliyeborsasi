@@ -41,6 +41,8 @@ export type MailWebEmbedHandoff = {
   mailOpsAssist?: boolean;
   /** Tek mesaj deep link (`mail-web` ?message=). */
   messageId?: string;
+  /** Ekolojik/NB hub: iframe içinde webmail sol menüyü gizle. */
+  embedHubShell?: boolean;
 };
 
 export function parseMailWebEmbedView(

@@ -46,6 +46,8 @@ function ConsumeHandoff() {
     const mailEngagement = search.get("mailEngagement")?.trim();
     const mailOps = search.get("mailOps")?.trim();
     const message = search.get("message")?.trim();
+    const embed = search.get("embed")?.trim();
+    const embedHub = search.get("embedHub")?.trim();
     const query = new URLSearchParams();
     if (fromAddress) {
       query.set("welcome", fromAddress);
@@ -97,6 +99,12 @@ function ConsumeHandoff() {
     }
     if (message) {
       query.set("message", message);
+    }
+    if (embed === "1") {
+      query.set("embed", "1");
+    }
+    if (embedHub === "1") {
+      query.set("embedHub", "1");
     }
     const qs = query.toString();
     router.replace(qs ? `/mail?${qs}` : "/mail");

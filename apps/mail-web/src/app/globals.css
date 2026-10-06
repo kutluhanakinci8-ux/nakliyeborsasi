@@ -2976,6 +2976,18 @@ a {
   display: none !important;
 }
 
+.mail-app--embed-hub {
+  grid-template-columns: minmax(280px, 380px) 1fr;
+}
+
+.mail-app--embed-hub .mail-sidebar {
+  display: none;
+}
+
+.mail-app--embed-hub .mail-mobile-bar button:first-child {
+  display: none;
+}
+
 .mail-app--embed .mail-brand strong {
   font-weight: 600;
 }

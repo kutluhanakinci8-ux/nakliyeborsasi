@@ -18,6 +18,9 @@ export function buildMailWebSsoHandoffUrl(
   if (options?.embed) {
     params.set("embed", "1");
   }
+  if (options?.embedHubShell) {
+    params.set("embedHub", "1");
+  }
   const composeTo = options?.composeTo?.trim();
   if (composeTo) {
     params.set("composeTo", composeTo);

@@ -11,6 +11,7 @@ export function MailClient() {
   const { accessToken, logout } = useMailSession();
   const embedMode =
     searchParams.get("embed") === "1" || searchParams.get("embedded") === "1";
+  const embedHubShell = searchParams.get("embedHub") === "1";
 
   const mail = useMailClientController({
     accessToken,
@@ -18,6 +19,7 @@ export function MailClient() {
     router,
     searchParams,
     embedMode,
+    embedHubShell,
   });
 
   return <MailClientShell mail={mail} />;
