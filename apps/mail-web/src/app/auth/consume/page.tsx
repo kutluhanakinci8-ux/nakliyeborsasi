@@ -31,12 +31,24 @@ function ConsumeHandoff() {
     }
     const search = new URLSearchParams(window.location.search);
     const composeTo = search.get("composeTo")?.trim();
+    const mailView = search.get("mailView")?.trim();
+    const customFolder = search.get("customFolder")?.trim();
+    const compose = search.get("compose")?.trim();
     const query = new URLSearchParams();
     if (fromAddress) {
       query.set("welcome", fromAddress);
     }
     if (composeTo) {
       query.set("composeTo", composeTo);
+    }
+    if (mailView) {
+      query.set("mailView", mailView);
+    }
+    if (customFolder) {
+      query.set("customFolder", customFolder);
+    }
+    if (compose === "1") {
+      query.set("compose", "1");
     }
     const qs = query.toString();
     router.replace(qs ? `/mail?${qs}` : "/mail");

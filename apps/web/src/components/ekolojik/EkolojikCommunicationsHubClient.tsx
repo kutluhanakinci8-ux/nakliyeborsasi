@@ -1,47 +1,32 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { SocialHubPageClient } from "../../app/(dashboard)/hesap/sosyal-medya/SocialHubPageClient";
 import { MessagingMailWebEmbed } from "../messaging/MessagingMailWebEmbed";
 import { MessagingConversationPanel } from "../messaging/MessagingConversationPanel";
 import { MessagingThreadSidebar } from "../messaging/MessagingThreadSidebar";
 import { useWebSession } from "../../context/WebSessionProvider";
 import { useMessagingChatController } from "../../hooks/useMessagingChatController";
+import { ekolojikSectionToMailHandoff } from "../../lib/ekolojikMailSectionHandoff";
+import {
+  parseEkolojikHubSection,
+  type EkolojikHubSection,
+} from "../../lib/ekolojikHubTypes";
 
-export type EkolojikHubSection =
-  | "posta"
-  | "mesajlar"
-  | "sosyal"
-  | "fatura"
-  | "gonderilen"
-  | "arsiv";
-
-function parseHubSection(raw: string | null): EkolojikHubSection {
-  switch (raw?.trim()) {
-    case "mesajlar":
-    case "musteri":
-      return "mesajlar";
-    case "sosyal":
-    case "kanallar":
-      return "sosyal";
-    case "fatura":
-      return "fatura";
-    case "gonderilen":
-      return "gonderilen";
-    case "arsiv":
-      return "arsiv";
-    default:
-      return "posta";
-  }
-}
+export type { EkolojikHubSection };
 
 export function EkolojikCommunicationsHubClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { accessToken, locale, session } = useWebSession();
-  const section = parseHubSection(searchParams.get("bolum"));
+  const section = parseEkolojikHubSection(searchParams.get("bolum"));
   const [composeTo, setComposeTo] = useState<string | undefined>(undefined);
+  const [openCompose, setOpenCompose] = useState(false);
+
+  useEffect(() => {
+    setOpenCompose(false);
+  }, [section]);
 
   const chat = useMessagingChatController({
     accessToken,
@@ -61,15 +46,18 @@ export function EkolojikCommunicationsHubClient() {
     [section],
   );
 
+  const mailHandoff = useMemo(
+    () =>
+      ekolojikSectionToMailHandoff(section, {
+        openCompose,
+        composeTo,
+      }),
+    [section, openCompose, composeTo],
+  );
+
   const folderHint = useMemo(() => {
     if (section === "fatura") {
-      return "Fatura e-postaları — EK-P4 ile mail-web IMAP klasör eşlemesi tamamlanacak; şimdilik gelen kutusu gömülü.";
-    }
-    if (section === "gonderilen") {
-      return "Gönderilen — EK-P4 ile mail-web «sent» görünümü; şimdilik tam posta istemcisi.";
-    }
-    if (section === "arsiv") {
-      return "Arşiv — EK-P4 ile mail-web arşiv klasörleri; şimdilik tam posta istemcisi.";
+      return "Fatura: özel klasör «Fatura» (veya adında fatura geçen klasör) webmail’de açılır; yoksa gelen kutusu gösterilir.";
     }
     return null;
   }, [section]);
@@ -98,7 +86,8 @@ export function EkolojikCommunicationsHubClient() {
             type="button"
             className="ekolojik-comms-sidebar-primary"
             onClick={() => {
-              setComposeTo("");
+              setComposeTo(undefined);
+              setOpenCompose(true);
               setSection("posta");
             }}
           >
@@ -199,7 +188,10 @@ export function EkolojikCommunicationsHubClient() {
           ) : null}
           {mailSection ? (
             <div className="ekolojik-comms-mail-wrap messaging-mail-embed-wrap messaging-mail-embed-wrap--primary">
-              <MessagingMailWebEmbed composeTo={composeTo} />
+              <MessagingMailWebEmbed
+                key={`${section}-${openCompose ? "compose" : "view"}`}
+                handoff={mailHandoff ?? { mailView: "inbox" }}
+              />
             </div>
           ) : null}
         </div>

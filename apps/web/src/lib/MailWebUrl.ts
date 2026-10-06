@@ -1,3 +1,5 @@
+import type { MailWebEmbedHandoff } from "./mailWebEmbedDeepLink";
+
 /** Tam webmail (posta.lerta.com.tr) — logistics uygulamasından SSO linki. */
 export function resolveMailWebPublicUrl(): string {
   const fromEnv = process.env.NEXT_PUBLIC_MAIL_WEB_URL?.trim();
@@ -9,7 +11,7 @@ export function resolveMailWebPublicUrl(): string {
 
 export function buildMailWebSsoHandoffUrl(
   accessToken: string,
-  options?: { embed?: boolean; composeTo?: string },
+  options?: { embed?: boolean } & MailWebEmbedHandoff,
 ): string {
   const base = resolveMailWebPublicUrl();
   const params = new URLSearchParams();
@@ -19,6 +21,15 @@ export function buildMailWebSsoHandoffUrl(
   const composeTo = options?.composeTo?.trim();
   if (composeTo) {
     params.set("composeTo", composeTo);
+  }
+  if (options?.openCompose) {
+    params.set("compose", "1");
+  }
+  if (options?.mailView) {
+    params.set("mailView", options.mailView);
+  }
+  if (options?.customFolder?.trim()) {
+    params.set("customFolder", options.customFolder.trim());
   }
   const qs = params.toString();
   return `${base}/auth/consume${qs ? `?${qs}` : ""}#access_token=${encodeURIComponent(accessToken)}`;

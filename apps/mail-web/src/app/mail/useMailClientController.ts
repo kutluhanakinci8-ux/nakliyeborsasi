@@ -75,7 +75,11 @@ import {
 } from "@/lib/mailApi";
 import { useMailKeyboardShortcuts } from "./useMailKeyboardShortcuts";
 
-import { inboxFolderForView, type MailClientView } from "./mailClientHelpers";
+import {
+  inboxFolderForView,
+  parseMailClientViewParam,
+  type MailClientView,
+} from "./mailClientHelpers";
 
 import type { ReadonlyURLSearchParams } from "next/navigation";
 import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
@@ -99,6 +103,9 @@ export function useMailClientController({
 }: Params) {
   const deepLinkMessageHandled = useRef(false);
   const deepLinkComposeHandled = useRef(false);
+  const deepLinkViewHandled = useRef(false);
+  const deepLinkCustomFolderHandled = useRef(false);
+  const deepLinkOpenComposeHandled = useRef(false);
   const [view, setView] = useState<MailClientView>("inbox");
   const [summary, setSummary] = useState<MailInboxSummary | null>(null);
   const [sendReadiness, setSendReadiness] = useState<MailSendReadiness | null>(
@@ -543,6 +550,60 @@ export function useMailClientController({
     setComposeTo(to);
     setComposeOpen(true);
   }, [accessToken, searchParams]);
+
+  useEffect(() => {
+    const parsed = parseMailClientViewParam(searchParams.get("mailView"));
+    if (!accessToken || !parsed || deepLinkViewHandled.current) {
+      return;
+    }
+    deepLinkViewHandled.current = true;
+    setView(parsed);
+    if (parsed !== "inbox") {
+      setActiveCustomFolderId(null);
+    }
+    setDetail(null);
+    setSentPreview(null);
+    setSelectedId(null);
+    setMobilePane("list");
+  }, [accessToken, searchParams]);
+
+  useEffect(() => {
+    const raw = searchParams.get("compose")?.trim();
+    if (!accessToken || raw !== "1" || deepLinkOpenComposeHandled.current) {
+      return;
+    }
+    deepLinkOpenComposeHandled.current = true;
+    setComposeOpen(true);
+  }, [accessToken, searchParams]);
+
+  useEffect(() => {
+    const needle = searchParams.get("customFolder")?.trim();
+    if (
+      !accessToken ||
+      !needle ||
+      deepLinkCustomFolderHandled.current ||
+      customFolders.length === 0
+    ) {
+      return;
+    }
+    const lower = needle.toLowerCase();
+    const match = customFolders.find(
+      (folder) =>
+        folder.id === needle ||
+        folder.name.trim().toLowerCase() === lower ||
+        folder.name.trim().toLowerCase().includes(lower),
+    );
+    if (!match) {
+      return;
+    }
+    deepLinkCustomFolderHandled.current = true;
+    setView("inbox");
+    setActiveCustomFolderId(match.id);
+    setDetail(null);
+    setSentPreview(null);
+    setSelectedId(null);
+    setMobilePane("list");
+  }, [accessToken, searchParams, customFolders]);
 
   async function downloadAttachment(index: number, filename: string) {
     if (!accessToken || !detail) {

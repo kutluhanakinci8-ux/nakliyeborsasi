@@ -1,11 +1,12 @@
 import { Controller, Get } from "@nestjs/common";
 
-const EK_PHASE = "ek-u1";
+const EK_PHASE = "ek-p4";
 
 const EK_FEATURES = [
   "ekolojik_product_shell",
   "ekolojik_communications_hub_unified",
   "ekolojik_mail_web_embed",
+  "ekolojik_mail_folder_deep_link",
   "ekolojik_messaging_full_chat",
   "ekolojik_social_hub_embed",
   "ekolojik_ci_workflow_ek_0",
