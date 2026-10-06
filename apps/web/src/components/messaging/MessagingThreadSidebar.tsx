@@ -16,9 +16,15 @@ type Props = {
   chat: MessagingChatController;
   locale: string;
   accessToken: string;
+  socialDmInboxOnly?: boolean;
 };
 
-export function MessagingThreadSidebar({ chat, locale, accessToken }: Props) {
+export function MessagingThreadSidebar({
+  chat,
+  locale,
+  accessToken,
+  socialDmInboxOnly = false,
+}: Props) {
   const {
     filteredThreads,
     threads,
@@ -51,11 +57,17 @@ export function MessagingThreadSidebar({ chat, locale, accessToken }: Props) {
           >
             <div className="chat-sidebar-header">
               <div className="chat-sidebar-heading">
-                <h2 className="chat-sidebar-title">Sohbetler</h2>
+                <h2 className="chat-sidebar-title">
+                  {socialDmInboxOnly ? "Sosyal DM" : "Sohbetler"}
+                </h2>
                 <p className="chat-sidebar-subtitle">
-                  {filteredThreads.length > 0
-                    ? `${filteredThreads.length} konuşma`
-                    : "Firma mesajları"}
+                  {socialDmInboxOnly
+                    ? filteredThreads.length > 0
+                      ? `${filteredThreads.length} kanal konuşması`
+                      : "Instagram · WhatsApp · Telegram…"
+                    : filteredThreads.length > 0
+                      ? `${filteredThreads.length} konuşma`
+                      : "Firma mesajları"}
                 </p>
                 <MessagingRealtimeStatusBadge
                   transport={realtimeTransport}
@@ -208,9 +220,13 @@ export function MessagingThreadSidebar({ chat, locale, accessToken }: Props) {
             {filteredThreads.length === 0 ? (
               <EmptyState
                 message={
-                  threads.length === 0
-                    ? "Henüz sohbet yok. Üstte firma adı ile yeni sohbet açın."
-                    : "Aramanızla eşleşen sohbet yok."
+                  socialDmInboxOnly
+                    ? threads.length === 0
+                      ? "Henüz sosyal DM yok. «Sosyal medya» sekmesinden kanal bağlayın; gelen mesajlar burada listelenir."
+                      : "Aramanızla eşleşen sosyal konuşma yok."
+                    : threads.length === 0
+                      ? "Henüz sohbet yok. Üstte firma adı ile yeni sohbet açın."
+                      : "Aramanızla eşleşen sohbet yok."
                 }
               />
             ) : (

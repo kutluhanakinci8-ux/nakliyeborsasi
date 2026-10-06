@@ -5,7 +5,11 @@ export function ekolojikSectionToMailHandoff(
   section: EkolojikHubSection,
   options?: { composeTo?: string; openCompose?: boolean },
 ): MailWebEmbedHandoff | null {
-  if (section === "mesajlar" || section === "sosyal") {
+  if (
+    section === "mesajlar" ||
+    section === "sosyal" ||
+    section === "sosyal-dm"
+  ) {
     return null;
   }
   if (options?.openCompose) {

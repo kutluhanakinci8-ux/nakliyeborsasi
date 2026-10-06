@@ -1,6 +1,7 @@
 export type EkolojikHubSection =
   | "posta"
   | "mesajlar"
+  | "sosyal-dm"
   | "sosyal"
   | "fatura"
   | "gonderilen"
@@ -13,6 +14,10 @@ export function parseEkolojikHubSection(
     case "mesajlar":
     case "musteri":
       return "mesajlar";
+    case "sosyal-dm":
+    case "sosyal_dm":
+    case "sosyalmesaj":
+      return "sosyal-dm";
     case "sosyal":
     case "kanallar":
       return "sosyal";

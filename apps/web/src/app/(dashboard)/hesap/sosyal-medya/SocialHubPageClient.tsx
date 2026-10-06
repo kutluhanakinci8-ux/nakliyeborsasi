@@ -38,7 +38,16 @@ import type {
   SocialHubInboxThreadPreview,
 } from "../../../../lib/socialHubTypes";
 
-export function SocialHubPageClient() {
+type SocialHubPageClientProps = {
+  /** Ekolojik hub: `/marketim/posta-ve-mesaj?bolum=sosyal-dm` */
+  messagingInboxHref?: string;
+  threadMessagingHref?: (threadId: string) => string;
+};
+
+export function SocialHubPageClient({
+  messagingInboxHref,
+  threadMessagingHref,
+}: SocialHubPageClientProps = {}) {
   const { accessToken, session } = useWebSession();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<SocialHubTabId>("connections");
@@ -719,6 +728,8 @@ export function SocialHubPageClient() {
                 threadsPreview={inboxThreadsPreview}
                 threadsPreviewLoading={inboxPreviewLoading}
                 busy={busy}
+                messagingInboxHref={messagingInboxHref}
+                threadMessagingHref={threadMessagingHref}
                 canSeedDemo={snapshot.permissions.canManageConnections}
                 onSeedDemo={() =>
                   void runAction(async () => {
@@ -947,6 +958,7 @@ export function SocialHubPageClient() {
                 channelScope={templateChannelScope}
                 serverPreview={templateServerPreview}
                 messagingDeepLink={
+                  messagingInboxHref ??
                   snapshot.inboxSummary?.messagingDeepLink ??
                   "/messaging?tab=sohbet&filter=social"
                 }

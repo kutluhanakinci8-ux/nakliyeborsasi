@@ -12,6 +12,12 @@ import { useWebSession } from "../../context/WebSessionProvider";
 import { useMessagingChatController } from "../../hooks/useMessagingChatController";
 import { ekolojikSectionToMailHandoff } from "../../lib/ekolojikMailSectionHandoff";
 import {
+  applyEkolojikSectionQueryParams,
+  isEkolojikMessagingChatSection,
+  isEkolojikSocialDmInbox,
+} from "../../lib/ekolojikMessagingChatSection";
+import { ekolojikSocialDmInboxHref } from "../../lib/ekolojikSocialMessagingDeepLink";
+import {
   parseEkolojikHubSection,
   type EkolojikHubSection,
 } from "../../lib/ekolojikHubTypes";
@@ -23,12 +29,27 @@ export function EkolojikCommunicationsHubClient() {
   const searchParams = useSearchParams();
   const { accessToken, locale, session } = useWebSession();
   const section = parseEkolojikHubSection(searchParams.get("bolum"));
+  const socialDmInbox = isEkolojikSocialDmInbox(section, searchParams);
   const [composeTo, setComposeTo] = useState<string | undefined>(undefined);
   const [openCompose, setOpenCompose] = useState(false);
 
   useEffect(() => {
     setOpenCompose(false);
   }, [section]);
+
+  useEffect(() => {
+    if (section !== "sosyal-dm") {
+      return;
+    }
+    if (searchParams.get("filter")?.toLowerCase() === "social") {
+      return;
+    }
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("filter", "social");
+    router.replace(`/marketim/posta-ve-mesaj?${params.toString()}`, {
+      scroll: false,
+    });
+  }, [section, searchParams, router]);
 
   const chat = useMessagingChatController({
     accessToken,
@@ -71,13 +92,15 @@ export function EkolojikCommunicationsHubClient() {
     mobileThreadOpen,
   } = chat;
 
-  const setSection = (next: EkolojikHubSection) => {
+  const navigateSection = (next: EkolojikHubSection) => {
     const params = new URLSearchParams(searchParams.toString());
-    params.set("bolum", next);
+    applyEkolojikSectionQueryParams(params, next);
     router.replace(`/marketim/posta-ve-mesaj?${params.toString()}`, {
       scroll: false,
     });
   };
+
+  const showMessagingChat = isEkolojikMessagingChatSection(section);
 
   return (
     <div className="ekolojik-comms-hub">
@@ -97,7 +120,7 @@ export function EkolojikCommunicationsHubClient() {
             onClick={() => {
               setComposeTo(undefined);
               setOpenCompose(true);
-              setSection("posta");
+              navigateSection("posta");
             }}
           >
             Yaz
@@ -109,7 +132,7 @@ export function EkolojikCommunicationsHubClient() {
                 ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
                 : "ekolojik-comms-sidebar-item"
             }
-            onClick={() => setSection("posta")}
+            onClick={() => navigateSection("posta")}
           >
             Gelen
           </button>
@@ -120,7 +143,7 @@ export function EkolojikCommunicationsHubClient() {
                 ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
                 : "ekolojik-comms-sidebar-item"
             }
-            onClick={() => setSection("fatura")}
+            onClick={() => navigateSection("fatura")}
           >
             Fatura
           </button>
@@ -131,9 +154,20 @@ export function EkolojikCommunicationsHubClient() {
                 ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
                 : "ekolojik-comms-sidebar-item"
             }
-            onClick={() => setSection("mesajlar")}
+            onClick={() => navigateSection("mesajlar")}
           >
             Müşteri mesajları
+          </button>
+          <button
+            type="button"
+            className={
+              socialDmInbox
+                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
+                : "ekolojik-comms-sidebar-item"
+            }
+            onClick={() => navigateSection("sosyal-dm")}
+          >
+            Sosyal DM
           </button>
           <button
             type="button"
@@ -142,7 +176,7 @@ export function EkolojikCommunicationsHubClient() {
                 ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
                 : "ekolojik-comms-sidebar-item"
             }
-            onClick={() => setSection("gonderilen")}
+            onClick={() => navigateSection("gonderilen")}
           >
             Gönderilen
           </button>
@@ -153,7 +187,7 @@ export function EkolojikCommunicationsHubClient() {
                 ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
                 : "ekolojik-comms-sidebar-item"
             }
-            onClick={() => setSection("arsiv")}
+            onClick={() => navigateSection("arsiv")}
           >
             Arşiv
           </button>
@@ -164,21 +198,27 @@ export function EkolojikCommunicationsHubClient() {
                 ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
                 : "ekolojik-comms-sidebar-item"
             }
-            onClick={() => setSection("sosyal")}
+            onClick={() => navigateSection("sosyal")}
           >
             Sosyal medya
           </button>
           <p className="ekolojik-comms-sidebar-foot module-hint">SMTP / IMAP: NB posta altyapısı</p>
         </nav>
         <div className="ekolojik-comms-main">
-          {section === "mesajlar" && moduleBlocked ? (
+          {showMessagingChat && moduleBlocked ? (
             <p className="module-hint messaging-module-blocked">
               Firma sohbeti modülü bu hesapta kapalı. Abonelik veya paket
               ayarlarını kontrol edin.
             </p>
           ) : null}
-          {section === "mesajlar" && errorMessage && !moduleBlocked ? (
+          {showMessagingChat && errorMessage && !moduleBlocked ? (
             <p className="error banner error--light">{errorMessage}</p>
+          ) : null}
+          {showMessagingChat && socialDmInbox ? (
+            <p className="module-hint ekolojik-comms-social-dm-hint">
+              Instagram, WhatsApp, Telegram ve diğer bağlı kanallardan gelen DM
+              konuşmaları. Yanıtlar Social Hub köprüsü ile kanala iletilir.
+            </p>
           ) : null}
           {section === "mesajlar" && searchParams.get("listingId") ? (
             <p className="module-hint ekolojik-comms-listing-hint">
@@ -192,32 +232,36 @@ export function EkolojikCommunicationsHubClient() {
           ) : null}
           {section === "sosyal" ? (
             <div className="ekolojik-comms-social-wrap">
-              <SocialHubPageClient />
+              <SocialHubPageClient
+                messagingInboxHref={ekolojikSocialDmInboxHref()}
+                threadMessagingHref={ekolojikSocialDmInboxHref}
+              />
             </div>
           ) : null}
-          {section === "mesajlar" ? (
+          {showMessagingChat ? (
             <>
-            <MessagingChatComplianceStrip chat={chat} />
-            <div
-              className={
-                mobileThreadOpen && activeThreadId
-                  ? "ekolojik-comms-chat-wrap chat-layout chat-layout--mobile-thread"
-                  : "ekolojik-comms-chat-wrap chat-layout"
-              }
-            >
-              <MessagingThreadSidebar
-                chat={chat}
-                locale={locale}
-                accessToken={accessToken}
-              />
-              <MessagingConversationPanel
-                chat={chat}
-                accessToken={accessToken}
-                locale={locale}
-                session={session}
-                chatBackgroundId="default"
-              />
-            </div>
+              <MessagingChatComplianceStrip chat={chat} />
+              <div
+                className={
+                  mobileThreadOpen && activeThreadId
+                    ? "ekolojik-comms-chat-wrap chat-layout chat-layout--mobile-thread"
+                    : "ekolojik-comms-chat-wrap chat-layout"
+                }
+              >
+                <MessagingThreadSidebar
+                  chat={chat}
+                  locale={locale}
+                  accessToken={accessToken}
+                  socialDmInboxOnly={socialDmInbox}
+                />
+                <MessagingConversationPanel
+                  chat={chat}
+                  accessToken={accessToken}
+                  locale={locale}
+                  session={session}
+                  chatBackgroundId="default"
+                />
+              </div>
             </>
           ) : null}
           {mailSection ? (
@@ -230,7 +274,7 @@ export function EkolojikCommunicationsHubClient() {
           ) : null}
         </div>
       </div>
-      {section === "mesajlar" ? <MessagingChatModalsLayer chat={chat} /> : null}
+      {showMessagingChat ? <MessagingChatModalsLayer chat={chat} /> : null}
     </div>
   );
 }

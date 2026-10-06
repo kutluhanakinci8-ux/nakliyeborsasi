@@ -68,7 +68,7 @@ Detay: kullanıcı onayı sonrası `docs/LERTA_MAIL_MESSAGING_PARITY_100_ROADMAP
 | M2 | ek-m2 | SSE + Redis fan-out (● `useMessagingChatController` + canlı rozet) |
 | M3 | ek-m3 | Düzenle/sil, mention, okundu, typing, şablon (● `MessagingChatModalsLayer` hub) |
 | M4 | ek-m4 | 10 MB × 5 ek, audit, legal hold (● thread `legalHoldAt` + uyumluluk şeridi) |
-| M5 | ek-m5 | Sosyal DM köprüsü (IG/WA/TG…) |
+| M5 | ek-m5 | Sosyal DM köprüsü (● `bolum=sosyal-dm` + Social Hub deep link) |
 | M6 | ek-m6 | WA bridge FS-12 |
 | M7 | ek-m7 | Public API, Slack, Zapier |
 | M8 | ek-m8 | Grup thread + roller |

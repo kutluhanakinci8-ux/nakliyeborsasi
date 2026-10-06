@@ -514,6 +514,8 @@ type InboxProps = {
   onSync: (platformCode: string) => void;
   onSeedDemo?: () => void;
   canSeedDemo?: boolean;
+  messagingInboxHref?: string;
+  threadMessagingHref?: (threadId: string) => string;
 };
 
 export function SocialInboxPanel({
@@ -524,12 +526,20 @@ export function SocialInboxPanel({
   onSync,
   onSeedDemo,
   canSeedDemo,
+  messagingInboxHref,
+  threadMessagingHref,
 }: InboxProps) {
-  const inboxSummary = snapshot.inboxSummary ?? {
-    totalOpenThreads: 0,
-    byPlatform: [],
-    messagingDeepLink: "/messaging?tab=sohbet&filter=social",
-    note: "Sosyal konuşmalar Mesajlar listesinde listelenir.",
+  const inboxSummary = {
+    ...(snapshot.inboxSummary ?? {
+      totalOpenThreads: 0,
+      byPlatform: [],
+      messagingDeepLink: "/messaging?tab=sohbet&filter=social",
+      note: "Sosyal konuşmalar Mesajlar listesinde listelenir.",
+    }),
+    messagingDeepLink:
+      messagingInboxHref ??
+      snapshot.inboxSummary?.messagingDeepLink ??
+      "/messaging?tab=sohbet&filter=social",
   };
   const permissions = snapshot.permissions ?? {
     canManageConnections: false,
@@ -612,7 +622,10 @@ export function SocialInboxPanel({
                         </span>
                       ) : null}
                       <Link
-                        href={row.messagingDeepLink}
+                        href={
+                          threadMessagingHref?.(row.threadId) ??
+                          row.messagingDeepLink
+                        }
                         className="btn-account-primary"
                       >
                         Aç

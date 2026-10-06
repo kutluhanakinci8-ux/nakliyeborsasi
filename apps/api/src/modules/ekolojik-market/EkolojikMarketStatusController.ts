@@ -1,7 +1,15 @@
 import { Controller, Get } from "@nestjs/common";
 import { MessagingAttachmentStorageService } from "../messaging/MessagingAttachmentStorageService";
 
-const EK_PHASE = "ek-m4";
+const EK_PHASE = "ek-m5";
+
+const EK_SOCIAL_DM_PLATFORMS = [
+  "INSTAGRAM",
+  "WHATSAPP",
+  "TELEGRAM",
+  "MESSENGER",
+  "X",
+] as const;
 
 const EK_FEATURES = [
   "ekolojik_product_shell",
@@ -12,6 +20,7 @@ const EK_FEATURES = [
   "ekolojik_messaging_sse_redis_fanout",
   "ekolojik_messaging_interactions_parity",
   "ekolojik_messaging_attachments_audit_hold",
+  "ekolojik_messaging_social_dm_bridge",
   "ekolojik_social_hub_embed",
   "ekolojik_ci_workflow_ek_0",
 ] as const;
@@ -25,6 +34,7 @@ const EK_PHASE_MILESTONES = [
   "ek-m2",
   "ek-m3",
   "ek-m4",
+  "ek-m5",
   "ek-s1",
   "ek-u4",
 ] as const;
@@ -50,6 +60,12 @@ export class EkolojikMarketStatusController {
       storageMode: string;
     };
     messagingCompliance: string[];
+    messagingSocialDm: {
+      hubSection: string;
+      filter: string;
+      platforms: string[];
+      nbBridgeModule: string;
+    };
   } {
     return {
       module: "ekolojik_market",
@@ -80,6 +96,12 @@ export class EkolojikMarketStatusController {
         "thread_legal_hold",
         "company_kvkk_export",
       ],
+      messagingSocialDm: {
+        hubSection: "sosyal-dm",
+        filter: "social",
+        platforms: [...EK_SOCIAL_DM_PLATFORMS],
+        nbBridgeModule: "social_hub_messaging_bridge",
+      },
     };
   }
 }
