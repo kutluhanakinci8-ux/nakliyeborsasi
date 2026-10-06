@@ -428,6 +428,11 @@ echo "${status_json}" | grep -q 'run-ekolojik-market-parity-close-checklist.sh' 
   exit 1
 }
 echo "OK: EK-U4 close checklist script ref"
+echo "${status_json}" | grep -q '"fullGateEnvVar":"EK_U4_FULL"' || {
+  echo "FAIL: missing parityClose.fullGateEnvVar EK_U4_FULL"
+  exit 1
+}
+echo "OK: parityClose full gate env (EK-FULL)"
 
 echo "== Ekolojik hub web route =="
 code="$(curl -sS -o /dev/null -w "%{http_code}" "${WEB_BASE}/marketim/posta-ve-mesaj")"

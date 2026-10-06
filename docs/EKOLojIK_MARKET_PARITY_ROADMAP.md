@@ -27,7 +27,7 @@ Detay: kullanıcı onayı sonrası `docs/LERTA_MAIL_MESSAGING_PARITY_100_ROADMAP
 - Route: `/marketim/posta-ve-mesaj`
 - `GET /api/v1/public/ekolojik-market/status` → `phase`, `features[]`
 - `scripts/smoke-ekolojik-market-parity.sh`
-- CI: `.github/workflows/ekolojik-market-parity.yml` (PR: `verify-ekolojik-market-status-source.sh` + build; main/schedule: prod smoke; `workflow_dispatch` → EK-U4 close checklist)
+- CI: `.github/workflows/ekolojik-market-parity.yml` (PR: source verify + build; main/schedule: prod smoke; `workflow_dispatch` → close + opsiyonel `ek_u4_full`)
 - VPS: `scripts/vps-operator-verify.sh` + `scripts/deploy-production-vps.sh` → source verify + EK-U4 close (`EK_U4_FULL=1` opsiyonel NB tam kapı)
 
 ## EK-U1 — Birleşik iletişim merkezi (● başlandı)
@@ -97,6 +97,13 @@ Detay: kullanıcı onayı sonrası `docs/LERTA_MAIL_MESSAGING_PARITY_100_ROADMAP
 
 - `scripts/verify-ekolojik-market-status-source.sh` — `EK_PHASE`, `EK_FEATURES`, scriptler, hub bileşeni (canlı API gerekmez)
 - Public status `ekolojikCi.statusSourceVerifyScript` ile referans
+- Close checklist ilk adım: source verify
+
+## EK-FULL — NB paylaşılan tam kapı (●)
+
+- `parityClose.fullGateEnvVar`: **`EK_U4_FULL`**
+- `EK_U4_FULL=1` → `run-mail-messaging-parity-close-checklist.sh` (posta/mesaj altyapısı; tenant verisi ayrı)
+- GitHub Actions `workflow_dispatch`: `ek_u4_full` (boolean); opsiyonel `run_prod_smoke=false`
 
 ## EK-U4 — Kapanış (●)
 

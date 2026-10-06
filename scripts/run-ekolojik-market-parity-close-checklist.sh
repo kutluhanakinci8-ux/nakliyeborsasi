@@ -24,6 +24,9 @@ run_step() {
 
 echo "== Ekolojik Market parity close checklist (EK-U4) =="
 
+run_step "Status source (EK-OPS)" \
+  bash "${ROOT}/scripts/verify-ekolojik-market-status-source.sh"
+
 run_step "Parity roadmap" test -f "${ROADMAP}"
 if [[ -f "${ROADMAP}" ]]; then
   grep -q "ek-u4" "${ROADMAP}" || {

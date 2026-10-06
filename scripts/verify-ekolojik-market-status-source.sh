@@ -86,6 +86,8 @@ if 'statusSourceVerifyScript' not in text:
     sys.exit("FAIL: ekolojikCi.statusSourceVerifyScript not declared")
 if "verify-ekolojik-market-status-source.sh" not in text:
     sys.exit("FAIL: verify script path not in controller")
+if 'fullGateEnvVar: "EK_U4_FULL"' not in text:
+    sys.exit("FAIL: parityClose.fullGateEnvVar EK_U4_FULL missing")
 
 print(f"OK: EK_FEATURES count={len(features)}")
 PY

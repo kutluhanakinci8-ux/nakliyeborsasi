@@ -418,8 +418,10 @@ export class EkolojikMarketStatusController {
       messagingPhaseComplete: string;
       socialPhaseComplete: string;
       closeChecklistScript: string;
+      statusSourceVerifyScript: string;
       smokeScript: string;
       nbMailMessagingCloseScript: string;
+      fullGateEnvVar: string;
       mailParityPercent: number;
       messagingParityPercent: number;
       mailThresholdPercent: number;
@@ -845,9 +847,12 @@ export class EkolojikMarketStatusController {
         socialPhaseComplete: EK_SOCIAL_PHASE_COMPLETE,
         closeChecklistScript:
           "scripts/run-ekolojik-market-parity-close-checklist.sh",
+        statusSourceVerifyScript:
+          "scripts/verify-ekolojik-market-status-source.sh",
         smokeScript: "scripts/smoke-ekolojik-market-parity.sh",
         nbMailMessagingCloseScript:
           "scripts/run-mail-messaging-parity-close-checklist.sh",
+        fullGateEnvVar: "EK_U4_FULL",
         mailParityPercent: EK_PARITY_MAIL_PERCENT,
         messagingParityPercent: EK_PARITY_MESSAGING_PERCENT,
         mailThresholdPercent: EK_PARITY_MAIL_THRESHOLD_PERCENT,
