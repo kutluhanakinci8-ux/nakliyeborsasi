@@ -35,6 +35,8 @@ export type MailWebEmbedHandoff = {
   composeAiAssist?: boolean;
   /** Teslimat panelinde engagement + webhook analitik (EK-P10). */
   mailEngagementAssist?: boolean;
+  /** Ops snapshot + runbook paneli (EK-P11). */
+  mailOpsAssist?: boolean;
 };
 
 export function parseMailWebEmbedView(

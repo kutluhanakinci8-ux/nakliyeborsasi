@@ -3,7 +3,7 @@
 set -euo pipefail
 API_BASE="${EKOLojIK_API_BASE:-${SOCIAL_HUB_API_BASE:-http://127.0.0.1:3000/api/v1}}"
 WEB_BASE="${EKOLojIK_WEB_PUBLIC_URL:-${SOCIAL_HUB_WEB_PUBLIC_URL:-http://127.0.0.1:3001}}"
-EXPECT_PHASE="${EKOLOJIK_SMOKE_EXPECT_PHASE:-ek-p10}"
+EXPECT_PHASE="${EKOLOJIK_SMOKE_EXPECT_PHASE:-ek-p11}"
 
 echo "== Ekolojik market public status =="
 status_json="$(curl -fsS "${API_BASE}/public/ekolojik-market/status")"
@@ -153,6 +153,24 @@ echo "${status_json}" | grep -q 'message.opened' || {
   exit 1
 }
 echo "OK: mailEngagementWebhook deep links"
+echo "${status_json}" | grep -q '"ekolojik_mail_ops_snapshot_runbook_hub"' || {
+  echo "FAIL: missing ekolojik_mail_ops_snapshot_runbook_hub"
+  exit 1
+}
+echo "OK: feature ekolojik_mail_ops_snapshot_runbook_hub (EK-P11)"
+echo "${status_json}" | grep -q '"mailSettings=ops"' || {
+  echo "FAIL: missing mailOpsSnapshotRunbook ops panel path"
+  exit 1
+}
+echo "${status_json}" | grep -q 'ops-snapshot' || {
+  echo "FAIL: missing mailOpsSnapshotRunbook API path"
+  exit 1
+}
+echo "${status_json}" | grep -q 'MESSAGING_POSTA_OPS_RUNBOOK' || {
+  echo "FAIL: missing mailOpsSnapshotRunbook runbook ref"
+  exit 1
+}
+echo "OK: mailOpsSnapshotRunbook deep links"
 echo "${status_json}" | grep -q '"ekolojik_messaging_sse_redis_fanout"' || {
   echo "FAIL: missing ekolojik_messaging_sse_redis_fanout"
   exit 1

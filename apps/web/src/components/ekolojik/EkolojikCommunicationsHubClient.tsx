@@ -47,6 +47,11 @@ import {
   readEkolojikMailEngagementWebhookFromSearchParams,
 } from "../../lib/ekolojikMailEngagementWebhookDeepLink";
 import {
+  ekolojikMailOpsRunbookHubHref,
+  isEkolojikMailOpsRunbookHub,
+  readEkolojikMailOpsFromSearchParams,
+} from "../../lib/ekolojikMailOpsRunbookDeepLink";
+import {
   ekolojikMailPwaHubHref,
   isEkolojikMailPwaHub,
   readEkolojikMailPwaFromSearchParams,
@@ -267,6 +272,14 @@ export function EkolojikCommunicationsHubClient() {
     [searchParams],
   );
 
+  const mailOpsDeepLink = useMemo(
+    () =>
+      readEkolojikMailOpsFromSearchParams(
+        new URLSearchParams(searchParams.toString()),
+      ),
+    [searchParams],
+  );
+
   const mailPwaDeepLink = useMemo(
     () =>
       readEkolojikMailPwaFromSearchParams(
@@ -276,6 +289,7 @@ export function EkolojikCommunicationsHubClient() {
   );
 
   const mailSettingsTab =
+    mailOpsDeepLink.mailSettingsTab ??
     mailPwaDeepLink.mailSettingsTab ??
     mailEngagementDeepLink.mailSettingsTab ??
     mailDmarcDeepLink.mailSettingsTab ??
@@ -292,6 +306,10 @@ export function EkolojikCommunicationsHubClient() {
     searchParams.get("bolum"),
     mailSettingsTab,
     searchParams.get("mailEngagement"),
+  );
+  const mailOpsHub = isEkolojikMailOpsRunbookHub(
+    searchParams.get("bolum"),
+    mailSettingsTab,
   );
   const mailDmarcHub = isEkolojikMailDmarcHub(
     searchParams.get("bolum"),
@@ -348,6 +366,7 @@ export function EkolojikCommunicationsHubClient() {
         ...mailDavDeepLink,
         ...mailDmarcDeepLink,
         ...mailEngagementDeepLink,
+        ...mailOpsDeepLink,
         ...mailPwaDeepLink,
         openCompose: openCompose || mailComposeDeepLink.openCompose,
         composeTo: composeTo ?? mailComposeDeepLink.composeTo,
@@ -361,6 +380,7 @@ export function EkolojikCommunicationsHubClient() {
       mailDavDeepLink,
       mailDmarcDeepLink,
       mailEngagementDeepLink,
+      mailOpsDeepLink,
       mailPwaDeepLink,
     ],
   );
@@ -526,6 +546,7 @@ export function EkolojikCommunicationsHubClient() {
               !mailCardDavHub &&
               !mailDmarcHub &&
               !mailEngagementHub &&
+              !mailOpsHub &&
               !mailPwaHub &&
               !mailAiComposeHub
                 ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
@@ -582,6 +603,19 @@ export function EkolojikCommunicationsHubClient() {
             }
           >
             Engagement &amp; webhook
+          </button>
+          <button
+            type="button"
+            className={
+              mailOpsHub
+                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
+                : "ekolojik-comms-sidebar-item"
+            }
+            onClick={() =>
+              navigateMailRichCompose(ekolojikMailOpsRunbookHubHref())
+            }
+          >
+            Ops &amp; runbook
           </button>
           <button
             type="button"

@@ -1704,3 +1704,40 @@ export async function fetchDeliverabilityHub(
     `company/mail-inbox/deliverability-hub?days=${safeDays}`,
   );
 }
+
+export type MailOpsRunbookRef = {
+  id: string;
+  docPath: string;
+  verifyScript: string | null;
+};
+
+export type MailOpsSnapshot = {
+  phaseCode: string;
+  generatedAt: string;
+  organizationId: string;
+  imap: {
+    enabled: boolean;
+    maildirPath: string | null;
+    imapHealthPath: string;
+  };
+  deliverability: {
+    score: number;
+    periodDays: number;
+    sentInPeriod: number;
+    bounceRatePercent: number | null;
+    webhookEndpointCount: number;
+  };
+  integration: {
+    jmap: { bridge: boolean; sessionPath: string; invokePath: string };
+    aiComposeEnabled: boolean;
+  };
+  runbooks: MailOpsRunbookRef[];
+  ekolojikPublicStatusPath: string;
+};
+
+export async function fetchMailOpsSnapshot(accessToken: string) {
+  return apiFetch<{ snapshot: MailOpsSnapshot }>(
+    accessToken,
+    "company/mail-inbox/ops-snapshot",
+  );
+}

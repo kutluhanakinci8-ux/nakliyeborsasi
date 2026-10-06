@@ -1,7 +1,7 @@
 import { Controller, Get } from "@nestjs/common";
 import { MessagingAttachmentStorageService } from "../messaging/MessagingAttachmentStorageService";
 
-const EK_PHASE = "ek-p10";
+const EK_PHASE = "ek-p11";
 
 const EK_MAIL_PWA_NB_FEATURES = [
   "mail_web_pwa_manifest_scope",
@@ -74,6 +74,7 @@ const EK_FEATURES = [
   "ekolojik_mail_pwa_offline_push_hub",
   "ekolojik_mail_ai_compose_hub",
   "ekolojik_mail_engagement_webhook_analytics_hub",
+  "ekolojik_mail_ops_snapshot_runbook_hub",
   "ekolojik_messaging_full_chat",
   "ekolojik_messaging_sse_redis_fanout",
   "ekolojik_messaging_interactions_parity",
@@ -112,6 +113,7 @@ const EK_PHASE_MILESTONES = [
   "ek-p8",
   "ek-p9",
   "ek-p10",
+  "ek-p11",
   "ek-m1",
   "ek-m2",
   "ek-m3",
@@ -281,6 +283,16 @@ export class EkolojikMarketStatusController {
       nbDeliverabilityHubApiPath: string;
       nbWebhookConfigureApiPath: string;
       nbEngagementWebhookEvents: string[];
+    };
+    mailOpsSnapshotRunbook: {
+      phaseCode: string;
+      hubSection: string;
+      opsPanelPath: string;
+      embedQueryParams: string[];
+      nbMailWebSurfaces: string[];
+      nbOpsSnapshotApiPath: string;
+      nbRunbookRefs: string[];
+      nbVerifyScripts: string[];
     };
     socialHubConnections: {
       hubSection: string;
@@ -644,6 +656,27 @@ export class EkolojikMarketStatusController {
           "message.opened",
           "message.clicked",
           "message.bounced",
+        ],
+      },
+      mailOpsSnapshotRunbook: {
+        phaseCode: "ek-p11",
+        hubSection: "posta",
+        opsPanelPath:
+          "/marketim/posta-ve-mesaj?bolum=posta&mailSettings=ops&mailOps=1",
+        embedQueryParams: ["mailSettings", "mailOps"],
+        nbMailWebSurfaces: [
+          "MailOpsSnapshotPanel",
+          "mail-ops-runbooks",
+          "ops-snapshot",
+        ],
+        nbOpsSnapshotApiPath: "/api/v1/company/mail-inbox/ops-snapshot",
+        nbRunbookRefs: [
+          "docs/MESSAGING_POSTA_OPS_RUNBOOK.md",
+          "docs/MAIL_PM5_IMAP_DOVECOT_RUNBOOK.md",
+        ],
+        nbVerifyScripts: [
+          "scripts/verify-communications-ops-snapshot.sh",
+          "scripts/run-ekolojik-market-parity-close-checklist.sh",
         ],
       },
       socialHubConnections: {

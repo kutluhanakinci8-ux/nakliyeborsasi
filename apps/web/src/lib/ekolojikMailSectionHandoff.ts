@@ -31,6 +31,7 @@ export function ekolojikSectionToMailHandoff(
       mailDmarcAssist: options.mailDmarcAssist,
       mailPwaAssist: options.mailPwaAssist,
       mailEngagementAssist: options.mailEngagementAssist,
+      mailOpsAssist: options.mailOpsAssist,
     };
   }
   if (
@@ -40,6 +41,7 @@ export function ekolojikSectionToMailHandoff(
     options?.mailDmarcAssist ||
     options?.mailPwaAssist ||
     options?.mailEngagementAssist ||
+    options?.mailOpsAssist ||
     options?.mailView
   ) {
     return {
@@ -54,6 +56,7 @@ export function ekolojikSectionToMailHandoff(
       mailDmarcAssist: options.mailDmarcAssist,
       mailPwaAssist: options.mailPwaAssist,
       mailEngagementAssist: options.mailEngagementAssist,
+      mailOpsAssist: options.mailOpsAssist,
     };
   }
   switch (section) {

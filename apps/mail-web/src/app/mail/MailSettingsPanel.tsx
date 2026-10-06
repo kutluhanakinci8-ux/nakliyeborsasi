@@ -13,6 +13,7 @@ import {
   type MailImapSettings,
 } from "@/lib/mailApi";
 import { MailDeliverabilityPanel } from "./MailDeliverabilityPanel";
+import { MailOpsSnapshotPanel } from "./MailOpsSnapshotPanel";
 import { MailImapClientSetup } from "./MailImapClientSetup";
 import { MailComposePresetsPanel } from "./MailComposePresetsPanel";
 import { MailAccountsSettingsPanel } from "./MailAccountsSettingsPanel";
@@ -59,7 +60,8 @@ export type SettingsView =
   | "deliverability"
   | "calendarSettings"
   | "contactsSettings"
-  | "help";
+  | "help"
+  | "ops";
 
 type HubItem = {
   id: SettingsView;
@@ -128,6 +130,13 @@ const HUB_ITEMS: HubItem[] = [
     keywords: "spf dkim dmarc bounce deliverability",
   },
   {
+    id: "ops",
+    section: "general",
+    label: "Ops snapshot",
+    subtitle: "Runbook ve smoke referansları",
+    keywords: "ops runbook smoke snapshot imap",
+  },
+  {
     id: "rules",
     section: "general",
     label: "Posta kuralları",
@@ -181,6 +190,7 @@ type Props = {
   deliverabilityDmarcFocus?: boolean;
   notificationsPwaFocus?: boolean;
   deliverabilityEngagementFocus?: boolean;
+  mailOpsRunbookFocus?: boolean;
 };
 
 export function MailSettingsPanel({
@@ -193,6 +203,7 @@ export function MailSettingsPanel({
   deliverabilityDmarcFocus = false,
   notificationsPwaFocus = false,
   deliverabilityEngagementFocus = false,
+  mailOpsRunbookFocus = false,
 }: Props) {
   const [view, setView] = useState<SettingsView>(initialView ?? "hub");
   const [query, setQuery] = useState("");
@@ -1153,6 +1164,15 @@ export function MailSettingsPanel({
         </>,
       );
       break;
+    case "ops":
+      content = renderDetail(
+        "Ops snapshot ve runbook",
+        <MailOpsSnapshotPanel
+          accessToken={accessToken}
+          highlightRunbook={mailOpsRunbookFocus}
+        />,
+      );
+      break;
     case "deliverability":
       content = renderDetail(
         "Teslimat ve itibar",
@@ -1253,6 +1273,10 @@ function settingsRowIcon(id: SettingsView): string {
       return "🛡️";
     case "help":
       return "❓";
+    case "ops":
+      return "📋";
+    case "deliverability":
+      return "📈";
     default:
       return "•";
   }

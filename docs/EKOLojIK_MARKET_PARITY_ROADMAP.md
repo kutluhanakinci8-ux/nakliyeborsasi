@@ -58,7 +58,7 @@ Detay: kullanıcı onayı sonrası `docs/LERTA_MAIL_MESSAGING_PARITY_100_ROADMAP
 | P8 | ek-p8 | PWA offline + push (● `mailSettings=notifications` + `mailPwa=1`) |
 | P9 | ek-p9 | AI compose (opsiyonel) (● `compose=1` + `composeRich=1` + `composeAi=1`) |
 | P10 | ek-p10 | Engagement / webhook analitik (● `mailSettings=deliverability` + `mailEngagement=1`) |
-| P11 | ek-p11 | Ops snapshot + runbook |
+| P11 | ek-p11 | Ops snapshot + runbook (● `mailSettings=ops` + `mailOps=1`) |
 
 ## EK-M — Mesajlar
 

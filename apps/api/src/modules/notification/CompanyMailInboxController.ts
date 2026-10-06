@@ -314,6 +314,61 @@ export class CompanyMailInboxController {
     };
   }
 
+  @Get("ops-snapshot")
+  public async mailOpsSnapshot(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    const imap = await this.mailImapAccessService.getSettings(user.companyId);
+    const deliverability = await this.mailDeliverabilityHubService.buildHub(
+      user.companyId,
+      7,
+    );
+    const integration = await this.integrationStatus(user);
+    return {
+      snapshot: {
+        phaseCode: "ek-p11",
+        generatedAt: new Date().toISOString(),
+        organizationId: user.companyId,
+        imap: {
+          enabled: imap.enabled,
+          maildirPath: imap.maildirPath,
+          imapHealthPath: "/api/v1/company/mail-inbox/imap-health",
+        },
+        deliverability: {
+          score: deliverability.score,
+          periodDays: deliverability.periodDays,
+          sentInPeriod: deliverability.engagement?.sentInPeriod ?? 0,
+          bounceRatePercent:
+            deliverability.engagement?.bounceRatePercent ?? null,
+          webhookEndpointCount:
+            deliverability.webhookAnalytics?.endpointCount ?? 0,
+        },
+        integration: {
+          jmap: integration.jmap,
+          aiComposeEnabled: integration.aiCompose.enabled,
+        },
+        runbooks: [
+          {
+            id: "messaging-posta-ops",
+            docPath: "docs/MESSAGING_POSTA_OPS_RUNBOOK.md",
+            verifyScript: "scripts/verify-communications-ops-snapshot.sh",
+          },
+          {
+            id: "imap-dovecot",
+            docPath: "docs/MAIL_PM5_IMAP_DOVECOT_RUNBOOK.md",
+            verifyScript: "scripts/smoke-ekolojik-market-parity.sh",
+          },
+          {
+            id: "ekolojik-parity-close",
+            docPath: "scripts/run-ekolojik-market-parity-close-checklist.sh",
+            verifyScript: "scripts/run-ekolojik-market-parity-close-checklist.sh",
+          },
+        ],
+        ekolojikPublicStatusPath: "/api/v1/public/ekolojik-market/status",
+      },
+    };
+  }
+
   @Get("account-hub")
   public async accountHub(@AuthenticatedUserParam() user: AuthenticatedUserContext) {
     const summary = await this.mailOrganizationInboxService.getSummary(

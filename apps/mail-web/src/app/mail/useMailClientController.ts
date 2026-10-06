@@ -116,6 +116,7 @@ export function useMailClientController({
   const deepLinkMailPwaHandled = useRef(false);
   const deepLinkComposeAiHandled = useRef(false);
   const deepLinkMailEngagementHandled = useRef(false);
+  const deepLinkMailOpsHandled = useRef(false);
   const [mailBulkAssistActive, setMailBulkAssistActive] = useState(false);
   const [mailSwipeAssistActive, setMailSwipeAssistActive] = useState(false);
   const [mailDmarcAssistActive, setMailDmarcAssistActive] = useState(false);
@@ -124,6 +125,7 @@ export function useMailClientController({
   const [composeAiDraftBusy, setComposeAiDraftBusy] = useState(false);
   const [mailEngagementAssistActive, setMailEngagementAssistActive] =
     useState(false);
+  const [mailOpsAssistActive, setMailOpsAssistActive] = useState(false);
   const [view, setView] = useState<MailClientView>("inbox");
   const [summary, setSummary] = useState<MailInboxSummary | null>(null);
   const [sendReadiness, setSendReadiness] = useState<MailSendReadiness | null>(
@@ -666,6 +668,7 @@ export function useMailClientController({
       "calendarSettings",
       "contactsSettings",
       "help",
+      "ops",
     ]);
     if (!allowed.has(raw)) {
       return;
@@ -756,6 +759,20 @@ export function useMailClientController({
     deepLinkMailEngagementHandled.current = true;
     setMailEngagementAssistActive(true);
     setSettingsInitialView("deliverability");
+    setSettingsOpen(true);
+  }, [accessToken, searchParams]);
+
+  useEffect(() => {
+    if (
+      !accessToken ||
+      searchParams.get("mailOps") !== "1" ||
+      deepLinkMailOpsHandled.current
+    ) {
+      return;
+    }
+    deepLinkMailOpsHandled.current = true;
+    setMailOpsAssistActive(true);
+    setSettingsInitialView("ops");
     setSettingsOpen(true);
   }, [accessToken, searchParams]);
 
@@ -1861,6 +1878,8 @@ export function useMailClientController({
     setComposeAiDraftBusy,
     mailEngagementAssistActive,
     setMailEngagementAssistActive,
+    mailOpsAssistActive,
+    setMailOpsAssistActive,
     setShortcutsOpen,
     setSummary,
     setThreadMessages,
