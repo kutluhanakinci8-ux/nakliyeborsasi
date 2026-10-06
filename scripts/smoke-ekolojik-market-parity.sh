@@ -414,6 +414,15 @@ echo "${status_json}" | grep -q 'verify-ekolojik-market-phase-pr-cleanup.sh' || 
   exit 1
 }
 echo "OK: ekolojikCi phase PR cleanup (EK-CLEAN)"
+echo "${status_json}" | grep -q 'run-ekolojik-market-close-stale-phase-prs.sh' || {
+  echo "FAIL: missing ekolojikCi phasePrCloseScript"
+  exit 1
+}
+echo "${status_json}" | grep -q '"phasePrCloseEnvVar":"EK_CLOSE_STALE_PRS"' || {
+  echo "FAIL: missing phasePrCloseEnvVar EK_CLOSE_STALE_PRS"
+  exit 1
+}
+echo "OK: ekolojikCi stale PR close (EK-CLOSE)"
 echo "${status_json}" | grep -q '"phaseCode":"ek-u4"' || {
   echo "FAIL: missing parityClose phaseCode ek-u4"
   exit 1
