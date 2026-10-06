@@ -27,7 +27,8 @@ Detay: kullanıcı onayı sonrası `docs/LERTA_MAIL_MESSAGING_PARITY_100_ROADMAP
 - Route: `/marketim/posta-ve-mesaj`
 - `GET /api/v1/public/ekolojik-market/status` → `phase`, `features[]`
 - `scripts/smoke-ekolojik-market-parity.sh`
-- CI: `.github/workflows/ekolojik-market-parity.yml` (build + prod public smoke; `workflow_dispatch` → EK-U4 close checklist)
+- CI: `.github/workflows/ekolojik-market-parity.yml` (PR: `verify-ekolojik-market-status-source.sh` + build; main/schedule: prod smoke; `workflow_dispatch` → EK-U4 close checklist)
+- VPS: `scripts/vps-operator-verify.sh` + `scripts/deploy-production-vps.sh` → source verify + EK-U4 close (`EK_U4_FULL=1` opsiyonel NB tam kapı)
 
 ## EK-U1 — Birleşik iletişim merkezi (● başlandı)
 
@@ -91,6 +92,11 @@ Detay: kullanıcı onayı sonrası `docs/LERTA_MAIL_MESSAGING_PARITY_100_ROADMAP
 | S8 | ek-s8 | Ops + integration gate (● `tab=health` + `integration_gate=1`) |
 | S9 | ek-s9 | TikTok/YouTube/PWA (● `platform=TIKTOK|YOUTUBE` + `tab=health&pwa=1`) |
 | S10 | ek-s10 | Telegram Ads API (● `tab=publishing&telegram_ads=1` explicit v2 gate + UTM) |
+
+## EK-OPS — VPS / CI kaynak doğrulama (●)
+
+- `scripts/verify-ekolojik-market-status-source.sh` — `EK_PHASE`, `EK_FEATURES`, scriptler, hub bileşeni (canlı API gerekmez)
+- Public status `ekolojikCi.statusSourceVerifyScript` ile referans
 
 ## EK-U4 — Kapanış (●)
 

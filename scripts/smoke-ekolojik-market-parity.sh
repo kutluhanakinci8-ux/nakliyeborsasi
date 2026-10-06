@@ -399,6 +399,11 @@ echo "${status_json}" | grep -q 'ekolojik-market-parity.yml' || {
   exit 1
 }
 echo "OK: ekolojikCi workflow (EK-0)"
+echo "${status_json}" | grep -q 'verify-ekolojik-market-status-source.sh' || {
+  echo "FAIL: missing ekolojikCi statusSourceVerifyScript"
+  exit 1
+}
+echo "OK: ekolojikCi status source verify (EK-OPS)"
 echo "${status_json}" | grep -q '"phaseCode":"ek-u4"' || {
   echo "FAIL: missing parityClose phaseCode ek-u4"
   exit 1

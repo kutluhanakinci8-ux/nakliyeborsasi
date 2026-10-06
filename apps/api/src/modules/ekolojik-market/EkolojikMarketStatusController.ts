@@ -303,6 +303,7 @@ export class EkolojikMarketStatusController {
       workflowPath: string;
       smokeScript: string;
       closeChecklistScript: string;
+      statusSourceVerifyScript: string;
       defaultSmokeExpectPhase: string;
     };
     socialHubConnections: {
@@ -699,6 +700,8 @@ export class EkolojikMarketStatusController {
         smokeScript: "scripts/smoke-ekolojik-market-parity.sh",
         closeChecklistScript:
           "scripts/run-ekolojik-market-parity-close-checklist.sh",
+        statusSourceVerifyScript:
+          "scripts/verify-ekolojik-market-status-source.sh",
         defaultSmokeExpectPhase: "ek-u4",
       },
       socialHubConnections: {
