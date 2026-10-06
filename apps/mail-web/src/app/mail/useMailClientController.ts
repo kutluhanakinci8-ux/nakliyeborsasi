@@ -106,6 +106,9 @@ export function useMailClientController({
   const deepLinkViewHandled = useRef(false);
   const deepLinkCustomFolderHandled = useRef(false);
   const deepLinkOpenComposeHandled = useRef(false);
+  const deepLinkComposeRichHandled = useRef(false);
+  const deepLinkComposeMultipartHandled = useRef(false);
+  const deepLinkComposeTemplateHandled = useRef(false);
   const [view, setView] = useState<MailClientView>("inbox");
   const [summary, setSummary] = useState<MailInboxSummary | null>(null);
   const [sendReadiness, setSendReadiness] = useState<MailSendReadiness | null>(
@@ -575,6 +578,54 @@ export function useMailClientController({
     deepLinkOpenComposeHandled.current = true;
     setComposeOpen(true);
   }, [accessToken, searchParams]);
+
+  useEffect(() => {
+    const raw = searchParams.get("composeRich")?.trim();
+    if (!accessToken || !raw || deepLinkComposeRichHandled.current) {
+      return;
+    }
+    deepLinkComposeRichHandled.current = true;
+    setComposeRich(raw !== "0");
+    if (searchParams.get("compose") === "1") {
+      setComposeOpen(true);
+    }
+  }, [accessToken, searchParams]);
+
+  useEffect(() => {
+    if (
+      !accessToken ||
+      searchParams.get("composeMultipart") !== "1" ||
+      deepLinkComposeMultipartHandled.current
+    ) {
+      return;
+    }
+    deepLinkComposeMultipartHandled.current = true;
+    setComposeOpen(true);
+    setComposeShowCcBcc(true);
+  }, [accessToken, searchParams]);
+
+  useEffect(() => {
+    const raw = searchParams.get("composeTemplate")?.trim();
+    if (!accessToken || !raw || deepLinkComposeTemplateHandled.current) {
+      return;
+    }
+    if (composeTemplates.length === 0) {
+      return;
+    }
+    const normalized = raw.includes(":") ? raw : `builtin:${raw}`;
+    const preset = composeTemplates.find(
+      (t) => t.id === normalized || t.id === raw,
+    );
+    if (!preset) {
+      return;
+    }
+    deepLinkComposeTemplateHandled.current = true;
+    setComposeOpen(true);
+    if (preset.subject) {
+      setComposeSubject(preset.subject);
+    }
+    setComposeText(preset.bodyText);
+  }, [accessToken, searchParams, composeTemplates]);
 
   useEffect(() => {
     const needle = searchParams.get("customFolder")?.trim();

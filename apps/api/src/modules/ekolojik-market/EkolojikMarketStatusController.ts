@@ -1,7 +1,7 @@
 import { Controller, Get } from "@nestjs/common";
 import { MessagingAttachmentStorageService } from "../messaging/MessagingAttachmentStorageService";
 
-const EK_PHASE = "ek-u4";
+const EK_PHASE = "ek-p2";
 
 /** EK-U4 rubrik — kod yolu paritesi (posta/mesaj aynı NB modülleri, ayrı tenant). */
 const EK_PARITY_MAIL_PERCENT = 96;
@@ -60,6 +60,7 @@ const EK_FEATURES = [
   "ekolojik_communications_hub_unified",
   "ekolojik_mail_web_embed",
   "ekolojik_mail_folder_deep_link",
+  "ekolojik_mail_rich_compose_templates_multipart",
   "ekolojik_messaging_full_chat",
   "ekolojik_messaging_sse_redis_fanout",
   "ekolojik_messaging_interactions_parity",
@@ -89,6 +90,7 @@ const EK_PHASE_MILESTONES = [
   "ek-0",
   "ek-u1",
   "ek-p1",
+  "ek-p2",
   "ek-p4",
   "ek-m1",
   "ek-m2",
@@ -181,6 +183,16 @@ export class EkolojikMarketStatusController {
       hubChatSections: string[];
       chatBackgroundStorageKey: string;
       nbParityComponents: string[];
+    };
+    mailComposeRich: {
+      phaseCode: string;
+      hubSection: string;
+      hubPath: string;
+      templateExamplePath: string;
+      multipartPath: string;
+      embedQueryParams: string[];
+      defaultBuiltinTemplateId: string;
+      nbMailWebSurfaces: string[];
     };
     socialHubConnections: {
       hubSection: string;
@@ -401,6 +413,29 @@ export class EkolojikMarketStatusController {
           "MessagingSideRail",
           "ChatConversationBackgroundPicker",
           "messaging-page-layout",
+        ],
+      },
+      mailComposeRich: {
+        phaseCode: "ek-p2",
+        hubSection: "posta",
+        hubPath:
+          "/marketim/posta-ve-mesaj?bolum=posta&compose=1&composeRich=1",
+        templateExamplePath:
+          "/marketim/posta-ve-mesaj?bolum=posta&compose=1&composeRich=1&composeTemplate=builtin:yuk-teklifi",
+        multipartPath:
+          "/marketim/posta-ve-mesaj?bolum=posta&compose=1&composeRich=1&composeMultipart=1",
+        embedQueryParams: [
+          "compose",
+          "composeRich",
+          "composeTemplate",
+          "composeMultipart",
+          "composeTo",
+        ],
+        defaultBuiltinTemplateId: "builtin:yuk-teklifi",
+        nbMailWebSurfaces: [
+          "ComposeRichEditor",
+          "MailComposePresetsPanel",
+          "composeMail_multipart",
         ],
       },
       socialHubConnections: {

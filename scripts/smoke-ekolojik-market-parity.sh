@@ -3,7 +3,7 @@
 set -euo pipefail
 API_BASE="${EKOLojIK_API_BASE:-${SOCIAL_HUB_API_BASE:-http://127.0.0.1:3000/api/v1}}"
 WEB_BASE="${EKOLojIK_WEB_PUBLIC_URL:-${SOCIAL_HUB_WEB_PUBLIC_URL:-http://127.0.0.1:3001}}"
-EXPECT_PHASE="${EKOLOJIK_SMOKE_EXPECT_PHASE:-ek-u4}"
+EXPECT_PHASE="${EKOLOJIK_SMOKE_EXPECT_PHASE:-ek-p2}"
 
 echo "== Ekolojik market public status =="
 status_json="$(curl -fsS "${API_BASE}/public/ekolojik-market/status")"
@@ -23,6 +23,21 @@ echo "${status_json}" | grep -q '"ekolojik_mail_folder_deep_link"' || {
   exit 1
 }
 echo "OK: feature ekolojik_mail_folder_deep_link (EK-P4)"
+echo "${status_json}" | grep -q '"ekolojik_mail_rich_compose_templates_multipart"' || {
+  echo "FAIL: missing ekolojik_mail_rich_compose_templates_multipart"
+  exit 1
+}
+echo "OK: feature ekolojik_mail_rich_compose_templates_multipart (EK-P2)"
+echo "${status_json}" | grep -q '"composeTemplate=builtin:yuk-teklifi"' || {
+  echo "FAIL: missing mailComposeRich template deep link"
+  exit 1
+}
+echo "OK: mailComposeRich embed deep links"
+echo "${status_json}" | grep -q '"composeMultipart=1"' || {
+  echo "FAIL: missing mailComposeRich multipart deep link"
+  exit 1
+}
+echo "OK: mailComposeRich multipart handoff"
 echo "${status_json}" | grep -q '"ekolojik_messaging_sse_redis_fanout"' || {
   echo "FAIL: missing ekolojik_messaging_sse_redis_fanout"
   exit 1

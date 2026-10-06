@@ -25,6 +25,18 @@ export function buildMailWebSsoHandoffUrl(
   if (options?.openCompose) {
     params.set("compose", "1");
   }
+  if (options?.composeRich === true) {
+    params.set("composeRich", "1");
+  } else if (options?.composeRich === false) {
+    params.set("composeRich", "0");
+  }
+  const composeTemplateId = options?.composeTemplateId?.trim();
+  if (composeTemplateId) {
+    params.set("composeTemplate", composeTemplateId);
+  }
+  if (options?.composeMultipart) {
+    params.set("composeMultipart", "1");
+  }
   if (options?.mailView) {
     params.set("mailView", options.mailView);
   }

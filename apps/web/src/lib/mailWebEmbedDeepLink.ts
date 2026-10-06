@@ -13,6 +13,12 @@ export type MailWebEmbedHandoff = {
   customFolder?: string;
   openCompose?: boolean;
   composeTo?: string;
+  /** Zengin HTML yazım (mail-web ComposeRichEditor). */
+  composeRich?: boolean;
+  /** Şablon kimliği (`builtin:yuk-teklifi` veya slug). */
+  composeTemplateId?: string;
+  /** Cc/Bcc + ekler (multipart MIME yazım ekranı). */
+  composeMultipart?: boolean;
 };
 
 export function parseMailWebEmbedView(

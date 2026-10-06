@@ -22,6 +22,11 @@ import { useWebSession } from "../../context/WebSessionProvider";
 import { useMessagingChatController } from "../../hooks/useMessagingChatController";
 import { ekolojikSectionToMailHandoff } from "../../lib/ekolojikMailSectionHandoff";
 import {
+  ekolojikMailRichComposeHref,
+  isEkolojikMailRichComposeHub,
+  readEkolojikMailComposeFromSearchParams,
+} from "../../lib/ekolojikMailComposeDeepLink";
+import {
   applyEkolojikSectionQueryParams,
   isEkolojikMessagingChatSection,
   isEkolojikGroupInbox,
@@ -180,13 +185,27 @@ export function EkolojikCommunicationsHubClient() {
     [section],
   );
 
+  const mailComposeDeepLink = useMemo(
+    () =>
+      readEkolojikMailComposeFromSearchParams(
+        new URLSearchParams(searchParams.toString()),
+      ),
+    [searchParams],
+  );
+
+  const mailRichComposeHub = isEkolojikMailRichComposeHub(
+    searchParams.get("bolum"),
+    new URLSearchParams(searchParams.toString()),
+  );
+
   const mailHandoff = useMemo(
     () =>
       ekolojikSectionToMailHandoff(section, {
-        openCompose,
-        composeTo,
+        ...mailComposeDeepLink,
+        openCompose: openCompose || mailComposeDeepLink.openCompose,
+        composeTo: composeTo ?? mailComposeDeepLink.composeTo,
       }),
-    [section, openCompose, composeTo],
+    [section, openCompose, composeTo, mailComposeDeepLink],
   );
 
   const folderHint = useMemo(() => {
@@ -230,6 +249,13 @@ export function EkolojikCommunicationsHubClient() {
       setChannelSettingsOpen(true);
     }
   }, [searchParams, showMessagingChat, setChannelSettingsOpen]);
+
+  const navigateMailRichCompose = useCallback(
+    (href: string) => {
+      router.replace(href, { scroll: false });
+    },
+    [router],
+  );
 
   const navigateSection = (next: EkolojikHubSection) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -332,13 +358,39 @@ export function EkolojikCommunicationsHubClient() {
           <button
             type="button"
             className={
-              section === "posta"
+              section === "posta" && !mailRichComposeHub
                 ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
                 : "ekolojik-comms-sidebar-item"
             }
             onClick={() => navigateSection("posta")}
           >
             Gelen
+          </button>
+          <button
+            type="button"
+            className={
+              mailRichComposeHub
+                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
+                : "ekolojik-comms-sidebar-item"
+            }
+            onClick={() =>
+              navigateMailRichCompose(
+                ekolojikMailRichComposeHref({ multipart: true }),
+              )
+            }
+          >
+            Zengin yazım
+          </button>
+          <button
+            type="button"
+            className="ekolojik-comms-sidebar-item"
+            onClick={() =>
+              navigateMailRichCompose(
+                ekolojikMailRichComposeHref({ templateSlug: "yuk-teklifi" }),
+              )
+            }
+          >
+            Teklif şablonu
           </button>
           <button
             type="button"

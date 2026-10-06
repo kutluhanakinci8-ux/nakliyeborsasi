@@ -3,7 +3,7 @@ import type { EkolojikHubSection } from "./ekolojikHubTypes";
 
 export function ekolojikSectionToMailHandoff(
   section: EkolojikHubSection,
-  options?: { composeTo?: string; openCompose?: boolean },
+  options?: MailWebEmbedHandoff,
 ): MailWebEmbedHandoff | null {
   if (
     section === "mesajlar" ||
@@ -21,6 +21,9 @@ export function ekolojikSectionToMailHandoff(
       mailView: "inbox",
       openCompose: true,
       composeTo: options.composeTo,
+      composeRich: options.composeRich,
+      composeTemplateId: options.composeTemplateId,
+      composeMultipart: options.composeMultipart,
     };
   }
   switch (section) {

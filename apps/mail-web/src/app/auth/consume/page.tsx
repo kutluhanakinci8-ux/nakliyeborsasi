@@ -34,6 +34,9 @@ function ConsumeHandoff() {
     const mailView = search.get("mailView")?.trim();
     const customFolder = search.get("customFolder")?.trim();
     const compose = search.get("compose")?.trim();
+    const composeRich = search.get("composeRich")?.trim();
+    const composeTemplate = search.get("composeTemplate")?.trim();
+    const composeMultipart = search.get("composeMultipart")?.trim();
     const query = new URLSearchParams();
     if (fromAddress) {
       query.set("welcome", fromAddress);
@@ -49,6 +52,15 @@ function ConsumeHandoff() {
     }
     if (compose === "1") {
       query.set("compose", "1");
+    }
+    if (composeRich === "1" || composeRich === "0") {
+      query.set("composeRich", composeRich);
+    }
+    if (composeTemplate) {
+      query.set("composeTemplate", composeTemplate);
+    }
+    if (composeMultipart === "1") {
+      query.set("composeMultipart", "1");
     }
     const qs = query.toString();
     router.replace(qs ? `/mail?${qs}` : "/mail");
