@@ -174,3 +174,39 @@ export function readEkolojikPublishingUtmFromSearchParams(
       undefined,
   };
 }
+
+export function isEkolojikSocialHubHealthTab(
+  bolum: string | null,
+  tab: string | null,
+): boolean {
+  return isEkolojikSocialHubTab(bolum, tab, "health");
+}
+
+export function ekolojikSocialHubHealthHref(): string {
+  const params = new URLSearchParams({
+    bolum: "sosyal",
+    tab: "health",
+  });
+  return `${EKOLOJIK_HUB_PATH}?${params.toString()}`;
+}
+
+export function isEkolojikSocialHubIntegrationGate(
+  bolum: string | null,
+  tab: string | null,
+  integrationGate: string | null,
+): boolean {
+  if (bolum !== "sosyal" || tab !== "connections") {
+    return false;
+  }
+  const raw = integrationGate?.toLowerCase();
+  return raw === "1" || raw === "true";
+}
+
+export function ekolojikSocialHubIntegrationGateHref(): string {
+  const params = new URLSearchParams({
+    bolum: "sosyal",
+    tab: "connections",
+    integration_gate: "1",
+  });
+  return `${EKOLOJIK_HUB_PATH}?${params.toString()}`;
+}

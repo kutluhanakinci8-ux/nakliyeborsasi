@@ -75,6 +75,8 @@ type SocialHubPageClientProps = {
   highlightAnalyticsUtmFromUrl?: boolean;
   /** Ekolojik hub: `platform=TELEGRAM` + `telegram=` sihirbaz deep link. */
   openTelegramDeepLinkFromUrl?: boolean;
+  /** Ekolojik hub: `integration_gate=1` ile kapı checklist. */
+  openIntegrationGateFromUrl?: boolean;
 };
 
 export function SocialHubPageClient({
@@ -87,6 +89,7 @@ export function SocialHubPageClient({
   prefillTemplateFromUrl = false,
   highlightAnalyticsUtmFromUrl = false,
   openTelegramDeepLinkFromUrl = false,
+  openIntegrationGateFromUrl = false,
 }: SocialHubPageClientProps = {}) {
   const { accessToken, session } = useWebSession();
   const router = useRouter();
@@ -134,6 +137,7 @@ export function SocialHubPageClient({
   const [telegramChannelDraft, setTelegramChannelDraft] = useState("");
   const [telegramDiscussionOpen, setTelegramDiscussionOpen] = useState(false);
   const [telegramDiscussionDraft, setTelegramDiscussionDraft] = useState("");
+  const [integrationGateExpanded, setIntegrationGateExpanded] = useState(false);
   const [inboxThreadsPreview, setInboxThreadsPreview] = useState<
     SocialHubInboxThreadPreview[]
   >([]);
@@ -288,6 +292,21 @@ export function SocialHubPageClient({
       setTelegramDiscussionOpen(true);
     }
   }, [searchParams, openTelegramDeepLinkFromUrl, snapshot]);
+
+  useEffect(() => {
+    if (!openIntegrationGateFromUrl) {
+      setIntegrationGateExpanded(false);
+      return;
+    }
+    const raw =
+      searchParams.get("integration_gate") ?? searchParams.get("gate");
+    if (raw === "1" || raw?.toLowerCase() === "true") {
+      setActiveTab("connections");
+      setIntegrationGateExpanded(true);
+    } else {
+      setIntegrationGateExpanded(false);
+    }
+  }, [searchParams, openIntegrationGateFromUrl]);
 
   const handleTabChange = useCallback(
     (tab: SocialHubTabId) => {
@@ -659,6 +678,7 @@ export function SocialHubPageClient({
                     await reload();
                   })
                 }
+                integrationGateExpanded={integrationGateExpanded}
               />
             ) : null}
             {activeTab === "health" ? (

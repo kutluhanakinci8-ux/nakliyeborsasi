@@ -43,6 +43,10 @@ import {
   isEkolojikSocialHubAnalyticsTab,
   ekolojikSocialHubTelegramHref,
   isEkolojikSocialHubTelegramConnections,
+  ekolojikSocialHubHealthHref,
+  ekolojikSocialHubIntegrationGateHref,
+  isEkolojikSocialHubHealthTab,
+  isEkolojikSocialHubIntegrationGate,
 } from "../../lib/ekolojikSocialHubDeepLink";
 import {
   parseEkolojikHubSection,
@@ -83,6 +87,15 @@ export function EkolojikCommunicationsHubClient() {
     searchParams.get("bolum"),
     searchParams.get("tab"),
     searchParams.get("platform"),
+  );
+  const socialHealthHub = isEkolojikSocialHubHealthTab(
+    searchParams.get("bolum"),
+    searchParams.get("tab"),
+  );
+  const socialIntegrationGateHub = isEkolojikSocialHubIntegrationGate(
+    searchParams.get("bolum"),
+    searchParams.get("tab"),
+    searchParams.get("integration_gate") ?? searchParams.get("gate"),
   );
   const [composeTo, setComposeTo] = useState<string | undefined>(undefined);
   const [openCompose, setOpenCompose] = useState(false);
@@ -219,6 +232,14 @@ export function EkolojikCommunicationsHubClient() {
 
   const navigateSocialTelegramHub = useCallback(() => {
     router.replace(ekolojikSocialHubTelegramHref("connect"), { scroll: false });
+  }, [router]);
+
+  const navigateSocialHealthHub = useCallback(() => {
+    router.replace(ekolojikSocialHubHealthHref(), { scroll: false });
+  }, [router]);
+
+  const navigateSocialIntegrationGateHub = useCallback(() => {
+    router.replace(ekolojikSocialHubIntegrationGateHref(), { scroll: false });
   }, [router]);
 
   const switchMessagingRailMode = useCallback(
@@ -371,6 +392,28 @@ export function EkolojikCommunicationsHubClient() {
           <button
             type="button"
             className={
+              socialHealthHub
+                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
+                : "ekolojik-comms-sidebar-item"
+            }
+            onClick={() => navigateSocialHealthHub()}
+          >
+            Sosyal ops
+          </button>
+          <button
+            type="button"
+            className={
+              socialIntegrationGateHub
+                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
+                : "ekolojik-comms-sidebar-item"
+            }
+            onClick={() => navigateSocialIntegrationGateHub()}
+          >
+            Entegrasyon kapısı
+          </button>
+          <button
+            type="button"
+            className={
               section === "gonderilen"
                 ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
                 : "ekolojik-comms-sidebar-item"
@@ -431,7 +474,9 @@ export function EkolojikCommunicationsHubClient() {
               !socialPublishingHub &&
               !socialTemplatesHub &&
               !socialAnalyticsHub &&
-              !socialTelegramHub
+              !socialTelegramHub &&
+              !socialHealthHub &&
+              !socialIntegrationGateHub
                 ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
                 : "ekolojik-comms-sidebar-item"
             }
@@ -527,6 +572,7 @@ export function EkolojikCommunicationsHubClient() {
                 prefillTemplateFromUrl
                 highlightAnalyticsUtmFromUrl
                 openTelegramDeepLinkFromUrl
+                openIntegrationGateFromUrl
                 oauthWebReturnQuery={EKOLOJIK_SOCIAL_OAUTH_WEB_RETURN_QUERY}
               />
             </div>

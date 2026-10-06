@@ -16625,6 +16625,33 @@ button.btn-secondary {
   white-space: nowrap;
 }
 
+.social-hub-integration-gate-details {
+  margin: 0 0 1.25rem;
+}
+
+.social-hub-integration-gate-steps {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.social-hub-integration-gate-step {
+  padding: 0.65rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #f8fafc;
+}
+
+.social-hub-integration-gate-step-code {
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-right: 0.5rem;
+  color: #64748b;
+}
+
 .social-hub-analytics-utm-row--highlight {
   background: #fff8e6;
   border-radius: 8px;

@@ -48,6 +48,7 @@ import type {
   SocialHubTemplate,
   SocialHubInboxThreadPreview,
   SocialHubPwaConfig,
+  SocialHubIntegrationGateStep,
 } from "../../lib/socialHubTypes";
 import {
   buildMonthGrid,
@@ -205,7 +206,25 @@ type ConnectionsProps = {
   onRoadmapRefreshToken?: (platformCode: string) => void;
   onTelegramChannelSetup?: () => void;
   onTelegramDiscussionSetup?: () => void;
+  integrationGateExpanded?: boolean;
 };
+
+function integrationGateStepLabel(
+  status: SocialHubIntegrationGateStep["status"],
+): string {
+  switch (status) {
+    case "ready":
+      return "Hazır";
+    case "partial":
+      return "Kısmi";
+    case "pending":
+      return "Bekliyor";
+    case "manual":
+      return "Manuel";
+    default:
+      return status;
+  }
+}
 
 export function SocialConnectionsPanel({
   snapshot,
@@ -218,6 +237,7 @@ export function SocialConnectionsPanel({
   onRoadmapRefreshToken,
   onTelegramChannelSetup,
   onTelegramDiscussionSetup,
+  integrationGateExpanded = false,
 }: ConnectionsProps) {
   const permissions = snapshot.permissions ?? {
     canManageConnections: false,
@@ -256,6 +276,38 @@ export function SocialConnectionsPanel({
               </p>
             ) : null}
           </header>
+
+          {snapshot.integrationGate &&
+          (integrationGateExpanded || gateSummary) ? (
+            <details
+              className="social-hub-integration-gate-details"
+              open={integrationGateExpanded}
+            >
+              <summary className="social-hub-health-settings-summary">
+                Entegrasyon kapısı (BC) — {gateSummary ?? "özet"}
+              </summary>
+              <p className="social-hub-connection-summary">
+                {snapshot.integrationGate.note}
+              </p>
+              <ul className="social-hub-integration-gate-steps">
+                {snapshot.integrationGate.steps.map((step) => (
+                  <li
+                    key={step.code}
+                    className={`social-hub-integration-gate-step social-hub-integration-gate-step--${step.status}`}
+                  >
+                    <span className="social-hub-integration-gate-step-code">
+                      {step.code}
+                    </span>
+                    <strong>{step.title}</strong>
+                    <span className="social-hub-stat-chip">
+                      {integrationGateStepLabel(step.status)}
+                    </span>
+                    <p className="module-hint">{step.detail}</p>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          ) : null}
 
           <ul className="social-hub-connection-grid social-hub-connection-grid--premium">
             {connections.map((row) => {

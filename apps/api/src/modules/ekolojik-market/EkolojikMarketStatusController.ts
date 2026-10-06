@@ -1,7 +1,7 @@
 import { Controller, Get } from "@nestjs/common";
 import { MessagingAttachmentStorageService } from "../messaging/MessagingAttachmentStorageService";
 
-const EK_PHASE = "ek-s7";
+const EK_PHASE = "ek-s8";
 
 const EK_SOCIAL_HUB_TELEGRAM_NB_PHASES = [
   "bd",
@@ -55,6 +55,7 @@ const EK_FEATURES = [
   "ekolojik_social_hub_templates",
   "ekolojik_social_hub_analytics",
   "ekolojik_social_hub_telegram_bd_bl",
+  "ekolojik_social_hub_ops_integration_gate",
   "ekolojik_ci_workflow_ek_0",
 ] as const;
 
@@ -81,6 +82,7 @@ const EK_PHASE_MILESTONES = [
   "ek-s5",
   "ek-s6",
   "ek-s7",
+  "ek-s8",
   "ek-u4",
 ] as const;
 
@@ -208,6 +210,26 @@ export class EkolojikMarketStatusController {
       nbSocialHubStatusPath: string;
       nbPhaseCodes: string[];
       nbStatusFeatures: string[];
+    };
+    socialHubOps: {
+      hubSection: string;
+      hubTab: string;
+      hubPath: string;
+      healthApiPath: string;
+      deliveryLogApiPath: string;
+      insightsExportPath: string;
+      webhookActivityExportPath: string;
+      nbTab: string;
+    };
+    socialHubIntegrationGate: {
+      hubSection: string;
+      hubTab: string;
+      hubPath: string;
+      gateQueryParam: string;
+      nbIntegrationGatePhase: string;
+      nbStatusFeature: string;
+      nbStatusPath: string;
+      smokeScript: string;
     };
   } {
     return {
@@ -378,6 +400,29 @@ export class EkolojikMarketStatusController {
         nbSocialHubStatusPath: "/api/v1/company/social-hub/status",
         nbPhaseCodes: [...EK_SOCIAL_HUB_TELEGRAM_NB_PHASES],
         nbStatusFeatures: [...EK_SOCIAL_HUB_TELEGRAM_NB_FEATURES],
+      },
+      socialHubOps: {
+        hubSection: "sosyal",
+        hubTab: "health",
+        hubPath: "/marketim/posta-ve-mesaj?bolum=sosyal&tab=health",
+        healthApiPath: "/api/v1/company/social-hub/health",
+        deliveryLogApiPath: "/api/v1/company/social-hub/health/deliveries",
+        insightsExportPath:
+          "/api/v1/company/social-hub/health/insights/export",
+        webhookActivityExportPath:
+          "/api/v1/company/social-hub/health/webhook-activity/export",
+        nbTab: "health",
+      },
+      socialHubIntegrationGate: {
+        hubSection: "sosyal",
+        hubTab: "connections",
+        hubPath:
+          "/marketim/posta-ve-mesaj?bolum=sosyal&tab=connections&integration_gate=1",
+        gateQueryParam: "integration_gate",
+        nbIntegrationGatePhase: "bc",
+        nbStatusFeature: "social_hub_integration_gate_checklist",
+        nbStatusPath: "/api/v1/company/social-hub/status",
+        smokeScript: "scripts/smoke-social-hub-integration-gate.sh",
       },
     };
   }
