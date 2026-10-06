@@ -17219,6 +17219,92 @@ button.btn-secondary {
   overflow: hidden;
 }
 
+.messaging-wa-bridge-hub-card {
+  margin-bottom: 0.65rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 10px;
+  border: 1px solid #dbeafe;
+  background: #eff6ff;
+}
+
+.messaging-wa-bridge-hub-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.5rem 0.75rem;
+}
+
+.messaging-wa-bridge-hub-card-title {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.messaging-wa-bridge-hub-card-lead {
+  margin: 0.2rem 0 0;
+  font-size: 0.72rem;
+  color: #475569;
+  max-width: 42rem;
+}
+
+.messaging-wa-bridge-hub-card-pill {
+  margin-left: auto;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.messaging-wa-bridge-hub-card-pill--on {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.messaging-wa-bridge-hub-card-meta {
+  margin: 0.45rem 0 0;
+}
+
+.messaging-wa-bridge-hub-card-warn {
+  margin: 0.35rem 0 0;
+  font-size: 0.72rem;
+  color: #b45309;
+}
+
+.messaging-wa-bridge-hub-card-btn {
+  margin-top: 0.5rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #93c5fd;
+  background: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.chat-sidebar-wa-bridge {
+  padding: 0.35rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.chat-sidebar-wa-bridge--active {
+  border-color: #22c55e;
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.ekolojik-comms-wa-bridge-link-hint {
+  margin: 0 0 0.5rem;
+  font-size: 0.68rem;
+}
+
 .ekolojik-comms-social-dm-hint {
   margin: 0 0 0.5rem;
   padding: 0 0.25rem;

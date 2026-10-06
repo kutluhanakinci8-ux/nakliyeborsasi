@@ -3,7 +3,7 @@
 set -euo pipefail
 API_BASE="${EKOLojIK_API_BASE:-${SOCIAL_HUB_API_BASE:-http://127.0.0.1:3000/api/v1}}"
 WEB_BASE="${EKOLojIK_WEB_PUBLIC_URL:-${SOCIAL_HUB_WEB_PUBLIC_URL:-http://127.0.0.1:3001}}"
-EXPECT_PHASE="${EKOLOJIK_SMOKE_EXPECT_PHASE:-ek-m5}"
+EXPECT_PHASE="${EKOLOJIK_SMOKE_EXPECT_PHASE:-ek-m6}"
 
 echo "== Ekolojik market public status =="
 status_json="$(curl -fsS "${API_BASE}/public/ekolojik-market/status")"
@@ -68,6 +68,16 @@ echo "${status_json}" | grep -q '"hubSection":"sosyal-dm"' || {
   exit 1
 }
 echo "OK: messagingSocialDm hub path"
+echo "${status_json}" | grep -q '"ekolojik_messaging_whatsapp_bridge_fs12"' || {
+  echo "FAIL: missing ekolojik_messaging_whatsapp_bridge_fs12"
+  exit 1
+}
+echo "OK: feature ekolojik_messaging_whatsapp_bridge_fs12 (EK-M6)"
+echo "${status_json}" | grep -q '"phaseCode":"fs-12"' || {
+  echo "FAIL: missing messagingWhatsappBridge fs-12"
+  exit 1
+}
+echo "OK: messagingWhatsappBridge FS-12"
 
 echo "== Ekolojik hub web route =="
 code="$(curl -sS -o /dev/null -w "%{http_code}" "${WEB_BASE}/marketim/posta-ve-mesaj")"

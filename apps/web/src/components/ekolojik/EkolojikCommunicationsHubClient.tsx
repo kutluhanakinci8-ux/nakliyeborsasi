@@ -8,6 +8,7 @@ import { MessagingConversationPanel } from "../messaging/MessagingConversationPa
 import { MessagingThreadSidebar } from "../messaging/MessagingThreadSidebar";
 import { MessagingChatModalsLayer } from "../messaging/MessagingChatModalsLayer";
 import { MessagingChatComplianceStrip } from "../messaging/MessagingChatComplianceStrip";
+import { MessagingWhatsappBridgeHubCard } from "../messaging/MessagingWhatsappBridgeHubCard";
 import { useWebSession } from "../../context/WebSessionProvider";
 import { useMessagingChatController } from "../../hooks/useMessagingChatController";
 import { ekolojikSectionToMailHandoff } from "../../lib/ekolojikMailSectionHandoff";
@@ -90,7 +91,21 @@ export function EkolojikCommunicationsHubClient() {
     errorMessage,
     activeThreadId,
     mobileThreadOpen,
+    isCompanyOwner,
+    channelSettingsOpen,
+    setChannelSettingsOpen,
   } = chat;
+
+  const showMessagingChat = isEkolojikMessagingChatSection(section);
+
+  useEffect(() => {
+    if (!showMessagingChat) {
+      return;
+    }
+    if (searchParams.get("waBridge") === "1") {
+      setChannelSettingsOpen(true);
+    }
+  }, [searchParams, showMessagingChat, setChannelSettingsOpen]);
 
   const navigateSection = (next: EkolojikHubSection) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -99,8 +114,6 @@ export function EkolojikCommunicationsHubClient() {
       scroll: false,
     });
   };
-
-  const showMessagingChat = isEkolojikMessagingChatSection(section);
 
   return (
     <div className="ekolojik-comms-hub">
@@ -241,6 +254,12 @@ export function EkolojikCommunicationsHubClient() {
           {showMessagingChat ? (
             <>
               <MessagingChatComplianceStrip chat={chat} />
+              <MessagingWhatsappBridgeHubCard
+                accessToken={accessToken}
+                isCompanyOwner={isCompanyOwner}
+                channelSettingsOpen={channelSettingsOpen}
+                onOpenSettings={() => setChannelSettingsOpen(true)}
+              />
               <div
                 className={
                   mobileThreadOpen && activeThreadId
@@ -253,6 +272,7 @@ export function EkolojikCommunicationsHubClient() {
                   locale={locale}
                   accessToken={accessToken}
                   socialDmInboxOnly={socialDmInbox}
+                  highlightWhatsappBridge
                 />
                 <MessagingConversationPanel
                   chat={chat}

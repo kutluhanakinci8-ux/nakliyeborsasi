@@ -17,6 +17,7 @@ type Props = {
   locale: string;
   accessToken: string;
   socialDmInboxOnly?: boolean;
+  highlightWhatsappBridge?: boolean;
 };
 
 export function MessagingThreadSidebar({
@@ -24,6 +25,7 @@ export function MessagingThreadSidebar({
   locale,
   accessToken,
   socialDmInboxOnly = false,
+  highlightWhatsappBridge = false,
 }: Props) {
   const {
     filteredThreads,
@@ -45,6 +47,7 @@ export function MessagingThreadSidebar({
     setMobileThreadOpen,
     isCompanyOwner,
     channelSettingsOpen,
+    setChannelSettingsOpen,
     setGroupModalOpen,
     setGroupSearchQuery,
     setGroupSearchHits,
@@ -89,6 +92,21 @@ export function MessagingThreadSidebar({
                 <IconUsers size={16} />
                 <span>Grup</span>
               </button>
+              {highlightWhatsappBridge && isCompanyOwner ? (
+                <button
+                  type="button"
+                  className={
+                    channelSettingsOpen
+                      ? "chat-sidebar-wa-bridge chat-sidebar-wa-bridge--active"
+                      : "chat-sidebar-wa-bridge"
+                  }
+                  title="WhatsApp FS-12 bildirim köprüsü"
+                  aria-expanded={channelSettingsOpen}
+                  onClick={() => setChannelSettingsOpen((open) => !open)}
+                >
+                  WA
+                </button>
+              ) : null}
             </div>
             <div className="chat-unified-search">
               <IconSearch className="chat-unified-search-icon" />

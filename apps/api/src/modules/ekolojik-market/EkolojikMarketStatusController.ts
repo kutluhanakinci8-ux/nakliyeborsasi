@@ -1,7 +1,7 @@
 import { Controller, Get } from "@nestjs/common";
 import { MessagingAttachmentStorageService } from "../messaging/MessagingAttachmentStorageService";
 
-const EK_PHASE = "ek-m5";
+const EK_PHASE = "ek-m6";
 
 const EK_SOCIAL_DM_PLATFORMS = [
   "INSTAGRAM",
@@ -21,6 +21,7 @@ const EK_FEATURES = [
   "ekolojik_messaging_interactions_parity",
   "ekolojik_messaging_attachments_audit_hold",
   "ekolojik_messaging_social_dm_bridge",
+  "ekolojik_messaging_whatsapp_bridge_fs12",
   "ekolojik_social_hub_embed",
   "ekolojik_ci_workflow_ek_0",
 ] as const;
@@ -35,6 +36,7 @@ const EK_PHASE_MILESTONES = [
   "ek-m3",
   "ek-m4",
   "ek-m5",
+  "ek-m6",
   "ek-s1",
   "ek-u4",
 ] as const;
@@ -65,6 +67,12 @@ export class EkolojikMarketStatusController {
       filter: string;
       platforms: string[];
       nbBridgeModule: string;
+    };
+    messagingWhatsappBridge: {
+      phaseCode: string;
+      hubDeepLinkQuery: string;
+      configureApiPath: string;
+      nbStatusFeatures: string[];
     };
   } {
     return {
@@ -101,6 +109,15 @@ export class EkolojikMarketStatusController {
         filter: "social",
         platforms: [...EK_SOCIAL_DM_PLATFORMS],
         nbBridgeModule: "social_hub_messaging_bridge",
+      },
+      messagingWhatsappBridge: {
+        phaseCode: "fs-12",
+        hubDeepLinkQuery: "waBridge=1",
+        configureApiPath: "/api/v1/messaging/integration/whatsapp-bridge",
+        nbStatusFeatures: [
+          "whatsapp_notify_bridge",
+          "whatsapp_notify_bridge_kvkk",
+        ],
       },
     };
   }
