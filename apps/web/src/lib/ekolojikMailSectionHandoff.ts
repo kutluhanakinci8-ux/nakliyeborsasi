@@ -27,12 +27,14 @@ export function ekolojikSectionToMailHandoff(
       mailSettingsTab: options.mailSettingsTab,
       mailBulkAssist: options.mailBulkAssist,
       mailSwipeAssist: options.mailSwipeAssist,
+      mailDmarcAssist: options.mailDmarcAssist,
     };
   }
   if (
     options?.mailSettingsTab?.trim() ||
     options?.mailBulkAssist ||
     options?.mailSwipeAssist ||
+    options?.mailDmarcAssist ||
     options?.mailView
   ) {
     return {
@@ -44,6 +46,7 @@ export function ekolojikSectionToMailHandoff(
       composeMultipart: options.composeMultipart,
       mailBulkAssist: options.mailBulkAssist,
       mailSwipeAssist: options.mailSwipeAssist,
+      mailDmarcAssist: options.mailDmarcAssist,
     };
   }
   switch (section) {

@@ -112,8 +112,10 @@ export function useMailClientController({
   const deepLinkMailSettingsHandled = useRef(false);
   const deepLinkMailBulkHandled = useRef(false);
   const deepLinkMailSwipeHandled = useRef(false);
+  const deepLinkMailDmarcHandled = useRef(false);
   const [mailBulkAssistActive, setMailBulkAssistActive] = useState(false);
   const [mailSwipeAssistActive, setMailSwipeAssistActive] = useState(false);
+  const [mailDmarcAssistActive, setMailDmarcAssistActive] = useState(false);
   const [view, setView] = useState<MailClientView>("inbox");
   const [summary, setSummary] = useState<MailInboxSummary | null>(null);
   const [sendReadiness, setSendReadiness] = useState<MailSendReadiness | null>(
@@ -691,6 +693,20 @@ export function useMailClientController({
     setView("inbox");
     setActiveCustomFolderId(null);
     setMailSwipeAssistActive(true);
+  }, [accessToken, searchParams]);
+
+  useEffect(() => {
+    if (
+      !accessToken ||
+      searchParams.get("mailDmarc") !== "1" ||
+      deepLinkMailDmarcHandled.current
+    ) {
+      return;
+    }
+    deepLinkMailDmarcHandled.current = true;
+    setMailDmarcAssistActive(true);
+    setSettingsInitialView("deliverability");
+    setSettingsOpen(true);
   }, [accessToken, searchParams]);
 
   useEffect(() => {
@@ -1784,6 +1800,8 @@ export function useMailClientController({
     setMailBulkAssistActive,
     mailSwipeAssistActive,
     setMailSwipeAssistActive,
+    mailDmarcAssistActive,
+    setMailDmarcAssistActive,
     setShortcutsOpen,
     setSummary,
     setThreadMessages,

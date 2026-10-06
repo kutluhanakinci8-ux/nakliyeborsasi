@@ -178,6 +178,7 @@ type Props = {
   onOpenContacts?: () => void;
   onInboxListDensityChange?: (density: MailInboxListDensity) => void;
   initialView?: SettingsView;
+  deliverabilityDmarcFocus?: boolean;
 };
 
 export function MailSettingsPanel({
@@ -187,6 +188,7 @@ export function MailSettingsPanel({
   onOpenContacts,
   onInboxListDensityChange,
   initialView,
+  deliverabilityDmarcFocus = false,
 }: Props) {
   const [view, setView] = useState<SettingsView>(initialView ?? "hub");
   const [query, setQuery] = useState("");
@@ -1138,7 +1140,10 @@ export function MailSettingsPanel({
     case "deliverability":
       content = renderDetail(
         "Teslimat ve itibar",
-        <MailDeliverabilityPanel accessToken={accessToken} />,
+        <MailDeliverabilityPanel
+          accessToken={accessToken}
+          highlightDmarc={deliverabilityDmarcFocus}
+        />,
       );
       break;
     case "rules":

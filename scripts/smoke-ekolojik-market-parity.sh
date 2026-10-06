@@ -3,7 +3,7 @@
 set -euo pipefail
 API_BASE="${EKOLojIK_API_BASE:-${SOCIAL_HUB_API_BASE:-http://127.0.0.1:3000/api/v1}}"
 WEB_BASE="${EKOLojIK_WEB_PUBLIC_URL:-${SOCIAL_HUB_WEB_PUBLIC_URL:-http://127.0.0.1:3001}}"
-EXPECT_PHASE="${EKOLOJIK_SMOKE_EXPECT_PHASE:-ek-p6}"
+EXPECT_PHASE="${EKOLOJIK_SMOKE_EXPECT_PHASE:-ek-p7}"
 
 echo "== Ekolojik market public status =="
 status_json="$(curl -fsS "${API_BASE}/public/ekolojik-market/status")"
@@ -93,6 +93,20 @@ echo "${status_json}" | grep -q '"mailSettings=contactsSettings"' || {
   exit 1
 }
 echo "OK: mailCalDavCardDav deep links"
+echo "${status_json}" | grep -q '"ekolojik_mail_deliverability_dmarc_hub"' || {
+  echo "FAIL: missing ekolojik_mail_deliverability_dmarc_hub"
+  exit 1
+}
+echo "OK: feature ekolojik_mail_deliverability_dmarc_hub (EK-P7)"
+echo "${status_json}" | grep -q '"mailDmarc=1"' || {
+  echo "FAIL: missing mailDeliverabilityDmarc dmarc panel path"
+  exit 1
+}
+echo "${status_json}" | grep -q 'deliverability-hub' || {
+  echo "FAIL: missing mailDeliverabilityDmarc API path"
+  exit 1
+}
+echo "OK: mailDeliverabilityDmarc deep links"
 echo "${status_json}" | grep -q '"ekolojik_messaging_sse_redis_fanout"' || {
   echo "FAIL: missing ekolojik_messaging_sse_redis_fanout"
   exit 1

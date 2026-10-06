@@ -8,12 +8,17 @@ import {
 
 type Props = {
   accessToken: string;
+  /** EK-P7 hub deep link — DMARC aggregate bölümüne odaklan. */
+  highlightDmarc?: boolean;
 };
 
 const PERIOD_OPTIONS = [7, 30, 90] as const;
 
-export function MailDeliverabilityPanel({ accessToken }: Props) {
-  const [days, setDays] = useState<number>(30);
+export function MailDeliverabilityPanel({
+  accessToken,
+  highlightDmarc = false,
+}: Props) {
+  const [days, setDays] = useState<number>(highlightDmarc ? 90 : 30);
   const [hub, setHub] = useState<MailDeliverabilityHub | null>(null);
   const [error, setError] = useState("");
 
@@ -32,6 +37,14 @@ export function MailDeliverabilityPanel({ accessToken }: Props) {
     void load();
   }, [load]);
 
+  useEffect(() => {
+    if (!highlightDmarc || !hub) {
+      return;
+    }
+    const el = document.getElementById("mail-dmarc-aggregate");
+    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [highlightDmarc, hub]);
+
   if (error) {
     return <p className="login-error">{error}</p>;
   }
@@ -43,6 +56,12 @@ export function MailDeliverabilityPanel({ accessToken }: Props) {
 
   return (
     <div className="mail-deliverability-panel">
+      {highlightDmarc ? (
+        <p className="mail-parity-assist-banner" role="status">
+          DMARC aggregate: SPF/DKIM geçiş oranları ve rapor satırları bu bölümde.
+          DNS kayıtları yukarıda; dönem seçerek trendi inceleyin.
+        </p>
+      ) : null}
       <p className="mail-settings-lead">
         Kurumsal gönderim itibarı: DNS, engagement (açılma/tıklama/bounce), DMARC
         aggregate ve suppression — yalnızca bu organizasyonun outbox kayıtları.
@@ -98,7 +117,16 @@ export function MailDeliverabilityPanel({ accessToken }: Props) {
           ))}
         </ul>
       ) : null}
-      <h4 className="mail-deliverability-subhead">DMARC aggregate</h4>
+      <h4
+        id="mail-dmarc-aggregate"
+        className={
+          highlightDmarc
+            ? "mail-deliverability-subhead mail-deliverability-subhead--focus"
+            : "mail-deliverability-subhead"
+        }
+      >
+        DMARC aggregate
+      </h4>
       <ul>
         <li>Rapor satırı ({hub.periodDays ?? days}g): {hub.dmarc?.reportRows ?? 0}</li>
         <li>İleti sayısı: {hub.dmarc?.messageCount ?? 0}</li>

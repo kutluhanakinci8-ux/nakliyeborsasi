@@ -32,6 +32,12 @@ import {
   isEkolojikMailSettingsHub,
 } from "../../lib/ekolojikMailAccountsDeepLink";
 import {
+  ekolojikMailDmarcHubHref,
+  isEkolojikMailDmarcHub,
+  isEkolojikMailDnsDeliverabilityHub,
+  readEkolojikMailDeliverabilityDmarcFromSearchParams,
+} from "../../lib/ekolojikMailDeliverabilityDmarcDeepLink";
+import {
   ekolojikMailBulkHubHref,
   ekolojikMailRulesHubHref,
   ekolojikMailSwipeHubHref,
@@ -227,17 +233,32 @@ export function EkolojikCommunicationsHubClient() {
     [searchParams],
   );
 
+  const mailDmarcDeepLink = useMemo(
+    () =>
+      readEkolojikMailDeliverabilityDmarcFromSearchParams(
+        new URLSearchParams(searchParams.toString()),
+      ),
+    [searchParams],
+  );
+
+  const mailSettingsTab =
+    mailDmarcDeepLink.mailSettingsTab ??
+    mailInboxOpsDeepLink.mailSettingsTab ??
+    null;
+
+  const mailDnsHub = isEkolojikMailDnsDeliverabilityHub(
+    searchParams.get("bolum"),
+    mailSettingsTab,
+    searchParams.get("mailDmarc"),
+  );
+  const mailDmarcHub = isEkolojikMailDmarcHub(
+    searchParams.get("bolum"),
+    mailSettingsTab,
+    searchParams.get("mailDmarc"),
+  );
   const mailAccountsHub = isEkolojikMailSettingsHub(
     searchParams.get("bolum"),
-    mailInboxOpsDeepLink.mailSettingsTab === "accounts"
-      ? "accounts"
-      : null,
-  );
-  const mailDnsHub = isEkolojikMailSettingsHub(
-    searchParams.get("bolum"),
-    mailInboxOpsDeepLink.mailSettingsTab === "deliverability"
-      ? "deliverability"
-      : null,
+    mailSettingsTab === "accounts" ? "accounts" : null,
   );
   const mailRulesHub = isEkolojikMailRulesHub(
     searchParams.get("bolum"),
@@ -277,6 +298,7 @@ export function EkolojikCommunicationsHubClient() {
         ...mailComposeDeepLink,
         ...mailInboxOpsDeepLink,
         ...mailDavDeepLink,
+        ...mailDmarcDeepLink,
         openCompose: openCompose || mailComposeDeepLink.openCompose,
         composeTo: composeTo ?? mailComposeDeepLink.composeTo,
       }),
@@ -287,6 +309,7 @@ export function EkolojikCommunicationsHubClient() {
       mailComposeDeepLink,
       mailInboxOpsDeepLink,
       mailDavDeepLink,
+      mailDmarcDeepLink,
     ],
   );
 
@@ -448,7 +471,8 @@ export function EkolojikCommunicationsHubClient() {
               !mailBulkHub &&
               !mailSwipeHub &&
               !mailCalDavHub &&
-              !mailCardDavHub
+              !mailCardDavHub &&
+              !mailDmarcHub
                 ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
                 : "ekolojik-comms-sidebar-item"
             }
@@ -479,6 +503,17 @@ export function EkolojikCommunicationsHubClient() {
             onClick={() => navigateMailRichCompose(ekolojikMailDnsHubHref())}
           >
             DNS &amp; teslimat
+          </button>
+          <button
+            type="button"
+            className={
+              mailDmarcHub
+                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
+                : "ekolojik-comms-sidebar-item"
+            }
+            onClick={() => navigateMailRichCompose(ekolojikMailDmarcHubHref())}
+          >
+            DMARC &amp; itibar
           </button>
           <button
             type="button"

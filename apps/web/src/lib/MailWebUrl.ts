@@ -47,6 +47,9 @@ export function buildMailWebSsoHandoffUrl(
   if (options?.mailSwipeAssist) {
     params.set("mailSwipe", "1");
   }
+  if (options?.mailDmarcAssist) {
+    params.set("mailDmarc", "1");
+  }
   if (options?.mailView) {
     params.set("mailView", options.mailView);
   }

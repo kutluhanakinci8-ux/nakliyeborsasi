@@ -27,6 +27,8 @@ export type MailWebEmbedHandoff = {
   mailBulkAssist?: boolean;
   /** Liste kaydırma (swipe) arşiv/çöp ipucu (EK-P5). */
   mailSwipeAssist?: boolean;
+  /** Teslimat ayarlarında DMARC aggregate vurgusu (EK-P7). */
+  mailDmarcAssist?: boolean;
 };
 
 export function parseMailWebEmbedView(

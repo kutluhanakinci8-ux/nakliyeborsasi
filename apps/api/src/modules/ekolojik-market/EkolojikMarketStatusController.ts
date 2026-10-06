@@ -1,7 +1,7 @@
 import { Controller, Get } from "@nestjs/common";
 import { MessagingAttachmentStorageService } from "../messaging/MessagingAttachmentStorageService";
 
-const EK_PHASE = "ek-p6";
+const EK_PHASE = "ek-p7";
 
 /** EK-U4 rubrik — kod yolu paritesi (posta/mesaj aynı NB modülleri, ayrı tenant). */
 const EK_PARITY_MAIL_PERCENT = 96;
@@ -64,6 +64,7 @@ const EK_FEATURES = [
   "ekolojik_mail_accounts_alias_dns_hub",
   "ekolojik_mail_rules_swipe_bulk",
   "ekolojik_mail_caldav_carddav_hub",
+  "ekolojik_mail_deliverability_dmarc_hub",
   "ekolojik_messaging_full_chat",
   "ekolojik_messaging_sse_redis_fanout",
   "ekolojik_messaging_interactions_parity",
@@ -98,6 +99,7 @@ const EK_PHASE_MILESTONES = [
   "ek-p4",
   "ek-p5",
   "ek-p6",
+  "ek-p7",
   "ek-m1",
   "ek-m2",
   "ek-m3",
@@ -227,6 +229,15 @@ export class EkolojikMarketStatusController {
       nbMailWebSurfaces: string[];
       nbCalDavApiPrefix: string;
       nbCardDavApiPrefix: string;
+    };
+    mailDeliverabilityDmarc: {
+      phaseCode: string;
+      hubSection: string;
+      dnsDeliverabilityPath: string;
+      dmarcPanelPath: string;
+      embedQueryParams: string[];
+      nbMailWebSurfaces: string[];
+      nbDeliverabilityHubApiPath: string;
     };
     socialHubConnections: {
       hubSection: string;
@@ -516,6 +527,22 @@ export class EkolojikMarketStatusController {
         ],
         nbCalDavApiPrefix: "/api/v1/company/mail-inbox/calendar/caldav",
         nbCardDavApiPrefix: "/api/v1/company/mail-inbox/contacts/carddav",
+      },
+      mailDeliverabilityDmarc: {
+        phaseCode: "ek-p7",
+        hubSection: "posta",
+        dnsDeliverabilityPath:
+          "/marketim/posta-ve-mesaj?bolum=posta&mailSettings=deliverability",
+        dmarcPanelPath:
+          "/marketim/posta-ve-mesaj?bolum=posta&mailSettings=deliverability&mailDmarc=1",
+        embedQueryParams: ["mailSettings", "mailDmarc"],
+        nbMailWebSurfaces: [
+          "MailDeliverabilityPanel",
+          "mail-dmarc-aggregate",
+          "mailDmarcAssist",
+        ],
+        nbDeliverabilityHubApiPath:
+          "/api/v1/company/mail-inbox/deliverability-hub",
       },
       socialHubConnections: {
         hubSection: "sosyal",

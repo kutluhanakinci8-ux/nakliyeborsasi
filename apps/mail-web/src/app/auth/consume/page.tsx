@@ -40,6 +40,7 @@ function ConsumeHandoff() {
     const mailSettings = search.get("mailSettings")?.trim();
     const mailBulk = search.get("mailBulk")?.trim();
     const mailSwipe = search.get("mailSwipe")?.trim();
+    const mailDmarc = search.get("mailDmarc")?.trim();
     const query = new URLSearchParams();
     if (fromAddress) {
       query.set("welcome", fromAddress);
@@ -73,6 +74,9 @@ function ConsumeHandoff() {
     }
     if (mailSwipe === "1") {
       query.set("mailSwipe", "1");
+    }
+    if (mailDmarc === "1") {
+      query.set("mailDmarc", "1");
     }
     const qs = query.toString();
     router.replace(qs ? `/mail?${qs}` : "/mail");
