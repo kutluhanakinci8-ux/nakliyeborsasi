@@ -19,6 +19,7 @@ import { ekolojikSectionToMailHandoff } from "../../lib/ekolojikMailSectionHando
 import {
   applyEkolojikSectionQueryParams,
   isEkolojikMessagingChatSection,
+  isEkolojikGroupInbox,
   isEkolojikSocialDmInbox,
 } from "../../lib/ekolojikMessagingChatSection";
 import { ekolojikSocialDmInboxHref } from "../../lib/ekolojikSocialMessagingDeepLink";
@@ -35,6 +36,7 @@ export function EkolojikCommunicationsHubClient() {
   const { accessToken, locale, session } = useWebSession();
   const section = parseEkolojikHubSection(searchParams.get("bolum"));
   const socialDmInbox = isEkolojikSocialDmInbox(section, searchParams);
+  const groupInbox = isEkolojikGroupInbox(section, searchParams);
   const [composeTo, setComposeTo] = useState<string | undefined>(undefined);
   const [openCompose, setOpenCompose] = useState(false);
 
@@ -51,6 +53,20 @@ export function EkolojikCommunicationsHubClient() {
     }
     const params = new URLSearchParams(searchParams.toString());
     params.set("filter", "social");
+    router.replace(`/marketim/posta-ve-mesaj?${params.toString()}`, {
+      scroll: false,
+    });
+  }, [section, searchParams, router]);
+
+  useEffect(() => {
+    if (section !== "grup-sohbet") {
+      return;
+    }
+    if (searchParams.get("filter")?.toLowerCase() === "group") {
+      return;
+    }
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("filter", "group");
     router.replace(`/marketim/posta-ve-mesaj?${params.toString()}`, {
       scroll: false,
     });
@@ -178,6 +194,17 @@ export function EkolojikCommunicationsHubClient() {
           <button
             type="button"
             className={
+              groupInbox
+                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
+                : "ekolojik-comms-sidebar-item"
+            }
+            onClick={() => navigateSection("grup-sohbet")}
+          >
+            Grup sohbet
+          </button>
+          <button
+            type="button"
+            className={
               socialDmInbox
                 ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
                 : "ekolojik-comms-sidebar-item"
@@ -248,6 +275,12 @@ export function EkolojikCommunicationsHubClient() {
               konuşmaları. Yanıtlar Social Hub köprüsü ile kanala iletilir.
             </p>
           ) : null}
+          {showMessagingChat && groupInbox ? (
+            <p className="module-hint ekolojik-comms-group-hint">
+              Üç veya daha fazla firma; her katılımcıya yükleyici, nakliyeci, acente
+              veya gözlemci rolü atanır. «Grup» ile yeni kanal açın.
+            </p>
+          ) : null}
           {section === "mesajlar" && searchParams.get("listingId") ? (
             <p className="module-hint ekolojik-comms-listing-hint">
               Bu sohbet ilan{" "}
@@ -305,6 +338,7 @@ export function EkolojikCommunicationsHubClient() {
                   locale={locale}
                   accessToken={accessToken}
                   socialDmInboxOnly={socialDmInbox}
+                  groupInboxOnly={groupInbox}
                   highlightWhatsappBridge
                 />
                 <MessagingConversationPanel

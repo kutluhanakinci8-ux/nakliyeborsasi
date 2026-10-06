@@ -1,6 +1,8 @@
 "use client";
 
 import type { MessagingChatController } from "../../hooks/useMessagingChatController";
+import type { MessagingGroupParticipantRole } from "../../lib/messagingChatUi";
+import { withDefaultGroupRole } from "../../lib/messagingGroupThreadPick";
 import {
   ChatGroupThreadModal,
   ChatMessageDeleteModal,
@@ -81,8 +83,17 @@ export function MessagingChatModalsLayer({ chat }: Props) {
             if (current.some((row) => row.companyId === company.companyId)) {
               return current;
             }
-            return [...current, company].slice(0, 8);
+            return [...current, withDefaultGroupRole(company)].slice(0, 8);
           });
+        }}
+        onParticipantRoleChange={(companyId, role: MessagingGroupParticipantRole) => {
+          setGroupSelected((current) =>
+            current.map((row) =>
+              row.companyId === companyId
+                ? { ...row, participantRole: role }
+                : row,
+            ),
+          );
         }}
         onRemoveCompany={(companyId) =>
           setGroupSelected((current) =>

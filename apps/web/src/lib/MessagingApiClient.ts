@@ -183,7 +183,14 @@ export class MessagingApiClient {
     accessToken: string,
     locale: string,
     participantCompanyIds: string[],
-    options?: { title?: string; freightListingId?: string },
+    options?: {
+      title?: string;
+      freightListingId?: string;
+      participantRoles?: Record<
+        string,
+        "shipper" | "carrier" | "agent" | "observer"
+      >;
+    },
   ): Promise<{ thread: { id: string } }> {
     return AuthenticatedApiClient.fetchJson(
       accessToken,
@@ -195,6 +202,9 @@ export class MessagingApiClient {
           ...(options?.title ? { title: options.title } : {}),
           ...(options?.freightListingId
             ? { freightListingId: options.freightListingId }
+            : {}),
+          ...(options?.participantRoles
+            ? { participantRoles: options.participantRoles }
             : {}),
         }),
       },

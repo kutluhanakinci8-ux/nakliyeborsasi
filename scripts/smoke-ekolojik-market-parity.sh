@@ -3,7 +3,7 @@
 set -euo pipefail
 API_BASE="${EKOLojIK_API_BASE:-${SOCIAL_HUB_API_BASE:-http://127.0.0.1:3000/api/v1}}"
 WEB_BASE="${EKOLojIK_WEB_PUBLIC_URL:-${SOCIAL_HUB_WEB_PUBLIC_URL:-http://127.0.0.1:3001}}"
-EXPECT_PHASE="${EKOLOJIK_SMOKE_EXPECT_PHASE:-ek-m7}"
+EXPECT_PHASE="${EKOLOJIK_SMOKE_EXPECT_PHASE:-ek-m8}"
 
 echo "== Ekolojik market public status =="
 status_json="$(curl -fsS "${API_BASE}/public/ekolojik-market/status")"
@@ -88,6 +88,16 @@ echo "${status_json}" | grep -q '"hubSection":"entegrasyon"' || {
   exit 1
 }
 echo "OK: messagingIntegrations hub"
+echo "${status_json}" | grep -q '"ekolojik_messaging_group_threads_roles"' || {
+  echo "FAIL: missing ekolojik_messaging_group_threads_roles"
+  exit 1
+}
+echo "OK: feature ekolojik_messaging_group_threads_roles (EK-M8)"
+echo "${status_json}" | grep -q '"hubSection":"grup-sohbet"' || {
+  echo "FAIL: missing messagingGroupThreads hubSection"
+  exit 1
+}
+echo "OK: messagingGroupThreads hub"
 
 echo "== Ekolojik hub web route =="
 code="$(curl -sS -o /dev/null -w "%{http_code}" "${WEB_BASE}/marketim/posta-ve-mesaj")"

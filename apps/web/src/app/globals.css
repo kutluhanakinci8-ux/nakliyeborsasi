@@ -17376,6 +17376,32 @@ button.btn-secondary {
   font-size: 0.68rem;
 }
 
+.chat-group-selected-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.5rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.chat-group-selected-name {
+  flex: 1 1 120px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.chat-group-role-select {
+  min-width: 7.5rem;
+  font-size: 0.72rem;
+  padding: 0.25rem 0.35rem;
+}
+
+.ekolojik-comms-group-hint {
+  margin: 0 0 0.5rem;
+  padding: 0 0.25rem;
+}
+
 .ekolojik-comms-social-dm-hint {
   margin: 0 0 0.5rem;
   padding: 0 0.25rem;

@@ -1,7 +1,7 @@
 import { Controller, Get } from "@nestjs/common";
 import { MessagingAttachmentStorageService } from "../messaging/MessagingAttachmentStorageService";
 
-const EK_PHASE = "ek-m7";
+const EK_PHASE = "ek-m8";
 
 const EK_SOCIAL_DM_PLATFORMS = [
   "INSTAGRAM",
@@ -23,6 +23,7 @@ const EK_FEATURES = [
   "ekolojik_messaging_social_dm_bridge",
   "ekolojik_messaging_whatsapp_bridge_fs12",
   "ekolojik_messaging_public_api_slack_zapier",
+  "ekolojik_messaging_group_threads_roles",
   "ekolojik_social_hub_embed",
   "ekolojik_ci_workflow_ek_0",
 ] as const;
@@ -39,6 +40,7 @@ const EK_PHASE_MILESTONES = [
   "ek-m5",
   "ek-m6",
   "ek-m7",
+  "ek-m8",
   "ek-s1",
   "ek-u4",
 ] as const;
@@ -82,6 +84,13 @@ export class EkolojikMarketStatusController {
       publicApiPath: string;
       automationCatalogPath: string;
       slackBridgePath: string;
+      nbStatusFeatures: string[];
+    };
+    messagingGroupThreads: {
+      hubSection: string;
+      filter: string;
+      openModalQuery: string;
+      participantRoles: string[];
       nbStatusFeatures: string[];
     };
   } {
@@ -143,6 +152,13 @@ export class EkolojikMarketStatusController {
           "slack_incoming_bridge",
           "automation_catalog_zapier_make",
         ],
+      },
+      messagingGroupThreads: {
+        hubSection: "grup-sohbet",
+        filter: "group",
+        openModalQuery: "group=1",
+        participantRoles: ["shipper", "carrier", "agent", "observer"],
+        nbStatusFeatures: ["group_threads_pilot", "group_thread_ui"],
       },
     };
   }

@@ -4,6 +4,12 @@ import type {
   MessagingCompanySearchRecord,
   MessagingOrgQuickReplyRecord,
 } from "../../lib/MessagingApiClient";
+import {
+  groupParticipantRoleLabel,
+  MESSAGING_GROUP_PARTICIPANT_ROLES,
+  type MessagingGroupParticipantRole,
+} from "../../lib/messagingChatUi";
+import type { GroupThreadParticipantPick } from "../../lib/messagingGroupThreadPick";
 import { useChatModalFocusTrap } from "../../hooks/useChatModalFocusTrap";
 
 type EditModalProps = {
@@ -132,12 +138,16 @@ type GroupModalProps = {
   title: string;
   searchQuery: string;
   searchHits: MessagingCompanySearchRecord[];
-  selected: MessagingCompanySearchRecord[];
+  selected: GroupThreadParticipantPick[];
   onClose: () => void;
   onTitleChange: (value: string) => void;
   onSearchChange: (value: string) => void;
   onAddCompany: (company: MessagingCompanySearchRecord) => void;
   onRemoveCompany: (companyId: string) => void;
+  onParticipantRoleChange: (
+    companyId: string,
+    role: MessagingGroupParticipantRole,
+  ) => void;
   onCreate: () => void;
 };
 
@@ -153,6 +163,7 @@ export function ChatGroupThreadModal({
   onSearchChange,
   onAddCompany,
   onRemoveCompany,
+  onParticipantRoleChange,
   onCreate,
 }: GroupModalProps) {
   const panelRef = useChatModalFocusTrap(open, onClose);
@@ -174,7 +185,8 @@ export function ChatGroupThreadModal({
           Grup sohbet (3+ firma)
         </h3>
         <p className="chat-modal-hint">
-          En az iki karşı firma seçin; siz otomatik dahil edilirsiniz.
+          En az iki karşı firma seçin; siz otomatik dahil edilirsiniz. Her firmaya
+          rol atayın (yükleyici / nakliyeci / acente / gözlemci).
         </p>
         <label className="chat-modal-label">
           Grup adı (isteğe bağlı)
@@ -216,8 +228,25 @@ export function ChatGroupThreadModal({
         {selected.length > 0 ? (
           <ul className="chat-group-selected">
             {selected.map((company) => (
-              <li key={company.companyId} className="chat-pending-chip">
-                <span>{company.legalName}</span>
+              <li key={company.companyId} className="chat-group-selected-row">
+                <span className="chat-group-selected-name">{company.legalName}</span>
+                <select
+                  className="input-light chat-group-role-select"
+                  aria-label={`${company.legalName} rolü`}
+                  value={company.participantRole}
+                  onChange={(event) =>
+                    onParticipantRoleChange(
+                      company.companyId,
+                      event.target.value as MessagingGroupParticipantRole,
+                    )
+                  }
+                >
+                  {MESSAGING_GROUP_PARTICIPANT_ROLES.map((role) => (
+                    <option key={role} value={role}>
+                      {groupParticipantRoleLabel(role)}
+                    </option>
+                  ))}
+                </select>
                 <button
                   type="button"
                   className="chat-pending-chip-remove"

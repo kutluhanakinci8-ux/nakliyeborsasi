@@ -32,6 +32,11 @@ import {
   type PendingAttachment,
 } from "../lib/messagingPageHelpers";
 import type { MessagingOperationStampType } from "../lib/messagingChatUi";
+import {
+  groupParticipantRolesRecord,
+  type GroupThreadParticipantPick,
+  withDefaultGroupRole,
+} from "../lib/messagingGroupThreadPick";
 import type { AuthSessionRecord } from "../lib/SessionApiClient";
 
 export type MessagingChatController = ReturnType<typeof useMessagingChatController>;
@@ -111,9 +116,9 @@ export function useMessagingChatController({
   const [groupSearchHits, setGroupSearchHits] = useState<
     MessagingCompanySearchRecord[]
   >([]);
-  const [groupSelected, setGroupSelected] = useState<
-    MessagingCompanySearchRecord[]
-  >([]);
+  const [groupSelected, setGroupSelected] = useState<GroupThreadParticipantPick[]>(
+    [],
+  );
   const [scrollToMessageId, setScrollToMessageId] = useState<string | null>(
     null,
   );
@@ -309,6 +314,7 @@ export function useMessagingChatController({
         {
           title: groupTitle.trim() || undefined,
           freightListingId: searchParams.get("listingId")?.trim() || undefined,
+          participantRoles: groupParticipantRolesRecord(groupSelected),
         },
       );
       const threadId =
@@ -766,11 +772,26 @@ export function useMessagingChatController({
 
   const socialInboxFilterOnly =
     searchParams.get("filter")?.toLowerCase() === "social";
+  const groupInboxFilterOnly =
+    searchParams.get("filter")?.toLowerCase() === "group";
+
+  useEffect(() => {
+    if (mode !== "chat") {
+      return;
+    }
+    if (searchParams.get("group") === "1") {
+      setGroupModalOpen(true);
+      setGroupSearchQuery("");
+      setGroupSearchHits([]);
+    }
+  }, [mode, searchParams]);
 
   const filteredThreads = useMemo(() => {
     let list = threads;
     if (socialInboxFilterOnly) {
       list = list.filter((thread) => thread.threadKind === "external_social");
+    } else if (groupInboxFilterOnly) {
+      list = list.filter((thread) => thread.threadKind === "group");
     }
     const query = threadSearch.trim().toLowerCase();
     if (!query) {
@@ -788,7 +809,7 @@ export function useMessagingChatController({
         .toLowerCase();
       return haystack.includes(query);
     });
-  }, [threads, threadSearch, socialInboxFilterOnly]);
+  }, [threads, threadSearch, socialInboxFilterOnly, groupInboxFilterOnly]);
 
   const companyUuidFromSearch = useMemo(
     () => parseCompanyUuidCandidate(threadSearch),
