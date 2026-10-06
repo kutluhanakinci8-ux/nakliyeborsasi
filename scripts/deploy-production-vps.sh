@@ -194,6 +194,15 @@ if [[ -x "${INSTALL_DIR}/scripts/run-mail-messaging-parity-wave2-checklist.sh" ]
     bash "${INSTALL_DIR}/scripts/run-mail-messaging-parity-wave2-checklist.sh" || true
 fi
 
+if [[ -x "${INSTALL_DIR}/scripts/verify-ekolojik-market-status-source.sh" ]]; then
+  bash "${INSTALL_DIR}/scripts/verify-ekolojik-market-status-source.sh" || echo "UYARI: ekolojik status source verify"
+fi
+if [[ -x "${INSTALL_DIR}/scripts/run-ekolojik-market-parity-close-checklist.sh" ]]; then
+  EK_U4_FULL="${EK_U4_FULL:-0}" EKOLOJIK_API_BASE="${API_BASE}" \
+    bash "${INSTALL_DIR}/scripts/run-ekolojik-market-parity-close-checklist.sh" \
+    || echo "UYARI: ekolojik EK-U4 close checklist (rubrik/API)"
+fi
+
 echo "=== Production deploy bitti ==="
 echo "  app:    https://app.lerta.com.tr/messaging?tab=email"
 echo "  posta:  https://posta.lerta.com.tr/login"

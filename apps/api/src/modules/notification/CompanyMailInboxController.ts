@@ -165,6 +165,8 @@ export class CompanyMailInboxController {
         llmConfigured: this.mailAiComposeService.isLlmConfigured(),
         consentRequired: true,
         suggestReplyPath: "/api/v1/company/mail-inbox/messages/:id/suggest-reply",
+        suggestComposeDraftPath:
+          "/api/v1/company/mail-inbox/compose/suggest-draft",
         summarizePath: "/api/v1/company/mail-inbox/messages/:id/summarize",
         classifyPath: "/api/v1/company/mail-inbox/messages/:id/classify",
       },
@@ -278,6 +280,26 @@ export class CompanyMailInboxController {
     return result;
   }
 
+  @Post("compose/suggest-draft")
+  public async suggestComposeDraft(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: { subject?: string; lang?: string },
+  ) {
+    this.assertMailInboxWriter(user);
+    const result = await this.mailAiComposeService.suggestOutboundDraft({
+      userId: user.userId,
+      subject: body.subject?.trim() ?? "",
+      locale: body.lang?.trim() || "tr",
+    });
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.AiMailSuggestReply,
+      { kind: "compose_draft", provider: result.provider },
+      "/company/mail-inbox/compose/suggest-draft",
+    );
+    return result;
+  }
+
   @Get("deliverability-hub")
   public async deliverabilityHub(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
@@ -289,6 +311,61 @@ export class CompanyMailInboxController {
         user.companyId,
         Number.isFinite(days) ? days : 30,
       ),
+    };
+  }
+
+  @Get("ops-snapshot")
+  public async mailOpsSnapshot(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    const imap = await this.mailImapAccessService.getSettings(user.companyId);
+    const deliverability = await this.mailDeliverabilityHubService.buildHub(
+      user.companyId,
+      7,
+    );
+    const integration = await this.integrationStatus(user);
+    return {
+      snapshot: {
+        phaseCode: "ek-p11",
+        generatedAt: new Date().toISOString(),
+        organizationId: user.companyId,
+        imap: {
+          enabled: imap.enabled,
+          maildirPath: imap.maildirPath,
+          imapHealthPath: "/api/v1/company/mail-inbox/imap-health",
+        },
+        deliverability: {
+          score: deliverability.score,
+          periodDays: deliverability.periodDays,
+          sentInPeriod: deliverability.engagement?.sentInPeriod ?? 0,
+          bounceRatePercent:
+            deliverability.engagement?.bounceRatePercent ?? null,
+          webhookEndpointCount:
+            deliverability.webhookAnalytics?.endpointCount ?? 0,
+        },
+        integration: {
+          jmap: integration.jmap,
+          aiComposeEnabled: integration.aiCompose.enabled,
+        },
+        runbooks: [
+          {
+            id: "messaging-posta-ops",
+            docPath: "docs/MESSAGING_POSTA_OPS_RUNBOOK.md",
+            verifyScript: "scripts/verify-communications-ops-snapshot.sh",
+          },
+          {
+            id: "imap-dovecot",
+            docPath: "docs/MAIL_PM5_IMAP_DOVECOT_RUNBOOK.md",
+            verifyScript: "scripts/smoke-ekolojik-market-parity.sh",
+          },
+          {
+            id: "ekolojik-parity-close",
+            docPath: "scripts/run-ekolojik-market-parity-close-checklist.sh",
+            verifyScript: "scripts/run-ekolojik-market-parity-close-checklist.sh",
+          },
+        ],
+        ekolojikPublicStatusPath: "/api/v1/public/ekolojik-market/status",
+      },
     };
   }
 

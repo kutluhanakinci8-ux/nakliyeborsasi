@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { SocialHubOpsLogRail } from "./SocialHubOpsLogRail";
 import {
   buildConnectionsOpsLog,
@@ -48,6 +48,7 @@ import type {
   SocialHubTemplate,
   SocialHubInboxThreadPreview,
   SocialHubPwaConfig,
+  SocialHubIntegrationGateStep,
 } from "../../lib/socialHubTypes";
 import {
   buildMonthGrid,
@@ -205,7 +206,26 @@ type ConnectionsProps = {
   onRoadmapRefreshToken?: (platformCode: string) => void;
   onTelegramChannelSetup?: () => void;
   onTelegramDiscussionSetup?: () => void;
+  integrationGateExpanded?: boolean;
+  highlightPlatformCode?: string | null;
 };
+
+function integrationGateStepLabel(
+  status: SocialHubIntegrationGateStep["status"],
+): string {
+  switch (status) {
+    case "ready":
+      return "Hazır";
+    case "partial":
+      return "Kısmi";
+    case "pending":
+      return "Bekliyor";
+    case "manual":
+      return "Manuel";
+    default:
+      return status;
+  }
+}
 
 export function SocialConnectionsPanel({
   snapshot,
@@ -218,7 +238,21 @@ export function SocialConnectionsPanel({
   onRoadmapRefreshToken,
   onTelegramChannelSetup,
   onTelegramDiscussionSetup,
+  integrationGateExpanded = false,
+  highlightPlatformCode = null,
 }: ConnectionsProps) {
+  const highlightRef = useRef<HTMLLIElement | null>(null);
+
+  useEffect(() => {
+    if (!highlightPlatformCode || !highlightRef.current) {
+      return;
+    }
+    highlightRef.current.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+    });
+  }, [highlightPlatformCode, snapshot.connections?.length]);
+
   const permissions = snapshot.permissions ?? {
     canManageConnections: false,
     canPublish: false,
@@ -257,6 +291,38 @@ export function SocialConnectionsPanel({
             ) : null}
           </header>
 
+          {snapshot.integrationGate &&
+          (integrationGateExpanded || gateSummary) ? (
+            <details
+              className="social-hub-integration-gate-details"
+              open={integrationGateExpanded}
+            >
+              <summary className="social-hub-health-settings-summary">
+                Entegrasyon kapısı (BC) — {gateSummary ?? "özet"}
+              </summary>
+              <p className="social-hub-connection-summary">
+                {snapshot.integrationGate.note}
+              </p>
+              <ul className="social-hub-integration-gate-steps">
+                {snapshot.integrationGate.steps.map((step) => (
+                  <li
+                    key={step.code}
+                    className={`social-hub-integration-gate-step social-hub-integration-gate-step--${step.status}`}
+                  >
+                    <span className="social-hub-integration-gate-step-code">
+                      {step.code}
+                    </span>
+                    <strong>{step.title}</strong>
+                    <span className="social-hub-stat-chip">
+                      {integrationGateStepLabel(step.status)}
+                    </span>
+                    <p className="module-hint">{step.detail}</p>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          ) : null}
+
           <ul className="social-hub-connection-grid social-hub-connection-grid--premium">
             {connections.map((row) => {
               const provider = providers.find(
@@ -276,10 +342,19 @@ export function SocialConnectionsPanel({
               const needsOAuthConfig =
                 provider?.implementationStatus === "pending" ||
                 row.oauthReady === false;
+              const isHighlighted =
+                highlightPlatformCode != null &&
+                row.platformCode === highlightPlatformCode;
               return (
                 <li
                   key={row.id}
-                  className="social-hub-connection-card social-hub-connection-card--premium"
+                  id={`social-hub-connection-${row.platformCode}`}
+                  ref={isHighlighted ? highlightRef : undefined}
+                  className={
+                    isHighlighted
+                      ? "social-hub-connection-card social-hub-connection-card--premium social-hub-connection-card--focused"
+                      : "social-hub-connection-card social-hub-connection-card--premium"
+                  }
                 >
                   <div className="social-hub-connection-main">
                     <div className="social-hub-connection-title-row">
@@ -514,6 +589,8 @@ type InboxProps = {
   onSync: (platformCode: string) => void;
   onSeedDemo?: () => void;
   canSeedDemo?: boolean;
+  messagingInboxHref?: string;
+  threadMessagingHref?: (threadId: string) => string;
 };
 
 export function SocialInboxPanel({
@@ -524,12 +601,20 @@ export function SocialInboxPanel({
   onSync,
   onSeedDemo,
   canSeedDemo,
+  messagingInboxHref,
+  threadMessagingHref,
 }: InboxProps) {
-  const inboxSummary = snapshot.inboxSummary ?? {
-    totalOpenThreads: 0,
-    byPlatform: [],
-    messagingDeepLink: "/messaging?tab=sohbet&filter=social",
-    note: "Sosyal konuşmalar Mesajlar listesinde listelenir.",
+  const inboxSummary = {
+    ...(snapshot.inboxSummary ?? {
+      totalOpenThreads: 0,
+      byPlatform: [],
+      messagingDeepLink: "/messaging?tab=sohbet&filter=social",
+      note: "Sosyal konuşmalar Mesajlar listesinde listelenir.",
+    }),
+    messagingDeepLink:
+      messagingInboxHref ??
+      snapshot.inboxSummary?.messagingDeepLink ??
+      "/messaging?tab=sohbet&filter=social",
   };
   const permissions = snapshot.permissions ?? {
     canManageConnections: false,
@@ -612,7 +697,10 @@ export function SocialInboxPanel({
                         </span>
                       ) : null}
                       <Link
-                        href={row.messagingDeepLink}
+                        href={
+                          threadMessagingHref?.(row.threadId) ??
+                          row.messagingDeepLink
+                        }
                         className="btn-account-primary"
                       >
                         Aç
@@ -670,6 +758,75 @@ export function SocialInboxPanel({
               <strong>Ekip &amp; izinler</strong> sekmesinden KVKK onayı gerekir
               (ayrıntı günlükte).
             </p>
+          ) : null}
+
+          {snapshot.inboxSyncSummary?.channels?.length ? (
+            <div className="social-hub-inbox-sync-summary">
+              <h3 className="social-hub-subsection-heading">Kanal senkron özet</h3>
+              <p className="social-hub-connection-summary">
+                Son özet:{" "}
+                {new Date(snapshot.inboxSyncSummary.generatedAt).toLocaleString(
+                  "tr-TR",
+                )}
+              </p>
+              <ul className="social-hub-health-grid social-hub-health-grid--premium">
+                {snapshot.inboxSyncSummary.channels.map((row) => {
+                  const canSync =
+                    row.connectionStatusCode === "CONNECTED" &&
+                    (row.inboxHistorySync || row.inboxWebhook);
+                  return (
+                    <li
+                      key={row.platformCode}
+                      className="social-hub-health-card social-hub-health-card--premium"
+                    >
+                      <div className="social-hub-connection-title-row">
+                        <h3>{row.label}</h3>
+                        <span
+                          className={
+                            row.openCount > 0
+                              ? "social-hub-stat-chip social-hub-stat-chip--ok"
+                              : "social-hub-stat-chip"
+                          }
+                        >
+                          {row.openCount} açık
+                        </span>
+                      </div>
+                      <p className="social-hub-connection-summary">
+                        Webhook (24s): {row.webhookInboundBridged24h}
+                        {row.dmInboxGateLabel
+                          ? ` · ${row.dmInboxGateLabel}`
+                          : row.inboxHistorySync
+                            ? " · Geçmiş sync"
+                            : row.inboxWebhook
+                              ? " · Webhook gelen kutusu"
+                              : ""}
+                      </p>
+                      {row.lastSyncAt ? (
+                        <p className="module-hint social-hub-inbox-sync-last">
+                          Son sync:{" "}
+                          {new Date(row.lastSyncAt).toLocaleString("tr-TR")}
+                          {row.lastSyncMessage ? ` — ${row.lastSyncMessage}` : ""}
+                        </p>
+                      ) : (
+                        <p className="module-hint social-hub-inbox-sync-last">
+                          Henüz senkron kaydı yok.
+                        </p>
+                      )}
+                      {canSync ? (
+                        <button
+                          type="button"
+                          className="btn-account-ghost"
+                          disabled={busy}
+                          onClick={() => onSync(row.platformCode)}
+                        >
+                          Senkron
+                        </button>
+                      ) : null}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
           ) : null}
 
           <div className="social-hub-inbox-actions-premium">
@@ -765,6 +922,8 @@ type PublishingProps = {
   onBulkRetrySelected: () => void;
   publishingEnabled?: boolean;
   integrationOpsHints?: SocialHubSnapshot["integrationOpsHints"];
+  telegramAdsGate?: SocialHubSnapshot["telegramAdsGate"];
+  telegramAdsSectionExpanded?: boolean;
 };
 
 export function SocialPublishingPanel({
@@ -807,6 +966,8 @@ export function SocialPublishingPanel({
   onBulkRetrySelected,
   publishingEnabled,
   integrationOpsHints,
+  telegramAdsGate,
+  telegramAdsSectionExpanded = false,
 }: PublishingProps) {
   const platformLabelByCode = (code: string) =>
     platformOptions.find((p) => p.code === code)?.label ?? code;
@@ -920,6 +1081,24 @@ export function SocialPublishingPanel({
               ) : null}
             </div>
           </header>
+          {telegramAdsGate ? (
+            <details
+              className="social-hub-telegram-ads-details"
+              open={telegramAdsSectionExpanded}
+            >
+              <summary className="social-hub-health-settings-summary">
+                {telegramAdsGate.userFacingLabel}
+              </summary>
+              <p className="social-hub-connection-summary">
+                {telegramAdsGate.userFacingNote}
+              </p>
+              <p className="module-hint">{telegramAdsGate.utmGuidance}</p>
+              <p className="module-hint">
+                Organik kanal ölçümü: aşağıdaki <strong>Kampanya linkleri (UTM)</strong>{" "}
+                alanını kullanın; Telegram platformunu yayın hedefi olarak seçin.
+              </p>
+            </details>
+          ) : null}
           {ownerApprovalRequired ? (
             <p className="social-hub-approval-chip">
               Onay gerekli — sahip veya sosyal yönetici onaylar.
@@ -1133,7 +1312,10 @@ export function SocialPublishingPanel({
               ))}
             </ul>
           ) : null}
-          <details className="social-hub-utm-details">
+          <details
+            className="social-hub-utm-details"
+            open={telegramAdsSectionExpanded}
+          >
             <summary className="module-hint">Kampanya linkleri (UTM)</summary>
             <p className="module-hint">
               Metindeki https bağlantılarına yayın anında utm_* eklenir (Telegram Ads
@@ -1519,6 +1701,7 @@ type AnalyticsProps = {
   analytics: SocialHubAnalytics | null;
   loading: boolean;
   busy?: boolean;
+  highlightUtmCampaign?: string | null;
   onExportAnalytics?: () => void;
 };
 
@@ -1527,6 +1710,7 @@ export function SocialAnalyticsPanel({
   analytics,
   loading,
   busy = false,
+  highlightUtmCampaign = null,
   onExportAnalytics,
 }: AnalyticsProps) {
   const fallbackOpen = snapshot.inboxSummary?.totalOpenThreads ?? 0;
@@ -1705,7 +1889,15 @@ export function SocialAnalyticsPanel({
           </h3>
           <ul className="social-hub-audit-list">
             {analytics.utmCampaignPublishedLast30Days.map((row) => (
-              <li key={row.utmCampaign}>
+              <li
+                key={row.utmCampaign}
+                className={
+                  highlightUtmCampaign &&
+                  row.utmCampaign === highlightUtmCampaign
+                    ? "social-hub-analytics-utm-row social-hub-analytics-utm-row--highlight"
+                    : "social-hub-analytics-utm-row"
+                }
+              >
                 <span>{row.utmCampaign}</span>
                 <span>{row.count}</span>
               </li>
@@ -2087,6 +2279,7 @@ type HealthPanelProps = {
   onRefreshToken: (platformCode: string) => void;
   onReload: () => void;
   pwa?: SocialHubPwaConfig;
+  pwaSectionExpanded?: boolean;
   healthPushHookStatus?: string;
 };
 
@@ -2132,6 +2325,7 @@ export function SocialHealthPanel({
   onRefreshToken,
   onReload,
   pwa,
+  pwaSectionExpanded = false,
   healthPushHookStatus,
 }: HealthPanelProps) {
   const opsLogEntries = useMemo(() => {
@@ -2182,6 +2376,24 @@ export function SocialHealthPanel({
             Genel durum:{" "}
             <strong>{healthOverallLabel(health.overallStatus)}</strong>
           </p>
+          {pwa ? (
+            <details
+              className="social-hub-pwa-details"
+              open={pwaSectionExpanded}
+            >
+              <summary className="social-hub-health-settings-summary">
+                PWA kısayolu (BB) — manifest &amp; push hook
+              </summary>
+              <p className="social-hub-connection-summary">
+                Manifest: <code>{pwa.manifestPath}</code> · scope{" "}
+                <code>{pwa.scope}</code>
+              </p>
+              <p className="module-hint">{pwa.healthPushHook.note}</p>
+              {healthPushHookStatus ? (
+                <p className="account-save-hint">{healthPushHookStatus}</p>
+              ) : null}
+            </details>
+          ) : null}
           <div className="social-hub-health-quick-actions">
         {canManage ? (
           <label className="social-hub-check">

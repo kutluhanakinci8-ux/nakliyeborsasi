@@ -5,12 +5,7 @@ import { MessagingMailWebEmbed } from "../../../components/messaging/MessagingMa
 import { MessagingSideRail } from "../../../components/messaging/MessagingSideRail";
 import { MessagingThreadSidebar } from "../../../components/messaging/MessagingThreadSidebar";
 import { MessagingConversationPanel } from "../../../components/messaging/MessagingConversationPanel";
-import {
-  ChatGroupThreadModal,
-  ChatMessageDeleteModal,
-  ChatMessageEditModal,
-  ChatQuickReplyAdminModal,
-} from "../../../components/messaging/ChatMessagingModals";
+import { MessagingChatModalsLayer } from "../../../components/messaging/MessagingChatModalsLayer";
 import { ModulePageShell } from "../../../components/ModulePageShell";
 import { useWebSession } from "../../../context/WebSessionProvider";
 import { useMessagingChatController } from "../../../hooks/useMessagingChatController";
@@ -55,30 +50,6 @@ export function MessagingPageClient() {
     moduleBlocked,
     totalUnread,
     isCompanyOwner,
-    editMessage,
-    setEditMessage,
-    deleteMessageId,
-    setDeleteMessageId,
-    messageActionBusy,
-    groupModalOpen,
-    setGroupModalOpen,
-    groupTitle,
-    setGroupTitle,
-    groupSearchQuery,
-    setGroupSearchQuery,
-    groupSearchHits,
-    groupSelected,
-    setGroupSelected,
-    isBusy,
-    quickReplyAdminOpen,
-    setQuickReplyAdminOpen,
-    orgQuickReplyDrafts,
-    setOrgQuickReplyDrafts,
-    quickReplyAdminBusy,
-    createGroupThread,
-    saveEditedMessage,
-    confirmDeleteMessage,
-    saveOrgQuickReplies,
     handleExportArchive,
     activeThreadId,
     mobileThreadOpen,
@@ -193,61 +164,7 @@ export function MessagingPageClient() {
           />
         ) : null}
       </div>
-      <ChatMessageEditModal
-        open={editMessage !== null}
-        bodyText={editMessage?.bodyText ?? ""}
-        busy={messageActionBusy}
-        onBodyChange={(value) =>
-          setEditMessage((current) =>
-            current ? { ...current, bodyText: value } : current,
-          )
-        }
-        onCancel={() => setEditMessage(null)}
-        onSave={() => void saveEditedMessage()}
-      />
-      <ChatMessageDeleteModal
-        open={deleteMessageId !== null}
-        busy={messageActionBusy}
-        onCancel={() => setDeleteMessageId(null)}
-        onConfirm={() => void confirmDeleteMessage()}
-      />
-      <ChatGroupThreadModal
-        open={groupModalOpen}
-        busy={isBusy}
-        title={groupTitle}
-        searchQuery={groupSearchQuery}
-        searchHits={groupSearchHits}
-        selected={groupSelected}
-        onClose={() => {
-          setGroupModalOpen(false);
-          setGroupSelected([]);
-          setGroupSearchQuery("");
-        }}
-        onTitleChange={setGroupTitle}
-        onSearchChange={setGroupSearchQuery}
-        onAddCompany={(company) => {
-          setGroupSelected((current) => {
-            if (current.some((row) => row.companyId === company.companyId)) {
-              return current;
-            }
-            return [...current, company].slice(0, 8);
-          });
-        }}
-        onRemoveCompany={(companyId) =>
-          setGroupSelected((current) =>
-            current.filter((row) => row.companyId !== companyId),
-          )
-        }
-        onCreate={() => void createGroupThread()}
-      />
-      <ChatQuickReplyAdminModal
-        open={quickReplyAdminOpen}
-        busy={quickReplyAdminBusy}
-        templates={orgQuickReplyDrafts}
-        onClose={() => setQuickReplyAdminOpen(false)}
-        onChange={setOrgQuickReplyDrafts}
-        onSave={() => void saveOrgQuickReplies()}
-      />
+      <MessagingChatModalsLayer chat={chat} />
     </ModulePageShell>
   );
 }

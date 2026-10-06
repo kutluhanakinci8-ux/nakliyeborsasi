@@ -58,6 +58,18 @@ npm run test:unit --prefix "${ROOT}"
 SKIP_PLAYWRIGHT="${SKIP_PLAYWRIGHT}" bash "${ROOT}/scripts/run-messaging-maturity-mp-checklist.sh"
 bash "${ROOT}/scripts/verify-communications-ops-snapshot.sh"
 
+if [[ "${SKIP_EKOLOJIK_PARITY:-0}" != "1" ]]; then
+  if [[ -f "${ROOT}/scripts/verify-ekolojik-market-status-source.sh" ]]; then
+    bash "${ROOT}/scripts/verify-ekolojik-market-status-source.sh"
+  fi
+  if [[ -f "${ROOT}/scripts/run-ekolojik-market-parity-close-checklist.sh" ]]; then
+    EK_U4_FULL="${EK_U4_FULL:-0}" \
+      EKOLOJIK_API_BASE="${API_BASE}" \
+      bash "${ROOT}/scripts/run-ekolojik-market-parity-close-checklist.sh" \
+      || echo "NOT: ekolojik parity close checklist (deploy/rubrik gerekebilir)" >&2
+  fi
+fi
+
 echo ""
 echo "OK: vps-operator-verify tamam (Playwright: SKIP_PLAYWRIGHT=${SKIP_PLAYWRIGHT})"
 echo "İpucu: Playwright için SKIP_PLAYWRIGHT=0 (sunucuda Chromium indirir — önerilmez)"

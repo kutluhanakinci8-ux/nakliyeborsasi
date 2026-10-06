@@ -21,7 +21,10 @@ import {
   parseSocialHubConnectionMetadata,
   serializeSocialHubConnectionMetadata,
 } from "./SocialHubConnectionMetadata";
-import type { SocialOAuthStartResult } from "../providers/SocialProviderPort";
+import type {
+  SocialOAuthConnectContext,
+  SocialOAuthStartResult,
+} from "../providers/SocialProviderPort";
 import { SocialHubRoadmapOAuthApplicationService } from "./SocialHubRoadmapOAuthApplicationService";
 import { isRoadmapPlatformCode } from "../socialHubRoadmapInterest";
 import { resolveMetaOAuthScopes } from "./socialHubMetaOAuthScopes";
@@ -51,16 +54,20 @@ export class SocialHubOAuthApplicationService {
   public async startOAuth(
     companyId: string,
     platformCode: SocialPlatformCode,
+    context?: SocialOAuthConnectContext,
   ): Promise<SocialOAuthStartResult> {
+    const webReturnQuery = this.oauthConfig.sanitizeWebReturnQuery(
+      context?.webReturnQuery,
+    );
     if (platformCode === SocialPlatformCode.LinkedIn) {
-      return this.startLinkedIn(companyId);
+      return this.startLinkedIn(companyId, webReturnQuery);
     }
     if (
       platformCode === SocialPlatformCode.Instagram ||
       platformCode === SocialPlatformCode.FacebookMessenger ||
       platformCode === SocialPlatformCode.WhatsAppCloud
     ) {
-      return this.startMeta(companyId, platformCode);
+      return this.startMeta(companyId, platformCode, webReturnQuery);
     }
     return {
       implementationStatus: "pending",
@@ -75,18 +82,21 @@ export class SocialHubOAuthApplicationService {
     state: string | null;
     error: string | null;
   }): Promise<{ redirectUrl: string }> {
-    const returnBase = this.oauthConfig.getWebAppReturnUrl();
+    const fallbackReturn = this.oauthConfig.getWebAppReturnUrl();
     if (params.error) {
       return {
-        redirectUrl: `${returnBase}&oauth=error&reason=${encodeURIComponent(params.error)}`,
+        redirectUrl: `${fallbackReturn}&oauth=error&reason=${encodeURIComponent(params.error)}`,
       };
     }
     if (!params.code || !params.state) {
       return {
-        redirectUrl: `${returnBase}&oauth=error&reason=missing_code`,
+        redirectUrl: `${fallbackReturn}&oauth=error&reason=missing_code`,
       };
     }
     const stateRow = await this.oauthStateService.consumeState(params.state);
+    const returnBase = this.oauthConfig.resolveWebAppReturnUrl(
+      stateRow.webReturnQuery,
+    );
     const platform = stateRow.platformCode;
     try {
       if (isRoadmapPlatformCode(platform)) {
@@ -123,6 +133,7 @@ export class SocialHubOAuthApplicationService {
   private async startMeta(
     companyId: string,
     platformCode: SocialPlatformCode,
+    webReturnQuery: string | null,
   ): Promise<SocialOAuthStartResult> {
     const config = this.oauthConfig.getMetaConfig();
     if (!config) {
@@ -134,7 +145,9 @@ export class SocialHubOAuthApplicationService {
           "Meta OAuth yapılandırılmadı (SOCIAL_META_APP_ID, SOCIAL_META_APP_SECRET, redirect URI).",
       };
     }
-    const state = await this.oauthStateService.issueState(companyId, platformCode);
+    const state = await this.oauthStateService.issueState(companyId, platformCode, {
+      webReturnQuery,
+    });
     if (
       platformCode === SocialPlatformCode.Instagram &&
       this.oauthConfig.preferInstagramBusinessLoginOAuth()
@@ -186,7 +199,10 @@ export class SocialHubOAuthApplicationService {
     };
   }
 
-  private async startLinkedIn(companyId: string): Promise<SocialOAuthStartResult> {
+  private async startLinkedIn(
+    companyId: string,
+    webReturnQuery: string | null,
+  ): Promise<SocialOAuthStartResult> {
     const config = this.oauthConfig.getLinkedInConfig();
     if (!config) {
       return {
@@ -200,6 +216,7 @@ export class SocialHubOAuthApplicationService {
     const state = await this.oauthStateService.issueState(
       companyId,
       SocialPlatformCode.LinkedIn,
+      { webReturnQuery },
     );
     const url = new URL("https://www.linkedin.com/oauth/v2/authorization");
     url.searchParams.set("response_type", "code");

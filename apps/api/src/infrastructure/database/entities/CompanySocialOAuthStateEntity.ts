@@ -25,6 +25,10 @@ export class CompanySocialOAuthStateEntity {
   @Column({ type: "varchar", length: 128, nullable: true })
   public pkceVerifier!: string | null;
 
+  /** Sanitized hub query (e.g. Ekolojik `bolum=sosyal&tab=connections`) for OAuth return. */
+  @Column({ type: "varchar", length: 256, nullable: true })
+  public webReturnQuery!: string | null;
+
   @Column({ type: "timestamptz" })
   public expiresAt!: Date;
 

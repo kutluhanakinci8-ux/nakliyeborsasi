@@ -437,6 +437,7 @@ export class MessagingThreadApplicationService {
               ? EXTERNAL_CHANNEL_LABELS[externalChannelCode] ??
                 externalChannelCode
               : null,
+          legalHoldAt: thread.legalHoldAt?.toISOString() ?? null,
         }),
       );
     }

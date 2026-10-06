@@ -15,6 +15,32 @@ export type MailClientView =
   | "calendar"
   | "contacts";
 
+const MAIL_CLIENT_VIEWS: MailClientView[] = [
+  "inbox",
+  "spam",
+  "sent",
+  "all",
+  "archive",
+  "trash",
+  "starred",
+  "snoozed",
+  "drafts",
+  "calendar",
+  "contacts",
+];
+
+export function parseMailClientViewParam(
+  raw: string | null | undefined,
+): MailClientView | null {
+  const v = raw?.trim().toLowerCase();
+  if (!v) {
+    return null;
+  }
+  return MAIL_CLIENT_VIEWS.includes(v as MailClientView)
+    ? (v as MailClientView)
+    : null;
+}
+
 export function inboxFolderForView(view: MailClientView): MailInboxFolder {
   if (view === "spam") {
     return "spam";

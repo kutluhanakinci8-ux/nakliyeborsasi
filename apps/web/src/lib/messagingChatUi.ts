@@ -3,6 +3,15 @@ export type MessagingOperationStampType =
   | "rejected"
   | "acknowledged";
 
+export type MessagingGroupParticipantRole =
+  | "shipper"
+  | "carrier"
+  | "agent"
+  | "observer";
+
+export const MESSAGING_GROUP_PARTICIPANT_ROLES: MessagingGroupParticipantRole[] =
+  ["shipper", "carrier", "agent", "observer"];
+
 export function groupParticipantRoleLabel(role: string): string {
   switch (role) {
     case "shipper":

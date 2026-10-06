@@ -21,6 +21,10 @@ import {
 } from "../lib/TrustScoreApiClient";
 import { ensureMessagingWebPush } from "../lib/messagingPush";
 import {
+  MESSAGING_ATTACHMENT_MAX_BYTES,
+  MESSAGING_ATTACHMENT_MAX_COUNT,
+} from "../lib/messagingAttachmentPolicy";
+import {
   readFileAsAttachment,
   messageHasActiveMentionQuery,
   parseCompanyUuidCandidate,
@@ -28,9 +32,17 @@ import {
   type PendingAttachment,
 } from "../lib/messagingPageHelpers";
 import type { MessagingOperationStampType } from "../lib/messagingChatUi";
+import {
+  groupParticipantRolesRecord,
+  type GroupThreadParticipantPick,
+  withDefaultGroupRole,
+} from "../lib/messagingGroupThreadPick";
 import type { AuthSessionRecord } from "../lib/SessionApiClient";
 
 export type MessagingChatController = ReturnType<typeof useMessagingChatController>;
+
+/** SSE stream vs polling fallback while chat mode is active. */
+export type MessagingRealtimeTransport = "sse" | "polling" | "idle";
 
 type Params = {
   accessToken: string;
@@ -79,6 +91,8 @@ export function useMessagingChatController({
   const [quickReplies, setQuickReplies] = useState<MessagingQuickReplyRecord[]>(
     [],
   );
+  const [realtimeTransport, setRealtimeTransport] =
+    useState<MessagingRealtimeTransport>("idle");
   const [internalNote, setInternalNote] = useState(false);
   const [typingHint, setTypingHint] = useState("");
   const [colleagues, setColleagues] = useState<
@@ -102,9 +116,9 @@ export function useMessagingChatController({
   const [groupSearchHits, setGroupSearchHits] = useState<
     MessagingCompanySearchRecord[]
   >([]);
-  const [groupSelected, setGroupSelected] = useState<
-    MessagingCompanySearchRecord[]
-  >([]);
+  const [groupSelected, setGroupSelected] = useState<GroupThreadParticipantPick[]>(
+    [],
+  );
   const [scrollToMessageId, setScrollToMessageId] = useState<string | null>(
     null,
   );
@@ -300,6 +314,7 @@ export function useMessagingChatController({
         {
           title: groupTitle.trim() || undefined,
           freightListingId: searchParams.get("listingId")?.trim() || undefined,
+          participantRoles: groupParticipantRolesRecord(groupSelected),
         },
       );
       const threadId =
@@ -375,18 +390,20 @@ export function useMessagingChatController({
       return;
     }
     for (const file of Array.from(fileList)) {
-      if (pendingAttachments.length >= 5) {
-        setErrorMessage("En fazla 5 dosya ekleyebilirsiniz.");
+      if (pendingAttachments.length >= MESSAGING_ATTACHMENT_MAX_COUNT) {
+        setErrorMessage(
+          `En fazla ${MESSAGING_ATTACHMENT_MAX_COUNT} dosya ekleyebilirsiniz.`,
+        );
         break;
       }
-      if (file.size > 10_000_000) {
+      if (file.size > MESSAGING_ATTACHMENT_MAX_BYTES) {
         setErrorMessage("Tek dosya en fazla 10 MB olabilir.");
         continue;
       }
       try {
         const attachment = await readFileAsAttachment(file);
         setPendingAttachments((current) =>
-          [...current, attachment].slice(0, 5),
+          [...current, attachment].slice(0, MESSAGING_ATTACHMENT_MAX_COUNT),
         );
       } catch {
         setErrorMessage("Dosya okunamadı (en fazla 5 dosya, 10 MB).");
@@ -755,11 +772,26 @@ export function useMessagingChatController({
 
   const socialInboxFilterOnly =
     searchParams.get("filter")?.toLowerCase() === "social";
+  const groupInboxFilterOnly =
+    searchParams.get("filter")?.toLowerCase() === "group";
+
+  useEffect(() => {
+    if (mode !== "chat") {
+      return;
+    }
+    if (searchParams.get("group") === "1") {
+      setGroupModalOpen(true);
+      setGroupSearchQuery("");
+      setGroupSearchHits([]);
+    }
+  }, [mode, searchParams]);
 
   const filteredThreads = useMemo(() => {
     let list = threads;
     if (socialInboxFilterOnly) {
       list = list.filter((thread) => thread.threadKind === "external_social");
+    } else if (groupInboxFilterOnly) {
+      list = list.filter((thread) => thread.threadKind === "group");
     }
     const query = threadSearch.trim().toLowerCase();
     if (!query) {
@@ -777,7 +809,7 @@ export function useMessagingChatController({
         .toLowerCase();
       return haystack.includes(query);
     });
-  }, [threads, threadSearch, socialInboxFilterOnly]);
+  }, [threads, threadSearch, socialInboxFilterOnly, groupInboxFilterOnly]);
 
   const companyUuidFromSearch = useMemo(
     () => parseCompanyUuidCandidate(threadSearch),
@@ -957,8 +989,10 @@ export function useMessagingChatController({
 
   useEffect(() => {
     if (mode !== "chat" || !accessToken) {
+      setRealtimeTransport("idle");
       return;
     }
+    setRealtimeTransport("polling");
     let pollTimer: number | undefined;
     let reconnectTimer: number | undefined;
     let eventSource: EventSource | null = null;
@@ -987,6 +1021,7 @@ export function useMessagingChatController({
       if (pollTimer !== undefined || sseConnected) {
         return;
       }
+      setRealtimeTransport("polling");
       pollTimer = window.setInterval(refreshFromServer, pollIntervalMs);
     }
 
@@ -1028,6 +1063,7 @@ export function useMessagingChatController({
             sseConnected = true;
             reconnectAttempt = 0;
             stopPolling();
+            setRealtimeTransport("sse");
           };
           eventSource.addEventListener("message", (event) => {
             try {
@@ -1064,6 +1100,7 @@ export function useMessagingChatController({
       if (reconnectTimer !== undefined) {
         window.clearTimeout(reconnectTimer);
       }
+      setRealtimeTransport("idle");
     };
   }, [mode, accessToken, locale, activeThreadId, loadMessages, loadThreads]);
 
@@ -1177,6 +1214,7 @@ export function useMessagingChatController({
     companyUuidFromSearch,
     showChatSearchPanel,
     totalUnread,
+    realtimeTransport,
     loadMessages,
     loadThreads,
     openThreadWithCounterparty,

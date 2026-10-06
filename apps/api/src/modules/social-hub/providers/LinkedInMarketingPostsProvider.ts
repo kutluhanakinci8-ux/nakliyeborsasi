@@ -6,6 +6,7 @@ import { SocialHubPublishApplicationService } from "../SocialHubPublishApplicati
 import { SocialHubInboxSyncApplicationService } from "../SocialHubInboxSyncApplicationService";
 import type {
   SocialInboxSyncResult,
+  SocialOAuthConnectContext,
   SocialOAuthStartResult,
   SocialProviderPort,
   SocialPublishRequest,
@@ -29,10 +30,14 @@ export class LinkedInMarketingPostsProvider implements SocialProviderPort {
       : "pending";
   }
 
-  public async startOAuthConnect(companyId: string): Promise<SocialOAuthStartResult> {
+  public async startOAuthConnect(
+    companyId: string,
+    context?: SocialOAuthConnectContext,
+  ): Promise<SocialOAuthStartResult> {
     return this.socialHubOAuthApplicationService.startOAuth(
       companyId,
       this.platformCode,
+      context,
     );
   }
 

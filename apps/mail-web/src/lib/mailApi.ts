@@ -1085,6 +1085,21 @@ export async function fetchSuggestReply(
   );
 }
 
+export async function fetchSuggestComposeDraft(
+  accessToken: string,
+  subject: string,
+  locale = "tr",
+): Promise<{ suggestion: string; provider: string }> {
+  return apiFetch<{ suggestion: string; provider: string }>(
+    accessToken,
+    "company/mail-inbox/compose/suggest-draft",
+    {
+      method: "POST",
+      body: JSON.stringify({ subject, lang: locale }),
+    },
+  );
+}
+
 export async function setDefaultMailSender(
   accessToken: string,
   senderId: string,
@@ -1668,6 +1683,15 @@ export type MailDeliverabilityHub = {
   };
   score: number;
   hintsTr: string[];
+  webhookAnalytics?: {
+    publicApiAllowed: boolean;
+    endpointCount: number;
+    enabledEndpointCount: number;
+    subscribedEvents: string[];
+    availableWebhookEvents: string[];
+    engagementWebhookEvents: string[];
+    configureApiPath: string;
+  };
 };
 
 export async function fetchDeliverabilityHub(
@@ -1678,5 +1702,42 @@ export async function fetchDeliverabilityHub(
   return apiFetch<{ hub: MailDeliverabilityHub }>(
     accessToken,
     `company/mail-inbox/deliverability-hub?days=${safeDays}`,
+  );
+}
+
+export type MailOpsRunbookRef = {
+  id: string;
+  docPath: string;
+  verifyScript: string | null;
+};
+
+export type MailOpsSnapshot = {
+  phaseCode: string;
+  generatedAt: string;
+  organizationId: string;
+  imap: {
+    enabled: boolean;
+    maildirPath: string | null;
+    imapHealthPath: string;
+  };
+  deliverability: {
+    score: number;
+    periodDays: number;
+    sentInPeriod: number;
+    bounceRatePercent: number | null;
+    webhookEndpointCount: number;
+  };
+  integration: {
+    jmap: { bridge: boolean; sessionPath: string; invokePath: string };
+    aiComposeEnabled: boolean;
+  };
+  runbooks: MailOpsRunbookRef[];
+  ekolojikPublicStatusPath: string;
+};
+
+export async function fetchMailOpsSnapshot(accessToken: string) {
+  return apiFetch<{ snapshot: MailOpsSnapshot }>(
+    accessToken,
+    "company/mail-inbox/ops-snapshot",
   );
 }

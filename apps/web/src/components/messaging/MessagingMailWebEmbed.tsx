@@ -8,15 +8,19 @@ import {
   type MailEmbedTokenMessage,
 } from "../../lib/MailEmbeddedSession";
 import { buildMailWebSsoHandoffUrl } from "../../lib/MailWebUrl";
+import type { MailWebEmbedHandoff } from "../../lib/mailWebEmbedDeepLink";
 
 type Props = {
   className?: string;
+  handoff?: MailWebEmbedHandoff;
+  /** @deprecated use handoff.composeTo */
   composeTo?: string;
 };
 
 /** posta.lerta.com.tr webmail — logistics oturumu ile SSO (iframe + postMessage). */
 export function MessagingMailWebEmbed({
   className = "",
+  handoff,
   composeTo,
 }: Props) {
   const { accessToken } = useWebSession();
@@ -26,11 +30,15 @@ export function MessagingMailWebEmbed({
     if (!accessToken) {
       return null;
     }
+    const merged: MailWebEmbedHandoff = {
+      ...handoff,
+      composeTo: handoff?.composeTo ?? composeTo?.trim() ?? undefined,
+    };
     return buildMailWebSsoHandoffUrl(accessToken, {
       embed: true,
-      composeTo: composeTo?.trim() || undefined,
+      ...merged,
     });
-  }, [accessToken, composeTo]);
+  }, [accessToken, composeTo, handoff]);
 
   useEffect(() => {
     if (!accessToken) {

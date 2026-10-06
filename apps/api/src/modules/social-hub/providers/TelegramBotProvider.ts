@@ -6,6 +6,7 @@ import { SocialHubInboxSyncApplicationService } from "../SocialHubInboxSyncAppli
 import { SocialHubPublishApplicationService } from "../SocialHubPublishApplicationService";
 import type {
   SocialInboxSyncResult,
+  SocialOAuthConnectContext,
   SocialOAuthStartResult,
   SocialProviderPort,
   SocialPublishRequest,
@@ -28,7 +29,10 @@ export class TelegramBotProvider implements SocialProviderPort {
     return this.oauthConfig.getOAuthEncryptionKey() ? "ready" : "pending";
   }
 
-  public async startOAuthConnect(_companyId: string): Promise<SocialOAuthStartResult> {
+  public async startOAuthConnect(
+    _companyId: string,
+    _context?: SocialOAuthConnectContext,
+  ): Promise<SocialOAuthStartResult> {
     if (!this.oauthConfig.getOAuthEncryptionKey()) {
       return {
         implementationStatus: "pending",

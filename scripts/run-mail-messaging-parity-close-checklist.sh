@@ -21,6 +21,10 @@ run_step() {
 }
 
 echo "== Mail & Messaging parity close checklist =="
+if [[ "${EK_TENANT_PARITY_CLOSE:-0}" == "1" ]]; then
+  echo "NOTE: EK_TENANT_PARITY_CLOSE=1 — Ekolojik tenant aynı NB posta/mesaj kod yollarını paylaşır (tenant verisi ayrı)."
+  echo "      Ekolojik özgün kapı: bash scripts/run-ekolojik-market-parity-close-checklist.sh"
+fi
 
 run_step "TypeORM global entities (MP-1)" bash "${ROOT}/scripts/verify-typeorm-global-entities.sh"
 run_step "Unit tests (MP-3 core)" npm run test:unit --prefix "${ROOT}"

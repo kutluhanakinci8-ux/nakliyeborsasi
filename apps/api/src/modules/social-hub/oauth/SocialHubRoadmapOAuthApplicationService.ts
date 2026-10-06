@@ -9,7 +9,10 @@ import { encryptTotpSecret } from "../../auth/TotpSecretCipher";
 import { CompanySocialConnectionEntity } from "../../../infrastructure/database/entities/CompanySocialConnectionEntity";
 import { SocialHubOAuthConfigService } from "./SocialHubOAuthConfigService";
 import { SocialHubOAuthStateService } from "./SocialHubOAuthStateService";
-import type { SocialOAuthStartResult } from "../providers/SocialProviderPort";
+import type {
+  SocialOAuthConnectContext,
+  SocialOAuthStartResult,
+} from "../providers/SocialProviderPort";
 import {
   assertRoadmapPlatformCode,
   isRoadmapPlatformCode,
@@ -46,7 +49,11 @@ export class SocialHubRoadmapOAuthApplicationService {
   public async startConnect(
     companyId: string,
     platformCode: string,
+    context?: SocialOAuthConnectContext,
   ): Promise<SocialOAuthStartResult> {
+    const webReturnQuery = this.oauthConfig.sanitizeWebReturnQuery(
+      context?.webReturnQuery,
+    );
     const code = assertRoadmapPlatformCode(platformCode);
     if (isRoadmapPendingSkeletonPlatform(code)) {
       return {
@@ -58,13 +65,13 @@ export class SocialHubRoadmapOAuthApplicationService {
       };
     }
     if (code === "TIKTOK") {
-      return this.startTikTok(companyId, code);
+      return this.startTikTok(companyId, code, webReturnQuery);
     }
     if (code === "YOUTUBE") {
-      return this.startYouTube(companyId, code);
+      return this.startYouTube(companyId, code, webReturnQuery);
     }
     if (code === "X") {
-      return this.startX(companyId, code);
+      return this.startX(companyId, code, webReturnQuery);
     }
     return {
       implementationStatus: "pending",
@@ -102,6 +109,7 @@ export class SocialHubRoadmapOAuthApplicationService {
   private async startTikTok(
     companyId: string,
     platformCode: string,
+    webReturnQuery: string | null,
   ): Promise<SocialOAuthStartResult> {
     const config = this.oauthConfig.getTikTokConfig();
     if (!config) {
@@ -114,7 +122,9 @@ export class SocialHubRoadmapOAuthApplicationService {
       };
     }
     await this.ensureConnectionRow(companyId, platformCode);
-    const state = await this.oauthStateService.issueState(companyId, platformCode);
+    const state = await this.oauthStateService.issueState(companyId, platformCode, {
+      webReturnQuery,
+    });
     const url = new URL(TIKTOK_AUTH_URL);
     url.searchParams.set("client_key", config.clientKey);
     url.searchParams.set("scope", TIKTOK_SCOPES);
@@ -178,6 +188,7 @@ export class SocialHubRoadmapOAuthApplicationService {
   private async startX(
     companyId: string,
     platformCode: string,
+    webReturnQuery: string | null,
   ): Promise<SocialOAuthStartResult> {
     const config = this.oauthConfig.getXConfig();
     if (!config) {
@@ -193,6 +204,7 @@ export class SocialHubRoadmapOAuthApplicationService {
     const pkceVerifier = generatePkceVerifier();
     const state = await this.oauthStateService.issueState(companyId, platformCode, {
       pkceVerifier,
+      webReturnQuery,
     });
     const url = new URL(X_AUTH_URL);
     url.searchParams.set("response_type", "code");
@@ -293,6 +305,7 @@ export class SocialHubRoadmapOAuthApplicationService {
   private async startYouTube(
     companyId: string,
     platformCode: string,
+    webReturnQuery: string | null,
   ): Promise<SocialOAuthStartResult> {
     const config = this.oauthConfig.getYouTubeConfig();
     if (!config) {
@@ -305,7 +318,9 @@ export class SocialHubRoadmapOAuthApplicationService {
       };
     }
     await this.ensureConnectionRow(companyId, platformCode);
-    const state = await this.oauthStateService.issueState(companyId, platformCode);
+    const state = await this.oauthStateService.issueState(companyId, platformCode, {
+      webReturnQuery,
+    });
     const url = new URL(GOOGLE_AUTH_URL);
     url.searchParams.set("client_id", config.clientId);
     url.searchParams.set("redirect_uri", config.redirectUri);

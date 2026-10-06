@@ -1,0 +1,103 @@
+name: Ekolojik market parity
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/api/src/modules/ekolojik-market/**"
+      - "apps/web/src/components/ekolojik/**"
+      - "apps/web/src/lib/ekolojik*.ts"
+      - "apps/mail-web/src/app/mail/**"
+      - "scripts/smoke-ekolojik-market-parity.sh"
+      - "scripts/run-ekolojik-market-parity-close-checklist.sh"
+      - "scripts/verify-ekolojik-market-status-source.sh"
+      - "scripts/verify-ekolojik-market-roll-manifest.sh"
+      - "scripts/run-ekolojik-market-post-deploy-gate.sh"
+      - "scripts/verify-ekolojik-market-phase-pr-cleanup.sh"
+      - "scripts/run-ekolojik-market-close-stale-phase-prs.sh"
+      - "scripts/verify-ekolojik-market-program-done.sh"
+      - "docs/EKOLojIK_MARKET_PHASE_PR_CLEANUP.md"
+      - ".github/workflows/deploy-vps.yml"
+      - "docs/EKOLojIK_MARKET_PARITY_ROADMAP.md"
+      - "scripts/vps-operator-verify.sh"
+      - "scripts/deploy-production-vps.sh"
+      - ".github/workflows/ekolojik-market-parity.yml"
+  pull_request:
+    paths:
+      - "apps/api/src/modules/ekolojik-market/**"
+      - "apps/web/src/components/ekolojik/**"
+      - "apps/web/src/lib/ekolojik*.ts"
+      - "apps/mail-web/src/app/mail/**"
+      - "scripts/smoke-ekolojik-market-parity.sh"
+      - "scripts/run-ekolojik-market-parity-close-checklist.sh"
+      - "scripts/verify-ekolojik-market-status-source.sh"
+      - "scripts/verify-ekolojik-market-roll-manifest.sh"
+      - "scripts/run-ekolojik-market-post-deploy-gate.sh"
+      - "scripts/verify-ekolojik-market-phase-pr-cleanup.sh"
+      - "scripts/run-ekolojik-market-close-stale-phase-prs.sh"
+      - "scripts/verify-ekolojik-market-program-done.sh"
+      - "docs/EKOLojIK_MARKET_PHASE_PR_CLEANUP.md"
+      - ".github/workflows/deploy-vps.yml"
+      - "docs/EKOLojIK_MARKET_PARITY_ROADMAP.md"
+      - "scripts/vps-operator-verify.sh"
+      - "scripts/deploy-production-vps.sh"
+      - ".github/workflows/ekolojik-market-parity.yml"
+  workflow_dispatch:
+    inputs:
+      ek_u4_full:
+        description: EK_U4_FULL=1 — paylaşılan NB mail/messaging close (VPS tam kapı)
+        type: boolean
+        default: false
+      run_prod_smoke:
+        description: Prod public smoke (app.lerta.com.tr)
+        type: boolean
+        default: true
+  schedule:
+    - cron: "30 6 * * *"
+
+jobs:
+  verify-source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ekolojik program done gate (no live API)
+        run: bash scripts/verify-ekolojik-market-program-done.sh
+
+  build:
+    runs-on: ubuntu-latest
+    needs: verify-source
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npm run build -w @nakliyeborsasi/api -w @nakliyeborsasi/web -w @nakliyeborsasi/mail-web
+
+  smoke-public:
+    runs-on: ubuntu-latest
+    needs: build
+    if: >-
+      github.event_name == 'push' || github.event_name == 'schedule' ||
+      (github.event_name == 'workflow_dispatch' && inputs.run_prod_smoke != false)
+    steps:
+      - uses: actions/checkout@v4
+      - name: Public ekolojik parity smoke (prod API)
+        env:
+          EKOLOJIK_API_BASE: https://app.lerta.com.tr/api/v1
+          EKOLOJIK_WEB_PUBLIC_URL: https://app.lerta.com.tr
+          EKOLOJIK_SMOKE_EXPECT_PHASE: ek-u4
+        run: bash scripts/smoke-ekolojik-market-parity.sh
+
+  close-checklist:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+      - name: EK-U4 close checklist (public rubric)
+        env:
+          EKOLOJIK_API_BASE: https://app.lerta.com.tr/api/v1
+          EK_U4_FULL: ${{ github.event.inputs.ek_u4_full == 'true' && '1' || '0' }}
+        run: bash scripts/run-ekolojik-market-parity-close-checklist.sh

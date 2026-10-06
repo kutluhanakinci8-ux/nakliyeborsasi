@@ -17,6 +17,7 @@ export type MessagingThreadRecord = {
   externalOutboundStatus?: "ok" | "failed" | null;
   externalOutboundError?: string | null;
   externalOutboundAt?: string | null;
+  legalHoldAt?: string | null;
 };
 
 export type MessagingChannelDeliveryRecord = {
@@ -182,7 +183,14 @@ export class MessagingApiClient {
     accessToken: string,
     locale: string,
     participantCompanyIds: string[],
-    options?: { title?: string; freightListingId?: string },
+    options?: {
+      title?: string;
+      freightListingId?: string;
+      participantRoles?: Record<
+        string,
+        "shipper" | "carrier" | "agent" | "observer"
+      >;
+    },
   ): Promise<{ thread: { id: string } }> {
     return AuthenticatedApiClient.fetchJson(
       accessToken,
@@ -194,6 +202,9 @@ export class MessagingApiClient {
           ...(options?.title ? { title: options.title } : {}),
           ...(options?.freightListingId
             ? { freightListingId: options.freightListingId }
+            : {}),
+          ...(options?.participantRoles
+            ? { participantRoles: options.participantRoles }
             : {}),
         }),
       },

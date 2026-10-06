@@ -75,7 +75,11 @@ import {
 } from "@/lib/mailApi";
 import { useMailKeyboardShortcuts } from "./useMailKeyboardShortcuts";
 
-import { inboxFolderForView, type MailClientView } from "./mailClientHelpers";
+import {
+  inboxFolderForView,
+  parseMailClientViewParam,
+  type MailClientView,
+} from "./mailClientHelpers";
 
 import type { ReadonlyURLSearchParams } from "next/navigation";
 import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
@@ -99,6 +103,29 @@ export function useMailClientController({
 }: Params) {
   const deepLinkMessageHandled = useRef(false);
   const deepLinkComposeHandled = useRef(false);
+  const deepLinkViewHandled = useRef(false);
+  const deepLinkCustomFolderHandled = useRef(false);
+  const deepLinkOpenComposeHandled = useRef(false);
+  const deepLinkComposeRichHandled = useRef(false);
+  const deepLinkComposeMultipartHandled = useRef(false);
+  const deepLinkComposeTemplateHandled = useRef(false);
+  const deepLinkMailSettingsHandled = useRef(false);
+  const deepLinkMailBulkHandled = useRef(false);
+  const deepLinkMailSwipeHandled = useRef(false);
+  const deepLinkMailDmarcHandled = useRef(false);
+  const deepLinkMailPwaHandled = useRef(false);
+  const deepLinkComposeAiHandled = useRef(false);
+  const deepLinkMailEngagementHandled = useRef(false);
+  const deepLinkMailOpsHandled = useRef(false);
+  const [mailBulkAssistActive, setMailBulkAssistActive] = useState(false);
+  const [mailSwipeAssistActive, setMailSwipeAssistActive] = useState(false);
+  const [mailDmarcAssistActive, setMailDmarcAssistActive] = useState(false);
+  const [mailPwaAssistActive, setMailPwaAssistActive] = useState(false);
+  const [composeAiAssistActive, setComposeAiAssistActive] = useState(false);
+  const [composeAiDraftBusy, setComposeAiDraftBusy] = useState(false);
+  const [mailEngagementAssistActive, setMailEngagementAssistActive] =
+    useState(false);
+  const [mailOpsAssistActive, setMailOpsAssistActive] = useState(false);
   const [view, setView] = useState<MailClientView>("inbox");
   const [summary, setSummary] = useState<MailInboxSummary | null>(null);
   const [sendReadiness, setSendReadiness] = useState<MailSendReadiness | null>(
@@ -177,6 +204,9 @@ export function useMailClientController({
   const [draftPreview, setDraftPreview] = useState<MailDraftItem | null>(null);
   const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsInitialView, setSettingsInitialView] = useState<
+    import("./MailSettingsPanel").SettingsView | null
+  >(null);
   const [inboxListDensity, setInboxListDensity] =
     useState<MailInboxListDensity>("comfortable");
   const [activeSwipeRowId, setActiveSwipeRowId] = useState<string | null>(null);
@@ -543,6 +573,237 @@ export function useMailClientController({
     setComposeTo(to);
     setComposeOpen(true);
   }, [accessToken, searchParams]);
+
+  useEffect(() => {
+    const parsed = parseMailClientViewParam(searchParams.get("mailView"));
+    if (!accessToken || !parsed || deepLinkViewHandled.current) {
+      return;
+    }
+    deepLinkViewHandled.current = true;
+    setView(parsed);
+    if (parsed !== "inbox") {
+      setActiveCustomFolderId(null);
+    }
+    setDetail(null);
+    setSentPreview(null);
+    setSelectedId(null);
+    setMobilePane("list");
+  }, [accessToken, searchParams]);
+
+  useEffect(() => {
+    const raw = searchParams.get("compose")?.trim();
+    if (!accessToken || raw !== "1" || deepLinkOpenComposeHandled.current) {
+      return;
+    }
+    deepLinkOpenComposeHandled.current = true;
+    setComposeOpen(true);
+  }, [accessToken, searchParams]);
+
+  useEffect(() => {
+    const raw = searchParams.get("composeRich")?.trim();
+    if (!accessToken || !raw || deepLinkComposeRichHandled.current) {
+      return;
+    }
+    deepLinkComposeRichHandled.current = true;
+    setComposeRich(raw !== "0");
+    if (searchParams.get("compose") === "1") {
+      setComposeOpen(true);
+    }
+  }, [accessToken, searchParams]);
+
+  useEffect(() => {
+    if (
+      !accessToken ||
+      searchParams.get("composeMultipart") !== "1" ||
+      deepLinkComposeMultipartHandled.current
+    ) {
+      return;
+    }
+    deepLinkComposeMultipartHandled.current = true;
+    setComposeOpen(true);
+    setComposeShowCcBcc(true);
+  }, [accessToken, searchParams]);
+
+  useEffect(() => {
+    const raw = searchParams.get("composeTemplate")?.trim();
+    if (!accessToken || !raw || deepLinkComposeTemplateHandled.current) {
+      return;
+    }
+    if (composeTemplates.length === 0) {
+      return;
+    }
+    const normalized = raw.includes(":") ? raw : `builtin:${raw}`;
+    const preset = composeTemplates.find(
+      (t) => t.id === normalized || t.id === raw,
+    );
+    if (!preset) {
+      return;
+    }
+    deepLinkComposeTemplateHandled.current = true;
+    setComposeOpen(true);
+    if (preset.subject) {
+      setComposeSubject(preset.subject);
+    }
+    setComposeText(preset.bodyText);
+  }, [accessToken, searchParams, composeTemplates]);
+
+  useEffect(() => {
+    const raw = searchParams.get("mailSettings")?.trim();
+    if (!accessToken || !raw || deepLinkMailSettingsHandled.current) {
+      return;
+    }
+    const allowed = new Set([
+      "hub",
+      "accounts",
+      "deliverability",
+      "imap",
+      "signature",
+      "rules",
+      "security",
+      "privacy",
+      "notifications",
+      "display",
+      "mailPrefs",
+      "autoReply",
+      "calendarSettings",
+      "contactsSettings",
+      "help",
+      "ops",
+    ]);
+    if (!allowed.has(raw)) {
+      return;
+    }
+    deepLinkMailSettingsHandled.current = true;
+    setSettingsInitialView(raw as import("./MailSettingsPanel").SettingsView);
+    setSettingsOpen(true);
+  }, [accessToken, searchParams]);
+
+  useEffect(() => {
+    if (
+      !accessToken ||
+      searchParams.get("mailBulk") !== "1" ||
+      deepLinkMailBulkHandled.current
+    ) {
+      return;
+    }
+    deepLinkMailBulkHandled.current = true;
+    setView("inbox");
+    setActiveCustomFolderId(null);
+    setMailBulkAssistActive(true);
+  }, [accessToken, searchParams]);
+
+  useEffect(() => {
+    if (
+      !accessToken ||
+      searchParams.get("mailSwipe") !== "1" ||
+      deepLinkMailSwipeHandled.current
+    ) {
+      return;
+    }
+    deepLinkMailSwipeHandled.current = true;
+    setView("inbox");
+    setActiveCustomFolderId(null);
+    setMailSwipeAssistActive(true);
+  }, [accessToken, searchParams]);
+
+  useEffect(() => {
+    if (
+      !accessToken ||
+      searchParams.get("mailDmarc") !== "1" ||
+      deepLinkMailDmarcHandled.current
+    ) {
+      return;
+    }
+    deepLinkMailDmarcHandled.current = true;
+    setMailDmarcAssistActive(true);
+    setSettingsInitialView("deliverability");
+    setSettingsOpen(true);
+  }, [accessToken, searchParams]);
+
+  useEffect(() => {
+    if (
+      !accessToken ||
+      searchParams.get("mailPwa") !== "1" ||
+      deepLinkMailPwaHandled.current
+    ) {
+      return;
+    }
+    deepLinkMailPwaHandled.current = true;
+    setMailPwaAssistActive(true);
+    setSettingsInitialView("notifications");
+    setSettingsOpen(true);
+  }, [accessToken, searchParams]);
+
+  useEffect(() => {
+    if (
+      !accessToken ||
+      searchParams.get("composeAi") !== "1" ||
+      deepLinkComposeAiHandled.current
+    ) {
+      return;
+    }
+    deepLinkComposeAiHandled.current = true;
+    setComposeAiAssistActive(true);
+    setComposeRich(true);
+    setComposeOpen(true);
+  }, [accessToken, searchParams]);
+
+  useEffect(() => {
+    if (
+      !accessToken ||
+      searchParams.get("mailEngagement") !== "1" ||
+      deepLinkMailEngagementHandled.current
+    ) {
+      return;
+    }
+    deepLinkMailEngagementHandled.current = true;
+    setMailEngagementAssistActive(true);
+    setSettingsInitialView("deliverability");
+    setSettingsOpen(true);
+  }, [accessToken, searchParams]);
+
+  useEffect(() => {
+    if (
+      !accessToken ||
+      searchParams.get("mailOps") !== "1" ||
+      deepLinkMailOpsHandled.current
+    ) {
+      return;
+    }
+    deepLinkMailOpsHandled.current = true;
+    setMailOpsAssistActive(true);
+    setSettingsInitialView("ops");
+    setSettingsOpen(true);
+  }, [accessToken, searchParams]);
+
+  useEffect(() => {
+    const needle = searchParams.get("customFolder")?.trim();
+    if (
+      !accessToken ||
+      !needle ||
+      deepLinkCustomFolderHandled.current ||
+      customFolders.length === 0
+    ) {
+      return;
+    }
+    const lower = needle.toLowerCase();
+    const match = customFolders.find(
+      (folder) =>
+        folder.id === needle ||
+        folder.name.trim().toLowerCase() === lower ||
+        folder.name.trim().toLowerCase().includes(lower),
+    );
+    if (!match) {
+      return;
+    }
+    deepLinkCustomFolderHandled.current = true;
+    setView("inbox");
+    setActiveCustomFolderId(match.id);
+    setDetail(null);
+    setSentPreview(null);
+    setSelectedId(null);
+    setMobilePane("list");
+  }, [accessToken, searchParams, customFolders]);
 
   async function downloadAttachment(index: number, filename: string) {
     if (!accessToken || !detail) {
@@ -1347,6 +1608,7 @@ export function useMailClientController({
     setComposeFiles([]);
     setComposeStoredAttachments([]);
     setComposeError("");
+    setComposeAiAssistActive(false);
   }
 
   function startForwardFromDetail() {
@@ -1600,6 +1862,24 @@ export function useMailClientController({
     setSentLoading,
     setSentPreview,
     setSettingsOpen,
+    settingsInitialView,
+    setSettingsInitialView,
+    mailBulkAssistActive,
+    setMailBulkAssistActive,
+    mailSwipeAssistActive,
+    setMailSwipeAssistActive,
+    mailDmarcAssistActive,
+    setMailDmarcAssistActive,
+    mailPwaAssistActive,
+    setMailPwaAssistActive,
+    composeAiAssistActive,
+    setComposeAiAssistActive,
+    composeAiDraftBusy,
+    setComposeAiDraftBusy,
+    mailEngagementAssistActive,
+    setMailEngagementAssistActive,
+    mailOpsAssistActive,
+    setMailOpsAssistActive,
     setShortcutsOpen,
     setSummary,
     setThreadMessages,

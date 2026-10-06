@@ -33,7 +33,7 @@ type ChatMessageActionBarProps = {
   onStamp: (stampType: MessagingOperationStampType) => void;
   onTranslate: (target: string) => void;
   onEdit: () => void;
-  onDelete: () => void;
+  onDelete?: () => void;
 };
 
 export function ChatMessageActionBar({
@@ -155,14 +155,16 @@ export function ChatMessageActionBar({
           >
             <IconPencil size={16} />
           </button>
-          <button
-            type="button"
-            className="chat-icon-btn chat-icon-btn--danger"
-            aria-label="Sil"
-            onClick={onDelete}
-          >
-            <IconTrash size={16} />
-          </button>
+          {onDelete ? (
+            <button
+              type="button"
+              className="chat-icon-btn chat-icon-btn--danger"
+              aria-label="Sil"
+              onClick={onDelete}
+            >
+              <IconTrash size={16} />
+            </button>
+          ) : null}
         </>
       ) : null}
     </div>

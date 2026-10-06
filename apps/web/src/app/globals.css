@@ -6841,6 +6841,124 @@ button.btn-secondary {
   color: #94a3b8;
 }
 
+.messaging-realtime-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #64748b;
+}
+
+.messaging-realtime-badge-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #94a3b8;
+}
+
+.messaging-realtime-badge--live {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.messaging-realtime-badge--live .messaging-realtime-badge-dot {
+  background: #22c55e;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.25);
+}
+
+.messaging-realtime-badge--poll {
+  border-color: #fde68a;
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.messaging-realtime-badge--poll .messaging-realtime-badge-dot {
+  background: #f59e0b;
+}
+
+.chat-sidebar-realtime {
+  max-width: 100%;
+}
+
+.messaging-chat-compliance-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin-bottom: 0.65rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.messaging-chat-compliance-policy {
+  margin: 0;
+  flex: 1 1 220px;
+}
+
+.messaging-chat-compliance-legal-hold {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  margin: 0;
+  flex: 1 1 100%;
+  font-size: 0.78rem;
+  color: #9a3412;
+}
+
+.messaging-chat-compliance-export {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #0f172a;
+  cursor: pointer;
+}
+
+.messaging-chat-compliance-export:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.chat-legal-hold-inline {
+  margin: 0 0 0.5rem;
+  padding: 0.4rem 0.65rem;
+  border-radius: 8px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #9a3412;
+}
+
+.chat-thread-legal-hold-pill {
+  display: inline-block;
+  margin-right: 0.35rem;
+  padding: 0 0.35rem;
+  border-radius: 4px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: #ffedd5;
+  color: #c2410c;
+  vertical-align: middle;
+}
+
 .chat-sidebar-new-group {
   flex-shrink: 0;
   display: inline-flex;
@@ -16507,6 +16625,70 @@ button.btn-secondary {
   white-space: nowrap;
 }
 
+.social-hub-integration-gate-details {
+  margin: 0 0 1.25rem;
+}
+
+.social-hub-integration-gate-steps {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.social-hub-integration-gate-step {
+  padding: 0.65rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #f8fafc;
+}
+
+.social-hub-integration-gate-step-code {
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-right: 0.5rem;
+  color: #64748b;
+}
+
+.social-hub-connection-card--focused {
+  outline: 2px solid #f59e0b;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.15);
+}
+
+.social-hub-pwa-details {
+  margin: 0 0 1rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #f8fafc;
+}
+
+.social-hub-telegram-ads-details {
+  margin: 0 0 1rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  background: #fffbeb;
+}
+
+.social-hub-analytics-utm-row--highlight {
+  background: #fff8e6;
+  border-radius: 8px;
+  padding: 0.25rem 0.5rem;
+  outline: 1px solid #f0c040;
+}
+
+.social-hub-inbox-sync-summary {
+  margin-top: 1.25rem;
+}
+
+.social-hub-inbox-sync-last {
+  margin: 0.35rem 0 0.5rem;
+}
+
 .social-hub-sync-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
@@ -16964,4 +17146,467 @@ button.btn-secondary {
   font-size: 0.85rem;
   color: #15803d;
   font-weight: 600;
+}
+
+/* —— Ekolojik Marketim iletişim hub (EK-0 / EK-U1) —— */
+.ekolojik-market-app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f4f7f4;
+}
+
+.ekolojik-market-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.65rem 1.25rem;
+  background: linear-gradient(90deg, #2d6a4f, #40916c);
+  color: #fff;
+}
+
+.ekolojik-market-topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.ekolojik-market-topnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.ekolojik-market-topnav-link {
+  color: rgba(255, 255, 255, 0.92);
+  text-decoration: none;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+}
+
+.ekolojik-market-topnav-link--active {
+  background: #fff;
+  color: #1b4332;
+  font-weight: 600;
+}
+
+.ekolojik-market-topnav-link--muted {
+  opacity: 0.65;
+  cursor: default;
+}
+
+.ekolojik-market-main {
+  flex: 1;
+  padding: 1rem 1.25rem 2rem;
+}
+
+.ekolojik-comms-hub-intro {
+  margin-bottom: 1rem;
+}
+
+.ekolojik-comms-hub-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.35rem;
+  color: #1b4332;
+}
+
+.ekolojik-comms-hub-lead {
+  margin: 0;
+  max-width: 72ch;
+  font-size: 0.92rem;
+  color: #495057;
+}
+
+.ekolojik-comms-hub-body {
+  display: grid;
+  grid-template-columns: minmax(160px, 200px) 1fr;
+  gap: 1rem;
+  min-height: calc(100vh - 11rem);
+}
+
+.ekolojik-comms-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.75rem;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #d8e2dc;
+}
+
+.ekolojik-comms-sidebar-primary {
+  margin-bottom: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-radius: 8px;
+  background: #40916c;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ekolojik-comms-sidebar-item {
+  text-align: left;
+  padding: 0.45rem 0.65rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #212529;
+}
+
+.ekolojik-comms-sidebar-item--active {
+  background: #d8f3dc;
+  font-weight: 600;
+  color: #1b4332;
+}
+
+.ekolojik-comms-sidebar-foot {
+  margin-top: auto;
+  padding-top: 0.75rem;
+  font-size: 0.75rem;
+}
+
+.ekolojik-comms-main {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #d8e2dc;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 520px;
+  overflow: hidden;
+}
+
+.messaging-wa-bridge-hub-card {
+  margin-bottom: 0.65rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 10px;
+  border: 1px solid #dbeafe;
+  background: #eff6ff;
+}
+
+.messaging-wa-bridge-hub-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.5rem 0.75rem;
+}
+
+.messaging-wa-bridge-hub-card-title {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.messaging-wa-bridge-hub-card-lead {
+  margin: 0.2rem 0 0;
+  font-size: 0.72rem;
+  color: #475569;
+  max-width: 42rem;
+}
+
+.messaging-wa-bridge-hub-card-pill {
+  margin-left: auto;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.messaging-wa-bridge-hub-card-pill--on {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.messaging-wa-bridge-hub-card-meta {
+  margin: 0.45rem 0 0;
+}
+
+.messaging-wa-bridge-hub-card-warn {
+  margin: 0.35rem 0 0;
+  font-size: 0.72rem;
+  color: #b45309;
+}
+
+.messaging-wa-bridge-hub-card-btn {
+  margin-top: 0.5rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #93c5fd;
+  background: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.chat-sidebar-wa-bridge {
+  padding: 0.35rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.chat-sidebar-wa-bridge--active {
+  border-color: #22c55e;
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.messaging-kvkk-retention-panel {
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+}
+
+.messaging-kvkk-retention-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.messaging-kvkk-retention-title--spaced {
+  margin-top: 1.25rem;
+}
+
+.messaging-kvkk-retention-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0.5rem 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  max-width: 280px;
+}
+
+.messaging-kvkk-retention-save {
+  margin-top: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ekolojik-comms-kvkk-wrap {
+  min-height: 280px;
+}
+
+.messaging-chat-compliance-export {
+  text-decoration: none;
+}
+
+.ekolojik-comms-notifications-wrap {
+  min-height: 280px;
+}
+
+.messaging-chat-notifications-panel {
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+}
+
+.messaging-chat-notifications-title {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.messaging-chat-notifications-sub {
+  margin: 0 0 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.messaging-chat-notifications-block {
+  margin-bottom: 1rem;
+}
+
+.messaging-chat-notifications-push-btn {
+  margin-top: 0.35rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.messaging-chat-notifications-matrix {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.72rem;
+}
+
+.messaging-chat-notifications-matrix th,
+.messaging-chat-notifications-matrix td {
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid #f1f5f9;
+  text-align: left;
+}
+
+.ekolojik-comms-integrations-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: 320px;
+}
+
+.messaging-slack-bridge-card,
+.messaging-automation-catalog {
+  padding: 0.75rem 0.85rem;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+}
+
+.messaging-slack-bridge-card-title,
+.messaging-automation-catalog-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.messaging-slack-bridge-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.messaging-slack-bridge-check {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.5rem 0;
+  font-size: 0.75rem;
+}
+
+.messaging-slack-bridge-save {
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.messaging-automation-catalog-sub {
+  margin: 0.75rem 0 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.messaging-automation-catalog-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.72rem;
+}
+
+.messaging-automation-catalog-meta {
+  display: block;
+  color: #64748b;
+  font-size: 0.68rem;
+}
+
+.messaging-automation-catalog-note {
+  margin-top: 0.35rem;
+}
+
+.ekolojik-comms-wa-bridge-link-hint {
+  margin: 0 0 0.5rem;
+  font-size: 0.68rem;
+}
+
+.chat-group-selected-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.5rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.chat-group-selected-name {
+  flex: 1 1 120px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.chat-group-role-select {
+  min-width: 7.5rem;
+  font-size: 0.72rem;
+  padding: 0.25rem 0.35rem;
+}
+
+.ekolojik-comms-group-hint {
+  margin: 0 0 0.5rem;
+  padding: 0 0.25rem;
+}
+
+.ekolojik-comms-social-dm-hint {
+  margin: 0 0 0.5rem;
+  padding: 0 0.25rem;
+}
+
+.ekolojik-comms-listing-hint {
+  margin: 0 0 0.5rem;
+  padding: 0 0.25rem;
+}
+
+.ekolojik-comms-folder-hint {
+  margin: 0 0 0.5rem;
+  padding: 0.5rem 0.65rem;
+  background: #fff3cd;
+  border-radius: 8px;
+}
+
+.ekolojik-comms-mail-wrap {
+  flex: 1;
+  min-height: 480px;
+}
+
+.ekolojik-comms-chat-layout {
+  flex: 1;
+  min-height: 480px;
+}
+
+.ekolojik-comms-chat-layout .ekolojik-comms-chat-wrap {
+  min-height: 420px;
+}
+
+.ekolojik-comms-chat-wrap {
+  flex: 1;
+  min-height: 480px;
+}
+
+.ekolojik-comms-social-wrap {
+  flex: 1;
+  overflow: auto;
+  max-height: calc(100vh - 12rem);
+}
+
+@media (max-width: 900px) {
+  .ekolojik-comms-hub-body {
+    grid-template-columns: 1fr;
+  }
 }

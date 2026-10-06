@@ -34,8 +34,11 @@ export class SocialHubController {
   public async connect(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
     @Param("platformCode") platformCode: string,
+    @Body() body: { webReturnQuery?: string },
   ) {
-    return this.socialHubApplicationService.startConnect(user, platformCode);
+    return this.socialHubApplicationService.startConnect(user, platformCode, {
+      webReturnQuery: body?.webReturnQuery,
+    });
   }
 
   @Post("connections/TELEGRAM/connect-bot")
@@ -529,10 +532,12 @@ export class SocialHubController {
   public async roadmapConnect(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
     @Param("platformCode") platformCode: string,
+    @Body() body: { webReturnQuery?: string },
   ) {
     return this.socialHubApplicationService.startRoadmapConnect(
       user,
       platformCode,
+      { webReturnQuery: body?.webReturnQuery },
     );
   }
 

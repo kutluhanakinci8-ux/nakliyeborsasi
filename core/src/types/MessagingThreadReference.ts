@@ -29,6 +29,8 @@ export class MessagingThreadReference {
 
   public readonly externalOutboundAt: string | null;
 
+  public readonly legalHoldAt: string | null;
+
   public constructor(params: {
     threadId: string;
     counterpartyCompanyId: string;
@@ -45,6 +47,7 @@ export class MessagingThreadReference {
     externalOutboundStatus?: "ok" | "failed" | null;
     externalOutboundError?: string | null;
     externalOutboundAt?: string | null;
+    legalHoldAt?: string | null;
   }) {
     this.threadId = params.threadId;
     this.counterpartyCompanyId = params.counterpartyCompanyId;
@@ -61,5 +64,6 @@ export class MessagingThreadReference {
     this.externalOutboundStatus = params.externalOutboundStatus ?? null;
     this.externalOutboundError = params.externalOutboundError ?? null;
     this.externalOutboundAt = params.externalOutboundAt ?? null;
+    this.legalHoldAt = params.legalHoldAt ?? null;
   }
 }

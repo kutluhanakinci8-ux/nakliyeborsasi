@@ -91,6 +91,46 @@ export class MailAiComposeService {
     return { suggestion: text, provider: "llm" };
   }
 
+  public async suggestOutboundDraft(input: {
+    userId: string;
+    subject: string;
+    locale: string;
+  }): Promise<{ suggestion: string; provider: string }> {
+    const subject = input.subject.trim().slice(0, 500);
+    const tr = input.locale.toLowerCase().startsWith("tr");
+    const fallback = tr
+      ? `Merhaba,\n\n${subject ? `«${subject}» konulu mesajımızla ilgili bilgilendirme yapmak istiyoruz.\n\n` : ""}Detayları paylaşmaktan memnuniyet duyarız.\n\nSaygılarımızla,`
+      : `Hello,\n\n${subject ? `Regarding «${subject}», ` : ""}we would like to share the following update.\n\nBest regards,`;
+    if (!this.isEnabled()) {
+      return { suggestion: fallback, provider: "template" };
+    }
+    const llmAllowed = await this.canUseLlm(input.userId);
+    if (!llmAllowed) {
+      return { suggestion: fallback, provider: "template-consent" };
+    }
+    const text = await this.completeChat(
+      [
+        {
+          role: "system",
+          content:
+            "Kısa, profesyonel Türkçe e-posta gövdesi yaz (yeni mesaj, yanıt değil). İmza yok.",
+        },
+        {
+          role: "user",
+          content: subject
+            ? `Konu: ${subject}`
+            : "Genel kurumsal bilgilendirme e-postası",
+        },
+      ],
+      400,
+    );
+    if (!text) {
+      return { suggestion: fallback, provider: "template-fallback" };
+    }
+    this.logger.log(`AI suggest-compose user=${input.userId} provider=llm`);
+    return { suggestion: text, provider: "llm" };
+  }
+
   public async summarizeMessage(input: {
     userId: string;
     subject: string;

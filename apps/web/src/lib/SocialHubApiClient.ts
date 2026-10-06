@@ -379,6 +379,7 @@ export class SocialHubApiClient {
   public static async connectPlatform(
     accessToken: string,
     platformCode: string,
+    webReturnQuery?: string,
   ): Promise<{
     oauth: {
       message: string;
@@ -389,6 +390,9 @@ export class SocialHubApiClient {
   }> {
     return socialHubFetch(accessToken, `/connections/${platformCode}/connect`, {
       method: "POST",
+      body: webReturnQuery
+        ? JSON.stringify({ webReturnQuery })
+        : undefined,
     });
   }
 
@@ -626,6 +630,7 @@ export class SocialHubApiClient {
   public static async connectRoadmapPlatform(
     accessToken: string,
     platformCode: string,
+    webReturnQuery?: string,
   ): Promise<{
     oauth: {
       implementationStatus: string;
@@ -635,6 +640,9 @@ export class SocialHubApiClient {
   }> {
     return socialHubFetch(accessToken, `/roadmap/${platformCode}/connect`, {
       method: "POST",
+      body: webReturnQuery
+        ? JSON.stringify({ webReturnQuery })
+        : undefined,
     });
   }
 

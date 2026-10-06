@@ -10,14 +10,25 @@ import {
   shortCompanyId,
 } from "../../lib/messagingPageHelpers";
 import type { MessagingChatController } from "../../hooks/useMessagingChatController";
+import { MessagingRealtimeStatusBadge } from "./MessagingRealtimeStatusBadge";
 
 type Props = {
   chat: MessagingChatController;
   locale: string;
   accessToken: string;
+  socialDmInboxOnly?: boolean;
+  groupInboxOnly?: boolean;
+  highlightWhatsappBridge?: boolean;
 };
 
-export function MessagingThreadSidebar({ chat, locale, accessToken }: Props) {
+export function MessagingThreadSidebar({
+  chat,
+  locale,
+  accessToken,
+  socialDmInboxOnly = false,
+  groupInboxOnly = false,
+  highlightWhatsappBridge = false,
+}: Props) {
   const {
     filteredThreads,
     threads,
@@ -38,9 +49,11 @@ export function MessagingThreadSidebar({ chat, locale, accessToken }: Props) {
     setMobileThreadOpen,
     isCompanyOwner,
     channelSettingsOpen,
+    setChannelSettingsOpen,
     setGroupModalOpen,
     setGroupSearchQuery,
     setGroupSearchHits,
+    realtimeTransport,
   } = chat;
   return (
           <aside
@@ -49,12 +62,30 @@ export function MessagingThreadSidebar({ chat, locale, accessToken }: Props) {
           >
             <div className="chat-sidebar-header">
               <div className="chat-sidebar-heading">
-                <h2 className="chat-sidebar-title">Sohbetler</h2>
+                <h2 className="chat-sidebar-title">
+                  {socialDmInboxOnly
+                    ? "Sosyal DM"
+                    : groupInboxOnly
+                      ? "Grup sohbetleri"
+                      : "Sohbetler"}
+                </h2>
                 <p className="chat-sidebar-subtitle">
-                  {filteredThreads.length > 0
-                    ? `${filteredThreads.length} konuşma`
-                    : "Firma mesajları"}
+                  {socialDmInboxOnly
+                    ? filteredThreads.length > 0
+                      ? `${filteredThreads.length} kanal konuşması`
+                      : "Instagram · WhatsApp · Telegram…"
+                    : groupInboxOnly
+                      ? filteredThreads.length > 0
+                        ? `${filteredThreads.length} grup`
+                        : "3+ firma · rol atamalı"
+                      : filteredThreads.length > 0
+                        ? `${filteredThreads.length} konuşma`
+                        : "Firma mesajları"}
                 </p>
+                <MessagingRealtimeStatusBadge
+                  transport={realtimeTransport}
+                  className="chat-sidebar-realtime"
+                />
               </div>
               <button
                 type="button"
@@ -71,6 +102,21 @@ export function MessagingThreadSidebar({ chat, locale, accessToken }: Props) {
                 <IconUsers size={16} />
                 <span>Grup</span>
               </button>
+              {highlightWhatsappBridge && isCompanyOwner ? (
+                <button
+                  type="button"
+                  className={
+                    channelSettingsOpen
+                      ? "chat-sidebar-wa-bridge chat-sidebar-wa-bridge--active"
+                      : "chat-sidebar-wa-bridge"
+                  }
+                  title="WhatsApp FS-12 bildirim köprüsü"
+                  aria-expanded={channelSettingsOpen}
+                  onClick={() => setChannelSettingsOpen((open) => !open)}
+                >
+                  WA
+                </button>
+              ) : null}
             </div>
             <div className="chat-unified-search">
               <IconSearch className="chat-unified-search-icon" />
@@ -202,9 +248,17 @@ export function MessagingThreadSidebar({ chat, locale, accessToken }: Props) {
             {filteredThreads.length === 0 ? (
               <EmptyState
                 message={
-                  threads.length === 0
-                    ? "Henüz sohbet yok. Üstte firma adı ile yeni sohbet açın."
-                    : "Aramanızla eşleşen sohbet yok."
+                  socialDmInboxOnly
+                    ? threads.length === 0
+                      ? "Henüz sosyal DM yok. «Sosyal medya» sekmesinden kanal bağlayın; gelen mesajlar burada listelenir."
+                      : "Aramanızla eşleşen sosyal konuşma yok."
+                    : groupInboxOnly
+                      ? threads.length === 0
+                        ? "Henüz grup sohbeti yok. «Grup» ile en az iki firma seçip rol atayın."
+                        : "Aramanızla eşleşen grup yok."
+                    : threads.length === 0
+                      ? "Henüz sohbet yok. Üstte firma adı ile yeni sohbet açın."
+                      : "Aramanızla eşleşen sohbet yok."
                 }
               />
             ) : (

@@ -13,6 +13,7 @@ import {
   type MailImapSettings,
 } from "@/lib/mailApi";
 import { MailDeliverabilityPanel } from "./MailDeliverabilityPanel";
+import { MailOpsSnapshotPanel } from "./MailOpsSnapshotPanel";
 import { MailImapClientSetup } from "./MailImapClientSetup";
 import { MailComposePresetsPanel } from "./MailComposePresetsPanel";
 import { MailAccountsSettingsPanel } from "./MailAccountsSettingsPanel";
@@ -44,7 +45,7 @@ import {
   type MailTheme,
 } from "@/lib/mailTheme";
 
-type SettingsView =
+export type SettingsView =
   | "hub"
   | "accounts"
   | "display"
@@ -59,7 +60,8 @@ type SettingsView =
   | "deliverability"
   | "calendarSettings"
   | "contactsSettings"
-  | "help";
+  | "help"
+  | "ops";
 
 type HubItem = {
   id: SettingsView;
@@ -128,6 +130,13 @@ const HUB_ITEMS: HubItem[] = [
     keywords: "spf dkim dmarc bounce deliverability",
   },
   {
+    id: "ops",
+    section: "general",
+    label: "Ops snapshot",
+    subtitle: "Runbook ve smoke referansları",
+    keywords: "ops runbook smoke snapshot imap",
+  },
+  {
     id: "rules",
     section: "general",
     label: "Posta kuralları",
@@ -177,6 +186,11 @@ type Props = {
   onOpenCalendar?: () => void;
   onOpenContacts?: () => void;
   onInboxListDensityChange?: (density: MailInboxListDensity) => void;
+  initialView?: SettingsView;
+  deliverabilityDmarcFocus?: boolean;
+  notificationsPwaFocus?: boolean;
+  deliverabilityEngagementFocus?: boolean;
+  mailOpsRunbookFocus?: boolean;
 };
 
 export function MailSettingsPanel({
@@ -185,8 +199,13 @@ export function MailSettingsPanel({
   onOpenCalendar,
   onOpenContacts,
   onInboxListDensityChange,
+  initialView,
+  deliverabilityDmarcFocus = false,
+  notificationsPwaFocus = false,
+  deliverabilityEngagementFocus = false,
+  mailOpsRunbookFocus = false,
 }: Props) {
-  const [view, setView] = useState<SettingsView>("hub");
+  const [view, setView] = useState<SettingsView>(initialView ?? "hub");
   const [query, setQuery] = useState("");
   const [theme, setTheme] = useState<MailTheme>("light");
   const [pushStatus, setPushStatus] = useState("");
@@ -223,6 +242,12 @@ export function MailSettingsPanel({
   const [newPassword, setNewPassword] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [copyHint, setCopyHint] = useState("");
+
+  useEffect(() => {
+    if (initialView) {
+      setView(initialView);
+    }
+  }, [initialView]);
 
   useEffect(() => {
     setTheme(initMailTheme());
@@ -746,6 +771,18 @@ export function MailSettingsPanel({
       content = renderDetail(
         "Bildirimler ve sesler",
         <>
+          {notificationsPwaFocus ? (
+            <p
+              id="mail-pwa-offline-push"
+              className="mail-parity-assist-banner"
+              role="status"
+            >
+              PWA: <code>/manifest.webmanifest</code> ve{" "}
+              <code>sw.js</code> ile ana ekrana ekleyebilirsiniz. Çevrimdışı
+              modda gelen kutusu önbelleği salt okunur gösterilir; Web Push için
+              alttaki <strong>Bildirimleri aç</strong> düğmesini kullanın.
+            </p>
+          ) : null}
           <p className="mail-settings-lead">
             Yeni gelen posta için tarayıcı bildirimi (Web Push). HTTPS ve izin
             gerekir.
@@ -1127,10 +1164,23 @@ export function MailSettingsPanel({
         </>,
       );
       break;
+    case "ops":
+      content = renderDetail(
+        "Ops snapshot ve runbook",
+        <MailOpsSnapshotPanel
+          accessToken={accessToken}
+          highlightRunbook={mailOpsRunbookFocus}
+        />,
+      );
+      break;
     case "deliverability":
       content = renderDetail(
         "Teslimat ve itibar",
-        <MailDeliverabilityPanel accessToken={accessToken} />,
+        <MailDeliverabilityPanel
+          accessToken={accessToken}
+          highlightDmarc={deliverabilityDmarcFocus}
+          highlightEngagement={deliverabilityEngagementFocus}
+        />,
       );
       break;
     case "rules":
@@ -1223,6 +1273,10 @@ function settingsRowIcon(id: SettingsView): string {
       return "🛡️";
     case "help":
       return "❓";
+    case "ops":
+      return "📋";
+    case "deliverability":
+      return "📈";
     default:
       return "•";
   }

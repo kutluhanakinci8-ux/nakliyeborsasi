@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   SocialAnalyticsPanel,
   SocialConnectionsPanel,
@@ -25,6 +25,12 @@ import {
   startOfMonth,
 } from "../../../../lib/socialHubCalendar";
 import { formatSocialHubOAuthReason } from "../../../../lib/formatSocialHubOAuthReason";
+import {
+  parseEkolojikBetaPlatformHighlight,
+  readEkolojikAnalyticsUtmHighlight,
+  readEkolojikPublishingUtmFromSearchParams,
+  type EkolojikSocialBetaPlatformCode,
+} from "../../../../lib/ekolojikSocialHubDeepLink";
 import { runSocialHubHealthPushHookSkeleton } from "../../../../lib/socialHubHealthPushHook";
 import type {
   SocialHubAnalytics,
@@ -38,10 +44,70 @@ import type {
   SocialHubInboxThreadPreview,
 } from "../../../../lib/socialHubTypes";
 
-export function SocialHubPageClient() {
+const SOCIAL_HUB_TAB_IDS: SocialHubTabId[] = [
+  "connections",
+  "health",
+  "inbox",
+  "publishing",
+  "templates",
+  "analytics",
+  "team",
+];
+
+function parseSocialHubTab(raw: string | null): SocialHubTabId {
+  if (raw && SOCIAL_HUB_TAB_IDS.includes(raw as SocialHubTabId)) {
+    return raw as SocialHubTabId;
+  }
+  return "connections";
+}
+
+type SocialHubPageClientProps = {
+  /** Ekolojik hub: `/marketim/posta-ve-mesaj?bolum=sosyal-dm` */
+  messagingInboxHref?: string;
+  threadMessagingHref?: (threadId: string) => string;
+  /** Ekolojik: `/marketim/posta-ve-mesaj` — sekme ve OAuth geri dönüşü için. */
+  hubBasePath?: string;
+  syncTabsToUrl?: boolean;
+  oauthWebReturnQuery?: string;
+  /** Ekolojik hub: `utm_*` query ile yayın taslağı UTM alanlarını doldur. */
+  prefillPublishingUtmFromUrl?: boolean;
+  /** Ekolojik hub: `templateId` query ile şablon editörünü doldur. */
+  prefillTemplateFromUrl?: boolean;
+  /** Ekolojik hub: analitikte `utm_campaign` satırını vurgula. */
+  highlightAnalyticsUtmFromUrl?: boolean;
+  /** Ekolojik hub: `platform=TELEGRAM` + `telegram=` sihirbaz deep link. */
+  openTelegramDeepLinkFromUrl?: boolean;
+  /** Ekolojik hub: `integration_gate=1` ile kapı checklist. */
+  openIntegrationGateFromUrl?: boolean;
+  /** Ekolojik hub: `platform=TIKTOK|YOUTUBE` bağlantı kartı vurgusu. */
+  openBetaPlatformDeepLinkFromUrl?: boolean;
+  /** Ekolojik hub: `tab=health&pwa=1` PWA / push hook bölümü. */
+  openPwaHealthFromUrl?: boolean;
+  /** Ekolojik hub: `tab=publishing&telegram_ads=1` Telegram Ads v2 kapı + UTM. */
+  openTelegramAdsFromUrl?: boolean;
+};
+
+export function SocialHubPageClient({
+  messagingInboxHref,
+  threadMessagingHref,
+  hubBasePath,
+  syncTabsToUrl = false,
+  oauthWebReturnQuery,
+  prefillPublishingUtmFromUrl = false,
+  prefillTemplateFromUrl = false,
+  highlightAnalyticsUtmFromUrl = false,
+  openTelegramDeepLinkFromUrl = false,
+  openIntegrationGateFromUrl = false,
+  openBetaPlatformDeepLinkFromUrl = false,
+  openPwaHealthFromUrl = false,
+  openTelegramAdsFromUrl = false,
+}: SocialHubPageClientProps = {}) {
   const { accessToken, session } = useWebSession();
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState<SocialHubTabId>("connections");
+  const [activeTab, setActiveTab] = useState<SocialHubTabId>(() =>
+    syncTabsToUrl ? parseSocialHubTab(searchParams.get("tab")) : "connections",
+  );
   const [snapshot, setSnapshot] = useState<SocialHubSnapshot | null>(null);
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
@@ -73,12 +139,21 @@ export function SocialHubPageClient() {
   const [auditFocus, setAuditFocus] = useState<"all" | "webhook">("all");
   const [analytics, setAnalytics] = useState<SocialHubAnalytics | null>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [analyticsUtmHighlight, setAnalyticsUtmHighlight] = useState<
+    string | null
+  >(null);
   const [telegramConnectOpen, setTelegramConnectOpen] = useState(false);
   const [telegramTokenDraft, setTelegramTokenDraft] = useState("");
   const [telegramChannelOpen, setTelegramChannelOpen] = useState(false);
   const [telegramChannelDraft, setTelegramChannelDraft] = useState("");
   const [telegramDiscussionOpen, setTelegramDiscussionOpen] = useState(false);
   const [telegramDiscussionDraft, setTelegramDiscussionDraft] = useState("");
+  const [integrationGateExpanded, setIntegrationGateExpanded] = useState(false);
+  const [connectionsPlatformHighlight, setConnectionsPlatformHighlight] =
+    useState<EkolojikSocialBetaPlatformCode | null>(null);
+  const [pwaSectionExpanded, setPwaSectionExpanded] = useState(false);
+  const [telegramAdsSectionExpanded, setTelegramAdsSectionExpanded] =
+    useState(false);
   const [inboxThreadsPreview, setInboxThreadsPreview] = useState<
     SocialHubInboxThreadPreview[]
   >([]);
@@ -128,6 +203,208 @@ export function SocialHubPageClient() {
     setSnapshot(hub);
     setSubscriptionBlocked(false);
   }, [accessToken]);
+
+  useEffect(() => {
+    if (!syncTabsToUrl) {
+      return;
+    }
+    setActiveTab(parseSocialHubTab(searchParams.get("tab")));
+  }, [searchParams, syncTabsToUrl]);
+
+  useEffect(() => {
+    if (!prefillPublishingUtmFromUrl) {
+      return;
+    }
+    if (parseSocialHubTab(searchParams.get("tab")) !== "publishing") {
+      return;
+    }
+    const utm = readEkolojikPublishingUtmFromSearchParams(
+      new URLSearchParams(searchParams.toString()),
+    );
+    if (utm.utmCampaign) {
+      setDraftUtmCampaign(utm.utmCampaign);
+    }
+    if (utm.utmSource) {
+      setDraftUtmSource(utm.utmSource);
+    }
+    if (utm.utmMedium) {
+      setDraftUtmMedium(utm.utmMedium);
+    }
+    if (utm.utmContent) {
+      setDraftUtmContent(utm.utmContent);
+    }
+  }, [searchParams, prefillPublishingUtmFromUrl]);
+
+  useEffect(() => {
+    if (!prefillTemplateFromUrl || !snapshot) {
+      return;
+    }
+    if (parseSocialHubTab(searchParams.get("tab")) !== "templates") {
+      return;
+    }
+    const templateId = searchParams.get("templateId")?.trim();
+    if (!templateId) {
+      return;
+    }
+    const row = snapshot.templates.find((t) => t.id === templateId);
+    if (!row) {
+      return;
+    }
+    setTemplateTitle(row.title);
+    setTemplateBody(row.bodyText);
+    setTemplateChannelScope(row.channelScopeCode ?? "");
+  }, [searchParams, prefillTemplateFromUrl, snapshot]);
+
+  useEffect(() => {
+    if (!highlightAnalyticsUtmFromUrl) {
+      setAnalyticsUtmHighlight(null);
+      return;
+    }
+    if (parseSocialHubTab(searchParams.get("tab")) !== "analytics") {
+      setAnalyticsUtmHighlight(null);
+      return;
+    }
+    setAnalyticsUtmHighlight(
+      readEkolojikAnalyticsUtmHighlight(
+        new URLSearchParams(searchParams.toString()),
+      ),
+    );
+  }, [searchParams, highlightAnalyticsUtmFromUrl]);
+
+  useEffect(() => {
+    if (!openTelegramDeepLinkFromUrl) {
+      return;
+    }
+    const platform = searchParams.get("platform")?.toUpperCase();
+    const telegram = searchParams.get("telegram")?.toLowerCase();
+    if (platform !== "TELEGRAM" && !telegram) {
+      return;
+    }
+    setActiveTab("connections");
+    if (telegram === "connect") {
+      setTelegramTokenDraft("");
+      setTelegramConnectOpen(true);
+    }
+  }, [searchParams, openTelegramDeepLinkFromUrl]);
+
+  useEffect(() => {
+    if (!openTelegramDeepLinkFromUrl || !snapshot) {
+      return;
+    }
+    const telegram = searchParams.get("telegram")?.toLowerCase();
+    if (telegram !== "channel" && telegram !== "discussion") {
+      return;
+    }
+    const tg = snapshot.connections?.find(
+      (c) => c.platformCode === "TELEGRAM",
+    );
+    if (telegram === "channel") {
+      setTelegramChannelDraft(
+        tg?.telegramPublishChannel?.username?.replace(/^@/, "") ?? "",
+      );
+      setTelegramChannelOpen(true);
+    } else {
+      setTelegramDiscussionDraft(tg?.telegramDiscussionGroup?.chatId ?? "");
+      setTelegramDiscussionOpen(true);
+    }
+  }, [searchParams, openTelegramDeepLinkFromUrl, snapshot]);
+
+  useEffect(() => {
+    if (!openIntegrationGateFromUrl) {
+      setIntegrationGateExpanded(false);
+      return;
+    }
+    const raw =
+      searchParams.get("integration_gate") ?? searchParams.get("gate");
+    if (raw === "1" || raw?.toLowerCase() === "true") {
+      setActiveTab("connections");
+      setIntegrationGateExpanded(true);
+    } else {
+      setIntegrationGateExpanded(false);
+    }
+  }, [searchParams, openIntegrationGateFromUrl]);
+
+  useEffect(() => {
+    if (!openBetaPlatformDeepLinkFromUrl) {
+      setConnectionsPlatformHighlight(null);
+      return;
+    }
+    const highlight = parseEkolojikBetaPlatformHighlight(
+      searchParams.get("platform"),
+    );
+    if (!highlight) {
+      setConnectionsPlatformHighlight(null);
+      return;
+    }
+    setActiveTab("connections");
+    setConnectionsPlatformHighlight(highlight);
+  }, [searchParams, openBetaPlatformDeepLinkFromUrl]);
+
+  useEffect(() => {
+    if (!openPwaHealthFromUrl) {
+      setPwaSectionExpanded(false);
+      return;
+    }
+    if (parseSocialHubTab(searchParams.get("tab")) !== "health") {
+      setPwaSectionExpanded(false);
+      return;
+    }
+    const raw = searchParams.get("pwa");
+    if (raw === "1" || raw?.toLowerCase() === "true") {
+      setActiveTab("health");
+      setPwaSectionExpanded(true);
+    } else {
+      setPwaSectionExpanded(false);
+    }
+  }, [searchParams, openPwaHealthFromUrl]);
+
+  useEffect(() => {
+    if (!openTelegramAdsFromUrl) {
+      setTelegramAdsSectionExpanded(false);
+      return;
+    }
+    if (parseSocialHubTab(searchParams.get("tab")) !== "publishing") {
+      setTelegramAdsSectionExpanded(false);
+      return;
+    }
+    const raw =
+      searchParams.get("telegram_ads") ?? searchParams.get("telegramAds");
+    if (raw === "1" || raw?.toLowerCase() === "true") {
+      setActiveTab("publishing");
+      setTelegramAdsSectionExpanded(true);
+      const utm = readEkolojikPublishingUtmFromSearchParams(
+        new URLSearchParams(searchParams.toString()),
+      );
+      if (utm.utmCampaign) {
+        setDraftUtmCampaign(utm.utmCampaign);
+      }
+      if (!utm.utmMedium) {
+        setDraftUtmMedium("telegram_channel");
+      }
+      if (!utm.utmSource) {
+        setDraftUtmSource("lerta");
+      }
+      setDraftPlatforms((current) =>
+        current.includes("TELEGRAM") ? current : [...current, "TELEGRAM"],
+      );
+    } else {
+      setTelegramAdsSectionExpanded(false);
+    }
+  }, [searchParams, openTelegramAdsFromUrl]);
+
+  const handleTabChange = useCallback(
+    (tab: SocialHubTabId) => {
+      setActiveTab(tab);
+      if (!syncTabsToUrl || !hubBasePath) {
+        return;
+      }
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("bolum", "sosyal");
+      params.set("tab", tab);
+      router.replace(`${hubBasePath}?${params.toString()}`, { scroll: false });
+    },
+    [hubBasePath, router, searchParams, syncTabsToUrl],
+  );
 
   useEffect(() => {
     const oauth = searchParams.get("oauth");
@@ -348,7 +625,7 @@ export function SocialHubPageClient() {
       <header className="social-hub-intro">
         <h2 className="social-hub-intro-title">Sosyal medya & kanallar</h2>
       </header>
-      <SocialHubSectionNav activeTab={activeTab} onTabChange={setActiveTab} />
+      <SocialHubSectionNav activeTab={activeTab} onTabChange={handleTabChange} />
         {error ? <p className="error banner error--light">{error}</p> : null}
         {status ? <p className="account-save-hint">{status}</p> : null}
         {!canAccess ? (
@@ -382,6 +659,7 @@ export function SocialHubPageClient() {
                     const result = await SocialHubApiClient.connectPlatform(
                       accessToken,
                       code,
+                      oauthWebReturnQuery,
                     );
                     if (result.oauth.authorizationUrl) {
                       window.location.href = result.oauth.authorizationUrl;
@@ -444,6 +722,7 @@ export function SocialHubPageClient() {
                     const result = await SocialHubApiClient.connectRoadmapPlatform(
                       accessToken,
                       code,
+                      oauthWebReturnQuery,
                     );
                     if (result.oauth.authorizationUrl) {
                       window.location.href = result.oauth.authorizationUrl;
@@ -483,6 +762,8 @@ export function SocialHubPageClient() {
                     await reload();
                   })
                 }
+                integrationGateExpanded={integrationGateExpanded}
+                highlightPlatformCode={connectionsPlatformHighlight}
               />
             ) : null}
             {activeTab === "health" ? (
@@ -693,6 +974,7 @@ export function SocialHubPageClient() {
                   })
                 }
                 pwa={snapshot.pwa}
+                pwaSectionExpanded={pwaSectionExpanded}
                 healthPushHookStatus={healthPushHookStatus}
                 onRefreshToken={(code) =>
                   void runAction(async () => {
@@ -719,6 +1001,8 @@ export function SocialHubPageClient() {
                 threadsPreview={inboxThreadsPreview}
                 threadsPreviewLoading={inboxPreviewLoading}
                 busy={busy}
+                messagingInboxHref={messagingInboxHref}
+                threadMessagingHref={threadMessagingHref}
                 canSeedDemo={snapshot.permissions.canManageConnections}
                 onSeedDemo={() =>
                   void runAction(async () => {
@@ -738,6 +1022,12 @@ export function SocialHubPageClient() {
                     );
                     setStatus(result.sync.message);
                     await reload();
+                    const preview =
+                      await SocialHubApiClient.fetchInboxThreadsPreview(
+                        accessToken,
+                        10,
+                      );
+                    setInboxThreadsPreview(preview);
                   })
                 }
               />
@@ -749,6 +1039,8 @@ export function SocialHubPageClient() {
                 ownerApprovalRequired={snapshot.settings.ownerApprovalRequired}
                 publishingEnabled={snapshot.settings.publishingEnabled}
                 integrationOpsHints={snapshot.integrationOpsHints}
+                telegramAdsGate={snapshot.telegramAdsGate}
+                telegramAdsSectionExpanded={telegramAdsSectionExpanded}
                 draftText={draftText}
                 draftPlatforms={draftPlatforms}
                 draftMedia={draftMedia}
@@ -947,6 +1239,7 @@ export function SocialHubPageClient() {
                 channelScope={templateChannelScope}
                 serverPreview={templateServerPreview}
                 messagingDeepLink={
+                  messagingInboxHref ??
                   snapshot.inboxSummary?.messagingDeepLink ??
                   "/messaging?tab=sohbet&filter=social"
                 }
@@ -990,6 +1283,7 @@ export function SocialHubPageClient() {
                 analytics={analytics}
                 loading={analyticsLoading}
                 busy={busy}
+                highlightUtmCampaign={analyticsUtmHighlight}
                 onExportAnalytics={() =>
                   void runAction(async () => {
                     await SocialHubApiClient.downloadAnalyticsExport(accessToken);

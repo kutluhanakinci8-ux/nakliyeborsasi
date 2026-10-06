@@ -16,6 +16,7 @@ import {
 } from "./socialHubModuleStatusFeatures";
 import { buildSocialHubPwaConfig } from "./socialHubPwaConfig";
 import { buildSocialHubIntegrationGate } from "./socialHubIntegrationGate";
+import { buildSocialHubTelegramAdsGate } from "./socialHubTelegramAdsGate";
 
 @Controller("company/social-hub")
 export class SocialHubModuleStatusController {
@@ -47,6 +48,7 @@ export class SocialHubModuleStatusController {
     phaseMilestones: string[];
     pwa: ReturnType<typeof buildSocialHubPwaConfig>;
     integrationGate: ReturnType<typeof buildSocialHubIntegrationGate>;
+    telegramAdsGate: ReturnType<typeof buildSocialHubTelegramAdsGate>;
   }> {
     const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const since7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
@@ -103,6 +105,7 @@ export class SocialHubModuleStatusController {
         inboundBridged24h: total24h,
         inboundBridged7d: total7d,
       }),
+      telegramAdsGate: buildSocialHubTelegramAdsGate(),
     };
   }
 }

@@ -31,12 +31,68 @@ function ConsumeHandoff() {
     }
     const search = new URLSearchParams(window.location.search);
     const composeTo = search.get("composeTo")?.trim();
+    const mailView = search.get("mailView")?.trim();
+    const customFolder = search.get("customFolder")?.trim();
+    const compose = search.get("compose")?.trim();
+    const composeRich = search.get("composeRich")?.trim();
+    const composeTemplate = search.get("composeTemplate")?.trim();
+    const composeMultipart = search.get("composeMultipart")?.trim();
+    const mailSettings = search.get("mailSettings")?.trim();
+    const mailBulk = search.get("mailBulk")?.trim();
+    const mailSwipe = search.get("mailSwipe")?.trim();
+    const mailDmarc = search.get("mailDmarc")?.trim();
+    const mailPwa = search.get("mailPwa")?.trim();
+    const composeAi = search.get("composeAi")?.trim();
+    const mailEngagement = search.get("mailEngagement")?.trim();
+    const mailOps = search.get("mailOps")?.trim();
     const query = new URLSearchParams();
     if (fromAddress) {
       query.set("welcome", fromAddress);
     }
     if (composeTo) {
       query.set("composeTo", composeTo);
+    }
+    if (mailView) {
+      query.set("mailView", mailView);
+    }
+    if (customFolder) {
+      query.set("customFolder", customFolder);
+    }
+    if (compose === "1") {
+      query.set("compose", "1");
+    }
+    if (composeRich === "1" || composeRich === "0") {
+      query.set("composeRich", composeRich);
+    }
+    if (composeTemplate) {
+      query.set("composeTemplate", composeTemplate);
+    }
+    if (composeMultipart === "1") {
+      query.set("composeMultipart", "1");
+    }
+    if (mailSettings) {
+      query.set("mailSettings", mailSettings);
+    }
+    if (mailBulk === "1") {
+      query.set("mailBulk", "1");
+    }
+    if (mailSwipe === "1") {
+      query.set("mailSwipe", "1");
+    }
+    if (mailDmarc === "1") {
+      query.set("mailDmarc", "1");
+    }
+    if (mailPwa === "1") {
+      query.set("mailPwa", "1");
+    }
+    if (composeAi === "1") {
+      query.set("composeAi", "1");
+    }
+    if (mailEngagement === "1") {
+      query.set("mailEngagement", "1");
+    }
+    if (mailOps === "1") {
+      query.set("mailOps", "1");
     }
     const qs = query.toString();
     router.replace(qs ? `/mail?${qs}` : "/mail");
