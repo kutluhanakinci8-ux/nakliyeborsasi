@@ -10,6 +10,7 @@ import {
   shortCompanyId,
 } from "../../lib/messagingPageHelpers";
 import type { MessagingChatController } from "../../hooks/useMessagingChatController";
+import { MessagingRealtimeStatusBadge } from "./MessagingRealtimeStatusBadge";
 
 type Props = {
   chat: MessagingChatController;
@@ -41,6 +42,7 @@ export function MessagingThreadSidebar({ chat, locale, accessToken }: Props) {
     setGroupModalOpen,
     setGroupSearchQuery,
     setGroupSearchHits,
+    realtimeTransport,
   } = chat;
   return (
           <aside
@@ -55,6 +57,10 @@ export function MessagingThreadSidebar({ chat, locale, accessToken }: Props) {
                     ? `${filteredThreads.length} konuşma`
                     : "Firma mesajları"}
                 </p>
+                <MessagingRealtimeStatusBadge
+                  transport={realtimeTransport}
+                  className="chat-sidebar-realtime"
+                />
               </div>
               <button
                 type="button"

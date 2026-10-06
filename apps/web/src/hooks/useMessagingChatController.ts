@@ -32,6 +32,9 @@ import type { AuthSessionRecord } from "../lib/SessionApiClient";
 
 export type MessagingChatController = ReturnType<typeof useMessagingChatController>;
 
+/** SSE stream vs polling fallback while chat mode is active. */
+export type MessagingRealtimeTransport = "sse" | "polling" | "idle";
+
 type Params = {
   accessToken: string;
   locale: string;
@@ -79,6 +82,8 @@ export function useMessagingChatController({
   const [quickReplies, setQuickReplies] = useState<MessagingQuickReplyRecord[]>(
     [],
   );
+  const [realtimeTransport, setRealtimeTransport] =
+    useState<MessagingRealtimeTransport>("idle");
   const [internalNote, setInternalNote] = useState(false);
   const [typingHint, setTypingHint] = useState("");
   const [colleagues, setColleagues] = useState<
@@ -957,8 +962,10 @@ export function useMessagingChatController({
 
   useEffect(() => {
     if (mode !== "chat" || !accessToken) {
+      setRealtimeTransport("idle");
       return;
     }
+    setRealtimeTransport("polling");
     let pollTimer: number | undefined;
     let reconnectTimer: number | undefined;
     let eventSource: EventSource | null = null;
@@ -987,6 +994,7 @@ export function useMessagingChatController({
       if (pollTimer !== undefined || sseConnected) {
         return;
       }
+      setRealtimeTransport("polling");
       pollTimer = window.setInterval(refreshFromServer, pollIntervalMs);
     }
 
@@ -1028,6 +1036,7 @@ export function useMessagingChatController({
             sseConnected = true;
             reconnectAttempt = 0;
             stopPolling();
+            setRealtimeTransport("sse");
           };
           eventSource.addEventListener("message", (event) => {
             try {
@@ -1064,6 +1073,7 @@ export function useMessagingChatController({
       if (reconnectTimer !== undefined) {
         window.clearTimeout(reconnectTimer);
       }
+      setRealtimeTransport("idle");
     };
   }, [mode, accessToken, locale, activeThreadId, loadMessages, loadThreads]);
 
@@ -1177,6 +1187,7 @@ export function useMessagingChatController({
     companyUuidFromSearch,
     showChatSearchPanel,
     totalUnread,
+    realtimeTransport,
     loadMessages,
     loadThreads,
     openThreadWithCounterparty,
