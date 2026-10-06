@@ -40,6 +40,27 @@ export function isEkolojikSocialHubPublishingTab(
   return isEkolojikSocialHubTab(bolum, tab, "publishing");
 }
 
+export function isEkolojikSocialHubTemplatesTab(
+  bolum: string | null,
+  tab: string | null,
+): boolean {
+  return isEkolojikSocialHubTab(bolum, tab, "templates");
+}
+
+export const EKOLOJIK_SOCIAL_HUB_TEMPLATES_QUERY =
+  "bolum=sosyal&tab=templates";
+
+export function ekolojikSocialHubTemplatesHref(templateId?: string): string {
+  const params = new URLSearchParams({
+    bolum: "sosyal",
+    tab: "templates",
+  });
+  if (templateId?.trim()) {
+    params.set("templateId", templateId.trim());
+  }
+  return `${EKOLOJIK_HUB_PATH}?${params.toString()}`;
+}
+
 export type EkolojikSocialPublishingUtm = {
   utmCampaign?: string;
   utmSource?: string;

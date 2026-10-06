@@ -66,6 +66,8 @@ type SocialHubPageClientProps = {
   oauthWebReturnQuery?: string;
   /** Ekolojik hub: `utm_*` query ile yayın taslağı UTM alanlarını doldur. */
   prefillPublishingUtmFromUrl?: boolean;
+  /** Ekolojik hub: `templateId` query ile şablon editörünü doldur. */
+  prefillTemplateFromUrl?: boolean;
 };
 
 export function SocialHubPageClient({
@@ -75,6 +77,7 @@ export function SocialHubPageClient({
   syncTabsToUrl = false,
   oauthWebReturnQuery,
   prefillPublishingUtmFromUrl = false,
+  prefillTemplateFromUrl = false,
 }: SocialHubPageClientProps = {}) {
   const { accessToken, session } = useWebSession();
   const router = useRouter();
@@ -199,6 +202,26 @@ export function SocialHubPageClient({
       setDraftUtmContent(utm.utmContent);
     }
   }, [searchParams, prefillPublishingUtmFromUrl]);
+
+  useEffect(() => {
+    if (!prefillTemplateFromUrl || !snapshot) {
+      return;
+    }
+    if (parseSocialHubTab(searchParams.get("tab")) !== "templates") {
+      return;
+    }
+    const templateId = searchParams.get("templateId")?.trim();
+    if (!templateId) {
+      return;
+    }
+    const row = snapshot.templates.find((t) => t.id === templateId);
+    if (!row) {
+      return;
+    }
+    setTemplateTitle(row.title);
+    setTemplateBody(row.bodyText);
+    setTemplateChannelScope(row.channelScopeCode ?? "");
+  }, [searchParams, prefillTemplateFromUrl, snapshot]);
 
   const handleTabChange = useCallback(
     (tab: SocialHubTabId) => {
