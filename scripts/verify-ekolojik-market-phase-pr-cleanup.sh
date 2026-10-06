@@ -19,8 +19,8 @@ test -f "${CONTROLLER}" || {
   exit 1
 }
 
-canonical="$(grep -o 'canonicalMergeBranch: "cursor/ekolojik-market-parity-ek-[^"]*"' "${CONTROLLER}" | head -1 | sed 's/.*"\(cursor\/[^"]*\)".*/\1/')"
-if [[ "${canonical}" != "cursor/ekolojik-market-parity-ek-roll-5925" ]]; then
+canonical="$(grep -o 'canonicalMergeBranch: "[^"]*"' "${CONTROLLER}" | head -1 | sed 's/.*"\([^"]*\)".*/\1/')"
+if [[ "${canonical}" != "main" && "${canonical}" != "cursor/ekolojik-market-parity-ek-roll-5925" ]]; then
   echo "FAIL: unexpected canonicalMergeBranch: ${canonical:-<empty>}" >&2
   exit 1
 fi

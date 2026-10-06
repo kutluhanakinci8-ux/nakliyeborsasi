@@ -437,6 +437,15 @@ echo "${status_json}" | grep -q 'verify-ekolojik-market-program-done.sh' || {
   exit 1
 }
 echo "OK: parityClose programDone manifest (EK-DONE)"
+echo "${status_json}" | grep -q '"canonicalMergeBranch":"main"' || {
+  echo "FAIL: ekolojikCi.canonicalMergeBranch not main"
+  exit 1
+}
+echo "${status_json}" | grep -q '"mergedCanonicalPullRequest":341' || {
+  echo "FAIL: missing mergedCanonicalPullRequest 341"
+  exit 1
+}
+echo "OK: ekolojikCi ship metadata (EK-SHIP)"
 echo "${status_json}" | grep -q '"phaseCode":"ek-u4"' || {
   echo "FAIL: missing parityClose phaseCode ek-u4"
   exit 1

@@ -308,6 +308,8 @@ export class EkolojikMarketStatusController {
       statusSourceVerifyScript: string;
       rollManifestVerifyScript: string;
       canonicalMergeBranch: string;
+      mergedCanonicalPullRequest: number;
+      shipChecklistScript: string;
       phasePrCleanupVerifyScript: string;
       phasePrCleanupDoc: string;
       phasePrCloseScript: string;
@@ -721,7 +723,9 @@ export class EkolojikMarketStatusController {
           "scripts/verify-ekolojik-market-status-source.sh",
         rollManifestVerifyScript:
           "scripts/verify-ekolojik-market-roll-manifest.sh",
-        canonicalMergeBranch: "cursor/ekolojik-market-parity-ek-roll-5925",
+        canonicalMergeBranch: "main",
+        mergedCanonicalPullRequest: 341,
+        shipChecklistScript: "scripts/run-ekolojik-market-ship-checklist.sh",
         phasePrCleanupVerifyScript:
           "scripts/verify-ekolojik-market-phase-pr-cleanup.sh",
         phasePrCleanupDoc: "docs/EKOLojIK_MARKET_PHASE_PR_CLEANUP.md",
@@ -892,9 +896,10 @@ export class EkolojikMarketStatusController {
           programComplete: true,
           verifyScript: "scripts/verify-ekolojik-market-program-done.sh",
           operatorSequence: [
-            "merge cursor/ekolojik-market-parity-ek-roll-5925 (or ek-close-5925) to main",
+            "merged PR #341 to main (EK-SHIP)",
             "deploy-production-vps.sh → run-ekolojik-market-post-deploy-gate.sh",
             "EK_CLOSE_STALE_PRS=1 run-ekolojik-market-close-stale-phase-prs.sh",
+            "close duplicate open PRs #337–#340 if still open",
             "workflow_dispatch ekolojik-market-parity optional ek_u4_full",
           ],
         },

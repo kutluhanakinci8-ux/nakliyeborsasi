@@ -1,6 +1,6 @@
 # Ekolojik Market — faz PR temizliği (EK-CLEAN)
 
-Canonical merge: **`cursor/ekolojik-market-parity-ek-roll-5925`** veya **`cursor/ekolojik-market-parity-ek-live-5925`** (aynı ağaç; PR **#337** / **#338**).
+Canonical merge: **`main`** (PR **#341** merged). Eski dal PR’ları **#337–#340** kapatılabilir.
 
 Rollup merge edildikten sonra aşağıdaki **draft/open faz PR’ları** kapatılabilir (içerik canonical dalda).
 

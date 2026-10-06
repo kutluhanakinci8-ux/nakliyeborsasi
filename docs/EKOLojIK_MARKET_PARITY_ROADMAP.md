@@ -141,6 +141,13 @@ Detay: kullanıcı onayı sonrası `docs/LERTA_MAIL_MESSAGING_PARITY_100_ROADMAP
 - Rubrik (`GET /public/ekolojik-market/status` → `parityClose`): posta **96%** / mesaj **96%** (eşik ≥95%), sosyal **BC** entegrasyon kapısı checklist
 - Kapanış smoke: `EKOLOJIK_SMOKE_EXPECT_PHASE=ek-u4` (varsayılan); geliştirme doğrulama için `ek-p11` geçici kullanılabilir
 
+## EK-SHIP — Main merge sonrası (●)
+
+- **Merged:** PR **#341** → `main`
+- `scripts/run-ekolojik-market-ship-checklist.sh` — program-done + operatör notları
+- Public status: `ekolojikCi.mergedCanonicalPullRequest`, `canonicalMergeBranch: main`
+- **Sıradaki:** VPS deploy → EK-LIVE prod gate
+
 ## EK-DONE — Program kapanış (●)
 
 - Tüm kod fazları (EK-0…EK-U4) + ops (OPS → ROLL → LIVE → CLEAN → CLOSE) tanımlandı
