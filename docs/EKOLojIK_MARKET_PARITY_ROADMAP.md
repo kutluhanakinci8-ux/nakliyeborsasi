@@ -106,6 +106,13 @@ Detay: kullanıcı onayı sonrası `docs/LERTA_MAIL_MESSAGING_PARITY_100_ROADMAP
 - Eski faz PR’ları (#303–#336) bu dal merge edildikten sonra kapatılabilir
 - Merge sonrası: `main` push → CI build + prod smoke; deploy → `run-ekolojik-market-parity-close-checklist.sh`
 
+## EK-LIVE — Deploy sonrası prod kapı (●)
+
+- `scripts/run-ekolojik-market-post-deploy-gate.sh` — prod smoke + EK-U4 close (`EK_LIVE_SKIP_CLOSE=1` ile sadece smoke)
+- `.github/workflows/deploy-vps.yml` job **`ekolojik-post-deploy`** (deploy başarılı → `app.lerta.com.tr` doğrulama)
+- `workflow_dispatch`: `skip_ekolojik_post_deploy` (acil deploy)
+- Public status `parityClose.postDeployGateScript`
+
 ## EK-FULL — NB paylaşılan tam kapı (●)
 
 - `parityClose.fullGateEnvVar`: **`EK_U4_FULL`**

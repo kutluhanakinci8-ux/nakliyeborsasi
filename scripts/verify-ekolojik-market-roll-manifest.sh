@@ -24,7 +24,8 @@ for path in \
   apps/web/src/lib/productShellProfile.ts \
   apps/api/src/modules/ekolojik-market/EkolojikMarketStatusController.ts \
   .github/workflows/ekolojik-market-parity.yml \
-  docs/EKOLojIK_MARKET_PARITY_ROADMAP.md; do
+  docs/EKOLojIK_MARKET_PARITY_ROADMAP.md \
+  scripts/run-ekolojik-market-post-deploy-gate.sh; do
   test -f "${ROOT}/${path}" || {
     echo "FAIL: missing ${path}" >&2
     exit 1
@@ -54,6 +55,10 @@ grep -q "verify-ekolojik-market-roll-manifest.sh" "${ROOT}/docs/EKOLojIK_MARKET_
   echo "FAIL: roadmap missing roll manifest script ref" >&2
   exit 1
 }
-echo "OK: roadmap EK-ROLL"
+grep -q "EK-LIVE" "${ROOT}/docs/EKOLojIK_MARKET_PARITY_ROADMAP.md" || {
+  echo "FAIL: roadmap missing EK-LIVE section" >&2
+  exit 1
+}
+echo "OK: roadmap EK-ROLL + EK-LIVE"
 
 echo "verify-ekolojik-market-roll-manifest: PASS"

@@ -92,6 +92,10 @@ if "rollManifestVerifyScript" not in text:
     sys.exit("FAIL: ekolojikCi.rollManifestVerifyScript not declared")
 if "verify-ekolojik-market-roll-manifest.sh" not in text:
     sys.exit("FAIL: roll manifest script path not in controller")
+if "postDeployGateScript" not in text:
+    sys.exit("FAIL: parityClose.postDeployGateScript not declared")
+if "run-ekolojik-market-post-deploy-gate.sh" not in text:
+    sys.exit("FAIL: post-deploy gate script path not in controller")
 
 print(f"OK: EK_FEATURES count={len(features)}")
 PY
