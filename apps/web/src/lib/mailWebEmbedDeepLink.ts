@@ -2,10 +2,12 @@
 export type MailWebEmbedView =
   | "inbox"
   | "sent"
+  | "all"
   | "archive"
   | "spam"
   | "trash"
   | "starred"
+  | "snoozed"
   | "drafts"
   | "calendar"
   | "contacts";
@@ -37,6 +39,8 @@ export type MailWebEmbedHandoff = {
   mailEngagementAssist?: boolean;
   /** Ops snapshot + runbook paneli (EK-P11). */
   mailOpsAssist?: boolean;
+  /** Tek mesaj deep link (`mail-web` ?message=). */
+  messageId?: string;
 };
 
 export function parseMailWebEmbedView(
@@ -49,10 +53,12 @@ export function parseMailWebEmbedView(
   const allowed: MailWebEmbedView[] = [
     "inbox",
     "sent",
+    "all",
     "archive",
     "spam",
     "trash",
     "starred",
+    "snoozed",
     "drafts",
     "calendar",
     "contacts",

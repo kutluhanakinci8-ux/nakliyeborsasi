@@ -68,6 +68,10 @@ export function buildMailWebSsoHandoffUrl(
   if (options?.customFolder?.trim()) {
     params.set("customFolder", options.customFolder.trim());
   }
+  const messageId = options?.messageId?.trim();
+  if (messageId) {
+    params.set("message", messageId);
+  }
   const qs = params.toString();
   return `${base}/auth/consume${qs ? `?${qs}` : ""}#access_token=${encodeURIComponent(accessToken)}`;
 }

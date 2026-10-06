@@ -45,6 +45,7 @@ function ConsumeHandoff() {
     const composeAi = search.get("composeAi")?.trim();
     const mailEngagement = search.get("mailEngagement")?.trim();
     const mailOps = search.get("mailOps")?.trim();
+    const message = search.get("message")?.trim();
     const query = new URLSearchParams();
     if (fromAddress) {
       query.set("welcome", fromAddress);
@@ -93,6 +94,9 @@ function ConsumeHandoff() {
     }
     if (mailOps === "1") {
       query.set("mailOps", "1");
+    }
+    if (message) {
+      query.set("message", message);
     }
     const qs = query.toString();
     router.replace(qs ? `/mail?${qs}` : "/mail");

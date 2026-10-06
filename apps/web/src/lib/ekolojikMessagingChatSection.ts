@@ -31,10 +31,36 @@ export function isEkolojikGroupInbox(
   );
 }
 
+const EKOLOJIK_MAIL_EMBED_QUERY_KEYS = [
+  "compose",
+  "composeTo",
+  "composeRich",
+  "composeTemplate",
+  "composeMultipart",
+  "composeAi",
+  "mailSettings",
+  "mailBulk",
+  "mailSwipe",
+  "mailDmarc",
+  "mailPwa",
+  "mailEngagement",
+  "mailOps",
+  "mailView",
+  "customFolder",
+  "message",
+] as const;
+
+export function clearEkolojikMailEmbedQueryParams(params: URLSearchParams): void {
+  for (const key of EKOLOJIK_MAIL_EMBED_QUERY_KEYS) {
+    params.delete(key);
+  }
+}
+
 export function applyEkolojikSectionQueryParams(
   params: URLSearchParams,
   next: EkolojikHubSection,
 ): void {
+  clearEkolojikMailEmbedQueryParams(params);
   params.set("bolum", next);
   if (next === "sosyal-dm") {
     params.set("filter", "social");
