@@ -1,7 +1,7 @@
 import { Controller, Get } from "@nestjs/common";
 import { MessagingAttachmentStorageService } from "../messaging/MessagingAttachmentStorageService";
 
-const EK_PHASE = "ek-m9";
+const EK_PHASE = "ek-m10";
 
 const EK_SOCIAL_DM_PLATFORMS = [
   "INSTAGRAM",
@@ -25,6 +25,7 @@ const EK_FEATURES = [
   "ekolojik_messaging_public_api_slack_zapier",
   "ekolojik_messaging_group_threads_roles",
   "ekolojik_messaging_push_translate_notify_matrix",
+  "ekolojik_messaging_kvkk_export_retention",
   "ekolojik_social_hub_embed",
   "ekolojik_ci_workflow_ek_0",
 ] as const;
@@ -43,6 +44,7 @@ const EK_PHASE_MILESTONES = [
   "ek-m7",
   "ek-m8",
   "ek-m9",
+  "ek-m10",
   "ek-s1",
   "ek-u4",
 ] as const;
@@ -100,6 +102,13 @@ export class EkolojikMarketStatusController {
       hubPath: string;
       matrixApiPath: string;
       pushSubscribePath: string;
+      nbStatusFeatures: string[];
+    };
+    messagingKvkkRetention: {
+      hubSection: string;
+      hubPath: string;
+      exportApiPath: string;
+      retentionApiPath: string;
       nbStatusFeatures: string[];
     };
   } {
@@ -179,6 +188,18 @@ export class EkolojikMarketStatusController {
           "translate_api",
           "notification_matrix_messaging",
           "notify_push_messaging_chat",
+        ],
+      },
+      messagingKvkkRetention: {
+        hubSection: "kvkk",
+        hubPath: "/marketim/posta-ve-mesaj?bolum=kvkk",
+        exportApiPath: "/api/v1/messaging/export",
+        retentionApiPath: "/api/v1/messaging/integration/retention",
+        nbStatusFeatures: [
+          "company_export",
+          "retention_policy_job",
+          "thread_legal_hold",
+          "ediscovery_zip_sha256",
         ],
       },
     };

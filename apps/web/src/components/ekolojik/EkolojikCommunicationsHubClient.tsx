@@ -14,6 +14,8 @@ import { MessagingAutomationCatalogPanel } from "../messaging/MessagingAutomatio
 import { IntegrationsMessagingHubPanel } from "../integrations/IntegrationsMessagingHubPanel";
 import { ekolojikMessagingChannelSettingsHref } from "../../lib/ekolojikIntegrationsDeepLink";
 import { MessagingChatNotificationsPanel } from "../messaging/MessagingChatNotificationsPanel";
+import { MessagingKvkkRetentionPanel } from "../messaging/MessagingKvkkRetentionPanel";
+import { EKOLOJIK_KVKK_HUB_PATH } from "../../lib/ekolojikKvkkDeepLink";
 import { useWebSession } from "../../context/WebSessionProvider";
 import { useMessagingChatController } from "../../hooks/useMessagingChatController";
 import { ekolojikSectionToMailHandoff } from "../../lib/ekolojikMailSectionHandoff";
@@ -261,6 +263,17 @@ export function EkolojikCommunicationsHubClient() {
           <button
             type="button"
             className={
+              section === "kvkk"
+                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
+                : "ekolojik-comms-sidebar-item"
+            }
+            onClick={() => navigateSection("kvkk")}
+          >
+            KVKK &amp; saklama
+          </button>
+          <button
+            type="button"
+            className={
               section === "sosyal"
                 ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
                 : "ekolojik-comms-sidebar-item"
@@ -303,6 +316,15 @@ export function EkolojikCommunicationsHubClient() {
           {folderHint ? (
             <p className="module-hint ekolojik-comms-folder-hint">{folderHint}</p>
           ) : null}
+          {section === "kvkk" ? (
+            <div className="ekolojik-comms-kvkk-wrap">
+              <MessagingKvkkRetentionPanel
+                accessToken={accessToken}
+                locale={locale}
+                isCompanyOwner={isCompanyOwner}
+              />
+            </div>
+          ) : null}
           {section === "bildirimler" ? (
             <div className="ekolojik-comms-notifications-wrap">
               <MessagingChatNotificationsPanel accessToken={accessToken} />
@@ -336,7 +358,10 @@ export function EkolojikCommunicationsHubClient() {
           ) : null}
           {showMessagingChat ? (
             <>
-              <MessagingChatComplianceStrip chat={chat} />
+              <MessagingChatComplianceStrip
+                chat={chat}
+                kvkkHubHref={EKOLOJIK_KVKK_HUB_PATH}
+              />
               <MessagingWhatsappBridgeHubCard
                 accessToken={accessToken}
                 isCompanyOwner={isCompanyOwner}

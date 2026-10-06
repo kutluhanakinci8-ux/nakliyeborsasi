@@ -6,10 +6,11 @@ import type { MessagingChatController } from "../../hooks/useMessagingChatContro
 
 type Props = {
   chat: MessagingChatController;
+  kvkkHubHref?: string;
 };
 
 /** EK-M4: ek limitleri, legal hold uyarısı, şirket sahibi KVKK dışa aktarma. */
-export function MessagingChatComplianceStrip({ chat }: Props) {
+export function MessagingChatComplianceStrip({ chat, kvkkHubHref }: Props) {
   const { activeThread, isCompanyOwner, isBusy, handleExportArchive } = chat;
   const legalHold = Boolean(activeThread?.legalHoldAt);
 
@@ -33,15 +34,22 @@ export function MessagingChatComplianceStrip({ chat }: Props) {
         </p>
       ) : null}
       {isCompanyOwner ? (
-        <button
-          type="button"
-          className="messaging-chat-compliance-export"
-          disabled={isBusy}
-          onClick={() => void handleExportArchive()}
-        >
-          <IconDownload size={16} aria-hidden />
-          KVKK şirket arşivi (JSON)
-        </button>
+        kvkkHubHref ? (
+          <a className="messaging-chat-compliance-export" href={kvkkHubHref}>
+            <IconDownload size={16} aria-hidden />
+            KVKK &amp; saklama
+          </a>
+        ) : (
+          <button
+            type="button"
+            className="messaging-chat-compliance-export"
+            disabled={isBusy}
+            onClick={() => void handleExportArchive()}
+          >
+            <IconDownload size={16} aria-hidden />
+            KVKK şirket arşivi (JSON)
+          </button>
+        )
       ) : null}
     </div>
   );

@@ -3,7 +3,7 @@
 set -euo pipefail
 API_BASE="${EKOLojIK_API_BASE:-${SOCIAL_HUB_API_BASE:-http://127.0.0.1:3000/api/v1}}"
 WEB_BASE="${EKOLojIK_WEB_PUBLIC_URL:-${SOCIAL_HUB_WEB_PUBLIC_URL:-http://127.0.0.1:3001}}"
-EXPECT_PHASE="${EKOLOJIK_SMOKE_EXPECT_PHASE:-ek-m9}"
+EXPECT_PHASE="${EKOLOJIK_SMOKE_EXPECT_PHASE:-ek-m10}"
 
 echo "== Ekolojik market public status =="
 status_json="$(curl -fsS "${API_BASE}/public/ekolojik-market/status")"
@@ -108,6 +108,16 @@ echo "${status_json}" | grep -q '"hubSection":"bildirimler"' || {
   exit 1
 }
 echo "OK: messagingNotifications hub"
+echo "${status_json}" | grep -q '"ekolojik_messaging_kvkk_export_retention"' || {
+  echo "FAIL: missing ekolojik_messaging_kvkk_export_retention"
+  exit 1
+}
+echo "OK: feature ekolojik_messaging_kvkk_export_retention (EK-M10)"
+echo "${status_json}" | grep -q '"hubSection":"kvkk"' || {
+  echo "FAIL: missing messagingKvkkRetention hubSection"
+  exit 1
+}
+echo "OK: messagingKvkkRetention hub"
 
 echo "== Ekolojik hub web route =="
 code="$(curl -sS -o /dev/null -w "%{http_code}" "${WEB_BASE}/marketim/posta-ve-mesaj")"

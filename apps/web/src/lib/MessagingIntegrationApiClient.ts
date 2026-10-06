@@ -20,10 +20,16 @@ export type MessagingWebhookSnapshot = {
   events: string[];
 };
 
+export type MessagingRetentionSnapshot = {
+  retentionDays: number | null;
+  retentionMode: "archive" | "delete";
+};
+
 export type MessagingIntegrationSnapshot = {
   companyId: string;
   webhooks: MessagingWebhookSnapshot[];
   availableWebhookEvents: string[];
+  retention: MessagingRetentionSnapshot;
   slackBridge: { enabled: boolean; configured: boolean };
   whatsappBridge: MessagingWhatsappBridgeSnapshot;
   publicApiBasePath: string;
@@ -111,5 +117,22 @@ export class MessagingIntegrationApiClient {
       accessToken,
       "/messaging/integration/automation-catalog",
     ) as Promise<{ catalog: MessagingAutomationCatalog }>;
+  }
+
+  public static async updateRetention(
+    accessToken: string,
+    params: {
+      retentionDays: number | null;
+      retentionMode?: "archive" | "delete";
+    },
+  ): Promise<{ retention: MessagingRetentionSnapshot }> {
+    return AuthenticatedApiClient.fetchJson(
+      accessToken,
+      "/messaging/integration/retention",
+      {
+        method: "PATCH",
+        body: JSON.stringify(params),
+      },
+    ) as Promise<{ retention: MessagingRetentionSnapshot }>;
   }
 }
