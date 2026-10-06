@@ -17300,6 +17300,77 @@ button.btn-secondary {
   color: #15803d;
 }
 
+.ekolojik-comms-integrations-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: 320px;
+}
+
+.messaging-slack-bridge-card,
+.messaging-automation-catalog {
+  padding: 0.75rem 0.85rem;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+}
+
+.messaging-slack-bridge-card-title,
+.messaging-automation-catalog-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.messaging-slack-bridge-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.messaging-slack-bridge-check {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.5rem 0;
+  font-size: 0.75rem;
+}
+
+.messaging-slack-bridge-save {
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.messaging-automation-catalog-sub {
+  margin: 0.75rem 0 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.messaging-automation-catalog-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.72rem;
+}
+
+.messaging-automation-catalog-meta {
+  display: block;
+  color: #64748b;
+  font-size: 0.68rem;
+}
+
+.messaging-automation-catalog-note {
+  margin-top: 0.35rem;
+}
+
 .ekolojik-comms-wa-bridge-link-hint {
   margin: 0 0 0.5rem;
   font-size: 0.68rem;

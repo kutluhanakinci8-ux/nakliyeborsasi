@@ -32,6 +32,23 @@ export type MessagingIntegrationSnapshot = {
   botTokenPrefix?: string;
 };
 
+export type MessagingAutomationCatalog = {
+  version: string;
+  platforms: string[];
+  triggers: Array<{
+    event: string;
+    descriptionTr: string;
+    subscribeVia: string;
+  }>;
+  actions: Array<{
+    scope: string;
+    method: string;
+    path: string;
+  }>;
+  zapier: { hookUrlPattern: string; noteTr: string };
+  make: { noteTr: string };
+};
+
 export class MessagingIntegrationApiClient {
   public static async fetchSnapshot(
     accessToken: string,
@@ -68,5 +85,31 @@ export class MessagingIntegrationApiClient {
       "/messaging/integration/whatsapp-bridge/test",
       { method: "POST" },
     ) as Promise<{ ok: boolean }>;
+  }
+
+  public static async updateSlackBridge(
+    accessToken: string,
+    params: {
+      slackIncomingWebhookUrl?: string | null;
+      enabled: boolean;
+    },
+  ): Promise<{ slack: unknown }> {
+    return AuthenticatedApiClient.fetchJson(
+      accessToken,
+      "/messaging/integration/slack-bridge",
+      {
+        method: "PATCH",
+        body: JSON.stringify(params),
+      },
+    ) as Promise<{ slack: unknown }>;
+  }
+
+  public static async fetchAutomationCatalog(
+    accessToken: string,
+  ): Promise<{ catalog: MessagingAutomationCatalog }> {
+    return AuthenticatedApiClient.fetchJson(
+      accessToken,
+      "/messaging/integration/automation-catalog",
+    ) as Promise<{ catalog: MessagingAutomationCatalog }>;
   }
 }

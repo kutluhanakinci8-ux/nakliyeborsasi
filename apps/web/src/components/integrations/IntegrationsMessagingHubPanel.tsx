@@ -11,6 +11,8 @@ import { PublicApiConfiguration } from "../../lib/PublicApiConfiguration";
 type Props = {
   accessToken: string;
   isCompanyOwner: boolean;
+  channelSettingsHref?: string;
+  messagingHref?: string;
 };
 
 async function copyText(value: string): Promise<void> {
@@ -29,6 +31,8 @@ async function copyText(value: string): Promise<void> {
 export function IntegrationsMessagingHubPanel({
   accessToken,
   isCompanyOwner,
+  channelSettingsHref = "/messaging?tab=sohbet",
+  messagingHref = "/messaging?tab=sohbet",
 }: Props) {
   const [snapshot, setSnapshot] = useState<MessagingIntegrationSnapshot | null>(
     null,
@@ -65,7 +69,7 @@ export function IntegrationsMessagingHubPanel({
         <p className="integrations-panel-hint">
           API ve kanal ayarları yalnızca firma sahibi tarafından yönetilir. Detay için
           yetkili kullanıcıya başvurun veya{" "}
-          <Link href="/messaging?tab=sohbet">Mesajlar</Link> üzerinden sohbet kullanın.
+          <Link href={messagingHref}>Mesajlar</Link> üzerinden sohbet kullanın.
         </p>
       ) : null}
 
@@ -158,7 +162,7 @@ export function IntegrationsMessagingHubPanel({
 
       {isCompanyOwner ? (
         <div className="integrations-hub-actions">
-          <Link href="/messaging?tab=sohbet" className="btn-accent btn-accent--compact">
+          <Link href={channelSettingsHref} className="btn-accent btn-accent--compact">
             Mesajlar → Kanal ayarları
           </Link>
           {snapshot?.companyId ? (

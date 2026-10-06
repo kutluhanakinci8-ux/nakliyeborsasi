@@ -1,7 +1,7 @@
 import { Controller, Get } from "@nestjs/common";
 import { MessagingAttachmentStorageService } from "../messaging/MessagingAttachmentStorageService";
 
-const EK_PHASE = "ek-m6";
+const EK_PHASE = "ek-m7";
 
 const EK_SOCIAL_DM_PLATFORMS = [
   "INSTAGRAM",
@@ -22,6 +22,7 @@ const EK_FEATURES = [
   "ekolojik_messaging_attachments_audit_hold",
   "ekolojik_messaging_social_dm_bridge",
   "ekolojik_messaging_whatsapp_bridge_fs12",
+  "ekolojik_messaging_public_api_slack_zapier",
   "ekolojik_social_hub_embed",
   "ekolojik_ci_workflow_ek_0",
 ] as const;
@@ -37,6 +38,7 @@ const EK_PHASE_MILESTONES = [
   "ek-m4",
   "ek-m5",
   "ek-m6",
+  "ek-m7",
   "ek-s1",
   "ek-u4",
 ] as const;
@@ -72,6 +74,14 @@ export class EkolojikMarketStatusController {
       phaseCode: string;
       hubDeepLinkQuery: string;
       configureApiPath: string;
+      nbStatusFeatures: string[];
+    };
+    messagingIntegrations: {
+      hubSection: string;
+      hubPath: string;
+      publicApiPath: string;
+      automationCatalogPath: string;
+      slackBridgePath: string;
       nbStatusFeatures: string[];
     };
   } {
@@ -117,6 +127,21 @@ export class EkolojikMarketStatusController {
         nbStatusFeatures: [
           "whatsapp_notify_bridge",
           "whatsapp_notify_bridge_kvkk",
+        ],
+      },
+      messagingIntegrations: {
+        hubSection: "entegrasyon",
+        hubPath: "/marketim/posta-ve-mesaj?bolum=entegrasyon",
+        publicApiPath: "/api/v1/public/lerta-messaging/v1",
+        automationCatalogPath:
+          "/api/v1/messaging/integration/automation-catalog",
+        slackBridgePath: "/api/v1/messaging/integration/slack-bridge",
+        nbStatusFeatures: [
+          "public_api_messaging_read",
+          "public_api_messaging_write",
+          "outbound_webhooks",
+          "slack_incoming_bridge",
+          "automation_catalog_zapier_make",
         ],
       },
     };

@@ -9,6 +9,10 @@ import { MessagingThreadSidebar } from "../messaging/MessagingThreadSidebar";
 import { MessagingChatModalsLayer } from "../messaging/MessagingChatModalsLayer";
 import { MessagingChatComplianceStrip } from "../messaging/MessagingChatComplianceStrip";
 import { MessagingWhatsappBridgeHubCard } from "../messaging/MessagingWhatsappBridgeHubCard";
+import { MessagingSlackBridgeCard } from "../messaging/MessagingSlackBridgeCard";
+import { MessagingAutomationCatalogPanel } from "../messaging/MessagingAutomationCatalogPanel";
+import { IntegrationsMessagingHubPanel } from "../integrations/IntegrationsMessagingHubPanel";
+import { ekolojikMessagingChannelSettingsHref } from "../../lib/ekolojikIntegrationsDeepLink";
 import { useWebSession } from "../../context/WebSessionProvider";
 import { useMessagingChatController } from "../../hooks/useMessagingChatController";
 import { ekolojikSectionToMailHandoff } from "../../lib/ekolojikMailSectionHandoff";
@@ -207,6 +211,17 @@ export function EkolojikCommunicationsHubClient() {
           <button
             type="button"
             className={
+              section === "entegrasyon"
+                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
+                : "ekolojik-comms-sidebar-item"
+            }
+            onClick={() => navigateSection("entegrasyon")}
+          >
+            API &amp; Zapier
+          </button>
+          <button
+            type="button"
+            className={
               section === "sosyal"
                 ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
                 : "ekolojik-comms-sidebar-item"
@@ -242,6 +257,24 @@ export function EkolojikCommunicationsHubClient() {
           ) : null}
           {folderHint ? (
             <p className="module-hint ekolojik-comms-folder-hint">{folderHint}</p>
+          ) : null}
+          {section === "entegrasyon" ? (
+            <div className="ekolojik-comms-integrations-wrap">
+              <IntegrationsMessagingHubPanel
+                accessToken={accessToken}
+                isCompanyOwner={isCompanyOwner}
+                channelSettingsHref={ekolojikMessagingChannelSettingsHref()}
+                messagingHref="/marketim/posta-ve-mesaj?bolum=mesajlar"
+              />
+              <MessagingSlackBridgeCard
+                accessToken={accessToken}
+                isCompanyOwner={isCompanyOwner}
+              />
+              <MessagingAutomationCatalogPanel
+                accessToken={accessToken}
+                isCompanyOwner={isCompanyOwner}
+              />
+            </div>
           ) : null}
           {section === "sosyal" ? (
             <div className="ekolojik-comms-social-wrap">
