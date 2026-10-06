@@ -100,6 +100,10 @@ if "phasePrCleanupVerifyScript" not in text:
     sys.exit("FAIL: ekolojikCi.phasePrCleanupVerifyScript not declared")
 if "EKOLojIK_MARKET_PHASE_PR_CLEANUP.md" not in text:
     sys.exit("FAIL: phasePrCleanupDoc path not in controller")
+if "phasePrCloseScript" not in text:
+    sys.exit("FAIL: ekolojikCi.phasePrCloseScript not declared")
+if 'phasePrCloseEnvVar: "EK_CLOSE_STALE_PRS"' not in text:
+    sys.exit("FAIL: phasePrCloseEnvVar EK_CLOSE_STALE_PRS missing")
 
 print(f"OK: EK_FEATURES count={len(features)}")
 PY

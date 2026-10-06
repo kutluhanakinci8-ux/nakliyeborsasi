@@ -12,7 +12,8 @@ Rollup merge edildikten sonra aşağıdaki **draft/open faz PR’ları** kapatı
 |-----------|----------|
 | `ek-roll-5925` | Canonical rollup |
 | `ek-live-5925` | Roll + EK-LIVE (deploy kapı) |
-| `ek-clean-5925` | Temizlik doğrulama (bu faz) |
+| `ek-clean-5925` | Temizlik doğrulama |
+| `ek-close-5925` | STALE PR kapatma (EK-CLOSE) |
 
 ## Faz dalları (kapatılabilir)
 
@@ -28,7 +29,13 @@ bash scripts/verify-ekolojik-market-phase-pr-cleanup.sh
 
 # Opsiyonel: açık PR listesi (gh CLI + repo erişimi)
 EK_CLEAN_LIST_OPEN=1 bash scripts/verify-ekolojik-market-phase-pr-cleanup.sh
+
+# EK-CLOSE — rollup main'e merge edildikten sonra (varsayılan dry-run)
+bash scripts/run-ekolojik-market-close-stale-phase-prs.sh
+EK_CLOSE_STALE_PRS=1 bash scripts/run-ekolojik-market-close-stale-phase-prs.sh
 ```
+
+`EK_CLOSE_REQUIRE_MAIN_ROLLED=0` yalnızca acil operatör senaryosu (önerilmez).
 
 ## Not
 
