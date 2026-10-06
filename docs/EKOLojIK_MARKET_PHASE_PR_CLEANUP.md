@@ -14,6 +14,7 @@ Rollup merge edildikten sonra aşağıdaki **draft/open faz PR’ları** kapatı
 | `ek-live-5925` | Roll + EK-LIVE (deploy kapı) |
 | `ek-clean-5925` | Temizlik doğrulama |
 | `ek-close-5925` | STALE PR kapatma (EK-CLOSE) |
+| `ek-done-5925` | Program kapanış manifesti (EK-DONE) |
 
 ## Faz dalları (kapatılabilir)
 

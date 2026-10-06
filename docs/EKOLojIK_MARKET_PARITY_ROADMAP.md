@@ -16,6 +16,7 @@
 | **EK-M1…M11** | `ek-m*` | Mesajlaşma tam parite | FS-1…12, P0–P4 |
 | **EK-S1…S10** | `ek-s*` | Sosyal hub tam parite | AO…BC, BD…BL |
 | **EK-U4** | `ek-u4` | Parite kapanış checklist (●) | `run-ekolojik-market-parity-close-checklist.sh` |
+| **EK-DONE** | `ek-done` | Program kapanış manifesti (●) | `verify-ekolojik-market-program-done.sh` |
 
 Detay: kullanıcı onayı sonrası `docs/LERTA_MAIL_MESSAGING_PARITY_100_ROADMAP.md`, `MESSAGING_PHASE_ROADMAP.md`, `SOCIAL_HUB_CODE_COMPLETE_ROADMAP.md`.
 
@@ -139,3 +140,12 @@ Detay: kullanıcı onayı sonrası `docs/LERTA_MAIL_MESSAGING_PARITY_100_ROADMAP
 - Opsiyonel VPS tam kapı: `EK_U4_FULL=1` → `run-mail-messaging-parity-close-checklist.sh` (paylaşılan posta/mesaj altyapısı)
 - Rubrik (`GET /public/ekolojik-market/status` → `parityClose`): posta **96%** / mesaj **96%** (eşik ≥95%), sosyal **BC** entegrasyon kapısı checklist
 - Kapanış smoke: `EKOLOJIK_SMOKE_EXPECT_PHASE=ek-u4` (varsayılan); geliştirme doğrulama için `ek-p11` geçici kullanılabilir
+
+## EK-DONE — Program kapanış (●)
+
+- Tüm kod fazları (EK-0…EK-U4) + ops (OPS → ROLL → LIVE → CLEAN → CLOSE) tanımlandı
+- `scripts/verify-ekolojik-market-program-done.sh` — roadmap bölümleri + script paketi + roll manifest
+- Public status: `parityClose.programDone` (`programComplete: true`, `phaseCode: ek-done`)
+- Feature: `ekolojik_program_done_gate`
+- **Runtime `phase` kalır `ek-u4`**; `ek-done` yalnızca milestone / operatör manifesti
+- Operatör sırası: status JSON `parityClose.programDone.operatorSequence`
