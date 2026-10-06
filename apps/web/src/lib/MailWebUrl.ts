@@ -50,6 +50,9 @@ export function buildMailWebSsoHandoffUrl(
   if (options?.mailDmarcAssist) {
     params.set("mailDmarc", "1");
   }
+  if (options?.mailPwaAssist) {
+    params.set("mailPwa", "1");
+  }
   if (options?.mailView) {
     params.set("mailView", options.mailView);
   }

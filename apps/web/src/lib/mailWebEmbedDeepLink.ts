@@ -29,6 +29,8 @@ export type MailWebEmbedHandoff = {
   mailSwipeAssist?: boolean;
   /** Teslimat ayarlarında DMARC aggregate vurgusu (EK-P7). */
   mailDmarcAssist?: boolean;
+  /** Bildirimler + PWA / offline / push odak (EK-P8). */
+  mailPwaAssist?: boolean;
 };
 
 export function parseMailWebEmbedView(

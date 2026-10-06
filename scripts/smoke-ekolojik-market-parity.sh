@@ -3,7 +3,7 @@
 set -euo pipefail
 API_BASE="${EKOLojIK_API_BASE:-${SOCIAL_HUB_API_BASE:-http://127.0.0.1:3000/api/v1}}"
 WEB_BASE="${EKOLojIK_WEB_PUBLIC_URL:-${SOCIAL_HUB_WEB_PUBLIC_URL:-http://127.0.0.1:3001}}"
-EXPECT_PHASE="${EKOLOJIK_SMOKE_EXPECT_PHASE:-ek-p7}"
+EXPECT_PHASE="${EKOLOJIK_SMOKE_EXPECT_PHASE:-ek-p8}"
 
 echo "== Ekolojik market public status =="
 status_json="$(curl -fsS "${API_BASE}/public/ekolojik-market/status")"
@@ -107,6 +107,24 @@ echo "${status_json}" | grep -q 'deliverability-hub' || {
   exit 1
 }
 echo "OK: mailDeliverabilityDmarc deep links"
+echo "${status_json}" | grep -q '"ekolojik_mail_pwa_offline_push_hub"' || {
+  echo "FAIL: missing ekolojik_mail_pwa_offline_push_hub"
+  exit 1
+}
+echo "OK: feature ekolojik_mail_pwa_offline_push_hub (EK-P8)"
+echo "${status_json}" | grep -q '"mailPwa=1"' || {
+  echo "FAIL: missing mailPwaOfflinePush pwa panel path"
+  exit 1
+}
+echo "${status_json}" | grep -q '"mailSettings=notifications"' || {
+  echo "FAIL: missing mailPwaOfflinePush notifications settings"
+  exit 1
+}
+echo "${status_json}" | grep -q 'mail_web_pwa_manifest_scope' || {
+  echo "FAIL: missing mail PWA nb feature"
+  exit 1
+}
+echo "OK: mailPwaOfflinePush deep links + NB PWA refs"
 echo "${status_json}" | grep -q '"ekolojik_messaging_sse_redis_fanout"' || {
   echo "FAIL: missing ekolojik_messaging_sse_redis_fanout"
   exit 1

@@ -55,7 +55,7 @@ Detay: kullanıcı onayı sonrası `docs/LERTA_MAIL_MESSAGING_PARITY_100_ROADMAP
 | P5 | ek-p5 | Kurallar, swipe, bulk (● `mailSettings=rules` + `mailBulk` + `mailSwipe`) |
 | P6 | ek-p6 | CalDAV / CardDAV (● `mailView=calendar|contacts` + `mailSettings=calendarSettings|contactsSettings`) |
 | P7 | ek-p7 | Deliverability + DMARC panel (● `mailSettings=deliverability` + `mailDmarc=1`) |
-| P8 | ek-p8 | PWA offline + push |
+| P8 | ek-p8 | PWA offline + push (● `mailSettings=notifications` + `mailPwa=1`) |
 | P9 | ek-p9 | AI compose (opsiyonel) |
 | P10 | ek-p10 | Engagement / webhook analitik |
 | P11 | ek-p11 | Ops snapshot + runbook |

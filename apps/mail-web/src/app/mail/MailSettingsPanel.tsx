@@ -179,6 +179,7 @@ type Props = {
   onInboxListDensityChange?: (density: MailInboxListDensity) => void;
   initialView?: SettingsView;
   deliverabilityDmarcFocus?: boolean;
+  notificationsPwaFocus?: boolean;
 };
 
 export function MailSettingsPanel({
@@ -189,6 +190,7 @@ export function MailSettingsPanel({
   onInboxListDensityChange,
   initialView,
   deliverabilityDmarcFocus = false,
+  notificationsPwaFocus = false,
 }: Props) {
   const [view, setView] = useState<SettingsView>(initialView ?? "hub");
   const [query, setQuery] = useState("");
@@ -756,6 +758,18 @@ export function MailSettingsPanel({
       content = renderDetail(
         "Bildirimler ve sesler",
         <>
+          {notificationsPwaFocus ? (
+            <p
+              id="mail-pwa-offline-push"
+              className="mail-parity-assist-banner"
+              role="status"
+            >
+              PWA: <code>/manifest.webmanifest</code> ve{" "}
+              <code>sw.js</code> ile ana ekrana ekleyebilirsiniz. Çevrimdışı
+              modda gelen kutusu önbelleği salt okunur gösterilir; Web Push için
+              alttaki <strong>Bildirimleri aç</strong> düğmesini kullanın.
+            </p>
+          ) : null}
           <p className="mail-settings-lead">
             Yeni gelen posta için tarayıcı bildirimi (Web Push). HTTPS ve izin
             gerekir.

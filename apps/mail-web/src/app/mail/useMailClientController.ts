@@ -113,9 +113,11 @@ export function useMailClientController({
   const deepLinkMailBulkHandled = useRef(false);
   const deepLinkMailSwipeHandled = useRef(false);
   const deepLinkMailDmarcHandled = useRef(false);
+  const deepLinkMailPwaHandled = useRef(false);
   const [mailBulkAssistActive, setMailBulkAssistActive] = useState(false);
   const [mailSwipeAssistActive, setMailSwipeAssistActive] = useState(false);
   const [mailDmarcAssistActive, setMailDmarcAssistActive] = useState(false);
+  const [mailPwaAssistActive, setMailPwaAssistActive] = useState(false);
   const [view, setView] = useState<MailClientView>("inbox");
   const [summary, setSummary] = useState<MailInboxSummary | null>(null);
   const [sendReadiness, setSendReadiness] = useState<MailSendReadiness | null>(
@@ -706,6 +708,20 @@ export function useMailClientController({
     deepLinkMailDmarcHandled.current = true;
     setMailDmarcAssistActive(true);
     setSettingsInitialView("deliverability");
+    setSettingsOpen(true);
+  }, [accessToken, searchParams]);
+
+  useEffect(() => {
+    if (
+      !accessToken ||
+      searchParams.get("mailPwa") !== "1" ||
+      deepLinkMailPwaHandled.current
+    ) {
+      return;
+    }
+    deepLinkMailPwaHandled.current = true;
+    setMailPwaAssistActive(true);
+    setSettingsInitialView("notifications");
     setSettingsOpen(true);
   }, [accessToken, searchParams]);
 
@@ -1802,6 +1818,8 @@ export function useMailClientController({
     setMailSwipeAssistActive,
     mailDmarcAssistActive,
     setMailDmarcAssistActive,
+    mailPwaAssistActive,
+    setMailPwaAssistActive,
     setShortcutsOpen,
     setSummary,
     setThreadMessages,

@@ -38,6 +38,11 @@ import {
   readEkolojikMailDeliverabilityDmarcFromSearchParams,
 } from "../../lib/ekolojikMailDeliverabilityDmarcDeepLink";
 import {
+  ekolojikMailPwaHubHref,
+  isEkolojikMailPwaHub,
+  readEkolojikMailPwaFromSearchParams,
+} from "../../lib/ekolojikMailPwaDeepLink";
+import {
   ekolojikMailBulkHubHref,
   ekolojikMailRulesHubHref,
   ekolojikMailSwipeHubHref,
@@ -241,7 +246,16 @@ export function EkolojikCommunicationsHubClient() {
     [searchParams],
   );
 
+  const mailPwaDeepLink = useMemo(
+    () =>
+      readEkolojikMailPwaFromSearchParams(
+        new URLSearchParams(searchParams.toString()),
+      ),
+    [searchParams],
+  );
+
   const mailSettingsTab =
+    mailPwaDeepLink.mailSettingsTab ??
     mailDmarcDeepLink.mailSettingsTab ??
     mailInboxOpsDeepLink.mailSettingsTab ??
     null;
@@ -255,6 +269,11 @@ export function EkolojikCommunicationsHubClient() {
     searchParams.get("bolum"),
     mailSettingsTab,
     searchParams.get("mailDmarc"),
+  );
+  const mailPwaHub = isEkolojikMailPwaHub(
+    searchParams.get("bolum"),
+    mailSettingsTab,
+    searchParams.get("mailPwa"),
   );
   const mailAccountsHub = isEkolojikMailSettingsHub(
     searchParams.get("bolum"),
@@ -299,6 +318,7 @@ export function EkolojikCommunicationsHubClient() {
         ...mailInboxOpsDeepLink,
         ...mailDavDeepLink,
         ...mailDmarcDeepLink,
+        ...mailPwaDeepLink,
         openCompose: openCompose || mailComposeDeepLink.openCompose,
         composeTo: composeTo ?? mailComposeDeepLink.composeTo,
       }),
@@ -310,6 +330,7 @@ export function EkolojikCommunicationsHubClient() {
       mailInboxOpsDeepLink,
       mailDavDeepLink,
       mailDmarcDeepLink,
+      mailPwaDeepLink,
     ],
   );
 
@@ -472,7 +493,8 @@ export function EkolojikCommunicationsHubClient() {
               !mailSwipeHub &&
               !mailCalDavHub &&
               !mailCardDavHub &&
-              !mailDmarcHub
+              !mailDmarcHub &&
+              !mailPwaHub
                 ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
                 : "ekolojik-comms-sidebar-item"
             }
@@ -514,6 +536,17 @@ export function EkolojikCommunicationsHubClient() {
             onClick={() => navigateMailRichCompose(ekolojikMailDmarcHubHref())}
           >
             DMARC &amp; itibar
+          </button>
+          <button
+            type="button"
+            className={
+              mailPwaHub
+                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
+                : "ekolojik-comms-sidebar-item"
+            }
+            onClick={() => navigateMailRichCompose(ekolojikMailPwaHubHref())}
+          >
+            PWA &amp; push
           </button>
           <button
             type="button"
