@@ -30,8 +30,16 @@ import {
   ekolojikMailAccountsHubHref,
   ekolojikMailDnsHubHref,
   isEkolojikMailSettingsHub,
-  readEkolojikMailSettingsFromSearchParams,
 } from "../../lib/ekolojikMailAccountsDeepLink";
+import {
+  ekolojikMailBulkHubHref,
+  ekolojikMailRulesHubHref,
+  ekolojikMailSwipeHubHref,
+  isEkolojikMailBulkHub,
+  isEkolojikMailRulesHub,
+  isEkolojikMailSwipeHub,
+  readEkolojikMailInboxOpsFromSearchParams,
+} from "../../lib/ekolojikMailRulesSwipeBulkDeepLink";
 import {
   applyEkolojikSectionQueryParams,
   isEkolojikMessagingChatSection,
@@ -204,9 +212,9 @@ export function EkolojikCommunicationsHubClient() {
     new URLSearchParams(searchParams.toString()),
   );
 
-  const mailSettingsDeepLink = useMemo(
+  const mailInboxOpsDeepLink = useMemo(
     () =>
-      readEkolojikMailSettingsFromSearchParams(
+      readEkolojikMailInboxOpsFromSearchParams(
         new URLSearchParams(searchParams.toString()),
       ),
     [searchParams],
@@ -214,26 +222,38 @@ export function EkolojikCommunicationsHubClient() {
 
   const mailAccountsHub = isEkolojikMailSettingsHub(
     searchParams.get("bolum"),
-    mailSettingsDeepLink.mailSettingsTab === "accounts"
+    mailInboxOpsDeepLink.mailSettingsTab === "accounts"
       ? "accounts"
       : null,
   );
   const mailDnsHub = isEkolojikMailSettingsHub(
     searchParams.get("bolum"),
-    mailSettingsDeepLink.mailSettingsTab === "deliverability"
+    mailInboxOpsDeepLink.mailSettingsTab === "deliverability"
       ? "deliverability"
       : null,
+  );
+  const mailRulesHub = isEkolojikMailRulesHub(
+    searchParams.get("bolum"),
+    mailInboxOpsDeepLink.mailSettingsTab,
+  );
+  const mailBulkHub = isEkolojikMailBulkHub(
+    searchParams.get("bolum"),
+    searchParams.get("mailBulk"),
+  );
+  const mailSwipeHub = isEkolojikMailSwipeHub(
+    searchParams.get("bolum"),
+    searchParams.get("mailSwipe"),
   );
 
   const mailHandoff = useMemo(
     () =>
       ekolojikSectionToMailHandoff(section, {
         ...mailComposeDeepLink,
-        ...mailSettingsDeepLink,
+        ...mailInboxOpsDeepLink,
         openCompose: openCompose || mailComposeDeepLink.openCompose,
         composeTo: composeTo ?? mailComposeDeepLink.composeTo,
       }),
-    [section, openCompose, composeTo, mailComposeDeepLink, mailSettingsDeepLink],
+    [section, openCompose, composeTo, mailComposeDeepLink, mailInboxOpsDeepLink],
   );
 
   const folderHint = useMemo(() => {
@@ -389,7 +409,10 @@ export function EkolojikCommunicationsHubClient() {
               section === "posta" &&
               !mailRichComposeHub &&
               !mailAccountsHub &&
-              !mailDnsHub
+              !mailDnsHub &&
+              !mailRulesHub &&
+              !mailBulkHub &&
+              !mailSwipeHub
                 ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
                 : "ekolojik-comms-sidebar-item"
             }
@@ -420,6 +443,39 @@ export function EkolojikCommunicationsHubClient() {
             onClick={() => navigateMailRichCompose(ekolojikMailDnsHubHref())}
           >
             DNS &amp; teslimat
+          </button>
+          <button
+            type="button"
+            className={
+              mailRulesHub
+                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
+                : "ekolojik-comms-sidebar-item"
+            }
+            onClick={() => navigateMailRichCompose(ekolojikMailRulesHubHref())}
+          >
+            Posta kuralları
+          </button>
+          <button
+            type="button"
+            className={
+              mailBulkHub
+                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
+                : "ekolojik-comms-sidebar-item"
+            }
+            onClick={() => navigateMailRichCompose(ekolojikMailBulkHubHref())}
+          >
+            Toplu işlem
+          </button>
+          <button
+            type="button"
+            className={
+              mailSwipeHub
+                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
+                : "ekolojik-comms-sidebar-item"
+            }
+            onClick={() => navigateMailRichCompose(ekolojikMailSwipeHubHref())}
+          >
+            Kaydırma (swipe)
           </button>
           <button
             type="button"

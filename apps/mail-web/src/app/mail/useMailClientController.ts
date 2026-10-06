@@ -110,6 +110,10 @@ export function useMailClientController({
   const deepLinkComposeMultipartHandled = useRef(false);
   const deepLinkComposeTemplateHandled = useRef(false);
   const deepLinkMailSettingsHandled = useRef(false);
+  const deepLinkMailBulkHandled = useRef(false);
+  const deepLinkMailSwipeHandled = useRef(false);
+  const [mailBulkAssistActive, setMailBulkAssistActive] = useState(false);
+  const [mailSwipeAssistActive, setMailSwipeAssistActive] = useState(false);
   const [view, setView] = useState<MailClientView>("inbox");
   const [summary, setSummary] = useState<MailInboxSummary | null>(null);
   const [sendReadiness, setSendReadiness] = useState<MailSendReadiness | null>(
@@ -659,6 +663,34 @@ export function useMailClientController({
     deepLinkMailSettingsHandled.current = true;
     setSettingsInitialView(raw as import("./MailSettingsPanel").SettingsView);
     setSettingsOpen(true);
+  }, [accessToken, searchParams]);
+
+  useEffect(() => {
+    if (
+      !accessToken ||
+      searchParams.get("mailBulk") !== "1" ||
+      deepLinkMailBulkHandled.current
+    ) {
+      return;
+    }
+    deepLinkMailBulkHandled.current = true;
+    setView("inbox");
+    setActiveCustomFolderId(null);
+    setMailBulkAssistActive(true);
+  }, [accessToken, searchParams]);
+
+  useEffect(() => {
+    if (
+      !accessToken ||
+      searchParams.get("mailSwipe") !== "1" ||
+      deepLinkMailSwipeHandled.current
+    ) {
+      return;
+    }
+    deepLinkMailSwipeHandled.current = true;
+    setView("inbox");
+    setActiveCustomFolderId(null);
+    setMailSwipeAssistActive(true);
   }, [accessToken, searchParams]);
 
   useEffect(() => {
@@ -1748,6 +1780,10 @@ export function useMailClientController({
     setSettingsOpen,
     settingsInitialView,
     setSettingsInitialView,
+    mailBulkAssistActive,
+    setMailBulkAssistActive,
+    mailSwipeAssistActive,
+    setMailSwipeAssistActive,
     setShortcutsOpen,
     setSummary,
     setThreadMessages,

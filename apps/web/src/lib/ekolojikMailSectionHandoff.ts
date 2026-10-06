@@ -25,16 +25,24 @@ export function ekolojikSectionToMailHandoff(
       composeTemplateId: options.composeTemplateId,
       composeMultipart: options.composeMultipart,
       mailSettingsTab: options.mailSettingsTab,
+      mailBulkAssist: options.mailBulkAssist,
+      mailSwipeAssist: options.mailSwipeAssist,
     };
   }
-  if (options?.mailSettingsTab?.trim()) {
+  if (
+    options?.mailSettingsTab?.trim() ||
+    options?.mailBulkAssist ||
+    options?.mailSwipeAssist
+  ) {
     return {
       mailView: options.mailView ?? "inbox",
-      mailSettingsTab: options.mailSettingsTab.trim(),
+      mailSettingsTab: options.mailSettingsTab?.trim(),
       composeTo: options.composeTo,
       composeRich: options.composeRich,
       composeTemplateId: options.composeTemplateId,
       composeMultipart: options.composeMultipart,
+      mailBulkAssist: options.mailBulkAssist,
+      mailSwipeAssist: options.mailSwipeAssist,
     };
   }
   switch (section) {

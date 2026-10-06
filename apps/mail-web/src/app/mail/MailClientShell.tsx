@@ -190,6 +190,10 @@ export function MailClientShell({ mail }: Props) {
     settingsOpen,
     settingsInitialView,
     setSettingsInitialView,
+    mailBulkAssistActive,
+    setMailBulkAssistActive,
+    mailSwipeAssistActive,
+    setMailSwipeAssistActive,
     shortcutsOpen,
     snoozeSelected,
     startForwardFromDetail,
@@ -624,6 +628,32 @@ export function MailClientShell({ mail }: Props) {
                   </p>
                 </div>
               </header>
+            ) : null}
+            {mailBulkAssistActive ? (
+              <p className="mail-parity-assist-banner" role="status">
+                Toplu işlem: listedeki kutularla seçim yapın; okundu, arşiv, çöp ve
+                klasör taşıma araç çubuğu açılır.{" "}
+                <button
+                  type="button"
+                  className="mail-parity-assist-dismiss"
+                  onClick={() => setMailBulkAssistActive(false)}
+                >
+                  Kapat
+                </button>
+              </p>
+            ) : null}
+            {mailSwipeAssistActive ? (
+              <p className="mail-parity-assist-banner mail-parity-assist-banner--swipe" role="status">
+                Kaydırma: satırı sağa/sola kaydırarak {swipeArchiveLabel} veya çöp
+                kutusuna gönderin (mobil ve trackpad).{" "}
+                <button
+                  type="button"
+                  className="mail-parity-assist-dismiss"
+                  onClick={() => setMailSwipeAssistActive(false)}
+                >
+                  Kapat
+                </button>
+              </p>
             ) : null}
             <div className="mail-list-toolbar mail-list-toolbar-main">
               {canUseThreads && !searchActive ? (

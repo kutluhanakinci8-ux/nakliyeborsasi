@@ -3,7 +3,7 @@
 set -euo pipefail
 API_BASE="${EKOLojIK_API_BASE:-${SOCIAL_HUB_API_BASE:-http://127.0.0.1:3000/api/v1}}"
 WEB_BASE="${EKOLojIK_WEB_PUBLIC_URL:-${SOCIAL_HUB_WEB_PUBLIC_URL:-http://127.0.0.1:3001}}"
-EXPECT_PHASE="${EKOLOJIK_SMOKE_EXPECT_PHASE:-ek-p3}"
+EXPECT_PHASE="${EKOLOJIK_SMOKE_EXPECT_PHASE:-ek-p5}"
 
 echo "== Ekolojik market public status =="
 status_json="$(curl -fsS "${API_BASE}/public/ekolojik-market/status")"
@@ -53,6 +53,24 @@ echo "${status_json}" | grep -q '"mailSettings=deliverability"' || {
   exit 1
 }
 echo "OK: mailAccountsDnsHub deliverability deep link"
+echo "${status_json}" | grep -q '"ekolojik_mail_rules_swipe_bulk"' || {
+  echo "FAIL: missing ekolojik_mail_rules_swipe_bulk"
+  exit 1
+}
+echo "OK: feature ekolojik_mail_rules_swipe_bulk (EK-P5)"
+echo "${status_json}" | grep -q '"mailSettings=rules"' || {
+  echo "FAIL: missing mailRulesSwipeBulk rules path"
+  exit 1
+}
+echo "${status_json}" | grep -q '"mailBulk=1"' || {
+  echo "FAIL: missing mailRulesSwipeBulk bulk path"
+  exit 1
+}
+echo "${status_json}" | grep -q '"mailSwipe=1"' || {
+  echo "FAIL: missing mailRulesSwipeBulk swipe path"
+  exit 1
+}
+echo "OK: mailRulesSwipeBulk deep links"
 echo "${status_json}" | grep -q '"ekolojik_messaging_sse_redis_fanout"' || {
   echo "FAIL: missing ekolojik_messaging_sse_redis_fanout"
   exit 1

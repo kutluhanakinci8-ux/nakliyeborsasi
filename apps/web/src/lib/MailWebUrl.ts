@@ -41,6 +41,12 @@ export function buildMailWebSsoHandoffUrl(
   if (mailSettingsTab) {
     params.set("mailSettings", mailSettingsTab);
   }
+  if (options?.mailBulkAssist) {
+    params.set("mailBulk", "1");
+  }
+  if (options?.mailSwipeAssist) {
+    params.set("mailSwipe", "1");
+  }
   if (options?.mailView) {
     params.set("mailView", options.mailView);
   }

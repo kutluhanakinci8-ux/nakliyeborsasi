@@ -21,6 +21,10 @@ export type MailWebEmbedHandoff = {
   composeMultipart?: boolean;
   /** Webmail ayarlar paneli (`accounts`, `deliverability`, …). */
   mailSettingsTab?: string;
+  /** Gelen kutusu toplu seçim / işlem şeridi (EK-P5). */
+  mailBulkAssist?: boolean;
+  /** Liste kaydırma (swipe) arşiv/çöp ipucu (EK-P5). */
+  mailSwipeAssist?: boolean;
 };
 
 export function parseMailWebEmbedView(
