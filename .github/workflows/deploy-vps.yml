@@ -59,4 +59,5 @@ jobs:
           EKOLOJIK_API_BASE: https://app.lerta.com.tr/api/v1
           EKOLOJIK_WEB_PUBLIC_URL: https://app.lerta.com.tr
           EK_U4_FULL: "0"
+          EK_PROD_ROLLOUT_STRICT: "1"
         run: bash scripts/run-ekolojik-market-post-deploy-gate.sh

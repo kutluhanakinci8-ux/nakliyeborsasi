@@ -14,7 +14,7 @@ test -f "${ROADMAP}" && test -f "${CONTROLLER}" || {
 }
 
 for section in \
-  EK-U4 EK-FULL EK-LIVE EK-CLEAN EK-CLOSE EK-ROLL EK-OPS EK-DONE EK-SHIP EK-PROD; do
+  EK-U4 EK-FULL EK-LIVE EK-CLEAN EK-CLOSE EK-ROLL EK-OPS EK-DONE EK-SHIP EK-PROD EK-CI-LIVE; do
   grep -q "## ${section}" "${ROADMAP}" || {
     echo "FAIL: roadmap missing section ${section}" >&2
     exit 1
