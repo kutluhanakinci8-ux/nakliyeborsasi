@@ -96,6 +96,10 @@ if "postDeployGateScript" not in text:
     sys.exit("FAIL: parityClose.postDeployGateScript not declared")
 if "run-ekolojik-market-post-deploy-gate.sh" not in text:
     sys.exit("FAIL: post-deploy gate script path not in controller")
+if "phasePrCleanupVerifyScript" not in text:
+    sys.exit("FAIL: ekolojikCi.phasePrCleanupVerifyScript not declared")
+if "EKOLojIK_MARKET_PHASE_PR_CLEANUP.md" not in text:
+    sys.exit("FAIL: phasePrCleanupDoc path not in controller")
 
 print(f"OK: EK_FEATURES count={len(features)}")
 PY

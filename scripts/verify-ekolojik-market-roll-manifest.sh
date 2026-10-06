@@ -59,6 +59,12 @@ grep -q "EK-LIVE" "${ROOT}/docs/EKOLojIK_MARKET_PARITY_ROADMAP.md" || {
   echo "FAIL: roadmap missing EK-LIVE section" >&2
   exit 1
 }
-echo "OK: roadmap EK-ROLL + EK-LIVE"
+grep -q "EK-CLEAN" "${ROOT}/docs/EKOLojIK_MARKET_PARITY_ROADMAP.md" || {
+  echo "FAIL: roadmap missing EK-CLEAN section" >&2
+  exit 1
+}
+echo "OK: roadmap EK-ROLL + EK-LIVE + EK-CLEAN"
+
+bash "${ROOT}/scripts/verify-ekolojik-market-phase-pr-cleanup.sh"
 
 echo "verify-ekolojik-market-roll-manifest: PASS"
