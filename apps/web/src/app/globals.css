@@ -17148,6 +17148,11 @@ button.btn-secondary {
   overflow: hidden;
 }
 
+.ekolojik-comms-listing-hint {
+  margin: 0 0 0.5rem;
+  padding: 0 0.25rem;
+}
+
 .ekolojik-comms-folder-hint {
   margin: 0 0 0.5rem;
   padding: 0.5rem 0.65rem;

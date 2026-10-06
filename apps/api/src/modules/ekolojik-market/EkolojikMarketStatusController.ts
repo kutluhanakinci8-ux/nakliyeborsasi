@@ -1,6 +1,6 @@
 import { Controller, Get } from "@nestjs/common";
 
-const EK_PHASE = "ek-m2";
+const EK_PHASE = "ek-m3";
 
 const EK_FEATURES = [
   "ekolojik_product_shell",
@@ -9,6 +9,7 @@ const EK_FEATURES = [
   "ekolojik_mail_folder_deep_link",
   "ekolojik_messaging_full_chat",
   "ekolojik_messaging_sse_redis_fanout",
+  "ekolojik_messaging_interactions_parity",
   "ekolojik_social_hub_embed",
   "ekolojik_ci_workflow_ek_0",
 ] as const;
@@ -20,6 +21,7 @@ const EK_PHASE_MILESTONES = [
   "ek-p4",
   "ek-m1",
   "ek-m2",
+  "ek-m3",
   "ek-s1",
   "ek-u4",
 ] as const;
@@ -38,6 +40,7 @@ export class EkolojikMarketStatusController {
       transport: string;
       nbModulePath: string;
     };
+    messagingInteractions: string[];
   } {
     return {
       module: "ekolojik_market",
@@ -50,6 +53,14 @@ export class EkolojikMarketStatusController {
         transport: "sse_redis_fanout",
         nbModulePath: "/api/v1/messaging/status",
       },
+      messagingInteractions: [
+        "message_edit_delete",
+        "user_mentions",
+        "read_receipts",
+        "typing_indicator",
+        "quick_reply_templates",
+        "group_thread_modal",
+      ],
     };
   }
 }

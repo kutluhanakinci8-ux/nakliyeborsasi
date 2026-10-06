@@ -3,7 +3,7 @@
 set -euo pipefail
 API_BASE="${EKOLojIK_API_BASE:-${SOCIAL_HUB_API_BASE:-http://127.0.0.1:3000/api/v1}}"
 WEB_BASE="${EKOLojIK_WEB_PUBLIC_URL:-${SOCIAL_HUB_WEB_PUBLIC_URL:-http://127.0.0.1:3001}}"
-EXPECT_PHASE="${EKOLOJIK_SMOKE_EXPECT_PHASE:-ek-m2}"
+EXPECT_PHASE="${EKOLOJIK_SMOKE_EXPECT_PHASE:-ek-m3}"
 
 echo "== Ekolojik market public status =="
 status_json="$(curl -fsS "${API_BASE}/public/ekolojik-market/status")"
@@ -33,6 +33,16 @@ echo "${status_json}" | grep -q '"transport":"sse_redis_fanout"' || {
   exit 1
 }
 echo "OK: messagingRealtime sse_redis_fanout"
+echo "${status_json}" | grep -q '"ekolojik_messaging_interactions_parity"' || {
+  echo "FAIL: missing ekolojik_messaging_interactions_parity"
+  exit 1
+}
+echo "OK: feature ekolojik_messaging_interactions_parity (EK-M3)"
+echo "${status_json}" | grep -q '"message_edit_delete"' || {
+  echo "FAIL: missing messagingInteractions message_edit_delete"
+  exit 1
+}
+echo "OK: messagingInteractions parity list"
 
 echo "== Ekolojik hub web route =="
 code="$(curl -sS -o /dev/null -w "%{http_code}" "${WEB_BASE}/marketim/posta-ve-mesaj")"

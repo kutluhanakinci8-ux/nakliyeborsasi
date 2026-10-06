@@ -66,7 +66,7 @@ Detay: kullanıcı onayı sonrası `docs/LERTA_MAIL_MESSAGING_PARITY_100_ROADMAP
 |-----|-----|--------|
 | M1 | ek-m1 | Hub chat UI (● EK-U1) |
 | M2 | ek-m2 | SSE + Redis fan-out (● `useMessagingChatController` + canlı rozet) |
-| M3 | ek-m3 | Düzenle/sil, mention, okundu, typing, şablon |
+| M3 | ek-m3 | Düzenle/sil, mention, okundu, typing, şablon (● `MessagingChatModalsLayer` hub) |
 | M4 | ek-m4 | 10 MB × 5 ek, audit, legal hold |
 | M5 | ek-m5 | Sosyal DM köprüsü (IG/WA/TG…) |
 | M6 | ek-m6 | WA bridge FS-12 |

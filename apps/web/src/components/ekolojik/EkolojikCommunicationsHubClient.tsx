@@ -6,6 +6,7 @@ import { SocialHubPageClient } from "../../app/(dashboard)/hesap/sosyal-medya/So
 import { MessagingMailWebEmbed } from "../messaging/MessagingMailWebEmbed";
 import { MessagingConversationPanel } from "../messaging/MessagingConversationPanel";
 import { MessagingThreadSidebar } from "../messaging/MessagingThreadSidebar";
+import { MessagingChatModalsLayer } from "../messaging/MessagingChatModalsLayer";
 import { useWebSession } from "../../context/WebSessionProvider";
 import { useMessagingChatController } from "../../hooks/useMessagingChatController";
 import { ekolojikSectionToMailHandoff } from "../../lib/ekolojikMailSectionHandoff";
@@ -61,6 +62,13 @@ export function EkolojikCommunicationsHubClient() {
     }
     return null;
   }, [section]);
+
+  const {
+    moduleBlocked,
+    errorMessage,
+    activeThreadId,
+    mobileThreadOpen,
+  } = chat;
 
   const setSection = (next: EkolojikHubSection) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -162,6 +170,22 @@ export function EkolojikCommunicationsHubClient() {
           <p className="ekolojik-comms-sidebar-foot module-hint">SMTP / IMAP: NB posta altyapısı</p>
         </nav>
         <div className="ekolojik-comms-main">
+          {section === "mesajlar" && moduleBlocked ? (
+            <p className="module-hint messaging-module-blocked">
+              Firma sohbeti modülü bu hesapta kapalı. Abonelik veya paket
+              ayarlarını kontrol edin.
+            </p>
+          ) : null}
+          {section === "mesajlar" && errorMessage && !moduleBlocked ? (
+            <p className="error banner error--light">{errorMessage}</p>
+          ) : null}
+          {section === "mesajlar" && searchParams.get("listingId") ? (
+            <p className="module-hint ekolojik-comms-listing-hint">
+              Bu sohbet ilan{" "}
+              <code>{searchParams.get("listingId")?.slice(0, 8)}…</code> bağlamında
+              açılır. Karşı firma ID girip <strong>Aç</strong> kullanın.
+            </p>
+          ) : null}
           {folderHint ? (
             <p className="module-hint ekolojik-comms-folder-hint">{folderHint}</p>
           ) : null}
@@ -171,7 +195,13 @@ export function EkolojikCommunicationsHubClient() {
             </div>
           ) : null}
           {section === "mesajlar" ? (
-            <div className="ekolojik-comms-chat-wrap chat-layout">
+            <div
+              className={
+                mobileThreadOpen && activeThreadId
+                  ? "ekolojik-comms-chat-wrap chat-layout chat-layout--mobile-thread"
+                  : "ekolojik-comms-chat-wrap chat-layout"
+              }
+            >
               <MessagingThreadSidebar
                 chat={chat}
                 locale={locale}
@@ -196,6 +226,7 @@ export function EkolojikCommunicationsHubClient() {
           ) : null}
         </div>
       </div>
+      {section === "mesajlar" ? <MessagingChatModalsLayer chat={chat} /> : null}
     </div>
   );
 }
