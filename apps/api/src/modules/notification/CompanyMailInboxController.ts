@@ -165,6 +165,8 @@ export class CompanyMailInboxController {
         llmConfigured: this.mailAiComposeService.isLlmConfigured(),
         consentRequired: true,
         suggestReplyPath: "/api/v1/company/mail-inbox/messages/:id/suggest-reply",
+        suggestComposeDraftPath:
+          "/api/v1/company/mail-inbox/compose/suggest-draft",
         summarizePath: "/api/v1/company/mail-inbox/messages/:id/summarize",
         classifyPath: "/api/v1/company/mail-inbox/messages/:id/classify",
       },
@@ -274,6 +276,26 @@ export class CompanyMailInboxController {
       MailIdentityAuditAction.AiMailClassify,
       { messageId, label: result.label, provider: result.provider },
       `/company/mail-inbox/messages/${messageId}/classify`,
+    );
+    return result;
+  }
+
+  @Post("compose/suggest-draft")
+  public async suggestComposeDraft(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: { subject?: string; lang?: string },
+  ) {
+    this.assertMailInboxWriter(user);
+    const result = await this.mailAiComposeService.suggestOutboundDraft({
+      userId: user.userId,
+      subject: body.subject?.trim() ?? "",
+      locale: body.lang?.trim() || "tr",
+    });
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.AiMailSuggestReply,
+      { kind: "compose_draft", provider: result.provider },
+      "/company/mail-inbox/compose/suggest-draft",
     );
     return result;
   }

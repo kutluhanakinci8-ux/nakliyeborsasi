@@ -37,6 +37,9 @@ export function buildMailWebSsoHandoffUrl(
   if (options?.composeMultipart) {
     params.set("composeMultipart", "1");
   }
+  if (options?.composeAiAssist) {
+    params.set("composeAi", "1");
+  }
   const mailSettingsTab = options?.mailSettingsTab?.trim();
   if (mailSettingsTab) {
     params.set("mailSettings", mailSettingsTab);

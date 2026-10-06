@@ -16,6 +16,7 @@ import {
   fetchClassifyMessage,
   fetchSentMessage,
   fetchSummarizeMessage,
+  fetchSuggestComposeDraft,
   fetchSuggestReply,
   renameCustomFolder,
   sendDraft,
@@ -50,6 +51,8 @@ export function MailClientShell({ mail }: Props) {
     composeHtml,
     composeOpen,
     composeRich,
+    composeAiAssistActive,
+    composeAiDraftBusy,
     composeShowCcBcc,
     composeSignatures,
     composeStoredAttachments,
@@ -140,6 +143,8 @@ export function MailClientShell({ mail }: Props) {
     setComposeHtml,
     setComposeOpen,
     setComposeRich,
+    setComposeAiAssistActive,
+    setComposeAiDraftBusy,
     setComposeShowCcBcc,
     setComposeSignatures,
     setComposeStoredAttachments,
@@ -1623,6 +1628,19 @@ export function MailClientShell({ mail }: Props) {
             </header>
 
             <div className="compose-premium-body">
+              {composeAiAssistActive ? (
+                <p className="mail-parity-assist-banner" role="status">
+                  AI yazım: konu satırına göre gövde önerisi (KVKK onayı gerekir).
+                  Gelen kutusunda yanıt öner / özet / sınıfla da kullanılabilir.{" "}
+                  <button
+                    type="button"
+                    className="mail-parity-assist-dismiss"
+                    onClick={() => setComposeAiAssistActive(false)}
+                  >
+                    Kapat
+                  </button>
+                </p>
+              ) : null}
               <div className="compose-field">
                 <label className="compose-field-label" htmlFor="compose-to">
                   Kime
@@ -1699,6 +1717,48 @@ export function MailClientShell({ mail }: Props) {
               )}
 
               <div className="compose-preset-row compose-premium-presets">
+                {composeAiAssistActive && !forwardMessageId && !editingDraftId ? (
+                  <button
+                    type="button"
+                    className="compose-chip-btn"
+                    disabled={composeAiDraftBusy || !accessToken}
+                    onClick={() => {
+                      if (!accessToken) {
+                        return;
+                      }
+                      setComposeAiDraftBusy(true);
+                      void ensureAiMailConsent()
+                        .then((allowed) => {
+                          if (!allowed) {
+                            setToast(
+                              "AI asistanı için Gizlilik ayarlarından onay verin.",
+                            );
+                            return null;
+                          }
+                          return fetchSuggestComposeDraft(
+                            accessToken,
+                            composeSubject,
+                            "tr",
+                          );
+                        })
+                        .then((result) => {
+                          if (!result) {
+                            return;
+                          }
+                          setComposeText(result.suggestion);
+                          setToast(
+                            result.provider === "llm"
+                              ? "AI gövde önerisi eklendi."
+                              : "Şablon gövde eklendi.",
+                          );
+                        })
+                        .catch(() => setToast("AI öneri alınamadı."))
+                        .finally(() => setComposeAiDraftBusy(false));
+                    }}
+                  >
+                    {composeAiDraftBusy ? "AI…" : "AI gövde öner"}
+                  </button>
+                ) : null}
                 <label className="compose-preset-label">
                   <span>Şablon</span>
                   <select

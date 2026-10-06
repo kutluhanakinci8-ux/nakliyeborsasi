@@ -27,6 +27,10 @@ import {
   readEkolojikMailComposeFromSearchParams,
 } from "../../lib/ekolojikMailComposeDeepLink";
 import {
+  ekolojikMailAiComposeHubHref,
+  isEkolojikMailAiComposeHub,
+} from "../../lib/ekolojikMailAiComposeDeepLink";
+import {
   ekolojikMailAccountsHubHref,
   ekolojikMailDnsHubHref,
   isEkolojikMailSettingsHub,
@@ -226,6 +230,10 @@ export function EkolojikCommunicationsHubClient() {
   );
 
   const mailRichComposeHub = isEkolojikMailRichComposeHub(
+    searchParams.get("bolum"),
+    new URLSearchParams(searchParams.toString()),
+  );
+  const mailAiComposeHub = isEkolojikMailAiComposeHub(
     searchParams.get("bolum"),
     new URLSearchParams(searchParams.toString()),
   );
@@ -494,7 +502,8 @@ export function EkolojikCommunicationsHubClient() {
               !mailCalDavHub &&
               !mailCardDavHub &&
               !mailDmarcHub &&
-              !mailPwaHub
+              !mailPwaHub &&
+              !mailAiComposeHub
                 ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
                 : "ekolojik-comms-sidebar-item"
             }
@@ -547,6 +556,19 @@ export function EkolojikCommunicationsHubClient() {
             onClick={() => navigateMailRichCompose(ekolojikMailPwaHubHref())}
           >
             PWA &amp; push
+          </button>
+          <button
+            type="button"
+            className={
+              mailAiComposeHub
+                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
+                : "ekolojik-comms-sidebar-item"
+            }
+            onClick={() =>
+              navigateMailRichCompose(ekolojikMailAiComposeHubHref())
+            }
+          >
+            AI yazım
           </button>
           <button
             type="button"

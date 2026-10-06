@@ -10,6 +10,7 @@ export type EkolojikMailComposeDeepLink = Pick<
   | "composeRich"
   | "composeTemplateId"
   | "composeMultipart"
+  | "composeAiAssist"
 >;
 
 export function normalizeEkolojikMailComposeTemplateId(
@@ -44,17 +45,26 @@ export function readEkolojikMailComposeFromSearchParams(
     searchParams.get("composeMultipart") ?? searchParams.get("multipart");
   const composeMultipart =
     multipartRaw === "1" || multipartRaw?.toLowerCase() === "true";
+  const aiRaw =
+    searchParams.get("composeAi") ?? searchParams.get("mailAiCompose");
+  const composeAiAssist =
+    aiRaw === "1" || aiRaw?.toLowerCase() === "true" ? true : undefined;
   const composeTemplateId = normalizeEkolojikMailComposeTemplateId(
     searchParams.get("composeTemplate") ??
       searchParams.get("mailTemplate") ??
       searchParams.get("template"),
   );
   return {
-    openCompose: openCompose || Boolean(composeTemplateId) || composeMultipart,
+    openCompose:
+      openCompose ||
+      Boolean(composeTemplateId) ||
+      composeMultipart ||
+      composeAiAssist,
     composeTo,
-    composeRich,
+    composeRich: composeAiAssist ? true : composeRich,
     composeTemplateId,
     composeMultipart: composeMultipart || undefined,
+    composeAiAssist,
   };
 }
 
@@ -93,6 +103,7 @@ export function isEkolojikMailRichComposeHub(
   const link = readEkolojikMailComposeFromSearchParams(searchParams);
   return (
     link.openCompose === true &&
+    !link.composeAiAssist &&
     (link.composeRich === true ||
       Boolean(link.composeTemplateId) ||
       link.composeMultipart === true)

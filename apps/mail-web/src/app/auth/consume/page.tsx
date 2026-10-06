@@ -42,6 +42,7 @@ function ConsumeHandoff() {
     const mailSwipe = search.get("mailSwipe")?.trim();
     const mailDmarc = search.get("mailDmarc")?.trim();
     const mailPwa = search.get("mailPwa")?.trim();
+    const composeAi = search.get("composeAi")?.trim();
     const query = new URLSearchParams();
     if (fromAddress) {
       query.set("welcome", fromAddress);
@@ -81,6 +82,9 @@ function ConsumeHandoff() {
     }
     if (mailPwa === "1") {
       query.set("mailPwa", "1");
+    }
+    if (composeAi === "1") {
+      query.set("composeAi", "1");
     }
     const qs = query.toString();
     router.replace(qs ? `/mail?${qs}` : "/mail");

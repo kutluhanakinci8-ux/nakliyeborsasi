@@ -24,6 +24,7 @@ export function ekolojikSectionToMailHandoff(
       composeRich: options.composeRich,
       composeTemplateId: options.composeTemplateId,
       composeMultipart: options.composeMultipart,
+      composeAiAssist: options.composeAiAssist,
       mailSettingsTab: options.mailSettingsTab,
       mailBulkAssist: options.mailBulkAssist,
       mailSwipeAssist: options.mailSwipeAssist,

@@ -1,7 +1,7 @@
 import { Controller, Get } from "@nestjs/common";
 import { MessagingAttachmentStorageService } from "../messaging/MessagingAttachmentStorageService";
 
-const EK_PHASE = "ek-p8";
+const EK_PHASE = "ek-p9";
 
 const EK_MAIL_PWA_NB_FEATURES = [
   "mail_web_pwa_manifest_scope",
@@ -72,6 +72,7 @@ const EK_FEATURES = [
   "ekolojik_mail_caldav_carddav_hub",
   "ekolojik_mail_deliverability_dmarc_hub",
   "ekolojik_mail_pwa_offline_push_hub",
+  "ekolojik_mail_ai_compose_hub",
   "ekolojik_messaging_full_chat",
   "ekolojik_messaging_sse_redis_fanout",
   "ekolojik_messaging_interactions_parity",
@@ -108,6 +109,7 @@ const EK_PHASE_MILESTONES = [
   "ek-p6",
   "ek-p7",
   "ek-p8",
+  "ek-p9",
   "ek-m1",
   "ek-m2",
   "ek-m3",
@@ -257,6 +259,16 @@ export class EkolojikMarketStatusController {
       nbServiceWorkerPath: string;
       nbPushSubscribeSurfaces: string[];
       nbStatusFeatures: string[];
+    };
+    mailAiCompose: {
+      phaseCode: string;
+      hubSection: string;
+      aiComposePath: string;
+      embedQueryParams: string[];
+      nbMailWebSurfaces: string[];
+      nbSuggestComposeDraftApiPath: string;
+      nbAiComposeCapabilityPath: string;
+      optional: boolean;
     };
     socialHubConnections: {
       hubSection: string;
@@ -582,6 +594,24 @@ export class EkolojikMarketStatusController {
           "mailPush.subscribeMailWebPush",
         ],
         nbStatusFeatures: [...EK_MAIL_PWA_NB_FEATURES],
+      },
+      mailAiCompose: {
+        phaseCode: "ek-p9",
+        hubSection: "posta",
+        aiComposePath:
+          "/marketim/posta-ve-mesaj?bolum=posta&compose=1&composeRich=1&composeAi=1",
+        embedQueryParams: ["compose", "composeRich", "composeAi"],
+        nbMailWebSurfaces: [
+          "composeAiAssist",
+          "fetchSuggestComposeDraft",
+          "ensureAiMailConsent",
+          "MailAiComposeService.suggestOutboundDraft",
+        ],
+        nbSuggestComposeDraftApiPath:
+          "/api/v1/company/mail-inbox/compose/suggest-draft",
+        nbAiComposeCapabilityPath:
+          "/api/v1/company/mail-inbox/account-hub#aiCompose",
+        optional: true,
       },
       socialHubConnections: {
         hubSection: "sosyal",

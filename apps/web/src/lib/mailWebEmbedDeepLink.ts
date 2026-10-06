@@ -31,6 +31,8 @@ export type MailWebEmbedHandoff = {
   mailDmarcAssist?: boolean;
   /** Bildirimler + PWA / offline / push odak (EK-P8). */
   mailPwaAssist?: boolean;
+  /** Yeni mesajda AI gövde önerisi (EK-P9, opsiyonel). */
+  composeAiAssist?: boolean;
 };
 
 export function parseMailWebEmbedView(

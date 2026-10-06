@@ -114,10 +114,13 @@ export function useMailClientController({
   const deepLinkMailSwipeHandled = useRef(false);
   const deepLinkMailDmarcHandled = useRef(false);
   const deepLinkMailPwaHandled = useRef(false);
+  const deepLinkComposeAiHandled = useRef(false);
   const [mailBulkAssistActive, setMailBulkAssistActive] = useState(false);
   const [mailSwipeAssistActive, setMailSwipeAssistActive] = useState(false);
   const [mailDmarcAssistActive, setMailDmarcAssistActive] = useState(false);
   const [mailPwaAssistActive, setMailPwaAssistActive] = useState(false);
+  const [composeAiAssistActive, setComposeAiAssistActive] = useState(false);
+  const [composeAiDraftBusy, setComposeAiDraftBusy] = useState(false);
   const [view, setView] = useState<MailClientView>("inbox");
   const [summary, setSummary] = useState<MailInboxSummary | null>(null);
   const [sendReadiness, setSendReadiness] = useState<MailSendReadiness | null>(
@@ -723,6 +726,20 @@ export function useMailClientController({
     setMailPwaAssistActive(true);
     setSettingsInitialView("notifications");
     setSettingsOpen(true);
+  }, [accessToken, searchParams]);
+
+  useEffect(() => {
+    if (
+      !accessToken ||
+      searchParams.get("composeAi") !== "1" ||
+      deepLinkComposeAiHandled.current
+    ) {
+      return;
+    }
+    deepLinkComposeAiHandled.current = true;
+    setComposeAiAssistActive(true);
+    setComposeRich(true);
+    setComposeOpen(true);
   }, [accessToken, searchParams]);
 
   useEffect(() => {
@@ -1557,6 +1574,7 @@ export function useMailClientController({
     setComposeFiles([]);
     setComposeStoredAttachments([]);
     setComposeError("");
+    setComposeAiAssistActive(false);
   }
 
   function startForwardFromDetail() {
@@ -1820,6 +1838,10 @@ export function useMailClientController({
     setMailDmarcAssistActive,
     mailPwaAssistActive,
     setMailPwaAssistActive,
+    composeAiAssistActive,
+    setComposeAiAssistActive,
+    composeAiDraftBusy,
+    setComposeAiDraftBusy,
     setShortcutsOpen,
     setSummary,
     setThreadMessages,

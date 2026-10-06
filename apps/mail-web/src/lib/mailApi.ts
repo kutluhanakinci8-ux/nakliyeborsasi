@@ -1085,6 +1085,21 @@ export async function fetchSuggestReply(
   );
 }
 
+export async function fetchSuggestComposeDraft(
+  accessToken: string,
+  subject: string,
+  locale = "tr",
+): Promise<{ suggestion: string; provider: string }> {
+  return apiFetch<{ suggestion: string; provider: string }>(
+    accessToken,
+    "company/mail-inbox/compose/suggest-draft",
+    {
+      method: "POST",
+      body: JSON.stringify({ subject, lang: locale }),
+    },
+  );
+}
+
 export async function setDefaultMailSender(
   accessToken: string,
   senderId: string,
