@@ -3,7 +3,7 @@
 set -euo pipefail
 API_BASE="${EKOLojIK_API_BASE:-${SOCIAL_HUB_API_BASE:-http://127.0.0.1:3000/api/v1}}"
 WEB_BASE="${EKOLojIK_WEB_PUBLIC_URL:-${SOCIAL_HUB_WEB_PUBLIC_URL:-http://127.0.0.1:3001}}"
-EXPECT_PHASE="${EKOLOJIK_SMOKE_EXPECT_PHASE:-ek-p5}"
+EXPECT_PHASE="${EKOLOJIK_SMOKE_EXPECT_PHASE:-ek-p6}"
 
 echo "== Ekolojik market public status =="
 status_json="$(curl -fsS "${API_BASE}/public/ekolojik-market/status")"
@@ -71,6 +71,28 @@ echo "${status_json}" | grep -q '"mailSwipe=1"' || {
   exit 1
 }
 echo "OK: mailRulesSwipeBulk deep links"
+echo "${status_json}" | grep -q '"ekolojik_mail_caldav_carddav_hub"' || {
+  echo "FAIL: missing ekolojik_mail_caldav_carddav_hub"
+  exit 1
+}
+echo "OK: feature ekolojik_mail_caldav_carddav_hub (EK-P6)"
+echo "${status_json}" | grep -q '"mailView=calendar"' || {
+  echo "FAIL: missing mailCalDavCardDav calDav path"
+  exit 1
+}
+echo "${status_json}" | grep -q '"mailSettings=calendarSettings"' || {
+  echo "FAIL: missing mailCalDavCardDav calendarSettings"
+  exit 1
+}
+echo "${status_json}" | grep -q '"mailView=contacts"' || {
+  echo "FAIL: missing mailCalDavCardDav cardDav path"
+  exit 1
+}
+echo "${status_json}" | grep -q '"mailSettings=contactsSettings"' || {
+  echo "FAIL: missing mailCalDavCardDav contactsSettings"
+  exit 1
+}
+echo "OK: mailCalDavCardDav deep links"
 echo "${status_json}" | grep -q '"ekolojik_messaging_sse_redis_fanout"' || {
   echo "FAIL: missing ekolojik_messaging_sse_redis_fanout"
   exit 1

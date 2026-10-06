@@ -32,7 +32,8 @@ export function ekolojikSectionToMailHandoff(
   if (
     options?.mailSettingsTab?.trim() ||
     options?.mailBulkAssist ||
-    options?.mailSwipeAssist
+    options?.mailSwipeAssist ||
+    options?.mailView
   ) {
     return {
       mailView: options.mailView ?? "inbox",

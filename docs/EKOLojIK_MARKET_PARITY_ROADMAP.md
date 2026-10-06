@@ -53,7 +53,7 @@ Detay: kullanıcı onayı sonrası `docs/LERTA_MAIL_MESSAGING_PARITY_100_ROADMAP
 | P3 | ek-p3 | Hesaplar / alias / DNS hub (● `mailSettings=accounts|deliverability`) |
 | P4 | ek-p4 | IMAP klasörleri: Fatura, Gönderilen, Arşiv sidebar eşlemesi (● deep link) |
 | P5 | ek-p5 | Kurallar, swipe, bulk (● `mailSettings=rules` + `mailBulk` + `mailSwipe`) |
-| P6 | ek-p6 | CalDAV / CardDAV |
+| P6 | ek-p6 | CalDAV / CardDAV (● `mailView=calendar|contacts` + `mailSettings=calendarSettings|contactsSettings`) |
 | P7 | ek-p7 | Deliverability + DMARC panel |
 | P8 | ek-p8 | PWA offline + push |
 | P9 | ek-p9 | AI compose (opsiyonel) |

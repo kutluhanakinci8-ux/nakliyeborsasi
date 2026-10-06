@@ -1,7 +1,7 @@
 import { Controller, Get } from "@nestjs/common";
 import { MessagingAttachmentStorageService } from "../messaging/MessagingAttachmentStorageService";
 
-const EK_PHASE = "ek-p5";
+const EK_PHASE = "ek-p6";
 
 /** EK-U4 rubrik — kod yolu paritesi (posta/mesaj aynı NB modülleri, ayrı tenant). */
 const EK_PARITY_MAIL_PERCENT = 96;
@@ -63,6 +63,7 @@ const EK_FEATURES = [
   "ekolojik_mail_rich_compose_templates_multipart",
   "ekolojik_mail_accounts_alias_dns_hub",
   "ekolojik_mail_rules_swipe_bulk",
+  "ekolojik_mail_caldav_carddav_hub",
   "ekolojik_messaging_full_chat",
   "ekolojik_messaging_sse_redis_fanout",
   "ekolojik_messaging_interactions_parity",
@@ -96,6 +97,7 @@ const EK_PHASE_MILESTONES = [
   "ek-p3",
   "ek-p4",
   "ek-p5",
+  "ek-p6",
   "ek-m1",
   "ek-m2",
   "ek-m3",
@@ -215,6 +217,16 @@ export class EkolojikMarketStatusController {
       swipePath: string;
       embedQueryParams: string[];
       nbMailWebSurfaces: string[];
+    };
+    mailCalDavCardDav: {
+      phaseCode: string;
+      hubSection: string;
+      calDavPath: string;
+      cardDavPath: string;
+      embedQueryParams: string[];
+      nbMailWebSurfaces: string[];
+      nbCalDavApiPrefix: string;
+      nbCardDavApiPrefix: string;
     };
     socialHubConnections: {
       hubSection: string;
@@ -487,6 +499,23 @@ export class EkolojikMarketStatusController {
           "mail_bulk_actions",
           "swipeRowArchive",
         ],
+      },
+      mailCalDavCardDav: {
+        phaseCode: "ek-p6",
+        hubSection: "posta",
+        calDavPath:
+          "/marketim/posta-ve-mesaj?bolum=posta&mailView=calendar&mailSettings=calendarSettings",
+        cardDavPath:
+          "/marketim/posta-ve-mesaj?bolum=posta&mailView=contacts&mailSettings=contactsSettings",
+        embedQueryParams: ["mailView", "mailSettings"],
+        nbMailWebSurfaces: [
+          "MailCalendarFeedsPanel",
+          "MailContactsCardDavPanel",
+          "calendarSettings",
+          "contactsSettings",
+        ],
+        nbCalDavApiPrefix: "/api/v1/company/mail-inbox/calendar/caldav",
+        nbCardDavApiPrefix: "/api/v1/company/mail-inbox/contacts/carddav",
       },
       socialHubConnections: {
         hubSection: "sosyal",

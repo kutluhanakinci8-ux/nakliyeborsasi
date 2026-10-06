@@ -41,6 +41,13 @@ import {
   readEkolojikMailInboxOpsFromSearchParams,
 } from "../../lib/ekolojikMailRulesSwipeBulkDeepLink";
 import {
+  ekolojikMailCalDavHubHref,
+  ekolojikMailCardDavHubHref,
+  isEkolojikMailCalDavHub,
+  isEkolojikMailCardDavHub,
+  readEkolojikMailDavFromSearchParams,
+} from "../../lib/ekolojikMailCalDavCardDavDeepLink";
+import {
   applyEkolojikSectionQueryParams,
   isEkolojikMessagingChatSection,
   isEkolojikGroupInbox,
@@ -245,15 +252,42 @@ export function EkolojikCommunicationsHubClient() {
     searchParams.get("mailSwipe"),
   );
 
+  const mailDavDeepLink = useMemo(
+    () =>
+      readEkolojikMailDavFromSearchParams(
+        new URLSearchParams(searchParams.toString()),
+      ),
+    [searchParams],
+  );
+
+  const mailCalDavHub = isEkolojikMailCalDavHub(
+    searchParams.get("bolum"),
+    mailDavDeepLink.mailSettingsTab ?? null,
+    searchParams.get("mailView"),
+  );
+  const mailCardDavHub = isEkolojikMailCardDavHub(
+    searchParams.get("bolum"),
+    mailDavDeepLink.mailSettingsTab ?? null,
+    searchParams.get("mailView"),
+  );
+
   const mailHandoff = useMemo(
     () =>
       ekolojikSectionToMailHandoff(section, {
         ...mailComposeDeepLink,
         ...mailInboxOpsDeepLink,
+        ...mailDavDeepLink,
         openCompose: openCompose || mailComposeDeepLink.openCompose,
         composeTo: composeTo ?? mailComposeDeepLink.composeTo,
       }),
-    [section, openCompose, composeTo, mailComposeDeepLink, mailInboxOpsDeepLink],
+    [
+      section,
+      openCompose,
+      composeTo,
+      mailComposeDeepLink,
+      mailInboxOpsDeepLink,
+      mailDavDeepLink,
+    ],
   );
 
   const folderHint = useMemo(() => {
@@ -412,7 +446,9 @@ export function EkolojikCommunicationsHubClient() {
               !mailDnsHub &&
               !mailRulesHub &&
               !mailBulkHub &&
-              !mailSwipeHub
+              !mailSwipeHub &&
+              !mailCalDavHub &&
+              !mailCardDavHub
                 ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
                 : "ekolojik-comms-sidebar-item"
             }
@@ -476,6 +512,32 @@ export function EkolojikCommunicationsHubClient() {
             onClick={() => navigateMailRichCompose(ekolojikMailSwipeHubHref())}
           >
             Kaydırma (swipe)
+          </button>
+          <button
+            type="button"
+            className={
+              mailCalDavHub
+                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
+                : "ekolojik-comms-sidebar-item"
+            }
+            onClick={() =>
+              navigateMailRichCompose(ekolojikMailCalDavHubHref())
+            }
+          >
+            CalDAV (takvim)
+          </button>
+          <button
+            type="button"
+            className={
+              mailCardDavHub
+                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
+                : "ekolojik-comms-sidebar-item"
+            }
+            onClick={() =>
+              navigateMailRichCompose(ekolojikMailCardDavHubHref())
+            }
+          >
+            CardDAV (rehber)
           </button>
           <button
             type="button"

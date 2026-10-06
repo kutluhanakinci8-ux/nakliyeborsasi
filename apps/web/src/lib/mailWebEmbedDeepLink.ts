@@ -6,7 +6,9 @@ export type MailWebEmbedView =
   | "spam"
   | "trash"
   | "starred"
-  | "drafts";
+  | "drafts"
+  | "calendar"
+  | "contacts";
 
 export type MailWebEmbedHandoff = {
   mailView?: MailWebEmbedView;
@@ -42,6 +44,8 @@ export function parseMailWebEmbedView(
     "trash",
     "starred",
     "drafts",
+    "calendar",
+    "contacts",
   ];
   return allowed.includes(v as MailWebEmbedView)
     ? (v as MailWebEmbedView)
