@@ -15,7 +15,7 @@ export function readEkolojikMailOpsFromSearchParams(
   }
   return {
     mailSettingsTab: "ops",
-    mailOpsAssist: opsFlag,
+    mailOpsAssist: opsFlag ? true : undefined,
   };
 }
 
