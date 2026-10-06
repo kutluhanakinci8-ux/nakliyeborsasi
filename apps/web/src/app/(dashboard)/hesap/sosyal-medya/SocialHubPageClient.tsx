@@ -25,6 +25,7 @@ import {
   startOfMonth,
 } from "../../../../lib/socialHubCalendar";
 import { formatSocialHubOAuthReason } from "../../../../lib/formatSocialHubOAuthReason";
+import { readEkolojikPublishingUtmFromSearchParams } from "../../../../lib/ekolojikSocialHubDeepLink";
 import { runSocialHubHealthPushHookSkeleton } from "../../../../lib/socialHubHealthPushHook";
 import type {
   SocialHubAnalytics,
@@ -63,6 +64,8 @@ type SocialHubPageClientProps = {
   hubBasePath?: string;
   syncTabsToUrl?: boolean;
   oauthWebReturnQuery?: string;
+  /** Ekolojik hub: `utm_*` query ile yayın taslağı UTM alanlarını doldur. */
+  prefillPublishingUtmFromUrl?: boolean;
 };
 
 export function SocialHubPageClient({
@@ -71,6 +74,7 @@ export function SocialHubPageClient({
   hubBasePath,
   syncTabsToUrl = false,
   oauthWebReturnQuery,
+  prefillPublishingUtmFromUrl = false,
 }: SocialHubPageClientProps = {}) {
   const { accessToken, session } = useWebSession();
   const router = useRouter();
@@ -171,6 +175,30 @@ export function SocialHubPageClient({
     }
     setActiveTab(parseSocialHubTab(searchParams.get("tab")));
   }, [searchParams, syncTabsToUrl]);
+
+  useEffect(() => {
+    if (!prefillPublishingUtmFromUrl) {
+      return;
+    }
+    if (parseSocialHubTab(searchParams.get("tab")) !== "publishing") {
+      return;
+    }
+    const utm = readEkolojikPublishingUtmFromSearchParams(
+      new URLSearchParams(searchParams.toString()),
+    );
+    if (utm.utmCampaign) {
+      setDraftUtmCampaign(utm.utmCampaign);
+    }
+    if (utm.utmSource) {
+      setDraftUtmSource(utm.utmSource);
+    }
+    if (utm.utmMedium) {
+      setDraftUtmMedium(utm.utmMedium);
+    }
+    if (utm.utmContent) {
+      setDraftUtmContent(utm.utmContent);
+    }
+  }, [searchParams, prefillPublishingUtmFromUrl]);
 
   const handleTabChange = useCallback(
     (tab: SocialHubTabId) => {

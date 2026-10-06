@@ -1,7 +1,7 @@
 import { Controller, Get } from "@nestjs/common";
 import { MessagingAttachmentStorageService } from "../messaging/MessagingAttachmentStorageService";
 
-const EK_PHASE = "ek-s3";
+const EK_PHASE = "ek-s4";
 
 const EK_SOCIAL_DM_PLATFORMS = [
   "INSTAGRAM",
@@ -30,6 +30,7 @@ const EK_FEATURES = [
   "ekolojik_social_hub_embed",
   "ekolojik_social_hub_connections_oauth",
   "ekolojik_social_hub_inbox_sync_summary",
+  "ekolojik_social_hub_publishing_utm_media",
   "ekolojik_ci_workflow_ek_0",
 ] as const;
 
@@ -52,6 +53,7 @@ const EK_PHASE_MILESTONES = [
   "ek-s1",
   "ek-s2",
   "ek-s3",
+  "ek-s4",
   "ek-u4",
 ] as const;
 
@@ -138,6 +140,15 @@ export class EkolojikMarketStatusController {
       syncSummaryApiPath: string;
       syncInboxApiPath: string;
       messagingDeepLinkHubSection: string;
+    };
+    socialHubPublishing: {
+      hubSection: string;
+      hubTab: string;
+      hubPath: string;
+      publishMediaApiPath: string;
+      maxMediaAttachments: number;
+      utmDeepLinkQueryParams: string[];
+      nbTab: string;
     };
   } {
     return {
@@ -257,6 +268,20 @@ export class EkolojikMarketStatusController {
         syncInboxApiPath:
           "/api/v1/company/social-hub/connections/{platformCode}/sync-inbox",
         messagingDeepLinkHubSection: "sosyal-dm",
+      },
+      socialHubPublishing: {
+        hubSection: "sosyal",
+        hubTab: "publishing",
+        hubPath: "/marketim/posta-ve-mesaj?bolum=sosyal&tab=publishing",
+        publishMediaApiPath: "/api/v1/company/social-hub/publishing/media",
+        maxMediaAttachments: 4,
+        utmDeepLinkQueryParams: [
+          "utm_campaign",
+          "utm_source",
+          "utm_medium",
+          "utm_content",
+        ],
+        nbTab: "publishing",
       },
     };
   }

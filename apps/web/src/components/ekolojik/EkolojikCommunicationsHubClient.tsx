@@ -34,7 +34,9 @@ import {
 import {
   EKOLOJIK_SOCIAL_OAUTH_WEB_RETURN_QUERY,
   ekolojikSocialHubInboxHref,
+  ekolojikSocialHubPublishingHref,
   isEkolojikSocialHubInboxTab,
+  isEkolojikSocialHubPublishingTab,
 } from "../../lib/ekolojikSocialHubDeepLink";
 import {
   parseEkolojikHubSection,
@@ -56,6 +58,10 @@ export function EkolojikCommunicationsHubClient() {
   const socialDmInbox = isEkolojikSocialDmInbox(section, searchParams);
   const groupInbox = isEkolojikGroupInbox(section, searchParams);
   const socialInboxHub = isEkolojikSocialHubInboxTab(
+    searchParams.get("bolum"),
+    searchParams.get("tab"),
+  );
+  const socialPublishingHub = isEkolojikSocialHubPublishingTab(
     searchParams.get("bolum"),
     searchParams.get("tab"),
   );
@@ -180,6 +186,10 @@ export function EkolojikCommunicationsHubClient() {
     });
   }, [router]);
 
+  const navigateSocialPublishingHub = useCallback(() => {
+    router.replace(ekolojikSocialHubPublishingHref(), { scroll: false });
+  }, [router]);
+
   const switchMessagingRailMode = useCallback(
     (mode: "chat" | "email") => {
       setChatBackgroundPickerOpen(false);
@@ -286,6 +296,17 @@ export function EkolojikCommunicationsHubClient() {
           <button
             type="button"
             className={
+              socialPublishingHub
+                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
+                : "ekolojik-comms-sidebar-item"
+            }
+            onClick={() => navigateSocialPublishingHub()}
+          >
+            Yayınlar &amp; UTM
+          </button>
+          <button
+            type="button"
+            className={
               section === "gonderilen"
                 ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
                 : "ekolojik-comms-sidebar-item"
@@ -341,11 +362,20 @@ export function EkolojikCommunicationsHubClient() {
           <button
             type="button"
             className={
-              section === "sosyal" && !socialInboxHub
+              section === "sosyal" &&
+              !socialInboxHub &&
+              !socialPublishingHub
                 ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
                 : "ekolojik-comms-sidebar-item"
             }
-            onClick={() => navigateSection("sosyal")}
+            onClick={() => {
+              const params = new URLSearchParams();
+              params.set("bolum", "sosyal");
+              params.set("tab", "connections");
+              router.replace(`/marketim/posta-ve-mesaj?${params.toString()}`, {
+                scroll: false,
+              });
+            }}
           >
             Sosyal medya
           </button>
@@ -426,6 +456,7 @@ export function EkolojikCommunicationsHubClient() {
                 threadMessagingHref={ekolojikSocialDmInboxHref}
                 hubBasePath={EKOLOJIK_HUB_PATH}
                 syncTabsToUrl
+                prefillPublishingUtmFromUrl
                 oauthWebReturnQuery={EKOLOJIK_SOCIAL_OAUTH_WEB_RETURN_QUERY}
               />
             </div>
