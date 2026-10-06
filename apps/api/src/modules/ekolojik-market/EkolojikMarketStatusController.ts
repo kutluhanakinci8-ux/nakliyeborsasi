@@ -1,7 +1,19 @@
 import { Controller, Get } from "@nestjs/common";
 import { MessagingAttachmentStorageService } from "../messaging/MessagingAttachmentStorageService";
 
-const EK_PHASE = "ek-s8";
+const EK_PHASE = "ek-s9";
+
+const EK_SOCIAL_HUB_BETA_PLATFORM_NB_FEATURES = [
+  "tiktok_prod_provider_path",
+  "youtube_prod_provider_path",
+  "tiktok_webhook_prod_stack",
+  "youtube_webhook_prod_stack",
+] as const;
+
+const EK_SOCIAL_HUB_PWA_NB_FEATURES = [
+  "social_hub_pwa_manifest_scope",
+  "social_hub_health_push_hook_skeleton",
+] as const;
 
 const EK_SOCIAL_HUB_TELEGRAM_NB_PHASES = [
   "bd",
@@ -56,6 +68,7 @@ const EK_FEATURES = [
   "ekolojik_social_hub_analytics",
   "ekolojik_social_hub_telegram_bd_bl",
   "ekolojik_social_hub_ops_integration_gate",
+  "ekolojik_social_hub_tiktok_youtube_pwa",
   "ekolojik_ci_workflow_ek_0",
 ] as const;
 
@@ -83,6 +96,7 @@ const EK_PHASE_MILESTONES = [
   "ek-s6",
   "ek-s7",
   "ek-s8",
+  "ek-s9",
   "ek-u4",
 ] as const;
 
@@ -230,6 +244,25 @@ export class EkolojikMarketStatusController {
       nbStatusFeature: string;
       nbStatusPath: string;
       smokeScript: string;
+    };
+    socialHubBetaPlatforms: {
+      hubSection: string;
+      hubTab: string;
+      platformQueryParam: string;
+      platforms: string[];
+      hubPaths: Record<string, string>;
+      nbPhaseCodes: string[];
+      nbStatusFeatures: string[];
+      roadmapOAuthApiPath: string;
+    };
+    socialHubPwa: {
+      hubSection: string;
+      hubTab: string;
+      hubPath: string;
+      pwaQueryParam: string;
+      manifestPath: string;
+      nbPhaseCode: string;
+      nbStatusFeatures: string[];
     };
   } {
     return {
@@ -423,6 +456,31 @@ export class EkolojikMarketStatusController {
         nbStatusFeature: "social_hub_integration_gate_checklist",
         nbStatusPath: "/api/v1/company/social-hub/status",
         smokeScript: "scripts/smoke-social-hub-integration-gate.sh",
+      },
+      socialHubBetaPlatforms: {
+        hubSection: "sosyal",
+        hubTab: "connections",
+        platformQueryParam: "platform",
+        platforms: ["TIKTOK", "YOUTUBE"],
+        hubPaths: {
+          TIKTOK:
+            "/marketim/posta-ve-mesaj?bolum=sosyal&tab=connections&platform=TIKTOK",
+          YOUTUBE:
+            "/marketim/posta-ve-mesaj?bolum=sosyal&tab=connections&platform=YOUTUBE",
+        },
+        nbPhaseCodes: ["av", "aw"],
+        nbStatusFeatures: [...EK_SOCIAL_HUB_BETA_PLATFORM_NB_FEATURES],
+        roadmapOAuthApiPath:
+          "/api/v1/company/social-hub/connections/{platformCode}/roadmap-oauth",
+      },
+      socialHubPwa: {
+        hubSection: "sosyal",
+        hubTab: "health",
+        hubPath: "/marketim/posta-ve-mesaj?bolum=sosyal&tab=health&pwa=1",
+        pwaQueryParam: "pwa",
+        manifestPath: "/manifest-social-hub.webmanifest",
+        nbPhaseCode: "bb",
+        nbStatusFeatures: [...EK_SOCIAL_HUB_PWA_NB_FEATURES],
       },
     };
   }

@@ -3,7 +3,7 @@
 set -euo pipefail
 API_BASE="${EKOLojIK_API_BASE:-${SOCIAL_HUB_API_BASE:-http://127.0.0.1:3000/api/v1}}"
 WEB_BASE="${EKOLojIK_WEB_PUBLIC_URL:-${SOCIAL_HUB_WEB_PUBLIC_URL:-http://127.0.0.1:3001}}"
-EXPECT_PHASE="${EKOLOJIK_SMOKE_EXPECT_PHASE:-ek-s8}"
+EXPECT_PHASE="${EKOLOJIK_SMOKE_EXPECT_PHASE:-ek-s9}"
 
 echo "== Ekolojik market public status =="
 status_json="$(curl -fsS "${API_BASE}/public/ekolojik-market/status")"
@@ -203,6 +203,29 @@ echo "${status_json}" | grep -q '"social_hub_integration_gate_checklist"' || {
   exit 1
 }
 echo "OK: socialHubIntegrationGate BC parity"
+echo "${status_json}" | grep -q '"ekolojik_social_hub_tiktok_youtube_pwa"' || {
+  echo "FAIL: missing ekolojik_social_hub_tiktok_youtube_pwa"
+  exit 1
+}
+echo "OK: feature ekolojik_social_hub_tiktok_youtube_pwa (EK-S9)"
+echo "${status_json}" | grep -q '"platform=TIKTOK"' || {
+  echo "FAIL: missing socialHubBetaPlatforms TIKTOK hub path"
+  exit 1
+}
+echo "OK: socialHubBetaPlatforms AV/AW deep links"
+echo "${status_json}" | grep -q '"tiktok_prod_provider_path"' || {
+  echo "FAIL: missing socialHubBetaPlatforms nb tiktok feature"
+  exit 1
+}
+echo "${status_json}" | grep -q '"tab=health&pwa=1"' || {
+  echo "FAIL: missing socialHubPwa health deep link"
+  exit 1
+}
+echo "OK: socialHubPwa BB manifest + push hook refs"
+echo "${status_json}" | grep -q '"social_hub_pwa_manifest_scope"' || {
+  echo "FAIL: missing socialHubPwa nb feature"
+  exit 1
+}
 
 echo "== Ekolojik hub web route =="
 code="$(curl -sS -o /dev/null -w "%{http_code}" "${WEB_BASE}/marketim/posta-ve-mesaj")"

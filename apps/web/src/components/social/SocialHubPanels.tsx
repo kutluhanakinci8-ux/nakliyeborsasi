@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { SocialHubOpsLogRail } from "./SocialHubOpsLogRail";
 import {
   buildConnectionsOpsLog,
@@ -207,6 +207,7 @@ type ConnectionsProps = {
   onTelegramChannelSetup?: () => void;
   onTelegramDiscussionSetup?: () => void;
   integrationGateExpanded?: boolean;
+  highlightPlatformCode?: string | null;
 };
 
 function integrationGateStepLabel(
@@ -238,7 +239,20 @@ export function SocialConnectionsPanel({
   onTelegramChannelSetup,
   onTelegramDiscussionSetup,
   integrationGateExpanded = false,
+  highlightPlatformCode = null,
 }: ConnectionsProps) {
+  const highlightRef = useRef<HTMLLIElement | null>(null);
+
+  useEffect(() => {
+    if (!highlightPlatformCode || !highlightRef.current) {
+      return;
+    }
+    highlightRef.current.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+    });
+  }, [highlightPlatformCode, snapshot.connections?.length]);
+
   const permissions = snapshot.permissions ?? {
     canManageConnections: false,
     canPublish: false,
@@ -328,10 +342,19 @@ export function SocialConnectionsPanel({
               const needsOAuthConfig =
                 provider?.implementationStatus === "pending" ||
                 row.oauthReady === false;
+              const isHighlighted =
+                highlightPlatformCode != null &&
+                row.platformCode === highlightPlatformCode;
               return (
                 <li
                   key={row.id}
-                  className="social-hub-connection-card social-hub-connection-card--premium"
+                  id={`social-hub-connection-${row.platformCode}`}
+                  ref={isHighlighted ? highlightRef : undefined}
+                  className={
+                    isHighlighted
+                      ? "social-hub-connection-card social-hub-connection-card--premium social-hub-connection-card--focused"
+                      : "social-hub-connection-card social-hub-connection-card--premium"
+                  }
                 >
                   <div className="social-hub-connection-main">
                     <div className="social-hub-connection-title-row">
@@ -2231,6 +2254,7 @@ type HealthPanelProps = {
   onRefreshToken: (platformCode: string) => void;
   onReload: () => void;
   pwa?: SocialHubPwaConfig;
+  pwaSectionExpanded?: boolean;
   healthPushHookStatus?: string;
 };
 
@@ -2276,6 +2300,7 @@ export function SocialHealthPanel({
   onRefreshToken,
   onReload,
   pwa,
+  pwaSectionExpanded = false,
   healthPushHookStatus,
 }: HealthPanelProps) {
   const opsLogEntries = useMemo(() => {
@@ -2326,6 +2351,24 @@ export function SocialHealthPanel({
             Genel durum:{" "}
             <strong>{healthOverallLabel(health.overallStatus)}</strong>
           </p>
+          {pwa ? (
+            <details
+              className="social-hub-pwa-details"
+              open={pwaSectionExpanded}
+            >
+              <summary className="social-hub-health-settings-summary">
+                PWA kısayolu (BB) — manifest &amp; push hook
+              </summary>
+              <p className="social-hub-connection-summary">
+                Manifest: <code>{pwa.manifestPath}</code> · scope{" "}
+                <code>{pwa.scope}</code>
+              </p>
+              <p className="module-hint">{pwa.healthPushHook.note}</p>
+              {healthPushHookStatus ? (
+                <p className="account-save-hint">{healthPushHookStatus}</p>
+              ) : null}
+            </details>
+          ) : null}
           <div className="social-hub-health-quick-actions">
         {canManage ? (
           <label className="social-hub-check">

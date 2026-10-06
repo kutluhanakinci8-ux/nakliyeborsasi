@@ -47,6 +47,11 @@ import {
   ekolojikSocialHubIntegrationGateHref,
   isEkolojikSocialHubHealthTab,
   isEkolojikSocialHubIntegrationGate,
+  ekolojikSocialHubBetaPlatformHref,
+  isEkolojikSocialHubBetaPlatformConnections,
+  ekolojikSocialHubPwaHealthHref,
+  isEkolojikSocialHubPwaHealth,
+  parseEkolojikBetaPlatformHighlight,
 } from "../../lib/ekolojikSocialHubDeepLink";
 import {
   parseEkolojikHubSection,
@@ -96,6 +101,24 @@ export function EkolojikCommunicationsHubClient() {
     searchParams.get("bolum"),
     searchParams.get("tab"),
     searchParams.get("integration_gate") ?? searchParams.get("gate"),
+  );
+  const betaPlatformHighlight = parseEkolojikBetaPlatformHighlight(
+    searchParams.get("platform"),
+  );
+  const socialTikTokHub = isEkolojikSocialHubBetaPlatformConnections(
+    searchParams.get("bolum"),
+    searchParams.get("tab"),
+    betaPlatformHighlight === "TIKTOK" ? "TIKTOK" : null,
+  );
+  const socialYouTubeHub = isEkolojikSocialHubBetaPlatformConnections(
+    searchParams.get("bolum"),
+    searchParams.get("tab"),
+    betaPlatformHighlight === "YOUTUBE" ? "YOUTUBE" : null,
+  );
+  const socialPwaHealthHub = isEkolojikSocialHubPwaHealth(
+    searchParams.get("bolum"),
+    searchParams.get("tab"),
+    searchParams.get("pwa"),
   );
   const [composeTo, setComposeTo] = useState<string | undefined>(undefined);
   const [openCompose, setOpenCompose] = useState(false);
@@ -240,6 +263,22 @@ export function EkolojikCommunicationsHubClient() {
 
   const navigateSocialIntegrationGateHub = useCallback(() => {
     router.replace(ekolojikSocialHubIntegrationGateHref(), { scroll: false });
+  }, [router]);
+
+  const navigateSocialTikTokHub = useCallback(() => {
+    router.replace(ekolojikSocialHubBetaPlatformHref("TIKTOK"), {
+      scroll: false,
+    });
+  }, [router]);
+
+  const navigateSocialYouTubeHub = useCallback(() => {
+    router.replace(ekolojikSocialHubBetaPlatformHref("YOUTUBE"), {
+      scroll: false,
+    });
+  }, [router]);
+
+  const navigateSocialPwaHealthHub = useCallback(() => {
+    router.replace(ekolojikSocialHubPwaHealthHref(), { scroll: false });
   }, [router]);
 
   const switchMessagingRailMode = useCallback(
@@ -392,13 +431,46 @@ export function EkolojikCommunicationsHubClient() {
           <button
             type="button"
             className={
-              socialHealthHub
+              socialTikTokHub
+                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
+                : "ekolojik-comms-sidebar-item"
+            }
+            onClick={() => navigateSocialTikTokHub()}
+          >
+            TikTok (beta)
+          </button>
+          <button
+            type="button"
+            className={
+              socialYouTubeHub
+                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
+                : "ekolojik-comms-sidebar-item"
+            }
+            onClick={() => navigateSocialYouTubeHub()}
+          >
+            YouTube (beta)
+          </button>
+          <button
+            type="button"
+            className={
+              socialHealthHub && !socialPwaHealthHub
                 ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
                 : "ekolojik-comms-sidebar-item"
             }
             onClick={() => navigateSocialHealthHub()}
           >
             Sosyal ops
+          </button>
+          <button
+            type="button"
+            className={
+              socialPwaHealthHub
+                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
+                : "ekolojik-comms-sidebar-item"
+            }
+            onClick={() => navigateSocialPwaHealthHub()}
+          >
+            Sosyal PWA
           </button>
           <button
             type="button"
@@ -475,7 +547,10 @@ export function EkolojikCommunicationsHubClient() {
               !socialTemplatesHub &&
               !socialAnalyticsHub &&
               !socialTelegramHub &&
+              !socialTikTokHub &&
+              !socialYouTubeHub &&
               !socialHealthHub &&
+              !socialPwaHealthHub &&
               !socialIntegrationGateHub
                 ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
                 : "ekolojik-comms-sidebar-item"
@@ -573,6 +648,8 @@ export function EkolojikCommunicationsHubClient() {
                 highlightAnalyticsUtmFromUrl
                 openTelegramDeepLinkFromUrl
                 openIntegrationGateFromUrl
+                openBetaPlatformDeepLinkFromUrl
+                openPwaHealthFromUrl
                 oauthWebReturnQuery={EKOLOJIK_SOCIAL_OAUTH_WEB_RETURN_QUERY}
               />
             </div>

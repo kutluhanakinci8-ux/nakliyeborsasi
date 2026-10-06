@@ -210,3 +210,70 @@ export function ekolojikSocialHubIntegrationGateHref(): string {
   });
   return `${EKOLOJIK_HUB_PATH}?${params.toString()}`;
 }
+
+/** NB AV/AW — TikTok & YouTube prod yol haritası bağlantıları (beta). */
+export const EKOLOJIK_SOCIAL_BETA_PLATFORM_CODES = ["TIKTOK", "YOUTUBE"] as const;
+
+export type EkolojikSocialBetaPlatformCode =
+  (typeof EKOLOJIK_SOCIAL_BETA_PLATFORM_CODES)[number];
+
+export function ekolojikSocialHubBetaPlatformHref(
+  platform: EkolojikSocialBetaPlatformCode,
+): string {
+  const params = new URLSearchParams({
+    bolum: "sosyal",
+    tab: "connections",
+    platform,
+  });
+  return `${EKOLOJIK_HUB_PATH}?${params.toString()}`;
+}
+
+export function isEkolojikSocialHubBetaPlatformConnections(
+  bolum: string | null,
+  tab: string | null,
+  platform: string | null,
+): boolean {
+  if (bolum !== "sosyal" || tab !== "connections" || !platform) {
+    return false;
+  }
+  const code = platform.toUpperCase();
+  return (
+    code === "TIKTOK" ||
+    code === "YOUTUBE" ||
+    EKOLOJIK_SOCIAL_BETA_PLATFORM_CODES.includes(
+      code as EkolojikSocialBetaPlatformCode,
+    )
+  );
+}
+
+export function parseEkolojikBetaPlatformHighlight(
+  platform: string | null,
+): EkolojikSocialBetaPlatformCode | null {
+  const code = platform?.trim().toUpperCase();
+  if (code === "TIKTOK" || code === "YOUTUBE") {
+    return code;
+  }
+  return null;
+}
+
+/** NB BB — sosyal hub PWA manifest + sağlık push hook (ops sekmesi). */
+export function isEkolojikSocialHubPwaHealth(
+  bolum: string | null,
+  tab: string | null,
+  pwa: string | null,
+): boolean {
+  if (bolum !== "sosyal" || tab !== "health") {
+    return false;
+  }
+  const raw = pwa?.toLowerCase();
+  return raw === "1" || raw === "true";
+}
+
+export function ekolojikSocialHubPwaHealthHref(): string {
+  const params = new URLSearchParams({
+    bolum: "sosyal",
+    tab: "health",
+    pwa: "1",
+  });
+  return `${EKOLOJIK_HUB_PATH}?${params.toString()}`;
+}

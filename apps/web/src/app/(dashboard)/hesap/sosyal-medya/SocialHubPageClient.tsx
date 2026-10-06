@@ -26,8 +26,10 @@ import {
 } from "../../../../lib/socialHubCalendar";
 import { formatSocialHubOAuthReason } from "../../../../lib/formatSocialHubOAuthReason";
 import {
+  parseEkolojikBetaPlatformHighlight,
   readEkolojikAnalyticsUtmHighlight,
   readEkolojikPublishingUtmFromSearchParams,
+  type EkolojikSocialBetaPlatformCode,
 } from "../../../../lib/ekolojikSocialHubDeepLink";
 import { runSocialHubHealthPushHookSkeleton } from "../../../../lib/socialHubHealthPushHook";
 import type {
@@ -77,6 +79,10 @@ type SocialHubPageClientProps = {
   openTelegramDeepLinkFromUrl?: boolean;
   /** Ekolojik hub: `integration_gate=1` ile kapı checklist. */
   openIntegrationGateFromUrl?: boolean;
+  /** Ekolojik hub: `platform=TIKTOK|YOUTUBE` bağlantı kartı vurgusu. */
+  openBetaPlatformDeepLinkFromUrl?: boolean;
+  /** Ekolojik hub: `tab=health&pwa=1` PWA / push hook bölümü. */
+  openPwaHealthFromUrl?: boolean;
 };
 
 export function SocialHubPageClient({
@@ -90,6 +96,8 @@ export function SocialHubPageClient({
   highlightAnalyticsUtmFromUrl = false,
   openTelegramDeepLinkFromUrl = false,
   openIntegrationGateFromUrl = false,
+  openBetaPlatformDeepLinkFromUrl = false,
+  openPwaHealthFromUrl = false,
 }: SocialHubPageClientProps = {}) {
   const { accessToken, session } = useWebSession();
   const router = useRouter();
@@ -138,6 +146,9 @@ export function SocialHubPageClient({
   const [telegramDiscussionOpen, setTelegramDiscussionOpen] = useState(false);
   const [telegramDiscussionDraft, setTelegramDiscussionDraft] = useState("");
   const [integrationGateExpanded, setIntegrationGateExpanded] = useState(false);
+  const [connectionsPlatformHighlight, setConnectionsPlatformHighlight] =
+    useState<EkolojikSocialBetaPlatformCode | null>(null);
+  const [pwaSectionExpanded, setPwaSectionExpanded] = useState(false);
   const [inboxThreadsPreview, setInboxThreadsPreview] = useState<
     SocialHubInboxThreadPreview[]
   >([]);
@@ -307,6 +318,40 @@ export function SocialHubPageClient({
       setIntegrationGateExpanded(false);
     }
   }, [searchParams, openIntegrationGateFromUrl]);
+
+  useEffect(() => {
+    if (!openBetaPlatformDeepLinkFromUrl) {
+      setConnectionsPlatformHighlight(null);
+      return;
+    }
+    const highlight = parseEkolojikBetaPlatformHighlight(
+      searchParams.get("platform"),
+    );
+    if (!highlight) {
+      setConnectionsPlatformHighlight(null);
+      return;
+    }
+    setActiveTab("connections");
+    setConnectionsPlatformHighlight(highlight);
+  }, [searchParams, openBetaPlatformDeepLinkFromUrl]);
+
+  useEffect(() => {
+    if (!openPwaHealthFromUrl) {
+      setPwaSectionExpanded(false);
+      return;
+    }
+    if (parseSocialHubTab(searchParams.get("tab")) !== "health") {
+      setPwaSectionExpanded(false);
+      return;
+    }
+    const raw = searchParams.get("pwa");
+    if (raw === "1" || raw?.toLowerCase() === "true") {
+      setActiveTab("health");
+      setPwaSectionExpanded(true);
+    } else {
+      setPwaSectionExpanded(false);
+    }
+  }, [searchParams, openPwaHealthFromUrl]);
 
   const handleTabChange = useCallback(
     (tab: SocialHubTabId) => {
@@ -679,6 +724,7 @@ export function SocialHubPageClient({
                   })
                 }
                 integrationGateExpanded={integrationGateExpanded}
+                highlightPlatformCode={connectionsPlatformHighlight}
               />
             ) : null}
             {activeTab === "health" ? (
@@ -889,6 +935,7 @@ export function SocialHubPageClient({
                   })
                 }
                 pwa={snapshot.pwa}
+                pwaSectionExpanded={pwaSectionExpanded}
                 healthPushHookStatus={healthPushHookStatus}
                 onRefreshToken={(code) =>
                   void runAction(async () => {
