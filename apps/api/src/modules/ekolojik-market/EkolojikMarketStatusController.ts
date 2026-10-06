@@ -317,6 +317,8 @@ export class EkolojikMarketStatusController {
       phasePrCleanupDoc: string;
       phasePrCloseScript: string;
       phasePrCloseEnvVar: string;
+      duplicateCanonicalPrCloseScript: string;
+      duplicateCanonicalPrCloseEnvVar: string;
       defaultSmokeExpectPhase: string;
     };
     socialHubConnections: {
@@ -739,6 +741,9 @@ export class EkolojikMarketStatusController {
         phasePrCloseScript:
           "scripts/run-ekolojik-market-close-stale-phase-prs.sh",
         phasePrCloseEnvVar: "EK_CLOSE_STALE_PRS",
+        duplicateCanonicalPrCloseScript:
+          "scripts/run-ekolojik-market-close-duplicate-canonical-prs.sh",
+        duplicateCanonicalPrCloseEnvVar: "EK_DEDUP_CANONICAL_PRS",
         defaultSmokeExpectPhase: "ek-u4",
       },
       socialHubConnections: {
@@ -906,7 +911,7 @@ export class EkolojikMarketStatusController {
             "merged PR #341 to main (EK-SHIP)",
             "deploy-production-vps.sh → run-ekolojik-market-post-deploy-gate.sh",
             "EK_CLOSE_STALE_PRS=1 run-ekolojik-market-close-stale-phase-prs.sh",
-            "close duplicate open PRs #337–#340 if still open",
+            "EK_DEDUP_CANONICAL_PRS=1 run-ekolojik-market-close-duplicate-canonical-prs.sh",
             "workflow_dispatch ekolojik-market-parity optional ek_u4_full",
           ],
         },

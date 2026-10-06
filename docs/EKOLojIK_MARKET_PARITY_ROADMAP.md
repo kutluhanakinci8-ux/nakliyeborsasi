@@ -141,6 +141,12 @@ Detay: kullanıcı onayı sonrası `docs/LERTA_MAIL_MESSAGING_PARITY_100_ROADMAP
 - Rubrik (`GET /public/ekolojik-market/status` → `parityClose`): posta **96%** / mesaj **96%** (eşik ≥95%), sosyal **BC** entegrasyon kapısı checklist
 - Kapanış smoke: `EKOLOJIK_SMOKE_EXPECT_PHASE=ek-u4` (varsayılan); geliştirme doğrulama için `ek-p11` geçici kullanılabilir
 
+## EK-DEDUP — Duplicate canonical PR (#337–#340) (●)
+
+- `scripts/run-ekolojik-market-close-duplicate-canonical-prs.sh` — `EK_DEDUP_CANONICAL_PRS=1`
+- `ekolojikCi.duplicateCanonicalPrCloseScript` / `duplicateCanonicalPrCloseEnvVar`
+- Prod rollout: HTTP **502/503** → `NOT_DEPLOYED` (strict=0)
+
 ## EK-CI-LIVE — CI prod smoke (●)
 
 - `ekolojik-market-parity` job **smoke-public** → `verify-ekolojik-market-prod-rollout.sh` (varsayılan `EK_PROD_ROLLOUT_STRICT=0`, 404 yeşil)

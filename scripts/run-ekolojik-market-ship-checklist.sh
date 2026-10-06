@@ -19,7 +19,7 @@ bash "${ROOT}/scripts/verify-ekolojik-market-prod-rollout.sh" || true
 
 echo ""
 echo "== Operatör (manuel) =="
-echo "1. Açık duplicate PR'lar (#337–#340) varsa GitHub'da kapat (merged via #341)."
+echo "1. EK_DEDUP_CANONICAL_PRS=1 bash scripts/run-ekolojik-market-close-duplicate-canonical-prs.sh"
 echo "2. VPS: DEPLOY_BRANCH=main bash scripts/deploy-production-vps.sh"
 echo "3. Prod: bash scripts/run-ekolojik-market-post-deploy-gate.sh"
 echo "4. İsteğe bağlı: EK_CLOSE_STALE_PRS=1 (faz PR'ları zaten kapalı olabilir)"

@@ -46,6 +46,14 @@ test -x "${ROOT}/scripts/run-ekolojik-market-close-stale-phase-prs.sh" || {
   echo "FAIL: missing run-ekolojik-market-close-stale-phase-prs.sh" >&2
   exit 1
 }
+test -x "${ROOT}/scripts/run-ekolojik-market-close-duplicate-canonical-prs.sh" || {
+  echo "FAIL: missing run-ekolojik-market-close-duplicate-canonical-prs.sh" >&2
+  exit 1
+}
+grep -q "duplicateCanonicalPrCloseScript" "${CONTROLLER}" || {
+  echo "FAIL: duplicateCanonicalPrCloseScript not in controller" >&2
+  exit 1
+}
 grep -q "phasePrCloseScript" "${CONTROLLER}" || {
   echo "FAIL: ekolojikCi.phasePrCloseScript not in controller" >&2
   exit 1

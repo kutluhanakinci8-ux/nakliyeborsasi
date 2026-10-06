@@ -14,7 +14,7 @@ test -f "${ROADMAP}" && test -f "${CONTROLLER}" || {
 }
 
 for section in \
-  EK-U4 EK-FULL EK-LIVE EK-CLEAN EK-CLOSE EK-ROLL EK-OPS EK-DONE EK-SHIP EK-PROD EK-CI-LIVE; do
+  EK-U4 EK-FULL EK-LIVE EK-CLEAN EK-CLOSE EK-ROLL EK-OPS EK-DONE EK-SHIP EK-PROD EK-CI-LIVE EK-DEDUP; do
   grep -q "## ${section}" "${ROADMAP}" || {
     echo "FAIL: roadmap missing section ${section}" >&2
     exit 1
@@ -46,6 +46,7 @@ for script in \
   run-ekolojik-market-close-stale-phase-prs.sh \
   run-ekolojik-market-ship-checklist.sh \
   verify-ekolojik-market-prod-rollout.sh \
+  run-ekolojik-market-close-duplicate-canonical-prs.sh \
   smoke-ekolojik-market-parity.sh; do
   test -x "${ROOT}/scripts/${script}" || {
     echo "FAIL: missing scripts/${script}" >&2
