@@ -17,4 +17,12 @@ grep -q 'embedHub' "$URL" || {
   echo "FAIL: MailWebUrl must support embedHubShell" >&2
   exit 1
 }
+grep -q 'shellBrand' "$CONSUME" || {
+  echo "FAIL: auth/consume must forward shellBrand to /mail" >&2
+  exit 1
+}
+grep -q 'MailEkolojikWebmailBranding' "$ROOT/apps/api/src/modules/notification/CompanyMailInboxController.ts" || {
+  echo "FAIL: branding endpoint must apply Ekolojik webmail branding" >&2
+  exit 1
+}
 echo "OK: mail embed SSO query chain"

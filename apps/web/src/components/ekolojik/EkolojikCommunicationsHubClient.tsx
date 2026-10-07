@@ -557,15 +557,44 @@ export function EkolojikCommunicationsHubClient() {
 
   const bolumParam = searchParams.get("bolum");
 
+  const mailAdvancedHubActive =
+    mailAccountsHub ||
+    mailDnsHub ||
+    mailDmarcHub ||
+    mailEngagementHub ||
+    mailOpsHub ||
+    mailPwaHub ||
+    mailAiComposeHub ||
+    mailRulesHub ||
+    mailBulkHub ||
+    mailSwipeHub ||
+    mailCalDavHub ||
+    mailCardDavHub ||
+    mailRichComposeHub;
+
   return (
     <div className={hubClassName}>
-      <header className="ekolojik-comms-hub-intro">
-        <h1 className="ekolojik-comms-hub-title">Ekolojik Posta &amp; Mesaj</h1>
-        <p className="ekolojik-comms-hub-lead">
-          Nakliye Borsası arayüzüne benzer — veri ve sunucu tamamen Ekolojik (NB ile
-          paylaşılmaz). Posta: tam webmail gömülü; mesajlar: firma sohbeti +
-          müşteri yazışmaları; sosyal: Lerta Social Hub.
-        </p>
+      <header
+        className={
+          mailSection
+            ? "ekolojik-comms-hub-intro ekolojik-comms-hub-intro--compact"
+            : "ekolojik-comms-hub-intro"
+        }
+      >
+        <h1 className="ekolojik-comms-hub-title">
+          {mailSection ? "Ekolojik Posta" : "Ekolojik Posta & Mesaj"}
+        </h1>
+        {mailSection ? (
+          <p className="ekolojik-comms-hub-lead">
+            Lerta webmail — arama, konuşma, toplu işlem ve kurumsal ayarlar.
+          </p>
+        ) : (
+          <p className="ekolojik-comms-hub-lead">
+            Nakliye Borsası arayüzüne benzer — veri ve sunucu tamamen Ekolojik
+            (NB ile paylaşılmaz). Posta: tam webmail gömülü; mesajlar: firma
+            sohbeti + müşteri yazışmaları; sosyal: Lerta Social Hub.
+          </p>
+        )}
       </header>
       <div className="ekolojik-comms-hub-body">
         <nav className="ekolojik-comms-sidebar" aria-label="Posta ve mesaj">
@@ -605,6 +634,138 @@ export function EkolojikCommunicationsHubClient() {
           >
             Gelen
           </button>
+          <button
+            type="button"
+            className={
+              section === "fatura"
+                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
+                : "ekolojik-comms-sidebar-item"
+            }
+            onClick={() => navigateSection("fatura")}
+          >
+            Fatura
+          </button>
+          <button
+            type="button"
+            className={
+              section === "gonderilen"
+                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
+                : "ekolojik-comms-sidebar-item"
+            }
+            onClick={() => navigateSection("gonderilen")}
+          >
+            Gönderilen
+          </button>
+          <button
+            type="button"
+            className={
+              section === "arsiv"
+                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
+                : "ekolojik-comms-sidebar-item"
+            }
+            onClick={() => navigateSection("arsiv")}
+          >
+            Arşiv
+          </button>
+          <button
+            type="button"
+            className={
+              isEkolojikMailViewHub(bolumParam, new URLSearchParams(searchParams.toString()), "starred")
+                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
+                : "ekolojik-comms-sidebar-item"
+            }
+            onClick={() =>
+              navigateMailRichCompose(ekolojikMailViewHubHref("starred"))
+            }
+          >
+            Yıldızlı
+          </button>
+          <button
+            type="button"
+            className={
+              isEkolojikMailViewHub(bolumParam, new URLSearchParams(searchParams.toString()), "snoozed")
+                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
+                : "ekolojik-comms-sidebar-item"
+            }
+            onClick={() =>
+              navigateMailRichCompose(ekolojikMailViewHubHref("snoozed"))
+            }
+          >
+            Ertelenen
+          </button>
+          <button
+            type="button"
+            className={
+              isEkolojikMailViewHub(bolumParam, new URLSearchParams(searchParams.toString()), "spam")
+                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
+                : "ekolojik-comms-sidebar-item"
+            }
+            onClick={() =>
+              navigateMailRichCompose(ekolojikMailViewHubHref("spam"))
+            }
+          >
+            Spam
+          </button>
+          <button
+            type="button"
+            className={
+              isEkolojikMailViewHub(bolumParam, new URLSearchParams(searchParams.toString()), "trash")
+                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
+                : "ekolojik-comms-sidebar-item"
+            }
+            onClick={() =>
+              navigateMailRichCompose(ekolojikMailViewHubHref("trash"))
+            }
+          >
+            Çöp
+          </button>
+          <button
+            type="button"
+            className={
+              isEkolojikMailViewHub(bolumParam, new URLSearchParams(searchParams.toString()), "drafts")
+                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
+                : "ekolojik-comms-sidebar-item"
+            }
+            onClick={() =>
+              navigateMailRichCompose(ekolojikMailViewHubHref("drafts"))
+            }
+          >
+            Taslaklar
+          </button>
+          <button
+            type="button"
+            className={
+              isEkolojikMailViewHub(bolumParam, new URLSearchParams(searchParams.toString()), "calendar")
+                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
+                : "ekolojik-comms-sidebar-item"
+            }
+            onClick={() =>
+              navigateMailRichCompose(ekolojikMailViewHubHref("calendar"))
+            }
+          >
+            Takvim
+          </button>
+          <button
+            type="button"
+            className={
+              isEkolojikMailViewHub(bolumParam, new URLSearchParams(searchParams.toString()), "contacts")
+                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
+                : "ekolojik-comms-sidebar-item"
+            }
+            onClick={() =>
+              navigateMailRichCompose(ekolojikMailViewHubHref("contacts"))
+            }
+          >
+            Kişiler
+          </button>
+          <details
+            className="ekolojik-comms-sidebar-details"
+            open={mailAdvancedHubActive}
+          >
+            <summary className="ekolojik-comms-sidebar-details-summary">
+              Posta araçları
+            </summary>
+            <div className="ekolojik-comms-sidebar-details-body">
           <button
             type="button"
             className={
@@ -775,17 +936,8 @@ export function EkolojikCommunicationsHubClient() {
           >
             Teklif şablonu
           </button>
-          <button
-            type="button"
-            className={
-              section === "fatura"
-                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
-                : "ekolojik-comms-sidebar-item"
-            }
-            onClick={() => navigateSection("fatura")}
-          >
-            Fatura
-          </button>
+            </div>
+          </details>
           <button
             type="button"
             className={
@@ -939,119 +1091,6 @@ export function EkolojikCommunicationsHubClient() {
             onClick={() => navigateSocialIntegrationGateHub()}
           >
             Entegrasyon kapısı
-          </button>
-          <button
-            type="button"
-            className={
-              section === "gonderilen"
-                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
-                : "ekolojik-comms-sidebar-item"
-            }
-            onClick={() => navigateSection("gonderilen")}
-          >
-            Gönderilen
-          </button>
-          <button
-            type="button"
-            className={
-              section === "arsiv"
-                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
-                : "ekolojik-comms-sidebar-item"
-            }
-            onClick={() => navigateSection("arsiv")}
-          >
-            Arşiv
-          </button>
-          <button
-            type="button"
-            className={
-              isEkolojikMailViewHub(bolumParam, new URLSearchParams(searchParams.toString()), "starred")
-                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
-                : "ekolojik-comms-sidebar-item"
-            }
-            onClick={() =>
-              navigateMailRichCompose(ekolojikMailViewHubHref("starred"))
-            }
-          >
-            Yıldızlı
-          </button>
-          <button
-            type="button"
-            className={
-              isEkolojikMailViewHub(bolumParam, new URLSearchParams(searchParams.toString()), "snoozed")
-                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
-                : "ekolojik-comms-sidebar-item"
-            }
-            onClick={() =>
-              navigateMailRichCompose(ekolojikMailViewHubHref("snoozed"))
-            }
-          >
-            Ertelenen
-          </button>
-          <button
-            type="button"
-            className={
-              isEkolojikMailViewHub(bolumParam, new URLSearchParams(searchParams.toString()), "spam")
-                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
-                : "ekolojik-comms-sidebar-item"
-            }
-            onClick={() =>
-              navigateMailRichCompose(ekolojikMailViewHubHref("spam"))
-            }
-          >
-            Spam
-          </button>
-          <button
-            type="button"
-            className={
-              isEkolojikMailViewHub(bolumParam, new URLSearchParams(searchParams.toString()), "trash")
-                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
-                : "ekolojik-comms-sidebar-item"
-            }
-            onClick={() =>
-              navigateMailRichCompose(ekolojikMailViewHubHref("trash"))
-            }
-          >
-            Çöp
-          </button>
-          <button
-            type="button"
-            className={
-              isEkolojikMailViewHub(bolumParam, new URLSearchParams(searchParams.toString()), "drafts")
-                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
-                : "ekolojik-comms-sidebar-item"
-            }
-            onClick={() =>
-              navigateMailRichCompose(ekolojikMailViewHubHref("drafts"))
-            }
-          >
-            Taslaklar
-          </button>
-          <button
-            type="button"
-            className={
-              isEkolojikMailViewHub(bolumParam, new URLSearchParams(searchParams.toString()), "calendar")
-                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
-                : "ekolojik-comms-sidebar-item"
-            }
-            onClick={() =>
-              navigateMailRichCompose(ekolojikMailViewHubHref("calendar"))
-            }
-          >
-            Takvim
-          </button>
-          <button
-            type="button"
-            className={
-              isEkolojikMailViewHub(bolumParam, new URLSearchParams(searchParams.toString()), "contacts")
-                ? "ekolojik-comms-sidebar-item ekolojik-comms-sidebar-item--active"
-                : "ekolojik-comms-sidebar-item"
-            }
-            onClick={() =>
-              navigateMailRichCompose(ekolojikMailViewHubHref("contacts"))
-            }
-          >
-            Kişiler
           </button>
           <button
             type="button"

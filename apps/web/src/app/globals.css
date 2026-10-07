@@ -17221,6 +17221,42 @@ button.btn-secondary {
   color: #495057;
 }
 
+.ekolojik-comms-hub-intro--compact {
+  margin-bottom: 0.5rem;
+}
+
+.ekolojik-comms-hub-intro--compact .ekolojik-comms-hub-title {
+  font-size: 1.15rem;
+}
+
+.ekolojik-comms-hub-intro--compact .ekolojik-comms-hub-lead {
+  font-size: 0.85rem;
+}
+
+.ekolojik-comms-sidebar-details {
+  margin: 0.25rem 0;
+}
+
+.ekolojik-comms-sidebar-details-summary {
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #1b4332;
+  padding: 0.35rem 0.5rem;
+  list-style: none;
+}
+
+.ekolojik-comms-sidebar-details-summary::-webkit-details-marker {
+  display: none;
+}
+
+.ekolojik-comms-sidebar-details-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding-left: 0.15rem;
+}
+
 .ekolojik-comms-hub-body {
   display: grid;
   grid-template-columns: minmax(160px, 200px) 1fr;

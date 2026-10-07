@@ -43,6 +43,8 @@ export type MailWebEmbedHandoff = {
   messageId?: string;
   /** Ekolojik/NB hub: iframe içinde webmail sol menüyü gizle. */
   embedHubShell?: boolean;
+  /** Ürün kabuğu markası (`ekolojik` → yeşil tema + başlık). */
+  productShell?: "ekolojik";
 };
 
 export function parseMailWebEmbedView(

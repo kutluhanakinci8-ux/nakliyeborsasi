@@ -48,6 +48,7 @@ function ConsumeHandoff() {
     const message = search.get("message")?.trim();
     const embed = search.get("embed")?.trim();
     const embedHub = search.get("embedHub")?.trim();
+    const shellBrand = search.get("shellBrand")?.trim();
     const query = new URLSearchParams();
     if (fromAddress) {
       query.set("welcome", fromAddress);
@@ -105,6 +106,9 @@ function ConsumeHandoff() {
     }
     if (embedHub === "1") {
       query.set("embedHub", "1");
+    }
+    if (shellBrand === "ekolojik") {
+      query.set("shellBrand", "ekolojik");
     }
     const qs = query.toString();
     router.replace(qs ? `/mail?${qs}` : "/mail");

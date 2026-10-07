@@ -93,6 +93,7 @@ type Params = {
   searchParams: ReadonlyURLSearchParams;
   embedMode: boolean;
   embedHubShell?: boolean;
+  shellBrand?: string;
 };
 
 export function useMailClientController({
@@ -102,6 +103,7 @@ export function useMailClientController({
   searchParams,
   embedMode,
   embedHubShell = false,
+  shellBrand = "",
 }: Params) {
   const deepLinkMessageHandled = useRef(false);
   const deepLinkComposeHandled = useRef(false);
@@ -1753,6 +1755,7 @@ export function useMailClientController({
     editingDraftId,
     embedMode,
     embedHubShell,
+    shellBrand,
     ensureAiMailConsent,
     filteredSent,
     forwardMessageId,

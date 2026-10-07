@@ -39,8 +39,9 @@ export function MessagingMailWebEmbed({
     };
     return buildMailWebSsoHandoffUrl(accessToken, {
       embed: true,
-      embedHubShell: hubShell || merged.embedHubShell,
       ...merged,
+      embedHubShell: hubShell || merged.embedHubShell,
+      productShell: merged.productShell ?? (hubShell ? "ekolojik" : undefined),
     });
   }, [accessToken, composeTo, handoff, hubShell]);
 

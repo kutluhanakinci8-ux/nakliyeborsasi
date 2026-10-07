@@ -2988,6 +2988,16 @@ a {
   display: none;
 }
 
+.mail-app--shell-ekolojik {
+  --accent: #2d6a4f;
+  --accent-hover: #1b4332;
+  --accent-soft: #d8f3dc;
+  --list-unread-bg: #e8f5e9;
+  --list-unread-border: #40916c;
+  --compose-btn-bg: linear-gradient(180deg, #52b788 0%, #2d6a4f 100%);
+  --nav-active: #d8f3dc;
+}
+
 .mail-app--embed .mail-brand strong {
   font-weight: 600;
 }

@@ -47,6 +47,7 @@ import {
   BulkMailInboxIdsDto,
 } from "./BulkMailInboxRequestDto";
 import { MailOrganizationBrandingService } from "./MailOrganizationBrandingService";
+import { applyEkolojikMarketWebmailBranding } from "./MailEkolojikWebmailBranding";
 import { SetMessageStarredRequestDto } from "./SetMessageStarredRequestDto";
 import { MailWebPushService } from "./MailWebPushService";
 import {
@@ -381,8 +382,9 @@ export class CompanyMailInboxController {
     const aliases = await this.mailAddressAliasService.listAliases(
       user.companyId,
     );
-    const branding = await this.mailOrganizationBrandingService.getSnapshot(
-      user.companyId,
+    const branding = applyEkolojikMarketWebmailBranding(
+      await this.mailOrganizationBrandingService.getSnapshot(user.companyId),
+      summary.primaryAddress,
     );
     return {
       primaryAddress: summary.primaryAddress,
@@ -593,8 +595,12 @@ export class CompanyMailInboxController {
 
   @Get("branding")
   public async branding(@AuthenticatedUserParam() user: AuthenticatedUserContext) {
-    const branding = await this.mailOrganizationBrandingService.getSnapshot(
+    const summary = await this.mailOrganizationInboxService.getSummary(
       user.companyId,
+    );
+    const branding = applyEkolojikMarketWebmailBranding(
+      await this.mailOrganizationBrandingService.getSnapshot(user.companyId),
+      summary.primaryAddress,
     );
     return { message: "OK", branding };
   }

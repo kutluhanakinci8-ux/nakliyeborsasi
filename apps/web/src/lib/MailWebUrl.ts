@@ -21,6 +21,9 @@ export function buildMailWebSsoHandoffUrl(
   if (options?.embedHubShell) {
     params.set("embedHub", "1");
   }
+  if (options?.productShell === "ekolojik") {
+    params.set("shellBrand", "ekolojik");
+  }
   const composeTo = options?.composeTo?.trim();
   if (composeTo) {
     params.set("composeTo", composeTo);
