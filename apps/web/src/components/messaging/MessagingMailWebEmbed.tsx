@@ -13,6 +13,8 @@ import type { MailWebEmbedHandoff } from "../../lib/mailWebEmbedDeepLink";
 type Props = {
   className?: string;
   handoff?: MailWebEmbedHandoff;
+  /** Ekolojik hub: tek navigasyon — webmail sol menü gizli. */
+  hubShell?: boolean;
   /** @deprecated use handoff.composeTo */
   composeTo?: string;
 };
@@ -21,6 +23,7 @@ type Props = {
 export function MessagingMailWebEmbed({
   className = "",
   handoff,
+  hubShell = false,
   composeTo,
 }: Props) {
   const { accessToken } = useWebSession();
@@ -37,8 +40,10 @@ export function MessagingMailWebEmbed({
     return buildMailWebSsoHandoffUrl(accessToken, {
       embed: true,
       ...merged,
+      embedHubShell: hubShell || merged.embedHubShell,
+      productShell: merged.productShell ?? (hubShell ? "ekolojik" : undefined),
     });
-  }, [accessToken, composeTo, handoff]);
+  }, [accessToken, composeTo, handoff, hubShell]);
 
   useEffect(() => {
     if (!accessToken) {

@@ -18,6 +18,12 @@ export function buildMailWebSsoHandoffUrl(
   if (options?.embed) {
     params.set("embed", "1");
   }
+  if (options?.embedHubShell) {
+    params.set("embedHub", "1");
+  }
+  if (options?.productShell === "ekolojik") {
+    params.set("shellBrand", "ekolojik");
+  }
   const composeTo = options?.composeTo?.trim();
   if (composeTo) {
     params.set("composeTo", composeTo);
@@ -67,6 +73,10 @@ export function buildMailWebSsoHandoffUrl(
   }
   if (options?.customFolder?.trim()) {
     params.set("customFolder", options.customFolder.trim());
+  }
+  const messageId = options?.messageId?.trim();
+  if (messageId) {
+    params.set("message", messageId);
   }
   const qs = params.toString();
   return `${base}/auth/consume${qs ? `?${qs}` : ""}#access_token=${encodeURIComponent(accessToken)}`;

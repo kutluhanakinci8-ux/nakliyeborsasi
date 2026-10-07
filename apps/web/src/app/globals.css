@@ -17221,6 +17221,42 @@ button.btn-secondary {
   color: #495057;
 }
 
+.ekolojik-comms-hub-intro--compact {
+  margin-bottom: 0.5rem;
+}
+
+.ekolojik-comms-hub-intro--compact .ekolojik-comms-hub-title {
+  font-size: 1.15rem;
+}
+
+.ekolojik-comms-hub-intro--compact .ekolojik-comms-hub-lead {
+  font-size: 0.85rem;
+}
+
+.ekolojik-comms-sidebar-details {
+  margin: 0.25rem 0;
+}
+
+.ekolojik-comms-sidebar-details-summary {
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #1b4332;
+  padding: 0.35rem 0.5rem;
+  list-style: none;
+}
+
+.ekolojik-comms-sidebar-details-summary::-webkit-details-marker {
+  display: none;
+}
+
+.ekolojik-comms-sidebar-details-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding-left: 0.15rem;
+}
+
 .ekolojik-comms-hub-body {
   display: grid;
   grid-template-columns: minmax(160px, 200px) 1fr;
@@ -17583,6 +17619,36 @@ button.btn-secondary {
 .ekolojik-comms-mail-wrap {
   flex: 1;
   min-height: 480px;
+}
+
+.ekolojik-comms-mail-layout {
+  flex: 1;
+  min-height: min(82vh, 960px);
+}
+
+.ekolojik-comms-hub--mail-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  background: #f8fafc;
+  padding: 0.75rem;
+  overflow: auto;
+}
+
+.ekolojik-comms-hub--mail-fullscreen .ekolojik-comms-hub-intro,
+.ekolojik-comms-hub--mail-fullscreen .ekolojik-comms-sidebar {
+  display: none;
+}
+
+.ekolojik-comms-hub--mail-fullscreen .ekolojik-comms-hub-body {
+  grid-template-columns: 1fr;
+  min-height: calc(100vh - 1.5rem);
+}
+
+.ekolojik-comms-hub--mail-fullscreen .ekolojik-comms-main {
+  min-height: calc(100vh - 1.5rem);
+  border: none;
+  padding: 0;
 }
 
 .ekolojik-comms-chat-layout {

@@ -26,7 +26,10 @@ import {
   parseAddressListFromMime,
   reparseInboundDisplayFromRawMime,
 } from "./MailInboundMimeParse";
-import { decodeMimeEncodedWords } from "./MailMimeCharset";
+import {
+  decodeMimeEncodedWords,
+  repairUtf8Mojibake,
+} from "./MailMimeCharset";
 import { extractInstagramVerificationCode } from "./instagramVerificationMail";
 import { sanitizeInboundHtml } from "./MailHtmlSanitize";
 
@@ -903,8 +906,8 @@ export class MailOrganizationInboxService {
     return {
       id: row.id,
       fromAddress: row.fromAddress,
-      subject: decodeMimeEncodedWords(row.subject),
-      snippet: row.snippet,
+      subject: repairUtf8Mojibake(decodeMimeEncodedWords(row.subject)) ?? row.subject,
+      snippet: repairUtf8Mojibake(row.snippet),
       receivedAt: row.receivedAt.toISOString(),
       readAt: row.readAt?.toISOString() ?? null,
       spamStatus: row.spamStatus,
