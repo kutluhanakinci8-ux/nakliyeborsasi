@@ -76,7 +76,8 @@ export function decodeMimeEncodedWords(value: string): string {
     lastIndex = index + match[0].length;
   }
   result += value.slice(lastIndex);
-  return repairUtf8Mojibake(result.replace(/[ \t]+/g, " ").trim());
+  const trimmed = result.replace(/[ \t]+/g, " ").trim();
+  return repairUtf8Mojibake(trimmed) ?? trimmed;
 }
 
 const MOJIBAKE_HINT_RE = /[ÃÂÄÅÆÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ]/;
