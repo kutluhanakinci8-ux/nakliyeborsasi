@@ -417,3 +417,108 @@ footer {
   color: var(--muted);
   font-size: 0.875rem;
 }
+
+.breadcrumb {
+  margin: 0 0 8px;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.breadcrumb a:hover {
+  color: var(--text);
+}
+
+.hero-platform h1 {
+  max-width: 18ch;
+}
+
+.platform-section {
+  margin-top: 48px;
+}
+
+.section-title {
+  margin: 0 0 8px;
+  font-size: 1.5rem;
+}
+
+.section-lead {
+  margin: 0 0 28px;
+  color: var(--muted);
+  max-width: 52ch;
+}
+
+.platform-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.platform-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg-soft);
+}
+
+.platform-card--violet {
+  border-color: rgba(139, 92, 246, 0.45);
+  background: linear-gradient(165deg, rgba(139, 92, 246, 0.12), var(--bg-soft));
+}
+
+.platform-card--blue {
+  border-color: rgba(59, 130, 246, 0.45);
+}
+
+.platform-card--emerald {
+  border-color: rgba(16, 185, 129, 0.45);
+  background: linear-gradient(165deg, rgba(16, 185, 129, 0.08), var(--bg-soft));
+}
+
+.platform-card-eyebrow {
+  margin: 0;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.platform-card-title {
+  margin: 0;
+  font-size: 1.35rem;
+}
+
+.platform-card-summary {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  flex: 1;
+}
+
+.platform-card-features {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.platform-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+@media (max-width: 720px) {
+  header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .nav-links {
+    flex-wrap: wrap;
+  }
+}
