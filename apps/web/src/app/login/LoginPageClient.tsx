@@ -59,12 +59,17 @@ const PARTICIPANT_TYPE_OPTIONS: {
   { code: "LOAD_SEEKER", label: "Yük arayan", hint: "Marketplace arama" },
 ];
 
-export function LoginPageClient() {
+export function LoginPageClient({
+  initialCommsPortal = false,
+}: {
+  initialCommsPortal?: boolean;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { setAccessToken, refreshSession, locale, setLocale, accessToken } =
     useWebSession();
-  const isCommsPortal = useLertaCommsPortal();
+  const isCommsPortalClient = useLertaCommsPortal();
+  const isCommsPortal = initialCommsPortal || isCommsPortalClient;
   const nextPath = searchParams.get("next");
 
   const initialMode: AuthMode =
