@@ -19,12 +19,14 @@ import { useLertaCommsPortal } from "../hooks/useLertaCommsPortal";
 
 type SiteHeaderProps = {
   variant?: "public" | "app";
+  commsPortal?: boolean;
 };
 
-export function SiteHeader({ variant = "app" }: SiteHeaderProps) {
+export function SiteHeader({ variant = "app", commsPortal }: SiteHeaderProps) {
   const pathname = usePathname();
   const { session, locale, setLocale, accessToken } = useWebSession();
-  const isCommsPortal = useLertaCommsPortal();
+  const isCommsPortalHost = useLertaCommsPortal();
+  const isCommsPortal = commsPortal ?? isCommsPortalHost;
   const mesajlarUnread = useMesajlarNavBadge(accessToken, locale);
   const mesajHref = isCommsPortal
     ? "/messaging?tab=sohbet"

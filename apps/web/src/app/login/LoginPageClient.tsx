@@ -172,7 +172,7 @@ export function LoginPageClient({
   }
 
   return (
-    <SiteLayout headerVariant="public">
+    <SiteLayout headerVariant="public" commsPortal={isCommsPortal}>
       <section
         className={
           authMode === "register"
