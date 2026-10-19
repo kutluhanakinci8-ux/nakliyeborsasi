@@ -9,6 +9,17 @@ WEB_PORT="${WEB_PORT:-3014}"
 NGINX_SITE="/etc/nginx/sites-available/lerta-www-mail-marketing.conf"
 CERTBOT_WEBROOT="/var/www/certbot"
 LE_WWW="/etc/letsencrypt/live/${APP_HOST_WWW}"
+LE_APEX="/etc/letsencrypt/live/${APP_HOST_APEX}"
+
+resolve_tls_dir() {
+  if [[ -f "${LE_WWW}/fullchain.pem" ]]; then
+    echo "${LE_WWW}"
+  elif [[ -f "${LE_APEX}/fullchain.pem" ]]; then
+    echo "${LE_APEX}"
+  else
+    echo ""
+  fi
+}
 
 if [[ "$(id -u)" -ne 0 ]]; then
   echo "root ile çalıştırın." >&2
@@ -42,6 +53,7 @@ EOF
 }
 
 write_https() {
+  local le_dir="$1"
   cat > "$NGINX_SITE" <<EOF
 server {
     listen 80;
@@ -63,8 +75,8 @@ server {
     listen [::]:443 ssl http2;
     server_name ${APP_HOST_WWW} ${APP_HOST_APEX};
 
-    ssl_certificate ${LE_WWW}/fullchain.pem;
-    ssl_certificate_key ${LE_WWW}/privkey.pem;
+    ssl_certificate ${le_dir}/fullchain.pem;
+    ssl_certificate_key ${le_dir}/privkey.pem;
     include /etc/letsencrypt/options-ssl-nginx.conf;
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 
@@ -85,10 +97,11 @@ ln -sf "$NGINX_SITE" "/etc/nginx/sites-enabled/$(basename "$NGINX_SITE")"
 nginx -t && systemctl reload nginx
 echo "HTTP: http://${APP_HOST_WWW}/"
 
-if [[ -f "${LE_WWW}/fullchain.pem" ]]; then
-  write_https
+TLS_DIR="$(resolve_tls_dir)"
+if [[ -n "${TLS_DIR}" ]]; then
+  write_https "${TLS_DIR}"
   nginx -t && systemctl reload nginx
-  echo "HTTPS aktif."
+  echo "HTTPS aktif (${TLS_DIR})."
   exit 0
 fi
 
@@ -96,9 +109,10 @@ if command -v certbot >/dev/null 2>&1; then
   certbot certonly --webroot -w "$CERTBOT_WEBROOT" \
     -d "$APP_HOST_WWW" -d "$APP_HOST_APEX" \
     --non-interactive --agree-tos -m "admin@lerta.com.tr" || true
-  if [[ -f "${LE_WWW}/fullchain.pem" ]]; then
-    write_https
+  TLS_DIR="$(resolve_tls_dir)"
+  if [[ -n "${TLS_DIR}" ]]; then
+    write_https "${TLS_DIR}"
     nginx -t && systemctl reload nginx
-    echo "HTTPS aktif."
+    echo "HTTPS aktif (${TLS_DIR})."
   fi
 fi
