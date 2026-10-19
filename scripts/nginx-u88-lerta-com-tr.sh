@@ -5,6 +5,8 @@ set -euo pipefail
 APP_HOST="${APP_HOST:-u88.lerta.com.tr}"
 U88_DIST_ROOT="${U88_DIST_ROOT:-/var/www/u88-app/dist}"
 U88_API_UPSTREAM="${U88_API_UPSTREAM:-http://127.0.0.1:8091}"
+LERTA_COMMS_WEB_PORT="${LERTA_COMMS_WEB_PORT:-3011}"
+LERTA_COMMS_API_PORT="${LERTA_COMMS_API_PORT:-3010}"
 NGINX_SITE="/etc/nginx/sites-available/u88-lerta-com-tr.conf"
 CERTBOT_WEBROOT="/var/www/certbot"
 LE_DIR="/etc/letsencrypt/live/${APP_HOST}"
@@ -32,6 +34,54 @@ ${scheme_extra}
     location ^~ /.well-known/acme-challenge/ {
         root ${CERTBOT_WEBROOT};
         default_type text/plain;
+    }
+
+    location ^~ /api/v1/ {
+        proxy_pass http://127.0.0.1:${LERTA_COMMS_API_PORT}/api/v1/;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_read_timeout 120s;
+    }
+
+    location ^~ /_next/ {
+        proxy_pass http://127.0.0.1:${LERTA_COMMS_WEB_PORT};
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+
+    location = /login {
+        proxy_pass http://127.0.0.1:${LERTA_COMMS_WEB_PORT};
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+
+    location ^~ /messaging {
+        proxy_pass http://127.0.0.1:${LERTA_COMMS_WEB_PORT};
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+
+    location = /messaging-push-sw.js {
+        proxy_pass http://127.0.0.1:${LERTA_COMMS_WEB_PORT};
+        proxy_set_header Host \$host;
+    }
+
+    location = /posta {
+        return 302 https://posta.lerta.com.tr/;
     }
 
     location /api/ {

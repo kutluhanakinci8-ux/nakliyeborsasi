@@ -15,6 +15,7 @@ import {
   PLATFORM_NAV_ITEMS,
 } from "../lib/siteNavigation";
 import { useMesajlarNavBadge } from "../hooks/useMesajlarNavBadge";
+import { useLertaCommsPortal } from "../hooks/useLertaCommsPortal";
 
 type SiteHeaderProps = {
   variant?: "public" | "app";
@@ -23,7 +24,11 @@ type SiteHeaderProps = {
 export function SiteHeader({ variant = "app" }: SiteHeaderProps) {
   const pathname = usePathname();
   const { session, locale, setLocale, accessToken } = useWebSession();
+  const isCommsPortal = useLertaCommsPortal();
   const mesajlarUnread = useMesajlarNavBadge(accessToken, locale);
+  const mesajHref = isCommsPortal
+    ? "/messaging?tab=sohbet"
+    : MESSAGING_NAV_HREF;
   const [corporateOpen, setCorporateOpen] = useState(false);
   const corporateRef = useRef<HTMLDivElement>(null);
 
@@ -61,7 +66,9 @@ export function SiteHeader({ variant = "app" }: SiteHeaderProps) {
         <div className="site-header-utility-inner">
           <span className="utility-badge">
             <span className="utility-dot" aria-hidden />
-            TR · UA · EU koridoru
+            {isCommsPortal
+              ? "Lerta platform · U88 · Posta · Mesaj"
+              : "TR · UA · EU koridoru"}
           </span>
           <div className="utility-actions">
             <label className="locale-select locale-select--header">
@@ -94,10 +101,50 @@ export function SiteHeader({ variant = "app" }: SiteHeaderProps) {
       </div>
       <div className="site-header-main">
         <div className="site-header-main-inner">
-          <SiteBrand href="/hizmetler" size="lg" />
+          <SiteBrand
+            href={isCommsPortal ? mesajHref : "/hizmetler"}
+            size="lg"
+            productName={isCommsPortal ? "Lerta Mesaj" : undefined}
+            monogram={isCommsPortal ? "M" : undefined}
+            tagline={isCommsPortal ? "Firma sohbeti" : undefined}
+          />
           <nav className="site-nav-shell" aria-label="Ana menü">
             <div className="site-nav">
-              {isFleetDriver ? (
+              {isCommsPortal ? (
+                <>
+                  <a
+                    href="https://u88.lerta.com.tr/"
+                    className="site-nav-link"
+                  >
+                    U88
+                  </a>
+                  <a
+                    href="https://posta.lerta.com.tr/login"
+                    className="site-nav-link"
+                  >
+                    Posta
+                  </a>
+                  <Link
+                    href={mesajHref}
+                    className={
+                      isMessagingNavActive(pathname)
+                        ? "site-nav-link active"
+                        : "site-nav-link"
+                    }
+                  >
+                    Mesajlar
+                    {mesajlarUnread > 0 ? (
+                      <span
+                        className="site-nav-badge"
+                        aria-label={`${mesajlarUnread} okunmamış`}
+                      >
+                        {mesajlarUnread > 99 ? "99+" : mesajlarUnread}
+                      </span>
+                    ) : null}
+                  </Link>
+                </>
+              ) : null}
+              {!isCommsPortal && isFleetDriver ? (
                 <Link
                   href={DRIVER_PORTAL_NAV_ITEM.href}
                   className={
@@ -109,7 +156,8 @@ export function SiteHeader({ variant = "app" }: SiteHeaderProps) {
                   {DRIVER_PORTAL_NAV_ITEM.label}
                 </Link>
               ) : null}
-              {PLATFORM_NAV_ITEMS.map((item) => {
+              {!isCommsPortal
+                ? PLATFORM_NAV_ITEMS.map((item) => {
                 const isMesajlar = item.href === MESSAGING_NAV_HREF;
                 const active = isMesajlar
                   ? isMessagingNavActive(pathname)
@@ -132,7 +180,9 @@ export function SiteHeader({ variant = "app" }: SiteHeaderProps) {
                     ) : null}
                   </Link>
                 );
-              })}
+                })
+                : null}
+              {!isCommsPortal ? (
               <Link
                 href={HIZMETLER_NAV_ITEM.href}
                 className={
@@ -143,6 +193,8 @@ export function SiteHeader({ variant = "app" }: SiteHeaderProps) {
               >
                 {HIZMETLER_NAV_ITEM.label}
               </Link>
+              ) : null}
+              {!isCommsPortal ? (
               <div className="site-nav-dropdown" ref={corporateRef}>
                 <button
                   type="button"
@@ -191,6 +243,7 @@ export function SiteHeader({ variant = "app" }: SiteHeaderProps) {
                   ))}
                 </div>
               </div>
+              ) : null}
             </div>
           </nav>
         </div>

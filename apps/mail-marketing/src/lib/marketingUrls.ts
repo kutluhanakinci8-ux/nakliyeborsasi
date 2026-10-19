@@ -8,11 +8,11 @@ export const U88_APP_URL =
 
 export const MESSAGING_APP_URL =
   process.env.NEXT_PUBLIC_MESSAGING_APP_URL ??
-  "https://app.lerta.com.tr/messaging?tab=sohbet";
+  "https://u88.lerta.com.tr/messaging?tab=sohbet";
 
 export const MESSAGING_LOGIN_URL =
   process.env.NEXT_PUBLIC_MESSAGING_LOGIN_URL ??
-  "https://app.lerta.com.tr/login?next=%2Fmessaging%3Ftab%3Dsohbet";
+  "https://u88.lerta.com.tr/login?next=%2Fmessaging%3Ftab%3Dsohbet";
 
 export function consolePath(path: string): string {
   return `${CONSOLE_URL.replace(/\/$/, "")}${path.startsWith("/") ? path : `/${path}`}`;
