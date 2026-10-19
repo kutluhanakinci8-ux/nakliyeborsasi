@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# A4 — www (veya kurumsal) Lerta Mail vitrin smoke (değişiklik yapmaz).
+# A4 — www (veya kurumsal) Lerta platform vitrin smoke (değişiklik yapmaz).
 set -euo pipefail
 
 BASE_URL="${BASE_URL:-https://www.lerta.com.tr}"
@@ -26,17 +26,17 @@ check_title() {
     return 0
   fi
 
-  if echo "$title" | grep -qi 'Lerta Mail'; then
+  if echo "$title" | grep -qi 'Lerta'; then
     echo "  OK"
-  elif echo "$body" | grep -qi 'Lerta Mail\|Sistem durumu'; then
+  elif echo "$body" | grep -qi 'Lerta\|Sistem durumu\|U88'; then
     echo "  OK (body)"
   else
-    echo "  FAIL: 'Lerta Mail' bekleniyordu" >&2
+    echo "  FAIL: 'Lerta' platform vitrini bekleniyordu" >&2
     FAIL=1
   fi
 }
 
-echo "== Lerta Mail vitrin smoke: ${BASE_URL} =="
+echo "== Lerta platform vitrin smoke: ${BASE_URL} =="
 
 check_title "/"
 check_title "/sss"

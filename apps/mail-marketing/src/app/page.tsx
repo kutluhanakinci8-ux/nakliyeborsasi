@@ -1,60 +1,39 @@
 import { MarketingPageShell } from "@/components/MarketingPageShell";
-import {
-  CONSOLE_URL,
-  CORPORATE_REGISTER,
-  MAIL_WEB_URL,
-} from "@/lib/marketingUrls";
-import { PricingSection } from "./PricingSection";
+import { PlatformProductCards } from "@/components/PlatformProductCards";
+import { PLATFORM_PRODUCTS, PLATFORM_REGISTER_HREF } from "@/lib/platformProducts";
 
-export default function MarketingHomePage() {
-  const loginHref = `${MAIL_WEB_URL.replace(/\/$/, "")}/login`;
-  const consoleLoginHref = `${CONSOLE_URL.replace(/\/$/, "")}/login`;
-
+export default function PlatformHomePage() {
   return (
     <MarketingPageShell>
-      <section className="hero">
-        <p className="hero-eyebrow">Kurumsal e-posta SaaS</p>
-        <h1>Posta kutunuz, firmanızın alan adında</h1>
+      <section className="hero hero-platform">
+        <p className="hero-eyebrow">Lerta platformu</p>
+        <h1>Uyumluluk, posta ve mesaj — tek marka altında</h1>
         <p className="lead">
-          Özel domain, DNS sihirbazı ve webmail tek panelde. Bireysel deneme için
-          pilot alt alan; kurumsal müşteriler için{" "}
-          <strong>info@sizin-domain.com</strong> modeli.
+          Türkiye&apos;de barındırılan kurumsal ürünler: <strong>U88</strong> ile
+          KVKK control plane, <strong>Lerta Posta</strong> ile domain tabanlı
+          e-posta, <strong>Lerta Mesaj</strong> ile firma içi ve müşteri
+          sohbeti.
         </p>
         <div className="hero-cta">
-          <a className="btn btn-primary" href={CORPORATE_REGISTER}>
-            Domain ile başla
+          <a className="btn btn-primary" href="/posta#fiyatlar">
+            Posta fiyatları
           </a>
-          <a className="btn btn-ghost" href={consoleLoginHref}>
-            Yönetim konsolu
+          <a className="btn btn-ghost" href="/durum">
+            Canlı durum
           </a>
-          <a className="btn btn-ghost" href={loginHref}>
-            Webmail giriş
+          <a className="btn btn-ghost" href={PLATFORM_REGISTER_HREF}>
+            Kurumsal kayıt
           </a>
         </div>
       </section>
 
-      <section className="grid">
-        <article className="card">
-          <h3>Özel domain öncelikli</h3>
-          <p>
-            Kayıt sonrası ilk adım: alan adınızı ekleyin, MX/SPF/DKIM/DMARC
-            kayıtlarını panelden takip edin.
-          </p>
-        </article>
-        <article className="card">
-          <h3>Webmail</h3>
-          <p>
-            Gelen kutusu, taslaklar, arama ve ekler —{" "}
-            <a href={loginHref}>posta.lerta.com.tr</a>.
-          </p>
-        </article>
-        <article className="card">
-          <h3>Güvenilir gönderim</h3>
-          <p>
-            Postfix, OpenDKIM ve Rspamd; kiracı bazlı izolasyon ve gönderim
-            kotası.
-          </p>
-        </article>
+      <section className="platform-section" aria-labelledby="products-heading">
+        <h2 id="products-heading" className="section-title">Ürünler</h2>
+        <p className="section-lead">
+          Her ürün ayrı uygulama ve kiracı modeliyle çalışır; istediğiniz
+          kombinasyonu seçin.
+        </p>
+        <PlatformProductCards products={PLATFORM_PRODUCTS} />
       </section>
 
       <section className="trust-strip" aria-labelledby="trust-heading">
@@ -67,8 +46,6 @@ export default function MarketingHomePage() {
           <a href="/iletisim">İletişim</a>
         </div>
       </section>
-
-      <PricingSection />
     </MarketingPageShell>
   );
 }
