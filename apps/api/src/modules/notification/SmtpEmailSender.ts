@@ -5,6 +5,7 @@ import {
 } from "@nestjs/common";
 import * as nodemailer from "nodemailer";
 import { NotificationConfigurationService } from "./NotificationConfigurationService";
+import { isLertaBrandedOutboundHtml } from "./MailOutboundHtmlTemplate";
 import { collectSmtpEnvelopeRecipients } from "./SmtpEnvelopeHelper";
 
 @Injectable()
@@ -21,7 +22,8 @@ export class SmtpEmailSender {
     bcc?: string;
     subject: string;
     html: string;
-    text: string;
+    /** Ham kullanıcı metni; branded HTML gönderiminde SMTP text parçası üretilmez. */
+    text?: string;
     from?: string;
     /** MAIL FROM — Lerta Post: teknik FQDN; From başlığı vanity kalır. */
     envelopeMailFrom?: string;
@@ -50,7 +52,8 @@ export class SmtpEmailSender {
       bcc: params.bcc,
     });
     try {
-      const result = await transport.sendMail({
+      const brandedHtml = isLertaBrandedOutboundHtml(params.html);
+      const mail: nodemailer.SendMailOptions = {
         from: headerFrom,
         ...(envelopeMailFrom
           ? {
@@ -65,7 +68,6 @@ export class SmtpEmailSender {
         bcc: params.bcc?.trim() || undefined,
         subject: params.subject,
         html: params.html,
-        text: params.text,
         replyTo: params.replyTo?.trim() || undefined,
         inReplyTo: params.inReplyTo,
         references: params.references,
@@ -74,7 +76,12 @@ export class SmtpEmailSender {
           content: file.content,
           contentType: file.contentType,
         })),
-      });
+      };
+      if (!brandedHtml && params.text?.trim()) {
+        mail.text = params.text;
+      }
+      // Branded HTML: text/plain gönderilmez (Outlook mobil ham metni seçiyordu).
+      const result = await transport.sendMail(mail);
       return result.messageId ?? null;
     } catch (error) {
       const detail =

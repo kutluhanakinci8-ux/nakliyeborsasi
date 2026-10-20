@@ -1,4 +1,7 @@
-import { resolveOutboundHtml } from "./MailOutboundHtmlTemplate";
+import {
+  isLertaBrandedOutboundHtml,
+  resolveOutboundHtml,
+} from "./MailOutboundHtmlTemplate";
 
 export function buildOutgoingSentMime(params: {
   fromHeader: string;
@@ -11,12 +14,12 @@ export function buildOutgoingSentMime(params: {
 }): string {
   const messageId = normalizeMessageId(params.messageId);
   const subject = encodeHeaderValue(params.subject);
-  const textBody = params.text.replace(/\r?\n/g, "\r\n");
-  const htmlBody = params.html
-    ?? resolveOutboundHtml(params.text, undefined, {
+  const htmlBody = (
+    params.html ??
+    resolveOutboundHtml(params.text, undefined, {
       fromHeader: params.fromHeader,
-    });
-  const boundary = `=_lerta_sent_${Date.now().toString(36)}`;
+    })
+  ).replace(/\r?\n/g, "\r\n");
 
   const headers = [
     `From: ${params.fromHeader}`,
@@ -25,8 +28,21 @@ export function buildOutgoingSentMime(params: {
     `Date: ${params.date.toUTCString()}`,
     `Message-ID: ${messageId}`,
     "MIME-Version: 1.0",
-    `Content-Type: multipart/alternative; boundary="${boundary}"`,
   ];
+
+  if (isLertaBrandedOutboundHtml(htmlBody)) {
+    return [
+      ...headers,
+      "Content-Type: text/html; charset=UTF-8",
+      "Content-Transfer-Encoding: 8bit",
+      "",
+      htmlBody,
+    ].join("\r\n");
+  }
+
+  const textBody = params.text.replace(/\r?\n/g, "\r\n");
+  const boundary = `=_lerta_sent_${Date.now().toString(36)}`;
+  headers.push(`Content-Type: multipart/alternative; boundary="${boundary}"`);
 
   const parts = [
     `--${boundary}`,
@@ -38,7 +54,7 @@ export function buildOutgoingSentMime(params: {
     "Content-Type: text/html; charset=UTF-8",
     "Content-Transfer-Encoding: 8bit",
     "",
-    htmlBody.replace(/\r?\n/g, "\r\n"),
+    htmlBody,
     `--${boundary}--`,
     "",
   ];

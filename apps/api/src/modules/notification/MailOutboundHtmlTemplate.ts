@@ -1,3 +1,13 @@
+/** Branded webmail çıkışı — SMTP düz metin alternatifi kullanılmaz (Outlook mobil düz metin seçiyordu). */
+export const LERTA_POSTA_OUTBOUND_MARKER = "data-lerta-posta-outbound";
+
+export function isLertaBrandedOutboundHtml(html: string): boolean {
+  return (
+    html.includes(LERTA_POSTA_OUTBOUND_MARKER) ||
+    (html.includes("Lerta Posta") && html.includes("<!DOCTYPE html>"))
+  );
+}
+
 export type OutboundHtmlContext = {
   /** From başlığı: "Ad" <ad@domain.com> */
   fromHeader?: string;
@@ -44,7 +54,7 @@ function wrapLertaPostaOutboundEmail(params: {
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Lerta Posta</title>
 </head>
-<body style="margin:0;padding:0;background-color:#f4f5f9;font-family:'Segoe UI',system-ui,-apple-system,BlinkMacSystemFont,sans-serif;">
+<body ${LERTA_POSTA_OUTBOUND_MARKER}="1" style="margin:0;padding:0;background-color:#f4f5f9;font-family:'Segoe UI',system-ui,-apple-system,BlinkMacSystemFont,sans-serif;">
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f4f5f9;padding:32px 16px;">
 <tr>
 <td align="center">
