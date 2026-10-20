@@ -73,7 +73,7 @@ export class MailOrganizationBrandingService {
       emailLegalFooter: row?.emailLegalFooter ?? null,
       defaultFromDisplayName: row?.defaultFromDisplayName ?? null,
       hidePlatformEmailChrome: row?.hidePlatformEmailChrome ?? false,
-      emailSocialLinks: normalizeMailEmailSocialLinks(row?.emailSocialLinks),
+      emailSocialLinks: await this.loadEmailSocialLinks(organizationId),
       detailTr: allowed
         ? "Enterprise white-label: logo ve From adı yapılandırılabilir."
         : "White-label yalnızca Enterprise mail planında (lerta_mail_enterprise_tr).",
@@ -173,22 +173,7 @@ export class MailOrganizationBrandingService {
     }
     const stored =
       emailSocialLinks.length > 0 ? emailSocialLinks : null;
-    const existing = await this.brandingRepository.findOne({
-      where: { organizationId },
-    });
-    if (!existing) {
-      await this.brandingRepository.save(
-        this.brandingRepository.create({
-          organizationId,
-          emailSocialLinks: stored,
-        }),
-      );
-    } else {
-      await this.brandingRepository.update(
-        { organizationId },
-        { emailSocialLinks: stored },
-      );
-    }
+    await this.persistEmailSocialLinks(organizationId, stored);
     return this.getSnapshot(organizationId);
   }
 
@@ -216,8 +201,42 @@ export class MailOrganizationBrandingService {
         whiteLabel && row?.emailLegalFooter?.trim()
           ? row.emailLegalFooter.trim()
           : null,
-      socialLinks: normalizeMailEmailSocialLinks(row?.emailSocialLinks),
+      socialLinks: await this.loadEmailSocialLinks(organizationId),
     };
+  }
+
+  /** jsonb kolonu — TypeORM karma adlandırmada güvenilir okuma. */
+  private async loadEmailSocialLinks(
+    organizationId: string,
+  ): Promise<MailEmailSocialLink[]> {
+    const rows: Array<{ email_social_links: unknown }> =
+      await this.brandingRepository.manager.query(
+        `SELECT email_social_links FROM mail_organization_branding WHERE "organizationId" = $1 LIMIT 1`,
+        [organizationId],
+      );
+    return normalizeMailEmailSocialLinks(rows[0]?.email_social_links);
+  }
+
+  private async persistEmailSocialLinks(
+    organizationId: string,
+    links: MailEmailSocialLink[] | null,
+  ): Promise<void> {
+    const existing = await this.brandingRepository.findOne({
+      where: { organizationId },
+    });
+    if (!existing) {
+      await this.brandingRepository.save(
+        this.brandingRepository.create({
+          organizationId,
+          emailSocialLinks: links,
+        }),
+      );
+      return;
+    }
+    await this.brandingRepository.manager.query(
+      `UPDATE mail_organization_branding SET email_social_links = $1::jsonb, "updatedAt" = NOW() WHERE "organizationId" = $2`,
+      [links ? JSON.stringify(links) : null, organizationId],
+    );
   }
 
   public async resolveDefaultFromDisplayName(
