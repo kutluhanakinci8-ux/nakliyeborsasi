@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import {
   composeCtaButtonBlock,
   composeDividerBlock,
+  composeCalloutBlock,
   composeHeroBlock,
   composeImageBlock,
   composeTwoColumnBlock,
@@ -156,6 +157,20 @@ export function ComposeRichEditor({
           }}
         >
           Buton
+        </button>
+        <button
+          type="button"
+          title="Bilgi kutusu"
+          onClick={() => {
+            const text = window.prompt("Kutu metni", "Önemli bilgi");
+            if (!text?.trim()) {
+              return;
+            }
+            insertHtmlAtSelection(composeCalloutBlock(text.trim()));
+            syncFromEditor();
+          }}
+        >
+          Kutu
         </button>
         <button
           type="button"

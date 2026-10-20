@@ -20,6 +20,13 @@ export function composeTwoColumnBlock(): string {
   return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:16px 0;"><tr><td width="48%" valign="top" style="padding-right:12px;font-size:15px;line-height:1.6;color:#14151f;"><p style="margin:0;">Sol sütun</p></td><td width="4%">&nbsp;</td><td width="48%" valign="top" style="padding-left:12px;font-size:15px;line-height:1.6;color:#14151f;"><p style="margin:0;">Sağ sütun</p></td></tr></table><p><br></p>`;
 }
 
+export function composeCalloutBlock(
+  body = "Önemli bilgi veya uyarı metni.",
+): string {
+  const safe = body.replace(/</g, "&lt;");
+  return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:16px 0;"><tr><td style="background-color:#f0f9ff;border-left:4px solid #2563eb;padding:14px 16px;border-radius:8px;font-size:15px;line-height:1.55;color:#0f172a;">${safe}</td></tr></table><p><br></p>`;
+}
+
 export function composeImageBlock(url: string, alt = "Görsel"): string {
   const safeUrl = url.replace(/"/g, "&quot;");
   const safeAlt = alt.replace(/</g, "&lt;");
