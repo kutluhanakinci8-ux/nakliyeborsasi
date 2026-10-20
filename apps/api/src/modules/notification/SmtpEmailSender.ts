@@ -41,6 +41,7 @@ export class SmtpEmailSender {
       cid?: string;
     }[];
     outboundBranding?: OutboundWrapBranding;
+    listUnsubscribeUrl?: string;
   }): Promise<string | null> {
     if (!this.notificationConfigurationService.isEmailEnabled()) {
       this.logger.warn(`EMAIL_ENABLED=false — skipped send to ${params.to}`);
@@ -98,6 +99,14 @@ export class SmtpEmailSender {
         };
       } else if (params.text?.trim()) {
         mail.text = params.text;
+      }
+      const unsub = params.listUnsubscribeUrl?.trim();
+      if (unsub) {
+        mail.headers = {
+          ...(mail.headers ?? {}),
+          "List-Unsubscribe": `<${unsub}>`,
+          "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+        };
       }
       const result = await transport.sendMail(mail);
       return result.messageId ?? null;

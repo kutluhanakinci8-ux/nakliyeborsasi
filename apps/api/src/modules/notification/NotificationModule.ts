@@ -152,6 +152,9 @@ import { MailInboxRuleService } from "./MailInboxRuleService";
 import { MailAddressAliasService } from "./MailAddressAliasService";
 import { MailPlatformKpiService } from "./MailPlatformKpiService";
 import { PublicMailStatusController } from "./PublicMailStatusController";
+import { PublicMailMarketingUnsubscribeController } from "./PublicMailMarketingUnsubscribeController";
+import { MailMarketingUnsubscribeService } from "./MailMarketingUnsubscribeService";
+import { MailBimiLogoProbeService } from "./MailBimiLogoProbeService";
 import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
 import { MailBillingService } from "./MailBillingService";
 import { MailIyzicoBillingService } from "./MailIyzicoBillingService";
@@ -232,6 +235,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     EmailTrackingController,
     UserNotificationPreferencesController,
     PublicMailStatusController,
+    PublicMailMarketingUnsubscribeController,
     MailPublicApiController,
   ],
   providers: [
@@ -251,6 +255,8 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     EmailHtmlTrackingService,
     EmailTrackingSignatureService,
     EmailSuppressionService,
+    MailMarketingUnsubscribeService,
+    MailBimiLogoProbeService,
     UserNotificationPreferenceService,
     CompanyNotificationPreferenceService,
     OperationalNotificationService,

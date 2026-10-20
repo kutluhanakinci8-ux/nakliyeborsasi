@@ -101,21 +101,37 @@ export function MailDeliverabilityWizard({ hub }: Props) {
     {
       id: "bimi",
       title: "5. BIMI (isteğe bağlı)",
-      done: false,
+      done: Boolean(hub.bimi?.okForBimi),
       body: (
         <>
           <p>
             DMARC <code>p=quarantine</code> veya <code>reject</code> sonrası Gmail/Apple inbox
             logosu için BIMI kaydı. SVG logo ve (bazı sağlayıcılarda) VMC sertifikası gerekir.
           </p>
+          {hub.bimi ? (
+            <p className="mail-deliverability-muted">
+              Logo kontrolü: {hub.bimi.detailTr}
+              {hub.bimi.contentType ? ` (${hub.bimi.contentType})` : ""}
+            </p>
+          ) : null}
           <p>
             <strong>Host:</strong> <code>{bimiHost}</code>
           </p>
-          <pre className="mail-deliverability-wizard-pre">{bimiValue}</pre>
+          <pre className="mail-deliverability-wizard-pre">
+            {hub.bimi?.logoUrl
+              ? `v=BIMI1; l=${hub.bimi.logoUrl}`
+              : bimiValue}
+          </pre>
           <button
             type="button"
             className="compose-chip-btn"
-            onClick={() => copyText(bimiValue)}
+            onClick={() =>
+              copyText(
+                hub.bimi?.logoUrl
+                  ? `v=BIMI1; l=${hub.bimi.logoUrl}`
+                  : bimiValue,
+              )
+            }
           >
             BIMI TXT kopyala
           </button>

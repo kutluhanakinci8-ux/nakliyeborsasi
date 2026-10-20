@@ -917,6 +917,7 @@ export async function composeCampaign(
     html?: string;
     attachments?: ComposeAttachment[];
     merge?: ComposeMergePayload;
+    delayMsBetweenRecipients?: number;
   },
 ) {
   return apiFetch<ComposeCampaignResult>(
@@ -1747,6 +1748,13 @@ export type MailDeliverabilityHub = {
   };
   score: number;
   hintsTr: string[];
+  bimi?: {
+    logoUrl: string | null;
+    reachable: boolean;
+    contentType: string | null;
+    okForBimi: boolean;
+    detailTr: string;
+  };
   webhookAnalytics?: {
     publicApiAllowed: boolean;
     endpointCount: number;

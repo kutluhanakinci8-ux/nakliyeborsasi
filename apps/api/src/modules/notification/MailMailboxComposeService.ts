@@ -6,7 +6,10 @@ import {
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { IsNull, Not, Repository } from "typeorm";
-import { MailSenderIdentityEntity } from "../../infrastructure/database/entities/MailSenderIdentityEntity";
+import {
+  MailSenderIdentityEntity,
+  MailSenderPurpose,
+} from "../../infrastructure/database/entities/MailSenderIdentityEntity";
 import { MailMailboxEntity } from "../../infrastructure/database/entities/MailMailboxEntity";
 import { MailInboundMessageEntity } from "../../infrastructure/database/entities/MailInboundMessageEntity";
 import { MailMailboxSentEntity } from "../../infrastructure/database/entities/MailMailboxSentEntity";
@@ -25,7 +28,10 @@ import { MailOrganizationIdentityService } from "./MailOrganizationIdentityServi
 import { MailTenantSubdomainService } from "./MailTenantSubdomainService";
 import { MailImapMaildirService } from "./MailImapMaildirService";
 import { buildOutgoingSentMime } from "./MailSentMimeBuilder";
-import { MailMailboxOutboundContentService } from "./MailMailboxOutboundContentService";
+import {
+  MailMailboxOutboundContentService,
+  type OutboundContentChannel,
+} from "./MailMailboxOutboundContentService";
 import { MailSubscriptionLifecycleService } from "./MailSubscriptionLifecycleService";
 import { MailOrganizationWebhookDispatcherService } from "./MailOrganizationWebhookDispatcherService";
 import { EmailSuppressionService } from "./EmailSuppressionService";
@@ -79,9 +85,14 @@ export class MailMailboxComposeService {
     html?: string;
     attachments?: ComposeAttachmentInput[];
     merge?: { referans?: string; musteriAdi?: string };
+    senderPurpose?: MailSenderPurpose;
+    outboundChannel?: OutboundContentChannel;
   }): Promise<{ sentId: string; smtpMessageId: string | null }> {
     const { fromHeader, fromEmail, envelopeMailFrom, mailbox, technicalEmail } =
-      await this.resolveSenderMailbox(params.organizationId);
+      await this.resolveSenderMailbox(
+        params.organizationId,
+        params.senderPurpose,
+      );
     await this.assertRateLimit(params.organizationId);
     await this.mailTenantSuspensionService.assertOrganizationCanSend(
       params.organizationId,
@@ -109,6 +120,7 @@ export class MailMailboxComposeService {
       fromHeader,
       toEmail: params.to,
       mergeContext: params.merge,
+      channel: params.outboundChannel,
     });
     let smtpMessageId: string | null;
     try {
@@ -122,6 +134,7 @@ export class MailMailboxComposeService {
         text: outbound.text,
         html: outbound.html,
         outboundBranding: outbound.branding,
+        listUnsubscribeUrl: outbound.listUnsubscribeUrl,
         replyTo,
         attachments: nodemailerAttachments,
       });
@@ -199,6 +212,7 @@ export class MailMailboxComposeService {
       referans?: string;
     }>;
     merge?: { referans?: string; musteriAdi?: string };
+    delayMsBetweenRecipients?: number;
   }): Promise<{
     campaignId: string;
     attempted: number;
@@ -219,6 +233,10 @@ export class MailMailboxComposeService {
       params.organizationId,
     );
     const campaignId = randomUUID();
+    const delayMs = Math.min(
+      2000,
+      Math.max(0, params.delayMsBetweenRecipients ?? 0),
+    );
     let sent = 0;
     let skippedSuppressed = 0;
     const failed: Array<{ email: string; error: string }> = [];
@@ -250,6 +268,8 @@ export class MailMailboxComposeService {
           text: params.text,
           html: params.html,
           attachments: params.attachments,
+          senderPurpose: "marketing",
+          outboundChannel: "marketing",
           merge:
             merge.referans || merge.musteriAdi
               ? {
@@ -259,6 +279,9 @@ export class MailMailboxComposeService {
               : undefined,
         });
         sent += 1;
+        if (delayMs > 0) {
+          await sleep(delayMs);
+        }
       } catch (error) {
         const message =
           error instanceof Error ? error.message : "Gönderim başarısız";
@@ -768,15 +791,34 @@ export class MailMailboxComposeService {
     await this.sentRepository.delete({ id: sentId, organizationId });
   }
 
-  private async resolveSenderMailbox(organizationId: string) {
+  private async resolveSenderMailbox(
+    organizationId: string,
+    purpose?: MailSenderPurpose,
+  ) {
     await this.mailTenantSubdomainService
       .syncTenantDomainVerificationFromDns()
       .catch(() => undefined);
 
-    const identity = await this.senderRepository.findOne({
-      where: { organizationId, isDefault: true },
-      relations: { mailDomain: true },
-    });
+    let identity =
+      purpose === "marketing"
+        ? await this.senderRepository.findOne({
+            where: { organizationId, purpose: "marketing", isDefault: true },
+            relations: { mailDomain: true },
+          })
+        : null;
+    if (!identity && purpose === "marketing") {
+      identity = await this.senderRepository.findOne({
+        where: { organizationId, purpose: "marketing" },
+        relations: { mailDomain: true },
+        order: { createdAt: "ASC" },
+      });
+    }
+    if (!identity) {
+      identity = await this.senderRepository.findOne({
+        where: { organizationId, isDefault: true },
+        relations: { mailDomain: true },
+      });
+    }
     if (!identity?.mailDomain) {
       throw new BadRequestException(
         "Kurumsal posta kutusu tanımlı değil. Hesap → Organizasyon → E-posta kimliği veya yonetim.lerta.com.tr üzerinden adres alın.",
@@ -1007,5 +1049,11 @@ function stripHtml(html: string): string {
 
 function isLikelyEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
 }
 

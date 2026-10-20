@@ -7,6 +7,8 @@ import { EmailSuppressionService } from "./EmailSuppressionService";
 import { MailDmarcAggregateService } from "./MailDmarcAggregateService";
 import { MailDmarcAggregateReportEntity } from "../../infrastructure/database/entities/MailDmarcAggregateReportEntity";
 import { MailOrganizationIntegrationService } from "./MailOrganizationIntegrationService";
+import { MailOrganizationBrandingService } from "./MailOrganizationBrandingService";
+import { MailBimiLogoProbeService } from "./MailBimiLogoProbeService";
 
 @Injectable()
 export class MailDeliverabilityHubService {
@@ -16,6 +18,8 @@ export class MailDeliverabilityHubService {
     private readonly emailSuppressionService: EmailSuppressionService,
     private readonly mailDmarcAggregateService: MailDmarcAggregateService,
     private readonly mailOrganizationIntegrationService: MailOrganizationIntegrationService,
+    private readonly mailOrganizationBrandingService: MailOrganizationBrandingService,
+    private readonly mailBimiLogoProbeService: MailBimiLogoProbeService,
     @InjectRepository(MailDmarcAggregateReportEntity)
     private readonly dmarcRepository: Repository<MailDmarcAggregateReportEntity>,
   ) {}
@@ -54,6 +58,7 @@ export class MailDeliverabilityHubService {
       engagementWebhookEvents: string[];
       configureApiPath: string;
     };
+    bimi: Awaited<ReturnType<MailBimiLogoProbeService["probeLogoUrl"]>>;
   }> {
     const periodDays = days <= 0 || days > 90 ? 30 : days;
     const since = new Date(Date.now() - periodDays * 24 * 60 * 60 * 1000);
@@ -143,6 +148,14 @@ export class MailDeliverabilityHubService {
     const enabledEndpointCount = integration.webhooks.filter(
       (endpoint) => endpoint.enabled,
     ).length;
+    const brandingSnapshot =
+      await this.mailOrganizationBrandingService.getSnapshot(organizationId);
+    const bimi = await this.mailBimiLogoProbeService.probeLogoUrl(
+      brandingSnapshot.logoUrl,
+    );
+    if (!bimi.okForBimi && brandingSnapshot.logoUrl) {
+      hintsTr.push(bimi.detailTr);
+    }
     return {
       periodDays,
       dns: dnsBlock,
@@ -167,6 +180,7 @@ export class MailDeliverabilityHubService {
         configureApiPath:
           "/api/v1/company/mail-identity/integration/webhooks",
       },
+      bimi,
     };
   }
 

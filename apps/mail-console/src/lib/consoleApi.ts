@@ -546,6 +546,21 @@ export async function fetchMailBranding(accessToken: string) {
   );
 }
 
+export type MailBimiLogoProbe = {
+  logoUrl: string | null;
+  reachable: boolean;
+  contentType: string | null;
+  okForBimi: boolean;
+  detailTr: string;
+};
+
+export async function fetchMailBimiProbe(accessToken: string) {
+  return apiFetch<{ message: string; probe: MailBimiLogoProbe }>(
+    accessToken,
+    "company/mail-identity/branding/bimi-probe",
+  );
+}
+
 export type MailIntegrationSnapshot = {
   allowed: boolean;
   planCode: string | null;

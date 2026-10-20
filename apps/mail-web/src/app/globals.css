@@ -2030,6 +2030,27 @@ html[data-mail-theme="dark"] .login-error {
   font-size: 13px;
 }
 
+.compose-campaign-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.mail-campaign-result-stats {
+  margin: 0 0 16px;
+  padding-left: 1.2rem;
+}
+
+.mail-campaign-result-failures {
+  margin: 0;
+  padding-left: 1.2rem;
+  font-size: 13px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
 .mail-deliverability-wizard {
   margin: 16px 0 20px;
   padding: 14px 16px;

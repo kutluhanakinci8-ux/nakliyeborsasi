@@ -6,9 +6,12 @@ import {
   ArrayMaxSize,
   ArrayMinSize,
   IsArray,
+  IsInt,
   IsOptional,
   IsString,
+  Max,
   MaxLength,
+  Min,
   MinLength,
   ValidateNested,
 } from "class-validator";
@@ -47,4 +50,11 @@ export class ComposeCampaignRequestDto {
   @ValidateNested()
   @Type(() => ComposeMergeContextDto)
   public merge?: ComposeMergeContextDto;
+
+  /** Alıcılar arası bekleme (0–2000 ms) — SMTP burst yumuşatma. */
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(2000)
+  public delayMsBetweenRecipients?: number;
 }

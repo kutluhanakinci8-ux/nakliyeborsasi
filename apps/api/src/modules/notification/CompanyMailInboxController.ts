@@ -1320,6 +1320,7 @@ export class CompanyMailInboxController {
         referans: row.referans,
       })),
       merge: body.merge,
+      delayMsBetweenRecipients: body.delayMsBetweenRecipients,
     });
     await this.recordInboxMailAudit(user, MailIdentityAuditAction.InboxComposeSent, {
       subject: body.subject,

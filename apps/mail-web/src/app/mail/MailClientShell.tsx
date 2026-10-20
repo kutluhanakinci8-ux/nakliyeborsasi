@@ -2,6 +2,7 @@
 
 import { MailSettingsPanel } from "./MailSettingsPanel";
 import { MailComposeMergeFields } from "./MailComposeMergeFields";
+import { MailCampaignResultDialog } from "./MailCampaignResultDialog";
 import { MailEmptyState } from "./MailEmptyState";
 import { MailShortcutsDialog } from "./MailShortcutsDialog";
 import { MailCalendarPanel } from "./MailCalendarPanel";
@@ -76,6 +77,11 @@ export function MailClientShell({ mail }: Props) {
     composeCampaignRecipients,
     setComposeCampaignRecipients,
     maxCampaignRecipients,
+    composeCampaignDelayMs,
+    setComposeCampaignDelayMs,
+    campaignResult,
+    setCampaignResult,
+    importCampaignCsv,
     addInlineComposeImage,
     customFolders,
     deepLinkComposeHandled,
@@ -1710,6 +1716,39 @@ export function MailClientShell({ mail }: Props) {
                   <p className="compose-attach-hint">
                     Satır başına e-posta; isteğe bağlı: e-posta, müşteri adı, referans
                   </p>
+                  <div className="compose-campaign-tools">
+                    <label className="compose-attach-label">
+                      <span className="compose-attach-btn">CSV içe aktar</span>
+                      <input
+                        type="file"
+                        accept=".csv,text/csv"
+                        className="compose-attach-input"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            void importCampaignCsv(file);
+                            e.target.value = "";
+                          }
+                        }}
+                      />
+                    </label>
+                    <label className="compose-field-label" htmlFor="compose-campaign-delay">
+                      Alıcılar arası gecikme
+                    </label>
+                    <select
+                      id="compose-campaign-delay"
+                      className="compose-input"
+                      value={composeCampaignDelayMs}
+                      onChange={(e) =>
+                        setComposeCampaignDelayMs(Number.parseInt(e.target.value, 10) || 0)
+                      }
+                    >
+                      <option value={0}>Yok</option>
+                      <option value={250}>250 ms</option>
+                      <option value={500}>500 ms</option>
+                      <option value={1000}>1 sn</option>
+                    </select>
+                  </div>
                 </div>
               ) : (
                 <div className="compose-field">
@@ -2052,6 +2091,10 @@ export function MailClientShell({ mail }: Props) {
       {shortcutsOpen ? (
         <MailShortcutsDialog onClose={() => setShortcutsOpen(false)} />
       ) : null}
+      <MailCampaignResultDialog
+        result={campaignResult}
+        onClose={() => setCampaignResult(null)}
+      />
     </div>
   );
 }

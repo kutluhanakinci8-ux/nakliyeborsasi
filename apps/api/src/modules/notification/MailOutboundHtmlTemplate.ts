@@ -11,6 +11,8 @@ export type OutboundWrapBranding = {
   hidePlatformFooter: boolean;
   /** KVKK / yasal dipnot (HTML’siz düz metin, satır içi). */
   legalFooterText?: string | null;
+  /** Pazarlama / kampanya: abonelik iptali linki. */
+  marketingUnsubscribeUrl?: string | null;
 };
 
 export function isLertaBrandedOutboundHtml(html: string): boolean {
@@ -41,10 +43,18 @@ export function buildBrandedPlainText(
     "",
     body || "(boş mesaj)",
     "",
+  ];
+  if (branding?.marketingUnsubscribeUrl?.trim()) {
+    lines.push(
+      `Abonelikten çık: ${branding.marketingUnsubscribeUrl.trim()}`,
+      "",
+    );
+  }
+  lines.push(
     branding?.hidePlatformFooter
       ? `— ${headerTitle}`
       : "— https://posta.lerta.com.tr",
-  ];
+  );
   return lines.join("\n");
 }
 
@@ -110,9 +120,13 @@ function wrapLertaPostaOutboundEmail(params: {
   const legalBlock = legal
     ? `<p style="margin:0 0 10px;font-size:11px;line-height:1.45;color:#8b919c;text-align:center;">${escapeHtml(legal)}</p>`
     : "";
+  const unsub = params.branding?.marketingUnsubscribeUrl?.trim();
+  const unsubBlock = unsub
+    ? `<p style="margin:0 0 10px;font-size:12px;line-height:1.5;color:#5c6370;text-align:center;"><a href="${escapeHtml(unsub)}" style="color:#4f46e5;text-decoration:underline;">Bülten aboneliğinden çık</a></p>`
+    : "";
   const footerHtml = params.branding?.hidePlatformFooter
-    ? `${legalBlock}<p style="margin:0;font-size:12px;line-height:1.5;color:#5c6370;text-align:center;">${brandTitle}</p>`
-    : `${legalBlock}<p style="margin:0;font-size:12px;line-height:1.5;color:#5c6370;text-align:center;">
+    ? `${legalBlock}${unsubBlock}<p style="margin:0;font-size:12px;line-height:1.5;color:#5c6370;text-align:center;">${brandTitle}</p>`
+    : `${legalBlock}${unsubBlock}<p style="margin:0;font-size:12px;line-height:1.5;color:#5c6370;text-align:center;">
 Kurumsal e-posta · <a href="https://posta.lerta.com.tr" style="color:#4f46e5;text-decoration:none;font-weight:600;">posta.lerta.com.tr</a>
 </p>`;
 

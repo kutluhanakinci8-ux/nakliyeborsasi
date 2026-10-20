@@ -73,6 +73,7 @@ import {
   type MailSentItem,
   type MailSentMessageDetail,
   type ComposeAttachment,
+  type ComposeCampaignResult,
   type MailInboxListDensity,
 } from "@/lib/mailApi";
 import { useMailKeyboardShortcuts } from "./useMailKeyboardShortcuts";
@@ -84,6 +85,8 @@ import {
 } from "./mailClientHelpers";
 import {
   MAX_CAMPAIGN_RECIPIENTS,
+  mergeCampaignRecipientLists,
+  parseCampaignCsvText,
   parseCampaignRecipientsText,
 } from "@/lib/mailCampaignRecipients";
 
@@ -254,6 +257,10 @@ export function useMailClientController({
   const [composeCampaignMode, setComposeCampaignMode] = useState(false);
   const [composeCampaignRecipients, setComposeCampaignRecipients] =
     useState("");
+  const [composeCampaignDelayMs, setComposeCampaignDelayMs] = useState(0);
+  const [campaignResult, setCampaignResult] = useState<ComposeCampaignResult | null>(
+    null,
+  );
   const [composeInlineAttachments, setComposeInlineAttachments] = useState<
     ComposeAttachment[]
   >([]);
@@ -1006,20 +1013,12 @@ export function useMailClientController({
           html: outboundHtml,
           attachments: attachments.length > 0 ? attachments : undefined,
           merge: buildComposeMergePayload(),
+          delayMsBetweenRecipients: composeCampaignDelayMs || undefined,
         });
         setComposeOpen(false);
         resetCompose();
-        const failNote =
-          result.failed.length > 0
-            ? ` ${result.failed.length} başarısız.`
-            : "";
-        const skipNote =
-          result.skippedSuppressed > 0
-            ? ` ${result.skippedSuppressed} suppression atlandı.`
-            : "";
-        setToast(
-          `Kampanya: ${result.sent}/${result.attempted} gönderildi.${skipNote}${failNote}`,
-        );
+        setCampaignResult(result);
+        setToast(`Kampanya: ${result.sent}/${result.attempted} gönderildi.`);
         void refresh();
         setSending(false);
         return;
@@ -1690,7 +1689,21 @@ export function useMailClientController({
     setComposeMergeOpen(false);
     setComposeCampaignMode(false);
     setComposeCampaignRecipients("");
+    setComposeCampaignDelayMs(0);
     setComposeInlineAttachments([]);
+  }
+
+  async function importCampaignCsv(file: File) {
+    const text = await file.text();
+    const rows = parseCampaignCsvText(text);
+    if (rows.length === 0) {
+      setToast("CSV’den geçerli alıcı bulunamadı.");
+      return;
+    }
+    setComposeCampaignRecipients((prev) =>
+      mergeCampaignRecipientLists(prev, rows),
+    );
+    setToast(`${rows.length} alıcı CSV’den eklendi.`);
   }
 
   function buildComposeMergePayload() {
@@ -1911,6 +1924,11 @@ export function useMailClientController({
     composeCampaignRecipients,
     setComposeCampaignRecipients,
     maxCampaignRecipients: MAX_CAMPAIGN_RECIPIENTS,
+    composeCampaignDelayMs,
+    setComposeCampaignDelayMs,
+    campaignResult,
+    setCampaignResult,
+    importCampaignCsv,
     addInlineComposeImage,
     customFolders,
     deepLinkComposeHandled,

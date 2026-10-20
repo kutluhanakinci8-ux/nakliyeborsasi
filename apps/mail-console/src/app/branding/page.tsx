@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ConsoleShell } from "@/components/ConsoleShell";
 import {
+  fetchMailBimiProbe,
   fetchMailBranding,
   isPlatformOperator,
   updateMailBranding,
@@ -26,6 +27,7 @@ export default function BrandingPage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [bimiProbe, setBimiProbe] = useState("");
 
   useEffect(() => {
     if (!accessToken) {
@@ -102,6 +104,29 @@ export default function BrandingPage() {
               style={{ width: "100%", marginTop: 4 }}
             />
           </label>
+          <p style={{ margin: "0 0 12px" }}>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              disabled={loading || !accessToken}
+              onClick={() => {
+                if (!accessToken) {
+                  return;
+                }
+                setBimiProbe("");
+                void fetchMailBimiProbe(accessToken)
+                  .then((data) => setBimiProbe(data.probe.detailTr))
+                  .catch(() => setBimiProbe("BIMI logo kontrolü başarısız."));
+              }}
+            >
+              BIMI logo doğrula
+            </button>
+            {bimiProbe ? (
+              <span style={{ display: "block", marginTop: 8, color: "var(--muted)" }}>
+                {bimiProbe}
+              </span>
+            ) : null}
+          </p>
           <label style={{ display: "block", marginBottom: 12 }}>
             E-posta marka adı
             <input

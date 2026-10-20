@@ -48,6 +48,7 @@ import { MailPilotOnboardingService } from "./MailPilotOnboardingService";
 import { MailAddressOnboardingService } from "./MailAddressOnboardingService";
 import { MailLertaComTrOnboardingService } from "./MailLertaComTrOnboardingService";
 import { MailOrganizationIdentityService } from "./MailOrganizationIdentityService";
+import { MailBimiLogoProbeService } from "./MailBimiLogoProbeService";
 import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
 import { MailOrganizationBrandingService } from "./MailOrganizationBrandingService";
 import { UpdateMailBrandingRequestDto } from "./MailBrandingRequestDto";
@@ -90,6 +91,7 @@ export class CompanyMailIdentityController {
     private readonly mailLertaComTrOnboardingService: MailLertaComTrOnboardingService,
     private readonly mailOrganizationIdentityService: MailOrganizationIdentityService,
     private readonly mailOrganizationBrandingService: MailOrganizationBrandingService,
+    private readonly mailBimiLogoProbeService: MailBimiLogoProbeService,
     private readonly mailOrganizationIntegrationService: MailOrganizationIntegrationService,
     private readonly mailAddressAliasService: MailAddressAliasService,
     private readonly mailInboundRoutingService: MailInboundRoutingService,
@@ -885,6 +887,18 @@ export class CompanyMailIdentityController {
       user.companyId,
     );
     return { message: "OK", branding };
+  }
+
+  @Get("branding/bimi-probe")
+  public async probeBimiLogo(@AuthenticatedUserParam() user: AuthenticatedUserContext) {
+    assertMailConsoleAccess(user);
+    const branding = await this.mailOrganizationBrandingService.getSnapshot(
+      user.companyId,
+    );
+    const probe = await this.mailBimiLogoProbeService.probeLogoUrl(
+      branding.logoUrl,
+    );
+    return { message: "OK", probe };
   }
 
   @Patch("branding")

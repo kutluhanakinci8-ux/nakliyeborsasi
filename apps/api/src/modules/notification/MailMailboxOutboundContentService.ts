@@ -18,12 +18,16 @@ import {
   plainTextToOutboundBodyHtml,
   resolveOutboundHtml,
 } from "./MailOutboundHtmlTemplate";
+import { MailMarketingUnsubscribeService } from "./MailMarketingUnsubscribeService";
+
+export type OutboundContentChannel = "transactional" | "marketing";
 
 @Injectable()
 export class MailMailboxOutboundContentService {
   public constructor(
     private readonly mailOrganizationBrandingService: MailOrganizationBrandingService,
     private readonly mailComposePresetService: MailComposePresetService,
+    private readonly mailMarketingUnsubscribeService: MailMarketingUnsubscribeService,
     @InjectRepository(CompanyEntity)
     private readonly companyRepository: Repository<CompanyEntity>,
   ) {}
@@ -36,16 +40,33 @@ export class MailMailboxOutboundContentService {
     fromHeader: string;
     toEmail?: string;
     mergeContext?: Pick<OutboundMergeContext, "referans" | "musteriAdi">;
-  }): Promise<{ text: string; html: string; branding: OutboundWrapBranding }> {
+    channel?: OutboundContentChannel;
+  }): Promise<{
+    text: string;
+    html: string;
+    branding: OutboundWrapBranding;
+    listUnsubscribeUrl?: string;
+  }> {
     const company = await this.companyRepository.findOne({
       where: { id: params.organizationId },
     });
     const companyName = company?.legalName?.trim() || "Kurumsal hesap";
-    const branding =
+    let branding =
       await this.mailOrganizationBrandingService.resolveOutboundWrapBranding(
         params.organizationId,
         companyName,
       );
+    let listUnsubscribeUrl: string | undefined;
+    if (params.channel === "marketing" && params.toEmail?.trim()) {
+      listUnsubscribeUrl = this.mailMarketingUnsubscribeService.buildUnsubscribeUrl(
+        params.organizationId,
+        params.toEmail.trim(),
+      );
+      branding = {
+        ...branding,
+        marketingUnsubscribeUrl: listUnsubscribeUrl,
+      };
+    }
 
     const sender = parseSenderFromHeader(params.fromHeader);
     const merged = applyOutboundMergeFields(
@@ -85,6 +106,11 @@ export class MailMailboxOutboundContentService {
       fromHeader: params.fromHeader,
       branding,
     });
-    return { text, html, branding };
+    return {
+      text,
+      html,
+      branding,
+      listUnsubscribeUrl,
+    };
   }
 }
