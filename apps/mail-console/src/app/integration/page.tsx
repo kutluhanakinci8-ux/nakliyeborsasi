@@ -9,6 +9,7 @@ import {
   createMailWebhook,
   fetchMailIntegration,
   fetchMailWebhookDeliveries,
+  replayMailWebhookDelivery,
   type MailWebhookDeliveryLogItem,
   isPlatformOperator,
   revokeMailApiKey,
@@ -210,6 +211,20 @@ export default function IntegrationPage() {
                     {row.httpStatus != null ? ` · HTTP ${row.httpStatus}` : ""}
                     {" · "}
                     {new Date(row.createdAt).toLocaleString("tr-TR")}
+                    {row.canReplay ? (
+                      <button
+                        type="button"
+                        className="btn secondary"
+                        style={{ marginLeft: 8, padding: "2px 8px", fontSize: 12 }}
+                        onClick={() =>
+                          void replayMailWebhookDelivery(accessToken!, row.id).then(
+                            () => reload(),
+                          )
+                        }
+                      >
+                        Yeniden gönder
+                      </button>
+                    ) : null}
                   </li>
                 ))}
               </ul>

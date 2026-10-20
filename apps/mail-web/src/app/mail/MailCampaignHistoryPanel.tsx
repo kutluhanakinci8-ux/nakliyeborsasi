@@ -8,6 +8,7 @@ import {
   downloadMailCampaignCsv,
   fetchMailCampaignDetail,
   fetchMailCampaigns,
+  resendFailedMailCampaign,
   resendMailCampaign,
   type MailCampaignDetail,
   type MailCampaignListItem,
@@ -143,6 +144,9 @@ export function MailCampaignHistoryPanel({
                 {row.result
                   ? ` · gönderilen ${row.result.sent}/${row.result.attempted}`
                   : ""}
+                {row.tags && row.tags.length > 0
+                  ? ` · ${row.tags.join(", ")}`
+                  : ""}
               </p>
               <div className="mail-campaign-history-actions">
                 <button
@@ -203,19 +207,37 @@ export function MailCampaignHistoryPanel({
                   </button>
                 ) : null}
                 {row.status === "completed" ? (
-                  <button
-                    type="button"
-                    className="compose-chip-btn"
-                    disabled={busyId === row.id}
-                    onClick={() => {
-                      setBusyId(row.id);
-                      void resendMailCampaign(accessToken, row.id)
-                        .then(() => load())
-                        .finally(() => setBusyId(null));
-                    }}
-                  >
-                    Tekrar gönder
-                  </button>
+                  <>
+                    {(row.failedRecipientCount ?? row.result?.failed?.length ?? 0) >
+                    0 ? (
+                      <button
+                        type="button"
+                        className="compose-chip-btn"
+                        disabled={busyId === row.id}
+                        onClick={() => {
+                          setBusyId(row.id);
+                          void resendFailedMailCampaign(accessToken, row.id)
+                            .then(() => load())
+                            .finally(() => setBusyId(null));
+                        }}
+                      >
+                        Başarısızları yeniden gönder
+                      </button>
+                    ) : null}
+                    <button
+                      type="button"
+                      className="compose-chip-btn"
+                      disabled={busyId === row.id}
+                      onClick={() => {
+                        setBusyId(row.id);
+                        void resendMailCampaign(accessToken, row.id)
+                          .then(() => load())
+                          .finally(() => setBusyId(null));
+                      }}
+                    >
+                      Tekrar gönder
+                    </button>
+                  </>
                 ) : null}
               </div>
               {scheduleCloneId === row.id ? (

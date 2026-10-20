@@ -295,6 +295,55 @@ export class MailMarketingCampaignService {
     return { campaignId: row.id, result };
   }
 
+  public async resendFailed(
+    organizationId: string,
+    campaignId: string,
+    userId?: string,
+  ): Promise<{
+    campaignId: string;
+    result: MailMarketingCampaignResult;
+  }> {
+    const source = await this.campaignRepository.findOne({
+      where: { id: campaignId, organizationId },
+    });
+    if (!source) {
+      throw new NotFoundException("Kampanya bulunamadı.");
+    }
+    const failedRows = source.result?.failed ?? [];
+    if (failedRows.length === 0) {
+      throw new BadRequestException("Yeniden gönderilecek başarısız alıcı yok.");
+    }
+    const failedEmails = new Set(
+      failedRows.map((row) => row.email.trim().toLowerCase()),
+    );
+    const recipients = (source.payload.recipients ?? []).filter((row) =>
+      failedEmails.has(row.email.trim().toLowerCase()),
+    );
+    if (recipients.length === 0) {
+      throw new BadRequestException("Başarısız alıcı kaydı bulunamadı.");
+    }
+    const payload: MailMarketingCampaignPayload = {
+      ...source.payload,
+      recipients,
+      reminderDispatchedAt: null,
+    };
+    const row = await this.campaignRepository.save(
+      this.campaignRepository.create({
+        organizationId,
+        createdByUserId: userId ?? source.createdByUserId,
+        subject: source.subject,
+        status: "running",
+        scheduleAt: null,
+        startedAt: new Date(),
+        payload,
+        result: null,
+        errorMessage: null,
+      }),
+    );
+    const result = await this.executeCampaignRow(row, userId);
+    return { campaignId: row.id, result };
+  }
+
   public async cancelScheduled(
     organizationId: string,
     campaignId: string,
@@ -527,12 +576,14 @@ export class MailMarketingCampaignService {
     return {
       id: row.id,
       subject: row.subject,
+      tags: row.payload.tags ?? [],
       status: row.status,
       scheduleAt: row.scheduleAt?.toISOString() ?? null,
       startedAt: row.startedAt?.toISOString() ?? null,
       completedAt: row.completedAt?.toISOString() ?? null,
       createdAt: row.createdAt.toISOString(),
       recipientCount: row.payload.recipients?.length ?? 0,
+      failedRecipientCount: row.result?.failed?.length ?? 0,
       result: row.result,
       errorMessage: row.errorMessage,
     };
@@ -551,6 +602,7 @@ export class MailMarketingCampaignService {
       segment: row.payload.segment,
       notifyCreator: row.payload.notifyCreator,
       reminderMinutesBefore: row.payload.reminderMinutesBefore,
+      tags: row.payload.tags,
     };
   }
 
@@ -563,6 +615,7 @@ export class MailMarketingCampaignService {
       reminderMinutesBefore: row.payload.reminderMinutesBefore ?? null,
       reminderDispatchedAt: row.payload.reminderDispatchedAt ?? null,
       notifyCreator: row.payload.notifyCreator ?? false,
+      tags: row.payload.tags ?? [],
       recipients: row.payload.recipients ?? [],
       payloadSummary: {
         hasHtml: Boolean(row.payload.html?.trim()),

@@ -36,6 +36,9 @@ export class MailWebhookDeliveryLogEntity {
   @Column({ type: "varchar", length: 500, name: "error_message", nullable: true })
   public errorMessage!: string | null;
 
+  @Column({ type: "text", name: "payload_body", nullable: true })
+  public payloadBody!: string | null;
+
   @CreateDateColumn({ type: "timestamptz", name: "created_at" })
   public createdAt!: Date;
 }

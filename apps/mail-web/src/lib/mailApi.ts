@@ -909,7 +909,9 @@ export type ComposeCampaignResult = {
 export type MailCampaignListItem = {
   id: string;
   subject: string;
+  tags?: string[];
   status: string;
+  failedRecipientCount?: number;
   scheduleAt: string | null;
   startedAt: string | null;
   completedAt: string | null;
@@ -979,6 +981,7 @@ export type MailCampaignComposeClone = {
   };
   notifyCreator?: boolean;
   reminderMinutesBefore?: number;
+  tags?: string[];
 };
 
 export async function cloneMailCampaignToCompose(
@@ -1017,6 +1020,7 @@ export async function composeCampaign(
       referansAllowlist?: string[];
     };
     reminderMinutesBefore?: number;
+    tags?: string[];
   },
 ) {
   return apiFetch<ComposeCampaignResult>(
@@ -1109,6 +1113,20 @@ export async function fetchMailCampaignDetail(
     accessToken,
     `company/mail-inbox/campaigns/${campaignId}`,
   );
+}
+
+export async function resendFailedMailCampaign(
+  accessToken: string,
+  campaignId: string,
+) {
+  return apiFetch<{
+    ok: true;
+    campaignId: string;
+    result: Omit<ComposeCampaignResult, "ok" | "campaignId" | "scheduled" | "scheduleAt">;
+  }>(accessToken, `company/mail-inbox/campaigns/${campaignId}/resend-failed`, {
+    method: "POST",
+    body: JSON.stringify({}),
+  });
 }
 
 export async function resendMailCampaign(accessToken: string, campaignId: string) {

@@ -96,4 +96,11 @@ export class ComposeCampaignRequestDto {
   @Min(5)
   @Max(1440)
   public reminderMinutesBefore?: number;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(8)
+  @IsString({ each: true })
+  @MaxLength(32, { each: true })
+  public tags?: string[];
 }

@@ -6,8 +6,10 @@ import {
   Param,
   Post,
   Query,
+  Res,
   UseGuards,
 } from "@nestjs/common";
+import type { Response } from "express";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { EmailOutboxEntity } from "../../infrastructure/database/entities/EmailOutboxEntity";
@@ -191,6 +193,25 @@ export class MailPublicApiController {
     return outcome;
   }
 
+  @Get("campaigns/:campaignId/export.csv")
+  public async exportCampaignCsv(
+    @MailPublicApiContextParam() ctx: MailPublicApiRequestContext,
+    @Param("campaignId") campaignId: string,
+    @Res() res: Response,
+  ) {
+    const { filename, csv } =
+      await this.mailMarketingCampaignService.exportCampaignCsv(
+        ctx.organizationId,
+        campaignId,
+      );
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${filename}"`,
+    );
+    res.send(`\uFEFF${csv}`);
+  }
+
   @Get("campaigns/:campaignId")
   public async getCampaign(
     @MailPublicApiContextParam() ctx: MailPublicApiRequestContext,
@@ -230,6 +251,7 @@ export class MailPublicApiController {
         segment: body.segment,
         reminderMinutesBefore: body.reminderMinutesBefore,
         notifyCreator: false,
+        tags: body.tags?.map((tag) => tag.trim()).filter(Boolean),
       },
     });
     const result = outcome.result;

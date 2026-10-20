@@ -40,6 +40,8 @@ export type MailMarketingCampaignPayload = {
   /** Gönderimden önce hatırlatma (dakika); yalnızca zamanlanmış kampanya. */
   reminderMinutesBefore?: number;
   reminderDispatchedAt?: string | null;
+  /** Raporlama etiketleri (ör. fuar-2026). */
+  tags?: string[];
 };
 
 export type MailMarketingCampaignResult = {

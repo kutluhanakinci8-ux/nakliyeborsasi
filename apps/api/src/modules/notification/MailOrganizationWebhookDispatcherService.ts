@@ -116,6 +116,7 @@ export class MailOrganizationWebhookDispatcherService {
           httpStatus: response.status,
           success: ok,
           errorMessage: ok ? null : `HTTP ${response.status}`,
+          payloadBody: params.rawBody,
         });
         if (ok) {
           return;
@@ -135,6 +136,7 @@ export class MailOrganizationWebhookDispatcherService {
           httpStatus: null,
           success: false,
           errorMessage: message,
+          payloadBody: params.rawBody,
         });
         this.logger.warn(
           `Webhook ${endpointId} request failed (${params.event}) attempt=${attempt + 1}: ${message}`,

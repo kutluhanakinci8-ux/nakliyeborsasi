@@ -98,6 +98,8 @@ export function MailClientShell({ mail }: Props) {
     setComposeCampaignRequireMusteriAdi,
     composeCampaignReminderMinutes,
     setComposeCampaignReminderMinutes,
+    composeCampaignTags,
+    setComposeCampaignTags,
     composeCampaignSegmentPreview,
     composeCampaignSegmentPreviewBusy,
     runCampaignSegmentPreview,
@@ -1840,6 +1842,17 @@ export function MailClientShell({ mail }: Props) {
                       placeholder="ornek.com, musteri.com.tr"
                       value={composeCampaignDomainAllowlist}
                       onChange={(e) => setComposeCampaignDomainAllowlist(e.target.value)}
+                    />
+                    <label className="compose-field-label" htmlFor="compose-campaign-tags">
+                      Etiketler (raporlama)
+                    </label>
+                    <input
+                      id="compose-campaign-tags"
+                      type="text"
+                      className="compose-input"
+                      placeholder="fuar-2026, b2b"
+                      value={composeCampaignTags}
+                      onChange={(e) => setComposeCampaignTags(e.target.value)}
                     />
                     <label className="compose-field-label" htmlFor="compose-campaign-segment-prefix">
                       Segment — referans öneki

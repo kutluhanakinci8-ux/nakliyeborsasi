@@ -1362,6 +1362,7 @@ export class CompanyMailInboxController {
         notifyCreator: body.notifyCreator ?? false,
         segment: body.segment,
         reminderMinutesBefore: body.reminderMinutesBefore,
+        tags: body.tags?.map((tag) => tag.trim()).filter(Boolean),
       },
     });
     const result = outcome.result;
@@ -1470,6 +1471,20 @@ export class CompanyMailInboxController {
       statusFilter,
     );
     return { ok: true, campaigns };
+  }
+
+  @Post("campaigns/:campaignId/resend-failed")
+  public async resendFailedCampaign(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("campaignId") campaignId: string,
+  ) {
+    this.assertMailInboxWriter(user);
+    const outcome = await this.mailMarketingCampaignService.resendFailed(
+      user.companyId,
+      campaignId,
+      user.userId,
+    );
+    return { ok: true, ...outcome };
   }
 
   @Post("campaigns/:campaignId/resend")

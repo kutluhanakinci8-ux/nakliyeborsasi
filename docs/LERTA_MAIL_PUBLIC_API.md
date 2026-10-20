@@ -21,6 +21,7 @@ API anahtarları posta konsol → Entegrasyon üzerinden oluşturulur.
 | GET | `/campaigns` | Kampanya listesi (`limit`, `status`) |
 | GET | `/campaigns/:campaignId` | Kampanya durumu ve sonuç |
 | POST | `/campaigns/:campaignId/clone` | `mode: schedule` + `scheduleAt` ile kopya |
+| GET | `/campaigns/:campaignId/export.csv` | Alıcı durum CSV |
 
 ## POST `/campaigns`
 
@@ -61,3 +62,9 @@ Başarısız HTTP veya ağ hatalarında uç nokta **3 denemeye** kadar otomatik 
 ## CSV dışa aktarma
 
 `GET company/mail-inbox/campaigns/:id/export.csv` — alıcı bazlı durum (UTF-8 BOM).
+
+## Faz 12
+
+- `POST …/campaigns/:id/resend-failed` — yalnızca başarısız alıcılar
+- Kampanya `tags` (en fazla 8) — web compose ve API
+- Konsol: başarısız webhook teslimatını **Yeniden gönder** (`payload_body` kolonu gerekir)

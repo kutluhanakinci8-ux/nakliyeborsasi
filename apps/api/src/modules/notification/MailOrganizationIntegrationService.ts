@@ -303,6 +303,15 @@ export class MailOrganizationIntegrationService {
     return rows.map((row) => this.toWebhookView(row));
   }
 
+  public async findWebhookForOrganization(
+    organizationId: string,
+    webhookId: string,
+  ): Promise<MailOrganizationWebhookEndpointEntity | null> {
+    return this.webhookRepository.findOne({
+      where: { id: webhookId, organizationId },
+    });
+  }
+
   public async listEnabledWebhooksForEvent(
     organizationId: string,
     event: MailWebhookEventType,

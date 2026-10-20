@@ -913,6 +913,19 @@ export class CompanyMailIdentityController {
     return { message: "OK", ...result };
   }
 
+  @Post("integration/webhook-deliveries/:logId/replay")
+  public async replayWebhookDelivery(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("logId") logId: string,
+  ) {
+    assertMailConsoleAccess(user);
+    const outcome = await this.mailWebhookDeliveryLogService.replay(
+      user.companyId,
+      logId,
+    );
+    return { message: "OK", ...outcome };
+  }
+
   @Get("integration/webhook-deliveries")
   public async listWebhookDeliveries(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,

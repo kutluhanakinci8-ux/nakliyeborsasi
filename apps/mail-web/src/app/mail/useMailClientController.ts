@@ -281,6 +281,7 @@ export function useMailClientController({
     useState<CampaignSegmentPreview | null>(null);
   const [composeCampaignSegmentPreviewBusy, setComposeCampaignSegmentPreviewBusy] =
     useState(false);
+  const [composeCampaignTags, setComposeCampaignTags] = useState("");
   const [composeCampaignHistoryOpen, setComposeCampaignHistoryOpen] =
     useState(false);
   const [campaignResult, setCampaignResult] = useState<ComposeCampaignResult | null>(
@@ -1081,6 +1082,11 @@ export function useMailClientController({
             composeCampaignScheduleAt && composeCampaignReminderMinutes > 0
               ? composeCampaignReminderMinutes
               : undefined,
+          tags: composeCampaignTags
+            .split(/[,;]+/)
+            .map((tag) => tag.trim())
+            .filter((tag) => tag.length > 0)
+            .slice(0, 8),
         });
         setComposeOpen(false);
         resetCompose();
@@ -1772,6 +1778,7 @@ export function useMailClientController({
     setComposeCampaignRequireMusteriAdi(false);
     setComposeCampaignReminderMinutes(0);
     setComposeCampaignSegmentPreview(null);
+    setComposeCampaignTags("");
     setComposeInlineAttachments([]);
   }
 
@@ -1856,6 +1863,7 @@ export function useMailClientController({
     setComposeMergeMusteriAdi(compose.merge?.musteriAdi ?? "");
     setComposeCampaignNotifyCreator(Boolean(compose.notifyCreator));
     setComposeCampaignReminderMinutes(compose.reminderMinutesBefore ?? 0);
+    setComposeCampaignTags(compose.tags?.join(", ") ?? "");
     setComposeCampaignSegmentPreview(null);
     setToast("Kampanya yazı ekranına kopyalandı.");
   }
@@ -2126,6 +2134,8 @@ export function useMailClientController({
     setComposeCampaignRequireMusteriAdi,
     composeCampaignReminderMinutes,
     setComposeCampaignReminderMinutes,
+    composeCampaignTags,
+    setComposeCampaignTags,
     composeCampaignSegmentPreview,
     composeCampaignSegmentPreviewBusy,
     runCampaignSegmentPreview,

@@ -688,8 +688,20 @@ export type MailWebhookDeliveryLogItem = {
   httpStatus: number | null;
   success: boolean;
   errorMessage: string | null;
+  canReplay?: boolean;
   createdAt: string;
 };
+
+export async function replayMailWebhookDelivery(
+  accessToken: string,
+  logId: string,
+) {
+  return apiFetch<{ message: string; ok: boolean; httpStatus: number }>(
+    accessToken,
+    `company/mail-identity/integration/webhook-deliveries/${logId}/replay`,
+    { method: "POST", body: JSON.stringify({}) },
+  );
+}
 
 export async function fetchMailWebhookDeliveries(
   accessToken: string,
