@@ -66,6 +66,14 @@ else
   FAIL=1
 fi
 
+echo ""
+echo "== Billing P0 cutover (config; prod anahtar yoksa FAIL beklenir) =="
+if bash "${ROOT}/scripts/run-mail-billing-p0-cutover.sh"; then
+  echo "OK"
+else
+  echo "SKIP/WARN: canlı billing henüz hazır değil (test modu normal)" >&2
+fi
+
 if [[ -n "${OPERATOR_JWT:-}" ]]; then
   echo ""
   echo "== A1 billing-health =="

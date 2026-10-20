@@ -63,6 +63,12 @@ export default function DashboardPage() {
   const [mailboxLimit, setMailboxLimit] = useState(1);
   const [checkoutCanStart, setCheckoutCanStart] = useState(true);
   const [checkoutBlockers, setCheckoutBlockers] = useState<string[]>([]);
+  const [billingMode, setBillingMode] = useState<
+    "unconfigured" | "sandbox" | "production"
+  >("unconfigured");
+  const [billingProductionReady, setBillingProductionReady] = useState(false);
+  const [billingSandboxReady, setBillingSandboxReady] = useState(false);
+  const [billingProvider, setBillingProvider] = useState("stripe");
   const [customDomain, setCustomDomain] = useState<string | null>(null);
   const [customDomainStatus, setCustomDomainStatus] = useState<string | null>(
     null,
@@ -169,6 +175,10 @@ export default function DashboardPage() {
         const billingStatus = await fetchMailBillingStatus(accessToken);
         setCheckoutCanStart(billingStatus.status.checkout.canStartCorporate);
         setCheckoutBlockers(billingStatus.status.checkout.blockers);
+        setBillingMode(billingStatus.status.mode);
+        setBillingProductionReady(billingStatus.status.productionReady);
+        setBillingSandboxReady(billingStatus.status.sandboxReady);
+        setBillingProvider(billingStatus.status.provider);
       } catch {
         setCheckoutCanStart(false);
         setCheckoutBlockers(["Ödeme durumu alınamadı"]);
@@ -445,6 +455,28 @@ export default function DashboardPage() {
             </p>
           </div>
         ) : null}
+        <p
+          style={{
+            margin: "0 0 12px",
+            fontSize: 13,
+            color: "var(--muted)",
+          }}
+        >
+          Ödeme altyapısı:{" "}
+          <strong>
+            {billingProvider === "iyzico" ? "iyzico" : "Stripe"} ·{" "}
+            {billingMode === "production"
+              ? "canlı"
+              : billingMode === "sandbox"
+                ? "test"
+                : "yapılandırılmadı"}
+          </strong>
+          {billingProductionReady
+            ? " — canlı ödeme hazır"
+            : billingSandboxReady
+              ? " — test ödeme hazır (canlı anahtarlar için operatör runbook)"
+              : null}
+        </p>
         {checkoutBlockers.length > 0 && !checkoutCanStart ? (
           <ul style={{ color: "var(--muted)", fontSize: 14, marginTop: 0 }}>
             {checkoutBlockers.map((line) => (
