@@ -24,6 +24,7 @@ import { MailDomainEntity } from "../../infrastructure/database/entities/MailDom
 import { MailOrganizationIdentityService } from "./MailOrganizationIdentityService";
 import { MailTenantSubdomainService } from "./MailTenantSubdomainService";
 import { MailImapMaildirService } from "./MailImapMaildirService";
+import { resolveOutboundHtml } from "./MailOutboundHtmlTemplate";
 import { buildOutgoingSentMime } from "./MailSentMimeBuilder";
 import { MailSubscriptionLifecycleService } from "./MailSubscriptionLifecycleService";
 import { MailOrganizationWebhookDispatcherService } from "./MailOrganizationWebhookDispatcherService";
@@ -92,6 +93,9 @@ export class MailMailboxComposeService {
       );
     const subject = params.subject.trim();
     const toAddress = params.to.trim().toLowerCase();
+    const outboundHtml = resolveOutboundHtml(params.text, params.html, {
+      fromHeader,
+    });
     let smtpMessageId: string | null;
     try {
       smtpMessageId = await this.smtpEmailSender.send({
@@ -102,7 +106,7 @@ export class MailMailboxComposeService {
         bcc: normalizeOptionalRecipients(params.bcc),
         subject,
         text: params.text,
-        html: resolveOutboundHtml(params.text, params.html),
+        html: outboundHtml,
         replyTo,
         attachments: nodemailerAttachments,
       });
@@ -161,6 +165,7 @@ export class MailMailboxComposeService {
       to: params.to.trim(),
       subject,
       text: params.text,
+      html: outboundHtml,
       smtpMessageId,
     });
     return { sentId: sent.id, smtpMessageId };
@@ -219,6 +224,9 @@ export class MailMailboxComposeService {
       params.cc,
     );
     const toAddress = inbound.fromAddress.toLowerCase();
+    const outboundHtml = resolveOutboundHtml(params.text, undefined, {
+      fromHeader,
+    });
     let smtpMessageId: string | null;
     try {
       smtpMessageId = await this.smtpEmailSender.send({
@@ -229,7 +237,7 @@ export class MailMailboxComposeService {
         bcc: normalizeOptionalRecipients(params.bcc),
         subject,
         text: params.text,
-        html: `<pre>${escapeHtml(params.text)}</pre>`,
+        html: outboundHtml,
         replyTo,
         inReplyTo,
         references: inReplyTo,
@@ -281,6 +289,7 @@ export class MailMailboxComposeService {
       to: replyAll.to,
       subject,
       text: params.text,
+      html: outboundHtml,
       smtpMessageId,
     });
     return { sentId: sent.id, smtpMessageId };
@@ -340,6 +349,7 @@ export class MailMailboxComposeService {
       );
     const toList = normalizeRecipientList(params.to);
     const toAddress = toList.toLowerCase();
+    const outboundHtml = resolveOutboundHtml(text, undefined, { fromHeader });
     let smtpMessageId: string | null;
     try {
       smtpMessageId = await this.smtpEmailSender.send({
@@ -348,7 +358,7 @@ export class MailMailboxComposeService {
         to: toList,
         subject,
         text,
-        html: `<pre>${escapeHtml(text)}</pre>`,
+        html: outboundHtml,
         replyTo,
         attachments: nodemailerAttachments,
       });
@@ -398,6 +408,7 @@ export class MailMailboxComposeService {
       to: toList,
       subject,
       text,
+      html: outboundHtml,
       smtpMessageId,
     });
     return { sentId: sent.id, smtpMessageId };
@@ -501,6 +512,7 @@ export class MailMailboxComposeService {
     to: string;
     subject: string;
     text: string;
+    html?: string;
     smtpMessageId: string | null;
   }): void {
     if (!this.mailImapMaildirService.isEnabled()) {
@@ -511,6 +523,7 @@ export class MailMailboxComposeService {
       to: params.to,
       subject: params.subject,
       text: params.text,
+      html: params.html,
       messageId: params.smtpMessageId,
       date: new Date(),
     });
@@ -792,13 +805,6 @@ export class MailMailboxComposeService {
   }
 }
 
-function escapeHtml(input: string): string {
-  return input
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-}
-
 function normalizeRecipientList(raw: string): string {
   const parts = raw
     .split(/[,;]/)
@@ -843,15 +849,3 @@ function stripHtml(html: string): string {
     .trim();
 }
 
-function resolveOutboundHtml(text: string, html?: string): string {
-  if (html?.trim()) {
-    return sanitizeOutboundHtml(html.trim());
-  }
-  return `<pre>${escapeHtml(text)}</pre>`;
-}
-
-function sanitizeOutboundHtml(html: string): string {
-  return html
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
-    .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "");
-}
