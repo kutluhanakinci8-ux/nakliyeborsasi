@@ -632,7 +632,8 @@ export class CompanyMailInboxController {
     const branding =
       await this.mailOrganizationBrandingService.updateEmailSocialLinks(
         user.companyId,
-        body.emailSocialLinks ?? [],
+        body.clearSocialLinks ? [] : body.emailSocialLinks,
+        { allowClear: Boolean(body.clearSocialLinks) },
       );
     await this.mailIdentityAuditService.recordFromUser(
       user,

@@ -95,6 +95,11 @@ export function MailEmailSocialLinksEditor({ accessToken, canEdit }: Props) {
         emailSocialLinks.push({ platform: platform.id, url: raw });
       }
     }
+    if (emailSocialLinks.length === 0) {
+      setError("Kaydetmek için en az bir sosyal medya adresi girin.");
+      setSaving(false);
+      return;
+    }
     try {
       const { branding } = await updateMailEmailSocialLinks(
         accessToken,

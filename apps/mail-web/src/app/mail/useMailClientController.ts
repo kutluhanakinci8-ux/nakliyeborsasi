@@ -1114,6 +1114,11 @@ export function useMailClientController({
         });
         if (applyDelayedSend(draftResult)) {
           scheduledUndo = true;
+          setComposeOpen(false);
+          setEditingDraftId(null);
+          setSending(false);
+          void refreshDrafts();
+          return;
         }
       } else {
         if (forwardMessageId) {
@@ -1131,6 +1136,11 @@ export function useMailClientController({
           );
           if (applyDelayedSend(forwardResult)) {
             scheduledUndo = true;
+            setComposeOpen(false);
+            setForwardMessageId(null);
+            setSending(false);
+            void refreshDrafts();
+            return;
           }
         } else {
           const result = await composeMail(accessToken, {
@@ -1146,6 +1156,19 @@ export function useMailClientController({
           });
           if (applyDelayedSend(result)) {
             scheduledUndo = true;
+            setComposeOpen(false);
+            setForwardMessageId(null);
+            setComposeTo("");
+            setComposeCc("");
+            setComposeBcc("");
+            setComposeSubject("");
+            setComposeText("");
+            setComposeFiles([]);
+            setComposeStoredAttachments([]);
+            setEditingDraftId(null);
+            setSending(false);
+            void refreshDrafts();
+            return;
           }
         }
       }

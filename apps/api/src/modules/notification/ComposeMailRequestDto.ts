@@ -73,6 +73,7 @@ export class ComposeMailRequestDto {
 
   /** 1–10: gönderimi geciktir (geri al penceresi). 0 veya boş = anında gönder. */
   @IsOptional()
+  @Type(() => Number)
   @IsInt()
   @Min(0)
   @Max(10)

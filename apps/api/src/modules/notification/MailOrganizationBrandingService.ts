@@ -146,30 +146,49 @@ export class MailOrganizationBrandingService {
   public async updateEmailSocialLinks(
     organizationId: string,
     raw: unknown,
+    options?: { allowClear?: boolean },
   ): Promise<MailOrganizationBrandingSnapshot> {
-    const hadInput =
-      Array.isArray(raw) &&
-      raw.some(
-        (row) =>
-          row &&
-          typeof row === "object" &&
-          String((row as { url?: string }).url ?? "").trim(),
-      );
+    if (raw === undefined) {
+      return this.getSnapshot(organizationId);
+    }
+    if (!Array.isArray(raw)) {
+      throw new BadRequestException("emailSocialLinks bir dizi olmalıdır.");
+    }
+    const hadInput = raw.some(
+      (row) =>
+        row &&
+        typeof row === "object" &&
+        String((row as { url?: string }).url ?? "").trim(),
+    );
     const emailSocialLinks = normalizeMailEmailSocialLinks(raw);
     if (hadInput && emailSocialLinks.length === 0) {
       throw new BadRequestException(
         "Geçerli sosyal bağlantı bulunamadı. https://… tam adresi veya Instagram/X/TikTok için @kullaniciadi girin.",
       );
     }
-    let row = await this.brandingRepository.findOne({
+    if (emailSocialLinks.length === 0 && !options?.allowClear) {
+      throw new BadRequestException(
+        "Boş kayıt mevcut sosyal bağlantıları silmez. En az bir adres girin veya «Tümünü kaldır» kullanın.",
+      );
+    }
+    const stored =
+      emailSocialLinks.length > 0 ? emailSocialLinks : null;
+    const existing = await this.brandingRepository.findOne({
       where: { organizationId },
     });
-    if (!row) {
-      row = this.brandingRepository.create({ organizationId });
+    if (!existing) {
+      await this.brandingRepository.save(
+        this.brandingRepository.create({
+          organizationId,
+          emailSocialLinks: stored,
+        }),
+      );
+    } else {
+      await this.brandingRepository.update(
+        { organizationId },
+        { emailSocialLinks: stored },
+      );
     }
-    row.emailSocialLinks =
-      emailSocialLinks.length > 0 ? emailSocialLinks : null;
-    await this.brandingRepository.save(row);
     return this.getSnapshot(organizationId);
   }
 

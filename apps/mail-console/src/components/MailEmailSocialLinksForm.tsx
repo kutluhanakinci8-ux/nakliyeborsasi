@@ -51,6 +51,11 @@ export function MailEmailSocialLinksForm({ accessToken }: Props) {
         emailSocialLinks.push({ platform: field.platform, url });
       }
     }
+    if (emailSocialLinks.length === 0) {
+      setError("Kaydetmek için en az bir adres girin.");
+      setLoading(false);
+      return;
+    }
     try {
       await updateMailEmailSocialLinks(accessToken, emailSocialLinks);
       setMessage("Kaydedildi.");

@@ -82,12 +82,24 @@ export class NotificationConfigurationService {
     secure: boolean;
     auth?: { user: string; pass: string };
     tls?: { rejectUnauthorized: boolean };
+    connectionTimeout?: number;
+    greetingTimeout?: number;
+    socketTimeout?: number;
   } {
     const smtp = this.resolveSmtpConfig();
     const loopback =
       smtp.host === "127.0.0.1" ||
       smtp.host === "localhost" ||
       smtp.host === "::1";
+    const connectionTimeout = this.readPositiveIntEnv(
+      "SMTP_CONNECTION_TIMEOUT_MS",
+      20_000,
+    );
+    const greetingTimeout = this.readPositiveIntEnv(
+      "SMTP_GREETING_TIMEOUT_MS",
+      15_000,
+    );
+    const socketTimeout = this.readPositiveIntEnv("SMTP_SOCKET_TIMEOUT_MS", 45_000);
     return {
       host: smtp.host,
       port: smtp.port,
@@ -99,7 +111,19 @@ export class NotificationConfigurationService {
       ...(loopback && !smtp.secure
         ? { tls: { rejectUnauthorized: false } }
         : {}),
+      connectionTimeout,
+      greetingTimeout,
+      socketTimeout,
     };
+  }
+
+  private readPositiveIntEnv(key: string, fallback: number): number {
+    const raw = this.configService.get<string>(key);
+    if (!raw?.trim()) {
+      return fallback;
+    }
+    const parsed = Number.parseInt(raw, 10);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
   }
 
   public resolveWebBaseUrl(): string {

@@ -2,6 +2,7 @@ import { Type } from "class-transformer";
 import {
   ArrayMaxSize,
   IsArray,
+  IsBoolean,
   IsIn,
   IsOptional,
   IsString,
@@ -26,4 +27,9 @@ export class UpdateMailEmailSocialLinksRequestDto {
   @ValidateNested({ each: true })
   @Type(() => MailEmailSocialLinkItemDto)
   public emailSocialLinks?: MailEmailSocialLinkItemDto[];
+
+  /** true ise tüm sosyal bağlantılar silinir (emailSocialLinks boş olabilir). */
+  @IsOptional()
+  @IsBoolean()
+  public clearSocialLinks?: boolean;
 }

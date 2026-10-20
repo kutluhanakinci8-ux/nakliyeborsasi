@@ -317,21 +317,42 @@ async function apiFetch<T>(
   accessToken: string,
   path: string,
   init: RequestInit = {},
+  timeoutMs = 90_000,
 ): Promise<T> {
   const headers = new Headers(init.headers);
   headers.set("Authorization", `Bearer ${accessToken}`);
   if (init.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
-  const response = await fetch(`${resolveApiBaseUrl()}/${path}`, {
-    ...init,
-    headers,
-  });
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(formatApiError(text || `API ${path}`));
+  const controller = new AbortController();
+  const schedule =
+    typeof window !== "undefined" ? window.setTimeout.bind(window) : setTimeout;
+  const clear =
+    typeof window !== "undefined"
+      ? window.clearTimeout.bind(window)
+      : clearTimeout;
+  const timer = schedule(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(`${resolveApiBaseUrl()}/${path}`, {
+      ...init,
+      headers,
+      signal: controller.signal,
+    });
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(formatApiError(text || `API ${path}`));
+    }
+    return (await response.json()) as T;
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new Error(
+        "Sunucu yanıt vermedi (zaman aşımı). Gönderilen klasörünü veya geri al çubuğunu kontrol edin.",
+      );
+    }
+    throw error;
+  } finally {
+    clear(timer);
   }
-  return (await response.json()) as T;
 }
 
 export async function requestPasswordReset(emailAddress: string): Promise<void> {
@@ -768,13 +789,17 @@ export type MailInboxBranding = {
 export async function updateMailEmailSocialLinks(
   accessToken: string,
   emailSocialLinks: MailEmailSocialLink[],
+  options?: { clearSocialLinks?: boolean },
 ) {
   return apiFetch<{ branding: MailInboxBranding }>(
     accessToken,
     "company/mail-inbox/branding/social",
     {
       method: "PATCH",
-      body: JSON.stringify({ emailSocialLinks }),
+      body: JSON.stringify({
+        emailSocialLinks,
+        clearSocialLinks: options?.clearSocialLinks ?? false,
+      }),
     },
   );
 }
@@ -922,10 +947,15 @@ export async function composeMail(
     merge?: ComposeMergePayload;
   },
 ) {
-  return apiFetch<ComposeMailResult>(accessToken, "company/mail-inbox/compose", {
-    method: "POST",
-    body: JSON.stringify(body),
-  });
+  return apiFetch<ComposeMailResult>(
+    accessToken,
+    "company/mail-inbox/compose",
+    {
+      method: "POST",
+      body: JSON.stringify(body),
+    },
+    25_000,
+  );
 }
 
 export type ComposeCampaignResult = {
