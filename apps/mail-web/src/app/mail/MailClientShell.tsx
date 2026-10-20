@@ -1,5 +1,7 @@
 "use client";
 
+import { MERGE_FIELD_TOKENS } from "@/lib/mailComposeHtmlBlocks";
+
 import { MailSettingsPanel } from "./MailSettingsPanel";
 import { MailEmptyState } from "./MailEmptyState";
 import { MailShortcutsDialog } from "./MailShortcutsDialog";
@@ -62,6 +64,13 @@ export function MailClientShell({ mail }: Props) {
     composeTemplates,
     composeText,
     composeTo,
+    composeMergeReferans,
+    composeMergeMusteriAdi,
+    composeMergeOpen,
+    setComposeMergeReferans,
+    setComposeMergeMusteriAdi,
+    setComposeMergeOpen,
+    insertMergeToken,
     customFolders,
     deepLinkComposeHandled,
     deepLinkMessageHandled,
@@ -1823,6 +1832,53 @@ export function MailClientShell({ mail }: Props) {
                     ))}
                   </select>
                 </label>
+              </div>
+
+              <div className="compose-merge-panel">
+                <button
+                  type="button"
+                  className="compose-chip-btn"
+                  onClick={() => setComposeMergeOpen((open) => !open)}
+                >
+                  {composeMergeOpen ? "Kişiselleştirme gizle" : "Kişiselleştirme alanları"}
+                </button>
+                {composeMergeOpen ? (
+                  <div className="compose-merge-fields">
+                    <label className="compose-field-label" htmlFor="compose-merge-musteri">
+                      Müşteri adı ({"{{musteri_adi}}"})
+                    </label>
+                    <input
+                      id="compose-merge-musteri"
+                      className="compose-input"
+                      value={composeMergeMusteriAdi}
+                      onChange={(e) => setComposeMergeMusteriAdi(e.target.value)}
+                      placeholder="Örn. Ahmet Yılmaz"
+                    />
+                    <label className="compose-field-label" htmlFor="compose-merge-ref">
+                      Referans ({"{{referans}}"})
+                    </label>
+                    <input
+                      id="compose-merge-ref"
+                      className="compose-input"
+                      value={composeMergeReferans}
+                      onChange={(e) => setComposeMergeReferans(e.target.value)}
+                      placeholder="Örn. REF-2026-042"
+                    />
+                    <div className="compose-merge-tokens">
+                      {MERGE_FIELD_TOKENS.map((row) => (
+                        <button
+                          key={row.token}
+                          type="button"
+                          className="compose-chip-btn"
+                          title={row.label}
+                          onClick={() => insertMergeToken(row.token)}
+                        >
+                          {row.token}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
               </div>
 
               <div className="compose-premium-editor-wrap">

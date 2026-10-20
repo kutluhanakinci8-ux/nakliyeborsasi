@@ -1,4 +1,5 @@
 import { Type } from "class-transformer";
+import { ComposeMergeContextDto } from "./ComposeMergeContextDto";
 import {
   IsArray,
   IsEmail,
@@ -68,4 +69,9 @@ export class ComposeMailRequestDto {
   @Min(0)
   @Max(10)
   public delaySeconds?: number;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => ComposeMergeContextDto)
+  public merge?: ComposeMergeContextDto;
 }

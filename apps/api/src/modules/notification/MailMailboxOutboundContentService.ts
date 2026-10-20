@@ -9,6 +9,11 @@ import {
   signatureAlreadyInPlainBody,
 } from "./MailComposeSignatureHtml";
 import {
+  applyOutboundMergeFields,
+  parseSenderFromHeader,
+  type OutboundMergeContext,
+} from "./MailOutboundMergeFields";
+import {
   OutboundWrapBranding,
   plainTextToOutboundBodyHtml,
   resolveOutboundHtml,
@@ -29,6 +34,8 @@ export class MailMailboxOutboundContentService {
     text: string;
     html?: string;
     fromHeader: string;
+    toEmail?: string;
+    mergeContext?: Pick<OutboundMergeContext, "referans" | "musteriAdi">;
   }): Promise<{ text: string; html: string; branding: OutboundWrapBranding }> {
     const company = await this.companyRepository.findOne({
       where: { id: params.organizationId },
@@ -40,8 +47,21 @@ export class MailMailboxOutboundContentService {
         companyName,
       );
 
-    let text = params.text;
-    let htmlInner = params.html?.trim() || undefined;
+    const sender = parseSenderFromHeader(params.fromHeader);
+    const merged = applyOutboundMergeFields(
+      params.text,
+      params.html?.trim() || undefined,
+      {
+        firmaAdi: companyName,
+        gonderenAd: sender.gonderenAd,
+        gonderenEposta: sender.gonderenEposta,
+        aliciEposta: params.toEmail?.trim().toLowerCase() || null,
+        referans: params.mergeContext?.referans ?? null,
+        musteriAdi: params.mergeContext?.musteriAdi ?? null,
+      },
+    );
+    let text = merged.text;
+    let htmlInner = merged.html;
 
     if (params.userId) {
       const signature =
@@ -57,7 +77,7 @@ export class MailMailboxOutboundContentService {
         const sigHtml = buildOutboundSignatureHtml(signature);
         htmlInner = htmlInner
           ? `${htmlInner}\n${sigHtml}`
-          : `${plainTextToOutboundBodyHtml(params.text)}\n${sigHtml}`;
+          : `${plainTextToOutboundBodyHtml(text)}\n${sigHtml}`;
       }
     }
 

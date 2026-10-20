@@ -13,6 +13,11 @@ export type MailDelayedComposeAttachment = {
   contentBase64: string;
 };
 
+export type MailDelayedComposeMergeContext = {
+  referans?: string;
+  musteriAdi?: string;
+};
+
 export type MailDelayedComposePayload = {
   to: string;
   cc?: string;
@@ -21,6 +26,7 @@ export type MailDelayedComposePayload = {
   text: string;
   html?: string;
   attachments?: MailDelayedComposeAttachment[];
+  merge?: MailDelayedComposeMergeContext;
 };
 
 export type MailDelayedSendPayload =
@@ -37,6 +43,7 @@ export type MailDelayedSendPayload =
       bcc?: string;
       replyAll?: boolean;
       attachments?: MailDelayedComposeAttachment[];
+      merge?: MailDelayedComposeMergeContext;
     }
   | {
       kind: "forward";
@@ -46,6 +53,7 @@ export type MailDelayedSendPayload =
       text?: string;
       includeOriginal?: boolean;
       attachments?: MailDelayedComposeAttachment[];
+      merge?: MailDelayedComposeMergeContext;
     }
   | {
       kind: "draft_send";

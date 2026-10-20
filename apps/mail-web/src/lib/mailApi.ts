@@ -848,9 +848,19 @@ export async function downloadMailPrivacyExport(accessToken: string) {
   return { blob, filename };
 }
 
+export type ComposeMergePayload = {
+  referans?: string;
+  musteriAdi?: string;
+};
+
 export async function fetchComposeOutboundPreview(
   accessToken: string,
-  body: { text: string; html?: string },
+  body: {
+    text: string;
+    html?: string;
+    to?: string;
+    merge?: ComposeMergePayload;
+  },
 ) {
   return apiFetch<{ ok: true; html: string }>(
     accessToken,
@@ -870,6 +880,7 @@ export async function composeMail(
     html?: string;
     attachments?: ComposeAttachment[];
     delaySeconds?: number;
+    merge?: ComposeMergePayload;
   },
 ) {
   return apiFetch<ComposeMailResult>(accessToken, "company/mail-inbox/compose", {
@@ -942,6 +953,7 @@ export async function replyMail(
     replyAll?: boolean;
     attachments?: ComposeAttachment[];
     delaySeconds?: number;
+    merge?: ComposeMergePayload;
   },
 ) {
   return apiFetch<
@@ -961,6 +973,7 @@ export async function forwardMail(
     includeOriginal?: boolean;
     attachments?: ComposeAttachment[];
     delaySeconds?: number;
+    merge?: ComposeMergePayload;
   },
 ) {
   return apiFetch<

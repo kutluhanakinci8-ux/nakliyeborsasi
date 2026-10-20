@@ -116,6 +116,11 @@ export function MailDeliverabilityPanel({
           <li>MX: {hub.dns.mx ? "✓" : "✗"}</li>
           <li>SPF: {hub.dns.spf ? "✓" : "✗"}</li>
           <li>DKIM: {hub.dns.dkim ? "✓" : "✗"}</li>
+          <li>
+            BIMI (inbox logosu): DMARC <code>p=quarantine</code> veya{" "}
+            <code>p=reject</code> sonrası <code>default._bimi</code> TXT + SVG
+            logo — kurumsal görünüm için önerilir.
+          </li>
         </ul>
       ) : (
         <p>Özel domain bağlı değil.</p>

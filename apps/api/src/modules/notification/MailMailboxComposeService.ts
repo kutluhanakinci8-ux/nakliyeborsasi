@@ -73,6 +73,7 @@ export class MailMailboxComposeService {
     text: string;
     html?: string;
     attachments?: ComposeAttachmentInput[];
+    merge?: { referans?: string; musteriAdi?: string };
   }): Promise<{ sentId: string; smtpMessageId: string | null }> {
     const { fromHeader, fromEmail, envelopeMailFrom, mailbox, technicalEmail } =
       await this.resolveSenderMailbox(params.organizationId);
@@ -101,6 +102,8 @@ export class MailMailboxComposeService {
       text: params.text,
       html: params.html,
       fromHeader,
+      toEmail: params.to,
+      mergeContext: params.merge,
     });
     let smtpMessageId: string | null;
     try {
@@ -183,6 +186,8 @@ export class MailMailboxComposeService {
     userId: string;
     text: string;
     html?: string;
+    to?: string;
+    merge?: { referans?: string; musteriAdi?: string };
   }): Promise<{ html: string }> {
     const { fromHeader } = await this.resolveSenderMailbox(params.organizationId);
     const outbound = await this.mailMailboxOutboundContentService.prepare({
@@ -191,6 +196,8 @@ export class MailMailboxComposeService {
       text: params.text,
       html: params.html,
       fromHeader,
+      toEmail: params.to,
+      mergeContext: params.merge,
     });
     return { html: outbound.html };
   }
@@ -204,6 +211,7 @@ export class MailMailboxComposeService {
     bcc?: string;
     replyAll?: boolean;
     attachments?: ComposeAttachmentInput[];
+    merge?: { referans?: string; musteriAdi?: string };
   }): Promise<{ sentId: string; smtpMessageId: string | null }> {
     const inbound = await this.inboundRepository.findOne({
       where: { id: params.inboundMessageId },
@@ -254,6 +262,8 @@ export class MailMailboxComposeService {
       userId: params.userId,
       text: params.text,
       fromHeader,
+      toEmail: toAddress,
+      mergeContext: params.merge,
     });
     let smtpMessageId: string | null;
     try {
@@ -332,6 +342,7 @@ export class MailMailboxComposeService {
     text?: string;
     includeOriginal?: boolean;
     attachments?: ComposeAttachmentInput[];
+    merge?: { referans?: string; musteriAdi?: string };
   }): Promise<{ sentId: string; smtpMessageId: string | null }> {
     const inbound = await this.inboundRepository.findOne({
       where: { id: params.inboundMessageId },
@@ -384,6 +395,8 @@ export class MailMailboxComposeService {
       userId: params.userId,
       text,
       fromHeader,
+      toEmail: toAddress,
+      mergeContext: params.merge,
     });
     let smtpMessageId: string | null;
     try {

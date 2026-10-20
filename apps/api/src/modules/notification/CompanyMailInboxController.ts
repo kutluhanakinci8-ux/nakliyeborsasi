@@ -1252,6 +1252,8 @@ export class CompanyMailInboxController {
       userId: user.userId,
       text: body.text,
       html: body.html,
+      to: body.to,
+      merge: body.merge,
     });
     return { ok: true, ...result };
   }
@@ -1270,6 +1272,7 @@ export class CompanyMailInboxController {
       text: body.text,
       html: body.html,
       attachments: body.attachments,
+      merge: body.merge,
     };
     if (body.delaySeconds && body.delaySeconds > 0) {
       const pending = await this.mailDelayedComposeService.schedule(
@@ -1339,6 +1342,7 @@ export class CompanyMailInboxController {
           bcc: body.bcc,
           replyAll: body.replyAll,
           attachments: body.attachments,
+          merge: body.merge,
         },
         body.delaySeconds,
       );
@@ -1358,6 +1362,7 @@ export class CompanyMailInboxController {
       bcc: body.bcc,
       replyAll: body.replyAll,
       attachments: body.attachments,
+      merge: body.merge,
     });
     await this.recordInboxMailAudit(user, MailIdentityAuditAction.InboxReplySent, {
       inboundMessageId: messageId,
@@ -1420,6 +1425,7 @@ export class CompanyMailInboxController {
           text: body.text,
           includeOriginal: body.includeOriginal,
           attachments: body.attachments,
+          merge: body.merge,
         },
         body.delaySeconds,
       );
@@ -1438,6 +1444,7 @@ export class CompanyMailInboxController {
       text: body.text,
       includeOriginal: body.includeOriginal,
       attachments: body.attachments,
+      merge: body.merge,
     });
     await this.recordInboxMailAudit(user, MailIdentityAuditAction.InboxForwardSent, {
       inboundMessageId: messageId,

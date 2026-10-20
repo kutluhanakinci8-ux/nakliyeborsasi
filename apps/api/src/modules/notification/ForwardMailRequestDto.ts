@@ -13,6 +13,7 @@ import {
   ValidateNested,
 } from "class-validator";
 import { ComposeMailAttachmentDto } from "./ComposeMailRequestDto";
+import { ComposeMergeContextDto } from "./ComposeMergeContextDto";
 
 export class ForwardMailRequestDto {
   @IsEmail()
@@ -39,4 +40,9 @@ export class ForwardMailRequestDto {
   @Min(0)
   @Max(10)
   public delaySeconds?: number;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => ComposeMergeContextDto)
+  public merge?: ComposeMergeContextDto;
 }

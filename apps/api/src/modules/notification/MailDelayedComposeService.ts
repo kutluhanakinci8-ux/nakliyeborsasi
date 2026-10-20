@@ -142,6 +142,7 @@ export class MailDelayedComposeService {
         bcc: send.bcc,
         replyAll: send.replyAll,
         attachments: send.attachments,
+        merge: send.merge,
       });
     }
     if (send.kind === "forward") {
@@ -153,6 +154,7 @@ export class MailDelayedComposeService {
         text: send.text,
         includeOriginal: send.includeOriginal,
         attachments: send.attachments,
+        merge: send.merge,
       });
     }
     if (send.kind === "compose") {
@@ -166,6 +168,7 @@ export class MailDelayedComposeService {
         text: send.text,
         html: send.html,
         attachments: send.attachments,
+        merge: send.merge,
       });
     }
     if (send.kind === "draft_send") {

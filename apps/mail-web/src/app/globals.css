@@ -2002,6 +2002,23 @@ html[data-mail-theme="dark"] .login-error {
   filter: brightness(1.06);
 }
 
+.compose-merge-panel {
+  margin-bottom: 12px;
+}
+
+.compose-merge-fields {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.compose-merge-tokens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
 .compose-preview-overlay {
   z-index: 1200;
 }

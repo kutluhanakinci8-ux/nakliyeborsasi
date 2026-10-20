@@ -1,6 +1,13 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import {
+  composeCtaButtonBlock,
+  composeDividerBlock,
+  composeHeroBlock,
+  composeImageBlock,
+  composeTwoColumnBlock,
+} from "@/lib/mailComposeHtmlBlocks";
 
 type Props = {
   enabled: boolean;
@@ -119,6 +126,74 @@ export function ComposeRichEditor({
           }}
         >
           Link
+        </button>
+        <button
+          type="button"
+          title="Kurumsal ayırıcı"
+          onClick={() => {
+            insertHtmlAtSelection(composeDividerBlock());
+            syncFromEditor();
+          }}
+        >
+          Ayırıcı
+        </button>
+        <button
+          type="button"
+          title="CTA buton"
+          onClick={() => {
+            const label = window.prompt("Buton metni", "Detayları görüntüle");
+            if (!label?.trim()) {
+              return;
+            }
+            const href = window.prompt("Buton linki (https)", "https://");
+            if (!href?.trim()) {
+              return;
+            }
+            insertHtmlAtSelection(composeCtaButtonBlock(label.trim(), href.trim()));
+            syncFromEditor();
+          }}
+        >
+          Buton
+        </button>
+        <button
+          type="button"
+          title="Hero başlık bandı"
+          onClick={() => {
+            const title = window.prompt("Hero başlık", "Önemli duyuru");
+            if (!title?.trim()) {
+              return;
+            }
+            const subtitle = window.prompt("Alt metin", "") ?? "";
+            insertHtmlAtSelection(composeHeroBlock(title.trim(), subtitle.trim()));
+            syncFromEditor();
+          }}
+        >
+          Hero
+        </button>
+        <button
+          type="button"
+          title="İki sütun"
+          onClick={() => {
+            insertHtmlAtSelection(composeTwoColumnBlock());
+            syncFromEditor();
+          }}
+        >
+          2 sütun
+        </button>
+        <button
+          type="button"
+          title="HTTPS görsel"
+          onClick={() => {
+            const url = window.prompt("Görsel URL (https)");
+            if (!url?.trim()) {
+              return;
+            }
+            const alt = window.prompt("Alt metin", "Görsel") ?? "Görsel";
+            insertHtmlAtSelection(composeImageBlock(url.trim(), alt.trim()));
+            syncFromEditor();
+          }}
+        >
+          Görsel
         </button>
         <button
           type="button"

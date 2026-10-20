@@ -243,6 +243,9 @@ export function useMailClientController({
     null,
   );
   const [composePreviewBusy, setComposePreviewBusy] = useState(false);
+  const [composeMergeReferans, setComposeMergeReferans] = useState("");
+  const [composeMergeMusteriAdi, setComposeMergeMusteriAdi] = useState("");
+  const [composeMergeOpen, setComposeMergeOpen] = useState(false);
   const [inboxOffline, setInboxOffline] = useState(false);
   const [inboxOfflineCachedAt, setInboxOfflineCachedAt] = useState<
     number | null
@@ -983,6 +986,7 @@ export function useMailClientController({
               includeOriginal: true,
               attachments: attachments.length > 0 ? attachments : undefined,
               delaySeconds: 5,
+              merge: buildComposeMergePayload(),
             },
           );
           if (applyDelayedSend(forwardResult)) {
@@ -998,6 +1002,7 @@ export function useMailClientController({
             html: outboundHtml,
             attachments: attachments.length > 0 ? attachments : undefined,
             delaySeconds: 5,
+            merge: buildComposeMergePayload(),
           });
           if (applyDelayedSend(result)) {
             scheduledUndo = true;
@@ -1618,6 +1623,25 @@ export function useMailClientController({
     setComposeStoredAttachments([]);
     setComposeError("");
     setComposeAiAssistActive(false);
+    setComposeMergeReferans("");
+    setComposeMergeMusteriAdi("");
+    setComposeMergeOpen(false);
+  }
+
+  function buildComposeMergePayload() {
+    const referans = composeMergeReferans.trim();
+    const musteriAdi = composeMergeMusteriAdi.trim();
+    if (!referans && !musteriAdi) {
+      return undefined;
+    }
+    return {
+      referans: referans || undefined,
+      musteriAdi: musteriAdi || undefined,
+    };
+  }
+
+  function insertMergeToken(token: string) {
+    setComposeText((prev) => `${prev.replace(/\s*$/, "")}${prev.trim() ? " " : ""}${token}`);
   }
 
   function startForwardFromDetail() {
@@ -1713,6 +1737,8 @@ export function useMailClientController({
       const result = await fetchComposeOutboundPreview(accessToken, {
         text: composeText,
         html: outboundHtml,
+        to: composeTo.trim() || undefined,
+        merge: buildComposeMergePayload(),
       });
       setComposePreviewHtml(result.html);
     } catch {
@@ -1784,6 +1810,13 @@ export function useMailClientController({
     composeTemplates,
     composeText,
     composeTo,
+    composeMergeReferans,
+    composeMergeMusteriAdi,
+    composeMergeOpen,
+    setComposeMergeReferans,
+    setComposeMergeMusteriAdi,
+    setComposeMergeOpen,
+    insertMergeToken,
     customFolders,
     deepLinkComposeHandled,
     deepLinkMessageHandled,
