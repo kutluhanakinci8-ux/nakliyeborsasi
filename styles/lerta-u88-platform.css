@@ -1,0 +1,110 @@
+/**
+ * Lerta platform — U88 control plane görsel dili (KVKK / Posta / Mesaj).
+ */
+:root {
+  --lerta-navy: #1a1647;
+  --lerta-navy-hover: #120f35;
+  --lerta-violet: #4f46e5;
+  --lerta-bg: #ffffff;
+  --lerta-surface: #f4f5f9;
+  --lerta-surface-soft: #eef0f6;
+  --lerta-text: #14151f;
+  --lerta-muted: #5c6370;
+  --lerta-border: #e2e5ec;
+  --lerta-radius-pill: 999px;
+  --lerta-radius-card: 16px;
+  --lerta-shadow: 0 8px 30px rgba(26, 22, 71, 0.08);
+  --lerta-font: "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+.lerta-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: var(--lerta-text);
+  text-decoration: none;
+}
+
+.lerta-brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--lerta-navy);
+  color: #fff;
+  font-weight: 800;
+  font-size: 1rem;
+}
+
+.lerta-brand-mark--violet {
+  background: linear-gradient(135deg, var(--lerta-violet), var(--lerta-navy));
+}
+
+.lerta-pill-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 32px;
+}
+
+.lerta-pill-nav a {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 18px;
+  border-radius: var(--lerta-radius-pill);
+  border: 1px solid var(--lerta-border);
+  background: var(--lerta-bg);
+  color: var(--lerta-text);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.lerta-pill-nav a:hover {
+  border-color: var(--lerta-navy);
+}
+
+.lerta-pill-nav a.is-active {
+  background: var(--lerta-navy);
+  border-color: var(--lerta-navy);
+  color: #fff;
+}
+
+.lerta-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 22px;
+  border-radius: var(--lerta-radius-pill);
+  background: var(--lerta-navy);
+  color: #fff !important;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.lerta-btn-primary:hover {
+  background: var(--lerta-navy-hover);
+}
+
+.lerta-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 22px;
+  border-radius: var(--lerta-radius-pill);
+  background: var(--lerta-bg);
+  color: var(--lerta-text) !important;
+  font-weight: 600;
+  border: 1px solid var(--lerta-border);
+  text-decoration: none;
+}
+
+.lerta-btn-outline:hover {
+  border-color: var(--lerta-navy);
+}

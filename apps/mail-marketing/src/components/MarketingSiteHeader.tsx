@@ -12,8 +12,10 @@ export function MarketingSiteHeader() {
 
   return (
     <header>
-      <Link href="/" className="brand" aria-label="Lerta ana sayfa">
-        <span className="brand-mark" aria-hidden="true">L</span>
+      <Link href="/" className="brand lerta-brand" aria-label="Lerta platform">
+        <span className="brand-mark lerta-brand-mark lerta-brand-mark--violet" aria-hidden="true">
+          L
+        </span>
         <span>Lerta</span>
       </Link>
       <nav className="nav-links">

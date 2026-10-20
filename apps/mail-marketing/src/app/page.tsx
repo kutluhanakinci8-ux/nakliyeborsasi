@@ -6,7 +6,7 @@ export default function PlatformHomePage() {
   return (
     <MarketingPageShell>
       <section className="hero hero-platform">
-        <p className="hero-eyebrow">Lerta platformu</p>
+        <p className="hero-eyebrow">CONTROL PLANE · POSTA · MESAJ</p>
         <h1>Uyumluluk, posta ve mesaj — tek marka altında</h1>
         <p className="lead">
           Türkiye&apos;de barındırılan kurumsal ürünler: <strong>U88</strong> ile

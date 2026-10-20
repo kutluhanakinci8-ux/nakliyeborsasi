@@ -1,13 +1,15 @@
+@import "../../../../styles/lerta-u88-platform.css";
+
 :root {
-  --bg: #0b1220;
-  --bg-soft: #111827;
-  --text: #f8fafc;
-  --muted: #94a3b8;
-  --accent: #3b82f6;
-  --accent-hover: #2563eb;
-  --border: #1e293b;
-  --radius: 14px;
-  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  --bg: var(--lerta-bg);
+  --bg-soft: var(--lerta-surface);
+  --text: var(--lerta-text);
+  --muted: var(--lerta-muted);
+  --accent: var(--lerta-navy);
+  --accent-hover: var(--lerta-navy-hover);
+  --border: var(--lerta-border);
+  --radius: var(--lerta-radius-card);
+  font-family: var(--lerta-font);
 }
 
 * {
@@ -60,7 +62,7 @@ a {
 .landing {
   min-height: 100vh;
   background:
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(59, 130, 246, 0.35), transparent),
+    radial-gradient(ellipse 70% 45% at 50% -10%, rgba(79, 70, 229, 0.07), transparent),
     var(--bg);
 }
 
@@ -95,7 +97,7 @@ header {
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  background: var(--lerta-navy);
   color: #fff;
   font-weight: 800;
   font-size: 1.1rem;
@@ -280,23 +282,25 @@ header {
 }
 
 .btn-primary {
-  background: var(--accent);
+  background: var(--lerta-navy);
   color: #fff;
+  border-radius: var(--lerta-radius-pill);
 }
 
 .btn-primary:hover {
-  background: var(--accent-hover);
+  background: var(--lerta-navy-hover);
 }
 
 .btn-ghost {
-  border-color: var(--border);
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--text);
+  border-color: var(--lerta-border);
+  background: var(--lerta-bg);
+  color: var(--lerta-text);
+  border-radius: var(--lerta-radius-pill);
 }
 
 .btn-ghost:hover {
-  border-color: #334155;
-  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--lerta-navy);
+  background: var(--lerta-surface);
 }
 
 .hero h1 {
@@ -461,6 +465,11 @@ footer {
   border-radius: var(--radius);
   border: 1px solid var(--border);
   background: var(--bg-soft);
+  box-shadow: var(--lerta-shadow);
+}
+
+.platform-card--u88-surface {
+  background: var(--lerta-bg);
 }
 
 .platform-card--violet {

@@ -1,0 +1,63 @@
+@import "../../../../styles/lerta-u88-platform.css";
+
+/* Mesaj / u88.lerta.com.tr — U88 control plane görünümü (lojistik teması kapalı). */
+.site-layout--u88-platform {
+  --corporate-accent: var(--lerta-navy);
+  --corporate-accent-soft: var(--lerta-surface-soft);
+  background: var(--lerta-bg);
+  color: var(--lerta-text);
+  font-family: var(--lerta-font);
+}
+
+.site-layout--u88-platform .site-header-utility,
+.site-layout--u88-platform .site-header-main {
+  background: var(--lerta-bg);
+  border-color: var(--lerta-border);
+}
+
+.site-layout--u88-platform .utility-badge {
+  color: var(--lerta-muted);
+  background: var(--lerta-surface);
+  border: 1px solid var(--lerta-border);
+}
+
+.site-layout--u88-platform .site-brand-name {
+  color: var(--lerta-text);
+  font-weight: 700;
+}
+
+.site-layout--u88-platform .site-brand-mark {
+  background: var(--lerta-navy) !important;
+  border-radius: 10px;
+}
+
+.site-layout--u88-platform .site-nav-link {
+  border-radius: var(--lerta-radius-pill);
+}
+
+.site-layout--u88-platform .site-nav-link.active {
+  background: var(--lerta-navy);
+  color: #fff;
+}
+
+.site-layout--u88-platform .btn-premium-header,
+.site-layout--u88-platform .auth-page button[type="submit"] {
+  background: var(--lerta-navy) !important;
+  border-radius: var(--lerta-radius-pill) !important;
+}
+
+.site-layout--u88-platform .auth-page {
+  background: var(--lerta-surface-soft);
+}
+
+.site-layout--u88-platform .auth-promo-card,
+.site-layout--u88-platform .auth-form-card {
+  border: 1px solid var(--lerta-border);
+  border-radius: var(--lerta-radius-card);
+  box-shadow: var(--lerta-shadow);
+}
+
+.site-layout--u88-platform .module-page,
+.site-layout--u88-platform .messaging-hub {
+  background: var(--lerta-surface-soft);
+}

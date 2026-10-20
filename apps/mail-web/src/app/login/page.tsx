@@ -47,10 +47,26 @@ export default function LoginPage() {
 
   return (
     <div className="login-page">
+      <div className="login-page-top">
+        <a className="login-platform-link" href="https://u88.lerta.com.tr/">
+          U88 · KVKK
+        </a>
+        <span className="login-platform-link">·</span>
+        <a className="login-platform-link" href="https://www.lerta.com.tr/mesaj">
+          Mesaj
+        </a>
+        <span className="login-platform-link">·</span>
+        <a className="login-platform-link" href="https://www.lerta.com.tr/">
+          Platform
+        </a>
+      </div>
       <form className="login-card" onSubmit={onSubmit}>
-        <h1>Lerta Posta</h1>
+        <div className="login-card-brand">
+          <span className="login-card-brand-mark" aria-hidden="true">@</span>
+          <h1 style={{ margin: 0, fontSize: "1.35rem" }}>Lerta Posta</h1>
+        </div>
         <p>
-          Kurumsal gelen kutusu — <strong>lerta.com.tr</strong>
+          Kurumsal webmail — <strong>posta.lerta.com.tr</strong>
         </p>
         {error ? <p className="login-error">{error}</p> : null}
         <label htmlFor="email">E-posta</label>

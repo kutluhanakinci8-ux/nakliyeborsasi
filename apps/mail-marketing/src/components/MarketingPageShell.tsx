@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { MarketingProductPills } from "./MarketingProductPills";
 import { MarketingSiteFooter } from "./MarketingSiteFooter";
 import { MarketingSiteHeader } from "./MarketingSiteHeader";
 
@@ -13,6 +14,7 @@ export function MarketingPageShell({
     <div className="landing">
       <div className={`wrap ${narrow ? "wrap-narrow" : ""}`}>
         <MarketingSiteHeader />
+        <MarketingProductPills />
         {children}
         <MarketingSiteFooter />
       </div>
