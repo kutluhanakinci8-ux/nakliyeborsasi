@@ -1277,6 +1277,13 @@ export type MailCampaignDetail = MailCampaignListItem & {
     musteriAdi?: string;
     referans?: string;
   }>;
+  engagement?: {
+    trackedSends: number;
+    uniqueOpens: number;
+    totalOpens: number;
+    totalClicks: number;
+    messagesWithClicks: number;
+  };
   payloadSummary: {
     hasHtml: boolean;
     textLength: number;

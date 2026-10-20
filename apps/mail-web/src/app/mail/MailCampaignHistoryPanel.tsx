@@ -54,6 +54,90 @@ const STATUS_FILTERS = [
   { value: "cancelled", label: "İptal" },
 ];
 
+const STATUS_CHART_COLORS: Record<string, string> = {
+  completed: "#16a34a",
+  scheduled: "#2563eb",
+  running: "#ca8a04",
+  failed: "#dc2626",
+  cancelled: "#64748b",
+};
+
+function MailCampaignSummaryCharts({
+  summary,
+}: {
+  summary: MailCampaignSummary;
+}) {
+  const statusRows = (
+    ["completed", "scheduled", "running", "failed", "cancelled"] as const
+  )
+    .map((key) => ({
+      key,
+      label:
+        STATUS_FILTERS.find((f) => f.value === key)?.label ?? key,
+      value: summary.counts[key] ?? 0,
+      color: STATUS_CHART_COLORS[key] ?? "#94a3b8",
+    }))
+    .filter((row) => row.value > 0);
+  const maxStatus = Math.max(1, ...statusRows.map((row) => row.value));
+  const tagRows = Object.entries(summary.tagCountsInWindow ?? {})
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6);
+  const maxTag = Math.max(1, ...tagRows.map(([, count]) => count));
+
+  return (
+    <div className="mail-campaign-chart-grid" aria-label="30 günlük kampanya grafikleri">
+      <div className="mail-campaign-chart-card">
+        <h4 className="mail-campaign-chart-title">Durum (30 gün)</h4>
+        {statusRows.length === 0 ? (
+          <p className="compose-attach-hint">Bu pencerede kampanya yok.</p>
+        ) : (
+          <ul className="mail-campaign-chart-bars">
+            {statusRows.map((row) => (
+              <li key={row.key}>
+                <span className="mail-campaign-chart-label">{row.label}</span>
+                <div className="mail-campaign-chart-track">
+                  <div
+                    className="mail-campaign-chart-fill"
+                    style={{
+                      width: `${Math.round((row.value / maxStatus) * 100)}%`,
+                      background: row.color,
+                    }}
+                  />
+                </div>
+                <span className="mail-campaign-chart-value">{row.value}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      <div className="mail-campaign-chart-card">
+        <h4 className="mail-campaign-chart-title">Etiketler (30 gün)</h4>
+        {tagRows.length === 0 ? (
+          <p className="compose-attach-hint">Etiketli kampanya yok.</p>
+        ) : (
+          <ul className="mail-campaign-chart-bars">
+            {tagRows.map(([tag, count]) => (
+              <li key={tag}>
+                <span className="mail-campaign-chart-label">{tag}</span>
+                <div className="mail-campaign-chart-track">
+                  <div
+                    className="mail-campaign-chart-fill"
+                    style={{
+                      width: `${Math.round((count / maxTag) * 100)}%`,
+                      background: "#4f46e5",
+                    }}
+                  />
+                </div>
+                <span className="mail-campaign-chart-value">{count}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function MailCampaignHistoryPanel({
   accessToken,
   open,
@@ -306,6 +390,7 @@ export function MailCampaignHistoryPanel({
             : ""}
         </p>
       ) : null}
+      {summary ? <MailCampaignSummaryCharts summary={summary} /> : null}
       <div className="mail-campaign-history-filters">
         <label className="compose-preset-label">
           <span>Durum filtresi</span>
@@ -783,6 +868,13 @@ export function MailCampaignHistoryPanel({
                   ) : null}
                   {detail && detail.id === row.id ? (
                     <>
+                      {detail.engagement && detail.engagement.trackedSends > 0 ? (
+                        <p className="compose-attach-hint">
+                          İzleme: {detail.engagement.uniqueOpens} açılma ·{" "}
+                          {detail.engagement.totalClicks} tıklama (
+                          {detail.engagement.trackedSends} HTML gönderim)
+                        </p>
+                      ) : null}
                       {detail.subjectB ? (
                         <p className="compose-attach-hint">A/B (B): {detail.subjectB}</p>
                       ) : null}
