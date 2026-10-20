@@ -9,6 +9,36 @@ import {
   buildEmailSocialFooterPlain,
 } from "./MailEmailSocialLinks";
 
+const GENERIC_PLATFORM_BRAND_TITLES = new Set([
+  "lerta posta",
+  "lerta mail saas",
+  "lerta mail",
+  "kurumsal hesap",
+]);
+
+export function isGenericPlatformBrandTitle(title: string): boolean {
+  return GENERIC_PLATFORM_BRAND_TITLES.has(title.trim().toLowerCase());
+}
+
+/** Üst şerit: gönderen adı; yalnızca özel kurumsal marka adı yapılandırıldıysa brandTitle. */
+export function resolveOutboundHeaderTitle(
+  branding: OutboundWrapBranding | undefined,
+  displayName: string | null,
+  email: string | null,
+): string {
+  const configured = branding?.brandTitle?.trim() ?? "";
+  if (configured && !isGenericPlatformBrandTitle(configured)) {
+    return configured;
+  }
+  if (displayName?.trim()) {
+    return displayName.trim();
+  }
+  if (email?.trim()) {
+    return email.trim();
+  }
+  return configured || "Lerta Posta";
+}
+
 export type OutboundWrapBranding = {
   brandTitle: string;
   logoUrl: string | null;
@@ -37,10 +67,14 @@ export function buildBrandedPlainText(
   branding?: OutboundWrapBranding,
 ): string {
   const { displayName, email } = parseFromHeader(fromHeader);
+  const headerTitle = resolveOutboundHeaderTitle(
+    branding,
+    displayName,
+    email,
+  ).toUpperCase();
   const senderLine = displayName
     ? `${displayName}${email ? ` · ${email}` : ""}`
     : email ?? "Lerta Posta";
-  const headerTitle = branding?.brandTitle?.trim() || "LERTA POSTA";
   const body = (userText ?? "").replace(/\r\n/g, "\n").trim();
   const lines = [
     "────────────────────────────",
@@ -61,10 +95,13 @@ export function buildBrandedPlainText(
   if (socialPlain) {
     lines.push("", socialPlain);
   }
+  const footerEmail = parseFromHeader(fromHeader).email?.trim();
   lines.push(
     branding?.hidePlatformFooter
       ? `— ${headerTitle}`
-      : "— https://posta.lerta.com.tr",
+      : footerEmail
+        ? `— ${footerEmail}`
+        : "— https://posta.lerta.com.tr",
   );
   return lines.join("\n");
 }
@@ -106,14 +143,23 @@ function wrapLertaPostaOutboundEmail(params: {
   branding?: OutboundWrapBranding;
 }): string {
   const { displayName, email } = parseFromHeader(params.fromHeader);
-  const senderLine = displayName
-    ? `${escapeHtml(displayName)}${email ? ` · ${escapeHtml(email)}` : ""}`
-    : email
-      ? escapeHtml(email)
-      : "Lerta Posta";
-
-  const rawTitle = params.branding?.brandTitle?.trim() || "Lerta Posta";
+  const rawTitle = resolveOutboundHeaderTitle(
+    params.branding,
+    displayName,
+    email,
+  );
   const brandTitle = escapeHtml(rawTitle);
+  const subline =
+    email?.trim() && rawTitle !== email.trim()
+      ? escapeHtml(email.trim())
+      : "";
+  const senderLine = subline
+    ? subline
+    : displayName
+      ? escapeHtml(displayName)
+      : email
+        ? escapeHtml(email)
+        : "Lerta Posta";
   const accent = normalizeAccentColor(params.branding?.accentColor);
   const logoUrl = params.branding?.logoUrl?.trim();
   const monogram = escapeHtml(rawTitle.charAt(0).toUpperCase() || "L");
@@ -139,11 +185,12 @@ function wrapLertaPostaOutboundEmail(params: {
     params.branding?.socialLinks ?? [],
     accent,
   );
+  const contactFooter = email?.trim()
+    ? `<p style="margin:0;font-size:12px;line-height:1.5;color:#5c6370;text-align:center;"><a href="mailto:${escapeHtml(email.trim())}" style="color:#4f46e5;text-decoration:none;font-weight:600;">${escapeHtml(email.trim())}</a></p>`
+    : `<p style="margin:0;font-size:12px;line-height:1.5;color:#5c6370;text-align:center;">${brandTitle}</p>`;
   const footerHtml = params.branding?.hidePlatformFooter
     ? `${legalBlock}${unsubBlock}${socialBlock}<p style="margin:0;font-size:12px;line-height:1.5;color:#5c6370;text-align:center;">${brandTitle}</p>`
-    : `${legalBlock}${unsubBlock}${socialBlock}<p style="margin:0;font-size:12px;line-height:1.5;color:#5c6370;text-align:center;">
-Kurumsal e-posta · <a href="https://posta.lerta.com.tr" style="color:#4f46e5;text-decoration:none;font-weight:600;">posta.lerta.com.tr</a>
-</p>`;
+    : `${legalBlock}${unsubBlock}${socialBlock}${contactFooter}`;
 
   return `<!DOCTYPE html>
 <html lang="tr" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">

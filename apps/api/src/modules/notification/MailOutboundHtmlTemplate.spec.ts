@@ -7,9 +7,9 @@ import {
 describe("MailOutboundHtmlTemplate", () => {
   it("wraps plain text in branded HTML with v2 marker", () => {
     const html = resolveOutboundHtml("Merhaba dünya", undefined, {
-      fromHeader: '"Test" <a@lerta.com.tr>',
+      fromHeader: '"Kutluhan Akıncı" <kutluhan@kullanici.lerta.com.tr>',
       branding: {
-        brandTitle: "U88 Sport",
+        brandTitle: "Lerta Mail SaaS",
         logoUrl: null,
         accentColor: "#1a1647",
         hidePlatformFooter: false,
@@ -19,7 +19,10 @@ describe("MailOutboundHtmlTemplate", () => {
     expect(html).toContain("<!-- lerta-posta-outbound-v2 -->");
     expect(html).not.toContain("data-lerta-posta-outbound");
     expect(html).toContain("Merhaba dünya");
-    expect(html).toContain("U88 Sport");
+    expect(html).toContain("Kutluhan Akıncı");
+    expect(html).toContain("mailto:kutluhan@kullanici.lerta.com.tr");
+    expect(html).not.toContain("Kurumsal e-posta");
+    expect(html).not.toContain("Lerta Mail SaaS");
     expect(html).toContain('bgcolor="#1a1647"');
   });
 
@@ -31,7 +34,21 @@ describe("MailOutboundHtmlTemplate", () => {
     expect(plain).toContain("LERTA POSTA");
     expect(plain).toContain("kutluhan · u@lerta.com.tr");
     expect(plain).toContain("deneme 3");
-    expect(plain).toContain("posta.lerta.com.tr");
+    expect(plain).toContain("u@lerta.com.tr");
+  });
+
+  it("keeps configured enterprise brand title in header", () => {
+    const html = resolveOutboundHtml("Merhaba", undefined, {
+      fromHeader: '"Kişi" <a@lerta.com.tr>',
+      branding: {
+        brandTitle: "U88 Sport",
+        logoUrl: null,
+        accentColor: "#1a1647",
+        hidePlatformFooter: false,
+      },
+    });
+    expect(html).toContain("U88 Sport");
+    expect(html).not.toContain(">Kişi<");
   });
 
   it("renders social links in HTML and plain footer", () => {
