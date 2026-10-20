@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   Post,
+  Query,
   UseGuards,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
@@ -16,7 +17,9 @@ import { MailPublicApiContextParam } from "./MailPublicApiRequestParam";
 import type { MailPublicApiRequestContext } from "./MailPublicApiGuard";
 import { MailPublicApiSendMessageDto } from "./MailPublicApiDto";
 import { MailPublicApiCampaignDto } from "./MailPublicApiCampaignDto";
+import { CloneMailCampaignRequestDto } from "./CloneMailCampaignRequestDto";
 import { MailMarketingCampaignService } from "./MailMarketingCampaignService";
+import type { MailMarketingCampaignStatus } from "../../infrastructure/database/entities/MailMarketingCampaignEntity";
 import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
 
 @Controller("public/lerta-mail/v1")
@@ -61,8 +64,18 @@ export class MailPublicApiController {
         },
         {
           method: "GET",
+          path: "/campaigns",
+          description: "Kampanya listesi (limit, status)",
+        },
+        {
+          method: "GET",
           path: "/campaigns/:campaignId",
           description: "Kampanya durumu ve alıcı/sonuç detayı",
+        },
+        {
+          method: "POST",
+          path: "/campaigns/:campaignId/clone",
+          description: "Kampanyayı yeni scheduleAt ile zamanla (mode=schedule)",
         },
         {
           method: "GET",
@@ -125,6 +138,57 @@ export class MailPublicApiController {
       status: row?.status ?? "skipped",
       idempotencyKey,
     };
+  }
+
+  @Get("campaigns")
+  public async listCampaigns(
+    @MailPublicApiContextParam() ctx: MailPublicApiRequestContext,
+    @Query("limit") limit?: string,
+    @Query("status") status?: string,
+  ) {
+    const parsed = limit ? Number.parseInt(limit, 10) : 20;
+    const allowed: MailMarketingCampaignStatus[] = [
+      "scheduled",
+      "running",
+      "completed",
+      "failed",
+      "cancelled",
+    ];
+    const statusFilter =
+      status && allowed.includes(status as MailMarketingCampaignStatus)
+        ? (status as MailMarketingCampaignStatus)
+        : undefined;
+    const campaigns = await this.mailMarketingCampaignService.listForOrganization(
+      ctx.organizationId,
+      Number.isFinite(parsed) ? parsed : 20,
+      statusFilter,
+    );
+    return { campaigns };
+  }
+
+  @Post("campaigns/:campaignId/clone")
+  public async cloneCampaign(
+    @MailPublicApiContextParam() ctx: MailPublicApiRequestContext,
+    @Param("campaignId") campaignId: string,
+    @Body() body: CloneMailCampaignRequestDto,
+  ) {
+    const mode = body.mode ?? "schedule";
+    if (mode === "compose") {
+      throw new BadRequestException(
+        "Public API yalnızca mode=schedule destekler.",
+      );
+    }
+    const scheduleAt = body.scheduleAt ? new Date(body.scheduleAt) : null;
+    if (!scheduleAt || Number.isNaN(scheduleAt.getTime())) {
+      throw new BadRequestException("scheduleAt zorunlu.");
+    }
+    const outcome = await this.mailMarketingCampaignService.cloneCampaign({
+      organizationId: ctx.organizationId,
+      campaignId,
+      mode: "schedule",
+      scheduleAt,
+    });
+    return outcome;
   }
 
   @Get("campaigns/:campaignId")

@@ -18,7 +18,9 @@ API anahtarları posta konsol → Entegrasyon üzerinden oluşturulur.
 | POST | `/messages` | Tek alıcı (outbox) |
 | GET | `/messages/:id` | Gönderim durumu |
 | POST | `/campaigns` | Pazarlama kampanyası |
+| GET | `/campaigns` | Kampanya listesi (`limit`, `status`) |
 | GET | `/campaigns/:campaignId` | Kampanya durumu ve sonuç |
+| POST | `/campaigns/:campaignId/clone` | `mode: schedule` + `scheduleAt` ile kopya |
 
 ## POST `/campaigns`
 
@@ -54,4 +56,8 @@ Başarısız HTTP veya ağ hatalarında uç nokta **3 denemeye** kadar otomatik 
 
 ## Segment önizleme
 
-`POST company/mail-inbox/compose/campaign/preview-segment` — alıcı listesi + segment/domain filtreleri için `matched` / `skipped*` sayıları.
+`POST company/mail-inbox/compose/campaign/preview-segment` — alıcı listesi + segment/domain filtreleri için `matched` / `skipped*` sayıları (durdurulmuş liste dahil).
+
+## CSV dışa aktarma
+
+`GET company/mail-inbox/campaigns/:id/export.csv` — alıcı bazlı durum (UTF-8 BOM).

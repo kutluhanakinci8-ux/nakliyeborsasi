@@ -14,6 +14,9 @@ import { UserAccountEntity } from "../../infrastructure/database/entities/UserAc
 import { MailMailboxComposeService } from "./MailMailboxComposeService";
 import type { ComposeAttachmentInput } from "./MailMailboxComposeService";
 import { MailOrganizationWebhookDispatcherService } from "./MailOrganizationWebhookDispatcherService";
+import { EmailSuppressionService } from "./EmailSuppressionService";
+import { buildCampaignRecipientExportCsv } from "./MailCampaignExportCsv";
+import type { MailMarketingCampaignStatus } from "../../infrastructure/database/entities/MailMarketingCampaignEntity";
 
 const MAX_SCHEDULE_DAYS = 7;
 const MIN_SCHEDULE_LEAD_MS = 60_000;
@@ -29,6 +32,7 @@ export class MailMarketingCampaignService {
     private readonly userAccountRepository: Repository<UserAccountEntity>,
     private readonly mailMailboxComposeService: MailMailboxComposeService,
     private readonly mailOrganizationWebhookDispatcherService: MailOrganizationWebhookDispatcherService,
+    private readonly emailSuppressionService: EmailSuppressionService,
   ) {}
 
   public async createAndRunOrSchedule(params: {
@@ -161,13 +165,103 @@ export class MailMarketingCampaignService {
     return this.toDetail(row);
   }
 
-  public async listForOrganization(organizationId: string, limit = 40) {
+  public async listForOrganization(
+    organizationId: string,
+    limit = 40,
+    status?: MailMarketingCampaignStatus,
+  ) {
     const rows = await this.campaignRepository.find({
-      where: { organizationId },
+      where: status ? { organizationId, status } : { organizationId },
       order: { createdAt: "DESC" },
       take: Math.min(80, Math.max(1, limit)),
     });
     return rows.map((row) => this.toListItem(row));
+  }
+
+  public async exportCampaignCsv(
+    organizationId: string,
+    campaignId: string,
+  ): Promise<{ filename: string; csv: string }> {
+    const row = await this.campaignRepository.findOne({
+      where: { id: campaignId, organizationId },
+    });
+    if (!row) {
+      throw new NotFoundException("Kampanya bulunamadı.");
+    }
+    const recipientStatus = await this.resolveRecipientExportStatuses(
+      row,
+      organizationId,
+    );
+    const safeSubject = row.subject
+      .replace(/[^\w\u00C0-\u024F\s-]+/g, "")
+      .trim()
+      .slice(0, 40)
+      .replace(/\s+/g, "-");
+    const filename = `kampanya-${safeSubject || row.id.slice(0, 8)}.csv`;
+    const csv = buildCampaignRecipientExportCsv(row, recipientStatus);
+    return { filename, csv };
+  }
+
+  private async resolveRecipientExportStatuses(
+    row: MailMarketingCampaignEntity,
+    organizationId: string,
+  ): Promise<
+    Array<{
+      email: string;
+      musteriAdi?: string;
+      referans?: string;
+      status: string;
+      error?: string;
+    }>
+  > {
+    const failed = new Map(
+      (row.result?.failed ?? []).map((item) => [
+        item.email.trim().toLowerCase(),
+        item.error,
+      ]),
+    );
+    const output: Array<{
+      email: string;
+      musteriAdi?: string;
+      referans?: string;
+      status: string;
+      error?: string;
+    }> = [];
+    for (const recipient of row.payload.recipients ?? []) {
+      const email = recipient.email.trim().toLowerCase();
+      let durum: string = row.status;
+      let error: string | undefined;
+      if (row.status === "scheduled") {
+        durum = "zamanlandi";
+      } else if (row.status === "cancelled") {
+        durum = "iptal";
+      } else if (row.status === "running") {
+        durum = "gonderiliyor";
+      } else if (failed.has(email)) {
+        durum = "basarisiz";
+        error = failed.get(email);
+      } else if (
+        row.status === "completed" &&
+        (await this.emailSuppressionService.isSuppressed(
+          email,
+          organizationId,
+        ))
+      ) {
+        durum = "durdurulmus";
+      } else if (row.status === "completed") {
+        durum = "gonderildi";
+      } else if (row.status === "failed") {
+        durum = "kampanya_basarisiz";
+      }
+      output.push({
+        email: recipient.email,
+        musteriAdi: recipient.musteriAdi,
+        referans: recipient.referans,
+        status: durum,
+        error,
+      });
+    }
+    return output;
   }
 
   public async resend(

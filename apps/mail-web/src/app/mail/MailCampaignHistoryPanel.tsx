@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import {
   cancelScheduledMailCampaign,
   cloneMailCampaignToCompose,
+  cloneMailCampaignSchedule,
+  downloadMailCampaignCsv,
   fetchMailCampaignDetail,
   fetchMailCampaigns,
   resendMailCampaign,
@@ -19,27 +21,42 @@ type Props = {
   ) => void;
 };
 
+const STATUS_FILTERS = [
+  { value: "", label: "Tümü" },
+  { value: "scheduled", label: "Zamanlanmış" },
+  { value: "completed", label: "Tamamlanan" },
+  { value: "failed", label: "Başarısız" },
+  { value: "cancelled", label: "İptal" },
+];
+
 export function MailCampaignHistoryPanel({
   accessToken,
   open,
   onCloneToCompose,
 }: Props) {
   const [rows, setRows] = useState<MailCampaignListItem[]>([]);
+  const [statusFilter, setStatusFilter] = useState("");
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
   const [detail, setDetail] = useState<MailCampaignDetail | null>(null);
   const [detailError, setDetailError] = useState("");
+  const [scheduleCloneId, setScheduleCloneId] = useState<string | null>(null);
+  const [scheduleCloneAt, setScheduleCloneAt] = useState("");
 
   const load = useCallback(async () => {
     setError("");
     try {
-      const data = await fetchMailCampaigns(accessToken, 25);
+      const data = await fetchMailCampaigns(
+        accessToken,
+        25,
+        statusFilter || undefined,
+      );
       setRows(data.campaigns);
     } catch {
       setError("Kampanya geçmişi yüklenemedi.");
     }
-  }, [accessToken]);
+  }, [accessToken, statusFilter]);
 
   useEffect(() => {
     if (open) {
@@ -65,6 +82,26 @@ export function MailCampaignHistoryPanel({
     }
   }
 
+  async function onDownloadCsv(campaignId: string) {
+    setBusyId(campaignId);
+    try {
+      const { blob, filename } = await downloadMailCampaignCsv(
+        accessToken,
+        campaignId,
+      );
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = filename;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setError("CSV indirilemedi.");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   if (!open) {
     return null;
   }
@@ -72,6 +109,20 @@ export function MailCampaignHistoryPanel({
   return (
     <div className="mail-campaign-history">
       <h3 className="mail-deliverability-subhead">Kampanya geçmişi</h3>
+      <label className="compose-preset-label">
+        <span>Durum filtresi</span>
+        <select
+          className="compose-select"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+        >
+          {STATUS_FILTERS.map((opt) => (
+            <option key={opt.value || "all"} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+      </label>
       {error ? <p className="login-error">{error}</p> : null}
       {rows.length === 0 ? (
         <p className="compose-attach-hint">Henüz kayıtlı kampanya yok.</p>
@@ -101,6 +152,14 @@ export function MailCampaignHistoryPanel({
                 >
                   {detailId === row.id ? "Detayı gizle" : "Detay"}
                 </button>
+                <button
+                  type="button"
+                  className="compose-chip-btn"
+                  disabled={busyId === row.id}
+                  onClick={() => void onDownloadCsv(row.id)}
+                >
+                  CSV
+                </button>
                 {onCloneToCompose ? (
                   <button
                     type="button"
@@ -116,6 +175,18 @@ export function MailCampaignHistoryPanel({
                     Yazıya kopyala
                   </button>
                 ) : null}
+                <button
+                  type="button"
+                  className="compose-chip-btn"
+                  onClick={() => {
+                    setScheduleCloneId(
+                      scheduleCloneId === row.id ? null : row.id,
+                    );
+                    setScheduleCloneAt("");
+                  }}
+                >
+                  Zamanla (kopya)
+                </button>
                 {row.status === "scheduled" ? (
                   <button
                     type="button"
@@ -147,6 +218,37 @@ export function MailCampaignHistoryPanel({
                   </button>
                 ) : null}
               </div>
+              {scheduleCloneId === row.id ? (
+                <div className="mail-campaign-schedule-clone">
+                  <input
+                    type="datetime-local"
+                    className="compose-input"
+                    value={scheduleCloneAt}
+                    onChange={(e) => setScheduleCloneAt(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="compose-chip-btn"
+                    disabled={!scheduleCloneAt || busyId === row.id}
+                    onClick={() => {
+                      setBusyId(row.id);
+                      void cloneMailCampaignSchedule(
+                        accessToken,
+                        row.id,
+                        new Date(scheduleCloneAt).toISOString(),
+                      )
+                        .then(() => {
+                          setScheduleCloneId(null);
+                          setScheduleCloneAt("");
+                          return load();
+                        })
+                        .finally(() => setBusyId(null));
+                    }}
+                  >
+                    Kaydet
+                  </button>
+                </div>
+              ) : null}
               {detailId === row.id ? (
                 <div className="mail-campaign-detail">
                   {detailError ? (

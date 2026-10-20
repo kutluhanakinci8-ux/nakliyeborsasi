@@ -29,7 +29,8 @@ import { ComposeMailPreviewRequestDto } from "./ComposeMailPreviewRequestDto";
 import { ComposeCampaignRequestDto } from "./ComposeCampaignRequestDto";
 import { ComposeCampaignPreviewSegmentDto } from "./ComposeCampaignPreviewSegmentDto";
 import { CloneMailCampaignRequestDto } from "./CloneMailCampaignRequestDto";
-import { previewCampaignRecipientMatch } from "./MailCampaignRecipientPreview";
+import { MailCampaignRecipientPreviewService } from "./MailCampaignRecipientPreviewService";
+import type { MailMarketingCampaignStatus } from "../../infrastructure/database/entities/MailMarketingCampaignEntity";
 import { ReplyMailRequestDto } from "./ReplyMailRequestDto";
 import { ForwardMailRequestDto } from "./ForwardMailRequestDto";
 import { MailComposeDraftService } from "./MailComposeDraftService";
@@ -136,6 +137,7 @@ export class CompanyMailInboxController {
     private readonly mailAiComposeService: MailAiComposeService,
     private readonly mailDeliverabilityHubService: MailDeliverabilityHubService,
     private readonly mailMarketingCampaignService: MailMarketingCampaignService,
+    private readonly mailCampaignRecipientPreviewService: MailCampaignRecipientPreviewService,
     private readonly userNotificationPreferenceService: UserNotificationPreferenceService,
   ) {}
 
@@ -1312,16 +1314,20 @@ export class CompanyMailInboxController {
     @Body() body: ComposeCampaignPreviewSegmentDto,
   ) {
     this.assertMailInboxWriter(user);
-    const preview = previewCampaignRecipientMatch({
-      recipients: body.recipients.map((row) => ({
-        email: row.email,
-        musteriAdi: row.musteriAdi,
-        referans: row.referans,
-      })),
-      merge: body.merge,
-      recipientDomainAllowlist: body.recipientDomainAllowlist,
-      segment: body.segment,
-    });
+    const preview =
+      await this.mailCampaignRecipientPreviewService.previewForOrganization(
+        user.companyId,
+        {
+          recipients: body.recipients.map((row) => ({
+            email: row.email,
+            musteriAdi: row.musteriAdi,
+            referans: row.referans,
+          })),
+          merge: body.merge,
+          recipientDomainAllowlist: body.recipientDomainAllowlist,
+          segment: body.segment,
+        },
+      );
     return { ok: true, preview };
   }
 
@@ -1406,6 +1412,26 @@ export class CompanyMailInboxController {
     return { ok: true, ...outcome };
   }
 
+  @Get("campaigns/:campaignId/export.csv")
+  public async exportCampaignCsv(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("campaignId") campaignId: string,
+    @Res() res: Response,
+  ) {
+    this.assertMailInboxWriter(user);
+    const { filename, csv } =
+      await this.mailMarketingCampaignService.exportCampaignCsv(
+        user.companyId,
+        campaignId,
+      );
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${filename}"`,
+    );
+    res.send(`\uFEFF${csv}`);
+  }
+
   @Get("campaigns/:campaignId")
   public async getCampaign(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
@@ -1423,12 +1449,25 @@ export class CompanyMailInboxController {
   public async listCampaigns(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
     @Query("limit") limit?: string,
+    @Query("status") status?: string,
   ) {
     this.assertMailInboxWriter(user);
     const parsed = limit ? Number.parseInt(limit, 10) : 40;
+    const allowed: MailMarketingCampaignStatus[] = [
+      "scheduled",
+      "running",
+      "completed",
+      "failed",
+      "cancelled",
+    ];
+    const statusFilter =
+      status && allowed.includes(status as MailMarketingCampaignStatus)
+        ? (status as MailMarketingCampaignStatus)
+        : undefined;
     const campaigns = await this.mailMarketingCampaignService.listForOrganization(
       user.companyId,
       Number.isFinite(parsed) ? parsed : 40,
+      statusFilter,
     );
     return { ok: true, campaigns };
   }

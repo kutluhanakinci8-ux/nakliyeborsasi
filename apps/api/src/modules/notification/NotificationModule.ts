@@ -159,6 +159,7 @@ import { MailMarketingCampaignService } from "./MailMarketingCampaignService";
 import { MailMarketingCampaignEntity } from "../../infrastructure/database/entities/MailMarketingCampaignEntity";
 import { MailWebhookDeliveryLogEntity } from "../../infrastructure/database/entities/MailWebhookDeliveryLogEntity";
 import { MailWebhookDeliveryLogService } from "./MailWebhookDeliveryLogService";
+import { MailCampaignRecipientPreviewService } from "./MailCampaignRecipientPreviewService";
 import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
 import { MailBillingService } from "./MailBillingService";
 import { MailIyzicoBillingService } from "./MailIyzicoBillingService";
@@ -265,6 +266,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     MailBimiLogoProbeService,
     MailMarketingCampaignService,
     MailWebhookDeliveryLogService,
+    MailCampaignRecipientPreviewService,
     UserNotificationPreferenceService,
     CompanyNotificationPreferenceService,
     OperationalNotificationService,

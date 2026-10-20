@@ -1900,6 +1900,9 @@ export function MailClientShell({ mail }: Props) {
                         {composeCampaignSegmentPreview.skippedInvalid > 0
                           ? ` · geçersiz ${composeCampaignSegmentPreview.skippedInvalid}`
                           : ""}
+                        {composeCampaignSegmentPreview.skippedSuppressed > 0
+                          ? ` · durdurulmuş ${composeCampaignSegmentPreview.skippedSuppressed}`
+                          : ""}
                       </p>
                     ) : null}
                     {composeCampaignScheduleAt ? (

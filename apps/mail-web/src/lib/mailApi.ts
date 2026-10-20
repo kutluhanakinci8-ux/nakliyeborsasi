@@ -930,6 +930,7 @@ export type CampaignSegmentPreview = {
   skippedInvalid: number;
   skippedDomain: number;
   skippedSegment: number;
+  skippedSuppressed: number;
 };
 
 export async function previewCampaignSegment(
@@ -1025,11 +1026,53 @@ export async function composeCampaign(
   );
 }
 
-export async function fetchMailCampaigns(accessToken: string, limit = 30) {
+export async function fetchMailCampaigns(
+  accessToken: string,
+  limit = 30,
+  status?: string,
+) {
+  const statusQuery = status ? `&status=${encodeURIComponent(status)}` : "";
   return apiFetch<{ ok: true; campaigns: MailCampaignListItem[] }>(
     accessToken,
-    `company/mail-inbox/campaigns?limit=${limit}`,
+    `company/mail-inbox/campaigns?limit=${limit}${statusQuery}`,
   );
+}
+
+export async function downloadMailCampaignCsv(
+  accessToken: string,
+  campaignId: string,
+): Promise<{ blob: Blob; filename: string }> {
+  const response = await fetch(
+    `${resolveApiBaseUrl()}/company/mail-inbox/campaigns/${campaignId}/export.csv`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    },
+  );
+  if (!response.ok) {
+    throw new Error("CSV indirilemedi.");
+  }
+  const disposition = response.headers.get("Content-Disposition");
+  const match = disposition?.match(/filename="([^"]+)"/);
+  const filename = match?.[1] ?? `kampanya-${campaignId}.csv`;
+  const blob = await response.blob();
+  return { blob, filename };
+}
+
+export async function cloneMailCampaignSchedule(
+  accessToken: string,
+  campaignId: string,
+  scheduleAt: string,
+) {
+  return apiFetch<{
+    ok: true;
+    mode: "schedule";
+    campaignId: string;
+    scheduled: boolean;
+    scheduleAt: string | null;
+  }>(accessToken, `company/mail-inbox/campaigns/${campaignId}/clone`, {
+    method: "POST",
+    body: JSON.stringify({ mode: "schedule", scheduleAt }),
+  });
 }
 
 export type MailCampaignDetail = MailCampaignListItem & {
