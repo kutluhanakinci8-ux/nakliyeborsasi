@@ -15,6 +15,7 @@ import {
   cancelDelayedCompose,
   fetchDelayedComposeStatus,
   composeMail,
+  fetchComposeOutboundPreview,
   createDraft,
   deleteDraft,
   deleteSentMessage,
@@ -238,6 +239,10 @@ export function useMailClientController({
   );
   const [composeRich, setComposeRich] = useState(true);
   const [composeHtml, setComposeHtml] = useState("");
+  const [composePreviewHtml, setComposePreviewHtml] = useState<string | null>(
+    null,
+  );
+  const [composePreviewBusy, setComposePreviewBusy] = useState(false);
   const [inboxOffline, setInboxOffline] = useState(false);
   const [inboxOfflineCachedAt, setInboxOfflineCachedAt] = useState<
     number | null
@@ -1689,6 +1694,34 @@ export function useMailClientController({
     },
   });
 
+  function closeComposePreview() {
+    setComposePreviewHtml(null);
+  }
+
+  async function previewComposeOutbound() {
+    if (!accessToken || !composeText.trim()) {
+      setComposeError("Önizleme için mesaj metni gerekli.");
+      return;
+    }
+    const outboundHtml =
+      composeRich && composeHtml.trim() && !forwardMessageId
+        ? composeHtml.trim()
+        : undefined;
+    setComposeError("");
+    setComposePreviewBusy(true);
+    try {
+      const result = await fetchComposeOutboundPreview(accessToken, {
+        text: composeText,
+        html: outboundHtml,
+      });
+      setComposePreviewHtml(result.html);
+    } catch {
+      setComposeError("Alıcı görünümü önizlemesi oluşturulamadı.");
+    } finally {
+      setComposePreviewBusy(false);
+    }
+  }
+
   function applyComposeTemplate(presetId: string) {
     const preset = composeTemplates.find((t) => t.id === presetId);
     if (!preset) {
@@ -1698,6 +1731,10 @@ export function useMailClientController({
       setComposeSubject(preset.subject);
     }
     setComposeText(preset.bodyText);
+    if (preset.bodyHtml?.trim()) {
+      setComposeHtml(preset.bodyHtml.trim());
+      setComposeRich(true);
+    }
   }
 
   const storageAtLimit = summary?.storageQuota?.atLimit ?? false;
@@ -1727,6 +1764,7 @@ export function useMailClientController({
     canBulkSelect,
     canUseThreads,
     cancelPendingUndo,
+    closeComposePreview,
     checkboxAnchorRef,
     checkedIds,
     clearRowSelectionAfterSwipe,
@@ -1736,6 +1774,8 @@ export function useMailClientController({
     composeFiles,
     composeHtml,
     composeOpen,
+    composePreviewBusy,
+    composePreviewHtml,
     composeRich,
     composeShowCcBcc,
     composeSignatures,
@@ -1781,6 +1821,7 @@ export function useMailClientController({
     openThread,
     pendingUndo,
     promptCreateCustomFolder,
+    previewComposeOutbound,
     purgeCurrentMessage,
     refresh,
     refreshCustomFolders,

@@ -23,6 +23,7 @@ export type MailOrganizationBrandingSnapshot = {
   logoUrl: string | null;
   emailBrandTitle: string | null;
   emailAccentColor: string | null;
+  emailLegalFooter: string | null;
   defaultFromDisplayName: string | null;
   hidePlatformEmailChrome: boolean;
   detailTr: string;
@@ -32,6 +33,7 @@ export type UpdateMailOrganizationBrandingInput = {
   logoUrl?: string | null;
   emailBrandTitle?: string | null;
   emailAccentColor?: string | null;
+  emailLegalFooter?: string | null;
   defaultFromDisplayName?: string | null;
   hidePlatformEmailChrome?: boolean;
 };
@@ -63,6 +65,7 @@ export class MailOrganizationBrandingService {
       logoUrl: row?.logoUrl ?? null,
       emailBrandTitle: row?.emailBrandTitle ?? null,
       emailAccentColor: row?.emailAccentColor ?? null,
+      emailLegalFooter: row?.emailLegalFooter ?? null,
       defaultFromDisplayName: row?.defaultFromDisplayName ?? null,
       hidePlatformEmailChrome: row?.hidePlatformEmailChrome ?? false,
       detailTr: allowed
@@ -114,6 +117,9 @@ export class MailOrganizationBrandingService {
     if (input.emailAccentColor !== undefined) {
       row.emailAccentColor = this.normalizeAccentColor(input.emailAccentColor);
     }
+    if (input.emailLegalFooter !== undefined) {
+      row.emailLegalFooter = this.normalizeLegalFooter(input.emailLegalFooter);
+    }
     if (input.defaultFromDisplayName !== undefined) {
       row.defaultFromDisplayName = this.normalizeShortText(
         input.defaultFromDisplayName,
@@ -150,6 +156,10 @@ export class MailOrganizationBrandingService {
       accentColor:
         (whiteLabel && row?.emailAccentColor?.trim()) || "#1a1647",
       hidePlatformFooter: whiteLabel && Boolean(row?.hidePlatformEmailChrome),
+      legalFooterText:
+        whiteLabel && row?.emailLegalFooter?.trim()
+          ? row.emailLegalFooter.trim()
+          : null,
     };
   }
 
@@ -252,6 +262,17 @@ export class MailOrganizationBrandingService {
     }
     sender.displayName = displayName.trim().slice(0, 120);
     await this.senderRepository.save(sender);
+  }
+
+  private normalizeLegalFooter(value: string | null): string | null {
+    if (value === null) {
+      return null;
+    }
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return null;
+    }
+    return trimmed.slice(0, 500);
   }
 
   private normalizeAccentColor(value: string | null): string | null {

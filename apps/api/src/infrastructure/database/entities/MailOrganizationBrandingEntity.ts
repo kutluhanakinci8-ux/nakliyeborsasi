@@ -26,6 +26,9 @@ export class MailOrganizationBrandingEntity {
   @Column({ name: "email_accent_color", type: "varchar", length: 16, nullable: true })
   public emailAccentColor!: string | null;
 
+  @Column({ name: "email_legal_footer", type: "text", nullable: true })
+  public emailLegalFooter!: string | null;
+
   /**
    * Varsayılan gönderen görünen adı (From); boşsa posta kutusu kimliği kullanılır.
    */

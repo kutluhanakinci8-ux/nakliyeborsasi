@@ -2002,6 +2002,25 @@ html[data-mail-theme="dark"] .login-error {
   filter: brightness(1.06);
 }
 
+.compose-preview-overlay {
+  z-index: 1200;
+}
+
+.compose-preview-dialog {
+  max-width: 720px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.compose-preview-frame {
+  flex: 1;
+  width: 100%;
+  min-height: 420px;
+  border: 0;
+  background: #f4f5f9;
+}
+
 .compose-premium-forward {
   margin: 0 0 14px;
   padding: 12px 14px;

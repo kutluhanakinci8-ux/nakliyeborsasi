@@ -25,6 +25,7 @@ import {
 import { MailMailboxComposeService } from "./MailMailboxComposeService";
 import { MailImapAccessService } from "./MailImapAccessService";
 import { ComposeMailRequestDto } from "./ComposeMailRequestDto";
+import { ComposeMailPreviewRequestDto } from "./ComposeMailPreviewRequestDto";
 import { ReplyMailRequestDto } from "./ReplyMailRequestDto";
 import { ForwardMailRequestDto } from "./ForwardMailRequestDto";
 import { MailComposeDraftService } from "./MailComposeDraftService";
@@ -1238,6 +1239,21 @@ export class CompanyMailInboxController {
       messageId,
     });
     return { ok: true };
+  }
+
+  @Post("compose/preview")
+  public async previewCompose(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: ComposeMailPreviewRequestDto,
+  ) {
+    this.assertMailInboxWriter(user);
+    const result = await this.mailMailboxComposeService.previewOutbound({
+      organizationId: user.companyId,
+      userId: user.userId,
+      text: body.text,
+      html: body.html,
+    });
+    return { ok: true, ...result };
   }
 
   @Post("compose")

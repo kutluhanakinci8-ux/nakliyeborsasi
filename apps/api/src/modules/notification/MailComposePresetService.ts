@@ -136,6 +136,13 @@ export class MailComposePresetService {
     if (input.kind === "template" && !input.subject?.trim()) {
       throw new BadRequestException("Şablon için konu zorunlu.");
     }
+    if (
+      input.kind === "template" &&
+      input.bodyHtml?.trim() &&
+      !input.bodyText?.trim()
+    ) {
+      throw new BadRequestException("HTML şablon için düz metin özet alanı da gerekli.");
+    }
     const existingCount = await this.presetRepository.count({
       where: {
         organizationId,

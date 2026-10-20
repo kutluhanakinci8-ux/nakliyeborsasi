@@ -3,6 +3,8 @@ export type BuiltinMailComposeTemplate = {
   name: string;
   subject: string;
   bodyText: string;
+  /** Kurumsal HTML gövde (CTA vb.); webmail zengin editörde açılır. */
+  bodyHtml?: string;
 };
 
 /** Tüm kurumlarda yazım ekranında görünen hazır posta şablonları. */
@@ -20,6 +22,18 @@ export const BUILTIN_MAIL_COMPOSE_TEMPLATES: BuiltinMailComposeTemplate[] = [
     subject: "Teklif onayı",
     bodyText:
       "Merhaba,\n\nTeklifinizi kabul ediyoruz. Operasyon için lütfen şunları paylaşır mısınız?\n• Yükleme adresi ve saat aralığı\n• İletişim kişisi ve telefon\n• Referans / ilan numarası (varsa)\n\nTeşekkürler,",
+    bodyHtml: `<p style="margin:0 0 16px;font-size:16px;line-height:1.65;color:#14151f;">Merhaba,</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.65;color:#14151f;">Teklifinizi <strong>kabul ediyoruz</strong>. Operasyon için lütfen aşağıdaki bilgileri paylaşır mısınız?</p>
+<ul style="margin:0 0 16px;padding-left:20px;font-size:16px;line-height:1.65;color:#14151f;">
+<li>Yükleme adresi ve saat aralığı</li>
+<li>İletişim kişisi ve telefon</li>
+<li>Referans / ilan numarası (varsa)</li>
+</ul>
+<table role="presentation" cellspacing="0" cellpadding="0" style="margin:8px 0 20px;">
+<tr><td style="border-radius:10px;background-color:#4f46e5;">
+<a href="https://posta.lerta.com.tr" style="display:inline-block;padding:14px 28px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;">Operasyon bilgilerini gönder</a>
+</td></tr></table>
+<p style="margin:0;font-size:16px;line-height:1.65;color:#14151f;">Teşekkürler,</p>`,
   },
   {
     slug: "teklif-red",
@@ -77,6 +91,7 @@ export function listBuiltinMailComposeTemplateDtos(): {
   name: string;
   subject: string;
   bodyText: string;
+  bodyHtml?: string | null;
   isDefault: boolean;
   isSystem: true;
   updatedAt: string;
@@ -88,6 +103,7 @@ export function listBuiltinMailComposeTemplateDtos(): {
     name: row.name,
     subject: row.subject,
     bodyText: row.bodyText,
+    bodyHtml: row.bodyHtml ?? null,
     isDefault: false,
     isSystem: true as const,
     updatedAt,

@@ -20,6 +20,7 @@ export default function BrandingPage() {
   const [logoUrl, setLogoUrl] = useState("");
   const [emailBrandTitle, setEmailBrandTitle] = useState("");
   const [emailAccentColor, setEmailAccentColor] = useState("#1a1647");
+  const [emailLegalFooter, setEmailLegalFooter] = useState("");
   const [defaultFromDisplayName, setDefaultFromDisplayName] = useState("");
   const [hidePlatformEmailChrome, setHidePlatformEmailChrome] = useState(false);
   const [message, setMessage] = useState("");
@@ -39,6 +40,7 @@ export default function BrandingPage() {
         setLogoUrl(data.branding.logoUrl ?? "");
         setEmailBrandTitle(data.branding.emailBrandTitle ?? "");
         setEmailAccentColor(data.branding.emailAccentColor ?? "#1a1647");
+        setEmailLegalFooter(data.branding.emailLegalFooter ?? "");
         setDefaultFromDisplayName(data.branding.defaultFromDisplayName ?? "");
         setHidePlatformEmailChrome(data.branding.hidePlatformEmailChrome);
       } catch {
@@ -60,6 +62,7 @@ export default function BrandingPage() {
         logoUrl: logoUrl.trim() || null,
         emailBrandTitle: emailBrandTitle.trim() || null,
         emailAccentColor: emailAccentColor.trim() || null,
+        emailLegalFooter: emailLegalFooter.trim() || null,
         defaultFromDisplayName: defaultFromDisplayName.trim() || null,
         hidePlatformEmailChrome,
       });
@@ -118,6 +121,17 @@ export default function BrandingPage() {
               placeholder="#1a1647"
               maxLength={16}
               style={{ width: "100%", marginTop: 4 }}
+            />
+          </label>
+          <label style={{ display: "block", marginBottom: 12 }}>
+            KVKK / yasal dipnot (e-posta altı)
+            <textarea
+              className="input"
+              value={emailLegalFooter}
+              onChange={(e) => setEmailLegalFooter(e.target.value)}
+              maxLength={500}
+              rows={3}
+              style={{ width: "100%", marginTop: 4, resize: "vertical" }}
             />
           </label>
           <label style={{ display: "block", marginBottom: 12 }}>

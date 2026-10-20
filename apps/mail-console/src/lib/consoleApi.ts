@@ -533,6 +533,7 @@ export type MailBrandingSnapshot = {
   logoUrl: string | null;
   emailBrandTitle: string | null;
   emailAccentColor: string | null;
+  emailLegalFooter: string | null;
   defaultFromDisplayName: string | null;
   hidePlatformEmailChrome: boolean;
   detailTr: string;
@@ -659,6 +660,7 @@ export async function updateMailBranding(
     logoUrl?: string | null;
     emailBrandTitle?: string | null;
     emailAccentColor?: string | null;
+    emailLegalFooter?: string | null;
     defaultFromDisplayName?: string | null;
     hidePlatformEmailChrome?: boolean;
   },

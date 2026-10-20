@@ -9,6 +9,8 @@ export type OutboundWrapBranding = {
   accentColor: string;
   /** Enterprise: Lerta footer gizlenir. */
   hidePlatformFooter: boolean;
+  /** KVKK / yasal dipnot (HTML’siz düz metin, satır içi). */
+  legalFooterText?: string | null;
 };
 
 export function isLertaBrandedOutboundHtml(html: string): boolean {
@@ -104,9 +106,13 @@ function wrapLertaPostaOutboundEmail(params: {
 </tr></table>`
     : `<span style="display:inline-block;width:36px;height:36px;line-height:36px;text-align:center;border-radius:10px;background:rgba(255,255,255,0.15);color:#ffffff;font-weight:800;font-size:18px;margin-right:12px;">${escapeHtml(monogram)}</span>${titleSpan}`;
 
+  const legal = params.branding?.legalFooterText?.trim();
+  const legalBlock = legal
+    ? `<p style="margin:0 0 10px;font-size:11px;line-height:1.45;color:#8b919c;text-align:center;">${escapeHtml(legal)}</p>`
+    : "";
   const footerHtml = params.branding?.hidePlatformFooter
-    ? `<p style="margin:0;font-size:12px;line-height:1.5;color:#5c6370;text-align:center;">${brandTitle}</p>`
-    : `<p style="margin:0;font-size:12px;line-height:1.5;color:#5c6370;text-align:center;">
+    ? `${legalBlock}<p style="margin:0;font-size:12px;line-height:1.5;color:#5c6370;text-align:center;">${brandTitle}</p>`
+    : `${legalBlock}<p style="margin:0;font-size:12px;line-height:1.5;color:#5c6370;text-align:center;">
 Kurumsal e-posta · <a href="https://posta.lerta.com.tr" style="color:#4f46e5;text-decoration:none;font-weight:600;">posta.lerta.com.tr</a>
 </p>`;
 

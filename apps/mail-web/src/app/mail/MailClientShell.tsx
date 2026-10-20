@@ -50,6 +50,8 @@ export function MailClientShell({ mail }: Props) {
     composeFiles,
     composeHtml,
     composeOpen,
+    composePreviewBusy,
+    composePreviewHtml,
     composeRich,
     composeAiAssistActive,
     composeAiDraftBusy,
@@ -97,6 +99,8 @@ export function MailClientShell({ mail }: Props) {
     openThread,
     pendingUndo,
     promptCreateCustomFolder,
+    previewComposeOutbound,
+    closeComposePreview,
     purgeCurrentMessage,
     refresh,
     refreshCustomFolders,
@@ -1905,6 +1909,14 @@ export function MailClientShell({ mail }: Props) {
                 ) : null}
                 <button
                   type="button"
+                  className="compose-btn compose-btn--secondary"
+                  disabled={sending || composePreviewBusy}
+                  onClick={() => void previewComposeOutbound()}
+                >
+                  {composePreviewBusy ? "Önizleme…" : "Alıcı görünümü"}
+                </button>
+                <button
+                  type="button"
                   className="compose-btn compose-btn--primary"
                   disabled={sending}
                   onClick={() => void sendCompose()}
@@ -1913,6 +1925,33 @@ export function MailClientShell({ mail }: Props) {
                 </button>
               </div>
             </footer>
+          </div>
+        </div>
+      ) : null}
+      {composePreviewHtml ? (
+        <div
+          className="compose-overlay compose-overlay--premium compose-preview-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label="E-posta önizleme"
+        >
+          <div className="compose-dialog compose-dialog--premium compose-preview-dialog">
+            <header className="compose-premium-header">
+              <h2>Alıcı görünümü önizleme</h2>
+              <button
+                type="button"
+                className="compose-premium-close"
+                onClick={closeComposePreview}
+              >
+                Kapat
+              </button>
+            </header>
+            <iframe
+              className="compose-preview-frame"
+              title="E-posta önizleme"
+              sandbox=""
+              srcDoc={composePreviewHtml}
+            />
           </div>
         </div>
       ) : null}

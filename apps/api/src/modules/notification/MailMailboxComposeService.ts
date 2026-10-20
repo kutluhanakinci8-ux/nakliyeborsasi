@@ -178,6 +178,23 @@ export class MailMailboxComposeService {
     return { sentId: sent.id, smtpMessageId };
   }
 
+  public async previewOutbound(params: {
+    organizationId: string;
+    userId: string;
+    text: string;
+    html?: string;
+  }): Promise<{ html: string }> {
+    const { fromHeader } = await this.resolveSenderMailbox(params.organizationId);
+    const outbound = await this.mailMailboxOutboundContentService.prepare({
+      organizationId: params.organizationId,
+      userId: params.userId,
+      text: params.text,
+      html: params.html,
+      fromHeader,
+    });
+    return { html: outbound.html };
+  }
+
   public async reply(params: {
     organizationId: string;
     userId?: string;

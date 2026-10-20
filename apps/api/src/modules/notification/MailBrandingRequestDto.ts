@@ -18,6 +18,11 @@ export class UpdateMailBrandingRequestDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(500)
+  public emailLegalFooter?: string | null;
+
+  @IsOptional()
+  @IsString()
   @MaxLength(120)
   public defaultFromDisplayName?: string | null;
 

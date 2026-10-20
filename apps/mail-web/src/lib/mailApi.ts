@@ -848,6 +848,17 @@ export async function downloadMailPrivacyExport(accessToken: string) {
   return { blob, filename };
 }
 
+export async function fetchComposeOutboundPreview(
+  accessToken: string,
+  body: { text: string; html?: string },
+) {
+  return apiFetch<{ ok: true; html: string }>(
+    accessToken,
+    "company/mail-inbox/compose/preview",
+    { method: "POST", body: JSON.stringify(body) },
+  );
+}
+
 export async function composeMail(
   accessToken: string,
   body: {

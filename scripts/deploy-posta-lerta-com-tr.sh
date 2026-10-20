@@ -22,6 +22,9 @@ fi
 if [[ -x "$INSTALL_DIR/scripts/apply-mail-organization-branding-accent-schema.sh" ]]; then
   bash "$INSTALL_DIR/scripts/apply-mail-organization-branding-accent-schema.sh" "$INSTALL_DIR" || true
 fi
+if [[ -x "$INSTALL_DIR/scripts/apply-mail-organization-branding-legal-footer-schema.sh" ]]; then
+  bash "$INSTALL_DIR/scripts/apply-mail-organization-branding-legal-footer-schema.sh" "$INSTALL_DIR" || true
+fi
 if [[ -x "$INSTALL_DIR/scripts/apply-mail-d6-calendar-contacts-schema.sh" ]]; then
   bash "$INSTALL_DIR/scripts/apply-mail-d6-calendar-contacts-schema.sh" "$INSTALL_DIR" || true
 fi
