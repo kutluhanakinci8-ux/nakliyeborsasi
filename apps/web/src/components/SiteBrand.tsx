@@ -10,6 +10,8 @@ type SiteBrandProps = {
   showTagline?: boolean;
   variant?: "header" | "footer";
   tagline?: string;
+  productName?: string;
+  monogram?: string;
 };
 
 export function SiteBrand({
@@ -18,6 +20,8 @@ export function SiteBrand({
   showTagline = true,
   variant = "header",
   tagline = "Yük ve taşıma arama",
+  productName = PLATFORM_PRODUCT_NAME,
+  monogram = PLATFORM_MONOGRAM,
 }: SiteBrandProps) {
   const content = (
     <>
@@ -33,10 +37,10 @@ export function SiteBrand({
           <circle cx="21" cy="22" r="2.2" fill="currentColor" />
           <path d="M6 14h12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
         </svg>
-        <span className="site-brand-monogram">{PLATFORM_MONOGRAM}</span>
+        <span className="site-brand-monogram">{monogram}</span>
       </div>
       <div className="site-brand-copy">
-        <span className="site-brand-name">{PLATFORM_PRODUCT_NAME}</span>
+        <span className="site-brand-name">{productName}</span>
         {showTagline ? (
           <span className="site-brand-tagline">{tagline}</span>
         ) : null}

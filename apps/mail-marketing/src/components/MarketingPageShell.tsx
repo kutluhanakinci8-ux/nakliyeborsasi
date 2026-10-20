@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
+import { MarketingPlatformHeader } from "./MarketingPlatformHeader";
 import { MarketingSiteFooter } from "./MarketingSiteFooter";
-import { MarketingSiteHeader } from "./MarketingSiteHeader";
 
 export function MarketingPageShell({
   children,
@@ -11,9 +11,13 @@ export function MarketingPageShell({
 }) {
   return (
     <div className="landing">
-      <div className={`wrap ${narrow ? "wrap-narrow" : ""}`}>
-        <MarketingSiteHeader />
-        {children}
+      <MarketingPlatformHeader />
+      <main
+        className={`platform-main ${narrow ? "platform-main--narrow" : ""}`}
+      >
+        <div className="platform-content">{children}</div>
+      </main>
+      <div className="platform-footer-wrap">
         <MarketingSiteFooter />
       </div>
     </div>

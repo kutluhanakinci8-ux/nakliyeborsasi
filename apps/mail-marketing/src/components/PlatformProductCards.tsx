@@ -11,7 +11,7 @@ export function PlatformProductCards({ products }: { products: PlatformProduct[]
       {products.map((product) => (
         <article
           key={product.slug}
-          className={`platform-card platform-card--${product.accent}`}
+          className={`platform-card platform-card--${product.accent} platform-card--u88-surface`}
           role="listitem"
         >
           <p className="platform-card-eyebrow">{product.tagline}</p>

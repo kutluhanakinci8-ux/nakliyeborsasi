@@ -5,8 +5,8 @@ html[data-mail-theme="light"] {
   --border: #dde1e8;
   --text: #1a1d21;
   --muted: #5c6370;
-  --accent: #0f4c81;
-  --accent-hover: #0d3d68;
+  --accent: #1a1647;
+  --accent-hover: #120f35;
   --accent-soft: #e8f1f8;
   --sidebar: #f4f6f9;
   --unread: #0f1419;
@@ -1152,18 +1152,59 @@ a {
 .login-page {
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #e8f0fe, #f6f8fc);
+  gap: 24px;
+  padding: 24px;
+  background: linear-gradient(180deg, #f4f5f9 0%, #ffffff 55%);
+}
+
+.login-page-top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+}
+
+.login-platform-link {
+  font-size: 0.85rem;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.login-platform-link:hover {
+  color: var(--accent);
 }
 
 .login-card {
   background: var(--panel);
   padding: 40px;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 30px rgba(26, 22, 71, 0.08);
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
+}
+
+.login-card-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.login-card-brand-mark {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #1a1647;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
 }
 
 .login-card h1 {
@@ -1197,7 +1238,7 @@ a {
   background: var(--accent);
   color: #fff;
   border: none;
-  border-radius: 8px;
+  border-radius: 999px;
   font-weight: 600;
   cursor: pointer;
 }

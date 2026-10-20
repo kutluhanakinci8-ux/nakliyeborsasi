@@ -38,6 +38,22 @@ server {
         proxy_set_header X-Forwarded-Proto \$scheme;
     }
 
+    location ^~ /messaging {
+        return 302 https://u88.lerta.com.tr\$request_uri;
+    }
+
+    location = /login {
+        if (\$arg_next ~* messaging) {
+            return 302 https://u88.lerta.com.tr/login?\$args;
+        }
+        proxy_pass http://127.0.0.1:${WEB_PORT};
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+
     location / {
         proxy_pass http://127.0.0.1:${WEB_PORT};
         proxy_http_version 1.1;
@@ -69,6 +85,22 @@ server {
 
     location /api/v1/ {
         proxy_pass http://127.0.0.1:${API_PORT}/api/v1/;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+    }
+
+    location ^~ /messaging {
+        return 302 https://u88.lerta.com.tr\$request_uri;
+    }
+
+    location = /login {
+        if (\$arg_next ~* messaging) {
+            return 302 https://u88.lerta.com.tr/login?\$args;
+        }
+        proxy_pass http://127.0.0.1:${WEB_PORT};
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;

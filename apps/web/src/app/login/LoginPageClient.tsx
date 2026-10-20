@@ -14,8 +14,25 @@ import { queueWebsiteEnrichmentAfterRegistration } from "../../lib/websiteEnrich
 import { PasswordField } from "../../components/PasswordField";
 import { SiteLayout } from "../../components/SiteLayout";
 import { useWebSession } from "../../context/WebSessionProvider";
+import { useLertaCommsPortal } from "../../hooks/useLertaCommsPortal";
+import { resolvePostLoginPath } from "../../lib/lertaCommsPortal";
 
 type AuthMode = "login" | "register";
+
+const COMMS_VALUE_BLOCKS = [
+  {
+    title: "Firma sohbeti",
+    body: "Kanallar, ekler ve anlık bildirimler — lojistik modülü olmadan.",
+  },
+  {
+    title: "KVKK kayıt",
+    body: "Mesaj geçmişi ve saklama politikaları denetlenebilir.",
+  },
+  {
+    title: "Entegrasyon",
+    body: "Webhook, WhatsApp ve Slack köprüleri tek hesapta.",
+  },
+] as const;
 
 const CORPORATE_VALUE_BLOCKS = [
   {
@@ -42,11 +59,18 @@ const PARTICIPANT_TYPE_OPTIONS: {
   { code: "LOAD_SEEKER", label: "Yük arayan", hint: "Marketplace arama" },
 ];
 
-export function LoginPageClient() {
+export function LoginPageClient({
+  initialCommsPortal = false,
+}: {
+  initialCommsPortal?: boolean;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { setAccessToken, refreshSession, locale, setLocale, accessToken } =
     useWebSession();
+  const isCommsPortalClient = useLertaCommsPortal();
+  const isCommsPortal = initialCommsPortal || isCommsPortalClient;
+  const nextPath = searchParams.get("next");
 
   const initialMode: AuthMode =
     searchParams.get("mode") === "register" ? "register" : "login";
@@ -68,9 +92,9 @@ export function LoginPageClient() {
 
   useEffect(() => {
     if (accessToken) {
-      router.replace("/marketplace");
+      router.replace(resolvePostLoginPath(isCommsPortal, nextPath));
     }
-  }, [accessToken, router]);
+  }, [accessToken, router, isCommsPortal, nextPath]);
 
   useEffect(() => {
     setAuthMode(initialMode);
@@ -92,10 +116,10 @@ export function LoginPageClient() {
       setAccessToken(result.accessToken);
       const sessionRecord = await SessionApiClient.fetchSession(result.accessToken);
       await refreshSession();
-      if (sessionRecord.roleCodes.includes("FLEET_DRIVER")) {
+      if (!isCommsPortal && sessionRecord.roleCodes.includes("FLEET_DRIVER")) {
         router.replace("/sofor");
       } else {
-        router.replace("/marketplace");
+        router.replace(resolvePostLoginPath(isCommsPortal, nextPath));
       }
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Giriş başarısız");
@@ -135,7 +159,11 @@ export function LoginPageClient() {
         companyWebsiteUrl,
       );
       await refreshSession();
-      router.replace("/hesap/posta-adresi?welcome=1");
+      router.replace(
+        isCommsPortal
+          ? "/messaging?tab=sohbet"
+          : "/hesap/posta-adresi?welcome=1",
+      );
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Kayıt başarısız");
     } finally {
@@ -144,7 +172,7 @@ export function LoginPageClient() {
   }
 
   return (
-    <SiteLayout headerVariant="public">
+    <SiteLayout headerVariant="public" commsPortal={isCommsPortal}>
       <section
         className={
           authMode === "register"
@@ -160,14 +188,23 @@ export function LoginPageClient() {
           }
         >
           <div className="auth-promo auth-promo--corporate">
-            <p className="auth-promo-badge">Kurumsal üyelik · TR · UA · AB</p>
-            <h1>Lerta Logistics&apos;e güvenli erişim</h1>
+            <p className="auth-promo-badge">
+              {isCommsPortal
+                ? "Lerta Mesaj · u88.lerta.com.tr"
+                : "Kurumsal üyelik · TR · UA · AB"}
+            </p>
+            <h1>
+              {isCommsPortal
+                ? "Lerta Mesaj'a güvenli erişim"
+                : "Lerta Logistics'e güvenli erişim"}
+            </h1>
             <p className="auth-promo-lead">
-              Taşıyıcı ve yük veren firmalar için tek giriş noktası. Mevcut hesabınızla
-              giriş yapın veya firma bilgilerinizle yeni kurumsal üyelik oluşturun.
+              {isCommsPortal
+                ? "Firma içi sohbet ve müşteri mesajları — nakliye borsasından bağımsız kurumsal hesap."
+                : "Taşıyıcı ve yük veren firmalar için tek giriş noktası. Mevcut hesabınızla giriş yapın veya firma bilgilerinizle yeni kurumsal üyelik oluşturun."}
             </p>
             <div className="auth-promo-cards">
-              {CORPORATE_VALUE_BLOCKS.map((block) => (
+              {(isCommsPortal ? COMMS_VALUE_BLOCKS : CORPORATE_VALUE_BLOCKS).map((block) => (
                 <article key={block.title} className="auth-promo-card">
                   <h2 className="auth-promo-card-title">{block.title}</h2>
                   <p>{block.body}</p>

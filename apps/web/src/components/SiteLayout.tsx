@@ -8,13 +8,22 @@ import { SiteHeader } from "./SiteHeader";
 type SiteLayoutProps = {
   children: ReactNode;
   headerVariant?: "public" | "app";
+  commsPortal?: boolean;
 };
 
-export function SiteLayout({ children, headerVariant = "app" }: SiteLayoutProps) {
+export function SiteLayout({
+  children,
+  headerVariant = "app",
+  commsPortal,
+}: SiteLayoutProps) {
+  const layoutClass = commsPortal
+    ? "site-layout site-layout--corporate site-layout--u88-platform"
+    : "site-layout site-layout--corporate";
+
   return (
-    <div className="site-layout site-layout--corporate">
+    <div className={layoutClass}>
       <PlatformAdminLiveSiteBanner />
-      <SiteHeader variant={headerVariant} />
+      <SiteHeader variant={headerVariant} commsPortal={commsPortal} />
       <main className="site-main">
         <div className="site-canvas">{children}</div>
       </main>

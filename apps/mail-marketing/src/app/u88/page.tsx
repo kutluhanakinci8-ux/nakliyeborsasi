@@ -1,9 +1,7 @@
 import { MarketingPageShell } from "@/components/MarketingPageShell";
-import { U88_APP_URL } from "@/lib/marketingUrls";
-
 export default function U88ProductPage() {
   return (
-    <MarketingPageShell narrow>
+    <MarketingPageShell>
       <p className="breadcrumb">
         <a href="/">Lerta</a> / U88
       </p>
@@ -14,14 +12,10 @@ export default function U88ProductPage() {
           Çerez, VERBİS, İYS, DSAR ve ajans white-label — tek panelde. Manuel
           süreçler yerine dakikalar içinde kurulan otomatik uyumluluk altyapısı.
         </p>
-        <div className="hero-cta">
-          <a className="btn btn-primary" href={U88_APP_URL}>
-            U88 uygulaması
-          </a>
-          <a className="btn btn-ghost" href="/">
-            Tüm ürünler
-          </a>
-        </div>
+        <p className="hero-hint">
+          Üst menüden <strong>Ücretsiz dene</strong> ile U88&apos;e geçin — 14 gün
+          deneme, kurulum sihirbazı dahil.
+        </p>
       </section>
 
       <section className="grid">

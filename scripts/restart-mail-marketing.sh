@@ -7,8 +7,8 @@ CONSOLE_URL="${3:-https://yonetim.lerta.com.tr}"
 MAIL_WEB_URL="${4:-https://posta.lerta.com.tr}"
 API_PUBLIC_URL="${5:-https://yonetim.lerta.com.tr/api/v1}"
 U88_APP_URL="${6:-https://u88.lerta.com.tr}"
-MESSAGING_APP_URL="${7:-https://app.lerta.com.tr/messaging?tab=sohbet}"
-MESSAGING_LOGIN_URL="${8:-https://app.lerta.com.tr/login?next=%2Fmessaging%3Ftab%3Dsohbet}"
+MESSAGING_APP_URL="${7:-https://u88.lerta.com.tr/messaging?tab=sohbet}"
+MESSAGING_LOGIN_URL="${8:-https://u88.lerta.com.tr/login?next=%2Fmessaging%3Ftab%3Dsohbet}"
 
 cd "$INSTALL_DIR"
 bash scripts/install-deps.sh

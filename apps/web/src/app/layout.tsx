@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import "./corporate-theme.css";
+import "./u88-platform-theme.css";
 import { AppProviders } from "./providers";
 
 const inter = Inter({
