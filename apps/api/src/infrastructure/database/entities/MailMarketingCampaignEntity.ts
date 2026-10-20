@@ -18,6 +18,8 @@ export type MailMarketingCampaignSegment = {
   referansPrefix?: string;
   referansEquals?: string;
   requireMusteriAdi?: boolean;
+  /** CSV / liste ile gelen referans kodları — yalnızca listede olanlar. */
+  referansAllowlist?: string[];
 };
 
 export type MailMarketingCampaignPayload = {

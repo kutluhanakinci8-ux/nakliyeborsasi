@@ -18,6 +18,7 @@ API anahtarları posta konsol → Entegrasyon üzerinden oluşturulur.
 | POST | `/messages` | Tek alıcı (outbox) |
 | GET | `/messages/:id` | Gönderim durumu |
 | POST | `/campaigns` | Pazarlama kampanyası |
+| GET | `/campaigns/:campaignId` | Kampanya durumu ve sonuç |
 
 ## POST `/campaigns`
 
@@ -25,7 +26,7 @@ API anahtarları posta konsol → Entegrasyon üzerinden oluşturulur.
 - `subject`, `text`, `html` (isteğe bağlı)
 - `subjectB` — A/B konu (2., 4. alıcı…)
 - `recipientDomainAllowlist` — alan adı filtresi
-- `segment` — `{ referansPrefix, referansEquals, requireMusteriAdi }`
+- `segment` — `{ referansPrefix, referansEquals, requireMusteriAdi, referansAllowlist }`
 - `scheduleAt` — ISO 8601 (1 dk – 7 gün)
 - `reminderMinutesBefore` — zamanlanmış kampanyada gönderimden önce hatırlatma (5–1440 dk)
 - `delayMsBetweenRecipients` — 0–2000 ms
@@ -44,3 +45,5 @@ Konsolda webhook uç noktasına abone olun:
 - `campaign.cancelled`
 
 İmza: `X-Lerta-Mail-Signature` (HMAC, mevcut mesaj webhook’ları ile aynı).
+
+Başarısız HTTP veya ağ hatalarında uç nokta **3 denemeye** kadar otomatik yeniden denenir (2 sn ve 5 sn aralıklarla).

@@ -117,6 +117,16 @@ export class MailMarketingCampaignService {
     };
   }
 
+  public async getForOrganization(organizationId: string, campaignId: string) {
+    const row = await this.campaignRepository.findOne({
+      where: { id: campaignId, organizationId },
+    });
+    if (!row) {
+      throw new NotFoundException("Kampanya bulunamadı.");
+    }
+    return this.toDetail(row);
+  }
+
   public async listForOrganization(organizationId: string, limit = 40) {
     const rows = await this.campaignRepository.find({
       where: { organizationId },
@@ -397,6 +407,26 @@ export class MailMarketingCampaignService {
       recipientCount: row.payload.recipients?.length ?? 0,
       result: row.result,
       errorMessage: row.errorMessage,
+    };
+  }
+
+  private toDetail(row: MailMarketingCampaignEntity) {
+    return {
+      ...this.toListItem(row),
+      subjectB: row.payload.subjectB ?? null,
+      segment: row.payload.segment ?? null,
+      recipientDomainAllowlist: row.payload.recipientDomainAllowlist ?? null,
+      reminderMinutesBefore: row.payload.reminderMinutesBefore ?? null,
+      reminderDispatchedAt: row.payload.reminderDispatchedAt ?? null,
+      notifyCreator: row.payload.notifyCreator ?? false,
+      recipients: row.payload.recipients ?? [],
+      payloadSummary: {
+        hasHtml: Boolean(row.payload.html?.trim()),
+        textLength: row.payload.text?.length ?? 0,
+        attachmentCount: row.payload.attachments?.length ?? 0,
+        delayMsBetweenRecipients: row.payload.delayMsBetweenRecipients ?? 0,
+      },
+      mergeDefaults: row.payload.merge ?? null,
     };
   }
 }

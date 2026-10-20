@@ -946,6 +946,7 @@ export async function composeCampaign(
       referansPrefix?: string;
       referansEquals?: string;
       requireMusteriAdi?: boolean;
+      referansAllowlist?: string[];
     };
     reminderMinutesBefore?: number;
   },
@@ -961,6 +962,42 @@ export async function fetchMailCampaigns(accessToken: string, limit = 30) {
   return apiFetch<{ ok: true; campaigns: MailCampaignListItem[] }>(
     accessToken,
     `company/mail-inbox/campaigns?limit=${limit}`,
+  );
+}
+
+export type MailCampaignDetail = MailCampaignListItem & {
+  subjectB: string | null;
+  segment: {
+    referansPrefix?: string;
+    referansEquals?: string;
+    requireMusteriAdi?: boolean;
+    referansAllowlist?: string[];
+  } | null;
+  recipientDomainAllowlist: string[] | null;
+  reminderMinutesBefore: number | null;
+  reminderDispatchedAt: string | null;
+  notifyCreator: boolean;
+  recipients: Array<{
+    email: string;
+    musteriAdi?: string;
+    referans?: string;
+  }>;
+  payloadSummary: {
+    hasHtml: boolean;
+    textLength: number;
+    attachmentCount: number;
+    delayMsBetweenRecipients: number;
+  };
+  mergeDefaults: ComposeMergePayload | null;
+};
+
+export async function fetchMailCampaignDetail(
+  accessToken: string,
+  campaignId: string,
+) {
+  return apiFetch<{ ok: true; campaign: MailCampaignDetail }>(
+    accessToken,
+    `company/mail-inbox/campaigns/${campaignId}`,
   );
 }
 

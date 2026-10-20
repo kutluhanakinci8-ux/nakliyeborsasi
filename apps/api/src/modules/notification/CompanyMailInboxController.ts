@@ -1362,6 +1362,19 @@ export class CompanyMailInboxController {
     };
   }
 
+  @Get("campaigns/:campaignId")
+  public async getCampaign(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("campaignId") campaignId: string,
+  ) {
+    this.assertMailInboxWriter(user);
+    const campaign = await this.mailMarketingCampaignService.getForOrganization(
+      user.companyId,
+      campaignId,
+    );
+    return { ok: true, campaign };
+  }
+
   @Get("campaigns")
   public async listCampaigns(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,

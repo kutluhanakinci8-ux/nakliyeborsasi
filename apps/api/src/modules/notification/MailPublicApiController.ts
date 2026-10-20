@@ -61,6 +61,11 @@ export class MailPublicApiController {
         },
         {
           method: "GET",
+          path: "/campaigns/:campaignId",
+          description: "Kampanya durumu ve alıcı/sonuç detayı",
+        },
+        {
+          method: "GET",
           path: "/docs",
           description: "Bu özet",
         },
@@ -120,6 +125,18 @@ export class MailPublicApiController {
       status: row?.status ?? "skipped",
       idempotencyKey,
     };
+  }
+
+  @Get("campaigns/:campaignId")
+  public async getCampaign(
+    @MailPublicApiContextParam() ctx: MailPublicApiRequestContext,
+    @Param("campaignId") campaignId: string,
+  ) {
+    const campaign = await this.mailMarketingCampaignService.getForOrganization(
+      ctx.organizationId,
+      campaignId,
+    );
+    return { campaign };
   }
 
   @Post("campaigns")

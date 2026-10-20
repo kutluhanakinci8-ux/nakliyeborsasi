@@ -1,4 +1,11 @@
-import { IsBoolean, IsOptional, IsString, MaxLength } from "class-validator";
+import {
+  ArrayMaxSize,
+  IsArray,
+  IsBoolean,
+  IsOptional,
+  IsString,
+  MaxLength,
+} from "class-validator";
 
 export class ComposeCampaignSegmentDto {
   @IsOptional()
@@ -14,4 +21,11 @@ export class ComposeCampaignSegmentDto {
   @IsOptional()
   @IsBoolean()
   public requireMusteriAdi?: boolean;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(50)
+  @IsString({ each: true })
+  @MaxLength(120, { each: true })
+  public referansAllowlist?: string[];
 }

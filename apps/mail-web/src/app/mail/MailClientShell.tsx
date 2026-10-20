@@ -92,6 +92,8 @@ export function MailClientShell({ mail }: Props) {
     setComposeCampaignNotifyCreator,
     composeCampaignSegmentReferansPrefix,
     setComposeCampaignSegmentReferansPrefix,
+    composeCampaignSegmentReferansList,
+    setComposeCampaignSegmentReferansList,
     composeCampaignRequireMusteriAdi,
     setComposeCampaignRequireMusteriAdi,
     composeCampaignReminderMinutes,
@@ -1845,6 +1847,19 @@ export function MailClientShell({ mail }: Props) {
                       value={composeCampaignSegmentReferansPrefix}
                       onChange={(e) =>
                         setComposeCampaignSegmentReferansPrefix(e.target.value)
+                      }
+                    />
+                    <label className="compose-field-label" htmlFor="compose-campaign-segment-list">
+                      Segment — referans listesi (CSV)
+                    </label>
+                    <textarea
+                      id="compose-campaign-segment-list"
+                      className="compose-textarea"
+                      rows={2}
+                      placeholder="REF-001, REF-002 veya satır satır"
+                      value={composeCampaignSegmentReferansList}
+                      onChange={(e) =>
+                        setComposeCampaignSegmentReferansList(e.target.value)
                       }
                     />
                     <label className="preset-check">

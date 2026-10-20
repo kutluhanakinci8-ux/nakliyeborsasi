@@ -3,8 +3,10 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   cancelScheduledMailCampaign,
+  fetchMailCampaignDetail,
   fetchMailCampaigns,
   resendMailCampaign,
+  type MailCampaignDetail,
   type MailCampaignListItem,
 } from "@/lib/mailApi";
 
@@ -17,6 +19,9 @@ export function MailCampaignHistoryPanel({ accessToken, open }: Props) {
   const [rows, setRows] = useState<MailCampaignListItem[]>([]);
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [detailId, setDetailId] = useState<string | null>(null);
+  const [detail, setDetail] = useState<MailCampaignDetail | null>(null);
+  const [detailError, setDetailError] = useState("");
 
   const load = useCallback(async () => {
     setError("");
@@ -33,6 +38,24 @@ export function MailCampaignHistoryPanel({ accessToken, open }: Props) {
       void load();
     }
   }, [open, load]);
+
+  async function toggleDetail(campaignId: string) {
+    if (detailId === campaignId) {
+      setDetailId(null);
+      setDetail(null);
+      setDetailError("");
+      return;
+    }
+    setDetailId(campaignId);
+    setDetail(null);
+    setDetailError("");
+    try {
+      const data = await fetchMailCampaignDetail(accessToken, campaignId);
+      setDetail(data.campaign);
+    } catch {
+      setDetailError("Detay yüklenemedi.");
+    }
+  }
 
   if (!open) {
     return null;
@@ -63,6 +86,13 @@ export function MailCampaignHistoryPanel({ accessToken, open }: Props) {
                   : ""}
               </p>
               <div className="mail-campaign-history-actions">
+                <button
+                  type="button"
+                  className="compose-chip-btn"
+                  onClick={() => void toggleDetail(row.id)}
+                >
+                  {detailId === row.id ? "Detayı gizle" : "Detay"}
+                </button>
                 {row.status === "scheduled" ? (
                   <button
                     type="button"
@@ -94,6 +124,46 @@ export function MailCampaignHistoryPanel({ accessToken, open }: Props) {
                   </button>
                 ) : null}
               </div>
+              {detailId === row.id ? (
+                <div className="mail-campaign-detail">
+                  {detailError ? (
+                    <p className="login-error">{detailError}</p>
+                  ) : null}
+                  {detail && detail.id === row.id ? (
+                    <>
+                      {detail.subjectB ? (
+                        <p className="compose-attach-hint">A/B (B): {detail.subjectB}</p>
+                      ) : null}
+                      {detail.segment?.referansAllowlist?.length ? (
+                        <p className="compose-attach-hint">
+                          Referans filtresi:{" "}
+                          {detail.segment.referansAllowlist.join(", ")}
+                        </p>
+                      ) : null}
+                      {detail.result?.failed?.length ? (
+                        <ul className="mail-campaign-result-failures">
+                          {detail.result.failed.map((f) => (
+                            <li key={f.email}>
+                              {f.email}: {f.error}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : null}
+                      <ul className="compose-attach-hint">
+                        {detail.recipients.map((r) => (
+                          <li key={r.email}>
+                            {r.email}
+                            {r.referans ? ` · ${r.referans}` : ""}
+                            {r.musteriAdi ? ` · ${r.musteriAdi}` : ""}
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  ) : !detailError ? (
+                    <p className="compose-attach-hint">Yükleniyor…</p>
+                  ) : null}
+                </div>
+              ) : null}
             </li>
           ))}
         </ul>

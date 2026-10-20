@@ -269,6 +269,8 @@ export function useMailClientController({
     useState(false);
   const [composeCampaignSegmentReferansPrefix, setComposeCampaignSegmentReferansPrefix] =
     useState("");
+  const [composeCampaignSegmentReferansList, setComposeCampaignSegmentReferansList] =
+    useState("");
   const [composeCampaignRequireMusteriAdi, setComposeCampaignRequireMusteriAdi] =
     useState(false);
   const [composeCampaignReminderMinutes, setComposeCampaignReminderMinutes] =
@@ -1047,17 +1049,28 @@ export function useMailClientController({
             composeCampaignScheduleAt && composeCampaignNotifyCreator
               ? true
               : undefined,
-          segment:
-            composeCampaignSegmentReferansPrefix.trim() ||
-            composeCampaignRequireMusteriAdi
-              ? {
-                  referansPrefix:
-                    composeCampaignSegmentReferansPrefix.trim() || undefined,
-                  requireMusteriAdi: composeCampaignRequireMusteriAdi
-                    ? true
-                    : undefined,
-                }
-              : undefined,
+          segment: (() => {
+            const allowlist = composeCampaignSegmentReferansList
+              .split(/[\n,;]+/)
+              .map((part) => part.trim())
+              .filter((part) => part.length > 0);
+            const hasSegment =
+              composeCampaignSegmentReferansPrefix.trim() ||
+              composeCampaignRequireMusteriAdi ||
+              allowlist.length > 0;
+            if (!hasSegment) {
+              return undefined;
+            }
+            return {
+              referansPrefix:
+                composeCampaignSegmentReferansPrefix.trim() || undefined,
+              requireMusteriAdi: composeCampaignRequireMusteriAdi
+                ? true
+                : undefined,
+              referansAllowlist:
+                allowlist.length > 0 ? allowlist.slice(0, 50) : undefined,
+            };
+          })(),
           reminderMinutesBefore:
             composeCampaignScheduleAt && composeCampaignReminderMinutes > 0
               ? composeCampaignReminderMinutes
@@ -1749,6 +1762,7 @@ export function useMailClientController({
     setComposeCampaignDomainAllowlist("");
     setComposeCampaignNotifyCreator(false);
     setComposeCampaignSegmentReferansPrefix("");
+    setComposeCampaignSegmentReferansList("");
     setComposeCampaignRequireMusteriAdi(false);
     setComposeCampaignReminderMinutes(0);
     setComposeInlineAttachments([]);
@@ -2014,6 +2028,8 @@ export function useMailClientController({
     setComposeCampaignNotifyCreator,
     composeCampaignSegmentReferansPrefix,
     setComposeCampaignSegmentReferansPrefix,
+    composeCampaignSegmentReferansList,
+    setComposeCampaignSegmentReferansList,
     composeCampaignRequireMusteriAdi,
     setComposeCampaignRequireMusteriAdi,
     composeCampaignReminderMinutes,

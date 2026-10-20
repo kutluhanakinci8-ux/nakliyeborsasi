@@ -20,5 +20,13 @@ export function recipientMatchesCampaignSegment(
   if (equals && referans.toLowerCase() !== equals.toLowerCase()) {
     return false;
   }
+  const allowlist = segment.referansAllowlist
+    ?.map((value) => value.trim().toLowerCase())
+    .filter((value) => value.length > 0);
+  if (allowlist && allowlist.length > 0) {
+    if (!referans || !allowlist.includes(referans.toLowerCase())) {
+      return false;
+    }
+  }
   return true;
 }
