@@ -54,6 +54,8 @@ describe("MailOutboundHtmlTemplate", () => {
     const html = resolveOutboundHtml("merhaba", undefined, { branding });
     expect(html).toContain("https://instagram.com/lerta");
     expect(html).toContain('title="Instagram"');
+    expect(html).toContain("email-social/instagram.svg");
+    expect(html).toContain("Bizi sosyal medyada takip edin");
     const plain = buildBrandedPlainText(undefined, "merhaba", branding);
     expect(plain).toContain("Instagram: https://instagram.com/lerta");
   });

@@ -25,14 +25,18 @@ const PLATFORM_LABEL: Record<MailEmailSocialPlatform, string> = {
   website: "Web",
 };
 
-const PLATFORM_SHORT: Record<MailEmailSocialPlatform, string> = {
-  instagram: "IG",
-  facebook: "f",
-  linkedin: "in",
-  x: "X",
-  youtube: "▶",
-  tiktok: "TT",
-  website: "⌂",
+/** E-posta istemcileri için HTTPS ikonlar (posta.lerta.com.tr static). */
+export const MAIL_EMAIL_SOCIAL_ICON_BASE_URL =
+  "https://posta.lerta.com.tr/email-social";
+
+const PLATFORM_ICON_FILE: Record<MailEmailSocialPlatform, string> = {
+  instagram: "instagram.svg",
+  facebook: "facebook.svg",
+  linkedin: "linkedin.svg",
+  x: "x.svg",
+  youtube: "youtube.svg",
+  tiktok: "tiktok.svg",
+  website: "website.svg",
 };
 
 export function normalizeMailEmailSocialLinks(
@@ -131,23 +135,40 @@ function normalizeSocialUrl(
 
 export function buildEmailSocialFooterHtml(
   links: MailEmailSocialLink[],
-  accentColor = "#4f46e5",
+  _accentColor = "#4f46e5",
 ): string {
   if (links.length === 0) {
     return "";
   }
+  const iconBase = MAIL_EMAIL_SOCIAL_ICON_BASE_URL.replace(/\/$/, "");
   const cells = links
     .map((link) => {
-      const short = escapeHtml(PLATFORM_SHORT[link.platform]);
       const label = escapeHtml(PLATFORM_LABEL[link.platform]);
       const href = escapeHtml(link.url);
-      return `<td style="padding:0 6px;">
-<a href="${href}" title="${label}" style="display:inline-block;width:40px;height:40px;line-height:40px;text-align:center;border-radius:50%;border:2px solid ${escapeHtml(accentColor)};color:${escapeHtml(accentColor)};font-size:14px;font-weight:700;text-decoration:none;">${short}</a>
+      const iconFile = PLATFORM_ICON_FILE[link.platform];
+      const iconUrl = escapeHtml(`${iconBase}/${iconFile}`);
+      return `<td style="padding:0 8px;" align="center" valign="middle">
+<a href="${href}" title="${label}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">
+<table role="presentation" cellspacing="0" cellpadding="0" style="border-collapse:separate;">
+<tr>
+<td align="center" valign="middle" width="44" height="44" style="width:44px;height:44px;border-radius:50%;border:1px solid #c7cdd6;background-color:#ffffff;mso-line-height-rule:exactly;line-height:44px;">
+<img src="${iconUrl}" width="22" height="22" alt="${label}" style="display:block;margin:0 auto;border:0;outline:none;text-decoration:none;max-width:22px;height:auto;" />
+</td>
+</tr>
+</table>
+</a>
 </td>`;
     })
     .join("");
-  return `<table role="presentation" cellspacing="0" cellpadding="0" align="center" style="margin:16px auto 12px;">
+  return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0;">
+<tr>
+<td style="padding:20px 28px 8px;border-top:1px solid #e8eaef;">
+<p style="margin:0 0 14px;font-size:12px;line-height:1.5;color:#8b919c;text-align:center;font-family:Segoe UI,system-ui,sans-serif;">Bizi sosyal medyada takip edin</p>
+<table role="presentation" cellspacing="0" cellpadding="0" align="center" style="margin:0 auto;">
 <tr>${cells}</tr>
+</table>
+</td>
+</tr>
 </table>`;
 }
 
