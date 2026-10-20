@@ -27,6 +27,9 @@ import { MailImapAccessService } from "./MailImapAccessService";
 import { ComposeMailRequestDto } from "./ComposeMailRequestDto";
 import { ComposeMailPreviewRequestDto } from "./ComposeMailPreviewRequestDto";
 import { ComposeCampaignRequestDto } from "./ComposeCampaignRequestDto";
+import { ComposeCampaignPreviewSegmentDto } from "./ComposeCampaignPreviewSegmentDto";
+import { CloneMailCampaignRequestDto } from "./CloneMailCampaignRequestDto";
+import { previewCampaignRecipientMatch } from "./MailCampaignRecipientPreview";
 import { ReplyMailRequestDto } from "./ReplyMailRequestDto";
 import { ForwardMailRequestDto } from "./ForwardMailRequestDto";
 import { MailComposeDraftService } from "./MailComposeDraftService";
@@ -1303,6 +1306,25 @@ export class CompanyMailInboxController {
     return { ok: true, ...result };
   }
 
+  @Post("compose/campaign/preview-segment")
+  public async previewCampaignSegment(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: ComposeCampaignPreviewSegmentDto,
+  ) {
+    this.assertMailInboxWriter(user);
+    const preview = previewCampaignRecipientMatch({
+      recipients: body.recipients.map((row) => ({
+        email: row.email,
+        musteriAdi: row.musteriAdi,
+        referans: row.referans,
+      })),
+      merge: body.merge,
+      recipientDomainAllowlist: body.recipientDomainAllowlist,
+      segment: body.segment,
+    });
+    return { ok: true, preview };
+  }
+
   @Post("compose/campaign")
   public async composeCampaign(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
@@ -1360,6 +1382,28 @@ export class CompanyMailInboxController {
       skippedSuppressed: result?.skippedSuppressed ?? 0,
       failed: result?.failed ?? [],
     };
+  }
+
+  @Post("campaigns/:campaignId/clone")
+  public async cloneCampaign(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("campaignId") campaignId: string,
+    @Body() body: CloneMailCampaignRequestDto,
+  ) {
+    this.assertMailInboxWriter(user);
+    const mode = body.mode ?? "compose";
+    const scheduleAt = body.scheduleAt ? new Date(body.scheduleAt) : null;
+    if (mode === "schedule" && scheduleAt && Number.isNaN(scheduleAt.getTime())) {
+      throw new BadRequestException("scheduleAt geçersiz.");
+    }
+    const outcome = await this.mailMarketingCampaignService.cloneCampaign({
+      organizationId: user.companyId,
+      campaignId,
+      userId: user.userId,
+      mode,
+      scheduleAt: mode === "schedule" ? scheduleAt : null,
+    });
+    return { ok: true, ...outcome };
   }
 
   @Get("campaigns/:campaignId")

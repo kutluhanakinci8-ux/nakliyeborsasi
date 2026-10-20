@@ -2,6 +2,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
 import type { MailWebhookEventType } from "../../infrastructure/database/entities/MailOrganizationWebhookEndpointEntity";
 import { MailOrganizationIntegrationService } from "./MailOrganizationIntegrationService";
+import { MailWebhookDeliveryLogService } from "./MailWebhookDeliveryLogService";
 import { signWebhookPayload } from "./MailIntegrationCrypto";
 
 const WEBHOOK_MAX_ATTEMPTS = 3;
@@ -13,6 +14,7 @@ export class MailOrganizationWebhookDispatcherService {
 
   public constructor(
     private readonly mailOrganizationIntegrationService: MailOrganizationIntegrationService,
+    private readonly mailWebhookDeliveryLogService: MailWebhookDeliveryLogService,
   ) {}
 
   public dispatch(
@@ -53,20 +55,33 @@ export class MailOrganizationWebhookDispatcherService {
 
     await Promise.all(
       endpoints.map((endpoint) =>
-        this.postWithRetries(endpoint.id, endpoint.url, endpoint.signingSecret, {
-          event,
-          timestamp,
-          rawBody,
-        }),
+        this.postWithRetries(
+          organizationId,
+          endpoint.id,
+          endpoint.url,
+          endpoint.signingSecret,
+          {
+            event,
+            timestamp,
+            rawBody,
+            deliveryId: envelope.id,
+          },
+        ),
       ),
     );
   }
 
   private async postWithRetries(
+    organizationId: string,
     endpointId: string,
     url: string,
     signingSecret: string,
-    params: { event: MailWebhookEventType; timestamp: string; rawBody: string },
+    params: {
+      event: MailWebhookEventType;
+      timestamp: string;
+      rawBody: string;
+      deliveryId: string;
+    },
   ): Promise<void> {
     const signature = signWebhookPayload(
       signingSecret,
@@ -91,17 +106,38 @@ export class MailOrganizationWebhookDispatcherService {
           body: params.rawBody,
           signal: AbortSignal.timeout(15_000),
         });
-        if (response.ok) {
+        const ok = response.ok;
+        await this.mailWebhookDeliveryLogService.recordAttempt({
+          organizationId,
+          webhookEndpointId: endpointId,
+          eventType: params.event,
+          deliveryId: params.deliveryId,
+          attempt: attempt + 1,
+          httpStatus: response.status,
+          success: ok,
+          errorMessage: ok ? null : `HTTP ${response.status}`,
+        });
+        if (ok) {
           return;
         }
         this.logger.warn(
           `Webhook ${endpointId} HTTP ${response.status} (${params.event}) attempt=${attempt + 1}`,
         );
       } catch (error) {
+        const message =
+          error instanceof Error ? error.message : String(error);
+        await this.mailWebhookDeliveryLogService.recordAttempt({
+          organizationId,
+          webhookEndpointId: endpointId,
+          eventType: params.event,
+          deliveryId: params.deliveryId,
+          attempt: attempt + 1,
+          httpStatus: null,
+          success: false,
+          errorMessage: message,
+        });
         this.logger.warn(
-          `Webhook ${endpointId} request failed (${params.event}) attempt=${attempt + 1}: ${
-            error instanceof Error ? error.message : String(error)
-          }`,
+          `Webhook ${endpointId} request failed (${params.event}) attempt=${attempt + 1}: ${message}`,
         );
       }
     }

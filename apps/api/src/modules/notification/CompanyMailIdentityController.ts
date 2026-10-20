@@ -54,6 +54,7 @@ import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
 import { MailOrganizationBrandingService } from "./MailOrganizationBrandingService";
 import { UpdateMailBrandingRequestDto } from "./MailBrandingRequestDto";
 import { MailOrganizationIntegrationService } from "./MailOrganizationIntegrationService";
+import { MailWebhookDeliveryLogService } from "./MailWebhookDeliveryLogService";
 import {
   CreateMailApiKeyRequestDto,
   CreateMailWebhookRequestDto,
@@ -94,6 +95,7 @@ export class CompanyMailIdentityController {
     private readonly mailOrganizationBrandingService: MailOrganizationBrandingService,
     private readonly mailBimiLogoProbeService: MailBimiLogoProbeService,
     private readonly mailOrganizationIntegrationService: MailOrganizationIntegrationService,
+    private readonly mailWebhookDeliveryLogService: MailWebhookDeliveryLogService,
     private readonly mailAddressAliasService: MailAddressAliasService,
     private readonly mailInboundRoutingService: MailInboundRoutingService,
     private readonly mailInstantPostDomainService: MailInstantPostDomainService,
@@ -909,6 +911,20 @@ export class CompanyMailIdentityController {
       "/company/mail-identity/integration/webhooks",
     );
     return { message: "OK", ...result };
+  }
+
+  @Get("integration/webhook-deliveries")
+  public async listWebhookDeliveries(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Query("limit") limit?: string,
+  ) {
+    assertMailConsoleAccess(user);
+    const parsed = limit ? Number.parseInt(limit, 10) : 40;
+    const deliveries = await this.mailWebhookDeliveryLogService.listForOrganization(
+      user.companyId,
+      Number.isFinite(parsed) ? parsed : 40,
+    );
+    return { message: "OK", deliveries };
   }
 
   @Get("branding")

@@ -8,6 +8,8 @@ import {
   createMailApiKey,
   createMailWebhook,
   fetchMailIntegration,
+  fetchMailWebhookDeliveries,
+  type MailWebhookDeliveryLogItem,
   isPlatformOperator,
   revokeMailApiKey,
   type MailIntegrationSnapshot,
@@ -30,6 +32,9 @@ export default function IntegrationPage() {
   const [newWebhookSecret, setNewWebhookSecret] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [deliveries, setDeliveries] = useState<MailWebhookDeliveryLogItem[]>(
+    [],
+  );
 
   async function reload() {
     if (!accessToken) {
@@ -37,6 +42,12 @@ export default function IntegrationPage() {
     }
     const data = await fetchMailIntegration(accessToken);
     setIntegration(data.integration);
+    try {
+      const logs = await fetchMailWebhookDeliveries(accessToken, 25);
+      setDeliveries(logs.deliveries);
+    } catch {
+      setDeliveries([]);
+    }
   }
 
   useEffect(() => {
@@ -179,6 +190,31 @@ export default function IntegrationPage() {
               ))}
             </ul>
           </form>
+          <div className="card" style={{ marginTop: 16 }}>
+            <h2 style={{ marginTop: 0, fontSize: "1.1rem" }}>
+              Son webhook teslimatları
+            </h2>
+            {deliveries.length === 0 ? (
+              <p style={{ fontSize: 12, color: "var(--muted)" }}>
+                Henüz kayıt yok (VPS’te{" "}
+                <code>apply-mail-webhook-delivery-log-schema.sh</code> gerekir).
+              </p>
+            ) : (
+              <ul
+                style={{ margin: 0, paddingLeft: 20, fontSize: "0.8rem" }}
+              >
+                {deliveries.map((row) => (
+                  <li key={row.id}>
+                    {row.success ? "✓" : "✗"} {row.eventType} · deneme{" "}
+                    {row.attempt}
+                    {row.httpStatus != null ? ` · HTTP ${row.httpStatus}` : ""}
+                    {" · "}
+                    {new Date(row.createdAt).toLocaleString("tr-TR")}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </>
       ) : null}
       {error ? <p style={{ color: "#b91c1c" }}>{error}</p> : null}

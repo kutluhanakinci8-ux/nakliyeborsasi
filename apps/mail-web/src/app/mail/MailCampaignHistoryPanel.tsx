@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   cancelScheduledMailCampaign,
+  cloneMailCampaignToCompose,
   fetchMailCampaignDetail,
   fetchMailCampaigns,
   resendMailCampaign,
@@ -13,9 +14,16 @@ import {
 type Props = {
   accessToken: string;
   open: boolean;
+  onCloneToCompose?: (
+    compose: import("@/lib/mailApi").MailCampaignComposeClone,
+  ) => void;
 };
 
-export function MailCampaignHistoryPanel({ accessToken, open }: Props) {
+export function MailCampaignHistoryPanel({
+  accessToken,
+  open,
+  onCloneToCompose,
+}: Props) {
   const [rows, setRows] = useState<MailCampaignListItem[]>([]);
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -93,6 +101,21 @@ export function MailCampaignHistoryPanel({ accessToken, open }: Props) {
                 >
                   {detailId === row.id ? "Detayı gizle" : "Detay"}
                 </button>
+                {onCloneToCompose ? (
+                  <button
+                    type="button"
+                    className="compose-chip-btn"
+                    disabled={busyId === row.id}
+                    onClick={() => {
+                      setBusyId(row.id);
+                      void cloneMailCampaignToCompose(accessToken, row.id)
+                        .then((data) => onCloneToCompose(data.compose))
+                        .finally(() => setBusyId(null));
+                    }}
+                  >
+                    Yazıya kopyala
+                  </button>
+                ) : null}
                 {row.status === "scheduled" ? (
                   <button
                     type="button"

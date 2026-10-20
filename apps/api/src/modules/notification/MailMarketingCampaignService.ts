@@ -117,6 +117,40 @@ export class MailMarketingCampaignService {
     };
   }
 
+  public async cloneCampaign(params: {
+    organizationId: string;
+    campaignId: string;
+    userId?: string;
+    mode: "compose" | "schedule";
+    scheduleAt?: Date | null;
+  }) {
+    const source = await this.campaignRepository.findOne({
+      where: { id: params.campaignId, organizationId: params.organizationId },
+    });
+    if (!source) {
+      throw new NotFoundException("Kampanya bulunamadı.");
+    }
+    const compose = this.buildComposeFromRow(source);
+    if (params.mode === "compose") {
+      return { mode: "compose" as const, compose };
+    }
+    if (!params.scheduleAt || Number.isNaN(params.scheduleAt.getTime())) {
+      throw new BadRequestException("scheduleAt zorunlu.");
+    }
+    const payload: MailMarketingCampaignPayload = {
+      ...source.payload,
+      reminderDispatchedAt: null,
+    };
+    const outcome = await this.createAndRunOrSchedule({
+      organizationId: params.organizationId,
+      userId: params.userId,
+      subject: source.subject,
+      scheduleAt: params.scheduleAt,
+      payload,
+    });
+    return { mode: "schedule" as const, ...outcome };
+  }
+
   public async getForOrganization(organizationId: string, campaignId: string) {
     const row = await this.campaignRepository.findOne({
       where: { id: campaignId, organizationId },
@@ -407,6 +441,22 @@ export class MailMarketingCampaignService {
       recipientCount: row.payload.recipients?.length ?? 0,
       result: row.result,
       errorMessage: row.errorMessage,
+    };
+  }
+
+  private buildComposeFromRow(row: MailMarketingCampaignEntity) {
+    return {
+      subject: row.subject,
+      subjectB: row.payload.subjectB ?? undefined,
+      text: row.payload.text,
+      html: row.payload.html,
+      recipients: row.payload.recipients ?? [],
+      merge: row.payload.merge,
+      delayMsBetweenRecipients: row.payload.delayMsBetweenRecipients,
+      recipientDomainAllowlist: row.payload.recipientDomainAllowlist,
+      segment: row.payload.segment,
+      notifyCreator: row.payload.notifyCreator,
+      reminderMinutesBefore: row.payload.reminderMinutesBefore,
     };
   }
 

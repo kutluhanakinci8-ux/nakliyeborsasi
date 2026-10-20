@@ -16,6 +16,8 @@ import {
   fetchDelayedComposeStatus,
   composeMail,
   composeCampaign,
+  previewCampaignSegment,
+  type CampaignSegmentPreview,
   fetchComposeOutboundPreview,
   createDraft,
   deleteDraft,
@@ -275,6 +277,10 @@ export function useMailClientController({
     useState(false);
   const [composeCampaignReminderMinutes, setComposeCampaignReminderMinutes] =
     useState(0);
+  const [composeCampaignSegmentPreview, setComposeCampaignSegmentPreview] =
+    useState<CampaignSegmentPreview | null>(null);
+  const [composeCampaignSegmentPreviewBusy, setComposeCampaignSegmentPreviewBusy] =
+    useState(false);
   const [composeCampaignHistoryOpen, setComposeCampaignHistoryOpen] =
     useState(false);
   const [campaignResult, setCampaignResult] = useState<ComposeCampaignResult | null>(
@@ -1765,7 +1771,93 @@ export function useMailClientController({
     setComposeCampaignSegmentReferansList("");
     setComposeCampaignRequireMusteriAdi(false);
     setComposeCampaignReminderMinutes(0);
+    setComposeCampaignSegmentPreview(null);
     setComposeInlineAttachments([]);
+  }
+
+  async function runCampaignSegmentPreview() {
+    if (!accessToken) {
+      return;
+    }
+    const recipients = parseCampaignRecipientsText(composeCampaignRecipients);
+    if (recipients.length === 0) {
+      setToast("Önizleme için alıcı listesi gerekli.");
+      return;
+    }
+    const domainAllowlist = composeCampaignDomainAllowlist
+      .split(/[,;\s]+/)
+      .map((part) => part.trim().replace(/^@+/, ""))
+      .filter((part) => part.length > 0);
+    const allowlist = composeCampaignSegmentReferansList
+      .split(/[\n,;]+/)
+      .map((part) => part.trim())
+      .filter((part) => part.length > 0);
+    setComposeCampaignSegmentPreviewBusy(true);
+    try {
+      const result = await previewCampaignSegment(accessToken, {
+        recipients,
+        merge: buildComposeMergePayload(),
+        recipientDomainAllowlist:
+          domainAllowlist.length > 0 ? domainAllowlist : undefined,
+        segment:
+          composeCampaignSegmentReferansPrefix.trim() ||
+          composeCampaignRequireMusteriAdi ||
+          allowlist.length > 0
+            ? {
+                referansPrefix:
+                  composeCampaignSegmentReferansPrefix.trim() || undefined,
+                requireMusteriAdi: composeCampaignRequireMusteriAdi
+                  ? true
+                  : undefined,
+                referansAllowlist:
+                  allowlist.length > 0 ? allowlist.slice(0, 50) : undefined,
+              }
+            : undefined,
+      });
+      setComposeCampaignSegmentPreview(result.preview);
+    } catch {
+      setToast("Segment önizlemesi alınamadı.");
+    } finally {
+      setComposeCampaignSegmentPreviewBusy(false);
+    }
+  }
+
+  function applyCampaignClonePayload(compose: import("@/lib/mailApi").MailCampaignComposeClone) {
+    setComposeCampaignMode(true);
+    setComposeOpen(true);
+    setComposeSubject(compose.subject);
+    setComposeCampaignSubjectB(compose.subjectB ?? "");
+    setComposeText(compose.text);
+    if (compose.html?.trim()) {
+      setComposeHtml(compose.html.trim());
+      setComposeRich(true);
+    }
+    setComposeCampaignRecipients(
+      compose.recipients
+        .map((row) =>
+          [row.email, row.musteriAdi, row.referans].filter(Boolean).join(", "),
+        )
+        .join("\n"),
+    );
+    setComposeCampaignDomainAllowlist(
+      compose.recipientDomainAllowlist?.join(", ") ?? "",
+    );
+    setComposeCampaignDelayMs(compose.delayMsBetweenRecipients ?? 0);
+    setComposeCampaignSegmentReferansPrefix(
+      compose.segment?.referansPrefix ?? "",
+    );
+    setComposeCampaignRequireMusteriAdi(
+      Boolean(compose.segment?.requireMusteriAdi),
+    );
+    setComposeCampaignSegmentReferansList(
+      compose.segment?.referansAllowlist?.join("\n") ?? "",
+    );
+    setComposeMergeReferans(compose.merge?.referans ?? "");
+    setComposeMergeMusteriAdi(compose.merge?.musteriAdi ?? "");
+    setComposeCampaignNotifyCreator(Boolean(compose.notifyCreator));
+    setComposeCampaignReminderMinutes(compose.reminderMinutesBefore ?? 0);
+    setComposeCampaignSegmentPreview(null);
+    setToast("Kampanya yazı ekranına kopyalandı.");
   }
 
   async function importCampaignCsv(file: File) {
@@ -2034,6 +2126,10 @@ export function useMailClientController({
     setComposeCampaignRequireMusteriAdi,
     composeCampaignReminderMinutes,
     setComposeCampaignReminderMinutes,
+    composeCampaignSegmentPreview,
+    composeCampaignSegmentPreviewBusy,
+    runCampaignSegmentPreview,
+    applyCampaignClonePayload,
     composeCampaignHistoryOpen,
     setComposeCampaignHistoryOpen,
     campaignResult,

@@ -98,6 +98,10 @@ export function MailClientShell({ mail }: Props) {
     setComposeCampaignRequireMusteriAdi,
     composeCampaignReminderMinutes,
     setComposeCampaignReminderMinutes,
+    composeCampaignSegmentPreview,
+    composeCampaignSegmentPreviewBusy,
+    runCampaignSegmentPreview,
+    applyCampaignClonePayload,
     composeCampaignHistoryOpen,
     setComposeCampaignHistoryOpen,
     campaignResult,
@@ -1731,6 +1735,7 @@ export function MailClientShell({ mail }: Props) {
                 <MailCampaignHistoryPanel
                   accessToken={accessToken}
                   open={composeCampaignHistoryOpen}
+                  onCloneToCompose={applyCampaignClonePayload}
                 />
               ) : null}
               {composeCampaignMode && !forwardMessageId && !editingDraftId ? (
@@ -1872,6 +1877,31 @@ export function MailClientShell({ mail }: Props) {
                       />
                       Yalnızca müşteri adı dolu satırlar
                     </label>
+                    <button
+                      type="button"
+                      className="compose-chip-btn"
+                      disabled={composeCampaignSegmentPreviewBusy}
+                      onClick={() => void runCampaignSegmentPreview()}
+                    >
+                      {composeCampaignSegmentPreviewBusy
+                        ? "Hesaplanıyor…"
+                        : "Segment önizle"}
+                    </button>
+                    {composeCampaignSegmentPreview ? (
+                      <p className="compose-attach-hint">
+                        Gönderilecek: {composeCampaignSegmentPreview.matched} /{" "}
+                        {composeCampaignSegmentPreview.total}
+                        {composeCampaignSegmentPreview.skippedDomain > 0
+                          ? ` · alan adı ${composeCampaignSegmentPreview.skippedDomain}`
+                          : ""}
+                        {composeCampaignSegmentPreview.skippedSegment > 0
+                          ? ` · segment ${composeCampaignSegmentPreview.skippedSegment}`
+                          : ""}
+                        {composeCampaignSegmentPreview.skippedInvalid > 0
+                          ? ` · geçersiz ${composeCampaignSegmentPreview.skippedInvalid}`
+                          : ""}
+                      </p>
+                    ) : null}
                     {composeCampaignScheduleAt ? (
                       <>
                         <label

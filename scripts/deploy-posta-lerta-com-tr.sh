@@ -28,6 +28,9 @@ fi
 if [[ -x "$INSTALL_DIR/scripts/apply-mail-marketing-campaign-schema.sh" ]]; then
   bash "$INSTALL_DIR/scripts/apply-mail-marketing-campaign-schema.sh" "$INSTALL_DIR" || true
 fi
+if [[ -x "$INSTALL_DIR/scripts/apply-mail-webhook-delivery-log-schema.sh" ]]; then
+  bash "$INSTALL_DIR/scripts/apply-mail-webhook-delivery-log-schema.sh" "$INSTALL_DIR" || true
+fi
 if [[ -x "$INSTALL_DIR/scripts/apply-mail-d6-calendar-contacts-schema.sh" ]]; then
   bash "$INSTALL_DIR/scripts/apply-mail-d6-calendar-contacts-schema.sh" "$INSTALL_DIR" || true
 fi

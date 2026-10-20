@@ -924,6 +924,73 @@ export type MailCampaignListItem = {
   errorMessage: string | null;
 };
 
+export type CampaignSegmentPreview = {
+  total: number;
+  matched: number;
+  skippedInvalid: number;
+  skippedDomain: number;
+  skippedSegment: number;
+};
+
+export async function previewCampaignSegment(
+  accessToken: string,
+  body: {
+    recipients: Array<{
+      email: string;
+      musteriAdi?: string;
+      referans?: string;
+    }>;
+    merge?: ComposeMergePayload;
+    recipientDomainAllowlist?: string[];
+    segment?: {
+      referansPrefix?: string;
+      referansEquals?: string;
+      requireMusteriAdi?: boolean;
+      referansAllowlist?: string[];
+    };
+  },
+) {
+  return apiFetch<{ ok: true; preview: CampaignSegmentPreview }>(
+    accessToken,
+    "company/mail-inbox/compose/campaign/preview-segment",
+    { method: "POST", body: JSON.stringify(body) },
+  );
+}
+
+export type MailCampaignComposeClone = {
+  subject: string;
+  subjectB?: string;
+  text: string;
+  html?: string;
+  recipients: Array<{
+    email: string;
+    musteriAdi?: string;
+    referans?: string;
+  }>;
+  merge?: ComposeMergePayload;
+  delayMsBetweenRecipients?: number;
+  recipientDomainAllowlist?: string[];
+  segment?: {
+    referansPrefix?: string;
+    referansEquals?: string;
+    requireMusteriAdi?: boolean;
+    referansAllowlist?: string[];
+  };
+  notifyCreator?: boolean;
+  reminderMinutesBefore?: number;
+};
+
+export async function cloneMailCampaignToCompose(
+  accessToken: string,
+  campaignId: string,
+) {
+  return apiFetch<{ ok: true; mode: "compose"; compose: MailCampaignComposeClone }>(
+    accessToken,
+    `company/mail-inbox/campaigns/${campaignId}/clone`,
+    { method: "POST", body: JSON.stringify({ mode: "compose" }) },
+  );
+}
+
 export async function composeCampaign(
   accessToken: string,
   body: {

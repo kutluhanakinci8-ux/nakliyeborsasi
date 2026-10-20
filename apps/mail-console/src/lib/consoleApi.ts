@@ -679,6 +679,28 @@ export async function revokeMailApiKey(accessToken: string, id: string) {
   );
 }
 
+export type MailWebhookDeliveryLogItem = {
+  id: string;
+  webhookEndpointId: string;
+  eventType: string;
+  deliveryId: string;
+  attempt: number;
+  httpStatus: number | null;
+  success: boolean;
+  errorMessage: string | null;
+  createdAt: string;
+};
+
+export async function fetchMailWebhookDeliveries(
+  accessToken: string,
+  limit = 30,
+) {
+  return apiFetch<{ message: string; deliveries: MailWebhookDeliveryLogItem[] }>(
+    accessToken,
+    `company/mail-identity/integration/webhook-deliveries?limit=${limit}`,
+  );
+}
+
 export async function createMailWebhook(
   accessToken: string,
   body: { url: string; events: string[]; description?: string },

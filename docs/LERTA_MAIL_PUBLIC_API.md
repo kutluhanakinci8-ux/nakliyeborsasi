@@ -46,4 +46,12 @@ Konsolda webhook uç noktasına abone olun:
 
 İmza: `X-Lerta-Mail-Signature` (HMAC, mevcut mesaj webhook’ları ile aynı).
 
-Başarısız HTTP veya ağ hatalarında uç nokta **3 denemeye** kadar otomatik yeniden denenir (2 sn ve 5 sn aralıklarla).
+Başarısız HTTP veya ağ hatalarında uç nokta **3 denemeye** kadar otomatik yeniden denenir (2 sn ve 5 sn aralıklarla). Her deneme `mail_webhook_delivery_log` tablosuna yazılır (konsol → Entegrasyon).
+
+## Kampanya klonlama (web oturumu)
+
+`POST company/mail-inbox/campaigns/:id/clone` — `mode: "compose"` yaz ekranını doldurur; `mode: "schedule"` + `scheduleAt` yeni zamanlanmış kampanya oluşturur.
+
+## Segment önizleme
+
+`POST company/mail-inbox/compose/campaign/preview-segment` — alıcı listesi + segment/domain filtreleri için `matched` / `skipped*` sayıları.
