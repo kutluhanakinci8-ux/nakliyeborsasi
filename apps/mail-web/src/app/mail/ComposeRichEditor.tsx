@@ -15,6 +15,7 @@ type Props = {
   plainText: string;
   onPlainTextChange: (text: string) => void;
   onHtmlChange: (html: string) => void;
+  onInlineImage?: (file: File) => Promise<string | null>;
 };
 
 function exec(command: string, value?: string) {
@@ -47,6 +48,7 @@ export function ComposeRichEditor({
   plainText,
   onPlainTextChange,
   onHtmlChange,
+  onInlineImage,
 }: Props) {
   const editorRef = useRef<HTMLDivElement>(null);
 
@@ -195,6 +197,35 @@ export function ComposeRichEditor({
         >
           Görsel
         </button>
+        {onInlineImage ? (
+          <button
+            type="button"
+            title="Satır içi görsel (CID)"
+            onClick={() => {
+              const input = document.createElement("input");
+              input.type = "file";
+              input.accept = "image/*";
+              input.onchange = () => {
+                const file = input.files?.[0];
+                if (!file) {
+                  return;
+                }
+                void onInlineImage(file).then((cid) => {
+                  if (!cid) {
+                    return;
+                  }
+                  insertHtmlAtSelection(
+                    `<img src="cid:${cid}" alt="" style="max-width:100%;height:auto" />`,
+                  );
+                  syncFromEditor();
+                });
+              };
+              input.click();
+            }}
+          >
+            CID görsel
+          </button>
+        ) : null}
         <button
           type="button"
           title="2×2 tablo"

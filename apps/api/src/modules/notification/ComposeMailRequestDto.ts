@@ -6,6 +6,7 @@ import {
   IsInt,
   IsOptional,
   IsString,
+  Matches,
   Max,
   MaxLength,
   Min,
@@ -25,6 +26,13 @@ export class ComposeMailAttachmentDto {
   @IsString()
   @MinLength(1)
   public contentBase64!: string;
+
+  /** Satır içi görsel (multipart/related) — HTML içinde cid: referansı. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  @Matches(/^[\w.-]+$/)
+  public contentId?: string;
 }
 
 export class ComposeMailRequestDto {

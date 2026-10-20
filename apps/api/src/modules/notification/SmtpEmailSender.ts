@@ -38,6 +38,7 @@ export class SmtpEmailSender {
       filename: string;
       content: Buffer;
       contentType?: string;
+      cid?: string;
     }[];
     outboundBranding?: OutboundWrapBranding;
   }): Promise<string | null> {
@@ -80,6 +81,9 @@ export class SmtpEmailSender {
           filename: file.filename,
           content: file.content,
           contentType: file.contentType,
+          ...(file.cid
+            ? { cid: file.cid, contentDisposition: "inline" as const }
+            : {}),
         })),
       };
       if (brandedHtml) {

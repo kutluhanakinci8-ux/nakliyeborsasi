@@ -1,8 +1,7 @@
 "use client";
 
-import { MERGE_FIELD_TOKENS } from "@/lib/mailComposeHtmlBlocks";
-
 import { MailSettingsPanel } from "./MailSettingsPanel";
+import { MailComposeMergeFields } from "./MailComposeMergeFields";
 import { MailEmptyState } from "./MailEmptyState";
 import { MailShortcutsDialog } from "./MailShortcutsDialog";
 import { MailCalendarPanel } from "./MailCalendarPanel";
@@ -71,6 +70,13 @@ export function MailClientShell({ mail }: Props) {
     setComposeMergeMusteriAdi,
     setComposeMergeOpen,
     insertMergeToken,
+    insertReplyMergeToken,
+    composeCampaignMode,
+    setComposeCampaignMode,
+    composeCampaignRecipients,
+    setComposeCampaignRecipients,
+    maxCampaignRecipients,
+    addInlineComposeImage,
     customFolders,
     deepLinkComposeHandled,
     deepLinkMessageHandled,
@@ -1424,6 +1430,16 @@ export function MailClientShell({ mail }: Props) {
                   onChange={(e) => setReplyText(e.target.value)}
                   rows={5}
                 />
+                <MailComposeMergeFields
+                  open={composeMergeOpen}
+                  onToggleOpen={() => setComposeMergeOpen((open) => !open)}
+                  musteriAdi={composeMergeMusteriAdi}
+                  referans={composeMergeReferans}
+                  onMusteriAdiChange={setComposeMergeMusteriAdi}
+                  onReferansChange={setComposeMergeReferans}
+                  onInsertToken={insertReplyMergeToken}
+                  idPrefix="reply"
+                />
                 <div className="compose-attach-zone mail-reply-attach">
                   <label className="compose-attach-label">
                     <span className="compose-attach-title">Ek</span>
@@ -1660,19 +1676,56 @@ export function MailClientShell({ mail }: Props) {
                   </button>
                 </p>
               ) : null}
-              <div className="compose-field">
-                <label className="compose-field-label" htmlFor="compose-to">
-                  Kime
-                </label>
-                <input
-                  id="compose-to"
-                  className="compose-input"
-                  placeholder="ornek@firma.com"
-                  value={composeTo}
-                  onChange={(e) => setComposeTo(e.target.value)}
-                  autoFocus
-                />
-              </div>
+              {!forwardMessageId && !editingDraftId ? (
+                <div className="compose-premium-inline-tools">
+                  <button
+                    type="button"
+                    className={
+                      composeCampaignMode
+                        ? "compose-chip-btn is-active"
+                        : "compose-chip-btn"
+                    }
+                    onClick={() => setComposeCampaignMode((on) => !on)}
+                  >
+                    {composeCampaignMode ? "Kampanya modu (açık)" : "Kampanya modu"}
+                  </button>
+                </div>
+              ) : null}
+              {composeCampaignMode && !forwardMessageId && !editingDraftId ? (
+                <div className="compose-field">
+                  <label
+                    className="compose-field-label"
+                    htmlFor="compose-campaign-recipients"
+                  >
+                    Alıcı listesi (en fazla {maxCampaignRecipients})
+                  </label>
+                  <textarea
+                    id="compose-campaign-recipients"
+                    className="compose-textarea compose-campaign-recipients"
+                    placeholder={`ornek@firma.com\nmusteri@firma.com, Ahmet Yılmaz, REF-001`}
+                    value={composeCampaignRecipients}
+                    onChange={(e) => setComposeCampaignRecipients(e.target.value)}
+                    rows={4}
+                  />
+                  <p className="compose-attach-hint">
+                    Satır başına e-posta; isteğe bağlı: e-posta, müşteri adı, referans
+                  </p>
+                </div>
+              ) : (
+                <div className="compose-field">
+                  <label className="compose-field-label" htmlFor="compose-to">
+                    Kime
+                  </label>
+                  <input
+                    id="compose-to"
+                    className="compose-input"
+                    placeholder="ornek@firma.com"
+                    value={composeTo}
+                    onChange={(e) => setComposeTo(e.target.value)}
+                    autoFocus
+                  />
+                </div>
+              )}
 
               {!forwardMessageId ? (
                 <div className="compose-premium-inline-tools">
@@ -1834,52 +1887,15 @@ export function MailClientShell({ mail }: Props) {
                 </label>
               </div>
 
-              <div className="compose-merge-panel">
-                <button
-                  type="button"
-                  className="compose-chip-btn"
-                  onClick={() => setComposeMergeOpen((open) => !open)}
-                >
-                  {composeMergeOpen ? "Kişiselleştirme gizle" : "Kişiselleştirme alanları"}
-                </button>
-                {composeMergeOpen ? (
-                  <div className="compose-merge-fields">
-                    <label className="compose-field-label" htmlFor="compose-merge-musteri">
-                      Müşteri adı ({"{{musteri_adi}}"})
-                    </label>
-                    <input
-                      id="compose-merge-musteri"
-                      className="compose-input"
-                      value={composeMergeMusteriAdi}
-                      onChange={(e) => setComposeMergeMusteriAdi(e.target.value)}
-                      placeholder="Örn. Ahmet Yılmaz"
-                    />
-                    <label className="compose-field-label" htmlFor="compose-merge-ref">
-                      Referans ({"{{referans}}"})
-                    </label>
-                    <input
-                      id="compose-merge-ref"
-                      className="compose-input"
-                      value={composeMergeReferans}
-                      onChange={(e) => setComposeMergeReferans(e.target.value)}
-                      placeholder="Örn. REF-2026-042"
-                    />
-                    <div className="compose-merge-tokens">
-                      {MERGE_FIELD_TOKENS.map((row) => (
-                        <button
-                          key={row.token}
-                          type="button"
-                          className="compose-chip-btn"
-                          title={row.label}
-                          onClick={() => insertMergeToken(row.token)}
-                        >
-                          {row.token}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-              </div>
+              <MailComposeMergeFields
+                open={composeMergeOpen}
+                onToggleOpen={() => setComposeMergeOpen((open) => !open)}
+                musteriAdi={composeMergeMusteriAdi}
+                referans={composeMergeReferans}
+                onMusteriAdiChange={setComposeMergeMusteriAdi}
+                onReferansChange={setComposeMergeReferans}
+                onInsertToken={insertMergeToken}
+              />
 
               <div className="compose-premium-editor-wrap">
                 {!forwardMessageId && !editingDraftId ? (
@@ -1889,6 +1905,7 @@ export function MailClientShell({ mail }: Props) {
                     plainText={composeText}
                     onPlainTextChange={setComposeText}
                     onHtmlChange={setComposeHtml}
+                    onInlineImage={addInlineComposeImage}
                   />
                 ) : null}
                 {!composeRich || forwardMessageId || editingDraftId ? (

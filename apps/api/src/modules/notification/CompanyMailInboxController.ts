@@ -26,6 +26,7 @@ import { MailMailboxComposeService } from "./MailMailboxComposeService";
 import { MailImapAccessService } from "./MailImapAccessService";
 import { ComposeMailRequestDto } from "./ComposeMailRequestDto";
 import { ComposeMailPreviewRequestDto } from "./ComposeMailPreviewRequestDto";
+import { ComposeCampaignRequestDto } from "./ComposeCampaignRequestDto";
 import { ReplyMailRequestDto } from "./ReplyMailRequestDto";
 import { ForwardMailRequestDto } from "./ForwardMailRequestDto";
 import { MailComposeDraftService } from "./MailComposeDraftService";
@@ -1296,6 +1297,38 @@ export class CompanyMailInboxController {
       subject: body.subject,
       to: body.to,
       sentId: result.sentId,
+    });
+    return { ok: true, ...result };
+  }
+
+  @Post("compose/campaign")
+  public async composeCampaign(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: ComposeCampaignRequestDto,
+  ) {
+    this.assertMailInboxWriter(user);
+    const result = await this.mailMailboxComposeService.sendCampaign({
+      organizationId: user.companyId,
+      userId: user.userId,
+      subject: body.subject,
+      text: body.text,
+      html: body.html,
+      attachments: body.attachments,
+      recipients: body.recipients.map((row) => ({
+        email: row.email,
+        musteriAdi: row.musteriAdi,
+        referans: row.referans,
+      })),
+      merge: body.merge,
+    });
+    await this.recordInboxMailAudit(user, MailIdentityAuditAction.InboxComposeSent, {
+      subject: body.subject,
+      to: `${result.sent} alıcı (kampanya)`,
+      sentId: result.campaignId,
+      campaign: true,
+      attempted: result.attempted,
+      skippedSuppressed: result.skippedSuppressed,
+      failedCount: result.failed.length,
     });
     return { ok: true, ...result };
   }

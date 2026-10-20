@@ -15,6 +15,7 @@ import {
   cancelDelayedCompose,
   fetchDelayedComposeStatus,
   composeMail,
+  composeCampaign,
   fetchComposeOutboundPreview,
   createDraft,
   deleteDraft,
@@ -81,6 +82,10 @@ import {
   parseMailClientViewParam,
   type MailClientView,
 } from "./mailClientHelpers";
+import {
+  MAX_CAMPAIGN_RECIPIENTS,
+  parseCampaignRecipientsText,
+} from "@/lib/mailCampaignRecipients";
 
 import type { ReadonlyURLSearchParams } from "next/navigation";
 import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
@@ -246,6 +251,12 @@ export function useMailClientController({
   const [composeMergeReferans, setComposeMergeReferans] = useState("");
   const [composeMergeMusteriAdi, setComposeMergeMusteriAdi] = useState("");
   const [composeMergeOpen, setComposeMergeOpen] = useState(false);
+  const [composeCampaignMode, setComposeCampaignMode] = useState(false);
+  const [composeCampaignRecipients, setComposeCampaignRecipients] =
+    useState("");
+  const [composeInlineAttachments, setComposeInlineAttachments] = useState<
+    ComposeAttachment[]
+  >([]);
   const [inboxOffline, setInboxOffline] = useState(false);
   const [inboxOfflineCachedAt, setInboxOfflineCachedAt] = useState<
     number | null
@@ -850,6 +861,7 @@ export function useMailClientController({
         replyAll: useReplyAll,
         attachments,
         delaySeconds: 5,
+        merge: buildComposeMergePayload(),
       });
       setReplyText("");
       setReplyFiles([]);
@@ -936,6 +948,11 @@ export function useMailClientController({
         setComposeError("İletmek için alıcı (Kime) zorunlu.");
         return;
       }
+    } else if (composeCampaignMode) {
+      if (!composeSubject.trim() || !composeText.trim()) {
+        setComposeError("Kampanya için konu ve mesaj zorunlu.");
+        return;
+      }
     } else if (
       !composeTo.trim() ||
       !composeSubject.trim() ||
@@ -952,12 +969,62 @@ export function useMailClientController({
     setSending(true);
     let scheduledUndo = false;
     try {
+      const fileAttachments =
+        composeFiles.length > 0
+          ? await Promise.all(composeFiles.map((f) => fileToAttachment(f)))
+          : [];
+      const attachments = [
+        ...composeInlineAttachments,
+        ...composeStoredAttachments,
+        ...fileAttachments,
+      ];
+      if (attachments.length > 3) {
+        setComposeError("En fazla 3 ek (satır içi görseller dahil).");
+        setSending(false);
+        return;
+      }
+      if (composeCampaignMode && !forwardMessageId && !editingDraftId) {
+        const recipients = parseCampaignRecipientsText(composeCampaignRecipients);
+        if (recipients.length === 0) {
+          setComposeError(
+            "Kampanya için alıcı listesi gerekli (satır başına bir e-posta).",
+          );
+          setSending(false);
+          return;
+        }
+        if (!composeSubject.trim() || !composeText.trim()) {
+          setComposeError("Konu ve mesaj zorunlu.");
+          setSending(false);
+          return;
+        }
+        const outboundHtml =
+          composeRich && composeHtml.trim() ? composeHtml.trim() : undefined;
+        const result = await composeCampaign(accessToken, {
+          recipients,
+          subject: composeSubject.trim(),
+          text: composeText,
+          html: outboundHtml,
+          attachments: attachments.length > 0 ? attachments : undefined,
+          merge: buildComposeMergePayload(),
+        });
+        setComposeOpen(false);
+        resetCompose();
+        const failNote =
+          result.failed.length > 0
+            ? ` ${result.failed.length} başarısız.`
+            : "";
+        const skipNote =
+          result.skippedSuppressed > 0
+            ? ` ${result.skippedSuppressed} suppression atlandı.`
+            : "";
+        setToast(
+          `Kampanya: ${result.sent}/${result.attempted} gönderildi.${skipNote}${failNote}`,
+        );
+        void refresh();
+        setSending(false);
+        return;
+      }
       if (editingDraftId) {
-        const fileAttachments =
-          composeFiles.length > 0
-            ? await Promise.all(composeFiles.map((f) => fileToAttachment(f)))
-            : [];
-        const attachments = [...composeStoredAttachments, ...fileAttachments];
         await updateDraft(accessToken, editingDraftId, {
           to: composeTo.trim(),
           subject: composeSubject.trim(),
@@ -971,11 +1038,6 @@ export function useMailClientController({
           scheduledUndo = true;
         }
       } else {
-        const fileAttachments =
-          composeFiles.length > 0
-            ? await Promise.all(composeFiles.map((f) => fileToAttachment(f)))
-            : [];
-        const attachments = [...composeStoredAttachments, ...fileAttachments];
         if (forwardMessageId) {
           const forwardResult = await forwardMail(
             accessToken,
@@ -1626,6 +1688,9 @@ export function useMailClientController({
     setComposeMergeReferans("");
     setComposeMergeMusteriAdi("");
     setComposeMergeOpen(false);
+    setComposeCampaignMode(false);
+    setComposeCampaignRecipients("");
+    setComposeInlineAttachments([]);
   }
 
   function buildComposeMergePayload() {
@@ -1642,6 +1707,29 @@ export function useMailClientController({
 
   function insertMergeToken(token: string) {
     setComposeText((prev) => `${prev.replace(/\s*$/, "")}${prev.trim() ? " " : ""}${token}`);
+  }
+
+  function insertReplyMergeToken(token: string) {
+    setReplyText((prev) => `${prev.replace(/\s*$/, "")}${prev.trim() ? " " : ""}${token}`);
+  }
+
+  async function addInlineComposeImage(file: File): Promise<string | null> {
+    const total =
+      composeInlineAttachments.length +
+      composeFiles.length +
+      composeStoredAttachments.length;
+    if (total >= 3) {
+      setToast("En fazla 3 ek (satır içi görseller dahil).");
+      return null;
+    }
+    if (!file.type.startsWith("image/")) {
+      setToast("Yalnızca görsel dosyaları desteklenir.");
+      return null;
+    }
+    const cid = `img_${Date.now()}`;
+    const att = await fileToAttachment(file, { contentId: cid });
+    setComposeInlineAttachments((prev) => [...prev, att]);
+    return cid;
   }
 
   function startForwardFromDetail() {
@@ -1817,6 +1905,13 @@ export function useMailClientController({
     setComposeMergeMusteriAdi,
     setComposeMergeOpen,
     insertMergeToken,
+    insertReplyMergeToken,
+    composeCampaignMode,
+    setComposeCampaignMode,
+    composeCampaignRecipients,
+    setComposeCampaignRecipients,
+    maxCampaignRecipients: MAX_CAMPAIGN_RECIPIENTS,
+    addInlineComposeImage,
     customFolders,
     deepLinkComposeHandled,
     deepLinkMessageHandled,

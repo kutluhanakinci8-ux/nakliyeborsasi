@@ -273,9 +273,14 @@ export type ComposeAttachment = {
   filename: string;
   contentType: string;
   contentBase64: string;
+  /** Satır içi görsel — HTML içinde cid: ile eşleşir. */
+  contentId?: string;
 };
 
-export function fileToAttachment(file: File): Promise<ComposeAttachment> {
+export function fileToAttachment(
+  file: File,
+  options?: { contentId?: string },
+): Promise<ComposeAttachment> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
@@ -285,6 +290,7 @@ export function fileToAttachment(file: File): Promise<ComposeAttachment> {
         filename: file.name,
         contentType: file.type || "application/octet-stream",
         contentBase64: base64,
+        contentId: options?.contentId,
       });
     };
     reader.onerror = () => reject(reader.error);
@@ -887,6 +893,37 @@ export async function composeMail(
     method: "POST",
     body: JSON.stringify(body),
   });
+}
+
+export type ComposeCampaignResult = {
+  ok: true;
+  campaignId: string;
+  attempted: number;
+  sent: number;
+  skippedSuppressed: number;
+  failed: Array<{ email: string; error: string }>;
+};
+
+export async function composeCampaign(
+  accessToken: string,
+  body: {
+    recipients: Array<{
+      email: string;
+      musteriAdi?: string;
+      referans?: string;
+    }>;
+    subject: string;
+    text: string;
+    html?: string;
+    attachments?: ComposeAttachment[];
+    merge?: ComposeMergePayload;
+  },
+) {
+  return apiFetch<ComposeCampaignResult>(
+    accessToken,
+    "company/mail-inbox/compose/campaign",
+    { method: "POST", body: JSON.stringify(body) },
+  );
 }
 
 export async function fetchDelayedComposeStatus(

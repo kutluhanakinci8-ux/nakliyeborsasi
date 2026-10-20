@@ -5,6 +5,7 @@ import {
   fetchDeliverabilityHub,
   type MailDeliverabilityHub,
 } from "@/lib/mailApi";
+import { MailDeliverabilityWizard } from "./MailDeliverabilityWizard";
 
 type Props = {
   accessToken: string;
@@ -125,6 +126,7 @@ export function MailDeliverabilityPanel({
       ) : (
         <p>Özel domain bağlı değil.</p>
       )}
+      <MailDeliverabilityWizard hub={hub} />
       <h4
         id="mail-engagement-analytics"
         className={

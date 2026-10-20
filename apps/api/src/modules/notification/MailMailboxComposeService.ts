@@ -28,16 +28,20 @@ import { buildOutgoingSentMime } from "./MailSentMimeBuilder";
 import { MailMailboxOutboundContentService } from "./MailMailboxOutboundContentService";
 import { MailSubscriptionLifecycleService } from "./MailSubscriptionLifecycleService";
 import { MailOrganizationWebhookDispatcherService } from "./MailOrganizationWebhookDispatcherService";
+import { EmailSuppressionService } from "./EmailSuppressionService";
+import { randomUUID } from "node:crypto";
 
 export type ComposeAttachmentInput = {
   filename: string;
   contentType: string;
   contentBase64: string;
+  contentId?: string;
 };
 
 @Injectable()
 export class MailMailboxComposeService {
   private static readonly maxAttachments = 3;
+  private static readonly maxCampaignRecipients = 25;
 
   public constructor(
     private readonly smtpEmailSender: SmtpEmailSender,
@@ -51,6 +55,7 @@ export class MailMailboxComposeService {
     private readonly notificationConfigurationService: NotificationConfigurationService,
     private readonly mailOrganizationWebhookDispatcherService: MailOrganizationWebhookDispatcherService,
     private readonly mailMailboxOutboundContentService: MailMailboxOutboundContentService,
+    private readonly emailSuppressionService: EmailSuppressionService,
     @InjectRepository(MailSenderIdentityEntity)
     private readonly senderRepository: Repository<MailSenderIdentityEntity>,
     @InjectRepository(MailDomainEntity)
@@ -179,6 +184,94 @@ export class MailMailboxComposeService {
       smtpMessageId,
     });
     return { sentId: sent.id, smtpMessageId };
+  }
+
+  public async sendCampaign(params: {
+    organizationId: string;
+    userId?: string;
+    subject: string;
+    text: string;
+    html?: string;
+    attachments?: ComposeAttachmentInput[];
+    recipients: Array<{
+      email: string;
+      musteriAdi?: string;
+      referans?: string;
+    }>;
+    merge?: { referans?: string; musteriAdi?: string };
+  }): Promise<{
+    campaignId: string;
+    attempted: number;
+    sent: number;
+    skippedSuppressed: number;
+    failed: Array<{ email: string; error: string }>;
+  }> {
+    const recipients = params.recipients ?? [];
+    if (recipients.length === 0) {
+      throw new BadRequestException("En az bir alıcı gerekli.");
+    }
+    if (recipients.length > MailMailboxComposeService.maxCampaignRecipients) {
+      throw new BadRequestException(
+        `Kampanya en fazla ${MailMailboxComposeService.maxCampaignRecipients} alıcıya gönderilebilir.`,
+      );
+    }
+    await this.mailTenantSuspensionService.assertOrganizationCanSend(
+      params.organizationId,
+    );
+    const campaignId = randomUUID();
+    let sent = 0;
+    let skippedSuppressed = 0;
+    const failed: Array<{ email: string; error: string }> = [];
+    for (const row of recipients) {
+      const email = row.email.trim().toLowerCase();
+      if (!isLikelyEmail(email)) {
+        failed.push({ email, error: "Geçersiz e-posta." });
+        continue;
+      }
+      if (
+        await this.emailSuppressionService.isSuppressed(
+          email,
+          params.organizationId,
+        )
+      ) {
+        skippedSuppressed += 1;
+        continue;
+      }
+      const merge = {
+        referans: row.referans?.trim() || params.merge?.referans,
+        musteriAdi: row.musteriAdi?.trim() || params.merge?.musteriAdi,
+      };
+      try {
+        await this.compose({
+          organizationId: params.organizationId,
+          userId: params.userId,
+          to: email,
+          subject: params.subject,
+          text: params.text,
+          html: params.html,
+          attachments: params.attachments,
+          merge:
+            merge.referans || merge.musteriAdi
+              ? {
+                  referans: merge.referans,
+                  musteriAdi: merge.musteriAdi,
+                }
+              : undefined,
+        });
+        sent += 1;
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Gönderim başarısız";
+        failed.push({ email, error: message.slice(0, 200) });
+      }
+    }
+    return {
+      campaignId,
+      attempted: recipients.length,
+      sent,
+      skippedSuppressed,
+      failed,
+    };
   }
 
   public async previewOutbound(params: {
@@ -784,7 +877,14 @@ export class MailMailboxComposeService {
   private async parseAttachments(
     organizationId: string,
     attachments?: ComposeAttachmentInput[],
-  ): Promise<{ filename: string; content: Buffer; contentType: string }[]> {
+  ): Promise<
+    {
+      filename: string;
+      content: Buffer;
+      contentType: string;
+      cid?: string;
+    }[]
+  > {
     if (!attachments?.length) {
       return [];
     }
@@ -805,10 +905,17 @@ export class MailMailboxComposeService {
           `Ek çok büyük: ${item.filename} (plan limiti ${maxMb} MB)`,
         );
       }
+      const contentId = item.contentId?.trim();
+      if (contentId && !/^[\w.-]+$/.test(contentId)) {
+        throw new BadRequestException(
+          `Geçersiz contentId: ${item.filename}`,
+        );
+      }
       return {
         filename: item.filename.slice(0, 120),
         content,
         contentType: item.contentType || "application/octet-stream",
+        cid: contentId || undefined,
       };
     });
   }
@@ -896,5 +1003,9 @@ function stripHtml(html: string): string {
     .replace(/<[^>]+>/g, "")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
+}
+
+function isLikelyEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
