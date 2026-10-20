@@ -10,6 +10,7 @@ import {
   MailMarketingCampaignPayload,
   MailMarketingCampaignResult,
 } from "../../infrastructure/database/entities/MailMarketingCampaignEntity";
+import { UserAccountEntity } from "../../infrastructure/database/entities/UserAccountEntity";
 import { MailMailboxComposeService } from "./MailMailboxComposeService";
 import type { ComposeAttachmentInput } from "./MailMailboxComposeService";
 
@@ -21,6 +22,8 @@ export class MailMarketingCampaignService {
   public constructor(
     @InjectRepository(MailMarketingCampaignEntity)
     private readonly campaignRepository: Repository<MailMarketingCampaignEntity>,
+    @InjectRepository(UserAccountEntity)
+    private readonly userAccountRepository: Repository<UserAccountEntity>,
     private readonly mailMailboxComposeService: MailMailboxComposeService,
   ) {}
 
@@ -66,6 +69,13 @@ export class MailMarketingCampaignService {
       }),
     );
     if (scheduleAt) {
+      if (params.payload.notifyCreator && params.userId) {
+        await this.notifyScheduledCreator(
+          params.organizationId,
+          params.userId,
+          row,
+        );
+      }
       return {
         campaignId: row.id,
         scheduled: true,
@@ -193,6 +203,8 @@ export class MailMarketingCampaignService {
       recipients: row.payload.recipients,
       merge: row.payload.merge,
       delayMsBetweenRecipients: row.payload.delayMsBetweenRecipients,
+      subjectB: row.payload.subjectB,
+      recipientDomainAllowlist: row.payload.recipientDomainAllowlist,
     });
     const result: MailMarketingCampaignResult = {
       attempted: sendResult.attempted,
@@ -213,6 +225,46 @@ export class MailMarketingCampaignService {
       },
     );
     return result;
+  }
+
+  private async notifyScheduledCreator(
+    organizationId: string,
+    userId: string,
+    row: MailMarketingCampaignEntity,
+  ): Promise<void> {
+    const user = await this.userAccountRepository.findOne({
+      where: { id: userId },
+    });
+    const to = user?.emailAddress?.trim();
+    if (!to) {
+      return;
+    }
+    const when = row.scheduleAt?.toISOString() ?? "";
+    const count = row.payload.recipients?.length ?? 0;
+    const subjectLine = `Kampanya zamanlandı: ${row.subject}`;
+    const text = [
+      "Merhaba,",
+      "",
+      `Konu: ${row.subject}`,
+      row.payload.subjectB ? `A/B konu (B): ${row.payload.subjectB}` : "",
+      `Alıcı sayısı: ${count}`,
+      `Gönderim: ${when}`,
+      "",
+      "Kampanyayı web posta → Kampanya geçmişi üzerinden iptal edebilirsiniz.",
+    ]
+      .filter(Boolean)
+      .join("\n");
+    try {
+      await this.mailMailboxComposeService.compose({
+        organizationId,
+        userId,
+        to,
+        subject: subjectLine,
+        text,
+      });
+    } catch {
+      // Bildirim başarısızlığı kampanyayı engellemez.
+    }
   }
 
   private toListItem(row: MailMarketingCampaignEntity) {

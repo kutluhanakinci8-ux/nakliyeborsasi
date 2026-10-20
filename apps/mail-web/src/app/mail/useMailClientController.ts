@@ -238,6 +238,9 @@ export function useMailClientController({
   const [composeTemplates, setComposeTemplates] = useState<
     MailComposePreset[]
   >([]);
+  const [composeCampaignTemplates, setComposeCampaignTemplates] = useState<
+    MailComposePreset[]
+  >([]);
   const [checkedIds, setCheckedIds] = useState<Set<string>>(() => new Set());
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -259,6 +262,11 @@ export function useMailClientController({
     useState("");
   const [composeCampaignDelayMs, setComposeCampaignDelayMs] = useState(0);
   const [composeCampaignScheduleAt, setComposeCampaignScheduleAt] = useState("");
+  const [composeCampaignSubjectB, setComposeCampaignSubjectB] = useState("");
+  const [composeCampaignDomainAllowlist, setComposeCampaignDomainAllowlist] =
+    useState("");
+  const [composeCampaignNotifyCreator, setComposeCampaignNotifyCreator] =
+    useState(false);
   const [composeCampaignHistoryOpen, setComposeCampaignHistoryOpen] =
     useState(false);
   const [campaignResult, setCampaignResult] = useState<ComposeCampaignResult | null>(
@@ -360,9 +368,11 @@ export function useMailClientController({
         setComposeTemplates(
           mergeComposeTemplatesWithBuiltins(data.templates),
         );
+        setComposeCampaignTemplates(data.campaignTemplates ?? []);
       })
       .catch(() => {
         setComposeTemplates(builtinComposeTemplatesFallback());
+        setComposeCampaignTemplates([]);
       });
   }, [composeOpen, accessToken, sendReadiness]);
 
@@ -1009,9 +1019,14 @@ export function useMailClientController({
         }
         const outboundHtml =
           composeRich && composeHtml.trim() ? composeHtml.trim() : undefined;
+        const domainAllowlist = composeCampaignDomainAllowlist
+          .split(/[,;\s]+/)
+          .map((part) => part.trim().replace(/^@+/, ""))
+          .filter((part) => part.length > 0);
         const result = await composeCampaign(accessToken, {
           recipients,
           subject: composeSubject.trim(),
+          subjectB: composeCampaignSubjectB.trim() || undefined,
           text: composeText,
           html: outboundHtml,
           attachments: attachments.length > 0 ? attachments : undefined,
@@ -1020,6 +1035,12 @@ export function useMailClientController({
           scheduleAt: composeCampaignScheduleAt
             ? new Date(composeCampaignScheduleAt).toISOString()
             : undefined,
+          recipientDomainAllowlist:
+            domainAllowlist.length > 0 ? domainAllowlist : undefined,
+          notifyCreator:
+            composeCampaignScheduleAt && composeCampaignNotifyCreator
+              ? true
+              : undefined,
         });
         setComposeOpen(false);
         resetCompose();
@@ -1703,6 +1724,9 @@ export function useMailClientController({
     setComposeCampaignRecipients("");
     setComposeCampaignDelayMs(0);
     setComposeCampaignScheduleAt("");
+    setComposeCampaignSubjectB("");
+    setComposeCampaignDomainAllowlist("");
+    setComposeCampaignNotifyCreator(false);
     setComposeInlineAttachments([]);
   }
 
@@ -1877,6 +1901,21 @@ export function useMailClientController({
     }
   }
 
+  function applyComposeCampaignTemplate(presetId: string) {
+    const preset = composeCampaignTemplates.find((t) => t.id === presetId);
+    if (!preset) {
+      return;
+    }
+    if (preset.subject) {
+      setComposeSubject(preset.subject);
+    }
+    setComposeText(preset.bodyText);
+    if (preset.bodyHtml?.trim()) {
+      setComposeHtml(preset.bodyHtml.trim());
+      setComposeRich(true);
+    }
+  }
+
   const storageAtLimit = summary?.storageQuota?.atLimit ?? false;
 
   function applyComposeSignature(presetId: string) {
@@ -1899,6 +1938,7 @@ export function useMailClientController({
     allListSelected,
     applyComposeSignature,
     applyComposeTemplate,
+    applyComposeCampaignTemplate,
     applyDelayedSend,
     applyMessageReadLocal,
     canBulkSelect,
@@ -1922,6 +1962,7 @@ export function useMailClientController({
     composeStoredAttachments,
     composeSubject,
     composeTemplates,
+    composeCampaignTemplates,
     composeText,
     composeTo,
     composeMergeReferans,
@@ -1941,6 +1982,12 @@ export function useMailClientController({
     setComposeCampaignDelayMs,
     composeCampaignScheduleAt,
     setComposeCampaignScheduleAt,
+    composeCampaignSubjectB,
+    setComposeCampaignSubjectB,
+    composeCampaignDomainAllowlist,
+    setComposeCampaignDomainAllowlist,
+    composeCampaignNotifyCreator,
+    setComposeCampaignNotifyCreator,
     composeCampaignHistoryOpen,
     setComposeCampaignHistoryOpen,
     campaignResult,

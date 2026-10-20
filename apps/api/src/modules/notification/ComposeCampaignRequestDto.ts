@@ -6,6 +6,7 @@ import {
   ArrayMaxSize,
   ArrayMinSize,
   IsArray,
+  IsBoolean,
   IsDateString,
   IsInt,
   IsOptional,
@@ -29,6 +30,12 @@ export class ComposeCampaignRequestDto {
   @MinLength(1)
   @MaxLength(500)
   public subject!: string;
+
+  /** A/B: tek numaralı alıcılar (2., 4. …) bu konuyu alır. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  public subjectB?: string;
 
   @IsString()
   @MinLength(1)
@@ -63,4 +70,17 @@ export class ComposeCampaignRequestDto {
   @IsOptional()
   @IsDateString()
   public scheduleAt?: string;
+
+  /** Örn. ["firma.com"] — yalnızca bu alan adlarına gönder. */
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(20)
+  @IsString({ each: true })
+  @MaxLength(120, { each: true })
+  public recipientDomainAllowlist?: string[];
+
+  /** Zamanlanmış gönderimde hesap e-postanıza özet bildirimi. */
+  @IsOptional()
+  @IsBoolean()
+  public notifyCreator?: boolean;
 }

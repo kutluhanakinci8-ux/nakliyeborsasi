@@ -17,11 +17,14 @@ type Props = {
 export function MailComposePresetsPanel({ accessToken }: Props) {
   const [signatures, setSignatures] = useState<MailComposePreset[]>([]);
   const [templates, setTemplates] = useState<MailComposePreset[]>([]);
+  const [campaignTemplates, setCampaignTemplates] = useState<MailComposePreset[]>(
+    [],
+  );
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [formKind, setFormKind] = useState<"signature" | "template">(
-    "signature",
-  );
+  const [formKind, setFormKind] = useState<
+    "signature" | "template" | "campaign"
+  >("signature");
   const [formName, setFormName] = useState("");
   const [formSubject, setFormSubject] = useState("");
   const [formBody, setFormBody] = useState("");
@@ -32,6 +35,7 @@ export function MailComposePresetsPanel({ accessToken }: Props) {
     const data = await fetchComposePresets(accessToken);
     setSignatures(data.signatures);
     setTemplates(mergeComposeTemplatesWithBuiltins(data.templates));
+    setCampaignTemplates(data.campaignTemplates ?? []);
   }, [accessToken]);
 
   useEffect(() => {
@@ -50,7 +54,10 @@ export function MailComposePresetsPanel({ accessToken }: Props) {
       setError("Ad ve metin zorunlu.");
       return;
     }
-    if (formKind === "template" && !formSubject.trim()) {
+    if (
+      (formKind === "template" || formKind === "campaign") &&
+      !formSubject.trim()
+    ) {
       setError("Şablon için konu zorunlu.");
       return;
     }
@@ -59,12 +66,12 @@ export function MailComposePresetsPanel({ accessToken }: Props) {
       await createComposePreset(accessToken, {
         kind: formKind,
         name: formName.trim(),
-        subject: formKind === "template" ? formSubject.trim() : undefined,
-        bodyText: formBody.trim(),
-        bodyHtml:
-          formKind === "signature" && formBodyHtml.trim()
-            ? formBodyHtml.trim()
+        subject:
+          formKind === "template" || formKind === "campaign"
+            ? formSubject.trim()
             : undefined,
+        bodyText: formBody.trim(),
+        bodyHtml: formBodyHtml.trim() ? formBodyHtml.trim() : undefined,
         isDefault: formKind === "signature" ? formDefault : undefined,
       });
       setFormName("");
@@ -110,7 +117,8 @@ export function MailComposePresetsPanel({ accessToken }: Props) {
           <li key={item.id}>
             <div>
               <strong>{item.name}</strong>
-              {item.kind === "template" && item.subject ? (
+              {(item.kind === "template" || item.kind === "campaign") &&
+              item.subject ? (
                 <span className="preset-meta"> — {item.subject}</span>
               ) : null}
               {showDefault && item.isDefault ? (
@@ -152,6 +160,11 @@ export function MailComposePresetsPanel({ accessToken }: Props) {
         Posta yöneticisi ek şablon tanımlayabilir.
       </p>
       {renderList(templates.filter((row) => !row.isSystem), false)}
+      <h3>Kampanya şablonları</h3>
+      <p className="preset-hint">
+        Kampanya modunda yaz ekranından seçilir (posta yöneticisi).
+      </p>
+      {renderList(campaignTemplates, false)}
       <h3>Yeni kayıt</h3>
       <div className="preset-form">
         <label>
@@ -159,11 +172,14 @@ export function MailComposePresetsPanel({ accessToken }: Props) {
           <select
             value={formKind}
             onChange={(e) =>
-              setFormKind(e.target.value as "signature" | "template")
+              setFormKind(
+                e.target.value as "signature" | "template" | "campaign",
+              )
             }
           >
             <option value="signature">İmza</option>
             <option value="template">Şablon</option>
+            <option value="campaign">Kampanya şablonu</option>
           </select>
         </label>
         <input
@@ -171,7 +187,7 @@ export function MailComposePresetsPanel({ accessToken }: Props) {
           value={formName}
           onChange={(e) => setFormName(e.target.value)}
         />
-        {formKind === "template" ? (
+        {formKind === "template" || formKind === "campaign" ? (
           <input
             placeholder="Konu"
             value={formSubject}
@@ -188,6 +204,15 @@ export function MailComposePresetsPanel({ accessToken }: Props) {
           <textarea
             className="preset-html"
             placeholder="HTML imza (isteğe bağlı): logo, telefon, bağlantılar"
+            rows={5}
+            value={formBodyHtml}
+            onChange={(e) => setFormBodyHtml(e.target.value)}
+          />
+        ) : null}
+        {formKind === "template" || formKind === "campaign" ? (
+          <textarea
+            className="preset-html"
+            placeholder="HTML gövde (isteğe bağlı)"
             rows={5}
             value={formBodyHtml}
             onChange={(e) => setFormBodyHtml(e.target.value)}

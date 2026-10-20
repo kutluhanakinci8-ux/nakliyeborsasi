@@ -39,6 +39,7 @@ export function MailClientShell({ mail }: Props) {
     allListSelected,
     applyComposeSignature,
     applyComposeTemplate,
+    applyComposeCampaignTemplate,
     applyDelayedSend,
     applyMessageReadLocal,
     canBulkSelect,
@@ -63,6 +64,7 @@ export function MailClientShell({ mail }: Props) {
     composeStoredAttachments,
     composeSubject,
     composeTemplates,
+    composeCampaignTemplates,
     composeText,
     composeTo,
     composeMergeReferans,
@@ -82,6 +84,12 @@ export function MailClientShell({ mail }: Props) {
     setComposeCampaignDelayMs,
     composeCampaignScheduleAt,
     setComposeCampaignScheduleAt,
+    composeCampaignSubjectB,
+    setComposeCampaignSubjectB,
+    composeCampaignDomainAllowlist,
+    setComposeCampaignDomainAllowlist,
+    composeCampaignNotifyCreator,
+    setComposeCampaignNotifyCreator,
     composeCampaignHistoryOpen,
     setComposeCampaignHistoryOpen,
     campaignResult,
@@ -1737,6 +1745,26 @@ export function MailClientShell({ mail }: Props) {
                     Satır başına e-posta; isteğe bağlı: e-posta, müşteri adı, referans
                   </p>
                   <div className="compose-campaign-tools">
+                    {composeCampaignTemplates.length > 0 ? (
+                      <label className="compose-preset-label">
+                        <span>Kampanya şablonu</span>
+                        <select
+                          className="compose-select"
+                          defaultValue=""
+                          onChange={(e) => {
+                            if (e.target.value) {
+                              applyComposeCampaignTemplate(e.target.value);
+                              e.target.value = "";
+                            }
+                          }}
+                        >
+                          <option value="">Seç…</option>
+                          {composeCampaignTemplates.map((t) => (
+                            <option key={t.id} value={t.id}>{t.name}</option>
+                          ))}
+                        </select>
+                      </label>
+                    ) : null}
                     <label className="compose-attach-label">
                       <span className="compose-attach-btn">CSV içe aktar</span>
                       <input
@@ -1778,6 +1806,40 @@ export function MailClientShell({ mail }: Props) {
                       value={composeCampaignScheduleAt}
                       onChange={(e) => setComposeCampaignScheduleAt(e.target.value)}
                     />
+                    <label className="compose-field-label" htmlFor="compose-campaign-subject-b">
+                      A/B konu (B) — 2., 4. alıcı…
+                    </label>
+                    <input
+                      id="compose-campaign-subject-b"
+                      type="text"
+                      className="compose-input"
+                      placeholder="İsteğe bağlı alternatif konu"
+                      value={composeCampaignSubjectB}
+                      onChange={(e) => setComposeCampaignSubjectB(e.target.value)}
+                    />
+                    <label className="compose-field-label" htmlFor="compose-campaign-domains">
+                      Alan adı filtresi
+                    </label>
+                    <input
+                      id="compose-campaign-domains"
+                      type="text"
+                      className="compose-input"
+                      placeholder="ornek.com, musteri.com.tr"
+                      value={composeCampaignDomainAllowlist}
+                      onChange={(e) => setComposeCampaignDomainAllowlist(e.target.value)}
+                    />
+                    {composeCampaignScheduleAt ? (
+                      <label className="preset-check">
+                        <input
+                          type="checkbox"
+                          checked={composeCampaignNotifyCreator}
+                          onChange={(e) =>
+                            setComposeCampaignNotifyCreator(e.target.checked)
+                          }
+                        />
+                        Zamanlandığında hesap e-postama özet gönder
+                      </label>
+                    ) : null}
                   </div>
                 </div>
               ) : (

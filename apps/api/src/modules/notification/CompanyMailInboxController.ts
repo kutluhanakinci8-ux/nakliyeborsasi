@@ -1329,6 +1329,9 @@ export class CompanyMailInboxController {
         attachments: body.attachments,
         merge: body.merge,
         delayMsBetweenRecipients: body.delayMsBetweenRecipients,
+        subjectB: body.subjectB?.trim() || undefined,
+        recipientDomainAllowlist: body.recipientDomainAllowlist,
+        notifyCreator: body.notifyCreator ?? false,
       },
     });
     const result = outcome.result;

@@ -6,7 +6,7 @@ import {
   UpdateDateColumn,
 } from "typeorm";
 
-export type MailComposePresetKind = "signature" | "template";
+export type MailComposePresetKind = "signature" | "template" | "campaign";
 
 @Entity({ name: "mail_compose_preset" })
 export class MailComposePresetEntity {

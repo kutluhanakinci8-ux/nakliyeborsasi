@@ -49,6 +49,7 @@ export class MailComposePresetService {
   ): Promise<{
     signatures: MailComposePresetDto[];
     templates: MailComposePresetDto[];
+    campaignTemplates: MailComposePresetDto[];
   }> {
     const builtins = listBuiltinMailComposeTemplateDtos().map((row) => ({
       ...row,
@@ -56,6 +57,7 @@ export class MailComposePresetService {
     }));
     let signatures: MailComposePresetDto[] = [];
     let orgTemplates: MailComposePresetDto[] = [];
+    let campaignTemplates: MailComposePresetDto[] = [];
     try {
       const rows = await this.presetRepository.find({
         where: { organizationId },
@@ -72,6 +74,9 @@ export class MailComposePresetService {
       orgTemplates = rows
         .filter((row) => row.kind === "template")
         .map((row) => this.toDto(row));
+      campaignTemplates = rows
+        .filter((row) => row.kind === "campaign")
+        .map((row) => this.toDto(row));
     } catch (error) {
       this.logger.warn(
         `compose-presets DB read failed org=${organizationId}: ${
@@ -80,7 +85,7 @@ export class MailComposePresetService {
       );
     }
     const templates = [...builtins, ...orgTemplates];
-    return { signatures, templates };
+    return { signatures, templates, campaignTemplates };
   }
 
   public async resolveDefaultSignatureForOutbound(
@@ -128,16 +133,22 @@ export class MailComposePresetService {
     },
     canManageOrgTemplates: boolean,
   ): Promise<MailComposePresetDto> {
-    if (input.kind === "template" && !canManageOrgTemplates) {
+    if (
+      (input.kind === "template" || input.kind === "campaign") &&
+      !canManageOrgTemplates
+    ) {
       throw new ForbiddenException(
         "Şablon oluşturmak için posta yöneticisi yetkisi gerekir.",
       );
     }
-    if (input.kind === "template" && !input.subject?.trim()) {
+    if (
+      (input.kind === "template" || input.kind === "campaign") &&
+      !input.subject?.trim()
+    ) {
       throw new BadRequestException("Şablon için konu zorunlu.");
     }
     if (
-      input.kind === "template" &&
+      (input.kind === "template" || input.kind === "campaign") &&
       input.bodyHtml?.trim() &&
       !input.bodyText?.trim()
     ) {
@@ -162,7 +173,9 @@ export class MailComposePresetService {
         kind: input.kind,
         name: input.name.trim(),
         subject:
-          input.kind === "template" ? input.subject?.trim() ?? null : null,
+          input.kind === "template" || input.kind === "campaign"
+            ? input.subject?.trim() ?? null
+            : null,
         bodyText: input.bodyText.trim(),
         bodyHtml: input.bodyHtml?.trim() || null,
         isDefault: Boolean(input.isDefault),
@@ -205,7 +218,10 @@ export class MailComposePresetService {
     if (input.bodyHtml !== undefined) {
       row.bodyHtml = input.bodyHtml?.trim() || null;
     }
-    if (row.kind === "template" && input.subject !== undefined) {
+    if (
+      (row.kind === "template" || row.kind === "campaign") &&
+      input.subject !== undefined
+    ) {
       row.subject = input.subject.trim();
     }
     if (input.isDefault !== undefined) {
@@ -252,7 +268,10 @@ export class MailComposePresetService {
     if (!row) {
       throw new NotFoundException("Kayıt bulunamadı");
     }
-    if (row.kind === "template" && !canManageOrgTemplates) {
+    if (
+      (row.kind === "template" || row.kind === "campaign") &&
+      !canManageOrgTemplates
+    ) {
       throw new ForbiddenException(
         "Şablon düzenlemek için posta yöneticisi yetkisi gerekir.",
       );

@@ -939,6 +939,9 @@ export async function composeCampaign(
     merge?: ComposeMergePayload;
     delayMsBetweenRecipients?: number;
     scheduleAt?: string;
+    subjectB?: string;
+    recipientDomainAllowlist?: string[];
+    notifyCreator?: boolean;
   },
 ) {
   return apiFetch<ComposeCampaignResult>(
@@ -1135,7 +1138,7 @@ export async function sendDraft(
 
 export type MailComposePreset = {
   id: string;
-  kind: "signature" | "template";
+  kind: "signature" | "template" | "campaign";
   name: string;
   subject: string | null;
   bodyText: string;
@@ -1150,6 +1153,7 @@ export async function fetchComposePresets(accessToken: string) {
   return apiFetch<{
     signatures: MailComposePreset[];
     templates: MailComposePreset[];
+    campaignTemplates: MailComposePreset[];
   }>(accessToken, "company/mail-inbox/compose-presets");
 }
 
@@ -1226,7 +1230,7 @@ export async function setDefaultMailSender(
 export async function createComposePreset(
   accessToken: string,
   body: {
-    kind: "signature" | "template";
+    kind: "signature" | "template" | "campaign";
     name: string;
     subject?: string;
     bodyText: string;

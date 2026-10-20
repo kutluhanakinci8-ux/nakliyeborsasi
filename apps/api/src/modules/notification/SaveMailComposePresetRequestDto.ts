@@ -7,8 +7,8 @@ import {
 } from "class-validator";
 
 export class SaveMailComposePresetRequestDto {
-  @IsIn(["signature", "template"])
-  public kind!: "signature" | "template";
+  @IsIn(["signature", "template", "campaign"])
+  public kind!: "signature" | "template" | "campaign";
 
   @IsString()
   @MaxLength(120)

@@ -213,6 +213,8 @@ export class MailMailboxComposeService {
     }>;
     merge?: { referans?: string; musteriAdi?: string };
     delayMsBetweenRecipients?: number;
+    subjectB?: string;
+    recipientDomainAllowlist?: string[];
     campaignId?: string;
   }): Promise<{
     campaignId: string;
@@ -241,10 +243,22 @@ export class MailMailboxComposeService {
     let sent = 0;
     let skippedSuppressed = 0;
     const failed: Array<{ email: string; error: string }> = [];
-    for (const row of recipients) {
+    const subjectB = params.subjectB?.trim() || "";
+    const domainAllowlist = normalizeCampaignDomainAllowlist(
+      params.recipientDomainAllowlist,
+    );
+    for (let index = 0; index < recipients.length; index += 1) {
+      const row = recipients[index];
       const email = row.email.trim().toLowerCase();
       if (!isLikelyEmail(email)) {
         failed.push({ email, error: "Geçersiz e-posta." });
+        continue;
+      }
+      if (
+        domainAllowlist.length > 0 &&
+        !recipientMatchesCampaignDomain(email, domainAllowlist)
+      ) {
+        failed.push({ email, error: "Alan adı filtresine uymuyor." });
         continue;
       }
       if (
@@ -260,12 +274,14 @@ export class MailMailboxComposeService {
         referans: row.referans?.trim() || params.merge?.referans,
         musteriAdi: row.musteriAdi?.trim() || params.merge?.musteriAdi,
       };
+      const subjectForRecipient =
+        subjectB && index % 2 === 1 ? subjectB : params.subject;
       try {
         await this.compose({
           organizationId: params.organizationId,
           userId: params.userId,
           to: email,
-          subject: params.subject,
+          subject: subjectForRecipient,
           text: params.text,
           html: params.html,
           attachments: params.attachments,
@@ -1050,6 +1066,30 @@ function stripHtml(html: string): string {
 
 function isLikelyEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function normalizeCampaignDomainAllowlist(
+  allowlist?: string[],
+): string[] {
+  if (!allowlist?.length) {
+    return [];
+  }
+  return allowlist
+    .map((row) => row.trim().toLowerCase().replace(/^@+/, ""))
+    .filter((row) => row.length > 0);
+}
+
+function recipientMatchesCampaignDomain(
+  email: string,
+  allowlist: string[],
+): boolean {
+  const domain = email.split("@")[1]?.toLowerCase();
+  if (!domain) {
+    return false;
+  }
+  return allowlist.some(
+    (allowed) => domain === allowed || domain.endsWith(`.${allowed}`),
+  );
 }
 
 function sleep(ms: number): Promise<void> {

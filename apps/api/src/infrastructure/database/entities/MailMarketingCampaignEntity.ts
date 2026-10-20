@@ -21,6 +21,12 @@ export type MailMarketingCampaignPayload = {
   attachments?: MailDelayedComposeAttachment[];
   merge?: { referans?: string; musteriAdi?: string };
   delayMsBetweenRecipients?: number;
+  /** A/B test: çift sıradaki alıcılar (1,3,5…) bu konuyu alır. */
+  subjectB?: string;
+  /** Örn. ["firma.com", "musteri.com.tr"] — boşsa filtre yok. */
+  recipientDomainAllowlist?: string[];
+  /** Zamanlanmış kampanyada oluşturucuya bilgi e-postası. */
+  notifyCreator?: boolean;
 };
 
 export type MailMarketingCampaignResult = {

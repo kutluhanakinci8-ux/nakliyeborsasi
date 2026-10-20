@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from "@nestjs/common";
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  UseGuards,
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { EmailOutboxEntity } from "../../infrastructure/database/entities/EmailOutboxEntity";
@@ -7,6 +15,8 @@ import { MailPublicApiGuard } from "./MailPublicApiGuard";
 import { MailPublicApiContextParam } from "./MailPublicApiRequestParam";
 import type { MailPublicApiRequestContext } from "./MailPublicApiGuard";
 import { MailPublicApiSendMessageDto } from "./MailPublicApiDto";
+import { MailPublicApiCampaignDto } from "./MailPublicApiCampaignDto";
+import { MailMarketingCampaignService } from "./MailMarketingCampaignService";
 import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
 
 @Controller("public/lerta-mail/v1")
@@ -15,6 +25,7 @@ export class MailPublicApiController {
   public constructor(
     private readonly emailOutboxService: EmailOutboxService,
     private readonly mailSaasSubscriptionService: MailSaasSubscriptionService,
+    private readonly mailMarketingCampaignService: MailMarketingCampaignService,
     @InjectRepository(EmailOutboxEntity)
     private readonly outboxRepository: Repository<EmailOutboxEntity>,
   ) {}
@@ -61,6 +72,45 @@ export class MailPublicApiController {
       messageId: row?.id ?? null,
       status: row?.status ?? "skipped",
       idempotencyKey,
+    };
+  }
+
+  @Post("campaigns")
+  public async createCampaign(
+    @MailPublicApiContextParam() ctx: MailPublicApiRequestContext,
+    @Body() body: MailPublicApiCampaignDto,
+  ) {
+    const scheduleAt = body.scheduleAt ? new Date(body.scheduleAt) : null;
+    if (scheduleAt && Number.isNaN(scheduleAt.getTime())) {
+      throw new BadRequestException("scheduleAt geçersiz.");
+    }
+    const outcome = await this.mailMarketingCampaignService.createAndRunOrSchedule({
+      organizationId: ctx.organizationId,
+      subject: body.subject,
+      scheduleAt,
+      payload: {
+        text: body.text,
+        html: body.html,
+        recipients: body.recipients.map((row) => ({
+          email: row.email,
+          musteriAdi: row.musteriAdi,
+          referans: row.referans,
+        })),
+        delayMsBetweenRecipients: body.delayMsBetweenRecipients,
+        subjectB: body.subjectB?.trim() || undefined,
+        recipientDomainAllowlist: body.recipientDomainAllowlist,
+        notifyCreator: false,
+      },
+    });
+    const result = outcome.result;
+    return {
+      campaignId: outcome.campaignId,
+      scheduled: outcome.scheduled,
+      scheduleAt: outcome.scheduleAt,
+      attempted: result?.attempted ?? body.recipients.length,
+      sent: result?.sent ?? 0,
+      skippedSuppressed: result?.skippedSuppressed ?? 0,
+      failed: result?.failed ?? [],
     };
   }
 
