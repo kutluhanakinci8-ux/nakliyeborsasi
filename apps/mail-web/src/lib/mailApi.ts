@@ -1050,6 +1050,25 @@ export async function fetchMailCampaignSummary(accessToken: string) {
   );
 }
 
+export async function downloadMailCampaignSummaryCsv(
+  accessToken: string,
+): Promise<{ blob: Blob; filename: string }> {
+  const response = await fetch(
+    `${resolveApiBaseUrl()}/company/mail-inbox/campaigns/summary/export.csv`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    },
+  );
+  if (!response.ok) {
+    throw new Error("Özet CSV indirilemedi.");
+  }
+  const disposition = response.headers.get("Content-Disposition");
+  const match = disposition?.match(/filename="([^"]+)"/);
+  const filename = match?.[1] ?? "kampanya-ozet.csv";
+  const blob = await response.blob();
+  return { blob, filename };
+}
+
 export type MailCampaignListPagination = {
   offset: number;
   limit: number;
@@ -1064,6 +1083,7 @@ export type MailCampaignListFilters = {
   createdAfter?: string;
   createdBefore?: string;
   sort?: "createdAt" | "scheduleAt";
+  hasFailures?: boolean;
 };
 
 function buildMailCampaignListQuery(
@@ -1090,7 +1110,8 @@ function buildMailCampaignListQuery(
     : "";
   const sortQuery =
     filters.sort === "scheduleAt" ? "&sort=scheduleAt" : "";
-  return `limit=${limit}${statusQuery}${tagQuery}${qQuery}${offsetQuery}${afterQuery}${beforeQuery}${sortQuery}`;
+  const failuresQuery = filters.hasFailures ? "&hasFailures=true" : "";
+  return `limit=${limit}${statusQuery}${tagQuery}${qQuery}${offsetQuery}${afterQuery}${beforeQuery}${sortQuery}${failuresQuery}`;
 }
 
 export async function fetchMailCampaigns(
@@ -1103,6 +1124,7 @@ export async function fetchMailCampaigns(
   createdAfter?: string,
   createdBefore?: string,
   sort?: "createdAt" | "scheduleAt",
+  hasFailures?: boolean,
 ) {
   const query = buildMailCampaignListQuery(limit, {
     status,
@@ -1112,6 +1134,7 @@ export async function fetchMailCampaigns(
     createdAfter,
     createdBefore,
     sort,
+    hasFailures,
   });
   return apiFetch<{
     ok: true;

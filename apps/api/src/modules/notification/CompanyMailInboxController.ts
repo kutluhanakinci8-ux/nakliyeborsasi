@@ -35,6 +35,7 @@ import { UpdateScheduledMailCampaignContentDto } from "./UpdateScheduledMailCamp
 import { BulkCancelMailCampaignsRequestDto } from "./BulkCancelMailCampaignsRequestDto";
 import {
   MailMarketingCampaignService,
+  parseMailCampaignHasFailures,
   parseMailCampaignListSort,
 } from "./MailMarketingCampaignService";
 import { MailCampaignRecipientPreviewService } from "./MailCampaignRecipientPreviewService";
@@ -1420,6 +1421,22 @@ export class CompanyMailInboxController {
     return { ok: true, ...outcome };
   }
 
+  @Get("campaigns/summary/export.csv")
+  public async exportCampaignSummaryCsv(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Res() res: Response,
+  ) {
+    this.assertMailInboxWriter(user);
+    const { filename, csv } =
+      await this.mailMarketingCampaignService.exportSummaryCsv(user.companyId);
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${filename}"`,
+    );
+    res.send(`\uFEFF${csv}`);
+  }
+
   @Get("campaigns/summary")
   public async campaignSummary(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
@@ -1443,11 +1460,13 @@ export class CompanyMailInboxController {
     @Query("createdAfter") createdAfter?: string,
     @Query("createdBefore") createdBefore?: string,
     @Query("sort") sort?: string,
+    @Query("hasFailures") hasFailures?: string,
   ) {
     this.assertMailInboxWriter(user);
     const parsed = limit ? Number.parseInt(limit, 10) : 40;
     const parsedOffset = offset ? Number.parseInt(offset, 10) : 0;
     const sortKey = parseMailCampaignListSort(sort);
+    const failuresOnly = parseMailCampaignHasFailures(hasFailures);
     const allowed: MailMarketingCampaignStatus[] = [
       "scheduled",
       "running",
@@ -1469,6 +1488,7 @@ export class CompanyMailInboxController {
       createdAfter?.trim() || undefined,
       createdBefore?.trim() || undefined,
       sortKey,
+      failuresOnly,
     );
     return { ok: true, ...list };
   }
@@ -1483,6 +1503,7 @@ export class CompanyMailInboxController {
     @Query("createdAfter") createdAfter?: string,
     @Query("createdBefore") createdBefore?: string,
     @Query("sort") sort?: string,
+    @Query("hasFailures") hasFailures?: string,
   ) {
     this.assertMailInboxWriter(user);
     const allowed: MailMarketingCampaignStatus[] = [
@@ -1505,6 +1526,7 @@ export class CompanyMailInboxController {
         createdAfter?.trim() || undefined,
         createdBefore?.trim() || undefined,
         parseMailCampaignListSort(sort),
+        parseMailCampaignHasFailures(hasFailures),
       );
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader(

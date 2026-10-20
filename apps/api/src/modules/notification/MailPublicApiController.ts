@@ -26,6 +26,7 @@ import { UpdateScheduledMailCampaignContentDto } from "./UpdateScheduledMailCamp
 import { BulkCancelMailCampaignsRequestDto } from "./BulkCancelMailCampaignsRequestDto";
 import {
   MailMarketingCampaignService,
+  parseMailCampaignHasFailures,
   parseMailCampaignListSort,
 } from "./MailMarketingCampaignService";
 import type { MailMarketingCampaignStatus } from "../../infrastructure/database/entities/MailMarketingCampaignEntity";
@@ -78,9 +79,14 @@ export class MailPublicApiController {
         },
         {
           method: "GET",
+          path: "/campaigns/summary/export.csv",
+          description: "30 günlük özet CSV",
+        },
+        {
+          method: "GET",
           path: "/campaigns",
           description:
-            "Kampanya listesi (limit, offset, status, tag, q, createdAfter, createdBefore, sort)",
+            "Kampanya listesi (limit, offset, status, tag, q, createdAfter, createdBefore, sort, hasFailures)",
         },
         {
           method: "GET",
@@ -200,6 +206,23 @@ export class MailPublicApiController {
     };
   }
 
+  @Get("campaigns/summary/export.csv")
+  public async exportCampaignSummaryCsv(
+    @MailPublicApiContextParam() ctx: MailPublicApiRequestContext,
+    @Res() res: Response,
+  ) {
+    const { filename, csv } =
+      await this.mailMarketingCampaignService.exportSummaryCsv(
+        ctx.organizationId,
+      );
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${filename}"`,
+    );
+    res.send(`\uFEFF${csv}`);
+  }
+
   @Get("campaigns/summary")
   public async campaignSummary(
     @MailPublicApiContextParam() ctx: MailPublicApiRequestContext,
@@ -222,10 +245,12 @@ export class MailPublicApiController {
     @Query("createdAfter") createdAfter?: string,
     @Query("createdBefore") createdBefore?: string,
     @Query("sort") sort?: string,
+    @Query("hasFailures") hasFailures?: string,
   ) {
     const parsed = limit ? Number.parseInt(limit, 10) : 20;
     const parsedOffset = offset ? Number.parseInt(offset, 10) : 0;
     const sortKey = parseMailCampaignListSort(sort);
+    const failuresOnly = parseMailCampaignHasFailures(hasFailures);
     const allowed: MailMarketingCampaignStatus[] = [
       "scheduled",
       "running",
@@ -247,6 +272,7 @@ export class MailPublicApiController {
       createdAfter?.trim() || undefined,
       createdBefore?.trim() || undefined,
       sortKey,
+      failuresOnly,
     );
     return list;
   }
@@ -261,6 +287,7 @@ export class MailPublicApiController {
     @Query("createdAfter") createdAfter?: string,
     @Query("createdBefore") createdBefore?: string,
     @Query("sort") sort?: string,
+    @Query("hasFailures") hasFailures?: string,
   ) {
     const allowed: MailMarketingCampaignStatus[] = [
       "scheduled",
@@ -282,6 +309,7 @@ export class MailPublicApiController {
         createdAfter?.trim() || undefined,
         createdBefore?.trim() || undefined,
         parseMailCampaignListSort(sort),
+        parseMailCampaignHasFailures(hasFailures),
       );
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader(

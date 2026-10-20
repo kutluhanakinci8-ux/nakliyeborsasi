@@ -2090,6 +2090,12 @@ html[data-mail-theme="dark"] .login-error {
   margin-right: 6px;
 }
 
+.mail-campaign-history-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .mail-campaign-content-edit {
   display: flex;
   flex-direction: column;

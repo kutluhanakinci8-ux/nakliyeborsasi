@@ -19,6 +19,7 @@ API anahtarları posta konsol → Entegrasyon üzerinden oluşturulur.
 | GET | `/messages/:id` | Gönderim durumu |
 | POST | `/campaigns` | Pazarlama kampanyası |
 | GET | `/campaigns/summary` | Son 30 gün özet + `availableTags` |
+| GET | `/campaigns/summary/export.csv` | 30 günlük özet CSV |
 | GET | `/campaigns` | Kampanya listesi (`limit`, `offset`, `status`, `tag`, `q`, `createdAfter`, `createdBefore`, `sort`) |
 | GET | `/campaigns/export.csv` | Filtrelenmiş liste CSV (en fazla 200 satır) |
 | GET | `/campaigns/:campaignId` | Kampanya durumu ve sonuç |
@@ -113,3 +114,13 @@ Başarısız HTTP veya ağ hatalarında uç nokta **3 denemeye** kadar otomatik 
 - Zamanlanmış kampanya içerik düzenleme (`subject`, `text`, `subjectB`) → `campaign.scheduled` webhook
 - Özet: `failedRecipientsInWindow`, `suppressedSkippedInWindow`; liste `successRatePercent`
 - Web: **İçerik** düzenleme, zamanlanmışlar için **Toplu iptal**
+
+## Faz 18
+
+- `GET /campaigns/summary/export.csv` — 30 günlük metrik + etiket kırılımı CSV
+- Liste / liste CSV: `hasFailures=true` — sonuçta başarısız alıcı olan kampanyalar
+- Web: **Başarısız alıcı** filtresi, **30g özet CSV** indirme
+
+## Deploy (faz sonrası)
+
+`main` merge sonrası: `bash scripts/trigger-vps-deploy.sh` veya `main` push (`.github/workflows/deploy-vps.yml`). Repo secrets: `VPS_HOST`, `VPS_SSH_KEY`, isteğe bağlı `VPS_USER`.

@@ -18,6 +18,7 @@ import { EmailSuppressionService } from "./EmailSuppressionService";
 import {
   buildCampaignListExportCsv,
   buildCampaignRecipientExportCsv,
+  buildCampaignSummaryExportCsv,
 } from "./MailCampaignExportCsv";
 import type { MailMarketingCampaignStatus } from "../../infrastructure/database/entities/MailMarketingCampaignEntity";
 import { normalizeMailCampaignTags } from "./MailCampaignTags";
@@ -34,6 +35,14 @@ export function parseMailCampaignListSort(
   raw?: string,
 ): MailCampaignListSort {
   return raw === "scheduleAt" ? "scheduleAt" : "createdAt";
+}
+
+export function parseMailCampaignHasFailures(raw?: string): boolean {
+  if (!raw?.trim()) {
+    return false;
+  }
+  const value = raw.trim().toLowerCase();
+  return value === "1" || value === "true" || value === "yes";
 }
 
 @Injectable()
@@ -164,6 +173,7 @@ export class MailMarketingCampaignService {
     createdAfter?: string,
     createdBefore?: string,
     sort: MailCampaignListSort = "createdAt",
+    hasFailures = false,
   ) {
     const take = Math.min(80, Math.max(1, limit));
     const skip = Math.min(500, Math.max(0, offset));
@@ -174,6 +184,7 @@ export class MailMarketingCampaignService {
       createdAfter,
       createdBefore,
       sort,
+      hasFailures,
     });
     qb.skip(skip).take(take);
     const rows = await qb.getMany();
@@ -238,6 +249,15 @@ export class MailMarketingCampaignService {
     };
   }
 
+  public async exportSummaryCsv(
+    organizationId: string,
+  ): Promise<{ filename: string; csv: string }> {
+    const summary = await this.getSummaryForOrganization(organizationId);
+    const csv = buildCampaignSummaryExportCsv(summary);
+    const stamp = new Date().toISOString().slice(0, 10);
+    return { filename: `kampanya-ozet-${stamp}.csv`, csv };
+  }
+
   public async exportCampaignListCsv(
     organizationId: string,
     status?: MailMarketingCampaignStatus,
@@ -246,6 +266,7 @@ export class MailMarketingCampaignService {
     createdAfter?: string,
     createdBefore?: string,
     sort: MailCampaignListSort = "createdAt",
+    hasFailures = false,
   ): Promise<{ filename: string; csv: string }> {
     const qb = this.buildCampaignListQuery(organizationId, {
       status,
@@ -254,6 +275,7 @@ export class MailMarketingCampaignService {
       createdAfter,
       createdBefore,
       sort,
+      hasFailures,
     });
     qb.take(MAX_LIST_EXPORT_ROWS);
     const rows = await qb.getMany();
@@ -821,6 +843,7 @@ export class MailMarketingCampaignService {
       createdAfter?: string;
       createdBefore?: string;
       sort: MailCampaignListSort;
+      hasFailures?: boolean;
     },
   ) {
     const tagNorm = filters.tag?.trim().toLowerCase();
@@ -848,6 +871,11 @@ export class MailMarketingCampaignService {
     const before = this.parseOptionalDateFilter(filters.createdBefore);
     if (before) {
       qb.andWhere("c.createdAt <= :createdBefore", { createdBefore: before });
+    }
+    if (filters.hasFailures) {
+      qb.andWhere(
+        "c.result IS NOT NULL AND jsonb_array_length(COALESCE(c.result::jsonb->'failed', '[]'::jsonb)) > 0",
+      );
     }
     if (filters.sort === "scheduleAt") {
       qb.orderBy("c.scheduleAt", "ASC", "NULLS LAST");

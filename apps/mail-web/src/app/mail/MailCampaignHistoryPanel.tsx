@@ -8,6 +8,7 @@ import {
   cloneMailCampaignSchedule,
   downloadMailCampaignCsv,
   downloadMailCampaignListCsv,
+  downloadMailCampaignSummaryCsv,
   fetchMailCampaignDetail,
   fetchMailCampaigns,
   fetchMailCampaignSummary,
@@ -91,6 +92,8 @@ export function MailCampaignHistoryPanel({
   const [bulkSelectMode, setBulkSelectMode] = useState(false);
   const [bulkSelected, setBulkSelected] = useState<string[]>([]);
   const [bulkBusy, setBulkBusy] = useState(false);
+  const [hasFailuresOnly, setHasFailuresOnly] = useState(false);
+  const [summaryExportBusy, setSummaryExportBusy] = useState(false);
 
   useEffect(() => {
     const timer = window.setTimeout(
@@ -114,6 +117,7 @@ export function MailCampaignHistoryPanel({
           dateRangeStart(createdFrom),
           dateRangeEnd(createdTo),
           sortFilter,
+          hasFailuresOnly || undefined,
         );
         setRows((prev) =>
           append ? [...prev, ...listData.campaigns] : listData.campaigns,
@@ -131,6 +135,7 @@ export function MailCampaignHistoryPanel({
       createdFrom,
       createdTo,
       sortFilter,
+      hasFailuresOnly,
     ],
   );
 
@@ -183,6 +188,7 @@ export function MailCampaignHistoryPanel({
           createdAfter: dateRangeStart(createdFrom),
           createdBefore: dateRangeEnd(createdTo),
           sort: sortFilter,
+          hasFailures: hasFailuresOnly || undefined,
         },
       );
       const url = URL.createObjectURL(blob);
@@ -348,6 +354,14 @@ export function MailCampaignHistoryPanel({
             onChange={(e) => setCreatedTo(e.target.value)}
           />
         </label>
+        <label className="compose-preset-label mail-campaign-history-check">
+          <span>Başarısız alıcı</span>
+          <input
+            type="checkbox"
+            checked={hasFailuresOnly}
+            onChange={(e) => setHasFailuresOnly(e.target.checked)}
+          />
+        </label>
         <label className="compose-preset-label">
           <span>Sıralama</span>
           <select
@@ -372,6 +386,27 @@ export function MailCampaignHistoryPanel({
           onClick={() => void onDownloadListCsv()}
         >
           {listExportBusy ? "Hazırlanıyor…" : "Filtreli liste CSV"}
+        </button>
+        <button
+          type="button"
+          className="compose-chip-btn"
+          disabled={summaryExportBusy}
+          onClick={() => {
+            setSummaryExportBusy(true);
+            void downloadMailCampaignSummaryCsv(accessToken)
+              .then(({ blob, filename }) => {
+                const url = URL.createObjectURL(blob);
+                const anchor = document.createElement("a");
+                anchor.href = url;
+                anchor.download = filename;
+                anchor.click();
+                URL.revokeObjectURL(url);
+              })
+              .catch(() => setError("Özet CSV indirilemedi."))
+              .finally(() => setSummaryExportBusy(false));
+          }}
+        >
+          {summaryExportBusy ? "Hazırlanıyor…" : "30g özet CSV"}
         </button>
         <button
           type="button"

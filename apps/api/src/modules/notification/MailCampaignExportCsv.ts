@@ -37,6 +37,40 @@ export function buildCampaignListExportCsv(rows: CampaignListExportRow[]): strin
   return [header, ...lines].join("\n");
 }
 
+export function buildCampaignSummaryExportCsv(summary: {
+  windowDays: number;
+  campaignsInWindow: number;
+  recipientsInWindow: number;
+  sentInWindow: number;
+  failedRecipientsInWindow: number;
+  suppressedSkippedInWindow: number;
+  tagCountsInWindow: Record<string, number>;
+}): string {
+  const header =
+    "metrik,deger";
+  const rows = [
+    ["pencere_gun", String(summary.windowDays)],
+    ["kampanya_sayisi", String(summary.campaignsInWindow)],
+    ["alici", String(summary.recipientsInWindow)],
+    ["gonderilen", String(summary.sentInWindow)],
+    ["basarisiz_alici", String(summary.failedRecipientsInWindow)],
+    ["durdurulmus_atlanan", String(summary.suppressedSkippedInWindow)],
+  ];
+  const escape = (value: string) => {
+    if (value.includes(",") || value.includes('"')) {
+      return `"${value.replace(/"/g, '""')}"`;
+    }
+    return value;
+  };
+  const lines = rows.map(([key, value]) =>
+    [escape(key), escape(value)].join(","),
+  );
+  const tagLines = Object.entries(summary.tagCountsInWindow)
+    .sort((a, b) => b[1] - a[1])
+    .map(([tag, count]) => `etiket_${escape(tag)},${count}`);
+  return [header, ...lines, "", "# etiketler", ...tagLines].join("\n");
+}
+
 export function buildCampaignRecipientExportCsv(
   row: MailMarketingCampaignEntity,
   recipientStatus: Array<{
