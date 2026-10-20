@@ -26,9 +26,11 @@ export type MailDelayedComposePayload = {
 export type MailDelayedSendPayload =
   | ({
       kind: "compose";
+      userId: string;
     } & MailDelayedComposePayload)
   | {
       kind: "reply";
+      userId: string;
       inboundMessageId: string;
       text: string;
       cc?: string;
@@ -38,6 +40,7 @@ export type MailDelayedSendPayload =
     }
   | {
       kind: "forward";
+      userId: string;
       inboundMessageId: string;
       to: string;
       text?: string;

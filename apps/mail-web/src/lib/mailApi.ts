@@ -1028,6 +1028,7 @@ export type MailComposePreset = {
   name: string;
   subject: string | null;
   bodyText: string;
+  bodyHtml?: string | null;
   isDefault: boolean;
   /** API: hazır sistem şablonları (düzenlenemez). */
   isSystem?: boolean;
@@ -1118,6 +1119,7 @@ export async function createComposePreset(
     name: string;
     subject?: string;
     bodyText: string;
+    bodyHtml?: string | null;
     isDefault?: boolean;
   },
 ) {
@@ -1136,6 +1138,7 @@ export async function updateComposePreset(
     name?: string;
     subject?: string;
     bodyText?: string;
+    bodyHtml?: string | null;
     isDefault?: boolean;
   },
 ) {

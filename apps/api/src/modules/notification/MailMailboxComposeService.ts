@@ -24,8 +24,8 @@ import { MailDomainEntity } from "../../infrastructure/database/entities/MailDom
 import { MailOrganizationIdentityService } from "./MailOrganizationIdentityService";
 import { MailTenantSubdomainService } from "./MailTenantSubdomainService";
 import { MailImapMaildirService } from "./MailImapMaildirService";
-import { resolveOutboundHtml } from "./MailOutboundHtmlTemplate";
 import { buildOutgoingSentMime } from "./MailSentMimeBuilder";
+import { MailMailboxOutboundContentService } from "./MailMailboxOutboundContentService";
 import { MailSubscriptionLifecycleService } from "./MailSubscriptionLifecycleService";
 import { MailOrganizationWebhookDispatcherService } from "./MailOrganizationWebhookDispatcherService";
 
@@ -50,6 +50,7 @@ export class MailMailboxComposeService {
     private readonly mailSubscriptionLifecycleService: MailSubscriptionLifecycleService,
     private readonly notificationConfigurationService: NotificationConfigurationService,
     private readonly mailOrganizationWebhookDispatcherService: MailOrganizationWebhookDispatcherService,
+    private readonly mailMailboxOutboundContentService: MailMailboxOutboundContentService,
     @InjectRepository(MailSenderIdentityEntity)
     private readonly senderRepository: Repository<MailSenderIdentityEntity>,
     @InjectRepository(MailDomainEntity)
@@ -64,6 +65,7 @@ export class MailMailboxComposeService {
 
   public async compose(params: {
     organizationId: string;
+    userId?: string;
     to: string;
     cc?: string;
     bcc?: string;
@@ -93,7 +95,11 @@ export class MailMailboxComposeService {
       );
     const subject = params.subject.trim();
     const toAddress = params.to.trim().toLowerCase();
-    const outboundHtml = resolveOutboundHtml(params.text, params.html, {
+    const outbound = await this.mailMailboxOutboundContentService.prepare({
+      organizationId: params.organizationId,
+      userId: params.userId,
+      text: params.text,
+      html: params.html,
       fromHeader,
     });
     let smtpMessageId: string | null;
@@ -105,8 +111,9 @@ export class MailMailboxComposeService {
         cc: normalizeOptionalRecipients(params.cc),
         bcc: normalizeOptionalRecipients(params.bcc),
         subject,
-        text: params.text,
-        html: outboundHtml,
+        text: outbound.text,
+        html: outbound.html,
+        outboundBranding: outbound.branding,
         replyTo,
         attachments: nodemailerAttachments,
       });
@@ -142,7 +149,7 @@ export class MailMailboxComposeService {
         fromAddress: fromEmail,
         toAddress,
         subject,
-        bodyText: params.text,
+        bodyText: outbound.text,
         relatedInboundMessageId: null,
         smtpMessageId,
       }),
@@ -164,8 +171,8 @@ export class MailMailboxComposeService {
       fromHeader,
       to: params.to.trim(),
       subject,
-      text: params.text,
-      html: outboundHtml,
+      text: outbound.text,
+      html: outbound.html,
       smtpMessageId,
     });
     return { sentId: sent.id, smtpMessageId };
@@ -173,6 +180,7 @@ export class MailMailboxComposeService {
 
   public async reply(params: {
     organizationId: string;
+    userId?: string;
     inboundMessageId: string;
     text: string;
     cc?: string;
@@ -224,7 +232,10 @@ export class MailMailboxComposeService {
       params.cc,
     );
     const toAddress = inbound.fromAddress.toLowerCase();
-    const outboundHtml = resolveOutboundHtml(params.text, undefined, {
+    const outbound = await this.mailMailboxOutboundContentService.prepare({
+      organizationId: params.organizationId,
+      userId: params.userId,
+      text: params.text,
       fromHeader,
     });
     let smtpMessageId: string | null;
@@ -236,8 +247,9 @@ export class MailMailboxComposeService {
         cc: normalizeOptionalRecipients(replyAll.cc),
         bcc: normalizeOptionalRecipients(params.bcc),
         subject,
-        text: params.text,
-        html: outboundHtml,
+        text: outbound.text,
+        html: outbound.html,
+        outboundBranding: outbound.branding,
         replyTo,
         inReplyTo,
         references: inReplyTo,
@@ -263,7 +275,7 @@ export class MailMailboxComposeService {
         fromAddress: fromEmail,
         toAddress: inbound.fromAddress,
         subject,
-        bodyText: params.text,
+        bodyText: outbound.text,
         relatedInboundMessageId: inbound.id,
         smtpMessageId,
       }),
@@ -288,8 +300,8 @@ export class MailMailboxComposeService {
       fromHeader,
       to: replyAll.to,
       subject,
-      text: params.text,
-      html: outboundHtml,
+      text: outbound.text,
+      html: outbound.html,
       smtpMessageId,
     });
     return { sentId: sent.id, smtpMessageId };
@@ -297,6 +309,7 @@ export class MailMailboxComposeService {
 
   public async forward(params: {
     organizationId: string;
+    userId?: string;
     inboundMessageId: string;
     to: string;
     text?: string;
@@ -349,7 +362,12 @@ export class MailMailboxComposeService {
       );
     const toList = normalizeRecipientList(params.to);
     const toAddress = toList.toLowerCase();
-    const outboundHtml = resolveOutboundHtml(text, undefined, { fromHeader });
+    const outbound = await this.mailMailboxOutboundContentService.prepare({
+      organizationId: params.organizationId,
+      userId: params.userId,
+      text,
+      fromHeader,
+    });
     let smtpMessageId: string | null;
     try {
       smtpMessageId = await this.smtpEmailSender.send({
@@ -357,8 +375,9 @@ export class MailMailboxComposeService {
         envelopeMailFrom,
         to: toList,
         subject,
-        text,
-        html: outboundHtml,
+        text: outbound.text,
+        html: outbound.html,
+        outboundBranding: outbound.branding,
         replyTo,
         attachments: nodemailerAttachments,
       });
@@ -382,7 +401,7 @@ export class MailMailboxComposeService {
         fromAddress: fromEmail,
         toAddress,
         subject,
-        bodyText: text,
+        bodyText: outbound.text,
         relatedInboundMessageId: inbound.id,
         smtpMessageId,
       }),
@@ -407,8 +426,8 @@ export class MailMailboxComposeService {
       fromHeader,
       to: toList,
       subject,
-      text,
-      html: outboundHtml,
+      text: outbound.text,
+      html: outbound.html,
       smtpMessageId,
     });
     return { sentId: sent.id, smtpMessageId };

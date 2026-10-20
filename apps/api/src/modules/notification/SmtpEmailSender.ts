@@ -8,6 +8,7 @@ import { NotificationConfigurationService } from "./NotificationConfigurationSer
 import {
   buildBrandedPlainText,
   isLertaBrandedOutboundHtml,
+  type OutboundWrapBranding,
 } from "./MailOutboundHtmlTemplate";
 import { collectSmtpEnvelopeRecipients } from "./SmtpEnvelopeHelper";
 
@@ -38,6 +39,7 @@ export class SmtpEmailSender {
       content: Buffer;
       contentType?: string;
     }[];
+    outboundBranding?: OutboundWrapBranding;
   }): Promise<string | null> {
     if (!this.notificationConfigurationService.isEmailEnabled()) {
       this.logger.warn(`EMAIL_ENABLED=false — skipped send to ${params.to}`);
@@ -81,7 +83,11 @@ export class SmtpEmailSender {
         })),
       };
       if (brandedHtml) {
-        mail.text = buildBrandedPlainText(headerFrom, params.text);
+        mail.text = buildBrandedPlainText(
+          headerFrom,
+          params.text,
+          params.outboundBranding,
+        );
         mail.headers = {
           ...(mail.headers ?? {}),
           "X-Lerta-Posta-Outbound": "v2",

@@ -19,6 +19,7 @@ export default function BrandingPage() {
   const [branding, setBranding] = useState<MailBrandingSnapshot | null>(null);
   const [logoUrl, setLogoUrl] = useState("");
   const [emailBrandTitle, setEmailBrandTitle] = useState("");
+  const [emailAccentColor, setEmailAccentColor] = useState("#1a1647");
   const [defaultFromDisplayName, setDefaultFromDisplayName] = useState("");
   const [hidePlatformEmailChrome, setHidePlatformEmailChrome] = useState(false);
   const [message, setMessage] = useState("");
@@ -37,6 +38,7 @@ export default function BrandingPage() {
         setBranding(data.branding);
         setLogoUrl(data.branding.logoUrl ?? "");
         setEmailBrandTitle(data.branding.emailBrandTitle ?? "");
+        setEmailAccentColor(data.branding.emailAccentColor ?? "#1a1647");
         setDefaultFromDisplayName(data.branding.defaultFromDisplayName ?? "");
         setHidePlatformEmailChrome(data.branding.hidePlatformEmailChrome);
       } catch {
@@ -57,6 +59,7 @@ export default function BrandingPage() {
       const data = await updateMailBranding(accessToken, {
         logoUrl: logoUrl.trim() || null,
         emailBrandTitle: emailBrandTitle.trim() || null,
+        emailAccentColor: emailAccentColor.trim() || null,
         defaultFromDisplayName: defaultFromDisplayName.trim() || null,
         hidePlatformEmailChrome,
       });
@@ -103,6 +106,17 @@ export default function BrandingPage() {
               value={emailBrandTitle}
               onChange={(e) => setEmailBrandTitle(e.target.value)}
               maxLength={120}
+              style={{ width: "100%", marginTop: 4 }}
+            />
+          </label>
+          <label style={{ display: "block", marginBottom: 12 }}>
+            E-posta üst şerit rengi
+            <input
+              className="input"
+              value={emailAccentColor}
+              onChange={(e) => setEmailAccentColor(e.target.value)}
+              placeholder="#1a1647"
+              maxLength={16}
               style={{ width: "100%", marginTop: 4 }}
             />
           </label>

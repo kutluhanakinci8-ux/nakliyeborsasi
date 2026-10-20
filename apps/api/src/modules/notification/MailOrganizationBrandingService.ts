@@ -15,12 +15,14 @@ import {
   appendTenantTrustFooter,
   type TenantTrustFooterMode,
 } from "./MailTenantEmailBranding";
+import type { OutboundWrapBranding } from "./MailOutboundHtmlTemplate";
 
 export type MailOrganizationBrandingSnapshot = {
   allowed: boolean;
   planCode: string | null;
   logoUrl: string | null;
   emailBrandTitle: string | null;
+  emailAccentColor: string | null;
   defaultFromDisplayName: string | null;
   hidePlatformEmailChrome: boolean;
   detailTr: string;
@@ -29,6 +31,7 @@ export type MailOrganizationBrandingSnapshot = {
 export type UpdateMailOrganizationBrandingInput = {
   logoUrl?: string | null;
   emailBrandTitle?: string | null;
+  emailAccentColor?: string | null;
   defaultFromDisplayName?: string | null;
   hidePlatformEmailChrome?: boolean;
 };
@@ -59,6 +62,7 @@ export class MailOrganizationBrandingService {
       planCode: plan.planCode,
       logoUrl: row?.logoUrl ?? null,
       emailBrandTitle: row?.emailBrandTitle ?? null,
+      emailAccentColor: row?.emailAccentColor ?? null,
       defaultFromDisplayName: row?.defaultFromDisplayName ?? null,
       hidePlatformEmailChrome: row?.hidePlatformEmailChrome ?? false,
       detailTr: allowed
@@ -107,6 +111,9 @@ export class MailOrganizationBrandingService {
     if (input.emailBrandTitle !== undefined) {
       row.emailBrandTitle = this.normalizeShortText(input.emailBrandTitle);
     }
+    if (input.emailAccentColor !== undefined) {
+      row.emailAccentColor = this.normalizeAccentColor(input.emailAccentColor);
+    }
     if (input.defaultFromDisplayName !== undefined) {
       row.defaultFromDisplayName = this.normalizeShortText(
         input.defaultFromDisplayName,
@@ -121,6 +128,29 @@ export class MailOrganizationBrandingService {
     }
     await this.brandingRepository.save(row);
     return this.getSnapshot(organizationId);
+  }
+
+  /** Webmail SMTP çıkış sarmalayıcısı (tüm planlar: firma adı; Enterprise: logo/renk). */
+  public async resolveOutboundWrapBranding(
+    organizationId: string,
+    companyName: string,
+  ): Promise<OutboundWrapBranding> {
+    const plan = await this.mailSaasSubscriptionService.getOrganizationMailPlan(
+      organizationId,
+    );
+    const whiteLabel = this.isWhiteLabelAllowedForPlanCode(plan.planCode);
+    const row = await this.brandingRepository.findOne({
+      where: { organizationId },
+    });
+    const brandTitle =
+      row?.emailBrandTitle?.trim() || companyName.trim() || "Lerta Posta";
+    return {
+      brandTitle,
+      logoUrl: whiteLabel && row?.logoUrl?.trim() ? row.logoUrl.trim() : null,
+      accentColor:
+        (whiteLabel && row?.emailAccentColor?.trim()) || "#1a1647",
+      hidePlatformFooter: whiteLabel && Boolean(row?.hidePlatformEmailChrome),
+    };
   }
 
   public async resolveDefaultFromDisplayName(
@@ -222,6 +252,22 @@ export class MailOrganizationBrandingService {
     }
     sender.displayName = displayName.trim().slice(0, 120);
     await this.senderRepository.save(sender);
+  }
+
+  private normalizeAccentColor(value: string | null): string | null {
+    if (value === null) {
+      return null;
+    }
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return null;
+    }
+    if (!/^#[0-9a-fA-F]{6}$/.test(trimmed)) {
+      throw new BadRequestException(
+        "Vurgu rengi #RRGGBB formatında olmalıdır (ör. #1a1647).",
+      );
+    }
+    return trimmed.toLowerCase();
   }
 
   private normalizeShortText(value: string | null): string | null {

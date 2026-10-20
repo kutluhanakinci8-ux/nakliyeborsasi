@@ -24,6 +24,11 @@ export class SaveMailComposePresetRequestDto {
   public bodyText!: string;
 
   @IsOptional()
+  @IsString()
+  @MaxLength(50_000)
+  public bodyHtml?: string | null;
+
+  @IsOptional()
   @IsBoolean()
   public isDefault?: boolean;
 }

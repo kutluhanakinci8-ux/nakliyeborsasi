@@ -22,9 +22,15 @@ type MailComposePresetDto = {
   name: string;
   subject: string | null;
   bodyText: string;
+  bodyHtml?: string | null;
   isDefault: boolean;
   isSystem: boolean;
   updatedAt: string;
+};
+
+export type OutboundSignaturePreset = {
+  bodyText: string;
+  bodyHtml: string | null;
 };
 
 @Injectable()
@@ -44,7 +50,10 @@ export class MailComposePresetService {
     signatures: MailComposePresetDto[];
     templates: MailComposePresetDto[];
   }> {
-    const builtins = listBuiltinMailComposeTemplateDtos();
+    const builtins = listBuiltinMailComposeTemplateDtos().map((row) => ({
+      ...row,
+      bodyHtml: null as string | null,
+    }));
     let signatures: MailComposePresetDto[] = [];
     let orgTemplates: MailComposePresetDto[] = [];
     try {
@@ -74,6 +83,38 @@ export class MailComposePresetService {
     return { signatures, templates };
   }
 
+  public async resolveDefaultSignatureForOutbound(
+    organizationId: string,
+    userId: string,
+  ): Promise<OutboundSignaturePreset | null> {
+    try {
+      const rows = await this.presetRepository.find({
+        where: { organizationId, kind: "signature" },
+        order: { isDefault: "DESC", updatedAt: "DESC" },
+        take: 50,
+      });
+      const eligible = rows.filter(
+        (row) => row.ownerUserId === userId || row.ownerUserId === null,
+      );
+      const picked =
+        eligible.find((row) => row.isDefault) ?? eligible[0] ?? null;
+      if (!picked) {
+        return null;
+      }
+      return {
+        bodyText: picked.bodyText,
+        bodyHtml: picked.bodyHtml,
+      };
+    } catch (error) {
+      this.logger.warn(
+        `default signature read failed org=${organizationId}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+      return null;
+    }
+  }
+
   public async create(
     organizationId: string,
     userId: string,
@@ -82,6 +123,7 @@ export class MailComposePresetService {
       name: string;
       subject?: string;
       bodyText: string;
+      bodyHtml?: string | null;
       isDefault?: boolean;
     },
     canManageOrgTemplates: boolean,
@@ -115,6 +157,7 @@ export class MailComposePresetService {
         subject:
           input.kind === "template" ? input.subject?.trim() ?? null : null,
         bodyText: input.bodyText.trim(),
+        bodyHtml: input.bodyHtml?.trim() || null,
         isDefault: Boolean(input.isDefault),
       }),
     );
@@ -132,6 +175,7 @@ export class MailComposePresetService {
       name?: string;
       subject?: string;
       bodyText?: string;
+      bodyHtml?: string | null;
       isDefault?: boolean;
     },
     canManageOrgTemplates: boolean,
@@ -150,6 +194,9 @@ export class MailComposePresetService {
     }
     if (input.bodyText !== undefined) {
       row.bodyText = input.bodyText.trim();
+    }
+    if (input.bodyHtml !== undefined) {
+      row.bodyHtml = input.bodyHtml?.trim() || null;
     }
     if (row.kind === "template" && input.subject !== undefined) {
       row.subject = input.subject.trim();
@@ -241,6 +288,7 @@ export class MailComposePresetService {
       name: row.name,
       subject: row.subject,
       bodyText: row.bodyText,
+      bodyHtml: row.bodyHtml,
       isDefault: row.isDefault,
       isSystem: false,
       updatedAt: row.updatedAt.toISOString(),

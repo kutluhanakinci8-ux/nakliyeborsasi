@@ -9,6 +9,7 @@ const base: MailOrganizationBrandingSnapshot = {
   planCode: null,
   logoUrl: null,
   emailBrandTitle: null,
+  emailAccentColor: null,
   defaultFromDisplayName: null,
   hidePlatformEmailChrome: false,
   detailTr: "test",

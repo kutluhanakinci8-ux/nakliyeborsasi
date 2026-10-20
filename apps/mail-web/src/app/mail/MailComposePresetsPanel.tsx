@@ -25,6 +25,7 @@ export function MailComposePresetsPanel({ accessToken }: Props) {
   const [formName, setFormName] = useState("");
   const [formSubject, setFormSubject] = useState("");
   const [formBody, setFormBody] = useState("");
+  const [formBodyHtml, setFormBodyHtml] = useState("");
   const [formDefault, setFormDefault] = useState(false);
 
   const reload = useCallback(async () => {
@@ -60,11 +61,16 @@ export function MailComposePresetsPanel({ accessToken }: Props) {
         name: formName.trim(),
         subject: formKind === "template" ? formSubject.trim() : undefined,
         bodyText: formBody.trim(),
+        bodyHtml:
+          formKind === "signature" && formBodyHtml.trim()
+            ? formBodyHtml.trim()
+            : undefined,
         isDefault: formKind === "signature" ? formDefault : undefined,
       });
       setFormName("");
       setFormSubject("");
       setFormBody("");
+      setFormBodyHtml("");
       setFormDefault(false);
       await reload();
     } catch (err) {
@@ -178,6 +184,15 @@ export function MailComposePresetsPanel({ accessToken }: Props) {
           value={formBody}
           onChange={(e) => setFormBody(e.target.value)}
         />
+        {formKind === "signature" ? (
+          <textarea
+            className="preset-html"
+            placeholder="HTML imza (isteğe bağlı): logo, telefon, bağlantılar"
+            rows={5}
+            value={formBodyHtml}
+            onChange={(e) => setFormBodyHtml(e.target.value)}
+          />
+        ) : null}
         {formKind === "signature" ? (
           <label className="preset-check">
             <input

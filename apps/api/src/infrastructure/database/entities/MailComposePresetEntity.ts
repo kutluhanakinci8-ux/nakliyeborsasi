@@ -32,6 +32,10 @@ export class MailComposePresetEntity {
   @Column({ name: "body_text", type: "text" })
   public bodyText!: string;
 
+  /** HTML imza (kurumsal blok); boşsa body_text’ten üretilir. */
+  @Column({ name: "body_html", type: "text", nullable: true })
+  public bodyHtml!: string | null;
+
   @Column({ name: "is_default", type: "boolean", default: false })
   public isDefault!: boolean;
 

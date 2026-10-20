@@ -83,6 +83,7 @@ import { MailInboundPostfixSyncBootstrap } from "./MailInboundPostfixSyncBootstr
 import { CompanyMailInboxController } from "./CompanyMailInboxController";
 import { MailInboundSpamService } from "./MailInboundSpamService";
 import { MailMailboxComposeService } from "./MailMailboxComposeService";
+import { MailMailboxOutboundContentService } from "./MailMailboxOutboundContentService";
 import { MailImapMaildirService } from "./MailImapMaildirService";
 import { MailImapAccessService } from "./MailImapAccessService";
 import { MailImapCredentialEntity } from "../../infrastructure/database/entities/MailImapCredentialEntity";
@@ -272,6 +273,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     MailInboundPostfixSyncBootstrap,
     MailInboundSpamService,
     MailMailboxComposeService,
+    MailMailboxOutboundContentService,
     MailJmapBridgeService,
     MailPlatformEdiscoveryService,
     MailImapMaildirService,

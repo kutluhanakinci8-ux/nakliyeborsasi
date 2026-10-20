@@ -628,6 +628,7 @@ export class CompanyMailInboxController {
         name: body.name,
         subject: body.subject,
         bodyText: body.bodyText,
+        bodyHtml: body.bodyHtml,
         isDefault: body.isDefault,
       },
       canManageMailInboxWrite(user),
@@ -975,6 +976,7 @@ export class CompanyMailInboxController {
     );
     const result = await this.mailMailboxComposeService.compose({
       organizationId: user.companyId,
+      userId: user.userId,
       to: payload.to,
       subject: payload.subject,
       text: payload.text,
@@ -1256,7 +1258,7 @@ export class CompanyMailInboxController {
     if (body.delaySeconds && body.delaySeconds > 0) {
       const pending = await this.mailDelayedComposeService.schedule(
         user.companyId,
-        { kind: "compose", ...payload },
+        { kind: "compose", userId: user.userId, ...payload },
         body.delaySeconds,
       );
       return {
@@ -1268,6 +1270,7 @@ export class CompanyMailInboxController {
     }
     const result = await this.mailMailboxComposeService.compose({
       organizationId: user.companyId,
+      userId: user.userId,
       ...payload,
     });
     await this.recordInboxMailAudit(user, MailIdentityAuditAction.InboxComposeSent, {
@@ -1313,6 +1316,7 @@ export class CompanyMailInboxController {
         user.companyId,
         {
           kind: "reply",
+          userId: user.userId,
           inboundMessageId: messageId,
           text: body.text,
           cc: body.cc,
@@ -1331,6 +1335,7 @@ export class CompanyMailInboxController {
     }
     const result = await this.mailMailboxComposeService.reply({
       organizationId: user.companyId,
+      userId: user.userId,
       inboundMessageId: messageId,
       text: body.text,
       cc: body.cc,
@@ -1393,6 +1398,7 @@ export class CompanyMailInboxController {
         user.companyId,
         {
           kind: "forward",
+          userId: user.userId,
           inboundMessageId: messageId,
           to: body.to,
           text: body.text,
@@ -1410,6 +1416,7 @@ export class CompanyMailInboxController {
     }
     const result = await this.mailMailboxComposeService.forward({
       organizationId: user.companyId,
+      userId: user.userId,
       inboundMessageId: messageId,
       to: body.to,
       text: body.text,

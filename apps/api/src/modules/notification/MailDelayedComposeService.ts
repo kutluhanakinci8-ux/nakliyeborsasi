@@ -135,6 +135,7 @@ export class MailDelayedComposeService {
     if (send.kind === "reply") {
       return this.mailMailboxComposeService.reply({
         organizationId,
+        userId: send.userId,
         inboundMessageId: send.inboundMessageId,
         text: send.text,
         cc: send.cc,
@@ -146,6 +147,7 @@ export class MailDelayedComposeService {
     if (send.kind === "forward") {
       return this.mailMailboxComposeService.forward({
         organizationId,
+        userId: send.userId,
         inboundMessageId: send.inboundMessageId,
         to: send.to,
         text: send.text,
@@ -156,6 +158,7 @@ export class MailDelayedComposeService {
     if (send.kind === "compose") {
       return this.mailMailboxComposeService.compose({
         organizationId,
+        userId: send.userId,
         to: send.to,
         cc: send.cc,
         bcc: send.bcc,
@@ -173,6 +176,7 @@ export class MailDelayedComposeService {
       );
       const result = await this.mailMailboxComposeService.compose({
         organizationId,
+        userId: send.userId,
         to: payload.to,
         subject: payload.subject,
         text: payload.text,

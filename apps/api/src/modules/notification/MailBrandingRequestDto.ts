@@ -13,6 +13,11 @@ export class UpdateMailBrandingRequestDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(16)
+  public emailAccentColor?: string | null;
+
+  @IsOptional()
+  @IsString()
   @MaxLength(120)
   public defaultFromDisplayName?: string | null;
 

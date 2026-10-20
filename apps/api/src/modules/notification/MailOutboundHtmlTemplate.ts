@@ -1,6 +1,16 @@
 /** HTML içinde marka tanıma (body data-* Outlook tarafında HTML düşürülmesine yol açabiliyor). */
 export const LERTA_POSTA_OUTBOUND_MARKER = "lerta-posta-outbound-v2";
 
+const DEFAULT_ACCENT = "#1a1647";
+
+export type OutboundWrapBranding = {
+  brandTitle: string;
+  logoUrl: string | null;
+  accentColor: string;
+  /** Enterprise: Lerta footer gizlenir. */
+  hidePlatformFooter: boolean;
+};
+
 export function isLertaBrandedOutboundHtml(html: string): boolean {
   return (
     html.includes(`<!-- ${LERTA_POSTA_OUTBOUND_MARKER} -->`) ||
@@ -13,21 +23,25 @@ export function isLertaBrandedOutboundHtml(html: string): boolean {
 export function buildBrandedPlainText(
   fromHeader?: string,
   userText?: string,
+  branding?: OutboundWrapBranding,
 ): string {
   const { displayName, email } = parseFromHeader(fromHeader);
   const senderLine = displayName
     ? `${displayName}${email ? ` · ${email}` : ""}`
     : email ?? "Lerta Posta";
+  const headerTitle = branding?.brandTitle?.trim() || "LERTA POSTA";
   const body = (userText ?? "").replace(/\r\n/g, "\n").trim();
   const lines = [
     "────────────────────────────",
-    "LERTA POSTA",
+    headerTitle.toUpperCase(),
     senderLine,
     "────────────────────────────",
     "",
     body || "(boş mesaj)",
     "",
-    "— https://posta.lerta.com.tr",
+    branding?.hidePlatformFooter
+      ? `— ${headerTitle}`
+      : "— https://posta.lerta.com.tr",
   ];
   return lines.join("\n");
 }
@@ -35,6 +49,7 @@ export function buildBrandedPlainText(
 export type OutboundHtmlContext = {
   /** From başlığı: "Ad" <ad@domain.com> */
   fromHeader?: string;
+  branding?: OutboundWrapBranding;
 };
 
 export function resolveOutboundHtml(
@@ -46,11 +61,13 @@ export function resolveOutboundHtml(
     return wrapLertaPostaOutboundEmail({
       bodyInnerHtml: sanitizeOutboundHtml(html.trim()),
       fromHeader: context?.fromHeader,
+      branding: context?.branding,
     });
   }
   return wrapLertaPostaOutboundEmail({
     bodyInnerHtml: plainTextToOutboundBodyHtml(text),
     fromHeader: context?.fromHeader,
+    branding: context?.branding,
   });
 }
 
@@ -63,6 +80,7 @@ export function sanitizeOutboundHtml(html: string): string {
 function wrapLertaPostaOutboundEmail(params: {
   bodyInnerHtml: string;
   fromHeader?: string;
+  branding?: OutboundWrapBranding;
 }): string {
   const { displayName, email } = parseFromHeader(params.fromHeader);
   const senderLine = displayName
@@ -71,30 +89,60 @@ function wrapLertaPostaOutboundEmail(params: {
       ? escapeHtml(email)
       : "Lerta Posta";
 
+  const rawTitle = params.branding?.brandTitle?.trim() || "Lerta Posta";
+  const brandTitle = escapeHtml(rawTitle);
+  const accent = normalizeAccentColor(params.branding?.accentColor);
+  const logoUrl = params.branding?.logoUrl?.trim();
+  const monogram = escapeHtml(rawTitle.charAt(0).toUpperCase() || "L");
+  const titleSpan = `<span style="color:#ffffff;font-size:17px;font-weight:700;letter-spacing:-0.02em;vertical-align:middle;">${brandTitle}</span>`;
+  const brandRow = logoUrl
+    ? `<table role="presentation" cellspacing="0" cellpadding="0"><tr>
+<td style="padding-right:12px;vertical-align:middle;">
+<img src="${escapeHtml(logoUrl)}" alt="${brandTitle}" width="40" height="40" style="display:block;width:40px;height:40px;max-width:40px;object-fit:contain;border-radius:8px;background:rgba(255,255,255,0.95);" />
+</td>
+<td style="vertical-align:middle;">${titleSpan}</td>
+</tr></table>`
+    : `<span style="display:inline-block;width:36px;height:36px;line-height:36px;text-align:center;border-radius:10px;background:rgba(255,255,255,0.15);color:#ffffff;font-weight:800;font-size:18px;margin-right:12px;">${escapeHtml(monogram)}</span>${titleSpan}`;
+
+  const footerHtml = params.branding?.hidePlatformFooter
+    ? `<p style="margin:0;font-size:12px;line-height:1.5;color:#5c6370;text-align:center;">${brandTitle}</p>`
+    : `<p style="margin:0;font-size:12px;line-height:1.5;color:#5c6370;text-align:center;">
+Kurumsal e-posta · <a href="https://posta.lerta.com.tr" style="color:#4f46e5;text-decoration:none;font-weight:600;">posta.lerta.com.tr</a>
+</p>`;
+
   return `<!DOCTYPE html>
-<html lang="tr">
+<html lang="tr" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Lerta Posta</title>
+<meta name="x-apple-disable-message-reformatting" />
+<!--[if mso]>
+<noscript>
+<xml>
+<o:OfficeDocumentSettings>
+<o:PixelsPerInch>96</o:PixelsPerInch>
+</o:OfficeDocumentSettings>
+</xml>
+</noscript>
+<![endif]-->
+<title>${brandTitle}</title>
 </head>
 <!-- ${LERTA_POSTA_OUTBOUND_MARKER} -->
 <body style="margin:0;padding:0;background-color:#f4f5f9;font-family:Segoe UI,system-ui,-apple-system,BlinkMacSystemFont,sans-serif;">
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f4f5f9;padding:32px 16px;">
 <tr>
 <td align="center">
-<table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width:600px;width:100%;background-color:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e2e5ec;box-shadow:0 12px 40px rgba(26,22,71,0.08);">
+<table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width:600px;width:100%;background-color:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e2e5ec;">
 <tr>
-<td style="background:linear-gradient(135deg,#1a1647 0%,#2d2868 100%);padding:22px 28px;">
+<td bgcolor="${accent}" style="background-color:${accent};padding:22px 28px;">
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
 <tr>
 <td style="vertical-align:middle;">
-<span style="display:inline-block;width:36px;height:36px;line-height:36px;text-align:center;border-radius:10px;background:rgba(255,255,255,0.15);color:#ffffff;font-weight:800;font-size:18px;margin-right:12px;">L</span>
-<span style="color:#ffffff;font-size:17px;font-weight:700;letter-spacing:-0.02em;vertical-align:middle;">Lerta Posta</span>
+${brandRow}
 </td>
 </tr>
 <tr>
-<td style="padding-top:10px;color:rgba(255,255,255,0.88);font-size:13px;line-height:1.45;">
+<td style="padding-top:10px;color:rgba(255,255,255,0.92);font-size:13px;line-height:1.45;">
 ${senderLine}
 </td>
 </tr>
@@ -108,9 +156,7 @@ ${params.bodyInnerHtml}
 </tr>
 <tr>
 <td style="padding:20px 28px 28px;border-top:1px solid #eef0f6;background-color:#fafbfc;">
-<p style="margin:0;font-size:12px;line-height:1.5;color:#5c6370;text-align:center;">
-Kurumsal e-posta · <a href="https://posta.lerta.com.tr" style="color:#4f46e5;text-decoration:none;font-weight:600;">posta.lerta.com.tr</a>
-</p>
+${footerHtml}
 </td>
 </tr>
 </table>
@@ -121,7 +167,7 @@ Kurumsal e-posta · <a href="https://posta.lerta.com.tr" style="color:#4f46e5;te
 </html>`;
 }
 
-function plainTextToOutboundBodyHtml(text: string): string {
+export function plainTextToOutboundBodyHtml(text: string): string {
   const normalized = text.replace(/\r\n/g, "\n").trim();
   if (!normalized) {
     return `<p style="margin:0;font-size:16px;line-height:1.65;color:#14151f;">&nbsp;</p>`;
@@ -139,6 +185,17 @@ function plainTextToOutboundBodyHtml(text: string): string {
       return `<p style="margin:0 0 16px;font-size:16px;line-height:1.65;color:#14151f;">${inner}</p>`;
     })
     .join("");
+}
+
+function normalizeAccentColor(raw?: string | null): string {
+  const trimmed = raw?.trim();
+  if (!trimmed) {
+    return DEFAULT_ACCENT;
+  }
+  if (/^#[0-9a-fA-F]{6}$/.test(trimmed)) {
+    return trimmed.toLowerCase();
+  }
+  return DEFAULT_ACCENT;
 }
 
 function parseFromHeader(raw?: string): {

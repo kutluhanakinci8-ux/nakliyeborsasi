@@ -22,6 +22,10 @@ export class MailOrganizationBrandingEntity {
   @Column({ type: "varchar", length: 120, nullable: true })
   public emailBrandTitle!: string | null;
 
+  /** Üst şerit rengi (#RRGGBB). */
+  @Column({ name: "email_accent_color", type: "varchar", length: 16, nullable: true })
+  public emailAccentColor!: string | null;
+
   /**
    * Varsayılan gönderen görünen adı (From); boşsa posta kutusu kimliği kullanılır.
    */
