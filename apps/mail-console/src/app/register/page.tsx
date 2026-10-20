@@ -3,6 +3,10 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  AuthPremiumShell,
+  type MailRegisterPlan,
+} from "@/components/AuthPremiumShell";
 import { MAIL_WEB_URL } from "@/lib/apiConfig";
 import {
   MAIL_PILOT_TENANT_DOMAIN,
@@ -16,7 +20,7 @@ import {
 } from "@/lib/consoleApi";
 import { useConsoleSession } from "@/lib/session";
 
-const MAIL_PLAN_CODES = new Set([
+const MAIL_PLAN_CODES = new Set<MailRegisterPlan>([
   "lerta_mail_pilot_tr",
   "lerta_mail_corporate_tr",
 ]);
@@ -24,21 +28,20 @@ const MAIL_PLAN_CODES = new Set([
 export default function RegisterPage() {
   const router = useRouter();
   const { setAccessToken } = useConsoleSession();
-  const [subscriptionPlanCode, setSubscriptionPlanCode] = useState(
-    "lerta_mail_pilot_tr",
-  );
+  const [subscriptionPlanCode, setSubscriptionPlanCode] =
+    useState<MailRegisterPlan>("lerta_mail_pilot_tr");
   const [postaDesired, setPostaDesired] = useState("");
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const fromQuery = params.get("plan")?.trim();
-    if (fromQuery && MAIL_PLAN_CODES.has(fromQuery)) {
-      setSubscriptionPlanCode(fromQuery);
+    if (fromQuery && MAIL_PLAN_CODES.has(fromQuery as MailRegisterPlan)) {
+      setSubscriptionPlanCode(fromQuery as MailRegisterPlan);
     }
     const slug = params.get("slug")?.trim().toLowerCase() ?? "";
     if (slug) {
       setPostaDesired(
-        slug.includes("@") ? slug : `info@${slug}.${MAIL_PILOT_TENANT_DOMAIN}`,
+        slug.includes("@") ? slug : `${slug}@${MAIL_PILOT_TENANT_DOMAIN}`,
       );
     }
   }, []);
@@ -48,6 +51,8 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const isPilot = subscriptionPlanCode === "lerta_mail_pilot_tr";
 
   const parsedPost = useMemo(
     () => parseLertaPilotMailboxAddress(postaDesired),
@@ -71,7 +76,7 @@ export default function RegisterPage() {
         subscriptionPlanCode,
       });
       setAccessToken(token);
-      if (subscriptionPlanCode === "lerta_mail_pilot_tr") {
+      if (isPilot) {
         const desired =
           parseLertaPilotMailboxAddress(postaDesired)?.full ??
           suggestLertaPilotFromCompany(companyLegalName);
@@ -117,126 +122,129 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="auth-page">
-      <form className="auth-card" onSubmit={onSubmit}>
-        <h1>Lerta Posta — Kayıt</h1>
-        <p style={{ color: "var(--muted)", marginTop: 0 }}>
-          {subscriptionPlanCode === "lerta_mail_corporate_tr"
-            ? "Kayıt sonrası özel domain sihirbazına yönlendirileceksiniz."
-            : "1 kutu, 80 gönderim/saat. Kayıt sonrası Lerta Posta adresiniz açılır ve webmail’e yönlendirilir."}
+    <AuthPremiumShell plan={subscriptionPlanCode}>
+      <form className="auth-premium-form" onSubmit={onSubmit}>
+        <h2 className="auth-premium-form-title">Hesap oluştur</h2>
+        <p className="auth-premium-form-sub">
+          {isPilot
+            ? "Pilot plan — kutu açıldıktan sonra webmail’e yönlendirilirsiniz."
+            : "Kurumsal plan — sonraki adım özel domain sihirbazı."}
         </p>
-        {subscriptionPlanCode === "lerta_mail_pilot_tr" ? (
-          <>
-            <label htmlFor="posta">Lerta Posta adresiniz (pilot)</label>
+
+        {error ? (
+          <p className="auth-premium-error" role="alert">{error}</p>
+        ) : null}
+
+        {isPilot ? (
+          <div className="auth-premium-field">
+            <label htmlFor="posta">Lerta Posta adresiniz</label>
             <input
               id="posta"
-              className="input"
               type="email"
               inputMode="email"
               autoComplete="off"
-              placeholder={`ornek-firma@${MAIL_PILOT_TENANT_DOMAIN}`}
+              placeholder={`firma-adi@${MAIL_PILOT_TENANT_DOMAIN}`}
               value={postaDesired}
-              onChange={(e) => setPostaDesired(e.target.value.trim().toLowerCase())}
+              onChange={(e) =>
+                setPostaDesired(e.target.value.trim().toLowerCase())
+              }
             />
-            <div
-              style={{
-                fontSize: "0.85rem",
-                color: "var(--muted)",
-                marginTop: 8,
-                lineHeight: 1.5,
-              }}
-            >
-              <p style={{ margin: "0 0 8px" }}>
-                Pilot kutular <strong>@{MAIL_PILOT_TENANT_DOMAIN}</strong> altında
-                açılır. Ön ek: küçük harf, rakam ve tire.
-              </p>
-              <p style={{ margin: 0 }}>
-                Örnekler: <strong>kutluhan@{MAIL_PILOT_TENANT_DOMAIN}</strong>,{" "}
-                <strong>abayer-lojistik@{MAIL_PILOT_TENANT_DOMAIN}</strong>
-              </p>
-            </div>
+            <p className="auth-premium-hint">
+              Pilot kutular <strong>@{MAIL_PILOT_TENANT_DOMAIN}</strong> altında
+              açılır. Örnek: <code>kutluhan@{MAIL_PILOT_TENANT_DOMAIN}</code>
+            </p>
             {parsedPost ? (
-              <p
-                style={{
-                  fontSize: "0.9rem",
-                  color: "var(--success)",
-                  fontWeight: 600,
-                  marginBottom: 0,
-                }}
-              >
-                Açılacak kutu: {parsedPost.full}
+              <p className="auth-premium-success">
+                Açılacak kutu: <strong>{parsedPost.full}</strong>
               </p>
             ) : postaDesired.trim() ? (
-              <p className="auth-error" style={{ fontSize: "0.85rem" }}>
-                Geçerli format: ön-ek@{MAIL_PILOT_TENANT_DOMAIN} (eski .post
-                adresleri kullanılmıyor)
+              <p className="auth-premium-error auth-premium-error--inline">
+                Geçerli format: ön-ek@{MAIL_PILOT_TENANT_DOMAIN}
               </p>
             ) : suggestedFromCompany ? (
-              <p style={{ fontSize: "0.85rem", color: "var(--muted)", marginBottom: 0 }}>
-                Boş bırakırsanız öneri:{" "}
+              <p className="auth-premium-hint">
+                Öneri:{" "}
                 <button
                   type="button"
-                  className="btn secondary"
-                  style={{ padding: "2px 8px", fontSize: "0.8rem", marginLeft: 4 }}
+                  className="auth-premium-chip"
                   onClick={() => setPostaDesired(suggestedFromCompany)}
                 >
                   {suggestedFromCompany}
                 </button>
               </p>
             ) : (
-              <p style={{ fontSize: "0.85rem", color: "var(--muted)", marginBottom: 0 }}>
-                Firma ünvanını yazdıktan sonra size uygun bir pilot adresi önerilir.
+              <p className="auth-premium-hint">
+                Firma ünvanını yazdıktan sonra adres önerilir; boş bırakırsanız
+                kayıt sonrası otomatik oluşturulur.
               </p>
             )}
-          </>
+          </div>
         ) : null}
-        {error ? <p className="auth-error">{error}</p> : null}
-        <label htmlFor="company">Firma ünvanı</label>
-        <input
-          id="company"
-          className="input"
-          value={companyLegalName}
-          onChange={(e) => setCompanyLegalName(e.target.value)}
-          required
-        />
-        <label htmlFor="display">Yetkili adı</label>
-        <input
-          id="display"
-          className="input"
-          value={displayName}
-          onChange={(e) => setDisplayName(e.target.value)}
-        />
-        <label htmlFor="email">Giriş e-postası</label>
-        <p style={{ fontSize: "0.8rem", color: "var(--muted)", margin: "4px 0 8px" }}>
-          Yönetim paneli ve webmail girişi için (Gmail vb. olabilir). Pilot
-          posta kutusu yukarıdaki <code>@{MAIL_PILOT_TENANT_DOMAIN}</code> adresidir
-          — isterseniz giriş e-postanızı kutu adresiyle aynı yapabilirsiniz.
-        </p>
-        <input
-          id="email"
-          className="input"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <label htmlFor="password">Şifre (min. 8)</label>
-        <input
-          id="password"
-          className="input"
-          type="password"
-          minLength={8}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <button className="btn" type="submit" disabled={loading} style={{ width: "100%" }}>
-          {loading ? "Kayıt…" : "Hesap oluştur"}
+
+        <div className="auth-premium-field">
+          <label htmlFor="company">Firma ünvanı</label>
+          <input
+            id="company"
+            value={companyLegalName}
+            onChange={(e) => setCompanyLegalName(e.target.value)}
+            placeholder="Örn. Abayer Lojistik A.Ş."
+            required
+          />
+        </div>
+
+        <div className="auth-premium-field">
+          <label htmlFor="display">Yetkili adı</label>
+          <input
+            id="display"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            placeholder="Ad Soyad"
+          />
+        </div>
+
+        <div className="auth-premium-field">
+          <label htmlFor="email">Giriş e-postası</label>
+          <p className="auth-premium-hint auth-premium-hint--tight">
+            Panel ve webmail girişi. Gmail vb. olabilir; pilot kutu adresinden
+            farklı tutulabilir.
+          </p>
+          <input
+            id="email"
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="sizin@eposta.com"
+            required
+          />
+        </div>
+
+        <div className="auth-premium-field">
+          <label htmlFor="password">Şifre</label>
+          <input
+            id="password"
+            type="password"
+            minLength={8}
+            autoComplete="new-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="En az 8 karakter"
+            required
+          />
+        </div>
+
+        <button
+          className="auth-premium-submit"
+          type="submit"
+          disabled={loading}
+        >
+          {loading ? "Kayıt yapılıyor…" : "Hesap oluştur"}
         </button>
-        <p style={{ marginTop: 16, fontSize: "0.9rem" }}>
-          <Link href="/login">Giriş yap</Link>
+
+        <p className="auth-premium-footer-link">
+          Zaten hesabınız var mı? <Link href="/login">Giriş yap</Link>
         </p>
       </form>
-    </div>
+    </AuthPremiumShell>
   );
 }
