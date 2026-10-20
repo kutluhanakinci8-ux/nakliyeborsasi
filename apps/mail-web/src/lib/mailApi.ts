@@ -1046,17 +1046,34 @@ export async function fetchMailCampaignSummary(accessToken: string) {
   );
 }
 
+export type MailCampaignListPagination = {
+  offset: number;
+  limit: number;
+  hasMore: boolean;
+};
+
 export async function fetchMailCampaigns(
   accessToken: string,
   limit = 30,
   status?: string,
   tag?: string,
+  q?: string,
+  offset = 0,
 ) {
   const statusQuery = status ? `&status=${encodeURIComponent(status)}` : "";
   const tagQuery = tag ? `&tag=${encodeURIComponent(tag)}` : "";
-  return apiFetch<{ ok: true; campaigns: MailCampaignListItem[] }>(
+  const qQuery =
+    q && q.trim().length >= 2
+      ? `&q=${encodeURIComponent(q.trim())}`
+      : "";
+  const offsetQuery = offset > 0 ? `&offset=${offset}` : "";
+  return apiFetch<{
+    ok: true;
+    campaigns: MailCampaignListItem[];
+    pagination: MailCampaignListPagination;
+  }>(
     accessToken,
-    `company/mail-inbox/campaigns?limit=${limit}${statusQuery}${tagQuery}`,
+    `company/mail-inbox/campaigns?limit=${limit}${statusQuery}${tagQuery}${qQuery}${offsetQuery}`,
   );
 }
 

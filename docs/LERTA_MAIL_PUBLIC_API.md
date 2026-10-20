@@ -19,7 +19,7 @@ API anahtarları posta konsol → Entegrasyon üzerinden oluşturulur.
 | GET | `/messages/:id` | Gönderim durumu |
 | POST | `/campaigns` | Pazarlama kampanyası |
 | GET | `/campaigns/summary` | Son 30 gün özet + `availableTags` |
-| GET | `/campaigns` | Kampanya listesi (`limit`, `status`, `tag`) |
+| GET | `/campaigns` | Kampanya listesi (`limit`, `offset`, `status`, `tag`, `q`) |
 | GET | `/campaigns/:campaignId` | Kampanya durumu ve sonuç |
 | POST | `/campaigns/:campaignId/clone` | `mode: schedule` + `scheduleAt` ile kopya |
 | POST | `/campaigns/:campaignId/resend-failed` | Yalnızca başarısız alıcılar |
@@ -76,3 +76,9 @@ Başarısız HTTP veya ağ hatalarında uç nokta **3 denemeye** kadar otomatik 
 - `GET /campaigns/summary` — 30 günlük kampanya sayıları, alıcı/gönderim toplamları, etiket listesi
 - `GET /campaigns?tag=` — etiket filtresi (küçük harf, payload içinde tam eşleşme)
 - Web kampanya geçmişi: özet satırı + etiket filtresi; compose segment önizlemesi otomatik (650 ms gecikme)
+
+## Faz 14
+
+- `GET /campaigns?q=` — konu araması (en az 2 karakter, `ILIKE`)
+- `offset` + `pagination.hasMore` — sayfalama (limit max 80, offset max 500)
+- Web kampanya geçmişi: konu arama + “Daha fazla göster”; “Gönderiliyor” durum filtresi

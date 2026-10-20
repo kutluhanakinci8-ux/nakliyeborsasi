@@ -72,7 +72,7 @@ export class MailPublicApiController {
         {
           method: "GET",
           path: "/campaigns",
-          description: "Kampanya listesi (limit, status, tag)",
+          description: "Kampanya listesi (limit, offset, status, tag, q)",
         },
         {
           method: "GET",
@@ -172,10 +172,13 @@ export class MailPublicApiController {
   public async listCampaigns(
     @MailPublicApiContextParam() ctx: MailPublicApiRequestContext,
     @Query("limit") limit?: string,
+    @Query("offset") offset?: string,
     @Query("status") status?: string,
     @Query("tag") tag?: string,
+    @Query("q") q?: string,
   ) {
     const parsed = limit ? Number.parseInt(limit, 10) : 20;
+    const parsedOffset = offset ? Number.parseInt(offset, 10) : 0;
     const allowed: MailMarketingCampaignStatus[] = [
       "scheduled",
       "running",
@@ -187,13 +190,15 @@ export class MailPublicApiController {
       status && allowed.includes(status as MailMarketingCampaignStatus)
         ? (status as MailMarketingCampaignStatus)
         : undefined;
-    const campaigns = await this.mailMarketingCampaignService.listForOrganization(
+    const list = await this.mailMarketingCampaignService.listForOrganization(
       ctx.organizationId,
       Number.isFinite(parsed) ? parsed : 20,
       statusFilter,
       tag?.trim() || undefined,
+      q?.trim() || undefined,
+      Number.isFinite(parsedOffset) ? parsedOffset : 0,
     );
-    return { campaigns };
+    return list;
   }
 
   @Post("campaigns/:campaignId/resend-failed")

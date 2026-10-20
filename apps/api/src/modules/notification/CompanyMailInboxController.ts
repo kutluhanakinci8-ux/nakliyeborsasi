@@ -1429,11 +1429,14 @@ export class CompanyMailInboxController {
   public async listCampaigns(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
     @Query("limit") limit?: string,
+    @Query("offset") offset?: string,
     @Query("status") status?: string,
     @Query("tag") tag?: string,
+    @Query("q") q?: string,
   ) {
     this.assertMailInboxWriter(user);
     const parsed = limit ? Number.parseInt(limit, 10) : 40;
+    const parsedOffset = offset ? Number.parseInt(offset, 10) : 0;
     const allowed: MailMarketingCampaignStatus[] = [
       "scheduled",
       "running",
@@ -1445,13 +1448,15 @@ export class CompanyMailInboxController {
       status && allowed.includes(status as MailMarketingCampaignStatus)
         ? (status as MailMarketingCampaignStatus)
         : undefined;
-    const campaigns = await this.mailMarketingCampaignService.listForOrganization(
+    const list = await this.mailMarketingCampaignService.listForOrganization(
       user.companyId,
       Number.isFinite(parsed) ? parsed : 40,
       statusFilter,
       tag?.trim() || undefined,
+      q?.trim() || undefined,
+      Number.isFinite(parsedOffset) ? parsedOffset : 0,
     );
-    return { ok: true, campaigns };
+    return { ok: true, ...list };
   }
 
   @Get("campaigns/:campaignId/export.csv")

@@ -13,6 +13,7 @@ import {
   resendMailCampaign,
   type MailCampaignDetail,
   type MailCampaignListItem,
+  type MailCampaignListPagination,
   type MailCampaignSummary,
 } from "@/lib/mailApi";
 
@@ -27,6 +28,7 @@ type Props = {
 const STATUS_FILTERS = [
   { value: "", label: "Tümü" },
   { value: "scheduled", label: "Zamanlanmış" },
+  { value: "running", label: "Gönderiliyor" },
   { value: "completed", label: "Tamamlanan" },
   { value: "failed", label: "Başarısız" },
   { value: "cancelled", label: "İptal" },
@@ -41,6 +43,11 @@ export function MailCampaignHistoryPanel({
   const [summary, setSummary] = useState<MailCampaignSummary | null>(null);
   const [statusFilter, setStatusFilter] = useState("");
   const [tagFilter, setTagFilter] = useState("");
+  const [subjectSearch, setSubjectSearch] = useState("");
+  const [debouncedSubjectQ, setDebouncedSubjectQ] = useState("");
+  const [pagination, setPagination] =
+    useState<MailCampaignListPagination | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
@@ -49,30 +56,65 @@ export function MailCampaignHistoryPanel({
   const [scheduleCloneId, setScheduleCloneId] = useState<string | null>(null);
   const [scheduleCloneAt, setScheduleCloneAt] = useState("");
 
-  const load = useCallback(async () => {
-    setError("");
-    try {
-      const [listData, summaryData] = await Promise.all([
-        fetchMailCampaigns(
+  useEffect(() => {
+    const timer = window.setTimeout(
+      () => setDebouncedSubjectQ(subjectSearch.trim()),
+      400,
+    );
+    return () => window.clearTimeout(timer);
+  }, [subjectSearch]);
+
+  const loadList = useCallback(
+    async (offset: number, append: boolean) => {
+      setError("");
+      try {
+        const listData = await fetchMailCampaigns(
           accessToken,
           25,
           statusFilter || undefined,
           tagFilter || undefined,
-        ),
-        fetchMailCampaignSummary(accessToken),
-      ]);
-      setRows(listData.campaigns);
+          debouncedSubjectQ || undefined,
+          offset,
+        );
+        setRows((prev) =>
+          append ? [...prev, ...listData.campaigns] : listData.campaigns,
+        );
+        setPagination(listData.pagination);
+      } catch {
+        setError("Kampanya geçmişi yüklenemedi.");
+      }
+    },
+    [accessToken, statusFilter, tagFilter, debouncedSubjectQ],
+  );
+
+  const refresh = useCallback(async () => {
+    setError("");
+    try {
+      const summaryData = await fetchMailCampaignSummary(accessToken);
       setSummary(summaryData.summary);
+      await loadList(0, false);
     } catch {
       setError("Kampanya geçmişi yüklenemedi.");
     }
-  }, [accessToken, statusFilter, tagFilter]);
+  }, [accessToken, loadList]);
 
   useEffect(() => {
     if (open) {
-      void load();
+      void refresh();
     }
-  }, [open, load]);
+  }, [open, refresh]);
+
+  async function loadMore() {
+    if (!pagination?.hasMore || loadingMore) {
+      return;
+    }
+    setLoadingMore(true);
+    try {
+      await loadList(pagination.offset + pagination.limit, true);
+    } finally {
+      setLoadingMore(false);
+    }
+  }
 
   const tagOptions = summary?.availableTags ?? [];
 
@@ -164,6 +206,16 @@ export function MailCampaignHistoryPanel({
             ))}
           </select>
         </label>
+        <label className="compose-preset-label mail-campaign-history-search">
+          <span>Konu ara</span>
+          <input
+            type="search"
+            className="compose-input"
+            placeholder="En az 2 karakter"
+            value={subjectSearch}
+            onChange={(e) => setSubjectSearch(e.target.value)}
+          />
+        </label>
       </div>
       {error ? <p className="login-error">{error}</p> : null}
       {rows.length === 0 ? (
@@ -240,7 +292,7 @@ export function MailCampaignHistoryPanel({
                     onClick={() => {
                       setBusyId(row.id);
                       void cancelScheduledMailCampaign(accessToken, row.id)
-                        .then(() => load())
+                        .then(() => refresh())
                         .finally(() => setBusyId(null));
                     }}
                   >
@@ -258,7 +310,7 @@ export function MailCampaignHistoryPanel({
                         onClick={() => {
                           setBusyId(row.id);
                           void resendFailedMailCampaign(accessToken, row.id)
-                            .then(() => load())
+                            .then(() => refresh())
                             .finally(() => setBusyId(null));
                         }}
                       >
@@ -272,7 +324,7 @@ export function MailCampaignHistoryPanel({
                       onClick={() => {
                         setBusyId(row.id);
                         void resendMailCampaign(accessToken, row.id)
-                          .then(() => load())
+                          .then(() => refresh())
                           .finally(() => setBusyId(null));
                       }}
                     >
@@ -303,7 +355,7 @@ export function MailCampaignHistoryPanel({
                         .then(() => {
                           setScheduleCloneId(null);
                           setScheduleCloneAt("");
-                          return load();
+                          return refresh();
                         })
                         .finally(() => setBusyId(null));
                     }}
@@ -356,6 +408,16 @@ export function MailCampaignHistoryPanel({
           ))}
         </ul>
       )}
+      {pagination?.hasMore ? (
+        <button
+          type="button"
+          className="compose-chip-btn mail-campaign-history-more"
+          disabled={loadingMore}
+          onClick={() => void loadMore()}
+        >
+          {loadingMore ? "Yükleniyor…" : "Daha fazla göster"}
+        </button>
+      ) : null}
     </div>
   );
 }

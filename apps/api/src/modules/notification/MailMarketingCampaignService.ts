@@ -175,31 +175,42 @@ export class MailMarketingCampaignService {
     limit = 40,
     status?: MailMarketingCampaignStatus,
     tag?: string,
+    subjectQuery?: string,
+    offset = 0,
   ) {
     const take = Math.min(80, Math.max(1, limit));
+    const skip = Math.min(500, Math.max(0, offset));
     const tagNorm = tag?.trim().toLowerCase();
-    let rows: MailMarketingCampaignEntity[];
+    const q = subjectQuery?.trim().replace(/[%_]/g, "");
+    const qb = this.campaignRepository
+      .createQueryBuilder("c")
+      .where("c.organizationId = :organizationId", { organizationId })
+      .orderBy("c.createdAt", "DESC")
+      .skip(skip)
+      .take(take);
+    if (status) {
+      qb.andWhere("c.status = :status", { status });
+    }
     if (tagNorm) {
-      const qb = this.campaignRepository
-        .createQueryBuilder("c")
-        .where("c.organizationId = :organizationId", { organizationId })
-        .andWhere("c.payload::jsonb @> :tagFilter", {
-          tagFilter: JSON.stringify({ tags: [tagNorm] }),
-        })
-        .orderBy("c.createdAt", "DESC")
-        .take(take);
-      if (status) {
-        qb.andWhere("c.status = :status", { status });
-      }
-      rows = await qb.getMany();
-    } else {
-      rows = await this.campaignRepository.find({
-        where: status ? { organizationId, status } : { organizationId },
-        order: { createdAt: "DESC" },
-        take,
+      qb.andWhere("c.payload::jsonb @> :tagFilter", {
+        tagFilter: JSON.stringify({ tags: [tagNorm] }),
       });
     }
-    return rows.map((row) => this.toListItem(row));
+    if (q && q.length >= 2) {
+      qb.andWhere("c.subject ILIKE :subjectQuery", {
+        subjectQuery: `%${q}%`,
+      });
+    }
+    const rows = await qb.getMany();
+    const campaigns = rows.map((row) => this.toListItem(row));
+    return {
+      campaigns,
+      pagination: {
+        offset: skip,
+        limit: take,
+        hasMore: rows.length === take,
+      },
+    };
   }
 
   public async getSummaryForOrganization(organizationId: string) {
