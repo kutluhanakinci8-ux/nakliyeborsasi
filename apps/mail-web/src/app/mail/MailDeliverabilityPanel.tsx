@@ -127,6 +127,28 @@ export function MailDeliverabilityPanel({
         <p>Özel domain bağlı değil.</p>
       )}
       <MailDeliverabilityWizard hub={hub} />
+      <h4 className="mail-deliverability-subhead">Alan adı itibarı</h4>
+      <p className="compose-attach-hint">
+        Google Postmaster Tools ile gönderen itibarını ve spam oranını izleyin
+        (özel domain doğrulandıktan sonra).
+      </p>
+      <ul>
+        <li>
+          <a
+            href="https://postmaster.google.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Google Postmaster Tools
+          </a>
+        </li>
+        <li>
+          DMARC aggregate: konsol → teslimat / DMARC paneli (rua raporları)
+        </li>
+        <li>
+          PTR + SPF + DKIM: yukarıdaki DNS satırları yeşil olmalı
+        </li>
+      </ul>
       <h4
         id="mail-engagement-analytics"
         className={
