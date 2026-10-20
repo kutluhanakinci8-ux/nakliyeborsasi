@@ -80,6 +80,16 @@ function normalizeSocialUrl(
   if (!value) {
     return null;
   }
+  if (
+    !value.startsWith("@") &&
+    !value.includes("/") &&
+    !value.includes(".") &&
+    (platform === "instagram" ||
+      platform === "x" ||
+      platform === "tiktok")
+  ) {
+    value = `@${value}`;
+  }
   if (value.startsWith("@")) {
     const handle = value.slice(1).replace(/[^\w.]/g, "");
     if (!handle) {
@@ -95,9 +105,12 @@ function normalizeSocialUrl(
       return null;
     }
   }
+  if (/^http:\/\//i.test(value)) {
+    value = `https://${value.slice(7)}`;
+  }
   if (!/^https:\/\//i.test(value)) {
-    if (platform === "website" && /^[\w.-]+\.[a-z]{2,}/i.test(value)) {
-      value = `https://${value}`;
+    if (/^[\w.-]+\.[a-z]{2,}/i.test(value) || value.includes("/")) {
+      value = `https://${value.replace(/^\/+/, "")}`;
     } else {
       return null;
     }

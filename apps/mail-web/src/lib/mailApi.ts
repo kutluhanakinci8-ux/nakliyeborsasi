@@ -771,7 +771,7 @@ export async function updateMailEmailSocialLinks(
 ) {
   return apiFetch<{ branding: MailInboxBranding }>(
     accessToken,
-    "company/mail-identity/branding/social",
+    "company/mail-inbox/branding/social",
     {
       method: "PATCH",
       body: JSON.stringify({ emailSocialLinks }),

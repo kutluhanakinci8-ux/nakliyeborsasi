@@ -96,11 +96,27 @@ export function MailEmailSocialLinksEditor({ accessToken, canEdit }: Props) {
       }
     }
     try {
-      await updateMailEmailSocialLinks(accessToken, emailSocialLinks);
-      setStatus("Kaydedildi. Giden e-postaların altında görünür.");
-    } catch {
+      const { branding } = await updateMailEmailSocialLinks(
+        accessToken,
+        emailSocialLinks,
+      );
+      const saved = branding.emailSocialLinks?.length ?? 0;
+      if (emailSocialLinks.length > 0 && saved === 0) {
+        setError(
+          "Kayıt boş kaldı. Tam https adresi veya @kullaniciadi deneyin.",
+        );
+        return;
+      }
+      setStatus(
+        saved > 0
+          ? `${saved} bağlantı kaydedildi. Önizleme ve giden postada alt kısımda görünür.`
+          : "Sosyal bağlantılar temizlendi.",
+      );
+    } catch (err) {
       setError(
-        "Kaydedilemedi. Adresler https veya @kullaniciadi (Instagram, X, TikTok) olmalı.",
+        err instanceof Error
+          ? err.message
+          : "Kaydedilemedi. Adresler https veya @kullaniciadi (Instagram, X, TikTok) olmalı.",
       );
     } finally {
       setSaving(false);

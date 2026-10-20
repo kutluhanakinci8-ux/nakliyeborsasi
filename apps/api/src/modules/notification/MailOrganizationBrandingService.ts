@@ -147,7 +147,20 @@ export class MailOrganizationBrandingService {
     organizationId: string,
     raw: unknown,
   ): Promise<MailOrganizationBrandingSnapshot> {
+    const hadInput =
+      Array.isArray(raw) &&
+      raw.some(
+        (row) =>
+          row &&
+          typeof row === "object" &&
+          String((row as { url?: string }).url ?? "").trim(),
+      );
     const emailSocialLinks = normalizeMailEmailSocialLinks(raw);
+    if (hadInput && emailSocialLinks.length === 0) {
+      throw new BadRequestException(
+        "Geçerli sosyal bağlantı bulunamadı. https://… tam adresi veya Instagram/X/TikTok için @kullaniciadi girin.",
+      );
+    }
     let row = await this.brandingRepository.findOne({
       where: { organizationId },
     });

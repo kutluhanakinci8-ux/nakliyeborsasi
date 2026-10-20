@@ -117,6 +117,7 @@ import {
 import { MailAiComposeService } from "./MailAiComposeService";
 import { MailDeliverabilityHubService } from "./MailDeliverabilityHubService";
 import { UserNotificationPreferenceService } from "./UserNotificationPreferenceService";
+import { UpdateMailEmailSocialLinksRequestDto } from "./MailEmailSocialLinksRequestDto";
 
 @Controller("company/mail-inbox")
 @UseGuards(JwtAuthenticationGuard, MailProductTotpPolicyGuard)
@@ -618,6 +619,29 @@ export class CompanyMailInboxController {
     const branding = applyEkolojikMarketWebmailBranding(
       await this.mailOrganizationBrandingService.getSnapshot(user.companyId),
       summary.primaryAddress,
+    );
+    return { message: "OK", branding };
+  }
+
+  @Patch("branding/social")
+  public async updateEmailSocialLinks(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: UpdateMailEmailSocialLinksRequestDto,
+  ) {
+    this.assertMailInboxWriter(user);
+    const branding =
+      await this.mailOrganizationBrandingService.updateEmailSocialLinks(
+        user.companyId,
+        body.emailSocialLinks ?? [],
+      );
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.BrandingUpdated,
+      {
+        organizationId: user.companyId,
+        emailSocialLinks: branding.emailSocialLinks,
+      },
+      "/company/mail-inbox/branding/social",
     );
     return { message: "OK", branding };
   }
