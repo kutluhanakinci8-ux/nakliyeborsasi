@@ -301,11 +301,16 @@ export function fileToAttachment(
 export function formatApiError(raw: string): string {
   try {
     const parsed = JSON.parse(raw) as { message?: string | string[] };
-    if (Array.isArray(parsed.message)) {
-      return parsed.message.join(" ");
+    const messages = Array.isArray(parsed.message)
+      ? parsed.message.join(" ")
+      : typeof parsed.message === "string"
+        ? parsed.message
+        : "";
+    if (messages.includes("emailSocialLinks must contain no more than")) {
+      return "En fazla 7 sosyal medya bağlantısı kaydedilebilir.";
     }
-    if (typeof parsed.message === "string") {
-      return parsed.message;
+    if (messages) {
+      return messages;
     }
   } catch {
     /* plain text */

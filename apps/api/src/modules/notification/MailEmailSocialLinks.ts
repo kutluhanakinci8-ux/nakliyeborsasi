@@ -77,7 +77,7 @@ export function normalizeMailEmailSocialLinks(
     }
     seen.add(platform);
     out.push({ platform, url });
-    if (out.length >= 6) {
+    if (out.length >= 7) {
       break;
     }
   }

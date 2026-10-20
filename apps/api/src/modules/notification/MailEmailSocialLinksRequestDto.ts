@@ -23,7 +23,7 @@ export class MailEmailSocialLinkItemDto {
 export class UpdateMailEmailSocialLinksRequestDto {
   @IsOptional()
   @IsArray()
-  @ArrayMaxSize(6)
+  @ArrayMaxSize(7)
   @ValidateNested({ each: true })
   @Type(() => MailEmailSocialLinkItemDto)
   public emailSocialLinks?: MailEmailSocialLinkItemDto[];
