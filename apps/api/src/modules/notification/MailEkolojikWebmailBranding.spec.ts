@@ -13,6 +13,7 @@ const base: MailOrganizationBrandingSnapshot = {
   emailLegalFooter: null,
   defaultFromDisplayName: null,
   hidePlatformEmailChrome: false,
+  emailSocialLinks: [],
   detailTr: "test",
 };
 

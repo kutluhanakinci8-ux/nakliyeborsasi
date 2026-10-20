@@ -38,6 +38,10 @@ export function LertaComTrMailAddressPicker({
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [socialOpen, setSocialOpen] = useState(false);
+  const [socialInstagram, setSocialInstagram] = useState("");
+  const [socialLinkedin, setSocialLinkedin] = useState("");
+  const [socialWebsite, setSocialWebsite] = useState("");
 
   const fullPreview = useMemo(() => {
     const lp = localPart.trim().toLowerCase();
@@ -135,9 +139,29 @@ export function LertaComTrMailAddressPicker({
     }
     setBusy(true);
     try {
+      const emailSocialLinks: { platform: string; url: string }[] = [];
+      if (socialInstagram.trim()) {
+        emailSocialLinks.push({
+          platform: "instagram",
+          url: socialInstagram.trim(),
+        });
+      }
+      if (socialLinkedin.trim()) {
+        emailSocialLinks.push({
+          platform: "linkedin",
+          url: socialLinkedin.trim(),
+        });
+      }
+      if (socialWebsite.trim()) {
+        emailSocialLinks.push({
+          platform: "website",
+          url: socialWebsite.trim(),
+        });
+      }
       const result = await claimCompanyMailAddress(accessToken, {
         desiredAddress: `${lp}@${tenantDomain}`,
         displayName: displayName.trim() || companyLegalName,
+        ...(emailSocialLinks.length > 0 ? { emailSocialLinks } : {}),
       });
       onSuccess(result.fromAddress);
     } catch (err) {
@@ -226,6 +250,56 @@ export function LertaComTrMailAddressPicker({
           placeholder={companyLegalName}
         />
       </label>
+
+      <p style={{ marginTop: "0.75rem" }}>
+        <button
+          type="button"
+          className="btn-account-secondary"
+          onClick={() => setSocialOpen((v) => !v)}
+        >
+          {socialOpen
+            ? "Sosyal medya alanlarını gizle"
+            : "Sosyal medya ekleyin (isteğe bağlı)"}
+        </button>
+      </p>
+      {socialOpen ? (
+        <div className="account-form-row" style={{ marginBottom: "0.75rem" }}>
+          <p className="module-hint">
+            Giden e-postaların altında tıklanabilir ikonlar görünür. Sonra
+            webmail ayarlarından da düzenleyebilirsiniz.
+          </p>
+          <label className="account-label">
+            Instagram
+            <input
+              className="account-input"
+              value={socialInstagram}
+              onChange={(e) => setSocialInstagram(e.target.value)}
+              placeholder="@firma"
+              autoComplete="off"
+            />
+          </label>
+          <label className="account-label">
+            LinkedIn
+            <input
+              className="account-input"
+              value={socialLinkedin}
+              onChange={(e) => setSocialLinkedin(e.target.value)}
+              placeholder="https://linkedin.com/company/…"
+              autoComplete="off"
+            />
+          </label>
+          <label className="account-label">
+            Web sitesi
+            <input
+              className="account-input"
+              value={socialWebsite}
+              onChange={(e) => setSocialWebsite(e.target.value)}
+              placeholder="https://firma.com"
+              autoComplete="off"
+            />
+          </label>
+        </div>
+      ) : null}
 
       {error ? <p className="error">{error}</p> : null}
 

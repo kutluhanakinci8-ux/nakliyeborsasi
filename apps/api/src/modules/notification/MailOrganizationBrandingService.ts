@@ -16,6 +16,10 @@ import {
   type TenantTrustFooterMode,
 } from "./MailTenantEmailBranding";
 import type { OutboundWrapBranding } from "./MailOutboundHtmlTemplate";
+import {
+  type MailEmailSocialLink,
+  normalizeMailEmailSocialLinks,
+} from "./MailEmailSocialLinks";
 
 export type MailOrganizationBrandingSnapshot = {
   allowed: boolean;
@@ -26,6 +30,7 @@ export type MailOrganizationBrandingSnapshot = {
   emailLegalFooter: string | null;
   defaultFromDisplayName: string | null;
   hidePlatformEmailChrome: boolean;
+  emailSocialLinks: MailEmailSocialLink[];
   detailTr: string;
 };
 
@@ -68,6 +73,7 @@ export class MailOrganizationBrandingService {
       emailLegalFooter: row?.emailLegalFooter ?? null,
       defaultFromDisplayName: row?.defaultFromDisplayName ?? null,
       hidePlatformEmailChrome: row?.hidePlatformEmailChrome ?? false,
+      emailSocialLinks: normalizeMailEmailSocialLinks(row?.emailSocialLinks),
       detailTr: allowed
         ? "Enterprise white-label: logo ve From adı yapılandırılabilir."
         : "White-label yalnızca Enterprise mail planında (lerta_mail_enterprise_tr).",
@@ -136,6 +142,24 @@ export class MailOrganizationBrandingService {
     return this.getSnapshot(organizationId);
   }
 
+  /** Giden e-posta alt bilgisi sosyal bağlantıları (tüm planlar). */
+  public async updateEmailSocialLinks(
+    organizationId: string,
+    raw: unknown,
+  ): Promise<MailOrganizationBrandingSnapshot> {
+    const emailSocialLinks = normalizeMailEmailSocialLinks(raw);
+    let row = await this.brandingRepository.findOne({
+      where: { organizationId },
+    });
+    if (!row) {
+      row = this.brandingRepository.create({ organizationId });
+    }
+    row.emailSocialLinks =
+      emailSocialLinks.length > 0 ? emailSocialLinks : null;
+    await this.brandingRepository.save(row);
+    return this.getSnapshot(organizationId);
+  }
+
   /** Webmail SMTP çıkış sarmalayıcısı (tüm planlar: firma adı; Enterprise: logo/renk). */
   public async resolveOutboundWrapBranding(
     organizationId: string,
@@ -160,6 +184,7 @@ export class MailOrganizationBrandingService {
         whiteLabel && row?.emailLegalFooter?.trim()
           ? row.emailLegalFooter.trim()
           : null,
+      socialLinks: normalizeMailEmailSocialLinks(row?.emailSocialLinks),
     };
   }
 

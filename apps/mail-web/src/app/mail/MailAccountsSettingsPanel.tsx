@@ -7,6 +7,7 @@ import {
   type MailAccountHubPayload,
 } from "@/lib/mailApi";
 import { resolveMailConsoleUrl } from "@/lib/mailApi";
+import { MailEmailSocialLinksEditor } from "./MailEmailSocialLinksEditor";
 
 type Props = {
   accessToken: string;
@@ -72,6 +73,12 @@ export function MailAccountsSettingsPanel({ accessToken }: Props) {
           Marka başlığı: {hub.branding.emailBrandTitle}
         </p>
       ) : null}
+
+      <h3 className="mail-settings-subhead">E-posta alt bilgisi — sosyal medya</h3>
+      <MailEmailSocialLinksEditor
+        accessToken={accessToken}
+        canEdit={hub.canManageSenders}
+      />
 
       <h3 className="mail-settings-subhead">Gönderen kimlikleri</h3>
       <ul className="mail-accounts-list">

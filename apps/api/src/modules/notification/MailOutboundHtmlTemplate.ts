@@ -3,6 +3,12 @@ export const LERTA_POSTA_OUTBOUND_MARKER = "lerta-posta-outbound-v2";
 
 const DEFAULT_ACCENT = "#1a1647";
 
+import type { MailEmailSocialLink } from "./MailEmailSocialLinks";
+import {
+  buildEmailSocialFooterHtml,
+  buildEmailSocialFooterPlain,
+} from "./MailEmailSocialLinks";
+
 export type OutboundWrapBranding = {
   brandTitle: string;
   logoUrl: string | null;
@@ -13,6 +19,7 @@ export type OutboundWrapBranding = {
   legalFooterText?: string | null;
   /** Pazarlama / kampanya: abonelik iptali linki. */
   marketingUnsubscribeUrl?: string | null;
+  socialLinks?: MailEmailSocialLink[];
 };
 
 export function isLertaBrandedOutboundHtml(html: string): boolean {
@@ -49,6 +56,10 @@ export function buildBrandedPlainText(
       `Abonelikten çık: ${branding.marketingUnsubscribeUrl.trim()}`,
       "",
     );
+  }
+  const socialPlain = buildEmailSocialFooterPlain(branding?.socialLinks ?? []);
+  if (socialPlain) {
+    lines.push("", socialPlain);
   }
   lines.push(
     branding?.hidePlatformFooter
@@ -124,9 +135,13 @@ function wrapLertaPostaOutboundEmail(params: {
   const unsubBlock = unsub
     ? `<p style="margin:0 0 10px;font-size:12px;line-height:1.5;color:#5c6370;text-align:center;"><a href="${escapeHtml(unsub)}" style="color:#4f46e5;text-decoration:underline;">Bülten aboneliğinden çık</a></p>`
     : "";
+  const socialBlock = buildEmailSocialFooterHtml(
+    params.branding?.socialLinks ?? [],
+    accent,
+  );
   const footerHtml = params.branding?.hidePlatformFooter
-    ? `${legalBlock}${unsubBlock}<p style="margin:0;font-size:12px;line-height:1.5;color:#5c6370;text-align:center;">${brandTitle}</p>`
-    : `${legalBlock}${unsubBlock}<p style="margin:0;font-size:12px;line-height:1.5;color:#5c6370;text-align:center;">
+    ? `${legalBlock}${unsubBlock}${socialBlock}<p style="margin:0;font-size:12px;line-height:1.5;color:#5c6370;text-align:center;">${brandTitle}</p>`
+    : `${legalBlock}${unsubBlock}${socialBlock}<p style="margin:0;font-size:12px;line-height:1.5;color:#5c6370;text-align:center;">
 Kurumsal e-posta · <a href="https://posta.lerta.com.tr" style="color:#4f46e5;text-decoration:none;font-weight:600;">posta.lerta.com.tr</a>
 </p>`;
 

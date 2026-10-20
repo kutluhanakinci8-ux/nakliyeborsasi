@@ -550,6 +550,18 @@ export type MailPlanView = {
   mailWhiteLabelAllowed?: boolean;
 };
 
+export type MailEmailSocialLink = {
+  platform:
+    | "instagram"
+    | "facebook"
+    | "linkedin"
+    | "x"
+    | "youtube"
+    | "tiktok"
+    | "website";
+  url: string;
+};
+
 export type MailBrandingSnapshot = {
   allowed: boolean;
   planCode: string | null;
@@ -559,6 +571,7 @@ export type MailBrandingSnapshot = {
   emailLegalFooter: string | null;
   defaultFromDisplayName: string | null;
   hidePlatformEmailChrome: boolean;
+  emailSocialLinks: MailEmailSocialLink[];
   detailTr: string;
 };
 
@@ -741,6 +754,20 @@ export async function updateMailBranding(
     accessToken,
     "company/mail-identity/branding",
     { method: "PATCH", body: JSON.stringify(body) },
+  );
+}
+
+export async function updateMailEmailSocialLinks(
+  accessToken: string,
+  emailSocialLinks: MailEmailSocialLink[],
+) {
+  return apiFetch<{ branding: MailBrandingSnapshot }>(
+    accessToken,
+    "company/mail-identity/branding/social",
+    {
+      method: "PATCH",
+      body: JSON.stringify({ emailSocialLinks }),
+    },
   );
 }
 

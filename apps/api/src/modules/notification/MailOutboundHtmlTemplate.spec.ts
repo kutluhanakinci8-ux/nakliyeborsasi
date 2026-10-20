@@ -33,4 +33,28 @@ describe("MailOutboundHtmlTemplate", () => {
     expect(plain).toContain("deneme 3");
     expect(plain).toContain("posta.lerta.com.tr");
   });
+
+  it("renders social links in HTML and plain footer", () => {
+    const branding = {
+      brandTitle: "Lerta Mail SaaS",
+      logoUrl: null,
+      accentColor: "#1a1647",
+      hidePlatformFooter: false,
+      socialLinks: [
+        {
+          platform: "instagram" as const,
+          url: "https://instagram.com/lerta",
+        },
+        {
+          platform: "linkedin" as const,
+          url: "https://www.linkedin.com/company/lerta",
+        },
+      ],
+    };
+    const html = resolveOutboundHtml("merhaba", undefined, { branding });
+    expect(html).toContain("https://instagram.com/lerta");
+    expect(html).toContain('title="Instagram"');
+    const plain = buildBrandedPlainText(undefined, "merhaba", branding);
+    expect(plain).toContain("Instagram: https://instagram.com/lerta");
+  });
 });

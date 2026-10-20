@@ -736,6 +736,24 @@ export async function deleteMessagePermanently(
   });
 }
 
+export const MAIL_EMAIL_SOCIAL_PLATFORMS = [
+  "instagram",
+  "facebook",
+  "linkedin",
+  "x",
+  "youtube",
+  "tiktok",
+  "website",
+] as const;
+
+export type MailEmailSocialPlatform =
+  (typeof MAIL_EMAIL_SOCIAL_PLATFORMS)[number];
+
+export type MailEmailSocialLink = {
+  platform: MailEmailSocialPlatform;
+  url: string;
+};
+
 export type MailInboxBranding = {
   allowed: boolean;
   planCode: string | null;
@@ -743,8 +761,23 @@ export type MailInboxBranding = {
   emailBrandTitle: string | null;
   defaultFromDisplayName: string | null;
   hidePlatformEmailChrome: boolean;
+  emailSocialLinks: MailEmailSocialLink[];
   detailTr: string;
 };
+
+export async function updateMailEmailSocialLinks(
+  accessToken: string,
+  emailSocialLinks: MailEmailSocialLink[],
+) {
+  return apiFetch<{ branding: MailInboxBranding }>(
+    accessToken,
+    "company/mail-identity/branding/social",
+    {
+      method: "PATCH",
+      body: JSON.stringify({ emailSocialLinks }),
+    },
+  );
+}
 
 export type MailPushConfig = {
   enabled: boolean;

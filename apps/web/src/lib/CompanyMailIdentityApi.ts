@@ -160,9 +160,18 @@ export async function fetchCompanyMailIdentity(
   };
 }
 
+export type CompanyMailEmailSocialLink = {
+  platform: string;
+  url: string;
+};
+
 export async function claimCompanyMailAddress(
   accessToken: string,
-  body: { desiredAddress: string; displayName?: string },
+  body: {
+    desiredAddress: string;
+    displayName?: string;
+    emailSocialLinks?: CompanyMailEmailSocialLink[];
+  },
 ): Promise<{
   fromAddress: string;
   vanityAddress: string | null;

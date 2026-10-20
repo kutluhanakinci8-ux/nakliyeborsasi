@@ -39,6 +39,10 @@ export class MailOrganizationBrandingEntity {
   @Column({ type: "boolean", default: false })
   public hidePlatformEmailChrome!: boolean;
 
+  /** Giden e-posta alt bilgisinde tıklanabilir sosyal bağlantılar. */
+  @Column({ name: "email_social_links", type: "jsonb", nullable: true })
+  public emailSocialLinks!: Array<{ platform: string; url: string }> | null;
+
   @CreateDateColumn({ type: "timestamptz" })
   public createdAt!: Date;
 

@@ -1,11 +1,16 @@
+import { Type } from "class-transformer";
 import {
+  ArrayMaxSize,
+  IsArray,
   IsIn,
   IsOptional,
   IsString,
   Matches,
   MaxLength,
   MinLength,
+  ValidateNested,
 } from "class-validator";
+import { MailEmailSocialLinkItemDto } from "./MailEmailSocialLinksRequestDto";
 
 export class RegisterCustomDomainDto {
   @IsString()
@@ -65,6 +70,13 @@ export class ClaimMailAddressDto {
   @IsString()
   @MaxLength(120)
   public displayName?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(6)
+  @ValidateNested({ each: true })
+  @Type(() => MailEmailSocialLinkItemDto)
+  public emailSocialLinks?: MailEmailSocialLinkItemDto[];
 }
 
 export class UpdateCompanyMailDisplayNameDto {

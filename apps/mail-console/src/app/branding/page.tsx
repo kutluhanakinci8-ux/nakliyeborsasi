@@ -11,6 +11,7 @@ import {
   updateMailBranding,
   type MailBrandingSnapshot,
 } from "@/lib/consoleApi";
+import { MailEmailSocialLinksForm } from "@/components/MailEmailSocialLinksForm";
 import { useConsoleSession } from "@/lib/session";
 
 export default function BrandingPage() {
@@ -79,7 +80,9 @@ export default function BrandingPage() {
 
   return (
     <ConsoleShell operator={operator}>
-      <h1>White-label (Enterprise)</h1>
+      <h1>Marka ve sosyal medya</h1>
+      {accessToken ? <MailEmailSocialLinksForm accessToken={accessToken} /> : null}
+      <h2 style={{ marginTop: 24 }}>White-label (Enterprise)</h2>
       <p style={{ color: "var(--muted)", maxWidth: 560 }}>
         Bildirim e-postalarında logo, üst bilgi marka adı ve varsayılan From
         görünen adı. Plan: <code>lerta_mail_enterprise_tr</code>.

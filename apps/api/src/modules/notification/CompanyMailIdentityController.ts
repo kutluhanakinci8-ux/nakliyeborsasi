@@ -53,6 +53,7 @@ import { MailBimiLogoProbeService } from "./MailBimiLogoProbeService";
 import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
 import { MailOrganizationBrandingService } from "./MailOrganizationBrandingService";
 import { UpdateMailBrandingRequestDto } from "./MailBrandingRequestDto";
+import { UpdateMailEmailSocialLinksRequestDto } from "./MailEmailSocialLinksRequestDto";
 import { MailOrganizationIntegrationService } from "./MailOrganizationIntegrationService";
 import { MailWebhookDeliveryLogService } from "./MailWebhookDeliveryLogService";
 import {
@@ -150,6 +151,12 @@ export class CompanyMailIdentityController {
       desiredAddress: body.desiredAddress,
       displayName: body.displayName,
     });
+    if (body.emailSocialLinks !== undefined) {
+      await this.mailOrganizationBrandingService.updateEmailSocialLinks(
+        user.companyId,
+        body.emailSocialLinks,
+      );
+    }
     this.refreshInboundRouting();
     await this.mailIdentityAuditService.recordFromUser(
       user,
@@ -959,6 +966,29 @@ export class CompanyMailIdentityController {
       branding.logoUrl,
     );
     return { message: "OK", probe };
+  }
+
+  @Patch("branding/social")
+  public async updateEmailSocialLinks(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: UpdateMailEmailSocialLinksRequestDto,
+  ) {
+    this.assertMailIdentityManager(user);
+    const branding =
+      await this.mailOrganizationBrandingService.updateEmailSocialLinks(
+        user.companyId,
+        body.emailSocialLinks ?? [],
+      );
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.BrandingUpdated,
+      {
+        organizationId: user.companyId,
+        emailSocialLinks: branding.emailSocialLinks,
+      },
+      "/company/mail-identity/branding/social",
+    );
+    return { message: "OK", branding };
   }
 
   @Patch("branding")
