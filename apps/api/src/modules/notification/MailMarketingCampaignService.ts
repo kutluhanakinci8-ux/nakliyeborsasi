@@ -22,6 +22,7 @@ import {
 } from "./MailCampaignExportCsv";
 import type { MailMarketingCampaignStatus } from "../../infrastructure/database/entities/MailMarketingCampaignEntity";
 import { normalizeMailCampaignTags } from "./MailCampaignTags";
+import { normalizeMailCampaignClientReference } from "./MailCampaignClientReference";
 
 const MAX_SCHEDULE_DAYS = 7;
 const MIN_SCHEDULE_LEAD_MS = 60_000;
@@ -68,6 +69,7 @@ export class MailMarketingCampaignService {
     scheduled: boolean;
     scheduleAt: string | null;
     result?: MailMarketingCampaignResult;
+    idempotent?: boolean;
   }> {
     const scheduleAt = params.scheduleAt ?? null;
     if (scheduleAt) {
@@ -77,9 +79,28 @@ export class MailMarketingCampaignService {
         "Hatırlatma yalnızca zamanlanmış kampanyalarda kullanılabilir.",
       );
     }
+    const clientReference = normalizeMailCampaignClientReference(
+      params.payload.clientReference,
+    );
+    if (clientReference) {
+      const existing = await this.findRecentByClientReference(
+        params.organizationId,
+        clientReference,
+      );
+      if (existing) {
+        return {
+          campaignId: existing.id,
+          scheduled: existing.status === "scheduled",
+          scheduleAt: existing.scheduleAt?.toISOString() ?? null,
+          result: existing.result ?? undefined,
+          idempotent: true,
+        };
+      }
+    }
     const payload = {
       ...params.payload,
       tags: normalizeMailCampaignTags(params.payload.tags),
+      clientReference,
     };
     const row = await this.campaignRepository.save(
       this.campaignRepository.create({
@@ -163,6 +184,33 @@ export class MailMarketingCampaignService {
     return this.toDetail(row);
   }
 
+  public async getPreviewForOrganization(
+    organizationId: string,
+    campaignId: string,
+  ) {
+    const row = await this.campaignRepository.findOne({
+      where: { id: campaignId, organizationId },
+    });
+    if (!row) {
+      throw new NotFoundException("Kampanya bulunamadı.");
+    }
+    const text = row.payload.text ?? "";
+    return {
+      campaignId: row.id,
+      status: row.status,
+      subject: row.subject,
+      subjectB: row.payload.subjectB ?? null,
+      textPreview: text.length > 2000 ? `${text.slice(0, 2000)}…` : text,
+      textLength: text.length,
+      hasHtml: Boolean(row.payload.html?.trim()),
+      htmlLength: row.payload.html?.length ?? 0,
+      recipientCount: row.payload.recipients?.length ?? 0,
+      scheduleAt: row.scheduleAt?.toISOString() ?? null,
+      tags: row.payload.tags ?? [],
+      clientReference: row.payload.clientReference ?? null,
+    };
+  }
+
   public async listForOrganization(
     organizationId: string,
     limit = 40,
@@ -174,6 +222,8 @@ export class MailMarketingCampaignService {
     createdBefore?: string,
     sort: MailCampaignListSort = "createdAt",
     hasFailures = false,
+    scheduleAfter?: string,
+    scheduleBefore?: string,
   ) {
     const take = Math.min(80, Math.max(1, limit));
     const skip = Math.min(500, Math.max(0, offset));
@@ -183,6 +233,8 @@ export class MailMarketingCampaignService {
       subjectQuery,
       createdAfter,
       createdBefore,
+      scheduleAfter,
+      scheduleBefore,
       sort,
       hasFailures,
     });
@@ -218,6 +270,9 @@ export class MailMarketingCampaignService {
     let sentInWindow = 0;
     let failedRecipientsInWindow = 0;
     let suppressedSkippedInWindow = 0;
+    let campaignsWithFailuresInWindow = 0;
+    let deliveryAttemptedInWindow = 0;
+    let deliverySentInWindow = 0;
     const tagSet = new Set<string>();
     const tagCountsInWindow: Record<string, number> = {};
     for (const row of rows) {
@@ -232,10 +287,21 @@ export class MailMarketingCampaignService {
       sentInWindow += row.result?.sent ?? 0;
       failedRecipientsInWindow += row.result?.failed?.length ?? 0;
       suppressedSkippedInWindow += row.result?.skippedSuppressed ?? 0;
+      if ((row.result?.failed?.length ?? 0) > 0) {
+        campaignsWithFailuresInWindow += 1;
+      }
+      if (row.status === "completed" && row.result) {
+        deliveryAttemptedInWindow += row.result.attempted;
+        deliverySentInWindow += row.result.sent;
+      }
       for (const value of row.payload.tags ?? []) {
         tagCountsInWindow[value] = (tagCountsInWindow[value] ?? 0) + 1;
       }
     }
+    const averageSuccessRatePercent =
+      deliveryAttemptedInWindow > 0
+        ? Math.round((deliverySentInWindow / deliveryAttemptedInWindow) * 100)
+        : null;
     return {
       windowDays,
       counts,
@@ -244,6 +310,8 @@ export class MailMarketingCampaignService {
       sentInWindow,
       failedRecipientsInWindow,
       suppressedSkippedInWindow,
+      campaignsWithFailuresInWindow,
+      averageSuccessRatePercent,
       availableTags: [...tagSet].sort(),
       tagCountsInWindow,
     };
@@ -267,6 +335,8 @@ export class MailMarketingCampaignService {
     createdBefore?: string,
     sort: MailCampaignListSort = "createdAt",
     hasFailures = false,
+    scheduleAfter?: string,
+    scheduleBefore?: string,
   ): Promise<{ filename: string; csv: string }> {
     const qb = this.buildCampaignListQuery(organizationId, {
       status,
@@ -274,6 +344,8 @@ export class MailMarketingCampaignService {
       subjectQuery,
       createdAfter,
       createdBefore,
+      scheduleAfter,
+      scheduleBefore,
       sort,
       hasFailures,
     });
@@ -834,6 +906,22 @@ export class MailMarketingCampaignService {
     return parsed;
   }
 
+  private async findRecentByClientReference(
+    organizationId: string,
+    clientReference: string,
+  ): Promise<MailMarketingCampaignEntity | null> {
+    const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    return this.campaignRepository
+      .createQueryBuilder("c")
+      .where("c.organizationId = :organizationId", { organizationId })
+      .andWhere("c.createdAt >= :since", { since })
+      .andWhere("c.payload::jsonb @> :clientRef", {
+        clientRef: JSON.stringify({ clientReference }),
+      })
+      .orderBy("c.createdAt", "DESC")
+      .getOne();
+  }
+
   private buildCampaignListQuery(
     organizationId: string,
     filters: {
@@ -842,6 +930,8 @@ export class MailMarketingCampaignService {
       subjectQuery?: string;
       createdAfter?: string;
       createdBefore?: string;
+      scheduleAfter?: string;
+      scheduleBefore?: string;
       sort: MailCampaignListSort;
       hasFailures?: boolean;
     },
@@ -871,6 +961,14 @@ export class MailMarketingCampaignService {
     const before = this.parseOptionalDateFilter(filters.createdBefore);
     if (before) {
       qb.andWhere("c.createdAt <= :createdBefore", { createdBefore: before });
+    }
+    const scheduleAfter = this.parseOptionalDateFilter(filters.scheduleAfter);
+    if (scheduleAfter) {
+      qb.andWhere("c.scheduleAt >= :scheduleAfter", { scheduleAfter });
+    }
+    const scheduleBefore = this.parseOptionalDateFilter(filters.scheduleBefore);
+    if (scheduleBefore) {
+      qb.andWhere("c.scheduleAt <= :scheduleBefore", { scheduleBefore });
     }
     if (filters.hasFailures) {
       qb.andWhere(

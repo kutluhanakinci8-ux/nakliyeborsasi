@@ -22,6 +22,7 @@ API anahtarları posta konsol → Entegrasyon üzerinden oluşturulur.
 | GET | `/campaigns/summary/export.csv` | 30 günlük özet CSV |
 | GET | `/campaigns` | Kampanya listesi (`limit`, `offset`, `status`, `tag`, `q`, `createdAfter`, `createdBefore`, `sort`) |
 | GET | `/campaigns/export.csv` | Filtrelenmiş liste CSV (en fazla 200 satır) |
+| GET | `/campaigns/:campaignId/preview` | Konu/metin önizleme |
 | GET | `/campaigns/:campaignId` | Kampanya durumu ve sonuç |
 | POST | `/campaigns/:campaignId/clone` | `mode: schedule` + `scheduleAt` ile kopya |
 | POST | `/campaigns/:campaignId/reschedule` | Zamanlanmış kampanya — yeni `scheduleAt` |
@@ -43,8 +44,9 @@ API anahtarları posta konsol → Entegrasyon üzerinden oluşturulur.
 - `scheduleAt` — ISO 8601 (1 dk – 7 gün)
 - `reminderMinutesBefore` — zamanlanmış kampanyada gönderimden önce hatırlatma (5–1440 dk)
 - `delayMsBetweenRecipients` — 0–2000 ms
+- `clientReference` — isteğe bağlı idempotency (7 gün, aynı referans → `idempotent: true`)
 
-Yanıt: `campaignId`, `scheduled`, `sent`, `failed`, …
+Yanıt: `campaignId`, `scheduled`, `sent`, `failed`, `idempotent`, …
 
 ## Webhook olayları (kampanya)
 
@@ -124,3 +126,11 @@ Başarısız HTTP veya ağ hatalarında uç nokta **3 denemeye** kadar otomatik 
 ## Deploy (faz sonrası)
 
 `main` merge sonrası: `bash scripts/trigger-vps-deploy.sh` veya `main` push (`.github/workflows/deploy-vps.yml`). Repo secrets: `VPS_HOST`, `VPS_SSH_KEY`, isteğe bağlı `VPS_USER`.
+
+## Faz 19
+
+- `clientReference` — POST `/campaigns` idempotency (7 gün)
+- `GET /campaigns/:id/preview` — entegrasyon önizleme
+- Liste: `scheduleAfter` / `scheduleBefore` (planlanan gönderim zamanı)
+- Özet: `averageSuccessRatePercent`, `campaignsWithFailuresInWindow`
+- Web: plan tarihi filtresi, özet satırında ortalama başarı %

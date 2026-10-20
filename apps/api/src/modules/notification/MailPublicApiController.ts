@@ -86,7 +86,7 @@ export class MailPublicApiController {
           method: "GET",
           path: "/campaigns",
           description:
-            "Kampanya listesi (limit, offset, status, tag, q, createdAfter, createdBefore, sort, hasFailures)",
+            "Kampanya listesi (limit, offset, status, tag, q, created/schedule date filters, sort, hasFailures)",
         },
         {
           method: "GET",
@@ -117,6 +117,11 @@ export class MailPublicApiController {
           method: "POST",
           path: "/campaigns/:campaignId/tags",
           description: "Kampanya etiketlerini güncelle (running hariç)",
+        },
+        {
+          method: "GET",
+          path: "/campaigns/:campaignId/preview",
+          description: "Konu ve metin önizleme (textPreview, htmlLength)",
         },
         {
           method: "GET",
@@ -246,6 +251,8 @@ export class MailPublicApiController {
     @Query("createdBefore") createdBefore?: string,
     @Query("sort") sort?: string,
     @Query("hasFailures") hasFailures?: string,
+    @Query("scheduleAfter") scheduleAfter?: string,
+    @Query("scheduleBefore") scheduleBefore?: string,
   ) {
     const parsed = limit ? Number.parseInt(limit, 10) : 20;
     const parsedOffset = offset ? Number.parseInt(offset, 10) : 0;
@@ -273,6 +280,8 @@ export class MailPublicApiController {
       createdBefore?.trim() || undefined,
       sortKey,
       failuresOnly,
+      scheduleAfter?.trim() || undefined,
+      scheduleBefore?.trim() || undefined,
     );
     return list;
   }
@@ -288,6 +297,8 @@ export class MailPublicApiController {
     @Query("createdBefore") createdBefore?: string,
     @Query("sort") sort?: string,
     @Query("hasFailures") hasFailures?: string,
+    @Query("scheduleAfter") scheduleAfter?: string,
+    @Query("scheduleBefore") scheduleBefore?: string,
   ) {
     const allowed: MailMarketingCampaignStatus[] = [
       "scheduled",
@@ -310,6 +321,8 @@ export class MailPublicApiController {
         createdBefore?.trim() || undefined,
         parseMailCampaignListSort(sort),
         parseMailCampaignHasFailures(hasFailures),
+        scheduleAfter?.trim() || undefined,
+        scheduleBefore?.trim() || undefined,
       );
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader(
@@ -450,6 +463,19 @@ export class MailPublicApiController {
     res.send(`\uFEFF${csv}`);
   }
 
+  @Get("campaigns/:campaignId/preview")
+  public async getCampaignPreview(
+    @MailPublicApiContextParam() ctx: MailPublicApiRequestContext,
+    @Param("campaignId") campaignId: string,
+  ) {
+    const preview =
+      await this.mailMarketingCampaignService.getPreviewForOrganization(
+        ctx.organizationId,
+        campaignId,
+      );
+    return { preview };
+  }
+
   @Get("campaigns/:campaignId")
   public async getCampaign(
     @MailPublicApiContextParam() ctx: MailPublicApiRequestContext,
@@ -490,6 +516,7 @@ export class MailPublicApiController {
         reminderMinutesBefore: body.reminderMinutesBefore,
         notifyCreator: false,
         tags: body.tags,
+        clientReference: body.clientReference,
       },
     });
     const result = outcome.result;
@@ -497,6 +524,7 @@ export class MailPublicApiController {
       campaignId: outcome.campaignId,
       scheduled: outcome.scheduled,
       scheduleAt: outcome.scheduleAt,
+      idempotent: outcome.idempotent ?? false,
       attempted: result?.attempted ?? body.recipients.length,
       sent: result?.sent ?? 0,
       skippedSuppressed: result?.skippedSuppressed ?? 0,

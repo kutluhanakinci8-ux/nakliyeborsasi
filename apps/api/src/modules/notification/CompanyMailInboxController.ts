@@ -1371,6 +1371,7 @@ export class CompanyMailInboxController {
         segment: body.segment,
         reminderMinutesBefore: body.reminderMinutesBefore,
         tags: body.tags,
+        clientReference: body.clientReference,
       },
     });
     const result = outcome.result;
@@ -1461,6 +1462,8 @@ export class CompanyMailInboxController {
     @Query("createdBefore") createdBefore?: string,
     @Query("sort") sort?: string,
     @Query("hasFailures") hasFailures?: string,
+    @Query("scheduleAfter") scheduleAfter?: string,
+    @Query("scheduleBefore") scheduleBefore?: string,
   ) {
     this.assertMailInboxWriter(user);
     const parsed = limit ? Number.parseInt(limit, 10) : 40;
@@ -1489,6 +1492,8 @@ export class CompanyMailInboxController {
       createdBefore?.trim() || undefined,
       sortKey,
       failuresOnly,
+      scheduleAfter?.trim() || undefined,
+      scheduleBefore?.trim() || undefined,
     );
     return { ok: true, ...list };
   }
@@ -1504,6 +1509,8 @@ export class CompanyMailInboxController {
     @Query("createdBefore") createdBefore?: string,
     @Query("sort") sort?: string,
     @Query("hasFailures") hasFailures?: string,
+    @Query("scheduleAfter") scheduleAfter?: string,
+    @Query("scheduleBefore") scheduleBefore?: string,
   ) {
     this.assertMailInboxWriter(user);
     const allowed: MailMarketingCampaignStatus[] = [
@@ -1527,6 +1534,8 @@ export class CompanyMailInboxController {
         createdBefore?.trim() || undefined,
         parseMailCampaignListSort(sort),
         parseMailCampaignHasFailures(hasFailures),
+        scheduleAfter?.trim() || undefined,
+        scheduleBefore?.trim() || undefined,
       );
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader(
@@ -1567,6 +1576,20 @@ export class CompanyMailInboxController {
       `attachment; filename="${filename}"`,
     );
     res.send(`\uFEFF${csv}`);
+  }
+
+  @Get("campaigns/:campaignId/preview")
+  public async getCampaignPreview(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("campaignId") campaignId: string,
+  ) {
+    this.assertMailInboxWriter(user);
+    const preview =
+      await this.mailMarketingCampaignService.getPreviewForOrganization(
+        user.companyId,
+        campaignId,
+      );
+    return { ok: true, preview };
   }
 
   @Get("campaigns/:campaignId")

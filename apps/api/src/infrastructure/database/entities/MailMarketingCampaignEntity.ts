@@ -42,6 +42,8 @@ export type MailMarketingCampaignPayload = {
   reminderDispatchedAt?: string | null;
   /** Raporlama etiketleri (ör. fuar-2026). */
   tags?: string[];
+  /** Entegrasyon idempotency anahtarı (7 gün içinde tekrar create aynı kampanyayı döner). */
+  clientReference?: string;
 };
 
 export type MailMarketingCampaignResult = {

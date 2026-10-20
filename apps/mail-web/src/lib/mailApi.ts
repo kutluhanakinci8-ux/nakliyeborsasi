@@ -1041,6 +1041,8 @@ export type MailCampaignSummary = {
   suppressedSkippedInWindow: number;
   availableTags: string[];
   tagCountsInWindow: Record<string, number>;
+  campaignsWithFailuresInWindow: number;
+  averageSuccessRatePercent: number | null;
 };
 
 export async function fetchMailCampaignSummary(accessToken: string) {
@@ -1084,6 +1086,8 @@ export type MailCampaignListFilters = {
   createdBefore?: string;
   sort?: "createdAt" | "scheduleAt";
   hasFailures?: boolean;
+  scheduleAfter?: string;
+  scheduleBefore?: string;
 };
 
 function buildMailCampaignListQuery(
@@ -1111,7 +1115,13 @@ function buildMailCampaignListQuery(
   const sortQuery =
     filters.sort === "scheduleAt" ? "&sort=scheduleAt" : "";
   const failuresQuery = filters.hasFailures ? "&hasFailures=true" : "";
-  return `limit=${limit}${statusQuery}${tagQuery}${qQuery}${offsetQuery}${afterQuery}${beforeQuery}${sortQuery}${failuresQuery}`;
+  const scheduleAfterQuery = filters.scheduleAfter
+    ? `&scheduleAfter=${encodeURIComponent(filters.scheduleAfter)}`
+    : "";
+  const scheduleBeforeQuery = filters.scheduleBefore
+    ? `&scheduleBefore=${encodeURIComponent(filters.scheduleBefore)}`
+    : "";
+  return `limit=${limit}${statusQuery}${tagQuery}${qQuery}${offsetQuery}${afterQuery}${beforeQuery}${sortQuery}${failuresQuery}${scheduleAfterQuery}${scheduleBeforeQuery}`;
 }
 
 export async function fetchMailCampaigns(
@@ -1125,6 +1135,8 @@ export async function fetchMailCampaigns(
   createdBefore?: string,
   sort?: "createdAt" | "scheduleAt",
   hasFailures?: boolean,
+  scheduleAfter?: string,
+  scheduleBefore?: string,
 ) {
   const query = buildMailCampaignListQuery(limit, {
     status,
@@ -1135,6 +1147,8 @@ export async function fetchMailCampaigns(
     createdBefore,
     sort,
     hasFailures,
+    scheduleAfter,
+    scheduleBefore,
   });
   return apiFetch<{
     ok: true;

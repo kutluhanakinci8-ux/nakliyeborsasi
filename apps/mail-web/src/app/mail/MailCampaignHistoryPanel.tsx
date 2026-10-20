@@ -79,6 +79,8 @@ export function MailCampaignHistoryPanel({
   const [rescheduleAt, setRescheduleAt] = useState("");
   const [createdFrom, setCreatedFrom] = useState("");
   const [createdTo, setCreatedTo] = useState("");
+  const [scheduleFrom, setScheduleFrom] = useState("");
+  const [scheduleTo, setScheduleTo] = useState("");
   const [sortFilter, setSortFilter] = useState<"createdAt" | "scheduleAt">(
     "createdAt",
   );
@@ -118,6 +120,8 @@ export function MailCampaignHistoryPanel({
           dateRangeEnd(createdTo),
           sortFilter,
           hasFailuresOnly || undefined,
+          dateRangeStart(scheduleFrom),
+          dateRangeEnd(scheduleTo),
         );
         setRows((prev) =>
           append ? [...prev, ...listData.campaigns] : listData.campaigns,
@@ -136,6 +140,8 @@ export function MailCampaignHistoryPanel({
       createdTo,
       sortFilter,
       hasFailuresOnly,
+      scheduleFrom,
+      scheduleTo,
     ],
   );
 
@@ -189,6 +195,8 @@ export function MailCampaignHistoryPanel({
           createdBefore: dateRangeEnd(createdTo),
           sort: sortFilter,
           hasFailures: hasFailuresOnly || undefined,
+          scheduleAfter: dateRangeStart(scheduleFrom),
+          scheduleBefore: dateRangeEnd(scheduleTo),
         },
       );
       const url = URL.createObjectURL(blob);
@@ -288,6 +296,9 @@ export function MailCampaignHistoryPanel({
           {summary.suppressedSkippedInWindow > 0
             ? ` · ${summary.suppressedSkippedInWindow} durdurulmuş atlandı`
             : ""}
+          {summary.averageSuccessRatePercent != null
+            ? ` · ort. başarı ${summary.averageSuccessRatePercent}%`
+            : ""}
           {topTagCounts.length > 0
             ? ` · etiket: ${topTagCounts
                 .map(([tag, count]) => `${tag} (${count})`)
@@ -352,6 +363,24 @@ export function MailCampaignHistoryPanel({
             className="compose-input"
             value={createdTo}
             onChange={(e) => setCreatedTo(e.target.value)}
+          />
+        </label>
+        <label className="compose-preset-label">
+          <span>Plan (başlangıç)</span>
+          <input
+            type="date"
+            className="compose-input"
+            value={scheduleFrom}
+            onChange={(e) => setScheduleFrom(e.target.value)}
+          />
+        </label>
+        <label className="compose-preset-label">
+          <span>Plan (bitiş)</span>
+          <input
+            type="date"
+            className="compose-input"
+            value={scheduleTo}
+            onChange={(e) => setScheduleTo(e.target.value)}
           />
         </label>
         <label className="compose-preset-label mail-campaign-history-check">

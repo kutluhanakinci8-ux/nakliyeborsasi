@@ -44,6 +44,8 @@ export function buildCampaignSummaryExportCsv(summary: {
   sentInWindow: number;
   failedRecipientsInWindow: number;
   suppressedSkippedInWindow: number;
+  campaignsWithFailuresInWindow: number;
+  averageSuccessRatePercent: number | null;
   tagCountsInWindow: Record<string, number>;
 }): string {
   const header =
@@ -55,6 +57,16 @@ export function buildCampaignSummaryExportCsv(summary: {
     ["gonderilen", String(summary.sentInWindow)],
     ["basarisiz_alici", String(summary.failedRecipientsInWindow)],
     ["durdurulmus_atlanan", String(summary.suppressedSkippedInWindow)],
+    [
+      "basarisiz_kampanya_sayisi",
+      String(summary.campaignsWithFailuresInWindow),
+    ],
+    [
+      "ortalama_basari_yuzde",
+      summary.averageSuccessRatePercent === null
+        ? ""
+        : String(summary.averageSuccessRatePercent),
+    ],
   ];
   const escape = (value: string) => {
     if (value.includes(",") || value.includes('"')) {

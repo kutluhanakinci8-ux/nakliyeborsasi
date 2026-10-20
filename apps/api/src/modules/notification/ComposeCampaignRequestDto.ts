@@ -103,4 +103,9 @@ export class ComposeCampaignRequestDto {
   @IsString({ each: true })
   @MaxLength(32, { each: true })
   public tags?: string[];
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(64)
+  public clientReference?: string;
 }
