@@ -13,9 +13,12 @@ import {
 import { UserAccountEntity } from "../../infrastructure/database/entities/UserAccountEntity";
 import { MailMailboxComposeService } from "./MailMailboxComposeService";
 import type { ComposeAttachmentInput } from "./MailMailboxComposeService";
+import { MailOrganizationWebhookDispatcherService } from "./MailOrganizationWebhookDispatcherService";
 
 const MAX_SCHEDULE_DAYS = 7;
 const MIN_SCHEDULE_LEAD_MS = 60_000;
+const MIN_REMINDER_MINUTES = 5;
+const MAX_REMINDER_MINUTES = 1440;
 
 @Injectable()
 export class MailMarketingCampaignService {
@@ -25,6 +28,7 @@ export class MailMarketingCampaignService {
     @InjectRepository(UserAccountEntity)
     private readonly userAccountRepository: Repository<UserAccountEntity>,
     private readonly mailMailboxComposeService: MailMailboxComposeService,
+    private readonly mailOrganizationWebhookDispatcherService: MailOrganizationWebhookDispatcherService,
   ) {}
 
   public async createAndRunOrSchedule(params: {
@@ -54,6 +58,26 @@ export class MailMarketingCampaignService {
           `Kampanya en fazla ${MAX_SCHEDULE_DAYS} gün sonrasına planlanabilir.`,
         );
       }
+      const reminderMin = params.payload.reminderMinutesBefore;
+      if (reminderMin !== undefined) {
+        if (
+          reminderMin < MIN_REMINDER_MINUTES ||
+          reminderMin > MAX_REMINDER_MINUTES
+        ) {
+          throw new BadRequestException(
+            `Hatırlatma ${MIN_REMINDER_MINUTES}–${MAX_REMINDER_MINUTES} dakika arasında olmalı.`,
+          );
+        }
+        if (reminderMin * 60_000 >= lead) {
+          throw new BadRequestException(
+            "Hatırlatma, gönderim zamanından önce olmalı.",
+          );
+        }
+      }
+    } else if (params.payload.reminderMinutesBefore !== undefined) {
+      throw new BadRequestException(
+        "Hatırlatma yalnızca zamanlanmış kampanyalarda kullanılabilir.",
+      );
     }
     const row = await this.campaignRepository.save(
       this.campaignRepository.create({
@@ -69,11 +93,13 @@ export class MailMarketingCampaignService {
       }),
     );
     if (scheduleAt) {
+      this.emitCampaignEvent(row, "campaign.scheduled");
       if (params.payload.notifyCreator && params.userId) {
         await this.notifyScheduledCreator(
           params.organizationId,
           params.userId,
           row,
+          "zamanlandı",
         );
       }
       return {
@@ -135,15 +161,19 @@ export class MailMarketingCampaignService {
     organizationId: string,
     campaignId: string,
   ): Promise<void> {
-    const updated = await this.campaignRepository.update(
-      { id: campaignId, organizationId, status: "scheduled" },
-      { status: "cancelled", completedAt: new Date() },
-    );
-    if (!updated.affected) {
+    const existing = await this.campaignRepository.findOne({
+      where: { id: campaignId, organizationId, status: "scheduled" },
+    });
+    if (!existing) {
       throw new NotFoundException(
         "Zamanlanmış kampanya bulunamadı veya iptal edilemez.",
       );
     }
+    await this.campaignRepository.update(
+      { id: campaignId, organizationId, status: "scheduled" },
+      { status: "cancelled", completedAt: new Date() },
+    );
+    this.emitCampaignEvent(existing, "campaign.cancelled");
   }
 
   public async drainScheduled(): Promise<{ processed: number }> {
@@ -181,8 +211,56 @@ export class MailMarketingCampaignService {
             errorMessage: message.slice(0, 500),
           },
         );
+        this.emitCampaignEvent(locked, "campaign.failed", {
+          errorMessage: message.slice(0, 500),
+        });
         processed += 1;
       }
+    }
+    return { processed };
+  }
+
+  public async drainScheduleReminders(): Promise<{ processed: number }> {
+    const rows = await this.campaignRepository.find({
+      where: { status: "scheduled" },
+      order: { scheduleAt: "ASC" },
+      take: 20,
+    });
+    const now = Date.now();
+    let processed = 0;
+    for (const row of rows) {
+      if (!row.scheduleAt || row.payload.reminderDispatchedAt) {
+        continue;
+      }
+      const minutes = row.payload.reminderMinutesBefore;
+      if (!minutes) {
+        continue;
+      }
+      const fireAt = row.scheduleAt.getTime() - minutes * 60_000;
+      if (now < fireAt || now >= row.scheduleAt.getTime()) {
+        continue;
+      }
+      const payload = {
+        ...row.payload,
+        reminderDispatchedAt: new Date().toISOString(),
+      };
+      await this.campaignRepository.update(
+        { id: row.id, status: "scheduled" },
+        { payload },
+      );
+      const updated = { ...row, payload };
+      this.emitCampaignEvent(updated, "campaign.reminder", {
+        reminderMinutesBefore: minutes,
+      });
+      if (row.payload.notifyCreator && row.createdByUserId) {
+        await this.notifyScheduledCreator(
+          row.organizationId,
+          row.createdByUserId,
+          updated,
+          "hatırlatma",
+        );
+      }
+      processed += 1;
     }
     return { processed };
   }
@@ -191,6 +269,7 @@ export class MailMarketingCampaignService {
     row: MailMarketingCampaignEntity,
     userId?: string,
   ): Promise<MailMarketingCampaignResult> {
+    this.emitCampaignEvent(row, "campaign.started");
     const attachments = row.payload.attachments as ComposeAttachmentInput[] | undefined;
     const sendResult = await this.mailMailboxComposeService.sendCampaign({
       organizationId: row.organizationId,
@@ -205,6 +284,7 @@ export class MailMarketingCampaignService {
       delayMsBetweenRecipients: row.payload.delayMsBetweenRecipients,
       subjectB: row.payload.subjectB,
       recipientDomainAllowlist: row.payload.recipientDomainAllowlist,
+      segment: row.payload.segment,
     });
     const result: MailMarketingCampaignResult = {
       attempted: sendResult.attempted,
@@ -224,13 +304,44 @@ export class MailMarketingCampaignService {
             : null,
       },
     );
+    this.emitCampaignEvent(
+      { ...row, result, status: "completed", completedAt: new Date() },
+      "campaign.completed",
+      { result },
+    );
     return result;
+  }
+
+  private emitCampaignEvent(
+    row: MailMarketingCampaignEntity,
+    event:
+      | "campaign.scheduled"
+      | "campaign.reminder"
+      | "campaign.started"
+      | "campaign.completed"
+      | "campaign.failed"
+      | "campaign.cancelled",
+    extra?: Record<string, unknown>,
+  ): void {
+    this.mailOrganizationWebhookDispatcherService.dispatch(
+      row.organizationId,
+      event,
+      {
+        campaignId: row.id,
+        subject: row.subject,
+        status: row.status,
+        scheduleAt: row.scheduleAt?.toISOString() ?? null,
+        recipientCount: row.payload.recipients?.length ?? 0,
+        ...extra,
+      },
+    );
   }
 
   private async notifyScheduledCreator(
     organizationId: string,
     userId: string,
     row: MailMarketingCampaignEntity,
+    kind: "zamanlandı" | "hatırlatma",
   ): Promise<void> {
     const user = await this.userAccountRepository.findOne({
       where: { id: userId },
@@ -241,9 +352,16 @@ export class MailMarketingCampaignService {
     }
     const when = row.scheduleAt?.toISOString() ?? "";
     const count = row.payload.recipients?.length ?? 0;
-    const subjectLine = `Kampanya zamanlandı: ${row.subject}`;
+    const subjectLine =
+      kind === "hatırlatma"
+        ? `Kampanya hatırlatması: ${row.subject}`
+        : `Kampanya zamanlandı: ${row.subject}`;
     const text = [
       "Merhaba,",
+      "",
+      kind === "hatırlatma"
+        ? "Planlanmış kampanyanızın gönderim zamanı yaklaşıyor."
+        : "Kampanyanız zamanlandı.",
       "",
       `Konu: ${row.subject}`,
       row.payload.subjectB ? `A/B konu (B): ${row.payload.subjectB}` : "",

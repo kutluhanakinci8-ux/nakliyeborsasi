@@ -942,6 +942,12 @@ export async function composeCampaign(
     subjectB?: string;
     recipientDomainAllowlist?: string[];
     notifyCreator?: boolean;
+    segment?: {
+      referansPrefix?: string;
+      referansEquals?: string;
+      requireMusteriAdi?: boolean;
+    };
+    reminderMinutesBefore?: number;
   },
 ) {
   return apiFetch<ComposeCampaignResult>(

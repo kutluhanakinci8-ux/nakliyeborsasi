@@ -14,6 +14,12 @@ const EVENTS: MailWebhookEventType[] = [
   "message.sent",
   "message.failed",
   "inbound.received",
+  "campaign.scheduled",
+  "campaign.reminder",
+  "campaign.started",
+  "campaign.completed",
+  "campaign.failed",
+  "campaign.cancelled",
 ];
 
 export class CreateMailApiKeyRequestDto {

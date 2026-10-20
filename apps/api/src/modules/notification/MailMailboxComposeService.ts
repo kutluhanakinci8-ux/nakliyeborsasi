@@ -34,6 +34,8 @@ import {
 } from "./MailMailboxOutboundContentService";
 import { MailSubscriptionLifecycleService } from "./MailSubscriptionLifecycleService";
 import { MailOrganizationWebhookDispatcherService } from "./MailOrganizationWebhookDispatcherService";
+import type { MailMarketingCampaignSegment } from "../../infrastructure/database/entities/MailMarketingCampaignEntity";
+import { recipientMatchesCampaignSegment } from "./MailCampaignSegment";
 import { EmailSuppressionService } from "./EmailSuppressionService";
 import { randomUUID } from "node:crypto";
 
@@ -215,6 +217,7 @@ export class MailMailboxComposeService {
     delayMsBetweenRecipients?: number;
     subjectB?: string;
     recipientDomainAllowlist?: string[];
+    segment?: MailMarketingCampaignSegment;
     campaignId?: string;
   }): Promise<{
     campaignId: string;
@@ -274,6 +277,18 @@ export class MailMailboxComposeService {
         referans: row.referans?.trim() || params.merge?.referans,
         musteriAdi: row.musteriAdi?.trim() || params.merge?.musteriAdi,
       };
+      if (
+        !recipientMatchesCampaignSegment(
+          {
+            referans: merge.referans,
+            musteriAdi: merge.musteriAdi,
+          },
+          params.segment,
+        )
+      ) {
+        failed.push({ email, error: "Segment filtresine uymuyor." });
+        continue;
+      }
       const subjectForRecipient =
         subjectB && index % 2 === 1 ? subjectB : params.subject;
       try {

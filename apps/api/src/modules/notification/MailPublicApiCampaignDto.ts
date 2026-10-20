@@ -14,6 +14,7 @@ import {
   MinLength,
   ValidateNested,
 } from "class-validator";
+import { ComposeCampaignSegmentDto } from "./ComposeCampaignSegmentDto";
 
 export class MailPublicApiCampaignRecipientDto {
   @IsEmail()
@@ -75,4 +76,15 @@ export class MailPublicApiCampaignDto {
   @IsString({ each: true })
   @MaxLength(120, { each: true })
   public recipientDomainAllowlist?: string[];
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => ComposeCampaignSegmentDto)
+  public segment?: ComposeCampaignSegmentDto;
+
+  @IsOptional()
+  @IsInt()
+  @Min(5)
+  @Max(1440)
+  public reminderMinutesBefore?: number;
 }

@@ -90,6 +90,12 @@ export function MailClientShell({ mail }: Props) {
     setComposeCampaignDomainAllowlist,
     composeCampaignNotifyCreator,
     setComposeCampaignNotifyCreator,
+    composeCampaignSegmentReferansPrefix,
+    setComposeCampaignSegmentReferansPrefix,
+    composeCampaignRequireMusteriAdi,
+    setComposeCampaignRequireMusteriAdi,
+    composeCampaignReminderMinutes,
+    setComposeCampaignReminderMinutes,
     composeCampaignHistoryOpen,
     setComposeCampaignHistoryOpen,
     campaignResult,
@@ -1828,17 +1834,63 @@ export function MailClientShell({ mail }: Props) {
                       value={composeCampaignDomainAllowlist}
                       onChange={(e) => setComposeCampaignDomainAllowlist(e.target.value)}
                     />
+                    <label className="compose-field-label" htmlFor="compose-campaign-segment-prefix">
+                      Segment — referans öneki
+                    </label>
+                    <input
+                      id="compose-campaign-segment-prefix"
+                      type="text"
+                      className="compose-input"
+                      placeholder="REF-"
+                      value={composeCampaignSegmentReferansPrefix}
+                      onChange={(e) =>
+                        setComposeCampaignSegmentReferansPrefix(e.target.value)
+                      }
+                    />
+                    <label className="preset-check">
+                      <input
+                        type="checkbox"
+                        checked={composeCampaignRequireMusteriAdi}
+                        onChange={(e) =>
+                          setComposeCampaignRequireMusteriAdi(e.target.checked)
+                        }
+                      />
+                      Yalnızca müşteri adı dolu satırlar
+                    </label>
                     {composeCampaignScheduleAt ? (
-                      <label className="preset-check">
-                        <input
-                          type="checkbox"
-                          checked={composeCampaignNotifyCreator}
+                      <>
+                        <label
+                          className="compose-field-label"
+                          htmlFor="compose-campaign-reminder"
+                        >
+                          Gönderimden önce hatırlatma
+                        </label>
+                        <select
+                          id="compose-campaign-reminder"
+                          className="compose-input"
+                          value={composeCampaignReminderMinutes}
                           onChange={(e) =>
-                            setComposeCampaignNotifyCreator(e.target.checked)
+                            setComposeCampaignReminderMinutes(
+                              Number.parseInt(e.target.value, 10) || 0,
+                            )
                           }
-                        />
-                        Zamanlandığında hesap e-postama özet gönder
-                      </label>
+                        >
+                          <option value={0}>Yok</option>
+                          <option value={15}>15 dk önce</option>
+                          <option value={30}>30 dk önce</option>
+                          <option value={60}>1 saat önce</option>
+                        </select>
+                        <label className="preset-check">
+                          <input
+                            type="checkbox"
+                            checked={composeCampaignNotifyCreator}
+                            onChange={(e) =>
+                              setComposeCampaignNotifyCreator(e.target.checked)
+                            }
+                          />
+                          Zamanlama / hatırlatmada hesap e-postama özet
+                        </label>
+                      </>
                     ) : null}
                   </div>
                 </div>

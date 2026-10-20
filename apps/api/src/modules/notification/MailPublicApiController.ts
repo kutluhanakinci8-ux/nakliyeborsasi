@@ -30,6 +30,53 @@ export class MailPublicApiController {
     private readonly outboxRepository: Repository<EmailOutboxEntity>,
   ) {}
 
+  @Get("docs")
+  public docs() {
+    return {
+      version: "v1",
+      basePath: "/api/v1/public/lerta-mail/v1",
+      authentication:
+        "Authorization: Bearer <api-key> veya X-Lerta-Mail-Api-Key başlığı",
+      endpoints: [
+        {
+          method: "GET",
+          path: "/organization",
+          description: "Kurum plan özetı",
+        },
+        {
+          method: "POST",
+          path: "/messages",
+          description: "Tekil transaksiyonel mesaj (outbox)",
+        },
+        {
+          method: "GET",
+          path: "/messages/:id",
+          description: "Outbox mesaj durumu",
+        },
+        {
+          method: "POST",
+          path: "/campaigns",
+          description:
+            "Pazarlama kampanyası (max 25 alıcı, scheduleAt, segment, A/B konu)",
+        },
+        {
+          method: "GET",
+          path: "/docs",
+          description: "Bu özet",
+        },
+      ],
+      campaignWebhooks: [
+        "campaign.scheduled",
+        "campaign.reminder",
+        "campaign.started",
+        "campaign.completed",
+        "campaign.failed",
+        "campaign.cancelled",
+      ],
+      markdown: "/docs/LERTA_MAIL_PUBLIC_API.md",
+    };
+  }
+
   @Get("organization")
   public async organization(
     @MailPublicApiContextParam() ctx: MailPublicApiRequestContext,
@@ -99,6 +146,8 @@ export class MailPublicApiController {
         delayMsBetweenRecipients: body.delayMsBetweenRecipients,
         subjectB: body.subjectB?.trim() || undefined,
         recipientDomainAllowlist: body.recipientDomainAllowlist,
+        segment: body.segment,
+        reminderMinutesBefore: body.reminderMinutesBefore,
         notifyCreator: false,
       },
     });

@@ -24,7 +24,9 @@ export default function IntegrationPage() {
   const [keyLabel, setKeyLabel] = useState("Üretim");
   const [newKey, setNewKey] = useState("");
   const [webhookUrl, setWebhookUrl] = useState("");
-  const [webhookEvents, setWebhookEvents] = useState("message.sent,message.failed");
+  const [webhookEvents, setWebhookEvents] = useState(
+    "message.sent,message.failed,campaign.completed",
+  );
   const [newWebhookSecret, setNewWebhookSecret] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");

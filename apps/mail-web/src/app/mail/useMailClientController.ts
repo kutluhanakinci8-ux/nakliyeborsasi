@@ -267,6 +267,12 @@ export function useMailClientController({
     useState("");
   const [composeCampaignNotifyCreator, setComposeCampaignNotifyCreator] =
     useState(false);
+  const [composeCampaignSegmentReferansPrefix, setComposeCampaignSegmentReferansPrefix] =
+    useState("");
+  const [composeCampaignRequireMusteriAdi, setComposeCampaignRequireMusteriAdi] =
+    useState(false);
+  const [composeCampaignReminderMinutes, setComposeCampaignReminderMinutes] =
+    useState(0);
   const [composeCampaignHistoryOpen, setComposeCampaignHistoryOpen] =
     useState(false);
   const [campaignResult, setCampaignResult] = useState<ComposeCampaignResult | null>(
@@ -1041,6 +1047,21 @@ export function useMailClientController({
             composeCampaignScheduleAt && composeCampaignNotifyCreator
               ? true
               : undefined,
+          segment:
+            composeCampaignSegmentReferansPrefix.trim() ||
+            composeCampaignRequireMusteriAdi
+              ? {
+                  referansPrefix:
+                    composeCampaignSegmentReferansPrefix.trim() || undefined,
+                  requireMusteriAdi: composeCampaignRequireMusteriAdi
+                    ? true
+                    : undefined,
+                }
+              : undefined,
+          reminderMinutesBefore:
+            composeCampaignScheduleAt && composeCampaignReminderMinutes > 0
+              ? composeCampaignReminderMinutes
+              : undefined,
         });
         setComposeOpen(false);
         resetCompose();
@@ -1727,6 +1748,9 @@ export function useMailClientController({
     setComposeCampaignSubjectB("");
     setComposeCampaignDomainAllowlist("");
     setComposeCampaignNotifyCreator(false);
+    setComposeCampaignSegmentReferansPrefix("");
+    setComposeCampaignRequireMusteriAdi(false);
+    setComposeCampaignReminderMinutes(0);
     setComposeInlineAttachments([]);
   }
 
@@ -1988,6 +2012,12 @@ export function useMailClientController({
     setComposeCampaignDomainAllowlist,
     composeCampaignNotifyCreator,
     setComposeCampaignNotifyCreator,
+    composeCampaignSegmentReferansPrefix,
+    setComposeCampaignSegmentReferansPrefix,
+    composeCampaignRequireMusteriAdi,
+    setComposeCampaignRequireMusteriAdi,
+    composeCampaignReminderMinutes,
+    setComposeCampaignReminderMinutes,
     composeCampaignHistoryOpen,
     setComposeCampaignHistoryOpen,
     campaignResult,

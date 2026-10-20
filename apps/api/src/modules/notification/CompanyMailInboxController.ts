@@ -1332,6 +1332,8 @@ export class CompanyMailInboxController {
         subjectB: body.subjectB?.trim() || undefined,
         recipientDomainAllowlist: body.recipientDomainAllowlist,
         notifyCreator: body.notifyCreator ?? false,
+        segment: body.segment,
+        reminderMinutesBefore: body.reminderMinutesBefore,
       },
     });
     const result = outcome.result;

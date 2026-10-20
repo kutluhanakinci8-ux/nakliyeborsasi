@@ -14,6 +14,12 @@ export type MailMarketingCampaignRecipient = {
   referans?: string;
 };
 
+export type MailMarketingCampaignSegment = {
+  referansPrefix?: string;
+  referansEquals?: string;
+  requireMusteriAdi?: boolean;
+};
+
 export type MailMarketingCampaignPayload = {
   text: string;
   html?: string;
@@ -27,6 +33,11 @@ export type MailMarketingCampaignPayload = {
   recipientDomainAllowlist?: string[];
   /** Zamanlanmış kampanyada oluşturucuya bilgi e-postası. */
   notifyCreator?: boolean;
+  /** Merge/referans alanlarına göre alıcı filtresi. */
+  segment?: MailMarketingCampaignSegment;
+  /** Gönderimden önce hatırlatma (dakika); yalnızca zamanlanmış kampanya. */
+  reminderMinutesBefore?: number;
+  reminderDispatchedAt?: string | null;
 };
 
 export type MailMarketingCampaignResult = {

@@ -2,6 +2,7 @@ import { Type } from "class-transformer";
 import { ComposeMergeContextDto } from "./ComposeMergeContextDto";
 import { ComposeMailAttachmentDto } from "./ComposeMailRequestDto";
 import { ComposeCampaignRecipientDto } from "./ComposeCampaignRecipientDto";
+import { ComposeCampaignSegmentDto } from "./ComposeCampaignSegmentDto";
 import {
   ArrayMaxSize,
   ArrayMinSize,
@@ -83,4 +84,16 @@ export class ComposeCampaignRequestDto {
   @IsOptional()
   @IsBoolean()
   public notifyCreator?: boolean;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => ComposeCampaignSegmentDto)
+  public segment?: ComposeCampaignSegmentDto;
+
+  /** Gönderimden önce hatırlatma (5–1440 dk); zamanlama ile birlikte. */
+  @IsOptional()
+  @IsInt()
+  @Min(5)
+  @Max(1440)
+  public reminderMinutesBefore?: number;
 }

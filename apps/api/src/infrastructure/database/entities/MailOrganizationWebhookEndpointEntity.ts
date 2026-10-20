@@ -12,7 +12,13 @@ export type MailWebhookEventType =
   | "inbound.received"
   | "message.opened"
   | "message.clicked"
-  | "message.bounced";
+  | "message.bounced"
+  | "campaign.scheduled"
+  | "campaign.reminder"
+  | "campaign.started"
+  | "campaign.completed"
+  | "campaign.failed"
+  | "campaign.cancelled";
 
 @Entity({ name: "mail_organization_webhook_endpoint" })
 export class MailOrganizationWebhookEndpointEntity {

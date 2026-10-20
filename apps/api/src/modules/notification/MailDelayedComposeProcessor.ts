@@ -37,6 +37,15 @@ export class MailDelayedComposeProcessor implements OnModuleInit, OnModuleDestro
           error instanceof Error ? error.message : "scheduled campaign drain failed",
         );
       });
+      void this.mailMarketingCampaignService.drainScheduleReminders().catch(
+        (error) => {
+          this.logger.warn(
+            error instanceof Error
+              ? error.message
+              : "campaign reminder drain failed",
+          );
+        },
+      );
     }, DRAIN_INTERVAL_MS);
   }
 
