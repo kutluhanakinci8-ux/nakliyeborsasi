@@ -1030,15 +1030,33 @@ export async function composeCampaign(
   );
 }
 
+export type MailCampaignSummary = {
+  windowDays: number;
+  counts: Record<string, number>;
+  campaignsInWindow: number;
+  recipientsInWindow: number;
+  sentInWindow: number;
+  availableTags: string[];
+};
+
+export async function fetchMailCampaignSummary(accessToken: string) {
+  return apiFetch<{ ok: true; summary: MailCampaignSummary }>(
+    accessToken,
+    "company/mail-inbox/campaigns/summary",
+  );
+}
+
 export async function fetchMailCampaigns(
   accessToken: string,
   limit = 30,
   status?: string,
+  tag?: string,
 ) {
   const statusQuery = status ? `&status=${encodeURIComponent(status)}` : "";
+  const tagQuery = tag ? `&tag=${encodeURIComponent(tag)}` : "";
   return apiFetch<{ ok: true; campaigns: MailCampaignListItem[] }>(
     accessToken,
-    `company/mail-inbox/campaigns?limit=${limit}${statusQuery}`,
+    `company/mail-inbox/campaigns?limit=${limit}${statusQuery}${tagQuery}`,
   );
 }
 

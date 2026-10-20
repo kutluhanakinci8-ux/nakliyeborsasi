@@ -1829,6 +1829,32 @@ export function useMailClientController({
     }
   }
 
+  useEffect(() => {
+    if (!composeOpen || !composeCampaignMode || !accessToken) {
+      return;
+    }
+    const recipients = parseCampaignRecipientsText(composeCampaignRecipients);
+    if (recipients.length === 0) {
+      setComposeCampaignSegmentPreview(null);
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      void runCampaignSegmentPreview();
+    }, 650);
+    return () => window.clearTimeout(timer);
+  }, [
+    accessToken,
+    composeOpen,
+    composeCampaignMode,
+    composeCampaignRecipients,
+    composeCampaignDomainAllowlist,
+    composeCampaignSegmentReferansPrefix,
+    composeCampaignSegmentReferansList,
+    composeCampaignRequireMusteriAdi,
+    composeMergeReferans,
+    composeMergeMusteriAdi,
+  ]);
+
   function applyCampaignClonePayload(compose: import("@/lib/mailApi").MailCampaignComposeClone) {
     setComposeCampaignMode(true);
     setComposeOpen(true);

@@ -17,6 +17,7 @@ import { MailOrganizationWebhookDispatcherService } from "./MailOrganizationWebh
 import { EmailSuppressionService } from "./EmailSuppressionService";
 import { buildCampaignRecipientExportCsv } from "./MailCampaignExportCsv";
 import type { MailMarketingCampaignStatus } from "../../infrastructure/database/entities/MailMarketingCampaignEntity";
+import { normalizeMailCampaignTags } from "./MailCampaignTags";
 
 const MAX_SCHEDULE_DAYS = 7;
 const MIN_SCHEDULE_LEAD_MS = 60_000;
@@ -83,6 +84,10 @@ export class MailMarketingCampaignService {
         "Hatırlatma yalnızca zamanlanmış kampanyalarda kullanılabilir.",
       );
     }
+    const payload = {
+      ...params.payload,
+      tags: normalizeMailCampaignTags(params.payload.tags),
+    };
     const row = await this.campaignRepository.save(
       this.campaignRepository.create({
         organizationId: params.organizationId,
@@ -91,7 +96,7 @@ export class MailMarketingCampaignService {
         status: scheduleAt ? "scheduled" : "running",
         scheduleAt,
         startedAt: scheduleAt ? null : new Date(),
-        payload: params.payload,
+        payload,
         result: null,
         errorMessage: null,
       }),
@@ -169,13 +174,71 @@ export class MailMarketingCampaignService {
     organizationId: string,
     limit = 40,
     status?: MailMarketingCampaignStatus,
+    tag?: string,
   ) {
-    const rows = await this.campaignRepository.find({
-      where: status ? { organizationId, status } : { organizationId },
-      order: { createdAt: "DESC" },
-      take: Math.min(80, Math.max(1, limit)),
-    });
+    const take = Math.min(80, Math.max(1, limit));
+    const tagNorm = tag?.trim().toLowerCase();
+    let rows: MailMarketingCampaignEntity[];
+    if (tagNorm) {
+      const qb = this.campaignRepository
+        .createQueryBuilder("c")
+        .where("c.organizationId = :organizationId", { organizationId })
+        .andWhere("c.payload::jsonb @> :tagFilter", {
+          tagFilter: JSON.stringify({ tags: [tagNorm] }),
+        })
+        .orderBy("c.createdAt", "DESC")
+        .take(take);
+      if (status) {
+        qb.andWhere("c.status = :status", { status });
+      }
+      rows = await qb.getMany();
+    } else {
+      rows = await this.campaignRepository.find({
+        where: status ? { organizationId, status } : { organizationId },
+        order: { createdAt: "DESC" },
+        take,
+      });
+    }
     return rows.map((row) => this.toListItem(row));
+  }
+
+  public async getSummaryForOrganization(organizationId: string) {
+    const windowDays = 30;
+    const since = new Date(Date.now() - windowDays * 24 * 60 * 60 * 1000);
+    const rows = await this.campaignRepository.find({
+      where: { organizationId },
+      order: { createdAt: "DESC" },
+      take: 250,
+    });
+    const counts: Record<MailMarketingCampaignStatus, number> = {
+      scheduled: 0,
+      running: 0,
+      completed: 0,
+      failed: 0,
+      cancelled: 0,
+    };
+    let recipientsInWindow = 0;
+    let sentInWindow = 0;
+    const tagSet = new Set<string>();
+    for (const row of rows) {
+      for (const value of row.payload.tags ?? []) {
+        tagSet.add(value);
+      }
+      if (row.createdAt < since) {
+        continue;
+      }
+      counts[row.status] += 1;
+      recipientsInWindow += row.payload.recipients?.length ?? 0;
+      sentInWindow += row.result?.sent ?? 0;
+    }
+    return {
+      windowDays,
+      counts,
+      campaignsInWindow: Object.values(counts).reduce((sum, n) => sum + n, 0),
+      recipientsInWindow,
+      sentInWindow,
+      availableTags: [...tagSet].sort(),
+    };
   }
 
   public async exportCampaignCsv(

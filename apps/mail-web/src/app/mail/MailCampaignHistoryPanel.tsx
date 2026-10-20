@@ -8,10 +8,12 @@ import {
   downloadMailCampaignCsv,
   fetchMailCampaignDetail,
   fetchMailCampaigns,
+  fetchMailCampaignSummary,
   resendFailedMailCampaign,
   resendMailCampaign,
   type MailCampaignDetail,
   type MailCampaignListItem,
+  type MailCampaignSummary,
 } from "@/lib/mailApi";
 
 type Props = {
@@ -36,7 +38,9 @@ export function MailCampaignHistoryPanel({
   onCloneToCompose,
 }: Props) {
   const [rows, setRows] = useState<MailCampaignListItem[]>([]);
+  const [summary, setSummary] = useState<MailCampaignSummary | null>(null);
   const [statusFilter, setStatusFilter] = useState("");
+  const [tagFilter, setTagFilter] = useState("");
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
@@ -48,22 +52,29 @@ export function MailCampaignHistoryPanel({
   const load = useCallback(async () => {
     setError("");
     try {
-      const data = await fetchMailCampaigns(
-        accessToken,
-        25,
-        statusFilter || undefined,
-      );
-      setRows(data.campaigns);
+      const [listData, summaryData] = await Promise.all([
+        fetchMailCampaigns(
+          accessToken,
+          25,
+          statusFilter || undefined,
+          tagFilter || undefined,
+        ),
+        fetchMailCampaignSummary(accessToken),
+      ]);
+      setRows(listData.campaigns);
+      setSummary(summaryData.summary);
     } catch {
       setError("Kampanya geçmişi yüklenemedi.");
     }
-  }, [accessToken, statusFilter]);
+  }, [accessToken, statusFilter, tagFilter]);
 
   useEffect(() => {
     if (open) {
       void load();
     }
   }, [open, load]);
+
+  const tagOptions = summary?.availableTags ?? [];
 
   async function toggleDetail(campaignId: string) {
     if (detailId === campaignId) {
@@ -110,20 +121,50 @@ export function MailCampaignHistoryPanel({
   return (
     <div className="mail-campaign-history">
       <h3 className="mail-deliverability-subhead">Kampanya geçmişi</h3>
-      <label className="compose-preset-label">
-        <span>Durum filtresi</span>
-        <select
-          className="compose-select"
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-        >
-          {STATUS_FILTERS.map((opt) => (
-            <option key={opt.value || "all"} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-      </label>
+      {summary ? (
+        <p className="mail-campaign-summary compose-attach-hint">
+          Son {summary.windowDays} gün: {summary.campaignsInWindow} kampanya ·{" "}
+          {summary.recipientsInWindow} alıcı · {summary.sentInWindow} gönderim
+          {summary.counts.scheduled > 0
+            ? ` · ${summary.counts.scheduled} zamanlanmış`
+            : ""}
+          {summary.counts.failed > 0
+            ? ` · ${summary.counts.failed} başarısız`
+            : ""}
+        </p>
+      ) : null}
+      <div className="mail-campaign-history-filters">
+        <label className="compose-preset-label">
+          <span>Durum filtresi</span>
+          <select
+            className="compose-select"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            {STATUS_FILTERS.map((opt) => (
+              <option key={opt.value || "all"} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="compose-preset-label">
+          <span>Etiket</span>
+          <select
+            className="compose-select"
+            value={tagFilter}
+            onChange={(e) => setTagFilter(e.target.value)}
+            disabled={tagOptions.length === 0}
+          >
+            <option value="">Tümü</option>
+            {tagOptions.map((tag) => (
+              <option key={tag} value={tag}>
+                {tag}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
       {error ? <p className="login-error">{error}</p> : null}
       {rows.length === 0 ? (
         <p className="compose-attach-hint">Henüz kayıtlı kampanya yok.</p>

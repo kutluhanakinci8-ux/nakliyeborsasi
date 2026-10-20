@@ -18,9 +18,11 @@ API anahtarları posta konsol → Entegrasyon üzerinden oluşturulur.
 | POST | `/messages` | Tek alıcı (outbox) |
 | GET | `/messages/:id` | Gönderim durumu |
 | POST | `/campaigns` | Pazarlama kampanyası |
-| GET | `/campaigns` | Kampanya listesi (`limit`, `status`) |
+| GET | `/campaigns/summary` | Son 30 gün özet + `availableTags` |
+| GET | `/campaigns` | Kampanya listesi (`limit`, `status`, `tag`) |
 | GET | `/campaigns/:campaignId` | Kampanya durumu ve sonuç |
 | POST | `/campaigns/:campaignId/clone` | `mode: schedule` + `scheduleAt` ile kopya |
+| POST | `/campaigns/:campaignId/resend-failed` | Yalnızca başarısız alıcılar |
 | GET | `/campaigns/:campaignId/export.csv` | Alıcı durum CSV |
 
 ## POST `/campaigns`
@@ -68,3 +70,9 @@ Başarısız HTTP veya ağ hatalarında uç nokta **3 denemeye** kadar otomatik 
 - `POST …/campaigns/:id/resend-failed` — yalnızca başarısız alıcılar
 - Kampanya `tags` (en fazla 8) — web compose ve API
 - Konsol: başarısız webhook teslimatını **Yeniden gönder** (`payload_body` kolonu gerekir)
+
+## Faz 13
+
+- `GET /campaigns/summary` — 30 günlük kampanya sayıları, alıcı/gönderim toplamları, etiket listesi
+- `GET /campaigns?tag=` — etiket filtresi (küçük harf, payload içinde tam eşleşme)
+- Web kampanya geçmişi: özet satırı + etiket filtresi; compose segment önizlemesi otomatik (650 ms gecikme)

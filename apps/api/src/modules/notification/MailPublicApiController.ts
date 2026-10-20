@@ -66,8 +66,13 @@ export class MailPublicApiController {
         },
         {
           method: "GET",
+          path: "/campaigns/summary",
+          description: "30 günlük kampanya özetı ve availableTags",
+        },
+        {
+          method: "GET",
           path: "/campaigns",
-          description: "Kampanya listesi (limit, status)",
+          description: "Kampanya listesi (limit, status, tag)",
         },
         {
           method: "GET",
@@ -78,6 +83,16 @@ export class MailPublicApiController {
           method: "POST",
           path: "/campaigns/:campaignId/clone",
           description: "Kampanyayı yeni scheduleAt ile zamanla (mode=schedule)",
+        },
+        {
+          method: "POST",
+          path: "/campaigns/:campaignId/resend-failed",
+          description: "Başarısız alıcıları yeniden gönder",
+        },
+        {
+          method: "GET",
+          path: "/campaigns/:campaignId/export.csv",
+          description: "Alıcı durum CSV",
         },
         {
           method: "GET",
@@ -142,11 +157,23 @@ export class MailPublicApiController {
     };
   }
 
+  @Get("campaigns/summary")
+  public async campaignSummary(
+    @MailPublicApiContextParam() ctx: MailPublicApiRequestContext,
+  ) {
+    const summary =
+      await this.mailMarketingCampaignService.getSummaryForOrganization(
+        ctx.organizationId,
+      );
+    return { summary };
+  }
+
   @Get("campaigns")
   public async listCampaigns(
     @MailPublicApiContextParam() ctx: MailPublicApiRequestContext,
     @Query("limit") limit?: string,
     @Query("status") status?: string,
+    @Query("tag") tag?: string,
   ) {
     const parsed = limit ? Number.parseInt(limit, 10) : 20;
     const allowed: MailMarketingCampaignStatus[] = [
@@ -164,8 +191,21 @@ export class MailPublicApiController {
       ctx.organizationId,
       Number.isFinite(parsed) ? parsed : 20,
       statusFilter,
+      tag?.trim() || undefined,
     );
     return { campaigns };
+  }
+
+  @Post("campaigns/:campaignId/resend-failed")
+  public async resendFailedCampaign(
+    @MailPublicApiContextParam() ctx: MailPublicApiRequestContext,
+    @Param("campaignId") campaignId: string,
+  ) {
+    const outcome = await this.mailMarketingCampaignService.resendFailed(
+      ctx.organizationId,
+      campaignId,
+    );
+    return outcome;
   }
 
   @Post("campaigns/:campaignId/clone")
@@ -251,7 +291,7 @@ export class MailPublicApiController {
         segment: body.segment,
         reminderMinutesBefore: body.reminderMinutesBefore,
         notifyCreator: false,
-        tags: body.tags?.map((tag) => tag.trim()).filter(Boolean),
+        tags: body.tags,
       },
     });
     const result = outcome.result;

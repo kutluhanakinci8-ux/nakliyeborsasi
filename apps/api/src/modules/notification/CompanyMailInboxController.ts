@@ -1362,7 +1362,7 @@ export class CompanyMailInboxController {
         notifyCreator: body.notifyCreator ?? false,
         segment: body.segment,
         reminderMinutesBefore: body.reminderMinutesBefore,
-        tags: body.tags?.map((tag) => tag.trim()).filter(Boolean),
+        tags: body.tags,
       },
     });
     const result = outcome.result;
@@ -1413,6 +1413,47 @@ export class CompanyMailInboxController {
     return { ok: true, ...outcome };
   }
 
+  @Get("campaigns/summary")
+  public async campaignSummary(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    this.assertMailInboxWriter(user);
+    const summary =
+      await this.mailMarketingCampaignService.getSummaryForOrganization(
+        user.companyId,
+      );
+    return { ok: true, summary };
+  }
+
+  @Get("campaigns")
+  public async listCampaigns(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Query("limit") limit?: string,
+    @Query("status") status?: string,
+    @Query("tag") tag?: string,
+  ) {
+    this.assertMailInboxWriter(user);
+    const parsed = limit ? Number.parseInt(limit, 10) : 40;
+    const allowed: MailMarketingCampaignStatus[] = [
+      "scheduled",
+      "running",
+      "completed",
+      "failed",
+      "cancelled",
+    ];
+    const statusFilter =
+      status && allowed.includes(status as MailMarketingCampaignStatus)
+        ? (status as MailMarketingCampaignStatus)
+        : undefined;
+    const campaigns = await this.mailMarketingCampaignService.listForOrganization(
+      user.companyId,
+      Number.isFinite(parsed) ? parsed : 40,
+      statusFilter,
+      tag?.trim() || undefined,
+    );
+    return { ok: true, campaigns };
+  }
+
   @Get("campaigns/:campaignId/export.csv")
   public async exportCampaignCsv(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
@@ -1444,33 +1485,6 @@ export class CompanyMailInboxController {
       campaignId,
     );
     return { ok: true, campaign };
-  }
-
-  @Get("campaigns")
-  public async listCampaigns(
-    @AuthenticatedUserParam() user: AuthenticatedUserContext,
-    @Query("limit") limit?: string,
-    @Query("status") status?: string,
-  ) {
-    this.assertMailInboxWriter(user);
-    const parsed = limit ? Number.parseInt(limit, 10) : 40;
-    const allowed: MailMarketingCampaignStatus[] = [
-      "scheduled",
-      "running",
-      "completed",
-      "failed",
-      "cancelled",
-    ];
-    const statusFilter =
-      status && allowed.includes(status as MailMarketingCampaignStatus)
-        ? (status as MailMarketingCampaignStatus)
-        : undefined;
-    const campaigns = await this.mailMarketingCampaignService.listForOrganization(
-      user.companyId,
-      Number.isFinite(parsed) ? parsed : 40,
-      statusFilter,
-    );
-    return { ok: true, campaigns };
   }
 
   @Post("campaigns/:campaignId/resend-failed")
