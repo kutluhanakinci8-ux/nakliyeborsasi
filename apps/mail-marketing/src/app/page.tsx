@@ -6,28 +6,28 @@ export default function PlatformHomePage() {
   return (
     <MarketingPageShell>
       <section className="hero hero-platform">
-        <p className="hero-eyebrow">CONTROL PLANE · POSTA · MESAJ</p>
-        <h1>Uyumluluk, posta ve mesaj — tek marka altında</h1>
+        <p className="hero-eyebrow">POSTA · MESAJLAŞMA · KVKK</p>
+        <h1>Posta, mesajlaşma ve uyumluluk — tek marka altında</h1>
         <p className="lead">
-          Türkiye&apos;de barındırılan kurumsal ürünler: <strong>U88</strong> ile
-          KVKK control plane, <strong>Lerta Posta</strong> ile domain tabanlı
-          e-posta, <strong>Lerta Mesaj</strong> ile firma içi ve müşteri
-          sohbeti.
+          Türkiye&apos;de barındırılan kurumsal ürünler: <strong>Lerta Posta</strong> ile
+          domain tabanlı e-posta, <strong>Lerta Mesaj</strong> ile firma içi ve müşteri
+          sohbeti, <strong>KVKK (U88)</strong> ile çerez ve VERBİS control plane.
         </p>
         <div className="hero-cta hero-cta--compact">
-          <a className="btn btn-primary" href="/u88">
-            U88&apos;i keşfet
-          </a>
-          <a className="btn btn-ghost" href="/posta#fiyatlar">
+          <a className="btn btn-primary" href="/posta#fiyatlar">
             Posta planları
           </a>
           <a className="btn btn-ghost" href="/mesaj">
-            Mesaj
+            Mesajlaşma
+          </a>
+          <a className="btn btn-ghost" href="/u88">
+            KVKK
           </a>
         </div>
         <p className="hero-hint">
-          Sağ üstten <strong>Ücretsiz dene</strong> (U88) veya <strong>Giriş</strong>{" "}
-          (Mesaj) ile doğrudan uygulamaya geçin. Kurumsal posta kaydı:{" "}
+          Üst menü sırası: <strong>Posta</strong>, <strong>Mesajlaşma</strong>,{" "}
+          <strong>KVKK</strong>. Mesaj için <strong>Giriş</strong>; KVKK için{" "}
+          <strong>Ücretsiz dene</strong>. Kurumsal posta kaydı:{" "}
           <a href={PLATFORM_REGISTER_HREF}>yonetim.lerta.com.tr</a>
         </p>
       </section>

@@ -4,13 +4,13 @@ export function MarketingSiteFooter() {
   return (
     <footer className="site-footer">
       <span>
-        © {new Date().getFullYear()} Lerta · U88, Posta ve Mesaj — Türkiye&apos;de
+        © {new Date().getFullYear()} Lerta · Posta, Mesajlaşma ve KVKK — Türkiye&apos;de
         barındırılan kurumsal platform
       </span>
       <nav className="footer-links">
-        <a href="/u88">U88</a>
         <a href="/posta">Posta</a>
-        <a href="/mesaj">Mesaj</a>
+        <a href="/mesaj">Mesajlaşma</a>
+        <a href="/u88">KVKK</a>
         <a href="/sss">SSS</a>
         <a href="/sla">SLA</a>
         <a href="/durum">Durum</a>

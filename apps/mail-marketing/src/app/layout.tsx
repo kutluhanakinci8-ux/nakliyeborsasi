@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Lerta — U88, Posta ve Mesaj",
+  title: "Lerta — Posta, Mesajlaşma ve KVKK",
   description:
-    "Lerta platformu: KVKK control plane (U88), kurumsal e-posta SaaS ve firma mesajlaşması.",
+    "Lerta platformu: kurumsal e-posta SaaS, firma mesajlaşması ve KVKK control plane (U88).",
 };
 
 export default function RootLayout({

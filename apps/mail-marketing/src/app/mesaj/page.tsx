@@ -3,7 +3,7 @@ export default function MesajProductPage() {
   return (
     <MarketingPageShell>
       <p className="breadcrumb">
-        <a href="/">Lerta</a> / Mesaj
+        <a href="/">Lerta</a> / Mesajlaşma
       </p>
       <section className="hero">
         <p className="hero-eyebrow">Firma sohbeti</p>

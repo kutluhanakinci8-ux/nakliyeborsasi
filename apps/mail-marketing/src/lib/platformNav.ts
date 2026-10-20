@@ -9,9 +9,9 @@ import {
 export type PlatformProductId = "home" | "u88" | "posta" | "mesaj";
 
 export const PRODUCT_TABS = [
-  { id: "u88" as const, href: "/u88", label: "U88 · KVKK" },
   { id: "posta" as const, href: "/posta", label: "Posta" },
-  { id: "mesaj" as const, href: "/mesaj", label: "Mesaj" },
+  { id: "mesaj" as const, href: "/mesaj", label: "Mesajlaşma" },
+  { id: "u88" as const, href: "/u88", label: "KVKK" },
 ];
 
 export function resolveProductId(pathname: string): PlatformProductId {
@@ -50,8 +50,9 @@ export function ctasForProduct(product: PlatformProductId): PlatformCta[] {
       ];
     default:
       return [
-        { label: "Ücretsiz dene", href: U88_APP_URL, variant: "primary" },
-        { label: "Giriş", href: MESSAGING_LOGIN_URL, variant: "outline" },
+        { label: "Domain ile başla", href: CORPORATE_REGISTER, variant: "primary" },
+        { label: "Mesaj girişi", href: MESSAGING_LOGIN_URL, variant: "outline" },
+        { label: "KVKK dene", href: U88_APP_URL, variant: "outline" },
       ];
   }
 }

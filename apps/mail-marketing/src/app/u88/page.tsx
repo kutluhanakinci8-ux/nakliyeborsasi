@@ -3,7 +3,7 @@ export default function U88ProductPage() {
   return (
     <MarketingPageShell>
       <p className="breadcrumb">
-        <a href="/">Lerta</a> / U88
+        <a href="/">Lerta</a> / KVKK
       </p>
       <section className="hero">
         <p className="hero-eyebrow">Control plane as a service</p>

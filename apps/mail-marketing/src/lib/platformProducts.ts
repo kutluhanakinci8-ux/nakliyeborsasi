@@ -21,19 +21,6 @@ export type PlatformProduct = {
 
 export const PLATFORM_PRODUCTS: PlatformProduct[] = [
   {
-    slug: "u88",
-    name: "U88",
-    tagline: "KVKK control plane",
-    summary:
-      "Çerez, VERBİS, İYS, DSAR ve ajans white-label — tek panelde uyumluluk otomasyonu.",
-    accent: "violet",
-    href: U88_APP_URL,
-    ctaLabel: "U88'ye git",
-    secondaryHref: "/u88",
-    secondaryLabel: "Ürün özeti",
-    features: ["Consent Mode v2", "VERBİS + İYS", "14 gün deneme"],
-  },
-  {
     slug: "posta",
     name: "Lerta Posta",
     tagline: "Kurumsal e-posta SaaS",
@@ -58,6 +45,19 @@ export const PLATFORM_PRODUCTS: PlatformProduct[] = [
     secondaryHref: MESSAGING_LOGIN_URL,
     secondaryLabel: "Giriş yap",
     features: ["Gerçek zamanlı sohbet", "KVKK kayıt", "API ve webhook"],
+  },
+  {
+    slug: "u88",
+    name: "KVKK (U88)",
+    tagline: "KVKK control plane",
+    summary:
+      "Çerez, VERBİS, İYS, DSAR ve ajans white-label — tek panelde uyumluluk otomasyonu.",
+    accent: "violet",
+    href: U88_APP_URL,
+    ctaLabel: "KVKK paneli",
+    secondaryHref: "/u88",
+    secondaryLabel: "Ürün özeti",
+    features: ["Consent Mode v2", "VERBİS + İYS", "14 gün deneme"],
   },
 ];
 
