@@ -60,6 +60,75 @@ export class MailMarketingCampaignService {
     private readonly emailEngagementService: EmailEngagementService,
   ) {}
 
+  public async saveDraft(params: {
+    organizationId: string;
+    userId?: string;
+    subject: string;
+    payload: MailMarketingCampaignPayload;
+    campaignId?: string;
+  }): Promise<{ campaignId: string; status: "draft" }> {
+    const subject = params.subject.trim() || "(Taslak kampanya)";
+    const payload = {
+      ...params.payload,
+      tags: normalizeMailCampaignTags(params.payload.tags),
+      clientReference: normalizeMailCampaignClientReference(
+        params.payload.clientReference,
+      ),
+    };
+    if (params.campaignId) {
+      const existing = await this.campaignRepository.findOne({
+        where: {
+          id: params.campaignId,
+          organizationId: params.organizationId,
+          status: "draft",
+        },
+      });
+      if (!existing) {
+        throw new NotFoundException("Taslak kampanya bulunamadı.");
+      }
+      existing.subject = subject;
+      existing.payload = payload;
+      const saved = await this.campaignRepository.save(existing);
+      return { campaignId: saved.id, status: "draft" };
+    }
+    const row = await this.campaignRepository.save(
+      this.campaignRepository.create({
+        organizationId: params.organizationId,
+        createdByUserId: params.userId ?? null,
+        subject,
+        status: "draft",
+        scheduleAt: null,
+        startedAt: null,
+        payload,
+        result: null,
+        errorMessage: null,
+      }),
+    );
+    return { campaignId: row.id, status: "draft" };
+  }
+
+  public async sendDraft(
+    organizationId: string,
+    campaignId: string,
+    userId?: string,
+    scheduleAt?: Date | null,
+  ) {
+    const draft = await this.campaignRepository.findOne({
+      where: { id: campaignId, organizationId, status: "draft" },
+    });
+    if (!draft) {
+      throw new NotFoundException("Taslak kampanya bulunamadı.");
+    }
+    await this.campaignRepository.delete({ id: draft.id });
+    return this.createAndRunOrSchedule({
+      organizationId,
+      userId,
+      subject: draft.subject,
+      scheduleAt: scheduleAt ?? null,
+      payload: draft.payload,
+    });
+  }
+
   public async createAndRunOrSchedule(params: {
     organizationId: string;
     userId?: string;
@@ -271,6 +340,7 @@ export class MailMarketingCampaignService {
       take: 250,
     });
     const counts: Record<MailMarketingCampaignStatus, number> = {
+      draft: 0,
       scheduled: 0,
       running: 0,
       completed: 0,

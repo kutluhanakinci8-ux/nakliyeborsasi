@@ -17,6 +17,7 @@ import {
   bulkCancelScheduledMailCampaigns,
   resendFailedMailCampaign,
   resendMailCampaign,
+  sendMailCampaignDraft,
   type MailCampaignDetail,
   type MailCampaignListItem,
   type MailCampaignListPagination,
@@ -47,6 +48,7 @@ function dateRangeEnd(date: string): string | undefined {
 
 const STATUS_FILTERS = [
   { value: "", label: "Tümü" },
+  { value: "draft", label: "Taslak" },
   { value: "scheduled", label: "Zamanlanmış" },
   { value: "running", label: "Gönderiliyor" },
   { value: "completed", label: "Tamamlanan" },
@@ -56,6 +58,7 @@ const STATUS_FILTERS = [
 
 const STATUS_CHART_COLORS: Record<string, string> = {
   completed: "#16a34a",
+  draft: "#8b5cf6",
   scheduled: "#2563eb",
   running: "#ca8a04",
   failed: "#dc2626",
@@ -68,7 +71,7 @@ function MailCampaignSummaryCharts({
   summary: MailCampaignSummary;
 }) {
   const statusRows = (
-    ["completed", "scheduled", "running", "failed", "cancelled"] as const
+    ["completed", "draft", "scheduled", "running", "failed", "cancelled"] as const
   )
     .map((key) => ({
       key,
@@ -651,6 +654,21 @@ export function MailCampaignHistoryPanel({
                 >
                   Zamanla (kopya)
                 </button>
+                {row.status === "draft" ? (
+                  <button
+                    type="button"
+                    className="compose-chip-btn"
+                    disabled={busyId === row.id}
+                    onClick={() => {
+                      setBusyId(row.id);
+                      void sendMailCampaignDraft(accessToken, row.id)
+                        .then(() => refresh())
+                        .finally(() => setBusyId(null));
+                    }}
+                  >
+                    Gönder
+                  </button>
+                ) : null}
                 {row.status === "scheduled" ? (
                   <>
                     <button

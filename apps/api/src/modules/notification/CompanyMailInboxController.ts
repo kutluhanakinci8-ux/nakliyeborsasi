@@ -1339,6 +1339,60 @@ export class CompanyMailInboxController {
     return { ok: true, preview };
   }
 
+  @Post("compose/campaign/draft")
+  public async saveCampaignDraft(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: ComposeCampaignRequestDto & { campaignId?: string },
+  ) {
+    this.assertMailInboxWriter(user);
+    const outcome = await this.mailMarketingCampaignService.saveDraft({
+      organizationId: user.companyId,
+      userId: user.userId,
+      subject: body.subject,
+      campaignId: body.campaignId,
+      payload: {
+        text: body.text,
+        html: body.html,
+        recipients: body.recipients.map((row) => ({
+          email: row.email,
+          musteriAdi: row.musteriAdi,
+          referans: row.referans,
+        })),
+        attachments: body.attachments,
+        merge: body.merge,
+        delayMsBetweenRecipients: body.delayMsBetweenRecipients,
+        subjectB: body.subjectB?.trim() || undefined,
+        recipientDomainAllowlist: body.recipientDomainAllowlist,
+        notifyCreator: body.notifyCreator ?? false,
+        segment: body.segment,
+        reminderMinutesBefore: body.reminderMinutesBefore,
+        tags: body.tags,
+        clientReference: body.clientReference,
+      },
+    });
+    return { ok: true, ...outcome };
+  }
+
+  @Post("campaigns/:campaignId/send-draft")
+  public async sendCampaignDraft(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("campaignId") campaignId: string,
+    @Body() body: { scheduleAt?: string },
+  ) {
+    this.assertMailInboxWriter(user);
+    const scheduleAt = body.scheduleAt ? new Date(body.scheduleAt) : null;
+    if (scheduleAt && Number.isNaN(scheduleAt.getTime())) {
+      throw new BadRequestException("scheduleAt geçersiz.");
+    }
+    const outcome = await this.mailMarketingCampaignService.sendDraft(
+      user.companyId,
+      campaignId,
+      user.userId,
+      scheduleAt,
+    );
+    return { ok: true, ...outcome };
+  }
+
   @Post("compose/campaign")
   public async composeCampaign(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
@@ -1471,6 +1525,7 @@ export class CompanyMailInboxController {
     const sortKey = parseMailCampaignListSort(sort);
     const failuresOnly = parseMailCampaignHasFailures(hasFailures);
     const allowed: MailMarketingCampaignStatus[] = [
+      "draft",
       "scheduled",
       "running",
       "completed",
@@ -1514,6 +1569,7 @@ export class CompanyMailInboxController {
   ) {
     this.assertMailInboxWriter(user);
     const allowed: MailMarketingCampaignStatus[] = [
+      "draft",
       "scheduled",
       "running",
       "completed",

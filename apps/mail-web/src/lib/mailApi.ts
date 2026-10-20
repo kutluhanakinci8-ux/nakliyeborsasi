@@ -996,6 +996,56 @@ export async function cloneMailCampaignToCompose(
   );
 }
 
+export async function saveMailCampaignDraft(
+  accessToken: string,
+  body: {
+    campaignId?: string;
+    recipients: Array<{
+      email: string;
+      musteriAdi?: string;
+      referans?: string;
+    }>;
+    subject: string;
+    text: string;
+    html?: string;
+    attachments?: ComposeAttachment[];
+    merge?: ComposeMergePayload;
+    delayMsBetweenRecipients?: number;
+    subjectB?: string;
+    recipientDomainAllowlist?: string[];
+    notifyCreator?: boolean;
+    segment?: {
+      referansPrefix?: string;
+      referansEquals?: string;
+      requireMusteriAdi?: boolean;
+      referansAllowlist?: string[];
+    };
+    reminderMinutesBefore?: number;
+    tags?: string[];
+  },
+) {
+  return apiFetch<{ ok: true; campaignId: string; status: "draft" }>(
+    accessToken,
+    "company/mail-inbox/compose/campaign/draft",
+    { method: "POST", body: JSON.stringify(body) },
+  );
+}
+
+export async function sendMailCampaignDraft(
+  accessToken: string,
+  campaignId: string,
+  scheduleAt?: string,
+) {
+  return apiFetch<ComposeCampaignResult>(
+    accessToken,
+    `company/mail-inbox/campaigns/${campaignId}/send-draft`,
+    {
+      method: "POST",
+      body: JSON.stringify(scheduleAt ? { scheduleAt } : {}),
+    },
+  );
+}
+
 export async function composeCampaign(
   accessToken: string,
   body: {

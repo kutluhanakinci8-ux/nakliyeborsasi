@@ -261,6 +261,7 @@ export class MailPublicApiController {
     const sortKey = parseMailCampaignListSort(sort);
     const failuresOnly = parseMailCampaignHasFailures(hasFailures);
     const allowed: MailMarketingCampaignStatus[] = [
+      "draft",
       "scheduled",
       "running",
       "completed",
@@ -303,6 +304,7 @@ export class MailPublicApiController {
     @Query("scheduleBefore") scheduleBefore?: string,
   ) {
     const allowed: MailMarketingCampaignStatus[] = [
+      "draft",
       "scheduled",
       "running",
       "completed",

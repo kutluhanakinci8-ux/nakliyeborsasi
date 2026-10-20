@@ -54,6 +54,7 @@ export type MailMarketingCampaignResult = {
 };
 
 export type MailMarketingCampaignStatus =
+  | "draft"
   | "scheduled"
   | "running"
   | "completed"
