@@ -6,6 +6,7 @@ export const MailIdentityAuditAction = {
   DisplayNameUpdated: "MAIL_IDENTITY_DISPLAY_NAME_UPDATED",
   SuppressionAdded: "MAIL_IDENTITY_SUPPRESSION_ADDED",
   SuppressionRemoved: "MAIL_IDENTITY_SUPPRESSION_REMOVED",
+  MarketingUnsubscribe: "MAIL_MARKETING_UNSUBSCRIBE",
   TenantSubdomainProvisioned: "MAIL_IDENTITY_TENANT_SUBDOMAIN_PROVISIONED",
   TenantSubdomainDnsVerified: "MAIL_IDENTITY_TENANT_SUBDOMAIN_DNS_VERIFIED",
   AdminDomainCreated: "MAIL_IDENTITY_ADMIN_DOMAIN_CREATED",

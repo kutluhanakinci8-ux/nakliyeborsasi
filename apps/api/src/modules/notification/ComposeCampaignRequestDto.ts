@@ -6,6 +6,7 @@ import {
   ArrayMaxSize,
   ArrayMinSize,
   IsArray,
+  IsDateString,
   IsInt,
   IsOptional,
   IsString,
@@ -57,4 +58,9 @@ export class ComposeCampaignRequestDto {
   @Min(0)
   @Max(2000)
   public delayMsBetweenRecipients?: number;
+
+  /** ISO 8601 — en az 1 dk, en fazla 7 gün sonrası. */
+  @IsOptional()
+  @IsDateString()
+  public scheduleAt?: string;
 }

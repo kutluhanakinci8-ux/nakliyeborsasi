@@ -898,10 +898,30 @@ export async function composeMail(
 export type ComposeCampaignResult = {
   ok: true;
   campaignId: string;
+  scheduled?: boolean;
+  scheduleAt?: string | null;
   attempted: number;
   sent: number;
   skippedSuppressed: number;
   failed: Array<{ email: string; error: string }>;
+};
+
+export type MailCampaignListItem = {
+  id: string;
+  subject: string;
+  status: string;
+  scheduleAt: string | null;
+  startedAt: string | null;
+  completedAt: string | null;
+  createdAt: string;
+  recipientCount: number;
+  result: {
+    attempted: number;
+    sent: number;
+    skippedSuppressed: number;
+    failed: Array<{ email: string; error: string }>;
+  } | null;
+  errorMessage: string | null;
 };
 
 export async function composeCampaign(
@@ -918,6 +938,7 @@ export async function composeCampaign(
     attachments?: ComposeAttachment[];
     merge?: ComposeMergePayload;
     delayMsBetweenRecipients?: number;
+    scheduleAt?: string;
   },
 ) {
   return apiFetch<ComposeCampaignResult>(
@@ -925,6 +946,34 @@ export async function composeCampaign(
     "company/mail-inbox/compose/campaign",
     { method: "POST", body: JSON.stringify(body) },
   );
+}
+
+export async function fetchMailCampaigns(accessToken: string, limit = 30) {
+  return apiFetch<{ ok: true; campaigns: MailCampaignListItem[] }>(
+    accessToken,
+    `company/mail-inbox/campaigns?limit=${limit}`,
+  );
+}
+
+export async function resendMailCampaign(accessToken: string, campaignId: string) {
+  return apiFetch<{
+    ok: true;
+    campaignId: string;
+    result: Omit<ComposeCampaignResult, "ok" | "campaignId" | "scheduled" | "scheduleAt">;
+  }>(accessToken, `company/mail-inbox/campaigns/${campaignId}/resend`, {
+    method: "POST",
+    body: JSON.stringify({}),
+  });
+}
+
+export async function cancelScheduledMailCampaign(
+  accessToken: string,
+  campaignId: string,
+) {
+  await apiFetch(accessToken, `company/mail-inbox/campaigns/${campaignId}/cancel`, {
+    method: "POST",
+    body: JSON.stringify({}),
+  });
 }
 
 export async function fetchDelayedComposeStatus(

@@ -70,6 +70,7 @@ import { MailWebPushSubscriptionEntity } from "./entities/MailWebPushSubscriptio
 import { MailCustomFolderEntity } from "./entities/MailCustomFolderEntity";
 import { MailInboxRuleEntity } from "./entities/MailInboxRuleEntity";
 import { MailDelayedComposeEntity } from "./entities/MailDelayedComposeEntity";
+import { MailMarketingCampaignEntity } from "./entities/MailMarketingCampaignEntity";
 import { MailInboxPreferencesEntity } from "./entities/MailInboxPreferencesEntity";
 import { MailAutoReplyThrottleEntity } from "./entities/MailAutoReplyThrottleEntity";
 import { MailCalendarEventEntity } from "./entities/MailCalendarEventEntity";
@@ -156,6 +157,7 @@ export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
         MailCustomFolderEntity,
         MailInboxRuleEntity,
         MailDelayedComposeEntity,
+        MailMarketingCampaignEntity,
         MailInboxPreferencesEntity,
         MailAutoReplyThrottleEntity,
         MailCalendarEventEntity,

@@ -8,6 +8,7 @@ const LABELS: Record<string, string> = {
   [MailIdentityAuditAction.DisplayNameUpdated]: "Görünen ad güncellendi",
   [MailIdentityAuditAction.SuppressionAdded]: "Teslimat engeli eklendi",
   [MailIdentityAuditAction.SuppressionRemoved]: "Teslimat engeli kaldırıldı",
+  [MailIdentityAuditAction.MarketingUnsubscribe]: "Pazarlama abonelik iptali",
   [MailIdentityAuditAction.TenantSubdomainProvisioned]: "Kiracı alt alan adı açıldı",
   [MailIdentityAuditAction.TenantSubdomainDnsVerified]: "Kiracı DNS doğrulandı",
   [MailIdentityAuditAction.AdminDomainCreated]: "Platform domain kaydı",
@@ -91,6 +92,8 @@ export function mailAuditSummaryTr(
     case MailIdentityAuditAction.SuppressionAdded:
     case MailIdentityAuditAction.SuppressionRemoved:
       return email ? `Adres: ${email}` : "";
+    case MailIdentityAuditAction.MarketingUnsubscribe:
+      return email ? `Abonelik iptali: ${email}` : "Abonelik iptali";
     case MailIdentityAuditAction.DefaultSenderSet:
       return fromAddress ?? "Varsayılan gönderen";
     case MailIdentityAuditAction.SubscriptionPlanSelected:

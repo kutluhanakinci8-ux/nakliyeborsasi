@@ -183,6 +183,7 @@ export class MailTenantSubdomainService {
     localPart: string;
     displayName?: string;
     makeDefault?: boolean;
+    purpose?: "transactional" | "marketing";
   }): Promise<{
     domain: MailDomainEntity;
     sender: MailSenderIdentityEntity;
@@ -246,6 +247,7 @@ export class MailTenantSubdomainService {
       localPart,
       displayName: params.displayName?.trim() || "Kurumsal bildirim",
       isDefault: makeDefault,
+      purpose: params.purpose,
     });
 
     return {

@@ -119,9 +119,25 @@ export class MailSaasSubscriptionService {
         isDefault: sender.isDefault,
         domain: sender.mailDomain?.domain ?? "",
         fromAddress,
+        purpose: sender.purpose,
         createdAt: sender.createdAt.toISOString(),
       };
     });
+  }
+
+  public async setSenderPurpose(
+    organizationId: string,
+    senderId: string,
+    purpose: "transactional" | "marketing",
+  ): Promise<void> {
+    const sender = await this.senderRepository.findOne({
+      where: { id: senderId, organizationId },
+    });
+    if (!sender) {
+      throw new NotFoundException("Gönderen adresi bulunamadı.");
+    }
+    sender.purpose = purpose;
+    await this.senderRepository.save(sender);
   }
 
   public async setDefaultSender(

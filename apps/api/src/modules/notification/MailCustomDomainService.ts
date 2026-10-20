@@ -218,6 +218,7 @@ export class MailCustomDomainService {
     localPart: string;
     displayName?: string;
     makeDefault?: boolean;
+    purpose?: "transactional" | "marketing";
     /** Kurulum akışında kutu DNS beklenmeden oluşturulabilir; gönderim DNS ile açılır. */
     allowUnverifiedDomain?: boolean;
   }): Promise<{ fromAddress: string; sender: MailSenderIdentityEntity }> {
@@ -273,6 +274,7 @@ export class MailCustomDomainService {
       localPart,
       displayName: params.displayName,
       isDefault: makeDefault,
+      purpose: params.purpose,
     });
     return {
       fromAddress: `${localPart}@${mailDomain.domain}`,

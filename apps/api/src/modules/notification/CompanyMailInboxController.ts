@@ -103,6 +103,7 @@ import {
 } from "./MailCalendarContactRequestDto";
 import { MailAiComposeService } from "./MailAiComposeService";
 import { MailDeliverabilityHubService } from "./MailDeliverabilityHubService";
+import { MailMarketingCampaignService } from "./MailMarketingCampaignService";
 import { UserNotificationPreferenceService } from "./UserNotificationPreferenceService";
 
 @Controller("company/mail-inbox")
@@ -131,6 +132,7 @@ export class CompanyMailInboxController {
     private readonly mailAddressAliasService: MailAddressAliasService,
     private readonly mailAiComposeService: MailAiComposeService,
     private readonly mailDeliverabilityHubService: MailDeliverabilityHubService,
+    private readonly mailMarketingCampaignService: MailMarketingCampaignService,
     private readonly userNotificationPreferenceService: UserNotificationPreferenceService,
   ) {}
 
@@ -1307,31 +1309,93 @@ export class CompanyMailInboxController {
     @Body() body: ComposeCampaignRequestDto,
   ) {
     this.assertMailInboxWriter(user);
-    const result = await this.mailMailboxComposeService.sendCampaign({
+    const scheduleAt = body.scheduleAt ? new Date(body.scheduleAt) : null;
+    if (scheduleAt && Number.isNaN(scheduleAt.getTime())) {
+      throw new BadRequestException("scheduleAt geçersiz.");
+    }
+    const outcome = await this.mailMarketingCampaignService.createAndRunOrSchedule({
       organizationId: user.companyId,
       userId: user.userId,
       subject: body.subject,
-      text: body.text,
-      html: body.html,
-      attachments: body.attachments,
-      recipients: body.recipients.map((row) => ({
-        email: row.email,
-        musteriAdi: row.musteriAdi,
-        referans: row.referans,
-      })),
-      merge: body.merge,
-      delayMsBetweenRecipients: body.delayMsBetweenRecipients,
+      scheduleAt,
+      payload: {
+        text: body.text,
+        html: body.html,
+        recipients: body.recipients.map((row) => ({
+          email: row.email,
+          musteriAdi: row.musteriAdi,
+          referans: row.referans,
+        })),
+        attachments: body.attachments,
+        merge: body.merge,
+        delayMsBetweenRecipients: body.delayMsBetweenRecipients,
+      },
     });
+    const result = outcome.result;
     await this.recordInboxMailAudit(user, MailIdentityAuditAction.InboxComposeSent, {
       subject: body.subject,
-      to: `${result.sent} alıcı (kampanya)`,
-      sentId: result.campaignId,
+      to: outcome.scheduled
+        ? `zamanlandı (${body.recipients.length} alıcı)`
+        : `${result?.sent ?? 0} alıcı (kampanya)`,
+      sentId: outcome.campaignId,
       campaign: true,
-      attempted: result.attempted,
-      skippedSuppressed: result.skippedSuppressed,
-      failedCount: result.failed.length,
+      scheduled: outcome.scheduled,
+      scheduleAt: outcome.scheduleAt,
+      attempted: result?.attempted,
+      skippedSuppressed: result?.skippedSuppressed,
+      failedCount: result?.failed.length,
     });
-    return { ok: true, ...result };
+    return {
+      ok: true,
+      campaignId: outcome.campaignId,
+      scheduled: outcome.scheduled,
+      scheduleAt: outcome.scheduleAt,
+      attempted: result?.attempted ?? body.recipients.length,
+      sent: result?.sent ?? 0,
+      skippedSuppressed: result?.skippedSuppressed ?? 0,
+      failed: result?.failed ?? [],
+    };
+  }
+
+  @Get("campaigns")
+  public async listCampaigns(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Query("limit") limit?: string,
+  ) {
+    this.assertMailInboxWriter(user);
+    const parsed = limit ? Number.parseInt(limit, 10) : 40;
+    const campaigns = await this.mailMarketingCampaignService.listForOrganization(
+      user.companyId,
+      Number.isFinite(parsed) ? parsed : 40,
+    );
+    return { ok: true, campaigns };
+  }
+
+  @Post("campaigns/:campaignId/resend")
+  public async resendCampaign(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("campaignId") campaignId: string,
+  ) {
+    this.assertMailInboxWriter(user);
+    const outcome = await this.mailMarketingCampaignService.resend(
+      user.companyId,
+      campaignId,
+      user.userId,
+    );
+    return { ok: true, ...outcome };
+  }
+
+  @Post("campaigns/:campaignId/cancel")
+  public async cancelCampaign(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("campaignId") campaignId: string,
+  ) {
+    this.assertMailInboxWriter(user);
+    await this.mailMarketingCampaignService.cancelScheduled(
+      user.companyId,
+      campaignId,
+    );
+    return { ok: true };
   }
 
   @Get("compose/pending/:pendingId")

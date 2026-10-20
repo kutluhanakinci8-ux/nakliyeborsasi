@@ -15,6 +15,7 @@ import {
   provisionCustomMailbox,
   provisionTenantMailbox,
   setDefaultMailSender,
+  updateMailSenderPurpose,
 } from "@/lib/consoleApi";
 import { useConsoleSession } from "@/lib/session";
 
@@ -25,6 +26,7 @@ type SenderRow = {
   displayName: string | null;
   isDefault: boolean;
   domain: string;
+  purpose?: "transactional" | "marketing";
 };
 
 export default function MailboxesPage() {
@@ -40,6 +42,9 @@ export default function MailboxesPage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [newMailboxPurpose, setNewMailboxPurpose] = useState<
+    "transactional" | "marketing"
+  >("transactional");
   const [canManage, setCanManage] = useState(true);
   const [sendUsed, setSendUsed] = useState(0);
   const [sendLimit, setSendLimit] = useState(80);
@@ -117,11 +122,13 @@ export default function MailboxesPage() {
         await provisionCustomMailbox(accessToken, part, {
           displayName: displayName.trim() || undefined,
           makeDefault: senders.length === 0,
+          purpose: newMailboxPurpose,
         });
       } else {
         await provisionTenantMailbox(accessToken, part, {
           displayName: displayName.trim() || undefined,
           makeDefault: senders.length === 0,
+          purpose: newMailboxPurpose,
         });
       }
       setMessage(`Kutu eklendi: ${part}`);
@@ -261,6 +268,11 @@ export default function MailboxesPage() {
                         varsayılan
                       </span>
                     ) : null}
+                    {row.purpose === "marketing" ? (
+                      <span className="badge" style={{ marginLeft: 8 }}>
+                        pazarlama
+                      </span>
+                    ) : null}
                   </td>
                   <td>{row.displayName ?? "—"}</td>
                   <td>
@@ -272,6 +284,29 @@ export default function MailboxesPage() {
                         onClick={() => void makeDefault(row.id)}
                       >
                         Varsayılan yap
+                      </button>
+                    ) : null}
+                    {canManage && row.purpose !== "marketing" ? (
+                      <button
+                        type="button"
+                        className="btn secondary"
+                        style={{ marginLeft: 8 }}
+                        disabled={loading}
+                        onClick={() => {
+                          if (!accessToken) {
+                            return;
+                          }
+                          setLoading(true);
+                          void updateMailSenderPurpose(
+                            accessToken,
+                            row.id,
+                            "marketing",
+                          )
+                            .then(() => reload())
+                            .finally(() => setLoading(false));
+                        }}
+                      >
+                        Pazarlama yap
                       </button>
                     ) : null}
                   </td>
@@ -305,6 +340,22 @@ export default function MailboxesPage() {
             minLength={2}
             disabled={atQuota || loading}
           />
+          <label style={{ display: "block", marginTop: 12 }}>
+            Gönderim türü
+            <select
+              className="input"
+              style={{ width: "100%", marginTop: 4 }}
+              value={newMailboxPurpose}
+              onChange={(e) =>
+                setNewMailboxPurpose(
+                  e.target.value === "marketing" ? "marketing" : "transactional",
+                )
+              }
+            >
+              <option value="transactional">İşlemsel (varsayılan)</option>
+              <option value="marketing">Pazarlama / bülten</option>
+            </select>
+          </label>
           <input
             className="input"
             placeholder="Görünen ad (isteğe bağlı)"

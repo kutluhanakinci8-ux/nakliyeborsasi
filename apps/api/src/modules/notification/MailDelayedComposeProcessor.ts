@@ -5,6 +5,7 @@ import {
   OnModuleInit,
 } from "@nestjs/common";
 import { MailDelayedComposeService } from "./MailDelayedComposeService";
+import { MailMarketingCampaignService } from "./MailMarketingCampaignService";
 import { MailRuntimeRoleService } from "./MailRuntimeRoleService";
 
 const DRAIN_INTERVAL_MS = 1000;
@@ -16,6 +17,7 @@ export class MailDelayedComposeProcessor implements OnModuleInit, OnModuleDestro
 
   public constructor(
     private readonly mailDelayedComposeService: MailDelayedComposeService,
+    private readonly mailMarketingCampaignService: MailMarketingCampaignService,
     private readonly mailRuntimeRoleService: MailRuntimeRoleService,
   ) {}
 
@@ -28,6 +30,11 @@ export class MailDelayedComposeProcessor implements OnModuleInit, OnModuleDestro
       void this.mailDelayedComposeService.drainDue().catch((error) => {
         this.logger.warn(
           error instanceof Error ? error.message : "delayed compose drain failed",
+        );
+      });
+      void this.mailMarketingCampaignService.drainScheduled().catch((error) => {
+        this.logger.warn(
+          error instanceof Error ? error.message : "scheduled campaign drain failed",
         );
       });
     }, DRAIN_INTERVAL_MS);

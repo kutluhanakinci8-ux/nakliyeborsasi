@@ -3,6 +3,7 @@
 import { MailSettingsPanel } from "./MailSettingsPanel";
 import { MailComposeMergeFields } from "./MailComposeMergeFields";
 import { MailCampaignResultDialog } from "./MailCampaignResultDialog";
+import { MailCampaignHistoryPanel } from "./MailCampaignHistoryPanel";
 import { MailEmptyState } from "./MailEmptyState";
 import { MailShortcutsDialog } from "./MailShortcutsDialog";
 import { MailCalendarPanel } from "./MailCalendarPanel";
@@ -79,6 +80,10 @@ export function MailClientShell({ mail }: Props) {
     maxCampaignRecipients,
     composeCampaignDelayMs,
     setComposeCampaignDelayMs,
+    composeCampaignScheduleAt,
+    setComposeCampaignScheduleAt,
+    composeCampaignHistoryOpen,
+    setComposeCampaignHistoryOpen,
     campaignResult,
     setCampaignResult,
     importCampaignCsv,
@@ -1695,7 +1700,22 @@ export function MailClientShell({ mail }: Props) {
                   >
                     {composeCampaignMode ? "Kampanya modu (açık)" : "Kampanya modu"}
                   </button>
+                  {composeCampaignMode ? (
+                    <button
+                      type="button"
+                      className="compose-chip-btn"
+                      onClick={() => setComposeCampaignHistoryOpen((on) => !on)}
+                    >
+                      {composeCampaignHistoryOpen ? "Geçmişi gizle" : "Kampanya geçmişi"}
+                    </button>
+                  ) : null}
                 </div>
+              ) : null}
+              {composeCampaignMode && accessToken ? (
+                <MailCampaignHistoryPanel
+                  accessToken={accessToken}
+                  open={composeCampaignHistoryOpen}
+                />
               ) : null}
               {composeCampaignMode && !forwardMessageId && !editingDraftId ? (
                 <div className="compose-field">
@@ -1748,6 +1768,16 @@ export function MailClientShell({ mail }: Props) {
                       <option value={500}>500 ms</option>
                       <option value={1000}>1 sn</option>
                     </select>
+                    <label className="compose-field-label" htmlFor="compose-campaign-schedule">
+                      Zamanla (isteğe bağlı)
+                    </label>
+                    <input
+                      id="compose-campaign-schedule"
+                      type="datetime-local"
+                      className="compose-input"
+                      value={composeCampaignScheduleAt}
+                      onChange={(e) => setComposeCampaignScheduleAt(e.target.value)}
+                    />
                   </div>
                 </div>
               ) : (

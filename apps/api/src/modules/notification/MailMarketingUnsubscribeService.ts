@@ -2,6 +2,12 @@ import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { EmailSuppressionService } from "./EmailSuppressionService";
+import { MailIdentityAuditService } from "./MailIdentityAuditService";
+import { MailIdentityAuditAction } from "./MailIdentityAuditAction";
+import { MailOrganizationBrandingService } from "./MailOrganizationBrandingService";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { CompanyEntity } from "../../infrastructure/database/entities/CompanyEntity";
 
 const TOKEN_TTL_MS = 365 * 24 * 60 * 60 * 1000;
 
@@ -10,6 +16,10 @@ export class MailMarketingUnsubscribeService {
   public constructor(
     private readonly configService: ConfigService,
     private readonly emailSuppressionService: EmailSuppressionService,
+    private readonly mailIdentityAuditService: MailIdentityAuditService,
+    private readonly mailOrganizationBrandingService: MailOrganizationBrandingService,
+    @InjectRepository(CompanyEntity)
+    private readonly companyRepository: Repository<CompanyEntity>,
   ) {}
 
   public buildUnsubscribeUrl(organizationId: string, email: string): string {
@@ -41,11 +51,39 @@ export class MailMarketingUnsubscribeService {
         note: "List-Unsubscribe / kampanya abonelik iptali",
       });
     }
+    await this.mailIdentityAuditService.record({
+      actorUserId: null,
+      actorCompanyId: parsed.organizationId,
+      actionCode: MailIdentityAuditAction.MarketingUnsubscribe,
+      metadata: {
+        email: parsed.email,
+        alreadySuppressed: already,
+      },
+      requestPath: "/public/lerta-mail/marketing-unsubscribe",
+    });
     return {
       ok: true,
       organizationId: parsed.organizationId,
       email: parsed.email,
       alreadySuppressed: already,
+    };
+  }
+
+  public async resolveUnsubscribeBranding(organizationId: string): Promise<{
+    brandTitle: string;
+    logoUrl: string | null;
+    accentColor: string;
+  }> {
+    const company = await this.companyRepository.findOne({
+      where: { id: organizationId },
+    });
+    const companyName = company?.legalName?.trim() || "Kurumsal hesap";
+    const branding =
+      await this.mailOrganizationBrandingService.getSnapshot(organizationId);
+    return {
+      brandTitle: branding.emailBrandTitle?.trim() || companyName,
+      logoUrl: branding.logoUrl,
+      accentColor: branding.emailAccentColor?.trim() || "#1a1647",
     };
   }
 

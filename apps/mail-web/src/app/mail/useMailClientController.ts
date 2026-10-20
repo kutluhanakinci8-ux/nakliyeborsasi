@@ -258,6 +258,9 @@ export function useMailClientController({
   const [composeCampaignRecipients, setComposeCampaignRecipients] =
     useState("");
   const [composeCampaignDelayMs, setComposeCampaignDelayMs] = useState(0);
+  const [composeCampaignScheduleAt, setComposeCampaignScheduleAt] = useState("");
+  const [composeCampaignHistoryOpen, setComposeCampaignHistoryOpen] =
+    useState(false);
   const [campaignResult, setCampaignResult] = useState<ComposeCampaignResult | null>(
     null,
   );
@@ -1014,11 +1017,20 @@ export function useMailClientController({
           attachments: attachments.length > 0 ? attachments : undefined,
           merge: buildComposeMergePayload(),
           delayMsBetweenRecipients: composeCampaignDelayMs || undefined,
+          scheduleAt: composeCampaignScheduleAt
+            ? new Date(composeCampaignScheduleAt).toISOString()
+            : undefined,
         });
         setComposeOpen(false);
         resetCompose();
-        setCampaignResult(result);
-        setToast(`Kampanya: ${result.sent}/${result.attempted} gönderildi.`);
+        if (result.scheduled) {
+          setToast(
+            `Kampanya zamanlandı (${result.scheduleAt ? new Date(result.scheduleAt).toLocaleString("tr-TR") : ""}).`,
+          );
+        } else {
+          setCampaignResult(result);
+          setToast(`Kampanya: ${result.sent}/${result.attempted} gönderildi.`);
+        }
         void refresh();
         setSending(false);
         return;
@@ -1690,6 +1702,7 @@ export function useMailClientController({
     setComposeCampaignMode(false);
     setComposeCampaignRecipients("");
     setComposeCampaignDelayMs(0);
+    setComposeCampaignScheduleAt("");
     setComposeInlineAttachments([]);
   }
 
@@ -1926,6 +1939,10 @@ export function useMailClientController({
     maxCampaignRecipients: MAX_CAMPAIGN_RECIPIENTS,
     composeCampaignDelayMs,
     setComposeCampaignDelayMs,
+    composeCampaignScheduleAt,
+    setComposeCampaignScheduleAt,
+    composeCampaignHistoryOpen,
+    setComposeCampaignHistoryOpen,
     campaignResult,
     setCampaignResult,
     importCampaignCsv,

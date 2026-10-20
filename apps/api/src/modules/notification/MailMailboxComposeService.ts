@@ -213,6 +213,7 @@ export class MailMailboxComposeService {
     }>;
     merge?: { referans?: string; musteriAdi?: string };
     delayMsBetweenRecipients?: number;
+    campaignId?: string;
   }): Promise<{
     campaignId: string;
     attempted: number;
@@ -232,7 +233,7 @@ export class MailMailboxComposeService {
     await this.mailTenantSuspensionService.assertOrganizationCanSend(
       params.organizationId,
     );
-    const campaignId = randomUUID();
+    const campaignId = params.campaignId ?? randomUUID();
     const delayMs = Math.min(
       2000,
       Math.max(0, params.delayMsBetweenRecipients ?? 0),

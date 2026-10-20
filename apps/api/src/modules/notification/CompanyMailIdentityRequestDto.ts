@@ -1,4 +1,11 @@
-import { IsOptional, IsString, Matches, MaxLength, MinLength } from "class-validator";
+import {
+  IsIn,
+  IsOptional,
+  IsString,
+  Matches,
+  MaxLength,
+  MinLength,
+} from "class-validator";
 
 export class RegisterCustomDomainDto {
   @IsString()
@@ -34,6 +41,15 @@ export class ProvisionMailIdentityDto {
   /** İlk kutu varsayılan true; ek kutular için false gönderin. */
   @IsOptional()
   public makeDefault?: boolean;
+
+  @IsOptional()
+  @IsIn(["transactional", "marketing"])
+  public purpose?: "transactional" | "marketing";
+}
+
+export class UpdateMailSenderPurposeDto {
+  @IsIn(["transactional", "marketing"])
+  public purpose!: "transactional" | "marketing";
 }
 
 export class ClaimMailAddressDto {

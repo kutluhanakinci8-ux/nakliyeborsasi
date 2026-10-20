@@ -218,6 +218,7 @@ export async function fetchMailSenders(accessToken: string) {
       isDefault: boolean;
       domain: string;
       fromAddress: string;
+      purpose?: "transactional" | "marketing";
     }[];
     mailboxQuota: { used: number; limit: number };
   }>(accessToken, "company/mail-identity/senders");
@@ -281,7 +282,11 @@ export async function resetPasswordWithToken(token: string, newPassword: string)
 export async function provisionTenantMailbox(
   accessToken: string,
   localPart: string,
-  options?: { displayName?: string; makeDefault?: boolean },
+  options?: {
+    displayName?: string;
+    makeDefault?: boolean;
+    purpose?: "transactional" | "marketing";
+  },
 ) {
   return apiFetch<{ fromAddress: string }>(
     accessToken,
@@ -292,6 +297,7 @@ export async function provisionTenantMailbox(
         localPart,
         displayName: options?.displayName,
         makeDefault: options?.makeDefault,
+        purpose: options?.purpose,
       }),
     },
   );
@@ -335,7 +341,11 @@ export async function claimMailAddress(
 export async function provisionCustomMailbox(
   accessToken: string,
   localPart: string,
-  options?: { displayName?: string; makeDefault?: boolean },
+  options?: {
+    displayName?: string;
+    makeDefault?: boolean;
+    purpose?: "transactional" | "marketing";
+  },
 ) {
   return apiFetch<{ fromAddress: string }>(
     accessToken,
@@ -346,8 +356,21 @@ export async function provisionCustomMailbox(
         localPart,
         displayName: options?.displayName,
         makeDefault: options?.makeDefault,
+        purpose: options?.purpose,
       }),
     },
+  );
+}
+
+export async function updateMailSenderPurpose(
+  accessToken: string,
+  senderId: string,
+  purpose: "transactional" | "marketing",
+) {
+  return apiFetch<{ senders: unknown[] }>(
+    accessToken,
+    `company/mail-identity/senders/${senderId}/purpose`,
+    { method: "PATCH", body: JSON.stringify({ purpose }) },
   );
 }
 

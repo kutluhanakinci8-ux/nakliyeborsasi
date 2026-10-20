@@ -39,6 +39,7 @@ import {
 import {
   ClaimMailAddressDto,
   ProvisionMailIdentityDto,
+  UpdateMailSenderPurposeDto,
   PilotQuickStartDto,
   RegisterCustomDomainDto,
   SelectMailPlanRequestDto,
@@ -314,6 +315,34 @@ export class CompanyMailIdentityController {
     };
   }
 
+  @Patch("senders/:senderId/purpose")
+  public async updateSenderPurpose(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("senderId") senderId: string,
+    @Body() body: UpdateMailSenderPurposeDto,
+  ) {
+    this.assertMailIdentityManager(user);
+    await this.mailSaasSubscriptionService.setSenderPurpose(
+      user.companyId,
+      senderId,
+      body.purpose,
+    );
+    const senders = await this.mailSaasSubscriptionService.listOrganizationSenders(
+      user.companyId,
+    );
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.SenderProvisioned,
+      {
+        organizationId: user.companyId,
+        senderId,
+        purpose: body.purpose,
+      },
+      `/company/mail-identity/senders/${senderId}/purpose`,
+    );
+    return { message: "OK", senders };
+  }
+
   @Post("senders/:senderId/default")
   public async setDefaultSender(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
@@ -352,6 +381,7 @@ export class CompanyMailIdentityController {
       localPart: body.localPart,
       displayName: body.displayName,
       makeDefault: body.makeDefault,
+      purpose: body.purpose,
     });
     await this.mailIdentityAuditService.recordFromUser(
       user,
@@ -452,6 +482,7 @@ export class CompanyMailIdentityController {
       localPart: body.localPart,
       displayName: body.displayName,
       makeDefault: body.makeDefault,
+      purpose: body.purpose,
     });
     await this.mailIdentityAuditService.recordFromUser(
       user,

@@ -224,6 +224,7 @@ export class MailInstantPostDomainService {
     localPart: string;
     displayName?: string;
     makeDefault?: boolean;
+    purpose?: "transactional" | "marketing";
   }): Promise<{
     fromAddress: string;
     vanityAddress: string;
@@ -263,6 +264,7 @@ export class MailInstantPostDomainService {
       localPart,
       displayName: params.displayName,
       isDefault: params.makeDefault ?? true,
+      purpose: params.purpose,
     });
     return {
       fromAddress: `${localPart}@${mailDomain.domain}`,

@@ -6,7 +6,10 @@ import {
   MailDomainEntity,
   MailDomainType,
 } from "../../infrastructure/database/entities/MailDomainEntity";
-import { MailSenderIdentityEntity } from "../../infrastructure/database/entities/MailSenderIdentityEntity";
+import {
+  MailSenderIdentityEntity,
+  MailSenderPurpose,
+} from "../../infrastructure/database/entities/MailSenderIdentityEntity";
 import { MailMailboxEntity } from "../../infrastructure/database/entities/MailMailboxEntity";
 
 @Injectable()
@@ -69,6 +72,7 @@ export class MailDomainApplicationService {
     localPart: string;
     displayName?: string;
     isDefault?: boolean;
+    purpose?: MailSenderPurpose;
   }): Promise<MailSenderIdentityEntity> {
     const domain = await this.domainRepository.findOne({
       where: { id: params.mailDomainId },
@@ -88,7 +92,7 @@ export class MailDomainApplicationService {
         organizationId: params.organizationId,
         localPart: params.localPart.trim().toLowerCase(),
         displayName: params.displayName?.trim() ?? null,
-        purpose: "transactional",
+        purpose: params.purpose ?? "transactional",
         isDefault: params.isDefault ?? false,
       }),
     );
