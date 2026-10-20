@@ -5,7 +5,10 @@ import {
 } from "@nestjs/common";
 import * as nodemailer from "nodemailer";
 import { NotificationConfigurationService } from "./NotificationConfigurationService";
-import { isLertaBrandedOutboundHtml } from "./MailOutboundHtmlTemplate";
+import {
+  buildBrandedPlainText,
+  isLertaBrandedOutboundHtml,
+} from "./MailOutboundHtmlTemplate";
 import { collectSmtpEnvelopeRecipients } from "./SmtpEnvelopeHelper";
 
 @Injectable()
@@ -77,10 +80,15 @@ export class SmtpEmailSender {
           contentType: file.contentType,
         })),
       };
-      if (!brandedHtml && params.text?.trim()) {
+      if (brandedHtml) {
+        mail.text = buildBrandedPlainText(headerFrom, params.text);
+        mail.headers = {
+          ...(mail.headers ?? {}),
+          "X-Lerta-Posta-Outbound": "v2",
+        };
+      } else if (params.text?.trim()) {
         mail.text = params.text;
       }
-      // Branded HTML: text/plain gönderilmez (Outlook mobil ham metni seçiyordu).
       const result = await transport.sendMail(mail);
       return result.messageId ?? null;
     } catch (error) {

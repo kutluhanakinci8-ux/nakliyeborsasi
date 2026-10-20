@@ -1,11 +1,35 @@
-/** Branded webmail çıkışı — SMTP düz metin alternatifi kullanılmaz (Outlook mobil düz metin seçiyordu). */
-export const LERTA_POSTA_OUTBOUND_MARKER = "data-lerta-posta-outbound";
+/** HTML içinde marka tanıma (body data-* Outlook tarafında HTML düşürülmesine yol açabiliyor). */
+export const LERTA_POSTA_OUTBOUND_MARKER = "lerta-posta-outbound-v2";
 
 export function isLertaBrandedOutboundHtml(html: string): boolean {
   return (
-    html.includes(LERTA_POSTA_OUTBOUND_MARKER) ||
+    html.includes(`<!-- ${LERTA_POSTA_OUTBOUND_MARKER} -->`) ||
+    html.includes("data-lerta-posta-outbound") ||
     (html.includes("Lerta Posta") && html.includes("<!DOCTYPE html>"))
   );
+}
+
+/** Outlook mobil çoğu zaman text/plain seçer; ham metin yerine kurumsal düz metin gönderilir. */
+export function buildBrandedPlainText(
+  fromHeader?: string,
+  userText?: string,
+): string {
+  const { displayName, email } = parseFromHeader(fromHeader);
+  const senderLine = displayName
+    ? `${displayName}${email ? ` · ${email}` : ""}`
+    : email ?? "Lerta Posta";
+  const body = (userText ?? "").replace(/\r\n/g, "\n").trim();
+  const lines = [
+    "────────────────────────────",
+    "LERTA POSTA",
+    senderLine,
+    "────────────────────────────",
+    "",
+    body || "(boş mesaj)",
+    "",
+    "— https://posta.lerta.com.tr",
+  ];
+  return lines.join("\n");
 }
 
 export type OutboundHtmlContext = {
@@ -54,7 +78,8 @@ function wrapLertaPostaOutboundEmail(params: {
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Lerta Posta</title>
 </head>
-<body ${LERTA_POSTA_OUTBOUND_MARKER}="1" style="margin:0;padding:0;background-color:#f4f5f9;font-family:'Segoe UI',system-ui,-apple-system,BlinkMacSystemFont,sans-serif;">
+<!-- ${LERTA_POSTA_OUTBOUND_MARKER} -->
+<body style="margin:0;padding:0;background-color:#f4f5f9;font-family:Segoe UI,system-ui,-apple-system,BlinkMacSystemFont,sans-serif;">
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f4f5f9;padding:32px 16px;">
 <tr>
 <td align="center">
