@@ -49,36 +49,8 @@ export class MailMarketingCampaignService {
     result?: MailMarketingCampaignResult;
   }> {
     const scheduleAt = params.scheduleAt ?? null;
-    const now = Date.now();
     if (scheduleAt) {
-      const lead = scheduleAt.getTime() - now;
-      if (lead < MIN_SCHEDULE_LEAD_MS) {
-        throw new BadRequestException(
-          "Zamanlanmış kampanya en az 1 dakika sonrası için olmalı.",
-        );
-      }
-      const maxAt = now + MAX_SCHEDULE_DAYS * 24 * 60 * 60 * 1000;
-      if (scheduleAt.getTime() > maxAt) {
-        throw new BadRequestException(
-          `Kampanya en fazla ${MAX_SCHEDULE_DAYS} gün sonrasına planlanabilir.`,
-        );
-      }
-      const reminderMin = params.payload.reminderMinutesBefore;
-      if (reminderMin !== undefined) {
-        if (
-          reminderMin < MIN_REMINDER_MINUTES ||
-          reminderMin > MAX_REMINDER_MINUTES
-        ) {
-          throw new BadRequestException(
-            `Hatırlatma ${MIN_REMINDER_MINUTES}–${MAX_REMINDER_MINUTES} dakika arasında olmalı.`,
-          );
-        }
-        if (reminderMin * 60_000 >= lead) {
-          throw new BadRequestException(
-            "Hatırlatma, gönderim zamanından önce olmalı.",
-          );
-        }
-      }
+      this.assertValidScheduleAt(scheduleAt, params.payload);
     } else if (params.payload.reminderMinutesBefore !== undefined) {
       throw new BadRequestException(
         "Hatırlatma yalnızca zamanlanmış kampanyalarda kullanılabilir.",
@@ -177,6 +149,8 @@ export class MailMarketingCampaignService {
     tag?: string,
     subjectQuery?: string,
     offset = 0,
+    createdAfter?: string,
+    createdBefore?: string,
   ) {
     const take = Math.min(80, Math.max(1, limit));
     const skip = Math.min(500, Math.max(0, offset));
@@ -200,6 +174,14 @@ export class MailMarketingCampaignService {
       qb.andWhere("c.subject ILIKE :subjectQuery", {
         subjectQuery: `%${q}%`,
       });
+    }
+    const after = this.parseOptionalDateFilter(createdAfter);
+    if (after) {
+      qb.andWhere("c.createdAt >= :createdAfter", { createdAfter: after });
+    }
+    const before = this.parseOptionalDateFilter(createdBefore);
+    if (before) {
+      qb.andWhere("c.createdAt <= :createdBefore", { createdBefore: before });
     }
     const rows = await qb.getMany();
     const campaigns = rows.map((row) => this.toListItem(row));
@@ -437,6 +419,40 @@ export class MailMarketingCampaignService {
     this.emitCampaignEvent(existing, "campaign.cancelled");
   }
 
+  public async rescheduleScheduled(
+    organizationId: string,
+    campaignId: string,
+    scheduleAt: Date,
+  ): Promise<{ campaignId: string; scheduleAt: string }> {
+    const existing = await this.campaignRepository.findOne({
+      where: { id: campaignId, organizationId, status: "scheduled" },
+    });
+    if (!existing) {
+      throw new NotFoundException(
+        "Zamanlanmış kampanya bulunamadı veya yeniden planlanamaz.",
+      );
+    }
+    if (Number.isNaN(scheduleAt.getTime())) {
+      throw new BadRequestException("scheduleAt geçersiz.");
+    }
+    this.assertValidScheduleAt(scheduleAt, existing.payload);
+    const payload: MailMarketingCampaignPayload = {
+      ...existing.payload,
+      reminderDispatchedAt: null,
+    };
+    await this.campaignRepository.update(
+      { id: campaignId, organizationId, status: "scheduled" },
+      { scheduleAt, payload },
+    );
+    const updated: MailMarketingCampaignEntity = {
+      ...existing,
+      scheduleAt,
+      payload,
+    };
+    this.emitCampaignEvent(updated, "campaign.scheduled");
+    return { campaignId, scheduleAt: scheduleAt.toISOString() };
+  }
+
   public async drainScheduled(): Promise<{ processed: number }> {
     const due = await this.campaignRepository.find({
       where: {
@@ -592,10 +608,59 @@ export class MailMarketingCampaignService {
         subject: row.subject,
         status: row.status,
         scheduleAt: row.scheduleAt?.toISOString() ?? null,
+        createdAt: row.createdAt.toISOString(),
+        tags: row.payload.tags ?? [],
         recipientCount: row.payload.recipients?.length ?? 0,
         ...extra,
       },
     );
+  }
+
+  private assertValidScheduleAt(
+    scheduleAt: Date,
+    payload: MailMarketingCampaignPayload,
+    now = Date.now(),
+  ): void {
+    const lead = scheduleAt.getTime() - now;
+    if (lead < MIN_SCHEDULE_LEAD_MS) {
+      throw new BadRequestException(
+        "Zamanlanmış kampanya en az 1 dakika sonrası için olmalı.",
+      );
+    }
+    const maxAt = now + MAX_SCHEDULE_DAYS * 24 * 60 * 60 * 1000;
+    if (scheduleAt.getTime() > maxAt) {
+      throw new BadRequestException(
+        `Kampanya en fazla ${MAX_SCHEDULE_DAYS} gün sonrasına planlanabilir.`,
+      );
+    }
+    const reminderMin = payload.reminderMinutesBefore;
+    if (reminderMin !== undefined) {
+      if (
+        reminderMin < MIN_REMINDER_MINUTES ||
+        reminderMin > MAX_REMINDER_MINUTES
+      ) {
+        throw new BadRequestException(
+          `Hatırlatma ${MIN_REMINDER_MINUTES}–${MAX_REMINDER_MINUTES} dakika arasında olmalı.`,
+        );
+      }
+      if (reminderMin * 60_000 >= lead) {
+        throw new BadRequestException(
+          "Hatırlatma, gönderim zamanından önce olmalı.",
+        );
+      }
+    }
+  }
+
+  private parseOptionalDateFilter(raw?: string): Date | null {
+    const value = raw?.trim();
+    if (!value) {
+      return null;
+    }
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+      return null;
+    }
+    return parsed;
   }
 
   private async notifyScheduledCreator(

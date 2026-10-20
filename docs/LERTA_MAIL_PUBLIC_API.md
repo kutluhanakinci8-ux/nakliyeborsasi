@@ -19,9 +19,10 @@ API anahtarları posta konsol → Entegrasyon üzerinden oluşturulur.
 | GET | `/messages/:id` | Gönderim durumu |
 | POST | `/campaigns` | Pazarlama kampanyası |
 | GET | `/campaigns/summary` | Son 30 gün özet + `availableTags` |
-| GET | `/campaigns` | Kampanya listesi (`limit`, `offset`, `status`, `tag`, `q`) |
+| GET | `/campaigns` | Kampanya listesi (`limit`, `offset`, `status`, `tag`, `q`, `createdAfter`, `createdBefore`) |
 | GET | `/campaigns/:campaignId` | Kampanya durumu ve sonuç |
 | POST | `/campaigns/:campaignId/clone` | `mode: schedule` + `scheduleAt` ile kopya |
+| POST | `/campaigns/:campaignId/reschedule` | Zamanlanmış kampanya — yeni `scheduleAt` |
 | POST | `/campaigns/:campaignId/resend-failed` | Yalnızca başarısız alıcılar |
 | GET | `/campaigns/:campaignId/export.csv` | Alıcı durum CSV |
 
@@ -50,6 +51,8 @@ Konsolda webhook uç noktasına abone olun:
 - `campaign.cancelled`
 
 İmza: `X-Lerta-Mail-Signature` (HMAC, mevcut mesaj webhook’ları ile aynı).
+
+Kampanya olaylarında gövde alanları: `campaignId`, `subject`, `status`, `scheduleAt`, `createdAt`, `tags`, `recipientCount` (+ `result` tamamlananlarda).
 
 Başarısız HTTP veya ağ hatalarında uç nokta **3 denemeye** kadar otomatik yeniden denenir (2 sn ve 5 sn aralıklarla). Her deneme `mail_webhook_delivery_log` tablosuna yazılır (konsol → Entegrasyon).
 
@@ -82,3 +85,10 @@ Başarısız HTTP veya ağ hatalarında uç nokta **3 denemeye** kadar otomatik 
 - `GET /campaigns?q=` — konu araması (en az 2 karakter, `ILIKE`)
 - `offset` + `pagination.hasMore` — sayfalama (limit max 80, offset max 500)
 - Web kampanya geçmişi: konu arama + “Daha fazla göster”; “Gönderiliyor” durum filtresi
+
+## Faz 15
+
+- `POST …/campaigns/:id/reschedule` — mevcut zamanlanmış kampanyayı yeni `scheduleAt` ile güncelle (hatırlatma sıfırlanır, `campaign.scheduled` webhook yeniden)
+- Liste: `createdAfter` / `createdBefore` (ISO 8601) oluşturulma aralığı
+- Kampanya webhook gövdesi: `tags`, `createdAt`
+- Web: zamanlanmış kampanyada **Yeniden zamanla**

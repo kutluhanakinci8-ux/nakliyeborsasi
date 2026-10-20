@@ -1185,6 +1185,21 @@ export async function cancelScheduledMailCampaign(
   });
 }
 
+export async function rescheduleMailCampaign(
+  accessToken: string,
+  campaignId: string,
+  scheduleAt: string,
+) {
+  return apiFetch<{
+    ok: true;
+    campaignId: string;
+    scheduleAt: string;
+  }>(accessToken, `company/mail-inbox/campaigns/${campaignId}/reschedule`, {
+    method: "POST",
+    body: JSON.stringify({ scheduleAt }),
+  });
+}
+
 export async function fetchDelayedComposeStatus(
   accessToken: string,
   pendingId: string,

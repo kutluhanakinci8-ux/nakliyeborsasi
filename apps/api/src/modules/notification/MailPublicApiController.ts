@@ -20,6 +20,7 @@ import type { MailPublicApiRequestContext } from "./MailPublicApiGuard";
 import { MailPublicApiSendMessageDto } from "./MailPublicApiDto";
 import { MailPublicApiCampaignDto } from "./MailPublicApiCampaignDto";
 import { CloneMailCampaignRequestDto } from "./CloneMailCampaignRequestDto";
+import { RescheduleMailCampaignRequestDto } from "./RescheduleMailCampaignRequestDto";
 import { MailMarketingCampaignService } from "./MailMarketingCampaignService";
 import type { MailMarketingCampaignStatus } from "../../infrastructure/database/entities/MailMarketingCampaignEntity";
 import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
@@ -72,7 +73,8 @@ export class MailPublicApiController {
         {
           method: "GET",
           path: "/campaigns",
-          description: "Kampanya listesi (limit, offset, status, tag, q)",
+          description:
+            "Kampanya listesi (limit, offset, status, tag, q, createdAfter, createdBefore)",
         },
         {
           method: "GET",
@@ -83,6 +85,11 @@ export class MailPublicApiController {
           method: "POST",
           path: "/campaigns/:campaignId/clone",
           description: "Kampanyayı yeni scheduleAt ile zamanla (mode=schedule)",
+        },
+        {
+          method: "POST",
+          path: "/campaigns/:campaignId/reschedule",
+          description: "Zamanlanmış kampanyanın gönderim saatini güncelle",
         },
         {
           method: "POST",
@@ -176,6 +183,8 @@ export class MailPublicApiController {
     @Query("status") status?: string,
     @Query("tag") tag?: string,
     @Query("q") q?: string,
+    @Query("createdAfter") createdAfter?: string,
+    @Query("createdBefore") createdBefore?: string,
   ) {
     const parsed = limit ? Number.parseInt(limit, 10) : 20;
     const parsedOffset = offset ? Number.parseInt(offset, 10) : 0;
@@ -197,8 +206,24 @@ export class MailPublicApiController {
       tag?.trim() || undefined,
       q?.trim() || undefined,
       Number.isFinite(parsedOffset) ? parsedOffset : 0,
+      createdAfter?.trim() || undefined,
+      createdBefore?.trim() || undefined,
     );
     return list;
+  }
+
+  @Post("campaigns/:campaignId/reschedule")
+  public async rescheduleCampaign(
+    @MailPublicApiContextParam() ctx: MailPublicApiRequestContext,
+    @Param("campaignId") campaignId: string,
+    @Body() body: RescheduleMailCampaignRequestDto,
+  ) {
+    const scheduleAt = new Date(body.scheduleAt);
+    return this.mailMarketingCampaignService.rescheduleScheduled(
+      ctx.organizationId,
+      campaignId,
+      scheduleAt,
+    );
   }
 
   @Post("campaigns/:campaignId/resend-failed")

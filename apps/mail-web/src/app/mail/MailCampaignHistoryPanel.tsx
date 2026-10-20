@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   cancelScheduledMailCampaign,
+  rescheduleMailCampaign,
   cloneMailCampaignToCompose,
   cloneMailCampaignSchedule,
   downloadMailCampaignCsv,
@@ -55,6 +56,8 @@ export function MailCampaignHistoryPanel({
   const [detailError, setDetailError] = useState("");
   const [scheduleCloneId, setScheduleCloneId] = useState<string | null>(null);
   const [scheduleCloneAt, setScheduleCloneAt] = useState("");
+  const [rescheduleId, setRescheduleId] = useState<string | null>(null);
+  const [rescheduleAt, setRescheduleAt] = useState("");
 
   useEffect(() => {
     const timer = window.setTimeout(
@@ -285,19 +288,32 @@ export function MailCampaignHistoryPanel({
                   Zamanla (kopya)
                 </button>
                 {row.status === "scheduled" ? (
-                  <button
-                    type="button"
-                    className="compose-chip-btn"
-                    disabled={busyId === row.id}
-                    onClick={() => {
-                      setBusyId(row.id);
-                      void cancelScheduledMailCampaign(accessToken, row.id)
-                        .then(() => refresh())
-                        .finally(() => setBusyId(null));
-                    }}
-                  >
-                    İptal
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      className="compose-chip-btn"
+                      onClick={() => {
+                        setRescheduleId(rescheduleId === row.id ? null : row.id);
+                        setRescheduleAt("");
+                        setScheduleCloneId(null);
+                      }}
+                    >
+                      Yeniden zamanla
+                    </button>
+                    <button
+                      type="button"
+                      className="compose-chip-btn"
+                      disabled={busyId === row.id}
+                      onClick={() => {
+                        setBusyId(row.id);
+                        void cancelScheduledMailCampaign(accessToken, row.id)
+                          .then(() => refresh())
+                          .finally(() => setBusyId(null));
+                      }}
+                    >
+                      İptal
+                    </button>
+                  </>
                 ) : null}
                 {row.status === "completed" ? (
                   <>
@@ -333,6 +349,38 @@ export function MailCampaignHistoryPanel({
                   </>
                 ) : null}
               </div>
+              {rescheduleId === row.id ? (
+                <div className="mail-campaign-schedule-clone">
+                  <input
+                    type="datetime-local"
+                    className="compose-input"
+                    value={rescheduleAt}
+                    onChange={(e) => setRescheduleAt(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="compose-chip-btn"
+                    disabled={!rescheduleAt || busyId === row.id}
+                    onClick={() => {
+                      setBusyId(row.id);
+                      void rescheduleMailCampaign(
+                        accessToken,
+                        row.id,
+                        new Date(rescheduleAt).toISOString(),
+                      )
+                        .then(() => {
+                          setRescheduleId(null);
+                          setRescheduleAt("");
+                          return refresh();
+                        })
+                        .catch(() => setError("Yeniden zamanlama başarısız."))
+                        .finally(() => setBusyId(null));
+                    }}
+                  >
+                    Planı güncelle
+                  </button>
+                </div>
+              ) : null}
               {scheduleCloneId === row.id ? (
                 <div className="mail-campaign-schedule-clone">
                   <input

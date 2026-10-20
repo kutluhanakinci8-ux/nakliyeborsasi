@@ -29,6 +29,7 @@ import { ComposeMailPreviewRequestDto } from "./ComposeMailPreviewRequestDto";
 import { ComposeCampaignRequestDto } from "./ComposeCampaignRequestDto";
 import { ComposeCampaignPreviewSegmentDto } from "./ComposeCampaignPreviewSegmentDto";
 import { CloneMailCampaignRequestDto } from "./CloneMailCampaignRequestDto";
+import { RescheduleMailCampaignRequestDto } from "./RescheduleMailCampaignRequestDto";
 import { MailCampaignRecipientPreviewService } from "./MailCampaignRecipientPreviewService";
 import type { MailMarketingCampaignStatus } from "../../infrastructure/database/entities/MailMarketingCampaignEntity";
 import { ReplyMailRequestDto } from "./ReplyMailRequestDto";
@@ -1433,6 +1434,8 @@ export class CompanyMailInboxController {
     @Query("status") status?: string,
     @Query("tag") tag?: string,
     @Query("q") q?: string,
+    @Query("createdAfter") createdAfter?: string,
+    @Query("createdBefore") createdBefore?: string,
   ) {
     this.assertMailInboxWriter(user);
     const parsed = limit ? Number.parseInt(limit, 10) : 40;
@@ -1455,6 +1458,8 @@ export class CompanyMailInboxController {
       tag?.trim() || undefined,
       q?.trim() || undefined,
       Number.isFinite(parsedOffset) ? parsedOffset : 0,
+      createdAfter?.trim() || undefined,
+      createdBefore?.trim() || undefined,
     );
     return { ok: true, ...list };
   }
@@ -1531,6 +1536,22 @@ export class CompanyMailInboxController {
       campaignId,
     );
     return { ok: true };
+  }
+
+  @Post("campaigns/:campaignId/reschedule")
+  public async rescheduleCampaign(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("campaignId") campaignId: string,
+    @Body() body: RescheduleMailCampaignRequestDto,
+  ) {
+    this.assertMailInboxWriter(user);
+    const scheduleAt = new Date(body.scheduleAt);
+    const outcome = await this.mailMarketingCampaignService.rescheduleScheduled(
+      user.companyId,
+      campaignId,
+      scheduleAt,
+    );
+    return { ok: true, ...outcome };
   }
 
   @Get("compose/pending/:pendingId")
