@@ -1,12 +1,7 @@
 import { MarketingPageShell } from "@/components/MarketingPageShell";
-import {
-  MESSAGING_APP_URL,
-  MESSAGING_LOGIN_URL,
-} from "@/lib/marketingUrls";
-
 export default function MesajProductPage() {
   return (
-    <MarketingPageShell narrow>
+    <MarketingPageShell>
       <p className="breadcrumb">
         <a href="/">Lerta</a> / Mesaj
       </p>
@@ -17,17 +12,10 @@ export default function MesajProductPage() {
           Ekip içi sohbet, dosya paylaşımı, bildirimler ve entegrasyon API&apos;si.
           WhatsApp ve Slack köprüleri ile müşteri iletişimini tek yerde toplayın.
         </p>
-        <div className="hero-cta">
-          <a className="btn btn-primary" href={MESSAGING_APP_URL}>
-            Mesajlaşmayı aç
-          </a>
-          <a className="btn btn-ghost" href={MESSAGING_LOGIN_URL}>
-            Giriş yap
-          </a>
-          <a className="btn btn-ghost" href="/">
-            Tüm ürünler
-          </a>
-        </div>
+        <p className="hero-hint">
+          <strong>Giriş yap</strong> ve <strong>Sohbeti aç</strong> üst menüde —
+          nakliye veya lojistik arayüzü açılmaz; yalnızca Lerta Mesaj.
+        </p>
       </section>
 
       <section className="grid">

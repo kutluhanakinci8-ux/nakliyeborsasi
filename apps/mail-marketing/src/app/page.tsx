@@ -14,17 +14,22 @@ export default function PlatformHomePage() {
           e-posta, <strong>Lerta Mesaj</strong> ile firma içi ve müşteri
           sohbeti.
         </p>
-        <div className="hero-cta">
-          <a className="btn btn-primary" href="/posta#fiyatlar">
-            Posta fiyatları
+        <div className="hero-cta hero-cta--compact">
+          <a className="btn btn-primary" href="/u88">
+            U88&apos;i keşfet
           </a>
-          <a className="btn btn-ghost" href="/durum">
-            Canlı durum
+          <a className="btn btn-ghost" href="/posta#fiyatlar">
+            Posta planları
           </a>
-          <a className="btn btn-ghost" href={PLATFORM_REGISTER_HREF}>
-            Kurumsal kayıt
+          <a className="btn btn-ghost" href="/mesaj">
+            Mesaj
           </a>
         </div>
+        <p className="hero-hint">
+          Sağ üstten <strong>Ücretsiz dene</strong> (U88) veya <strong>Giriş</strong>{" "}
+          (Mesaj) ile doğrudan uygulamaya geçin. Kurumsal posta kaydı:{" "}
+          <a href={PLATFORM_REGISTER_HREF}>yonetim.lerta.com.tr</a>
+        </p>
       </section>
 
       <section className="platform-section" aria-labelledby="products-heading">

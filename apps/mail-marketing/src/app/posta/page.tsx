@@ -1,7 +1,6 @@
 import { MarketingPageShell } from "@/components/MarketingPageShell";
 import {
   CONSOLE_URL,
-  CORPORATE_REGISTER,
   MAIL_WEB_URL,
 } from "@/lib/marketingUrls";
 import { PricingSection } from "../PricingSection";
@@ -23,17 +22,11 @@ export default function PostaProductPage() {
           pilot alt alan; kurumsal müşteriler için{" "}
           <strong>info@sizin-domain.com</strong> modeli.
         </p>
-        <div className="hero-cta">
-          <a className="btn btn-primary" href={CORPORATE_REGISTER}>
-            Domain ile başla
-          </a>
-          <a className="btn btn-ghost" href={consoleLoginHref}>
-            Yönetim konsolu
-          </a>
-          <a className="btn btn-ghost" href={loginHref}>
-            Webmail giriş
-          </a>
-        </div>
+        <p className="hero-hint">
+          <strong>Domain ile başla</strong> ve <strong>Webmail giriş</strong> üst
+          menüde. Yönetim:{" "}
+          <a href={consoleLoginHref}>yonetim.lerta.com.tr</a>
+        </p>
       </section>
 
       <section className="grid">

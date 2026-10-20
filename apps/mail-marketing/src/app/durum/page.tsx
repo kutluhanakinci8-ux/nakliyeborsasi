@@ -23,8 +23,8 @@ export default async function DurumPage() {
 
   return (
     <MarketingPageShell narrow>
-      <h1>Sistem durumu</h1>
-      <p>
+      <h1 className="page-title">Sistem durumu</h1>
+      <p className="page-lead">
         Lerta Mail hizmet bileşenlerinin güncel durumu.{" "}
         <code>status.lerta.com.tr</code> bu sayfaya yönlendirilebilir.
       </p>
