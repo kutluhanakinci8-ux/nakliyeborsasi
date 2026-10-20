@@ -5,8 +5,9 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MAIL_WEB_URL } from "@/lib/apiConfig";
 import {
-  parseLertaPostDesiredAddress,
-  suggestLertaPostFromCompany,
+  MAIL_PILOT_TENANT_DOMAIN,
+  parseLertaPilotMailboxAddress,
+  suggestLertaPilotFromCompany,
 } from "@/lib/lertaPostAddress";
 import {
   claimMailAddress,
@@ -47,11 +48,11 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
 
   const parsedPost = useMemo(
-    () => parseLertaPostDesiredAddress(postaDesired),
+    () => parseLertaPilotMailboxAddress(postaDesired),
     [postaDesired],
   );
   const suggestedFromCompany = useMemo(
-    () => suggestLertaPostFromCompany(companyLegalName, "info"),
+    () => suggestLertaPilotFromCompany(companyLegalName),
     [companyLegalName],
   );
 
@@ -70,8 +71,8 @@ export default function RegisterPage() {
       setAccessToken(token);
       if (subscriptionPlanCode === "lerta_mail_pilot_tr") {
         const desired =
-          parseLertaPostDesiredAddress(postaDesired)?.full ??
-          suggestLertaPostFromCompany(companyLegalName, "info");
+          parseLertaPilotMailboxAddress(postaDesired)?.full ??
+          suggestLertaPilotFromCompany(companyLegalName);
         if (desired) {
           try {
             const claim = await claimMailAddress(token, desired, {
@@ -84,7 +85,7 @@ export default function RegisterPage() {
             return;
           } catch {
             setError(
-              "Lerta Posta adresi açılamadı. Format: info@firmaniz.post (küçük harf).",
+              `Lerta Posta adresi açılamadı. Format: firma-on-eki@${MAIL_PILOT_TENANT_DOMAIN} (küçük harf).`,
             );
             setLoading(false);
             return;
@@ -124,14 +125,14 @@ export default function RegisterPage() {
         </p>
         {subscriptionPlanCode === "lerta_mail_pilot_tr" ? (
           <>
-            <label htmlFor="posta">Lerta Posta adresiniz</label>
+            <label htmlFor="posta">Lerta Posta adresiniz (pilot)</label>
             <input
               id="posta"
               className="input"
               type="email"
               inputMode="email"
               autoComplete="off"
-              placeholder="info@firmaniz.post"
+              placeholder={`ornek-firma@${MAIL_PILOT_TENANT_DOMAIN}`}
               value={postaDesired}
               onChange={(e) => setPostaDesired(e.target.value.trim().toLowerCase())}
             />
@@ -144,22 +145,12 @@ export default function RegisterPage() {
               }}
             >
               <p style={{ margin: "0 0 8px" }}>
-                Nasıl yazılır: <strong>ön ek</strong> + <strong>@</strong> +{" "}
-                <strong>firma adı</strong> + <strong>.post</strong>
-              </p>
-              <p
-                style={{
-                  margin: "0 0 8px",
-                  fontFamily: "ui-monospace, monospace",
-                  fontSize: "0.8rem",
-                }}
-              >
-                [ info | adiniz | satis ] @ [ kutluhan | abayer ] .post
+                Pilot kutular <strong>@{MAIL_PILOT_TENANT_DOMAIN}</strong> altında
+                açılır. Ön ek: küçük harf, rakam ve tire.
               </p>
               <p style={{ margin: 0 }}>
-                Örnekler: <strong>info@kutluhan.post</strong>,{" "}
-                <strong>abayer@abayer.post</strong>,{" "}
-                <strong>satis@abayer.post</strong>
+                Örnekler: <strong>kutluhan@{MAIL_PILOT_TENANT_DOMAIN}</strong>,{" "}
+                <strong>abayer-lojistik@{MAIL_PILOT_TENANT_DOMAIN}</strong>
               </p>
             </div>
             {parsedPost ? (
@@ -175,7 +166,8 @@ export default function RegisterPage() {
               </p>
             ) : postaDesired.trim() ? (
               <p className="auth-error" style={{ fontSize: "0.85rem" }}>
-                Geçerli format: küçük harf, ör. info@firmaniz.post
+                Geçerli format: ön-ek@{MAIL_PILOT_TENANT_DOMAIN} (eski .post
+                adresleri kullanılmıyor)
               </p>
             ) : suggestedFromCompany ? (
               <p style={{ fontSize: "0.85rem", color: "var(--muted)", marginBottom: 0 }}>
@@ -191,7 +183,7 @@ export default function RegisterPage() {
               </p>
             ) : (
               <p style={{ fontSize: "0.85rem", color: "var(--muted)", marginBottom: 0 }}>
-                Firma ünvanını yazdıktan sonra size uygun bir .post adresi önerilir.
+                Firma ünvanını yazdıktan sonra size uygun bir pilot adresi önerilir.
               </p>
             )}
           </>
@@ -214,8 +206,9 @@ export default function RegisterPage() {
         />
         <label htmlFor="email">Giriş e-postası</label>
         <p style={{ fontSize: "0.8rem", color: "var(--muted)", margin: "4px 0 8px" }}>
-          Panele giriş için (ör. sizin Gmail veya kurumsal adresiniz); Lerta Posta
-          kutusu yukarıdaki <code>.post</code> adresidir.
+          Yönetim paneli ve webmail girişi için (Gmail vb. olabilir). Pilot
+          posta kutusu yukarıdaki <code>@{MAIL_PILOT_TENANT_DOMAIN}</code> adresidir
+          — isterseniz giriş e-postanızı kutu adresiyle aynı yapabilirsiniz.
         </p>
         <input
           id="email"

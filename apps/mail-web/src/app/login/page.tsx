@@ -4,6 +4,10 @@ import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { completeTotpLogin, login } from "@/lib/mailApi";
+import {
+  MAIL_CORPORATE_REGISTER,
+  MAIL_PILOT_REGISTER,
+} from "@/lib/postaOnboardingUrls";
 import { useMailSession } from "@/lib/session";
 
 export default function LoginPage() {
@@ -48,16 +52,16 @@ export default function LoginPage() {
   return (
     <div className="login-page">
       <div className="login-page-top">
-        <a className="login-platform-link" href="https://u88.lerta.com.tr/">
-          U88 · KVKK
+        <a className="login-platform-link" href="https://www.lerta.com.tr/posta">
+          Posta
         </a>
         <span className="login-platform-link">·</span>
         <a className="login-platform-link" href="https://www.lerta.com.tr/mesaj">
-          Mesaj
+          Mesajlaşma
         </a>
         <span className="login-platform-link">·</span>
-        <a className="login-platform-link" href="https://www.lerta.com.tr/">
-          Platform
+        <a className="login-platform-link" href="https://www.lerta.com.tr/u88">
+          KVKK
         </a>
       </div>
       <form className="login-card" onSubmit={onSubmit}>
@@ -65,8 +69,9 @@ export default function LoginPage() {
           <span className="login-card-brand-mark" aria-hidden="true">@</span>
           <h1 style={{ margin: 0, fontSize: "1.35rem" }}>Lerta Posta</h1>
         </div>
-        <p>
-          Kurumsal webmail — <strong>posta.lerta.com.tr</strong>
+        <p className="login-card-lead">
+          Webmail — mevcut hesabınızla giriş. Yeni kullanıcılar önce kayıt olup
+          posta kutusunu seçer.
         </p>
         {error ? <p className="login-error">{error}</p> : null}
         <label htmlFor="email">E-posta</label>
@@ -107,6 +112,34 @@ export default function LoginPage() {
           <Link href="/forgot-password">Şifremi unuttum</Link>
         </p>
       </form>
+      <aside className="login-onboarding" aria-labelledby="login-onboarding-title">
+        <h2 id="login-onboarding-title">Hesabınız yok mu?</h2>
+        <p>
+          Kayıt <strong>yonetim.lerta.com.tr</strong> üzerinde yapılır; ardından
+          pilot veya kurumsal posta adresiniz açılır ve buraya yönlendirilirsiniz.
+        </p>
+        <div className="login-onboarding-actions">
+          <a className="btn-onboarding btn-onboarding-primary" href={MAIL_PILOT_REGISTER}>
+            Bireysel / pilot kayıt
+          </a>
+          <a
+            className="btn-onboarding btn-onboarding-secondary"
+            href={MAIL_CORPORATE_REGISTER}
+          >
+            Kurumsal domain kayıt
+          </a>
+        </div>
+        <ul className="login-onboarding-list">
+          <li>
+            <strong>Pilot:</strong> tek kutu, örn.{" "}
+            <code>sizin-adi@lerta.com.tr</code>
+          </li>
+          <li>
+            <strong>Kurumsal:</strong> <code>info@sirketiniz.com</code> — birden
+            fazla kutu yönetim panelinden eklenir
+          </li>
+        </ul>
+      </aside>
     </div>
   );
 }
