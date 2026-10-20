@@ -18,6 +18,7 @@ import {
   quickStartPilotMailbox,
   registerMailSaas,
 } from "@/lib/consoleApi";
+import { isEmailAlreadyRegisteredMessage } from "@/lib/authErrorMessages";
 import { useConsoleSession } from "@/lib/session";
 
 const MAIL_PLAN_CODES = new Set<MailRegisterPlan>([
@@ -114,8 +115,12 @@ export default function RegisterPage() {
       router.replace(
         `/domain?welcome=1&plan=${encodeURIComponent(subscriptionPlanCode)}`,
       );
-    } catch {
-      setError("Kayıt tamamlanamadı. E-posta kullanımda olabilir.");
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Kayıt tamamlanamadı. Lütfen tekrar deneyin.",
+      );
     } finally {
       setLoading(false);
     }
@@ -132,7 +137,16 @@ export default function RegisterPage() {
         </p>
 
         {error ? (
-          <p className="auth-premium-error" role="alert">{error}</p>
+          <div className="auth-premium-error" role="alert">
+            <p>{error}</p>
+            {isEmailAlreadyRegisteredMessage(error) ? (
+              <p className="auth-premium-error-actions">
+                <Link href="/login">Giriş yap</Link>
+                {" · "}
+                <Link href="/forgot-password">Şifremi unuttum</Link>
+              </p>
+            ) : null}
+          </div>
         ) : null}
 
         {isPilot ? (
@@ -205,8 +219,11 @@ export default function RegisterPage() {
         <div className="auth-premium-field">
           <label htmlFor="email">Giriş e-postası</label>
           <p className="auth-premium-hint auth-premium-hint--tight">
-            Panel ve webmail girişi. Gmail vb. olabilir; pilot kutu adresinden
-            farklı tutulabilir.
+            <strong>Giriş e-postası</strong> hesabınızın kimliğidir (panel +
+            webmail şifresi). Nakliye Borsası veya önceki Lerta kaydında
+            kullandığınız adres burada tekrar kayıt olamaz —{" "}
+            <Link href="/login">giriş yapın</Link>. Pilot kutu adresi (
+            <code>@{MAIL_PILOT_TENANT_DOMAIN}</code>) ayrı bir alandır.
           </p>
           <input
             id="email"

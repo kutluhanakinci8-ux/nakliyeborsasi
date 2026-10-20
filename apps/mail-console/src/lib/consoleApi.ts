@@ -1,3 +1,4 @@
+import { formatRegisterApiError } from "./authErrorMessages";
 import { resolveApiBaseUrl } from "./apiConfig";
 
 export type CustomDomainBundle = {
@@ -173,7 +174,7 @@ export async function registerMailSaas(params: {
   });
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(text || "Kayıt başarısız");
+    throw new Error(formatRegisterApiError(text));
   }
   const payload = (await response.json()) as { accessToken: string };
   return payload.accessToken;

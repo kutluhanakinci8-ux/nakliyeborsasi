@@ -503,6 +503,19 @@ a:hover {
   color: #b91c1c;
 }
 
+.auth-premium-error p {
+  margin: 0;
+}
+
+.auth-premium-error-actions {
+  margin-top: 10px !important;
+  font-weight: 600;
+}
+
+.auth-premium-error-actions a {
+  color: #991b1b;
+}
+
 .auth-premium-error--inline {
   margin-top: 8px;
   margin-bottom: 0;
