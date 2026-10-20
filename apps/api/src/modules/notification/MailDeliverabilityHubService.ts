@@ -143,7 +143,9 @@ export class MailDeliverabilityHubService {
       (event) =>
         event === "message.opened" ||
         event === "message.clicked" ||
-        event === "message.bounced",
+        event === "message.bounced" ||
+        event === "campaign.opened" ||
+        event === "campaign.clicked",
     );
     const enabledEndpointCount = integration.webhooks.filter(
       (endpoint) => endpoint.enabled,

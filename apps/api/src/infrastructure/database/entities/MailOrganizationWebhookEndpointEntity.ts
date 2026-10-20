@@ -18,7 +18,9 @@ export type MailWebhookEventType =
   | "campaign.started"
   | "campaign.completed"
   | "campaign.failed"
-  | "campaign.cancelled";
+  | "campaign.cancelled"
+  | "campaign.opened"
+  | "campaign.clicked";
 
 @Entity({ name: "mail_organization_webhook_endpoint" })
 export class MailOrganizationWebhookEndpointEntity {

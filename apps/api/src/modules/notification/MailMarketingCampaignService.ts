@@ -15,6 +15,7 @@ import { MailMailboxComposeService } from "./MailMailboxComposeService";
 import type { ComposeAttachmentInput } from "./MailMailboxComposeService";
 import { MailOrganizationWebhookDispatcherService } from "./MailOrganizationWebhookDispatcherService";
 import { EmailSuppressionService } from "./EmailSuppressionService";
+import { EmailEngagementService } from "./EmailEngagementService";
 import {
   buildCampaignListExportCsv,
   buildCampaignRecipientExportCsv,
@@ -56,6 +57,7 @@ export class MailMarketingCampaignService {
     private readonly mailMailboxComposeService: MailMailboxComposeService,
     private readonly mailOrganizationWebhookDispatcherService: MailOrganizationWebhookDispatcherService,
     private readonly emailSuppressionService: EmailSuppressionService,
+    private readonly emailEngagementService: EmailEngagementService,
   ) {}
 
   public async createAndRunOrSchedule(params: {
@@ -181,7 +183,16 @@ export class MailMarketingCampaignService {
     if (!row) {
       throw new NotFoundException("Kampanya bulunamadı.");
     }
-    return this.toDetail(row);
+    const detail = this.toDetail(row);
+    if (row.status === "completed" || row.status === "running") {
+      const engagement =
+        await this.emailEngagementService.getCampaignEngagementTotals(
+          row.id,
+          organizationId,
+        );
+      return { ...detail, engagement };
+    }
+    return detail;
   }
 
   public async getPreviewForOrganization(

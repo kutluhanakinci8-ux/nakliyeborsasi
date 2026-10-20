@@ -37,6 +37,9 @@ import { MailOrganizationWebhookDispatcherService } from "./MailOrganizationWebh
 import type { MailMarketingCampaignSegment } from "../../infrastructure/database/entities/MailMarketingCampaignEntity";
 import { recipientMatchesCampaignSegment } from "./MailCampaignSegment";
 import { EmailSuppressionService } from "./EmailSuppressionService";
+import { EmailHtmlTrackingService } from "./EmailHtmlTrackingService";
+import { EmailOutboxEntity } from "../../infrastructure/database/entities/EmailOutboxEntity";
+import { EmailRecipientKind } from "./NotificationEventCode";
 import { randomUUID } from "node:crypto";
 
 export type ComposeAttachmentInput = {
@@ -64,6 +67,9 @@ export class MailMailboxComposeService {
     private readonly mailOrganizationWebhookDispatcherService: MailOrganizationWebhookDispatcherService,
     private readonly mailMailboxOutboundContentService: MailMailboxOutboundContentService,
     private readonly emailSuppressionService: EmailSuppressionService,
+    private readonly emailHtmlTrackingService: EmailHtmlTrackingService,
+    @InjectRepository(EmailOutboxEntity)
+    private readonly emailOutboxRepository: Repository<EmailOutboxEntity>,
     @InjectRepository(MailSenderIdentityEntity)
     private readonly senderRepository: Repository<MailSenderIdentityEntity>,
     @InjectRepository(MailDomainEntity)
@@ -89,6 +95,8 @@ export class MailMailboxComposeService {
     merge?: { referans?: string; musteriAdi?: string };
     senderPurpose?: MailSenderPurpose;
     outboundChannel?: OutboundContentChannel;
+    /** Kampanya gönderiminde open/click izleme (outbox + pixel). */
+    marketingCampaignId?: string;
   }): Promise<{ sentId: string; smtpMessageId: string | null }> {
     const { fromHeader, fromEmail, envelopeMailFrom, mailbox, technicalEmail } =
       await this.resolveSenderMailbox(
@@ -124,6 +132,18 @@ export class MailMailboxComposeService {
       mergeContext: params.merge,
       channel: params.outboundChannel,
     });
+    const trackingOutbox = await this.createCampaignTrackingOutbox({
+      organizationId: params.organizationId,
+      marketingCampaignId: params.marketingCampaignId,
+      recipientEmail: toAddress,
+      subject,
+      text: outbound.text,
+      html: outbound.html,
+    });
+    let htmlToSend = outbound.html;
+    if (trackingOutbox?.htmlBody) {
+      htmlToSend = trackingOutbox.htmlBody;
+    }
     let smtpMessageId: string | null;
     try {
       smtpMessageId = await this.smtpEmailSender.send({
@@ -134,13 +154,17 @@ export class MailMailboxComposeService {
         bcc: normalizeOptionalRecipients(params.bcc),
         subject,
         text: outbound.text,
-        html: outbound.html,
+        html: htmlToSend,
         outboundBranding: outbound.branding,
         listUnsubscribeUrl: outbound.listUnsubscribeUrl,
         replyTo,
         attachments: nodemailerAttachments,
       });
     } catch (error) {
+      await this.failCampaignTrackingOutbox(
+        trackingOutbox,
+        error instanceof Error ? error.message : String(error),
+      );
       this.dispatchMailboxSendWebhook(params.organizationId, "message.failed", {
         recipientEmail: toAddress,
         subject,
@@ -154,6 +178,7 @@ export class MailMailboxComposeService {
     if (!smtpMessageId) {
       const reason =
         "E-posta gönderimi kapalı (EMAIL_ENABLED) veya SMTP yanıt vermedi.";
+      await this.failCampaignTrackingOutbox(trackingOutbox, reason);
       this.dispatchMailboxSendWebhook(params.organizationId, "message.failed", {
         recipientEmail: toAddress,
         subject,
@@ -164,6 +189,7 @@ export class MailMailboxComposeService {
       });
       throw new BadRequestException(reason);
     }
+    await this.completeCampaignTrackingOutbox(trackingOutbox, smtpMessageId);
     this.mailOrganizationSendRateService.recordSend(params.organizationId);
     const sent = await this.sentRepository.save(
       this.sentRepository.create({
@@ -302,6 +328,7 @@ export class MailMailboxComposeService {
           attachments: params.attachments,
           senderPurpose: "marketing",
           outboundChannel: "marketing",
+          marketingCampaignId: campaignId,
           merge:
             merge.referans || merge.musteriAdi
               ? {
@@ -1020,6 +1047,75 @@ export class MailMailboxComposeService {
       to: inbound.fromAddress,
       cc: ccOverride ?? (ccList.length > 0 ? ccList.join(", ") : undefined),
     };
+  }
+
+  private async createCampaignTrackingOutbox(params: {
+    organizationId: string;
+    marketingCampaignId?: string;
+    recipientEmail: string;
+    subject: string;
+    text: string;
+    html?: string;
+  }): Promise<EmailOutboxEntity | null> {
+    const campaignId = params.marketingCampaignId?.trim();
+    const html = params.html?.trim();
+    if (!campaignId || !html) {
+      return null;
+    }
+    const row = await this.emailOutboxRepository.save(
+      this.emailOutboxRepository.create({
+        eventCode: "MAIL_CAMPAIGN_RECIPIENT",
+        recipientKind: EmailRecipientKind.User,
+        recipientEmail: params.recipientEmail,
+        locale: "tr",
+        subject: params.subject,
+        htmlBody: html,
+        textBody: params.text,
+        status: "pending",
+        idempotencyKey: `campaign:${campaignId}:${params.recipientEmail}:${randomUUID()}`,
+        metadata: {
+          organizationId: params.organizationId,
+          companyId: params.organizationId,
+          marketingCampaignId: campaignId,
+          source: "mail_marketing_campaign",
+        },
+        providerMessageId: null,
+        lastError: null,
+        sentAt: null,
+      }),
+    );
+    const trackedHtml = await this.emailHtmlTrackingService.applyTracking(
+      row.id,
+      html,
+    );
+    row.htmlBody = trackedHtml;
+    await this.emailOutboxRepository.save(row);
+    return row;
+  }
+
+  private async completeCampaignTrackingOutbox(
+    row: EmailOutboxEntity | null,
+    providerMessageId: string,
+  ): Promise<void> {
+    if (!row) {
+      return;
+    }
+    row.status = "sent";
+    row.sentAt = new Date();
+    row.providerMessageId = providerMessageId;
+    await this.emailOutboxRepository.save(row);
+  }
+
+  private async failCampaignTrackingOutbox(
+    row: EmailOutboxEntity | null,
+    errorMessage: string,
+  ): Promise<void> {
+    if (!row) {
+      return;
+    }
+    row.status = "failed";
+    row.lastError = errorMessage.slice(0, 500);
+    await this.emailOutboxRepository.save(row);
   }
 
   private dispatchMailboxSendWebhook(

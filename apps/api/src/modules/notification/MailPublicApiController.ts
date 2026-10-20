@@ -161,6 +161,8 @@ export class MailPublicApiController {
         "campaign.completed",
         "campaign.failed",
         "campaign.cancelled",
+        "campaign.opened",
+        "campaign.clicked",
       ],
       markdown: "/docs/LERTA_MAIL_PUBLIC_API.md",
     };

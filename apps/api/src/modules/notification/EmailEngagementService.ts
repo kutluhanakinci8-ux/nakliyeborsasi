@@ -62,6 +62,10 @@ export class EmailEngagementService {
       openCount: row.openCount,
       firstOpenedAt: row.firstOpenedAt?.toISOString() ?? null,
     });
+    this.dispatchCampaignEngagementWebhook(row, "campaign.opened", {
+      openCount: row.openCount,
+      firstOpenedAt: row.firstOpenedAt?.toISOString() ?? null,
+    });
   }
 
   public async resolveClickRedirect(
@@ -94,6 +98,10 @@ export class EmailEngagementService {
       }),
     );
     this.dispatchEngagementWebhook(outbox, "message.clicked", {
+      linkUrl: clickRow.targetUrl,
+      clickCount: outbox.clickCount,
+    });
+    this.dispatchCampaignEngagementWebhook(outbox, "campaign.clicked", {
       linkUrl: clickRow.targetUrl,
       clickCount: outbox.clickCount,
     });
@@ -160,6 +168,73 @@ export class EmailEngagementService {
       eventCode: row.eventCode,
       ...extra,
     });
+  }
+
+  private dispatchCampaignEngagementWebhook(
+    row: EmailOutboxEntity,
+    event: MailWebhookEventType,
+    extra: Record<string, unknown>,
+  ): void {
+    const organizationId = this.resolveOrganizationId(row);
+    const campaignId = this.readCampaignIdFromMetadata(row.metadata);
+    if (!organizationId || !campaignId) {
+      return;
+    }
+    this.mailOrganizationWebhookDispatcherService.dispatch(organizationId, event, {
+      campaignId,
+      messageId: row.id,
+      recipientEmail: row.recipientEmail,
+      subject: row.subject,
+      ...extra,
+    });
+  }
+
+  private readCampaignIdFromMetadata(
+    metadata: Record<string, unknown> | null | undefined,
+  ): string | null {
+    const raw = metadata?.marketingCampaignId ?? metadata?.campaignId;
+    return typeof raw === "string" && raw.trim().length > 0 ? raw.trim() : null;
+  }
+
+  public async getCampaignEngagementTotals(
+    campaignId: string,
+    organizationId: string,
+  ): Promise<{
+    trackedSends: number;
+    uniqueOpens: number;
+    totalOpens: number;
+    totalClicks: number;
+    messagesWithClicks: number;
+  }> {
+    const rows: Array<{
+      tracked: string;
+      unique_opens: string;
+      total_opens: string;
+      total_clicks: string;
+      with_clicks: string;
+    }> = await this.outboxRepository.query(
+      `
+      SELECT
+        COUNT(*)::text AS tracked,
+        COUNT(*) FILTER (WHERE "openCount" > 0)::text AS unique_opens,
+        COALESCE(SUM("openCount"), 0)::text AS total_opens,
+        COALESCE(SUM("clickCount"), 0)::text AS total_clicks,
+        COUNT(*) FILTER (WHERE "clickCount" > 0)::text AS with_clicks
+      FROM email_outbox
+      WHERE status = 'sent'
+        AND metadata->>'marketingCampaignId' = $1
+        AND (metadata->>'organizationId' = $2 OR metadata->>'companyId' = $2)
+      `,
+      [campaignId, organizationId],
+    );
+    const row = rows[0];
+    return {
+      trackedSends: Number.parseInt(row?.tracked ?? "0", 10),
+      uniqueOpens: Number.parseInt(row?.unique_opens ?? "0", 10),
+      totalOpens: Number.parseInt(row?.total_opens ?? "0", 10),
+      totalClicks: Number.parseInt(row?.total_clicks ?? "0", 10),
+      messagesWithClicks: Number.parseInt(row?.with_clicks ?? "0", 10),
+    };
   }
 
   private resolveOrganizationId(row: EmailOutboxEntity): string | null {

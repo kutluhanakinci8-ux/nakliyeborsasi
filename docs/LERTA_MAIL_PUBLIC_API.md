@@ -58,6 +58,8 @@ Konsolda webhook uç noktasına abone olun:
 - `campaign.completed`
 - `campaign.failed`
 - `campaign.cancelled`
+- `campaign.opened`
+- `campaign.clicked`
 
 İmza: `X-Lerta-Mail-Signature` (HMAC, mevcut mesaj webhook’ları ile aynı).
 
@@ -134,3 +136,9 @@ Başarısız HTTP veya ağ hatalarında uç nokta **3 denemeye** kadar otomatik 
 - Liste: `scheduleAfter` / `scheduleBefore` (planlanan gönderim zamanı)
 - Özet: `averageSuccessRatePercent`, `campaignsWithFailuresInWindow`
 - Web: plan tarihi filtresi, özet satırında ortalama başarı %
+
+## Parite Faz 22 (P1 engagement)
+
+- Kampanya gönderimlerinde HTML varsa open pixel + link sarmalama (`email_outbox`)
+- Webhook: `campaign.opened`, `campaign.clicked`
+- `GET …/campaigns/:id` yanıtında `engagement` (trackedSends, uniqueOpens, totalClicks)

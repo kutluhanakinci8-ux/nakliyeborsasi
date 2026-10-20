@@ -33,6 +33,8 @@ const WEBHOOK_EVENTS: MailWebhookEventType[] = [
   "campaign.completed",
   "campaign.failed",
   "campaign.cancelled",
+  "campaign.opened",
+  "campaign.clicked",
 ];
 
 @Injectable()
