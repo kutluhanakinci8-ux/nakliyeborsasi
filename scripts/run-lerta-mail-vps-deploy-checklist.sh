@@ -39,6 +39,16 @@ else
 fi
 
 echo ""
+echo "== Vitrin ↔ posta tutarlılık =="
+if VITRIN_BASE_URL="${VITRIN_BASE_URL:-https://www.lerta.com.tr}" \
+  bash "${ROOT}/scripts/verify-mail-vitrin-posta-consistency.sh"; then
+  echo "OK"
+else
+  echo "NOT: vitrin/posta smoke" >&2
+  FAIL=1
+fi
+
+echo ""
 echo "== Vitrin (kurumsal) =="
 if BASE_URL="${VITRIN_BASE_URL:-https://kurumsal.lerta.com.tr}" \
   bash "${ROOT}/scripts/smoke-www-cutover-lerta-mail.sh"; then

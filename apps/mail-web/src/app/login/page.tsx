@@ -9,11 +9,12 @@ import {
   MAIL_PILOT_REGISTER,
 } from "@/lib/postaOnboardingUrls";
 import { useMailSession } from "@/lib/session";
+import { vitrinPath } from "@/lib/vitrinUrls";
 
 const PLATFORM_LINKS = [
-  { href: "https://www.lerta.com.tr/posta", label: "Posta" },
-  { href: "https://www.lerta.com.tr/mesaj", label: "Mesajlaşma" },
-  { href: "https://www.lerta.com.tr/u88", label: "KVKK" },
+  { href: vitrinPath("/posta"), label: "Posta" },
+  { href: vitrinPath("/mesaj"), label: "Mesajlaşma" },
+  { href: vitrinPath("/u88"), label: "KVKK" },
 ] as const;
 
 export default function LoginPage() {
@@ -60,7 +61,7 @@ export default function LoginPage() {
       <header className="login-shell-header">
         <a
           className="login-shell-brand"
-          href="https://www.lerta.com.tr/posta"
+          href={vitrinPath("/posta")}
           aria-label="Lerta Posta ana sayfa"
         >
           <span className="login-shell-brand-mark" aria-hidden="true">L</span>
@@ -221,8 +222,8 @@ export default function LoginPage() {
 
       <footer className="login-shell-footer">
         <span>© {new Date().getFullYear()} Lerta · Kurumsal posta altyapısı</span>
-        <a href="https://www.lerta.com.tr/durum">Sistem durumu</a>
-        <a href="https://www.lerta.com.tr/kvkk">KVKK</a>
+        <a href={vitrinPath("/durum")}>Sistem durumu</a>
+        <a href={vitrinPath("/kvkk")}>KVKK</a>
       </footer>
     </div>
   );

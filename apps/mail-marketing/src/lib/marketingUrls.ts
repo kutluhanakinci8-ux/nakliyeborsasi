@@ -1,7 +1,15 @@
+export const VITRIN_BASE_URL =
+  process.env.NEXT_PUBLIC_VITRIN_URL?.replace(/\/$/, "") ??
+  "https://www.lerta.com.tr";
+
 export const CONSOLE_URL =
   process.env.NEXT_PUBLIC_CONSOLE_URL ?? "https://yonetim.lerta.com.tr";
 export const MAIL_WEB_URL =
   process.env.NEXT_PUBLIC_MAIL_WEB_URL ?? "https://posta.lerta.com.tr";
+
+export function vitrinPath(path: string): string {
+  return `${VITRIN_BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
+}
 
 export const U88_APP_URL =
   process.env.NEXT_PUBLIC_U88_APP_URL ?? "https://u88.lerta.com.tr";

@@ -1,4 +1,8 @@
-import { CORPORATE_REGISTER, PILOT_REGISTER } from "@/lib/marketingUrls";
+import {
+  CORPORATE_REGISTER,
+  MAIL_WEB_URL,
+  PILOT_REGISTER,
+} from "@/lib/marketingUrls";
 
 export function MarketingSiteFooter() {
   return (
@@ -9,6 +13,7 @@ export function MarketingSiteFooter() {
       </span>
       <nav className="footer-links">
         <a href="/posta">Posta</a>
+        <a href={`${MAIL_WEB_URL.replace(/\/$/, "")}/login`}>Webmail giriş</a>
         <a href="/mesaj">Mesajlaşma</a>
         <a href="/u88">KVKK</a>
         <a href="/sss">SSS</a>
