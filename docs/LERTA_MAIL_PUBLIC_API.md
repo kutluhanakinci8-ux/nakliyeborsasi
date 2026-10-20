@@ -19,10 +19,12 @@ API anahtarları posta konsol → Entegrasyon üzerinden oluşturulur.
 | GET | `/messages/:id` | Gönderim durumu |
 | POST | `/campaigns` | Pazarlama kampanyası |
 | GET | `/campaigns/summary` | Son 30 gün özet + `availableTags` |
-| GET | `/campaigns` | Kampanya listesi (`limit`, `offset`, `status`, `tag`, `q`, `createdAfter`, `createdBefore`) |
+| GET | `/campaigns` | Kampanya listesi (`limit`, `offset`, `status`, `tag`, `q`, `createdAfter`, `createdBefore`, `sort`) |
+| GET | `/campaigns/export.csv` | Filtrelenmiş liste CSV (en fazla 200 satır) |
 | GET | `/campaigns/:campaignId` | Kampanya durumu ve sonuç |
 | POST | `/campaigns/:campaignId/clone` | `mode: schedule` + `scheduleAt` ile kopya |
 | POST | `/campaigns/:campaignId/reschedule` | Zamanlanmış kampanya — yeni `scheduleAt` |
+| POST | `/campaigns/:campaignId/tags` | Etiket güncelle (`running` hariç) |
 | POST | `/campaigns/:campaignId/resend-failed` | Yalnızca başarısız alıcılar |
 | GET | `/campaigns/:campaignId/export.csv` | Alıcı durum CSV |
 
@@ -92,3 +94,11 @@ Başarısız HTTP veya ağ hatalarında uç nokta **3 denemeye** kadar otomatik 
 - Liste: `createdAfter` / `createdBefore` (ISO 8601) oluşturulma aralığı
 - Kampanya webhook gövdesi: `tags`, `createdAt`
 - Web: zamanlanmış kampanyada **Yeniden zamanla**
+
+## Faz 16
+
+- `POST …/campaigns/:id/tags` — etiket güncelleme (gönderim sırasında hariç)
+- `GET …/campaigns/export.csv` — mevcut filtrelerle liste CSV
+- Liste `sort=createdAt|scheduleAt` (plan tarihi için `scheduleAt`)
+- Özet: `tagCountsInWindow` (30 gün)
+- Web: tarih aralığı, sıralama, filtreli liste CSV, kampanya **Etiket** düzenleme

@@ -21,7 +21,11 @@ import { MailPublicApiSendMessageDto } from "./MailPublicApiDto";
 import { MailPublicApiCampaignDto } from "./MailPublicApiCampaignDto";
 import { CloneMailCampaignRequestDto } from "./CloneMailCampaignRequestDto";
 import { RescheduleMailCampaignRequestDto } from "./RescheduleMailCampaignRequestDto";
-import { MailMarketingCampaignService } from "./MailMarketingCampaignService";
+import { UpdateMailCampaignTagsRequestDto } from "./UpdateMailCampaignTagsRequestDto";
+import {
+  MailMarketingCampaignService,
+  parseMailCampaignListSort,
+} from "./MailMarketingCampaignService";
 import type { MailMarketingCampaignStatus } from "../../infrastructure/database/entities/MailMarketingCampaignEntity";
 import { MailSaasSubscriptionService } from "./MailSaasSubscriptionService";
 
@@ -74,7 +78,17 @@ export class MailPublicApiController {
           method: "GET",
           path: "/campaigns",
           description:
-            "Kampanya listesi (limit, offset, status, tag, q, createdAfter, createdBefore)",
+            "Kampanya listesi (limit, offset, status, tag, q, createdAfter, createdBefore, sort)",
+        },
+        {
+          method: "GET",
+          path: "/campaigns/export.csv",
+          description: "Filtrelenmiş kampanya listesi CSV (max 200)",
+        },
+        {
+          method: "POST",
+          path: "/campaigns/:campaignId/tags",
+          description: "Kampanya etiketlerini güncelle (running hariç)",
         },
         {
           method: "GET",
@@ -185,9 +199,11 @@ export class MailPublicApiController {
     @Query("q") q?: string,
     @Query("createdAfter") createdAfter?: string,
     @Query("createdBefore") createdBefore?: string,
+    @Query("sort") sort?: string,
   ) {
     const parsed = limit ? Number.parseInt(limit, 10) : 20;
     const parsedOffset = offset ? Number.parseInt(offset, 10) : 0;
+    const sortKey = parseMailCampaignListSort(sort);
     const allowed: MailMarketingCampaignStatus[] = [
       "scheduled",
       "running",
@@ -208,8 +224,62 @@ export class MailPublicApiController {
       Number.isFinite(parsedOffset) ? parsedOffset : 0,
       createdAfter?.trim() || undefined,
       createdBefore?.trim() || undefined,
+      sortKey,
     );
     return list;
+  }
+
+  @Get("campaigns/export.csv")
+  public async exportCampaignListCsv(
+    @MailPublicApiContextParam() ctx: MailPublicApiRequestContext,
+    @Res() res: Response,
+    @Query("status") status?: string,
+    @Query("tag") tag?: string,
+    @Query("q") q?: string,
+    @Query("createdAfter") createdAfter?: string,
+    @Query("createdBefore") createdBefore?: string,
+    @Query("sort") sort?: string,
+  ) {
+    const allowed: MailMarketingCampaignStatus[] = [
+      "scheduled",
+      "running",
+      "completed",
+      "failed",
+      "cancelled",
+    ];
+    const statusFilter =
+      status && allowed.includes(status as MailMarketingCampaignStatus)
+        ? (status as MailMarketingCampaignStatus)
+        : undefined;
+    const { filename, csv } =
+      await this.mailMarketingCampaignService.exportCampaignListCsv(
+        ctx.organizationId,
+        statusFilter,
+        tag?.trim() || undefined,
+        q?.trim() || undefined,
+        createdAfter?.trim() || undefined,
+        createdBefore?.trim() || undefined,
+        parseMailCampaignListSort(sort),
+      );
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${filename}"`,
+    );
+    res.send(`\uFEFF${csv}`);
+  }
+
+  @Post("campaigns/:campaignId/tags")
+  public async updateCampaignTags(
+    @MailPublicApiContextParam() ctx: MailPublicApiRequestContext,
+    @Param("campaignId") campaignId: string,
+    @Body() body: UpdateMailCampaignTagsRequestDto,
+  ) {
+    return this.mailMarketingCampaignService.updateCampaignTags(
+      ctx.organizationId,
+      campaignId,
+      body.tags,
+    );
   }
 
   @Post("campaigns/:campaignId/reschedule")

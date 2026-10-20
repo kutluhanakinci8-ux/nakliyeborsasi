@@ -1037,6 +1037,7 @@ export type MailCampaignSummary = {
   recipientsInWindow: number;
   sentInWindow: number;
   availableTags: string[];
+  tagCountsInWindow: Record<string, number>;
 };
 
 export async function fetchMailCampaignSummary(accessToken: string) {
@@ -1052,6 +1053,43 @@ export type MailCampaignListPagination = {
   hasMore: boolean;
 };
 
+export type MailCampaignListFilters = {
+  status?: string;
+  tag?: string;
+  q?: string;
+  offset?: number;
+  createdAfter?: string;
+  createdBefore?: string;
+  sort?: "createdAt" | "scheduleAt";
+};
+
+function buildMailCampaignListQuery(
+  limit: number,
+  filters: MailCampaignListFilters = {},
+): string {
+  const statusQuery = filters.status
+    ? `&status=${encodeURIComponent(filters.status)}`
+    : "";
+  const tagQuery = filters.tag
+    ? `&tag=${encodeURIComponent(filters.tag)}`
+    : "";
+  const qQuery =
+    filters.q && filters.q.trim().length >= 2
+      ? `&q=${encodeURIComponent(filters.q.trim())}`
+      : "";
+  const offsetQuery =
+    filters.offset && filters.offset > 0 ? `&offset=${filters.offset}` : "";
+  const afterQuery = filters.createdAfter
+    ? `&createdAfter=${encodeURIComponent(filters.createdAfter)}`
+    : "";
+  const beforeQuery = filters.createdBefore
+    ? `&createdBefore=${encodeURIComponent(filters.createdBefore)}`
+    : "";
+  const sortQuery =
+    filters.sort === "scheduleAt" ? "&sort=scheduleAt" : "";
+  return `limit=${limit}${statusQuery}${tagQuery}${qQuery}${offsetQuery}${afterQuery}${beforeQuery}${sortQuery}`;
+}
+
 export async function fetchMailCampaigns(
   accessToken: string,
   limit = 30,
@@ -1059,21 +1097,56 @@ export async function fetchMailCampaigns(
   tag?: string,
   q?: string,
   offset = 0,
+  createdAfter?: string,
+  createdBefore?: string,
+  sort?: "createdAt" | "scheduleAt",
 ) {
-  const statusQuery = status ? `&status=${encodeURIComponent(status)}` : "";
-  const tagQuery = tag ? `&tag=${encodeURIComponent(tag)}` : "";
-  const qQuery =
-    q && q.trim().length >= 2
-      ? `&q=${encodeURIComponent(q.trim())}`
-      : "";
-  const offsetQuery = offset > 0 ? `&offset=${offset}` : "";
+  const query = buildMailCampaignListQuery(limit, {
+    status,
+    tag,
+    q,
+    offset,
+    createdAfter,
+    createdBefore,
+    sort,
+  });
   return apiFetch<{
     ok: true;
     campaigns: MailCampaignListItem[];
     pagination: MailCampaignListPagination;
-  }>(
+  }>(accessToken, `company/mail-inbox/campaigns?${query}`);
+}
+
+export async function downloadMailCampaignListCsv(
+  accessToken: string,
+  filters: MailCampaignListFilters = {},
+): Promise<{ blob: Blob; filename: string }> {
+  const query = buildMailCampaignListQuery(25, filters);
+  const response = await fetch(
+    `${resolveApiBaseUrl()}/company/mail-inbox/campaigns/export.csv?${query}`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    },
+  );
+  if (!response.ok) {
+    throw new Error("Liste CSV indirilemedi.");
+  }
+  const disposition = response.headers.get("Content-Disposition");
+  const match = disposition?.match(/filename="([^"]+)"/);
+  const filename = match?.[1] ?? "kampanyalar.csv";
+  const blob = await response.blob();
+  return { blob, filename };
+}
+
+export async function updateMailCampaignTags(
+  accessToken: string,
+  campaignId: string,
+  tags: string[],
+) {
+  return apiFetch<{ ok: true; campaignId: string; tags: string[] }>(
     accessToken,
-    `company/mail-inbox/campaigns?limit=${limit}${statusQuery}${tagQuery}${qQuery}${offsetQuery}`,
+    `company/mail-inbox/campaigns/${campaignId}/tags`,
+    { method: "POST", body: JSON.stringify({ tags }) },
   );
 }
 

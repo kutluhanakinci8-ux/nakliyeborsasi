@@ -7,9 +7,11 @@ import {
   cloneMailCampaignToCompose,
   cloneMailCampaignSchedule,
   downloadMailCampaignCsv,
+  downloadMailCampaignListCsv,
   fetchMailCampaignDetail,
   fetchMailCampaigns,
   fetchMailCampaignSummary,
+  updateMailCampaignTags,
   resendFailedMailCampaign,
   resendMailCampaign,
   type MailCampaignDetail,
@@ -25,6 +27,20 @@ type Props = {
     compose: import("@/lib/mailApi").MailCampaignComposeClone,
   ) => void;
 };
+
+function dateRangeStart(date: string): string | undefined {
+  if (!date) {
+    return undefined;
+  }
+  return new Date(`${date}T00:00:00`).toISOString();
+}
+
+function dateRangeEnd(date: string): string | undefined {
+  if (!date) {
+    return undefined;
+  }
+  return new Date(`${date}T23:59:59.999`).toISOString();
+}
 
 const STATUS_FILTERS = [
   { value: "", label: "Tümü" },
@@ -58,6 +74,14 @@ export function MailCampaignHistoryPanel({
   const [scheduleCloneAt, setScheduleCloneAt] = useState("");
   const [rescheduleId, setRescheduleId] = useState<string | null>(null);
   const [rescheduleAt, setRescheduleAt] = useState("");
+  const [createdFrom, setCreatedFrom] = useState("");
+  const [createdTo, setCreatedTo] = useState("");
+  const [sortFilter, setSortFilter] = useState<"createdAt" | "scheduleAt">(
+    "createdAt",
+  );
+  const [tagsEditId, setTagsEditId] = useState<string | null>(null);
+  const [tagsDraft, setTagsDraft] = useState("");
+  const [listExportBusy, setListExportBusy] = useState(false);
 
   useEffect(() => {
     const timer = window.setTimeout(
@@ -78,6 +102,9 @@ export function MailCampaignHistoryPanel({
           tagFilter || undefined,
           debouncedSubjectQ || undefined,
           offset,
+          dateRangeStart(createdFrom),
+          dateRangeEnd(createdTo),
+          sortFilter,
         );
         setRows((prev) =>
           append ? [...prev, ...listData.campaigns] : listData.campaigns,
@@ -87,7 +114,15 @@ export function MailCampaignHistoryPanel({
         setError("Kampanya geçmişi yüklenemedi.");
       }
     },
-    [accessToken, statusFilter, tagFilter, debouncedSubjectQ],
+    [
+      accessToken,
+      statusFilter,
+      tagFilter,
+      debouncedSubjectQ,
+      createdFrom,
+      createdTo,
+      sortFilter,
+    ],
   );
 
   const refresh = useCallback(async () => {
@@ -120,6 +155,39 @@ export function MailCampaignHistoryPanel({
   }
 
   const tagOptions = summary?.availableTags ?? [];
+  const topTagCounts = summary?.tagCountsInWindow
+    ? Object.entries(summary.tagCountsInWindow)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 4)
+    : [];
+
+  async function onDownloadListCsv() {
+    setListExportBusy(true);
+    setError("");
+    try {
+      const { blob, filename } = await downloadMailCampaignListCsv(
+        accessToken,
+        {
+          status: statusFilter || undefined,
+          tag: tagFilter || undefined,
+          q: debouncedSubjectQ || undefined,
+          createdAfter: dateRangeStart(createdFrom),
+          createdBefore: dateRangeEnd(createdTo),
+          sort: sortFilter,
+        },
+      );
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = filename;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setError("Liste CSV indirilemedi.");
+    } finally {
+      setListExportBusy(false);
+    }
+  }
 
   async function toggleDetail(campaignId: string) {
     if (detailId === campaignId) {
@@ -176,6 +244,11 @@ export function MailCampaignHistoryPanel({
           {summary.counts.failed > 0
             ? ` · ${summary.counts.failed} başarısız`
             : ""}
+          {topTagCounts.length > 0
+            ? ` · etiket: ${topTagCounts
+                .map(([tag, count]) => `${tag} (${count})`)
+                .join(", ")}`
+            : ""}
         </p>
       ) : null}
       <div className="mail-campaign-history-filters">
@@ -219,7 +292,48 @@ export function MailCampaignHistoryPanel({
             onChange={(e) => setSubjectSearch(e.target.value)}
           />
         </label>
+        <label className="compose-preset-label">
+          <span>Başlangıç</span>
+          <input
+            type="date"
+            className="compose-input"
+            value={createdFrom}
+            onChange={(e) => setCreatedFrom(e.target.value)}
+          />
+        </label>
+        <label className="compose-preset-label">
+          <span>Bitiş</span>
+          <input
+            type="date"
+            className="compose-input"
+            value={createdTo}
+            onChange={(e) => setCreatedTo(e.target.value)}
+          />
+        </label>
+        <label className="compose-preset-label">
+          <span>Sıralama</span>
+          <select
+            className="compose-select"
+            value={sortFilter}
+            onChange={(e) =>
+              setSortFilter(
+                e.target.value === "scheduleAt" ? "scheduleAt" : "createdAt",
+              )
+            }
+          >
+            <option value="createdAt">Oluşturma (yeni)</option>
+            <option value="scheduleAt">Planlanan tarih</option>
+          </select>
+        </label>
       </div>
+      <button
+        type="button"
+        className="compose-chip-btn mail-campaign-history-more"
+        disabled={listExportBusy}
+        onClick={() => void onDownloadListCsv()}
+      >
+        {listExportBusy ? "Hazırlanıyor…" : "Filtreli liste CSV"}
+      </button>
       {error ? <p className="login-error">{error}</p> : null}
       {rows.length === 0 ? (
         <p className="compose-attach-hint">Henüz kayıtlı kampanya yok.</p>
@@ -252,6 +366,18 @@ export function MailCampaignHistoryPanel({
                 >
                   {detailId === row.id ? "Detayı gizle" : "Detay"}
                 </button>
+                {row.status !== "running" ? (
+                  <button
+                    type="button"
+                    className="compose-chip-btn"
+                    onClick={() => {
+                      setTagsEditId(tagsEditId === row.id ? null : row.id);
+                      setTagsDraft((row.tags ?? []).join(", "));
+                    }}
+                  >
+                    Etiket
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   className="compose-chip-btn"
@@ -349,6 +475,38 @@ export function MailCampaignHistoryPanel({
                   </>
                 ) : null}
               </div>
+              {tagsEditId === row.id ? (
+                <div className="mail-campaign-schedule-clone">
+                  <input
+                    type="text"
+                    className="compose-input"
+                    placeholder="etiket1, etiket2"
+                    value={tagsDraft}
+                    onChange={(e) => setTagsDraft(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="compose-chip-btn"
+                    disabled={busyId === row.id}
+                    onClick={() => {
+                      setBusyId(row.id);
+                      const tags = tagsDraft
+                        .split(/[,;]+/)
+                        .map((part) => part.trim())
+                        .filter(Boolean);
+                      void updateMailCampaignTags(accessToken, row.id, tags)
+                        .then(() => {
+                          setTagsEditId(null);
+                          return refresh();
+                        })
+                        .catch(() => setError("Etiketler kaydedilemedi."))
+                        .finally(() => setBusyId(null));
+                    }}
+                  >
+                    Etiketleri kaydet
+                  </button>
+                </div>
+              ) : null}
               {rescheduleId === row.id ? (
                 <div className="mail-campaign-schedule-clone">
                   <input

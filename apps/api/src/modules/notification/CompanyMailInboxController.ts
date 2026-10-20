@@ -30,6 +30,11 @@ import { ComposeCampaignRequestDto } from "./ComposeCampaignRequestDto";
 import { ComposeCampaignPreviewSegmentDto } from "./ComposeCampaignPreviewSegmentDto";
 import { CloneMailCampaignRequestDto } from "./CloneMailCampaignRequestDto";
 import { RescheduleMailCampaignRequestDto } from "./RescheduleMailCampaignRequestDto";
+import { UpdateMailCampaignTagsRequestDto } from "./UpdateMailCampaignTagsRequestDto";
+import {
+  MailMarketingCampaignService,
+  parseMailCampaignListSort,
+} from "./MailMarketingCampaignService";
 import { MailCampaignRecipientPreviewService } from "./MailCampaignRecipientPreviewService";
 import type { MailMarketingCampaignStatus } from "../../infrastructure/database/entities/MailMarketingCampaignEntity";
 import { ReplyMailRequestDto } from "./ReplyMailRequestDto";
@@ -108,7 +113,6 @@ import {
 } from "./MailCalendarContactRequestDto";
 import { MailAiComposeService } from "./MailAiComposeService";
 import { MailDeliverabilityHubService } from "./MailDeliverabilityHubService";
-import { MailMarketingCampaignService } from "./MailMarketingCampaignService";
 import { UserNotificationPreferenceService } from "./UserNotificationPreferenceService";
 
 @Controller("company/mail-inbox")
@@ -1436,10 +1440,12 @@ export class CompanyMailInboxController {
     @Query("q") q?: string,
     @Query("createdAfter") createdAfter?: string,
     @Query("createdBefore") createdBefore?: string,
+    @Query("sort") sort?: string,
   ) {
     this.assertMailInboxWriter(user);
     const parsed = limit ? Number.parseInt(limit, 10) : 40;
     const parsedOffset = offset ? Number.parseInt(offset, 10) : 0;
+    const sortKey = parseMailCampaignListSort(sort);
     const allowed: MailMarketingCampaignStatus[] = [
       "scheduled",
       "running",
@@ -1460,8 +1466,50 @@ export class CompanyMailInboxController {
       Number.isFinite(parsedOffset) ? parsedOffset : 0,
       createdAfter?.trim() || undefined,
       createdBefore?.trim() || undefined,
+      sortKey,
     );
     return { ok: true, ...list };
+  }
+
+  @Get("campaigns/export.csv")
+  public async exportCampaignListCsv(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Res() res: Response,
+    @Query("status") status?: string,
+    @Query("tag") tag?: string,
+    @Query("q") q?: string,
+    @Query("createdAfter") createdAfter?: string,
+    @Query("createdBefore") createdBefore?: string,
+    @Query("sort") sort?: string,
+  ) {
+    this.assertMailInboxWriter(user);
+    const allowed: MailMarketingCampaignStatus[] = [
+      "scheduled",
+      "running",
+      "completed",
+      "failed",
+      "cancelled",
+    ];
+    const statusFilter =
+      status && allowed.includes(status as MailMarketingCampaignStatus)
+        ? (status as MailMarketingCampaignStatus)
+        : undefined;
+    const { filename, csv } =
+      await this.mailMarketingCampaignService.exportCampaignListCsv(
+        user.companyId,
+        statusFilter,
+        tag?.trim() || undefined,
+        q?.trim() || undefined,
+        createdAfter?.trim() || undefined,
+        createdBefore?.trim() || undefined,
+        parseMailCampaignListSort(sort),
+      );
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${filename}"`,
+    );
+    res.send(`\uFEFF${csv}`);
   }
 
   @Get("campaigns/:campaignId/export.csv")
@@ -1536,6 +1584,21 @@ export class CompanyMailInboxController {
       campaignId,
     );
     return { ok: true };
+  }
+
+  @Post("campaigns/:campaignId/tags")
+  public async updateCampaignTags(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("campaignId") campaignId: string,
+    @Body() body: UpdateMailCampaignTagsRequestDto,
+  ) {
+    this.assertMailInboxWriter(user);
+    const outcome = await this.mailMarketingCampaignService.updateCampaignTags(
+      user.companyId,
+      campaignId,
+      body.tags,
+    );
+    return { ok: true, ...outcome };
   }
 
   @Post("campaigns/:campaignId/reschedule")
