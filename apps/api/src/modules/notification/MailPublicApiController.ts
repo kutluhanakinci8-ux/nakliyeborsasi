@@ -22,6 +22,8 @@ import { MailPublicApiCampaignDto } from "./MailPublicApiCampaignDto";
 import { CloneMailCampaignRequestDto } from "./CloneMailCampaignRequestDto";
 import { RescheduleMailCampaignRequestDto } from "./RescheduleMailCampaignRequestDto";
 import { UpdateMailCampaignTagsRequestDto } from "./UpdateMailCampaignTagsRequestDto";
+import { UpdateScheduledMailCampaignContentDto } from "./UpdateScheduledMailCampaignContentDto";
+import { BulkCancelMailCampaignsRequestDto } from "./BulkCancelMailCampaignsRequestDto";
 import {
   MailMarketingCampaignService,
   parseMailCampaignListSort,
@@ -84,6 +86,26 @@ export class MailPublicApiController {
           method: "GET",
           path: "/campaigns/export.csv",
           description: "Filtrelenmiş kampanya listesi CSV (max 200)",
+        },
+        {
+          method: "POST",
+          path: "/campaigns/bulk-cancel",
+          description: "Zamanlanmış kampanyaları toplu iptal (max 25)",
+        },
+        {
+          method: "POST",
+          path: "/campaigns/:campaignId/cancel",
+          description: "Zamanlanmış kampanyayı iptal",
+        },
+        {
+          method: "POST",
+          path: "/campaigns/:campaignId/resend",
+          description: "Kampanyayı yeni gönderim olarak kopyala ve çalıştır",
+        },
+        {
+          method: "POST",
+          path: "/campaigns/:campaignId/content",
+          description: "Zamanlanmış kampanya konu/metin güncelle",
         },
         {
           method: "POST",
@@ -267,6 +289,54 @@ export class MailPublicApiController {
       `attachment; filename="${filename}"`,
     );
     res.send(`\uFEFF${csv}`);
+  }
+
+  @Post("campaigns/bulk-cancel")
+  public async bulkCancelCampaigns(
+    @MailPublicApiContextParam() ctx: MailPublicApiRequestContext,
+    @Body() body: BulkCancelMailCampaignsRequestDto,
+  ) {
+    return this.mailMarketingCampaignService.bulkCancelScheduled(
+      ctx.organizationId,
+      body.campaignIds,
+    );
+  }
+
+  @Post("campaigns/:campaignId/cancel")
+  public async cancelCampaign(
+    @MailPublicApiContextParam() ctx: MailPublicApiRequestContext,
+    @Param("campaignId") campaignId: string,
+  ) {
+    await this.mailMarketingCampaignService.cancelScheduled(
+      ctx.organizationId,
+      campaignId,
+    );
+    return { cancelled: true, campaignId };
+  }
+
+  @Post("campaigns/:campaignId/resend")
+  public async resendCampaign(
+    @MailPublicApiContextParam() ctx: MailPublicApiRequestContext,
+    @Param("campaignId") campaignId: string,
+  ) {
+    return this.mailMarketingCampaignService.resend(
+      ctx.organizationId,
+      campaignId,
+    );
+  }
+
+  @Post("campaigns/:campaignId/content")
+  public async updateScheduledCampaignContent(
+    @MailPublicApiContextParam() ctx: MailPublicApiRequestContext,
+    @Param("campaignId") campaignId: string,
+    @Body() body: UpdateScheduledMailCampaignContentDto,
+  ) {
+    const campaign = await this.mailMarketingCampaignService.updateScheduledContent(
+      ctx.organizationId,
+      campaignId,
+      body,
+    );
+    return { campaign };
   }
 
   @Post("campaigns/:campaignId/tags")

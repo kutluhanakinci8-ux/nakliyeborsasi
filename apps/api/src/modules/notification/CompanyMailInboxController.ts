@@ -31,6 +31,8 @@ import { ComposeCampaignPreviewSegmentDto } from "./ComposeCampaignPreviewSegmen
 import { CloneMailCampaignRequestDto } from "./CloneMailCampaignRequestDto";
 import { RescheduleMailCampaignRequestDto } from "./RescheduleMailCampaignRequestDto";
 import { UpdateMailCampaignTagsRequestDto } from "./UpdateMailCampaignTagsRequestDto";
+import { UpdateScheduledMailCampaignContentDto } from "./UpdateScheduledMailCampaignContentDto";
+import { BulkCancelMailCampaignsRequestDto } from "./BulkCancelMailCampaignsRequestDto";
 import {
   MailMarketingCampaignService,
   parseMailCampaignListSort,
@@ -1512,6 +1514,19 @@ export class CompanyMailInboxController {
     res.send(`\uFEFF${csv}`);
   }
 
+  @Post("campaigns/bulk-cancel")
+  public async bulkCancelCampaigns(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: BulkCancelMailCampaignsRequestDto,
+  ) {
+    this.assertMailInboxWriter(user);
+    const outcome = await this.mailMarketingCampaignService.bulkCancelScheduled(
+      user.companyId,
+      body.campaignIds,
+    );
+    return { ok: true, ...outcome };
+  }
+
   @Get("campaigns/:campaignId/export.csv")
   public async exportCampaignCsv(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
@@ -1584,6 +1599,21 @@ export class CompanyMailInboxController {
       campaignId,
     );
     return { ok: true };
+  }
+
+  @Post("campaigns/:campaignId/content")
+  public async updateScheduledCampaignContent(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("campaignId") campaignId: string,
+    @Body() body: UpdateScheduledMailCampaignContentDto,
+  ) {
+    this.assertMailInboxWriter(user);
+    const campaign = await this.mailMarketingCampaignService.updateScheduledContent(
+      user.companyId,
+      campaignId,
+      body,
+    );
+    return { ok: true, campaign };
   }
 
   @Post("campaigns/:campaignId/tags")

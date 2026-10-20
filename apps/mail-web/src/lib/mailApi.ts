@@ -912,6 +912,7 @@ export type MailCampaignListItem = {
   tags?: string[];
   status: string;
   failedRecipientCount?: number;
+  successRatePercent?: number | null;
   scheduleAt: string | null;
   startedAt: string | null;
   completedAt: string | null;
@@ -1036,6 +1037,8 @@ export type MailCampaignSummary = {
   campaignsInWindow: number;
   recipientsInWindow: number;
   sentInWindow: number;
+  failedRecipientsInWindow: number;
+  suppressedSkippedInWindow: number;
   availableTags: string[];
   tagCountsInWindow: Record<string, number>;
 };
@@ -1150,6 +1153,37 @@ export async function updateMailCampaignTags(
   );
 }
 
+export async function updateScheduledMailCampaignContent(
+  accessToken: string,
+  campaignId: string,
+  body: {
+    subject?: string;
+    text?: string;
+    html?: string;
+    subjectB?: string;
+  },
+) {
+  return apiFetch<{ ok: true; campaign: MailCampaignDetail }>(
+    accessToken,
+    `company/mail-inbox/campaigns/${campaignId}/content`,
+    { method: "POST", body: JSON.stringify(body) },
+  );
+}
+
+export async function bulkCancelScheduledMailCampaigns(
+  accessToken: string,
+  campaignIds: string[],
+) {
+  return apiFetch<{
+    ok: true;
+    cancelled: string[];
+    skipped: string[];
+  }>(accessToken, "company/mail-inbox/campaigns/bulk-cancel", {
+    method: "POST",
+    body: JSON.stringify({ campaignIds }),
+  });
+}
+
 export async function downloadMailCampaignCsv(
   accessToken: string,
   campaignId: string,
@@ -1199,6 +1233,8 @@ export type MailCampaignDetail = MailCampaignListItem & {
   reminderMinutesBefore: number | null;
   reminderDispatchedAt: string | null;
   notifyCreator: boolean;
+  text: string;
+  html: string | null;
   recipients: Array<{
     email: string;
     musteriAdi?: string;

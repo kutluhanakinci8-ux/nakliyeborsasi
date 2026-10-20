@@ -25,6 +25,10 @@ API anahtarları posta konsol → Entegrasyon üzerinden oluşturulur.
 | POST | `/campaigns/:campaignId/clone` | `mode: schedule` + `scheduleAt` ile kopya |
 | POST | `/campaigns/:campaignId/reschedule` | Zamanlanmış kampanya — yeni `scheduleAt` |
 | POST | `/campaigns/:campaignId/tags` | Etiket güncelle (`running` hariç) |
+| POST | `/campaigns/:campaignId/content` | Zamanlanmış kampanya konu/metin |
+| POST | `/campaigns/:campaignId/cancel` | Zamanlanmış kampanyayı iptal |
+| POST | `/campaigns/:campaignId/resend` | Kampanyayı yeniden gönder (yeni kayıt) |
+| POST | `/campaigns/bulk-cancel` | Toplu iptal (max 25 id) |
 | POST | `/campaigns/:campaignId/resend-failed` | Yalnızca başarısız alıcılar |
 | GET | `/campaigns/:campaignId/export.csv` | Alıcı durum CSV |
 
@@ -102,3 +106,10 @@ Başarısız HTTP veya ağ hatalarında uç nokta **3 denemeye** kadar otomatik 
 - Liste `sort=createdAt|scheduleAt` (plan tarihi için `scheduleAt`)
 - Özet: `tagCountsInWindow` (30 gün)
 - Web: tarih aralığı, sıralama, filtreli liste CSV, kampanya **Etiket** düzenleme
+
+## Faz 17
+
+- Public API: `cancel`, `resend`, `content`, `bulk-cancel`
+- Zamanlanmış kampanya içerik düzenleme (`subject`, `text`, `subjectB`) → `campaign.scheduled` webhook
+- Özet: `failedRecipientsInWindow`, `suppressedSkippedInWindow`; liste `successRatePercent`
+- Web: **İçerik** düzenleme, zamanlanmışlar için **Toplu iptal**

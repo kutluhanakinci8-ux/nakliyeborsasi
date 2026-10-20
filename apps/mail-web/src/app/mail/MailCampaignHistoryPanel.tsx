@@ -12,6 +12,8 @@ import {
   fetchMailCampaigns,
   fetchMailCampaignSummary,
   updateMailCampaignTags,
+  updateScheduledMailCampaignContent,
+  bulkCancelScheduledMailCampaigns,
   resendFailedMailCampaign,
   resendMailCampaign,
   type MailCampaignDetail,
@@ -82,6 +84,13 @@ export function MailCampaignHistoryPanel({
   const [tagsEditId, setTagsEditId] = useState<string | null>(null);
   const [tagsDraft, setTagsDraft] = useState("");
   const [listExportBusy, setListExportBusy] = useState(false);
+  const [contentEditId, setContentEditId] = useState<string | null>(null);
+  const [contentSubject, setContentSubject] = useState("");
+  const [contentText, setContentText] = useState("");
+  const [contentSubjectB, setContentSubjectB] = useState("");
+  const [bulkSelectMode, setBulkSelectMode] = useState(false);
+  const [bulkSelected, setBulkSelected] = useState<string[]>([]);
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   useEffect(() => {
     const timer = window.setTimeout(
@@ -207,6 +216,29 @@ export function MailCampaignHistoryPanel({
     }
   }
 
+  async function openContentEditor(campaignId: string) {
+    if (contentEditId === campaignId) {
+      setContentEditId(null);
+      return;
+    }
+    setContentEditId(campaignId);
+    setRescheduleId(null);
+    setTagsEditId(null);
+    setScheduleCloneId(null);
+    setBusyId(campaignId);
+    try {
+      const data = await fetchMailCampaignDetail(accessToken, campaignId);
+      setContentSubject(data.campaign.subject);
+      setContentSubjectB(data.campaign.subjectB ?? "");
+      setContentText(data.campaign.text);
+    } catch {
+      setError("İçerik yüklenemedi.");
+      setContentEditId(null);
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   async function onDownloadCsv(campaignId: string) {
     setBusyId(campaignId);
     try {
@@ -243,6 +275,12 @@ export function MailCampaignHistoryPanel({
             : ""}
           {summary.counts.failed > 0
             ? ` · ${summary.counts.failed} başarısız`
+            : ""}
+          {summary.failedRecipientsInWindow > 0
+            ? ` · ${summary.failedRecipientsInWindow} başarısız alıcı`
+            : ""}
+          {summary.suppressedSkippedInWindow > 0
+            ? ` · ${summary.suppressedSkippedInWindow} durdurulmuş atlandı`
             : ""}
           {topTagCounts.length > 0
             ? ` · etiket: ${topTagCounts
@@ -326,14 +364,48 @@ export function MailCampaignHistoryPanel({
           </select>
         </label>
       </div>
-      <button
-        type="button"
-        className="compose-chip-btn mail-campaign-history-more"
-        disabled={listExportBusy}
-        onClick={() => void onDownloadListCsv()}
-      >
-        {listExportBusy ? "Hazırlanıyor…" : "Filtreli liste CSV"}
-      </button>
+      <div className="mail-campaign-history-toolbar">
+        <button
+          type="button"
+          className="compose-chip-btn"
+          disabled={listExportBusy}
+          onClick={() => void onDownloadListCsv()}
+        >
+          {listExportBusy ? "Hazırlanıyor…" : "Filtreli liste CSV"}
+        </button>
+        <button
+          type="button"
+          className="compose-chip-btn"
+          onClick={() => {
+            setBulkSelectMode((value) => !value);
+            setBulkSelected([]);
+          }}
+        >
+          {bulkSelectMode ? "Toplu iptal: kapalı" : "Toplu iptal"}
+        </button>
+        {bulkSelectMode && bulkSelected.length > 0 ? (
+          <button
+            type="button"
+            className="compose-chip-btn"
+            disabled={bulkBusy}
+            onClick={() => {
+              setBulkBusy(true);
+              void bulkCancelScheduledMailCampaigns(accessToken, bulkSelected)
+                .then(() => {
+                  setBulkSelected([]);
+                  setBulkSelectMode(false);
+                  return refresh();
+                })
+                .catch(() => setError("Toplu iptal başarısız."))
+                .finally(() => setBulkBusy(false));
+            }}
+          >
+            {bulkBusy
+              ? "İptal ediliyor…"
+              : `Seçilenleri iptal (${bulkSelected.length})`}
+          </button>
+        ) : null}
+      </div>
       {error ? <p className="login-error">{error}</p> : null}
       {rows.length === 0 ? (
         <p className="compose-attach-hint">Henüz kayıtlı kampanya yok.</p>
@@ -342,6 +414,20 @@ export function MailCampaignHistoryPanel({
           {rows.map((row) => (
             <li key={row.id} className="mail-campaign-history-item">
               <div className="mail-campaign-history-head">
+                {bulkSelectMode && row.status === "scheduled" ? (
+                  <input
+                    type="checkbox"
+                    className="mail-campaign-bulk-check"
+                    checked={bulkSelected.includes(row.id)}
+                    onChange={(e) => {
+                      setBulkSelected((prev) =>
+                        e.target.checked
+                          ? [...prev, row.id]
+                          : prev.filter((id) => id !== row.id),
+                      );
+                    }}
+                  />
+                ) : null}
                 <strong>{row.subject}</strong>
                 <span className="mail-campaign-history-status">{row.status}</span>
               </div>
@@ -353,6 +439,9 @@ export function MailCampaignHistoryPanel({
                   : ""}
                 {row.result
                   ? ` · gönderilen ${row.result.sent}/${row.result.attempted}`
+                  : ""}
+                {row.successRatePercent != null
+                  ? ` · başarı ${row.successRatePercent}%`
                   : ""}
                 {row.tags && row.tags.length > 0
                   ? ` · ${row.tags.join(", ")}`
@@ -418,10 +507,18 @@ export function MailCampaignHistoryPanel({
                     <button
                       type="button"
                       className="compose-chip-btn"
+                      onClick={() => void openContentEditor(row.id)}
+                    >
+                      {contentEditId === row.id ? "İçeriği gizle" : "İçerik"}
+                    </button>
+                    <button
+                      type="button"
+                      className="compose-chip-btn"
                       onClick={() => {
                         setRescheduleId(rescheduleId === row.id ? null : row.id);
                         setRescheduleAt("");
                         setScheduleCloneId(null);
+                        setContentEditId(null);
                       }}
                     >
                       Yeniden zamanla
@@ -475,6 +572,51 @@ export function MailCampaignHistoryPanel({
                   </>
                 ) : null}
               </div>
+              {contentEditId === row.id ? (
+                <div className="mail-campaign-content-edit">
+                  <input
+                    type="text"
+                    className="compose-input"
+                    placeholder="Konu"
+                    value={contentSubject}
+                    onChange={(e) => setContentSubject(e.target.value)}
+                  />
+                  <input
+                    type="text"
+                    className="compose-input"
+                    placeholder="A/B konu (B)"
+                    value={contentSubjectB}
+                    onChange={(e) => setContentSubjectB(e.target.value)}
+                  />
+                  <textarea
+                    className="compose-input mail-campaign-content-text"
+                    rows={5}
+                    value={contentText}
+                    onChange={(e) => setContentText(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="compose-chip-btn"
+                    disabled={!contentSubject.trim() || !contentText.trim() || busyId === row.id}
+                    onClick={() => {
+                      setBusyId(row.id);
+                      void updateScheduledMailCampaignContent(accessToken, row.id, {
+                        subject: contentSubject.trim(),
+                        text: contentText.trim(),
+                        subjectB: contentSubjectB.trim() || undefined,
+                      })
+                        .then(() => {
+                          setContentEditId(null);
+                          return refresh();
+                        })
+                        .catch(() => setError("İçerik kaydedilemedi."))
+                        .finally(() => setBusyId(null));
+                    }}
+                  >
+                    İçeriği kaydet
+                  </button>
+                </div>
+              ) : null}
               {tagsEditId === row.id ? (
                 <div className="mail-campaign-schedule-clone">
                   <input

@@ -205,6 +205,8 @@ export class MailMarketingCampaignService {
     };
     let recipientsInWindow = 0;
     let sentInWindow = 0;
+    let failedRecipientsInWindow = 0;
+    let suppressedSkippedInWindow = 0;
     const tagSet = new Set<string>();
     const tagCountsInWindow: Record<string, number> = {};
     for (const row of rows) {
@@ -217,6 +219,8 @@ export class MailMarketingCampaignService {
       counts[row.status] += 1;
       recipientsInWindow += row.payload.recipients?.length ?? 0;
       sentInWindow += row.result?.sent ?? 0;
+      failedRecipientsInWindow += row.result?.failed?.length ?? 0;
+      suppressedSkippedInWindow += row.result?.skippedSuppressed ?? 0;
       for (const value of row.payload.tags ?? []) {
         tagCountsInWindow[value] = (tagCountsInWindow[value] ?? 0) + 1;
       }
@@ -227,6 +231,8 @@ export class MailMarketingCampaignService {
       campaignsInWindow: Object.values(counts).reduce((sum, n) => sum + n, 0),
       recipientsInWindow,
       sentInWindow,
+      failedRecipientsInWindow,
+      suppressedSkippedInWindow,
       availableTags: [...tagSet].sort(),
       tagCountsInWindow,
     };
@@ -299,6 +305,82 @@ export class MailMarketingCampaignService {
       { payload },
     );
     return { campaignId, tags: normalized };
+  }
+
+  public async updateScheduledContent(
+    organizationId: string,
+    campaignId: string,
+    patch: {
+      subject?: string;
+      text?: string;
+      html?: string;
+      subjectB?: string;
+    },
+  ) {
+    const hasPatch =
+      Boolean(patch.subject?.trim()) ||
+      Boolean(patch.text?.trim()) ||
+      patch.html !== undefined ||
+      patch.subjectB !== undefined;
+    if (!hasPatch) {
+      throw new BadRequestException("Güncellenecek alan gerekli.");
+    }
+    const existing = await this.campaignRepository.findOne({
+      where: { id: campaignId, organizationId, status: "scheduled" },
+    });
+    if (!existing) {
+      throw new NotFoundException(
+        "Zamanlanmış kampanya bulunamadı veya düzenlenemez.",
+      );
+    }
+    const subject = patch.subject?.trim() || existing.subject;
+    const text = patch.text?.trim() || existing.payload.text;
+    if (!text.trim()) {
+      throw new BadRequestException("Metin gövdesi boş olamaz.");
+    }
+    const payload: MailMarketingCampaignPayload = {
+      ...existing.payload,
+      text,
+    };
+    if (patch.html !== undefined) {
+      const html = patch.html.trim();
+      payload.html = html.length > 0 ? html : undefined;
+    }
+    if (patch.subjectB !== undefined) {
+      const subjectB = patch.subjectB.trim();
+      payload.subjectB = subjectB.length > 0 ? subjectB : undefined;
+    }
+    await this.campaignRepository.update(
+      { id: campaignId, organizationId, status: "scheduled" },
+      { subject, payload },
+    );
+    const updated: MailMarketingCampaignEntity = {
+      ...existing,
+      subject,
+      payload,
+    };
+    this.emitCampaignEvent(updated, "campaign.scheduled");
+    return this.toDetail(updated);
+  }
+
+  public async bulkCancelScheduled(
+    organizationId: string,
+    campaignIds: string[],
+  ): Promise<{ cancelled: string[]; skipped: string[] }> {
+    const unique = [
+      ...new Set(campaignIds.map((id) => id.trim()).filter((id) => id.length > 0)),
+    ].slice(0, 25);
+    const cancelled: string[] = [];
+    const skipped: string[] = [];
+    for (const id of unique) {
+      try {
+        await this.cancelScheduled(organizationId, id);
+        cancelled.push(id);
+      } catch {
+        skipped.push(id);
+      }
+    }
+    return { cancelled, skipped };
   }
 
   public async exportCampaignCsv(
@@ -825,6 +907,12 @@ export class MailMarketingCampaignService {
   }
 
   private toListItem(row: MailMarketingCampaignEntity) {
+    const attempted = row.result?.attempted ?? 0;
+    const sent = row.result?.sent ?? 0;
+    const successRatePercent =
+      row.status === "completed" && attempted > 0
+        ? Math.round((sent / attempted) * 100)
+        : null;
     return {
       id: row.id,
       subject: row.subject,
@@ -836,6 +924,7 @@ export class MailMarketingCampaignService {
       createdAt: row.createdAt.toISOString(),
       recipientCount: row.payload.recipients?.length ?? 0,
       failedRecipientCount: row.result?.failed?.length ?? 0,
+      successRatePercent,
       result: row.result,
       errorMessage: row.errorMessage,
     };
@@ -868,6 +957,8 @@ export class MailMarketingCampaignService {
       reminderDispatchedAt: row.payload.reminderDispatchedAt ?? null,
       notifyCreator: row.payload.notifyCreator ?? false,
       tags: row.payload.tags ?? [],
+      text: row.payload.text,
+      html: row.payload.html ?? null,
       recipients: row.payload.recipients ?? [],
       payloadSummary: {
         hasHtml: Boolean(row.payload.html?.trim()),
