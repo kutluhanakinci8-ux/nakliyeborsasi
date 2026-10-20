@@ -37,7 +37,9 @@ export default function RegisterPage() {
     }
     const slug = params.get("slug")?.trim().toLowerCase() ?? "";
     if (slug) {
-      setPostaDesired(slug.includes("@") ? slug : `info@${slug}.post`);
+      setPostaDesired(
+        slug.includes("@") ? slug : `info@${slug}.${MAIL_PILOT_TENANT_DOMAIN}`,
+      );
     }
   }, []);
   const [companyLegalName, setCompanyLegalName] = useState("");
