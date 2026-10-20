@@ -91,6 +91,11 @@ fi
 
 DEPLOY_BRANCH="$BRANCH" bash scripts/deploy-posta-lerta-com-tr.sh "$INSTALL_DIR"
 
+if [[ "${MAIL_APPLY_INBOUND_STACK:-0}" == "1" ]] && [[ -x scripts/apply-mail-vps-inbound-stack.sh ]]; then
+  echo "=== MAIL_APPLY_INBOUND_STACK=1 — inbound stack ==="
+  INSTALL_DIR="$INSTALL_DIR" bash scripts/apply-mail-vps-inbound-stack.sh || true
+fi
+
 if [[ -x scripts/provision-pm5-imap-dovecot-vps.sh ]]; then
   INSTALL_DIR="$INSTALL_DIR" bash scripts/provision-pm5-imap-dovecot-vps.sh || true
 fi

@@ -49,6 +49,15 @@ else
 fi
 
 echo ""
+echo "== P0 inbound DNS / PTR (read-only) =="
+if bash "${ROOT}/scripts/verify-lerta-mail-inbound-p0.sh"; then
+  echo "OK"
+else
+  echo "NOT: inbound P0 (DNS veya VPS servisleri)" >&2
+  FAIL=1
+fi
+
+echo ""
 echo "== Billing config (yerel .env) =="
 if bash "${ROOT}/scripts/verify-mail-billing-config.sh"; then
   echo "OK"
