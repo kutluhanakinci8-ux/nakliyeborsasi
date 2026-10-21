@@ -239,6 +239,7 @@ export type MailSentItem = {
 export type MailSentMessageDetail = MailSentItem & {
   fromAddress: string;
   bodyText: string | null;
+  bodyHtml: string | null;
   smtpMessageId: string | null;
 };
 

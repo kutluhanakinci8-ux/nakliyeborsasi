@@ -141,6 +141,15 @@ function normalizeSocialUrl(
   }
 }
 
+function chunkSocialLinks<T>(items: T[], size: number): T[][] {
+  const rows: T[][] = [];
+  for (let i = 0; i < items.length; i += size) {
+    rows.push(items.slice(i, i + size));
+  }
+  return rows;
+}
+
+/** Outlook / mobil: border-radius td yerine sabit img; satırda en fazla 4 ikon. */
 export function buildEmailSocialFooterHtml(
   links: MailEmailSocialLink[],
   _accentColor = "#4f46e5",
@@ -148,30 +157,25 @@ export function buildEmailSocialFooterHtml(
   if (links.length === 0) {
     return "";
   }
-  const cells = links
-    .map((link) => {
-      const label = escapeHtml(PLATFORM_LABEL[link.platform]);
-      const href = escapeHtml(link.url);
-      const iconUrl = escapeHtml(PLATFORM_ICON_DATA_URI[link.platform]);
-      return `<td style="padding:0 8px;" align="center" valign="middle">
-<a href="${href}" title="${label}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">
-<table role="presentation" cellspacing="0" cellpadding="0" style="border-collapse:separate;">
-<tr>
-<td align="center" valign="middle" width="44" height="44" style="width:44px;height:44px;border-radius:50%;border:1px solid #c7cdd6;background-color:#ffffff;mso-line-height-rule:exactly;line-height:44px;">
-<img src="${iconUrl}" width="22" height="22" alt="${label}" style="display:block;margin:0 auto;border:0;outline:none;text-decoration:none;max-width:22px;height:auto;" />
-</td>
-</tr>
-</table>
+  const iconCells = links.map((link) => {
+    const label = escapeHtml(PLATFORM_LABEL[link.platform]);
+    const href = escapeHtml(link.url);
+    const iconUrl = escapeHtml(PLATFORM_ICON_DATA_URI[link.platform]);
+    return `<td align="center" valign="top" width="52" style="width:52px;padding:8px 6px;font-size:0;line-height:0;">
+<a href="${href}" title="${label}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;display:inline-block;">
+<img src="${iconUrl}" width="32" height="32" alt="${label}" style="display:block;width:32px;height:32px;max-width:32px;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;" />
 </a>
 </td>`;
-    })
+  });
+  const rowHtml = chunkSocialLinks(iconCells, 4)
+    .map((cells) => `<tr>${cells.join("")}</tr>`)
     .join("");
   return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0;">
 <tr>
 <td style="padding:20px 28px 8px;border-top:1px solid #e8eaef;">
 <p style="margin:0 0 14px;font-size:12px;line-height:1.5;color:#8b919c;text-align:center;font-family:Segoe UI,system-ui,sans-serif;">Bizi sosyal medyada takip edin</p>
-<table role="presentation" cellspacing="0" cellpadding="0" align="center" style="margin:0 auto;">
-<tr>${cells}</tr>
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin:0 auto;border-collapse:collapse;">
+${rowHtml}
 </table>
 </td>
 </tr>

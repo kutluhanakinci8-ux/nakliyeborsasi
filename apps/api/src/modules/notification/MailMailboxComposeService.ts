@@ -199,6 +199,7 @@ export class MailMailboxComposeService {
         toAddress,
         subject,
         bodyText: outbound.text,
+        bodyHtml: htmlToSend,
         relatedInboundMessageId: null,
         smtpMessageId,
       }),
@@ -478,6 +479,7 @@ export class MailMailboxComposeService {
         toAddress: inbound.fromAddress,
         subject,
         bodyText: outbound.text,
+        bodyHtml: outbound.html,
         relatedInboundMessageId: inbound.id,
         smtpMessageId,
       }),
@@ -607,6 +609,7 @@ export class MailMailboxComposeService {
         toAddress,
         subject,
         bodyText: outbound.text,
+        bodyHtml: outbound.html,
         relatedInboundMessageId: inbound.id,
         smtpMessageId,
       }),
@@ -822,16 +825,45 @@ export class MailMailboxComposeService {
     if (!row || row.organizationId !== organizationId) {
       throw new NotFoundException("Gönderilen mesaj bulunamadı");
     }
+    const bodyHtml = await this.resolveSentMessageHtml(row);
     return {
       id: row.id,
       fromAddress: row.fromAddress,
       toAddress: row.toAddress,
       subject: row.subject,
       bodyText: row.bodyText,
+      bodyHtml,
       sentAt: row.sentAt.toISOString(),
       smtpMessageId: row.smtpMessageId,
       relatedInboundMessageId: row.relatedInboundMessageId,
     };
+  }
+
+  /** Gönderilen klasörü = alıcı görünümü (kayıtlı HTML veya yeniden sarma). */
+  private async resolveSentMessageHtml(
+    row: MailMailboxSentEntity,
+  ): Promise<string | null> {
+    if (row.bodyHtml?.trim()) {
+      return row.bodyHtml;
+    }
+    const text = row.bodyText?.trim();
+    if (!text) {
+      return null;
+    }
+    const identity = await this.senderRepository.findOne({
+      where: { organizationId: row.organizationId, isDefault: true },
+    });
+    const fromHeader = formatMailFromHeader(
+      row.fromAddress,
+      identity?.displayName ?? null,
+    );
+    const outbound = await this.mailMailboxOutboundContentService.prepare({
+      organizationId: row.organizationId,
+      text,
+      fromHeader,
+      toEmail: row.toAddress,
+    });
+    return outbound.html;
   }
 
   public async deleteSentMessage(

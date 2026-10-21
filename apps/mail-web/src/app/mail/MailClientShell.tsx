@@ -1063,6 +1063,7 @@ export function MailClientShell({ mail }: Props) {
                               ...s,
                               fromAddress: summary?.primaryAddress ?? "—",
                               bodyText: null,
+                              bodyHtml: null,
                               smtpMessageId: null,
                             }
                           : null,
@@ -1197,8 +1198,17 @@ export function MailClientShell({ mail }: Props) {
                 {new Date(sentPreview.sentAt).toLocaleString("tr-TR")}
               </div>
             </header>
-            <div className="mail-read-body">
-              <pre>{sentPreview.bodyText ?? "(İçerik yok)"}</pre>
+            <div className="mail-read-body mail-read-body--html">
+              {sentPreview.bodyHtml ? (
+                <iframe
+                  title="Gönderilen mesaj (alıcı görünümü)"
+                  className="mail-html-frame mail-html-frame--sent"
+                  sandbox=""
+                  srcDoc={sentPreview.bodyHtml}
+                />
+              ) : (
+                <pre>{sentPreview.bodyText ?? "(İçerik yok)"}</pre>
+              )}
             </div>
           </>
         ) : draftPreview ? (

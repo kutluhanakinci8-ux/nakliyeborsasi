@@ -415,6 +415,10 @@ a {
   background: #fff;
 }
 
+.mail-html-frame--sent {
+  min-height: 420px;
+}
+
 .mail-attachments {
   list-style: none;
   margin: 0;

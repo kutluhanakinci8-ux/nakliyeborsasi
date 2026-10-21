@@ -28,6 +28,10 @@ export class MailMailboxSentEntity {
   @Column({ type: "text", nullable: true })
   public bodyText!: string | null;
 
+  /** Alıcıya giden tam HTML (Lerta şablonu dahil). */
+  @Column({ name: "body_html", type: "text", nullable: true })
+  public bodyHtml!: string | null;
+
   @Column({ type: "uuid", nullable: true })
   public relatedInboundMessageId!: string | null;
 
