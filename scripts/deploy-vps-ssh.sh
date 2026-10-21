@@ -22,6 +22,10 @@ SSH_BASE_OPTS=(
 REMOTE_CMD="cd '${VPS_INSTALL_DIR}' && git fetch origin '${VPS_BRANCH}' && (git merge --abort 2>/dev/null || true) && git checkout -f '${VPS_BRANCH}' 2>/dev/null || true && git reset --hard 'origin/${VPS_BRANCH}' && git clean -fdx -e .env -e apps/web/.env.local && DEPLOY_BRANCH='${VPS_BRANCH}' bash scripts/deploy-production-vps.sh '${VPS_INSTALL_DIR}'"
 
 echo "=== VPS deploy: ${VPS_USER}@${VPS_HOST} branch=${VPS_BRANCH} ==="
+if [[ -x "$(dirname "$0")/verify-main-branch-policy.sh" ]]; then
+  DEPLOY_BRANCH="${VPS_BRANCH}" REQUIRE_MAIN_DEPLOY="${REQUIRE_MAIN_DEPLOY:-0}" \
+    bash "$(dirname "$0")/verify-main-branch-policy.sh"
+fi
 
 if [[ -n "${VPS_SSH_PRIVATE_KEY:-}" ]]; then
   KEY_FILE="$(mktemp)"

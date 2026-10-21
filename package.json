@@ -20,7 +20,10 @@
     "lint": "npm run lint -w @nakliyeborsasi/api",
     "test:unit": "npm run test -w @nakliyeborsasi/core",
     "test:e2e": "npm run test:e2e -w @nakliyeborsasi/web",
-    "verify:vps": "bash scripts/vps-operator-verify.sh"
+    "verify:vps": "bash scripts/vps-operator-verify.sh",
+    "archive:move": "bash scripts/archive-replaced-source.sh",
+    "git:cleanup-merged": "bash scripts/cleanup-merged-git-branches.sh",
+    "git:cleanup-merged:apply": "DRY_RUN=0 APPLY=1 bash scripts/cleanup-merged-git-branches.sh"
   },
   "engines": {
     "node": ">=20"
