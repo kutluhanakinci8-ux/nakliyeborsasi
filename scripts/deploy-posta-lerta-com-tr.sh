@@ -10,6 +10,9 @@ git fetch origin "$BRANCH"
 git checkout "$BRANCH"
 git pull origin "$BRANCH"
 
+if [[ -x "$INSTALL_DIR/scripts/backup-mail-email-social-links.sh" ]]; then
+  bash "$INSTALL_DIR/scripts/backup-mail-email-social-links.sh" "$INSTALL_DIR" || true
+fi
 if [[ -x "$INSTALL_DIR/scripts/apply-mail-compose-draft-schema.sh" ]]; then
   bash "$INSTALL_DIR/scripts/apply-mail-compose-draft-schema.sh" "$INSTALL_DIR" || true
 fi

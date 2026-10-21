@@ -1,0 +1,9 @@
+[
+  { "platform": "instagram", "url": "https://instagram.com/lertatest" },
+  { "platform": "facebook", "url": "https://www.facebook.com/lertatest" },
+  { "platform": "linkedin", "url": "https://www.linkedin.com/company/lerta" },
+  { "platform": "x", "url": "https://x.com/lertatest" },
+  { "platform": "youtube", "url": "https://www.youtube.com/@lertatest" },
+  { "platform": "tiktok", "url": "https://www.tiktok.com/@lertatest" },
+  { "platform": "website", "url": "https://lertatest.com" }
+]

@@ -151,7 +151,10 @@ export class CompanyMailIdentityController {
       desiredAddress: body.desiredAddress,
       displayName: body.displayName,
     });
-    if (body.emailSocialLinks !== undefined) {
+    if (
+      Array.isArray(body.emailSocialLinks) &&
+      body.emailSocialLinks.length > 0
+    ) {
       await this.mailOrganizationBrandingService.updateEmailSocialLinks(
         user.companyId,
         body.emailSocialLinks,

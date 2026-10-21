@@ -108,37 +108,44 @@ export class MailOrganizationBrandingService {
     input: UpdateMailOrganizationBrandingInput,
   ): Promise<MailOrganizationBrandingSnapshot> {
     await this.assertCanManage(organizationId);
-    let row = await this.brandingRepository.findOne({
-      where: { organizationId },
-    });
-    if (!row) {
-      row = this.brandingRepository.create({ organizationId });
-    }
+    const patch: Partial<MailOrganizationBrandingEntity> = {};
     if (input.logoUrl !== undefined) {
-      row.logoUrl = this.normalizeLogoUrl(input.logoUrl);
+      patch.logoUrl = this.normalizeLogoUrl(input.logoUrl);
     }
     if (input.emailBrandTitle !== undefined) {
-      row.emailBrandTitle = this.normalizeShortText(input.emailBrandTitle);
+      patch.emailBrandTitle = this.normalizeShortText(input.emailBrandTitle);
     }
     if (input.emailAccentColor !== undefined) {
-      row.emailAccentColor = this.normalizeAccentColor(input.emailAccentColor);
+      patch.emailAccentColor = this.normalizeAccentColor(input.emailAccentColor);
     }
     if (input.emailLegalFooter !== undefined) {
-      row.emailLegalFooter = this.normalizeLegalFooter(input.emailLegalFooter);
+      patch.emailLegalFooter = this.normalizeLegalFooter(input.emailLegalFooter);
     }
     if (input.defaultFromDisplayName !== undefined) {
-      row.defaultFromDisplayName = this.normalizeShortText(
+      patch.defaultFromDisplayName = this.normalizeShortText(
         input.defaultFromDisplayName,
       );
       await this.syncDefaultSenderDisplayName(
         organizationId,
-        row.defaultFromDisplayName,
+        patch.defaultFromDisplayName,
       );
     }
     if (input.hidePlatformEmailChrome !== undefined) {
-      row.hidePlatformEmailChrome = Boolean(input.hidePlatformEmailChrome);
+      patch.hidePlatformEmailChrome = Boolean(input.hidePlatformEmailChrome);
     }
-    await this.brandingRepository.save(row);
+    const existing = await this.brandingRepository.findOne({
+      where: { organizationId },
+    });
+    if (!existing) {
+      await this.brandingRepository.insert({
+        organizationId,
+        hidePlatformEmailChrome: false,
+        ...patch,
+      });
+    } else if (Object.keys(patch).length > 0) {
+      // Yalnızca white-label alanları — email_social_links jsonb'ye dokunulmaz (save() sıfırlama riski).
+      await this.brandingRepository.update({ organizationId }, patch);
+    }
     return this.getSnapshot(organizationId);
   }
 
