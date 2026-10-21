@@ -1793,6 +1793,77 @@ html[data-mail-theme="dark"] .login-error {
   margin-bottom: 14px;
 }
 
+.compose-recipient-field {
+  position: relative;
+}
+
+.compose-contact-suggest {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 40;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel);
+  box-shadow: var(--shadow-md);
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.compose-contact-suggest li {
+  margin: 0;
+}
+
+.compose-contact-suggest button {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+
+.compose-contact-suggest button:hover,
+.compose-contact-suggest button.is-active {
+  background: var(--accent-soft);
+}
+
+.compose-contact-suggest-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.compose-contact-suggest-email {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.compose-contact-suggest-empty {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 39;
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 0.8rem;
+  color: var(--muted);
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+}
+
 .compose-field-label {
   display: block;
   font-size: 0.72rem;

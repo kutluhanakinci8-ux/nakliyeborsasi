@@ -9,6 +9,7 @@ import { MailShortcutsDialog } from "./MailShortcutsDialog";
 import { MailCalendarPanel } from "./MailCalendarPanel";
 import { MailContactsPanel } from "./MailContactsPanel";
 import { ComposeRichEditor } from "./ComposeRichEditor";
+import { MailComposeRecipientField } from "./MailComposeRecipientField";
 import { MailInboxMessageRow } from "./MailInboxMessageRow";
 import { MailListSwipeRow } from "./MailListSwipeRow";
 import type { MailClientController } from "./useMailClientController";
@@ -66,6 +67,7 @@ export function MailClientShell({ mail }: Props) {
     composeCampaignTemplates,
     composeText,
     composeTo,
+    composeOrgContacts,
     composeMergeReferans,
     composeMergeMusteriAdi,
     composeMergeOpen,
@@ -1993,19 +1995,15 @@ export function MailClientShell({ mail }: Props) {
                   </div>
                 </div>
               ) : (
-                <div className="compose-field">
-                  <label className="compose-field-label" htmlFor="compose-to">
-                    Kime
-                  </label>
-                  <input
-                    id="compose-to"
-                    className="compose-input"
-                    placeholder="ornek@firma.com"
-                    value={composeTo}
-                    onChange={(e) => setComposeTo(e.target.value)}
-                    autoFocus
-                  />
-                </div>
+                <MailComposeRecipientField
+                  id="compose-to"
+                  label="Kime"
+                  placeholder="ornek@firma.com veya kişi adı"
+                  value={composeTo}
+                  onChange={setComposeTo}
+                  contacts={composeOrgContacts}
+                  autoFocus
+                />
               )}
 
               {!forwardMessageId ? (
@@ -2022,30 +2020,22 @@ export function MailClientShell({ mail }: Props) {
 
               {!forwardMessageId && composeShowCcBcc ? (
                 <>
-                  <div className="compose-field">
-                    <label className="compose-field-label" htmlFor="compose-cc">
-                      Cc
-                    </label>
-                    <input
-                      id="compose-cc"
-                      className="compose-input"
-                      placeholder="Virgülle ayırın"
-                      value={composeCc}
-                      onChange={(e) => setComposeCc(e.target.value)}
-                    />
-                  </div>
-                  <div className="compose-field">
-                    <label className="compose-field-label" htmlFor="compose-bcc">
-                      Bcc
-                    </label>
-                    <input
-                      id="compose-bcc"
-                      className="compose-input"
-                      placeholder="Virgülle ayırın"
-                      value={composeBcc}
-                      onChange={(e) => setComposeBcc(e.target.value)}
-                    />
-                  </div>
+                  <MailComposeRecipientField
+                    id="compose-cc"
+                    label="Cc"
+                    placeholder="Virgülle ayırın"
+                    value={composeCc}
+                    onChange={setComposeCc}
+                    contacts={composeOrgContacts}
+                  />
+                  <MailComposeRecipientField
+                    id="compose-bcc"
+                    label="Bcc"
+                    placeholder="Virgülle ayırın"
+                    value={composeBcc}
+                    onChange={setComposeBcc}
+                    contacts={composeOrgContacts}
+                  />
                 </>
               ) : null}
 

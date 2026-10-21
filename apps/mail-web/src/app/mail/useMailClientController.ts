@@ -26,6 +26,8 @@ import {
   restoreSentFromTrash,
   downloadMailAttachment,
   fetchComposePresets,
+  fetchOrgContacts,
+  type MailOrgContact,
   fetchDrafts,
   fetchInboxPreferences,
   fetchCustomFolders,
@@ -169,6 +171,9 @@ export function useMailClientController({
   const [replyText, setReplyText] = useState("");
   const [replyFiles, setReplyFiles] = useState<File[]>([]);
   const [composeOpen, setComposeOpen] = useState(false);
+  const [composeOrgContacts, setComposeOrgContacts] = useState<
+    MailOrgContact[]
+  >([]);
   const [composeTo, setComposeTo] = useState("");
   const [composeCc, setComposeCc] = useState("");
   const [composeBcc, setComposeBcc] = useState("");
@@ -390,6 +395,13 @@ export function useMailClientController({
         setComposeTemplates(builtinComposeTemplatesFallback());
         setComposeCampaignTemplates([]);
       });
+    void fetchOrgContacts(accessToken)
+      .then((data) => {
+        setComposeOrgContacts(
+          data.contacts.filter((c) => c.email && c.email.trim()),
+        );
+      })
+      .catch(() => setComposeOrgContacts([]));
   }, [composeOpen, accessToken, sendReadiness]);
 
   useEffect(() => {
@@ -2286,6 +2298,7 @@ export function useMailClientController({
     composeFiles,
     composeHtml,
     composeOpen,
+    composeOrgContacts,
     composePreviewBusy,
     composePreviewHtml,
     composeRich,
