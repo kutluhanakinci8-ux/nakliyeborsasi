@@ -3524,6 +3524,527 @@ html[data-mail-theme="dark"] .login-error {
   margin-left: 6px;
 }
 
+/* —— Takvim premium —— */
+.mail-cal-premium.mail-d6-inner {
+  max-width: min(1120px, 100%);
+  padding: 24px 28px 56px;
+}
+
+.mail-cal-premium-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px 24px;
+  margin-bottom: 20px;
+}
+
+.mail-cal-premium-heading h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.mail-cal-premium-kicker {
+  margin: 4px 0 0;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.mail-cal-premium-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+}
+
+.mail-cal-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  box-shadow: var(--shadow-sm);
+}
+
+.mail-cal-month-label {
+  min-width: 9.5rem;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 0 6px;
+  text-transform: capitalize;
+}
+
+.mail-cal-toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mail-cal-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: inherit;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.1s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.mail-cal-btn:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+  background: var(--accent-soft);
+}
+
+.mail-cal-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.mail-cal-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.mail-cal-btn--icon {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  font-size: 1.35rem;
+  line-height: 1;
+  border-radius: 10px;
+}
+
+.mail-cal-btn--ghost {
+  background: transparent;
+  box-shadow: none;
+}
+
+.mail-cal-btn--primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  box-shadow: var(--shadow-md);
+}
+
+.mail-cal-btn--primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+  color: #fff;
+}
+
+.mail-cal-btn--danger {
+  color: #c5221f;
+  border-color: color-mix(in srgb, #c5221f 25%, var(--border));
+  background: color-mix(in srgb, #c5221f 6%, var(--panel));
+}
+
+.mail-cal-btn--danger:hover:not(:disabled) {
+  background: color-mix(in srgb, #c5221f 12%, var(--panel));
+}
+
+.mail-cal-btn--sm {
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  border-radius: 8px;
+}
+
+.mail-cal-file-input {
+  cursor: pointer;
+  margin: 0;
+}
+
+.mail-cal-premium-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .mail-cal-premium-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .mail-cal-premium-aside {
+    order: -1;
+  }
+}
+
+.mail-cal-premium-main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.mail-cal-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px 20px;
+  box-shadow: var(--shadow-md);
+}
+
+.mail-cal-card-title {
+  margin: 0 0 14px;
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+.mail-cal-month--card {
+  padding: 16px 14px 14px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-md);
+  margin-bottom: 0;
+}
+
+.mail-cal-premium .mail-cal-weekday {
+  font-weight: 600;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.mail-cal-premium .mail-cal-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 6px 4px 8px;
+  min-height: 52px;
+  border-radius: 12px;
+  border-color: color-mix(in srgb, var(--border) 80%, transparent);
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.mail-cal-premium .mail-cal-day:hover {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+  box-shadow: var(--shadow-sm);
+}
+
+.mail-cal-premium .mail-cal-day.today .mail-cal-day-num {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 650;
+}
+
+.mail-cal-premium .mail-cal-day.selected {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+.mail-cal-day-num {
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.mail-cal-day-dots {
+  display: flex;
+  gap: 3px;
+  margin-top: auto;
+  padding-top: 4px;
+}
+
+.mail-cal-day-dots span {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--accent);
+  opacity: 0.85;
+}
+
+.mail-cal-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 14px;
+}
+
+.mail-cal-form-grid--compact {
+  margin-top: 12px;
+}
+
+.mail-cal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.mail-cal-field--full {
+  grid-column: 1 / -1;
+}
+
+.mail-cal-field--grow {
+  grid-column: span 2;
+}
+
+@media (max-width: 640px) {
+  .mail-cal-field--grow {
+    grid-column: 1 / -1;
+  }
+}
+
+.mail-cal-field--check {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  align-self: end;
+  font-size: 0.9rem;
+}
+
+.mail-cal-field-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.mail-cal-input,
+.mail-cal-select,
+.mail-cal-premium .mail-cal-occ-edit input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  font-size: 0.9rem;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.mail-cal-input:focus,
+.mail-cal-select:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.mail-cal-select {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+    linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) calc(50% + 2px),
+    calc(100% - 12px) calc(50% + 2px);
+  background-size:
+    6px 6px,
+    6px 6px;
+  background-repeat: no-repeat;
+  padding-right: 32px;
+}
+
+.mail-cal-form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.mail-cal-form-actions--inline {
+  grid-column: auto;
+  align-self: end;
+  margin-top: 0;
+}
+
+.mail-cal-events-panel {
+  position: sticky;
+  top: 12px;
+  max-height: calc(100vh - 120px);
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 12px;
+}
+
+.mail-cal-events-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.mail-cal-events-panel-head .mail-cal-card-title {
+  margin: 0;
+}
+
+.mail-cal-events-count {
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.mail-cal-chip {
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mail-cal-event-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mail-cal-event-item {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 12px 10px;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mail-cal-event-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.95rem;
+}
+
+.mail-cal-badge {
+  font-size: 0.75rem;
+  opacity: 0.75;
+}
+
+.mail-cal-event-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.mail-cal-event-empty,
+.mail-cal-loading {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.9rem;
+  padding: 24px 12px;
+}
+
+.mail-cal-premium .mail-cal-occ-edit {
+  margin: 0;
+  border: none;
+  padding: 0;
+  gap: 12px;
+}
+
+.mail-cal-integrations {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  margin-top: 28px;
+}
+
+@media (max-width: 900px) {
+  .mail-cal-integrations {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mail-cal-section-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px 20px 16px;
+  box-shadow: var(--shadow-md);
+}
+
+.mail-cal-section-card h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 650;
+}
+
+.mail-cal-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.mail-cal-section-hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.mail-cal-feed-list {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mail-cal-feed-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.mail-cal-feed-empty {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.88rem;
+  padding: 16px;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+}
+
 /* —— Gelen kutusu premium liste —— */
 .mail-list-inbox-premium {
   background: linear-gradient(180deg, var(--bg) 0%, var(--panel) 48px);
