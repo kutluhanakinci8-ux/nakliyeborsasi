@@ -763,6 +763,18 @@ export async function deleteMessagePermanently(
   });
 }
 
+export async function emptyMailTrash(accessToken: string) {
+  return apiFetch<{
+    ok: true;
+    deletedInbound: number;
+    deletedSent: number;
+    deletedTotal: number;
+  }>(accessToken, "company/mail-inbox/trash/empty", {
+    method: "POST",
+    body: JSON.stringify({}),
+  });
+}
+
 export const MAIL_EMAIL_SOCIAL_PLATFORMS = [
   "instagram",
   "facebook",

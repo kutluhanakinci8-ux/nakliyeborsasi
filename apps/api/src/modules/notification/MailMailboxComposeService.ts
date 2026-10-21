@@ -882,6 +882,17 @@ export class MailMailboxComposeService {
     await this.sentRepository.delete({ id: sentId, organizationId });
   }
 
+  /** Çöpteki tüm gönderilen kayıtları kalıcı siler. */
+  public async purgeAllTrashedSent(
+    organizationId: string,
+  ): Promise<{ deleted: number }> {
+    const result = await this.sentRepository.delete({
+      organizationId,
+      trashedAt: Not(IsNull()),
+    });
+    return { deleted: result.affected ?? 0 };
+  }
+
   private async resolveSenderMailbox(
     organizationId: string,
     purpose?: MailSenderPurpose,

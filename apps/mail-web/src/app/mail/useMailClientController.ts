@@ -61,6 +61,7 @@ import {
   setMessageMailboxFolder,
   setMessageStarred,
   deleteMessagePermanently,
+  emptyMailTrash,
   updateDraft,
   type MailComposePreset,
   type MailDraftItem,
@@ -1354,6 +1355,145 @@ export function useMailClientController({
     }
   }
 
+  function messageKindForId(id: string): "inbound" | "sent" {
+    if (view === "sent") {
+      return "sent";
+    }
+    const row = messages.find((m) => m.id === id);
+    if (row?.messageKind === "sent") {
+      return "sent";
+    }
+    return "inbound";
+  }
+
+  async function openSentById(id: string) {
+    if (!accessToken) {
+      return;
+    }
+    setSelectedId(id);
+    setDetail(null);
+    setDraftPreview(null);
+    setSentLoading(true);
+    setSentPreview(null);
+    try {
+      setSentPreview(await fetchSentMessage(accessToken, id));
+    } catch {
+      const s = sent.find((x) => x.id === id);
+      setSentPreview(
+        s
+          ? {
+              ...s,
+              fromAddress: summary?.primaryAddress ?? "—",
+              bodyText: null,
+              bodyHtml: null,
+              smtpMessageId: null,
+            }
+          : null,
+      );
+    } finally {
+      setSentLoading(false);
+    }
+  }
+
+  async function runBulkRestoreFromTrash() {
+    if (!accessToken || checkedIds.size === 0) {
+      return;
+    }
+    const ids = [...checkedIds];
+    try {
+      let restored = 0;
+      for (const id of ids) {
+        if (messageKindForId(id) === "sent") {
+          await restoreSentFromTrash(accessToken, id);
+        } else {
+          await setMessageMailboxFolder(accessToken, id, "inbox");
+        }
+        restored += 1;
+      }
+      setToast(`${restored} mesaj geri alındı.`);
+      setCheckedIds(new Set());
+      setDetail(null);
+      setSelectedId(null);
+      setSentPreview(null);
+      void refresh();
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : "Geri alınamadı.");
+    }
+  }
+
+  async function runBulkPurgeTrash() {
+    if (!accessToken || checkedIds.size === 0) {
+      return;
+    }
+    const ids = [...checkedIds];
+    try {
+      let purged = 0;
+      for (const id of ids) {
+        if (messageKindForId(id) === "sent") {
+          await deleteSentMessage(accessToken, id);
+        } else {
+          await deleteMessagePermanently(accessToken, id);
+        }
+        purged += 1;
+      }
+      setToast(`${purged} mesaj kalıcı olarak silindi.`);
+      setCheckedIds(new Set());
+      setDetail(null);
+      setSelectedId(null);
+      setSentPreview(null);
+      void refresh();
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : "Silinemedi.");
+    }
+  }
+
+  async function runEmptyTrash() {
+    if (!accessToken) {
+      return;
+    }
+    if (
+      !window.confirm(
+        "Çöp kutusundaki tüm mesajlar kalıcı olarak silinecek. Devam edilsin mi?",
+      )
+    ) {
+      return;
+    }
+    try {
+      const result = await emptyMailTrash(accessToken);
+      setToast(
+        `${result.deletedTotal} mesaj kalıcı silindi (gelen: ${result.deletedInbound}, gönderilen: ${result.deletedSent}).`,
+      );
+      setCheckedIds(new Set());
+      setDetail(null);
+      setSelectedId(null);
+      setSentPreview(null);
+      void refresh();
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : "Çöp boşaltılamadı.");
+    }
+  }
+
+  async function restoreCurrentFromTrash() {
+    if (!accessToken || !selectedId) {
+      return;
+    }
+    try {
+      if (messageKindForId(selectedId) === "sent") {
+        await restoreSentFromTrash(accessToken, selectedId);
+        setSentPreview(null);
+      } else {
+        await setMessageMailboxFolder(accessToken, selectedId, "inbox");
+        setDetail(null);
+      }
+      setSelectedId(null);
+      setMobilePane("list");
+      setToast("Geri alındı.");
+      void refresh();
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : "Geri alınamadı.");
+    }
+  }
+
   async function runBulkFolder(folder: MailMailboxFolder) {
     if (!accessToken || checkedIds.size === 0) {
       return;
@@ -1469,9 +1609,14 @@ export function useMailClientController({
       return;
     }
     try {
-      await deleteMessagePermanently(accessToken, selectedId);
+      if (messageKindForId(selectedId) === "sent") {
+        await deleteSentMessage(accessToken, selectedId);
+        setSentPreview(null);
+      } else {
+        await deleteMessagePermanently(accessToken, selectedId);
+        setDetail(null);
+      }
       setToast("Kalıcı olarak silindi.");
-      setDetail(null);
       setSelectedId(null);
       setMobilePane("list");
       void refresh();
@@ -2234,6 +2379,11 @@ export function useMailClientController({
     promptCreateCustomFolder,
     previewComposeOutbound,
     purgeCurrentMessage,
+    openSentById,
+    restoreCurrentFromTrash,
+    runBulkPurgeTrash,
+    runBulkRestoreFromTrash,
+    runEmptyTrash,
     refresh,
     refreshCustomFolders,
     refreshDrafts,

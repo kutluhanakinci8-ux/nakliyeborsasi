@@ -1024,6 +1024,30 @@ a {
   border-color: rgba(197, 34, 31, 0.35);
 }
 
+.mail-bulk-danger {
+  color: #b42318;
+  border-color: #fecdca;
+}
+
+.mail-bulk-danger:hover {
+  background: #fef3f2;
+}
+
+.mail-empty-trash-btn {
+  margin-left: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid #fecdca;
+  background: #fff;
+  color: #b42318;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.mail-empty-trash-btn:hover {
+  background: #fef3f2;
+}
+
 .mail-read-tool-btn--danger:hover {
   background: #fce8e6;
   border-color: #c5221f;

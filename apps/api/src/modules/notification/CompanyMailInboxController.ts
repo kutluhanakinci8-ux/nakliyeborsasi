@@ -1282,6 +1282,26 @@ export class CompanyMailInboxController {
     return { ok: true };
   }
 
+  @Post("trash/empty")
+  public async emptyTrash(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    this.assertMailInboxWriter(user);
+    const inbound =
+      await this.mailOrganizationInboxService.purgeAllTrashMessages(
+        user.companyId,
+      );
+    const sent = await this.mailMailboxComposeService.purgeAllTrashedSent(
+      user.companyId,
+    );
+    return {
+      ok: true,
+      deletedInbound: inbound.deleted,
+      deletedSent: sent.deleted,
+      deletedTotal: inbound.deleted + sent.deleted,
+    };
+  }
+
   @Post("compose/preview")
   public async previewCompose(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,

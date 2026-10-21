@@ -641,6 +641,24 @@ export class MailOrganizationInboxService {
     await this.inboundRepository.remove(row);
   }
 
+  /** Çöp kutusundaki tüm gelen mesajları kalıcı siler. */
+  public async purgeAllTrashMessages(
+    organizationId: string,
+  ): Promise<{ deleted: number }> {
+    const mailboxIds = await this.mailboxIdsForOrganization(organizationId);
+    if (mailboxIds.length === 0) {
+      return { deleted: 0 };
+    }
+    const rows = await this.inboundRepository.find({
+      where: { mailboxId: In(mailboxIds), mailboxFolder: "trash" },
+    });
+    for (const row of rows) {
+      this.mailImapMaildirService.deleteMailboxFile(row.maildirFilePath);
+      await this.inboundRepository.remove(row);
+    }
+    return { deleted: rows.length };
+  }
+
   private async assertMessageAccess(
     organizationId: string,
     messageId: string,

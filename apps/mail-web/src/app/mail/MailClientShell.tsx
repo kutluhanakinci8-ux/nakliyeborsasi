@@ -17,7 +17,6 @@ import {
   deleteCustomFolder,
   deleteDraft,
   fetchClassifyMessage,
-  fetchSentMessage,
   fetchSummarizeMessage,
   fetchSuggestComposeDraft,
   fetchSuggestReply,
@@ -150,6 +149,11 @@ export function MailClientShell({ mail }: Props) {
     previewComposeOutbound,
     closeComposePreview,
     purgeCurrentMessage,
+    openSentById,
+    restoreCurrentFromTrash,
+    runBulkPurgeTrash,
+    runBulkRestoreFromTrash,
+    runEmptyTrash,
     refresh,
     refreshCustomFolders,
     refreshDrafts,
@@ -745,6 +749,24 @@ export function MailClientShell({ mail }: Props) {
               ) : null}
               {canBulkSelect && checkedIds.size > 0 ? (
                 <span className="mail-bulk-actions">
+                  {view === "trash" ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => void runBulkRestoreFromTrash()}
+                      >
+                        Geri al
+                      </button>
+                      <button
+                        type="button"
+                        className="mail-bulk-danger"
+                        onClick={() => void runBulkPurgeTrash()}
+                      >
+                        Kalıcı sil
+                      </button>
+                    </>
+                  ) : (
+                    <>
                   <button type="button" onClick={() => void runBulkMarkRead(false)}>
                     Okundu
                   </button>
@@ -757,6 +779,8 @@ export function MailClientShell({ mail }: Props) {
                   <button type="button" onClick={() => void runBulkFolder("trash")}>
                     Çöp
                   </button>
+                    </>
+                  )}
                   {view !== "trash" ? (
                     <>
                       <button
@@ -816,6 +840,15 @@ export function MailClientShell({ mail }: Props) {
                     </select>
                   ) : null}
                 </span>
+              ) : null}
+              {view === "trash" && listItems.length > 0 ? (
+                <button
+                  type="button"
+                  className="mail-empty-trash-btn"
+                  onClick={() => void runEmptyTrash()}
+                >
+                  Çöpü boşalt
+                </button>
               ) : null}
               <button type="button" className="mail-toolbar-btn" onClick={() => void refresh()}>
                 Yenile
@@ -1042,36 +1075,8 @@ export function MailClientShell({ mail }: Props) {
                   }
                   return;
                 }
-                if (view === "sent") {
-                  setSelectedId(m.id);
-                  setDetail(null);
-                  setSentLoading(true);
-                  setSentPreview(null);
-                  void (async () => {
-                    if (!accessToken) {
-                      return;
-                    }
-                    try {
-                      setSentPreview(
-                        await fetchSentMessage(accessToken, m.id),
-                      );
-                    } catch {
-                      const s = sent.find((x) => x.id === m.id);
-                      setSentPreview(
-                        s
-                          ? {
-                              ...s,
-                              fromAddress: summary?.primaryAddress ?? "—",
-                              bodyText: null,
-                              bodyHtml: null,
-                              smtpMessageId: null,
-                            }
-                          : null,
-                      );
-                    } finally {
-                      setSentLoading(false);
-                    }
-                  })();
+                if (view === "sent" || (view === "trash" && rowMessageKind === "sent")) {
+                  void openSentById(m.id);
                   return;
                 }
                 if (threadView && canUseThreads && "threadId" in m) {
@@ -1210,6 +1215,28 @@ export function MailClientShell({ mail }: Props) {
                 <pre>{sentPreview.bodyText ?? "(İçerik yok)"}</pre>
               )}
             </div>
+            {view === "trash" ? (
+              <div
+                className="mail-read-toolbar"
+                role="toolbar"
+                aria-label="Çöp işlemleri"
+              >
+                <button
+                  type="button"
+                  className="mail-read-tool-btn"
+                  onClick={() => void restoreCurrentFromTrash()}
+                >
+                  Geri al
+                </button>
+                <button
+                  type="button"
+                  className="mail-read-tool-btn mail-read-tool-btn--danger"
+                  onClick={() => void purgeCurrentMessage()}
+                >
+                  Kalıcı sil
+                </button>
+              </div>
+            ) : null}
           </>
         ) : draftPreview ? (
           <>
@@ -1395,7 +1422,7 @@ export function MailClientShell({ mail }: Props) {
                   <button
                     type="button"
                     className="mail-read-tool-btn"
-                    onClick={() => void moveCurrentMessage("inbox")}
+                    onClick={() => void restoreCurrentFromTrash()}
                   >
                     Geri al
                   </button>
