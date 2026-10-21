@@ -23,7 +23,9 @@
     "verify:vps": "bash scripts/vps-operator-verify.sh",
     "archive:move": "bash scripts/archive-replaced-source.sh",
     "git:cleanup-merged": "bash scripts/cleanup-merged-git-branches.sh",
-    "git:cleanup-merged:apply": "DRY_RUN=0 APPLY=1 bash scripts/cleanup-merged-git-branches.sh"
+    "git:cleanup-merged:apply": "DRY_RUN=0 APPLY=1 bash scripts/cleanup-merged-git-branches.sh",
+    "git:archive-stale-branches": "bash scripts/archive-stale-branches-as-tags.sh",
+    "git:archive-stale-branches:apply": "DRY_RUN=0 APPLY=1 bash scripts/archive-stale-branches-as-tags.sh"
   },
   "engines": {
     "node": ">=20"

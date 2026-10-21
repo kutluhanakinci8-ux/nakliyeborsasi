@@ -39,6 +39,7 @@
 - Varsayılan: `DRY_RUN=1` (sadece rapor)
 - `DRY_RUN=0 APPLY=1`: uzak dalı `git push origin --delete` ile kaldırır, yerel dalı siler
 - **Merge edilmemiş** dallar silinmez; rapor `archive/git/unmerged-branches.txt`
+- Çok geride kalan stale dallar: `scripts/archive-stale-branches-as-tags.sh` → `archive/cursor/*` git tag, sonra dal silinir
 
 ## TypeScript
 

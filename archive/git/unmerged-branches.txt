@@ -1,0 +1,16 @@
+origin/cursor/ekolojik-market-parity-ek-clean-5925
+origin/cursor/ekolojik-market-parity-ek-close-5925
+origin/cursor/ekolojik-market-parity-ek-live-5925
+origin/cursor/ekolojik-market-parity-ek-roll-5925
+origin/cursor/instagram-diagnose-logs-5925
+origin/cursor/jmap-bridge-expand-519e
+origin/cursor/kutluhan-telemetry-map-demo-519e
+origin/cursor/logistics-web-build-fix-519e
+origin/cursor/mail-abayer-demo-provision-519e
+origin/cursor/mail-completion-gap-close-519e
+origin/cursor/mail-kurumsal-sunum-tr-519e
+origin/cursor/mail-marketing-campaigns-519e
+origin/cursor/messaging-slack-depth-519e
+origin/cursor/meta-veri-silme-url-5925
+origin/cursor/social-hub-code-roadmap-5925
+origin/cursor/social-meta-vps-env-5925
