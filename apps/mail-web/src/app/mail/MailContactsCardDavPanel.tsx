@@ -44,106 +44,128 @@ export function MailContactsCardDavPanel({
   }, [load]);
 
   return (
-    <section className="mail-cal-feeds">
-      <h2>CardDAV adres defteri</h2>
-      <p className="mail-d6-hint">
-        Nextcloud <code>…/addressbooks/kullanici/kişisel/</code> gibi HTTPS
-        koleksiyon URL’si. Kişi listesinde <strong>CardDAV’a yaz</strong> ile
-        yerel kişi gönderilir.
-      </p>
-      <div className="mail-d6-form">
-        <input
-          placeholder="Ad"
-          value={label}
-          onChange={(e) => setLabel(e.target.value)}
-        />
-        <input
-          placeholder="https://…/addressbooks/…/"
-          value={addressbookUrl}
-          onChange={(e) => setAddressbookUrl(e.target.value)}
-        />
-        <input
-          placeholder="Kullanıcı adı"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-        />
-        <input
-          type="password"
-          placeholder="Şifre"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <button
-          type="button"
-          onClick={() =>
-            void (async () => {
-              if (
-                !label.trim() ||
-                !addressbookUrl.trim() ||
-                !username.trim() ||
-                !password
-              ) {
-                onToast("Tüm alanlar gerekli.");
-                return;
-              }
-              try {
-                await createContactCardDavAccount(accessToken, {
-                  label: label.trim(),
-                  addressbookUrl: addressbookUrl.trim(),
-                  username: username.trim(),
-                  password,
-                });
-                setLabel("");
-                setAddressbookUrl("");
-                setUsername("");
-                setPassword("");
-                onToast("CardDAV hesabı eklendi.");
-                void load();
-              } catch (error) {
-                onToast(
-                  error instanceof Error ? error.message : "Eklenemedi.",
-                );
-              }
-            })()
-          }
-        >
-          Bağla
-        </button>
+    <section className="mail-cal-section-card mail-contacts-carddav">
+      <div className="mail-cal-section-head">
+        <h2>CardDAV adres defteri</h2>
+        {accounts.some((a) => a.enabled) ? (
+          <button
+            type="button"
+            className="mail-cal-btn mail-cal-btn--ghost mail-cal-btn--sm"
+            disabled={syncingAll}
+            onClick={() =>
+              void (async () => {
+                setSyncingAll(true);
+                try {
+                  const r = await syncAllContactCardDavAccounts(accessToken);
+                  onToast(
+                    `CardDAV: ${r.succeeded}/${r.accounts} hesap · ${r.imported} yeni, ${r.updated} güncel${r.failed ? ` · ${r.failed} hata` : ""}.`,
+                  );
+                  void load();
+                  onSynced();
+                } catch (error) {
+                  onToast(
+                    error instanceof Error
+                      ? error.message
+                      : "Toplu senkron başarısız.",
+                  );
+                  void load();
+                } finally {
+                  setSyncingAll(false);
+                }
+              })()
+            }
+          >
+            {syncingAll ? "Senkronize ediliyor…" : "Tümünü çek"}
+          </button>
+        ) : null}
       </div>
-      {accounts.some((a) => a.enabled) ? (
-        <button
-          type="button"
-          className="mail-d6-sync-all"
-          disabled={syncingAll}
-          onClick={() =>
-            void (async () => {
-              setSyncingAll(true);
-              try {
-                const r = await syncAllContactCardDavAccounts(accessToken);
-                onToast(
-                  `CardDAV: ${r.succeeded}/${r.accounts} hesap · ${r.imported} yeni, ${r.updated} güncel${r.failed ? ` · ${r.failed} hata` : ""}.`,
-                );
-                void load();
-                onSynced();
-              } catch (error) {
-                onToast(
-                  error instanceof Error
-                    ? error.message
-                    : "Toplu senkron başarısız.",
-                );
-                void load();
-              } finally {
-                setSyncingAll(false);
-              }
-            })()
-          }
-        >
-          {syncingAll ? "Senkronize ediliyor…" : "Tüm CardDAV hesaplarını çek"}
-        </button>
-      ) : null}
-      <ul className="mail-d6-list">
+      <p className="mail-cal-section-hint">
+        Nextcloud{" "}
+        <code>…/addressbooks/kullanici/kişisel/</code> gibi HTTPS koleksiyon
+        URL’si. Kişi kartlarından <strong>CardDAV</strong> ile yerel kayıt
+        sunucuya gönderilir.
+      </p>
+      <div className="mail-cal-form-grid mail-cal-form-grid--compact">
+        <label className="mail-cal-field">
+          <span className="mail-cal-field-label">Ad</span>
+          <input
+            className="mail-cal-input"
+            placeholder="ör. Nextcloud iş"
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+          />
+        </label>
+        <label className="mail-cal-field mail-cal-field--full">
+          <span className="mail-cal-field-label">Adres defteri URL</span>
+          <input
+            className="mail-cal-input"
+            placeholder="https://…/addressbooks/…/"
+            value={addressbookUrl}
+            onChange={(e) => setAddressbookUrl(e.target.value)}
+          />
+        </label>
+        <label className="mail-cal-field">
+          <span className="mail-cal-field-label">Kullanıcı</span>
+          <input
+            className="mail-cal-input"
+            placeholder="Kullanıcı adı"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
+        </label>
+        <label className="mail-cal-field">
+          <span className="mail-cal-field-label">Şifre</span>
+          <input
+            className="mail-cal-input"
+            type="password"
+            placeholder="Şifre"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </label>
+        <div className="mail-cal-form-actions mail-cal-form-actions--inline">
+          <button
+            type="button"
+            className="mail-cal-btn mail-cal-btn--primary"
+            onClick={() =>
+              void (async () => {
+                if (
+                  !label.trim() ||
+                  !addressbookUrl.trim() ||
+                  !username.trim() ||
+                  !password
+                ) {
+                  onToast("Tüm alanlar gerekli.");
+                  return;
+                }
+                try {
+                  await createContactCardDavAccount(accessToken, {
+                    label: label.trim(),
+                    addressbookUrl: addressbookUrl.trim(),
+                    username: username.trim(),
+                    password,
+                  });
+                  setLabel("");
+                  setAddressbookUrl("");
+                  setUsername("");
+                  setPassword("");
+                  onToast("CardDAV hesabı eklendi.");
+                  void load();
+                } catch (error) {
+                  onToast(
+                    error instanceof Error ? error.message : "Eklenemedi.",
+                  );
+                }
+              })()
+            }
+          >
+            Bağla
+          </button>
+        </div>
+      </div>
+      <ul className="mail-cal-feed-list">
         {accounts.map((a) => (
-          <li key={a.id}>
+          <li key={a.id} className="mail-cal-feed-item">
             <div>
               <strong>{a.label}</strong>
               <div className="mail-d6-meta">
@@ -155,9 +177,10 @@ export function MailContactsCardDavPanel({
                 {a.lastSyncError ? ` · Hata: ${a.lastSyncError}` : ""}
               </div>
             </div>
-            <span className="mail-d6-actions">
+            <span className="mail-cal-event-actions">
               <button
                 type="button"
+                className="mail-cal-btn mail-cal-btn--ghost mail-cal-btn--sm"
                 onClick={() =>
                   void syncContactCardDavAccount(accessToken, a.id)
                     .then((r) => {
@@ -181,7 +204,7 @@ export function MailContactsCardDavPanel({
               </button>
               <button
                 type="button"
-                className="mail-d6-danger"
+                className="mail-cal-btn mail-cal-btn--danger mail-cal-btn--sm"
                 onClick={() =>
                   void deleteContactCardDavAccount(accessToken, a.id)
                     .then(() => {
@@ -202,7 +225,7 @@ export function MailContactsCardDavPanel({
           </li>
         ))}
         {accounts.length === 0 ? (
-          <li className="mail-d6-empty">CardDAV hesabı yok.</li>
+          <li className="mail-cal-feed-empty">CardDAV hesabı yok.</li>
         ) : null}
       </ul>
     </section>

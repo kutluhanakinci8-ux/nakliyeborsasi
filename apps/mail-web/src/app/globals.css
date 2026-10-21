@@ -4045,6 +4045,267 @@ html[data-mail-theme="dark"] .login-error {
   border-radius: 12px;
 }
 
+.mail-contacts-view-toggle .mail-cal-btn.is-active {
+  background: var(--accent-soft);
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* —— Kişiler premium —— */
+.mail-contacts-premium.mail-d6-inner {
+  max-width: min(1120px, 100%);
+  padding: 24px 28px 56px;
+}
+
+.mail-contacts-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px 24px;
+  margin-bottom: 20px;
+}
+
+.mail-contacts-heading h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.mail-contacts-kicker {
+  margin: 4px 0 0;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.mail-contacts-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 14px;
+}
+
+.mail-contacts-view-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  box-shadow: var(--shadow-sm);
+}
+
+.mail-contacts-import-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mail-contacts-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 300px) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 860px) {
+  .mail-contacts-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mail-contacts-aside {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: sticky;
+  top: 12px;
+}
+
+.mail-contacts-search-card {
+  padding: 14px 16px;
+}
+
+.mail-contacts-search-meta {
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.mail-contacts-form-grid {
+  grid-template-columns: 1fr;
+}
+
+.mail-contacts-composer .mail-cal-card-title {
+  margin-bottom: 10px;
+}
+
+.mail-contacts-main {
+  min-width: 0;
+}
+
+.mail-contacts-loading {
+  text-align: center;
+  color: var(--muted);
+  padding: 48px 16px;
+}
+
+.mail-contacts-empty {
+  text-align: center;
+  padding: 40px 28px;
+}
+
+.mail-contacts-empty strong {
+  display: block;
+  font-size: 1.05rem;
+  margin-bottom: 8px;
+}
+
+.mail-contacts-empty p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--muted);
+  line-height: 1.5;
+  max-width: 36rem;
+  margin-inline: auto;
+}
+
+.mail-contacts-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.mail-contacts-grid-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  padding: 20px 16px 14px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  box-shadow: var(--shadow-md);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.12s ease;
+}
+
+.mail-contacts-grid-card:hover {
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
+  box-shadow: 0 8px 24px rgba(15, 28, 45, 0.1);
+}
+
+.mail-contacts-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #fff;
+  letter-spacing: 0.02em;
+  box-shadow: inset 0 -2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.mail-contacts-avatar--sm {
+  width: 40px;
+  height: 40px;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.mail-contacts-card-body {
+  width: 100%;
+  min-width: 0;
+}
+
+.mail-contacts-name {
+  display: block;
+  font-size: 1rem;
+  margin-bottom: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mail-contacts-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: center;
+}
+
+.mail-contacts-email,
+.mail-contacts-phone {
+  font-size: 0.82rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.mail-contacts-muted {
+  font-size: 0.82rem;
+  opacity: 0.7;
+}
+
+.mail-contacts-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  width: 100%;
+  margin-top: auto;
+  padding-top: 4px;
+}
+
+.mail-contacts-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mail-contacts-list-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  box-shadow: var(--shadow-sm);
+}
+
+.mail-contacts-list-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.mail-contacts-list-info strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mail-contacts-carddav {
+  margin-top: 28px;
+}
+
 /* —— Gelen kutusu premium liste —— */
 .mail-list-inbox-premium {
   background: linear-gradient(180deg, var(--bg) 0%, var(--panel) 48px);
