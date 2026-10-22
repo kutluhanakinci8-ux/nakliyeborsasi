@@ -2318,6 +2318,8 @@ export function MailClientShell({ mail }: Props) {
           onOpenCalendar={() => switchView("calendar")}
           onOpenContacts={() => switchView("contacts")}
           onInboxListDensityChange={setInboxListDensity}
+          threadView={threadView}
+          onThreadViewChange={setThreadView}
         />
       ) : null}
       {shortcutsOpen ? (

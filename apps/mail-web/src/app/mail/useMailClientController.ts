@@ -7,6 +7,7 @@ import {
   mergeComposeTemplatesWithBuiltins,
 } from "@/lib/mailComposePresets";
 import { syncMailUnreadBadge } from "@/lib/mailUnreadBadge";
+import { readThreadViewPreference, writeThreadViewPreference } from "@/lib/mailDisplayPrefs";
 import {
   fetchInboxWithOfflineCache,
   fetchMessageWithOfflineCache,
@@ -231,7 +232,16 @@ export function useMailClientController({
   const [inboxListDensity, setInboxListDensity] =
     useState<MailInboxListDensity>("comfortable");
   const [activeSwipeRowId, setActiveSwipeRowId] = useState<string | null>(null);
-  const [threadView, setThreadView] = useState(false);
+  const [threadView, setThreadViewState] = useState(false);
+
+  const setThreadView = useCallback((enabled: boolean) => {
+    setThreadViewState(enabled);
+    writeThreadViewPreference(enabled);
+  }, []);
+
+  useEffect(() => {
+    setThreadViewState(readThreadViewPreference());
+  }, []);
   const [threads, setThreads] = useState<MailInboxThreadRow[]>([]);
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   const [threadMessages, setThreadMessages] = useState<MailInboxListItem[]>(

@@ -2,17 +2,24 @@
 
 import { useEffect, useState } from "react";
 import {
+  ensureSystemThemeListener,
   initMailTheme,
+  resolveEffectiveTheme,
   toggleMailTheme,
-  type MailTheme,
+  type MailThemeMode,
 } from "@/lib/mailTheme";
+import { initReadFontScale } from "@/lib/mailDisplayPrefs";
 
 export function MailThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<MailTheme>("light");
+  const [themeMode, setThemeMode] = useState<MailThemeMode>("light");
 
   useEffect(() => {
-    setTheme(initMailTheme());
+    setThemeMode(initMailTheme());
+    initReadFontScale();
+    ensureSystemThemeListener();
   }, []);
+
+  const effective = resolveEffectiveTheme(themeMode);
 
   return (
     <>
@@ -20,11 +27,11 @@ export function MailThemeProvider({ children }: { children: React.ReactNode }) {
       <button
         type="button"
         className="mail-theme-fab"
-        onClick={() => setTheme((prev) => toggleMailTheme(prev))}
-        title={theme === "dark" ? "Açık tema" : "Koyu tema"}
+        onClick={() => setThemeMode((prev) => toggleMailTheme(prev))}
+        title={effective === "dark" ? "Açık tema" : "Koyu tema"}
         aria-label="Tema değiştir"
       >
-        {theme === "dark" ? "☀" : "☾"}
+        {effective === "dark" ? "☀" : "☾"}
       </button>
     </>
   );

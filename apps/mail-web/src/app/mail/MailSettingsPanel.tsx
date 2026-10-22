@@ -39,11 +39,7 @@ import {
   playMailNotifyBeep,
   setMailNotifySoundEnabled,
 } from "@/lib/mailNotifySound";
-import {
-  applyMailTheme,
-  initMailTheme,
-  type MailTheme,
-} from "@/lib/mailTheme";
+import { MailDisplaySettings } from "./MailDisplaySettings";
 
 export type SettingsView =
   | "hub"
@@ -77,8 +73,8 @@ const HUB_ITEMS: HubItem[] = [
     id: "display",
     section: "quick",
     label: "Ekran ve görünüm",
-    subtitle: "Açık ve koyu tema",
-    keywords: "tema görünüm dark light",
+    subtitle: "Tema, yoğunluk, okuma",
+    keywords: "tema görünüm dark light yoğunluk konuşma yazı",
   },
   {
     id: "mailPrefs",
@@ -186,6 +182,8 @@ type Props = {
   onOpenCalendar?: () => void;
   onOpenContacts?: () => void;
   onInboxListDensityChange?: (density: MailInboxListDensity) => void;
+  threadView?: boolean;
+  onThreadViewChange?: (enabled: boolean) => void;
   initialView?: SettingsView;
   deliverabilityDmarcFocus?: boolean;
   notificationsPwaFocus?: boolean;
@@ -199,6 +197,8 @@ export function MailSettingsPanel({
   onOpenCalendar,
   onOpenContacts,
   onInboxListDensityChange,
+  threadView = false,
+  onThreadViewChange,
   initialView,
   deliverabilityDmarcFocus = false,
   notificationsPwaFocus = false,
@@ -207,7 +207,6 @@ export function MailSettingsPanel({
 }: Props) {
   const [view, setView] = useState<SettingsView>(initialView ?? "hub");
   const [query, setQuery] = useState("");
-  const [theme, setTheme] = useState<MailTheme>("light");
   const [pushStatus, setPushStatus] = useState("");
   const [pushConfigured, setPushConfigured] = useState(false);
   const [notifySound, setNotifySound] = useState(false);
@@ -220,8 +219,6 @@ export function MailSettingsPanel({
   const [autoReplySaving, setAutoReplySaving] = useState(false);
   const [inboxListDensity, setInboxListDensity] =
     useState<MailInboxListDensity>("comfortable");
-  const [mailPrefsStatus, setMailPrefsStatus] = useState("");
-  const [mailPrefsSaving, setMailPrefsSaving] = useState(false);
   const [privacyStatus, setPrivacyStatus] = useState("");
   const [privacyExporting, setPrivacyExporting] = useState(false);
   const [aiMailConsent, setAiMailConsent] = useState(false);
@@ -250,7 +247,6 @@ export function MailSettingsPanel({
   }, [initialView]);
 
   useEffect(() => {
-    setTheme(initMailTheme());
     setNotifySound(isMailNotifySoundEnabled());
   }, []);
 
@@ -580,92 +576,29 @@ export function MailSettingsPanel({
         "Posta",
         <>
           <p className="mail-settings-lead">
-            Gelen kutusu satır aralığı (Outlook «Posta» yoğunluğu). Tercih
-            kurumsal posta kutusu için sunucuda saklanır.
+            Liste yoğunluğu ve okuma görünümü artık{" "}
+            <strong>Ekran ve görünüm</strong> altında. Kısayol:
           </p>
-          <div className="mail-settings-theme-options">
-            {(
-              [
-                { id: "comfortable" as MailInboxListDensity, label: "Rahat" },
-                { id: "compact" as MailInboxListDensity, label: "Sıkı" },
-              ] as const
-            ).map((option) => (
-              <button
-                key={option.id}
-                type="button"
-                className={
-                  inboxListDensity === option.id
-                    ? "mail-settings-theme-btn active"
-                    : "mail-settings-theme-btn"
-                }
-                onClick={() => setInboxListDensity(option.id)}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-          {mailPrefsStatus ? <p>{mailPrefsStatus}</p> : null}
-          <div className="compose-actions">
-            <button
-              type="button"
-              disabled={mailPrefsSaving}
-              onClick={() =>
-                void (async () => {
-                  setMailPrefsSaving(true);
-                  setMailPrefsStatus("");
-                  try {
-                    const result = await updateInboxPreferences(accessToken, {
-                      inboxListDensity,
-                    });
-                    const saved = result.preferences.inboxListDensity;
-                    setInboxListDensity(saved);
-                    onInboxListDensityChange?.(saved);
-                    setMailPrefsStatus("Kaydedildi.");
-                  } catch (error) {
-                    setMailPrefsStatus(
-                      error instanceof Error
-                        ? error.message
-                        : "Kaydedilemedi.",
-                    );
-                  } finally {
-                    setMailPrefsSaving(false);
-                  }
-                })()
-              }
-            >
-              {mailPrefsSaving ? "Kaydediliyor…" : "Kaydet"}
-            </button>
-          </div>
+          <button
+            type="button"
+            className="mail-settings-btn-secondary"
+            onClick={() => setView("display")}
+          >
+            Ekran ve görünümü aç
+          </button>
         </>,
       );
       break;
     case "display":
       content = renderDetail(
         "Ekran ve görünüm",
-        <>
-          <p className="mail-settings-lead">
-            Webmail teması. Tercih tarayıcıda saklanır.
-          </p>
-          <div className="mail-settings-theme-options">
-            {(["light", "dark"] as MailTheme[]).map((option) => (
-              <button
-                key={option}
-                type="button"
-                className={
-                  theme === option
-                    ? "mail-settings-theme-btn active"
-                    : "mail-settings-theme-btn"
-                }
-                onClick={() => {
-                  applyMailTheme(option);
-                  setTheme(option);
-                }}
-              >
-                {option === "light" ? "Açık" : "Koyu"}
-              </button>
-            ))}
-          </div>
-        </>,
+        <MailDisplaySettings
+          accessToken={accessToken}
+          inboxListDensity={inboxListDensity}
+          onInboxListDensityChange={onInboxListDensityChange}
+          threadView={threadView}
+          onThreadViewChange={(enabled) => onThreadViewChange?.(enabled)}
+        />,
       );
       break;
     case "accounts":
