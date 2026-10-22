@@ -55,16 +55,22 @@ export function MailContactsPanel({
   >(null);
   const [viewMode, setViewMode] = useState<ContactsViewMode>("grid");
   const [search, setSearch] = useState("");
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
+    if (!accessToken) {
+      return;
+    }
     setLoading(true);
+    setLoadError(null);
     try {
       const data = await fetchOrgContacts(accessToken);
-      setContacts(data.contacts);
+      setContacts(data.contacts ?? []);
     } catch (error) {
-      onToast(
-        error instanceof Error ? error.message : "Kişiler yüklenemedi.",
-      );
+      const message =
+        error instanceof Error ? error.message : "Kişiler yüklenemedi.";
+      setLoadError(message);
+      onToast(message);
     } finally {
       setLoading(false);
     }
@@ -72,6 +78,16 @@ export function MailContactsPanel({
 
   useEffect(() => {
     void load();
+  }, [load]);
+
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        void load();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
   }, [load]);
 
   useEffect(() => {
@@ -278,9 +294,22 @@ export function MailContactsPanel({
         </aside>
 
         <main className="mail-contacts-main">
-          {loading ? (
+          {loadError ? (
+            <div className="mail-contacts-empty mail-cal-card">
+              <strong>Kişiler yüklenemedi</strong>
+              <p>{loadError}</p>
+              <button
+                type="button"
+                className="mail-cal-btn mail-cal-btn--primary"
+                onClick={() => void load()}
+              >
+                Yeniden dene
+              </button>
+            </div>
+          ) : null}
+          {!loadError && loading ? (
             <p className="mail-contacts-loading">Yükleniyor…</p>
-          ) : filteredContacts.length === 0 ? (
+          ) : !loadError && filteredContacts.length === 0 ? (
             <div className="mail-contacts-empty mail-cal-card">
               <strong>
                 {search.trim() ? "Aramanızla eşleşen kişi yok." : "Henüz kişi yok."}
@@ -290,7 +319,7 @@ export function MailContactsPanel({
                 Nextcloud adres defterinizi de bağlayabilirsiniz.
               </p>
             </div>
-          ) : viewMode === "grid" ? (
+          ) : !loadError && viewMode === "grid" ? (
             <ul className="mail-contacts-grid" aria-label="Kişi kartları">
               {filteredContacts.map((c) => (
                 <li key={c.id} className="mail-contacts-grid-card">
@@ -373,7 +402,7 @@ export function MailContactsPanel({
                 </li>
               ))}
             </ul>
-          ) : (
+          ) : !loadError ? (
             <ul className="mail-contacts-list" aria-label="Kişi listesi">
               {filteredContacts.map((c) => (
                 <li key={c.id} className="mail-contacts-list-row">
@@ -450,7 +479,7 @@ export function MailContactsPanel({
                 </li>
               ))}
             </ul>
-          )}
+          ) : null}
         </main>
       </div>
 

@@ -15,13 +15,14 @@ import { InstagramPublicStatsService } from "./InstagramPublicStatsService";
 import { SubscriptionCatalogModule } from "../subscription/SubscriptionCatalogModule";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { UserAccountEntity } from "../../infrastructure/database/entities/UserAccountEntity";
+import { MailMailboxEntity } from "../../infrastructure/database/entities/MailMailboxEntity";
 import { UserTotpService } from "./UserTotpService";
 
 @Module({
   imports: [
     forwardRef(() => NotificationModule),
     SubscriptionCatalogModule,
-    TypeOrmModule.forFeature([UserAccountEntity]),
+    TypeOrmModule.forFeature([UserAccountEntity, MailMailboxEntity]),
     PassportModule.register({ defaultStrategy: "jwt" }),
     JwtModule.registerAsync({
       imports: [ConfigModule],

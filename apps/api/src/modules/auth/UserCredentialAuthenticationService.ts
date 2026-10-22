@@ -11,6 +11,7 @@ import {
 import { UserAccountEntity } from "../../infrastructure/database/entities/UserAccountEntity";
 import { CompanyEntity } from "../../infrastructure/database/entities/CompanyEntity";
 import { CompanyMembershipEntity } from "../../infrastructure/database/entities/CompanyMembershipEntity";
+import { MailMailboxEntity } from "../../infrastructure/database/entities/MailMailboxEntity";
 import { CompanySubscriptionEntity } from "../../infrastructure/database/entities/CompanySubscriptionEntity";
 import { PasswordHashingService } from "./PasswordHashingService";
 import { RegisterCompanyUserRequestDto } from "./RegisterCompanyUserRequestDto";
@@ -28,6 +29,8 @@ export class UserCredentialAuthenticationService {
     private readonly companyMembershipRepository: Repository<CompanyMembershipEntity>,
     @InjectRepository(CompanySubscriptionEntity)
     private readonly companySubscriptionRepository: Repository<CompanySubscriptionEntity>,
+    @InjectRepository(MailMailboxEntity)
+    private readonly mailMailboxRepository: Repository<MailMailboxEntity>,
     private readonly passwordHashingService: PasswordHashingService,
     private readonly subscriptionPlanCatalog: SubscriptionPlanCatalog,
   ) {}
@@ -125,7 +128,10 @@ export class UserCredentialAuthenticationService {
     if (!passwordValid) {
       throw new AuthenticationException("Invalid email or password");
     }
-    const primaryMembership = user.memberships[0];
+    const primaryMembership = await this.pickPrimaryMembership(
+      user.memberships,
+      user.emailAddress,
+    );
     if (!primaryMembership) {
       throw new AuthenticationException("User has no company membership");
     }
@@ -153,7 +159,10 @@ export class UserCredentialAuthenticationService {
     if (!user || user.memberships.length === 0) {
       throw new AuthenticationException("User has no company membership");
     }
-    const primaryMembership = user.memberships[0];
+    const primaryMembership = await this.pickPrimaryMembership(
+      user.memberships,
+      user.emailAddress,
+    );
     const roleCodes = user.memberships
       .filter(
         (membership) => membership.companyId === primaryMembership.companyId,
@@ -166,6 +175,40 @@ export class UserCredentialAuthenticationService {
       roleCodes,
     });
     return this.resolveSessionContext(context);
+  }
+
+  /** Posta kutusu olan organizasyonu JWT companyId olarak seç (kişi/takvim ile gelen kutusu aynı org). */
+  private async pickPrimaryMembership(
+    memberships: CompanyMembershipEntity[],
+    emailAddress: string,
+  ): Promise<CompanyMembershipEntity> {
+    if (memberships.length === 0) {
+      throw new AuthenticationException("User has no company membership");
+    }
+    const orgIds = memberships.map((m) => m.companyId);
+    const mailboxByEmail = await this.mailMailboxRepository.findOne({
+      where: { emailAddress: emailAddress.toLowerCase() },
+    });
+    if (
+      mailboxByEmail &&
+      orgIds.includes(mailboxByEmail.organizationId)
+    ) {
+      const match = memberships.find(
+        (m) => m.companyId === mailboxByEmail.organizationId,
+      );
+      if (match) {
+        return match;
+      }
+    }
+    for (const membership of memberships) {
+      const mailboxCount = await this.mailMailboxRepository.count({
+        where: { organizationId: membership.companyId },
+      });
+      if (mailboxCount > 0) {
+        return membership;
+      }
+    }
+    return memberships[0];
   }
 
   private normalizeWebsiteUrl(raw?: string): string | null {
