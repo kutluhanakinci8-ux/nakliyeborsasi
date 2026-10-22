@@ -74,18 +74,8 @@ export function MailDisplaySettings({
 
   return (
     <div className="mail-display-settings">
-      <p className="mail-display-intro">
-        Gmail ve Outlook’taki «Görünüm» benzeri: renk modu, liste yoğunluğu ve
-        okuma alanı. Tema ve yazı boyutu tarayıcıda; yoğunluk kurumsal posta
-        kutunuzda saklanır.
-      </p>
-
       <section className="mail-display-section">
         <h3 className="mail-display-section-title">Renk modu</h3>
-        <p className="mail-display-section-hint">
-          Outlook «Koyu mod», Gmail «Temayı ayarla», iCloud «Açık / Koyu /
-          Otomatik».
-        </p>
         <div className="mail-display-theme-grid">
           {THEME_OPTIONS.map((option) => (
             <button
@@ -117,9 +107,6 @@ export function MailDisplaySettings({
 
       <section className="mail-display-section">
         <h3 className="mail-display-section-title">Gelen kutusu yoğunluğu</h3>
-        <p className="mail-display-section-hint">
-          Outlook «Görünüm → Yoğunluk»; Gmail «Görünüm yoğunluğu» (Rahat / Sıkı).
-        </p>
         <div className="mail-display-segment">
           {(
             [
@@ -176,9 +163,6 @@ export function MailDisplaySettings({
 
       <section className="mail-display-section">
         <h3 className="mail-display-section-title">Okuma alanı</h3>
-        <p className="mail-display-section-hint">
-          Mesaj gövdesi yazı boyutu (Yahoo / Outlook okuma boyutu benzeri).
-        </p>
         <div className="mail-display-segment">
           {(
             [
@@ -205,42 +189,19 @@ export function MailDisplaySettings({
         </div>
       </section>
 
-      <section className="mail-display-section">
-        <h3 className="mail-display-section-title">Konuşma görünümü</h3>
-        <p className="mail-display-section-hint">
-          Gmail «Konuşma görünümü» — aynı konudaki iletileri tek satırda grupla.
-        </p>
+      <section className="mail-display-section mail-display-section--toggle">
         <label className="mail-display-toggle-row">
-          <span>Konuşmaları grupla</span>
+          <span className="mail-display-section-title mail-display-section-title--inline">
+            Konuşma görünümü
+          </span>
           <input
             type="checkbox"
             checked={threadView}
             onChange={(e) => onThreadViewChange(e.target.checked)}
+            aria-label="Konuşma görünümü"
           />
         </label>
       </section>
-
-      <details className="mail-display-compare">
-        <summary>Rakiplerde bu sekmede neler var?</summary>
-        <ul>
-          <li>
-            <strong>Gmail:</strong> Açık / Koyu / Sistem, yoğunluk, okuma paneli
-            konumu, konuşma görünümü.
-          </li>
-          <li>
-            <strong>Outlook:</strong> Tema, yoğunluk, odaklanmış gelen kutusu,
-            okuma bölmesi.
-          </li>
-          <li>
-            <strong>Proton:</strong> Açık / Koyu / Sistem, yoğunluk, e-posta
-            birleştirme.
-          </li>
-          <li>
-            <strong>Lerta Posta:</strong> Yukarıdaki seçenler; odaklanmış gelen
-            kutusu ve özel arka plan planlanıyor.
-          </li>
-        </ul>
-      </details>
     </div>
   );
 }
