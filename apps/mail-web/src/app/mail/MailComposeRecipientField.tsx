@@ -49,9 +49,7 @@ export function MailComposeRecipientField({
 
   const suggestions = useMemo(() => {
     if (!query) {
-      return contacts
-        .filter((c) => c.email)
-        .slice(0, 8);
+      return [];
     }
     const q = query.toLowerCase();
     return contacts
@@ -66,7 +64,7 @@ export function MailComposeRecipientField({
       .slice(0, 8);
   }, [contacts, query]);
 
-  const showList = open && suggestions.length > 0;
+  const showList = open && query.length > 0 && suggestions.length > 0;
 
   useEffect(() => {
     setHighlight(0);
@@ -108,14 +106,19 @@ export function MailComposeRecipientField({
         aria-expanded={showList}
         aria-controls={showList ? listId : undefined}
         aria-autocomplete="list"
-        onFocus={() => setOpen(true)}
         onChange={(e) => {
-          onChange(e.target.value);
-          setOpen(true);
+          const next = e.target.value;
+          onChange(next);
+          const { query: nextQuery } = activeRecipientQuery(next);
+          setOpen(nextQuery.length > 0);
         }}
         onKeyDown={(e) => {
           if (!showList) {
-            if (e.key === "ArrowDown" && suggestions.length > 0) {
+            if (
+              e.key === "ArrowDown" &&
+              activeRecipientQuery(value).query.length > 0 &&
+              suggestions.length > 0
+            ) {
               setOpen(true);
               e.preventDefault();
             }
@@ -165,7 +168,7 @@ export function MailComposeRecipientField({
           ))}
         </ul>
       ) : null}
-      {open && contacts.length === 0 && query.length > 0 ? (
+      {open && query.length > 0 && contacts.length === 0 ? (
         <p className="compose-contact-suggest-empty">
           Kayıtlı kişi bulunamadı. Kişiler sekmesinden ekleyin.
         </p>
