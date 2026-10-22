@@ -2939,6 +2939,15 @@ html[data-mail-read-font="large"] .mail-read--premium .mail-read-body {
   font-weight: 650;
 }
 
+.mail-display-section-title--inline {
+  margin: 0;
+}
+
+.mail-display-section--toggle {
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+
 .mail-display-section-hint {
   margin: 0 0 14px;
   font-size: 0.8rem;
