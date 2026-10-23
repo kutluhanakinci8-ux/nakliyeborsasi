@@ -1146,7 +1146,11 @@ export function MailSettingsPanel({
   return (
     <div className="compose-overlay" role="presentation" onClick={onClose}>
       <div
-        className="compose-dialog mail-settings-dialog"
+        className={
+          view === "mailPrefs"
+            ? "compose-dialog mail-settings-dialog mail-settings-dialog--posta"
+            : "compose-dialog mail-settings-dialog"
+        }
         role="dialog"
         aria-label="Ayarlar"
         onClick={(e) => e.stopPropagation()}

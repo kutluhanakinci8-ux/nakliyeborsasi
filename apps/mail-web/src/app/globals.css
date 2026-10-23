@@ -2536,45 +2536,351 @@ html[data-mail-theme="dark"] .login-error {
   color: var(--muted);
 }
 
-.mail-posta-settings {
+.mail-posta-settings--premium {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
+  padding-bottom: 8px;
 }
 
-.mail-posta-block {
-  padding: 14px 0;
-  border-top: 1px solid var(--border);
+.mail-posta-intro {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--muted);
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent) 10%, var(--panel)) 0%,
+    var(--panel) 100%
+  );
+  border: 1px solid color-mix(in srgb, var(--accent) 14%, var(--border));
 }
 
-.mail-posta-block--muted {
-  opacity: 0.92;
+.mail-posta-intro-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
 }
 
-.mail-posta-block-title {
-  margin: 0 0 12px;
-  font-size: 0.9rem;
+.mail-posta-card {
+  padding: 16px 16px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  box-shadow: var(--shadow-sm);
+}
+
+.mail-posta-card--muted {
+  background: color-mix(in srgb, var(--bg) 55%, var(--panel));
+}
+
+.mail-posta-card-head {
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+}
+
+.mail-posta-card-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.mail-posta-card-desc {
+  margin: 6px 0 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.mail-posta-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.mail-posta-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+  gap: 12px 16px;
+  align-items: start;
+}
+
+@media (max-width: 520px) {
+  .mail-posta-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mail-posta-row-title {
+  display: block;
+  font-size: 0.86rem;
   font-weight: 600;
   color: var(--text);
 }
 
-.mail-posta-segment {
-  margin-top: 10px;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
-}
-
-.mail-posta-segment-label {
-  font-size: 0.82rem;
-  color: var(--muted);
-}
-
-.mail-posta-field-hint {
+.mail-posta-row-hint {
   display: block;
-  margin-top: 6px;
-  font-size: 0.78rem;
+  margin-top: 4px;
+  font-size: 0.76rem;
+  line-height: 1.4;
   color: var(--muted);
+}
+
+.mail-posta-chips {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+}
+
+.mail-posta-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 44px;
+  padding: 8px 6px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.mail-posta-chip:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+}
+
+.mail-posta-chip.is-active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--panel));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+.mail-posta-chip:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.mail-posta-chip-label {
+  line-height: 1.2;
+}
+
+.mail-posta-chip-hint {
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.mail-posta-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  transition: background 0.15s ease;
+}
+
+.mail-posta-toggle:hover:not(.mail-posta-toggle--disabled) {
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+}
+
+.mail-posta-toggle--disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.mail-posta-toggle-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.mail-posta-toggle-track {
+  flex-shrink: 0;
+  position: relative;
+  width: 44px;
+  height: 26px;
+  margin-top: 2px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--muted) 35%, var(--border));
+  transition: background 0.2s ease;
+}
+
+.mail-posta-toggle-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease;
+}
+
+.mail-posta-toggle-input:checked + .mail-posta-toggle-track {
+  background: var(--accent);
+}
+
+.mail-posta-toggle-input:checked + .mail-posta-toggle-track .mail-posta-toggle-thumb {
+  transform: translateX(18px);
+}
+
+.mail-posta-toggle-input:focus-visible + .mail-posta-toggle-track {
+  outline: 2px solid color-mix(in srgb, var(--accent) 50%, transparent);
+  outline-offset: 2px;
+}
+
+.mail-posta-toggle-label {
+  display: block;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.mail-posta-toggle-hint {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.76rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.mail-posta-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 4px;
+  padding: 14px 0 4px;
+  border-top: 1px solid var(--border);
+  background: linear-gradient(
+    to top,
+    var(--panel) 75%,
+    color-mix(in srgb, var(--panel) 0%, transparent)
+  );
+}
+
+.mail-posta-status {
+  margin: 0;
+  flex: 1 1 200px;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.mail-posta-status--hint {
+  color: var(--muted);
+}
+
+.mail-posta-status--ok {
+  color: #166534;
+  font-weight: 500;
+}
+
+.mail-posta-status--err {
+  color: #b91c1c;
+}
+
+html[data-mail-theme="dark"] .mail-posta-status--ok {
+  color: #86efac;
+}
+
+.mail-posta-save {
+  flex-shrink: 0;
+  min-width: 120px;
+  padding: 11px 22px;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 650;
+  cursor: pointer;
+  color: var(--compose-btn-text, #fff);
+  background: var(--compose-btn-bg, var(--accent));
+  box-shadow: var(--shadow-sm);
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.mail-posta-save:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.mail-posta-save:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.mail-posta-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mail-posta-skeleton-line {
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--border) 80%, var(--panel)) 0%,
+    color-mix(in srgb, var(--border) 40%, var(--panel)) 50%,
+    color-mix(in srgb, var(--border) 80%, var(--panel)) 100%
+  );
+  background-size: 200% 100%;
+  animation: mail-posta-shimmer 1.2s ease-in-out infinite;
+}
+
+.mail-posta-skeleton-line--lead {
+  height: 52px;
+}
+
+.mail-posta-skeleton-card {
+  height: 140px;
+  border-radius: 14px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--border) 70%, var(--panel)) 0%,
+    color-mix(in srgb, var(--border) 35%, var(--panel)) 50%,
+    color-mix(in srgb, var(--border) 70%, var(--panel)) 100%
+  );
+  background-size: 200% 100%;
+  animation: mail-posta-shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes mail-posta-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
 }
 
 .mail-settings-inline-link {
