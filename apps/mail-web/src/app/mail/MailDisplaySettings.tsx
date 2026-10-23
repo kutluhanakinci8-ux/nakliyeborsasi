@@ -19,8 +19,6 @@ type Props = {
   accessToken: string;
   inboxListDensity: MailInboxListDensity;
   onInboxListDensityChange?: (density: MailInboxListDensity) => void;
-  threadView: boolean;
-  onThreadViewChange: (enabled: boolean) => void;
 };
 
 const THEME_OPTIONS: {
@@ -53,8 +51,6 @@ export function MailDisplaySettings({
   accessToken,
   inboxListDensity,
   onInboxListDensityChange,
-  threadView,
-  onThreadViewChange,
 }: Props) {
   const [themeMode, setThemeMode] = useState<MailThemeMode>("light");
   const [density, setDensity] = useState(inboxListDensity);

@@ -595,8 +595,6 @@ export function MailSettingsPanel({
           accessToken={accessToken}
           inboxListDensity={inboxListDensity}
           onInboxListDensityChange={onInboxListDensityChange}
-          threadView={threadView}
-          onThreadViewChange={(enabled) => onThreadViewChange?.(enabled)}
         />,
       );
       break;

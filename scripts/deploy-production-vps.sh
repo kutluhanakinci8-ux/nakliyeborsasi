@@ -77,6 +77,10 @@ if [[ -x scripts/apply-mail-sa3-inbox-list-density-schema.sh ]]; then
   bash scripts/apply-mail-sa3-inbox-list-density-schema.sh "$INSTALL_DIR" || true
 fi
 
+if [[ -x scripts/apply-mail-sa4-posta-preferences-schema.sh ]]; then
+  bash scripts/apply-mail-sa4-posta-preferences-schema.sh "$INSTALL_DIR" || true
+fi
+
 if [[ -x scripts/apply-mail-sent-trash-schema.sh ]]; then
   bash scripts/apply-mail-sent-trash-schema.sh "$INSTALL_DIR" || true
 fi
