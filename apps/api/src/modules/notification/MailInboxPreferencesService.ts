@@ -2,6 +2,20 @@ import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { MailInboxPreferencesEntity } from "../../infrastructure/database/entities/MailInboxPreferencesEntity";
+import {
+  normalizeAfterMessageAction,
+  normalizeDefaultReplyMode,
+  normalizeRemoteImagesPolicy,
+  normalizeReplyQuoteMode,
+  normalizeSwipePrimaryAction,
+  normalizeUndoSendSeconds,
+  type MailAfterMessageAction,
+  type MailDefaultReplyMode,
+  type MailRemoteImagesPolicy,
+  type MailReplyQuoteMode,
+  type MailSwipePrimaryAction,
+  type UndoSendSeconds,
+} from "./MailInboxPostaPreferenceValues";
 
 export type MailInboxListDensity = "comfortable" | "compact";
 
@@ -12,6 +26,16 @@ export type MailInboxPreferencesDto = {
   autoReplyActiveFrom: string | null;
   autoReplyActiveUntil: string | null;
   inboxListDensity: MailInboxListDensity;
+  undoSendSeconds: UndoSendSeconds;
+  defaultReplyMode: MailDefaultReplyMode;
+  remoteImagesPolicy: MailRemoteImagesPolicy;
+  afterMessageAction: MailAfterMessageAction;
+  confirmPermanentDelete: boolean;
+  confirmBulkDelete: boolean;
+  threadViewEnabled: boolean;
+  swipePrimaryAction: MailSwipePrimaryAction;
+  focusedInboxEnabled: boolean;
+  replyQuoteMode: MailReplyQuoteMode;
 };
 
 export type MailAutoReplyConfig = {
@@ -58,6 +82,16 @@ export class MailInboxPreferencesService {
       autoReplyActiveFrom?: string | null;
       autoReplyActiveUntil?: string | null;
       inboxListDensity?: MailInboxListDensity;
+      undoSendSeconds?: number;
+      defaultReplyMode?: MailDefaultReplyMode;
+      remoteImagesPolicy?: MailRemoteImagesPolicy;
+      afterMessageAction?: MailAfterMessageAction;
+      confirmPermanentDelete?: boolean;
+      confirmBulkDelete?: boolean;
+      threadViewEnabled?: boolean;
+      swipePrimaryAction?: MailSwipePrimaryAction;
+      focusedInboxEnabled?: boolean;
+      replyQuoteMode?: MailReplyQuoteMode;
     },
   ): Promise<MailInboxPreferencesDto> {
     let row = await this.preferencesRepository.findOne({
@@ -73,6 +107,16 @@ export class MailInboxPreferencesService {
         autoReplyActiveUntil: null,
         inboxListDensity: "comfortable",
         lastDigestSentOn: null,
+        undoSendSeconds: 5,
+        defaultReplyMode: "reply",
+        remoteImagesPolicy: "show",
+        afterMessageAction: "list",
+        confirmPermanentDelete: true,
+        confirmBulkDelete: true,
+        threadViewEnabled: false,
+        swipePrimaryAction: "archive",
+        focusedInboxEnabled: false,
+        replyQuoteMode: "full",
       });
     }
     if (input.dailyDigestEnabled !== undefined) {
@@ -99,6 +143,42 @@ export class MailInboxPreferencesService {
       row.inboxListDensity =
         input.inboxListDensity === "compact" ? "compact" : "comfortable";
     }
+    if (input.undoSendSeconds !== undefined) {
+      row.undoSendSeconds = normalizeUndoSendSeconds(input.undoSendSeconds);
+    }
+    if (input.defaultReplyMode !== undefined) {
+      row.defaultReplyMode = normalizeDefaultReplyMode(input.defaultReplyMode);
+    }
+    if (input.remoteImagesPolicy !== undefined) {
+      row.remoteImagesPolicy = normalizeRemoteImagesPolicy(
+        input.remoteImagesPolicy,
+      );
+    }
+    if (input.afterMessageAction !== undefined) {
+      row.afterMessageAction = normalizeAfterMessageAction(
+        input.afterMessageAction,
+      );
+    }
+    if (input.confirmPermanentDelete !== undefined) {
+      row.confirmPermanentDelete = Boolean(input.confirmPermanentDelete);
+    }
+    if (input.confirmBulkDelete !== undefined) {
+      row.confirmBulkDelete = Boolean(input.confirmBulkDelete);
+    }
+    if (input.threadViewEnabled !== undefined) {
+      row.threadViewEnabled = Boolean(input.threadViewEnabled);
+    }
+    if (input.swipePrimaryAction !== undefined) {
+      row.swipePrimaryAction = normalizeSwipePrimaryAction(
+        input.swipePrimaryAction,
+      );
+    }
+    if (input.focusedInboxEnabled !== undefined) {
+      row.focusedInboxEnabled = Boolean(input.focusedInboxEnabled);
+    }
+    if (input.replyQuoteMode !== undefined) {
+      row.replyQuoteMode = normalizeReplyQuoteMode(input.replyQuoteMode);
+    }
     await this.preferencesRepository.save(row);
     return this.get(organizationId);
   }
@@ -114,6 +194,16 @@ export class MailInboxPreferencesService {
       autoReplyActiveUntil: row?.autoReplyActiveUntil?.toISOString() ?? null,
       inboxListDensity:
         row?.inboxListDensity === "compact" ? "compact" : "comfortable",
+      undoSendSeconds: normalizeUndoSendSeconds(row?.undoSendSeconds),
+      defaultReplyMode: normalizeDefaultReplyMode(row?.defaultReplyMode),
+      remoteImagesPolicy: normalizeRemoteImagesPolicy(row?.remoteImagesPolicy),
+      afterMessageAction: normalizeAfterMessageAction(row?.afterMessageAction),
+      confirmPermanentDelete: row?.confirmPermanentDelete ?? true,
+      confirmBulkDelete: row?.confirmBulkDelete ?? true,
+      threadViewEnabled: row?.threadViewEnabled ?? false,
+      swipePrimaryAction: normalizeSwipePrimaryAction(row?.swipePrimaryAction),
+      focusedInboxEnabled: row?.focusedInboxEnabled ?? false,
+      replyQuoteMode: normalizeReplyQuoteMode(row?.replyQuoteMode),
     };
   }
 

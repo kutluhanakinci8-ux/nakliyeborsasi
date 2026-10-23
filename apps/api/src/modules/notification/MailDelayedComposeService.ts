@@ -14,7 +14,7 @@ import {
 import { MailMailboxComposeService } from "./MailMailboxComposeService";
 import { MailComposeDraftService } from "./MailComposeDraftService";
 
-const MAX_DELAY_SECONDS = 10;
+const MAX_DELAY_SECONDS = 30;
 const DEFAULT_DELAY_SECONDS = 5;
 
 @Injectable()

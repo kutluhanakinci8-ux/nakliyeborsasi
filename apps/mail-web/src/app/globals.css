@@ -2530,6 +2530,86 @@ html[data-mail-theme="dark"] .login-error {
   color: var(--text);
 }
 
+.mail-display-section-hint {
+  margin: 12px 0 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.mail-posta-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.mail-posta-block {
+  padding: 14px 0;
+  border-top: 1px solid var(--border);
+}
+
+.mail-posta-block--muted {
+  opacity: 0.92;
+}
+
+.mail-posta-block-title {
+  margin: 0 0 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.mail-posta-segment {
+  margin-top: 10px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.mail-posta-segment-label {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.mail-posta-field-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.mail-settings-inline-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--accent);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.mail-remote-images-banner {
+  margin: 0 0 10px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--accent) 8%, var(--panel));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mail-remote-images-banner button {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  cursor: pointer;
+}
+
 .mail-session-expired-banner button {
   flex-shrink: 0;
   padding: 6px 14px;

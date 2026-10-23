@@ -40,6 +40,7 @@ import {
   setMailNotifySoundEnabled,
 } from "@/lib/mailNotifySound";
 import { MailDisplaySettings } from "./MailDisplaySettings";
+import { MailPostaSettings } from "./MailPostaSettings";
 
 export type SettingsView =
   | "hub"
@@ -80,8 +81,8 @@ const HUB_ITEMS: HubItem[] = [
     id: "mailPrefs",
     section: "quick",
     label: "Posta",
-    subtitle: "Gelen kutusu liste yoğunluğu",
-    keywords: "posta liste yoğunluk sıkı rahat compact",
+    subtitle: "Geri al gönder, yanıt, uzak resim",
+    keywords: "posta geri al undo yanıt reply uzak resim konuşma",
   },
   {
     id: "accounts",
@@ -184,6 +185,9 @@ type Props = {
   onInboxListDensityChange?: (density: MailInboxListDensity) => void;
   threadView?: boolean;
   onThreadViewChange?: (enabled: boolean) => void;
+  onMailPostaPreferencesSaved?: (
+    prefs: import("@/lib/mailApi").MailInboxPreferences,
+  ) => void;
   initialView?: SettingsView;
   deliverabilityDmarcFocus?: boolean;
   notificationsPwaFocus?: boolean;
@@ -199,6 +203,7 @@ export function MailSettingsPanel({
   onInboxListDensityChange,
   threadView = false,
   onThreadViewChange,
+  onMailPostaPreferencesSaved,
   initialView,
   deliverabilityDmarcFocus = false,
   notificationsPwaFocus = false,
@@ -574,19 +579,13 @@ export function MailSettingsPanel({
     case "mailPrefs":
       content = renderDetail(
         "Posta",
-        <>
-          <p className="mail-settings-lead">
-            Liste yoğunluğu ve okuma görünümü artık{" "}
-            <strong>Ekran ve görünüm</strong> altında. Kısayol:
-          </p>
-          <button
-            type="button"
-            className="mail-settings-btn-secondary"
-            onClick={() => setView("display")}
-          >
-            Ekran ve görünümü aç
-          </button>
-        </>,
+        <MailPostaSettings
+          accessToken={accessToken}
+          threadView={threadView}
+          onThreadViewChange={(enabled) => onThreadViewChange?.(enabled)}
+          onPreferencesSaved={onMailPostaPreferencesSaved}
+          onOpenDisplay={() => setView("display")}
+        />,
       );
       break;
     case "display":

@@ -460,6 +460,16 @@ export class CompanyMailInboxController {
         autoReplyActiveFrom: body.autoReplyActiveFrom,
         autoReplyActiveUntil: body.autoReplyActiveUntil,
         inboxListDensity: body.inboxListDensity,
+        undoSendSeconds: body.undoSendSeconds,
+        defaultReplyMode: body.defaultReplyMode,
+        remoteImagesPolicy: body.remoteImagesPolicy,
+        afterMessageAction: body.afterMessageAction,
+        confirmPermanentDelete: body.confirmPermanentDelete,
+        confirmBulkDelete: body.confirmBulkDelete,
+        threadViewEnabled: body.threadViewEnabled,
+        swipePrimaryAction: body.swipePrimaryAction,
+        focusedInboxEnabled: body.focusedInboxEnabled,
+        replyQuoteMode: body.replyQuoteMode,
       },
     );
     return { preferences };

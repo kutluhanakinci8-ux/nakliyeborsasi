@@ -189,19 +189,10 @@ export function MailDisplaySettings({
         </div>
       </section>
 
-      <section className="mail-display-section mail-display-section--toggle">
-        <label className="mail-display-toggle-row">
-          <span className="mail-display-section-title mail-display-section-title--inline">
-            Konuşma görünümü
-          </span>
-          <input
-            type="checkbox"
-            checked={threadView}
-            onChange={(e) => onThreadViewChange(e.target.checked)}
-            aria-label="Konuşma görünümü"
-          />
-        </label>
-      </section>
+      <p className="mail-display-section-hint">
+        Konuşma görünümü ve geri al gönder süresi{" "}
+        <strong>Ayarlar → Posta</strong> altında.
+      </p>
     </div>
   );
 }

@@ -907,6 +907,13 @@ export type ComposeMailResult =
 
 export type MailInboxListDensity = "comfortable" | "compact";
 
+export type MailDefaultReplyMode = "reply" | "reply_all";
+export type MailRemoteImagesPolicy = "show" | "ask" | "hide";
+export type MailAfterMessageAction = "list" | "next" | "previous";
+export type MailSwipePrimaryAction = "archive" | "delete" | "read";
+export type MailReplyQuoteMode = "full" | "trimmed" | "none";
+export type UndoSendSeconds = 0 | 5 | 10 | 20 | 30;
+
 export type MailInboxPreferences = {
   dailyDigestEnabled: boolean;
   autoReplyEnabled: boolean;
@@ -914,6 +921,16 @@ export type MailInboxPreferences = {
   autoReplyActiveFrom: string | null;
   autoReplyActiveUntil: string | null;
   inboxListDensity: MailInboxListDensity;
+  undoSendSeconds: UndoSendSeconds;
+  defaultReplyMode: MailDefaultReplyMode;
+  remoteImagesPolicy: MailRemoteImagesPolicy;
+  afterMessageAction: MailAfterMessageAction;
+  confirmPermanentDelete: boolean;
+  confirmBulkDelete: boolean;
+  threadViewEnabled: boolean;
+  swipePrimaryAction: MailSwipePrimaryAction;
+  focusedInboxEnabled: boolean;
+  replyQuoteMode: MailReplyQuoteMode;
 };
 
 export async function fetchInboxPreferences(accessToken: string) {

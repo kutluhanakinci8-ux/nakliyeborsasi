@@ -124,6 +124,10 @@ export function MailClientShell({ mail }: Props) {
     embedHubShell,
     shellBrand,
     ensureAiMailConsent,
+    getMessageHtmlForRead,
+    handleMailPostaPreferencesSaved,
+    shouldPromptRemoteImages,
+    setRemoteImagesRevealed,
     filteredSent,
     forwardMessageId,
     inboxBranding,
@@ -1408,12 +1412,27 @@ export function MailClientShell({ mail }: Props) {
             ) : null}
             <div className="mail-read-body">
               {detail.bodyHtml ? (
-                <iframe
-                  title="Mesaj içeriği"
-                  className="mail-html-frame"
-                  sandbox=""
-                  srcDoc={detail.bodyHtml}
-                />
+                <>
+                  {shouldPromptRemoteImages(detail.bodyHtml) ? (
+                    <div className="mail-remote-images-banner" role="status">
+                      <span>Uzak resimler gizlendi.</span>
+                      <button
+                        type="button"
+                        onClick={() => setRemoteImagesRevealed(true)}
+                      >
+                        Resimleri göster
+                      </button>
+                    </div>
+                  ) : null}
+                  <iframe
+                    title="Mesaj içeriği"
+                    className="mail-html-frame"
+                    sandbox=""
+                    srcDoc={
+                      getMessageHtmlForRead(detail.bodyHtml) ?? detail.bodyHtml
+                    }
+                  />
+                </>
               ) : (
                 <pre>{detail.bodyText ?? ""}</pre>
               )}
@@ -2333,6 +2352,7 @@ export function MailClientShell({ mail }: Props) {
           onInboxListDensityChange={setInboxListDensity}
           threadView={threadView}
           onThreadViewChange={setThreadView}
+          onMailPostaPreferencesSaved={handleMailPostaPreferencesSaved}
         />
       ) : null}
       {shortcutsOpen ? (

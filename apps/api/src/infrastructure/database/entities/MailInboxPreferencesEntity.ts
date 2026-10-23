@@ -34,6 +34,42 @@ export class MailInboxPreferencesEntity {
   @Column({ type: "varchar", length: 10, nullable: true })
   public lastDigestSentOn!: string | null;
 
+  /** 0 = anında gönder (geri al kapalı), 5–30 = gecikmeli gönder */
+  @Column({ type: "int", default: 5 })
+  public undoSendSeconds!: number;
+
+  /** reply | reply_all */
+  @Column({ type: "varchar", length: 16, default: "reply" })
+  public defaultReplyMode!: string;
+
+  /** show | ask | hide */
+  @Column({ type: "varchar", length: 16, default: "show" })
+  public remoteImagesPolicy!: string;
+
+  /** list | next | previous */
+  @Column({ type: "varchar", length: 16, default: "list" })
+  public afterMessageAction!: string;
+
+  @Column({ type: "boolean", default: true })
+  public confirmPermanentDelete!: boolean;
+
+  @Column({ type: "boolean", default: true })
+  public confirmBulkDelete!: boolean;
+
+  @Column({ type: "boolean", default: false })
+  public threadViewEnabled!: boolean;
+
+  /** archive | delete | read */
+  @Column({ type: "varchar", length: 16, default: "archive" })
+  public swipePrimaryAction!: string;
+
+  @Column({ type: "boolean", default: false })
+  public focusedInboxEnabled!: boolean;
+
+  /** full | trimmed | none — yanıt alıntısı (P2) */
+  @Column({ type: "varchar", length: 16, default: "full" })
+  public replyQuoteMode!: string;
+
   @CreateDateColumn({ type: "timestamptz" })
   public createdAt!: Date;
 

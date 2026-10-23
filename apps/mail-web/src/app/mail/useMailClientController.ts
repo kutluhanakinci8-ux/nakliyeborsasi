@@ -7,7 +7,15 @@ import {
   mergeComposeTemplatesWithBuiltins,
 } from "@/lib/mailComposePresets";
 import { syncMailUnreadBadge } from "@/lib/mailUnreadBadge";
+import {
+  applyRemoteImagesPolicyToHtml,
+  htmlHasBlockedRemoteImages,
+} from "@/lib/mailHtmlBodyDisplay";
 import { readThreadViewPreference, writeThreadViewPreference } from "@/lib/mailDisplayPrefs";
+import {
+  composeDelaySecondsFromUndoPref,
+  pickMailPostaPreferences,
+} from "@/lib/mailPostaPrefs";
 import {
   fetchInboxWithOfflineCache,
   fetchMessageWithOfflineCache,
@@ -121,6 +129,7 @@ export function useMailClientController({
   embedHubShell = false,
   shellBrand = "",
 }: Params) {
+  const listMessageIdsRef = useRef<string[]>([]);
   const deepLinkMessageHandled = useRef(false);
   const deepLinkComposeHandled = useRef(false);
   const deepLinkViewHandled = useRef(false);
@@ -234,6 +243,10 @@ export function useMailClientController({
     useState<MailInboxListDensity>("comfortable");
   const [activeSwipeRowId, setActiveSwipeRowId] = useState<string | null>(null);
   const [threadView, setThreadViewState] = useState(false);
+  const [mailPostaPrefs, setMailPostaPrefs] = useState(() =>
+    pickMailPostaPreferences(null),
+  );
+  const [remoteImagesRevealed, setRemoteImagesRevealed] = useState(false);
 
   const setThreadView = useCallback((enabled: boolean) => {
     setThreadViewState(enabled);
@@ -243,6 +256,20 @@ export function useMailClientController({
   useEffect(() => {
     setThreadViewState(readThreadViewPreference());
   }, []);
+
+  const handleMailPostaPreferencesSaved = useCallback(
+    (prefs: import("@/lib/mailApi").MailInboxPreferences) => {
+      const picked = pickMailPostaPreferences(prefs);
+      setMailPostaPrefs(picked);
+      setThreadView(picked.threadViewEnabled);
+    },
+    [setThreadView],
+  );
+
+  const composeDelaySeconds = useCallback(
+    () => composeDelaySecondsFromUndoPref(mailPostaPrefs.undoSendSeconds),
+    [mailPostaPrefs.undoSendSeconds],
+  );
   const [threads, setThreads] = useState<MailInboxThreadRow[]>([]);
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   const [threadMessages, setThreadMessages] = useState<MailInboxListItem[]>(
@@ -391,9 +418,10 @@ export function useMailClientController({
       .catch(() => setInboxBranding(null));
     void refreshCustomFolders();
     void fetchInboxPreferences(accessToken)
-      .then((data) =>
-        setInboxListDensity(data.preferences.inboxListDensity ?? "comfortable"),
-      )
+      .then((data) => {
+        setInboxListDensity(data.preferences.inboxListDensity ?? "comfortable");
+        handleMailPostaPreferencesSaved(data.preferences);
+      })
       .catch(() => undefined);
   }, [accessToken, refresh, refreshDrafts, refreshCustomFolders, router]);
 
@@ -632,6 +660,8 @@ export function useMailClientController({
     setMobilePane("read");
     setSelectedId(id);
     setSentPreview(null);
+    setRemoteImagesRevealed(false);
+    setReplyAllMode(mailPostaPrefs.defaultReplyMode === "reply_all");
     let message: Awaited<
       ReturnType<typeof fetchMessageWithOfflineCache>
     >["message"];
@@ -949,7 +979,9 @@ export function useMailClientController({
         bcc: replyBcc.trim() || undefined,
         replyAll: useReplyAll,
         attachments,
-        delaySeconds: 5,
+        ...(composeDelaySeconds() !== undefined
+          ? { delaySeconds: composeDelaySeconds() }
+          : {}),
         merge: buildComposeMergePayload(),
       });
       setReplyText("");
@@ -1164,7 +1196,9 @@ export function useMailClientController({
           attachments: attachments.length > 0 ? attachments : undefined,
         });
         const draftResult = await sendDraft(accessToken, editingDraftId, {
-          delaySeconds: 5,
+          ...(composeDelaySeconds() !== undefined
+            ? { delaySeconds: composeDelaySeconds() }
+            : {}),
         });
         if (applyDelayedSend(draftResult)) {
           scheduledUndo = true;
@@ -1184,7 +1218,9 @@ export function useMailClientController({
               text: composeText.trim() || undefined,
               includeOriginal: true,
               attachments: attachments.length > 0 ? attachments : undefined,
-              delaySeconds: 5,
+              ...(composeDelaySeconds() !== undefined
+                ? { delaySeconds: composeDelaySeconds() }
+                : {}),
               merge: buildComposeMergePayload(),
             },
           );
@@ -1205,7 +1241,9 @@ export function useMailClientController({
             text: composeText,
             html: outboundHtml,
             attachments: attachments.length > 0 ? attachments : undefined,
-            delaySeconds: 5,
+            ...(composeDelaySeconds() !== undefined
+              ? { delaySeconds: composeDelaySeconds() }
+              : {}),
             merge: buildComposeMergePayload(),
           });
           if (applyDelayedSend(result)) {
@@ -1478,6 +1516,14 @@ export function useMailClientController({
     if (!accessToken || checkedIds.size === 0) {
       return;
     }
+    if (
+      mailPostaPrefs.confirmBulkDelete &&
+      !window.confirm(
+        `${checkedIds.size} mesaj kalıcı olarak silinecek. Emin misiniz?`,
+      )
+    ) {
+      return;
+    }
     const ids = [...checkedIds];
     try {
       let purged = 0;
@@ -1622,10 +1668,40 @@ export function useMailClientController({
     }
   }
 
+  function finishAfterMessageNavigation(closedId: string | null) {
+    const mode = mailPostaPrefs.afterMessageAction;
+    if (!closedId || mode === "list") {
+      setDetail(null);
+      setSelectedId(null);
+      setActiveThreadId(null);
+      setThreadMessages([]);
+      setMobilePane("list");
+      return;
+    }
+    const ids = listMessageIdsRef.current;
+    const idx = ids.indexOf(closedId);
+    let target: string | undefined;
+    if (mode === "next" && idx >= 0) {
+      target = ids[idx + 1] ?? ids[idx - 1];
+    } else if (mode === "previous" && idx >= 0) {
+      target = ids[idx - 1] ?? ids[idx + 1];
+    }
+    if (target) {
+      void openMessage(target);
+      return;
+    }
+    setDetail(null);
+    setSelectedId(null);
+    setActiveThreadId(null);
+    setThreadMessages([]);
+    setMobilePane("list");
+  }
+
   async function moveCurrentMessage(folder: MailMailboxFolder) {
     if (!accessToken || !selectedId) {
       return;
     }
+    const closedId = selectedId;
     try {
       await setMessageMailboxFolder(accessToken, selectedId, folder);
       setToast(
@@ -1635,11 +1711,7 @@ export function useMailClientController({
             ? "Arşivlendi."
             : "Gelen kutusuna alındı.",
       );
-      setDetail(null);
-      setSelectedId(null);
-      setActiveThreadId(null);
-      setThreadMessages([]);
-      setMobilePane("list");
+      finishAfterMessageNavigation(closedId);
       void refresh();
       if (threadView && canUseThreads) {
         void fetchInboxThreads(
@@ -1661,6 +1733,13 @@ export function useMailClientController({
     if (!accessToken || !selectedId) {
       return;
     }
+    if (
+      mailPostaPrefs.confirmPermanentDelete &&
+      !window.confirm("Bu mesaj kalıcı olarak silinecek. Emin misiniz?")
+    ) {
+      return;
+    }
+    const closedId = selectedId;
     try {
       if (messageKindForId(selectedId) === "sent") {
         await deleteSentMessage(accessToken, selectedId);
@@ -1670,8 +1749,7 @@ export function useMailClientController({
         setDetail(null);
       }
       setToast("Kalıcı olarak silindi.");
-      setSelectedId(null);
-      setMobilePane("list");
+      finishAfterMessageNavigation(closedId);
       void refresh();
     } catch (error) {
       setToast(error instanceof Error ? error.message : "Silinemedi.");
@@ -1857,6 +1935,7 @@ export function useMailClientController({
     () => listItems.map((m) => m.id),
     [listItems],
   );
+  listMessageIdsRef.current = listMessageIds;
 
   function toggleChecked(id: string, shiftKey = false) {
     if (shiftKey && checkboxAnchorRef.current && canBulkSelect) {
@@ -2407,6 +2486,26 @@ export function useMailClientController({
     embedHubShell,
     shellBrand,
     ensureAiMailConsent,
+    getMessageHtmlForRead: (rawHtml: string | null) => {
+      if (!rawHtml) {
+        return null;
+      }
+      return applyRemoteImagesPolicyToHtml(
+        rawHtml,
+        mailPostaPrefs.remoteImagesPolicy,
+        remoteImagesRevealed,
+      );
+    },
+    handleMailPostaPreferencesSaved,
+    shouldPromptRemoteImages: (rawHtml: string | null) =>
+      rawHtml
+        ? htmlHasBlockedRemoteImages(
+            rawHtml,
+            mailPostaPrefs.remoteImagesPolicy,
+            remoteImagesRevealed,
+          )
+        : false,
+    setRemoteImagesRevealed,
     filteredSent,
     forwardMessageId,
     inboxBranding,
