@@ -1610,6 +1610,16 @@ a {
   border: 1px solid #fecaca;
 }
 
+.login-info {
+  color: #92400e;
+  font-size: 0.85rem;
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+}
+
 html[data-mail-theme="dark"] .login-page--premium {
   --login-text: #eef0f6;
   --login-muted: #a8b0bd;
@@ -2504,6 +2514,32 @@ html[data-mail-theme="dark"] .login-error {
   background: color-mix(in srgb, var(--accent) 12%, var(--panel));
   border-bottom: 1px solid var(--border);
   color: var(--text);
+}
+
+.mail-session-expired-banner {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  padding: 10px 14px;
+  font-size: 0.88rem;
+  background: color-mix(in srgb, #c45c26 14%, var(--panel));
+  border-bottom: 1px solid color-mix(in srgb, #c45c26 35%, var(--border));
+  color: var(--text);
+}
+
+.mail-session-expired-banner button {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  background: var(--accent);
+  color: var(--compose-btn-text, #fff);
 }
 
 .mail-parity-assist-banner {

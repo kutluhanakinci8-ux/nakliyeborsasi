@@ -8,6 +8,7 @@ import {
   syncAllCalendarIcsFeeds,
   syncCalendarIcsFeed,
   type MailCalendarIcsFeed,
+  isMailSessionExpiredError,
 } from "@/lib/mailApi";
 
 type Props = {
@@ -22,18 +23,23 @@ export function MailCalendarFeedsPanel({
   onSynced,
 }: Props) {
   const [feeds, setFeeds] = useState<MailCalendarIcsFeed[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [label, setLabel] = useState("");
   const [feedUrl, setFeedUrl] = useState("");
   const [syncingAll, setSyncingAll] = useState(false);
 
   const load = useCallback(async () => {
+    setLoadError(null);
     try {
       const data = await fetchCalendarIcsFeeds(accessToken);
       setFeeds(data.feeds);
     } catch (error) {
-      onToast(
-        error instanceof Error ? error.message : "Akışlar yüklenemedi.",
-      );
+      const message =
+        error instanceof Error ? error.message : "Akışlar yüklenemedi.";
+      setLoadError(message);
+      if (!isMailSessionExpiredError(error)) {
+        onToast(message);
+      }
     }
   }, [accessToken, onToast]);
 
@@ -191,7 +197,12 @@ export function MailCalendarFeedsPanel({
             </span>
           </li>
         ))}
-        {feeds.length === 0 ? (
+        {loadError ? (
+          <li className="mail-cal-feed-empty mail-cal-feed-empty--warn">
+            {loadError}
+          </li>
+        ) : null}
+        {feeds.length === 0 && !loadError ? (
           <li className="mail-cal-feed-empty">Harici takvim yok.</li>
         ) : null}
       </ul>

@@ -28,6 +28,7 @@ import {
   downloadMailAttachment,
   fetchComposePresets,
   fetchOrgContacts,
+  isMailSessionExpiredError,
   type MailOrgContact,
   fetchDrafts,
   fetchInboxPreferences,
@@ -310,6 +311,7 @@ export function useMailClientController({
   const [inboxOfflineCachedAt, setInboxOfflineCachedAt] = useState<
     number | null
   >(null);
+  const [sessionExpired, setSessionExpired] = useState(false);
   const [detailOffline, setDetailOffline] = useState(false);
   const [customFolders, setCustomFolders] = useState<MailCustomFolder[]>([]);
   const [activeCustomFolderId, setActiveCustomFolderId] = useState<
@@ -329,30 +331,45 @@ export function useMailClientController({
     setCustomFolders(data.folders);
   }, [accessToken]);
 
+  const reLogin = useCallback(() => {
+    logout();
+    router.replace("/login?oturum=sona-erdi");
+  }, [logout, router]);
+
   const refresh = useCallback(async () => {
     if (!accessToken) {
       return;
     }
-    if (view === "calendar" || view === "contacts") {
-      const data = await fetchInboxWithOfflineCache(accessToken, "inbox");
+    try {
+      if (view === "calendar" || view === "contacts") {
+        const data = await fetchInboxWithOfflineCache(accessToken, "inbox");
+        setSummary(data.summary);
+        setSendReadiness(data.sendReadiness ?? null);
+        setInboxOffline(data.fromOfflineCache);
+        setInboxOfflineCachedAt(data.cachedAt);
+        setSessionExpired(data.sessionStale);
+        return;
+      }
+      const folder = inboxFolderForView(view);
+      const data = await fetchInboxWithOfflineCache(
+        accessToken,
+        folder,
+        folder === "inbox" ? inboxCustomFolderId : undefined,
+      );
       setSummary(data.summary);
       setSendReadiness(data.sendReadiness ?? null);
+      setMessages(data.messages);
+      setSent(data.sent);
       setInboxOffline(data.fromOfflineCache);
       setInboxOfflineCachedAt(data.cachedAt);
-      return;
+      setSessionExpired(data.sessionStale);
+    } catch (error) {
+      if (isMailSessionExpiredError(error)) {
+        setSessionExpired(true);
+        return;
+      }
+      throw error;
     }
-    const folder = inboxFolderForView(view);
-    const data = await fetchInboxWithOfflineCache(
-      accessToken,
-      folder,
-      folder === "inbox" ? inboxCustomFolderId : undefined,
-    );
-    setSummary(data.summary);
-    setSendReadiness(data.sendReadiness ?? null);
-    setMessages(data.messages);
-    setSent(data.sent);
-    setInboxOffline(data.fromOfflineCache);
-    setInboxOfflineCachedAt(data.cachedAt);
   }, [accessToken, view, inboxCustomFolderId]);
 
   const refreshDrafts = useCallback(async () => {
@@ -615,10 +632,24 @@ export function useMailClientController({
     setMobilePane("read");
     setSelectedId(id);
     setSentPreview(null);
-    const { message, fromOfflineCache } = await fetchMessageWithOfflineCache(
-      accessToken,
-      id,
-    );
+    let message: Awaited<
+      ReturnType<typeof fetchMessageWithOfflineCache>
+    >["message"];
+    let fromOfflineCache = false;
+    try {
+      const loaded = await fetchMessageWithOfflineCache(accessToken, id);
+      message = loaded.message;
+      fromOfflineCache = loaded.fromOfflineCache;
+      if (loaded.sessionStale) {
+        setSessionExpired(true);
+      }
+    } catch (error) {
+      if (isMailSessionExpiredError(error)) {
+        setSessionExpired(true);
+        return;
+      }
+      throw error;
+    }
     setDetailOffline(fromOfflineCache);
     setReplyText("");
     setReplyFiles([]);
@@ -2410,6 +2441,8 @@ export function useMailClientController({
     refresh,
     refreshCustomFolders,
     refreshDrafts,
+    reLogin,
+    sessionExpired,
     removeMessageFromLocalLists,
     replyAllMode,
     replyBcc,

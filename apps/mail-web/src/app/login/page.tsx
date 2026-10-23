@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { completeTotpLogin, login } from "@/lib/mailApi";
 import {
@@ -19,7 +19,17 @@ const PLATFORM_LINKS = [
 
 export default function LoginPage() {
   const router = useRouter();
+  const [sessionEnded, setSessionEnded] = useState(false);
   const { setAccessToken } = useMailSession();
+
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      setSessionEnded(params.get("oturum") === "sona-erdi");
+    } catch {
+      setSessionEnded(false);
+    }
+  }, []);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -123,6 +133,12 @@ export default function LoginPage() {
               <p className="login-form-sub">
                 Mevcut Lerta hesabınızla webmail&apos;e erişin.
               </p>
+              {sessionEnded && !error ? (
+                <p className="login-info" role="status">
+                  Oturumunuz sona erdi. Yeniden giriş yapın; posta, gönderilenler,
+                  kişiler ve harici takvim kayıtlarınız sunucuda duruyor.
+                </p>
+              ) : null}
               {error ? (
                 <p className="login-error" role="alert">{error}</p>
               ) : null}

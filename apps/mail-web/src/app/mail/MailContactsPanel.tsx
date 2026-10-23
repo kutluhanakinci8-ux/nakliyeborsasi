@@ -8,6 +8,7 @@ import {
   fetchContactCardDavAccounts,
   importContactsVcf,
   fetchOrgContacts,
+  isMailSessionExpiredError,
   pushContactToCardDav,
   type MailOrgContact,
 } from "@/lib/mailApi";
@@ -70,7 +71,9 @@ export function MailContactsPanel({
       const message =
         error instanceof Error ? error.message : "Kişiler yüklenemedi.";
       setLoadError(message);
-      onToast(message);
+      if (!isMailSessionExpiredError(error)) {
+        onToast(message);
+      }
     } finally {
       setLoading(false);
     }

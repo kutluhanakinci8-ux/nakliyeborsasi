@@ -159,6 +159,8 @@ export function MailClientShell({ mail }: Props) {
     refresh,
     refreshCustomFolders,
     refreshDrafts,
+    reLogin,
+    sessionExpired,
     removeMessageFromLocalLists,
     replyAllMode,
     replyBcc,
@@ -292,6 +294,17 @@ export function MailClientShell({ mail }: Props) {
     <div
       className={`mail-app mobile-pane-${mobilePane}${embedMode ? " mail-app--embed" : ""}${embedHubShell ? " mail-app--embed-hub" : ""}${shellBrand === "ekolojik" ? " mail-app--shell-ekolojik" : ""}${inboxListDensity === "compact" ? " mail-app--list-compact" : ""}`}
     >
+      {sessionExpired ? (
+        <div className="mail-session-expired-banner" role="alert">
+          <span>
+            Oturumunuz sona erdi. Posta, gönderilenler, kişiler ve harici takvim
+            kayıtlarınız sunucuda duruyor — yeniden giriş yapın.
+          </span>
+          <button type="button" onClick={() => reLogin()}>
+            Yeniden giriş
+          </button>
+        </div>
+      ) : null}
       {(inboxOffline || detailOffline) ? (
         <div className="mail-offline-banner" role="status">
           Çevrimdışı önbellek — salt okunur

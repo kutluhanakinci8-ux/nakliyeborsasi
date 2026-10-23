@@ -1,5 +1,32 @@
 import { resolveApiBaseUrl } from "./apiConfig";
 
+export const MAIL_SESSION_EXPIRED_MESSAGE_TR =
+  "Oturumunuz sona erdi. Yeniden giriş yapın — posta, gönderilenler, kişiler ve harici takvim kayıtlarınız sunucuda duruyor.";
+
+export class MailApiError extends Error {
+  readonly status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "MailApiError";
+    this.status = status;
+  }
+}
+
+export function isMailSessionExpiredError(error: unknown): boolean {
+  if (error instanceof MailApiError) {
+    return error.status === 401;
+  }
+  if (error instanceof Error) {
+    const normalized = error.message.trim().toLowerCase();
+    return (
+      normalized === "unauthorized" ||
+      normalized.includes("oturumunuz sona erdi")
+    );
+  }
+  return false;
+}
+
 export type MailInboxFolder =
   | "inbox"
   | "spam"
@@ -311,10 +338,16 @@ export function formatApiError(raw: string): string {
       return "En fazla 7 sosyal medya bağlantısı kaydedilebilir.";
     }
     if (messages) {
+      if (messages === "Unauthorized") {
+        return MAIL_SESSION_EXPIRED_MESSAGE_TR;
+      }
       return messages;
     }
   } catch {
     /* plain text */
+  }
+  if (raw.trim() === "Unauthorized") {
+    return MAIL_SESSION_EXPIRED_MESSAGE_TR;
   }
   return raw.length > 200 ? "İşlem başarısız." : raw;
 }
@@ -346,7 +379,7 @@ async function apiFetch<T>(
     });
     if (!response.ok) {
       const text = await response.text();
-      throw new Error(formatApiError(text || `API ${path}`));
+      throw new MailApiError(formatApiError(text || `API ${path}`), response.status);
     }
     return (await response.json()) as T;
   } catch (error) {

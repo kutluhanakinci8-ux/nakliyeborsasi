@@ -1,6 +1,7 @@
 import {
   fetchInbox,
   fetchMessage,
+  isMailSessionExpiredError,
   type MailInboxFolder,
   type MailInboxListItem,
   type MailInboxMessageDetail,
@@ -174,6 +175,10 @@ export function isLikelyNetworkFailure(error: unknown): boolean {
   return /failed to fetch|network|load failed/i.test(message);
 }
 
+function shouldUseOfflineCacheFallback(error: unknown): boolean {
+  return isLikelyNetworkFailure(error) || isMailSessionExpiredError(error);
+}
+
 function postOfflineSyncToServiceWorker(snapshotKey: string): void {
   if (typeof navigator === "undefined" || !navigator.serviceWorker?.controller) {
     return;
@@ -196,6 +201,7 @@ export async function fetchInboxWithOfflineCache(
   sent: MailSentItem[];
   fromOfflineCache: boolean;
   cachedAt: number | null;
+  sessionStale: boolean;
 }> {
   const key = inboxCacheKey(folder, customFolderId);
   try {
@@ -211,9 +217,10 @@ export async function fetchInboxWithOfflineCache(
       ...data,
       fromOfflineCache: false,
       cachedAt: null,
+      sessionStale: false,
     };
   } catch (error) {
-    if (!isLikelyNetworkFailure(error)) {
+    if (!shouldUseOfflineCacheFallback(error)) {
       throw error;
     }
     const cached = await getInboxSnapshot(key);
@@ -227,6 +234,7 @@ export async function fetchInboxWithOfflineCache(
       sent: cached.sent,
       fromOfflineCache: true,
       cachedAt: cached.cachedAt,
+      sessionStale: isMailSessionExpiredError(error),
     };
   }
 }
@@ -234,19 +242,27 @@ export async function fetchInboxWithOfflineCache(
 export async function fetchMessageWithOfflineCache(
   accessToken: string,
   id: string,
-): Promise<{ message: MailInboxMessageDetail; fromOfflineCache: boolean }> {
+): Promise<{
+  message: MailInboxMessageDetail;
+  fromOfflineCache: boolean;
+  sessionStale: boolean;
+}> {
   try {
     const message = await fetchMessage(accessToken, id);
     await putMessageDetail(message);
-    return { message, fromOfflineCache: false };
+    return { message, fromOfflineCache: false, sessionStale: false };
   } catch (error) {
-    if (!isLikelyNetworkFailure(error)) {
+    if (!shouldUseOfflineCacheFallback(error)) {
       throw error;
     }
     const cached = await getMessageDetail(id);
     if (!cached) {
       throw error;
     }
-    return { message: cached, fromOfflineCache: true };
+    return {
+      message: cached,
+      fromOfflineCache: true,
+      sessionStale: isMailSessionExpiredError(error),
+    };
   }
 }
