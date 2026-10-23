@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   fetchInboxPreferences,
   updateInboxPreferences,
@@ -43,15 +43,20 @@ export function MailPostaSettings({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState("");
+  const onThreadViewChangeRef = useRef(onThreadViewChange);
+  const onPreferencesSavedRef = useRef(onPreferencesSaved);
+  onThreadViewChangeRef.current = onThreadViewChange;
+  onPreferencesSavedRef.current = onPreferencesSaved;
 
   const load = useCallback(async () => {
     setLoading(true);
+    setStatus("");
     try {
       const data = await fetchInboxPreferences(accessToken);
       const picked = pickMailPostaPreferences(data.preferences);
       setForm(picked);
-      onThreadViewChange(picked.threadViewEnabled);
-      onPreferencesSaved?.(data.preferences);
+      onThreadViewChangeRef.current(picked.threadViewEnabled);
+      onPreferencesSavedRef.current?.(data.preferences);
     } catch (error) {
       setStatus(
         error instanceof Error ? error.message : "Tercihler yüklenemedi.",
@@ -59,7 +64,7 @@ export function MailPostaSettings({
     } finally {
       setLoading(false);
     }
-  }, [accessToken, onPreferencesSaved, onThreadViewChange]);
+  }, [accessToken]);
 
   useEffect(() => {
     void load();
@@ -87,7 +92,7 @@ export function MailPostaSettings({
     }
   }
 
-  if (loading) {
+  if (loading && !status) {
     return <p className="mail-settings-lead">Yükleniyor…</p>;
   }
 

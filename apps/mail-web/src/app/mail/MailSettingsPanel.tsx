@@ -582,7 +582,12 @@ export function MailSettingsPanel({
         <MailPostaSettings
           accessToken={accessToken}
           threadView={threadView}
-          onThreadViewChange={(enabled) => onThreadViewChange?.(enabled)}
+          onThreadViewChange={
+            onThreadViewChange ??
+            (() => {
+              /* hub dışı panel */
+            })
+          }
           onPreferencesSaved={onMailPostaPreferencesSaved}
           onOpenDisplay={() => setView("display")}
         />,
