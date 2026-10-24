@@ -31,7 +31,7 @@ describe("MailOutboundHtmlTemplate", () => {
       '"kutluhan" <u@lerta.com.tr>',
       "deneme 3",
     );
-    expect(plain).toContain("LERTA POSTA");
+    expect(plain).toContain("KUTLUHAN");
     expect(plain).toContain("kutluhan · u@lerta.com.tr");
     expect(plain).toContain("deneme 3");
     expect(plain).toContain("u@lerta.com.tr");

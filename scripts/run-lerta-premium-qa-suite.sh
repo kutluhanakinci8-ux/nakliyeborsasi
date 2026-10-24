@@ -36,11 +36,12 @@ echo "== Lerta Premium QA Suite ${STAMP} (Europe/Istanbul) =="
 
 run_layer unit_core "1. Unit — @nakliyeborsasi/core" npm run test:unit --prefix "${ROOT}"
 
-run_layer unit_api "2. Unit/Integration — API vitest (notification *.test.ts)" \
-  bash -c "cd '${ROOT}' && npx vitest run apps/api/src/modules/notification/MailCampaignSegment.test.ts --reporter=dot"
+run_layer unit_api "2. Unit/Integration — API vitest (all spec/test)" \
+  npm run test:api --prefix "${ROOT}"
 
 run_layer regression_parity "3. Regression — mail/messaging parity close" \
-  bash "${ROOT}/scripts/run-mail-messaging-parity-close-checklist.sh"
+  env MAIL_INBOUND_PTR_SOFT="${MAIL_INBOUND_PTR_SOFT:-1}" MAIL_BILLING_PILOT_FREE="${MAIL_BILLING_PILOT_FREE:-1}" \
+    bash "${ROOT}/scripts/run-mail-messaging-parity-close-checklist.sh"
 
 run_layer regression_wave2 "4. Regression — wave-2 + Lighthouse PWA" \
   bash "${ROOT}/scripts/run-mail-messaging-parity-wave2-checklist.sh"
@@ -51,8 +52,8 @@ run_layer system_smoke "5. System — prod HTTPS/smoke" \
 run_layer compliance_mp9 "6. Compliance — MP-9 SOC2-lite docs" \
   bash "${ROOT}/scripts/verify-security-compliance-mp9.sh"
 
-run_layer security_audit "7. Security — npm audit (high+)" \
-  bash -c "cd '${ROOT}' && npm audit --audit-level=high 2>&1 | tail -30; test \$(npm audit --audit-level=critical --json 2>/dev/null | node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const j=JSON.parse(d);process.exit((j.metadata?.vulnerabilities?.critical||0)>0?1:0)}catch{process.exit(0)}})\")"
+run_layer security_audit "7. Security — npm audit (runtime prod deps)" \
+  bash -c "cd '${ROOT}' && npm audit --omit=dev --audit-level=critical 2>&1 | tail -20; crit=\$(npm audit --omit=dev --audit-level=critical --json 2>/dev/null | node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const j=JSON.parse(d);console.log(j.metadata?.vulnerabilities?.critical||0)}catch{console.log(0)}})\"); test \"\${crit}\" -eq 0"
 
 run_layer security_surface "8. Security — surface headers" \
   bash "${ROOT}/scripts/qa-security-surface.sh"

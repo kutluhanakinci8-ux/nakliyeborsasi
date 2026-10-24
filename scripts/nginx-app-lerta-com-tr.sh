@@ -83,6 +83,11 @@ server {
 
     client_max_body_size 16m;
 
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+
     location /api/v1/ {
         proxy_pass http://127.0.0.1:${API_PORT}/api/v1/;
         proxy_http_version 1.1;

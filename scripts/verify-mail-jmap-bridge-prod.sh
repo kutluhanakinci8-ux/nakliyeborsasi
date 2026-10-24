@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # PM-10: JMAP köprü uç noktası prod'da mount (auth gerekir).
 set -euo pipefail
-API_BASE="${API_BASE:-https://app.lerta.com.tr/api/v1}"
+API_BASE="${API_BASE:-https://yonetim.lerta.com.tr/api/v1}"
 SESSION_URL="${API_BASE}/company/mail-jmap/session"
 CODE="$(curl -sS -o /dev/null -w '%{http_code}' --connect-timeout 15 "${SESSION_URL}" || echo "000")"
 echo "GET company/mail-jmap/session → HTTP ${CODE}"

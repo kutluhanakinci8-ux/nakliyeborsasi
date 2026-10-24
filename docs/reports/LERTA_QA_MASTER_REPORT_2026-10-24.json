@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-10-24T22:59:17+03:00",
+  "generatedAt": "2026-10-24T23:07:01+03:00",
   "timezone": "Europe/Istanbul",
   "failCount": 5,
   "layers": {
     "unit_core": "PASS",
-    "unit_api": "FAIL",
+    "unit_api": "PASS",
     "regression_parity": "FAIL",
     "regression_wave2": "FAIL",
     "system_smoke": "PASS",
@@ -13,7 +13,7 @@
     "security_surface": "FAIL",
     "perf_load": "PASS",
     "l10n_tr": "PASS",
-    "e2e_playwright": "PASS",
+    "e2e_playwright": "FAIL",
     "uat": "MANUAL",
     "pentest": "NOT_RUN"
   }

@@ -37,7 +37,7 @@ code="$(curl -sS -o /dev/null -w '%{http_code}' --connect-timeout 12 "${API_BASE
 echo "GET /health → ${code}"
 if [[ "${code}" != "200" ]]; then FAIL=1; fi
 
-for path in company/mail-inbox/messages platform-admin/mail/billing-health; do
+for path in company/mail-inbox platform-admin/mail/billing-health; do
   c="$(curl -sS -o /dev/null -w '%{http_code}' --connect-timeout 12 "${API_BASE}/${path}" || echo 000)"
   if [[ "${c}" == "401" ]] || [[ "${c}" == "403" ]]; then
     echo "OK: ${path} korumalı (${c})"

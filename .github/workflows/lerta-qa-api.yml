@@ -1,0 +1,25 @@
+name: lerta-qa-api-unit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/api/**"
+      - "core/**"
+  pull_request:
+    paths:
+      - "apps/api/**"
+      - "core/**"
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npm run test:unit
+      - run: npm run test:api

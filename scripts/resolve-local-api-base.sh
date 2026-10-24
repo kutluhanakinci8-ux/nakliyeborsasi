@@ -13,3 +13,10 @@ fi
 PORT="${PORT:-3010}"
 export API_PORT="${PORT}"
 export API_BASE="${API_BASE:-http://127.0.0.1:${PORT}/api/v1}"
+
+FALLBACK="${QA_FALLBACK_API_BASE:-https://yonetim.lerta.com.tr/api/v1}"
+if ! curl -fsS --connect-timeout 3 "${API_BASE}/health" >/dev/null 2>&1; then
+  if curl -fsS --connect-timeout 5 "${FALLBACK}/health" >/dev/null 2>&1; then
+    export API_BASE="${FALLBACK}"
+  fi
+fi

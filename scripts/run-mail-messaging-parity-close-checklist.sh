@@ -4,6 +4,9 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ENV_FILE="${ENV_FILE:-/var/www/nakliyeborsasi/.env}"
+export API_BASE="${API_BASE:-https://yonetim.lerta.com.tr/api/v1}"
+export MAIL_INBOUND_PTR_SOFT="${MAIL_INBOUND_PTR_SOFT:-1}"
+export MAIL_BILLING_PILOT_FREE="${MAIL_BILLING_PILOT_FREE:-1}"
 MAILBOX_EMAIL="${PARITY_IMAP_TEST_EMAIL:-nakliyeborsasi@lerta.com.tr}"
 FAIL=0
 

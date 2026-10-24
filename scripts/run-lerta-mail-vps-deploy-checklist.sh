@@ -18,8 +18,7 @@ fi
 
 echo ""
 echo "== API health =="
-if curl -fsS --connect-timeout 12 "${API_BASE%/api/v1}/health" -o /dev/null 2>/dev/null ||
-  curl -fsS --connect-timeout 12 "${API_BASE}/health" -o /dev/null 2>/dev/null; then
+if curl -fsS --connect-timeout 12 "${API_BASE}/health" -o /dev/null 2>/dev/null; then
   echo "OK: health endpoint"
 else
   echo "NOT: health yanıt vermedi" >&2

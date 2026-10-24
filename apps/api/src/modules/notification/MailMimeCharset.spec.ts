@@ -5,7 +5,7 @@ import {
 
 describe("repairUtf8Mojibake", () => {
   it("repairs UTF-8 Turkish text misread as Latin-1", () => {
-    const broken = "mÃ¼ÅŸteri mesajÄ±";
+    const broken = Buffer.from("müşteri mesajı", "utf8").toString("latin1");
     expect(repairUtf8Mojibake(broken)).toBe("müşteri mesajı");
   });
 
@@ -21,6 +21,7 @@ describe("repairUtf8Mojibake", () => {
 
 describe("decodeMimeEncodedWords", () => {
   it("repairs mojibake on plain subjects", () => {
-    expect(decodeMimeEncodedWords("mÃ¼ÅŸteri")).toBe("müşteri");
+    const broken = Buffer.from("müşteri", "utf8").toString("latin1");
+    expect(decodeMimeEncodedWords(broken)).toBe("müşteri");
   });
 });
