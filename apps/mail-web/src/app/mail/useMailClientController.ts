@@ -287,6 +287,7 @@ export function useMailClientController({
       const picked = pickMailPostaPreferences(prefs);
       setMailPostaPrefs(picked);
       setThreadView(picked.threadViewEnabled);
+      setReplyAllMode(picked.defaultReplyMode === "reply_all");
     },
     [setThreadView],
   );
@@ -1011,7 +1012,7 @@ export function useMailClientController({
       });
       setReplyText("");
       setReplyFiles([]);
-      setReplyAllMode(false);
+      setReplyAllMode(mailPostaPrefs.defaultReplyMode === "reply_all");
       if (applyDelayedSend(replyResult)) {
         return;
       }
@@ -2571,6 +2572,8 @@ export function useMailClientController({
     sessionExpired,
     removeMessageFromLocalLists,
     replyAllMode,
+    defaultReplyIsAll: mailPostaPrefs.defaultReplyMode === "reply_all",
+    composeDelaySeconds,
     replyBcc,
     replyFiles,
     replyText,

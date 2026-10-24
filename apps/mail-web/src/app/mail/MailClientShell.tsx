@@ -168,6 +168,8 @@ export function MailClientShell({ mail }: Props) {
     sessionExpired,
     removeMessageFromLocalLists,
     replyAllMode,
+    defaultReplyIsAll,
+    composeDelaySeconds,
     replyBcc,
     replyFiles,
     replyText,
@@ -1301,7 +1303,9 @@ export function MailClientShell({ mail }: Props) {
                       const draftResult = await sendDraft(
                         accessToken,
                         draftPreview.id,
-                        { delaySeconds: 5 },
+                        composeDelaySeconds() !== undefined
+                          ? { delaySeconds: composeDelaySeconds() }
+                          : {},
                       );
                       if (applyDelayedSend(draftResult)) {
                         setDraftPreview(null);
@@ -1678,20 +1682,41 @@ export function MailClientShell({ mail }: Props) {
                     >
                       Sınıfla
                     </button>
-                    <button
-                      type="button"
-                      className="compose-btn compose-btn--primary"
-                      onClick={() => void sendReply(false)}
-                    >
-                      Yanıtla
-                    </button>
-                    <button
-                      type="button"
-                      className="compose-btn compose-btn--secondary"
-                      onClick={() => void sendReply(true)}
-                    >
-                      Tümüne yanıtla
-                    </button>
+                    {defaultReplyIsAll ? (
+                      <>
+                        <button
+                          type="button"
+                          className="compose-btn compose-btn--primary"
+                          onClick={() => void sendReply(true)}
+                        >
+                          Tümüne yanıtla
+                        </button>
+                        <button
+                          type="button"
+                          className="compose-btn compose-btn--secondary"
+                          onClick={() => void sendReply(false)}
+                        >
+                          Yanıtla
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          className="compose-btn compose-btn--primary"
+                          onClick={() => void sendReply(false)}
+                        >
+                          Yanıtla
+                        </button>
+                        <button
+                          type="button"
+                          className="compose-btn compose-btn--secondary"
+                          onClick={() => void sendReply(true)}
+                        >
+                          Tümüne yanıtla
+                        </button>
+                      </>
+                    )}
                   </div>
                   <div className="mail-reply-action-group mail-reply-action-group--end">
                     <select
