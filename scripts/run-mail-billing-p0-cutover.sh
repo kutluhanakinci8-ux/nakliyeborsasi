@@ -13,6 +13,11 @@ bash "${ROOT}/scripts/verify-mail-billing-config.sh"
 
 echo ""
 echo "== 2/2 Production readiness =="
+if [[ "${MAIL_BILLING_PILOT_FREE:-0}" == "1" ]]; then
+  echo "MAIL_BILLING_PILOT_FREE=1 — pilot ücretsiz mod (canlı ödeme kapısı atlandı)"
+  echo "P0 billing: PASS (pilot)"
+  exit 0
+fi
 if bash "${ROOT}/scripts/verify-mail-billing-prod.sh"; then
   echo ""
   echo "P0 billing: PASS (canlı ödeme için hazır)"

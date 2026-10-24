@@ -67,7 +67,11 @@ echo "== PTR =="
 PTR=$(dig +short -x "${EXPECTED_IP}" 2>/dev/null | head -1)
 echo "PTR ${EXPECTED_IP}: ${PTR:-<yok>}"
 if [[ "${PTR}" != *"mail"* ]]; then
-  warn "PTR mail hostname içermiyor (Hostinger panel)"
+  if [[ "${MAIL_INBOUND_PTR_SOFT:-0}" == "1" ]]; then
+    echo "UYARI: PTR mail hostname içermiyor — MAIL_INBOUND_PTR_SOFT=1 (docs/MAIL_PTR_HOSTINGER.md)"
+  else
+    warn "PTR mail hostname içermiyor (Hostinger panel — docs/MAIL_PTR_HOSTINGER.md)"
+  fi
 else
   ok "PTR"
 fi

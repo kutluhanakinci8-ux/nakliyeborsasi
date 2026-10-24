@@ -297,6 +297,25 @@ export function MailDeliverabilityPanel({
             ))}
           </ul>
         ) : null}
+        {hub.bounceIntelligence ? (
+          <div className="mail-deliverability-bounce-intel">
+            <p className="compose-attach-hint">{hub.bounceIntelligence.reputationHintTr}</p>
+            <div className="mail-deliverability-stat-grid mail-deliverability-stat-grid--3">
+              <StatTile label="Hard bounce" value={hub.bounceIntelligence.hardBounces} />
+              <StatTile label="Soft bounce" value={hub.bounceIntelligence.softBounces} />
+            </div>
+            {hub.bounceIntelligence.topBounceDomains.length > 0 ? (
+              <ul className="mail-deliverability-bounce-class">
+                {hub.bounceIntelligence.topBounceDomains.map((row) => (
+                  <li key={row.domain}>
+                    <span className="mail-deliverability-bounce-label">{row.domain}</span>
+                    <span className="mail-deliverability-bounce-count">{row.count}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+        ) : null}
         {engagement?.dailyOpenClick?.length ||
         engagement?.providerBreakdown?.length ? (
           <MailDeliverabilityEngagementMap

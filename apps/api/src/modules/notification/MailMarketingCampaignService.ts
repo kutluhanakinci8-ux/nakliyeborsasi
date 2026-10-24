@@ -893,6 +893,7 @@ export class MailMarketingCampaignService {
       sent: sendResult.sent,
       skippedSuppressed: sendResult.skippedSuppressed,
       failed: sendResult.failed,
+      abStats: sendResult.abStats,
     };
     await this.campaignRepository.update(
       { id: row.id },
@@ -1159,6 +1160,8 @@ export class MailMarketingCampaignService {
     return {
       ...this.toListItem(row),
       subjectB: row.payload.subjectB ?? null,
+      htmlB: row.payload.htmlB ?? null,
+      abStats: row.result?.abStats ?? null,
       segment: row.payload.segment ?? null,
       recipientDomainAllowlist: row.payload.recipientDomainAllowlist ?? null,
       reminderMinutesBefore: row.payload.reminderMinutesBefore ?? null,

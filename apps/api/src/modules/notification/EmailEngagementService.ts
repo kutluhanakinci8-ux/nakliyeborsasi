@@ -474,6 +474,86 @@ export class EmailEngagementService {
     return "other";
   }
 
+  public async getBounceIntelligence(
+    since: Date,
+    organizationId?: string | null,
+  ): Promise<{
+    hardBounces: number;
+    softBounces: number;
+    topBounceDomains: Array<{ domain: string; count: number }>;
+    autoSuppressedLastPeriod: number;
+    reputationHintTr: string;
+  }> {
+    const org = organizationId?.trim() || null;
+    const bounceJoin = org
+      ? `INNER JOIN email_outbox o ON o.id = e."outboxId"`
+      : "";
+    const bounceOrg = org ? this.outboxOrganizationSql("o", 2) : "";
+    const params: (Date | string)[] = org ? [since, org] : [since];
+    const classRows: Array<{ bounce_class: string; count: string }> =
+      await this.eventRepository.query(
+        `
+        SELECT e."bounceClass" AS bounce_class, COUNT(*)::text AS count
+        FROM email_outbox_engagement_events e
+        ${bounceJoin}
+        WHERE e."eventType" = 'bounce' AND e."occurredAt" >= $1 AND e."bounceClass" IS NOT NULL${bounceOrg}
+        GROUP BY e."bounceClass"
+        `,
+        params,
+      );
+    let hardBounces = 0;
+    let softBounces = 0;
+    for (const row of classRows) {
+      const count = Number.parseInt(row.count, 10);
+      if (/hard|permanent|invalid/i.test(row.bounce_class)) {
+        hardBounces += count;
+      } else {
+        softBounces += count;
+      }
+    }
+    const domainRows: Array<{ domain: string; count: string }> =
+      await this.eventRepository.query(
+        `
+        SELECT
+          lower(split_part(o."recipientEmail", '@', 2)) AS domain,
+          COUNT(*)::text AS count
+        FROM email_outbox_engagement_events e
+        INNER JOIN email_outbox o ON o.id = e."outboxId"
+        WHERE e."eventType" = 'bounce' AND e."occurredAt" >= $1${bounceOrg}
+          AND o."recipientEmail" LIKE '%@%'
+        GROUP BY 1
+        ORDER BY COUNT(*) DESC
+        LIMIT 8
+        `,
+        params,
+      );
+    const topBounceDomains = domainRows
+      .filter((row) => row.domain?.trim())
+      .map((row) => ({
+        domain: row.domain,
+        count: Number.parseInt(row.count, 10),
+      }));
+    const summary = await this.getEngagementSummary(since, organizationId);
+    let reputationHintTr = "Teslimat itibarı stabil görünüyor.";
+    if (
+      summary.bounceRatePercent != null &&
+      summary.bounceRatePercent >= 5
+    ) {
+      reputationHintTr =
+        "Bounce oranı yüksek — listeyi temizleyin ve hard bounce alan adresleri suppression’a alın.";
+    } else if (hardBounces > softBounces && hardBounces >= 3) {
+      reputationHintTr =
+        "Kalıcı (hard) bounce artışı — alan adı veya adres kalitesini gözden geçirin.";
+    }
+    return {
+      hardBounces,
+      softBounces,
+      topBounceDomains,
+      autoSuppressedLastPeriod: 0,
+      reputationHintTr,
+    };
+  }
+
   public async buildEngagementExportCsv(
     since: Date,
     limit = 5000,

@@ -4,6 +4,7 @@ import { MailSettingsPanel } from "./MailSettingsPanel";
 import { MailComposeMergeFields } from "./MailComposeMergeFields";
 import { MailCampaignResultDialog } from "./MailCampaignResultDialog";
 import { MailCampaignHistoryPanel } from "./MailCampaignHistoryPanel";
+import { MailCampaignBlockEditor } from "./MailCampaignBlockEditor";
 import { MailEmptyState } from "./MailEmptyState";
 import { MailShortcutsDialog } from "./MailShortcutsDialog";
 import { MailCalendarPanel } from "./MailCalendarPanel";
@@ -1972,6 +1973,10 @@ export function MailClientShell({ mail }: Props) {
                         }}
                       />
                     </label>
+                    <MailCampaignBlockEditor
+                      html={composeHtml}
+                      onHtmlChange={setComposeHtml}
+                    />
                     <label className="compose-field-label" htmlFor="compose-campaign-delay">
                       Alıcılar arası gecikme
                     </label>

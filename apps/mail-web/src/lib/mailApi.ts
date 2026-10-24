@@ -1637,8 +1637,15 @@ export async function cloneMailCampaignSchedule(
   });
 }
 
+export type MailCampaignAbStats = {
+  sentVariantA: number;
+  sentVariantB: number;
+};
+
 export type MailCampaignDetail = MailCampaignListItem & {
   subjectB: string | null;
+  htmlB?: string | null;
+  abStats?: MailCampaignAbStats | null;
   segment: {
     referansPrefix?: string;
     referansEquals?: string;
@@ -2853,6 +2860,14 @@ export type MailDeliverabilityEngagement = {
   }>;
 };
 
+export type MailBounceIntelligence = {
+  hardBounces: number;
+  softBounces: number;
+  topBounceDomains: Array<{ domain: string; count: number }>;
+  autoSuppressedLastPeriod: number;
+  reputationHintTr: string;
+};
+
 export type MailDeliverabilityHub = {
   periodDays?: number;
   dns: {
@@ -2863,6 +2878,7 @@ export type MailDeliverabilityHub = {
     dkim: boolean;
   } | null;
   engagement?: MailDeliverabilityEngagement;
+  bounceIntelligence?: MailBounceIntelligence;
   /** @deprecated API eski alan adı — engagement ile aynı */
   engagement30d?: MailDeliverabilityEngagement;
   suppressionCount: number;

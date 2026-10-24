@@ -48,3 +48,30 @@ export function buildReplyQuotePreview(
     ...quotedLines,
   ].join("\n");
 }
+
+/** Outlook tarzı HTML alıntı önizleme (compose WYSIWYG). */
+export function buildReplyQuotePreviewHtml(
+  source: ReplyQuotePreviewSource,
+  mode: MailReplyQuoteMode,
+  draftHtml?: string,
+): string {
+  const plain = buildReplyQuotePreview(source, mode);
+  if (!plain.trim()) {
+    return draftHtml?.trim() ?? "";
+  }
+  const quotedHtml = plain
+    .split("\n")
+    .map((line) => escapeHtml(line))
+    .join("<br/>");
+  const draftBlock = draftHtml?.trim()
+    ? `<div class="mail-reply-draft">${draftHtml}</div>`
+    : "";
+  return `${draftBlock}<blockquote class="mail-reply-quote-block" style="margin:12px 0 0;padding:8px 12px;border-left:3px solid #94a3b8;color:#475569;font-family:system-ui,sans-serif;font-size:14px;line-height:1.45">${quotedHtml}</blockquote>`;
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}

@@ -86,6 +86,9 @@ import { MailMailboxComposeService } from "./MailMailboxComposeService";
 import { MailMailboxOutboundContentService } from "./MailMailboxOutboundContentService";
 import { MailImapMaildirService } from "./MailImapMaildirService";
 import { MailImapMaildirReconcileService } from "./MailImapMaildirReconcileService";
+import { MailImapMaildirReconcileScheduler } from "./MailImapMaildirReconcileScheduler";
+import { MailInboxAiFocusBackgroundService } from "./MailInboxAiFocusBackgroundService";
+import { MailInboxAiFocusScheduler } from "./MailInboxAiFocusScheduler";
 import { MailImapAccessService } from "./MailImapAccessService";
 import { MailImapCredentialEntity } from "../../infrastructure/database/entities/MailImapCredentialEntity";
 import { MailMailboxSentEntity } from "../../infrastructure/database/entities/MailMailboxSentEntity";
@@ -323,6 +326,9 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     MailPlatformEdiscoveryService,
     MailImapMaildirService,
     MailImapMaildirReconcileService,
+    MailImapMaildirReconcileScheduler,
+    MailInboxAiFocusBackgroundService,
+    MailInboxAiFocusScheduler,
     MailImapAccessService,
     MailComposeDraftService,
     MailComposePresetService,

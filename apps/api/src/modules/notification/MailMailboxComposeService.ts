@@ -279,6 +279,7 @@ export class MailMailboxComposeService {
     sent: number;
     skippedSuppressed: number;
     failed: Array<{ email: string; error: string }>;
+    abStats?: { sentVariantA: number; sentVariantB: number };
   }> {
     const recipients = params.recipients ?? [];
     if (recipients.length === 0) {
@@ -298,6 +299,8 @@ export class MailMailboxComposeService {
       Math.max(0, params.delayMsBetweenRecipients ?? 0),
     );
     let sent = 0;
+    let sentVariantA = 0;
+    let sentVariantB = 0;
     let skippedSuppressed = 0;
     const failed: Array<{ email: string; error: string }> = [];
     const subjectB = params.subjectB?.trim() || "";
@@ -370,6 +373,13 @@ export class MailMailboxComposeService {
               : undefined,
         });
         sent += 1;
+        if (subjectB || htmlB) {
+          if (useVariantB) {
+            sentVariantB += 1;
+          } else {
+            sentVariantA += 1;
+          }
+        }
         if (delayMs > 0) {
           await sleep(delayMs);
         }
@@ -379,12 +389,16 @@ export class MailMailboxComposeService {
         failed.push({ email, error: message.slice(0, 200) });
       }
     }
+    const hasAb = Boolean(subjectB || htmlB);
     return {
       campaignId,
       attempted: recipients.length,
       sent,
       skippedSuppressed,
       failed,
+      abStats: hasAb
+        ? { sentVariantA, sentVariantB }
+        : undefined,
     };
   }
 

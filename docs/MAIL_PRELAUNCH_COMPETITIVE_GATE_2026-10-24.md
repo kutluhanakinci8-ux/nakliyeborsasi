@@ -154,12 +154,12 @@ Rakip referans skorları: sektör “tam donanım” = 100 (Gmail webmail günl�
 |---------|------|------------------|--------------|
 | **P0** | Graph + Google OAuth prod anahtarları + M3/M4 manuel | Entegrasyon %92→%98 | Pilot kurumsal |
 | **P0** | MSN/Gmail/Outlook teslimat smoke M9 | İtibar | Satış güveni |
-| **P1** | IMAP %100 iki yön kanıt (M1) + otomatik reconcile cron | IMAP %94→%98 | Thunderbird kullanıcıları |
-| **P1** | Engagement analitiği: bounce intelligence, kampanya cohort | Postmark %76→%85 | ESP iddiası |
-| **P1** | Native Capacitor mağaza beta (`MAIL_POSTA_NATIVE_SHELL.md`) | Mobil app %82→%90 | Sahada “app var” |
-| **P2** | Mailchimp tarzı drag-drop kampanya editörü | Kampanya %82→%90 | Pazarlama ekipleri |
-| **P2** | Odaklı kutu ML / sürekli sınıflandırma pipeline | Gmail akıllı %98→%100 | Power user |
-| **P2** | Tam yanıt alıntısı Outlook düzenleme (compose WYSIWYG) | Yazma %98→%100 | Outlook migrasyonu |
+| **P1** | IMAP %100 iki yön kanıt (M1) + otomatik reconcile cron | IMAP %94→%98 | Cron ✅ kod — M1 manuel |
+| **P1** | Engagement analitiği: bounce intelligence, kampanya cohort | Postmark %76→%85 | Bounce intel ✅ — cohort kısmi |
+| **P1** | Native Capacitor mağaza beta (`MAIL_POSTA_NATIVE_SHELL.md`) | Mobil app %82→%90 | `build-posta-capacitor-native.sh` |
+| **P2** | Mailchimp tarzı drag-drop kampanya editörü | Kampanya %82→%90 | Blok editör ✅ |
+| **P2** | Odaklı kutu ML / sürekli sınıflandırma pipeline | Gmail akıllı %98→%100 | Scheduler ✅ |
+| **P2** | Tam yanıt alıntısı Outlook düzenleme (compose WYSIWYG) | Yazma %98→%100 | WYSIWYG önizleme ✅ |
 | **P3** | JMAP Email/set genişletme veya Cory kararı | Entegrasyon | Harici istemci |
 
 ---

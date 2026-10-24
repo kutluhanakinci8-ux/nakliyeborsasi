@@ -39,6 +39,9 @@ export class MailDeliverabilityHubService {
     engagement: Awaited<
       ReturnType<EmailEngagementService["getEngagementSummary"]>
     >;
+    bounceIntelligence: Awaited<
+      ReturnType<EmailEngagementService["getBounceIntelligence"]>
+    >;
     suppressionCount: number;
     dmarcReports90d: number;
     dmarc: {
@@ -66,6 +69,11 @@ export class MailDeliverabilityHubService {
       since,
       organizationId,
     );
+    const bounceIntelligence =
+      await this.emailEngagementService.getBounceIntelligence(
+        since,
+        organizationId,
+      );
     const bundle =
       await this.mailCustomDomainService.getOrganizationBundle(organizationId);
     const suppressionCount =
@@ -162,6 +170,7 @@ export class MailDeliverabilityHubService {
       periodDays,
       dns: dnsBlock,
       engagement,
+      bounceIntelligence,
       suppressionCount,
       dmarcReports90d,
       dmarc: {

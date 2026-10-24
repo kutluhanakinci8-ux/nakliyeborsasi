@@ -2,7 +2,7 @@
 
 import type { MailReplyQuoteMode } from "@/lib/mailApi";
 import {
-  buildReplyQuotePreview,
+  buildReplyQuotePreviewHtml,
   type ReplyQuotePreviewSource,
 } from "@/lib/mailReplyQuotePreview";
 
@@ -13,22 +13,25 @@ type Props = {
 };
 
 export function MailReplyQuotePreview({ source, mode, draftText }: Props) {
-  const quote = buildReplyQuotePreview(source, mode);
-  if (!quote.trim()) {
+  const draftHtml = draftText.trim()
+    ? draftText.trim().replace(/\n/g, "<br/>")
+    : "";
+  const previewHtml = buildReplyQuotePreviewHtml(source, mode, draftHtml);
+  if (!previewHtml.trim()) {
     return null;
   }
-  const preview = draftText.trim()
-    ? `${draftText.trim()}\n${quote}`
-    : quote;
   return (
     <div className="mail-reply-quote-preview" aria-label="Yanıt alıntı önizleme">
       <div className="mail-reply-quote-preview-head">
-        <span className="mail-reply-quote-preview-label">Gönderim önizleme</span>
+        <span className="mail-reply-quote-preview-label">Gönderim önizleme (WYSIWYG)</span>
         <span className="mail-reply-quote-preview-mode">
           {mode === "full" ? "Tam alıntı" : mode === "trimmed" ? "Kısa alıntı" : ""}
         </span>
       </div>
-      <pre className="mail-reply-quote-preview-body">{preview}</pre>
+      <div
+        className="mail-reply-quote-preview-body mail-reply-quote-preview-body--html"
+        dangerouslySetInnerHTML={{ __html: previewHtml }}
+      />
     </div>
   );
 }

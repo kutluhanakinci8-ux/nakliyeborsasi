@@ -27,6 +27,51 @@ export class MailImapMaildirReconcileService {
     private readonly mailboxRepository: Repository<MailMailboxEntity>,
   ) {}
 
+  public async reconcileAllOrganizations(limitPerOrg = 400): Promise<{
+    organizations: number;
+    scanned: number;
+    updatedFolder: number;
+    relocatedPath: number;
+    missingOnDisk: number;
+  }> {
+    if (!this.mailImapMaildirService.isEnabled()) {
+      return {
+        organizations: 0,
+        scanned: 0,
+        updatedFolder: 0,
+        relocatedPath: 0,
+        missingOnDisk: 0,
+      };
+    }
+    const rows = await this.mailboxRepository
+      .createQueryBuilder("m")
+      .select("DISTINCT m.organizationId", "organizationId")
+      .where("m.status = :status", { status: "active" })
+      .getRawMany<{ organizationId: string }>();
+    let scanned = 0;
+    let updatedFolder = 0;
+    let relocatedPath = 0;
+    let missingOnDisk = 0;
+    for (const row of rows) {
+      const outcome = await this.reconcileForOrganization(
+        row.organizationId,
+        undefined,
+        limitPerOrg,
+      );
+      scanned += outcome.scanned;
+      updatedFolder += outcome.updatedFolder;
+      relocatedPath += outcome.relocatedPath;
+      missingOnDisk += outcome.missingOnDisk;
+    }
+    return {
+      organizations: rows.length,
+      scanned,
+      updatedFolder,
+      relocatedPath,
+      missingOnDisk,
+    };
+  }
+
   public async reconcileForOrganization(
     organizationId: string,
     actor?: MailInboxActor,

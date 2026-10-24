@@ -896,6 +896,12 @@ export function MailCampaignHistoryPanel({
                       {detail.subjectB ? (
                         <p className="compose-attach-hint">A/B (B): {detail.subjectB}</p>
                       ) : null}
+                      {detail.abStats ? (
+                        <p className="compose-attach-hint">
+                          A/B gönderim: A={detail.abStats.sentVariantA} · B=
+                          {detail.abStats.sentVariantB}
+                        </p>
+                      ) : null}
                       {detail.segment?.referansAllowlist?.length ? (
                         <p className="compose-attach-hint">
                           Referans filtresi:{" "}

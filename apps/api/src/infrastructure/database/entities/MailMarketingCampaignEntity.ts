@@ -48,11 +48,17 @@ export type MailMarketingCampaignPayload = {
   clientReference?: string;
 };
 
+export type MailMarketingCampaignAbStats = {
+  sentVariantA: number;
+  sentVariantB: number;
+};
+
 export type MailMarketingCampaignResult = {
   attempted: number;
   sent: number;
   skippedSuppressed: number;
   failed: Array<{ email: string; error: string }>;
+  abStats?: MailMarketingCampaignAbStats;
 };
 
 export type MailMarketingCampaignStatus =
