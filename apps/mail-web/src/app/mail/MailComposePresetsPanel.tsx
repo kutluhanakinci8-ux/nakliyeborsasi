@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import {
   createComposePreset,
   deleteComposePreset,
@@ -14,6 +14,45 @@ type Props = {
   accessToken: string;
 };
 
+type FormKind = "signature" | "template" | "campaign";
+
+function PresetSection({
+  title,
+  description,
+  children,
+  muted,
+}: {
+  title: string;
+  description?: string;
+  children: ReactNode;
+  muted?: boolean;
+}) {
+  return (
+    <section
+      className={
+        muted ? "mail-posta-card mail-posta-card--muted" : "mail-posta-card"
+      }
+    >
+      <header className="mail-posta-card-head">
+        <h3 className="mail-posta-card-title">{title}</h3>
+        {description ? (
+          <p className="mail-posta-card-desc">{description}</p>
+        ) : null}
+      </header>
+      {children}
+    </section>
+  );
+}
+
+function PresetEmpty({ label }: { label: string }) {
+  return (
+    <div className="mail-presets-empty" role="status">
+      <span className="mail-presets-empty-icon" aria-hidden="true">✎</span>
+      <p>{label}</p>
+    </div>
+  );
+}
+
 export function MailComposePresetsPanel({ accessToken }: Props) {
   const [signatures, setSignatures] = useState<MailComposePreset[]>([]);
   const [templates, setTemplates] = useState<MailComposePreset[]>([]);
@@ -21,10 +60,10 @@ export function MailComposePresetsPanel({ accessToken }: Props) {
     [],
   );
   const [error, setError] = useState("");
+  const [status, setStatus] = useState("");
+  const [initialLoading, setInitialLoading] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [formKind, setFormKind] = useState<
-    "signature" | "template" | "campaign"
-  >("signature");
+  const [formKind, setFormKind] = useState<FormKind>("signature");
   const [formName, setFormName] = useState("");
   const [formSubject, setFormSubject] = useState("");
   const [formBody, setFormBody] = useState("");
@@ -40,16 +79,20 @@ export function MailComposePresetsPanel({ accessToken }: Props) {
 
   useEffect(() => {
     void (async () => {
+      setInitialLoading(true);
       try {
         await reload();
       } catch {
         setError("İmza ve şablonlar yüklenemedi.");
+      } finally {
+        setInitialLoading(false);
       }
     })();
   }, [reload]);
 
   async function onCreate() {
     setError("");
+    setStatus("");
     if (!formName.trim() || !formBody.trim()) {
       setError("Ad ve metin zorunlu.");
       return;
@@ -80,6 +123,7 @@ export function MailComposePresetsPanel({ accessToken }: Props) {
       setFormBodyHtml("");
       setFormDefault(false);
       await reload();
+      setStatus("Kayıt oluşturuldu — yaz ekranından seçebilirsiniz.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Kaydedilemedi.");
     } finally {
@@ -88,51 +132,83 @@ export function MailComposePresetsPanel({ accessToken }: Props) {
   }
 
   async function toggleDefault(preset: MailComposePreset) {
+    setStatus("");
     try {
       await updateComposePreset(accessToken, preset.id, {
         isDefault: !preset.isDefault,
       });
       await reload();
+      setStatus("Varsayılan imza güncellendi.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Güncellenemedi.");
     }
   }
 
   async function onDelete(id: string) {
+    setStatus("");
     try {
       await deleteComposePreset(accessToken, id);
       await reload();
+      setStatus("Kayıt silindi.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Silinemedi.");
     }
   }
 
-  function renderList(items: MailComposePreset[], showDefault: boolean) {
+  function renderList(
+    items: MailComposePreset[],
+    options: {
+      showDefault: boolean;
+      emptyLabel: string;
+    },
+  ) {
     if (items.length === 0) {
-      return <p className="mail-empty">Kayıt yok</p>;
+      return <PresetEmpty label={options.emptyLabel} />;
     }
     return (
-      <ul className="preset-list">
+      <ul className="mail-presets-list">
         {items.map((item) => (
-          <li key={item.id}>
-            <div>
-              <strong>{item.name}</strong>
+          <li
+            key={item.id}
+            className={
+              item.isDefault
+                ? "mail-presets-item is-default"
+                : "mail-presets-item"
+            }
+          >
+            <div className="mail-presets-item-main">
+              <div className="mail-presets-item-head">
+                <span className="mail-presets-item-name">{item.name}</span>
+                {item.isSystem ? (
+                  <span className="mail-presets-tag mail-presets-tag--system">
+                    Sistem
+                  </span>
+                ) : null}
+                {options.showDefault && item.isDefault ? (
+                  <span className="mail-accounts-badge">Varsayılan</span>
+                ) : null}
+              </div>
               {(item.kind === "template" || item.kind === "campaign") &&
               item.subject ? (
-                <span className="preset-meta"> — {item.subject}</span>
-              ) : null}
-              {showDefault && item.isDefault ? (
-                <span className="preset-meta"> (varsayılan)</span>
+                <span className="mail-presets-item-subject">{item.subject}</span>
               ) : null}
             </div>
-            <div className="preset-actions">
-              {showDefault ? (
-                <button type="button" onClick={() => void toggleDefault(item)}>
+            <div className="mail-presets-item-actions">
+              {options.showDefault ? (
+                <button
+                  type="button"
+                  className="mail-premium-btn mail-premium-btn--ghost"
+                  onClick={() => void toggleDefault(item)}
+                >
                   {item.isDefault ? "Varsayılanı kaldır" : "Varsayılan yap"}
                 </button>
               ) : null}
               {item.isSystem ? null : (
-                <button type="button" onClick={() => void onDelete(item.id)}>
+                <button
+                  type="button"
+                  className="mail-premium-btn mail-premium-btn--danger-ghost"
+                  onClick={() => void onDelete(item.id)}
+                >
                   Sil
                 </button>
               )}
@@ -143,95 +219,210 @@ export function MailComposePresetsPanel({ accessToken }: Props) {
     );
   }
 
-  return (
-    <div className="presets-panel">
-      {error ? <p className="login-error">{error}</p> : null}
-      <h3>İmzalar</h3>
-      <p className="preset-hint">Kişisel imzalarınız; yaz ekranından seçilebilir.</p>
-      {renderList(signatures, true)}
-      <h3>Hazır şablonlar</h3>
-      <p className="preset-hint">
-        Tüm kullanıcılar için nakliye odaklı sistem şablonları (yaz ekranından
-        seçilir).
-      </p>
-      {renderList(templates.filter((row) => row.isSystem), false)}
-      <h3>Kurumsal şablonlar</h3>
-      <p className="preset-hint">
-        Posta yöneticisi ek şablon tanımlayabilir.
-      </p>
-      {renderList(templates.filter((row) => !row.isSystem), false)}
-      <h3>Kampanya şablonları</h3>
-      <p className="preset-hint">
-        Kampanya modunda yaz ekranından seçilir (posta yöneticisi).
-      </p>
-      {renderList(campaignTemplates, false)}
-      <h3>Yeni kayıt</h3>
-      <div className="preset-form">
-        <label>
-          Tür
-          <select
-            value={formKind}
-            onChange={(e) =>
-              setFormKind(
-                e.target.value as "signature" | "template" | "campaign",
-              )
-            }
-          >
-            <option value="signature">İmza</option>
-            <option value="template">Şablon</option>
-            <option value="campaign">Kampanya şablonu</option>
-          </select>
-        </label>
-        <input
-          placeholder="Ad"
-          value={formName}
-          onChange={(e) => setFormName(e.target.value)}
-        />
-        {formKind === "template" || formKind === "campaign" ? (
-          <input
-            placeholder="Konu"
-            value={formSubject}
-            onChange={(e) => setFormSubject(e.target.value)}
-          />
-        ) : null}
-        <textarea
-          placeholder="Metin"
-          rows={4}
-          value={formBody}
-          onChange={(e) => setFormBody(e.target.value)}
-        />
-        {formKind === "signature" ? (
-          <textarea
-            className="preset-html"
-            placeholder="HTML imza (isteğe bağlı): logo, telefon, bağlantılar"
-            rows={5}
-            value={formBodyHtml}
-            onChange={(e) => setFormBodyHtml(e.target.value)}
-          />
-        ) : null}
-        {formKind === "template" || formKind === "campaign" ? (
-          <textarea
-            className="preset-html"
-            placeholder="HTML gövde (isteğe bağlı)"
-            rows={5}
-            value={formBodyHtml}
-            onChange={(e) => setFormBodyHtml(e.target.value)}
-          />
-        ) : null}
-        {formKind === "signature" ? (
-          <label className="preset-check">
-            <input
-              type="checkbox"
-              checked={formDefault}
-              onChange={(e) => setFormDefault(e.target.checked)}
-            />
-            Varsayılan imza
-          </label>
-        ) : null}
-        <button type="button" disabled={loading} onClick={() => void onCreate()}>
-          {loading ? "…" : "Kaydet"}
-        </button>
+  if (initialLoading) {
+    return (
+      <div className="mail-presets-panel mail-presets-panel--premium">
+        <div className="mail-posta-skeleton" aria-busy="true">
+          <div className="mail-posta-skeleton-line mail-posta-skeleton-line--lead" />
+          <div className="mail-posta-skeleton-card" />
+          <div className="mail-posta-skeleton-card" />
+        </div>
       </div>
+    );
+  }
+
+  const systemTemplates = templates.filter((row) => row.isSystem);
+  const orgTemplates = templates.filter((row) => !row.isSystem);
+
+  return (
+    <div className="mail-presets-panel mail-presets-panel--premium">
+      <p className="mail-posta-intro">
+        Kurumsal imza ve hazır şablonlar yaz ekranında tek tıkla uygulanır. Nakliye
+        odaklı sistem şablonları tüm kullanıcılar için hazırdır.
+      </p>
+
+      {error ? (
+        <p className="mail-accounts-status mail-accounts-status--err" role="alert">
+          {error}
+        </p>
+      ) : null}
+      {status ? (
+        <p className="mail-accounts-status mail-accounts-status--ok" role="status">
+          {status}
+        </p>
+      ) : null}
+
+      <PresetSection
+        title="İmzalar"
+        description="Kişisel imzalarınız; gönderim öncesi yaz ekranından seçilir."
+      >
+        {renderList(signatures, {
+          showDefault: true,
+          emptyLabel: "Henüz imza eklenmedi.",
+        })}
+      </PresetSection>
+
+      <PresetSection
+        title="Hazır şablonlar"
+        description="Nakliye ve lojistik süreçleri için yerleşik metinler."
+      >
+        {renderList(systemTemplates, {
+          showDefault: false,
+          emptyLabel: "Sistem şablonu bulunamadı.",
+        })}
+      </PresetSection>
+
+      <PresetSection
+        title="Kurumsal şablonlar"
+        description="Posta yöneticisi ek şablon tanımlayabilir."
+        muted
+      >
+        {renderList(orgTemplates, {
+          showDefault: false,
+          emptyLabel: "Kurumsal şablon yok.",
+        })}
+      </PresetSection>
+
+      <PresetSection
+        title="Kampanya şablonları"
+        description="Kampanya modunda yaz ekranından seçilir."
+        muted
+      >
+        {renderList(campaignTemplates, {
+          showDefault: false,
+          emptyLabel: "Kampanya şablonu yok.",
+        })}
+      </PresetSection>
+
+      <PresetSection
+        title="Yeni kayıt"
+        description="İmza, şablon veya kampanya metni oluşturun."
+      >
+        <div className="mail-presets-form">
+          <div className="mail-premium-field">
+            <span className="mail-premium-field-label">Tür</span>
+            <div
+              className="mail-posta-chips mail-posta-chips--equal mail-presets-kind-chips"
+              role="group"
+              aria-label="Kayıt türü"
+            >
+              {(
+                [
+                  { id: "signature" as FormKind, label: "İmza" },
+                  { id: "template" as FormKind, label: "Şablon" },
+                  { id: "campaign" as FormKind, label: "Kampanya" },
+                ] as const
+              ).map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  className={
+                    formKind === opt.id
+                      ? "mail-posta-chip is-active"
+                      : "mail-posta-chip"
+                  }
+                  aria-pressed={formKind === opt.id}
+                  onClick={() => setFormKind(opt.id)}
+                >
+                  <span className="mail-posta-chip-label">{opt.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <label className="mail-premium-field">
+            <span className="mail-premium-field-label">Ad</span>
+            <input
+              className="mail-premium-field-input"
+              placeholder="Örn. Kurumsal imza"
+              value={formName}
+              onChange={(e) => setFormName(e.target.value)}
+            />
+          </label>
+
+          {formKind === "template" || formKind === "campaign" ? (
+            <label className="mail-premium-field">
+              <span className="mail-premium-field-label">Konu</span>
+              <input
+                className="mail-premium-field-input"
+                placeholder="E-posta konu satırı"
+                value={formSubject}
+                onChange={(e) => setFormSubject(e.target.value)}
+              />
+            </label>
+          ) : null}
+
+          <label className="mail-premium-field">
+            <span className="mail-premium-field-label">Metin</span>
+            <textarea
+              className="mail-premium-field-textarea"
+              placeholder="Düz metin gövde"
+              rows={4}
+              value={formBody}
+              onChange={(e) => setFormBody(e.target.value)}
+            />
+          </label>
+
+          {formKind === "signature" ? (
+            <label className="mail-premium-field">
+              <span className="mail-premium-field-label">
+                HTML imza (isteğe bağlı)
+              </span>
+              <textarea
+                className="mail-premium-field-textarea mail-premium-field-textarea--mono"
+                placeholder="Logo, telefon, bağlantılar…"
+                rows={5}
+                value={formBodyHtml}
+                onChange={(e) => setFormBodyHtml(e.target.value)}
+              />
+            </label>
+          ) : null}
+
+          {formKind === "template" || formKind === "campaign" ? (
+            <label className="mail-premium-field">
+              <span className="mail-premium-field-label">
+                HTML gövde (isteğe bağlı)
+              </span>
+              <textarea
+                className="mail-premium-field-textarea mail-premium-field-textarea--mono"
+                placeholder="Zengin metin HTML"
+                rows={5}
+                value={formBodyHtml}
+                onChange={(e) => setFormBodyHtml(e.target.value)}
+              />
+            </label>
+          ) : null}
+
+          {formKind === "signature" ? (
+            <label className="mail-posta-toggle mail-presets-default-toggle">
+              <input
+                type="checkbox"
+                className="mail-posta-toggle-input"
+                checked={formDefault}
+                onChange={(e) => setFormDefault(e.target.checked)}
+              />
+              <span className="mail-posta-toggle-track" aria-hidden="true">
+                <span className="mail-posta-toggle-thumb" />
+              </span>
+              <span className="mail-posta-toggle-text">
+                <span className="mail-posta-toggle-label">Varsayılan imza</span>
+                <span className="mail-posta-toggle-hint">
+                  Yeni mesajlarda otomatik önerilir.
+                </span>
+              </span>
+            </label>
+          ) : null}
+
+          <button
+            type="button"
+            className="mail-premium-btn mail-premium-btn--primary"
+            disabled={loading}
+            onClick={() => void onCreate()}
+          >
+            {loading ? "Kaydediliyor…" : "Kaydet"}
+          </button>
+        </div>
+      </PresetSection>
     </div>
   );
 }
