@@ -22,12 +22,12 @@ type Props = {
   onOpenDisplay?: () => void;
 };
 
-const UNDO_OPTIONS: { value: UndoSendSeconds; label: string; hint: string }[] = [
-  { value: 0, label: "Kapalı", hint: "Anında gönder" },
-  { value: 5, label: "5 sn", hint: "Varsayılan" },
-  { value: 10, label: "10 sn", hint: "" },
-  { value: 20, label: "20 sn", hint: "" },
-  { value: 30, label: "30 sn", hint: "" },
+const UNDO_OPTIONS: { value: UndoSendSeconds; label: string }[] = [
+  { value: 0, label: "Kapalı" },
+  { value: 5, label: "5 sn" },
+  { value: 10, label: "10 sn" },
+  { value: 20, label: "20 sn" },
+  { value: 30, label: "30 sn" },
 ];
 
 type PostaForm = ReturnType<typeof pickMailPostaPreferences>;
@@ -86,17 +86,22 @@ function ChipGroup<T extends string | number>({
   value,
   options,
   onChange,
-  columns,
+  layout = "equal",
 }: {
   value: T;
-  options: { value: T; label: string; hint?: string; disabled?: boolean }[];
+  options: { value: T; label: string; disabled?: boolean }[];
   onChange: (value: T) => void;
-  columns?: number;
+  layout?: "equal" | "wrap" | "pair";
 }) {
   return (
     <div
-      className="mail-posta-chips"
-      style={columns ? { gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` } : undefined}
+      className={
+        layout === "wrap"
+          ? "mail-posta-chips mail-posta-chips--wrap"
+          : layout === "pair"
+            ? "mail-posta-chips mail-posta-chips--pair"
+            : "mail-posta-chips mail-posta-chips--equal"
+      }
       role="group"
     >
       {options.map((option) => (
@@ -113,9 +118,6 @@ function ChipGroup<T extends string | number>({
           onClick={() => onChange(option.value)}
         >
           <span className="mail-posta-chip-label">{option.label}</span>
-          {option.hint ? (
-            <span className="mail-posta-chip-hint">{option.hint}</span>
-          ) : null}
         </button>
       ))}
     </div>
@@ -252,20 +254,16 @@ export function MailPostaSettings({
 
       <PostaSection
         title="Gönderme ve yanıtlama"
-        description="Gmail ve Outlook’taki «Geri al gönder» ve varsayılan yanıt davranışı."
+        description="Gönderim gecikmesi ve varsayılan yanıt düğmesi."
       >
         <PostaRow
           label="Geri al gönder"
-          hint="Gönderdikten sonra bir süre geri alabilirsiniz."
+          hint="Kapalı = anında gönder. 5 sn kurumsal varsayılan."
         >
           <ChipGroup
             value={form.undoSendSeconds}
-            columns={5}
-            options={UNDO_OPTIONS.map((o) => ({
-              value: o.value,
-              label: o.label,
-              hint: o.hint || undefined,
-            }))}
+            layout="wrap"
+            options={UNDO_OPTIONS}
             onChange={(v) =>
               setForm((f) => ({ ...f, undoSendSeconds: v as UndoSendSeconds }))
             }
@@ -274,7 +272,7 @@ export function MailPostaSettings({
         <PostaRow label="Varsayılan yanıt" hint="Okuma panelindeki birincil düğme.">
           <ChipGroup<MailDefaultReplyMode>
             value={form.defaultReplyMode}
-            columns={2}
+            layout="pair"
             options={[
               { value: "reply", label: "Yanıtla" },
               { value: "reply_all", label: "Yanıtla tümü" },
@@ -291,7 +289,7 @@ export function MailPostaSettings({
         <PostaRow label="Uzak resimler" hint="Gizlilik ve takip pikselleri.">
           <ChipGroup<MailRemoteImagesPolicy>
             value={form.remoteImagesPolicy}
-            columns={3}
+            layout="equal"
             options={[
               { value: "show", label: "Göster" },
               { value: "ask", label: "Önce sor" },
@@ -315,7 +313,7 @@ export function MailPostaSettings({
         >
           <ChipGroup<MailAfterMessageAction>
             value={form.afterMessageAction}
-            columns={3}
+            layout="equal"
             options={[
               { value: "list", label: "Liste" },
               { value: "next", label: "Sonraki" },
@@ -343,7 +341,7 @@ export function MailPostaSettings({
         <PostaRow label="Kaydırma aksiyonu" hint="Mobil liste — yakında tam eşleme.">
           <ChipGroup<MailSwipePrimaryAction>
             value={form.swipePrimaryAction}
-            columns={3}
+            layout="equal"
             options={[
               { value: "archive", label: "Arşiv" },
               { value: "delete", label: "Çöp" },
@@ -369,7 +367,7 @@ export function MailPostaSettings({
         <PostaRow label="Yanıt alıntısı" hint="Sunucu biçimi sonraki sürümde bağlanacak.">
           <ChipGroup<MailReplyQuoteMode>
             value={form.replyQuoteMode}
-            columns={3}
+            layout="equal"
             options={[
               { value: "full", label: "Tam" },
               { value: "trimmed", label: "Kısa" },

@@ -2540,7 +2540,7 @@ html[data-mail-theme="dark"] .login-error {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding-bottom: 8px;
+  padding-bottom: 4px;
 }
 
 .mail-posta-intro {
@@ -2609,17 +2609,20 @@ html[data-mail-theme="dark"] .login-error {
   gap: 14px;
 }
 
-.mail-posta-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
-  gap: 12px 16px;
-  align-items: start;
+.mail-posta-settings--premium .mail-posta-row {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
 }
 
-@media (max-width: 520px) {
-  .mail-posta-row {
-    grid-template-columns: 1fr;
-  }
+.mail-posta-settings--premium .mail-posta-row-label {
+  width: 100%;
+}
+
+.mail-posta-settings--premium .mail-posta-row-control {
+  width: 100%;
+  min-width: 0;
 }
 
 .mail-posta-row-title {
@@ -2639,24 +2642,44 @@ html[data-mail-theme="dark"] .login-error {
 
 .mail-posta-chips {
   display: grid;
-  gap: 6px;
+  gap: 8px;
   width: 100%;
+}
+
+.mail-posta-chips--equal {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.mail-posta-chips--pair {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.mail-posta-chips--wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mail-posta-chips--wrap .mail-posta-chip {
+  flex: 1 1 calc(33.333% - 8px);
+  min-width: 4.5rem;
+  max-width: calc(50% - 4px);
 }
 
 .mail-posta-chip {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  min-height: 44px;
-  padding: 8px 6px;
+  min-height: 40px;
+  padding: 8px 10px;
   border-radius: 10px;
   border: 1px solid var(--border);
   background: var(--bg);
   color: var(--text);
   font-size: 0.8rem;
   font-weight: 600;
+  line-height: 1.25;
+  white-space: nowrap;
   cursor: pointer;
   transition:
     border-color 0.15s ease,
@@ -2680,23 +2703,22 @@ html[data-mail-theme="dark"] .login-error {
 }
 
 .mail-posta-chip-label {
-  line-height: 1.2;
-}
-
-.mail-posta-chip-hint {
-  font-size: 0.65rem;
-  font-weight: 500;
-  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .mail-posta-toggle {
   display: flex;
   align-items: flex-start;
   gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
   cursor: pointer;
-  padding: 10px 12px;
+  padding: 12px 12px;
   border-radius: 12px;
-  border: 1px solid transparent;
+  border: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
+  background: color-mix(in srgb, var(--bg) 40%, var(--panel));
   transition: background 0.15s ease;
 }
 
@@ -2769,22 +2791,26 @@ html[data-mail-theme="dark"] .login-error {
 }
 
 .mail-posta-footer {
-  position: sticky;
-  bottom: 0;
-  z-index: 2;
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: stretch;
   gap: 12px;
-  margin-top: 4px;
-  padding: 14px 0 4px;
+  margin-top: 8px;
+  padding: 16px 0 0;
   border-top: 1px solid var(--border);
-  background: linear-gradient(
-    to top,
-    var(--panel) 75%,
-    color-mix(in srgb, var(--panel) 0%, transparent)
-  );
+  background: var(--panel);
+}
+
+@media (min-width: 420px) {
+  .mail-posta-footer {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .mail-posta-save {
+    width: auto;
+  }
 }
 
 .mail-posta-status {
@@ -2813,6 +2839,7 @@ html[data-mail-theme="dark"] .mail-posta-status--ok {
 
 .mail-posta-save {
   flex-shrink: 0;
+  width: 100%;
   min-width: 120px;
   padding: 11px 22px;
   border: none;
@@ -3061,6 +3088,19 @@ html[data-mail-theme="dark"] .mail-posta-status--ok {
   flex-direction: column;
   padding: 0;
   overflow: hidden;
+}
+
+.mail-settings-dialog--posta {
+  width: min(540px, calc(100vw - 24px));
+  max-height: min(90vh, 780px);
+}
+
+.mail-settings-dialog--posta .mail-settings-detail {
+  padding: 12px 18px 20px;
+}
+
+.mail-settings-dialog--posta .mail-settings-scroll {
+  padding-bottom: 8px;
 }
 
 .mail-settings-header {
