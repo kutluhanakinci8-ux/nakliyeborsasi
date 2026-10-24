@@ -27,21 +27,12 @@ import {
   resolveMailConsoleUrl,
   syncAllCalendarCalDavAccounts,
   syncAllContactCardDavAccounts,
-  updateInboxPreferences,
   type MailInboxListDensity,
 } from "@/lib/mailApi";
-import {
-  subscribeMailWebPush,
-  unsubscribeMailWebPush,
-} from "@/lib/mailPush";
-import {
-  isMailNotifySoundEnabled,
-  playMailNotifyBeep,
-  setMailNotifySoundEnabled,
-} from "@/lib/mailNotifySound";
 import { MailDisplaySettings } from "./MailDisplaySettings";
 import { MailPostaSettings } from "./MailPostaSettings";
 import { MailAutoReplySettingsPanel } from "./MailAutoReplySettingsPanel";
+import { MailNotificationsSettingsPanel } from "./MailNotificationsSettingsPanel";
 
 export type SettingsView =
   | "hub"
@@ -213,10 +204,7 @@ export function MailSettingsPanel({
 }: Props) {
   const [view, setView] = useState<SettingsView>(initialView ?? "hub");
   const [query, setQuery] = useState("");
-  const [pushStatus, setPushStatus] = useState("");
   const [pushConfigured, setPushConfigured] = useState(false);
-  const [notifySound, setNotifySound] = useState(false);
-  const [dailyDigest, setDailyDigest] = useState(true);
   const [autoReplyEnabled, setAutoReplyEnabled] = useState(false);
   const [inboxListDensity, setInboxListDensity] =
     useState<MailInboxListDensity>("comfortable");
@@ -248,10 +236,6 @@ export function MailSettingsPanel({
   }, [initialView]);
 
   useEffect(() => {
-    setNotifySound(isMailNotifySoundEnabled());
-  }, []);
-
-  useEffect(() => {
     void (async () => {
       try {
         setSettings(await fetchImapSettings(accessToken));
@@ -260,7 +244,6 @@ export function MailSettingsPanel({
         const push = await fetchMailPushConfig(accessToken);
         setPushConfigured(push.config.enabled);
         const prefs = await fetchInboxPreferences(accessToken);
-        setDailyDigest(prefs.preferences.dailyDigestEnabled);
         setAutoReplyEnabled(prefs.preferences.autoReplyEnabled);
         const density = prefs.preferences.inboxListDensity ?? "comfortable";
         setInboxListDensity(density);
@@ -616,114 +599,10 @@ export function MailSettingsPanel({
     case "notifications":
       content = renderDetail(
         "Bildirimler ve sesler",
-        <>
-          {notificationsPwaFocus ? (
-            <p
-              id="mail-pwa-offline-push"
-              className="mail-parity-assist-banner"
-              role="status"
-            >
-              PWA: <code>/manifest.webmanifest</code> ve{" "}
-              <code>sw.js</code> ile ana ekrana ekleyebilirsiniz. Çevrimdışı
-              modda gelen kutusu önbelleği salt okunur gösterilir; Web Push için
-              alttaki <strong>Bildirimleri aç</strong> düğmesini kullanın.
-            </p>
-          ) : null}
-          <p className="mail-settings-lead">
-            Yeni gelen posta için tarayıcı bildirimi (Web Push). HTTPS ve izin
-            gerekir.
-          </p>
-          {!pushConfigured ? (
-            <p>Sunucuda push henüz yapılandırılmamış (VAPID anahtarları).</p>
-          ) : null}
-          <div className="mail-settings-callout">
-            <strong>iPhone / iPad (Safari)</strong>
-            <p>
-              Bildirimler tarayıcı <em>sekmede</em> çalışmaz. Paylaş →{" "}
-              <strong>Ana Ekrana Ekle</strong>, uygulamayı ana ekrandan açın,
-              sonra buradan bildirimleri açın.
-            </p>
-          </div>
-          {pushStatus ? <p>{pushStatus}</p> : null}
-          <label className="mail-settings-check">
-            <input
-              type="checkbox"
-              checked={notifySound}
-              onChange={(e) => {
-                const on = e.target.checked;
-                setNotifySound(on);
-                setMailNotifySoundEnabled(on);
-                if (on) {
-                  playMailNotifyBeep();
-                }
-              }}
-            />
-            Yeni posta bildiriminde ses (sekme açıkken)
-          </label>
-          <label className="mail-settings-check">
-            <input
-              type="checkbox"
-              checked={dailyDigest}
-              onChange={(e) => {
-                const on = e.target.checked;
-                setDailyDigest(on);
-                void updateInboxPreferences(accessToken, {
-                  dailyDigestEnabled: on,
-                }).catch(() => {
-                  setPushStatus("Özet ayarı kaydedilemedi.");
-                  setDailyDigest(!on);
-                });
-              }}
-            />
-            Günlük özet e-postası (08:00, okunmamış varsa)
-          </label>
-          <div className="compose-actions">
-            <button
-              type="button"
-              disabled={!pushConfigured}
-              onClick={() =>
-                void (async () => {
-                  setPushStatus("");
-                  try {
-                    const result = await subscribeMailWebPush(accessToken);
-                    if (result === "enabled") {
-                      setPushStatus("Bildirimler açıldı.");
-                    } else if (result === "denied") {
-                      setPushStatus("Tarayıcı bildirim izni reddedildi.");
-                    } else if (result === "unsupported") {
-                      setPushStatus("Bu tarayıcı Web Push desteklemiyor.");
-                    } else {
-                      setPushStatus("Push sunucuda kapalı.");
-                    }
-                  } catch (err) {
-                    setPushStatus(
-                      err instanceof Error
-                        ? err.message
-                        : "Abonelik başarısız.",
-                    );
-                  }
-                })()
-              }
-            >
-              Bildirimleri aç
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                void (async () => {
-                  try {
-                    await unsubscribeMailWebPush(accessToken);
-                    setPushStatus("Bildirimler kapatıldı.");
-                  } catch {
-                    setPushStatus("Kapatılamadı.");
-                  }
-                })()
-              }
-            >
-              Bildirimleri kapat
-            </button>
-          </div>
-        </>,
+        <MailNotificationsSettingsPanel
+          accessToken={accessToken}
+          notificationsPwaFocus={notificationsPwaFocus}
+        />,
       );
       break;
     case "security":
@@ -1061,7 +940,8 @@ export function MailSettingsPanel({
           view === "mailPrefs" ||
           view === "accounts" ||
           view === "signature" ||
-          view === "autoReply"
+          view === "autoReply" ||
+          view === "notifications"
             ? "compose-dialog mail-settings-dialog mail-settings-dialog--wide"
             : "compose-dialog mail-settings-dialog"
         }
