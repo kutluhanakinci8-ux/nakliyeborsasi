@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { startRegistration } from "@simplewebauthn/browser";
+import { MailCryptoSettingsPanel } from "./MailCryptoSettingsPanel";
 import {
   beginTotpSetup,
   confirmTotpSetup,
@@ -450,6 +451,16 @@ export function MailSecuritySettingsPanel({
             </div>
           </>
         )}
+      </section>
+
+      <section className="mail-posta-card">
+        <header className="mail-posta-card-head">
+          <h3 className="mail-posta-card-title">PGP ve S/MIME</h3>
+          <p className="mail-posta-card-desc">
+            İçerik şifreleme ve kurumsal imza (Proton tam E2E değil; ek katman).
+          </p>
+        </header>
+        <MailCryptoSettingsPanel accessToken={accessToken} />
       </section>
 
       <section className="mail-posta-card mail-posta-card--muted">

@@ -126,6 +126,9 @@ import { MailDelayedComposeEntity } from "../../infrastructure/database/entities
 import { MailDelayedComposeService } from "./MailDelayedComposeService";
 import { MailDelayedComposeProcessor } from "./MailDelayedComposeProcessor";
 import { MailInboxPreferencesEntity } from "../../infrastructure/database/entities/MailInboxPreferencesEntity";
+import { UserMailCryptoSettingsEntity } from "../../infrastructure/database/entities/UserMailCryptoSettingsEntity";
+import { UserMailCryptoService } from "./UserMailCryptoService";
+import { MailSmimeSigningService } from "./MailSmimeSigningService";
 import { MailCalendarEventEntity } from "../../infrastructure/database/entities/MailCalendarEventEntity";
 import { MailCalendarRecurrenceExceptionEntity } from "../../infrastructure/database/entities/MailCalendarRecurrenceExceptionEntity";
 import { MailOrgContactEntity } from "../../infrastructure/database/entities/MailOrgContactEntity";
@@ -221,6 +224,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
       MailMarketingCampaignEntity,
       MailWebhookDeliveryLogEntity,
       MailInboxPreferencesEntity,
+      UserMailCryptoSettingsEntity,
       MailAutoReplyThrottleEntity,
       MailCalendarEventEntity,
       MailCalendarRecurrenceExceptionEntity,
@@ -343,6 +347,8 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     MailDelayedComposeService,
     MailDelayedComposeProcessor,
     MailInboxPreferencesService,
+    UserMailCryptoService,
+    MailSmimeSigningService,
     MailAutoReplyService,
     MailInboxDigestService,
     MailInboxDigestScheduler,

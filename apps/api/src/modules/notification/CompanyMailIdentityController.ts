@@ -560,14 +560,18 @@ export class CompanyMailIdentityController {
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
     @Query("limit") limitRaw?: string,
     @Query("before") before?: string,
+    @Query("category") category?: string,
   ) {
     assertMailConsoleAccess(user);
     const parsed = limitRaw ? Number.parseInt(limitRaw, 10) : 50;
+    const normalizedCategory =
+      category === "send" || category === "security" ? category : "all";
     const panel = await this.mailIdentityAuditService.listForOrganization(
       user.companyId,
       {
         limit: Number.isFinite(parsed) ? parsed : 50,
         before: before?.trim() || undefined,
+        category: normalizedCategory,
       },
     );
     return { message: "OK", ...panel };

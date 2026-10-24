@@ -1118,6 +1118,7 @@ export async function composeMail(
     attachments?: ComposeAttachment[];
     delaySeconds?: number;
     merge?: ComposeMergePayload;
+    contentProtection?: "none" | "pgp" | "smime";
   },
 ) {
   return apiFetch<ComposeMailResult>(
@@ -1129,6 +1130,94 @@ export async function composeMail(
     },
     25_000,
   );
+}
+
+export type MailCryptoSettings = {
+  pgpPublicKeyArmored: string | null;
+  pgpKeyFingerprint: string | null;
+  hasSmimeCertificate: boolean;
+  hasSmimePrivateKey: boolean;
+  outboundSignSmime: boolean;
+  composePreferPgp: boolean;
+};
+
+export async function fetchMailCryptoSettings(accessToken: string) {
+  return apiFetch<{ settings: MailCryptoSettings }>(
+    accessToken,
+    "company/mail-inbox/crypto-settings",
+  );
+}
+
+export async function updateMailCryptoSettings(
+  accessToken: string,
+  body: Partial<{
+    pgpPublicKeyArmored: string | null;
+    pgpKeyFingerprint: string | null;
+    smimeCertificatePem: string;
+    smimePrivateKeyPem: string;
+    clearSmimePrivateKey: boolean;
+    outboundSignSmime: boolean;
+    composePreferPgp: boolean;
+  }>,
+) {
+  return apiFetch<{ settings: MailCryptoSettings }>(
+    accessToken,
+    "company/mail-inbox/crypto-settings",
+    { method: "PATCH", body: JSON.stringify(body) },
+  );
+}
+
+export type MailComplianceAuditEntry = {
+  id: string;
+  actionCode: string;
+  labelTr: string;
+  summaryTr: string;
+  actorUserId: string | null;
+  actorEmail: string | null;
+  requestPath: string;
+  metadata: Record<string, unknown> | null;
+  createdAt: string;
+};
+
+export async function fetchMailComplianceAudit(
+  accessToken: string,
+  params: {
+    limit?: number;
+    before?: string;
+    category?: "all" | "send" | "security";
+  } = {},
+) {
+  const query = new URLSearchParams();
+  if (params.limit) {
+    query.set("limit", String(params.limit));
+  }
+  if (params.before) {
+    query.set("before", params.before);
+  }
+  if (params.category) {
+    query.set("category", params.category);
+  }
+  const suffix = query.toString() ? `?${query.toString()}` : "";
+  return apiFetch<{
+    logs: MailComplianceAuditEntry[];
+    nextBefore: string | null;
+  }>(accessToken, `company/mail-inbox/compliance/audit${suffix}`);
+}
+
+export async function downloadMailSendLogCsv(accessToken: string) {
+  const response = await fetch(
+    `${resolveApiBaseUrl()}/company/mail-inbox/compliance/send-log/export`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  );
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+  const blob = await response.blob();
+  const anchor = document.createElement("a");
+  anchor.href = URL.createObjectURL(blob);
+  anchor.download = "lerta-mail-send-log.csv";
+  anchor.click();
+  URL.revokeObjectURL(anchor.href);
 }
 
 export type ComposeCampaignResult = {

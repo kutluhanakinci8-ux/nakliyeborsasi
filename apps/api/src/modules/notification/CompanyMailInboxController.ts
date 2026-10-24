@@ -63,6 +63,8 @@ import {
 } from "./BulkMailInboxRequestDto";
 import { MailOrganizationBrandingService } from "./MailOrganizationBrandingService";
 import { UpdateMailBrandingRequestDto } from "./MailBrandingRequestDto";
+import { UpdateUserMailCryptoRequestDto } from "./UserMailCryptoRequestDto";
+import { UserMailCryptoService } from "./UserMailCryptoService";
 import { applyEkolojikMarketWebmailBranding } from "./MailEkolojikWebmailBranding";
 import { SetMessageStarredRequestDto } from "./SetMessageStarredRequestDto";
 import { MailWebPushService } from "./MailWebPushService";
@@ -158,6 +160,7 @@ export class CompanyMailInboxController {
     private readonly userNotificationPreferenceService: UserNotificationPreferenceService,
     private readonly mailMailboxDelegationService: MailMailboxDelegationService,
     private readonly mailExchangeGraphSyncService: MailExchangeGraphSyncService,
+    private readonly userMailCryptoService: UserMailCryptoService,
   ) {}
 
   @Get("imap-health")
@@ -834,6 +837,101 @@ export class CompanyMailInboxController {
       "/company/mail-inbox/branding",
     );
     return { message: "OK", branding: webmailBranding };
+  }
+
+  @Get("crypto-settings")
+  public async getCryptoSettings(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    const settings = await this.userMailCryptoService.getForUser(user.userId);
+    return { message: "OK", settings };
+  }
+
+  @Patch("crypto-settings")
+  public async updateCryptoSettings(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: UpdateUserMailCryptoRequestDto,
+  ) {
+    const settings = await this.userMailCryptoService.updateForUser(
+      user.userId,
+      body,
+    );
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.CryptoSettingsUpdated,
+      {
+        organizationId: user.companyId,
+        outboundSignSmime: settings.outboundSignSmime,
+        composePreferPgp: settings.composePreferPgp,
+        hasPgpKey: Boolean(settings.pgpPublicKeyArmored),
+        hasSmime: settings.hasSmimeCertificate && settings.hasSmimePrivateKey,
+      },
+      "/company/mail-inbox/crypto-settings",
+    );
+    return { message: "OK", settings };
+  }
+
+  @Get("compliance/audit")
+  public async listComplianceAudit(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Query("limit") limitRaw?: string,
+    @Query("before") before?: string,
+    @Query("category") category?: string,
+  ) {
+    if (!canManageMailIdentity(user)) {
+      throw new ForbiddenException("Uyum kayıtları için posta yöneticisi gerekir.");
+    }
+    const parsed = limitRaw ? Number.parseInt(limitRaw, 10) : 50;
+    const normalizedCategory =
+      category === "send" || category === "security" ? category : "all";
+    const panel = await this.mailIdentityAuditService.listForOrganization(
+      user.companyId,
+      {
+        limit: Number.isFinite(parsed) ? parsed : 50,
+        before: before?.trim() || undefined,
+        category: normalizedCategory,
+      },
+    );
+    return { message: "OK", ...panel };
+  }
+
+  @Get("compliance/send-log/export")
+  public async exportSendLogCsv(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Res() response: Response,
+  ): Promise<void> {
+    if (!canManageMailIdentity(user)) {
+      throw new ForbiddenException("Gönderim günlüğü için posta yöneticisi gerekir.");
+    }
+    const panel = await this.mailIdentityAuditService.listForOrganization(
+      user.companyId,
+      { limit: 500, category: "send" },
+    );
+    const lines = [
+      "createdAt,action,actorEmail,summary,contentProtection,sentId",
+      ...panel.logs.map((row) => {
+        const meta = row.metadata ?? {};
+        const protection = String(meta.contentProtection ?? "");
+        const sentId = String(meta.sentId ?? "");
+        const esc = (value: string) =>
+          `"${value.replace(/"/g, '""').replace(/\r?\n/g, " ")}"`;
+        return [
+          esc(row.createdAt),
+          esc(row.actionCode),
+          esc(row.actorEmail ?? ""),
+          esc(row.summaryTr),
+          esc(protection),
+          esc(sentId),
+        ].join(",");
+      }),
+    ];
+    const csv = lines.join("\n");
+    response.setHeader("Content-Type", "text/csv; charset=utf-8");
+    response.setHeader(
+      "Content-Disposition",
+      'attachment; filename="lerta-mail-send-log.csv"',
+    );
+    response.send(csv);
   }
 
   @Get("compose-presets")
@@ -1529,12 +1627,15 @@ export class CompanyMailInboxController {
     const result = await this.mailMailboxComposeService.compose({
       organizationId: user.companyId,
       userId: user.userId,
+      contentProtection: body.contentProtection,
       ...payload,
     });
     await this.recordInboxMailAudit(user, MailIdentityAuditAction.InboxComposeSent, {
       subject: body.subject,
       to: body.to,
       sentId: result.sentId,
+      contentProtection: body.contentProtection ?? "none",
+      kvkkCategory: "mailbox_send",
     });
     return { ok: true, ...result };
   }

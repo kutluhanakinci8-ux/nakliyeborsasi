@@ -48,6 +48,7 @@ const LABELS: Record<string, string> = {
   [MailIdentityAuditAction.InboxMessageDeleted]: "Gelen kutusu mesajı silindi",
   [MailIdentityAuditAction.AdminEdiscoveryExport]:
     "Platform eDiscovery dışa aktarımı",
+  [MailIdentityAuditAction.CryptoSettingsUpdated]: "Şifreleme ayarları",
   [MailIdentityAuditAction.AiMailAssistConsentGranted]:
     "AI posta asistanı KVKK onayı",
   [MailIdentityAuditAction.AiMailAssistConsentRevoked]:

@@ -106,9 +106,20 @@ export class MailIdentityAuditService {
     }));
   }
 
+  private static readonly SEND_ACTION_CODES = [
+    "MAIL_INBOX_COMPOSE_SENT",
+    "MAIL_INBOX_REPLY_SENT",
+    "MAIL_INBOX_FORWARD_SENT",
+    "MAIL_INBOX_DRAFT_SENT",
+  ];
+
   public async listForOrganization(
     organizationId: string,
-    options: { limit?: number; before?: string } = {},
+    options: {
+      limit?: number;
+      before?: string;
+      category?: "all" | "send" | "security";
+    } = {},
   ): Promise<{ logs: MailTenantAuditLogDto[]; nextBefore: string | null }> {
     const limit = Math.min(Math.max(options.limit ?? 50, 1), 100);
     const qb = this.auditLogRepository
@@ -120,6 +131,15 @@ export class MailIdentityAuditService {
       )
       .orderBy("log.createdAt", "DESC")
       .take(limit + 1);
+    if (options.category === "send") {
+      qb.andWhere("log.actionCode IN (:...sendCodes)", {
+        sendCodes: MailIdentityAuditService.SEND_ACTION_CODES,
+      });
+    } else if (options.category === "security") {
+      qb.andWhere(
+        `(log.actionCode LIKE 'MAIL_SECURITY_%' OR log.actionCode LIKE 'MAIL_PRIVACY_%' OR log.actionCode LIKE 'MAIL_CRYPTO_%')`,
+      );
+    }
     if (options.before) {
       const beforeDate = new Date(options.before);
       if (!Number.isNaN(beforeDate.getTime())) {

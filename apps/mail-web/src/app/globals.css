@@ -6298,6 +6298,58 @@ html[data-mail-read-font="large"] .mail-html-frame {
   letter-spacing: 0.04em;
 }
 
+.mail-crypto-key-area {
+  width: 100%;
+  min-height: 96px;
+  font-family: ui-monospace, monospace;
+  font-size: 0.8rem;
+}
+
+.mail-compliance-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+  margin-bottom: 12px;
+}
+
+.mail-compliance-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+}
+
+.mail-compliance-log-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.mail-compliance-log-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
+  font-size: 0.88rem;
+}
+
+.mail-compliance-log-row time {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.mail-compliance-log-row small {
+  color: var(--muted);
+}
+
 .compose-rich-block-select {
   font-size: 0.85rem;
   padding: 6px 8px;

@@ -24,6 +24,7 @@ import {
   composeDelaySecondsFromUndoPref,
   pickMailPostaPreferences,
 } from "@/lib/mailPostaPrefs";
+import { encryptTextWithPgp } from "@/lib/mailPgp";
 import {
   filterInboxByFocusLane,
   type InboxFocusLane,
@@ -54,6 +55,7 @@ import {
   fetchDrafts,
   fetchInboxPreferences,
   fetchWebAuthnCredentials,
+  fetchMailCryptoSettings,
   fetchCustomFolders,
   createCustomFolder,
   deleteCustomFolder,
@@ -1273,18 +1275,40 @@ export function useMailClientController({
             return;
           }
         } else {
+          let textToSend = composeText;
+          let contentProtection: "none" | "pgp" | "smime" = "none";
+          try {
+            const crypto = await fetchMailCryptoSettings(accessToken);
+            if (crypto.settings.composePreferPgp) {
+              const recipientKey = window.prompt(
+                "Alıcının PGP public key (armored) — boş bırakırsanız şifreleme yapılmaz",
+              );
+              if (recipientKey?.trim()) {
+                textToSend = await encryptTextWithPgp(
+                  composeText,
+                  recipientKey.trim(),
+                );
+                contentProtection = "pgp";
+              }
+            } else if (crypto.settings.outboundSignSmime) {
+              contentProtection = "smime";
+            }
+          } catch {
+            /* şifreleme atlanır */
+          }
           const result = await composeMail(accessToken, {
             to: composeTo.trim(),
             cc: composeCc.trim() || undefined,
             bcc: composeBcc.trim() || undefined,
             subject: composeSubject.trim(),
-            text: composeText,
-            html: outboundHtml,
+            text: textToSend,
+            html: contentProtection === "pgp" ? undefined : outboundHtml,
             attachments: attachments.length > 0 ? attachments : undefined,
             ...(composeDelaySeconds() !== undefined
               ? { delaySeconds: composeDelaySeconds() }
               : {}),
             merge: buildComposeMergePayload(),
+            contentProtection,
           });
           if (applyDelayedSend(result)) {
             scheduledUndo = true;

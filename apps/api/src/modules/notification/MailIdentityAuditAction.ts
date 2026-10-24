@@ -53,6 +53,7 @@ export const MailIdentityAuditAction = {
   AiMailClassify: "MAIL_AI_CLASSIFY",
   LegalHoldEnabled: "MAIL_LEGAL_HOLD_ENABLED",
   LegalHoldReleased: "MAIL_LEGAL_HOLD_RELEASED",
+  CryptoSettingsUpdated: "MAIL_CRYPTO_SETTINGS_UPDATED",
 } as const;
 
 export type MailIdentityAuditActionCode =

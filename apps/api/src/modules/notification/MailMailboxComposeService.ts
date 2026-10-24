@@ -43,6 +43,8 @@ import { EmailRecipientKind } from "./NotificationEventCode";
 import { randomUUID } from "node:crypto";
 import { MailInboxPreferencesService } from "./MailInboxPreferencesService";
 import { buildReplyQuoteBlock } from "./MailReplyQuoteBlock";
+import { UserMailCryptoService } from "./UserMailCryptoService";
+import { MailSmimeSigningService } from "./MailSmimeSigningService";
 
 export type ComposeAttachmentInput = {
   filename: string;
@@ -69,6 +71,8 @@ export class MailMailboxComposeService {
     private readonly mailOrganizationWebhookDispatcherService: MailOrganizationWebhookDispatcherService,
     private readonly mailMailboxOutboundContentService: MailMailboxOutboundContentService,
     private readonly mailInboxPreferencesService: MailInboxPreferencesService,
+    private readonly userMailCryptoService: UserMailCryptoService,
+    private readonly mailSmimeSigningService: MailSmimeSigningService,
     private readonly emailSuppressionService: EmailSuppressionService,
     private readonly emailHtmlTrackingService: EmailHtmlTrackingService,
     @InjectRepository(EmailOutboxEntity)
@@ -100,6 +104,7 @@ export class MailMailboxComposeService {
     outboundChannel?: OutboundContentChannel;
     /** Kampanya gönderiminde open/click izleme (outbox + pixel). */
     marketingCampaignId?: string;
+    contentProtection?: "none" | "pgp" | "smime";
   }): Promise<{ sentId: string; smtpMessageId: string | null }> {
     const { fromHeader, fromEmail, envelopeMailFrom, mailbox, technicalEmail } =
       await this.resolveSenderMailbox(
@@ -147,6 +152,24 @@ export class MailMailboxComposeService {
     if (trackingOutbox?.htmlBody) {
       htmlToSend = trackingOutbox.htmlBody;
     }
+    const attachmentsForSend = [...nodemailerAttachments];
+    if (params.userId && params.contentProtection !== "pgp") {
+      const material =
+        await this.userMailCryptoService.resolveSmimeSigningMaterial(
+          params.userId,
+        );
+      if (material) {
+        const signature =
+          this.mailSmimeSigningService.createDetachedSignatureAttachment({
+            certificatePem: material.certificatePem,
+            privateKeyPem: material.privateKeyPem,
+            canonicalContent: outbound.text,
+          });
+        if (signature) {
+          attachmentsForSend.push(signature);
+        }
+      }
+    }
     let smtpMessageId: string | null;
     try {
       smtpMessageId = await this.smtpEmailSender.send({
@@ -161,7 +184,7 @@ export class MailMailboxComposeService {
         outboundBranding: outbound.branding,
         listUnsubscribeUrl: outbound.listUnsubscribeUrl,
         replyTo,
-        attachments: nodemailerAttachments,
+        attachments: attachmentsForSend,
       });
     } catch (error) {
       await this.failCampaignTrackingOutbox(

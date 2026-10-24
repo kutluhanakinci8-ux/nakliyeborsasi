@@ -82,6 +82,7 @@ import { MailCalendarCalDavAccountEntity } from "./entities/MailCalendarCalDavAc
 import { MailContactCardDavAccountEntity } from "./entities/MailContactCardDavAccountEntity";
 import { MailDmarcAggregateReportEntity } from "./entities/MailDmarcAggregateReportEntity";
 import { UserWebAuthnCredentialEntity } from "./entities/UserWebAuthnCredentialEntity";
+import { UserMailCryptoSettingsEntity } from "./entities/UserMailCryptoSettingsEntity";
 
 @Injectable()
 export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
@@ -101,6 +102,7 @@ export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
         CompanyEntity,
         UserAccountEntity,
         UserWebAuthnCredentialEntity,
+        UserMailCryptoSettingsEntity,
         CompanyMembershipEntity,
         SubscriptionPlanEntity,
         CompanySubscriptionEntity,

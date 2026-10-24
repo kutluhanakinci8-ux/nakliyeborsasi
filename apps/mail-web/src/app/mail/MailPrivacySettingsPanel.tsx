@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { MailComplianceAuditPanel } from "./MailComplianceAuditPanel";
 import {
   downloadMailPrivacyExport,
   fetchAiMailConsent,
@@ -183,6 +184,8 @@ export function MailPrivacySettingsPanel({ accessToken }: Props) {
           </span>
         </label>
       </section>
+
+      <MailComplianceAuditPanel accessToken={accessToken} />
 
       <section className="mail-posta-card mail-posta-card--muted">
         <header className="mail-posta-card-head">

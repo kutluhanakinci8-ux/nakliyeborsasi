@@ -83,4 +83,10 @@ export class ComposeMailRequestDto {
   @ValidateNested()
   @Type(() => ComposeMergeContextDto)
   public merge?: ComposeMergeContextDto;
+
+  /** none | pgp (istemci şifreli) | smime (sunucu imza) */
+  @IsOptional()
+  @IsString()
+  @MaxLength(16)
+  public contentProtection?: "none" | "pgp" | "smime";
 }
