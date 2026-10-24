@@ -52,6 +52,15 @@ export class MailCalendarEventEntity {
   @Column({ name: "caldav_etag", type: "varchar", length: 200, nullable: true })
   public caldavEtag!: string | null;
 
+  @Column({ name: "graph_account_id", type: "uuid", nullable: true })
+  public graphAccountId!: string | null;
+
+  @Column({ name: "graph_event_id", type: "varchar", length: 200, nullable: true })
+  public graphEventId!: string | null;
+
+  @Column({ name: "graph_change_key", type: "varchar", length: 200, nullable: true })
+  public graphChangeKey!: string | null;
+
   @Column({ name: "recurrence_rule", type: "varchar", length: 500, nullable: true })
   public recurrenceRule!: string | null;
 

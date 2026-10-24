@@ -2075,6 +2075,85 @@ export async function deleteExchangeAccount(
   );
 }
 
+export type MailCalendarGraphAccount = {
+  id: string;
+  emailAddress: string;
+  displayName: string | null;
+  enabled: boolean;
+  writeEnabled: boolean;
+  lastSyncedAt: string | null;
+  lastSyncError: string | null;
+  createdAt: string;
+};
+
+export async function fetchCalendarGraphAccounts(accessToken: string) {
+  return apiFetch<{
+    configured: boolean;
+    accounts: MailCalendarGraphAccount[];
+  }>(accessToken, "company/mail-inbox/calendar/graph/accounts");
+}
+
+export async function startCalendarGraphOAuth(accessToken: string) {
+  return apiFetch<{ authorizationUrl: string; state: string }>(
+    accessToken,
+    "company/mail-inbox/calendar/graph/oauth/start",
+  );
+}
+
+export async function completeCalendarGraphOAuth(
+  accessToken: string,
+  code: string,
+  state: string,
+) {
+  return apiFetch<{ ok: boolean; account: MailCalendarGraphAccount }>(
+    accessToken,
+    "company/mail-inbox/calendar/graph/oauth/complete",
+    {
+      method: "POST",
+      body: JSON.stringify({ code, state }),
+    },
+  );
+}
+
+export async function syncCalendarGraphAccount(
+  accessToken: string,
+  accountId: string,
+) {
+  return apiFetch<{
+    ok: boolean;
+    imported: number;
+    updated: number;
+    pushed: number;
+  }>(
+    accessToken,
+    `company/mail-inbox/calendar/graph/accounts/${accountId}/sync`,
+    { method: "POST" },
+  );
+}
+
+export async function syncAllCalendarGraphAccounts(accessToken: string) {
+  return apiFetch<{
+    ok: boolean;
+    accounts: number;
+    imported: number;
+    updated: number;
+    pushed: number;
+  }>(accessToken, "company/mail-inbox/calendar/graph/accounts/sync-all", {
+    method: "POST",
+  });
+}
+
+export async function deleteCalendarGraphAccount(
+  accessToken: string,
+  accountId: string,
+) {
+  return apiFetch<{ ok: boolean }>(
+    accessToken,
+    `company/mail-inbox/calendar/graph/accounts/${accountId}`,
+    { method: "DELETE" },
+  );
+}
+
 export async function fetchSuggestReply(
   accessToken: string,
   messageId: string,

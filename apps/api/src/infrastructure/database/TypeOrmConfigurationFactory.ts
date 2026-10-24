@@ -79,6 +79,7 @@ import { MailCalendarRecurrenceExceptionEntity } from "./entities/MailCalendarRe
 import { MailOrgContactEntity } from "./entities/MailOrgContactEntity";
 import { MailCalendarIcsFeedEntity } from "./entities/MailCalendarIcsFeedEntity";
 import { MailCalendarCalDavAccountEntity } from "./entities/MailCalendarCalDavAccountEntity";
+import { MailCalendarGraphAccountEntity } from "./entities/MailCalendarGraphAccountEntity";
 import { MailContactCardDavAccountEntity } from "./entities/MailContactCardDavAccountEntity";
 import { MailDmarcAggregateReportEntity } from "./entities/MailDmarcAggregateReportEntity";
 import { UserWebAuthnCredentialEntity } from "./entities/UserWebAuthnCredentialEntity";
@@ -171,6 +172,7 @@ export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
         MailOrgContactEntity,
         MailCalendarIcsFeedEntity,
         MailCalendarCalDavAccountEntity,
+        MailCalendarGraphAccountEntity,
         MailContactCardDavAccountEntity,
         MailDmarcAggregateReportEntity,
         CompanySocialConnectionEntity,

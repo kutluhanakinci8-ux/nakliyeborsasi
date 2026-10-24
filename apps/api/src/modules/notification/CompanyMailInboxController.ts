@@ -124,6 +124,7 @@ import { UpdateMailEmailSocialLinksRequestDto } from "./MailEmailSocialLinksRequ
 import { MailMailboxDelegationService } from "./MailMailboxDelegationService";
 import { MailExchangeGraphSyncService } from "./MailExchangeGraphSyncService";
 import { MailImapMaildirReconcileService } from "./MailImapMaildirReconcileService";
+import { MailCalendarGraphSyncService } from "./MailCalendarGraphSyncService";
 import {
   AddMailboxDelegateRequestDto,
   CompleteExchangeOAuthRequestDto,
@@ -162,6 +163,7 @@ export class CompanyMailInboxController {
     private readonly userNotificationPreferenceService: UserNotificationPreferenceService,
     private readonly mailMailboxDelegationService: MailMailboxDelegationService,
     private readonly mailExchangeGraphSyncService: MailExchangeGraphSyncService,
+    private readonly mailCalendarGraphSyncService: MailCalendarGraphSyncService,
     private readonly userMailCryptoService: UserMailCryptoService,
   ) {}
 
@@ -2510,6 +2512,77 @@ export class CompanyMailInboxController {
       accountId,
       eventId,
       new Date(body.occurrenceStartsAt),
+    );
+    return { ok: true, ...result };
+  }
+
+  @Get("calendar/graph/accounts")
+  public async listCalendarGraphAccounts(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    const accounts = await this.mailCalendarGraphSyncService.listAccounts(
+      user.companyId,
+    );
+    return {
+      configured: this.mailCalendarGraphSyncService.isConfigured(),
+      accounts,
+    };
+  }
+
+  @Get("calendar/graph/oauth/start")
+  public async startCalendarGraphOAuth(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    this.assertMailInboxWriter(user);
+    return this.mailCalendarGraphSyncService.buildOAuthStart(user);
+  }
+
+  @Post("calendar/graph/oauth/complete")
+  public async completeCalendarGraphOAuth(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: { code: string; state: string },
+  ) {
+    this.assertMailInboxWriter(user);
+    const account = await this.mailCalendarGraphSyncService.completeOAuth(
+      user,
+      body.code,
+      body.state,
+    );
+    return { ok: true, account };
+  }
+
+  @Delete("calendar/graph/accounts/:accountId")
+  public async deleteCalendarGraphAccount(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("accountId") accountId: string,
+  ) {
+    this.assertMailInboxWriter(user);
+    await this.mailCalendarGraphSyncService.deleteAccount(user, accountId);
+    return { ok: true };
+  }
+
+  @Post("calendar/graph/accounts/:accountId/sync")
+  public async syncCalendarGraphAccount(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("accountId") accountId: string,
+  ) {
+    this.assertMailInboxWriter(user);
+    const result = await this.mailCalendarGraphSyncService.syncAccount(
+      user.companyId,
+      accountId,
+      user.userId,
+    );
+    return { ok: true, ...result };
+  }
+
+  @Post("calendar/graph/accounts/sync-all")
+  public async syncAllCalendarGraphAccounts(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    this.assertMailInboxWriter(user);
+    const result = await this.mailCalendarGraphSyncService.syncAllForOrganization(
+      user.companyId,
+      user.userId,
     );
     return { ok: true, ...result };
   }
