@@ -88,9 +88,63 @@ type Props = {
   accessToken: string;
 };
 
+function RuleToggle({
+  checked,
+  onChange,
+  label,
+  hint,
+}: {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  label: string;
+  hint?: string;
+}) {
+  return (
+    <label className="mail-posta-toggle">
+      <input
+        type="checkbox"
+        className="mail-posta-toggle-input"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+      />
+      <span className="mail-posta-toggle-track" aria-hidden="true">
+        <span className="mail-posta-toggle-thumb" />
+      </span>
+      <span className="mail-posta-toggle-text">
+        <span className="mail-posta-toggle-label">{label}</span>
+        {hint ? <span className="mail-posta-toggle-hint">{hint}</span> : null}
+      </span>
+    </label>
+  );
+}
+
+function ActionChip({
+  active,
+  label,
+  onClick,
+}: {
+  active: boolean;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className={
+        active ? "mail-rules-action-chip is-active" : "mail-rules-action-chip"
+      }
+      aria-pressed={active}
+      onClick={onClick}
+    >
+      {label}
+    </button>
+  );
+}
+
 export function MailRulesPanel({ accessToken }: Props) {
   const [rules, setRules] = useState<MailInboxRule[]>([]);
   const [folders, setFolders] = useState<MailCustomFolder[]>([]);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState("");
   const [name, setName] = useState("");
   const [fromContains, setFromContains] = useState("");
@@ -121,7 +175,9 @@ export function MailRulesPanel({ accessToken }: Props) {
   }
 
   useEffect(() => {
-    void reload().catch(() => setError("Kurallar yüklenemedi."));
+    void reload()
+      .catch(() => setError("Kurallar yüklenemedi."))
+      .finally(() => setInitialLoading(false));
   }, [accessToken]);
 
   function buildConditionGroupsPayload(): MailInboxRuleConditionGroups | null {
@@ -263,22 +319,63 @@ export function MailRulesPanel({ accessToken }: Props) {
     }
   }
 
+  if (initialLoading) {
+    return (
+      <div className="mail-rules-panel mail-rules-panel--premium">
+        <div className="mail-posta-skeleton" aria-busy="true">
+          <div className="mail-posta-skeleton-line mail-posta-skeleton-line--lead" />
+          <div className="mail-posta-skeleton-card" />
+          <div className="mail-posta-skeleton-card" />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="mail-rules-panel">
-      <p style={{ color: "var(--muted)", fontSize: "0.9rem" }}>
-        Yeni gelen postalar için sunucu kuralları (ilk eşleşen uygulanır).
+    <div className="mail-rules-panel mail-rules-panel--premium">
+      <p className="mail-posta-intro">
+        Yeni gelen postalar için sunucu kuralları. Üstten alta sırayla değerlendirilir;
+        ilk eşleşen kural uygulanır.
       </p>
-      {error ? <p className="login-error">{error}</p> : null}
-      {info ? <p style={{ fontSize: "0.9rem" }}>{info}</p> : null}
-      <ul className="mail-rules-list">
+      {error ? (
+        <p className="mail-accounts-status mail-accounts-status--err" role="alert">
+          {error}
+        </p>
+      ) : null}
+      {info ? (
+        <p className="mail-accounts-status mail-accounts-status--ok" role="status">
+          {info}
+        </p>
+      ) : null}
+
+      <section className="mail-posta-card">
+        <header className="mail-posta-card-head">
+          <h3 className="mail-posta-card-title">Mevcut kurallar</h3>
+          <p className="mail-posta-card-desc">
+            Sırayı değiştirmek için yukarı/aşağı kullanın.
+          </p>
+        </header>
+      <ul className="mail-rules-list mail-rules-list--premium">
         {rules.length === 0 ? (
-          <li className="mail-rules-empty">Henüz kural yok.</li>
+          <li className="mail-rules-empty">
+            <span className="mail-rules-empty-icon" aria-hidden="true">⚡</span>
+            Henüz kural yok.
+          </li>
         ) : (
           rules.map((rule, index) => (
-            <li key={rule.id} className="mail-rules-item">
+            <li
+              key={rule.id}
+              className={
+                rule.enabled
+                  ? "mail-rules-item mail-rules-item--premium"
+                  : "mail-rules-item mail-rules-item--premium is-disabled"
+              }
+            >
+              <div className="mail-rules-item-top">
               <div className="mail-rules-order">
                 <button
                   type="button"
+                  className="mail-premium-btn mail-premium-btn--ghost mail-rules-order-btn"
                   disabled={index === 0}
                   title="Yukarı"
                   onClick={() => {
@@ -293,6 +390,7 @@ export function MailRulesPanel({ accessToken }: Props) {
                 </button>
                 <button
                   type="button"
+                  className="mail-premium-btn mail-premium-btn--ghost mail-rules-order-btn"
                   disabled={index === rules.length - 1}
                   title="Aşağı"
                   onClick={() => {
@@ -306,18 +404,19 @@ export function MailRulesPanel({ accessToken }: Props) {
                   ↓
                 </button>
               </div>
-              <label>
-                <input
-                  type="checkbox"
+              <div className="mail-rules-item-main">
+              <div className="mail-rules-item-head">
+                <strong className="mail-rules-item-name">{rule.name}</strong>
+                <RuleToggle
                   checked={rule.enabled}
                   onChange={() =>
                     void updateInboxRule(accessToken, rule.id, {
                       enabled: !rule.enabled,
                     }).then(() => reload())
                   }
+                  label="Aktif"
                 />
-                <strong>{rule.name}</strong>
-              </label>
+              </div>
               <div className="mail-rules-meta">
                 {rule.fromContains ? `Gönderen: “${rule.fromContains}”` : null}
                 {rule.fromContains && rule.subjectContains ? " · " : null}
@@ -344,12 +443,19 @@ export function MailRulesPanel({ accessToken }: Props) {
                 {rule.actionMarkRead ? " · Okundu" : null}
                 {rule.actionTrash ? " · Çöp" : null}
               </div>
-              <div className="mail-rules-actions">
-                <button type="button" onClick={() => beginEdit(rule)}>
+              </div>
+              </div>
+              <div className="mail-rules-actions mail-rules-actions--premium">
+                <button
+                  type="button"
+                  className="mail-premium-btn mail-premium-btn--ghost"
+                  onClick={() => beginEdit(rule)}
+                >
                   Düzenle
                 </button>
                 <button
                   type="button"
+                  className="mail-premium-btn mail-premium-btn--ghost"
                   onClick={() =>
                     void previewInboxRule(accessToken, rule.id).then(
                       ({ preview }) => {
@@ -378,6 +484,7 @@ export function MailRulesPanel({ accessToken }: Props) {
                 </button>
                 <button
                   type="button"
+                  className="mail-premium-btn mail-premium-btn--ghost"
                   onClick={() =>
                     void applyInboxRuleToMailbox(accessToken, rule.id).then(
                       (r) => {
@@ -397,7 +504,7 @@ export function MailRulesPanel({ accessToken }: Props) {
                 </button>
                 <button
                   type="button"
-                  className="mail-rules-delete"
+                  className="mail-premium-btn mail-premium-btn--danger-ghost"
                   onClick={() =>
                     void deleteInboxRule(accessToken, rule.id).then(() =>
                       reload(),
@@ -411,215 +518,264 @@ export function MailRulesPanel({ accessToken }: Props) {
           ))
         )}
       </ul>
-      <h3>{editingRuleId ? "Kural düzenle" : "Yeni kural"}</h3>
-      <input
-        placeholder="Kural adı"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
-      <label>
+      </section>
+
+      <section className="mail-posta-card mail-rules-form-card">
+        <header className="mail-posta-card-head">
+          <h3 className="mail-posta-card-title">
+            {editingRuleId ? "Kural düzenle" : "Yeni kural"}
+          </h3>
+          <p className="mail-posta-card-desc">
+            Koşullar ve uygulanacak işlemleri tanımlayın.
+          </p>
+        </header>
+        <div className="mail-rules-form-body">
+      <label className="mail-premium-field">
+        <span className="mail-premium-field-label">Kural adı</span>
         <input
-          type="checkbox"
-          checked={useConditionGroups}
-          onChange={(e) => setUseConditionGroups(e.target.checked)}
+          className="mail-premium-field-input"
+          placeholder="Örn. Destek talepleri"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
         />
-        Gelişmiş koşul grupları (en fazla 5 grup, iç içe VE/VEYA)
       </label>
+      <RuleToggle
+        checked={useConditionGroups}
+        onChange={setUseConditionGroups}
+        label="Gelişmiş koşul grupları"
+        hint="En fazla 5 grup; iç içe VE / VEYA mantığı."
+      />
       {useConditionGroups ? (
-        <div className="mail-rules-groups">
-          <label>
-            <input
-              type="checkbox"
-              checked={matchAnyBetweenGroups}
-              onChange={(e) => setMatchAnyBetweenGroups(e.target.checked)}
-            />
-            Gruplar arası VEYA (kapalı = tüm gruplar sağlanmalı)
-          </label>
+        <div className="mail-rules-groups mail-rules-groups--premium">
+          <RuleToggle
+            checked={matchAnyBetweenGroups}
+            onChange={setMatchAnyBetweenGroups}
+            label="Gruplar arası VEYA"
+            hint="Kapalıysa tüm gruplar sağlanmalı (VE)."
+          />
           {conditionGroups.map((group, gi) => (
-            <fieldset key={gi} className="mail-rules-group">
-              <legend>Grup {gi + 1}</legend>
-              <label>
+            <fieldset key={gi} className="mail-rules-group mail-rules-group--premium">
+              <legend className="mail-rules-group-legend">Grup {gi + 1}</legend>
+              <RuleToggle
+                checked={group.matchAny}
+                onChange={(on) => {
+                  const next = [...conditionGroups];
+                  next[gi] = { ...group, matchAny: on };
+                  setConditionGroups(next);
+                }}
+                label="Bu grupta VEYA"
+              />
+              <label className="mail-premium-field">
+                <span className="mail-premium-field-label">Gönderen</span>
                 <input
-                  type="checkbox"
-                  checked={group.matchAny}
+                  className="mail-premium-field-input"
+                  placeholder="| ile alternatif"
+                  value={group.fromContains ?? ""}
                   onChange={(e) => {
                     const next = [...conditionGroups];
-                    next[gi] = { ...group, matchAny: e.target.checked };
+                    next[gi] = { ...group, fromContains: e.target.value };
                     setConditionGroups(next);
                   }}
                 />
-                Bu grupta VEYA
               </label>
-              <input
-                placeholder="Gönderen (| alternatif)"
-                value={group.fromContains ?? ""}
-                onChange={(e) => {
-                  const next = [...conditionGroups];
-                  next[gi] = { ...group, fromContains: e.target.value };
-                  setConditionGroups(next);
-                }}
-              />
-              <input
-                placeholder="Konu (| alternatif)"
-                value={group.subjectContains ?? ""}
-                onChange={(e) => {
-                  const next = [...conditionGroups];
-                  next[gi] = { ...group, subjectContains: e.target.value };
-                  setConditionGroups(next);
-                }}
-              />
-              <input
-                placeholder="Alıcı (| alternatif)"
-                value={group.toContains ?? ""}
-                onChange={(e) => {
-                  const next = [...conditionGroups];
-                  next[gi] = { ...group, toContains: e.target.value };
-                  setConditionGroups(next);
-                }}
-              />
-              <input
-                placeholder="Gövde metni içerir (| alternatif)"
-                value={group.bodyContains ?? ""}
-                onChange={(e) => {
-                  const next = [...conditionGroups];
-                  next[gi] = { ...group, bodyContains: e.target.value };
-                  setConditionGroups(next);
-                }}
-              />
-              <input
-                type="number"
-                min={0}
-                placeholder="Min ek boyutu (byte, toplam)"
-                value={group.minAttachmentBytes ?? ""}
-                onChange={(e) => {
-                  const next = [...conditionGroups];
-                  const raw = e.target.value.trim();
-                  next[gi] = {
-                    ...group,
-                    minAttachmentBytes: raw === "" ? null : Number(raw),
-                  };
-                  setConditionGroups(next);
-                }}
-              />
-              <input
-                type="number"
-                min={0}
-                placeholder="Max ek boyutu (byte, toplam)"
-                value={group.maxAttachmentBytes ?? ""}
-                onChange={(e) => {
-                  const next = [...conditionGroups];
-                  const raw = e.target.value.trim();
-                  next[gi] = {
-                    ...group,
-                    maxAttachmentBytes: raw === "" ? null : Number(raw),
-                  };
-                  setConditionGroups(next);
-                }}
-              />
-              <label>
+              <label className="mail-premium-field">
+                <span className="mail-premium-field-label">Konu</span>
                 <input
-                  type="checkbox"
-                  checked={Boolean(group.requireAttachment)}
+                  className="mail-premium-field-input"
+                  placeholder="| ile alternatif"
+                  value={group.subjectContains ?? ""}
                   onChange={(e) => {
                     const next = [...conditionGroups];
-                    next[gi] = {
-                      ...group,
-                      requireAttachment: e.target.checked,
-                    };
+                    next[gi] = { ...group, subjectContains: e.target.value };
                     setConditionGroups(next);
                   }}
                 />
-                Ek zorunlu
               </label>
+              <label className="mail-premium-field">
+                <span className="mail-premium-field-label">Alıcı (To)</span>
+                <input
+                  className="mail-premium-field-input"
+                  placeholder="| ile alternatif"
+                  value={group.toContains ?? ""}
+                  onChange={(e) => {
+                    const next = [...conditionGroups];
+                    next[gi] = { ...group, toContains: e.target.value };
+                    setConditionGroups(next);
+                  }}
+                />
+              </label>
+              <label className="mail-premium-field">
+                <span className="mail-premium-field-label">Gövde</span>
+                <input
+                  className="mail-premium-field-input"
+                  placeholder="Metin içerir (| alternatif)"
+                  value={group.bodyContains ?? ""}
+                  onChange={(e) => {
+                    const next = [...conditionGroups];
+                    next[gi] = { ...group, bodyContains: e.target.value };
+                    setConditionGroups(next);
+                  }}
+                />
+              </label>
+              <div className="mail-rules-attach-row">
+                <label className="mail-premium-field">
+                  <span className="mail-premium-field-label">Min ek (byte)</span>
+                  <input
+                    type="number"
+                    min={0}
+                    className="mail-premium-field-input"
+                    placeholder="Toplam"
+                    value={group.minAttachmentBytes ?? ""}
+                    onChange={(e) => {
+                      const next = [...conditionGroups];
+                      const raw = e.target.value.trim();
+                      next[gi] = {
+                        ...group,
+                        minAttachmentBytes: raw === "" ? null : Number(raw),
+                      };
+                      setConditionGroups(next);
+                    }}
+                  />
+                </label>
+                <label className="mail-premium-field">
+                  <span className="mail-premium-field-label">Max ek (byte)</span>
+                  <input
+                    type="number"
+                    min={0}
+                    className="mail-premium-field-input"
+                    placeholder="Toplam"
+                    value={group.maxAttachmentBytes ?? ""}
+                    onChange={(e) => {
+                      const next = [...conditionGroups];
+                      const raw = e.target.value.trim();
+                      next[gi] = {
+                        ...group,
+                        maxAttachmentBytes: raw === "" ? null : Number(raw),
+                      };
+                      setConditionGroups(next);
+                    }}
+                  />
+                </label>
+              </div>
+              <RuleToggle
+                checked={Boolean(group.requireAttachment)}
+                onChange={(on) => {
+                  const next = [...conditionGroups];
+                  next[gi] = { ...group, requireAttachment: on };
+                  setConditionGroups(next);
+                }}
+                label="Ek zorunlu"
+              />
             </fieldset>
           ))}
         </div>
       ) : (
-        <>
-          <input
-            placeholder="Gönderen içerir (| ile alternatif: destek|support)"
-            value={fromContains}
-            onChange={(e) => setFromContains(e.target.value)}
-          />
-          <input
-            placeholder="Konu içerir (| ile alternatif)"
-            value={subjectContains}
-            onChange={(e) => setSubjectContains(e.target.value)}
-          />
-          <input
-            placeholder="Alıcı (To) içerir (| ile alternatif)"
-            value={toContains}
-            onChange={(e) => setToContains(e.target.value)}
-          />
-          <label>
+        <div className="mail-rules-simple-conditions">
+          <label className="mail-premium-field">
+            <span className="mail-premium-field-label">Gönderen içerir</span>
             <input
-              type="checkbox"
-              checked={matchAnyCondition}
-              onChange={(e) => setMatchAnyCondition(e.target.checked)}
+              className="mail-premium-field-input"
+              placeholder="destek|support"
+              value={fromContains}
+              onChange={(e) => setFromContains(e.target.value)}
             />
-            Koşullardan herhangi biri (VEYA) — varsayılan: tümü (VE)
           </label>
-          <label>
+          <label className="mail-premium-field">
+            <span className="mail-premium-field-label">Konu içerir</span>
             <input
-              type="checkbox"
-              checked={requireAttachment}
-              onChange={(e) => setRequireAttachment(e.target.checked)}
+              className="mail-premium-field-input"
+              placeholder="| ile alternatif"
+              value={subjectContains}
+              onChange={(e) => setSubjectContains(e.target.value)}
             />
-            Yalnızca ekli postalar
           </label>
-        </>
+          <label className="mail-premium-field">
+            <span className="mail-premium-field-label">Alıcı (To) içerir</span>
+            <input
+              className="mail-premium-field-input"
+              placeholder="| ile alternatif"
+              value={toContains}
+              onChange={(e) => setToContains(e.target.value)}
+            />
+          </label>
+          <RuleToggle
+            checked={matchAnyCondition}
+            onChange={setMatchAnyCondition}
+            label="Koşullardan herhangi biri (VEYA)"
+            hint="Varsayılan: tüm koşullar (VE)."
+          />
+          <RuleToggle
+            checked={requireAttachment}
+            onChange={setRequireAttachment}
+            label="Yalnızca ekli postalar"
+          />
+        </div>
       )}
-      <label>
-        <input
-          type="checkbox"
-          checked={actionStar}
-          onChange={(e) => setActionStar(e.target.checked)}
-        />
-        Yıldızla
+
+      <div className="mail-rules-actions-section">
+        <span className="mail-premium-field-label">İşlemler</span>
+        <div
+          className="mail-rules-action-chips"
+          role="group"
+          aria-label="Kural işlemleri"
+        >
+          <ActionChip
+            active={actionStar}
+            label="Yıldızla"
+            onClick={() => setActionStar(!actionStar)}
+          />
+          <ActionChip
+            active={actionArchive}
+            label="Arşivle"
+            onClick={() => setActionArchive(!actionArchive)}
+          />
+          <ActionChip
+            active={actionMarkRead}
+            label="Okundu"
+            onClick={() => setActionMarkRead(!actionMarkRead)}
+          />
+          <ActionChip
+            active={actionTrash}
+            label="Çöp"
+            onClick={() => setActionTrash(!actionTrash)}
+          />
+        </div>
+      </div>
+
+      <label className="mail-premium-field">
+        <span className="mail-premium-field-label">Özel klasör</span>
+        <select
+          className="mail-premium-field-input mail-premium-field-select"
+          value={actionFolderId}
+          onChange={(e) => setActionFolderId(e.target.value)}
+        >
+          <option value="">Klasör seçme</option>
+          {folders.map((f) => (
+            <option key={f.id} value={f.id}>{f.name}</option>
+          ))}
+        </select>
       </label>
-      <label>
-        <input
-          type="checkbox"
-          checked={actionArchive}
-          onChange={(e) => setActionArchive(e.target.checked)}
-        />
-        Arşivle
-      </label>
-      <label>
-        <input
-          type="checkbox"
-          checked={actionMarkRead}
-          onChange={(e) => setActionMarkRead(e.target.checked)}
-        />
-        Okundu işaretle
-      </label>
-      <label>
-        <input
-          type="checkbox"
-          checked={actionTrash}
-          onChange={(e) => setActionTrash(e.target.checked)}
-        />
-        Çöpe taşı
-      </label>
-      <select
-        value={actionFolderId}
-        onChange={(e) => setActionFolderId(e.target.value)}
-      >
-        <option value="">Klasör seçme</option>
-        {folders.map((f) => (
-          <option key={f.id} value={f.id}>{f.name}</option>
-        ))}
-      </select>
-      <div className="mail-rules-form-actions">
-        <button type="button" onClick={() => void onSubmit()}>
+
+      <div className="mail-rules-form-actions mail-rules-form-actions--premium">
+        <button
+          type="button"
+          className="mail-premium-btn mail-premium-btn--primary"
+          onClick={() => void onSubmit()}
+        >
           {editingRuleId ? "Kaydet" : "Kural ekle"}
         </button>
         {editingRuleId ? (
-          <button type="button" onClick={() => resetForm()}>
+          <button
+            type="button"
+            className="mail-premium-btn mail-premium-btn--ghost"
+            onClick={() => resetForm()}
+          >
             İptal
           </button>
         ) : null}
       </div>
+        </div>
+      </section>
     </div>
   );
 }

@@ -944,7 +944,8 @@ export function MailSettingsPanel({
           view === "notifications" ||
           view === "imap" ||
           view === "deliverability" ||
-          view === "ops"
+          view === "ops" ||
+          view === "rules"
             ? "compose-dialog mail-settings-dialog mail-settings-dialog--wide"
             : "compose-dialog mail-settings-dialog"
         }
