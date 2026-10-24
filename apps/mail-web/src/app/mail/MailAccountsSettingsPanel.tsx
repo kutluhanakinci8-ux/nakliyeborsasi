@@ -50,10 +50,20 @@ export function MailAccountsSettingsPanel({ accessToken }: Props) {
   }
 
   if (loading) {
-    return <p className="mail-settings-muted">Hesaplar yükleniyor…</p>;
+    return (
+      <div className="mail-accounts-settings mail-accounts-settings--premium">
+        <div className="mail-posta-skeleton" aria-busy="true">
+          <div className="mail-posta-skeleton-line mail-posta-skeleton-line--lead" />
+          <div className="mail-posta-skeleton-card" />
+          <div className="mail-posta-skeleton-card" />
+        </div>
+      </div>
+    );
   }
   if (error && !hub) {
-    return <p className="mail-settings-error">{error}</p>;
+    return (
+      <p className="mail-accounts-status mail-accounts-status--err">{error}</p>
+    );
   }
   if (!hub) {
     return null;
@@ -62,77 +72,129 @@ export function MailAccountsSettingsPanel({ accessToken }: Props) {
   const consoleUrl = resolveMailConsoleUrl();
 
   return (
-    <div className="mail-accounts-settings">
-      <p className="mail-settings-lead">
-        Kurumsal kutu:{" "}
-        <strong>{hub.primaryAddress ?? "Henüz atanmadı"}</strong>
-        {hub.unreadCount > 0 ? ` · ${hub.unreadCount} okunmamış` : null}
-      </p>
-      {hub.branding?.emailBrandTitle ? (
-        <p className="mail-settings-muted">
-          Marka başlığı: {hub.branding.emailBrandTitle}
+    <div className="mail-accounts-settings mail-accounts-settings--premium">
+      <div className="mail-accounts-hero">
+        <p className="mail-accounts-hero-label">Kurumsal posta kutusu</p>
+        <p className="mail-accounts-hero-address">
+          {hub.primaryAddress ?? "Henüz atanmadı"}
         </p>
-      ) : null}
+        {hub.unreadCount > 0 ? (
+          <p className="mail-accounts-hero-meta">
+            {hub.unreadCount} okunmamış mesaj
+          </p>
+        ) : null}
+        {hub.branding?.emailBrandTitle ? (
+          <p className="mail-accounts-hero-meta">
+            Marka: {hub.branding.emailBrandTitle}
+          </p>
+        ) : null}
+      </div>
 
-      <h3 className="mail-settings-subhead">E-posta alt bilgisi — sosyal medya</h3>
-      <MailEmailSocialLinksEditor
-        accessToken={accessToken}
-        canEdit={hub.canManageSenders}
-      />
+      <section className="mail-posta-card">
+        <header className="mail-posta-card-head">
+          <h3 className="mail-posta-card-title">E-posta alt bilgisi</h3>
+          <p className="mail-posta-card-desc">
+            Gönderdiğiniz kurumsal postaların altında tıklanabilir sosyal medya
+            ikonları görünür (alıcı önizlemesinde de yer alır).
+          </p>
+        </header>
+        <MailEmailSocialLinksEditor
+          accessToken={accessToken}
+          canEdit={hub.canManageSenders}
+        />
+      </section>
 
-      <h3 className="mail-settings-subhead">Gönderen kimlikleri</h3>
-      <ul className="mail-accounts-list">
-        {hub.senders.map((sender) => (
-          <li key={sender.id} className="mail-accounts-row">
-            <div>
-              <strong>{sender.fromAddress}</strong>
-              {sender.isDefault ? (
-                <span className="mail-accounts-badge">Varsayılan</span>
-              ) : null}
-              {sender.displayName ? (
-                <div className="mail-settings-muted">{sender.displayName}</div>
-              ) : null}
-            </div>
-            {hub.canManageSenders && !sender.isDefault ? (
-              <button
-                type="button"
-                className="mail-settings-btn-secondary"
-                onClick={() => void handleDefault(sender.id)}
-              >
-                Varsayılan yap
-              </button>
-            ) : null}
-          </li>
-        ))}
-      </ul>
-
-      <h3 className="mail-settings-subhead">Takma adlar (alias)</h3>
-      {hub.aliases.length === 0 ? (
-        <p className="mail-settings-muted">Kayıtlı alias yok.</p>
-      ) : (
-        <ul className="mail-accounts-list">
-          {hub.aliases.map((alias) => (
-            <li key={alias.id} className="mail-accounts-row">
-              <span>{alias.aliasEmail}</span>
-              <span className="mail-settings-muted">
-                → {alias.targets[0]?.emailAddress ?? "—"}
-              </span>
+      <section className="mail-posta-card">
+        <header className="mail-posta-card-head">
+          <h3 className="mail-posta-card-title">Gönderen kimlikleri</h3>
+          <p className="mail-posta-card-desc">
+            Yeni mesajlarda kullanılan From adresi ve görünen ad.
+          </p>
+        </header>
+        <ul className="mail-accounts-list--premium">
+          {hub.senders.map((sender) => (
+            <li
+              key={sender.id}
+              className={
+                sender.isDefault
+                  ? "mail-accounts-card is-default"
+                  : "mail-accounts-card"
+              }
+            >
+              <div className="mail-accounts-card-main">
+                <span className="mail-accounts-card-email">
+                  {sender.fromAddress}
+                </span>
+                {sender.displayName ? (
+                  <span className="mail-accounts-card-name">
+                    {sender.displayName}
+                  </span>
+                ) : null}
+              </div>
+              <div className="mail-accounts-card-actions">
+                {sender.isDefault ? (
+                  <span className="mail-accounts-badge">Varsayılan</span>
+                ) : hub.canManageSenders ? (
+                  <button
+                    type="button"
+                    className="mail-premium-btn mail-premium-btn--ghost"
+                    onClick={() => void handleDefault(sender.id)}
+                  >
+                    Varsayılan yap
+                  </button>
+                ) : null}
+              </div>
             </li>
           ))}
         </ul>
-      )}
+      </section>
 
-      {hub.canManageSenders ? (
-        <p className="mail-settings-muted">
-          Yeni alias veya domain için{" "}
-          <a href={consoleUrl} target="_blank" rel="noreferrer">
-            yönetim konsolu
-          </a>
-          .
+      <section className="mail-posta-card mail-posta-card--muted">
+        <header className="mail-posta-card-head">
+          <h3 className="mail-posta-card-title">Takma adlar (alias)</h3>
+          <p className="mail-posta-card-desc">
+            Ek adresler gelen kutunuza yönlendirilir.
+          </p>
+        </header>
+        {hub.aliases.length === 0 ? (
+          <p className="mail-accounts-muted">Kayıtlı alias yok.</p>
+        ) : (
+          <ul className="mail-accounts-list--premium">
+            {hub.aliases.map((alias) => (
+              <li key={alias.id} className="mail-accounts-card mail-accounts-card--alias">
+                <div className="mail-accounts-card-main">
+                  <span className="mail-accounts-card-email">
+                    {alias.aliasEmail}
+                  </span>
+                  <span className="mail-accounts-card-name">
+                    → {alias.targets[0]?.emailAddress ?? "—"}
+                  </span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+        {hub.canManageSenders ? (
+          <p className="mail-accounts-muted mail-accounts-console-link">
+            Yeni alias veya domain için{" "}
+            <a href={consoleUrl} target="_blank" rel="noreferrer">
+              yönetim konsolu
+            </a>
+            .
+          </p>
+        ) : null}
+      </section>
+
+      {status ? (
+        <p className="mail-accounts-status mail-accounts-status--ok" role="status">
+          {status}
         </p>
       ) : null}
-      {status ? <p className="mail-settings-ok">{status}</p> : null}
-      {error ? <p className="mail-settings-error">{error}</p> : null}
+      {error ? (
+        <p className="mail-accounts-status mail-accounts-status--err" role="alert">
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }

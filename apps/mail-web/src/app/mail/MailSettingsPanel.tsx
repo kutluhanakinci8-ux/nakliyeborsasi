@@ -1147,8 +1147,8 @@ export function MailSettingsPanel({
     <div className="compose-overlay" role="presentation" onClick={onClose}>
       <div
         className={
-          view === "mailPrefs"
-            ? "compose-dialog mail-settings-dialog mail-settings-dialog--posta"
+          view === "mailPrefs" || view === "accounts"
+            ? "compose-dialog mail-settings-dialog mail-settings-dialog--wide"
             : "compose-dialog mail-settings-dialog"
         }
         role="dialog"

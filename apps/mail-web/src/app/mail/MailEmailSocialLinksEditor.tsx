@@ -8,40 +8,55 @@ import {
   type MailEmailSocialPlatform,
 } from "@/lib/mailApi";
 
-const PLATFORMS: { id: MailEmailSocialPlatform; label: string; placeholder: string }[] =
-  [
-    {
-      id: "instagram",
-      label: "Instagram",
-      placeholder: "@firma veya https://instagram.com/…",
-    },
-    {
-      id: "facebook",
-      label: "Facebook",
-      placeholder: "https://facebook.com/…",
-    },
-    {
-      id: "linkedin",
-      label: "LinkedIn",
-      placeholder: "https://linkedin.com/company/…",
-    },
-    { id: "x", label: "X (Twitter)", placeholder: "@firma veya https://x.com/…" },
-    {
-      id: "youtube",
-      label: "YouTube",
-      placeholder: "https://youtube.com/@…",
-    },
-    {
-      id: "tiktok",
-      label: "TikTok",
-      placeholder: "@firma veya https://tiktok.com/@…",
-    },
-    {
-      id: "website",
-      label: "Web sitesi",
-      placeholder: "https://firma.com",
-    },
-  ];
+const PLATFORMS: {
+  id: MailEmailSocialPlatform;
+  label: string;
+  placeholder: string;
+  markClass: string;
+}[] = [
+  {
+    id: "instagram",
+    label: "Instagram",
+    placeholder: "@firma veya https://instagram.com/…",
+    markClass: "mail-social-mark--instagram",
+  },
+  {
+    id: "facebook",
+    label: "Facebook",
+    placeholder: "https://facebook.com/…",
+    markClass: "mail-social-mark--facebook",
+  },
+  {
+    id: "linkedin",
+    label: "LinkedIn",
+    placeholder: "https://linkedin.com/company/…",
+    markClass: "mail-social-mark--linkedin",
+  },
+  {
+    id: "x",
+    label: "X",
+    placeholder: "@firma veya https://x.com/…",
+    markClass: "mail-social-mark--x",
+  },
+  {
+    id: "youtube",
+    label: "YouTube",
+    placeholder: "https://youtube.com/@…",
+    markClass: "mail-social-mark--youtube",
+  },
+  {
+    id: "tiktok",
+    label: "TikTok",
+    placeholder: "@firma veya https://tiktok.com/@…",
+    markClass: "mail-social-mark--tiktok",
+  },
+  {
+    id: "website",
+    label: "Web sitesi",
+    placeholder: "https://firma.com",
+    markClass: "mail-social-mark--website",
+  },
+];
 
 type Props = {
   accessToken: string;
@@ -114,14 +129,14 @@ export function MailEmailSocialLinksEditor({ accessToken, canEdit }: Props) {
       }
       setStatus(
         saved > 0
-          ? `${saved} bağlantı kaydedildi. Önizleme ve giden postada alt kısımda görünür.`
+          ? `${saved} bağlantı kaydedildi — giden posta alt bilgisinde görünür.`
           : "Sosyal bağlantılar temizlendi.",
       );
     } catch (err) {
       setError(
         err instanceof Error
           ? err.message
-          : "Kaydedilemedi. Adresler https veya @kullaniciadi (Instagram, X, TikTok) olmalı.",
+          : "Kaydedilemedi. Adresler https veya @kullaniciadi olmalı.",
       );
     } finally {
       setSaving(false);
@@ -129,45 +144,64 @@ export function MailEmailSocialLinksEditor({ accessToken, canEdit }: Props) {
   }
 
   if (loading) {
-    return <p className="mail-settings-muted">Yükleniyor…</p>;
+    return (
+      <div className="mail-social-skeleton" aria-busy="true">
+        {PLATFORMS.slice(0, 4).map((p) => (
+          <div key={p.id} className="mail-social-skeleton-row" />
+        ))}
+      </div>
+    );
   }
 
   return (
-    <form className="mail-email-social-form" onSubmit={(e) => void onSubmit(e)}>
-      <p className="mail-settings-lead">
-        Gönderdiğiniz e-postaların altında tıklanabilir sosyal medya ikonları
-        görünür (alıcı önizlemesinde de yer alır).
-      </p>
-      {PLATFORMS.map((platform) => (
-        <label key={platform.id} className="mail-settings-field">
-          <span>{platform.label}</span>
-          <input
-            className="mail-settings-input"
-            type="text"
-            value={values[platform.id]}
-            onChange={(e) =>
-              setValues((prev) => ({
-                ...prev,
-                [platform.id]: e.target.value,
-              }))
-            }
-            placeholder={platform.placeholder}
-            disabled={!canEdit}
-            autoComplete="off"
-          />
-        </label>
-      ))}
+    <form className="mail-social-form" onSubmit={(e) => void onSubmit(e)}>
+      <div className="mail-social-form-grid">
+        {PLATFORMS.map((platform) => (
+          <label key={platform.id} className="mail-social-field">
+            <span className="mail-social-field-label">
+              <span
+                className={`mail-social-mark ${platform.markClass}`}
+                aria-hidden="true"
+              />
+              {platform.label}
+            </span>
+            <input
+              className="mail-premium-input"
+              type="text"
+              inputMode="url"
+              value={values[platform.id]}
+              onChange={(e) =>
+                setValues((prev) => ({
+                  ...prev,
+                  [platform.id]: e.target.value,
+                }))
+              }
+              placeholder={platform.placeholder}
+              disabled={!canEdit}
+              autoComplete="off"
+            />
+          </label>
+        ))}
+      </div>
       {!canEdit ? (
-        <p className="mail-settings-muted">
+        <p className="mail-accounts-muted">
           Düzenlemek için kurumsal posta yöneticisi yetkisi gerekir.
         </p>
       ) : null}
-      {error ? <p className="mail-settings-error">{error}</p> : null}
-      {status ? <p className="mail-settings-ok">{status}</p> : null}
+      {error ? (
+        <p className="mail-accounts-status mail-accounts-status--err" role="alert">
+          {error}
+        </p>
+      ) : null}
+      {status ? (
+        <p className="mail-accounts-status mail-accounts-status--ok" role="status">
+          {status}
+        </p>
+      ) : null}
       {canEdit ? (
         <button
           type="submit"
-          className="mail-settings-btn-primary"
+          className="mail-premium-btn mail-premium-btn--primary"
           disabled={saving}
         >
           {saving ? "Kaydediliyor…" : "Sosyal bağlantıları kaydet"}
