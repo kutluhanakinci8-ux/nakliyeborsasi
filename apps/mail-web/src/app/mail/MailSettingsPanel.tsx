@@ -942,7 +942,8 @@ export function MailSettingsPanel({
           view === "signature" ||
           view === "autoReply" ||
           view === "notifications" ||
-          view === "imap"
+          view === "imap" ||
+          view === "deliverability"
             ? "compose-dialog mail-settings-dialog mail-settings-dialog--wide"
             : "compose-dialog mail-settings-dialog"
         }

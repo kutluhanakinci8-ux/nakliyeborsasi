@@ -9,13 +9,58 @@ import { MailDeliverabilityWizard } from "./MailDeliverabilityWizard";
 
 type Props = {
   accessToken: string;
-  /** EK-P7 hub deep link — DMARC aggregate bölümüne odaklan. */
   highlightDmarc?: boolean;
-  /** EK-P10 hub deep link — engagement + webhook analitik. */
   highlightEngagement?: boolean;
 };
 
 const PERIOD_OPTIONS = [7, 30, 90] as const;
+
+function StatTile({
+  label,
+  value,
+  suffix = "",
+}: {
+  label: string;
+  value: string | number;
+  suffix?: string;
+}) {
+  return (
+    <div className="mail-deliverability-stat">
+      <span className="mail-deliverability-stat-label">{label}</span>
+      <span className="mail-deliverability-stat-value">
+        {value}
+        {suffix}
+      </span>
+    </div>
+  );
+}
+
+function DnsBadge({ label, ok }: { label: string; ok: boolean }) {
+  return (
+    <span
+      className={
+        ok
+          ? "mail-deliverability-dns-badge is-ok"
+          : "mail-deliverability-dns-badge is-bad"
+      }
+    >
+      {label}
+      <span className="mail-deliverability-dns-badge-icon" aria-hidden="true">
+        {ok ? "✓" : "✗"}
+      </span>
+    </span>
+  );
+}
+
+function scoreTone(score: number): "good" | "mid" | "low" {
+  if (score >= 80) {
+    return "good";
+  }
+  if (score >= 50) {
+    return "mid";
+  }
+  return "low";
+}
 
 export function MailDeliverabilityPanel({
   accessToken,
@@ -27,15 +72,19 @@ export function MailDeliverabilityPanel({
   );
   const [hub, setHub] = useState<MailDeliverabilityHub | null>(null);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     setError("");
+    setLoading(true);
     try {
       const payload = await fetchDeliverabilityHub(accessToken, days);
       setHub(payload.hub);
     } catch {
       setError("Teslimat özeti yüklenemedi.");
       setHub(null);
+    } finally {
+      setLoading(false);
     }
   }, [accessToken, days]);
 
@@ -59,174 +108,277 @@ export function MailDeliverabilityPanel({
     el?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [highlightEngagement, hub]);
 
-  if (error) {
-    return <p className="login-error">{error}</p>;
+  if (loading && !hub) {
+    return (
+      <div className="mail-deliverability-panel mail-deliverability-panel--premium">
+        <div className="mail-posta-skeleton" aria-busy="true">
+          <div className="mail-posta-skeleton-line mail-posta-skeleton-line--lead" />
+          <div className="mail-posta-skeleton-card" />
+          <div className="mail-posta-skeleton-card" />
+        </div>
+      </div>
+    );
   }
+
+  if (error && !hub) {
+    return (
+      <p className="mail-accounts-status mail-accounts-status--err" role="alert">
+        {error}
+      </p>
+    );
+  }
+
   if (!hub) {
-    return <p>Yükleniyor…</p>;
+    return null;
   }
 
   const engagement = hub.engagement ?? hub.engagement30d;
   const webhooks = hub.webhookAnalytics;
+  const periodDays = hub.periodDays ?? days;
+  const tone = scoreTone(hub.score);
 
   return (
-    <div className="mail-deliverability-panel">
+    <div className="mail-deliverability-panel mail-deliverability-panel--premium">
       {highlightDmarc ? (
-        <p className="mail-parity-assist-banner" role="status">
-          DMARC aggregate: SPF/DKIM geçiş oranları ve rapor satırları bu bölümde.
-          DNS kayıtları yukarıda; dönem seçerek trendi inceleyin.
-        </p>
+        <div className="mail-notify-info mail-notify-info--pwa" role="status">
+          <span className="mail-notify-info-icon" aria-hidden="true">📊</span>
+          <div>
+            <p className="mail-notify-info-title">DMARC aggregate odak</p>
+            <p className="mail-notify-info-body">
+              SPF/DKIM geçiş oranları ve rapor satırları altta. DNS kayıtları
+              sihirbazda; dönem seçerek trendi inceleyin.
+            </p>
+          </div>
+        </div>
       ) : null}
       {highlightEngagement ? (
-        <p className="mail-parity-assist-banner" role="status">
-          Engagement: outbox açılma/tıklama/bounce oranları. Webhook uç noktaları
-          ile <code>message.opened</code>, <code>message.clicked</code> ve{" "}
-          <code>message.bounced</code> olaylarını harici sisteme aktarabilirsiniz.
-        </p>
+        <div className="mail-notify-info mail-notify-info--pwa" role="status">
+          <span className="mail-notify-info-icon" aria-hidden="true">📈</span>
+          <div>
+            <p className="mail-notify-info-title">Engagement odak</p>
+            <p className="mail-notify-info-body">
+              Outbox açılma/tıklama/bounce oranları. Webhook ile{" "}
+              <code>message.opened</code>, <code>message.clicked</code> ve{" "}
+              <code>message.bounced</code> olaylarını harici sisteme aktarın.
+            </p>
+          </div>
+        </div>
       ) : null}
-      <p className="mail-settings-lead">
+
+      <p className="mail-posta-intro">
         Kurumsal gönderim itibarı: DNS, engagement (açılma/tıklama/bounce), DMARC
         aggregate ve suppression — yalnızca bu organizasyonun outbox kayıtları.
       </p>
-      <div className="mail-deliverability-period">
-        {PERIOD_OPTIONS.map((option) => (
-          <button
-            key={option}
-            type="button"
-            className={
-              days === option
-                ? "mail-deliverability-period-btn is-active"
-                : "mail-deliverability-period-btn"
-            }
-            onClick={() => setDays(option)}
+
+      <section className="mail-posta-card mail-deliverability-score-card">
+        <header className="mail-deliverability-score-head">
+          <div
+            className={`mail-deliverability-score-ring mail-deliverability-score-ring--${tone}`}
+            aria-hidden="true"
           >
-            {option} gün
-          </button>
-        ))}
-      </div>
-      <p>
-        Skor: <strong>{hub.score}/100</strong>
-        <span className="mail-deliverability-muted">
-          {" "}
-          (son {hub.periodDays ?? days} gün)
-        </span>
-      </p>
-      {hub.dns ? (
-        <ul className="mail-deliverability-dns">
-          <li>Domain: {hub.dns.domain ?? "—"}</li>
-          <li>MX: {hub.dns.mx ? "✓" : "✗"}</li>
-          <li>SPF: {hub.dns.spf ? "✓" : "✗"}</li>
-          <li>DKIM: {hub.dns.dkim ? "✓" : "✗"}</li>
+            <span className="mail-deliverability-score-number">{hub.score}</span>
+            <span className="mail-deliverability-score-max">/100</span>
+          </div>
+          <div className="mail-deliverability-score-meta">
+            <h3 className="mail-posta-card-title">Teslimat skoru</h3>
+            <p className="mail-posta-card-desc">
+              Son {periodDays} günlük özet — DNS ve engagement etkiler.
+            </p>
+            <div
+              className="mail-posta-chips mail-posta-chips--equal mail-deliverability-period-chips"
+              role="group"
+              aria-label="Dönem seçimi"
+            >
+              {PERIOD_OPTIONS.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  className={
+                    days === option
+                      ? "mail-posta-chip is-active"
+                      : "mail-posta-chip"
+                  }
+                  aria-pressed={days === option}
+                  onClick={() => setDays(option)}
+                >
+                  <span className="mail-posta-chip-label">{option} gün</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </header>
+        {hub.dns ? (
+          <div className="mail-deliverability-dns-row">
+            <span className="mail-deliverability-domain">
+              {hub.dns.domain ?? "—"}
+            </span>
+            <DnsBadge label="MX" ok={Boolean(hub.dns.mx)} />
+            <DnsBadge label="SPF" ok={Boolean(hub.dns.spf)} />
+            <DnsBadge label="DKIM" ok={Boolean(hub.dns.dkim)} />
+          </div>
+        ) : (
+          <p className="mail-deliverability-no-domain" role="note">
+            Özel domain bağlı değil — gönderim itibarı sınırlı olabilir.
+          </p>
+        )}
+      </section>
+
+      <MailDeliverabilityWizard hub={hub} />
+
+      <section className="mail-posta-card mail-posta-card--muted">
+        <header className="mail-posta-card-head">
+          <h3 className="mail-posta-card-title">Alan adı itibarı</h3>
+          <p className="mail-posta-card-desc">
+            Google Postmaster ve DMARC aggregate ile gönderen itibarını izleyin.
+          </p>
+        </header>
+        <ul className="mail-deliverability-links">
           <li>
-            BIMI (inbox logosu): DMARC <code>p=quarantine</code> veya{" "}
-            <code>p=reject</code> sonrası <code>default._bimi</code> TXT + SVG
-            logo — kurumsal görünüm için önerilir.
+            <a
+              href="https://postmaster.google.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mail-deliverability-link"
+            >
+              Google Postmaster Tools →
+            </a>
+          </li>
+          <li>DMARC aggregate: konsol → teslimat / DMARC paneli (rua raporları)</li>
+          <li>PTR + SPF + DKIM: DNS sihirbazındaki adımlar tamamlanmalı</li>
+          <li>
+            BIMI: DMARC <code>p=quarantine</code> veya <code>p=reject</code> sonrası
+            inbox logosu için önerilir
           </li>
         </ul>
-      ) : (
-        <p>Özel domain bağlı değil.</p>
-      )}
-      <MailDeliverabilityWizard hub={hub} />
-      <h4 className="mail-deliverability-subhead">Alan adı itibarı</h4>
-      <p className="compose-attach-hint">
-        Google Postmaster Tools ile gönderen itibarını ve spam oranını izleyin
-        (özel domain doğrulandıktan sonra).
-      </p>
-      <ul>
-        <li>
-          <a
-            href="https://postmaster.google.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Google Postmaster Tools
-          </a>
-        </li>
-        <li>
-          DMARC aggregate: konsol → teslimat / DMARC paneli (rua raporları)
-        </li>
-        <li>
-          PTR + SPF + DKIM: yukarıdaki DNS satırları yeşil olmalı
-        </li>
-      </ul>
-      <h4
+      </section>
+
+      <section
         id="mail-engagement-analytics"
         className={
           highlightEngagement
-            ? "mail-deliverability-subhead mail-deliverability-subhead--focus"
-            : "mail-deliverability-subhead"
+            ? "mail-posta-card mail-deliverability-focus-card"
+            : "mail-posta-card"
         }
       >
-        Engagement
-      </h4>
-      <ul>
-        <li>Gönderim: {engagement?.sentInPeriod ?? "—"}</li>
-        <li>Bounce: {engagement?.bounceRatePercent ?? "—"}%</li>
-        <li>Açılma: {engagement?.openRatePercent ?? "—"}%</li>
-        <li>Tıklama: {engagement?.clickRatePercent ?? "—"}%</li>
-        <li>Suppression: {hub.suppressionCount}</li>
-      </ul>
-      {engagement?.bounceByClass &&
-      Object.keys(engagement.bounceByClass).length > 0 ? (
-        <ul className="mail-deliverability-bounce-class">
-          {Object.entries(engagement.bounceByClass).map(([cls, count]) => (
-            <li key={cls}>
-              Bounce ({cls}): {count}
-            </li>
-          ))}
-        </ul>
-      ) : null}
-      {webhooks ? (
-        <>
-          <h4
-            id="mail-webhook-analytics"
-            className="mail-deliverability-subhead"
-          >
-            Webhook analitik
-          </h4>
-          <ul>
-            <li>
-              Public API: {webhooks.publicApiAllowed ? "açık" : "plan gerekli"}
-            </li>
-            <li>
-              Uç nokta: {webhooks.enabledEndpointCount} aktif /{" "}
-              {webhooks.endpointCount} toplam
-            </li>
-            <li>
-              Abone olaylar:{" "}
-              {webhooks.subscribedEvents.length > 0
-                ? webhooks.subscribedEvents.join(", ")
-                : "—"}
-            </li>
-            <li>
-              Engagement olayları:{" "}
-              {webhooks.engagementWebhookEvents.join(", ")}
-            </li>
-            <li>
-              Yapılandırma API: <code>{webhooks.configureApiPath}</code>
-            </li>
+        <header className="mail-posta-card-head">
+          <h3 className="mail-posta-card-title">Engagement</h3>
+          <p className="mail-posta-card-desc">
+            Outbox gönderim, bounce, açılma ve tıklama ({periodDays} gün).
+          </p>
+        </header>
+        <div className="mail-deliverability-stat-grid">
+          <StatTile label="Gönderim" value={engagement?.sentInPeriod ?? "—"} />
+          <StatTile
+            label="Bounce"
+            value={engagement?.bounceRatePercent ?? "—"}
+            suffix="%"
+          />
+          <StatTile
+            label="Açılma"
+            value={engagement?.openRatePercent ?? "—"}
+            suffix="%"
+          />
+          <StatTile
+            label="Tıklama"
+            value={engagement?.clickRatePercent ?? "—"}
+            suffix="%"
+          />
+          <StatTile label="Suppression" value={hub.suppressionCount} />
+        </div>
+        {engagement?.bounceByClass &&
+        Object.keys(engagement.bounceByClass).length > 0 ? (
+          <ul className="mail-deliverability-bounce-class">
+            {Object.entries(engagement.bounceByClass).map(([cls, count]) => (
+              <li key={cls}>
+                <span className="mail-deliverability-bounce-label">Bounce ({cls})</span>
+                <span className="mail-deliverability-bounce-count">{count}</span>
+              </li>
+            ))}
           </ul>
-        </>
+        ) : null}
+      </section>
+
+      {webhooks ? (
+        <section id="mail-webhook-analytics" className="mail-posta-card">
+          <header className="mail-posta-card-head mail-deliverability-card-head">
+            <div>
+              <h3 className="mail-posta-card-title">Webhook analitik</h3>
+              <p className="mail-posta-card-desc">
+                Harici sistemlere engagement olayları aktarımı.
+              </p>
+            </div>
+            <span
+              className={
+                webhooks.publicApiAllowed
+                  ? "mail-deliverability-wizard-pill"
+                  : "mail-deliverability-step-badge"
+              }
+            >
+              {webhooks.publicApiAllowed ? "Public API açık" : "Plan gerekli"}
+            </span>
+          </header>
+          <div className="mail-deliverability-stat-grid mail-deliverability-stat-grid--3">
+            <StatTile
+              label="Uç nokta"
+              value={`${webhooks.enabledEndpointCount} / ${webhooks.endpointCount}`}
+            />
+            <StatTile
+              label="Abone olay"
+              value={
+                webhooks.subscribedEvents.length > 0
+                  ? webhooks.subscribedEvents.length
+                  : "—"
+              }
+            />
+            <StatTile label="Aktif" value={webhooks.enabledEndpointCount} />
+          </div>
+          <p className="mail-deliverability-events">
+            <span className="mail-deliverability-events-label">Olaylar</span>
+            {webhooks.engagementWebhookEvents.join(", ")}
+          </p>
+          <p className="mail-deliverability-api-path">
+            <span className="mail-deliverability-api-path-label">Yapılandırma API</span>
+            <code>{webhooks.configureApiPath}</code>
+          </p>
+        </section>
       ) : null}
-      <h4
+
+      <section
         id="mail-dmarc-aggregate"
         className={
           highlightDmarc
-            ? "mail-deliverability-subhead mail-deliverability-subhead--focus"
-            : "mail-deliverability-subhead"
+            ? "mail-posta-card mail-deliverability-focus-card"
+            : "mail-posta-card"
         }
       >
-        DMARC aggregate
-      </h4>
-      <ul>
-        <li>Rapor satırı ({hub.periodDays ?? days}g): {hub.dmarc?.reportRows ?? 0}</li>
-        <li>İleti sayısı: {hub.dmarc?.messageCount ?? 0}</li>
-        <li>DKIM pass: {hub.dmarc?.dkimPassRatePercent ?? "—"}%</li>
-        <li>SPF pass: {hub.dmarc?.spfPassRatePercent ?? "—"}%</li>
-        <li>Toplam rapor (tüm dönemler): {hub.dmarcReports90d}</li>
-      </ul>
+        <header className="mail-posta-card-head">
+          <h3 className="mail-posta-card-title">DMARC aggregate</h3>
+          <p className="mail-posta-card-desc">
+            Rapor satırları ve SPF/DKIM geçiş oranları ({periodDays} gün).
+          </p>
+        </header>
+        <div className="mail-deliverability-stat-grid">
+          <StatTile
+            label="Rapor satırı"
+            value={hub.dmarc?.reportRows ?? 0}
+          />
+          <StatTile label="İleti sayısı" value={hub.dmarc?.messageCount ?? 0} />
+          <StatTile
+            label="DKIM pass"
+            value={hub.dmarc?.dkimPassRatePercent ?? "—"}
+            suffix="%"
+          />
+          <StatTile
+            label="SPF pass"
+            value={hub.dmarc?.spfPassRatePercent ?? "—"}
+            suffix="%"
+          />
+          <StatTile label="Toplam rapor (90g)" value={hub.dmarcReports90d} />
+        </div>
+      </section>
+
       {hub.hintsTr.length > 0 ? (
-        <ul className="mail-deliverability-hints">
+        <ul className="mail-deliverability-hints" role="list">
           {hub.hintsTr.map((hint) => (
             <li key={hint}>{hint}</li>
           ))}
