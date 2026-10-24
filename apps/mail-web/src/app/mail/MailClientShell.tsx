@@ -134,6 +134,7 @@ export function MailClientShell({ mail }: Props) {
     inboxCustomFolderId,
     inboxFolder,
     inboxListDensity,
+    readFontScale,
     inboxOffline,
     inboxOfflineCachedAt,
     isPrimaryInbox,
@@ -1225,10 +1226,14 @@ export function MailClientShell({ mail }: Props) {
             <div className="mail-read-body mail-read-body--html">
               {sentPreview.bodyHtml ? (
                 <iframe
+                  key={`sent-${readFontScale}`}
                   title="Gönderilen mesaj (alıcı görünümü)"
                   className="mail-html-frame mail-html-frame--sent"
                   sandbox=""
-                  srcDoc={sentPreview.bodyHtml}
+                  srcDoc={
+                    getMessageHtmlForRead(sentPreview.bodyHtml) ??
+                    sentPreview.bodyHtml
+                  }
                 />
               ) : (
                 <pre>{sentPreview.bodyText ?? "(İçerik yok)"}</pre>
@@ -1425,6 +1430,7 @@ export function MailClientShell({ mail }: Props) {
                     </div>
                   ) : null}
                   <iframe
+                    key={`${detail.id}-${readFontScale}`}
                     title="Mesaj içeriği"
                     className="mail-html-frame"
                     sandbox=""

@@ -14,6 +14,8 @@ import {
 import {
   applyReadFontScale,
   initReadFontScale,
+  MAIL_READ_FONT_SCALE_CHANGE_EVENT,
+  readReadFontScale,
   type MailReadFontScale,
 } from "@/lib/mailDisplayPrefs";
 
@@ -74,8 +76,22 @@ export function MailDisplaySettings({
     };
     window.addEventListener(MAIL_THEME_MODE_CHANGE_EVENT, onModeChange);
 
+    const onReadFontChange = (event: Event) => {
+      const detail = (event as CustomEvent<{ scale: MailReadFontScale }>).detail;
+      const scale = detail?.scale ?? readReadFontScale();
+      setReadFont(scale);
+    };
+    window.addEventListener(
+      MAIL_READ_FONT_SCALE_CHANGE_EVENT,
+      onReadFontChange,
+    );
+
     return () => {
       window.removeEventListener(MAIL_THEME_MODE_CHANGE_EVENT, onModeChange);
+      window.removeEventListener(
+        MAIL_READ_FONT_SCALE_CHANGE_EVENT,
+        onReadFontChange,
+      );
     };
   }, []);
 

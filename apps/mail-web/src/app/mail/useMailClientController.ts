@@ -11,7 +11,15 @@ import {
   applyRemoteImagesPolicyToHtml,
   htmlHasBlockedRemoteImages,
 } from "@/lib/mailHtmlBodyDisplay";
-import { readThreadViewPreference, writeThreadViewPreference } from "@/lib/mailDisplayPrefs";
+import {
+  applyReadFontScaleToHtml,
+  initReadFontScale,
+  MAIL_READ_FONT_SCALE_CHANGE_EVENT,
+  readReadFontScale,
+  readThreadViewPreference,
+  type MailReadFontScale,
+  writeThreadViewPreference,
+} from "@/lib/mailDisplayPrefs";
 import {
   composeDelaySecondsFromUndoPref,
   pickMailPostaPreferences,
@@ -241,6 +249,8 @@ export function useMailClientController({
   >(null);
   const [inboxListDensity, setInboxListDensity] =
     useState<MailInboxListDensity>("comfortable");
+  const [readFontScale, setReadFontScale] =
+    useState<MailReadFontScale>("default");
   const [activeSwipeRowId, setActiveSwipeRowId] = useState<string | null>(null);
   const [threadView, setThreadViewState] = useState(false);
   const [mailPostaPrefs, setMailPostaPrefs] = useState(() =>
@@ -255,6 +265,21 @@ export function useMailClientController({
 
   useEffect(() => {
     setThreadViewState(readThreadViewPreference());
+    setReadFontScale(initReadFontScale());
+  }, []);
+
+  useEffect(() => {
+    const onReadFontChange = (event: Event) => {
+      const detail = (event as CustomEvent<{ scale: MailReadFontScale }>).detail;
+      const scale = detail?.scale ?? readReadFontScale();
+      setReadFontScale(scale);
+    };
+    window.addEventListener(MAIL_READ_FONT_SCALE_CHANGE_EVENT, onReadFontChange);
+    return () =>
+      window.removeEventListener(
+        MAIL_READ_FONT_SCALE_CHANGE_EVENT,
+        onReadFontChange,
+      );
   }, []);
 
   const handleMailPostaPreferencesSaved = useCallback(
@@ -2490,12 +2515,14 @@ export function useMailClientController({
       if (!rawHtml) {
         return null;
       }
-      return applyRemoteImagesPolicyToHtml(
+      const withImages = applyRemoteImagesPolicyToHtml(
         rawHtml,
         mailPostaPrefs.remoteImagesPolicy,
         remoteImagesRevealed,
       );
+      return applyReadFontScaleToHtml(withImages, readFontScale);
     },
+    readFontScale,
     handleMailPostaPreferencesSaved,
     shouldPromptRemoteImages: (rawHtml: string | null) =>
       rawHtml

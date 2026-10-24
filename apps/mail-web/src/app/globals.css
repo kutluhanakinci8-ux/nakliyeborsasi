@@ -5140,14 +5140,26 @@ html[data-mail-theme="dark"] .mail-imap-pill--warn {
   color: #1a73e8;
 }
 
+html[data-mail-read-font="large"] .mail-read--premium .mail-read-title {
+  font-size: 1.5rem;
+}
+
+html[data-mail-read-font="large"] .mail-read-meta--premium {
+  font-size: 0.95rem;
+}
+
 html[data-mail-read-font="large"] .mail-read-body,
 html[data-mail-read-font="large"] .mail-read-body pre {
-  font-size: 1.05rem;
-  line-height: 1.65;
+  font-size: 1.125rem;
+  line-height: 1.7;
 }
 
 html[data-mail-read-font="large"] .mail-read--premium .mail-read-body {
-  font-size: 1.08rem;
+  font-size: 1.125rem;
+}
+
+html[data-mail-read-font="large"] .mail-html-frame {
+  zoom: 1.08;
 }
 
 .mail-display-settings {

@@ -42,7 +42,7 @@ export default function RootLayout({
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var k="lerta-mail-theme";var v=localStorage.getItem(k);var mode=(v==="dark"||v==="light"||v==="system")?v:null;if(!mode){mode=window.matchMedia("(prefers-color-scheme: dark)").matches?"system":"light";}var dark=window.matchMedia("(prefers-color-scheme: dark)").matches;var eff=mode==="system"?(dark?"dark":"light"):mode;var r=document.documentElement;r.dataset.mailTheme=eff;r.dataset.mailThemeMode=mode;r.dataset.mailThemeFollowsSystem=mode==="system"?"true":"false";}catch(e){}})();`,
+            __html: `(function(){try{var r=document.documentElement;var k="lerta-mail-theme";var v=localStorage.getItem(k);var mode=(v==="dark"||v==="light"||v==="system")?v:null;if(!mode){mode=window.matchMedia("(prefers-color-scheme: dark)").matches?"system":"light";}var dark=window.matchMedia("(prefers-color-scheme: dark)").matches;var eff=mode==="system"?(dark?"dark":"light"):mode;r.dataset.mailTheme=eff;r.dataset.mailThemeMode=mode;r.dataset.mailThemeFollowsSystem=mode==="system"?"true":"false";if(localStorage.getItem("lerta-mail-read-font")==="large"){r.dataset.mailReadFont="large";}}catch(e){}})();`,
           }}
         />
       </head>
