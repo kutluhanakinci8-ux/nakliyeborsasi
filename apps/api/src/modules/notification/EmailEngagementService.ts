@@ -262,6 +262,12 @@ export class EmailEngagementService {
     clickRatePercent: number | null;
     bounceRatePercent: number | null;
     bounceByClass: Record<string, number>;
+    dailyOpenClick: Array<{ day: string; opens: number; clicks: number }>;
+    providerBreakdown: Array<{
+      provider: string;
+      opens: number;
+      clicks: number;
+    }>;
   }> {
     const org = organizationId?.trim() || null;
     const outboxOrg = org ? this.outboxOrganizationSql("email_outbox", 2) : "";
@@ -346,6 +352,8 @@ export class EmailEngagementService {
     }
 
     const attempted = sentInPeriod + bounces;
+    const dailyOpenClick = await this.loadDailyOpenClickSeries(since, org);
+    const providerBreakdown = await this.loadProviderBreakdown(since, org);
     return {
       sentInPeriod,
       uniqueOpens,
@@ -364,7 +372,106 @@ export class EmailEngagementService {
       bounceRatePercent:
         attempted > 0 ? Math.round((bounces / attempted) * 1000) / 10 : null,
       bounceByClass,
+      dailyOpenClick,
+      providerBreakdown,
     };
+  }
+
+  private async loadDailyOpenClickSeries(
+    since: Date,
+    organizationId: string | null,
+  ): Promise<Array<{ day: string; opens: number; clicks: number }>> {
+    const org = organizationId?.trim() || null;
+    const join = org ? `INNER JOIN email_outbox o ON o.id = e."outboxId"` : "";
+    const orgSql = org ? this.outboxOrganizationSql("o", 2) : "";
+    const params: (Date | string)[] = org ? [since, org] : [since];
+    const rows: Array<{ day: string; opens: string; clicks: string }> =
+      await this.eventRepository.query(
+        `
+        SELECT
+          to_char(date_trunc('day', e."occurredAt" AT TIME ZONE 'UTC'), 'YYYY-MM-DD') AS day,
+          COUNT(*) FILTER (WHERE e."eventType" = 'open')::text AS opens,
+          COUNT(*) FILTER (WHERE e."eventType" = 'click')::text AS clicks
+        FROM email_outbox_engagement_events e
+        ${join}
+        WHERE e."occurredAt" >= $1
+          AND e."eventType" IN ('open', 'click')${orgSql}
+        GROUP BY 1
+        ORDER BY 1 ASC
+        `,
+        params,
+      );
+    return rows.map((row) => ({
+      day: row.day,
+      opens: Number.parseInt(row.opens, 10),
+      clicks: Number.parseInt(row.clicks, 10),
+    }));
+  }
+
+  private async loadProviderBreakdown(
+    since: Date,
+    organizationId: string | null,
+  ): Promise<Array<{ provider: string; opens: number; clicks: number }>> {
+    const org = organizationId?.trim() || null;
+    const join = org ? `INNER JOIN email_outbox o ON o.id = e."outboxId"` : "";
+    const orgSql = org ? this.outboxOrganizationSql("o", 2) : "";
+    const params: (Date | string)[] = org ? [since, org] : [since];
+    const rows: Array<{
+      user_agent: string | null;
+      opens: string;
+      clicks: string;
+    }> = await this.eventRepository.query(
+      `
+      SELECT
+        e."userAgent" AS user_agent,
+        COUNT(*) FILTER (WHERE e."eventType" = 'open')::text AS opens,
+        COUNT(*) FILTER (WHERE e."eventType" = 'click')::text AS clicks
+      FROM email_outbox_engagement_events e
+      ${join}
+      WHERE e."occurredAt" >= $1
+        AND e."eventType" IN ('open', 'click')${orgSql}
+      GROUP BY e."userAgent"
+      `,
+      params,
+    );
+    const byProvider = new Map<string, { opens: number; clicks: number }>();
+    for (const row of rows) {
+      const provider = this.classifyEngagementClientProvider(row.user_agent);
+      const bucket = byProvider.get(provider) ?? { opens: 0, clicks: 0 };
+      bucket.opens += Number.parseInt(row.opens, 10);
+      bucket.clicks += Number.parseInt(row.clicks, 10);
+      byProvider.set(provider, bucket);
+    }
+    return [...byProvider.entries()]
+      .map(([provider, counts]) => ({
+        provider,
+        opens: counts.opens,
+        clicks: counts.clicks,
+      }))
+      .sort((a, b) => b.opens + b.clicks - (a.opens + a.clicks));
+  }
+
+  private classifyEngagementClientProvider(userAgent: string | null): string {
+    const ua = (userAgent ?? "").toLowerCase();
+    if (!ua) {
+      return "unknown";
+    }
+    if (ua.includes("googleimageproxy") || ua.includes("gmail")) {
+      return "gmail";
+    }
+    if (ua.includes("outlook") || ua.includes("microsoft")) {
+      return "outlook";
+    }
+    if (ua.includes("yahoo")) {
+      return "yahoo";
+    }
+    if (ua.includes("apple") || ua.includes("iphone") || ua.includes("ipad")) {
+      return "apple_mail";
+    }
+    if (ua.includes("thunderbird")) {
+      return "thunderbird";
+    }
+    return "other";
   }
 
   public async buildEngagementExportCsv(

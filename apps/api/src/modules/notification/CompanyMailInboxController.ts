@@ -123,6 +123,7 @@ import { UserNotificationPreferenceService } from "./UserNotificationPreferenceS
 import { UpdateMailEmailSocialLinksRequestDto } from "./MailEmailSocialLinksRequestDto";
 import { MailMailboxDelegationService } from "./MailMailboxDelegationService";
 import { MailExchangeGraphSyncService } from "./MailExchangeGraphSyncService";
+import { MailImapMaildirReconcileService } from "./MailImapMaildirReconcileService";
 import {
   AddMailboxDelegateRequestDto,
   CompleteExchangeOAuthRequestDto,
@@ -136,6 +137,7 @@ export class CompanyMailInboxController {
     private readonly mailOrganizationInboxService: MailOrganizationInboxService,
     private readonly mailMailboxComposeService: MailMailboxComposeService,
     private readonly mailImapAccessService: MailImapAccessService,
+    private readonly mailImapMaildirReconcileService: MailImapMaildirReconcileService,
     private readonly mailComposeDraftService: MailComposeDraftService,
     private readonly mailComposePresetService: MailComposePresetService,
     private readonly mailOrganizationStorageService: MailOrganizationStorageService,
@@ -300,13 +302,61 @@ export class CompanyMailInboxController {
       subject: detail.subject,
       bodySnippet: detail.bodyText ?? detail.snippet ?? "",
     });
+    await this.mailOrganizationInboxService.setAiFocusLane(
+      user.companyId,
+      messageId,
+      result.focusLane,
+      user,
+    );
     await this.mailIdentityAuditService.recordFromUser(
       user,
       MailIdentityAuditAction.AiMailClassify,
-      { messageId, label: result.label, provider: result.provider },
+      {
+        messageId,
+        label: result.label,
+        provider: result.provider,
+        focusLane: result.focusLane,
+      },
       `/company/mail-inbox/messages/${messageId}/classify`,
     );
     return result;
+  }
+
+  @Post("inbox/refresh-ai-focus")
+  public async refreshInboxAiFocus(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: { limit?: number },
+  ) {
+    const outcome = await this.mailOrganizationInboxService.refreshAiFocusBatch(
+      user.companyId,
+      user.userId,
+      async (snippet) => {
+        const classified = await this.mailAiComposeService.classifyInbound({
+          userId: user.userId,
+          subject: snippet.subject,
+          bodySnippet: snippet.bodySnippet,
+        });
+        return { lane: classified.focusLane };
+      },
+      user,
+      body.limit,
+    );
+    return { ok: true, ...outcome };
+  }
+
+  @Post("imap/reconcile-maildir")
+  public async reconcileImapMaildir(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: { limit?: number },
+  ) {
+    this.assertMailInboxWriter(user);
+    const outcome =
+      await this.mailImapMaildirReconcileService.reconcileForOrganization(
+        user.companyId,
+        user,
+        body.limit,
+      );
+    return { ok: true, ...outcome };
   }
 
   @Post("compose/suggest-draft")
@@ -1686,6 +1736,7 @@ export class CompanyMailInboxController {
         merge: body.merge,
         delayMsBetweenRecipients: body.delayMsBetweenRecipients,
         subjectB: body.subjectB?.trim() || undefined,
+        htmlB: body.htmlB?.trim() || undefined,
         recipientDomainAllowlist: body.recipientDomainAllowlist,
         notifyCreator: body.notifyCreator ?? false,
         segment: body.segment,
@@ -1744,6 +1795,7 @@ export class CompanyMailInboxController {
         merge: body.merge,
         delayMsBetweenRecipients: body.delayMsBetweenRecipients,
         subjectB: body.subjectB?.trim() || undefined,
+        htmlB: body.htmlB?.trim() || undefined,
         recipientDomainAllowlist: body.recipientDomainAllowlist,
         notifyCreator: body.notifyCreator ?? false,
         segment: body.segment,

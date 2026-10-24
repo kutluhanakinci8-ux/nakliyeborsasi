@@ -85,6 +85,7 @@ import { MailInboundSpamService } from "./MailInboundSpamService";
 import { MailMailboxComposeService } from "./MailMailboxComposeService";
 import { MailMailboxOutboundContentService } from "./MailMailboxOutboundContentService";
 import { MailImapMaildirService } from "./MailImapMaildirService";
+import { MailImapMaildirReconcileService } from "./MailImapMaildirReconcileService";
 import { MailImapAccessService } from "./MailImapAccessService";
 import { MailImapCredentialEntity } from "../../infrastructure/database/entities/MailImapCredentialEntity";
 import { MailMailboxSentEntity } from "../../infrastructure/database/entities/MailMailboxSentEntity";
@@ -309,6 +310,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     MailJmapBridgeService,
     MailPlatformEdiscoveryService,
     MailImapMaildirService,
+    MailImapMaildirReconcileService,
     MailImapAccessService,
     MailComposeDraftService,
     MailComposePresetService,

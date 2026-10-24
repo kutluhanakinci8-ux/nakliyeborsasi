@@ -6,6 +6,7 @@ import {
   type MailDeliverabilityHub,
 } from "@/lib/mailApi";
 import { MailDeliverabilityWizard } from "./MailDeliverabilityWizard";
+import { MailDeliverabilityEngagementMap } from "./MailDeliverabilityEngagementMap";
 
 type Props = {
   accessToken: string;
@@ -295,6 +296,13 @@ export function MailDeliverabilityPanel({
               </li>
             ))}
           </ul>
+        ) : null}
+        {engagement?.dailyOpenClick?.length ||
+        engagement?.providerBreakdown?.length ? (
+          <MailDeliverabilityEngagementMap
+            dailyOpenClick={engagement.dailyOpenClick ?? []}
+            providerBreakdown={engagement.providerBreakdown ?? []}
+          />
         ) : null}
       </section>
 

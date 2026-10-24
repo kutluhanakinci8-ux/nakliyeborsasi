@@ -14,6 +14,12 @@ const BULK_FROM_PATTERNS = [
 
 /** Odaklı gelen kutusu: önemli satırlar (yıldız, okunmamış kişisel, vb.). */
 export function isFocusedInboxMessage(message: MailInboxListItem): boolean {
+  if (message.aiFocusLane === "focus") {
+    return true;
+  }
+  if (message.aiFocusLane === "other") {
+    return false;
+  }
   if (message.starredAt) {
     return true;
   }

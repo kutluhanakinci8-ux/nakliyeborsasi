@@ -48,6 +48,12 @@ export class ComposeCampaignRequestDto {
   @MaxLength(500_000)
   public html?: string;
 
+  /** A/B HTML (B varyantı — çift sıra alıcılar). */
+  @IsOptional()
+  @IsString()
+  @MaxLength(500_000)
+  public htmlB?: string;
+
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })

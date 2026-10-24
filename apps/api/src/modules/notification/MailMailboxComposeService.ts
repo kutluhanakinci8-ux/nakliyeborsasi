@@ -269,6 +269,7 @@ export class MailMailboxComposeService {
     merge?: { referans?: string; musteriAdi?: string };
     delayMsBetweenRecipients?: number;
     subjectB?: string;
+    htmlB?: string;
     recipientDomainAllowlist?: string[];
     segment?: MailMarketingCampaignSegment;
     campaignId?: string;
@@ -300,6 +301,7 @@ export class MailMailboxComposeService {
     let skippedSuppressed = 0;
     const failed: Array<{ email: string; error: string }> = [];
     const subjectB = params.subjectB?.trim() || "";
+    const htmlB = params.htmlB?.trim() || "";
     const domainAllowlist = normalizeCampaignDomainAllowlist(
       params.recipientDomainAllowlist,
     );
@@ -342,8 +344,11 @@ export class MailMailboxComposeService {
         failed.push({ email, error: "Segment filtresine uymuyor." });
         continue;
       }
+      const useVariantB = index % 2 === 1;
       const subjectForRecipient =
-        subjectB && index % 2 === 1 ? subjectB : params.subject;
+        subjectB && useVariantB ? subjectB : params.subject;
+      const htmlForRecipient =
+        htmlB && useVariantB ? htmlB : params.html;
       try {
         await this.compose({
           organizationId: params.organizationId,
@@ -351,7 +356,7 @@ export class MailMailboxComposeService {
           to: email,
           subject: subjectForRecipient,
           text: params.text,
-          html: params.html,
+          html: htmlForRecipient,
           attachments: params.attachments,
           senderPurpose: "marketing",
           outboundChannel: "marketing",

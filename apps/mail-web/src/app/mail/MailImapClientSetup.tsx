@@ -11,6 +11,8 @@ type Props = {
   onCopyHint: (msg: string) => void;
   onProvision: () => void;
   onRotate: () => void;
+  onReconcileMaildir?: () => void;
+  reconcileBusy?: boolean;
 };
 
 function buildClientBundle(
@@ -70,6 +72,8 @@ export function MailImapClientSetup({
   onCopyHint,
   onProvision,
   onRotate,
+  onReconcileMaildir,
+  reconcileBusy = false,
 }: Props) {
   async function copyText(label: string, value: string) {
     try {
@@ -303,6 +307,18 @@ export function MailImapClientSetup({
               }}
             >
               Son şifreyi tekrar kopyala
+            </button>
+          ) : null}
+          {onReconcileMaildir ? (
+            <button
+              type="button"
+              className="mail-premium-btn mail-premium-btn--ghost"
+              disabled={loading || reconcileBusy}
+              onClick={() => onReconcileMaildir()}
+            >
+              {reconcileBusy
+                ? "Maildir senkronu…"
+                : "Arşiv/çöp iki yön senkron"}
             </button>
           ) : null}
         </div>

@@ -80,10 +80,32 @@ export function MailCalendarCalDavPanel({
         ) : null}
       </div>
       <p className="mail-cal-section-hint">
-        Nextcloud / Baikal gibi sunucularda takvim koleksiyon URL’si (HTTPS) ve
+        Nextcloud / Baikal, Google veya Outlook takvim URL’si (HTTPS) ve
         kullanıcı adı/şifre. Yerel etkinlikleri listeden{" "}
         <strong>CalDAV’a yaz</strong> ile gönderin.
       </p>
+      <div className="mail-cal-preset-row">
+        <button
+          type="button"
+          className="mail-cal-btn mail-cal-btn--ghost mail-cal-btn--sm"
+          onClick={() => {
+            setLabel("Google Takvim");
+            setCalendarUrl("https://apidata.googleusercontent.com/caldav/v2/");
+          }}
+        >
+          Google CalDAV
+        </button>
+        <button
+          type="button"
+          className="mail-cal-btn mail-cal-btn--ghost mail-cal-btn--sm"
+          onClick={() => {
+            setLabel("Outlook");
+            setCalendarUrl("https://outlook.office365.com/caldav/");
+          }}
+        >
+          Outlook CalDAV
+        </button>
+      </div>
       <div className="mail-cal-form-grid mail-cal-form-grid--compact">
         <label className="mail-cal-field">
           <span className="mail-cal-field-label">Ad</span>

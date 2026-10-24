@@ -27,6 +27,11 @@ export function inboxSmartSortScore(message: MailInboxListItem): number {
   if (isFocusedInboxMessage(message)) {
     score += 40;
   }
+  if (message.aiFocusLane === "focus") {
+    score += 30;
+  } else if (message.aiFocusLane === "other") {
+    score -= 25;
+  }
   if ((message.attachmentCount ?? 0) > 0) {
     score += 8;
   }

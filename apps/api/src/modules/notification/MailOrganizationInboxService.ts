@@ -964,6 +964,59 @@ export class MailOrganizationInboxService {
     return current?.internetMessageId ?? current?.id ?? row.id;
   }
 
+  public async setAiFocusLane(
+    organizationId: string,
+    messageId: string,
+    lane: "focus" | "other",
+    actor?: MailInboxActor,
+  ): Promise<void> {
+    const row = await this.assertMessageAccess(organizationId, messageId, actor);
+    row.aiFocusLane = lane;
+    await this.inboundRepository.save(row);
+  }
+
+  public async refreshAiFocusBatch(
+    organizationId: string,
+    userId: string,
+    classify: (input: {
+      subject: string;
+      bodySnippet: string;
+    }) => Promise<{ lane: "focus" | "other" }>,
+    actor?: MailInboxActor,
+    limit = 40,
+  ): Promise<{ updated: number; skipped: number }> {
+    const mailboxIds = await this.mailboxIds(organizationId, actor);
+    if (mailboxIds.length === 0) {
+      return { updated: 0, skipped: 0 };
+    }
+    const safeLimit = Math.min(Math.max(limit, 1), 80);
+    const rows = await this.inboundRepository.find({
+      where: {
+        mailboxId: In(mailboxIds),
+        mailboxFolder: "inbox",
+        aiFocusLane: IsNull(),
+      },
+      order: { receivedAt: "DESC" },
+      take: safeLimit,
+    });
+    let updated = 0;
+    let skipped = 0;
+    for (const row of rows) {
+      try {
+        const result = await classify({
+          subject: row.subject,
+          bodySnippet: row.snippet ?? row.bodyText ?? "",
+        });
+        row.aiFocusLane = result.lane;
+        await this.inboundRepository.save(row);
+        updated += 1;
+      } catch {
+        skipped += 1;
+      }
+    }
+    return { updated, skipped };
+  }
+
   private toListRow(row: MailInboundMessageEntity) {
     return {
       id: row.id,
@@ -977,6 +1030,7 @@ export class MailOrganizationInboxService {
       attachmentCount: row.attachments?.length ?? 0,
       starredAt: row.starredAt?.toISOString() ?? null,
       customFolderId: row.customFolderId,
+      aiFocusLane: row.aiFocusLane ?? null,
       messageKind: "inbound" as const,
     };
   }

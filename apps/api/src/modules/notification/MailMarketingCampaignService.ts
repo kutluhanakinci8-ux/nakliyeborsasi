@@ -884,6 +884,7 @@ export class MailMarketingCampaignService {
       merge: row.payload.merge,
       delayMsBetweenRecipients: row.payload.delayMsBetweenRecipients,
       subjectB: row.payload.subjectB,
+      htmlB: row.payload.htmlB,
       recipientDomainAllowlist: row.payload.recipientDomainAllowlist,
       segment: row.payload.segment,
     });

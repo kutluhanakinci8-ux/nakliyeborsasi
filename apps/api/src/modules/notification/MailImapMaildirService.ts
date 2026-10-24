@@ -1,6 +1,13 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { existsSync, mkdirSync, renameSync, unlinkSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  renameSync,
+  unlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { basename, join } from "node:path";
 
 export type MaildirMailboxFolder = "inbox" | "archive" | "trash" | "junk";
@@ -182,6 +189,40 @@ export class MailImapMaildirService {
       created.push(dir);
     }
     return created;
+  }
+
+  /** Thunderbird/Dovecot taşıması sonrası dosyayı klasörler arasında bul. */
+  public findMaildirFileByBasename(
+    mailboxEmail: string,
+    fileBasename: string,
+  ): { path: string; folder: MaildirMailboxFolder } | null {
+    const maildir = this.resolveMaildirForAddress(mailboxEmail);
+    if (!maildir || !fileBasename.trim()) {
+      return null;
+    }
+    const base = fileBasename.split(":")[0] ?? fileBasename;
+    const subdirs: Array<{ sub: string; folder: MaildirMailboxFolder }> = [
+      { sub: "new", folder: "inbox" },
+      { sub: "cur", folder: "inbox" },
+      { sub: ".Archive/new", folder: "archive" },
+      { sub: ".Archive/cur", folder: "archive" },
+      { sub: ".Trash/new", folder: "trash" },
+      { sub: ".Trash/cur", folder: "trash" },
+      { sub: ".Junk/new", folder: "junk" },
+      { sub: ".Junk/cur", folder: "junk" },
+    ];
+    for (const { sub, folder } of subdirs) {
+      const dir = join(maildir, sub);
+      if (!existsSync(dir)) {
+        continue;
+      }
+      for (const name of readdirSync(dir)) {
+        if (name === base || name.startsWith(`${base}:`)) {
+          return { path: join(dir, name), folder };
+        }
+      }
+    }
+    return null;
   }
 
   public resolveMaildirForAddress(email: string): string | null {

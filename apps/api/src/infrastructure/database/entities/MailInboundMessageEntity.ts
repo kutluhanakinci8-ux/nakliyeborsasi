@@ -84,6 +84,10 @@ export class MailInboundMessageEntity {
   @Column({ type: "text", nullable: true })
   public maildirFilePath!: string | null;
 
+  /** AI / kural odaklı gelen kutusu: focus | other */
+  @Column({ name: "ai_focus_lane", type: "varchar", length: 16, nullable: true })
+  public aiFocusLane!: "focus" | "other" | null;
+
   @Column({ name: "exchange_sync_account_id", type: "uuid", nullable: true })
   public exchangeSyncAccountId!: string | null;
 

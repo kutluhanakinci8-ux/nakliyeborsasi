@@ -4,6 +4,19 @@
   "description": "Kurumsal webmail — lerta.com.tr",
   "start_url": "/mail",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "shortcuts": [
+    {
+      "name": "Gelen kutusu",
+      "url": "/mail",
+      "description": "Webmail gelen kutusu"
+    },
+    {
+      "name": "Yeni mesaj",
+      "url": "/mail?compose=1",
+      "description": "Yeni e-posta yaz"
+    }
+  ],
   "background_color": "#f6f8fc",
   "theme_color": "#1a73e8",
   "lang": "tr",

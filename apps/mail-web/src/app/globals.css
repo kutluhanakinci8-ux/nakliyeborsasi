@@ -7789,3 +7789,132 @@ html[data-mail-read-font="large"] .mail-html-frame {
   opacity: 0.45;
   cursor: not-allowed;
 }
+
+.mail-reply-quote-preview {
+  margin-top: 0.65rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  background: var(--surface-muted, #f8fafc);
+}
+
+.mail-reply-quote-preview-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--text-muted, #64748b);
+}
+
+.mail-reply-quote-preview-body {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  max-height: 12rem;
+  overflow: auto;
+  color: var(--text-secondary, #475569);
+}
+
+.mail-deliverability-engagement-map {
+  margin-top: 1rem;
+  display: grid;
+  gap: 1.25rem;
+}
+
+@media (min-width: 720px) {
+  .mail-deliverability-engagement-map {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.mail-deliverability-map-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.mail-deliverability-heatmap-grid {
+  display: flex;
+  gap: 4px;
+  align-items: flex-end;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  min-height: 72px;
+}
+
+.mail-deliverability-heatmap-cell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.mail-deliverability-heatmap-day {
+  font-size: 0.62rem;
+  color: var(--text-muted, #64748b);
+}
+
+.mail-deliverability-heatmap-bar {
+  width: 42%;
+  min-height: 2px;
+  border-radius: 2px 2px 0 0;
+}
+
+.mail-deliverability-heatmap-bar--open {
+  background: #1a73e8;
+}
+
+.mail-deliverability-heatmap-bar--click {
+  background: #34a853;
+}
+
+.mail-deliverability-heatmap-legend {
+  margin: 0.35rem 0 0;
+  font-size: 0.72rem;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.mail-deliverability-legend-open::before,
+.mail-deliverability-legend-click::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+.mail-deliverability-legend-open::before {
+  background: #1a73e8;
+}
+
+.mail-deliverability-legend-click::before {
+  background: #34a853;
+}
+
+.mail-deliverability-provider-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.mail-deliverability-provider-table th,
+.mail-deliverability-provider-table td {
+  padding: 0.35rem 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-subtle, #e2e8f0);
+}
+
+.mail-cal-preset-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}

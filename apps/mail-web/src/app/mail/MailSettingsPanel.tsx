@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   fetchImapSettings,
+  reconcileImapMaildir,
   fetchTotpStatus,
   provisionImapPassword,
   rotateImapPassword,
@@ -238,6 +239,7 @@ export function MailSettingsPanel({
   const [error, setError] = useState("");
   const [newPassword, setNewPassword] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [imapReconcileBusy, setImapReconcileBusy] = useState(false);
   const [copyHint, setCopyHint] = useState("");
 
   useEffect(() => {
@@ -337,6 +339,23 @@ export function MailSettingsPanel({
       );
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function onReconcileImapMaildir() {
+    setError("");
+    setImapReconcileBusy(true);
+    try {
+      const result = await reconcileImapMaildir(accessToken);
+      setCopyHint(
+        `IMAP senkron: ${result.updatedFolder} klasör, ${result.relocatedPath} dosya güncellendi.`,
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Maildir senkronu başarısız.",
+      );
+    } finally {
+      setImapReconcileBusy(false);
     }
   }
 
@@ -813,6 +832,8 @@ export function MailSettingsPanel({
           onCopyHint={setCopyHint}
           onProvision={() => void onProvisionImap()}
           onRotate={() => void onRotateImap()}
+          onReconcileMaildir={() => void onReconcileImapMaildir()}
+          reconcileBusy={imapReconcileBusy}
         />,
       );
       break;

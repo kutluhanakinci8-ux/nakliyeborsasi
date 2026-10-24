@@ -31,6 +31,8 @@ export type MailMarketingCampaignPayload = {
   delayMsBetweenRecipients?: number;
   /** A/B test: çift sıradaki alıcılar (1,3,5…) bu konuyu alır. */
   subjectB?: string;
+  /** A/B HTML (B varyantı — çift sıra alıcılar). */
+  htmlB?: string;
   /** Örn. ["firma.com", "musteri.com.tr"] — boşsa filtre yok. */
   recipientDomainAllowlist?: string[];
   /** Zamanlanmış kampanyada oluşturucuya bilgi e-postası. */

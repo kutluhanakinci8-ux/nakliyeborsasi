@@ -89,6 +89,7 @@ export type MailInboxListItem = {
   attachmentCount?: number;
   starredAt?: string | null;
   customFolderId?: string | null;
+  aiFocusLane?: "focus" | "other" | null;
   messageKind?: "inbound" | "sent";
 };
 
@@ -1289,6 +1290,7 @@ export async function previewCampaignSegment(
 export type MailCampaignComposeClone = {
   subject: string;
   subjectB?: string;
+  htmlB?: string;
   text: string;
   html?: string;
   recipients: Array<{
@@ -1337,6 +1339,7 @@ export async function saveMailCampaignDraft(
     merge?: ComposeMergePayload;
     delayMsBetweenRecipients?: number;
     subjectB?: string;
+    htmlB?: string;
     recipientDomainAllowlist?: string[];
     notifyCreator?: boolean;
     segment?: {
@@ -1387,6 +1390,7 @@ export async function composeCampaign(
     delayMsBetweenRecipients?: number;
     scheduleAt?: string;
     subjectB?: string;
+    htmlB?: string;
     recipientDomainAllowlist?: string[];
     notifyCreator?: boolean;
     segment?: {
@@ -2615,6 +2619,30 @@ export async function provisionImapPassword(accessToken: string) {
   return payload.credentials;
 }
 
+export async function reconcileImapMaildir(
+  accessToken: string,
+  limit = 500,
+) {
+  return apiFetch<{
+    ok: true;
+    scanned: number;
+    updatedFolder: number;
+    relocatedPath: number;
+    missingOnDisk: number;
+  }>(accessToken, "company/mail-inbox/imap/reconcile-maildir", {
+    method: "POST",
+    body: JSON.stringify({ limit }),
+  });
+}
+
+export async function refreshInboxAiFocus(accessToken: string, limit = 40) {
+  return apiFetch<{ ok: true; updated: number; skipped: number }>(
+    accessToken,
+    "company/mail-inbox/inbox/refresh-ai-focus",
+    { method: "POST", body: JSON.stringify({ limit }) },
+  );
+}
+
 export async function fetchAiMailConsent(accessToken: string) {
   return apiFetch<{
     aiMailAssistConsent: boolean;
@@ -2659,6 +2687,12 @@ export type MailDeliverabilityEngagement = {
   openRatePercent: number | null;
   clickRatePercent: number | null;
   bounceByClass?: Record<string, number>;
+  dailyOpenClick?: Array<{ day: string; opens: number; clicks: number }>;
+  providerBreakdown?: Array<{
+    provider: string;
+    opens: number;
+    clicks: number;
+  }>;
 };
 
 export type MailDeliverabilityHub = {

@@ -222,17 +222,35 @@ export class MailAiComposeService {
     userId: string;
     subject: string;
     bodySnippet: string;
-  }): Promise<{ label: string; provider: string }> {
+  }): Promise<{ label: string; provider: string; focusLane: "focus" | "other" }> {
     const snippet = `${input.subject}\n${input.bodySnippet}`.slice(0, 2000);
     if (!this.isEnabled() || !(await this.canUseLlm(input.userId))) {
       const lower = snippet.toLowerCase();
       if (/fatura|invoice|ödeme|payment/.test(lower)) {
-        return { label: "billing", provider: "rules" };
+        return {
+          label: "billing",
+          provider: "rules",
+          focusLane: "focus",
+        };
       }
       if (/teklif|offer|ihale|auction/.test(lower)) {
-        return { label: "commercial", provider: "rules" };
+        return {
+          label: "commercial",
+          provider: "rules",
+          focusLane: "focus",
+        };
       }
-      return { label: "general", provider: "rules" };
+      if (
+        /unsubscribe|newsletter|kampanya|promo|indirim|%\d/.test(lower) ||
+        /noreply|no-reply/.test(lower)
+      ) {
+        return {
+          label: "promo",
+          provider: "rules",
+          focusLane: "other",
+        };
+      }
+      return { label: "general", provider: "rules", focusLane: "focus" };
     }
     const text = await this.completeChat(
       [
@@ -246,7 +264,9 @@ export class MailAiComposeService {
       16,
     );
     const label = text?.toLowerCase().replace(/[^a-z_]/g, "") || "general";
-    return { label, provider: "llm" };
+    const focusLane =
+      label === "spam_suspect" || label === "promo" ? "other" : "focus";
+    return { label, provider: "llm", focusLane };
   }
 
   private async canUseLlm(userId: string): Promise<boolean> {

@@ -1,7 +1,7 @@
 /* Lerta Posta — PM-4 offline shell + IndexedDB snapshot ping (client-owned DB). */
-const CACHE = "lerta-mail-shell-v8";
+const CACHE = "lerta-mail-shell-v9";
 const OFFLINE_DB_NAME = "lerta-mail-offline-v1";
-const PRECACHE = ["/manifest.webmanifest", "/offline.html", "/login"];
+const PRECACHE = ["/manifest.webmanifest", "/offline.html", "/login", "/mail"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

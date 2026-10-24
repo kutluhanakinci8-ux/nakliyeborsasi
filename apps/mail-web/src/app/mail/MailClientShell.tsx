@@ -9,6 +9,7 @@ import { MailShortcutsDialog } from "./MailShortcutsDialog";
 import { MailCalendarPanel } from "./MailCalendarPanel";
 import { MailContactsPanel } from "./MailContactsPanel";
 import { ComposeRichEditor } from "./ComposeRichEditor";
+import { MailReplyQuotePreview } from "./MailReplyQuotePreview";
 import { MailComposeRecipientField } from "./MailComposeRecipientField";
 import { MailInboxMessageRow } from "./MailInboxMessageRow";
 import { MailListSwipeRow } from "./MailListSwipeRow";
@@ -88,6 +89,8 @@ export function MailClientShell({ mail }: Props) {
     setComposeCampaignScheduleAt,
     composeCampaignSubjectB,
     setComposeCampaignSubjectB,
+    composeCampaignHtmlB,
+    setComposeCampaignHtmlB,
     composeCampaignDomainAllowlist,
     setComposeCampaignDomainAllowlist,
     composeCampaignNotifyCreator,
@@ -181,6 +184,7 @@ export function MailClientShell({ mail }: Props) {
     replyBcc,
     replyFiles,
     replyText,
+    replyQuoteMode,
     resetCompose,
     router,
     runBulkCustomFolder,
@@ -1602,6 +1606,19 @@ export function MailClientShell({ mail }: Props) {
                   onChange={(e) => setReplyText(e.target.value)}
                   rows={5}
                 />
+                {detail ? (
+                  <MailReplyQuotePreview
+                    source={{
+                      fromAddress: detail.fromAddress,
+                      receivedAt: detail.receivedAt,
+                      bodyText: detail.bodyText,
+                      bodyHtml: detail.bodyHtml,
+                      snippet: detail.snippet,
+                    }}
+                    mode={replyQuoteMode}
+                    draftText={replyText}
+                  />
+                ) : null}
                 <MailComposeMergeFields
                   open={composeMergeOpen}
                   onToggleOpen={() => setComposeMergeOpen((open) => !open)}
@@ -1992,6 +2009,24 @@ export function MailClientShell({ mail }: Props) {
                       value={composeCampaignSubjectB}
                       onChange={(e) => setComposeCampaignSubjectB(e.target.value)}
                     />
+                    <label className="compose-field-label" htmlFor="compose-campaign-html-b">
+                      A/B HTML (B) — çift sıra alıcılar
+                    </label>
+                    <textarea
+                      id="compose-campaign-html-b"
+                      className="compose-textarea"
+                      rows={3}
+                      placeholder="İsteğe bağlı alternatif HTML (boşsa A HTML kullanılır)"
+                      value={composeCampaignHtmlB}
+                      onChange={(e) => setComposeCampaignHtmlB(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      className="compose-chip-btn"
+                      onClick={() => setComposeRich(true)}
+                    >
+                      Görsel şablon editörü (zengin HTML)
+                    </button>
                     <label className="compose-field-label" htmlFor="compose-campaign-domains">
                       Alan adı filtresi
                     </label>

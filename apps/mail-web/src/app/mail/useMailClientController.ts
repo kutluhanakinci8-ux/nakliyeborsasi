@@ -83,6 +83,7 @@ import {
   patchAiMailConsent,
   fetchSummarizeMessage,
   fetchClassifyMessage,
+  refreshInboxAiFocus,
   type MailInboxBranding,
   searchInbox,
   sendDraft,
@@ -348,6 +349,7 @@ export function useMailClientController({
   const [composeCampaignDelayMs, setComposeCampaignDelayMs] = useState(0);
   const [composeCampaignScheduleAt, setComposeCampaignScheduleAt] = useState("");
   const [composeCampaignSubjectB, setComposeCampaignSubjectB] = useState("");
+  const [composeCampaignHtmlB, setComposeCampaignHtmlB] = useState("");
   const [composeCampaignDomainAllowlist, setComposeCampaignDomainAllowlist] =
     useState("");
   const [composeCampaignNotifyCreator, setComposeCampaignNotifyCreator] =
@@ -437,6 +439,34 @@ export function useMailClientController({
       throw error;
     }
   }, [accessToken, view, inboxCustomFolderId]);
+
+  const aiFocusBatchRef = useRef(false);
+  useEffect(() => {
+    if (
+      !accessToken ||
+      !mailPostaPrefs.focusedInboxEnabled ||
+      !isPrimaryInbox ||
+      aiFocusBatchRef.current ||
+      !messages?.length
+    ) {
+      return;
+    }
+    if (!messages.some((m) => !m.aiFocusLane)) {
+      return;
+    }
+    aiFocusBatchRef.current = true;
+    void refreshInboxAiFocus(accessToken, 40)
+      .then(() => refresh())
+      .catch(() => {
+        aiFocusBatchRef.current = false;
+      });
+  }, [
+    accessToken,
+    mailPostaPrefs.focusedInboxEnabled,
+    isPrimaryInbox,
+    messages,
+    refresh,
+  ]);
 
   const refreshDrafts = useCallback(async () => {
     if (!accessToken) {
@@ -1170,6 +1200,7 @@ export function useMailClientController({
           recipients,
           subject: composeSubject.trim(),
           subjectB: composeCampaignSubjectB.trim() || undefined,
+          htmlB: composeCampaignHtmlB.trim() || undefined,
           text: composeText,
           html: outboundHtml,
           attachments: attachments.length > 0 ? attachments : undefined,
@@ -2295,6 +2326,7 @@ export function useMailClientController({
     setComposeOpen(true);
     setComposeSubject(compose.subject);
     setComposeCampaignSubjectB(compose.subjectB ?? "");
+    setComposeCampaignHtmlB(compose.htmlB ?? "");
     setComposeText(compose.text);
     if (compose.html?.trim()) {
       setComposeHtml(compose.html.trim());
@@ -2584,6 +2616,8 @@ export function useMailClientController({
     setComposeCampaignScheduleAt,
     composeCampaignSubjectB,
     setComposeCampaignSubjectB,
+    composeCampaignHtmlB,
+    setComposeCampaignHtmlB,
     composeCampaignDomainAllowlist,
     setComposeCampaignDomainAllowlist,
     composeCampaignNotifyCreator,
