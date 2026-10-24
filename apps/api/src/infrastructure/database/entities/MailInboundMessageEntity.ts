@@ -84,6 +84,12 @@ export class MailInboundMessageEntity {
   @Column({ type: "text", nullable: true })
   public maildirFilePath!: string | null;
 
+  @Column({ name: "exchange_sync_account_id", type: "uuid", nullable: true })
+  public exchangeSyncAccountId!: string | null;
+
+  @Column({ name: "exchange_message_id", type: "varchar", length: 255, nullable: true })
+  public exchangeMessageId!: string | null;
+
   @CreateDateColumn({ type: "timestamptz" })
   public receivedAt!: Date;
 }

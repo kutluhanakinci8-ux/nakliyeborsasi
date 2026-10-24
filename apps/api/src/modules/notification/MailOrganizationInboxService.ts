@@ -32,6 +32,10 @@ import {
 } from "./MailMimeCharset";
 import { extractInstagramVerificationCode } from "./instagramVerificationMail";
 import { sanitizeInboundHtml } from "./MailHtmlSanitize";
+import {
+  MailInboxActor,
+  MailMailboxAccessService,
+} from "./MailMailboxAccessService";
 
 export type InboxFolder =
   | "inbox"
@@ -61,9 +65,13 @@ export class MailOrganizationInboxService {
     @InjectRepository(MailSenderIdentityEntity)
     private readonly senderRepository: Repository<MailSenderIdentityEntity>,
     private readonly mailImapMaildirService: MailImapMaildirService,
+    private readonly mailMailboxAccessService: MailMailboxAccessService,
   ) {}
 
-  public async getSummary(organizationId: string): Promise<{
+  public async getSummary(
+    organizationId: string,
+    actor?: MailInboxActor,
+  ): Promise<{
     primaryAddress: string | null;
     technicalPrimaryAddress: string | null;
     mailboxId: string | null;
@@ -78,7 +86,7 @@ export class MailOrganizationInboxService {
     const primaryAddress = await this.resolvePrimaryAddress(organizationId);
     const technicalPrimaryAddress =
       await this.resolvePrimaryTechnicalAddress(organizationId);
-    const mailboxIds = await this.mailboxIdsForOrganization(organizationId);
+    const mailboxIds = await this.mailboxIds(organizationId, actor);
     if (mailboxIds.length === 0) {
       return {
         primaryAddress,
@@ -171,6 +179,7 @@ export class MailOrganizationInboxService {
     folder: InboxFolder = "inbox",
     limit = 50,
     customFolderId?: string | null,
+    actor?: MailInboxActor,
   ): Promise<
     {
       id: string;
@@ -184,7 +193,7 @@ export class MailOrganizationInboxService {
       attachmentCount: number;
     }[]
   > {
-    const mailboxIds = await this.mailboxIdsForOrganization(organizationId);
+    const mailboxIds = await this.mailboxIds(organizationId, actor);
     if (mailboxIds.length === 0) {
       return [];
     }
@@ -205,6 +214,7 @@ export class MailOrganizationInboxService {
     filters: MailInboxSearchFilters = {},
     limit = 50,
     customFolderId?: string | null,
+    actor?: MailInboxActor,
   ): Promise<
     {
       id: string;
@@ -221,7 +231,7 @@ export class MailOrganizationInboxService {
     if (!this.hasSearchCriteria(filters)) {
       return [];
     }
-    const mailboxIds = await this.mailboxIdsForOrganization(organizationId);
+    const mailboxIds = await this.mailboxIds(organizationId, actor);
     if (mailboxIds.length === 0) {
       return [];
     }
@@ -279,6 +289,7 @@ export class MailOrganizationInboxService {
   public async getMessage(
     organizationId: string,
     messageId: string,
+    actor?: MailInboxActor,
   ): Promise<{
     id: string;
     fromAddress: string;
@@ -304,7 +315,7 @@ export class MailOrganizationInboxService {
     }[];
     instagramVerificationCode: string | null;
   }> {
-    const row = await this.assertMessageAccess(organizationId, messageId);
+    const row = await this.assertMessageAccess(organizationId, messageId, actor);
     const mailbox = await this.mailboxRepository.findOne({
       where: { id: row.mailboxId },
     });
@@ -388,8 +399,9 @@ export class MailOrganizationInboxService {
     organizationId: string,
     messageId: string,
     index: number,
+    actor?: MailInboxActor,
   ): Promise<{ file: MailInboundAttachmentMeta; buffer: Buffer }> {
-    const row = await this.assertMessageAccess(organizationId, messageId);
+    const row = await this.assertMessageAccess(organizationId, messageId, actor);
     const file = row.attachments?.[index];
     if (!file) {
       throw new NotFoundException("Ek bulunamadı");
@@ -403,6 +415,7 @@ export class MailOrganizationInboxService {
     folder: InboxFolder = "inbox",
     limit = 40,
     customFolderId?: string | null,
+    actor?: MailInboxActor,
   ): Promise<
     {
       threadId: string;
@@ -415,7 +428,7 @@ export class MailOrganizationInboxService {
       latestMessageId: string;
     }[]
   > {
-    const mailboxIds = await this.mailboxIdsForOrganization(organizationId);
+    const mailboxIds = await this.mailboxIds(organizationId, actor);
     if (mailboxIds.length === 0) {
       return [];
     }
@@ -466,6 +479,7 @@ export class MailOrganizationInboxService {
     threadId: string,
     folder: InboxFolder = "inbox",
     customFolderId?: string | null,
+    actor?: MailInboxActor,
   ): Promise<
     {
       id: string;
@@ -479,7 +493,7 @@ export class MailOrganizationInboxService {
       attachmentCount: number;
     }[]
   > {
-    const mailboxIds = await this.mailboxIdsForOrganization(organizationId);
+    const mailboxIds = await this.mailboxIds(organizationId, actor);
     if (mailboxIds.length === 0) {
       return [];
     }
@@ -503,8 +517,9 @@ export class MailOrganizationInboxService {
   public async markRead(
     organizationId: string,
     messageId: string,
+    actor?: MailInboxActor,
   ): Promise<void> {
-    const row = await this.assertMessageAccess(organizationId, messageId);
+    const row = await this.assertMessageAccess(organizationId, messageId, actor);
     if (!row.readAt) {
       row.readAt = new Date();
       await this.inboundRepository.save(row);
@@ -515,8 +530,9 @@ export class MailOrganizationInboxService {
     organizationId: string,
     messageId: string,
     starred: boolean,
+    actor?: MailInboxActor,
   ): Promise<{ starredAt: string | null }> {
-    const row = await this.assertMessageAccess(organizationId, messageId);
+    const row = await this.assertMessageAccess(organizationId, messageId, actor);
     if (row.mailboxFolder === "trash") {
       throw new ForbiddenException("Çöp kutusundaki mesaj yıldızlanamaz.");
     }
@@ -528,8 +544,9 @@ export class MailOrganizationInboxService {
   public async markUnread(
     organizationId: string,
     messageId: string,
+    actor?: MailInboxActor,
   ): Promise<void> {
-    const row = await this.assertMessageAccess(organizationId, messageId);
+    const row = await this.assertMessageAccess(organizationId, messageId, actor);
     if (row.readAt) {
       row.readAt = null;
       await this.inboundRepository.save(row);
@@ -539,10 +556,11 @@ export class MailOrganizationInboxService {
   public async bulkMarkRead(
     organizationId: string,
     messageIds: string[],
+    actor?: MailInboxActor,
   ): Promise<{ updated: number }> {
     let updated = 0;
     for (const messageId of messageIds) {
-      const row = await this.assertMessageAccess(organizationId, messageId);
+      const row = await this.assertMessageAccess(organizationId, messageId, actor);
       if (!row.readAt) {
         row.readAt = new Date();
         await this.inboundRepository.save(row);
@@ -555,10 +573,11 @@ export class MailOrganizationInboxService {
   public async bulkMarkUnread(
     organizationId: string,
     messageIds: string[],
+    actor?: MailInboxActor,
   ): Promise<{ updated: number }> {
     let updated = 0;
     for (const messageId of messageIds) {
-      const row = await this.assertMessageAccess(organizationId, messageId);
+      const row = await this.assertMessageAccess(organizationId, messageId, actor);
       if (row.readAt) {
         row.readAt = null;
         await this.inboundRepository.save(row);
@@ -572,10 +591,11 @@ export class MailOrganizationInboxService {
     organizationId: string,
     messageIds: string[],
     folder: MailboxFolder,
+    actor?: MailInboxActor,
   ): Promise<{ updated: number }> {
     let updated = 0;
     for (const messageId of messageIds) {
-      await this.setMailboxFolder(organizationId, messageId, folder);
+      await this.setMailboxFolder(organizationId, messageId, folder, actor);
       updated += 1;
     }
     return { updated };
@@ -585,10 +605,11 @@ export class MailOrganizationInboxService {
     organizationId: string,
     messageIds: string[],
     starred: boolean,
+    actor?: MailInboxActor,
   ): Promise<{ updated: number }> {
     let updated = 0;
     for (const messageId of messageIds) {
-      const row = await this.assertMessageAccess(organizationId, messageId);
+      const row = await this.assertMessageAccess(organizationId, messageId, actor);
       if (row.mailboxFolder === "trash") {
         continue;
       }
@@ -610,8 +631,9 @@ export class MailOrganizationInboxService {
     organizationId: string,
     messageId: string,
     folder: MailboxFolder,
+    actor?: MailInboxActor,
   ): Promise<{ mailboxFolder: MailboxFolder }> {
-    const row = await this.assertMessageAccess(organizationId, messageId);
+    const row = await this.assertMessageAccess(organizationId, messageId, actor);
     if (row.mailboxFolder === folder) {
       return { mailboxFolder: folder };
     }
@@ -630,8 +652,9 @@ export class MailOrganizationInboxService {
   public async deleteMessagePermanently(
     organizationId: string,
     messageId: string,
+    actor?: MailInboxActor,
   ): Promise<void> {
-    const row = await this.assertMessageAccess(organizationId, messageId);
+    const row = await this.assertMessageAccess(organizationId, messageId, actor);
     if (row.mailboxFolder !== "trash") {
       throw new ForbiddenException(
         "Kalıcı silme yalnızca çöp kutusundaki mesajlar için geçerlidir.",
@@ -644,8 +667,9 @@ export class MailOrganizationInboxService {
   /** Çöp kutusundaki tüm gelen mesajları kalıcı siler. */
   public async purgeAllTrashMessages(
     organizationId: string,
+    actor?: MailInboxActor,
   ): Promise<{ deleted: number }> {
-    const mailboxIds = await this.mailboxIdsForOrganization(organizationId);
+    const mailboxIds = await this.mailboxIds(organizationId, actor);
     if (mailboxIds.length === 0) {
       return { deleted: 0 };
     }
@@ -662,6 +686,7 @@ export class MailOrganizationInboxService {
   private async assertMessageAccess(
     organizationId: string,
     messageId: string,
+    actor?: MailInboxActor,
   ): Promise<MailInboundMessageEntity> {
     const row = await this.inboundRepository.findOne({
       where: { id: messageId },
@@ -674,6 +699,15 @@ export class MailOrganizationInboxService {
     });
     if (!mailbox || mailbox.organizationId !== organizationId) {
       throw new ForbiddenException("Bu mesaja erişim yok");
+    }
+    if (actor) {
+      const allowed = await this.mailMailboxAccessService.canAccessMailbox(
+        actor,
+        row.mailboxId,
+      );
+      if (!allowed) {
+        throw new ForbiddenException("Bu mesaja erişim yok");
+      }
     }
     return row;
   }
@@ -698,8 +732,9 @@ export class MailOrganizationInboxService {
     organizationId: string,
     messageId: string,
     snoozedUntil: Date,
+    actor?: MailInboxActor,
   ): Promise<{ snoozedUntil: string }> {
-    const row = await this.assertMessageAccess(organizationId, messageId);
+    const row = await this.assertMessageAccess(organizationId, messageId, actor);
     if (row.mailboxFolder === "trash") {
       throw new BadRequestException("Çöpteki mesaj ertelenemez.");
     }
@@ -711,8 +746,9 @@ export class MailOrganizationInboxService {
   public async clearSnooze(
     organizationId: string,
     messageId: string,
+    actor?: MailInboxActor,
   ): Promise<void> {
-    const row = await this.assertMessageAccess(organizationId, messageId);
+    const row = await this.assertMessageAccess(organizationId, messageId, actor);
     row.snoozedUntil = null;
     await this.inboundRepository.save(row);
   }
@@ -721,10 +757,11 @@ export class MailOrganizationInboxService {
     organizationId: string,
     messageIds: string[],
     snoozedUntil: Date,
+    actor?: MailInboxActor,
   ): Promise<{ updated: number }> {
     let updated = 0;
     for (const messageId of messageIds) {
-      const row = await this.assertMessageAccess(organizationId, messageId);
+      const row = await this.assertMessageAccess(organizationId, messageId, actor);
       if (row.mailboxFolder === "trash") {
         continue;
       }
@@ -862,13 +899,20 @@ export class MailOrganizationInboxService {
     return base;
   }
 
-  private async mailboxIdsForOrganization(
+  private async mailboxIds(
     organizationId: string,
+    actor?: MailInboxActor,
   ): Promise<string[]> {
-    const mailboxes = await this.mailboxRepository.find({
-      where: { organizationId },
-    });
-    return mailboxes.map((m) => m.id);
+    if (actor) {
+      return this.mailMailboxAccessService.resolveAccessibleMailboxIds({
+        companyId: organizationId,
+        userId: actor.userId,
+        roleCodes: actor.roleCodes,
+      });
+    }
+    return this.mailMailboxAccessService.allMailboxIdsForOrganization(
+      organizationId,
+    );
   }
 
   private async resolvePrimaryAddress(

@@ -8,6 +8,7 @@ import {
 } from "@/lib/mailApi";
 import { resolveMailConsoleUrl } from "@/lib/mailApi";
 import { MailEmailSocialLinksEditor } from "./MailEmailSocialLinksEditor";
+import { MailDelegationExchangePanel } from "./MailDelegationExchangePanel";
 
 type Props = {
   accessToken: string;
@@ -184,6 +185,12 @@ export function MailAccountsSettingsPanel({ accessToken }: Props) {
           </p>
         ) : null}
       </section>
+
+      <MailDelegationExchangePanel
+        accessToken={accessToken}
+        hub={hub}
+        onHubChange={setHub}
+      />
 
       {status ? (
         <p className="mail-accounts-status mail-accounts-status--ok" role="status">

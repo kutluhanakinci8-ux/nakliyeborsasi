@@ -3,6 +3,7 @@ import {
   InboxFolder,
   MailOrganizationInboxService,
 } from "./MailOrganizationInboxService";
+import { MailInboxActor } from "./MailMailboxAccessService";
 
 const CORE = "urn:ietf:params:jmap:core";
 const MAIL = "urn:ietf:params:jmap:mail";
@@ -58,6 +59,7 @@ export class MailJmapBridgeService {
   public async processMethodCalls(
     organizationId: string,
     body: JmapRequestBody,
+    actor?: MailInboxActor,
   ): Promise<{ methodResponses: unknown[]; sessionState: string }> {
     const using = body.using ?? [];
     if (!using.includes(CORE)) {
@@ -88,6 +90,7 @@ export class MailJmapBridgeService {
           organizationId,
           method,
           args as Record<string, unknown>,
+          actor,
         );
         methodResponses.push([method, result, clientCallId]);
       } catch (error) {
@@ -110,12 +113,13 @@ export class MailJmapBridgeService {
     organizationId: string,
     method: string,
     args: Record<string, unknown>,
+    actor?: MailInboxActor,
   ): Promise<Record<string, unknown>> {
     switch (method) {
       case "Email/query":
-        return await this.emailQuery(organizationId, args);
+        return await this.emailQuery(organizationId, args, actor);
       case "Email/get":
-        return await this.emailGet(organizationId, args);
+        return await this.emailGet(organizationId, args, actor);
       default:
         throw new BadRequestException(`Desteklenmeyen JMAP method: ${method}`);
     }
@@ -124,6 +128,7 @@ export class MailJmapBridgeService {
   private async emailQuery(
     organizationId: string,
     args: Record<string, unknown>,
+    actor?: MailInboxActor,
   ): Promise<Record<string, unknown>> {
     const limit = Math.min(
       Math.max(typeof args.limit === "number" ? args.limit : 50, 1),
@@ -138,11 +143,15 @@ export class MailJmapBridgeService {
             folder,
             { q: text },
             limit,
+            undefined,
+            actor,
           )
         : await this.mailOrganizationInboxService.listMessages(
             organizationId,
             folder,
             limit,
+            undefined,
+            actor,
           );
     const ids = rows.map((row) => row.id);
     return {
@@ -158,6 +167,7 @@ export class MailJmapBridgeService {
   private async emailGet(
     organizationId: string,
     args: Record<string, unknown>,
+    actor?: MailInboxActor,
   ): Promise<Record<string, unknown>> {
     const ids = Array.isArray(args.ids)
       ? args.ids.filter((id): id is string => typeof id === "string")
@@ -169,6 +179,7 @@ export class MailJmapBridgeService {
         const message = await this.mailOrganizationInboxService.getMessage(
           organizationId,
           id,
+          actor,
         );
         list.push({
           id: message.id,

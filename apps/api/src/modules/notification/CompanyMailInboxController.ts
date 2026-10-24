@@ -118,6 +118,13 @@ import { MailAiComposeService } from "./MailAiComposeService";
 import { MailDeliverabilityHubService } from "./MailDeliverabilityHubService";
 import { UserNotificationPreferenceService } from "./UserNotificationPreferenceService";
 import { UpdateMailEmailSocialLinksRequestDto } from "./MailEmailSocialLinksRequestDto";
+import { MailMailboxDelegationService } from "./MailMailboxDelegationService";
+import { MailExchangeGraphSyncService } from "./MailExchangeGraphSyncService";
+import {
+  AddMailboxDelegateRequestDto,
+  CompleteExchangeOAuthRequestDto,
+  UpdateMailboxAccessModeRequestDto,
+} from "./MailMailboxDelegationRequestDto";
 
 @Controller("company/mail-inbox")
 @UseGuards(JwtAuthenticationGuard, MailProductTotpPolicyGuard)
@@ -148,6 +155,8 @@ export class CompanyMailInboxController {
     private readonly mailMarketingCampaignService: MailMarketingCampaignService,
     private readonly mailCampaignRecipientPreviewService: MailCampaignRecipientPreviewService,
     private readonly userNotificationPreferenceService: UserNotificationPreferenceService,
+    private readonly mailMailboxDelegationService: MailMailboxDelegationService,
+    private readonly mailExchangeGraphSyncService: MailExchangeGraphSyncService,
   ) {}
 
   @Get("imap-health")
@@ -233,8 +242,7 @@ export class CompanyMailInboxController {
   ) {
     const detail = await this.mailOrganizationInboxService.getMessage(
       user.companyId,
-      messageId,
-    );
+      messageId, user);
     const result = await this.mailAiComposeService.suggestReply({
       userId: user.userId,
       subject: detail.subject,
@@ -259,8 +267,7 @@ export class CompanyMailInboxController {
   ) {
     const detail = await this.mailOrganizationInboxService.getMessage(
       user.companyId,
-      messageId,
-    );
+      messageId, user);
     const result = await this.mailAiComposeService.summarizeMessage({
       userId: user.userId,
       subject: detail.subject,
@@ -283,8 +290,7 @@ export class CompanyMailInboxController {
   ) {
     const detail = await this.mailOrganizationInboxService.getMessage(
       user.companyId,
-      messageId,
-    );
+      messageId, user);
     const result = await this.mailAiComposeService.classifyInbound({
       userId: user.userId,
       subject: detail.subject,
@@ -391,8 +397,7 @@ export class CompanyMailInboxController {
   @Get("account-hub")
   public async accountHub(@AuthenticatedUserParam() user: AuthenticatedUserContext) {
     const summary = await this.mailOrganizationInboxService.getSummary(
-      user.companyId,
-    );
+      user.companyId, user);
     const senders =
       await this.mailSaasSubscriptionService.listOrganizationSenders(
         user.companyId,
@@ -404,6 +409,10 @@ export class CompanyMailInboxController {
       await this.mailOrganizationBrandingService.getSnapshot(user.companyId),
       summary.primaryAddress,
     );
+    const delegation =
+      await this.mailMailboxDelegationService.listMailboxDelegations(user);
+    const exchangeAccounts =
+      await this.mailExchangeGraphSyncService.listAccounts(user.companyId);
     return {
       primaryAddress: summary.primaryAddress,
       unreadCount: summary.unreadCount,
@@ -411,7 +420,135 @@ export class CompanyMailInboxController {
       aliases,
       branding,
       canManageSenders: canManageMailIdentity(user),
+      mailboxDelegations: delegation.mailboxes,
+      canManageMailboxDelegations: delegation.canManage,
+      exchangeSync: {
+        configured: this.mailExchangeGraphSyncService.isConfigured(),
+        accounts: exchangeAccounts,
+      },
     };
+  }
+
+  @Get("mailbox-delegations")
+  public async listMailboxDelegations(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    return await this.mailMailboxDelegationService.listMailboxDelegations(user);
+  }
+
+  @Patch("mailboxes/:mailboxId/access-mode")
+  public async updateMailboxAccessMode(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("mailboxId") mailboxId: string,
+    @Body() body: UpdateMailboxAccessModeRequestDto,
+  ) {
+    const mailbox = await this.mailMailboxDelegationService.setMailboxAccessMode(
+      user,
+      mailboxId,
+      body.accessMode,
+      body.ownerUserId,
+    );
+    return { ok: true, mailbox };
+  }
+
+  @Post("mailboxes/:mailboxId/delegates")
+  public async addMailboxDelegate(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("mailboxId") mailboxId: string,
+    @Body() body: AddMailboxDelegateRequestDto,
+  ) {
+    const mailbox = await this.mailMailboxDelegationService.addDelegate(
+      user,
+      mailboxId,
+      body.email,
+      body.permission,
+    );
+    return { ok: true, mailbox };
+  }
+
+  @Delete("mailboxes/:mailboxId/delegates/:delegateId")
+  public async removeMailboxDelegate(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("mailboxId") mailboxId: string,
+    @Param("delegateId") delegateId: string,
+  ) {
+    await this.mailMailboxDelegationService.removeDelegate(
+      user,
+      mailboxId,
+      delegateId,
+    );
+    return { ok: true };
+  }
+
+  @Get("exchange/oauth/start")
+  public async startExchangeOAuth(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    this.assertMailInboxWriter(user);
+    return this.mailExchangeGraphSyncService.buildOAuthStart(user);
+  }
+
+  @Post("exchange/oauth/complete")
+  public async completeExchangeOAuth(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: CompleteExchangeOAuthRequestDto,
+  ) {
+    this.assertMailInboxWriter(user);
+    const account = await this.mailExchangeGraphSyncService.completeOAuth(
+      user,
+      body.code,
+      body.state,
+    );
+    return { ok: true, account };
+  }
+
+  @Get("exchange/accounts")
+  public async listExchangeAccounts(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    const accounts = await this.mailExchangeGraphSyncService.listAccounts(
+      user.companyId,
+    );
+    return {
+      configured: this.mailExchangeGraphSyncService.isConfigured(),
+      accounts,
+    };
+  }
+
+  @Delete("exchange/accounts/:accountId")
+  public async deleteExchangeAccount(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("accountId") accountId: string,
+  ) {
+    this.assertMailInboxWriter(user);
+    await this.mailExchangeGraphSyncService.deleteAccount(user, accountId);
+    return { ok: true };
+  }
+
+  @Post("exchange/accounts/:accountId/sync")
+  public async syncExchangeAccount(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("accountId") accountId: string,
+  ) {
+    this.assertMailInboxWriter(user);
+    const result = await this.mailExchangeGraphSyncService.syncAccount(
+      user.companyId,
+      accountId,
+      user.userId,
+    );
+    return { ok: true, ...result };
+  }
+
+  @Post("exchange/accounts/sync-all")
+  public async syncAllExchangeAccounts(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    this.assertMailInboxWriter(user);
+    const result = await this.mailExchangeGraphSyncService.syncAllForOrganization(
+      user.companyId,
+      user.userId,
+    );
+    return { ok: true, ...result };
   }
 
   @Post("senders/:senderId/default")
@@ -624,8 +761,7 @@ export class CompanyMailInboxController {
   @Get("branding")
   public async branding(@AuthenticatedUserParam() user: AuthenticatedUserContext) {
     const summary = await this.mailOrganizationInboxService.getSummary(
-      user.companyId,
-    );
+      user.companyId, user);
     const branding = applyEkolojikMarketWebmailBranding(
       await this.mailOrganizationBrandingService.getSnapshot(user.companyId),
       summary.primaryAddress,
@@ -805,16 +941,14 @@ export class CompanyMailInboxController {
       customFolderId,
     );
     const summary = await this.mailOrganizationInboxService.getSummary(
-      user.companyId,
-    );
+      user.companyId, user);
     const trashedSentCount =
       await this.mailMailboxComposeService.countTrashedSent(user.companyId);
     let messages = await this.mailOrganizationInboxService.listMessages(
       user.companyId,
       resolvedFolder,
       50,
-      resolvedCustomFolderId,
-    );
+      resolvedCustomFolderId, user);
     if (resolvedFolder === "trash") {
       const trashedSent = await this.mailMailboxComposeService.listTrashedSent(
         user.companyId,
@@ -875,8 +1009,7 @@ export class CompanyMailInboxController {
       user.companyId,
       resolvedFolder,
       40,
-      resolvedCustomFolderId,
-    );
+      resolvedCustomFolderId, user);
     return { threads, folder: resolvedFolder };
   }
 
@@ -896,8 +1029,7 @@ export class CompanyMailInboxController {
       user.companyId,
       threadId,
       resolvedFolder,
-      resolvedCustomFolderId,
-    );
+      resolvedCustomFolderId, user);
     return { threadId, messages, folder: resolvedFolder };
   }
 
@@ -930,6 +1062,7 @@ export class CompanyMailInboxController {
       },
       50,
       resolvedCustomFolderId,
+      user,
     );
     return {
       messages,
@@ -1101,8 +1234,7 @@ export class CompanyMailInboxController {
   ) {
     const message = await this.mailOrganizationInboxService.getMessage(
       user.companyId,
-      messageId,
-    );
+      messageId, user);
     return { message };
   }
 
@@ -1119,6 +1251,7 @@ export class CompanyMailInboxController {
         user.companyId,
         messageId,
         index,
+        user,
       );
     response.setHeader("Content-Type", file.contentType);
     response.setHeader(
@@ -1133,7 +1266,7 @@ export class CompanyMailInboxController {
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
     @Param("messageId") messageId: string,
   ) {
-    await this.mailOrganizationInboxService.markRead(user.companyId, messageId);
+    await this.mailOrganizationInboxService.markRead(user.companyId, messageId, user);
     return { ok: true };
   }
 
@@ -1146,8 +1279,7 @@ export class CompanyMailInboxController {
     const result = await this.mailOrganizationInboxService.setStarred(
       user.companyId,
       messageId,
-      body.starred,
-    );
+      body.starred, user);
     return { ok: true, ...result };
   }
 
@@ -1158,8 +1290,7 @@ export class CompanyMailInboxController {
   ) {
     await this.mailOrganizationInboxService.markUnread(
       user.companyId,
-      messageId,
-    );
+      messageId, user);
     return { ok: true };
   }
 
@@ -1170,8 +1301,7 @@ export class CompanyMailInboxController {
   ) {
     const result = await this.mailOrganizationInboxService.bulkMarkRead(
       user.companyId,
-      body.messageIds,
-    );
+      body.messageIds, user);
     return { ok: true, ...result };
   }
 
@@ -1182,8 +1312,7 @@ export class CompanyMailInboxController {
   ) {
     const result = await this.mailOrganizationInboxService.bulkMarkUnread(
       user.companyId,
-      body.messageIds,
-    );
+      body.messageIds, user);
     return { ok: true, ...result };
   }
 
@@ -1197,8 +1326,7 @@ export class CompanyMailInboxController {
     const result = await this.mailOrganizationInboxService.bulkSetMailboxFolder(
       user.companyId,
       body.messageIds,
-      folder,
-    );
+      folder, user);
     return { ok: true, ...result };
   }
 
@@ -1210,8 +1338,7 @@ export class CompanyMailInboxController {
     const result = await this.mailOrganizationInboxService.bulkSetStarred(
       user.companyId,
       body.messageIds,
-      body.starred,
-    );
+      body.starred, user);
     return { ok: true, ...result };
   }
 
@@ -1228,8 +1355,7 @@ export class CompanyMailInboxController {
     const result = await this.mailOrganizationInboxService.bulkSnoozeMessages(
       user.companyId,
       body.messageIds,
-      until,
-    );
+      until, user);
     return { ok: true, ...result };
   }
 
@@ -1271,8 +1397,7 @@ export class CompanyMailInboxController {
     const result = await this.mailOrganizationInboxService.setMailboxFolder(
       user.companyId,
       messageId,
-      folder,
-    );
+      folder, user);
     return { ok: true, ...result };
   }
 
@@ -1284,8 +1409,7 @@ export class CompanyMailInboxController {
     this.assertMailInboxWriter(user);
     await this.mailOrganizationInboxService.deleteMessagePermanently(
       user.companyId,
-      messageId,
-    );
+      messageId, user);
     await this.recordInboxMailAudit(user, MailIdentityAuditAction.InboxMessageDeleted, {
       messageId,
     });
@@ -1300,6 +1424,7 @@ export class CompanyMailInboxController {
     const inbound =
       await this.mailOrganizationInboxService.purgeAllTrashMessages(
         user.companyId,
+        user,
       );
     const sent = await this.mailMailboxComposeService.purgeAllTrashedSent(
       user.companyId,
@@ -1892,8 +2017,7 @@ export class CompanyMailInboxController {
     const result = await this.mailOrganizationInboxService.snoozeMessage(
       user.companyId,
       messageId,
-      until,
-    );
+      until, user);
     return { ok: true, ...result };
   }
 
@@ -1905,8 +2029,7 @@ export class CompanyMailInboxController {
     this.assertMailInboxWriter(user);
     await this.mailOrganizationInboxService.clearSnooze(
       user.companyId,
-      messageId,
-    );
+      messageId, user);
     return { ok: true };
   }
 

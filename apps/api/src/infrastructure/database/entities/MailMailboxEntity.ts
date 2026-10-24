@@ -20,6 +20,13 @@ export class MailMailboxEntity {
   @Column({ type: "varchar", length: 16, default: "active" })
   public status!: "active" | "suspended";
 
+  /** organization = tüm mail konsol kullanıcıları; delegates_only = yalnızca sahip + delegeler */
+  @Column({ name: "access_mode", type: "varchar", length: 24, default: "organization" })
+  public accessMode!: "organization" | "delegates_only";
+
+  @Column({ name: "owner_user_id", type: "uuid", nullable: true })
+  public ownerUserId!: string | null;
+
   @Column({ type: "bigint", default: 0 })
   public quotaBytes!: string;
 

@@ -136,6 +136,12 @@ import { MailCalendarCalDavAccountEntity } from "../../infrastructure/database/e
 import { MailCalendarCalDavService } from "./MailCalendarCalDavService";
 import { MailCalendarCalDavSyncScheduler } from "./MailCalendarCalDavSyncScheduler";
 import { MailContactCardDavAccountEntity } from "../../infrastructure/database/entities/MailContactCardDavAccountEntity";
+import { MailMailboxDelegateEntity } from "../../infrastructure/database/entities/MailMailboxDelegateEntity";
+import { MailExchangeSyncAccountEntity } from "../../infrastructure/database/entities/MailExchangeSyncAccountEntity";
+import { MailMailboxAccessService } from "./MailMailboxAccessService";
+import { MailMailboxDelegationService } from "./MailMailboxDelegationService";
+import { MailExchangeGraphSyncService } from "./MailExchangeGraphSyncService";
+import { MailExchangeSyncScheduler } from "./MailExchangeSyncScheduler";
 import { MailContactCardDavService } from "./MailContactCardDavService";
 import { MailContactCardDavSyncScheduler } from "./MailContactCardDavSyncScheduler";
 import { MailDeliverabilityHubService } from "./MailDeliverabilityHubService";
@@ -222,6 +228,8 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
       MailCalendarIcsFeedEntity,
       MailCalendarCalDavAccountEntity,
       MailContactCardDavAccountEntity,
+      MailMailboxDelegateEntity,
+      MailExchangeSyncAccountEntity,
       CompanyMailTeamInviteEntity,
       MailOrganizationBillingStateEntity,
       MailOrganizationOperatorStateEntity,
@@ -284,6 +292,10 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     MailIdentityAuditService,
     MailInboundIngestService,
     MailInboundWebhookGuard,
+    MailMailboxAccessService,
+    MailMailboxDelegationService,
+    MailExchangeGraphSyncService,
+    MailExchangeSyncScheduler,
     MailOrganizationInboxService,
     MailInboundRoutingService,
     MailInboundPostfixSyncBootstrap,

@@ -46,6 +46,7 @@ export class CompanyMailJmapController {
     return await this.mailJmapBridgeService.processMethodCalls(
       user.companyId,
       body,
+      user,
     );
   }
 

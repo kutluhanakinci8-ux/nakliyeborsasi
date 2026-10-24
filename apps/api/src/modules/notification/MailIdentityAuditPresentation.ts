@@ -34,6 +34,13 @@ const LABELS: Record<string, string> = {
   [MailIdentityAuditAction.IntegrationWebhookUpdated]: "Webhook güncellendi",
   [MailIdentityAuditAction.MailAliasCreated]: "Paylaşımlı alias oluşturuldu",
   [MailIdentityAuditAction.MailAliasRemoved]: "Alias kaldırıldı",
+  [MailIdentityAuditAction.MailboxAccessModeUpdated]:
+    "Posta kutusu erişim modu güncellendi",
+  [MailIdentityAuditAction.MailboxDelegateAdded]: "Posta kutusu delegasyonu eklendi",
+  [MailIdentityAuditAction.MailboxDelegateRemoved]:
+    "Posta kutusu delegasyonu kaldırıldı",
+  [MailIdentityAuditAction.ExchangeSyncConnected]: "Exchange hesabı bağlandı",
+  [MailIdentityAuditAction.ExchangeSyncDisconnected]: "Exchange hesabı kaldırıldı",
   [MailIdentityAuditAction.InboxComposeSent]: "E-posta gönderildi",
   [MailIdentityAuditAction.InboxReplySent]: "Yanıt gönderildi",
   [MailIdentityAuditAction.InboxForwardSent]: "İleti gönderildi",

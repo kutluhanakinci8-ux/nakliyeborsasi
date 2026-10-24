@@ -1725,6 +1725,35 @@ export type MailAccountHubAlias = {
   targets: { emailAddress: string }[];
 };
 
+export type MailMailboxDelegatePermission = "read" | "send" | "manage";
+
+export type MailMailboxDelegationRow = {
+  mailboxId: string;
+  emailAddress: string;
+  accessMode: "organization" | "delegates_only";
+  ownerUserId: string | null;
+  ownerEmail: string | null;
+  delegates: {
+    id: string;
+    userId: string;
+    emailAddress: string;
+    displayName: string | null;
+    permission: MailMailboxDelegatePermission;
+    createdAt: string;
+  }[];
+};
+
+export type MailExchangeSyncAccountRow = {
+  id: string;
+  emailAddress: string;
+  displayName: string | null;
+  enabled: boolean;
+  mailboxId: string | null;
+  lastSyncedAt: string | null;
+  lastSyncError: string | null;
+  createdAt: string;
+};
+
 export type MailAccountHubPayload = {
   primaryAddress: string | null;
   unreadCount: number;
@@ -1735,12 +1764,116 @@ export type MailAccountHubPayload = {
     logoUrl: string | null;
   };
   canManageSenders: boolean;
+  mailboxDelegations?: MailMailboxDelegationRow[];
+  canManageMailboxDelegations?: boolean;
+  exchangeSync?: {
+    configured: boolean;
+    accounts: MailExchangeSyncAccountRow[];
+  };
 };
 
 export async function fetchMailAccountHub(accessToken: string) {
   return apiFetch<MailAccountHubPayload>(
     accessToken,
     "company/mail-inbox/account-hub",
+  );
+}
+
+export async function updateMailboxAccessMode(
+  accessToken: string,
+  mailboxId: string,
+  accessMode: "organization" | "delegates_only",
+) {
+  return apiFetch<{ ok: boolean; mailbox: MailMailboxDelegationRow }>(
+    accessToken,
+    `company/mail-inbox/mailboxes/${mailboxId}/access-mode`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ accessMode }),
+    },
+  );
+}
+
+export async function addMailboxDelegate(
+  accessToken: string,
+  mailboxId: string,
+  email: string,
+  permission: MailMailboxDelegatePermission,
+) {
+  return apiFetch<{ ok: boolean; mailbox: MailMailboxDelegationRow }>(
+    accessToken,
+    `company/mail-inbox/mailboxes/${mailboxId}/delegates`,
+    {
+      method: "POST",
+      body: JSON.stringify({ email, permission }),
+    },
+  );
+}
+
+export async function removeMailboxDelegate(
+  accessToken: string,
+  mailboxId: string,
+  delegateId: string,
+) {
+  return apiFetch<{ ok: boolean }>(
+    accessToken,
+    `company/mail-inbox/mailboxes/${mailboxId}/delegates/${delegateId}`,
+    { method: "DELETE" },
+  );
+}
+
+export async function startExchangeOAuth(accessToken: string) {
+  return apiFetch<{ authorizationUrl: string; state: string }>(
+    accessToken,
+    "company/mail-inbox/exchange/oauth/start",
+  );
+}
+
+export async function completeExchangeOAuth(
+  accessToken: string,
+  code: string,
+  state: string,
+) {
+  return apiFetch<{ ok: boolean; account: MailExchangeSyncAccountRow }>(
+    accessToken,
+    "company/mail-inbox/exchange/oauth/complete",
+    {
+      method: "POST",
+      body: JSON.stringify({ code, state }),
+    },
+  );
+}
+
+export async function syncExchangeAccount(
+  accessToken: string,
+  accountId: string,
+) {
+  return apiFetch<{ ok: boolean; imported: number; updated: number }>(
+    accessToken,
+    `company/mail-inbox/exchange/accounts/${accountId}/sync`,
+    { method: "POST" },
+  );
+}
+
+export async function syncAllExchangeAccounts(accessToken: string) {
+  return apiFetch<{
+    ok: boolean;
+    accounts: number;
+    imported: number;
+    updated: number;
+  }>(accessToken, "company/mail-inbox/exchange/accounts/sync-all", {
+    method: "POST",
+  });
+}
+
+export async function deleteExchangeAccount(
+  accessToken: string,
+  accountId: string,
+) {
+  return apiFetch<{ ok: boolean }>(
+    accessToken,
+    `company/mail-inbox/exchange/accounts/${accountId}`,
+    { method: "DELETE" },
   );
 }
 

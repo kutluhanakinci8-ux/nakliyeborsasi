@@ -4121,6 +4121,55 @@ html[data-mail-theme="dark"] .mail-posta-status--ok {
   text-underline-offset: 2px;
 }
 
+.mail-delegation-mailbox-picker {
+  margin-bottom: 12px;
+}
+
+.mail-delegation-mode-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 12px;
+}
+
+.mail-delegation-add {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+@media (max-width: 640px) {
+  .mail-delegation-add {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mail-posta-select,
+.mail-posta-input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.mail-posta-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.mail-exchange-oauth-callback {
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--text);
+}
+
 .mail-accounts-status {
   margin: 0;
   font-size: 0.82rem;
