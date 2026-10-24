@@ -23,7 +23,7 @@ Outlook mobildeki **biyometri / Face ID** satırının web karşılığı: **Web
 ```bash
 WEBAUTHN_RP_ID=posta.lerta.com.tr
 WEBAUTHN_ORIGINS=https://posta.lerta.com.tr
-# WEBAUTHN_RP_NAME=Lerta Posta
+# WEBAUTHN_RP_NAME="Lerta Posta"
 ```
 
 ## SQL
