@@ -25,6 +25,10 @@ import {
   pickMailPostaPreferences,
 } from "@/lib/mailPostaPrefs";
 import {
+  filterInboxByFocusLane,
+  type InboxFocusLane,
+} from "@/lib/mailInboxFocus";
+import {
   fetchInboxWithOfflineCache,
   fetchMessageWithOfflineCache,
 } from "@/lib/mailOfflineCache";
@@ -251,6 +255,8 @@ export function useMailClientController({
     useState<MailInboxListDensity>("comfortable");
   const [readFontScale, setReadFontScale] =
     useState<MailReadFontScale>("default");
+  const [inboxFocusLane, setInboxFocusLane] =
+    useState<InboxFocusLane>("focus");
   const [activeSwipeRowId, setActiveSwipeRowId] = useState<string | null>(null);
   const [threadView, setThreadViewState] = useState(false);
   const [mailPostaPrefs, setMailPostaPrefs] = useState(() =>
@@ -1957,9 +1963,35 @@ export function useMailClientController({
         }))
       : searchResults ?? messages;
 
+  const focusedInboxEnabled = mailPostaPrefs.focusedInboxEnabled;
+
+  const displayListItems = useMemo(() => {
+    if (
+      !isPrimaryInbox ||
+      !focusedInboxEnabled ||
+      threadView ||
+      searchActive ||
+      view !== "inbox"
+    ) {
+      return listItems;
+    }
+    return filterInboxByFocusLane(
+      listItems as import("@/lib/mailApi").MailInboxListItem[],
+      inboxFocusLane,
+    );
+  }, [
+    listItems,
+    isPrimaryInbox,
+    focusedInboxEnabled,
+    threadView,
+    searchActive,
+    view,
+    inboxFocusLane,
+  ]);
+
   const listMessageIds = useMemo(
-    () => listItems.map((m) => m.id),
-    [listItems],
+    () => displayListItems.map((m) => m.id),
+    [displayListItems],
   );
   listMessageIdsRef.current = listMessageIds;
 
@@ -2543,7 +2575,11 @@ export function useMailClientController({
     inboxOffline,
     inboxOfflineCachedAt,
     isPrimaryInbox,
-    listItems,
+    listItems: displayListItems,
+    focusedInboxEnabled,
+    inboxFocusLane,
+    setInboxFocusLane,
+    replyQuoteMode: mailPostaPrefs.replyQuoteMode,
     listMessageIds,
     listNavigationEnabled,
     logout,

@@ -139,6 +139,9 @@ export function MailClientShell({ mail }: Props) {
     inboxOfflineCachedAt,
     isPrimaryInbox,
     listItems,
+    focusedInboxEnabled,
+    inboxFocusLane,
+    setInboxFocusLane,
     listMessageIds,
     listNavigationEnabled,
     logout,
@@ -720,6 +723,40 @@ export function MailClientShell({ mail }: Props) {
                       : "Tüm mesajlar okundu"}
                   </p>
                 </div>
+                {focusedInboxEnabled ? (
+                  <div
+                    className="mail-inbox-focus-tabs"
+                    role="tablist"
+                    aria-label="Odaklı gelen kutusu"
+                  >
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={inboxFocusLane === "focus"}
+                      className={
+                        inboxFocusLane === "focus"
+                          ? "mail-inbox-focus-tab is-active"
+                          : "mail-inbox-focus-tab"
+                      }
+                      onClick={() => setInboxFocusLane("focus")}
+                    >
+                      Önemli
+                    </button>
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={inboxFocusLane === "other"}
+                      className={
+                        inboxFocusLane === "other"
+                          ? "mail-inbox-focus-tab is-active"
+                          : "mail-inbox-focus-tab"
+                      }
+                      onClick={() => setInboxFocusLane("other")}
+                    >
+                      Diğer
+                    </button>
+                  </div>
+                ) : null}
               </header>
             ) : null}
             {mailBulkAssistActive ? (

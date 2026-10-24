@@ -7222,6 +7222,30 @@ html[data-mail-read-font="large"] .mail-html-frame {
   color: var(--muted);
 }
 
+.mail-inbox-focus-tabs {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.mail-inbox-focus-tab {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.mail-inbox-focus-tab.is-active {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  background: var(--accent-soft);
+}
+
 .mail-inbox-search-premium .mail-list-toolbar-main {
   border-bottom: none;
   padding-bottom: 10px;

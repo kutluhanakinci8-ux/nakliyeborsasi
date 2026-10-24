@@ -41,6 +41,8 @@ import { EmailHtmlTrackingService } from "./EmailHtmlTrackingService";
 import { EmailOutboxEntity } from "../../infrastructure/database/entities/EmailOutboxEntity";
 import { EmailRecipientKind } from "./NotificationEventCode";
 import { randomUUID } from "node:crypto";
+import { MailInboxPreferencesService } from "./MailInboxPreferencesService";
+import { buildReplyQuoteBlock } from "./MailReplyQuoteBlock";
 
 export type ComposeAttachmentInput = {
   filename: string;
@@ -66,6 +68,7 @@ export class MailMailboxComposeService {
     private readonly notificationConfigurationService: NotificationConfigurationService,
     private readonly mailOrganizationWebhookDispatcherService: MailOrganizationWebhookDispatcherService,
     private readonly mailMailboxOutboundContentService: MailMailboxOutboundContentService,
+    private readonly mailInboxPreferencesService: MailInboxPreferencesService,
     private readonly emailSuppressionService: EmailSuppressionService,
     private readonly emailHtmlTrackingService: EmailHtmlTrackingService,
     @InjectRepository(EmailOutboxEntity)
@@ -433,10 +436,17 @@ export class MailMailboxComposeService {
       params.cc,
     );
     const toAddress = inbound.fromAddress.toLowerCase();
+    const prefs = await this.mailInboxPreferencesService.get(
+      params.organizationId,
+    );
+    const quoteBlock = buildReplyQuoteBlock(inbound, prefs.replyQuoteMode);
+    const replyText = [params.text.trim(), quoteBlock]
+      .filter((part) => part.length > 0)
+      .join("\n\n");
     const outbound = await this.mailMailboxOutboundContentService.prepare({
       organizationId: params.organizationId,
       userId: params.userId,
-      text: params.text,
+      text: replyText,
       fromHeader,
       toEmail: toAddress,
       mergeContext: params.merge,

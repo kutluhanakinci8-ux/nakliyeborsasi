@@ -359,12 +359,14 @@ export function MailPostaSettings({
       >
         <PostaToggle
           checked={form.focusedInboxEnabled}
-          disabled
           label="Odaklı gelen kutusu"
-          hint="Önemli / diğer ayrımı — yakında."
+          hint="Gelen kutusunda Önemli / Diğer sekmeleri (yıldız, okunmamış, bülten filtresi)."
           onChange={(v) => setForm((f) => ({ ...f, focusedInboxEnabled: v }))}
         />
-        <PostaRow label="Yanıt alıntısı" hint="Sunucu biçimi sonraki sürümde bağlanacak.">
+        <PostaRow
+          label="Yanıt alıntısı"
+          hint="Yanıt gönderildiğinde önceki mesajın alıntısı (sunucu)."
+        >
           <ChipGroup<MailReplyQuoteMode>
             value={form.replyQuoteMode}
             layout="equal"
