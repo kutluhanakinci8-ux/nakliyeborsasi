@@ -5893,6 +5893,72 @@ html[data-mail-read-font="large"] .mail-read--premium .mail-read-body {
   text-decoration: underline;
 }
 
+/* —— Gizlilik (premium) —— */
+.mail-privacy-panel--premium {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mail-privacy-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px 16px;
+}
+
+.mail-privacy-pill {
+  flex-shrink: 0;
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  background: color-mix(in srgb, var(--border) 55%, var(--panel));
+}
+
+.mail-privacy-pill--on {
+  color: color-mix(in srgb, var(--accent) 90%, #0f766e);
+  background: color-mix(in srgb, var(--accent) 12%, var(--panel));
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+}
+
+.mail-privacy-pill--off {
+  opacity: 0.9;
+}
+
+.mail-privacy-bullets {
+  margin: 0 0 14px;
+  padding-left: 1.15rem;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.mail-privacy-bullets li {
+  margin-bottom: 6px;
+}
+
+.mail-privacy-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.mail-privacy-console-link {
+  display: inline-flex;
+  font-size: 0.88rem;
+  font-weight: 650;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.mail-privacy-console-link:hover {
+  text-decoration: underline;
+}
+
 .mail-settings-callout {
   margin-top: 0.75rem;
   padding: 12px 14px;

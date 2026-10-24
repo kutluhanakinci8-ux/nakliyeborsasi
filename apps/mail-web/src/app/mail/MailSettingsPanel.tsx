@@ -4,10 +4,8 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   beginTotpSetup,
   confirmTotpSetup,
-  fetchAiMailConsent,
   fetchImapSettings,
   fetchTotpStatus,
-  patchAiMailConsent,
   provisionImapPassword,
   rotateImapPassword,
   type MailImapSettings,
@@ -19,12 +17,10 @@ import { MailComposePresetsPanel } from "./MailComposePresetsPanel";
 import { MailAccountsSettingsPanel } from "./MailAccountsSettingsPanel";
 import { MailRulesPanel } from "./MailRulesPanel";
 import {
-  downloadMailPrivacyExport,
   fetchCalendarCalDavAccounts,
   fetchContactCardDavAccounts,
   fetchInboxPreferences,
   fetchMailPushConfig,
-  resolveMailConsoleUrl,
   syncAllCalendarCalDavAccounts,
   syncAllContactCardDavAccounts,
   type MailInboxListDensity,
@@ -34,6 +30,7 @@ import { MailPostaSettings } from "./MailPostaSettings";
 import { MailAutoReplySettingsPanel } from "./MailAutoReplySettingsPanel";
 import { MailNotificationsSettingsPanel } from "./MailNotificationsSettingsPanel";
 import { MailHelpPanel } from "./MailHelpPanel";
+import { MailPrivacySettingsPanel } from "./MailPrivacySettingsPanel";
 
 export type SettingsView =
   | "hub"
@@ -209,10 +206,6 @@ export function MailSettingsPanel({
   const [autoReplyEnabled, setAutoReplyEnabled] = useState(false);
   const [inboxListDensity, setInboxListDensity] =
     useState<MailInboxListDensity>("comfortable");
-  const [privacyStatus, setPrivacyStatus] = useState("");
-  const [privacyExporting, setPrivacyExporting] = useState(false);
-  const [aiMailConsent, setAiMailConsent] = useState(false);
-  const [aiConsentBusy, setAiConsentBusy] = useState(false);
   const [calDavAccounts, setCalDavAccounts] = useState<
     { id: string; label: string; lastSyncedAt: string | null }[]
   >([]);
@@ -655,81 +648,7 @@ export function MailSettingsPanel({
     case "privacy":
       content = renderDetail(
         "Gizlilik",
-        <>
-          <p className="mail-settings-lead">
-            KVKK kapsamında kurumsal posta kimliği verilerinizi indirin. Silme
-            talebi ve durum takibi firma yöneticisi için yönetim konsolunda
-            yapılır.
-          </p>
-          <label className="mail-settings-toggle">
-            <input
-              type="checkbox"
-              checked={aiMailConsent}
-              disabled={aiConsentBusy}
-              onChange={(e) => {
-                const next = e.target.checked;
-                setAiConsentBusy(true);
-                void patchAiMailConsent(accessToken, next)
-                  .then(() => {
-                    setAiMailConsent(next);
-                  })
-                  .finally(() => setAiConsentBusy(false));
-              }}
-              onFocus={() => {
-                if (!aiMailConsent && !aiConsentBusy) {
-                  void fetchAiMailConsent(accessToken)
-                    .then((p) => setAiMailConsent(p.aiMailAssistConsent))
-                    .catch(() => undefined);
-                }
-              }}
-            />
-            AI posta asistanı (yanıt önerisi, özet, sınıflandırma) — KVKK onayı
-          </label>
-          {privacyStatus ? <p>{privacyStatus}</p> : null}
-          <div className="compose-actions">
-            <button
-              type="button"
-              disabled={privacyExporting}
-              onClick={() =>
-                void (async () => {
-                  setPrivacyExporting(true);
-                  setPrivacyStatus("");
-                  try {
-                    const { blob, filename } =
-                      await downloadMailPrivacyExport(accessToken);
-                    const url = URL.createObjectURL(blob);
-                    const anchor = document.createElement("a");
-                    anchor.href = url;
-                    anchor.download = filename;
-                    anchor.click();
-                    URL.revokeObjectURL(url);
-                    setPrivacyStatus("JSON indirildi.");
-                  } catch (error) {
-                    setPrivacyStatus(
-                      error instanceof Error
-                        ? error.message
-                        : "Dışa aktarım başarısız.",
-                    );
-                  } finally {
-                    setPrivacyExporting(false);
-                  }
-                })()
-              }
-            >
-              {privacyExporting ? "Hazırlanıyor…" : "Verilerimi indir (JSON)"}
-            </button>
-          </div>
-          <p className="mail-settings-lead" style={{ marginTop: 16 }}>
-            <a
-              href={resolveMailConsoleUrl()}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Lerta yönetim konsolu
-            </a>
-            — silme talebi, DNS ve posta kimliği ayarları.
-          </p>
-        </>,
+        <MailPrivacySettingsPanel accessToken={accessToken} />,
       );
       break;
     case "calendarSettings":
@@ -953,7 +872,8 @@ export function MailSettingsPanel({
           view === "deliverability" ||
           view === "ops" ||
           view === "rules" ||
-          view === "help"
+          view === "help" ||
+          view === "privacy"
             ? "compose-dialog mail-settings-dialog mail-settings-dialog--wide"
             : "compose-dialog mail-settings-dialog"
         }
