@@ -930,6 +930,7 @@ export type MailInboxPreferences = {
   threadViewEnabled: boolean;
   swipePrimaryAction: MailSwipePrimaryAction;
   focusedInboxEnabled: boolean;
+  inboxSmartSortEnabled: boolean;
   replyQuoteMode: MailReplyQuoteMode;
 };
 

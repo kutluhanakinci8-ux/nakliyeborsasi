@@ -3,25 +3,31 @@
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import type { MailSwipePrimaryAction } from "@/lib/mailApi";
 
 const REVEAL_PX = 152;
 const OPEN_THRESHOLD = 48;
 const DRAG_START_PX = 8;
+const FULL_COMMIT_PX = Math.round(REVEAL_PX * 0.9);
 
 type Props = {
   children: ReactNode;
   rowKey: string;
   activeSwipeKey: string | null;
   onActiveSwipeKeyChange: (key: string | null) => void;
+  primaryAction: MailSwipePrimaryAction;
   showArchive?: boolean;
   archiveLabel?: string;
+  readLabel?: string;
   onArchive: () => void;
   onDelete: () => void;
+  onToggleRead: () => void;
 };
 
 export function MailListSwipeRow({
@@ -29,10 +35,13 @@ export function MailListSwipeRow({
   rowKey,
   activeSwipeKey,
   onActiveSwipeKeyChange,
+  primaryAction,
   showArchive = true,
   archiveLabel = "Arşivle",
+  readLabel = "Okundu",
   onArchive,
   onDelete,
+  onToggleRead,
 }: Props) {
   const [offset, setOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -45,6 +54,61 @@ export function MailListSwipeRow({
     startOffset: 0,
     pointerId: -1,
   });
+
+  const primaryHandler = useMemo(() => {
+    if (primaryAction === "delete") {
+      return onDelete;
+    }
+    if (primaryAction === "read") {
+      return onToggleRead;
+    }
+    return onArchive;
+  }, [primaryAction, onArchive, onDelete, onToggleRead]);
+
+  const actions = useMemo(() => {
+    const archiveBtn = showArchive
+      ? {
+          key: "archive",
+          label: archiveLabel,
+          className: "mail-swipe-action mail-swipe-action--archive",
+          onClick: onArchive,
+        }
+      : null;
+    const deleteBtn = {
+      key: "delete",
+      label: "Sil",
+      className: "mail-swipe-action mail-swipe-action--delete",
+      onClick: onDelete,
+    };
+    const readBtn = {
+      key: "read",
+      label: readLabel,
+      className: "mail-swipe-action mail-swipe-action--read",
+      onClick: onToggleRead,
+    };
+
+    if (primaryAction === "delete") {
+      return [deleteBtn, archiveBtn].filter(Boolean) as NonNullable<
+        typeof archiveBtn
+      >[];
+    }
+    if (primaryAction === "read") {
+      return [readBtn, archiveBtn ?? deleteBtn].filter(Boolean) as NonNullable<
+        typeof archiveBtn
+      >[];
+    }
+    return [archiveBtn, deleteBtn].filter(Boolean) as NonNullable<
+      typeof archiveBtn
+    >[];
+  }, [
+    primaryAction,
+    showArchive,
+    archiveLabel,
+    readLabel,
+    onArchive,
+    onDelete,
+    onToggleRead,
+  ]);
 
   const setOffsetSynced = useCallback((value: number) => {
     const clamped = Math.max(-REVEAL_PX, Math.min(0, value));
@@ -59,23 +123,42 @@ export function MailListSwipeRow({
     return 0;
   }, []);
 
+  const runPrimaryCommit = useCallback(() => {
+    blockClickUntilRef.current = Date.now() + 500;
+    setOffsetSynced(0);
+    onActiveSwipeKeyChange(null);
+    primaryHandler();
+  }, [onActiveSwipeKeyChange, primaryHandler, setOffsetSynced]);
+
   const finishDrag = useCallback(
     (snap: boolean) => {
       dragRef.current.active = false;
       dragRef.current.dragging = false;
       setIsDragging(false);
-      if (snap) {
-        const next = snapOffset(offsetRef.current);
-        setOffsetSynced(next);
-        if (next < 0) {
-          blockClickUntilRef.current = Date.now() + 400;
-          onActiveSwipeKeyChange(rowKey);
-        } else {
-          onActiveSwipeKeyChange(null);
-        }
+      if (!snap) {
+        return;
+      }
+      const current = offsetRef.current;
+      if (current <= -FULL_COMMIT_PX) {
+        runPrimaryCommit();
+        return;
+      }
+      const next = snapOffset(current);
+      setOffsetSynced(next);
+      if (next < 0) {
+        blockClickUntilRef.current = Date.now() + 400;
+        onActiveSwipeKeyChange(rowKey);
+      } else {
+        onActiveSwipeKeyChange(null);
       }
     },
-    [onActiveSwipeKeyChange, rowKey, setOffsetSynced, snapOffset],
+    [
+      onActiveSwipeKeyChange,
+      rowKey,
+      runPrimaryCommit,
+      setOffsetSynced,
+      snapOffset,
+    ],
   );
 
   useEffect(() => {
@@ -187,32 +270,21 @@ export function MailListSwipeRow({
       }}
     >
       <div className="mail-swipe-actions" aria-hidden={!actionsOpen}>
-        {showArchive ? (
+        {actions.map((action) => (
           <button
+            key={action.key}
             type="button"
-            className="mail-swipe-action mail-swipe-action--archive"
+            className={action.className}
             onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => {
               e.stopPropagation();
               close();
-              onArchive();
+              action.onClick();
             }}
           >
-            {archiveLabel}
+            {action.label}
           </button>
-        ) : null}
-        <button
-          type="button"
-          className="mail-swipe-action mail-swipe-action--delete"
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => {
-            e.stopPropagation();
-            close();
-            onDelete();
-          }}
-        >
-          Sil
-        </button>
+        ))}
       </div>
       <div
         className={

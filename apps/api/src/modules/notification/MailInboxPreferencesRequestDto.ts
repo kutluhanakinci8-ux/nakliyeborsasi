@@ -72,6 +72,10 @@ export class UpdateMailInboxPreferencesRequestDto {
   public focusedInboxEnabled?: boolean;
 
   @IsOptional()
+  @IsBoolean()
+  public inboxSmartSortEnabled?: boolean;
+
+  @IsOptional()
   @IsIn(["full", "trimmed", "none"])
   public replyQuoteMode?: "full" | "trimmed" | "none";
 }

@@ -66,6 +66,10 @@ export class MailInboxPreferencesEntity {
   @Column({ type: "boolean", default: false })
   public focusedInboxEnabled!: boolean;
 
+  /** Gmail tarzı önem sıralaması (yıldız, okunmamış, kişisel öncelik) */
+  @Column({ type: "boolean", default: true })
+  public inboxSmartSortEnabled!: boolean;
+
   /** full | trimmed | none — yanıt alıntısı (P2) */
   @Column({ type: "varchar", length: 16, default: "full" })
   public replyQuoteMode!: string;

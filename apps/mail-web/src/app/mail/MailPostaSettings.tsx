@@ -338,7 +338,10 @@ export function MailPostaSettings({
           label="Toplu kalıcı silmeden önce onay"
           onChange={(v) => setForm((f) => ({ ...f, confirmBulkDelete: v }))}
         />
-        <PostaRow label="Kaydırma aksiyonu" hint="Mobil liste — yakında tam eşleme.">
+        <PostaRow
+          label="Kaydırma aksiyonu"
+          hint="Sola kaydırma: birincil düğme ve tam kaydırmada otomatik uygulama."
+        >
           <ChipGroup<MailSwipePrimaryAction>
             value={form.swipePrimaryAction}
             layout="equal"
@@ -362,6 +365,12 @@ export function MailPostaSettings({
           label="Odaklı gelen kutusu"
           hint="Gelen kutusunda Önemli / Diğer sekmeleri (yıldız, okunmamış, bülten filtresi)."
           onChange={(v) => setForm((f) => ({ ...f, focusedInboxEnabled: v }))}
+        />
+        <PostaToggle
+          checked={form.inboxSmartSortEnabled}
+          label="Akıllı sıralama"
+          hint="Gelen kutusunda önem skoruna göre sıralama (yıldız, okunmamış, kişisel, güncellik)."
+          onChange={(v) => setForm((f) => ({ ...f, inboxSmartSortEnabled: v }))}
         />
         <PostaRow
           label="Yanıt alıntısı"

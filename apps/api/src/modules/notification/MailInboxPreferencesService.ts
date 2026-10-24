@@ -35,6 +35,7 @@ export type MailInboxPreferencesDto = {
   threadViewEnabled: boolean;
   swipePrimaryAction: MailSwipePrimaryAction;
   focusedInboxEnabled: boolean;
+  inboxSmartSortEnabled: boolean;
   replyQuoteMode: MailReplyQuoteMode;
 };
 
@@ -91,6 +92,7 @@ export class MailInboxPreferencesService {
       threadViewEnabled?: boolean;
       swipePrimaryAction?: MailSwipePrimaryAction;
       focusedInboxEnabled?: boolean;
+      inboxSmartSortEnabled?: boolean;
       replyQuoteMode?: MailReplyQuoteMode;
     },
   ): Promise<MailInboxPreferencesDto> {
@@ -116,6 +118,7 @@ export class MailInboxPreferencesService {
         threadViewEnabled: false,
         swipePrimaryAction: "archive",
         focusedInboxEnabled: false,
+        inboxSmartSortEnabled: true,
         replyQuoteMode: "full",
       });
     }
@@ -176,6 +179,9 @@ export class MailInboxPreferencesService {
     if (input.focusedInboxEnabled !== undefined) {
       row.focusedInboxEnabled = Boolean(input.focusedInboxEnabled);
     }
+    if (input.inboxSmartSortEnabled !== undefined) {
+      row.inboxSmartSortEnabled = Boolean(input.inboxSmartSortEnabled);
+    }
     if (input.replyQuoteMode !== undefined) {
       row.replyQuoteMode = normalizeReplyQuoteMode(input.replyQuoteMode);
     }
@@ -203,6 +209,7 @@ export class MailInboxPreferencesService {
       threadViewEnabled: row?.threadViewEnabled ?? false,
       swipePrimaryAction: normalizeSwipePrimaryAction(row?.swipePrimaryAction),
       focusedInboxEnabled: row?.focusedInboxEnabled ?? false,
+      inboxSmartSortEnabled: row?.inboxSmartSortEnabled ?? true,
       replyQuoteMode: normalizeReplyQuoteMode(row?.replyQuoteMode),
     };
   }
