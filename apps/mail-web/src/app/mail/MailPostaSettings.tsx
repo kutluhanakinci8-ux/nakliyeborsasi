@@ -392,19 +392,17 @@ export function MailPostaSettings({
           >
             {status}
           </p>
-        ) : (
-          <p className="mail-posta-status mail-posta-status--hint">
-            Değişiklikler tüm oturumlarda geçerli olur.
-          </p>
-        )}
-        <button
-          type="button"
-          className="mail-posta-save"
-          disabled={saving}
-          onClick={() => void save()}
-        >
-          {saving ? "Kaydediliyor…" : "Kaydet"}
-        </button>
+        ) : null}
+        <div className="mail-posta-footer-actions">
+          <button
+            type="button"
+            className="mail-posta-save"
+            disabled={saving}
+            onClick={() => void save()}
+          >
+            {saving ? "Kaydediliyor…" : "Kaydet"}
+          </button>
+        </div>
       </footer>
     </div>
   );
