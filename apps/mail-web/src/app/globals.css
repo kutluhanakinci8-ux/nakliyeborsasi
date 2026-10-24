@@ -867,6 +867,44 @@ a {
   font-size: 0.72rem;
 }
 
+/* Gelen kutusu premium kartları (mail-inbox-row) */
+.mail-app.mail-app--list-compact .mail-inbox-row {
+  margin: 0 10px 4px;
+  padding: 7px 10px 7px 6px;
+  gap: 8px;
+}
+
+.mail-app.mail-app--list-compact .mail-inbox-row-check {
+  margin-top: 6px;
+}
+
+.mail-app.mail-app--list-compact .mail-inbox-row-avatar {
+  width: 30px;
+  height: 30px;
+  font-size: 0.68rem;
+}
+
+.mail-app.mail-app--list-compact .mail-inbox-row-sender {
+  font-size: 0.8rem;
+}
+
+.mail-app.mail-app--list-compact .mail-inbox-row-subject {
+  font-size: 0.84rem;
+  line-height: 1.25;
+}
+
+.mail-app.mail-app--list-compact .mail-inbox-row-snippet {
+  margin-top: 1px;
+  font-size: 0.74rem;
+  line-height: 1.3;
+  -webkit-line-clamp: 1;
+}
+
+.mail-app.mail-app--list-compact .mail-inbox-row-attach {
+  margin-top: 3px;
+  font-size: 0.62rem;
+}
+
 .mail-read {
   background: var(--panel);
   display: flex;

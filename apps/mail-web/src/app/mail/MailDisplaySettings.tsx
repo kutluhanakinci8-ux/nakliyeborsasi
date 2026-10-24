@@ -100,7 +100,9 @@ export function MailDisplaySettings({
           const saved = result.preferences.inboxListDensity;
           setDensity(saved);
           onInboxListDensityChange?.(saved);
-          setDensityStatus("Yoğunluk kaydedildi.");
+          setDensityStatus(
+            saved === "compact" ? "Sıkı görünüm uygulandı." : "Rahat görünüm uygulandı.",
+          );
         } catch (error) {
           setDensity(inboxListDensity);
           onInboxListDensityChange?.(inboxListDensity);

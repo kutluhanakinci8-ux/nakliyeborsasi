@@ -505,7 +505,10 @@ export function MailSettingsPanel({
         <MailDisplaySettings
           accessToken={accessToken}
           inboxListDensity={inboxListDensity}
-          onInboxListDensityChange={onInboxListDensityChange}
+          onInboxListDensityChange={(density) => {
+            setInboxListDensity(density);
+            onInboxListDensityChange?.(density);
+          }}
         />,
       );
       break;
