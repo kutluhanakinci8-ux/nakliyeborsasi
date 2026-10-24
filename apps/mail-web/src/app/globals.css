@@ -5959,6 +5959,95 @@ html[data-mail-read-font="large"] .mail-read--premium .mail-read-body {
   text-decoration: underline;
 }
 
+/* —— Güvenlik (premium) —— */
+.mail-security-panel--premium {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mail-security-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px 16px;
+}
+
+.mail-security-pill {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+}
+
+.mail-security-pill--on {
+  color: color-mix(in srgb, #16a34a 90%, var(--text));
+  background: color-mix(in srgb, #22c55e 12%, var(--panel));
+  border-color: color-mix(in srgb, #22c55e 35%, var(--border));
+}
+
+.mail-security-pill--off {
+  color: var(--muted);
+  background: color-mix(in srgb, var(--border) 55%, var(--panel));
+}
+
+.mail-security-status-text {
+  margin: 0 0 14px;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: var(--text);
+}
+
+.mail-security-setup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mail-security-setup-label {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.mail-security-secret {
+  display: block;
+  word-break: break-all;
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--border));
+  background: color-mix(in srgb, var(--bg) 25%, var(--panel));
+  font-family: ui-monospace, "Cascadia Code", monospace;
+  font-size: 0.9rem;
+  letter-spacing: 0.06em;
+}
+
+.mail-security-setup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mail-security-code-input {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.12em;
+  max-width: 12rem;
+}
+
+.mail-security-primary-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
 .mail-settings-callout {
   margin-top: 0.75rem;
   padding: 12px 14px;

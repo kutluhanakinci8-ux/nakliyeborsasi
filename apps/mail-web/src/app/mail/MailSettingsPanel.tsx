@@ -2,8 +2,6 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
-  beginTotpSetup,
-  confirmTotpSetup,
   fetchImapSettings,
   fetchTotpStatus,
   provisionImapPassword,
@@ -31,6 +29,7 @@ import { MailAutoReplySettingsPanel } from "./MailAutoReplySettingsPanel";
 import { MailNotificationsSettingsPanel } from "./MailNotificationsSettingsPanel";
 import { MailHelpPanel } from "./MailHelpPanel";
 import { MailPrivacySettingsPanel } from "./MailPrivacySettingsPanel";
+import { MailSecuritySettingsPanel } from "./MailSecuritySettingsPanel";
 
 export type SettingsView =
   | "hub"
@@ -215,8 +214,6 @@ export function MailSettingsPanel({
   const [syncStatus, setSyncStatus] = useState("");
   const [syncBusy, setSyncBusy] = useState(false);
   const [totpEnabled, setTotpEnabled] = useState(false);
-  const [totpSecret, setTotpSecret] = useState<string | null>(null);
-  const [totpCode, setTotpCode] = useState("");
   const [settings, setSettings] = useState<MailImapSettings | null>(null);
   const [error, setError] = useState("");
   const [newPassword, setNewPassword] = useState<string | null>(null);
@@ -598,51 +595,10 @@ export function MailSettingsPanel({
     case "security":
       content = renderDetail(
         "Güvenlik",
-        <>
-          <p className="mail-settings-lead">
-            İki adımlı doğrulama (TOTP). Kapatmak için yönetim konsolu güvenlik
-            sayfasını kullanın.
-          </p>
-          <p>{totpEnabled ? "TOTP açık." : "TOTP kapalı."}</p>
-          {!totpEnabled && !totpSecret ? (
-            <button
-              type="button"
-              onClick={() =>
-                void (async () => {
-                  const data = await beginTotpSetup(accessToken);
-                  setTotpSecret(data.setup.secret);
-                })()
-              }
-            >
-              TOTP kur
-            </button>
-          ) : null}
-          {totpSecret ? (
-            <div style={{ marginTop: 12 }}>
-              <p>
-                Secret: <code>{totpSecret}</code>
-              </p>
-              <input
-                placeholder="6 haneli kod"
-                value={totpCode}
-                onChange={(e) => setTotpCode(e.target.value)}
-              />
-              <button
-                type="button"
-                style={{ marginLeft: 8 }}
-                onClick={() =>
-                  void (async () => {
-                    await confirmTotpSetup(accessToken, totpCode);
-                    setTotpSecret(null);
-                    setTotpEnabled(true);
-                  })()
-                }
-              >
-                Etkinleştir
-              </button>
-            </div>
-          ) : null}
-        </>,
+        <MailSecuritySettingsPanel
+          accessToken={accessToken}
+          onTotpEnabledChange={setTotpEnabled}
+        />,
       );
       break;
     case "privacy":
@@ -873,7 +829,8 @@ export function MailSettingsPanel({
           view === "ops" ||
           view === "rules" ||
           view === "help" ||
-          view === "privacy"
+          view === "privacy" ||
+          view === "security"
             ? "compose-dialog mail-settings-dialog mail-settings-dialog--wide"
             : "compose-dialog mail-settings-dialog"
         }
