@@ -11,7 +11,7 @@
 
 | Alan | Sonuç |
 |------|--------|
-| **Otomatik katman** | 8 PASS / **5 FAIL** / 1 MANUAL / 1 NOT_RUN |
+| **Otomatik katman** | 7 PASS / **6 FAIL** / 1 MANUAL / 1 NOT_RUN |
 | **Üretim kritik** | HTTPS, health, yük testi, TR l10n **PASS** |
 | **Regresyon** | Parity + wave-2 **FAIL** (ortam/PTR/Lighthouse/billing) |
 | **Güvenlik** | npm audit **4 critical**; yüzey başlıkları kısmi |
