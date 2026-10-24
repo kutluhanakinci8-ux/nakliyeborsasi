@@ -33,6 +33,7 @@ import { MailDisplaySettings } from "./MailDisplaySettings";
 import { MailPostaSettings } from "./MailPostaSettings";
 import { MailAutoReplySettingsPanel } from "./MailAutoReplySettingsPanel";
 import { MailNotificationsSettingsPanel } from "./MailNotificationsSettingsPanel";
+import { MailHelpPanel } from "./MailHelpPanel";
 
 export type SettingsView =
   | "hub"
@@ -164,8 +165,8 @@ const HUB_ITEMS: HubItem[] = [
     id: "help",
     section: "other",
     label: "Yardım",
-    subtitle: "IMAP kurulum rehberi",
-    keywords: "yardım destek imap",
+    subtitle: "Rehberler ve özellikler",
+    keywords: "yardım destek imap rehber kılavuz",
   },
 ];
 
@@ -356,10 +357,6 @@ export function MailSettingsPanel({
 
   function openHubItem(item: HubItem) {
     if (item.disabled) {
-      return;
-    }
-    if (item.id === "help") {
-      window.open("/help/imap", "_blank", "noopener,noreferrer");
       return;
     }
     setView(item.id);
@@ -914,6 +911,16 @@ export function MailSettingsPanel({
         <MailRulesPanel accessToken={accessToken} />,
       );
       break;
+    case "help":
+      content = renderDetail(
+        "Yardım",
+        <MailHelpPanel
+          onOpenSetting={setView}
+          onOpenCalendar={onOpenCalendar}
+          onOpenContacts={onOpenContacts}
+        />,
+      );
+      break;
     case "imap":
       content = renderDetail(
         "IMAP ve SMTP",
@@ -945,7 +952,8 @@ export function MailSettingsPanel({
           view === "imap" ||
           view === "deliverability" ||
           view === "ops" ||
-          view === "rules"
+          view === "rules" ||
+          view === "help"
             ? "compose-dialog mail-settings-dialog mail-settings-dialog--wide"
             : "compose-dialog mail-settings-dialog"
         }
