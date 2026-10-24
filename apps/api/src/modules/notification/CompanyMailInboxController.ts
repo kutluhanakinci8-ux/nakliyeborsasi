@@ -125,6 +125,7 @@ import { MailMailboxDelegationService } from "./MailMailboxDelegationService";
 import { MailExchangeGraphSyncService } from "./MailExchangeGraphSyncService";
 import { MailImapMaildirReconcileService } from "./MailImapMaildirReconcileService";
 import { MailCalendarGraphSyncService } from "./MailCalendarGraphSyncService";
+import { MailCalendarGoogleSyncService } from "./MailCalendarGoogleSyncService";
 import {
   AddMailboxDelegateRequestDto,
   CompleteExchangeOAuthRequestDto,
@@ -164,6 +165,7 @@ export class CompanyMailInboxController {
     private readonly mailMailboxDelegationService: MailMailboxDelegationService,
     private readonly mailExchangeGraphSyncService: MailExchangeGraphSyncService,
     private readonly mailCalendarGraphSyncService: MailCalendarGraphSyncService,
+    private readonly mailCalendarGoogleSyncService: MailCalendarGoogleSyncService,
     private readonly userMailCryptoService: UserMailCryptoService,
   ) {}
 
@@ -2584,6 +2586,78 @@ export class CompanyMailInboxController {
       user.companyId,
       user.userId,
     );
+    return { ok: true, ...result };
+  }
+
+  @Get("calendar/google/accounts")
+  public async listCalendarGoogleAccounts(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    const accounts = await this.mailCalendarGoogleSyncService.listAccounts(
+      user.companyId,
+    );
+    return {
+      configured: this.mailCalendarGoogleSyncService.isConfigured(),
+      accounts,
+    };
+  }
+
+  @Get("calendar/google/oauth/start")
+  public async startCalendarGoogleOAuth(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    this.assertMailInboxWriter(user);
+    return this.mailCalendarGoogleSyncService.buildOAuthStart(user);
+  }
+
+  @Post("calendar/google/oauth/complete")
+  public async completeCalendarGoogleOAuth(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: { code: string; state: string },
+  ) {
+    this.assertMailInboxWriter(user);
+    const account = await this.mailCalendarGoogleSyncService.completeOAuth(
+      user,
+      body.code,
+      body.state,
+    );
+    return { ok: true, account };
+  }
+
+  @Delete("calendar/google/accounts/:accountId")
+  public async deleteCalendarGoogleAccount(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("accountId") accountId: string,
+  ) {
+    this.assertMailInboxWriter(user);
+    await this.mailCalendarGoogleSyncService.deleteAccount(user, accountId);
+    return { ok: true };
+  }
+
+  @Post("calendar/google/accounts/:accountId/sync")
+  public async syncCalendarGoogleAccount(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("accountId") accountId: string,
+  ) {
+    this.assertMailInboxWriter(user);
+    const result = await this.mailCalendarGoogleSyncService.syncAccount(
+      user.companyId,
+      accountId,
+      user.userId,
+    );
+    return { ok: true, ...result };
+  }
+
+  @Post("calendar/google/accounts/sync-all")
+  public async syncAllCalendarGoogleAccounts(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    this.assertMailInboxWriter(user);
+    const result =
+      await this.mailCalendarGoogleSyncService.syncAllForOrganization(
+        user.companyId,
+        user.userId,
+      );
     return { ok: true, ...result };
   }
 

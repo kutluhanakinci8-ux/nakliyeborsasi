@@ -61,6 +61,15 @@ export class MailCalendarEventEntity {
   @Column({ name: "graph_change_key", type: "varchar", length: 200, nullable: true })
   public graphChangeKey!: string | null;
 
+  @Column({ name: "google_account_id", type: "uuid", nullable: true })
+  public googleAccountId!: string | null;
+
+  @Column({ name: "google_event_id", type: "varchar", length: 200, nullable: true })
+  public googleEventId!: string | null;
+
+  @Column({ name: "google_etag", type: "varchar", length: 200, nullable: true })
+  public googleEtag!: string | null;
+
   @Column({ name: "recurrence_rule", type: "varchar", length: 500, nullable: true })
   public recurrenceRule!: string | null;
 

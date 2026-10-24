@@ -2154,6 +2154,85 @@ export async function deleteCalendarGraphAccount(
   );
 }
 
+export type MailCalendarGoogleAccount = {
+  id: string;
+  emailAddress: string;
+  displayName: string | null;
+  enabled: boolean;
+  writeEnabled: boolean;
+  lastSyncedAt: string | null;
+  lastSyncError: string | null;
+  createdAt: string;
+};
+
+export async function fetchCalendarGoogleAccounts(accessToken: string) {
+  return apiFetch<{
+    configured: boolean;
+    accounts: MailCalendarGoogleAccount[];
+  }>(accessToken, "company/mail-inbox/calendar/google/accounts");
+}
+
+export async function startCalendarGoogleOAuth(accessToken: string) {
+  return apiFetch<{ authorizationUrl: string; state: string }>(
+    accessToken,
+    "company/mail-inbox/calendar/google/oauth/start",
+  );
+}
+
+export async function completeCalendarGoogleOAuth(
+  accessToken: string,
+  code: string,
+  state: string,
+) {
+  return apiFetch<{ ok: boolean; account: MailCalendarGoogleAccount }>(
+    accessToken,
+    "company/mail-inbox/calendar/google/oauth/complete",
+    {
+      method: "POST",
+      body: JSON.stringify({ code, state }),
+    },
+  );
+}
+
+export async function syncCalendarGoogleAccount(
+  accessToken: string,
+  accountId: string,
+) {
+  return apiFetch<{
+    ok: boolean;
+    imported: number;
+    updated: number;
+    pushed: number;
+  }>(
+    accessToken,
+    `company/mail-inbox/calendar/google/accounts/${accountId}/sync`,
+    { method: "POST" },
+  );
+}
+
+export async function syncAllCalendarGoogleAccounts(accessToken: string) {
+  return apiFetch<{
+    ok: boolean;
+    accounts: number;
+    imported: number;
+    updated: number;
+    pushed: number;
+  }>(accessToken, "company/mail-inbox/calendar/google/accounts/sync-all", {
+    method: "POST",
+  });
+}
+
+export async function deleteCalendarGoogleAccount(
+  accessToken: string,
+  accountId: string,
+) {
+  return apiFetch<{ ok: boolean }>(
+    accessToken,
+    `company/mail-inbox/calendar/google/accounts/${accountId}`,
+    { method: "DELETE" },
+  );
+}
+
 export async function fetchSuggestReply(
   accessToken: string,
   messageId: string,

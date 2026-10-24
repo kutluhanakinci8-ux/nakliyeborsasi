@@ -20,6 +20,7 @@ import {
 import { MailCalendarFeedsPanel } from "./MailCalendarFeedsPanel";
 import { MailCalendarCalDavPanel } from "./MailCalendarCalDavPanel";
 import { MailCalendarGraphPanel } from "./MailCalendarGraphPanel";
+import { MailCalendarGooglePanel } from "./MailCalendarGooglePanel";
 import {
   fetchCalendarCalDavAccounts,
   pushCalendarEventToCalDav,
@@ -804,6 +805,11 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
         onSynced={() => void load()}
       />
       <MailCalendarGraphPanel
+        accessToken={accessToken}
+        onToast={onToast}
+        onSynced={() => void load()}
+      />
+      <MailCalendarGooglePanel
         accessToken={accessToken}
         onToast={onToast}
         onSynced={() => void load()}
