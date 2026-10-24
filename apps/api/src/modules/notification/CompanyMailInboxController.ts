@@ -469,6 +469,7 @@ export class CompanyMailInboxController {
         threadViewEnabled: body.threadViewEnabled,
         swipePrimaryAction: body.swipePrimaryAction,
         focusedInboxEnabled: body.focusedInboxEnabled,
+        inboxSmartSortEnabled: body.inboxSmartSortEnabled,
         replyQuoteMode: body.replyQuoteMode,
       },
     );

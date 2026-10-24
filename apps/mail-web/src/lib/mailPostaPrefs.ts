@@ -14,6 +14,7 @@ export const DEFAULT_MAIL_POSTA_PREFERENCES: Pick<
   | "threadViewEnabled"
   | "swipePrimaryAction"
   | "focusedInboxEnabled"
+  | "inboxSmartSortEnabled"
   | "replyQuoteMode"
 > = {
   undoSendSeconds: 5,
@@ -25,6 +26,7 @@ export const DEFAULT_MAIL_POSTA_PREFERENCES: Pick<
   threadViewEnabled: false,
   swipePrimaryAction: "archive",
   focusedInboxEnabled: false,
+  inboxSmartSortEnabled: true,
   replyQuoteMode: "full",
 };
 
@@ -53,6 +55,7 @@ export function pickMailPostaPreferences(
         ? prefs.swipePrimaryAction
         : "archive",
     focusedInboxEnabled: prefs?.focusedInboxEnabled ?? false,
+    inboxSmartSortEnabled: prefs?.inboxSmartSortEnabled ?? true,
     replyQuoteMode:
       prefs?.replyQuoteMode === "trimmed" || prefs?.replyQuoteMode === "none"
         ? prefs.replyQuoteMode

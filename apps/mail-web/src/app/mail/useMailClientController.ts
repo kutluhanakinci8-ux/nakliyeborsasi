@@ -28,6 +28,7 @@ import {
   filterInboxByFocusLane,
   type InboxFocusLane,
 } from "@/lib/mailInboxFocus";
+import { sortInboxMessagesSmart } from "@/lib/mailInboxSmartSort";
 import {
   fetchInboxWithOfflineCache,
   fetchMessageWithOfflineCache,
@@ -1867,6 +1868,30 @@ export function useMailClientController({
     }
   }
 
+  async function swipeRowToggleRead(
+    messageId: string,
+    currentlyUnread: boolean,
+  ) {
+    if (!accessToken) {
+      return;
+    }
+    try {
+      if (currentlyUnread) {
+        await markRead(accessToken, messageId);
+        setToast("Okundu olarak işaretlendi.");
+      } else {
+        await markUnread(accessToken, messageId);
+        setToast("Okunmadı olarak işaretlendi.");
+      }
+      clearRowSelectionAfterSwipe(messageId);
+      void refresh();
+    } catch (error) {
+      setToast(
+        error instanceof Error ? error.message : "Okundu durumu güncellenemedi.",
+      );
+    }
+  }
+
   async function swipeRowDelete(
     messageId: string,
     messageKind: "inbound" | "sent" = view === "sent" ? "sent" : "inbound",
@@ -1906,6 +1931,17 @@ export function useMailClientController({
 
   const swipeArchiveLabel =
     view === "trash" ? "Geri al" : view === "archive" ? "Gelen kutusu" : "Arşivle";
+
+  const swipePrimaryAction = mailPostaPrefs.swipePrimaryAction;
+
+  const swipePrimaryActionLabel =
+    swipePrimaryAction === "delete"
+      ? view === "trash"
+        ? "kalıcı silme"
+        : "çöp"
+      : swipePrimaryAction === "read"
+        ? "okundu"
+        : swipeArchiveLabel.toLowerCase();
 
   useEffect(() => {
     if (!accessToken || !threadView || !canUseThreads) {
@@ -1965,24 +2001,34 @@ export function useMailClientController({
 
   const focusedInboxEnabled = mailPostaPrefs.focusedInboxEnabled;
 
+  const inboxSmartSortEnabled = mailPostaPrefs.inboxSmartSortEnabled;
+
   const displayListItems = useMemo(() => {
+    let items = listItems as import("@/lib/mailApi").MailInboxListItem[];
     if (
-      !isPrimaryInbox ||
-      !focusedInboxEnabled ||
-      threadView ||
-      searchActive ||
-      view !== "inbox"
+      isPrimaryInbox &&
+      focusedInboxEnabled &&
+      !threadView &&
+      !searchActive &&
+      view === "inbox"
     ) {
-      return listItems;
+      items = filterInboxByFocusLane(items, inboxFocusLane);
     }
-    return filterInboxByFocusLane(
-      listItems as import("@/lib/mailApi").MailInboxListItem[],
-      inboxFocusLane,
-    );
+    if (
+      inboxSmartSortEnabled &&
+      isPrimaryInbox &&
+      !threadView &&
+      !searchActive &&
+      view === "inbox"
+    ) {
+      items = sortInboxMessagesSmart(items);
+    }
+    return items;
   }, [
     listItems,
     isPrimaryInbox,
     focusedInboxEnabled,
+    inboxSmartSortEnabled,
     threadView,
     searchActive,
     view,
@@ -2724,8 +2770,11 @@ export function useMailClientController({
     storageAtLimit,
     summary,
     swipeArchiveLabel,
+    swipePrimaryAction,
+    swipePrimaryActionLabel,
     swipeRowArchive,
     swipeRowDelete,
+    swipeRowToggleRead,
     switchView,
     threadMessages,
     threadView,

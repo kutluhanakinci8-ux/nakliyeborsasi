@@ -285,8 +285,11 @@ export function MailClientShell({ mail }: Props) {
     storageAtLimit,
     summary,
     swipeArchiveLabel,
+    swipePrimaryAction,
+    swipePrimaryActionLabel,
     swipeRowArchive,
     swipeRowDelete,
+    swipeRowToggleRead,
     switchView,
     threadMessages,
     threadView,
@@ -774,8 +777,8 @@ export function MailClientShell({ mail }: Props) {
             ) : null}
             {mailSwipeAssistActive ? (
               <p className="mail-parity-assist-banner mail-parity-assist-banner--swipe" role="status">
-                Kaydırma: satırı sağa/sola kaydırarak {swipeArchiveLabel} veya çöp
-                kutusuna gönderin (mobil ve trackpad).{" "}
+                Kaydırma: sola kaydırın — birincil aksiyon «{swipePrimaryActionLabel}»;
+                tam kaydırmada otomatik uygulanır (Posta ayarları).{" "}
                 <button
                   type="button"
                   className="mail-parity-assist-dismiss"
@@ -1062,11 +1065,16 @@ export function MailClientShell({ mail }: Props) {
                   rowKey={m.id}
                   activeSwipeKey={activeSwipeRowId}
                   onActiveSwipeKeyChange={setActiveSwipeRowId}
+                  primaryAction={swipePrimaryAction}
                   archiveLabel={swipeArchiveLabel}
+                  readLabel={unread ? "Okundu" : "Okunmadı"}
                   onArchive={() =>
                     void swipeRowArchive(m.id, relatedInbound)
                   }
                   onDelete={() => void swipeRowDelete(m.id)}
+                  onToggleRead={() =>
+                    void swipeRowToggleRead(m.id, unread)
+                  }
                 >
                   <MailInboxMessageRow
                     message={{
@@ -1112,12 +1120,20 @@ export function MailClientShell({ mail }: Props) {
               rowKey={m.id}
               activeSwipeKey={activeSwipeRowId}
               onActiveSwipeKeyChange={setActiveSwipeRowId}
+              primaryAction={swipePrimaryAction}
               showArchive={view === "trash" ? true : view !== "sent"}
               archiveLabel={swipeArchiveLabel}
+              readLabel={unread ? "Okundu" : "Okunmadı"}
               onArchive={() =>
                 void swipeRowArchive(m.id, relatedInbound, rowMessageKind)
               }
               onDelete={() => void swipeRowDelete(m.id, rowMessageKind)}
+              onToggleRead={() => {
+                if (rowMessageKind === "sent") {
+                  return;
+                }
+                void swipeRowToggleRead(m.id, unread);
+              }}
             >
             <div
               role="button"

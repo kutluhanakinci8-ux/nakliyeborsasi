@@ -714,6 +714,10 @@ a {
   background: #c62828;
 }
 
+.mail-swipe-action--read {
+  background: #1565c0;
+}
+
 .mail-swipe-content {
   position: relative;
   z-index: 1;
