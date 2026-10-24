@@ -39,8 +39,8 @@
     "@playwright/test": "^1.51.0"
   },
   "optionalDependencies": {
-    "@next/swc-linux-x64-gnu": "14.2.15",
-    "@next/swc-linux-x64-musl": "14.2.15"
+    "@next/swc-linux-x64-gnu": "15.5.28",
+    "@next/swc-linux-x64-musl": "15.5.28"
   },
   "overrides": {
     "react": "18.3.1",
