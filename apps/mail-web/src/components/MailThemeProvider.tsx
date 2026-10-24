@@ -5,7 +5,6 @@ import {
   ensureSystemThemeListener,
   initMailTheme,
   MAIL_THEME_MODE_CHANGE_EVENT,
-  mailThemeModeLabel,
   readStoredThemeMode,
   resolveEffectiveTheme,
   toggleMailTheme,
