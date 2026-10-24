@@ -255,6 +255,23 @@ a {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
+.mail-theme-fab--system {
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.15),
+    0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.mail-theme-fab-system-dot {
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 1px solid var(--panel);
+}
+
 .mail-brand-logo {
   max-height: 28px;
   max-width: 140px;
@@ -5171,6 +5188,17 @@ html[data-mail-read-font="large"] .mail-read--premium .mail-read-body {
 
 .mail-display-theme-card:hover {
   border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+}
+
+.mail-display-theme-status {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--accent) 6%, var(--panel));
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
 }
 
 .mail-display-theme-card.is-active {

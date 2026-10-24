@@ -39,6 +39,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="tr" data-mail-theme="light" className={inter.variable}>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var k="lerta-mail-theme";var v=localStorage.getItem(k);var mode=(v==="dark"||v==="light"||v==="system")?v:null;if(!mode){mode=window.matchMedia("(prefers-color-scheme: dark)").matches?"system":"light";}var dark=window.matchMedia("(prefers-color-scheme: dark)").matches;var eff=mode==="system"?(dark?"dark":"light"):mode;var r=document.documentElement;r.dataset.mailTheme=eff;r.dataset.mailThemeMode=mode;r.dataset.mailThemeFollowsSystem=mode==="system"?"true":"false";}catch(e){}})();`,
+          }}
+        />
+      </head>
       <body className={inter.className}>
         <MailSessionProvider>
           <MailThemeProvider>
