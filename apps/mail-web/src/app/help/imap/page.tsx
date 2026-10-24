@@ -59,6 +59,41 @@ export default function ImapHelpPage() {
         </ul>
       </section>
 
+      <section id="outlook-mobile" className="mail-help-card">
+        <h2>Outlook mobil (iOS / Android)</h2>
+        <ol className="mail-help-steps">
+          <li>
+            Microsoft Outlook uygulamasını açın → <strong>Hesap ekle</strong>.
+          </li>
+          <li>
+            <strong>Diğer hesap</strong> veya doğrudan <strong>IMAP</strong> seçin.
+          </li>
+          <li>
+            E-posta adresiniz ve webmailde oluşturduğunuz <strong>IMAP şifresi</strong>.
+          </li>
+          <li>
+            Gelen: host/port webmaildeki gibi (ör. <code>mail.lerta.com.tr:993</code>, SSL).
+          </li>
+          <li>
+            Giden SMTP: aynı menüdeki host, port <code>587</code> (STARTTLS) veya ekrandaki
+            değer; kimlik doğrulama açık.
+          </li>
+          <li>
+            Outlook uygulamasındaki <strong>Face ID / PIN</strong> Microsoft hesabınızı korur;
+            Lerta webmail biyometrisi için{" "}
+            <Link href="/mail">webmail</Link> → Ayarlar → Güvenlik → Passkey kullanın.
+          </li>
+        </ol>
+      </section>
+
+      <section className="mail-help-card">
+        <h2>Outlook (Windows / Mac masaüstü)</h2>
+        <ol className="mail-help-steps">
+          <li>Hesap ekle → Gelişmiş → IMAP</li>
+          <li>Gelen ve giden sunucuları Thunderbird ile aynı doldurun</li>
+        </ol>
+      </section>
+
       <section className="mail-help-card">
         <h2>Thunderbird</h2>
         <ol className="mail-help-steps">
@@ -84,8 +119,7 @@ export default function ImapHelpPage() {
           <li>Şifre yenilendiğinde eski istemci bağlantısı kesilir.</li>
           <li>
             Adres:{" "}
-            <code>https://posta.lerta.com.tr</code> — iki adımlı doğrulama Ayarlar →
-            Güvenlik.
+            <code>https://posta.lerta.com.tr</code> — TOTP ve passkey Ayarlar → Güvenlik.
           </li>
         </ul>
       </section>

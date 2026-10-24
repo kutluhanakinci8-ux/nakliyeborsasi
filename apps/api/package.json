@@ -21,6 +21,8 @@
     "@nestjs/passport": "^10.0.3",
     "@nestjs/platform-express": "^10.4.6",
     "@nestjs/typeorm": "^10.0.2",
+    "@simplewebauthn/server": "^11.0.0",
+    "@simplewebauthn/types": "^11.0.0",
     "axios": "^1.7.7",
     "bcrypt": "^5.1.1",
     "class-transformer": "^0.5.1",

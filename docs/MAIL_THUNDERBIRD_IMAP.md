@@ -44,6 +44,15 @@ MAIL_CLIENT_SMTP_SECURITY=starttls   # veya ssl (465)
 - Hesap türü: **IMAP**
 - Gelen ve giden sunucu alanlarını Thunderbird ile aynı doldurun.
 
+## Outlook mobil (iOS / Android)
+
+1. Outlook → **Hesap ekle** → **Diğer** / **IMAP**
+2. Tam e-posta + webmailde oluşturulan **IMAP şifresi**
+3. Gelen: `993` SSL/TLS; giden SMTP: ekrandaki port/güvenlik (çoğunlukla `587` STARTTLS)
+4. Uygulama biyometrisi Microsoft tarafında; Lerta webmail için **Passkey** ([MAIL_BIOMETRIC_APP_LOCK.md](./MAIL_BIOMETRIC_APP_LOCK.md))
+
+Kullanıcı rehberi: `/help/imap#outlook-mobile`
+
 ## Güvenlik
 
 - IMAP şifresi web arayüzünde tekrar gösterilmez; kaybettiyseniz **yenile** (eski şifre geçersiz olur).

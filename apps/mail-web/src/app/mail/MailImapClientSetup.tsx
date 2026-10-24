@@ -315,6 +315,42 @@ export function MailImapClientSetup({
           Thunderbird / Outlook kurulum rehberi →
         </a>
       </section>
+
+      <section className="mail-posta-card mail-posta-card--muted">
+        <header className="mail-posta-card-head">
+          <h3 className="mail-posta-card-title">Outlook mobil (iOS / Android)</h3>
+          <p className="mail-posta-card-desc">
+            Microsoft Outlook uygulaması — IMAP ile aynı sunucu ve şifre.
+          </p>
+        </header>
+        <ol className="mail-help-steps mail-imap-mobile-steps">
+          <li>
+            Outlook → <strong>Hesap ekle</strong> → <strong>Diğer hesap</strong> veya{" "}
+            <strong>IMAP</strong>.
+          </li>
+          <li>
+            E-posta ve yukarıdaki <strong>IMAP şifresi</strong> (web oturum şifresi değil).
+          </li>
+          <li>
+            Gelen sunucu: ekrandaki host, port <strong>993</strong>, SSL/TLS açık.
+          </li>
+          <li>
+            Giden (SMTP): ekrandaki host, port ve güvenlik (genelde <strong>587 STARTTLS</strong>).
+          </li>
+          <li>
+            Uygulama içi <strong>biyometri / PIN</strong> Outlook tarafında; webmail için{" "}
+            <strong>Ayarlar → Güvenlik → Passkey</strong>.
+          </li>
+        </ol>
+        <a
+          className="mail-imap-help-link"
+          href="/help/imap#outlook-mobile"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Mobil adım adım rehber →
+        </a>
+      </section>
     </div>
   );
 }

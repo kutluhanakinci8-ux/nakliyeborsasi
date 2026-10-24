@@ -12,6 +12,7 @@ import { ComposeRichEditor } from "./ComposeRichEditor";
 import { MailComposeRecipientField } from "./MailComposeRecipientField";
 import { MailInboxMessageRow } from "./MailInboxMessageRow";
 import { MailListSwipeRow } from "./MailListSwipeRow";
+import { MailAppLockOverlay } from "./MailAppLockOverlay";
 import type { MailClientController } from "./useMailClientController";
 import { formatMailListDate } from "@/lib/mailDisplay";
 import {
@@ -126,6 +127,10 @@ export function MailClientShell({ mail }: Props) {
     ensureAiMailConsent,
     getMessageHtmlForRead,
     handleMailPostaPreferencesSaved,
+    mailAppLockEnabled,
+    setMailAppLockEnabled,
+    hasWebAuthnPasskeys,
+    setHasWebAuthnPasskeys,
     shouldPromptRemoteImages,
     setRemoteImagesRevealed,
     filteredSent,
@@ -2437,6 +2442,15 @@ export function MailClientShell({ mail }: Props) {
           threadView={threadView}
           onThreadViewChange={setThreadView}
           onMailPostaPreferencesSaved={handleMailPostaPreferencesSaved}
+          onAppLockChange={setMailAppLockEnabled}
+          onPasskeysChange={setHasWebAuthnPasskeys}
+        />
+      ) : null}
+      {accessToken ? (
+        <MailAppLockOverlay
+          accessToken={accessToken}
+          appLockEnabled={mailAppLockEnabled}
+          hasPasskeys={hasWebAuthnPasskeys}
         />
       ) : null}
       {shortcutsOpen ? (

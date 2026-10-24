@@ -78,4 +78,8 @@ export class UpdateMailInboxPreferencesRequestDto {
   @IsOptional()
   @IsIn(["full", "trimmed", "none"])
   public replyQuoteMode?: "full" | "trimmed" | "none";
+
+  @IsOptional()
+  @IsBoolean()
+  public mailAppLockEnabled?: boolean;
 }

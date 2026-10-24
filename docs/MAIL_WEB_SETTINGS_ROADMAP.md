@@ -6,20 +6,20 @@ Outlook mobil ayarlar ekranına göre mevcut durum ve faz planı.
 
 | Outlook | Lerta Post (şimdi) | Durum |
 |---------|-------------------|--------|
-| Ayarlar arama | — | ❌ S-A1 |
-| Gruplu liste + ikon satırları | Yatay sekmeler (IMAP, imza, …) | 🔄 S-A1 |
-| **Ekran ve görünüm** | Tema FAB (☾/☀), ayarlarda değil | 🔄 S-A1 |
+| Ayarlar arama | Ayar merkezi arama | ✅ S-A1 |
+| Gruplu liste + ikon satırları | Hub grupları + drill-down | ✅ S-A1 |
+| **Ekran ve görünüm** | Ayarlar → Ekran ve görünüm | ✅ S-A1 |
 | **İmza** | İmza / şablon sekmesi | ✅ |
 | **Otomatik yanıtlar** | Ayarlar + inbound tetikleme | ✅ S-A2 |
-| **Bildirimler ve sesler** | Push, ses, günlük özet | ✅ (S-A1’de tek satır) |
-| **Hesaplar** | Ayarlar → Hesaplar ve gönderenler (S-A4 / PM-3) | ✅ |
-| **Posta** (yoğunluk, varsayılan) | Liste yoğunluğu + kurallar, klasörler | ✅ yoğunluk S-A3 |
-| **Takvim** ayarları | Ayarlarda CalDAV özet + senkron | ✅ S-A3 |
-| **Kişiler** ayarları | Ayarlarda CardDAV özet + senkron | ✅ S-A3 |
-| Biyometri / Face ID | Web: TOTP 2FA | ⚠️ farklı platform |
+| **Bildirimler ve sesler** | Push, ses, günlük özet | ✅ |
+| **Hesaplar** | Ayarlar → Hesaplar ve gönderenler | ✅ S-A4 |
+| **Posta** (yoğunluk, varsayılan) | Liste yoğunluğu + kurallar, klasörler | ✅ S-A3 |
+| **Takvim** ayarları | CalDAV özet + senkron | ✅ S-A3 |
+| **Kişiler** ayarları | CardDAV özet + senkron | ✅ S-A3 |
+| Biyometri / Face ID | WebAuthn passkey + posta kilidi | ✅ |
 | **Gizlilik** | JSON export + konsol bağlantısı | ✅ S-A3 |
-| Eklentiler / entegrasyonlar | IMAP, public API (plan) | ⚠️ kısmi |
-| Yardım ve geri bildirim | `/help/imap` | ⚠️ S-A3 |
+| Eklentiler / entegrasyonlar | Hub → Entegrasyonlar (IMAP, CalDAV, API) | ✅ |
+| Yardım ve geri bildirim | Yardım merkezi + `mailto:destek@lerta.com.tr` | ✅ |
 | Varsayılan e-posta uygulaması | Mobil OS | — (N/A web) |
 
 ## Fazlar
@@ -30,3 +30,9 @@ Outlook mobil ayarlar ekranına göre mevcut durum ve faz planı.
 | **S-A2** | Otomatik yanıt (API + şablon + aç/kapa + tarih aralığı) | ✅ kod |
 | **S-A3** | Posta tercihleri (liste yoğunluğu), takvim/kişi kısayolları, gizlilik/yarım linkleri | ✅ kod |
 | **S-A4** | Hesaplar özeti (gönderen kimlikleri, alias), gelişmiş entegrasyonlar | ✅ PM-3 |
+| **S-A5** | Passkey / posta kilidi, Outlook mobil IMAP satırları, entegrasyon hub | ✅ kod |
+
+## İlgili
+
+- [MAIL_BIOMETRIC_APP_LOCK.md](./MAIL_BIOMETRIC_APP_LOCK.md)
+- [MAIL_THUNDERBIRD_IMAP.md](./MAIL_THUNDERBIRD_IMAP.md)

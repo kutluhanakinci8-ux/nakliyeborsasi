@@ -30,6 +30,8 @@ import { MailNotificationsSettingsPanel } from "./MailNotificationsSettingsPanel
 import { MailHelpPanel } from "./MailHelpPanel";
 import { MailPrivacySettingsPanel } from "./MailPrivacySettingsPanel";
 import { MailSecuritySettingsPanel } from "./MailSecuritySettingsPanel";
+import { MailIntegrationsSettingsPanel } from "./MailIntegrationsSettingsPanel";
+import { fetchWebAuthnCredentials } from "@/lib/mailApi";
 
 export type SettingsView =
   | "hub"
@@ -47,6 +49,7 @@ export type SettingsView =
   | "calendarSettings"
   | "contactsSettings"
   | "help"
+  | "integrations"
   | "ops";
 
 type HubItem = {
@@ -105,8 +108,15 @@ const HUB_ITEMS: HubItem[] = [
     id: "imap",
     section: "general",
     label: "IMAP ve SMTP",
-    subtitle: "Thunderbird, Outlook masaüstü",
-    keywords: "imap smtp thunderbird outlook hesap",
+    subtitle: "Thunderbird, Outlook masaüstü ve mobil",
+    keywords: "imap smtp thunderbird outlook hesap android ios",
+  },
+  {
+    id: "integrations",
+    section: "general",
+    label: "Eklentiler ve entegrasyonlar",
+    subtitle: "IMAP, CalDAV, CardDAV, API",
+    keywords: "entegrasyon imap api webhook outlook mobil caldav carddav",
   },
   {
     id: "deliverability",
@@ -147,8 +157,8 @@ const HUB_ITEMS: HubItem[] = [
     id: "security",
     section: "general",
     label: "Güvenlik",
-    subtitle: "İki adımlı doğrulama (TOTP)",
-    keywords: "2fa totp güvenlik",
+    subtitle: "Passkey, TOTP, posta kilidi",
+    keywords: "2fa totp güvenlik passkey biyometri face id",
   },
   {
     id: "privacy",
@@ -177,6 +187,8 @@ type Props = {
   onMailPostaPreferencesSaved?: (
     prefs: import("@/lib/mailApi").MailInboxPreferences,
   ) => void;
+  onAppLockChange?: (enabled: boolean) => void;
+  onPasskeysChange?: (hasPasskeys: boolean) => void;
   initialView?: SettingsView;
   deliverabilityDmarcFocus?: boolean;
   notificationsPwaFocus?: boolean;
@@ -193,6 +205,8 @@ export function MailSettingsPanel({
   threadView = false,
   onThreadViewChange,
   onMailPostaPreferencesSaved,
+  onAppLockChange,
+  onPasskeysChange,
   initialView,
   deliverabilityDmarcFocus = false,
   notificationsPwaFocus = false,
@@ -214,6 +228,8 @@ export function MailSettingsPanel({
   const [syncStatus, setSyncStatus] = useState("");
   const [syncBusy, setSyncBusy] = useState(false);
   const [totpEnabled, setTotpEnabled] = useState(false);
+  const [hasPasskeys, setHasPasskeys] = useState(false);
+  const [mailAppLockEnabled, setMailAppLockEnabled] = useState(false);
   const [settings, setSettings] = useState<MailImapSettings | null>(null);
   const [error, setError] = useState("");
   const [newPassword, setNewPassword] = useState<string | null>(null);
@@ -232,10 +248,15 @@ export function MailSettingsPanel({
         setSettings(await fetchImapSettings(accessToken));
         const totp = await fetchTotpStatus(accessToken);
         setTotpEnabled(totp.status.enabled);
+        const webauthn = await fetchWebAuthnCredentials(accessToken);
+        setHasPasskeys(webauthn.hasPasskeys);
+        onPasskeysChange?.(webauthn.hasPasskeys);
         const push = await fetchMailPushConfig(accessToken);
         setPushConfigured(push.config.enabled);
         const prefs = await fetchInboxPreferences(accessToken);
         setAutoReplyEnabled(prefs.preferences.autoReplyEnabled);
+        setMailAppLockEnabled(prefs.preferences.mailAppLockEnabled ?? false);
+        onAppLockChange?.(prefs.preferences.mailAppLockEnabled ?? false);
         const density = prefs.preferences.inboxListDensity ?? "comfortable";
         setInboxListDensity(density);
         onInboxListDensityChange?.(density);
@@ -404,9 +425,17 @@ export function MailSettingsPanel({
                             {item.id === "notifications" && pushConfigured
                               ? "Push yapılandırıldı"
                                 : item.id === "security"
-                                ? totpEnabled
-                                  ? "TOTP açık"
-                                  : "TOTP kapalı"
+                                ? hasPasskeys
+                                  ? mailAppLockEnabled
+                                    ? "Passkey + posta kilidi"
+                                    : "Passkey kayıtlı"
+                                  : totpEnabled
+                                    ? "TOTP açık"
+                                    : "TOTP / passkey"
+                                : item.id === "integrations"
+                                  ? settings?.hasCredential
+                                    ? "IMAP hazır · CalDAV/CardDAV"
+                                    : "IMAP, takvim, kişi, API"
                                 : item.id === "autoReply"
                                   ? autoReplyEnabled
                                     ? "Açık"
@@ -548,6 +577,25 @@ export function MailSettingsPanel({
         <MailSecuritySettingsPanel
           accessToken={accessToken}
           onTotpEnabledChange={setTotpEnabled}
+          onAppLockChange={(enabled) => {
+            setMailAppLockEnabled(enabled);
+            onAppLockChange?.(enabled);
+          }}
+          onPasskeysChange={(has) => {
+            setHasPasskeys(has);
+            onPasskeysChange?.(has);
+          }}
+        />,
+      );
+      break;
+    case "integrations":
+      content = renderDetail(
+        "Eklentiler ve entegrasyonlar",
+        <MailIntegrationsSettingsPanel
+          onOpenImap={() => setView("imap")}
+          onOpenCalendarSettings={() => setView("calendarSettings")}
+          onOpenContactsSettings={() => setView("contactsSettings")}
+          onOpenDeliverability={() => setView("deliverability")}
         />,
       );
       break;

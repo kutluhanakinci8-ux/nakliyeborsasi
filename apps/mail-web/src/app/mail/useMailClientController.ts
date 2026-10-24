@@ -53,6 +53,7 @@ import {
   type MailOrgContact,
   fetchDrafts,
   fetchInboxPreferences,
+  fetchWebAuthnCredentials,
   fetchCustomFolders,
   createCustomFolder,
   deleteCustomFolder,
@@ -263,6 +264,8 @@ export function useMailClientController({
   const [mailPostaPrefs, setMailPostaPrefs] = useState(() =>
     pickMailPostaPreferences(null),
   );
+  const [mailAppLockEnabled, setMailAppLockEnabled] = useState(false);
+  const [hasWebAuthnPasskeys, setHasWebAuthnPasskeys] = useState(false);
   const [remoteImagesRevealed, setRemoteImagesRevealed] = useState(false);
 
   const setThreadView = useCallback((enabled: boolean) => {
@@ -295,6 +298,7 @@ export function useMailClientController({
       setMailPostaPrefs(picked);
       setThreadView(picked.threadViewEnabled);
       setReplyAllMode(picked.defaultReplyMode === "reply_all");
+      setMailAppLockEnabled(prefs.mailAppLockEnabled ?? false);
     },
     [setThreadView],
   );
@@ -456,6 +460,9 @@ export function useMailClientController({
         handleMailPostaPreferencesSaved(data.preferences);
       })
       .catch(() => undefined);
+    void fetchWebAuthnCredentials(accessToken)
+      .then((data) => setHasWebAuthnPasskeys(data.hasPasskeys))
+      .catch(() => setHasWebAuthnPasskeys(false));
   }, [accessToken, refresh, refreshDrafts, refreshCustomFolders, router]);
 
   useEffect(() => {
@@ -2603,6 +2610,10 @@ export function useMailClientController({
     },
     readFontScale,
     handleMailPostaPreferencesSaved,
+    mailAppLockEnabled,
+    setMailAppLockEnabled,
+    hasWebAuthnPasskeys,
+    setHasWebAuthnPasskeys,
     shouldPromptRemoteImages: (rawHtml: string | null) =>
       rawHtml
         ? htmlHasBlockedRemoteImages(

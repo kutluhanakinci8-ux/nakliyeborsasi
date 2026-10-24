@@ -607,6 +607,7 @@ export class CompanyMailInboxController {
         swipePrimaryAction: body.swipePrimaryAction,
         focusedInboxEnabled: body.focusedInboxEnabled,
         inboxSmartSortEnabled: body.inboxSmartSortEnabled,
+        mailAppLockEnabled: body.mailAppLockEnabled,
         replyQuoteMode: body.replyQuoteMode,
       },
     );

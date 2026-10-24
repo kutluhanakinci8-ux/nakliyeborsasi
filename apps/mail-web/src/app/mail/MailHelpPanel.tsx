@@ -116,9 +116,31 @@ export function MailHelpPanel({
       id: "security",
       icon: "🔒",
       title: "Güvenlik ve gizlilik",
-      description: "İki adımlı doğrulama (TOTP), KVKK veri export ve AI posta onayı.",
+      description:
+        "Passkey (Face ID / Touch ID), TOTP, posta kilidi, KVKK export ve AI onayı.",
       settingView: "security",
       actionLabel: "Güvenlik",
+    },
+    {
+      id: "integrations",
+      icon: "🔗",
+      title: "Entegrasyonlar",
+      description:
+        "IMAP/SMTP, Outlook mobil, CalDAV, CardDAV ve public API özeti.",
+      settingView: "integrations",
+      actionLabel: "Entegrasyonlar",
+    },
+    {
+      id: "feedback",
+      icon: "💬",
+      title: "Geri bildirim",
+      description:
+        "Öneri veya sorun bildirin; ekran görüntüsü ve org adınızı ekleyin.",
+      actionLabel: "E-posta gönder",
+      onAction: () => {
+        window.location.href =
+          "mailto:destek@lerta.com.tr?subject=Lerta%20Posta%20geri%20bildirim";
+      },
     },
     {
       id: "privacy",

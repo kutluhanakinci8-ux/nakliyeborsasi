@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Param,
   Post,
   Query,
   Req,
@@ -29,11 +30,21 @@ import { RequestPasswordResetDto } from "../notification/RequestPasswordResetDto
 import { ResetPasswordDto } from "../notification/ResetPasswordDto";
 import { VerifyEmailQueryDto } from "../notification/VerifyEmailQueryDto";
 import { UserTotpService } from "./UserTotpService";
+import { UserWebAuthnService } from "./UserWebAuthnService";
 import {
   CompleteTotpLoginDto,
   ConfirmTotpSetupDto,
   DisableTotpDto,
 } from "./AuthTotpRequestDto";
+import {
+  WebAuthnAuthenticationVerifyDto,
+  WebAuthnRegisterOptionsDto,
+  WebAuthnRegistrationVerifyDto,
+} from "./AuthWebAuthnRequestDto";
+import type {
+  AuthenticationResponseJSON,
+  RegistrationResponseJSON,
+} from "@simplewebauthn/types";
 
 @Controller("auth")
 export class AuthenticationController {
@@ -45,7 +56,18 @@ export class AuthenticationController {
     private readonly authNotificationService: AuthNotificationService,
     private readonly emailSecurityTokenService: EmailSecurityTokenService,
     private readonly userTotpService: UserTotpService,
+    private readonly userWebAuthnService: UserWebAuthnService,
   ) {}
+
+  private resolveRequestOrigin(request: Request): string {
+    const forwardedProto = request.headers["x-forwarded-proto"];
+    const protocol =
+      typeof forwardedProto === "string"
+        ? forwardedProto.split(",")[0]?.trim()
+        : request.protocol;
+    const host = request.get("host") ?? "localhost";
+    return `${protocol}://${host}`;
+  }
 
   @Post("register")
   public async register(
@@ -241,6 +263,91 @@ export class AuthenticationController {
   ): Promise<{ message: string }> {
     await this.emailSecurityTokenService.requestEmailVerification(user.userId);
     return { message: "OK" };
+  }
+
+  @Get("webauthn/credentials")
+  @UseGuards(JwtAuthenticationGuard)
+  public async listWebAuthnCredentials(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    const credentials = await this.userWebAuthnService.listCredentials(
+      user.userId,
+    );
+    const hasPasskeys = credentials.length > 0;
+    return { credentials, hasPasskeys };
+  }
+
+  @Post("webauthn/register/options")
+  @UseGuards(JwtAuthenticationGuard)
+  public async webAuthnRegisterOptions(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Req() request: Request,
+    @Body() body: WebAuthnRegisterOptionsDto,
+  ) {
+    const origin = this.resolveRequestOrigin(request);
+    return await this.userWebAuthnService.createRegistrationOptions(
+      user.userId,
+      origin,
+      body.deviceName,
+    );
+  }
+
+  @Post("webauthn/register/verify")
+  @UseGuards(JwtAuthenticationGuard)
+  public async webAuthnRegisterVerify(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Req() request: Request,
+    @Body() body: WebAuthnRegistrationVerifyDto,
+  ) {
+    const origin = this.resolveRequestOrigin(request);
+    return await this.userWebAuthnService.verifyRegistration(
+      user.userId,
+      origin,
+      body.response as unknown as RegistrationResponseJSON,
+      body.deviceName,
+    );
+  }
+
+  @Post("webauthn/authenticate/options")
+  @UseGuards(JwtAuthenticationGuard)
+  public async webAuthnAuthOptions(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Req() request: Request,
+  ) {
+    const origin = this.resolveRequestOrigin(request);
+    const options = await this.userWebAuthnService.createAuthenticationOptions(
+      user.userId,
+      origin,
+    );
+    return options;
+  }
+
+  @Post("webauthn/authenticate/verify")
+  @UseGuards(JwtAuthenticationGuard)
+  public async webAuthnAuthVerify(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Req() request: Request,
+    @Body() body: WebAuthnAuthenticationVerifyDto,
+  ) {
+    const origin = this.resolveRequestOrigin(request);
+    return await this.userWebAuthnService.verifyAuthentication(
+      user.userId,
+      origin,
+      body.response as unknown as AuthenticationResponseJSON,
+    );
+  }
+
+  @Post("webauthn/credentials/:credentialId/delete")
+  @UseGuards(JwtAuthenticationGuard)
+  public async deleteWebAuthnCredential(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("credentialId") credentialId: string,
+  ) {
+    if (!credentialId?.trim()) {
+      throw new UnauthorizedException();
+    }
+    await this.userWebAuthnService.deleteCredential(user.userId, credentialId);
+    return { ok: true };
   }
 
   @Get("session")

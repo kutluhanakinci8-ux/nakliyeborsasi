@@ -1,3 +1,9 @@
+import type {
+  AuthenticationResponseJSON,
+  PublicKeyCredentialCreationOptionsJSON,
+  PublicKeyCredentialRequestOptionsJSON,
+  RegistrationResponseJSON,
+} from "@simplewebauthn/types";
 import { resolveApiBaseUrl } from "./apiConfig";
 
 export const MAIL_SESSION_EXPIRED_MESSAGE_TR =
@@ -493,6 +499,82 @@ export async function confirmTotpSetup(accessToken: string, code: string) {
   });
 }
 
+export type WebAuthnCredentialSummary = {
+  id: string;
+  deviceName: string | null;
+  createdAt: string;
+  lastUsedAt: string | null;
+};
+
+export async function fetchWebAuthnCredentials(accessToken: string) {
+  return mailApiFetch<{
+    credentials: WebAuthnCredentialSummary[];
+    hasPasskeys: boolean;
+  }>(accessToken, "auth/webauthn/credentials");
+}
+
+export async function fetchWebAuthnRegisterOptions(
+  accessToken: string,
+  deviceName?: string,
+) {
+  return mailApiFetch<{ options: PublicKeyCredentialCreationOptionsJSON }>(
+    accessToken,
+    "auth/webauthn/register/options",
+    {
+      method: "POST",
+      body: JSON.stringify({ deviceName }),
+    },
+  );
+}
+
+export async function verifyWebAuthnRegistration(
+  accessToken: string,
+  response: RegistrationResponseJSON,
+  deviceName?: string,
+) {
+  return mailApiFetch<{ ok: boolean; credentialId: string }>(
+    accessToken,
+    "auth/webauthn/register/verify",
+    {
+      method: "POST",
+      body: JSON.stringify({ response, deviceName }),
+    },
+  );
+}
+
+export async function fetchWebAuthnAuthOptions(accessToken: string) {
+  return mailApiFetch<{ options: PublicKeyCredentialRequestOptionsJSON }>(
+    accessToken,
+    "auth/webauthn/authenticate/options",
+    { method: "POST", body: "{}" },
+  );
+}
+
+export async function verifyWebAuthnAuthentication(
+  accessToken: string,
+  response: AuthenticationResponseJSON,
+) {
+  return mailApiFetch<{ ok: boolean }>(
+    accessToken,
+    "auth/webauthn/authenticate/verify",
+    {
+      method: "POST",
+      body: JSON.stringify({ response }),
+    },
+  );
+}
+
+export async function deleteWebAuthnCredential(
+  accessToken: string,
+  credentialId: string,
+) {
+  return mailApiFetch<{ ok: boolean }>(
+    accessToken,
+    `auth/webauthn/credentials/${encodeURIComponent(credentialId)}/delete`,
+    { method: "POST", body: "{}" },
+  );
+}
+
 export type MailInboxThreadRow = {
   threadId: string;
   subject: string;
@@ -931,6 +1013,7 @@ export type MailInboxPreferences = {
   swipePrimaryAction: MailSwipePrimaryAction;
   focusedInboxEnabled: boolean;
   inboxSmartSortEnabled: boolean;
+  mailAppLockEnabled: boolean;
   replyQuoteMode: MailReplyQuoteMode;
 };
 

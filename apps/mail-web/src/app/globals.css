@@ -6201,6 +6201,78 @@ html[data-mail-read-font="large"] .mail-html-frame {
   max-width: 12rem;
 }
 
+.mail-security-passkey-list {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mail-security-passkey-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
+  background: color-mix(in srgb, var(--bg) 50%, var(--panel));
+}
+
+.mail-security-passkey-row small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin-top: 2px;
+}
+
+.mail-app-lock-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 12000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: color-mix(in srgb, var(--bg) 15%, rgba(0, 0, 0, 0.55));
+  backdrop-filter: blur(8px);
+}
+
+.mail-app-lock-card {
+  max-width: 400px;
+  width: 100%;
+  padding: 28px 24px;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  background: var(--panel);
+  text-align: center;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.2);
+}
+
+.mail-app-lock-icon {
+  font-size: 2.5rem;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.mail-app-lock-title {
+  margin: 0 0 8px;
+  font-size: 1.25rem;
+}
+
+.mail-app-lock-lead {
+  margin: 0 0 16px;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.mail-app-lock-btn {
+  width: 100%;
+}
+
 .mail-security-primary-actions {
   display: flex;
   flex-wrap: wrap;
