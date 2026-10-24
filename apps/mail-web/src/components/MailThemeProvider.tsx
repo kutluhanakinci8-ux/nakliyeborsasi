@@ -33,12 +33,7 @@ export function MailThemeProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const effective = resolveEffectiveTheme(themeMode);
-  const fabTitle =
-    themeMode === "system"
-      ? `Sistem teması (şu an ${mailThemeModeLabel(effective).toLowerCase()}) — tıklayınca sabit ${effective === "dark" ? "açık" : "koyu"} mod`
-      : effective === "dark"
-        ? "Açık temaya geç"
-        : "Koyu temaya geç";
+  const fabTitle = effective === "dark" ? "Açık tema" : "Koyu tema";
 
   return (
     <>
