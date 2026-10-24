@@ -72,6 +72,7 @@ const DISPLAY: readonly SubscriptionPlanDisplayMeta[] = [
     mailStorageLimitBytes: 25 * 1024 * 1024 * 1024,
     mailMaxAttachmentBytes: 10 * 1024 * 1024,
     customDomainAllowed: true,
+    mailWhiteLabelAllowed: true,
     monthlyPriceTry: 490,
     annualPriceTry: 4900,
   },

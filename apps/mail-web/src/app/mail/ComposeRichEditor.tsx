@@ -2,12 +2,18 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 import {
+  COMPOSE_HTML_BLOCK_CATALOG,
   composeCtaButtonBlock,
   composeDividerBlock,
   composeCalloutBlock,
+  composeFeatureRowBlock,
   composeHeroBlock,
   composeImageBlock,
+  composeLegalFooterBlock,
+  composeLogoHeaderBlock,
+  composeQuoteBlock,
   composeTwoColumnBlock,
+  type ComposeHtmlBlockId,
 } from "@/lib/mailComposeHtmlBlocks";
 
 type Props = {
@@ -17,6 +23,10 @@ type Props = {
   onPlainTextChange: (text: string) => void;
   onHtmlChange: (html: string) => void;
   onInlineImage?: (file: File) => Promise<string | null>;
+  brandAccentColor?: string | null;
+  brandLogoUrl?: string | null;
+  brandTitle?: string | null;
+  brandLegalFooter?: string | null;
 };
 
 function exec(command: string, value?: string) {
@@ -174,6 +184,10 @@ export function ComposeRichEditor({
   onPlainTextChange,
   onHtmlChange,
   onInlineImage,
+  brandAccentColor,
+  brandLogoUrl,
+  brandTitle,
+  brandLegalFooter,
 }: Props) {
   const editorRef = useRef<HTMLDivElement>(null);
 
@@ -217,16 +231,18 @@ export function ComposeRichEditor({
     if (!href?.trim()) {
       return;
     }
-    insertHtmlAtSelection(composeCtaButtonBlock(label.trim(), href.trim()));
+    insertHtmlAtSelection(
+      composeCtaButtonBlock(label.trim(), href.trim(), brandAccentColor),
+    );
     syncFromEditor();
   }
 
-  function insertCallout() {
+  function insertCallout(variant: "info" | "success" | "warning" = "info") {
     const text = window.prompt("Kutu metni", "Önemli bilgi");
     if (!text?.trim()) {
       return;
     }
-    insertHtmlAtSelection(composeCalloutBlock(text.trim()));
+    insertHtmlAtSelection(composeCalloutBlock(text.trim(), variant));
     syncFromEditor();
   }
 
@@ -236,7 +252,84 @@ export function ComposeRichEditor({
       return;
     }
     const subtitle = window.prompt("Alt metin", "") ?? "";
-    insertHtmlAtSelection(composeHeroBlock(title.trim(), subtitle.trim()));
+    insertHtmlAtSelection(
+      composeHeroBlock(title.trim(), subtitle.trim(), brandAccentColor),
+    );
+    syncFromEditor();
+  }
+
+  function insertBlockById(blockId: ComposeHtmlBlockId) {
+    switch (blockId) {
+      case "divider":
+        insertHtmlAtSelection(composeDividerBlock());
+        break;
+      case "cta":
+        insertCtaButton();
+        return;
+      case "hero":
+        insertHero();
+        return;
+      case "columns":
+        insertHtmlAtSelection(composeTwoColumnBlock());
+        break;
+      case "callout":
+        insertCallout("info");
+        return;
+      case "callout-success":
+        insertCallout("success");
+        return;
+      case "callout-warning":
+        insertCallout("warning");
+        return;
+      case "quote": {
+        const quote = window.prompt("Alıntı", "");
+        if (!quote?.trim()) {
+          return;
+        }
+        const author = window.prompt("Kaynak (isteğe bağlı)", "") ?? "";
+        insertHtmlAtSelection(composeQuoteBlock(quote.trim(), author.trim()));
+        break;
+      }
+      case "feature": {
+        const title = window.prompt("Özellik başlığı", "Hızlı teslimat");
+        if (!title?.trim()) {
+          return;
+        }
+        const body = window.prompt("Açıklama", "") ?? "";
+        insertHtmlAtSelection(composeFeatureRowBlock(title.trim(), body.trim()));
+        break;
+      }
+      case "logo-header": {
+        const logo = brandLogoUrl?.trim() || window.prompt("Logo URL (https)", "");
+        if (!logo?.trim()) {
+          return;
+        }
+        const title =
+          brandTitle?.trim() ||
+          window.prompt("Marka başlığı", "Firma adı") ||
+          "Firma";
+        insertHtmlAtSelection(
+          composeLogoHeaderBlock(logo.trim(), title.trim(), brandAccentColor),
+        );
+        break;
+      }
+      case "legal-footer": {
+        const text =
+          brandLegalFooter?.trim() ||
+          window.prompt("Yasal dipnot metni", "") ||
+          "";
+        if (!text.trim()) {
+          return;
+        }
+        insertHtmlAtSelection(composeLegalFooterBlock(text.trim()));
+        break;
+      }
+      case "image":
+        insertRemoteImage();
+        return;
+      default:
+        break;
+    }
     syncFromEditor();
   }
 
@@ -414,11 +507,33 @@ export function ComposeRichEditor({
           </div>
         </div>
         <div className="compose-rich-toolbar__row compose-rich-toolbar__row--blocks">
+          <label className="compose-rich-block-select-wrap">
+            <span className="compose-rich-block-select-label">HTML blok</span>
+            <select
+              className="compose-rich-block-select"
+              defaultValue=""
+              onChange={(e) => {
+                const id = e.target.value as ComposeHtmlBlockId;
+                if (!id) {
+                  return;
+                }
+                insertBlockById(id);
+                e.target.value = "";
+              }}
+            >
+              <option value="">Kütüphaneden ekle…</option>
+              {COMPOSE_HTML_BLOCK_CATALOG.map((block) => (
+                <option key={block.id} value={block.id}>
+                  {block.label}
+                </option>
+              ))}
+            </select>
+          </label>
           <div className="compose-rich-toolbar__group">
             <ToolbarButton label="CTA buton" onClick={insertCtaButton}>
               {icon.button}
             </ToolbarButton>
-            <ToolbarButton label="Bilgi kutusu" onClick={insertCallout}>
+            <ToolbarButton label="Bilgi kutusu" onClick={() => insertCallout("info")}>
               {icon.callout}
             </ToolbarButton>
             <ToolbarButton label="Hero başlık bandı" onClick={insertHero}>

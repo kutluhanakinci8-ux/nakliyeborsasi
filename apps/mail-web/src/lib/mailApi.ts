@@ -910,14 +910,35 @@ export type MailEmailSocialLink = {
 
 export type MailInboxBranding = {
   allowed: boolean;
+  fullWhiteLabel: boolean;
   planCode: string | null;
   logoUrl: string | null;
   emailBrandTitle: string | null;
+  emailAccentColor: string | null;
+  emailLegalFooter: string | null;
   defaultFromDisplayName: string | null;
   hidePlatformEmailChrome: boolean;
   emailSocialLinks: MailEmailSocialLink[];
   detailTr: string;
 };
+
+export async function updateMailInboxBranding(
+  accessToken: string,
+  body: {
+    logoUrl?: string | null;
+    emailBrandTitle?: string | null;
+    emailAccentColor?: string | null;
+    emailLegalFooter?: string | null;
+    defaultFromDisplayName?: string | null;
+    hidePlatformEmailChrome?: boolean;
+  },
+) {
+  return apiFetch<{ branding: MailInboxBranding }>(
+    accessToken,
+    "company/mail-inbox/branding",
+    { method: "PATCH", body: JSON.stringify(body) },
+  );
+}
 
 export async function updateMailEmailSocialLinks(
   accessToken: string,

@@ -62,6 +62,7 @@ import {
   BulkMailInboxIdsDto,
 } from "./BulkMailInboxRequestDto";
 import { MailOrganizationBrandingService } from "./MailOrganizationBrandingService";
+import { UpdateMailBrandingRequestDto } from "./MailBrandingRequestDto";
 import { applyEkolojikMarketWebmailBranding } from "./MailEkolojikWebmailBranding";
 import { SetMessageStarredRequestDto } from "./SetMessageStarredRequestDto";
 import { MailWebPushService } from "./MailWebPushService";
@@ -793,6 +794,46 @@ export class CompanyMailInboxController {
       "/company/mail-inbox/branding/social",
     );
     return { message: "OK", branding };
+  }
+
+  @Patch("branding")
+  public async updateInboxBranding(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: UpdateMailBrandingRequestDto,
+  ) {
+    if (!canManageMailIdentity(user)) {
+      throw new ForbiddenException("Marka ayarları için yetki gerekir.");
+    }
+    const branding = await this.mailOrganizationBrandingService.updateBranding(
+      user.companyId,
+      {
+        logoUrl: body.logoUrl,
+        emailBrandTitle: body.emailBrandTitle,
+        emailAccentColor: body.emailAccentColor,
+        emailLegalFooter: body.emailLegalFooter,
+        defaultFromDisplayName: body.defaultFromDisplayName,
+        hidePlatformEmailChrome: body.hidePlatformEmailChrome,
+      },
+    );
+    const summary = await this.mailOrganizationInboxService.getSummary(
+      user.companyId,
+      user,
+    );
+    const webmailBranding = applyEkolojikMarketWebmailBranding(
+      branding,
+      summary.primaryAddress,
+    );
+    await this.mailIdentityAuditService.recordFromUser(
+      user,
+      MailIdentityAuditAction.BrandingUpdated,
+      {
+        organizationId: user.companyId,
+        logoUrl: branding.logoUrl,
+        emailBrandTitle: branding.emailBrandTitle,
+      },
+      "/company/mail-inbox/branding",
+    );
+    return { message: "OK", branding: webmailBranding };
   }
 
   @Get("compose-presets")

@@ -6273,6 +6273,40 @@ html[data-mail-read-font="large"] .mail-html-frame {
   width: 100%;
 }
 
+.mail-tenant-branding-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mail-tenant-branding-legal {
+  min-height: 72px;
+  resize: vertical;
+}
+
+.compose-rich-block-select-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 160px;
+}
+
+.compose-rich-block-select-label {
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.compose-rich-block-select {
+  font-size: 0.85rem;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
+  background: var(--panel);
+  color: var(--text);
+}
+
 .mail-security-primary-actions {
   display: flex;
   flex-wrap: wrap;

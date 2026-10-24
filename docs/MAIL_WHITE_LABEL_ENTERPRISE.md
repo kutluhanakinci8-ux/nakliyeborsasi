@@ -2,11 +2,11 @@
 
 ## Plan
 
-| Plan kodu | White-label |
-|-----------|-------------|
-| `lerta_mail_pilot_tr` | Hayır |
-| `lerta_mail_corporate_tr` | Hayır |
-| `lerta_mail_enterprise_tr` | Evet |
+| Plan kodu | Marka (logo, renk, dipnot) | Tam white-label (chrome gizle) |
+|-----------|------------------------------|--------------------------------|
+| `lerta_mail_pilot_tr` | Hayır | Hayır |
+| `lerta_mail_corporate_tr` | Evet | Hayır |
+| `lerta_mail_enterprise_tr` | Evet | Evet |
 
 Operatör veya faturalama ile Enterprise plan atandıktan sonra tenant marka ayarları açılır.
 
@@ -18,6 +18,7 @@ Pilot test: `MAIL_WHITELABEL_EXTRA_PLAN_CODES=lerta_mail_corporate_tr` (virgüll
 |--------|-----|----------|
 | GET | `company/mail-identity/branding` | `allowed`, logo, From adı, chrome bayrakları |
 | PATCH | `company/mail-identity/branding` | Yetki: posta yöneticisi / firma sahibi |
+| PATCH | `company/mail-inbox/branding` | Aynı alanlar — webmail Ayarlar → Hesaplar |
 
 Alanlar:
 

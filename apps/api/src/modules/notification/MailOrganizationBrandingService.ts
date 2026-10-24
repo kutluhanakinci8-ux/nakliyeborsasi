@@ -22,7 +22,10 @@ import {
 } from "./MailEmailSocialLinks";
 
 export type MailOrganizationBrandingSnapshot = {
+  /** Logo, renk, yasal dipnot (Kurumsal + Enterprise). */
   allowed: boolean;
+  /** Platform chrome gizleme (yalnızca Enterprise). */
+  fullWhiteLabel: boolean;
   planCode: string | null;
   logoUrl: string | null;
   emailBrandTitle: string | null;
@@ -61,11 +64,13 @@ export class MailOrganizationBrandingService {
       organizationId,
     );
     const allowed = this.isWhiteLabelAllowedForPlanCode(plan.planCode);
+    const fullWhiteLabel = this.isFullWhiteLabelAllowedForPlanCode(plan.planCode);
     const row = await this.brandingRepository.findOne({
       where: { organizationId },
     });
     return {
       allowed,
+      fullWhiteLabel,
       planCode: plan.planCode,
       logoUrl: row?.logoUrl ?? null,
       emailBrandTitle: row?.emailBrandTitle ?? null,
@@ -75,9 +80,19 @@ export class MailOrganizationBrandingService {
       hidePlatformEmailChrome: row?.hidePlatformEmailChrome ?? false,
       emailSocialLinks: await this.loadEmailSocialLinks(organizationId),
       detailTr: allowed
-        ? "Enterprise white-label: logo ve From adı yapılandırılabilir."
-        : "White-label yalnızca Enterprise mail planında (lerta_mail_enterprise_tr).",
+        ? fullWhiteLabel
+          ? "Enterprise: tam white-label (logo, renk, platform chrome gizleme)."
+          : "Kurumsal: logo, marka rengi, yasal dipnot ve From adı yapılandırılabilir."
+        : "Marka ayarları Kurumsal veya Enterprise mail planında açılır.",
     };
+  }
+
+  public isFullWhiteLabelAllowedForPlanCode(planCode: string | null): boolean {
+    if (!planCode) {
+      return false;
+    }
+    const display = SubscriptionPlanDisplayCatalog.find(planCode);
+    return display?.planCode === "lerta_mail_enterprise_tr";
   }
 
   public isWhiteLabelAllowedForPlanCode(planCode: string | null): boolean {
@@ -108,6 +123,9 @@ export class MailOrganizationBrandingService {
     input: UpdateMailOrganizationBrandingInput,
   ): Promise<MailOrganizationBrandingSnapshot> {
     await this.assertCanManage(organizationId);
+    const plan = await this.mailSaasSubscriptionService.getOrganizationMailPlan(
+      organizationId,
+    );
     const patch: Partial<MailOrganizationBrandingEntity> = {};
     if (input.logoUrl !== undefined) {
       patch.logoUrl = this.normalizeLogoUrl(input.logoUrl);
@@ -131,7 +149,13 @@ export class MailOrganizationBrandingService {
       );
     }
     if (input.hidePlatformEmailChrome !== undefined) {
-      patch.hidePlatformEmailChrome = Boolean(input.hidePlatformEmailChrome);
+      const hide = Boolean(input.hidePlatformEmailChrome);
+      if (hide && !this.isFullWhiteLabelAllowedForPlanCode(plan.planCode)) {
+        throw new ForbiddenException(
+          "Platform e-posta chrome gizleme yalnızca Enterprise planda kullanılabilir.",
+        );
+      }
+      patch.hidePlatformEmailChrome = hide;
     }
     const existing = await this.brandingRepository.findOne({
       where: { organizationId },

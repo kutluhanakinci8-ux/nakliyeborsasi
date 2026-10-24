@@ -27,6 +27,7 @@ export function applyEkolojikMarketWebmailBranding(
   return {
     ...branding,
     allowed: true,
+    fullWhiteLabel: true,
     emailBrandTitle: title,
     hidePlatformEmailChrome: true,
     detailTr: "Ekolojik Market kurumsal posta (tenant white-label).",

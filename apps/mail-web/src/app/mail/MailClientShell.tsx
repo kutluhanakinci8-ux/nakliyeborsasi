@@ -2298,6 +2298,10 @@ export function MailClientShell({ mail }: Props) {
                     onPlainTextChange={setComposeText}
                     onHtmlChange={setComposeHtml}
                     onInlineImage={addInlineComposeImage}
+                    brandAccentColor={inboxBranding?.emailAccentColor}
+                    brandLogoUrl={inboxBranding?.logoUrl}
+                    brandTitle={inboxBranding?.emailBrandTitle}
+                    brandLegalFooter={inboxBranding?.emailLegalFooter}
                   />
                 ) : null}
                 {!composeRich || forwardMessageId || editingDraftId ? (
@@ -2444,6 +2448,7 @@ export function MailClientShell({ mail }: Props) {
           onMailPostaPreferencesSaved={handleMailPostaPreferencesSaved}
           onAppLockChange={setMailAppLockEnabled}
           onPasskeysChange={setHasWebAuthnPasskeys}
+          onInboxBrandingSaved={setInboxBranding}
         />
       ) : null}
       {accessToken ? (

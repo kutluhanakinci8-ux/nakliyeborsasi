@@ -564,6 +564,7 @@ export type MailEmailSocialLink = {
 
 export type MailBrandingSnapshot = {
   allowed: boolean;
+  fullWhiteLabel?: boolean;
   planCode: string | null;
   logoUrl: string | null;
   emailBrandTitle: string | null;

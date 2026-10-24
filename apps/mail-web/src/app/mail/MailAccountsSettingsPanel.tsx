@@ -9,12 +9,18 @@ import {
 import { resolveMailConsoleUrl } from "@/lib/mailApi";
 import { MailEmailSocialLinksEditor } from "./MailEmailSocialLinksEditor";
 import { MailDelegationExchangePanel } from "./MailDelegationExchangePanel";
+import { MailTenantBrandingPanel } from "./MailTenantBrandingPanel";
+import type { MailInboxBranding } from "@/lib/mailApi";
 
 type Props = {
   accessToken: string;
+  onBrandingSaved?: (branding: MailInboxBranding) => void;
 };
 
-export function MailAccountsSettingsPanel({ accessToken }: Props) {
+export function MailAccountsSettingsPanel({
+  accessToken,
+  onBrandingSaved,
+}: Props) {
   const [hub, setHub] = useState<MailAccountHubPayload | null>(null);
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
@@ -90,6 +96,24 @@ export function MailAccountsSettingsPanel({ accessToken }: Props) {
           </p>
         ) : null}
       </div>
+
+      <section className="mail-posta-card">
+        <header className="mail-posta-card-head">
+          <h3 className="mail-posta-card-title">Kurumsal kimlik</h3>
+          <p className="mail-posta-card-desc">
+            Logo, marka rengi, yasal dipnot ve varsayılan gönderen adı — giden
+            HTML şablon ve webmail başlığında kullanılır.
+          </p>
+        </header>
+        <MailTenantBrandingPanel
+          accessToken={accessToken}
+          canEdit={hub.canManageSenders}
+          onBrandingSaved={(branding) => {
+            setHub((prev) => (prev ? { ...prev, branding } : prev));
+            onBrandingSaved?.(branding);
+          }}
+        />
+      </section>
 
       <section className="mail-posta-card">
         <header className="mail-posta-card-head">

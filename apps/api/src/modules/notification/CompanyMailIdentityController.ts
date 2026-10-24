@@ -1006,6 +1006,8 @@ export class CompanyMailIdentityController {
       {
         logoUrl: body.logoUrl,
         emailBrandTitle: body.emailBrandTitle,
+        emailAccentColor: body.emailAccentColor,
+        emailLegalFooter: body.emailLegalFooter,
         defaultFromDisplayName: body.defaultFromDisplayName,
         hidePlatformEmailChrome: body.hidePlatformEmailChrome,
       },

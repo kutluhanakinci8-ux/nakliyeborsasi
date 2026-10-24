@@ -189,6 +189,9 @@ type Props = {
   ) => void;
   onAppLockChange?: (enabled: boolean) => void;
   onPasskeysChange?: (hasPasskeys: boolean) => void;
+  onInboxBrandingSaved?: (
+    branding: import("@/lib/mailApi").MailInboxBranding,
+  ) => void;
   initialView?: SettingsView;
   deliverabilityDmarcFocus?: boolean;
   notificationsPwaFocus?: boolean;
@@ -207,6 +210,7 @@ export function MailSettingsPanel({
   onMailPostaPreferencesSaved,
   onAppLockChange,
   onPasskeysChange,
+  onInboxBrandingSaved,
   initialView,
   deliverabilityDmarcFocus = false,
   notificationsPwaFocus = false,
@@ -544,7 +548,10 @@ export function MailSettingsPanel({
     case "accounts":
       content = renderDetail(
         "Hesaplar ve gönderenler",
-        <MailAccountsSettingsPanel accessToken={accessToken} />,
+        <MailAccountsSettingsPanel
+          accessToken={accessToken}
+          onBrandingSaved={onInboxBrandingSaved}
+        />,
       );
       break;
     case "signature":
