@@ -2897,6 +2897,194 @@ html[data-mail-theme="dark"] .mail-deliverability-dns-badge.is-bad {
   color: color-mix(in srgb, var(--accent) 90%, var(--text));
 }
 
+/* —— Ops snapshot ve runbook (premium) —— */
+.mail-ops-panel--premium {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mail-ops-meta-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px 16px;
+  margin-bottom: 12px;
+}
+
+.mail-ops-phase-pill {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  border-radius: 999px;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--panel));
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+}
+
+.mail-ops-org-id {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.mail-ops-org-id code {
+  word-break: break-all;
+  font-size: 0.75rem;
+}
+
+.mail-ops-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px 12px;
+}
+
+.mail-ops-status-pill {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+}
+
+.mail-ops-status-pill--on {
+  color: color-mix(in srgb, #16a34a 90%, var(--text));
+  background: color-mix(in srgb, #22c55e 12%, var(--panel));
+  border-color: color-mix(in srgb, #22c55e 35%, var(--border));
+}
+
+.mail-ops-status-pill--off {
+  color: var(--muted);
+  background: color-mix(in srgb, var(--border) 55%, var(--panel));
+}
+
+.mail-ops-kv {
+  margin: 10px 0 0;
+  font-size: 0.82rem;
+}
+
+.mail-ops-kv code {
+  display: block;
+  margin-top: 4px;
+  word-break: break-all;
+  font-size: 0.75rem;
+  font-family: ui-monospace, "Cascadia Code", monospace;
+}
+
+.mail-ops-kv--row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+}
+
+.mail-ops-kv--row code {
+  flex: 1 1 12rem;
+  margin-top: 0;
+}
+
+.mail-ops-score-ring {
+  width: 4.25rem;
+  height: 4.25rem;
+}
+
+.mail-ops-score-ring .mail-deliverability-score-number {
+  font-size: 1.1rem;
+}
+
+.mail-ops-integration-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.mail-ops-runbook-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mail-ops-runbook-card {
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg) 38%, var(--panel));
+}
+
+.mail-ops-runbook-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.mail-ops-runbook-id {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text);
+  font-family: ui-monospace, "Cascadia Code", monospace;
+}
+
+.mail-ops-runbook-field-label {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.mail-ops-runbook-doc,
+.mail-ops-runbook-verify {
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+}
+
+.mail-ops-runbook-verify {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mail-ops-runbook-verify .mail-ops-copy-btn {
+  align-self: flex-start;
+}
+
+.mail-ops-copy-btn {
+  font-size: 0.75rem;
+  padding: 5px 12px;
+  min-width: 5.5rem;
+}
+
+.mail-ops-public-status {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.mail-ops-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 4px;
+}
+
+.mail-ops-actions .mail-premium-btn--primary {
+  min-width: 8rem;
+}
+
 .compose-preview-overlay {
   z-index: 1200;
 }

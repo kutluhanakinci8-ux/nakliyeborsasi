@@ -943,7 +943,8 @@ export function MailSettingsPanel({
           view === "autoReply" ||
           view === "notifications" ||
           view === "imap" ||
-          view === "deliverability"
+          view === "deliverability" ||
+          view === "ops"
             ? "compose-dialog mail-settings-dialog mail-settings-dialog--wide"
             : "compose-dialog mail-settings-dialog"
         }
