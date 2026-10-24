@@ -1,0 +1,156 @@
+#!/usr/bin/env bash
+# Lerta — premium QA kapısı: unit, integration smoke, system/prod, regression, perf, security, compliance, l10n.
+# Çıktı: docs/reports/LERTA_QA_MASTER_REPORT_<date>.md + .json özet
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+STAMP="$(TZ=Europe/Istanbul date '+%Y-%m-%d')"
+REPORT_DIR="${ROOT}/docs/reports"
+REPORT_MD="${REPORT_DIR}/LERTA_QA_MASTER_REPORT_${STAMP}.md"
+REPORT_JSON="${REPORT_DIR}/LERTA_QA_MASTER_REPORT_${STAMP}.json"
+mkdir -p "${REPORT_DIR}"
+
+declare -A RESULT
+declare -A DETAIL
+
+run_layer() {
+  local key="$1"
+  local title="$2"
+  shift 2
+  echo ""
+  echo "######## ${title} ########"
+  local log
+  log="$(mktemp)"
+  if "$@" >"${log}" 2>&1; then
+    RESULT["${key}"]="PASS"
+  else
+    RESULT["${key}"]="FAIL"
+  fi
+  DETAIL["${key}"]="$(tail -n 40 "${log}" | sed 's/"/\\"/g' | tr '\n' ' ')"
+  echo "--- tail ---"
+  tail -n 15 "${log}" || true
+  rm -f "${log}"
+}
+
+echo "== Lerta Premium QA Suite ${STAMP} (Europe/Istanbul) =="
+
+run_layer unit_core "1. Unit — @nakliyeborsasi/core" npm run test:unit --prefix "${ROOT}"
+
+run_layer unit_api "2. Unit/Integration — API vitest (notification *.test.ts)" \
+  bash -c "cd '${ROOT}' && npx vitest run apps/api/src/modules/notification/MailCampaignSegment.test.ts --reporter=dot"
+
+run_layer regression_parity "3. Regression — mail/messaging parity close" \
+  bash "${ROOT}/scripts/run-mail-messaging-parity-close-checklist.sh"
+
+run_layer regression_wave2 "4. Regression — wave-2 + Lighthouse PWA" \
+  bash "${ROOT}/scripts/run-mail-messaging-parity-wave2-checklist.sh"
+
+run_layer system_smoke "5. System — prod HTTPS/smoke" \
+  bash "${ROOT}/scripts/verify-posta-https.sh"
+
+run_layer compliance_mp9 "6. Compliance — MP-9 SOC2-lite docs" \
+  bash "${ROOT}/scripts/verify-security-compliance-mp9.sh"
+
+run_layer security_audit "7. Security — npm audit (high+)" \
+  bash -c "cd '${ROOT}' && npm audit --audit-level=high 2>&1 | tail -30; test \$(npm audit --audit-level=critical --json 2>/dev/null | node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const j=JSON.parse(d);process.exit((j.metadata?.vulnerabilities?.critical||0)>0?1:0)}catch{process.exit(0)}})\")"
+
+run_layer security_surface "8. Security — surface headers" \
+  bash "${ROOT}/scripts/qa-security-surface.sh"
+
+run_layer perf_load "9. Performance — load (light prod)" \
+  bash "${ROOT}/scripts/qa-load-stress.sh"
+
+run_layer l10n_tr "10. Localization — tr-TR" \
+  bash "${ROOT}/scripts/qa-localization-tr.sh"
+
+run_layer e2e_playwright "11. System/E2E — Playwright (public)" \
+  bash -c "cd '${ROOT}/apps/web' && npx playwright install chromium --with-deps 2>/dev/null | tail -3; npx playwright test e2e/messaging-hub.spec.ts --grep 'login sayfası|korumalı'"
+
+# UAT: checklist only (müşteri imzası gerekir)
+RESULT["uat"]="MANUAL"
+DETAIL["uat"]="M1–M10 premium manuel set — docs/MAIL_PRELAUNCH_COMPETITIVE_GATE_2026-10-24.md §7.2"
+
+# Pentest full
+RESULT["pentest"]="NOT_RUN"
+DETAIL["pentest"]="Tam sızma (OWASP ZAP/Burp) bu otomasyon dışı; security_surface + npm audit surrogate."
+
+FAIL_COUNT=0
+for k in unit_core unit_api regression_parity regression_wave2 system_smoke compliance_mp9 security_audit security_surface perf_load l10n_tr e2e_playwright; do
+  [[ "${RESULT[$k]:-FAIL}" == "FAIL" ]] && FAIL_COUNT=$((FAIL_COUNT + 1))
+done
+
+{
+  echo "{"
+  echo "  \"generatedAt\": \"$(TZ=Europe/Istanbul date -Iseconds)\","
+  echo "  \"timezone\": \"Europe/Istanbul\","
+  echo "  \"failCount\": ${FAIL_COUNT},"
+  echo "  \"layers\": {"
+  first=1
+  for k in unit_core unit_api regression_parity regression_wave2 system_smoke compliance_mp9 security_audit security_surface perf_load l10n_tr e2e_playwright uat pentest; do
+    [[ $first -eq 1 ]] || echo ","
+    first=0
+    printf '    "%s": "%s"' "$k" "${RESULT[$k]:-UNKNOWN}"
+  done
+  echo ""
+  echo "  }"
+  echo "}"
+} > "${REPORT_JSON}"
+
+cat > "${REPORT_MD}" <<EOF
+# Lerta — Master QA Raporu (${STAMP})
+
+**Oluşturulma:** $(TZ=Europe/Istanbul date '+%Y-%m-%d %H:%M %Z')  
+**Komut:** \`bash scripts/run-lerta-premium-qa-suite.sh\`  
+**JSON özet:** [\`LERTA_QA_MASTER_REPORT_${STAMP}.json\`](./LERTA_QA_MASTER_REPORT_${STAMP}.json)
+
+## Executive özet
+
+| Metrik | Değer |
+|--------|--------|
+| Otomatik katman FAIL | **${FAIL_COUNT}** |
+| UAT (müşteri) | Manuel — §7.2 prelaunch gate |
+| Tam pentest | Bu koşuda çalıştırılmadı |
+
+## Katman sonuçları (ISO/IEC/IEEE 29119 hizalı çerçeve)
+
+| # | Katman | Standart karşılığı | Sonuç |
+|---|--------|-------------------|--------|
+| 1 | Unit (core) | Bileşen testi | ${RESULT[unit_core]:-?} |
+| 2 | Unit/Integration (API) | Modül + servis | ${RESULT[unit_api]:-?} |
+| 3 | Regression (parity close) | Değişiklik regresyonu | ${RESULT[regression_parity]:-?} |
+| 4 | Regression (wave-2) | PWA/Lighthouse/DNS | ${RESULT[regression_wave2]:-?} |
+| 5 | System (prod smoke) | Canlı sistem | ${RESULT[system_smoke]:-?} |
+| 6 | Compliance (MP-9) | SOC2-lite dok + süreç | ${RESULT[compliance_mp9]:-?} |
+| 7 | Security (npm audit) | Bağımlılık zafiyeti | ${RESULT[security_audit]:-?} |
+| 8 | Security (surface) | Kara kutu HTTP/TLS | ${RESULT[security_surface]:-?} |
+| 9 | Performance (load) | Yük (hafif prod) | ${RESULT[perf_load]:-?} |
+| 10 | Localization (tr-TR) | L10n | ${RESULT[l10n_tr]:-?} |
+| 11 | E2E (Playwright) | Uçtan uca (kısmi) | ${RESULT[e2e_playwright]:-?} |
+| 12 | UAT | Müşteri kabul | ${RESULT[uat]:-?} |
+| 13 | Pentest | Sızma (tam) | ${RESULT[pentest]:-?} |
+
+## Bilinen eksikler / aksiyonlar
+
+1. **API vitest kapsamı:** \`apps/api\` spec dosyalarının bir kısmı global \`describe\` import eksik — CI'ye \`vitest\` workspace config eklenmeli.
+2. **Integration test DB:** NestJS + Postgres entegrasyon testleri yok; parity scriptleri prod read-only smoke ile kısmi.
+3. **Stress test:** \`qa-load-stress.sh\` düşük hacimli; gerçek stres için k6/Artillery ayrı profil gerekir.
+4. **Pentest / ISO 27001 / PCI:** MP-9 dokümantasyon var; sertifikalı pentest ve QSA denetimi ayrı proje.
+5. **UAT:** Thunderbird IMAP, Graph/Google takvim, iOS push, MSN/Gmail teslimat — manuel imza bekliyor.
+6. **Regression FAIL kökleri:** PTR Hostinger, billing prod anahtarları, Lighthouse headless ortamı, OPERATOR_JWT skip.
+
+## Referanslar
+
+- [MAIL_PRELAUNCH_COMPETITIVE_GATE_2026-10-24.md](../MAIL_PRELAUNCH_COMPETITIVE_GATE_2026-10-24.md)
+- [SECURITY_SOC2_LITE_OVERVIEW.md](../SECURITY_SOC2_LITE_OVERVIEW.md)
+- [LERTA_MAIL_PARITY_100_CLOSURE_EXECUTION.md](../LERTA_MAIL_PARITY_100_CLOSURE_EXECUTION.md)
+
+EOF
+
+echo ""
+echo "Rapor: ${REPORT_MD}"
+if [[ "${FAIL_COUNT}" -gt 0 ]]; then
+  echo "QA suite: ${FAIL_COUNT} katman FAIL" >&2
+  exit 1
+fi
+echo "QA suite: PASS"
+exit 0
