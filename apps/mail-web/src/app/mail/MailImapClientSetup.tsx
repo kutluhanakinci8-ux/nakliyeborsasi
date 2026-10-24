@@ -17,8 +17,7 @@ function buildClientBundle(
   settings: MailImapSettings,
   password: string,
 ): string {
-  const smtpSec =
-    settings.smtpSecurity === "ssl" ? "SSL" : "STARTTLS";
+  const smtpSec = settings.smtpSecurity === "ssl" ? "SSL" : "STARTTLS";
   return [
     "Lerta Posta — IMAP/SMTP",
     `Gelen (IMAP): ${settings.imapHost}:${settings.imapPort} (SSL/TLS)`,
@@ -28,6 +27,38 @@ function buildClientBundle(
     "",
     "Şifreyi güvenli bir yerde saklayın; webmail dışında tekrar gösterilmez.",
   ].join("\n");
+}
+
+function EndpointRow({
+  icon,
+  label,
+  value,
+  hint,
+  onCopy,
+}: {
+  icon: string;
+  label: string;
+  value: string;
+  hint?: string;
+  onCopy: () => void;
+}) {
+  return (
+    <li className="mail-imap-endpoint">
+      <span className="mail-imap-endpoint-icon" aria-hidden="true">{icon}</span>
+      <div className="mail-imap-endpoint-main">
+        <span className="mail-imap-endpoint-label">{label}</span>
+        <code className="mail-imap-endpoint-value">{value}</code>
+        {hint ? <p className="mail-imap-endpoint-hint">{hint}</p> : null}
+      </div>
+      <button
+        type="button"
+        className="mail-premium-btn mail-premium-btn--ghost mail-imap-copy-btn"
+        onClick={onCopy}
+      >
+        Kopyala
+      </button>
+    </li>
+  );
 }
 
 export function MailImapClientSetup({
@@ -65,118 +96,164 @@ export function MailImapClientSetup({
   }
 
   if (!settings) {
-    return <p>Yükleniyor…</p>;
+    return (
+      <div className="mail-imap-panel mail-imap-panel--premium">
+        <div className="mail-posta-skeleton" aria-busy="true">
+          <div className="mail-posta-skeleton-line mail-posta-skeleton-line--lead" />
+          <div className="mail-posta-skeleton-card" />
+          <div className="mail-posta-skeleton-card" />
+        </div>
+      </div>
+    );
   }
 
   if (!settings.enabled) {
     return (
-      <p className="mail-imap-hint">
-        IMAP bu kurulumda kapalı. Yöneticinize başvurun.
-      </p>
+      <div className="mail-imap-panel mail-imap-panel--premium">
+        <p className="mail-posta-intro">
+          Harici posta istemcileri için IMAP ve SMTP bilgileri bu alanda yönetilir.
+        </p>
+        <div className="mail-imap-empty" role="status">
+          <span className="mail-imap-empty-icon" aria-hidden="true">📭</span>
+          <p>IMAP bu kurulumda kapalı. Yöneticinize başvurun.</p>
+        </div>
+      </div>
     );
   }
 
   const needsSetup = settings.needsImapClientPassword ?? !settings.hasCredential;
+  const smtpSecLabel =
+    settings.smtpSecurity === "ssl" ? "(SSL)" : "(STARTTLS)";
+  const imapEndpoint = `${settings.imapHost}:${settings.imapPort}${
+    settings.imapTls ? " (SSL/TLS)" : ""
+  }`;
+  const smtpEndpoint = `${settings.smtpHost}:${settings.smtpPort} ${smtpSecLabel}`;
+  const credentialUpdated = settings.credentialUpdatedAt
+    ? new Date(settings.credentialUpdatedAt).toLocaleString("tr-TR")
+    : null;
 
   return (
-    <>
-      <p className="mail-settings-lead">
-        Masaüstü veya mobil posta uygulaması için bilgileri buradan alın. Şifre
-        yalnızca oluşturma/yenileme anında gösterilir — VPS veya e-posta ile
-        gönderilmez.
+    <div className="mail-imap-panel mail-imap-panel--premium">
+      <p className="mail-posta-intro">
+        Masaüstü veya mobil posta uygulaması için sunucu bilgilerini buradan alın.
+        Şifre yalnızca oluşturma veya yenileme anında gösterilir; VPS veya e-posta
+        ile gönderilmez.
       </p>
-      {copyHint ? <p className="mail-imap-copy-hint">{copyHint}</p> : null}
-      {error ? <p className="login-error">{error}</p> : null}
 
-      {needsSetup ? (
-        <div className="mail-imap-status mail-imap-status--warn" role="status">
-          <strong>İlk kurulum:</strong> Harici uygulama için IMAP şifresi henüz
-          oluşturulmadı. Aşağıdaki düğmeyle şifre üretin ve istemciye girin.
-        </div>
-      ) : (
-        <div className="mail-imap-status mail-imap-status--ok" role="status">
-          <strong>IMAP hazır.</strong> Şifre kayıtlı
-          {settings.credentialUpdatedAt
-            ? ` (son güncelleme: ${new Date(
-                settings.credentialUpdatedAt,
-              ).toLocaleString("tr-TR")})`
-            : ""}
-          . Unuttuysanız yeni şifre oluşturun.
-        </div>
-      )}
+      {copyHint ? (
+        <p className="mail-accounts-status mail-accounts-status--ok" role="status">
+          {copyHint}
+        </p>
+      ) : null}
+      {error ? (
+        <p className="mail-accounts-status mail-accounts-status--err" role="alert">
+          {error}
+        </p>
+      ) : null}
 
-      <dl className="imap-dl">
-        <dt>Gelen (IMAP)</dt>
-        <dd>
-          {settings.imapHost}:{settings.imapPort}{" "}
-          {settings.imapTls ? "(SSL/TLS)" : ""}
-          <button
-            type="button"
-            className="mail-copy-inline"
-            onClick={() =>
+      <section className="mail-posta-card">
+        <header className="mail-posta-card-head mail-imap-card-head">
+          <div>
+            <h3 className="mail-posta-card-title">Hesap durumu</h3>
+            <p className="mail-posta-card-desc">
+              Harici istemci şifresi ve son güncelleme bilgisi.
+            </p>
+          </div>
+          <span
+            className={
+              needsSetup
+                ? "mail-imap-pill mail-imap-pill--warn"
+                : "mail-imap-pill mail-imap-pill--ok"
+            }
+          >
+            {needsSetup ? "Kurulum gerekli" : "Hazır"}
+          </span>
+        </header>
+        {needsSetup ? (
+          <p className="mail-imap-status-text" role="status">
+            <strong>İlk kurulum:</strong> Harici uygulama için IMAP şifresi henüz
+            oluşturulmadı. Alttaki düğmeyle şifre üretin ve istemciye girin.
+          </p>
+        ) : (
+          <p className="mail-imap-status-text" role="status">
+            <strong>IMAP hazır.</strong> Şifre kayıtlı
+            {credentialUpdated ? ` (son güncelleme: ${credentialUpdated})` : ""}.
+            Unuttuysanız yeni şifre oluşturun.
+          </p>
+        )}
+      </section>
+
+      <section className="mail-posta-card">
+        <header className="mail-posta-card-head">
+          <h3 className="mail-posta-card-title">Bağlantı bilgileri</h3>
+          <p className="mail-posta-card-desc">
+            Thunderbird, Outlook ve mobil uygulamalara aynı değerleri girin.
+          </p>
+        </header>
+        <ul className="mail-imap-endpoints">
+          <EndpointRow
+            icon="📥"
+            label="Gelen (IMAP)"
+            value={imapEndpoint}
+            onCopy={() =>
               void copyText(
                 "IMAP sunucu",
                 `${settings.imapHost}:${settings.imapPort}`,
               )
             }
-          >
-            Kopyala
-          </button>
-        </dd>
-        <dt>Kullanıcı</dt>
-        <dd>
-          {settings.username ?? "—"}
-          {settings.username ? (
-            <button
-              type="button"
-              className="mail-copy-inline"
-              onClick={() => void copyText("Kullanıcı", settings.username!)}
-            >
-              Kopyala
-            </button>
-          ) : null}
-        </dd>
-        <dt>Giden (SMTP)</dt>
-        <dd>
-          {settings.smtpHost}:{settings.smtpPort}{" "}
-          {settings.smtpSecurity === "ssl" ? "(SSL)" : "(STARTTLS)"}
-          <button
-            type="button"
-            className="mail-copy-inline"
-            onClick={() =>
+          />
+          <EndpointRow
+            icon="👤"
+            label="Kullanıcı"
+            value={settings.username ?? "—"}
+            onCopy={() => {
+              if (settings.username) {
+                void copyText("Kullanıcı", settings.username);
+              }
+            }}
+          />
+          <EndpointRow
+            icon="📤"
+            label="Giden (SMTP)"
+            value={smtpEndpoint}
+            hint="Kimlik doğrulama: IMAP ile aynı kullanıcı ve şifre."
+            onCopy={() =>
               void copyText(
                 "SMTP sunucu",
                 `${settings.smtpHost}:${settings.smtpPort}`,
               )
             }
-          >
-            Kopyala
-          </button>
-          <div className="mail-imap-hint">
-            Kimlik doğrulama: IMAP ile aynı kullanıcı ve şifre.
-          </div>
-        </dd>
-        <dt>Gönderilen klasörü</dt>
-        <dd className="mail-imap-hint">{settings.sentFolderImapHint}</dd>
-      </dl>
+          />
+        </ul>
+        <div className="mail-imap-folder-note">
+          <span className="mail-imap-folder-note-label">Gönderilen klasörü</span>
+          <p>{settings.sentFolderImapHint}</p>
+        </div>
+      </section>
 
       {newPassword ? (
-        <div className="mail-imap-password-card">
-          <p className="mail-imap-password-title">
-            IMAP şifresi (yalnızca bir kez gösterilir)
-          </p>
+        <section
+          className="mail-posta-card mail-imap-password-card"
+          aria-live="polite"
+        >
+          <header className="mail-posta-card-head">
+            <h3 className="mail-posta-card-title">IMAP şifresi</h3>
+            <p className="mail-posta-card-desc">
+              Yalnızca bir kez gösterilir — sayfayı kapatmadan istemciye girin.
+            </p>
+          </header>
           <code className="mail-imap-password-value">{newPassword}</code>
           <div className="mail-imap-password-actions">
             <button
               type="button"
-              className="mail-settings-theme-btn"
+              className="mail-premium-btn mail-premium-btn--primary"
               onClick={() => void copyText("Şifre", newPassword)}
             >
               Şifreyi kopyala
             </button>
             <button
               type="button"
-              className="mail-settings-theme-btn"
+              className="mail-premium-btn mail-premium-btn--ghost"
               onClick={() =>
                 void copyText(
                   "Kurulum bilgisi",
@@ -187,56 +264,57 @@ export function MailImapClientSetup({
               Tüm bilgileri kopyala
             </button>
           </div>
-          <p className="mail-imap-hint">
-            Bu sayfayı kapatmadan önce şifreyi Thunderbird, Outlook veya telefon
-            ayarlarına girin.
-          </p>
-        </div>
+        </section>
       ) : null}
 
-      <div className="compose-actions mail-imap-actions">
-        {needsSetup ? (
-          <button
-            type="button"
-            className="mail-imap-primary-btn"
-            disabled={loading}
-            onClick={() => onProvision()}
-          >
-            {loading ? "…" : "IMAP şifresi oluştur"}
-          </button>
-        ) : (
-          <button
-            type="button"
-            disabled={loading}
-            onClick={() => confirmRotate(onRotate)}
-          >
-            {loading ? "…" : "IMAP şifresini yenile"}
-          </button>
-        )}
-        {!needsSetup ? (
-          <button
-            type="button"
-            className="mail-imap-ghost-btn"
-            disabled={loading || !newPassword}
-            onClick={() => {
-              if (settings && newPassword) {
-                void copyText(
-                  "Kurulum bilgisi",
-                  buildClientBundle(settings, newPassword),
-                );
-              }
-            }}
-          >
-            Son şifreyi tekrar kopyala
-          </button>
-        ) : null}
-      </div>
-
-      <p className="mail-imap-hint">
-        <a href="/help/imap" target="_blank" rel="noopener noreferrer">
-          Thunderbird / Outlook kurulum rehberi
+      <section className="mail-posta-card mail-imap-actions-card">
+        <div className="mail-imap-primary-actions">
+          {needsSetup ? (
+            <button
+              type="button"
+              className="mail-premium-btn mail-premium-btn--primary"
+              disabled={loading}
+              onClick={() => onProvision()}
+            >
+              {loading ? "Oluşturuluyor…" : "IMAP şifresi oluştur"}
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="mail-premium-btn mail-premium-btn--primary"
+              disabled={loading}
+              onClick={() => confirmRotate(onRotate)}
+            >
+              {loading ? "Yenileniyor…" : "IMAP şifresini yenile"}
+            </button>
+          )}
+          {!needsSetup ? (
+            <button
+              type="button"
+              className="mail-premium-btn mail-premium-btn--ghost"
+              disabled={loading || !newPassword}
+              onClick={() => {
+                if (newPassword) {
+                  void copyText(
+                    "Kurulum bilgisi",
+                    buildClientBundle(settings, newPassword),
+                  );
+                }
+              }}
+            >
+              Son şifreyi tekrar kopyala
+            </button>
+          ) : null}
+        </div>
+        <a
+          className="mail-imap-help-link"
+          href="/help/imap"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Thunderbird / Outlook kurulum rehberi →
         </a>
-      </p>
-    </>
+      </section>
+    </div>
   );
 }
