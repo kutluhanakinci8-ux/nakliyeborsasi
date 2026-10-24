@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import { MailSocialPlatformIcon } from "@/components/MailSocialPlatformIcon";
 import {
   fetchMailInboxBranding,
   updateMailEmailSocialLinks,
@@ -12,49 +13,41 @@ const PLATFORMS: {
   id: MailEmailSocialPlatform;
   label: string;
   placeholder: string;
-  markClass: string;
 }[] = [
   {
     id: "instagram",
     label: "Instagram",
     placeholder: "@firma veya https://instagram.com/…",
-    markClass: "mail-social-mark--instagram",
   },
   {
     id: "facebook",
     label: "Facebook",
     placeholder: "https://facebook.com/…",
-    markClass: "mail-social-mark--facebook",
   },
   {
     id: "linkedin",
     label: "LinkedIn",
     placeholder: "https://linkedin.com/company/…",
-    markClass: "mail-social-mark--linkedin",
   },
   {
     id: "x",
     label: "X",
     placeholder: "@firma veya https://x.com/…",
-    markClass: "mail-social-mark--x",
   },
   {
     id: "youtube",
     label: "YouTube",
     placeholder: "https://youtube.com/@…",
-    markClass: "mail-social-mark--youtube",
   },
   {
     id: "tiktok",
     label: "TikTok",
     placeholder: "@firma veya https://tiktok.com/@…",
-    markClass: "mail-social-mark--tiktok",
   },
   {
     id: "website",
     label: "Web sitesi",
     placeholder: "https://firma.com",
-    markClass: "mail-social-mark--website",
   },
 ];
 
@@ -159,10 +152,7 @@ export function MailEmailSocialLinksEditor({ accessToken, canEdit }: Props) {
         {PLATFORMS.map((platform) => (
           <label key={platform.id} className="mail-social-field">
             <span className="mail-social-field-label">
-              <span
-                className={`mail-social-mark ${platform.markClass}`}
-                aria-hidden="true"
-              />
+              <MailSocialPlatformIcon platform={platform.id} />
               {platform.label}
             </span>
             <input
@@ -199,13 +189,15 @@ export function MailEmailSocialLinksEditor({ accessToken, canEdit }: Props) {
         </p>
       ) : null}
       {canEdit ? (
-        <button
-          type="submit"
-          className="mail-premium-btn mail-premium-btn--primary"
-          disabled={saving}
-        >
-          {saving ? "Kaydediliyor…" : "Sosyal bağlantıları kaydet"}
-        </button>
+        <div className="mail-social-form-actions">
+          <button
+            type="submit"
+            className="mail-premium-btn mail-premium-btn--primary mail-social-save-btn"
+            disabled={saving}
+          >
+            {saving ? "Kaydediliyor…" : "Sosyal bağlantıları kaydet"}
+          </button>
+        </div>
       ) : null}
     </form>
   );

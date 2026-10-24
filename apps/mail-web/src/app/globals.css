@@ -4151,6 +4151,28 @@ html[data-mail-theme="dark"] .mail-accounts-status--ok {
   gap: 14px;
 }
 
+.mail-social-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 4px;
+  border-top: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
+}
+
+.mail-social-save-btn {
+  min-width: 200px;
+}
+
+@media (max-width: 419px) {
+  .mail-social-form-actions {
+    justify-content: stretch;
+  }
+
+  .mail-social-save-btn {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
 .mail-social-form-grid {
   display: flex;
   flex-direction: column;
@@ -4192,40 +4214,46 @@ html[data-mail-theme="dark"] .mail-accounts-status--ok {
   color: var(--text);
 }
 
-.mail-social-mark {
+.mail-social-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  width: 22px;
-  height: 22px;
-  border-radius: 6px;
-  background: var(--accent-soft);
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: #fff;
+  border: 1px solid color-mix(in srgb, var(--border) 75%, transparent);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.06),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.65);
 }
 
-.mail-social-mark--instagram {
-  background: linear-gradient(135deg, #f58529, #dd2a7b, #8134af);
+html[data-mail-theme="dark"] .mail-social-icon {
+  background: color-mix(in srgb, var(--panel) 88%, #fff 12%);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.25),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 
-.mail-social-mark--facebook {
-  background: #1877f2;
+.mail-social-icon svg {
+  display: block;
 }
 
-.mail-social-mark--linkedin {
-  background: #0a66c2;
+.mail-social-icon--x {
+  color: #0f1419;
 }
 
-.mail-social-mark--x {
-  background: #111;
+html[data-mail-theme="dark"] .mail-social-icon--x {
+  color: #e7e9ea;
 }
 
-.mail-social-mark--youtube {
-  background: #ff0000;
+.mail-social-icon--website {
+  color: var(--accent);
 }
 
-.mail-social-mark--tiktok {
-  background: linear-gradient(135deg, #25f4ee, #fe2c55);
-}
-
-.mail-social-mark--website {
-  background: var(--accent);
+.mail-social-field-label .mail-social-icon {
+  margin-right: 2px;
 }
 
 .mail-premium-input {
