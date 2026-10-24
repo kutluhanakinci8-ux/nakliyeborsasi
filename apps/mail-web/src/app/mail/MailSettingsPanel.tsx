@@ -375,59 +375,6 @@ export function MailSettingsPanel({
           aria-label="Ayarları ara"
         />
         <div className="mail-settings-scroll">
-          {onOpenCalendar || onOpenContacts ? (
-            <section className="mail-settings-group">
-              <h3 className="mail-settings-group-title">Posta ve takvim</h3>
-              <ul className="mail-settings-list">
-                {onOpenCalendar ? (
-                  <li>
-                    <button
-                      type="button"
-                      className="mail-settings-row"
-                      onClick={() => {
-                        onOpenCalendar();
-                        onClose();
-                      }}
-                    >
-                      <span className="mail-settings-row-icon" aria-hidden>
-                        📅
-                      </span>
-                      <span className="mail-settings-row-text">
-                        <strong>Takvim</strong>
-                        <small>CalDAV ve ICS beslemeleri</small>
-                      </span>
-                      <span className="mail-settings-chevron" aria-hidden>
-                        ›
-                      </span>
-                    </button>
-                  </li>
-                ) : null}
-                {onOpenContacts ? (
-                  <li>
-                    <button
-                      type="button"
-                      className="mail-settings-row"
-                      onClick={() => {
-                        onOpenContacts();
-                        onClose();
-                      }}
-                    >
-                      <span className="mail-settings-row-icon" aria-hidden>
-                        👥
-                      </span>
-                      <span className="mail-settings-row-text">
-                        <strong>Kişiler</strong>
-                        <small>CardDAV ve rehber</small>
-                      </span>
-                      <span className="mail-settings-chevron" aria-hidden>
-                        ›
-                      </span>
-                    </button>
-                  </li>
-                ) : null}
-              </ul>
-            </section>
-          ) : null}
           {hubSections.map((section) => {
             const items = filteredItems.filter((i) => i.section === section.key);
             if (items.length === 0) {
