@@ -3602,6 +3602,86 @@ html[data-mail-theme="dark"] .mail-premium-btn--danger-ghost {
   color: #fca5a5;
 }
 
+/* —— Otomatik yanıtlar (premium) —— */
+.mail-autoreply-panel--premium {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mail-autoreply-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px 16px;
+}
+
+.mail-autoreply-pill {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: 999px;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--border) 55%, var(--panel));
+  border: 1px solid var(--border);
+}
+
+.mail-autoreply-pill--live {
+  color: color-mix(in srgb, var(--accent) 90%, #0f766e);
+  background: color-mix(in srgb, var(--accent) 12%, var(--panel));
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+}
+
+.mail-autoreply-pill--off {
+  opacity: 0.85;
+}
+
+.mail-autoreply-card--disabled {
+  opacity: 0.72;
+  pointer-events: none;
+}
+
+.mail-autoreply-char-count {
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-align: right;
+}
+
+.mail-autoreply-schedule {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+@media (max-width: 480px) {
+  .mail-autoreply-schedule {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mail-premium-field-input--datetime {
+  min-height: 42px;
+  color-scheme: light;
+}
+
+html[data-mail-theme="dark"] .mail-premium-field-input--datetime {
+  color-scheme: dark;
+}
+
+.mail-autoreply-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 4px;
+}
+
+.mail-autoreply-actions .mail-premium-btn--primary {
+  min-width: 8.5rem;
+}
+
 .mail-settings-header {
   display: grid;
   grid-template-columns: 40px 1fr 40px;

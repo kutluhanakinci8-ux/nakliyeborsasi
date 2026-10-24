@@ -41,6 +41,7 @@ import {
 } from "@/lib/mailNotifySound";
 import { MailDisplaySettings } from "./MailDisplaySettings";
 import { MailPostaSettings } from "./MailPostaSettings";
+import { MailAutoReplySettingsPanel } from "./MailAutoReplySettingsPanel";
 
 export type SettingsView =
   | "hub"
@@ -217,11 +218,6 @@ export function MailSettingsPanel({
   const [notifySound, setNotifySound] = useState(false);
   const [dailyDigest, setDailyDigest] = useState(true);
   const [autoReplyEnabled, setAutoReplyEnabled] = useState(false);
-  const [autoReplyBodyText, setAutoReplyBodyText] = useState("");
-  const [autoReplyActiveFrom, setAutoReplyActiveFrom] = useState("");
-  const [autoReplyActiveUntil, setAutoReplyActiveUntil] = useState("");
-  const [autoReplyStatus, setAutoReplyStatus] = useState("");
-  const [autoReplySaving, setAutoReplySaving] = useState(false);
   const [inboxListDensity, setInboxListDensity] =
     useState<MailInboxListDensity>("comfortable");
   const [privacyStatus, setPrivacyStatus] = useState("");
@@ -266,13 +262,6 @@ export function MailSettingsPanel({
         const prefs = await fetchInboxPreferences(accessToken);
         setDailyDigest(prefs.preferences.dailyDigestEnabled);
         setAutoReplyEnabled(prefs.preferences.autoReplyEnabled);
-        setAutoReplyBodyText(prefs.preferences.autoReplyBodyText ?? "");
-        setAutoReplyActiveFrom(
-          toDatetimeLocalValue(prefs.preferences.autoReplyActiveFrom),
-        );
-        setAutoReplyActiveUntil(
-          toDatetimeLocalValue(prefs.preferences.autoReplyActiveUntil),
-        );
         const density = prefs.preferences.inboxListDensity ?? "comfortable";
         setInboxListDensity(density);
         onInboxListDensityChange?.(density);
@@ -618,88 +607,10 @@ export function MailSettingsPanel({
     case "autoReply":
       content = renderDetail(
         "Otomatik yanıtlar",
-        <>
-          <p className="mail-settings-lead">
-            Gelen postaya otomatik yanıt (Outlook «Otomatik yanıtlar»). Aynı
-            gönderene 24 saatte en fazla bir yanıt; spam ve kurumsal
-            adreslere gönderilmez.
-          </p>
-          <label className="mail-settings-check">
-            <input
-              type="checkbox"
-              checked={autoReplyEnabled}
-              onChange={(e) => setAutoReplyEnabled(e.target.checked)}
-            />
-            Otomatik yanıt açık
-          </label>
-          <label className="mail-settings-field">
-            <span>Mesaj metni</span>
-            <textarea
-              className="mail-settings-textarea"
-              rows={6}
-              maxLength={4000}
-              value={autoReplyBodyText}
-              onChange={(e) => setAutoReplyBodyText(e.target.value)}
-              placeholder="Örn: 15–22 Eylül arasında ofis dışındayım…"
-            />
-          </label>
-          <label className="mail-settings-field">
-            <span>Başlangıç (isteğe bağlı)</span>
-            <input
-              type="datetime-local"
-              value={autoReplyActiveFrom}
-              onChange={(e) => setAutoReplyActiveFrom(e.target.value)}
-            />
-          </label>
-          <label className="mail-settings-field">
-            <span>Bitiş (isteğe bağlı)</span>
-            <input
-              type="datetime-local"
-              value={autoReplyActiveUntil}
-              onChange={(e) => setAutoReplyActiveUntil(e.target.value)}
-            />
-          </label>
-          {autoReplyStatus ? <p>{autoReplyStatus}</p> : null}
-          <div className="compose-actions">
-            <button
-              type="button"
-              disabled={autoReplySaving}
-              onClick={() =>
-                void (async () => {
-                  if (autoReplyEnabled && !autoReplyBodyText.trim()) {
-                    setAutoReplyStatus("Açıkken mesaj metni gerekli.");
-                    return;
-                  }
-                  setAutoReplySaving(true);
-                  setAutoReplyStatus("");
-                  try {
-                    await updateInboxPreferences(accessToken, {
-                      autoReplyEnabled,
-                      autoReplyBodyText: autoReplyBodyText.trim() || null,
-                      autoReplyActiveFrom: fromDatetimeLocalValue(
-                        autoReplyActiveFrom,
-                      ),
-                      autoReplyActiveUntil: fromDatetimeLocalValue(
-                        autoReplyActiveUntil,
-                      ),
-                    });
-                    setAutoReplyStatus("Kaydedildi.");
-                  } catch (error) {
-                    setAutoReplyStatus(
-                      error instanceof Error
-                        ? error.message
-                        : "Kaydedilemedi.",
-                    );
-                  } finally {
-                    setAutoReplySaving(false);
-                  }
-                })()
-              }
-            >
-              {autoReplySaving ? "Kaydediliyor…" : "Kaydet"}
-            </button>
-          </div>
-        </>,
+        <MailAutoReplySettingsPanel
+          accessToken={accessToken}
+          onEnabledChange={setAutoReplyEnabled}
+        />,
       );
       break;
     case "notifications":
@@ -1149,7 +1060,8 @@ export function MailSettingsPanel({
         className={
           view === "mailPrefs" ||
           view === "accounts" ||
-          view === "signature"
+          view === "signature" ||
+          view === "autoReply"
             ? "compose-dialog mail-settings-dialog mail-settings-dialog--wide"
             : "compose-dialog mail-settings-dialog"
         }
@@ -1161,29 +1073,6 @@ export function MailSettingsPanel({
       </div>
     </div>
   );
-}
-
-function toDatetimeLocalValue(iso: string | null): string {
-  if (!iso) {
-    return "";
-  }
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-  const pad = (value: number) => String(value).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-}
-
-function fromDatetimeLocalValue(value: string): string | null {
-  if (!value.trim()) {
-    return null;
-  }
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) {
-    return null;
-  }
-  return parsed.toISOString();
 }
 
 function settingsRowIcon(id: SettingsView): string {
