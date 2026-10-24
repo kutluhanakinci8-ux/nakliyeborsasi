@@ -6,12 +6,9 @@ import { updateInboxPreferences } from "@/lib/mailApi";
 import {
   applyMailThemeMode,
   ensureSystemThemeListener,
-  getSystemPrefersDark,
   initMailTheme,
   MAIL_THEME_MODE_CHANGE_EVENT,
-  mailThemeModeLabel,
   readStoredThemeMode,
-  resolveEffectiveTheme,
   type MailThemeMode,
 } from "@/lib/mailTheme";
 import {
@@ -62,17 +59,11 @@ export function MailDisplaySettings({
   const [readFont, setReadFont] = useState<MailReadFontScale>("default");
   const [densityStatus, setDensityStatus] = useState("");
   const [densitySaving, setDensitySaving] = useState(false);
-  const [osPrefersDark, setOsPrefersDark] = useState(false);
 
   useEffect(() => {
     setThemeMode(initMailTheme());
     setReadFont(initReadFontScale());
-    setOsPrefersDark(getSystemPrefersDark());
     ensureSystemThemeListener();
-
-    const media = window.matchMedia("(prefers-color-scheme: dark)");
-    const onOsTheme = () => setOsPrefersDark(media.matches);
-    media.addEventListener("change", onOsTheme);
 
     const onModeChange = (event: Event) => {
       const detail = (event as CustomEvent<{ mode: MailThemeMode }>).detail;
@@ -84,7 +75,6 @@ export function MailDisplaySettings({
     window.addEventListener(MAIL_THEME_MODE_CHANGE_EVENT, onModeChange);
 
     return () => {
-      media.removeEventListener("change", onOsTheme);
       window.removeEventListener(MAIL_THEME_MODE_CHANGE_EVENT, onModeChange);
     };
   }, []);
@@ -93,37 +83,12 @@ export function MailDisplaySettings({
     setDensity(inboxListDensity);
   }, [inboxListDensity]);
 
-  const effectiveTheme = resolveEffectiveTheme(themeMode);
-  const osThemeLabel = osPrefersDark ? "Koyu" : "Açık";
-
-  const themeStatusMessage = (() => {
-    if (themeMode === "system") {
-      const effectiveLabel = mailThemeModeLabel(effectiveTheme);
-      if (effectiveTheme === "light") {
-        return `Sistem modu seçili. İşletim sisteminiz şu an «${osThemeLabel}» temada; bu yüzden görünüm «Açık» ile aynı. macOS/Windows koyu temaya geçtiğinde Posta otomatik koyulaşır.`;
-      }
-      return `Sistem modu seçili. İşletim sistemi «${osThemeLabel}» — uygulama şu an «${effectiveLabel}» görünümde ve OS ile senkron kalır.`;
-    }
-    if (themeMode === "light") {
-      return "Sabit açık mod: işletim sistemi teması değişse bile görünüm açık kalır.";
-    }
-    return "Sabit koyu mod: işletim sistemi teması değişse bile görünüm koyu kalır.";
-  })();
-
   return (
     <div className="mail-display-settings">
       <section className="mail-display-section">
         <h3 className="mail-display-section-title">Renk modu</h3>
-        <p className="mail-display-theme-status" role="status">
-          {themeStatusMessage}
-        </p>
         <div className="mail-display-theme-grid">
-          {THEME_OPTIONS.map((option) => {
-            const hint =
-              option.id === "system"
-                ? `Windows / macOS teması · OS: ${osThemeLabel}`
-                : option.hint;
-            return (
+          {THEME_OPTIONS.map((option) => (
             <button
               key={option.id}
               type="button"
@@ -146,10 +111,9 @@ export function MailDisplaySettings({
                 <span className="mail-display-theme-preview-body" />
               </span>
               <span className="mail-display-theme-card-label">{option.label}</span>
-              <span className="mail-display-theme-card-hint">{hint}</span>
+              <span className="mail-display-theme-card-hint">{option.hint}</span>
             </button>
-            );
-          })}
+          ))}
         </div>
       </section>
 

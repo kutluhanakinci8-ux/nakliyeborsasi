@@ -5190,17 +5190,6 @@ html[data-mail-read-font="large"] .mail-read--premium .mail-read-body {
   border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
 }
 
-.mail-display-theme-status {
-  margin: 0 0 12px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  font-size: 0.78rem;
-  line-height: 1.45;
-  color: var(--muted);
-  background: color-mix(in srgb, var(--accent) 6%, var(--panel));
-  border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
-}
-
 .mail-display-theme-card.is-active {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
