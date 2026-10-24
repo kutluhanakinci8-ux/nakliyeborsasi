@@ -849,8 +849,9 @@ a {
 }
 
 .mail-app.mail-app--list-compact .mail-list-item {
-  padding: 6px 12px;
-  gap: 6px;
+  padding: 5px 12px;
+  gap: 5px;
+  min-height: 0;
 }
 
 .mail-app.mail-app--list-compact .mail-list-from {

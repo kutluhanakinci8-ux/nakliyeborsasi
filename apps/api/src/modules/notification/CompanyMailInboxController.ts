@@ -450,7 +450,7 @@ export class CompanyMailInboxController {
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
     @Body() body: UpdateMailInboxPreferencesRequestDto,
   ) {
-    this.assertMailInboxWriter(user);
+    this.assertCanPatchInboxPreferences(user, body);
     const preferences = await this.mailInboxPreferencesService.update(
       user.companyId,
       {
@@ -2576,5 +2576,23 @@ export class CompanyMailInboxController {
         "Posta gönderimi yalnızca firma sahibi veya posta yöneticisi tarafından yapılabilir.",
       );
     }
+  }
+
+  /** Otomatik yanıt ve özet gibi kurumsal alanlar yönetici; görünüm/yoğunluk tüm posta kullanıcıları. */
+  private assertCanPatchInboxPreferences(
+    user: AuthenticatedUserContext,
+    body: UpdateMailInboxPreferencesRequestDto,
+  ): void {
+    const adminOnly =
+      body.dailyDigestEnabled !== undefined ||
+      body.autoReplyEnabled !== undefined ||
+      body.autoReplyBodyText !== undefined ||
+      body.autoReplyActiveFrom !== undefined ||
+      body.autoReplyActiveUntil !== undefined;
+    if (adminOnly) {
+      this.assertMailInboxWriter(user);
+      return;
+    }
+    assertMailConsoleAccess(user);
   }
 }

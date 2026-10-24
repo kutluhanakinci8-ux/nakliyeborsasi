@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { MailInboxListDensity } from "@/lib/mailApi";
 import { updateInboxPreferences } from "@/lib/mailApi";
 import {
@@ -83,6 +83,43 @@ export function MailDisplaySettings({
     setDensity(inboxListDensity);
   }, [inboxListDensity]);
 
+  const persistInboxListDensity = useCallback(
+    (next: MailInboxListDensity) => {
+      if (next === inboxListDensity || densitySaving) {
+        return;
+      }
+      setDensity(next);
+      onInboxListDensityChange?.(next);
+      setDensitySaving(true);
+      setDensityStatus("");
+      void (async () => {
+        try {
+          const result = await updateInboxPreferences(accessToken, {
+            inboxListDensity: next,
+          });
+          const saved = result.preferences.inboxListDensity;
+          setDensity(saved);
+          onInboxListDensityChange?.(saved);
+          setDensityStatus("Yoğunluk kaydedildi.");
+        } catch (error) {
+          setDensity(inboxListDensity);
+          onInboxListDensityChange?.(inboxListDensity);
+          setDensityStatus(
+            error instanceof Error ? error.message : "Kaydedilemedi.",
+          );
+        } finally {
+          setDensitySaving(false);
+        }
+      })();
+    },
+    [
+      accessToken,
+      densitySaving,
+      inboxListDensity,
+      onInboxListDensityChange,
+    ],
+  );
+
   return (
     <div className="mail-display-settings">
       <section className="mail-display-section">
@@ -134,43 +171,18 @@ export function MailDisplaySettings({
                   ? "mail-display-segment-btn is-active"
                   : "mail-display-segment-btn"
               }
-              onClick={() => setDensity(option.id)}
+              disabled={densitySaving}
+              onClick={() => persistInboxListDensity(option.id)}
             >
               {option.label}
             </button>
           ))}
         </div>
-        {densityStatus ? (
+        {densitySaving ? (
+          <p className="mail-display-status">Kaydediliyor…</p>
+        ) : densityStatus ? (
           <p className="mail-display-status">{densityStatus}</p>
         ) : null}
-        <button
-          type="button"
-          className="mail-display-save-btn"
-          disabled={densitySaving || density === inboxListDensity}
-          onClick={() =>
-            void (async () => {
-              setDensitySaving(true);
-              setDensityStatus("");
-              try {
-                const result = await updateInboxPreferences(accessToken, {
-                  inboxListDensity: density,
-                });
-                const saved = result.preferences.inboxListDensity;
-                setDensity(saved);
-                onInboxListDensityChange?.(saved);
-                setDensityStatus("Yoğunluk kaydedildi.");
-              } catch (error) {
-                setDensityStatus(
-                  error instanceof Error ? error.message : "Kaydedilemedi.",
-                );
-              } finally {
-                setDensitySaving(false);
-              }
-            })()
-          }
-        >
-          {densitySaving ? "Kaydediliyor…" : "Yoğunluğu kaydet"}
-        </button>
       </section>
 
       <section className="mail-display-section">
