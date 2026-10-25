@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import type { MailDeliverabilityHub } from "@/lib/mailApi";
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 
 type Props = {
   hub: MailDeliverabilityHub;
@@ -23,7 +24,17 @@ async function copyText(value: string): Promise<boolean> {
   }
 }
 
-function CopyButton({ label, value }: { label: string; value: string }) {
+function CopyButton({
+  label,
+  copyLabel,
+  value,
+  t,
+}: {
+  label: string;
+  copyLabel: string;
+  value: string;
+  t: (key: string, params?: Record<string, string | number>) => string;
+}) {
   const [hint, setHint] = useState("");
   return (
     <div className="mail-deliverability-copy-row">
@@ -33,7 +44,11 @@ function CopyButton({ label, value }: { label: string; value: string }) {
         onClick={() =>
           void (async () => {
             const ok = await copyText(value);
-            setHint(ok ? "Kopyalandı" : "Kopyalanamadı");
+            setHint(
+              ok
+                ? t("settingsCopied", { label: copyLabel })
+                : t("settingsCopyFailed"),
+            );
             window.setTimeout(() => setHint(""), 2000);
           })()
         }
@@ -48,7 +63,8 @@ function CopyButton({ label, value }: { label: string; value: string }) {
 }
 
 export function MailDeliverabilityWizard({ hub }: Props) {
-  const domain = hub.dns?.domain?.trim() || "sizin-domain.com";
+  const { t } = useMailLocale();
+  const domain = hub.dns?.domain?.trim() || t("delivDomainPlaceholder");
   const dmarcHost = `_dmarc.${domain}`;
   const dmarcValue = `v=DMARC1; p=none; rua=mailto:dmarc@${domain}; pct=100; adkim=s; aspf=s`;
   const bimiHost = `default._bimi.${domain}`;
@@ -56,112 +72,132 @@ export function MailDeliverabilityWizard({ hub }: Props) {
     ? `v=BIMI1; l=${hub.bimi.logoUrl}`
     : `v=BIMI1; l=https://${domain}/logo.svg`;
 
-  const steps: Step[] = [
-    {
-      id: "mx",
-      title: "MX kaydı",
-      done: Boolean(hub.dns?.mx),
-      body: (
-        <>
-          <p className="mail-deliverability-step-desc">
-            Posta kutunuzun gelen kutusu için MX kaydı doğrulanmalı.
-          </p>
-          <p className="mail-deliverability-step-status">
-            Durum:{" "}
-            <span className={hub.dns?.mx ? "is-ok" : "is-bad"}>
-              {hub.dns?.mx ? "Doğrulandı" : "Eksik veya hatalı"}
-            </span>
-          </p>
-        </>
-      ),
-    },
-    {
-      id: "spf",
-      title: "SPF (TXT)",
-      done: Boolean(hub.dns?.spf),
-      body: (
-        <>
-          <p className="mail-deliverability-step-desc">
-            Gönderen domain için SPF TXT kaydı — genelde{" "}
-            <code>include:</code> Lerta posta sunucusu.
-          </p>
-          <p className="mail-deliverability-step-status">
-            Durum:{" "}
-            <span className={hub.dns?.spf ? "is-ok" : "is-bad"}>
-              {hub.dns?.spf ? "Doğrulandı" : "Eksik"}
-            </span>
-          </p>
-        </>
-      ),
-    },
-    {
-      id: "dkim",
-      title: "DKIM",
-      done: Boolean(hub.dns?.dkim),
-      body: (
-        <>
-          <p className="mail-deliverability-step-desc">
-            Seçilen gönderen kimliği için DKIM CNAME/TXT — konsol Domain sayfasından
-            kopyalayın.
-          </p>
-          <p className="mail-deliverability-step-status">
-            Durum:{" "}
-            <span className={hub.dns?.dkim ? "is-ok" : "is-bad"}>
-              {hub.dns?.dkim ? "Doğrulandı" : "Eksik"}
-            </span>
-          </p>
-        </>
-      ),
-    },
-    {
-      id: "dmarc",
-      title: "DMARC politikası",
-      done: (hub.dmarc?.dkimPassRatePercent ?? 0) >= 90,
-      body: (
-        <>
-          <p className="mail-deliverability-step-desc">
-            Önce <code>p=none</code> ile izleme; aggregate raporlar bu panelde görünür.
-            İtibar oturduğunda <code>quarantine</code> / <code>reject</code>.
-          </p>
-          <p className="mail-deliverability-host">
-            <span className="mail-deliverability-host-label">Host</span>
-            <code>{dmarcHost}</code>
-          </p>
-          <pre className="mail-deliverability-code">{dmarcValue}</pre>
-          <CopyButton label="DMARC TXT kopyala" value={dmarcValue} />
-          <p className="mail-deliverability-step-meta">
-            DKIM pass (dönem): {hub.dmarc?.dkimPassRatePercent ?? "—"}%
-          </p>
-        </>
-      ),
-    },
-    {
-      id: "bimi",
-      title: "BIMI (isteğe bağlı)",
-      done: Boolean(hub.bimi?.okForBimi),
-      body: (
-        <>
-          <p className="mail-deliverability-step-desc">
-            DMARC <code>p=quarantine</code> veya <code>reject</code> sonrası Gmail/Apple
-            inbox logosu için BIMI kaydı. SVG logo ve (bazı sağlayıcılarda) VMC
-            sertifikası gerekir.
-          </p>
-          {hub.bimi ? (
-            <p className="mail-deliverability-step-meta">
-              Logo kontrolü: {hub.bimi.detailTr}
-              {hub.bimi.contentType ? ` (${hub.bimi.contentType})` : ""}
+  const steps: Step[] = useMemo(
+    () => [
+      {
+        id: "mx",
+        title: t("delivStepMxTitle"),
+        done: Boolean(hub.dns?.mx),
+        body: (
+          <>
+            <p className="mail-deliverability-step-desc">{t("delivStepMxDesc")}</p>
+            <p className="mail-deliverability-step-status">
+              {t("delivStepStatusLabel")}{" "}
+              <span className={hub.dns?.mx ? "is-ok" : "is-bad"}>
+                {hub.dns?.mx ? t("delivStepVerified") : t("delivStepMxMissing")}
+              </span>
             </p>
-          ) : null}
-          <p className="mail-deliverability-host">
-            <span className="mail-deliverability-host-label">Host</span>
-            <code>{bimiHost}</code>
-          </p>
-          <pre className="mail-deliverability-code">{bimiValue}</pre>
-          <CopyButton label="BIMI TXT kopyala" value={bimiValue} />
-        </>
-      ),
-    },
-  ];
+          </>
+        ),
+      },
+      {
+        id: "spf",
+        title: t("delivStepSpfTitle"),
+        done: Boolean(hub.dns?.spf),
+        body: (
+          <>
+            <p className="mail-deliverability-step-desc">
+              {t("delivStepSpfDescLead")}
+              <code>include:</code>
+              {t("delivStepSpfDescEnd")}
+            </p>
+            <p className="mail-deliverability-step-status">
+              {t("delivStepStatusLabel")}{" "}
+              <span className={hub.dns?.spf ? "is-ok" : "is-bad"}>
+                {hub.dns?.spf ? t("delivStepVerified") : t("delivStepMissing")}
+              </span>
+            </p>
+          </>
+        ),
+      },
+      {
+        id: "dkim",
+        title: t("delivStepDkimTitle"),
+        done: Boolean(hub.dns?.dkim),
+        body: (
+          <>
+            <p className="mail-deliverability-step-desc">{t("delivStepDkimDesc")}</p>
+            <p className="mail-deliverability-step-status">
+              {t("delivStepStatusLabel")}{" "}
+              <span className={hub.dns?.dkim ? "is-ok" : "is-bad"}>
+                {hub.dns?.dkim ? t("delivStepVerified") : t("delivStepMissing")}
+              </span>
+            </p>
+          </>
+        ),
+      },
+      {
+        id: "dmarc",
+        title: t("delivStepDmarcTitle"),
+        done: (hub.dmarc?.dkimPassRatePercent ?? 0) >= 90,
+        body: (
+          <>
+            <p className="mail-deliverability-step-desc">
+              {t("delivStepDmarcDescLead")}
+              <code>p=none</code>
+              {t("delivStepDmarcDescMid")}
+              <code>quarantine</code> / <code>reject</code>
+              {t("delivStepDmarcDescEnd")}
+            </p>
+            <p className="mail-deliverability-host">
+              <span className="mail-deliverability-host-label">
+                {t("delivHostLabel")}
+              </span>
+              <code>{dmarcHost}</code>
+            </p>
+            <pre className="mail-deliverability-code">{dmarcValue}</pre>
+            <CopyButton
+              label={t("delivCopyDmarcBtn")}
+              copyLabel={t("delivCopyDmarcLabel")}
+              value={dmarcValue}
+              t={t}
+            />
+            <p className="mail-deliverability-step-meta">
+              {t("delivDkimPassPeriod", {
+                pct: hub.dmarc?.dkimPassRatePercent ?? "—",
+              })}
+            </p>
+          </>
+        ),
+      },
+      {
+        id: "bimi",
+        title: t("delivStepBimiTitle"),
+        done: Boolean(hub.bimi?.okForBimi),
+        body: (
+          <>
+            <p className="mail-deliverability-step-desc">
+              {t("delivStepBimiDescLead")}
+              <code>p=quarantine</code>
+              {t("delivStepBimiDescMid")}
+              <code>p=reject</code>
+              {t("delivStepBimiDescEnd")}
+            </p>
+            {hub.bimi ? (
+              <p className="mail-deliverability-step-meta">
+                {t("delivBimiLogoCheck")} {hub.bimi.detailTr}
+                {hub.bimi.contentType ? ` (${hub.bimi.contentType})` : ""}
+              </p>
+            ) : null}
+            <p className="mail-deliverability-host">
+              <span className="mail-deliverability-host-label">
+                {t("delivHostLabel")}
+              </span>
+              <code>{bimiHost}</code>
+            </p>
+            <pre className="mail-deliverability-code">{bimiValue}</pre>
+            <CopyButton
+              label={t("delivCopyBimiBtn")}
+              copyLabel={t("delivCopyBimiLabel")}
+              value={bimiValue}
+              t={t}
+            />
+          </>
+        ),
+      },
+    ],
+    [hub, t, dmarcHost, dmarcValue, bimiHost, bimiValue],
+  );
 
   const completed = steps.filter((s) => s.done).length;
   const progressPct = Math.round((completed / steps.length) * 100);
@@ -174,10 +210,13 @@ export function MailDeliverabilityWizard({ hub }: Props) {
       <header className="mail-posta-card-head mail-deliverability-wizard-head">
         <div>
           <h3 id="mail-dns-wizard-title" className="mail-posta-card-title">
-            DNS sihirbazı
+            {t("delivWizardTitle")}
           </h3>
           <p className="mail-posta-card-desc">
-            {completed}/{steps.length} adım tamam — kayıtları DNS sağlayıcınıza ekleyin.
+            {t("delivWizardDesc", {
+              completed,
+              total: steps.length,
+            })}
           </p>
         </div>
         <span className="mail-deliverability-wizard-pill">{progressPct}%</span>
@@ -188,7 +227,7 @@ export function MailDeliverabilityWizard({ hub }: Props) {
         aria-valuenow={progressPct}
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-label="DNS kurulum ilerlemesi"
+        aria-label={t("delivWizardProgressAria")}
       >
         <span
           className="mail-deliverability-progress-fill"
@@ -219,7 +258,7 @@ export function MailDeliverabilityWizard({ hub }: Props) {
                     : "mail-deliverability-step-badge"
                 }
               >
-                {step.done ? "Tamam" : "Yapılacak"}
+                {step.done ? t("delivWizardStepDone") : t("delivWizardStepTodo")}
               </span>
             </div>
             <div className="mail-deliverability-wizard-step-body">{step.body}</div>

@@ -15,6 +15,9 @@ import {
   type MailInboxRuleConditionGroup,
   type MailInboxRuleConditionGroups,
 } from "@/lib/mailApi";
+import { useMailLocale } from "@/lib/MailLocaleProvider";
+
+type MailT = (key: string, params?: Record<string, string | number>) => string;
 
 const emptyGroup = (): MailInboxRuleConditionGroup => ({
   matchAny: false,
@@ -27,36 +30,43 @@ const emptyGroup = (): MailInboxRuleConditionGroup => ({
   maxAttachmentBytes: null,
 });
 
-function groupSummary(group: MailInboxRuleConditionGroup): string {
+function groupSummary(group: MailInboxRuleConditionGroup, t: MailT): string {
   const parts: string[] = [];
   if (group.fromContains?.trim()) {
-    parts.push(`gönderen: ${group.fromContains.trim()}`);
+    parts.push(t("rulesCondFrom", { value: group.fromContains.trim() }));
   }
   if (group.subjectContains?.trim()) {
-    parts.push(`konu: ${group.subjectContains.trim()}`);
+    parts.push(t("rulesCondSubject", { value: group.subjectContains.trim() }));
   }
   if (group.toContains?.trim()) {
-    parts.push(`alıcı: ${group.toContains.trim()}`);
+    parts.push(t("rulesCondTo", { value: group.toContains.trim() }));
   }
   if (group.bodyContains?.trim()) {
-    parts.push(`gövde: ${group.bodyContains.trim()}`);
+    parts.push(t("rulesCondBody", { value: group.bodyContains.trim() }));
   }
   if (group.requireAttachment) {
-    parts.push("ek");
+    parts.push(t("attachLabel"));
   }
   if (group.minAttachmentBytes != null) {
-    parts.push(`ek≥${group.minAttachmentBytes}B`);
+    parts.push(t("rulesCondAttachMin", { bytes: group.minAttachmentBytes }));
   }
   if (group.maxAttachmentBytes != null) {
-    parts.push(`ek≤${group.maxAttachmentBytes}B`);
+    parts.push(t("rulesCondAttachMax", { bytes: group.maxAttachmentBytes }));
   }
   const inner = parts.length ? parts.join(", ") : "—";
-  return group.matchAny ? `(${inner} — VEYA)` : `(${inner} — VE)`;
+  return group.matchAny
+    ? t("rulesCondGroupAny", { inner })
+    : t("rulesCondGroupAll", { inner });
 }
 
-function formatConditionGroups(groups: MailInboxRuleConditionGroups): string {
-  const between = groups.matchAnyBetweenGroups ? " VEYA " : " VE ";
-  return groups.groups.map(groupSummary).join(between);
+function formatConditionGroups(
+  groups: MailInboxRuleConditionGroups,
+  t: MailT,
+): string {
+  const between = groups.matchAnyBetweenGroups
+    ? t("rulesCondBetweenOr")
+    : t("rulesCondBetweenAnd");
+  return groups.groups.map((g) => groupSummary(g, t)).join(between);
 }
 
 const MAX_CONDITION_GROUPS = 5;
@@ -142,6 +152,7 @@ function ActionChip({
 }
 
 export function MailRulesPanel({ accessToken }: Props) {
+  const { t } = useMailLocale();
   const [rules, setRules] = useState<MailInboxRule[]>([]);
   const [folders, setFolders] = useState<MailCustomFolder[]>([]);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -176,9 +187,9 @@ export function MailRulesPanel({ accessToken }: Props) {
 
   useEffect(() => {
     void reload()
-      .catch(() => setError("Kurallar yüklenemedi."))
+      .catch(() => setError(t("rulesErrLoad")))
       .finally(() => setInitialLoading(false));
-  }, [accessToken]);
+  }, [accessToken, t]);
 
   function buildConditionGroupsPayload(): MailInboxRuleConditionGroups | null {
     if (!useConditionGroups) {
@@ -285,7 +296,7 @@ export function MailRulesPanel({ accessToken }: Props) {
       };
       if (editingRuleId) {
         await updateInboxRule(accessToken, editingRuleId, body);
-        setInfo("Kural güncellendi.");
+        setInfo(t("rulesInfoUpdated"));
       } else {
         await createInboxRule(accessToken, {
           ...body,
@@ -304,7 +315,7 @@ export function MailRulesPanel({ accessToken }: Props) {
             : matchAnyCondition,
           conditionGroups: groupsPayload,
         });
-        setInfo("Kural eklendi.");
+        setInfo(t("rulesInfoAdded"));
       }
       resetForm();
       await reload();
@@ -313,8 +324,8 @@ export function MailRulesPanel({ accessToken }: Props) {
         err instanceof Error
           ? err.message
           : editingRuleId
-            ? "Kural güncellenemedi."
-            : "Kural eklenemedi.",
+            ? t("rulesErrUpdate")
+            : t("rulesErrAdd"),
       );
     }
   }
@@ -333,10 +344,7 @@ export function MailRulesPanel({ accessToken }: Props) {
 
   return (
     <div className="mail-rules-panel mail-rules-panel--premium">
-      <p className="mail-posta-intro">
-        Yeni gelen postalar için sunucu kuralları. Üstten alta sırayla değerlendirilir;
-        ilk eşleşen kural uygulanır.
-      </p>
+      <p className="mail-posta-intro">{t("rulesIntro")}</p>
       {error ? (
         <p className="mail-accounts-status mail-accounts-status--err" role="alert">
           {error}
@@ -350,16 +358,14 @@ export function MailRulesPanel({ accessToken }: Props) {
 
       <section className="mail-posta-card">
         <header className="mail-posta-card-head">
-          <h3 className="mail-posta-card-title">Mevcut kurallar</h3>
-          <p className="mail-posta-card-desc">
-            Sırayı değiştirmek için yukarı/aşağı kullanın.
-          </p>
+          <h3 className="mail-posta-card-title">{t("rulesExistingTitle")}</h3>
+          <p className="mail-posta-card-desc">{t("rulesExistingDesc")}</p>
         </header>
       <ul className="mail-rules-list mail-rules-list--premium">
         {rules.length === 0 ? (
           <li className="mail-rules-empty">
             <span className="mail-rules-empty-icon" aria-hidden="true">⚡</span>
-            Henüz kural yok.
+            {t("rulesEmpty")}
           </li>
         ) : (
           rules.map((rule, index) => (
@@ -377,7 +383,7 @@ export function MailRulesPanel({ accessToken }: Props) {
                   type="button"
                   className="mail-premium-btn mail-premium-btn--ghost mail-rules-order-btn"
                   disabled={index === 0}
-                  title="Yukarı"
+                  title={t("rulesMoveUp")}
                   onClick={() => {
                     const ids = rules.map((r) => r.id);
                     [ids[index - 1], ids[index]] = [ids[index], ids[index - 1]];
@@ -392,7 +398,7 @@ export function MailRulesPanel({ accessToken }: Props) {
                   type="button"
                   className="mail-premium-btn mail-premium-btn--ghost mail-rules-order-btn"
                   disabled={index === rules.length - 1}
-                  title="Aşağı"
+                  title={t("rulesMoveDown")}
                   onClick={() => {
                     const ids = rules.map((r) => r.id);
                     [ids[index], ids[index + 1]] = [ids[index + 1], ids[index]];
@@ -414,34 +420,41 @@ export function MailRulesPanel({ accessToken }: Props) {
                       enabled: !rule.enabled,
                     }).then(() => reload())
                   }
-                  label="Aktif"
+                  label={t("rulesActiveLabel")}
                 />
               </div>
               <div className="mail-rules-meta">
-                {rule.fromContains ? `Gönderen: “${rule.fromContains}”` : null}
+                {rule.fromContains
+                  ? t("rulesMetaFrom", { value: rule.fromContains })
+                  : null}
                 {rule.fromContains && rule.subjectContains ? " · " : null}
                 {rule.subjectContains
-                  ? `Konu: “${rule.subjectContains}”`
+                  ? t("rulesMetaSubject", { value: rule.subjectContains })
                   : null}
-                {rule.toContains ? ` · Alıcı: “${rule.toContains}”` : null}
-                {rule.requireAttachment ? " · Ek var" : null}
-                {rule.matchAnyCondition ? " · Koşul: VEYA" : null}
+                {rule.toContains
+                  ? ` · ${t("rulesMetaTo", { value: rule.toContains })}`
+                  : null}
+                {rule.requireAttachment ? ` · ${t("rulesMetaHasAttachment")}` : null}
+                {rule.matchAnyCondition ? ` · ${t("rulesMetaConditionOr")}` : null}
                 {rule.conditionGroups
-                  ? ` · Gruplar: ${formatConditionGroups(rule.conditionGroups)}`
+                  ? ` · ${t("rulesMetaGroups", {
+                      summary: formatConditionGroups(rule.conditionGroups, t),
+                    })}`
                   : null}
               </div>
               <div className="mail-rules-meta">
-                {rule.actionStar ? "★ Yıldızla" : null}
+                {rule.actionStar ? t("readStar") : null}
                 {rule.actionStar && rule.actionCustomFolderId ? " · " : null}
                 {rule.actionCustomFolderId
-                  ? `Klasör: ${
-                      folders.find((f) => f.id === rule.actionCustomFolderId)
-                        ?.name ?? "—"
-                    }`
+                  ? ` · ${t("rulesMetaFolder", {
+                      name:
+                        folders.find((f) => f.id === rule.actionCustomFolderId)
+                          ?.name ?? "—",
+                    })}`
                   : null}
-                {rule.actionArchive ? " · Arşivle" : null}
-                {rule.actionMarkRead ? " · Okundu" : null}
-                {rule.actionTrash ? " · Çöp" : null}
+                {rule.actionArchive ? ` · ${t("readArchive")}` : null}
+                {rule.actionMarkRead ? ` · ${t("bulkMarkRead")}` : null}
+                {rule.actionTrash ? ` · ${t("bulkTrash")}` : null}
               </div>
               </div>
               </div>
@@ -451,7 +464,7 @@ export function MailRulesPanel({ accessToken }: Props) {
                   className="mail-premium-btn mail-premium-btn--ghost"
                   onClick={() => beginEdit(rule)}
                 >
-                  Düzenle
+                  {t("draftEdit")}
                 </button>
                 <button
                   type="button"
@@ -459,7 +472,7 @@ export function MailRulesPanel({ accessToken }: Props) {
                   onClick={() =>
                     void previewInboxRule(accessToken, rule.id).then(
                       ({ preview }) => {
-                        const cap = preview.capped ? " (ilk 500 tarandı)" : "";
+                        const cap = preview.capped ? t("rulesPreviewCapped") : "";
                         const sample = preview.samples
                           .map(
                             (s) =>
@@ -473,14 +486,24 @@ export function MailRulesPanel({ accessToken }: Props) {
                           )
                           .join("; ");
                         setInfo(
-                          `Önizleme: ${preview.matchCount} eşleşme${cap}. Mantık: ${preview.matchLogicDescription}${sample ? ` — eşleşen: ${sample}` : ""}${counter ? ` — eşleşmeyen: ${counter}` : ""}`,
+                          t("rulesPreviewHeader", {
+                            matchCount: preview.matchCount,
+                            capped: cap,
+                            logic: preview.matchLogicDescription,
+                          }) +
+                            (sample
+                              ? t("rulesPreviewMatched", { sample })
+                              : "") +
+                            (counter
+                              ? t("rulesPreviewUnmatched", { sample: counter })
+                              : ""),
                         );
                       },
-                      () => setError("Önizleme başarısız."),
+                      () => setError(t("rulesPreviewFailed")),
                     )
                   }
                 >
-                  Önizle
+                  {t("rulesPreviewBtn")}
                 </button>
                 <button
                   type="button"
@@ -488,19 +511,19 @@ export function MailRulesPanel({ accessToken }: Props) {
                   onClick={() =>
                     void applyInboxRuleToMailbox(accessToken, rule.id).then(
                       (r) => {
-                        setInfo(`${r.applied} mesaja uygulandı (en fazla 100).`);
+                        setInfo(t("rulesAppliedInfo", { count: r.applied }));
                       },
                       (err: unknown) => {
                         setError(
                           err instanceof Error
                             ? err.message
-                            : "Uygulanamadı.",
+                            : t("rulesApplyFailed"),
                         );
                       },
                     )
                   }
                 >
-                  Gelen kutusuna uygula
+                  {t("rulesApplyInboxBtn")}
                 </button>
                 <button
                   type="button"
@@ -511,7 +534,7 @@ export function MailRulesPanel({ accessToken }: Props) {
                     )
                   }
                 >
-                  Sil
+                  {t("actionDelete")}
                 </button>
               </div>
             </li>
@@ -523,18 +546,16 @@ export function MailRulesPanel({ accessToken }: Props) {
       <section className="mail-posta-card mail-rules-form-card">
         <header className="mail-posta-card-head">
           <h3 className="mail-posta-card-title">
-            {editingRuleId ? "Kural düzenle" : "Yeni kural"}
+            {editingRuleId ? t("rulesFormEditTitle") : t("rulesFormNewTitle")}
           </h3>
-          <p className="mail-posta-card-desc">
-            Koşullar ve uygulanacak işlemleri tanımlayın.
-          </p>
+          <p className="mail-posta-card-desc">{t("rulesFormDesc")}</p>
         </header>
         <div className="mail-rules-form-body">
       <label className="mail-premium-field">
-        <span className="mail-premium-field-label">Kural adı</span>
+        <span className="mail-premium-field-label">{t("rulesFieldName")}</span>
         <input
           className="mail-premium-field-input"
-          placeholder="Örn. Destek talepleri"
+          placeholder={t("rulesNamePlaceholder")}
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
@@ -542,20 +563,22 @@ export function MailRulesPanel({ accessToken }: Props) {
       <RuleToggle
         checked={useConditionGroups}
         onChange={setUseConditionGroups}
-        label="Gelişmiş koşul grupları"
-        hint="En fazla 5 grup; iç içe VE / VEYA mantığı."
+        label={t("rulesAdvancedGroups")}
+        hint={t("rulesAdvancedGroupsHint")}
       />
       {useConditionGroups ? (
         <div className="mail-rules-groups mail-rules-groups--premium">
           <RuleToggle
             checked={matchAnyBetweenGroups}
             onChange={setMatchAnyBetweenGroups}
-            label="Gruplar arası VEYA"
-            hint="Kapalıysa tüm gruplar sağlanmalı (VE)."
+            label={t("rulesBetweenGroupsOr")}
+            hint={t("rulesBetweenGroupsOrHint")}
           />
           {conditionGroups.map((group, gi) => (
             <fieldset key={gi} className="mail-rules-group mail-rules-group--premium">
-              <legend className="mail-rules-group-legend">Grup {gi + 1}</legend>
+              <legend className="mail-rules-group-legend">
+                {t("rulesGroupLegend", { n: gi + 1 })}
+              </legend>
               <RuleToggle
                 checked={group.matchAny}
                 onChange={(on) => {
@@ -563,13 +586,13 @@ export function MailRulesPanel({ accessToken }: Props) {
                   next[gi] = { ...group, matchAny: on };
                   setConditionGroups(next);
                 }}
-                label="Bu grupta VEYA"
+                label={t("rulesInGroupOr")}
               />
               <label className="mail-premium-field">
-                <span className="mail-premium-field-label">Gönderen</span>
+                <span className="mail-premium-field-label">{t("rulesFieldFrom")}</span>
                 <input
                   className="mail-premium-field-input"
-                  placeholder="| ile alternatif"
+                  placeholder={t("rulesPlaceholderPipeAlt")}
                   value={group.fromContains ?? ""}
                   onChange={(e) => {
                     const next = [...conditionGroups];
@@ -579,10 +602,10 @@ export function MailRulesPanel({ accessToken }: Props) {
                 />
               </label>
               <label className="mail-premium-field">
-                <span className="mail-premium-field-label">Konu</span>
+                <span className="mail-premium-field-label">{t("rulesFieldSubject")}</span>
                 <input
                   className="mail-premium-field-input"
-                  placeholder="| ile alternatif"
+                  placeholder={t("rulesPlaceholderPipeAlt")}
                   value={group.subjectContains ?? ""}
                   onChange={(e) => {
                     const next = [...conditionGroups];
@@ -592,10 +615,10 @@ export function MailRulesPanel({ accessToken }: Props) {
                 />
               </label>
               <label className="mail-premium-field">
-                <span className="mail-premium-field-label">Alıcı (To)</span>
+                <span className="mail-premium-field-label">{t("rulesFieldTo")}</span>
                 <input
                   className="mail-premium-field-input"
-                  placeholder="| ile alternatif"
+                  placeholder={t("rulesPlaceholderPipeAlt")}
                   value={group.toContains ?? ""}
                   onChange={(e) => {
                     const next = [...conditionGroups];
@@ -605,10 +628,10 @@ export function MailRulesPanel({ accessToken }: Props) {
                 />
               </label>
               <label className="mail-premium-field">
-                <span className="mail-premium-field-label">Gövde</span>
+                <span className="mail-premium-field-label">{t("rulesFieldBody")}</span>
                 <input
                   className="mail-premium-field-input"
-                  placeholder="Metin içerir (| alternatif)"
+                  placeholder={t("rulesPlaceholderBody")}
                   value={group.bodyContains ?? ""}
                   onChange={(e) => {
                     const next = [...conditionGroups];
@@ -619,12 +642,14 @@ export function MailRulesPanel({ accessToken }: Props) {
               </label>
               <div className="mail-rules-attach-row">
                 <label className="mail-premium-field">
-                  <span className="mail-premium-field-label">Min ek (byte)</span>
+                  <span className="mail-premium-field-label">
+                    {t("rulesMinAttachBytes")}
+                  </span>
                   <input
                     type="number"
                     min={0}
                     className="mail-premium-field-input"
-                    placeholder="Toplam"
+                    placeholder={t("rulesAttachTotalPlaceholder")}
                     value={group.minAttachmentBytes ?? ""}
                     onChange={(e) => {
                       const next = [...conditionGroups];
@@ -638,12 +663,14 @@ export function MailRulesPanel({ accessToken }: Props) {
                   />
                 </label>
                 <label className="mail-premium-field">
-                  <span className="mail-premium-field-label">Max ek (byte)</span>
+                  <span className="mail-premium-field-label">
+                    {t("rulesMaxAttachBytes")}
+                  </span>
                   <input
                     type="number"
                     min={0}
                     className="mail-premium-field-input"
-                    placeholder="Toplam"
+                    placeholder={t("rulesAttachTotalPlaceholder")}
                     value={group.maxAttachmentBytes ?? ""}
                     onChange={(e) => {
                       const next = [...conditionGroups];
@@ -664,7 +691,7 @@ export function MailRulesPanel({ accessToken }: Props) {
                   next[gi] = { ...group, requireAttachment: on };
                   setConditionGroups(next);
                 }}
-                label="Ek zorunlu"
+                label={t("rulesRequireAttachment")}
               />
             </fieldset>
           ))}
@@ -672,7 +699,9 @@ export function MailRulesPanel({ accessToken }: Props) {
       ) : (
         <div className="mail-rules-simple-conditions">
           <label className="mail-premium-field">
-            <span className="mail-premium-field-label">Gönderen içerir</span>
+            <span className="mail-premium-field-label">
+              {t("rulesFieldFromContains")}
+            </span>
             <input
               className="mail-premium-field-input"
               placeholder="destek|support"
@@ -681,19 +710,23 @@ export function MailRulesPanel({ accessToken }: Props) {
             />
           </label>
           <label className="mail-premium-field">
-            <span className="mail-premium-field-label">Konu içerir</span>
+            <span className="mail-premium-field-label">
+              {t("rulesFieldSubjectContains")}
+            </span>
             <input
               className="mail-premium-field-input"
-              placeholder="| ile alternatif"
+              placeholder={t("rulesPlaceholderPipeAlt")}
               value={subjectContains}
               onChange={(e) => setSubjectContains(e.target.value)}
             />
           </label>
           <label className="mail-premium-field">
-            <span className="mail-premium-field-label">Alıcı (To) içerir</span>
+            <span className="mail-premium-field-label">
+              {t("rulesFieldToContains")}
+            </span>
             <input
               className="mail-premium-field-input"
-              placeholder="| ile alternatif"
+              placeholder={t("rulesPlaceholderPipeAlt")}
               value={toContains}
               onChange={(e) => setToContains(e.target.value)}
             />
@@ -701,55 +734,55 @@ export function MailRulesPanel({ accessToken }: Props) {
           <RuleToggle
             checked={matchAnyCondition}
             onChange={setMatchAnyCondition}
-            label="Koşullardan herhangi biri (VEYA)"
-            hint="Varsayılan: tüm koşullar (VE)."
+            label={t("rulesAnyCondition")}
+            hint={t("rulesAnyConditionHint")}
           />
           <RuleToggle
             checked={requireAttachment}
             onChange={setRequireAttachment}
-            label="Yalnızca ekli postalar"
+            label={t("rulesOnlyWithAttachment")}
           />
         </div>
       )}
 
       <div className="mail-rules-actions-section">
-        <span className="mail-premium-field-label">İşlemler</span>
+        <span className="mail-premium-field-label">{t("rulesActionsSection")}</span>
         <div
           className="mail-rules-action-chips"
           role="group"
-          aria-label="Kural işlemleri"
+          aria-label={t("rulesActionsAria")}
         >
           <ActionChip
             active={actionStar}
-            label="Yıldızla"
+            label={t("readStar")}
             onClick={() => setActionStar(!actionStar)}
           />
           <ActionChip
             active={actionArchive}
-            label="Arşivle"
+            label={t("readArchive")}
             onClick={() => setActionArchive(!actionArchive)}
           />
           <ActionChip
             active={actionMarkRead}
-            label="Okundu"
+            label={t("bulkMarkRead")}
             onClick={() => setActionMarkRead(!actionMarkRead)}
           />
           <ActionChip
             active={actionTrash}
-            label="Çöp"
+            label={t("bulkTrash")}
             onClick={() => setActionTrash(!actionTrash)}
           />
         </div>
       </div>
 
       <label className="mail-premium-field">
-        <span className="mail-premium-field-label">Özel klasör</span>
+        <span className="mail-premium-field-label">{t("rulesCustomFolder")}</span>
         <select
           className="mail-premium-field-input mail-premium-field-select"
           value={actionFolderId}
           onChange={(e) => setActionFolderId(e.target.value)}
         >
-          <option value="">Klasör seçme</option>
+          <option value="">{t("rulesNoFolderOption")}</option>
           {folders.map((f) => (
             <option key={f.id} value={f.id}>{f.name}</option>
           ))}
@@ -762,7 +795,7 @@ export function MailRulesPanel({ accessToken }: Props) {
           className="mail-premium-btn mail-premium-btn--primary"
           onClick={() => void onSubmit()}
         >
-          {editingRuleId ? "Kaydet" : "Kural ekle"}
+          {editingRuleId ? t("actionSave") : t("rulesAddBtn")}
         </button>
         {editingRuleId ? (
           <button
@@ -770,7 +803,7 @@ export function MailRulesPanel({ accessToken }: Props) {
             className="mail-premium-btn mail-premium-btn--ghost"
             onClick={() => resetForm()}
           >
-            İptal
+            {t("composeCancel")}
           </button>
         ) : null}
       </div>
