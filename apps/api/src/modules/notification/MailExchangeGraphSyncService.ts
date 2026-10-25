@@ -1245,16 +1245,16 @@ export class MailExchangeGraphSyncService {
       },
       body: JSON.stringify(body),
     });
+    const text = await response.text();
     if (!response.ok) {
-      const text = await response.text();
       throw new BadRequestException(
         `Graph POST başarısız (${response.status}): ${text.slice(0, 200)}`,
       );
     }
-    if (response.status === 204) {
+    if (response.status === 204 || response.status === 202 || !text.trim()) {
       return {};
     }
-    return (await response.json()) as Record<string, unknown>;
+    return JSON.parse(text) as Record<string, unknown>;
   }
 
   private async graphDelete(accessToken: string, url: string): Promise<void> {
