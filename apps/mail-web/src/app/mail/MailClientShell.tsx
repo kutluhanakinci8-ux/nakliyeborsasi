@@ -208,6 +208,9 @@ export function MailClientShell({ mail }: Props) {
     searchQuery,
     searchResults,
     searchExternalHits,
+    openExternalSearchHit,
+    composeScheduleAt,
+    setComposeScheduleAt,
     selectedId,
     composeSendAsKey,
     setComposeSendAsKey,
@@ -1090,6 +1093,27 @@ export function MailClientShell({ mail }: Props) {
                   ? ` · ${searchExternalHits.length} bulut (Microsoft/Gmail)`
                   : ""}
               </p>
+            ) : null}
+            {searchActive && searchExternalHits.length > 0 ? (
+              <ul className="mail-search-external-hits">
+                {searchExternalHits.map((hit) => (
+                  <li key={`${hit.provider}:${hit.providerMessageId}`}>
+                    <button
+                      type="button"
+                      className="mail-list-item"
+                      onClick={() => void openExternalSearchHit(hit)}
+                    >
+                      <span className="mail-inbox-source-badge">
+                        {hit.provider === "gmail_api" ? "Gmail" : "Microsoft"}
+                      </span>
+                      <strong>{hit.subject}</strong>
+                      <span className="mail-accounts-muted">
+                        {hit.fromAddress} · {hit.accountEmail}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
             ) : null}
           </div>
         ) : null}
@@ -2281,6 +2305,16 @@ export function MailClientShell({ mail }: Props) {
                   >
                     {composeShowCcBcc ? "Cc/Bcc gizle" : "Cc / Bcc"}
                   </button>
+                  <label className="compose-field-label" htmlFor="compose-schedule">
+                    Zamanla
+                  </label>
+                  <input
+                    id="compose-schedule"
+                    type="datetime-local"
+                    className="compose-input"
+                    value={composeScheduleAt}
+                    onChange={(e) => setComposeScheduleAt(e.target.value)}
+                  />
                 </div>
               ) : null}
 

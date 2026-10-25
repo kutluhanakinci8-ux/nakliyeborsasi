@@ -111,14 +111,6 @@ export class MailGmailSyncService {
       throw new BadRequestException("OAuth kodu veya state eksik.");
     }
     const parsed = this.parseOAuthState(state, actor);
-    const canAdd = await this.mailConnectedAccountsService.canAddConnectedAccount(
-      actor.companyId,
-    );
-    if (!canAdd) {
-      throw new BadRequestException(
-        "Bağlı hesap limitine ulaşıldı veya premium kapalı.",
-      );
-    }
     const tokens = await this.exchangeCodeForTokens(code.trim());
     const profile = await this.fetchGoogleEmail(tokens.accessToken);
     const email = profile.email.toLowerCase();
@@ -126,6 +118,14 @@ export class MailGmailSyncService {
       where: { organizationId: actor.companyId, emailAddress: email },
     });
     if (!account) {
+      const canAdd = await this.mailConnectedAccountsService.canAddConnectedAccount(
+        actor.companyId,
+      );
+      if (!canAdd) {
+        throw new BadRequestException(
+          "Bağlı hesap limitine ulaşıldı veya premium kapalı.",
+        );
+      }
       account = this.accountRepository.create({
         organizationId: actor.companyId,
         connectedByUserId: actor.userId,
@@ -216,8 +216,18 @@ export class MailGmailSyncService {
     let updated = 0;
     try {
       const profile = await this.gmailGet(accessToken, `${GMAIL_BASE}/profile`);
+      const previousHistoryId = account.historyId;
       if (typeof profile.historyId === "string") {
         account.historyId = profile.historyId;
+      }
+      if (previousHistoryId) {
+        const delta = await this.syncHistoryDelta(
+          accessToken,
+          account,
+          previousHistoryId,
+        );
+        imported += delta.imported;
+        updated += delta.updated;
       }
       for (const label of GMAIL_SYNC_LABELS) {
         const list = await this.gmailGet(
@@ -390,6 +400,88 @@ export class MailGmailSyncService {
     return hits;
   }
 
+  public async importMessageById(
+    organizationId: string,
+    accountId: string,
+    providerMessageId: string,
+  ): Promise<{ localMessageId: string }> {
+    const account = await this.accountRepository.findOne({
+      where: { id: accountId, organizationId, enabled: true },
+    });
+    if (!account?.mailboxId) {
+      throw new NotFoundException("Gmail bağlantısı bulunamadı.");
+    }
+    const accessToken = await this.resolveAccessToken(account);
+    const full = await this.gmailGet(
+      accessToken,
+      `${GMAIL_BASE}/messages/${providerMessageId}?format=full`,
+    );
+    const labelIds = (full.labelIds ?? []) as string[];
+    const folderKey =
+      labelIds.includes("DRAFT")
+        ? "drafts"
+        : labelIds.includes("SENT")
+          ? "sentitems"
+          : labelIds.includes("TRASH")
+            ? "deleteditems"
+            : labelIds.includes("SPAM")
+              ? "junkemail"
+              : "inbox";
+    await this.upsertGmailMessage(
+      account,
+      full as GmailMessage,
+      folderKey,
+    );
+    const local = await this.inboundRepository.findOne({
+      where: {
+        gmailSyncAccountId: account.id,
+        gmailMessageId: providerMessageId,
+      },
+    });
+    if (!local) {
+      throw new NotFoundException("Mesaj içe aktarılamadı.");
+    }
+    return { localMessageId: local.id };
+  }
+
+  private async syncHistoryDelta(
+    accessToken: string,
+    account: MailGmailSyncAccountEntity,
+    startHistoryId: string,
+  ): Promise<{ imported: number; updated: number }> {
+    let imported = 0;
+    let updated = 0;
+    const history = await this.gmailGet(
+      accessToken,
+      `${GMAIL_BASE}/history?startHistoryId=${startHistoryId}&historyTypes=messageAdded`,
+    );
+    const records = (history.history ?? []) as Array<{
+      messagesAdded?: Array<{ message?: { id?: string } }>;
+    }>;
+    for (const record of records) {
+      for (const added of record.messagesAdded ?? []) {
+        if (!added.message?.id) {
+          continue;
+        }
+        const full = await this.gmailGet(
+          accessToken,
+          `${GMAIL_BASE}/messages/${added.message.id}?format=full`,
+        );
+        const result = await this.upsertGmailMessage(
+          account,
+          full as GmailMessage,
+          "inbox",
+        );
+        if (result === "imported") {
+          imported += 1;
+        } else if (result === "updated") {
+          updated += 1;
+        }
+      }
+    }
+    return { imported, updated };
+  }
+
   public async sendRawMessage(
     organizationId: string,
     accountId: string,
@@ -462,6 +554,7 @@ export class MailGmailSyncService {
       existing.mailboxFolder = folderState.mailboxFolder;
       existing.spamStatus = folderState.spamStatus;
       existing.exchangeWellKnownFolder = folderKey;
+      existing.gmailThreadId = message.threadId ?? existing.gmailThreadId;
       existing.internetMessageId =
         internetMessageId ?? existing.internetMessageId;
       if (attachments.length > 0) {
@@ -485,6 +578,7 @@ export class MailGmailSyncService {
         attachments: attachments.length > 0 ? attachments : null,
         gmailSyncAccountId: account.id,
         gmailMessageId: message.id,
+        gmailThreadId: message.threadId ?? null,
         exchangeWellKnownFolder: folderKey,
         receivedAt,
       }),

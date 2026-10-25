@@ -86,6 +86,7 @@ import {
   refreshInboxAiFocus,
   type MailInboxBranding,
   searchInbox,
+  importConnectedSearchMessage,
   type MailConnectedExternalSearchHit,
   sendDraft,
   setMessageMailboxFolder,
@@ -398,6 +399,7 @@ export function useMailClientController({
     null,
   );
   const [composeSendAsKey, setComposeSendAsKey] = useState("lerta");
+  const [composeScheduleAt, setComposeScheduleAt] = useState("");
   const [composeRich, setComposeRich] = useState(true);
   const [composeHtml, setComposeHtml] = useState("");
   const [composePreviewHtml, setComposePreviewHtml] = useState<string | null>(
@@ -811,6 +813,31 @@ export function useMailClientController({
         ? { ...prev, unreadCount: Math.max(0, prev.unreadCount - 1) }
         : prev,
     );
+  }
+
+  async function openExternalSearchHit(
+    hit: MailConnectedExternalSearchHit,
+  ): Promise<void> {
+    if (!accessToken) {
+      return;
+    }
+    try {
+      if (hit.localMessageId) {
+        await openMessage(hit.localMessageId);
+        return;
+      }
+      const imported = await importConnectedSearchMessage(accessToken, {
+        provider: hit.provider,
+        accountId: hit.accountId,
+        providerMessageId: hit.providerMessageId,
+      });
+      await openMessage(imported.localMessageId);
+      setToast("Bulut mesajı içe aktarıldı.");
+    } catch (error) {
+      setToast(
+        error instanceof Error ? error.message : "Mesaj içe aktarılamadı.",
+      );
+    }
   }
 
   async function openMessage(id: string) {
@@ -1430,6 +1457,9 @@ export function useMailClientController({
             merge: buildComposeMergePayload(),
             contentProtection,
             ...connectedSend,
+            ...(composeScheduleAt
+              ? { scheduleAt: new Date(composeScheduleAt).toISOString() }
+              : {}),
           });
           if (applyDelayedSend(result)) {
             scheduledUndo = true;
@@ -2849,9 +2879,12 @@ export function useMailClientController({
     searchQuery,
     searchResults,
     searchExternalHits,
+    openExternalSearchHit,
     selectedId,
     composeSendAsKey,
     setComposeSendAsKey,
+    composeScheduleAt,
+    setComposeScheduleAt,
     sendCompose,
     sendReadiness,
     sendReply,

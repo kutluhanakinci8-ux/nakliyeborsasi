@@ -23,6 +23,7 @@ import {
   MailIdentityAuditAction,
   MailIdentityAuditService,
 } from "./MailIdentityAuditService";
+import { MailConnectedAccountsService } from "./MailConnectedAccountsService";
 
 const GRAPH_SCOPE =
   "offline_access User.Read Mail.ReadWrite Mail.Send openid profile email";
@@ -66,6 +67,7 @@ export class MailExchangeGraphSyncService {
     private readonly inboundRepository: Repository<MailInboundMessageEntity>,
     private readonly configService: ConfigService,
     private readonly mailIdentityAuditService: MailIdentityAuditService,
+    private readonly mailConnectedAccountsService: MailConnectedAccountsService,
   ) {}
 
   public isConfigured(): boolean {
@@ -161,6 +163,14 @@ export class MailExchangeGraphSyncService {
       },
     });
     if (!account) {
+      const canAdd = await this.mailConnectedAccountsService.canAddConnectedAccount(
+        actor.companyId,
+      );
+      if (!canAdd) {
+        throw new BadRequestException(
+          "Bağlı hesap limitine ulaşıldı veya premium kapalı.",
+        );
+      }
       account = this.accountRepository.create({
         organizationId: actor.companyId,
         connectedByUserId: actor.userId,
@@ -401,6 +411,65 @@ export class MailExchangeGraphSyncService {
     }
   }
 
+  public async importMessageById(
+    organizationId: string,
+    accountId: string,
+    exchangeMessageId: string,
+  ): Promise<{ localMessageId: string }> {
+    const account = await this.accountRepository.findOne({
+      where: { id: accountId, organizationId, enabled: true },
+    });
+    if (!account?.mailboxId) {
+      throw new NotFoundException("Exchange bağlantısı bulunamadı.");
+    }
+    const accessToken = await this.resolveAccessToken(account);
+    const message = (await this.graphGet(
+      accessToken,
+      `${GRAPH_BASE}/me/messages/${exchangeMessageId}?$select=${GRAPH_MESSAGE_SELECT}`,
+    )) as GraphMessage;
+    if (!message.id) {
+      throw new NotFoundException("Graph mesajı bulunamadı.");
+    }
+    const folderState = this.mapExchangeFolder("inbox");
+    const fromAddress = message.from?.emailAddress?.address ?? "unknown@exchange";
+    const subject = message.subject?.trim() || "(Konu yok)";
+    const existing = await this.inboundRepository.findOne({
+      where: {
+        exchangeSyncAccountId: account.id,
+        exchangeMessageId: message.id,
+      },
+    });
+    const payload = {
+      mailboxId: account.mailboxId,
+      fromAddress,
+      subject,
+      snippet: message.bodyPreview?.slice(0, 500) ?? null,
+      bodyText:
+        message.body?.contentType === "text"
+          ? message.body.content?.slice(0, 200_000) ?? null
+          : null,
+      bodyHtml:
+        message.body?.contentType === "html"
+          ? message.body.content?.slice(0, 400_000) ?? null
+          : null,
+      spamStatus: folderState.spamStatus,
+      mailboxFolder: folderState.mailboxFolder,
+      internetMessageId: message.internetMessageId ?? null,
+      readAt: message.isRead ? new Date() : null,
+      exchangeSyncAccountId: account.id,
+      exchangeMessageId: message.id,
+      exchangeConversationId: message.conversationId ?? null,
+      exchangeWellKnownFolder: folderState.exchangeWellKnownFolder,
+      receivedAt: message.receivedDateTime
+        ? new Date(message.receivedDateTime)
+        : new Date(),
+    };
+    const saved = existing
+      ? await this.inboundRepository.save({ ...existing, ...payload })
+      : await this.inboundRepository.save(this.inboundRepository.create(payload));
+    return { localMessageId: saved.id };
+  }
+
   public async searchMessages(
     organizationId: string,
     accountId: string,
@@ -446,11 +515,11 @@ export class MailExchangeGraphSyncService {
       }));
   }
 
-  public async sendMailMessage(
+  public async sendReplyMessage(
     organizationId: string,
     accountId: string,
+    exchangeMessageId: string,
     message: {
-      subject: string;
       bodyHtml: string;
       to: string[];
       cc?: string[];
@@ -466,11 +535,60 @@ export class MailExchangeGraphSyncService {
     const accessToken = await this.resolveAccessToken(account);
     const payload = {
       message: {
+        body: { contentType: "HTML", content: message.bodyHtml },
+        toRecipients: toGraphRecipients(message.to),
+        ccRecipients: toGraphRecipients(message.cc ?? []),
+        bccRecipients: toGraphRecipients(message.bcc ?? []),
+      },
+    };
+    await this.graphPost(
+      accessToken,
+      `${GRAPH_BASE}/me/messages/${exchangeMessageId}/reply`,
+      payload,
+    );
+    return null;
+  }
+
+  public async sendMailMessage(
+    organizationId: string,
+    accountId: string,
+    message: {
+      subject: string;
+      bodyHtml: string;
+      to: string[];
+      cc?: string[];
+      bcc?: string[];
+      inReplyTo?: string;
+      references?: string;
+    },
+  ): Promise<string | null> {
+    const account = await this.accountRepository.findOne({
+      where: { id: accountId, organizationId, enabled: true },
+    });
+    if (!account) {
+      throw new NotFoundException("Exchange bağlantısı bulunamadı.");
+    }
+    const accessToken = await this.resolveAccessToken(account);
+    const headers: Array<{ name: string; value: string }> = [];
+    if (message.inReplyTo) {
+      headers.push({
+        name: "In-Reply-To",
+        value: message.inReplyTo.startsWith("<")
+          ? message.inReplyTo
+          : `<${message.inReplyTo}>`,
+      });
+    }
+    if (message.references) {
+      headers.push({ name: "References", value: message.references });
+    }
+    const payload = {
+      message: {
         subject: message.subject,
         body: { contentType: "HTML", content: message.bodyHtml },
         toRecipients: toGraphRecipients(message.to),
         ccRecipients: toGraphRecipients(message.cc ?? []),
         bccRecipients: toGraphRecipients(message.bcc ?? []),
+        ...(headers.length > 0 ? { internetMessageHeaders: headers } : {}),
       },
       saveToSentItems: true,
     };

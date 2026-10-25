@@ -6,10 +6,14 @@ import {
 export function buildOutgoingSentMime(params: {
   fromHeader: string;
   to: string;
+  cc?: string;
+  bcc?: string;
   subject: string;
   text: string;
   html?: string;
   messageId: string | null;
+  inReplyTo?: string | null;
+  references?: string | null;
   date: Date;
 }): string {
   const messageId = normalizeMessageId(params.messageId);
@@ -24,9 +28,17 @@ export function buildOutgoingSentMime(params: {
   const headers = [
     `From: ${params.fromHeader}`,
     `To: ${params.to}`,
+    ...(params.cc?.trim() ? [`Cc: ${params.cc.trim()}`] : []),
+    ...(params.bcc?.trim() ? [`Bcc: ${params.bcc.trim()}`] : []),
     `Subject: ${subject}`,
     `Date: ${params.date.toUTCString()}`,
     `Message-ID: ${messageId}`,
+    ...(params.inReplyTo
+      ? [`In-Reply-To: ${normalizeMessageId(params.inReplyTo)}`]
+      : []),
+    ...(params.references
+      ? [`References: ${normalizeReferences(params.references)}`]
+      : []),
     "MIME-Version: 1.0",
   ];
 
@@ -71,6 +83,14 @@ function normalizeMessageId(raw: string | null): string {
     return trimmed;
   }
   return `<${trimmed.replace(/^<|>$/g, "")}>`;
+}
+
+function normalizeReferences(raw: string): string {
+  const parts = raw
+    .split(/\s+/)
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0);
+  return parts.map((part) => normalizeMessageId(part)).join(" ");
 }
 
 function encodeHeaderValue(value: string): string {

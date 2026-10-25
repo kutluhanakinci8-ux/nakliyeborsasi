@@ -25,6 +25,7 @@ import {
 } from "./MailOrganizationInboxService";
 import { MailConnectedAccountsService } from "./MailConnectedAccountsService";
 import { MailConnectedInboxSearchService } from "./MailConnectedInboxSearchService";
+import { ConnectedImportMessageRequestDto } from "./ConnectedImportMessageRequestDto";
 import { MailMailboxComposeService } from "./MailMailboxComposeService";
 import { MailImapAccessService } from "./MailImapAccessService";
 import { ComposeMailRequestDto } from "./ComposeMailRequestDto";
@@ -525,6 +526,28 @@ export class CompanyMailInboxController {
       exchangeConfigured: this.mailExchangeGraphSyncService.isConfigured(),
       gmailConfigured: this.mailGmailSyncService.isConfigured(),
     };
+  }
+
+  @Post("connected-accounts/import-message")
+  public async importConnectedMessage(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: ConnectedImportMessageRequestDto,
+  ) {
+    this.assertMailInboxWriter(user);
+    if (body.provider === "gmail_api") {
+      const result = await this.mailGmailSyncService.importMessageById(
+        user.companyId,
+        body.accountId,
+        body.providerMessageId,
+      );
+      return { ok: true, ...result };
+    }
+    const result = await this.mailExchangeGraphSyncService.importMessageById(
+      user.companyId,
+      body.accountId,
+      body.providerMessageId,
+    );
+    return { ok: true, ...result };
   }
 
   @Get("connected-accounts/audit")

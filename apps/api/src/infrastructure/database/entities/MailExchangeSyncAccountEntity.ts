@@ -55,6 +55,12 @@ export class MailExchangeSyncAccountEntity {
   @Column({ name: "last_sync_error", type: "varchar", length: 500, nullable: true })
   public lastSyncError!: string | null;
 
+  @Column({ name: "graph_subscription_id", type: "varchar", length: 120, nullable: true })
+  public graphSubscriptionId!: string | null;
+
+  @Column({ name: "graph_subscription_expiration", type: "timestamptz", nullable: true })
+  public graphSubscriptionExpiration!: Date | null;
+
   @CreateDateColumn({ name: "created_at", type: "timestamptz" })
   public createdAt!: Date;
 

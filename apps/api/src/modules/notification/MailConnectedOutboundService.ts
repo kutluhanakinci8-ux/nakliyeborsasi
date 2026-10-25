@@ -32,6 +32,7 @@ export type ConnectedOutboundMessage = {
   inReplyTo?: string;
   references?: string;
   gmailThreadId?: string | null;
+  exchangeMessageId?: string | null;
 };
 
 @Injectable()
@@ -60,18 +61,31 @@ export class MailConnectedOutboundService {
       if (!account) {
         throw new NotFoundException("Microsoft bağlantısı bulunamadı.");
       }
-      const providerMessageId =
-        await this.mailExchangeGraphSyncService.sendMailMessage(
-          message.organizationId,
-          account.id,
-          {
-            subject: message.subject,
-            bodyHtml: message.html ?? wrapTextAsHtml(message.text),
-            to: splitAddresses(message.to),
-            cc: splitAddresses(message.cc),
-            bcc: splitAddresses(message.bcc),
-          },
-        );
+      const providerMessageId = message.exchangeMessageId
+        ? await this.mailExchangeGraphSyncService.sendReplyMessage(
+            message.organizationId,
+            account.id,
+            message.exchangeMessageId,
+            {
+              bodyHtml: message.html ?? wrapTextAsHtml(message.text),
+              to: splitAddresses(message.to),
+              cc: splitAddresses(message.cc),
+              bcc: splitAddresses(message.bcc),
+            },
+          )
+        : await this.mailExchangeGraphSyncService.sendMailMessage(
+            message.organizationId,
+            account.id,
+            {
+              subject: message.subject,
+              bodyHtml: message.html ?? wrapTextAsHtml(message.text),
+              to: splitAddresses(message.to),
+              cc: splitAddresses(message.cc),
+              bcc: splitAddresses(message.bcc),
+              inReplyTo: message.inReplyTo,
+              references: message.references,
+            },
+          );
       await this.auditSend(message, account.emailAddress, providerMessageId);
       return { providerMessageId, fromAddress: account.emailAddress };
     }
@@ -91,10 +105,14 @@ export class MailConnectedOutboundService {
     const rawMime = buildOutgoingSentMime({
       fromHeader,
       to: message.to,
+      cc: message.cc,
+      bcc: message.bcc,
       subject: message.subject,
       text: message.text,
       html: message.html,
-      messageId: message.inReplyTo ?? `<${randomUUID()}@lerta.connected>`,
+      messageId: `<${randomUUID()}@lerta.connected>`,
+      inReplyTo: message.inReplyTo,
+      references: message.references,
       date: new Date(),
     });
     const result = await this.mailGmailSyncService.sendRawMessage(

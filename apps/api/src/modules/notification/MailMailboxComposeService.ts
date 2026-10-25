@@ -498,7 +498,8 @@ export class MailMailboxComposeService {
         text: replyText,
         inReplyTo: inbound.internetMessageId ?? undefined,
         references: inbound.internetMessageId ?? undefined,
-        gmailThreadId: inbound.gmailMessageId ? inbound.gmailMessageId : null,
+        gmailThreadId: inbound.gmailThreadId ?? null,
+        exchangeMessageId: inbound.exchangeMessageId ?? null,
       });
       const sent = await this.sentRepository.save(
         this.sentRepository.create({

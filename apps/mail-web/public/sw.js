@@ -1,5 +1,5 @@
 /* Lerta Posta — PM-4 offline shell + IndexedDB snapshot ping (client-owned DB). */
-const CACHE = "lerta-mail-shell-v13";
+const CACHE = "lerta-mail-shell-v14";
 const OFFLINE_DB_NAME = "lerta-mail-offline-v1";
 const PRECACHE = ["/manifest.webmanifest", "/offline.html", "/login", "/mail"];
 

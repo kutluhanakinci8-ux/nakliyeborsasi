@@ -1211,6 +1211,7 @@ export async function composeMail(
     contentProtection?: "none" | "pgp" | "smime";
     connectedSendProvider?: "microsoft_graph" | "gmail_api";
     connectedSendAccountId?: string;
+    scheduleAt?: string;
   },
 ) {
   return apiFetch<ComposeMailResult>(
@@ -1952,6 +1953,24 @@ export async function fetchScheduledCompose(accessToken: string) {
   return apiFetch<{ pending: MailScheduledComposeItem[] }>(
     accessToken,
     "company/mail-inbox/compose/scheduled",
+  );
+}
+
+export async function importConnectedSearchMessage(
+  accessToken: string,
+  body: {
+    provider: "microsoft_graph" | "gmail_api";
+    accountId: string;
+    providerMessageId: string;
+  },
+) {
+  return apiFetch<{ ok: boolean; localMessageId: string }>(
+    accessToken,
+    "company/mail-inbox/connected-accounts/import-message",
+    {
+      method: "POST",
+      body: JSON.stringify(body),
+    },
   );
 }
 

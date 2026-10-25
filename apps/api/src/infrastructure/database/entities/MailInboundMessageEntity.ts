@@ -102,6 +102,9 @@ export class MailInboundMessageEntity {
   @Column({ name: "gmail_message_id", type: "varchar", length: 255, nullable: true })
   public gmailMessageId!: string | null;
 
+  @Column({ name: "gmail_thread_id", type: "varchar", length: 64, nullable: true })
+  public gmailThreadId!: string | null;
+
   @Column({ name: "exchange_conversation_id", type: "varchar", length: 255, nullable: true })
   public exchangeConversationId!: string | null;
 
