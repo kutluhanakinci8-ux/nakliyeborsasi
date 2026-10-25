@@ -10,6 +10,16 @@ mkdir -p "${ROOT}/docs/reports"
 if [[ -f "${ROOT}/.env" ]] && [[ ! -f "${ENV_FILE:-}" ]]; then
   export ENV_FILE="${ROOT}/.env"
 fi
+ENV_FILE="${ENV_FILE:-/var/www/nakliyeborsasi/.env}"
+if [[ -f "${ENV_FILE}" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "${ENV_FILE}"
+  set +a
+  # shellcheck source=scripts/resolve-operator-jwt.sh
+  source "${ROOT}/scripts/resolve-operator-jwt.sh" || true
+fi
+export ENV_FILE
 
 FAIL=0
 SKIP_OPS=0
