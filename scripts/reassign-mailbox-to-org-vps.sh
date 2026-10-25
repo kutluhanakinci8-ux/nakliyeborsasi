@@ -40,16 +40,38 @@ UPDATE mail_mailbox
 SET "organizationId" = '${TO_ORG_ID}'::uuid
 WHERE lower("emailAddress") = '${EMAIL}';
 
-UPDATE mail_imap_credential
-SET "organizationId" = '${TO_ORG_ID}'::uuid
-WHERE lower("emailAddress") = '${EMAIL}';
-
 UPDATE mail_sender_identity si
 SET "organizationId" = '${TO_ORG_ID}'::uuid
 FROM mail_domains md
 WHERE si."mailDomainId" = md.id
   AND md.domain = '${DOMAIN}'
   AND si."localPart" = '${LOCAL}';
+
+-- Org başına tek IMAP satırı (unique organizationId): hedefte varsa e-postayı güncelle, kaynak satırı sil.
+DELETE FROM mail_imap_credential mic
+WHERE mic."organizationId" = '${FROM_ORG}'::uuid
+  AND lower(mic."emailAddress") = '${EMAIL}'
+  AND EXISTS (
+    SELECT 1 FROM mail_imap_credential x
+    WHERE x."organizationId" = '${TO_ORG_ID}'::uuid
+  );
+
+UPDATE mail_imap_credential
+SET "emailAddress" = '${EMAIL}', "updatedAt" = now()
+WHERE "organizationId" = '${TO_ORG_ID}'::uuid
+  AND EXISTS (
+    SELECT 1 FROM mail_imap_credential x
+    WHERE x."organizationId" = '${TO_ORG_ID}'::uuid
+  );
+
+UPDATE mail_imap_credential
+SET "organizationId" = '${TO_ORG_ID}'::uuid
+WHERE lower("emailAddress") = '${EMAIL}'
+  AND "organizationId" = '${FROM_ORG}'::uuid
+  AND NOT EXISTS (
+    SELECT 1 FROM mail_imap_credential x
+    WHERE x."organizationId" = '${TO_ORG_ID}'::uuid
+  );
 COMMIT;
 SQL
 
