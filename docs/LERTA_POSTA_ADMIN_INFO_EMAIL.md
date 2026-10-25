@@ -31,9 +31,26 @@ bash scripts/align-lerta-posta-admin-info-email.sh
 bash scripts/restart-api.sh
 ```
 
+## Tek giriş — iki kapı
+
+| Adres | Ne? |
+|-------|-----|
+| `posta.lerta.com.tr/login` | Webmail |
+| `yonetim.lerta.com.tr/login` | Yönetim konsolu (DNS, kutular, ekip) |
+
+**Aynı e-posta + aynı şifre.** İki ayrı admin hesabı yok.
+
+Şifre repoda veya sohbette yok; veritabanında bcrypt hash saklanır. `info@` ile giriş olmuyorsa: (1) hesap hâlâ `a.kutluhan@msn.com` olabilir — önce MSN ile deneyin; (2) align script çalışmadıysa `info@` kullanıcı kaydı yoktur.
+
+Şifre sıfırlama (VPS):
+
+```bash
+bash scripts/reset-user-password-vps.sh info@lerta.com.tr 'SizinBelirlediginizSifre'
+```
+
 Script sonrası:
 
-1. `https://posta.lerta.com.tr/login` → **info@lerta.com.tr** + mevcut şifre (giriş e-postası güncellenir, şifre aynı kalır).
+1. `https://posta.lerta.com.tr/login` → **info@lerta.com.tr** + mevcut şifre (giriş e-postası güncellenir, şifre aynı kalır — sıfırlamadıysanız).
 2. IMAP şifresi dosyada: `/root/lerta-imap-credentials-bootstrap.txt` (yenilendiyse).
 3. `bash scripts/verify-uat-oauth-env.sh .env` — OAuth henüz opsiyonel.
 
