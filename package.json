@@ -29,6 +29,7 @@
     "uat:ops": "bash scripts/run-faz6-ops-sequence.sh",
     "qa:pentest-zap": "bash scripts/qa-pentest-zap-passive.sh",
     "qa:faz7": "bash scripts/run-faz7-pentest-sequence.sh",
+    "qa:faz8": "bash scripts/run-faz8-compliance-sequence.sh",
     "verify:vps": "bash scripts/vps-operator-verify.sh",
     "archive:move": "bash scripts/archive-replaced-source.sh",
     "git:cleanup-merged": "bash scripts/cleanup-merged-git-branches.sh",

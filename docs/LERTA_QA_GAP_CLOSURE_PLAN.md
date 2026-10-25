@@ -15,7 +15,8 @@
 | **6B** | UAT ops | `npm run uat:ops-prereqs` → `npm run uat:ops` | **VPS / secrets** — runbook: `docs/UAT_FAZ6_OPS_RUNBOOK.md` |
 | **7** | Pentest otomasyon | `npm run qa:faz7` | ✅ VPS 25.10.2026 — OWASP + ZAP JSON raporları |
 | **7b** | Pentest / sertifika (harici) | `docs/PENTEST_EXTERNAL_CHECKLIST.md` | **Üçüncü taraf** |
-| **8** | ISO 29119 / SOC2 Type II / ISO 27001 / PCI | `docs/ISO_29119_TEST_TRACEABILITY.md` + MP-9 | Dok + denetim |
+| **8** | Uyumluluk otomasyon | `npm run qa:faz8` + `COMPLIANCE_EVIDENCE_INDEX.md` | Repo + VPS |
+| **8b** | SOC2 Type II / ISO 27001 / PCI denetimi | Harici denetçi | **Bekliyor** |
 | **9** | Müşteri imzalı UAT (Thunderbird, teslimat, takvim) | `uat-faz6-sequential.sh`, runbook | **Manuel** |
 
 ## VPS’te kapatılacak maddeler (Faz 6–9)
