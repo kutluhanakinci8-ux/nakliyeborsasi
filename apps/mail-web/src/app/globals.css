@@ -1,32 +1,52 @@
 :root,
 html[data-mail-theme="light"] {
-  --bg: #eef1f6;
-  --panel: #fff;
-  --border: #dde1e8;
+  --mail-brand: #0f4c81;
+  --mail-brand-mid: #1a5f9e;
+  --mail-brand-ink: #1a1647;
+  --mail-surface: #ffffff;
+  --mail-surface-muted: #f4f6f9;
+  --mail-surface-page: #eef1f6;
+  --mail-border: #dde1e8;
+  --mail-radius-md: 12px;
+  --mail-radius-sm: 8px;
+  --bg: var(--mail-surface-page);
+  --panel: var(--mail-surface);
+  --border: var(--mail-border);
   --text: #1a1d21;
   --muted: #5c6370;
-  --accent: #1a1647;
+  --accent: var(--mail-brand-ink);
   --accent-hover: #120f35;
   --accent-soft: #e8f1f8;
-  --sidebar: #f4f6f9;
+  --sidebar: var(--mail-surface-muted);
   --unread: #0f1419;
   --list-unread-bg: #e8f2fc;
-  --list-unread-border: #0f4c81;
-  --list-read-bg: #fff;
+  --list-unread-border: var(--mail-brand);
+  --list-read-bg: var(--mail-surface);
   --list-read-text: #5c6370;
-  --compose-btn-bg: linear-gradient(180deg, #1a5f9e 0%, #0f4c81 100%);
+  --compose-btn-bg: linear-gradient(
+    180deg,
+    var(--mail-brand-mid) 0%,
+    var(--mail-brand) 100%
+  );
   --compose-btn-text: #fff;
   --nav-active: #dce8f4;
   --toast-bg: #e6f4ea;
   --shadow-sm: 0 1px 2px rgba(15, 76, 129, 0.06);
   --shadow-md: 0 4px 14px rgba(15, 28, 45, 0.08);
-  --radius-lg: 12px;
+  --radius-lg: var(--mail-radius-md);
 }
 
 html[data-mail-theme="dark"] {
-  --bg: #14171c;
-  --panel: #1e2229;
-  --border: #343b47;
+  --mail-brand: #6ba3d6;
+  --mail-brand-mid: #4a8bc4;
+  --mail-brand-ink: #8ab8e8;
+  --mail-surface: #1e2229;
+  --mail-surface-muted: #181c22;
+  --mail-surface-page: #14171c;
+  --mail-border: #343b47;
+  --bg: var(--mail-surface-page);
+  --panel: var(--mail-surface);
+  --border: var(--mail-border);
   --text: #e8eaed;
   --muted: #9aa0a6;
   --accent: #6ba3d6;
@@ -1239,9 +1259,9 @@ a {
 
 /* —— Premium login shell (posta.lerta.com.tr/login) —— */
 .login-page--premium {
-  --login-navy: #1a1647;
+  --login-navy: var(--mail-brand-ink);
   --login-navy-deep: #0f0d2e;
-  --login-violet: #4f46e5;
+  --login-violet: var(--mail-brand-mid);
   --login-text: #14151f;
   --login-muted: #5c6370;
   --login-border: #e2e5ec;
@@ -2336,6 +2356,71 @@ html[data-mail-theme="dark"] .login-error {
   font-size: 13px;
   max-height: 200px;
   overflow-y: auto;
+}
+
+.mail-campaign-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin: 12px 0 16px;
+}
+
+.mail-campaign-stat-card {
+  padding: 12px 14px;
+  border-radius: var(--mail-radius-sm);
+  border: 1px solid var(--border);
+  background: var(--panel);
+}
+
+.mail-campaign-stat-card--skeleton {
+  min-height: 72px;
+  background: linear-gradient(
+    90deg,
+    var(--border) 0%,
+    color-mix(in srgb, var(--border) 60%, transparent) 50%,
+    var(--border) 100%
+  );
+  background-size: 200% 100%;
+  animation: mail-panel-skeleton-shimmer 1.2s ease-in-out infinite;
+}
+
+.mail-campaign-stat-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.mail-campaign-stat-value {
+  display: block;
+  margin-top: 4px;
+  font-size: 1.35rem;
+  line-height: 1.2;
+  color: var(--mail-brand);
+}
+
+html[data-mail-theme="dark"] .mail-campaign-stat-value {
+  color: var(--mail-brand);
+}
+
+.mail-campaign-stat-hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.mail-campaign-empty-state {
+  margin: 16px 0;
+  padding: 20px 16px;
+  border-radius: var(--mail-radius-sm);
+  border: 1px dashed var(--border);
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.875rem;
 }
 
 .mail-campaign-history {

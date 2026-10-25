@@ -10,13 +10,10 @@ import {
 } from "@/lib/postaOnboardingUrls";
 import { useMailLocale } from "@/lib/MailLocaleProvider";
 import { useMailSession } from "@/lib/session";
-import { vitrinPath } from "@/lib/vitrinUrls";
-
-const PLATFORM_LINKS = [
-  { href: vitrinPath("/posta"), label: "Posta" },
-  { href: vitrinPath("/mesaj"), label: "Mesajlaşma" },
-  { href: vitrinPath("/u88"), label: "KVKK" },
-] as const;
+import {
+  MAIL_VITRIN_NAV,
+  mailVitrinUrl,
+} from "@/lib/mailVitrinLinks";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -75,8 +72,8 @@ export default function LoginPage() {
       <header className="login-shell-header">
         <a
           className="login-shell-brand"
-          href={vitrinPath("/posta")}
-          aria-label="Lerta Posta ana sayfa"
+          href={mailVitrinUrl("/posta")}
+          aria-label={t("loginBrandHomeAria")}
         >
           <span className="login-shell-brand-mark" aria-hidden="true">L</span>
           <span className="login-shell-brand-text">
@@ -100,10 +97,14 @@ export default function LoginPage() {
             {t("localeEn")}
           </button>
         </div>
-        <nav className="login-shell-nav" aria-label="Lerta platform">
-          {PLATFORM_LINKS.map((item) => (
-            <a key={item.href} href={item.href} className="login-shell-nav-link">
-              {item.label}
+        <nav className="login-shell-nav" aria-label={t("vitrinNavAria")}>
+          {MAIL_VITRIN_NAV.map((item) => (
+            <a
+              key={item.path}
+              href={mailVitrinUrl(item.path)}
+              className="login-shell-nav-link"
+            >
+              {t(item.labelKey)}
             </a>
           ))}
         </nav>
@@ -111,14 +112,11 @@ export default function LoginPage() {
 
       <main className="login-shell-main">
         <section className="login-showcase" aria-labelledby="login-showcase-title">
-          <p className="login-showcase-eyebrow">Türkiye&apos;de barındırılan SaaS</p>
+          <p className="login-showcase-eyebrow">{t("loginShowcaseEyebrow")}</p>
           <h1 id="login-showcase-title" className="login-showcase-title">
-            Kurumsal e-posta, güvenilir teslimat
+            {t("loginShowcaseTitle")}
           </h1>
-          <p className="login-showcase-lead">
-            Özel alan adı, webmail ve yönetim konsolu tek platformda. Pilot veya
-            kurumsal planla dakikalar içinde kutunuzu açın.
-          </p>
+          <p className="login-showcase-lead">{t("loginShowcaseLead")}</p>
           <ul className="login-showcase-features">
             <li>
               <span className="login-feature-icon" aria-hidden="true">✓</span>
@@ -152,13 +150,10 @@ export default function LoginPage() {
               <h2 id="login-form-title" className="login-form-title">
                 {t("loginTitle")}
               </h2>
-              <p className="login-form-sub">
-                Mevcut Lerta hesabınızla webmail&apos;e erişin.
-              </p>
+              <p className="login-form-sub">{t("loginFormSub")}</p>
               {sessionEnded && !error ? (
                 <p className="login-info" role="status">
-                  Oturumunuz sona erdi. Yeniden giriş yapın; posta, gönderilenler,
-                  kişiler ve harici takvim kayıtlarınız sunucuda duruyor.
+                  {t("loginSessionEnded")}
                 </p>
               ) : null}
               {error ? (
@@ -267,9 +262,12 @@ export default function LoginPage() {
       </main>
 
       <footer className="login-shell-footer">
-        <span>© {new Date().getFullYear()} Lerta · Kurumsal posta altyapısı</span>
-        <a href={vitrinPath("/durum")}>Sistem durumu</a>
-        <a href={vitrinPath("/kvkk")}>KVKK</a>
+        <span>
+          © {new Date().getFullYear()} {t("loginFooterCopy")}
+        </span>
+        <a href={mailVitrinUrl("/durum")}>{t("loginFooterStatus")}</a>
+        <a href={mailVitrinUrl("/kvkk")}>{t("loginFooterKvkk")}</a>
+        <a href={mailVitrinUrl("/sss")}>{t("loginFooterFaq")}</a>
       </footer>
     </div>
   );

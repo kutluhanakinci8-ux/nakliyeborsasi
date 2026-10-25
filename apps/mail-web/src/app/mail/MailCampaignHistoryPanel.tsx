@@ -22,7 +22,11 @@ import {
   type MailCampaignListItem,
   type MailCampaignListPagination,
   type MailCampaignSummary,
+  type MailDeliverabilityEngagement,
+  fetchDeliverabilityHub,
 } from "@/lib/mailApi";
+import { useMailLocale } from "@/lib/MailLocaleProvider";
+import { MailCampaignStatsCards } from "./MailCampaignStatsCards";
 
 type Props = {
   accessToken: string;
@@ -146,8 +150,12 @@ export function MailCampaignHistoryPanel({
   open,
   onCloneToCompose,
 }: Props) {
+  const { t } = useMailLocale();
   const [rows, setRows] = useState<MailCampaignListItem[]>([]);
   const [summary, setSummary] = useState<MailCampaignSummary | null>(null);
+  const [engagement, setEngagement] =
+    useState<MailDeliverabilityEngagement | null>(null);
+  const [loading, setLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState("");
   const [tagFilter, setTagFilter] = useState("");
   const [subjectSearch, setSubjectSearch] = useState("");
@@ -215,7 +223,7 @@ export function MailCampaignHistoryPanel({
         );
         setPagination(listData.pagination);
       } catch {
-        setError("Kampanya geçmişi yüklenemedi.");
+        setError(t("campaignLoadError"));
       }
     },
     [
@@ -229,19 +237,36 @@ export function MailCampaignHistoryPanel({
       hasFailuresOnly,
       scheduleFrom,
       scheduleTo,
+      t,
     ],
   );
 
   const refresh = useCallback(async () => {
     setError("");
+    setLoading(true);
     try {
       const summaryData = await fetchMailCampaignSummary(accessToken);
       setSummary(summaryData.summary);
+      try {
+        const { hub: deliverability } = await fetchDeliverabilityHub(
+          accessToken,
+          summaryData.summary.windowDays,
+        );
+        setEngagement(
+          deliverability.engagement ??
+            deliverability.engagement30d ??
+            null,
+        );
+      } catch {
+        setEngagement(null);
+      }
       await loadList(0, false);
     } catch {
-      setError("Kampanya geçmişi yüklenemedi.");
+      setError(t("campaignLoadError"));
+    } finally {
+      setLoading(false);
     }
-  }, [accessToken, loadList]);
+  }, [accessToken, loadList, t]);
 
   useEffect(() => {
     if (open) {
@@ -366,7 +391,39 @@ export function MailCampaignHistoryPanel({
 
   return (
     <div className="mail-campaign-history">
-      <h3 className="mail-deliverability-subhead">Kampanya geçmişi</h3>
+      <h3 className="mail-deliverability-subhead">{t("campaignHistoryTitle")}</h3>
+      {summary ? (
+        <MailCampaignStatsCards
+          summary={summary}
+          engagement={engagement}
+          loading={loading}
+        />
+      ) : loading ? (
+        <MailCampaignStatsCards
+          summary={{
+            windowDays: 30,
+            counts: {
+              draft: 0,
+              scheduled: 0,
+              running: 0,
+              completed: 0,
+              failed: 0,
+              cancelled: 0,
+            },
+            campaignsInWindow: 0,
+            recipientsInWindow: 0,
+            sentInWindow: 0,
+            failedRecipientsInWindow: 0,
+            suppressedSkippedInWindow: 0,
+            availableTags: [],
+            tagCountsInWindow: {},
+            campaignsWithFailuresInWindow: 0,
+            averageSuccessRatePercent: null,
+          }}
+          engagement={null}
+          loading
+        />
+      ) : null}
       {summary ? (
         <p className="mail-campaign-summary compose-attach-hint">
           Son {summary.windowDays} gün: {summary.campaignsInWindow} kampanya ·{" "}
@@ -559,9 +616,11 @@ export function MailCampaignHistoryPanel({
         ) : null}
       </div>
       {error ? <p className="login-error">{error}</p> : null}
-      {rows.length === 0 ? (
-        <p className="compose-attach-hint">Henüz kayıtlı kampanya yok.</p>
-      ) : (
+      {rows.length === 0 && !loading ? (
+        <div className="mail-campaign-empty-state" role="status">
+          {t("campaignListEmpty")}
+        </div>
+      ) : rows.length === 0 ? null : (
         <ul className="mail-campaign-history-list">
           {rows.map((row) => (
             <li key={row.id} className="mail-campaign-history-item">

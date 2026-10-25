@@ -781,8 +781,8 @@ export function MailClientShell({ mail }: Props) {
                   <h2 className="mail-inbox-header-title">{t("inboxTitle")}</h2>
                   <p className="mail-inbox-header-meta">
                     {summary && summary.unreadCount > 0
-                      ? `${summary.unreadCount} okunmamış`
-                      : "Tüm mesajlar okundu"}
+                      ? t("inboxUnreadCount", { count: summary.unreadCount })
+                      : t("inboxAllRead")}
                   </p>
                 </div>
                 {showConnectedInboxTabs ? (
@@ -864,7 +864,7 @@ export function MailClientShell({ mail }: Props) {
                       }
                       onClick={() => setInboxFocusLane("focus")}
                     >
-                      Önemli
+                      {t("focusImportant")}
                     </button>
                     <button
                       type="button"
@@ -877,7 +877,7 @@ export function MailClientShell({ mail }: Props) {
                       }
                       onClick={() => setInboxFocusLane("other")}
                     >
-                      Diğer
+                      {t("focusOther")}
                     </button>
                   </div>
                 ) : null}
@@ -1126,7 +1126,7 @@ export function MailClientShell({ mail }: Props) {
                     setSearchHasAttachment("any");
                   }}
                 >
-                  Filtreleri temizle
+                  {t("clearFilters")}
                 </button>
               </div>
             ) : null}
