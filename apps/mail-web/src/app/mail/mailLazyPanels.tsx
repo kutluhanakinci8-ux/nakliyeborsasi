@@ -1,7 +1,15 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 import { MailPanelSkeleton } from "./MailPanelSkeleton";
+
+function LazyPanelSkeleton({ labelKey }: { labelKey?: string }) {
+  const { t } = useMailLocale();
+  return (
+    <MailPanelSkeleton label={labelKey ? t(labelKey) : undefined} />
+  );
+}
 
 export const MailCalendarPanel = dynamic(
   () =>
@@ -9,7 +17,7 @@ export const MailCalendarPanel = dynamic(
       default: m.MailCalendarPanel,
     })),
   {
-    loading: () => <MailPanelSkeleton label="Takvim" />,
+    loading: () => <LazyPanelSkeleton labelKey="navCalendar" />,
     ssr: false,
   },
 );
@@ -20,7 +28,7 @@ export const MailContactsPanel = dynamic(
       default: m.MailContactsPanel,
     })),
   {
-    loading: () => <MailPanelSkeleton label="Kişiler" />,
+    loading: () => <LazyPanelSkeleton labelKey="navContacts" />,
     ssr: false,
   },
 );
@@ -31,7 +39,7 @@ export const MailSettingsPanel = dynamic(
       default: m.MailSettingsPanel,
     })),
   {
-    loading: () => <MailPanelSkeleton label="Ayarlar" />,
+    loading: () => <LazyPanelSkeleton labelKey="settingsTitle" />,
     ssr: false,
   },
 );
@@ -64,7 +72,7 @@ export const ComposeRichEditor = dynamic(
       default: m.ComposeRichEditor,
     })),
   {
-    loading: () => <MailPanelSkeleton label="Yazı editörü" />,
+    loading: () => <LazyPanelSkeleton labelKey="lazyRichEditor" />,
     ssr: false,
   },
 );

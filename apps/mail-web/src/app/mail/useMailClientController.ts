@@ -1780,14 +1780,16 @@ export function useMailClientController({
         }
         restored += 1;
       }
-      setToast(`${restored} mesaj geri alındı.`);
+      setToast(translate("toastBulkRestored", { count: restored }));
       setCheckedIds(new Set());
       setDetail(null);
       setSelectedId(null);
       setSentPreview(null);
       void refresh();
     } catch (error) {
-      setToast(error instanceof Error ? error.message : "Geri alınamadı.");
+      setToast(
+        error instanceof Error ? error.message : translate("errRestoreFailed"),
+      );
     }
   }
 
@@ -1798,7 +1800,7 @@ export function useMailClientController({
     if (
       mailPostaPrefs.confirmBulkDelete &&
       !window.confirm(
-        `${checkedIds.size} mesaj kalıcı olarak silinecek. Emin misiniz?`,
+        translate("confirmBulkPurge", { count: checkedIds.size }),
       )
     ) {
       return;
@@ -1814,14 +1816,16 @@ export function useMailClientController({
         }
         purged += 1;
       }
-      setToast(`${purged} mesaj kalıcı olarak silindi.`);
+      setToast(translate("toastBulkPurged", { count: purged }));
       setCheckedIds(new Set());
       setDetail(null);
       setSelectedId(null);
       setSentPreview(null);
       void refresh();
     } catch (error) {
-      setToast(error instanceof Error ? error.message : "Silinemedi.");
+      setToast(
+        error instanceof Error ? error.message : translate("errDeleteFailed"),
+      );
     }
   }
 
@@ -1830,16 +1834,18 @@ export function useMailClientController({
       return;
     }
     if (
-      !window.confirm(
-        "Çöp kutusundaki tüm mesajlar kalıcı olarak silinecek. Devam edilsin mi?",
-      )
+      !window.confirm(translate("confirmEmptyTrash"))
     ) {
       return;
     }
     try {
       const result = await emptyMailTrash(accessToken);
       setToast(
-        `${result.deletedTotal} mesaj kalıcı silindi (gelen: ${result.deletedInbound}, gönderilen: ${result.deletedSent}).`,
+        translate("toastEmptyTrashResult", {
+          total: result.deletedTotal,
+          inbound: result.deletedInbound,
+          sent: result.deletedSent,
+        }),
       );
       setCheckedIds(new Set());
       setDetail(null);
@@ -1847,7 +1853,9 @@ export function useMailClientController({
       setSentPreview(null);
       void refresh();
     } catch (error) {
-      setToast(error instanceof Error ? error.message : "Çöp boşaltılamadı.");
+      setToast(
+        error instanceof Error ? error.message : translate("errEmptyTrashFailed"),
+      );
     }
   }
 
@@ -1868,7 +1876,9 @@ export function useMailClientController({
       setToast(translate("toastUndone"));
       void refresh();
     } catch (error) {
-      setToast(error instanceof Error ? error.message : "Geri alınamadı.");
+      setToast(
+        error instanceof Error ? error.message : translate("errRestoreFailed"),
+      );
     }
   }
 
@@ -1881,10 +1891,10 @@ export function useMailClientController({
       await bulkSetMessageMailboxFolder(accessToken, messageIds, folder);
       setToast(
         folder === "trash"
-          ? `${messageIds.length} mesaj çöpe taşındı.`
+          ? translate("toastBulkMovedTrash", { count: messageIds.length })
           : folder === "archive"
-            ? `${messageIds.length} mesaj arşivlendi.`
-            : `${messageIds.length} mesaj gelen kutusuna alındı.`,
+            ? translate("toastBulkArchived", { count: messageIds.length })
+            : translate("toastBulkMovedInbox", { count: messageIds.length }),
       );
       setCheckedIds(new Set());
       setDetail(null);
@@ -1892,7 +1902,7 @@ export function useMailClientController({
       void refresh();
     } catch (error) {
       setToast(
-        error instanceof Error ? error.message : "Klasör değiştirilemedi.",
+        error instanceof Error ? error.message : translate("errFolderMoveFailed"),
       );
     }
   }
@@ -1914,11 +1924,13 @@ export function useMailClientController({
         setSelectedId(null);
         setMobilePane("list");
       }
-      setToast(starred ? "Yıldızlandı." : "Yıldız kaldırıldı.");
+      setToast(
+        starred ? translate("toastStarred") : translate("toastUnstarred"),
+      );
       void refresh();
     } catch (error) {
       setToast(
-        error instanceof Error ? error.message : "Yıldız güncellenemedi.",
+        error instanceof Error ? error.message : translate("errStarUpdateFailed"),
       );
     }
   }
@@ -2038,7 +2050,9 @@ export function useMailClientController({
       finishAfterMessageNavigation(closedId);
       void refresh();
     } catch (error) {
-      setToast(error instanceof Error ? error.message : "Silinemedi.");
+      setToast(
+        error instanceof Error ? error.message : translate("errDeleteFailed"),
+      );
     }
   }
 
@@ -2178,7 +2192,9 @@ export function useMailClientController({
       }
       void refresh();
     } catch (error) {
-      setToast(error instanceof Error ? error.message : "Silinemedi.");
+      setToast(
+        error instanceof Error ? error.message : translate("errDeleteFailed"),
+      );
     }
   }
 
@@ -2571,7 +2587,7 @@ export function useMailClientController({
     setComposeCampaignRecipients((prev) =>
       mergeCampaignRecipientLists(prev, rows),
     );
-    setToast(`${rows.length} alıcı CSV’den eklendi.`);
+    setToast(translate("toastCsvRecipientsAdded", { count: rows.length }));
   }
 
   function buildComposeMergePayload() {
