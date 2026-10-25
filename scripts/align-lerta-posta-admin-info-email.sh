@@ -87,8 +87,15 @@ echo "Hedef organizasyon: ${TARGET_ORG_ID}"
 EXISTING_INFO_ORG="$(psql "${DATABASE_URL}" -At -c \
   "SELECT \"organizationId\" FROM mail_mailbox WHERE lower(\"emailAddress\")='${ADMIN_MAILBOX}' LIMIT 1;" || true)"
 if [[ -n "${EXISTING_INFO_ORG}" && "${EXISTING_INFO_ORG}" != "${TARGET_ORG_ID}" ]]; then
-  echo "FAIL: ${ADMIN_MAILBOX} başka org'a ait (${EXISTING_INFO_ORG}). TARGET_ORG_ID veya mailbox taşıma gerekir." >&2
-  exit 1
+  if [[ "${REASSIGN_MAILBOX_TO_TARGET_ORG:-}" == "1" ]]; then
+    echo "==> ${ADMIN_MAILBOX} org taşıma (${EXISTING_INFO_ORG} → ${TARGET_ORG_ID})"
+    bash "${ROOT}/scripts/reassign-mailbox-to-org-vps.sh" "${ADMIN_MAILBOX}" "${TARGET_ORG_ID}"
+  else
+    echo "FAIL: ${ADMIN_MAILBOX} başka org'a ait (${EXISTING_INFO_ORG})." >&2
+    echo "  Çözüm: REASSIGN_MAILBOX_TO_TARGET_ORG=1 ile tekrar çalıştırın veya:" >&2
+    echo "  bash scripts/reassign-mailbox-to-org-vps.sh ${ADMIN_MAILBOX} ${TARGET_ORG_ID}" >&2
+    exit 1
+  fi
 fi
 
 DOMAIN_ID="$(psql "${DATABASE_URL}" -At -c \
