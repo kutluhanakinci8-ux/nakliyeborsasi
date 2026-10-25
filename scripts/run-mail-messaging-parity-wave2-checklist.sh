@@ -31,6 +31,12 @@ if [[ -f "${ENV_FILE}" ]]; then
   set +a
 fi
 
+# shellcheck source=scripts/resolve-operator-jwt.sh
+source "${ROOT}/scripts/resolve-operator-jwt.sh" || true
+# shellcheck source=scripts/resolve-messaging-test-jwt.sh
+source "${ROOT}/scripts/resolve-messaging-test-jwt.sh" || true
+export MESSAGING_SSE_JWT="${MESSAGING_SSE_JWT:-${MESSAGING_TEST_JWT:-}}"
+
 echo "== Mail & Messaging parity wave-2 =="
 
 run_step "Parity close (PM-1…10)" bash "${ROOT}/scripts/run-mail-messaging-parity-close-checklist.sh"

@@ -45,6 +45,11 @@ if [[ -f "${ENV_FILE}" ]]; then
   # shellcheck disable=SC1090
   source "${ENV_FILE}"
   set +a
+  # shellcheck source=scripts/resolve-operator-jwt.sh
+  source "${ROOT}/scripts/resolve-operator-jwt.sh" || true
+  # shellcheck source=scripts/resolve-mail-jmap-jwt.sh
+  source "${ROOT}/scripts/resolve-mail-jmap-jwt.sh" || true
+  export MAIL_JMAP_JWT="${MAIL_JMAP_JWT:-${ACCESS_TOKEN:-}}"
   run_step "Mail push VAPID" bash "${ROOT}/scripts/verify-mail-web-push-prod.sh" "${ENV_FILE}"
   run_step "Messaging push VAPID (izole)" bash "${ROOT}/scripts/verify-messaging-web-push-prod.sh" "${ENV_FILE}"
   run_step "AI compose flags" bash "${ROOT}/scripts/verify-mail-ai-compose-prod.sh" "${ENV_FILE}"
