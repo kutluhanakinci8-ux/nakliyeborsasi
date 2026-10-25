@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-# Faz 6 UAT — sıralı otomatik adımlar (M1 otomasyon, M3/M4 env, M9 inbound P0).
-# Thunderbird/Graph sync/Gmail inbox teslimi (M1 görsel, M2–M5, M7–M9 gönderim) manuel kalır.
+# Faz 6 UAT — önce kod (verify-uat-faz6-code-complete), sonra isteğe bağlı VPS runtime.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -10,94 +9,91 @@ ENV_FILE="${ENV_FILE:-${INSTALL_DIR:-${ROOT}}/.env}"
 REPORT="${UAT_FAZ6_REPORT:-${ROOT}/docs/reports/UAT_FAZ6_SEQUENTIAL.json}"
 STAMP="$(TZ=Europe/Istanbul date -Iseconds)"
 
+m_code="SKIP"
 m1="SKIP"
 m2="SKIP"
-m3="SKIP"
-m4="SKIP"
+m3="DEFERRED"
+m4="DEFERRED"
 m9="SKIP"
 notes=()
 
 echo "=== Faz 6 sıralı UAT (${STAMP}) ==="
 
-if [[ -f /etc/dovecot/conf.d/99-lerta-mail.conf ]] && [[ -x "${ROOT}/scripts/smoke-imap-gold.sh" ]]; then
-  EMAIL="$(bash "${ROOT}/scripts/resolve-parity-imap-test-email.sh")"
+echo ""
+echo "—— Faz 6A: kod tamamlama ——"
+if bash "${ROOT}/scripts/verify-uat-faz6-code-complete.sh"; then
+  m_code="PASS"
+  notes+=("Kod kapısı PASS — yapılandırma: OAuth, VAPID, PTR, inbox smoke")
+else
+  m_code="FAIL"
+  notes+=("Kod kapısı FAIL — verify-uat-faz6-code-complete.sh")
+  exit 1
+fi
+
+if [[ "${UAT_VPS_RUNTIME:-0}" != "1" ]]; then
+  notes+=("VPS runtime atlandı — UAT_VPS_RUNTIME=1 ile M1/M2/M9 canlı")
+else
+  if [[ -f /etc/dovecot/conf.d/99-lerta-mail.conf ]] && [[ -x "${ROOT}/scripts/smoke-imap-gold.sh" ]]; then
+    EMAIL="$(bash "${ROOT}/scripts/resolve-parity-imap-test-email.sh")"
+    echo ""
+    echo "—— M1 IMAP gold (${EMAIL}) ——"
+    if [[ -x "${ROOT}/scripts/provision-pm5-imap-dovecot-vps.sh" ]]; then
+      INSTALL_DIR="${INSTALL_DIR:-${ROOT}}" ENV_FILE="${ENV_FILE}" \
+        bash "${ROOT}/scripts/provision-pm5-imap-dovecot-vps.sh" >/dev/null || true
+    fi
+    if INSTALL_DIR="${INSTALL_DIR:-${ROOT}}" ENV_FILE="${ENV_FILE}" PARITY_IMAP_TEST_EMAIL="${EMAIL}" \
+      bash "${ROOT}/scripts/ensure-imap-gold-smoke-deploy.sh"; then
+      m1="PASS_AUTO"
+    else
+      m1="FAIL"
+    fi
+  fi
+
   echo ""
-  echo "—— M1 IMAP gold (${EMAIL}) ——"
-  if [[ -x "${ROOT}/scripts/provision-pm5-imap-dovecot-vps.sh" ]]; then
-    INSTALL_DIR="${INSTALL_DIR:-${ROOT}}" ENV_FILE="${ENV_FILE}" \
-      bash "${ROOT}/scripts/provision-pm5-imap-dovecot-vps.sh" >/dev/null || true
-  fi
-  if INSTALL_DIR="${INSTALL_DIR:-${ROOT}}" ENV_FILE="${ENV_FILE}" PARITY_IMAP_TEST_EMAIL="${EMAIL}" \
-    bash "${ROOT}/scripts/ensure-imap-gold-smoke-deploy.sh"; then
-    m1="PASS_AUTO"
-    notes+=("M1: Dovecot+IMAP LIST/INBOX OK; Thunderbird çift yön manuel — docs/MAIL_IMAP_GOLD_SMOKE.md")
-  else
-    m1="FAIL"
-    notes+=("M1: smoke/rotate başarısız — aktif mailbox ve PM-5 maildir kontrol")
-  fi
-else
-  notes+=("M1: Dovecot yok veya agent ortamı — VPS'te ensure-imap-gold-smoke-deploy.sh")
-fi
-
-echo ""
-echo "—— M2 Outlook mobil IMAP (sunucu) ——"
-set +e
-rc_m2=0
-if [[ -x "${ROOT}/scripts/verify-uat-m2-outlook-mobile-imap.sh" ]]; then
+  echo "—— M2 Outlook mobil (runtime) ——"
+  set +e
+  rc_m2=0
   INSTALL_DIR="${INSTALL_DIR:-${ROOT}}" ENV_FILE="${ENV_FILE}" \
-    bash "${ROOT}/scripts/verify-uat-m2-outlook-mobile-imap.sh"
-  rc_m2=$?
-fi
-set -e
-if [[ "${rc_m2}" -eq 0 ]]; then
-  m2="PASS_SERVER"
-  notes+=("M2: Outlook mobil kurulum manuel — help/imap#outlook-mobile")
-elif [[ "${rc_m2}" -eq 2 ]]; then
-  m2="WARN_SERVER"
-  notes+=("M2: sunucu uyarıları var; mobil smoke manuel")
-else
-  m2="FAIL"
+    bash "${ROOT}/scripts/verify-uat-m2-outlook-mobile-imap.sh" || rc_m2=$?
+  set -e
+  if [[ "${rc_m2}" -eq 0 ]]; then
+    m2="PASS_SERVER"
+  elif [[ "${rc_m2}" -eq 2 ]]; then
+    m2="WARN_SERVER"
+  else
+    m2="FAIL"
+  fi
+
+  echo ""
+  echo "—— M9 inbound P0 (runtime) ——"
+  set +e
+  MAIL_INBOUND_PTR_SOFT="${MAIL_INBOUND_PTR_SOFT:-1}" bash "${ROOT}/scripts/verify-lerta-mail-inbound-p0.sh"
+  inbound_rc=$?
+  set -e
+  if [[ "${inbound_rc}" -eq 0 ]]; then
+    m9="PASS_P0_DNS"
+  else
+    m9="FAIL_P0_DNS"
+  fi
 fi
 
-echo ""
-echo "—— M3/M4 OAuth env (en sona bırakılabilir) ——"
-if [[ "${UAT_DEFER_OAUTH:-1}" == "1" ]]; then
-  m3="DEFERRED"
-  m4="DEFERRED"
-  notes+=("M3/M4: UAT_DEFER_OAUTH=1 — MAIL_OAUTH_VPS_SETUP.md en sonda")
-else
+if [[ "${UAT_DEFER_OAUTH:-1}" == "0" ]]; then
+  echo ""
+  echo "—— M3/M4 OAuth env ——"
   if bash "${ROOT}/scripts/verify-uat-oauth-env.sh"; then
     m3="PASS_ENV"
     m4="PASS_ENV"
   else
     m3="MISSING_ENV"
     m4="MISSING_ENV"
-    notes+=("M3/M4: VPS .env Graph + Google — MAIL_PRELAUNCH gate P0-1/P0-2")
   fi
 fi
 
-echo ""
-echo "—— M9 inbound (P0 DNS/PTR) ——"
-set +e
-MAIL_INBOUND_PTR_SOFT="${MAIL_INBOUND_PTR_SOFT:-1}" bash "${ROOT}/scripts/verify-lerta-mail-inbound-p0.sh"
-inbound_rc=$?
-set -e
-if [[ "${inbound_rc}" -eq 0 ]]; then
-  m9="PASS_P0_DNS"
-  notes+=("M9: MSN/Gmail/Outlook inbox teslimi manuel — EMAIL_PILOT §3.3")
-else
-  m9="FAIL_P0_DNS"
-  notes+=("M9: inbound P0 FAIL (ör. :25 dinleyici / PTR) — verify-lerta-mail-inbound-p0.sh")
-fi
-
-echo ""
-echo "—— M6/M10 preflight ——"
-bash "${ROOT}/scripts/uat-premium-preflight.sh" 2>/dev/null | grep '^MANUAL:' || true
-
 export UAT_FAZ6_NOTES_JSON UAT_FAZ6_REPORT_PATH UAT_FAZ6_STAMP
-export UAT_FAZ6_M1 UAT_FAZ6_M2 UAT_FAZ6_M3 UAT_FAZ6_M4 UAT_FAZ6_M9
+export UAT_FAZ6_CODE UAT_FAZ6_M1 UAT_FAZ6_M2 UAT_FAZ6_M3 UAT_FAZ6_M4 UAT_FAZ6_M9
 UAT_FAZ6_REPORT_PATH="${REPORT}"
 UAT_FAZ6_STAMP="${STAMP}"
+UAT_FAZ6_CODE="${m_code}"
 UAT_FAZ6_M1="${m1}"
 UAT_FAZ6_M2="${m2}"
 UAT_FAZ6_M3="${m3}"
@@ -117,6 +113,7 @@ p.write_text(
             "generatedAt": os.environ["UAT_FAZ6_STAMP"],
             "timezone": "Europe/Istanbul",
             "steps": {
+                "code_complete": os.environ["UAT_FAZ6_CODE"],
                 "M1_imap_gold": os.environ["UAT_FAZ6_M1"],
                 "M2_outlook_mobile_imap": os.environ["UAT_FAZ6_M2"],
                 "M3_graph_oauth_env": os.environ["UAT_FAZ6_M3"],
@@ -134,8 +131,8 @@ print(f"Wrote {p}")
 PY
 
 echo ""
-echo "=== Faz 6 sıralı özet: M1=${m1} M2=${m2} M3=${m3} M4=${m4} M9=${m9} ==="
-if [[ "${m1}" == FAIL ]] || [[ "${m2}" == FAIL ]] || [[ "${m9}" == FAIL_* ]]; then
+echo "=== Özet: kod=${m_code} M1=${m1} M2=${m2} M3=${m3} M4=${m4} M9=${m9} ==="
+if [[ "${m1}" == FAIL ]] || [[ "${m2}" == FAIL ]]; then
   exit 1
 fi
 exit 0

@@ -1,0 +1,8 @@
+{
+  "generatedAt": "2026-10-25T07:55:30+03:00",
+  "timezone": "Europe/Istanbul",
+  "steps": {
+    "M1_imap_code":"PASS","M2_outlook_code":"PASS","M3_m4_calendar_code":"PASS","M5_pwa_push_code":"PASS","M6_webauthn_code":"PASS","M7_campaign_code":"PASS","M8_kvkk_code":"PASS","M9_delivery_code":"PASS","M10_pwa_code":"PASS"
+  },
+  "configLater": ["M3/M4 OAuth .env", "M5 VAPID", "M9 inbox smoke", "PTR Hostinger"]
+}

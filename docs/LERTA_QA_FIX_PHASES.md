@@ -7,7 +7,7 @@
 | **3** | Regresyon: prod API fallback, PWA proxy lighthouse, SSE | ✅ Script |
 | **4** | E2E Playwright install (QA suite içinde) | ✅ Script |
 | **5** | npm audit + güvenlik deps | ✅ Posta + TMS **Next 15.5.28**, WebAuthn **14**; kalan audit: bcrypt/tar — [NPM_AUDIT_REMEDIATION.md](./reports/NPM_AUDIT_REMEDIATION.md) |
-| **6** | UAT M1–M10 | `bash scripts/uat-faz6-sequential.sh` (VPS: M1✅ otomasyon); M3/M4 OAuth `.env` bekliyor |
+| **6** | UAT M1–M10 | Kod: `bash scripts/verify-uat-faz6-code-complete.sh` ✅ · Ops sonra: `UAT_VPS_RUNTIME=1` + OAuth/VAPID/PTR |
 | **7** | Pentest harici | Manuel |
 
 Doğrulama: `bash scripts/run-lerta-premium-qa-suite.sh`

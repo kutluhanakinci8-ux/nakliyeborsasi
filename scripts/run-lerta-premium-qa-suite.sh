@@ -67,16 +67,19 @@ run_layer l10n_tr "10. Localization — tr-TR" \
 run_layer e2e_playwright "11. System/E2E — Playwright (public)" \
   bash -c "cd '${ROOT}/apps/web' && npx playwright install chromium --with-deps 2>/dev/null | tail -3; npx playwright test e2e/messaging-hub.spec.ts --grep 'login sayfası|korumalı'"
 
-# UAT: checklist only (müşteri imzası gerekir)
-RESULT["uat"]="MANUAL"
-DETAIL["uat"]="M1–M10 premium manuel set — docs/MAIL_PRELAUNCH_COMPETITIVE_GATE_2026-10-24.md §7.2"
+run_layer uat_faz6_code "12. UAT Faz 6 — kod tamamlama" \
+  bash "${ROOT}/scripts/verify-uat-faz6-code-complete.sh"
+
+# UAT: ops / müşteri imzası (kod kapısı geçildikten sonra)
+RESULT["uat"]="CONFIG_LATER"
+DETAIL["uat"]="Ops: UAT_VPS_RUNTIME=1, OAuth, VAPID, PTR, inbox — docs/UAT_FAZ6_CODE_COMPLETE.md"
 
 # Pentest full
 RESULT["pentest"]="NOT_RUN"
 DETAIL["pentest"]="Tam sızma (OWASP ZAP/Burp) bu otomasyon dışı; security_surface + npm audit surrogate."
 
 FAIL_COUNT=0
-for k in unit_core unit_api regression_parity regression_wave2 system_smoke compliance_mp9 security_audit security_surface perf_load l10n_tr e2e_playwright; do
+for k in unit_core unit_api regression_parity regression_wave2 system_smoke compliance_mp9 security_audit security_surface perf_load l10n_tr e2e_playwright uat_faz6_code; do
   [[ "${RESULT[$k]:-FAIL}" == "FAIL" ]] && FAIL_COUNT=$((FAIL_COUNT + 1))
 done
 
@@ -127,8 +130,9 @@ cat > "${REPORT_MD}" <<EOF
 | 9 | Performance (load) | Yük (hafif prod) | ${RESULT[perf_load]:-?} |
 | 10 | Localization (tr-TR) | L10n | ${RESULT[l10n_tr]:-?} |
 | 11 | E2E (Playwright) | Uçtan uca (kısmi) | ${RESULT[e2e_playwright]:-?} |
-| 12 | UAT | Müşteri kabul | ${RESULT[uat]:-?} |
-| 13 | Pentest | Sızma (tam) | ${RESULT[pentest]:-?} |
+| 12 | UAT Faz 6 kod | M1–M10 kod kapısı | ${RESULT[uat_faz6_code]:-?} |
+| 13 | UAT ops | Yapılandırma + imza | ${RESULT[uat]:-?} |
+| 14 | Pentest | Sızma (tam) | ${RESULT[pentest]:-?} |
 
 ## Bilinen eksikler / aksiyonlar
 
