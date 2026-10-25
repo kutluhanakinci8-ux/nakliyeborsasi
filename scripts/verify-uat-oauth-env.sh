@@ -70,12 +70,12 @@ google_keys=(
   GOOGLE_CALENDAR_REDIRECT_URI
 )
 for k in "${google_keys[@]}"; do
-  check_key "${k}" && google_ok=$((google_ok + 1)) || failed=$((failed + 1))
+  check_key "${k}" && google_ok=$((google_ok + 1)) || true
 done
 if [[ "${google_ok}" -eq 3 ]]; then
   echo "OK: Google Calendar OAuth env tam"
 else
-  echo "NOT: Google Calendar OAuth eksik — docs/MAIL_GOOGLE_CALENDAR.md"
+  echo "NOTE: Google Calendar OAuth eksik (isteğe bağlı) — docs/MAIL_GOOGLE_CALENDAR.md"
 fi
 
 echo ""

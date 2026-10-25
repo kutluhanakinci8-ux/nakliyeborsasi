@@ -60,7 +60,7 @@ step "Wave-2 (full)" \
   bash "${ROOT}/scripts/run-mail-messaging-parity-wave2-checklist.sh"
 
 step "UAT ops runtime" \
-  env UAT_VPS_RUNTIME=1 bash "${ROOT}/scripts/verify-uat-ops-runtime.sh" || true
+  env UAT_VPS_RUNTIME=1 bash "${ROOT}/scripts/verify-uat-ops-runtime.sh"
 
 if [[ "${FAIL}" -eq 0 ]]; then
   echo ""
