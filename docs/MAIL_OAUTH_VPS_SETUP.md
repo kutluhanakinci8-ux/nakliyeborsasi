@@ -60,6 +60,16 @@ GOOGLE_GMAIL_REDIRECT_URI=https://posta.lerta.com.tr/mail/gmail-oauth
 ```
 
 3. API yeniden başlat.
+4. Canlı doğrulama (secret gerçekten Google’da geçerli mi):
+
+```bash
+bash scripts/verify-uat-oauth-env.sh
+# Beklenen: "OK: Gmail client_id + client_secret Google tarafından tanınıyor"
+# FAIL: client_secret geçersiz → Console’da aynı Web client için **Create new client secret**,
+#       VPS `.env` güncelle, `pm2 restart nakliyeborsasi-api`
+```
+
+**Not:** `client_id` ve `client_secret` aynı OAuth “Web application” kaydına ait olmalı; redirect URI birebir `GOOGLE_GMAIL_REDIRECT_URI` ile eşleşmeli.
 
 ## 3. Smoke
 

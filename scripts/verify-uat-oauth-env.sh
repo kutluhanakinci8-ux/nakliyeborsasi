@@ -68,6 +68,33 @@ for k in "${gmail_keys[@]}"; do
 done
 if [[ "${gmail_ok}" -eq 3 ]]; then
   echo "OK: Gmail posta OAuth env tam"
+  if [[ "${VERIFY_GMAIL_LIVE:-1}" != "0" ]]; then
+    # invalid_grant = client_id + secret accepted; invalid_client = yanlış secret veya client
+    gmail_live="$(
+      set -a
+      # shellcheck disable=SC1090
+      source "${ENV_FILE}"
+      set +a
+      curl -sS -X POST "https://oauth2.googleapis.com/token" \
+        -H "Content-Type: application/x-www-form-urlencoded" \
+        --data-urlencode "client_id=${GOOGLE_GMAIL_CLIENT_ID}" \
+        --data-urlencode "client_secret=${GOOGLE_GMAIL_CLIENT_SECRET}" \
+        --data-urlencode "code=__lerta_verify__" \
+        --data-urlencode "redirect_uri=${GOOGLE_GMAIL_REDIRECT_URI}" \
+        --data-urlencode "grant_type=authorization_code" 2>/dev/null || true
+    )"
+    if echo "${gmail_live}" | grep -q '"error"[[:space:]]*:[[:space:]]*"invalid_grant"'; then
+      echo "OK: Gmail client_id + client_secret Google tarafından tanınıyor"
+    elif echo "${gmail_live}" | grep -q 'client secret is invalid'; then
+      echo "FAIL: Gmail client_secret geçersiz — Google Cloud → Credentials → OAuth client → yeni secret"
+      failed=$((failed + 1))
+    elif echo "${gmail_live}" | grep -q '"error"[[:space:]]*:[[:space:]]*"invalid_client"'; then
+      echo "FAIL: Gmail OAuth client_id/secret eşleşmiyor veya client silindi"
+      failed=$((failed + 1))
+    else
+      echo "WARN: Gmail canlı doğrulama belirsiz (ağ veya yanıt değişti)"
+    fi
+  fi
 else
   echo "NOT: Gmail posta OAuth eksik — docs/MAIL_OAUTH_VPS_SETUP.md §2b"
 fi
