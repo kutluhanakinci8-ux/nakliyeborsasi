@@ -18,6 +18,13 @@ fi
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ENV_FILE="${ENV_FILE:-${ROOT}/.env}"
+PARITY_ENV="${OPERATOR_PARITY_ENV:-/root/lerta-operator-parity.env}"
+if [[ -f "${PARITY_ENV}" ]]; then
+  # shellcheck disable=SC1090
+  set -a
+  source "${PARITY_ENV}"
+  set +a
+fi
 if [[ -f "${ENV_FILE}" ]]; then
   # shellcheck disable=SC1090
   set -a
@@ -25,7 +32,12 @@ if [[ -f "${ENV_FILE}" ]]; then
   set +a
 fi
 
-EMAIL="${OPERATOR_TEST_EMAIL:-${PLATFORM_OPERATOR_EMAIL:-${PLATFORM_OPERATOR_LOGIN_EMAIL:-}}}"
+OPERATOR_EMAILS_RAW="${PLATFORM_OPERATOR_EMAILS:-}"
+OPERATOR_EMAIL_FROM_LIST=""
+if [[ -n "${OPERATOR_EMAILS_RAW}" ]]; then
+  OPERATOR_EMAIL_FROM_LIST="$(echo "${OPERATOR_EMAILS_RAW}" | tr ',' '\n' | head -1 | tr -d ' \"')"
+fi
+EMAIL="${OPERATOR_TEST_EMAIL:-${PLATFORM_OPERATOR_EMAIL:-${PLATFORM_OPERATOR_LOGIN_EMAIL:-${OPERATOR_EMAIL_FROM_LIST}}}}"
 PASS="${OPERATOR_TEST_PASSWORD:-${PLATFORM_OPERATOR_PASSWORD:-${PLATFORM_OPERATOR_LOGIN_PASSWORD:-}}}"
 if [[ -z "${EMAIL}" || -z "${PASS}" ]]; then
   return 0 2>/dev/null || exit 0

@@ -11,7 +11,7 @@ fi
 export API_BASE="${API_BASE:-https://yonetim.lerta.com.tr/api/v1}"
 export MAIL_INBOUND_PTR_SOFT="${MAIL_INBOUND_PTR_SOFT:-1}"
 export MAIL_BILLING_PILOT_FREE="${MAIL_BILLING_PILOT_FREE:-1}"
-MAILBOX_EMAIL="${PARITY_IMAP_TEST_EMAIL:-nakliyeborsasi@lerta.com.tr}"
+MAILBOX_EMAIL="${PARITY_IMAP_TEST_EMAIL:-$(bash "${ROOT}/scripts/resolve-parity-imap-test-email.sh")}"
 FAIL=0
 
 run_step() {
