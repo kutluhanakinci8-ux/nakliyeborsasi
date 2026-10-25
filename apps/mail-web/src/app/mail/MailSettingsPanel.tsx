@@ -36,6 +36,7 @@ import { MailPilotBillingNotice } from "./MailPilotBillingNotice";
 import { MailCalendarGooglePanel } from "./MailCalendarGooglePanel";
 import { MailCalendarGraphPanel } from "./MailCalendarGraphPanel";
 import { fetchWebAuthnCredentials } from "@/lib/mailApi";
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 
 export type SettingsView =
   | "hub"
@@ -65,117 +66,126 @@ type HubItem = {
   disabled?: boolean;
 };
 
-const HUB_ITEMS: HubItem[] = [
+type HubItemDef = {
+  id: SettingsView;
+  section: HubItem["section"];
+  labelKey: string;
+  subtitleKey: string;
+  keywords: string;
+  disabled?: boolean;
+};
+
+const HUB_ITEM_DEFS: HubItemDef[] = [
   {
     id: "display",
     section: "quick",
-    label: "Ekran ve görünüm",
-    subtitle: "Tema, yoğunluk, okuma",
+    labelKey: "settingsHubDisplay",
+    subtitleKey: "settingsHubDisplaySub",
     keywords: "tema görünüm dark light yoğunluk konuşma yazı",
   },
   {
     id: "mailPrefs",
     section: "quick",
-    label: "Posta",
-    subtitle: "Geri al gönder, yanıt, uzak resim",
+    labelKey: "settingsHubMailPrefs",
+    subtitleKey: "settingsHubMailPrefsSub",
     keywords: "posta geri al undo yanıt reply uzak resim konuşma",
   },
   {
     id: "accounts",
     section: "quick",
-    label: "Hesaplar ve gönderenler",
-    subtitle: "Kimlik, alias, varsayılan From",
+    labelKey: "settingsHubAccounts",
+    subtitleKey: "settingsHubAccountsSub",
     keywords: "hesap gönderen alias kimlik from",
   },
   {
     id: "signature",
     section: "quick",
-    label: "İmza ve şablon",
-    subtitle: "Gönderim ön ayarları",
+    labelKey: "settingsHubSignature",
+    subtitleKey: "settingsHubSignatureSub",
     keywords: "imza şablon compose",
   },
   {
     id: "autoReply",
     section: "quick",
-    label: "Otomatik yanıtlar",
-    subtitle: "Tatil / toplantı mesajı",
+    labelKey: "settingsHubAutoReply",
+    subtitleKey: "settingsHubAutoReplySub",
     keywords: "tatil toplantı oof vacation",
   },
   {
     id: "notifications",
     section: "quick",
-    label: "Bildirimler ve sesler",
-    subtitle: "Push, ses, günlük özet",
+    labelKey: "settingsHubNotifications",
+    subtitleKey: "settingsHubNotificationsSub",
     keywords: "bildirim push ses digest",
   },
   {
     id: "imap",
     section: "general",
-    label: "IMAP ve SMTP",
-    subtitle: "Thunderbird, Outlook masaüstü ve mobil",
+    labelKey: "settingsHubImap",
+    subtitleKey: "settingsHubImapSub",
     keywords: "imap smtp thunderbird outlook hesap android ios",
   },
   {
     id: "integrations",
     section: "general",
-    label: "Eklentiler ve entegrasyonlar",
-    subtitle: "IMAP, CalDAV, CardDAV, API",
+    labelKey: "settingsHubIntegrations",
+    subtitleKey: "settingsHubIntegrationsSub",
     keywords: "entegrasyon imap api webhook outlook mobil caldav carddav",
   },
   {
     id: "deliverability",
     section: "general",
-    label: "Teslimat ve itibar",
-    subtitle: "SPF, DKIM, bounce özeti",
+    labelKey: "settingsHubDeliverability",
+    subtitleKey: "settingsHubDeliverabilitySub",
     keywords: "spf dkim dmarc bounce deliverability",
   },
   {
     id: "ops",
     section: "general",
-    label: "Ops snapshot",
-    subtitle: "Runbook ve smoke referansları",
+    labelKey: "settingsHubOps",
+    subtitleKey: "settingsHubOpsSub",
     keywords: "ops runbook smoke snapshot imap",
   },
   {
     id: "rules",
     section: "general",
-    label: "Posta kuralları",
-    subtitle: "Gelen kutusu otomasyonu",
+    labelKey: "settingsHubRules",
+    subtitleKey: "settingsHubRulesSub",
     keywords: "kural filtre yönlendir",
   },
   {
     id: "calendarSettings",
     section: "general",
-    label: "Takvim",
-    subtitle: "CalDAV hesapları ve senkron",
+    labelKey: "settingsHubCalendar",
+    subtitleKey: "settingsHubCalendarSub",
     keywords: "takvim caldav ics senkron",
   },
   {
     id: "contactsSettings",
     section: "general",
-    label: "Kişiler",
-    subtitle: "CardDAV hesapları ve senkron",
+    labelKey: "settingsHubContacts",
+    subtitleKey: "settingsHubContactsSub",
     keywords: "kişi rehber carddav senkron",
   },
   {
     id: "security",
     section: "general",
-    label: "Güvenlik",
-    subtitle: "Passkey, TOTP, posta kilidi",
+    labelKey: "settingsHubSecurity",
+    subtitleKey: "settingsHubSecuritySub",
     keywords: "2fa totp güvenlik passkey biyometri face id",
   },
   {
     id: "privacy",
     section: "general",
-    label: "Gizlilik",
-    subtitle: "KVKK ve veri hakları",
+    labelKey: "settingsHubPrivacy",
+    subtitleKey: "settingsHubPrivacySub",
     keywords: "kvkk gizlilik veri",
   },
   {
     id: "help",
     section: "other",
-    label: "Yardım",
-    subtitle: "Rehberler ve özellikler",
+    labelKey: "settingsHubHelp",
+    subtitleKey: "settingsHubHelpSub",
     keywords: "yardım destek imap rehber kılavuz",
   },
 ];
@@ -221,6 +231,19 @@ export function MailSettingsPanel({
   deliverabilityEngagementFocus = false,
   mailOpsRunbookFocus = false,
 }: Props) {
+  const { t } = useMailLocale();
+  const hubItems = useMemo<HubItem[]>(
+    () =>
+      HUB_ITEM_DEFS.map((item) => ({
+        id: item.id,
+        section: item.section,
+        keywords: item.keywords,
+        disabled: item.disabled,
+        label: t(item.labelKey),
+        subtitle: t(item.subtitleKey),
+      })),
+    [t],
+  );
   const [view, setView] = useState<SettingsView>(initialView ?? "hub");
   const [query, setQuery] = useState("");
   const [pushConfigured, setPushConfigured] = useState(false);
@@ -270,10 +293,10 @@ export function MailSettingsPanel({
         setInboxListDensity(density);
         onInboxListDensityChange?.(density);
       } catch {
-        setError("Ayarlar yüklenemedi.");
+        setError(t("settingsLoadError"));
       }
     })();
-  }, [accessToken, onInboxListDensityChange]);
+  }, [accessToken, onInboxListDensityChange, onAppLockChange, onPasskeysChange, t]);
 
   useEffect(() => {
     if (view !== "calendarSettings" && view !== "contactsSettings") {
@@ -309,20 +332,20 @@ export function MailSettingsPanel({
   const filteredItems = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) {
-      return HUB_ITEMS;
+      return hubItems;
     }
-    return HUB_ITEMS.filter(
+    return hubItems.filter(
       (item) =>
         item.label.toLowerCase().includes(q) ||
         item.subtitle.toLowerCase().includes(q) ||
         item.keywords.includes(q),
     );
-  }, [query]);
+  }, [query, hubItems]);
 
   const hubSections: { key: HubItem["section"]; title: string }[] = [
-    { key: "quick", title: "Hızlı ayarlar" },
-    { key: "general", title: "Genel" },
-    { key: "other", title: "Diğer" },
+    { key: "quick", title: t("settingsSectionQuick") },
+    { key: "general", title: t("settingsSectionGeneral") },
+    { key: "other", title: t("settingsSectionOther") },
   ];
 
   async function onProvisionImap() {
@@ -385,10 +408,10 @@ export function MailSettingsPanel({
   async function copyText(label: string, value: string) {
     try {
       await navigator.clipboard.writeText(value);
-      setCopyHint(`${label} kopyalandı.`);
+      setCopyHint(t("settingsCopied", { label }));
       window.setTimeout(() => setCopyHint(""), 2500);
     } catch {
-      setCopyHint("Kopyalanamadı.");
+      setCopyHint(t("settingsCopyFailed"));
     }
   }
 
@@ -399,6 +422,11 @@ export function MailSettingsPanel({
     setView(item.id);
   }
 
+  function detailTitle(id: SettingsView): string {
+    const def = HUB_ITEM_DEFS.find((item) => item.id === id);
+    return def ? t(def.labelKey) : t("settingsTitle");
+  }
+
   function renderHub() {
     return (
       <>
@@ -407,19 +435,19 @@ export function MailSettingsPanel({
             type="button"
             className="mail-settings-close"
             onClick={onClose}
-            aria-label="Kapat"
+            aria-label={t("actionClose")}
           >
             ×
           </button>
-          <h2 className="mail-settings-title">Ayarlar</h2>
+          <h2 className="mail-settings-title">{t("settingsTitle")}</h2>
         </div>
         <input
           className="mail-settings-search"
           type="search"
-          placeholder="Ara"
+          placeholder={t("settingsSearchPlaceholder")}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          aria-label="Ayarları ara"
+          aria-label={t("settingsSearchAria")}
         />
         <MailPilotBillingNotice accessToken={accessToken} variant="hub" />
         <div className="mail-settings-scroll">
@@ -499,7 +527,7 @@ export function MailSettingsPanel({
             );
           })}
           {filteredItems.length === 0 ? (
-            <p className="mail-settings-empty">Sonuç bulunamadı.</p>
+            <p className="mail-settings-empty">{t("settingsEmpty")}</p>
           ) : null}
         </div>
       </>
@@ -514,7 +542,7 @@ export function MailSettingsPanel({
             type="button"
             className="mail-settings-back"
             onClick={() => setView("hub")}
-            aria-label="Geri"
+            aria-label={t("actionBack")}
           >
             ←
           </button>
@@ -540,7 +568,7 @@ export function MailSettingsPanel({
       break;
     case "mailPrefs":
       content = renderDetail(
-        "Posta",
+        detailTitle("mailPrefs"),
         <MailPostaSettings
           accessToken={accessToken}
           threadView={threadView}
@@ -557,7 +585,7 @@ export function MailSettingsPanel({
       break;
     case "display":
       content = renderDetail(
-        "Ekran ve görünüm",
+        detailTitle("display"),
         <MailDisplaySettings
           accessToken={accessToken}
           inboxListDensity={inboxListDensity}
@@ -570,7 +598,7 @@ export function MailSettingsPanel({
       break;
     case "accounts":
       content = renderDetail(
-        "Hesaplar ve gönderenler",
+        detailTitle("accounts"),
         <MailAccountsSettingsPanel
           accessToken={accessToken}
           onBrandingSaved={onInboxBrandingSaved}
@@ -579,13 +607,13 @@ export function MailSettingsPanel({
       break;
     case "signature":
       content = renderDetail(
-        "İmza ve şablon",
+        detailTitle("signature"),
         <MailComposePresetsPanel accessToken={accessToken} />,
       );
       break;
     case "autoReply":
       content = renderDetail(
-        "Otomatik yanıtlar",
+        detailTitle("autoReply"),
         <MailAutoReplySettingsPanel
           accessToken={accessToken}
           onEnabledChange={setAutoReplyEnabled}
@@ -594,7 +622,7 @@ export function MailSettingsPanel({
       break;
     case "notifications":
       content = renderDetail(
-        "Bildirimler ve sesler",
+        detailTitle("notifications"),
         <MailNotificationsSettingsPanel
           accessToken={accessToken}
           notificationsPwaFocus={notificationsPwaFocus}
@@ -603,7 +631,7 @@ export function MailSettingsPanel({
       break;
     case "security":
       content = renderDetail(
-        "Güvenlik",
+        detailTitle("security"),
         <MailSecuritySettingsPanel
           accessToken={accessToken}
           onTotpEnabledChange={setTotpEnabled}
@@ -620,7 +648,7 @@ export function MailSettingsPanel({
       break;
     case "integrations":
       content = renderDetail(
-        "Eklentiler ve entegrasyonlar",
+        detailTitle("integrations"),
         <MailIntegrationsSettingsPanel
           onOpenImap={() => setView("imap")}
           onOpenCalendarSettings={() => setView("calendarSettings")}
@@ -631,13 +659,13 @@ export function MailSettingsPanel({
       break;
     case "privacy":
       content = renderDetail(
-        "Gizlilik",
+        detailTitle("privacy"),
         <MailPrivacySettingsPanel accessToken={accessToken} />,
       );
       break;
     case "calendarSettings":
       content = renderDetail(
-        "Takvim",
+        detailTitle("calendarSettings"),
         <>
           <p className="mail-settings-lead">
             Google Takvim, Microsoft Graph ve CalDAV. OAuth bağlantıları buradan
@@ -730,7 +758,7 @@ export function MailSettingsPanel({
       break;
     case "contactsSettings":
       content = renderDetail(
-        "Kişiler",
+        detailTitle("contactsSettings"),
         <>
           <p className="mail-settings-lead">
             Harici CardDAV rehberleri. Yeni hesap ekleme tam ekran kişiler
@@ -807,7 +835,7 @@ export function MailSettingsPanel({
       break;
     case "ops":
       content = renderDetail(
-        "Ops snapshot ve runbook",
+        detailTitle("ops"),
         <MailOpsSnapshotPanel
           accessToken={accessToken}
           highlightRunbook={mailOpsRunbookFocus}
@@ -816,7 +844,7 @@ export function MailSettingsPanel({
       break;
     case "deliverability":
       content = renderDetail(
-        "Teslimat ve itibar",
+        detailTitle("deliverability"),
         <MailDeliverabilityPanel
           accessToken={accessToken}
           highlightDmarc={deliverabilityDmarcFocus}
@@ -826,13 +854,13 @@ export function MailSettingsPanel({
       break;
     case "rules":
       content = renderDetail(
-        "Posta kuralları",
+        detailTitle("rules"),
         <MailRulesPanel accessToken={accessToken} />,
       );
       break;
     case "help":
       content = renderDetail(
-        "Yardım",
+        detailTitle("help"),
         <MailHelpPanel
           onOpenSetting={setView}
           onOpenCalendar={onOpenCalendar}
@@ -842,7 +870,7 @@ export function MailSettingsPanel({
       break;
     case "imap":
       content = renderDetail(
-        "IMAP ve SMTP",
+        detailTitle("imap"),
         <MailImapClientSetup
           settings={settings}
           newPassword={newPassword}
@@ -881,7 +909,7 @@ export function MailSettingsPanel({
             : "compose-dialog mail-settings-dialog"
         }
         role="dialog"
-        aria-label="Ayarlar"
+        aria-label={t("settingsAria")}
         onClick={(e) => e.stopPropagation()}
       >
         {content}

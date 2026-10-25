@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import {
   fetchInboxPreferences,
   updateInboxPreferences,
@@ -13,6 +20,7 @@ import {
   type UndoSendSeconds,
 } from "@/lib/mailApi";
 import { pickMailPostaPreferences } from "@/lib/mailPostaPrefs";
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 
 type Props = {
   accessToken: string;
@@ -21,14 +29,6 @@ type Props = {
   onPreferencesSaved?: (prefs: MailInboxPreferences) => void;
   onOpenDisplay?: () => void;
 };
-
-const UNDO_OPTIONS: { value: UndoSendSeconds; label: string }[] = [
-  { value: 0, label: "Kapalı" },
-  { value: 5, label: "5 sn" },
-  { value: 10, label: "10 sn" },
-  { value: 20, label: "20 sn" },
-  { value: 30, label: "30 sn" },
-];
 
 type PostaForm = ReturnType<typeof pickMailPostaPreferences>;
 
@@ -168,6 +168,18 @@ export function MailPostaSettings({
   onPreferencesSaved,
   onOpenDisplay,
 }: Props) {
+  const { t } = useMailLocale();
+  const undoOptions = useMemo(
+    () =>
+      [
+        { value: 0 as UndoSendSeconds, label: t("postaUndoOff") },
+        { value: 5 as UndoSendSeconds, label: "5 sn" },
+        { value: 10 as UndoSendSeconds, label: "10 sn" },
+        { value: 20 as UndoSendSeconds, label: "20 sn" },
+        { value: 30 as UndoSendSeconds, label: "30 sn" },
+      ] satisfies { value: UndoSendSeconds; label: string }[],
+    [t],
+  );
   const [form, setForm] = useState<PostaForm>(pickMailPostaPreferences(null));
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -188,12 +200,12 @@ export function MailPostaSettings({
       onPreferencesSavedRef.current?.(data.preferences);
     } catch (error) {
       setStatus(
-        error instanceof Error ? error.message : "Tercihler yüklenemedi.",
+        error instanceof Error ? error.message : t("postaLoadError"),
       );
     } finally {
       setLoading(false);
     }
-  }, [accessToken]);
+  }, [accessToken, t]);
 
   useEffect(() => {
     void load();
@@ -211,10 +223,10 @@ export function MailPostaSettings({
       setForm(picked);
       onThreadViewChange(picked.threadViewEnabled);
       onPreferencesSaved?.(result.preferences);
-      setStatus("Kaydedildi — tercihleriniz bu kurumsal posta kutusunda geçerli.");
+      setStatus(t("postaSavedDetail"));
     } catch (error) {
       setStatus(
-        error instanceof Error ? error.message : "Kaydedilemedi.",
+        error instanceof Error ? error.message : t("displayDensitySaveFailed"),
       );
     } finally {
       setSaving(false);
@@ -224,7 +236,11 @@ export function MailPostaSettings({
   if (loading && !status) {
     return (
       <div className="mail-posta-settings mail-posta-settings--premium">
-        <div className="mail-posta-skeleton" aria-busy="true" aria-label="Yükleniyor">
+        <div
+          className="mail-posta-skeleton"
+          aria-busy="true"
+          aria-label={t("postaLoadingAria")}
+        >
           <div className="mail-posta-skeleton-line mail-posta-skeleton-line--lead" />
           <div className="mail-posta-skeleton-card" />
           <div className="mail-posta-skeleton-card" />
@@ -236,46 +252,45 @@ export function MailPostaSettings({
   return (
     <div className="mail-posta-settings mail-posta-settings--premium">
       <p className="mail-posta-intro">
-        Kurumsal posta davranışınız: gönderim, yanıt ve gelen kutusu akışı. Görünüm
-        için{" "}
+        {t("postaIntro")}{" "}
         {onOpenDisplay ? (
           <button
             type="button"
             className="mail-posta-intro-link"
             onClick={onOpenDisplay}
           >
-            Ekran ve görünüm
+            {t("postaIntroDisplayLink")}
           </button>
         ) : (
-          <strong>Ekran ve görünüm</strong>
+          <strong>{t("postaIntroDisplayLink")}</strong>
         )}
         .
       </p>
 
       <PostaSection
-        title="Gönderme ve yanıtlama"
-        description="Gönderim gecikmesi ve varsayılan yanıt düğmesi."
+        title={t("postaSendSectionTitle")}
+        description={t("postaSendSectionDesc")}
       >
-        <PostaRow
-          label="Geri al gönder"
-          hint="Kapalı = anında gönder. 5 sn kurumsal varsayılan."
-        >
+        <PostaRow label={t("postaUndoLabel")} hint={t("postaUndoHint")}>
           <ChipGroup
             value={form.undoSendSeconds}
             layout="wrap"
-            options={UNDO_OPTIONS}
+            options={undoOptions}
             onChange={(v) =>
               setForm((f) => ({ ...f, undoSendSeconds: v as UndoSendSeconds }))
             }
           />
         </PostaRow>
-        <PostaRow label="Varsayılan yanıt" hint="Okuma panelindeki birincil düğme.">
+        <PostaRow
+          label={t("postaDefaultReplyLabel")}
+          hint={t("postaDefaultReplyHint")}
+        >
           <ChipGroup<MailDefaultReplyMode>
             value={form.defaultReplyMode}
             layout="pair"
             options={[
-              { value: "reply", label: "Yanıtla" },
-              { value: "reply_all", label: "Yanıtla tümü" },
+              { value: "reply", label: t("replyAction") },
+              { value: "reply_all", label: t("postaReplyAllShort") },
             ]}
             onChange={(id) => setForm((f) => ({ ...f, defaultReplyMode: id }))}
           />
@@ -283,41 +298,44 @@ export function MailPostaSettings({
       </PostaSection>
 
       <PostaSection
-        title="Okuma ve güvenlik"
-        description="HTML postada uzak içerik ve konuşma listesi."
+        title={t("postaReadSectionTitle")}
+        description={t("postaReadSectionDesc")}
       >
-        <PostaRow label="Uzak resimler" hint="Gizlilik ve takip pikselleri.">
+        <PostaRow
+          label={t("postaRemoteImagesLabel")}
+          hint={t("postaRemoteImagesHint")}
+        >
           <ChipGroup<MailRemoteImagesPolicy>
             value={form.remoteImagesPolicy}
             layout="equal"
             options={[
-              { value: "show", label: "Göster" },
-              { value: "ask", label: "Önce sor" },
-              { value: "hide", label: "Gizle" },
+              { value: "show", label: t("postaRemoteShow") },
+              { value: "ask", label: t("postaRemoteAsk") },
+              { value: "hide", label: t("postaRemoteHide") },
             ]}
             onChange={(v) => setForm((f) => ({ ...f, remoteImagesPolicy: v }))}
           />
         </PostaRow>
         <PostaToggle
           checked={threadView}
-          label="Konuşma görünümü"
-          hint="Aynı konudaki mesajları tek zincirde göster."
+          label={t("postaThreadViewLabel")}
+          hint={t("postaThreadViewHint")}
           onChange={(enabled) => {
             onThreadViewChange(enabled);
             setForm((f) => ({ ...f, threadViewEnabled: enabled }));
           }}
         />
         <PostaRow
-          label="Arşiv veya silme sonrası"
-          hint="Mesajı taşıdıktan sonra nereye gidilsin?"
+          label={t("postaAfterActionLabel")}
+          hint={t("postaAfterActionHint")}
         >
           <ChipGroup<MailAfterMessageAction>
             value={form.afterMessageAction}
             layout="equal"
             options={[
-              { value: "list", label: "Liste" },
-              { value: "next", label: "Sonraki" },
-              { value: "previous", label: "Önceki" },
+              { value: "list", label: t("postaAfterList") },
+              { value: "next", label: t("postaAfterNext") },
+              { value: "previous", label: t("postaAfterPrevious") },
             ]}
             onChange={(v) => setForm((f) => ({ ...f, afterMessageAction: v }))}
           />
@@ -325,30 +343,27 @@ export function MailPostaSettings({
       </PostaSection>
 
       <PostaSection
-        title="Onaylar ve hareketler"
-        description="Yanlışlıkla silmeyi önleyin; mobil kaydırma tercihi."
+        title={t("postaConfirmSectionTitle")}
+        description={t("postaConfirmSectionDesc")}
       >
         <PostaToggle
           checked={form.confirmPermanentDelete}
-          label="Kalıcı silmeden önce onay"
+          label={t("postaConfirmPermanent")}
           onChange={(v) => setForm((f) => ({ ...f, confirmPermanentDelete: v }))}
         />
         <PostaToggle
           checked={form.confirmBulkDelete}
-          label="Toplu kalıcı silmeden önce onay"
+          label={t("postaConfirmBulk")}
           onChange={(v) => setForm((f) => ({ ...f, confirmBulkDelete: v }))}
         />
-        <PostaRow
-          label="Kaydırma aksiyonu"
-          hint="Sola kaydırma: birincil düğme ve tam kaydırmada otomatik uygulama."
-        >
+        <PostaRow label={t("postaSwipeLabel")} hint={t("postaSwipeHint")}>
           <ChipGroup<MailSwipePrimaryAction>
             value={form.swipePrimaryAction}
             layout="equal"
             options={[
-              { value: "archive", label: "Arşiv" },
-              { value: "delete", label: "Çöp" },
-              { value: "read", label: "Okundu" },
+              { value: "archive", label: t("postaSwipeArchive") },
+              { value: "delete", label: t("postaSwipeTrash") },
+              { value: "read", label: t("postaSwipeRead") },
             ]}
             onChange={(v) => setForm((f) => ({ ...f, swipePrimaryAction: v }))}
           />
@@ -356,33 +371,30 @@ export function MailPostaSettings({
       </PostaSection>
 
       <PostaSection
-        title="Gelişmiş"
-        description="Kademeli açılan kurumsal özellikler."
+        title={t("postaAdvancedTitle")}
+        description={t("postaAdvancedDesc")}
         muted
       >
         <PostaToggle
           checked={form.focusedInboxEnabled}
-          label="Odaklı gelen kutusu"
-          hint="Gelen kutusunda Önemli / Diğer sekmeleri (yıldız, okunmamış, bülten filtresi)."
+          label={t("postaFocusedInbox")}
+          hint={t("postaFocusedInboxHint")}
           onChange={(v) => setForm((f) => ({ ...f, focusedInboxEnabled: v }))}
         />
         <PostaToggle
           checked={form.inboxSmartSortEnabled}
-          label="Akıllı sıralama"
-          hint="Gelen kutusunda önem skoruna göre sıralama (yıldız, okunmamış, kişisel, güncellik)."
+          label={t("postaSmartSort")}
+          hint={t("postaSmartSortHint")}
           onChange={(v) => setForm((f) => ({ ...f, inboxSmartSortEnabled: v }))}
         />
-        <PostaRow
-          label="Yanıt alıntısı"
-          hint="Yanıt gönderildiğinde önceki mesajın alıntısı (sunucu)."
-        >
+        <PostaRow label={t("postaQuoteLabel")} hint={t("postaQuoteHint")}>
           <ChipGroup<MailReplyQuoteMode>
             value={form.replyQuoteMode}
             layout="equal"
             options={[
-              { value: "full", label: "Tam" },
-              { value: "trimmed", label: "Kısa" },
-              { value: "none", label: "Yok" },
+              { value: "full", label: t("postaQuoteFull") },
+              { value: "trimmed", label: t("postaQuoteTrimmed") },
+              { value: "none", label: t("postaQuoteNone") },
             ]}
             onChange={(v) => setForm((f) => ({ ...f, replyQuoteMode: v }))}
           />
@@ -393,7 +405,8 @@ export function MailPostaSettings({
         {status ? (
           <p
             className={
-              status.startsWith("Kaydedildi")
+              status.startsWith(t("postaSaved").replace(/\.$/, "")) ||
+              status === t("postaSavedDetail")
                 ? "mail-posta-status mail-posta-status--ok"
                 : "mail-posta-status mail-posta-status--err"
             }
@@ -409,7 +422,7 @@ export function MailPostaSettings({
             disabled={saving}
             onClick={() => void save()}
           >
-            {saving ? "Kaydediliyor…" : "Kaydet"}
+            {saving ? t("actionSaving") : t("actionSave")}
           </button>
         </div>
       </footer>

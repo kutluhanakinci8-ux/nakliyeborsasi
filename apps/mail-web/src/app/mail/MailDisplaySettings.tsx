@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { MailInboxListDensity } from "@/lib/mailApi";
 import { updateInboxPreferences } from "@/lib/mailApi";
 import {
@@ -27,38 +27,35 @@ type Props = {
   onInboxListDensityChange?: (density: MailInboxListDensity) => void;
 };
 
-const THEME_OPTIONS: {
-  id: MailThemeMode;
-  label: string;
-  hint: string;
-  previewClass: string;
-}[] = [
-  {
-    id: "light",
-    label: "Açık",
-    hint: "Gündüz, aydınlık ortam",
-    previewClass: "mail-display-theme-preview--light",
-  },
-  {
-    id: "dark",
-    label: "Koyu",
-    hint: "Gece, düşük ışık",
-    previewClass: "mail-display-theme-preview--dark",
-  },
-  {
-    id: "system",
-    label: "Sistem",
-    hint: "Windows / macOS teması",
-    previewClass: "mail-display-theme-preview--system",
-  },
-];
-
 export function MailDisplaySettings({
   accessToken,
   inboxListDensity,
   onInboxListDensityChange,
 }: Props) {
   const { locale, setLocale, timeZone, setTimeZone, t } = useMailLocale();
+  const themeOptions = useMemo(
+    () => [
+      {
+        id: "light" as MailThemeMode,
+        label: t("displayThemeLight"),
+        hint: t("displayThemeLightHint"),
+        previewClass: "mail-display-theme-preview--light",
+      },
+      {
+        id: "dark" as MailThemeMode,
+        label: t("displayThemeDark"),
+        hint: t("displayThemeDarkHint"),
+        previewClass: "mail-display-theme-preview--dark",
+      },
+      {
+        id: "system" as MailThemeMode,
+        label: t("displayThemeSystem"),
+        hint: t("displayThemeSystemHint"),
+        previewClass: "mail-display-theme-preview--system",
+      },
+    ],
+    [t],
+  );
   const [themeMode, setThemeMode] = useState<MailThemeMode>("light");
   const [density, setDensity] = useState(inboxListDensity);
   const [readFont, setReadFont] = useState<MailReadFontScale>("default");
@@ -120,13 +117,15 @@ export function MailDisplaySettings({
           setDensity(saved);
           onInboxListDensityChange?.(saved);
           setDensityStatus(
-            saved === "compact" ? "Sıkı görünüm uygulandı." : "Rahat görünüm uygulandı.",
+            saved === "compact"
+              ? t("displayDensitySavedCompact")
+              : t("displayDensitySavedComfortable"),
           );
         } catch (error) {
           setDensity(inboxListDensity);
           onInboxListDensityChange?.(inboxListDensity);
           setDensityStatus(
-            error instanceof Error ? error.message : "Kaydedilemedi.",
+            error instanceof Error ? error.message : t("displayDensitySaveFailed"),
           );
         } finally {
           setDensitySaving(false);
@@ -138,15 +137,16 @@ export function MailDisplaySettings({
       densitySaving,
       inboxListDensity,
       onInboxListDensityChange,
+      t,
     ],
   );
 
   return (
     <div className="mail-display-settings">
       <section className="mail-display-section">
-        <h3 className="mail-display-section-title">Renk modu</h3>
+        <h3 className="mail-display-section-title">{t("displayThemeTitle")}</h3>
         <div className="mail-display-theme-grid">
-          {THEME_OPTIONS.map((option) => (
+          {themeOptions.map((option) => (
             <button
               key={option.id}
               type="button"
@@ -176,12 +176,18 @@ export function MailDisplaySettings({
       </section>
 
       <section className="mail-display-section">
-        <h3 className="mail-display-section-title">Gelen kutusu yoğunluğu</h3>
+        <h3 className="mail-display-section-title">{t("displayDensityTitle")}</h3>
         <div className="mail-display-segment">
           {(
             [
-              { id: "comfortable" as MailInboxListDensity, label: "Rahat" },
-              { id: "compact" as MailInboxListDensity, label: "Sıkı" },
+              {
+                id: "comfortable" as MailInboxListDensity,
+                label: t("displayDensityComfortable"),
+              },
+              {
+                id: "compact" as MailInboxListDensity,
+                label: t("displayDensityCompact"),
+              },
             ] as const
           ).map((option) => (
             <button
@@ -200,7 +206,7 @@ export function MailDisplaySettings({
           ))}
         </div>
         {densitySaving ? (
-          <p className="mail-display-status">Kaydediliyor…</p>
+          <p className="mail-display-status">{t("displayDensitySaving")}</p>
         ) : densityStatus ? (
           <p className="mail-display-status">{densityStatus}</p>
         ) : null}
@@ -247,12 +253,18 @@ export function MailDisplaySettings({
       </section>
 
       <section className="mail-display-section">
-        <h3 className="mail-display-section-title">Okuma alanı</h3>
+        <h3 className="mail-display-section-title">{t("displayReadAreaTitle")}</h3>
         <div className="mail-display-segment">
           {(
             [
-              { id: "default" as MailReadFontScale, label: "Normal" },
-              { id: "large" as MailReadFontScale, label: "Büyük" },
+              {
+                id: "default" as MailReadFontScale,
+                label: t("displayReadFontDefault"),
+              },
+              {
+                id: "large" as MailReadFontScale,
+                label: t("displayReadFontLarge"),
+              },
             ] as const
           ).map((option) => (
             <button
@@ -274,10 +286,7 @@ export function MailDisplaySettings({
         </div>
       </section>
 
-      <p className="mail-display-section-hint">
-        Konuşma görünümü ve geri al gönder süresi{" "}
-        <strong>Ayarlar → Posta</strong> altında.
-      </p>
+      <p className="mail-display-section-hint">{t("displayPostaPrefsHint")}</p>
     </div>
   );
 }

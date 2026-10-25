@@ -50,15 +50,59 @@ function dateRangeEnd(date: string): string | undefined {
   return new Date(`${date}T23:59:59.999`).toISOString();
 }
 
-const STATUS_FILTERS = [
-  { value: "", label: "Tümü" },
-  { value: "draft", label: "Taslak" },
-  { value: "scheduled", label: "Zamanlanmış" },
-  { value: "running", label: "Gönderiliyor" },
-  { value: "completed", label: "Tamamlanan" },
-  { value: "failed", label: "Başarısız" },
-  { value: "cancelled", label: "İptal" },
-];
+function formatCampaignSummaryLine(
+  summary: MailCampaignSummary,
+  topTagCounts: [string, number][],
+  t: (key: string, params?: Record<string, string | number>) => string,
+): string {
+  let line = t("campaignSummaryWindow", {
+    days: summary.windowDays,
+    campaigns: summary.campaignsInWindow,
+    recipients: summary.recipientsInWindow,
+    sent: summary.sentInWindow,
+  });
+  if (summary.counts.scheduled > 0) {
+    line += t("campaignSummaryScheduledSuffix", {
+      count: summary.counts.scheduled,
+    });
+  }
+  if (summary.counts.failed > 0) {
+    line += t("campaignSummaryFailedSuffix", { count: summary.counts.failed });
+  }
+  if (summary.failedRecipientsInWindow > 0) {
+    line += t("campaignSummaryFailedRecipientsSuffix", {
+      count: summary.failedRecipientsInWindow,
+    });
+  }
+  if (summary.suppressedSkippedInWindow > 0) {
+    line += t("campaignSummarySuppressedSuffix", {
+      count: summary.suppressedSkippedInWindow,
+    });
+  }
+  if (summary.averageSuccessRatePercent != null) {
+    line += t("campaignSummaryAvgSuccessSuffix", {
+      pct: summary.averageSuccessRatePercent,
+    });
+  }
+  if (topTagCounts.length > 0) {
+    line += t("campaignSummaryTagsPrefix", {
+      tags: topTagCounts.map(([tag, count]) => `${tag} (${count})`).join(", "),
+    });
+  }
+  return line;
+}
+
+function statusFilters(t: (key: string) => string) {
+  return [
+    { value: "", label: t("campaignFilterAll") },
+    { value: "draft", label: t("campaignStatusDraft") },
+    { value: "scheduled", label: t("campaignStatusScheduled") },
+    { value: "running", label: t("campaignStatusRunning") },
+    { value: "completed", label: t("campaignStatusCompleted") },
+    { value: "failed", label: t("campaignStatusFailed") },
+    { value: "cancelled", label: t("campaignStatusCancelled") },
+  ];
+}
 
 const STATUS_CHART_COLORS: Record<string, string> = {
   completed: "#16a34a",
@@ -71,16 +115,18 @@ const STATUS_CHART_COLORS: Record<string, string> = {
 
 function MailCampaignSummaryCharts({
   summary,
+  t,
 }: {
   summary: MailCampaignSummary;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }) {
+  const filters = statusFilters(t);
   const statusRows = (
     ["completed", "draft", "scheduled", "running", "failed", "cancelled"] as const
   )
     .map((key) => ({
       key,
-      label:
-        STATUS_FILTERS.find((f) => f.value === key)?.label ?? key,
+      label: filters.find((f) => f.value === key)?.label ?? key,
       value: summary.counts[key] ?? 0,
       color: STATUS_CHART_COLORS[key] ?? "#94a3b8",
     }))
@@ -92,11 +138,11 @@ function MailCampaignSummaryCharts({
   const maxTag = Math.max(1, ...tagRows.map(([, count]) => count));
 
   return (
-    <div className="mail-campaign-chart-grid" aria-label="30 günlük kampanya grafikleri">
+    <div className="mail-campaign-chart-grid" aria-label={t("campaignChartsAria")}>
       <div className="mail-campaign-chart-card">
-        <h4 className="mail-campaign-chart-title">Durum (30 gün)</h4>
+        <h4 className="mail-campaign-chart-title">{t("campaignChartStatusTitle")}</h4>
         {statusRows.length === 0 ? (
-          <p className="compose-attach-hint">Bu pencerede kampanya yok.</p>
+          <p className="compose-attach-hint">{t("campaignChartEmptyStatus")}</p>
         ) : (
           <ul className="mail-campaign-chart-bars">
             {statusRows.map((row) => (
@@ -118,9 +164,9 @@ function MailCampaignSummaryCharts({
         )}
       </div>
       <div className="mail-campaign-chart-card">
-        <h4 className="mail-campaign-chart-title">Etiketler (30 gün)</h4>
+        <h4 className="mail-campaign-chart-title">{t("campaignChartTagsTitle")}</h4>
         {tagRows.length === 0 ? (
-          <p className="compose-attach-hint">Etiketli kampanya yok.</p>
+          <p className="compose-attach-hint">{t("campaignChartEmptyTags")}</p>
         ) : (
           <ul className="mail-campaign-chart-bars">
             {tagRows.map(([tag, count]) => (
@@ -318,7 +364,7 @@ export function MailCampaignHistoryPanel({
       anchor.click();
       URL.revokeObjectURL(url);
     } catch {
-      setError("Liste CSV indirilemedi.");
+      setError(t("campaignErrListCsv"));
     } finally {
       setListExportBusy(false);
     }
@@ -338,7 +384,7 @@ export function MailCampaignHistoryPanel({
       const data = await fetchMailCampaignDetail(accessToken, campaignId);
       setDetail(data.campaign);
     } catch {
-      setDetailError("Detay yüklenemedi.");
+      setDetailError(t("campaignErrDetailLoad"));
     }
   }
 
@@ -358,7 +404,7 @@ export function MailCampaignHistoryPanel({
       setContentSubjectB(data.campaign.subjectB ?? "");
       setContentText(data.campaign.text);
     } catch {
-      setError("İçerik yüklenemedi.");
+      setError(t("campaignErrContentLoad"));
       setContentEditId(null);
     } finally {
       setBusyId(null);
@@ -379,7 +425,7 @@ export function MailCampaignHistoryPanel({
       anchor.click();
       URL.revokeObjectURL(url);
     } catch {
-      setError("CSV indirilemedi.");
+      setError(t("campaignErrCsv"));
     } finally {
       setBusyId(null);
     }
@@ -426,40 +472,19 @@ export function MailCampaignHistoryPanel({
       ) : null}
       {summary ? (
         <p className="mail-campaign-summary compose-attach-hint">
-          Son {summary.windowDays} gün: {summary.campaignsInWindow} kampanya ·{" "}
-          {summary.recipientsInWindow} alıcı · {summary.sentInWindow} gönderim
-          {summary.counts.scheduled > 0
-            ? ` · ${summary.counts.scheduled} zamanlanmış`
-            : ""}
-          {summary.counts.failed > 0
-            ? ` · ${summary.counts.failed} başarısız`
-            : ""}
-          {summary.failedRecipientsInWindow > 0
-            ? ` · ${summary.failedRecipientsInWindow} başarısız alıcı`
-            : ""}
-          {summary.suppressedSkippedInWindow > 0
-            ? ` · ${summary.suppressedSkippedInWindow} durdurulmuş atlandı`
-            : ""}
-          {summary.averageSuccessRatePercent != null
-            ? ` · ort. başarı ${summary.averageSuccessRatePercent}%`
-            : ""}
-          {topTagCounts.length > 0
-            ? ` · etiket: ${topTagCounts
-                .map(([tag, count]) => `${tag} (${count})`)
-                .join(", ")}`
-            : ""}
+          {formatCampaignSummaryLine(summary, topTagCounts, t)}
         </p>
       ) : null}
-      {summary ? <MailCampaignSummaryCharts summary={summary} /> : null}
+      {summary ? <MailCampaignSummaryCharts summary={summary} t={t} /> : null}
       <div className="mail-campaign-history-filters">
         <label className="compose-preset-label">
-          <span>Durum filtresi</span>
+          <span>{t("campaignFilterStatus")}</span>
           <select
             className="compose-select"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
           >
-            {STATUS_FILTERS.map((opt) => (
+            {statusFilters(t).map((opt) => (
               <option key={opt.value || "all"} value={opt.value}>
                 {opt.label}
               </option>
@@ -467,14 +492,14 @@ export function MailCampaignHistoryPanel({
           </select>
         </label>
         <label className="compose-preset-label">
-          <span>Etiket</span>
+          <span>{t("campaignFilterTag")}</span>
           <select
             className="compose-select"
             value={tagFilter}
             onChange={(e) => setTagFilter(e.target.value)}
             disabled={tagOptions.length === 0}
           >
-            <option value="">Tümü</option>
+            <option value="">{t("campaignFilterAll")}</option>
             {tagOptions.map((tag) => (
               <option key={tag} value={tag}>
                 {tag}
@@ -483,17 +508,17 @@ export function MailCampaignHistoryPanel({
           </select>
         </label>
         <label className="compose-preset-label mail-campaign-history-search">
-          <span>Konu ara</span>
+          <span>{t("campaignFilterSubject")}</span>
           <input
             type="search"
             className="compose-input"
-            placeholder="En az 2 karakter"
+            placeholder={t("campaignFilterSubjectPlaceholder")}
             value={subjectSearch}
             onChange={(e) => setSubjectSearch(e.target.value)}
           />
         </label>
         <label className="compose-preset-label">
-          <span>Başlangıç</span>
+          <span>{t("campaignFilterCreatedFrom")}</span>
           <input
             type="date"
             className="compose-input"
@@ -502,7 +527,7 @@ export function MailCampaignHistoryPanel({
           />
         </label>
         <label className="compose-preset-label">
-          <span>Bitiş</span>
+          <span>{t("campaignFilterCreatedTo")}</span>
           <input
             type="date"
             className="compose-input"
@@ -511,7 +536,7 @@ export function MailCampaignHistoryPanel({
           />
         </label>
         <label className="compose-preset-label">
-          <span>Plan (başlangıç)</span>
+          <span>{t("campaignFilterScheduleFrom")}</span>
           <input
             type="date"
             className="compose-input"
@@ -520,7 +545,7 @@ export function MailCampaignHistoryPanel({
           />
         </label>
         <label className="compose-preset-label">
-          <span>Plan (bitiş)</span>
+          <span>{t("campaignFilterScheduleTo")}</span>
           <input
             type="date"
             className="compose-input"
@@ -529,7 +554,7 @@ export function MailCampaignHistoryPanel({
           />
         </label>
         <label className="compose-preset-label mail-campaign-history-check">
-          <span>Başarısız alıcı</span>
+          <span>{t("campaignFilterHasFailures")}</span>
           <input
             type="checkbox"
             checked={hasFailuresOnly}
@@ -537,7 +562,7 @@ export function MailCampaignHistoryPanel({
           />
         </label>
         <label className="compose-preset-label">
-          <span>Sıralama</span>
+          <span>{t("campaignFilterSort")}</span>
           <select
             className="compose-select"
             value={sortFilter}
@@ -547,8 +572,8 @@ export function MailCampaignHistoryPanel({
               )
             }
           >
-            <option value="createdAt">Oluşturma (yeni)</option>
-            <option value="scheduleAt">Planlanan tarih</option>
+            <option value="createdAt">{t("campaignSortCreated")}</option>
+            <option value="scheduleAt">{t("campaignSortSchedule")}</option>
           </select>
         </label>
       </div>
@@ -559,7 +584,7 @@ export function MailCampaignHistoryPanel({
           disabled={listExportBusy}
           onClick={() => void onDownloadListCsv()}
         >
-          {listExportBusy ? "Hazırlanıyor…" : "Filtreli liste CSV"}
+          {listExportBusy ? t("campaignExportPreparing") : t("campaignExportFilteredCsv")}
         </button>
         <button
           type="button"
@@ -576,7 +601,7 @@ export function MailCampaignHistoryPanel({
                 anchor.click();
                 URL.revokeObjectURL(url);
               })
-              .catch(() => setError("Özet CSV indirilemedi."))
+              .catch(() => setError(t("campaignErrSummaryCsv")))
               .finally(() => setSummaryExportBusy(false));
           }}
         >
@@ -590,7 +615,7 @@ export function MailCampaignHistoryPanel({
             setBulkSelected([]);
           }}
         >
-          {bulkSelectMode ? "Toplu iptal: kapalı" : "Toplu iptal"}
+          {bulkSelectMode ? t("campaignBulkCancelOff") : t("campaignBulkCancelOn")}
         </button>
         {bulkSelectMode && bulkSelected.length > 0 ? (
           <button
@@ -605,12 +630,12 @@ export function MailCampaignHistoryPanel({
                   setBulkSelectMode(false);
                   return refresh();
                 })
-                .catch(() => setError("Toplu iptal başarısız."))
+                .catch(() => setError(t("campaignErrBulkCancel")))
                 .finally(() => setBulkBusy(false));
             }}
           >
             {bulkBusy
-              ? "İptal ediliyor…"
+              ? t("campaignBulkCancelling")
               : `Seçilenleri iptal (${bulkSelected.length})`}
           </button>
         ) : null}
@@ -664,7 +689,9 @@ export function MailCampaignHistoryPanel({
                   className="compose-chip-btn"
                   onClick={() => void toggleDetail(row.id)}
                 >
-                  {detailId === row.id ? "Detayı gizle" : "Detay"}
+                  {detailId === row.id
+                    ? t("campaignDetailHide")
+                    : t("campaignDetailShow")}
                 </button>
                 {row.status !== "running" ? (
                   <button
@@ -725,7 +752,7 @@ export function MailCampaignHistoryPanel({
                         .finally(() => setBusyId(null));
                     }}
                   >
-                    Gönder
+                    {t("composeSend")}
                   </button>
                 ) : null}
                 {row.status === "scheduled" ? (
@@ -735,7 +762,9 @@ export function MailCampaignHistoryPanel({
                       className="compose-chip-btn"
                       onClick={() => void openContentEditor(row.id)}
                     >
-                      {contentEditId === row.id ? "İçeriği gizle" : "İçerik"}
+                      {contentEditId === row.id
+                        ? t("campaignContentHide")
+                        : t("campaignContentShow")}
                     </button>
                     <button
                       type="button"
@@ -835,11 +864,11 @@ export function MailCampaignHistoryPanel({
                           setContentEditId(null);
                           return refresh();
                         })
-                        .catch(() => setError("İçerik kaydedilemedi."))
+                        .catch(() => setError(t("campaignErrContentSave")))
                         .finally(() => setBusyId(null));
                     }}
                   >
-                    İçeriği kaydet
+                    {t("campaignContentSave")}
                   </button>
                 </div>
               ) : null}
@@ -867,7 +896,7 @@ export function MailCampaignHistoryPanel({
                           setTagsEditId(null);
                           return refresh();
                         })
-                        .catch(() => setError("Etiketler kaydedilemedi."))
+                        .catch(() => setError(t("campaignErrTagsSave")))
                         .finally(() => setBusyId(null));
                     }}
                   >
@@ -899,7 +928,7 @@ export function MailCampaignHistoryPanel({
                           setRescheduleAt("");
                           return refresh();
                         })
-                        .catch(() => setError("Yeniden zamanlama başarısız."))
+                        .catch(() => setError(t("campaignErrReschedule")))
                         .finally(() => setBusyId(null));
                     }}
                   >
@@ -987,7 +1016,7 @@ export function MailCampaignHistoryPanel({
                       </ul>
                     </>
                   ) : !detailError ? (
-                    <p className="compose-attach-hint">Yükleniyor…</p>
+                    <p className="compose-attach-hint">{t("campaignLoadingMore")}</p>
                   ) : null}
                 </div>
               ) : null}
@@ -1002,7 +1031,7 @@ export function MailCampaignHistoryPanel({
           disabled={loadingMore}
           onClick={() => void loadMore()}
         >
-          {loadingMore ? "Yükleniyor…" : "Daha fazla göster"}
+          {loadingMore ? t("campaignLoadingMore") : t("campaignLoadMore")}
         </button>
       ) : null}
     </div>

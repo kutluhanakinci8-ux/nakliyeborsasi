@@ -1,6 +1,7 @@
 "use client";
 
 import type { ComposeCampaignResult } from "@/lib/mailApi";
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 
 type Props = {
   result: ComposeCampaignResult | null;
@@ -8,6 +9,7 @@ type Props = {
 };
 
 export function MailCampaignResultDialog({ result, onClose }: Props) {
+  const { t } = useMailLocale();
   if (!result) {
     return null;
   }
@@ -21,22 +23,40 @@ export function MailCampaignResultDialog({ result, onClose }: Props) {
       >
         <header className="compose-premium-header">
           <div className="compose-premium-header-text">
-            <h2 id="campaign-result-title">Kampanya özeti</h2>
-            <p className="compose-premium-subtitle">Kampanya ID: {result.campaignId}</p>
+            <h2 id="campaign-result-title">{t("campaignResultTitle")}</h2>
+            <p className="compose-premium-subtitle">
+              {t("campaignResultCampaignId", { id: result.campaignId })}
+            </p>
           </div>
-          <button type="button" className="compose-premium-close" aria-label="Kapat" onClick={onClose}>
+          <button
+            type="button"
+            className="compose-premium-close"
+            aria-label={t("actionClose")}
+            onClick={onClose}
+          >
             ×
           </button>
         </header>
         <div className="compose-premium-body">
           <ul className="mail-campaign-result-stats">
-            <li>Gönderilen: <strong>{result.sent}</strong> / {result.attempted}</li>
-            <li>Suppression (atlandı): {result.skippedSuppressed}</li>
-            <li>Başarısız: {result.failed.length}</li>
+            <li>
+              {t("campaignResultSent", {
+                sent: result.sent,
+                attempted: result.attempted,
+              })}
+            </li>
+            <li>
+              {t("campaignResultSkipped", { count: result.skippedSuppressed })}
+            </li>
+            <li>
+              {t("campaignResultFailedCount", { count: result.failed.length })}
+            </li>
           </ul>
           {result.failed.length > 0 ? (
             <>
-              <h3 className="mail-deliverability-subhead">Başarısız alıcılar</h3>
+              <h3 className="mail-deliverability-subhead">
+                {t("campaignResultFailedRecipients")}
+              </h3>
               <ul className="mail-campaign-result-failures">
                 {result.failed.map((row) => (
                   <li key={row.email}>
@@ -46,11 +66,9 @@ export function MailCampaignResultDialog({ result, onClose }: Props) {
               </ul>
             </>
           ) : (
-            <p className="compose-attach-hint">Tüm gönderimler tamamlandı veya suppression nedeniyle atlandı.</p>
+            <p className="compose-attach-hint">{t("campaignResultAllDone")}</p>
           )}
-          <p className="compose-attach-hint">
-            Pazarlama gönderimlerinde abonelik iptali linki ve List-Unsubscribe başlığı otomatik eklenir.
-          </p>
+          <p className="compose-attach-hint">{t("campaignResultUnsubscribeHint")}</p>
         </div>
       </div>
     </div>

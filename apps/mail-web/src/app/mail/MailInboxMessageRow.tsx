@@ -51,6 +51,7 @@ export function MailInboxMessageRow({
   onToggleCheck,
 }: Props) {
   const { t } = useMailLocale();
+  const noSubjectLabel = t("noSubject");
   const starred = Boolean(m.starredAt);
   const sender = mailSenderLabel(m.fromAddress);
   const dateLabel = formatMailListDate(m.receivedAt);
@@ -77,7 +78,7 @@ export function MailInboxMessageRow({
           type="checkbox"
           className="mail-inbox-row-check"
           checked={checked}
-          aria-label="Mesajı seç"
+          aria-label={t("rowSelectAria")}
           onClick={(e) => {
             e.stopPropagation();
             onToggleCheck(e.shiftKey);
@@ -111,13 +112,15 @@ export function MailInboxMessageRow({
           </span>
           <span className="mail-inbox-row-date">{dateLabel}</span>
         </div>
-        <div className="mail-inbox-row-subject">{m.subject || "(Konu yok)"}</div>
+        <div className="mail-inbox-row-subject">
+          {m.subject || noSubjectLabel}
+        </div>
         {m.snippet ? (
           <div className="mail-inbox-row-snippet">{m.snippet}</div>
         ) : null}
         {(m.attachmentCount ?? 0) > 0 ? (
-          <span className="mail-inbox-row-attach" title="Ek var">
-            Ek
+          <span className="mail-inbox-row-attach" title={t("attachHasTitle")}>
+            {t("attachLabel")}
           </span>
         ) : null}
       </div>
@@ -125,7 +128,7 @@ export function MailInboxMessageRow({
         <button
           type="button"
           className={`mail-inbox-row-star ${starred ? "starred" : ""}`}
-          aria-label={starred ? "Yıldızı kaldır" : "Yıldızla"}
+          aria-label={starred ? t("starRemoveAria") : t("starAddAria")}
           onClick={(e) => {
             e.stopPropagation();
             onToggleStar();
