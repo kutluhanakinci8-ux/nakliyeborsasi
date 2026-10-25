@@ -26,6 +26,7 @@ import {
   pushCalendarEventToCalDav,
   pushCalendarOccurrenceToCalDav,
 } from "@/lib/mailApi";
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 
 type Props = {
   accessToken: string;
@@ -49,6 +50,7 @@ function occurrenceAnchor(ev: MailCalendarEvent): string {
 }
 
 export function MailCalendarPanel({ accessToken, onToast }: Props) {
+  const { t, localeTag } = useMailLocale();
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
@@ -108,11 +110,11 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
   }, [events, selectedDay]);
   const monthLabel = useMemo(
     () =>
-      new Date(year, month, 1).toLocaleDateString("tr-TR", {
+      new Date(year, month, 1).toLocaleDateString(localeTag, {
         month: "long",
         year: "numeric",
       }),
-    [year, month],
+    [year, month, localeTag],
   );
 
   const load = useCallback(async () => {
@@ -126,12 +128,12 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
       setEvents(data.events);
     } catch (error) {
       onToast(
-        error instanceof Error ? error.message : "Takvim yüklenemedi.",
+        error instanceof Error ? error.message : t("calLoadErr"),
       );
     } finally {
       setLoading(false);
     }
-  }, [accessToken, bounds.from, bounds.to, onToast]);
+  }, [accessToken, bounds.from, bounds.to, onToast, t]);
 
   useEffect(() => {
     void load();
@@ -180,12 +182,12 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
     if (Number.isNaN(d.getTime())) {
       return selectedDay;
     }
-    return d.toLocaleDateString("tr-TR", {
+    return d.toLocaleDateString(localeTag, {
       weekday: "long",
       day: "numeric",
       month: "long",
     });
-  }, [selectedDay]);
+  }, [selectedDay, localeTag]);
 
   const isCurrentMonth =
     year === now.getFullYear() && month === now.getMonth();
@@ -208,7 +210,7 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
     const startsAt = new Date(editStartLocal);
     const endsAt = new Date(editEndLocal);
     if (Number.isNaN(startsAt.getTime()) || Number.isNaN(endsAt.getTime())) {
-      onToast("Geçersiz tarih.");
+      onToast(t("calInvalidDate"));
       return;
     }
     const currentAnchor = occurrenceAnchor(editingOccurrence);
@@ -216,7 +218,7 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
     if (editNewAnchorLocal.trim()) {
       const newAnchor = new Date(editNewAnchorLocal);
       if (Number.isNaN(newAnchor.getTime())) {
-        onToast("Geçersiz yeni tekrar anahtarı.");
+        onToast(t("calInvalidRecurrenceKey"));
         return;
       }
       if (newAnchor.getTime() !== new Date(currentAnchor).getTime()) {
@@ -233,24 +235,24 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
         newOccurrenceAnchorAt,
       });
       setEditingOccurrence(null);
-      onToast("Bu tekrar güncellendi.");
+      onToast(t("calOccurrenceUpdated"));
       void load();
     } catch (error) {
       onToast(
-        error instanceof Error ? error.message : "Güncellenemedi.",
+        error instanceof Error ? error.message : t("errGenericSave"),
       );
     }
   }
 
   async function onAddEvent() {
     if (!title.trim() || !startLocal || !endLocal) {
-      onToast("Başlık ve tarihler gerekli.");
+      onToast(t("calTitleDatesRequired"));
       return;
     }
     const startsAt = new Date(startLocal);
     const endsAt = new Date(endLocal);
     if (Number.isNaN(startsAt.getTime()) || Number.isNaN(endsAt.getTime())) {
-      onToast("Geçersiz tarih.");
+      onToast(t("calInvalidDate"));
       return;
     }
     try {
@@ -267,11 +269,11 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
       setTitle("");
       setRecurrenceFrequency("");
       setRecurrenceUntilLocal("");
-      onToast("Etkinlik eklendi.");
+      onToast(t("calEventAdded"));
       void load();
     } catch (error) {
       onToast(
-        error instanceof Error ? error.message : "Etkinlik eklenemedi.",
+        error instanceof Error ? error.message : t("calEventAddErr"),
       );
     }
   }
@@ -280,10 +282,10 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
     <div className="mail-d6-inner mail-cal-premium">
       <header className="mail-cal-premium-header">
         <div className="mail-cal-premium-heading">
-          <h1>Takvim</h1>
+          <h1>{t("calPanelTitle")}</h1>
           <p className="mail-cal-premium-kicker">
             {monthLabel}
-            {loading ? " · güncelleniyor…" : ""}
+            {loading ? t("calUpdating") : ""}
           </p>
         </div>
         <div className="mail-cal-premium-toolbar">
@@ -293,14 +295,14 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
             onClick={goToday}
             disabled={isCurrentMonth && !selectedDay}
           >
-            Bugün
+            {t("calToday")}
           </button>
-          <div className="mail-cal-nav" role="group" aria-label="Ay seçici">
+          <div className="mail-cal-nav" role="group" aria-label={t("calMonthPickerAria")}>
             <button
               type="button"
               className="mail-cal-btn mail-cal-btn--icon"
               onClick={() => shiftMonth(-1)}
-              aria-label="Önceki ay"
+              aria-label={t("calPrevMonth")}
             >
               ‹
             </button>
@@ -309,7 +311,7 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
               type="button"
               className="mail-cal-btn mail-cal-btn--icon"
               onClick={() => shiftMonth(1)}
-              aria-label="Sonraki ay"
+              aria-label={t("calNextMonth")}
             >
               ›
             </button>
@@ -330,15 +332,15 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
                   })
                   .catch((e: unknown) => {
                     onToast(
-                      e instanceof Error ? e.message : "Dışa aktarılamadı.",
+                      e instanceof Error ? e.message : t("calExportErr"),
                     );
                   })
               }
             >
-              İndir .ics
+              {t("calDownloadIcs")}
             </button>
             <label className="mail-cal-btn mail-cal-btn--ghost mail-cal-file-input">
-              Yükle .ics
+              {t("calUploadIcs")}
               <input
                 type="file"
                 accept=".ics,text/calendar"
@@ -353,7 +355,14 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
                     importCalendarIcs(accessToken, ics)
                       .then((r) => {
                         onToast(
-                          `${r.imported} etkinlik içe aktarıldı${r.skipped ? `, ${r.skipped} atlandı` : ""}.`,
+                          t("calImportResult", {
+                            imported: r.imported,
+                            skippedSuffix: r.skipped
+                              ? t("calImportSkippedSuffix", {
+                                  skipped: r.skipped,
+                                })
+                              : "",
+                          }),
                         );
                         void load();
                       })
@@ -361,7 +370,7 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
                         onToast(
                           err instanceof Error
                             ? err.message
-                            : "İçe aktarma başarısız.",
+                            : t("calImportErr"),
                         );
                       }),
                   );
@@ -374,7 +383,7 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
 
       <div className="mail-cal-premium-layout">
         <div className="mail-cal-premium-main">
-      <div className="mail-cal-month mail-cal-month--card" aria-label="Ay görünümü">
+      <div className="mail-cal-month mail-cal-month--card" aria-label={t("calMonthViewAria")}>
         <div className="mail-cal-grid mail-cal-grid-head" role="row">
           {["Pt", "Sa", "Ça", "Pe", "Cu", "Ct", "Pz"].map((label) => (
             <div key={label} className="mail-cal-weekday" role="columnheader">
@@ -446,19 +455,19 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
       </div>
 
       <div className="mail-cal-card mail-cal-composer">
-        <h2 className="mail-cal-card-title">Yeni etkinlik</h2>
+        <h2 className="mail-cal-card-title">{t("calNewEvent")}</h2>
         <div className="mail-cal-form-grid">
           <label className="mail-cal-field mail-cal-field--full">
-            <span className="mail-cal-field-label">Başlık</span>
+            <span className="mail-cal-field-label">{t("calFieldTitle")}</span>
             <input
               className="mail-cal-input"
-              placeholder="Etkinlik başlığı"
+              placeholder={t("calEventTitlePlaceholder")}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
           </label>
           <label className="mail-cal-field">
-            <span className="mail-cal-field-label">Başlangıç</span>
+            <span className="mail-cal-field-label">{t("calFieldStart")}</span>
             <input
               className="mail-cal-input"
               type="datetime-local"
@@ -467,7 +476,7 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
             />
           </label>
           <label className="mail-cal-field">
-            <span className="mail-cal-field-label">Bitiş</span>
+            <span className="mail-cal-field-label">{t("calFieldEnd")}</span>
             <input
               className="mail-cal-input"
               type="datetime-local"
@@ -481,10 +490,10 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
               checked={allDay}
               onChange={(e) => setAllDay(e.target.checked)}
             />
-            <span>Tüm gün</span>
+            <span>{t("calAllDay")}</span>
           </label>
           <label className="mail-cal-field">
-            <span className="mail-cal-field-label">Tekrar</span>
+            <span className="mail-cal-field-label">{t("calRecurrence")}</span>
             <select
               className="mail-cal-select"
               value={recurrenceFrequency}
@@ -494,21 +503,21 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
                 )
               }
             >
-              <option value="">Tekrar yok</option>
-              <option value="daily">Her gün</option>
-              <option value="weekly">Her hafta</option>
-              <option value="monthly">Her ay</option>
+              <option value="">{t("calRecurrenceNone")}</option>
+              <option value="daily">{t("calRecurrenceDaily")}</option>
+              <option value="weekly">{t("calRecurrenceWeekly")}</option>
+              <option value="monthly">{t("calRecurrenceMonthly")}</option>
             </select>
           </label>
           {recurrenceFrequency ? (
             <label className="mail-cal-field">
-              <span className="mail-cal-field-label">Tekrar bitişi</span>
+              <span className="mail-cal-field-label">{t("calRecurrenceEnd")}</span>
               <input
                 className="mail-cal-input"
                 type="date"
                 value={recurrenceUntilLocal}
                 onChange={(e) => setRecurrenceUntilLocal(e.target.value)}
-                title="Tekrar bitiş (isteğe bağlı)"
+                title={t("calRecurrenceEndTitle")}
               />
             </label>
           ) : null}
@@ -518,7 +527,7 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
               className="mail-cal-btn mail-cal-btn--primary"
               onClick={() => void onAddEvent()}
             >
-              Etkinlik ekle
+              {t("calAddEvent")}
             </button>
           </div>
         </div>
@@ -526,23 +535,23 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
 
       {editingOccurrence ? (
         <div className="mail-cal-card mail-cal-occ-edit">
-          <h3 className="mail-cal-card-title">Bu tekrarı düzenle</h3>
+          <h3 className="mail-cal-card-title">{t("calEditOccurrence")}</h3>
           <input
             value={editTitle}
             onChange={(e) => setEditTitle(e.target.value)}
-            aria-label="Başlık"
+            aria-label={t("calFieldTitle")}
           />
           <input
             type="datetime-local"
             value={editStartLocal}
             onChange={(e) => setEditStartLocal(e.target.value)}
-            aria-label="Başlangıç"
+            aria-label={t("calFieldStart")}
           />
           <input
             type="datetime-local"
             value={editEndLocal}
             onChange={(e) => setEditEndLocal(e.target.value)}
-            aria-label="Bitiş"
+            aria-label={t("calFieldEnd")}
           />
           <label>
             <input
@@ -550,24 +559,26 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
               checked={editAllDay}
               onChange={(e) => setEditAllDay(e.target.checked)}
             />
-            Tüm gün
+            {t("calAllDay")}
           </label>
           <p className="mail-d6-meta">
-            Mevcut tekrar anahtarı:{" "}
-            {new Date(occurrenceAnchor(editingOccurrence)).toLocaleString("tr-TR")}
+            {t("calCurrentOccurrenceKey")}{" "}
+            {new Date(occurrenceAnchor(editingOccurrence)).toLocaleString(
+              localeTag,
+            )}
           </p>
           <label>
-            Yeni tekrar anahtarı (isteğe bağlı, CalDAV)
+            {t("calNewRecurrenceKeyCaldav")}
             <input
               type="datetime-local"
               value={editNewAnchorLocal}
               onChange={(e) => setEditNewAnchorLocal(e.target.value)}
-              aria-label="Yeni tekrar anahtarı"
+              aria-label={t("calNewRecurrenceKey")}
             />
           </label>
           <p className="mail-d6-meta">
-            Seride farklı bir örneğe taşımak için doldurun; eski CalDAV{" "}
-            <code>_occ_</code> dosyası silinir.
+            {t("calEditOccurrenceMoveIntro")}{" "}
+            <code>_occ_</code> {t("calEditOccurrenceHint")}
           </p>
           <div className="mail-cal-form-actions">
             <button
@@ -575,14 +586,14 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
               className="mail-cal-btn mail-cal-btn--primary"
               onClick={() => void onSaveOccurrenceEdit()}
             >
-              Kaydet
+              {t("actionSave")}
             </button>
             <button
               type="button"
               className="mail-cal-btn mail-cal-btn--ghost"
               onClick={() => setEditingOccurrence(null)}
             >
-              İptal
+              {t("composeCancel")}
             </button>
           </div>
         </div>
@@ -593,7 +604,7 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
           <div className="mail-cal-card mail-cal-events-panel">
             <div className="mail-cal-events-panel-head">
               <h2 className="mail-cal-card-title">
-                {selectedDay ? "Seçili gün" : "Bu ay"}
+                {selectedDay ? t("calListSelectedDay") : t("calListThisMonth")}
               </h2>
               {selectedDay ? (
                 <button
@@ -605,12 +616,12 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
                 </button>
               ) : (
                 <span className="mail-cal-events-count">
-                  {visibleEvents.length} etkinlik
+                  {t("calEventsCount", { count: visibleEvents.length })}
                 </span>
               )}
             </div>
             {loading ? (
-              <p className="mail-cal-loading">Yükleniyor…</p>
+              <p className="mail-cal-loading">{t("readLoading")}</p>
             ) : null}
             <ul className="mail-cal-event-list">
         {visibleEvents.map((ev) => (
@@ -619,25 +630,32 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
               <strong className="mail-cal-event-title">
                 {ev.title}
                 {ev.recurrenceRule ? (
-                  <span className="mail-cal-badge" title="Tekrarlayan">↻</span>
+                  <span className="mail-cal-badge" title={t("calRecurringTitle")}>
+                    ↻
+                  </span>
                 ) : null}
                 {ev.isOccurrenceOverride ? (
-                  <span className="mail-cal-badge" title="Özel düzenleme">✎</span>
+                  <span
+                    className="mail-cal-badge"
+                    title={t("calCustomEditBadge")}
+                  >
+                    ✎
+                  </span>
                 ) : null}
               </strong>
               <div className="mail-d6-meta mail-cal-event-time">
                 {ev.allDay
-                  ? new Date(ev.startsAt).toLocaleDateString("tr-TR", {
+                  ? new Date(ev.startsAt).toLocaleDateString(localeTag, {
                       weekday: "short",
                       day: "numeric",
                       month: "short",
                     })
-                  : `${new Date(ev.startsAt).toLocaleString("tr-TR", {
+                  : `${new Date(ev.startsAt).toLocaleString(localeTag, {
                       day: "numeric",
                       month: "short",
                       hour: "2-digit",
                       minute: "2-digit",
-                    })} – ${new Date(ev.endsAt).toLocaleTimeString("tr-TR", {
+                    })} – ${new Date(ev.endsAt).toLocaleTimeString(localeTag, {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}`}
@@ -656,21 +674,17 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
                           caldavPushAccountId,
                           ev.id,
                         )
-                          .then(() =>
-                            onToast(
-                              "Tüm seri CalDAV’a yazıldı (RRULE, EXDATE, override’lar).",
-                            ),
-                          )
+                          .then(() => onToast(t("calCaldavSeriesWritten")))
                           .catch((err: unknown) => {
                             onToast(
                               err instanceof Error
                                 ? err.message
-                                : "CalDAV yazma başarısız.",
+                                : t("calCaldavWriteErr"),
                             );
                           })
                       }
                     >
-                      CalDAV (tüm seri)
+                      {t("calCaldavPushSeries")}
                     </button>
                   ) : null}
                   {ev.recurrenceRule && ev.occurrenceAnchorAt ? (
@@ -685,20 +699,18 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
                           occurrenceAnchor(ev),
                         )
                           .then(() =>
-                            onToast(
-                              "Bu tekrar CalDAV’a yazıldı (RECURRENCE-ID).",
-                            ),
+                            onToast(t("calCaldavOccurrenceWritten")),
                           )
                           .catch((err: unknown) => {
                             onToast(
                               err instanceof Error
                                 ? err.message
-                                : "CalDAV yazma başarısız.",
+                                : t("calCaldavWriteErr"),
                             );
                           })
                       }
                     >
-                      CalDAV (bu tekrar)
+                      {t("calCaldavPushOccurrence")}
                     </button>
                   ) : !ev.recurrenceRule ? (
                     <button
@@ -710,17 +722,17 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
                           caldavPushAccountId,
                           ev.id,
                         )
-                          .then(() => onToast("CalDAV’a yazıldı."))
+                          .then(() => onToast(t("calCaldavWritten")))
                           .catch((err: unknown) => {
                             onToast(
                               err instanceof Error
                                 ? err.message
-                                : "CalDAV yazma başarısız.",
+                                : t("calCaldavWriteErr"),
                             );
                           })
                       }
                     >
-                      CalDAV’a yaz
+                      {t("calWriteToCaldav")}
                     </button>
                   ) : null}
                 </>
@@ -732,7 +744,7 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
                     className="mail-cal-btn mail-cal-btn--ghost mail-cal-btn--sm"
                     onClick={() => beginEditOccurrence(ev)}
                   >
-                    Düzenle
+                    {t("draftEdit")}
                   </button>
                   <button
                     type="button"
@@ -744,19 +756,19 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
                         occurrenceAnchor(ev),
                       )
                         .then(() => {
-                          onToast("Bu tekrar kaldırıldı.");
+                          onToast(t("calOccurrenceRemoved"));
                           void load();
                         })
                         .catch((err: unknown) => {
                           onToast(
                             err instanceof Error
                               ? err.message
-                              : "Kaldırılamadı.",
+                              : t("calOccurrenceRemoveErr"),
                           );
                         })
                     }
                   >
-                    Bu tekrarı sil
+                    {t("calDeleteOccurrence")}
                   </button>
                 </>
               ) : null}
@@ -767,25 +779,29 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
                   void deleteCalendarEvent(accessToken, ev.id)
                     .then(() => {
                       onToast(
-                        ev.recurrenceRule ? "Tüm seri silindi." : "Silindi.",
+                        ev.recurrenceRule
+                          ? t("calSeriesDeleted")
+                          : t("calEventDeleted"),
                       );
                       void load();
                     })
                     .catch((err: unknown) => {
                       onToast(
-                        err instanceof Error ? err.message : "Silinemedi.",
+                        err instanceof Error
+                          ? err.message
+                          : t("errDeleteFailed"),
                       );
                     })
                 }
               >
-                {ev.recurrenceRule ? "Tüm seriyi sil" : "Sil"}
+                {ev.recurrenceRule ? t("calDeleteSeries") : t("actionDelete")}
               </button>
             </span>
           </li>
         ))}
         {!loading && visibleEvents.length === 0 ? (
           <li className="mail-cal-event-empty">
-            {selectedDay ? "Bu gün etkinlik yok." : "Bu ay etkinlik yok."}
+            {selectedDay ? t("calNoEventsDay") : t("calNoEventsMonth")}
           </li>
         ) : null}
             </ul>
