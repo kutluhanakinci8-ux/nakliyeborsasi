@@ -9,7 +9,9 @@ import {
   useState,
 } from "react";
 
-const STORAGE_KEY = "lerta_mail_access_token";
+import { MAIL_ACCESS_TOKEN_STORAGE_KEY } from "./mailAccessTokenStorage";
+
+const STORAGE_KEY = MAIL_ACCESS_TOKEN_STORAGE_KEY;
 
 type SessionContextValue = {
   accessToken: string | null;

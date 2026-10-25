@@ -1,34 +1,83 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { completeExchangeOAuth } from "@/lib/mailApi";
+import { readMailAccessToken } from "@/lib/mailAccessTokenStorage";
 
-/** OAuth redirect target — popup parent'a code iletir. */
+/** OAuth redirect — bağlantıyı burada tamamlar (popup ve tam sayfa yönlendirme). */
 export default function ExchangeOAuthCallbackPage() {
-  const [done, setDone] = useState(false);
+  const [message, setMessage] = useState("Microsoft oturumu işleniyor…");
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
     const state = params.get("state");
     const oauthError = params.get("error_description") ?? params.get("error");
-    if (window.opener) {
+
+    const notifyOpener = (payload: {
+      success: boolean;
+      error?: string;
+      emailAddress?: string;
+    }) => {
+      if (!window.opener) return;
       window.opener.postMessage(
-        {
-          type: "lerta-exchange-oauth",
-          code: code ?? undefined,
-          oauthState: state ?? undefined,
-          error: oauthError ?? undefined,
-        },
+        { type: "lerta-exchange-oauth", ...payload },
         window.location.origin,
       );
-      setDone(true);
-      window.close();
-    }
+    };
+
+    void (async () => {
+      if (oauthError) {
+        const err = oauthError;
+        setMessage(`Bağlantı iptal edildi: ${err}`);
+        notifyOpener({ success: false, error: err });
+        return;
+      }
+      if (!code?.trim() || !state?.trim()) {
+        setMessage("Microsoft yanıtı eksik. Ayarlardan tekrar deneyin.");
+        notifyOpener({ success: false, error: "missing_code" });
+        return;
+      }
+
+      const accessToken = readMailAccessToken();
+      if (!accessToken) {
+        setMessage(
+          "Oturum bulunamadı. posta.lerta.com.tr üzerinde giriş yapıp tekrar bağlayın.",
+        );
+        notifyOpener({ success: false, error: "no_session" });
+        return;
+      }
+
+      try {
+        const result = await completeExchangeOAuth(
+          accessToken,
+          code,
+          state,
+        );
+        const email = result.account?.emailAddress ?? "";
+        setMessage(
+          email
+            ? `${email} bağlandı. Pencere kapanıyor…`
+            : "Exchange hesabı bağlandı.",
+        );
+        notifyOpener({ success: true, emailAddress: email });
+        if (window.opener) {
+          window.close();
+        } else {
+          window.location.replace("/mail");
+        }
+      } catch (error) {
+        const err =
+          error instanceof Error ? error.message : "Bağlantı tamamlanamadı.";
+        setMessage(err);
+        notifyOpener({ success: false, error: err });
+      }
+    })();
   }, []);
 
   return (
     <main className="mail-exchange-oauth-callback">
-      <p>{done ? "Tamamlandı, pencere kapanıyor…" : "Microsoft oturumu işleniyor…"}</p>
+      <p>{message}</p>
     </main>
   );
 }

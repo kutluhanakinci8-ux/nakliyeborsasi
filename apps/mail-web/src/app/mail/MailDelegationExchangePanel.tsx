@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   addMailboxDelegate,
-  completeExchangeOAuth,
   deleteExchangeAccount,
   fetchMailAccountHub,
   removeMailboxDelegate,
@@ -111,7 +110,7 @@ export function MailDelegationExchangePanel({
     setError("");
     setStatus("");
     try {
-      const { authorizationUrl, state } = await startExchangeOAuth(accessToken);
+      const { authorizationUrl } = await startExchangeOAuth(accessToken);
       const popup = window.open(
         authorizationUrl,
         "lerta-exchange-oauth",
@@ -125,22 +124,26 @@ export function MailDelegationExchangePanel({
         if (event.origin !== window.location.origin) return;
         const data = event.data as {
           type?: string;
-          code?: string;
-          oauthState?: string;
+          success?: boolean;
+          error?: string;
+          emailAddress?: string;
         };
         if (data.type !== "lerta-exchange-oauth") return;
         window.removeEventListener("message", onMessage);
-        if (!data.code) {
-          setError("Microsoft oturumu tamamlanmadı.");
+        if (!data.success) {
+          setError(
+            data.error?.trim()
+              ? `Microsoft bağlantısı: ${data.error}`
+              : "Microsoft oturumu tamamlanmadı.",
+          );
           return;
         }
-        await completeExchangeOAuth(
-          accessToken,
-          data.code,
-          data.oauthState ?? state,
-        );
         await reloadHub();
-        setStatus("Exchange hesabı bağlandı ve ilk senkron başlatıldı.");
+        setStatus(
+          data.emailAddress
+            ? `${data.emailAddress} bağlandı; ilk senkron başlatıldı.`
+            : "Exchange hesabı bağlandı ve ilk senkron başlatıldı.",
+        );
       };
       window.addEventListener("message", onMessage);
     } catch (err) {
