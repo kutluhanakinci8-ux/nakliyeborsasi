@@ -13,5 +13,10 @@ Bu liste **bağlantı kurulmadan** tamamlanan kod iyileştirmelerini izler.
 | Dış arama UI | Bulut hit listesi + aç / içe aktar |
 | Graph push aboneliği | Senkron sonrası `/subscriptions` (varsayılan webhook URL) |
 | Lerta taslak → Graph/Gmail | `connectedSend*` + `provider_draft_id` |
+| Çöp kutusu / kalıcı silme senkronu | Graph trash + Gmail trash/untrash/delete |
+| Taslak gönderim Kimden | `getForSend` + UI `composeSendAsKey` geri yükleme |
+| Bağlı kutu durumu API | `GET .../connected-inbox/status` (özellik bayrakları) |
 
 OAuth / Console sonrası: `GOOGLE_GMAIL_*`, `MICROSOFT_GRAPH_*`, isteğe bağlı `GOOGLE_GMAIL_PUBSUB_TOPIC`, `MICROSOFT_GRAPH_MAIL_WEBHOOK_URL` (boşsa `posta.lerta.com.tr/api/v1/public/mail-connected/microsoft/graph`).
+
+Doğrulama: `scripts/verify-connected-inbox-cap8.sh` (public push uçları); tam API için canlı JWT ile `connected-inbox/status` ve senkron akışları.

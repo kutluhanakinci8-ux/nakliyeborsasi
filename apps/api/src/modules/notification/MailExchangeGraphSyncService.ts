@@ -236,6 +236,7 @@ export class MailExchangeGraphSyncService {
     if (!account) {
       throw new NotFoundException("Exchange bağlantısı bulunamadı.");
     }
+    await this.cancelGraphMailSubscription(account);
     await this.accountRepository.remove(account);
     await this.mailIdentityAuditService.record({
       actorUserId: actor.userId,
@@ -458,6 +459,52 @@ export class MailExchangeGraphSyncService {
       throw new BadRequestException("Graph taslak oluşturulamadı.");
     }
     return id;
+  }
+
+  public async moveMessageToTrash(
+    organizationId: string,
+    accountId: string,
+    exchangeMessageId: string,
+  ): Promise<void> {
+    const account = await this.accountRepository.findOne({
+      where: { id: accountId, organizationId, enabled: true },
+    });
+    if (!account) {
+      return;
+    }
+    const accessToken = await this.resolveAccessToken(account);
+    await this.graphDelete(
+      accessToken,
+      `${GRAPH_BASE}/me/messages/${exchangeMessageId}`,
+    );
+  }
+
+  public async deleteMessagePermanently(
+    organizationId: string,
+    accountId: string,
+    exchangeMessageId: string,
+  ): Promise<void> {
+    await this.moveMessageToTrash(organizationId, accountId, exchangeMessageId);
+  }
+
+  public async cancelGraphMailSubscription(
+    account: MailExchangeSyncAccountEntity,
+  ): Promise<void> {
+    if (!account.graphSubscriptionId || !account.accessTokenCiphertext) {
+      return;
+    }
+    try {
+      const accessToken = await this.resolveAccessToken(account);
+      await this.graphDelete(
+        accessToken,
+        `${GRAPH_BASE}/subscriptions/${account.graphSubscriptionId}`,
+      );
+    } catch {
+      /* ignore */
+    }
+    account.graphSubscriptionId = null;
+    account.graphSubscriptionExpiration = null;
+    await this.accountRepository.save(account);
   }
 
   public async deleteDraftMessage(

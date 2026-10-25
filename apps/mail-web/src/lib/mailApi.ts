@@ -326,6 +326,8 @@ export type MailDraftItem = {
   createdAt: string;
   source?: "lerta" | "connected";
   inboundMessageId?: string;
+  connectedSendProvider?: "microsoft_graph" | "gmail_api" | null;
+  connectedSendAccountId?: string | null;
 };
 
 export type MailConnectedExternalSearchHit = {

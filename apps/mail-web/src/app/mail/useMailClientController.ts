@@ -186,6 +186,18 @@ function parseComposeSendAsKey(key: string): {
   return {};
 }
 
+function composeSendAsKeyFromDraft(draft: MailDraftItem): string {
+  if (
+    draft.connectedSendProvider &&
+    draft.connectedSendAccountId &&
+    (draft.connectedSendProvider === "microsoft_graph" ||
+      draft.connectedSendProvider === "gmail_api")
+  ) {
+    return `${draft.connectedSendProvider}:${draft.connectedSendAccountId}`;
+  }
+  return "lerta";
+}
+
 export function useMailClientController({
   accessToken,
   logout,
@@ -1208,6 +1220,7 @@ export function useMailClientController({
     setComposeText(draft.text ?? "");
     setComposeFiles([]);
     setComposeStoredAttachments(draft.attachments ?? []);
+    setComposeSendAsKey(composeSendAsKeyFromDraft(draft));
     setComposeError("");
     setComposeOpen(true);
   }

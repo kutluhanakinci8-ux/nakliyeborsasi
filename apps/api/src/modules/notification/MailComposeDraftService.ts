@@ -157,6 +157,8 @@ export class MailComposeDraftService {
     subject: string;
     text: string;
     attachments?: ComposeAttachmentInput[];
+    connectedSendProvider?: ConnectedSendProvider;
+    connectedSendAccountId?: string;
   }> {
     const row = await this.assertDraftAccess(organizationId, userId, draftId);
     const to = row.toAddress?.trim();
@@ -172,6 +174,8 @@ export class MailComposeDraftService {
       subject,
       text,
       attachments: row.attachments ?? undefined,
+      connectedSendProvider: row.connectedSendProvider ?? undefined,
+      connectedSendAccountId: row.connectedSendAccountId ?? undefined,
     };
   }
 
@@ -181,6 +185,10 @@ export class MailComposeDraftService {
     draftId: string,
   ): Promise<void> {
     const row = await this.assertDraftAccess(organizationId, userId, draftId);
+    await this.mailConnectedDraftSyncService.deleteProviderDraft(
+      organizationId,
+      row,
+    );
     await this.draftRepository.remove(row);
   }
 
@@ -280,6 +288,8 @@ export class MailComposeDraftService {
       attachments: row.attachments ?? [],
       updatedAt: row.updatedAt.toISOString(),
       createdAt: row.createdAt.toISOString(),
+      connectedSendProvider: row.connectedSendProvider,
+      connectedSendAccountId: row.connectedSendAccountId,
     };
   }
 }

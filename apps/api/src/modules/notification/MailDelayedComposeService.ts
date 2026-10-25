@@ -278,6 +278,8 @@ export class MailDelayedComposeService {
         subject: payload.subject,
         text: payload.text,
         attachments: payload.attachments,
+        connectedSendProvider: payload.connectedSendProvider,
+        connectedSendAccountId: payload.connectedSendAccountId,
       });
       await this.mailComposeDraftService.deleteAfterSend(
         organizationId,

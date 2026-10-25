@@ -508,6 +508,30 @@ export class CompanyMailInboxController {
     };
   }
 
+  @Get("connected-inbox/status")
+  public async connectedInboxStatus(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    const entitlement = await this.mailConnectedAccountsService.getEntitlement(
+      user.companyId,
+      user,
+    );
+    return {
+      exchangeConfigured: this.mailExchangeGraphSyncService.isConfigured(),
+      gmailConfigured: this.mailGmailSyncService.isConfigured(),
+      entitlement,
+      features: {
+        unifiedInbox: true,
+        connectedSend: true,
+        deepSearch: true,
+        draftSync: true,
+        trashSync: true,
+        graphPush: true,
+        gmailPush: this.mailGmailSyncService.isPushConfigured(),
+      },
+    };
+  }
+
   @Get("connected-accounts")
   public async listConnectedAccounts(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
@@ -1559,6 +1583,8 @@ export class CompanyMailInboxController {
       subject: payload.subject,
       text: payload.text,
       attachments: payload.attachments,
+      connectedSendProvider: payload.connectedSendProvider,
+      connectedSendAccountId: payload.connectedSendAccountId,
     });
     await this.mailComposeDraftService.deleteAfterSend(
       user.companyId,

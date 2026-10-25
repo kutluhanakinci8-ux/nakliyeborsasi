@@ -75,6 +75,12 @@ export class MailGmailSyncService {
     return Boolean(this.clientId() && this.clientSecret() && this.redirectUri());
   }
 
+  public isPushConfigured(): boolean {
+    return Boolean(
+      this.configService.get<string>("GOOGLE_GMAIL_PUBSUB_TOPIC")?.trim(),
+    );
+  }
+
   public buildOAuthStart(actor: AuthenticatedUserContext): {
     authorizationUrl: string;
     state: string;
@@ -449,6 +455,68 @@ export class MailGmailSyncService {
     return draftId;
   }
 
+  public async moveMessageToTrash(
+    organizationId: string,
+    accountId: string,
+    gmailMessageId: string,
+  ): Promise<void> {
+    const account = await this.accountRepository.findOne({
+      where: { id: accountId, organizationId, enabled: true },
+    });
+    if (!account) {
+      return;
+    }
+    const accessToken = await this.resolveAccessToken(account);
+    await this.gmailPost(
+      accessToken,
+      `${GMAIL_BASE}/messages/${gmailMessageId}/trash`,
+      {},
+    );
+  }
+
+  public async untrashMessage(
+    organizationId: string,
+    accountId: string,
+    gmailMessageId: string,
+  ): Promise<void> {
+    const account = await this.accountRepository.findOne({
+      where: { id: accountId, organizationId, enabled: true },
+    });
+    if (!account) {
+      return;
+    }
+    const accessToken = await this.resolveAccessToken(account);
+    await this.gmailPost(
+      accessToken,
+      `${GMAIL_BASE}/messages/${gmailMessageId}/untrash`,
+      {},
+    );
+  }
+
+  public async deleteMessagePermanently(
+    organizationId: string,
+    accountId: string,
+    gmailMessageId: string,
+  ): Promise<void> {
+    const account = await this.accountRepository.findOne({
+      where: { id: accountId, organizationId, enabled: true },
+    });
+    if (!account) {
+      return;
+    }
+    const accessToken = await this.resolveAccessToken(account);
+    const response = await fetch(`${GMAIL_BASE}/messages/${gmailMessageId}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!response.ok && response.status !== 404) {
+      const text = await response.text();
+      throw new BadRequestException(
+        `Gmail kalıcı silme başarısız (${response.status}): ${text.slice(0, 120)}`,
+      );
+    }
+  }
+
   public async deleteDraftMessage(
     organizationId: string,
     accountId: string,
@@ -526,12 +594,54 @@ export class MailGmailSyncService {
     let updated = 0;
     const history = await this.gmailGet(
       accessToken,
-      `${GMAIL_BASE}/history?startHistoryId=${startHistoryId}&historyTypes=messageAdded`,
+      `${GMAIL_BASE}/history?startHistoryId=${startHistoryId}&historyTypes=messageAdded&historyTypes=messageDeleted&historyTypes=labelsAdded&historyTypes=labelsRemoved`,
     );
     const records = (history.history ?? []) as Array<{
       messagesAdded?: Array<{ message?: { id?: string } }>;
+      messagesDeleted?: Array<{ message?: { id?: string } }>;
+      labelsAdded?: Array<{ message?: { id?: string }; labelIds?: string[] }>;
+      labelsRemoved?: Array<{ message?: { id?: string }; labelIds?: string[] }>;
     }>;
     for (const record of records) {
+      for (const deleted of record.messagesDeleted ?? []) {
+        if (!deleted.message?.id) {
+          continue;
+        }
+        const local = await this.inboundRepository.findOne({
+          where: {
+            gmailSyncAccountId: account.id,
+            gmailMessageId: deleted.message.id,
+          },
+        });
+        if (local) {
+          local.mailboxFolder = "trash";
+          await this.inboundRepository.save(local);
+          updated += 1;
+        }
+      }
+      for (const labelChange of [
+        ...(record.labelsAdded ?? []),
+        ...(record.labelsRemoved ?? []),
+      ]) {
+        if (!labelChange.message?.id) {
+          continue;
+        }
+        const local = await this.inboundRepository.findOne({
+          where: {
+            gmailSyncAccountId: account.id,
+            gmailMessageId: labelChange.message.id,
+          },
+        });
+        if (!local) {
+          continue;
+        }
+        const labels = new Set(labelChange.labelIds ?? []);
+        if (labels.has("TRASH")) {
+          local.mailboxFolder = "trash";
+          await this.inboundRepository.save(local);
+          updated += 1;
+        }
+      }
       for (const added of record.messagesAdded ?? []) {
         if (!added.message?.id) {
           continue;

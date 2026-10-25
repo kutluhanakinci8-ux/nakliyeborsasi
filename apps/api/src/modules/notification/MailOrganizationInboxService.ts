@@ -40,6 +40,7 @@ import {
 } from "./MailMailboxAccessService";
 import { MailExchangeGraphSyncService } from "./MailExchangeGraphSyncService";
 import { MailGmailSyncService } from "./MailGmailSyncService";
+import { MailConnectedInboxActionsService } from "./MailConnectedInboxActionsService";
 
 export type InboxFolder =
   | "inbox"
@@ -104,6 +105,7 @@ export class MailOrganizationInboxService {
     private readonly mailMailboxAccessService: MailMailboxAccessService,
     private readonly mailExchangeGraphSyncService: MailExchangeGraphSyncService,
     private readonly mailGmailSyncService: MailGmailSyncService,
+    private readonly mailConnectedInboxActionsService: MailConnectedInboxActionsService,
   ) {}
 
   public async getSummary(
@@ -736,6 +738,7 @@ export class MailOrganizationInboxService {
     if (row.mailboxFolder === folder) {
       return { mailboxFolder: folder };
     }
+    const previousFolder = row.mailboxFolder;
     row.maildirFilePath = this.mailImapMaildirService.relocateMailboxFile(
       row.maildirFilePath,
       folder,
@@ -745,6 +748,9 @@ export class MailOrganizationInboxService {
       row.customFolderId = null;
     }
     await this.inboundRepository.save(row);
+    void this.mailConnectedInboxActionsService
+      .syncTrashState(organizationId, row, folder, previousFolder)
+      .catch(() => undefined);
     return { mailboxFolder: folder };
   }
 
@@ -760,6 +766,10 @@ export class MailOrganizationInboxService {
       );
     }
     this.mailImapMaildirService.deleteMailboxFile(row.maildirFilePath);
+    await this.mailConnectedInboxActionsService.syncPermanentDelete(
+      organizationId,
+      row,
+    );
     await this.inboundRepository.remove(row);
   }
 
