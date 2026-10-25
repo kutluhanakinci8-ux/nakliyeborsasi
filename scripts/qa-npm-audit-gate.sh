@@ -5,7 +5,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${ROOT}"
 
-crit="$(npm audit --omit=dev --audit-level=critical --json 2>/dev/null | node -e "
+crit="$( (npm audit --omit=dev --audit-level=critical --json 2>/dev/null || true) | node -e "
 let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{
   try{const j=JSON.parse(d);console.log(j.metadata?.vulnerabilities?.critical||0)}catch{console.log(99)}
 })")"
