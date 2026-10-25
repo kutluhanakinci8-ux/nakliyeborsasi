@@ -11,6 +11,7 @@ import {
   syncCalendarGoogleAccount,
   type MailCalendarGoogleAccount,
 } from "@/lib/mailApi";
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 
 type Props = {
   accessToken: string;
@@ -23,6 +24,7 @@ export function MailCalendarGooglePanel({
   onToast,
   onSynced,
 }: Props) {
+  const { t } = useMailLocale();
   const [configured, setConfigured] = useState<boolean | null>(null);
   const [accounts, setAccounts] = useState<MailCalendarGoogleAccount[]>([]);
   const [syncingAll, setSyncingAll] = useState(false);
@@ -34,12 +36,10 @@ export function MailCalendarGooglePanel({
       setAccounts(data.accounts);
     } catch (error) {
       onToast(
-        error instanceof Error
-          ? error.message
-          : "Google takvim hesapları yüklenemedi.",
+        error instanceof Error ? error.message : t("calGoogleLoadErr"),
       );
     }
-  }, [accessToken, onToast]);
+  }, [accessToken, onToast, t]);
 
   useEffect(() => {
     void load();
@@ -68,7 +68,7 @@ export function MailCalendarGooglePanel({
         if (data.type !== "lerta-google-calendar-oauth") return;
         window.removeEventListener("message", onMessage);
         if (!data.code) {
-          onToast("Google takvim oturumu tamamlanmadı.");
+          onToast(t("calGoogleOAuthIncomplete"));
           return;
         }
         await completeCalendarGoogleOAuth(
@@ -78,12 +78,12 @@ export function MailCalendarGooglePanel({
         );
         await load();
         onSynced();
-        onToast("Google Takvim bağlandı — iki yön senkron başladı.");
+        onToast(t("calGoogleConnected"));
       };
       window.addEventListener("message", onMessage);
     } catch (error) {
       onToast(
-        error instanceof Error ? error.message : "Google bağlantısı başlatılamadı.",
+        error instanceof Error ? error.message : t("calGoogleConnectErr"),
       );
     }
   }
@@ -91,7 +91,7 @@ export function MailCalendarGooglePanel({
   return (
     <section className="mail-cal-section-card">
       <div className="mail-cal-section-head">
-        <h2>Google Takvim</h2>
+        <h2>{t("calGoogleTitle")}</h2>
         {accounts.some((a) => a.enabled) ? (
           <button
             type="button"
@@ -103,7 +103,12 @@ export function MailCalendarGooglePanel({
                 try {
                   const r = await syncAllCalendarGoogleAccounts(accessToken);
                   onToast(
-                    `Google: ${r.accounts} hesap · ${r.imported} yeni, ${r.updated} güncel, ${r.pushed} yerel gönderildi.`,
+                    t("calGoogleSyncAllResult", {
+                      accounts: r.accounts,
+                      imported: r.imported,
+                      updated: r.updated,
+                      pushed: r.pushed,
+                    }),
                   );
                   void load();
                   onSynced();
@@ -111,7 +116,7 @@ export function MailCalendarGooglePanel({
                   onToast(
                     error instanceof Error
                       ? error.message
-                      : "Google senkron başarısız.",
+                      : t("calGoogleSyncErr"),
                   );
                 } finally {
                   setSyncingAll(false);
@@ -119,15 +124,11 @@ export function MailCalendarGooglePanel({
               })()
             }
           >
-            {syncingAll ? "Senkron…" : "Tümünü senkronize et"}
+            {syncingAll ? t("settingsSyncBusy") : t("settingsSyncAll")}
           </button>
         ) : null}
       </div>
-      <p className="mail-cal-section-hint">
-        Google Calendar ile webmail takvimini <strong>iki yön</strong> senkronlar
-        (OAuth). Yerel etkinlikler Google’a yazılır; Google etkinlikleri takvim
-        görünümüne aktarılır.
-      </p>
+      <p className="mail-cal-section-hint">{t("calGoogleHint")}</p>
       {configured === false ? (
         <MailCalendarOAuthSetupCard provider="google" />
       ) : (
@@ -136,12 +137,12 @@ export function MailCalendarGooglePanel({
           className="mail-cal-btn mail-cal-btn--primary mail-cal-btn--sm"
           onClick={() => void handleConnect()}
         >
-          Google hesabı bağla
+          {t("calGoogleConnect")}
         </button>
       )}
       <ul className="mail-cal-account-list">
         {accounts.length === 0 ? (
-          <li className="mail-cal-feed-empty">Google takvim hesabı yok.</li>
+          <li className="mail-cal-feed-empty">{t("calGoogleEmpty")}</li>
         ) : (
           accounts.map((acc) => (
             <li key={acc.id} className="mail-cal-account-row">
@@ -160,7 +161,11 @@ export function MailCalendarGooglePanel({
                     void syncCalendarGoogleAccount(accessToken, acc.id).then(
                       (r) => {
                         onToast(
-                          `Senkron: ${r.imported} yeni, ${r.updated} güncel, ${r.pushed} gönderildi.`,
+                          t("calGoogleSyncOneResult", {
+                            imported: r.imported,
+                            updated: r.updated,
+                            pushed: r.pushed,
+                          }),
                         );
                         void load();
                         onSynced();
@@ -168,7 +173,7 @@ export function MailCalendarGooglePanel({
                     )
                   }
                 >
-                  Senkron
+                  {t("calActionSyncShort")}
                 </button>
                 <button
                   type="button"
@@ -176,13 +181,13 @@ export function MailCalendarGooglePanel({
                   onClick={() =>
                     void deleteCalendarGoogleAccount(accessToken, acc.id).then(
                       () => {
-                        onToast("Google hesabı kaldırıldı.");
+                        onToast(t("calGoogleRemoved"));
                         void load();
                       },
                     )
                   }
                 >
-                  Kaldır
+                  {t("calActionRemove")}
                 </button>
               </div>
             </li>

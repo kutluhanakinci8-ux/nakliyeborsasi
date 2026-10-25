@@ -7,11 +7,16 @@ import {
   MAIL_WEB_I18N_CLEANUP_EN,
   MAIL_WEB_I18N_CLEANUP_TR,
 } from "./mailWebLocaleI18nCleanup";
+import {
+  MAIL_WEB_I18N_CAL_INT_EN,
+  MAIL_WEB_I18N_CAL_INT_TR,
+} from "./mailWebLocaleI18nCalendarIntegration";
 
 export const MAIL_WEB_MESSAGES: Record<MailUiLocale, Record<string, string>> = {
   tr: {
     ...MAIL_WEB_I18N_BATCH_TR,
     ...MAIL_WEB_I18N_CLEANUP_TR,
+    ...MAIL_WEB_I18N_CAL_INT_TR,
     navInbox: "Gelen",
     navSent: "Gönderilen",
     navAll: "Tümü",
@@ -270,6 +275,7 @@ export const MAIL_WEB_MESSAGES: Record<MailUiLocale, Record<string, string>> = {
   en: {
     ...MAIL_WEB_I18N_BATCH_EN,
     ...MAIL_WEB_I18N_CLEANUP_EN,
+    ...MAIL_WEB_I18N_CAL_INT_EN,
     navInbox: "Inbox",
     navSent: "Sent",
     navAll: "All",

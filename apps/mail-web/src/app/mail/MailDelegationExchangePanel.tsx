@@ -14,6 +14,7 @@ import {
   type MailAccountHubPayload,
   type MailMailboxDelegatePermission,
 } from "@/lib/mailApi";
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 
 type Props = {
   accessToken: string;
@@ -21,17 +22,26 @@ type Props = {
   onHubChange: (hub: MailAccountHubPayload) => void;
 };
 
-const PERMISSION_LABEL: Record<MailMailboxDelegatePermission, string> = {
-  read: "Okuma",
-  send: "Okuma + gönder",
-  manage: "Yönetim",
-};
+function delegatePermissionLabel(
+  permission: MailMailboxDelegatePermission,
+  t: (key: string) => string,
+): string {
+  switch (permission) {
+    case "read":
+      return t("permRead");
+    case "send":
+      return t("permSend");
+    case "manage":
+      return t("permManage");
+  }
+}
 
 export function MailDelegationExchangePanel({
   accessToken,
   hub,
   onHubChange,
 }: Props) {
+  const { t, formatDateTime } = useMailLocale();
   const [delegateEmail, setDelegateEmail] = useState("");
   const [delegatePermission, setDelegatePermission] =
     useState<MailMailboxDelegatePermission>("send");
@@ -68,11 +78,11 @@ export function MailDelegationExchangePanel({
       await reloadHub();
       setStatus(
         mode === "delegates_only"
-          ? "Kutu paylaşımlı / delegasyon moduna alındı."
-          : "Kutu kurum geneli erişime açıldı.",
+          ? t("exchangeModeDelegatesSet")
+          : t("exchangeModeOrgSet"),
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Kaydedilemedi");
+      setError(err instanceof Error ? err.message : t("errGenericSave"));
     }
   }
 
@@ -89,9 +99,9 @@ export function MailDelegationExchangePanel({
       );
       setDelegateEmail("");
       await reloadHub();
-      setStatus("Delegasyon eklendi.");
+      setStatus(t("exchangeDelegateAdded"));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Eklenemedi");
+      setError(err instanceof Error ? err.message : t("exchangeErrAdded"));
     }
   }
 
@@ -101,9 +111,9 @@ export function MailDelegationExchangePanel({
     try {
       await removeMailboxDelegate(accessToken, selected.mailboxId, delegateId);
       await reloadHub();
-      setStatus("Delegasyon kaldırıldı.");
+      setStatus(t("exchangeDelegateRemoved"));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Silinemedi");
+      setError(err instanceof Error ? err.message : t("exchangeErrRemoved"));
     }
   }
 
@@ -131,7 +141,7 @@ export function MailDelegationExchangePanel({
         if (data.type !== "lerta-exchange-oauth") return;
         window.removeEventListener("message", onMessage);
         if (!data.code) {
-          setError("Microsoft oturumu tamamlanmadı.");
+          setError(t("exchangeMsOAuthIncomplete"));
           return;
         }
         await completeExchangeOAuth(
@@ -140,11 +150,11 @@ export function MailDelegationExchangePanel({
           data.oauthState ?? state,
         );
         await reloadHub();
-        setStatus("Exchange hesabı bağlandı ve ilk senkron başlatıldı.");
+        setStatus(t("exchangeConnected"));
       };
       window.addEventListener("message", onMessage);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Bağlantı başlatılamadı");
+      setError(err instanceof Error ? err.message : t("exchangeConnectErr"));
     }
   }
 
@@ -154,10 +164,13 @@ export function MailDelegationExchangePanel({
       const result = await syncExchangeAccount(accessToken, accountId);
       await reloadHub();
       setStatus(
-        `Senkron: ${result.imported} yeni, ${result.updated} güncellenen mesaj.`,
+        t("exchangeSyncResult", {
+          imported: result.imported,
+          updated: result.updated,
+        }),
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Senkron başarısız");
+      setError(err instanceof Error ? err.message : t("settingsSyncFailed"));
     }
   }
 
@@ -167,10 +180,14 @@ export function MailDelegationExchangePanel({
       const result = await syncAllExchangeAccounts(accessToken);
       await reloadHub();
       setStatus(
-        `${result.accounts} hesap — ${result.imported} yeni, ${result.updated} güncellenen.`,
+        t("exchangeSyncAllResult", {
+          accounts: result.accounts,
+          imported: result.imported,
+          updated: result.updated,
+        }),
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Senkron başarısız");
+      setError(err instanceof Error ? err.message : t("settingsSyncFailed"));
     }
   }
 
@@ -179,9 +196,9 @@ export function MailDelegationExchangePanel({
     try {
       await deleteExchangeAccount(accessToken, accountId);
       await reloadHub();
-      setStatus("Exchange bağlantısı kaldırıldı.");
+      setStatus(t("exchangeRemoved"));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Kaldırılamadı");
+      setError(err instanceof Error ? err.message : t("exchangeErrRemoved"));
     }
   }
 
@@ -189,19 +206,18 @@ export function MailDelegationExchangePanel({
     <>
       <section className="mail-posta-card">
         <header className="mail-posta-card-head">
-          <h3 className="mail-posta-card-title">Paylaşımlı kutu ve delegasyon</h3>
-          <p className="mail-posta-card-desc">
-            Gmail delegasyonu benzeri: seçili kutuya ekip üyesi ekleyin veya
-            kutuyu yalnızca delegelerle paylaşın.
-          </p>
+          <h3 className="mail-posta-card-title">
+            {t("exchangeDelegationTitle")}
+          </h3>
+          <p className="mail-posta-card-desc">{t("exchangeDelegationDesc")}</p>
         </header>
         {mailboxes.length === 0 ? (
-          <p className="mail-accounts-muted">Henüz posta kutusu yok.</p>
+          <p className="mail-accounts-muted">{t("exchangeNoMailbox")}</p>
         ) : (
           <>
             <div className="mail-delegation-mailbox-picker">
               <label className="mail-posta-label" htmlFor="mailbox-pick">
-                Posta kutusu
+                {t("exchangeMailboxLabel")}
               </label>
               <select
                 id="mailbox-pick"
@@ -219,12 +235,12 @@ export function MailDelegationExchangePanel({
             {selected ? (
               <>
                 <p className="mail-accounts-muted">
-                  Erişim:{" "}
+                  {t("exchangeAccessLabel")}:{" "}
                   {selected.accessMode === "delegates_only"
-                    ? "Yalnızca sahip ve delegeler"
-                    : "Kurum (tüm mail konsol kullanıcıları)"}
+                    ? t("exchangeAccessDelegates")
+                    : t("exchangeAccessOrg")}
                   {selected.ownerEmail
-                    ? ` · Sahip: ${selected.ownerEmail}`
+                    ? t("exchangeOwnerSuffix", { email: selected.ownerEmail })
                     : null}
                 </p>
                 {canManage ? (
@@ -235,7 +251,7 @@ export function MailDelegationExchangePanel({
                       disabled={selected.accessMode === "organization"}
                       onClick={() => void handleAccessMode("organization")}
                     >
-                      Kurum geneli
+                      {t("exchangeModeOrg")}
                     </button>
                     <button
                       type="button"
@@ -243,7 +259,7 @@ export function MailDelegationExchangePanel({
                       disabled={selected.accessMode === "delegates_only"}
                       onClick={() => void handleAccessMode("delegates_only")}
                     >
-                      Paylaşımlı / delegasyon
+                      {t("exchangeModeDelegates")}
                     </button>
                   </div>
                 ) : null}
@@ -255,7 +271,7 @@ export function MailDelegationExchangePanel({
                           {d.emailAddress}
                         </span>
                         <span className="mail-accounts-card-name">
-                          {PERMISSION_LABEL[d.permission]}
+                          {delegatePermissionLabel(d.permission, t)}
                         </span>
                       </div>
                       {canManage ? (
@@ -264,7 +280,7 @@ export function MailDelegationExchangePanel({
                           className="mail-premium-btn mail-premium-btn--ghost"
                           onClick={() => void handleRemoveDelegate(d.id)}
                         >
-                          Kaldır
+                          {t("calActionRemove")}
                         </button>
                       ) : null}
                     </li>
@@ -275,7 +291,7 @@ export function MailDelegationExchangePanel({
                     <input
                       type="email"
                       className="mail-posta-input"
-                      placeholder="ekip@firma.com"
+                      placeholder={t("exchangeDelegateEmailPlaceholder")}
                       value={delegateEmail}
                       onChange={(e) => setDelegateEmail(e.target.value)}
                     />
@@ -288,16 +304,16 @@ export function MailDelegationExchangePanel({
                         )
                       }
                     >
-                      <option value="read">Okuma</option>
-                      <option value="send">Okuma + gönder</option>
-                      <option value="manage">Yönetim</option>
+                      <option value="read">{t("permRead")}</option>
+                      <option value="send">{t("permSend")}</option>
+                      <option value="manage">{t("permManage")}</option>
                     </select>
                     <button
                       type="button"
                       className="mail-premium-btn"
                       onClick={() => void handleAddDelegate()}
                     >
-                      Delege ekle
+                      {t("exchangeAddDelegate")}
                     </button>
                   </div>
                 ) : null}
@@ -309,21 +325,13 @@ export function MailDelegationExchangePanel({
 
       <section className="mail-posta-card">
         <header className="mail-posta-card-head">
-          <h3 className="mail-posta-card-title">Microsoft Exchange senkronu</h3>
-          <p className="mail-posta-card-desc">
-            Office 365 / Outlook kutunuzu Microsoft Graph ile webmail gelen
-            kutusuna delta senkronu (okuma, klasör durumu, otomatik yenileme).
-            Kurumsal <code>@lerta.com.tr</code> postası (Lerta sunucusu){" "}
-            <strong>Lerta</strong> sekmesinde; bu bağlantı{" "}
-            <strong>Microsoft</strong> sekmesini doldurur.
-          </p>
+          <h3 className="mail-posta-card-title">
+            {t("exchangeSyncSectionTitle")}
+          </h3>
+          <p className="mail-posta-card-desc">{t("exchangeSyncSectionDesc")}</p>
         </header>
         {exchange?.configured === false ? (
-          <p className="mail-accounts-muted">
-            Sunucuda{" "}
-            <code>MICROSOFT_GRAPH_MAIL_CLIENT_ID</code> ve ilişkili anahtarlar
-            tanımlandığında bağlantı açılır.
-          </p>
+          <p className="mail-accounts-muted">{t("exchangeGraphEnvHint")}</p>
         ) : (
           <>
             {hub.canManageSenders ? (
@@ -333,14 +341,14 @@ export function MailDelegationExchangePanel({
                   className="mail-premium-btn"
                   onClick={() => void handleExchangeConnect()}
                 >
-                  Microsoft hesabı bağla
+                  {t("exchangeConnectBtn")}
                 </button>
                 <button
                   type="button"
                   className="mail-premium-btn mail-premium-btn--ghost"
                   onClick={() => void handleExchangeSyncAll()}
                 >
-                  Tümünü senkronize et
+                  {t("settingsSyncAll")}
                 </button>
               </div>
             ) : null}
@@ -353,9 +361,13 @@ export function MailDelegationExchangePanel({
                     </span>
                     <span className="mail-accounts-card-name">
                       {acc.lastSyncedAt
-                        ? `Son senkron: ${new Date(acc.lastSyncedAt).toLocaleString("tr-TR")}`
-                        : "Henüz senkron yok"}
-                      {acc.lastSyncError ? ` · Hata: ${acc.lastSyncError}` : ""}
+                        ? t("settingsLastSync", {
+                            date: formatDateTime(acc.lastSyncedAt),
+                          })
+                        : t("settingsNotSyncedYet")}
+                      {acc.lastSyncError
+                        ? t("calErrorSuffix", { error: acc.lastSyncError })
+                        : ""}
                     </span>
                   </div>
                   {hub.canManageSenders ? (
@@ -365,14 +377,14 @@ export function MailDelegationExchangePanel({
                         className="mail-premium-btn mail-premium-btn--ghost"
                         onClick={() => void handleExchangeSync(acc.id)}
                       >
-                        Senkronize et
+                        {t("exchangeSyncOne")}
                       </button>
                       <button
                         type="button"
                         className="mail-premium-btn mail-premium-btn--ghost"
                         onClick={() => void handleExchangeDelete(acc.id)}
                       >
-                        Kaldır
+                        {t("calActionRemove")}
                       </button>
                     </div>
                   ) : null}

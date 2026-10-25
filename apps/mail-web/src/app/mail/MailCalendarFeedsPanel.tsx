@@ -10,6 +10,7 @@ import {
   type MailCalendarIcsFeed,
   isMailSessionExpiredError,
 } from "@/lib/mailApi";
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 
 type Props = {
   accessToken: string;
@@ -22,6 +23,7 @@ export function MailCalendarFeedsPanel({
   onToast,
   onSynced,
 }: Props) {
+  const { t, formatDateTime } = useMailLocale();
   const [feeds, setFeeds] = useState<MailCalendarIcsFeed[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [label, setLabel] = useState("");
@@ -35,13 +37,13 @@ export function MailCalendarFeedsPanel({
       setFeeds(data.feeds);
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Akışlar yüklenemedi.";
+        error instanceof Error ? error.message : t("calFeedsLoadErr");
       setLoadError(message);
       if (!isMailSessionExpiredError(error)) {
         onToast(message);
       }
     }
-  }, [accessToken, onToast]);
+  }, [accessToken, onToast, t]);
 
   useEffect(() => {
     void load();
@@ -50,7 +52,7 @@ export function MailCalendarFeedsPanel({
   return (
     <section className="mail-cal-section-card">
       <div className="mail-cal-section-head">
-        <h2>Harici takvim (iCal URL)</h2>
+        <h2>{t("calFeedsTitle")}</h2>
         {feeds.some((f) => f.enabled) ? (
           <button
             type="button"
@@ -62,7 +64,16 @@ export function MailCalendarFeedsPanel({
                 try {
                   const r = await syncAllCalendarIcsFeeds(accessToken);
                   onToast(
-                    `Tümü: ${r.succeeded}/${r.feeds} akış · ${r.imported} yeni, ${r.updated} güncel, ${r.removed} kaldırıldı${r.failed ? ` · ${r.failed} hata` : ""}.`,
+                    t("calFeedsSyncAllResult", {
+                      succeeded: r.succeeded,
+                      feeds: r.feeds,
+                      imported: r.imported,
+                      updated: r.updated,
+                      removed: r.removed,
+                      failedSuffix: r.failed
+                        ? t("calCalDavBulkFailedSuffix", { failed: r.failed })
+                        : "",
+                    }),
                   );
                   void load();
                   onSynced();
@@ -70,7 +81,7 @@ export function MailCalendarFeedsPanel({
                   onToast(
                     error instanceof Error
                       ? error.message
-                      : "Toplu senkron başarısız.",
+                      : t("calCalDavBulkSyncErr"),
                   );
                   void load();
                 } finally {
@@ -79,30 +90,26 @@ export function MailCalendarFeedsPanel({
               })()
             }
           >
-            {syncingAll ? "Senkronize ediliyor…" : "Tümünü senkronize et"}
+            {syncingAll ? t("settingsSyncBusy") : t("settingsSyncAll")}
           </button>
         ) : null}
       </div>
-      <p className="mail-cal-section-hint">
-        Nextcloud / Google “gizli iCal adresi” veya Outlook yayımlanan ICS
-        bağlantılarını ekleyin. Etkin akışlar sunucuda saatlik otomatik
-        senkronize edilir.
-      </p>
+      <p className="mail-cal-section-hint">{t("calFeedsHint")}</p>
       <div className="mail-cal-form-grid mail-cal-form-grid--compact">
         <label className="mail-cal-field">
-          <span className="mail-cal-field-label">Ad</span>
+          <span className="mail-cal-field-label">{t("calCalDavFieldName")}</span>
           <input
             className="mail-cal-input"
-            placeholder="ör. Nextcloud, MSN"
+            placeholder={t("calFeedsNamePlaceholder")}
             value={label}
             onChange={(e) => setLabel(e.target.value)}
           />
         </label>
         <label className="mail-cal-field mail-cal-field--grow">
-          <span className="mail-cal-field-label">iCal URL</span>
+          <span className="mail-cal-field-label">{t("calFeedsFieldUrl")}</span>
           <input
             className="mail-cal-input"
-            placeholder="https://…/calendar.ics"
+            placeholder={t("calFeedsUrlPlaceholder")}
             value={feedUrl}
             onChange={(e) => setFeedUrl(e.target.value)}
           />
@@ -114,7 +121,7 @@ export function MailCalendarFeedsPanel({
             onClick={() =>
               void (async () => {
                 if (!label.trim() || !feedUrl.trim()) {
-                  onToast("Ad ve URL gerekli.");
+                  onToast(t("calFeedsNameUrlRequired"));
                   return;
                 }
                 try {
@@ -124,17 +131,17 @@ export function MailCalendarFeedsPanel({
                   });
                   setLabel("");
                   setFeedUrl("");
-                  onToast("Harici takvim eklendi.");
+                  onToast(t("calFeedsAdded"));
                   void load();
                 } catch (error) {
                   onToast(
-                    error instanceof Error ? error.message : "Eklenemedi.",
+                    error instanceof Error ? error.message : t("errGenericSave"),
                   );
                 }
               })()
             }
           >
-            Ekle
+            {t("calActionAdd")}
           </button>
         </div>
       </div>
@@ -145,9 +152,13 @@ export function MailCalendarFeedsPanel({
               <strong>{f.label}</strong>
               <div className="mail-d6-meta">
                 {f.lastSyncedAt
-                  ? `Son senkron: ${new Date(f.lastSyncedAt).toLocaleString("tr-TR")}`
-                  : "Henüz senkron yok"}
-                {f.lastSyncError ? ` · Hata: ${f.lastSyncError}` : ""}
+                  ? t("settingsLastSync", {
+                      date: formatDateTime(f.lastSyncedAt),
+                    })
+                  : t("settingsNotSyncedYet")}
+                {f.lastSyncError
+                  ? t("calErrorSuffix", { error: f.lastSyncError })
+                  : ""}
               </div>
             </div>
             <span className="mail-cal-event-actions">
@@ -158,7 +169,11 @@ export function MailCalendarFeedsPanel({
                   void syncCalendarIcsFeed(accessToken, f.id)
                     .then((r) => {
                       onToast(
-                        `Senkron: ${r.imported} yeni, ${r.updated} güncel, ${r.removed} kaldırıldı.`,
+                        t("calCalDavSyncResult", {
+                          imported: r.imported,
+                          updated: r.updated,
+                          removed: r.removed,
+                        }),
                       );
                       void load();
                       onSynced();
@@ -167,13 +182,13 @@ export function MailCalendarFeedsPanel({
                       onToast(
                         err instanceof Error
                           ? err.message
-                          : "Senkron başarısız.",
+                          : t("settingsSyncFailed"),
                       );
                       void load();
                     })
                 }
               >
-                Senkronize
+                {t("calFeedsSyncBtn")}
               </button>
               <button
                 type="button"
@@ -181,18 +196,18 @@ export function MailCalendarFeedsPanel({
                 onClick={() =>
                   void deleteCalendarIcsFeed(accessToken, f.id)
                     .then(() => {
-                      onToast("Akış silindi.");
+                      onToast(t("calFeedsDeleted"));
                       void load();
                       onSynced();
                     })
                     .catch((err: unknown) => {
                       onToast(
-                        err instanceof Error ? err.message : "Silinemedi.",
+                        err instanceof Error ? err.message : t("errGenericSave"),
                       );
                     })
                 }
               >
-                Sil
+                {t("actionDelete")}
               </button>
             </span>
           </li>
@@ -203,7 +218,7 @@ export function MailCalendarFeedsPanel({
           </li>
         ) : null}
         {feeds.length === 0 && !loadError ? (
-          <li className="mail-cal-feed-empty">Harici takvim yok.</li>
+          <li className="mail-cal-feed-empty">{t("calFeedsEmpty")}</li>
         ) : null}
       </ul>
     </section>
