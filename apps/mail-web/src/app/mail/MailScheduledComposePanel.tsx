@@ -6,12 +6,14 @@ import {
   fetchScheduledCompose,
   type MailScheduledComposeItem,
 } from "@/lib/mailApi";
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 
 type Props = {
   accessToken: string;
 };
 
 export function MailScheduledComposePanel({ accessToken }: Props) {
+  const { t, localeTag } = useMailLocale();
   const [pending, setPending] = useState<MailScheduledComposeItem[]>([]);
   const [status, setStatus] = useState("");
 
@@ -26,16 +28,16 @@ export function MailScheduledComposePanel({ accessToken }: Props) {
 
   return (
     <section className="mail-posta-card mail-help-topic-card">
-      <h3 className="mail-help-topic-title">Zamanlanmış gönderimler</h3>
+      <h3 className="mail-help-topic-title">{t("scheduledTitle")}</h3>
       {pending.length === 0 ? (
-        <p className="mail-accounts-muted">Bekleyen zamanlanmış gönderim yok.</p>
+        <p className="mail-accounts-muted">{t("scheduledEmpty")}</p>
       ) : (
         <ul className="mail-exchange-account-list">
           {pending.map((row) => (
             <li key={row.id}>
               <strong>{row.summary}</strong>
               <span className="mail-accounts-muted">
-                {new Date(row.sendAt).toLocaleString("tr-TR")} · {row.kind}
+                {new Date(row.sendAt).toLocaleString(localeTag)} · {row.kind}
               </span>
               <button
                 type="button"
@@ -43,10 +45,10 @@ export function MailScheduledComposePanel({ accessToken }: Props) {
                 onClick={() =>
                   void cancelDelayedCompose(accessToken, row.id)
                     .then(() => reload())
-                    .then(() => setStatus("Zamanlanmış gönderim iptal edildi."))
+                    .then(() => setStatus(t("scheduledCancelled")))
                 }
               >
-                İptal
+                {t("composeCancel")}
               </button>
             </li>
           ))}

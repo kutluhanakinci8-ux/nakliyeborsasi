@@ -1,10 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 
 /** Microsoft Graph takvim OAuth callback — popup parent'a code iletir. */
 export default function CalendarGraphOAuthCallbackPage() {
+  const { t } = useMailLocale();
   const [done, setDone] = useState(false);
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    setMessage(t("oauthCalGraphProcessing"));
+  }, [t]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -22,17 +29,14 @@ export default function CalendarGraphOAuthCallbackPage() {
         window.location.origin,
       );
       setDone(true);
+      setMessage(t("oauthCalGraphDone"));
       window.close();
     }
-  }, []);
+  }, [t]);
 
   return (
     <main className="mail-exchange-oauth-callback">
-      <p>
-        {done
-          ? "Takvim bağlantısı tamamlandı, pencere kapanıyor…"
-          : "Microsoft takvim oturumu işleniyor…"}
-      </p>
+      <p>{done ? message || t("oauthCalGraphDone") : message}</p>
     </main>
   );
 }

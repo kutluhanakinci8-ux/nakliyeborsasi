@@ -1,5 +1,6 @@
 "use client";
 
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 import { useCallback, useEffect, useState } from "react";
 import { startRegistration } from "@simplewebauthn/browser";
 import { MailCryptoSettingsPanel } from "./MailCryptoSettingsPanel";
@@ -47,6 +48,7 @@ export function MailSecuritySettingsPanel({
   onAppLockChange,
   onPasskeysChange,
 }: Props) {
+  const { t, localeTag } = useMailLocale();
   const [totpEnabled, setTotpEnabled] = useState(false);
   const [totpSecret, setTotpSecret] = useState<string | null>(null);
   const [totpCode, setTotpCode] = useState("");
@@ -87,7 +89,7 @@ export function MailSecuritySettingsPanel({
       try {
         await reload();
       } catch {
-        setError("Güvenlik ayarları yüklenemedi.");
+        setError(t("securityErrLoad"));
       } finally {
         setInitialLoading(false);
       }
@@ -102,9 +104,9 @@ export function MailSecuritySettingsPanel({
       const data = await beginTotpSetup(accessToken);
       setTotpSecret(data.setup.secret);
       setTotpCode("");
-      setStatus("Authenticator uygulamasına secret ekleyin, sonra 6 haneli kodu girin.");
+      setStatus(t("securityTotpSetupHint"));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "TOTP kurulumu başlatılamadı.");
+      setError(err instanceof Error ? err.message : t("securityErrTotpBegin"));
     } finally {
       setSetupBusy(false);
     }
@@ -112,7 +114,7 @@ export function MailSecuritySettingsPanel({
 
   async function onConfirmSetup() {
     if (!totpCode.trim() || totpCode.trim().length < 6) {
-      setError("6 haneli doğrulama kodu gerekli.");
+      setError(t("securityErrTotpCode"));
       return;
     }
     setConfirmBusy(true);
@@ -123,9 +125,9 @@ export function MailSecuritySettingsPanel({
       setTotpCode("");
       setTotpEnabled(true);
       onTotpEnabledChange?.(true);
-      setStatus("İki adımlı doğrulama (TOTP) etkinleştirildi.");
+      setStatus(t("securityTotpEnabled"));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Kod doğrulanamadı.");
+      setError(err instanceof Error ? err.message : t("securityErrCodeVerify"));
     } finally {
       setConfirmBusy(false);
     }
@@ -133,9 +135,7 @@ export function MailSecuritySettingsPanel({
 
   async function onAddPasskey() {
     if (!passkeySupported()) {
-      setError(
-        "Passkey bu tarayıcıda desteklenmiyor. HTTPS ve güncel Chrome/Safari/Edge kullanın.",
-      );
+      setError(t("securityErrPasskeyUnsupported"));
       return;
     }
     setPasskeyBusy(true);
@@ -148,10 +148,10 @@ export function MailSecuritySettingsPanel({
       await verifyWebAuthnRegistration(accessToken, attestation, name);
       setPasskeyDeviceName("");
       await reloadPasskeys();
-      setStatus("Passkey kaydedildi. Face ID / Touch ID ile kilidi açabilirsiniz.");
+      setStatus(t("securityPasskeySaved"));
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Passkey kaydı tamamlanamadı.",
+        err instanceof Error ? err.message : t("securityErrPasskeyRegister"),
       );
     } finally {
       setPasskeyBusy(false);
@@ -159,7 +159,7 @@ export function MailSecuritySettingsPanel({
   }
 
   async function onRemovePasskey(id: string) {
-    if (!window.confirm("Bu passkey silinsin mi?")) {
+    if (!window.confirm(t("securityConfirmRemovePasskey"))) {
       return;
     }
     setPasskeyBusy(true);
@@ -173,12 +173,12 @@ export function MailSecuritySettingsPanel({
         });
         setMailAppLockEnabled(false);
         onAppLockChange?.(false);
-        setStatus("Son passkey silindi; posta kilidi kapatıldı.");
+        setStatus(t("securityLastPasskeyRemoved"));
       } else {
-        setStatus("Passkey silindi.");
+        setStatus(t("securityPasskeyRemoved"));
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Passkey silinemedi.");
+      setError(err instanceof Error ? err.message : t("securityErrPasskeyRemove"));
     } finally {
       setPasskeyBusy(false);
     }
@@ -186,7 +186,7 @@ export function MailSecuritySettingsPanel({
 
   async function onToggleAppLock(enabled: boolean) {
     if (enabled && passkeys.length === 0) {
-      setError("Posta kilidi için önce passkey ekleyin.");
+      setError(t("securityErrAppLockNeedPasskey"));
       return;
     }
     setAppLockBusy(true);
@@ -199,12 +199,12 @@ export function MailSecuritySettingsPanel({
       onAppLockChange?.(prefs.preferences.mailAppLockEnabled);
       setStatus(
         enabled
-          ? "Posta kilidi açık — sekme açıldığında biyometrik doğrulama istenir."
-          : "Posta kilidi kapalı.",
+          ? t("securityAppLockOn")
+          : t("securityAppLockOff"),
       );
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Posta kilidi güncellenemedi.",
+        err instanceof Error ? err.message : t("securityErrAppLockUpdate"),
       );
     } finally {
       setAppLockBusy(false);
@@ -226,11 +226,7 @@ export function MailSecuritySettingsPanel({
 
   return (
     <div className="mail-security-panel mail-security-panel--premium">
-      <p className="mail-posta-intro">
-        Hesabınızı Authenticator (TOTP) ve cihaz passkey ile koruyun. Outlook
-        mobildeki biyometri satırının web karşılığı passkey ve isteğe bağlı posta
-        kilididir.
-      </p>
+      <p className="mail-posta-intro">{t("securityIntro")}</p>
 
       {error ? (
         <p className="mail-accounts-status mail-accounts-status--err" role="alert">
@@ -251,10 +247,8 @@ export function MailSecuritySettingsPanel({
       <section className="mail-posta-card">
         <header className="mail-posta-card-head mail-security-card-head">
           <div>
-            <h3 className="mail-posta-card-title">Biyometri / passkey</h3>
-            <p className="mail-posta-card-desc">
-              Face ID, Touch ID, Windows Hello veya platform PIN.
-            </p>
+            <h3 className="mail-posta-card-title">{t("securityPasskeyTitle")}</h3>
+<p className="mail-posta-card-desc">{t("securityPasskeyDesc")}</p>
           </div>
           <span
             className={
@@ -263,7 +257,7 @@ export function MailSecuritySettingsPanel({
                 : "mail-security-pill mail-security-pill--off"
             }
           >
-            {passkeys.length > 0 ? `${passkeys.length} kayıt` : "Yok"}
+            {passkeys.length > 0 ? t("securityPasskeyCount", { count: passkeys.length }) : t("securityPasskeyNone")}
           </span>
         </header>
 
@@ -272,11 +266,11 @@ export function MailSecuritySettingsPanel({
             {passkeys.map((cred) => (
               <li key={cred.id} className="mail-security-passkey-row">
                 <div>
-                  <strong>{cred.deviceName ?? "Passkey"}</strong>
+                  <strong>{cred.deviceName ?? t("securityPasskeyDefaultName")}</strong>
                   <small>
                     {cred.lastUsedAt
-                      ? `Son kullanım: ${new Date(cred.lastUsedAt).toLocaleString("tr-TR")}`
-                      : `Eklenme: ${new Date(cred.createdAt).toLocaleString("tr-TR")}`}
+                      ? t("securityLastUsed", { when: new Date(cred.lastUsedAt).toLocaleString(localeTag) })
+                      : t("securityAddedAt", { when: new Date(cred.createdAt).toLocaleString(localeTag) })}
                   </small>
                 </div>
                 <button
@@ -285,24 +279,22 @@ export function MailSecuritySettingsPanel({
                   disabled={passkeyBusy}
                   onClick={() => void onRemovePasskey(cred.id)}
                 >
-                  Sil
+                  {t("actionDelete")}
                 </button>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="mail-security-status-text">
-            Henüz passkey yok. Bu cihazda biyometrik kayıt ekleyin.
-          </p>
+<p className="mail-security-status-text">{t("securityPasskeyEmpty")}</p>
         )}
 
         <label className="mail-premium-field">
-          <span className="mail-premium-field-label">Cihaz adı (isteğe bağlı)</span>
+          <span className="mail-premium-field-label">{t("securityDeviceNameLabel")}</span>
           <input
             className="mail-premium-field-input"
             value={passkeyDeviceName}
             onChange={(e) => setPasskeyDeviceName(e.target.value)}
-            placeholder="Örn. MacBook, iPhone"
+            placeholder={t("securityDeviceNamePlaceholder")}
             maxLength={120}
           />
         </label>
@@ -313,7 +305,7 @@ export function MailSecuritySettingsPanel({
             disabled={passkeyBusy || !passkeySupported()}
             onClick={() => void onAddPasskey()}
           >
-            {passkeyBusy ? "Kaydediliyor…" : "Passkey ekle"}
+            {passkeyBusy ? t("securityAddingPasskey") : t("securityAddPasskey")}
           </button>
         </div>
       </section>
@@ -321,10 +313,8 @@ export function MailSecuritySettingsPanel({
       <section className="mail-posta-card">
         <header className="mail-posta-card-head mail-security-card-head">
           <div>
-            <h3 className="mail-posta-card-title">Posta kilidi</h3>
-            <p className="mail-posta-card-desc">
-              Oturum içinde postayı yeniden açmadan önce passkey doğrulaması.
-            </p>
+            <h3 className="mail-posta-card-title">{t("securityMailLockTitle")}</h3>
+<p className="mail-posta-card-desc">{t("securityMailLockDesc")}</p>
           </div>
         </header>
         <label
@@ -345,13 +335,13 @@ export function MailSecuritySettingsPanel({
             <span className="mail-posta-toggle-thumb" />
           </span>
           <span className="mail-posta-toggle-text">
-            <span className="mail-posta-toggle-label">Posta kilidini kullan</span>
+            <span className="mail-posta-toggle-label">{t("securityMailLockToggle")}</span>
             <span className="mail-posta-toggle-hint">
               {passkeys.length === 0
-                ? "Önce passkey ekleyin."
+                ? t("securityMailLockHintNeedPasskey")
                 : mailAppLockEnabled
-                  ? "Oturumda postayı açmadan önce biyometrik doğrulama."
-                  : "Kapalı — etkinleştirmek için açın."}
+                  ? t("securityMailLockHintOn")
+                  : t("securityMailLockHintOff")}
             </span>
           </span>
         </label>
@@ -360,10 +350,8 @@ export function MailSecuritySettingsPanel({
       <section className="mail-posta-card">
         <header className="mail-posta-card-head mail-security-card-head">
           <div>
-            <h3 className="mail-posta-card-title">İki adımlı doğrulama (TOTP)</h3>
-            <p className="mail-posta-card-desc">
-              Google Authenticator, Microsoft Authenticator veya uyumlu uygulama.
-            </p>
+            <h3 className="mail-posta-card-title">{t("securityTotpTitle")}</h3>
+<p className="mail-posta-card-desc">{t("securityTotpDesc")}</p>
           </div>
           <span
             className={
@@ -372,17 +360,17 @@ export function MailSecuritySettingsPanel({
                 : "mail-security-pill mail-security-pill--off"
             }
           >
-            {totpEnabled ? "Açık" : "Kapalı"}
+            {totpEnabled ? t("stateOn") : t("stateOff")}
           </span>
         </header>
 
         {totpEnabled ? (
           <p className="mail-security-status-text" role="status">
-            TOTP etkin. Yeni cihazda giriş için uygulamadaki kodu kullanın.
+{t("securityTotpActiveHint")}
           </p>
         ) : totpSecret ? (
           <div className="mail-security-setup">
-            <p className="mail-security-setup-label">Kurulum secret (tek sefer)</p>
+            <p className="mail-security-setup-label">{t("securityTotpSetupSecretLabel")}</p>
             <code className="mail-security-secret">{totpSecret}</code>
             <div className="mail-security-setup-actions">
               <button
@@ -391,21 +379,21 @@ export function MailSecuritySettingsPanel({
                 onClick={() =>
                   void (async () => {
                     const ok = await copySecret(totpSecret);
-                    setCopyHint(ok ? "Secret kopyalandı." : "Kopyalanamadı.");
+                    setCopyHint(ok ? t("securitySecretCopied") : t("securityCopyFailed"));
                     window.setTimeout(() => setCopyHint(""), 2500);
                   })()
                 }
               >
-                Secret kopyala
+                {t("securityCopySecret")}
               </button>
             </div>
             <label className="mail-premium-field">
-              <span className="mail-premium-field-label">Doğrulama kodu</span>
+              <span className="mail-premium-field-label">{t("securityVerifyCodeLabel")}</span>
               <input
                 className="mail-premium-field-input mail-security-code-input"
                 inputMode="numeric"
                 autoComplete="one-time-code"
-                placeholder="6 haneli kod"
+                placeholder={t("securityVerifyCodePlaceholder")}
                 maxLength={8}
                 value={totpCode}
                 onChange={(e) => setTotpCode(e.target.value.replace(/\s/g, ""))}
@@ -418,7 +406,7 @@ export function MailSecuritySettingsPanel({
                 disabled={confirmBusy}
                 onClick={() => void onConfirmSetup()}
               >
-                {confirmBusy ? "Doğrulanıyor…" : "Etkinleştir"}
+                {confirmBusy ? t("securityVerifying") : t("securityEnable")}
               </button>
               <button
                 type="button"
@@ -430,15 +418,13 @@ export function MailSecuritySettingsPanel({
                   setStatus("");
                 }}
               >
-                İptal
+                {t("composeCancel")}
               </button>
             </div>
           </div>
         ) : (
           <>
-            <p className="mail-security-status-text">
-              TOTP kapalı. Kuruluma başlamak için düğmeyi kullanın.
-            </p>
+<p className="mail-security-status-text">{t("securityTotpOffHint")}</p>
             <div className="mail-security-primary-actions">
               <button
                 type="button"
@@ -446,7 +432,7 @@ export function MailSecuritySettingsPanel({
                 disabled={setupBusy}
                 onClick={() => void onBeginSetup()}
               >
-                {setupBusy ? "Hazırlanıyor…" : "TOTP kur"}
+                {setupBusy ? t("securityPreparing") : t("securitySetupTotp")}
               </button>
             </div>
           </>
@@ -455,21 +441,16 @@ export function MailSecuritySettingsPanel({
 
       <section className="mail-posta-card">
         <header className="mail-posta-card-head">
-          <h3 className="mail-posta-card-title">PGP ve S/MIME</h3>
-          <p className="mail-posta-card-desc">
-            İçerik şifreleme ve kurumsal imza (Proton tam E2E değil; ek katman).
-          </p>
+          <h3 className="mail-posta-card-title">{t("securityPgpTitle")}</h3>
+<p className="mail-posta-card-desc">{t("securityPgpDesc")}</p>
         </header>
         <MailCryptoSettingsPanel accessToken={accessToken} />
       </section>
 
       <section className="mail-posta-card mail-posta-card--muted">
         <header className="mail-posta-card-head">
-          <h3 className="mail-posta-card-title">TOTP kapatma</h3>
-          <p className="mail-posta-card-desc">
-            Güvenlik politikası gereği webmailden kapatılamaz; yönetim konsolu
-            gerekir.
-          </p>
+          <h3 className="mail-posta-card-title">{t("securityTotpDisableTitle")}</h3>
+<p className="mail-posta-card-desc">{t("securityTotpDisableDesc")}</p>
         </header>
         <a
           className="mail-privacy-console-link"
@@ -477,7 +458,7 @@ export function MailSecuritySettingsPanel({
           target="_blank"
           rel="noopener noreferrer"
         >
-          Yönetim konsolu — güvenlik →
+          {t("securityConsoleLink")}
         </a>
       </section>
     </div>

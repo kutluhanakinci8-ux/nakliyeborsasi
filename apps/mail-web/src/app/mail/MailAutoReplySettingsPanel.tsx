@@ -1,5 +1,6 @@
 "use client";
 
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   fetchInboxPreferences,
@@ -62,6 +63,7 @@ export function MailAutoReplySettingsPanel({
   accessToken,
   onEnabledChange,
 }: Props) {
+  const { t } = useMailLocale();
   const [enabled, setEnabled] = useState(false);
   const [bodyText, setBodyText] = useState("");
   const [activeFrom, setActiveFrom] = useState("");
@@ -88,7 +90,7 @@ export function MailAutoReplySettingsPanel({
       try {
         await reload();
       } catch {
-        setError("Otomatik yanıt ayarları yüklenemedi.");
+        setError(t("autoReplyErrLoad"));
       } finally {
         setInitialLoading(false);
       }
@@ -104,7 +106,7 @@ export function MailAutoReplySettingsPanel({
     setError("");
     setStatus("");
     if (enabled && !bodyText.trim()) {
-      setError("Açıkken mesaj metni gerekli.");
+      setError(t("autoReplyErrBodyRequired"));
       return;
     }
     setSaving(true);
@@ -116,9 +118,9 @@ export function MailAutoReplySettingsPanel({
         autoReplyActiveUntil: fromDatetimeLocalValue(activeUntil),
       });
       onEnabledChange?.(enabled);
-      setStatus("Ayarlar kaydedildi.");
+      setStatus(t("autoReplySaved"));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Kaydedilemedi.");
+      setError(err instanceof Error ? err.message : t("errGenericSave"));
     } finally {
       setSaving(false);
     }
@@ -137,11 +139,7 @@ export function MailAutoReplySettingsPanel({
 
   return (
     <div className="mail-autoreply-panel mail-autoreply-panel--premium">
-      <p className="mail-posta-intro">
-        Gelen postaya otomatik yanıt gönderin (Outlook «Otomatik yanıtlar»). Aynı
-        gönderene 24 saatte en fazla bir yanıt verilir; spam ve kurumsal adreslere
-        gönderilmez.
-      </p>
+      <p className="mail-posta-intro">{t("autoReplyIntro")}</p>
 
       {error ? (
         <p className="mail-accounts-status mail-accounts-status--err" role="alert">
@@ -157,10 +155,8 @@ export function MailAutoReplySettingsPanel({
       <section className="mail-posta-card">
         <header className="mail-posta-card-head mail-autoreply-card-head">
           <div>
-            <h3 className="mail-posta-card-title">Otomatik yanıt</h3>
-            <p className="mail-posta-card-desc">
-              Açık olduğunda gelen mesajlara tanımlı metin gönderilir.
-            </p>
+            <h3 className="mail-posta-card-title">{t("autoReplyTitle")}</h3>
+<p className="mail-posta-card-desc">{t("autoReplyDesc")}</p>
           </div>
           {enabled ? (
             <span
@@ -170,11 +166,11 @@ export function MailAutoReplySettingsPanel({
                   : "mail-autoreply-pill"
               }
             >
-              {liveNow ? "Şu an aktif" : "Açık (zaman dışı)"}
+              {liveNow ? t("autoReplyLive") : t("autoReplyOpenOutside")}
             </span>
           ) : (
             <span className="mail-autoreply-pill mail-autoreply-pill--off">
-              Kapalı
+              {t("stateOff")}
             </span>
           )}
         </header>
@@ -189,10 +185,8 @@ export function MailAutoReplySettingsPanel({
             <span className="mail-posta-toggle-thumb" />
           </span>
           <span className="mail-posta-toggle-text">
-            <span className="mail-posta-toggle-label">Otomatik yanıt açık</span>
-            <span className="mail-posta-toggle-hint">
-              Kapatıldığında yeni gelen postaya yanıt gönderilmez.
-            </span>
+            <span className="mail-posta-toggle-label">{t("autoReplyToggle")}</span>
+<span className="mail-posta-toggle-hint">{t("autoReplyToggleHint")}</span>
           </span>
         </label>
       </section>
@@ -206,13 +200,11 @@ export function MailAutoReplySettingsPanel({
         aria-disabled={!enabled}
       >
         <header className="mail-posta-card-head">
-          <h3 className="mail-posta-card-title">Mesaj metni</h3>
-          <p className="mail-posta-card-desc">
-            Alıcıların göreceği düz metin (en fazla 4000 karakter).
-          </p>
+          <h3 className="mail-posta-card-title">{t("autoReplyBodyTitle")}</h3>
+<p className="mail-posta-card-desc">{t("autoReplyBodyDesc")}</p>
         </header>
         <label className="mail-premium-field">
-          <span className="mail-premium-field-label">Yanıt metni</span>
+          <span className="mail-premium-field-label">{t("autoReplyBodyLabel")}</span>
           <textarea
             className="mail-premium-field-textarea"
             rows={6}
@@ -220,10 +212,10 @@ export function MailAutoReplySettingsPanel({
             disabled={!enabled}
             value={bodyText}
             onChange={(e) => setBodyText(e.target.value)}
-            placeholder="Örn: 15–22 Eylül arasında ofis dışındayım. Acil durumlarda …"
+            placeholder={t("autoReplyBodyPlaceholder")}
           />
           <span className="mail-autoreply-char-count" aria-live="polite">
-            {bodyText.length} / 4000
+            {t("autoReplyCharCount", { count: bodyText.length })}
           </span>
         </label>
       </section>
@@ -236,15 +228,12 @@ export function MailAutoReplySettingsPanel({
         }
       >
         <header className="mail-posta-card-head">
-          <h3 className="mail-posta-card-title">Zaman aralığı</h3>
-          <p className="mail-posta-card-desc">
-            Boş bırakırsanız yanıt sürekli açık kalır; tarih seçerek tatil veya
-            toplantı dönemini sınırlayabilirsiniz.
-          </p>
+          <h3 className="mail-posta-card-title">{t("autoReplyScheduleTitle")}</h3>
+<p className="mail-posta-card-desc">{t("autoReplyScheduleDesc")}</p>
         </header>
         <div className="mail-autoreply-schedule">
           <label className="mail-premium-field">
-            <span className="mail-premium-field-label">Başlangıç (isteğe bağlı)</span>
+            <span className="mail-premium-field-label">{t("autoReplyStartLabel")}</span>
             <input
               type="datetime-local"
               className="mail-premium-field-input mail-premium-field-input--datetime"
@@ -254,7 +243,7 @@ export function MailAutoReplySettingsPanel({
             />
           </label>
           <label className="mail-premium-field">
-            <span className="mail-premium-field-label">Bitiş (isteğe bağlı)</span>
+            <span className="mail-premium-field-label">{t("autoReplyEndLabel")}</span>
             <input
               type="datetime-local"
               className="mail-premium-field-input mail-premium-field-input--datetime"
@@ -273,7 +262,7 @@ export function MailAutoReplySettingsPanel({
           disabled={saving}
           onClick={() => void onSave()}
         >
-          {saving ? "Kaydediliyor…" : "Kaydet"}
+          {saving ? t("actionSaving") : t("actionSave")}
         </button>
       </div>
     </div>

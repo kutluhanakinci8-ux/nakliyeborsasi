@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { MailComplianceAuditPanel } from "./MailComplianceAuditPanel";
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 import {
   downloadMailPrivacyExport,
   fetchAiMailConsent,
@@ -14,6 +15,7 @@ type Props = {
 };
 
 export function MailPrivacySettingsPanel({ accessToken }: Props) {
+  const { t } = useMailLocale();
   const [aiMailConsent, setAiMailConsent] = useState(false);
   const [aiConsentBusy, setAiConsentBusy] = useState(false);
   const [status, setStatus] = useState("");
@@ -33,7 +35,7 @@ export function MailPrivacySettingsPanel({ accessToken }: Props) {
       try {
         await reload();
       } catch {
-        setError("Gizlilik ayarları yüklenemedi.");
+        setError(t("privacyErrLoad"));
       } finally {
         setInitialLoading(false);
       }
@@ -49,11 +51,11 @@ export function MailPrivacySettingsPanel({ accessToken }: Props) {
       setAiMailConsent(next);
       setStatus(
         next
-          ? "AI posta asistanı onayı kaydedildi."
-          : "AI posta asistanı onayı kaldırıldı.",
+          ? t("privacyAiOn")
+          : t("privacyAiOff"),
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Onay kaydedilemedi.");
+      setError(err instanceof Error ? err.message : t("privacyErrConsent"));
     } finally {
       setAiConsentBusy(false);
     }
@@ -71,9 +73,9 @@ export function MailPrivacySettingsPanel({ accessToken }: Props) {
       anchor.download = filename;
       anchor.click();
       URL.revokeObjectURL(url);
-      setStatus("KVKK veri paketi indirildi (JSON).");
+      setStatus(t("privacyExportDone"));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Dışa aktarım başarısız.");
+      setError(err instanceof Error ? err.message : t("privacyErrExport"));
     } finally {
       setExporting(false);
     }
@@ -94,11 +96,7 @@ export function MailPrivacySettingsPanel({ accessToken }: Props) {
 
   return (
     <div className="mail-privacy-panel mail-privacy-panel--premium">
-      <p className="mail-posta-intro">
-        KVKK kapsamında kurumsal posta kimliği verilerinizi görüntüleyin ve
-        indirin. Silme talebi ve veri işleme kayıtları firma yöneticisi için
-        yönetim konsolunda yürütülür.
-      </p>
+      <p className="mail-posta-intro">{t("privacyIntro")}</p>
 
       {error ? (
         <p className="mail-accounts-status mail-accounts-status--err" role="alert">
@@ -114,18 +112,15 @@ export function MailPrivacySettingsPanel({ accessToken }: Props) {
       <section className="mail-posta-card">
         <header className="mail-posta-card-head mail-privacy-card-head">
           <div>
-            <h3 className="mail-posta-card-title">Veri erişimi (KVKK)</h3>
-            <p className="mail-posta-card-desc">
-              Posta kimliği, gönderenler ve ilgili kurumsal meta veriler JSON
-              olarak indirilir.
-            </p>
+            <h3 className="mail-posta-card-title">{t("privacyAccessTitle")}</h3>
+<p className="mail-posta-card-desc">{t("privacyAccessDesc")}</p>
           </div>
-          <span className="mail-privacy-pill">Madde 11</span>
+          <span className="mail-privacy-pill">{t("privacyArticlePill")}</span>
         </header>
         <ul className="mail-privacy-bullets">
-          <li>İndirme yalnızca oturumunuzdaki kurumsal hesap için geçerlidir.</li>
-          <li>Dosyayı güvenli saklayın; üçüncü taraflarla paylaşmayın.</li>
-          <li>Silme veya düzeltme talebi için yönetim konsolunu kullanın.</li>
+          <li>{t("privacyBullet1")}</li>
+          <li>{t("privacyBullet2")}</li>
+          <li>{t("privacyBullet3")}</li>
         </ul>
         <div className="mail-privacy-actions">
           <button
@@ -134,7 +129,7 @@ export function MailPrivacySettingsPanel({ accessToken }: Props) {
             disabled={exporting}
             onClick={() => void onExport()}
           >
-            {exporting ? "Hazırlanıyor…" : "Verilerimi indir (JSON)"}
+            {exporting ? t("privacyPreparing") : t("privacyExportBtn")}
           </button>
         </div>
       </section>
@@ -142,10 +137,8 @@ export function MailPrivacySettingsPanel({ accessToken }: Props) {
       <section className="mail-posta-card">
         <header className="mail-posta-card-head mail-privacy-card-head">
           <div>
-            <h3 className="mail-posta-card-title">AI posta asistanı</h3>
-            <p className="mail-posta-card-desc">
-              Yanıt önerisi, özet ve sınıflandırma için açık rıza (KVKK).
-            </p>
+            <h3 className="mail-posta-card-title">{t("privacyAiTitle")}</h3>
+<p className="mail-posta-card-desc">{t("privacyAiDesc")}</p>
           </div>
           <span
             className={
@@ -154,7 +147,7 @@ export function MailPrivacySettingsPanel({ accessToken }: Props) {
                 : "mail-privacy-pill mail-privacy-pill--off"
             }
           >
-            {aiMailConsent ? "Onaylı" : "Kapalı"}
+            {aiMailConsent ? t("privacyConsentOn") : t("privacyConsentOff")}
           </span>
         </header>
         <label
@@ -175,12 +168,8 @@ export function MailPrivacySettingsPanel({ accessToken }: Props) {
             <span className="mail-posta-toggle-thumb" />
           </span>
           <span className="mail-posta-toggle-text">
-            <span className="mail-posta-toggle-label">
-              AI posta asistanını kullan
-            </span>
-            <span className="mail-posta-toggle-hint">
-              Kapatıldığında yanıt önerisi ve özet özellikleri devre dışı kalır.
-            </span>
+<span className="mail-posta-toggle-label">{t("privacyAiToggle")}</span>
+<span className="mail-posta-toggle-hint">{t("privacyAiToggleHint")}</span>
           </span>
         </label>
       </section>
@@ -189,11 +178,8 @@ export function MailPrivacySettingsPanel({ accessToken }: Props) {
 
       <section className="mail-posta-card mail-posta-card--muted">
         <header className="mail-posta-card-head">
-          <h3 className="mail-posta-card-title">Yönetim konsolu</h3>
-          <p className="mail-posta-card-desc">
-            Firma yöneticisi: silme talebi, DNS, posta kimliği ve teslimat
-            ayarları.
-          </p>
+          <h3 className="mail-posta-card-title">{t("privacyConsoleTitle")}</h3>
+<p className="mail-posta-card-desc">{t("privacyConsoleDesc")}</p>
         </header>
         <a
           className="mail-privacy-console-link"
@@ -201,7 +187,7 @@ export function MailPrivacySettingsPanel({ accessToken }: Props) {
           target="_blank"
           rel="noopener noreferrer"
         >
-          Lerta yönetim konsolunu aç →
+          {t("privacyConsoleOpen")}
         </a>
       </section>
     </div>

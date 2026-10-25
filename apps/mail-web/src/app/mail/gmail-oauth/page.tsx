@@ -2,9 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { completeGmailOAuth } from "@/lib/mailApi";
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 
 export default function GmailOAuthCallbackPage() {
-  const [message, setMessage] = useState("Gmail oturumu işleniyor…");
+  const { t } = useMailLocale();
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    setMessage(t("oauthGmailProcessing"));
+  }, [t]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -21,7 +27,7 @@ export default function GmailOAuthCallbackPage() {
         },
         window.location.origin,
       );
-      setMessage("Tamamlandı, pencere kapanıyor…");
+      setMessage(t("oauthClosing"));
       window.close();
       return;
     }
@@ -31,17 +37,19 @@ export default function GmailOAuthCallbackPage() {
       return;
     }
     if (!token || !code || !state) {
-      setMessage("Oturum veya OAuth parametreleri eksik.");
+      setMessage(t("oauthMissingParams"));
       return;
     }
     void completeGmailOAuth(token, code, state)
       .then(() => {
-        setMessage("Gmail bağlandı. Ayarlar sayfasına dönebilirsiniz.");
+        setMessage(t("oauthGmailConnected"));
       })
       .catch((error) => {
-        setMessage(error instanceof Error ? error.message : "Bağlantı başarısız.");
+        setMessage(
+          error instanceof Error ? error.message : t("oauthConnectFailed"),
+        );
       });
-  }, []);
+  }, [t]);
 
   return (
     <main className="mail-exchange-oauth-callback">

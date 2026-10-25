@@ -1,5 +1,6 @@
 "use client";
 
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 import { useCallback, useEffect, useState } from "react";
 import {
   downloadMailSendLogCsv,
@@ -12,6 +13,7 @@ type Props = {
 };
 
 export function MailComplianceAuditPanel({ accessToken }: Props) {
+  const { t, localeTag } = useMailLocale();
   const [category, setCategory] = useState<"all" | "send" | "security">("send");
   const [logs, setLogs] = useState<MailComplianceAuditEntry[]>([]);
   const [nextBefore, setNextBefore] = useState<string | null>(null);
@@ -32,7 +34,7 @@ export function MailComplianceAuditPanel({ accessToken }: Props) {
         setLogs((prev) => (before ? [...prev, ...data.logs] : data.logs));
         setNextBefore(data.nextBefore);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Kayıtlar yüklenemedi.");
+        setError(err instanceof Error ? err.message : t("complianceErrLoad"));
       } finally {
         setLoading(false);
       }
@@ -47,24 +49,24 @@ export function MailComplianceAuditPanel({ accessToken }: Props) {
   return (
     <section className="mail-posta-card mail-compliance-panel">
       <header className="mail-posta-card-head">
-        <h3 className="mail-posta-card-title">Denetim ve gönderim günlüğü (KVKK)</h3>
+        <h3 className="mail-posta-card-title">{t("complianceTitle")}</h3>
         <p className="mail-posta-card-desc">
-          Kim, ne zaman, hangi konuyu kime gönderdi — posta yöneticisi görünümü.
+          {t("complianceDesc")}
         </p>
       </header>
 
       <div className="mail-compliance-toolbar">
         <label className="mail-compliance-filter">
-          <span>Kategori</span>
+          <span>{t("complianceCategory")}</span>
           <select
             value={category}
             onChange={(e) =>
               setCategory(e.target.value as "all" | "send" | "security")
             }
           >
-            <option value="send">Gönderimler</option>
-            <option value="security">Güvenlik / gizlilik</option>
-            <option value="all">Tümü</option>
+            <option value="send">{t("complianceCatSend")}</option>
+            <option value="security">{t("complianceCatSecurity")}</option>
+            <option value="all">{t("complianceCatAll")}</option>
           </select>
         </label>
         <button
@@ -77,14 +79,14 @@ export function MailComplianceAuditPanel({ accessToken }: Props) {
               try {
                 await downloadMailSendLogCsv(accessToken);
               } catch (err) {
-                setError(err instanceof Error ? err.message : "CSV indirilemedi.");
+                setError(err instanceof Error ? err.message : t("complianceErrCsv"));
               } finally {
                 setExporting(false);
               }
             })()
           }
         >
-          {exporting ? "Hazırlanıyor…" : "Gönderim CSV"}
+          {exporting ? t("privacyPreparing") : t("complianceCsv")}
         </button>
       </div>
 
@@ -98,16 +100,16 @@ export function MailComplianceAuditPanel({ accessToken }: Props) {
         {logs.map((row) => (
           <li key={row.id} className="mail-compliance-log-row">
             <time dateTime={row.createdAt}>
-              {new Date(row.createdAt).toLocaleString("tr-TR")}
+              {new Date(row.createdAt).toLocaleString(localeTag)}
             </time>
             <strong>{row.labelTr}</strong>
             <span>{row.summaryTr}</span>
-            <small>{row.actorEmail ?? "sistem"}</small>
+            <small>{row.actorEmail ?? t("complianceActorSystem")}</small>
           </li>
         ))}
       </ul>
 
-      {loading ? <p className="mail-accounts-muted">Yükleniyor…</p> : null}
+      {loading ? <p className="mail-accounts-muted">{t("readLoading")}</p> : null}
       {nextBefore ? (
         <button
           type="button"
@@ -115,7 +117,7 @@ export function MailComplianceAuditPanel({ accessToken }: Props) {
           disabled={loading}
           onClick={() => void load(nextBefore)}
         >
-          Daha eski kayıtlar
+          {t("complianceLoadMore")}
         </button>
       ) : null}
     </section>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import {
   createComposePreset,
@@ -54,6 +55,7 @@ function PresetEmpty({ label }: { label: string }) {
 }
 
 export function MailComposePresetsPanel({ accessToken }: Props) {
+  const { t } = useMailLocale();
   const [signatures, setSignatures] = useState<MailComposePreset[]>([]);
   const [templates, setTemplates] = useState<MailComposePreset[]>([]);
   const [campaignTemplates, setCampaignTemplates] = useState<MailComposePreset[]>(
@@ -83,7 +85,7 @@ export function MailComposePresetsPanel({ accessToken }: Props) {
       try {
         await reload();
       } catch {
-        setError("İmza ve şablonlar yüklenemedi.");
+        setError(t("presetsErrLoad"));
       } finally {
         setInitialLoading(false);
       }
@@ -94,14 +96,14 @@ export function MailComposePresetsPanel({ accessToken }: Props) {
     setError("");
     setStatus("");
     if (!formName.trim() || !formBody.trim()) {
-      setError("Ad ve metin zorunlu.");
+      setError(t("presetsErrNameBody"));
       return;
     }
     if (
       (formKind === "template" || formKind === "campaign") &&
       !formSubject.trim()
     ) {
-      setError("Şablon için konu zorunlu.");
+      setError(t("presetsErrSubject"));
       return;
     }
     setLoading(true);
@@ -123,9 +125,9 @@ export function MailComposePresetsPanel({ accessToken }: Props) {
       setFormBodyHtml("");
       setFormDefault(false);
       await reload();
-      setStatus("Kayıt oluşturuldu — yaz ekranından seçebilirsiniz.");
+      setStatus(t("presetsCreated"));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Kaydedilemedi.");
+      setError(err instanceof Error ? err.message : t("errGenericSave"));
     } finally {
       setLoading(false);
     }
@@ -138,9 +140,9 @@ export function MailComposePresetsPanel({ accessToken }: Props) {
         isDefault: !preset.isDefault,
       });
       await reload();
-      setStatus("Varsayılan imza güncellendi.");
+      setStatus(t("presetsDefaultUpdated"));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Güncellenemedi.");
+      setError(err instanceof Error ? err.message : t("errGenericUpdate"));
     }
   }
 
@@ -149,9 +151,9 @@ export function MailComposePresetsPanel({ accessToken }: Props) {
     try {
       await deleteComposePreset(accessToken, id);
       await reload();
-      setStatus("Kayıt silindi.");
+      setStatus(t("presetsDeleted"));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Silinemedi.");
+      setError(err instanceof Error ? err.message : t("presetsErrDelete"));
     }
   }
 
@@ -181,11 +183,11 @@ export function MailComposePresetsPanel({ accessToken }: Props) {
                 <span className="mail-presets-item-name">{item.name}</span>
                 {item.isSystem ? (
                   <span className="mail-presets-tag mail-presets-tag--system">
-                    Sistem
+                    {t("presetsTagSystem")}
                   </span>
                 ) : null}
                 {options.showDefault && item.isDefault ? (
-                  <span className="mail-accounts-badge">Varsayılan</span>
+                  <span className="mail-accounts-badge">{t("presetsTagDefault")}</span>
                 ) : null}
               </div>
               {(item.kind === "template" || item.kind === "campaign") &&
@@ -200,7 +202,7 @@ export function MailComposePresetsPanel({ accessToken }: Props) {
                   className="mail-premium-btn mail-premium-btn--ghost"
                   onClick={() => void toggleDefault(item)}
                 >
-                  {item.isDefault ? "Varsayılanı kaldır" : "Varsayılan yap"}
+                  {item.isDefault ? t("presetsUnsetDefault") : t("presetsSetDefault")}
                 </button>
               ) : null}
               {item.isSystem ? null : (
@@ -209,7 +211,7 @@ export function MailComposePresetsPanel({ accessToken }: Props) {
                   className="mail-premium-btn mail-premium-btn--danger-ghost"
                   onClick={() => void onDelete(item.id)}
                 >
-                  Sil
+                  {t("actionDelete")}
                 </button>
               )}
             </div>
@@ -236,10 +238,7 @@ export function MailComposePresetsPanel({ accessToken }: Props) {
 
   return (
     <div className="mail-presets-panel mail-presets-panel--premium">
-      <p className="mail-posta-intro">
-        Kurumsal imza ve hazır şablonlar yaz ekranında tek tıkla uygulanır. Nakliye
-        odaklı sistem şablonları tüm kullanıcılar için hazırdır.
-      </p>
+      <p className="mail-posta-intro">{t("presetsIntro")}</p>
 
       {error ? (
         <p className="mail-accounts-status mail-accounts-status--err" role="alert">
@@ -253,64 +252,64 @@ export function MailComposePresetsPanel({ accessToken }: Props) {
       ) : null}
 
       <PresetSection
-        title="İmzalar"
-        description="Kişisel imzalarınız; gönderim öncesi yaz ekranından seçilir."
+        title={t("presetsSignaturesTitle")}
+        description={t("presetsSignaturesDesc")}
       >
         {renderList(signatures, {
           showDefault: true,
-          emptyLabel: "Henüz imza eklenmedi.",
+          emptyLabel: t("presetsEmptySignatures"),
         })}
       </PresetSection>
 
       <PresetSection
-        title="Hazır şablonlar"
-        description="Nakliye ve lojistik süreçleri için yerleşik metinler."
+        title={t("presetsTemplatesTitle")}
+        description={t("presetsTemplatesDesc")}
       >
         {renderList(systemTemplates, {
           showDefault: false,
-          emptyLabel: "Sistem şablonu bulunamadı.",
+          emptyLabel: t("presetsEmptySystem"),
         })}
       </PresetSection>
 
       <PresetSection
-        title="Kurumsal şablonlar"
-        description="Posta yöneticisi ek şablon tanımlayabilir."
+        title={t("presetsOrgTitle")}
+        description={t("presetsOrgDesc")}
         muted
       >
         {renderList(orgTemplates, {
           showDefault: false,
-          emptyLabel: "Kurumsal şablon yok.",
+          emptyLabel: t("presetsEmptyOrg"),
         })}
       </PresetSection>
 
       <PresetSection
-        title="Kampanya şablonları"
-        description="Kampanya modunda yaz ekranından seçilir."
+        title={t("presetsCampaignTitle")}
+        description={t("presetsCampaignDesc")}
         muted
       >
         {renderList(campaignTemplates, {
           showDefault: false,
-          emptyLabel: "Kampanya şablonu yok.",
+          emptyLabel: t("presetsEmptyCampaign"),
         })}
       </PresetSection>
 
       <PresetSection
-        title="Yeni kayıt"
-        description="İmza, şablon veya kampanya metni oluşturun."
+        title={t("presetsNewTitle")}
+        description={t("presetsNewDesc")}
       >
         <div className="mail-presets-form">
           <div className="mail-premium-field">
-            <span className="mail-premium-field-label">Tür</span>
+            <span className="mail-premium-field-label">{t("presetsKindLabel")}</span>
             <div
               className="mail-posta-chips mail-posta-chips--equal mail-presets-kind-chips"
               role="group"
-              aria-label="Kayıt türü"
+              aria-label={t("presetsKindAria")}
             >
               {(
                 [
-                  { id: "signature" as FormKind, label: "İmza" },
-                  { id: "template" as FormKind, label: "Şablon" },
-                  { id: "campaign" as FormKind, label: "Kampanya" },
+                  { id: "signature" as FormKind, label: t("presetsKindSignature") },
+                  { id: "template" as FormKind, label: t("presetsKindTemplate") },
+                  { id: "campaign" as FormKind, label: t("presetsKindCampaign") },
                 ] as const
               ).map((opt) => (
                 <button
@@ -331,10 +330,10 @@ export function MailComposePresetsPanel({ accessToken }: Props) {
           </div>
 
           <label className="mail-premium-field">
-            <span className="mail-premium-field-label">Ad</span>
+            <span className="mail-premium-field-label">{t("presetsNameLabel")}</span>
             <input
               className="mail-premium-field-input"
-              placeholder="Örn. Kurumsal imza"
+              placeholder={t("presetsNamePlaceholder")}
               value={formName}
               onChange={(e) => setFormName(e.target.value)}
             />
@@ -342,10 +341,10 @@ export function MailComposePresetsPanel({ accessToken }: Props) {
 
           {formKind === "template" || formKind === "campaign" ? (
             <label className="mail-premium-field">
-              <span className="mail-premium-field-label">Konu</span>
+              <span className="mail-premium-field-label">{t("presetsSubjectLabel")}</span>
               <input
                 className="mail-premium-field-input"
-                placeholder="E-posta konu satırı"
+                placeholder={t("presetsSubjectPlaceholder")}
                 value={formSubject}
                 onChange={(e) => setFormSubject(e.target.value)}
               />
@@ -353,10 +352,10 @@ export function MailComposePresetsPanel({ accessToken }: Props) {
           ) : null}
 
           <label className="mail-premium-field">
-            <span className="mail-premium-field-label">Metin</span>
+            <span className="mail-premium-field-label">{t("presetsBodyLabel")}</span>
             <textarea
               className="mail-premium-field-textarea"
-              placeholder="Düz metin gövde"
+              placeholder={t("presetsBodyPlaceholder")}
               rows={4}
               value={formBody}
               onChange={(e) => setFormBody(e.target.value)}
@@ -366,11 +365,11 @@ export function MailComposePresetsPanel({ accessToken }: Props) {
           {formKind === "signature" ? (
             <label className="mail-premium-field">
               <span className="mail-premium-field-label">
-                HTML imza (isteğe bağlı)
+                {t("presetsHtmlSigLabel")}
               </span>
               <textarea
                 className="mail-premium-field-textarea mail-premium-field-textarea--mono"
-                placeholder="Logo, telefon, bağlantılar…"
+                placeholder={t("presetsHtmlSigPlaceholder")}
                 rows={5}
                 value={formBodyHtml}
                 onChange={(e) => setFormBodyHtml(e.target.value)}
@@ -381,11 +380,11 @@ export function MailComposePresetsPanel({ accessToken }: Props) {
           {formKind === "template" || formKind === "campaign" ? (
             <label className="mail-premium-field">
               <span className="mail-premium-field-label">
-                HTML gövde (isteğe bağlı)
+                {t("presetsHtmlBodyLabel")}
               </span>
               <textarea
                 className="mail-premium-field-textarea mail-premium-field-textarea--mono"
-                placeholder="Zengin metin HTML"
+                placeholder={t("presetsHtmlBodyPlaceholder")}
                 rows={5}
                 value={formBodyHtml}
                 onChange={(e) => setFormBodyHtml(e.target.value)}
@@ -405,9 +404,9 @@ export function MailComposePresetsPanel({ accessToken }: Props) {
                 <span className="mail-posta-toggle-thumb" />
               </span>
               <span className="mail-posta-toggle-text">
-                <span className="mail-posta-toggle-label">Varsayılan imza</span>
+                <span className="mail-posta-toggle-label">{t("presetsDefaultSig")}</span>
                 <span className="mail-posta-toggle-hint">
-                  Yeni mesajlarda otomatik önerilir.
+                  {t("presetsDefaultSigHint")}
                 </span>
               </span>
             </label>
@@ -419,7 +418,7 @@ export function MailComposePresetsPanel({ accessToken }: Props) {
             disabled={loading}
             onClick={() => void onCreate()}
           >
-            {loading ? "Kaydediliyor…" : "Kaydet"}
+            {loading ? t("actionSaving") : t("actionSave")}
           </button>
         </div>
       </PresetSection>

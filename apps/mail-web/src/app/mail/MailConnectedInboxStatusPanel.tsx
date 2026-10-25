@@ -1,5 +1,6 @@
 "use client";
 
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 import { useEffect, useState } from "react";
 import {
   fetchConnectedInboxStatus,
@@ -12,23 +13,20 @@ type Props = {
   canManage?: boolean;
 };
 
-const FEATURE_LABELS: Record<
-  keyof MailConnectedInboxStatus["features"],
-  string
-> = {
-  unifiedInbox: "Birleşik gelen kutusu",
-  connectedSend: "Bağlı hesaptan gönderim",
-  deepSearch: "Bulut arama",
-  draftSync: "Taslak senkronu",
-  trashSync: "Çöp / arşiv senkronu",
-  graphPush: "Microsoft anlık bildirim",
-  gmailPush: "Gmail Pub/Sub",
-};
-
 export function MailConnectedInboxStatusPanel({
   accessToken,
   canManage = false,
 }: Props) {
+  const { t } = useMailLocale();
+  const featureLabels: Record<keyof MailConnectedInboxStatus["features"], string> = {
+    unifiedInbox: t("connectedFeatUnified"),
+    connectedSend: t("connectedFeatSend"),
+    deepSearch: t("connectedFeatSearch"),
+    draftSync: t("connectedFeatDrafts"),
+    trashSync: t("connectedFeatTrash"),
+    graphPush: t("connectedFeatGraphPush"),
+    gmailPush: t("connectedFeatGmailPush"),
+  };
   const [status, setStatus] = useState<MailConnectedInboxStatus | null>(null);
   const [error, setError] = useState("");
   const [saveStatus, setSaveStatus] = useState("");
@@ -43,7 +41,7 @@ export function MailConnectedInboxStatusPanel({
         setMaxConnectedAccounts(payload.entitlement.maxConnectedAccounts);
       })
       .catch((err) =>
-        setError(err instanceof Error ? err.message : "Durum yüklenemedi"),
+        setError(err instanceof Error ? err.message : t("connectedErrLoad")),
       );
   }, [accessToken]);
 
@@ -58,30 +56,29 @@ export function MailConnectedInboxStatusPanel({
       setStatus((prev) =>
         prev ? { ...prev, entitlement: result.entitlement } : prev,
       );
-      setSaveStatus("Entitlement kaydedildi.");
+      setSaveStatus(t("connectedEntitlementSaved"));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Kaydedilemedi");
+      setError(err instanceof Error ? err.message : t("errGenericSave"));
     }
   }
 
   return (
     <section className="mail-posta-card mail-help-topic-card">
-      <h3 className="mail-help-topic-title">Bağlı gelen kutusu (CAP)</h3>
+      <h3 className="mail-help-topic-title">{t("connectedTitle")}</h3>
       <p className="mail-help-topic-desc">
-        Sunucu yapılandırması ve premium özellik bayrakları. OAuth bağlantısı
-        kurulduğunda hesaplar bu özellikleri kullanır.
+        {t("connectedDesc")}
       </p>
       {error ? (
         <p className="mail-accounts-status mail-accounts-status--err">{error}</p>
       ) : null}
       {!status && !error ? (
-        <p className="mail-accounts-muted">Yükleniyor…</p>
+        <p className="mail-accounts-muted">{t("readLoading")}</p>
       ) : null}
       {status ? (
         <>
           <ul className="mail-connected-status-grid">
             <li>
-              <span className="mail-accounts-muted">Microsoft Graph OAuth</span>
+              <span className="mail-accounts-muted">{t("connectedMsOAuth")}</span>
               <span
                 className={
                   status.exchangeConfigured
@@ -89,11 +86,11 @@ export function MailConnectedInboxStatusPanel({
                     : "mail-accounts-badge mail-accounts-badge--muted"
                 }
               >
-                {status.exchangeConfigured ? "Tanımlı" : "Eksik env"}
+                {status.exchangeConfigured ? t("connectedConfigured") : t("connectedMissingEnv")}
               </span>
             </li>
             <li>
-              <span className="mail-accounts-muted">Gmail OAuth</span>
+              <span className="mail-accounts-muted">{t("connectedGmailOAuth")}</span>
               <span
                 className={
                   status.gmailConfigured
@@ -101,20 +98,20 @@ export function MailConnectedInboxStatusPanel({
                     : "mail-accounts-badge mail-accounts-badge--muted"
                 }
               >
-                {status.gmailConfigured ? "Tanımlı" : "Eksik env"}
+                {status.gmailConfigured ? t("connectedConfigured") : t("connectedMissingEnv")}
               </span>
             </li>
             <li>
-              <span className="mail-accounts-muted">Premium</span>
+              <span className="mail-accounts-muted">{t("connectedPremium")}</span>
               <span className="mail-accounts-badge">
                 {status.entitlement.premiumEnabled
-                  ? `Açık · ${status.entitlement.connectedCount}/${status.entitlement.maxConnectedAccounts} hesap`
-                  : "Kapalı"}
+                  ? t("connectedPremiumOn", { count: status.entitlement.connectedCount, max: status.entitlement.maxConnectedAccounts })
+                  : t("stateOff")}
               </span>
             </li>
           </ul>
           <p className="mail-accounts-muted mail-connected-status-features-title">
-            Kod özellikleri
+            {t("connectedFeaturesTitle")}
           </p>
           <ul className="mail-connected-status-features">
             {(
@@ -130,7 +127,7 @@ export function MailConnectedInboxStatusPanel({
                       : "mail-connected-feature-pill"
                   }
                 >
-                  {FEATURE_LABELS[key]}
+                  {featureLabels[key]}
                 </span>
               </li>
             ))}
@@ -138,7 +135,7 @@ export function MailConnectedInboxStatusPanel({
           {canManage ? (
             <div className="mail-connected-entitlement-form">
               <p className="mail-accounts-muted mail-connected-status-features-title">
-                Yönetim (CAP entitlement)
+                {t("connectedManageTitle")}
               </p>
               <label className="mail-connected-entitlement-row">
                 <input
@@ -146,10 +143,10 @@ export function MailConnectedInboxStatusPanel({
                   checked={premiumEnabled}
                   onChange={(e) => setPremiumEnabled(e.target.checked)}
                 />
-                Premium bağlı gelen kutusu açık
+                {t("connectedPremiumToggle")}
               </label>
               <label className="mail-connected-entitlement-row">
-                <span className="mail-accounts-muted">Maks. bağlı hesap</span>
+                <span className="mail-accounts-muted">{t("connectedMaxAccounts")}</span>
                 <input
                   type="number"
                   min={0}
@@ -168,7 +165,7 @@ export function MailConnectedInboxStatusPanel({
                 className="mail-premium-btn mail-premium-btn--ghost"
                 onClick={() => void handleSaveEntitlement()}
               >
-                Kaydet
+                {t("actionSave")}
               </button>
               {saveStatus ? (
                 <p className="mail-accounts-status mail-accounts-status--ok">

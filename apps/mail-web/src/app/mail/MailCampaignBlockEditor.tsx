@@ -1,5 +1,6 @@
 "use client";
 
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 import { useCallback, useMemo, useState } from "react";
 
 type Block =
@@ -54,12 +55,27 @@ type Props = {
   label?: string;
 };
 
+function initialBlocks(t: (key: string) => string): Block[] {
+  return [
+    {
+      id: newId(),
+      type: "hero",
+      title: t("campaignBlockHeroTitle"),
+      subtitle: t("campaignBlockHeroSubtitle"),
+    },
+    { id: newId(), type: "text", body: t("campaignBlockTextDefault") },
+    {
+      id: newId(),
+      type: "button",
+      label: t("campaignBlockBtnDefault"),
+      href: "https://lerta.com.tr",
+    },
+  ];
+}
+
 export function MailCampaignBlockEditor({ html, onHtmlChange, label }: Props) {
-  const [blocks, setBlocks] = useState<Block[]>(() => [
-    { id: newId(), type: "hero", title: "Kampanya başlığı", subtitle: "Kısa özet" },
-    { id: newId(), type: "text", body: "Mesajınızı buraya yazın." },
-    { id: newId(), type: "button", label: "Detaylar", href: "https://lerta.com.tr" },
-  ]);
+  const { t } = useMailLocale();
+  const [blocks, setBlocks] = useState<Block[]>(() => initialBlocks(t));
 
   const previewHtml = useMemo(() => blocksToHtml(blocks), [blocks]);
 
@@ -81,9 +97,9 @@ export function MailCampaignBlockEditor({ html, onHtmlChange, label }: Props) {
   return (
     <div className="mail-campaign-block-editor">
       <div className="mail-campaign-block-editor-head">
-        <span className="compose-field-label">{label ?? "Görsel kampanya editörü"}</span>
+        <span className="compose-field-label">{label ?? t("campaignBlockDefaultLabel")}</span>
         <button type="button" className="compose-chip-btn" onClick={applyToCompose}>
-          HTML&apos;i compose&apos;a uygula
+          {t("campaignBlockApply")}
         </button>
       </div>
       <ul className="mail-campaign-block-list">
@@ -102,7 +118,7 @@ export function MailCampaignBlockEditor({ html, onHtmlChange, label }: Props) {
                 className="compose-chip-btn"
                 onClick={() => setBlocks(blocks.filter((b) => b.id !== block.id))}
               >
-                Sil
+                {t("actionDelete")}
               </button>
             </div>
             {block.type === "hero" ? (
@@ -115,7 +131,7 @@ export function MailCampaignBlockEditor({ html, onHtmlChange, label }: Props) {
                     (next[index] as Block & { type: "hero" }).title = e.target.value;
                     setBlocks(next);
                   }}
-                  placeholder="Başlık"
+                  placeholder={t("campaignBlockTitlePh")}
                 />
                 <input
                   className="compose-input"
@@ -125,7 +141,7 @@ export function MailCampaignBlockEditor({ html, onHtmlChange, label }: Props) {
                     (next[index] as Block & { type: "hero" }).subtitle = e.target.value;
                     setBlocks(next);
                   }}
-                  placeholder="Alt başlık"
+                  placeholder={t("campaignBlockSubtitlePh")}
                 />
               </>
             ) : null}
@@ -151,7 +167,7 @@ export function MailCampaignBlockEditor({ html, onHtmlChange, label }: Props) {
                     (next[index] as Block & { type: "button" }).label = e.target.value;
                     setBlocks(next);
                   }}
-                  placeholder="Buton metni"
+                  placeholder={t("campaignBlockBtnTextPh")}
                 />
                 <input
                   className="compose-input"
@@ -175,7 +191,7 @@ export function MailCampaignBlockEditor({ html, onHtmlChange, label }: Props) {
                     (next[index] as Block & { type: "image" }).src = e.target.value;
                     setBlocks(next);
                   }}
-                  placeholder="Görsel URL"
+                  placeholder={t("campaignBlockImageUrlPh")}
                 />
                 <input
                   className="compose-input"
@@ -185,7 +201,7 @@ export function MailCampaignBlockEditor({ html, onHtmlChange, label }: Props) {
                     (next[index] as Block & { type: "image" }).alt = e.target.value;
                     setBlocks(next);
                   }}
-                  placeholder="Alt metin"
+                  placeholder={t("campaignBlockAltPh")}
                 />
               </>
             ) : null}
@@ -198,7 +214,7 @@ export function MailCampaignBlockEditor({ html, onHtmlChange, label }: Props) {
           className="compose-chip-btn"
           onClick={() => setBlocks([...blocks, { id: newId(), type: "text", body: "" }])}
         >
-          + Metin
+          {t("campaignBlockAddText")}
         </button>
         <button
           type="button"
@@ -206,19 +222,19 @@ export function MailCampaignBlockEditor({ html, onHtmlChange, label }: Props) {
           onClick={() =>
             setBlocks([
               ...blocks,
-              { id: newId(), type: "button", label: "İncele", href: "https://" },
+              { id: newId(), type: "button", label: t("campaignBlockBtnExplore"), href: "https://" },
             ])
           }
         >
-          + Buton
+          {t("campaignBlockAddButton")}
         </button>
       </div>
       {html.trim() ? (
-        <p className="compose-attach-hint">Compose HTML uzunluğu: {html.length} karakter</p>
+        <p className="compose-attach-hint">{t("campaignBlockHtmlLen", { count: html.length })}</p>
       ) : null}
       <div
         className="mail-campaign-block-preview"
-        aria-label="Kampanya önizleme"
+        aria-label={t("campaignBlockPreviewAria")}
         dangerouslySetInnerHTML={{ __html: previewHtml }}
       />
     </div>

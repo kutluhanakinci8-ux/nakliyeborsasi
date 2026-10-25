@@ -1,5 +1,6 @@
 "use client";
 
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 import { useCallback, useEffect, useState } from "react";
 import {
   createContactCardDavAccount,
@@ -21,6 +22,7 @@ export function MailContactsCardDavPanel({
   onToast,
   onSynced,
 }: Props) {
+  const { t, localeTag } = useMailLocale();
   const [accounts, setAccounts] = useState<MailContactCardDavAccount[]>([]);
   const [label, setLabel] = useState("");
   const [addressbookUrl, setAddressbookUrl] = useState("");
@@ -34,7 +36,7 @@ export function MailContactsCardDavPanel({
       setAccounts(data.accounts);
     } catch (error) {
       onToast(
-        error instanceof Error ? error.message : "CardDAV hesapları yüklenemedi.",
+        error instanceof Error ? error.message : t("cardDavErrLoad"),
       );
     }
   }, [accessToken, onToast]);
@@ -46,7 +48,7 @@ export function MailContactsCardDavPanel({
   return (
     <section className="mail-cal-section-card mail-contacts-carddav">
       <div className="mail-cal-section-head">
-        <h2>CardDAV adres defteri</h2>
+        <h2>{t("cardDavTitle")}</h2>
         {accounts.some((a) => a.enabled) ? (
           <button
             type="button"
@@ -57,16 +59,14 @@ export function MailContactsCardDavPanel({
                 setSyncingAll(true);
                 try {
                   const r = await syncAllContactCardDavAccounts(accessToken);
-                  onToast(
-                    `CardDAV: ${r.succeeded}/${r.accounts} hesap · ${r.imported} yeni, ${r.updated} güncel${r.failed ? ` · ${r.failed} hata` : ""}.`,
-                  );
+                  onToast(t("cardDavSyncToast", { succeeded: r.succeeded, accounts: r.accounts, imported: r.imported, updated: r.updated, failedPart: r.failed ? t("cardDavFailedPart", { failed: r.failed }) : "" }));
                   void load();
                   onSynced();
                 } catch (error) {
                   onToast(
                     error instanceof Error
                       ? error.message
-                      : "Toplu senkron başarısız.",
+                      : t("cardDavSyncAllFailed"),
                   );
                   void load();
                 } finally {
@@ -75,50 +75,45 @@ export function MailContactsCardDavPanel({
               })()
             }
           >
-            {syncingAll ? "Senkronize ediliyor…" : "Tümünü çek"}
+            {syncingAll ? t("cardDavSyncing") : t("cardDavSyncAll")}
           </button>
         ) : null}
       </div>
-      <p className="mail-cal-section-hint">
-        Nextcloud{" "}
-        <code>…/addressbooks/kullanici/kişisel/</code> gibi HTTPS koleksiyon
-        URL’si. Kişi kartlarından <strong>CardDAV</strong> ile yerel kayıt
-        sunucuya gönderilir.
-      </p>
+      <p className="mail-cal-section-hint">{t("cardDavHint")}</p>
       <div className="mail-cal-form-grid mail-cal-form-grid--compact">
         <label className="mail-cal-field">
-          <span className="mail-cal-field-label">Ad</span>
+          <span className="mail-cal-field-label">{t("cardDavLabel")}</span>
           <input
             className="mail-cal-input"
-            placeholder="ör. Nextcloud iş"
+            placeholder={t("cardDavLabelPlaceholder")}
             value={label}
             onChange={(e) => setLabel(e.target.value)}
           />
         </label>
         <label className="mail-cal-field mail-cal-field--full">
-          <span className="mail-cal-field-label">Adres defteri URL</span>
+          <span className="mail-cal-field-label">{t("cardDavUrlLabel")}</span>
           <input
             className="mail-cal-input"
-            placeholder="https://…/addressbooks/…/"
+            placeholder={t("cardDavUrlPlaceholder")}
             value={addressbookUrl}
             onChange={(e) => setAddressbookUrl(e.target.value)}
           />
         </label>
         <label className="mail-cal-field">
-          <span className="mail-cal-field-label">Kullanıcı</span>
+          <span className="mail-cal-field-label">{t("cardDavUserLabel")}</span>
           <input
             className="mail-cal-input"
-            placeholder="Kullanıcı adı"
+            placeholder={t("cardDavUserPlaceholder")}
             value={username}
             onChange={(e) => setUsername(e.target.value)}
           />
         </label>
         <label className="mail-cal-field">
-          <span className="mail-cal-field-label">Şifre</span>
+          <span className="mail-cal-field-label">{t("cardDavPasswordLabel")}</span>
           <input
             className="mail-cal-input"
             type="password"
-            placeholder="Şifre"
+            placeholder={t("cardDavPasswordPlaceholder")}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
@@ -135,7 +130,7 @@ export function MailContactsCardDavPanel({
                   !username.trim() ||
                   !password
                 ) {
-                  onToast("Tüm alanlar gerekli.");
+                  onToast(t("cardDavErrAllFields"));
                   return;
                 }
                 try {
@@ -149,17 +144,17 @@ export function MailContactsCardDavPanel({
                   setAddressbookUrl("");
                   setUsername("");
                   setPassword("");
-                  onToast("CardDAV hesabı eklendi.");
+                  onToast(t("cardDavAdded"));
                   void load();
                 } catch (error) {
                   onToast(
-                    error instanceof Error ? error.message : "Eklenemedi.",
+                    error instanceof Error ? error.message : t("cardDavErrAdd"),
                   );
                 }
               })()
             }
           >
-            Bağla
+            {t("cardDavConnect")}
           </button>
         </div>
       </div>
@@ -169,12 +164,12 @@ export function MailContactsCardDavPanel({
             <div>
               <strong>{a.label}</strong>
               <div className="mail-d6-meta">
-                {a.username} · {a.writeEnabled ? "yazma açık" : "yalnızca okuma"}
+                {a.username} · {a.writeEnabled ? t("cardDavWriteOn") : t("cardDavReadOnly")}
                 <br />
                 {a.lastSyncedAt
-                  ? `Son senkron: ${new Date(a.lastSyncedAt).toLocaleString("tr-TR")}`
-                  : "Henüz senkron yok"}
-                {a.lastSyncError ? ` · Hata: ${a.lastSyncError}` : ""}
+                  ? t("cardDavLastSync", { when: new Date(a.lastSyncedAt).toLocaleString(localeTag) })
+                  : t("cardDavNeverSync")}
+                {a.lastSyncError ? t("cardDavSyncError", { error: a.lastSyncError }) : ""}
               </div>
             </div>
             <span className="mail-cal-event-actions">
@@ -184,9 +179,7 @@ export function MailContactsCardDavPanel({
                 onClick={() =>
                   void syncContactCardDavAccount(accessToken, a.id)
                     .then((r) => {
-                      onToast(
-                        `Senkron: ${r.imported} yeni, ${r.updated} güncel, ${r.removed} kaldırıldı.`,
-                      );
+                      onToast(t("cardDavSyncRow", { imported: r.imported, updated: r.updated, removed: r.removed }));
                       void load();
                       onSynced();
                     })
@@ -194,13 +187,13 @@ export function MailContactsCardDavPanel({
                       onToast(
                         err instanceof Error
                           ? err.message
-                          : "Senkron başarısız.",
+                          : t("cardDavSyncFailed"),
                       );
                       void load();
                     })
                 }
               >
-                Çek
+                {t("cardDavPull")}
               </button>
               <button
                 type="button"
@@ -208,24 +201,24 @@ export function MailContactsCardDavPanel({
                 onClick={() =>
                   void deleteContactCardDavAccount(accessToken, a.id)
                     .then(() => {
-                      onToast("Hesap silindi.");
+                      onToast(t("cardDavAccountDeleted"));
                       void load();
                       onSynced();
                     })
                     .catch((err: unknown) => {
                       onToast(
-                        err instanceof Error ? err.message : "Silinemedi.",
+                        err instanceof Error ? err.message : t("presetsErrDelete"),
                       );
                     })
                 }
               >
-                Sil
+                {t("actionDelete")}
               </button>
             </span>
           </li>
         ))}
         {accounts.length === 0 ? (
-          <li className="mail-cal-feed-empty">CardDAV hesabı yok.</li>
+          <li className="mail-cal-feed-empty">{t("cardDavEmpty")}</li>
         ) : null}
       </ul>
     </section>
