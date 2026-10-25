@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /login
+Disallow: /mail
+Disallow: /api
