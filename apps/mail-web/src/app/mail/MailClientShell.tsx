@@ -177,6 +177,7 @@ export function MailClientShell({ mail }: Props) {
     runBulkRestoreFromTrash,
     runEmptyTrash,
     refresh,
+    refreshWithConnectedSync,
     refreshCustomFolders,
     refreshDrafts,
     reLogin,
@@ -993,7 +994,11 @@ export function MailClientShell({ mail }: Props) {
                   Çöpü boşalt
                 </button>
               ) : null}
-              <button type="button" className="mail-toolbar-btn" onClick={() => void refresh()}>
+              <button
+                type="button"
+                className="mail-toolbar-btn"
+                onClick={() => void refreshWithConnectedSync()}
+              >
                 Yenile
               </button>
               <button

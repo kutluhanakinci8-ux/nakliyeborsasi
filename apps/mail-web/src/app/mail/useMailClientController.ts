@@ -86,6 +86,8 @@ import {
   refreshInboxAiFocus,
   type MailInboxBranding,
   searchInbox,
+  syncAllExchangeAccounts,
+  syncAllGmailAccounts,
   importConnectedSearchMessage,
   type MailConnectedExternalSearchHit,
   sendDraft,
@@ -530,6 +532,38 @@ export function useMailClientController({
       throw error;
     }
   }, [accessToken, view, inboxCustomFolderId, inboxConnectedSourceForFetch]);
+
+  const refreshWithConnectedSync = useCallback(async () => {
+    if (!accessToken) {
+      return;
+    }
+    const folderViews: MailInboxFolder[] = [
+      "inbox",
+      "sent",
+      "archive",
+      "trash",
+      "spam",
+      "all",
+    ];
+    const shouldPullFromProviders = folderViews.includes(
+      inboxFolderForView(view),
+    );
+    const hasGmail = connectedAccounts.some((a) => a.provider === "gmail_api");
+    const hasExchange = connectedAccounts.some(
+      (a) => a.provider === "microsoft_graph",
+    );
+    if (shouldPullFromProviders && (hasGmail || hasExchange)) {
+      await Promise.all([
+        hasGmail
+          ? syncAllGmailAccounts(accessToken).catch(() => undefined)
+          : Promise.resolve(),
+        hasExchange
+          ? syncAllExchangeAccounts(accessToken).catch(() => undefined)
+          : Promise.resolve(),
+      ]);
+    }
+    await refresh();
+  }, [accessToken, connectedAccounts, refresh, view]);
 
   const aiFocusBatchRef = useRef(false);
   useEffect(() => {
@@ -2870,6 +2904,7 @@ export function useMailClientController({
     runBulkRestoreFromTrash,
     runEmptyTrash,
     refresh,
+    refreshWithConnectedSync,
     refreshCustomFolders,
     refreshDrafts,
     reLogin,
