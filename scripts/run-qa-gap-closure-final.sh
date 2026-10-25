@@ -32,13 +32,13 @@ step() {
 
 echo "== QA gap closure FINAL (${STAMP}) =="
 
-step faz7 npm run qa:faz7 --prefix "${ROOT}"
-step faz8 npm run qa:faz8 --prefix "${ROOT}"
-step faz9 npm run qa:faz9 --prefix "${ROOT}"
-step faz9b bash "${ROOT}/scripts/run-faz9b-pre-signoff-assist.sh"
+step faz7 "Faz 7 pentest" npm run qa:faz7 --prefix "${ROOT}"
+step faz8 "Faz 8 compliance" npm run qa:faz8 --prefix "${ROOT}"
+step faz9 "Faz 9 UAT signoff" npm run qa:faz9 --prefix "${ROOT}"
+step faz9b "Faz 9b assist" bash "${ROOT}/scripts/run-faz9b-pre-signoff-assist.sh"
 
 if [[ "${QA_CLOSURE_STRICT:-0}" == "1" ]]; then
-  step customer_ready env STRICT_CUSTOMER_READY=1 MAIL_INBOUND_PTR_SOFT=1 MAIL_BILLING_PILOT_FREE=1 \
+  step customer_ready "Customer-ready STRICT" env STRICT_CUSTOMER_READY=1 MAIL_INBOUND_PTR_SOFT=1 MAIL_BILLING_PILOT_FREE=1 \
     NPM_AUDIT_ALLOW_NEXT_CRITICAL=1 npm run customer-ready --prefix "${ROOT}"
 else
   echo ""
