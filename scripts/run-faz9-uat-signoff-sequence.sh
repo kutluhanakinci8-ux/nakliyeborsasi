@@ -143,12 +143,12 @@ if [[ "${auto_ok}" -eq 0 ]]; then
   exit 1
 fi
 
-pending=0
+pending_count=0
 for k in "${m_thunderbird}" "${m_apple_mail}" "${m_delivery_inbox}"; do
-  [[ "${k}" == PENDING_SIGNATURE ]] && pending=1
+  [[ "${k}" == PENDING_SIGNATURE ]] && pending_count=$((pending_count + 1))
 done
-if [[ "${pending}" -eq 1 ]]; then
-  echo "run-faz9-uat-signoff-sequence: PASS_AUTO (müşteri imzası bekleniyor — ${pending} madde)"
+if [[ "${pending_count}" -gt 0 ]]; then
+  echo "run-faz9-uat-signoff-sequence: PASS_AUTO (müşteri imzası bekleniyor — ${pending_count} madde)"
   exit 0
 fi
 echo "run-faz9-uat-signoff-sequence: PASS_FULL"
