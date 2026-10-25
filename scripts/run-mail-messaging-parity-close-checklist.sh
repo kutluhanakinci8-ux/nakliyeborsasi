@@ -70,7 +70,7 @@ fi
 
 if [[ -f /etc/dovecot/conf.d/99-lerta-mail.conf ]] && [[ -x "${ROOT}/scripts/smoke-imap-gold.sh" ]]; then
   run_step "IMAP gold smoke" \
-    env IMAP_GOLD_EMAIL="${IMAP_GOLD_EMAIL:-${PARITY_IMAP_TEST_EMAIL:-nakliyeborsasi@lerta.com.tr}}" \
+    env IMAP_GOLD_EMAIL="${IMAP_GOLD_EMAIL:-${PARITY_IMAP_TEST_EMAIL:-$(bash "${ROOT}/scripts/resolve-parity-imap-test-email.sh")}}" \
     IMAP_GOLD_PASSWORD="${IMAP_GOLD_PASSWORD:-}" \
     INSTALL_DIR="${INSTALL_DIR:-${ROOT}}" \
     bash "${ROOT}/scripts/smoke-imap-gold.sh"

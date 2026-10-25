@@ -4,7 +4,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 INSTALL_DIR="${INSTALL_DIR:-${ROOT}}"
-EMAIL="${PARITY_IMAP_TEST_EMAIL:-${IMAP_GOLD_EMAIL:-nakliyeborsasi@lerta.com.tr}}"
+EMAIL="${PARITY_IMAP_TEST_EMAIL:-${IMAP_GOLD_EMAIL:-$(bash "${ROOT}/scripts/resolve-parity-imap-test-email.sh")}}"
 ENV_FILE="${ENV_FILE:-${INSTALL_DIR}/.env}"
 
 if [[ ! -f /etc/dovecot/conf.d/99-lerta-mail.conf ]]; then
@@ -18,6 +18,10 @@ run_smoke() {
 }
 
 echo "=== IMAP gold smoke (deploy) — ${EMAIL} ==="
+if [[ -x "${ROOT}/scripts/provision-pm5-imap-dovecot-vps.sh" ]]; then
+  INSTALL_DIR="${INSTALL_DIR}" ENV_FILE="${ENV_FILE}" \
+    bash "${ROOT}/scripts/provision-pm5-imap-dovecot-vps.sh" >/dev/null || true
+fi
 if run_smoke; then
   echo "OK: IMAP gold smoke (deploy)"
   exit 0
