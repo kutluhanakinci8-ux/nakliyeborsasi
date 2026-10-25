@@ -8229,6 +8229,43 @@ html[data-mail-read-font="large"] .mail-html-frame {
   color: var(--text-secondary, #475569);
 }
 
+.mail-reply-quote-preview-body--html .mail-reply-draft {
+  margin-bottom: 0.65rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--text-primary, #0f172a);
+}
+
+.mail-reply-quote-preview-body--html .mail-reply-quote-wrap {
+  margin-top: 0.35rem;
+}
+
+.mail-reply-quote-preview-body--html .mail-reply-quote-attribution {
+  margin: 0 0 0.35rem;
+  font-size: 0.72rem;
+  color: var(--text-muted, #64748b);
+}
+
+.mail-reply-quote-preview-body--html .mail-reply-quote-block {
+  margin: 0;
+  padding: 0.5rem 0.75rem 0.5rem 0.85rem;
+  border-left: 3px solid var(--mail-quote-border, #94a3b8);
+  background: var(--mail-quote-bg, rgba(148, 163, 184, 0.08));
+  color: var(--text-secondary, #475569);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.mail-reply-quote-preview-body--html .mail-reply-quote-original-html {
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.mail-reply-quote-preview-body--html .mail-reply-quote-original-html img {
+  max-width: 100%;
+  height: auto;
+}
+
 .mail-deliverability-engagement-map {
   margin-top: 1rem;
   display: grid;

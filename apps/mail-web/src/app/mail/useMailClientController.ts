@@ -135,6 +135,7 @@ export type MailClientController = ReturnType<typeof useMailClientController>;
 
 type Params = {
   accessToken: string | null;
+  sessionReady: boolean;
   logout: () => void;
   router: AppRouterInstance;
   searchParams: ReadonlyURLSearchParams;
@@ -203,6 +204,7 @@ function composeSendAsKeyFromDraft(draft: MailDraftItem): string {
 
 export function useMailClientController({
   accessToken,
+  sessionReady,
   logout,
   router,
   searchParams,
@@ -604,6 +606,9 @@ export function useMailClientController({
   }, [accessToken]);
 
   useEffect(() => {
+    if (!sessionReady) {
+      return;
+    }
     if (!accessToken) {
       router.replace("/login");
       return;
@@ -623,7 +628,14 @@ export function useMailClientController({
     void fetchWebAuthnCredentials(accessToken)
       .then((data) => setHasWebAuthnPasskeys(data.hasPasskeys))
       .catch(() => setHasWebAuthnPasskeys(false));
-  }, [accessToken, refresh, refreshDrafts, refreshCustomFolders, router]);
+  }, [
+    accessToken,
+    sessionReady,
+    refresh,
+    refreshDrafts,
+    refreshCustomFolders,
+    router,
+  ]);
 
   useEffect(() => {
     if (accessToken && view === "drafts") {
@@ -2344,10 +2356,11 @@ export function useMailClientController({
       }
       const nextId = listMessageIds[nextIndex];
       if (nextId) {
+        checkboxAnchorRef.current = nextId;
         void openMessage(nextId);
       }
     },
-    [listNavigationEnabled, listMessageIds, selectedId],
+    [listNavigationEnabled, listMessageIds, selectedId, openMessage],
   );
 
   const allListSelected =
@@ -2614,7 +2627,11 @@ export function useMailClientController({
   }
 
   useMailKeyboardShortcuts({
-    enabled: Boolean(accessToken) && !composeOpen,
+    enabled:
+      Boolean(accessToken) &&
+      !composeOpen &&
+      !settingsOpen &&
+      !shortcutsOpen,
     onCompose: () => {
       resetCompose();
       setComposeOpen(true);

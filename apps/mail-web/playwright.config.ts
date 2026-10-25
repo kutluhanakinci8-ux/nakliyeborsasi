@@ -24,7 +24,7 @@ export default defineConfig({
     : {
         command: "npm run start -w @lerta/mail-web",
         url: baseURL,
-        reuseExistingServer: !process.env.CI,
+        reuseExistingServer: false,
         timeout: 120_000,
       },
 });

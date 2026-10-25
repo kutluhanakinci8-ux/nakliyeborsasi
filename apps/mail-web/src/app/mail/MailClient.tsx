@@ -9,7 +9,7 @@ import { MailClientShell } from "./MailClientShell";
 export function MailClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { accessToken, logout } = useMailSession();
+  const { accessToken, sessionReady, logout } = useMailSession();
   const { t } = useMailLocale();
   const embedMode =
     searchParams.get("embed") === "1" || searchParams.get("embedded") === "1";
@@ -18,6 +18,7 @@ export function MailClient() {
 
   const mail = useMailClientController({
     accessToken,
+    sessionReady,
     logout,
     router,
     searchParams,

@@ -1,50 +1,54 @@
+"use client";
+
+import { useMailLocale } from "@/lib/MailLocaleProvider";
+
 type Props = {
   onClose: () => void;
 };
 
-const ROWS = [
-  { keys: "c", action: "Yeni mesaj (Yaz)" },
-  { keys: "r", action: "Yanıtla (mesaj açıkken)" },
-  { keys: "a", action: "Tümüne yanıtla (mesaj açıkken)" },
-  { keys: "z", action: "1 saat ertele (mesaj açıkken)" },
-  { keys: "/", action: "Arama kutusuna odaklan" },
-  { keys: "e", action: "Arşivle (mesaj açıkken)" },
-  { keys: "#", action: "Çöpe taşı (mesaj açıkken)" },
-  { keys: "u", action: "Okunmadı işaretle (mesaj açıkken)" },
-  { keys: "f", action: "İlet (mesaj açıkken)" },
-  { keys: "s", action: "Yıldızla / yıldızı kaldır (mesaj açıkken)" },
-  { keys: "j / k", action: "Sonraki / önceki mesaj (liste)" },
-  { keys: "Shift+tık", action: "Aralık seçimi (onay kutusu)" },
-  { keys: "?", action: "Bu yardım penceresi" },
-  { keys: "Esc", action: "Yaz penceresini / yardımı kapat" },
-];
+const ROW_KEYS = [
+  { keys: "c", actionKey: "shortcutCompose" },
+  { keys: "r", actionKey: "shortcutReply" },
+  { keys: "a", actionKey: "shortcutReplyAll" },
+  { keys: "z", actionKey: "shortcutSnooze" },
+  { keys: "/", actionKey: "shortcutSearch" },
+  { keys: "e", actionKey: "shortcutArchive" },
+  { keys: "#", actionKey: "shortcutTrash" },
+  { keys: "u", actionKey: "shortcutUnread" },
+  { keys: "f", actionKey: "shortcutForward" },
+  { keys: "s", actionKey: "shortcutStar" },
+  { keys: "j / k", actionKey: "shortcutListNav" },
+  { keys: "Shift+click", actionKey: "shortcutRangeSelect" },
+  { keys: "?", actionKey: "shortcutHelp" },
+  { keys: "Esc", actionKey: "shortcutEscape" },
+] as const;
 
 export function MailShortcutsDialog({ onClose }: Props) {
+  const { t } = useMailLocale();
+
   return (
-    <div
-      className="compose-overlay"
-      role="presentation"
-      onClick={onClose}
-    >
+    <div className="compose-overlay" role="presentation" onClick={onClose}>
       <div
         className="compose-dialog mail-shortcuts-dialog"
         role="dialog"
         aria-labelledby="shortcuts-title"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 id="shortcuts-title">Klavye kısayolları</h2>
+        <h2 id="shortcuts-title">{t("shortcutsTitle")}</h2>
         <table className="mail-shortcuts-table">
           <tbody>
-            {ROWS.map((row) => (
+            {ROW_KEYS.map((row) => (
               <tr key={row.keys}>
-                <td><kbd>{row.keys}</kbd></td>
-                <td>{row.action}</td>
+                <td>
+                  <kbd>{row.keys}</kbd>
+                </td>
+                <td>{t(row.actionKey)}</td>
               </tr>
             ))}
           </tbody>
         </table>
         <div className="compose-actions">
-          <button type="button" onClick={onClose}>Kapat</button>
+          <button type="button" onClick={onClose}>{t("shortcutsClose")}</button>
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import type { MailReplyQuoteMode } from "@/lib/mailApi";
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 import {
   buildReplyQuotePreviewHtml,
   type ReplyQuotePreviewSource,
@@ -13,19 +14,32 @@ type Props = {
 };
 
 export function MailReplyQuotePreview({ source, mode, draftText }: Props) {
+  const { locale, t } = useMailLocale();
   const draftHtml = draftText.trim()
     ? draftText.trim().replace(/\n/g, "<br/>")
     : "";
-  const previewHtml = buildReplyQuotePreviewHtml(source, mode, draftHtml);
+  const previewLocale = locale === "en" ? "en-GB" : "tr-TR";
+  const previewHtml = buildReplyQuotePreviewHtml(source, mode, draftHtml, {
+    locale: previewLocale,
+  });
   if (!previewHtml.trim()) {
     return null;
   }
   return (
-    <div className="mail-reply-quote-preview" aria-label="Yanıt alıntı önizleme">
+    <div
+      className="mail-reply-quote-preview"
+      aria-label={t("replyQuotePreviewAria")}
+    >
       <div className="mail-reply-quote-preview-head">
-        <span className="mail-reply-quote-preview-label">Gönderim önizleme (WYSIWYG)</span>
+        <span className="mail-reply-quote-preview-label">
+          {t("replyQuotePreviewLabel")}
+        </span>
         <span className="mail-reply-quote-preview-mode">
-          {mode === "full" ? "Tam alıntı" : mode === "trimmed" ? "Kısa alıntı" : ""}
+          {mode === "full"
+            ? t("replyQuoteModeFull")
+            : mode === "trimmed"
+              ? t("replyQuoteModeTrimmed")
+              : ""}
         </span>
       </div>
       <div

@@ -124,6 +124,10 @@ export function resolveInitialLocaleFromUrl(): MailUiLocale | null {
   return null;
 }
 
+export function resolveInitialMailUiLocale(): MailUiLocale {
+  return resolveInitialLocaleFromUrl() ?? readMailUiLocale();
+}
+
 export function t(
   key: string,
   locale: MailUiLocale,

@@ -4,15 +4,28 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
 } from "react";
 
 const STORAGE_KEY = "lerta_mail_access_token";
 
+function readStoredAccessToken(): string | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  try {
+    return localStorage.getItem(STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
 type SessionContextValue = {
   accessToken: string | null;
+  /** localStorage oturum okuması tamamlandı (ilk paint öncesi). */
+  sessionReady: boolean;
   setAccessToken: (token: string | null) => void;
   logout: () => void;
 };
@@ -21,13 +34,11 @@ const SessionContext = createContext<SessionContextValue | null>(null);
 
 export function MailSessionProvider({ children }: { children: React.ReactNode }) {
   const [accessToken, setTokenState] = useState<string | null>(null);
+  const [sessionReady, setSessionReady] = useState(false);
 
-  useEffect(() => {
-    try {
-      setTokenState(localStorage.getItem(STORAGE_KEY));
-    } catch {
-      setTokenState(null);
-    }
+  useLayoutEffect(() => {
+    setTokenState(readStoredAccessToken());
+    setSessionReady(true);
   }, []);
 
   const setAccessToken = useCallback((token: string | null) => {
@@ -46,8 +57,8 @@ export function MailSessionProvider({ children }: { children: React.ReactNode })
   const logout = useCallback(() => setAccessToken(null), [setAccessToken]);
 
   const value = useMemo(
-    () => ({ accessToken, setAccessToken, logout }),
-    [accessToken, setAccessToken, logout],
+    () => ({ accessToken, sessionReady, setAccessToken, logout }),
+    [accessToken, sessionReady, setAccessToken, logout],
   );
 
   return (

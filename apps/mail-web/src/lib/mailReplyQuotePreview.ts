@@ -26,15 +26,23 @@ function plainBody(source: ReplyQuotePreviewSource): string {
   );
 }
 
+function quoteAttributionLine(
+  source: ReplyQuotePreviewSource,
+  locale = "tr-TR",
+): string {
+  const date = new Date(source.receivedAt).toLocaleString(locale);
+  return `--- ${date} tarihinde ${source.fromAddress} yazdı ---`;
+}
+
 /** İstemci yanıt alıntısı önizleme (sunucu buildReplyQuoteBlock ile uyumlu). */
 export function buildReplyQuotePreview(
   source: ReplyQuotePreviewSource,
   mode: MailReplyQuoteMode,
+  locale = "tr-TR",
 ): string {
   if (mode === "none") {
     return "";
   }
-  const date = new Date(source.receivedAt).toLocaleString("tr-TR");
   let body = plainBody(source) || "(İçerik yok)";
   if (mode === "trimmed" && body.length > 480) {
     body = `${body.slice(0, 480).trim()}…`;
@@ -42,11 +50,14 @@ export function buildReplyQuotePreview(
   const quotedLines = body
     .split("\n")
     .map((line) => (line.trim().length > 0 ? `> ${line}` : ">"));
-  return [
-    "",
-    `--- ${date} tarihinde ${source.fromAddress} yazdı ---`,
-    ...quotedLines,
-  ].join("\n");
+  return ["", quoteAttributionLine(source, locale), ...quotedLines].join("\n");
+}
+
+function quoteBodyHtmlFromPlain(body: string): string {
+  return body
+    .split("\n")
+    .map((line) => escapeHtml(line))
+    .join("<br/>");
 }
 
 /** Outlook tarzı HTML alıntı önizleme (compose WYSIWYG). */
@@ -54,19 +65,31 @@ export function buildReplyQuotePreviewHtml(
   source: ReplyQuotePreviewSource,
   mode: MailReplyQuoteMode,
   draftHtml?: string,
+  options?: { locale?: string },
 ): string {
-  const plain = buildReplyQuotePreview(source, mode);
-  if (!plain.trim()) {
+  if (mode === "none") {
     return draftHtml?.trim() ?? "";
   }
-  const quotedHtml = plain
-    .split("\n")
-    .map((line) => escapeHtml(line))
-    .join("<br/>");
+
+  const locale = options?.locale ?? "tr-TR";
+  const attribution = escapeHtml(quoteAttributionLine(source, locale));
   const draftBlock = draftHtml?.trim()
     ? `<div class="mail-reply-draft">${draftHtml}</div>`
     : "";
-  return `${draftBlock}<blockquote class="mail-reply-quote-block" style="margin:12px 0 0;padding:8px 12px;border-left:3px solid #94a3b8;color:#475569;font-family:system-ui,sans-serif;font-size:14px;line-height:1.45">${quotedHtml}</blockquote>`;
+
+  let quotedInner: string;
+  const htmlSource = source.bodyHtml?.trim();
+  if (mode === "full" && htmlSource) {
+    quotedInner = `<div class="mail-reply-quote-original-html">${htmlSource}</div>`;
+  } else {
+    let body = plainBody(source) || "(İçerik yok)";
+    if (mode === "trimmed" && body.length > 480) {
+      body = `${body.slice(0, 480).trim()}…`;
+    }
+    quotedInner = quoteBodyHtmlFromPlain(body);
+  }
+
+  return `${draftBlock}<div class="mail-reply-quote-wrap"><p class="mail-reply-quote-attribution">${attribution}</p><blockquote class="mail-reply-quote-block">${quotedInner}</blockquote></div>`;
 }
 
 function escapeHtml(value: string): string {

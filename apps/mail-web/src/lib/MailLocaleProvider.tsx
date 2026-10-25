@@ -4,7 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -15,8 +15,7 @@ import {
   persistMailTimeZone,
   persistMailUiLocale,
   readMailTimeZone,
-  readMailUiLocale,
-  resolveInitialLocaleFromUrl,
+  resolveInitialMailUiLocale,
   t,
   type MailTimeZoneId,
   type MailUiLocale,
@@ -39,9 +38,8 @@ export function MailLocaleProvider({ children }: { children: ReactNode }) {
   const [timeZone, setTimeZoneState] =
     useState<MailTimeZoneId>("Europe/Istanbul");
 
-  useEffect(() => {
-    const fromUrl = resolveInitialLocaleFromUrl();
-    const initial = fromUrl ?? readMailUiLocale();
+  useLayoutEffect(() => {
+    const initial = resolveInitialMailUiLocale();
     setLocaleState(initial);
     persistMailUiLocale(initial);
     setTimeZoneState(readMailTimeZone());

@@ -11,7 +11,7 @@ test.describe("Lerta Posta login", () => {
     await page.goto("/login");
     await page.getByRole("button", { name: "English" }).click();
     await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
-    await expect(page.getByLabel("Email")).toBeVisible();
+    await expect(page.getByRole("textbox", { name: "Email" })).toBeVisible();
   });
 
   test("EN login via ?lang=en", async ({ page }) => {
