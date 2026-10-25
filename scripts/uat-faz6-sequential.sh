@@ -11,6 +11,7 @@ REPORT="${UAT_FAZ6_REPORT:-${ROOT}/docs/reports/UAT_FAZ6_SEQUENTIAL.json}"
 STAMP="$(TZ=Europe/Istanbul date -Iseconds)"
 
 m1="SKIP"
+m2="SKIP"
 m3="SKIP"
 m4="SKIP"
 m9="SKIP"
@@ -39,14 +40,40 @@ else
 fi
 
 echo ""
-echo "—— M3/M4 OAuth env ——"
-if bash "${ROOT}/scripts/verify-uat-oauth-env.sh"; then
-  m3="PASS_ENV"
-  m4="PASS_ENV"
+echo "—— M2 Outlook mobil IMAP (sunucu) ——"
+set +e
+rc_m2=0
+if [[ -x "${ROOT}/scripts/verify-uat-m2-outlook-mobile-imap.sh" ]]; then
+  INSTALL_DIR="${INSTALL_DIR:-${ROOT}}" ENV_FILE="${ENV_FILE}" \
+    bash "${ROOT}/scripts/verify-uat-m2-outlook-mobile-imap.sh"
+  rc_m2=$?
+fi
+set -e
+if [[ "${rc_m2}" -eq 0 ]]; then
+  m2="PASS_SERVER"
+  notes+=("M2: Outlook mobil kurulum manuel — help/imap#outlook-mobile")
+elif [[ "${rc_m2}" -eq 2 ]]; then
+  m2="WARN_SERVER"
+  notes+=("M2: sunucu uyarıları var; mobil smoke manuel")
 else
-  m3="MISSING_ENV"
-  m4="MISSING_ENV"
-  notes+=("M3/M4: VPS .env Graph + Google — MAIL_PRELAUNCH gate P0-1/P0-2")
+  m2="FAIL"
+fi
+
+echo ""
+echo "—— M3/M4 OAuth env (en sona bırakılabilir) ——"
+if [[ "${UAT_DEFER_OAUTH:-1}" == "1" ]]; then
+  m3="DEFERRED"
+  m4="DEFERRED"
+  notes+=("M3/M4: UAT_DEFER_OAUTH=1 — MAIL_OAUTH_VPS_SETUP.md en sonda")
+else
+  if bash "${ROOT}/scripts/verify-uat-oauth-env.sh"; then
+    m3="PASS_ENV"
+    m4="PASS_ENV"
+  else
+    m3="MISSING_ENV"
+    m4="MISSING_ENV"
+    notes+=("M3/M4: VPS .env Graph + Google — MAIL_PRELAUNCH gate P0-1/P0-2")
+  fi
 fi
 
 echo ""
@@ -67,10 +94,12 @@ echo ""
 echo "—— M6/M10 preflight ——"
 bash "${ROOT}/scripts/uat-premium-preflight.sh" 2>/dev/null | grep '^MANUAL:' || true
 
-export UAT_FAZ6_NOTES_JSON UAT_FAZ6_REPORT_PATH UAT_FAZ6_STAMP UAT_FAZ6_M1 UAT_FAZ6_M3 UAT_FAZ6_M4 UAT_FAZ6_M9
+export UAT_FAZ6_NOTES_JSON UAT_FAZ6_REPORT_PATH UAT_FAZ6_STAMP
+export UAT_FAZ6_M1 UAT_FAZ6_M2 UAT_FAZ6_M3 UAT_FAZ6_M4 UAT_FAZ6_M9
 UAT_FAZ6_REPORT_PATH="${REPORT}"
 UAT_FAZ6_STAMP="${STAMP}"
 UAT_FAZ6_M1="${m1}"
+UAT_FAZ6_M2="${m2}"
 UAT_FAZ6_M3="${m3}"
 UAT_FAZ6_M4="${m4}"
 UAT_FAZ6_M9="${m9}"
@@ -89,6 +118,7 @@ p.write_text(
             "timezone": "Europe/Istanbul",
             "steps": {
                 "M1_imap_gold": os.environ["UAT_FAZ6_M1"],
+                "M2_outlook_mobile_imap": os.environ["UAT_FAZ6_M2"],
                 "M3_graph_oauth_env": os.environ["UAT_FAZ6_M3"],
                 "M4_google_calendar_env": os.environ["UAT_FAZ6_M4"],
                 "M9_inbound_p0": os.environ["UAT_FAZ6_M9"],
@@ -104,8 +134,8 @@ print(f"Wrote {p}")
 PY
 
 echo ""
-echo "=== Faz 6 sıralı özet: M1=${m1} M3=${m3} M4=${m4} M9=${m9} ==="
-if [[ "${m1}" == FAIL ]] || [[ "${m9}" == FAIL_* ]]; then
+echo "=== Faz 6 sıralı özet: M1=${m1} M2=${m2} M3=${m3} M4=${m4} M9=${m9} ==="
+if [[ "${m1}" == FAIL ]] || [[ "${m2}" == FAIL ]] || [[ "${m9}" == FAIL_* ]]; then
   exit 1
 fi
 exit 0
