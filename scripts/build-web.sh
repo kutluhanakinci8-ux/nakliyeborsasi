@@ -34,12 +34,14 @@ NEXT_VERSION="$(node -p "require('${ROOT}/apps/web/node_modules/next/package.jso
 echo "react=${REACT_VERSION} next=${NEXT_VERSION}"
 
 if [[ "${REACT_VERSION}" != 18.* ]]; then
-  echo "HATA: Next 14 için React 18.3.1 gerekli (şu an ${REACT_VERSION})." >&2
+  echo "HATA: TMS web için React 18.3.1 gerekli (şu an ${REACT_VERSION})." >&2
   exit 1
 fi
 
-if [[ "${NEXT_VERSION}" != 14.2.15 ]]; then
-  npm install next@14.2.15 @next/swc-linux-x64-gnu@14.2.15 -w @nakliyeborsasi/web --save-exact
+EXPECTED_NEXT="15.5.28"
+if [[ "${NEXT_VERSION}" != "${EXPECTED_NEXT}" ]]; then
+  npm install "next@${EXPECTED_NEXT}" "@next/swc-linux-x64-gnu@${EXPECTED_NEXT}" "@next/swc-linux-x64-musl@${EXPECTED_NEXT}" \
+    -w @nakliyeborsasi/web --save-exact
 fi
 
 export NEXT_TELEMETRY_DISABLED=1
