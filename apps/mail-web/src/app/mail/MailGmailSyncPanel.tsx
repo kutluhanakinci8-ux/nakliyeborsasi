@@ -10,6 +10,7 @@ import {
   syncGmailAccount,
   type MailAccountHubPayload,
 } from "@/lib/mailApi";
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 
 type Props = {
   accessToken: string;
@@ -18,6 +19,7 @@ type Props = {
 };
 
 export function MailGmailSyncPanel({ accessToken, hub, onHubChange }: Props) {
+  const { t, formatDateTime } = useMailLocale();
   const gmail = hub.gmailSync;
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
@@ -57,31 +59,28 @@ export function MailGmailSyncPanel({ accessToken, hub, onHubChange }: Props) {
             return;
           }
           if (!data.code || !data.oauthState) {
-            setError("Gmail OAuth tamamlanamadı.");
+            setError(t("gmailOAuthIncomplete"));
             return;
           }
           await completeGmailOAuth(accessToken, data.code, data.oauthState);
           await reloadHub();
-          setStatus("Gmail hesabı bağlandı; ilk senkron başlatıldı.");
+          setStatus(t("gmailConnected"));
         })().catch((err) => {
-          setError(err instanceof Error ? err.message : "Bağlantı başarısız");
+          setError(err instanceof Error ? err.message : t("gmailConnectFailed"));
         });
       };
       window.addEventListener("message", onMessage);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Bağlantı başlatılamadı");
+      setError(err instanceof Error ? err.message : t("gmailConnectErr"));
     }
   }
 
   return (
     <section className="mail-posta-card mail-help-topic-card">
-      <h3 className="mail-help-topic-title">Gmail senkronu</h3>
-      <p className="mail-help-topic-desc">
-        Gmail gelen kutusunu Lerta birleşik listede görün. OAuth için Google Cloud
-        Gmail API ve <code>GOOGLE_GMAIL_*</code> ortam değişkenleri gerekir.
-      </p>
+      <h3 className="mail-help-topic-title">{t("gmailSyncTitle")}</h3>
+      <p className="mail-help-topic-desc">{t("gmailSyncDesc")}</p>
       {!gmail?.configured ? (
-        <p className="mail-accounts-muted">Sunucuda Gmail OAuth henüz yapılandırılmadı.</p>
+        <p className="mail-accounts-muted">{t("gmailNotConfigured")}</p>
       ) : (
         <>
           <button
@@ -89,7 +88,7 @@ export function MailGmailSyncPanel({ accessToken, hub, onHubChange }: Props) {
             className="mail-premium-btn mail-premium-btn--primary"
             onClick={() => void handleConnect()}
           >
-            Gmail hesabı bağla
+            {t("gmailConnect")}
           </button>
           {gmail.accounts.length > 0 ? (
             <ul className="mail-exchange-account-list">
@@ -102,7 +101,9 @@ export function MailGmailSyncPanel({ accessToken, hub, onHubChange }: Props) {
                     </span>
                   ) : account.lastSyncedAt ? (
                     <span className="mail-accounts-muted">
-                      Son senkron: {new Date(account.lastSyncedAt).toLocaleString("tr-TR")}
+                      {t("settingsLastSync", {
+                        date: formatDateTime(account.lastSyncedAt),
+                      })}
                     </span>
                   ) : null}
                   <div className="mail-exchange-account-actions">
@@ -112,13 +113,15 @@ export function MailGmailSyncPanel({ accessToken, hub, onHubChange }: Props) {
                       onClick={() =>
                         void syncGmailAccount(accessToken, account.id)
                           .then(() => reloadHub())
-                          .then(() => setStatus("Senkron tamamlandı."))
+                          .then(() => setStatus(t("gmailSyncDone")))
                           .catch((e) =>
-                            setError(e instanceof Error ? e.message : "Senkron hatası"),
+                            setError(
+                              e instanceof Error ? e.message : t("gmailSyncErr"),
+                            ),
                           )
                       }
                     >
-                      Senkronize et
+                      {t("gmailSyncOne")}
                     </button>
                     <button
                       type="button"
@@ -126,10 +129,10 @@ export function MailGmailSyncPanel({ accessToken, hub, onHubChange }: Props) {
                       onClick={() =>
                         void deleteGmailAccount(accessToken, account.id)
                           .then(() => reloadHub())
-                          .then(() => setStatus("Gmail bağlantısı kaldırıldı."))
+                          .then(() => setStatus(t("gmailRemoved")))
                       }
                     >
-                      Kaldır
+                      {t("calActionRemove")}
                     </button>
                   </div>
                 </li>
@@ -143,10 +146,10 @@ export function MailGmailSyncPanel({ accessToken, hub, onHubChange }: Props) {
               onClick={() =>
                 void syncAllGmailAccounts(accessToken)
                   .then(() => reloadHub())
-                  .then(() => setStatus("Tüm Gmail hesapları senkronize edildi."))
+                  .then(() => setStatus(t("gmailSyncAllDone")))
               }
             >
-              Tümünü senkronize et
+              {t("settingsSyncAll")}
             </button>
           ) : null}
         </>

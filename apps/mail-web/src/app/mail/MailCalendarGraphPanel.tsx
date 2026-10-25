@@ -11,6 +11,7 @@ import {
   syncCalendarGraphAccount,
   type MailCalendarGraphAccount,
 } from "@/lib/mailApi";
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 
 type Props = {
   accessToken: string;
@@ -23,6 +24,7 @@ export function MailCalendarGraphPanel({
   onToast,
   onSynced,
 }: Props) {
+  const { t } = useMailLocale();
   const [configured, setConfigured] = useState<boolean | null>(null);
   const [accounts, setAccounts] = useState<MailCalendarGraphAccount[]>([]);
   const [syncingAll, setSyncingAll] = useState(false);
@@ -34,12 +36,10 @@ export function MailCalendarGraphPanel({
       setAccounts(data.accounts);
     } catch (error) {
       onToast(
-        error instanceof Error
-          ? error.message
-          : "Graph takvim hesapları yüklenemedi.",
+        error instanceof Error ? error.message : t("calGraphLoadErr"),
       );
     }
-  }, [accessToken, onToast]);
+  }, [accessToken, onToast, t]);
 
   useEffect(() => {
     void load();
@@ -68,7 +68,7 @@ export function MailCalendarGraphPanel({
         if (data.type !== "lerta-calendar-graph-oauth") return;
         window.removeEventListener("message", onMessage);
         if (!data.code) {
-          onToast("Microsoft takvim oturumu tamamlanmadı.");
+          onToast(t("calGraphOAuthIncomplete"));
           return;
         }
         await completeCalendarGraphOAuth(
@@ -78,12 +78,12 @@ export function MailCalendarGraphPanel({
         );
         await load();
         onSynced();
-        onToast("Outlook takvimi bağlandı — iki yön senkron başladı.");
+        onToast(t("calGraphConnected"));
       };
       window.addEventListener("message", onMessage);
     } catch (error) {
       onToast(
-        error instanceof Error ? error.message : "Graph bağlantısı başlatılamadı.",
+        error instanceof Error ? error.message : t("calGraphConnectErr"),
       );
     }
   }
@@ -91,7 +91,7 @@ export function MailCalendarGraphPanel({
   return (
     <section className="mail-cal-section-card">
       <div className="mail-cal-section-head">
-        <h2>Microsoft Graph takvim</h2>
+        <h2>{t("calGraphTitle")}</h2>
         {accounts.some((a) => a.enabled) ? (
           <button
             type="button"
@@ -103,7 +103,12 @@ export function MailCalendarGraphPanel({
                 try {
                   const r = await syncAllCalendarGraphAccounts(accessToken);
                   onToast(
-                    `Graph: ${r.accounts} hesap · ${r.imported} yeni, ${r.updated} güncel, ${r.pushed} yerel gönderildi.`,
+                    t("calGraphSyncAllResult", {
+                      accounts: r.accounts,
+                      imported: r.imported,
+                      updated: r.updated,
+                      pushed: r.pushed,
+                    }),
                   );
                   void load();
                   onSynced();
@@ -111,7 +116,7 @@ export function MailCalendarGraphPanel({
                   onToast(
                     error instanceof Error
                       ? error.message
-                      : "Graph senkron başarısız.",
+                      : t("calGraphSyncErr"),
                   );
                 } finally {
                   setSyncingAll(false);
@@ -119,15 +124,11 @@ export function MailCalendarGraphPanel({
               })()
             }
           >
-            {syncingAll ? "Senkron…" : "Tümünü senkronize et"}
+            {syncingAll ? t("settingsSyncBusy") : t("settingsSyncAll")}
           </button>
         ) : null}
       </div>
-      <p className="mail-cal-section-hint">
-        Office 365 / Outlook takvimini webmail ile <strong>iki yön</strong>{" "}
-        senkronlar (Graph OAuth). Yerel etkinlikler Outlook’a yazılır; Outlook
-        etkinlikleri takvim görünümüne aktarılır.
-      </p>
+      <p className="mail-cal-section-hint">{t("calGraphHint")}</p>
       {configured === false ? (
         <MailCalendarOAuthSetupCard provider="graph" />
       ) : (
@@ -136,12 +137,12 @@ export function MailCalendarGraphPanel({
           className="mail-cal-btn mail-cal-btn--primary mail-cal-btn--sm"
           onClick={() => void handleConnect()}
         >
-          Outlook / Microsoft 365 bağla
+          {t("calGraphConnect")}
         </button>
       )}
       <ul className="mail-cal-account-list">
         {accounts.length === 0 ? (
-          <li className="mail-cal-feed-empty">Graph takvim hesabı yok.</li>
+          <li className="mail-cal-feed-empty">{t("calGraphEmpty")}</li>
         ) : (
           accounts.map((acc) => (
             <li key={acc.id} className="mail-cal-account-row">
@@ -160,7 +161,11 @@ export function MailCalendarGraphPanel({
                     void syncCalendarGraphAccount(accessToken, acc.id).then(
                       (r) => {
                         onToast(
-                          `Senkron: ${r.imported} yeni, ${r.updated} güncel, ${r.pushed} gönderildi.`,
+                          t("calGoogleSyncOneResult", {
+                            imported: r.imported,
+                            updated: r.updated,
+                            pushed: r.pushed,
+                          }),
                         );
                         void load();
                         onSynced();
@@ -168,7 +173,7 @@ export function MailCalendarGraphPanel({
                     )
                   }
                 >
-                  Senkron
+                  {t("calActionSyncShort")}
                 </button>
                 <button
                   type="button"
@@ -176,13 +181,13 @@ export function MailCalendarGraphPanel({
                   onClick={() =>
                     void deleteCalendarGraphAccount(accessToken, acc.id).then(
                       () => {
-                        onToast("Graph hesabı kaldırıldı.");
+                        onToast(t("calGraphRemoved"));
                         void load();
                       },
                     )
                   }
                 >
-                  Kaldır
+                  {t("calActionRemove")}
                 </button>
               </div>
             </li>

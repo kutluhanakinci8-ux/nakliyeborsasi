@@ -9,6 +9,7 @@ import {
   syncCalendarCalDavAccount,
   type MailCalendarCalDavAccount,
 } from "@/lib/mailApi";
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 
 type Props = {
   accessToken: string;
@@ -21,6 +22,7 @@ export function MailCalendarCalDavPanel({
   onToast,
   onSynced,
 }: Props) {
+  const { t, formatDateTime } = useMailLocale();
   const [accounts, setAccounts] = useState<MailCalendarCalDavAccount[]>([]);
   const [label, setLabel] = useState("");
   const [calendarUrl, setCalendarUrl] = useState("");
@@ -34,10 +36,10 @@ export function MailCalendarCalDavPanel({
       setAccounts(data.accounts);
     } catch (error) {
       onToast(
-        error instanceof Error ? error.message : "CalDAV hesapları yüklenemedi.",
+        error instanceof Error ? error.message : t("calCalDavLoadErr"),
       );
     }
-  }, [accessToken, onToast]);
+  }, [accessToken, onToast, t]);
 
   useEffect(() => {
     void load();
@@ -46,7 +48,7 @@ export function MailCalendarCalDavPanel({
   return (
     <section className="mail-cal-section-card">
       <div className="mail-cal-section-head">
-        <h2>CalDAV hesabı</h2>
+        <h2>{t("calCalDavTitle")}</h2>
         {accounts.some((a) => a.enabled) ? (
           <button
             type="button"
@@ -58,7 +60,15 @@ export function MailCalendarCalDavPanel({
                 try {
                   const r = await syncAllCalendarCalDavAccounts(accessToken);
                   onToast(
-                    `CalDAV: ${r.succeeded}/${r.accounts} hesap · ${r.imported} yeni, ${r.updated} güncel${r.failed ? ` · ${r.failed} hata` : ""}.`,
+                    t("calCalDavBulkResult", {
+                      succeeded: r.succeeded,
+                      accounts: r.accounts,
+                      imported: r.imported,
+                      updated: r.updated,
+                      failedSuffix: r.failed
+                        ? t("calCalDavBulkFailedSuffix", { failed: r.failed })
+                        : "",
+                    }),
                   );
                   void load();
                   onSynced();
@@ -66,7 +76,7 @@ export function MailCalendarCalDavPanel({
                   onToast(
                     error instanceof Error
                       ? error.message
-                      : "Toplu senkron başarısız.",
+                      : t("calCalDavBulkSyncErr"),
                   );
                   void load();
                 } finally {
@@ -75,25 +85,21 @@ export function MailCalendarCalDavPanel({
               })()
             }
           >
-            {syncingAll ? "Senkronize ediliyor…" : "Tümünü çek"}
+            {syncingAll ? t("calCalDavPulling") : t("calCalDavPullAll")}
           </button>
         ) : null}
       </div>
-      <p className="mail-cal-section-hint">
-        Nextcloud / Baikal, Google veya Outlook takvim URL’si (HTTPS) ve
-        kullanıcı adı/şifre. Yerel etkinlikleri listeden{" "}
-        <strong>CalDAV’a yaz</strong> ile gönderin.
-      </p>
+      <p className="mail-cal-section-hint">{t("calCalDavHint")}</p>
       <div className="mail-cal-preset-row">
         <button
           type="button"
           className="mail-cal-btn mail-cal-btn--ghost mail-cal-btn--sm"
           onClick={() => {
-            setLabel("Google Takvim");
+            setLabel(t("calGoogleTitle"));
             setCalendarUrl("https://apidata.googleusercontent.com/caldav/v2/");
           }}
         >
-          Google CalDAV
+          {t("calCalDavPresetGoogle")}
         </button>
         <button
           type="button"
@@ -103,43 +109,43 @@ export function MailCalendarCalDavPanel({
             setCalendarUrl("https://outlook.office365.com/caldav/");
           }}
         >
-          Outlook CalDAV
+          {t("calCalDavPresetOutlook")}
         </button>
       </div>
       <div className="mail-cal-form-grid mail-cal-form-grid--compact">
         <label className="mail-cal-field">
-          <span className="mail-cal-field-label">Ad</span>
+          <span className="mail-cal-field-label">{t("calCalDavFieldName")}</span>
           <input
             className="mail-cal-input"
-            placeholder="ör. Nextcloud iş"
+            placeholder={t("calCalDavNamePlaceholder")}
             value={label}
             onChange={(e) => setLabel(e.target.value)}
           />
         </label>
         <label className="mail-cal-field mail-cal-field--full">
-          <span className="mail-cal-field-label">Koleksiyon URL</span>
+          <span className="mail-cal-field-label">{t("calCalDavFieldUrl")}</span>
           <input
             className="mail-cal-input"
-            placeholder="https://…/dav/calendars/kullanici/kişisel/"
+            placeholder={t("calCalDavUrlPlaceholder")}
             value={calendarUrl}
             onChange={(e) => setCalendarUrl(e.target.value)}
           />
         </label>
         <label className="mail-cal-field">
-          <span className="mail-cal-field-label">Kullanıcı</span>
+          <span className="mail-cal-field-label">{t("calCalDavFieldUser")}</span>
           <input
             className="mail-cal-input"
-            placeholder="Kullanıcı adı"
+            placeholder={t("calCalDavUserPlaceholder")}
             value={username}
             onChange={(e) => setUsername(e.target.value)}
           />
         </label>
         <label className="mail-cal-field">
-          <span className="mail-cal-field-label">Şifre</span>
+          <span className="mail-cal-field-label">{t("calCalDavFieldPassword")}</span>
           <input
             className="mail-cal-input"
             type="password"
-            placeholder="Şifre"
+            placeholder={t("calCalDavPasswordPlaceholder")}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
@@ -156,7 +162,7 @@ export function MailCalendarCalDavPanel({
                   !username.trim() ||
                   !password
                 ) {
-                  onToast("Tüm alanlar gerekli.");
+                  onToast(t("calCalDavAllFieldsRequired"));
                   return;
                 }
                 try {
@@ -170,17 +176,17 @@ export function MailCalendarCalDavPanel({
                   setCalendarUrl("");
                   setUsername("");
                   setPassword("");
-                  onToast("CalDAV hesabı eklendi.");
+                  onToast(t("calCalDavAdded"));
                   void load();
                 } catch (error) {
                   onToast(
-                    error instanceof Error ? error.message : "Eklenemedi.",
+                    error instanceof Error ? error.message : t("errGenericSave"),
                   );
                 }
               })()
             }
           >
-            Bağla
+            {t("calCalDavConnect")}
           </button>
         </div>
       </div>
@@ -190,12 +196,19 @@ export function MailCalendarCalDavPanel({
             <div>
               <strong>{a.label}</strong>
               <div className="mail-d6-meta">
-                {a.username} · {a.writeEnabled ? "yazma açık" : "yalnızca okuma"}
+                {a.username} ·{" "}
+                {a.writeEnabled
+                  ? t("calCalDavWriteEnabled")
+                  : t("calCalDavReadOnly")}
                 <br />
                 {a.lastSyncedAt
-                  ? `Son senkron: ${new Date(a.lastSyncedAt).toLocaleString("tr-TR")}`
-                  : "Henüz senkron yok"}
-                {a.lastSyncError ? ` · Hata: ${a.lastSyncError}` : ""}
+                  ? t("settingsLastSync", {
+                      date: formatDateTime(a.lastSyncedAt),
+                    })
+                  : t("settingsNotSyncedYet")}
+                {a.lastSyncError
+                  ? t("calErrorSuffix", { error: a.lastSyncError })
+                  : ""}
               </div>
             </div>
             <span className="mail-cal-event-actions">
@@ -206,7 +219,11 @@ export function MailCalendarCalDavPanel({
                   void syncCalendarCalDavAccount(accessToken, a.id)
                     .then((r) => {
                       onToast(
-                        `Senkron: ${r.imported} yeni, ${r.updated} güncel, ${r.removed} kaldırıldı.`,
+                        t("calCalDavSyncResult", {
+                          imported: r.imported,
+                          updated: r.updated,
+                          removed: r.removed,
+                        }),
                       );
                       void load();
                       onSynced();
@@ -215,13 +232,13 @@ export function MailCalendarCalDavPanel({
                       onToast(
                         err instanceof Error
                           ? err.message
-                          : "Senkron başarısız.",
+                          : t("settingsSyncFailed"),
                       );
                       void load();
                     })
                 }
               >
-                Çek
+                {t("calCalDavPull")}
               </button>
               <button
                 type="button"
@@ -229,24 +246,24 @@ export function MailCalendarCalDavPanel({
                 onClick={() =>
                   void deleteCalendarCalDavAccount(accessToken, a.id)
                     .then(() => {
-                      onToast("Hesap silindi.");
+                      onToast(t("calCalDavAccountDeleted"));
                       void load();
                       onSynced();
                     })
                     .catch((err: unknown) => {
                       onToast(
-                        err instanceof Error ? err.message : "Silinemedi.",
+                        err instanceof Error ? err.message : t("errGenericSave"),
                       );
                     })
                 }
               >
-                Sil
+                {t("actionDelete")}
               </button>
             </span>
           </li>
         ))}
         {accounts.length === 0 ? (
-          <li className="mail-cal-feed-empty">CalDAV hesabı yok.</li>
+          <li className="mail-cal-feed-empty">{t("calCalDavEmpty")}</li>
         ) : null}
       </ul>
     </section>
