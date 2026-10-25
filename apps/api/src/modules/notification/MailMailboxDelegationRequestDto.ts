@@ -1,4 +1,11 @@
-import { IsEmail, IsIn, IsOptional, IsUUID } from "class-validator";
+import {
+  IsEmail,
+  IsIn,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from "class-validator";
 
 export class UpdateMailboxAccessModeRequestDto {
   @IsIn(["organization", "delegates_only"])
@@ -18,6 +25,11 @@ export class AddMailboxDelegateRequestDto {
 }
 
 export class CompleteExchangeOAuthRequestDto {
+  @IsString()
+  @IsNotEmpty()
   public code!: string;
+
+  @IsString()
+  @IsNotEmpty()
   public state!: string;
 }
