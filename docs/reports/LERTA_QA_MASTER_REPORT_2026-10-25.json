@@ -1,22 +1,28 @@
 {
-  "generatedAt": "2026-10-25T17:24:36+03:00",
+  "generatedAt": "2026-10-25T21:57:55+03:00",
   "timezone": "Europe/Istanbul",
-  "failCount": 3,
+  "failCount": 0,
   "layers": {
     "unit_core": "PASS",
     "unit_api": "PASS",
+    "integration_smoke": "PASS",
     "regression_parity": "PASS",
     "regression_wave2": "PASS",
     "system_smoke": "PASS",
     "compliance_mp9": "PASS",
-    "security_audit": "FAIL",
+    "security_audit": "PASS",
     "security_surface": "PASS",
     "perf_load": "PASS",
+    "perf_stress": "PASS",
     "l10n_tr": "PASS",
-    "l10n_en": "FAIL",
+    "l10n_en": "PASS",
+    "l10n_expanded": "PASS",
+    "i18n_gate": "PASS",
     "e2e_playwright": "PASS",
-    "e2e_mail_web": "FAIL",
+    "e2e_mail_web": "PASS",
+    "uat_faz6_code": "PASS",
     "uat": "CONFIG_LATER",
-    "pentest": "PASS"
+    "pentest": "PASS",
+    "pentest_external": "CONFIG_LATER"
   }
 }

@@ -8,7 +8,8 @@ export type MailTimeZoneId =
   | "Europe/London"
   | "Europe/Berlin";
 
-const STORAGE_LOCALE = "lerta-mail-ui-locale";
+export const STORAGE_LOCALE = "lerta-mail-ui-locale";
+export const MAIL_UI_LOCALE_COOKIE = "lerta-mail-ui-locale";
 const STORAGE_TZ = "lerta-mail-time-zone";
 
 const MESSAGES: Record<MailUiLocale, Record<string, string>> = {
@@ -57,6 +58,10 @@ const MESSAGES: Record<MailUiLocale, Record<string, string>> = {
     pilotBillingDismiss: "Dismiss",
   },
 };
+
+export function parseMailUiLocale(raw: string | null | undefined): MailUiLocale {
+  return raw === "en" ? "en" : "tr";
+}
 
 export function readMailUiLocale(): MailUiLocale {
   if (typeof window === "undefined") {

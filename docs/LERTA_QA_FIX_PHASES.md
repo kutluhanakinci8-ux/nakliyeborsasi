@@ -8,6 +8,7 @@
 | **4** | E2E Playwright install (QA suite içinde) | ✅ Script |
 | **5** | npm audit + güvenlik deps | ✅ Posta + TMS **Next 15.5.28**, WebAuthn **14**; kalan audit: bcrypt/tar — [NPM_AUDIT_REMEDIATION.md](./reports/NPM_AUDIT_REMEDIATION.md) |
 | **6** | UAT M1–M10 | Kod: `bash scripts/verify-uat-faz6-code-complete.sh` ✅ · Ops sonra: `UAT_VPS_RUNTIME=1` + OAuth/VAPID/PTR |
-| **7** | Pentest harici | Manuel |
+| **7** | Pentest harici | `qa-pentest-external-checklist.sh` + manuel |
+| **8** | Gap kapanış (entegrasyon smoke, stres, l10n gate, tam mail E2E) | [LERTA_QA_GAP_CLOSURE_PLAN.md](./LERTA_QA_GAP_CLOSURE_PLAN.md) |
 
-Doğrulama: `bash scripts/run-lerta-premium-qa-suite.sh`
+Doğrulama: `bash scripts/run-lerta-premium-qa-suite.sh` · `npm run test:integration`

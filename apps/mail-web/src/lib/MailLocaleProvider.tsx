@@ -33,8 +33,14 @@ type MailLocaleContextValue = {
 
 const MailLocaleContext = createContext<MailLocaleContextValue | null>(null);
 
-export function MailLocaleProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<MailUiLocale>("tr");
+export function MailLocaleProvider({
+  children,
+  initialLocale = "tr",
+}: {
+  children: ReactNode;
+  initialLocale?: MailUiLocale;
+}) {
+  const [locale, setLocaleState] = useState<MailUiLocale>(initialLocale);
   const [timeZone, setTimeZoneState] =
     useState<MailTimeZoneId>("Europe/Istanbul");
 

@@ -12,6 +12,7 @@ if [[ -f "${ROOT}/.env" ]] && [[ ! -f "${ENV_FILE:-}" ]]; then
 fi
 
 FAIL=0
+SKIP_OPS=0
 step() {
   local title="$1"
   shift
@@ -23,6 +24,14 @@ step() {
     echo "→ FAIL" >&2
     FAIL=1
   fi
+}
+step_skip() {
+  local title="$1"
+  local reason="$2"
+  echo ""
+  echo "######## ${title} ########"
+  echo "→ SKIP: ${reason}"
+  SKIP_OPS=1
 }
 
 echo "== Customer readiness gate ${STAMP} (Europe/Istanbul) =="
@@ -41,29 +50,38 @@ step "k6/load profile" bash "${ROOT}/scripts/qa-k6-profile.sh"
 if [[ -f "${ENV_FILE:-/var/www/nakliyeborsasi/.env}" ]]; then
   step "OAuth env verify" bash "${ROOT}/scripts/verify-uat-oauth-env.sh"
 else
-  echo ""
-  echo "SKIP: OAuth env — VPS .env veya repo kök .env kopyala (docs/CUSTOMER_READY_GATE.md)"
+  step_skip "OAuth env verify" "VPS .env veya repo kök .env (docs/CUSTOMER_READY_GATE.md)"
 fi
 
 if [[ -n "${OPERATOR_JWT:-}" ]]; then
   step "Billing A1" bash "${ROOT}/scripts/run-mail-billing-a1-acceptance.sh"
 else
-  echo "SKIP: OPERATOR_JWT — platform operatör JWT (billing A1)"
+  step_skip "Billing A1" "OPERATOR_JWT — platform operatör JWT"
 fi
+
+step "Integration smoke" bash "${ROOT}/scripts/qa-api-integration-smoke.sh"
+step "Stress profile" bash "${ROOT}/scripts/qa-stress-profile.sh"
 
 {
   echo "# Customer ready gate (${STAMP})"
   echo ""
-  echo "| Sonuç | ${FAIL} |"
+  echo "| Otomasyon FAIL | ${FAIL} |"
+  echo "| Ops SKIP | ${SKIP_OPS} |"
   echo ""
   echo "Komut: \`npm run customer-ready\`"
   echo ""
   echo "VPS son adımlar: \`docs/CUSTOMER_READY_GATE.md\`"
+  echo ""
+  echo "Tam ops zorunlu: \`STRICT_CUSTOMER_READY=1 npm run customer-ready\`"
 } > "${REPORT}"
 
 echo ""
 echo "Rapor: ${REPORT}"
 if [[ "${FAIL}" -eq 0 ]]; then
+  if [[ "${SKIP_OPS}" -eq 1 && "${STRICT_CUSTOMER_READY:-0}" == "1" ]]; then
+    echo "customer-readiness-gate: FAIL (STRICT — ops SKIP kaldı)" >&2
+    exit 1
+  fi
   echo "customer-readiness-gate: PASS"
   exit 0
 fi

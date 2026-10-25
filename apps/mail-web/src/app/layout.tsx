@@ -13,10 +13,26 @@ import { MailThemeProvider } from "@/components/MailThemeProvider";
 import { MailPwaRegister } from "@/components/MailPwaRegister";
 import { MailHttpsRedirect } from "@/components/MailHttpsRedirect";
 import { MailEmbeddedSessionBridge } from "@/components/MailEmbeddedSessionBridge";
-import { readMailUiLocale, t } from "@/lib/mailLocale";
+import { cookies, headers } from "next/headers";
+import {
+  MAIL_UI_LOCALE_COOKIE,
+  parseMailUiLocale,
+  t,
+  type MailUiLocale,
+} from "@/lib/mailLocale";
 
-export function generateMetadata(): Metadata {
-  const locale = readMailUiLocale();
+async function readServerMailUiLocale(): Promise<MailUiLocale> {
+  const hdrs = await headers();
+  const fromQuery = hdrs.get("x-mail-ui-locale");
+  if (fromQuery === "en" || fromQuery === "tr") {
+    return fromQuery;
+  }
+  const jar = await cookies();
+  return parseMailUiLocale(jar.get(MAIL_UI_LOCALE_COOKIE)?.value);
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await readServerMailUiLocale();
   const title = t("appMetaTitle", locale);
   return {
     metadataBase: new URL("https://posta.lerta.com.tr"),
@@ -42,13 +58,18 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const serverLocale = await readServerMailUiLocale();
   return (
-    <html lang="tr" data-mail-theme="light" className={inter.variable}>
+    <html
+      lang={serverLocale === "en" ? "en" : "tr"}
+      data-mail-theme="light"
+      className={inter.variable}
+    >
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -58,7 +79,7 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <MailSessionProvider>
-          <MailLocaleProvider>
+          <MailLocaleProvider initialLocale={serverLocale}>
             <MailThemeProvider>
               <MailEmbeddedSessionBridge />
               <MailPwaRegister />

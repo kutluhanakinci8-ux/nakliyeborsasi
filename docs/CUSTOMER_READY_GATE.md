@@ -8,7 +8,9 @@ Bu belge, QA raporunda **atlanan / CONFIG_LATER** maddelerin operasyon ve otomas
 npm run customer-ready
 ```
 
-Katmanlar: premium QA suite, npm audit gate (`tar` override + isteğe bağlı `NPM_AUDIT_ALLOW_NEXT_CRITICAL=1`), OWASP baseline, EN Playwright, k6/autocannon profili.
+Katmanlar: premium QA suite, npm audit gate (`tar` override + isteğe bağlı `NPM_AUDIT_ALLOW_NEXT_CRITICAL=1`), OWASP baseline, EN Playwright, k6/autocannon + stres profili, API entegrasyon smoke.
+
+Ops atlanırsa gate yine **PASS** (otomasyon tamam); zorunlu ops için: `STRICT_CUSTOMER_READY=1 npm run customer-ready`.
 
 ## VPS — zorunlu ops (canlı müşteri)
 

@@ -1,21 +1,26 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+export const MAIL_UI_LOCALE_COOKIE = "lerta-mail-ui-locale";
+
 export function middleware(request: NextRequest) {
-  const host = request.headers.get("host") ?? "";
-  const proto = request.headers.get("x-forwarded-proto");
-  if (
-    host.includes("posta.lerta.com.tr") &&
-    proto === "http" &&
-    process.env.NODE_ENV === "production"
-  ) {
-    const url = request.nextUrl.clone();
-    url.protocol = "https:";
-    return NextResponse.redirect(url, 308);
+  const lang = request.nextUrl.searchParams.get("lang");
+  if (lang !== "en" && lang !== "tr") {
+    return NextResponse.next();
   }
-  return NextResponse.next();
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-mail-ui-locale", lang);
+  const response = NextResponse.next({
+    request: { headers: requestHeaders },
+  });
+  response.cookies.set(MAIL_UI_LOCALE_COOKIE, lang, {
+    path: "/",
+    maxAge: 60 * 60 * 24 * 365,
+    sameSite: "lax",
+  });
+  return response;
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/login", "/mail/:path*", "/help/:path*"],
 };

@@ -39,6 +39,9 @@ run_layer unit_core "1. Unit — @nakliyeborsasi/core" npm run test:unit --prefi
 run_layer unit_api "2. Unit/Integration — API vitest (all spec/test)" \
   npm run test:api --prefix "${ROOT}"
 
+run_layer integration_smoke "2b. Integration — API health/ready smoke" \
+  bash "${ROOT}/scripts/qa-api-integration-smoke.sh"
+
 run_layer regression_parity "3. Regression — mail/messaging parity close" \
   env MAIL_INBOUND_PTR_SOFT="${MAIL_INBOUND_PTR_SOFT:-1}" MAIL_BILLING_PILOT_FREE="${MAIL_BILLING_PILOT_FREE:-1}" \
     bash "${ROOT}/scripts/run-mail-messaging-parity-close-checklist.sh"
@@ -62,17 +65,26 @@ run_layer security_surface "8. Security — surface headers" \
 run_layer perf_load "9. Performance — load (light prod)" \
   bash "${ROOT}/scripts/qa-load-stress.sh"
 
+run_layer perf_stress "9b. Performance — stress profile" \
+  bash "${ROOT}/scripts/qa-stress-profile.sh"
+
 run_layer l10n_tr "10. Localization — tr-TR" \
   bash "${ROOT}/scripts/qa-localization-tr.sh"
 
 run_layer l10n_en "10b. Localization — en-US" \
   bash "${ROOT}/scripts/qa-localization-en.sh"
 
+run_layer l10n_expanded "10c. Localization — expanded URLs" \
+  bash "${ROOT}/scripts/qa-l10n-expanded.sh"
+
+run_layer i18n_gate "10d. Localization — mail-web TR literal gate" \
+  bash "${ROOT}/scripts/qa-i18n-mail-web-gate.sh"
+
 run_layer e2e_playwright "11. System/E2E — Playwright (messaging)" \
   bash -c "cd '${ROOT}/apps/web' && npx playwright install chromium --with-deps 2>/dev/null | tail -3; npx playwright test e2e/messaging-hub.spec.ts --grep 'login sayfası|korumalı'"
 
-run_layer e2e_mail_web "11b. System/E2E — Playwright (posta)" \
-  bash -c "cd '${ROOT}/apps/mail-web' && npm run build && npx playwright install chromium 2>/dev/null | tail -2 && npx playwright test e2e/login-locale.spec.ts"
+run_layer e2e_mail_web "11b. System/E2E — Playwright (posta full)" \
+  bash -c "cd '${ROOT}/apps/mail-web' && npm run build && npx playwright install chromium 2>/dev/null | tail -2 && npm run test:e2e"
 
 run_layer uat_faz6_code "12. UAT Faz 6 — kod tamamlama" \
   bash "${ROOT}/scripts/verify-uat-faz6-code-complete.sh"
@@ -90,13 +102,25 @@ fi
 run_layer pentest_baseline "13. Security — OWASP baseline (surrogate)" \
   bash "${ROOT}/scripts/qa-owasp-baseline.sh"
 
+bash "${ROOT}/scripts/qa-pentest-external-checklist.sh" >/dev/null || true
+RESULT["pentest_external"]="CONFIG_LATER"
+DETAIL["pentest_external"]="docs/PENTEST_EXTERNAL_CHECKLIST.md"
+
 RESULT["pentest"]="${RESULT[pentest_baseline]:-FAIL}"
 DETAIL["pentest"]="Tam sızma (ZAP/Burp) ayrı; qa-owasp-baseline.sh sürekli smoke."
 
 FAIL_COUNT=0
-for k in unit_core unit_api regression_parity regression_wave2 system_smoke compliance_mp9 security_audit security_surface perf_load l10n_tr l10n_en e2e_playwright e2e_mail_web uat_faz6_code pentest_baseline uat_ops; do
+LAYER_KEYS=(
+  unit_core unit_api integration_smoke regression_parity regression_wave2 system_smoke
+  compliance_mp9 security_audit security_surface perf_load perf_stress
+  l10n_tr l10n_en l10n_expanded i18n_gate e2e_playwright e2e_mail_web uat_faz6_code pentest_baseline
+)
+for k in "${LAYER_KEYS[@]}"; do
   [[ "${RESULT[$k]:-FAIL}" == "FAIL" ]] && FAIL_COUNT=$((FAIL_COUNT + 1))
 done
+if [[ "${UAT_VPS_RUNTIME:-0}" == "1" ]]; then
+  [[ "${RESULT[uat_ops]:-FAIL}" == "FAIL" ]] && FAIL_COUNT=$((FAIL_COUNT + 1))
+fi
 
 {
   echo "{"
@@ -105,7 +129,7 @@ done
   echo "  \"failCount\": ${FAIL_COUNT},"
   echo "  \"layers\": {"
   first=1
-  for k in unit_core unit_api regression_parity regression_wave2 system_smoke compliance_mp9 security_audit security_surface perf_load l10n_tr l10n_en e2e_playwright e2e_mail_web uat pentest; do
+  for k in unit_core unit_api integration_smoke regression_parity regression_wave2 system_smoke compliance_mp9 security_audit security_surface perf_load perf_stress l10n_tr l10n_en l10n_expanded i18n_gate e2e_playwright e2e_mail_web uat_faz6_code uat pentest pentest_external; do
     [[ $first -eq 1 ]] || echo ","
     first=0
     printf '    "%s": "%s"' "$k" "${RESULT[$k]:-UNKNOWN}"
@@ -136,6 +160,7 @@ cat > "${REPORT_MD}" <<EOF
 |---|--------|-------------------|--------|
 | 1 | Unit (core) | Bileşen testi | ${RESULT[unit_core]:-?} |
 | 2 | Unit/Integration (API) | Modül + servis | ${RESULT[unit_api]:-?} |
+| 2b | Integration smoke | Canlı API health/ready | ${RESULT[integration_smoke]:-?} |
 | 3 | Regression (parity close) | Değişiklik regresyonu | ${RESULT[regression_parity]:-?} |
 | 4 | Regression (wave-2) | PWA/Lighthouse/DNS | ${RESULT[regression_wave2]:-?} |
 | 5 | System (prod smoke) | Canlı sistem | ${RESULT[system_smoke]:-?} |
@@ -143,8 +168,11 @@ cat > "${REPORT_MD}" <<EOF
 | 7 | Security (npm audit) | Bağımlılık zafiyeti | ${RESULT[security_audit]:-?} |
 | 8 | Security (surface) | Kara kutu HTTP/TLS | ${RESULT[security_surface]:-?} |
 | 9 | Performance (load) | Yük (hafif prod) | ${RESULT[perf_load]:-?} |
+| 9b | Performance (stress) | Stres profili | ${RESULT[perf_stress]:-?} |
 | 10 | Localization (tr-TR) | L10n | ${RESULT[l10n_tr]:-?} |
-| 11 | E2E (Playwright) | Uçtan uca (kısmi) | ${RESULT[e2e_playwright]:-?} |
+| 10c–d | L10n expanded + i18n gate | URL + TR literal | ${RESULT[l10n_expanded]:-?} / ${RESULT[i18n_gate]:-?} |
+| 11 | E2E (Playwright) | Messaging smoke | ${RESULT[e2e_playwright]:-?} |
+| 11b | E2E mail-web | Tam posta suite | ${RESULT[e2e_mail_web]:-?} |
 | 12 | UAT Faz 6 kod | M1–M10 kod kapısı | ${RESULT[uat_faz6_code]:-?} |
 | 13 | UAT ops | Yapılandırma + imza | ${RESULT[uat]:-?} |
 | 14 | Pentest | Sızma (tam) | ${RESULT[pentest]:-?} |
@@ -152,9 +180,9 @@ cat > "${REPORT_MD}" <<EOF
 ## Bilinen eksikler / aksiyonlar
 
 1. **API vitest kapsamı:** \`apps/api\` spec dosyalarının bir kısmı global \`describe\` import eksik — CI'ye \`vitest\` workspace config eklenmeli.
-2. **Integration test DB:** NestJS + Postgres entegrasyon testleri yok; parity scriptleri prod read-only smoke ile kısmi.
-3. **Stress test:** \`qa-load-stress.sh\` düşük hacimli; gerçek stres için k6/Artillery ayrı profil gerekir.
-4. **Pentest / ISO 27001 / PCI:** MP-9 dokümantasyon var; sertifikalı pentest ve QSA denetimi ayrı proje.
+2. **Integration test DB:** Yerel Nest+Postgres testcontainers hâlâ yok; \`qa-api-integration-smoke.sh\` + HealthController spec kısmi.
+3. **Stress test:** \`qa-stress-profile.sh\` orta hacim; tam kırılma noktası VPS profili.
+4. **Pentest / ISO 27001 / PCI:** \`docs/PENTEST_EXTERNAL_CHECKLIST.md\` — sertifikalı pentest ve QSA denetimi harici.
 5. **UAT:** Thunderbird IMAP, Graph/Google takvim, iOS push, MSN/Gmail teslimat — manuel imza bekliyor.
 6. **Regression FAIL kökleri:** PTR Hostinger, billing prod anahtarları, Lighthouse headless ortamı, OPERATOR_JWT skip.
 

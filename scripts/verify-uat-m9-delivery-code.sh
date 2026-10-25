@@ -26,8 +26,14 @@ else
 fi
 need_file "${ROOT}/scripts/vps-diagnose-outbound-mail.sh" "outbound diagnose script"
 
-npm run test:unit -w @nakliyeborsasi/core -- --run src/mail/emailOutboxMetadata.test.ts 2>/dev/null | tail -1 | grep -q passed && \
-  echo "OK: unit emailOutboxMetadata" || echo "UYARI: unit emailOutboxMetadata atlandı"
+if npm run test -w @nakliyeborsasi/core -- src/mail/emailOutboxMetadata.test.ts >/tmp/m9-unit.log 2>&1 \
+  && grep -qE 'Tests\s+[0-9]+ passed' /tmp/m9-unit.log; then
+  echo "OK: unit emailOutboxMetadata"
+else
+  echo "NOT: unit emailOutboxMetadata" >&2
+  tail -5 /tmp/m9-unit.log >&2 || true
+  fail=1
+fi
 
 [[ "${fail}" -eq 0 ]] || exit 1
 echo "M9 kod: PASS (MSN/Gmail/Outlook inbox — manuel §3.3 sonra)"
