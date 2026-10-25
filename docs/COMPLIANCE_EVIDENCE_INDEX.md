@@ -10,6 +10,8 @@ Son otomasyon özeti: `docs/reports/FAZ8_COMPLIANCE_<tarih>.json`
 | Müşteri hazırlık | `STRICT_CUSTOMER_READY=1 npm run customer-ready` → `CUSTOMER_READY_GATE_*.md` |
 | UAT Faz 6 | `npm run uat:faz6` · `npm run uat:ops` → `UAT_FAZ6_*.json` |
 | Pentest otomasyon | `npm run qa:faz7` → `FAZ7_PENTEST_*.json`, `ZAP_PASSIVE_*.json` |
+| Uyumluluk Faz 8 | `npm run qa:faz8` → `FAZ8_COMPLIANCE_*.json` |
+| Müşteri UAT Faz 9 | `npm run qa:faz9` → `UAT_FAZ9_SIGNOFF_*.json` |
 | MP-9 | `bash scripts/verify-security-compliance-mp9.sh` |
 | Due diligence paketi | `bash scripts/pack-customer-due-diligence-mp9.sh` → `dist/customer-due-diligence-mp9.zip` |
 
