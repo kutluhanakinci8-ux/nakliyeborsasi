@@ -18,7 +18,9 @@
 | **8** | Uyumluluk otomasyon | `npm run qa:faz8` + `COMPLIANCE_EVIDENCE_INDEX.md` | Repo + VPS |
 | **8b** | SOC2 Type II / ISO 27001 / PCI denetimi | Harici denetçi | **Bekliyor** |
 | **9** | Müşteri UAT | `npm run qa:faz9` + `docs/UAT_FAZ9_CUSTOMER_SIGNOFF.md` | Otomasyon PASS · imza **bekliyor** |
-| **9b** | İmzalı PDF / PO onayı | `UAT_*_SIGNED=1` veya arşiv | **Müşteri** |
+| **9b** | İmza öncesi paket | `npm run qa:faz9b` → `UAT_FAZ9B_ASSIST_*.md` | ✅ Otomasyon |
+| **9c** | İmzalı PDF / PO | `UAT_*_SIGNED=1` | **Müşteri** |
+| **10** | Final kapı | `npm run qa:closure` · `QA_GAP_CLOSURE_FINAL_*.json` | VPS |
 
 ## VPS’te kapatılacak maddeler (Faz 6–9)
 

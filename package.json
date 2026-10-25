@@ -31,6 +31,8 @@
     "qa:faz7": "bash scripts/run-faz7-pentest-sequence.sh",
     "qa:faz8": "bash scripts/run-faz8-compliance-sequence.sh",
     "qa:faz9": "bash scripts/run-faz9-uat-signoff-sequence.sh",
+    "qa:faz9b": "bash scripts/run-faz9b-pre-signoff-assist.sh",
+    "qa:closure": "bash scripts/run-qa-gap-closure-final.sh",
     "verify:vps": "bash scripts/vps-operator-verify.sh",
     "archive:move": "bash scripts/archive-replaced-source.sh",
     "git:cleanup-merged": "bash scripts/cleanup-merged-git-branches.sh",
