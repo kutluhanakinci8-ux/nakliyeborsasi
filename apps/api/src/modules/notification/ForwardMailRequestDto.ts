@@ -2,6 +2,7 @@ import { Type } from "class-transformer";
 import {
   IsArray,
   IsBoolean,
+  IsDateString,
   IsEmail,
   IsIn,
   IsInt,
@@ -55,4 +56,8 @@ export class ForwardMailRequestDto {
   @IsOptional()
   @IsUUID()
   public connectedSendAccountId?: string;
+
+  @IsOptional()
+  @IsDateString()
+  public scheduleAt?: string;
 }

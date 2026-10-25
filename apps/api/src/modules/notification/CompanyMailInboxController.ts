@@ -24,6 +24,7 @@ import {
   MailOrganizationInboxService,
 } from "./MailOrganizationInboxService";
 import { MailConnectedAccountsService } from "./MailConnectedAccountsService";
+import { MailConnectedInboxSearchService } from "./MailConnectedInboxSearchService";
 import { MailMailboxComposeService } from "./MailMailboxComposeService";
 import { MailImapAccessService } from "./MailImapAccessService";
 import { ComposeMailRequestDto } from "./ComposeMailRequestDto";
@@ -169,6 +170,7 @@ export class CompanyMailInboxController {
     private readonly mailExchangeGraphSyncService: MailExchangeGraphSyncService,
     private readonly mailGmailSyncService: MailGmailSyncService,
     private readonly mailConnectedAccountsService: MailConnectedAccountsService,
+    private readonly mailConnectedInboxSearchService: MailConnectedInboxSearchService,
     private readonly mailCalendarGraphSyncService: MailCalendarGraphSyncService,
     private readonly mailCalendarGoogleSyncService: MailCalendarGoogleSyncService,
     private readonly userMailCryptoService: UserMailCryptoService,
@@ -521,7 +523,18 @@ export class CompanyMailInboxController {
       accounts,
       entitlement,
       exchangeConfigured: this.mailExchangeGraphSyncService.isConfigured(),
+      gmailConfigured: this.mailGmailSyncService.isConfigured(),
     };
+  }
+
+  @Get("connected-accounts/audit")
+  public async listConnectedAccountAudit(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    return this.mailIdentityAuditService.listConnectedAccountEvents(
+      user.companyId,
+      80,
+    );
   }
 
   @Get("mailbox-delegations")
@@ -1369,6 +1382,7 @@ export class CompanyMailInboxController {
     @Query("hasAttachment") hasAttachment?: string,
     @Query("customFolderId") customFolderId?: string,
     @Query("connectedSource") connectedSource?: string,
+    @Query("deep") deep?: string,
   ) {
     const resolvedFolder = this.parseFolder(folder);
     const resolvedCustomFolderId = this.parseCustomFolderId(
@@ -1392,14 +1406,25 @@ export class CompanyMailInboxController {
       user,
       resolvedConnectedSource,
     );
+    const externalHits =
+      deep === "1" || deep === "true"
+        ? await this.mailConnectedInboxSearchService.searchExternal(
+            user.companyId,
+            (query ?? "").trim(),
+            resolvedConnectedSource,
+            15,
+          )
+        : [];
     return {
       messages,
+      externalHits,
       folder: resolvedFolder,
       q: (query ?? "").trim(),
       from: (fromAddress ?? "").trim(),
       receivedAfter: receivedAfter?.trim() ?? "",
       receivedBefore: receivedBefore?.trim() ?? "",
       hasAttachment: attachmentFilter ?? null,
+      deepSearch: externalHits.length > 0,
     };
   }
 
@@ -1409,7 +1434,24 @@ export class CompanyMailInboxController {
       user.companyId,
       user.userId,
     );
-    return { drafts };
+    const syncedDrafts =
+      await this.mailOrganizationInboxService.listConnectedSyncedDrafts(
+        user.companyId,
+        user,
+      );
+    return { drafts, syncedDrafts };
+  }
+
+  @Get("compose/scheduled")
+  public async listScheduledCompose(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    this.assertMailInboxWriter(user);
+    const pending = await this.mailDelayedComposeService.listPendingForOrganization(
+      user.companyId,
+      user.userId,
+    );
+    return { pending };
   }
 
   @Post("drafts")
@@ -1797,7 +1839,23 @@ export class CompanyMailInboxController {
       html: body.html,
       attachments: body.attachments,
       merge: body.merge,
+      connectedSendProvider: body.connectedSendProvider,
+      connectedSendAccountId: body.connectedSendAccountId,
     };
+    if (body.scheduleAt) {
+      const pending = await this.mailDelayedComposeService.scheduleAt(
+        user.companyId,
+        { kind: "compose", userId: user.userId, ...payload },
+        new Date(body.scheduleAt),
+      );
+      return {
+        ok: true,
+        delayed: true,
+        scheduled: true,
+        pendingId: pending.id,
+        sendAt: pending.sendAt,
+      };
+    }
     if (body.delaySeconds && body.delaySeconds > 0) {
       const pending = await this.mailDelayedComposeService.schedule(
         user.companyId,
@@ -1815,8 +1873,6 @@ export class CompanyMailInboxController {
       organizationId: user.companyId,
       userId: user.userId,
       contentProtection: body.contentProtection,
-      connectedSendProvider: body.connectedSendProvider,
-      connectedSendAccountId: body.connectedSendAccountId,
       ...payload,
     });
     await this.recordInboxMailAudit(user, MailIdentityAuditAction.InboxComposeSent, {
@@ -2293,20 +2349,37 @@ export class CompanyMailInboxController {
     @Body() body: ReplyMailRequestDto,
   ) {
     this.assertMailInboxWriter(user);
+    const replyDelayedPayload = {
+      kind: "reply" as const,
+      userId: user.userId,
+      inboundMessageId: messageId,
+      text: body.text,
+      cc: body.cc,
+      bcc: body.bcc,
+      replyAll: body.replyAll,
+      attachments: body.attachments,
+      merge: body.merge,
+      connectedSendProvider: body.connectedSendProvider,
+      connectedSendAccountId: body.connectedSendAccountId,
+    };
+    if (body.scheduleAt) {
+      const pending = await this.mailDelayedComposeService.scheduleAt(
+        user.companyId,
+        replyDelayedPayload,
+        new Date(body.scheduleAt),
+      );
+      return {
+        ok: true,
+        delayed: true,
+        scheduled: true,
+        pendingId: pending.id,
+        sendAt: pending.sendAt,
+      };
+    }
     if (body.delaySeconds && body.delaySeconds > 0) {
       const pending = await this.mailDelayedComposeService.schedule(
         user.companyId,
-        {
-          kind: "reply",
-          userId: user.userId,
-          inboundMessageId: messageId,
-          text: body.text,
-          cc: body.cc,
-          bcc: body.bcc,
-          replyAll: body.replyAll,
-          attachments: body.attachments,
-          merge: body.merge,
-        },
+        replyDelayedPayload,
         body.delaySeconds,
       );
       return {
@@ -2377,19 +2450,36 @@ export class CompanyMailInboxController {
     @Body() body: ForwardMailRequestDto,
   ) {
     this.assertMailInboxWriter(user);
+    const forwardDelayedPayload = {
+      kind: "forward" as const,
+      userId: user.userId,
+      inboundMessageId: messageId,
+      to: body.to,
+      text: body.text,
+      includeOriginal: body.includeOriginal,
+      attachments: body.attachments,
+      merge: body.merge,
+      connectedSendProvider: body.connectedSendProvider,
+      connectedSendAccountId: body.connectedSendAccountId,
+    };
+    if (body.scheduleAt) {
+      const pending = await this.mailDelayedComposeService.scheduleAt(
+        user.companyId,
+        forwardDelayedPayload,
+        new Date(body.scheduleAt),
+      );
+      return {
+        ok: true,
+        delayed: true,
+        scheduled: true,
+        pendingId: pending.id,
+        sendAt: pending.sendAt,
+      };
+    }
     if (body.delaySeconds && body.delaySeconds > 0) {
       const pending = await this.mailDelayedComposeService.schedule(
         user.companyId,
-        {
-          kind: "forward",
-          userId: user.userId,
-          inboundMessageId: messageId,
-          to: body.to,
-          text: body.text,
-          includeOriginal: body.includeOriginal,
-          attachments: body.attachments,
-          merge: body.merge,
-        },
+        forwardDelayedPayload,
         body.delaySeconds,
       );
       return {

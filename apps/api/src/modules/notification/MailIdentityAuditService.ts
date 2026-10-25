@@ -106,6 +106,14 @@ export class MailIdentityAuditService {
     }));
   }
 
+  private static readonly CONNECTED_ACCOUNT_ACTION_CODES = [
+    MailIdentityAuditAction.ExchangeSyncConnected,
+    MailIdentityAuditAction.ExchangeSyncDisconnected,
+    MailIdentityAuditAction.GmailSyncConnected,
+    MailIdentityAuditAction.GmailSyncDisconnected,
+    MailIdentityAuditAction.ConnectedAccountOutboundSent,
+  ];
+
   private static readonly SEND_ACTION_CODES = [
     "MAIL_INBOX_COMPOSE_SENT",
     "MAIL_INBOX_REPLY_SENT",
@@ -183,5 +191,54 @@ export class MailIdentityAuditService {
         ? page[page.length - 1].createdAt.toISOString()
         : null;
     return { logs, nextBefore };
+  }
+
+  public async listConnectedAccountEvents(
+    organizationId: string,
+    limit = 50,
+  ): Promise<{ logs: MailTenantAuditLogDto[] }> {
+    const capped = Math.min(Math.max(limit, 1), 100);
+    const rows = await this.auditLogRepository
+      .createQueryBuilder("log")
+      .where("log.actionCode IN (:...codes)", {
+        codes: MailIdentityAuditService.CONNECTED_ACCOUNT_ACTION_CODES,
+      })
+      .andWhere(
+        `(log.actorCompanyId = :orgId OR log.metadata->>'organizationId' = :orgId)`,
+        { orgId: organizationId },
+      )
+      .orderBy("log.createdAt", "DESC")
+      .take(capped)
+      .getMany();
+    const actorIds = [
+      ...new Set(
+        rows
+          .map((row) => row.actorUserId)
+          .filter((id): id is string => Boolean(id)),
+      ),
+    ];
+    const actors =
+      actorIds.length > 0
+        ? await this.userAccountRepository.find({
+            where: { id: In(actorIds) },
+          })
+        : [];
+    const emailByUserId = new Map(
+      actors.map((user) => [user.id, user.emailAddress]),
+    );
+    const logs: MailTenantAuditLogDto[] = rows.map((row) => ({
+      id: row.id,
+      actionCode: row.actionCode,
+      labelTr: mailAuditLabelTr(row.actionCode),
+      summaryTr: mailAuditSummaryTr(row.actionCode, row.metadata),
+      actorUserId: row.actorUserId,
+      actorEmail: row.actorUserId
+        ? emailByUserId.get(row.actorUserId) ?? null
+        : null,
+      requestPath: row.requestPath,
+      metadata: row.metadata,
+      createdAt: row.createdAt.toISOString(),
+    }));
+    return { logs };
   }
 }

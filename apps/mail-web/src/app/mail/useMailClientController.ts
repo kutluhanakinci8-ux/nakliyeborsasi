@@ -86,6 +86,7 @@ import {
   refreshInboxAiFocus,
   type MailInboxBranding,
   searchInbox,
+  type MailConnectedExternalSearchHit,
   sendDraft,
   setMessageMailboxFolder,
   setMessageStarred,
@@ -237,6 +238,9 @@ export function useMailClientController({
   const [searchResults, setSearchResults] = useState<MailInboxListItem[] | null>(
     null,
   );
+  const [searchExternalHits, setSearchExternalHits] = useState<
+    MailConnectedExternalSearchHit[]
+  >([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detail, setDetail] = useState<MailInboxMessageDetail | null>(null);
   const [sentPreview, setSentPreview] = useState<MailSentMessageDetail | null>(
@@ -732,16 +736,22 @@ export function useMailClientController({
       view === "contacts"
     ) {
       setSearchResults(null);
+      setSearchExternalHits([]);
       return;
     }
     if (!searchActive) {
       setSearchResults(null);
+      setSearchExternalHits([]);
       return;
     }
     setSearchResults(null);
+    setSearchExternalHits([]);
     const timer = window.setTimeout(() => {
       void (async () => {
         const folder = inboxFolderForView(view);
+        const deep =
+          searchQuery.trim().length >= 3 &&
+          (inboxConnectedSourceForFetch !== "lerta" || showConnectedInboxTabs);
         const data = await searchInbox(
           accessToken,
           folder,
@@ -756,11 +766,13 @@ export function useMailClientController({
                 : searchHasAttachment === "no"
                   ? false
                   : undefined,
+            deep,
           },
           folder === "inbox" ? inboxCustomFolderId : undefined,
           folder === "inbox" ? inboxConnectedSourceForFetch : "all",
         );
         setSearchResults(data.messages);
+        setSearchExternalHits(data.externalHits ?? []);
       })();
     }, 300);
     return () => window.clearTimeout(timer);
@@ -775,6 +787,7 @@ export function useMailClientController({
     view,
     inboxCustomFolderId,
     inboxConnectedSourceForFetch,
+    showConnectedInboxTabs,
   ]);
 
   function applyMessageReadLocal(messageId: string, readAt: string) {
@@ -2835,6 +2848,7 @@ export function useMailClientController({
     searchParams,
     searchQuery,
     searchResults,
+    searchExternalHits,
     selectedId,
     composeSendAsKey,
     setComposeSendAsKey,

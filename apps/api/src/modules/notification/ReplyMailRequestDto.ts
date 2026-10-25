@@ -2,6 +2,7 @@ import { Type } from "class-transformer";
 import {
   IsArray,
   IsBoolean,
+  IsDateString,
   IsIn,
   IsInt,
   IsOptional,
@@ -60,4 +61,8 @@ export class ReplyMailRequestDto {
   @IsOptional()
   @IsUUID()
   public connectedSendAccountId?: string;
+
+  @IsOptional()
+  @IsDateString()
+  public scheduleAt?: string;
 }

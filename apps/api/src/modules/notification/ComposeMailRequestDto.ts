@@ -3,6 +3,7 @@ import { ComposeMergeContextDto } from "./ComposeMergeContextDto";
 import {
   IsArray,
   IsEmail,
+  IsDateString,
   IsIn,
   IsInt,
   IsOptional,
@@ -99,4 +100,9 @@ export class ComposeMailRequestDto {
   @IsOptional()
   @IsUUID()
   public connectedSendAccountId?: string;
+
+  /** ISO-8601 — gelecekte gönder (delaySeconds yerine). */
+  @IsOptional()
+  @IsDateString()
+  public scheduleAt?: string;
 }

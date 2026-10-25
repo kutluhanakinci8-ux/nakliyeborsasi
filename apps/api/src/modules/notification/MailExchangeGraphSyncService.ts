@@ -401,6 +401,51 @@ export class MailExchangeGraphSyncService {
     }
   }
 
+  public async searchMessages(
+    organizationId: string,
+    accountId: string,
+    query: string,
+    limit = 15,
+  ): Promise<
+    Array<{
+      id: string;
+      subject: string;
+      fromAddress: string;
+      receivedAt: string | null;
+      snippet: string | null;
+    }>
+  > {
+    const account = await this.accountRepository.findOne({
+      where: { id: accountId, organizationId, enabled: true },
+    });
+    if (!account) {
+      return [];
+    }
+    const accessToken = await this.resolveAccessToken(account);
+    const safeQuery = query.replace(/"/g, "").trim();
+    const url = `${GRAPH_BASE}/messages?$search=${encodeURIComponent(
+      `"${safeQuery}"`,
+    )}&$top=${Math.min(limit, 25)}&$select=id,subject,from,receivedDateTime,bodyPreview`;
+    const payload = await this.graphGetSearch(accessToken, url);
+    const values = (payload.value ?? []) as Array<Record<string, unknown>>;
+    return values
+      .filter((row) => typeof row.id === "string")
+      .map((row) => ({
+        id: String(row.id),
+        subject:
+          typeof row.subject === "string" ? row.subject : "(Konu yok)",
+        fromAddress:
+          (row.from as { emailAddress?: { address?: string } })?.emailAddress
+            ?.address ?? "unknown",
+        receivedAt:
+          typeof row.receivedDateTime === "string"
+            ? row.receivedDateTime
+            : null,
+        snippet:
+          typeof row.bodyPreview === "string" ? row.bodyPreview.slice(0, 300) : null,
+      }));
+  }
+
   public async sendMailMessage(
     organizationId: string,
     accountId: string,
@@ -727,6 +772,25 @@ export class MailExchangeGraphSyncService {
         `Graph POST başarısız (${response.status}): ${text.slice(0, 200)}`,
       );
     }
+  }
+
+  private async graphGetSearch(
+    accessToken: string,
+    url: string,
+  ): Promise<Record<string, unknown>> {
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        ConsistencyLevel: "eventual",
+      },
+    });
+    if (!response.ok) {
+      const text = await response.text();
+      throw new BadRequestException(
+        `Graph arama başarısız (${response.status}): ${text.slice(0, 200)}`,
+      );
+    }
+    return (await response.json()) as Record<string, unknown>;
   }
 
   private async graphGet(

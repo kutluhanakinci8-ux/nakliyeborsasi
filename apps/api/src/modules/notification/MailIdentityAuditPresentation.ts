@@ -41,6 +41,10 @@ const LABELS: Record<string, string> = {
     "Posta kutusu delegasyonu kaldırıldı",
   [MailIdentityAuditAction.ExchangeSyncConnected]: "Exchange hesabı bağlandı",
   [MailIdentityAuditAction.ExchangeSyncDisconnected]: "Exchange hesabı kaldırıldı",
+  [MailIdentityAuditAction.GmailSyncConnected]: "Gmail hesabı bağlandı",
+  [MailIdentityAuditAction.GmailSyncDisconnected]: "Gmail hesabı kaldırıldı",
+  [MailIdentityAuditAction.ConnectedAccountOutboundSent]:
+    "Bağlı hesaptan gönderim",
   [MailIdentityAuditAction.InboxComposeSent]: "E-posta gönderildi",
   [MailIdentityAuditAction.InboxReplySent]: "Yanıt gönderildi",
   [MailIdentityAuditAction.InboxForwardSent]: "İleti gönderildi",

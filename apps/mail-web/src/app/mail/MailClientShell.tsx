@@ -207,6 +207,7 @@ export function MailClientShell({ mail }: Props) {
     searchParams,
     searchQuery,
     searchResults,
+    searchExternalHits,
     selectedId,
     composeSendAsKey,
     setComposeSendAsKey,
@@ -1085,6 +1086,9 @@ export function MailClientShell({ mail }: Props) {
             {searchActive && searchResults !== null ? (
               <p className="mail-search-hint">
                 {searchResults.length} sonuç
+                {searchExternalHits.length > 0
+                  ? ` · ${searchExternalHits.length} bulut (Microsoft/Gmail)`
+                  : ""}
               </p>
             ) : null}
           </div>
@@ -1219,6 +1223,10 @@ export function MailClientShell({ mail }: Props) {
               onClick={() => {
                 if (view === "drafts") {
                   const d = drafts.find((x) => x.id === m.id);
+                  if (d?.source === "connected" && d.inboundMessageId) {
+                    void openMessage(d.inboundMessageId);
+                    return;
+                  }
                   if (d) {
                     setSelectedId(m.id);
                     setDraftPreview(d);

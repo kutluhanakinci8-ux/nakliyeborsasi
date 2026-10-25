@@ -334,6 +334,62 @@ export class MailGmailSyncService {
     return { buffer, contentType: "application/octet-stream" };
   }
 
+  public async searchMessages(
+    organizationId: string,
+    accountId: string,
+    query: string,
+    limit = 15,
+  ): Promise<
+    Array<{
+      id: string;
+      subject: string;
+      fromAddress: string;
+      receivedAt: string | null;
+      snippet: string | null;
+    }>
+  > {
+    const account = await this.accountRepository.findOne({
+      where: { id: accountId, organizationId, enabled: true },
+    });
+    if (!account) {
+      return [];
+    }
+    const accessToken = await this.resolveAccessToken(account);
+    const list = await this.gmailGet(
+      accessToken,
+      `${GMAIL_BASE}/messages?q=${encodeURIComponent(query)}&maxResults=${Math.min(limit, 25)}`,
+    );
+    const refs = (list.messages ?? []) as Array<{ id?: string }>;
+    const hits: Array<{
+      id: string;
+      subject: string;
+      fromAddress: string;
+      receivedAt: string | null;
+      snippet: string | null;
+    }> = [];
+    for (const ref of refs) {
+      if (!ref.id) {
+        continue;
+      }
+      const meta = await this.gmailGet(
+        accessToken,
+        `${GMAIL_BASE}/messages/${ref.id}?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=Date`,
+      );
+      const headers = (meta.payload as { headers?: GmailHeader[] })?.headers ?? [];
+      hits.push({
+        id: ref.id,
+        subject: headerValue(headers, "Subject")?.trim() || "(Konu yok)",
+        fromAddress:
+          headerValue(headers, "From")?.match(/<([^>]+)>/)?.[1] ??
+          headerValue(headers, "From") ??
+          "unknown",
+        receivedAt: headerValue(headers, "Date"),
+        snippet: typeof meta.snippet === "string" ? meta.snippet.slice(0, 300) : null,
+      });
+    }
+    return hits;
+  }
+
   public async sendRawMessage(
     organizationId: string,
     accountId: string,

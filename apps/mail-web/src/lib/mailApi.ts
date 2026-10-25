@@ -324,6 +324,28 @@ export type MailDraftItem = {
   attachments: ComposeAttachment[];
   updatedAt: string;
   createdAt: string;
+  source?: "lerta" | "connected";
+  inboundMessageId?: string;
+};
+
+export type MailConnectedExternalSearchHit = {
+  provider: "microsoft_graph" | "gmail_api";
+  accountId: string;
+  accountEmail: string;
+  providerMessageId: string;
+  subject: string;
+  fromAddress: string;
+  receivedAt: string | null;
+  snippet: string | null;
+  localMessageId: string | null;
+};
+
+export type MailScheduledComposeItem = {
+  id: string;
+  sendAt: string;
+  status: string;
+  kind: string;
+  summary: string;
 };
 
 export type MailImapSettings = {
@@ -750,6 +772,7 @@ export type MailInboxSearchOptions = {
   receivedAfter?: string;
   receivedBefore?: string;
   hasAttachment?: boolean;
+  deep?: boolean;
 };
 
 export async function searchInbox(
@@ -785,10 +808,14 @@ export async function searchInbox(
   } else if (options.hasAttachment === false) {
     params.set("hasAttachment", "false");
   }
-  return apiFetch<{ messages: MailInboxListItem[] }>(
-    accessToken,
-    `company/mail-inbox/search?${params.toString()}`,
-  );
+  if (options.deep) {
+    params.set("deep", "1");
+  }
+  return apiFetch<{
+    messages: MailInboxListItem[];
+    externalHits?: MailConnectedExternalSearchHit[];
+    deepSearch?: boolean;
+  }>(accessToken, `company/mail-inbox/search?${params.toString()}`);
 }
 
 export async function deleteSentMessage(accessToken: string, sentId: string) {
@@ -1899,11 +1926,46 @@ export async function forwardMail(
 }
 
 export async function fetchDrafts(accessToken: string) {
-  const payload = await apiFetch<{ drafts: MailDraftItem[] }>(
+  const payload = await apiFetch<{
+    drafts: MailDraftItem[];
+    syncedDrafts?: MailInboxListItem[];
+  }>(accessToken, "company/mail-inbox/drafts");
+  const local = payload.drafts.map((draft) => ({
+    ...draft,
+    source: "lerta" as const,
+  }));
+  const synced = (payload.syncedDrafts ?? []).map((row) => ({
+    id: `connected:${row.id}`,
+    inboundMessageId: row.id,
+    source: "connected" as const,
+    to: row.inboxSource?.accountEmail ?? row.fromAddress,
+    subject: row.subject,
+    text: row.snippet,
+    attachments: [],
+    updatedAt: row.receivedAt,
+    createdAt: row.receivedAt,
+  }));
+  return [...local, ...synced];
+}
+
+export async function fetchScheduledCompose(accessToken: string) {
+  return apiFetch<{ pending: MailScheduledComposeItem[] }>(
     accessToken,
-    "company/mail-inbox/drafts",
+    "company/mail-inbox/compose/scheduled",
   );
-  return payload.drafts;
+}
+
+export async function fetchConnectedAccountAudit(accessToken: string) {
+  return apiFetch<{
+    logs: Array<{
+      id: string;
+      actionCode: string;
+      labelTr: string;
+      summaryTr: string;
+      actorEmail: string | null;
+      createdAt: string;
+    }>;
+  }>(accessToken, "company/mail-inbox/connected-accounts/audit");
 }
 
 export async function createDraft(

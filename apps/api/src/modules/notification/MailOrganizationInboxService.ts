@@ -238,6 +238,30 @@ export class MailOrganizationInboxService {
     return rows.map((row) => this.toListRow(row, sourceCtx));
   }
 
+  public async listConnectedSyncedDrafts(
+    organizationId: string,
+    actor?: MailInboxActor,
+    connectedSource: ConnectedInboxSourceFilter = "all",
+    limit = 40,
+  ): Promise<MailInboxListRow[]> {
+    const mailboxIds = await this.mailboxIds(organizationId, actor);
+    if (mailboxIds.length === 0) {
+      return [];
+    }
+    const sourceCtx = await this.loadInboxSourceContext(organizationId);
+    const qb = this.inboundRepository.createQueryBuilder("m");
+    qb.where("m.mailboxId IN (:...mailboxIds)", { mailboxIds });
+    qb.andWhere("m.exchange_well_known_folder = :draftsFolder", {
+      draftsFolder: "drafts",
+    });
+    this.applyConnectedSourceFilter(qb, connectedSource);
+    const rows = await qb
+      .orderBy("m.receivedAt", "DESC")
+      .take(limit)
+      .getMany();
+    return rows.map((row) => this.toListRow(row, sourceCtx));
+  }
+
   public async searchMessages(
     organizationId: string,
     folder: InboxFolder = "inbox",
@@ -270,7 +294,8 @@ export class MailOrganizationInboxService {
           sub
             .where("m.subject ILIKE :textPattern", { textPattern: pattern })
             .orWhere("m.fromAddress ILIKE :textPattern", { textPattern: pattern })
-            .orWhere("m.snippet ILIKE :textPattern", { textPattern: pattern });
+            .orWhere("m.snippet ILIKE :textPattern", { textPattern: pattern })
+            .orWhere("m.bodyText ILIKE :textPattern", { textPattern: pattern });
         }),
       );
     }

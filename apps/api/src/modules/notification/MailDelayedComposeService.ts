@@ -16,6 +16,7 @@ import { MailComposeDraftService } from "./MailComposeDraftService";
 
 const MAX_DELAY_SECONDS = 30;
 const DEFAULT_DELAY_SECONDS = 5;
+const MAX_SCHEDULE_AHEAD_MS = 90 * 24 * 60 * 60 * 1000;
 
 @Injectable()
 export class MailDelayedComposeService {
@@ -44,6 +45,93 @@ export class MailDelayedComposeService {
       }),
     );
     return { id: row.id, sendAt: sendAfter.toISOString() };
+  }
+
+  public async scheduleAt(
+    organizationId: string,
+    payload: MailDelayedSendPayload,
+    sendAt: Date,
+  ): Promise<{ id: string; sendAt: string }> {
+    const now = Date.now();
+    if (sendAt.getTime() < now + 60_000) {
+      throw new BadRequestException(
+        "Zamanlanmış gönderim en az 1 dakika sonrası olmalı.",
+      );
+    }
+    if (sendAt.getTime() > now + MAX_SCHEDULE_AHEAD_MS) {
+      throw new BadRequestException(
+        "Zamanlanmış gönderim en fazla 90 gün sonrası olabilir.",
+      );
+    }
+    const row = await this.delayedRepository.save(
+      this.delayedRepository.create({
+        organizationId,
+        status: "pending",
+        sendAfter: sendAt,
+        payload,
+        sentId: null,
+        errorMessage: null,
+      }),
+    );
+    return { id: row.id, sendAt: sendAt.toISOString() };
+  }
+
+  public async listPendingForOrganization(
+    organizationId: string,
+    userId?: string,
+    limit = 30,
+  ): Promise<
+    Array<{
+      id: string;
+      sendAt: string;
+      status: MailDelayedComposeEntity["status"];
+      kind: string;
+      summary: string;
+    }>
+  > {
+    const rows = await this.delayedRepository.find({
+      where: { organizationId, status: "pending" },
+      order: { sendAfter: "ASC" },
+      take: Math.min(limit, 50),
+    });
+    return rows
+      .filter((row) => {
+        if (!userId) {
+          return true;
+        }
+        const payload = row.payload;
+        if (this.isLegacyCompose(payload)) {
+          return true;
+        }
+        return "userId" in payload && payload.userId === userId;
+      })
+      .map((row) => {
+        const payload = row.payload;
+        let kind = "compose";
+        let summary = "Gönderim";
+        if (this.isLegacyCompose(payload)) {
+          summary = payload.subject;
+        } else {
+          const send = payload as MailDelayedSendPayload;
+          kind = send.kind;
+          if (send.kind === "compose") {
+            summary = send.subject;
+          } else if (send.kind === "reply") {
+            summary = "Yanıt";
+          } else if (send.kind === "forward") {
+            summary = `İleti → ${send.to}`;
+          } else if (send.kind === "draft_send") {
+            summary = "Taslaktan gönderim";
+          }
+        }
+        return {
+          id: row.id,
+          sendAt: row.sendAfter.toISOString(),
+          status: row.status,
+          kind,
+          summary,
+        };
+      });
   }
 
   public async getStatus(
@@ -143,6 +231,8 @@ export class MailDelayedComposeService {
         replyAll: send.replyAll,
         attachments: send.attachments,
         merge: send.merge,
+        connectedSendProvider: send.connectedSendProvider,
+        connectedSendAccountId: send.connectedSendAccountId,
       });
     }
     if (send.kind === "forward") {
@@ -155,6 +245,8 @@ export class MailDelayedComposeService {
         includeOriginal: send.includeOriginal,
         attachments: send.attachments,
         merge: send.merge,
+        connectedSendProvider: send.connectedSendProvider,
+        connectedSendAccountId: send.connectedSendAccountId,
       });
     }
     if (send.kind === "compose") {
@@ -169,6 +261,8 @@ export class MailDelayedComposeService {
         html: send.html,
         attachments: send.attachments,
         merge: send.merge,
+        connectedSendProvider: send.connectedSendProvider,
+        connectedSendAccountId: send.connectedSendAccountId,
       });
     }
     if (send.kind === "draft_send") {

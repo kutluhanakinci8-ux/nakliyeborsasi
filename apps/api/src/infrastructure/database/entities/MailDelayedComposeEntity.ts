@@ -18,6 +18,11 @@ export type MailDelayedComposeMergeContext = {
   musteriAdi?: string;
 };
 
+export type MailDelayedConnectedSend = {
+  connectedSendProvider?: "microsoft_graph" | "gmail_api";
+  connectedSendAccountId?: string;
+};
+
 export type MailDelayedComposePayload = {
   to: string;
   cc?: string;
@@ -27,6 +32,8 @@ export type MailDelayedComposePayload = {
   html?: string;
   attachments?: MailDelayedComposeAttachment[];
   merge?: MailDelayedComposeMergeContext;
+  connectedSendProvider?: "microsoft_graph" | "gmail_api";
+  connectedSendAccountId?: string;
 };
 
 export type MailDelayedSendPayload =
@@ -44,6 +51,8 @@ export type MailDelayedSendPayload =
       replyAll?: boolean;
       attachments?: MailDelayedComposeAttachment[];
       merge?: MailDelayedComposeMergeContext;
+      connectedSendProvider?: "microsoft_graph" | "gmail_api";
+      connectedSendAccountId?: string;
     }
   | {
       kind: "forward";
@@ -54,6 +63,8 @@ export type MailDelayedSendPayload =
       includeOriginal?: boolean;
       attachments?: MailDelayedComposeAttachment[];
       merge?: MailDelayedComposeMergeContext;
+      connectedSendProvider?: "microsoft_graph" | "gmail_api";
+      connectedSendAccountId?: string;
     }
   | {
       kind: "draft_send";
