@@ -18,6 +18,8 @@ import {
   readReadFontScale,
   type MailReadFontScale,
 } from "@/lib/mailDisplayPrefs";
+import { useMailLocale } from "@/lib/MailLocaleProvider";
+import type { MailTimeZoneId, MailUiLocale } from "@/lib/mailLocale";
 
 type Props = {
   accessToken: string;
@@ -56,6 +58,7 @@ export function MailDisplaySettings({
   inboxListDensity,
   onInboxListDensityChange,
 }: Props) {
+  const { locale, setLocale, timeZone, setTimeZone, t } = useMailLocale();
   const [themeMode, setThemeMode] = useState<MailThemeMode>("light");
   const [density, setDensity] = useState(inboxListDensity);
   const [readFont, setReadFont] = useState<MailReadFontScale>("default");
@@ -201,6 +204,46 @@ export function MailDisplaySettings({
         ) : densityStatus ? (
           <p className="mail-display-status">{densityStatus}</p>
         ) : null}
+      </section>
+
+      <section className="mail-display-section">
+        <h3 className="mail-display-section-title">{t("regionalTitle")}</h3>
+        <p className="mail-display-section-hint">{t("regionalHint")}</p>
+        <p className="mail-display-field-label">{t("languageLabel")}</p>
+        <div className="mail-display-segment">
+          {(
+            [
+              { id: "tr" as MailUiLocale, label: t("localeTr") },
+              { id: "en" as MailUiLocale, label: t("localeEn") },
+            ] as const
+          ).map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              className={
+                locale === option.id
+                  ? "mail-display-segment-btn is-active"
+                  : "mail-display-segment-btn"
+              }
+              onClick={() => setLocale(option.id)}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+        <p className="mail-display-field-label">{t("timeZoneLabel")}</p>
+        <select
+          className="mail-display-select"
+          value={timeZone}
+          onChange={(event) =>
+            setTimeZone(event.target.value as MailTimeZoneId)
+          }
+        >
+          <option value="Europe/Istanbul">Europe/Istanbul (TR)</option>
+          <option value="UTC">UTC</option>
+          <option value="Europe/London">Europe/London</option>
+          <option value="Europe/Berlin">Europe/Berlin</option>
+        </select>
       </section>
 
       <section className="mail-display-section">

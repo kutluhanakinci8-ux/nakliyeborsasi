@@ -21,6 +21,8 @@
     "test:unit": "npm run test -w @nakliyeborsasi/core",
     "test:api": "npm run test -w @nakliyeborsasi/api",
     "test:e2e": "npm run test:e2e -w @nakliyeborsasi/web",
+    "test:mail-e2e": "npm run test:e2e -w @lerta/mail-web",
+    "customer-ready": "bash scripts/run-customer-readiness-gate.sh",
     "verify:vps": "bash scripts/vps-operator-verify.sh",
     "archive:move": "bash scripts/archive-replaced-source.sh",
     "git:cleanup-merged": "bash scripts/cleanup-merged-git-branches.sh",
@@ -46,6 +48,7 @@
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "@types/react": "^18.3.11",
-    "@types/react-dom": "^18.3.1"
+    "@types/react-dom": "^18.3.1",
+    "tar": "7.5.22"
   }
 }

@@ -1258,6 +1258,43 @@ a {
   color: var(--login-text);
 }
 
+.login-shell-locale {
+  display: inline-flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.login-shell-locale button {
+  border: 1px solid rgba(26, 22, 71, 0.15);
+  background: #fff;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.login-shell-locale button.is-active {
+  background: var(--login-navy, #1a1647);
+  color: #fff;
+  border-color: transparent;
+}
+
+.mail-display-select {
+  width: 100%;
+  max-width: 320px;
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--mail-border, #d8dce8);
+  font: inherit;
+}
+
+.mail-display-field-label {
+  margin: 12px 0 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
 .login-shell-header {
   display: flex;
   align-items: center;

@@ -16,6 +16,7 @@ import { MailInboxMessageRow } from "./MailInboxMessageRow";
 import { MailListSwipeRow } from "./MailListSwipeRow";
 import { MailAppLockOverlay } from "./MailAppLockOverlay";
 import type { MailClientController } from "./useMailClientController";
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 import { formatMailListDate } from "@/lib/mailDisplay";
 import {
   deleteCustomFolder,
@@ -32,6 +33,7 @@ import {
 type Props = { mail: MailClientController };
 
 export function MailClientShell({ mail }: Props) {
+  const { t } = useMailLocale();
   const {
     accessToken,
     activeCustomFolderId,
@@ -1121,6 +1123,11 @@ export function MailClientShell({ mail }: Props) {
               </ul>
             ) : null}
           </div>
+        ) : null}
+        {view === "spam" ? (
+          <p className="mail-search-hint" role="status">
+            {t("spamFolderHint")}
+          </p>
         ) : null}
         {listItems.length === 0 ? (
           <MailEmptyState

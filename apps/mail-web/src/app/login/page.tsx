@@ -8,6 +8,7 @@ import {
   MAIL_CORPORATE_REGISTER,
   MAIL_PILOT_REGISTER,
 } from "@/lib/postaOnboardingUrls";
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 import { useMailSession } from "@/lib/session";
 import { vitrinPath } from "@/lib/vitrinUrls";
 
@@ -19,6 +20,7 @@ const PLATFORM_LINKS = [
 
 export default function LoginPage() {
   const router = useRouter();
+  const { locale, setLocale, t } = useMailLocale();
   const [sessionEnded, setSessionEnded] = useState(false);
   const { setAccessToken } = useMailSession();
 
@@ -58,8 +60,10 @@ export default function LoginPage() {
     } catch {
       setError(
         totpChallenge
-          ? "Doğrulama kodu geçersiz."
-          : "E-posta veya şifre hatalı. Kurumsal posta için firma hesabı gerekir.",
+          ? locale === "en"
+            ? "Invalid verification code."
+            : "Doğrulama kodu geçersiz."
+          : t("loginError"),
       );
     } finally {
       setLoading(false);
@@ -76,10 +80,26 @@ export default function LoginPage() {
         >
           <span className="login-shell-brand-mark" aria-hidden="true">L</span>
           <span className="login-shell-brand-text">
-            <span className="login-shell-brand-name">Lerta Posta</span>
-            <span className="login-shell-brand-tag">Kurumsal webmail</span>
+            <span className="login-shell-brand-name">{t("loginBrand")}</span>
+            <span className="login-shell-brand-tag">{t("loginTag")}</span>
           </span>
         </a>
+        <div className="login-shell-locale" role="group" aria-label={t("languageLabel")}>
+          <button
+            type="button"
+            className={locale === "tr" ? "is-active" : ""}
+            onClick={() => setLocale("tr")}
+          >
+            {t("localeTr")}
+          </button>
+          <button
+            type="button"
+            className={locale === "en" ? "is-active" : ""}
+            onClick={() => setLocale("en")}
+          >
+            {t("localeEn")}
+          </button>
+        </div>
         <nav className="login-shell-nav" aria-label="Lerta platform">
           {PLATFORM_LINKS.map((item) => (
             <a key={item.href} href={item.href} className="login-shell-nav-link">
@@ -129,7 +149,9 @@ export default function LoginPage() {
         <section className="login-panel" aria-labelledby="login-form-title">
           <div className="login-panel-inner">
             <form className="login-form" onSubmit={onSubmit}>
-              <h2 id="login-form-title" className="login-form-title">Giriş yap</h2>
+              <h2 id="login-form-title" className="login-form-title">
+                {t("loginTitle")}
+              </h2>
               <p className="login-form-sub">
                 Mevcut Lerta hesabınızla webmail&apos;e erişin.
               </p>
@@ -143,7 +165,7 @@ export default function LoginPage() {
                 <p className="login-error" role="alert">{error}</p>
               ) : null}
               <div className="login-field">
-                <label htmlFor="email">E-posta</label>
+                <label htmlFor="email">{t("loginEmail")}</label>
                 <input
                   id="email"
                   type="email"
@@ -155,7 +177,7 @@ export default function LoginPage() {
                 />
               </div>
               <div className="login-field">
-                <label htmlFor="password">Şifre</label>
+                <label htmlFor="password">{t("loginPassword")}</label>
                 <input
                   id="password"
                   type="password"
@@ -184,7 +206,15 @@ export default function LoginPage() {
                 className="login-submit"
                 disabled={loading}
               >
-                {loading ? "Giriş yapılıyor…" : totpChallenge ? "Doğrula" : "Giriş yap"}
+                {loading
+                  ? locale === "en"
+                    ? "Signing in…"
+                    : "Giriş yapılıyor…"
+                  : totpChallenge
+                    ? locale === "en"
+                      ? "Verify"
+                      : "Doğrula"
+                    : t("loginSubmit")}
               </button>
               <p className="login-forgot">
                 <Link href="/forgot-password">Şifremi unuttum</Link>

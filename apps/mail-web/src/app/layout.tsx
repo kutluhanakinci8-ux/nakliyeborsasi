@@ -7,6 +7,7 @@ const inter = Inter({
   display: "swap",
   variable: "--font-mail",
 });
+import { MailLocaleProvider } from "@/lib/MailLocaleProvider";
 import { MailSessionProvider } from "@/lib/session";
 import { MailThemeProvider } from "@/components/MailThemeProvider";
 import { MailPwaRegister } from "@/components/MailPwaRegister";
@@ -48,12 +49,14 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <MailSessionProvider>
-          <MailThemeProvider>
-            <MailEmbeddedSessionBridge />
-            <MailPwaRegister />
-            <MailHttpsRedirect />
-            {children}
-          </MailThemeProvider>
+          <MailLocaleProvider>
+            <MailThemeProvider>
+              <MailEmbeddedSessionBridge />
+              <MailPwaRegister />
+              <MailHttpsRedirect />
+              {children}
+            </MailThemeProvider>
+          </MailLocaleProvider>
         </MailSessionProvider>
       </body>
     </html>

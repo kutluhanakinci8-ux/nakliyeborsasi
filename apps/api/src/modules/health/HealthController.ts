@@ -1,7 +1,9 @@
 import { Controller, Get } from "@nestjs/common";
+import { SkipThrottle } from "@nestjs/throttler";
 import { DataSource } from "typeorm";
 import { MessagingRealtimeHubService } from "../messaging/MessagingRealtimeHubService";
 
+@SkipThrottle()
 @Controller("health")
 export class HealthController {
   public constructor(

@@ -4,6 +4,7 @@ import { ConfigService } from "@nestjs/config";
 import { NestExpressApplication } from "@nestjs/platform-express";
 import { join } from "path";
 import { AppModule } from "./AppModule";
+import { HttpSecurityHeadersMiddleware } from "./infrastructure/http/HttpSecurityHeadersMiddleware";
 import { PlatformExceptionFilter } from "./infrastructure/http/PlatformExceptionFilter";
 
 export class BootstrapApplication {
@@ -29,6 +30,8 @@ export class BootstrapApplication {
       }),
     );
     application.useGlobalFilters(new PlatformExceptionFilter());
+    const securityHeaders = new HttpSecurityHeadersMiddleware();
+    application.use(securityHeaders.use.bind(securityHeaders));
     application.enableCors({
       origin: true,
       credentials: true,

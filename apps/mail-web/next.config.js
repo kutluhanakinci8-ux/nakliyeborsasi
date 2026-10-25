@@ -7,6 +7,10 @@ const securityHeaders = [
 
 const nextConfig = {
   reactStrictMode: true,
+  images: {
+    dangerouslyAllowSVG: false,
+    contentDispositionType: "attachment",
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

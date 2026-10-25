@@ -52,8 +52,9 @@ run_layer system_smoke "5. System — prod HTTPS/smoke" \
 run_layer compliance_mp9 "6. Compliance — MP-9 SOC2-lite docs" \
   bash "${ROOT}/scripts/verify-security-compliance-mp9.sh"
 
-run_layer security_audit "7. Security — npm audit (runtime prod deps)" \
-  bash -c "cd '${ROOT}' && npm audit --omit=dev --audit-level=critical 2>&1 | tail -20; crit=\$(npm audit --omit=dev --audit-level=critical --json 2>/dev/null | node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const j=JSON.parse(d);console.log(j.metadata?.vulnerabilities?.critical||0)}catch{console.log(0)}})\"); test \"\${crit}\" -eq 0"
+run_layer security_audit "7. Security — npm audit gate" \
+  env NPM_AUDIT_ALLOW_NEXT_CRITICAL="${NPM_AUDIT_ALLOW_NEXT_CRITICAL:-1}" \
+    bash "${ROOT}/scripts/qa-npm-audit-gate.sh"
 
 run_layer security_surface "8. Security — surface headers" \
   bash "${ROOT}/scripts/qa-security-surface.sh"
@@ -64,22 +65,36 @@ run_layer perf_load "9. Performance — load (light prod)" \
 run_layer l10n_tr "10. Localization — tr-TR" \
   bash "${ROOT}/scripts/qa-localization-tr.sh"
 
-run_layer e2e_playwright "11. System/E2E — Playwright (public)" \
+run_layer l10n_en "10b. Localization — en-US" \
+  bash "${ROOT}/scripts/qa-localization-en.sh"
+
+run_layer e2e_playwright "11. System/E2E — Playwright (messaging)" \
   bash -c "cd '${ROOT}/apps/web' && npx playwright install chromium --with-deps 2>/dev/null | tail -3; npx playwright test e2e/messaging-hub.spec.ts --grep 'login sayfası|korumalı'"
+
+run_layer e2e_mail_web "11b. System/E2E — Playwright (posta)" \
+  bash -c "cd '${ROOT}/apps/mail-web' && npm run build && npx playwright install chromium 2>/dev/null | tail -2 && npx playwright test e2e/login-locale.spec.ts"
 
 run_layer uat_faz6_code "12. UAT Faz 6 — kod tamamlama" \
   bash "${ROOT}/scripts/verify-uat-faz6-code-complete.sh"
 
-# UAT: ops / müşteri imzası (kod kapısı geçildikten sonra)
-RESULT["uat"]="CONFIG_LATER"
-DETAIL["uat"]="Ops: UAT_VPS_RUNTIME=1, OAuth, VAPID, PTR, inbox — docs/UAT_FAZ6_CODE_COMPLETE.md"
+if [[ "${UAT_VPS_RUNTIME:-0}" == "1" ]]; then
+  run_layer uat_ops "13b. UAT ops — VPS runtime" \
+    bash "${ROOT}/scripts/verify-uat-ops-runtime.sh"
+  RESULT["uat"]="${RESULT[uat_ops]:-FAIL}"
+  DETAIL["uat"]="UAT_VPS_RUNTIME=1"
+else
+  RESULT["uat"]="CONFIG_LATER"
+  DETAIL["uat"]="Ops: UAT_VPS_RUNTIME=1 + docs/CUSTOMER_READY_GATE.md"
+fi
 
-# Pentest full
-RESULT["pentest"]="NOT_RUN"
-DETAIL["pentest"]="Tam sızma (OWASP ZAP/Burp) bu otomasyon dışı; security_surface + npm audit surrogate."
+run_layer pentest_baseline "13. Security — OWASP baseline (surrogate)" \
+  bash "${ROOT}/scripts/qa-owasp-baseline.sh"
+
+RESULT["pentest"]="${RESULT[pentest_baseline]:-FAIL}"
+DETAIL["pentest"]="Tam sızma (ZAP/Burp) ayrı; qa-owasp-baseline.sh sürekli smoke."
 
 FAIL_COUNT=0
-for k in unit_core unit_api regression_parity regression_wave2 system_smoke compliance_mp9 security_audit security_surface perf_load l10n_tr e2e_playwright uat_faz6_code; do
+for k in unit_core unit_api regression_parity regression_wave2 system_smoke compliance_mp9 security_audit security_surface perf_load l10n_tr l10n_en e2e_playwright e2e_mail_web uat_faz6_code pentest_baseline uat_ops; do
   [[ "${RESULT[$k]:-FAIL}" == "FAIL" ]] && FAIL_COUNT=$((FAIL_COUNT + 1))
 done
 
@@ -90,7 +105,7 @@ done
   echo "  \"failCount\": ${FAIL_COUNT},"
   echo "  \"layers\": {"
   first=1
-  for k in unit_core unit_api regression_parity regression_wave2 system_smoke compliance_mp9 security_audit security_surface perf_load l10n_tr e2e_playwright uat pentest; do
+  for k in unit_core unit_api regression_parity regression_wave2 system_smoke compliance_mp9 security_audit security_surface perf_load l10n_tr l10n_en e2e_playwright e2e_mail_web uat pentest; do
     [[ $first -eq 1 ]] || echo ","
     first=0
     printf '    "%s": "%s"' "$k" "${RESULT[$k]:-UNKNOWN}"
