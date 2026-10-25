@@ -7,7 +7,9 @@ if [[ "$(id -u)" -ne 0 ]]; then
   exit 1
 fi
 
+MASTER_CF="/etc/postfix/master.cf"
 DOVECOT_SASL_SNIP="/etc/dovecot/conf.d/99-lerta-postfix-sasl.conf"
+
 if [[ ! -f "${DOVECOT_SASL_SNIP}" ]]; then
   cat >"${DOVECOT_SASL_SNIP}" <<'EOF'
 # Lerta — Postfix smtp-auth (Outlook mobil / Thunderbird giden)
@@ -30,27 +32,33 @@ if ! grep -q '^smtpd_sasl_auth_enable' /etc/postfix/main.cf 2>/dev/null; then
   echo "OK: postfix main.cf SASL (dovecot)"
 fi
 
-if ! postconf -Mf 'submission/inet' >/dev/null 2>&1; then
-  postconf -M 'submission/inet=submission inet n - y - - smtpd'
-  postconf -P 'submission/inet/syslog_name=postfix/submission'
-  postconf -P 'submission/inet/smtpd_tls_security_level=encrypt'
-  postconf -P 'submission/inet/smtpd_sasl_auth_enable=yes'
-  postconf -P 'submission/inet/smtpd_tls_auth_only=yes'
-  postconf -P 'submission/inet/smtpd_reject_unlisted_recipient=no'
-  postconf -P 'submission/inet/smtpd_recipient_restrictions=permit_sasl_authenticated,reject'
-  postconf -P 'submission/inet/milter_macro_daemon_name=ORIGINATING'
-  echo "OK: postfix submission/inet :587"
+if ! grep -qE '^submission[[:space:]]+inet' "${MASTER_CF}"; then
+  cat >>"${MASTER_CF}" <<'EOF'
+
+# Lerta — harici istemci gönderim (Outlook mobil / M2)
+submission inet n       -       y       -       -       smtpd
+  -o syslog_name=postfix/submission
+  -o smtpd_tls_security_level=encrypt
+  -o smtpd_sasl_auth_enable=yes
+  -o smtpd_tls_auth_only=yes
+  -o smtpd_reject_unlisted_recipient=no
+  -o smtpd_recipient_restrictions=permit_sasl_authenticated,reject
+  -o milter_macro_daemon_name=ORIGINATING
+EOF
+  echo "OK: master.cf submission :587"
 else
-  echo "SKIP: submission/inet zaten tanımlı"
+  echo "SKIP: master.cf submission zaten aktif"
 fi
 
 systemctl restart dovecot
-systemctl reload postfix
+postfix check
+systemctl restart postfix
 
-if ss -tlnp | grep -q ':587 '; then
+sleep 1
+if ss -tlnp | grep -qE ':587[[:space:]]'; then
   echo "OK: dinleyici :587"
 else
-  echo "NOT: :587 dinlemiyor" >&2
+  echo "NOT: :587 dinlemiyor — journalctl -u postfix" >&2
   exit 1
 fi
 
