@@ -100,12 +100,12 @@ export function MailNotificationsSettingsPanel({
       try {
         await reload();
       } catch {
-        setError("Bildirim ayarları yüklenemedi.");
+        setError(t("notifyLoadError"));
       } finally {
         setInitialLoading(false);
       }
     })();
-  }, [reload]);
+  }, [reload, t]);
 
   function setStatusMessage(message: string, isError = false) {
     if (isError) {

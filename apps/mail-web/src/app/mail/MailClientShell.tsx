@@ -1821,10 +1821,14 @@ export function MailClientShell({ mail }: Props) {
                   </label>
                   {replyFiles.length > 0 ? (
                     <p className="mail-attach-hint">
-                      {replyFiles.length} ek (en fazla 3, {maxAttachmentMb} MB)
+                      {t("replyAttachmentsCount", {
+                        count: replyFiles.length,
+                        maxCount: 3,
+                        maxMb: maxAttachmentMb,
+                      })}
                     </p>
                   ) : (
-                    <p className="compose-attach-hint">Dosya seçilmedi</p>
+                    <p className="compose-attach-hint">{t("composeNoFileSelected")}</p>
                   )}
                 </div>
                 {detail.snoozedUntil &&
@@ -2104,23 +2108,25 @@ export function MailClientShell({ mail }: Props) {
                     className="compose-field-label"
                     htmlFor="compose-campaign-recipients"
                   >
-                    Alıcı listesi (en fazla {maxCampaignRecipients})
+                    {t("composeCampaignRecipientsLabel", {
+                      max: maxCampaignRecipients,
+                    })}
                   </label>
                   <textarea
                     id="compose-campaign-recipients"
                     className="compose-textarea compose-campaign-recipients"
-                    placeholder={`ornek@firma.com\nmusteri@firma.com, Ahmet Yılmaz, REF-001`}
+                    placeholder={t("composeCampaignRecipientsPlaceholder")}
                     value={composeCampaignRecipients}
                     onChange={(e) => setComposeCampaignRecipients(e.target.value)}
                     rows={4}
                   />
                   <p className="compose-attach-hint">
-                    Satır başına e-posta; isteğe bağlı: e-posta, müşteri adı, referans
+                    {t("composeCampaignRecipientsHint")}
                   </p>
                   <div className="compose-campaign-tools">
                     {composeCampaignTemplates.length > 0 ? (
                       <label className="compose-preset-label">
-                        <span>Kampanya şablonu</span>
+                        <span>{t("composeCampaignTemplate")}</span>
                         <select
                           className="compose-select"
                           defaultValue=""
@@ -2131,15 +2137,15 @@ export function MailClientShell({ mail }: Props) {
                             }
                           }}
                         >
-                          <option value="">Seç…</option>
-                          {composeCampaignTemplates.map((t) => (
-                            <option key={t.id} value={t.id}>{t.name}</option>
+                          <option value="">{t("composeSelectPrompt")}</option>
+                          {composeCampaignTemplates.map((tpl) => (
+                            <option key={tpl.id} value={tpl.id}>{tpl.name}</option>
                           ))}
                         </select>
                       </label>
                     ) : null}
                     <label className="compose-attach-label">
-                      <span className="compose-attach-btn">CSV içe aktar</span>
+                      <span className="compose-attach-btn">{t("composeCsvImport")}</span>
                       <input
                         type="file"
                         accept=".csv,text/csv"
@@ -2158,7 +2164,7 @@ export function MailClientShell({ mail }: Props) {
                       onHtmlChange={setComposeHtml}
                     />
                     <label className="compose-field-label" htmlFor="compose-campaign-delay">
-                      Alıcılar arası gecikme
+                      {t("composeCampaignDelayLabel")}
                     </label>
                     <select
                       id="compose-campaign-delay"
@@ -2168,13 +2174,13 @@ export function MailClientShell({ mail }: Props) {
                         setComposeCampaignDelayMs(Number.parseInt(e.target.value, 10) || 0)
                       }
                     >
-                      <option value={0}>Yok</option>
+                      <option value={0}>{t("composeDelayNone")}</option>
                       <option value={250}>250 ms</option>
                       <option value={500}>500 ms</option>
                       <option value={1000}>1 sn</option>
                     </select>
                     <label className="compose-field-label" htmlFor="compose-campaign-schedule">
-                      Zamanla (isteğe bağlı)
+                      {t("composeCampaignScheduleOptional")}
                     </label>
                     <input
                       id="compose-campaign-schedule"
@@ -2184,24 +2190,24 @@ export function MailClientShell({ mail }: Props) {
                       onChange={(e) => setComposeCampaignScheduleAt(e.target.value)}
                     />
                     <label className="compose-field-label" htmlFor="compose-campaign-subject-b">
-                      A/B konu (B) — 2., 4. alıcı…
+                      {t("composeCampaignSubjectBLabel")}
                     </label>
                     <input
                       id="compose-campaign-subject-b"
                       type="text"
                       className="compose-input"
-                      placeholder="İsteğe bağlı alternatif konu"
+                      placeholder={t("composeCampaignSubjectBPlaceholder")}
                       value={composeCampaignSubjectB}
                       onChange={(e) => setComposeCampaignSubjectB(e.target.value)}
                     />
                     <label className="compose-field-label" htmlFor="compose-campaign-html-b">
-                      A/B HTML (B) — çift sıra alıcılar
+                      {t("composeCampaignHtmlBLabel")}
                     </label>
                     <textarea
                       id="compose-campaign-html-b"
                       className="compose-textarea"
                       rows={3}
-                      placeholder="İsteğe bağlı alternatif HTML (boşsa A HTML kullanılır)"
+                      placeholder={t("composeCampaignHtmlBPlaceholder")}
                       value={composeCampaignHtmlB}
                       onChange={(e) => setComposeCampaignHtmlB(e.target.value)}
                     />
@@ -2210,32 +2216,32 @@ export function MailClientShell({ mail }: Props) {
                       className="compose-chip-btn"
                       onClick={() => setComposeRich(true)}
                     >
-                      Görsel şablon editörü (zengin HTML)
+                      {t("composeVisualEditorBtn")}
                     </button>
                     <label className="compose-field-label" htmlFor="compose-campaign-domains">
-                      Alan adı filtresi
+                      {t("composeCampaignDomainLabel")}
                     </label>
                     <input
                       id="compose-campaign-domains"
                       type="text"
                       className="compose-input"
-                      placeholder="ornek.com, musteri.com.tr"
+                      placeholder={t("composeCampaignDomainPlaceholder")}
                       value={composeCampaignDomainAllowlist}
                       onChange={(e) => setComposeCampaignDomainAllowlist(e.target.value)}
                     />
                     <label className="compose-field-label" htmlFor="compose-campaign-tags">
-                      Etiketler (raporlama)
+                      {t("composeCampaignTagsLabel")}
                     </label>
                     <input
                       id="compose-campaign-tags"
                       type="text"
                       className="compose-input"
-                      placeholder="fuar-2026, b2b"
+                      placeholder={t("composeCampaignTagsPlaceholder")}
                       value={composeCampaignTags}
                       onChange={(e) => setComposeCampaignTags(e.target.value)}
                     />
                     <label className="compose-field-label" htmlFor="compose-campaign-segment-prefix">
-                      Segment — referans öneki
+                      {t("composeCampaignSegmentPrefixLabel")}
                     </label>
                     <input
                       id="compose-campaign-segment-prefix"
@@ -2248,13 +2254,13 @@ export function MailClientShell({ mail }: Props) {
                       }
                     />
                     <label className="compose-field-label" htmlFor="compose-campaign-segment-list">
-                      Segment — referans listesi (CSV)
+                      {t("composeCampaignSegmentListLabel")}
                     </label>
                     <textarea
                       id="compose-campaign-segment-list"
                       className="compose-textarea"
                       rows={2}
-                      placeholder="REF-001, REF-002 veya satır satır"
+                      placeholder={t("composeCampaignSegmentListPlaceholder")}
                       value={composeCampaignSegmentReferansList}
                       onChange={(e) =>
                         setComposeCampaignSegmentReferansList(e.target.value)
@@ -2268,7 +2274,7 @@ export function MailClientShell({ mail }: Props) {
                           setComposeCampaignRequireMusteriAdi(e.target.checked)
                         }
                       />
-                      Yalnızca müşteri adı dolu satırlar
+                      {t("composeCampaignRequireName")}
                     </label>
                     <button
                       type="button"
@@ -2277,25 +2283,43 @@ export function MailClientShell({ mail }: Props) {
                       onClick={() => void runCampaignSegmentPreview()}
                     >
                       {composeCampaignSegmentPreviewBusy
-                        ? "Hesaplanıyor…"
-                        : "Segment önizle"}
+                        ? t("composeSegmentCalculating")
+                        : t("composeSegmentPreviewBtn")}
                     </button>
                     {composeCampaignSegmentPreview ? (
                       <p className="compose-attach-hint">
-                        Gönderilecek: {composeCampaignSegmentPreview.matched} /{" "}
-                        {composeCampaignSegmentPreview.total}
-                        {composeCampaignSegmentPreview.skippedDomain > 0
-                          ? ` · alan adı ${composeCampaignSegmentPreview.skippedDomain}`
-                          : ""}
-                        {composeCampaignSegmentPreview.skippedSegment > 0
-                          ? ` · segment ${composeCampaignSegmentPreview.skippedSegment}`
-                          : ""}
-                        {composeCampaignSegmentPreview.skippedInvalid > 0
-                          ? ` · geçersiz ${composeCampaignSegmentPreview.skippedInvalid}`
-                          : ""}
-                        {composeCampaignSegmentPreview.skippedSuppressed > 0
-                          ? ` · durdurulmuş ${composeCampaignSegmentPreview.skippedSuppressed}`
-                          : ""}
+                        {t("composeSegmentResult", {
+                          matched: composeCampaignSegmentPreview.matched,
+                          total: composeCampaignSegmentPreview.total,
+                          skippedDomain:
+                            composeCampaignSegmentPreview.skippedDomain > 0
+                              ? t("composeSegmentSkippedDomain", {
+                                  count:
+                                    composeCampaignSegmentPreview.skippedDomain,
+                                })
+                              : "",
+                          skippedSegment:
+                            composeCampaignSegmentPreview.skippedSegment > 0
+                              ? t("composeSegmentSkippedSegment", {
+                                  count:
+                                    composeCampaignSegmentPreview.skippedSegment,
+                                })
+                              : "",
+                          skippedInvalid:
+                            composeCampaignSegmentPreview.skippedInvalid > 0
+                              ? t("composeSegmentSkippedInvalid", {
+                                  count:
+                                    composeCampaignSegmentPreview.skippedInvalid,
+                                })
+                              : "",
+                          skippedSuppressed:
+                            composeCampaignSegmentPreview.skippedSuppressed > 0
+                              ? t("composeSegmentSkippedSuppressed", {
+                                  count:
+                                    composeCampaignSegmentPreview.skippedSuppressed,
+                                })
+                              : "",
+                        })}
                       </p>
                     ) : null}
                     {composeCampaignScheduleAt ? (
@@ -2304,7 +2328,7 @@ export function MailClientShell({ mail }: Props) {
                           className="compose-field-label"
                           htmlFor="compose-campaign-reminder"
                         >
-                          Gönderimden önce hatırlatma
+                          {t("composeCampaignReminderLabel")}
                         </label>
                         <select
                           id="compose-campaign-reminder"
@@ -2316,10 +2340,10 @@ export function MailClientShell({ mail }: Props) {
                             )
                           }
                         >
-                          <option value={0}>Yok</option>
-                          <option value={15}>15 dk önce</option>
-                          <option value={30}>30 dk önce</option>
-                          <option value={60}>1 saat önce</option>
+                          <option value={0}>{t("composeDelayNone")}</option>
+                          <option value={15}>{t("composeReminder15m")}</option>
+                          <option value={30}>{t("composeReminder30m")}</option>
+                          <option value={60}>{t("composeReminder1h")}</option>
                         </select>
                         <label className="preset-check">
                           <input
@@ -2329,7 +2353,7 @@ export function MailClientShell({ mail }: Props) {
                               setComposeCampaignNotifyCreator(e.target.checked)
                             }
                           />
-                          Zamanlama / hatırlatmada hesap e-postama özet
+                          {t("composeCampaignNotifyCreator")}
                         </label>
                       </>
                     ) : null}
@@ -2343,7 +2367,7 @@ export function MailClientShell({ mail }: Props) {
                         className="compose-field-label"
                         htmlFor="compose-send-as"
                       >
-                        Kimden
+                        {t("composeFromLabel")}
                       </label>
                       <select
                         id="compose-send-as"
@@ -2352,7 +2376,7 @@ export function MailClientShell({ mail }: Props) {
                         onChange={(e) => setComposeSendAsKey(e.target.value)}
                       >
                         <option value="lerta">
-                          Lerta · {sendReadiness?.displayAddress ?? "kurumsal"}
+                          Lerta · {sendReadiness?.displayAddress ?? t("composeLertaCorporate")}
                         </option>
                         {sendReadiness?.connectedSendAsOptions?.map((opt) => (
                           <option
@@ -2367,8 +2391,8 @@ export function MailClientShell({ mail }: Props) {
                   ) : null}
                   <MailComposeRecipientField
                     id="compose-to"
-                    label="Kime"
-                    placeholder="ornek@firma.com veya kişi adı"
+                    label={t("fieldTo")}
+                    placeholder={t("composeRecipientPlaceholder")}
                     value={composeTo}
                     onChange={setComposeTo}
                     contacts={composeOrgContacts}
@@ -2384,10 +2408,12 @@ export function MailClientShell({ mail }: Props) {
                     className="compose-chip-btn"
                     onClick={() => setComposeShowCcBcc((open) => !open)}
                   >
-                    {composeShowCcBcc ? "Cc/Bcc gizle" : "Cc / Bcc"}
+                    {composeShowCcBcc
+                      ? t("composeCcBccHide")
+                      : t("composeCcBccShow")}
                   </button>
                   <label className="compose-field-label" htmlFor="compose-schedule">
-                    Zamanla
+                    {t("composeScheduleLabel")}
                   </label>
                   <input
                     id="compose-schedule"
@@ -2403,16 +2429,16 @@ export function MailClientShell({ mail }: Props) {
                 <>
                   <MailComposeRecipientField
                     id="compose-cc"
-                    label="Cc"
-                    placeholder="Virgülle ayırın"
+                    label={t("fieldCc")}
+                    placeholder={t("composeRecipientsComma")}
                     value={composeCc}
                     onChange={setComposeCc}
                     contacts={composeOrgContacts}
                   />
                   <MailComposeRecipientField
                     id="compose-bcc"
-                    label="Bcc"
-                    placeholder="Virgülle ayırın"
+                    label={t("fieldBcc")}
+                    placeholder={t("composeRecipientsComma")}
                     value={composeBcc}
                     onChange={setComposeBcc}
                     contacts={composeOrgContacts}
@@ -2422,18 +2448,17 @@ export function MailClientShell({ mail }: Props) {
 
               {forwardMessageId ? (
                 <p className="mail-compose-forward-hint compose-premium-forward">
-                  Konu: <strong>{composeSubject}</strong> — orijinal metin
-                  otomatik eklenir.
+                  {t("composeForwardHint", { subject: composeSubject })}
                 </p>
               ) : (
                 <div className="compose-field">
                   <label className="compose-field-label" htmlFor="compose-subject">
-                    Konu
+                    {t("fieldSubject")}
                   </label>
                   <input
                     id="compose-subject"
                     className="compose-input"
-                    placeholder="Mesaj konusu"
+                    placeholder={t("composeSubjectPlaceholder")}
                     value={composeSubject}
                     onChange={(e) => setComposeSubject(e.target.value)}
                   />
@@ -2454,9 +2479,7 @@ export function MailClientShell({ mail }: Props) {
                       void ensureAiMailConsent()
                         .then((allowed) => {
                           if (!allowed) {
-                            setToast(
-                              "AI asistanı için Gizlilik ayarlarından onay verin.",
-                            );
+                            setToast(t("toastAiPrivacyConsent"));
                             return null;
                           }
                           return fetchSuggestComposeDraft(
@@ -2472,19 +2495,21 @@ export function MailClientShell({ mail }: Props) {
                           setComposeText(result.suggestion);
                           setToast(
                             result.provider === "llm"
-                              ? "AI gövde önerisi eklendi."
-                              : "Şablon gövde eklendi.",
+                              ? t("toastAiBodyAdded")
+                              : t("toastTemplateBodyAdded"),
                           );
                         })
-                        .catch(() => setToast("AI öneri alınamadı."))
+                        .catch(() => setToast(t("toastAiDraftFailed")))
                         .finally(() => setComposeAiDraftBusy(false));
                     }}
                   >
-                    {composeAiDraftBusy ? "AI…" : "AI gövde öner"}
+                    {composeAiDraftBusy
+                      ? t("composeAiDraftBusy")
+                      : t("composeAiDraftBtn")}
                   </button>
                 ) : null}
                 <label className="compose-preset-label">
-                  <span>Şablon</span>
+                  <span>{t("composeTemplateLabel")}</span>
                   <select
                     className="compose-select"
                     defaultValue=""
@@ -2495,29 +2520,29 @@ export function MailClientShell({ mail }: Props) {
                       }
                     }}
                   >
-                    <option value="">Seç…</option>
-                    {composeTemplates.some((t) => t.isSystem) ? (
-                      <optgroup label="Hazır şablonlar">
+                    <option value="">{t("composeSelectPrompt")}</option>
+                    {composeTemplates.some((tpl) => tpl.isSystem) ? (
+                      <optgroup label={t("composePresetSystem")}>
                         {composeTemplates
-                          .filter((t) => t.isSystem)
-                          .map((t) => (
-                            <option key={t.id} value={t.id}>{t.name}</option>
+                          .filter((tpl) => tpl.isSystem)
+                          .map((tpl) => (
+                            <option key={tpl.id} value={tpl.id}>{tpl.name}</option>
                           ))}
                       </optgroup>
                     ) : null}
-                    {composeTemplates.some((t) => !t.isSystem) ? (
-                      <optgroup label="Kurumsal">
+                    {composeTemplates.some((tpl) => !tpl.isSystem) ? (
+                      <optgroup label={t("composePresetCorporate")}>
                         {composeTemplates
-                          .filter((t) => !t.isSystem)
-                          .map((t) => (
-                            <option key={t.id} value={t.id}>{t.name}</option>
+                          .filter((tpl) => !tpl.isSystem)
+                          .map((tpl) => (
+                            <option key={tpl.id} value={tpl.id}>{tpl.name}</option>
                           ))}
                       </optgroup>
                     ) : null}
                   </select>
                 </label>
                 <label className="compose-preset-label">
-                  <span>İmza</span>
+                  <span>{t("composeSignatureLabel")}</span>
                   <select
                     className="compose-select"
                     defaultValue=""
@@ -2528,7 +2553,7 @@ export function MailClientShell({ mail }: Props) {
                       }
                     }}
                   >
-                    <option value="">Ekle…</option>
+                    <option value="">{t("composeSignatureAdd")}</option>
                     {composeSignatures.map((s) => (
                       <option key={s.id} value={s.id}>
                         {s.name}
@@ -2569,8 +2594,8 @@ export function MailClientShell({ mail }: Props) {
                     className="compose-textarea"
                     placeholder={
                       forwardMessageId
-                        ? "Üst not (isteğe bağlı)…"
-                        : "Mesajınızı yazın…"
+                        ? t("composeTopNotePlaceholder")
+                        : t("composeBodyPlaceholder")
                     }
                     rows={8}
                     value={composeText}
@@ -2581,8 +2606,8 @@ export function MailClientShell({ mail }: Props) {
 
               <div className="compose-attach-zone">
                 <label className="compose-attach-label">
-                  <span className="compose-attach-title">Ekler</span>
-                  <span className="compose-attach-btn">Dosya seç</span>
+                  <span className="compose-attach-title">{t("composeAttachmentsTitle")}</span>
+                  <span className="compose-attach-btn">{t("attachChoose")}</span>
                   <input
                     type="file"
                     multiple
@@ -2595,17 +2620,21 @@ export function MailClientShell({ mail }: Props) {
                 {composeStoredAttachments.length > 0 ? (
                   <ul className="compose-attach-list">
                     {composeStoredAttachments.map((file) => (
-                      <li key={file.filename}>{file.filename} (taslakta)</li>
+                      <li key={file.filename}>
+                        {file.filename} {t("composeDraftAttachment")}
+                      </li>
                     ))}
                   </ul>
                 ) : null}
                 {composeFiles.length > 0 ? (
                   <p className="mail-attach-hint">
-                    {composeFiles.length} yeni ek (en fazla {maxAttachmentMb}{" "}
-                    MB)
+                    {t("composeNewAttachments", {
+                      count: composeFiles.length,
+                      max: maxAttachmentMb,
+                    })}
                   </p>
                 ) : (
-                  <p className="compose-attach-hint">Dosya seçilmedi</p>
+                  <p className="compose-attach-hint">{t("composeNoFileSelected")}</p>
                 )}
               </div>
 
@@ -2642,7 +2671,9 @@ export function MailClientShell({ mail }: Props) {
                   disabled={sending || composePreviewBusy}
                   onClick={() => void previewComposeOutbound()}
                 >
-                  {composePreviewBusy ? "Önizleme…" : "Alıcı görünümü"}
+                  {composePreviewBusy
+                    ? t("composePreviewBusy")
+                    : t("composeRecipientPreviewBtn")}
                 </button>
                 <button
                   type="button"
@@ -2662,22 +2693,22 @@ export function MailClientShell({ mail }: Props) {
           className="compose-overlay compose-overlay--premium compose-preview-overlay"
           role="dialog"
           aria-modal="true"
-          aria-label="E-posta önizleme"
+          aria-label={t("composeEmailPreviewAria")}
         >
           <div className="compose-dialog compose-dialog--premium compose-preview-dialog">
             <header className="compose-premium-header">
-              <h2>Alıcı görünümü önizleme</h2>
+              <h2>{t("composePreviewTitle")}</h2>
               <button
                 type="button"
                 className="compose-premium-close"
                 onClick={closeComposePreview}
               >
-                Kapat
+                {t("actionClose")}
               </button>
             </header>
             <iframe
               className="compose-preview-frame"
-              title="E-posta önizleme"
+              title={t("composeEmailPreviewAria")}
               sandbox=""
               srcDoc={composePreviewHtml}
             />

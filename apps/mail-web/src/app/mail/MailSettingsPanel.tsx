@@ -324,10 +324,10 @@ export function MailSettingsPanel({
           );
         }
       } catch {
-        setSyncStatus("Hesaplar yüklenemedi.");
+        setSyncStatus(t("settingsErrAccountsLoad"));
       }
     })();
-  }, [accessToken, view]);
+  }, [accessToken, view, t]);
 
   const filteredItems = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -356,12 +356,12 @@ export function MailSettingsPanel({
       const creds = await provisionImapPassword(accessToken);
       setNewPassword(creds.password);
       setSettings(await fetchImapSettings(accessToken));
-      setCopyHint("IMAP şifresi oluşturuldu — kopyalayın.");
+      setCopyHint(t("settingsImapPasswordCreated"));
     } catch (err) {
       setError(
         err instanceof Error
           ? err.message
-          : "Şifre oluşturulamadı (firma sahibi veya posta yöneticisi gerekli).",
+          : t("settingsErrImapProvision"),
       );
     } finally {
       setLoading(false);
@@ -374,11 +374,14 @@ export function MailSettingsPanel({
     try {
       const result = await reconcileImapMaildir(accessToken);
       setCopyHint(
-        `IMAP senkron: ${result.updatedFolder} klasör, ${result.relocatedPath} dosya güncellendi.`,
+        t("settingsImapReconcileResult", {
+          folders: result.updatedFolder,
+          files: result.relocatedPath,
+        }),
       );
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Maildir senkronu başarısız.",
+        err instanceof Error ? err.message : t("settingsErrImapReconcile"),
       );
     } finally {
       setImapReconcileBusy(false);
@@ -393,12 +396,12 @@ export function MailSettingsPanel({
       const creds = await rotateImapPassword(accessToken);
       setNewPassword(creds.password);
       setSettings(await fetchImapSettings(accessToken));
-      setCopyHint("Yeni IMAP şifresi — eski istemcilerde güncelleyin.");
+      setCopyHint(t("settingsImapPasswordRotated"));
     } catch (err) {
       setError(
         err instanceof Error
           ? err.message
-          : "Şifre yenilenemedi (firma sahibi veya posta yöneticisi gerekli).",
+          : t("settingsErrImapRotate"),
       );
     } finally {
       setLoading(false);
@@ -478,36 +481,36 @@ export function MailSettingsPanel({
                           <strong>{item.label}</strong>
                           <small>
                             {item.id === "notifications" && pushConfigured
-                              ? "Push yapılandırıldı"
-                                : item.id === "security"
+                              ? t("settingsHubPushConfigured")
+                              : item.id === "security"
                                 ? hasPasskeys
                                   ? mailAppLockEnabled
-                                    ? "Passkey + posta kilidi"
-                                    : "Passkey kayıtlı"
+                                    ? t("settingsHubPasskeyLock")
+                                    : t("settingsHubPasskeyOnly")
                                   : totpEnabled
-                                    ? "TOTP açık"
-                                    : "TOTP / passkey"
+                                    ? t("settingsHubTotpOn")
+                                    : t("settingsHubTotpPasskey")
                                 : item.id === "integrations"
                                   ? settings?.hasCredential
-                                    ? "IMAP hazır · CalDAV/CardDAV"
-                                    : "IMAP, takvim, kişi, API"
-                                : item.id === "autoReply"
-                                  ? autoReplyEnabled
-                                    ? "Açık"
-                                    : "Kapalı"
-                                  : item.id === "mailPrefs"
-                                    ? inboxListDensity === "compact"
-                                      ? "Sıkı liste"
-                                      : "Rahat liste"
-                                    : item.id === "imap" &&
-                                        settings?.enabled &&
-                                        (settings.needsImapClientPassword ||
-                                          !settings.hasCredential)
-                                      ? "İlk kurulum: şifre oluşturun"
+                                    ? t("settingsHubIntegrationsReady")
+                                    : t("settingsHubIntegrationsDefault")
+                                  : item.id === "autoReply"
+                                    ? autoReplyEnabled
+                                      ? t("settingsHubAutoReplyOn")
+                                      : t("settingsHubAutoReplyOff")
+                                    : item.id === "mailPrefs"
+                                      ? inboxListDensity === "compact"
+                                        ? t("settingsHubListCompact")
+                                        : t("settingsHubListComfortable")
                                       : item.id === "imap" &&
-                                          settings?.hasCredential
-                                        ? "Thunderbird / Outlook hazır"
-                                        : item.subtitle}
+                                          settings?.enabled &&
+                                          (settings.needsImapClientPassword ||
+                                            !settings.hasCredential)
+                                        ? t("settingsHubImapSetup")
+                                        : item.id === "imap" &&
+                                            settings?.hasCredential
+                                          ? t("settingsHubImapReady")
+                                          : item.subtitle}
                           </small>
                           {item.id === "imap" &&
                           settings?.enabled &&
@@ -683,13 +686,10 @@ export function MailSettingsPanel({
               onSynced={() => {}}
             />
           </div>
-          <p className="mail-settings-lead">
-            CalDAV hesapları ve ICS beslemeleri tam ekran takvimde de
-            düzenlenebilir.
-          </p>
+          <p className="mail-settings-lead">{t("settingsCalDavLead")}</p>
           {syncStatus ? <p>{syncStatus}</p> : null}
           {calDavAccounts.length === 0 ? (
-            <p>Henüz CalDAV hesabı yok.</p>
+            <p>{t("settingsCalDavEmpty")}</p>
           ) : (
             <ul className="mail-settings-sync-list">
               {calDavAccounts.map((account) => (
@@ -697,8 +697,12 @@ export function MailSettingsPanel({
                   <strong>{account.label}</strong>
                   <small>
                     {account.lastSyncedAt
-                      ? `Son senkron: ${new Date(account.lastSyncedAt).toLocaleString("tr-TR")}`
-                      : "Henüz senkronlanmadı"}
+                      ? t("settingsLastSync", {
+                          date: new Date(account.lastSyncedAt).toLocaleString(
+                            "tr-TR",
+                          ),
+                        })
+                      : t("settingsNotSyncedYet")}
                   </small>
                 </li>
               ))}
@@ -713,7 +717,7 @@ export function MailSettingsPanel({
                   onClose();
                 }}
               >
-                Takvimi aç
+                {t("settingsOpenCalendar")}
               </button>
             ) : null}
             <button
@@ -727,7 +731,12 @@ export function MailSettingsPanel({
                     const result =
                       await syncAllCalendarCalDavAccounts(accessToken);
                     setSyncStatus(
-                      `Senkron: ${result.succeeded}/${result.accounts} hesap · +${result.imported} / ~${result.updated} etkinlik.`,
+                      t("settingsSyncResultCal", {
+                        succeeded: result.succeeded,
+                        accounts: result.accounts,
+                        imported: result.imported,
+                        updated: result.updated,
+                      }),
                     );
                     const { accounts } =
                       await fetchCalendarCalDavAccounts(accessToken);
@@ -742,7 +751,7 @@ export function MailSettingsPanel({
                     setSyncStatus(
                       error instanceof Error
                         ? error.message
-                        : "Senkron başarısız.",
+                        : t("settingsSyncFailed"),
                     );
                   } finally {
                     setSyncBusy(false);
@@ -750,7 +759,7 @@ export function MailSettingsPanel({
                 })()
               }
             >
-              {syncBusy ? "Senkron…" : "Tümünü senkronla"}
+              {syncBusy ? t("settingsSyncBusy") : t("settingsSyncAll")}
             </button>
           </div>
         </>,
@@ -760,13 +769,10 @@ export function MailSettingsPanel({
       content = renderDetail(
         detailTitle("contactsSettings"),
         <>
-          <p className="mail-settings-lead">
-            Harici CardDAV rehberleri. Yeni hesap ekleme tam ekran kişiler
-            görünümünde yapılır.
-          </p>
+          <p className="mail-settings-lead">{t("settingsCardDavLead")}</p>
           {syncStatus ? <p>{syncStatus}</p> : null}
           {cardDavAccounts.length === 0 ? (
-            <p>Henüz CardDAV hesabı yok.</p>
+            <p>{t("settingsCardDavEmpty")}</p>
           ) : (
             <ul className="mail-settings-sync-list">
               {cardDavAccounts.map((account) => (
@@ -774,8 +780,12 @@ export function MailSettingsPanel({
                   <strong>{account.label}</strong>
                   <small>
                     {account.lastSyncedAt
-                      ? `Son senkron: ${new Date(account.lastSyncedAt).toLocaleString("tr-TR")}`
-                      : "Henüz senkronlanmadı"}
+                      ? t("settingsLastSync", {
+                          date: new Date(account.lastSyncedAt).toLocaleString(
+                            "tr-TR",
+                          ),
+                        })
+                      : t("settingsNotSyncedYet")}
                   </small>
                 </li>
               ))}
@@ -790,7 +800,7 @@ export function MailSettingsPanel({
                   onClose();
                 }}
               >
-                Kişileri aç
+                {t("settingsOpenContacts")}
               </button>
             ) : null}
             <button
@@ -804,7 +814,12 @@ export function MailSettingsPanel({
                     const result =
                       await syncAllContactCardDavAccounts(accessToken);
                     setSyncStatus(
-                      `Senkron: ${result.succeeded}/${result.accounts} hesap · +${result.imported} / ~${result.updated} kişi.`,
+                      t("settingsSyncResultContacts", {
+                        succeeded: result.succeeded,
+                        accounts: result.accounts,
+                        imported: result.imported,
+                        updated: result.updated,
+                      }),
                     );
                     const { accounts } =
                       await fetchContactCardDavAccounts(accessToken);
@@ -819,7 +834,7 @@ export function MailSettingsPanel({
                     setSyncStatus(
                       error instanceof Error
                         ? error.message
-                        : "Senkron başarısız.",
+                        : t("settingsSyncFailed"),
                     );
                   } finally {
                     setSyncBusy(false);
@@ -827,7 +842,7 @@ export function MailSettingsPanel({
                 })()
               }
             >
-              {syncBusy ? "Senkron…" : "Tümünü senkronla"}
+              {syncBusy ? t("settingsSyncBusy") : t("settingsSyncAll")}
             </button>
           </div>
         </>,

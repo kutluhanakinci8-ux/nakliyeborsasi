@@ -15,6 +15,7 @@ import { MailConnectedInboxStatusPanel } from "./MailConnectedInboxStatusPanel";
 import { MailScheduledComposePanel } from "./MailScheduledComposePanel";
 import { MailTenantBrandingPanel } from "./MailTenantBrandingPanel";
 import type { MailInboxBranding } from "@/lib/mailApi";
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 
 type Props = {
   accessToken: string;
@@ -25,6 +26,7 @@ export function MailAccountsSettingsPanel({
   accessToken,
   onBrandingSaved,
 }: Props) {
+  const { t } = useMailLocale();
   const [hub, setHub] = useState<MailAccountHubPayload | null>(null);
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
@@ -37,11 +39,11 @@ export function MailAccountsSettingsPanel({
       const payload = await fetchMailAccountHub(accessToken);
       setHub(payload);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Yüklenemedi");
+      setError(err instanceof Error ? err.message : t("errGenericLoad"));
     } finally {
       setLoading(false);
     }
-  }, [accessToken]);
+  }, [accessToken, t]);
 
   useEffect(() => {
     void reload();
@@ -54,9 +56,9 @@ export function MailAccountsSettingsPanel({
       setHub((prev) =>
         prev ? { ...prev, senders: result.senders } : prev,
       );
-      setStatus("Varsayılan gönderen güncellendi.");
+      setStatus(t("accountsDefaultSenderUpdated"));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Kaydedilemedi");
+      setError(err instanceof Error ? err.message : t("errGenericSave"));
     }
   }
 
@@ -85,18 +87,18 @@ export function MailAccountsSettingsPanel({
   return (
     <div className="mail-accounts-settings mail-accounts-settings--premium">
       <div className="mail-accounts-hero">
-        <p className="mail-accounts-hero-label">Kurumsal posta kutusu</p>
+        <p className="mail-accounts-hero-label">{t("accountsMailboxHero")}</p>
         <p className="mail-accounts-hero-address">
-          {hub.primaryAddress ?? "Henüz atanmadı"}
+          {hub.primaryAddress ?? t("accountsNotAssigned")}
         </p>
         {hub.unreadCount > 0 ? (
           <p className="mail-accounts-hero-meta">
-            {hub.unreadCount} okunmamış mesaj
+            {t("accountsUnreadCount", { count: hub.unreadCount })}
           </p>
         ) : null}
         {hub.branding?.emailBrandTitle ? (
           <p className="mail-accounts-hero-meta">
-            Marka: {hub.branding.emailBrandTitle}
+            {t("accountsBrandLabel")}: {hub.branding.emailBrandTitle}
           </p>
         ) : null}
       </div>
@@ -135,7 +137,7 @@ export function MailAccountsSettingsPanel({
 
       <section className="mail-posta-card">
         <header className="mail-posta-card-head">
-          <h3 className="mail-posta-card-title">Gönderen kimlikleri</h3>
+          <h3 className="mail-posta-card-title">{t("accountsSendersTitle")}</h3>
           <p className="mail-posta-card-desc">
             Yeni mesajlarda kullanılan From adresi ve görünen ad.
           </p>
@@ -162,14 +164,14 @@ export function MailAccountsSettingsPanel({
               </div>
               <div className="mail-accounts-card-actions">
                 {sender.isDefault ? (
-                  <span className="mail-accounts-badge">Varsayılan</span>
+                  <span className="mail-accounts-badge">{t("accountsDefaultBadge")}</span>
                 ) : hub.canManageSenders ? (
                   <button
                     type="button"
                     className="mail-premium-btn mail-premium-btn--ghost"
                     onClick={() => void handleDefault(sender.id)}
                   >
-                    Varsayılan yap
+                    {t("accountsSetDefault")}
                   </button>
                 ) : null}
               </div>
@@ -186,7 +188,7 @@ export function MailAccountsSettingsPanel({
           </p>
         </header>
         {hub.aliases.length === 0 ? (
-          <p className="mail-accounts-muted">Kayıtlı alias yok.</p>
+          <p className="mail-accounts-muted">{t("accountsNoAliases")}</p>
         ) : (
           <ul className="mail-accounts-list--premium">
             {hub.aliases.map((alias) => (
