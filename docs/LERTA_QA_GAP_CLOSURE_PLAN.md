@@ -13,7 +13,7 @@
 | **5** | L10n gate (hardcoded TR taraması + genişletilmiş URL) | `qa-i18n-mail-web-gate.sh`, `qa-l10n-expanded.sh` | Bu PR |
 | **6A** | UAT kod | `npm run uat:faz6` | ✅ Agent PASS |
 | **6B** | UAT ops | `npm run uat:ops-prereqs` → `npm run uat:ops` | **VPS / secrets** — runbook: `docs/UAT_FAZ6_OPS_RUNBOOK.md` |
-| **7** | Pentest otomasyon | `npm run qa:faz7` (OWASP + ZAP x2 + checklist) | VPS koşuldu → rapor `FAZ7_PENTEST_*.json` |
+| **7** | Pentest otomasyon | `npm run qa:faz7` | ✅ VPS 25.10.2026 — OWASP + ZAP JSON raporları |
 | **7b** | Pentest / sertifika (harici) | `docs/PENTEST_EXTERNAL_CHECKLIST.md` | **Üçüncü taraf** |
 | **8** | ISO 29119 / SOC2 Type II / ISO 27001 / PCI | `docs/ISO_29119_TEST_TRACEABILITY.md` + MP-9 | Dok + denetim |
 | **9** | Müşteri imzalı UAT (Thunderbird, teslimat, takvim) | `uat-faz6-sequential.sh`, runbook | **Manuel** |
