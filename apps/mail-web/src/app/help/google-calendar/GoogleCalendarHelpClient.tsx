@@ -30,8 +30,8 @@ export function GoogleCalendarHelpClient() {
           </li>
         </ul>
         <p>
-          Google Cloud Console: Calendar API enabled, OAuth client redirect URI and
-          scope <code>https://www.googleapis.com/auth/calendar</code>.
+          {t("helpGoogleAdminConsole")}{" "}
+          <code>https://www.googleapis.com/auth/calendar</code>.
         </p>
       </section>
       <section className="mail-help-section">

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 import { useMailLocale } from "@/lib/MailLocaleProvider";
+import { COMPOSE_HTML_BLOCK_LABEL_KEYS } from "@/lib/mailWebLocaleI18nComposeHelp";
 import {
   COMPOSE_HTML_BLOCK_CATALOG,
   composeCtaButtonBlock,
@@ -354,7 +355,9 @@ export function ComposeRichEditor({
     if (!url?.trim()) {
       return;
     }
-    const alt = window.prompt(t("richPromptImageAlt"), t("richPromptImageAltDefault")) ?? "Görsel";
+    const alt =
+      window.prompt(t("richPromptImageAlt"), t("richPromptImageAltDefault")) ??
+      t("richPromptImageAltDefault");
     insertHtmlAtSelection(composeImageBlock(url.trim(), alt.trim()));
     syncFromEditor();
   }
@@ -498,28 +501,28 @@ export function ComposeRichEditor({
             <ToolbarButton label={t("richDivider")} onClick={insertDivider}>
               {icon.divider}
             </ToolbarButton>
-            <ToolbarButton label="HTTPS görsel" onClick={insertRemoteImage}>
+            <ToolbarButton label={t("richHttpsImage")} onClick={insertRemoteImage}>
               {icon.image}
             </ToolbarButton>
             {onInlineImage ? (
               <ToolbarButton
-                label="Satır içi görsel (CID)"
+                label={t("richInlineCid")}
                 onClick={insertCidImage}
               >
                 {icon.imageInline}
               </ToolbarButton>
             ) : null}
-            <ToolbarButton label="2×2 tablo" onClick={insertTable}>
+            <ToolbarButton label={t("richTable2x2")} onClick={insertTable}>
               {icon.table}
             </ToolbarButton>
-            <ToolbarButton label="Video embed" onClick={insertVideo}>
+            <ToolbarButton label={t("richVideoEmbed")} onClick={insertVideo}>
               {icon.video}
             </ToolbarButton>
           </div>
         </div>
         <div className="compose-rich-toolbar__row compose-rich-toolbar__row--blocks">
           <label className="compose-rich-block-select-wrap">
-            <span className="compose-rich-block-select-label">HTML blok</span>
+            <span className="compose-rich-block-select-label">{t("richHtmlBlock")}</span>
             <select
               className="compose-rich-block-select"
               defaultValue=""
@@ -532,32 +535,35 @@ export function ComposeRichEditor({
                 e.target.value = "";
               }}
             >
-              <option value="">Kütüphaneden ekle…</option>
+              <option value="">{t("richBlockLibraryPlaceholder")}</option>
               {COMPOSE_HTML_BLOCK_CATALOG.map((block) => (
                 <option key={block.id} value={block.id}>
-                  {block.label}
+                  {t(COMPOSE_HTML_BLOCK_LABEL_KEYS[block.id] ?? block.id)}
                 </option>
               ))}
             </select>
           </label>
           <div className="compose-rich-toolbar__group">
-            <ToolbarButton label="CTA buton" onClick={insertCtaButton}>
+            <ToolbarButton label={t("richCtaButton")} onClick={insertCtaButton}>
               {icon.button}
             </ToolbarButton>
-            <ToolbarButton label="Bilgi kutusu" onClick={() => insertCallout("info")}>
+            <ToolbarButton
+              label={t("richCalloutInfo")}
+              onClick={() => insertCallout("info")}
+            >
               {icon.callout}
             </ToolbarButton>
-            <ToolbarButton label="Hero başlık bandı" onClick={insertHero}>
+            <ToolbarButton label={t("richHeroBand")} onClick={insertHero}>
               {icon.hero}
             </ToolbarButton>
-            <ToolbarButton label="İki sütun" onClick={insertTwoColumns}>
+            <ToolbarButton label={t("richTwoColumn")} onClick={insertTwoColumns}>
               {icon.columns}
             </ToolbarButton>
           </div>
           <ToolbarSep />
           <div className="compose-rich-toolbar__group">
             <ToolbarButton
-              label="Biçimi temizle"
+              label={t("richClearFormat")}
               onClick={() => {
                 exec("removeFormat");
                 syncFromEditor();
@@ -574,7 +580,7 @@ export function ComposeRichEditor({
         contentEditable
         role="textbox"
         aria-multiline="true"
-        aria-label="E-posta gövdesi"
+        aria-label={t("richBodyAria")}
         onInput={syncFromEditor}
         onBlur={syncFromEditor}
         suppressContentEditableWarning
