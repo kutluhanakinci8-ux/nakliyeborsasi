@@ -16,7 +16,7 @@ export function composeDividerBlock(): string {
 }
 
 export function composeCtaButtonBlock(
-  label = "Detayları görüntüle",
+  label = "View details",
   href = "https://posta.lerta.com.tr",
   accentColor?: string | null,
 ): string {
@@ -27,8 +27,8 @@ export function composeCtaButtonBlock(
 }
 
 export function composeHeroBlock(
-  title = "Başlık",
-  subtitle = "Alt satır metni",
+  title = "Title",
+  subtitle = "Subtitle",
   accentColor?: string | null,
 ): string {
   const t = title.replace(/</g, "&lt;");
@@ -47,7 +47,7 @@ export function composeTwoColumnBlock(
 }
 
 export function composeCalloutBlock(
-  body = "Önemli bilgi veya uyarı metni.",
+  body = "Important information or notice.",
   variant: "info" | "success" | "warning" = "info",
 ): string {
   const safe = body.replace(/</g, "&lt;");
@@ -60,7 +60,7 @@ export function composeCalloutBlock(
   return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:16px 0;"><tr><td style="background-color:${palette.bg};border-left:4px solid ${palette.border};padding:14px 16px;border-radius:8px;font-size:15px;line-height:1.55;color:${palette.text};">${safe}</td></tr></table><p><br></p>`;
 }
 
-export function composeQuoteBlock(quote = "Alıntı metni", author = ""): string {
+export function composeQuoteBlock(quote = "Quote text", author = ""): string {
   const q = quote.replace(/</g, "&lt;");
   const a = author.replace(/</g, "&lt;");
   const byline = a
@@ -86,15 +86,15 @@ export function composeLegalFooterBlock(text: string): string {
 }
 
 export function composeFeatureRowBlock(
-  title = "Özellik",
-  body = "Kısa açıklama",
+  title = "Feature",
+  body = "Short description",
 ): string {
   const t = title.replace(/</g, "&lt;");
   const b = body.replace(/</g, "&lt;");
   return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:12px 0;"><tr><td width="36" valign="top" style="font-size:22px;line-height:1;">✓</td><td valign="top" style="font-size:15px;line-height:1.55;color:#14151f;"><p style="margin:0;font-weight:700;">${t}</p><p style="margin:4px 0 0;color:#475569;">${b}</p></td></tr></table><p><br></p>`;
 }
 
-export function composeImageBlock(url: string, alt = "Görsel"): string {
+export function composeImageBlock(url: string, alt = "Image"): string {
   const safeUrl = url.replace(/"/g, "&quot;");
   const safeAlt = alt.replace(/</g, "&lt;");
   return `<p style="margin:16px 0;"><img src="${safeUrl}" alt="${safeAlt}" width="560" style="display:block;max-width:100%;height:auto;border-radius:8px;" /></p><p><br></p>`;
@@ -116,27 +116,27 @@ export type ComposeHtmlBlockId =
 
 export const COMPOSE_HTML_BLOCK_CATALOG: {
   id: ComposeHtmlBlockId;
-  label: string;
   group: "kurumsal" | "içerik" | "görsel";
 }[] = [
-  { id: "hero", label: "Hero başlık", group: "kurumsal" },
-  { id: "logo-header", label: "Logo üst bilgi", group: "kurumsal" },
-  { id: "cta", label: "CTA düğme", group: "kurumsal" },
-  { id: "legal-footer", label: "Yasal dipnot", group: "kurumsal" },
-  { id: "divider", label: "Ayırıcı", group: "içerik" },
-  { id: "columns", label: "İki sütun", group: "içerik" },
-  { id: "callout", label: "Bilgi kutusu", group: "içerik" },
-  { id: "callout-success", label: "Başarı kutusu", group: "içerik" },
-  { id: "callout-warning", label: "Uyarı kutusu", group: "içerik" },
-  { id: "quote", label: "Alıntı", group: "içerik" },
-  { id: "feature", label: "Özellik satırı", group: "içerik" },
-  { id: "image", label: "Görsel (URL)", group: "görsel" },
+  { id: "hero", group: "kurumsal" },
+  { id: "logo-header", group: "kurumsal" },
+  { id: "cta", group: "kurumsal" },
+  { id: "legal-footer", group: "kurumsal" },
+  { id: "divider", group: "içerik" },
+  { id: "columns", group: "içerik" },
+  { id: "callout", group: "içerik" },
+  { id: "callout-success", group: "içerik" },
+  { id: "callout-warning", group: "içerik" },
+  { id: "quote", group: "içerik" },
+  { id: "feature", group: "içerik" },
+  { id: "image", group: "görsel" },
 ];
 
+/** Token only; labels come from mailWebLocaleI18nComposeHelp MERGE_FIELD_TOKEN_LABEL_KEYS. */
 export const MERGE_FIELD_TOKENS = [
-  { token: "{{musteri_adi}}", label: "Müşteri adı" },
-  { token: "{{referans}}", label: "Referans" },
-  { token: "{{firma_adi}}", label: "Firma adı" },
-  { token: "{{bugun}}", label: "Bugünün tarihi" },
-  { token: "{{gonderen_ad}}", label: "Gönderen adı" },
+  { token: "{{musteri_adi}}" },
+  { token: "{{referans}}" },
+  { token: "{{firma_adi}}" },
+  { token: "{{bugun}}" },
+  { token: "{{gonderen_ad}}" },
 ] as const;

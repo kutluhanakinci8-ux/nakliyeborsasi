@@ -687,10 +687,7 @@ export function MailSettingsPanel({
       content = renderDetail(
         detailTitle("calendarSettings"),
         <>
-          <p className="mail-settings-lead">
-            Google Takvim, Microsoft Graph ve CalDAV. OAuth bağlantıları buradan
-            veya tam ekran takvim görünümünden yönetilir.
-          </p>
+          <p className="mail-settings-lead">{t("settingsCalendarSettingsLead")}</p>
           <div className="mail-settings-calendar-cloud">
             <MailCalendarGooglePanel
               accessToken={accessToken}
