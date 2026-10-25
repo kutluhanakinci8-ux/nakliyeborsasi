@@ -84,7 +84,7 @@ run_layer e2e_playwright "11. System/E2E — Playwright (messaging)" \
   bash -c "cd '${ROOT}/apps/web' && npx playwright install chromium --with-deps 2>/dev/null | tail -3; npx playwright test e2e/messaging-hub.spec.ts --grep 'login sayfası|korumalı'"
 
 run_layer e2e_mail_web "11b. System/E2E — Playwright (posta full)" \
-  bash -c "cd '${ROOT}/apps/mail-web' && npm run build && npx playwright install chromium 2>/dev/null | tail -2 && npm run test:e2e"
+  bash -c "cd '${ROOT}/apps/mail-web' && rm -rf .next && npm run build && npx playwright install chromium 2>/dev/null | tail -2 && npm run test:e2e"
 
 run_layer uat_faz6_code "12. UAT Faz 6 — kod tamamlama" \
   bash "${ROOT}/scripts/verify-uat-faz6-code-complete.sh"
