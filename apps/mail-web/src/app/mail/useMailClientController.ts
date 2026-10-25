@@ -537,17 +537,8 @@ export function useMailClientController({
     if (!accessToken) {
       return;
     }
-    const folderViews: MailInboxFolder[] = [
-      "inbox",
-      "sent",
-      "archive",
-      "trash",
-      "spam",
-      "all",
-    ];
-    const shouldPullFromProviders = folderViews.includes(
-      inboxFolderForView(view),
-    );
+    const shouldPullFromProviders =
+      view !== "drafts" && view !== "calendar" && view !== "contacts";
     const hasGmail = connectedAccounts.some((a) => a.provider === "gmail_api");
     const hasExchange = connectedAccounts.some(
       (a) => a.provider === "microsoft_graph",
