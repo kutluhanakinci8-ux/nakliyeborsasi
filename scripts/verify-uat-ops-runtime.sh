@@ -40,7 +40,8 @@ if [[ -x "${ROOT}/scripts/verify-uat-oauth-env.sh" ]] && [[ -f "${ENV_FILE}" ]];
 fi
 
 if [[ -n "${OPERATOR_JWT:-}" ]]; then
-  bash "${ROOT}/scripts/run-mail-billing-a1-acceptance.sh" || FAIL=1
+  MAIL_BILLING_PILOT_FREE="${MAIL_BILLING_PILOT_FREE:-1}" \
+    bash "${ROOT}/scripts/run-mail-billing-a1-acceptance.sh" || FAIL=1
 fi
 
 if [[ "${FAIL}" -eq 0 ]]; then

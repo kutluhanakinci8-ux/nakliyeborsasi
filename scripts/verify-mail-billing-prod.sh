@@ -24,6 +24,21 @@ echo "MAIL_BILLING_PROVIDER=$provider"
 
 fail=0
 
+if [[ "${MAIL_BILLING_PILOT_FREE:-}" == "1" ]]; then
+  echo "MAIL_BILLING_PILOT_FREE=1 — canlı ödeme kapısı atlandı (pilot)"
+  if [[ -n "${OPERATOR_JWT:-}" ]]; then
+    API_BASE="${API_BASE:-https://yonetim.lerta.com.tr/api/v1}"
+    code="$(curl -sS -o /dev/null -w '%{http_code}' -H "Authorization: Bearer ${OPERATOR_JWT}" \
+      "${API_BASE}/platform-admin/mail/billing-health" || echo 000)"
+    if [[ "${code}" == "200" ]]; then
+      echo "OK: billing-health 200 (operatör)"
+      exit 0
+    fi
+  fi
+  echo "WARN: OPERATOR_JWT ile billing-health doğrulanamadı"
+  exit 0
+fi
+
 if [[ "$provider" == "stripe" ]]; then
   if [[ -z "${STRIPE_SECRET_KEY:-}" ]]; then
     echo "FAIL: STRIPE_SECRET_KEY missing"

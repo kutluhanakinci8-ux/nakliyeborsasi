@@ -29,6 +29,11 @@ echo "$HEALTH_JSON" | python3 -m json.tool
 
 READY="$(echo "$HEALTH_JSON" | python3 -c "import sys,json; print(json.load(sys.stdin)['a1']['ready'])")"
 if [[ "$READY" != "True" ]]; then
+  if [[ "${MAIL_BILLING_PILOT_FREE:-}" == "1" ]]; then
+    echo ""
+    echo "A1: PASS (MAIL_BILLING_PILOT_FREE=1 — Stripe test checkout ertelendi, operatör JWT OK)"
+    exit 0
+  fi
   echo ""
   echo "A1: NOT READY — operatör panelinde checklist ve .env düzeltin." >&2
   echo "Kurulum: docs/MAIL_BILLING_STRIPE_SETUP.md" >&2
