@@ -153,6 +153,7 @@ import { MailGmailSyncScheduler } from "./MailGmailSyncScheduler";
 import { MailConnectedOutboundService } from "./MailConnectedOutboundService";
 import { MailConnectedInboxSearchService } from "./MailConnectedInboxSearchService";
 import { MailConnectedAccountsPushService } from "./MailConnectedAccountsPushService";
+import { MailConnectedDraftSyncService } from "./MailConnectedDraftSyncService";
 import { PublicMailConnectedPushController } from "./PublicMailConnectedPushController";
 import { MailMailboxAccessService } from "./MailMailboxAccessService";
 import { MailMailboxDelegationService } from "./MailMailboxDelegationService";
@@ -329,6 +330,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     MailConnectedOutboundService,
     MailConnectedInboxSearchService,
     MailConnectedAccountsPushService,
+    MailConnectedDraftSyncService,
     MailExchangeSyncScheduler,
     MailCalendarGraphSyncService,
     MailCalendarGraphSyncScheduler,

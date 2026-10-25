@@ -24,6 +24,8 @@ import {
   MailIdentityAuditService,
 } from "./MailIdentityAuditService";
 import { MailConnectedAccountsService } from "./MailConnectedAccountsService";
+import { buildOutgoingSentMime } from "./MailSentMimeBuilder";
+import { randomUUID } from "node:crypto";
 
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
@@ -400,6 +402,77 @@ export class MailGmailSyncService {
     return hits;
   }
 
+  public async upsertDraftMessage(
+    organizationId: string,
+    accountId: string,
+    params: {
+      providerDraftId: string | null;
+      to: string | null;
+      subject: string | null;
+      text: string | null;
+    },
+  ): Promise<string> {
+    const account = await this.accountRepository.findOne({
+      where: { id: accountId, organizationId, enabled: true },
+    });
+    if (!account) {
+      throw new NotFoundException("Gmail bağlantısı bulunamadı.");
+    }
+    const accessToken = await this.resolveAccessToken(account);
+    const fromHeader = account.displayName
+      ? `${account.displayName} <${account.emailAddress}>`
+      : account.emailAddress;
+    const rawMime = buildOutgoingSentMime({
+      fromHeader,
+      to: params.to?.trim() || "",
+      subject: params.subject?.trim() || "(Konu yok)",
+      text: params.text ?? "",
+      messageId: `<${randomUUID()}@lerta.draft>`,
+      date: new Date(),
+    });
+    const raw = Buffer.from(rawMime).toString("base64url");
+    if (params.providerDraftId) {
+      await this.gmailPut(
+        accessToken,
+        `${GMAIL_BASE}/drafts/${params.providerDraftId}`,
+        { message: { raw } },
+      );
+      return params.providerDraftId;
+    }
+    const created = await this.gmailPost(accessToken, `${GMAIL_BASE}/drafts`, {
+      message: { raw },
+    });
+    const draftId = typeof created.id === "string" ? created.id : null;
+    if (!draftId) {
+      throw new BadRequestException("Gmail taslak oluşturulamadı.");
+    }
+    return draftId;
+  }
+
+  public async deleteDraftMessage(
+    organizationId: string,
+    accountId: string,
+    providerDraftId: string,
+  ): Promise<void> {
+    const account = await this.accountRepository.findOne({
+      where: { id: accountId, organizationId, enabled: true },
+    });
+    if (!account) {
+      return;
+    }
+    const accessToken = await this.resolveAccessToken(account);
+    const response = await fetch(`${GMAIL_BASE}/drafts/${providerDraftId}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!response.ok && response.status !== 404) {
+      const text = await response.text();
+      throw new BadRequestException(
+        `Gmail taslak silinemedi (${response.status}): ${text.slice(0, 120)}`,
+      );
+    }
+  }
+
   public async importMessageById(
     organizationId: string,
     accountId: string,
@@ -771,6 +844,28 @@ export class MailGmailSyncService {
       const text = await response.text();
       throw new BadRequestException(
         `Gmail isteği başarısız (${response.status}): ${text.slice(0, 200)}`,
+      );
+    }
+    return (await response.json()) as Record<string, unknown>;
+  }
+
+  private async gmailPut(
+    accessToken: string,
+    url: string,
+    body: Record<string, unknown>,
+  ): Promise<Record<string, unknown>> {
+    const response = await fetch(url, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+    if (!response.ok) {
+      const text = await response.text();
+      throw new BadRequestException(
+        `Gmail PUT başarısız (${response.status}): ${text.slice(0, 200)}`,
       );
     }
     return (await response.json()) as Record<string, unknown>;

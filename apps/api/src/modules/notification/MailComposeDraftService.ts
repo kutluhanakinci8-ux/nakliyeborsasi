@@ -12,6 +12,8 @@ import {
 } from "../../infrastructure/database/entities/MailComposeDraftEntity";
 import { ComposeAttachmentInput } from "./MailMailboxComposeService";
 import { MailOrganizationStorageService } from "./MailOrganizationStorageService";
+import { MailConnectedDraftSyncService } from "./MailConnectedDraftSyncService";
+import type { ConnectedSendProvider } from "./MailConnectedOutboundService";
 
 @Injectable()
 export class MailComposeDraftService {
@@ -22,6 +24,7 @@ export class MailComposeDraftService {
     @InjectRepository(MailComposeDraftEntity)
     private readonly draftRepository: Repository<MailComposeDraftEntity>,
     private readonly mailOrganizationStorageService: MailOrganizationStorageService,
+    private readonly mailConnectedDraftSyncService: MailConnectedDraftSyncService,
   ) {}
 
   public async list(organizationId: string, userId: string) {
@@ -41,6 +44,8 @@ export class MailComposeDraftService {
       subject?: string;
       text?: string;
       attachments?: ComposeAttachmentInput[];
+      connectedSendProvider?: ConnectedSendProvider;
+      connectedSendAccountId?: string;
     },
   ) {
     await this.assertDraftQuota(organizationId, userId);
@@ -49,7 +54,7 @@ export class MailComposeDraftService {
       body.attachments,
     );
     await this.assertDraftStorage(organizationId, body.text ?? "", attachments);
-    const row = await this.draftRepository.save(
+    let row = await this.draftRepository.save(
       this.draftRepository.create({
         organizationId,
         createdByUserId: userId,
@@ -57,8 +62,19 @@ export class MailComposeDraftService {
         subject: body.subject?.trim() || null,
         bodyText: body.text ?? null,
         attachments,
+        connectedSendProvider: body.connectedSendProvider ?? null,
+        connectedSendAccountId: body.connectedSendAccountId ?? null,
       }),
     );
+    row = await this.mailConnectedDraftSyncService.syncLertaDraftToProvider(
+      organizationId,
+      row,
+      {
+        connectedSendProvider: body.connectedSendProvider,
+        connectedSendAccountId: body.connectedSendAccountId,
+      },
+    );
+    row = await this.draftRepository.save(row);
     return this.toDto(row);
   }
 
@@ -71,6 +87,8 @@ export class MailComposeDraftService {
       subject?: string;
       text?: string;
       attachments?: ComposeAttachmentInput[];
+      connectedSendProvider?: ConnectedSendProvider;
+      connectedSendAccountId?: string;
     },
   ) {
     const row = await this.assertDraftAccess(organizationId, userId, draftId);
@@ -90,6 +108,12 @@ export class MailComposeDraftService {
         body.attachments,
       );
     }
+    if (body.connectedSendProvider !== undefined) {
+      row.connectedSendProvider = body.connectedSendProvider ?? null;
+    }
+    if (body.connectedSendAccountId !== undefined) {
+      row.connectedSendAccountId = body.connectedSendAccountId ?? null;
+    }
     const bytesAfter = this.estimateDraftBytes(row.bodyText ?? "", row.attachments);
     const delta = bytesAfter - bytesBefore;
     if (delta > 0) {
@@ -98,7 +122,16 @@ export class MailComposeDraftService {
         delta,
       );
     }
-    const saved = await this.draftRepository.save(row);
+    let saved = await this.draftRepository.save(row);
+    saved = await this.mailConnectedDraftSyncService.syncLertaDraftToProvider(
+      organizationId,
+      saved,
+      {
+        connectedSendProvider: body.connectedSendProvider,
+        connectedSendAccountId: body.connectedSendAccountId,
+      },
+    );
+    saved = await this.draftRepository.save(saved);
     return this.toDto(saved);
   }
 
@@ -108,6 +141,10 @@ export class MailComposeDraftService {
     draftId: string,
   ): Promise<void> {
     const row = await this.assertDraftAccess(organizationId, userId, draftId);
+    await this.mailConnectedDraftSyncService.deleteProviderDraft(
+      organizationId,
+      row,
+    );
     await this.draftRepository.remove(row);
   }
 

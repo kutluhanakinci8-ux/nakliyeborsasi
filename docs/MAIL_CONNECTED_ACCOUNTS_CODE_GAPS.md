@@ -11,5 +11,7 @@ Bu liste **bağlantı kurulmadan** tamamlanan kod iyileştirmelerini izler.
 | Push (CAP-5) | Pub/Sub + Graph validation → senkron tetikleme |
 | Zamanlama UI | `scheduleAt` compose API + Ayarlar paneli |
 | Dış arama UI | Bulut hit listesi + aç / içe aktar |
+| Graph push aboneliği | Senkron sonrası `/subscriptions` (varsayılan webhook URL) |
+| Lerta taslak → Graph/Gmail | `connectedSend*` + `provider_draft_id` |
 
-OAuth / Console sonrası: `GOOGLE_GMAIL_*`, `MICROSOFT_GRAPH_*`, isteğe bağlı `GOOGLE_GMAIL_PUBSUB_TOPIC`, `MICROSOFT_GRAPH_MAIL_WEBHOOK_URL`.
+OAuth / Console sonrası: `GOOGLE_GMAIL_*`, `MICROSOFT_GRAPH_*`, isteğe bağlı `GOOGLE_GMAIL_PUBSUB_TOPIC`, `MICROSOFT_GRAPH_MAIL_WEBHOOK_URL` (boşsa `posta.lerta.com.tr/api/v1/public/mail-connected/microsoft/graph`).

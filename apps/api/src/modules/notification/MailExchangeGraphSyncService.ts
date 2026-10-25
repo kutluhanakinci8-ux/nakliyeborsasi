@@ -373,6 +373,9 @@ export class MailExchangeGraphSyncService {
       account.lastSyncedAt = new Date();
       account.lastSyncError = null;
       await this.accountRepository.save(account);
+      void this.ensureGraphMailSubscription(account, accessToken).catch(
+        () => undefined,
+      );
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Exchange senkron hatası";
@@ -409,6 +412,70 @@ export class MailExchangeGraphSyncService {
         `Exchange read sync failed ${exchangeMessageId}: ${message}`,
       );
     }
+  }
+
+  public async upsertDraftMessage(
+    organizationId: string,
+    accountId: string,
+    params: {
+      providerMessageId: string | null;
+      to: string | null;
+      subject: string | null;
+      text: string | null;
+    },
+  ): Promise<string> {
+    const account = await this.accountRepository.findOne({
+      where: { id: accountId, organizationId, enabled: true },
+    });
+    if (!account) {
+      throw new NotFoundException("Exchange bağlantısı bulunamadı.");
+    }
+    const accessToken = await this.resolveAccessToken(account);
+    const bodyHtml = wrapTextAsHtml(params.text ?? "");
+    const toRecipients = params.to?.trim()
+      ? toGraphRecipients([params.to.trim()])
+      : [];
+    const subject = params.subject?.trim() || "(Konu yok)";
+    if (params.providerMessageId) {
+      await this.graphPatch(accessToken, `${GRAPH_BASE}/me/messages/${params.providerMessageId}`, {
+        subject,
+        body: { contentType: "HTML", content: bodyHtml },
+        toRecipients,
+      });
+      return params.providerMessageId;
+    }
+    const created = await this.graphPostJson(
+      accessToken,
+      `${GRAPH_BASE}/me/mailFolders/drafts/messages`,
+      {
+        subject,
+        body: { contentType: "HTML", content: bodyHtml },
+        toRecipients,
+      },
+    );
+    const id = typeof created.id === "string" ? created.id : null;
+    if (!id) {
+      throw new BadRequestException("Graph taslak oluşturulamadı.");
+    }
+    return id;
+  }
+
+  public async deleteDraftMessage(
+    organizationId: string,
+    accountId: string,
+    providerMessageId: string,
+  ): Promise<void> {
+    const account = await this.accountRepository.findOne({
+      where: { id: accountId, organizationId, enabled: true },
+    });
+    if (!account) {
+      return;
+    }
+    const accessToken = await this.resolveAccessToken(account);
+    await this.graphDelete(
+      accessToken,
+      `${GRAPH_BASE}/me/messages/${providerMessageId}`,
+    );
   }
 
   public async importMessageById(
@@ -850,6 +917,63 @@ export class MailExchangeGraphSyncService {
       }));
   }
 
+  private async ensureGraphMailSubscription(
+    account: MailExchangeSyncAccountEntity,
+    accessToken: string,
+  ): Promise<void> {
+    const webhookUrl = this.resolveGraphWebhookUrl();
+    if (!webhookUrl) {
+      return;
+    }
+    const renewBefore = Date.now() + 6 * 60 * 60 * 1000;
+    if (
+      account.graphSubscriptionExpiration &&
+      account.graphSubscriptionExpiration.getTime() > renewBefore
+    ) {
+      return;
+    }
+    if (account.graphSubscriptionId) {
+      try {
+        await this.graphDelete(
+          accessToken,
+          `${GRAPH_BASE}/subscriptions/${account.graphSubscriptionId}`,
+        );
+      } catch {
+        /* expired */
+      }
+    }
+    const expiration = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
+    const created = await this.graphPostJson(
+      accessToken,
+      `${GRAPH_BASE}/subscriptions`,
+      {
+        changeType: "created,updated,deleted",
+        notificationUrl: webhookUrl,
+        resource: "/me/messages",
+        expirationDateTime: expiration.toISOString(),
+        clientState: account.id,
+      },
+    );
+    if (typeof created.id === "string") {
+      account.graphSubscriptionId = created.id;
+      account.graphSubscriptionExpiration = expiration;
+      await this.accountRepository.save(account);
+    }
+  }
+
+  private resolveGraphWebhookUrl(): string | null {
+    const explicit = this.configService
+      .get<string>("MICROSOFT_GRAPH_MAIL_WEBHOOK_URL")
+      ?.trim();
+    if (explicit) {
+      return explicit;
+    }
+    const publicUrl =
+      this.configService.get<string>("LERTA_MAIL_PUBLIC_URL")?.trim() ??
+      "https://posta.lerta.com.tr";
+    return `${publicUrl.replace(/\/$/, "")}/api/v1/public/mail-connected/microsoft/graph`;
+  }
+
   private async graphPatch(
     accessToken: string,
     url: string,
@@ -876,6 +1000,14 @@ export class MailExchangeGraphSyncService {
     url: string,
     body: Record<string, unknown>,
   ): Promise<void> {
+    await this.graphPostJson(accessToken, url, body);
+  }
+
+  private async graphPostJson(
+    accessToken: string,
+    url: string,
+    body: Record<string, unknown>,
+  ): Promise<Record<string, unknown>> {
     const response = await fetch(url, {
       method: "POST",
       headers: {
@@ -888,6 +1020,23 @@ export class MailExchangeGraphSyncService {
       const text = await response.text();
       throw new BadRequestException(
         `Graph POST başarısız (${response.status}): ${text.slice(0, 200)}`,
+      );
+    }
+    if (response.status === 204) {
+      return {};
+    }
+    return (await response.json()) as Record<string, unknown>;
+  }
+
+  private async graphDelete(accessToken: string, url: string): Promise<void> {
+    const response = await fetch(url, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!response.ok && response.status !== 404) {
+      const text = await response.text();
+      throw new BadRequestException(
+        `Graph DELETE başarısız (${response.status}): ${text.slice(0, 200)}`,
       );
     }
   }
@@ -975,4 +1124,12 @@ function toGraphRecipients(addresses: string[]): Array<{
   return addresses.map((address) => ({
     emailAddress: { address },
   }));
+}
+
+function wrapTextAsHtml(text: string): string {
+  const escaped = text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+  return `<div style="white-space:pre-wrap;font-family:sans-serif">${escaped}</div>`;
 }

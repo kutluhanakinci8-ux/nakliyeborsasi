@@ -1994,6 +1994,8 @@ export async function createDraft(
     subject?: string;
     text?: string;
     attachments?: ComposeAttachment[];
+    connectedSendProvider?: "microsoft_graph" | "gmail_api";
+    connectedSendAccountId?: string;
   },
 ) {
   const payload = await apiFetch<{ draft: MailDraftItem }>(
@@ -2012,6 +2014,8 @@ export async function updateDraft(
     subject?: string;
     text?: string;
     attachments?: ComposeAttachment[];
+    connectedSendProvider?: "microsoft_graph" | "gmail_api";
+    connectedSendAccountId?: string;
   },
 ) {
   const payload = await apiFetch<{ draft: MailDraftItem }>(

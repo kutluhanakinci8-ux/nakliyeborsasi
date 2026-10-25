@@ -1224,11 +1224,13 @@ export function useMailClientController({
           ? await Promise.all(composeFiles.map((f) => fileToAttachment(f)))
           : [];
       const attachments = [...composeStoredAttachments, ...fileAttachments];
+      const connectedSend = parseComposeSendAsKey(composeSendAsKey);
       const body = {
         to: composeTo.trim() || undefined,
         subject: composeSubject.trim() || undefined,
         text: composeText || undefined,
         attachments: attachments.length > 0 ? attachments : undefined,
+        ...connectedSend,
       };
       if (editingDraftId) {
         await updateDraft(accessToken, editingDraftId, body);

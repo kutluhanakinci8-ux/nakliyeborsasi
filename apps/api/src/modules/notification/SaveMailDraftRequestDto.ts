@@ -2,8 +2,10 @@ import { Type } from "class-transformer";
 import {
   IsArray,
   IsEmail,
+  IsIn,
   IsOptional,
   IsString,
+  IsUUID,
   MaxLength,
   ValidateNested,
 } from "class-validator";
@@ -30,4 +32,12 @@ export class SaveMailDraftRequestDto {
   @ValidateNested({ each: true })
   @Type(() => ComposeMailAttachmentDto)
   public attachments?: ComposeMailAttachmentDto[];
+
+  @IsOptional()
+  @IsIn(["microsoft_graph", "gmail_api"])
+  public connectedSendProvider?: "microsoft_graph" | "gmail_api";
+
+  @IsOptional()
+  @IsUUID()
+  public connectedSendAccountId?: string;
 }

@@ -35,6 +35,15 @@ export class MailComposeDraftEntity {
   @Column({ type: "jsonb", nullable: true })
   public attachments!: MailComposeDraftAttachmentMeta[] | null;
 
+  @Column({ name: "connected_send_provider", type: "varchar", length: 32, nullable: true })
+  public connectedSendProvider!: "microsoft_graph" | "gmail_api" | null;
+
+  @Column({ name: "connected_send_account_id", type: "uuid", nullable: true })
+  public connectedSendAccountId!: string | null;
+
+  @Column({ name: "provider_draft_id", type: "varchar", length: 255, nullable: true })
+  public providerDraftId!: string | null;
+
   @CreateDateColumn({ name: "created_at", type: "timestamptz" })
   public createdAt!: Date;
 
