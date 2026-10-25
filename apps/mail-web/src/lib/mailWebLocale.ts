@@ -1,7 +1,12 @@
 import type { MailUiLocale } from "./mailLocale";
+import {
+  MAIL_WEB_I18N_BATCH_EN,
+  MAIL_WEB_I18N_BATCH_TR,
+} from "./mailWebLocaleI18nBatch";
 
 export const MAIL_WEB_MESSAGES: Record<MailUiLocale, Record<string, string>> = {
   tr: {
+    ...MAIL_WEB_I18N_BATCH_TR,
     navInbox: "Gelen",
     navSent: "Gönderilen",
     navAll: "Tümü",
@@ -258,6 +263,7 @@ export const MAIL_WEB_MESSAGES: Record<MailUiLocale, Record<string, string>> = {
     replyQuoteModeTrimmed: "Kısa alıntı",
   },
   en: {
+    ...MAIL_WEB_I18N_BATCH_EN,
     navInbox: "Inbox",
     navSent: "Sent",
     navAll: "All",

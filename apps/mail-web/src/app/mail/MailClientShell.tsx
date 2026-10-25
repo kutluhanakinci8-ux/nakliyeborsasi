@@ -432,7 +432,7 @@ export function MailClientShell({ mail }: Props) {
           disabled={storageAtLimit}
           title={
             storageAtLimit
-              ? "Depolama kotası dolu — önce arşivleyin veya silin"
+              ? t("storageQuotaTitle")
               : undefined
           }
           onClick={() => {
@@ -567,22 +567,22 @@ export function MailClientShell({ mail }: Props) {
               <button
                 type="button"
                 className="mail-custom-folder-action"
-                title="Yeniden adlandır"
+                title={t("folderRenameTitle")}
                 onClick={() => {
-                  const next = window.prompt("Yeni klasör adı", f.name);
+                  const next = window.prompt(t("folderRenamePrompt"), f.name);
                   if (!next?.trim() || !accessToken || next.trim() === f.name) {
                     return;
                   }
                   void renameCustomFolder(accessToken, f.id, next.trim()).then(
                     () => {
-                      setToast("Klasör güncellendi.");
+                      setToast(t("toastFolderUpdated"));
                       void refreshCustomFolders();
                     },
                     (error: unknown) => {
                       setToast(
                         error instanceof Error
                           ? error.message
-                          : "Klasör güncellenemedi.",
+                          : t("errFolderUpdateFailed"),
                       );
                     },
                   );
@@ -593,12 +593,12 @@ export function MailClientShell({ mail }: Props) {
               <button
                 type="button"
                 className="mail-custom-folder-action mail-custom-folder-delete"
-                title="Klasörü sil"
+                title={t("folderDeleteTitle")}
                 onClick={() => {
                   if (
                     !accessToken ||
                     !window.confirm(
-                      `"${f.name}" silinsin mi? İçindeki postalar Gelen'e döner.`,
+                      t("folderDeleteConfirm", { name: f.name }),
                     )
                   ) {
                     return;
@@ -608,7 +608,7 @@ export function MailClientShell({ mail }: Props) {
                       if (activeCustomFolderId === f.id) {
                         setActiveCustomFolderId(null);
                       }
-                      setToast("Klasör silindi.");
+                      setToast(t("toastFolderDeleted"));
                       void refreshCustomFolders();
                       void refresh();
                     },
@@ -616,7 +616,7 @@ export function MailClientShell({ mail }: Props) {
                       setToast(
                         error instanceof Error
                           ? error.message
-                          : "Klasör silinemedi.",
+                          : t("errFolderDeleteFailed"),
                       );
                     },
                   );
@@ -642,8 +642,8 @@ export function MailClientShell({ mail }: Props) {
             type="button"
             className="mail-nav-imap mail-nav-imap--icon"
             onClick={() => void promptCreateCustomFolder()}
-            aria-label="Yeni özel klasör"
-            title="Yeni özel klasör"
+            aria-label={t("folderNewAria")}
+            title={t("folderNewAria")}
           >
             <svg
               className="mail-nav-imap-icon"
@@ -663,8 +663,8 @@ export function MailClientShell({ mail }: Props) {
             type="button"
             className="mail-nav-imap mail-nav-imap--icon"
             onClick={() => setSettingsOpen(true)}
-            aria-label="Ayarlar: IMAP, imza, iki adımlı doğrulama"
-            title="Ayarlar (IMAP · imza · 2FA)"
+            aria-label={t("settingsAriaLong")}
+            title={t("settingsImapAria")}
           >
             <svg
               className="mail-nav-imap-icon"
@@ -705,7 +705,7 @@ export function MailClientShell({ mail }: Props) {
             {summary.storageQuota.atLimit ? (
               <p className="mail-storage-warn mail-storage-warn--danger">
                 Depolama kotası dolu — yeni gönderim ve ekler engellenebilir.
-                Arşivleyin veya plan yükseltin.
+                {t("storageQuotaHint")}
               </p>
             ) : summary.storageQuota.nearLimit ? (
               <p className="mail-storage-warn">
@@ -851,7 +851,7 @@ export function MailClientShell({ mail }: Props) {
                   <div
                     className="mail-inbox-focus-tabs"
                     role="tablist"
-                    aria-label="Odaklı gelen kutusu"
+                    aria-label={t("focusedInboxAria")}
                   >
                     <button
                       type="button"
@@ -898,14 +898,13 @@ export function MailClientShell({ mail }: Props) {
             ) : null}
             {mailSwipeAssistActive ? (
               <p className="mail-parity-assist-banner mail-parity-assist-banner--swipe" role="status">
-                Kaydırma: sola kaydırın — birincil aksiyon «{swipePrimaryActionLabel}»;
-                tam kaydırmada otomatik uygulanır (Posta ayarları).{" "}
+                {t("swipeAssistBanner", { action: swipePrimaryActionLabel })}{" "}
                 <button
                   type="button"
                   className="mail-parity-assist-dismiss"
                   onClick={() => setMailSwipeAssistActive(false)}
                 >
-                  Kapat
+                  {t("actionClose")}
                 </button>
               </p>
             ) : null}
@@ -917,7 +916,7 @@ export function MailClientShell({ mail }: Props) {
                     checked={threadView}
                     onChange={(e) => setThreadView(e.target.checked)}
                   />
-                  Konuşma
+                  {t("threadToggle")}
                 </label>
               ) : null}
               {canBulkSelect && listItems.length > 0 ? (
@@ -926,7 +925,7 @@ export function MailClientShell({ mail }: Props) {
                     type="checkbox"
                     checked={allListSelected}
                     onChange={toggleSelectAll}
-                    aria-label="Tümünü seç"
+                    aria-label={t("bulkSelectAll")}
                   />
                 </label>
               ) : null}
@@ -938,29 +937,29 @@ export function MailClientShell({ mail }: Props) {
                         type="button"
                         onClick={() => void runBulkRestoreFromTrash()}
                       >
-                        Geri al
+                        {t("readRestore")}
                       </button>
                       <button
                         type="button"
                         className="mail-bulk-danger"
                         onClick={() => void runBulkPurgeTrash()}
                       >
-                        Kalıcı sil
+                        {t("readPurge")}
                       </button>
                     </>
                   ) : (
                     <>
                   <button type="button" onClick={() => void runBulkMarkRead(false)}>
-                    Okundu
+                    {t("bulkMarkRead")}
                   </button>
                   <button type="button" onClick={() => void runBulkMarkRead(true)}>
-                    Okunmadı
+                    {t("bulkMarkUnread")}
                   </button>
                   <button type="button" onClick={() => void runBulkFolder("archive")}>
-                    Arşiv
+                    {t("bulkArchiveShort")}
                   </button>
                   <button type="button" onClick={() => void runBulkFolder("trash")}>
-                    Çöp
+                    {t("bulkTrash")}
                   </button>
                     </>
                   )}
@@ -970,18 +969,18 @@ export function MailClientShell({ mail }: Props) {
                         type="button"
                         onClick={() => void runBulkStar(true)}
                       >
-                        Yıldızla
+                        {t("bulkStar")}
                       </button>
                       <button
                         type="button"
                         onClick={() => void runBulkStar(false)}
                       >
-                        Yıldız kaldır
+                        {t("bulkUnstar")}
                       </button>
                       <select
                         className="mail-bulk-folder-select"
                         defaultValue=""
-                        aria-label="Seçilenleri ertele"
+                        aria-label={t("bulkSnoozeSelectedAria")}
                         onChange={(e) => {
                           const v = e.target.value;
                           e.target.value = "";
@@ -991,11 +990,11 @@ export function MailClientShell({ mail }: Props) {
                           void runBulkSnooze(Number(v));
                         }}
                       >
-                        <option value="">Ertele…</option>
-                        <option value="1">1 saat</option>
-                        <option value="3">3 saat</option>
-                        <option value="24">1 gün</option>
-                        <option value="168">1 hafta</option>
+                        <option value="">{t("snoozePrompt")}</option>
+                        <option value="1">{t("snooze1h")}</option>
+                        <option value="3">{t("snooze3h")}</option>
+                        <option value="24">{t("snooze24h")}</option>
+                        <option value="168">{t("snooze1w")}</option>
                       </select>
                     </>
                   ) : null}
@@ -1003,7 +1002,7 @@ export function MailClientShell({ mail }: Props) {
                     <select
                       className="mail-bulk-folder-select"
                       defaultValue=""
-                      aria-label="Özel klasöre taşı"
+                      aria-label={t("bulkMoveCustomAria")}
                       onChange={(e) => {
                         const v = e.target.value;
                         e.target.value = "";
@@ -1015,8 +1014,8 @@ export function MailClientShell({ mail }: Props) {
                         );
                       }}
                     >
-                      <option value="">Klasöre taşı…</option>
-                      <option value="__inbox__">Gelen (klasörsüz)</option>
+                      <option value="">{t("bulkMoveFolderPrompt")}</option>
+                      <option value="__inbox__">{t("folderInboxOption")}</option>
                       {customFolders.map((f) => (
                         <option key={f.id} value={f.id}>{f.name}</option>
                       ))}
@@ -1044,7 +1043,7 @@ export function MailClientShell({ mail }: Props) {
                 type="button"
                 className="mail-toolbar-btn"
                 onClick={() => setShortcutsOpen(true)}
-                title="Klavye kısayolları"
+                title={t("keyboardShortcutsTitle")}
               >
                 ?
               </button>
@@ -1058,12 +1057,12 @@ export function MailClientShell({ mail }: Props) {
                 type="search"
                 placeholder={
                   isPrimaryInbox
-                    ? "Gelen kutusunda ara…"
-                    : "Ara (konu, gönderen)…"
+                    ? t("searchInboxPlaceholder")
+                    : t("searchFolderPlaceholder")
                 }
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                aria-label="Posta ara"
+                aria-label={t("searchAria")}
               />
             </div>
             <button
@@ -1071,12 +1070,12 @@ export function MailClientShell({ mail }: Props) {
               className="mail-search-filters-toggle"
               onClick={() => setSearchFiltersOpen((open) => !open)}
             >
-              {searchFiltersOpen ? "Filtreleri gizle" : "Gelişmiş filtre"}
+              {searchFiltersOpen ? t("hideFilters") : t("advancedFilter")}
             </button>
             {searchFiltersOpen ? (
               <div className="mail-search-filters">
                 <label>
-                  Gönderen
+                  {t("filterFrom")}
                   <input
                     type="text"
                     placeholder="ornek@firma.com"
@@ -1085,7 +1084,7 @@ export function MailClientShell({ mail }: Props) {
                   />
                 </label>
                 <label>
-                  Başlangıç
+                  {t("filterDateStart")}
                   <input
                     type="date"
                     value={searchDateFrom}
@@ -1093,7 +1092,7 @@ export function MailClientShell({ mail }: Props) {
                   />
                 </label>
                 <label>
-                  Bitiş
+                  {t("filterDateEnd")}
                   <input
                     type="date"
                     value={searchDateTo}
@@ -1101,7 +1100,7 @@ export function MailClientShell({ mail }: Props) {
                   />
                 </label>
                 <label>
-                  Ek
+                  {t("filterAttachment")}
                   <select
                     value={searchHasAttachment}
                     onChange={(e) =>
@@ -1110,9 +1109,9 @@ export function MailClientShell({ mail }: Props) {
                       )
                     }
                   >
-                    <option value="any">Fark etmez</option>
-                    <option value="yes">Ek var</option>
-                    <option value="no">Ek yok</option>
+                    <option value="any">{t("filterAttachmentAny")}</option>
+                    <option value="yes">{t("filterAttachmentYes")}</option>
+                    <option value="no">{t("filterAttachmentNo")}</option>
                   </select>
                 </label>
                 <button
@@ -1132,9 +1131,9 @@ export function MailClientShell({ mail }: Props) {
             ) : null}
             {searchActive && searchResults !== null ? (
               <p className="mail-search-hint">
-                {searchResults.length} sonuç
+                {t("searchResultsCount", { count: searchResults.length })}
                 {searchExternalHits.length > 0
-                  ? ` · ${searchExternalHits.length} bulut (Microsoft/Gmail)`
+                  ? t("searchCloudSuffix", { count: searchExternalHits.length })
                   : ""}
               </p>
             ) : null}
@@ -1241,7 +1240,9 @@ export function MailClientShell({ mail }: Props) {
                   onActiveSwipeKeyChange={setActiveSwipeRowId}
                   primaryAction={swipePrimaryAction}
                   archiveLabel={swipeArchiveLabel}
-                  readLabel={unread ? "Okundu" : "Okunmadı"}
+                  readLabel={
+                    unread ? t("bulkMarkRead") : t("bulkMarkUnread")
+                  }
                   onArchive={() =>
                     void swipeRowArchive(m.id, relatedInbound)
                   }
@@ -1297,7 +1298,9 @@ export function MailClientShell({ mail }: Props) {
               primaryAction={swipePrimaryAction}
               showArchive={view === "trash" ? true : view !== "sent"}
               archiveLabel={swipeArchiveLabel}
-              readLabel={unread ? "Okundu" : "Okunmadı"}
+              readLabel={
+                unread ? t("bulkMarkRead") : t("bulkMarkUnread")
+              }
               onArchive={() =>
                 void swipeRowArchive(m.id, relatedInbound, rowMessageKind)
               }
@@ -1359,7 +1362,7 @@ export function MailClientShell({ mail }: Props) {
                   type="checkbox"
                   className="mail-list-check"
                   checked={checkedIds.has(m.id)}
-                  aria-label="Mesajı seç"
+                  aria-label={t("rowSelectAria")}
                   onClick={(e) => {
                     e.stopPropagation();
                     toggleChecked(m.id, e.shiftKey);
@@ -1377,13 +1380,13 @@ export function MailClientShell({ mail }: Props) {
                   }`}
                   aria-label={
                     "starredAt" in m && m.starredAt
-                      ? "Yıldızı kaldır"
-                      : "Yıldızla"
+                      ? t("starRemoveAria")
+                      : t("starAddAria")
                   }
                   title={
                     "starredAt" in m && m.starredAt
-                      ? "Yıldızı kaldır"
-                      : "Yıldızla"
+                      ? t("starRemoveAria")
+                      : t("starAddAria")
                   }
                   onClick={(e) => {
                     e.stopPropagation();
@@ -1425,10 +1428,11 @@ export function MailClientShell({ mail }: Props) {
         {pendingUndo ? (
           <div className="mail-undo-bar">
             <span>
-              Gönderiliyor… {undoSecondsLeft > 0 ? `${undoSecondsLeft}s` : ""}
+              {t("undoSendingProgress")}
+              {undoSecondsLeft > 0 ? ` ${undoSecondsLeft}s` : ""}
             </span>
             <button type="button" onClick={() => void cancelPendingUndo()}>
-              Geri al
+              {t("readRestore")}
             </button>
           </div>
         ) : null}
@@ -1446,7 +1450,7 @@ export function MailClientShell({ mail }: Props) {
           <p className="mail-read-toast">{toast}</p>
         ) : null}
         {sentLoading ? (
-          <p className="mail-empty">Yükleniyor…</p>
+          <p className="mail-empty">{t("readLoading")}</p>
         ) : sentPreview ? (
           <>
             <header className="mail-read-header">
@@ -1460,7 +1464,7 @@ export function MailClientShell({ mail }: Props) {
               {sentPreview.bodyHtml ? (
                 <iframe
                   key={`sent-${readFontScale}`}
-                  title="Gönderilen mesaj (alıcı görünümü)"
+                  title={t("sentPreviewTitle")}
                   className="mail-html-frame mail-html-frame--sent"
                   sandbox=""
                   srcDoc={
@@ -1469,28 +1473,28 @@ export function MailClientShell({ mail }: Props) {
                   }
                 />
               ) : (
-                <pre>{sentPreview.bodyText ?? "(İçerik yok)"}</pre>
+                <pre>{sentPreview.bodyText ?? t("noBodyContent")}</pre>
               )}
             </div>
             {view === "trash" ? (
               <div
                 className="mail-read-toolbar"
                 role="toolbar"
-                aria-label="Çöp işlemleri"
+                aria-label={t("trashOpsAria")}
               >
                 <button
                   type="button"
                   className="mail-read-tool-btn"
                   onClick={() => void restoreCurrentFromTrash()}
                 >
-                  Geri al
+                  {t("readRestore")}
                 </button>
                 <button
                   type="button"
                   className="mail-read-tool-btn mail-read-tool-btn--danger"
                   onClick={() => void purgeCurrentMessage()}
                 >
-                  Kalıcı sil
+                  {t("readPurge")}
                 </button>
               </div>
             ) : null}
@@ -1498,9 +1502,9 @@ export function MailClientShell({ mail }: Props) {
         ) : draftPreview ? (
           <>
             <header className="mail-read-header">
-              <h1>{draftPreview.subject || "(Konu yok)"}</h1>
+              <h1>{draftPreview.subject || t("noSubject")}</h1>
               <div className="mail-read-meta">
-                Kime: {draftPreview.to ?? "—"} · Güncellendi:{" "}
+                {t("fieldTo")}: {draftPreview.to ?? "—"} · {t("draftUpdatedLabel")}:{" "}
                 {new Date(draftPreview.updatedAt).toLocaleString("tr-TR")}
               </div>
             </header>
@@ -1520,7 +1524,7 @@ export function MailClientShell({ mail }: Props) {
                 className="compose-btn compose-btn--secondary"
                 onClick={() => openComposeFromDraft(draftPreview)}
               >
-                Düzenle
+                {t("draftEdit")}
               </button>
               <button
                 type="button"
@@ -1543,7 +1547,7 @@ export function MailClientShell({ mail }: Props) {
                         setSelectedId(null);
                         return;
                       }
-                      setToast("Gönderildi.");
+                      setToast(t("toastSent"));
                       setDraftPreview(null);
                       setSelectedId(null);
                       void refresh();
@@ -1553,13 +1557,13 @@ export function MailClientShell({ mail }: Props) {
                       setToast(
                         error instanceof Error
                           ? error.message
-                          : "Gönderilemedi.",
+                          : t("toastSendFailed"),
                       );
                     }
                   })();
                 }}
               >
-                Gönder
+                {t("composeSend")}
               </button>
               <button
                 type="button"
@@ -1576,7 +1580,7 @@ export function MailClientShell({ mail }: Props) {
                   })();
                 }}
               >
-                Sil
+                {t("actionDelete")}
               </button>
             </div>
           </>
@@ -1625,12 +1629,16 @@ export function MailClientShell({ mail }: Props) {
               ) : null}
               <h1 className="mail-read-title">{detail.subject}</h1>
               <div className="mail-read-meta mail-read-meta--premium">
-                Kimden: {detail.fromAddress} ·{" "}
+                {t("readFromLabel")}: {detail.fromAddress} ·{" "}
                 {new Date(detail.receivedAt).toLocaleString("tr-TR")}
                 {detail.spamReason ? ` · ${detail.spamReason}` : ""}
                 {detail.snoozedUntil &&
                 new Date(detail.snoozedUntil).getTime() > Date.now()
-                  ? ` · Ertelenmiş: ${new Date(detail.snoozedUntil).toLocaleString("tr-TR")}`
+                  ? t("snoozedUntilSuffix", {
+                      date: new Date(detail.snoozedUntil).toLocaleString(
+                        "tr-TR",
+                      ),
+                    })
                   : null}
               </div>
             </header>
@@ -1655,18 +1663,18 @@ export function MailClientShell({ mail }: Props) {
                 <>
                   {shouldPromptRemoteImages(detail.bodyHtml) ? (
                     <div className="mail-remote-images-banner" role="status">
-                      <span>Uzak resimler gizlendi.</span>
+                      <span>{t("remoteImagesHidden")}</span>
                       <button
                         type="button"
                         onClick={() => setRemoteImagesRevealed(true)}
                       >
-                        Resimleri göster
+                        {t("remoteImagesShowBtn")}
                       </button>
                     </div>
                   ) : null}
                   <iframe
                     key={`${detail.id}-${readFontScale}`}
-                    title="Mesaj içeriği"
+                    title={t("messageContentTitle")}
                     className="mail-html-frame"
                     sandbox=""
                     srcDoc={
@@ -1681,7 +1689,7 @@ export function MailClientShell({ mail }: Props) {
             <div
               className="mail-read-toolbar"
               role="toolbar"
-              aria-label="Mesaj işlemleri"
+              aria-label={t("messageOpsAria")}
             >
               {detail.mailboxFolder !== "trash" ? (
                 <button
@@ -1689,7 +1697,7 @@ export function MailClientShell({ mail }: Props) {
                   className={`mail-read-tool-btn ${detail.starredAt ? "is-active" : ""}`}
                   onClick={() => void toggleCurrentStarred()}
                 >
-                  {detail.starredAt ? "★ Yıldızlı" : "☆ Yıldızla"}
+                  {detail.starredAt ? t("readStarred") : t("readStar")}
                 </button>
               ) : null}
               {view === "trash" || detail.mailboxFolder === "trash" ? (
@@ -1699,14 +1707,14 @@ export function MailClientShell({ mail }: Props) {
                     className="mail-read-tool-btn"
                     onClick={() => void restoreCurrentFromTrash()}
                   >
-                    Geri al
+                    {t("readRestore")}
                   </button>
                   <button
                     type="button"
                     className="mail-read-tool-btn mail-read-tool-btn--danger"
                     onClick={() => void purgeCurrentMessage()}
                   >
-                    Kalıcı sil
+                    {t("readPurge")}
                   </button>
                 </>
               ) : (
@@ -1717,7 +1725,7 @@ export function MailClientShell({ mail }: Props) {
                       className="mail-read-tool-btn"
                       onClick={() => void moveCurrentMessage("archive")}
                     >
-                      Arşivle
+                      {t("readArchive")}
                     </button>
                   ) : (
                     <button
@@ -1725,7 +1733,7 @@ export function MailClientShell({ mail }: Props) {
                       className="mail-read-tool-btn"
                       onClick={() => void moveCurrentMessage("inbox")}
                     >
-                      Gelen kutusuna taşı
+                      {t("readMoveToInbox")}
                     </button>
                   )}
                   <button
@@ -1733,7 +1741,7 @@ export function MailClientShell({ mail }: Props) {
                     className="mail-read-tool-btn"
                     onClick={() => void moveCurrentMessage("trash")}
                   >
-                    Sil
+                    {t("actionDelete")}
                   </button>
                   {detail.readAt ? (
                     <button
@@ -1741,7 +1749,7 @@ export function MailClientShell({ mail }: Props) {
                       className="mail-read-tool-btn"
                       onClick={() => void markCurrentUnread()}
                     >
-                      Okunmadı
+                      {t("readMarkUnread")}
                     </button>
                   ) : null}
                 </>
@@ -1750,9 +1758,9 @@ export function MailClientShell({ mail }: Props) {
             {view !== "sent" && view !== "trash" ? (
               <div className="mail-reply mail-reply--premium">
                 <div className="mail-reply-premium-head">
-                  <h3 className="mail-reply-premium-title">Yanıt</h3>
+                  <h3 className="mail-reply-premium-title">{t("replySectionTitle")}</h3>
                   {replyAllMode ? (
-                    <span className="mail-reply-all-badge">Tümüne yanıt (a)</span>
+                    <span className="mail-reply-all-badge">{t("replyAllBadge")}</span>
                   ) : null}
                 </div>
                 <div className="compose-field mail-reply-field">
@@ -1762,7 +1770,7 @@ export function MailClientShell({ mail }: Props) {
                   <input
                     id="reply-bcc"
                     type="text"
-                    placeholder="Gizli kopya, virgülle ayırın"
+                    placeholder={t("replyBccPlaceholder")}
                     value={replyBcc}
                     onChange={(e) => setReplyBcc(e.target.value)}
                     className="compose-input"
@@ -1770,7 +1778,7 @@ export function MailClientShell({ mail }: Props) {
                 </div>
                 <textarea
                   className="compose-textarea mail-reply-textarea"
-                  placeholder="Yanıtınızı yazın…"
+                  placeholder={t("replyPlaceholder")}
                   value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}
                   rows={5}
@@ -1800,8 +1808,8 @@ export function MailClientShell({ mail }: Props) {
                 />
                 <div className="compose-attach-zone mail-reply-attach">
                   <label className="compose-attach-label">
-                    <span className="compose-attach-title">Ek</span>
-                    <span className="compose-attach-btn">Dosya seç</span>
+                    <span className="compose-attach-title">{t("attachLabel")}</span>
+                    <span className="compose-attach-btn">{t("attachChoose")}</span>
                     <input
                       type="file"
                       multiple
@@ -1829,14 +1837,14 @@ export function MailClientShell({ mail }: Props) {
                     onClick={() =>
                       void unsnoozeMailMessage(accessToken, selectedId).then(
                         () => {
-                          setToast("Erteleme kaldırıldı.");
+                          setToast(t("toastSnoozeCleared"));
                           void refresh();
                           void openMessage(selectedId);
                         },
                       )
                     }
                   >
-                    Ertelemeyi kaldır
+                    {t("snoozeClear")}
                   </button>
                 ) : null}
                 <div className="mail-reply-premium-actions">
@@ -1864,15 +1872,15 @@ export function MailClientShell({ mail }: Props) {
                             setReplyText(result.suggestion);
                             setToast(
                               result.provider === "llm"
-                                ? "AI yanıt önerisi eklendi."
-                                : "Yanıt şablonu eklendi.",
+                                ? t("toastAiReplyAdded")
+                                : t("toastReplyTemplateAdded"),
                             );
                           })
-                          .catch(() => setToast("Öneri alınamadı."))
+                          .catch(() => setToast(t("toastSuggestFailed")))
                           .finally(() => setAiSuggestBusy(false));
                       }}
                     >
-                      {aiSuggestBusy ? "Öneri…" : "Yanıt öner"}
+                      {aiSuggestBusy ? t("aiReplySuggestBusy") : t("aiReplySuggest")}
                     </button>
                     <button
                       type="button"
@@ -1894,11 +1902,11 @@ export function MailClientShell({ mail }: Props) {
                               setToast(`Özet (${result.provider}): ${result.summary.slice(0, 120)}…`);
                             }
                           })
-                          .catch(() => setToast("Özet alınamadı."))
+                          .catch(() => setToast(t("toastSummaryFailed")))
                           .finally(() => setAiSuggestBusy(false));
                       }}
                     >
-                      Özet
+                      {t("aiSummary")}
                     </button>
                     <button
                       type="button"
@@ -1920,7 +1928,7 @@ export function MailClientShell({ mail }: Props) {
                               setToast(`Sınıf: ${result.label} (${result.provider})`);
                             }
                           })
-                          .catch(() => setToast("Sınıflandırma başarısız."))
+                          .catch(() => setToast(t("aiClassifyFailed")))
                           .finally(() => setAiSuggestBusy(false));
                       }}
                     >
@@ -1933,14 +1941,14 @@ export function MailClientShell({ mail }: Props) {
                           className="compose-btn compose-btn--primary"
                           onClick={() => void sendReply(true)}
                         >
-                          Tümüne yanıtla
+                          {t("replyAll")}
                         </button>
                         <button
                           type="button"
                           className="compose-btn compose-btn--secondary"
                           onClick={() => void sendReply(false)}
                         >
-                          Yanıtla
+                          {t("replyAction")}
                         </button>
                       </>
                     ) : (
@@ -1950,14 +1958,14 @@ export function MailClientShell({ mail }: Props) {
                           className="compose-btn compose-btn--primary"
                           onClick={() => void sendReply(false)}
                         >
-                          Yanıtla
+                          {t("replyAction")}
                         </button>
                         <button
                           type="button"
                           className="compose-btn compose-btn--secondary"
                           onClick={() => void sendReply(true)}
                         >
-                          Tümüne yanıtla
+                          {t("replyAll")}
                         </button>
                       </>
                     )}
@@ -1966,7 +1974,7 @@ export function MailClientShell({ mail }: Props) {
                     <select
                       className="compose-select mail-snooze-select"
                       defaultValue=""
-                      aria-label="Ertele"
+                      aria-label={t("snoozeAria")}
                       onChange={(e) => {
                         const hours = Number(e.target.value);
                         if (hours > 0) {
@@ -1975,18 +1983,18 @@ export function MailClientShell({ mail }: Props) {
                         }
                       }}
                     >
-                      <option value="">Ertele…</option>
-                      <option value="1">1 saat</option>
-                      <option value="3">3 saat</option>
-                      <option value="24">Yarın</option>
-                      <option value="168">1 hafta</option>
+                      <option value="">{t("snoozePrompt")}</option>
+                      <option value="1">{t("snooze1h")}</option>
+                      <option value="3">{t("snooze3h")}</option>
+                      <option value="24">{t("snoozeTomorrow")}</option>
+                      <option value="168">{t("snooze1w")}</option>
                     </select>
                     <button
                       type="button"
                       className="compose-btn compose-btn--ghost"
                       onClick={() => startForwardFromDetail()}
                     >
-                      İlet
+                      {t("forwardAction")}
                     </button>
                   </div>
                 </div>
@@ -2017,7 +2025,7 @@ export function MailClientShell({ mail }: Props) {
               <div className="compose-premium-header-text">
                 <h2 id="compose-premium-title">
                   {forwardMessageId
-                    ? "İlet"
+                    ? t("forwardAction")
                     : editingDraftId
                       ? t("composeEditDraft")
                       : t("composeNew")}
@@ -2025,13 +2033,13 @@ export function MailClientShell({ mail }: Props) {
                 <p className="compose-premium-subtitle">
                   {summary?.primaryAddress
                     ? t("composeFrom", { address: summary.primaryAddress })
-                    : "Kurumsal gönderim"}
+                    : t("composeCorporateSend")}
                 </p>
               </div>
               <button
                 type="button"
                 className="compose-premium-close"
-                aria-label="Kapat"
+                aria-label={t("actionClose")}
                 onClick={() => {
                   setComposeOpen(false);
                   resetCompose();
@@ -2066,7 +2074,9 @@ export function MailClientShell({ mail }: Props) {
                     }
                     onClick={() => setComposeCampaignMode((on) => !on)}
                   >
-                    {composeCampaignMode ? "Kampanya modu (açık)" : "Kampanya modu"}
+                    {composeCampaignMode
+                      ? t("campaignModeOn")
+                      : t("campaignModeOff")}
                   </button>
                   {composeCampaignMode ? (
                     <button
@@ -2074,7 +2084,9 @@ export function MailClientShell({ mail }: Props) {
                       className="compose-chip-btn"
                       onClick={() => setComposeCampaignHistoryOpen((on) => !on)}
                     >
-                      {composeCampaignHistoryOpen ? "Geçmişi gizle" : "Kampanya geçmişi"}
+                      {composeCampaignHistoryOpen
+                        ? t("campaignHistoryHide")
+                        : t("campaignHistoryShow")}
                     </button>
                   ) : null}
                 </div>

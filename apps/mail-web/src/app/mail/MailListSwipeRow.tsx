@@ -10,6 +10,7 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import type { MailSwipePrimaryAction } from "@/lib/mailApi";
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 
 const REVEAL_PX = 152;
 const OPEN_THRESHOLD = 48;
@@ -37,12 +38,15 @@ export function MailListSwipeRow({
   onActiveSwipeKeyChange,
   primaryAction,
   showArchive = true,
-  archiveLabel = "Arşivle",
-  readLabel = "Okundu",
+  archiveLabel,
+  readLabel,
   onArchive,
   onDelete,
   onToggleRead,
 }: Props) {
+  const { t } = useMailLocale();
+  const resolvedArchiveLabel = archiveLabel ?? t("swipeArchive");
+  const resolvedReadLabel = readLabel ?? t("swipeRead");
   const [offset, setOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const offsetRef = useRef(0);
@@ -69,20 +73,20 @@ export function MailListSwipeRow({
     const archiveBtn = showArchive
       ? {
           key: "archive",
-          label: archiveLabel,
+          label: resolvedArchiveLabel,
           className: "mail-swipe-action mail-swipe-action--archive",
           onClick: onArchive,
         }
       : null;
     const deleteBtn = {
       key: "delete",
-      label: "Sil",
+      label: t("swipeDeleteLabel"),
       className: "mail-swipe-action mail-swipe-action--delete",
       onClick: onDelete,
     };
     const readBtn = {
       key: "read",
-      label: readLabel,
+      label: resolvedReadLabel,
       className: "mail-swipe-action mail-swipe-action--read",
       onClick: onToggleRead,
     };
@@ -103,8 +107,9 @@ export function MailListSwipeRow({
   }, [
     primaryAction,
     showArchive,
-    archiveLabel,
-    readLabel,
+    resolvedArchiveLabel,
+    resolvedReadLabel,
+    t,
     onArchive,
     onDelete,
     onToggleRead,

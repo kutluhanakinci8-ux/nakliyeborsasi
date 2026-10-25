@@ -55,13 +55,7 @@ export default function LoginPage() {
       setAccessToken(result.accessToken);
       router.replace("/mail");
     } catch {
-      setError(
-        totpChallenge
-          ? locale === "en"
-            ? "Invalid verification code."
-            : "Doğrulama kodu geçersiz."
-          : t("loginError"),
-      );
+      setError(totpChallenge ? t("loginTotpInvalid") : t("loginError"));
     } finally {
       setLoading(false);
     }
@@ -121,19 +115,22 @@ export default function LoginPage() {
             <li>
               <span className="login-feature-icon" aria-hidden="true">✓</span>
               <span>
-                <strong>Özel domain</strong> — MX, SPF, DKIM ve DMARC sihirbazı
+                <strong>{t("loginShowcaseFeature1Strong")}</strong>{" "}
+                {t("loginShowcaseFeature1Text")}
               </span>
             </li>
             <li>
               <span className="login-feature-icon" aria-hidden="true">✓</span>
               <span>
-                <strong>Çoklu kutu</strong> — kurumsal planlarda yönetim panelinden
+                <strong>{t("loginShowcaseFeature2Strong")}</strong>{" "}
+                {t("loginShowcaseFeature2Text")}
               </span>
             </li>
             <li>
               <span className="login-feature-icon" aria-hidden="true">✓</span>
               <span>
-                <strong>KVKK uyumlu</strong> — veri Türkiye&apos;de, denetlenebilir kayıt
+                <strong>{t("loginShowcaseFeature3Strong")}</strong>{" "}
+                {t("loginShowcaseFeature3Text")}
               </span>
             </li>
           </ul>
@@ -165,7 +162,7 @@ export default function LoginPage() {
                   id="email"
                   type="email"
                   autoComplete="username"
-                  placeholder="ornek@sirketiniz.com"
+                  placeholder={t("loginEmailPlaceholder")}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -185,7 +182,7 @@ export default function LoginPage() {
               </div>
               {totpChallenge ? (
                 <div className="login-field">
-                  <label htmlFor="totp">Authenticator kodu</label>
+                  <label htmlFor="totp">{t("loginTotpLabel")}</label>
                   <input
                     id="totp"
                     inputMode="numeric"
@@ -202,22 +199,18 @@ export default function LoginPage() {
                 disabled={loading}
               >
                 {loading
-                  ? locale === "en"
-                    ? "Signing in…"
-                    : "Giriş yapılıyor…"
+                  ? t("loginSigningIn")
                   : totpChallenge
-                    ? locale === "en"
-                      ? "Verify"
-                      : "Doğrula"
+                    ? t("loginVerify")
                     : t("loginSubmit")}
               </button>
               <p className="login-forgot">
-                <Link href="/forgot-password">Şifremi unuttum</Link>
+                <Link href="/forgot-password">{t("loginForgotPassword")}</Link>
               </p>
             </form>
 
             <div className="login-panel-divider" role="separator">
-              <span>veya</span>
+              <span>{t("loginDividerOr")}</span>
             </div>
 
             <aside
@@ -225,34 +218,31 @@ export default function LoginPage() {
               aria-labelledby="login-register-title"
             >
               <h3 id="login-register-title" className="login-register-title">
-                Yeni müşteri
+                {t("loginRegisterTitle")}
               </h3>
-              <p className="login-register-lead">
-                Kayıt yönetim konsolunda tamamlanır; ardından posta kutunuz açılır
-                ve webmail&apos;e yönlendirilirsiniz.
-              </p>
+              <p className="login-register-lead">{t("loginRegisterLead")}</p>
               <div className="login-register-actions">
                 <a
                   className="login-cta login-cta--primary"
                   href={MAIL_CORPORATE_REGISTER}
                 >
-                  Kurumsal domain ile başla
+                  {t("loginRegisterCorporate")}
                 </a>
                 <a className="login-cta login-cta--ghost" href={MAIL_PILOT_REGISTER}>
-                  Pilot / bireysel kayıt
+                  {t("loginRegisterPilot")}
                 </a>
               </div>
               <dl className="login-register-meta">
                 <div>
-                  <dt>Kurumsal</dt>
+                  <dt>{t("loginRegisterCorporateDt")}</dt>
                   <dd>
-                    <code>info@sirketiniz.com</code> — çoklu kutu, DNS paneli
+                    <code>info@sirketiniz.com</code> {t("loginRegisterCorporateDd")}
                   </dd>
                 </div>
                 <div>
-                  <dt>Pilot</dt>
+                  <dt>{t("loginRegisterPilotDt")}</dt>
                   <dd>
-                    <code>adi@lerta.com.tr</code> — tek kutu, hızlı deneme
+                    <code>adi@lerta.com.tr</code> {t("loginRegisterPilotDd")}
                   </dd>
                 </div>
               </dl>

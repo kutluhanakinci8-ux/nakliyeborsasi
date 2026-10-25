@@ -12,8 +12,8 @@ test.describe("Mail display settings", () => {
 
   test("locale and timezone controls in display settings", async ({ page }) => {
     await page.goto("/mail");
-    await page.getByRole("button", { name: /Ayarlar/i }).click();
-    await page.getByRole("button", { name: "Ekran ve görünüm" }).click();
+    await page.getByRole("button", { name: "Settings" }).click();
+    await page.getByRole("button", { name: "Display" }).click();
     await expect(page.getByText("Region & language")).toBeVisible();
     await expect(page.getByText("English")).toBeVisible();
     await expect(page.getByText("Time zone")).toBeVisible();
