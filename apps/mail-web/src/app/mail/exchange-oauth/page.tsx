@@ -2,10 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { completeExchangeOAuth } from "@/lib/mailApi";
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 
 /** OAuth redirect target — popup parent'a code iletir. */
 export default function ExchangeOAuthCallbackPage() {
-  const [message, setMessage] = useState("Microsoft oturumu işleniyor…");
+  const { t } = useMailLocale();
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    setMessage(t("oauthExchangeProcessing"));
+  }, [t]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -22,7 +28,7 @@ export default function ExchangeOAuthCallbackPage() {
         },
         window.location.origin,
       );
-      setMessage("Tamamlandı, pencere kapanıyor…");
+      setMessage(t("oauthClosing"));
       window.close();
       return;
     }
@@ -32,17 +38,19 @@ export default function ExchangeOAuthCallbackPage() {
       return;
     }
     if (!token || !code || !state) {
-      setMessage("Oturum veya OAuth parametreleri eksik.");
+      setMessage(t("oauthMissingParams"));
       return;
     }
     void completeExchangeOAuth(token, code, state)
       .then(() => {
-        setMessage("Microsoft bağlandı. Ayarlar sayfasına dönebilirsiniz.");
+        setMessage(t("oauthExchangeConnected"));
       })
       .catch((error) => {
-        setMessage(error instanceof Error ? error.message : "Bağlantı başarısız.");
+        setMessage(
+          error instanceof Error ? error.message : t("oauthConnectFailed"),
+        );
       });
-  }, []);
+  }, [t]);
 
   return (
     <main className="mail-exchange-oauth-callback">

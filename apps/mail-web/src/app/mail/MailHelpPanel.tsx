@@ -1,6 +1,8 @@
 "use client";
 
+import { useMemo } from "react";
 import type { SettingsView } from "./MailSettingsPanel";
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 
 type Props = {
   onOpenSetting: (view: SettingsView) => void;
@@ -24,156 +26,146 @@ export function MailHelpPanel({
   onOpenCalendar,
   onOpenContacts,
 }: Props) {
-  const topics: HelpTopic[] = [
-    {
-      id: "start",
-      icon: "✉️",
-      title: "Posta ve yazma",
-      description:
-        "Gelen kutusu, konuşma görünümü, geri alma, yanıt davranışı ve uzak resimler — Ayarlar → Posta ve Ekran.",
-      settingView: "mailPrefs",
-      actionLabel: "Posta ayarları",
-    },
-    {
-      id: "accounts",
-      icon: "👤",
-      title: "Hesaplar ve gönderenler",
-      description:
-        "Kurumsal adres, alias ve varsayılan Gönderen kimliği; sosyal bağlantılar konsoldan yönetilir.",
-      settingView: "accounts",
-      actionLabel: "Hesaplar",
-    },
-    {
-      id: "signature",
-      icon: "✒️",
-      title: "İmza ve şablonlar",
-      description:
-        "Kişisel imza, nakliye hazır şablonları ve kampanya metinleri yaz ekranından seçilir.",
-      settingView: "signature",
-      actionLabel: "İmza ve şablon",
-    },
-    {
-      id: "rules",
-      icon: "⚡",
-      title: "Posta kuralları",
-      description:
-        "Gelen postayı otomatik yıldızla, arşivle, klasöre taşı veya çöpe gönder; önizleme ve toplu uygulama.",
-      settingView: "rules",
-      actionLabel: "Kurallar",
-    },
-    {
-      id: "autoreply",
-      icon: "↩️",
-      title: "Otomatik yanıtlar",
-      description: "Tatil veya toplantı mesajı; isteğe bağlı başlangıç/bitiş tarihi.",
-      settingView: "autoReply",
-      actionLabel: "Otomatik yanıt",
-    },
-    {
-      id: "notify",
-      icon: "🔔",
-      title: "Bildirimler ve PWA",
-      description:
-        "Web Push, sekme açıkken ses, günlük özet. iPhone için Ana ekrana ekle adımları bildirimler sekmesinde.",
-      settingView: "notifications",
-      actionLabel: "Bildirimler",
-    },
-    {
-      id: "imap",
-      icon: "📬",
-      title: "IMAP ve SMTP",
-      description:
-        "Thunderbird, Outlook ve mobil istemci: sunucu bilgileri ve tek seferlik IMAP şifresi webmailden alınır.",
-      settingView: "imap",
-      guideHref: "/help/imap",
-      actionLabel: "IMAP ayarları",
-    },
-    {
-      id: "deliverability",
-      icon: "📈",
-      title: "Teslimat ve itibar",
-      description: "DNS sihirbazı (MX, SPF, DKIM, DMARC, BIMI), skor ve engagement özeti.",
-      settingView: "deliverability",
-      actionLabel: "Teslimat",
-    },
-    {
-      id: "calendar",
-      icon: "📅",
-      title: "Takvim ve CalDAV",
-      description: "Harici takvim hesapları, ICS akışları ve senkron — takvim modülü ile entegre.",
-      actionLabel: "Takvimi aç",
-      onAction: onOpenCalendar,
-    },
-    {
-      id: "contacts",
-      icon: "👥",
-      title: "Kişiler ve CardDAV",
-      description: "Rehber, VCF içe/dışa aktarma ve CardDAV senkron.",
-      actionLabel: "Kişileri aç",
-      onAction: onOpenContacts,
-    },
-    {
-      id: "security",
-      icon: "🔒",
-      title: "Güvenlik ve gizlilik",
-      description:
-        "Passkey (Face ID / Touch ID), TOTP, posta kilidi, KVKK export ve AI onayı.",
-      settingView: "security",
-      actionLabel: "Güvenlik",
-    },
-    {
-      id: "integrations",
-      icon: "🔗",
-      title: "Entegrasyonlar",
-      description:
-        "IMAP/SMTP, Outlook mobil, CalDAV, CardDAV ve public API özeti.",
-      settingView: "integrations",
-      actionLabel: "Entegrasyonlar",
-    },
-    {
-      id: "feedback",
-      icon: "💬",
-      title: "Geri bildirim",
-      description:
-        "Öneri veya sorun bildirin; ekran görüntüsü ve org adınızı ekleyin.",
-      actionLabel: "E-posta gönder",
-      onAction: () => {
-        window.location.href =
-          "mailto:destek@lerta.com.tr?subject=Lerta%20Posta%20geri%20bildirim";
+  const { t } = useMailLocale();
+
+  const topics: HelpTopic[] = useMemo(
+    () => [
+      {
+        id: "start",
+        icon: "✉️",
+        title: t("helpTopicStartTitle"),
+        description: t("helpTopicStartDesc"),
+        settingView: "mailPrefs",
+        actionLabel: t("helpTopicStartAction"),
       },
-    },
-    {
-      id: "privacy",
-      icon: "🛡️",
-      title: "KVKK ve veri hakları",
-      description: "Kişisel veri export talebi ve gizlilik tercihleri.",
-      settingView: "privacy",
-      actionLabel: "Gizlilik",
-    },
-    {
-      id: "ops",
-      icon: "📋",
-      title: "Ops ve runbook",
-      description: "Kurumsal snapshot, teslimat metrikleri ve doğrulama script referansları.",
-      settingView: "ops",
-      actionLabel: "Ops snapshot",
-    },
-  ];
+      {
+        id: "accounts",
+        icon: "👤",
+        title: t("helpTopicAccountsTitle"),
+        description: t("helpTopicAccountsDesc"),
+        settingView: "accounts",
+        actionLabel: t("helpTopicAccountsAction"),
+      },
+      {
+        id: "signature",
+        icon: "✒️",
+        title: t("helpTopicSignatureTitle"),
+        description: t("helpTopicSignatureDesc"),
+        settingView: "signature",
+        actionLabel: t("helpTopicSignatureAction"),
+      },
+      {
+        id: "rules",
+        icon: "⚡",
+        title: t("helpTopicRulesTitle"),
+        description: t("helpTopicRulesDesc"),
+        settingView: "rules",
+        actionLabel: t("helpTopicRulesAction"),
+      },
+      {
+        id: "autoreply",
+        icon: "↩️",
+        title: t("helpTopicAutoreplyTitle"),
+        description: t("helpTopicAutoreplyDesc"),
+        settingView: "autoReply",
+        actionLabel: t("helpTopicAutoreplyAction"),
+      },
+      {
+        id: "notify",
+        icon: "🔔",
+        title: t("helpTopicNotifyTitle"),
+        description: t("helpTopicNotifyDesc"),
+        settingView: "notifications",
+        actionLabel: t("helpTopicNotifyAction"),
+      },
+      {
+        id: "imap",
+        icon: "📬",
+        title: t("helpTopicImapTitle"),
+        description: t("helpTopicImapDesc"),
+        settingView: "imap",
+        guideHref: "/help/imap",
+        actionLabel: t("helpTopicImapAction"),
+      },
+      {
+        id: "deliverability",
+        icon: "📈",
+        title: t("helpTopicDeliverTitle"),
+        description: t("helpTopicDeliverDesc"),
+        settingView: "deliverability",
+        actionLabel: t("helpTopicDeliverAction"),
+      },
+      {
+        id: "calendar",
+        icon: "📅",
+        title: t("helpTopicCalendarTitle"),
+        description: t("helpTopicCalendarDesc"),
+        actionLabel: t("helpTopicCalendarAction"),
+        onAction: onOpenCalendar,
+      },
+      {
+        id: "contacts",
+        icon: "👥",
+        title: t("helpTopicContactsTitle"),
+        description: t("helpTopicContactsDesc"),
+        actionLabel: t("helpTopicContactsAction"),
+        onAction: onOpenContacts,
+      },
+      {
+        id: "security",
+        icon: "🔒",
+        title: t("helpTopicSecurityTitle"),
+        description: t("helpTopicSecurityDesc"),
+        settingView: "security",
+        actionLabel: t("helpTopicSecurityAction"),
+      },
+      {
+        id: "integrations",
+        icon: "🔗",
+        title: t("helpTopicIntegrationsTitle"),
+        description: t("helpTopicIntegrationsDesc"),
+        settingView: "integrations",
+        actionLabel: t("helpTopicIntegrationsAction"),
+      },
+      {
+        id: "feedback",
+        icon: "💬",
+        title: t("helpTopicFeedbackTitle"),
+        description: t("helpTopicFeedbackDesc"),
+        actionLabel: t("helpTopicFeedbackAction"),
+        onAction: () => {
+          window.location.href =
+            "mailto:destek@lerta.com.tr?subject=Lerta%20Posta%20geri%20bildirim";
+        },
+      },
+      {
+        id: "privacy",
+        icon: "🛡️",
+        title: t("helpTopicPrivacyTitle"),
+        description: t("helpTopicPrivacyDesc"),
+        settingView: "privacy",
+        actionLabel: t("helpTopicPrivacyAction"),
+      },
+      {
+        id: "ops",
+        icon: "📋",
+        title: t("helpTopicOpsTitle"),
+        description: t("helpTopicOpsDesc"),
+        settingView: "ops",
+        actionLabel: t("helpTopicOpsAction"),
+      },
+    ],
+    [t, onOpenCalendar, onOpenContacts],
+  );
 
   return (
     <div className="mail-help-panel mail-help-panel--premium">
-      <p className="mail-posta-intro">
-        Lerta Posta yardım merkezi: webmail özellikleri, harici istemci kurulumu ve
-        kurumsal ayarlara doğrudan geçiş. Tam IMAP rehberi ayrı sayfada da
-        açılabilir.
-      </p>
+      <p className="mail-posta-intro">{t("helpIntro")}</p>
 
       <section className="mail-posta-card mail-help-quick-card">
         <header className="mail-posta-card-head">
-          <h3 className="mail-posta-card-title">Hızlı erişim</h3>
-          <p className="mail-posta-card-desc">
-            En sık kullanılan ayarlar ve rehberler.
-          </p>
+          <h3 className="mail-posta-card-title">{t("helpQuickTitle")}</h3>
+          <p className="mail-posta-card-desc">{t("helpQuickDesc")}</p>
         </header>
         <div className="mail-help-quick-grid">
           <button
@@ -182,7 +174,7 @@ export function MailHelpPanel({
             onClick={() => onOpenSetting("imap")}
           >
             <span aria-hidden="true">📬</span>
-            IMAP kurulum
+            {t("helpQuickImap")}
           </button>
           <button
             type="button"
@@ -190,7 +182,7 @@ export function MailHelpPanel({
             onClick={() => onOpenSetting("notifications")}
           >
             <span aria-hidden="true">🔔</span>
-            Bildirimler
+            {t("helpQuickNotify")}
           </button>
           <button
             type="button"
@@ -198,7 +190,7 @@ export function MailHelpPanel({
             onClick={() => window.open("/help/imap", "_blank", "noopener,noreferrer")}
           >
             <span aria-hidden="true">📖</span>
-            Tam IMAP rehberi
+            {t("helpQuickImapGuide")}
           </button>
         </div>
       </section>
@@ -217,7 +209,7 @@ export function MailHelpPanel({
                     className="mail-premium-btn mail-premium-btn--primary"
                     onClick={() => onOpenSetting(topic.settingView!)}
                   >
-                    {topic.actionLabel ?? "Ayarlara git"}
+                    {topic.actionLabel ?? t("helpGoSettings")}
                   </button>
                 ) : null}
                 {topic.onAction ? (
@@ -226,7 +218,7 @@ export function MailHelpPanel({
                     className="mail-premium-btn mail-premium-btn--primary"
                     onClick={() => topic.onAction?.()}
                   >
-                    {topic.actionLabel ?? "Aç"}
+                    {topic.actionLabel ?? t("helpOpen")}
                   </button>
                 ) : null}
                 {topic.guideHref ? (
@@ -236,7 +228,7 @@ export function MailHelpPanel({
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    Tam rehber
+                    {t("helpFullGuide")}
                   </a>
                 ) : null}
               </div>
@@ -247,11 +239,11 @@ export function MailHelpPanel({
 
       <section className="mail-posta-card mail-posta-card--muted mail-help-footer-card">
         <p className="mail-help-footer-text">
-          Site adresi:{" "}
+          {t("helpFooterSite")}{" "}
           <a href="https://posta.lerta.com.tr/mail" target="_blank" rel="noreferrer">
             posta.lerta.com.tr
           </a>
-          . Sorun devam ederse posta yöneticinize veya Lerta destek kanalına başvurun.
+          {t("helpFooterSupport")}
         </p>
       </section>
     </div>

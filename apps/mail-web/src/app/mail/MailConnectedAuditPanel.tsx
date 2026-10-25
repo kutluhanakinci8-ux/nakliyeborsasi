@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { fetchConnectedAccountAudit } from "@/lib/mailApi";
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 
 type Props = {
   accessToken: string;
 };
 
 export function MailConnectedAuditPanel({ accessToken }: Props) {
+  const { t, localeTag } = useMailLocale();
   const [logs, setLogs] = useState<
     Array<{
       id: string;
@@ -23,21 +25,21 @@ export function MailConnectedAuditPanel({ accessToken }: Props) {
     void fetchConnectedAccountAudit(accessToken)
       .then((data) => setLogs(data.logs))
       .catch((err) =>
-        setError(err instanceof Error ? err.message : "Denetim kaydı yüklenemedi"),
+        setError(
+          err instanceof Error ? err.message : t("connectedAuditErrLoad"),
+        ),
       );
-  }, [accessToken]);
+  }, [accessToken, t]);
 
   return (
     <section className="mail-posta-card mail-help-topic-card">
-      <h3 className="mail-help-topic-title">Bağlı hesap denetimi (CAP-8)</h3>
-      <p className="mail-help-topic-desc">
-        Microsoft / Gmail bağlantı ve bağlı hesaptan gönderim olayları.
-      </p>
+      <h3 className="mail-help-topic-title">{t("connectedAuditTitle")}</h3>
+      <p className="mail-help-topic-desc">{t("connectedAuditDesc")}</p>
       {error ? (
         <p className="mail-accounts-status mail-accounts-status--err">{error}</p>
       ) : null}
       {logs.length === 0 ? (
-        <p className="mail-accounts-muted">Henüz kayıt yok.</p>
+        <p className="mail-accounts-muted">{t("connectedAuditEmpty")}</p>
       ) : (
         <ul className="mail-exchange-account-list">
           {logs.slice(0, 12).map((row) => (
@@ -45,7 +47,7 @@ export function MailConnectedAuditPanel({ accessToken }: Props) {
               <strong>{row.labelTr}</strong>
               <span className="mail-accounts-muted">
                 {row.actorEmail ?? "—"} ·{" "}
-                {new Date(row.createdAt).toLocaleString("tr-TR")}
+                {new Date(row.createdAt).toLocaleString(localeTag)}
               </span>
               <div>{row.summaryTr}</div>
             </li>

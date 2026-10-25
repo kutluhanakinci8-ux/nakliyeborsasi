@@ -1,10 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 
 /** Google Calendar OAuth callback — popup parent'a code iletir. */
 export default function GoogleCalendarOAuthCallbackPage() {
+  const { t } = useMailLocale();
   const [done, setDone] = useState(false);
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    setMessage(t("oauthGoogleCalProcessing"));
+  }, [t]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -22,17 +29,14 @@ export default function GoogleCalendarOAuthCallbackPage() {
         window.location.origin,
       );
       setDone(true);
+      setMessage(t("oauthGoogleCalDone"));
       window.close();
     }
-  }, []);
+  }, [t]);
 
   return (
     <main className="mail-exchange-oauth-callback">
-      <p>
-        {done
-          ? "Google takvim bağlantısı tamamlandı, pencere kapanıyor…"
-          : "Google oturumu işleniyor…"}
-      </p>
+      <p>{done ? message || t("oauthGoogleCalDone") : message}</p>
     </main>
   );
 }

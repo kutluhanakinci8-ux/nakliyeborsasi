@@ -1,7 +1,8 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { MailSocialPlatformIcon } from "@/components/MailSocialPlatformIcon";
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 import {
   fetchMailInboxBranding,
   updateMailEmailSocialLinks,
@@ -9,54 +10,25 @@ import {
   type MailEmailSocialPlatform,
 } from "@/lib/mailApi";
 
-const PLATFORMS: {
-  id: MailEmailSocialPlatform;
-  label: string;
-  placeholder: string;
-}[] = [
-  {
-    id: "instagram",
-    label: "Instagram",
-    placeholder: "@firma veya https://instagram.com/…",
-  },
-  {
-    id: "facebook",
-    label: "Facebook",
-    placeholder: "https://facebook.com/…",
-  },
-  {
-    id: "linkedin",
-    label: "LinkedIn",
-    placeholder: "https://linkedin.com/company/…",
-  },
-  {
-    id: "x",
-    label: "X",
-    placeholder: "@firma veya https://x.com/…",
-  },
-  {
-    id: "youtube",
-    label: "YouTube",
-    placeholder: "https://youtube.com/@…",
-  },
-  {
-    id: "tiktok",
-    label: "TikTok",
-    placeholder: "@firma veya https://tiktok.com/@…",
-  },
-  {
-    id: "website",
-    label: "Web sitesi",
-    placeholder: "https://firma.com",
-  },
-];
-
 type Props = {
   accessToken: string;
   canEdit: boolean;
 };
 
 export function MailEmailSocialLinksEditor({ accessToken, canEdit }: Props) {
+  const { t } = useMailLocale();
+  const PLATFORMS = useMemo(
+    () => [
+      { id: "instagram" as const, label: "Instagram", placeholder: t("socialPhInstagram") },
+      { id: "facebook" as const, label: "Facebook", placeholder: t("socialPhFacebook") },
+      { id: "linkedin" as const, label: "LinkedIn", placeholder: t("socialPhLinkedin") },
+      { id: "x" as const, label: "X", placeholder: t("socialPhX") },
+      { id: "youtube" as const, label: "YouTube", placeholder: t("socialPhYoutube") },
+      { id: "tiktok" as const, label: "TikTok", placeholder: t("socialPhTiktok") },
+      { id: "website" as const, label: t("socialWebsite"), placeholder: t("socialPhWebsite") },
+    ],
+    [t],
+  );
   const [values, setValues] = useState<Record<MailEmailSocialPlatform, string>>(
     () =>
       Object.fromEntries(
@@ -81,7 +53,7 @@ export function MailEmailSocialLinksEditor({ accessToken, canEdit }: Props) {
         }
         setValues(next);
       } catch {
-        setError("Sosyal bağlantılar yüklenemedi.");
+        setError(t("socialErrLoad"));
       } finally {
         setLoading(false);
       }
@@ -104,7 +76,7 @@ export function MailEmailSocialLinksEditor({ accessToken, canEdit }: Props) {
       }
     }
     if (emailSocialLinks.length === 0) {
-      setError("Kaydetmek için en az bir sosyal medya adresi girin.");
+      setError(t("socialErrMinOne"));
       setSaving(false);
       return;
     }
@@ -116,20 +88,20 @@ export function MailEmailSocialLinksEditor({ accessToken, canEdit }: Props) {
       const saved = branding.emailSocialLinks?.length ?? 0;
       if (emailSocialLinks.length > 0 && saved === 0) {
         setError(
-          "Kayıt boş kaldı. Tam https adresi veya @kullaniciadi deneyin.",
+          t("socialErrEmptySave"),
         );
         return;
       }
       setStatus(
         saved > 0
-          ? `${saved} bağlantı kaydedildi — giden posta alt bilgisinde görünür.`
-          : "Sosyal bağlantılar temizlendi.",
+          ? t("socialSavedCount", { count: saved })
+          : t("socialCleared"),
       );
     } catch (err) {
       setError(
         err instanceof Error
           ? err.message
-          : "Kaydedilemedi. Adresler https veya @kullaniciadi olmalı.",
+          : t("socialErrSaveFormat"),
       );
     } finally {
       setSaving(false);
@@ -175,7 +147,7 @@ export function MailEmailSocialLinksEditor({ accessToken, canEdit }: Props) {
       </div>
       {!canEdit ? (
         <p className="mail-accounts-muted">
-          Düzenlemek için kurumsal posta yöneticisi yetkisi gerekir.
+          {t("socialNeedAdmin")}
         </p>
       ) : null}
       {error ? (
@@ -195,7 +167,7 @@ export function MailEmailSocialLinksEditor({ accessToken, canEdit }: Props) {
             className="mail-premium-btn mail-premium-btn--primary mail-social-save-btn"
             disabled={saving}
           >
-            {saving ? "Kaydediliyor…" : "Sosyal bağlantıları kaydet"}
+            {saving ? t("actionSaving") : t("socialSave")}
           </button>
         </div>
       ) : null}

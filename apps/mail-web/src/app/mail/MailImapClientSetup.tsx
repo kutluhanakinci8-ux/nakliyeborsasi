@@ -1,5 +1,6 @@
 "use client";
 
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 import type { MailImapSettings } from "@/lib/mailApi";
 
 type Props = {
@@ -18,16 +19,17 @@ type Props = {
 function buildClientBundle(
   settings: MailImapSettings,
   password: string,
+  tr: (key: string, params?: Record<string, string | number>) => string,
 ): string {
   const smtpSec = settings.smtpSecurity === "ssl" ? "SSL" : "STARTTLS";
   return [
-    "Lerta Posta — IMAP/SMTP",
-    `Gelen (IMAP): ${settings.imapHost}:${settings.imapPort} (SSL/TLS)`,
-    `Giden (SMTP): ${settings.smtpHost}:${settings.smtpPort} (${smtpSec})`,
-    `Kullanıcı: ${settings.username ?? ""}`,
-    `Şifre: ${password}`,
+    tr("imapBundleTitle"),
+    tr("imapBundleIncoming", { host: settings.imapHost, port: settings.imapPort }),
+    tr("imapBundleOutgoing", { host: settings.smtpHost, port: settings.smtpPort, sec: smtpSec }),
+    tr("imapBundleUser", { user: settings.username ?? "" }),
+    tr("imapBundlePassword", { password }),
     "",
-    "Şifreyi güvenli bir yerde saklayın; webmail dışında tekrar gösterilmez.",
+    tr("imapBundleFooter"),
   ].join("\n");
 }
 
@@ -37,12 +39,14 @@ function EndpointRow({
   value,
   hint,
   onCopy,
+  copyLabel,
 }: {
   icon: string;
   label: string;
   value: string;
   hint?: string;
   onCopy: () => void;
+  copyLabel: string;
 }) {
   return (
     <li className="mail-imap-endpoint">
@@ -57,7 +61,7 @@ function EndpointRow({
         className="mail-premium-btn mail-premium-btn--ghost mail-imap-copy-btn"
         onClick={onCopy}
       >
-        Kopyala
+        {copyLabel}
       </button>
     </li>
   );
@@ -75,13 +79,14 @@ export function MailImapClientSetup({
   onReconcileMaildir,
   reconcileBusy = false,
 }: Props) {
+  const { t, localeTag } = useMailLocale();
   async function copyText(label: string, value: string) {
     try {
       await navigator.clipboard.writeText(value);
-      onCopyHint(`${label} kopyalandı.`);
+      onCopyHint(t("imapCopied", { label }));
       window.setTimeout(() => onCopyHint(""), 2500);
     } catch {
-      onCopyHint("Kopyalanamadı.");
+      onCopyHint(t("securityCopyFailed"));
     }
   }
 
@@ -92,7 +97,7 @@ export function MailImapClientSetup({
       return;
     }
     const ok = window.confirm(
-      "Yeni şifre oluşturulduğunda Thunderbird, Outlook ve telefonunuzdaki eski şifre çalışmaz. Devam edilsin mi?",
+      t("imapConfirmRotate"),
     );
     if (ok) {
       action();
@@ -114,12 +119,10 @@ export function MailImapClientSetup({
   if (!settings.enabled) {
     return (
       <div className="mail-imap-panel mail-imap-panel--premium">
-        <p className="mail-posta-intro">
-          Harici posta istemcileri için IMAP ve SMTP bilgileri bu alanda yönetilir.
-        </p>
+<p className="mail-posta-intro">{t("imapIntroDisabled")}</p>
         <div className="mail-imap-empty" role="status">
           <span className="mail-imap-empty-icon" aria-hidden="true">📭</span>
-          <p>IMAP bu kurulumda kapalı. Yöneticinize başvurun.</p>
+          <p>{t("imapDisabled")}</p>
         </div>
       </div>
     );
@@ -133,16 +136,12 @@ export function MailImapClientSetup({
   }`;
   const smtpEndpoint = `${settings.smtpHost}:${settings.smtpPort} ${smtpSecLabel}`;
   const credentialUpdated = settings.credentialUpdatedAt
-    ? new Date(settings.credentialUpdatedAt).toLocaleString("tr-TR")
+    ? new Date(settings.credentialUpdatedAt).toLocaleString(localeTag)
     : null;
 
   return (
     <div className="mail-imap-panel mail-imap-panel--premium">
-      <p className="mail-posta-intro">
-        Masaüstü veya mobil posta uygulaması için sunucu bilgilerini buradan alın.
-        Şifre yalnızca oluşturma veya yenileme anında gösterilir; VPS veya e-posta
-        ile gönderilmez.
-      </p>
+<p className="mail-posta-intro">{t("imapIntro")}</p>
 
       {copyHint ? (
         <p className="mail-accounts-status mail-accounts-status--ok" role="status">
@@ -158,10 +157,8 @@ export function MailImapClientSetup({
       <section className="mail-posta-card">
         <header className="mail-posta-card-head mail-imap-card-head">
           <div>
-            <h3 className="mail-posta-card-title">Hesap durumu</h3>
-            <p className="mail-posta-card-desc">
-              Harici istemci şifresi ve son güncelleme bilgisi.
-            </p>
+            <h3 className="mail-posta-card-title">{t("imapStatusTitle")}</h3>
+<p className="mail-posta-card-desc">{t("imapStatusDesc")}</p>
           </div>
           <span
             className={
@@ -170,67 +167,65 @@ export function MailImapClientSetup({
                 : "mail-imap-pill mail-imap-pill--ok"
             }
           >
-            {needsSetup ? "Kurulum gerekli" : "Hazır"}
+            {needsSetup ? t("imapNeedsSetup") : t("imapReady")}
           </span>
         </header>
         {needsSetup ? (
           <p className="mail-imap-status-text" role="status">
-            <strong>İlk kurulum:</strong> Harici uygulama için IMAP şifresi henüz
-            oluşturulmadı. Alttaki düğmeyle şifre üretin ve istemciye girin.
+{t("imapFirstSetup")}
           </p>
         ) : (
           <p className="mail-imap-status-text" role="status">
-            <strong>IMAP hazır.</strong> Şifre kayıtlı
-            {credentialUpdated ? ` (son güncelleme: ${credentialUpdated})` : ""}.
-            Unuttuysanız yeni şifre oluşturun.
+{t("imapReadyStatus", { updatedPart: credentialUpdated ? t("imapUpdatedPart", { when: credentialUpdated }) : "" })}
           </p>
         )}
       </section>
 
       <section className="mail-posta-card">
         <header className="mail-posta-card-head">
-          <h3 className="mail-posta-card-title">Bağlantı bilgileri</h3>
-          <p className="mail-posta-card-desc">
-            Thunderbird, Outlook ve mobil uygulamalara aynı değerleri girin.
-          </p>
+          <h3 className="mail-posta-card-title">{t("imapConnTitle")}</h3>
+<p className="mail-posta-card-desc">{t("imapConnDesc")}</p>
         </header>
         <ul className="mail-imap-endpoints">
           <EndpointRow
             icon="📥"
-            label="Gelen (IMAP)"
+            label={t("imapIncoming")}
             value={imapEndpoint}
+            copyLabel={t("imapCopy")}
             onCopy={() =>
               void copyText(
-                "IMAP sunucu",
+                t("imapCopyImapServer"),
                 `${settings.imapHost}:${settings.imapPort}`,
               )
             }
           />
           <EndpointRow
             icon="👤"
-            label="Kullanıcı"
+            label={t("imapUser")}
             value={settings.username ?? "—"}
+            copyLabel={t("imapCopy")}
             onCopy={() => {
               if (settings.username) {
-                void copyText("Kullanıcı", settings.username);
+                void copyText(t("imapCopyUser"), settings.username);
               }
             }}
           />
           <EndpointRow
             icon="📤"
-            label="Giden (SMTP)"
+            label={t("imapOutgoing")}
             value={smtpEndpoint}
-            hint="Kimlik doğrulama: IMAP ile aynı kullanıcı ve şifre."
+            hint={t("imapAuthHint")}
+            copyLabel={t("imapCopy")}
             onCopy={() =>
               void copyText(
-                "SMTP sunucu",
+                t("imapCopySmtpServer"),
                 `${settings.smtpHost}:${settings.smtpPort}`,
               )
             }
           />
         </ul>
         <div className="mail-imap-folder-note">
-          <span className="mail-imap-folder-note-label">Gönderilen klasörü</span>
+          <span className="mail-imap-folder-note-label">{t("imapSentFolder")}</span>
           <p>{settings.sentFolderImapHint}</p>
         </div>
       </section>
@@ -241,31 +236,29 @@ export function MailImapClientSetup({
           aria-live="polite"
         >
           <header className="mail-posta-card-head">
-            <h3 className="mail-posta-card-title">IMAP şifresi</h3>
-            <p className="mail-posta-card-desc">
-              Yalnızca bir kez gösterilir — sayfayı kapatmadan istemciye girin.
-            </p>
+            <h3 className="mail-posta-card-title">{t("imapPasswordTitle")}</h3>
+<p className="mail-posta-card-desc">{t("imapPasswordDesc")}</p>
           </header>
           <code className="mail-imap-password-value">{newPassword}</code>
           <div className="mail-imap-password-actions">
             <button
               type="button"
               className="mail-premium-btn mail-premium-btn--primary"
-              onClick={() => void copyText("Şifre", newPassword)}
+              onClick={() => void copyText(t("imapCopyPasswordLabel"), newPassword)}
             >
-              Şifreyi kopyala
+              {t("imapCopyPassword")}
             </button>
             <button
               type="button"
               className="mail-premium-btn mail-premium-btn--ghost"
               onClick={() =>
                 void copyText(
-                  "Kurulum bilgisi",
-                  buildClientBundle(settings, newPassword),
+                  t("imapCopyBundleLabel"),
+                  buildClientBundle(settings, newPassword, t),
                 )
               }
             >
-              Tüm bilgileri kopyala
+              {t("imapCopyBundle")}
             </button>
           </div>
         </section>
@@ -280,7 +273,7 @@ export function MailImapClientSetup({
               disabled={loading}
               onClick={() => onProvision()}
             >
-              {loading ? "Oluşturuluyor…" : "IMAP şifresi oluştur"}
+              {loading ? t("imapCreating") : t("imapCreatePassword")}
             </button>
           ) : (
             <button
@@ -289,7 +282,7 @@ export function MailImapClientSetup({
               disabled={loading}
               onClick={() => confirmRotate(onRotate)}
             >
-              {loading ? "Yenileniyor…" : "IMAP şifresini yenile"}
+              {loading ? t("imapRotating") : t("imapRotatePassword")}
             </button>
           )}
           {!needsSetup ? (
@@ -300,13 +293,13 @@ export function MailImapClientSetup({
               onClick={() => {
                 if (newPassword) {
                   void copyText(
-                    "Kurulum bilgisi",
-                    buildClientBundle(settings, newPassword),
+                    t("imapCopyBundleLabel"),
+                    buildClientBundle(settings, newPassword, t),
                   );
                 }
               }}
             >
-              Son şifreyi tekrar kopyala
+              {t("imapRecopyPassword")}
             </button>
           ) : null}
           {onReconcileMaildir ? (
@@ -316,9 +309,7 @@ export function MailImapClientSetup({
               disabled={loading || reconcileBusy}
               onClick={() => onReconcileMaildir()}
             >
-              {reconcileBusy
-                ? "Maildir senkronu…"
-                : "Arşiv/çöp iki yön senkron"}
+              {reconcileBusy ? t("imapReconcileBusy") : t("imapReconcile")}
             </button>
           ) : null}
         </div>
@@ -328,35 +319,21 @@ export function MailImapClientSetup({
           target="_blank"
           rel="noopener noreferrer"
         >
-          Thunderbird / Outlook kurulum rehberi →
+          {t("imapGuideLink")}
         </a>
       </section>
 
       <section className="mail-posta-card mail-posta-card--muted">
         <header className="mail-posta-card-head">
-          <h3 className="mail-posta-card-title">Outlook mobil (iOS / Android)</h3>
-          <p className="mail-posta-card-desc">
-            Microsoft Outlook uygulaması — IMAP ile aynı sunucu ve şifre.
-          </p>
+          <h3 className="mail-posta-card-title">{t("imapMobileTitle")}</h3>
+<p className="mail-posta-card-desc">{t("imapMobileDesc")}</p>
         </header>
         <ol className="mail-help-steps mail-imap-mobile-steps">
-          <li>
-            Outlook → <strong>Hesap ekle</strong> → <strong>Diğer hesap</strong> veya{" "}
-            <strong>IMAP</strong>.
-          </li>
-          <li>
-            E-posta ve yukarıdaki <strong>IMAP şifresi</strong> (web oturum şifresi değil).
-          </li>
-          <li>
-            Gelen sunucu: ekrandaki host, port <strong>993</strong>, SSL/TLS açık.
-          </li>
-          <li>
-            Giden (SMTP): ekrandaki host, port ve güvenlik (genelde <strong>587 STARTTLS</strong>).
-          </li>
-          <li>
-            Uygulama içi <strong>biyometri / PIN</strong> Outlook tarafında; webmail için{" "}
-            <strong>Ayarlar → Güvenlik → Passkey</strong>.
-          </li>
+<li>{t("imapMobileStep1")}</li>
+<li>{t("imapMobileStep2")}</li>
+<li>{t("imapMobileStep3")}</li>
+<li>{t("imapMobileStep4")}</li>
+<li>{t("imapMobileStep5")}</li>
         </ol>
         <a
           className="mail-imap-help-link"
@@ -364,7 +341,7 @@ export function MailImapClientSetup({
           target="_blank"
           rel="noopener noreferrer"
         >
-          Mobil adım adım rehber →
+          {t("imapMobileGuide")}
         </a>
       </section>
     </div>

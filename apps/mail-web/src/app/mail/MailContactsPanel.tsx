@@ -1,5 +1,6 @@
 "use client";
 
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   createOrgContact,
@@ -46,6 +47,7 @@ export function MailContactsPanel({
   onToast,
   onComposeTo,
 }: Props) {
+  const { t, localeTag } = useMailLocale();
   const [contacts, setContacts] = useState<MailOrgContact[]>([]);
   const [loading, setLoading] = useState(false);
   const [displayName, setDisplayName] = useState("");
@@ -69,7 +71,7 @@ export function MailContactsPanel({
       setContacts(data.contacts ?? []);
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Kişiler yüklenemedi.";
+        error instanceof Error ? error.message : t("contactsErrLoad");
       setLoadError(message);
       if (!isMailSessionExpiredError(error)) {
         onToast(message);
@@ -105,7 +107,7 @@ export function MailContactsPanel({
   const filteredContacts = useMemo(() => {
     const q = search.trim().toLowerCase();
     const list = [...contacts].sort((a, b) =>
-      a.displayName.localeCompare(b.displayName, "tr"),
+      a.displayName.localeCompare(b.displayName, localeTag.startsWith("en") ? "en" : "tr"),
     );
     if (!q) {
       return list;
@@ -118,7 +120,7 @@ export function MailContactsPanel({
 
   async function onAdd() {
     if (!displayName.trim()) {
-      onToast("Ad gerekli.");
+      onToast(t("contactsErrNameRequired"));
       return;
     }
     try {
@@ -130,11 +132,11 @@ export function MailContactsPanel({
       setDisplayName("");
       setEmail("");
       setPhone("");
-      onToast("Kişi eklendi.");
+      onToast(t("contactsAdded"));
       void load();
     } catch (error) {
       onToast(
-        error instanceof Error ? error.message : "Kişi eklenemedi.",
+        error instanceof Error ? error.message : t("contactsErrAdd"),
       );
     }
   }
@@ -143,18 +145,18 @@ export function MailContactsPanel({
     <div className="mail-d6-inner mail-contacts-premium">
       <header className="mail-contacts-header">
         <div className="mail-contacts-heading">
-          <h1>Kişiler</h1>
+          <h1>{t("navContacts")}</h1>
           <p className="mail-contacts-kicker">
             {loading
-              ? "Güncelleniyor…"
-              : `${contacts.length} kişi · kurumsal adres defteri`}
+              ? t("contactsUpdating")
+              : t("contactsKicker", { count: contacts.length })}
           </p>
         </div>
         <div className="mail-contacts-toolbar">
           <div
             className="mail-contacts-view-toggle"
             role="group"
-            aria-label="Görünüm"
+            aria-label={t("contactsViewAria")}
           >
             <button
               type="button"
@@ -162,7 +164,7 @@ export function MailContactsPanel({
               onClick={() => setViewMode("list")}
               aria-pressed={viewMode === "list"}
             >
-              Liste
+              {t("contactsViewList")}
             </button>
             <button
               type="button"
@@ -170,7 +172,7 @@ export function MailContactsPanel({
               onClick={() => setViewMode("grid")}
               aria-pressed={viewMode === "grid"}
             >
-              Kart
+              {t("contactsViewGrid")}
             </button>
           </div>
           <div className="mail-contacts-import-actions">
@@ -189,15 +191,15 @@ export function MailContactsPanel({
                   })
                   .catch((e: unknown) => {
                     onToast(
-                      e instanceof Error ? e.message : "Dışa aktarılamadı.",
+                      e instanceof Error ? e.message : t("contactsErrExport"),
                     );
                   })
               }
             >
-              İndir .vcf
+              {t("contactsDownloadVcf")}
             </button>
             <label className="mail-cal-btn mail-cal-btn--ghost mail-cal-file-input">
-              Yükle .vcf
+              {t("contactsUploadVcf")}
               <input
                 type="file"
                 accept=".vcf,text/vcard"
@@ -212,7 +214,7 @@ export function MailContactsPanel({
                     importContactsVcf(accessToken, vcf)
                       .then((r) => {
                         onToast(
-                          `${r.imported} kişi içe aktarıldı${r.skipped ? `, ${r.skipped} atlandı` : ""}.`,
+                          t("contactsImportResult", { imported: r.imported, skippedPart: r.skipped ? t("contactsImportSkipped", { skipped: r.skipped }) : "" }),
                         );
                         void load();
                       })
@@ -220,7 +222,7 @@ export function MailContactsPanel({
                         onToast(
                           err instanceof Error
                             ? err.message
-                            : "İçe aktarma başarısız.",
+                            : t("contactsErrImport"),
                         );
                       }),
                   );
@@ -235,50 +237,50 @@ export function MailContactsPanel({
         <aside className="mail-contacts-aside">
           <div className="mail-cal-card mail-contacts-search-card">
             <label className="mail-cal-field mail-cal-field--full">
-              <span className="mail-cal-field-label">Ara</span>
+              <span className="mail-cal-field-label">{t("contactsSearchLabel")}</span>
               <input
                 className="mail-cal-input"
                 type="search"
-                placeholder="Ad, e-posta veya telefon"
+                placeholder={t("contactsSearchPlaceholder")}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
             </label>
             {search.trim() ? (
               <p className="mail-contacts-search-meta">
-                {filteredContacts.length} sonuç
+                {t("contactsSearchResults", { count: filteredContacts.length })}
               </p>
             ) : null}
           </div>
 
           <div className="mail-cal-card mail-contacts-composer">
-            <h2 className="mail-cal-card-title">Yeni kişi</h2>
+            <h2 className="mail-cal-card-title">{t("contactsNewTitle")}</h2>
             <div className="mail-cal-form-grid mail-contacts-form-grid">
               <label className="mail-cal-field mail-cal-field--full">
-                <span className="mail-cal-field-label">Ad</span>
+                <span className="mail-cal-field-label">{t("contactsNameLabel")}</span>
                 <input
                   className="mail-cal-input"
-                  placeholder="Ad soyad"
+                  placeholder={t("contactsNamePlaceholder")}
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                 />
               </label>
               <label className="mail-cal-field mail-cal-field--full">
-                <span className="mail-cal-field-label">E-posta</span>
+                <span className="mail-cal-field-label">{t("contactsEmailLabel")}</span>
                 <input
                   className="mail-cal-input"
                   type="email"
-                  placeholder="ornek@firma.com"
+                  placeholder={t("contactsEmailPlaceholder")}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </label>
               <label className="mail-cal-field mail-cal-field--full">
-                <span className="mail-cal-field-label">Telefon</span>
+                <span className="mail-cal-field-label">{t("contactsPhoneLabel")}</span>
                 <input
                   className="mail-cal-input"
                   type="tel"
-                  placeholder="+90 …"
+                  placeholder={t("contactsPhonePlaceholder")}
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                 />
@@ -289,7 +291,7 @@ export function MailContactsPanel({
                   className="mail-cal-btn mail-cal-btn--primary"
                   onClick={() => void onAdd()}
                 >
-                  Kişi ekle
+                  {t("contactsAddBtn")}
                 </button>
               </div>
             </div>
@@ -299,31 +301,30 @@ export function MailContactsPanel({
         <main className="mail-contacts-main">
           {loadError ? (
             <div className="mail-contacts-empty mail-cal-card">
-              <strong>Kişiler yüklenemedi</strong>
+              <strong>{t("contactsLoadFailedTitle")}</strong>
               <p>{loadError}</p>
               <button
                 type="button"
                 className="mail-cal-btn mail-cal-btn--primary"
                 onClick={() => void load()}
               >
-                Yeniden dene
+                {t("contactsRetry")}
               </button>
             </div>
           ) : null}
           {!loadError && loading ? (
-            <p className="mail-contacts-loading">Yükleniyor…</p>
+            <p className="mail-contacts-loading">{t("readLoading")}</p>
           ) : !loadError && filteredContacts.length === 0 ? (
             <div className="mail-contacts-empty mail-cal-card">
               <strong>
-                {search.trim() ? "Aramanızla eşleşen kişi yok." : "Henüz kişi yok."}
+                {search.trim() ? t("contactsEmptySearch") : t("contactsEmpty")}
               </strong>
               <p>
-                Soldan yeni kişi ekleyin veya .vcf dosyası yükleyin. CardDAV ile
-                Nextcloud adres defterinizi de bağlayabilirsiniz.
+{t("contactsEmptyHint")}
               </p>
             </div>
           ) : !loadError && viewMode === "grid" ? (
-            <ul className="mail-contacts-grid" aria-label="Kişi kartları">
+            <ul className="mail-contacts-grid" aria-label={t("contactsGridAria")}>
               {filteredContacts.map((c) => (
                 <li key={c.id} className="mail-contacts-grid-card">
                   <div
@@ -341,7 +342,7 @@ export function MailContactsPanel({
                       {c.email ? (
                         <span className="mail-contacts-email">{c.email}</span>
                       ) : (
-                        <span className="mail-contacts-muted">E-posta yok</span>
+                        <span className="mail-contacts-muted">{t("contactsNoEmail")}</span>
                       )}
                       {c.phone ? (
                         <span className="mail-contacts-phone">{c.phone}</span>
@@ -355,7 +356,7 @@ export function MailContactsPanel({
                         className="mail-cal-btn mail-cal-btn--primary mail-cal-btn--sm"
                         onClick={() => onComposeTo(c.email!)}
                       >
-                        Yaz
+                        {t("contactsCompose")}
                       </button>
                     ) : null}
                     {cardDavPushAccountId ? (
@@ -368,12 +369,12 @@ export function MailContactsPanel({
                             cardDavPushAccountId,
                             c.id,
                           )
-                            .then(() => onToast("CardDAV’a yazıldı."))
+                            .then(() => onToast(t("contactsCardDavWritten")))
                             .catch((err: unknown) => {
                               onToast(
                                 err instanceof Error
                                   ? err.message
-                                  : "CardDAV yazma başarısız.",
+                                  : t("contactsCardDavWriteFailed"),
                               );
                             })
                         }
@@ -387,14 +388,14 @@ export function MailContactsPanel({
                       onClick={() =>
                         void deleteOrgContact(accessToken, c.id)
                           .then(() => {
-                            onToast("Silindi.");
+                            onToast(t("contactsDeleted"));
                             void load();
                           })
                           .catch((err: unknown) => {
                             onToast(
                               err instanceof Error
                                 ? err.message
-                                : "Silinemedi.",
+                                : t("presetsErrDelete"),
                             );
                           })
                       }
@@ -406,7 +407,7 @@ export function MailContactsPanel({
               ))}
             </ul>
           ) : !loadError ? (
-            <ul className="mail-contacts-list" aria-label="Kişi listesi">
+            <ul className="mail-contacts-list" aria-label={t("contactsListAria")}>
               {filteredContacts.map((c) => (
                 <li key={c.id} className="mail-contacts-list-row">
                   <div
@@ -432,7 +433,7 @@ export function MailContactsPanel({
                         className="mail-cal-btn mail-cal-btn--ghost mail-cal-btn--sm"
                         onClick={() => onComposeTo(c.email!)}
                       >
-                        Yaz
+                        {t("contactsCompose")}
                       </button>
                     ) : null}
                     {cardDavPushAccountId ? (
@@ -445,12 +446,12 @@ export function MailContactsPanel({
                             cardDavPushAccountId,
                             c.id,
                           )
-                            .then(() => onToast("CardDAV’a yazıldı."))
+                            .then(() => onToast(t("contactsCardDavWritten")))
                             .catch((err: unknown) => {
                               onToast(
                                 err instanceof Error
                                   ? err.message
-                                  : "CardDAV yazma başarısız.",
+                                  : t("contactsCardDavWriteFailed"),
                               );
                             })
                         }
@@ -464,14 +465,14 @@ export function MailContactsPanel({
                       onClick={() =>
                         void deleteOrgContact(accessToken, c.id)
                           .then(() => {
-                            onToast("Silindi.");
+                            onToast(t("contactsDeleted"));
                             void load();
                           })
                           .catch((err: unknown) => {
                             onToast(
                               err instanceof Error
                                 ? err.message
-                                : "Silinemedi.",
+                                : t("presetsErrDelete"),
                             );
                           })
                       }

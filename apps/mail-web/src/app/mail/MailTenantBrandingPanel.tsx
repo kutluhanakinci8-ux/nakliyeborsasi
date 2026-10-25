@@ -1,5 +1,6 @@
 "use client";
 
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 import { useCallback, useEffect, useState } from "react";
 import {
   fetchMailInboxBranding,
@@ -19,6 +20,7 @@ export function MailTenantBrandingPanel({
   canEdit,
   onBrandingSaved,
 }: Props) {
+  const { t } = useMailLocale();
   const [branding, setBranding] = useState<MailInboxBranding | null>(null);
   const [logoUrl, setLogoUrl] = useState("");
   const [emailBrandTitle, setEmailBrandTitle] = useState("");
@@ -44,7 +46,7 @@ export function MailTenantBrandingPanel({
       setDefaultFromDisplayName(data.branding.defaultFromDisplayName ?? "");
       setHidePlatformEmailChrome(data.branding.hidePlatformEmailChrome ?? false);
     } catch {
-      setError("Marka ayarları yüklenemedi.");
+      setError(t("brandingErrLoad"));
     } finally {
       setLoading(false);
     }
@@ -74,9 +76,9 @@ export function MailTenantBrandingPanel({
       });
       setBranding(data.branding);
       onBrandingSaved?.(data.branding);
-      setStatus("Kurumsal kimlik kaydedildi.");
+      setStatus(t("brandingSaved"));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Kaydedilemedi.");
+      setError(err instanceof Error ? err.message : t("errGenericSave"));
     } finally {
       setBusy(false);
     }
@@ -93,9 +95,9 @@ export function MailTenantBrandingPanel({
   if (!branding?.allowed) {
     return (
       <p className="mail-accounts-muted">
-        {branding?.detailTr ?? "Marka ayarları bu planda kapalı."}{" "}
+        {branding?.detailTr ?? t("brandingPlanClosed")}{" "}
         <a href={resolveMailConsoleUrl("/upgrade")} target="_blank" rel="noreferrer">
-          Plan yükseltme
+          {t("brandingUpgrade")}
         </a>
       </p>
     );
@@ -115,17 +117,17 @@ export function MailTenantBrandingPanel({
       ) : null}
 
       <label className="mail-premium-field">
-        <span className="mail-premium-field-label">Logo URL (HTTPS)</span>
+        <span className="mail-premium-field-label">{t("brandingLogoLabel")}</span>
         <input
           className="mail-premium-field-input"
           value={logoUrl}
           disabled={!canEdit}
           onChange={(e) => setLogoUrl(e.target.value)}
-          placeholder="https://firma.com/logo.png"
+          placeholder={t("brandingLogoPlaceholder")}
         />
       </label>
       <label className="mail-premium-field">
-        <span className="mail-premium-field-label">Marka adı (e-posta üst bilgi)</span>
+        <span className="mail-premium-field-label">{t("brandingTitleLabel")}</span>
         <input
           className="mail-premium-field-input"
           value={emailBrandTitle}
@@ -135,7 +137,7 @@ export function MailTenantBrandingPanel({
         />
       </label>
       <label className="mail-premium-field">
-        <span className="mail-premium-field-label">Marka rengi</span>
+        <span className="mail-premium-field-label">{t("brandingColorLabel")}</span>
         <input
           className="mail-premium-field-input"
           type="color"
@@ -145,7 +147,7 @@ export function MailTenantBrandingPanel({
         />
       </label>
       <label className="mail-premium-field">
-        <span className="mail-premium-field-label">Varsayılan gönderen adı</span>
+        <span className="mail-premium-field-label">{t("brandingFromNameLabel")}</span>
         <input
           className="mail-premium-field-input"
           value={defaultFromDisplayName}
@@ -155,7 +157,7 @@ export function MailTenantBrandingPanel({
         />
       </label>
       <label className="mail-premium-field">
-        <span className="mail-premium-field-label">Yasal dipnot (giden posta)</span>
+        <span className="mail-premium-field-label">{t("brandingLegalLabel")}</span>
         <textarea
           className="mail-premium-field-input mail-tenant-branding-legal"
           value={emailLegalFooter}
@@ -179,15 +181,15 @@ export function MailTenantBrandingPanel({
             <span className="mail-posta-toggle-thumb" />
           </span>
           <span className="mail-posta-toggle-text">
-            <span className="mail-posta-toggle-label">Lerta platform chrome gizle</span>
+            <span className="mail-posta-toggle-label">{t("brandingHideChrome")}</span>
             <span className="mail-posta-toggle-hint">
-              Giden HTML şablonda üst/alt Lerta markası kaldırılır.
+              {t("brandingHideChromeHint")}
             </span>
           </span>
         </label>
       ) : (
         <p className="mail-accounts-muted">
-          Tam white-label (platform chrome gizleme) Enterprise planda açılır.
+          {t("brandingEnterpriseHint")}
         </p>
       )}
 
@@ -198,7 +200,7 @@ export function MailTenantBrandingPanel({
           disabled={busy}
           onClick={() => void onSave()}
         >
-          {busy ? "Kaydediliyor…" : "Markayı kaydet"}
+          {busy ? t("actionSaving") : t("brandingSave")}
         </button>
       ) : null}
     </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 import { useCallback, useEffect, useState } from "react";
 import {
   fetchMailCryptoSettings,
@@ -13,6 +14,7 @@ type Props = {
 };
 
 export function MailCryptoSettingsPanel({ accessToken }: Props) {
+  const { t } = useMailLocale();
   const [settings, setSettings] = useState<MailCryptoSettings | null>(null);
   const [pgpKey, setPgpKey] = useState("");
   const [smimeCert, setSmimeCert] = useState("");
@@ -36,7 +38,7 @@ export function MailCryptoSettingsPanel({ accessToken }: Props) {
       try {
         await reload();
       } catch {
-        setError("Şifreleme ayarları yüklenemedi.");
+        setError(t("cryptoErrLoad"));
       } finally {
         setLoading(false);
       }
@@ -61,9 +63,9 @@ export function MailCryptoSettingsPanel({ accessToken }: Props) {
         composePreferPgp: settings?.composePreferPgp,
       });
       setSettings(data.settings);
-      setStatus("Şifreleme ayarları kaydedildi.");
+      setStatus(t("cryptoSaved"));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Kaydedilemedi.");
+      setError(err instanceof Error ? err.message : t("errGenericSave"));
     } finally {
       setBusy(false);
     }
@@ -84,7 +86,7 @@ export function MailCryptoSettingsPanel({ accessToken }: Props) {
       });
       setSettings(data.settings);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Güncellenemedi.");
+      setError(err instanceof Error ? err.message : t("errGenericUpdate"));
     } finally {
       setBusy(false);
     }
@@ -100,10 +102,7 @@ export function MailCryptoSettingsPanel({ accessToken }: Props) {
 
   return (
     <div className="mail-crypto-panel">
-      <p className="mail-posta-intro">
-        OpenPGP (E2E benzeri içerik şifreleme) ve S/MIME imza. Tam Proton seviyesi
-        sıfır-bilgi sunucu modeli değildir; TLS + isteğe bağlı PGP/S/MIME katmanı.
-      </p>
+      <p className="mail-posta-intro">{t("cryptoIntro")}</p>
       {error ? (
         <p className="mail-accounts-status mail-accounts-status--err" role="alert">
           {error}
@@ -116,11 +115,8 @@ export function MailCryptoSettingsPanel({ accessToken }: Props) {
       ) : null}
 
       <section className="mail-posta-card">
-        <h3 className="mail-posta-card-title">OpenPGP public key</h3>
-        <p className="mail-posta-card-desc">
-          Alıcılar sizden şifreli posta doğrulayabilir; gönderimde alıcının public
-          key gerekir.
-        </p>
+        <h3 className="mail-posta-card-title">{t("cryptoPgpTitle")}</h3>
+        <p className="mail-posta-card-desc">{t("cryptoPgpDesc")}</p>
         <textarea
           className="mail-premium-field-input mail-crypto-key-area"
           value={pgpKey}
@@ -140,25 +136,22 @@ export function MailCryptoSettingsPanel({ accessToken }: Props) {
             <span className="mail-posta-toggle-thumb" />
           </span>
           <span className="mail-posta-toggle-text">
-            <span className="mail-posta-toggle-label">Yazarken PGP şifrelemeyi öner</span>
+            <span className="mail-posta-toggle-label">{t("cryptoPreferPgp")}</span>
           </span>
         </label>
       </section>
 
       <section className="mail-posta-card">
-        <h3 className="mail-posta-card-title">S/MIME imza</h3>
-        <p className="mail-posta-card-desc">
-          Kurumsal sertifika PEM + özel anahtar (sunucuda şifreli saklanır). Giden
-          postaya <code>smime.p7s</code> eklenir.
-        </p>
+        <h3 className="mail-posta-card-title">{t("cryptoSmimeTitle")}</h3>
+        <p className="mail-posta-card-desc">{t("cryptoSmimeDesc")}</p>
         {settings?.hasSmimeCertificate ? (
           <p className="mail-security-status-text" role="status">
-            Sertifika kayıtlı
-            {settings.hasSmimePrivateKey ? " · özel anahtar kayıtlı" : ""}.
+            {t("cryptoCertStored")}
+            {settings.hasSmimePrivateKey ? t("cryptoPrivateKeyStored") : ""}.
           </p>
         ) : null}
         <label className="mail-premium-field">
-          <span className="mail-premium-field-label">Sertifika PEM (güncelleme)</span>
+          <span className="mail-premium-field-label">{t("cryptoCertPemLabel")}</span>
           <textarea
             className="mail-premium-field-input mail-crypto-key-area"
             value={smimeCert}
@@ -167,7 +160,7 @@ export function MailCryptoSettingsPanel({ accessToken }: Props) {
           />
         </label>
         <label className="mail-premium-field">
-          <span className="mail-premium-field-label">Özel anahtar PEM</span>
+          <span className="mail-premium-field-label">{t("cryptoPrivatePemLabel")}</span>
           <textarea
             className="mail-premium-field-input mail-crypto-key-area"
             value={smimeKey}
@@ -191,7 +184,7 @@ export function MailCryptoSettingsPanel({ accessToken }: Props) {
             <span className="mail-posta-toggle-thumb" />
           </span>
           <span className="mail-posta-toggle-text">
-            <span className="mail-posta-toggle-label">Giden postayı S/MIME ile imzala</span>
+            <span className="mail-posta-toggle-label">{t("cryptoSignOutbound")}</span>
           </span>
         </label>
       </section>
@@ -202,7 +195,7 @@ export function MailCryptoSettingsPanel({ accessToken }: Props) {
         disabled={busy}
         onClick={() => void onSave()}
       >
-        {busy ? "Kaydediliyor…" : "Anahtarları kaydet"}
+        {busy ? t("actionSaving") : t("cryptoSaveKeys")}
       </button>
     </div>
   );
