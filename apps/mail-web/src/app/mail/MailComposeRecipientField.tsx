@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { MailOrgContact } from "@/lib/mailApi";
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 
 type Props = {
   id: string;
@@ -37,6 +38,7 @@ export function MailComposeRecipientField({
   contacts,
   autoFocus,
 }: Props) {
+  const { t } = useMailLocale();
   const listId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
@@ -145,7 +147,7 @@ export function MailComposeRecipientField({
           id={listId}
           className="compose-contact-suggest"
           role="listbox"
-          aria-label="Kayıtlı kişiler"
+          aria-label={t("composeRecipientSuggestAria")}
         >
           {suggestions.map((c, index) => (
             <li key={c.id} role="option" aria-selected={index === highlight}>
@@ -170,7 +172,7 @@ export function MailComposeRecipientField({
       ) : null}
       {open && query.length > 0 && contacts.length === 0 ? (
         <p className="compose-contact-suggest-empty">
-          Kayıtlı kişi bulunamadı. Kişiler sekmesinden ekleyin.
+          {t("composeRecipientSuggestEmpty")}
         </p>
       ) : null}
     </div>

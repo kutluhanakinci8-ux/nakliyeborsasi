@@ -31,6 +31,10 @@ import {
   MAIL_WEB_I18N_SWEEP_P2_EN,
   MAIL_WEB_I18N_SWEEP_P2_TR,
 } from "./mailWebLocaleI18nFinalSweepP2";
+import {
+  MAIL_WEB_I18N_SWEEP_P3_EN,
+  MAIL_WEB_I18N_SWEEP_P3_TR,
+} from "./mailWebLocaleI18nFinalSweepP3";
 
 export const MAIL_WEB_MESSAGES: Record<MailUiLocale, Record<string, string>> = {
   tr: {
@@ -42,6 +46,7 @@ export const MAIL_WEB_MESSAGES: Record<MailUiLocale, Record<string, string>> = {
     ...MAIL_WEB_I18N_SWEEP_P0_TR,
     ...MAIL_WEB_I18N_SWEEP_P1_TR,
     ...MAIL_WEB_I18N_SWEEP_P2_TR,
+    ...MAIL_WEB_I18N_SWEEP_P3_TR,
     navInbox: "Gelen",
     navSent: "Gönderilen",
     navAll: "Tümü",
@@ -306,6 +311,7 @@ export const MAIL_WEB_MESSAGES: Record<MailUiLocale, Record<string, string>> = {
     ...MAIL_WEB_I18N_SWEEP_P0_EN,
     ...MAIL_WEB_I18N_SWEEP_P1_EN,
     ...MAIL_WEB_I18N_SWEEP_P2_EN,
+    ...MAIL_WEB_I18N_SWEEP_P3_EN,
     navInbox: "Inbox",
     navSent: "Sent",
     navAll: "All",

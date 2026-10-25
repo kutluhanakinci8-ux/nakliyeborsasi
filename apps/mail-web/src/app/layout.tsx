@@ -13,18 +13,23 @@ import { MailThemeProvider } from "@/components/MailThemeProvider";
 import { MailPwaRegister } from "@/components/MailPwaRegister";
 import { MailHttpsRedirect } from "@/components/MailHttpsRedirect";
 import { MailEmbeddedSessionBridge } from "@/components/MailEmbeddedSessionBridge";
+import { readMailUiLocale, t } from "@/lib/mailLocale";
 
-export const metadata: Metadata = {
-  metadataBase: new URL("https://posta.lerta.com.tr"),
-  title: "Lerta Posta",
-  description: "Kurumsal e-posta — lerta.com.tr",
-  manifest: "/manifest.webmanifest",
-  appleWebApp: {
-    capable: true,
-    title: "Lerta Posta",
-    statusBarStyle: "default",
-  },
-};
+export function generateMetadata(): Metadata {
+  const locale = readMailUiLocale();
+  const title = t("appMetaTitle", locale);
+  return {
+    metadataBase: new URL("https://posta.lerta.com.tr"),
+    title,
+    description: t("appMetaDescription", locale),
+    manifest: "/manifest.webmanifest",
+    appleWebApp: {
+      capable: true,
+      title,
+      statusBarStyle: "default",
+    },
+  };
+}
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -47,7 +52,7 @@ export default function RootLayout({
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var r=document.documentElement;var k="lerta-mail-theme";var v=localStorage.getItem(k);var mode=(v==="dark"||v==="light"||v==="system")?v:null;if(!mode){mode=window.matchMedia("(prefers-color-scheme: dark)").matches?"system":"light";}var dark=window.matchMedia("(prefers-color-scheme: dark)").matches;var eff=mode==="system"?(dark?"dark":"light"):mode;r.dataset.mailTheme=eff;r.dataset.mailThemeMode=mode;r.dataset.mailThemeFollowsSystem=mode==="system"?"true":"false";if(localStorage.getItem("lerta-mail-read-font")==="large"){r.dataset.mailReadFont="large";}}catch(e){}})();`,
+            __html: `(function(){try{var r=document.documentElement;var k="lerta-mail-theme";var v=localStorage.getItem(k);var mode=(v==="dark"||v==="light"||v==="system")?v:null;if(!mode){mode=window.matchMedia("(prefers-color-scheme: dark)").matches?"system":"light";}var dark=window.matchMedia("(prefers-color-scheme: dark)").matches;var eff=mode==="system"?(dark?"dark":"light"):mode;r.dataset.mailTheme=eff;r.dataset.mailThemeMode=mode;r.dataset.mailThemeFollowsSystem=mode==="system"?"true":"false";if(localStorage.getItem("lerta-mail-read-font")==="large"){r.dataset.mailReadFont="large";}var lk="lerta-mail-ui-locale";var loc=localStorage.getItem(lk);if(loc==="en"||loc==="tr"){r.lang=loc;}}catch(e){}})();`,
           }}
         />
       </head>
