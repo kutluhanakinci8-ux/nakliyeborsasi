@@ -12,6 +12,8 @@ Son otomasyon özeti: `docs/reports/FAZ8_COMPLIANCE_<tarih>.json`
 | Pentest otomasyon | `npm run qa:faz7` → `FAZ7_PENTEST_*.json`, `ZAP_PASSIVE_*.json` |
 | Uyumluluk Faz 8 | `npm run qa:faz8` → `FAZ8_COMPLIANCE_*.json` |
 | Müşteri UAT Faz 9 | `npm run qa:faz9` → `UAT_FAZ9_SIGNOFF_*.json` |
+| İmza öncesi Faz 9b | `npm run qa:faz9b` → `UAT_FAZ9B_ASSIST_*.md` |
+| Final gap kapısı | `npm run qa:closure` → `QA_GAP_CLOSURE_FINAL_*.json` |
 | MP-9 | `bash scripts/verify-security-compliance-mp9.sh` |
 | Due diligence paketi | `bash scripts/pack-customer-due-diligence-mp9.sh` → `dist/customer-due-diligence-mp9.zip` |
 
