@@ -33,6 +33,7 @@
     "qa:faz9": "bash scripts/run-faz9-uat-signoff-sequence.sh",
     "qa:faz9b": "bash scripts/run-faz9b-pre-signoff-assist.sh",
     "qa:closure": "bash scripts/run-qa-gap-closure-final.sh",
+    "qa:external-status": "bash scripts/run-external-pending-status.sh",
     "verify:vps": "bash scripts/vps-operator-verify.sh",
     "archive:move": "bash scripts/archive-replaced-source.sh",
     "git:cleanup-merged": "bash scripts/cleanup-merged-git-branches.sh",

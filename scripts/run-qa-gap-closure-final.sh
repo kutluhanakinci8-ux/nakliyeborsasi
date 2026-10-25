@@ -61,7 +61,8 @@ fi
   done
   echo ""
   echo "  },"
-  echo "  \"external_pending\": [\"7b pentest firma\", \"8b SOC2/ISO\", \"9b müşteri imza\"]"
+  echo "  \"external_pending\": [\"7b pentest firma\", \"8b SOC2/ISO\", \"9c müşteri imza (3 madde)\"],"
+  echo "  \"closure_doc\": \"docs/QA_GAP_CLOSURE_COMPLETE.md\""
   echo "}"
 } > "${FINAL}"
 

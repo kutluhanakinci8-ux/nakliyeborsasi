@@ -20,7 +20,8 @@
 | **9** | Müşteri UAT | `npm run qa:faz9` + `docs/UAT_FAZ9_CUSTOMER_SIGNOFF.md` | Otomasyon PASS · imza **bekliyor** |
 | **9b** | İmza öncesi paket | `npm run qa:faz9b` → `UAT_FAZ9B_ASSIST_*.md` | ✅ Otomasyon |
 | **9c** | İmzalı PDF / PO | `UAT_*_SIGNED=1` | **Müşteri** |
-| **10** | Final kapı | `npm run qa:closure` · `QA_GAP_CLOSURE_FINAL_*.json` | VPS |
+| **10** | Final kapı | `npm run qa:closure` · `QA_CLOSURE_STRICT=1` | ✅ VPS STRICT PASS |
+| **11** | Harici durum | `npm run qa:external-status` | Bilgi |
 
 ## VPS’te kapatılacak maddeler (Faz 6–9)
 
