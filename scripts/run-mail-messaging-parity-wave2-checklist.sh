@@ -39,7 +39,12 @@ export MESSAGING_SSE_JWT="${MESSAGING_SSE_JWT:-${MESSAGING_TEST_JWT:-}}"
 
 echo "== Mail & Messaging parity wave-2 =="
 
-run_step "Parity close (PM-1…10)" bash "${ROOT}/scripts/run-mail-messaging-parity-close-checklist.sh"
+if [[ "${QA_PARITY_ALREADY_RAN:-0}" == "1" ]]; then
+  echo ""
+  echo "SKIP: Parity close — premium suite adım 3 zaten koştu"
+else
+  run_step "Parity close (PM-1…10)" bash "${ROOT}/scripts/run-mail-messaging-parity-close-checklist.sh"
+fi
 
 if [[ -n "${OPERATOR_JWT:-}" ]]; then
   run_step "A1 billing-health" bash "${ROOT}/scripts/run-mail-billing-a1-acceptance.sh"

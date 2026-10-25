@@ -67,7 +67,7 @@ run_layer regression_parity "3. Regression — mail/messaging parity close" \
     bash "${ROOT}/scripts/run-mail-messaging-parity-close-checklist.sh"
 
 run_layer regression_wave2 "4. Regression — wave-2 + Lighthouse PWA" \
-  bash "${ROOT}/scripts/run-mail-messaging-parity-wave2-checklist.sh"
+  env QA_PARITY_ALREADY_RAN=1 bash "${ROOT}/scripts/run-mail-messaging-parity-wave2-checklist.sh"
 
 run_layer system_smoke "5. System — prod HTTPS/smoke" \
   bash "${ROOT}/scripts/verify-posta-https.sh"
