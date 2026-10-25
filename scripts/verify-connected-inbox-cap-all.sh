@@ -24,6 +24,9 @@ grep -q 'class MailConnectedInboxActionsService' apps/api/src/modules/notificati
 grep -q 'connected-inbox/status' apps/api/src/modules/notification/CompanyMailInboxController.ts
 grep -q 'isPushConfigured' apps/api/src/modules/notification/MailGmailSyncService.ts
 grep -q 'restoreMessageFromTrash' apps/api/src/modules/notification/MailExchangeGraphSyncService.ts
+grep -q 'permanentDelete' apps/api/src/modules/notification/MailExchangeGraphSyncService.ts
+grep -q 'buildOutgoingSentMimeWithAttachments' apps/api/src/modules/notification/MailSentMimeBuilder.ts
+grep -q 'assertGmailPushAuthorized' apps/api/src/modules/notification/MailConnectedAccountsPushService.ts
 grep -q 'syncMailboxFolderState' apps/api/src/modules/notification/MailConnectedInboxActionsService.ts
 grep -q 'MailConnectedInboxStatusPanel' apps/mail-web/src/app/mail/MailConnectedInboxStatusPanel.tsx
 

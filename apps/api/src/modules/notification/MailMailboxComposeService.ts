@@ -470,6 +470,19 @@ export class MailMailboxComposeService {
       params.connectedSendAccountId,
     );
     if (connectedSend) {
+      await this.assertRateLimit(params.organizationId);
+      await this.mailTenantSuspensionService.assertOrganizationCanSend(
+        params.organizationId,
+      );
+      const parsedAttachments = await this.parseAttachments(
+        params.organizationId,
+        params.attachments,
+      );
+      await this.mailOrganizationStorageService.assertCanStore(
+        params.organizationId,
+        params.text.length +
+          parsedAttachments.reduce((sum, file) => sum + file.content.length, 0),
+      );
       const prefs = await this.mailInboxPreferencesService.get(
         params.organizationId,
       );
@@ -500,6 +513,7 @@ export class MailMailboxComposeService {
         references: inbound.internetMessageId ?? undefined,
         gmailThreadId: inbound.gmailThreadId ?? null,
         exchangeMessageId: inbound.exchangeMessageId ?? null,
+        attachments: this.toConnectedOutboundAttachments(parsedAttachments),
       });
       const sent = await this.sentRepository.save(
         this.sentRepository.create({
@@ -513,6 +527,7 @@ export class MailMailboxComposeService {
           smtpMessageId: outbound.providerMessageId,
         }),
       );
+      this.mailOrganizationSendRateService.recordSend(params.organizationId);
       return { sentId: sent.id, smtpMessageId: outbound.providerMessageId };
     }
     const { fromHeader, fromEmail, envelopeMailFrom, technicalEmail } =
@@ -672,6 +687,19 @@ export class MailMailboxComposeService {
       params.connectedSendAccountId,
     );
     if (connectedSend) {
+      await this.assertRateLimit(params.organizationId);
+      await this.mailTenantSuspensionService.assertOrganizationCanSend(
+        params.organizationId,
+      );
+      const parsedAttachments = await this.parseAttachments(
+        params.organizationId,
+        params.attachments,
+      );
+      await this.mailOrganizationStorageService.assertCanStore(
+        params.organizationId,
+        text.length +
+          parsedAttachments.reduce((sum, file) => sum + file.content.length, 0),
+      );
       const outbound = await this.mailConnectedOutboundService.send({
         organizationId: params.organizationId,
         actorUserId: params.userId,
@@ -680,6 +708,7 @@ export class MailMailboxComposeService {
         to: params.to,
         subject,
         text,
+        attachments: this.toConnectedOutboundAttachments(parsedAttachments),
       });
       const sent = await this.sentRepository.save(
         this.sentRepository.create({
@@ -693,6 +722,7 @@ export class MailMailboxComposeService {
           smtpMessageId: outbound.providerMessageId,
         }),
       );
+      this.mailOrganizationSendRateService.recordSend(params.organizationId);
       return { sentId: sent.id, smtpMessageId: outbound.providerMessageId };
     }
     const { fromHeader, fromEmail, envelopeMailFrom, technicalEmail } =
@@ -957,12 +987,22 @@ export class MailMailboxComposeService {
       subject: string;
       text: string;
       html?: string;
+      attachments?: ComposeAttachmentInput[];
     },
     connected: { provider: ConnectedSendProvider; accountId: string },
   ): Promise<{ sentId: string; smtpMessageId: string | null }> {
     await this.assertRateLimit(params.organizationId);
     await this.mailTenantSuspensionService.assertOrganizationCanSend(
       params.organizationId,
+    );
+    const parsedAttachments = await this.parseAttachments(
+      params.organizationId,
+      params.attachments,
+    );
+    await this.mailOrganizationStorageService.assertCanStore(
+      params.organizationId,
+      params.text.length +
+        parsedAttachments.reduce((sum, file) => sum + file.content.length, 0),
     );
     const outbound = await this.mailConnectedOutboundService.send({
       organizationId: params.organizationId,
@@ -975,6 +1015,7 @@ export class MailMailboxComposeService {
       subject: params.subject,
       text: params.text,
       html: params.html,
+      attachments: this.toConnectedOutboundAttachments(parsedAttachments),
     });
     const mailboxes = await this.mailboxRepository.find({
       where: { organizationId: params.organizationId },
@@ -1271,6 +1312,22 @@ export class MailMailboxComposeService {
       mailDomain.verificationStatus = "verified";
       await this.mailDomainRepository.save(mailDomain);
     }
+  }
+
+  private toConnectedOutboundAttachments(
+    attachments: {
+      filename: string;
+      content: Buffer;
+      contentType: string;
+      cid?: string;
+    }[],
+  ) {
+    return attachments.map((file) => ({
+      filename: file.filename,
+      contentType: file.contentType,
+      contentBase64: file.content.toString("base64"),
+      contentId: file.cid,
+    }));
   }
 
   private async assertRateLimit(organizationId: string): Promise<void> {

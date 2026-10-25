@@ -54,6 +54,9 @@ GOOGLE_GMAIL_CLIENT_SECRET=...
 GOOGLE_GMAIL_REDIRECT_URI=https://posta.lerta.com.tr/mail/gmail-oauth
 # İsteğe bağlı anlık push (CAP-5):
 # GOOGLE_GMAIL_PUBSUB_TOPIC=projects/.../topics/...
+# Pub/Sub push aboneliğinde özel HTTP başlığı (önerilir):
+# GOOGLE_GMAIL_PUBSUB_PUSH_SECRET=uzun-rastgele-deger
+# Başlık adı: x-lerta-gmail-push-secret
 ```
 
 3. API yeniden başlat.

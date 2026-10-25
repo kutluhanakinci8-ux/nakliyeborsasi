@@ -596,16 +596,7 @@ export class MailGmailSyncService {
       `${GMAIL_BASE}/messages/${providerMessageId}?format=full`,
     );
     const labelIds = (full.labelIds ?? []) as string[];
-    const folderKey =
-      labelIds.includes("DRAFT")
-        ? "drafts"
-        : labelIds.includes("SENT")
-          ? "sentitems"
-          : labelIds.includes("TRASH")
-            ? "deleteditems"
-            : labelIds.includes("SPAM")
-              ? "junkemail"
-              : "inbox";
+    const folderKey = resolveGmailFolderKeyFromLabels(labelIds);
     await this.upsertGmailMessage(
       account,
       full as GmailMessage,
@@ -1099,6 +1090,25 @@ type GmailMessage = {
   internalDate?: string;
   payload?: { headers?: GmailHeader[]; parts?: GmailPart[]; body?: { data?: string } };
 };
+
+function resolveGmailFolderKeyFromLabels(labelIds: string[]): string {
+  if (labelIds.includes("DRAFT")) {
+    return "drafts";
+  }
+  if (labelIds.includes("SENT")) {
+    return "sentitems";
+  }
+  if (labelIds.includes("TRASH")) {
+    return "deleteditems";
+  }
+  if (labelIds.includes("SPAM")) {
+    return "junkemail";
+  }
+  if (!labelIds.includes("INBOX")) {
+    return "archive";
+  }
+  return "inbox";
+}
 
 function headerValue(headers: GmailHeader[], name: string): string | null {
   const row = headers.find((h) => h.name?.toLowerCase() === name.toLowerCase());

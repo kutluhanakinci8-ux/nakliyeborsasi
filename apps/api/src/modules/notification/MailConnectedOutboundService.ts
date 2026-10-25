@@ -9,7 +9,9 @@ import { MailExchangeSyncAccountEntity } from "../../infrastructure/database/ent
 import { MailGmailSyncAccountEntity } from "../../infrastructure/database/entities/MailGmailSyncAccountEntity";
 import { MailExchangeGraphSyncService } from "./MailExchangeGraphSyncService";
 import { MailGmailSyncService } from "./MailGmailSyncService";
-import { buildOutgoingSentMime } from "./MailSentMimeBuilder";
+import {
+  buildOutgoingSentMimeWithAttachments,
+} from "./MailSentMimeBuilder";
 import { randomUUID } from "node:crypto";
 import {
   MailIdentityAuditAction,
@@ -17,6 +19,13 @@ import {
 } from "./MailIdentityAuditService";
 
 export type ConnectedSendProvider = "microsoft_graph" | "gmail_api";
+
+export type ConnectedOutboundAttachment = {
+  filename: string;
+  contentType: string;
+  contentBase64: string;
+  contentId?: string;
+};
 
 export type ConnectedOutboundMessage = {
   organizationId: string;
@@ -33,6 +42,7 @@ export type ConnectedOutboundMessage = {
   references?: string;
   gmailThreadId?: string | null;
   exchangeMessageId?: string | null;
+  attachments?: ConnectedOutboundAttachment[];
 };
 
 @Injectable()
@@ -61,6 +71,7 @@ export class MailConnectedOutboundService {
       if (!account) {
         throw new NotFoundException("Microsoft bağlantısı bulunamadı.");
       }
+      const graphAttachments = message.attachments ?? [];
       const providerMessageId = message.exchangeMessageId
         ? await this.mailExchangeGraphSyncService.sendReplyMessage(
             message.organizationId,
@@ -71,6 +82,7 @@ export class MailConnectedOutboundService {
               to: splitAddresses(message.to),
               cc: splitAddresses(message.cc),
               bcc: splitAddresses(message.bcc),
+              attachments: graphAttachments,
             },
           )
         : await this.mailExchangeGraphSyncService.sendMailMessage(
@@ -84,6 +96,7 @@ export class MailConnectedOutboundService {
               bcc: splitAddresses(message.bcc),
               inReplyTo: message.inReplyTo,
               references: message.references,
+              attachments: graphAttachments,
             },
           );
       await this.auditSend(message, account.emailAddress, providerMessageId);
@@ -102,19 +115,28 @@ export class MailConnectedOutboundService {
     const fromHeader = account.displayName
       ? `${account.displayName} <${account.emailAddress}>`
       : account.emailAddress;
-    const rawMime = buildOutgoingSentMime({
-      fromHeader,
-      to: message.to,
-      cc: message.cc,
-      bcc: message.bcc,
-      subject: message.subject,
-      text: message.text,
-      html: message.html,
-      messageId: `<${randomUUID()}@lerta.connected>`,
-      inReplyTo: message.inReplyTo,
-      references: message.references,
-      date: new Date(),
-    });
+    const mimeAttachments = (message.attachments ?? []).map((file) => ({
+      filename: file.filename,
+      contentType: file.contentType,
+      content: Buffer.from(file.contentBase64, "base64"),
+      cid: file.contentId,
+    }));
+    const rawMime = buildOutgoingSentMimeWithAttachments(
+      {
+        fromHeader,
+        to: message.to,
+        cc: message.cc,
+        bcc: message.bcc,
+        subject: message.subject,
+        text: message.text,
+        html: message.html,
+        messageId: `<${randomUUID()}@lerta.connected>`,
+        inReplyTo: message.inReplyTo,
+        references: message.references,
+        date: new Date(),
+      },
+      mimeAttachments,
+    );
     const result = await this.mailGmailSyncService.sendRawMessage(
       message.organizationId,
       account.id,

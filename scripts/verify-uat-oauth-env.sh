@@ -56,6 +56,26 @@ else
 fi
 
 echo ""
+echo "=== CAP Gmail posta OAuth (isteğe bağlı push ile) ==="
+gmail_ok=0
+gmail_keys=(
+  GOOGLE_GMAIL_CLIENT_ID
+  GOOGLE_GMAIL_CLIENT_SECRET
+  GOOGLE_GMAIL_REDIRECT_URI
+)
+for k in "${gmail_keys[@]}"; do
+  check_key "${k}" && gmail_ok=$((gmail_ok + 1)) || failed=$((failed + 1))
+done
+if [[ "${gmail_ok}" -eq 3 ]]; then
+  echo "OK: Gmail posta OAuth env tam"
+else
+  echo "NOT: Gmail posta OAuth eksik — docs/MAIL_OAUTH_VPS_SETUP.md §2b"
+fi
+if check_key "GOOGLE_GMAIL_PUBSUB_TOPIC"; then
+  echo "HINT: Pub/Sub push için GOOGLE_GMAIL_PUBSUB_PUSH_SECRET + header x-lerta-gmail-push-secret önerilir"
+fi
+
+echo ""
 echo "Redirect URI örnekleri (.env.example):"
 echo "  https://posta.lerta.com.tr/mail/exchange-oauth"
 echo "  https://posta.lerta.com.tr/mail/calendar-oauth"

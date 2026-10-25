@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query } from "@nestjs/common";
+import { Body, Controller, Get, Headers, Post, Query } from "@nestjs/common";
 import { MailConnectedAccountsPushService } from "./MailConnectedAccountsPushService";
 
 @Controller("public/mail-connected")
@@ -8,7 +8,11 @@ export class PublicMailConnectedPushController {
   ) {}
 
   @Post("gmail/pubsub")
-  public async gmailPubSub(@Body() body: Record<string, unknown>) {
+  public async gmailPubSub(
+    @Body() body: Record<string, unknown>,
+    @Headers("x-lerta-gmail-push-secret") pushSecret?: string,
+  ) {
+    this.mailConnectedAccountsPushService.assertGmailPushAuthorized(pushSecret);
     return this.mailConnectedAccountsPushService.handleGmailPubSub(body);
   }
 

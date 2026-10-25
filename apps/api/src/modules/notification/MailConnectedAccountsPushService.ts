@@ -1,4 +1,9 @@
-import { Injectable, Logger } from "@nestjs/common";
+import {
+  Injectable,
+  Logger,
+  UnauthorizedException,
+} from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { MailGmailSyncAccountEntity } from "../../infrastructure/database/entities/MailGmailSyncAccountEntity";
@@ -17,7 +22,20 @@ export class MailConnectedAccountsPushService {
     private readonly exchangeAccountRepository: Repository<MailExchangeSyncAccountEntity>,
     private readonly mailGmailSyncService: MailGmailSyncService,
     private readonly mailExchangeGraphSyncService: MailExchangeGraphSyncService,
+    private readonly configService: ConfigService,
   ) {}
+
+  public assertGmailPushAuthorized(pushSecretHeader?: string): void {
+    const expected = this.configService
+      .get<string>("GOOGLE_GMAIL_PUBSUB_PUSH_SECRET")
+      ?.trim();
+    if (!expected) {
+      return;
+    }
+    if (pushSecretHeader?.trim() !== expected) {
+      throw new UnauthorizedException("Gmail push doğrulaması başarısız.");
+    }
+  }
 
   public async handleGmailPubSub(
     body: Record<string, unknown>,
@@ -81,24 +99,9 @@ export class MailConnectedAccountsPushService {
       }
     }
     if (synced === 0 && (notifications?.length ?? 0) > 0) {
-      const accounts = await this.exchangeAccountRepository.find({
-        where: { enabled: true },
-        take: 3,
-      });
-      for (const account of accounts) {
-        try {
-          await this.mailExchangeGraphSyncService.syncAccount(
-            account.organizationId,
-            account.id,
-            null,
-          );
-          synced += 1;
-        } catch (error) {
-          const message =
-            error instanceof Error ? error.message : "graph_push_sync_failed";
-          this.logger.warn(`Graph push sync failed: ${message}`);
-        }
-      }
+      this.logger.warn(
+        "Graph push bildirimi clientState olmadan geldi; hesap senkronu atlandı.",
+      );
     }
     return { ok: true, synced };
   }

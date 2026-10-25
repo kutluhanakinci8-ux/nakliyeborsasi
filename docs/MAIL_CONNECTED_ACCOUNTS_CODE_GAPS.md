@@ -20,6 +20,7 @@ Bu liste **bağlantı kurulmadan** tamamlanan kod iyileştirmelerini izler.
 | Ayarlar CAP özeti | `MailConnectedInboxStatusPanel` + status API |
 | Taslak gönderim Kimden | `getForSend` + UI `composeSendAsKey` geri yükleme |
 | Bağlı kutu durumu API | `GET .../connected-inbox/status` (özellik bayrakları) |
+| P0 ön-bağlantı | Graph `permanentDelete`, bağlı ekler, push secret, import klasör |
 
 OAuth / Console sonrası: `GOOGLE_GMAIL_*`, `MICROSOFT_GRAPH_*`, isteğe bağlı `GOOGLE_GMAIL_PUBSUB_TOPIC`, `MICROSOFT_GRAPH_MAIL_WEBHOOK_URL` (boşsa `posta.lerta.com.tr/api/v1/public/mail-connected/microsoft/graph`).
 

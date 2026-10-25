@@ -541,7 +541,32 @@ export class MailExchangeGraphSyncService {
     accountId: string,
     exchangeMessageId: string,
   ): Promise<void> {
-    await this.moveMessageToTrash(organizationId, accountId, exchangeMessageId);
+    const account = await this.accountRepository.findOne({
+      where: { id: accountId, organizationId, enabled: true },
+    });
+    if (!account) {
+      return;
+    }
+    const accessToken = await this.resolveAccessToken(account);
+    try {
+      await this.graphPost(
+        accessToken,
+        `${GRAPH_BASE}/me/messages/${exchangeMessageId}/permanentDelete`,
+        {},
+      );
+      return;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
+      if (!message.includes("404") && !message.includes("ErrorItemNotFound")) {
+        this.logger.warn(
+          `Graph permanentDelete failed, falling back to delete: ${message}`,
+        );
+      }
+    }
+    await this.graphDelete(
+      accessToken,
+      `${GRAPH_BASE}/me/messages/${exchangeMessageId}`,
+    );
   }
 
   public async cancelGraphMailSubscription(
@@ -596,12 +621,16 @@ export class MailExchangeGraphSyncService {
     const accessToken = await this.resolveAccessToken(account);
     const message = (await this.graphGet(
       accessToken,
-      `${GRAPH_BASE}/me/messages/${exchangeMessageId}?$select=${GRAPH_MESSAGE_SELECT}`,
+      `${GRAPH_BASE}/me/messages/${exchangeMessageId}?$select=${GRAPH_MESSAGE_SELECT},parentFolderId`,
     )) as GraphMessage;
     if (!message.id) {
       throw new NotFoundException("Graph mesajı bulunamadı.");
     }
-    const folderState = this.mapExchangeFolder("inbox");
+    const folderKey = await this.resolveGraphFolderKey(
+      accessToken,
+      message.parentFolderId,
+    );
+    const folderState = this.mapExchangeFolder(folderKey);
     const fromAddress = message.from?.emailAddress?.address ?? "unknown@exchange";
     const subject = message.subject?.trim() || "(Konu yok)";
     const existing = await this.inboundRepository.findOne({
@@ -634,6 +663,14 @@ export class MailExchangeGraphSyncService {
       receivedAt: message.receivedDateTime
         ? new Date(message.receivedDateTime)
         : new Date(),
+      attachments:
+        message.hasAttachments && message.id
+          ? await this.fetchAttachmentMetadata(accessToken, message.id)
+          : existing?.attachments ?? null,
+      starredAt:
+        message.flag?.flagStatus === "flagged"
+          ? existing?.starredAt ?? new Date()
+          : null,
     };
     const saved = existing
       ? await this.inboundRepository.save({ ...existing, ...payload })
@@ -695,6 +732,7 @@ export class MailExchangeGraphSyncService {
       to: string[];
       cc?: string[];
       bcc?: string[];
+      attachments?: GraphOutboundAttachment[];
     },
   ): Promise<string | null> {
     const account = await this.accountRepository.findOne({
@@ -704,12 +742,14 @@ export class MailExchangeGraphSyncService {
       throw new NotFoundException("Exchange bağlantısı bulunamadı.");
     }
     const accessToken = await this.resolveAccessToken(account);
+    const graphAttachments = toGraphFileAttachments(message.attachments);
     const payload = {
       message: {
         body: { contentType: "HTML", content: message.bodyHtml },
         toRecipients: toGraphRecipients(message.to),
         ccRecipients: toGraphRecipients(message.cc ?? []),
         bccRecipients: toGraphRecipients(message.bcc ?? []),
+        ...(graphAttachments.length > 0 ? { attachments: graphAttachments } : {}),
       },
     };
     await this.graphPost(
@@ -731,6 +771,7 @@ export class MailExchangeGraphSyncService {
       bcc?: string[];
       inReplyTo?: string;
       references?: string;
+      attachments?: GraphOutboundAttachment[];
     },
   ): Promise<string | null> {
     const account = await this.accountRepository.findOne({
@@ -752,6 +793,7 @@ export class MailExchangeGraphSyncService {
     if (message.references) {
       headers.push({ name: "References", value: message.references });
     }
+    const graphAttachments = toGraphFileAttachments(message.attachments);
     const payload = {
       message: {
         subject: message.subject,
@@ -760,6 +802,7 @@ export class MailExchangeGraphSyncService {
         ccRecipients: toGraphRecipients(message.cc ?? []),
         bccRecipients: toGraphRecipients(message.bcc ?? []),
         ...(headers.length > 0 ? { internetMessageHeaders: headers } : {}),
+        ...(graphAttachments.length > 0 ? { attachments: graphAttachments } : {}),
       },
       saveToSentItems: true,
     };
@@ -961,6 +1004,28 @@ export class MailExchangeGraphSyncService {
       links.inbox = account.deltaLink;
     }
     return links;
+  }
+
+  private async resolveGraphFolderKey(
+    accessToken: string,
+    parentFolderId?: string,
+  ): Promise<string> {
+    if (!parentFolderId?.trim()) {
+      return "inbox";
+    }
+    try {
+      const folder = (await this.graphGet(
+        accessToken,
+        `${GRAPH_BASE}/me/mailFolders/${parentFolderId}?$select=wellKnownName`,
+      )) as { wellKnownName?: string };
+      const known = folder.wellKnownName?.toLowerCase().trim();
+      if (known) {
+        return known;
+      }
+    } catch {
+      /* default inbox */
+    }
+    return "inbox";
   }
 
   private mapExchangeFolder(folderKey: string): {
@@ -1213,6 +1278,14 @@ type GraphMessage = {
   conversationId?: string;
   hasAttachments?: boolean;
   flag?: { flagStatus?: string };
+  parentFolderId?: string;
+};
+
+export type GraphOutboundAttachment = {
+  filename: string;
+  contentType: string;
+  contentBase64: string;
+  contentId?: string;
 };
 
 type GraphAttachment = {
@@ -1228,6 +1301,27 @@ function toGraphRecipients(addresses: string[]): Array<{
   return addresses.map((address) => ({
     emailAddress: { address },
   }));
+}
+
+function toGraphFileAttachments(
+  attachments?: GraphOutboundAttachment[],
+): Array<Record<string, unknown>> {
+  if (!attachments?.length) {
+    return [];
+  }
+  return attachments.map((file) => {
+    const base: Record<string, unknown> = {
+      "@odata.type": "#microsoft.graph.fileAttachment",
+      name: file.filename,
+      contentType: file.contentType,
+      contentBytes: file.contentBase64,
+    };
+    if (file.contentId?.trim()) {
+      base.isInline = true;
+      base.contentId = file.contentId.trim();
+    }
+    return base;
+  });
 }
 
 function wrapTextAsHtml(text: string): string {
