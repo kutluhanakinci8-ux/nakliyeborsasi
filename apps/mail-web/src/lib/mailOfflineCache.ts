@@ -5,6 +5,7 @@ import {
   type MailInboxFolder,
   type MailInboxListItem,
   type MailInboxMessageDetail,
+  type MailConnectedAccountRow,
   type MailInboxSummary,
   type MailSendReadiness,
   type MailSentItem,
@@ -22,6 +23,7 @@ export type InboxSnapshotPayload = {
   sendReadiness?: MailSendReadiness;
   messages: MailInboxListItem[];
   sent: MailSentItem[];
+  connectedAccounts?: MailConnectedAccountRow[];
   cachedAt: number;
 };
 
@@ -63,8 +65,9 @@ function idbRequest<T>(request: IDBRequest<T>): Promise<T> {
 export function inboxCacheKey(
   folder: MailInboxFolder,
   customFolderId?: string | null,
+  connectedSource?: string | null,
 ): string {
-  return `${folder}:${customFolderId ?? ""}`;
+  return `${folder}:${customFolderId ?? ""}:${connectedSource ?? "all"}`;
 }
 
 export async function putInboxSnapshot(
@@ -194,23 +197,31 @@ export async function fetchInboxWithOfflineCache(
   accessToken: string,
   folder: MailInboxFolder,
   customFolderId?: string | null,
+  connectedSource?: import("./mailApi").MailConnectedInboxSource,
 ): Promise<{
   summary: MailInboxSummary;
   sendReadiness?: MailSendReadiness;
   messages: MailInboxListItem[];
   sent: MailSentItem[];
+  connectedAccounts?: MailConnectedAccountRow[];
   fromOfflineCache: boolean;
   cachedAt: number | null;
   sessionStale: boolean;
 }> {
-  const key = inboxCacheKey(folder, customFolderId);
+  const key = inboxCacheKey(folder, customFolderId, connectedSource ?? "all");
   try {
-    const data = await fetchInbox(accessToken, folder, customFolderId);
+    const data = await fetchInbox(
+      accessToken,
+      folder,
+      customFolderId,
+      connectedSource,
+    );
     await putInboxSnapshot(key, {
       summary: data.summary,
       sendReadiness: data.sendReadiness,
       messages: data.messages,
       sent: data.sent,
+      connectedAccounts: data.connectedAccounts,
       cachedAt: Date.now(),
     });
     return {
@@ -232,6 +243,7 @@ export async function fetchInboxWithOfflineCache(
       sendReadiness: cached.sendReadiness,
       messages: cached.messages,
       sent: cached.sent,
+      connectedAccounts: cached.connectedAccounts,
       fromOfflineCache: true,
       cachedAt: cached.cachedAt,
       sessionStale: isMailSessionExpiredError(error),

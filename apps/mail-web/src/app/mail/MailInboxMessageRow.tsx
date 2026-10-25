@@ -15,6 +15,11 @@ type RowMessage = {
   readAt: string | null;
   attachmentCount?: number;
   starredAt?: string | null;
+  inboxSource?: {
+    label: string;
+    provider: string;
+    accountEmail?: string | null;
+  };
 };
 
 type Props = {
@@ -79,7 +84,21 @@ export function MailInboxMessageRow({
       </div>
       <div className="mail-inbox-row-body">
         <div className="mail-inbox-row-top">
-          <span className="mail-inbox-row-sender">{sender}</span>
+          <span className="mail-inbox-row-sender">
+            {sender}
+            {m.inboxSource && m.inboxSource.provider !== "lerta" ? (
+              <span
+                className="mail-inbox-source-badge"
+                title={
+                  m.inboxSource.accountEmail
+                    ? m.inboxSource.accountEmail
+                    : m.inboxSource.label
+                }
+              >
+                {m.inboxSource.label}
+              </span>
+            ) : null}
+          </span>
           <span className="mail-inbox-row-date">{dateLabel}</span>
         </div>
         <div className="mail-inbox-row-subject">{m.subject || "(Konu yok)"}</div>

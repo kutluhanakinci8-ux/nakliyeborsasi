@@ -151,6 +151,9 @@ export function MailClientShell({ mail }: Props) {
     focusedInboxEnabled,
     inboxFocusLane,
     setInboxFocusLane,
+    inboxConnectedSource,
+    setInboxConnectedSource,
+    showConnectedInboxTabs,
     listMessageIds,
     listNavigationEnabled,
     logout,
@@ -736,6 +739,55 @@ export function MailClientShell({ mail }: Props) {
                       : "Tüm mesajlar okundu"}
                   </p>
                 </div>
+                {showConnectedInboxTabs ? (
+                  <div
+                    className="mail-inbox-focus-tabs mail-inbox-connected-tabs"
+                    role="tablist"
+                    aria-label="Bağlı hesap filtresi"
+                  >
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={inboxConnectedSource === "all"}
+                      className={
+                        inboxConnectedSource === "all"
+                          ? "mail-inbox-focus-tab is-active"
+                          : "mail-inbox-focus-tab"
+                      }
+                      onClick={() => setInboxConnectedSource("all")}
+                    >
+                      Tümü
+                    </button>
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={inboxConnectedSource === "lerta"}
+                      className={
+                        inboxConnectedSource === "lerta"
+                          ? "mail-inbox-focus-tab is-active"
+                          : "mail-inbox-focus-tab"
+                      }
+                      onClick={() => setInboxConnectedSource("lerta")}
+                    >
+                      Lerta
+                    </button>
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={inboxConnectedSource === "microsoft_graph"}
+                      className={
+                        inboxConnectedSource === "microsoft_graph"
+                          ? "mail-inbox-focus-tab is-active"
+                          : "mail-inbox-focus-tab"
+                      }
+                      onClick={() =>
+                        setInboxConnectedSource("microsoft_graph")
+                      }
+                    >
+                      Microsoft
+                    </button>
+                  </div>
+                ) : null}
                 {focusedInboxEnabled ? (
                   <div
                     className="mail-inbox-focus-tabs"

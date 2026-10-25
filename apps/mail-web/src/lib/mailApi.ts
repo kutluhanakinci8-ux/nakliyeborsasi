@@ -77,6 +77,36 @@ export type MailInboxSummary = {
   storageQuota?: MailStorageQuota;
 };
 
+export type MailConnectedInboxSource =
+  | "all"
+  | "lerta"
+  | "microsoft_graph"
+  | "gmail_api";
+
+export type MailInboxSourceBadge = {
+  provider: MailConnectedInboxSource | "lerta" | "microsoft_graph" | "gmail_api";
+  accountId: string | null;
+  accountEmail: string | null;
+  label: string;
+};
+
+export type MailConnectedAccountRow = {
+  id: string;
+  provider: "lerta" | "microsoft_graph" | "gmail_api";
+  emailAddress: string;
+  displayName: string | null;
+  mailboxId: string | null;
+  enabled: boolean;
+  lastSyncedAt: string | null;
+  lastSyncError: string | null;
+};
+
+export type MailConnectedInboxEntitlement = {
+  premiumEnabled: boolean;
+  maxConnectedAccounts: number;
+  connectedCount: number;
+};
+
 export type MailInboxListItem = {
   id: string;
   fromAddress: string;
@@ -91,6 +121,7 @@ export type MailInboxListItem = {
   customFolderId?: string | null;
   aiFocusLane?: "focus" | "other" | null;
   messageKind?: "inbound" | "sent";
+  inboxSource?: MailInboxSourceBadge;
 };
 
 export type MailInboxRuleConditionGroup = {
@@ -591,17 +622,32 @@ export async function fetchInbox(
   accessToken: string,
   folder: MailInboxFolder,
   customFolderId?: string | null,
+  connectedSource?: MailConnectedInboxSource,
 ) {
   const params = new URLSearchParams({ folder });
   if (folder === "inbox" && customFolderId) {
     params.set("customFolderId", customFolderId);
+  }
+  if (connectedSource && connectedSource !== "all") {
+    params.set("connectedSource", connectedSource);
   }
   return apiFetch<{
     summary: MailInboxSummary;
     sendReadiness?: MailSendReadiness;
     messages: MailInboxListItem[];
     sent: MailSentItem[];
+    connectedSource?: MailConnectedInboxSource;
+    connectedAccounts?: MailConnectedAccountRow[];
+    connectedInboxEntitlement?: MailConnectedInboxEntitlement;
   }>(accessToken, `company/mail-inbox?${params.toString()}`);
+}
+
+export async function fetchConnectedAccounts(accessToken: string) {
+  return apiFetch<{
+    accounts: MailConnectedAccountRow[];
+    entitlement: MailConnectedInboxEntitlement;
+    exchangeConfigured: boolean;
+  }>(accessToken, "company/mail-inbox/connected-accounts");
 }
 
 export async function fetchCustomFolders(accessToken: string) {
@@ -659,10 +705,14 @@ export async function fetchInboxThreads(
   accessToken: string,
   folder: MailInboxFolder,
   customFolderId?: string | null,
+  connectedSource?: MailConnectedInboxSource,
 ) {
   const params = new URLSearchParams({ folder });
   if (folder === "inbox" && customFolderId) {
     params.set("customFolderId", customFolderId);
+  }
+  if (connectedSource && connectedSource !== "all") {
+    params.set("connectedSource", connectedSource);
   }
   return apiFetch<{ threads: MailInboxThreadRow[] }>(
     accessToken,
@@ -699,8 +749,12 @@ export async function searchInbox(
   folder: MailInboxFolder,
   options: MailInboxSearchOptions = {},
   customFolderId?: string | null,
+  connectedSource?: MailConnectedInboxSource,
 ) {
   const params = new URLSearchParams({ folder });
+  if (connectedSource && connectedSource !== "all") {
+    params.set("connectedSource", connectedSource);
+  }
   if (folder === "inbox" && customFolderId) {
     params.set("customFolderId", customFolderId);
   }

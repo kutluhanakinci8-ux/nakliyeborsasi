@@ -19,9 +19,11 @@ import { JwtAuthenticationGuard } from "../auth/JwtAuthenticationGuard";
 import { MailProductTotpPolicyGuard } from "./MailProductTotpPolicyGuard";
 import { AuthenticatedUserParam } from "../auth/AuthenticatedUserParam";
 import {
+  ConnectedInboxSourceFilter,
   InboxFolder,
   MailOrganizationInboxService,
 } from "./MailOrganizationInboxService";
+import { MailConnectedAccountsService } from "./MailConnectedAccountsService";
 import { MailMailboxComposeService } from "./MailMailboxComposeService";
 import { MailImapAccessService } from "./MailImapAccessService";
 import { ComposeMailRequestDto } from "./ComposeMailRequestDto";
@@ -164,6 +166,7 @@ export class CompanyMailInboxController {
     private readonly userNotificationPreferenceService: UserNotificationPreferenceService,
     private readonly mailMailboxDelegationService: MailMailboxDelegationService,
     private readonly mailExchangeGraphSyncService: MailExchangeGraphSyncService,
+    private readonly mailConnectedAccountsService: MailConnectedAccountsService,
     private readonly mailCalendarGraphSyncService: MailCalendarGraphSyncService,
     private readonly mailCalendarGoogleSyncService: MailCalendarGoogleSyncService,
     private readonly userMailCryptoService: UserMailCryptoService,
@@ -471,6 +474,10 @@ export class CompanyMailInboxController {
       await this.mailMailboxDelegationService.listMailboxDelegations(user);
     const exchangeAccounts =
       await this.mailExchangeGraphSyncService.listAccounts(user.companyId);
+    const connectedAccounts =
+      await this.mailConnectedAccountsService.listAccounts(user.companyId, user);
+    const connectedEntitlement =
+      await this.mailConnectedAccountsService.getEntitlement(user.companyId, user);
     return {
       primaryAddress: summary.primaryAddress,
       unreadCount: summary.unreadCount,
@@ -484,6 +491,27 @@ export class CompanyMailInboxController {
         configured: this.mailExchangeGraphSyncService.isConfigured(),
         accounts: exchangeAccounts,
       },
+      connectedAccounts,
+      connectedInboxEntitlement: connectedEntitlement,
+    };
+  }
+
+  @Get("connected-accounts")
+  public async listConnectedAccounts(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    const accounts = await this.mailConnectedAccountsService.listAccounts(
+      user.companyId,
+      user,
+    );
+    const entitlement = await this.mailConnectedAccountsService.getEntitlement(
+      user.companyId,
+      user,
+    );
+    return {
+      accounts,
+      entitlement,
+      exchangeConfigured: this.mailExchangeGraphSyncService.isConfigured(),
     };
   }
 
@@ -1129,12 +1157,14 @@ export class CompanyMailInboxController {
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
     @Query("folder") folder?: string,
     @Query("customFolderId") customFolderId?: string,
+    @Query("connectedSource") connectedSource?: string,
   ) {
     const resolvedFolder = this.parseFolder(folder);
     const resolvedCustomFolderId = this.parseCustomFolderId(
       resolvedFolder,
       customFolderId,
     );
+    const resolvedConnectedSource = this.parseConnectedSource(connectedSource);
     const summary = await this.mailOrganizationInboxService.getSummary(
       user.companyId, user);
     const trashedSentCount =
@@ -1143,7 +1173,10 @@ export class CompanyMailInboxController {
       user.companyId,
       resolvedFolder,
       50,
-      resolvedCustomFolderId, user);
+      resolvedCustomFolderId,
+      user,
+      resolvedConnectedSource,
+    );
     if (resolvedFolder === "trash") {
       const trashedSent = await this.mailMailboxComposeService.listTrashedSent(
         user.companyId,
@@ -1160,6 +1193,13 @@ export class CompanyMailInboxController {
         attachmentCount: 0,
         starredAt: null,
         customFolderId: null,
+        aiFocusLane: null,
+        inboxSource: {
+          provider: "lerta" as const,
+          accountId: null,
+          accountEmail: null,
+          label: "Lerta",
+        },
         messageKind: "sent" as const,
       }));
       messages = [...messages, ...sentTrashRows]
@@ -1176,6 +1216,10 @@ export class CompanyMailInboxController {
     const sendReadiness = await this.mailMailboxComposeService.resolveSendReadiness(
       user.companyId,
     );
+    const connectedAccounts =
+      await this.mailConnectedAccountsService.listAccounts(user.companyId, user);
+    const connectedInboxEntitlement =
+      await this.mailConnectedAccountsService.getEntitlement(user.companyId, user);
     return {
       summary: {
         ...summary,
@@ -1186,6 +1230,9 @@ export class CompanyMailInboxController {
       messages,
       sent,
       folder: resolvedFolder,
+      connectedSource: resolvedConnectedSource,
+      connectedAccounts,
+      connectedInboxEntitlement,
     };
   }
 
@@ -1194,18 +1241,23 @@ export class CompanyMailInboxController {
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
     @Query("folder") folder?: string,
     @Query("customFolderId") customFolderId?: string,
+    @Query("connectedSource") connectedSource?: string,
   ) {
     const resolvedFolder = this.parseFolder(folder);
     const resolvedCustomFolderId = this.parseCustomFolderId(
       resolvedFolder,
       customFolderId,
     );
+    const resolvedConnectedSource = this.parseConnectedSource(connectedSource);
     const threads = await this.mailOrganizationInboxService.listConversationThreads(
       user.companyId,
       resolvedFolder,
       40,
-      resolvedCustomFolderId, user);
-    return { threads, folder: resolvedFolder };
+      resolvedCustomFolderId,
+      user,
+      resolvedConnectedSource,
+    );
+    return { threads, folder: resolvedFolder, connectedSource: resolvedConnectedSource };
   }
 
   @Get("threads/:threadId/messages")
@@ -1238,12 +1290,14 @@ export class CompanyMailInboxController {
     @Query("receivedBefore") receivedBefore?: string,
     @Query("hasAttachment") hasAttachment?: string,
     @Query("customFolderId") customFolderId?: string,
+    @Query("connectedSource") connectedSource?: string,
   ) {
     const resolvedFolder = this.parseFolder(folder);
     const resolvedCustomFolderId = this.parseCustomFolderId(
       resolvedFolder,
       customFolderId,
     );
+    const resolvedConnectedSource = this.parseConnectedSource(connectedSource);
     const attachmentFilter = this.parseHasAttachmentFilter(hasAttachment);
     const messages = await this.mailOrganizationInboxService.searchMessages(
       user.companyId,
@@ -1258,6 +1312,7 @@ export class CompanyMailInboxController {
       50,
       resolvedCustomFolderId,
       user,
+      resolvedConnectedSource,
     );
     return {
       messages,
@@ -2308,6 +2363,21 @@ export class CompanyMailInboxController {
       return folder;
     }
     return "inbox";
+  }
+
+  private parseConnectedSource(
+    value?: string,
+  ): ConnectedInboxSourceFilter {
+    const raw = value?.trim().toLowerCase();
+    if (
+      raw === "lerta" ||
+      raw === "microsoft_graph" ||
+      raw === "gmail_api" ||
+      raw === "all"
+    ) {
+      return raw;
+    }
+    return "all";
   }
 
   private parseSearchDateStart(value?: string): Date | undefined {

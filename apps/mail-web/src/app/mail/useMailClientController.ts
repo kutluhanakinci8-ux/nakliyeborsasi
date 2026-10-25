@@ -96,6 +96,8 @@ import {
   type MailDraftItem,
   type MailInboxFolder,
   type MailMailboxFolder,
+  type MailConnectedInboxSource,
+  type MailConnectedAccountRow,
   type MailInboxListItem,
   type MailInboxMessageDetail,
   type MailInboxSummary,
@@ -136,6 +138,31 @@ type Params = {
   embedHubShell?: boolean;
   shellBrand?: string;
 };
+
+const MAIL_CONNECTED_SOURCE_KEY = "lerta_mail_connected_source";
+
+function readStoredConnectedSource(): MailConnectedInboxSource {
+  if (typeof window === "undefined") {
+    return "all";
+  }
+  const raw = localStorage.getItem(MAIL_CONNECTED_SOURCE_KEY);
+  if (
+    raw === "all" ||
+    raw === "lerta" ||
+    raw === "microsoft_graph" ||
+    raw === "gmail_api"
+  ) {
+    return raw;
+  }
+  return "all";
+}
+
+function writeStoredConnectedSource(value: MailConnectedInboxSource): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+  localStorage.setItem(MAIL_CONNECTED_SOURCE_KEY, value);
+}
 
 export function useMailClientController({
   accessToken,
@@ -262,6 +289,18 @@ export function useMailClientController({
     useState<MailReadFontScale>("default");
   const [inboxFocusLane, setInboxFocusLane] =
     useState<InboxFocusLane>("focus");
+  const [inboxConnectedSource, setInboxConnectedSourceState] =
+    useState<MailConnectedInboxSource>(() => readStoredConnectedSource());
+  const [connectedAccounts, setConnectedAccounts] = useState<
+    MailConnectedAccountRow[]
+  >([]);
+  const setInboxConnectedSource = useCallback(
+    (value: MailConnectedInboxSource) => {
+      writeStoredConnectedSource(value);
+      setInboxConnectedSourceState(value);
+    },
+    [],
+  );
   const [activeSwipeRowId, setActiveSwipeRowId] = useState<string | null>(null);
   const [threadView, setThreadViewState] = useState(false);
   const [mailPostaPrefs, setMailPostaPrefs] = useState(() =>
@@ -391,6 +430,15 @@ export function useMailClientController({
 
   const isPrimaryInbox = view === "inbox" && !activeCustomFolderId;
 
+  const inboxConnectedSourceForFetch: MailConnectedInboxSource =
+    isPrimaryInbox ? inboxConnectedSource : "all";
+
+  const showConnectedInboxTabs = useMemo(
+    () =>
+      connectedAccounts.some((account) => account.provider !== "lerta"),
+    [connectedAccounts],
+  );
+
   const refreshCustomFolders = useCallback(async () => {
     if (!accessToken) {
       return;
@@ -423,11 +471,15 @@ export function useMailClientController({
         accessToken,
         folder,
         folder === "inbox" ? inboxCustomFolderId : undefined,
+        folder === "inbox" ? inboxConnectedSourceForFetch : "all",
       );
       setSummary(data.summary);
       setSendReadiness(data.sendReadiness ?? null);
       setMessages(data.messages);
       setSent(data.sent);
+      if (data.connectedAccounts) {
+        setConnectedAccounts(data.connectedAccounts);
+      }
       setInboxOffline(data.fromOfflineCache);
       setInboxOfflineCachedAt(data.cachedAt);
       setSessionExpired(data.sessionStale);
@@ -438,7 +490,7 @@ export function useMailClientController({
       }
       throw error;
     }
-  }, [accessToken, view, inboxCustomFolderId]);
+  }, [accessToken, view, inboxCustomFolderId, inboxConnectedSourceForFetch]);
 
   const aiFocusBatchRef = useRef(false);
   useEffect(() => {
@@ -685,6 +737,7 @@ export function useMailClientController({
                   : undefined,
           },
           folder === "inbox" ? inboxCustomFolderId : undefined,
+          folder === "inbox" ? inboxConnectedSourceForFetch : "all",
         );
         setSearchResults(data.messages);
       })();
@@ -700,6 +753,7 @@ export function useMailClientController({
     searchActive,
     view,
     inboxCustomFolderId,
+    inboxConnectedSourceForFetch,
   ]);
 
   function applyMessageReadLocal(messageId: string, readAt: string) {
@@ -1813,6 +1867,7 @@ export function useMailClientController({
           accessToken,
           inboxFolder,
           inboxCustomFolderId,
+          inboxConnectedSourceForFetch,
         ).then((data) => {
           setThreads(data.threads);
         });
@@ -2014,10 +2069,18 @@ export function useMailClientController({
       accessToken,
       inboxFolder,
       inboxCustomFolderId,
+      inboxConnectedSourceForFetch,
     ).then((data) => {
       setThreads(data.threads);
     });
-  }, [accessToken, threadView, inboxFolder, inboxCustomFolderId, canUseThreads]);
+  }, [
+    accessToken,
+    threadView,
+    inboxFolder,
+    inboxCustomFolderId,
+    canUseThreads,
+    inboxConnectedSourceForFetch,
+  ]);
 
   const listItems =
     threadView && canUseThreads && !searchActive
@@ -2694,6 +2757,9 @@ export function useMailClientController({
     focusedInboxEnabled,
     inboxFocusLane,
     setInboxFocusLane,
+    inboxConnectedSource,
+    setInboxConnectedSource,
+    showConnectedInboxTabs,
     replyQuoteMode: mailPostaPrefs.replyQuoteMode,
     listMessageIds,
     listNavigationEnabled,

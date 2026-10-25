@@ -85,6 +85,9 @@ fi
 if [[ -x "$INSTALL_DIR/scripts/apply-lerta-mail-subscription-plans.sh" ]]; then
   bash "$INSTALL_DIR/scripts/apply-lerta-mail-subscription-plans.sh" "$INSTALL_DIR" || true
 fi
+if [[ -x "$INSTALL_DIR/scripts/apply-mail-connected-accounts-cap0-schema.sh" ]]; then
+  bash "$INSTALL_DIR/scripts/apply-mail-connected-accounts-cap0-schema.sh" "$INSTALL_DIR" || true
+fi
 
 if [[ -x "$INSTALL_DIR/scripts/fix-postfix-inbound-pipe-quotes.sh" ]]; then
   bash "$INSTALL_DIR/scripts/fix-postfix-inbound-pipe-quotes.sh" || true

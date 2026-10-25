@@ -21,6 +21,7 @@ import {
 } from "../../infrastructure/database/entities/MailInboundMessageEntity";
 import { MailSenderIdentityEntity } from "../../infrastructure/database/entities/MailSenderIdentityEntity";
 import { resolveMailSenderAddresses } from "@nakliyeborsasi/core";
+import { MailExchangeSyncAccountEntity } from "../../infrastructure/database/entities/MailExchangeSyncAccountEntity";
 import { MailImapMaildirService } from "./MailImapMaildirService";
 import {
   parseAddressListFromMime,
@@ -55,6 +56,34 @@ export type MailInboxSearchFilters = {
   hasAttachment?: boolean;
 };
 
+export type ConnectedInboxSourceFilter =
+  | "all"
+  | "lerta"
+  | "microsoft_graph"
+  | "gmail_api";
+
+export type MailInboxListRow = {
+  id: string;
+  fromAddress: string;
+  subject: string;
+  snippet: string | null;
+  receivedAt: string;
+  readAt: string | null;
+  spamStatus: string;
+  spamReason: string | null;
+  attachmentCount: number;
+  starredAt: string | null;
+  customFolderId: string | null;
+  aiFocusLane: "focus" | "other" | null;
+  messageKind: "inbound" | "sent";
+  inboxSource?: {
+    provider: "lerta" | "microsoft_graph" | "gmail_api";
+    accountId: string | null;
+    accountEmail: string | null;
+    label: string;
+  };
+};
+
 @Injectable()
 export class MailOrganizationInboxService {
   public constructor(
@@ -64,6 +93,8 @@ export class MailOrganizationInboxService {
     private readonly inboundRepository: Repository<MailInboundMessageEntity>,
     @InjectRepository(MailSenderIdentityEntity)
     private readonly senderRepository: Repository<MailSenderIdentityEntity>,
+    @InjectRepository(MailExchangeSyncAccountEntity)
+    private readonly exchangeSyncAccountRepository: Repository<MailExchangeSyncAccountEntity>,
     private readonly mailImapMaildirService: MailImapMaildirService,
     private readonly mailMailboxAccessService: MailMailboxAccessService,
   ) {}
@@ -180,32 +211,23 @@ export class MailOrganizationInboxService {
     limit = 50,
     customFolderId?: string | null,
     actor?: MailInboxActor,
-  ): Promise<
-    {
-      id: string;
-      fromAddress: string;
-      subject: string;
-      snippet: string | null;
-      receivedAt: string;
-      readAt: string | null;
-      spamStatus: string;
-      spamReason: string | null;
-      attachmentCount: number;
-    }[]
-  > {
+    connectedSource: ConnectedInboxSourceFilter = "all",
+  ): Promise<MailInboxListRow[]> {
     const mailboxIds = await this.mailboxIds(organizationId, actor);
     if (mailboxIds.length === 0) {
       return [];
     }
+    const sourceCtx = await this.loadInboxSourceContext(organizationId);
     const qb = this.inboundRepository.createQueryBuilder("m");
     qb.where("m.mailboxId IN (:...mailboxIds)", { mailboxIds });
     this.applyFolderToQueryBuilder(qb, folder, customFolderId);
     this.applySnoozeListFilter(qb, folder);
+    this.applyConnectedSourceFilter(qb, connectedSource);
     const rows = await qb
       .orderBy("m.receivedAt", "DESC")
       .take(limit)
       .getMany();
-    return rows.map((row) => this.toListRow(row));
+    return rows.map((row) => this.toListRow(row, sourceCtx));
   }
 
   public async searchMessages(
@@ -215,19 +237,8 @@ export class MailOrganizationInboxService {
     limit = 50,
     customFolderId?: string | null,
     actor?: MailInboxActor,
-  ): Promise<
-    {
-      id: string;
-      fromAddress: string;
-      subject: string;
-      snippet: string | null;
-      receivedAt: string;
-      readAt: string | null;
-      spamStatus: string;
-      spamReason: string | null;
-      attachmentCount: number;
-    }[]
-  > {
+    connectedSource: ConnectedInboxSourceFilter = "all",
+  ): Promise<MailInboxListRow[]> {
     if (!this.hasSearchCriteria(filters)) {
       return [];
     }
@@ -235,10 +246,12 @@ export class MailOrganizationInboxService {
     if (mailboxIds.length === 0) {
       return [];
     }
+    const sourceCtx = await this.loadInboxSourceContext(organizationId);
     const qb = this.inboundRepository.createQueryBuilder("m");
     qb.where("m.mailboxId IN (:...mailboxIds)", { mailboxIds });
     this.applyFolderToQueryBuilder(qb, folder, customFolderId);
     this.applySnoozeListFilter(qb, folder);
+    this.applyConnectedSourceFilter(qb, connectedSource);
 
     const term = filters.q?.trim() ?? "";
     if (term.length >= 2) {
@@ -283,7 +296,7 @@ export class MailOrganizationInboxService {
       .orderBy("m.receivedAt", "DESC")
       .take(limit)
       .getMany();
-    return rows.map((row) => this.toListRow(row));
+    return rows.map((row) => this.toListRow(row, sourceCtx));
   }
 
   public async getMessage(
@@ -416,6 +429,7 @@ export class MailOrganizationInboxService {
     limit = 40,
     customFolderId?: string | null,
     actor?: MailInboxActor,
+    connectedSource: ConnectedInboxSourceFilter = "all",
   ): Promise<
     {
       threadId: string;
@@ -432,11 +446,15 @@ export class MailOrganizationInboxService {
     if (mailboxIds.length === 0) {
       return [];
     }
-    const rows = await this.inboundRepository.find({
-      where: this.whereForFolder(mailboxIds, folder, customFolderId),
-      order: { receivedAt: "DESC" },
-      take: 300,
-    });
+    const qb = this.inboundRepository.createQueryBuilder("m");
+    qb.where("m.mailboxId IN (:...mailboxIds)", { mailboxIds });
+    this.applyFolderToQueryBuilder(qb, folder, customFolderId);
+    this.applySnoozeListFilter(qb, folder);
+    this.applyConnectedSourceFilter(qb, connectedSource);
+    const rows = await qb
+      .orderBy("m.receivedAt", "DESC")
+      .take(300)
+      .getMany();
     const byInternetId = new Map<string, MailInboundMessageEntity>();
     for (const row of rows) {
       if (row.internetMessageId) {
@@ -511,7 +529,8 @@ export class MailOrganizationInboxService {
     const inThread = rows.filter(
       (row) => this.resolveThreadRootId(row, byInternetId) === threadId,
     );
-    return inThread.map((row) => this.toListRow(row));
+    const sourceCtx = await this.loadInboxSourceContext(organizationId);
+    return inThread.map((row) => this.toListRow(row, sourceCtx));
   }
 
   public async markRead(
@@ -1017,7 +1036,95 @@ export class MailOrganizationInboxService {
     return { updated, skipped };
   }
 
-  private toListRow(row: MailInboundMessageEntity) {
+  private applyConnectedSourceFilter(
+    qb: SelectQueryBuilder<MailInboundMessageEntity>,
+    filter: ConnectedInboxSourceFilter,
+  ): void {
+    if (filter === "all") {
+      return;
+    }
+    if (filter === "lerta") {
+      qb.andWhere("m.exchange_sync_account_id IS NULL");
+      qb.andWhere("m.gmail_sync_account_id IS NULL");
+      return;
+    }
+    if (filter === "microsoft_graph") {
+      qb.andWhere("m.exchange_sync_account_id IS NOT NULL");
+      return;
+    }
+    if (filter === "gmail_api") {
+      qb.andWhere("m.gmail_sync_account_id IS NOT NULL");
+    }
+  }
+
+  private async loadInboxSourceContext(organizationId: string): Promise<{
+    lertaLabel: string;
+    lertaEmail: string | null;
+    exchangeById: Map<string, MailExchangeSyncAccountEntity>;
+  }> {
+    const exchangeRows = await this.exchangeSyncAccountRepository.find({
+      where: { organizationId },
+    });
+    const exchangeById = new Map(exchangeRows.map((row) => [row.id, row]));
+    const sender = await this.senderRepository.findOne({
+      where: { organizationId, isDefault: true },
+      relations: { mailDomain: true },
+    });
+    let lertaEmail: string | null = null;
+    if (sender?.mailDomain) {
+      lertaEmail = resolveMailSenderAddresses(
+        sender.localPart,
+        sender.mailDomain,
+      ).publicAddress;
+    }
+    return {
+      lertaLabel: "Lerta",
+      lertaEmail,
+      exchangeById,
+    };
+  }
+
+  private resolveInboxSource(
+    row: MailInboundMessageEntity,
+    ctx: {
+      lertaLabel: string;
+      lertaEmail: string | null;
+      exchangeById: Map<string, MailExchangeSyncAccountEntity>;
+    },
+  ): MailInboxListRow["inboxSource"] {
+    if (row.gmailSyncAccountId) {
+      return {
+        provider: "gmail_api",
+        accountId: row.gmailSyncAccountId,
+        accountEmail: null,
+        label: "Gmail",
+      };
+    }
+    if (row.exchangeSyncAccountId) {
+      const account = ctx.exchangeById.get(row.exchangeSyncAccountId);
+      return {
+        provider: "microsoft_graph",
+        accountId: row.exchangeSyncAccountId,
+        accountEmail: account?.emailAddress ?? null,
+        label: "Microsoft",
+      };
+    }
+    return {
+      provider: "lerta",
+      accountId: null,
+      accountEmail: ctx.lertaEmail,
+      label: ctx.lertaLabel,
+    };
+  }
+
+  private toListRow(
+    row: MailInboundMessageEntity,
+    ctx: {
+      lertaLabel: string;
+      lertaEmail: string | null;
+      exchangeById: Map<string, MailExchangeSyncAccountEntity>;
+    },
+  ): MailInboxListRow {
     return {
       id: row.id,
       fromAddress: row.fromAddress,
@@ -1032,6 +1139,7 @@ export class MailOrganizationInboxService {
       customFolderId: row.customFolderId,
       aiFocusLane: row.aiFocusLane ?? null,
       messageKind: "inbound" as const,
+      inboxSource: this.resolveInboxSource(row, ctx),
     };
   }
 }
