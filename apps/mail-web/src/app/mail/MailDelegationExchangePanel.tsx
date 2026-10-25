@@ -37,6 +37,10 @@ export function MailDelegationExchangePanel({
   const [activeMailboxId, setActiveMailboxId] = useState<string | null>(null);
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
+  const [exchangeAlert, setExchangeAlert] = useState<{
+    kind: "ok" | "err";
+    text: string;
+  } | null>(null);
 
   const mailboxes = hub.mailboxDelegations ?? [];
   const canManage = hub.canManageMailboxDelegations ?? false;
@@ -109,6 +113,10 @@ export function MailDelegationExchangePanel({
   async function handleExchangeConnect(): Promise<void> {
     setError("");
     setStatus("");
+    setExchangeAlert({
+      kind: "ok",
+      text: "Microsoft penceresi açıldı. Girişten sonra bu ekranda sonuç görünür.",
+    });
     try {
       const { authorizationUrl } = await startExchangeOAuth(accessToken);
       const popup = window.open(
@@ -120,6 +128,28 @@ export function MailDelegationExchangePanel({
         window.location.assign(authorizationUrl);
         return;
       }
+      let settled = false;
+      const finish = async (
+        ok: boolean,
+        message: string,
+        emailAddress?: string,
+      ) => {
+        if (settled) return;
+        settled = true;
+        window.clearInterval(popupPoll);
+        window.removeEventListener("message", onMessage);
+        if (ok) {
+          await reloadHub();
+          const okText = emailAddress
+            ? `${emailAddress} bağlandı; ilk senkron başlatıldı.`
+            : "Exchange hesabı bağlandı ve ilk senkron başlatıldı.";
+          setExchangeAlert({ kind: "ok", text: okText });
+          setStatus(okText);
+        } else {
+          setExchangeAlert({ kind: "err", text: message });
+          setError(message);
+        }
+      };
       const onMessage = async (event: MessageEvent) => {
         if (event.origin !== window.location.origin) return;
         const data = event.data as {
@@ -129,25 +159,44 @@ export function MailDelegationExchangePanel({
           emailAddress?: string;
         };
         if (data.type !== "lerta-exchange-oauth") return;
-        window.removeEventListener("message", onMessage);
         if (!data.success) {
-          setError(
+          await finish(
+            false,
             data.error?.trim()
               ? `Microsoft bağlantısı: ${data.error}`
               : "Microsoft oturumu tamamlanmadı.",
           );
           return;
         }
-        await reloadHub();
-        setStatus(
-          data.emailAddress
-            ? `${data.emailAddress} bağlandı; ilk senkron başlatıldı.`
-            : "Exchange hesabı bağlandı ve ilk senkron başlatıldı.",
-        );
+        await finish(true, "ok", data.emailAddress);
       };
       window.addEventListener("message", onMessage);
+      const popupPoll = window.setInterval(() => {
+        if (!popup.closed) return;
+        window.clearInterval(popupPoll);
+        void (async () => {
+          await new Promise((resolve) => window.setTimeout(resolve, 1500));
+          if (settled) return;
+          const before = exchange?.accounts?.length ?? 0;
+          const next = await fetchMailAccountHub(accessToken);
+          onHubChange(next);
+          const after = next.exchangeSync?.accounts?.length ?? 0;
+          if (after > before) {
+            const email = next.exchangeSync?.accounts?.[after - 1]?.emailAddress;
+            await finish(true, "ok", email);
+            return;
+          }
+          await finish(
+            false,
+            "Microsoft penceresi kapandı ama hesap kaydı görünmüyor. Aşağıdaki kırmızı uyarıyı okuyun ve tekrar bağlayın.",
+          );
+        })();
+      }, 600);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Bağlantı başlatılamadı");
+      const msg =
+        err instanceof Error ? err.message : "Bağlantı başlatılamadı";
+      setExchangeAlert({ kind: "err", text: msg });
+      setError(msg);
     }
   }
 
@@ -326,6 +375,18 @@ export function MailDelegationExchangePanel({
           </p>
         ) : (
           <>
+            {exchangeAlert ? (
+              <p
+                className={
+                  exchangeAlert.kind === "ok"
+                    ? "mail-accounts-status mail-accounts-status--ok"
+                    : "mail-accounts-status mail-accounts-status--err"
+                }
+                role={exchangeAlert.kind === "ok" ? "status" : "alert"}
+              >
+                {exchangeAlert.text}
+              </p>
+            ) : null}
             {hub.canManageSenders ? (
               <div className="mail-delegation-mode-actions">
                 <button
