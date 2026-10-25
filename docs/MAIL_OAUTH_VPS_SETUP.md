@@ -5,14 +5,16 @@
 ## 1. Azure (M3) — Exchange / Microsoft 365 posta
 
 1. [Azure Portal](https://portal.azure.com) → **App registrations** → New registration (veya mevcut **Lerta Posta** uygulaması).
-2. **Authentication** → Platform **Web** → Redirect URIs:
+2. **Supported account types:** **Accounts in any organizational directory and personal Microsoft accounts**  
+   (böylece `lertaposta@hotmail.com`, `@outlook.com`, `@onmicrosoft.com` ve kurumsal M365 aynı uygulamayla bağlanır).
+3. **Authentication** → Platform **Web** → Redirect URIs:
    - `https://posta.lerta.com.tr/mail/exchange-oauth`
    - `https://posta.lerta.com.tr/mail/calendar-oauth` (takvim için)
-3. **API permissions** → Microsoft Graph → **Delegated**:
+4. **API permissions** → Microsoft Graph → **Delegated**:
    - `Mail.ReadWrite`, `Mail.Send`, `User.Read`, `offline_access`, `openid`, `profile`, `email`
-   - Kurumsal kiracıda **Grant admin consent** (yönetici onayı) gerekir.
-4. **Certificates & secrets** → Client secret oluşturun (süresi dolmadan yenileyin).
-5. VPS `/var/www/nakliyeborsasi/.env`:
+   - Kurumsal kiracıda **Grant admin consent** (yönetici onayı) gerekir. Kişisel Hotmail/Outlook için kullanıcı onayı yeterli.
+5. **Certificates & secrets** → Client secret oluşturun (süresi dolmadan yenileyin).
+6. VPS `/var/www/nakliyeborsasi/.env`:
 
 ```bash
 MICROSOFT_GRAPH_MAIL_CLIENT_ID=...
@@ -28,7 +30,8 @@ MICROSOFT_GRAPH_CALENDAR_REDIRECT_URI=https://posta.lerta.com.tr/mail/calendar-o
 
 3. `pm2 restart nakliyeborsasi-api` (veya deploy script).
 4. Doğrula: `bash scripts/verify-uat-oauth-env.sh`
-5. Posta → **Ayarlar → Hesaplar** → **Microsoft hesabı bağla** → `info@…` veya kurumsal M365 hesabı.
+5. Posta → **Ayarlar → Hesaplar** → **Microsoft hesabı bağla** → örn. `lertaposta@hotmail.com` veya `firma@onmicrosoft.com`  
+   (`info@lerta.com.tr` kurumsal kutusu için **Lerta** sekmesi yeterli; Graph’a bağlamanız gerekmez.)
 
 **Önemli:** `@lerta.com.tr` kurumsal posta (Postfix/Dovecot) **Lerta** sekmesinde görünür. **Microsoft** sekmesi yalnızca Graph ile bağlanan **Microsoft 365 / Outlook** kutusundaki mesajları listeler; MX kayıtları Lerta’da olsa bile M365 kutusu boş kalabilir.
 
