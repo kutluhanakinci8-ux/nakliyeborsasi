@@ -704,13 +704,11 @@ export function MailClientShell({ mail }: Props) {
             </div>
             {summary.storageQuota.atLimit ? (
               <p className="mail-storage-warn mail-storage-warn--danger">
-                Depolama kotası dolu — yeni gönderim ve ekler engellenebilir.
-                {t("storageQuotaHint")}
+                {t("storageQuotaAtLimitWarn")} {t("storageQuotaHint")}
               </p>
             ) : summary.storageQuota.nearLimit ? (
               <p className="mail-storage-warn">
-                Depolama kotasına yaklaşıyorsunuz. Eski postaları arşivleyin veya
-                silin.
+                {t("storageQuotaNearLimitWarn")}
               </p>
             ) : null}
           </div>
@@ -885,14 +883,13 @@ export function MailClientShell({ mail }: Props) {
             ) : null}
             {mailBulkAssistActive ? (
               <p className="mail-parity-assist-banner" role="status">
-                Toplu işlem: listedeki kutularla seçim yapın; okundu, arşiv, çöp ve
-                klasör taşıma araç çubuğu açılır.{" "}
+                {t("bulkAssistBanner")}{" "}
                 <button
                   type="button"
                   className="mail-parity-assist-dismiss"
                   onClick={() => setMailBulkAssistActive(false)}
                 >
-                  Kapat
+                  {t("actionClose")}
                 </button>
               </p>
             ) : null}
@@ -1029,7 +1026,7 @@ export function MailClientShell({ mail }: Props) {
                   className="mail-empty-trash-btn"
                   onClick={() => void runEmptyTrash()}
                 >
-                  Çöpü boşalt
+                  {t("emptyTrashButton")}
                 </button>
               ) : null}
               <button
@@ -1903,7 +1900,12 @@ export function MailClientShell({ mail }: Props) {
                           )
                           .then((result) => {
                             if (result) {
-                              setToast(`Özet (${result.provider}): ${result.summary.slice(0, 120)}…`);
+                              setToast(
+                                t("toastAiSummary", {
+                                  provider: result.provider,
+                                  snippet: result.summary.slice(0, 120),
+                                }),
+                              );
                             }
                           })
                           .catch(() => setToast(t("toastSummaryFailed")))
@@ -1929,14 +1931,19 @@ export function MailClientShell({ mail }: Props) {
                           )
                           .then((result) => {
                             if (result) {
-                              setToast(`Sınıf: ${result.label} (${result.provider})`);
+                              setToast(
+                                t("toastAiClassify", {
+                                  label: result.label,
+                                  provider: result.provider,
+                                }),
+                              );
                             }
                           })
                           .catch(() => setToast(t("aiClassifyFailed")))
                           .finally(() => setAiSuggestBusy(false));
                       }}
                     >
-                      Sınıfla
+                      {t("aiClassify")}
                     </button>
                     {defaultReplyIsAll ? (
                       <>
@@ -2056,14 +2063,13 @@ export function MailClientShell({ mail }: Props) {
             <div className="compose-premium-body">
               {composeAiAssistActive ? (
                 <p className="mail-parity-assist-banner" role="status">
-                  AI yazım: konu satırına göre gövde önerisi (KVKK onayı gerekir).
-                  Gelen kutusunda yanıt öner / özet / sınıfla da kullanılabilir.{" "}
+                  {t("composeAiAssistBanner")}{" "}
                   <button
                     type="button"
                     className="mail-parity-assist-dismiss"
                     onClick={() => setComposeAiAssistActive(false)}
                   >
-                    Kapat
+                    {t("actionClose")}
                   </button>
                 </p>
               ) : null}

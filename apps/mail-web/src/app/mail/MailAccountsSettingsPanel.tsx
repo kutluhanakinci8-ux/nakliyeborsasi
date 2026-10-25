@@ -105,11 +105,8 @@ export function MailAccountsSettingsPanel({
 
       <section className="mail-posta-card">
         <header className="mail-posta-card-head">
-          <h3 className="mail-posta-card-title">Kurumsal kimlik</h3>
-          <p className="mail-posta-card-desc">
-            Logo, marka rengi, yasal dipnot ve varsayılan gönderen adı — giden
-            HTML şablon ve webmail başlığında kullanılır.
-          </p>
+          <h3 className="mail-posta-card-title">{t("accountsCorporateIdentityTitle")}</h3>
+          <p className="mail-posta-card-desc">{t("accountsCorporateIdentityDesc")}</p>
         </header>
         <MailTenantBrandingPanel
           accessToken={accessToken}
@@ -123,11 +120,8 @@ export function MailAccountsSettingsPanel({
 
       <section className="mail-posta-card">
         <header className="mail-posta-card-head">
-          <h3 className="mail-posta-card-title">E-posta alt bilgisi</h3>
-          <p className="mail-posta-card-desc">
-            Gönderdiğiniz kurumsal postaların altında tıklanabilir sosyal medya
-            ikonları görünür (alıcı önizlemesinde de yer alır).
-          </p>
+          <h3 className="mail-posta-card-title">{t("accountsEmailFooterTitle")}</h3>
+          <p className="mail-posta-card-desc">{t("accountsEmailFooterDesc")}</p>
         </header>
         <MailEmailSocialLinksEditor
           accessToken={accessToken}
@@ -138,9 +132,7 @@ export function MailAccountsSettingsPanel({
       <section className="mail-posta-card">
         <header className="mail-posta-card-head">
           <h3 className="mail-posta-card-title">{t("accountsSendersTitle")}</h3>
-          <p className="mail-posta-card-desc">
-            Yeni mesajlarda kullanılan From adresi ve görünen ad.
-          </p>
+          <p className="mail-posta-card-desc">{t("accountsSendersDesc")}</p>
         </header>
         <ul className="mail-accounts-list--premium">
           {hub.senders.map((sender) => (
@@ -182,10 +174,8 @@ export function MailAccountsSettingsPanel({
 
       <section className="mail-posta-card mail-posta-card--muted">
         <header className="mail-posta-card-head">
-          <h3 className="mail-posta-card-title">Takma adlar (alias)</h3>
-          <p className="mail-posta-card-desc">
-            Ek adresler gelen kutunuza yönlendirilir.
-          </p>
+          <h3 className="mail-posta-card-title">{t("accountsAliasTitle")}</h3>
+          <p className="mail-posta-card-desc">{t("accountsAliasDesc")}</p>
         </header>
         {hub.aliases.length === 0 ? (
           <p className="mail-accounts-muted">{t("accountsNoAliases")}</p>
@@ -207,9 +197,9 @@ export function MailAccountsSettingsPanel({
         )}
         {hub.canManageSenders ? (
           <p className="mail-accounts-muted mail-accounts-console-link">
-            Yeni alias veya domain için{" "}
+            {t("accountsConsoleAliasBefore")}{" "}
             <a href={consoleUrl} target="_blank" rel="noreferrer">
-              yönetim konsolu
+              {t("accountsConsoleLink")}
             </a>
             .
           </p>

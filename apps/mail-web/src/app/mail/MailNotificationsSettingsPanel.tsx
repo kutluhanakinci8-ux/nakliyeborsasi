@@ -123,17 +123,17 @@ export function MailNotificationsSettingsPanel({
     try {
       const result = await subscribeMailWebPush(accessToken);
       if (result === "enabled") {
-        setStatusMessage("Bildirimler açıldı.");
+        setStatusMessage(t("notifyStatusEnabled"));
       } else if (result === "denied") {
-        setStatusMessage("Tarayıcı bildirim izni reddedildi.", true);
+        setStatusMessage(t("notifyStatusDenied"), true);
       } else if (result === "unsupported") {
-        setStatusMessage("Bu tarayıcı Web Push desteklemiyor.", true);
+        setStatusMessage(t("notifyStatusUnsupported"), true);
       } else {
-        setStatusMessage("Push sunucuda kapalı.", true);
+        setStatusMessage(t("notifyStatusServerOff"), true);
       }
     } catch (err) {
       setStatusMessage(
-        err instanceof Error ? err.message : "Abonelik başarısız.",
+        err instanceof Error ? err.message : t("notifyStatusSubscribeFailed"),
         true,
       );
     } finally {
@@ -146,9 +146,9 @@ export function MailNotificationsSettingsPanel({
     setStatusMessage("");
     try {
       await unsubscribeMailWebPush(accessToken);
-      setStatusMessage("Bildirimler kapatıldı.");
+      setStatusMessage(t("notifyStatusDisabled"));
     } catch {
-      setStatusMessage("Kapatılamadı.", true);
+      setStatusMessage(t("notifyStatusDisableFailed"), true);
     } finally {
       setPushBusy(false);
     }
@@ -167,10 +167,7 @@ export function MailNotificationsSettingsPanel({
 
   return (
     <div className="mail-notify-panel mail-notify-panel--premium">
-      <p className="mail-posta-intro">
-        Yeni gelen posta için tarayıcı bildirimi (Web Push). HTTPS ve tarayıcı izni
-        gerekir; sekme kapalıyken de uyarı alabilirsiniz.
-      </p>
+      <p className="mail-posta-intro">{t("notifyIntro")}</p>
 
       {showIosOnboarding ? (
         <div
@@ -198,13 +195,8 @@ export function MailNotificationsSettingsPanel({
         >
           <span className="mail-notify-info-icon" aria-hidden="true">📲</span>
           <div>
-            <p className="mail-notify-info-title">PWA ve çevrimdışı mod</p>
-            <p className="mail-notify-info-body">
-              <code>/manifest.webmanifest</code> ve <code>sw.js</code> ile ana
-              ekrana ekleyebilirsiniz. Çevrimdışı modda gelen kutusu önbelleği salt
-              okunur gösterilir; Web Push için alttaki{" "}
-              <strong>Bildirimleri aç</strong> düğmesini kullanın.
-            </p>
+            <p className="mail-notify-info-title">{t("notifyPwaTitle")}</p>
+            <p className="mail-notify-info-body">{t("notifyPwaFocusBody")}</p>
           </div>
         </div>
       ) : null}
@@ -223,11 +215,8 @@ export function MailNotificationsSettingsPanel({
       <section className="mail-posta-card">
         <header className="mail-posta-card-head mail-notify-card-head">
           <div>
-            <h3 className="mail-posta-card-title">Web Push bildirimleri</h3>
-            <p className="mail-posta-card-desc">
-              Masaüstü ve Android tarayıcılarda anlık uyarı; iOS için ana ekran
-              uygulaması gerekir.
-            </p>
+            <h3 className="mail-posta-card-title">{t("notifyWebPushTitle")}</h3>
+            <p className="mail-posta-card-desc">{t("notifyDesktopHint")}</p>
           </div>
           <span
             className={
@@ -236,25 +225,25 @@ export function MailNotificationsSettingsPanel({
                 : "mail-notify-pill mail-notify-pill--off"
             }
           >
-            {pushConfigured ? "Sunucu hazır" : "Sunucu yapılandırılmamış"}
+            {pushConfigured ? t("notifyServerReady") : t("notifyServerNotConfigured")}
           </span>
         </header>
 
         {!pushConfigured ? (
           <p className="mail-notify-server-warn" role="note">
-            Sunucuda push henüz yapılandırılmamış (VAPID anahtarları). Yönetici
-            kurulumu tamamlanana kadar abonelik açılamaz.
+            {t("notifyVapidMissing")}
           </p>
         ) : null}
 
         <div className="mail-notify-info mail-notify-info--ios">
           <span className="mail-notify-info-icon" aria-hidden="true">🍎</span>
           <div>
-            <p className="mail-notify-info-title">iPhone / iPad (Safari)</p>
+            <p className="mail-notify-info-title">{t("notifyIosSafariTitle")}</p>
             <p className="mail-notify-info-body">
-              Bildirimler tarayıcı <em>sekmede</em> çalışmaz. Paylaş →{" "}
-              <strong>Ana Ekrana Ekle</strong>, uygulamayı ana ekrandan açın, sonra
-              buradan bildirimleri açın.
+              {t("notifyIosHintBefore")}{" "}
+              <em>{t("notifyIosHintEm")}</em> {t("notifyIosHintMid")}{" "}
+              <strong>{t("notifyIosHintStrong")}</strong>
+              {t("notifyIosHintAfter")}
             </p>
           </div>
         </div>
@@ -266,7 +255,7 @@ export function MailNotificationsSettingsPanel({
             disabled={!pushConfigured || pushBusy}
             onClick={() => void onEnablePush()}
           >
-            {pushBusy ? "İşleniyor…" : "Bildirimleri aç"}
+            {pushBusy ? t("notifyEnableBusy") : t("notifyEnableBtn")}
           </button>
           <button
             type="button"
@@ -274,17 +263,15 @@ export function MailNotificationsSettingsPanel({
             disabled={pushBusy}
             onClick={() => void onDisablePush()}
           >
-            Bildirimleri kapat
+            {t("notifyDisableBtn")}
           </button>
         </div>
       </section>
 
       <section className="mail-posta-card">
         <header className="mail-posta-card-head">
-          <h3 className="mail-posta-card-title">Ses ve özet</h3>
-          <p className="mail-posta-card-desc">
-            Sekme açıkken sesli uyarı ve sabah günlük özet e-postası.
-          </p>
+          <h3 className="mail-posta-card-title">{t("notifySoundDigestTitle")}</h3>
+          <p className="mail-posta-card-desc">{t("notifySoundDigestDesc")}</p>
         </header>
         <div className="mail-notify-toggles">
           <NotifyToggle
@@ -296,8 +283,8 @@ export function MailNotificationsSettingsPanel({
                 playMailNotifyBeep();
               }
             }}
-            label="Yeni posta bildiriminde ses"
-            hint="Sekme açıkken gelen kutusunda kısa bip çalar."
+            label={t("notifySoundLabel")}
+            hint={t("notifySoundHint")}
           />
           <NotifyToggle
             checked={dailyDigest}
@@ -307,12 +294,12 @@ export function MailNotificationsSettingsPanel({
               void updateInboxPreferences(accessToken, {
                 dailyDigestEnabled: on,
               }).catch(() => {
-                setStatusMessage("Özet ayarı kaydedilemedi.", true);
+                setStatusMessage(t("notifyDigestSaveFailed"), true);
                 setDailyDigest(prev);
               });
             }}
-            label="Günlük özet e-postası"
-            hint="Her gün 08:00’de okunmamış varsa özet gönderilir."
+            label={t("notifyDigestLabel")}
+            hint={t("notifyDigestHint")}
           />
         </div>
       </section>
