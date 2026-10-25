@@ -9,6 +9,9 @@ echo "=== Lerta mail inbound stack ==="
 bash "${INSTALL_DIR}/scripts/setup-postfix-inbound-c2.sh"
 bash "${INSTALL_DIR}/scripts/setup-rspamd-c4.sh"
 bash "${INSTALL_DIR}/scripts/setup-dovecot-c4.sh"
+if [[ -x "${INSTALL_DIR}/scripts/enable-postfix-submission-587.sh" ]]; then
+  bash "${INSTALL_DIR}/scripts/enable-postfix-submission-587.sh"
+fi
 
 if [[ -f "${ENV_FILE}" ]]; then
   set_kv() {

@@ -64,10 +64,17 @@ fi
 
 echo ""
 echo "—— SMTP submission :${PORT_SMTP} STARTTLS ——"
-if timeout 12 bash -c "echo | openssl s_client -starttls smtp -connect '${SMTP_HOST}:${PORT_SMTP}' -servername '${SMTP_HOST}' 2>/dev/null" | grep -qi "250"; then
-  ok "SMTP STARTTLS EHLO yanıtı"
+smtp_probe="$(timeout 15 openssl s_client -starttls smtp -connect "${SMTP_HOST}:${PORT_SMTP}" -servername "${SMTP_HOST}" -quiet -crlf 2>/dev/null <<'SMTP' || true
+EHLO lerta-uat-m2
+QUIT
+SMTP
+)"
+if echo "${smtp_probe}" | grep -qiE '250.*STARTTLS|250.*AUTH'; then
+  ok "SMTP STARTTLS + EHLO"
+elif echo "${smtp_probe}" | grep -q '^220 '; then
+  ok "SMTP 220 banner (STARTTLS)"
 else
-  warn "SMTP :${PORT_SMTP} STARTTLS yanıt yok — Outlook giden posta başarısız olabilir"
+  warn "SMTP :${PORT_SMTP} yanıt yok — bash scripts/enable-postfix-submission-587.sh (root)"
 fi
 
 if command -v ss >/dev/null 2>&1; then
