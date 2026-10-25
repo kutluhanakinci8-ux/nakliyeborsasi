@@ -34,6 +34,25 @@ run_layer() {
 
 echo "== Lerta Premium QA Suite ${STAMP} (Europe/Istanbul) =="
 
+ENV_FILE="${ENV_FILE:-}"
+if [[ -z "${ENV_FILE}" && -f /var/www/nakliyeborsasi/.env ]]; then
+  ENV_FILE=/var/www/nakliyeborsasi/.env
+elif [[ -z "${ENV_FILE}" && -f "${ROOT}/.env" ]]; then
+  ENV_FILE="${ROOT}/.env"
+fi
+if [[ -n "${ENV_FILE}" && -f "${ENV_FILE}" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "${ENV_FILE}"
+  set +a
+  # shellcheck source=scripts/resolve-operator-jwt.sh
+  source "${ROOT}/scripts/resolve-operator-jwt.sh" || true
+  # shellcheck source=scripts/resolve-mail-jmap-jwt.sh
+  source "${ROOT}/scripts/resolve-mail-jmap-jwt.sh" || true
+  export MAIL_JMAP_JWT="${MAIL_JMAP_JWT:-${ACCESS_TOKEN:-}}"
+fi
+export ENV_FILE="${ENV_FILE:-}"
+
 run_layer unit_core "1. Unit — @nakliyeborsasi/core" npm run test:unit --prefix "${ROOT}"
 
 run_layer unit_api "2. Unit/Integration — API vitest (all spec/test)" \
@@ -43,7 +62,8 @@ run_layer integration_smoke "2b. Integration — API health/ready smoke" \
   bash "${ROOT}/scripts/qa-api-integration-smoke.sh"
 
 run_layer regression_parity "3. Regression — mail/messaging parity close" \
-  env MAIL_INBOUND_PTR_SOFT="${MAIL_INBOUND_PTR_SOFT:-1}" MAIL_BILLING_PILOT_FREE="${MAIL_BILLING_PILOT_FREE:-1}" \
+  env ENV_FILE="${ENV_FILE:-}" MAIL_INBOUND_PTR_SOFT="${MAIL_INBOUND_PTR_SOFT:-1}" MAIL_BILLING_PILOT_FREE="${MAIL_BILLING_PILOT_FREE:-1}" \
+    OPERATOR_JWT="${OPERATOR_JWT:-}" MAIL_JMAP_JWT="${MAIL_JMAP_JWT:-}" \
     bash "${ROOT}/scripts/run-mail-messaging-parity-close-checklist.sh"
 
 run_layer regression_wave2 "4. Regression — wave-2 + Lighthouse PWA" \
@@ -84,7 +104,7 @@ run_layer e2e_playwright "11. System/E2E — Playwright (messaging)" \
   bash -c "cd '${ROOT}/apps/web' && npx playwright install chromium --with-deps 2>/dev/null | tail -3; npx playwright test e2e/messaging-hub.spec.ts --grep 'login sayfası|korumalı'"
 
 run_layer e2e_mail_web "11b. System/E2E — Playwright (posta full)" \
-  bash -c "cd '${ROOT}/apps/mail-web' && rm -rf .next && npm run build && npx playwright install chromium 2>/dev/null | tail -2 && npm run test:e2e"
+  bash "${ROOT}/scripts/qa-mail-web-playwright.sh"
 
 run_layer uat_faz6_code "12. UAT Faz 6 — kod tamamlama" \
   bash "${ROOT}/scripts/verify-uat-faz6-code-complete.sh"
