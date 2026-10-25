@@ -1,0 +1,16 @@
+{
+  "generatedAt": "2026-10-25T21:59:33+03:00",
+  "timezone": "Europe/Istanbul",
+  "steps": {
+    "code_complete": "PASS",
+    "M1_imap_gold": "SKIP",
+    "M2_outlook_mobile_imap": "SKIP",
+    "M3_graph_oauth_env": "DEFERRED",
+    "M4_google_calendar_env": "DEFERRED",
+    "M9_inbound_p0": "SKIP"
+  },
+  "notes": [
+    "Kod kap\u0131s\u0131 PASS \u2014 yap\u0131land\u0131rma: OAuth, VAPID, PTR, inbox smoke",
+    "VPS runtime atland\u0131 \u2014 UAT_VPS_RUNTIME=1 ile M1/M2/M9 canl\u0131"
+  ]
+}

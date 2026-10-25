@@ -96,7 +96,10 @@ if [[ "${UAT_VPS_RUNTIME:-0}" == "1" ]]; then
   DETAIL["uat"]="UAT_VPS_RUNTIME=1"
 else
   RESULT["uat"]="CONFIG_LATER"
-  DETAIL["uat"]="Ops: UAT_VPS_RUNTIME=1 + docs/CUSTOMER_READY_GATE.md"
+  DETAIL["uat"]="Ops: npm run uat:ops-prereqs → uat:ops (docs/UAT_FAZ6_OPS_RUNBOOK.md)"
+  echo ""
+  echo "—— UAT ops önkoşul (bilgi) ——"
+  bash "${ROOT}/scripts/verify-uat-ops-prereqs.sh" 2>/dev/null || true
 fi
 
 run_layer pentest_baseline "13. Security — OWASP baseline (surrogate)" \

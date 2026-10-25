@@ -11,8 +11,9 @@
 | **3** | Sistem E2E tam mail-web + messaging script | Premium suite full `test:mail-e2e` | Bu PR |
 | **4** | Yük + stres profilleri | `qa-load-stress.sh`, `qa-stress-profile.sh`, `qa-k6-profile.sh` | Bu PR (stres: hafif-orta; tam kırılma VPS profili) |
 | **5** | L10n gate (hardcoded TR taraması + genişletilmiş URL) | `qa-i18n-mail-web-gate.sh`, `qa-l10n-expanded.sh` | Bu PR |
-| **6** | UAT ops | `UAT_VPS_RUNTIME=1`, `.env`, `verify-uat-ops-runtime.sh` | **VPS / secrets** |
-| **7** | Pentest tam | Harici firma + `qa-pentest-external-checklist.sh` | **Harici** |
+| **6A** | UAT kod | `npm run uat:faz6` | ✅ Agent PASS |
+| **6B** | UAT ops | `npm run uat:ops-prereqs` → `npm run uat:ops` | **VPS / secrets** — runbook: `docs/UAT_FAZ6_OPS_RUNBOOK.md` |
+| **7** | Pentest | `qa-owasp-baseline.sh` + isteğe bağlı `qa-pentest-zap-passive.sh` + harici checklist | **Kısmi otomasyon** |
 | **8** | ISO 29119 / SOC2 Type II / ISO 27001 / PCI | `docs/ISO_29119_TEST_TRACEABILITY.md` + MP-9 | Dok + denetim |
 | **9** | Müşteri imzalı UAT (Thunderbird, teslimat, takvim) | `uat-faz6-sequential.sh`, runbook | **Manuel** |
 
