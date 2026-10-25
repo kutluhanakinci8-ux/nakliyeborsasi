@@ -2,12 +2,17 @@
 
 **Hedef:** `posta.lerta.com.tr` üzerinde Exchange/Graph ve Google Takvim bağlantısı.
 
-## 1. Azure (M3)
+## 1. Azure (M3) — Exchange / Microsoft 365 posta
 
-1. App registration → redirect URI:
+1. [Azure Portal](https://portal.azure.com) → **App registrations** → New registration (veya mevcut **Lerta Posta** uygulaması).
+2. **Authentication** → Platform **Web** → Redirect URIs:
    - `https://posta.lerta.com.tr/mail/exchange-oauth`
-   - `https://posta.lerta.com.tr/mail/calendar-oauth`
-2. VPS `/var/www/nakliyeborsasi/.env`:
+   - `https://posta.lerta.com.tr/mail/calendar-oauth` (takvim için)
+3. **API permissions** → Microsoft Graph → **Delegated**:
+   - `Mail.ReadWrite`, `Mail.Send`, `User.Read`, `offline_access`, `openid`, `profile`, `email`
+   - Kurumsal kiracıda **Grant admin consent** (yönetici onayı) gerekir.
+4. **Certificates & secrets** → Client secret oluşturun (süresi dolmadan yenileyin).
+5. VPS `/var/www/nakliyeborsasi/.env`:
 
 ```bash
 MICROSOFT_GRAPH_MAIL_CLIENT_ID=...
@@ -21,10 +26,15 @@ MICROSOFT_GRAPH_MAIL_REDIRECT_URI=https://posta.lerta.com.tr/mail/exchange-oauth
 MICROSOFT_GRAPH_CALENDAR_REDIRECT_URI=https://posta.lerta.com.tr/mail/calendar-oauth
 ```
 
-3. `systemctl restart nakliyeborsasi-api` (veya deploy script).
+3. `pm2 restart nakliyeborsasi-api` (veya deploy script).
 4. Doğrula: `bash scripts/verify-uat-oauth-env.sh`
+5. Posta → **Ayarlar → Hesaplar** → **Microsoft hesabı bağla** → `info@…` veya kurumsal M365 hesabı.
 
-Detay: [MAIL_GRAPH_CALENDAR.md](./MAIL_GRAPH_CALENDAR.md)
+**Önemli:** `@lerta.com.tr` kurumsal posta (Postfix/Dovecot) **Lerta** sekmesinde görünür. **Microsoft** sekmesi yalnızca Graph ile bağlanan **Microsoft 365 / Outlook** kutusundaki mesajları listeler; MX kayıtları Lerta’da olsa bile M365 kutusu boş kalabilir.
+
+İsteğe bağlı arka plan sıklığı: `MAIL_EXCHANGE_SYNC_INTERVAL_MS=180000` (3 dk, min 60000).
+
+Detay: [MAIL_GRAPH_CALENDAR.md](./MAIL_GRAPH_CALENDAR.md) · [MAIL_DELEGATION_EXCHANGE.md](./MAIL_DELEGATION_EXCHANGE.md)
 
 ## 2. Google (M4)
 

@@ -266,15 +266,20 @@ export class MailExchangeGraphSyncService {
     const accessToken = await this.resolveAccessToken(account);
     let imported = 0;
     let updated = 0;
-    const folderDeltaLinks = this.loadFolderDeltaLinks(account);
+    const storedMessageCount = await this.inboundRepository.count({
+      where: { exchangeSyncAccountId: account.id },
+    });
+    const folderDeltaLinks =
+      storedMessageCount === 0 ? {} : this.loadFolderDeltaLinks(account);
     try {
       for (const folder of EXCHANGE_SYNC_FOLDERS) {
-        const deltaUrl =
+        let pageUrl: string | null =
           folderDeltaLinks[folder.key] ??
           `${GRAPH_BASE}/me/mailFolders/${folder.graphName}/messages/delta?$select=${GRAPH_MESSAGE_SELECT}&$top=50`;
-        const page = await this.graphGet(accessToken, deltaUrl);
-        const messages = (page.value ?? []) as GraphMessage[];
-        for (const message of messages) {
+        while (pageUrl) {
+          const page = await this.graphGet(accessToken, pageUrl);
+          const messages = (page.value ?? []) as GraphMessage[];
+          for (const message of messages) {
           if (!message.id) {
             continue;
           }
@@ -366,10 +371,18 @@ export class MailExchangeGraphSyncService {
             );
             imported += 1;
           }
-        }
-        const nextLink = page["@odata.deltaLink"] ?? page["@odata.nextLink"];
-        if (typeof nextLink === "string" && nextLink.includes("/delta")) {
-          folderDeltaLinks[folder.key] = nextLink;
+          }
+          const deltaLink = page["@odata.deltaLink"];
+          const nextLink = page["@odata.nextLink"];
+          if (typeof deltaLink === "string") {
+            folderDeltaLinks[folder.key] = deltaLink;
+            break;
+          }
+          if (typeof nextLink === "string") {
+            pageUrl = nextLink;
+            continue;
+          }
+          break;
         }
       }
       account.folderDeltaLinks = folderDeltaLinks;

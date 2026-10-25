@@ -313,6 +313,9 @@ export function MailDelegationExchangePanel({
           <p className="mail-posta-card-desc">
             Office 365 / Outlook kutunuzu Microsoft Graph ile webmail gelen
             kutusuna delta senkronu (okuma, klasör durumu, otomatik yenileme).
+            Kurumsal <code>@lerta.com.tr</code> postası (Lerta sunucusu){" "}
+            <strong>Lerta</strong> sekmesinde; bu bağlantı{" "}
+            <strong>Microsoft</strong> sekmesini doldurur.
           </p>
         </header>
         {exchange?.configured === false ? (

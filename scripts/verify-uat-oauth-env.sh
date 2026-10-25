@@ -35,6 +35,29 @@ for k in "${graph_keys[@]}"; do
 done
 if [[ "${graph_ok}" -eq 3 ]]; then
   echo "OK: Graph mail OAuth env tam"
+  if [[ "${VERIFY_GRAPH_LIVE:-1}" != "0" ]]; then
+    graph_live="$(
+      set -a
+      # shellcheck disable=SC1090
+      source "${ENV_FILE}"
+      set +a
+      curl -sS -X POST "https://login.microsoftonline.com/common/oauth2/v2.0/token" \
+        -H "Content-Type: application/x-www-form-urlencoded" \
+        --data-urlencode "client_id=${MICROSOFT_GRAPH_MAIL_CLIENT_ID}" \
+        --data-urlencode "client_secret=${MICROSOFT_GRAPH_MAIL_CLIENT_SECRET}" \
+        --data-urlencode "grant_type=authorization_code" \
+        --data-urlencode "code=__lerta_verify__" \
+        --data-urlencode "redirect_uri=${MICROSOFT_GRAPH_MAIL_REDIRECT_URI}" 2>/dev/null || true
+    )"
+    if echo "${graph_live}" | grep -qE '"error"[[:space:]]*:[[:space:]]*"invalid_grant"'; then
+      echo "OK: Graph client_id + client_secret tanınıyor (invalid_grant beklenen)"
+    elif echo "${graph_live}" | grep -qi 'invalid_client\|client secret\|AADSTS7000215'; then
+      echo "FAIL: Graph client_secret geçersiz — Azure → Certificates & secrets"
+      failed=$((failed + 1))
+    else
+      echo "WARN: Graph canlı doğrulama belirsiz"
+    fi
+  fi
 else
   echo "NOT: Graph mail OAuth eksik — docs/MAIL_GRAPH_CALENDAR.md · .env.example"
 fi
