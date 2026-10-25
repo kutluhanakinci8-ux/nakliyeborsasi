@@ -28,9 +28,12 @@ if [[ -f "${ENV_FILE}" ]]; then
   set +a
 fi
 
+# shellcheck source=scripts/resolve-operator-jwt.sh
+source "${ROOT}/scripts/resolve-operator-jwt.sh" || true
+
 need "OPERATOR_JWT" "${OPERATOR_JWT:-}"
-need "GOOGLE_OAUTH_CLIENT_ID" "${GOOGLE_OAUTH_CLIENT_ID:-${GMAIL_OAUTH_CLIENT_ID:-}}"
-need "AZURE_AD_CLIENT_ID" "${AZURE_AD_CLIENT_ID:-${EXCHANGE_OAUTH_CLIENT_ID:-}}"
+need "GOOGLE_GMAIL_CLIENT_ID" "${GOOGLE_GMAIL_CLIENT_ID:-${GOOGLE_OAUTH_CLIENT_ID:-}}"
+need "MICROSOFT_GRAPH_MAIL_CLIENT_ID" "${MICROSOFT_GRAPH_MAIL_CLIENT_ID:-${AZURE_AD_CLIENT_ID:-}}"
 
 if [[ -x "${ROOT}/scripts/verify-uat-oauth-env.sh" ]] && [[ -f "${ENV_FILE}" ]]; then
   bash "${ROOT}/scripts/verify-uat-oauth-env.sh" || FAIL=1
