@@ -27,7 +27,7 @@ type MailLocaleContextValue = {
   setLocale: (locale: MailUiLocale) => void;
   timeZone: MailTimeZoneId;
   setTimeZone: (zone: MailTimeZoneId) => void;
-  t: (key: string) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
   formatDateTime: (iso: string) => string;
   localeTag: string;
 };
@@ -63,7 +63,8 @@ export function MailLocaleProvider({ children }: { children: ReactNode }) {
       setLocale,
       timeZone,
       setTimeZone,
-      t: (key: string) => t(key, locale),
+      t: (key: string, params?: Record<string, string | number>) =>
+        t(key, locale, params),
       formatDateTime: (iso: string) => formatMailDateTime(iso, locale, timeZone),
       localeTag: mailLocaleTag(locale),
     }),

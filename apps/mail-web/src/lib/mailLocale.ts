@@ -1,3 +1,5 @@
+import { MAIL_WEB_MESSAGES } from "./mailWebLocale";
+
 export type MailUiLocale = "tr" | "en";
 
 export type MailTimeZoneId =
@@ -122,8 +124,24 @@ export function resolveInitialLocaleFromUrl(): MailUiLocale | null {
   return null;
 }
 
-export function t(key: string, locale: MailUiLocale): string {
-  return MESSAGES[locale][key] ?? MESSAGES.tr[key] ?? key;
+export function t(
+  key: string,
+  locale: MailUiLocale,
+  params?: Record<string, string | number>,
+): string {
+  const raw =
+    MESSAGES[locale][key] ??
+    MAIL_WEB_MESSAGES[locale][key] ??
+    MESSAGES.tr[key] ??
+    MAIL_WEB_MESSAGES.tr[key] ??
+    key;
+  if (!params) {
+    return raw;
+  }
+  return Object.entries(params).reduce(
+    (acc, [name, value]) => acc.replaceAll(`{{${name}}}`, String(value)),
+    raw,
+  );
 }
 
 export function mailLocaleTag(locale: MailUiLocale): string {

@@ -334,18 +334,15 @@ export function MailClientShell({ mail }: Props) {
     >
       {sessionExpired ? (
         <div className="mail-session-expired-banner" role="alert">
-          <span>
-            Oturumunuz sona erdi. Posta, gönderilenler, kişiler ve harici takvim
-            kayıtlarınız sunucuda duruyor — yeniden giriş yapın.
-          </span>
+          <span>{t("sessionExpired")}</span>
           <button type="button" onClick={() => reLogin()}>
-            Yeniden giriş
+            {t("sessionReLogin")}
           </button>
         </div>
       ) : null}
       {(inboxOffline || detailOffline) ? (
         <div className="mail-offline-banner" role="status">
-          Çevrimdışı önbellek — salt okunur
+          {t("offlineBanner")}
           {inboxOfflineCachedAt
             ? ` · ${new Date(inboxOfflineCachedAt).toLocaleString("tr-TR")}`
             : ""}
@@ -356,14 +353,14 @@ export function MailClientShell({ mail }: Props) {
       ) : null}
       <div className="mail-mobile-bar">
         <button type="button" onClick={() => setMobilePane("nav")}>
-          Menü
+          {t("mobileMenu")}
         </button>
         <button type="button" onClick={() => setMobilePane("list")}>
-          Liste
+          {t("mobileList")}
         </button>
         {selectedId ? (
           <button type="button" onClick={() => setMobilePane("read")}>
-            Mesaj
+            {t("mobileMessage")}
           </button>
         ) : null}
       </div>
@@ -383,7 +380,7 @@ export function MailClientShell({ mail }: Props) {
             <span className="mail-brand-title-only mail-brand-title-only--embed">
               {inboxBranding?.emailBrandTitle?.trim() ||
                 summary?.primaryAddress ||
-                "Kurumsal e-posta"}
+                t("corporateMail")}
             </span>
           ) : inboxBranding?.allowed && inboxBranding.emailBrandTitle ? (
             <span className="mail-brand-title-only">
@@ -391,7 +388,7 @@ export function MailClientShell({ mail }: Props) {
             </span>
           ) : (
             <>
-              <strong>Lerta</strong> Posta
+              <strong>Lerta</strong> {t("brandPosta")}
             </>
           )}
         </div>
@@ -409,7 +406,7 @@ export function MailClientShell({ mail }: Props) {
             setComposeOpen(true);
           }}
         >
-          Yaz
+          {t("composeBtn")}
         </button>
         <div className="mail-nav-scroll">
         <nav className="mail-nav">
@@ -423,7 +420,7 @@ export function MailClientShell({ mail }: Props) {
               switchView("inbox");
             }}
           >
-            Gelen
+            {t("navInbox")}
             {summary && summary.unreadCount > 0
               ? ` (${summary.unreadCount})`
               : ""}
@@ -433,21 +430,21 @@ export function MailClientShell({ mail }: Props) {
             className={view === "sent" ? "active" : ""}
             onClick={() => switchView("sent")}
           >
-            Gönderilen
+            {t("navSent")}
           </button>
           <button
             type="button"
             className={view === "all" ? "active" : ""}
             onClick={() => switchView("all")}
           >
-            Tümü
+            {t("navAll")}
           </button>
           <button
             type="button"
             className={view === "starred" ? "active" : ""}
             onClick={() => switchView("starred")}
           >
-            Yıldızlı
+            {t("navStarred")}
             {summary && (summary.starredCount ?? 0) > 0
               ? ` (${summary.starredCount})`
               : ""}
@@ -457,7 +454,7 @@ export function MailClientShell({ mail }: Props) {
             className={view === "snoozed" ? "active" : ""}
             onClick={() => switchView("snoozed")}
           >
-            Ertelenen
+            {t("navSnoozed")}
             {summary && (summary.snoozedCount ?? 0) > 0
               ? ` (${summary.snoozedCount})`
               : ""}
@@ -467,7 +464,7 @@ export function MailClientShell({ mail }: Props) {
             className={view === "spam" ? "active" : ""}
             onClick={() => switchView("spam")}
           >
-            Spam
+            {t("navSpam")}
             {summary && summary.spamCount > 0 ? ` (${summary.spamCount})` : ""}
           </button>
           <button
@@ -475,7 +472,7 @@ export function MailClientShell({ mail }: Props) {
             className={view === "archive" ? "active" : ""}
             onClick={() => switchView("archive")}
           >
-            Arşiv
+            {t("navArchive")}
             {summary && (summary.archiveCount ?? 0) > 0
               ? ` (${summary.archiveCount})`
               : ""}
@@ -485,7 +482,7 @@ export function MailClientShell({ mail }: Props) {
             className={view === "trash" ? "active" : ""}
             onClick={() => switchView("trash")}
           >
-            Çöp
+            {t("navTrash")}
             {summary && (summary.trashCount ?? 0) > 0
               ? ` (${summary.trashCount})`
               : ""}
@@ -495,7 +492,7 @@ export function MailClientShell({ mail }: Props) {
             className={view === "drafts" ? "active" : ""}
             onClick={() => switchView("drafts")}
           >
-            Taslaklar
+            {t("navDrafts")}
             {drafts.length > 0 ? ` (${drafts.length})` : ""}
           </button>
           <button
@@ -503,17 +500,17 @@ export function MailClientShell({ mail }: Props) {
             className={view === "calendar" ? "active" : ""}
             onClick={() => switchView("calendar")}
           >
-            Takvim
+            {t("navCalendar")}
           </button>
           <button
             type="button"
             className={view === "contacts" ? "active" : ""}
             onClick={() => switchView("contacts")}
           >
-            Kişiler
+            {t("navContacts")}
           </button>
           {customFolders.length > 0 ? (
-            <div className="mail-custom-folders-label">Özel klasörler</div>
+            <div className="mail-custom-folders-label">{t("navCustomFolders")}</div>
           ) : null}
           {customFolders.map((f) => (
             <div key={f.id} className="mail-custom-folder-row">
@@ -702,14 +699,14 @@ export function MailClientShell({ mail }: Props) {
               router.replace("/login");
             }}
           >
-            Çıkış
+            {t("logout")}
           </button>
           {process.env.NEXT_PUBLIC_DEPLOY_SHA ? (
             <span
               className="mail-deploy-sha"
               title={process.env.NEXT_PUBLIC_DEPLOY_TIME}
             >
-              Sürüm {process.env.NEXT_PUBLIC_DEPLOY_SHA}
+              {t("version")} {process.env.NEXT_PUBLIC_DEPLOY_SHA}
             </span>
           ) : null}
         </div>
@@ -747,7 +744,7 @@ export function MailClientShell({ mail }: Props) {
             {isPrimaryInbox ? (
               <header className="mail-inbox-header">
                 <div className="mail-inbox-header-text">
-                  <h2 className="mail-inbox-header-title">Gelen kutusu</h2>
+                  <h2 className="mail-inbox-header-title">{t("inboxTitle")}</h2>
                   <p className="mail-inbox-header-meta">
                     {summary && summary.unreadCount > 0
                       ? `${summary.unreadCount} okunmamış`
@@ -1007,7 +1004,7 @@ export function MailClientShell({ mail }: Props) {
                 className="mail-toolbar-btn"
                 onClick={() => void refreshWithConnectedSync()}
               >
-                Yenile
+                {t("refresh")}
               </button>
               <button
                 type="button"
@@ -1968,12 +1965,12 @@ export function MailClientShell({ mail }: Props) {
                   {forwardMessageId
                     ? "İlet"
                     : editingDraftId
-                      ? "Taslak düzenle"
-                      : "Yeni mesaj"}
+                      ? t("composeEditDraft")
+                      : t("composeNew")}
                 </h2>
                 <p className="compose-premium-subtitle">
                   {summary?.primaryAddress
-                    ? `Gönderen: ${summary.primaryAddress}`
+                    ? t("composeFrom", { address: summary.primaryAddress })
                     : "Kurumsal gönderim"}
                 </p>
               </div>
@@ -2561,7 +2558,7 @@ export function MailClientShell({ mail }: Props) {
                     resetCompose();
                   }}
                 >
-                  İptal
+                  {t("composeCancel")}
                 </button>
                 {!forwardMessageId ? (
                   <button
@@ -2570,7 +2567,7 @@ export function MailClientShell({ mail }: Props) {
                     disabled={sending}
                     onClick={() => void saveComposeDraft()}
                   >
-                    Taslak kaydet
+                    {t("composeSaveDraft")}
                   </button>
                 ) : null}
                 <button
@@ -2587,7 +2584,7 @@ export function MailClientShell({ mail }: Props) {
                   disabled={sending}
                   onClick={() => void sendCompose()}
                 >
-                  {sending ? "Gönderiliyor…" : "Gönder"}
+                  {sending ? t("composeSending") : t("composeSend")}
                 </button>
               </div>
             </footer>

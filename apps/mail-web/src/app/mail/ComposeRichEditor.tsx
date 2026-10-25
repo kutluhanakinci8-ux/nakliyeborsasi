@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, type ReactNode } from "react";
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 import {
   COMPOSE_HTML_BLOCK_CATALOG,
   composeCtaButtonBlock,
@@ -189,6 +190,7 @@ export function ComposeRichEditor({
   brandTitle,
   brandLegalFooter,
 }: Props) {
+  const { t } = useMailLocale();
   const editorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -210,7 +212,7 @@ export function ComposeRichEditor({
   }
 
   function insertLink() {
-    const url = window.prompt("Bağlantı URL");
+    const url = window.prompt(t("richPromptLinkUrl"));
     if (url?.trim()) {
       exec("createLink", url.trim());
       syncFromEditor();
@@ -223,11 +225,14 @@ export function ComposeRichEditor({
   }
 
   function insertCtaButton() {
-    const label = window.prompt("Buton metni", "Detayları görüntüle");
+    const label = window.prompt(
+      t("richPromptButtonLabel"),
+      t("richPromptButtonDefault"),
+    );
     if (!label?.trim()) {
       return;
     }
-    const href = window.prompt("Buton linki (https)", "https://");
+    const href = window.prompt(t("richPromptButtonHref"), "https://");
     if (!href?.trim()) {
       return;
     }
@@ -238,7 +243,10 @@ export function ComposeRichEditor({
   }
 
   function insertCallout(variant: "info" | "success" | "warning" = "info") {
-    const text = window.prompt("Kutu metni", "Önemli bilgi");
+    const text = window.prompt(
+      t("richPromptCallout"),
+      t("richPromptCalloutDefault"),
+    );
     if (!text?.trim()) {
       return;
     }
@@ -247,11 +255,14 @@ export function ComposeRichEditor({
   }
 
   function insertHero() {
-    const title = window.prompt("Hero başlık", "Önemli duyuru");
+    const title = window.prompt(
+      t("richPromptHeroTitle"),
+      t("richPromptHeroDefault"),
+    );
     if (!title?.trim()) {
       return;
     }
-    const subtitle = window.prompt("Alt metin", "") ?? "";
+    const subtitle = window.prompt(t("richPromptHeroSubtitle"), "") ?? "";
     insertHtmlAtSelection(
       composeHeroBlock(title.trim(), subtitle.trim(), brandAccentColor),
     );
@@ -282,32 +293,32 @@ export function ComposeRichEditor({
         insertCallout("warning");
         return;
       case "quote": {
-        const quote = window.prompt("Alıntı", "");
+        const quote = window.prompt(t("richPromptQuote"), "");
         if (!quote?.trim()) {
           return;
         }
-        const author = window.prompt("Kaynak (isteğe bağlı)", "") ?? "";
+        const author = window.prompt(t("richPromptQuoteSource"), "") ?? "";
         insertHtmlAtSelection(composeQuoteBlock(quote.trim(), author.trim()));
         break;
       }
       case "feature": {
-        const title = window.prompt("Özellik başlığı", "Hızlı teslimat");
+        const title = window.prompt(t("richPromptFeatureTitle"), t("richPromptFeatureDefault"));
         if (!title?.trim()) {
           return;
         }
-        const body = window.prompt("Açıklama", "") ?? "";
+        const body = window.prompt(t("richPromptFeatureBody"), "") ?? "";
         insertHtmlAtSelection(composeFeatureRowBlock(title.trim(), body.trim()));
         break;
       }
       case "logo-header": {
-        const logo = brandLogoUrl?.trim() || window.prompt("Logo URL (https)", "");
+        const logo = brandLogoUrl?.trim() || window.prompt(t("richPromptLogoUrl"), "");
         if (!logo?.trim()) {
           return;
         }
         const title =
           brandTitle?.trim() ||
-          window.prompt("Marka başlığı", "Firma adı") ||
-          "Firma";
+          window.prompt(t("richPromptBrandTitle"), t("richPromptBrandDefault")) ||
+          t("richPromptBrandDefault");
         insertHtmlAtSelection(
           composeLogoHeaderBlock(logo.trim(), title.trim(), brandAccentColor),
         );
@@ -316,7 +327,7 @@ export function ComposeRichEditor({
       case "legal-footer": {
         const text =
           brandLegalFooter?.trim() ||
-          window.prompt("Yasal dipnot metni", "") ||
+          window.prompt(t("richPromptLegal"), "") ||
           "";
         if (!text.trim()) {
           return;
@@ -339,11 +350,11 @@ export function ComposeRichEditor({
   }
 
   function insertRemoteImage() {
-    const url = window.prompt("Görsel URL (https)");
+    const url = window.prompt(t("richPromptImageUrl"));
     if (!url?.trim()) {
       return;
     }
-    const alt = window.prompt("Alt metin", "Görsel") ?? "Görsel";
+    const alt = window.prompt(t("richPromptImageAlt"), t("richPromptImageAltDefault")) ?? "Görsel";
     insertHtmlAtSelection(composeImageBlock(url.trim(), alt.trim()));
     syncFromEditor();
   }
@@ -381,7 +392,7 @@ export function ComposeRichEditor({
   }
 
   function insertVideo() {
-    const raw = window.prompt("Video URL (YouTube, Vimeo veya doğrudan mp4)");
+    const raw = window.prompt(t("richPromptVideoUrl"));
     const url = raw?.trim();
     if (!url) {
       return;
@@ -426,7 +437,7 @@ export function ComposeRichEditor({
           checked={enabled}
           onChange={(e) => onEnabledChange(e.target.checked)}
         />
-        <span>Zengin biçim (kalın, tablo, video)</span>
+        <span>{t("richToggleEnable")}</span>
       </label>
     );
   }
@@ -434,46 +445,46 @@ export function ComposeRichEditor({
   return (
     <div className="mail-rich-editor compose-rich-editor compose-rich-editor--premium">
       <div className="compose-rich-head">
-        <span className="compose-rich-badge">Zengin metin</span>
+        <span className="compose-rich-badge">{t("richBadge")}</span>
         <label className="mail-rich-toggle compose-rich-toggle">
           <input
             type="checkbox"
             checked={enabled}
             onChange={(e) => onEnabledChange(e.target.checked)}
           />
-          <span>Kapat</span>
+          <span>{t("richClose")}</span>
         </label>
       </div>
       <div
         className="mail-rich-toolbar compose-rich-toolbar"
         role="toolbar"
-        aria-label="Zengin metin biçimlendirme"
+        aria-label={t("richToolbarAria")}
       >
         <div className="compose-rich-toolbar__row">
           <div className="compose-rich-toolbar__group">
-            <ToolbarButton label="Kalın" onClick={() => exec("bold")}>
+            <ToolbarButton label={t("richBold")} onClick={() => exec("bold")}>
               {icon.bold}
             </ToolbarButton>
-            <ToolbarButton label="İtalik" onClick={() => exec("italic")}>
+            <ToolbarButton label={t("richItalic")} onClick={() => exec("italic")}>
               {icon.italic}
             </ToolbarButton>
-            <ToolbarButton label="Altı çizili" onClick={() => exec("underline")}>
+            <ToolbarButton label={t("richUnderline")} onClick={() => exec("underline")}>
               {icon.underline}
             </ToolbarButton>
-            <ToolbarButton label="Üstü çizili" onClick={() => exec("strikeThrough")}>
+            <ToolbarButton label={t("richStrike")} onClick={() => exec("strikeThrough")}>
               {icon.strike}
             </ToolbarButton>
           </div>
           <ToolbarSep />
           <div className="compose-rich-toolbar__group">
             <ToolbarButton
-              label="Madde işaretli liste"
+              label={t("richBulletList")}
               onClick={() => exec("insertUnorderedList")}
             >
               {icon.listBullet}
             </ToolbarButton>
             <ToolbarButton
-              label="Numaralı liste"
+              label={t("richOrderedList")}
               onClick={() => exec("insertOrderedList")}
             >
               {icon.listOrdered}
@@ -481,10 +492,10 @@ export function ComposeRichEditor({
           </div>
           <ToolbarSep />
           <div className="compose-rich-toolbar__group">
-            <ToolbarButton label="Bağlantı ekle" onClick={insertLink}>
+            <ToolbarButton label={t("richLink")} onClick={insertLink}>
               {icon.link}
             </ToolbarButton>
-            <ToolbarButton label="Kurumsal ayırıcı" onClick={insertDivider}>
+            <ToolbarButton label={t("richDivider")} onClick={insertDivider}>
               {icon.divider}
             </ToolbarButton>
             <ToolbarButton label="HTTPS görsel" onClick={insertRemoteImage}>

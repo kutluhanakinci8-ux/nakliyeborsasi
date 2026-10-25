@@ -1,72 +1,12 @@
-type Variant =
-  | "inbox"
-  | "sent"
-  | "drafts"
-  | "search"
-  | "read"
-  | "starred"
-  | "trash"
-  | "archive"
-  | "spam";
+"use client";
 
-const COPY: Record<
-  Variant,
-  { title: string; body: string; tips?: string[] }
-> = {
-  inbox: {
-    title: "Gelen kutusu boş",
-    body: "Bu adrese gelen kurumsal postalar burada listelenir.",
-    tips: [
-      "Başka bir hesaptan kendinize test e-postası gönderin.",
-      "Telefon veya Thunderbird için: Ayarlar → IMAP bilgileri.",
-      "Kutu ve gönderen kimliği: Lerta Logistics → Hesap → Organizasyon → E-posta kimliği.",
-    ],
-  },
-  sent: {
-    title: "Gönderilen yok",
-    body: "Yazdığınız ve gönderdiğiniz mesajlar bu klasörde görünür.",
-    tips: ["Yeni mesaj için sol üstteki Yaz düğmesini kullanın."],
-  },
-  drafts: {
-    title: "Taslak yok",
-    body: "Yaz ekranında Taslak kaydet ile yarım kalan mesajları saklayın.",
-  },
-  search: {
-    title: "Sonuç bulunamadı",
-    body: "Farklı anahtar kelime veya gelişmiş filtre deneyin.",
-  },
-  starred: {
-    title: "Yıldızlı mesaj yok",
-    body: "Önemli postaları yıldızlayın; burada tek listede görünür.",
-    tips: [
-      "Liste veya okuma panelindeki ☆ düğmesine tıklayın.",
-      "Klavye: mesaj açıkken s tuşu.",
-    ],
-  },
-  read: {
-    title: "Mesaj seçin",
-    body: "Listeden bir satıra tıklayın veya konuşma görünümünde bir zincir açın.",
-    tips: [
-      "Konuşma görünümü: liste üstündeki düğme ile aynı konudaki yanıtları gruplar.",
-    ],
-  },
-  trash: {
-    title: "Çöp kutusu boş",
-    body: "Silinen gelen ve gönderilen postalar burada görünür.",
-    tips: [
-      "Gelen postada Sil → çöp; Gönderilen'de Sil → çöp.",
-      "Çöp'te Geri al ile gelen kutusuna veya gönderilene döner.",
-    ],
-  },
-  archive: {
-    title: "Arşiv boş",
-    body: "Arşivlediğiniz gelen postalar burada saklanır.",
-  },
-  spam: {
-    title: "Spam yok",
-    body: "Şüpheli veya engellenen postalar burada listelenir.",
-  },
-};
+import { useMailLocale } from "@/lib/MailLocaleProvider";
+import {
+  getMailEmptyStateContent,
+  type MailEmptyVariant,
+} from "@/lib/mailWebLocale";
+
+type Variant = MailEmptyVariant;
 
 export function MailEmptyState({
   variant,
@@ -75,7 +15,8 @@ export function MailEmptyState({
   variant: Variant;
   premium?: boolean;
 }) {
-  const content = COPY[variant];
+  const { t } = useMailLocale();
+  const content = getMailEmptyStateContent(t, variant);
   return (
     <div
       className={`mail-empty-state${premium ? " mail-empty-state--premium" : ""}`}
@@ -99,7 +40,7 @@ export function MailEmptyState({
           target="_blank"
           rel="noreferrer"
         >
-          E-posta kimliği
+          {t("emptyLinkIdentity")}
         </a>
         {" · "}
         <a
@@ -107,7 +48,7 @@ export function MailEmptyState({
           target="_blank"
           rel="noreferrer"
         >
-          SSS
+          {t("emptyLinkFaq")}
         </a>
       </p>
     </div>

@@ -141,6 +141,7 @@ type Params = {
   embedMode: boolean;
   embedHubShell?: boolean;
   shellBrand?: string;
+  translate?: (key: string, params?: Record<string, string | number>) => string;
 };
 
 const MAIL_CONNECTED_SOURCE_KEY = "lerta_mail_connected_source";
@@ -208,7 +209,18 @@ export function useMailClientController({
   embedMode,
   embedHubShell = false,
   shellBrand = "",
+  translate: translateProp,
 }: Params) {
+  const translate =
+    translateProp ?? ((key: string, params?: Record<string, string | number>) => {
+      if (!params) {
+        return key;
+      }
+      return Object.entries(params).reduce(
+        (acc, [name, value]) => acc.replaceAll(`{{${name}}}`, String(value)),
+        key,
+      );
+    });
   const listMessageIdsRef = useRef<string[]>([]);
   const deepLinkMessageHandled = useRef(false);
   const deepLinkComposeHandled = useRef(false);
@@ -667,24 +679,24 @@ export function useMailClientController({
           }
           setPendingUndo(null);
           if (status.status === "sent") {
-            setToast("Gönderildi.");
+            setToast(translate("toastSent"));
             setView("sent");
             void refresh();
             void refreshDrafts();
             return;
           }
           if (status.status === "failed") {
-            setToast(status.errorMessage ?? "Gönderilemedi.");
+            setToast(status.errorMessage ?? translate("toastSendFailed"));
             return;
           }
           if (status.status === "cancelled") {
-            setToast("Gönderim iptal edildi.");
+            setToast(translate("toastSendCancelled"));
             return;
           }
-          setToast("Gönderim durumu alınamadı — Gönderilen klasörünü kontrol edin.");
+          setToast(translate("toastSendStatusUnknown"));
         } catch {
           setPendingUndo(null);
-          setToast("Gönderim doğrulanamadı.");
+          setToast(translate("toastSendVerifyFailed"));
         }
       };
       await poll(0);
@@ -736,7 +748,7 @@ export function useMailClientController({
     try {
       await cancelDelayedCompose(accessToken, pendingUndo.pendingId);
       setPendingUndo(null);
-      setToast("Gönderim iptal edildi.");
+      setToast(translate("toastSendCancelled"));
     } catch (error) {
       setToast(
         error instanceof Error ? error.message : "Geri alınamadı.",
@@ -869,7 +881,7 @@ export function useMailClientController({
         providerMessageId: hit.providerMessageId,
       });
       await openMessage(imported.localMessageId);
-      setToast("Bulut mesajı içe aktarıldı.");
+      setToast(translate("toastCloudImported"));
     } catch (error) {
       setToast(
         error instanceof Error ? error.message : "Mesaj içe aktarılamadı.",
@@ -1184,7 +1196,7 @@ export function useMailClientController({
       anchor.click();
       URL.revokeObjectURL(url);
     } catch {
-      setToast("Ek indirilemedi.");
+      setToast(translate("toastAttachmentDownloadFailed"));
     }
   }
 
@@ -1214,7 +1226,7 @@ export function useMailClientController({
       if (applyDelayedSend(replyResult)) {
         return;
       }
-      setToast(useReplyAll ? "Tümüne yanıt gönderildi." : "Yanıt gönderildi.");
+      setToast(useReplyAll ? translate("toastReplyAllSent") : translate("toastReplySent"));
     } catch (error) {
       setToast(
         error instanceof Error ? error.message : "Yanıt gönderilemedi.",
@@ -1229,12 +1241,12 @@ export function useMailClientController({
     const until = new Date(Date.now() + hours * 60 * 60 * 1000);
     try {
       await snoozeMailMessage(accessToken, selectedId, until.toISOString());
-      setToast(`Ertelendi (${hours} saat).`);
+      setToast(translate("toastSnoozed", { hours }));
       setDetail(null);
       setSelectedId(null);
       void refresh();
     } catch (error) {
-      setToast(error instanceof Error ? error.message : "Ertelenemedi.");
+      setToast(error instanceof Error ? error.message : translate("toastSnoozeFailed"));
     }
   }
 
@@ -1276,11 +1288,11 @@ export function useMailClientController({
         const created = await createDraft(accessToken, body);
         setEditingDraftId(created.id);
       }
-      setToast("Taslak kaydedildi.");
+      setToast(translate("toastDraftSaved"));
       void refreshDrafts();
     } catch (error) {
       setComposeError(
-        error instanceof Error ? error.message : "Taslak kaydedilemedi.",
+        error instanceof Error ? error.message : translate("errDraftSaveFailed"),
       );
     } finally {
       setSending(false);
@@ -1293,12 +1305,12 @@ export function useMailClientController({
     }
     if (forwardMessageId) {
       if (!composeTo.trim()) {
-        setComposeError("İletmek için alıcı (Kime) zorunlu.");
+        setComposeError(translate("errForwardToRequired"));
         return;
       }
     } else if (composeCampaignMode) {
       if (!composeSubject.trim() || !composeText.trim()) {
-        setComposeError("Kampanya için konu ve mesaj zorunlu.");
+        setComposeError(translate("errCampaignSubjectBody"));
         return;
       }
     } else if (
@@ -1306,7 +1318,7 @@ export function useMailClientController({
       !composeSubject.trim() ||
       !composeText.trim()
     ) {
-      setComposeError("Kime, konu ve mesaj zorunlu.");
+      setComposeError(translate("errComposeRequired"));
       return;
     }
     const outboundHtml =
@@ -1327,7 +1339,7 @@ export function useMailClientController({
         ...fileAttachments,
       ];
       if (attachments.length > 3) {
-        setComposeError("En fazla 3 ek (satır içi görseller dahil).");
+        setComposeError(translate("errMaxAttachments"));
         setSending(false);
         return;
       }
@@ -1341,7 +1353,7 @@ export function useMailClientController({
           return;
         }
         if (!composeSubject.trim() || !composeText.trim()) {
-          setComposeError("Konu ve mesaj zorunlu.");
+          setComposeError(translate("errSubjectBodyRequired"));
           setSending(false);
           return;
         }
@@ -1410,7 +1422,7 @@ export function useMailClientController({
           );
         } else {
           setCampaignResult(result);
-          setToast(`Kampanya: ${result.sent}/${result.attempted} gönderildi.`);
+          setToast(translate("toastCampaignSent", { sent: result.sent, attempted: result.attempted }));
         }
         void refresh();
         setSending(false);
@@ -1530,7 +1542,7 @@ export function useMailClientController({
       setComposeStoredAttachments([]);
       setEditingDraftId(null);
       if (!scheduledUndo) {
-        setToast("Gönderildi.");
+        setToast(translate("toastSent"));
         setView("sent");
         void refresh();
       }
@@ -1539,7 +1551,7 @@ export function useMailClientController({
       setComposeError(
         error instanceof Error
           ? error.message
-          : "Gönderilemedi. SMTP veya kurumsal kutu ayarını kontrol edin.",
+          : translate("errSendFailedCheck"),
       );
     } finally {
       setSending(false);
@@ -1601,7 +1613,7 @@ export function useMailClientController({
       void refresh();
     } catch (error) {
       setToast(
-        error instanceof Error ? error.message : "Toplu işlem başarısız.",
+        error instanceof Error ? error.message : translate("errBulkFailed"),
       );
     }
   }
@@ -1613,11 +1625,11 @@ export function useMailClientController({
     }
     try {
       await createCustomFolder(accessToken, name.trim());
-      setToast("Klasör oluşturuldu.");
+      setToast(translate("toastFolderCreated"));
       void refreshCustomFolders();
     } catch (error) {
       setToast(
-        error instanceof Error ? error.message : "Klasör oluşturulamadı.",
+        error instanceof Error ? error.message : translate("errFolderCreateFailed"),
       );
     }
   }
@@ -1672,7 +1684,7 @@ export function useMailClientController({
       void refresh();
     } catch (error) {
       setToast(
-        error instanceof Error ? error.message : "Toplu yıldız başarısız.",
+        error instanceof Error ? error.message : translate("errBulkStarFailed"),
       );
     }
   }
@@ -1689,14 +1701,14 @@ export function useMailClientController({
         messageIds,
         until.toISOString(),
       );
-      setToast(`${result.updated} mesaj ${hours} saat ertelendi.`);
+      setToast(translate("toastBulkSnoozed", { count: result.updated, hours }));
       setCheckedIds(new Set());
       setDetail(null);
       setSelectedId(null);
       void refresh();
     } catch (error) {
       setToast(
-        error instanceof Error ? error.message : "Toplu erteleme başarısız.",
+        error instanceof Error ? error.message : translate("errBulkSnoozeFailed"),
       );
     }
   }
@@ -1841,7 +1853,7 @@ export function useMailClientController({
       }
       setSelectedId(null);
       setMobilePane("list");
-      setToast("Geri alındı.");
+      setToast(translate("toastUndone"));
       void refresh();
     } catch (error) {
       setToast(error instanceof Error ? error.message : "Geri alınamadı.");
@@ -1914,7 +1926,7 @@ export function useMailClientController({
     try {
       await markUnread(accessToken, selectedId);
       setDetail({ ...detail, readAt: null });
-      setToast("Okunmadı işaretlendi.");
+      setToast(translate("toastMarkedUnread"));
       void refresh();
     } catch (error) {
       setToast(
@@ -2010,7 +2022,7 @@ export function useMailClientController({
         await deleteMessagePermanently(accessToken, selectedId);
         setDetail(null);
       }
-      setToast("Kalıcı olarak silindi.");
+      setToast(translate("toastDeletedPermanent"));
       finishAfterMessageNavigation(closedId);
       void refresh();
     } catch (error) {
@@ -2059,10 +2071,10 @@ export function useMailClientController({
     try {
       if (view === "trash" && kind === "sent") {
         await restoreSentFromTrash(accessToken, messageId);
-        setToast("Gönderilen klasörüne geri alındı.");
+        setToast(translate("toastRestoredToSent"));
       } else if (view === "sent") {
         if (!relatedInboundMessageId) {
-          setToast("Bu gönderim için arşivlenecek gelen mesaj yok.");
+          setToast(translate("toastNoInboundToArchive"));
           return;
         }
         await setMessageMailboxFolder(
@@ -2070,13 +2082,13 @@ export function useMailClientController({
           relatedInboundMessageId,
           "archive",
         );
-        setToast("İlişkili mesaj arşivlendi.");
+        setToast(translate("toastRelatedArchived"));
       } else if (view === "drafts") {
-        setToast("Taslaklar arşivlenemez.");
+        setToast(translate("toastDraftsCannotArchive"));
         return;
       } else if (view === "trash") {
         await setMessageMailboxFolder(accessToken, messageId, "inbox");
-        setToast("Gelen kutusuna alındı.");
+        setToast(translate("toastMovedToInbox"));
       } else {
         const folder: MailMailboxFolder =
           view === "archive" ? "inbox" : "archive";
@@ -2107,10 +2119,10 @@ export function useMailClientController({
     try {
       if (currentlyUnread) {
         await markRead(accessToken, messageId);
-        setToast("Okundu olarak işaretlendi.");
+        setToast(translate("toastMarkedRead"));
       } else {
         await markUnread(accessToken, messageId);
-        setToast("Okunmadı olarak işaretlendi.");
+        setToast(translate("toastMarkedUnreadState"));
       }
       clearRowSelectionAfterSwipe(messageId);
       void refresh();
@@ -2133,20 +2145,20 @@ export function useMailClientController({
       if (kind === "sent" || view === "sent") {
         if (view === "trash") {
           await deleteSentMessage(accessToken, messageId);
-          setToast("Kalıcı olarak silindi.");
+          setToast(translate("toastDeletedPermanent"));
         } else {
           await trashSentMessage(accessToken, messageId);
-          setToast("Çöp kutusuna taşındı.");
+          setToast(translate("toastMovedToTrash"));
         }
       } else if (view === "drafts") {
         await deleteDraft(accessToken, messageId);
-        setToast("Taslak silindi.");
+        setToast(translate("toastDraftDeleted"));
       } else if (view === "trash") {
         await deleteMessagePermanently(accessToken, messageId);
-        setToast("Kalıcı olarak silindi.");
+        setToast(translate("toastDeletedPermanent"));
       } else {
         await setMessageMailboxFolder(accessToken, messageId, "trash");
-        setToast("Çöp kutusuna taşındı.");
+        setToast(translate("toastMovedToTrash"));
       }
       clearRowSelectionAfterSwipe(messageId);
       if (view !== "trash") {
@@ -2429,7 +2441,7 @@ export function useMailClientController({
     }
     const recipients = parseCampaignRecipientsText(composeCampaignRecipients);
     if (recipients.length === 0) {
-      setToast("Önizleme için alıcı listesi gerekli.");
+      setToast(translate("toastPreviewRecipientsRequired"));
       return;
     }
     const domainAllowlist = composeCampaignDomainAllowlist
@@ -2464,7 +2476,7 @@ export function useMailClientController({
       });
       setComposeCampaignSegmentPreview(result.preview);
     } catch {
-      setToast("Segment önizlemesi alınamadı.");
+      setToast(translate("toastSegmentPreviewFailed"));
     } finally {
       setComposeCampaignSegmentPreviewBusy(false);
     }
@@ -2533,14 +2545,14 @@ export function useMailClientController({
     setComposeCampaignReminderMinutes(compose.reminderMinutesBefore ?? 0);
     setComposeCampaignTags(compose.tags?.join(", ") ?? "");
     setComposeCampaignSegmentPreview(null);
-    setToast("Kampanya yazı ekranına kopyalandı.");
+    setToast(translate("toastCampaignCopied"));
   }
 
   async function importCampaignCsv(file: File) {
     const text = await file.text();
     const rows = parseCampaignCsvText(text);
     if (rows.length === 0) {
-      setToast("CSV’den geçerli alıcı bulunamadı.");
+      setToast(translate("toastCsvNoRecipients"));
       return;
     }
     setComposeCampaignRecipients((prev) =>
@@ -2575,11 +2587,11 @@ export function useMailClientController({
       composeFiles.length +
       composeStoredAttachments.length;
     if (total >= 3) {
-      setToast("En fazla 3 ek (satır içi görseller dahil).");
+      setToast(translate("errMaxAttachments"));
       return null;
     }
     if (!file.type.startsWith("image/")) {
-      setToast("Yalnızca görsel dosyaları desteklenir.");
+      setToast(translate("toastImagesOnly"));
       return null;
     }
     const cid = `img_${Date.now()}`;
@@ -2668,7 +2680,7 @@ export function useMailClientController({
 
   async function previewComposeOutbound() {
     if (!accessToken || !composeText.trim()) {
-      setComposeError("Önizleme için mesaj metni gerekli.");
+      setComposeError(translate("errPreviewBodyRequired"));
       return;
     }
     const outboundHtml =
@@ -2686,7 +2698,7 @@ export function useMailClientController({
       });
       setComposePreviewHtml(result.html);
     } catch {
-      setComposeError("Alıcı görünümü önizlemesi oluşturulamadı.");
+      setComposeError(translate("errRecipientPreviewFailed"));
     } finally {
       setComposePreviewBusy(false);
     }
