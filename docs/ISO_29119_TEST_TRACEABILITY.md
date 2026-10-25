@@ -17,13 +17,17 @@ Bu belge **sertifikasyon** değildir; otomatik kapılar, raporlar ve manuel UAT/
 
 | Seviye | Komut | Son koşu (VPS) |
 |--------|--------|----------------|
-| Bileşen | `npm run test:unit` | Premium suite |
-| Entegrasyon | `npm run test:integration` | Premium suite |
-| Sistem | `npm run test:mail-e2e`, `verify-posta-https.sh` | Premium suite |
-| Regresyon | Parity close / wave-2 | `customer-ready` STRICT PASS |
-| Güvenlik | OWASP + ZAP | `npm run qa:faz7` |
-| Kabul (UAT) | `npm run uat:faz6` / `uat:ops` | Faz 6B PASS |
-| Müşteri kapısı | `STRICT_CUSTOMER_READY=1 npm run customer-ready` | PASS (25.10.2026) |
+| Tam katalog | `npm run qa:full-catalog` | **PASS** `SDLC_TEST_CATALOG_2026-10-25.json` failCount 0 |
+| Bileşen | `npm run test:unit` | 9 test (core) PASS |
+| Entegrasyon | `npm run test:integration` | 43 API test + smoke PASS |
+| Sistem | `npm run test:mail-e2e`, `verify-posta-https.sh` | Playwright posta + messaging PASS |
+| Regresyon | Parity close / wave-2 | PASS |
+| Yük/stres | `qa-load-stress` + `qa-stress-profile` + k6 | PASS |
+| Lokalizasyon | tr/en/expanded/i18n gate | PASS |
+| Güvenlik | OWASP + ZAP passive | Faz 7 PASS (ZAP WARN backlog) |
+| Kabul (UAT) | `UAT_VPS_RUNTIME=1` premium + faz9 | uat ops PASS |
+| Uyumluluk | `npm run qa:faz8` | MP-9 + kanıt PASS |
+| Müşteri kapısı | `QA_CLOSURE_STRICT=1` | closure PASS |
 
 ## Harici sertifikasyon (29119 dışı çerçeveler)
 

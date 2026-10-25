@@ -87,21 +87,19 @@ fi
 
 echo ""
 echo "—— IMAP LOGIN (parity kutu) ——"
-if [[ -n "${IMAP_GOLD_PASSWORD:-}" ]] || [[ $# -ge 2 ]]; then
-  PASS="${2:-${IMAP_GOLD_PASSWORD}}"
-  set +e
-  INSTALL_DIR="${INSTALL_DIR:-${ROOT}}" ENV_FILE="${ENV_FILE}" \
-    IMAP_GOLD_EMAIL="${EMAIL}" IMAP_GOLD_PASSWORD="${PASS}" \
-    bash "${ROOT}/scripts/smoke-imap-gold.sh" "${EMAIL}" "${PASS}"
-  imap_rc=$?
-  set -e
-  if [[ "${imap_rc}" -ne 0 ]]; then
-    not "IMAP gold smoke (M2 parity login)"
-  else
-    ok "IMAP gold smoke (M2 parity login)"
-  fi
+PASS="${2:-${IMAP_GOLD_PASSWORD:-}}"
+set +e
+INSTALL_DIR="${INSTALL_DIR:-${ROOT}}" ENV_FILE="${ENV_FILE}" \
+  IMAP_GOLD_EMAIL="${EMAIL}" IMAP_GOLD_PASSWORD="${PASS}" \
+  bash "${ROOT}/scripts/smoke-imap-gold.sh" "${EMAIL}" ${PASS:+"${PASS}"}
+imap_rc=$?
+set -e
+if [[ "${imap_rc}" -eq 2 ]]; then
+  echo "SKIP: IMAP şifresi yok — bootstrap veya IMAP_GOLD_PASSWORD (rotate-imap-credential-vps.sh)"
+elif [[ "${imap_rc}" -ne 0 ]]; then
+  not "IMAP gold smoke (M2 parity login)"
 else
-  echo "SKIP: IMAP_GOLD_PASSWORD yok — M1 deploy smoke veya rotate sonrası tekrar çalıştırın"
+  ok "IMAP gold smoke (M2 parity login)"
 fi
 
 echo ""
