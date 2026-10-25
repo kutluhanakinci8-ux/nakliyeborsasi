@@ -5,6 +5,11 @@ import {
   mailSenderInitials,
   mailSenderLabel,
 } from "@/lib/mailDisplay";
+import { useMailLocale } from "@/lib/MailLocaleProvider";
+import {
+  inboxSourceBadgeClass,
+  inboxSourceBadgeLabel,
+} from "@/lib/mailInboxSourceUi";
 
 type RowMessage = {
   id: string;
@@ -45,6 +50,7 @@ export function MailInboxMessageRow({
   onToggleStar,
   onToggleCheck,
 }: Props) {
+  const { t } = useMailLocale();
   const starred = Boolean(m.starredAt);
   const sender = mailSenderLabel(m.fromAddress);
   const dateLabel = formatMailListDate(m.receivedAt);
@@ -88,14 +94,18 @@ export function MailInboxMessageRow({
             {sender}
             {m.inboxSource && m.inboxSource.provider !== "lerta" ? (
               <span
-                className="mail-inbox-source-badge"
+                className={inboxSourceBadgeClass(m.inboxSource.provider)}
                 title={
                   m.inboxSource.accountEmail
                     ? m.inboxSource.accountEmail
                     : m.inboxSource.label
                 }
               >
-                {m.inboxSource.label}
+                {inboxSourceBadgeLabel(
+                  m.inboxSource.provider,
+                  m.inboxSource.label,
+                  t,
+                )}
               </span>
             ) : null}
           </span>

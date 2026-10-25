@@ -1,6 +1,9 @@
 "use client";
 
+import { useMemo } from "react";
 import { MailComposeMergeFields } from "./MailComposeMergeFields";
+import { MailCapInboxEmptyState } from "./MailCapInboxEmptyState";
+import { MailIosPwaOnboardingBanner } from "./MailIosPwaOnboardingBanner";
 import { MailCampaignResultDialog } from "./MailCampaignResultDialog";
 import { MailEmptyState } from "./MailEmptyState";
 import { MailShortcutsDialog } from "./MailShortcutsDialog";
@@ -20,6 +23,7 @@ import { MailListSwipeRow } from "./MailListSwipeRow";
 import { MailAppLockOverlay } from "./MailAppLockOverlay";
 import type { MailClientController } from "./useMailClientController";
 import { useMailLocale } from "@/lib/MailLocaleProvider";
+import { connectedTabLabel, inboxSourceBadgeClass, inboxSourceBadgeLabel } from "@/lib/mailInboxSourceUi";
 import { formatMailListDate } from "@/lib/mailDisplay";
 import {
   deleteCustomFolder,
@@ -159,6 +163,7 @@ export function MailClientShell({ mail }: Props) {
     inboxConnectedSource,
     setInboxConnectedSource,
     showConnectedInboxTabs,
+    connectedAccounts,
     listMessageIds,
     listNavigationEnabled,
     logout,
@@ -328,6 +333,34 @@ export function MailClientShell({ mail }: Props) {
     view,
   } = mail;
 
+  const capInboxEmpty = useMemo(() => {
+    if (
+      view !== "inbox" ||
+      searchActive ||
+      inboxConnectedSource === "all" ||
+      listItems.length > 0
+    ) {
+      return null;
+    }
+    const accounts = connectedAccounts.filter(
+      (account) =>
+        account.provider === inboxConnectedSource && account.enabled,
+    );
+    return {
+      source: inboxConnectedSource,
+      reason:
+        accounts.length === 0
+          ? ("no_account" as const)
+          : ("sync_pending" as const),
+    };
+  }, [
+    view,
+    searchActive,
+    inboxConnectedSource,
+    listItems.length,
+    connectedAccounts,
+  ]);
+
   return (
     <div
       className={`mail-app mobile-pane-${mobilePane}${embedMode ? " mail-app--embed" : ""}${embedHubShell ? " mail-app--embed-hub" : ""}${shellBrand === "ekolojik" ? " mail-app--shell-ekolojik" : ""}${inboxListDensity === "compact" ? " mail-app--list-compact" : ""}`}
@@ -351,6 +384,7 @@ export function MailClientShell({ mail }: Props) {
       {accessToken ? (
         <MailPilotBillingNotice accessToken={accessToken} variant="banner" />
       ) : null}
+      {accessToken ? <MailIosPwaOnboardingBanner /> : null}
       <div className="mail-mobile-bar">
         <button type="button" onClick={() => setMobilePane("nav")}>
           {t("mobileMenu")}
@@ -755,7 +789,7 @@ export function MailClientShell({ mail }: Props) {
                   <div
                     className="mail-inbox-focus-tabs mail-inbox-connected-tabs"
                     role="tablist"
-                    aria-label="Bağlı hesap filtresi"
+                    aria-label={t("capFilterAria")}
                   >
                     <button
                       type="button"
@@ -768,7 +802,7 @@ export function MailClientShell({ mail }: Props) {
                       }
                       onClick={() => setInboxConnectedSource("all")}
                     >
-                      Tümü
+                      {connectedTabLabel("all", t)}
                     </button>
                     <button
                       type="button"
@@ -781,7 +815,7 @@ export function MailClientShell({ mail }: Props) {
                       }
                       onClick={() => setInboxConnectedSource("lerta")}
                     >
-                      Lerta
+                      {connectedTabLabel("lerta", t)}
                     </button>
                     <button
                       type="button"
@@ -796,7 +830,7 @@ export function MailClientShell({ mail }: Props) {
                         setInboxConnectedSource("microsoft_graph")
                       }
                     >
-                      Microsoft
+                      {connectedTabLabel("microsoft_graph", t)}
                     </button>
                     <button
                       type="button"
@@ -809,7 +843,7 @@ export function MailClientShell({ mail }: Props) {
                       }
                       onClick={() => setInboxConnectedSource("gmail_api")}
                     >
-                      Gmail
+                      {connectedTabLabel("gmail_api", t)}
                     </button>
                   </div>
                 ) : null}
@@ -1113,8 +1147,10 @@ export function MailClientShell({ mail }: Props) {
                       className="mail-list-item"
                       onClick={() => void openExternalSearchHit(hit)}
                     >
-                      <span className="mail-inbox-source-badge">
-                        {hit.provider === "gmail_api" ? "Gmail" : "Microsoft"}
+                      <span
+                        className={inboxSourceBadgeClass(hit.provider)}
+                      >
+                        {inboxSourceBadgeLabel(hit.provider, hit.provider, t)}
                       </span>
                       <strong>{hit.subject}</strong>
                       <span className="mail-accounts-muted">
@@ -1130,9 +1166,26 @@ export function MailClientShell({ mail }: Props) {
         {view === "spam" ? (
           <p className="mail-search-hint" role="status">
             {t("spamFolderHint")}
+            {showConnectedInboxTabs ? (
+              <>
+                {" "}
+                {t("capConnectedSpamHint")}
+              </>
+            ) : null}
           </p>
         ) : null}
         {listItems.length === 0 ? (
+          capInboxEmpty ? (
+            <MailCapInboxEmptyState
+              premium={isPrimaryInbox}
+              source={capInboxEmpty.source}
+              reason={capInboxEmpty.reason}
+              onManageAccounts={() => {
+                setSettingsInitialView("accounts");
+                setSettingsOpen(true);
+              }}
+            />
+          ) : (
           <MailEmptyState
             premium={isPrimaryInbox}
             variant={
@@ -1153,6 +1206,7 @@ export function MailClientShell({ mail }: Props) {
                             : "inbox"
             }
           />
+          )
         ) : (
           listItems.map((m) => {
             const unread =

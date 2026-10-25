@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { MailCalendarOAuthSetupCard } from "./MailCalendarOAuthSetupCard";
 import {
   completeCalendarGoogleOAuth,
   deleteCalendarGoogleAccount,
@@ -128,11 +129,7 @@ export function MailCalendarGooglePanel({
         görünümüne aktarılır.
       </p>
       {configured === false ? (
-        <p className="mail-cal-feed-empty" role="note">
-          Sunucuda Google OAuth tanımlı değil (
-          <code>GOOGLE_CALENDAR_CLIENT_ID</code> /{" "}
-          <code>GOOGLE_CALENDAR_CLIENT_SECRET</code>).
-        </p>
+        <MailCalendarOAuthSetupCard provider="google" />
       ) : (
         <button
           type="button"

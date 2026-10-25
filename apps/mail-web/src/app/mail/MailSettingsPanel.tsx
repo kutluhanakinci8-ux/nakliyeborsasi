@@ -33,6 +33,8 @@ import { MailPrivacySettingsPanel } from "./MailPrivacySettingsPanel";
 import { MailSecuritySettingsPanel } from "./MailSecuritySettingsPanel";
 import { MailIntegrationsSettingsPanel } from "./MailIntegrationsSettingsPanel";
 import { MailPilotBillingNotice } from "./MailPilotBillingNotice";
+import { MailCalendarGooglePanel } from "./MailCalendarGooglePanel";
+import { MailCalendarGraphPanel } from "./MailCalendarGraphPanel";
 import { fetchWebAuthnCredentials } from "@/lib/mailApi";
 
 export type SettingsView =
@@ -638,8 +640,24 @@ export function MailSettingsPanel({
         "Takvim",
         <>
           <p className="mail-settings-lead">
-            Harici CalDAV hesapları. Hesap ekleme ve ICS beslemeleri tam ekran
-            takvim görünümünde yapılır.
+            Google Takvim, Microsoft Graph ve CalDAV. OAuth bağlantıları buradan
+            veya tam ekran takvim görünümünden yönetilir.
+          </p>
+          <div className="mail-settings-calendar-cloud">
+            <MailCalendarGooglePanel
+              accessToken={accessToken}
+              onToast={setSyncStatus}
+              onSynced={() => {}}
+            />
+            <MailCalendarGraphPanel
+              accessToken={accessToken}
+              onToast={setSyncStatus}
+              onSynced={() => {}}
+            />
+          </div>
+          <p className="mail-settings-lead">
+            CalDAV hesapları ve ICS beslemeleri tam ekran takvimde de
+            düzenlenebilir.
           </p>
           {syncStatus ? <p>{syncStatus}</p> : null}
           {calDavAccounts.length === 0 ? (

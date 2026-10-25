@@ -166,6 +166,42 @@ export const MAIL_WEB_MESSAGES: Record<MailUiLocale, Record<string, string>> = {
     richPromptImageAlt: "Alt metin",
     richPromptImageAltDefault: "Görsel",
     richPromptVideoUrl: "Video URL (YouTube, Vimeo veya doğrudan mp4)",
+    calGoogleSetupTitle: "Google Takvim — yönetici yapılandırması gerekli",
+    calGoogleSetupBody:
+      "OAuth anahtarları sunucuda tanımlı değil. Kurulum tamamlanana kadar bağlantı başlatılamaz; aşağıdaki rehberi paylaşın.",
+    calGoogleSetupEnv:
+      "GOOGLE_CALENDAR_CLIENT_ID · GOOGLE_CALENDAR_CLIENT_SECRET · redirect /mail/google-calendar-oauth",
+    calGraphSetupTitle: "Microsoft Graph takvim — yönetici yapılandırması gerekli",
+    calGraphSetupBody:
+      "Graph OAuth anahtarları sunucuda tanımlı değil. Kurulum tamamlanana kadar bağlantı başlatılamaz.",
+    calGraphSetupEnv: "MICROSOFT_GRAPH_MAIL_* · MICROSOFT_GRAPH_CALENDAR_*",
+    calSetupHelpLink: "Kurulum rehberi",
+    calSetupAdminLink: "Yöneticiye yazın",
+    iosPwaBannerTitle: "iPhone’da bildirim ve tam ekran için",
+    iosPwaStep1: "Safari’de paylaş (□↑) düğmesine dokunun",
+    iosPwaStep2: "Ana Ekrana Ekle’yi seçin",
+    iosPwaStep3: "Açılan kısayoldan Lerta Posta’yı kullanın; Web Push için Ayarlar → Bildirimler",
+    iosPwaDismiss: "Kapat",
+    iosPwaSettingsTitle: "iOS — Ana ekrana ekle",
+    iosPwaSettingsHint:
+      "Kısayol açıldıktan sonra bildirimler için Web Push düğmesini kullanın (sunucu VAPID yapılandırması gerekir).",
+    capFilterAria: "Bağlı hesap filtresi",
+    capTabAll: "Tümü",
+    capTabLerta: "Lerta",
+    capTabMicrosoft: "Microsoft",
+    capTabGmail: "Gmail",
+    capBadgeGmail: "Gmail",
+    capBadgeMicrosoft: "Microsoft",
+    capBadgeLerta: "Lerta",
+    capEmptyNoAccountTitle: "Bağlı hesap yok",
+    capEmptyNoAccountBody:
+      "{{filter}} filtresi için etkin bir hesap bulunamadı. Ayarlar → Hesaplar bölümünden Microsoft veya Gmail bağlayın.",
+    capEmptySyncTitle: "Senkron bekleniyor",
+    capEmptySyncBody:
+      "{{filter}} için hesap bağlı; ilk senkron veya yeni postalar henüz listelenmemiş olabilir. Yenile’ye basın veya birkaç dakika bekleyin.",
+    capEmptyAccountsLink: "Hesapları yönet",
+    capConnectedSpamHint:
+      "Bağlı Gmail/Microsoft hesaplarında Junk klasörü ayrı senkronlanır; Gelen’e taşıdıktan sonra Yenile kullanın.",
   },
   en: {
     navInbox: "Inbox",
@@ -329,6 +365,43 @@ export const MAIL_WEB_MESSAGES: Record<MailUiLocale, Record<string, string>> = {
     richPromptImageAlt: "Alt text",
     richPromptImageAltDefault: "Image",
     richPromptVideoUrl: "Video URL (YouTube, Vimeo, or direct mp4)",
+    calGoogleSetupTitle: "Google Calendar — admin setup required",
+    calGoogleSetupBody:
+      "OAuth keys are not configured on the server. Share the setup guide below with your administrator.",
+    calGoogleSetupEnv:
+      "GOOGLE_CALENDAR_CLIENT_ID · GOOGLE_CALENDAR_CLIENT_SECRET · redirect /mail/google-calendar-oauth",
+    calGraphSetupTitle: "Microsoft Graph calendar — admin setup required",
+    calGraphSetupBody:
+      "Graph OAuth keys are not configured on the server. Connection cannot start until setup is complete.",
+    calGraphSetupEnv: "MICROSOFT_GRAPH_MAIL_* · MICROSOFT_GRAPH_CALENDAR_*",
+    calSetupHelpLink: "Setup guide",
+    calSetupAdminLink: "Email administrator",
+    iosPwaBannerTitle: "For notifications and full screen on iPhone",
+    iosPwaStep1: "In Safari, tap Share (□↑)",
+    iosPwaStep2: "Choose Add to Home Screen",
+    iosPwaStep3:
+      "Open Lerta Mail from the shortcut; enable Web Push under Settings → Notifications",
+    iosPwaDismiss: "Dismiss",
+    iosPwaSettingsTitle: "iOS — Add to Home Screen",
+    iosPwaSettingsHint:
+      "After installing the shortcut, use Web Push below (requires server VAPID configuration).",
+    capFilterAria: "Connected account filter",
+    capTabAll: "All",
+    capTabLerta: "Lerta",
+    capTabMicrosoft: "Microsoft",
+    capTabGmail: "Gmail",
+    capBadgeGmail: "Gmail",
+    capBadgeMicrosoft: "Microsoft",
+    capBadgeLerta: "Lerta",
+    capEmptyNoAccountTitle: "No connected account",
+    capEmptyNoAccountBody:
+      "No active account for the {{filter}} filter. Connect Microsoft or Gmail under Settings → Accounts.",
+    capEmptySyncTitle: "Waiting for sync",
+    capEmptySyncBody:
+      "An account is linked for {{filter}}; the first sync may still be running. Press Refresh or wait a few minutes.",
+    capEmptyAccountsLink: "Manage accounts",
+    capConnectedSpamHint:
+      "Junk folders on connected Gmail/Microsoft accounts sync separately; move to Inbox there, then Refresh.",
   },
 };
 

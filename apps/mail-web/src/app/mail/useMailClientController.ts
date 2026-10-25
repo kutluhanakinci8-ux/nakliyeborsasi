@@ -2884,6 +2884,7 @@ export function useMailClientController({
     inboxConnectedSource,
     setInboxConnectedSource,
     showConnectedInboxTabs,
+    connectedAccounts,
     replyQuoteMode: mailPostaPrefs.replyQuoteMode,
     listMessageIds,
     listNavigationEnabled,

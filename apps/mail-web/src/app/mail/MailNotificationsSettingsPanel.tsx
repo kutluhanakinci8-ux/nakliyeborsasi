@@ -15,6 +15,8 @@ import {
   playMailNotifyBeep,
   setMailNotifySoundEnabled,
 } from "@/lib/mailNotifySound";
+import { useMailLocale } from "@/lib/MailLocaleProvider";
+import { isIosSafari, isStandaloneMailPwa } from "@/lib/mailIosPwa";
 
 type Props = {
   accessToken: string;
@@ -64,7 +66,9 @@ export function MailNotificationsSettingsPanel({
   accessToken,
   notificationsPwaFocus = false,
 }: Props) {
+  const { t } = useMailLocale();
   const [pushConfigured, setPushConfigured] = useState(false);
+  const [showIosOnboarding, setShowIosOnboarding] = useState(false);
   const [notifySound, setNotifySound] = useState(false);
   const [dailyDigest, setDailyDigest] = useState(true);
   const [status, setStatus] = useState("");
@@ -83,6 +87,10 @@ export function MailNotificationsSettingsPanel({
 
   useEffect(() => {
     setNotifySound(isMailNotifySoundEnabled());
+  }, []);
+
+  useEffect(() => {
+    setShowIosOnboarding(isIosSafari() && !isStandaloneMailPwa());
   }, []);
 
   useEffect(() => {
@@ -163,6 +171,24 @@ export function MailNotificationsSettingsPanel({
         Yeni gelen posta için tarayıcı bildirimi (Web Push). HTTPS ve tarayıcı izni
         gerekir; sekme kapalıyken de uyarı alabilirsiniz.
       </p>
+
+      {showIosOnboarding ? (
+        <div
+          className="mail-notify-info mail-notify-info--pwa mail-notify-info--ios"
+          role="note"
+        >
+          <span className="mail-notify-info-icon" aria-hidden="true">📱</span>
+          <div>
+            <p className="mail-notify-info-title">{t("iosPwaSettingsTitle")}</p>
+            <ol className="mail-ios-pwa-settings-steps">
+              <li>{t("iosPwaStep1")}</li>
+              <li>{t("iosPwaStep2")}</li>
+              <li>{t("iosPwaStep3")}</li>
+            </ol>
+            <p className="mail-notify-info-body">{t("iosPwaSettingsHint")}</p>
+          </div>
+        </div>
+      ) : null}
 
       {notificationsPwaFocus ? (
         <div

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { MailCalendarOAuthSetupCard } from "./MailCalendarOAuthSetupCard";
 import {
   completeCalendarGraphOAuth,
   deleteCalendarGraphAccount,
@@ -128,11 +129,7 @@ export function MailCalendarGraphPanel({
         etkinlikleri takvim görünümüne aktarılır.
       </p>
       {configured === false ? (
-        <p className="mail-cal-feed-empty" role="note">
-          Sunucuda Graph OAuth tanımlı değil (
-          <code>MICROSOFT_GRAPH_MAIL_*</code> veya{" "}
-          <code>MICROSOFT_GRAPH_CALENDAR_*</code>).
-        </p>
+        <MailCalendarOAuthSetupCard provider="graph" />
       ) : (
         <button
           type="button"
