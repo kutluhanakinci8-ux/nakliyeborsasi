@@ -98,6 +98,26 @@ export class EmailTemplateService {
       case NotificationEventCode.SocialHubHealthDegraded:
       case NotificationEventCode.SocialHubWeeklyDigest:
         return this.renderOperationalAdminTr(eventCode, payload);
+      case NotificationEventCode.PlatformContactFormSubmitted:
+        return {
+          subject: `[${PLATFORM_EMAIL_SUBJECT_TAG}] İletişim formu — ${payload.topic}`,
+          html: wrapCorporateEmail(
+            "Web iletişim formu",
+            `${leadParagraph(
+              `<strong>${escapeHtml(payload.name)}</strong> (${escapeHtml(payload.emailAddress)}) yeni mesaj gönderdi.`,
+            )}
+            ${detailTable([
+              { label: "Konu", value: payload.topic },
+              { label: "Firma", value: payload.company ?? "—" },
+              { label: "Mesaj", value: payload.message },
+            ])}`,
+            {
+              eyebrow: "Vitrin / form",
+              preheader: `Form: ${payload.topic}`,
+            },
+          ),
+          text: `Form ${payload.topic}: ${payload.name} <${payload.emailAddress}>\n${payload.message}`,
+        };
       case NotificationEventCode.UserFirstLogin:
         return {
           subject: `[${PLATFORM_EMAIL_SUBJECT_TAG}] İlk giriş — ${payload.emailAddress}`,

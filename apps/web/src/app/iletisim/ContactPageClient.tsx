@@ -11,7 +11,8 @@ import {
   CONTACT_ROUTES,
   type ContactTopic,
 } from "../../lib/contactOffices";
-import { PLATFORM_PRIMARY_CONTACT_EMAIL } from "../../lib/platformBranding";
+import { PublicApiConfiguration } from "../../lib/PublicApiConfiguration";
+import { LERTA_COM_TR_PLATFORM_ADMIN_INBOX } from "../../lib/platformBranding";
 
 const SUBNAV = [
   { href: "#contact-form", label: "Mesaj formu" },
@@ -30,11 +31,46 @@ const ROUTE_ICON: Record<ContactTopic, string> = {
 export function ContactPageClient() {
   const [topic, setTopic] = useState<ContactTopic>("demo");
   const [sent, setSent] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>): void {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
-    setSent(true);
+    setSubmitError("");
+    setSubmitting(true);
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    const name = String(data.get("name") ?? "").trim();
+    const email = String(data.get("email") ?? "").trim();
+    const message = String(data.get("message") ?? "").trim();
+    try {
+      const response = await fetch(
+        `${PublicApiConfiguration.resolveBaseUrl()}/public/platform/contact`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name,
+            email,
+            topic,
+            message,
+            company: String(data.get("company") ?? "").trim() || undefined,
+          }),
+        },
+      );
+      if (!response.ok) {
+        throw new Error("submit-failed");
+      }
+      setSent(true);
+      form.reset();
+    } catch {
+      setSubmitError(
+        "Gönderilemedi. Lütfen tekrar deneyin veya info@lerta.com.tr adresine yazın.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   const selectedRoute = CONTACT_ROUTES.find((route) => route.topic === topic);
@@ -78,8 +114,11 @@ export function ContactPageClient() {
 
         {sent ? (
           <p className="success banner contact-success">
-            Teşekkürler. Mesajınız kaydedildi — en kısa sürede dönüş yapılacak.
+            Teşekkürler. Mesajınız info@lerta.com.tr adresine iletildi — en kısa sürede dönüş yapılacak.
           </p>
+        ) : null}
+        {submitError ? (
+          <p className="error banner contact-error" role="alert">{submitError}</p>
         ) : null}
 
         <div id="contact-form" className="contact-layout contact-layout--wide contact-anchor">
@@ -137,8 +176,12 @@ export function ContactPageClient() {
                   placeholder="Koridor, hacim veya entegrasyon ihtiyacınızı kısaca yazın…"
                 />
               </label>
-              <button type="submit" className="btn-gold-wide contact-submit">
-                Mesajı gönder
+              <button
+                type="submit"
+                className="btn-gold-wide contact-submit"
+                disabled={submitting}
+              >
+                {submitting ? "Gönderiliyor…" : "Mesajı gönder"}
               </button>
             </form>
           </section>
@@ -152,8 +195,8 @@ export function ContactPageClient() {
                   <span>TR genel hat · mesai içi</span>
                 </li>
                 <li>
-                  <a href={`mailto:${PLATFORM_PRIMARY_CONTACT_EMAIL}`}>
-                    {PLATFORM_PRIMARY_CONTACT_EMAIL}
+                  <a href={`mailto:${LERTA_COM_TR_PLATFORM_ADMIN_INBOX}`}>
+                    {LERTA_COM_TR_PLATFORM_ADMIN_INBOX}
                   </a>
                   <span>Genel bilgi</span>
                 </li>

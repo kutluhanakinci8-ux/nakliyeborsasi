@@ -172,6 +172,7 @@ import { MailAddressAliasService } from "./MailAddressAliasService";
 import { MailPlatformKpiService } from "./MailPlatformKpiService";
 import { PublicMailStatusController } from "./PublicMailStatusController";
 import { PublicMailMarketingUnsubscribeController } from "./PublicMailMarketingUnsubscribeController";
+import { PublicPlatformContactController } from "./PublicPlatformContactController";
 import { MailMarketingUnsubscribeService } from "./MailMarketingUnsubscribeService";
 import { MailBimiLogoProbeService } from "./MailBimiLogoProbeService";
 import { MailMarketingCampaignService } from "./MailMarketingCampaignService";
@@ -267,6 +268,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     UserNotificationPreferencesController,
     PublicMailStatusController,
     PublicMailMarketingUnsubscribeController,
+    PublicPlatformContactController,
     MailPublicApiController,
   ],
   providers: [

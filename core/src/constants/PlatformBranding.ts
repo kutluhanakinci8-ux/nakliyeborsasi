@@ -18,6 +18,9 @@ export const PLATFORM_TENANT_MAIL_DOMAIN = "kullanici.lerta.tr";
  */
 export const PLATFORM_MAIL_SAAS_TENANT_DOMAIN = "lerta.com.tr";
 
+/** Lerta Mail / Posta — tek platform yönetici kutusu (form, kayıt, anket bildirimleri). */
+export const LERTA_COM_TR_PLATFORM_ADMIN_INBOX = "info@lerta.com.tr";
+
 /**
  * Lerta Post — sıfır müşteri DNS: `{localPart}@{firma}.post` (ör. `info@abayer.post`).
  * Teknik FQDN: `info@abayer.post.lerta.com.tr` · wildcard MX `*.post.lerta.com.tr`.
@@ -167,6 +170,7 @@ export function isPlatformOperatorEmail(emailAddress: string): boolean {
   const allowed = new Set([
     PLATFORM_OPERATOR_EMAIL.toLowerCase(),
     PLATFORM_PRIMARY_CONTACT_EMAIL.toLowerCase(),
+    LERTA_COM_TR_PLATFORM_ADMIN_INBOX.toLowerCase(),
   ]);
   return allowed.has(normalized);
 }

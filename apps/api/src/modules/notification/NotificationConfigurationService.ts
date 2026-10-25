@@ -1,5 +1,6 @@
 import {
   InstantPostFromMode,
+  LERTA_COM_TR_PLATFORM_ADMIN_INBOX,
   PLATFORM_DEFAULT_SMTP_FROM,
   PLATFORM_PRIMARY_CONTACT_EMAIL,
   resolveInstantPostFromMode,
@@ -22,11 +23,19 @@ export class NotificationConfigurationService {
   public resolveDefaultAdminRecipients(): string[] {
     const raw =
       this.configService.get<string>("PLATFORM_ADMIN_EMAILS") ??
-      PLATFORM_PRIMARY_CONTACT_EMAIL;
+      this.configService.get<string>("LERTA_PLATFORM_INBOX_EMAIL") ??
+      LERTA_COM_TR_PLATFORM_ADMIN_INBOX;
     return raw
       .split(/[,;]/)
       .map((email) => email.trim().toLowerCase())
       .filter(Boolean);
+  }
+
+  public resolvePlatformInboxEmail(): string {
+    const raw =
+      this.configService.get<string>("LERTA_PLATFORM_INBOX_EMAIL")?.trim() ??
+      LERTA_COM_TR_PLATFORM_ADMIN_INBOX;
+    return raw.toLowerCase();
   }
 
   public resolveSmtpProfile(): string {

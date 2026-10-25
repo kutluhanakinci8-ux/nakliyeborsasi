@@ -17,6 +17,7 @@ export enum NotificationEventCode {
   TrustReviewReminder = "TRUST_REVIEW_REMINDER",
   SocialHubHealthDegraded = "SOCIAL_HUB_HEALTH_DEGRADED",
   SocialHubWeeklyDigest = "SOCIAL_HUB_WEEKLY_DIGEST",
+  PlatformContactFormSubmitted = "PLATFORM_CONTACT_FORM_SUBMITTED",
 }
 
 
