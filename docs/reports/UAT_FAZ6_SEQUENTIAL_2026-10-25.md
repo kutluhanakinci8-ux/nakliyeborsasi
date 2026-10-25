@@ -20,4 +20,6 @@
 6. **M9** gönderim: pilot adrese MSN/Gmail/Outlook teslim testi.
 7. **M3/M4** OAuth (en son).
 
-Komut: `INSTALL_DIR=/var/www/nakliyeborsasi bash scripts/uat-faz6-sequential.sh`
+Kod kapısı: `bash scripts/verify-uat-faz6-code-complete.sh` — [UAT_FAZ6_CODE_COMPLETE.md](../UAT_FAZ6_CODE_COMPLETE.md)
+
+Ops (sonra): `UAT_VPS_RUNTIME=1 INSTALL_DIR=/var/www/nakliyeborsasi bash scripts/uat-faz6-sequential.sh`
