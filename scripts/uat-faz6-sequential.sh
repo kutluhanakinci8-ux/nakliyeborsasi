@@ -51,11 +51,16 @@ fi
 
 echo ""
 echo "—— M9 inbound (P0 DNS/PTR) ——"
-if MAIL_INBOUND_PTR_SOFT="${MAIL_INBOUND_PTR_SOFT:-1}" bash "${ROOT}/scripts/verify-lerta-mail-inbound-p0.sh"; then
+set +e
+MAIL_INBOUND_PTR_SOFT="${MAIL_INBOUND_PTR_SOFT:-1}" bash "${ROOT}/scripts/verify-lerta-mail-inbound-p0.sh"
+inbound_rc=$?
+set -e
+if [[ "${inbound_rc}" -eq 0 ]]; then
   m9="PASS_P0_DNS"
   notes+=("M9: MSN/Gmail/Outlook inbox teslimi manuel — EMAIL_PILOT §3.3")
 else
   m9="FAIL_P0_DNS"
+  notes+=("M9: inbound P0 FAIL (ör. :25 dinleyici / PTR) — verify-lerta-mail-inbound-p0.sh")
 fi
 
 echo ""

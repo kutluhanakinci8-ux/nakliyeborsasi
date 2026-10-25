@@ -7,7 +7,7 @@
 | **M1** IMAP gold | **PASS_AUTO** | `kutluhan@lerta.com.tr` — PM-5 maildir, doveadm auth, LIST (5 klasör), INBOX. Thunderbird ↔ webmail **manuel** ([MAIL_IMAP_GOLD_SMOKE.md](../MAIL_IMAP_GOLD_SMOKE.md)). |
 | **M3** Graph OAuth | **MISSING_ENV** | VPS `.env`: `MICROSOFT_GRAPH_MAIL_*` yok |
 | **M4** Google Calendar | **MISSING_ENV** | VPS `.env`: `GOOGLE_CALENDAR_*` yok |
-| **M9** inbound P0 | **PASS_P0_DNS** (soft PTR) | MX/SPF/DMARC OK; PTR Hostinger uyarısı — [MAIL_PTR_HOSTINGER.md](../MAIL_PTR_HOSTINGER.md). Inbox teslim (MSN/Gmail) **manuel** §3.3. |
+| **M9** inbound P0 | **Kontrol** | `verify-lerta-mail-inbound-p0.sh` — MX/SPF/DMARC/DKIM OK; PTR Hostinger; `:25` ara sıra script uyarısı (Postfix aktif). Inbox teslim **manuel** §3.3. |
 | **M6/M10** preflight | **PASS** | `uat-premium-preflight.sh` |
 
 ## Sıradaki (sıra)
