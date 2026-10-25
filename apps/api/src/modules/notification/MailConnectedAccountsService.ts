@@ -4,6 +4,7 @@ import { Repository } from "typeorm";
 import { resolveMailSenderAddresses } from "@nakliyeborsasi/core";
 import { MailConnectedInboxEntitlementEntity } from "../../infrastructure/database/entities/MailConnectedInboxEntitlementEntity";
 import { MailExchangeSyncAccountEntity } from "../../infrastructure/database/entities/MailExchangeSyncAccountEntity";
+import { MailGmailSyncAccountEntity } from "../../infrastructure/database/entities/MailGmailSyncAccountEntity";
 import { MailMailboxEntity } from "../../infrastructure/database/entities/MailMailboxEntity";
 import { MailSenderIdentityEntity } from "../../infrastructure/database/entities/MailSenderIdentityEntity";
 import {
@@ -40,6 +41,8 @@ export class MailConnectedAccountsService {
     private readonly entitlementRepository: Repository<MailConnectedInboxEntitlementEntity>,
     @InjectRepository(MailExchangeSyncAccountEntity)
     private readonly exchangeRepository: Repository<MailExchangeSyncAccountEntity>,
+    @InjectRepository(MailGmailSyncAccountEntity)
+    private readonly gmailRepository: Repository<MailGmailSyncAccountEntity>,
     @InjectRepository(MailSenderIdentityEntity)
     private readonly senderRepository: Repository<MailSenderIdentityEntity>,
     @InjectRepository(MailMailboxEntity)
@@ -105,6 +108,29 @@ export class MailConnectedAccountsService {
       accounts.push({
         id: row.id,
         provider: "microsoft_graph",
+        emailAddress: row.emailAddress,
+        displayName: row.displayName,
+        mailboxId: row.mailboxId,
+        enabled: row.enabled,
+        lastSyncedAt: row.lastSyncedAt?.toISOString() ?? null,
+        lastSyncError: row.lastSyncError,
+      });
+    }
+    const gmailRows = await this.gmailRepository.find({
+      where: { organizationId },
+      order: { createdAt: "DESC" },
+    });
+    for (const row of gmailRows) {
+      if (
+        accessibleMailboxIds &&
+        row.mailboxId &&
+        !accessibleMailboxIds.has(row.mailboxId)
+      ) {
+        continue;
+      }
+      accounts.push({
+        id: row.id,
+        provider: "gmail_api",
         emailAddress: row.emailAddress,
         displayName: row.displayName,
         mailboxId: row.mailboxId,

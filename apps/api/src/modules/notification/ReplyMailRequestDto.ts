@@ -2,9 +2,11 @@ import { Type } from "class-transformer";
 import {
   IsArray,
   IsBoolean,
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
+  IsUUID,
   Max,
   MaxLength,
   Min,
@@ -50,4 +52,12 @@ export class ReplyMailRequestDto {
   @ValidateNested()
   @Type(() => ComposeMergeContextDto)
   public merge?: ComposeMergeContextDto;
+
+  @IsOptional()
+  @IsIn(["microsoft_graph", "gmail_api"])
+  public connectedSendProvider?: "microsoft_graph" | "gmail_api";
+
+  @IsOptional()
+  @IsUUID()
+  public connectedSendAccountId?: string;
 }

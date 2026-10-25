@@ -72,6 +72,7 @@ import { MailInboxRuleEntity } from "./entities/MailInboxRuleEntity";
 import { MailDelayedComposeEntity } from "./entities/MailDelayedComposeEntity";
 import { MailExchangeSyncAccountEntity } from "./entities/MailExchangeSyncAccountEntity";
 import { MailConnectedInboxEntitlementEntity } from "./entities/MailConnectedInboxEntitlementEntity";
+import { MailGmailSyncAccountEntity } from "./entities/MailGmailSyncAccountEntity";
 import { MailMailboxDelegateEntity } from "./entities/MailMailboxDelegateEntity";
 import { MailMarketingCampaignEntity } from "./entities/MailMarketingCampaignEntity";
 import { MailWebhookDeliveryLogEntity } from "./entities/MailWebhookDeliveryLogEntity";
@@ -169,6 +170,7 @@ export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
         MailDelayedComposeEntity,
         MailExchangeSyncAccountEntity,
         MailConnectedInboxEntitlementEntity,
+        MailGmailSyncAccountEntity,
         MailMailboxDelegateEntity,
         MailMarketingCampaignEntity,
         MailWebhookDeliveryLogEntity,

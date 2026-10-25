@@ -11,6 +11,7 @@ export type MailInboundAttachmentMeta = {
   sizeBytes: number;
   storagePath?: string | null;
   exchangeAttachmentId?: string | null;
+  gmailAttachmentId?: string | null;
 };
 
 @Entity({ name: "mail_inbound_message" })

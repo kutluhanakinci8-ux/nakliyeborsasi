@@ -3,9 +3,11 @@ import {
   IsArray,
   IsBoolean,
   IsEmail,
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
+  IsUUID,
   Max,
   MaxLength,
   Min,
@@ -45,4 +47,12 @@ export class ForwardMailRequestDto {
   @ValidateNested()
   @Type(() => ComposeMergeContextDto)
   public merge?: ComposeMergeContextDto;
+
+  @IsOptional()
+  @IsIn(["microsoft_graph", "gmail_api"])
+  public connectedSendProvider?: "microsoft_graph" | "gmail_api";
+
+  @IsOptional()
+  @IsUUID()
+  public connectedSendAccountId?: string;
 }

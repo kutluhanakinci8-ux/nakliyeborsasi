@@ -125,6 +125,7 @@ import { UserNotificationPreferenceService } from "./UserNotificationPreferenceS
 import { UpdateMailEmailSocialLinksRequestDto } from "./MailEmailSocialLinksRequestDto";
 import { MailMailboxDelegationService } from "./MailMailboxDelegationService";
 import { MailExchangeGraphSyncService } from "./MailExchangeGraphSyncService";
+import { MailGmailSyncService } from "./MailGmailSyncService";
 import { MailImapMaildirReconcileService } from "./MailImapMaildirReconcileService";
 import { MailCalendarGraphSyncService } from "./MailCalendarGraphSyncService";
 import { MailCalendarGoogleSyncService } from "./MailCalendarGoogleSyncService";
@@ -166,6 +167,7 @@ export class CompanyMailInboxController {
     private readonly userNotificationPreferenceService: UserNotificationPreferenceService,
     private readonly mailMailboxDelegationService: MailMailboxDelegationService,
     private readonly mailExchangeGraphSyncService: MailExchangeGraphSyncService,
+    private readonly mailGmailSyncService: MailGmailSyncService,
     private readonly mailConnectedAccountsService: MailConnectedAccountsService,
     private readonly mailCalendarGraphSyncService: MailCalendarGraphSyncService,
     private readonly mailCalendarGoogleSyncService: MailCalendarGoogleSyncService,
@@ -474,6 +476,9 @@ export class CompanyMailInboxController {
       await this.mailMailboxDelegationService.listMailboxDelegations(user);
     const exchangeAccounts =
       await this.mailExchangeGraphSyncService.listAccounts(user.companyId);
+    const gmailAccounts = await this.mailGmailSyncService.listAccounts(
+      user.companyId,
+    );
     const connectedAccounts =
       await this.mailConnectedAccountsService.listAccounts(user.companyId, user);
     const connectedEntitlement =
@@ -490,6 +495,10 @@ export class CompanyMailInboxController {
       exchangeSync: {
         configured: this.mailExchangeGraphSyncService.isConfigured(),
         accounts: exchangeAccounts,
+      },
+      gmailSync: {
+        configured: this.mailGmailSyncService.isConfigured(),
+        accounts: gmailAccounts,
       },
       connectedAccounts,
       connectedInboxEntitlement: connectedEntitlement,
@@ -631,6 +640,75 @@ export class CompanyMailInboxController {
   ) {
     this.assertMailInboxWriter(user);
     const result = await this.mailExchangeGraphSyncService.syncAllForOrganization(
+      user.companyId,
+      user.userId,
+    );
+    return { ok: true, ...result };
+  }
+
+  @Get("gmail/oauth/start")
+  public async startGmailOAuth(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    this.assertMailInboxWriter(user);
+    return this.mailGmailSyncService.buildOAuthStart(user);
+  }
+
+  @Post("gmail/oauth/complete")
+  public async completeGmailOAuth(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: CompleteExchangeOAuthRequestDto,
+  ) {
+    this.assertMailInboxWriter(user);
+    const account = await this.mailGmailSyncService.completeOAuth(
+      user,
+      body.code,
+      body.state,
+    );
+    return { ok: true, account };
+  }
+
+  @Get("gmail/accounts")
+  public async listGmailAccounts(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    const accounts = await this.mailGmailSyncService.listAccounts(user.companyId);
+    return {
+      configured: this.mailGmailSyncService.isConfigured(),
+      accounts,
+    };
+  }
+
+  @Delete("gmail/accounts/:accountId")
+  public async deleteGmailAccount(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("accountId") accountId: string,
+  ) {
+    this.assertMailInboxWriter(user);
+    await this.mailGmailSyncService.deleteAccount(user, accountId);
+    return { ok: true };
+  }
+
+  @Post("gmail/accounts/:accountId/sync")
+  public async syncGmailAccount(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("accountId") accountId: string,
+  ) {
+    this.assertMailInboxWriter(user);
+    const result = await this.mailGmailSyncService.syncAccount(
+      user.companyId,
+      accountId,
+      user.userId,
+    );
+    return { ok: true, ...result };
+  }
+
+  @Post("gmail/accounts/sync-all")
+  public async syncAllGmailAccounts(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    this.assertMailInboxWriter(user);
+    const result = await this.mailGmailSyncService.syncAllForOrganization(
       user.companyId,
       user.userId,
     );
@@ -1737,6 +1815,8 @@ export class CompanyMailInboxController {
       organizationId: user.companyId,
       userId: user.userId,
       contentProtection: body.contentProtection,
+      connectedSendProvider: body.connectedSendProvider,
+      connectedSendAccountId: body.connectedSendAccountId,
       ...payload,
     });
     await this.recordInboxMailAudit(user, MailIdentityAuditAction.InboxComposeSent, {
@@ -2246,6 +2326,8 @@ export class CompanyMailInboxController {
       replyAll: body.replyAll,
       attachments: body.attachments,
       merge: body.merge,
+      connectedSendProvider: body.connectedSendProvider,
+      connectedSendAccountId: body.connectedSendAccountId,
     });
     await this.recordInboxMailAudit(user, MailIdentityAuditAction.InboxReplySent, {
       inboundMessageId: messageId,
@@ -2326,6 +2408,8 @@ export class CompanyMailInboxController {
       includeOriginal: body.includeOriginal,
       attachments: body.attachments,
       merge: body.merge,
+      connectedSendProvider: body.connectedSendProvider,
+      connectedSendAccountId: body.connectedSendAccountId,
     });
     await this.recordInboxMailAudit(user, MailIdentityAuditAction.InboxForwardSent, {
       inboundMessageId: messageId,

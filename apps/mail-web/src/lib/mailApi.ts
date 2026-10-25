@@ -56,12 +56,20 @@ export type MailStorageQuota = {
   windowLabelTr: string;
 };
 
+export type MailConnectedSendAsOption = {
+  provider: "microsoft_graph" | "gmail_api";
+  accountId: string;
+  emailAddress: string;
+  label: string;
+};
+
 export type MailSendReadiness = {
   canSend: boolean;
   reasonTr: string | null;
   displayAddress: string | null;
   billingWarningTr?: string | null;
   billingStatus?: string | null;
+  connectedSendAsOptions?: MailConnectedSendAsOption[];
 };
 
 export type MailInboxSummary = {
@@ -1174,6 +1182,8 @@ export async function composeMail(
     delaySeconds?: number;
     merge?: ComposeMergePayload;
     contentProtection?: "none" | "pgp" | "smime";
+    connectedSendProvider?: "microsoft_graph" | "gmail_api";
+    connectedSendAccountId?: string;
   },
 ) {
   return apiFetch<ComposeMailResult>(
@@ -2029,7 +2039,13 @@ export type MailAccountHubPayload = {
     configured: boolean;
     accounts: MailExchangeSyncAccountRow[];
   };
+  gmailSync?: {
+    configured: boolean;
+    accounts: MailGmailSyncAccountRow[];
+  };
 };
+
+export type MailGmailSyncAccountRow = MailExchangeSyncAccountRow;
 
 export async function fetchMailAccountHub(accessToken: string) {
   return apiFetch<MailAccountHubPayload>(
@@ -2132,6 +2148,55 @@ export async function deleteExchangeAccount(
   return apiFetch<{ ok: boolean }>(
     accessToken,
     `company/mail-inbox/exchange/accounts/${accountId}`,
+    { method: "DELETE" },
+  );
+}
+
+export async function startGmailOAuth(accessToken: string) {
+  return apiFetch<{ authorizationUrl: string; state: string }>(
+    accessToken,
+    "company/mail-inbox/gmail/oauth/start",
+  );
+}
+
+export async function completeGmailOAuth(
+  accessToken: string,
+  code: string,
+  state: string,
+) {
+  return apiFetch<{ ok: boolean; account: MailGmailSyncAccountRow }>(
+    accessToken,
+    "company/mail-inbox/gmail/oauth/complete",
+    {
+      method: "POST",
+      body: JSON.stringify({ code, state }),
+    },
+  );
+}
+
+export async function syncGmailAccount(accessToken: string, accountId: string) {
+  return apiFetch<{ ok: boolean; imported: number; updated: number }>(
+    accessToken,
+    `company/mail-inbox/gmail/accounts/${accountId}/sync`,
+    { method: "POST" },
+  );
+}
+
+export async function syncAllGmailAccounts(accessToken: string) {
+  return apiFetch<{
+    ok: boolean;
+    accounts: number;
+    imported: number;
+    updated: number;
+  }>(accessToken, "company/mail-inbox/gmail/accounts/sync-all", {
+    method: "POST",
+  });
+}
+
+export async function deleteGmailAccount(accessToken: string, accountId: string) {
+  return apiFetch<{ ok: boolean }>(
+    accessToken,
+    `company/mail-inbox/gmail/accounts/${accountId}`,
     { method: "DELETE" },
   );
 }

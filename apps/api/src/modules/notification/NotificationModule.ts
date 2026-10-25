@@ -147,6 +147,11 @@ import { MailMailboxDelegateEntity } from "../../infrastructure/database/entitie
 import { MailExchangeSyncAccountEntity } from "../../infrastructure/database/entities/MailExchangeSyncAccountEntity";
 import { MailConnectedInboxEntitlementEntity } from "../../infrastructure/database/entities/MailConnectedInboxEntitlementEntity";
 import { MailConnectedAccountsService } from "./MailConnectedAccountsService";
+import { MailGmailSyncAccountEntity } from "../../infrastructure/database/entities/MailGmailSyncAccountEntity";
+import { MailGmailSyncService } from "./MailGmailSyncService";
+import { MailGmailSyncScheduler } from "./MailGmailSyncScheduler";
+import { MailConnectedOutboundService } from "./MailConnectedOutboundService";
+import { PublicMailConnectedPushController } from "./PublicMailConnectedPushController";
 import { MailMailboxAccessService } from "./MailMailboxAccessService";
 import { MailMailboxDelegationService } from "./MailMailboxDelegationService";
 import { MailExchangeGraphSyncService } from "./MailExchangeGraphSyncService";
@@ -247,6 +252,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
       MailMailboxDelegateEntity,
       MailExchangeSyncAccountEntity,
       MailConnectedInboxEntitlementEntity,
+      MailGmailSyncAccountEntity,
       MailCalendarGraphAccountEntity,
       MailCalendarGoogleAccountEntity,
       CompanyMailTeamInviteEntity,
@@ -270,6 +276,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     UserNotificationPreferencesController,
     PublicMailStatusController,
     PublicMailMarketingUnsubscribeController,
+    PublicMailConnectedPushController,
     MailPublicApiController,
   ],
   providers: [
@@ -315,6 +322,9 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     MailMailboxDelegationService,
     MailExchangeGraphSyncService,
     MailConnectedAccountsService,
+    MailGmailSyncService,
+    MailGmailSyncScheduler,
+    MailConnectedOutboundService,
     MailExchangeSyncScheduler,
     MailCalendarGraphSyncService,
     MailCalendarGraphSyncScheduler,

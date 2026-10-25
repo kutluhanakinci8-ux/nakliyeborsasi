@@ -45,6 +45,11 @@ import { MailInboxPreferencesService } from "./MailInboxPreferencesService";
 import { buildReplyQuoteBlock } from "./MailReplyQuoteBlock";
 import { UserMailCryptoService } from "./UserMailCryptoService";
 import { MailSmimeSigningService } from "./MailSmimeSigningService";
+import {
+  ConnectedSendProvider,
+  MailConnectedOutboundService,
+} from "./MailConnectedOutboundService";
+import { MailConnectedAccountsService } from "./MailConnectedAccountsService";
 
 export type ComposeAttachmentInput = {
   filename: string;
@@ -73,6 +78,8 @@ export class MailMailboxComposeService {
     private readonly mailInboxPreferencesService: MailInboxPreferencesService,
     private readonly userMailCryptoService: UserMailCryptoService,
     private readonly mailSmimeSigningService: MailSmimeSigningService,
+    private readonly mailConnectedOutboundService: MailConnectedOutboundService,
+    private readonly mailConnectedAccountsService: MailConnectedAccountsService,
     private readonly emailSuppressionService: EmailSuppressionService,
     private readonly emailHtmlTrackingService: EmailHtmlTrackingService,
     @InjectRepository(EmailOutboxEntity)
@@ -105,7 +112,13 @@ export class MailMailboxComposeService {
     /** Kampanya gönderiminde open/click izleme (outbox + pixel). */
     marketingCampaignId?: string;
     contentProtection?: "none" | "pgp" | "smime";
+    connectedSendProvider?: ConnectedSendProvider;
+    connectedSendAccountId?: string;
   }): Promise<{ sentId: string; smtpMessageId: string | null }> {
+    const connectedSend = this.parseConnectedSend(params);
+    if (connectedSend) {
+      return this.composeViaConnectedAccount(params, connectedSend);
+    }
     const { fromHeader, fromEmail, envelopeMailFrom, mailbox, technicalEmail } =
       await this.resolveSenderMailbox(
         params.organizationId,
@@ -433,6 +446,8 @@ export class MailMailboxComposeService {
     replyAll?: boolean;
     attachments?: ComposeAttachmentInput[];
     merge?: { referans?: string; musteriAdi?: string };
+    connectedSendProvider?: ConnectedSendProvider;
+    connectedSendAccountId?: string;
   }): Promise<{ sentId: string; smtpMessageId: string | null }> {
     const inbound = await this.inboundRepository.findOne({
       where: { id: params.inboundMessageId },
@@ -449,6 +464,56 @@ export class MailMailboxComposeService {
     const subject = inbound.subject.toLowerCase().startsWith("re:")
       ? inbound.subject
       : `Re: ${inbound.subject}`;
+    const connectedSend = this.resolveConnectedSendForInbound(
+      inbound,
+      params.connectedSendProvider,
+      params.connectedSendAccountId,
+    );
+    if (connectedSend) {
+      const prefs = await this.mailInboxPreferencesService.get(
+        params.organizationId,
+      );
+      const quoteBlock = buildReplyQuoteBlock(inbound, prefs.replyQuoteMode);
+      const replyText = [params.text.trim(), quoteBlock]
+        .filter((part) => part.length > 0)
+        .join("\n\n");
+      const { fromHeader: _fh, technicalEmail } =
+        await this.resolveSenderMailbox(params.organizationId);
+      void _fh;
+      const replyAll = this.resolveReplyAllRecipients(
+        inbound,
+        technicalEmail,
+        params.replyAll,
+        params.cc,
+      );
+      const outbound = await this.mailConnectedOutboundService.send({
+        organizationId: params.organizationId,
+        actorUserId: params.userId,
+        provider: connectedSend.provider,
+        accountId: connectedSend.accountId,
+        to: replyAll.to,
+        cc: replyAll.cc,
+        bcc: params.bcc,
+        subject,
+        text: replyText,
+        inReplyTo: inbound.internetMessageId ?? undefined,
+        references: inbound.internetMessageId ?? undefined,
+        gmailThreadId: inbound.gmailMessageId ? inbound.gmailMessageId : null,
+      });
+      const sent = await this.sentRepository.save(
+        this.sentRepository.create({
+          organizationId: params.organizationId,
+          mailboxId: mailbox.id,
+          fromAddress: outbound.fromAddress,
+          toAddress: inbound.fromAddress,
+          subject,
+          bodyText: replyText,
+          relatedInboundMessageId: inbound.id,
+          smtpMessageId: outbound.providerMessageId,
+        }),
+      );
+      return { sentId: sent.id, smtpMessageId: outbound.providerMessageId };
+    }
     const { fromHeader, fromEmail, envelopeMailFrom, technicalEmail } =
       await this.resolveSenderMailbox(params.organizationId);
     await this.assertRateLimit(params.organizationId);
@@ -572,6 +637,8 @@ export class MailMailboxComposeService {
     includeOriginal?: boolean;
     attachments?: ComposeAttachmentInput[];
     merge?: { referans?: string; musteriAdi?: string };
+    connectedSendProvider?: ConnectedSendProvider;
+    connectedSendAccountId?: string;
   }): Promise<{ sentId: string; smtpMessageId: string | null }> {
     const inbound = await this.inboundRepository.findOne({
       where: { id: params.inboundMessageId },
@@ -597,6 +664,35 @@ export class MailMailboxComposeService {
       .join("\n\n");
     if (!text.trim()) {
       throw new BadRequestException("İletilecek metin boş olamaz.");
+    }
+    const connectedSend = this.resolveConnectedSendForInbound(
+      inbound,
+      params.connectedSendProvider,
+      params.connectedSendAccountId,
+    );
+    if (connectedSend) {
+      const outbound = await this.mailConnectedOutboundService.send({
+        organizationId: params.organizationId,
+        actorUserId: params.userId,
+        provider: connectedSend.provider,
+        accountId: connectedSend.accountId,
+        to: params.to,
+        subject,
+        text,
+      });
+      const sent = await this.sentRepository.save(
+        this.sentRepository.create({
+          organizationId: params.organizationId,
+          mailboxId: mailbox.id,
+          fromAddress: outbound.fromAddress,
+          toAddress: params.to,
+          subject,
+          bodyText: text,
+          relatedInboundMessageId: inbound.id,
+          smtpMessageId: outbound.providerMessageId,
+        }),
+      );
+      return { sentId: sent.id, smtpMessageId: outbound.providerMessageId };
     }
     const { fromHeader, fromEmail, envelopeMailFrom, technicalEmail } =
       await this.resolveSenderMailbox(params.organizationId);
@@ -699,6 +795,12 @@ export class MailMailboxComposeService {
     displayAddress: string | null;
     billingWarningTr: string | null;
     billingStatus: string | null;
+    connectedSendAsOptions: Array<{
+      provider: ConnectedSendProvider;
+      accountId: string;
+      emailAddress: string;
+      label: string;
+    }>;
   }> {
     const billing =
       await this.mailSubscriptionLifecycleService.getLifecycleView(
@@ -711,6 +813,7 @@ export class MailMailboxComposeService {
         displayAddress: null,
         billingWarningTr: null,
         billingStatus: billing.status,
+        connectedSendAsOptions: [],
       };
     }
     try {
@@ -728,6 +831,7 @@ export class MailMailboxComposeService {
         displayAddress: null,
         billingWarningTr: null,
         billingStatus: billing.status,
+        connectedSendAsOptions: [],
       };
     }
     const storage =
@@ -740,6 +844,7 @@ export class MailMailboxComposeService {
         displayAddress: null,
         billingWarningTr: billing.inGrace ? billing.detailTr : null,
         billingStatus: billing.status,
+        connectedSendAsOptions: [],
       };
     }
     const rate =
@@ -751,6 +856,7 @@ export class MailMailboxComposeService {
         displayAddress: null,
         billingWarningTr: billing.inGrace ? billing.detailTr : null,
         billingStatus: billing.status,
+        connectedSendAsOptions: [],
       };
     }
     try {
@@ -763,12 +869,26 @@ export class MailMailboxComposeService {
         await this.mailOrganizationIdentityService.getPrimaryIdentity(
           organizationId,
         );
+      const connectedAccounts =
+        await this.mailConnectedAccountsService.listAccounts(organizationId);
+      const connectedSendAsOptions = connectedAccounts
+        .filter((row) => row.provider !== "lerta" && row.enabled)
+        .map((row) => ({
+          provider: row.provider as ConnectedSendProvider,
+          accountId: row.id,
+          emailAddress: row.emailAddress,
+          label:
+            row.provider === "gmail_api"
+              ? `Gmail · ${row.emailAddress}`
+              : `Microsoft · ${row.emailAddress}`,
+        }));
       return {
         canSend: true,
         reasonTr: null,
         displayAddress: primary.displayAddress ?? primary.fromAddress,
         billingWarningTr: billing.inGrace ? billing.detailTr : null,
         billingStatus: billing.status,
+        connectedSendAsOptions,
       };
     } catch (error) {
       const reason =
@@ -781,8 +901,100 @@ export class MailMailboxComposeService {
         displayAddress: null,
         billingWarningTr: billing.inGrace ? billing.detailTr : null,
         billingStatus: billing.status,
+        connectedSendAsOptions: [],
       };
     }
+  }
+
+  private parseConnectedSend(params: {
+    connectedSendProvider?: ConnectedSendProvider;
+    connectedSendAccountId?: string;
+  }): { provider: ConnectedSendProvider; accountId: string } | null {
+    if (!params.connectedSendProvider || !params.connectedSendAccountId) {
+      return null;
+    }
+    return {
+      provider: params.connectedSendProvider,
+      accountId: params.connectedSendAccountId,
+    };
+  }
+
+  private resolveConnectedSendForInbound(
+    inbound: MailInboundMessageEntity,
+    provider?: ConnectedSendProvider,
+    accountId?: string,
+  ): { provider: ConnectedSendProvider; accountId: string } | null {
+    const explicit = this.parseConnectedSend({
+      connectedSendProvider: provider,
+      connectedSendAccountId: accountId,
+    });
+    if (explicit) {
+      return explicit;
+    }
+    if (inbound.exchangeSyncAccountId) {
+      return {
+        provider: "microsoft_graph",
+        accountId: inbound.exchangeSyncAccountId,
+      };
+    }
+    if (inbound.gmailSyncAccountId) {
+      return {
+        provider: "gmail_api",
+        accountId: inbound.gmailSyncAccountId,
+      };
+    }
+    return null;
+  }
+
+  private async composeViaConnectedAccount(
+    params: {
+      organizationId: string;
+      userId?: string;
+      to: string;
+      cc?: string;
+      bcc?: string;
+      subject: string;
+      text: string;
+      html?: string;
+    },
+    connected: { provider: ConnectedSendProvider; accountId: string },
+  ): Promise<{ sentId: string; smtpMessageId: string | null }> {
+    await this.assertRateLimit(params.organizationId);
+    await this.mailTenantSuspensionService.assertOrganizationCanSend(
+      params.organizationId,
+    );
+    const outbound = await this.mailConnectedOutboundService.send({
+      organizationId: params.organizationId,
+      actorUserId: params.userId,
+      provider: connected.provider,
+      accountId: connected.accountId,
+      to: params.to,
+      cc: params.cc,
+      bcc: params.bcc,
+      subject: params.subject,
+      text: params.text,
+      html: params.html,
+    });
+    const mailboxes = await this.mailboxRepository.find({
+      where: { organizationId: params.organizationId },
+      order: { createdAt: "ASC" },
+      take: 1,
+    });
+    const mailbox = mailboxes[0];
+    const sent = await this.sentRepository.save(
+      this.sentRepository.create({
+        organizationId: params.organizationId,
+        mailboxId: mailbox?.id ?? randomUUID(),
+        fromAddress: outbound.fromAddress,
+        toAddress: params.to,
+        subject: params.subject,
+        bodyText: params.text,
+        bodyHtml: params.html ?? null,
+        smtpMessageId: outbound.providerMessageId,
+      }),
+    );
+    this.mailOrganizationSendRateService.recordSend(params.organizationId);
+    return { sentId: sent.id, smtpMessageId: outbound.providerMessageId };
   }
 
   private mirrorSentToImap(params: {

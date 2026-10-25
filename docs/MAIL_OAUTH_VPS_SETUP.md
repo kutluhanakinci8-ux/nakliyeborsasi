@@ -40,6 +40,22 @@ GOOGLE_CALENDAR_REDIRECT_URI=https://posta.lerta.com.tr/mail/google-calendar-oau
 
 Detay: [MAIL_GOOGLE_CALENDAR.md](./MAIL_GOOGLE_CALENDAR.md)
 
+## 2b. Gmail posta (CAP-3 / CAP-4)
+
+1. Cloud Console → Gmail API etkin → OAuth redirect:
+   - `https://posta.lerta.com.tr/mail/gmail-oauth`
+2. VPS `.env`:
+
+```bash
+GOOGLE_GMAIL_CLIENT_ID=...
+GOOGLE_GMAIL_CLIENT_SECRET=...
+GOOGLE_GMAIL_REDIRECT_URI=https://posta.lerta.com.tr/mail/gmail-oauth
+# İsteğe bağlı anlık push (CAP-5):
+# GOOGLE_GMAIL_PUBSUB_TOPIC=projects/.../topics/...
+```
+
+3. API yeniden başlat.
+
 ## 3. Smoke
 
 Posta → Ayarlar → Takvim → Microsoft / Google bağla → test etkinlik oluştur.

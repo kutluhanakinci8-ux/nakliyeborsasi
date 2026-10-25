@@ -164,6 +164,26 @@ function writeStoredConnectedSource(value: MailConnectedInboxSource): void {
   localStorage.setItem(MAIL_CONNECTED_SOURCE_KEY, value);
 }
 
+function parseComposeSendAsKey(key: string): {
+  connectedSendProvider?: "microsoft_graph" | "gmail_api";
+  connectedSendAccountId?: string;
+} {
+  if (key === "lerta" || !key.includes(":")) {
+    return {};
+  }
+  const [provider, accountId] = key.split(":");
+  if (
+    (provider === "microsoft_graph" || provider === "gmail_api") &&
+    accountId
+  ) {
+    return {
+      connectedSendProvider: provider,
+      connectedSendAccountId: accountId,
+    };
+  }
+  return {};
+}
+
 export function useMailClientController({
   accessToken,
   logout,
@@ -373,6 +393,7 @@ export function useMailClientController({
   const [inboxBranding, setInboxBranding] = useState<MailInboxBranding | null>(
     null,
   );
+  const [composeSendAsKey, setComposeSendAsKey] = useState("lerta");
   const [composeRich, setComposeRich] = useState(true);
   const [composeHtml, setComposeHtml] = useState("");
   const [composePreviewHtml, setComposePreviewHtml] = useState<string | null>(
@@ -1381,6 +1402,7 @@ export function useMailClientController({
           } catch {
             /* şifreleme atlanır */
           }
+          const connectedSend = parseComposeSendAsKey(composeSendAsKey);
           const result = await composeMail(accessToken, {
             to: composeTo.trim(),
             cc: composeCc.trim() || undefined,
@@ -1394,6 +1416,7 @@ export function useMailClientController({
               : {}),
             merge: buildComposeMergePayload(),
             contentProtection,
+            ...connectedSend,
           });
           if (applyDelayedSend(result)) {
             scheduledUndo = true;
@@ -2813,6 +2836,8 @@ export function useMailClientController({
     searchQuery,
     searchResults,
     selectedId,
+    composeSendAsKey,
+    setComposeSendAsKey,
     sendCompose,
     sendReadiness,
     sendReply,

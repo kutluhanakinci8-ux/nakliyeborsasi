@@ -3,9 +3,11 @@ import { ComposeMergeContextDto } from "./ComposeMergeContextDto";
 import {
   IsArray,
   IsEmail,
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
+  IsUUID,
   Matches,
   Max,
   MaxLength,
@@ -89,4 +91,12 @@ export class ComposeMailRequestDto {
   @IsString()
   @MaxLength(16)
   public contentProtection?: "none" | "pgp" | "smime";
+
+  @IsOptional()
+  @IsIn(["microsoft_graph", "gmail_api"])
+  public connectedSendProvider?: "microsoft_graph" | "gmail_api";
+
+  @IsOptional()
+  @IsUUID()
+  public connectedSendAccountId?: string;
 }

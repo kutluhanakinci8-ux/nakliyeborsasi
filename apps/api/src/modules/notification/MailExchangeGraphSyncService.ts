@@ -401,6 +401,38 @@ export class MailExchangeGraphSyncService {
     }
   }
 
+  public async sendMailMessage(
+    organizationId: string,
+    accountId: string,
+    message: {
+      subject: string;
+      bodyHtml: string;
+      to: string[];
+      cc?: string[];
+      bcc?: string[];
+    },
+  ): Promise<string | null> {
+    const account = await this.accountRepository.findOne({
+      where: { id: accountId, organizationId, enabled: true },
+    });
+    if (!account) {
+      throw new NotFoundException("Exchange bağlantısı bulunamadı.");
+    }
+    const accessToken = await this.resolveAccessToken(account);
+    const payload = {
+      message: {
+        subject: message.subject,
+        body: { contentType: "HTML", content: message.bodyHtml },
+        toRecipients: toGraphRecipients(message.to),
+        ccRecipients: toGraphRecipients(message.cc ?? []),
+        bccRecipients: toGraphRecipients(message.bcc ?? []),
+      },
+      saveToSentItems: true,
+    };
+    await this.graphPost(accessToken, `${GRAPH_BASE}/me/sendMail`, payload);
+    return null;
+  }
+
   public async fetchAttachmentBytes(
     organizationId: string,
     exchangeSyncAccountId: string,
@@ -676,6 +708,27 @@ export class MailExchangeGraphSyncService {
     }
   }
 
+  private async graphPost(
+    accessToken: string,
+    url: string,
+    body: Record<string, unknown>,
+  ): Promise<void> {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+    if (!response.ok) {
+      const text = await response.text();
+      throw new BadRequestException(
+        `Graph POST başarısız (${response.status}): ${text.slice(0, 200)}`,
+      );
+    }
+  }
+
   private async graphGet(
     accessToken: string,
     url: string,
@@ -733,3 +786,11 @@ type GraphAttachment = {
   size?: number;
   contentType?: string;
 };
+
+function toGraphRecipients(addresses: string[]): Array<{
+  emailAddress: { address: string };
+}> {
+  return addresses.map((address) => ({
+    emailAddress: { address },
+  }));
+}

@@ -208,6 +208,8 @@ export function MailClientShell({ mail }: Props) {
     searchQuery,
     searchResults,
     selectedId,
+    composeSendAsKey,
+    setComposeSendAsKey,
     sendCompose,
     sendReadiness,
     sendReply,
@@ -785,6 +787,19 @@ export function MailClientShell({ mail }: Props) {
                       }
                     >
                       Microsoft
+                    </button>
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={inboxConnectedSource === "gmail_api"}
+                      className={
+                        inboxConnectedSource === "gmail_api"
+                          ? "mail-inbox-focus-tab is-active"
+                          : "mail-inbox-focus-tab"
+                      }
+                      onClick={() => setInboxConnectedSource("gmail_api")}
+                    >
+                      Gmail
                     </button>
                   </div>
                 ) : null}
@@ -2208,15 +2223,45 @@ export function MailClientShell({ mail }: Props) {
                   </div>
                 </div>
               ) : (
-                <MailComposeRecipientField
-                  id="compose-to"
-                  label="Kime"
-                  placeholder="ornek@firma.com veya kişi adı"
-                  value={composeTo}
-                  onChange={setComposeTo}
-                  contacts={composeOrgContacts}
-                  autoFocus
-                />
+                <>
+                  {(sendReadiness?.connectedSendAsOptions?.length ?? 0) > 0 ? (
+                    <div className="compose-field">
+                      <label
+                        className="compose-field-label"
+                        htmlFor="compose-send-as"
+                      >
+                        Kimden
+                      </label>
+                      <select
+                        id="compose-send-as"
+                        className="compose-input"
+                        value={composeSendAsKey}
+                        onChange={(e) => setComposeSendAsKey(e.target.value)}
+                      >
+                        <option value="lerta">
+                          Lerta · {sendReadiness?.displayAddress ?? "kurumsal"}
+                        </option>
+                        {sendReadiness?.connectedSendAsOptions?.map((opt) => (
+                          <option
+                            key={`${opt.provider}:${opt.accountId}`}
+                            value={`${opt.provider}:${opt.accountId}`}
+                          >
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  ) : null}
+                  <MailComposeRecipientField
+                    id="compose-to"
+                    label="Kime"
+                    placeholder="ornek@firma.com veya kişi adı"
+                    value={composeTo}
+                    onChange={setComposeTo}
+                    contacts={composeOrgContacts}
+                    autoFocus
+                  />
+                </>
               )}
 
               {!forwardMessageId ? (

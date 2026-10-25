@@ -9,6 +9,7 @@ import {
 import { resolveMailConsoleUrl } from "@/lib/mailApi";
 import { MailEmailSocialLinksEditor } from "./MailEmailSocialLinksEditor";
 import { MailDelegationExchangePanel } from "./MailDelegationExchangePanel";
+import { MailGmailSyncPanel } from "./MailGmailSyncPanel";
 import { MailTenantBrandingPanel } from "./MailTenantBrandingPanel";
 import type { MailInboxBranding } from "@/lib/mailApi";
 
@@ -211,6 +212,12 @@ export function MailAccountsSettingsPanel({
       </section>
 
       <MailDelegationExchangePanel
+        accessToken={accessToken}
+        hub={hub}
+        onHubChange={setHub}
+      />
+
+      <MailGmailSyncPanel
         accessToken={accessToken}
         hub={hub}
         onHubChange={setHub}

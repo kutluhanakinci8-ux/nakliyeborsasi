@@ -22,6 +22,7 @@ import {
 import { MailSenderIdentityEntity } from "../../infrastructure/database/entities/MailSenderIdentityEntity";
 import { resolveMailSenderAddresses } from "@nakliyeborsasi/core";
 import { MailExchangeSyncAccountEntity } from "../../infrastructure/database/entities/MailExchangeSyncAccountEntity";
+import { MailGmailSyncAccountEntity } from "../../infrastructure/database/entities/MailGmailSyncAccountEntity";
 import { MailImapMaildirService } from "./MailImapMaildirService";
 import {
   parseAddressListFromMime,
@@ -38,6 +39,7 @@ import {
   MailMailboxAccessService,
 } from "./MailMailboxAccessService";
 import { MailExchangeGraphSyncService } from "./MailExchangeGraphSyncService";
+import { MailGmailSyncService } from "./MailGmailSyncService";
 
 export type InboxFolder =
   | "inbox"
@@ -96,9 +98,12 @@ export class MailOrganizationInboxService {
     private readonly senderRepository: Repository<MailSenderIdentityEntity>,
     @InjectRepository(MailExchangeSyncAccountEntity)
     private readonly exchangeSyncAccountRepository: Repository<MailExchangeSyncAccountEntity>,
+    @InjectRepository(MailGmailSyncAccountEntity)
+    private readonly gmailSyncAccountRepository: Repository<MailGmailSyncAccountEntity>,
     private readonly mailImapMaildirService: MailImapMaildirService,
     private readonly mailMailboxAccessService: MailMailboxAccessService,
     private readonly mailExchangeGraphSyncService: MailExchangeGraphSyncService,
+    private readonly mailGmailSyncService: MailGmailSyncService,
   ) {}
 
   public async getSummary(
@@ -440,6 +445,25 @@ export class MailOrganizationInboxService {
           contentType: graph.contentType || file.contentType,
         },
         buffer: graph.buffer,
+      };
+    }
+    if (
+      row.gmailSyncAccountId &&
+      row.gmailMessageId &&
+      file.gmailAttachmentId
+    ) {
+      const gmail = await this.mailGmailSyncService.fetchAttachmentBytes(
+        organizationId,
+        row.gmailSyncAccountId,
+        row.gmailMessageId,
+        file.gmailAttachmentId,
+      );
+      return {
+        file: {
+          ...file,
+          contentType: gmail.contentType || file.contentType,
+        },
+        buffer: gmail.buffer,
       };
     }
     if (!file.storagePath) {
@@ -1002,15 +1026,22 @@ export class MailOrganizationInboxService {
     row: MailInboundMessageEntity,
     isRead: boolean,
   ): Promise<void> {
-    if (!row.exchangeSyncAccountId || !row.exchangeMessageId) {
-      return;
+    if (row.exchangeSyncAccountId && row.exchangeMessageId) {
+      await this.mailExchangeGraphSyncService.pushReadStateToGraph(
+        organizationId,
+        row.exchangeSyncAccountId,
+        row.exchangeMessageId,
+        isRead,
+      );
     }
-    await this.mailExchangeGraphSyncService.pushReadStateToGraph(
-      organizationId,
-      row.exchangeSyncAccountId,
-      row.exchangeMessageId,
-      isRead,
-    );
+    if (row.gmailSyncAccountId && row.gmailMessageId) {
+      await this.mailGmailSyncService.pushReadStateToGmail(
+        organizationId,
+        row.gmailSyncAccountId,
+        row.gmailMessageId,
+        isRead,
+      );
+    }
   }
 
   private applyExchangeDraftExclusion(
@@ -1123,11 +1154,16 @@ export class MailOrganizationInboxService {
     lertaLabel: string;
     lertaEmail: string | null;
     exchangeById: Map<string, MailExchangeSyncAccountEntity>;
+    gmailById: Map<string, MailGmailSyncAccountEntity>;
   }> {
     const exchangeRows = await this.exchangeSyncAccountRepository.find({
       where: { organizationId },
     });
     const exchangeById = new Map(exchangeRows.map((row) => [row.id, row]));
+    const gmailRows = await this.gmailSyncAccountRepository.find({
+      where: { organizationId },
+    });
+    const gmailById = new Map(gmailRows.map((row) => [row.id, row]));
     const sender = await this.senderRepository.findOne({
       where: { organizationId, isDefault: true },
       relations: { mailDomain: true },
@@ -1143,6 +1179,7 @@ export class MailOrganizationInboxService {
       lertaLabel: "Lerta",
       lertaEmail,
       exchangeById,
+      gmailById,
     };
   }
 
@@ -1152,13 +1189,15 @@ export class MailOrganizationInboxService {
       lertaLabel: string;
       lertaEmail: string | null;
       exchangeById: Map<string, MailExchangeSyncAccountEntity>;
+      gmailById: Map<string, MailGmailSyncAccountEntity>;
     },
   ): MailInboxListRow["inboxSource"] {
     if (row.gmailSyncAccountId) {
+      const gmail = ctx.gmailById.get(row.gmailSyncAccountId);
       return {
         provider: "gmail_api",
         accountId: row.gmailSyncAccountId,
-        accountEmail: null,
+        accountEmail: gmail?.emailAddress ?? null,
         label: "Gmail",
       };
     }
@@ -1185,6 +1224,7 @@ export class MailOrganizationInboxService {
       lertaLabel: string;
       lertaEmail: string | null;
       exchangeById: Map<string, MailExchangeSyncAccountEntity>;
+      gmailById: Map<string, MailGmailSyncAccountEntity>;
     },
   ): MailInboxListRow {
     return {
