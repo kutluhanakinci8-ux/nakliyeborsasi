@@ -37,6 +37,7 @@ import {
   MailInboxActor,
   MailMailboxAccessService,
 } from "./MailMailboxAccessService";
+import { MailExchangeGraphSyncService } from "./MailExchangeGraphSyncService";
 
 export type InboxFolder =
   | "inbox"
@@ -97,6 +98,7 @@ export class MailOrganizationInboxService {
     private readonly exchangeSyncAccountRepository: Repository<MailExchangeSyncAccountEntity>,
     private readonly mailImapMaildirService: MailImapMaildirService,
     private readonly mailMailboxAccessService: MailMailboxAccessService,
+    private readonly mailExchangeGraphSyncService: MailExchangeGraphSyncService,
   ) {}
 
   public async getSummary(
@@ -223,6 +225,7 @@ export class MailOrganizationInboxService {
     this.applyFolderToQueryBuilder(qb, folder, customFolderId);
     this.applySnoozeListFilter(qb, folder);
     this.applyConnectedSourceFilter(qb, connectedSource);
+    this.applyExchangeDraftExclusion(qb, folder);
     const rows = await qb
       .orderBy("m.receivedAt", "DESC")
       .take(limit)
@@ -252,6 +255,7 @@ export class MailOrganizationInboxService {
     this.applyFolderToQueryBuilder(qb, folder, customFolderId);
     this.applySnoozeListFilter(qb, folder);
     this.applyConnectedSourceFilter(qb, connectedSource);
+    this.applyExchangeDraftExclusion(qb, folder);
 
     const term = filters.q?.trim() ?? "";
     if (term.length >= 2) {
@@ -419,6 +423,28 @@ export class MailOrganizationInboxService {
     if (!file) {
       throw new NotFoundException("Ek bulunamadı");
     }
+    if (
+      row.exchangeSyncAccountId &&
+      row.exchangeMessageId &&
+      file.exchangeAttachmentId
+    ) {
+      const graph = await this.mailExchangeGraphSyncService.fetchAttachmentBytes(
+        organizationId,
+        row.exchangeSyncAccountId,
+        row.exchangeMessageId,
+        file.exchangeAttachmentId,
+      );
+      return {
+        file: {
+          ...file,
+          contentType: graph.contentType || file.contentType,
+        },
+        buffer: graph.buffer,
+      };
+    }
+    if (!file.storagePath) {
+      throw new NotFoundException("Ek bulunamadı");
+    }
     const buffer = readFileSync(file.storagePath);
     return { file, buffer };
   }
@@ -451,6 +477,7 @@ export class MailOrganizationInboxService {
     this.applyFolderToQueryBuilder(qb, folder, customFolderId);
     this.applySnoozeListFilter(qb, folder);
     this.applyConnectedSourceFilter(qb, connectedSource);
+    this.applyExchangeDraftExclusion(qb, folder);
     const rows = await qb
       .orderBy("m.receivedAt", "DESC")
       .take(300)
@@ -542,6 +569,7 @@ export class MailOrganizationInboxService {
     if (!row.readAt) {
       row.readAt = new Date();
       await this.inboundRepository.save(row);
+      await this.syncExchangeReadState(organizationId, row, true);
     }
   }
 
@@ -569,6 +597,7 @@ export class MailOrganizationInboxService {
     if (row.readAt) {
       row.readAt = null;
       await this.inboundRepository.save(row);
+      await this.syncExchangeReadState(organizationId, row, false);
     }
   }
 
@@ -583,6 +612,7 @@ export class MailOrganizationInboxService {
       if (!row.readAt) {
         row.readAt = new Date();
         await this.inboundRepository.save(row);
+        await this.syncExchangeReadState(organizationId, row, true);
         updated += 1;
       }
     }
@@ -600,6 +630,7 @@ export class MailOrganizationInboxService {
       if (row.readAt) {
         row.readAt = null;
         await this.inboundRepository.save(row);
+        await this.syncExchangeReadState(organizationId, row, false);
         updated += 1;
       }
     }
@@ -966,10 +997,41 @@ export class MailOrganizationInboxService {
     ).technicalAddress;
   }
 
+  private async syncExchangeReadState(
+    organizationId: string,
+    row: MailInboundMessageEntity,
+    isRead: boolean,
+  ): Promise<void> {
+    if (!row.exchangeSyncAccountId || !row.exchangeMessageId) {
+      return;
+    }
+    await this.mailExchangeGraphSyncService.pushReadStateToGraph(
+      organizationId,
+      row.exchangeSyncAccountId,
+      row.exchangeMessageId,
+      isRead,
+    );
+  }
+
+  private applyExchangeDraftExclusion(
+    qb: SelectQueryBuilder<MailInboundMessageEntity>,
+    folder: InboxFolder,
+  ): void {
+    if (folder === "inbox" || folder === "all") {
+      qb.andWhere(
+        "(m.exchange_well_known_folder IS NULL OR m.exchange_well_known_folder <> :exchangeDrafts)",
+        { exchangeDrafts: "drafts" },
+      );
+    }
+  }
+
   private resolveThreadRootId(
     row: MailInboundMessageEntity,
     byInternetId: Map<string, MailInboundMessageEntity>,
   ): string {
+    if (row.exchangeConversationId) {
+      return row.exchangeConversationId;
+    }
     const visited = new Set<string>();
     let current: MailInboundMessageEntity | undefined = row;
     while (current?.inReplyTo && !visited.has(current.id)) {

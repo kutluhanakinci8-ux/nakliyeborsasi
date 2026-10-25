@@ -6,7 +6,7 @@
 |-----|-----|--------|
 | Temel + faturalama | CAP-0 | `mail_connected_inbox_entitlement`, `GET .../connected-accounts` |
 | Birleşik liste + filtre | CAP-1 | `connectedSource` + rozetler |
-| Microsoft tam okuma | CAP-2 | Klasörler, thread, ekler |
+| Microsoft tam okuma | CAP-2 | ✅ 6 klasör delta, conversationId, Graph ek/okundu |
 | Gmail okuma | CAP-3 | Gmail API OAuth + senkron |
 | Birleşik gönderim | CAP-4 | Graph + Gmail send |
 | Push | CAP-5 | Webhook / Pub/Sub |

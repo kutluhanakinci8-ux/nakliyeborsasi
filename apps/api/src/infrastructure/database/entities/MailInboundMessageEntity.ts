@@ -9,7 +9,8 @@ export type MailInboundAttachmentMeta = {
   filename: string;
   contentType: string;
   sizeBytes: number;
-  storagePath: string;
+  storagePath?: string | null;
+  exchangeAttachmentId?: string | null;
 };
 
 @Entity({ name: "mail_inbound_message" })
@@ -99,6 +100,12 @@ export class MailInboundMessageEntity {
 
   @Column({ name: "gmail_message_id", type: "varchar", length: 255, nullable: true })
   public gmailMessageId!: string | null;
+
+  @Column({ name: "exchange_conversation_id", type: "varchar", length: 255, nullable: true })
+  public exchangeConversationId!: string | null;
+
+  @Column({ name: "exchange_well_known_folder", type: "varchar", length: 32, nullable: true })
+  public exchangeWellKnownFolder!: string | null;
 
   @CreateDateColumn({ type: "timestamptz" })
   public receivedAt!: Date;

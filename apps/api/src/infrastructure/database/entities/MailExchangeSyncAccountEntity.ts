@@ -40,6 +40,9 @@ export class MailExchangeSyncAccountEntity {
   @Column({ name: "delta_link", type: "text", nullable: true })
   public deltaLink!: string | null;
 
+  @Column({ name: "folder_delta_links", type: "jsonb", nullable: true })
+  public folderDeltaLinks!: Record<string, string> | null;
+
   @Column({ name: "mailbox_id", type: "uuid", nullable: true })
   public mailboxId!: string | null;
 

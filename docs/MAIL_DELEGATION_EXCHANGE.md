@@ -19,7 +19,7 @@ SQL: `scripts/sql/mail-mailbox-delegate-exchange.sql`
 
 ## Microsoft Exchange senkronu
 
-Microsoft Graph **delta** ile Office 365 gelen kutusu webmail’e aktarılır (30 dk cron + manuel «Senkronize et»).
+Microsoft Graph **delta** ile Inbox, Gönderilen, Taslak, Çöp, Önemsiz ve Arşiv klasörleri webmail’e aktarılır (30 dk cron + manuel «Senkronize et»). Konuşma kimliği (`conversationId`), ek meta verisi ve okundu durumu Graph ile iki yönlü senkronlanır.
 
 Ortam:
 

@@ -11,7 +11,10 @@ import { Repository } from "typeorm";
 import { AuthenticatedUserContext } from "@nakliyeborsasi/core";
 import { MailExchangeSyncAccountEntity } from "../../infrastructure/database/entities/MailExchangeSyncAccountEntity";
 import { MailMailboxEntity } from "../../infrastructure/database/entities/MailMailboxEntity";
-import { MailInboundMessageEntity } from "../../infrastructure/database/entities/MailInboundMessageEntity";
+import {
+  MailInboundAttachmentMeta,
+  MailInboundMessageEntity,
+} from "../../infrastructure/database/entities/MailInboundMessageEntity";
 import {
   decryptCalendarCredential,
   encryptCalendarCredential,
@@ -24,6 +27,20 @@ import {
 const GRAPH_SCOPE =
   "offline_access User.Read Mail.ReadWrite Mail.Send openid profile email";
 const GRAPH_BASE = "https://graph.microsoft.com/v1.0";
+const GRAPH_MESSAGE_SELECT =
+  "id,subject,bodyPreview,body,from,receivedDateTime,isRead,internetMessageId,conversationId,hasAttachments,flag";
+
+const EXCHANGE_SYNC_FOLDERS: ReadonlyArray<{
+  key: string;
+  graphName: string;
+}> = [
+  { key: "inbox", graphName: "inbox" },
+  { key: "sentitems", graphName: "sentitems" },
+  { key: "drafts", graphName: "drafts" },
+  { key: "deleteditems", graphName: "deleteditems" },
+  { key: "junkemail", graphName: "junkemail" },
+  { key: "archive", graphName: "archive" },
+];
 
 export type MailExchangeSyncAccountDto = {
   id: string;
@@ -235,71 +252,114 @@ export class MailExchangeGraphSyncService {
     const accessToken = await this.resolveAccessToken(account);
     let imported = 0;
     let updated = 0;
+    const folderDeltaLinks = this.loadFolderDeltaLinks(account);
     try {
-      const deltaUrl =
-        account.deltaLink ??
-        `${GRAPH_BASE}/me/mailFolders/inbox/messages/delta?$select=id,subject,bodyPreview,body,from,receivedDateTime,isRead,internetMessageId&$top=50`;
-      const page = await this.graphGet(accessToken, deltaUrl);
-      const messages = (page.value ?? []) as GraphMessage[];
-      for (const message of messages) {
-        if (!message.id) {
-          continue;
-        }
-        const existing = await this.inboundRepository.findOne({
-          where: {
-            exchangeSyncAccountId: account.id,
-            exchangeMessageId: message.id,
-          },
-        });
-        const fromAddress =
-          message.from?.emailAddress?.address ?? "unknown@exchange";
-        const subject = message.subject?.trim() || "(Konu yok)";
-        const snippet = message.bodyPreview?.slice(0, 500) ?? null;
-        const bodyText =
-          message.body?.contentType === "text"
-            ? message.body.content?.slice(0, 200_000) ?? null
-            : null;
-        const bodyHtml =
-          message.body?.contentType === "html"
-            ? message.body.content?.slice(0, 400_000) ?? null
-            : null;
-        const receivedAt = message.receivedDateTime
-          ? new Date(message.receivedDateTime)
-          : new Date();
-        if (existing) {
-          existing.subject = subject;
-          existing.snippet = snippet;
-          existing.bodyText = bodyText;
-          existing.bodyHtml = bodyHtml;
-          existing.readAt = message.isRead ? existing.readAt ?? new Date() : null;
-          await this.inboundRepository.save(existing);
-          updated += 1;
-        } else {
-          await this.inboundRepository.save(
-            this.inboundRepository.create({
-              mailboxId: account.mailboxId,
-              fromAddress,
-              subject,
-              snippet,
-              bodyText,
-              bodyHtml,
-              spamStatus: "clean",
-              internetMessageId: message.internetMessageId ?? null,
-              readAt: message.isRead ? new Date() : null,
+      for (const folder of EXCHANGE_SYNC_FOLDERS) {
+        const deltaUrl =
+          folderDeltaLinks[folder.key] ??
+          `${GRAPH_BASE}/me/mailFolders/${folder.graphName}/messages/delta?$select=${GRAPH_MESSAGE_SELECT}&$top=50`;
+        const page = await this.graphGet(accessToken, deltaUrl);
+        const messages = (page.value ?? []) as GraphMessage[];
+        for (const message of messages) {
+          if (!message.id) {
+            continue;
+          }
+          const removed = Boolean(
+            (message as { "@removed"?: unknown })["@removed"],
+          );
+          const existing = await this.inboundRepository.findOne({
+            where: {
               exchangeSyncAccountId: account.id,
               exchangeMessageId: message.id,
-              receivedAt,
-            }),
-          );
-          imported += 1;
+            },
+          });
+          if (removed) {
+            if (existing) {
+              existing.mailboxFolder = "trash";
+              await this.inboundRepository.save(existing);
+              updated += 1;
+            }
+            continue;
+          }
+          const folderState = this.mapExchangeFolder(folder.key);
+          const fromAddress =
+            message.from?.emailAddress?.address ?? "unknown@exchange";
+          const subject = message.subject?.trim() || "(Konu yok)";
+          const snippet = message.bodyPreview?.slice(0, 500) ?? null;
+          const bodyText =
+            message.body?.contentType === "text"
+              ? message.body.content?.slice(0, 200_000) ?? null
+              : null;
+          const bodyHtml =
+            message.body?.contentType === "html"
+              ? message.body.content?.slice(0, 400_000) ?? null
+              : null;
+          const receivedAt = message.receivedDateTime
+            ? new Date(message.receivedDateTime)
+            : new Date();
+          const readAt = message.isRead ? new Date() : null;
+          const starredAt =
+            message.flag?.flagStatus === "flagged"
+              ? existing?.starredAt ?? new Date()
+              : null;
+          let attachments = existing?.attachments ?? null;
+          if (message.hasAttachments && message.id) {
+            attachments = await this.fetchAttachmentMetadata(
+              accessToken,
+              message.id,
+            );
+          }
+          if (existing) {
+            existing.subject = subject;
+            existing.snippet = snippet;
+            existing.bodyText = bodyText;
+            existing.bodyHtml = bodyHtml;
+            existing.readAt = readAt;
+            existing.starredAt = starredAt;
+            existing.mailboxFolder = folderState.mailboxFolder;
+            existing.spamStatus = folderState.spamStatus;
+            existing.exchangeWellKnownFolder = folderState.exchangeWellKnownFolder;
+            existing.exchangeConversationId =
+              message.conversationId ?? existing.exchangeConversationId;
+            existing.internetMessageId =
+              message.internetMessageId ?? existing.internetMessageId;
+            if (attachments) {
+              existing.attachments = attachments;
+            }
+            await this.inboundRepository.save(existing);
+            updated += 1;
+          } else {
+            await this.inboundRepository.save(
+              this.inboundRepository.create({
+                mailboxId: account.mailboxId,
+                fromAddress,
+                subject,
+                snippet,
+                bodyText,
+                bodyHtml,
+                spamStatus: folderState.spamStatus,
+                mailboxFolder: folderState.mailboxFolder,
+                internetMessageId: message.internetMessageId ?? null,
+                readAt,
+                starredAt,
+                attachments,
+                exchangeSyncAccountId: account.id,
+                exchangeMessageId: message.id,
+                exchangeConversationId: message.conversationId ?? null,
+                exchangeWellKnownFolder: folderState.exchangeWellKnownFolder,
+                receivedAt,
+              }),
+            );
+            imported += 1;
+          }
+        }
+        const nextLink = page["@odata.deltaLink"] ?? page["@odata.nextLink"];
+        if (typeof nextLink === "string" && nextLink.includes("/delta")) {
+          folderDeltaLinks[folder.key] = nextLink;
         }
       }
-      const nextLink = page["@odata.deltaLink"] ?? page["@odata.nextLink"];
-      if (typeof nextLink === "string" && nextLink.includes("/delta")) {
-        account.deltaLink = nextLink;
-      } else if (typeof nextLink === "string") {
-        account.deltaLink = null;
-      }
+      account.folderDeltaLinks = folderDeltaLinks;
+      account.deltaLink = folderDeltaLinks.inbox ?? account.deltaLink;
       account.lastSyncedAt = new Date();
       account.lastSyncError = null;
       await this.accountRepository.save(account);
@@ -313,6 +373,58 @@ export class MailExchangeGraphSyncService {
     }
     void actorUserId;
     return { imported, updated };
+  }
+
+  public async pushReadStateToGraph(
+    organizationId: string,
+    exchangeSyncAccountId: string,
+    exchangeMessageId: string,
+    isRead: boolean,
+  ): Promise<void> {
+    const account = await this.accountRepository.findOne({
+      where: { id: exchangeSyncAccountId, organizationId },
+    });
+    if (!account?.enabled) {
+      return;
+    }
+    try {
+      const accessToken = await this.resolveAccessToken(account);
+      await this.graphPatch(accessToken, `${GRAPH_BASE}/me/messages/${exchangeMessageId}`, {
+        isRead,
+      });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Graph okundu güncellenemedi";
+      this.logger.warn(
+        `Exchange read sync failed ${exchangeMessageId}: ${message}`,
+      );
+    }
+  }
+
+  public async fetchAttachmentBytes(
+    organizationId: string,
+    exchangeSyncAccountId: string,
+    exchangeMessageId: string,
+    exchangeAttachmentId: string,
+  ): Promise<{ buffer: Buffer; contentType: string }> {
+    const account = await this.accountRepository.findOne({
+      where: { id: exchangeSyncAccountId, organizationId },
+    });
+    if (!account?.enabled) {
+      throw new NotFoundException("Exchange bağlantısı bulunamadı.");
+    }
+    const accessToken = await this.resolveAccessToken(account);
+    const url = `${GRAPH_BASE}/me/messages/${exchangeMessageId}/attachments/${exchangeAttachmentId}/$value`;
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!response.ok) {
+      throw new NotFoundException("Graph eki indirilemedi.");
+    }
+    const buffer = Buffer.from(await response.arrayBuffer());
+    const contentType =
+      response.headers.get("content-type") ?? "application/octet-stream";
+    return { buffer, contentType };
   }
 
   public async syncAllForOrganization(
@@ -473,6 +585,97 @@ export class MailExchangeGraphSyncService {
     return (await response.json()) as GraphProfile;
   }
 
+  private loadFolderDeltaLinks(
+    account: MailExchangeSyncAccountEntity,
+  ): Record<string, string> {
+    const links: Record<string, string> = {
+      ...(account.folderDeltaLinks ?? {}),
+    };
+    if (account.deltaLink && !links.inbox) {
+      links.inbox = account.deltaLink;
+    }
+    return links;
+  }
+
+  private mapExchangeFolder(folderKey: string): {
+    mailboxFolder: "inbox" | "archive" | "trash";
+    spamStatus: "clean" | "blocked";
+    exchangeWellKnownFolder: string;
+  } {
+    switch (folderKey) {
+      case "junkemail":
+        return {
+          mailboxFolder: "inbox",
+          spamStatus: "blocked",
+          exchangeWellKnownFolder: folderKey,
+        };
+      case "deleteditems":
+        return {
+          mailboxFolder: "trash",
+          spamStatus: "clean",
+          exchangeWellKnownFolder: folderKey,
+        };
+      case "archive":
+      case "sentitems":
+        return {
+          mailboxFolder: "archive",
+          spamStatus: "clean",
+          exchangeWellKnownFolder: folderKey,
+        };
+      case "drafts":
+        return {
+          mailboxFolder: "inbox",
+          spamStatus: "clean",
+          exchangeWellKnownFolder: folderKey,
+        };
+      default:
+        return {
+          mailboxFolder: "inbox",
+          spamStatus: "clean",
+          exchangeWellKnownFolder: folderKey,
+        };
+    }
+  }
+
+  private async fetchAttachmentMetadata(
+    accessToken: string,
+    graphMessageId: string,
+  ): Promise<MailInboundAttachmentMeta[]> {
+    const url = `${GRAPH_BASE}/me/messages/${graphMessageId}/attachments?$select=id,name,size,contentType`;
+    const page = await this.graphGet(accessToken, url);
+    const values = (page.value ?? []) as GraphAttachment[];
+    return values
+      .filter((row) => row.id && row.name)
+      .map((row) => ({
+        filename: row.name ?? "attachment",
+        contentType: row.contentType ?? "application/octet-stream",
+        sizeBytes: row.size ?? 0,
+        storagePath: null,
+        exchangeAttachmentId: row.id ?? null,
+      }));
+  }
+
+  private async graphPatch(
+    accessToken: string,
+    url: string,
+    body: Record<string, unknown>,
+  ): Promise<void> {
+    const response = await fetch(url, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+    if (!response.ok) {
+      const text = await response.text();
+      throw new BadRequestException(
+        `Graph PATCH başarısız (${response.status}): ${text.slice(0, 200)}`,
+      );
+    }
+  }
+
   private async graphGet(
     accessToken: string,
     url: string,
@@ -519,4 +722,14 @@ type GraphMessage = {
   receivedDateTime?: string;
   isRead?: boolean;
   internetMessageId?: string;
+  conversationId?: string;
+  hasAttachments?: boolean;
+  flag?: { flagStatus?: string };
+};
+
+type GraphAttachment = {
+  id?: string;
+  name?: string;
+  size?: number;
+  contentType?: string;
 };
