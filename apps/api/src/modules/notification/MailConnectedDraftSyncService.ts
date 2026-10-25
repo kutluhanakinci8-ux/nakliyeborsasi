@@ -53,6 +53,8 @@ export class MailConnectedDraftSyncService {
             to: row.toAddress,
             subject: row.subject,
             text: row.bodyText,
+            html: row.bodyText,
+            attachments: row.attachments,
           },
         );
         row.providerDraftId = providerDraftId;

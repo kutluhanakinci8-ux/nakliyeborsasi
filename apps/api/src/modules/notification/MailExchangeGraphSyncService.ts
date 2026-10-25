@@ -251,6 +251,9 @@ export class MailExchangeGraphSyncService {
     accountId: string,
     actorUserId: string | null,
   ): Promise<{ imported: number; updated: number }> {
+    await this.mailConnectedAccountsService.assertPremiumConnectedInbox(
+      organizationId,
+    );
     const account = await this.accountRepository.findOne({
       where: { id: accountId, organizationId },
     });
@@ -389,6 +392,47 @@ export class MailExchangeGraphSyncService {
     return { imported, updated };
   }
 
+  public async pushStarStateToGraph(
+    organizationId: string,
+    exchangeSyncAccountId: string,
+    exchangeMessageId: string,
+    starred: boolean,
+  ): Promise<void> {
+    const account = await this.accountRepository.findOne({
+      where: { id: exchangeSyncAccountId, organizationId },
+    });
+    if (!account?.enabled) {
+      return;
+    }
+    try {
+      const accessToken = await this.resolveAccessToken(account);
+      await this.graphPatch(accessToken, `${GRAPH_BASE}/me/messages/${exchangeMessageId}`, {
+        flag: { flagStatus: starred ? "flagged" : "notFlagged" },
+      });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Graph yıldız güncellenemedi";
+      this.logger.warn(
+        `Exchange star sync failed ${exchangeMessageId}: ${message}`,
+      );
+      throw error;
+    }
+  }
+
+  public async renewGraphMailPushSubscription(
+    organizationId: string,
+    accountId: string,
+  ): Promise<void> {
+    const account = await this.accountRepository.findOne({
+      where: { id: accountId, organizationId, enabled: true },
+    });
+    if (!account) {
+      return;
+    }
+    const accessToken = await this.resolveAccessToken(account);
+    await this.ensureGraphMailSubscription(account, accessToken);
+  }
+
   public async pushReadStateToGraph(
     organizationId: string,
     exchangeSyncAccountId: string,
@@ -423,6 +467,7 @@ export class MailExchangeGraphSyncService {
       to: string | null;
       subject: string | null;
       text: string | null;
+      html?: string | null;
     },
   ): Promise<string> {
     const account = await this.accountRepository.findOne({
@@ -432,7 +477,9 @@ export class MailExchangeGraphSyncService {
       throw new NotFoundException("Exchange bağlantısı bulunamadı.");
     }
     const accessToken = await this.resolveAccessToken(account);
-    const bodyHtml = wrapTextAsHtml(params.text ?? "");
+    const bodyHtml =
+      params.html?.trim() ||
+      (looksLikeHtml(params.text) ? params.text! : wrapTextAsHtml(params.text ?? ""));
     const toRecipients = params.to?.trim()
       ? toGraphRecipients([params.to.trim()])
       : [];
@@ -1322,6 +1369,11 @@ function toGraphFileAttachments(
     }
     return base;
   });
+}
+
+function looksLikeHtml(text: string | null | undefined): boolean {
+  const trimmed = text?.trim() ?? "";
+  return trimmed.startsWith("<") && trimmed.includes(">");
 }
 
 function wrapTextAsHtml(text: string): string {

@@ -26,6 +26,7 @@ import {
 import { MailConnectedAccountsService } from "./MailConnectedAccountsService";
 import { MailConnectedInboxSearchService } from "./MailConnectedInboxSearchService";
 import { ConnectedImportMessageRequestDto } from "./ConnectedImportMessageRequestDto";
+import { UpdateConnectedInboxEntitlementRequestDto } from "./UpdateConnectedInboxEntitlementRequestDto";
 import { MailMailboxComposeService } from "./MailMailboxComposeService";
 import { MailImapAccessService } from "./MailImapAccessService";
 import { ComposeMailRequestDto } from "./ComposeMailRequestDto";
@@ -552,12 +553,30 @@ export class CompanyMailInboxController {
     };
   }
 
+  @Patch("connected-inbox/entitlement")
+  public async updateConnectedInboxEntitlement(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: UpdateConnectedInboxEntitlementRequestDto,
+  ) {
+    if (!canManageMailIdentity(user)) {
+      throw new ForbiddenException("Bağlı kutu entitlement yalnızca yöneticiler içindir.");
+    }
+    const entitlement = await this.mailConnectedAccountsService.updateEntitlement(
+      user.companyId,
+      body,
+    );
+    return { ok: true, entitlement };
+  }
+
   @Post("connected-accounts/import-message")
   public async importConnectedMessage(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
     @Body() body: ConnectedImportMessageRequestDto,
   ) {
     this.assertMailInboxWriter(user);
+    await this.mailConnectedAccountsService.assertPremiumConnectedInbox(
+      user.companyId,
+    );
     if (body.provider === "gmail_api") {
       const result = await this.mailGmailSyncService.importMessageById(
         user.companyId,
@@ -1453,15 +1472,20 @@ export class CompanyMailInboxController {
       user,
       resolvedConnectedSource,
     );
-    const externalHits =
-      deep === "1" || deep === "true"
-        ? await this.mailConnectedInboxSearchService.searchExternal(
-            user.companyId,
-            (query ?? "").trim(),
-            resolvedConnectedSource,
-            15,
-          )
-        : [];
+    let externalHits: Awaited<
+      ReturnType<MailConnectedInboxSearchService["searchExternal"]>
+    > = [];
+    if (deep === "1" || deep === "true") {
+      await this.mailConnectedAccountsService.assertPremiumConnectedInbox(
+        user.companyId,
+      );
+      externalHits = await this.mailConnectedInboxSearchService.searchExternal(
+        user.companyId,
+        (query ?? "").trim(),
+        resolvedConnectedSource,
+        15,
+      );
+    }
     return {
       messages,
       externalHits,

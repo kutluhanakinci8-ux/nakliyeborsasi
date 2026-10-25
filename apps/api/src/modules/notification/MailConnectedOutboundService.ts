@@ -17,6 +17,7 @@ import {
   MailIdentityAuditAction,
   MailIdentityAuditService,
 } from "./MailIdentityAuditService";
+import { MailConnectedAccountsService } from "./MailConnectedAccountsService";
 
 export type ConnectedSendProvider = "microsoft_graph" | "gmail_api";
 
@@ -55,11 +56,15 @@ export class MailConnectedOutboundService {
     private readonly mailExchangeGraphSyncService: MailExchangeGraphSyncService,
     private readonly mailGmailSyncService: MailGmailSyncService,
     private readonly mailIdentityAuditService: MailIdentityAuditService,
+    private readonly mailConnectedAccountsService: MailConnectedAccountsService,
   ) {}
 
   public async send(
     message: ConnectedOutboundMessage,
   ): Promise<{ providerMessageId: string | null; fromAddress: string }> {
+    await this.mailConnectedAccountsService.assertPremiumConnectedInbox(
+      message.organizationId,
+    );
     if (message.provider === "microsoft_graph") {
       const account = await this.exchangeAccountRepository.findOne({
         where: {

@@ -27,6 +27,9 @@ grep -q 'restoreMessageFromTrash' apps/api/src/modules/notification/MailExchange
 grep -q 'permanentDelete' apps/api/src/modules/notification/MailExchangeGraphSyncService.ts
 grep -q 'buildOutgoingSentMimeWithAttachments' apps/api/src/modules/notification/MailSentMimeBuilder.ts
 grep -q 'assertGmailPushAuthorized' apps/api/src/modules/notification/MailConnectedAccountsPushService.ts
+grep -q 'pushStarStateToGraph' apps/api/src/modules/notification/MailExchangeGraphSyncService.ts
+grep -q 'MailConnectedPushRenewScheduler' apps/api/src/modules/notification/MailConnectedPushRenewScheduler.ts
+grep -q 'assertPremiumConnectedInbox' apps/api/src/modules/notification/MailConnectedAccountsService.ts
 grep -q 'syncMailboxFolderState' apps/api/src/modules/notification/MailConnectedInboxActionsService.ts
 grep -q 'MailConnectedInboxStatusPanel' apps/mail-web/src/app/mail/MailConnectedInboxStatusPanel.tsx
 

@@ -955,9 +955,26 @@ export async function setMessageMailboxFolder(
   messageId: string,
   folder: MailMailboxFolder,
 ) {
-  await apiFetch(accessToken, `company/mail-inbox/messages/${messageId}/folder`, {
+  return apiFetch<{
+    ok: true;
+    mailboxFolder: MailMailboxFolder;
+    connectedSyncWarning?: string | null;
+  }>(accessToken, `company/mail-inbox/messages/${messageId}/folder`, {
     method: "PATCH",
     body: JSON.stringify({ folder }),
+  });
+}
+
+export async function updateConnectedInboxEntitlement(
+  accessToken: string,
+  body: { premiumEnabled: boolean; maxConnectedAccounts: number },
+) {
+  return apiFetch<{
+    ok: true;
+    entitlement: MailConnectedInboxEntitlement;
+  }>(accessToken, "company/mail-inbox/connected-inbox/entitlement", {
+    method: "PATCH",
+    body: JSON.stringify(body),
   });
 }
 

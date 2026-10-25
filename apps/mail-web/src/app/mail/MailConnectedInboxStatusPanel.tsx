@@ -3,11 +3,13 @@
 import { useEffect, useState } from "react";
 import {
   fetchConnectedInboxStatus,
+  updateConnectedInboxEntitlement,
   type MailConnectedInboxStatus,
 } from "@/lib/mailApi";
 
 type Props = {
   accessToken: string;
+  canManage?: boolean;
 };
 
 const FEATURE_LABELS: Record<
@@ -23,17 +25,44 @@ const FEATURE_LABELS: Record<
   gmailPush: "Gmail Pub/Sub",
 };
 
-export function MailConnectedInboxStatusPanel({ accessToken }: Props) {
+export function MailConnectedInboxStatusPanel({
+  accessToken,
+  canManage = false,
+}: Props) {
   const [status, setStatus] = useState<MailConnectedInboxStatus | null>(null);
   const [error, setError] = useState("");
+  const [saveStatus, setSaveStatus] = useState("");
+  const [premiumEnabled, setPremiumEnabled] = useState(true);
+  const [maxConnectedAccounts, setMaxConnectedAccounts] = useState(10);
 
   useEffect(() => {
     void fetchConnectedInboxStatus(accessToken)
-      .then(setStatus)
+      .then((payload) => {
+        setStatus(payload);
+        setPremiumEnabled(payload.entitlement.premiumEnabled);
+        setMaxConnectedAccounts(payload.entitlement.maxConnectedAccounts);
+      })
       .catch((err) =>
         setError(err instanceof Error ? err.message : "Durum yüklenemedi"),
       );
   }, [accessToken]);
+
+  async function handleSaveEntitlement(): Promise<void> {
+    setSaveStatus("");
+    setError("");
+    try {
+      const result = await updateConnectedInboxEntitlement(accessToken, {
+        premiumEnabled,
+        maxConnectedAccounts,
+      });
+      setStatus((prev) =>
+        prev ? { ...prev, entitlement: result.entitlement } : prev,
+      );
+      setSaveStatus("Entitlement kaydedildi.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Kaydedilemedi");
+    }
+  }
 
   return (
     <section className="mail-posta-card mail-help-topic-card">
@@ -106,6 +135,48 @@ export function MailConnectedInboxStatusPanel({ accessToken }: Props) {
               </li>
             ))}
           </ul>
+          {canManage ? (
+            <div className="mail-connected-entitlement-form">
+              <p className="mail-accounts-muted mail-connected-status-features-title">
+                Yönetim (CAP entitlement)
+              </p>
+              <label className="mail-connected-entitlement-row">
+                <input
+                  type="checkbox"
+                  checked={premiumEnabled}
+                  onChange={(e) => setPremiumEnabled(e.target.checked)}
+                />
+                Premium bağlı gelen kutusu açık
+              </label>
+              <label className="mail-connected-entitlement-row">
+                <span className="mail-accounts-muted">Maks. bağlı hesap</span>
+                <input
+                  type="number"
+                  min={0}
+                  max={50}
+                  value={maxConnectedAccounts}
+                  onChange={(e) =>
+                    setMaxConnectedAccounts(
+                      Number.parseInt(e.target.value, 10) || 0,
+                    )
+                  }
+                  className="mail-premium-input mail-premium-input--narrow"
+                />
+              </label>
+              <button
+                type="button"
+                className="mail-premium-btn mail-premium-btn--ghost"
+                onClick={() => void handleSaveEntitlement()}
+              >
+                Kaydet
+              </button>
+              {saveStatus ? (
+                <p className="mail-accounts-status mail-accounts-status--ok">
+                  {saveStatus}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
         </>
       ) : null}
     </section>

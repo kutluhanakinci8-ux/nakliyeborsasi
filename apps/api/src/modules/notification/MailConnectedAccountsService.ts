@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { ForbiddenException, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { resolveMailSenderAddresses } from "@nakliyeborsasi/core";
@@ -148,6 +148,31 @@ export class MailConnectedAccountsService {
       return false;
     }
     return ent.connectedCount < ent.maxConnectedAccounts;
+  }
+
+  public async assertPremiumConnectedInbox(organizationId: string): Promise<void> {
+    const ent = await this.getEntitlement(organizationId);
+    if (!ent.premiumEnabled) {
+      throw new ForbiddenException(
+        "Bağlı gelen kutusu (CAP) bu kuruluş için kapalı.",
+      );
+    }
+  }
+
+  public async updateEntitlement(
+    organizationId: string,
+    body: { premiumEnabled: boolean; maxConnectedAccounts: number },
+  ): Promise<MailConnectedInboxEntitlementDto> {
+    let row = await this.entitlementRepository.findOne({
+      where: { organizationId },
+    });
+    if (!row) {
+      row = this.entitlementRepository.create({ organizationId });
+    }
+    row.premiumEnabled = body.premiumEnabled;
+    row.maxConnectedAccounts = body.maxConnectedAccounts;
+    await this.entitlementRepository.save(row);
+    return this.getEntitlement(organizationId);
   }
 
   private async resolvePrimaryLertaAccount(

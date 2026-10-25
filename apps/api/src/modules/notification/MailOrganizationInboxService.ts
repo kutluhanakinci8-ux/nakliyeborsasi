@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
@@ -90,6 +91,8 @@ export type MailInboxListRow = {
 
 @Injectable()
 export class MailOrganizationInboxService {
+  private readonly logger = new Logger(MailOrganizationInboxService.name);
+
   public constructor(
     @InjectRepository(MailMailboxEntity)
     private readonly mailboxRepository: Repository<MailMailboxEntity>,
@@ -636,6 +639,7 @@ export class MailOrganizationInboxService {
     }
     row.starredAt = starred ? new Date() : null;
     await this.inboundRepository.save(row);
+    await this.syncConnectedStarState(organizationId, row, starred);
     return { starredAt: row.starredAt?.toISOString() ?? null };
   }
 
@@ -718,10 +722,12 @@ export class MailOrganizationInboxService {
       if (starred && !wasStarred) {
         row.starredAt = new Date();
         await this.inboundRepository.save(row);
+        await this.syncConnectedStarState(organizationId, row, true);
         updated += 1;
       } else if (!starred && wasStarred) {
         row.starredAt = null;
         await this.inboundRepository.save(row);
+        await this.syncConnectedStarState(organizationId, row, false);
         updated += 1;
       }
     }
@@ -733,7 +739,7 @@ export class MailOrganizationInboxService {
     messageId: string,
     folder: MailboxFolder,
     actor?: MailInboxActor,
-  ): Promise<{ mailboxFolder: MailboxFolder }> {
+  ): Promise<{ mailboxFolder: MailboxFolder; connectedSyncWarning?: string | null }> {
     const row = await this.assertMessageAccess(organizationId, messageId, actor);
     if (row.mailboxFolder === folder) {
       return { mailboxFolder: folder };
@@ -748,10 +754,14 @@ export class MailOrganizationInboxService {
       row.customFolderId = null;
     }
     await this.inboundRepository.save(row);
-    await this.mailConnectedInboxActionsService
-      .syncMailboxFolderState(organizationId, row, folder, previousFolder)
-      .catch(() => undefined);
-    return { mailboxFolder: folder };
+    const connectedSyncWarning =
+      await this.mailConnectedInboxActionsService.syncMailboxFolderState(
+        organizationId,
+        row,
+        folder,
+        previousFolder,
+      );
+    return { mailboxFolder: folder, connectedSyncWarning };
   }
 
   public async deleteMessagePermanently(
@@ -1058,6 +1068,35 @@ export class MailOrganizationInboxService {
       sender.localPart,
       sender.mailDomain,
     ).technicalAddress;
+  }
+
+  private async syncConnectedStarState(
+    organizationId: string,
+    row: MailInboundMessageEntity,
+    starred: boolean,
+  ): Promise<void> {
+    try {
+      if (row.exchangeSyncAccountId && row.exchangeMessageId) {
+        await this.mailExchangeGraphSyncService.pushStarStateToGraph(
+          organizationId,
+          row.exchangeSyncAccountId,
+          row.exchangeMessageId,
+          starred,
+        );
+      }
+      if (row.gmailSyncAccountId && row.gmailMessageId) {
+        await this.mailGmailSyncService.pushStarStateToGmail(
+          organizationId,
+          row.gmailSyncAccountId,
+          row.gmailMessageId,
+          starred,
+        );
+      }
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "connected_star_failed";
+      this.logger.warn(`Connected star sync failed: ${message}`);
+    }
   }
 
   private async syncExchangeReadState(

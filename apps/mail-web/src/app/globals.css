@@ -4163,6 +4163,24 @@ html[data-mail-theme="dark"] .mail-posta-status--ok {
   background: color-mix(in srgb, var(--accent) 10%, var(--panel));
 }
 
+.mail-connected-entitlement-form {
+  margin-top: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.mail-connected-entitlement-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.82rem;
+}
+
+.mail-premium-input--narrow {
+  max-width: 88px;
+}
+
 .mail-accounts-muted {
   margin: 0;
   font-size: 0.82rem;

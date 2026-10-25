@@ -226,7 +226,10 @@ export function MailAccountsSettingsPanel({
         onHubChange={setHub}
       />
 
-      <MailConnectedInboxStatusPanel accessToken={accessToken} />
+      <MailConnectedInboxStatusPanel
+        accessToken={accessToken}
+        canManage={hub.canManageSenders}
+      />
 
       <MailScheduledComposePanel accessToken={accessToken} />
 

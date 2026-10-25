@@ -24,7 +24,11 @@ import {
   MailIdentityAuditService,
 } from "./MailIdentityAuditService";
 import { MailConnectedAccountsService } from "./MailConnectedAccountsService";
-import { buildOutgoingSentMime } from "./MailSentMimeBuilder";
+import {
+  buildOutgoingSentMime,
+  buildOutgoingSentMimeWithAttachments,
+} from "./MailSentMimeBuilder";
+import type { MailComposeDraftAttachmentMeta } from "../../infrastructure/database/entities/MailComposeDraftEntity";
 import { randomUUID } from "node:crypto";
 
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
@@ -213,6 +217,9 @@ export class MailGmailSyncService {
     accountId: string,
     actorUserId: string | null,
   ): Promise<{ imported: number; updated: number }> {
+    await this.mailConnectedAccountsService.assertPremiumConnectedInbox(
+      organizationId,
+    );
     const account = await this.accountRepository.findOne({
       where: { id: accountId, organizationId },
     });
@@ -302,6 +309,54 @@ export class MailGmailSyncService {
       }
     }
     return { accounts: accounts.length, imported, updated };
+  }
+
+  public async pushStarStateToGmail(
+    organizationId: string,
+    gmailSyncAccountId: string,
+    gmailMessageId: string,
+    starred: boolean,
+  ): Promise<void> {
+    const account = await this.accountRepository.findOne({
+      where: { id: gmailSyncAccountId, organizationId },
+    });
+    if (!account?.enabled) {
+      return;
+    }
+    try {
+      const accessToken = await this.resolveAccessToken(account);
+      await this.gmailPost(accessToken, `${GMAIL_BASE}/messages/batchModify`, {
+        ids: [gmailMessageId],
+        addLabelIds: starred ? ["STAR"] : [],
+        removeLabelIds: starred ? [] : ["STAR"],
+      });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Gmail yıldız güncellenemedi";
+      this.logger.warn(`Gmail star sync failed ${gmailMessageId}: ${message}`);
+      throw error;
+    }
+  }
+
+  public async renewGmailWatchIfNeeded(
+    organizationId: string,
+    accountId: string,
+  ): Promise<void> {
+    const account = await this.accountRepository.findOne({
+      where: { id: accountId, organizationId, enabled: true },
+    });
+    if (!account) {
+      return;
+    }
+    const renewBefore = Date.now() + 24 * 60 * 60 * 1000;
+    if (
+      account.gmailWatchExpiration &&
+      account.gmailWatchExpiration.getTime() > renewBefore
+    ) {
+      return;
+    }
+    const accessToken = await this.resolveAccessToken(account);
+    await this.registerGmailWatch(account, accessToken);
   }
 
   public async pushReadStateToGmail(
@@ -416,6 +471,8 @@ export class MailGmailSyncService {
       to: string | null;
       subject: string | null;
       text: string | null;
+      html?: string | null;
+      attachments?: MailComposeDraftAttachmentMeta[] | null;
     },
   ): Promise<string> {
     const account = await this.accountRepository.findOne({
@@ -428,14 +485,23 @@ export class MailGmailSyncService {
     const fromHeader = account.displayName
       ? `${account.displayName} <${account.emailAddress}>`
       : account.emailAddress;
-    const rawMime = buildOutgoingSentMime({
-      fromHeader,
-      to: params.to?.trim() || "",
-      subject: params.subject?.trim() || "(Konu yok)",
-      text: params.text ?? "",
-      messageId: `<${randomUUID()}@lerta.draft>`,
-      date: new Date(),
-    });
+    const mimeAttachments = (params.attachments ?? []).map((file) => ({
+      filename: file.filename,
+      contentType: file.contentType,
+      content: Buffer.from(file.contentBase64, "base64"),
+    }));
+    const rawMime = buildOutgoingSentMimeWithAttachments(
+      {
+        fromHeader,
+        to: params.to?.trim() || "",
+        subject: params.subject?.trim() || "(Konu yok)",
+        text: params.text ?? "",
+        html: params.html ?? undefined,
+        messageId: `<${randomUUID()}@lerta.draft>`,
+        date: new Date(),
+      },
+      mimeAttachments,
+    );
     const raw = Buffer.from(rawMime).toString("base64url");
     if (params.providerDraftId) {
       await this.gmailPut(
@@ -648,26 +714,27 @@ export class MailGmailSyncService {
           updated += 1;
         }
       }
-      for (const labelChange of [
-        ...(record.labelsAdded ?? []),
-        ...(record.labelsRemoved ?? []),
-      ]) {
-        if (!labelChange.message?.id) {
-          continue;
+      for (const added of record.labelsAdded ?? []) {
+        if (
+          await this.applyGmailLabelDelta(
+            account.id,
+            added.message?.id,
+            added.labelIds ?? [],
+            [],
+          )
+        ) {
+          updated += 1;
         }
-        const local = await this.inboundRepository.findOne({
-          where: {
-            gmailSyncAccountId: account.id,
-            gmailMessageId: labelChange.message.id,
-          },
-        });
-        if (!local) {
-          continue;
-        }
-        const labels = new Set(labelChange.labelIds ?? []);
-        if (labels.has("TRASH")) {
-          local.mailboxFolder = "trash";
-          await this.inboundRepository.save(local);
+      }
+      for (const removed of record.labelsRemoved ?? []) {
+        if (
+          await this.applyGmailLabelDelta(
+            account.id,
+            removed.message?.id,
+            [],
+            removed.labelIds ?? [],
+          )
+        ) {
           updated += 1;
         }
       }
@@ -757,12 +824,18 @@ export class MailGmailSyncService {
         gmailMessageId: message.id,
       },
     });
+    const starredAt = message.labelIds?.includes("STAR")
+      ? existing?.starredAt ?? new Date()
+      : null;
     if (existing) {
       existing.subject = subject;
       existing.snippet = snippet;
       existing.bodyText = bodyText;
       existing.bodyHtml = bodyHtml;
       existing.readAt = readAt;
+      existing.starredAt = message.labelIds?.includes("STAR")
+        ? existing.starredAt ?? new Date()
+        : null;
       existing.mailboxFolder = folderState.mailboxFolder;
       existing.spamStatus = folderState.spamStatus;
       existing.exchangeWellKnownFolder = folderKey;
@@ -787,6 +860,7 @@ export class MailGmailSyncService {
         mailboxFolder: folderState.mailboxFolder,
         internetMessageId: internetMessageId ?? null,
         readAt,
+        starredAt,
         attachments: attachments.length > 0 ? attachments : null,
         gmailSyncAccountId: account.id,
         gmailMessageId: message.id,
@@ -812,6 +886,57 @@ export class MailGmailSyncService {
       default:
         return { mailboxFolder: "inbox", spamStatus: "clean" };
     }
+  }
+
+  private async applyGmailLabelDelta(
+    accountId: string,
+    gmailMessageId: string | undefined,
+    added: string[],
+    removed: string[],
+  ): Promise<boolean> {
+    if (!gmailMessageId) {
+      return false;
+    }
+    const local = await this.inboundRepository.findOne({
+      where: { gmailSyncAccountId: accountId, gmailMessageId },
+    });
+    if (!local) {
+      return false;
+    }
+    let changed = false;
+    if (added.includes("TRASH")) {
+      local.mailboxFolder = "trash";
+      changed = true;
+    }
+    if (removed.includes("TRASH") && local.mailboxFolder === "trash") {
+      local.mailboxFolder = "inbox";
+      changed = true;
+    }
+    if (added.includes("STAR")) {
+      local.starredAt = local.starredAt ?? new Date();
+      changed = true;
+    }
+    if (removed.includes("STAR")) {
+      local.starredAt = null;
+      changed = true;
+    }
+    if (
+      removed.includes("INBOX") &&
+      !added.includes("TRASH") &&
+      local.mailboxFolder !== "trash"
+    ) {
+      local.mailboxFolder = "archive";
+      changed = true;
+    }
+    if (added.includes("INBOX") && local.mailboxFolder !== "trash") {
+      local.mailboxFolder = "inbox";
+      changed = true;
+    }
+    if (!changed) {
+      return false;
+    }
+    await this.inboundRepository.save(local);
+    return true;
   }
 
   private async registerGmailWatch(

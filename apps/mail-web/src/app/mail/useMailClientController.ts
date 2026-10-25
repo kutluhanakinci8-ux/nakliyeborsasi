@@ -1933,13 +1933,19 @@ export function useMailClientController({
     }
     const closedId = selectedId;
     try {
-      await setMessageMailboxFolder(accessToken, selectedId, folder);
+      const folderResult = await setMessageMailboxFolder(
+        accessToken,
+        selectedId,
+        folder,
+      );
       setToast(
-        folder === "trash"
-          ? "Çöp kutusuna taşındı."
-          : folder === "archive"
-            ? "Arşivlendi."
-            : "Gelen kutusuna alındı.",
+        folderResult.connectedSyncWarning
+          ? `${folder === "trash" ? "Çöp kutusuna taşındı" : folder === "archive" ? "Arşivlendi" : "Gelen kutusuna alındı"} (uyarı: ${folderResult.connectedSyncWarning})`
+          : folder === "trash"
+            ? "Çöp kutusuna taşındı."
+            : folder === "archive"
+              ? "Arşivlendi."
+              : "Gelen kutusuna alındı.",
       );
       finishAfterMessageNavigation(closedId);
       void refresh();

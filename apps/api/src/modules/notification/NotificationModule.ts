@@ -166,6 +166,7 @@ import { MailCalendarGoogleSyncService } from "./MailCalendarGoogleSyncService";
 import { MailCalendarGoogleSyncScheduler } from "./MailCalendarGoogleSyncScheduler";
 import { MailCalendarGoogleAccountEntity } from "../../infrastructure/database/entities/MailCalendarGoogleAccountEntity";
 import { MailExchangeSyncScheduler } from "./MailExchangeSyncScheduler";
+import { MailConnectedPushRenewScheduler } from "./MailConnectedPushRenewScheduler";
 import { MailContactCardDavService } from "./MailContactCardDavService";
 import { MailContactCardDavSyncScheduler } from "./MailContactCardDavSyncScheduler";
 import { MailDeliverabilityHubService } from "./MailDeliverabilityHubService";
@@ -334,6 +335,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     MailConnectedDraftSyncService,
     MailConnectedInboxActionsService,
     MailExchangeSyncScheduler,
+    MailConnectedPushRenewScheduler,
     MailCalendarGraphSyncService,
     MailCalendarGraphSyncScheduler,
     MailCalendarGoogleSyncService,
