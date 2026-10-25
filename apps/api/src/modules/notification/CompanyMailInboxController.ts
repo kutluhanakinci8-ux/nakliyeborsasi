@@ -2542,7 +2542,7 @@ export class CompanyMailInboxController {
   @Post("calendar/graph/oauth/complete")
   public async completeCalendarGraphOAuth(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
-    @Body() body: { code: string; state: string },
+    @Body() body: CompleteExchangeOAuthRequestDto,
   ) {
     this.assertMailInboxWriter(user);
     const account = await this.mailCalendarGraphSyncService.completeOAuth(
