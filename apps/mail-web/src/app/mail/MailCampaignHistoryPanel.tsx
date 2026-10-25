@@ -196,7 +196,7 @@ export function MailCampaignHistoryPanel({
   open,
   onCloneToCompose,
 }: Props) {
-  const { t } = useMailLocale();
+  const { t, localeTag } = useMailLocale();
   const [rows, setRows] = useState<MailCampaignListItem[]>([]);
   const [summary, setSummary] = useState<MailCampaignSummary | null>(null);
   const [engagement, setEngagement] =
@@ -605,7 +605,9 @@ export function MailCampaignHistoryPanel({
               .finally(() => setSummaryExportBusy(false));
           }}
         >
-          {summaryExportBusy ? "Hazırlanıyor…" : "30g özet CSV"}
+          {summaryExportBusy
+            ? t("campaignExportPreparing")
+            : t("campaignSummaryCsv30d")}
         </button>
         <button
           type="button"
@@ -636,7 +638,7 @@ export function MailCampaignHistoryPanel({
           >
             {bulkBusy
               ? t("campaignBulkCancelling")
-              : `Seçilenleri iptal (${bulkSelected.length})`}
+              : t("campaignBulkCancelSelected", { count: bulkSelected.length })}
           </button>
         ) : null}
       </div>
@@ -668,16 +670,21 @@ export function MailCampaignHistoryPanel({
                 <span className="mail-campaign-history-status">{row.status}</span>
               </div>
               <p className="compose-attach-hint">
-                {row.recipientCount} alıcı ·{" "}
-                {new Date(row.createdAt).toLocaleString("tr-TR")}
+                {t("campaignRowRecipients", { count: row.recipientCount })} ·{" "}
+                {new Date(row.createdAt).toLocaleString(localeTag)}
                 {row.scheduleAt
-                  ? ` · plan: ${new Date(row.scheduleAt).toLocaleString("tr-TR")}`
+                  ? t("campaignRowScheduled", {
+                      when: new Date(row.scheduleAt).toLocaleString(localeTag),
+                    })
                   : ""}
                 {row.result
-                  ? ` · gönderilen ${row.result.sent}/${row.result.attempted}`
+                  ? t("campaignRowSent", {
+                      sent: row.result.sent,
+                      attempted: row.result.attempted,
+                    })
                   : ""}
                 {row.successRatePercent != null
-                  ? ` · başarı ${row.successRatePercent}%`
+                  ? t("campaignRowSuccess", { percent: row.successRatePercent })
                   : ""}
                 {row.tags && row.tags.length > 0
                   ? ` · ${row.tags.join(", ")}`
@@ -702,7 +709,7 @@ export function MailCampaignHistoryPanel({
                       setTagsDraft((row.tags ?? []).join(", "));
                     }}
                   >
-                    Etiket
+                    {t("campaignTagBtn")}
                   </button>
                 ) : null}
                 <button
@@ -725,7 +732,7 @@ export function MailCampaignHistoryPanel({
                         .finally(() => setBusyId(null));
                     }}
                   >
-                    Yazıya kopyala
+                    {t("campaignCloneToCompose")}
                   </button>
                 ) : null}
                 <button
@@ -738,7 +745,7 @@ export function MailCampaignHistoryPanel({
                     setScheduleCloneAt("");
                   }}
                 >
-                  Zamanla (kopya)
+                  {t("campaignScheduleClone")}
                 </button>
                 {row.status === "draft" ? (
                   <button
@@ -776,7 +783,7 @@ export function MailCampaignHistoryPanel({
                         setContentEditId(null);
                       }}
                     >
-                      Yeniden zamanla
+                      {t("campaignReschedule")}
                     </button>
                     <button
                       type="button"
@@ -789,7 +796,7 @@ export function MailCampaignHistoryPanel({
                           .finally(() => setBusyId(null));
                       }}
                     >
-                      İptal
+                      {t("composeCancel")}
                     </button>
                   </>
                 ) : null}
@@ -808,7 +815,7 @@ export function MailCampaignHistoryPanel({
                             .finally(() => setBusyId(null));
                         }}
                       >
-                        Başarısızları yeniden gönder
+                        {t("campaignResendFailed")}
                       </button>
                     ) : null}
                     <button
@@ -822,7 +829,7 @@ export function MailCampaignHistoryPanel({
                           .finally(() => setBusyId(null));
                       }}
                     >
-                      Tekrar gönder
+                      {t("campaignResend")}
                     </button>
                   </>
                 ) : null}
@@ -832,14 +839,14 @@ export function MailCampaignHistoryPanel({
                   <input
                     type="text"
                     className="compose-input"
-                    placeholder="Konu"
+                    placeholder={t("campaignSubjectPlaceholder")}
                     value={contentSubject}
                     onChange={(e) => setContentSubject(e.target.value)}
                   />
                   <input
                     type="text"
                     className="compose-input"
-                    placeholder="A/B konu (B)"
+                    placeholder={t("campaignSubjectBPlaceholder")}
                     value={contentSubjectB}
                     onChange={(e) => setContentSubjectB(e.target.value)}
                   />
@@ -877,7 +884,7 @@ export function MailCampaignHistoryPanel({
                   <input
                     type="text"
                     className="compose-input"
-                    placeholder="etiket1, etiket2"
+                    placeholder={t("campaignTagsPlaceholder")}
                     value={tagsDraft}
                     onChange={(e) => setTagsDraft(e.target.value)}
                   />
@@ -900,7 +907,7 @@ export function MailCampaignHistoryPanel({
                         .finally(() => setBusyId(null));
                     }}
                   >
-                    Etiketleri kaydet
+                    {t("campaignTagsSave")}
                   </button>
                 </div>
               ) : null}
@@ -932,7 +939,7 @@ export function MailCampaignHistoryPanel({
                         .finally(() => setBusyId(null));
                     }}
                   >
-                    Planı güncelle
+                    {t("campaignUpdateSchedule")}
                   </button>
                 </div>
               ) : null}
@@ -963,7 +970,7 @@ export function MailCampaignHistoryPanel({
                         .finally(() => setBusyId(null));
                     }}
                   >
-                    Kaydet
+                    {t("actionSave")}
                   </button>
                 </div>
               ) : null}
@@ -976,9 +983,11 @@ export function MailCampaignHistoryPanel({
                     <>
                       {detail.engagement && detail.engagement.trackedSends > 0 ? (
                         <p className="compose-attach-hint">
-                          İzleme: {detail.engagement.uniqueOpens} açılma ·{" "}
-                          {detail.engagement.totalClicks} tıklama (
-                          {detail.engagement.trackedSends} HTML gönderim)
+                          {t("campaignEngagementLine", {
+                            opens: detail.engagement.uniqueOpens,
+                            clicks: detail.engagement.totalClicks,
+                            tracked: detail.engagement.trackedSends,
+                          })}
                         </p>
                       ) : null}
                       {detail.subjectB ? (
@@ -986,13 +995,15 @@ export function MailCampaignHistoryPanel({
                       ) : null}
                       {detail.abStats ? (
                         <p className="compose-attach-hint">
-                          A/B gönderim: A={detail.abStats.sentVariantA} · B=
-                          {detail.abStats.sentVariantB}
+                          {t("campaignAbLine", {
+                            a: detail.abStats.sentVariantA,
+                            b: detail.abStats.sentVariantB,
+                          })}
                         </p>
                       ) : null}
                       {detail.segment?.referansAllowlist?.length ? (
                         <p className="compose-attach-hint">
-                          Referans filtresi:{" "}
+                          {t("campaignRefFilter")}{" "}
                           {detail.segment.referansAllowlist.join(", ")}
                         </p>
                       ) : null}

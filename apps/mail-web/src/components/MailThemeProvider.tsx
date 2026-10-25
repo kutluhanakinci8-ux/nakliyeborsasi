@@ -11,8 +11,10 @@ import {
   type MailThemeMode,
 } from "@/lib/mailTheme";
 import { initReadFontScale } from "@/lib/mailDisplayPrefs";
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 
 export function MailThemeProvider({ children }: { children: React.ReactNode }) {
+  const { t } = useMailLocale();
   const [themeMode, setThemeMode] = useState<MailThemeMode>("light");
 
   useEffect(() => {
@@ -33,7 +35,8 @@ export function MailThemeProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const effective = resolveEffectiveTheme(themeMode);
-  const fabTitle = effective === "dark" ? "Açık tema" : "Koyu tema";
+  const fabTitle =
+    effective === "dark" ? t("themeFabLight") : t("themeFabDark");
 
   return (
     <>
@@ -47,7 +50,7 @@ export function MailThemeProvider({ children }: { children: React.ReactNode }) {
         }
         onClick={() => setThemeMode(toggleMailTheme())}
         title={fabTitle}
-        aria-label="Tema değiştir"
+        aria-label={t("themeFabAria")}
       >
         {effective === "dark" ? "☀" : "☾"}
         {themeMode === "system" ? (
