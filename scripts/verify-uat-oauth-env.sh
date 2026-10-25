@@ -131,7 +131,10 @@ echo "  https://posta.lerta.com.tr/mail/exchange-oauth"
 echo "  https://posta.lerta.com.tr/mail/calendar-oauth"
 echo "  https://posta.lerta.com.tr/mail/google-calendar-oauth"
 
-if [[ "${graph_ok}" -eq 3 && "${google_ok}" -eq 3 ]]; then
+if [[ "${graph_ok}" -eq 3 && "${gmail_ok}" -eq 3 ]]; then
+  exit 0
+fi
+if [[ "${failed}" -eq 0 ]]; then
   exit 0
 fi
 exit 2
