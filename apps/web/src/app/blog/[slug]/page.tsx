@@ -3,14 +3,15 @@ import { BlogPostPageClient } from "../BlogPostPageClient";
 import { findBlogPost } from "../../../lib/siteNavigation";
 
 type BlogPostPageProps = {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 };
 
-export default function BlogPostPage({ params }: BlogPostPageProps) {
-  const post = findBlogPost(params.slug);
+export default async function BlogPostPage({ params }: BlogPostPageProps) {
+  const { slug } = await params;
+  const post = findBlogPost(slug);
   if (!post) {
     notFound();
   }
 
-  return <BlogPostPageClient slug={params.slug} />;
+  return <BlogPostPageClient slug={slug} />;
 }

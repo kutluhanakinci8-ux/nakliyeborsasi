@@ -3,8 +3,8 @@ import { Suspense } from "react";
 import { isLertaCommsPortalHost } from "../../lib/lertaCommsPortal";
 import { LoginPageClient } from "./LoginPageClient";
 
-export default function LoginPage() {
-  const host = headers().get("host");
+export default async function LoginPage() {
+  const host = (await headers()).get("host");
   const isCommsPortal = isLertaCommsPortalHost(host);
 
   return (

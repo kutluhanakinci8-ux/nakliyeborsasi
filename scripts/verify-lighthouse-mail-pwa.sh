@@ -48,7 +48,7 @@ if [[ "${LIGHTHOUSE_PWA_PROXY:-1}" == "1" ]]; then
   man="$(curl -fsS -o /dev/null -w '%{http_code}' --connect-timeout 12 "${base}/manifest.webmanifest" 2>/dev/null || echo 0)"
   proxy_score=0
   [[ "${sw}" == *"lerta-mail-shell-v"* ]] && proxy_score=$((proxy_score + 50))
-  [[ "${sw}" == *"lerta-mail-offline"* ]] && proxy_score=$((proxy_score + 20))
+  [[ "${sw}" == *"lerta-mail-offline"* ]] || [[ "${sw}" == *"lerta-mail-offline-snapshot"* ]] && proxy_score=$((proxy_score + 20))
   [[ "${man}" == "200" ]] && proxy_score=$((proxy_score + 30))
   echo "PWA proxy score (manifest+SW): ${proxy_score}"
   if [[ "${proxy_score}" -ge "${MIN_SCORE}" ]]; then

@@ -1,9 +1,10 @@
 import { AuctionDetailPageClient } from "../AuctionDetailPageClient";
 
 type PageProps = {
-  params: { sessionId: string };
+  params: Promise<{ sessionId: string }>;
 };
 
-export default function AuctionDetailPage({ params }: PageProps) {
-  return <AuctionDetailPageClient sessionId={params.sessionId} />;
+export default async function AuctionDetailPage({ params }: PageProps) {
+  const { sessionId } = await params;
+  return <AuctionDetailPageClient sessionId={sessionId} />;
 }
