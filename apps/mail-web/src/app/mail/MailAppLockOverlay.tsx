@@ -8,6 +8,7 @@ import {
   fetchWebAuthnAuthOptions,
   verifyWebAuthnAuthentication,
 } from "@/lib/mailApi";
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 
 const SESSION_KEY = "lerta-mail-biometric-unlock";
 
@@ -33,6 +34,7 @@ export function MailAppLockOverlay({
   appLockEnabled,
   hasPasskeys,
 }: Props) {
+  const { t } = useMailLocale();
   const [unlocked, setUnlocked] = useState(() => readMailAppLockSessionUnlocked());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -50,14 +52,12 @@ export function MailAppLockOverlay({
       setUnlocked(true);
     } catch (err) {
       setError(
-        err instanceof Error
-          ? err.message
-          : "Biyometrik doğrulama başarısız. Tekrar deneyin.",
+        err instanceof Error ? err.message : t("appLockErrGeneric"),
       );
     } finally {
       setBusy(false);
     }
-  }, [accessToken]);
+  }, [accessToken, t]);
 
   useEffect(() => {
     if (!shouldLock || busy) {
@@ -81,12 +81,9 @@ export function MailAppLockOverlay({
       <div className="mail-app-lock-card">
         <span className="mail-app-lock-icon" aria-hidden="true">🔐</span>
         <h2 id="mail-app-lock-title" className="mail-app-lock-title">
-          Posta kilitli
+          {t("appLockTitle")}
         </h2>
-        <p className="mail-app-lock-lead">
-          Bu oturumda postayı görmek için Face ID, Touch ID veya cihaz PIN ile
-          doğrulayın (Outlook mobil biyometri benzeri).
-        </p>
+        <p className="mail-app-lock-lead">{t("appLockLead")}</p>
         {error ? (
           <p className="mail-accounts-status mail-accounts-status--err" role="alert">
             {error}
@@ -98,7 +95,7 @@ export function MailAppLockOverlay({
           disabled={busy}
           onClick={() => void unlock()}
         >
-          {busy ? "Doğrulanıyor…" : "Kilidi aç"}
+          {busy ? t("appLockVerifyBusy") : t("appLockUnlock")}
         </button>
       </div>
     </div>

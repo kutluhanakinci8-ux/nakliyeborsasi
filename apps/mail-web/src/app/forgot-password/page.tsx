@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { requestPasswordReset } from "@/lib/mailApi";
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 
 export default function ForgotPasswordPage() {
+  const { t } = useMailLocale();
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
@@ -18,7 +20,7 @@ export default function ForgotPasswordPage() {
       await requestPasswordReset(email.trim());
       setSent(true);
     } catch {
-      setError("İstek gönderilemedi.");
+      setError(t("forgotPasswordErr"));
     } finally {
       setLoading(false);
     }
@@ -27,13 +29,13 @@ export default function ForgotPasswordPage() {
   return (
     <div className="login-page">
       <form className="login-card" onSubmit={onSubmit}>
-        <h1>Şifre sıfırlama</h1>
+        <h1>{t("forgotPasswordTitle")}</h1>
         {sent ? (
-          <p>E-posta gönderildi (hesap varsa). Gelen kutunuzu kontrol edin.</p>
+          <p>{t("forgotPasswordSent")}</p>
         ) : (
           <>
             {error ? <p className="login-error">{error}</p> : null}
-            <label htmlFor="email">Giriş e-postası</label>
+            <label htmlFor="email">{t("forgotPasswordEmail")}</label>
             <input
               id="email"
               type="email"
@@ -42,12 +44,12 @@ export default function ForgotPasswordPage() {
               required
             />
             <button type="submit" disabled={loading}>
-              Bağlantı gönder
+              {t("forgotPasswordSubmit")}
             </button>
           </>
         )}
         <p style={{ marginTop: 16 }}>
-          <Link href="/login">Giriş</Link>
+          <Link href="/login">{t("forgotPasswordBackLogin")}</Link>
         </p>
       </form>
     </div>

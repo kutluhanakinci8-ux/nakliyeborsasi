@@ -282,7 +282,12 @@ export function ComposeRichEditor({
         insertHero();
         return;
       case "columns":
-        insertHtmlAtSelection(composeTwoColumnBlock());
+        insertHtmlAtSelection(
+          composeTwoColumnBlock(
+            t("composeDefaultColLeft"),
+            t("composeDefaultColRight"),
+          ),
+        );
         break;
       case "callout":
         insertCallout("info");
@@ -346,7 +351,12 @@ export function ComposeRichEditor({
   }
 
   function insertTwoColumns() {
-    insertHtmlAtSelection(composeTwoColumnBlock());
+    insertHtmlAtSelection(
+      composeTwoColumnBlock(
+        t("composeDefaultColLeft"),
+        t("composeDefaultColRight"),
+      ),
+    );
     syncFromEditor();
   }
 
