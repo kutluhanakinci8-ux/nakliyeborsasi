@@ -1989,6 +1989,28 @@ export async function fetchConnectedAccountAudit(accessToken: string) {
   }>(accessToken, "company/mail-inbox/connected-accounts/audit");
 }
 
+export type MailConnectedInboxStatus = {
+  exchangeConfigured: boolean;
+  gmailConfigured: boolean;
+  entitlement: MailConnectedInboxEntitlement;
+  features: {
+    unifiedInbox: boolean;
+    connectedSend: boolean;
+    deepSearch: boolean;
+    draftSync: boolean;
+    trashSync: boolean;
+    graphPush: boolean;
+    gmailPush: boolean;
+  };
+};
+
+export async function fetchConnectedInboxStatus(accessToken: string) {
+  return apiFetch<MailConnectedInboxStatus>(
+    accessToken,
+    "company/mail-inbox/connected-inbox/status",
+  );
+}
+
 export async function createDraft(
   accessToken: string,
   body: {

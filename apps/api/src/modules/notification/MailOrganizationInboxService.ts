@@ -748,8 +748,8 @@ export class MailOrganizationInboxService {
       row.customFolderId = null;
     }
     await this.inboundRepository.save(row);
-    void this.mailConnectedInboxActionsService
-      .syncTrashState(organizationId, row, folder, previousFolder)
+    await this.mailConnectedInboxActionsService
+      .syncMailboxFolderState(organizationId, row, folder, previousFolder)
       .catch(() => undefined);
     return { mailboxFolder: folder };
   }
@@ -787,6 +787,10 @@ export class MailOrganizationInboxService {
     });
     for (const row of rows) {
       this.mailImapMaildirService.deleteMailboxFile(row.maildirFilePath);
+      await this.mailConnectedInboxActionsService.syncPermanentDelete(
+        organizationId,
+        row,
+      );
       await this.inboundRepository.remove(row);
     }
     return { deleted: rows.length };

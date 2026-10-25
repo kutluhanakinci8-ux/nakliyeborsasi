@@ -11,6 +11,7 @@ import { MailEmailSocialLinksEditor } from "./MailEmailSocialLinksEditor";
 import { MailDelegationExchangePanel } from "./MailDelegationExchangePanel";
 import { MailGmailSyncPanel } from "./MailGmailSyncPanel";
 import { MailConnectedAuditPanel } from "./MailConnectedAuditPanel";
+import { MailConnectedInboxStatusPanel } from "./MailConnectedInboxStatusPanel";
 import { MailScheduledComposePanel } from "./MailScheduledComposePanel";
 import { MailTenantBrandingPanel } from "./MailTenantBrandingPanel";
 import type { MailInboxBranding } from "@/lib/mailApi";
@@ -225,7 +226,10 @@ export function MailAccountsSettingsPanel({
         onHubChange={setHub}
       />
 
+      <MailConnectedInboxStatusPanel accessToken={accessToken} />
+
       <MailScheduledComposePanel accessToken={accessToken} />
+
 
       <MailConnectedAuditPanel accessToken={accessToken} />
 

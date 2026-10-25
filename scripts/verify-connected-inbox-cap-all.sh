@@ -23,5 +23,8 @@ echo "== API symbols (static grep) =="
 grep -q 'class MailConnectedInboxActionsService' apps/api/src/modules/notification/MailConnectedInboxActionsService.ts
 grep -q 'connected-inbox/status' apps/api/src/modules/notification/CompanyMailInboxController.ts
 grep -q 'isPushConfigured' apps/api/src/modules/notification/MailGmailSyncService.ts
+grep -q 'restoreMessageFromTrash' apps/api/src/modules/notification/MailExchangeGraphSyncService.ts
+grep -q 'syncMailboxFolderState' apps/api/src/modules/notification/MailConnectedInboxActionsService.ts
+grep -q 'MailConnectedInboxStatusPanel' apps/mail-web/src/app/mail/MailConnectedInboxStatusPanel.tsx
 
 echo "OK: connected inbox CAP code bundle present"

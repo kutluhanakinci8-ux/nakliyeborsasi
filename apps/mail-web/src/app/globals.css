@@ -4111,6 +4111,58 @@ html[data-mail-theme="dark"] .mail-posta-status--ok {
   letter-spacing: 0.02em;
 }
 
+.mail-accounts-badge--muted {
+  background: color-mix(in srgb, var(--muted) 12%, var(--panel));
+  color: var(--muted);
+}
+
+.mail-connected-status-grid {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.mail-connected-status-grid li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.mail-connected-status-features-title {
+  margin: 0 0 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.mail-connected-status-features {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mail-connected-feature-pill {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  background: color-mix(in srgb, var(--muted) 10%, var(--panel));
+  color: var(--muted);
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+}
+
+.mail-connected-feature-pill.is-on {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--panel));
+}
+
 .mail-accounts-muted {
   margin: 0;
   font-size: 0.82rem;

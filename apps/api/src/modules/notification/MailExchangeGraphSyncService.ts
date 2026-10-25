@@ -479,6 +479,63 @@ export class MailExchangeGraphSyncService {
     );
   }
 
+  public async restoreMessageFromTrash(
+    organizationId: string,
+    accountId: string,
+    exchangeMessageId: string,
+  ): Promise<void> {
+    await this.moveMessageToWellKnownFolder(
+      organizationId,
+      accountId,
+      exchangeMessageId,
+      "inbox",
+    );
+  }
+
+  public async moveMessageToArchive(
+    organizationId: string,
+    accountId: string,
+    exchangeMessageId: string,
+  ): Promise<void> {
+    await this.moveMessageToWellKnownFolder(
+      organizationId,
+      accountId,
+      exchangeMessageId,
+      "archive",
+    );
+  }
+
+  public async moveMessageToInbox(
+    organizationId: string,
+    accountId: string,
+    exchangeMessageId: string,
+  ): Promise<void> {
+    await this.moveMessageToWellKnownFolder(
+      organizationId,
+      accountId,
+      exchangeMessageId,
+      "inbox",
+    );
+  }
+
+  private async moveMessageToWellKnownFolder(
+    organizationId: string,
+    accountId: string,
+    exchangeMessageId: string,
+    destinationId: "inbox" | "archive",
+  ): Promise<void> {
+    const account = await this.accountRepository.findOne({
+      where: { id: accountId, organizationId, enabled: true },
+    });
+    if (!account) {
+      return;
+    }
+    const accessToken = await this.resolveAccessToken(account);
+    await this.graphPost(accessToken, `${GRAPH_BASE}/me/messages/${exchangeMessageId}/move`, {
+      destinationId,
+    });
+  }
+
   public async deleteMessagePermanently(
     organizationId: string,
     accountId: string,

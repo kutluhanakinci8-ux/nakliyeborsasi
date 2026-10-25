@@ -474,6 +474,44 @@ export class MailGmailSyncService {
     );
   }
 
+  public async archiveMessage(
+    organizationId: string,
+    accountId: string,
+    gmailMessageId: string,
+  ): Promise<void> {
+    const account = await this.accountRepository.findOne({
+      where: { id: accountId, organizationId, enabled: true },
+    });
+    if (!account) {
+      return;
+    }
+    const accessToken = await this.resolveAccessToken(account);
+    await this.gmailPost(
+      accessToken,
+      `${GMAIL_BASE}/messages/${gmailMessageId}/modify`,
+      { removeLabelIds: ["INBOX"] },
+    );
+  }
+
+  public async moveMessageToInbox(
+    organizationId: string,
+    accountId: string,
+    gmailMessageId: string,
+  ): Promise<void> {
+    const account = await this.accountRepository.findOne({
+      where: { id: accountId, organizationId, enabled: true },
+    });
+    if (!account) {
+      return;
+    }
+    const accessToken = await this.resolveAccessToken(account);
+    await this.gmailPost(
+      accessToken,
+      `${GMAIL_BASE}/messages/${gmailMessageId}/modify`,
+      { addLabelIds: ["INBOX"] },
+    );
+  }
+
   public async untrashMessage(
     organizationId: string,
     accountId: string,
