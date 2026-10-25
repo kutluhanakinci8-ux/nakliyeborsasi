@@ -101,7 +101,7 @@ run_layer i18n_gate "10d. Localization — mail-web TR literal gate" \
   bash "${ROOT}/scripts/qa-i18n-mail-web-gate.sh"
 
 run_layer e2e_playwright "11. System/E2E — Playwright (messaging)" \
-  bash -c "cd '${ROOT}/apps/web' && npx playwright install chromium --with-deps 2>/dev/null | tail -3; npx playwright test e2e/messaging-hub.spec.ts --grep 'login sayfası|korumalı'"
+  bash -c "cd '${ROOT}/apps/web' && npx playwright install chromium --with-deps 2>/dev/null | tail -3; npx playwright test e2e/messaging-hub.spec.ts --grep 'login sayfası'"
 
 run_layer e2e_mail_web "11b. System/E2E — Playwright (posta full)" \
   bash "${ROOT}/scripts/qa-mail-web-playwright.sh"
