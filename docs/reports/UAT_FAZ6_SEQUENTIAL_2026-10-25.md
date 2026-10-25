@@ -5,7 +5,7 @@
 | Adım | Durum | Not |
 |------|--------|-----|
 | **M1** IMAP gold | **PASS_AUTO** | `kutluhan@lerta.com.tr` — PM-5 maildir, doveadm auth, LIST (5 klasör), INBOX. Thunderbird ↔ webmail **manuel** ([MAIL_IMAP_GOLD_SMOKE.md](../MAIL_IMAP_GOLD_SMOKE.md)). |
-| **M2** Outlook mobil | **PASS_SERVER** (bekleniyor) | `verify-uat-m2-outlook-mobile-imap.sh` — TLS/help/SMTP; Outlook uygulaması **manuel** |
+| **M2** Outlook mobil | **PASS_SERVER** | VPS: IMAP+TLS, **:587 submission** (`enable-postfix-submission-587.sh`), help/imap. Outlook uygulaması **manuel** (`kutluhan@lerta.com.tr` — webmailden IMAP şifresi yenile). |
 | **M3** Graph OAuth | **DEFERRED** | En sonda — [MAIL_OAUTH_VPS_SETUP.md](../MAIL_OAUTH_VPS_SETUP.md) |
 | **M4** Google Calendar | **DEFERRED** | En sonda |
 | **M9** inbound P0 | **Kontrol** | `verify-lerta-mail-inbound-p0.sh` — MX/SPF/DMARC/DKIM OK; PTR Hostinger; `:25` ara sıra script uyarısı (Postfix aktif). Inbox teslim **manuel** §3.3. |

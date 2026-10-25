@@ -15,6 +15,7 @@ Kimlik doğrulama: kurumsal e-posta + **IMAP şifresi** (webmailde rotate).
 ## Pilot notları
 
 - Postfix submission (587) ve Dovecot SASL aynı passwd dosyasına bağlı olmalı.
+- VPS kurulum: `bash scripts/enable-postfix-submission-587.sh` (root).
 - **Gönderilen** klasörü IMAP’te her zaman dolu değil; webmail gönderilen kutusu güvenilir kaynak.
 
 ## İlgili

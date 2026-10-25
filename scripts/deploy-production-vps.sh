@@ -104,6 +104,10 @@ if [[ -x scripts/provision-pm5-imap-dovecot-vps.sh ]]; then
   INSTALL_DIR="$INSTALL_DIR" bash scripts/provision-pm5-imap-dovecot-vps.sh || true
 fi
 
+if [[ -x scripts/enable-postfix-submission-587.sh ]] && [[ -f /etc/postfix/main.cf ]]; then
+  bash scripts/enable-postfix-submission-587.sh || true
+fi
+
 if [[ -x scripts/fix-dovecot-lerta-userdb-gid.sh ]]; then
   bash scripts/fix-dovecot-lerta-userdb-gid.sh || true
 fi
