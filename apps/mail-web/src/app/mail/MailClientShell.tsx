@@ -1,15 +1,18 @@
 "use client";
 
-import { MailSettingsPanel } from "./MailSettingsPanel";
 import { MailComposeMergeFields } from "./MailComposeMergeFields";
 import { MailCampaignResultDialog } from "./MailCampaignResultDialog";
-import { MailCampaignHistoryPanel } from "./MailCampaignHistoryPanel";
-import { MailCampaignBlockEditor } from "./MailCampaignBlockEditor";
 import { MailEmptyState } from "./MailEmptyState";
 import { MailShortcutsDialog } from "./MailShortcutsDialog";
-import { MailCalendarPanel } from "./MailCalendarPanel";
-import { MailContactsPanel } from "./MailContactsPanel";
-import { ComposeRichEditor } from "./ComposeRichEditor";
+import {
+  ComposeRichEditor,
+  MailCalendarPanel,
+  MailCampaignBlockEditor,
+  MailCampaignHistoryPanel,
+  MailContactsPanel,
+  MailSettingsPanel,
+} from "./mailLazyPanels";
+import { MailPilotBillingNotice } from "./MailPilotBillingNotice";
 import { MailReplyQuotePreview } from "./MailReplyQuotePreview";
 import { MailComposeRecipientField } from "./MailComposeRecipientField";
 import { MailInboxMessageRow } from "./MailInboxMessageRow";
@@ -347,6 +350,9 @@ export function MailClientShell({ mail }: Props) {
             ? ` · ${new Date(inboxOfflineCachedAt).toLocaleString("tr-TR")}`
             : ""}
         </div>
+      ) : null}
+      {accessToken ? (
+        <MailPilotBillingNotice accessToken={accessToken} variant="banner" />
       ) : null}
       <div className="mail-mobile-bar">
         <button type="button" onClick={() => setMobilePane("nav")}>

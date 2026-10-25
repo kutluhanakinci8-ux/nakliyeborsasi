@@ -72,6 +72,18 @@ export type MailSendReadiness = {
   connectedSendAsOptions?: MailConnectedSendAsOption[];
 };
 
+export type MailBillingPlatformStatus = {
+  provider: string;
+  mode: "unconfigured" | "sandbox" | "production";
+  productionReady: boolean;
+  sandboxReady: boolean;
+  checkout: {
+    canStartCorporate: boolean;
+    canStartEnterprise: boolean;
+    blockers: string[];
+  };
+};
+
 export type MailInboxSummary = {
   primaryAddress: string | null;
   mailboxId: string | null;
@@ -2999,6 +3011,13 @@ export async function pushContactToCardDav(
     `company/mail-inbox/contacts/carddav/accounts/${accountId}/push/${contactId}`,
     { method: "POST", body: JSON.stringify({}) },
   );
+}
+
+export async function fetchMailBillingPlatformStatus(accessToken: string) {
+  return apiFetch<{
+    message: string;
+    status: MailBillingPlatformStatus;
+  }>(accessToken, "company/mail-billing/status");
 }
 
 export async function fetchImapSettings(accessToken: string) {

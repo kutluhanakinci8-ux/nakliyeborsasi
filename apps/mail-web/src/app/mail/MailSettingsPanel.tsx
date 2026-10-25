@@ -32,6 +32,7 @@ import { MailHelpPanel } from "./MailHelpPanel";
 import { MailPrivacySettingsPanel } from "./MailPrivacySettingsPanel";
 import { MailSecuritySettingsPanel } from "./MailSecuritySettingsPanel";
 import { MailIntegrationsSettingsPanel } from "./MailIntegrationsSettingsPanel";
+import { MailPilotBillingNotice } from "./MailPilotBillingNotice";
 import { fetchWebAuthnCredentials } from "@/lib/mailApi";
 
 export type SettingsView =
@@ -418,6 +419,7 @@ export function MailSettingsPanel({
           onChange={(e) => setQuery(e.target.value)}
           aria-label="Ayarları ara"
         />
+        <MailPilotBillingNotice accessToken={accessToken} variant="hub" />
         <div className="mail-settings-scroll">
           {hubSections.map((section) => {
             const items = filteredItems.filter((i) => i.section === section.key);

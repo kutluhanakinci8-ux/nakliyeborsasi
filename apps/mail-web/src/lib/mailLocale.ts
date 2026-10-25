@@ -26,6 +26,11 @@ const MESSAGES: Record<MailUiLocale, Record<string, string>> = {
     languageLabel: "Dil",
     spamFolderHint:
       "Microsoft veya Gmail bağlı hesaplarda İstenmeyen / Junk klasöründeki iletiler burada listelenir. Gelen kutusunda görmek için Outlook veya Gmail’de “Gelen”e taşıyın, sonra Yenile’ye basın.",
+    pilotBillingTitle: "Pilot dönem — ödeme kapalı",
+    pilotBillingBody:
+      "Kurumsal plan ve canlı ödeme henüz açılmadı. Posta ve webmail kullanımınız pilot kapsamında devam eder. Plan ve faturalama için yönetim konsolunu kullanın.",
+    pilotBillingConsoleLink: "Yönetim konsolu — planlar",
+    pilotBillingDismiss: "Kapat",
   },
   en: {
     loginBrand: "Lerta Mail",
@@ -43,6 +48,11 @@ const MESSAGES: Record<MailUiLocale, Record<string, string>> = {
     languageLabel: "Language",
     spamFolderHint:
       "Messages in Junk / Spam on connected Microsoft or Gmail accounts appear here. Move them to Inbox in Outlook or Gmail, then press Refresh.",
+    pilotBillingTitle: "Pilot period — billing not live",
+    pilotBillingBody:
+      "Corporate plans and live checkout are not enabled yet. Your mail and webmail continue under the pilot program. Use the admin console for plans and billing.",
+    pilotBillingConsoleLink: "Admin console — plans",
+    pilotBillingDismiss: "Dismiss",
   },
 };
 
