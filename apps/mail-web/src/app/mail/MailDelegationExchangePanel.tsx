@@ -344,6 +344,12 @@ export function MailDelegationExchangePanel({
                 </button>
               </div>
             ) : null}
+            {(exchange?.accounts ?? []).length === 0 ? (
+              <p className="mail-accounts-muted" role="status">
+                Henüz bağlı Microsoft / Exchange hesabı yok. Bağlantı başarılı olunca
+                burada e-posta adresi listelenir.
+              </p>
+            ) : null}
             <ul className="mail-accounts-list--premium">
               {(exchange?.accounts ?? []).map((acc) => (
                 <li key={acc.id} className="mail-accounts-card">
