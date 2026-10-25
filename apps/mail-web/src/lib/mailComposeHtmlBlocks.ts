@@ -37,8 +37,13 @@ export function composeHeroBlock(
   return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 20px;border-radius:12px;overflow:hidden;"><tr><td style="background-color:${bg};padding:22px 24px;"><p style="margin:0;font-size:22px;font-weight:700;line-height:1.25;color:#ffffff;">${t}</p><p style="margin:8px 0 0;font-size:15px;line-height:1.5;color:rgba(255,255,255,0.9);">${s}</p></td></tr></table><p><br></p>`;
 }
 
-export function composeTwoColumnBlock(): string {
-  return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:16px 0;"><tr><td width="48%" valign="top" style="padding-right:12px;font-size:15px;line-height:1.6;color:#14151f;"><p style="margin:0;">Sol sütun</p></td><td width="4%">&nbsp;</td><td width="48%" valign="top" style="padding-left:12px;font-size:15px;line-height:1.6;color:#14151f;"><p style="margin:0;">Sağ sütun</p></td></tr></table><p><br></p>`;
+export function composeTwoColumnBlock(
+  left = "Left column",
+  right = "Right column",
+): string {
+  const l = left.replace(/</g, "&lt;");
+  const r = right.replace(/</g, "&lt;");
+  return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:16px 0;"><tr><td width="48%" valign="top" style="padding-right:12px;font-size:15px;line-height:1.6;color:#14151f;"><p style="margin:0;">${l}</p></td><td width="4%">&nbsp;</td><td width="48%" valign="top" style="padding-left:12px;font-size:15px;line-height:1.6;color:#14151f;"><p style="margin:0;">${r}</p></td></tr></table><p><br></p>`;
 }
 
 export function composeCalloutBlock(

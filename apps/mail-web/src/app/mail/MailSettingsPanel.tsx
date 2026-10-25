@@ -72,6 +72,7 @@ type HubItemDef = {
   labelKey: string;
   subtitleKey: string;
   keywords: string;
+  keywordsEn: string;
   disabled?: boolean;
 };
 
@@ -82,6 +83,7 @@ const HUB_ITEM_DEFS: HubItemDef[] = [
     labelKey: "settingsHubDisplay",
     subtitleKey: "settingsHubDisplaySub",
     keywords: "tema görünüm dark light yoğunluk konuşma yazı",
+    keywordsEn: "theme display dark light density conversation reading",
   },
   {
     id: "mailPrefs",
@@ -89,6 +91,7 @@ const HUB_ITEM_DEFS: HubItemDef[] = [
     labelKey: "settingsHubMailPrefs",
     subtitleKey: "settingsHubMailPrefsSub",
     keywords: "posta geri al undo yanıt reply uzak resim konuşma",
+    keywordsEn: "mail undo send reply remote images conversation thread",
   },
   {
     id: "accounts",
@@ -96,6 +99,7 @@ const HUB_ITEM_DEFS: HubItemDef[] = [
     labelKey: "settingsHubAccounts",
     subtitleKey: "settingsHubAccountsSub",
     keywords: "hesap gönderen alias kimlik from",
+    keywordsEn: "account sender alias identity from",
   },
   {
     id: "signature",
@@ -103,6 +107,7 @@ const HUB_ITEM_DEFS: HubItemDef[] = [
     labelKey: "settingsHubSignature",
     subtitleKey: "settingsHubSignatureSub",
     keywords: "imza şablon compose",
+    keywordsEn: "signature template compose",
   },
   {
     id: "autoReply",
@@ -110,6 +115,7 @@ const HUB_ITEM_DEFS: HubItemDef[] = [
     labelKey: "settingsHubAutoReply",
     subtitleKey: "settingsHubAutoReplySub",
     keywords: "tatil toplantı oof vacation",
+    keywordsEn: "vacation meeting oof out of office autoreply",
   },
   {
     id: "notifications",
@@ -117,6 +123,7 @@ const HUB_ITEM_DEFS: HubItemDef[] = [
     labelKey: "settingsHubNotifications",
     subtitleKey: "settingsHubNotificationsSub",
     keywords: "bildirim push ses digest",
+    keywordsEn: "notification push sound digest",
   },
   {
     id: "imap",
@@ -124,6 +131,7 @@ const HUB_ITEM_DEFS: HubItemDef[] = [
     labelKey: "settingsHubImap",
     subtitleKey: "settingsHubImapSub",
     keywords: "imap smtp thunderbird outlook hesap android ios",
+    keywordsEn: "imap smtp thunderbird outlook account android ios",
   },
   {
     id: "integrations",
@@ -131,6 +139,7 @@ const HUB_ITEM_DEFS: HubItemDef[] = [
     labelKey: "settingsHubIntegrations",
     subtitleKey: "settingsHubIntegrationsSub",
     keywords: "entegrasyon imap api webhook outlook mobil caldav carddav",
+    keywordsEn: "integration imap api webhook outlook mobile caldav carddav",
   },
   {
     id: "deliverability",
@@ -138,6 +147,7 @@ const HUB_ITEM_DEFS: HubItemDef[] = [
     labelKey: "settingsHubDeliverability",
     subtitleKey: "settingsHubDeliverabilitySub",
     keywords: "spf dkim dmarc bounce deliverability",
+    keywordsEn: "spf dkim dmarc bounce deliverability engagement",
   },
   {
     id: "ops",
@@ -145,6 +155,7 @@ const HUB_ITEM_DEFS: HubItemDef[] = [
     labelKey: "settingsHubOps",
     subtitleKey: "settingsHubOpsSub",
     keywords: "ops runbook smoke snapshot imap",
+    keywordsEn: "ops runbook smoke snapshot imap health",
   },
   {
     id: "rules",
@@ -152,6 +163,7 @@ const HUB_ITEM_DEFS: HubItemDef[] = [
     labelKey: "settingsHubRules",
     subtitleKey: "settingsHubRulesSub",
     keywords: "kural filtre yönlendir",
+    keywordsEn: "rule filter forward redirect",
   },
   {
     id: "calendarSettings",
@@ -159,6 +171,7 @@ const HUB_ITEM_DEFS: HubItemDef[] = [
     labelKey: "settingsHubCalendar",
     subtitleKey: "settingsHubCalendarSub",
     keywords: "takvim caldav ics senkron",
+    keywordsEn: "calendar caldav ics sync",
   },
   {
     id: "contactsSettings",
@@ -166,6 +179,7 @@ const HUB_ITEM_DEFS: HubItemDef[] = [
     labelKey: "settingsHubContacts",
     subtitleKey: "settingsHubContactsSub",
     keywords: "kişi rehber carddav senkron",
+    keywordsEn: "contacts address book carddav sync",
   },
   {
     id: "security",
@@ -173,6 +187,7 @@ const HUB_ITEM_DEFS: HubItemDef[] = [
     labelKey: "settingsHubSecurity",
     subtitleKey: "settingsHubSecuritySub",
     keywords: "2fa totp güvenlik passkey biyometri face id",
+    keywordsEn: "2fa totp security passkey biometric face id",
   },
   {
     id: "privacy",
@@ -180,6 +195,7 @@ const HUB_ITEM_DEFS: HubItemDef[] = [
     labelKey: "settingsHubPrivacy",
     subtitleKey: "settingsHubPrivacySub",
     keywords: "kvkk gizlilik veri",
+    keywordsEn: "gdpr privacy data kvkk",
   },
   {
     id: "help",
@@ -187,6 +203,7 @@ const HUB_ITEM_DEFS: HubItemDef[] = [
     labelKey: "settingsHubHelp",
     subtitleKey: "settingsHubHelpSub",
     keywords: "yardım destek imap rehber kılavuz",
+    keywordsEn: "help support imap guide documentation",
   },
 ];
 
@@ -237,7 +254,7 @@ export function MailSettingsPanel({
       HUB_ITEM_DEFS.map((item) => ({
         id: item.id,
         section: item.section,
-        keywords: item.keywords,
+        keywords: `${item.keywords} ${item.keywordsEn}`,
         disabled: item.disabled,
         label: t(item.labelKey),
         subtitle: t(item.subtitleKey),

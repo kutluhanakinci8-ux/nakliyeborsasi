@@ -117,6 +117,14 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
     [year, month, localeTag],
   );
 
+  const weekdayLabels = useMemo(() => {
+    const formatter = new Intl.DateTimeFormat(localeTag, { weekday: "short" });
+    const mondayUtc = Date.UTC(2024, 0, 1);
+    return Array.from({ length: 7 }, (_, i) =>
+      formatter.format(new Date(mondayUtc + i * 86_400_000)),
+    );
+  }, [localeTag]);
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -385,7 +393,7 @@ export function MailCalendarPanel({ accessToken, onToast }: Props) {
         <div className="mail-cal-premium-main">
       <div className="mail-cal-month mail-cal-month--card" aria-label={t("calMonthViewAria")}>
         <div className="mail-cal-grid mail-cal-grid-head" role="row">
-          {["Pt", "Sa", "Ça", "Pe", "Cu", "Ct", "Pz"].map((label) => (
+          {weekdayLabels.map((label) => (
             <div key={label} className="mail-cal-weekday" role="columnheader">
               {label}
             </div>

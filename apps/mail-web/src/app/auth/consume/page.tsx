@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import { useMailSession } from "@/lib/session";
 import { parseEmbedFromSearch } from "@/lib/embeddedParentSession";
 import { postTokenRequestToEmbedParents } from "@/lib/embedParentOrigins";
+import { useMailLocale } from "@/lib/MailLocaleProvider";
 
 function ConsumeHandoff() {
   const router = useRouter();
   const { setAccessToken } = useMailSession();
+  const { t } = useMailLocale();
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -19,7 +21,7 @@ function ConsumeHandoff() {
     const token = params.get("access_token");
     const fromAddress = params.get("from");
     if (!token) {
-      setError("Oturum bağlantısı geçersiz veya süresi doldu.");
+      setError(t("authConsumeInvalid"));
       return;
     }
     setAccessToken(token);
@@ -112,14 +114,14 @@ function ConsumeHandoff() {
     }
     const qs = query.toString();
     router.replace(qs ? `/mail?${qs}` : "/mail");
-  }, [router, setAccessToken]);
+  }, [router, setAccessToken, t]);
 
   if (error) {
     return (
       <div className="login-page">
         <div className="login-card">
           <p className="login-error">{error}</p>
-          <a href="/login">Giriş sayfasına git</a>
+          <a href="/login">{t("authConsumeGoLogin")}</a>
         </div>
       </div>
     );
@@ -128,7 +130,18 @@ function ConsumeHandoff() {
   return (
     <div className="login-page">
       <div className="login-card">
-        <p>Webmail açılıyor…</p>
+        <p>{t("authConsumeOpening")}</p>
+      </div>
+    </div>
+  );
+}
+
+function AuthConsumeFallback() {
+  const { t } = useMailLocale();
+  return (
+    <div className="login-page">
+      <div className="login-card">
+        <p>{t("readLoading")}</p>
       </div>
     </div>
   );
@@ -136,15 +149,7 @@ function ConsumeHandoff() {
 
 export default function AuthConsumePage() {
   return (
-    <Suspense
-      fallback={
-        <div className="login-page">
-          <div className="login-card">
-            <p>Yükleniyor…</p>
-          </div>
-        </div>
-      }
-    >
+    <Suspense fallback={<AuthConsumeFallback />}>
       <ConsumeHandoff />
     </Suspense>
   );
