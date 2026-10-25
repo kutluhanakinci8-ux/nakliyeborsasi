@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import {
-  completeCalendarGoogleOAuth,
   deleteCalendarGoogleAccount,
   fetchCalendarGoogleAccounts,
   startCalendarGoogleOAuth,
@@ -46,8 +45,8 @@ export function MailCalendarGooglePanel({
 
   async function handleConnect() {
     try {
-      const { authorizationUrl, state } =
-        await startCalendarGoogleOAuth(accessToken);
+      const { authorizationUrl } = await startCalendarGoogleOAuth(accessToken);
+      onToast("Google penceresi açıldı. Onaydan sonra sonuç burada görünür.");
       const popup = window.open(
         authorizationUrl,
         "lerta-google-calendar-oauth",
@@ -61,23 +60,27 @@ export function MailCalendarGooglePanel({
         if (event.origin !== window.location.origin) return;
         const data = event.data as {
           type?: string;
-          code?: string;
-          oauthState?: string;
+          success?: boolean;
+          error?: string;
+          emailAddress?: string;
         };
         if (data.type !== "lerta-google-calendar-oauth") return;
         window.removeEventListener("message", onMessage);
-        if (!data.code) {
-          onToast("Google takvim oturumu tamamlanmadı.");
+        if (!data.success) {
+          onToast(
+            data.error?.trim()
+              ? `Google takvim: ${data.error}`
+              : "Google takvim oturumu tamamlanmadı.",
+          );
           return;
         }
-        await completeCalendarGoogleOAuth(
-          accessToken,
-          data.code,
-          data.oauthState ?? state,
-        );
         await load();
         onSynced();
-        onToast("Google Takvim bağlandı — iki yön senkron başladı.");
+        onToast(
+          data.emailAddress
+            ? `${data.emailAddress} Google takvimi bağlandı.`
+            : "Google Takvim bağlandı — iki yön senkron başladı.",
+        );
       };
       window.addEventListener("message", onMessage);
     } catch (error) {

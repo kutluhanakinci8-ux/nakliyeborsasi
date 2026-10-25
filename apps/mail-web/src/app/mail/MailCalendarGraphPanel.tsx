@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import {
-  completeCalendarGraphOAuth,
   deleteCalendarGraphAccount,
   fetchCalendarGraphAccounts,
   startCalendarGraphOAuth,
@@ -46,8 +45,8 @@ export function MailCalendarGraphPanel({
 
   async function handleConnect() {
     try {
-      const { authorizationUrl, state } =
-        await startCalendarGraphOAuth(accessToken);
+      const { authorizationUrl } = await startCalendarGraphOAuth(accessToken);
+      onToast("Microsoft penceresi açıldı. Onaydan sonra sonuç burada görünür.");
       const popup = window.open(
         authorizationUrl,
         "lerta-calendar-graph-oauth",
@@ -61,23 +60,27 @@ export function MailCalendarGraphPanel({
         if (event.origin !== window.location.origin) return;
         const data = event.data as {
           type?: string;
-          code?: string;
-          oauthState?: string;
+          success?: boolean;
+          error?: string;
+          emailAddress?: string;
         };
         if (data.type !== "lerta-calendar-graph-oauth") return;
         window.removeEventListener("message", onMessage);
-        if (!data.code) {
-          onToast("Microsoft takvim oturumu tamamlanmadı.");
+        if (!data.success) {
+          onToast(
+            data.error?.trim()
+              ? `Microsoft takvim: ${data.error}`
+              : "Microsoft takvim oturumu tamamlanmadı.",
+          );
           return;
         }
-        await completeCalendarGraphOAuth(
-          accessToken,
-          data.code,
-          data.oauthState ?? state,
-        );
         await load();
         onSynced();
-        onToast("Outlook takvimi bağlandı — iki yön senkron başladı.");
+        onToast(
+          data.emailAddress
+            ? `${data.emailAddress} Outlook takvimi bağlandı.`
+            : "Outlook takvimi bağlandı — iki yön senkron başladı.",
+        );
       };
       window.addEventListener("message", onMessage);
     } catch (error) {
