@@ -134,8 +134,8 @@ export class MailIdentityAuditService {
       .createQueryBuilder("log")
       .where("log.actionCode LIKE :mailPrefix", { mailPrefix: "MAIL_%" })
       .andWhere(
-        `(log.actorCompanyId = :orgId OR log.metadata->>'organizationId' = :orgId)`,
-        { orgId: organizationId },
+        `(log.actorCompanyId = :orgId OR log.metadata->>'organizationId' = :orgIdText)`,
+        { orgId: organizationId, orgIdText: organizationId },
       )
       .orderBy("log.createdAt", "DESC")
       .take(limit + 1);
@@ -204,8 +204,8 @@ export class MailIdentityAuditService {
         codes: MailIdentityAuditService.CONNECTED_ACCOUNT_ACTION_CODES,
       })
       .andWhere(
-        `(log.actorCompanyId = :orgId OR log.metadata->>'organizationId' = :orgId)`,
-        { orgId: organizationId },
+        `(log.actorCompanyId = :orgId OR log.metadata->>'organizationId' = :orgIdText)`,
+        { orgId: organizationId, orgIdText: organizationId },
       )
       .orderBy("log.createdAt", "DESC")
       .take(capped)

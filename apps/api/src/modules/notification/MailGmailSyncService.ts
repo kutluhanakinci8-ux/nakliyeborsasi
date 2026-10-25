@@ -689,7 +689,7 @@ export class MailGmailSyncService {
     let updated = 0;
     const history = await this.gmailGet(
       accessToken,
-      `${GMAIL_BASE}/history?startHistoryId=${startHistoryId}&historyTypes=messageAdded&historyTypes=messageDeleted&historyTypes=labelsAdded&historyTypes=labelsRemoved`,
+      `${GMAIL_BASE}/history?startHistoryId=${encodeURIComponent(startHistoryId)}&historyTypes=messageAdded&historyTypes=messageDeleted&historyTypes=labelAdded&historyTypes=labelRemoved`,
     );
     const records = (history.history ?? []) as Array<{
       messagesAdded?: Array<{ message?: { id?: string } }>;
