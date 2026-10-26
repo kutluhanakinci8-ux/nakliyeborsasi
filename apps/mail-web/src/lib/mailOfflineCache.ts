@@ -131,6 +131,7 @@ export async function getInboxSnapshot(
     return decodeOfflineSnapshot(row.blob);
   }
   if ("payload" in row && row.payload) {
+    void putInboxSnapshot(key, row.payload).catch(() => undefined);
     return row.payload;
   }
   return null;
@@ -205,6 +206,7 @@ export async function getMessageDetail(
     return decodeOfflineMessageDetail(row.blob).message;
   }
   if ("message" in row && row.message) {
+    void putMessageDetail(row.message).catch(() => undefined);
     return row.message;
   }
   return null;

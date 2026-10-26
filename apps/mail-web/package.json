@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start -H 0.0.0.0 -p 3012",
     "test:e2e": "playwright test",
-    "test:zstd": "node scripts/verify-zstd-roundtrip.mjs"
+    "test:zstd": "node scripts/verify-zstd-roundtrip.mjs",
+    "test:zstd:integration": "node scripts/verify-zstd-integration.mjs"
   },
   "dependencies": {
     "@nakliyeborsasi/core": "*",

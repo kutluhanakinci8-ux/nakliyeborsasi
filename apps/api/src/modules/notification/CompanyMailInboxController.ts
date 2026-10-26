@@ -12,6 +12,7 @@ import {
   Req,
   Res,
   UseGuards,
+  UseInterceptors,
 } from "@nestjs/common";
 import { AuthenticatedUserContext } from "@nakliyeborsasi/core";
 import { Request, Response } from "express";
@@ -25,7 +26,7 @@ import {
 } from "./MailOrganizationInboxService";
 import { MailConnectedAccountsService } from "./MailConnectedAccountsService";
 import { MailConnectedInboxSearchService } from "./MailConnectedInboxSearchService";
-import { maybeZstdJsonEnvelope } from "../../common/mailZstdHttp.util";
+import { MailZstdJsonResponseInterceptor } from "../../common/MailZstdJsonResponseInterceptor";
 import { ConnectedImportMessageRequestDto } from "./ConnectedImportMessageRequestDto";
 import { UpdateConnectedInboxEntitlementRequestDto } from "./UpdateConnectedInboxEntitlementRequestDto";
 import { MailMailboxComposeService } from "./MailMailboxComposeService";
@@ -142,6 +143,7 @@ import {
 
 @Controller("company/mail-inbox")
 @UseGuards(JwtAuthenticationGuard, MailProductTotpPolicyGuard)
+@UseInterceptors(MailZstdJsonResponseInterceptor)
 export class CompanyMailInboxController {
   public constructor(
     private readonly mailOrganizationInboxService: MailOrganizationInboxService,
@@ -1447,7 +1449,6 @@ export class CompanyMailInboxController {
   @Get()
   public async summary(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
-    @Req() req: Request,
     @Query("folder") folder?: string,
     @Query("customFolderId") customFolderId?: string,
     @Query("connectedSource") connectedSource?: string,
@@ -1515,7 +1516,7 @@ export class CompanyMailInboxController {
       await this.mailConnectedAccountsService.listAccounts(user.companyId, user);
     const connectedInboxEntitlement =
       await this.mailConnectedAccountsService.getEntitlement(user.companyId, user);
-    return maybeZstdJsonEnvelope(req, {
+    return {
       summary: {
         ...summary,
         storageQuota,
@@ -1528,7 +1529,7 @@ export class CompanyMailInboxController {
       connectedSource: resolvedConnectedSource,
       connectedAccounts,
       connectedInboxEntitlement,
-    });
+    };
   }
 
   @Get("threads")
@@ -1578,7 +1579,6 @@ export class CompanyMailInboxController {
   @Get("search")
   public async search(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
-    @Req() req: Request,
     @Query("q") query?: string,
     @Query("folder") folder?: string,
     @Query("from") fromAddress?: string,
@@ -1625,7 +1625,7 @@ export class CompanyMailInboxController {
         15,
       );
     }
-    return maybeZstdJsonEnvelope(req, {
+    return {
       messages,
       externalHits,
       folder: resolvedFolder,
@@ -1635,7 +1635,7 @@ export class CompanyMailInboxController {
       receivedBefore: receivedBefore?.trim() ?? "",
       hasAttachment: attachmentFilter ?? null,
       deepSearch: externalHits.length > 0,
-    });
+    };
   }
 
   @Get("drafts")
