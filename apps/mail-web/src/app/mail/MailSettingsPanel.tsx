@@ -34,6 +34,7 @@ import { MailShareLertaPostaPanel } from "./MailShareLertaPostaPanel";
 import { MailExploreLertaAppsPanel } from "./MailExploreLertaAppsPanel";
 import { MailLertaAppsGridIcon } from "./MailLertaAppsGridIcon";
 import { MailExternalOpenPickerPanel } from "./MailExternalOpenPickerPanel";
+import { MailOpenSourceLicensesPanel } from "./MailOpenSourceLicensesPanel";
 import {
   EXTERNAL_OPEN_PREFS_EVENT,
   readDirectionsApp,
@@ -74,6 +75,7 @@ export type SettingsView =
   | "openLinksWith"
   | "openDirectionsWith"
   | "integrations"
+  | "openSourceLicenses"
   | "ops";
 
 type HubItem = {
@@ -263,6 +265,14 @@ const HUB_ITEM_DEFS: HubItemDef[] = [
     subtitleKey: "settingsHubHelpSub",
     keywords: "yardım geri bildirim destek sss tanılama kvkk",
     keywordsEn: "help feedback support faq diagnostics privacy",
+  },
+  {
+    id: "openSourceLicenses",
+    section: "other",
+    labelKey: "settingsHubOssLicenses",
+    subtitleKey: "settingsHubOssLicensesSub",
+    keywords: "lisans açık kaynak zstandard zstd oss",
+    keywordsEn: "license open source zstandard zstd oss",
   },
 ];
 
@@ -1015,6 +1025,12 @@ export function MailSettingsPanel({
         />,
       );
       break;
+    case "openSourceLicenses":
+      content = renderDetail(
+        t("ossLicensesTitle"),
+        <MailOpenSourceLicensesPanel />,
+      );
+      break;
     case "imap":
       content = renderDetail(
         detailTitle("imap"),
@@ -1051,6 +1067,7 @@ export function MailSettingsPanel({
           view === "rules" ||
           view === "categories" ||
           view === "help" ||
+          view === "openSourceLicenses" ||
           view === "shareLerta" ||
           view === "exploreLertaApps" ||
           view === "openLinksWith" ||
@@ -1115,6 +1132,8 @@ function settingsRowIcon(id: SettingsView): string {
       return "🗺️";
     case "help":
       return "💬";
+    case "openSourceLicenses":
+      return "📜";
     case "ops":
       return "📋";
     case "deliverability":
