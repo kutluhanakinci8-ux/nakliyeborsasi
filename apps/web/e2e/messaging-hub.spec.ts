@@ -110,4 +110,59 @@ test.describe("Mesajlar hub", () => {
       timeout: 20_000,
     });
   });
+
+  test("oturumlu: görsel ek önizleme (API seed + UI)", async ({
+    page,
+    request,
+  }) => {
+    test.skip(!ACCESS_TOKEN, "E2E_ACCESS_TOKEN veya MESSAGING_TEST_JWT gerekli");
+
+    const tinyPng =
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+    const threadsResponse = await request.get(
+      `${API_BASE}/messaging/threads?lang=tr`,
+      { headers: { Authorization: `Bearer ${ACCESS_TOKEN}` } },
+    );
+    test.skip(!threadsResponse.ok(), "threads API erişilemedi");
+    const threadId = (
+      (await threadsResponse.json()) as { threads?: { threadId: string }[] }
+    ).threads?.[0]?.threadId;
+    test.skip(!threadId, "thread yok");
+
+    const marker = `E2E_IMG_${Date.now()}`;
+    const sendResponse = await request.post(
+      `${API_BASE}/messaging/threads/${threadId}/messages?lang=tr`,
+      {
+        headers: {
+          Authorization: `Bearer ${ACCESS_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        data: {
+          bodyText: marker,
+          attachments: [
+            {
+              filename: "e2e-preview.png",
+              contentType: "image/png",
+              contentBase64: tinyPng,
+            },
+          ],
+        },
+      },
+    );
+    test.skip(!sendResponse.ok(), "ekli mesaj gönderilemedi");
+
+    await page.addInitScript((token) => {
+      window.localStorage.setItem("nakliyeborsasi_access_token", token);
+    }, ACCESS_TOKEN);
+
+    await page.goto(
+      `/messaging?tab=sohbet&threadId=${encodeURIComponent(threadId)}`,
+    );
+    await expect(page.getByText(marker, { exact: true })).toBeVisible({
+      timeout: 20_000,
+    });
+    await expect(page.locator(".chat-attachment-preview img")).toBeVisible({
+      timeout: 20_000,
+    });
+  });
 });

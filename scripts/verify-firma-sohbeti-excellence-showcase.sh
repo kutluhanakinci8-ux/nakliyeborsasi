@@ -249,6 +249,7 @@ echo ""
 echo "== API thread + WebRTC smoke =="
 API_BASE="${API_BASE}" bash "${ROOT}/scripts/verify-messaging-thread-api-smoke.sh"
 API_BASE="${API_BASE}" bash "${ROOT}/scripts/verify-messaging-webrtc-ice-config.sh"
+API_BASE="${API_BASE}" bash "${ROOT}/scripts/verify-messaging-attachment-preview.sh"
 
 echo ""
 echo "Excellence showcase verify: PASS"

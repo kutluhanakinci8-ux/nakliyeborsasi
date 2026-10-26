@@ -45,6 +45,7 @@ import type {
   AuthenticationResponseJSON,
   RegistrationResponseJSON,
 } from "@simplewebauthn/types";
+import { MobileAuthConfigService } from "./MobileAuthConfigService";
 
 @Controller("auth")
 export class AuthenticationController {
@@ -57,7 +58,13 @@ export class AuthenticationController {
     private readonly emailSecurityTokenService: EmailSecurityTokenService,
     private readonly userTotpService: UserTotpService,
     private readonly userWebAuthnService: UserWebAuthnService,
+    private readonly mobileAuthConfigService: MobileAuthConfigService,
   ) {}
+
+  @Get("mobile/config")
+  public getMobileAuthConfig(): ReturnType<MobileAuthConfigService["getConfig"]> {
+    return this.mobileAuthConfigService.getConfig();
+  }
 
   private resolveRequestOrigin(request: Request): string {
     const forwardedProto = request.headers["x-forwarded-proto"];

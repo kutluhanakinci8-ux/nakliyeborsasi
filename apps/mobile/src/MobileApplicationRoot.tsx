@@ -20,6 +20,8 @@ import {
   loginWithOAuthIfConfigured,
   resolveMobileOAuthConfig,
 } from "./lertaMobileOAuth";
+import { fetchMobileAuthConfigFromApi } from "./lertaMobileAuthConfig";
+import type { RemoteMobileAuthConfig } from "./lertaMobileAuthConfig";
 
 /** OAuth redirect — AppAuth / expo-auth-session (W6). */
 export const MOBILE_OAUTH_REDIRECT_URI = AuthSession.makeRedirectUri({
@@ -35,6 +37,8 @@ export function MobileApplicationRoot(): React.ReactElement {
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState<string | null>(null);
   const [loginBusy, setLoginBusy] = useState(false);
+  const [remoteAuthConfig, setRemoteAuthConfig] =
+    useState<RemoteMobileAuthConfig | null>(null);
 
   const loadSession = useCallback(async () => {
     const token = await resolveMobileAccessToken();
@@ -45,8 +49,13 @@ export function MobileApplicationRoot(): React.ReactElement {
     void loadSession();
   }, [loadSession]);
 
+  React.useEffect(() => {
+    void fetchMobileAuthConfigFromApi().then(setRemoteAuthConfig);
+  }, []);
+
   const push = useLertaMobilePushRegistration(accessToken);
-  const oauthConfigured = resolveMobileOAuthConfig() !== null;
+  const oauthConfigured =
+    resolveMobileOAuthConfig(remoteAuthConfig) !== null;
 
   async function handleLogin(): Promise<void> {
     setLoginError(null);
@@ -70,7 +79,10 @@ export function MobileApplicationRoot(): React.ReactElement {
     setLoginError(null);
     setLoginBusy(true);
     try {
-      const token = await loginWithOAuthIfConfigured(MOBILE_OAUTH_REDIRECT_URI);
+      const token = await loginWithOAuthIfConfigured(
+        MOBILE_OAUTH_REDIRECT_URI,
+        remoteAuthConfig,
+      );
       if (!token) {
         setLoginError("OAuth yapılandırılmadı");
         return;

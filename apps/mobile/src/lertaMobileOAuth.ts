@@ -1,6 +1,7 @@
 import * as AuthSession from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
 import { storeAccessToken } from "./lertaMobileAuth";
+import type { RemoteMobileAuthConfig } from "./lertaMobileAuthConfig";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -10,14 +11,23 @@ export type MobileOAuthConfig = {
   scopes: string[];
 };
 
-export function resolveMobileOAuthConfig(): MobileOAuthConfig | null {
-  const issuer = process.env.EXPO_PUBLIC_LERTA_OAUTH_ISSUER?.trim();
-  const clientId = process.env.EXPO_PUBLIC_LERTA_OAUTH_CLIENT_ID?.trim();
+export function resolveMobileOAuthConfig(
+  remote?: RemoteMobileAuthConfig | null,
+): MobileOAuthConfig | null {
+  const issuer =
+    process.env.EXPO_PUBLIC_LERTA_OAUTH_ISSUER?.trim() ??
+    remote?.oauth.issuer ??
+    null;
+  const clientId =
+    process.env.EXPO_PUBLIC_LERTA_OAUTH_CLIENT_ID?.trim() ??
+    remote?.oauth.clientId ??
+    null;
   if (!issuer || !clientId) {
     return null;
   }
   const scopes =
     process.env.EXPO_PUBLIC_LERTA_OAUTH_SCOPES?.split(/[\s,]+/).filter(Boolean) ??
+    remote?.oauth.scopes ??
     ["openid", "profile", "email"];
   return { issuer, clientId, scopes };
 }
@@ -28,8 +38,9 @@ export function resolveMobileOAuthConfig(): MobileOAuthConfig | null {
  */
 export async function loginWithOAuthIfConfigured(
   redirectUri: string,
+  remote?: RemoteMobileAuthConfig | null,
 ): Promise<string | null> {
-  const config = resolveMobileOAuthConfig();
+  const config = resolveMobileOAuthConfig(remote);
   if (!config) {
     return null;
   }

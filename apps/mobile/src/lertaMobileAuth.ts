@@ -3,7 +3,7 @@ import { Platform } from "react-native";
 
 const ACCESS_TOKEN_KEY = "lerta_mobile_access_token";
 
-function resolveApiBaseUrl(): string {
+export function resolveApiBaseUrl(): string {
   const base =
     process.env.EXPO_PUBLIC_LERTA_API_URL?.trim() ??
     "https://api.lerta.com.tr/api/v1";

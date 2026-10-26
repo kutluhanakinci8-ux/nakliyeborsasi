@@ -19,6 +19,7 @@ import { MailMailboxEntity } from "../../infrastructure/database/entities/MailMa
 import { UserTotpService } from "./UserTotpService";
 import { UserWebAuthnCredentialEntity } from "../../infrastructure/database/entities/UserWebAuthnCredentialEntity";
 import { UserWebAuthnService } from "./UserWebAuthnService";
+import { MobileAuthConfigService } from "./MobileAuthConfigService";
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { UserWebAuthnService } from "./UserWebAuthnService";
     InstagramPublicStatsService,
     UserTotpService,
     UserWebAuthnService,
+    MobileAuthConfigService,
   ],
   exports: [
     JwtAuthenticationGuard,
