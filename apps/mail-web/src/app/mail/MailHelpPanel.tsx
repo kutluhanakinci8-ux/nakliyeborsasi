@@ -1,8 +1,15 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { SettingsView } from "./MailSettingsPanel";
 import { useMailLocale } from "@/lib/MailLocaleProvider";
+import { mailVitrinUrl, MAIL_VITRIN_PATHS } from "@/lib/mailVitrinLinks";
+import { isStandaloneMailPwa } from "@/lib/mailIosPwa";
+import {
+  buildMailClientDiagnostics,
+  downloadDiagnosticsJson,
+  resetMailLocalTroubleshootingCaches,
+} from "@/lib/mailHelpLocalReset";
 
 type Props = {
   onOpenSetting: (view: SettingsView) => void;
@@ -10,241 +17,255 @@ type Props = {
   onOpenContacts?: () => void;
 };
 
-type HelpTopic = {
-  id: string;
-  icon: string;
-  title: string;
-  description: string;
-  settingView?: SettingsView;
-  guideHref?: string;
-  actionLabel?: string;
-  onAction?: () => void;
+type HelpSubView = "main" | "diagnostics" | "thirdParty";
+
+type RowProps = {
+  label: string;
+  onClick: () => void;
+  external?: boolean;
+  chevron?: boolean;
+  value?: string;
 };
+
+function HelpIosRow({ label, onClick, external, chevron, value }: RowProps) {
+  return (
+    <li>
+      <button type="button" className="mail-help-ios-row" onClick={onClick}>
+        <span className="mail-help-ios-row-label">{label}</span>
+        {value ? <span className="mail-help-ios-row-value">{value}</span> : null}
+        {external ? (
+          <span className="mail-help-ios-row-accessory" aria-hidden="true">↗</span>
+        ) : chevron ? (
+          <span className="mail-help-ios-row-accessory" aria-hidden="true">›</span>
+        ) : null}
+      </button>
+    </li>
+  );
+}
+
+const SUPPORT_EMAIL = "destek@lerta.com.tr";
 
 export function MailHelpPanel({
   onOpenSetting,
-  onOpenCalendar,
-  onOpenContacts,
 }: Props) {
   const { t } = useMailLocale();
+  const [subView, setSubView] = useState<HelpSubView>("main");
+  const [status, setStatus] = useState("");
 
-  const topics: HelpTopic[] = useMemo(
-    () => [
-      {
-        id: "start",
-        icon: "✉️",
-        title: t("helpTopicStartTitle"),
-        description: t("helpTopicStartDesc"),
-        settingView: "mailPrefs",
-        actionLabel: t("helpTopicStartAction"),
-      },
-      {
-        id: "accounts",
-        icon: "👤",
-        title: t("helpTopicAccountsTitle"),
-        description: t("helpTopicAccountsDesc"),
-        settingView: "accounts",
-        actionLabel: t("helpTopicAccountsAction"),
-      },
-      {
-        id: "signature",
-        icon: "✒️",
-        title: t("helpTopicSignatureTitle"),
-        description: t("helpTopicSignatureDesc"),
-        settingView: "signature",
-        actionLabel: t("helpTopicSignatureAction"),
-      },
-      {
-        id: "rules",
-        icon: "⚡",
-        title: t("helpTopicRulesTitle"),
-        description: t("helpTopicRulesDesc"),
-        settingView: "rules",
-        actionLabel: t("helpTopicRulesAction"),
-      },
-      {
-        id: "autoreply",
-        icon: "↩️",
-        title: t("helpTopicAutoreplyTitle"),
-        description: t("helpTopicAutoreplyDesc"),
-        settingView: "autoReply",
-        actionLabel: t("helpTopicAutoreplyAction"),
-      },
-      {
-        id: "notify",
-        icon: "🔔",
-        title: t("helpTopicNotifyTitle"),
-        description: t("helpTopicNotifyDesc"),
-        settingView: "notifications",
-        actionLabel: t("helpTopicNotifyAction"),
-      },
-      {
-        id: "imap",
-        icon: "📬",
-        title: t("helpTopicImapTitle"),
-        description: t("helpTopicImapDesc"),
-        settingView: "imap",
-        guideHref: "/help/imap",
-        actionLabel: t("helpTopicImapAction"),
-      },
-      {
-        id: "deliverability",
-        icon: "📈",
-        title: t("helpTopicDeliverTitle"),
-        description: t("helpTopicDeliverDesc"),
-        settingView: "deliverability",
-        actionLabel: t("helpTopicDeliverAction"),
-      },
-      {
-        id: "calendar",
-        icon: "📅",
-        title: t("helpTopicCalendarTitle"),
-        description: t("helpTopicCalendarDesc"),
-        actionLabel: t("helpTopicCalendarAction"),
-        onAction: onOpenCalendar,
-      },
-      {
-        id: "contacts",
-        icon: "👥",
-        title: t("helpTopicContactsTitle"),
-        description: t("helpTopicContactsDesc"),
-        actionLabel: t("helpTopicContactsAction"),
-        onAction: onOpenContacts,
-      },
-      {
-        id: "security",
-        icon: "🔒",
-        title: t("helpTopicSecurityTitle"),
-        description: t("helpTopicSecurityDesc"),
-        settingView: "security",
-        actionLabel: t("helpTopicSecurityAction"),
-      },
-      {
-        id: "integrations",
-        icon: "🔗",
-        title: t("helpTopicIntegrationsTitle"),
-        description: t("helpTopicIntegrationsDesc"),
-        settingView: "integrations",
-        actionLabel: t("helpTopicIntegrationsAction"),
-      },
-      {
-        id: "feedback",
-        icon: "💬",
-        title: t("helpTopicFeedbackTitle"),
-        description: t("helpTopicFeedbackDesc"),
-        actionLabel: t("helpTopicFeedbackAction"),
-        onAction: () => {
-          window.location.href =
-            "mailto:destek@lerta.com.tr?subject=Lerta%20Posta%20geri%20bildirim";
-        },
-      },
-      {
-        id: "privacy",
-        icon: "🛡️",
-        title: t("helpTopicPrivacyTitle"),
-        description: t("helpTopicPrivacyDesc"),
-        settingView: "privacy",
-        actionLabel: t("helpTopicPrivacyAction"),
-      },
-      {
-        id: "ops",
-        icon: "📋",
-        title: t("helpTopicOpsTitle"),
-        description: t("helpTopicOpsDesc"),
-        settingView: "ops",
-        actionLabel: t("helpTopicOpsAction"),
-      },
-    ],
-    [t, onOpenCalendar, onOpenContacts],
+  const deployVersion =
+    process.env.NEXT_PUBLIC_DEPLOY_SHA?.trim().slice(0, 7) || "—";
+
+  const diagnostics = useMemo(
+    () => buildMailClientDiagnostics(),
+    [subView],
   );
 
-  return (
-    <div className="mail-help-panel mail-help-panel--premium">
-      <p className="mail-posta-intro">{t("helpIntro")}</p>
+  const openSupport = useCallback(() => {
+    window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(
+      t("helpMailSubjectSupport"),
+    )}`;
+  }, [t]);
 
-      <section className="mail-posta-card mail-help-quick-card">
-        <header className="mail-posta-card-head">
-          <h3 className="mail-posta-card-title">{t("helpQuickTitle")}</h3>
-          <p className="mail-posta-card-desc">{t("helpQuickDesc")}</p>
-        </header>
-        <div className="mail-help-quick-grid">
+  const openFeedback = useCallback(() => {
+    window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(
+      t("helpMailSubjectFeedback"),
+    )}&body=${encodeURIComponent(t("helpMailBodyFeedback"))}`;
+  }, [t]);
+
+  const testPush = useCallback(() => {
+    if (typeof Notification === "undefined") {
+      setStatus(t("helpPushUnsupported"));
+      return;
+    }
+    if (Notification.permission === "granted") {
+      try {
+        const title = t("helpPushTestTitle");
+        const body = t("helpPushTestBody");
+        if (isStandaloneMailPwa() && "serviceWorker" in navigator) {
+          void navigator.serviceWorker.ready.then((reg) => {
+            void reg.showNotification(title, { body, tag: "lerta-posta-push-test" });
+          });
+        } else {
+          new Notification(title, { body });
+        }
+        setStatus(t("helpPushTestSent"));
+      } catch {
+        setStatus(t("helpPushTestFailed"));
+      }
+      return;
+    }
+    onOpenSetting("notifications");
+    setStatus(t("helpPushOpenSettings"));
+  }, [onOpenSetting, t]);
+
+  const resetSearchCache = useCallback(() => {
+    if (!window.confirm(t("helpResetSearchConfirm"))) {
+      return;
+    }
+    void resetMailLocalTroubleshootingCaches().then(() => {
+      setStatus(t("helpResetSearchDone"));
+    });
+  }, [t]);
+
+  const clearLocalContacts = useCallback(() => {
+    if (!window.confirm(t("helpClearLocalConfirm"))) {
+      return;
+    }
+    void resetMailLocalTroubleshootingCaches().then(() => {
+      setStatus(t("helpClearLocalDone"));
+    });
+  }, [t]);
+
+  const copyDiagnostics = useCallback(async () => {
+    const text = JSON.stringify(diagnostics, null, 2);
+    try {
+      await navigator.clipboard.writeText(text);
+      setStatus(t("helpDiagnosticsCopied"));
+    } catch {
+      downloadDiagnosticsJson(diagnostics);
+      setStatus(t("helpDiagnosticsDownloaded"));
+    }
+  }, [diagnostics, t]);
+
+  if (subView === "diagnostics") {
+    return (
+      <div className="mail-help-panel mail-help-panel--ios">
+        <div className="mail-help-ios-subhead">
           <button
             type="button"
-            className="mail-help-quick-btn"
-            onClick={() => onOpenSetting("imap")}
+            className="mail-help-ios-back"
+            onClick={() => setSubView("main")}
           >
-            <span aria-hidden="true">📬</span>
-            {t("helpQuickImap")}
+            {t("actionBack")}
+          </button>
+          <h3>{t("helpDiagnosticsTitle")}</h3>
+        </div>
+        <p className="mail-help-ios-lead">{t("helpDiagnosticsIntro")}</p>
+        <pre className="mail-help-diagnostics-pre">
+          {JSON.stringify(diagnostics, null, 2)}
+        </pre>
+        <div className="mail-help-ios-actions">
+          <button
+            type="button"
+            className="mail-premium-btn mail-premium-btn--primary"
+            onClick={() => void copyDiagnostics()}
+          >
+            {t("helpDiagnosticsCopy")}
           </button>
           <button
             type="button"
-            className="mail-help-quick-btn"
-            onClick={() => onOpenSetting("notifications")}
+            className="mail-premium-btn mail-premium-btn--ghost"
+            onClick={() => downloadDiagnosticsJson(diagnostics)}
           >
-            <span aria-hidden="true">🔔</span>
-            {t("helpQuickNotify")}
-          </button>
-          <button
-            type="button"
-            className="mail-help-quick-btn"
-            onClick={() => window.open("/help/imap", "_blank", "noopener,noreferrer")}
-          >
-            <span aria-hidden="true">📖</span>
-            {t("helpQuickImapGuide")}
+            {t("helpDiagnosticsDownload")}
           </button>
         </div>
+        {status ? <p className="mail-settings-muted" role="status">{status}</p> : null}
+      </div>
+    );
+  }
+
+  if (subView === "thirdParty") {
+    return (
+      <div className="mail-help-panel mail-help-panel--ios">
+        <div className="mail-help-ios-subhead">
+          <button
+            type="button"
+            className="mail-help-ios-back"
+            onClick={() => setSubView("main")}
+          >
+            {t("actionBack")}
+          </button>
+          <h3>{t("helpThirdPartyTitle")}</h3>
+        </div>
+        <p className="mail-help-ios-lead">{t("helpThirdPartyIntro")}</p>
+        <ul className="mail-help-ios-bullets">
+          <li>{t("helpThirdPartyItem1")}</li>
+          <li>{t("helpThirdPartyItem2")}</li>
+          <li>{t("helpThirdPartyItem3")}</li>
+        </ul>
+        <p className="mail-help-ios-lead">
+          <a
+            href={mailVitrinUrl(MAIL_VITRIN_PATHS.u88)}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {t("helpThirdPartyMore")}
+          </a>
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mail-help-panel mail-help-panel--ios">
+      {status ? (
+        <p className="mail-help-ios-status" role="status">{status}</p>
+      ) : null}
+
+      <section className="mail-help-ios-section" aria-label={t("helpSectionSupport")}>
+        <ul className="mail-help-ios-group">
+          <HelpIosRow label={t("helpContactSupport")} onClick={openSupport} />
+          <HelpIosRow label={t("helpSendFeedback")} onClick={openFeedback} />
+          <HelpIosRow
+            label={t("helpFaq")}
+            external
+            onClick={() =>
+              window.open(mailVitrinUrl(MAIL_VITRIN_PATHS.sss), "_blank", "noopener,noreferrer")
+            }
+          />
+        </ul>
       </section>
 
-      <ul className="mail-help-topic-list">
-        {topics.map((topic) => (
-          <li key={topic.id} className="mail-posta-card mail-help-topic-card">
-            <div className="mail-help-topic-icon" aria-hidden="true">{topic.icon}</div>
-            <div className="mail-help-topic-body">
-              <h3 className="mail-help-topic-title">{topic.title}</h3>
-              <p className="mail-help-topic-desc">{topic.description}</p>
-              <div className="mail-help-topic-actions">
-                {topic.settingView ? (
-                  <button
-                    type="button"
-                    className="mail-premium-btn mail-premium-btn--primary"
-                    onClick={() => onOpenSetting(topic.settingView!)}
-                  >
-                    {topic.actionLabel ?? t("helpGoSettings")}
-                  </button>
-                ) : null}
-                {topic.onAction ? (
-                  <button
-                    type="button"
-                    className="mail-premium-btn mail-premium-btn--primary"
-                    onClick={() => topic.onAction?.()}
-                  >
-                    {topic.actionLabel ?? t("helpOpen")}
-                  </button>
-                ) : null}
-                {topic.guideHref ? (
-                  <a
-                    className="mail-premium-btn mail-premium-btn--ghost"
-                    href={topic.guideHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {t("helpFullGuide")}
-                  </a>
-                ) : null}
-              </div>
-            </div>
-          </li>
-        ))}
-      </ul>
+      <section className="mail-help-ios-section">
+        <h4 className="mail-help-ios-section-title">{t("helpSectionTroubleshoot")}</h4>
+        <ul className="mail-help-ios-group">
+          <HelpIosRow label={t("helpTestPush")} onClick={testPush} />
+          <HelpIosRow label={t("helpResetSearchIndex")} onClick={resetSearchCache} />
+          <HelpIosRow label={t("helpClearLocalContacts")} onClick={clearLocalContacts} />
+          <HelpIosRow
+            label={t("helpDiagnostics")}
+            chevron
+            onClick={() => {
+              setStatus("");
+              setSubView("diagnostics");
+            }}
+          />
+        </ul>
+      </section>
 
-      <section className="mail-posta-card mail-posta-card--muted mail-help-footer-card">
-        <p className="mail-help-footer-text">
-          {t("helpFooterSite")}{" "}
-          <a href="https://posta.lerta.com.tr/mail" target="_blank" rel="noreferrer">
-            posta.lerta.com.tr
-          </a>
-          {t("helpFooterSupport")}
-        </p>
+      <section className="mail-help-ios-section">
+        <h4 className="mail-help-ios-section-title">{t("helpSectionAbout")}</h4>
+        <ul className="mail-help-ios-group">
+          <HelpIosRow
+            label={t("helpPrivacyCookies")}
+            external
+            onClick={() =>
+              window.open(mailVitrinUrl(MAIL_VITRIN_PATHS.kvkk), "_blank", "noopener,noreferrer")
+            }
+          />
+          <HelpIosRow
+            label={t("helpThirdParty")}
+            chevron
+            onClick={() => setSubView("thirdParty")}
+          />
+          <HelpIosRow
+            label={t("helpLicense")}
+            external
+            onClick={() =>
+              window.open(
+                mailVitrinUrl(MAIL_VITRIN_PATHS.kurumsal),
+                "_blank",
+                "noopener,noreferrer",
+              )
+            }
+          />
+          <li className="mail-help-ios-row mail-help-ios-row--static">
+            <span className="mail-help-ios-row-label">{t("helpVersion")}</span>
+            <span className="mail-help-ios-row-value">{deployVersion}</span>
+          </li>
+        </ul>
+        <p className="mail-help-ios-footnote">{t("helpAboutFootnote")}</p>
       </section>
     </div>
   );
