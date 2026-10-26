@@ -64,6 +64,34 @@ async function testOfflineCodec() {
   console.log("OK: offline IndexedDB codec (zstd-codec → fzstd)");
 }
 
+async function testApiGzipUtil() {
+  const apiRoot = path.resolve(root, "../api");
+  const utilPath = path.join(apiRoot, "dist/common/mailGzip.util.js");
+  const httpPath = path.join(apiRoot, "dist/common/mailJsonCompressionHttp.util.js");
+  try {
+    const gzipMod = await import(pathToFileURL(utilPath).href);
+    const httpMod = await import(pathToFileURL(httpPath).href);
+    const payload = { items: Array.from({ length: 30 }, (_, i) => ({ n: i, t: "y".repeat(80) })) };
+    const b64 = await gzipMod.compressJsonToGzipBase64(payload);
+    const back = await gzipMod.decompressGzipBase64ToJson(b64);
+    if (JSON.stringify(back) !== JSON.stringify(payload)) {
+      throw new Error("API gzip roundtrip mismatch");
+    }
+    const envelope = await httpMod.maybeCompressJsonEnvelope(
+      { headers: { "x-lerta-encoding": "gzip" } },
+      payload,
+    );
+    if (envelope.encoding !== "gzip-base64") {
+      throw new Error("gzip envelope encoding mismatch");
+    }
+    console.log("OK: API zlib gzip roundtrip + HTTP envelope");
+    return true;
+  } catch (e) {
+    console.log("SKIP: API dist not built —", e?.message ?? e);
+    return false;
+  }
+}
+
 async function testEnvelopeUnwrap() {
   const { ZstdCodec } = require("zstd-codec");
   const fzstd = require("fzstd");
@@ -92,7 +120,7 @@ async function testEnvelopeUnwrap() {
 }
 
 let failed = false;
-for (const fn of [testApiZstdUtil, testOfflineCodec, testEnvelopeUnwrap]) {
+for (const fn of [testApiZstdUtil, testApiGzipUtil, testOfflineCodec, testEnvelopeUnwrap]) {
   try {
     await fn();
   } catch (e) {

@@ -2,7 +2,7 @@ import { crc32 } from "zlib";
 
 type ZipEntry = { name: string; data: Buffer };
 
-/** Minimal ZIP (store, no compression) for eDiscovery packages. */
+/** Minimal ZIP (store, no compression). Büyük dışa aktarımlar için createDeflateZipArchive kullanın. */
 export function createStoreZipArchive(entries: ZipEntry[]): Buffer {
   const localParts: Buffer[] = [];
   const centralParts: Buffer[] = [];

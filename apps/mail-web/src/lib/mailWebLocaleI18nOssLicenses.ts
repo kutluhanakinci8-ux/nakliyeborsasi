@@ -12,7 +12,9 @@ export const MAIL_WEB_I18N_OSS_LICENSES_TR = {
   ossLicenseHomepage: "Kaynak",
   helpOpenSourceLicenses: "Lisanslar",
   ossLicenseZstandardUsage:
-    "Zstandard; tüm Posta API JSON yanıtları (X-Lerta-Encoding: zstd), IndexedDB çevrimdışı önbellek ve mesaj detaylarında kullanılır.",
+    "Zstandard; birincil sıkıştırma — Posta API JSON (X-Lerta-Encoding: zstd), IndexedDB çevrimdışı önbellek ve mesaj detayları.",
+  ossLicenseZlibUsage:
+    "zlib (gzip/DEFLATE); Zstd desteklemeyen istemciler için API yedek sıkıştırma (X-Lerta-Encoding: gzip), eDiscovery ZIP arşivleri ve ZIP CRC hesapları.",
 } as const;
 
 export const MAIL_WEB_I18N_OSS_LICENSES_EN = {
@@ -29,5 +31,7 @@ export const MAIL_WEB_I18N_OSS_LICENSES_EN = {
   ossLicenseHomepage: "Source",
   helpOpenSourceLicenses: "Licenses",
   ossLicenseZstandardUsage:
-    "Zstandard is used for all Posta API JSON responses (X-Lerta-Encoding: zstd) and compressed IndexedDB offline cache.",
+    "Zstandard is the primary codec for Posta API JSON (X-Lerta-Encoding: zstd) and compressed IndexedDB offline cache.",
+  ossLicenseZlibUsage:
+    "zlib (gzip/DEFLATE) provides API fallback compression (X-Lerta-Encoding: gzip), eDiscovery ZIP exports, and ZIP CRC checks.",
 } as const;
