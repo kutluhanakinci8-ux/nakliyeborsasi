@@ -1828,6 +1828,26 @@ export class CompanyMailInboxController {
     return { message };
   }
 
+  @Get("messages/:messageId/attachments/:index/preview")
+  public async previewAttachment(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("messageId") messageId: string,
+    @Param("index") indexRaw: string,
+    @Res() response: Response,
+  ): Promise<void> {
+    const index = Number.parseInt(indexRaw, 10);
+    const { contentType, buffer } =
+      await this.mailOrganizationInboxService.getAttachmentImagePreview(
+        user.companyId,
+        messageId,
+        index,
+        user,
+      );
+    response.setHeader("Content-Type", contentType);
+    response.setHeader("Cache-Control", "private, max-age=3600");
+    response.send(buffer);
+  }
+
   @Get("messages/:messageId/attachments/:index")
   public async downloadAttachment(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,

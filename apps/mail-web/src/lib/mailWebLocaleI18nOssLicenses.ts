@@ -3,7 +3,7 @@ export const MAIL_WEB_I18N_OSS_LICENSES_TR = {
   settingsHubOssLicensesSub: "Açık kaynak bileşenler",
   ossLicensesTitle: "Açık kaynak lisansları",
   ossLicensesIntro:
-    "Lerta Posta, platform web ve mobil istemci için açık kaynak bileşenleri (W1–W6). Bir satıra dokunarak tam lisans metnini görüntüleyin.",
+    "Lerta Posta, platform web ve mobil istemci için açık kaynak bileşenleri (W1–W7). Bir satıra dokunarak tam lisans metnini görüntüleyin.",
   ossLicensesBackToList: "Lisans listesi",
   ossLicensePackage: "Paket",
   ossLicenseVersion: "Sürüm",
@@ -49,6 +49,8 @@ export const MAIL_WEB_I18N_OSS_LICENSES_TR = {
     "React Native (mobil); iOS/Android kullanıcı arayüzü.",
   ossLicenseExpoAuthSessionUsage:
     "expo-auth-session (AppAuth); kurumsal OAuth / giriş akışı (mobil).",
+  ossLicenseSharpUsage:
+    "sharp / libvips (sunucu); gelen posta eklerinde küçük JPEG önizleme (libjpeg-turbo vb.). Tarayıcıya indirilmez.",
 } as const;
 
 export const MAIL_WEB_I18N_OSS_LICENSES_EN = {
@@ -56,7 +58,7 @@ export const MAIL_WEB_I18N_OSS_LICENSES_EN = {
   settingsHubOssLicensesSub: "Open-source components",
   ossLicensesTitle: "Open source licenses",
   ossLicensesIntro:
-    "Open-source components for Lerta Posta, the platform web app, and the mobile client (W1–W6). Tap a row to view the full license text.",
+    "Open-source components for Lerta Posta, the platform web app, and the mobile client (W1–W7). Tap a row to view the full license text.",
   ossLicensesBackToList: "License list",
   ossLicensePackage: "Package",
   ossLicenseVersion: "Version",
@@ -102,4 +104,6 @@ export const MAIL_WEB_I18N_OSS_LICENSES_EN = {
     "React Native provides the iOS/Android UI layer.",
   ossLicenseExpoAuthSessionUsage:
     "expo-auth-session (AppAuth) handles mobile OAuth sign-in flows.",
+  ossLicenseSharpUsage:
+    "sharp / libvips (server) generates small JPEG previews for inbound mail image attachments. Not shipped to the browser bundle.",
 } as const;

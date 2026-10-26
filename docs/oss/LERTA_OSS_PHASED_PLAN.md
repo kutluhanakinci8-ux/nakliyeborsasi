@@ -31,7 +31,7 @@ npm run build -w @lerta/mail-web
 | **W4** | Posta sunucu (görünür) | +2–3 | nodemailer, @mongodb-js/zstd (API) | SMTP/IMAP aynı backend |
 | **W5** | Mesajlaşma web | +1–2 | Leaflet, ortak Lisanslar URL | Harita RN’de Mapbox/Maps ayrı |
 | **W6** ✓ | Mobil istemci v1 | +3 (19 toplam) | Expo, RN, expo-auth-session + Legal ekranı | `oss:mobile`, merge legal JSON |
-| **W7** | Medya / sosyal | Seçmeli | Önizleme, upload | libjpeg, harfbuzz… |
+| **W7** ✓ | Medya önizleme | +1 (20 toplam) | sharp API + posta ek JPEG önizleme | libjpeg-turbo (sharp/libvips) |
 | **W8** | Görüntülü görüşme | WebRTC paketi | — | libvpx, libwebm, libSRTP |
 
 ---
@@ -195,14 +195,15 @@ UI: Lisans detayında **“Sunucu bileşeni — tarayıcıya indirilmez”** i18
 
 ---
 
-## W7 — Medya önizleme (posta ekleri, sosyal hub)
+## W7 ✓ — Medya önizleme (posta ekleri)
 
-| Gmail | Web kararı |
-|-------|------------|
-| libjpeg-turbo, giflib, freetype, harfbuzz | Tarayıcı + CDN önizleme; native viewer mobilde |
+| Gmail | Lerta |
+|-------|--------|
+| libjpeg-turbo | `sharp` (libvips) — API `GET …/attachments/:index/preview`, mail-web küçük JPEG thumb |
+| giflib, freetype, harfbuzz | Sonraki faz / mobil native viewer |
 | bzip2 | Opsiyonel arşiv export |
 
-Katalog: yalnızca **npm ile dağıtılan** görüntü kütüphanesi eklenirse (ör. `sharp` sunucuda).
+Katalog: `sharp` (sunucu; Legal’de kullanım notu).
 
 ---
 

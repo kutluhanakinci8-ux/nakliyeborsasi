@@ -140,6 +140,15 @@
       "package": "expo-auth-session"
     },
     {
+      "gmailRef": "libjpeg-turbo",
+      "phase": "W7",
+      "status": "done",
+      "surfaces": ["api"],
+      "catalogId": "sharp",
+      "package": "sharp",
+      "note": "Gmail libjpeg-turbo — sharp/libvips üzerinden posta ek önizleme"
+    },
+    {
       "gmailRef": "Firebase",
       "phase": "W6",
       "status": "planned",

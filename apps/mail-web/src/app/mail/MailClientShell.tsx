@@ -17,6 +17,7 @@ import {
 } from "./mailLazyPanels";
 import { MailPilotBillingNotice } from "./MailPilotBillingNotice";
 import { MailReplyQuotePreview } from "./MailReplyQuotePreview";
+import { MailAttachmentImagePreview } from "./MailAttachmentImagePreview";
 import { MailComposeRecipientField } from "./MailComposeRecipientField";
 import { MailInboxCommandBar } from "./MailInboxCommandBar";
 import { MailInboxMessageRow } from "./MailInboxMessageRow";
@@ -1607,7 +1608,16 @@ export function MailClientShell({ mail }: Props) {
             {detail.attachments.length > 0 ? (
               <ul className="mail-attachments">
                 {detail.attachments.map((file) => (
-                  <li key={file.index}>
+                  <li key={file.index} className="mail-attachments-item">
+                    {accessToken && selectedId ? (
+                      <MailAttachmentImagePreview
+                        accessToken={accessToken}
+                        messageId={selectedId}
+                        index={file.index}
+                        contentType={file.contentType}
+                        filename={file.filename}
+                      />
+                    ) : null}
                     <button
                       type="button"
                       onClick={() =>
