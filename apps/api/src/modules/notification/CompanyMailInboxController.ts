@@ -78,7 +78,6 @@ import {
   RegisterWebPushSubscriptionRequestDto,
   UnregisterWebPushSubscriptionRequestDto,
 } from "./RegisterWebPushSubscriptionRequestDto";
-import type { Request } from "express";
 import { MailCustomFolderService } from "./MailCustomFolderService";
 import { MailUserInboxCategoryService } from "./MailUserInboxCategoryService";
 import {
@@ -1448,10 +1447,10 @@ export class CompanyMailInboxController {
   @Get()
   public async summary(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Req() req: Request,
     @Query("folder") folder?: string,
     @Query("customFolderId") customFolderId?: string,
     @Query("connectedSource") connectedSource?: string,
-    @Req() req: Request,
   ) {
     const resolvedFolder = this.parseFolder(folder);
     const resolvedCustomFolderId = this.parseCustomFolderId(
