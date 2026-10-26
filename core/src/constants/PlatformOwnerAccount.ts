@@ -19,4 +19,5 @@ export const PLATFORM_OWNER_COMPANY_COUNTRY_CODE = "TR";
 export const PLATFORM_OWNER_PARTICIPANT_TYPE =
   CompanyParticipantTypeCode.LoadShipper;
 
-export const PLATFORM_OWNER_SUBSCRIPTION_PLAN_CODE = "carrier_starter_tr_ua";
+/** Platform operatörü: posta + mesajlaşma + tam lojistik modülleri. */
+export const PLATFORM_OWNER_SUBSCRIPTION_PLAN_CODE = "platform_operator_tr_ua";

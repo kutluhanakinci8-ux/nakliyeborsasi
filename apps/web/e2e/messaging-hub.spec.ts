@@ -46,6 +46,10 @@ test.describe("Mesajlar hub", () => {
 
     await page.getByRole("button", { name: /sohbet/i }).first().click();
     await expect(page).toHaveURL(/tab=chat|tab=sohbet/);
+
+    await expect(
+      page.getByRole("complementary", { name: /sohbet listesi/i }),
+    ).toBeVisible();
   });
 
   test("oturumlu: MESSAGING modülü kapalı banner", async ({ page }) => {

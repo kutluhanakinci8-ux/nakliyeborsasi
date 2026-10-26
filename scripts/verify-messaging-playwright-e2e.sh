@@ -20,7 +20,11 @@ npm run test:e2e:install -w @nakliyeborsasi/web
 export PLAYWRIGHT_BASE_URL="${PLAYWRIGHT_BASE_URL:-http://127.0.0.1:3011}"
 
 if [[ "${PLAYWRIGHT_SKIP_WEB_SERVER:-}" != "1" ]]; then
-  npm run test:e2e -w @nakliyeborsasi/web -- --grep "login sayfası|korumalı"
+  if [[ -n "${E2E_ACCESS_TOKEN:-}" ]]; then
+    npm run test:e2e -w @nakliyeborsasi/web -- --grep "Mesajlar hub"
+  else
+    npm run test:e2e -w @nakliyeborsasi/web -- --grep "login sayfası|korumalı"
+  fi
 else
   npm run test:e2e -w @nakliyeborsasi/web
 fi

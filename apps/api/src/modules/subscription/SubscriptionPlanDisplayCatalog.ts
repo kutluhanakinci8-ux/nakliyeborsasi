@@ -46,6 +46,14 @@ const DISPLAY: readonly SubscriptionPlanDisplayMeta[] = [
     productLine: "logistics",
   },
   {
+    planCode: "platform_operator_tr_ua",
+    displayName: "Platform operatör",
+    tagline: "Lerta platform yönetimi — posta, mesajlaşma ve lojistik modülleri.",
+    monthlyPriceEur: 0,
+    annualPriceEur: 0,
+    productLine: "logistics",
+  },
+  {
     planCode: "lerta_mail_pilot_tr",
     displayName: "Pilot",
     tagline: "@lerta.com.tr — webmail, taslaklar, IMAP.",
