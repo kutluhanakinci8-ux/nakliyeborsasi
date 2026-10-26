@@ -30,7 +30,8 @@ Deploy (`deploy-production-vps.sh`) bu script'i otomatik dener.
 
 1. `curl -s https://api.lerta.com.tr/api/v1/messaging/status | jq .webrtc`
 2. Hub → sohbet seç → **Pilot görüntülü arama** (iki tarayıcı / iki firma hesabı, aynı thread).
-3. TURN testi: coturn loglarında `ALLOCATE` veya managed TURN paneli.
+3. **Safari:** Kamera/mikrofon yalnızca düğmeye bastığınızda istenir; gelen aramada **Gelen aramayı kabul et** gerekir. Adres çubuğundan site izinlerini açın.
+4. TURN testi: coturn loglarında `ALLOCATE` veya managed TURN paneli.
 
 ## Güvenlik
 
