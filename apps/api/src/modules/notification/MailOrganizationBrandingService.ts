@@ -20,6 +20,7 @@ import {
   type MailEmailSocialLink,
   normalizeMailEmailSocialLinks,
 } from "./MailEmailSocialLinks";
+import { stripLertaPostalMarker } from "@nakliyeborsasi/core";
 
 export type MailOrganizationBrandingSnapshot = {
   /** Logo, renk, yasal dipnot (Kurumsal + Enterprise). */
@@ -230,7 +231,7 @@ export class MailOrganizationBrandingService {
       hidePlatformFooter: whiteLabel && Boolean(row?.hidePlatformEmailChrome),
       legalFooterText:
         whiteLabel && row?.emailLegalFooter?.trim()
-          ? row.emailLegalFooter.trim()
+          ? stripLertaPostalMarker(row.emailLegalFooter.trim())
           : null,
       socialLinks: await this.loadEmailSocialLinks(organizationId),
     };

@@ -20,6 +20,7 @@ export function listOpenSourceLicensesSorted(): OpenSourceLicenseEntry[] {
 
 /** SBOM doğrulama script'i ile senkron tutulur. */
 export const OSS_CATALOG_REQUIRED_PACKAGE_NAMES = [
+  "@fragaria/address-formatter",
   "next",
   "openpgp",
   "react",

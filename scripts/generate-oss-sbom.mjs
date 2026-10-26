@@ -132,6 +132,7 @@ function main() {
     "|-------|----------|-------------|",
   ];
   const w1 = [
+    "@fragaria/address-formatter",
     "next",
     "openpgp",
     "react",

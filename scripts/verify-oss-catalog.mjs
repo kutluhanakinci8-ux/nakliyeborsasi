@@ -29,6 +29,7 @@ const idsMatch = fs.readFileSync(
 );
 const ids = [...idsMatch.matchAll(/id:\s*"([^"]+)"/g)].map((m) => m[1]);
 const expectedIds = new Set([
+  "address-formatting",
   "nextjs",
   "openpgp",
   "react",
@@ -69,4 +70,8 @@ for (const name of packages) {
 }
 
 if (failed) process.exit(1);
+if (ids.length < 7) {
+  console.error(`FAIL: expected at least 7 catalog ids, got ${ids.length}`);
+  process.exit(1);
+}
 console.log(`OK: ${ids.length} catalog entries, ${packages.length} required deps`);
