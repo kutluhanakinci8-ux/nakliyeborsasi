@@ -450,11 +450,22 @@ export function LoginPageClient({
 
               <details className="auth-demo-details">
                 <summary>Demo ve test hesapları</summary>
-                <p>
-                  Demo: <code>demo@nakliyeborsasi.local</code> / DemoPass123! · Test:
-                  yukveren01@test… · TestPass123! · Platform yönetimi:{" "}
-                  <Link href="/admin/login">/admin/login</Link>
-                </p>
+                {isCommsPortal ? (
+                  <p>
+                    <strong>Not:</strong> Kurumsal posta adresi (
+                    <code>info@lerta.com.tr</code> vb.) Posta girişi içindir —{" "}
+                    <a href="https://posta.lerta.com.tr/login">posta.lerta.com.tr</a>
+                    . Mesaj (u88) için ayrı üyelik e-postası gerekir. Demo:{" "}
+                    <code>demo@nakliyeborsasi.local</code> / DemoPass123! · Platform
+                    operatörü: <code>admin@lerta.tr</code> (kurulum şifresi).
+                  </p>
+                ) : (
+                  <p>
+                    Demo: <code>demo@nakliyeborsasi.local</code> / DemoPass123! · Test:
+                    yukveren01@test… · TestPass123! · Platform yönetimi:{" "}
+                    <Link href="/admin/login">/admin/login</Link>
+                  </p>
+                )}
               </details>
             </div>
           </div>
