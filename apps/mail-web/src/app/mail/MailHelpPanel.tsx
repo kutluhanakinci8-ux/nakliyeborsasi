@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import type { SettingsView } from "./MailSettingsPanel";
 import { useMailLocale } from "@/lib/MailLocaleProvider";
 import { mailVitrinUrl, MAIL_VITRIN_PATHS } from "@/lib/mailVitrinLinks";
+import { openExternalHttpUrl } from "@/lib/mailExternalOpenPrefs";
 import { isStandaloneMailPwa } from "@/lib/mailIosPwa";
 import {
   buildMailClientDiagnostics,
@@ -210,9 +211,7 @@ export function MailHelpPanel({
           <HelpIosRow
             label={t("helpFaq")}
             external
-            onClick={() =>
-              window.open(mailVitrinUrl(MAIL_VITRIN_PATHS.sss), "_blank", "noopener,noreferrer")
-            }
+            onClick={() => openExternalHttpUrl(mailVitrinUrl(MAIL_VITRIN_PATHS.sss))}
           />
         </ul>
       </section>
@@ -240,9 +239,7 @@ export function MailHelpPanel({
           <HelpIosRow
             label={t("helpPrivacyCookies")}
             external
-            onClick={() =>
-              window.open(mailVitrinUrl(MAIL_VITRIN_PATHS.kvkk), "_blank", "noopener,noreferrer")
-            }
+            onClick={() => openExternalHttpUrl(mailVitrinUrl(MAIL_VITRIN_PATHS.kvkk))}
           />
           <HelpIosRow
             label={t("helpThirdParty")}
@@ -253,11 +250,7 @@ export function MailHelpPanel({
             label={t("helpLicense")}
             external
             onClick={() =>
-              window.open(
-                mailVitrinUrl(MAIL_VITRIN_PATHS.kurumsal),
-                "_blank",
-                "noopener,noreferrer",
-              )
+              openExternalHttpUrl(mailVitrinUrl(MAIL_VITRIN_PATHS.kurumsal))
             }
           />
           <li className="mail-help-ios-row mail-help-ios-row--static">
