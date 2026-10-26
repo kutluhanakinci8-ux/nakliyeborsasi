@@ -12,6 +12,7 @@
     },
     "android": {
       "package": "com.lerta.logistics"
-    }
+    },
+    "plugins": ["expo-notifications"]
   }
 }

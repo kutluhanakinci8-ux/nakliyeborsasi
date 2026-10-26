@@ -63,6 +63,7 @@ const expectedIds = new Set([
   "expo-auth-session",
   "sharp",
   "browser-webrtc",
+  "expo-notifications",
 ]);
 for (const id of expectedIds) {
   if (!ids.includes(id)) {
@@ -166,8 +167,8 @@ for (const name of mobilePackages) {
 
 if (failed) process.exit(1);
 
-if (ids.length < 21) {
-  console.error(`FAIL: expected at least 21 catalog ids, got ${ids.length}`);
+if (ids.length < 22) {
+  console.error(`FAIL: expected at least 22 catalog ids, got ${ids.length}`);
   process.exit(1);
 }
 console.log(

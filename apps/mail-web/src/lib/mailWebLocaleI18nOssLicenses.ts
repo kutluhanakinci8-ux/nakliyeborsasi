@@ -49,6 +49,8 @@ export const MAIL_WEB_I18N_OSS_LICENSES_TR = {
     "React Native (mobil); iOS/Android kullanıcı arayüzü.",
   ossLicenseExpoAuthSessionUsage:
     "expo-auth-session (AppAuth); kurumsal OAuth / giriş akışı (mobil).",
+  ossLicenseExpoNotificationsUsage:
+    "expo-notifications (mobil); Firebase Cloud Messaging (Android) ve APNs (iOS) üzerinden push bildirim token kaydı.",
   ossLicenseSharpUsage:
     "sharp / libvips (sunucu); gelen posta eklerinde küçük JPEG önizleme (libjpeg-turbo vb.). Tarayıcıya indirilmez.",
   ossLicenseBrowserWebRtcUsage:
@@ -106,6 +108,8 @@ export const MAIL_WEB_I18N_OSS_LICENSES_EN = {
     "React Native provides the iOS/Android UI layer.",
   ossLicenseExpoAuthSessionUsage:
     "expo-auth-session (AppAuth) handles mobile OAuth sign-in flows.",
+  ossLicenseExpoNotificationsUsage:
+    "expo-notifications registers mobile push tokens via FCM (Android) and APNs (iOS).",
   ossLicenseSharpUsage:
     "sharp / libvips (server) generates small JPEG previews for inbound mail image attachments. Not shipped to the browser bundle.",
   ossLicenseBrowserWebRtcUsage:

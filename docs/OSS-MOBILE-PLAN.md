@@ -35,7 +35,7 @@ Mobil yayınlanmadan **Lisanslar ekranına yüzlerce satır elle eklenmez**.
 ### Mobilde beklenen ek kategoriler (Gmail benzeri ölçek)
 
 - React Native, Hermes, Expo modülleri
-- FCM / push native
+- FCM / push native (`expo-notifications` ✓)
 - Kamera/mikrofon (görüntülü konuşma) → WebRTC native yığını
 - Offline posta önbelleği → Zstd (web ile aynı aile)
 

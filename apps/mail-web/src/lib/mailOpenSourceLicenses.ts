@@ -29,6 +29,7 @@ export const OSS_CATALOG_MOBILE_PACKAGE_NAMES = [
   "expo",
   "react-native",
   "expo-auth-session",
+  "expo-notifications",
 ] as const;
 
 export function getOpenSourceLicenseById(

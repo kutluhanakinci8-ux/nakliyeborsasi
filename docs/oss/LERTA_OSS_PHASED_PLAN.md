@@ -30,7 +30,7 @@ npm run build -w @lerta/mail-web
 | **W3** ✓ | Güvenli HTML + canlı mesaj | +3 (13 toplam) | DOMPurify, web-push, ws | Push/WebSocket aynı API |
 | **W4** | Posta sunucu (görünür) | +2–3 | nodemailer, @mongodb-js/zstd (API) | SMTP/IMAP aynı backend |
 | **W5** | Mesajlaşma web | +1–2 | Leaflet, ortak Lisanslar URL | Harita RN’de Mapbox/Maps ayrı |
-| **W6** ✓ | Mobil istemci v1 | +3 (19 toplam) | Expo, RN, expo-auth-session + Legal ekranı | `oss:mobile`, merge legal JSON |
+| **W6** ✓ | Mobil istemci v1 | +4 (22 toplam) | Expo, RN, AppAuth, expo-notifications (FCM) + Legal | `oss:mobile`, merge legal JSON |
 | **W7** ✓ | Medya önizleme | +1 (20 toplam) | sharp API + posta ek JPEG önizleme | libjpeg-turbo (sharp/libvips) |
 | **W8** ✓ | Görüntülü görüşme | +1 (21 toplam) | WebRTC disclosure + mesajlaşma hub notu | libvpx, libwebm (mobil SBOM) |
 
@@ -185,7 +185,7 @@ UI: Lisans detayında **“Sunucu bileşeni — tarayıcıya indirilmez”** i18
 | Gmail / ekosistem | RN / native |
 |-------------------|-------------|
 | AppAuth | expo-auth-session |
-| Firebase | FCM |
+| Firebase | expo-notifications (FCM/APNs token) ✓ |
 | okhttp3 | Android stack |
 | libPhoneNumber | libphonenumber (native) veya js |
 | protobuf / gRPC | yalnızca seçilirse |
