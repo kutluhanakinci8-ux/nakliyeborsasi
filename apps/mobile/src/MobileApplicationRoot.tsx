@@ -1,10 +1,27 @@
-import React, { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import React, { useCallback, useState } from "react";
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { StatusBar } from "expo-status-bar";
 import * as AuthSession from "expo-auth-session";
 import { OpenSourceLegalScreen } from "./OpenSourceLegalScreen";
-import { registerExpoMobilePushToken } from "./expoMobilePush";
-import { registerLertaExpoPushToken } from "./lertaMobilePushApi";
+import {
+  clearStoredAccessToken,
+  loginWithEmailPassword,
+  mobileAuthDiagnostics,
+  resolveMobileAccessToken,
+} from "./lertaMobileAuth";
+import { useLertaMobilePushRegistration } from "./useLertaMobilePushRegistration";
+import {
+  loginWithOAuthIfConfigured,
+  resolveMobileOAuthConfig,
+} from "./lertaMobileOAuth";
+import { fetchMobileAuthConfigFromApi } from "./lertaMobileAuthConfig";
+import type { RemoteMobileAuthConfig } from "./lertaMobileAuthConfig";
 
 /** OAuth redirect — AppAuth / expo-auth-session (W6). */
 export const MOBILE_OAUTH_REDIRECT_URI = AuthSession.makeRedirectUri({
@@ -15,24 +32,74 @@ type Screen = "home" | "legal";
 
 export function MobileApplicationRoot(): React.ReactElement {
   const [screen, setScreen] = useState<Screen>("home");
-  const [pushTokenPreview, setPushTokenPreview] = useState<string | null>(null);
-  const [pushServerState, setPushServerState] = useState<string | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [loginBusy, setLoginBusy] = useState(false);
+  const [remoteAuthConfig, setRemoteAuthConfig] =
+    useState<RemoteMobileAuthConfig | null>(null);
 
-  useEffect(() => {
-    void registerExpoMobilePushToken().then(async (token) => {
-      if (!token) {
-        return;
-      }
-      setPushTokenPreview(`${token.slice(0, 24)}…`);
-      const accessToken = process.env.EXPO_PUBLIC_LERTA_ACCESS_TOKEN?.trim();
-      if (!accessToken) {
-        setPushServerState("API kaydı için oturum (JWT) gerekli");
-        return;
-      }
-      const ok = await registerLertaExpoPushToken(accessToken, token);
-      setPushServerState(ok ? "Push token API'ye kaydedildi" : "API kaydı başarısız");
-    });
+  const loadSession = useCallback(async () => {
+    const token = await resolveMobileAccessToken();
+    setAccessToken(token);
   }, []);
+
+  React.useEffect(() => {
+    void loadSession();
+  }, [loadSession]);
+
+  React.useEffect(() => {
+    void fetchMobileAuthConfigFromApi().then(setRemoteAuthConfig);
+  }, []);
+
+  const push = useLertaMobilePushRegistration(accessToken);
+  const oauthConfigured =
+    resolveMobileOAuthConfig(remoteAuthConfig) !== null;
+
+  async function handleLogin(): Promise<void> {
+    setLoginError(null);
+    setLoginBusy(true);
+    try {
+      const token = await loginWithEmailPassword(email.trim(), password, {
+        oauthTokenEndpoint: remoteAuthConfig?.oauth.tokenEndpoint,
+      });
+      setAccessToken(token);
+      setPassword("");
+      await push.refresh();
+    } catch (error) {
+      setLoginError(error instanceof Error ? error.message : "Giriş hatası");
+    } finally {
+      setLoginBusy(false);
+    }
+  }
+
+  async function handleOAuthLogin(): Promise<void> {
+    setLoginError(null);
+    setLoginBusy(true);
+    try {
+      const token = await loginWithOAuthIfConfigured(
+        MOBILE_OAUTH_REDIRECT_URI,
+        remoteAuthConfig,
+      );
+      if (!token) {
+        setLoginError("OAuth yapılandırılmadı");
+        return;
+      }
+      setAccessToken(token);
+      await push.refresh();
+    } catch (error) {
+      setLoginError(error instanceof Error ? error.message : "OAuth hatası");
+    } finally {
+      setLoginBusy(false);
+    }
+  }
+
+  async function handleLogout(): Promise<void> {
+    await clearStoredAccessToken();
+    setAccessToken(null);
+    setLoginError(null);
+  }
 
   if (screen === "legal") {
     return <OpenSourceLegalScreen onBack={() => setScreen("home")} />;
@@ -45,16 +112,78 @@ export function MobileApplicationRoot(): React.ReactElement {
         Expo / React Native — posta ve mesajlaşma (JWT API)
       </Text>
       <Text style={styles.hint} selectable>
+        {mobileAuthDiagnostics()}
+      </Text>
+      <Text style={styles.hint} selectable>
         OAuth redirect: {MOBILE_OAUTH_REDIRECT_URI}
       </Text>
-      {pushTokenPreview ? (
+
+      {accessToken ? (
+        <Text style={styles.hint}>Oturum: aktif (JWT)</Text>
+      ) : (
+        <View style={styles.loginBox}>
+          <TextInput
+            style={styles.input}
+            placeholder="E-posta"
+            autoCapitalize="none"
+            keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Şifre"
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+          />
+          <Pressable
+            style={[styles.button, loginBusy && styles.buttonDisabled]}
+            onPress={() => void handleLogin()}
+            disabled={loginBusy}
+            accessibilityRole="button"
+          >
+            <Text style={styles.buttonText}>
+              {loginBusy ? "Giriş…" : "Giriş yap"}
+            </Text>
+          </Pressable>
+          {loginError ? (
+            <Text style={styles.error} accessibilityRole="alert">
+              {loginError}
+            </Text>
+          ) : null}
+          {oauthConfigured ? (
+            <Pressable
+              style={[styles.buttonSecondary, loginBusy && styles.buttonDisabled]}
+              onPress={() => void handleOAuthLogin()}
+              disabled={loginBusy}
+              accessibilityRole="button"
+            >
+              <Text style={styles.buttonSecondaryText}>OAuth ile giriş</Text>
+            </Pressable>
+          ) : null}
+        </View>
+      )}
+
+      {accessToken ? (
+        <Pressable
+          style={styles.buttonSecondary}
+          onPress={() => void handleLogout()}
+          accessibilityRole="button"
+        >
+          <Text style={styles.buttonSecondaryText}>Çıkış</Text>
+        </Pressable>
+      ) : null}
+
+      {push.tokenPreview ? (
         <Text style={styles.hint} selectable>
-          Push (Expo/FCM) token: {pushTokenPreview}
+          Push (Expo/FCM) token: {push.tokenPreview}
         </Text>
       ) : null}
-      {pushServerState ? (
-        <Text style={styles.hint}>{pushServerState}</Text>
+      {push.serverState ? (
+        <Text style={styles.hint}>{push.serverState}</Text>
       ) : null}
+
       <Pressable
         style={styles.button}
         onPress={() => setScreen("legal")}
@@ -81,26 +210,59 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   sub: {
-    fontSize: 15,
-    color: "#5c6370",
+    fontSize: 14,
+    color: "#444",
     textAlign: "center",
     marginBottom: 12,
   },
   hint: {
-    fontSize: 11,
-    color: "#94a3b8",
+    fontSize: 12,
+    color: "#666",
     textAlign: "center",
-    marginBottom: 20,
+    marginBottom: 8,
+  },
+  loginBox: {
+    width: "100%",
+    maxWidth: 360,
+    marginVertical: 12,
+    gap: 8,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 16,
+    width: "100%",
   },
   button: {
-    backgroundColor: "#0f4c81",
+    backgroundColor: "#1a1a2e",
     paddingHorizontal: 20,
     paddingVertical: 12,
-    borderRadius: 10,
+    borderRadius: 8,
+    marginTop: 8,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
   buttonText: {
     color: "#fff",
-    fontWeight: "600",
     fontSize: 16,
+    fontWeight: "500",
+  },
+  buttonSecondary: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginTop: 4,
+  },
+  buttonSecondaryText: {
+    color: "#555",
+    fontSize: 14,
+  },
+  error: {
+    color: "#b00020",
+    fontSize: 13,
+    marginTop: 4,
   },
 });

@@ -61,6 +61,25 @@ export class SubscriptionPlanCatalog {
         laneAnalyticsHistoryDays: 0,
       }),
       new SubscriptionPlanDefinition({
+        planCode: "platform_operator_tr_ua",
+        tierCode: SubscriptionTierCode.Enterprise,
+        includedModules: [
+          SubscriptionModuleCode.MarketplaceSearch,
+          SubscriptionModuleCode.ContactReveal,
+          SubscriptionModuleCode.Auction,
+          SubscriptionModuleCode.Messaging,
+          SubscriptionModuleCode.SocialHub,
+          SubscriptionModuleCode.TrustProfile,
+          SubscriptionModuleCode.Fleet,
+          SubscriptionModuleCode.LaneAnalytics,
+          SubscriptionModuleCode.ExternalFeeds,
+          SubscriptionModuleCode.ApiAccess,
+          SubscriptionModuleCode.LertaMail,
+        ],
+        maxConcurrentSearchTabs: 10,
+        laneAnalyticsHistoryDays: 90,
+      }),
+      new SubscriptionPlanDefinition({
         planCode: "forwarder_enterprise_tr_ua",
         tierCode: SubscriptionTierCode.Enterprise,
         includedModules: [

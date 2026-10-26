@@ -11,6 +11,9 @@ else
 fi
 # shellcheck source=scripts/resolve-messaging-test-jwt.sh
 source "${ROOT}/scripts/resolve-messaging-test-jwt.sh" || true
+# shellcheck source=scripts/resolve-messaging-verify-jwt.sh
+source "${ROOT}/scripts/resolve-messaging-verify-jwt.sh" || true
+export_messaging_verify_jwt_aliases || true
 
 export API_BASE
 

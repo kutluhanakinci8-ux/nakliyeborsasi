@@ -200,8 +200,14 @@ if [[ -x "${INSTALL_DIR}/scripts/verify-firma-sohbeti-pilot-nps.sh" ]]; then
   PILOT_NPS_STRICT="${PILOT_NPS_STRICT:-1}" bash "${INSTALL_DIR}/scripts/verify-firma-sohbeti-pilot-nps.sh" || echo "UYARI: pilot NPS verify"
 fi
 
-SHOWCASE_API_BASE="${MESSAGING_SHOWCASE_API_BASE:-https://app.lerta.com.tr/api/v1}"
-if [[ -x "${INSTALL_DIR}/scripts/ensure-firma-sohbeti-excellence-showcase.sh" ]]; then
+SHOWCASE_API_BASE="${MESSAGING_SHOWCASE_API_BASE:-https://u88.lerta.com.tr/api/v1}"
+if [[ "${MESSAGING_DEPLOY_RUN_EXCELLENCE_SEED:-}" == "1" ]] && [[ -x "${INSTALL_DIR}/scripts/run-messaging-excellence-seed-and-verify.sh" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  [[ -f "${INSTALL_DIR}/.env" ]] && source "${INSTALL_DIR}/.env"
+  set +a
+  API_BASE="${SHOWCASE_API_BASE}" bash "${INSTALL_DIR}/scripts/run-messaging-excellence-seed-and-verify.sh" || echo "UYARI: excellence seed+verify"
+elif [[ -x "${INSTALL_DIR}/scripts/ensure-firma-sohbeti-excellence-showcase.sh" ]]; then
   set -a
   # shellcheck disable=SC1090
   [[ -f "${INSTALL_DIR}/.env" ]] && source "${INSTALL_DIR}/.env"
@@ -248,6 +254,15 @@ fi
 if [[ -x "${INSTALL_DIR}/scripts/verify-posta-deploy-revision.sh" ]]; then
   DEPLOY_BRANCH="${BRANCH}" bash "${INSTALL_DIR}/scripts/verify-posta-deploy-revision.sh" "${INSTALL_DIR}" \
     || echo "UYARI: posta revision doğrulaması başarısız — main ile VPS HEAD uyumsuz olabilir." >&2
+fi
+
+if [[ -x "${INSTALL_DIR}/scripts/verify-messaging-post-deploy-gate.sh" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  [[ -f "${INSTALL_DIR}/.env" ]] && source "${INSTALL_DIR}/.env"
+  set +a
+  API_BASE="${SHOWCASE_API_BASE}" bash "${INSTALL_DIR}/scripts/verify-messaging-post-deploy-gate.sh" \
+    || echo "UYARI: messaging post-deploy gate"
 fi
 
 echo "=== Production deploy bitti ==="

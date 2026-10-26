@@ -4,14 +4,16 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=scripts/resolve-local-api-base.sh
 source "${ROOT}/scripts/resolve-local-api-base.sh" "${ROOT}"
-JWT="${MESSAGING_SSE_JWT:-}"
+# shellcheck source=scripts/resolve-messaging-verify-jwt.sh
+source "${ROOT}/scripts/resolve-messaging-verify-jwt.sh" || true
+JWT="$(resolve_messaging_verify_jwt 2>/dev/null || true)"
 CONCURRENCY="${MESSAGING_SSE_LOAD_CONCURRENCY:-5}"
 
 status="$(curl -fsS "${API_BASE}/messaging/status")"
 echo "$status" | python3 -c "import sys,json; d=json.load(sys.stdin); print('sse stats', d.get('sse')); print('redisFanout', d.get('sse',{}).get('redisFanout'))"
 
 if [[ -z "$JWT" ]]; then
-  echo "SKIP: MESSAGING_SSE_JWT yok (ticket + timing atlandı)"
+  echo "SKIP: messaging verify JWT yok (ticket + timing atlandı)"
   exit 0
 fi
 

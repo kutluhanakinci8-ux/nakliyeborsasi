@@ -1,0 +1,8 @@
+[
+  { "urls": "stun:stun.l.google.com:19302" },
+  {
+    "urls": "turn:turn.example.com:3478",
+    "username": "lerta-turn-user",
+    "credential": "REPLACE_WITH_SECRET"
+  }
+]

@@ -36,7 +36,7 @@ export function MessagingChatAttachmentPreview({
       return;
     }
     let objectUrl: string | null = null;
-    void MessagingApiClient.downloadAttachment(
+    void MessagingApiClient.downloadAttachmentPreview(
       accessToken,
       locale,
       threadId,
@@ -47,9 +47,24 @@ export function MessagingChatAttachmentPreview({
         objectUrl = URL.createObjectURL(blob);
         setPreviewUrl(objectUrl);
       })
-      .catch((error) => {
-        onError(error instanceof Error ? error.message : "Önizleme yüklenemedi");
-      });
+      .catch(() =>
+        MessagingApiClient.downloadAttachment(
+          accessToken,
+          locale,
+          threadId,
+          messageId,
+          attachmentIndex,
+        )
+          .then((blob) => {
+            objectUrl = URL.createObjectURL(blob);
+            setPreviewUrl(objectUrl);
+          })
+          .catch((error) => {
+            onError(
+              error instanceof Error ? error.message : "Önizleme yüklenemedi",
+            );
+          }),
+      );
     return () => {
       if (objectUrl) {
         URL.revokeObjectURL(objectUrl);

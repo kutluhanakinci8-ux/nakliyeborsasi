@@ -6,6 +6,9 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "${ROOT}/scripts/resolve-local-api-base.sh" "${ROOT}"
 # shellcheck source=scripts/resolve-messaging-test-jwt.sh
 source "${ROOT}/scripts/resolve-messaging-test-jwt.sh" || true
+# shellcheck source=scripts/resolve-messaging-verify-jwt.sh
+source "${ROOT}/scripts/resolve-messaging-verify-jwt.sh" || true
+export_messaging_verify_jwt_aliases || true
 
 MARKER="[DEMO_EXCELLENCE_V1]"
 SEARCH_TOKEN="DEMO_EXCELLENCE_ARAMA_TOKEN"
@@ -241,6 +244,12 @@ echo "== Typing endpoint =="
 curl -fsS -X POST "${auth_hdr[@]}" \
   "${API_BASE}/messaging/threads/${thread_id}/typing?lang=tr" \
   | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('ok') is True; print('OK: typing')"
+
+echo ""
+echo "== API thread + WebRTC smoke =="
+API_BASE="${API_BASE}" bash "${ROOT}/scripts/verify-messaging-thread-api-smoke.sh"
+API_BASE="${API_BASE}" bash "${ROOT}/scripts/verify-messaging-webrtc-ice-config.sh"
+API_BASE="${API_BASE}" bash "${ROOT}/scripts/verify-messaging-attachment-preview.sh"
 
 echo ""
 echo "Excellence showcase verify: PASS"

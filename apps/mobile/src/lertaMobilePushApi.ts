@@ -1,11 +1,5 @@
 import { Platform } from "react-native";
-
-function resolveApiBaseUrl(): string {
-  const base =
-    process.env.EXPO_PUBLIC_LERTA_API_URL?.trim() ??
-    "https://api.lerta.com.tr/api/v1";
-  return base.replace(/\/$/, "");
-}
+import { resolveApiBaseUrl } from "./lertaMobileAuth";
 
 export async function registerLertaExpoPushToken(
   accessToken: string,

@@ -494,6 +494,38 @@ export class MessagingApiClient {
     return `${base}/messaging/threads/${threadId}/messages/${messageId}/attachments/${index}?lang=${encodeURIComponent(locale)}`;
   }
 
+  public static attachmentPreviewUrl(
+    locale: string,
+    threadId: string,
+    messageId: string,
+    index: number,
+  ): string {
+    const base = PublicApiConfiguration.resolveBaseUrl();
+    return `${base}/messaging/threads/${threadId}/messages/${messageId}/attachments/${index}/preview?lang=${encodeURIComponent(locale)}`;
+  }
+
+  public static async downloadAttachmentPreview(
+    accessToken: string,
+    locale: string,
+    threadId: string,
+    messageId: string,
+    index: number,
+  ): Promise<Blob> {
+    const url = MessagingApiClient.attachmentPreviewUrl(
+      locale,
+      threadId,
+      messageId,
+      index,
+    );
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!response.ok) {
+      throw new Error("Ek önizleme yüklenemedi");
+    }
+    return response.blob();
+  }
+
   public static async downloadAttachment(
     accessToken: string,
     locale: string,

@@ -786,6 +786,33 @@ export class MessagingThreadApplicationService {
     );
   }
 
+  public async getMessageAttachmentPreview(
+    authenticatedUser: AuthenticatedUserContext,
+    threadId: string,
+    messageId: string,
+    attachmentIndex: number,
+    locale: string,
+  ): Promise<{ buffer: Buffer; contentType: string }> {
+    const file = await this.getMessageAttachment(
+      authenticatedUser,
+      threadId,
+      messageId,
+      attachmentIndex,
+      locale,
+    );
+    const {
+      createMailAttachmentImagePreview,
+      isPreviewableMailAttachmentContentType,
+    } = await import("../../common/mailAttachmentImagePreview.util");
+    if (!isPreviewableMailAttachmentContentType(file.contentType)) {
+      throw new ValidationException(
+        "Attachment preview is only available for images",
+      );
+    }
+    const buffer = await createMailAttachmentImagePreview(file.buffer);
+    return { buffer, contentType: "image/jpeg" };
+  }
+
   private publicAttachments(
     attachments: MessageAttachmentMeta[] | null,
   ): { index: number; filename: string; contentType: string; sizeBytes: number }[] {

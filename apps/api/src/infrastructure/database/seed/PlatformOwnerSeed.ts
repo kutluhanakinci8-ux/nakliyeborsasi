@@ -127,4 +127,35 @@ export async function ensurePlatformOwnerAccount(
       company.participantTypeCode ?? PLATFORM_OWNER_PARTICIPANT_TYPE;
     await deps.companyRepository.save(company);
   }
+
+  await ensurePlatformOwnerSubscription(deps, membership.companyId);
+}
+
+/** Mevcut kurulumlarda starter plan → operatör planı (MESSAGING dahil). */
+async function ensurePlatformOwnerSubscription(
+  deps: PlatformOwnerSeedDeps,
+  companyId: string,
+): Promise<void> {
+  const targetPlan = PLATFORM_OWNER_SUBSCRIPTION_PLAN_CODE;
+  const active = await deps.companySubscriptionRepository.findOne({
+    where: { companyId, isActive: true },
+  });
+  if (active?.planCode === targetPlan) {
+    return;
+  }
+  const legacyStarter = "carrier_starter_tr_ua";
+  if (active && active.planCode !== legacyStarter) {
+    return;
+  }
+  if (active) {
+    active.isActive = false;
+    await deps.companySubscriptionRepository.save(active);
+  }
+  await deps.companySubscriptionRepository.save(
+    deps.companySubscriptionRepository.create({
+      companyId,
+      planCode: targetPlan,
+      isActive: true,
+    }),
+  );
 }

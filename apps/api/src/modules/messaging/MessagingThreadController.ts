@@ -318,6 +318,33 @@ export class MessagingThreadController {
     return { ok: true };
   }
 
+  @Get("threads/:threadId/messages/:messageId/attachments/:index/preview")
+  public async previewAttachment(
+    @Param("threadId") threadId: string,
+    @Param("messageId") messageId: string,
+    @Param("index", ParseIntPipe) index: number,
+    @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
+    @Headers("accept-language") acceptLanguage: string | undefined,
+    @Query("lang") queryLanguage: string | undefined,
+    @Res() response: Response,
+  ): Promise<void> {
+    const locale = this.localeResolutionService.resolveFromHeaders(
+      acceptLanguage,
+      queryLanguage,
+    );
+    const file =
+      await this.messagingThreadApplicationService.getMessageAttachmentPreview(
+        authenticatedUser,
+        threadId,
+        messageId,
+        index,
+        locale,
+      );
+    response.setHeader("Content-Type", file.contentType);
+    response.setHeader("Cache-Control", "private, max-age=3600");
+    response.send(file.buffer);
+  }
+
   @Get("threads/:threadId/messages/:messageId/attachments/:index")
   public async downloadAttachment(
     @Param("threadId") threadId: string,
