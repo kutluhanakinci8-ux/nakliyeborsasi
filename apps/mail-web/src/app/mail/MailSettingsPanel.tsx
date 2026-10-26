@@ -30,6 +30,7 @@ import { MailPostaSettings } from "./MailPostaSettings";
 import { MailAutoReplySettingsPanel } from "./MailAutoReplySettingsPanel";
 import { MailNotificationsSettingsPanel } from "./MailNotificationsSettingsPanel";
 import { MailHelpPanel } from "./MailHelpPanel";
+import { MailShareLertaPostaPanel } from "./MailShareLertaPostaPanel";
 import { MailPrivacySettingsPanel } from "./MailPrivacySettingsPanel";
 import { MailSecuritySettingsPanel } from "./MailSecuritySettingsPanel";
 import { MailIntegrationsSettingsPanel } from "./MailIntegrationsSettingsPanel";
@@ -56,6 +57,7 @@ export type SettingsView =
   | "calendarSettings"
   | "contactsSettings"
   | "help"
+  | "shareLerta"
   | "integrations"
   | "ops";
 
@@ -206,6 +208,14 @@ const HUB_ITEM_DEFS: HubItemDef[] = [
     subtitleKey: "settingsHubPrivacySub",
     keywords: "kvkk gizlilik veri",
     keywordsEn: "gdpr privacy data kvkk",
+  },
+  {
+    id: "shareLerta",
+    section: "other",
+    labelKey: "settingsHubShareLerta",
+    subtitleKey: "settingsHubShareLertaSub",
+    keywords: "arkadaş paylaş davet e-posta sms",
+    keywordsEn: "friend share invite email sms",
   },
   {
     id: "help",
@@ -908,6 +918,12 @@ export function MailSettingsPanel({
         />,
       );
       break;
+    case "shareLerta":
+      content = renderDetail(
+        detailTitle("shareLerta"),
+        <MailShareLertaPostaPanel />,
+      );
+      break;
     case "help":
       content = renderDetail(
         detailTitle("help"),
@@ -954,6 +970,7 @@ export function MailSettingsPanel({
           view === "rules" ||
           view === "categories" ||
           view === "help" ||
+          view === "shareLerta" ||
           view === "privacy" ||
           view === "security"
             ? "compose-dialog mail-settings-dialog mail-settings-dialog--wide"
@@ -997,6 +1014,8 @@ function settingsRowIcon(id: SettingsView): string {
       return "🔒";
     case "privacy":
       return "🛡️";
+    case "shareLerta":
+      return "↗️";
     case "help":
       return "❓";
     case "ops":

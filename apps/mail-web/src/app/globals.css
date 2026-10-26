@@ -8158,6 +8158,43 @@ html[data-mail-read-font="large"] .mail-html-frame {
   }
 }
 
+.mail-share-lerta-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 16px 0;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--panel);
+}
+
+.mail-share-lerta-btn {
+  width: 100%;
+  padding: 14px 16px;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--accent);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mail-share-lerta-btn:last-child {
+  border-bottom: none;
+}
+
+.mail-share-lerta-btn:hover {
+  background: color-mix(in srgb, var(--accent) 6%, var(--panel));
+}
+
+.mail-share-lerta-link {
+  margin: 12px 0 0;
+  font-size: 0.88rem;
+  text-align: center;
+}
+
 .mail-inbox-filter-menu__clear {
   width: 100%;
   margin-top: 6px;
