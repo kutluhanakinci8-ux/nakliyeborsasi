@@ -18,6 +18,7 @@ import {
 import { MailPilotBillingNotice } from "./MailPilotBillingNotice";
 import { MailReplyQuotePreview } from "./MailReplyQuotePreview";
 import { MailComposeRecipientField } from "./MailComposeRecipientField";
+import { MailInboxCommandBar } from "./MailInboxCommandBar";
 import { MailInboxMessageRow } from "./MailInboxMessageRow";
 import { MailListSwipeRow } from "./MailListSwipeRow";
 import { MailAppLockOverlay } from "./MailAppLockOverlay";
@@ -160,6 +161,10 @@ export function MailClientShell({ mail }: Props) {
     focusedInboxEnabled,
     inboxFocusLane,
     setInboxFocusLane,
+    inboxQueryFilters,
+    toggleInboxQueryFilter,
+    clearInboxQueryFilters,
+    showInboxLaneAndFilters,
     inboxConnectedSource,
     setInboxConnectedSource,
     showConnectedInboxTabs,
@@ -767,119 +772,31 @@ export function MailClientShell({ mail }: Props) {
       ) : (
         <>
       <section
-        className={`mail-list${isPrimaryInbox ? " mail-list-inbox-premium" : ""}`}
+        className={`mail-list${view === "inbox" ? " mail-list-inbox-premium" : ""}`}
       >
         {view !== "drafts" ? (
           <div
-            className={`mail-search${isPrimaryInbox ? " mail-inbox-search-premium" : ""}`}
+            className={`mail-search${view === "inbox" ? " mail-inbox-search-premium" : ""}`}
           >
-            {isPrimaryInbox ? (
-              <header className="mail-inbox-header">
-                <div className="mail-inbox-header-text">
-                  <h2 className="mail-inbox-header-title">{t("inboxTitle")}</h2>
-                  <p className="mail-inbox-header-meta">
-                    {summary && summary.unreadCount > 0
-                      ? t("inboxUnreadCount", { count: summary.unreadCount })
-                      : t("inboxAllRead")}
-                  </p>
-                </div>
-                {showConnectedInboxTabs ? (
-                  <div
-                    className="mail-inbox-focus-tabs mail-inbox-connected-tabs"
-                    role="tablist"
-                    aria-label={t("capFilterAria")}
-                  >
-                    <button
-                      type="button"
-                      role="tab"
-                      aria-selected={inboxConnectedSource === "all"}
-                      className={
-                        inboxConnectedSource === "all"
-                          ? "mail-inbox-focus-tab is-active"
-                          : "mail-inbox-focus-tab"
-                      }
-                      onClick={() => setInboxConnectedSource("all")}
-                    >
-                      {connectedTabLabel("all", t)}
-                    </button>
-                    <button
-                      type="button"
-                      role="tab"
-                      aria-selected={inboxConnectedSource === "lerta"}
-                      className={
-                        inboxConnectedSource === "lerta"
-                          ? "mail-inbox-focus-tab is-active"
-                          : "mail-inbox-focus-tab"
-                      }
-                      onClick={() => setInboxConnectedSource("lerta")}
-                    >
-                      {connectedTabLabel("lerta", t)}
-                    </button>
-                    <button
-                      type="button"
-                      role="tab"
-                      aria-selected={inboxConnectedSource === "microsoft_graph"}
-                      className={
-                        inboxConnectedSource === "microsoft_graph"
-                          ? "mail-inbox-focus-tab is-active"
-                          : "mail-inbox-focus-tab"
-                      }
-                      onClick={() =>
-                        setInboxConnectedSource("microsoft_graph")
-                      }
-                    >
-                      {connectedTabLabel("microsoft_graph", t)}
-                    </button>
-                    <button
-                      type="button"
-                      role="tab"
-                      aria-selected={inboxConnectedSource === "gmail_api"}
-                      className={
-                        inboxConnectedSource === "gmail_api"
-                          ? "mail-inbox-focus-tab is-active"
-                          : "mail-inbox-focus-tab"
-                      }
-                      onClick={() => setInboxConnectedSource("gmail_api")}
-                    >
-                      {connectedTabLabel("gmail_api", t)}
-                    </button>
-                  </div>
-                ) : null}
-                {focusedInboxEnabled ? (
-                  <div
-                    className="mail-inbox-focus-tabs"
-                    role="tablist"
-                    aria-label={t("focusedInboxAria")}
-                  >
-                    <button
-                      type="button"
-                      role="tab"
-                      aria-selected={inboxFocusLane === "focus"}
-                      className={
-                        inboxFocusLane === "focus"
-                          ? "mail-inbox-focus-tab is-active"
-                          : "mail-inbox-focus-tab"
-                      }
-                      onClick={() => setInboxFocusLane("focus")}
-                    >
-                      {t("focusImportant")}
-                    </button>
-                    <button
-                      type="button"
-                      role="tab"
-                      aria-selected={inboxFocusLane === "other"}
-                      className={
-                        inboxFocusLane === "other"
-                          ? "mail-inbox-focus-tab is-active"
-                          : "mail-inbox-focus-tab"
-                      }
-                      onClick={() => setInboxFocusLane("other")}
-                    >
-                      {t("focusOther")}
-                    </button>
-                  </div>
-                ) : null}
-              </header>
+            {showInboxLaneAndFilters ? (
+              <MailInboxCommandBar
+                t={t}
+                title={t("inboxTitle")}
+                meta={
+                  summary && summary.unreadCount > 0
+                    ? t("inboxUnreadCount", { count: summary.unreadCount })
+                    : t("inboxAllRead")
+                }
+                inboxFocusLane={inboxFocusLane}
+                onFocusLaneChange={setInboxFocusLane}
+                activeFilters={inboxQueryFilters}
+                onToggleFilter={toggleInboxQueryFilter}
+                onClearFilters={clearInboxQueryFilters}
+                showConnectedInboxTabs={showConnectedInboxTabs}
+                inboxConnectedSource={inboxConnectedSource}
+                onConnectedSourceChange={setInboxConnectedSource}
+                showFocusTabs={focusedInboxEnabled}
+              />
             ) : null}
             {mailBulkAssistActive ? (
               <p className="mail-parity-assist-banner" role="status">

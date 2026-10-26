@@ -25,7 +25,7 @@ export const DEFAULT_MAIL_POSTA_PREFERENCES: Pick<
   confirmBulkDelete: true,
   threadViewEnabled: false,
   swipePrimaryAction: "archive",
-  focusedInboxEnabled: false,
+  focusedInboxEnabled: true,
   inboxSmartSortEnabled: true,
   replyQuoteMode: "full",
 };
@@ -54,7 +54,7 @@ export function pickMailPostaPreferences(
       prefs?.swipePrimaryAction === "read"
         ? prefs.swipePrimaryAction
         : "archive",
-    focusedInboxEnabled: prefs?.focusedInboxEnabled ?? false,
+    focusedInboxEnabled: prefs?.focusedInboxEnabled ?? true,
     inboxSmartSortEnabled: prefs?.inboxSmartSortEnabled ?? true,
     replyQuoteMode:
       prefs?.replyQuoteMode === "trimmed" || prefs?.replyQuoteMode === "none"

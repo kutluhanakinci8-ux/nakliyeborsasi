@@ -30,6 +30,16 @@ import {
   filterInboxByFocusLane,
   type InboxFocusLane,
 } from "@/lib/mailInboxFocus";
+import {
+  applyInboxQueryFilters,
+  type InboxQueryFilterId,
+} from "@/lib/mailInboxListFilters";
+import {
+  readStoredInboxFocusLane,
+  readStoredInboxQueryFilters,
+  writeStoredInboxFocusLane,
+  writeStoredInboxQueryFilters,
+} from "@/lib/mailInboxToolbarPrefs";
 import { sortInboxMessagesSmart } from "@/lib/mailInboxSmartSort";
 import {
   fetchInboxWithOfflineCache,
@@ -340,8 +350,35 @@ export function useMailClientController({
     useState<MailInboxListDensity>("comfortable");
   const [readFontScale, setReadFontScale] =
     useState<MailReadFontScale>("default");
-  const [inboxFocusLane, setInboxFocusLane] =
-    useState<InboxFocusLane>("focus");
+  const [inboxFocusLane, setInboxFocusLaneState] =
+    useState<InboxFocusLane>(() => readStoredInboxFocusLane());
+  const [inboxQueryFilters, setInboxQueryFiltersState] = useState<
+    Set<InboxQueryFilterId>
+  >(() => readStoredInboxQueryFilters());
+
+  const setInboxFocusLane = useCallback((lane: InboxFocusLane) => {
+    writeStoredInboxFocusLane(lane);
+    setInboxFocusLaneState(lane);
+  }, []);
+
+  const toggleInboxQueryFilter = useCallback((id: InboxQueryFilterId) => {
+    setInboxQueryFiltersState((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      writeStoredInboxQueryFilters(next);
+      return next;
+    });
+  }, []);
+
+  const clearInboxQueryFilters = useCallback(() => {
+    const next = new Set<InboxQueryFilterId>();
+    writeStoredInboxQueryFilters(next);
+    setInboxQueryFiltersState(next);
+  }, []);
   const [inboxConnectedSource, setInboxConnectedSourceState] =
     useState<MailConnectedInboxSource>(() => readStoredConnectedSource());
   const [connectedAccounts, setConnectedAccounts] = useState<
@@ -2291,23 +2328,25 @@ export function useMailClientController({
 
   const inboxSmartSortEnabled = mailPostaPrefs.inboxSmartSortEnabled;
 
+  const showInboxLaneAndFilters =
+    view === "inbox" && !threadView && !searchActive;
+
   const displayListItems = useMemo(() => {
     let items = listItems as import("@/lib/mailApi").MailInboxListItem[];
-    if (
-      isPrimaryInbox &&
-      focusedInboxEnabled &&
-      !threadView &&
-      !searchActive &&
-      view === "inbox"
-    ) {
+    if (showInboxLaneAndFilters && focusedInboxEnabled) {
       items = filterInboxByFocusLane(items, inboxFocusLane);
+    }
+    if (showInboxLaneAndFilters && inboxQueryFilters.size > 0) {
+      items = applyInboxQueryFilters(
+        items,
+        inboxQueryFilters,
+        summary?.primaryAddress ?? null,
+      );
     }
     if (
       inboxSmartSortEnabled &&
-      isPrimaryInbox &&
-      !threadView &&
-      !searchActive &&
-      view === "inbox"
+      showInboxLaneAndFilters &&
+      isPrimaryInbox
     ) {
       items = sortInboxMessagesSmart(items);
     }
@@ -2317,10 +2356,10 @@ export function useMailClientController({
     isPrimaryInbox,
     focusedInboxEnabled,
     inboxSmartSortEnabled,
-    threadView,
-    searchActive,
-    view,
+    showInboxLaneAndFilters,
     inboxFocusLane,
+    inboxQueryFilters,
+    summary?.primaryAddress,
   ]);
 
   const listMessageIds = useMemo(
@@ -2925,6 +2964,10 @@ export function useMailClientController({
     focusedInboxEnabled,
     inboxFocusLane,
     setInboxFocusLane,
+    inboxQueryFilters,
+    toggleInboxQueryFilter,
+    clearInboxQueryFilters,
+    showInboxLaneAndFilters,
     inboxConnectedSource,
     setInboxConnectedSource,
     showConnectedInboxTabs,
