@@ -9,6 +9,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { basename, join } from "node:path";
+import { maildirSegmentForCustomFolder } from "../../common/mailImapModifiedUtf7.util";
 
 export type MaildirMailboxFolder = "inbox" | "archive" | "trash" | "junk";
 
@@ -189,6 +190,30 @@ export class MailImapMaildirService {
       created.push(dir);
     }
     return created;
+  }
+
+  /** Webmail özel klasörü — IMAP maildir iskeleti (Thunderbird LIST ile eşleşen iç ad). */
+  public ensureCustomFolderMaildir(
+    mailboxEmail: string,
+    folderId: string,
+  ): string | null {
+    const root = this.resolveMaildirRoot();
+    if (!root) {
+      return null;
+    }
+    const at = mailboxEmail.lastIndexOf("@");
+    if (at < 1) {
+      return null;
+    }
+    const local = mailboxEmail.slice(0, at);
+    const domain = mailboxEmail.slice(at + 1);
+    const segment = maildirSegmentForCustomFolder(folderId);
+    const newDir = join(root, domain, local, "Maildir", segment, "new");
+    const curDir = join(root, domain, local, "Maildir", segment, "cur");
+    mkdirSync(newDir, { recursive: true });
+    mkdirSync(curDir, { recursive: true });
+    this.logger.debug(`Maildir custom folder ${segment} for ${mailboxEmail}`);
+    return segment;
   }
 
   /** Thunderbird/Dovecot taşıması sonrası dosyayı klasörler arasında bul. */

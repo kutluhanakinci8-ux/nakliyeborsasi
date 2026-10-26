@@ -9,12 +9,17 @@ import { MailCustomFolderEntity } from "../../infrastructure/database/entities/M
 import { MailInboundMessageEntity } from "../../infrastructure/database/entities/MailInboundMessageEntity";
 import { MailInboxRuleEntity } from "../../infrastructure/database/entities/MailInboxRuleEntity";
 import { MailMailboxEntity } from "../../infrastructure/database/entities/MailMailboxEntity";
+import { MailSenderIdentityEntity } from "../../infrastructure/database/entities/MailSenderIdentityEntity";
+import { encodeImapModifiedUtf7MailboxName } from "../../common/mailImapModifiedUtf7.util";
+import { MailImapMaildirService } from "./MailImapMaildirService";
 
 const MAX_FOLDERS_PER_ORG = 25;
 
 export type MailCustomFolderRow = {
   id: string;
   name: string;
+  /** IMAP LIST mailbox adı (RFC 3501 modified UTF-7). */
+  imapModifiedUtf7: string;
   sortOrder: number;
   messageCount: number;
   createdAt: string;
@@ -31,6 +36,9 @@ export class MailCustomFolderService {
     private readonly mailboxRepository: Repository<MailMailboxEntity>,
     @InjectRepository(MailInboxRuleEntity)
     private readonly ruleRepository: Repository<MailInboxRuleEntity>,
+    @InjectRepository(MailSenderIdentityEntity)
+    private readonly senderRepository: Repository<MailSenderIdentityEntity>,
+    private readonly mailImapMaildirService: MailImapMaildirService,
   ) {}
 
   public async listForOrganization(
@@ -83,6 +91,7 @@ export class MailCustomFolderService {
         sortOrder: existing,
       }),
     );
+    await this.syncCustomFolderMaildir(organizationId, row.id);
     return this.toRow(row, 0);
   }
 
@@ -199,6 +208,30 @@ export class MailCustomFolderService {
     return mailboxes.map((m) => m.id);
   }
 
+  private async syncCustomFolderMaildir(
+    organizationId: string,
+    folderId: string,
+  ): Promise<void> {
+    const email = await this.resolvePrimaryMailboxEmail(organizationId);
+    if (!email || !this.mailImapMaildirService.isEnabled()) {
+      return;
+    }
+    this.mailImapMaildirService.ensureCustomFolderMaildir(email, folderId);
+  }
+
+  private async resolvePrimaryMailboxEmail(
+    organizationId: string,
+  ): Promise<string | null> {
+    const sender = await this.senderRepository.findOne({
+      where: { organizationId, isDefault: true },
+      relations: { mailDomain: true },
+    });
+    if (!sender?.mailDomain) {
+      return null;
+    }
+    return `${sender.localPart}@${sender.mailDomain.domain}`.toLowerCase();
+  }
+
   private toRow(
     row: MailCustomFolderEntity,
     messageCount: number,
@@ -206,6 +239,7 @@ export class MailCustomFolderService {
     return {
       id: row.id,
       name: row.name,
+      imapModifiedUtf7: encodeImapModifiedUtf7MailboxName(row.name),
       sortOrder: row.sortOrder,
       messageCount,
       createdAt: row.createdAt.toISOString(),

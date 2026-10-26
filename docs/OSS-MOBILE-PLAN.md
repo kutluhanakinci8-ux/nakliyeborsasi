@@ -4,11 +4,17 @@
 
 | Katman | Ne yapıyoruz |
 |--------|----------------|
-| **Ayarlar → Lisanslar** | W1 kataloğu: Next.js, React, OpenPGP.js, SimpleWebAuthn, Zstandard, zlib (`mailOpenSourceLicensesCatalog.ts`) |
+| **Ayarlar → Lisanslar** | W1–W2: Next.js, React, OpenPGP.js, SimpleWebAuthn, Zstandard, zlib, Brotli, libphonenumber-js, utf7 (`mailOpenSourceLicensesCatalog*.ts`) |
 | **SBOM** | `npm run oss:sbom` → `docs/oss/mail-web-sbom.json` (tüm mail-web transitive npm) |
 | **Doğrulama** | `npm run oss:verify-catalog` — W1 paketleri lockfile'da var mı |
 
-### W2 (web genişleme — sıradaki ekler)
+### W2 (tamamlandı — Gmail listesi parçası)
+
+- **utf7** — IMAP modified UTF-7 özel klasör adları + maildir iskeleti
+- **libphonenumber-js** — kurumsal kişi telefonu (E.164)
+- **Brotli** — API JSON `X-Lerta-Encoding: br`
+
+### W3 (sıradaki web ekler)
 
 - `web-push` (MPL-2.0) — mesajlaşma bildirim sunucusu (platform SBOM veya alt bölüm)
 - HTML mail sanitizer (ör. isomorphic-dompurify)

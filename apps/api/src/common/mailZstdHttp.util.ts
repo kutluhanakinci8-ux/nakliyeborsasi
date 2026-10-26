@@ -1,5 +1,6 @@
 export {
   clientRequestedZstd,
+  isBrotliBase64Envelope,
   isGzipBase64Envelope,
   isZstdBase64Envelope,
   maybeCompressJsonEnvelope,

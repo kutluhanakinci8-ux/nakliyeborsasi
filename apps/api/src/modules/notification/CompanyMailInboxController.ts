@@ -188,10 +188,18 @@ export class CompanyMailInboxController {
     const settings = await this.mailImapAccessService.getSettings(
       user.companyId,
     );
+    const customFolders = await this.mailCustomFolderService.listForOrganization(
+      user.companyId,
+    );
     return {
       phase: "PM-5",
       maildirEnabled: settings.enabled,
       folders: [".Sent", ".Archive", ".Trash", ".Junk", "inbox"],
+      customFolders: customFolders.map((f) => ({
+        id: f.id,
+        name: f.name,
+        imapModifiedUtf7: f.imapModifiedUtf7,
+      })),
       settings,
     };
   }

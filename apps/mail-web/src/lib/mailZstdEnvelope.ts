@@ -1,4 +1,5 @@
 import { decompress } from "fzstd";
+import { decompressBrotliBase64ToJson } from "./mailBrotli";
 import { decompressGzipBase64ToJson } from "./mailGzip";
 
 export type ZstdBase64Envelope = {
@@ -8,6 +9,11 @@ export type ZstdBase64Envelope = {
 
 export type GzipBase64Envelope = {
   encoding: "gzip-base64";
+  data: string;
+};
+
+export type BrotliBase64Envelope = {
+  encoding: "brotli-base64";
   data: string;
 };
 
@@ -33,6 +39,17 @@ export function isGzipBase64Envelope(
   );
 }
 
+export function isBrotliBase64Envelope(
+  value: unknown,
+): value is BrotliBase64Envelope {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    (value as BrotliBase64Envelope).encoding === "brotli-base64" &&
+    typeof (value as BrotliBase64Envelope).data === "string"
+  );
+}
+
 function decompressZstdBase64ToUtf8(encoded: string): string {
   const binary = atob(encoded);
   const bytes = new Uint8Array(binary.length);
@@ -50,6 +67,9 @@ export async function unwrapLertaJsonEnvelope<T>(value: unknown): Promise<T> {
   }
   if (isGzipBase64Envelope(value)) {
     return decompressGzipBase64ToJson<T>(value.data);
+  }
+  if (isBrotliBase64Envelope(value)) {
+    return decompressBrotliBase64ToJson<T>(value.data);
   }
   return value as T;
 }
