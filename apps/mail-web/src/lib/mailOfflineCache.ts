@@ -10,37 +10,53 @@ import {
   type MailSendReadiness,
   type MailSentItem,
 } from "./mailApi";
+import {
+  decodeOfflineMessageDetail,
+  decodeOfflineSnapshot,
+  encodeOfflineMessageDetail,
+  encodeOfflineSnapshot,
+} from "./mailOfflineZstd";
 
 export const OFFLINE_DB_NAME = "lerta-mail-offline-v1";
+export const OFFLINE_DB_VERSION = 2;
 export const OFFLINE_MAX_LIST = 50;
 export const OFFLINE_MAX_DETAILS = 25;
 
 const STORE_SNAPSHOTS = "inboxSnapshots";
 const STORE_DETAILS = "messageDetails";
 
-export type InboxSnapshotPayload = {
-  summary: MailInboxSummary;
-  sendReadiness?: MailSendReadiness;
-  messages: MailInboxListItem[];
-  sent: MailSentItem[];
-  connectedAccounts?: MailConnectedAccountRow[];
-  cachedAt: number;
-};
+import type { InboxSnapshotPayload } from "./mailOfflineTypes";
 
-type InboxSnapshotRecord = {
+export type { InboxSnapshotPayload } from "./mailOfflineTypes";
+
+type InboxSnapshotRecordLegacy = {
   key: string;
   payload: InboxSnapshotPayload;
 };
 
-type MessageDetailRecord = {
+type InboxSnapshotRecordCompressed = {
+  key: string;
+  codec: string;
+  blob: string;
+  cachedAt: number;
+};
+
+type MessageDetailRecordLegacy = {
   id: string;
   message: MailInboxMessageDetail;
   cachedAt: number;
 };
 
+type MessageDetailRecordCompressed = {
+  id: string;
+  codec: string;
+  blob: string;
+  cachedAt: number;
+};
+
 function openOfflineDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(OFFLINE_DB_NAME, 1);
+    const request = indexedDB.open(OFFLINE_DB_NAME, OFFLINE_DB_VERSION);
     request.onerror = () => reject(request.error ?? new Error("IndexedDB açılamadı"));
     request.onupgradeneeded = () => {
       const db = request.result;
@@ -77,16 +93,20 @@ export async function putInboxSnapshot(
   if (typeof indexedDB === "undefined") {
     return;
   }
+  const trimmed: InboxSnapshotPayload = {
+    ...payload,
+    messages: payload.messages.slice(0, OFFLINE_MAX_LIST),
+  };
+  const encoded = await encodeOfflineSnapshot(trimmed);
   const db = await openOfflineDb();
   const tx = db.transaction(STORE_SNAPSHOTS, "readwrite");
   await idbRequest(
     tx.objectStore(STORE_SNAPSHOTS).put({
       key,
-      payload: {
-        ...payload,
-        messages: payload.messages.slice(0, OFFLINE_MAX_LIST),
-      },
-    } satisfies InboxSnapshotRecord),
+      codec: encoded.codec,
+      blob: encoded.blob,
+      cachedAt: trimmed.cachedAt,
+    } satisfies InboxSnapshotRecordCompressed),
   );
   db.close();
   postOfflineSyncToServiceWorker(key);
@@ -100,11 +120,20 @@ export async function getInboxSnapshot(
   }
   const db = await openOfflineDb();
   const tx = db.transaction(STORE_SNAPSHOTS, "readonly");
-  const row = await idbRequest<InboxSnapshotRecord | undefined>(
-    tx.objectStore(STORE_SNAPSHOTS).get(key),
-  );
+  const row = await idbRequest<
+    InboxSnapshotRecordCompressed | InboxSnapshotRecordLegacy | undefined
+  >(tx.objectStore(STORE_SNAPSHOTS).get(key));
   db.close();
-  return row?.payload ?? null;
+  if (!row) {
+    return null;
+  }
+  if ("blob" in row && row.blob) {
+    return decodeOfflineSnapshot(row.blob);
+  }
+  if ("payload" in row && row.payload) {
+    return row.payload;
+  }
+  return null;
 }
 
 function runTransaction(
@@ -127,22 +156,27 @@ export async function putMessageDetail(
   if (typeof indexedDB === "undefined") {
     return;
   }
+  const encoded = await encodeOfflineMessageDetail(message, Date.now());
   const db = await openOfflineDb();
   await runTransaction(db, STORE_DETAILS, "readwrite", (store) => {
     store.put({
-      id: message.id,
-      message,
-      cachedAt: Date.now(),
-    } satisfies MessageDetailRecord);
+      id: encoded.id,
+      codec: encoded.codec,
+      blob: encoded.blob,
+      cachedAt: encoded.cachedAt,
+    } satisfies MessageDetailRecordCompressed);
   });
   const all = await (async () => {
     const tx = db.transaction(STORE_DETAILS, "readonly");
-    return idbRequest<MessageDetailRecord[]>(
-      tx.objectStore(STORE_DETAILS).getAll(),
-    );
+    return idbRequest<
+      (MessageDetailRecordCompressed | MessageDetailRecordLegacy)[]
+    >(tx.objectStore(STORE_DETAILS).getAll());
   })();
   if (all.length > OFFLINE_MAX_DETAILS) {
-    const sorted = [...all].sort((a, b) => b.cachedAt - a.cachedAt);
+    const sorted = [...all].sort(
+      (a, b) =>
+        (b.cachedAt ?? 0) - (a.cachedAt ?? 0),
+    );
     await runTransaction(db, STORE_DETAILS, "readwrite", (store) => {
       for (const stale of sorted.slice(OFFLINE_MAX_DETAILS)) {
         store.delete(stale.id);
@@ -160,11 +194,20 @@ export async function getMessageDetail(
   }
   const db = await openOfflineDb();
   const tx = db.transaction(STORE_DETAILS, "readonly");
-  const row = await idbRequest<MessageDetailRecord | undefined>(
-    tx.objectStore(STORE_DETAILS).get(id),
-  );
+  const row = await idbRequest<
+    MessageDetailRecordCompressed | MessageDetailRecordLegacy | undefined
+  >(tx.objectStore(STORE_DETAILS).get(id));
   db.close();
-  return row?.message ?? null;
+  if (!row) {
+    return null;
+  }
+  if ("blob" in row && row.blob) {
+    return decodeOfflineMessageDetail(row.blob).message;
+  }
+  if ("message" in row && row.message) {
+    return row.message;
+  }
+  return null;
 }
 
 export function isLikelyNetworkFailure(error: unknown): boolean {

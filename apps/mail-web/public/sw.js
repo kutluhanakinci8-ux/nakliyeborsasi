@@ -129,7 +129,7 @@ self.addEventListener("message", (event) => {
 
 function openOfflineDb() {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(OFFLINE_DB_NAME, 1);
+    const request = indexedDB.open(OFFLINE_DB_NAME, 2);
     request.onerror = () => reject(request.error);
     request.onsuccess = () => resolve(request.result);
   });

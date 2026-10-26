@@ -12,7 +12,7 @@ export const MAIL_WEB_I18N_OSS_LICENSES_TR = {
   ossLicenseHomepage: "Kaynak",
   helpOpenSourceLicenses: "Lisanslar",
   ossLicenseZstandardUsage:
-    "Zstandard, API tarafında sıkıştırma (@mongodb-js/zstd) ve istemcide açma (fzstd) ile çevrimdışı önbellek ve büyük veri aktarımlarında kullanılır.",
+    "Zstandard; gelen kutusu/arama API yanıtları (X-Lerta-Encoding: zstd), IndexedDB çevrimdışı önbellek ve mesaj detaylarında kullanılır.",
 } as const;
 
 export const MAIL_WEB_I18N_OSS_LICENSES_EN = {
@@ -29,5 +29,5 @@ export const MAIL_WEB_I18N_OSS_LICENSES_EN = {
   ossLicenseHomepage: "Source",
   helpOpenSourceLicenses: "Licenses",
   ossLicenseZstandardUsage:
-    "Zstandard compresses on the API (@mongodb-js/zstd) and decompresses in the client (fzstd) for offline cache and large transfers.",
+    "Zstandard is used for inbox/search API payloads (X-Lerta-Encoding: zstd) and compressed IndexedDB offline cache.",
 } as const;
