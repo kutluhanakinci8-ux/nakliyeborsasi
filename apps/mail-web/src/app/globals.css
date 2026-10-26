@@ -8189,6 +8189,15 @@ html[data-mail-read-font="large"] .mail-html-frame {
   background: color-mix(in srgb, var(--accent) 6%, var(--panel));
 }
 
+.mail-lerta-apps-grid-icon {
+  display: block;
+  margin: 0 auto;
+}
+
+.mail-explore-lerta-apps {
+  min-height: 120px;
+}
+
 .mail-share-lerta-link {
   margin: 12px 0 0;
   font-size: 0.88rem;

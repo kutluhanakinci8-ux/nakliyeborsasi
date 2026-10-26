@@ -31,6 +31,8 @@ import { MailAutoReplySettingsPanel } from "./MailAutoReplySettingsPanel";
 import { MailNotificationsSettingsPanel } from "./MailNotificationsSettingsPanel";
 import { MailHelpPanel } from "./MailHelpPanel";
 import { MailShareLertaPostaPanel } from "./MailShareLertaPostaPanel";
+import { MailExploreLertaAppsPanel } from "./MailExploreLertaAppsPanel";
+import { MailLertaAppsGridIcon } from "./MailLertaAppsGridIcon";
 import { MailPrivacySettingsPanel } from "./MailPrivacySettingsPanel";
 import { MailSecuritySettingsPanel } from "./MailSecuritySettingsPanel";
 import { MailIntegrationsSettingsPanel } from "./MailIntegrationsSettingsPanel";
@@ -58,6 +60,7 @@ export type SettingsView =
   | "contactsSettings"
   | "help"
   | "shareLerta"
+  | "exploreLertaApps"
   | "integrations"
   | "ops";
 
@@ -216,6 +219,14 @@ const HUB_ITEM_DEFS: HubItemDef[] = [
     subtitleKey: "settingsHubShareLertaSub",
     keywords: "arkadaş paylaş davet e-posta sms",
     keywordsEn: "friend share invite email sms",
+  },
+  {
+    id: "exploreLertaApps",
+    section: "other",
+    labelKey: "settingsHubExploreLertaApps",
+    subtitleKey: "settingsHubExploreLertaAppsSub",
+    keywords: "lerta uygulama keşfet posta takvim mesaj",
+    keywordsEn: "lerta apps explore posta calendar messaging",
   },
   {
     id: "help",
@@ -514,7 +525,7 @@ export function MailSettingsPanel({
                         onClick={() => openHubItem(item)}
                       >
                         <span className="mail-settings-row-icon" aria-hidden>
-                          {settingsRowIcon(item.id)}
+                          {renderSettingsRowIcon(item.id)}
                         </span>
                         <span className="mail-settings-row-text">
                           <strong>{item.label}</strong>
@@ -924,6 +935,12 @@ export function MailSettingsPanel({
         <MailShareLertaPostaPanel />,
       );
       break;
+    case "exploreLertaApps":
+      content = renderDetail(
+        detailTitle("exploreLertaApps"),
+        <MailExploreLertaAppsPanel />,
+      );
+      break;
     case "help":
       content = renderDetail(
         detailTitle("help"),
@@ -971,6 +988,7 @@ export function MailSettingsPanel({
           view === "categories" ||
           view === "help" ||
           view === "shareLerta" ||
+          view === "exploreLertaApps" ||
           view === "privacy" ||
           view === "security"
             ? "compose-dialog mail-settings-dialog mail-settings-dialog--wide"
@@ -984,6 +1002,13 @@ export function MailSettingsPanel({
       </div>
     </div>
   );
+}
+
+function renderSettingsRowIcon(id: SettingsView): ReactNode {
+  if (id === "exploreLertaApps") {
+    return <MailLertaAppsGridIcon />;
+  }
+  return settingsRowIcon(id);
 }
 
 function settingsRowIcon(id: SettingsView): string {
@@ -1016,6 +1041,8 @@ function settingsRowIcon(id: SettingsView): string {
       return "🛡️";
     case "shareLerta":
       return "↗️";
+    case "exploreLertaApps":
+      return "";
     case "help":
       return "❓";
     case "ops":
