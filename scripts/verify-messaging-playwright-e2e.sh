@@ -4,6 +4,16 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${ROOT}"
 
+# Opsiyonel: MESSAGING_TEST_EMAIL/PASSWORD → E2E_ACCESS_TOKEN
+# shellcheck source=scripts/resolve-messaging-verify-jwt.sh
+source "${ROOT}/scripts/resolve-messaging-verify-jwt.sh" || true
+if [[ -z "${E2E_ACCESS_TOKEN:-}" ]]; then
+  jwt="$(resolve_messaging_verify_jwt 2>/dev/null || true)"
+  if [[ -n "${jwt}" ]]; then
+    export E2E_ACCESS_TOKEN="${jwt}"
+  fi
+fi
+
 npm run build -w @nakliyeborsasi/web
 npm run test:e2e:install -w @nakliyeborsasi/web
 

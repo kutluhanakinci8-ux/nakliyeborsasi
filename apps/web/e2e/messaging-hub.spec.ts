@@ -6,6 +6,8 @@ const ACCESS_TOKEN =
   process.env.MESSAGING_SSE_JWT ??
   "";
 
+const BLOCKED_ACCESS_TOKEN = process.env.E2E_MESSAGING_BLOCKED_TOKEN ?? "";
+
 test.describe("Mesajlar hub", () => {
   test("login sayfası messaging next ile açılır", async ({ page }) => {
     await page.goto("/login?next=%2Fmessaging%3Ftab%3Dsohbet");
@@ -44,5 +46,21 @@ test.describe("Mesajlar hub", () => {
 
     await page.getByRole("button", { name: /sohbet/i }).first().click();
     await expect(page).toHaveURL(/tab=chat|tab=sohbet/);
+  });
+
+  test("oturumlu: MESSAGING modülü kapalı banner", async ({ page }) => {
+    test.skip(
+      !BLOCKED_ACCESS_TOKEN,
+      "E2E_MESSAGING_BLOCKED_TOKEN gerekli (MESSAGING entitlement olmayan hesap)",
+    );
+
+    await page.addInitScript((token) => {
+      window.localStorage.setItem("nakliyeborsasi_access_token", token);
+    }, BLOCKED_ACCESS_TOKEN);
+
+    await page.goto("/messaging?tab=sohbet");
+    await expect(page.locator(".messaging-module-blocked")).toBeVisible({
+      timeout: 20_000,
+    });
   });
 });

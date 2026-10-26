@@ -4,8 +4,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=scripts/resolve-local-api-base.sh
 source "${ROOT}/scripts/resolve-local-api-base.sh" "${ROOT}"
-# shellcheck source=scripts/resolve-messaging-test-jwt.sh
-source "${ROOT}/scripts/resolve-messaging-test-jwt.sh" || true
+# shellcheck source=scripts/resolve-messaging-verify-jwt.sh
+source "${ROOT}/scripts/resolve-messaging-verify-jwt.sh" || true
 
 echo "== FS-8 firma sohbeti verify =="
 echo "API: ${API_BASE}/messaging/status"
@@ -14,7 +14,7 @@ payload="$(curl -fsS "${API_BASE}/messaging/status")"
 export MESSAGING_STATUS_JSON="${payload}"
 python3 "${ROOT}/scripts/messaging-status-from-env.py" fs8
 
-JWT="${MESSAGING_TEST_JWT:-${MESSAGING_SSE_JWT:-}}"
+JWT="$(resolve_messaging_verify_jwt 2>/dev/null || true)"
 if [[ -n "${JWT}" ]]; then
   echo ""
   echo "== company search smoke =="

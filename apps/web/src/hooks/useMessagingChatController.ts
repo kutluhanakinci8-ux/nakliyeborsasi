@@ -25,6 +25,10 @@ import {
   MESSAGING_ATTACHMENT_MAX_COUNT,
 } from "../lib/messagingAttachmentPolicy";
 import {
+  SubscriptionModuleCode,
+  isSubscriptionEntitlementDeniedError,
+} from "@nakliyeborsasi/core";
+import {
   readFileAsAttachment,
   messageHasActiveMentionQuery,
   parseCompanyUuidCandidate,
@@ -251,10 +255,18 @@ export function useMessagingChatController({
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Yükleme hatası";
-      if (/messaging|modül|entitlement|abonelik/i.test(message)) {
+      if (
+        isSubscriptionEntitlementDeniedError(
+          message,
+          SubscriptionModuleCode.Messaging,
+        ) ||
+        /modül|entitlement|abonelik/i.test(message)
+      ) {
         setModuleBlocked(true);
+        setErrorMessage("");
+      } else {
+        setErrorMessage(message);
       }
-      setErrorMessage(message);
     }
   }, [accessToken, locale]);
 

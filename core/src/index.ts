@@ -68,3 +68,4 @@ export * from "./mailPostalMarker";
 export * from "./messaging/whatsappBridgeDelivery";
 export * from "./messaging/structuredLog";
 export * from "./webrtc/browserWebRtcCapabilities";
+export * from "./http/isSubscriptionEntitlementDeniedError";
