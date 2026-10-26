@@ -25,13 +25,17 @@ export const PLATFORM_PRODUCTS: PlatformProduct[] = [
     name: "Lerta Posta",
     tagline: "Kurumsal e-posta SaaS",
     summary:
-      "Özel domain, DNS sihirbazı ve Gmail benzeri webmail — kiracı bazlı izolasyon.",
+      "Özel domain, DNS sihirbazı, modern webmail ve IMAP — Türkiye'de kiracı izolasyonu.",
     accent: "blue",
     href: "/posta",
     ctaLabel: "Posta ürünü",
     secondaryHref: `${MAIL_WEB_URL.replace(/\/$/, "")}/login`,
     secondaryLabel: "Webmail giriş",
-    features: ["MX / SPF / DKIM", "Postfix + Rspamd", "Yönetim konsolu"],
+    features: [
+      "MX · SPF · DKIM · DMARC",
+      "Exchange / Gmail bağlantı",
+      "PWA + IMAP mobil",
+    ],
   },
   {
     slug: "mesaj",

@@ -14,7 +14,16 @@
   --lerta-radius-pill: 999px;
   --lerta-radius-card: 16px;
   --lerta-shadow: 0 8px 30px rgba(26, 22, 71, 0.08);
-  --lerta-font: "Segoe UI", system-ui, -apple-system, sans-serif;
+  --lerta-font: var(--font-dm-sans, "DM Sans"), "Segoe UI", system-ui, sans-serif;
+  --lerta-font-display: var(--font-fraunces, "Fraunces"), Georgia, serif;
+  --lerta-blue: #2563eb;
+  --lerta-blue-soft: rgba(37, 99, 235, 0.12);
+  --lerta-grad-hero: linear-gradient(
+    135deg,
+    rgba(26, 22, 71, 0.04) 0%,
+    rgba(37, 99, 235, 0.08) 45%,
+    rgba(16, 185, 129, 0.06) 100%
+  );
 }
 
 .lerta-brand {
