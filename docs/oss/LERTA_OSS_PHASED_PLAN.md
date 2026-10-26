@@ -230,6 +230,8 @@ Mobil: native WebRTC stack → otomatik OSS listesi (sonraki ürün fazı).
 
 **Mobil OAuth/JWT oturumu** bilinçli olarak sonraki ürün fazı; push kaydı `EXPO_PUBLIC_LERTA_ACCESS_TOKEN` ile devam eder.
 
+**Pilot arama UI:** mesajlaşma hub sohbet başlığı — `MessagingWebRtcPilotCall` + `docs/messaging/WEBRTC-TURN-VPS.md`.
+
 ---
 
 ## Registry ve faz senkronu
