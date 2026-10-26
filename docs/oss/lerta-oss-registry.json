@@ -86,7 +86,7 @@
     {
       "gmailRef": null,
       "phase": "W3",
-      "status": "planned",
+      "status": "done",
       "surfaces": ["mail-web", "api"],
       "catalogId": "dompurify",
       "package": "isomorphic-dompurify"
@@ -94,7 +94,7 @@
     {
       "gmailRef": null,
       "phase": "W3",
-      "status": "planned",
+      "status": "done",
       "surfaces": ["api"],
       "catalogId": "web-push",
       "package": "web-push"
@@ -102,7 +102,7 @@
     {
       "gmailRef": null,
       "phase": "W3",
-      "status": "planned",
+      "status": "done",
       "surfaces": ["api"],
       "catalogId": "ws",
       "package": "ws"
