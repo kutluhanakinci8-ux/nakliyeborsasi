@@ -6600,6 +6600,66 @@ html[data-mail-read-font="large"] .mail-html-frame {
   flex-shrink: 0;
 }
 
+.mail-oss-licenses {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mail-oss-licenses-list .mail-help-ios-row {
+  color: var(--text);
+}
+
+.mail-oss-license-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mail-oss-license-detail-title {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.mail-oss-license-meta {
+  margin: 0;
+  display: grid;
+  gap: 10px;
+  font-size: 0.85rem;
+}
+
+.mail-oss-license-meta dt {
+  font-weight: 600;
+  color: var(--muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.mail-oss-license-meta dd {
+  margin: 2px 0 0;
+}
+
+.mail-oss-license-usage {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.mail-oss-license-text {
+  max-height: 280px;
+  overflow: auto;
+  margin: 0;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.08));
+}
+
 .mail-help-footer-text a:hover {
   text-decoration: underline;
 }

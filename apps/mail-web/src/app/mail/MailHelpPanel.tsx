@@ -247,6 +247,11 @@ export function MailHelpPanel({
             onClick={() => setSubView("thirdParty")}
           />
           <HelpIosRow
+            label={t("helpOpenSourceLicenses")}
+            chevron
+            onClick={() => onOpenSetting("openSourceLicenses")}
+          />
+          <HelpIosRow
             label={t("helpLicense")}
             external
             onClick={() =>

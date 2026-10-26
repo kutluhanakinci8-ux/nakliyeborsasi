@@ -39,6 +39,10 @@ import {
   MAIL_WEB_I18N_EXTERNAL_OPEN_EN,
   MAIL_WEB_I18N_EXTERNAL_OPEN_TR,
 } from "./mailWebLocaleI18nExternalOpen";
+import {
+  MAIL_WEB_I18N_OSS_LICENSES_EN,
+  MAIL_WEB_I18N_OSS_LICENSES_TR,
+} from "./mailWebLocaleI18nOssLicenses";
 
 export const MAIL_WEB_MESSAGES: Record<MailUiLocale, Record<string, string>> = {
   tr: {
@@ -52,6 +56,7 @@ export const MAIL_WEB_MESSAGES: Record<MailUiLocale, Record<string, string>> = {
     ...MAIL_WEB_I18N_SWEEP_P2_TR,
     ...MAIL_WEB_I18N_SWEEP_P3_TR,
     ...MAIL_WEB_I18N_EXTERNAL_OPEN_TR,
+    ...MAIL_WEB_I18N_OSS_LICENSES_TR,
     navInbox: "Gelen",
     navSent: "Gönderilen",
     navAll: "Tümü",
@@ -318,6 +323,7 @@ export const MAIL_WEB_MESSAGES: Record<MailUiLocale, Record<string, string>> = {
     ...MAIL_WEB_I18N_SWEEP_P2_EN,
     ...MAIL_WEB_I18N_SWEEP_P3_EN,
     ...MAIL_WEB_I18N_EXTERNAL_OPEN_EN,
+    ...MAIL_WEB_I18N_OSS_LICENSES_EN,
     navInbox: "Inbox",
     navSent: "Sent",
     navAll: "All",
