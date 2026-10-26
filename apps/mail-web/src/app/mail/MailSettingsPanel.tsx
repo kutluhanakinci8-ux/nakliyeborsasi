@@ -233,8 +233,8 @@ const HUB_ITEM_DEFS: HubItemDef[] = [
     section: "other",
     labelKey: "settingsHubHelp",
     subtitleKey: "settingsHubHelpSub",
-    keywords: "yardım destek imap rehber kılavuz",
-    keywordsEn: "help support imap guide documentation",
+    keywords: "yardım geri bildirim destek sss tanılama kvkk",
+    keywordsEn: "help feedback support faq diagnostics privacy",
   },
 ];
 
@@ -1044,7 +1044,7 @@ function settingsRowIcon(id: SettingsView): string {
     case "exploreLertaApps":
       return "";
     case "help":
-      return "❓";
+      return "💬";
     case "ops":
       return "📋";
     case "deliverability":
