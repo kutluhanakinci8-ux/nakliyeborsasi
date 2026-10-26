@@ -117,6 +117,9 @@ export const MAIL_WEB_I18N_BATCH_TR: Record<string, string> = {
   settingsHubHelpSub: "Rehberler ve özellikler",
   settingsHubShareLerta: "Arkadaşlarınıza Lerta Posta'dan bahsedin",
   settingsHubShareLertaSub: "E-posta veya SMS ile davet",
+  settingsHubExploreLertaApps: "Lerta uygulamalarını keşfedin",
+  settingsHubExploreLertaAppsSub: "",
+  exploreLertaAppsTitle: "Lerta uygulamalarını keşfedin",
   shareLertaTitle: "Arkadaşlarınıza Lerta Posta'dan bahsedin",
   shareLertaIntro:
     "Takımınız veya iş ortaklarınız kurumsal posta için Lerta Posta'yı denesin. Paylaşım metni otomatik hazırlanır.",
@@ -501,6 +504,9 @@ export const MAIL_WEB_I18N_BATCH_EN: Record<string, string> = {
   settingsHubHelpSub: "Guides and features",
   settingsHubShareLerta: "Tell friends about Lerta Posta",
   settingsHubShareLertaSub: "Invite via email or SMS",
+  settingsHubExploreLertaApps: "Explore Lerta apps",
+  settingsHubExploreLertaAppsSub: "",
+  exploreLertaAppsTitle: "Explore Lerta apps",
   shareLertaTitle: "Tell friends about Lerta Posta",
   shareLertaIntro:
     "Invite colleagues and partners to try Lerta Posta for business email. We prepare the message for you.",
