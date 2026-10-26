@@ -271,8 +271,10 @@ const HUB_ITEM_DEFS: HubItemDef[] = [
     section: "other",
     labelKey: "settingsHubOssLicenses",
     subtitleKey: "settingsHubOssLicensesSub",
-    keywords: "lisans açık kaynak zstandard zstd zlib gzip oss",
-    keywordsEn: "license open source zstandard zstd zlib gzip oss",
+    keywords:
+      "lisans açık kaynak zstandard zstd zlib gzip oss react next openpgp webauthn passkey",
+    keywordsEn:
+      "license open source zstandard zstd zlib gzip oss react next openpgp webauthn passkey",
   },
 ];
 

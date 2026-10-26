@@ -1,0 +1,275 @@
+{
+  "generatedAt": "2026-10-26T16:04:32.175Z",
+  "workspace": "@lerta/mail-web",
+  "packageCount": 37,
+  "byLicense": {
+    "MIT": 28,
+    "Apache-2.0": 1,
+    "CC-BY-4.0": 1,
+    "ISC": 3,
+    "LGPL-3.0+": 1,
+    "BSD-3-Clause": 1,
+    "0BSD": 2
+  },
+  "packages": [
+    {
+      "name": "@next/env",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/vercel/next.js",
+      "path": "/workspace/node_modules/@lerta/mail-console/node_modules/@next/env"
+    },
+    {
+      "name": "@next/env",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/vercel/next.js",
+      "path": "/workspace/node_modules/@next/env"
+    },
+    {
+      "name": "@next/swc-linux-x64-gnu",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/vercel/next.js",
+      "path": "/workspace/node_modules/@nakliyeborsasi/web/node_modules/@next/swc-linux-x64-gnu"
+    },
+    {
+      "name": "@next/swc-linux-x64-gnu",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/vercel/next.js",
+      "path": "/workspace/node_modules/@lerta/mail-console/node_modules/next/node_modules/@next/swc-linux-x64-gnu"
+    },
+    {
+      "name": "@next/swc-linux-x64-gnu",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/vercel/next.js",
+      "path": "/workspace/node_modules/@next/swc-linux-x64-gnu"
+    },
+    {
+      "name": "@next/swc-linux-x64-musl",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/vercel/next.js",
+      "path": "/workspace/node_modules/@nakliyeborsasi/web/node_modules/@next/swc-linux-x64-musl"
+    },
+    {
+      "name": "@next/swc-linux-x64-musl",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/vercel/next.js",
+      "path": "/workspace/node_modules/@lerta/mail-console/node_modules/next/node_modules/@next/swc-linux-x64-musl"
+    },
+    {
+      "name": "@next/swc-linux-x64-musl",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/vercel/next.js",
+      "path": "/workspace/node_modules/@next/swc-linux-x64-musl"
+    },
+    {
+      "name": "@simplewebauthn/browser",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/MasterKale/SimpleWebAuthn",
+      "path": "/workspace/node_modules/@lerta/mail-web/node_modules/@simplewebauthn/browser"
+    },
+    {
+      "name": "@simplewebauthn/types",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/MasterKale/SimpleWebAuthn",
+      "path": "/workspace/node_modules/@nakliyeborsasi/api/node_modules/@simplewebauthn/types"
+    },
+    {
+      "name": "@swc/helpers",
+      "version": null,
+      "licenses": "Apache-2.0",
+      "repository": "https://github.com/swc-project/swc",
+      "path": "/workspace/node_modules/@swc/helpers"
+    },
+    {
+      "name": "asn1.js",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/indutny/asn1.js",
+      "path": "/workspace/node_modules/asn1.js"
+    },
+    {
+      "name": "bn.js",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/indutny/bn.js",
+      "path": "/workspace/node_modules/bn.js"
+    },
+    {
+      "name": "caniuse-lite",
+      "version": null,
+      "licenses": "CC-BY-4.0",
+      "repository": "https://github.com/browserslist/caniuse-lite",
+      "path": "/workspace/node_modules/caniuse-lite"
+    },
+    {
+      "name": "client-only",
+      "version": null,
+      "licenses": "MIT",
+      "repository": null,
+      "path": "/workspace/node_modules/client-only"
+    },
+    {
+      "name": "fzstd",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/101arrowz/fzstd",
+      "path": "/workspace/node_modules/fzstd"
+    },
+    {
+      "name": "inherits",
+      "version": null,
+      "licenses": "ISC",
+      "repository": "https://github.com/isaacs/inherits",
+      "path": "/workspace/node_modules/inherits"
+    },
+    {
+      "name": "js-tokens",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/lydell/js-tokens",
+      "path": "/workspace/node_modules/js-tokens"
+    },
+    {
+      "name": "js-tokens",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/lydell/js-tokens",
+      "path": "/workspace/node_modules/strip-literal/node_modules/js-tokens"
+    },
+    {
+      "name": "loose-envify",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/zertosh/loose-envify",
+      "path": "/workspace/node_modules/loose-envify"
+    },
+    {
+      "name": "minimalistic-assert",
+      "version": null,
+      "licenses": "ISC",
+      "repository": "https://github.com/calvinmetcalf/minimalistic-assert",
+      "path": "/workspace/node_modules/minimalistic-assert"
+    },
+    {
+      "name": "nanoid",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/ai/nanoid",
+      "path": "/workspace/node_modules/nanoid"
+    },
+    {
+      "name": "next",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/vercel/next.js",
+      "path": "/workspace/node_modules/@lerta/mail-console/node_modules/next"
+    },
+    {
+      "name": "next",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/vercel/next.js",
+      "path": "/workspace/node_modules/next"
+    },
+    {
+      "name": "openpgp",
+      "version": null,
+      "licenses": "LGPL-3.0+",
+      "repository": "https://github.com/openpgpjs/openpgpjs",
+      "path": "/workspace/node_modules/openpgp"
+    },
+    {
+      "name": "picocolors",
+      "version": null,
+      "licenses": "ISC",
+      "repository": "https://github.com/alexeyraspopov/picocolors",
+      "path": "/workspace/node_modules/picocolors"
+    },
+    {
+      "name": "postcss",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/postcss/postcss",
+      "path": "/workspace/node_modules/postcss"
+    },
+    {
+      "name": "postcss",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/postcss/postcss",
+      "path": "/workspace/node_modules/vite/node_modules/postcss"
+    },
+    {
+      "name": "react",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/facebook/react",
+      "path": "/workspace/node_modules/react"
+    },
+    {
+      "name": "react-dom",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/facebook/react",
+      "path": "/workspace/node_modules/react-dom"
+    },
+    {
+      "name": "safer-buffer",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/ChALkeR/safer-buffer",
+      "path": "/workspace/node_modules/safer-buffer"
+    },
+    {
+      "name": "scheduler",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/facebook/react",
+      "path": "/workspace/node_modules/scheduler"
+    },
+    {
+      "name": "source-map-js",
+      "version": null,
+      "licenses": "BSD-3-Clause",
+      "repository": "https://github.com/7rulnik/source-map-js",
+      "path": "/workspace/node_modules/source-map-js"
+    },
+    {
+      "name": "styled-jsx",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/vercel/styled-jsx",
+      "path": "/workspace/node_modules/styled-jsx"
+    },
+    {
+      "name": "tslib",
+      "version": null,
+      "licenses": "0BSD",
+      "repository": "https://github.com/Microsoft/tslib",
+      "path": "/workspace/node_modules/tsyringe/node_modules/tslib"
+    },
+    {
+      "name": "tslib",
+      "version": null,
+      "licenses": "0BSD",
+      "repository": "https://github.com/Microsoft/tslib",
+      "path": "/workspace/node_modules/tslib"
+    },
+    {
+      "name": "zstd-codec",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/yoshihitoh/zstd-codec",
+      "path": "/workspace/node_modules/zstd-codec"
+    }
+  ]
+}
