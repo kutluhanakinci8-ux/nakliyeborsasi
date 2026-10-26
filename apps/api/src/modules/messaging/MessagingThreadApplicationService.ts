@@ -12,6 +12,7 @@ import {
   SocialPlatformCode,
   SubscriptionModuleCode,
   ValidationException,
+  DEFAULT_LOCALE,
 } from "@nakliyeborsasi/core";
 import { MessageThreadEntity } from "../../infrastructure/database/entities/MessageThreadEntity";
 import {
@@ -1736,6 +1737,17 @@ export class MessagingThreadApplicationService {
       threadId: thread.id,
     });
     return true;
+  }
+
+  public async assertThreadParticipantForSignaling(
+    authenticatedUser: AuthenticatedUserContext,
+    threadId: string,
+  ): Promise<void> {
+    await this.requireParticipantThread(
+      authenticatedUser,
+      threadId,
+      DEFAULT_LOCALE,
+    );
   }
 
   private async requireParticipantThread(

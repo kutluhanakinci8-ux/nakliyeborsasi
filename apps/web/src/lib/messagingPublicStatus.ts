@@ -6,8 +6,9 @@ export type MessagingPublicStatus = {
   features: string[];
   webrtc?: {
     clientStack: "browser";
-    signaling: "planned";
+    signaling: "redis_relay" | "unavailable" | "planned";
     codecsShippedWithApp: boolean;
+    configPath?: string;
   };
   mobileExpoPush?: { registerPath: string; enabled: boolean };
 };
