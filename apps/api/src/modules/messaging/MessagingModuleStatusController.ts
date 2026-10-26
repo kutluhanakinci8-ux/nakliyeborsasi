@@ -6,6 +6,7 @@ import { buildMessagingAttachmentOpsSnapshot } from "./messagingAttachmentOpsSna
 import { MessagingRealtimeHubService } from "./MessagingRealtimeHubService";
 import { MessagingOptionalWsService } from "./MessagingOptionalWsService";
 import { MessagingWhatsappBridgeService } from "./MessagingWhatsappBridgeService";
+import { MessagingWebRtcSignalingService } from "./MessagingWebRtcSignalingService";
 import type { WhatsappBridgeDeliverySnapshot } from "@nakliyeborsasi/core";
 
 @Controller("messaging")
@@ -15,10 +16,11 @@ export class MessagingModuleStatusController {
     private readonly messagingRealtimeHubService: MessagingRealtimeHubService,
     private readonly messagingOptionalWsService: MessagingOptionalWsService,
     private readonly messagingWhatsappBridgeService: MessagingWhatsappBridgeService,
+    private readonly messagingWebRtcSignalingService: MessagingWebRtcSignalingService,
   ) {}
 
   @Get("status")
-  public getStatus(): {
+  public async getStatus(): Promise<{
     module: string;
     phase: string;
     features: string[];
@@ -38,11 +40,12 @@ export class MessagingModuleStatusController {
     whatsappBridge: WhatsappBridgeDeliverySnapshot;
     webrtc: {
       clientStack: "browser";
-      signaling: "planned";
+      signaling: "redis_relay" | "unavailable" | "planned";
       codecsShippedWithApp: false;
+      configPath: string;
     };
     mobileExpoPush: { registerPath: string; enabled: boolean };
-  } {
+  }> {
     const deepl = Boolean(
       this.configService.get<string>("MESSAGING_DEEPL_API_KEY")?.trim(),
     );
@@ -50,6 +53,7 @@ export class MessagingModuleStatusController {
       this.configService.get<string>("MESSAGING_TRANSLATE_API_URL")?.trim(),
     );
     const vapid = resolveMessagingVapidFromEnv();
+    const webrtcRelay = await this.messagingWebRtcSignalingService.isRelayAvailable();
     return {
       module: "messaging",
       phase: "ga",
@@ -119,6 +123,7 @@ export class MessagingModuleStatusController {
         "native_shell_capacitor_docs",
         "browser_webrtc_disclosure",
         "mobile_expo_push_api",
+        "messaging_webrtc_signaling_relay",
       ],
       translate: { deepl, libretranslate: libre },
       attachments: (() => {
@@ -146,8 +151,9 @@ export class MessagingModuleStatusController {
       whatsappBridge: this.messagingWhatsappBridgeService.getDeliverySnapshot(),
       webrtc: {
         clientStack: "browser",
-        signaling: "planned",
+        signaling: webrtcRelay ? "redis_relay" : "unavailable",
         codecsShippedWithApp: false,
+        configPath: "/messaging/webrtc/config",
       },
       mobileExpoPush: {
         registerPath: "/messaging/push/expo/register",

@@ -159,12 +159,12 @@
     },
     {
       "gmailRef": "libvpx",
-      "phase": "W8",
-      "status": "planned",
+      "phase": "W9",
+      "status": "done",
       "surfaces": ["mobile"],
-      "catalogId": null,
+      "catalogId": "libvpx-native",
       "package": "libvpx",
-      "note": "Native mobil WebRTC yığını — SBOM otomatik"
+      "note": "Native WebRTC disclosure — npm SBOM dışı"
     },
     {
       "gmailRef": "Firebase",
@@ -177,11 +177,12 @@
     },
     {
       "gmailRef": "okhttp3",
-      "phase": "W6",
-      "status": "planned",
+      "phase": "W9",
+      "status": "done",
       "surfaces": ["mobile"],
-      "catalogId": null,
-      "package": "com.squareup.okhttp3:okhttp"
+      "catalogId": "okhttp3-android",
+      "package": "com.squareup.okhttp3:okhttp",
+      "note": "Android Gradle transitive — npm SBOM dışı"
     },
     {
       "gmailRef": "Abseil",

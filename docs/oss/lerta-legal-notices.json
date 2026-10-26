@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-26T18:15:10.788Z",
+  "generatedAt": "2026-10-26T18:35:53.720Z",
   "version": 1,
   "description": "Lerta birleşik Legal — posta web kataloğu + mobil npm SBOM (W6)",
   "webCatalog": [
@@ -5760,6 +5760,17 @@
       "note": "Codec'ler tarayıcı/OS'ta; libvpx/libwebm npm ile dağıtılmaz"
     },
     {
+      "gmailRef": "libvpx",
+      "phase": "W9",
+      "status": "done",
+      "surfaces": [
+        "mobile"
+      ],
+      "catalogId": "libvpx-native",
+      "package": "libvpx",
+      "note": "Native WebRTC disclosure — npm SBOM dışı"
+    },
+    {
       "gmailRef": "Firebase",
       "phase": "W6",
       "status": "done",
@@ -5772,13 +5783,14 @@
     },
     {
       "gmailRef": "okhttp3",
-      "phase": "W6",
-      "status": "planned",
+      "phase": "W9",
+      "status": "done",
       "surfaces": [
         "mobile"
       ],
-      "catalogId": null,
-      "package": "com.squareup.okhttp3:okhttp"
+      "catalogId": "okhttp3-android",
+      "package": "com.squareup.okhttp3:okhttp",
+      "note": "Android Gradle transitive — npm SBOM dışı"
     }
   ]
 }

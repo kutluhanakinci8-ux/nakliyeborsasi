@@ -33,6 +33,7 @@ npm run build -w @lerta/mail-web
 | **W6** ✓ | Mobil istemci v1 | +4 (22 toplam) | Expo, RN, AppAuth, expo-notifications (FCM) + Legal | `oss:mobile`, merge legal JSON |
 | **W7** ✓ | Medya önizleme | +1 (20 toplam) | sharp API + posta ek JPEG önizleme | libjpeg-turbo (sharp/libvips) |
 | **W8** ✓ | Görüntülü görüşme | +1 (21 toplam) | WebRTC disclosure + mesajlaşma hub notu | libvpx, libwebm (mobil SBOM) |
+| **W9** ✓ | Mobil native OSS | +2 (24 toplam) | OkHttp + libvpx Legal; WebRTC Redis signaling API | OAuth sonraki faz |
 
 ---
 
@@ -216,6 +217,18 @@ Katalog: `sharp` (sunucu; Legal’de kullanım notu).
 
 Web: tarayıcı `RTCPeerConnection` / `getUserMedia` (`@nakliyeborsasi/core` capability helper).  
 Mobil: native WebRTC stack → otomatik OSS listesi (sonraki ürün fazı).
+
+---
+
+## W9 ✓ — Native OSS + WebRTC signaling pilot
+
+| Gmail | Lerta |
+|-------|--------|
+| okhttp3 | `okhttp3-android` Legal (Gradle, npm SBOM dışı) |
+| libvpx / libwebm | `libvpx-native` Legal açıklaması |
+| WebRTC signaling | `GET/POST messaging/webrtc/*` — Redis SDP/ICE relay (JWT) |
+
+**Mobil OAuth/JWT oturumu** bilinçli olarak sonraki ürün fazı; push kaydı `EXPO_PUBLIC_LERTA_ACCESS_TOKEN` ile devam eder.
 
 ---
 

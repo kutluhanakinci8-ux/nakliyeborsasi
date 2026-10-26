@@ -32,6 +32,7 @@ const catalogFiles = [
   "mailOpenSourceLicensesCatalogW6.ts",
   "mailOpenSourceLicensesCatalogW7.ts",
   "mailOpenSourceLicensesCatalogW8.ts",
+  "mailOpenSourceLicensesCatalogW9.ts",
 ];
 const ids = [];
 for (const file of catalogFiles) {
@@ -64,6 +65,8 @@ const expectedIds = new Set([
   "sharp",
   "browser-webrtc",
   "expo-notifications",
+  "okhttp3-android",
+  "libvpx-native",
 ]);
 for (const id of expectedIds) {
   if (!ids.includes(id)) {
@@ -167,8 +170,8 @@ for (const name of mobilePackages) {
 
 if (failed) process.exit(1);
 
-if (ids.length < 22) {
-  console.error(`FAIL: expected at least 22 catalog ids, got ${ids.length}`);
+if (ids.length < 24) {
+  console.error(`FAIL: expected at least 24 catalog ids, got ${ids.length}`);
   process.exit(1);
 }
 console.log(

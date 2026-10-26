@@ -22,6 +22,8 @@ import { MessagingWebPushService } from "./MessagingWebPushService";
 import { MessagingWebPushSubscriptionEntity } from "../../infrastructure/database/entities/MessagingWebPushSubscriptionEntity";
 import { MessagingExpoPushTokenEntity } from "../../infrastructure/database/entities/MessagingExpoPushTokenEntity";
 import { MessagingExpoPushService } from "./MessagingExpoPushService";
+import { MessagingWebRtcSignalingService } from "./MessagingWebRtcSignalingService";
+import { MessagingWebRtcController } from "./MessagingWebRtcController";
 import { MessagingPushController } from "./MessagingPushController";
 import { MessagingRealtimeHubService } from "./MessagingRealtimeHubService";
 import { MessagingStreamTicketService } from "./MessagingStreamTicketService";
@@ -91,6 +93,7 @@ import { SocialHubModule } from "../social-hub/SocialHubModule";
     MessagingModuleStatusController,
     MessagingThreadController,
     MessagingPushController,
+    MessagingWebRtcController,
     MessagingStreamController,
     MessagingIntegrationController,
     MessagingAutomationCatalogController,
@@ -105,6 +108,7 @@ import { SocialHubModule } from "../social-hub/SocialHubModule";
     MessagingAttachmentStorageService,
     MessagingWebPushService,
     MessagingExpoPushService,
+    MessagingWebRtcSignalingService,
     MessagingRealtimeHubService,
     MessagingStreamTicketService,
     MessagingAuditService,

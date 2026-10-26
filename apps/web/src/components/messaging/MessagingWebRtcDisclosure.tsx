@@ -13,6 +13,7 @@ type Props = {
 export function MessagingWebRtcDisclosure({ accessToken }: Props) {
   const support = useMemo(() => summarizeBrowserWebRtcSupport(), []);
   const [featureEnabled, setFeatureEnabled] = useState(false);
+  const [signalingMode, setSignalingMode] = useState<string | null>(null);
   const licensesHref = accessToken
     ? resolveOpenSourceLicensesMailUrl(accessToken)
     : null;
@@ -23,6 +24,7 @@ export function MessagingWebRtcDisclosure({ accessToken }: Props) {
         setFeatureEnabled(
           status.features.includes("browser_webrtc_disclosure"),
         );
+        setSignalingMode(status.webrtc?.signaling ?? null);
       })
       .catch(() => setFeatureEnabled(false));
   }, []);
@@ -33,7 +35,13 @@ export function MessagingWebRtcDisclosure({ accessToken }: Props) {
 
   return (
     <p className="messaging-chat-compliance-webrtc module-hint" role="note">
-      <strong>Görüntülü görüşme (WebRTC)</strong> — sinyalleşme yakında; ses/görüntü
+      <strong>Görüntülü görüşme (WebRTC)</strong> — sinyalleşme:{" "}
+      {signalingMode === "redis_relay"
+        ? "Redis relay (SDP/ICE pilot)"
+        : signalingMode === "unavailable"
+          ? "relay geçici kapalı"
+          : "hazırlanıyor"}
+      ; ses/görüntü
       codec&apos;leri (libvpx, libwebm vb.){" "}
       {support.ready
         ? "bu tarayıcıda yerleşik olarak çalışır"

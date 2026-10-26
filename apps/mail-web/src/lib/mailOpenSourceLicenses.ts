@@ -6,6 +6,7 @@ import { MAIL_WEB_W5_OPEN_SOURCE_LICENSES } from "./mailOpenSourceLicensesCatalo
 import { MAIL_WEB_W6_OPEN_SOURCE_LICENSES } from "./mailOpenSourceLicensesCatalogW6";
 import { MAIL_WEB_W7_OPEN_SOURCE_LICENSES } from "./mailOpenSourceLicensesCatalogW7";
 import { MAIL_WEB_W8_OPEN_SOURCE_LICENSES } from "./mailOpenSourceLicensesCatalogW8";
+import { MAIL_WEB_W9_OPEN_SOURCE_LICENSES } from "./mailOpenSourceLicensesCatalogW9";
 import type { OpenSourceLicenseEntry } from "./mailOpenSourceLicenseTypes";
 
 export type { OpenSourceLicenseEntry } from "./mailOpenSourceLicenseTypes";
@@ -19,6 +20,7 @@ export const OPEN_SOURCE_LICENSES: OpenSourceLicenseEntry[] = [
   ...MAIL_WEB_W6_OPEN_SOURCE_LICENSES,
   ...MAIL_WEB_W7_OPEN_SOURCE_LICENSES,
   ...MAIL_WEB_W8_OPEN_SOURCE_LICENSES,
+  ...MAIL_WEB_W9_OPEN_SOURCE_LICENSES,
 ];
 
 /** apps/web istemcisi — Legal katalogda, posta bundle’ında yok. */
