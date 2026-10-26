@@ -105,7 +105,26 @@ export function MailInboxCommandBar({
     updateMenuPosition();
     const frame = requestAnimationFrame(() => updateMenuPosition());
     return () => cancelAnimationFrame(frame);
-  }, [filterOpen, updateMenuPosition, activeFilters.size]);
+  }, [filterOpen, updateMenuPosition]);
+
+  const keepFocusOnTrigger = useCallback(() => {
+    triggerRef.current?.focus({ preventScroll: true });
+  }, []);
+
+  const onFilterMenuPointerDown = useCallback(
+    (event: { preventDefault: () => void }) => {
+      event.preventDefault();
+    },
+    [],
+  );
+
+  const onToggleFilterItem = useCallback(
+    (id: InboxQueryFilterId) => {
+      onToggleFilter(id);
+      requestAnimationFrame(() => keepFocusOnTrigger());
+    },
+    [onToggleFilter, keepFocusOnTrigger],
+  );
 
   useEffect(() => {
     if (!filterOpen) {
@@ -172,8 +191,10 @@ export function MailInboxCommandBar({
                   type="button"
                   role="menuitemcheckbox"
                   aria-checked={on}
+                  tabIndex={-1}
                   className={`mail-inbox-filter-menu__item${on ? " is-on" : ""}`}
-                  onClick={() => onToggleFilter(id)}
+                  onMouseDown={onFilterMenuPointerDown}
+                  onClick={() => onToggleFilterItem(id)}
                 >
                   <span
                     className="mail-inbox-filter-menu__check"
@@ -189,9 +210,12 @@ export function MailInboxCommandBar({
               <button
                 type="button"
                 className="mail-inbox-filter-menu__clear"
+                tabIndex={-1}
+                onMouseDown={onFilterMenuPointerDown}
                 onClick={() => {
                   onClearFilters();
                   setFilterOpen(false);
+                  requestAnimationFrame(() => keepFocusOnTrigger());
                 }}
               >
                 {t("inboxFilterClear")}

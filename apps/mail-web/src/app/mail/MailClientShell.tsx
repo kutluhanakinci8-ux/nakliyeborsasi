@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { MailComposeMergeFields } from "./MailComposeMergeFields";
 import { MailCapInboxEmptyState } from "./MailCapInboxEmptyState";
 import { MailIosPwaOnboardingBanner } from "./MailIosPwaOnboardingBanner";
@@ -365,6 +365,23 @@ export function MailClientShell({ mail }: Props) {
     listItems.length,
     connectedAccounts,
   ]);
+
+  const inboxListScrollRef = useRef<HTMLDivElement>(null);
+  const inboxToolbarScrollKey = useMemo(
+    () =>
+      `${inboxFocusLane}|${inboxConnectedSource}|${Array.from(inboxQueryFilters).sort().join(",")}`,
+    [inboxFocusLane, inboxConnectedSource, inboxQueryFilters],
+  );
+
+  useEffect(() => {
+    if (view !== "inbox" || !showInboxLaneAndFilters) {
+      return;
+    }
+    const el = inboxListScrollRef.current;
+    if (el) {
+      el.scrollTop = 0;
+    }
+  }, [view, showInboxLaneAndFilters, inboxToolbarScrollKey]);
 
   return (
     <div
@@ -1076,6 +1093,11 @@ export function MailClientShell({ mail }: Props) {
             ) : null}
           </div>
         ) : null}
+        <div
+          className={view === "inbox" ? "mail-inbox-list-body" : undefined}
+          ref={view === "inbox" ? inboxListScrollRef : undefined}
+          style={view === "inbox" ? undefined : { display: "contents" }}
+        >
         {view === "spam" ? (
           <p className="mail-search-hint" role="status">
             {t("spamFolderHint")}
@@ -1336,6 +1358,7 @@ export function MailClientShell({ mail }: Props) {
             );
           })
         )}
+        </div>
       </section>
 
       <section className="mail-read mail-read--premium">

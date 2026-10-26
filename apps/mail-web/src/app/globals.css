@@ -7775,10 +7775,21 @@ html[data-mail-read-font="large"] .mail-html-frame {
 }
 
 /* —— Gelen kutusu premium liste —— */
-.mail-list-inbox-premium {
+.mail-list.mail-list-inbox-premium {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
   background: linear-gradient(180deg, var(--bg) 0%, var(--panel) 48px);
   border-right: 1px solid var(--border);
   padding-top: 4px;
+  padding-bottom: 0;
+}
+
+.mail-list-inbox-premium .mail-inbox-list-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   padding-bottom: 16px;
 }
 
