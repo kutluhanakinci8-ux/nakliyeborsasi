@@ -1,0 +1,5704 @@
+{
+  "generatedAt": "2026-10-26T17:44:36.165Z",
+  "version": 1,
+  "description": "Lerta birleşik Legal — posta web kataloğu + mobil npm SBOM (W6)",
+  "webCatalog": [
+    {
+      "id": "address-formatting",
+      "sortName": "Address formatting",
+      "packageName": "@fragaria/address-formatter (OpenCage address-formatting)",
+      "licenseShort": "MIT (code) · CC-BY-4.0 (template data)",
+      "usageNoteKey": "ossLicenseAddressFormattingUsage",
+      "surface": "web-legal"
+    },
+    {
+      "id": "brotli",
+      "sortName": "Brotli",
+      "packageName": "Brotli (Node.js zlib.brotliCompress)",
+      "licenseShort": "MIT",
+      "usageNoteKey": "ossLicenseBrotliUsage",
+      "surface": "web-legal"
+    },
+    {
+      "id": "dompurify",
+      "sortName": "DOMPurify",
+      "packageName": "dompurify · isomorphic-dompurify",
+      "licenseShort": "MPL-2.0 OR Apache-2.0",
+      "usageNoteKey": "ossLicenseDompurifyUsage",
+      "surface": "web-legal"
+    },
+    {
+      "id": "expo",
+      "sortName": "Expo",
+      "packageName": "expo · expo-modules-core",
+      "licenseShort": "MIT",
+      "usageNoteKey": "ossLicenseExpoUsage",
+      "surface": "web-legal"
+    },
+    {
+      "id": "expo-auth-session",
+      "sortName": "expo-auth-session (AppAuth)",
+      "packageName": "expo-auth-session · expo-web-browser",
+      "licenseShort": "MIT",
+      "usageNoteKey": "ossLicenseExpoAuthSessionUsage",
+      "surface": "web-legal"
+    },
+    {
+      "id": "leaflet",
+      "sortName": "Leaflet",
+      "packageName": "leaflet",
+      "licenseShort": "BSD-2-Clause",
+      "usageNoteKey": "ossLicenseLeafletUsage",
+      "surface": "web-legal"
+    },
+    {
+      "id": "libphonenumber-js",
+      "sortName": "libphonenumber-js",
+      "packageName": "libphonenumber-js",
+      "licenseShort": "MIT",
+      "usageNoteKey": "ossLicenseLibPhoneNumberUsage",
+      "surface": "web-legal"
+    },
+    {
+      "id": "nextjs",
+      "sortName": "Next.js",
+      "packageName": "next",
+      "licenseShort": "MIT",
+      "usageNoteKey": "ossLicenseNextUsage",
+      "surface": "web-legal"
+    },
+    {
+      "id": "nodemailer",
+      "sortName": "Nodemailer",
+      "packageName": "nodemailer",
+      "licenseShort": "MIT-0",
+      "usageNoteKey": "ossLicenseNodemailerUsage",
+      "surface": "web-legal"
+    },
+    {
+      "id": "openpgp",
+      "sortName": "OpenPGP.js",
+      "packageName": "openpgp",
+      "licenseShort": "LGPL-3.0+",
+      "usageNoteKey": "ossLicenseOpenpgpUsage",
+      "surface": "web-legal"
+    },
+    {
+      "id": "react",
+      "sortName": "React",
+      "packageName": "react · react-dom",
+      "licenseShort": "MIT",
+      "usageNoteKey": "ossLicenseReactUsage",
+      "surface": "web-legal"
+    },
+    {
+      "id": "react-native",
+      "sortName": "React Native",
+      "packageName": "react-native",
+      "licenseShort": "MIT",
+      "usageNoteKey": "ossLicenseReactNativeUsage",
+      "surface": "web-legal"
+    },
+    {
+      "id": "simplewebauthn",
+      "sortName": "SimpleWebAuthn",
+      "packageName": "@simplewebauthn/browser",
+      "licenseShort": "MIT",
+      "usageNoteKey": "ossLicenseSimpleWebAuthnUsage",
+      "surface": "web-legal"
+    },
+    {
+      "id": "utf7-imap",
+      "sortName": "UTF-7 (IMAP)",
+      "packageName": "utf7 (jutf7 / RFC 3501 modified UTF-7)",
+      "licenseShort": "BSD",
+      "usageNoteKey": "ossLicenseUtf7ImapUsage",
+      "surface": "web-legal"
+    },
+    {
+      "id": "web-push",
+      "sortName": "web-push",
+      "packageName": "web-push",
+      "licenseShort": "MPL-2.0",
+      "usageNoteKey": "ossLicenseWebPushUsage",
+      "surface": "web-legal"
+    },
+    {
+      "id": "ws",
+      "sortName": "ws",
+      "packageName": "ws",
+      "licenseShort": "MIT",
+      "usageNoteKey": "ossLicenseWsUsage",
+      "surface": "web-legal"
+    },
+    {
+      "id": "zlib",
+      "sortName": "zlib",
+      "packageName": "zlib (Node.js zlib / DEFLATE)",
+      "licenseShort": "zlib License",
+      "usageNoteKey": "ossLicenseZlibUsage",
+      "surface": "web-legal"
+    },
+    {
+      "id": "zstandard",
+      "sortName": "Zstandard",
+      "packageName": "Zstandard (libzstd / fzstd / zstd-codec)",
+      "licenseShort": "BSD-3-Clause OR GPLv2",
+      "usageNoteKey": "ossLicenseZstandardUsage",
+      "surface": "web-legal"
+    },
+    {
+      "id": "zstd-node-api",
+      "sortName": "Zstandard (Node API)",
+      "packageName": "@mongodb-js/zstd",
+      "licenseShort": "Apache-2.0",
+      "usageNoteKey": "ossLicenseZstdNodeApiUsage",
+      "surface": "web-legal"
+    }
+  ],
+  "mobilePackages": [
+    {
+      "name": "@babel/code-frame",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/code-frame",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/compat-data",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/core",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/generator",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/generator",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/helper-annotate-as-pure",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/helper-compilation-targets",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/helper-create-class-features-plugin",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/helper-create-regexp-features-plugin",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/helper-define-polyfill-provider",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/helper-environment-visitor",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/helper-globals",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/helper-member-expression-to-functions",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/helper-module-imports",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/helper-module-transforms",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/helper-optimise-call-expression",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/helper-plugin-utils",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/helper-remap-async-to-generator",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/helper-replace-supers",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/helper-skip-transparent-expression-wrappers",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/helper-string-parser",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/helper-validator-identifier",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/helper-validator-option",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/helper-wrap-function",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/helpers",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/highlight",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/parser",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-proposal-async-generator-functions",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-proposal-class-properties",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-proposal-decorators",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-proposal-export-default-from",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-proposal-logical-assignment-operators",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-proposal-nullish-coalescing-operator",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-proposal-numeric-separator",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-proposal-object-rest-spread",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-proposal-optional-catch-binding",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-proposal-optional-chaining",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-syntax-async-generators",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-syntax-decorators",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-syntax-dynamic-import",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-syntax-export-default-from",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-syntax-flow",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-syntax-jsx",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-syntax-logical-assignment-operators",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-syntax-nullish-coalescing-operator",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-syntax-numeric-separator",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-syntax-object-rest-spread",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-syntax-optional-catch-binding",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-syntax-optional-chaining",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-syntax-typescript",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-transform-arrow-functions",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-transform-async-to-generator",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-transform-block-scoping",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-transform-classes",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-transform-computed-properties",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-transform-destructuring",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-transform-export-namespace-from",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-transform-flow-strip-types",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-transform-function-name",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-transform-literals",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-transform-modules-commonjs",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-transform-named-capturing-groups-regex",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-transform-object-rest-spread",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-transform-parameters",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-transform-private-methods",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-transform-private-property-in-object",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-transform-react-display-name",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-transform-react-jsx",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-transform-react-jsx-development",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-transform-react-jsx-self",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-transform-react-jsx-source",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-transform-react-pure-annotations",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-transform-runtime",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-transform-shorthand-properties",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-transform-spread",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-transform-sticky-regex",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-transform-typescript",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/plugin-transform-unicode-regex",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/preset-flow",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/preset-react",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/preset-typescript",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/register",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/runtime",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/template",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/traverse",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@babel/types",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@expo/bunyan",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@expo/cli",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@expo/code-signing-certificates",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@expo/config",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@expo/config-plugins",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@expo/config-types",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@expo/devcert",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@expo/env",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@expo/image-utils",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@expo/json-file",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@expo/json-file",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@expo/metro-config",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@expo/osascript",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@expo/package-manager",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@expo/plist",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@expo/prebuild-config",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@expo/rudder-sdk-node",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@expo/sdk-runtime-versions",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@expo/spawn-async",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@expo/sudo-prompt",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@expo/vector-icons",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@expo/xcpretty",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@graphql-typed-document-node/core",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@hapi/hoek",
+      "version": null,
+      "licenses": "BSD-3-Clause",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@hapi/topo",
+      "version": null,
+      "licenses": "BSD-3-Clause",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@isaacs/cliui",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@isaacs/ttlcache",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@jest/create-cache-key-function",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@jest/environment",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@jest/fake-timers",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@jest/schemas",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@jest/types",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@jest/types",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@jest/types",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@jridgewell/gen-mapping",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@jridgewell/remapping",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@jridgewell/resolve-uri",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@jridgewell/source-map",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@jridgewell/sourcemap-codec",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@jridgewell/trace-mapping",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@nodelib/fs.scandir",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@nodelib/fs.stat",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@nodelib/fs.walk",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@npmcli/fs",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@react-native-community/cli",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@react-native-community/cli-clean",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@react-native-community/cli-config",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@react-native-community/cli-debugger-ui",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@react-native-community/cli-doctor",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@react-native-community/cli-hermes",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@react-native-community/cli-platform-android",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@react-native-community/cli-platform-apple",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@react-native-community/cli-platform-ios",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@react-native-community/cli-server-api",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@react-native-community/cli-tools",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@react-native-community/cli-types",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@react-native/assets-registry",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@react-native/babel-plugin-codegen",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@react-native/babel-preset",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@react-native/codegen",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@react-native/community-cli-plugin",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@react-native/debugger-frontend",
+      "version": null,
+      "licenses": "BSD-3-Clause",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@react-native/debugger-frontend",
+      "version": null,
+      "licenses": "BSD-3-Clause",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@react-native/dev-middleware",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@react-native/dev-middleware",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@react-native/gradle-plugin",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@react-native/js-polyfills",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@react-native/metro-babel-transformer",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@react-native/normalize-colors",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@react-native/normalize-colors",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@react-native/virtualized-lists",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@rnx-kit/chromium-edge-launcher",
+      "version": null,
+      "licenses": "Apache-2.0",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@segment/loosely-validate-event",
+      "version": null,
+      "licenses": "MIT*",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@sideway/address",
+      "version": null,
+      "licenses": "BSD-3-Clause",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@sideway/formula",
+      "version": null,
+      "licenses": "BSD-3-Clause",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@sideway/pinpoint",
+      "version": null,
+      "licenses": "BSD-3-Clause",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@sinclair/typebox",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@sinonjs/commons",
+      "version": null,
+      "licenses": "BSD-3-Clause",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@sinonjs/fake-timers",
+      "version": null,
+      "licenses": "BSD-3-Clause",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@types/istanbul-lib-coverage",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@types/istanbul-lib-report",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@types/istanbul-reports",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@types/istanbul-reports",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@types/node",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@types/node-forge",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@types/stack-utils",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@types/yargs",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@types/yargs",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@types/yargs",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@types/yargs-parser",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@urql/core",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@urql/exchange-retry",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@xmldom/xmldom",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "@xmldom/xmldom",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "abort-controller",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "accepts",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "acorn",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "agent-base",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "aggregate-error",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "anser",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "ansi-escapes",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "ansi-fragments",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "ansi-regex",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "ansi-regex",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "ansi-regex",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "ansi-styles",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "ansi-styles",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "ansi-styles",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "ansi-styles",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "any-promise",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "anymatch",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "appdirsjs",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "arg",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "argparse",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "argparse",
+      "version": null,
+      "licenses": "Python-2.0",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "array-buffer-byte-length",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "array-union",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "arraybuffer.prototype.slice",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "asap",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "ast-types",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "astral-regex",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "async-function",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "async-limiter",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "asynckit",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "at-least-node",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "available-typed-arrays",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "babel-core",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "babel-plugin-polyfill-corejs2",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "babel-plugin-polyfill-corejs3",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "babel-plugin-polyfill-corejs3",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "babel-plugin-polyfill-regenerator",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "babel-plugin-react-compiler",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "babel-plugin-react-native-web",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "babel-plugin-transform-flow-enums",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "babel-preset-expo",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "balanced-match",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "base64-js",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "baseline-browser-mapping",
+      "version": null,
+      "licenses": "Apache-2.0",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "better-opn",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "big-integer",
+      "version": null,
+      "licenses": "Unlicense",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "bl",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "bplist-creator",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "bplist-creator",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "bplist-parser",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "bplist-parser",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "brace-expansion",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "brace-expansion",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "braces",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "browserslist",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "bser",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "buffer",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "buffer-alloc",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "buffer-alloc-unsafe",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "buffer-fill",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "buffer-from",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "builtins",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "bytes",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "cacache",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "call-bind",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "call-bind-apply-helpers",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "call-bound",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "caller-callsite",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "caller-path",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "callsites",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "camelcase",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "camelcase",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "caniuse-lite",
+      "version": null,
+      "licenses": "CC-BY-4.0",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "chalk",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "chalk",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "charenc",
+      "version": null,
+      "licenses": "BSD-3-Clause",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "chownr",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "chrome-launcher",
+      "version": null,
+      "licenses": "Apache-2.0",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "ci-info",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "ci-info",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "clean-stack",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "cli-cursor",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "cli-cursor",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "cli-spinners",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "cliui",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "cliui",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "clone",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "clone",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "clone-deep",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "color-convert",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "color-convert",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "color-name",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "color-name",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "colorette",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "combined-stream",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "command-exists",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "commander",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "commander",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "commander",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "commander",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "commondir",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "component-type",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "compressible",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "compression",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "concat-map",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "connect",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "convert-source-map",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "core-js-compat",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "core-util-is",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "cosmiconfig",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "cross-fetch",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "cross-spawn",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "cross-spawn",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "crypt",
+      "version": null,
+      "licenses": "BSD-3-Clause",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "crypto-random-string",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "crypto-random-string",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "dag-map",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "data-view-buffer",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "data-view-byte-length",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "data-view-byte-offset",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "dayjs",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "debug",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "debug",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "debug",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "decamelize",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "deep-extend",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "deepmerge",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "default-gateway",
+      "version": null,
+      "licenses": "BSD-2-Clause",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "defaults",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "define-data-property",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "define-lazy-prop",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "define-properties",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "del",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "delayed-stream",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "denodeify",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "depd",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "destroy",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "detect-libc",
+      "version": null,
+      "licenses": "Apache-2.0",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "dir-glob",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "dotenv",
+      "version": null,
+      "licenses": "BSD-2-Clause",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "dotenv-expand",
+      "version": null,
+      "licenses": "BSD-2-Clause",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "dunder-proto",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "eastasianwidth",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "ee-first",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "electron-to-chromium",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "emoji-regex",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "emoji-regex",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "encodeurl",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "encodeurl",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "end-of-stream",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "env-editor",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "envinfo",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "error-ex",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "error-stack-parser",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "errorhandler",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "es-abstract",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "es-abstract-get",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "es-define-property",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "es-errors",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "es-object-atoms",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "es-set-tostringtag",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "es-to-primitive",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "escalade",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "escape-html",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "escape-string-regexp",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "escape-string-regexp",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "escape-string-regexp",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "esprima",
+      "version": null,
+      "licenses": "BSD-2-Clause",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "etag",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "event-target-shim",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "execa",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "execa",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "expo",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "expo-application",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "expo-asset",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "expo-auth-session",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "expo-constants",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "expo-crypto",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "expo-file-system",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "expo-font",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "expo-keep-awake",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "expo-linking",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "expo-modules-autolinking",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "expo-modules-core",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "expo-status-bar",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "expo-web-browser",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "exponential-backoff",
+      "version": null,
+      "licenses": "Apache-2.0",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "fast-glob",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "fast-xml-parser",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "fastq",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "fb-watchman",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "fbemitter",
+      "version": null,
+      "licenses": "BSD-3-Clause",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "fbjs",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "fbjs-css-vars",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "fetch-retry",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "fill-range",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "finalhandler",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "find-cache-dir",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "find-up",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "find-up",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "find-up",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "find-yarn-workspace-root",
+      "version": null,
+      "licenses": "Apache-2.0",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "flow-enums-runtime",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "flow-estree",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "flow-parser",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "fontfaceobserver",
+      "version": null,
+      "licenses": "BSD-2-Clause",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "for-each",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "foreground-child",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "form-data",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "freeport-async",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "fresh",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "fs-extra",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "fs-extra",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "fs-extra",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "fs-minipass",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "fs-minipass",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "fs.realpath",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "function-bind",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "function.prototype.name",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "functions-have-names",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "generator-function",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "gensync",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "get-caller-file",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "get-intrinsic",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "get-proto",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "get-stream",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "get-stream",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "get-symbol-description",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "getenv",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "glob",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "glob",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "glob",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "glob-parent",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "globalthis",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "globby",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "gopd",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "graceful-fs",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "graphql",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "graphql-tag",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "has-bigints",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "has-flag",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "has-flag",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "has-property-descriptors",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "has-proto",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "has-symbols",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "has-tostringtag",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "hasown",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "hermes-estree",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "hermes-estree",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "hermes-parser",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "hermes-parser",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "hermes-profile-transformer",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "hosted-git-info",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "hosted-git-info",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "http-errors",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "http-errors",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "https-proxy-agent",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "human-signals",
+      "version": null,
+      "licenses": "Apache-2.0",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "ieee754",
+      "version": null,
+      "licenses": "BSD-3-Clause",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "ignore",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "image-size",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "import-fresh",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "imurmurhash",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "indent-string",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "inflight",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "inherits",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "ini",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "internal-ip",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "internal-slot",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "invariant",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "ip-regex",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "ipaddr.js",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-array-buffer",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-arrayish",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-async-function",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-bigint",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-boolean-object",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-buffer",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-callable",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-core-module",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-data-view",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-date-object",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-directory",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-docker",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-document.all",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-extglob",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-extglob",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-finalizationregistry",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-fullwidth-code-point",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-fullwidth-code-point",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-generator-function",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-glob",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-glob",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-interactive",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-invalid-path",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-map",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-negative-zero",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-number",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-number-object",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-path-cwd",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-path-inside",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-plain-object",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-regex",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-set",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-shared-array-buffer",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-stream",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-stream",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-string",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-symbol",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-typed-array",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-unicode-supported",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-valid-path",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-weakmap",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-weakref",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-weakset",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-wsl",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-wsl",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "isarray",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "isarray",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "isexe",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "isobject",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "jackspeak",
+      "version": null,
+      "licenses": "BlueOak-1.0.0",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "jest-environment-node",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "jest-get-type",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "jest-message-util",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "jest-mock",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "jest-util",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "jest-validate",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "jest-worker",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "jimp-compact",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "joi",
+      "version": null,
+      "licenses": "BSD-3-Clause",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "join-component",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "js-tokens",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "js-yaml",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "js-yaml",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "jsc-android",
+      "version": null,
+      "licenses": "BSD-2-Clause",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "jsc-safe-url",
+      "version": null,
+      "licenses": "0BSD",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "jscodeshift",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "jsesc",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "jsesc",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "json-parse-better-errors",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "json-schema-deref-sync",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "json5",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "jsonfile",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "jsonfile",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "kind-of",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "kleur",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "leven",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "lighthouse-logger",
+      "version": null,
+      "licenses": "Apache-2.0",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "lightningcss",
+      "version": null,
+      "licenses": "MPL-2.0",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "lines-and-columns",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "locate-path",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "locate-path",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "locate-path",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "lodash",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "lodash.debounce",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "lodash.throttle",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "log-symbols",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "log-symbols",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "logkitty",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "loose-envify",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "lru-cache",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "lru-cache",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "lru-cache",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "make-dir",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "makeerror",
+      "version": null,
+      "licenses": "BSD-3-Clause",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "marky",
+      "version": null,
+      "licenses": "Apache-2.0",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "math-intrinsics",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "md5",
+      "version": null,
+      "licenses": "BSD-3-Clause",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "md5",
+      "version": null,
+      "licenses": "BSD-3-Clause",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "md5-file",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "md5hex",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "memoize-one",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "memory-cache",
+      "version": null,
+      "licenses": "BSD-2-Clause",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "merge-stream",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "merge2",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "metro",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "metro-babel-transformer",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "metro-cache",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "metro-cache-key",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "metro-config",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "metro-core",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "metro-file-map",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "metro-minify-terser",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "metro-resolver",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "metro-runtime",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "metro-source-map",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "metro-symbolicate",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "metro-transform-plugins",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "metro-transform-worker",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "micromatch",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "mime",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "mime",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "mime-db",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "mime-types",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "mimic-fn",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "mimic-fn",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "minimatch",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "minimatch",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "minimist",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "minipass",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "minipass",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "minipass",
+      "version": null,
+      "licenses": "BlueOak-1.0.0",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "minipass-collect",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "minipass-flush",
+      "version": null,
+      "licenses": "BlueOak-1.0.0",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "minipass-pipeline",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "minizlib",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "mkdirp",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "mkdirp",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "ms",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "ms",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "mz",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "nanoid",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "negotiator",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "negotiator",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "neo-async",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "nested-error-stacks",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "nice-try",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "nocache",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "node-abort-controller",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "node-dir",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "node-fetch",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "node-forge",
+      "version": null,
+      "licenses": "(BSD-3-Clause OR GPL-2.0)",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "node-int64",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "node-releases",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "node-stream-zip",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "normalize-path",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "npm-package-arg",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "npm-package-arg",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "npm-run-path",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "npm-run-path",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "nullthrows",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "ob1",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "object-assign",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "object-inspect",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "object-keys",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "object.assign",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "on-finished",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "on-finished",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "on-finished",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "on-headers",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "once",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "onetime",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "onetime",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "open",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "open",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "open",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "ora",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "ora",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "os-homedir",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "os-tmpdir",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "osenv",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "own-keys",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "p-finally",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "p-limit",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "p-limit",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "p-locate",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "p-locate",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "p-locate",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "p-map",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "p-try",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "package-json-from-dist",
+      "version": null,
+      "licenses": "BlueOak-1.0.0",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "parse-json",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "parse-png",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "parseurl",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "path-exists",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "path-exists",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "path-is-absolute",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "path-key",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "path-key",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "path-parse",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "path-scurry",
+      "version": null,
+      "licenses": "BlueOak-1.0.0",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "path-type",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "picocolors",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "picomatch",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "picomatch",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "pify",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "pirates",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "pkg-dir",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "plist",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "pngjs",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "possible-typed-array-names",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "postcss",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "pretty-bytes",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "pretty-format",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "pretty-format",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "pretty-format",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "proc-log",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "process-nextick-args",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "progress",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "promise",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "promise",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "prompts",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "pump",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "punycode",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "qrcode-terminal",
+      "version": null,
+      "licenses": "Apache 2.0",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "querystring",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "queue",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "queue-microtask",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "range-parser",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "rc",
+      "version": null,
+      "licenses": "(BSD-2-Clause OR MIT OR Apache-2.0)",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "react",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "react-devtools-core",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "react-is",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "react-is",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "react-is",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "react-native",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "react-refresh",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "react-shallow-renderer",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "readable-stream",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "readable-stream",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "readline",
+      "version": null,
+      "licenses": "BSD*",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "recast",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "reflect.getprototypeof",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "regenerate",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "regenerate-unicode-properties",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "regenerator-runtime",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "regexp.prototype.flags",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "regexpu-core",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "regjsgen",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "regjsparser",
+      "version": null,
+      "licenses": "BSD-2-Clause",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "remove-trailing-slash",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "require-directory",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "require-from-string",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "require-main-filename",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "requireg",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "resolve",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "resolve",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "resolve-from",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "resolve-from",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "resolve-workspace-root",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "resolve.exports",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "restore-cursor",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "restore-cursor",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "reusify",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "rimraf",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "rimraf",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "run-parallel",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "safe-array-concat",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "safe-buffer",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "safe-buffer",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "safe-push-apply",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "safe-regex-test",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "sax",
+      "version": null,
+      "licenses": "BlueOak-1.0.0",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "scheduler",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "selfsigned",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "semver",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "semver",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "semver",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "send",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "send",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "serialize-error",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "serve-static",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "set-blocking",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "set-function-length",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "set-function-name",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "set-proto",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "setimmediate",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "setprototypeof",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "shallow-clone",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "shebang-command",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "shebang-command",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "shebang-regex",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "shebang-regex",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "shell-quote",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "side-channel",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "side-channel-list",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "side-channel-map",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "side-channel-weakmap",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "signal-exit",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "signal-exit",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "simple-plist",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "sisteransi",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "slash",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "slice-ansi",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "slugify",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "source-map",
+      "version": null,
+      "licenses": "BSD-3-Clause",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "source-map",
+      "version": null,
+      "licenses": "BSD-3-Clause",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "source-map",
+      "version": null,
+      "licenses": "BSD-3-Clause",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "source-map-js",
+      "version": null,
+      "licenses": "BSD-3-Clause",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "source-map-support",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "sprintf-js",
+      "version": null,
+      "licenses": "BSD-3-Clause",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "ssri",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "stack-utils",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "stackframe",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "stacktrace-parser",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "statuses",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "statuses",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "statuses",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "stop-iteration-iterator",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "stream-buffers",
+      "version": null,
+      "licenses": "Unlicense",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "string_decoder",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "string-width",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "string-width",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "string.prototype.trim",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "string.prototype.trimend",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "string.prototype.trimstart",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "strip-ansi",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "strip-ansi",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "strip-ansi",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "strip-eof",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "strip-final-newline",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "strip-json-comments",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "strnum",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "structured-headers",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "sucrase",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "sudo-prompt",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "supports-color",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "supports-color",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "supports-color",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "supports-hyperlinks",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "supports-preserve-symlinks-flag",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "tar",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "temp",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "temp-dir",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "temp-dir",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "tempy",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "tempy",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "terminal-link",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "terser",
+      "version": null,
+      "licenses": "BSD-2-Clause",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "text-table",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "thenify",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "thenify-all",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "throat",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "through2",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "tmpl",
+      "version": null,
+      "licenses": "BSD-3-Clause",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "to-regex-range",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "toidentifier",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "tr46",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "traverse",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "trim-right",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "ts-interface-checker",
+      "version": null,
+      "licenses": "Apache-2.0",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "tslib",
+      "version": null,
+      "licenses": "0BSD",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "type-detect",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "type-fest",
+      "version": null,
+      "licenses": "(MIT OR CC0-1.0)",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "type-fest",
+      "version": null,
+      "licenses": "(MIT OR CC0-1.0)",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "type-fest",
+      "version": null,
+      "licenses": "(MIT OR CC0-1.0)",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "type-fest",
+      "version": null,
+      "licenses": "(MIT OR CC0-1.0)",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "typed-array-buffer",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "typed-array-byte-length",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "typed-array-byte-offset",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "typed-array-length",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "typedarray.prototype.slice",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "ua-parser-js",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "unbox-primitive",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "undici-types",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "unicode-canonical-property-names-ecmascript",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "unicode-match-property-ecmascript",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "unicode-match-property-value-ecmascript",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "unicode-property-aliases-ecmascript",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "unique-filename",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "unique-slug",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "unique-string",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "unique-string",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "universalify",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "universalify",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "universalify",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "unpipe",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "update-browserslist-db",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "url-join",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "util-deprecate",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "utils-merge",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "uuid",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "uuid",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "valid-url",
+      "version": null,
+      "licenses": "MIT*",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "validate-npm-package-name",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "validate-npm-package-name",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "vary",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "vlq",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "walker",
+      "version": null,
+      "licenses": "Apache-2.0",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "wcwidth",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "webidl-conversions",
+      "version": null,
+      "licenses": "BSD-2-Clause",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "webidl-conversions",
+      "version": null,
+      "licenses": "BSD-2-Clause",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "whatwg-fetch",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "whatwg-url",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "whatwg-url-without-unicode",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "which",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "which",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "which-boxed-primitive",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "which-builtin-type",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "which-collection",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "which-module",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "which-typed-array",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "wonka",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "wrap-ansi",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "wrap-ansi",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "wrap-ansi",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "wrappy",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "write-file-atomic",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "ws",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "ws",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "ws",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "xcode",
+      "version": null,
+      "licenses": "Apache-2.0",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "xml2js",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "xmlbuilder",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "xmlbuilder",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "xmlbuilder",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "xtend",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "y18n",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "y18n",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "yallist",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "yallist",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "yaml",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "yargs",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "yargs",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "yargs-parser",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "yargs-parser",
+      "version": null,
+      "licenses": "ISC",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "yocto-queue",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "zod",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "zod-validation-error",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    }
+  ],
+  "registry": [
+    {
+      "gmailRef": "address_sorting",
+      "phase": "W1",
+      "status": "done",
+      "surfaces": [
+        "mail-web"
+      ],
+      "catalogId": "address-formatting",
+      "package": "@fragaria/address-formatter"
+    },
+    {
+      "gmailRef": null,
+      "phase": "W1",
+      "status": "done",
+      "surfaces": [
+        "mail-web"
+      ],
+      "catalogId": "nextjs",
+      "package": "next"
+    },
+    {
+      "gmailRef": null,
+      "phase": "W1",
+      "status": "done",
+      "surfaces": [
+        "mail-web"
+      ],
+      "catalogId": "react",
+      "package": "react"
+    },
+    {
+      "gmailRef": null,
+      "phase": "W1",
+      "status": "done",
+      "surfaces": [
+        "mail-web"
+      ],
+      "catalogId": "openpgp",
+      "package": "openpgp"
+    },
+    {
+      "gmailRef": null,
+      "phase": "W1",
+      "status": "done",
+      "surfaces": [
+        "mail-web"
+      ],
+      "catalogId": "simplewebauthn",
+      "package": "@simplewebauthn/browser"
+    },
+    {
+      "gmailRef": "zstd",
+      "phase": "W1",
+      "status": "done",
+      "surfaces": [
+        "mail-web",
+        "api"
+      ],
+      "catalogId": "zstandard",
+      "package": "fzstd"
+    },
+    {
+      "gmailRef": "zlib",
+      "phase": "W1",
+      "status": "done",
+      "surfaces": [
+        "mail-web",
+        "api"
+      ],
+      "catalogId": "zlib",
+      "package": "node:zlib"
+    },
+    {
+      "gmailRef": "jutf7",
+      "phase": "W2",
+      "status": "done",
+      "surfaces": [
+        "api"
+      ],
+      "catalogId": "utf7-imap",
+      "package": "utf7"
+    },
+    {
+      "gmailRef": "libPhoneNumber",
+      "phase": "W2",
+      "status": "done",
+      "surfaces": [
+        "mail-web",
+        "api"
+      ],
+      "catalogId": "libphonenumber-js",
+      "package": "libphonenumber-js"
+    },
+    {
+      "gmailRef": "Brotli",
+      "phase": "W2",
+      "status": "done",
+      "surfaces": [
+        "mail-web",
+        "api"
+      ],
+      "catalogId": "brotli",
+      "package": "node:zlib.brotli"
+    },
+    {
+      "gmailRef": null,
+      "phase": "W3",
+      "status": "done",
+      "surfaces": [
+        "mail-web",
+        "api"
+      ],
+      "catalogId": "dompurify",
+      "package": "isomorphic-dompurify"
+    },
+    {
+      "gmailRef": null,
+      "phase": "W3",
+      "status": "done",
+      "surfaces": [
+        "api"
+      ],
+      "catalogId": "web-push",
+      "package": "web-push"
+    },
+    {
+      "gmailRef": null,
+      "phase": "W3",
+      "status": "done",
+      "surfaces": [
+        "api"
+      ],
+      "catalogId": "ws",
+      "package": "ws"
+    },
+    {
+      "gmailRef": null,
+      "phase": "W4",
+      "status": "done",
+      "surfaces": [
+        "api"
+      ],
+      "catalogId": "nodemailer",
+      "package": "nodemailer"
+    },
+    {
+      "gmailRef": "zstd",
+      "phase": "W4",
+      "status": "done",
+      "surfaces": [
+        "api"
+      ],
+      "catalogId": "zstd-node-api",
+      "package": "@mongodb-js/zstd"
+    },
+    {
+      "gmailRef": null,
+      "phase": "W5",
+      "status": "done",
+      "surfaces": [
+        "web"
+      ],
+      "catalogId": "leaflet",
+      "package": "leaflet"
+    },
+    {
+      "gmailRef": "AppAuth",
+      "phase": "W6",
+      "status": "done",
+      "surfaces": [
+        "mobile"
+      ],
+      "catalogId": "expo-auth-session",
+      "package": "expo-auth-session"
+    },
+    {
+      "gmailRef": "Firebase",
+      "phase": "W6",
+      "status": "planned",
+      "surfaces": [
+        "mobile"
+      ],
+      "catalogId": null,
+      "package": "@react-native-firebase/messaging"
+    },
+    {
+      "gmailRef": "okhttp3",
+      "phase": "W6",
+      "status": "planned",
+      "surfaces": [
+        "mobile"
+      ],
+      "catalogId": null,
+      "package": "com.squareup.okhttp3:okhttp"
+    }
+  ]
+}

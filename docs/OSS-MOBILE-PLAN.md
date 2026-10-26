@@ -30,7 +30,7 @@ Mobil yayınlanmadan **Lisanslar ekranına yüzlerce satır elle eklenmez**.
 
 1. **Android:** Gradle `oss-licenses-plugin` veya `aboutlibraries` — APK içi liste
 2. **iOS:** `Settings.bundle` / SwiftUI Legal veya üçüncü taraf OSS ekranı
-3. **Paylaşılan API:** Posta + mesajlaşma aynı backend; mobil istemci SBOM ayrı dosya (`docs/oss/mobile-sbom.json` gelecekte)
+3. **Paylaşılan API:** Posta + mesajlaşma aynı backend; mobil SBOM: `npm run oss:sbom:mobile` → `docs/oss/mobile-sbom.json`; birleşik Legal: `npm run oss:merge-legal`
 
 ### Mobilde beklenen ek kategoriler (Gmail benzeri ölçek)
 

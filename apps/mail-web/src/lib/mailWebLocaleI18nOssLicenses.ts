@@ -3,7 +3,7 @@ export const MAIL_WEB_I18N_OSS_LICENSES_TR = {
   settingsHubOssLicensesSub: "Açık kaynak bileşenler",
   ossLicensesTitle: "Açık kaynak lisansları",
   ossLicensesIntro:
-    "Lerta Posta ve platform web (mesajlaşma hub, filo haritası) aşağıdaki açık kaynak bileşenlerini kullanır (W1–W5). Bir satıra dokunarak tam lisans metnini görüntüleyin.",
+    "Lerta Posta, platform web ve mobil istemci için açık kaynak bileşenleri (W1–W6). Bir satıra dokunarak tam lisans metnini görüntüleyin.",
   ossLicensesBackToList: "Lisans listesi",
   ossLicensePackage: "Paket",
   ossLicenseVersion: "Sürüm",
@@ -43,6 +43,12 @@ export const MAIL_WEB_I18N_OSS_LICENSES_TR = {
     "Zstandard (sunucu); Posta API JSON sıkıştırma (X-Lerta-Encoding: zstd). Tarayıcıya indirilmez.",
   ossLicenseLeafletUsage:
     "Leaflet (app.lerta.com.tr); canlı filo haritası ve konum görselleştirme — mesajlaşma/lojistik hub.",
+  ossLicenseExpoUsage:
+    "Expo (mobil); React Native çatısı, posta ve mesajlaşma mobil istemci iskeleti.",
+  ossLicenseReactNativeUsage:
+    "React Native (mobil); iOS/Android kullanıcı arayüzü.",
+  ossLicenseExpoAuthSessionUsage:
+    "expo-auth-session (AppAuth); kurumsal OAuth / giriş akışı (mobil).",
 } as const;
 
 export const MAIL_WEB_I18N_OSS_LICENSES_EN = {
@@ -50,7 +56,7 @@ export const MAIL_WEB_I18N_OSS_LICENSES_EN = {
   settingsHubOssLicensesSub: "Open-source components",
   ossLicensesTitle: "Open source licenses",
   ossLicensesIntro:
-    "Lerta Posta and the platform web app (messaging hub, fleet map) use the open-source components below (W1–W5). Tap a row to view the full license text.",
+    "Open-source components for Lerta Posta, the platform web app, and the mobile client (W1–W6). Tap a row to view the full license text.",
   ossLicensesBackToList: "License list",
   ossLicensePackage: "Package",
   ossLicenseVersion: "Version",
@@ -90,4 +96,10 @@ export const MAIL_WEB_I18N_OSS_LICENSES_EN = {
     "Zstandard on the server compresses Posta API JSON (X-Lerta-Encoding: zstd). Not shipped to the browser bundle.",
   ossLicenseLeafletUsage:
     "Leaflet (app.lerta.com.tr) powers the live fleet map and location views in the messaging/logistics hub.",
+  ossLicenseExpoUsage:
+    "Expo powers the mobile React Native shell for mail and messaging.",
+  ossLicenseReactNativeUsage:
+    "React Native provides the iOS/Android UI layer.",
+  ossLicenseExpoAuthSessionUsage:
+    "expo-auth-session (AppAuth) handles mobile OAuth sign-in flows.",
 } as const;
