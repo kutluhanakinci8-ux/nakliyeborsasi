@@ -11,7 +11,7 @@ import {
   parseClientLertaEncoding,
 } from "./mailZstdHttp.util";
 
-/** Posta istemcisi X-Lerta-Encoding: zstd | gzip gönderdiğinde JSON yanıtları sıkıştırır. */
+/** Posta istemcisi X-Lerta-Encoding: zstd | br | gzip gönderdiğinde JSON yanıtları sıkıştırır. */
 @Injectable()
 export class MailZstdJsonResponseInterceptor implements NestInterceptor {
   public intercept(

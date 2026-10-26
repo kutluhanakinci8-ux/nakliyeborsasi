@@ -296,6 +296,7 @@ export async function deleteInboxRule(accessToken: string, ruleId: string) {
 export type MailCustomFolder = {
   id: string;
   name: string;
+  imapModifiedUtf7: string;
   sortOrder: number;
   messageCount: number;
   createdAt: string;

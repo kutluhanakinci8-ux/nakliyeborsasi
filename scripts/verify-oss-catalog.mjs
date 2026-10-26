@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * W1 lisans kataloğu ↔ package-lock uyumu.
+ * W1–W2 lisans kataloğu ↔ package-lock uyumu.
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -23,11 +23,18 @@ if (!requiredMatch) {
 }
 const packages = [...requiredMatch[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]);
 
-const idsMatch = fs.readFileSync(
-  path.join(root, "apps/mail-web/src/lib/mailOpenSourceLicensesCatalog.ts"),
-  "utf8",
-);
-const ids = [...idsMatch.matchAll(/id:\s*"([^"]+)"/g)].map((m) => m[1]);
+const catalogFiles = [
+  "mailOpenSourceLicensesCatalog.ts",
+  "mailOpenSourceLicensesCatalogW2.ts",
+];
+const ids = [];
+for (const file of catalogFiles) {
+  const src = fs.readFileSync(
+    path.join(root, "apps/mail-web/src/lib", file),
+    "utf8",
+  );
+  ids.push(...[...src.matchAll(/id:\s*"([^"]+)"/g)].map((m) => m[1]));
+}
 const expectedIds = new Set([
   "address-formatting",
   "nextjs",
@@ -36,6 +43,9 @@ const expectedIds = new Set([
   "simplewebauthn",
   "zlib",
   "zstandard",
+  "brotli",
+  "libphonenumber-js",
+  "utf7-imap",
 ]);
 for (const id of expectedIds) {
   if (!ids.includes(id)) {
@@ -70,8 +80,8 @@ for (const name of packages) {
 }
 
 if (failed) process.exit(1);
-if (ids.length < 7) {
-  console.error(`FAIL: expected at least 7 catalog ids, got ${ids.length}`);
+if (ids.length < 10) {
+  console.error(`FAIL: expected at least 10 catalog ids, got ${ids.length}`);
   process.exit(1);
 }
 console.log(`OK: ${ids.length} catalog entries, ${packages.length} required deps`);

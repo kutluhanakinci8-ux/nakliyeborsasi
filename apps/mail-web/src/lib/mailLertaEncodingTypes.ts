@@ -1,1 +1,1 @@
-export type LertaJsonCompression = "zstd" | "gzip";
+export type LertaJsonCompression = "zstd" | "br" | "gzip";

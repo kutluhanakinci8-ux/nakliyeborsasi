@@ -1,8 +1,9 @@
 import type { Request } from "express";
+import { compressJsonToBrotliBase64 } from "./mailBrotli.util";
 import { compressJsonToGzipBase64 } from "./mailGzip.util";
 import { compressJsonToZstdBase64 } from "./mailZstd.util";
 
-export type LertaJsonCompression = "zstd" | "gzip";
+export type LertaJsonCompression = "zstd" | "br" | "gzip";
 
 export function isZstdBase64Envelope(
   value: unknown,
@@ -26,6 +27,17 @@ export function isGzipBase64Envelope(
   );
 }
 
+export function isBrotliBase64Envelope(
+  value: unknown,
+): value is { encoding: "brotli-base64"; data: string } {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    (value as { encoding?: string }).encoding === "brotli-base64" &&
+    typeof (value as { data?: unknown }).data === "string"
+  );
+}
+
 export function parseClientLertaEncoding(
   req: Pick<Request, "headers">,
 ): LertaJsonCompression | null {
@@ -36,6 +48,9 @@ export function parseClientLertaEncoding(
   }
   if (value === "gzip") {
     return "gzip";
+  }
+  if (value === "br") {
+    return "br";
   }
   return null;
 }
@@ -56,7 +71,11 @@ function shouldCompressWrap(data: unknown): boolean {
   if (Buffer.isBuffer(data)) {
     return false;
   }
-  if (isZstdBase64Envelope(data) || isGzipBase64Envelope(data)) {
+  if (
+    isZstdBase64Envelope(data) ||
+    isGzipBase64Envelope(data) ||
+    isBrotliBase64Envelope(data)
+  ) {
     return false;
   }
   return true;
@@ -79,6 +98,10 @@ export async function maybeCompressJsonEnvelope(
   if (mode === "zstd") {
     const data = await compressJsonToZstdBase64(payload);
     return { encoding: "zstd-base64" as const, data };
+  }
+  if (mode === "br") {
+    const data = await compressJsonToBrotliBase64(payload);
+    return { encoding: "brotli-base64" as const, data };
   }
   const data = await compressJsonToGzipBase64(payload);
   return { encoding: "gzip-base64" as const, data };

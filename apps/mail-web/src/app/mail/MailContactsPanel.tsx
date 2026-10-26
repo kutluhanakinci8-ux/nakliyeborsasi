@@ -14,6 +14,10 @@ import {
   type MailOrgContact,
 } from "@/lib/mailApi";
 import { MailContactsCardDavPanel } from "./MailContactsCardDavPanel";
+import {
+  formatContactPhoneForDisplay,
+  isContactPhonePlausible,
+} from "@/lib/mailPhoneFormat";
 
 type Props = {
   accessToken: string;
@@ -121,6 +125,10 @@ export function MailContactsPanel({
   async function onAdd() {
     if (!displayName.trim()) {
       onToast(t("contactsErrNameRequired"));
+      return;
+    }
+    if (!isContactPhonePlausible(phone)) {
+      onToast(t("contactsErrPhoneInvalid"));
       return;
     }
     try {
@@ -345,7 +353,9 @@ export function MailContactsPanel({
                         <span className="mail-contacts-muted">{t("contactsNoEmail")}</span>
                       )}
                       {c.phone ? (
-                        <span className="mail-contacts-phone">{c.phone}</span>
+                        <span className="mail-contacts-phone">
+                          {formatContactPhoneForDisplay(c.phone) ?? c.phone}
+                        </span>
                       ) : null}
                     </div>
                   </div>
@@ -423,7 +433,9 @@ export function MailContactsPanel({
                     <strong>{c.displayName}</strong>
                     <div className="mail-d6-meta">
                       {c.email ?? "—"}
-                      {c.phone ? ` · ${c.phone}` : ""}
+                      {c.phone
+                        ? ` · ${formatContactPhoneForDisplay(c.phone) ?? c.phone}`
+                        : ""}
                     </div>
                   </div>
                   <span className="mail-cal-event-actions">

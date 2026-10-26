@@ -1,10 +1,13 @@
 import { MAIL_WEB_W1_OPEN_SOURCE_LICENSES } from "./mailOpenSourceLicensesCatalog";
+import { MAIL_WEB_W2_OPEN_SOURCE_LICENSES } from "./mailOpenSourceLicensesCatalogW2";
 import type { OpenSourceLicenseEntry } from "./mailOpenSourceLicenseTypes";
 
 export type { OpenSourceLicenseEntry } from "./mailOpenSourceLicenseTypes";
 
-export const OPEN_SOURCE_LICENSES: OpenSourceLicenseEntry[] =
-  MAIL_WEB_W1_OPEN_SOURCE_LICENSES;
+export const OPEN_SOURCE_LICENSES: OpenSourceLicenseEntry[] = [
+  ...MAIL_WEB_W1_OPEN_SOURCE_LICENSES,
+  ...MAIL_WEB_W2_OPEN_SOURCE_LICENSES,
+];
 
 export function getOpenSourceLicenseById(
   id: string,
@@ -27,4 +30,6 @@ export const OSS_CATALOG_REQUIRED_PACKAGE_NAMES = [
   "@simplewebauthn/browser",
   "fzstd",
   "zstd-codec",
+  "libphonenumber-js",
+  "utf7",
 ] as const;

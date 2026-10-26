@@ -8,6 +8,10 @@ import { Repository } from "typeorm";
 import { MailOrgContactEntity } from "../../infrastructure/database/entities/MailOrgContactEntity";
 import { MailContactCardDavService } from "./MailContactCardDavService";
 import { parseVcfContacts } from "./MailVcfUtil";
+import {
+  formatMailContactPhoneForDisplay,
+  normalizeMailContactPhone,
+} from "../../common/mailPhone.util";
 
 const MAX_CONTACTS = 1000;
 
@@ -53,12 +57,13 @@ export class MailOrganizationContactService {
     if (count >= MAX_CONTACTS) {
       throw new BadRequestException(`En fazla ${MAX_CONTACTS} kişi.`);
     }
+    const phone = normalizeMailContactPhone(input.phone);
     const row = await this.contactRepository.save(
       this.contactRepository.create({
         organizationId,
         displayName: input.displayName.trim(),
         email: input.email?.trim().toLowerCase() || null,
-        phone: input.phone?.trim() || null,
+        phone,
         notes: input.notes?.trim() || null,
       }),
     );
@@ -83,7 +88,7 @@ export class MailOrganizationContactService {
       row.email = input.email?.trim().toLowerCase() || null;
     }
     if (input.phone !== undefined) {
-      row.phone = input.phone?.trim() || null;
+      row.phone = normalizeMailContactPhone(input.phone);
     }
     if (input.notes !== undefined) {
       row.notes = input.notes?.trim() || null;
@@ -136,12 +141,21 @@ export class MailOrganizationContactService {
         skipped += 1;
         continue;
       }
+      let phone: string | null = row.phone;
+      if (phone) {
+        try {
+          phone = normalizeMailContactPhone(phone);
+        } catch {
+          skipped += 1;
+          continue;
+        }
+      }
       await this.contactRepository.save(
         this.contactRepository.create({
           organizationId,
           displayName: row.displayName.trim(),
           email: row.email,
-          phone: row.phone,
+          phone,
           notes: row.notes,
         }),
       );
@@ -206,7 +220,7 @@ export class MailOrganizationContactService {
       id: row.id,
       displayName: row.displayName,
       email: row.email,
-      phone: row.phone,
+      phone: formatMailContactPhoneForDisplay(row.phone),
       notes: row.notes,
       createdAt: row.createdAt.toISOString(),
       updatedAt: row.updatedAt.toISOString(),

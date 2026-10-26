@@ -3,7 +3,7 @@ export const MAIL_WEB_I18N_OSS_LICENSES_TR = {
   settingsHubOssLicensesSub: "Açık kaynak bileşenler",
   ossLicensesTitle: "Açık kaynak lisansları",
   ossLicensesIntro:
-    "Lerta Posta web istemcisi aşağıdaki açık kaynak bileşenleri kullanır (W1 kataloğu). Bir satıra dokunarak tam lisans metnini görüntüleyin.",
+    "Lerta Posta web istemcisi aşağıdaki açık kaynak bileşenleri kullanır (W1–W2 kataloğu). Bir satıra dokunarak tam lisans metnini görüntüleyin.",
   ossLicensesBackToList: "Lisans listesi",
   ossLicensePackage: "Paket",
   ossLicenseVersion: "Sürüm",
@@ -25,6 +25,12 @@ export const MAIL_WEB_I18N_OSS_LICENSES_TR = {
     "OpenPGP.js; istemci tarafında PGP şifreleme ve anahtar okuma (kurumsal güvenli posta).",
   ossLicenseSimpleWebAuthnUsage:
     "SimpleWebAuthn; passkey ve biyometrik giriş (WebAuthn) tarayıcı istemcisi.",
+  ossLicenseBrotliUsage:
+    "Brotli; Zstd yüklenemezse API JSON sıkıştırması (X-Lerta-Encoding: br) ve yanıt zarfı açma.",
+  ossLicenseLibPhoneNumberUsage:
+    "libphonenumber-js; kurumsal kişilerde telefon doğrulama, E.164 saklama ve uluslararası gösterim.",
+  ossLicenseUtf7ImapUsage:
+    "utf7 (IMAP modified UTF-7); özel klasör adlarının IMAP LIST biçimi ve maildir iskeleti.",
 } as const;
 
 export const MAIL_WEB_I18N_OSS_LICENSES_EN = {
@@ -32,7 +38,7 @@ export const MAIL_WEB_I18N_OSS_LICENSES_EN = {
   settingsHubOssLicensesSub: "Open-source components",
   ossLicensesTitle: "Open source licenses",
   ossLicensesIntro:
-    "The Lerta Posta web client uses the open-source components below (W1 catalog). Tap a row to view the full license text.",
+    "The Lerta Posta web client uses the open-source components below (W1–W2 catalog). Tap a row to view the full license text.",
   ossLicensesBackToList: "License list",
   ossLicensePackage: "Package",
   ossLicenseVersion: "Version",
@@ -54,4 +60,10 @@ export const MAIL_WEB_I18N_OSS_LICENSES_EN = {
     "OpenPGP.js provides client-side PGP encryption and key handling.",
   ossLicenseSimpleWebAuthnUsage:
     "SimpleWebAuthn enables passkeys and biometric sign-in in the browser.",
+  ossLicenseBrotliUsage:
+    "Brotli is the second-choice API JSON codec (X-Lerta-Encoding: br) when Zstd is unavailable.",
+  ossLicenseLibPhoneNumberUsage:
+    "libphonenumber-js validates org contacts, stores E.164, and formats numbers for display.",
+  ossLicenseUtf7ImapUsage:
+    "utf7 (IMAP modified UTF-7) encodes custom folder names for IMAP LIST and maildir layout.",
 } as const;
