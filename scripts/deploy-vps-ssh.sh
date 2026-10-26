@@ -44,3 +44,4 @@ else
   exit 1
 fi
 echo "=== Deploy tamam ==="
+echo "İpucu: Cloud Agent tur sonu → npm run publish:main (merge + bu deploy)"

@@ -37,6 +37,7 @@
     "qa:full-catalog": "bash scripts/run-full-sdlc-test-catalog.sh",
     "oss:sbom": "node scripts/generate-oss-sbom.mjs",
     "oss:verify-catalog": "node scripts/verify-oss-catalog.mjs",
+    "publish:main": "bash scripts/agent-merge-deploy-main.sh",
     "verify:vps": "bash scripts/vps-operator-verify.sh",
     "archive:move": "bash scripts/archive-replaced-source.sh",
     "git:cleanup-merged": "bash scripts/cleanup-merged-git-branches.sh",
