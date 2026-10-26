@@ -464,6 +464,36 @@ a {
   border-bottom: 1px solid var(--border);
 }
 
+.mail-attachments li.mail-attachments-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.mail-attachment-preview-img {
+  display: block;
+  max-width: 160px;
+  max-height: 120px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  object-fit: contain;
+  background: var(--bg);
+}
+
+.mail-attachment-preview-placeholder {
+  display: inline-block;
+  width: 48px;
+  height: 36px;
+  line-height: 36px;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--muted);
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+}
+
 .mail-attachments button {
   background: none;
   border: none;

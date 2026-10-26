@@ -36,6 +36,10 @@ import {
 import { extractInstagramVerificationCode } from "./instagramVerificationMail";
 import { sanitizeInboundHtml } from "./MailHtmlSanitize";
 import {
+  createMailAttachmentImagePreview,
+  isPreviewableMailAttachmentContentType,
+} from "../../common/mailAttachmentImagePreview.util";
+import {
   MailInboxActor,
   MailMailboxAccessService,
 } from "./MailMailboxAccessService";
@@ -510,6 +514,27 @@ export class MailOrganizationInboxService {
     }
     const buffer = readFileSync(file.storagePath);
     return { file, buffer };
+  }
+
+  public async getAttachmentImagePreview(
+    organizationId: string,
+    messageId: string,
+    index: number,
+    actor?: MailInboxActor,
+  ): Promise<{ contentType: string; buffer: Buffer }> {
+    const { file, buffer } = await this.getAttachment(
+      organizationId,
+      messageId,
+      index,
+      actor,
+    );
+    if (!isPreviewableMailAttachmentContentType(file.contentType)) {
+      throw new BadRequestException(
+        "Bu ek türü için görsel önizleme desteklenmiyor.",
+      );
+    }
+    const preview = await createMailAttachmentImagePreview(buffer);
+    return { contentType: "image/jpeg", buffer: preview };
   }
 
   public async listConversationThreads(

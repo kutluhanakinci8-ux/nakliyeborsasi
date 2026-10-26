@@ -30,6 +30,7 @@ const catalogFiles = [
   "mailOpenSourceLicensesCatalogW4.ts",
   "mailOpenSourceLicensesCatalogW5.ts",
   "mailOpenSourceLicensesCatalogW6.ts",
+  "mailOpenSourceLicensesCatalogW7.ts",
 ];
 const ids = [];
 for (const file of catalogFiles) {
@@ -59,6 +60,7 @@ const expectedIds = new Set([
   "expo",
   "react-native",
   "expo-auth-session",
+  "sharp",
 ]);
 for (const id of expectedIds) {
   if (!ids.includes(id)) {
@@ -162,8 +164,8 @@ for (const name of mobilePackages) {
 
 if (failed) process.exit(1);
 
-if (ids.length < 19) {
-  console.error(`FAIL: expected at least 19 catalog ids, got ${ids.length}`);
+if (ids.length < 20) {
+  console.error(`FAIL: expected at least 20 catalog ids, got ${ids.length}`);
   process.exit(1);
 }
 console.log(
