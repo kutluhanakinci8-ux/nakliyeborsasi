@@ -9,6 +9,7 @@ export type MessagingPublicStatus = {
     signaling: "planned";
     codecsShippedWithApp: boolean;
   };
+  mobileExpoPush?: { registerPath: string; enabled: boolean };
 };
 
 export async function fetchMessagingPublicStatus(): Promise<MessagingPublicStatus> {

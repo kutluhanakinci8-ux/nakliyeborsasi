@@ -185,7 +185,7 @@ UI: Lisans detayında **“Sunucu bileşeni — tarayıcıya indirilmez”** i18
 | Gmail / ekosistem | RN / native |
 |-------------------|-------------|
 | AppAuth | expo-auth-session |
-| Firebase | expo-notifications (FCM/APNs token) ✓ |
+| Firebase | expo-notifications + API `messaging/push/expo/*` ✓ |
 | okhttp3 | Android stack |
 | libPhoneNumber | libphonenumber (native) veya js |
 | protobuf / gRPC | yalnızca seçilirse |

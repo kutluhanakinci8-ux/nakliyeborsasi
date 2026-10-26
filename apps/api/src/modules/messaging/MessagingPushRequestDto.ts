@@ -1,4 +1,4 @@
-import { IsString, MinLength } from "class-validator";
+import { IsIn, IsString, Matches, MinLength } from "class-validator";
 
 export class RegisterMessagingPushSubscriptionRequestDto {
   @IsString()
@@ -18,4 +18,19 @@ export class UnregisterMessagingPushSubscriptionRequestDto {
   @IsString()
   @MinLength(8)
   public endpoint!: string;
+}
+
+export class RegisterMessagingExpoPushTokenRequestDto {
+  @IsString()
+  @Matches(/^(ExponentPushToken|ExpoPushToken)\[[^\]]+\]$/)
+  public expoPushToken!: string;
+
+  @IsIn(["ios", "android"])
+  public platform!: "ios" | "android";
+}
+
+export class UnregisterMessagingExpoPushTokenRequestDto {
+  @IsString()
+  @Matches(/^(ExponentPushToken|ExpoPushToken)\[[^\]]+\]$/)
+  public expoPushToken!: string;
 }

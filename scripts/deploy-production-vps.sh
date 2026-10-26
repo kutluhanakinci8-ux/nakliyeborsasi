@@ -29,6 +29,10 @@ if [[ -x scripts/apply-messaging-p4-schema.sh ]]; then
   bash scripts/apply-messaging-p4-schema.sh "$INSTALL_DIR" || true
 fi
 
+if [[ -x scripts/apply-messaging-expo-push-schema.sh ]]; then
+  bash scripts/apply-messaging-expo-push-schema.sh "$INSTALL_DIR" || true
+fi
+
 if [[ -x scripts/apply-mail-parity-wave2-schema.sh ]]; then
   bash scripts/apply-mail-parity-wave2-schema.sh "$INSTALL_DIR" || true
 fi

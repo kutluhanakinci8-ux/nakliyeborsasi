@@ -2,7 +2,7 @@ import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 
-/** FCM (Android) / APNs (iOS) — Expo push token; sunucu kaydı sonraki faz. */
+/** FCM (Android) / APNs (iOS) — Expo push token. */
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,

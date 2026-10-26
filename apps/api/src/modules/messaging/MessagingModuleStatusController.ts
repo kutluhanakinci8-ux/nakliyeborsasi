@@ -41,6 +41,7 @@ export class MessagingModuleStatusController {
       signaling: "planned";
       codecsShippedWithApp: false;
     };
+    mobileExpoPush: { registerPath: string; enabled: boolean };
   } {
     const deepl = Boolean(
       this.configService.get<string>("MESSAGING_DEEPL_API_KEY")?.trim(),
@@ -117,6 +118,7 @@ export class MessagingModuleStatusController {
         "native_shell_capacitor_ready",
         "native_shell_capacitor_docs",
         "browser_webrtc_disclosure",
+        "mobile_expo_push_api",
       ],
       translate: { deepl, libretranslate: libre },
       attachments: (() => {
@@ -146,6 +148,10 @@ export class MessagingModuleStatusController {
         clientStack: "browser",
         signaling: "planned",
         codecsShippedWithApp: false,
+      },
+      mobileExpoPush: {
+        registerPath: "/messaging/push/expo/register",
+        enabled: true,
       },
     };
   }
