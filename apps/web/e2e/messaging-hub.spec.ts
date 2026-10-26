@@ -8,6 +8,12 @@ const ACCESS_TOKEN =
 
 const BLOCKED_ACCESS_TOKEN = process.env.E2E_MESSAGING_BLOCKED_TOKEN ?? "";
 
+const API_BASE = (
+  process.env.E2E_API_BASE_URL ??
+  process.env.PLAYWRIGHT_API_BASE_URL ??
+  "http://127.0.0.1:8091/api/v1"
+).replace(/\/$/, "");
+
 test.describe("Mesajlar hub", () => {
   test("login sayfası messaging next ile açılır", async ({ page }) => {
     await page.goto("/login?next=%2Fmessaging%3Ftab%3Dsohbet");
@@ -64,6 +70,43 @@ test.describe("Mesajlar hub", () => {
 
     await page.goto("/messaging?tab=sohbet");
     await expect(page.locator(".messaging-module-blocked")).toBeVisible({
+      timeout: 20_000,
+    });
+  });
+
+  test("oturumlu: sohbetten mesaj gönder", async ({ page, request }) => {
+    test.skip(!ACCESS_TOKEN, "E2E_ACCESS_TOKEN veya MESSAGING_TEST_JWT gerekli");
+
+    const threadsResponse = await request.get(
+      `${API_BASE}/messaging/threads?lang=tr`,
+      { headers: { Authorization: `Bearer ${ACCESS_TOKEN}` } },
+    );
+    test.skip(!threadsResponse.ok(), "threads API erişilemedi");
+    const threadsPayload = (await threadsResponse.json()) as {
+      threads?: { threadId: string }[];
+    };
+    const threadId = threadsPayload.threads?.[0]?.threadId;
+    test.skip(!threadId, "Açık thread yok — seed veya demo konuşma gerekli");
+
+    await page.addInitScript((token) => {
+      window.localStorage.setItem("nakliyeborsasi_access_token", token);
+    }, ACCESS_TOKEN);
+
+    const marker = `E2E_UI_${Date.now()}`;
+    await page.goto(
+      `/messaging?tab=sohbet&threadId=${encodeURIComponent(threadId)}`,
+    );
+    await expect(page.locator(".messaging-page-layout")).toBeVisible({
+      timeout: 20_000,
+    });
+
+    const compose = page.getByRole("textbox", {
+      name: /karşı firmaya mesaj yazın/i,
+    });
+    await expect(compose).toBeEnabled({ timeout: 15_000 });
+    await compose.fill(marker);
+    await page.getByRole("button", { name: /^Gönder$/i }).click();
+    await expect(page.getByText(marker, { exact: true })).toBeVisible({
       timeout: 20_000,
     });
   });

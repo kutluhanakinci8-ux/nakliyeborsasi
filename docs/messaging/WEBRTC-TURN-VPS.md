@@ -22,9 +22,20 @@ SDP/ICE relay için `REDIS_URL` zorunlu. `messaging/status` → `webrtc.signalin
 ```bash
 # İlk kez: varsayılan STUN satırını .env'e yaz (TURN'ü sonra elle güncelleyin)
 bash scripts/apply-messaging-webrtc-ice-vps-env.sh /var/www/nakliyeborsasi
+
+# TURN ile birlikte (coturn / managed TURN):
+MESSAGING_TURN_URL=turn:turn.lerta.com.tr:3478 \
+MESSAGING_TURN_USERNAME=lerta \
+MESSAGING_TURN_CREDENTIAL='SECRET' \
+bash scripts/apply-messaging-webrtc-ice-vps-env.sh /var/www/nakliyeborsasi
 ```
 
+Örnek JSON: `scripts/fixtures/messaging-webrtc-ice-servers.turn.example.json`
+
 Deploy (`deploy-production-vps.sh`) bu script'i otomatik dener.
+
+JWT smoke: `bash scripts/verify-messaging-webrtc-ice-config.sh`  
+Prod TURN zorunlu gate: `MESSAGING_WEBRTC_REQUIRE_TURN=1 bash scripts/verify-messaging-webrtc-ice-config.sh`
 
 ## Doğrulama
 

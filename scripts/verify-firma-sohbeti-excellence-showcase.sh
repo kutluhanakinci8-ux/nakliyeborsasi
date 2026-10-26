@@ -246,4 +246,9 @@ curl -fsS -X POST "${auth_hdr[@]}" \
   | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('ok') is True; print('OK: typing')"
 
 echo ""
+echo "== API thread + WebRTC smoke =="
+API_BASE="${API_BASE}" bash "${ROOT}/scripts/verify-messaging-thread-api-smoke.sh"
+API_BASE="${API_BASE}" bash "${ROOT}/scripts/verify-messaging-webrtc-ice-config.sh"
+
+echo ""
 echo "Excellence showcase verify: PASS"

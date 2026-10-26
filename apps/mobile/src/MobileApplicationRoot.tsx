@@ -16,6 +16,10 @@ import {
   resolveMobileAccessToken,
 } from "./lertaMobileAuth";
 import { useLertaMobilePushRegistration } from "./useLertaMobilePushRegistration";
+import {
+  loginWithOAuthIfConfigured,
+  resolveMobileOAuthConfig,
+} from "./lertaMobileOAuth";
 
 /** OAuth redirect — AppAuth / expo-auth-session (W6). */
 export const MOBILE_OAUTH_REDIRECT_URI = AuthSession.makeRedirectUri({
@@ -42,6 +46,7 @@ export function MobileApplicationRoot(): React.ReactElement {
   }, [loadSession]);
 
   const push = useLertaMobilePushRegistration(accessToken);
+  const oauthConfigured = resolveMobileOAuthConfig() !== null;
 
   async function handleLogin(): Promise<void> {
     setLoginError(null);
@@ -56,6 +61,24 @@ export function MobileApplicationRoot(): React.ReactElement {
       await push.refresh();
     } catch (error) {
       setLoginError(error instanceof Error ? error.message : "Giriş hatası");
+    } finally {
+      setLoginBusy(false);
+    }
+  }
+
+  async function handleOAuthLogin(): Promise<void> {
+    setLoginError(null);
+    setLoginBusy(true);
+    try {
+      const token = await loginWithOAuthIfConfigured(MOBILE_OAUTH_REDIRECT_URI);
+      if (!token) {
+        setLoginError("OAuth yapılandırılmadı");
+        return;
+      }
+      setAccessToken(token);
+      await push.refresh();
+    } catch (error) {
+      setLoginError(error instanceof Error ? error.message : "OAuth hatası");
     } finally {
       setLoginBusy(false);
     }
@@ -117,6 +140,16 @@ export function MobileApplicationRoot(): React.ReactElement {
             <Text style={styles.error} accessibilityRole="alert">
               {loginError}
             </Text>
+          ) : null}
+          {oauthConfigured ? (
+            <Pressable
+              style={[styles.buttonSecondary, loginBusy && styles.buttonDisabled]}
+              onPress={() => void handleOAuthLogin()}
+              disabled={loginBusy}
+              accessibilityRole="button"
+            >
+              <Text style={styles.buttonSecondaryText}>OAuth ile giriş</Text>
+            </Pressable>
           ) : null}
         </View>
       )}
