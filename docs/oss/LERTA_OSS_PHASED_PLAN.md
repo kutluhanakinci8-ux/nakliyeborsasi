@@ -32,7 +32,7 @@ npm run build -w @lerta/mail-web
 | **W5** | Mesajlaşma web | +1–2 | Leaflet, ortak Lisanslar URL | Harita RN’de Mapbox/Maps ayrı |
 | **W6** ✓ | Mobil istemci v1 | +3 (19 toplam) | Expo, RN, expo-auth-session + Legal ekranı | `oss:mobile`, merge legal JSON |
 | **W7** ✓ | Medya önizleme | +1 (20 toplam) | sharp API + posta ek JPEG önizleme | libjpeg-turbo (sharp/libvips) |
-| **W8** | Görüntülü görüşme | WebRTC paketi | — | libvpx, libwebm, libSRTP |
+| **W8** ✓ | Görüntülü görüşme | +1 (21 toplam) | WebRTC disclosure + mesajlaşma hub notu | libvpx, libwebm (mobil SBOM) |
 
 ---
 
@@ -207,15 +207,15 @@ Katalog: `sharp` (sunucu; Legal’de kullanım notu).
 
 ---
 
-## W8 — Görüntülü görüşme
+## W8 ✓ — Görüntülü görüşme (disclosure + hazırlık)
 
-| Gmail | Plan |
-|-------|------|
-| libvpx, libwebm, dav1d, libaom | WebRTC fazı |
-| libSRTP | Medya şifreleme |
+| Gmail | Lerta |
+|-------|--------|
+| WebRTC / libSRTP | `browser-webrtc` Legal kaydı; mesajlaşma hub uyumluluk şeridi + `messaging/status` `webrtc` |
+| libvpx, libwebm, dav1d, libaom | Mobil native stack → `planned` registry; web'de dağıtılmaz |
 
-Web: muhtemelen tarayıcı WebRTC (lisans: **not “we ship libvpx”** — kullanıcı agent).  
-Mobil: native WebRTC stack → otomatik OSS listesi.
+Web: tarayıcı `RTCPeerConnection` / `getUserMedia` (`@nakliyeborsasi/core` capability helper).  
+Mobil: native WebRTC stack → otomatik OSS listesi (sonraki ürün fazı).
 
 ---
 

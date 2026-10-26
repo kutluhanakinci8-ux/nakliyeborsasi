@@ -3,14 +3,20 @@
 import { IconDownload, IconShieldLock } from "./ChatUiIcons";
 import { messagingAttachmentLimitSummary } from "../../lib/messagingAttachmentPolicy";
 import type { MessagingChatController } from "../../hooks/useMessagingChatController";
+import { MessagingWebRtcDisclosure } from "./MessagingWebRtcDisclosure";
 
 type Props = {
   chat: MessagingChatController;
   kvkkHubHref?: string;
+  accessToken?: string | null;
 };
 
 /** EK-M4: ek limitleri, legal hold uyarısı, şirket sahibi KVKK dışa aktarma. */
-export function MessagingChatComplianceStrip({ chat, kvkkHubHref }: Props) {
+export function MessagingChatComplianceStrip({
+  chat,
+  kvkkHubHref,
+  accessToken,
+}: Props) {
   const { activeThread, isCompanyOwner, isBusy, handleExportArchive } = chat;
   const legalHold = Boolean(activeThread?.legalHoldAt);
 
@@ -20,6 +26,7 @@ export function MessagingChatComplianceStrip({ chat, kvkkHubHref }: Props) {
         {messagingAttachmentLimitSummary()}. Mesaj düzenleme/silme işlemleri denetim
         kaydına yazılır.
       </p>
+      <MessagingWebRtcDisclosure accessToken={accessToken} />
       {legalHold ? (
         <p className="messaging-chat-compliance-legal-hold" role="status">
           <IconShieldLock size={16} aria-hidden />

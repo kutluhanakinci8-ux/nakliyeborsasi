@@ -67,3 +67,4 @@ export * from "./mail/emailOutboxMetadata";
 export * from "./mailPostalMarker";
 export * from "./messaging/whatsappBridgeDelivery";
 export * from "./messaging/structuredLog";
+export * from "./webrtc/browserWebRtcCapabilities";

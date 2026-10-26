@@ -149,6 +149,24 @@
       "note": "Gmail libjpeg-turbo — sharp/libvips üzerinden posta ek önizleme"
     },
     {
+      "gmailRef": "WebRTC",
+      "phase": "W8",
+      "status": "done",
+      "surfaces": ["web", "mail-web"],
+      "catalogId": "browser-webrtc",
+      "package": "W3C WebRTC (user agent)",
+      "note": "Codec'ler tarayıcı/OS'ta; libvpx/libwebm npm ile dağıtılmaz"
+    },
+    {
+      "gmailRef": "libvpx",
+      "phase": "W8",
+      "status": "planned",
+      "surfaces": ["mobile"],
+      "catalogId": null,
+      "package": "libvpx",
+      "note": "Native mobil WebRTC yığını — SBOM otomatik"
+    },
+    {
       "gmailRef": "Firebase",
       "phase": "W6",
       "status": "planned",

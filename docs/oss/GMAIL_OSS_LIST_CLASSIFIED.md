@@ -81,7 +81,8 @@ address-formatting (address_sorting), Zstandard, zlib, React, Next.js, OpenPGP.j
 | **W4** | nodemailer, API zstd (katalog) |
 | **W5** | Leaflet + mesajlaşma web Legal |
 | **W6** | Mobil RN/FCM/AppAuth — SBOM merge |
-| **W7–W8** | Medya, WebRTC |
+| **W7** ✓ | Medya önizleme (sharp) |
+| **W8** ✓ | WebRTC disclosure (tarayıcı) |
 
 Detay: `LERTA_OSS_PHASED_PLAN.md`.
 
