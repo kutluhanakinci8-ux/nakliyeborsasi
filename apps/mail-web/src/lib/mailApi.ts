@@ -5,6 +5,7 @@ import type {
   RegistrationResponseJSON,
 } from "@simplewebauthn/types";
 import { resolveApiBaseUrl } from "./apiConfig";
+import { unwrapZstdEnvelope } from "./mailZstdEnvelope";
 
 export const MAIL_SESSION_EXPIRED_MESSAGE_TR =
   "Oturumunuz sona erdi. Yeniden giriş yapın — posta, gönderilenler, kişiler ve harici takvim kayıtlarınız sunucuda duruyor.";
@@ -444,6 +445,9 @@ async function apiFetch<T>(
 ): Promise<T> {
   const headers = new Headers(init.headers);
   headers.set("Authorization", `Bearer ${accessToken}`);
+  if (!headers.has("X-Lerta-Encoding")) {
+    headers.set("X-Lerta-Encoding", "zstd");
+  }
   if (init.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
@@ -465,7 +469,8 @@ async function apiFetch<T>(
       const text = await response.text();
       throw new MailApiError(formatApiError(text || `API ${path}`), response.status);
     }
-    return (await response.json()) as T;
+    const json: unknown = await response.json();
+    return unwrapZstdEnvelope<T>(json);
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") {
       throw new Error(

@@ -14,7 +14,7 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { AuthenticatedUserContext } from "@nakliyeborsasi/core";
-import { Response } from "express";
+import { Request, Response } from "express";
 import { JwtAuthenticationGuard } from "../auth/JwtAuthenticationGuard";
 import { MailProductTotpPolicyGuard } from "./MailProductTotpPolicyGuard";
 import { AuthenticatedUserParam } from "../auth/AuthenticatedUserParam";
@@ -25,6 +25,7 @@ import {
 } from "./MailOrganizationInboxService";
 import { MailConnectedAccountsService } from "./MailConnectedAccountsService";
 import { MailConnectedInboxSearchService } from "./MailConnectedInboxSearchService";
+import { maybeZstdJsonEnvelope } from "../../common/mailZstdHttp.util";
 import { ConnectedImportMessageRequestDto } from "./ConnectedImportMessageRequestDto";
 import { UpdateConnectedInboxEntitlementRequestDto } from "./UpdateConnectedInboxEntitlementRequestDto";
 import { MailMailboxComposeService } from "./MailMailboxComposeService";
@@ -1450,6 +1451,7 @@ export class CompanyMailInboxController {
     @Query("folder") folder?: string,
     @Query("customFolderId") customFolderId?: string,
     @Query("connectedSource") connectedSource?: string,
+    @Req() req: Request,
   ) {
     const resolvedFolder = this.parseFolder(folder);
     const resolvedCustomFolderId = this.parseCustomFolderId(
@@ -1514,7 +1516,7 @@ export class CompanyMailInboxController {
       await this.mailConnectedAccountsService.listAccounts(user.companyId, user);
     const connectedInboxEntitlement =
       await this.mailConnectedAccountsService.getEntitlement(user.companyId, user);
-    return {
+    return maybeZstdJsonEnvelope(req, {
       summary: {
         ...summary,
         storageQuota,
@@ -1527,7 +1529,7 @@ export class CompanyMailInboxController {
       connectedSource: resolvedConnectedSource,
       connectedAccounts,
       connectedInboxEntitlement,
-    };
+    });
   }
 
   @Get("threads")
@@ -1577,6 +1579,7 @@ export class CompanyMailInboxController {
   @Get("search")
   public async search(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Req() req: Request,
     @Query("q") query?: string,
     @Query("folder") folder?: string,
     @Query("from") fromAddress?: string,
@@ -1623,7 +1626,7 @@ export class CompanyMailInboxController {
         15,
       );
     }
-    return {
+    return maybeZstdJsonEnvelope(req, {
       messages,
       externalHits,
       folder: resolvedFolder,
@@ -1633,7 +1636,7 @@ export class CompanyMailInboxController {
       receivedBefore: receivedBefore?.trim() ?? "",
       hasAttachment: attachmentFilter ?? null,
       deepSearch: externalHits.length > 0,
-    };
+    });
   }
 
   @Get("drafts")
