@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { useWebSession } from "../../context/WebSessionProvider";
+import { resolveOpenSourceLicensesMailUrl } from "../../lib/lertaOpenSourceLicensesUrl";
 
 type Props = {
   children: ReactNode;
@@ -9,6 +11,9 @@ type Props = {
 };
 
 export function EkolojikMarketShell({ children, activeNav }: Props) {
+  const { accessToken } = useWebSession();
+  const ossLicensesHref = resolveOpenSourceLicensesMailUrl(accessToken);
+
   return (
     <div className="ekolojik-market-app">
       <header className="ekolojik-market-topbar">
@@ -39,6 +44,16 @@ export function EkolojikMarketShell({ children, activeNav }: Props) {
         </nav>
       </header>
       <main className="ekolojik-market-main">{children}</main>
+      <footer className="ekolojik-market-footer">
+        <a
+          href={ossLicensesHref}
+          className="ekolojik-market-footer-link"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Açık kaynak lisansları
+        </a>
+      </footer>
     </div>
   );
 }

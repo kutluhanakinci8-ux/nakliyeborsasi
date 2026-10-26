@@ -1177,6 +1177,7 @@ export function useMailClientController({
       "contactsSettings",
       "help",
       "ops",
+      "openSourceLicenses",
     ]);
     if (!allowed.has(raw)) {
       return;

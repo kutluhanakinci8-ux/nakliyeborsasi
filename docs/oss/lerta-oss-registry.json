@@ -126,7 +126,7 @@
     {
       "gmailRef": null,
       "phase": "W5",
-      "status": "planned",
+      "status": "done",
       "surfaces": ["web"],
       "catalogId": "leaflet",
       "package": "leaflet"
