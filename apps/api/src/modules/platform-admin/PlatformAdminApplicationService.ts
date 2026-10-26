@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { createHash } from "node:crypto";
 import { In, Repository } from "typeorm";
-import { createStoreZipArchive } from "../../infrastructure/zip/createStoreZipArchive";
+import { createDeflateZipArchive } from "../../infrastructure/zip/createDeflateZipArchive";
 import { CompanyEntity } from "../../infrastructure/database/entities/CompanyEntity";
 import { UserAccountEntity } from "../../infrastructure/database/entities/UserAccountEntity";
 import { CompanyMembershipEntity } from "../../infrastructure/database/entities/CompanyMembershipEntity";
@@ -533,7 +533,7 @@ export class PlatformAdminApplicationService {
       ),
       "utf8",
     );
-    const zipBuffer = createStoreZipArchive([
+    const zipBuffer = await createDeflateZipArchive([
       { name: "export.json", data: exportJson },
       { name: "manifest.json", data: manifest },
     ]);
