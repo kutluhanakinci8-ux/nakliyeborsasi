@@ -1,5 +1,6 @@
 "use client";
 
+import { PasswordField } from "@/components/PasswordField";
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -238,13 +239,12 @@ export default function RegisterPage() {
 
         <div className="auth-premium-field">
           <label htmlFor="password">Şifre</label>
-          <input
+          <PasswordField
             id="password"
-            type="password"
             minLength={8}
             autoComplete="new-password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={setPassword}
             placeholder="En az 8 karakter"
             required
           />

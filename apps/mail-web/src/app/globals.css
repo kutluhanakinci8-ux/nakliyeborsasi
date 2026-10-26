@@ -1523,7 +1523,8 @@ a {
   color: var(--login-text);
 }
 
-.login-field input {
+.login-field input,
+.login-field .password-field input {
   width: 100%;
   padding: 12px 14px;
   border: 1px solid var(--login-border);
@@ -1533,15 +1534,59 @@ a {
   transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
 }
 
-.login-field input:focus {
+.login-field .password-field input {
+  padding-right: 2.75rem;
+}
+
+.login-field input:focus,
+.login-field .password-field input:focus {
   outline: none;
   border-color: var(--login-violet);
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.18);
   background: #fff;
 }
 
-.login-field input::placeholder {
+.login-field input::placeholder,
+.login-field .password-field input::placeholder {
   color: #9ca3af;
+}
+
+.password-field {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+.password-field-toggle {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--login-muted, #6b7280);
+  cursor: pointer;
+}
+
+.password-field-toggle:hover {
+  color: var(--login-violet, #4f46e5);
+  background: rgba(79, 70, 229, 0.08);
+}
+
+.password-field-toggle:focus-visible {
+  outline: 2px solid var(--login-violet, #4f46e5);
+  outline-offset: 2px;
+}
+
+.mail-cal-field .password-field input.mail-cal-input {
+  padding-right: 2.75rem;
 }
 
 .login-submit {

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { PasswordField } from "@/components/PasswordField";
 import { resetPasswordWithToken } from "@/lib/consoleApi";
 
 function ResetForm() {
@@ -43,13 +44,12 @@ function ResetForm() {
         <>
           {error ? <p className="auth-error">{error}</p> : null}
           <label htmlFor="password">Yeni şifre (min. 8)</label>
-          <input
+          <PasswordField
             id="password"
             className="input"
-            type="password"
             minLength={8}
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={setPassword}
             required
           />
           <button className="btn" type="submit" disabled={loading || !token}>

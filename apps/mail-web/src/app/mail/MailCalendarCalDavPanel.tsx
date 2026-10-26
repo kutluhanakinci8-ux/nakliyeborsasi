@@ -1,5 +1,6 @@
 "use client";
 
+import { PasswordField } from "@/components/PasswordField";
 import { useCallback, useEffect, useState } from "react";
 import {
   createCalendarCalDavAccount,
@@ -142,12 +143,13 @@ export function MailCalendarCalDavPanel({
         </label>
         <label className="mail-cal-field">
           <span className="mail-cal-field-label">{t("calCalDavFieldPassword")}</span>
-          <input
+          <PasswordField
             className="mail-cal-input"
-            type="password"
             placeholder={t("calCalDavPasswordPlaceholder")}
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={setPassword}
+            showLabel={t("passwordToggleShow")}
+            hideLabel={t("passwordToggleHide")}
           />
         </label>
         <div className="mail-cal-form-actions mail-cal-form-actions--inline">

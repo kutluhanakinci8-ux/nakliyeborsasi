@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { PasswordField } from "@/components/PasswordField";
 import { completeTotpLogin, login } from "@/lib/mailApi";
 import {
   MAIL_CORPORATE_REGISTER,
@@ -170,13 +171,14 @@ export default function LoginPage() {
               </div>
               <div className="login-field">
                 <label htmlFor="password">{t("loginPassword")}</label>
-                <input
+                <PasswordField
                   id="password"
-                  type="password"
                   autoComplete="current-password"
                   placeholder="••••••••"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={setPassword}
+                  showLabel={t("passwordToggleShow")}
+                  hideLabel={t("passwordToggleHide")}
                   required
                 />
               </div>

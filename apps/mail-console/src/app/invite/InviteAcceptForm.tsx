@@ -1,5 +1,7 @@
 "use client";
 
+import { PasswordField } from "@/components/PasswordField";
+
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -90,14 +92,15 @@ export function InviteAcceptForm() {
           ) : null}
           <label>
             {requiresRegistration ? "Şifre oluşturun" : "Mevcut şifreniz"}
-            <input
-              type="password"
-              required
-              minLength={8}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={{ width: "100%", marginTop: 4 }}
-            />
+            <div style={{ marginTop: 4 }}>
+              <PasswordField
+                className="input"
+                required
+                minLength={8}
+                value={password}
+                onChange={setPassword}
+              />
+            </div>
           </label>
           <button type="submit" className="btn" disabled={loading || !token}>
             Daveti kabul et ve giriş yap

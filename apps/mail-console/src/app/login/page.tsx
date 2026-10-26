@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { PasswordField } from "@/components/PasswordField";
 import { completeTotpLogin, login } from "@/lib/consoleApi";
 import { useConsoleSession } from "@/lib/session";
 
@@ -65,13 +66,12 @@ export default function LoginPage() {
           required
         />
         <label htmlFor="password">Şifre</label>
-        <input
+        <PasswordField
           id="password"
           className="input"
-          type="password"
           autoComplete="current-password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={setPassword}
           required
         />
         {totpChallenge ? (

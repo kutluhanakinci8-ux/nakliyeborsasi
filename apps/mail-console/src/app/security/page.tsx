@@ -1,5 +1,7 @@
 "use client";
 
+import { PasswordField } from "@/components/PasswordField";
+
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ConsoleShell } from "@/components/ConsoleShell";
@@ -167,11 +169,10 @@ export default function SecurityPage() {
             <h3>TOTP kapat</h3>
             <label>
               Şifre
-              <input
+              <PasswordField
                 className="input"
-                type="password"
                 value={disablePassword}
-                onChange={(e) => setDisablePassword(e.target.value)}
+                onChange={setDisablePassword}
                 required
               />
             </label>
