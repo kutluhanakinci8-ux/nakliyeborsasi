@@ -27,6 +27,7 @@ const catalogFiles = [
   "mailOpenSourceLicensesCatalog.ts",
   "mailOpenSourceLicensesCatalogW2.ts",
   "mailOpenSourceLicensesCatalogW3.ts",
+  "mailOpenSourceLicensesCatalogW4.ts",
 ];
 const ids = [];
 for (const file of catalogFiles) {
@@ -50,6 +51,8 @@ const expectedIds = new Set([
   "dompurify",
   "web-push",
   "ws",
+  "nodemailer",
+  "zstd-node-api",
 ]);
 for (const id of expectedIds) {
   if (!ids.includes(id)) {
@@ -101,8 +104,8 @@ for (const name of serverPackages) {
   console.log(`OK (server): ${name}@${version}`);
 }
 
-if (ids.length < 13) {
-  console.error(`FAIL: expected at least 13 catalog ids, got ${ids.length}`);
+if (ids.length < 15) {
+  console.error(`FAIL: expected at least 15 catalog ids, got ${ids.length}`);
   process.exit(1);
 }
 console.log(

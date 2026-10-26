@@ -1,6 +1,7 @@
 import { MAIL_WEB_W1_OPEN_SOURCE_LICENSES } from "./mailOpenSourceLicensesCatalog";
 import { MAIL_WEB_W2_OPEN_SOURCE_LICENSES } from "./mailOpenSourceLicensesCatalogW2";
 import { MAIL_WEB_W3_OPEN_SOURCE_LICENSES } from "./mailOpenSourceLicensesCatalogW3";
+import { MAIL_WEB_W4_OPEN_SOURCE_LICENSES } from "./mailOpenSourceLicensesCatalogW4";
 import type { OpenSourceLicenseEntry } from "./mailOpenSourceLicenseTypes";
 
 export type { OpenSourceLicenseEntry } from "./mailOpenSourceLicenseTypes";
@@ -9,6 +10,7 @@ export const OPEN_SOURCE_LICENSES: OpenSourceLicenseEntry[] = [
   ...MAIL_WEB_W1_OPEN_SOURCE_LICENSES,
   ...MAIL_WEB_W2_OPEN_SOURCE_LICENSES,
   ...MAIL_WEB_W3_OPEN_SOURCE_LICENSES,
+  ...MAIL_WEB_W4_OPEN_SOURCE_LICENSES,
 ];
 
 export function getOpenSourceLicenseById(
@@ -39,4 +41,9 @@ export const OSS_CATALOG_REQUIRED_PACKAGE_NAMES = [
 ] as const;
 
 /** API sunucusu — Legal ekranında, tarayıcı bundle’ında yok. */
-export const OSS_CATALOG_SERVER_PACKAGE_NAMES = ["web-push", "ws"] as const;
+export const OSS_CATALOG_SERVER_PACKAGE_NAMES = [
+  "web-push",
+  "ws",
+  "nodemailer",
+  "@mongodb-js/zstd",
+] as const;

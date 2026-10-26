@@ -3,7 +3,7 @@ export const MAIL_WEB_I18N_OSS_LICENSES_TR = {
   settingsHubOssLicensesSub: "Açık kaynak bileşenler",
   ossLicensesTitle: "Açık kaynak lisansları",
   ossLicensesIntro:
-    "Lerta Posta web istemcisi aşağıdaki açık kaynak bileşenleri kullanır (W1–W3 kataloğu). Bir satıra dokunarak tam lisans metnini görüntüleyin.",
+    "Lerta Posta web istemcisi aşağıdaki açık kaynak bileşenleri kullanır (W1–W4 kataloğu). Bir satıra dokunarak tam lisans metnini görüntüleyin.",
   ossLicensesBackToList: "Lisans listesi",
   ossLicensePackage: "Paket",
   ossLicenseVersion: "Sürüm",
@@ -37,6 +37,10 @@ export const MAIL_WEB_I18N_OSS_LICENSES_TR = {
     "web-push (sunucu); tarayıcı push bildirimleri — posta ve mesajlaşma uyarıları. Tarayıcıya indirilmez.",
   ossLicenseWsUsage:
     "ws (sunucu); mesajlaşma canlı WebSocket hub. Tarayıcıya indirilmez.",
+  ossLicenseNodemailerUsage:
+    "Nodemailer (sunucu); kurumsal giden e-posta SMTP gönderimi. Tarayıcıya indirilmez.",
+  ossLicenseZstdNodeApiUsage:
+    "Zstandard (sunucu); Posta API JSON sıkıştırma (X-Lerta-Encoding: zstd). Tarayıcıya indirilmez.",
 } as const;
 
 export const MAIL_WEB_I18N_OSS_LICENSES_EN = {
@@ -44,7 +48,7 @@ export const MAIL_WEB_I18N_OSS_LICENSES_EN = {
   settingsHubOssLicensesSub: "Open-source components",
   ossLicensesTitle: "Open source licenses",
   ossLicensesIntro:
-    "The Lerta Posta web client uses the open-source components below (W1–W3 catalog). Tap a row to view the full license text.",
+    "The Lerta Posta web client uses the open-source components below (W1–W4 catalog). Tap a row to view the full license text.",
   ossLicensesBackToList: "License list",
   ossLicensePackage: "Package",
   ossLicenseVersion: "Version",
@@ -78,4 +82,8 @@ export const MAIL_WEB_I18N_OSS_LICENSES_EN = {
     "web-push (server) sends browser push notifications for mail and messaging. Not shipped to the browser bundle.",
   ossLicenseWsUsage:
     "ws (server) powers the messaging WebSocket hub. Not shipped to the browser bundle.",
+  ossLicenseNodemailerUsage:
+    "Nodemailer (server) sends outbound corporate mail over SMTP. Not shipped to the browser bundle.",
+  ossLicenseZstdNodeApiUsage:
+    "Zstandard on the server compresses Posta API JSON (X-Lerta-Encoding: zstd). Not shipped to the browser bundle.",
 } as const;

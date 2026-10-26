@@ -110,7 +110,7 @@
     {
       "gmailRef": null,
       "phase": "W4",
-      "status": "planned",
+      "status": "done",
       "surfaces": ["api"],
       "catalogId": "nodemailer",
       "package": "nodemailer"
@@ -118,11 +118,10 @@
     {
       "gmailRef": "zstd",
       "phase": "W4",
-      "status": "planned",
+      "status": "done",
       "surfaces": ["api"],
-      "catalogId": null,
-      "package": "@mongodb-js/zstd",
-      "note": "API zstd; katalog zstandard ile birleşik not"
+      "catalogId": "zstd-node-api",
+      "package": "@mongodb-js/zstd"
     },
     {
       "gmailRef": null,
