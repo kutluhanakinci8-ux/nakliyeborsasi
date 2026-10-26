@@ -12,6 +12,7 @@
     "oss:verify-catalog": "node ../../scripts/verify-oss-catalog.mjs"
   },
   "dependencies": {
+    "@fragaria/address-formatter": "^7.1.2",
     "@nakliyeborsasi/core": "*",
     "@simplewebauthn/browser": "^13.2.2",
     "@simplewebauthn/types": "^12.0.0",

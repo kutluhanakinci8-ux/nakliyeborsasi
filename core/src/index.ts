@@ -64,5 +64,6 @@ export * from "./ports/ExternalFreightDataPort";
 export * from "./mail/lertaComTrLocalPart";
 export * from "./mail/mailComposeBuiltinTemplates";
 export * from "./mail/emailOutboxMetadata";
+export * from "./mailPostalMarker";
 export * from "./messaging/whatsappBridgeDelivery";
 export * from "./messaging/structuredLog";

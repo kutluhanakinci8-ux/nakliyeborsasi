@@ -6895,6 +6895,30 @@ html[data-mail-read-font="large"] .mail-html-frame {
   resize: vertical;
 }
 
+.mail-tenant-branding-postal {
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin: 0;
+}
+
+.mail-tenant-branding-postal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.mail-tenant-branding-postal-road {
+  grid-column: 1 / -1;
+}
+
+.mail-tenant-branding-postal-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
 .compose-rich-block-select-wrap {
   display: flex;
   flex-direction: column;

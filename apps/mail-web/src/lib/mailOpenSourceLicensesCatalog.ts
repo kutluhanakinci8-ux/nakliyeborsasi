@@ -7,6 +7,18 @@ import type { OpenSourceLicenseEntry } from "./mailOpenSourceLicenseTypes";
 /** Web fazı W1 — Posta istemcisinde kullanıcıya dağıtılan bileşenler. */
 export const MAIL_WEB_W1_OPEN_SOURCE_LICENSES: OpenSourceLicenseEntry[] = [
   {
+    id: "address-formatting",
+    sortName: "Address formatting",
+    packageName: "@fragaria/address-formatter (OpenCage address-formatting)",
+    version: "7.1.2",
+    copyright:
+      "Copyright (c) 2018 Winding Tree · OpenCage Data (address templates, CC-BY-4.0 data)",
+    licenseShort: "MIT (code) · CC-BY-4.0 (template data)",
+    homepage: "https://github.com/fragaria/address-formatter",
+    usageNoteKey: "ossLicenseAddressFormattingUsage",
+    licenseText: mitLicenseText("Copyright (c) 2018 Winding Tree"),
+  },
+  {
     id: "nextjs",
     sortName: "Next.js",
     packageName: "next",

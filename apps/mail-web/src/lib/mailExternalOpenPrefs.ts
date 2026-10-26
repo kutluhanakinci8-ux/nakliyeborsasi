@@ -1,3 +1,5 @@
+import { normalizeFreeformAddressForDirections } from "./mailAddressFormat";
+
 export type LinkBrowserId =
   | "edge"
   | "firefox"
@@ -173,7 +175,7 @@ export function openDirectionsTo(destination: string): void {
   if (typeof window === "undefined") {
     return;
   }
-  const dest = destination.trim();
+  const dest = normalizeFreeformAddressForDirections(destination);
   if (!dest) {
     return;
   }
