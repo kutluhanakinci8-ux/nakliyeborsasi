@@ -32,14 +32,18 @@ import {
 } from "@/lib/mailInboxFocus";
 import {
   applyInboxQueryFilters,
+  applyUserInboxCategoryFilters,
   type InboxQueryFilterId,
 } from "@/lib/mailInboxListFilters";
 import {
   readStoredInboxFocusLane,
   readStoredInboxQueryFilters,
+  readStoredUserCategoryFilters,
   writeStoredInboxFocusLane,
   writeStoredInboxQueryFilters,
+  writeStoredUserCategoryFilters,
 } from "@/lib/mailInboxToolbarPrefs";
+import type { MailUserInboxCategory } from "@/lib/mailUserInboxCategoryUi";
 import { sortInboxMessagesSmart } from "@/lib/mailInboxSmartSort";
 import {
   fetchInboxWithOfflineCache,
@@ -94,7 +98,8 @@ import {
   patchAiMailConsent,
   fetchSummarizeMessage,
   fetchClassifyMessage,
-  patchMessageInboxCategory,
+  fetchUserInboxCategories,
+  patchMessageUserInboxCategory,
   refreshInboxAiFocus,
   type MailInboxBranding,
   searchInbox,
@@ -380,6 +385,48 @@ export function useMailClientController({
     writeStoredInboxQueryFilters(next);
     setInboxQueryFiltersState(next);
   }, []);
+
+  const [userInboxCategories, setUserInboxCategories] = useState<
+    MailUserInboxCategory[]
+  >([]);
+  const [inboxUserCategoryFilterIds, setInboxUserCategoryFilterIdsState] =
+    useState<Set<string>>(() => readStoredUserCategoryFilters());
+
+  const refreshUserInboxCategories = useCallback(async () => {
+    if (!accessToken) {
+      return;
+    }
+    try {
+      const { categories } = await fetchUserInboxCategories(accessToken);
+      setUserInboxCategories(categories);
+    } catch {
+      /* ignore */
+    }
+  }, [accessToken]);
+
+  useEffect(() => {
+    void refreshUserInboxCategories();
+  }, [refreshUserInboxCategories]);
+
+  const toggleInboxUserCategoryFilter = useCallback((categoryId: string) => {
+    setInboxUserCategoryFilterIdsState((prev) => {
+      const next = new Set(prev);
+      if (next.has(categoryId)) {
+        next.delete(categoryId);
+      } else {
+        next.add(categoryId);
+      }
+      writeStoredUserCategoryFilters(next);
+      return next;
+    });
+  }, []);
+
+  const clearInboxUserCategoryFilters = useCallback(() => {
+    const next = new Set<string>();
+    writeStoredUserCategoryFilters(next);
+    setInboxUserCategoryFilterIdsState(next);
+  }, []);
+
   const [inboxConnectedSource, setInboxConnectedSourceState] =
     useState<MailConnectedInboxSource>(() => readStoredConnectedSource());
   const [connectedAccounts, setConnectedAccounts] = useState<
@@ -891,37 +938,34 @@ export function useMailClientController({
     showConnectedInboxTabs,
   ]);
 
-  function applyMessageInboxCategoryLocal(
+  function applyMessageUserCategoryLocal(
     messageId: string,
-    inboxCategory: string | null,
+    userInboxCategoryId: string | null,
   ) {
     setMessages((prev) =>
       prev.map((m) =>
-        m.id === messageId ? { ...m, inboxCategory } : m,
+        m.id === messageId ? { ...m, userInboxCategoryId } : m,
       ),
     );
     setSearchResults((prev) =>
       prev
         ? prev.map((m) =>
-            m.id === messageId ? { ...m, inboxCategory } : m,
+            m.id === messageId ? { ...m, userInboxCategoryId } : m,
           )
         : prev,
     );
   }
 
-  async function setMessageInboxCategory(
+  async function setMessageUserInboxCategory(
     messageId: string,
-    category: string | null,
-    applyToSender = false,
+    categoryId: string | null,
   ) {
     if (!accessToken) {
       return;
     }
-    await patchMessageInboxCategory(accessToken, messageId, {
-      category,
-      applyToSender,
-    });
-    applyMessageInboxCategoryLocal(messageId, category);
+    await patchMessageUserInboxCategory(accessToken, messageId, categoryId);
+    applyMessageUserCategoryLocal(messageId, categoryId);
+    void refreshUserInboxCategories();
   }
 
   function applyMessageReadLocal(messageId: string, readAt: string) {
@@ -2370,6 +2414,12 @@ export function useMailClientController({
     if (showInboxLaneAndFilters && focusedInboxEnabled) {
       items = filterInboxByFocusLane(items, inboxFocusLane);
     }
+    if (
+      showInboxLaneAndFilters &&
+      inboxUserCategoryFilterIds.size > 0
+    ) {
+      items = applyUserInboxCategoryFilters(items, inboxUserCategoryFilterIds);
+    }
     if (showInboxLaneAndFilters && inboxQueryFilters.size > 0) {
       items = applyInboxQueryFilters(
         items,
@@ -2393,6 +2443,7 @@ export function useMailClientController({
     showInboxLaneAndFilters,
     inboxFocusLane,
     inboxQueryFilters,
+    inboxUserCategoryFilterIds,
     summary?.primaryAddress,
   ]);
 
@@ -2876,8 +2927,13 @@ export function useMailClientController({
     applyComposeCampaignTemplate,
     applyDelayedSend,
     applyMessageReadLocal,
-    applyMessageInboxCategoryLocal,
-    setMessageInboxCategory,
+    applyMessageUserCategoryLocal,
+    setMessageUserInboxCategory,
+    userInboxCategories,
+    refreshUserInboxCategories,
+    inboxUserCategoryFilterIds,
+    toggleInboxUserCategoryFilter,
+    clearInboxUserCategoryFilters,
     canBulkSelect,
     canUseThreads,
     cancelPendingUndo,

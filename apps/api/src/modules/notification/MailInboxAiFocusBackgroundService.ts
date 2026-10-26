@@ -45,9 +45,7 @@ export class MailInboxAiFocusBackgroundService {
             });
             return {
               lane: classified.focusLane,
-              category: classified.inboxCategory
-                ? (classified.inboxCategory as "promotions" | "updates" | "social" | "forums" | "commercial")
-                : null,
+              category: normalizeInboxCategory(classified.inboxCategory),
             };
           },
           undefined,

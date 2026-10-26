@@ -85,6 +85,10 @@ if [[ -x scripts/apply-mail-inbound-inbox-category-schema.sh ]]; then
   bash scripts/apply-mail-inbound-inbox-category-schema.sh "$INSTALL_DIR" || true
 fi
 
+if [[ -x scripts/apply-mail-user-inbox-category-schema.sh ]]; then
+  bash scripts/apply-mail-user-inbox-category-schema.sh "$INSTALL_DIR" || true
+fi
+
 if [[ -x scripts/apply-mail-sent-trash-schema.sh ]]; then
   bash scripts/apply-mail-sent-trash-schema.sh "$INSTALL_DIR" || true
 fi

@@ -94,6 +94,9 @@ export class MailInboundMessageEntity {
   @Column({ name: "inbox_category", type: "varchar", length: 32, nullable: true })
   public inboxCategory!: string | null;
 
+  @Column({ name: "user_inbox_category_id", type: "uuid", nullable: true })
+  public userInboxCategoryId!: string | null;
+
   @Column({ name: "exchange_sync_account_id", type: "uuid", nullable: true })
   public exchangeSyncAccountId!: string | null;
 

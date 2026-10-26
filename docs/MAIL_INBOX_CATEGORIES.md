@@ -23,7 +23,8 @@ Akıllı posta kutuları (öncelikli, güncellemeler, promosyonlar) + kullanıc�
 | Kavram | Lerta alanı | Kullanıcıya nasıl görünür |
 |--------|-------------|---------------------------|
 | Odaklanmış / Diğer | `ai_focus_lane` | Komut çubuğu sekmeleri (mevcut) |
-| İçerik kategorisi | `inbox_category` | Liste rozeti + okuma panelinde “Kategori” |
+| Kullanıcı kategorisi (Outlook etiket) | `user_inbox_category_id` → `mail_user_inbox_category` | Ayarlar → Kategoriler; okuma paneli; filtre menüsü |
+| Otomatik içerik ipucu (arka plan) | `inbox_category` | AI/kural; kullanıcı rozeti değil |
 | Gönderen kuralı | `mail_inbox_category_override` | “Bu gönderenden gelenleri her zaman …” |
 | Özel klasör | `custom_folder_id` | Sol menü klasörleri (mevcut) |
 

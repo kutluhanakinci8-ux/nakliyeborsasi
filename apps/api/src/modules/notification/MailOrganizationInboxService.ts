@@ -86,6 +86,7 @@ export type MailInboxListRow = {
   customFolderId: string | null;
   aiFocusLane: "focus" | "other" | null;
   inboxCategory: MailInboxCategory | null;
+  userInboxCategoryId: string | null;
   messageKind: "inbound" | "sent";
   inboxSource?: {
     provider: "lerta" | "microsoft_graph" | "gmail_api";
@@ -1173,6 +1174,18 @@ export class MailOrganizationInboxService {
     await this.inboundRepository.save(row);
   }
 
+  public async setMessageUserInboxCategory(
+    organizationId: string,
+    messageId: string,
+    userInboxCategoryId: string | null,
+    actor?: MailInboxActor,
+  ): Promise<{ userInboxCategoryId: string | null }> {
+    const row = await this.assertMessageAccess(organizationId, messageId, actor);
+    row.userInboxCategoryId = userInboxCategoryId;
+    await this.inboundRepository.save(row);
+    return { userInboxCategoryId };
+  }
+
   public async setMessageInboxCategory(
     organizationId: string,
     messageId: string,
@@ -1423,6 +1436,7 @@ export class MailOrganizationInboxService {
       customFolderId: row.customFolderId,
       aiFocusLane: row.aiFocusLane ?? null,
       inboxCategory: normalizeInboxCategory(row.inboxCategory),
+      userInboxCategoryId: row.userInboxCategoryId ?? null,
       messageKind: "inbound" as const,
       inboxSource: this.resolveInboxSource(row, ctx),
     };

@@ -8049,6 +8049,115 @@ html[data-mail-read-font="large"] .mail-html-frame {
   color: var(--muted);
 }
 
+.mail-inbox-filter-menu__section {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.mail-inbox-filter-menu__section-title {
+  margin: 0 0 6px;
+  padding: 0 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.mail-inbox-filter-menu__item--category {
+  gap: 8px;
+}
+
+.mail-inbox-filter-menu__category-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.mail-user-category-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 6px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 0.62rem;
+  font-weight: 700;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.mail-user-category-badge--compact {
+  padding: 2px 5px;
+}
+
+.mail-user-categories-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mail-user-categories-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mail-user-categories-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto auto auto;
+  gap: 8px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel);
+}
+
+.mail-user-categories-row-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 10px;
+}
+
+.mail-user-categories-name {
+  min-width: 0;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.mail-user-categories-select {
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-size: 0.82rem;
+}
+
+.mail-user-categories-count {
+  font-size: 0.75rem;
+  color: var(--muted);
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 720px) {
+  .mail-user-categories-row {
+    grid-template-columns: auto 1fr 1fr;
+  }
+}
+
 .mail-inbox-filter-menu__clear {
   width: 100%;
   margin-top: 6px;

@@ -26,7 +26,7 @@ describe("mailInboxListFilters", () => {
   it("filters categorized via inbox category", () => {
     const promo = {
       ...base,
-      inboxCategory: "promotions",
+      userInboxCategoryId: "cat-1",
       readAt: new Date().toISOString(),
     };
     const plain = { ...base, readAt: new Date().toISOString() };

@@ -11,10 +11,9 @@ import {
   inboxSourceBadgeLabel,
 } from "@/lib/mailInboxSourceUi";
 import {
-  inboxCategoryBadgeClass,
-  inboxCategoryLabelKey,
-  type MailInboxCategory,
-} from "@/lib/mailInboxCategory";
+  UserCategoryBadge,
+  type MailUserInboxCategory,
+} from "@/lib/mailUserInboxCategoryUi";
 
 type RowMessage = {
   id: string;
@@ -30,7 +29,7 @@ type RowMessage = {
     provider: string;
     accountEmail?: string | null;
   };
-  inboxCategory?: MailInboxCategory | null;
+  userCategory?: MailUserInboxCategory | null;
 };
 
 type Props = {
@@ -115,13 +114,8 @@ export function MailInboxMessageRow({
                 )}
               </span>
             ) : null}
-            {m.inboxCategory ? (
-              <span
-                className={inboxCategoryBadgeClass(m.inboxCategory)}
-                title={t(inboxCategoryLabelKey(m.inboxCategory))}
-              >
-                {t(inboxCategoryLabelKey(m.inboxCategory))}
-              </span>
+            {m.userCategory ? (
+              <UserCategoryBadge category={m.userCategory} compact />
             ) : null}
           </span>
           <span className="mail-inbox-row-date">{dateLabel}</span>

@@ -141,6 +141,7 @@ export type MailInboxListItem = {
   customFolderId?: string | null;
   aiFocusLane?: "focus" | "other" | null;
   inboxCategory?: string | null;
+  userInboxCategoryId?: string | null;
   messageKind?: "inbound" | "sent";
   inboxSource?: MailInboxSourceBadge;
 };
@@ -729,6 +730,71 @@ export async function deleteCustomFolder(
   await apiFetch(accessToken, `company/mail-inbox/custom-folders/${folderId}`, {
     method: "DELETE",
   });
+}
+
+export type MailUserInboxCategory = {
+  id: string;
+  name: string;
+  colorKey: string;
+  iconKey: string;
+  sortOrder: number;
+  messageCount: number;
+};
+
+export async function fetchUserInboxCategories(accessToken: string) {
+  return apiFetch<{ categories: MailUserInboxCategory[] }>(
+    accessToken,
+    "company/mail-inbox/user-categories",
+  );
+}
+
+export async function createUserInboxCategory(
+  accessToken: string,
+  body: { name: string; colorKey?: string; iconKey?: string },
+) {
+  return apiFetch<{ category: MailUserInboxCategory }>(
+    accessToken,
+    "company/mail-inbox/user-categories",
+    { method: "POST", body: JSON.stringify(body) },
+  );
+}
+
+export async function updateUserInboxCategory(
+  accessToken: string,
+  categoryId: string,
+  body: { name?: string; colorKey?: string; iconKey?: string },
+) {
+  return apiFetch<{ category: MailUserInboxCategory }>(
+    accessToken,
+    `company/mail-inbox/user-categories/${categoryId}`,
+    { method: "PATCH", body: JSON.stringify(body) },
+  );
+}
+
+export async function deleteUserInboxCategory(
+  accessToken: string,
+  categoryId: string,
+) {
+  await apiFetch(
+    accessToken,
+    `company/mail-inbox/user-categories/${categoryId}`,
+    { method: "DELETE" },
+  );
+}
+
+export async function patchMessageUserInboxCategory(
+  accessToken: string,
+  messageId: string,
+  categoryId: string | null,
+) {
+  return apiFetch<{ ok: true; userInboxCategoryId: string | null }>(
+    accessToken,
+    `company/mail-inbox/messages/${messageId}/user-category`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ categoryId }),
+    },
+  );
 }
 
 export async function bulkSetMessageCustomFolder(

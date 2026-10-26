@@ -1,8 +1,4 @@
 import type { MailInboxListItem } from "@/lib/mailApi";
-import {
-  isCategorizedInboxCategory,
-  resolveMessageInboxCategory,
-} from "@/lib/mailInboxCategory";
 
 export type InboxQueryFilterId =
   | "unread"
@@ -43,7 +39,7 @@ export function matchesInboxQueryFilter(
     case "pinned":
       return Boolean(message.starredAt);
     case "categorized":
-      return isCategorizedInboxCategory(resolveMessageInboxCategory(message));
+      return Boolean(message.userInboxCategoryId);
     case "toMe": {
       if (!userMailboxEmail) {
         return !message.readAt;
@@ -79,5 +75,20 @@ export function applyInboxQueryFilters(
   const selected = INBOX_QUERY_FILTER_IDS.filter((id) => active.has(id));
   return messages.filter((m) =>
     selected.some((id) => matchesInboxQueryFilter(m, id, userMailboxEmail)),
+  );
+}
+
+/** Outlook tarzı: seçili kullanıcı kategorilerinden herhangi biri (boş set = filtre yok). */
+export function applyUserInboxCategoryFilters(
+  messages: MailInboxListItem[],
+  activeCategoryIds: ReadonlySet<string>,
+): MailInboxListItem[] {
+  if (activeCategoryIds.size === 0) {
+    return messages;
+  }
+  return messages.filter(
+    (m) =>
+      m.userInboxCategoryId != null &&
+      activeCategoryIds.has(m.userInboxCategoryId),
   );
 }

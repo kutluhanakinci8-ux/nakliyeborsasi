@@ -79,6 +79,7 @@ import {
 } from "./RegisterWebPushSubscriptionRequestDto";
 import type { Request } from "express";
 import { MailCustomFolderService } from "./MailCustomFolderService";
+import { MailUserInboxCategoryService } from "./MailUserInboxCategoryService";
 import {
   BulkSetMessageCustomFolderRequestDto,
   CreateMailCustomFolderRequestDto,
@@ -153,6 +154,7 @@ export class CompanyMailInboxController {
     private readonly mailOrganizationBrandingService: MailOrganizationBrandingService,
     private readonly mailWebPushService: MailWebPushService,
     private readonly mailCustomFolderService: MailCustomFolderService,
+    private readonly mailUserInboxCategoryService: MailUserInboxCategoryService,
     private readonly mailInboxRuleService: MailInboxRuleService,
     private readonly mailDelayedComposeService: MailDelayedComposeService,
     private readonly mailInboxPreferencesService: MailInboxPreferencesService,
@@ -1368,6 +1370,80 @@ export class CompanyMailInboxController {
     return { ok: true };
   }
 
+  @Get("user-categories")
+  public async listUserInboxCategories(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    const categories =
+      await this.mailUserInboxCategoryService.listForOrganization(
+        user.companyId,
+      );
+    return { categories };
+  }
+
+  @Post("user-categories")
+  public async createUserInboxCategory(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body()
+    body: { name: string; colorKey?: string; iconKey?: string },
+  ) {
+    const category = await this.mailUserInboxCategoryService.create(
+      user.companyId,
+      body,
+    );
+    return { category };
+  }
+
+  @Patch("user-categories/:categoryId")
+  public async updateUserInboxCategory(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("categoryId") categoryId: string,
+    @Body()
+    body: { name?: string; colorKey?: string; iconKey?: string },
+  ) {
+    const category = await this.mailUserInboxCategoryService.update(
+      user.companyId,
+      categoryId,
+      body,
+    );
+    return { category };
+  }
+
+  @Delete("user-categories/:categoryId")
+  public async deleteUserInboxCategory(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("categoryId") categoryId: string,
+  ) {
+    await this.mailUserInboxCategoryService.remove(user.companyId, categoryId);
+    return { ok: true };
+  }
+
+  @Patch("messages/:messageId/user-category")
+  public async patchMessageUserInboxCategory(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("messageId") messageId: string,
+    @Body() body: { categoryId?: string | null },
+  ) {
+    const categoryId =
+      body.categoryId === undefined || body.categoryId === ""
+        ? null
+        : body.categoryId;
+    if (categoryId) {
+      await this.mailUserInboxCategoryService.assertCategoryForOrg(
+        user.companyId,
+        categoryId,
+      );
+    }
+    const outcome =
+      await this.mailOrganizationInboxService.setMessageUserInboxCategory(
+        user.companyId,
+        messageId,
+        categoryId,
+        user,
+      );
+    return { ok: true, ...outcome };
+  }
+
   @Get()
   public async summary(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
@@ -1411,6 +1487,7 @@ export class CompanyMailInboxController {
         customFolderId: null,
         aiFocusLane: null,
         inboxCategory: null,
+        userInboxCategoryId: null,
         inboxSource: {
           provider: "lerta" as const,
           accountId: null,

@@ -15,6 +15,7 @@ import { MailImapClientSetup } from "./MailImapClientSetup";
 import { MailComposePresetsPanel } from "./MailComposePresetsPanel";
 import { MailAccountsSettingsPanel } from "./MailAccountsSettingsPanel";
 import { MailRulesPanel } from "./MailRulesPanel";
+import { MailUserCategoriesSettingsPanel } from "./MailUserCategoriesSettingsPanel";
 import {
   fetchCalendarCalDavAccounts,
   fetchContactCardDavAccounts,
@@ -48,6 +49,7 @@ export type SettingsView =
   | "notifications"
   | "imap"
   | "rules"
+  | "categories"
   | "security"
   | "privacy"
   | "deliverability"
@@ -166,6 +168,14 @@ const HUB_ITEM_DEFS: HubItemDef[] = [
     keywordsEn: "rule filter forward redirect",
   },
   {
+    id: "categories",
+    section: "quick",
+    labelKey: "settingsHubCategories",
+    subtitleKey: "settingsHubCategoriesSub",
+    keywords: "kategori etiket renk ikon outlook",
+    keywordsEn: "category tag color icon label outlook",
+  },
+  {
     id: "calendarSettings",
     section: "general",
     labelKey: "settingsHubCalendar",
@@ -228,6 +238,7 @@ type Props = {
   notificationsPwaFocus?: boolean;
   deliverabilityEngagementFocus?: boolean;
   mailOpsRunbookFocus?: boolean;
+  onUserCategoriesChanged?: () => void;
 };
 
 export function MailSettingsPanel({
@@ -247,6 +258,7 @@ export function MailSettingsPanel({
   notificationsPwaFocus = false,
   deliverabilityEngagementFocus = false,
   mailOpsRunbookFocus = false,
+  onUserCategoriesChanged,
 }: Props) {
   const { t } = useMailLocale();
   const hubItems = useMemo<HubItem[]>(
@@ -887,6 +899,15 @@ export function MailSettingsPanel({
         <MailRulesPanel accessToken={accessToken} />,
       );
       break;
+    case "categories":
+      content = renderDetail(
+        detailTitle("categories"),
+        <MailUserCategoriesSettingsPanel
+          accessToken={accessToken}
+          onCategoriesChanged={onUserCategoriesChanged}
+        />,
+      );
+      break;
     case "help":
       content = renderDetail(
         detailTitle("help"),
@@ -931,6 +952,7 @@ export function MailSettingsPanel({
           view === "deliverability" ||
           view === "ops" ||
           view === "rules" ||
+          view === "categories" ||
           view === "help" ||
           view === "privacy" ||
           view === "security"
@@ -965,6 +987,8 @@ function settingsRowIcon(id: SettingsView): string {
       return "📬";
     case "rules":
       return "⚡";
+    case "categories":
+      return "🏷️";
     case "calendarSettings":
       return "📅";
     case "contactsSettings":

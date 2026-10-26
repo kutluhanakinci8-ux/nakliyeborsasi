@@ -26,12 +26,7 @@ import type { MailClientController } from "./useMailClientController";
 import { useMailLocale } from "@/lib/MailLocaleProvider";
 import { connectedTabLabel, inboxSourceBadgeClass, inboxSourceBadgeLabel } from "@/lib/mailInboxSourceUi";
 import { formatMailListDate } from "@/lib/mailDisplay";
-import {
-  MAIL_INBOX_CATEGORY_VALUES,
-  inboxCategoryLabelKey,
-  normalizeInboxCategory,
-  resolveMessageInboxCategory,
-} from "@/lib/mailInboxCategory";
+import { UserCategoryBadge } from "@/lib/mailUserInboxCategoryUi";
 import {
   deleteCustomFolder,
   deleteDraft,
@@ -61,8 +56,13 @@ export function MailClientShell({ mail }: Props) {
     applyComposeCampaignTemplate,
     applyDelayedSend,
     applyMessageReadLocal,
-    applyMessageInboxCategoryLocal,
-    setMessageInboxCategory,
+    applyMessageUserCategoryLocal,
+    setMessageUserInboxCategory,
+    userInboxCategories,
+    refreshUserInboxCategories,
+    inboxUserCategoryFilterIds,
+    toggleInboxUserCategoryFilter,
+    clearInboxUserCategoryFilters,
     canBulkSelect,
     canUseThreads,
     cancelPendingUndo,
@@ -375,11 +375,14 @@ export function MailClientShell({ mail }: Props) {
   ]);
 
   const inboxListScrollRef = useRef<HTMLDivElement>(null);
-  const [inboxCategoryApplySender, setInboxCategoryApplySender] =
-    useState(false);
   const selectedInboxListRow = useMemo(
     () => messages.find((m) => m.id === selectedId) ?? null,
     [messages, selectedId],
+  );
+
+  const userCategoryById = useMemo(
+    () => new Map(userInboxCategories.map((c) => [c.id, c])),
+    [userInboxCategories],
   );
 
   const inboxToolbarScrollKey = useMemo(
@@ -824,6 +827,10 @@ export function MailClientShell({ mail }: Props) {
                 activeFilters={inboxQueryFilters}
                 onToggleFilter={toggleInboxQueryFilter}
                 onClearFilters={clearInboxQueryFilters}
+                userCategories={userInboxCategories}
+                activeUserCategoryIds={inboxUserCategoryFilterIds}
+                onToggleUserCategory={toggleInboxUserCategoryFilter}
+                onClearUserCategoryFilters={clearInboxUserCategoryFilters}
                 showConnectedInboxTabs={showConnectedInboxTabs}
                 inboxConnectedSource={inboxConnectedSource}
                 onConnectedSourceChange={setInboxConnectedSource}
@@ -1207,7 +1214,9 @@ export function MailClientShell({ mail }: Props) {
                       ...m,
                       starredAt:
                         "starredAt" in m ? m.starredAt ?? null : null,
-                      inboxCategory: resolveMessageInboxCategory(m),
+                      userCategory: m.userInboxCategoryId
+                        ? userCategoryById.get(m.userInboxCategoryId) ?? null
+                        : null,
                     }}
                     selected={selectedId === m.id}
                     unread={unread}
@@ -1804,43 +1813,49 @@ export function MailClientShell({ mail }: Props) {
                     {t("snoozeClear")}
                   </button>
                 ) : null}
-                {isPrimaryInbox && selectedId && selectedInboxListRow ? (
+                {selectedId && selectedInboxListRow ? (
                   <div className="mail-inbox-category-field">
                     <label className="mail-inbox-category-field__label">
                       {t("inboxCategoryLabel")}
                       <select
                         className="mail-inbox-category-field__select"
-                        value={
-                          resolveMessageInboxCategory(selectedInboxListRow) ??
-                          ""
-                        }
+                        value={selectedInboxListRow.userInboxCategoryId ?? ""}
                         onChange={(e) => {
                           const value = e.target.value;
-                          void setMessageInboxCategory(
+                          void setMessageUserInboxCategory(
                             selectedId,
                             value === "" ? null : value,
-                            inboxCategoryApplySender,
-                          ).catch(() => setToast(t("aiClassifyFailed")));
+                          ).catch(() => setToast(t("settingsCategoriesSaveFailed")));
                         }}
                       >
                         <option value="">{t("inboxCategoryNone")}</option>
-                        {MAIL_INBOX_CATEGORY_VALUES.map((cat) => (
-                          <option key={cat} value={cat}>
-                            {t(inboxCategoryLabelKey(cat))}
+                        {userInboxCategories.map((cat) => (
+                          <option key={cat.id} value={cat.id}>
+                            {cat.name}
                           </option>
                         ))}
                       </select>
                     </label>
-                    <label className="mail-inbox-category-field__remember">
-                      <input
-                        type="checkbox"
-                        checked={inboxCategoryApplySender}
-                        onChange={(e) =>
-                          setInboxCategoryApplySender(e.target.checked)
+                    {selectedInboxListRow.userInboxCategoryId &&
+                    userCategoryById.get(selectedInboxListRow.userInboxCategoryId) ? (
+                      <UserCategoryBadge
+                        category={
+                          userCategoryById.get(
+                            selectedInboxListRow.userInboxCategoryId,
+                          )!
                         }
                       />
-                      {t("inboxCategoryApplySender")}
-                    </label>
+                    ) : null}
+                    <button
+                      type="button"
+                      className="compose-btn compose-btn--secondary"
+                      onClick={() => {
+                        setSettingsInitialView("categories");
+                        setSettingsOpen(true);
+                      }}
+                    >
+                      {t("inboxManageCategories")}
+                    </button>
                   </div>
                 ) : null}
                 <div className="mail-reply-premium-actions">
@@ -1926,12 +1941,6 @@ export function MailClientShell({ mail }: Props) {
                           )
                           .then((result) => {
                             if (result) {
-                              if (result.inboxCategory !== undefined) {
-                                applyMessageInboxCategoryLocal(
-                                  selectedId,
-                                  normalizeInboxCategory(result.inboxCategory),
-                                );
-                              }
                               setToast(
                                 t("toastAiClassify", {
                                   label: result.label,
@@ -2748,6 +2757,7 @@ export function MailClientShell({ mail }: Props) {
           onAppLockChange={setMailAppLockEnabled}
           onPasskeysChange={setHasWebAuthnPasskeys}
           onInboxBrandingSaved={setInboxBranding}
+          onUserCategoriesChanged={() => void refreshUserInboxCategories()}
         />
       ) : null}
       {accessToken ? (

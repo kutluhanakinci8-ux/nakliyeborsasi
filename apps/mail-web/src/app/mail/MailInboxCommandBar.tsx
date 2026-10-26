@@ -15,6 +15,11 @@ import {
 } from "@/lib/mailInboxListFilters";
 import type { MailConnectedInboxSource } from "@/lib/mailApi";
 import { connectedTabLabel } from "@/lib/mailInboxSourceUi";
+import {
+  UserCategoryTagIcon,
+  userCategoryColors,
+  type MailUserInboxCategory,
+} from "@/lib/mailUserInboxCategoryUi";
 
 type Translate = (key: string, params?: Record<string, string | number>) => string;
 
@@ -33,6 +38,10 @@ type Props = {
   activeFilters: ReadonlySet<InboxQueryFilterId>;
   onToggleFilter: (id: InboxQueryFilterId) => void;
   onClearFilters: () => void;
+  userCategories: readonly MailUserInboxCategory[];
+  activeUserCategoryIds: ReadonlySet<string>;
+  onToggleUserCategory: (id: string) => void;
+  onClearUserCategoryFilters: () => void;
   showConnectedInboxTabs: boolean;
   inboxConnectedSource: MailConnectedInboxSource;
   onConnectedSourceChange: (source: MailConnectedInboxSource) => void;
@@ -65,6 +74,10 @@ export function MailInboxCommandBar({
   activeFilters,
   onToggleFilter,
   onClearFilters,
+  userCategories,
+  activeUserCategoryIds,
+  onToggleUserCategory,
+  onClearUserCategoryFilters,
   showConnectedInboxTabs,
   inboxConnectedSource,
   onConnectedSourceChange,
@@ -166,7 +179,7 @@ export function MailInboxCommandBar({
     };
   }, [filterOpen]);
 
-  const filterCount = activeFilters.size;
+  const filterCount = activeFilters.size + activeUserCategoryIds.size;
 
   const filterMenu =
     filterOpen && menuPosition
@@ -206,6 +219,48 @@ export function MailInboxCommandBar({
                 </button>
               );
             })}
+            {userCategories.length > 0 ? (
+              <div
+                className="mail-inbox-filter-menu__section"
+                role="group"
+                aria-label={t("inboxFilterUserCategoriesAria")}
+              >
+                <p className="mail-inbox-filter-menu__section-title">
+                  {t("inboxFilterUserCategoriesTitle")}
+                </p>
+                {userCategories.map((cat) => {
+                  const on = activeUserCategoryIds.has(cat.id);
+                  const colors = userCategoryColors(cat.colorKey);
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      role="menuitemcheckbox"
+                      aria-checked={on}
+                      tabIndex={-1}
+                      className={`mail-inbox-filter-menu__item mail-inbox-filter-menu__item--category${on ? " is-on" : ""}`}
+                      onMouseDown={onFilterMenuPointerDown}
+                      onClick={() => onToggleUserCategory(cat.id)}
+                    >
+                      <span
+                        className="mail-inbox-filter-menu__category-icon"
+                        style={{ background: colors.bg, color: colors.fg }}
+                      >
+                        <UserCategoryTagIcon
+                          iconKey={cat.iconKey}
+                          colorKey={cat.colorKey}
+                          size={14}
+                        />
+                      </span>
+                      <span className="mail-inbox-filter-menu__check" aria-hidden="true">
+                        {on ? "✓" : ""}
+                      </span>
+                      {cat.name}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
             {filterCount > 0 ? (
               <button
                 type="button"
@@ -214,6 +269,7 @@ export function MailInboxCommandBar({
                 onMouseDown={onFilterMenuPointerDown}
                 onClick={() => {
                   onClearFilters();
+                  onClearUserCategoryFilters();
                   setFilterOpen(false);
                   requestAnimationFrame(() => keepFocusOnTrigger());
                 }}
