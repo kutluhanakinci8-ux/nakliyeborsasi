@@ -4,6 +4,7 @@ import { StatusBar } from "expo-status-bar";
 import * as AuthSession from "expo-auth-session";
 import { OpenSourceLegalScreen } from "./OpenSourceLegalScreen";
 import { registerExpoMobilePushToken } from "./expoMobilePush";
+import { registerLertaExpoPushToken } from "./lertaMobilePushApi";
 
 /** OAuth redirect — AppAuth / expo-auth-session (W6). */
 export const MOBILE_OAUTH_REDIRECT_URI = AuthSession.makeRedirectUri({
@@ -15,12 +16,21 @@ type Screen = "home" | "legal";
 export function MobileApplicationRoot(): React.ReactElement {
   const [screen, setScreen] = useState<Screen>("home");
   const [pushTokenPreview, setPushTokenPreview] = useState<string | null>(null);
+  const [pushServerState, setPushServerState] = useState<string | null>(null);
 
   useEffect(() => {
-    void registerExpoMobilePushToken().then((token) => {
-      if (token) {
-        setPushTokenPreview(`${token.slice(0, 24)}…`);
+    void registerExpoMobilePushToken().then(async (token) => {
+      if (!token) {
+        return;
       }
+      setPushTokenPreview(`${token.slice(0, 24)}…`);
+      const accessToken = process.env.EXPO_PUBLIC_LERTA_ACCESS_TOKEN?.trim();
+      if (!accessToken) {
+        setPushServerState("API kaydı için oturum (JWT) gerekli");
+        return;
+      }
+      const ok = await registerLertaExpoPushToken(accessToken, token);
+      setPushServerState(ok ? "Push token API'ye kaydedildi" : "API kaydı başarısız");
     });
   }, []);
 
@@ -41,6 +51,9 @@ export function MobileApplicationRoot(): React.ReactElement {
         <Text style={styles.hint} selectable>
           Push (Expo/FCM) token: {pushTokenPreview}
         </Text>
+      ) : null}
+      {pushServerState ? (
+        <Text style={styles.hint}>{pushServerState}</Text>
       ) : null}
       <Pressable
         style={styles.button}

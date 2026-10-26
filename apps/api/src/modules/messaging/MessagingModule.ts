@@ -20,6 +20,8 @@ import { MessagingAttachmentQuotaService } from "./MessagingAttachmentQuotaServi
 import { MessagingAttachmentS3ProbeService } from "./MessagingAttachmentS3ProbeService";
 import { MessagingWebPushService } from "./MessagingWebPushService";
 import { MessagingWebPushSubscriptionEntity } from "../../infrastructure/database/entities/MessagingWebPushSubscriptionEntity";
+import { MessagingExpoPushTokenEntity } from "../../infrastructure/database/entities/MessagingExpoPushTokenEntity";
+import { MessagingExpoPushService } from "./MessagingExpoPushService";
 import { MessagingPushController } from "./MessagingPushController";
 import { MessagingRealtimeHubService } from "./MessagingRealtimeHubService";
 import { MessagingStreamTicketService } from "./MessagingStreamTicketService";
@@ -68,6 +70,7 @@ import { SocialHubModule } from "../social-hub/SocialHubModule";
       MessageThreadReadStateEntity,
       MessageThreadUserReadStateEntity,
       MessagingWebPushSubscriptionEntity,
+      MessagingExpoPushTokenEntity,
       CompanyEntity,
       FreightListingEntity,
       UserAccountEntity,
@@ -101,6 +104,7 @@ import { SocialHubModule } from "../social-hub/SocialHubModule";
     MessagingAttachmentS3ProbeService,
     MessagingAttachmentStorageService,
     MessagingWebPushService,
+    MessagingExpoPushService,
     MessagingRealtimeHubService,
     MessagingStreamTicketService,
     MessagingAuditService,
@@ -122,6 +126,7 @@ import { SocialHubModule } from "../social-hub/SocialHubModule";
     MessagingThreadApplicationService,
     MessagingRealtimeHubService,
     MessagingWebPushService,
+    MessagingExpoPushService,
     MessagingWhatsappBridgeService,
     MessagingAttachmentStorageService,
   ],

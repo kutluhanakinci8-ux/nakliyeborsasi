@@ -21,6 +21,7 @@ import {
 import { MessagingAttachmentStorageService } from "./MessagingAttachmentStorageService";
 import type { MessagingAttachmentInput } from "./MessagingAttachmentStorageService";
 import { MessagingWebPushService } from "./MessagingWebPushService";
+import { MessagingExpoPushService } from "./MessagingExpoPushService";
 import { MessageThreadReadStateEntity } from "../../infrastructure/database/entities/MessageThreadReadStateEntity";
 import { MessageThreadUserReadStateEntity } from "../../infrastructure/database/entities/MessageThreadUserReadStateEntity";
 import { UserAccountEntity } from "../../infrastructure/database/entities/UserAccountEntity";
@@ -126,6 +127,7 @@ export class MessagingThreadApplicationService {
     private readonly operationalNotificationService: OperationalNotificationService,
     private readonly messagingAttachmentStorageService: MessagingAttachmentStorageService,
     private readonly messagingWebPushService: MessagingWebPushService,
+    private readonly messagingExpoPushService: MessagingExpoPushService,
     private readonly messagingRealtimeHubService: MessagingRealtimeHubService,
     private readonly mailAiComposeService: MailAiComposeService,
     private readonly messagingAuditService: MessagingAuditService,
@@ -671,6 +673,14 @@ export class MessagingThreadApplicationService {
         freightListingId: thread.freightListingId,
       });
       void this.messagingWebPushService.notifyNewChatMessage({
+        companyId: counterpartyCompanyId,
+        threadId: thread.id,
+        senderCompanyName:
+          senderCompany?.legalName?.trim() || authenticatedUser.companyId,
+        bodyPreview: preview,
+        freightListingId: thread.freightListingId,
+      });
+      void this.messagingExpoPushService.notifyNewChatMessage({
         companyId: counterpartyCompanyId,
         threadId: thread.id,
         senderCompanyName:
@@ -1631,6 +1641,13 @@ export class MessagingThreadApplicationService {
         : stored?.map((item) => item.filename).join(", ").slice(0, 280) ??
           "Ek dosya";
     void this.messagingWebPushService.notifyNewChatMessage({
+      companyId: thread.companyAId,
+      threadId: thread.id,
+      senderCompanyName: params.senderDisplayName,
+      bodyPreview: preview,
+      freightListingId: thread.freightListingId,
+    });
+    void this.messagingExpoPushService.notifyNewChatMessage({
       companyId: thread.companyAId,
       threadId: thread.id,
       senderCompanyName: params.senderDisplayName,
