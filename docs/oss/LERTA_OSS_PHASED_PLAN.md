@@ -30,7 +30,7 @@ npm run build -w @lerta/mail-web
 | **W3** ✓ | Güvenli HTML + canlı mesaj | +3 (13 toplam) | DOMPurify, web-push, ws | Push/WebSocket aynı API |
 | **W4** | Posta sunucu (görünür) | +2–3 | nodemailer, @mongodb-js/zstd (API) | SMTP/IMAP aynı backend |
 | **W5** | Mesajlaşma web | +1–2 | Leaflet, ortak Lisanslar URL | Harita RN’de Mapbox/Maps ayrı |
-| **W6** | Mobil istemci v1 | Otomatik merge | Expo/RN scaffold | AppAuth, FCM, okhttp… |
+| **W6** ✓ | Mobil istemci v1 | +3 (19 toplam) | Expo, RN, expo-auth-session + Legal ekranı | `oss:mobile`, merge legal JSON |
 | **W7** | Medya / sosyal | Seçmeli | Önizleme, upload | libjpeg, harfbuzz… |
 | **W8** | Görüntülü görüşme | WebRTC paketi | — | libvpx, libwebm, libSRTP |
 

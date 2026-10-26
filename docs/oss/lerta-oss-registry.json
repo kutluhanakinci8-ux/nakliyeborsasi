@@ -134,9 +134,9 @@
     {
       "gmailRef": "AppAuth",
       "phase": "W6",
-      "status": "planned",
+      "status": "done",
       "surfaces": ["mobile"],
-      "catalogId": null,
+      "catalogId": "expo-auth-session",
       "package": "expo-auth-session"
     },
     {
