@@ -1250,6 +1250,7 @@ export function EkolojikCommunicationsHubClient() {
               <MessagingChatComplianceStrip
                 chat={chat}
                 kvkkHubHref={EKOLOJIK_KVKK_HUB_PATH}
+                accessToken={accessToken}
               />
               <MessagingWhatsappBridgeHubCard
                 accessToken={accessToken}

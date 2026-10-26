@@ -4,6 +4,11 @@ export type MessagingPublicStatus = {
   translate: { deepl: boolean; libretranslate: boolean };
   webPush: { enabled: boolean; isolatedVapid: boolean };
   features: string[];
+  webrtc?: {
+    clientStack: "browser";
+    signaling: "planned";
+    codecsShippedWithApp: boolean;
+  };
 };
 
 export async function fetchMessagingPublicStatus(): Promise<MessagingPublicStatus> {

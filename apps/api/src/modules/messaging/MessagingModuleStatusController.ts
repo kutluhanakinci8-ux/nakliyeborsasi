@@ -36,6 +36,11 @@ export class MessagingModuleStatusController {
     sse: ReturnType<MessagingRealtimeHubService["getStats"]>;
     ws: { enabled: boolean; port: number | null };
     whatsappBridge: WhatsappBridgeDeliverySnapshot;
+    webrtc: {
+      clientStack: "browser";
+      signaling: "planned";
+      codecsShippedWithApp: false;
+    };
   } {
     const deepl = Boolean(
       this.configService.get<string>("MESSAGING_DEEPL_API_KEY")?.trim(),
@@ -111,6 +116,7 @@ export class MessagingModuleStatusController {
         "partner_api_messaging_stamp",
         "native_shell_capacitor_ready",
         "native_shell_capacitor_docs",
+        "browser_webrtc_disclosure",
       ],
       translate: { deepl, libretranslate: libre },
       attachments: (() => {
@@ -136,6 +142,11 @@ export class MessagingModuleStatusController {
         port: this.messagingOptionalWsService.getPort(),
       },
       whatsappBridge: this.messagingWhatsappBridgeService.getDeliverySnapshot(),
+      webrtc: {
+        clientStack: "browser",
+        signaling: "planned",
+        codecsShippedWithApp: false,
+      },
     };
   }
 }
