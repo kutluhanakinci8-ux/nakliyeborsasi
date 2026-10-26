@@ -12,6 +12,7 @@ import {
   applyRemoteImagesPolicyToHtml,
   htmlHasBlockedRemoteImages,
 } from "@/lib/mailHtmlBodyDisplay";
+import { sanitizeMailHtmlForRead } from "@/lib/mailHtmlPurify";
 import {
   applyReadFontScaleToHtml,
   initReadFontScale,
@@ -3023,8 +3024,9 @@ export function useMailClientController({
       if (!rawHtml) {
         return null;
       }
+      const safe = sanitizeMailHtmlForRead(rawHtml);
       const withImages = applyRemoteImagesPolicyToHtml(
-        rawHtml,
+        safe,
         mailPostaPrefs.remoteImagesPolicy,
         remoteImagesRevealed,
       );

@@ -27,7 +27,7 @@ npm run build -w @lerta/mail-web
 | **W0** ✓ | SBOM, verify, şema | — | `scripts/*`, tipler | Registry şeması |
 | **W1** ✓ | Posta web çekirdeği | 7 kalem | Next, React, PGP, WebAuthn, zstd, zlib, adres | — |
 | **W2** ✓ | Gmail parça | +3 (10 toplam) | utf7, libphonenumber, Brotli | jutf7 / libPhoneNumber eşlemesi |
-| **W3** | Güvenli HTML + canlı mesaj | +3–4 | DOMPurify, web-push, ws | Push/WebSocket aynı API |
+| **W3** ✓ | Güvenli HTML + canlı mesaj | +3 (13 toplam) | DOMPurify, web-push, ws | Push/WebSocket aynı API |
 | **W4** | Posta sunucu (görünür) | +2–3 | nodemailer, @mongodb-js/zstd (API) | SMTP/IMAP aynı backend |
 | **W5** | Mesajlaşma web | +1–2 | Leaflet, ortak Lisanslar URL | Harita RN’de Mapbox/Maps ayrı |
 | **W6** | Mobil istemci v1 | Otomatik merge | Expo/RN scaffold | AppAuth, FCM, okhttp… |

@@ -3,6 +3,7 @@ export const LERTA_POSTA_OUTBOUND_MARKER = "lerta-posta-outbound-v2";
 
 const DEFAULT_ACCENT = "#1a1647";
 
+import { sanitizeOutboundHtmlWithPurify } from "../../common/mailHtmlPurify.util";
 import type { MailEmailSocialLink } from "./MailEmailSocialLinks";
 import {
   buildEmailSocialFooterHtml,
@@ -132,9 +133,7 @@ export function resolveOutboundHtml(
 }
 
 export function sanitizeOutboundHtml(html: string): string {
-  return html
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
-    .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "");
+  return sanitizeOutboundHtmlWithPurify(html);
 }
 
 function wrapLertaPostaOutboundEmail(params: {

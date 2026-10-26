@@ -3,7 +3,7 @@ export const MAIL_WEB_I18N_OSS_LICENSES_TR = {
   settingsHubOssLicensesSub: "Açık kaynak bileşenler",
   ossLicensesTitle: "Açık kaynak lisansları",
   ossLicensesIntro:
-    "Lerta Posta web istemcisi aşağıdaki açık kaynak bileşenleri kullanır (W1–W2 kataloğu). Bir satıra dokunarak tam lisans metnini görüntüleyin.",
+    "Lerta Posta web istemcisi aşağıdaki açık kaynak bileşenleri kullanır (W1–W3 kataloğu). Bir satıra dokunarak tam lisans metnini görüntüleyin.",
   ossLicensesBackToList: "Lisans listesi",
   ossLicensePackage: "Paket",
   ossLicenseVersion: "Sürüm",
@@ -31,6 +31,12 @@ export const MAIL_WEB_I18N_OSS_LICENSES_TR = {
     "libphonenumber-js; kurumsal kişilerde telefon doğrulama, E.164 saklama ve uluslararası gösterim.",
   ossLicenseUtf7ImapUsage:
     "utf7 (IMAP modified UTF-7); özel klasör adlarının IMAP LIST biçimi ve maildir iskeleti.",
+  ossLicenseDompurifyUsage:
+    "DOMPurify; gelen ve giden posta HTML sanitizasyonu (API) ve mesaj okuma görünümü (istemci).",
+  ossLicenseWebPushUsage:
+    "web-push (sunucu); tarayıcı push bildirimleri — posta ve mesajlaşma uyarıları. Tarayıcıya indirilmez.",
+  ossLicenseWsUsage:
+    "ws (sunucu); mesajlaşma canlı WebSocket hub. Tarayıcıya indirilmez.",
 } as const;
 
 export const MAIL_WEB_I18N_OSS_LICENSES_EN = {
@@ -38,7 +44,7 @@ export const MAIL_WEB_I18N_OSS_LICENSES_EN = {
   settingsHubOssLicensesSub: "Open-source components",
   ossLicensesTitle: "Open source licenses",
   ossLicensesIntro:
-    "The Lerta Posta web client uses the open-source components below (W1–W2 catalog). Tap a row to view the full license text.",
+    "The Lerta Posta web client uses the open-source components below (W1–W3 catalog). Tap a row to view the full license text.",
   ossLicensesBackToList: "License list",
   ossLicensePackage: "Package",
   ossLicenseVersion: "Version",
@@ -66,4 +72,10 @@ export const MAIL_WEB_I18N_OSS_LICENSES_EN = {
     "libphonenumber-js validates org contacts, stores E.164, and formats numbers for display.",
   ossLicenseUtf7ImapUsage:
     "utf7 (IMAP modified UTF-7) encodes custom folder names for IMAP LIST and maildir layout.",
+  ossLicenseDompurifyUsage:
+    "DOMPurify sanitizes inbound/outbound mail HTML on the API and mail read view in the browser.",
+  ossLicenseWebPushUsage:
+    "web-push (server) sends browser push notifications for mail and messaging. Not shipped to the browser bundle.",
+  ossLicenseWsUsage:
+    "ws (server) powers the messaging WebSocket hub. Not shipped to the browser bundle.",
 } as const;

@@ -26,6 +26,7 @@ const packages = [...requiredMatch[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]);
 const catalogFiles = [
   "mailOpenSourceLicensesCatalog.ts",
   "mailOpenSourceLicensesCatalogW2.ts",
+  "mailOpenSourceLicensesCatalogW3.ts",
 ];
 const ids = [];
 for (const file of catalogFiles) {
@@ -46,6 +47,9 @@ const expectedIds = new Set([
   "brotli",
   "libphonenumber-js",
   "utf7-imap",
+  "dompurify",
+  "web-push",
+  "ws",
 ]);
 for (const id of expectedIds) {
   if (!ids.includes(id)) {
@@ -80,8 +84,27 @@ for (const name of packages) {
 }
 
 if (failed) process.exit(1);
-if (ids.length < 10) {
-  console.error(`FAIL: expected at least 10 catalog ids, got ${ids.length}`);
+const serverMatch = catalogSrc.match(
+  /OSS_CATALOG_SERVER_PACKAGE_NAMES\s*=\s*\[([\s\S]*?)\]/,
+);
+const serverPackages = serverMatch
+  ? [...serverMatch[1].matchAll(/"([^"]+)"/g)].map((m) => m[1])
+  : [];
+
+for (const name of serverPackages) {
+  const version = resolveLockVersion(name);
+  if (!version) {
+    console.error(`FAIL: server catalog package ${name} not in package-lock`);
+    failed = true;
+    continue;
+  }
+  console.log(`OK (server): ${name}@${version}`);
+}
+
+if (ids.length < 13) {
+  console.error(`FAIL: expected at least 13 catalog ids, got ${ids.length}`);
   process.exit(1);
 }
-console.log(`OK: ${ids.length} catalog entries, ${packages.length} required deps`);
+console.log(
+  `OK: ${ids.length} catalog entries, ${packages.length} client deps, ${serverPackages.length} server deps`,
+);
