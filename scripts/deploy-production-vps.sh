@@ -256,6 +256,15 @@ if [[ -x "${INSTALL_DIR}/scripts/verify-posta-deploy-revision.sh" ]]; then
     || echo "UYARI: posta revision doğrulaması başarısız — main ile VPS HEAD uyumsuz olabilir." >&2
 fi
 
+if [[ -x "${INSTALL_DIR}/scripts/verify-messaging-post-deploy-gate.sh" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  [[ -f "${INSTALL_DIR}/.env" ]] && source "${INSTALL_DIR}/.env"
+  set +a
+  API_BASE="${SHOWCASE_API_BASE}" bash "${INSTALL_DIR}/scripts/verify-messaging-post-deploy-gate.sh" \
+    || echo "UYARI: messaging post-deploy gate"
+fi
+
 echo "=== Production deploy bitti ==="
 echo "  app:    https://app.lerta.com.tr/messaging?tab=email"
 echo "  posta:  https://posta.lerta.com.tr/login"

@@ -8,6 +8,8 @@ export type RemoteMobileAuthConfig = {
     issuer: string | null;
     clientId: string | null;
     scopes: string[];
+    authorizationEndpoint: string | null;
+    tokenEndpoint: string | null;
   };
 };
 

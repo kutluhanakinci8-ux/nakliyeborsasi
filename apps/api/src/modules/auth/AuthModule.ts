@@ -20,6 +20,8 @@ import { UserTotpService } from "./UserTotpService";
 import { UserWebAuthnCredentialEntity } from "../../infrastructure/database/entities/UserWebAuthnCredentialEntity";
 import { UserWebAuthnService } from "./UserWebAuthnService";
 import { MobileAuthConfigService } from "./MobileAuthConfigService";
+import { MobileAuthBridgeService } from "./MobileAuthBridgeService";
+import { MobileAuthBridgeController } from "./MobileAuthBridgeController";
 
 @Module({
   imports: [
@@ -48,7 +50,7 @@ import { MobileAuthConfigService } from "./MobileAuthConfigService";
       },
     }),
   ],
-  controllers: [AuthenticationController],
+  controllers: [AuthenticationController, MobileAuthBridgeController],
   providers: [
     UserCredentialAuthenticationService,
     PasswordHashingService,
@@ -61,6 +63,7 @@ import { MobileAuthConfigService } from "./MobileAuthConfigService";
     UserTotpService,
     UserWebAuthnService,
     MobileAuthConfigService,
+    MobileAuthBridgeService,
   ],
   exports: [
     JwtAuthenticationGuard,

@@ -61,10 +61,9 @@ export function MobileApplicationRoot(): React.ReactElement {
     setLoginError(null);
     setLoginBusy(true);
     try {
-      const token = await loginWithEmailPassword(
-        email.trim(),
-        password,
-      );
+      const token = await loginWithEmailPassword(email.trim(), password, {
+        oauthTokenEndpoint: remoteAuthConfig?.oauth.tokenEndpoint,
+      });
       setAccessToken(token);
       setPassword("");
       await push.refresh();

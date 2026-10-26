@@ -165,4 +165,30 @@ test.describe("Mesajlar hub", () => {
       timeout: 20_000,
     });
   });
+
+  test("oturumlu: WebRTC açıklama şeridi (feature açıksa)", async ({
+    page,
+    request,
+  }) => {
+    test.skip(!ACCESS_TOKEN, "E2E_ACCESS_TOKEN veya MESSAGING_TEST_JWT gerekli");
+
+    const statusResponse = await request.get(`${API_BASE}/messaging/status`);
+    test.skip(!statusResponse.ok(), "messaging status erişilemedi");
+    const status = (await statusResponse.json()) as {
+      features?: string[];
+    };
+    test.skip(
+      !(status.features ?? []).includes("browser_webrtc_disclosure"),
+      "browser_webrtc_disclosure kapalı",
+    );
+
+    await page.addInitScript((token) => {
+      window.localStorage.setItem("nakliyeborsasi_access_token", token);
+    }, ACCESS_TOKEN);
+
+    await page.goto("/messaging?tab=sohbet");
+    await expect(
+      page.locator(".messaging-chat-compliance-webrtc"),
+    ).toBeVisible({ timeout: 20_000 });
+  });
 });

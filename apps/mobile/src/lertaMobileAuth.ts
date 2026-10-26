@@ -29,7 +29,38 @@ export async function clearStoredAccessToken(): Promise<void> {
 export async function loginWithEmailPassword(
   emailAddress: string,
   password: string,
+  options?: { oauthTokenEndpoint?: string | null },
 ): Promise<string> {
+  const tokenEndpoint = options?.oauthTokenEndpoint?.trim();
+  if (tokenEndpoint) {
+    const response = await fetch(tokenEndpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Accept: "application/json",
+      },
+      body: new URLSearchParams({
+        grant_type: "password",
+        username: emailAddress.trim(),
+        password,
+      }).toString(),
+    });
+    const payload = (await response.json().catch(() => ({}))) as {
+      access_token?: string;
+      accessToken?: string;
+      message?: string;
+      error?: string;
+    };
+    const accessToken = payload.access_token ?? payload.accessToken;
+    if (!response.ok || !accessToken) {
+      throw new Error(
+        payload.message ?? payload.error ?? "OAuth token isteği başarısız",
+      );
+    }
+    await storeAccessToken(accessToken);
+    return accessToken;
+  }
+
   const response = await fetch(`${resolveApiBaseUrl()}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
