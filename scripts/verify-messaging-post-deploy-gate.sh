@@ -17,11 +17,7 @@ JWT="$(resolve_messaging_verify_jwt 2>/dev/null || true)"
 if [[ -n "${JWT}" ]]; then
   bash "${ROOT}/scripts/verify-messaging-thread-api-smoke.sh"
   bash "${ROOT}/scripts/verify-messaging-attachment-preview.sh"
-  if curl -fsS "${API_BASE}/auth/mobile/config" | grep -q '"enabled":true'; then
-    echo "OK: mobile OAuth bridge advertised"
-  else
-    echo "NOT: mobile OAuth bridge kapalı (apply-messaging-mobile-oauth-vps-env.sh)"
-  fi
+  bash "${ROOT}/scripts/verify-messaging-mobile-oauth-bridge.sh" || true
 else
   echo "SKIP: JWT yok — thread/attachment/mobile OAuth smoke atlandı"
 fi
