@@ -12,7 +12,7 @@ export const MAIL_WEB_I18N_OSS_LICENSES_TR = {
   ossLicenseHomepage: "Kaynak",
   helpOpenSourceLicenses: "Lisanslar",
   ossLicenseZstandardUsage:
-    "Zstandard; gelen kutusu/arama API yanıtları (X-Lerta-Encoding: zstd), IndexedDB çevrimdışı önbellek ve mesaj detaylarında kullanılır.",
+    "Zstandard; tüm Posta API JSON yanıtları (X-Lerta-Encoding: zstd), IndexedDB çevrimdışı önbellek ve mesaj detaylarında kullanılır.",
 } as const;
 
 export const MAIL_WEB_I18N_OSS_LICENSES_EN = {
@@ -29,5 +29,5 @@ export const MAIL_WEB_I18N_OSS_LICENSES_EN = {
   ossLicenseHomepage: "Source",
   helpOpenSourceLicenses: "Licenses",
   ossLicenseZstandardUsage:
-    "Zstandard is used for inbox/search API payloads (X-Lerta-Encoding: zstd) and compressed IndexedDB offline cache.",
+    "Zstandard is used for all Posta API JSON responses (X-Lerta-Encoding: zstd) and compressed IndexedDB offline cache.",
 } as const;

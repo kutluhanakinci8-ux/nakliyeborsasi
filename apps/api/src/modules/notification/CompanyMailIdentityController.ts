@@ -11,7 +11,9 @@ import {
   Query,
   Res,
   UseGuards,
+  UseInterceptors,
 } from "@nestjs/common";
+import { MailZstdJsonResponseInterceptor } from "../../common/MailZstdJsonResponseInterceptor";
 import { CompanyRoleCode, AuthenticatedUserContext } from "@nakliyeborsasi/core";
 import { JwtAuthenticationGuard } from "../auth/JwtAuthenticationGuard";
 import { AuthenticatedUserParam } from "../auth/AuthenticatedUserParam";
@@ -75,6 +77,7 @@ import {
 
 @Controller("company/mail-identity")
 @UseGuards(JwtAuthenticationGuard, MailConsoleAccessGuard)
+@UseInterceptors(MailZstdJsonResponseInterceptor)
 export class CompanyMailIdentityController {
   public constructor(
     private readonly mailTenantSubdomainService: MailTenantSubdomainService,

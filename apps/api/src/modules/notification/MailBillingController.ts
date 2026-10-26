@@ -8,7 +8,9 @@ import {
   Req,
   Res,
   UseGuards,
+  UseInterceptors,
 } from "@nestjs/common";
+import { MailZstdJsonResponseInterceptor } from "../../common/MailZstdJsonResponseInterceptor";
 import { Request, Response } from "express";
 import { JwtAuthenticationGuard } from "../auth/JwtAuthenticationGuard";
 import { AuthenticatedUserParam } from "../auth/AuthenticatedUserParam";
@@ -37,6 +39,7 @@ class IyzicoCallbackDto {
 }
 
 @Controller("company/mail-billing")
+@UseInterceptors(MailZstdJsonResponseInterceptor)
 export class MailBillingController {
   public constructor(
     private readonly mailBillingService: MailBillingService,
