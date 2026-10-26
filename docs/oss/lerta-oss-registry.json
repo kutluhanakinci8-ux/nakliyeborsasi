@@ -1,0 +1,169 @@
+{
+  "$schema": "./lerta-oss-registry.schema.json",
+  "version": 1,
+  "description": "Lerta OSS master kayıt — faz ve yüzey; UI katalog ile senkron tutulur.",
+  "entries": [
+    {
+      "gmailRef": "address_sorting",
+      "phase": "W1",
+      "status": "done",
+      "surfaces": ["mail-web"],
+      "catalogId": "address-formatting",
+      "package": "@fragaria/address-formatter"
+    },
+    {
+      "gmailRef": null,
+      "phase": "W1",
+      "status": "done",
+      "surfaces": ["mail-web"],
+      "catalogId": "nextjs",
+      "package": "next"
+    },
+    {
+      "gmailRef": null,
+      "phase": "W1",
+      "status": "done",
+      "surfaces": ["mail-web"],
+      "catalogId": "react",
+      "package": "react"
+    },
+    {
+      "gmailRef": null,
+      "phase": "W1",
+      "status": "done",
+      "surfaces": ["mail-web"],
+      "catalogId": "openpgp",
+      "package": "openpgp"
+    },
+    {
+      "gmailRef": null,
+      "phase": "W1",
+      "status": "done",
+      "surfaces": ["mail-web"],
+      "catalogId": "simplewebauthn",
+      "package": "@simplewebauthn/browser"
+    },
+    {
+      "gmailRef": "zstd",
+      "phase": "W1",
+      "status": "done",
+      "surfaces": ["mail-web", "api"],
+      "catalogId": "zstandard",
+      "package": "fzstd"
+    },
+    {
+      "gmailRef": "zlib",
+      "phase": "W1",
+      "status": "done",
+      "surfaces": ["mail-web", "api"],
+      "catalogId": "zlib",
+      "package": "node:zlib"
+    },
+    {
+      "gmailRef": "jutf7",
+      "phase": "W2",
+      "status": "done",
+      "surfaces": ["api"],
+      "catalogId": "utf7-imap",
+      "package": "utf7"
+    },
+    {
+      "gmailRef": "libPhoneNumber",
+      "phase": "W2",
+      "status": "done",
+      "surfaces": ["mail-web", "api"],
+      "catalogId": "libphonenumber-js",
+      "package": "libphonenumber-js"
+    },
+    {
+      "gmailRef": "Brotli",
+      "phase": "W2",
+      "status": "done",
+      "surfaces": ["mail-web", "api"],
+      "catalogId": "brotli",
+      "package": "node:zlib.brotli"
+    },
+    {
+      "gmailRef": null,
+      "phase": "W3",
+      "status": "planned",
+      "surfaces": ["mail-web", "api"],
+      "catalogId": "dompurify",
+      "package": "isomorphic-dompurify"
+    },
+    {
+      "gmailRef": null,
+      "phase": "W3",
+      "status": "planned",
+      "surfaces": ["api"],
+      "catalogId": "web-push",
+      "package": "web-push"
+    },
+    {
+      "gmailRef": null,
+      "phase": "W3",
+      "status": "planned",
+      "surfaces": ["api"],
+      "catalogId": "ws",
+      "package": "ws"
+    },
+    {
+      "gmailRef": null,
+      "phase": "W4",
+      "status": "planned",
+      "surfaces": ["api"],
+      "catalogId": "nodemailer",
+      "package": "nodemailer"
+    },
+    {
+      "gmailRef": "zstd",
+      "phase": "W4",
+      "status": "planned",
+      "surfaces": ["api"],
+      "catalogId": null,
+      "package": "@mongodb-js/zstd",
+      "note": "API zstd; katalog zstandard ile birleşik not"
+    },
+    {
+      "gmailRef": null,
+      "phase": "W5",
+      "status": "planned",
+      "surfaces": ["web"],
+      "catalogId": "leaflet",
+      "package": "leaflet"
+    },
+    {
+      "gmailRef": "AppAuth",
+      "phase": "W6",
+      "status": "planned",
+      "surfaces": ["mobile"],
+      "catalogId": null,
+      "package": "expo-auth-session"
+    },
+    {
+      "gmailRef": "Firebase",
+      "phase": "W6",
+      "status": "planned",
+      "surfaces": ["mobile"],
+      "catalogId": null,
+      "package": "@react-native-firebase/messaging"
+    },
+    {
+      "gmailRef": "okhttp3",
+      "phase": "W6",
+      "status": "planned",
+      "surfaces": ["mobile"],
+      "catalogId": null,
+      "package": "com.squareup.okhttp3:okhttp"
+    },
+    {
+      "gmailRef": "Abseil",
+      "phase": null,
+      "status": "skip",
+      "surfaces": [],
+      "catalogId": null,
+      "package": null,
+      "note": "Chromium/GPU — web veya RN ile dağıtılmaz"
+    }
+  ]
+}

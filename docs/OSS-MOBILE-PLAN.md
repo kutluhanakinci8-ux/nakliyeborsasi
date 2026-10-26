@@ -14,12 +14,15 @@
 - **libphonenumber-js** — kurumsal kişi telefonu (E.164)
 - **Brotli** — API JSON `X-Lerta-Encoding: br`
 
-### W3 (sıradaki web ekler)
+### W3–W8 (web + mobil hazırlık)
 
-- `web-push` (MPL-2.0) — mesajlaşma bildirim sunucusu (platform SBOM veya alt bölüm)
-- HTML mail sanitizer (ör. isomorphic-dompurify)
-- Leaflet (`apps/web` harita)
-- Grafik kütüphanesi (mesajlaşma istatistik UI)
+Tek kaynak: **`docs/oss/LERTA_OSS_PHASED_PLAN.md`** (yükle + Lisanslar + kod, faz faz).
+
+- **W3:** DOMPurify, web-push, ws  
+- **W4:** nodemailer, API zstd katalog  
+- **W5:** Leaflet, mesajlaşma web Legal  
+- **W6:** Mobil SBOM merge (`lerta-oss-registry.json`)  
+- **W7–W8:** Medya, WebRTC (ürün fazına bağlı)
 
 ## Faz M — Mobil (Expo / React Native)
 

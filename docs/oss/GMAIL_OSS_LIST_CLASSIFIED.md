@@ -7,9 +7,12 @@ Kaynak: kullanıcı listesi (127 satır, `libwebm` ile biter) + tipik Gmail/Andr
 | Durum | Anlam |
 |-------|--------|
 | **W1 ✓** | Lisanslar ekranı + kodda kullanımda |
-| **W2 ✓** | Bu turda eklendi (lisans + kod) |
-| **Mobil** | Expo/RN/WebView otomatik OSS |
+| **W2 ✓** | Lisanslar ekranı + kodda kullanımda |
+| **W3–W8** | `docs/oss/LERTA_OSS_PHASED_PLAN.md` |
+| **Mobil** | Faz W6 — otomatik OSS merge |
 | **Hayır** | Bu ürün için eklemeyin |
+
+Tam faz planı: **`docs/oss/LERTA_OSS_PHASED_PLAN.md`** · Registry: **`docs/oss/lerta-oss-registry.json`**
 
 ---
 
@@ -70,8 +73,16 @@ address-formatting (address_sorting), Zstandard, zlib, React, Next.js, OpenPGP.j
 
 ---
 
-## Sonraki W3 (plan)
+## Sonraki fazlar (özet)
 
-AppAuth, Firebase FCM, Leaflet (web harita lisansı), HTML sanitizer (DOMPurify), mesajlaşma grafikleri (MIT chart lib).
+| Faz | İçerik |
+|-----|--------|
+| **W3** | DOMPurify, web-push, ws (katalog + kod) |
+| **W4** | nodemailer, API zstd (katalog) |
+| **W5** | Leaflet + mesajlaşma web Legal |
+| **W6** | Mobil RN/FCM/AppAuth — SBOM merge |
+| **W7–W8** | Medya, WebRTC |
+
+Detay: `LERTA_OSS_PHASED_PLAN.md`.
 
 Güncelleme: `npm run oss:verify-catalog` · SBOM: `npm run oss:sbom`
