@@ -169,10 +169,11 @@
     {
       "gmailRef": "Firebase",
       "phase": "W6",
-      "status": "planned",
+      "status": "done",
       "surfaces": ["mobile"],
-      "catalogId": null,
-      "package": "@react-native-firebase/messaging"
+      "catalogId": "expo-notifications",
+      "package": "expo-notifications",
+      "note": "FCM/APNs — Expo push; bare @react-native-firebase/messaging gerekmez"
     },
     {
       "gmailRef": "okhttp3",

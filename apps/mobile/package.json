@@ -9,6 +9,7 @@
   "dependencies": {
     "expo": "~51.0.28",
     "expo-auth-session": "~5.5.2",
+    "expo-notifications": "^0.28.19",
     "expo-status-bar": "~1.12.1",
     "expo-web-browser": "~13.0.3",
     "react": "18.2.0",

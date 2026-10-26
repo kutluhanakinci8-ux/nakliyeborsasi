@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-10-26T17:44:36.067Z",
+  "generatedAt": "2026-10-26T18:15:10.684Z",
   "app": "mobile",
   "workspace": "@nakliyeborsasi/mobile",
-  "packageCount": 891,
+  "packageCount": 899,
   "packages": [
     {
       "name": "@babel/code-frame",
@@ -677,6 +677,12 @@
       "repository": "https://github.com/hapijs/topo"
     },
     {
+      "name": "@ide/backoff",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/ide/backoff"
+    },
+    {
       "name": "@isaacs/cliui",
       "version": null,
       "licenses": "ISC",
@@ -1241,6 +1247,12 @@
       "repository": "https://github.com/kriskowal/asap"
     },
     {
+      "name": "assert",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/browserify/commonjs-assert"
+    },
+    {
       "name": "ast-types",
       "version": null,
       "licenses": "MIT",
@@ -1335,6 +1347,12 @@
       "version": null,
       "licenses": "MIT",
       "repository": "https://github.com/expo/expo"
+    },
+    {
+      "name": "badgin",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/jaulz/badgin"
     },
     {
       "name": "balanced-match",
@@ -2195,6 +2213,12 @@
       "repository": "https://github.com/expo/expo"
     },
     {
+      "name": "expo-notifications",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/expo/expo"
+    },
+    {
       "name": "expo-status-bar",
       "version": null,
       "licenses": "MIT",
@@ -2723,6 +2747,12 @@
       "repository": "https://github.com/whitequark/ipaddr.js"
     },
     {
+      "name": "is-arguments",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/inspect-js/is-arguments"
+    },
+    {
       "name": "is-array-buffer",
       "version": null,
       "licenses": "MIT",
@@ -2865,6 +2895,12 @@
       "version": null,
       "licenses": "MIT",
       "repository": "https://github.com/inspect-js/is-map"
+    },
+    {
+      "name": "is-nan",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/es-shims/is-nan"
     },
     {
       "name": "is-negative-zero",
@@ -3699,6 +3735,12 @@
       "version": null,
       "licenses": "MIT",
       "repository": "https://github.com/inspect-js/object-inspect"
+    },
+    {
+      "name": "object-is",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/es-shims/object-is"
     },
     {
       "name": "object-keys",
@@ -5049,6 +5091,12 @@
       "version": null,
       "licenses": "MIT",
       "repository": "https://github.com/jfromaniello/url-join"
+    },
+    {
+      "name": "util",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/browserify/node-util"
     },
     {
       "name": "util-deprecate",

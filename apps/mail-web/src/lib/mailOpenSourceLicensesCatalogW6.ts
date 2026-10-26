@@ -38,4 +38,15 @@ export const MAIL_WEB_W6_OPEN_SOURCE_LICENSES: OpenSourceLicenseEntry[] = [
     usageNoteKey: "ossLicenseExpoAuthSessionUsage",
     licenseText: mitLicenseText("Copyright (c) 650 Industries, Inc."),
   },
+  {
+    id: "expo-notifications",
+    sortName: "expo-notifications (FCM / APNs)",
+    packageName: "expo-notifications",
+    version: "0.28.19",
+    copyright: "Copyright (c) 650 Industries, Inc.",
+    licenseShort: "MIT",
+    homepage: "https://docs.expo.dev/versions/latest/sdk/notifications/",
+    usageNoteKey: "ossLicenseExpoNotificationsUsage",
+    licenseText: mitLicenseText("Copyright (c) 650 Industries, Inc."),
+  },
 ];

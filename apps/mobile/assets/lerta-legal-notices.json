@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-26T17:44:36.165Z",
+  "generatedAt": "2026-10-26T18:15:10.788Z",
   "version": 1,
   "description": "Lerta birleşik Legal — posta web kataloğu + mobil npm SBOM (W6)",
   "webCatalog": [
@@ -41,6 +41,14 @@
       "packageName": "expo-auth-session · expo-web-browser",
       "licenseShort": "MIT",
       "usageNoteKey": "ossLicenseExpoAuthSessionUsage",
+      "surface": "web-legal"
+    },
+    {
+      "id": "expo-notifications",
+      "sortName": "expo-notifications (FCM / APNs)",
+      "packageName": "expo-notifications",
+      "licenseShort": "MIT",
+      "usageNoteKey": "ossLicenseExpoNotificationsUsage",
       "surface": "web-legal"
     },
     {
@@ -830,6 +838,12 @@
       "surface": "mobile-npm"
     },
     {
+      "name": "@ide/backoff",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
       "name": "@isaacs/cliui",
       "version": null,
       "licenses": "ISC",
@@ -1394,6 +1408,12 @@
       "surface": "mobile-npm"
     },
     {
+      "name": "assert",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
       "name": "ast-types",
       "version": null,
       "licenses": "MIT",
@@ -1485,6 +1505,12 @@
     },
     {
       "name": "babel-preset-expo",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "badgin",
       "version": null,
       "licenses": "MIT",
       "surface": "mobile-npm"
@@ -2348,6 +2374,12 @@
       "surface": "mobile-npm"
     },
     {
+      "name": "expo-notifications",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
       "name": "expo-status-bar",
       "version": null,
       "licenses": "MIT",
@@ -2876,6 +2908,12 @@
       "surface": "mobile-npm"
     },
     {
+      "name": "is-arguments",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
       "name": "is-array-buffer",
       "version": null,
       "licenses": "MIT",
@@ -3015,6 +3053,12 @@
     },
     {
       "name": "is-map",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "is-nan",
       "version": null,
       "licenses": "MIT",
       "surface": "mobile-npm"
@@ -3849,6 +3893,12 @@
     },
     {
       "name": "object-inspect",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
+      "name": "object-is",
       "version": null,
       "licenses": "MIT",
       "surface": "mobile-npm"
@@ -5204,6 +5254,12 @@
       "surface": "mobile-npm"
     },
     {
+      "name": "util",
+      "version": null,
+      "licenses": "MIT",
+      "surface": "mobile-npm"
+    },
+    {
       "name": "util-deprecate",
       "version": null,
       "licenses": "MIT",
@@ -5681,14 +5737,38 @@
       "package": "expo-auth-session"
     },
     {
+      "gmailRef": "libjpeg-turbo",
+      "phase": "W7",
+      "status": "done",
+      "surfaces": [
+        "api"
+      ],
+      "catalogId": "sharp",
+      "package": "sharp",
+      "note": "Gmail libjpeg-turbo — sharp/libvips üzerinden posta ek önizleme"
+    },
+    {
+      "gmailRef": "WebRTC",
+      "phase": "W8",
+      "status": "done",
+      "surfaces": [
+        "web",
+        "mail-web"
+      ],
+      "catalogId": "browser-webrtc",
+      "package": "W3C WebRTC (user agent)",
+      "note": "Codec'ler tarayıcı/OS'ta; libvpx/libwebm npm ile dağıtılmaz"
+    },
+    {
       "gmailRef": "Firebase",
       "phase": "W6",
-      "status": "planned",
+      "status": "done",
       "surfaces": [
         "mobile"
       ],
-      "catalogId": null,
-      "package": "@react-native-firebase/messaging"
+      "catalogId": "expo-notifications",
+      "package": "expo-notifications",
+      "note": "FCM/APNs — Expo push; bare @react-native-firebase/messaging gerekmez"
     },
     {
       "gmailRef": "okhttp3",

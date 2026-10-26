@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import * as AuthSession from "expo-auth-session";
 import { OpenSourceLegalScreen } from "./OpenSourceLegalScreen";
+import { registerExpoMobilePushToken } from "./expoMobilePush";
 
 /** OAuth redirect — AppAuth / expo-auth-session (W6). */
 export const MOBILE_OAUTH_REDIRECT_URI = AuthSession.makeRedirectUri({
@@ -13,6 +14,15 @@ type Screen = "home" | "legal";
 
 export function MobileApplicationRoot(): React.ReactElement {
   const [screen, setScreen] = useState<Screen>("home");
+  const [pushTokenPreview, setPushTokenPreview] = useState<string | null>(null);
+
+  useEffect(() => {
+    void registerExpoMobilePushToken().then((token) => {
+      if (token) {
+        setPushTokenPreview(`${token.slice(0, 24)}…`);
+      }
+    });
+  }, []);
 
   if (screen === "legal") {
     return <OpenSourceLegalScreen onBack={() => setScreen("home")} />;
@@ -27,6 +37,11 @@ export function MobileApplicationRoot(): React.ReactElement {
       <Text style={styles.hint} selectable>
         OAuth redirect: {MOBILE_OAUTH_REDIRECT_URI}
       </Text>
+      {pushTokenPreview ? (
+        <Text style={styles.hint} selectable>
+          Push (Expo/FCM) token: {pushTokenPreview}
+        </Text>
+      ) : null}
       <Pressable
         style={styles.button}
         onPress={() => setScreen("legal")}
