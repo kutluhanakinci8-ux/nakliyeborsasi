@@ -5,6 +5,7 @@ import { MailMailboxEntity } from "../../infrastructure/database/entities/MailMa
 import { CompanyMembershipEntity } from "../../infrastructure/database/entities/CompanyMembershipEntity";
 import { MailOrganizationInboxService } from "./MailOrganizationInboxService";
 import { MailAiComposeService } from "./MailAiComposeService";
+import { normalizeInboxCategory } from "./MailInboxCategoryCatalog";
 
 @Injectable()
 export class MailInboxAiFocusBackgroundService {
@@ -42,7 +43,12 @@ export class MailInboxAiFocusBackgroundService {
               subject: snippet.subject,
               bodySnippet: snippet.bodySnippet,
             });
-            return { lane: classified.focusLane };
+            return {
+              lane: classified.focusLane,
+              category: classified.inboxCategory
+                ? (classified.inboxCategory as "promotions" | "updates" | "social" | "forums" | "commercial")
+                : null,
+            };
           },
           undefined,
           limitPerOrg,

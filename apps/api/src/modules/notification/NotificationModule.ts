@@ -126,6 +126,7 @@ import { MailWebPushService } from "./MailWebPushService";
 import { MailCustomFolderEntity } from "../../infrastructure/database/entities/MailCustomFolderEntity";
 import { MailCustomFolderService } from "./MailCustomFolderService";
 import { MailInboxRuleEntity } from "../../infrastructure/database/entities/MailInboxRuleEntity";
+import { MailInboxCategoryOverrideEntity } from "../../infrastructure/database/entities/MailInboxCategoryOverrideEntity";
 import { MailDelayedComposeEntity } from "../../infrastructure/database/entities/MailDelayedComposeEntity";
 import { MailDelayedComposeService } from "./MailDelayedComposeService";
 import { MailDelayedComposeProcessor } from "./MailDelayedComposeProcessor";
@@ -242,6 +243,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
       MailWebPushSubscriptionEntity,
       MailCustomFolderEntity,
       MailInboxRuleEntity,
+      MailInboxCategoryOverrideEntity,
       MailDelayedComposeEntity,
       MailMarketingCampaignEntity,
       MailWebhookDeliveryLogEntity,

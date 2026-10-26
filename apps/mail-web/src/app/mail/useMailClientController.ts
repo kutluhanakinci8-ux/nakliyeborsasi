@@ -94,6 +94,7 @@ import {
   patchAiMailConsent,
   fetchSummarizeMessage,
   fetchClassifyMessage,
+  patchMessageInboxCategory,
   refreshInboxAiFocus,
   type MailInboxBranding,
   searchInbox,
@@ -889,6 +890,39 @@ export function useMailClientController({
     inboxConnectedSourceForFetch,
     showConnectedInboxTabs,
   ]);
+
+  function applyMessageInboxCategoryLocal(
+    messageId: string,
+    inboxCategory: string | null,
+  ) {
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === messageId ? { ...m, inboxCategory } : m,
+      ),
+    );
+    setSearchResults((prev) =>
+      prev
+        ? prev.map((m) =>
+            m.id === messageId ? { ...m, inboxCategory } : m,
+          )
+        : prev,
+    );
+  }
+
+  async function setMessageInboxCategory(
+    messageId: string,
+    category: string | null,
+    applyToSender = false,
+  ) {
+    if (!accessToken) {
+      return;
+    }
+    await patchMessageInboxCategory(accessToken, messageId, {
+      category,
+      applyToSender,
+    });
+    applyMessageInboxCategoryLocal(messageId, category);
+  }
 
   function applyMessageReadLocal(messageId: string, readAt: string) {
     setMessages((prev) =>
@@ -2842,6 +2876,8 @@ export function useMailClientController({
     applyComposeCampaignTemplate,
     applyDelayedSend,
     applyMessageReadLocal,
+    applyMessageInboxCategoryLocal,
+    setMessageInboxCategory,
     canBulkSelect,
     canUseThreads,
     cancelPendingUndo,

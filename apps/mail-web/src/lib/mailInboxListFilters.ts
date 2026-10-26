@@ -1,4 +1,8 @@
 import type { MailInboxListItem } from "@/lib/mailApi";
+import {
+  isCategorizedInboxCategory,
+  resolveMessageInboxCategory,
+} from "@/lib/mailInboxCategory";
 
 export type InboxQueryFilterId =
   | "unread"
@@ -39,7 +43,7 @@ export function matchesInboxQueryFilter(
     case "pinned":
       return Boolean(message.starredAt);
     case "categorized":
-      return Boolean(message.customFolderId) || Boolean(message.aiFocusLane);
+      return isCategorizedInboxCategory(resolveMessageInboxCategory(message));
     case "toMe": {
       if (!userMailboxEmail) {
         return !message.readAt;

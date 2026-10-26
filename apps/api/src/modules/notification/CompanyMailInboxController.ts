@@ -98,6 +98,7 @@ import {
 } from "./MailInboxRuleRequestDto";
 import { MailOrganizationCalendarService } from "./MailOrganizationCalendarService";
 import { MailOrganizationContactService } from "./MailOrganizationContactService";
+import { normalizeInboxCategory } from "./MailInboxCategoryCatalog";
 import { MailCalendarIcsFeedService } from "./MailCalendarIcsFeedService";
 import { MailCalendarCalDavService } from "./MailCalendarCalDavService";
 import { MailContactCardDavService } from "./MailContactCardDavService";
@@ -321,6 +322,12 @@ export class CompanyMailInboxController {
       result.focusLane,
       user,
     );
+    await this.mailOrganizationInboxService.setMessageInboxCategory(
+      user.companyId,
+      messageId,
+      normalizeInboxCategory(result.inboxCategory),
+      user,
+    );
     await this.mailIdentityAuditService.recordFromUser(
       user,
       MailIdentityAuditAction.AiMailClassify,
@@ -332,7 +339,37 @@ export class CompanyMailInboxController {
       },
       `/company/mail-inbox/messages/${messageId}/classify`,
     );
-    return result;
+    return {
+      ...result,
+      inboxCategory: normalizeInboxCategory(result.inboxCategory),
+    };
+  }
+
+  @Patch("messages/:messageId/inbox-category")
+  public async patchMessageInboxCategory(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("messageId") messageId: string,
+    @Body()
+    body: {
+      category?: string | null;
+      applyToSender?: boolean;
+    },
+  ) {
+    const category =
+      body.category === null || body.category === ""
+        ? null
+        : normalizeInboxCategory(body.category);
+    if (body.category && body.category !== "" && category == null) {
+      throw new BadRequestException("invalid_inbox_category");
+    }
+    const outcome = await this.mailOrganizationInboxService.setMessageInboxCategory(
+      user.companyId,
+      messageId,
+      category,
+      user,
+      { applyToSender: Boolean(body.applyToSender) },
+    );
+    return { ok: true, ...outcome };
   }
 
   @Post("inbox/refresh-ai-focus")
@@ -349,12 +386,34 @@ export class CompanyMailInboxController {
           subject: snippet.subject,
           bodySnippet: snippet.bodySnippet,
         });
-        return { lane: classified.focusLane };
+        return {
+          lane: classified.focusLane,
+          category: classified.inboxCategory
+            ? normalizeInboxCategory(classified.inboxCategory)
+            : null,
+        };
       },
       user,
       body.limit,
     );
-    return { ok: true, ...outcome };
+    const categoryBackfill =
+      await this.mailOrganizationInboxService.backfillInboxCategoriesBatch(
+        user.companyId,
+        user.userId,
+        async (snippet) => {
+          const classified = await this.mailAiComposeService.classifyInbound({
+            userId: user.userId,
+            subject: snippet.subject,
+            bodySnippet: snippet.bodySnippet,
+          });
+          return {
+            category: normalizeInboxCategory(classified.inboxCategory),
+          };
+        },
+        user,
+        body.limit,
+      );
+    return { ok: true, ...outcome, categoryBackfill };
   }
 
   @Post("imap/reconcile-maildir")
@@ -1351,6 +1410,7 @@ export class CompanyMailInboxController {
         starredAt: null,
         customFolderId: null,
         aiFocusLane: null,
+        inboxCategory: null,
         inboxSource: {
           provider: "lerta" as const,
           accountId: null,

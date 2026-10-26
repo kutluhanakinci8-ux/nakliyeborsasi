@@ -140,6 +140,7 @@ export type MailInboxListItem = {
   starredAt?: string | null;
   customFolderId?: string | null;
   aiFocusLane?: "focus" | "other" | null;
+  inboxCategory?: string | null;
   messageKind?: "inbound" | "sent";
   inboxSource?: MailInboxSourceBadge;
 };
@@ -3103,10 +3104,27 @@ export async function fetchClassifyMessage(
   accessToken: string,
   messageId: string,
 ) {
-  return apiFetch<{ label: string; provider: string }>(
+  return apiFetch<{
+    label: string;
+    provider: string;
+    focusLane?: "focus" | "other";
+    inboxCategory?: string | null;
+  }>(
     accessToken,
     `company/mail-inbox/messages/${messageId}/classify`,
     { method: "POST" },
+  );
+}
+
+export async function patchMessageInboxCategory(
+  accessToken: string,
+  messageId: string,
+  body: { category: string | null; applyToSender?: boolean },
+) {
+  return apiFetch<{ ok: true; inboxCategory: string | null }>(
+    accessToken,
+    `company/mail-inbox/messages/${messageId}/inbox-category`,
+    { method: "PATCH", body: JSON.stringify(body) },
   );
 }
 

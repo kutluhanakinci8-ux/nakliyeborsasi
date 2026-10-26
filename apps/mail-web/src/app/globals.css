@@ -7975,6 +7975,80 @@ html[data-mail-read-font="large"] .mail-html-frame {
   font-weight: 800;
 }
 
+.mail-inbox-category-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  vertical-align: middle;
+  text-transform: uppercase;
+}
+
+.mail-inbox-category-badge--promotions {
+  background: #fce7f3;
+  color: #9d174d;
+}
+
+.mail-inbox-category-badge--updates {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.mail-inbox-category-badge--social {
+  background: #ede9fe;
+  color: #5b21b6;
+}
+
+.mail-inbox-category-badge--forums {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.mail-inbox-category-badge--commercial {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.mail-inbox-category-field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 16px;
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--accent) 4%, var(--panel));
+}
+
+.mail-inbox-category-field__label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.mail-inbox-category-field__select {
+  min-width: 200px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-size: 0.88rem;
+}
+
+.mail-inbox-category-field__remember {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
 .mail-inbox-filter-menu__clear {
   width: 100%;
   margin-top: 6px;

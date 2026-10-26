@@ -10,6 +10,11 @@ import {
   inboxSourceBadgeClass,
   inboxSourceBadgeLabel,
 } from "@/lib/mailInboxSourceUi";
+import {
+  inboxCategoryBadgeClass,
+  inboxCategoryLabelKey,
+  type MailInboxCategory,
+} from "@/lib/mailInboxCategory";
 
 type RowMessage = {
   id: string;
@@ -25,6 +30,7 @@ type RowMessage = {
     provider: string;
     accountEmail?: string | null;
   };
+  inboxCategory?: MailInboxCategory | null;
 };
 
 type Props = {
@@ -107,6 +113,14 @@ export function MailInboxMessageRow({
                   m.inboxSource.label,
                   t,
                 )}
+              </span>
+            ) : null}
+            {m.inboxCategory ? (
+              <span
+                className={inboxCategoryBadgeClass(m.inboxCategory)}
+                title={t(inboxCategoryLabelKey(m.inboxCategory))}
+              >
+                {t(inboxCategoryLabelKey(m.inboxCategory))}
               </span>
             ) : null}
           </span>

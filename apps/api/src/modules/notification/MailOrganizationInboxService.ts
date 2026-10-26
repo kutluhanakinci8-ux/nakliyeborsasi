@@ -42,6 +42,11 @@ import {
 import { MailExchangeGraphSyncService } from "./MailExchangeGraphSyncService";
 import { MailGmailSyncService } from "./MailGmailSyncService";
 import { MailConnectedInboxActionsService } from "./MailConnectedInboxActionsService";
+import { MailInboxCategoryOverrideEntity } from "../../infrastructure/database/entities/MailInboxCategoryOverrideEntity";
+import {
+  MailInboxCategory,
+  normalizeInboxCategory,
+} from "./MailInboxCategoryCatalog";
 
 export type InboxFolder =
   | "inbox"
@@ -80,6 +85,7 @@ export type MailInboxListRow = {
   starredAt: string | null;
   customFolderId: string | null;
   aiFocusLane: "focus" | "other" | null;
+  inboxCategory: MailInboxCategory | null;
   messageKind: "inbound" | "sent";
   inboxSource?: {
     provider: "lerta" | "microsoft_graph" | "gmail_api";
@@ -104,6 +110,8 @@ export class MailOrganizationInboxService {
     private readonly exchangeSyncAccountRepository: Repository<MailExchangeSyncAccountEntity>,
     @InjectRepository(MailGmailSyncAccountEntity)
     private readonly gmailSyncAccountRepository: Repository<MailGmailSyncAccountEntity>,
+    @InjectRepository(MailInboxCategoryOverrideEntity)
+    private readonly categoryOverrideRepository: Repository<MailInboxCategoryOverrideEntity>,
     private readonly mailImapMaildirService: MailImapMaildirService,
     private readonly mailMailboxAccessService: MailMailboxAccessService,
     private readonly mailExchangeGraphSyncService: MailExchangeGraphSyncService,
@@ -1165,13 +1173,46 @@ export class MailOrganizationInboxService {
     await this.inboundRepository.save(row);
   }
 
+  public async setMessageInboxCategory(
+    organizationId: string,
+    messageId: string,
+    category: MailInboxCategory | null,
+    actor?: MailInboxActor,
+    options?: { applyToSender?: boolean },
+  ): Promise<{ inboxCategory: MailInboxCategory | null }> {
+    const row = await this.assertMessageAccess(organizationId, messageId, actor);
+    row.inboxCategory = category;
+    await this.inboundRepository.save(row);
+    if (options?.applyToSender) {
+      const fromLower = row.fromAddress.trim().toLowerCase();
+      await this.categoryOverrideRepository.save({
+        organizationId,
+        fromAddressLower: fromLower,
+        inboxCategory: category,
+      });
+    }
+    return { inboxCategory: category };
+  }
+
+  public async resolveInboxCategoryForFrom(
+    organizationId: string,
+    fromAddress: string,
+  ): Promise<MailInboxCategory | null> {
+    const fromLower = fromAddress.trim().toLowerCase();
+    const override = await this.categoryOverrideRepository.findOne({
+      where: { organizationId, fromAddressLower: fromLower },
+    });
+    return override?.inboxCategory ?? null;
+  }
+
   public async refreshAiFocusBatch(
     organizationId: string,
     userId: string,
     classify: (input: {
       subject: string;
       bodySnippet: string;
-    }) => Promise<{ lane: "focus" | "other" }>,
+      fromAddress: string;
+    }) => Promise<{ lane: "focus" | "other"; category?: MailInboxCategory | null }>,
     actor?: MailInboxActor,
     limit = 40,
   ): Promise<{ updated: number; skipped: number }> {
@@ -1193,11 +1234,74 @@ export class MailOrganizationInboxService {
     let skipped = 0;
     for (const row of rows) {
       try {
+        const override = await this.resolveInboxCategoryForFrom(
+          organizationId,
+          row.fromAddress,
+        );
         const result = await classify({
           subject: row.subject,
           bodySnippet: row.snippet ?? row.bodyText ?? "",
+          fromAddress: row.fromAddress,
         });
+        const category =
+          override ??
+          result.category ??
+          normalizeInboxCategory(row.inboxCategory);
         row.aiFocusLane = result.lane;
+        row.inboxCategory = category;
+        await this.inboundRepository.save(row);
+        updated += 1;
+      } catch {
+        skipped += 1;
+      }
+    }
+    return { updated, skipped };
+  }
+
+  public async backfillInboxCategoriesBatch(
+    organizationId: string,
+    userId: string,
+    classify: (input: {
+      subject: string;
+      bodySnippet: string;
+      fromAddress: string;
+    }) => Promise<{ category?: MailInboxCategory | null }>,
+    actor?: MailInboxActor,
+    limit = 40,
+  ): Promise<{ updated: number; skipped: number }> {
+    const mailboxIds = await this.mailboxIds(organizationId, actor);
+    if (mailboxIds.length === 0) {
+      return { updated: 0, skipped: 0 };
+    }
+    const safeLimit = Math.min(Math.max(limit, 1), 80);
+    const rows = await this.inboundRepository.find({
+      where: {
+        mailboxId: In(mailboxIds),
+        mailboxFolder: "inbox",
+        inboxCategory: IsNull(),
+        aiFocusLane: Not(IsNull()),
+      },
+      order: { receivedAt: "DESC" },
+      take: safeLimit,
+    });
+    let updated = 0;
+    let skipped = 0;
+    for (const row of rows) {
+      try {
+        const override = await this.resolveInboxCategoryForFrom(
+          organizationId,
+          row.fromAddress,
+        );
+        if (override != null) {
+          row.inboxCategory = override;
+        } else {
+          const result = await classify({
+            subject: row.subject,
+            bodySnippet: row.snippet ?? row.bodyText ?? "",
+            fromAddress: row.fromAddress,
+          });
+          row.inboxCategory = result.category ?? null;
+        }
         await this.inboundRepository.save(row);
         updated += 1;
       } catch {
@@ -1318,6 +1422,7 @@ export class MailOrganizationInboxService {
       starredAt: row.starredAt?.toISOString() ?? null,
       customFolderId: row.customFolderId,
       aiFocusLane: row.aiFocusLane ?? null,
+      inboxCategory: normalizeInboxCategory(row.inboxCategory),
       messageKind: "inbound" as const,
       inboxSource: this.resolveInboxSource(row, ctx),
     };

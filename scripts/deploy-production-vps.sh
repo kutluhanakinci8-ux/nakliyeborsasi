@@ -81,6 +81,10 @@ if [[ -x scripts/apply-mail-sa4-posta-preferences-schema.sh ]]; then
   bash scripts/apply-mail-sa4-posta-preferences-schema.sh "$INSTALL_DIR" || true
 fi
 
+if [[ -x scripts/apply-mail-inbound-inbox-category-schema.sh ]]; then
+  bash scripts/apply-mail-inbound-inbox-category-schema.sh "$INSTALL_DIR" || true
+fi
+
 if [[ -x scripts/apply-mail-sent-trash-schema.sh ]]; then
   bash scripts/apply-mail-sent-trash-schema.sh "$INSTALL_DIR" || true
 fi

@@ -1,5 +1,6 @@
 import { ForbiddenException, Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { inboxCategoryFromClassifyLabel } from "./MailInboxCategoryCatalog";
 import { UserNotificationPreferenceService } from "./UserNotificationPreferenceService";
 
 @Injectable()
@@ -222,35 +223,28 @@ export class MailAiComposeService {
     userId: string;
     subject: string;
     bodySnippet: string;
-  }): Promise<{ label: string; provider: string; focusLane: "focus" | "other" }> {
+  }): Promise<{
+    label: string;
+    provider: string;
+    focusLane: "focus" | "other";
+    inboxCategory: string | null;
+  }> {
     const snippet = `${input.subject}\n${input.bodySnippet}`.slice(0, 2000);
     if (!this.isEnabled() || !(await this.canUseLlm(input.userId))) {
       const lower = snippet.toLowerCase();
       if (/fatura|invoice|ödeme|payment/.test(lower)) {
-        return {
-          label: "billing",
-          provider: "rules",
-          focusLane: "focus",
-        };
+        return this.classifyResult("billing", "rules", "focus");
       }
       if (/teklif|offer|ihale|auction/.test(lower)) {
-        return {
-          label: "commercial",
-          provider: "rules",
-          focusLane: "focus",
-        };
+        return this.classifyResult("commercial", "rules", "focus");
       }
       if (
         /unsubscribe|newsletter|kampanya|promo|indirim|%\d/.test(lower) ||
         /noreply|no-reply/.test(lower)
       ) {
-        return {
-          label: "promo",
-          provider: "rules",
-          focusLane: "other",
-        };
+        return this.classifyResult("promo", "rules", "other");
       }
-      return { label: "general", provider: "rules", focusLane: "focus" };
+      return this.classifyResult("general", "rules", "focus");
     }
     const text = await this.completeChat(
       [
@@ -266,7 +260,26 @@ export class MailAiComposeService {
     const label = text?.toLowerCase().replace(/[^a-z_]/g, "") || "general";
     const focusLane =
       label === "spam_suspect" || label === "promo" ? "other" : "focus";
-    return { label, provider: "llm", focusLane };
+    return this.classifyResult(label, "llm", focusLane);
+  }
+
+  private classifyResult(
+    label: string,
+    provider: string,
+    focusLane: "focus" | "other",
+  ): {
+    label: string;
+    provider: string;
+    focusLane: "focus" | "other";
+    inboxCategory: string | null;
+  } {
+    const category = inboxCategoryFromClassifyLabel(label);
+    return {
+      label,
+      provider,
+      focusLane,
+      inboxCategory: category ?? null,
+    };
   }
 
   private async canUseLlm(userId: string): Promise<boolean> {

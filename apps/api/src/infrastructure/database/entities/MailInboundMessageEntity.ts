@@ -90,6 +90,10 @@ export class MailInboundMessageEntity {
   @Column({ name: "ai_focus_lane", type: "varchar", length: 16, nullable: true })
   public aiFocusLane!: "focus" | "other" | null;
 
+  /** Gmail/Outlook tarzı içerik kategorisi (null = birincil gelen kutusu) */
+  @Column({ name: "inbox_category", type: "varchar", length: 32, nullable: true })
+  public inboxCategory!: string | null;
+
   @Column({ name: "exchange_sync_account_id", type: "uuid", nullable: true })
   public exchangeSyncAccountId!: string | null;
 

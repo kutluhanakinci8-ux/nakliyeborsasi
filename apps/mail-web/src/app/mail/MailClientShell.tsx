@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { MailComposeMergeFields } from "./MailComposeMergeFields";
 import { MailCapInboxEmptyState } from "./MailCapInboxEmptyState";
 import { MailIosPwaOnboardingBanner } from "./MailIosPwaOnboardingBanner";
@@ -26,6 +26,12 @@ import type { MailClientController } from "./useMailClientController";
 import { useMailLocale } from "@/lib/MailLocaleProvider";
 import { connectedTabLabel, inboxSourceBadgeClass, inboxSourceBadgeLabel } from "@/lib/mailInboxSourceUi";
 import { formatMailListDate } from "@/lib/mailDisplay";
+import {
+  MAIL_INBOX_CATEGORY_VALUES,
+  inboxCategoryLabelKey,
+  normalizeInboxCategory,
+  resolveMessageInboxCategory,
+} from "@/lib/mailInboxCategory";
 import {
   deleteCustomFolder,
   deleteDraft,
@@ -55,6 +61,8 @@ export function MailClientShell({ mail }: Props) {
     applyComposeCampaignTemplate,
     applyDelayedSend,
     applyMessageReadLocal,
+    applyMessageInboxCategoryLocal,
+    setMessageInboxCategory,
     canBulkSelect,
     canUseThreads,
     cancelPendingUndo,
@@ -367,6 +375,13 @@ export function MailClientShell({ mail }: Props) {
   ]);
 
   const inboxListScrollRef = useRef<HTMLDivElement>(null);
+  const [inboxCategoryApplySender, setInboxCategoryApplySender] =
+    useState(false);
+  const selectedInboxListRow = useMemo(
+    () => messages.find((m) => m.id === selectedId) ?? null,
+    [messages, selectedId],
+  );
+
   const inboxToolbarScrollKey = useMemo(
     () =>
       `${inboxFocusLane}|${inboxConnectedSource}|${Array.from(inboxQueryFilters).sort().join(",")}`,
@@ -1192,6 +1207,7 @@ export function MailClientShell({ mail }: Props) {
                       ...m,
                       starredAt:
                         "starredAt" in m ? m.starredAt ?? null : null,
+                      inboxCategory: resolveMessageInboxCategory(m),
                     }}
                     selected={selectedId === m.id}
                     unread={unread}
@@ -1788,6 +1804,45 @@ export function MailClientShell({ mail }: Props) {
                     {t("snoozeClear")}
                   </button>
                 ) : null}
+                {isPrimaryInbox && selectedId && selectedInboxListRow ? (
+                  <div className="mail-inbox-category-field">
+                    <label className="mail-inbox-category-field__label">
+                      {t("inboxCategoryLabel")}
+                      <select
+                        className="mail-inbox-category-field__select"
+                        value={
+                          resolveMessageInboxCategory(selectedInboxListRow) ??
+                          ""
+                        }
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          void setMessageInboxCategory(
+                            selectedId,
+                            value === "" ? null : value,
+                            inboxCategoryApplySender,
+                          ).catch(() => setToast(t("aiClassifyFailed")));
+                        }}
+                      >
+                        <option value="">{t("inboxCategoryNone")}</option>
+                        {MAIL_INBOX_CATEGORY_VALUES.map((cat) => (
+                          <option key={cat} value={cat}>
+                            {t(inboxCategoryLabelKey(cat))}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="mail-inbox-category-field__remember">
+                      <input
+                        type="checkbox"
+                        checked={inboxCategoryApplySender}
+                        onChange={(e) =>
+                          setInboxCategoryApplySender(e.target.checked)
+                        }
+                      />
+                      {t("inboxCategoryApplySender")}
+                    </label>
+                  </div>
+                ) : null}
                 <div className="mail-reply-premium-actions">
                   <div className="mail-reply-action-group">
                     <button
@@ -1871,12 +1926,19 @@ export function MailClientShell({ mail }: Props) {
                           )
                           .then((result) => {
                             if (result) {
+                              if (result.inboxCategory !== undefined) {
+                                applyMessageInboxCategoryLocal(
+                                  selectedId,
+                                  normalizeInboxCategory(result.inboxCategory),
+                                );
+                              }
                               setToast(
                                 t("toastAiClassify", {
                                   label: result.label,
                                   provider: result.provider,
                                 }),
                               );
+                              void refresh();
                             }
                           })
                           .catch(() => setToast(t("aiClassifyFailed")))

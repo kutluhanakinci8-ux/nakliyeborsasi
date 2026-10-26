@@ -23,6 +23,17 @@ describe("mailInboxListFilters", () => {
     ).toBe(false);
   });
 
+  it("filters categorized via inbox category", () => {
+    const promo = {
+      ...base,
+      inboxCategory: "promotions",
+      readAt: new Date().toISOString(),
+    };
+    const plain = { ...base, readAt: new Date().toISOString() };
+    expect(matchesInboxQueryFilter(promo, "categorized")).toBe(true);
+    expect(matchesInboxQueryFilter(plain, "categorized")).toBe(false);
+  });
+
   it("applies OR across active filters", () => {
     const read = { ...base, readAt: new Date().toISOString(), starredAt: null };
     const out = applyInboxQueryFilters(
