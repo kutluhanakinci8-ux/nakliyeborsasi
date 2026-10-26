@@ -33,6 +33,16 @@ import { MailHelpPanel } from "./MailHelpPanel";
 import { MailShareLertaPostaPanel } from "./MailShareLertaPostaPanel";
 import { MailExploreLertaAppsPanel } from "./MailExploreLertaAppsPanel";
 import { MailLertaAppsGridIcon } from "./MailLertaAppsGridIcon";
+import { MailExternalOpenPickerPanel } from "./MailExternalOpenPickerPanel";
+import {
+  EXTERNAL_OPEN_PREFS_EVENT,
+  readDirectionsApp,
+  readLinkBrowser,
+} from "@/lib/mailExternalOpenPrefs";
+import {
+  externalOpenDirectionsAppLabel,
+  externalOpenLinkBrowserLabel,
+} from "./MailExternalOpenPickerPanel";
 import { MailPrivacySettingsPanel } from "./MailPrivacySettingsPanel";
 import { MailSecuritySettingsPanel } from "./MailSecuritySettingsPanel";
 import { MailIntegrationsSettingsPanel } from "./MailIntegrationsSettingsPanel";
@@ -61,12 +71,14 @@ export type SettingsView =
   | "help"
   | "shareLerta"
   | "exploreLertaApps"
+  | "openLinksWith"
+  | "openDirectionsWith"
   | "integrations"
   | "ops";
 
 type HubItem = {
   id: SettingsView;
-  section: "quick" | "general" | "other";
+  section: "quick" | "general" | "integrations" | "other";
   label: string;
   subtitle: string;
   keywords: string;
@@ -142,11 +154,27 @@ const HUB_ITEM_DEFS: HubItemDef[] = [
   },
   {
     id: "integrations",
-    section: "general",
+    section: "integrations",
     labelKey: "settingsHubIntegrations",
     subtitleKey: "settingsHubIntegrationsSub",
-    keywords: "entegrasyon imap api webhook outlook mobil caldav carddav",
-    keywordsEn: "integration imap api webhook outlook mobile caldav carddav",
+    keywords: "entegrasyon imap api webhook outlook mobil caldav carddav eklenti",
+    keywordsEn: "integration imap api webhook outlook mobile caldav carddav add-in",
+  },
+  {
+    id: "openLinksWith",
+    section: "integrations",
+    labelKey: "settingsHubOpenLinks",
+    subtitleKey: "settingsHubOpenLinksSub",
+    keywords: "bağlantı link tarayıcı edge chrome safari firefox opera",
+    keywordsEn: "link browser edge chrome safari firefox opera",
+  },
+  {
+    id: "openDirectionsWith",
+    section: "integrations",
+    labelKey: "settingsHubOpenDirections",
+    subtitleKey: "settingsHubOpenDirectionsSub",
+    keywords: "yol tarif harita maps yandex waze google apple citymapper",
+    keywordsEn: "directions map yandex waze google apple citymapper navigation",
   },
   {
     id: "deliverability",
@@ -317,12 +345,25 @@ export function MailSettingsPanel({
   const [loading, setLoading] = useState(false);
   const [imapReconcileBusy, setImapReconcileBusy] = useState(false);
   const [copyHint, setCopyHint] = useState("");
+  const [linkBrowserPref, setLinkBrowserPref] = useState(readLinkBrowser);
+  const [directionsAppPref, setDirectionsAppPref] = useState(readDirectionsApp);
 
   useEffect(() => {
     if (initialView) {
       setView(initialView);
     }
   }, [initialView]);
+
+  useEffect(() => {
+    const syncExternalOpenPrefs = () => {
+      setLinkBrowserPref(readLinkBrowser());
+      setDirectionsAppPref(readDirectionsApp());
+    };
+    syncExternalOpenPrefs();
+    window.addEventListener(EXTERNAL_OPEN_PREFS_EVENT, syncExternalOpenPrefs);
+    return () =>
+      window.removeEventListener(EXTERNAL_OPEN_PREFS_EVENT, syncExternalOpenPrefs);
+  }, []);
 
   useEffect(() => {
     void (async () => {
@@ -394,6 +435,7 @@ export function MailSettingsPanel({
 
   const hubSections: { key: HubItem["section"]; title: string }[] = [
     { key: "quick", title: t("settingsSectionQuick") },
+    { key: "integrations", title: t("settingsSectionIntegrations") },
     { key: "general", title: t("settingsSectionGeneral") },
     { key: "other", title: t("settingsSectionOther") },
   ];
@@ -560,7 +602,17 @@ export function MailSettingsPanel({
                                         : item.id === "imap" &&
                                             settings?.hasCredential
                                           ? t("settingsHubImapReady")
-                                          : item.subtitle}
+                                          : item.id === "openLinksWith"
+                                            ? externalOpenLinkBrowserLabel(
+                                                linkBrowserPref,
+                                                t,
+                                              )
+                                            : item.id === "openDirectionsWith"
+                                              ? externalOpenDirectionsAppLabel(
+                                                  directionsAppPref,
+                                                  t,
+                                                )
+                                              : item.subtitle}
                           </small>
                           {item.id === "imap" &&
                           settings?.enabled &&
@@ -941,6 +993,18 @@ export function MailSettingsPanel({
         <MailExploreLertaAppsPanel />,
       );
       break;
+    case "openLinksWith":
+      content = renderDetail(
+        detailTitle("openLinksWith"),
+        <MailExternalOpenPickerPanel kind="links" />,
+      );
+      break;
+    case "openDirectionsWith":
+      content = renderDetail(
+        detailTitle("openDirectionsWith"),
+        <MailExternalOpenPickerPanel kind="directions" />,
+      );
+      break;
     case "help":
       content = renderDetail(
         detailTitle("help"),
@@ -989,6 +1053,8 @@ export function MailSettingsPanel({
           view === "help" ||
           view === "shareLerta" ||
           view === "exploreLertaApps" ||
+          view === "openLinksWith" ||
+          view === "openDirectionsWith" ||
           view === "privacy" ||
           view === "security"
             ? "compose-dialog mail-settings-dialog mail-settings-dialog--wide"
@@ -1043,6 +1109,10 @@ function settingsRowIcon(id: SettingsView): string {
       return "↗️";
     case "exploreLertaApps":
       return "";
+    case "openLinksWith":
+      return "🌐";
+    case "openDirectionsWith":
+      return "🗺️";
     case "help":
       return "💬";
     case "ops":
