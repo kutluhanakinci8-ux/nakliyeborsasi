@@ -3,7 +3,7 @@ export const MAIL_WEB_I18N_OSS_LICENSES_TR = {
   settingsHubOssLicensesSub: "Açık kaynak bileşenler",
   ossLicensesTitle: "Açık kaynak lisansları",
   ossLicensesIntro:
-    "Lerta Posta web istemcisi aşağıdaki açık kaynak bileşenleri kullanır (W1–W4 kataloğu). Bir satıra dokunarak tam lisans metnini görüntüleyin.",
+    "Lerta Posta ve platform web (mesajlaşma hub, filo haritası) aşağıdaki açık kaynak bileşenlerini kullanır (W1–W5). Bir satıra dokunarak tam lisans metnini görüntüleyin.",
   ossLicensesBackToList: "Lisans listesi",
   ossLicensePackage: "Paket",
   ossLicenseVersion: "Sürüm",
@@ -41,6 +41,8 @@ export const MAIL_WEB_I18N_OSS_LICENSES_TR = {
     "Nodemailer (sunucu); kurumsal giden e-posta SMTP gönderimi. Tarayıcıya indirilmez.",
   ossLicenseZstdNodeApiUsage:
     "Zstandard (sunucu); Posta API JSON sıkıştırma (X-Lerta-Encoding: zstd). Tarayıcıya indirilmez.",
+  ossLicenseLeafletUsage:
+    "Leaflet (app.lerta.com.tr); canlı filo haritası ve konum görselleştirme — mesajlaşma/lojistik hub.",
 } as const;
 
 export const MAIL_WEB_I18N_OSS_LICENSES_EN = {
@@ -48,7 +50,7 @@ export const MAIL_WEB_I18N_OSS_LICENSES_EN = {
   settingsHubOssLicensesSub: "Open-source components",
   ossLicensesTitle: "Open source licenses",
   ossLicensesIntro:
-    "The Lerta Posta web client uses the open-source components below (W1–W4 catalog). Tap a row to view the full license text.",
+    "Lerta Posta and the platform web app (messaging hub, fleet map) use the open-source components below (W1–W5). Tap a row to view the full license text.",
   ossLicensesBackToList: "License list",
   ossLicensePackage: "Package",
   ossLicenseVersion: "Version",
@@ -86,4 +88,6 @@ export const MAIL_WEB_I18N_OSS_LICENSES_EN = {
     "Nodemailer (server) sends outbound corporate mail over SMTP. Not shipped to the browser bundle.",
   ossLicenseZstdNodeApiUsage:
     "Zstandard on the server compresses Posta API JSON (X-Lerta-Encoding: zstd). Not shipped to the browser bundle.",
+  ossLicenseLeafletUsage:
+    "Leaflet (app.lerta.com.tr) powers the live fleet map and location views in the messaging/logistics hub.",
 } as const;

@@ -1,23 +1,77 @@
 {
-  "generatedAt": "2026-10-26T16:04:32.175Z",
+  "generatedAt": "2026-10-26T17:34:25.347Z",
   "workspace": "@lerta/mail-web",
-  "packageCount": 37,
+  "app": "mail-web",
+  "packageCount": 93,
   "byLicense": {
-    "MIT": 28,
-    "Apache-2.0": 1,
+    "MIT": 71,
+    "MIT-0": 1,
+    "Apache-2.0": 2,
     "CC-BY-4.0": 1,
-    "ISC": 3,
+    "(MPL-2.0 OR Apache-2.0)": 1,
+    "BSD-2-Clause": 3,
+    "ISC": 8,
     "LGPL-3.0+": 1,
-    "BSD-3-Clause": 1,
-    "0BSD": 2
+    "BSD-3-Clause": 2,
+    "0BSD": 2,
+    "BSD": 1
   },
   "packages": [
+    {
+      "name": "@asamuzakjp/css-color",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/asamuzaK/cssColor",
+      "path": "/workspace/node_modules/@asamuzakjp/css-color"
+    },
+    {
+      "name": "@csstools/color-helpers",
+      "version": null,
+      "licenses": "MIT-0",
+      "repository": "https://github.com/csstools/postcss-plugins",
+      "path": "/workspace/node_modules/@csstools/color-helpers"
+    },
+    {
+      "name": "@csstools/css-calc",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/csstools/postcss-plugins",
+      "path": "/workspace/node_modules/@csstools/css-calc"
+    },
+    {
+      "name": "@csstools/css-color-parser",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/csstools/postcss-plugins",
+      "path": "/workspace/node_modules/@csstools/css-color-parser"
+    },
+    {
+      "name": "@csstools/css-parser-algorithms",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/csstools/postcss-plugins",
+      "path": "/workspace/node_modules/@csstools/css-parser-algorithms"
+    },
+    {
+      "name": "@csstools/css-tokenizer",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/csstools/postcss-plugins",
+      "path": "/workspace/node_modules/@csstools/css-tokenizer"
+    },
+    {
+      "name": "@fragaria/address-formatter",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/fragaria/address-formatter",
+      "path": "/workspace/node_modules/@fragaria/address-formatter"
+    },
     {
       "name": "@next/env",
       "version": null,
       "licenses": "MIT",
       "repository": "https://github.com/vercel/next.js",
-      "path": "/workspace/node_modules/@lerta/mail-console/node_modules/@next/env"
+      "path": "/workspace/node_modules/@lerta/mail-marketing/node_modules/@next/env"
     },
     {
       "name": "@next/env",
@@ -38,7 +92,7 @@
       "version": null,
       "licenses": "MIT",
       "repository": "https://github.com/vercel/next.js",
-      "path": "/workspace/node_modules/@lerta/mail-console/node_modules/next/node_modules/@next/swc-linux-x64-gnu"
+      "path": "/workspace/node_modules/@lerta/mail-marketing/node_modules/next/node_modules/@next/swc-linux-x64-gnu"
     },
     {
       "name": "@next/swc-linux-x64-gnu",
@@ -59,7 +113,7 @@
       "version": null,
       "licenses": "MIT",
       "repository": "https://github.com/vercel/next.js",
-      "path": "/workspace/node_modules/@lerta/mail-console/node_modules/next/node_modules/@next/swc-linux-x64-musl"
+      "path": "/workspace/node_modules/@lerta/mail-marketing/node_modules/next/node_modules/@next/swc-linux-x64-musl"
     },
     {
       "name": "@next/swc-linux-x64-musl",
@@ -90,6 +144,20 @@
       "path": "/workspace/node_modules/@swc/helpers"
     },
     {
+      "name": "agent-base",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/TooTallNate/node-agent-base",
+      "path": "/workspace/node_modules/agent-base"
+    },
+    {
+      "name": "agent-base",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/TooTallNate/proxy-agents",
+      "path": "/workspace/node_modules/http-proxy-agent/node_modules/agent-base"
+    },
+    {
       "name": "asn1.js",
       "version": null,
       "licenses": "MIT",
@@ -118,6 +186,55 @@
       "path": "/workspace/node_modules/client-only"
     },
     {
+      "name": "cssstyle",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/jsdom/cssstyle",
+      "path": "/workspace/node_modules/cssstyle"
+    },
+    {
+      "name": "data-urls",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/jsdom/data-urls",
+      "path": "/workspace/node_modules/data-urls"
+    },
+    {
+      "name": "debug",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/visionmedia/debug",
+      "path": "/workspace/node_modules/debug"
+    },
+    {
+      "name": "debug",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/debug-js/debug",
+      "path": "/workspace/node_modules/@tokenizer/inflate/node_modules/debug"
+    },
+    {
+      "name": "decimal.js",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/MikeMcl/decimal.js",
+      "path": "/workspace/node_modules/decimal.js"
+    },
+    {
+      "name": "dompurify",
+      "version": null,
+      "licenses": "(MPL-2.0 OR Apache-2.0)",
+      "repository": "https://github.com/cure53/DOMPurify",
+      "path": "/workspace/node_modules/dompurify"
+    },
+    {
+      "name": "entities",
+      "version": null,
+      "licenses": "BSD-2-Clause",
+      "repository": "https://github.com/fb55/entities",
+      "path": "/workspace/node_modules/entities"
+    },
+    {
       "name": "fzstd",
       "version": null,
       "licenses": "MIT",
@@ -125,11 +242,67 @@
       "path": "/workspace/node_modules/fzstd"
     },
     {
+      "name": "html-encoding-sniffer",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/jsdom/html-encoding-sniffer",
+      "path": "/workspace/node_modules/html-encoding-sniffer"
+    },
+    {
+      "name": "http-proxy-agent",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/TooTallNate/proxy-agents",
+      "path": "/workspace/node_modules/http-proxy-agent"
+    },
+    {
+      "name": "https-proxy-agent",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/TooTallNate/node-https-proxy-agent",
+      "path": "/workspace/node_modules/https-proxy-agent"
+    },
+    {
+      "name": "https-proxy-agent",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/TooTallNate/proxy-agents",
+      "path": "/workspace/node_modules/jsdom/node_modules/https-proxy-agent"
+    },
+    {
+      "name": "iconv-lite",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/ashtuchkin/iconv-lite",
+      "path": "/workspace/node_modules/iconv-lite"
+    },
+    {
+      "name": "iconv-lite",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/ashtuchkin/iconv-lite",
+      "path": "/workspace/node_modules/whatwg-encoding/node_modules/iconv-lite"
+    },
+    {
       "name": "inherits",
       "version": null,
       "licenses": "ISC",
       "repository": "https://github.com/isaacs/inherits",
       "path": "/workspace/node_modules/inherits"
+    },
+    {
+      "name": "is-potential-custom-element-name",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/mathiasbynens/is-potential-custom-element-name",
+      "path": "/workspace/node_modules/is-potential-custom-element-name"
+    },
+    {
+      "name": "isomorphic-dompurify",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/kkomelin/isomorphic-dompurify",
+      "path": "/workspace/node_modules/isomorphic-dompurify"
     },
     {
       "name": "js-tokens",
@@ -146,6 +319,27 @@
       "path": "/workspace/node_modules/strip-literal/node_modules/js-tokens"
     },
     {
+      "name": "jsdom",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/jsdom/jsdom",
+      "path": "/workspace/node_modules/jsdom"
+    },
+    {
+      "name": "libphonenumber-js",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "git+https://gitlab.com/catamphetamine/libphonenumber-js",
+      "path": "/workspace/node_modules/libphonenumber-js"
+    },
+    {
+      "name": "libphonenumber-js",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "git+https://gitlab.com/catamphetamine/libphonenumber-js",
+      "path": "/workspace/node_modules/@nakliyeborsasi/api/node_modules/libphonenumber-js"
+    },
+    {
       "name": "loose-envify",
       "version": null,
       "licenses": "MIT",
@@ -153,11 +347,39 @@
       "path": "/workspace/node_modules/loose-envify"
     },
     {
+      "name": "lru-cache",
+      "version": null,
+      "licenses": "ISC",
+      "repository": "https://github.com/isaacs/node-lru-cache",
+      "path": "/workspace/node_modules/lru-cache"
+    },
+    {
       "name": "minimalistic-assert",
       "version": null,
       "licenses": "ISC",
       "repository": "https://github.com/calvinmetcalf/minimalistic-assert",
       "path": "/workspace/node_modules/minimalistic-assert"
+    },
+    {
+      "name": "ms",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/zeit/ms",
+      "path": "/workspace/node_modules/ms"
+    },
+    {
+      "name": "ms",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/vercel/ms",
+      "path": "/workspace/node_modules/@tokenizer/inflate/node_modules/ms"
+    },
+    {
+      "name": "mustache",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/janl/mustache.js",
+      "path": "/workspace/node_modules/mustache"
     },
     {
       "name": "nanoid",
@@ -171,7 +393,7 @@
       "version": null,
       "licenses": "MIT",
       "repository": "https://github.com/vercel/next.js",
-      "path": "/workspace/node_modules/@lerta/mail-console/node_modules/next"
+      "path": "/workspace/node_modules/@lerta/mail-marketing/node_modules/next"
     },
     {
       "name": "next",
@@ -181,11 +403,25 @@
       "path": "/workspace/node_modules/next"
     },
     {
+      "name": "nwsapi",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/dperini/nwsapi",
+      "path": "/workspace/node_modules/nwsapi"
+    },
+    {
       "name": "openpgp",
       "version": null,
       "licenses": "LGPL-3.0+",
       "repository": "https://github.com/openpgpjs/openpgpjs",
       "path": "/workspace/node_modules/openpgp"
+    },
+    {
+      "name": "parse5",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/inikulin/parse5",
+      "path": "/workspace/node_modules/parse5"
     },
     {
       "name": "picocolors",
@@ -209,6 +445,13 @@
       "path": "/workspace/node_modules/vite/node_modules/postcss"
     },
     {
+      "name": "punycode",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/mathiasbynens/punycode.js",
+      "path": "/workspace/node_modules/punycode"
+    },
+    {
       "name": "react",
       "version": null,
       "licenses": "MIT",
@@ -223,6 +466,13 @@
       "path": "/workspace/node_modules/react-dom"
     },
     {
+      "name": "rrweb-cssom",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/rrweb-io/CSSOM",
+      "path": "/workspace/node_modules/rrweb-cssom"
+    },
+    {
       "name": "safer-buffer",
       "version": null,
       "licenses": "MIT",
@@ -230,11 +480,39 @@
       "path": "/workspace/node_modules/safer-buffer"
     },
     {
+      "name": "saxes",
+      "version": null,
+      "licenses": "ISC",
+      "repository": "https://github.com/lddubeau/saxes",
+      "path": "/workspace/node_modules/saxes"
+    },
+    {
       "name": "scheduler",
       "version": null,
       "licenses": "MIT",
       "repository": "https://github.com/facebook/react",
       "path": "/workspace/node_modules/scheduler"
+    },
+    {
+      "name": "semver",
+      "version": null,
+      "licenses": "ISC",
+      "repository": "https://github.com/npm/node-semver",
+      "path": "/workspace/node_modules/utf7/node_modules/semver"
+    },
+    {
+      "name": "semver",
+      "version": null,
+      "licenses": "ISC",
+      "repository": "https://github.com/npm/node-semver",
+      "path": "/workspace/node_modules/make-dir/node_modules/semver"
+    },
+    {
+      "name": "semver",
+      "version": null,
+      "licenses": "ISC",
+      "repository": "https://github.com/npm/node-semver",
+      "path": "/workspace/node_modules/semver"
     },
     {
       "name": "source-map-js",
@@ -251,6 +529,48 @@
       "path": "/workspace/node_modules/styled-jsx"
     },
     {
+      "name": "symbol-tree",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/jsdom/js-symbol-tree",
+      "path": "/workspace/node_modules/symbol-tree"
+    },
+    {
+      "name": "tldts",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/remusao/tldts",
+      "path": "/workspace/node_modules/tldts"
+    },
+    {
+      "name": "tldts-core",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/remusao/tldts",
+      "path": "/workspace/node_modules/tldts-core"
+    },
+    {
+      "name": "tough-cookie",
+      "version": null,
+      "licenses": "BSD-3-Clause",
+      "repository": "https://github.com/salesforce/tough-cookie",
+      "path": "/workspace/node_modules/tough-cookie"
+    },
+    {
+      "name": "tr46",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/Sebmaster/tr46.js",
+      "path": "/workspace/node_modules/tr46"
+    },
+    {
+      "name": "tr46",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/jsdom/tr46",
+      "path": "/workspace/node_modules/data-urls/node_modules/tr46"
+    },
+    {
       "name": "tslib",
       "version": null,
       "licenses": "0BSD",
@@ -263,6 +583,83 @@
       "licenses": "0BSD",
       "repository": "https://github.com/Microsoft/tslib",
       "path": "/workspace/node_modules/tslib"
+    },
+    {
+      "name": "utf7",
+      "version": null,
+      "licenses": "BSD",
+      "repository": null,
+      "path": "/workspace/node_modules/utf7"
+    },
+    {
+      "name": "w3c-xmlserializer",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/jsdom/w3c-xmlserializer",
+      "path": "/workspace/node_modules/w3c-xmlserializer"
+    },
+    {
+      "name": "webidl-conversions",
+      "version": null,
+      "licenses": "BSD-2-Clause",
+      "repository": "https://github.com/jsdom/webidl-conversions",
+      "path": "/workspace/node_modules/webidl-conversions"
+    },
+    {
+      "name": "webidl-conversions",
+      "version": null,
+      "licenses": "BSD-2-Clause",
+      "repository": "https://github.com/jsdom/webidl-conversions",
+      "path": "/workspace/node_modules/data-urls/node_modules/webidl-conversions"
+    },
+    {
+      "name": "whatwg-encoding",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/jsdom/whatwg-encoding",
+      "path": "/workspace/node_modules/whatwg-encoding"
+    },
+    {
+      "name": "whatwg-mimetype",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/jsdom/whatwg-mimetype",
+      "path": "/workspace/node_modules/whatwg-mimetype"
+    },
+    {
+      "name": "whatwg-url",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/jsdom/whatwg-url",
+      "path": "/workspace/node_modules/data-urls/node_modules/whatwg-url"
+    },
+    {
+      "name": "whatwg-url",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/jsdom/whatwg-url",
+      "path": "/workspace/node_modules/whatwg-url"
+    },
+    {
+      "name": "ws",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/websockets/ws",
+      "path": "/workspace/node_modules/ws"
+    },
+    {
+      "name": "xml-name-validator",
+      "version": null,
+      "licenses": "Apache-2.0",
+      "repository": "https://github.com/jsdom/xml-name-validator",
+      "path": "/workspace/node_modules/xml-name-validator"
+    },
+    {
+      "name": "xmlchars",
+      "version": null,
+      "licenses": "MIT",
+      "repository": "https://github.com/lddubeau/xmlchars",
+      "path": "/workspace/node_modules/xmlchars"
     },
     {
       "name": "zstd-codec",

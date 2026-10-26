@@ -1,7 +1,11 @@
 #!/usr/bin/env node
 /**
- * mail-web istemci bağımlılıkları için SBOM (license-checker + package-lock BFS).
- * Çıktı: docs/oss/mail-web-sbom.json, docs/oss/mail-web-sbom-summary.md
+ * İstemci bağımlılıkları için SBOM (license-checker + package-lock BFS).
+ * Çıktı: docs/oss/<app>-sbom.json, docs/oss/<app>-sbom-summary.md
+ *
+ * Kullanım:
+ *   OSS_SBOM_APP=mail-web node scripts/generate-oss-sbom.mjs   (varsayılan)
+ *   OSS_SBOM_APP=web node scripts/generate-oss-sbom.mjs
  */
 import { execSync } from "node:child_process";
 import fs from "node:fs";
@@ -10,12 +14,30 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const outDir = path.join(root, "docs", "oss");
-const mailWebDir = path.join(root, "apps", "mail-web");
-const workspace = "@lerta/mail-web";
 
-function loadMailWebRootDeps() {
+const APP_CONFIG = {
+  "mail-web": {
+    dir: path.join(root, "apps", "mail-web"),
+    workspace: "@lerta/mail-web",
+    slug: "mail-web",
+  },
+  web: {
+    dir: path.join(root, "apps", "web"),
+    workspace: "@nakliyeborsasi/web",
+    slug: "web",
+  },
+};
+
+const appKey = process.env.OSS_SBOM_APP?.trim() || "mail-web";
+const config = APP_CONFIG[appKey];
+if (!config) {
+  console.error(`FAIL: unknown OSS_SBOM_APP=${appKey}`);
+  process.exit(1);
+}
+
+function loadRootDeps(appDir) {
   const pkg = JSON.parse(
-    fs.readFileSync(path.join(mailWebDir, "package.json"), "utf8"),
+    fs.readFileSync(path.join(appDir, "package.json"), "utf8"),
   );
   return [
     ...Object.keys(pkg.dependencies ?? {}),
@@ -60,7 +82,7 @@ function main() {
   const lock = JSON.parse(
     fs.readFileSync(path.join(root, "package-lock.json"), "utf8"),
   );
-  const mailWebNames = collectTransitiveNames(lock, loadMailWebRootDeps());
+  const rootNames = collectTransitiveNames(lock, loadRootDeps(config.dir));
 
   const checkerRaw = execSync(
     "npx --yes license-checker@25.0.1 --json",
@@ -72,7 +94,7 @@ function main() {
   for (const [key, meta] of Object.entries(checker)) {
     const name =
       meta.name ?? (key.split("@").slice(0, -1).join("@") || key);
-    if (!mailWebNames.has(name)) continue;
+    if (!rootNames.has(name)) continue;
     if (name.startsWith("@lerta/") || name.startsWith("@nakliyeborsasi/")) {
       continue;
     }
@@ -95,13 +117,14 @@ function main() {
   const generatedAt = new Date().toISOString();
   const payload = {
     generatedAt,
-    workspace,
+    workspace: config.workspace,
+    app: appKey,
     packageCount: entries.length,
     byLicense,
     packages: entries,
   };
 
-  const jsonPath = path.join(outDir, "mail-web-sbom.json");
+  const jsonPath = path.join(outDir, `${config.slug}-sbom.json`);
   fs.writeFileSync(jsonPath, `${JSON.stringify(payload, null, 2)}\n`);
 
   const lockPackages = lock.packages ?? {};
@@ -114,11 +137,11 @@ function main() {
   }
 
   const mdLines = [
-    "# mail-web SBOM özeti",
+    `# ${config.slug} SBOM özeti`,
     "",
     `Oluşturulma: ${generatedAt}`,
     "",
-    `Toplam paket: **${entries.length}** (lockfile BFS, mail-web kök bağımlılıkları)`,
+    `Toplam paket: **${entries.length}** (lockfile BFS, ${appKey} kök bağımlılıkları)`,
     "",
     "## Lisans dağılımı",
     "",
@@ -126,32 +149,16 @@ function main() {
       .sort((a, b) => b[1] - a[1])
       .map(([lic, n]) => `- ${lic}: ${n}`),
     "",
-    "## W1 katalog paketleri (manuel ekran)",
+    `Tam liste: \`${config.slug}-sbom.json\``,
     "",
-    "| Paket | lockfile | SBOM lisans |",
-    "|-------|----------|-------------|",
   ];
-  const w1 = [
-    "@fragaria/address-formatter",
-    "next",
-    "openpgp",
-    "react",
-    "react-dom",
-    "@simplewebauthn/browser",
-    "fzstd",
-    "zstd-codec",
-  ];
-  for (const pkg of w1) {
-    const row = entries.find((e) => e.name === pkg);
-    mdLines.push(
-      `| ${pkg} | ${lockVersion(pkg) ?? "—"} | ${row?.licenses ?? "—"} |`,
-    );
-  }
-  mdLines.push("", `Tam liste: \`mail-web-sbom.json\``, "");
-  fs.writeFileSync(path.join(outDir, "mail-web-sbom-summary.md"), mdLines.join("\n"));
+  fs.writeFileSync(
+    path.join(outDir, `${config.slug}-sbom-summary.md`),
+    mdLines.join("\n"),
+  );
 
   console.log(
-    `OK: ${entries.length} packages (${mailWebNames.size} in lock BFS) → ${jsonPath}`,
+    `OK: ${entries.length} packages (${rootNames.size} in lock BFS) → ${jsonPath}`,
   );
 }
 

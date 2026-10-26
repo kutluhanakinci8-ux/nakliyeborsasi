@@ -28,6 +28,7 @@ const catalogFiles = [
   "mailOpenSourceLicensesCatalogW2.ts",
   "mailOpenSourceLicensesCatalogW3.ts",
   "mailOpenSourceLicensesCatalogW4.ts",
+  "mailOpenSourceLicensesCatalogW5.ts",
 ];
 const ids = [];
 for (const file of catalogFiles) {
@@ -53,6 +54,7 @@ const expectedIds = new Set([
   "ws",
   "nodemailer",
   "zstd-node-api",
+  "leaflet",
 ]);
 for (const id of expectedIds) {
   if (!ids.includes(id)) {
@@ -87,12 +89,21 @@ for (const name of packages) {
 }
 
 if (failed) process.exit(1);
-const serverMatch = catalogSrc.match(
-  /OSS_CATALOG_SERVER_PACKAGE_NAMES\s*=\s*\[([\s\S]*?)\]/,
+function extractPackageList(src, constName) {
+  const m = src.match(
+    new RegExp(`${constName}\\s*=\\s*\\[([\\s\\S]*?)\\]`),
+  );
+  return m ? [...m[1].matchAll(/"([^"]+)"/g)].map((x) => x[1]) : [];
+}
+
+const serverPackages = extractPackageList(
+  catalogSrc,
+  "OSS_CATALOG_SERVER_PACKAGE_NAMES",
 );
-const serverPackages = serverMatch
-  ? [...serverMatch[1].matchAll(/"([^"]+)"/g)].map((m) => m[1])
-  : [];
+const webPackages = extractPackageList(
+  catalogSrc,
+  "OSS_CATALOG_WEB_PACKAGE_NAMES",
+);
 
 for (const name of serverPackages) {
   const version = resolveLockVersion(name);
@@ -104,10 +115,20 @@ for (const name of serverPackages) {
   console.log(`OK (server): ${name}@${version}`);
 }
 
-if (ids.length < 15) {
-  console.error(`FAIL: expected at least 15 catalog ids, got ${ids.length}`);
+for (const name of webPackages) {
+  const version = resolveLockVersion(name);
+  if (!version) {
+    console.error(`FAIL: web catalog package ${name} not in package-lock`);
+    failed = true;
+    continue;
+  }
+  console.log(`OK (web): ${name}@${version}`);
+}
+
+if (ids.length < 16) {
+  console.error(`FAIL: expected at least 16 catalog ids, got ${ids.length}`);
   process.exit(1);
 }
 console.log(
-  `OK: ${ids.length} catalog entries, ${packages.length} client deps, ${serverPackages.length} server deps`,
+  `OK: ${ids.length} catalog entries, ${packages.length} client deps, ${serverPackages.length} server deps, ${webPackages.length} web deps`,
 );

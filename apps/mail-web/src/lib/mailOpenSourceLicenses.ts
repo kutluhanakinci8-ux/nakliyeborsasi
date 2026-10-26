@@ -2,6 +2,7 @@ import { MAIL_WEB_W1_OPEN_SOURCE_LICENSES } from "./mailOpenSourceLicensesCatalo
 import { MAIL_WEB_W2_OPEN_SOURCE_LICENSES } from "./mailOpenSourceLicensesCatalogW2";
 import { MAIL_WEB_W3_OPEN_SOURCE_LICENSES } from "./mailOpenSourceLicensesCatalogW3";
 import { MAIL_WEB_W4_OPEN_SOURCE_LICENSES } from "./mailOpenSourceLicensesCatalogW4";
+import { MAIL_WEB_W5_OPEN_SOURCE_LICENSES } from "./mailOpenSourceLicensesCatalogW5";
 import type { OpenSourceLicenseEntry } from "./mailOpenSourceLicenseTypes";
 
 export type { OpenSourceLicenseEntry } from "./mailOpenSourceLicenseTypes";
@@ -11,7 +12,11 @@ export const OPEN_SOURCE_LICENSES: OpenSourceLicenseEntry[] = [
   ...MAIL_WEB_W2_OPEN_SOURCE_LICENSES,
   ...MAIL_WEB_W3_OPEN_SOURCE_LICENSES,
   ...MAIL_WEB_W4_OPEN_SOURCE_LICENSES,
+  ...MAIL_WEB_W5_OPEN_SOURCE_LICENSES,
 ];
+
+/** apps/web istemcisi — Legal katalogda, posta bundle’ında yok. */
+export const OSS_CATALOG_WEB_PACKAGE_NAMES = ["leaflet"] as const;
 
 export function getOpenSourceLicenseById(
   id: string,
