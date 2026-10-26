@@ -6934,6 +6934,60 @@ button.btn-secondary {
   cursor: not-allowed;
 }
 
+.messaging-webrtc-pilot {
+  flex: 1 1 100%;
+  margin-top: 0.35rem;
+}
+
+.messaging-webrtc-pilot-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+
+.messaging-webrtc-pilot-btn {
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #0f4c81;
+  background: #0f4c81;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.messaging-webrtc-pilot-btn--end {
+  border-color: #b91c1c;
+  background: #b91c1c;
+}
+
+.messaging-webrtc-pilot-status {
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+.messaging-webrtc-pilot-error {
+  font-size: 0.72rem;
+  color: #b91c1c;
+}
+
+.messaging-webrtc-pilot-videos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  max-width: 420px;
+}
+
+.messaging-webrtc-pilot-video {
+  width: 100%;
+  max-height: 160px;
+  background: #0f172a;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
 .chat-legal-hold-inline {
   margin: 0 0 0.5rem;
   padding: 0.4rem 0.65rem;

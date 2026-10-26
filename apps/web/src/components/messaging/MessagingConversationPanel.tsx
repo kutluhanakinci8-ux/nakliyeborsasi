@@ -35,6 +35,7 @@ import {
 import type { MessagingChatController } from "../../hooks/useMessagingChatController";
 import type { ChatConversationBackgroundId } from "../../lib/messagingChatBackground";
 import type { AuthSessionRecord } from "../../lib/SessionApiClient";
+import { MessagingWebRtcPilotCall } from "./MessagingWebRtcPilotCall";
 
 type Props = {
   chat: MessagingChatController;
@@ -164,6 +165,10 @@ export function MessagingConversationPanel({
                       shortCompanyId(activeThread.counterpartyCompanyId)
                   : "Mesaj kutusu"}
               </h2>
+              <MessagingWebRtcPilotCall
+                accessToken={accessToken}
+                threadId={activeThreadId || null}
+              />
               {activeThread?.threadKind === "group" &&
               groupParticipants.length > 0 ? (
                 <ul
