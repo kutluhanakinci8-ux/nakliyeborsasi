@@ -3,6 +3,34 @@ import type {
   UndoSendSeconds,
 } from "./mailApi";
 
+const FOCUSED_INBOX_ENABLED_KEY = "lerta-mail-focused-inbox-enabled";
+
+export function readStoredFocusedInboxEnabled(): boolean {
+  if (typeof window === "undefined") {
+    return true;
+  }
+  try {
+    const raw = localStorage.getItem(FOCUSED_INBOX_ENABLED_KEY);
+    if (raw === "0") {
+      return false;
+    }
+    if (raw === "1") {
+      return true;
+    }
+  } catch {
+    /* ignore */
+  }
+  return true;
+}
+
+export function writeStoredFocusedInboxEnabled(enabled: boolean): void {
+  try {
+    localStorage.setItem(FOCUSED_INBOX_ENABLED_KEY, enabled ? "1" : "0");
+  } catch {
+    /* ignore */
+  }
+}
+
 export const DEFAULT_MAIL_POSTA_PREFERENCES: Pick<
   MailInboxPreferences,
   | "undoSendSeconds"
@@ -32,7 +60,12 @@ export const DEFAULT_MAIL_POSTA_PREFERENCES: Pick<
 
 export function pickMailPostaPreferences(
   prefs: Partial<MailInboxPreferences> | null | undefined,
+  options?: { beforeServerPrefs?: boolean },
 ): typeof DEFAULT_MAIL_POSTA_PREFERENCES {
+  const focusedDefault =
+    options?.beforeServerPrefs && prefs?.focusedInboxEnabled === undefined
+      ? readStoredFocusedInboxEnabled()
+      : true;
   return {
     undoSendSeconds: normalizeUndoSendSeconds(prefs?.undoSendSeconds),
     defaultReplyMode:
@@ -54,7 +87,7 @@ export function pickMailPostaPreferences(
       prefs?.swipePrimaryAction === "read"
         ? prefs.swipePrimaryAction
         : "archive",
-    focusedInboxEnabled: prefs?.focusedInboxEnabled ?? true,
+    focusedInboxEnabled: prefs?.focusedInboxEnabled ?? focusedDefault,
     inboxSmartSortEnabled: prefs?.inboxSmartSortEnabled ?? true,
     replyQuoteMode:
       prefs?.replyQuoteMode === "trimmed" || prefs?.replyQuoteMode === "none"

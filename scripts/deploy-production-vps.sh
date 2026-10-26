@@ -89,6 +89,10 @@ if [[ -x scripts/apply-mail-user-inbox-category-schema.sh ]]; then
   bash scripts/apply-mail-user-inbox-category-schema.sh "$INSTALL_DIR" || true
 fi
 
+if [[ -x scripts/apply-mail-focused-inbox-default-true.sh ]]; then
+  bash scripts/apply-mail-focused-inbox-default-true.sh "$INSTALL_DIR" || true
+fi
+
 if [[ -x scripts/apply-mail-sent-trash-schema.sh ]]; then
   bash scripts/apply-mail-sent-trash-schema.sh "$INSTALL_DIR" || true
 fi
@@ -233,6 +237,12 @@ elif [[ -x "${INSTALL_DIR}/scripts/run-ekolojik-market-parity-close-checklist.sh
     || echo "UYARI: ekolojik EK-U4 close checklist (rubrik/API)"
 fi
 
+if [[ -x "${INSTALL_DIR}/scripts/verify-posta-deploy-revision.sh" ]]; then
+  DEPLOY_BRANCH="${BRANCH}" bash "${INSTALL_DIR}/scripts/verify-posta-deploy-revision.sh" "${INSTALL_DIR}" \
+    || echo "UYARI: posta revision doğrulaması başarısız — main ile VPS HEAD uyumsuz olabilir." >&2
+fi
+
 echo "=== Production deploy bitti ==="
 echo "  app:    https://app.lerta.com.tr/messaging?tab=email"
 echo "  posta:  https://posta.lerta.com.tr/login"
+echo "  posta git: $(git -C "${INSTALL_DIR}" rev-parse --short HEAD 2>/dev/null || echo '?')"

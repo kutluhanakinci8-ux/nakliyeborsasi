@@ -24,6 +24,7 @@ import {
 import {
   composeDelaySecondsFromUndoPref,
   pickMailPostaPreferences,
+  writeStoredFocusedInboxEnabled,
 } from "@/lib/mailPostaPrefs";
 import { encryptTextWithPgp } from "@/lib/mailPgp";
 import {
@@ -442,7 +443,7 @@ export function useMailClientController({
   const [activeSwipeRowId, setActiveSwipeRowId] = useState<string | null>(null);
   const [threadView, setThreadViewState] = useState(false);
   const [mailPostaPrefs, setMailPostaPrefs] = useState(() =>
-    pickMailPostaPreferences(null),
+    pickMailPostaPreferences(null, { beforeServerPrefs: true }),
   );
   const [mailAppLockEnabled, setMailAppLockEnabled] = useState(false);
   const [hasWebAuthnPasskeys, setHasWebAuthnPasskeys] = useState(false);
@@ -475,6 +476,7 @@ export function useMailClientController({
   const handleMailPostaPreferencesSaved = useCallback(
     (prefs: import("@/lib/mailApi").MailInboxPreferences) => {
       const picked = pickMailPostaPreferences(prefs);
+      writeStoredFocusedInboxEnabled(picked.focusedInboxEnabled);
       setMailPostaPrefs(picked);
       setThreadView(picked.threadViewEnabled);
       setReplyAllMode(picked.defaultReplyMode === "reply_all");
