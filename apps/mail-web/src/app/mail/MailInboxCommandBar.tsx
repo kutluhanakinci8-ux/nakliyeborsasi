@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+import { createPortal } from "react-dom";
 import type { InboxFocusLane } from "@/lib/mailInboxFocus";
 import {
   INBOX_QUERY_FILTER_IDS,
@@ -10,6 +17,12 @@ import type { MailConnectedInboxSource } from "@/lib/mailApi";
 import { connectedTabLabel } from "@/lib/mailInboxSourceUi";
 
 type Translate = (key: string, params?: Record<string, string | number>) => string;
+
+type MenuPosition = {
+  top: number;
+  left: number;
+  minWidth: number;
+};
 
 type Props = {
   t: Translate;
@@ -40,6 +53,9 @@ function filterLabelKey(id: InboxQueryFilterId): string {
   return map[id];
 }
 
+const MENU_MIN_WIDTH = 248;
+const MENU_ESTIMATE_HEIGHT = 360;
+
 export function MailInboxCommandBar({
   t,
   title,
@@ -55,25 +71,136 @@ export function MailInboxCommandBar({
   showFocusTabs,
 }: Props) {
   const [filterOpen, setFilterOpen] = useState(false);
-  const filterRef = useRef<HTMLDivElement>(null);
+  const [menuPosition, setMenuPosition] = useState<MenuPosition | null>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  const updateMenuPosition = useCallback(() => {
+    const trigger = triggerRef.current;
+    if (!trigger) {
+      return;
+    }
+    const rect = trigger.getBoundingClientRect();
+    const menuHeight =
+      menuRef.current?.offsetHeight || MENU_ESTIMATE_HEIGHT;
+    const spaceBelow = window.innerHeight - rect.bottom - 12;
+    const openUpward =
+      spaceBelow < Math.min(menuHeight, MENU_ESTIMATE_HEIGHT) &&
+      rect.top > spaceBelow;
+    const top = openUpward
+      ? Math.max(8, rect.top - menuHeight - 8)
+      : rect.bottom + 8;
+    const left = Math.min(
+      Math.max(8, rect.right - MENU_MIN_WIDTH),
+      window.innerWidth - MENU_MIN_WIDTH - 8,
+    );
+    setMenuPosition({ top, left, minWidth: MENU_MIN_WIDTH });
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!filterOpen) {
+      setMenuPosition(null);
+      return;
+    }
+    updateMenuPosition();
+    const frame = requestAnimationFrame(() => updateMenuPosition());
+    return () => cancelAnimationFrame(frame);
+  }, [filterOpen, updateMenuPosition, activeFilters.size]);
+
+  useEffect(() => {
+    if (!filterOpen) {
+      return;
+    }
+    const onScrollOrResize = () => updateMenuPosition();
+    window.addEventListener("resize", onScrollOrResize);
+    window.addEventListener("scroll", onScrollOrResize, true);
+    return () => {
+      window.removeEventListener("resize", onScrollOrResize);
+      window.removeEventListener("scroll", onScrollOrResize, true);
+    };
+  }, [filterOpen, updateMenuPosition]);
 
   useEffect(() => {
     if (!filterOpen) {
       return;
     }
     const onDoc = (event: MouseEvent) => {
+      const target = event.target as Node;
       if (
-        filterRef.current &&
-        !filterRef.current.contains(event.target as Node)
+        triggerRef.current?.contains(target) ||
+        menuRef.current?.contains(target)
       ) {
+        return;
+      }
+      setFilterOpen(false);
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
         setFilterOpen(false);
       }
     };
     document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
   }, [filterOpen]);
 
   const filterCount = activeFilters.size;
+
+  const filterMenu =
+    filterOpen && menuPosition
+      ? createPortal(
+          <div
+            ref={menuRef}
+            className="mail-inbox-filter-menu mail-inbox-filter-menu--portal"
+            role="menu"
+            style={{
+              position: "fixed",
+              top: menuPosition.top,
+              left: menuPosition.left,
+              minWidth: menuPosition.minWidth,
+              zIndex: 600,
+            }}
+          >
+            {INBOX_QUERY_FILTER_IDS.map((id) => {
+              const on = activeFilters.has(id);
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  role="menuitemcheckbox"
+                  aria-checked={on}
+                  className={`mail-inbox-filter-menu__item${on ? " is-on" : ""}`}
+                  onClick={() => onToggleFilter(id)}
+                >
+                  <span
+                    className="mail-inbox-filter-menu__check"
+                    aria-hidden="true"
+                  >
+                    {on ? "✓" : ""}
+                  </span>
+                  {t(filterLabelKey(id))}
+                </button>
+              );
+            })}
+            {filterCount > 0 ? (
+              <button
+                type="button"
+                className="mail-inbox-filter-menu__clear"
+                onClick={() => {
+                  onClearFilters();
+                  setFilterOpen(false);
+                }}
+              >
+                {t("inboxFilterClear")}
+              </button>
+            ) : null}
+          </div>,
+          document.body,
+        )
+      : null;
 
   return (
     <header className="mail-inbox-command-bar">
@@ -149,8 +276,9 @@ export function MailInboxCommandBar({
           <span className="mail-inbox-command-bar__spacer" />
         )}
 
-        <div className="mail-inbox-filter-wrap" ref={filterRef}>
+        <div className="mail-inbox-filter-wrap">
           <button
+            ref={triggerRef}
             type="button"
             className={`mail-inbox-filter-trigger${filterCount > 0 ? " is-active" : ""}`}
             aria-expanded={filterOpen}
@@ -172,43 +300,9 @@ export function MailInboxCommandBar({
               <span className="mail-inbox-filter-badge">{filterCount}</span>
             ) : null}
           </button>
-
-          {filterOpen ? (
-            <div className="mail-inbox-filter-menu" role="menu">
-              {INBOX_QUERY_FILTER_IDS.map((id) => {
-                const on = activeFilters.has(id);
-                return (
-                  <button
-                    key={id}
-                    type="button"
-                    role="menuitemcheckbox"
-                    aria-checked={on}
-                    className={`mail-inbox-filter-menu__item${on ? " is-on" : ""}`}
-                    onClick={() => onToggleFilter(id)}
-                  >
-                    <span className="mail-inbox-filter-menu__check" aria-hidden="true">
-                      {on ? "✓" : ""}
-                    </span>
-                    {t(filterLabelKey(id))}
-                  </button>
-                );
-              })}
-              {filterCount > 0 ? (
-                <button
-                  type="button"
-                  className="mail-inbox-filter-menu__clear"
-                  onClick={() => {
-                    onClearFilters();
-                    setFilterOpen(false);
-                  }}
-                >
-                  {t("inboxFilterClear")}
-                </button>
-              ) : null}
-            </div>
-          ) : null}
         </div>
       </div>
+      {filterMenu}
     </header>
   );
 }
