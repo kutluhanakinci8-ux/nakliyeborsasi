@@ -759,17 +759,11 @@ export class SocialHubMetaGraphService {
     if (!toDigits) {
       return { ok: false, message: "WhatsApp alıcı numarası geçersiz." };
     }
-    const { prepareWhatsAppOutboundAudio } = await import(
-      "./socialHubWhatsAppOutboundAudio"
-    );
     const prepared = await prepareWhatsAppOutboundAudio({
       buffer: params.buffer,
       contentType: params.contentType,
       filename: params.filename,
     });
-    const { isWhatsAppCloudAllowedAudioMime } = await import(
-      "./socialHubWhatsAppOutboundAudio"
-    );
     const uploadMime = prepared.contentType || "audio/ogg";
     if (!isWhatsAppCloudAllowedAudioMime(uploadMime)) {
       return {
