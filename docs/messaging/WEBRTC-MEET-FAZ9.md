@@ -13,4 +13,4 @@ Status feature: `messaging_webrtc_meet_realtime_faz9`
 
 ## Sonraki (Faz 10)
 
-Mobil banner, erişilebilirlik, meet deep link otomatik odak.
+Bkz. `WEBRTC-MEET-FAZ10.md`.

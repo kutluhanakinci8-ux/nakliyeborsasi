@@ -50,6 +50,11 @@ import {
 } from "../../lib/messagingWebRtcLocalRecorder";
 import { replaceOutgoingVideoTrack } from "../../lib/messagingWebRtcScreenShare";
 import {
+  buildMessagingMeetDeepLink,
+  isLikelyMobileBrowser,
+  isMeetDeepLinkActive,
+} from "../../lib/messagingWebRtcMeetDeepLink";
+import {
   startMeetIncomingRing,
   stopMeetIncomingRing,
 } from "../../lib/messagingWebRtcRing";
@@ -341,6 +346,7 @@ export function MessagingWebRtcPilotCall({
             status.features.includes("messaging_webrtc_meet_compliance_faz7") &&
             status.features.includes("messaging_webrtc_meet_qa_gate_faz8") &&
             status.features.includes("messaging_webrtc_meet_realtime_faz9") &&
+            status.features.includes("messaging_webrtc_meet_mobile_faz10") &&
             status.webrtc?.signaling === "redis_relay",
         );
       })
@@ -379,6 +385,15 @@ export function MessagingWebRtcPilotCall({
       .then(setRecordingArchives)
       .catch(() => setRecordingArchives([]));
   }, [accessToken, enabled, threadId]);
+
+  useEffect(() => {
+    if (!enabled || !threadId || phase !== "idle") {
+      return;
+    }
+    if (isMeetDeepLinkActive()) {
+      setStatusLine("Görüşme daveti — sesli veya görüntülü aramayı başlatın.");
+    }
+  }, [enabled, phase, threadId]);
 
   useEffect(() => {
     attachStreamToVideo(localVideoRef.current, localStream);
@@ -1011,7 +1026,7 @@ export function MessagingWebRtcPilotCall({
     if (!threadId || typeof window === "undefined") {
       return;
     }
-    const url = `${window.location.origin}/messaging?threadId=${encodeURIComponent(threadId)}`;
+    const url = buildMessagingMeetDeepLink(threadId);
     try {
       await navigator.clipboard.writeText(url);
       setLinkCopied(true);
@@ -1195,7 +1210,7 @@ export function MessagingWebRtcPilotCall({
     if (!threadId || !meetSchedule || typeof window === "undefined") {
       return;
     }
-    const meetUrl = `${window.location.origin}/messaging?threadId=${encodeURIComponent(threadId)}`;
+    const meetUrl = buildMessagingMeetDeepLink(threadId);
     downloadMeetIcsFile({
       scheduledAt: meetSchedule.scheduledAt,
       threadId,
@@ -1332,10 +1347,16 @@ export function MessagingWebRtcPilotCall({
 
   return (
     <div
-      className="messaging-webrtc-pilot messaging-webrtc-meet-faz1 messaging-webrtc-meet-faz2 messaging-webrtc-meet-faz3 messaging-webrtc-meet-faz4 messaging-webrtc-meet-faz5 messaging-webrtc-meet-faz6 messaging-webrtc-meet-faz7 messaging-webrtc-meet-faz9"
+      className="messaging-webrtc-pilot messaging-webrtc-meet-faz1 messaging-webrtc-meet-faz2 messaging-webrtc-meet-faz3 messaging-webrtc-meet-faz4 messaging-webrtc-meet-faz5 messaging-webrtc-meet-faz6 messaging-webrtc-meet-faz7 messaging-webrtc-meet-faz9 messaging-webrtc-meet-faz10"
       role="region"
       aria-label="Görüntülü ve sesli görüşme (en fazla 3 kişi)"
     >
+      {isLikelyMobileBrowser() && (phase === "idle" || phase === "ended") ? (
+        <p className="messaging-webrtc-faz10-mobile-hint" role="note">
+          Mobil: görüşme için tarayıcıda bu sohbeti açık tutun; bildirimdeki bağlantı
+          sizi doğrudan arama alanına getirir.
+        </p>
+      ) : null}
       {showContextStrip ? (
         <div className="messaging-webrtc-faz3-context" role="status">
           {threadTitle ? (

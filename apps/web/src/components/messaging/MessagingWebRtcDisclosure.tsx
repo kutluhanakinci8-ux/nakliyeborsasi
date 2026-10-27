@@ -42,8 +42,9 @@ export function MessagingWebRtcDisclosure({ accessToken }: Props) {
         : signalingMode === "unavailable"
           ? "relay geçici kapalı"
           : "hazırlanıyor"}
-      ; ses/görüntü
-      codec&apos;leri (libvpx, libwebm vb.){" "}
+      ; mobilde native uygulama yerine tarayıcı üzerinden Meet deep link (
+      <code>?meet=1</code>) kullanılır. Ses/görüntü codec&apos;leri (libvpx, libwebm
+      vb.){" "}
       {support.ready
         ? "bu tarayıcıda yerleşik olarak çalışır"
         : "bu ortamda WebRTC API bulunamadı"}

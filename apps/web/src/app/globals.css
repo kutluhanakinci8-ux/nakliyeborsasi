@@ -7338,6 +7338,14 @@ button.btn-secondary {
   border: 1px solid #e2e8f0;
 }
 
+.messaging-webrtc-faz10-mobile-hint {
+  font-size: 0.65rem;
+  color: #475569;
+  margin: 0 0 0.35rem;
+  max-width: 520px;
+  line-height: 1.35;
+}
+
 .messaging-webrtc-pilot-video.is-active-speaker {
   outline: 3px solid #22c55e;
   outline-offset: 2px;
