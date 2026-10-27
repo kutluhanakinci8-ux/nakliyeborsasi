@@ -715,9 +715,9 @@ export function useMessagingChatController({
       if (sendResult.channelDelivery?.status === "failed") {
         setErrorMessage(
           sendResult.channelDelivery.errorMessage ??
-            "Mesaj kaydedildi ancak kanala gönderilemedi.",
+            "Mesaj kaydedildi ancak WhatsApp/kanala gönderilemedi.",
         );
-      } else {
+      } else if (sendResult.channelDelivery?.status === "ok") {
         setErrorMessage("");
       }
       await loadMessages(activeThreadId);
