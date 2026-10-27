@@ -777,7 +777,8 @@ export class SocialHubMetaGraphService {
     );
     const form = new FormData();
     form.append("messaging_product", "whatsapp");
-    form.append("type", uploadMime);
+    // Graph upload `type` is audio|image|video|document — not audio/ogg (MIME → #100).
+    form.append("type", "audio");
     form.append(
       "file",
       new Blob([Uint8Array.from(prepared.buffer)], {

@@ -73,6 +73,32 @@ export class SocialHubOutboundMessagingService {
           )
         : [];
     if (!trimmed && channelAttachments.length === 0) {
+      if (
+        params.messageId &&
+        link.platformCode === SocialPlatformCode.WhatsAppCloud
+      ) {
+        const message = await this.messageRepository.findOne({
+          where: { id: params.messageId, threadId: params.messageThreadId },
+        });
+        const expectsVoice = message?.attachments?.some(
+          (row) =>
+            row.kind === "voice_note" ||
+            row.contentType.toLowerCase().startsWith("audio/"),
+        );
+        if (expectsVoice) {
+          const readError =
+            "Ses dosyası okunamadı; WhatsApp gönderimi yapılamadı (depolama/S3).";
+          await this.recordOutbound({
+            link,
+            companyId: params.companyId,
+            messageId: params.messageId,
+            ok: false,
+            errorMessage: readError,
+            bodyTextPreview: "Sesli mesaj",
+          });
+          return { attempted: true, ok: false, message: readError };
+        }
+      }
       return { attempted: false, ok: true, message: "" };
     }
     const bodyPreview =
@@ -116,6 +142,12 @@ export class SocialHubOutboundMessagingService {
         params.companyId,
         platformCode,
       );
+      const whatsAppAudioAttachment =
+        platformCode === SocialPlatformCode.WhatsAppCloud
+          ? channelAttachments.find((row) =>
+              row.contentType.toLowerCase().startsWith("audio/"),
+            )
+          : undefined;
       const result =
         platformCode === "TIKTOK"
           ? await this.dispatchTikTokOutbound({
@@ -144,17 +176,13 @@ export class SocialHubOutboundMessagingService {
                     bodyText: trimmed,
                     attachments: channelAttachments,
                   })
-                : platformCode === SocialPlatformCode.WhatsAppCloud &&
-                    channelAttachments.length === 1 &&
-                    channelAttachments[0].contentType
-                      .toLowerCase()
-                      .startsWith("audio/")
+                : whatsAppAudioAttachment
                   ? await this.dispatchWhatsAppAudioOutbound({
                       companyId: params.companyId,
                       accessToken: token,
                       recipientExternalId: link.externalThreadId,
                       bodyText: trimmed,
-                      attachment: channelAttachments[0],
+                      attachment: whatsAppAudioAttachment,
                     })
             : await this.metaGraphService.sendChannelTextMessage({
                 companyId: params.companyId,
