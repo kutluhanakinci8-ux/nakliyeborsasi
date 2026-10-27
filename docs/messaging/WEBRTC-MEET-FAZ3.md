@@ -12,6 +12,6 @@
 
 Status feature: `messaging_webrtc_meet_biz_faz3`
 
-## Sonraki (Faz 4+)
+## Sonraki (Faz 4)
 
-Planlı görüşme, kayıt, TURN kapasite izleme.
+Bkz. `WEBRTC-MEET-FAZ4.md` — planlı görüşme, yerel kayıt, ICE/TURN özeti.

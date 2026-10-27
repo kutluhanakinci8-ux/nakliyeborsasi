@@ -1,10 +1,19 @@
 import { PublicApiConfiguration } from "./PublicApiConfiguration";
 
+export type MessagingWebRtcIceCaps = {
+  iceServerEntries: number;
+  stunUrlCount: number;
+  turnUrlCount: number;
+  turnCredentialsConfigured: boolean;
+  usingDefaultStunOnly: boolean;
+};
+
 export type MessagingWebRtcConfig = {
   iceServers: RTCIceServer[];
   signaling: "redis_relay" | "unavailable" | "planned";
   maxParticipants?: number;
   meshMode?: "p2p";
+  iceCaps?: MessagingWebRtcIceCaps;
 };
 
 export type WebRtcRoomParticipant = {

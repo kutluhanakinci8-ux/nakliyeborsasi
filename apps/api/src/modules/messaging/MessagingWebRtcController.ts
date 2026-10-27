@@ -1,9 +1,11 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
+  Put,
   Query,
   UseGuards,
 } from "@nestjs/common";
@@ -11,7 +13,12 @@ import { AuthenticatedUserContext } from "@nakliyeborsasi/core";
 import { JwtAuthenticationGuard } from "../auth/JwtAuthenticationGuard";
 import { AuthenticatedUserParam } from "../auth/AuthenticatedUserParam";
 import { MESSAGING_WEBRTC_MAX_PARTICIPANTS } from "./messagingWebRtcConstants";
-import { resolveMessagingWebRtcIceServers } from "./messagingWebRtcIceConfig";
+import {
+  resolveMessagingWebRtcIceServers,
+  summarizeMessagingWebRtcIceCaps,
+} from "./messagingWebRtcIceConfig";
+import { MessagingWebRtcMeetScheduleService } from "./MessagingWebRtcMeetScheduleService";
+import { UpsertMessagingWebRtcScheduleRequestDto } from "./MessagingWebRtcScheduleRequestDto";
 import { MessagingWebRtcSignalingService } from "./MessagingWebRtcSignalingService";
 import {
   ListMessagingWebRtcSignalsQueryDto,
@@ -23,6 +30,7 @@ import {
 export class MessagingWebRtcController {
   public constructor(
     private readonly signalingService: MessagingWebRtcSignalingService,
+    private readonly meetScheduleService: MessagingWebRtcMeetScheduleService,
   ) {}
 
   @Get("config")
@@ -33,7 +41,44 @@ export class MessagingWebRtcController {
       signaling: relay ? "redis_relay" : "unavailable",
       maxParticipants: MESSAGING_WEBRTC_MAX_PARTICIPANTS,
       meshMode: "p2p",
+      iceCaps: summarizeMessagingWebRtcIceCaps(),
     };
+  }
+
+  @Get("threads/:threadId/schedule")
+  public async getSchedule(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("threadId") threadId: string,
+  ) {
+    const schedule = await this.meetScheduleService.getSchedule(user, threadId);
+    return { schedule };
+  }
+
+  @Put("threads/:threadId/schedule")
+  public async upsertSchedule(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("threadId") threadId: string,
+    @Body() body: UpsertMessagingWebRtcScheduleRequestDto,
+  ) {
+    const schedule = await this.meetScheduleService.upsertSchedule(
+      user,
+      threadId,
+      {
+        scheduledAt: body.scheduledAt,
+        media: body.media,
+        note: body.note,
+      },
+    );
+    return { ok: true, schedule };
+  }
+
+  @Delete("threads/:threadId/schedule")
+  public async clearSchedule(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("threadId") threadId: string,
+  ) {
+    await this.meetScheduleService.clearSchedule(user, threadId);
+    return { ok: true };
   }
 
   @Get("threads/:threadId/room")

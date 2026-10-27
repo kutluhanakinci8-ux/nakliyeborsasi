@@ -27,6 +27,19 @@ import { attachStreamLevelMeter } from "../../lib/messagingWebRtcSpeakerLevel";
 import { fetchMessagingPublicStatus } from "../../lib/messagingPublicStatus";
 import { MessagingApiClient } from "../../lib/MessagingApiClient";
 import type { MessagingListingCardRecord } from "../../lib/MessagingApiClient";
+import {
+  clearMessagingWebRtcMeetSchedule,
+  downloadMeetIcsFile,
+  fetchMessagingWebRtcMeetSchedule,
+  formatMeetScheduleLocal,
+  upsertMessagingWebRtcMeetSchedule,
+  type WebRtcMeetScheduleRecord,
+} from "../../lib/messagingWebRtcMeetSchedule";
+import {
+  downloadMeetRecordingBlob,
+  startMeetLocalRecorder,
+  type MeetLocalRecorder,
+} from "../../lib/messagingWebRtcLocalRecorder";
 import { replaceOutgoingVideoTrack } from "../../lib/messagingWebRtcScreenShare";
 import {
   fetchMessagingWebRtcConfig,
@@ -35,6 +48,7 @@ import {
   leaveMessagingWebRtcRoom,
   pollMessagingWebRtcSignals,
   postMessagingWebRtcSignal,
+  type MessagingWebRtcIceCaps,
   type WebRtcSignalEnvelope,
 } from "../../lib/messagingWebRtcSignalingClient";
 
@@ -94,6 +108,28 @@ function parseScreenSharing(payload: string): boolean {
   }
 }
 
+function iceCapsStatusLabel(caps: MessagingWebRtcIceCaps | null): string {
+  if (!caps) {
+    return "ICE…";
+  }
+  if (caps.turnUrlCount > 0 && caps.turnCredentialsConfigured) {
+    return "TURN hazır";
+  }
+  if (caps.usingDefaultStunOnly) {
+    return "Yalnızca STUN — üretimde TURN önerilir";
+  }
+  if (caps.turnUrlCount > 0) {
+    return "TURN — kimlik bilgisi eksik";
+  }
+  return `STUN ×${caps.stunUrlCount}`;
+}
+
+function defaultDatetimeLocalValue(): string {
+  const d = new Date(Date.now() + 60 * 60 * 1000);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 export function MessagingWebRtcPilotCall({
   accessToken,
   locale,
@@ -132,8 +168,19 @@ export function MessagingWebRtcPilotCall({
   const [raisedPeerIds, setRaisedPeerIds] = useState<string[]>([]);
   const [peerReactions, setPeerReactions] = useState<Record<string, string>>({});
   const [linkCopied, setLinkCopied] = useState(false);
+  const [iceCaps, setIceCaps] = useState<MessagingWebRtcIceCaps | null>(null);
+  const [meetSchedule, setMeetSchedule] = useState<WebRtcMeetScheduleRecord | null>(
+    null,
+  );
+  const [schedulePanelOpen, setSchedulePanelOpen] = useState(false);
+  const [scheduleAtLocal, setScheduleAtLocal] = useState("");
+  const [scheduleMedia, setScheduleMedia] = useState<CallMediaMode>("video");
+  const [scheduleNote, setScheduleNote] = useState("");
+  const [scheduleBusy, setScheduleBusy] = useState(false);
+  const [recording, setRecording] = useState(false);
 
   const pcsRef = useRef<Map<string, RTCPeerConnection>>(new Map());
+  const meetRecorderRef = useRef<MeetLocalRecorder | null>(null);
   const cameraVideoTrackRef = useRef<MediaStreamTrack | null>(null);
   const screenTrackRef = useRef<MediaStreamTrack | null>(null);
   const reactionClearTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(
@@ -219,6 +266,11 @@ export function MessagingWebRtcPilotCall({
     setRaisedPeerIds([]);
     setPeerReactions({});
     setLinkCopied(false);
+    if (meetRecorderRef.current) {
+      void meetRecorderRef.current.stop().catch(() => undefined);
+      meetRecorderRef.current = null;
+    }
+    setRecording(false);
     screenTrackRef.current?.stop();
     screenTrackRef.current = null;
     cameraVideoTrackRef.current = null;
@@ -249,12 +301,32 @@ export function MessagingWebRtcPilotCall({
             status.features.includes("messaging_webrtc_meet_core_faz1") &&
             status.features.includes("messaging_webrtc_meet_hd_faz2") &&
             status.features.includes("messaging_webrtc_meet_biz_faz3") &&
+            status.features.includes("messaging_webrtc_meet_ops_faz4") &&
             status.webrtc?.signaling === "redis_relay",
         );
       })
       .catch(() => setEnabled(false));
     return () => teardown();
   }, [teardown]);
+
+  useEffect(() => {
+    if (!enabled || !accessToken) {
+      return;
+    }
+    void fetchMessagingWebRtcConfig(accessToken)
+      .then((config) => setIceCaps(config.iceCaps ?? null))
+      .catch(() => setIceCaps(null));
+  }, [accessToken, enabled]);
+
+  useEffect(() => {
+    if (!enabled || !threadId || !accessToken) {
+      setMeetSchedule(null);
+      return;
+    }
+    void fetchMessagingWebRtcMeetSchedule(accessToken, threadId)
+      .then(setMeetSchedule)
+      .catch(() => setMeetSchedule(null));
+  }, [accessToken, enabled, threadId]);
 
   useEffect(() => {
     attachStreamToVideo(localVideoRef.current, localStream);
@@ -888,6 +960,116 @@ export function MessagingWebRtcPilotCall({
     }
   }
 
+  async function stopMeetRecording(download: boolean): Promise<void> {
+    const recorder = meetRecorderRef.current;
+    if (!recorder) {
+      return;
+    }
+    meetRecorderRef.current = null;
+    setRecording(false);
+    try {
+      const blob = await recorder.stop();
+      if (download) {
+        downloadMeetRecordingBlob(blob);
+      }
+    } catch {
+      setStatusLine("Kayıt durdurulamadı");
+    }
+  }
+
+  async function toggleMeetRecording(): Promise<void> {
+    if (recording) {
+      await stopMeetRecording(true);
+      return;
+    }
+    const local = localStreamRef.current;
+    if (!local) {
+      return;
+    }
+    try {
+      meetRecorderRef.current = startMeetLocalRecorder({
+        localStream: local,
+        remoteStreams: remotePeers.map((peer) => peer.stream),
+        mode: callModeRef.current,
+      });
+      setRecording(true);
+      setStatusLine("Yerel kayıt — dosya yalnızca cihazınıza indirilir");
+    } catch {
+      setStatusLine("Kayıt başlatılamadı");
+    }
+  }
+
+  async function saveMeetSchedule(): Promise<void> {
+    if (!threadId || !scheduleAtLocal) {
+      return;
+    }
+    setScheduleBusy(true);
+    setError("");
+    try {
+      const scheduledAt = new Date(scheduleAtLocal).toISOString();
+      const saved = await upsertMessagingWebRtcMeetSchedule(accessToken, threadId, {
+        scheduledAt,
+        media: scheduleMedia,
+        note: scheduleNote.trim() || undefined,
+      });
+      setMeetSchedule(saved);
+      setSchedulePanelOpen(false);
+      setStatusLine(
+        `Planlandı: ${formatMeetScheduleLocal(saved.scheduledAt, locale)}`,
+      );
+      void MessagingApiClient.sendMessage(
+        accessToken,
+        locale,
+        threadId,
+        `📅 Planlı görüşme: ${formatMeetScheduleLocal(saved.scheduledAt, locale)} (${saved.media === "audio" ? "sesli" : "görüntülü"})${saved.note ? ` — ${saved.note}` : ""}`,
+        undefined,
+        "internal",
+      ).catch(() => undefined);
+    } catch (err) {
+      setError(formatWebRtcMediaError(err));
+    } finally {
+      setScheduleBusy(false);
+    }
+  }
+
+  async function cancelMeetSchedule(): Promise<void> {
+    if (!threadId) {
+      return;
+    }
+    setScheduleBusy(true);
+    try {
+      await clearMessagingWebRtcMeetSchedule(accessToken, threadId);
+      setMeetSchedule(null);
+      setSchedulePanelOpen(false);
+      setStatusLine("Planlı görüşme iptal edildi");
+    } catch {
+      setStatusLine("Plan iptal edilemedi");
+    } finally {
+      setScheduleBusy(false);
+    }
+  }
+
+  function openSchedulePanel(): void {
+    setScheduleAtLocal(defaultDatetimeLocalValue());
+    setScheduleMedia("video");
+    setScheduleNote("");
+    setSchedulePanelOpen(true);
+  }
+
+  function downloadScheduleIcs(): void {
+    if (!threadId || !meetSchedule || typeof window === "undefined") {
+      return;
+    }
+    const meetUrl = `${window.location.origin}/messaging?threadId=${encodeURIComponent(threadId)}`;
+    downloadMeetIcsFile({
+      scheduledAt: meetSchedule.scheduledAt,
+      threadId,
+      title: threadTitle?.trim() || "Lerta görüşme",
+      meetUrl,
+      note: meetSchedule.note,
+    });
+  }
+
   async function enterPictureInPicture(video: HTMLVideoElement | null): Promise<void> {
     if (!video || !document.pictureInPictureEnabled) {
       return;
@@ -910,6 +1092,9 @@ export function MessagingWebRtcPilotCall({
         : callSeconds;
     if (screenSharing) {
       await stopScreenShare().catch(() => undefined);
+    }
+    if (recording) {
+      await stopMeetRecording(true).catch(() => undefined);
     }
     if (threadId && currentUserId) {
       for (const peerId of pcsRef.current.keys()) {
@@ -1002,9 +1187,17 @@ export function MessagingWebRtcPilotCall({
     phase !== "idle" &&
     phase !== "ended";
 
+  const scheduleAtMs = meetSchedule
+    ? Date.parse(meetSchedule.scheduledAt)
+    : Number.NaN;
+  const showScheduleBanner =
+    Boolean(meetSchedule) &&
+    Number.isFinite(scheduleAtMs) &&
+    scheduleAtMs > Date.now() - 15 * 60 * 1000;
+
   return (
     <div
-      className="messaging-webrtc-pilot messaging-webrtc-meet-faz1 messaging-webrtc-meet-faz2 messaging-webrtc-meet-faz3"
+      className="messaging-webrtc-pilot messaging-webrtc-meet-faz1 messaging-webrtc-meet-faz2 messaging-webrtc-meet-faz3 messaging-webrtc-meet-faz4"
       role="region"
       aria-label="Görüntülü ve sesli görüşme (en fazla 3 kişi)"
     >
@@ -1021,6 +1214,36 @@ export function MessagingWebRtcPilotCall({
                 ? ` · ${listingCard.priceAmount} ${listingCard.priceCurrencyCode ?? ""}`
                 : ""}
             </span>
+          ) : null}
+        </div>
+      ) : null}
+      {showScheduleBanner && meetSchedule ? (
+        <div className="messaging-webrtc-faz4-schedule-banner" role="status">
+          <span>
+            Planlı görüşme:{" "}
+            <strong>
+              {formatMeetScheduleLocal(meetSchedule.scheduledAt, locale)}
+            </strong>
+            {" · "}
+            {meetSchedule.media === "audio" ? "Sesli" : "Görüntülü"}
+          </span>
+          {phase === "idle" || phase === "ended" ? (
+            <>
+              <button
+                type="button"
+                className="messaging-webrtc-pilot-btn messaging-webrtc-pilot-btn--primary"
+                onClick={() => void openPreCall(meetSchedule.media)}
+              >
+                Şimdi başlat
+              </button>
+              <button
+                type="button"
+                className="messaging-webrtc-pilot-btn"
+                onClick={() => downloadScheduleIcs()}
+              >
+                Takvim (.ics)
+              </button>
+            </>
           ) : null}
         </div>
       ) : null}
@@ -1083,6 +1306,23 @@ export function MessagingWebRtcPilotCall({
             >
               {linkCopied ? "Kopyalandı" : "Bağlantı"}
             </button>
+            <button
+              type="button"
+              className="messaging-webrtc-pilot-btn"
+              onClick={() => openSchedulePanel()}
+            >
+              Planla
+            </button>
+            {meetSchedule ? (
+              <button
+                type="button"
+                className="messaging-webrtc-pilot-btn"
+                onClick={() => void cancelMeetSchedule()}
+                disabled={scheduleBusy}
+              >
+                Planı iptal
+              </button>
+            ) : null}
           </>
         ) : (
           <>
@@ -1132,6 +1372,14 @@ export function MessagingWebRtcPilotCall({
             </button>
             <button
               type="button"
+              className={`messaging-webrtc-pilot-btn ${recording ? "is-recording" : ""}`}
+              onClick={() => void toggleMeetRecording()}
+              title="Yerel kayıt (indir)"
+            >
+              {recording ? "Kaydı durdur" : "Kayıt"}
+            </button>
+            <button
+              type="button"
               className="messaging-webrtc-pilot-btn"
               onClick={() =>
                 setLayoutMode((m) => (m === "grid" ? "speaker" : "grid"))
@@ -1174,6 +1422,17 @@ export function MessagingWebRtcPilotCall({
             {networkQualityLabel(networkLevel)}
           </span>
         ) : null}
+        {recording ? (
+          <span className="messaging-webrtc-faz4-recording-dot" aria-live="polite">
+            REC
+          </span>
+        ) : null}
+        <span
+          className={`messaging-webrtc-faz4-ice ${iceCaps?.turnCredentialsConfigured ? "is-turn-ok" : "is-turn-warn"}`}
+          title={iceCapsStatusLabel(iceCaps)}
+        >
+          {iceCapsStatusLabel(iceCaps)}
+        </span>
         {inCallUi && callStartedAtRef.current ? (
           <span className="messaging-webrtc-pilot-timer" aria-live="polite">
             {formatCallDuration(callSeconds)}
@@ -1188,6 +1447,58 @@ export function MessagingWebRtcPilotCall({
           </span>
         ) : null}
       </div>
+
+      {schedulePanelOpen ? (
+        <div className="messaging-webrtc-faz4-schedule-panel">
+          <label>
+            Tarih / saat
+            <input
+              type="datetime-local"
+              value={scheduleAtLocal}
+              onChange={(e) => setScheduleAtLocal(e.target.value)}
+            />
+          </label>
+          <label>
+            Tür
+            <select
+              value={scheduleMedia}
+              onChange={(e) =>
+                setScheduleMedia(e.target.value as CallMediaMode)
+              }
+            >
+              <option value="video">Görüntülü</option>
+              <option value="audio">Sesli</option>
+            </select>
+          </label>
+          <label>
+            Not
+            <input
+              type="text"
+              value={scheduleNote}
+              maxLength={240}
+              placeholder="İsteğe bağlı"
+              onChange={(e) => setScheduleNote(e.target.value)}
+            />
+          </label>
+          <div className="messaging-webrtc-faz4-schedule-actions">
+            <button
+              type="button"
+              className="messaging-webrtc-pilot-btn messaging-webrtc-pilot-btn--primary"
+              disabled={scheduleBusy || !scheduleAtLocal}
+              onClick={() => void saveMeetSchedule()}
+            >
+              Kaydet
+            </button>
+            <button
+              type="button"
+              className="messaging-webrtc-pilot-btn"
+              onClick={() => setSchedulePanelOpen(false)}
+            >
+              Kapat
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       {phase === "precall" ? (
         <div className="messaging-webrtc-precall">
