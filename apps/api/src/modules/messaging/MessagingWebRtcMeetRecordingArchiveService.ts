@@ -19,6 +19,7 @@ export type WebRtcMeetRecordingArchiveMeta = {
   hasBlob: boolean;
   createdByUserId: string;
   createdAt: string;
+  consentAcknowledged?: boolean;
 };
 
 const LIST_MAX = 24;
@@ -69,6 +70,7 @@ export class MessagingWebRtcMeetRecordingArchiveService {
       media: "audio" | "video";
       filename?: string;
       contentBase64?: string;
+      consentAcknowledged?: boolean;
     },
   ): Promise<WebRtcMeetRecordingArchiveMeta> {
     await this.messagingThreadApplicationService.assertThreadParticipantForSignaling(
@@ -80,6 +82,11 @@ export class MessagingWebRtcMeetRecordingArchiveService {
     let hasBlob = false;
     const id = randomUUID();
     if (input.contentBase64?.trim()) {
+      if (!input.consentAcknowledged) {
+        throw new BadRequestException(
+          "Kayıt dosyası için consentAcknowledged gerekli.",
+        );
+      }
       const buf = Buffer.from(input.contentBase64, "base64");
       byteSize = buf.byteLength;
       if (byteSize > maxBytes) {
@@ -107,6 +114,7 @@ export class MessagingWebRtcMeetRecordingArchiveService {
       hasBlob,
       createdByUserId: user.userId,
       createdAt: new Date().toISOString(),
+      ...(input.consentAcknowledged ? { consentAcknowledged: true } : {}),
     };
     await this.redis
       .multi()

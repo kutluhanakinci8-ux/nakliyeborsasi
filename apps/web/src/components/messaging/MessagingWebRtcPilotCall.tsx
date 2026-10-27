@@ -37,6 +37,8 @@ import {
 } from "../../lib/messagingWebRtcMeetSchedule";
 import {
   blobToBase64,
+  downloadArchiveWebmFromBase64,
+  fetchMessagingWebRtcRecordingArchiveBlob,
   fetchMessagingWebRtcRecordingArchives,
   postMessagingWebRtcRecordingArchive,
   type WebRtcMeetRecordingArchiveMeta,
@@ -200,6 +202,8 @@ export function MessagingWebRtcPilotCall({
   const [recordingArchives, setRecordingArchives] = useState<
     WebRtcMeetRecordingArchiveMeta[]
   >([]);
+  const [recordingConsent, setRecordingConsent] = useState(false);
+  const [archivePanelOpen, setArchivePanelOpen] = useState(false);
 
   const pcsRef = useRef<Map<string, RTCPeerConnection>>(new Map());
   const meetRecorderRef = useRef<MeetLocalRecorder | null>(null);
@@ -327,6 +331,7 @@ export function MessagingWebRtcPilotCall({
             status.features.includes("messaging_webrtc_meet_ops_faz4") &&
             status.features.includes("messaging_webrtc_meet_reliability_faz5") &&
             status.features.includes("messaging_webrtc_meet_prod_net_faz6") &&
+            status.features.includes("messaging_webrtc_meet_compliance_faz7") &&
             status.webrtc?.signaling === "redis_relay",
         );
       })
@@ -1017,6 +1022,7 @@ export function MessagingWebRtcPilotCall({
           durationSeconds,
           media: callModeRef.current,
           contentBase64,
+          consentAcknowledged: recordingConsent || Boolean(contentBase64),
         },
       );
       setRecordingArchives((prev) => [archive, ...prev].slice(0, 12));
@@ -1061,9 +1067,33 @@ export function MessagingWebRtcPilotCall({
     }
   }
 
+  async function downloadArchivedRecording(archiveId: string): Promise<void> {
+    if (!threadId) {
+      return;
+    }
+    try {
+      const { meta, contentBase64 } = await fetchMessagingWebRtcRecordingArchiveBlob(
+        accessToken,
+        threadId,
+        archiveId,
+      );
+      if (!meta.hasBlob) {
+        setStatusLine("Bu arşivde dosya yok (yalnızca özet)");
+        return;
+      }
+      downloadArchiveWebmFromBase64(meta.filename, contentBase64);
+    } catch {
+      setStatusLine("Arşiv indirilemedi");
+    }
+  }
+
   async function toggleMeetRecording(): Promise<void> {
     if (recording) {
       await stopMeetRecording(true);
+      return;
+    }
+    if (!recordingConsent) {
+      setStatusLine("Kayıt için onay kutusunu işaretleyin");
       return;
     }
     const local = localStreamRef.current;
@@ -1284,7 +1314,7 @@ export function MessagingWebRtcPilotCall({
 
   return (
     <div
-      className="messaging-webrtc-pilot messaging-webrtc-meet-faz1 messaging-webrtc-meet-faz2 messaging-webrtc-meet-faz3 messaging-webrtc-meet-faz4 messaging-webrtc-meet-faz5"
+      className="messaging-webrtc-pilot messaging-webrtc-meet-faz1 messaging-webrtc-meet-faz2 messaging-webrtc-meet-faz3 messaging-webrtc-meet-faz4 messaging-webrtc-meet-faz5 messaging-webrtc-meet-faz6 messaging-webrtc-meet-faz7"
       role="region"
       aria-label="Görüntülü ve sesli görüşme (en fazla 3 kişi)"
     >
@@ -1521,9 +1551,13 @@ export function MessagingWebRtcPilotCall({
           {iceCapsStatusLabel(iceCaps, turnMonitor)}
         </span>
         {recordingArchives.length > 0 ? (
-          <span className="messaging-webrtc-faz5-archive-hint">
+          <button
+            type="button"
+            className="messaging-webrtc-faz5-archive-hint messaging-webrtc-faz7-archive-btn"
+            onClick={() => setArchivePanelOpen((o) => !o)}
+          >
             Arşiv: {recordingArchives.length}
-          </span>
+          </button>
         ) : null}
         {inCallUi && callStartedAtRef.current ? (
           <span className="messaging-webrtc-pilot-timer" aria-live="polite">
@@ -1703,6 +1737,39 @@ export function MessagingWebRtcPilotCall({
             </select>
           </label>
         </div>
+      ) : null}
+
+      {inCallUi ? (
+        <label className="messaging-webrtc-faz7-consent">
+          <input
+            type="checkbox"
+            checked={recordingConsent}
+            onChange={(e) => setRecordingConsent(e.target.checked)}
+          />
+          Görüşme kaydı — katılımcıları bilgilendirdim (KVKK)
+        </label>
+      ) : null}
+
+      {archivePanelOpen && recordingArchives.length > 0 ? (
+        <ul className="messaging-webrtc-faz7-archive-list">
+          {recordingArchives.map((row) => (
+            <li key={row.id}>
+              <span>
+                {formatCallDuration(row.durationSeconds)} · {row.media} ·{" "}
+                {row.hasBlob ? `${Math.round(row.byteSize / 1024)} KB` : "meta"}
+              </span>
+              {row.hasBlob ? (
+                <button
+                  type="button"
+                  className="messaging-webrtc-pilot-btn"
+                  onClick={() => void downloadArchivedRecording(row.id)}
+                >
+                  İndir
+                </button>
+              ) : null}
+            </li>
+          ))}
+        </ul>
       ) : null}
 
       {inCallUi ? (

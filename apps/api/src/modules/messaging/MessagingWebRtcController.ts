@@ -122,6 +122,7 @@ export class MessagingWebRtcController {
         media: body.media,
         filename: body.filename,
         contentBase64: body.contentBase64,
+        consentAcknowledged: body.consentAcknowledged,
       },
     );
     return { ok: true, archive };

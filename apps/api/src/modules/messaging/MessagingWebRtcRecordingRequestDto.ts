@@ -1,4 +1,5 @@
 import {
+  IsBoolean,
   IsIn,
   IsInt,
   IsOptional,
@@ -28,4 +29,9 @@ export class PostMessagingWebRtcRecordingArchiveRequestDto {
   @IsString()
   @MinLength(8)
   public contentBase64?: string;
+
+  /** KVKK — dosya yüklerken zorunlu. */
+  @IsOptional()
+  @IsBoolean()
+  public consentAcknowledged?: boolean;
 }

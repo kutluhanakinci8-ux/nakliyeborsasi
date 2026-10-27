@@ -10,6 +10,7 @@ export type WebRtcMeetRecordingArchiveMeta = {
   hasBlob: boolean;
   createdByUserId: string;
   createdAt: string;
+  consentAcknowledged?: boolean;
 };
 
 function apiBase(): string {
@@ -41,6 +42,7 @@ export async function postMessagingWebRtcRecordingArchive(
     media: "audio" | "video";
     filename?: string;
     contentBase64?: string;
+    consentAcknowledged?: boolean;
   },
 ): Promise<WebRtcMeetRecordingArchiveMeta> {
   const response = await fetch(
@@ -62,6 +64,43 @@ export async function postMessagingWebRtcRecordingArchive(
     archive: WebRtcMeetRecordingArchiveMeta;
   };
   return body.archive;
+}
+
+export async function fetchMessagingWebRtcRecordingArchiveBlob(
+  accessToken: string,
+  threadId: string,
+  archiveId: string,
+): Promise<{ meta: WebRtcMeetRecordingArchiveMeta; contentBase64: string }> {
+  const response = await fetch(
+    `${apiBase()}/messaging/webrtc/threads/${encodeURIComponent(threadId)}/recordings/${encodeURIComponent(archiveId)}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  );
+  if (!response.ok) {
+    throw new Error("webrtc recording get");
+  }
+  const body = (await response.json()) as {
+    archive: WebRtcMeetRecordingArchiveMeta;
+    contentBase64: string;
+  };
+  return { meta: body.archive, contentBase64: body.contentBase64 };
+}
+
+export function downloadArchiveWebmFromBase64(
+  filename: string,
+  contentBase64: string,
+): void {
+  const binary = atob(contentBase64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  const blob = new Blob([bytes], { type: "video/webm" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename || "lerta-gorusme.webm";
+  anchor.click();
+  URL.revokeObjectURL(url);
 }
 
 export function blobToBase64(blob: Blob): Promise<string> {
