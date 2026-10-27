@@ -61,6 +61,12 @@ import {
   postMessagingWebRtcOverflowIntent,
 } from "../../lib/messagingWebRtcMeetOverflowIntent";
 import {
+  buildSfuPilotSignalingUrl,
+  copyTextToClipboard,
+  createMessagingWebRtcSfuSession,
+  type WebRtcMeetSfuSessionJoinBundle,
+} from "../../lib/messagingWebRtcMeetSfuSession";
+import {
   startMeetIncomingRing,
   stopMeetIncomingRing,
 } from "../../lib/messagingWebRtcRing";
@@ -223,6 +229,9 @@ export function MessagingWebRtcPilotCall({
   const [sfuBackend, setSfuBackend] = useState<MessagingWebRtcSfuBackend | null>(
     null,
   );
+  const [sfuJoinBundle, setSfuJoinBundle] =
+    useState<WebRtcMeetSfuSessionJoinBundle | null>(null);
+  const [sfuSessionBusy, setSfuSessionBusy] = useState(false);
   const [maxRecordingArchiveBytes, setMaxRecordingArchiveBytes] = useState(
     2_500_000,
   );
@@ -370,6 +379,7 @@ export function MessagingWebRtcPilotCall({
             status.features.includes("messaging_webrtc_meet_capacity_faz15") &&
             status.features.includes("messaging_webrtc_meet_sfu_intent_faz16") &&
             status.features.includes("messaging_webrtc_meet_sfu_config_faz17") &&
+            status.features.includes("messaging_webrtc_meet_sfu_session_faz18") &&
             status.webrtc?.signaling === "redis_relay",
         );
       })
@@ -825,6 +835,40 @@ export function MessagingWebRtcPilotCall({
   function isMeetRoomFullError(err: unknown): boolean {
     const message = err instanceof Error ? err.message : String(err);
     return message.includes("dolu");
+  }
+
+  async function startSfuPilotSession(media: CallMediaMode): Promise<void> {
+    if (!threadId || sfuSessionBusy) {
+      return;
+    }
+    if (!sfuBackend?.sessionJoin?.enabled) {
+      setError("SFU signaling URL yapılandırılmamış.");
+      return;
+    }
+    setSfuSessionBusy(true);
+    setError("");
+    try {
+      const join = await createMessagingWebRtcSfuSession(
+        accessToken,
+        threadId,
+        media === "audio" ? "audio" : "video",
+      );
+      setSfuJoinBundle(join);
+      const url = buildSfuPilotSignalingUrl(join);
+      try {
+        await copyTextToClipboard(url);
+        setStatusLine("SFU pilot bağlantısı kopyalandı — harici istemciye yapıştırın.");
+      } catch {
+        setStatusLine(join.pilotHintTr);
+      }
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "SFU pilot oturumu oluşturulamadı.",
+      );
+    } finally {
+      setSfuSessionBusy(false);
+    }
   }
 
   async function submitSfuOverflowIntent(): Promise<void> {
@@ -1421,7 +1465,7 @@ export function MessagingWebRtcPilotCall({
 
   return (
     <div
-      className="messaging-webrtc-pilot messaging-webrtc-meet-faz1 messaging-webrtc-meet-faz2 messaging-webrtc-meet-faz3 messaging-webrtc-meet-faz4 messaging-webrtc-meet-faz5 messaging-webrtc-meet-faz6 messaging-webrtc-meet-faz7 messaging-webrtc-meet-faz9 messaging-webrtc-meet-faz10 messaging-webrtc-meet-faz15 messaging-webrtc-meet-faz16 messaging-webrtc-meet-faz17"
+      className="messaging-webrtc-pilot messaging-webrtc-meet-faz1 messaging-webrtc-meet-faz2 messaging-webrtc-meet-faz3 messaging-webrtc-meet-faz4 messaging-webrtc-meet-faz5 messaging-webrtc-meet-faz6 messaging-webrtc-meet-faz7 messaging-webrtc-meet-faz9 messaging-webrtc-meet-faz10 messaging-webrtc-meet-faz15 messaging-webrtc-meet-faz16 messaging-webrtc-meet-faz17 messaging-webrtc-meet-faz18"
       role="region"
       aria-label={`Görüntülü ve sesli görüşme (en fazla ${meetCapacity?.effectiveMaxParticipants ?? MAX_PARTICIPANTS} kişi)`}
     >
@@ -1450,6 +1494,32 @@ export function MessagingWebRtcPilotCall({
               : "SFU altyapı: sağlık kontrolü başarısız (mesh aktif)"
             : `SFU altyapı: yapılandırılmadı (plan ≤${sfuBackend.plannedMaxParticipants} kişi)`}
         </p>
+      ) : null}
+      {sfuBackend?.sessionJoin?.enabled && threadId ? (
+        <div className="messaging-webrtc-faz18-sfu-session">
+          <button
+            type="button"
+            className="messaging-webrtc-pilot-btn"
+            disabled={sfuSessionBusy}
+            onClick={() => void startSfuPilotSession("video")}
+          >
+            {sfuSessionBusy ? "SFU oturumu…" : "SFU pilot (görüntülü)"}
+          </button>
+          <button
+            type="button"
+            className="messaging-webrtc-pilot-btn"
+            disabled={sfuSessionBusy}
+            onClick={() => void startSfuPilotSession("audio")}
+          >
+            SFU pilot (sesli)
+          </button>
+          {sfuJoinBundle ? (
+            <span className="messaging-webrtc-faz18-sfu-session-id" role="status">
+              Oturum: {sfuJoinBundle.sessionId.slice(0, 8)}… (≤
+              {sfuJoinBundle.maxParticipants} kişi)
+            </span>
+          ) : null}
+        </div>
       ) : null}
       {meetCapacity?.sfuOverflowIntent?.enabled &&
       threadId &&

@@ -20,9 +20,11 @@ import {
   summarizeMessagingWebRtcIceCaps,
 } from "./messagingWebRtcIceConfig";
 import { MessagingWebRtcMeetOverflowIntentService } from "./MessagingWebRtcMeetOverflowIntentService";
+import { MessagingWebRtcMeetSfuSessionService } from "./MessagingWebRtcMeetSfuSessionService";
 import { MessagingWebRtcMeetRecordingArchiveService } from "./MessagingWebRtcMeetRecordingArchiveService";
 import { MessagingWebRtcMeetScheduleService } from "./MessagingWebRtcMeetScheduleService";
 import { PostMessagingWebRtcOverflowIntentRequestDto } from "./MessagingWebRtcOverflowIntentRequestDto";
+import { PostMessagingWebRtcSfuSessionRequestDto } from "./MessagingWebRtcSfuSessionRequestDto";
 import { PostMessagingWebRtcRecordingArchiveRequestDto } from "./MessagingWebRtcRecordingRequestDto";
 import { UpsertMessagingWebRtcScheduleRequestDto } from "./MessagingWebRtcScheduleRequestDto";
 import {
@@ -43,6 +45,7 @@ export class MessagingWebRtcController {
     private readonly meetScheduleService: MessagingWebRtcMeetScheduleService,
     private readonly meetRecordingArchiveService: MessagingWebRtcMeetRecordingArchiveService,
     private readonly meetOverflowIntentService: MessagingWebRtcMeetOverflowIntentService,
+    private readonly meetSfuSessionService: MessagingWebRtcMeetSfuSessionService,
   ) {}
 
   @Get("config")
@@ -78,6 +81,38 @@ export class MessagingWebRtcController {
   @Get("capacity")
   public getCapacityPolicy() {
     return { capacity: summarizeMessagingWebRtcMeetCapacity() };
+  }
+
+  @Get("threads/:threadId/sfu/session")
+  public async getSfuSession(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("threadId") threadId: string,
+  ) {
+    const join = await this.meetSfuSessionService.getActiveSession(user, threadId);
+    return { join };
+  }
+
+  @Post("threads/:threadId/sfu/session")
+  public async postSfuSession(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("threadId") threadId: string,
+    @Body() body: PostMessagingWebRtcSfuSessionRequestDto,
+  ) {
+    const join = await this.meetSfuSessionService.createOrRefreshSession(
+      user,
+      threadId,
+      body.media ?? "video",
+    );
+    return { ok: true, join };
+  }
+
+  @Delete("threads/:threadId/sfu/session")
+  public async deleteSfuSession(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("threadId") threadId: string,
+  ) {
+    await this.meetSfuSessionService.clearSession(user, threadId);
+    return { ok: true };
   }
 
   @Get("threads/:threadId/overflow-intent")

@@ -14,6 +14,6 @@ Status feature: `messaging_webrtc_meet_sfu_config_faz17`
 
 VPS: `docs/messaging/WEBRTC-SFU-VPS.md`
 
-## Sonraki (Faz 18+)
+## Sonraki
 
-SFU medya join / signaling entegrasyonu.
+Faz 18 SFU oturum API — `WEBRTC-MEET-FAZ18.md`.

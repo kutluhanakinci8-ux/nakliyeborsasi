@@ -9,6 +9,7 @@
 | 15 | `messaging_webrtc_meet_capacity_faz15` | Kapasite politikası (mesh ≤3, SFU kapalı, 409 metinleri) |
 | 16 | `messaging_webrtc_meet_sfu_intent_faz16` | SFU beta overflow intent (Redis, ops sayacı) |
 | 17 | `messaging_webrtc_meet_sfu_config_faz17` | SFU env + HTTP sağlık (mesh medya devam) |
-| 18+ | — | SFU medya join, RN WebRTC native |
+| 18 | `messaging_webrtc_meet_sfu_session_faz18` | SFU oturum mint + join bundle (harici signaling) |
+| 19+ | — | Tarayıcı SFU medya, RN WebRTC native |
 
-Faz 1–17 kodlandı.
+Faz 1–18 kodlandı.

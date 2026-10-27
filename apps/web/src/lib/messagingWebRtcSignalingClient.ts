@@ -38,6 +38,10 @@ export type MessagingWebRtcSfuBackend = {
   healthUrlConfigured: boolean;
   signalingUrlConfigured: boolean;
   plannedMaxParticipants: number;
+  sessionJoin?: {
+    enabled: boolean;
+    pathTemplate: string;
+  };
   probe: {
     ok: boolean;
     source: "disabled" | "http_probe";
