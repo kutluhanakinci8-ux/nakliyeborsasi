@@ -24,6 +24,7 @@ import { MessagingExpoPushTokenEntity } from "../../infrastructure/database/enti
 import { MessagingExpoPushService } from "./MessagingExpoPushService";
 import { MessagingWebRtcSignalingService } from "./MessagingWebRtcSignalingService";
 import { MessagingWebRtcMeetRecordingArchiveService } from "./MessagingWebRtcMeetRecordingArchiveService";
+import { MessagingWebRtcIncomingCallNotifyService } from "./MessagingWebRtcIncomingCallNotifyService";
 import { MessagingWebRtcMeetReminderScheduler } from "./MessagingWebRtcMeetReminderScheduler";
 import { MessagingWebRtcMeetReminderService } from "./MessagingWebRtcMeetReminderService";
 import { MessagingWebRtcMeetScheduleService } from "./MessagingWebRtcMeetScheduleService";
@@ -115,6 +116,7 @@ import { SocialHubModule } from "../social-hub/SocialHubModule";
     MessagingWebRtcSignalingService,
     MessagingWebRtcMeetScheduleService,
     MessagingWebRtcMeetRecordingArchiveService,
+    MessagingWebRtcIncomingCallNotifyService,
     MessagingWebRtcMeetReminderService,
     MessagingWebRtcMeetReminderScheduler,
     MessagingRealtimeHubService,

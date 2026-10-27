@@ -180,6 +180,60 @@ export class MessagingWebPushService {
     }
   }
 
+  public async notifyMeetIncomingCall(params: {
+    companyId: string;
+    threadId: string;
+    title: string;
+    body: string;
+    freightListingId: string | null;
+  }): Promise<void> {
+    const vapid = resolveMessagingVapidFromEnv();
+    if (!vapid) {
+      return;
+    }
+    const subs = await this.subscriptionRepository.find({
+      where: { companyId: params.companyId },
+    });
+    if (subs.length === 0) {
+      return;
+    }
+    const webBase =
+      process.env.MESSAGING_WEB_PUBLIC_URL?.trim() ??
+      process.env.WEB_PUBLIC_BASE_URL?.trim() ??
+      "https://app.lerta.com.tr";
+    const listingQuery = params.freightListingId
+      ? `&listingId=${encodeURIComponent(params.freightListingId)}`
+      : "";
+    const payload = JSON.stringify({
+      title: params.title,
+      body: params.body.slice(0, 180),
+      url: `${webBase.replace(/\/$/, "")}/messaging?tab=chat&threadId=${encodeURIComponent(params.threadId)}&meet=1${listingQuery}`,
+    });
+    for (const row of subs) {
+      const prefs = await this.userNotificationPreferenceService.getForUser(
+        row.userId,
+      );
+      if (!prefs.notifyPushMessagingChat || !prefs.notifyPushMessages) {
+        continue;
+      }
+      try {
+        await sendWebPushNotification(
+          {
+            endpoint: row.endpoint,
+            keys: { p256dh: row.p256dh, auth: row.auth },
+          },
+          payload,
+          vapid,
+        );
+      } catch (error) {
+        const status = (error as { statusCode?: number }).statusCode;
+        if (status === 404 || status === 410) {
+          await this.subscriptionRepository.delete({ id: row.id });
+        }
+      }
+    }
+  }
+
   public async notifyMeetScheduleReminder(params: {
     companyId: string;
     threadId: string;

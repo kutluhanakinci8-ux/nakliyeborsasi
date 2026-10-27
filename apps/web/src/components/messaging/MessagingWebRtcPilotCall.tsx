@@ -50,6 +50,10 @@ import {
 } from "../../lib/messagingWebRtcLocalRecorder";
 import { replaceOutgoingVideoTrack } from "../../lib/messagingWebRtcScreenShare";
 import {
+  startMeetIncomingRing,
+  stopMeetIncomingRing,
+} from "../../lib/messagingWebRtcRing";
+import {
   fetchMessagingWebRtcConfig,
   fetchMessagingWebRtcRoom,
   joinMessagingWebRtcRoom,
@@ -64,6 +68,8 @@ import {
 const QUICK_REACTIONS = ["👍", "👏", "❤️", "😂"] as const;
 
 const MAX_PARTICIPANTS = 3;
+const MEET_POLL_IDLE_MS = 750;
+const MEET_POLL_INCALL_MS = 900;
 
 type Props = {
   accessToken: string;
@@ -277,6 +283,7 @@ export function MessagingWebRtcPilotCall({
     }
     pcsRef.current.clear();
     iceQueuesRef.current.clear();
+    stopMeetIncomingRing();
     stopPreview();
     setLocalStream((prev) => {
       prev?.getTracks().forEach((track) => track.stop());
@@ -332,6 +339,8 @@ export function MessagingWebRtcPilotCall({
             status.features.includes("messaging_webrtc_meet_reliability_faz5") &&
             status.features.includes("messaging_webrtc_meet_prod_net_faz6") &&
             status.features.includes("messaging_webrtc_meet_compliance_faz7") &&
+            status.features.includes("messaging_webrtc_meet_qa_gate_faz8") &&
+            status.features.includes("messaging_webrtc_meet_realtime_faz9") &&
             status.webrtc?.signaling === "redis_relay",
         );
       })
@@ -391,6 +400,15 @@ export function MessagingWebRtcPilotCall({
       }
     }, 1000);
     return () => clearInterval(timer);
+  }, [phase]);
+
+  useEffect(() => {
+    if (phase === "incoming") {
+      startMeetIncomingRing();
+      return () => stopMeetIncomingRing();
+    }
+    stopMeetIncomingRing();
+    return undefined;
   }, [phase]);
 
   const flushIceQueue = useCallback(async (pc: RTCPeerConnection, peerId: string) => {
@@ -709,7 +727,7 @@ export function MessagingWebRtcPilotCall({
           }
         })
         .catch(() => undefined);
-    }, 2000);
+    }, MEET_POLL_IDLE_MS);
     return () => clearInterval(timer);
   }, [accessToken, enabled, phase, processRemoteSignal, threadId]);
 
@@ -743,7 +761,7 @@ export function MessagingWebRtcPilotCall({
           }
         })
         .catch(() => undefined);
-    }, 1500);
+    }, MEET_POLL_INCALL_MS);
   }, [accessToken, processRemoteSignal, syncNewRoomPeers, threadId]);
 
   async function postCallInvite(): Promise<void> {
@@ -1314,7 +1332,7 @@ export function MessagingWebRtcPilotCall({
 
   return (
     <div
-      className="messaging-webrtc-pilot messaging-webrtc-meet-faz1 messaging-webrtc-meet-faz2 messaging-webrtc-meet-faz3 messaging-webrtc-meet-faz4 messaging-webrtc-meet-faz5 messaging-webrtc-meet-faz6 messaging-webrtc-meet-faz7"
+      className="messaging-webrtc-pilot messaging-webrtc-meet-faz1 messaging-webrtc-meet-faz2 messaging-webrtc-meet-faz3 messaging-webrtc-meet-faz4 messaging-webrtc-meet-faz5 messaging-webrtc-meet-faz6 messaging-webrtc-meet-faz7 messaging-webrtc-meet-faz9"
       role="region"
       aria-label="Görüntülü ve sesli görüşme (en fazla 3 kişi)"
     >

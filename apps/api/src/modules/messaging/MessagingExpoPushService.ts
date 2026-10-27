@@ -126,6 +126,69 @@ export class MessagingExpoPushService {
     }
   }
 
+  public async notifyMeetIncomingCall(params: {
+    companyId: string;
+    threadId: string;
+    title: string;
+    body: string;
+    freightListingId: string | null;
+  }): Promise<void> {
+    const rows = await this.tokenRepository.find({
+      where: { companyId: params.companyId },
+    });
+    if (rows.length === 0) {
+      return;
+    }
+    const webBase =
+      process.env.MESSAGING_WEB_PUBLIC_URL?.trim() ??
+      process.env.WEB_PUBLIC_BASE_URL?.trim() ??
+      "https://app.lerta.com.tr";
+    const listingQuery = params.freightListingId
+      ? `&listingId=${encodeURIComponent(params.freightListingId)}`
+      : "";
+    const url = `${webBase.replace(/\/$/, "")}/messaging?tab=chat&threadId=${encodeURIComponent(params.threadId)}&meet=1${listingQuery}`;
+    const messages = [];
+    const rowByToken = new Map<string, MessagingExpoPushTokenEntity>();
+    for (const row of rows) {
+      const prefs = await this.userNotificationPreferenceService.getForUser(
+        row.userId,
+      );
+      if (!prefs.notifyPushMessagingChat || !prefs.notifyPushMessages) {
+        continue;
+      }
+      messages.push(
+        buildMessagingExpoPushMessage({
+          expoPushToken: row.expoPushToken,
+          title: params.title,
+          body: params.body.slice(0, 180),
+          url,
+        }),
+      );
+      rowByToken.set(row.expoPushToken, row);
+    }
+    if (messages.length === 0) {
+      return;
+    }
+    try {
+      const tickets = await sendExpoPushMessages(messages);
+      for (let i = 0; i < tickets.length; i++) {
+        const ticket = tickets[i];
+        const token = messages[i]?.to;
+        if (!token || !isExpoPushTokenInvalid(ticket)) {
+          continue;
+        }
+        const row = rowByToken.get(token);
+        if (row) {
+          await this.tokenRepository.delete({ id: row.id });
+        }
+      }
+    } catch (error) {
+      this.logger.warn(
+        `Expo meet incoming failed: ${error instanceof Error ? error.message : "?"}`,
+      );
+    }
+  }
+
   public async notifyMeetScheduleReminder(params: {
     companyId: string;
     threadId: string;
