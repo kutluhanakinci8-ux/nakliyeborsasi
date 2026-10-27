@@ -42,6 +42,10 @@ import {
   withDefaultGroupRole,
 } from "../lib/messagingGroupThreadPick";
 import type { AuthSessionRecord } from "../lib/SessionApiClient";
+import {
+  isMessagingVoiceNoteDeepLink,
+  stripMessagingVoiceNoteDeepLinkParam,
+} from "../lib/messagingVoiceNoteDeepLink";
 
 export type MessagingChatController = ReturnType<typeof useMessagingChatController>;
 
@@ -77,6 +81,7 @@ export function useMessagingChatController({
   const [counterpartyTrust, setCounterpartyTrust] =
     useState<TrustScoreRecord | null>(null);
   const [moduleBlocked, setModuleBlocked] = useState(false);
+  const [voiceNoteDeepLinkFocus, setVoiceNoteDeepLinkFocus] = useState(false);
   const [threadSummary, setThreadSummary] =
     useState<MessagingThreadSummaryRecord | null>(null);
   const [listingCard, setListingCard] =
@@ -551,6 +556,17 @@ export function useMessagingChatController({
     setMessageBody(draft);
     const params = new URLSearchParams(searchParams.toString());
     params.delete("draft");
+    router.replace(`/messaging?${params.toString()}`, { scroll: false });
+  }, [searchParams, router]);
+
+  useEffect(() => {
+    if (!isMessagingVoiceNoteDeepLink(searchParams)) {
+      return;
+    }
+    setVoiceNoteDeepLinkFocus(true);
+    const params = stripMessagingVoiceNoteDeepLinkParam(
+      new URLSearchParams(searchParams.toString()),
+    );
     router.replace(`/messaging?${params.toString()}`, { scroll: false });
   }, [searchParams, router]);
 
@@ -1272,6 +1288,8 @@ export function useMessagingChatController({
     handleTranslateMessage,
     handleSendMessage,
     sendVoiceNoteAttachment,
+    voiceNoteDeepLinkFocus,
+    clearVoiceNoteDeepLinkFocus: () => setVoiceNoteDeepLinkFocus(false),
     acceptListingFixedPrice,
     submitUnifiedChatSearch,
     refreshLlmSummary,

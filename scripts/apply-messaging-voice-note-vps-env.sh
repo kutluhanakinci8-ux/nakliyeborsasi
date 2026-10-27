@@ -25,13 +25,17 @@ case "$PHASE" in
   vm3)
     append_kv "MESSAGING_VOICE_NOTE_MOBILE_FAZ3" "1"
     ;;
+  vm4)
+    append_kv "MESSAGING_VOICE_NOTE_DEEPLINK_FAZ4" "1"
+    ;;
   all)
     append_kv "MESSAGING_VOICE_NOTE_FAZ1" "1"
     append_kv "MESSAGING_VOICE_NOTE_PLAYER_FAZ2" "1"
     append_kv "MESSAGING_VOICE_NOTE_MOBILE_FAZ3" "1"
+    append_kv "MESSAGING_VOICE_NOTE_DEEPLINK_FAZ4" "1"
     ;;
   *)
-    echo "Kullanım: $0 [vm1|vm2|vm3|all]" >&2
+    echo "Kullanım: $0 [vm1|vm2|vm3|vm4|all]" >&2
     exit 1
     ;;
 esac

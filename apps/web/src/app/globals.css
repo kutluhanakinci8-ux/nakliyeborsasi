@@ -5266,6 +5266,31 @@ button.btn-secondary {
   font-weight: 800;
 }
 
+.chat-compose-tool-btn--voice-deeplink {
+  border-color: #0d9488;
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.28);
+  animation: chat-voice-deeplink-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes chat-voice-deeplink-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.28);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(13, 148, 136, 0.12);
+  }
+}
+
+.chat-voice-deeplink-hint {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #0f766e;
+  flex: 1 1 100%;
+  min-width: 100%;
+}
+
 .chat-mention-anchor {
   position: relative;
 }
