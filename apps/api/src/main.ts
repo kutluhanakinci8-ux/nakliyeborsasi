@@ -13,6 +13,13 @@ export class BootstrapApplication {
       AppModule,
       { rawBody: true },
     );
+    // Sesli mesajlar JSON içinde base64 gelir; Express varsayılanı ~100kb (413).
+    const jsonBodyLimit = process.env.API_JSON_BODY_LIMIT?.trim() || "20mb";
+    application.useBodyParser("json", { limit: jsonBodyLimit });
+    application.useBodyParser("urlencoded", {
+      limit: jsonBodyLimit,
+      extended: true,
+    });
     application.useStaticAssets(join(__dirname, "public", "panel"), {
       prefix: "/panel/",
     });

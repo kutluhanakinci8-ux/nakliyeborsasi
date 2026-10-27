@@ -731,7 +731,19 @@ export function useMessagingChatController({
       } catch {
         // ignore refresh errors
       }
-      setErrorMessage(error instanceof Error ? error.message : "Gönderim hatası");
+      const raw =
+        error instanceof Error ? error.message : "Gönderim hatası";
+      if (
+        /413|entity too large|PayloadTooLarge|request entity too large/i.test(
+          raw,
+        )
+      ) {
+        setErrorMessage(
+          "Ses dosyası sunucu gövde sınırına takıldı. Kayıt çok uzun olabilir; daha kısa deneyin veya destek ile API_JSON_BODY_LIMIT kontrol edin.",
+        );
+      } else {
+        setErrorMessage(raw);
+      }
     } finally {
       setVoiceNoteSendBusy(false);
     }

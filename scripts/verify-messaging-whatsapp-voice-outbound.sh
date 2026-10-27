@@ -7,5 +7,6 @@ grep -q 'form.append("type", "audio")' "${ROOT}/apps/api/src/modules/social-hub/
 grep -q "WHATSAPP_CLOUD_ALLOWED_AUDIO_MIME" "${ROOT}/apps/api/src/modules/social-hub/oauth/socialHubWhatsAppOutboundAudio.ts"
 test -x "${ROOT}/scripts/ensure-vps-ffmpeg.sh"
 grep -q "audio/ogg;codecs=opus" "${ROOT}/apps/web/src/lib/messagingVoiceNoteBlob.ts"
+bash "${ROOT}/scripts/verify-messaging-voice-json-body-limit.sh"
 cd "${ROOT}/apps/api" && npm test -- --run socialHubWhatsAppOutboundAudio 2>&1 | tail -5
 echo "verify-messaging-whatsapp-voice-outbound: PASS"
