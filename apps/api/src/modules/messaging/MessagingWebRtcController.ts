@@ -17,8 +17,11 @@ import {
   resolveMessagingWebRtcIceServers,
   summarizeMessagingWebRtcIceCaps,
 } from "./messagingWebRtcIceConfig";
+import { MessagingWebRtcMeetRecordingArchiveService } from "./MessagingWebRtcMeetRecordingArchiveService";
 import { MessagingWebRtcMeetScheduleService } from "./MessagingWebRtcMeetScheduleService";
+import { PostMessagingWebRtcRecordingArchiveRequestDto } from "./MessagingWebRtcRecordingRequestDto";
 import { UpsertMessagingWebRtcScheduleRequestDto } from "./MessagingWebRtcScheduleRequestDto";
+import { probeMessagingWebRtcTurnMonitor } from "./messagingWebRtcTurnMonitor";
 import { MessagingWebRtcSignalingService } from "./MessagingWebRtcSignalingService";
 import {
   ListMessagingWebRtcSignalsQueryDto,
@@ -31,17 +34,22 @@ export class MessagingWebRtcController {
   public constructor(
     private readonly signalingService: MessagingWebRtcSignalingService,
     private readonly meetScheduleService: MessagingWebRtcMeetScheduleService,
+    private readonly meetRecordingArchiveService: MessagingWebRtcMeetRecordingArchiveService,
   ) {}
 
   @Get("config")
   public async getConfig() {
     const relay = await this.signalingService.isRelayAvailable();
+    const turnMonitor = await probeMessagingWebRtcTurnMonitor();
     return {
       iceServers: resolveMessagingWebRtcIceServers(),
       signaling: relay ? "redis_relay" : "unavailable",
       maxParticipants: MESSAGING_WEBRTC_MAX_PARTICIPANTS,
       meshMode: "p2p",
       iceCaps: summarizeMessagingWebRtcIceCaps(),
+      turnMonitor,
+      maxRecordingArchiveBytes:
+        this.meetRecordingArchiveService.maxArchiveBytes(),
     };
   }
 
@@ -79,6 +87,54 @@ export class MessagingWebRtcController {
   ) {
     await this.meetScheduleService.clearSchedule(user, threadId);
     return { ok: true };
+  }
+
+  @Get("threads/:threadId/recordings")
+  public async listRecordings(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("threadId") threadId: string,
+  ) {
+    const archives = await this.meetRecordingArchiveService.listArchives(
+      user,
+      threadId,
+    );
+    return { archives };
+  }
+
+  @Post("threads/:threadId/recordings")
+  public async createRecordingArchive(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("threadId") threadId: string,
+    @Body() body: PostMessagingWebRtcRecordingArchiveRequestDto,
+  ) {
+    const archive = await this.meetRecordingArchiveService.createArchive(
+      user,
+      threadId,
+      {
+        durationSeconds: body.durationSeconds,
+        media: body.media,
+        filename: body.filename,
+        contentBase64: body.contentBase64,
+      },
+    );
+    return { ok: true, archive };
+  }
+
+  @Get("threads/:threadId/recordings/:archiveId")
+  public async getRecordingArchive(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("threadId") threadId: string,
+    @Param("archiveId") archiveId: string,
+  ) {
+    const payload = await this.meetRecordingArchiveService.fetchArchiveBlob(
+      user,
+      threadId,
+      archiveId,
+    );
+    return {
+      archive: payload.meta,
+      contentBase64: payload.base64,
+    };
   }
 
   @Get("threads/:threadId/room")

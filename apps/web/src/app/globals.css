@@ -7292,6 +7292,15 @@ button.btn-secondary {
   }
 }
 
+.messaging-webrtc-faz5-archive-hint {
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: #4338ca;
+  padding: 0.12rem 0.4rem;
+  border-radius: 999px;
+  background: #eef2ff;
+}
+
 .messaging-webrtc-pilot-video.is-active-speaker {
   outline: 3px solid #22c55e;
   outline-offset: 2px;

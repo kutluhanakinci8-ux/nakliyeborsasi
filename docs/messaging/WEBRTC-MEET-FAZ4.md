@@ -16,6 +16,6 @@ Status feature: `messaging_webrtc_meet_ops_faz4`
 - `PUT /messaging/webrtc/threads/:threadId/schedule` — body: `scheduledAt` (ISO), `media`, `note?`
 - `DELETE /messaging/webrtc/threads/:threadId/schedule`
 
-## Sonraki (Faz 5+)
+## Sonraki (Faz 5)
 
-Sunucu tarafı kayıt arşivi, hatırlatma push, coturn metrik scrape.
+Bkz. `WEBRTC-MEET-FAZ5.md` — push hatırlatma, kayıt arşivi, TURN izleme.
