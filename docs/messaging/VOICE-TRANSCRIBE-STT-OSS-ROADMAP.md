@@ -35,11 +35,11 @@ SBOM / vitrin: `docs/oss/` veya mevcut lisans envanterine STT servisi satırı e
 - Model boyutu kararı: `base` (hızlı) vs `small` (TR kalite)
 - VPS kaynak hedefi (ör. 2 vCPU, 4 GB RAM → `small` sınırda)
 
-**Doğrulama:** Yönetim notu; kod değişikliği yok.
+**Doğrulama:** [VOICE-TRANSCRIBE-STT-OSS-0.md](./VOICE-TRANSCRIBE-STT-OSS-0.md)
 
 ---
 
-## STT-OSS-1 — Yerel Whisper servisi (ops only)
+## STT-OSS-1 — Yerel Whisper servisi (ops only) — uygulama
 
 **Amaç:** `127.0.0.1` üzerinde OpenAI `/v1/audio/transcriptions` uyumlu servis.
 

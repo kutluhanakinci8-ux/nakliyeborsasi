@@ -1,0 +1,17 @@
+# Lerta messaging — self-hosted STT (OpenAI /v1/audio/transcriptions uyumlu)
+# CPU: faster_whisper + base model. Yalnızca localhost.
+services:
+  messaging-local-stt:
+    image: onerahmet/openai-whisper-asr-webservice:latest
+    container_name: lerta-messaging-local-stt
+    ports:
+      - "127.0.0.1:9010:9000"
+    environment:
+      ASR_ENGINE: faster_whisper
+      ASR_MODEL: base
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
