@@ -5,6 +5,11 @@ export type MessagingWebRtcNativeMediaModule = {
   rnWebRtcStatus: "absent" | "linked_dev_client";
   sfuMediaMode: "webview_embed" | "native_planned";
   capabilitiesPath: string;
+  nativeMeshPilot?: {
+    enabled: boolean;
+    pathTemplate: string;
+    requiresRnWebRtc: true;
+  };
   hintTr: string;
 };
 

@@ -27,6 +27,7 @@ import {
   parseMeetDeepLinkFromUrl,
 } from "./lertaMobileMeetHub";
 import { openNativeRtcMeetHub } from "./lertaMobileNativeRtcBridge";
+import { NativeMeetMeshPilotPanel } from "./NativeMeetMeshPilotPanel";
 import * as Linking from "expo-linking";
 
 /** OAuth redirect — AppAuth / expo-auth-session (W6). */
@@ -224,6 +225,7 @@ export function MobileApplicationRoot(): React.ReactElement {
               Meet native köprü (beta)
             </Text>
           </Pressable>
+          <NativeMeetMeshPilotPanel accessToken={accessToken} />
           <Pressable
             style={styles.buttonSecondary}
             onPress={() => void handleLogout()}

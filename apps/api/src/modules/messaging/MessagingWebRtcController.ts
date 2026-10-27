@@ -16,6 +16,7 @@ import { MESSAGING_WEBRTC_MAX_PARTICIPANTS } from "./messagingWebRtcConstants";
 import { summarizeMessagingWebRtcMeetCapacity } from "./messagingWebRtcMeetCapacity";
 import { probeMessagingWebRtcSfuBackend } from "./messagingWebRtcSfuBackend";
 import { MessagingWebRtcNativeBridgeService } from "./MessagingWebRtcNativeBridgeService";
+import { MessagingWebRtcNativeMeshPilotService } from "./MessagingWebRtcNativeMeshPilotService";
 import { PostMessagingWebRtcNativeBridgeHandshakeDto } from "./MessagingWebRtcNativeBridgeRequestDto";
 import { PostMessagingWebRtcNativeBridgeCapabilitiesDto } from "./MessagingWebRtcNativeBridgeCapabilitiesRequestDto";
 import {
@@ -50,6 +51,7 @@ export class MessagingWebRtcController {
     private readonly meetOverflowIntentService: MessagingWebRtcMeetOverflowIntentService,
     private readonly meetSfuSessionService: MessagingWebRtcMeetSfuSessionService,
     private readonly nativeBridgeService: MessagingWebRtcNativeBridgeService,
+    private readonly nativeMeshPilotService: MessagingWebRtcNativeMeshPilotService,
   ) {}
 
   @Get("config")
@@ -121,6 +123,27 @@ export class MessagingWebRtcController {
     const mediaModule =
       this.nativeBridgeService.resolveMediaModuleSnapshot(record);
     return { ok: true, capabilities: record, mediaModule };
+  }
+
+  @Get("threads/:threadId/native-pilot/session")
+  public async getNativeMeshPilotSession(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("threadId") threadId: string,
+  ) {
+    const session = await this.nativeMeshPilotService.getSession(user, threadId);
+    return { session };
+  }
+
+  @Post("threads/:threadId/native-pilot/session")
+  public async postNativeMeshPilotSession(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("threadId") threadId: string,
+  ) {
+    const session = await this.nativeMeshPilotService.createSession(
+      user,
+      threadId,
+    );
+    return { ok: true, session };
   }
 
   @Get("capacity")

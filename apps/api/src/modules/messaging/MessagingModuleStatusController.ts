@@ -180,6 +180,7 @@ export class MessagingModuleStatusController {
         "messaging_webrtc_meet_sfu_embed_faz19",
         "messaging_webrtc_meet_native_rtc_faz20",
         "messaging_webrtc_meet_native_module_faz21",
+        "messaging_webrtc_meet_rn_webrtc_pilot_faz22",
       ],
       translate: { deepl, libretranslate: libre },
       attachments: (() => {

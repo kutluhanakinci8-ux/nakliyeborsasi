@@ -16,6 +16,7 @@ export function buildMeetHubUrl(params?: {
   meetInvite?: boolean;
   sfuPilot?: boolean;
   nativeRtc?: boolean;
+  nativePilot?: boolean;
 }): string {
   const query = new URLSearchParams({ tab: "chat" });
   if (params?.threadId) {
@@ -29,6 +30,9 @@ export function buildMeetHubUrl(params?: {
   }
   if (params?.nativeRtc) {
     query.set("nativeRtc", "1");
+  }
+  if (params?.nativePilot) {
+    query.set("nativePilot", "1");
   }
   return `${resolveLertaWebBase()}/messaging?${query.toString()}`;
 }
