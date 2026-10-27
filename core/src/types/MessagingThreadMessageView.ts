@@ -3,6 +3,8 @@ export type MessagingMessageAttachmentView = {
   filename: string;
   contentType: string;
   sizeBytes: number;
+  kind?: "voice_note";
+  durationMs?: number;
 };
 
 export type MessagingOperationStampView = {

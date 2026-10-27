@@ -3,6 +3,8 @@ export type PendingAttachment = {
   contentType: string;
   contentBase64: string;
   previewUrl?: string;
+  kind?: "voice_note";
+  durationMs?: number;
 };
 
 export async function readFileAsAttachment(file: File): Promise<PendingAttachment> {

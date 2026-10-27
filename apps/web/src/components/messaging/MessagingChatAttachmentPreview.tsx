@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { MessagingApiClient } from "../../lib/MessagingApiClient";
+import { MessagingVoiceNotePlayer } from "./MessagingVoiceNotePlayer";
 
 type Props = {
   accessToken: string;
@@ -12,20 +13,36 @@ type Props = {
   contentType: string;
   filename: string;
   sizeBytes: number;
+  kind?: "voice_note";
+  durationMs?: number;
+  voiceNotePlayerEnabled?: boolean;
   onError: (message: string) => void;
 };
 
-export function MessagingChatAttachmentPreview({
-  accessToken,
-  locale,
-  threadId,
-  messageId,
-  attachmentIndex,
-  contentType,
-  filename,
-  sizeBytes,
-  onError,
-}: Props) {
+function isVoiceAttachment(
+  kind: Props["kind"],
+  contentType: string,
+  filename: string,
+): boolean {
+  return (
+    kind === "voice_note" ||
+    (contentType.toLowerCase().startsWith("audio/") &&
+      filename.toLowerCase().includes("sesli-mesaj"))
+  );
+}
+
+function MessagingImageAttachmentPreview(props: Props) {
+  const {
+    accessToken,
+    locale,
+    threadId,
+    messageId,
+    attachmentIndex,
+    contentType,
+    filename,
+    sizeBytes,
+    onError,
+  } = props;
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const isImage =
     contentType.toLowerCase().startsWith("image/") ||
@@ -116,4 +133,37 @@ export function MessagingChatAttachmentPreview({
       📎 {filename} ({Math.round(sizeBytes / 1024)} KB)
     </button>
   );
+}
+
+export function MessagingChatAttachmentPreview(props: Props) {
+  const {
+    accessToken,
+    locale,
+    threadId,
+    messageId,
+    attachmentIndex,
+    contentType,
+    filename,
+    kind,
+    durationMs,
+    voiceNotePlayerEnabled = false,
+    onError,
+  } = props;
+
+  if (isVoiceAttachment(kind, contentType, filename)) {
+    return (
+      <MessagingVoiceNotePlayer
+        accessToken={accessToken}
+        locale={locale}
+        threadId={threadId}
+        messageId={messageId}
+        attachmentIndex={attachmentIndex}
+        durationMs={durationMs}
+        advancedPlayer={voiceNotePlayerEnabled}
+        onError={onError}
+      />
+    );
+  }
+
+  return <MessagingImageAttachmentPreview {...props} />;
 }

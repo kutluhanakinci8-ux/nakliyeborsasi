@@ -681,6 +681,36 @@ export function useMessagingChatController({
     }
   }
 
+  async function sendVoiceNoteAttachment(
+    attachment: PendingAttachment,
+  ): Promise<void> {
+    if (!activeThreadId || attachment.kind !== "voice_note") {
+      return;
+    }
+    try {
+      const sendResult = await MessagingApiClient.sendMessage(
+        accessToken,
+        locale,
+        activeThreadId,
+        "",
+        [attachment],
+        internalNote ? "internal" : "public",
+      );
+      if (sendResult.channelDelivery?.status === "failed") {
+        setErrorMessage(
+          sendResult.channelDelivery.errorMessage ??
+            "Mesaj kaydedildi ancak kanala gönderilemedi.",
+        );
+      } else {
+        setErrorMessage("");
+      }
+      await loadMessages(activeThreadId);
+      await loadThreads();
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Gönderim hatası");
+    }
+  }
+
   async function handleSendMessage(): Promise<void> {
     if (
       !activeThreadId ||
@@ -1241,6 +1271,7 @@ export function useMessagingChatController({
     handleExportArchive,
     handleTranslateMessage,
     handleSendMessage,
+    sendVoiceNoteAttachment,
     acceptListingFixedPrice,
     submitUnifiedChatSearch,
     refreshLlmSummary,

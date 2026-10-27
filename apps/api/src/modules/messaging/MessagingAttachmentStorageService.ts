@@ -21,6 +21,8 @@ export type MessagingAttachmentInput = {
   filename: string;
   contentType: string;
   contentBase64: string;
+  kind?: "voice_note";
+  durationMs?: number;
 };
 
 export type PersistAttachmentsOptions = {
@@ -48,6 +50,7 @@ export class MessagingAttachmentStorageService {
       "application/pdf",
       "text/plain",
       "image/*",
+      "audio/*",
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       "application/vnd.ms-excel",
     ];
@@ -78,6 +81,8 @@ export class MessagingAttachmentStorageService {
       filename: string;
       contentType: string;
       content: Buffer;
+      kind?: "voice_note";
+      durationMs?: number;
     }> = [];
     let totalBytes = 0;
     for (const item of inputs) {
@@ -91,7 +96,13 @@ export class MessagingAttachmentStorageService {
         throw new BadRequestException("Boş ek dosyası.");
       }
       totalBytes += content.length;
-      prepared.push({ filename, contentType, content });
+      prepared.push({
+        filename,
+        contentType,
+        content,
+        kind: item.kind,
+        durationMs: item.durationMs,
+      });
     }
     if (options?.companyId && totalBytes > 0) {
       await this.attachmentQuotaService.preflightCompanyMonthlyQuota(
@@ -101,7 +112,8 @@ export class MessagingAttachmentStorageService {
     }
     const metas: MessageAttachmentMeta[] = [];
     for (let index = 0; index < prepared.length; index += 1) {
-      const { filename, contentType, content } = prepared[index];
+      const { filename, contentType, content, kind, durationMs } =
+        prepared[index];
       if (content.length > s3Max) {
         throw new BadRequestException(
           `Ek dosya boyutu sınırı aşıldı (${Math.round(s3Max / 1_000_000)} MB).`,
@@ -135,6 +147,7 @@ export class MessagingAttachmentStorageService {
         contentType,
         sizeBytes: content.length,
         storagePath,
+        ...(kind === "voice_note" ? { kind, durationMs } : {}),
       });
     }
     if (options?.companyId && totalBytes > 0) {

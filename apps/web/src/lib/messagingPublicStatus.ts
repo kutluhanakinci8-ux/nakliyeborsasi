@@ -11,6 +11,11 @@ export type MessagingPublicStatus = {
     configPath?: string;
   };
   mobileExpoPush?: { registerPath: string; enabled: boolean };
+  voiceNote?: {
+    faz1Enabled: boolean;
+    playerFaz2Enabled: boolean;
+    maxDurationMs: number;
+  };
 };
 
 export async function fetchMessagingPublicStatus(): Promise<MessagingPublicStatus> {

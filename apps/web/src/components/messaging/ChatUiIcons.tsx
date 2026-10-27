@@ -28,6 +28,17 @@ export function IconPaperclip({ className, size = defaultSize }: IconProps) {
   );
 }
 
+export function IconMic({ className, size = defaultSize }: IconProps) {
+  return (
+    <svg className={className} aria-hidden {...strokeProps(size)}>
+      <path d="M12 14a3 3 0 003-3V6a3 3 0 10-6 0v5a3 3 0 003 3z" />
+      <path d="M19 11v1a7 7 0 01-14 0v-1" />
+      <path d="M12 18v3" />
+      <path d="M8 21h8" />
+    </svg>
+  );
+}
+
 export function IconSend({ className, size = defaultSize }: IconProps) {
   return (
     <svg className={className} aria-hidden {...strokeProps(size)}>

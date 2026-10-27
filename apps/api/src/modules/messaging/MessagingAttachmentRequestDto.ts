@@ -2,9 +2,13 @@ import { Type } from "class-transformer";
 import {
   ArrayMaxSize,
   IsArray,
+  IsIn,
+  IsInt,
   IsOptional,
   IsString,
+  Max,
   MaxLength,
+  Min,
   MinLength,
   ValidateIf,
   ValidateNested,
@@ -24,6 +28,16 @@ export class MessagingAttachmentInputDto {
   @IsString()
   @MinLength(8)
   public contentBase64!: string;
+
+  @IsOptional()
+  @IsIn(["voice_note"])
+  public kind?: "voice_note";
+
+  @IsOptional()
+  @IsInt()
+  @Min(500)
+  @Max(600_000)
+  public durationMs?: number;
 }
 
 export class SendThreadMessageRequestDto {

@@ -14,6 +14,9 @@ export type MessageAttachmentMeta = {
   contentType: string;
   sizeBytes: number;
   storagePath: string;
+  /** Sesli not (WhatsApp tarzı); asenkron kayıt — canlı WebRTC araması değil. */
+  kind?: "voice_note";
+  durationMs?: number;
 };
 
 @Entity({ name: "messages" })
