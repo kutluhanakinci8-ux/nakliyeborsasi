@@ -11,6 +11,8 @@ export_messaging_verify_jwt_aliases || true
 echo "== Messaging post-deploy gate (API: ${API_BASE}) =="
 
 bash "${ROOT}/scripts/verify-firma-sohbeti-fs1.sh"
+bash "${ROOT}/scripts/verify-messaging-voice-json-body-limit.sh"
+bash "${ROOT}/scripts/verify-messaging-whatsapp-voice-outbound.sh"
 bash "${ROOT}/scripts/verify-messaging-webrtc-pilot-checklist.sh"
 bash "${ROOT}/scripts/verify-messaging-webrtc-meet-faz-gate.sh"
 
