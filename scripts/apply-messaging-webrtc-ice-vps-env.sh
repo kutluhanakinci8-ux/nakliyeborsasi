@@ -23,6 +23,27 @@ set_kv() {
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DEFAULT_ICE='[{"urls":"stun:stun.l.google.com:19302"}]'
 
+read_env_var() {
+  local key="$1"
+  if [[ -n "${!key:-}" ]]; then
+    return 0
+  fi
+  if [[ ! -f "${ENV_FILE}" ]]; then
+    return 0
+  fi
+  local line
+  line="$(grep -E "^${key}=" "${ENV_FILE}" 2>/dev/null | tail -1 || true)"
+  if [[ -n "${line}" ]]; then
+    local val="${line#*=}"
+    export "${key}=${val}"
+  fi
+}
+
+for key in MESSAGING_TURN_URL MESSAGING_TURN_USERNAME MESSAGING_TURN_CREDENTIAL \
+  MESSAGING_WEBRTC_TURN_ALLOCATIONS_HINT MESSAGING_WEBRTC_TURN_METRICS_URL; do
+  read_env_var "${key}"
+done
+
 # Opsiyonel: TURN_URL=turn:host:3478 TURN_USERNAME=... TURN_CREDENTIAL=...
 export DEFAULT_ICE TURN_URL="${MESSAGING_TURN_URL:-${TURN_URL:-}}" \
   TURN_USERNAME="${MESSAGING_TURN_USERNAME:-${TURN_USERNAME:-}}" \

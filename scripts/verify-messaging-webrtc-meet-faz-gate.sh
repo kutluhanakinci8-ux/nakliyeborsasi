@@ -19,6 +19,7 @@ REQUIRED=(
   messaging_webrtc_meet_realtime_faz9
   messaging_webrtc_meet_mobile_faz10
   messaging_webrtc_meet_enterprise_faz11
+  messaging_webrtc_meet_turn_prod_faz12
 )
 
 payload="$(curl -fsS "${API_BASE}/messaging/status")"
@@ -37,4 +38,5 @@ print(f"OK: meet faz gate ({len(required)} flags)")
 PY
 
 API_BASE="${API_BASE}" bash "${ROOT}/scripts/verify-messaging-webrtc-meet-faz6-gate.sh"
+API_BASE="${API_BASE}" bash "${ROOT}/scripts/verify-messaging-webrtc-meet-faz12-turn-prod.sh"
 echo "verify-messaging-webrtc-meet-faz-gate: PASS"
