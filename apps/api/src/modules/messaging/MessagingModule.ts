@@ -150,6 +150,7 @@ import { SocialHubModule } from "../social-hub/SocialHubModule";
   ],
   exports: [
     MessagingThreadApplicationService,
+    MessagingVoiceTranscribeService,
     MessagingRealtimeHubService,
     MessagingWebPushService,
     MessagingExpoPushService,

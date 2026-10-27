@@ -77,7 +77,9 @@ const EXTERNAL_CHANNEL_LABELS: Record<string, string> = {
   [SocialPlatformCode.Telegram]: "Telegram",
 };
 
-const EXTERNAL_INBOUND_SENDER_USER_ID = "00000000-0000-0000-0000-000000000001";
+export const MESSAGING_EXTERNAL_INBOUND_SENDER_USER_ID =
+  "00000000-0000-0000-0000-000000000001";
+const EXTERNAL_INBOUND_SENDER_USER_ID = MESSAGING_EXTERNAL_INBOUND_SENDER_USER_ID;
 
 export type MessagingChannelDeliveryResult = {
   status: "ok" | "failed";
@@ -792,6 +794,14 @@ export class MessagingThreadApplicationService {
     locale: string,
   ): Promise<{ buffer: Buffer; contentType: string; filename: string }> {
     await this.requireParticipantThread(authenticatedUser, threadId, locale);
+    return this.readMessageAttachmentFile(threadId, messageId, attachmentIndex);
+  }
+
+  public async readMessageAttachmentFile(
+    threadId: string,
+    messageId: string,
+    attachmentIndex: number,
+  ): Promise<{ buffer: Buffer; contentType: string; filename: string }> {
     const message = await this.messageRepository.findOne({
       where: { id: messageId, threadId },
     });

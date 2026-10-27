@@ -1,4 +1,15 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Res,
+  UseGuards,
+} from "@nestjs/common";
+import type { Response } from "express";
 import { JwtAuthenticationGuard } from "../auth/JwtAuthenticationGuard";
 import { AuthenticatedUserParam } from "../auth/AuthenticatedUserParam";
 import { AuthenticatedUserContext } from "@nakliyeborsasi/core";
@@ -123,6 +134,26 @@ export class MessagingIntegrationController {
   ) {
     const ok = await this.messagingBotService.revokeBot(user, botId);
     return { ok };
+  }
+
+  @Get("voice-transcripts/export.csv")
+  public async exportVoiceTranscripts(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Query("limit") limitRaw: string | undefined,
+    @Res() response: Response,
+  ): Promise<void> {
+    const limit = limitRaw ? Number.parseInt(limitRaw, 10) : 500;
+    const payload =
+      await this.messagingCompanyIntegrationService.exportVoiceTranscriptsCsv(
+        user,
+        Number.isFinite(limit) ? limit : 500,
+      );
+    response.setHeader("Content-Type", "text/csv; charset=utf-8");
+    response.setHeader(
+      "Content-Disposition",
+      'attachment; filename="voice-transcripts-export.csv"',
+    );
+    response.send(payload.csv);
   }
 
   @Patch("voice-transcribe")

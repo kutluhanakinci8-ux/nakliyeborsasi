@@ -329,6 +329,21 @@ export class MessagingCompanyIntegrationService {
     return { ok: true };
   }
 
+  public async exportVoiceTranscriptsCsv(
+    authenticatedUser: AuthenticatedUserContext,
+    limit?: number,
+  ): Promise<{ csv: string; rowCount: number; exportedAt: string }> {
+    this.assertOwner(authenticatedUser);
+    const payload = await this.messagingVoiceTranscribeService.exportCompanyTranscriptsCsv(
+      authenticatedUser.companyId,
+      limit,
+    );
+    return {
+      ...payload,
+      exportedAt: new Date().toISOString(),
+    };
+  }
+
   public async updateVoiceTranscribePolicy(
     authenticatedUser: AuthenticatedUserContext,
     params: {

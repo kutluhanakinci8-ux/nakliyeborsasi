@@ -4,6 +4,7 @@ import { Repository } from "typeorm";
 import { SocialPlatformCode } from "@nakliyeborsasi/core";
 import { CompanySocialThreadLinkEntity } from "../../infrastructure/database/entities/CompanySocialThreadLinkEntity";
 import { SocialHubMetaGraphService } from "./oauth/SocialHubMetaGraphService";
+import { parseSocialHubConnectionMetadata } from "./oauth/SocialHubConnectionMetadata";
 import { SocialHubTokenVaultService } from "./oauth/SocialHubTokenVaultService";
 import { SocialHubOutboundDeliveryLogService } from "./SocialHubOutboundDeliveryLogService";
 import { SocialHubSlackNotificationService } from "./SocialHubSlackNotificationService";
@@ -62,20 +63,22 @@ export class SocialHubOutboundMessagingService {
     if (!link) {
       return { attempted: false, ok: true, message: "" };
     }
-    const telegramAttachments =
-      link.platformCode === SocialPlatformCode.Telegram && params.messageId
-        ? await this.loadTelegramOutboundAttachments(
+    const channelAttachments =
+      params.messageId &&
+      (link.platformCode === SocialPlatformCode.Telegram ||
+        link.platformCode === SocialPlatformCode.WhatsAppCloud)
+        ? await this.loadOutboundMessageAttachments(
             params.messageThreadId,
             params.messageId,
           )
         : [];
-    if (!trimmed && telegramAttachments.length === 0) {
+    if (!trimmed && channelAttachments.length === 0) {
       return { attempted: false, ok: true, message: "" };
     }
     const bodyPreview =
       trimmed.length > 0
         ? trimmed.slice(0, 280)
-        : telegramAttachments.map((item) => item.filename).join(", ").slice(0, 280);
+        : channelAttachments.map((item) => item.filename).join(", ").slice(0, 280);
     const platformCode = link.platformCode;
     if (link.externalThreadId.startsWith("demo-")) {
       const demoMessage =
@@ -139,8 +142,20 @@ export class SocialHubOutboundMessagingService {
                     accessToken: token,
                     externalThreadId: link.externalThreadId,
                     bodyText: trimmed,
-                    attachments: telegramAttachments,
+                    attachments: channelAttachments,
                   })
+                : platformCode === SocialPlatformCode.WhatsAppCloud &&
+                    channelAttachments.length === 1 &&
+                    channelAttachments[0].contentType
+                      .toLowerCase()
+                      .startsWith("audio/")
+                  ? await this.dispatchWhatsAppAudioOutbound({
+                      companyId: params.companyId,
+                      accessToken: token,
+                      recipientExternalId: link.externalThreadId,
+                      bodyText: trimmed,
+                      attachment: channelAttachments[0],
+                    })
             : await this.metaGraphService.sendChannelTextMessage({
                 companyId: params.companyId,
                 platformCode: platformCode as SocialPlatformCode,
@@ -267,7 +282,33 @@ export class SocialHubOutboundMessagingService {
     };
   }
 
-  private async loadTelegramOutboundAttachments(
+  private async dispatchWhatsAppAudioOutbound(params: {
+    companyId: string;
+    accessToken: string;
+    recipientExternalId: string;
+    bodyText: string;
+    attachment: { buffer: Buffer; contentType: string; filename: string };
+  }): Promise<{ ok: boolean; message: string; externalMessageId?: string }> {
+    const connection = await this.connectionRepository.findOne({
+      where: {
+        companyId: params.companyId,
+        platformCode: SocialPlatformCode.WhatsAppCloud,
+      },
+    });
+    const metadata = parseSocialHubConnectionMetadata(connection?.grantedScopes);
+    const phoneNumberId = metadata.phoneNumberId;
+    return this.metaGraphService.sendWhatsAppAudio({
+      phoneNumberId,
+      accessToken: params.accessToken,
+      to: params.recipientExternalId,
+      buffer: params.attachment.buffer,
+      contentType: params.attachment.contentType,
+      filename: params.attachment.filename,
+      caption: params.bodyText.trim() || undefined,
+    });
+  }
+
+  private async loadOutboundMessageAttachments(
     messageThreadId: string,
     messageId: string,
   ): Promise<

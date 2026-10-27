@@ -11,7 +11,9 @@ import {
 import { labelSocialPlatform } from "./socialHubPlatformLabels";
 import { CompanySocialThreadLinkEntity } from "../../infrastructure/database/entities/CompanySocialThreadLinkEntity";
 import { MessageThreadEntity } from "../../infrastructure/database/entities/MessageThreadEntity";
+import { MessageEntity } from "../../infrastructure/database/entities/MessageEntity";
 import { MessagingThreadApplicationService } from "../messaging/MessagingThreadApplicationService";
+import { MessagingVoiceTranscribeService } from "../messaging/MessagingVoiceTranscribeService";
 import type { MessagingAttachmentInput } from "../messaging/MessagingAttachmentStorageService";
 import {
   buildSocialInboxThreadDeepLink,
@@ -36,7 +38,10 @@ export class SocialHubMessagingBridgeService {
     private readonly linkRepository: Repository<CompanySocialThreadLinkEntity>,
     @InjectRepository(MessageThreadEntity)
     private readonly messageThreadRepository: Repository<MessageThreadEntity>,
+    @InjectRepository(MessageEntity)
+    private readonly messageRepository: Repository<MessageEntity>,
     private readonly messagingThreadApplicationService: MessagingThreadApplicationService,
+    private readonly messagingVoiceTranscribeService: MessagingVoiceTranscribeService,
     private readonly externalInboundMessageMapService: SocialHubExternalInboundMessageMapService,
   ) {}
 
@@ -337,6 +342,21 @@ export class SocialHubMessagingBridgeService {
         externalMessageId: params.externalMessageId,
       },
     );
+    if (params.attachmentsInput?.length) {
+      const message = await this.messageRepository.findOne({
+        where: { id: inbound.messageId },
+      });
+      if (message) {
+        void this.messagingVoiceTranscribeService
+          .maybeAutoTranscribeBridgeInbound(
+            params.companyId,
+            inbound.threadId,
+            message,
+            String(params.platformCode),
+          )
+          .catch(() => undefined);
+      }
+    }
     if (dedupKey) {
       link.lastExternalMessageId = dedupKey;
       await this.linkRepository.save(link);

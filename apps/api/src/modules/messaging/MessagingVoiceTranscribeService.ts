@@ -10,7 +10,12 @@ import {
 import { ConfigService } from "@nestjs/config";
 import { InjectRepository } from "@nestjs/typeorm";
 import { In, Repository } from "typeorm";
-import type { AuthenticatedUserContext } from "@nakliyeborsasi/core";
+import {
+  AuthenticatedUserContext,
+  DEFAULT_LOCALE,
+} from "@nakliyeborsasi/core";
+import { MESSAGING_EXTERNAL_INBOUND_SENDER_USER_ID } from "./MessagingThreadApplicationService";
+import { messagingVoiceBridgeSttFaz1Enabled } from "./messagingVoiceBridgeSttConfig";
 import { MessageEntity } from "../../infrastructure/database/entities/MessageEntity";
 import { MessageThreadEntity } from "../../infrastructure/database/entities/MessageThreadEntity";
 import { MessageVoiceTranscriptEntity } from "../../infrastructure/database/entities/MessageVoiceTranscriptEntity";
@@ -94,6 +99,114 @@ export class MessagingVoiceTranscribeService {
       .getCount();
   }
 
+  public async maybeAutoTranscribeBridgeInbound(
+    companyId: string,
+    threadId: string,
+    message: MessageEntity,
+    bridgePlatform: string,
+  ): Promise<void> {
+    if (!messagingVoiceBridgeSttFaz1Enabled()) {
+      return;
+    }
+    if (!messagingVoiceTranscribeAutoFaz3Enabled()) {
+      return;
+    }
+    if (!messagingVoiceTranscribeFaz1Enabled() || !messagingVoiceSttConfigured()) {
+      return;
+    }
+    const settings = await this.companyMessagingSettingsRepository.findOne({
+      where: { companyId },
+    });
+    if (settings?.voiceTranscribeMode !== "auto") {
+      return;
+    }
+    if (!settings.voiceTranscribeAutoKvkkAcceptedAt) {
+      return;
+    }
+    const attachments = message.attachments ?? [];
+    const voiceIndexes = attachments
+      .filter(
+        (row) =>
+          row.kind === "voice_note" ||
+          row.contentType.toLowerCase().startsWith("audio/"),
+      )
+      .map((row) => row.index);
+    if (voiceIndexes.length === 0) {
+      return;
+    }
+    const actor = new AuthenticatedUserContext({
+      userId: MESSAGING_EXTERNAL_INBOUND_SENDER_USER_ID,
+      companyId,
+      emailAddress: "bridge-inbound@system.local",
+      roleCodes: [],
+    });
+    const quota = messagingVoiceSttMonthlyQuotaPerCompany();
+    let used = await this.countSttUsageThisMonth(companyId);
+    for (const attachmentIndex of voiceIndexes) {
+      if (used >= quota) {
+        this.logger.warn(
+          `Bridge STT kota doldu (company=${companyId})`,
+        );
+        return;
+      }
+      try {
+        await this.transcribeVoiceAttachment(
+          actor,
+          threadId,
+          message.id,
+          attachmentIndex,
+          DEFAULT_LOCALE,
+          true,
+          {
+            skipConsentCheck: true,
+            skipParticipantAccessCheck: true,
+            transcriptSource: "bridge_inbound",
+            bridgePlatform,
+          },
+        );
+        used += 1;
+      } catch (error) {
+        this.logger.warn(
+          `Bridge inbound STT failed message=${message.id}: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+      }
+    }
+  }
+
+  public async exportCompanyTranscriptsCsv(
+    companyId: string,
+    limit = 500,
+  ): Promise<{ csv: string; rowCount: number }> {
+    const capped = Math.min(Math.max(limit, 1), 2000);
+    const rows = await this.transcriptRepository
+      .createQueryBuilder("t")
+      .where("t.requestedByCompanyId = :companyId", { companyId })
+      .orderBy("t.createdAt", "DESC")
+      .take(capped)
+      .getMany();
+    const header =
+      "messageId,attachmentIndex,status,transcriptSource,bridgePlatform,languageCode,confidenceScore,createdAt,textPreview";
+    const lines = rows.map((row) => {
+      const text =
+        row.editedTextBody?.trim() || row.textBody?.trim() || "";
+      const preview = text.replace(/"/g, '""').slice(0, 500);
+      return [
+        row.messageId,
+        row.attachmentIndex,
+        row.status,
+        row.transcriptSource ?? "manual",
+        row.bridgePlatform ?? "",
+        row.languageCode ?? "",
+        row.confidenceScore ?? "",
+        row.createdAt.toISOString(),
+        `"${preview}"`,
+      ].join(",");
+    });
+    return { csv: [header, ...lines].join("\n"), rowCount: rows.length };
+  }
+
   public async maybeAutoTranscribeAfterSend(
     authenticatedUser: AuthenticatedUserContext,
     threadId: string,
@@ -143,7 +256,7 @@ export class MessagingVoiceTranscribeService {
           attachmentIndex,
           locale,
           true,
-          { skipConsentCheck: true },
+          { skipConsentCheck: true, transcriptSource: "outbound_auto" },
         );
         used += 1;
       } catch (error) {
@@ -264,7 +377,13 @@ export class MessagingVoiceTranscribeService {
     attachmentIndex: number,
     locale: string,
     kvkkConsentAcknowledged: boolean,
-    options?: { languageCode?: string; skipConsentCheck?: boolean },
+    options?: {
+      languageCode?: string;
+      skipConsentCheck?: boolean;
+      skipParticipantAccessCheck?: boolean;
+      transcriptSource?: "manual" | "outbound_auto" | "bridge_inbound";
+      bridgePlatform?: string;
+    },
   ): Promise<VoiceTranscriptView> {
     if (!messagingVoiceTranscribeFaz1Enabled()) {
       throw new ForbiddenException("Ses transkripsiyonu bu ortamda kapalı.");
@@ -298,13 +417,17 @@ export class MessagingVoiceTranscribeService {
     if (!isVoice) {
       throw new BadRequestException("Yalnızca sesli mesaj ekleri transkribe edilir.");
     }
-    await this.messagingThreadApplicationService.getMessageAttachment(
-      authenticatedUser,
-      threadId,
-      messageId,
-      attachmentIndex,
-      locale,
-    );
+    if (!options?.skipParticipantAccessCheck) {
+      await this.messagingThreadApplicationService.getMessageAttachment(
+        authenticatedUser,
+        threadId,
+        messageId,
+        attachmentIndex,
+        locale,
+      );
+    }
+
+    const transcriptSource = options?.transcriptSource ?? "manual";
 
     let row = await this.transcriptRepository.findOne({
       where: { messageId, attachmentIndex },
@@ -330,6 +453,8 @@ export class MessagingVoiceTranscribeService {
         editedAt: null,
         searchText: null,
         kvkkConsentAt: consentAt,
+        transcriptSource,
+        bridgePlatform: options?.bridgePlatform?.slice(0, 32) ?? null,
       });
       await this.transcriptRepository.save(row);
     } else {
@@ -337,16 +462,24 @@ export class MessagingVoiceTranscribeService {
       row.requestedByUserId = authenticatedUser.userId;
       row.requestedByCompanyId = authenticatedUser.companyId;
       row.kvkkConsentAt = consentAt;
+      row.transcriptSource = transcriptSource;
+      row.bridgePlatform = options?.bridgePlatform?.slice(0, 32) ?? null;
       await this.transcriptRepository.save(row);
     }
 
-    const file = await this.messagingThreadApplicationService.getMessageAttachment(
-      authenticatedUser,
-      threadId,
-      messageId,
-      attachmentIndex,
-      locale,
-    );
+    const file = options?.skipParticipantAccessCheck
+      ? await this.messagingThreadApplicationService.readMessageAttachmentFile(
+          threadId,
+          messageId,
+          attachmentIndex,
+        )
+      : await this.messagingThreadApplicationService.getMessageAttachment(
+          authenticatedUser,
+          threadId,
+          messageId,
+          attachmentIndex,
+          locale,
+        );
     const language = resolveMessagingVoiceSttLanguage(
       locale,
       options?.languageCode,
