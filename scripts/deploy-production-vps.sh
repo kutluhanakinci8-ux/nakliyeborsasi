@@ -17,6 +17,10 @@ git log -1 --oneline
 
 bash scripts/install-deps.sh
 
+if [[ -x scripts/ensure-vps-ffmpeg.sh ]]; then
+  bash scripts/ensure-vps-ffmpeg.sh || echo "WARN: ffmpeg kurulamadı — WhatsApp ses + STT smoke etkilenir" >&2
+fi
+
 if [[ -x scripts/apply-mail-web-push-vps-env.sh ]]; then
   bash scripts/apply-mail-web-push-vps-env.sh "$INSTALL_DIR" || true
 fi
