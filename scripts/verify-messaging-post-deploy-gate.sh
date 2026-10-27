@@ -12,6 +12,7 @@ echo "== Messaging post-deploy gate (API: ${API_BASE}) =="
 
 bash "${ROOT}/scripts/verify-firma-sohbeti-fs1.sh"
 bash "${ROOT}/scripts/verify-messaging-webrtc-pilot-checklist.sh"
+bash "${ROOT}/scripts/verify-messaging-webrtc-meet-faz-gate.sh"
 
 JWT="$(resolve_messaging_verify_jwt 2>/dev/null || true)"
 if [[ -n "${JWT}" ]]; then
