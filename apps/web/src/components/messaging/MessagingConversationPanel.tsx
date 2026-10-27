@@ -128,6 +128,8 @@ export function MessagingConversationPanel({
   const [voiceNotePlayerEnabled, setVoiceNotePlayerEnabled] = useState(false);
   const [voiceNoteMaxDurationMs, setVoiceNoteMaxDurationMs] = useState(180_000);
   const [voiceTranscribeEnabled, setVoiceTranscribeEnabled] = useState(false);
+  const [voiceTranscribeAdvancedEnabled, setVoiceTranscribeAdvancedEnabled] =
+    useState(false);
 
   useEffect(() => {
     void fetchMessagingPublicStatus()
@@ -144,11 +146,15 @@ export function MessagingConversationPanel({
         setVoiceTranscribeEnabled(
           status.features.includes("messaging_voice_transcribe_manual_faz1"),
         );
+        setVoiceTranscribeAdvancedEnabled(
+          status.features.includes("messaging_voice_transcribe_advanced_faz2"),
+        );
       })
       .catch(() => {
         setVoiceNoteEnabled(false);
         setVoiceNotePlayerEnabled(false);
         setVoiceTranscribeEnabled(false);
+        setVoiceTranscribeAdvancedEnabled(false);
       });
   }, []);
 
@@ -562,6 +568,9 @@ export function MessagingConversationPanel({
                                     durationMs={attachment.durationMs}
                                     voiceNotePlayerEnabled={voiceNotePlayerEnabled}
                                     voiceTranscribeEnabled={voiceTranscribeEnabled}
+                                    voiceTranscribeAdvancedEnabled={
+                                      voiceTranscribeAdvancedEnabled
+                                    }
                                     attachmentRecord={attachment}
                                     onTranscriptReady={() => {
                                       if (activeThreadId) {

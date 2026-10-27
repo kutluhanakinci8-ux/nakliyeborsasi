@@ -89,6 +89,16 @@ export type MessagingSendMessageResult = {
   channelDelivery?: MessagingChannelDeliveryResult;
 };
 
+export type MessagingSearchResultHit = {
+  kind: "message" | "voice_transcript";
+  threadId: string;
+  messageId: string;
+  snippet: string;
+  counterpartyCompanyId: string;
+  counterpartyLegalName: string | null;
+  createdAt: string;
+};
+
 const COMPANY_UUID_SEARCH_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -1319,15 +1329,7 @@ export class MessagingThreadApplicationService {
     limit = 40,
   ): Promise<{
     query: string;
-    results: {
-      kind: "message";
-      threadId: string;
-      messageId: string;
-      snippet: string;
-      counterpartyCompanyId: string;
-      counterpartyLegalName: string | null;
-      createdAt: string;
-    }[];
+    results: MessagingSearchResultHit[];
   }> {
     await this.modularSubscriptionEntitlementService.assertModuleAccess(
       authenticatedUser.companyId,

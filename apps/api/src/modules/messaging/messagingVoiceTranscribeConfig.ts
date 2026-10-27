@@ -4,6 +4,26 @@ export function messagingVoiceTranscribeFaz1Enabled(
   return env.MESSAGING_VOICE_TRANSCRIBE_FAZ1?.trim() === "1";
 }
 
+export function messagingVoiceTranscribeAdvancedFaz2Enabled(
+  env: NodeJS.ProcessEnv = process.env,
+): boolean {
+  return env.MESSAGING_VOICE_TRANSCRIBE_ADVANCED_FAZ2?.trim() === "1";
+}
+
+export function messagingVoiceTranscribeAutoFaz3Enabled(
+  env: NodeJS.ProcessEnv = process.env,
+): boolean {
+  return env.MESSAGING_VOICE_TRANSCRIBE_AUTO_FAZ3?.trim() === "1";
+}
+
+export function messagingVoiceSttMonthlyQuotaPerCompany(
+  env: NodeJS.ProcessEnv = process.env,
+): number {
+  const raw = env.MESSAGING_VOICE_STT_MONTHLY_QUOTA?.trim();
+  const parsed = raw ? Number.parseInt(raw, 10) : 500;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 500;
+}
+
 export function messagingVoiceSttConfigured(
   env: NodeJS.ProcessEnv = process.env,
 ): boolean {

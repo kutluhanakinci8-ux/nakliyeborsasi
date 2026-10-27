@@ -12,12 +12,18 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { In, Repository } from "typeorm";
 import type { AuthenticatedUserContext } from "@nakliyeborsasi/core";
 import { MessageEntity } from "../../infrastructure/database/entities/MessageEntity";
+import { MessageThreadEntity } from "../../infrastructure/database/entities/MessageThreadEntity";
 import { MessageVoiceTranscriptEntity } from "../../infrastructure/database/entities/MessageVoiceTranscriptEntity";
 import { MailAiComposeService } from "../notification/MailAiComposeService";
 import { MessagingThreadApplicationService } from "./MessagingThreadApplicationService";
 import {
+  applyMessagingVoiceSttGlossary,
+  resolveMessagingVoiceSttLanguage,
+} from "./messagingVoiceSttGlossary";
+import {
   messagingVoiceSttConfigured,
   messagingVoiceSttModel,
+  messagingVoiceTranscribeAdvancedFaz2Enabled,
   messagingVoiceTranscribeFaz1Enabled,
   resolveMessagingVoiceSttApiUrl,
 } from "./messagingVoiceTranscribeConfig";
@@ -26,6 +32,10 @@ export type VoiceTranscriptView = {
   status: "pending" | "ready" | "failed";
   text: string | null;
   provider: string | null;
+  languageCode?: string | null;
+  confidenceScore?: number | null;
+  editedText?: string | null;
+  displayText?: string | null;
 };
 
 @Injectable()
@@ -37,11 +47,33 @@ export class MessagingVoiceTranscribeService {
     private readonly transcriptRepository: Repository<MessageVoiceTranscriptEntity>,
     @InjectRepository(MessageEntity)
     private readonly messageRepository: Repository<MessageEntity>,
+    @InjectRepository(MessageThreadEntity)
+    private readonly threadRepository: Repository<MessageThreadEntity>,
     @Inject(forwardRef(() => MessagingThreadApplicationService))
     private readonly messagingThreadApplicationService: MessagingThreadApplicationService,
     private readonly mailAiComposeService: MailAiComposeService,
     private readonly configService: ConfigService,
   ) {}
+
+  private rowToView(row: MessageVoiceTranscriptEntity): VoiceTranscriptView {
+    const display =
+      row.editedTextBody?.trim() || row.textBody?.trim() || null;
+    return {
+      status: row.status,
+      text: row.textBody,
+      provider: row.provider,
+      languageCode: row.languageCode,
+      confidenceScore: row.confidenceScore,
+      editedText: row.editedTextBody,
+      displayText: display,
+    };
+  }
+
+  private syncSearchText(row: MessageVoiceTranscriptEntity): void {
+    const display =
+      row.editedTextBody?.trim() || row.textBody?.trim() || "";
+    row.searchText = display ? display.slice(0, 8000) : null;
+  }
 
   public async mapTranscriptsByMessageAndIndex(
     messageIds: string[],
@@ -54,13 +86,96 @@ export class MessagingVoiceTranscribeService {
     });
     const map = new Map<string, VoiceTranscriptView>();
     for (const row of rows) {
-      map.set(`${row.messageId}:${row.attachmentIndex}`, {
-        status: row.status,
-        text: row.textBody,
-        provider: row.provider,
-      });
+      map.set(`${row.messageId}:${row.attachmentIndex}`, this.rowToView(row));
     }
     return map;
+  }
+
+  public async searchTranscriptHits(
+    companyId: string,
+    term: string,
+    limit: number,
+  ): Promise<
+    Array<{
+      threadId: string;
+      messageId: string;
+      snippet: string;
+      createdAt: string;
+    }>
+  > {
+    if (!messagingVoiceTranscribeAdvancedFaz2Enabled()) {
+      return [];
+    }
+    const transcripts = await this.transcriptRepository
+      .createQueryBuilder("t")
+      .innerJoin(MessageEntity, "message", "message.id = t.messageId")
+      .innerJoin(MessageThreadEntity, "thread", "thread.id = message.threadId")
+      .where(
+        "(thread.companyAId = :companyId OR thread.companyBId = :companyId)",
+        { companyId },
+      )
+      .andWhere("t.status = 'ready'")
+      .andWhere("t.search_text ILIKE :q", { q: `%${term}%` })
+      .orderBy("t.updatedAt", "DESC")
+      .take(limit)
+      .getMany();
+    if (transcripts.length === 0) {
+      return [];
+    }
+    const messages = await this.messageRepository.find({
+      where: { id: In(transcripts.map((row) => row.messageId)) },
+    });
+    const messageById = new Map(messages.map((row) => [row.id, row]));
+    return transcripts
+      .map((row) => {
+        const message = messageById.get(row.messageId);
+        if (!message) {
+          return null;
+        }
+        return {
+          threadId: message.threadId,
+          messageId: row.messageId,
+          snippet: (row.searchText ?? "").slice(0, 240),
+          createdAt: message.createdAt.toISOString(),
+        };
+      })
+      .filter((row): row is NonNullable<typeof row> => row !== null);
+  }
+
+  public async editTranscript(
+    authenticatedUser: AuthenticatedUserContext,
+    threadId: string,
+    messageId: string,
+    attachmentIndex: number,
+    locale: string,
+    editedText: string,
+    languageCode?: string,
+  ): Promise<VoiceTranscriptView> {
+    if (!messagingVoiceTranscribeAdvancedFaz2Enabled()) {
+      throw new ForbiddenException("Transkript düzenleme bu ortamda kapalı.");
+    }
+    await this.messagingThreadApplicationService.getMessageAttachment(
+      authenticatedUser,
+      threadId,
+      messageId,
+      attachmentIndex,
+      locale,
+    );
+    const row = await this.transcriptRepository.findOne({
+      where: { messageId, attachmentIndex },
+    });
+    if (!row || row.status !== "ready") {
+      throw new NotFoundException("Hazır transkript bulunamadı.");
+    }
+    row.editedTextBody = editedText.trim();
+    row.editedByUserId = authenticatedUser.userId;
+    row.editedAt = new Date();
+    if (languageCode?.trim()) {
+      row.languageCode = languageCode.trim().slice(0, 8);
+    }
+    this.syncSearchText(row);
+    await this.transcriptRepository.save(row);
+    return this.rowToView(row);
   }
 
   public async transcribeVoiceAttachment(
@@ -70,20 +185,23 @@ export class MessagingVoiceTranscribeService {
     attachmentIndex: number,
     locale: string,
     kvkkConsentAcknowledged: boolean,
+    options?: { languageCode?: string; skipConsentCheck?: boolean },
   ): Promise<VoiceTranscriptView> {
     if (!messagingVoiceTranscribeFaz1Enabled()) {
       throw new ForbiddenException("Ses transkripsiyonu bu ortamda kapalı.");
     }
-    if (!kvkkConsentAcknowledged) {
+    if (!kvkkConsentAcknowledged && !options?.skipConsentCheck) {
       throw new BadRequestException("KVKK onayı gerekli.");
     }
-    const llmConsent = await this.mailAiComposeService.hasMessagingAiConsent(
-      authenticatedUser.userId,
-    );
-    if (!llmConsent) {
-      throw new ForbiddenException(
-        "AI / ses işleme rızası gerekli (profil bildirim tercihleri).",
+    if (!options?.skipConsentCheck) {
+      const llmConsent = await this.mailAiComposeService.hasMessagingAiConsent(
+        authenticatedUser.userId,
       );
+      if (!llmConsent) {
+        throw new ForbiddenException(
+          "AI / ses işleme rızası gerekli (profil bildirim tercihleri).",
+        );
+      }
     }
     const message = await this.messageRepository.findOne({
       where: { id: messageId, threadId },
@@ -112,12 +230,8 @@ export class MessagingVoiceTranscribeService {
     let row = await this.transcriptRepository.findOne({
       where: { messageId, attachmentIndex },
     });
-    if (row?.status === "ready" && row.textBody) {
-      return {
-        status: row.status,
-        text: row.textBody,
-        provider: row.provider,
-      };
+    if (row?.status === "ready" && (row.textBody || row.editedTextBody)) {
+      return this.rowToView(row);
     }
 
     const consentAt = new Date();
@@ -130,6 +244,12 @@ export class MessagingVoiceTranscribeService {
         status: "pending",
         textBody: null,
         provider: null,
+        languageCode: null,
+        confidenceScore: null,
+        editedTextBody: null,
+        editedByUserId: null,
+        editedAt: null,
+        searchText: null,
         kvkkConsentAt: consentAt,
       });
       await this.transcriptRepository.save(row);
@@ -148,34 +268,42 @@ export class MessagingVoiceTranscribeService {
       attachmentIndex,
       locale,
     );
+    const language = resolveMessagingVoiceSttLanguage(
+      locale,
+      options?.languageCode,
+    );
     const result = await this.runSpeechToText(
       file.buffer,
       file.contentType,
       file.filename,
-      locale,
+      language,
     );
     row.status = result.text ? "ready" : "failed";
     row.textBody = result.text;
     row.provider = result.provider;
+    row.languageCode = language ?? null;
+    row.confidenceScore = result.confidenceScore;
+    this.syncSearchText(row);
     await this.transcriptRepository.save(row);
 
-    return {
-      status: row.status,
-      text: row.textBody,
-      provider: row.provider,
-    };
+    return this.rowToView(row);
   }
 
   private async runSpeechToText(
     buffer: Buffer,
     contentType: string,
     filename: string,
-    locale: string,
-  ): Promise<{ text: string | null; provider: string }> {
+    language?: string,
+  ): Promise<{
+    text: string | null;
+    provider: string;
+    confidenceScore: number | null;
+  }> {
     if (!messagingVoiceSttConfigured()) {
       return {
         text: null,
         provider: "unconfigured",
+        confidenceScore: null,
       };
     }
     const apiUrl = resolveMessagingVoiceSttApiUrl();
@@ -183,10 +311,10 @@ export class MessagingVoiceTranscribeService {
       .get<string>("LERTA_MAIL_AI_COMPOSE_API_KEY")
       ?.trim();
     if (!apiUrl || !apiKey) {
-      return { text: null, provider: "unconfigured" };
+      return { text: null, provider: "unconfigured", confidenceScore: null };
     }
     const model = messagingVoiceSttModel();
-    const language = locale.toLowerCase().startsWith("tr") ? "tr" : undefined;
+    const advanced = messagingVoiceTranscribeAdvancedFaz2Enabled();
     const form = new FormData();
     const bytes = new Uint8Array(buffer);
     form.append(
@@ -198,7 +326,7 @@ export class MessagingVoiceTranscribeService {
     if (language) {
       form.append("language", language);
     }
-    form.append("response_format", "json");
+    form.append("response_format", advanced ? "verbose_json" : "json");
     try {
       const response = await fetch(apiUrl, {
         method: "POST",
@@ -212,18 +340,34 @@ export class MessagingVoiceTranscribeService {
         this.logger.warn(
           `Voice STT failed status=${response.status} body=${body.slice(0, 200)}`,
         );
-        return { text: null, provider: "stt-error" };
+        return { text: null, provider: "stt-error", confidenceScore: null };
       }
-      const payload = (await response.json()) as { text?: string };
-      const text = payload.text?.trim() ?? null;
-      return { text, provider: "whisper" };
+      const payload = (await response.json()) as {
+        text?: string;
+        segments?: { avg_logprob?: number }[];
+      };
+      let text = payload.text?.trim() ?? null;
+      if (text && advanced) {
+        text = applyMessagingVoiceSttGlossary(text);
+      }
+      let confidenceScore: number | null = null;
+      if (advanced && payload.segments?.length) {
+        const probs = payload.segments
+          .map((segment) => segment.avg_logprob)
+          .filter((value): value is number => typeof value === "number");
+        if (probs.length > 0) {
+          const avg = probs.reduce((sum, value) => sum + value, 0) / probs.length;
+          confidenceScore = Math.min(1, Math.max(0, Math.exp(avg)));
+        }
+      }
+      return { text, provider: "whisper", confidenceScore };
     } catch (error) {
       this.logger.warn(
         `Voice STT exception: ${
           error instanceof Error ? error.message : String(error)
         }`,
       );
-      return { text: null, provider: "stt-error" };
+      return { text: null, provider: "stt-error", confidenceScore: null };
     }
   }
 }
