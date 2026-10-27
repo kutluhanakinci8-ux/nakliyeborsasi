@@ -21,6 +21,7 @@ Kullanıcı: profil → bildirim/AI rızası (mesajlaşma STT için).
 
 ## STT motoru
 
+- Açık kaynak / VPS planı: [VOICE-TRANSCRIBE-STT-OSS-ROADMAP.md](./VOICE-TRANSCRIBE-STT-OSS-ROADMAP.md)
 - OpenAI Whisper uyumlu: `MESSAGING_VOICE_STT_API_URL` (opsiyonel)
 - Varsayılan: `https://api.openai.com/v1/audio/transcriptions`
 - API anahtarı: `LERTA_MAIL_AI_COMPOSE_API_KEY`
