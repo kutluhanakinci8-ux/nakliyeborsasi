@@ -7,4 +7,4 @@
 | 13 | `messaging_webrtc_meet_native_shell_faz13` | Expo shell → hub meet deep link |
 | 14+ | — | SFU / &gt;3 kişi, RN WebRTC native (ürün kararı) |
 
-Faz 1–10 tamamlandı (web mesh, ≤3 kişi).
+Faz 1–13 (web mesh ≤3 kişi + mobil shell) kodlandı.

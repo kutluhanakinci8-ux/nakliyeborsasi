@@ -22,6 +22,11 @@ import {
 } from "./lertaMobileOAuth";
 import { fetchMobileAuthConfigFromApi } from "./lertaMobileAuthConfig";
 import type { RemoteMobileAuthConfig } from "./lertaMobileAuthConfig";
+import {
+  openMeetMessagingHub,
+  parseMeetDeepLinkFromUrl,
+} from "./lertaMobileMeetHub";
+import * as Linking from "expo-linking";
 
 /** OAuth redirect — AppAuth / expo-auth-session (W6). */
 export const MOBILE_OAUTH_REDIRECT_URI = AuthSession.makeRedirectUri({
@@ -52,6 +57,27 @@ export function MobileApplicationRoot(): React.ReactElement {
   React.useEffect(() => {
     void fetchMobileAuthConfigFromApi().then(setRemoteAuthConfig);
   }, []);
+
+  React.useEffect(() => {
+    if (!accessToken) {
+      return;
+    }
+    function handleUrl(url: string): void {
+      const parsed = parseMeetDeepLinkFromUrl(url);
+      if (parsed.meetInvite) {
+        void openMeetMessagingHub({ threadId: parsed.threadId ?? undefined });
+      }
+    }
+    void Linking.getInitialURL().then((url) => {
+      if (url) {
+        handleUrl(url);
+      }
+    });
+    const sub = Linking.addEventListener("url", (event) => {
+      handleUrl(event.url);
+    });
+    return () => sub.remove();
+  }, [accessToken]);
 
   const push = useLertaMobilePushRegistration(accessToken);
   const oauthConfigured =
@@ -166,13 +192,23 @@ export function MobileApplicationRoot(): React.ReactElement {
       )}
 
       {accessToken ? (
-        <Pressable
-          style={styles.buttonSecondary}
-          onPress={() => void handleLogout()}
-          accessibilityRole="button"
-        >
-          <Text style={styles.buttonSecondaryText}>Çıkış</Text>
-        </Pressable>
+        <>
+          <Pressable
+            style={styles.button}
+            onPress={() => void openMeetMessagingHub()}
+            accessibilityRole="button"
+            accessibilityLabel="Mesajlaşma hub görüşme"
+          >
+            <Text style={styles.buttonText}>Mesajlaşma / Meet (web)</Text>
+          </Pressable>
+          <Pressable
+            style={styles.buttonSecondary}
+            onPress={() => void handleLogout()}
+            accessibilityRole="button"
+          >
+            <Text style={styles.buttonSecondaryText}>Çıkış</Text>
+          </Pressable>
+        </>
       ) : null}
 
       {push.tokenPreview ? (

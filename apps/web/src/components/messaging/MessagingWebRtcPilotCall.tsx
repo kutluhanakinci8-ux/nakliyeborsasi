@@ -349,6 +349,7 @@ export function MessagingWebRtcPilotCall({
             status.features.includes("messaging_webrtc_meet_mobile_faz10") &&
             status.features.includes("messaging_webrtc_meet_enterprise_faz11") &&
             status.features.includes("messaging_webrtc_meet_turn_prod_faz12") &&
+            status.features.includes("messaging_webrtc_meet_native_shell_faz13") &&
             status.webrtc?.signaling === "redis_relay",
         );
       })
