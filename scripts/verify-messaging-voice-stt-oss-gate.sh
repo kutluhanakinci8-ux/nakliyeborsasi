@@ -5,7 +5,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=scripts/resolve-local-api-base.sh
 source "${ROOT}/scripts/resolve-local-api-base.sh" "${ROOT}"
 
-REQUIRED_FEATURES=(
+GATE_FEATURES=(
   messaging_voice_note_faz1
   messaging_voice_transcribe_manual_faz1
   messaging_voice_transcribe_advanced_faz2
@@ -21,7 +21,7 @@ echo "== STT-OSS-7 gate (API: ${API_BASE}) =="
 
 status="$(curl -fsS "${API_BASE}/messaging/status")"
 export MESSAGING_STATUS_JSON="${status}"
-export REQUIRED_FEATURES="${REQUIRED_FEATURES[*]}"
+export STT_OSS_GATE_REQUIRED_FEATURES="${GATE_FEATURES[*]}"
 python3 <<'PY'
 import json, os, sys
 
