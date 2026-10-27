@@ -103,6 +103,17 @@ run_layer i18n_gate "10d. Localization — mail-web TR literal gate" \
 run_layer e2e_playwright "11. System/E2E — Playwright (messaging)" \
   bash -c "cd '${ROOT}/apps/web' && npx playwright install chromium --with-deps 2>/dev/null | tail -3; npx playwright test e2e/messaging-hub.spec.ts --grep 'login sayfası'"
 
+if [[ "${QA_MESSAGING_VOICE_STT_OSS_GATE:-0}" == "1" ]]; then
+  run_layer messaging_voice_stt_oss "11c. Messaging — voice STT OSS gate" \
+    bash "${ROOT}/scripts/verify-messaging-voice-stt-oss-gate.sh"
+else
+  RESULT["messaging_voice_stt_oss"]="CONFIG_LATER"
+  DETAIL["messaging_voice_stt_oss"]="QA_MESSAGING_VOICE_STT_OSS_GATE=1 → verify-messaging-voice-stt-oss-gate.sh"
+  echo ""
+  echo "—— Voice STT OSS gate (opsiyonel) ——"
+  echo "   QA_MESSAGING_VOICE_STT_OSS_GATE=1 ile tam gate"
+fi
+
 run_layer e2e_mail_web "11b. System/E2E — Playwright (posta full)" \
   bash "${ROOT}/scripts/qa-mail-web-playwright.sh"
 

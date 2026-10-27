@@ -14,6 +14,11 @@ bash "${ROOT}/scripts/verify-firma-sohbeti-fs1.sh"
 bash "${ROOT}/scripts/verify-messaging-webrtc-pilot-checklist.sh"
 bash "${ROOT}/scripts/verify-messaging-webrtc-meet-faz-gate.sh"
 
+if [[ -x "${ROOT}/scripts/verify-messaging-voice-stt-oss-gate.sh" ]]; then
+  bash "${ROOT}/scripts/verify-messaging-voice-stt-oss-gate.sh" \
+    || echo "UYARI: STT-OSS-7 gate (STT kapalı veya env eksik)"
+fi
+
 JWT="$(resolve_messaging_verify_jwt 2>/dev/null || true)"
 if [[ -n "${JWT}" ]]; then
   bash "${ROOT}/scripts/verify-messaging-thread-api-smoke.sh"

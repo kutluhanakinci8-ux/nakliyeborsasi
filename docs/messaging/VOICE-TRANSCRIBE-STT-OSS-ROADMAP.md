@@ -137,13 +137,15 @@ SBOM / vitrin: `docs/oss/` veya mevcut lisans envanterine STT servisi satırı e
 
 ---
 
-## STT-OSS-7 — Kapanış ve parity gate
+## STT-OSS-7 — Kapanış ve parity gate — uygulama
 
 **Teslim:**
 
 - `scripts/verify-messaging-voice-stt-oss-gate.sh` (status + local health + örnek transcript)
 - QA suite’e opsiyonel gate satırı
 - Müşteri hazır checklist: anahtar yok, yalnızca self-hosted
+
+**Doğrulama:** [VOICE-TRANSCRIBE-STT-OSS-7.md](./VOICE-TRANSCRIBE-STT-OSS-7.md), `MESSAGING_VOICE_STT_OSS_GATE_FAZ7=1`
 
 ---
 

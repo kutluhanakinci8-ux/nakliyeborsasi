@@ -147,5 +147,12 @@ export function messagingVoiceSttReliabilityFaz1Enabled(
   return env.MESSAGING_VOICE_STT_RELIABILITY_FAZ1?.trim() === "1";
 }
 
+/** STT-OSS-7: program kapanış gate (status feature). */
+export function messagingVoiceSttOssGateFaz7Enabled(
+  env: NodeJS.ProcessEnv = process.env,
+): boolean {
+  return env.MESSAGING_VOICE_STT_OSS_GATE_FAZ7?.trim() === "1";
+}
+
 export const MESSAGING_VOICE_TRANSCRIBE_KVKK_NOTICE_TR =
   "Ses kaydınızı yazıya çevirmek için ses işleme (speech-to-text) yapılacaktır. İşlem, onayladığınız KVKK / AI asistan rızası ve firma mesajlaşma politikası kapsamında gerçekleşir.";
