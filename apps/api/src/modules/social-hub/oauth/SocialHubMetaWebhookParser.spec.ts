@@ -109,6 +109,42 @@ describe("SocialHubMetaWebhookParser", () => {
     expect(messages[0]?.whatsAppPhoneNumberId).toBe("1359460837248586");
   });
 
+  it("parses whatsapp inbound audio with media id", () => {
+    const body = {
+      object: "whatsapp_business_account",
+      entry: [
+        {
+          id: "waba",
+          changes: [
+            {
+              field: "messages",
+              value: {
+                messages: [
+                  {
+                    from: "9055",
+                    id: "wamid.audio",
+                    type: "audio",
+                    audio: {
+                      id: "graph-media-123",
+                      mime_type: "audio/ogg; codecs=opus",
+                      voice: true,
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      ],
+    };
+    const msg = parseMetaWebhookBody(body).messages[0];
+    expect(msg?.bodyText).toBe("[audio]");
+    expect(msg?.whatsAppInboundAudio).toEqual({
+      mediaId: "graph-media-123",
+      mimeType: "audio/ogg",
+    });
+  });
+
   it("parses whatsapp image without caption as placeholder", () => {
     const body = {
       object: "whatsapp_business_account",

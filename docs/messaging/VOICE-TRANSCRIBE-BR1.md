@@ -9,4 +9,4 @@
 Flag: `MESSAGING_VOICE_BRIDGE_STT_FAZ1=1`  
 Gereksinim: `MESSAGING_VOICE_TRANSCRIBE_FAZ1=1`, `MESSAGING_VOICE_TRANSCRIBE_AUTO_FAZ3=1`, STT API anahtarı.
 
-WhatsApp **inbound** ses indirme (Graph media) sonraki iterasyon.
+WhatsApp **inbound** ses: BR-2 (`VOICE-TRANSCRIBE-BR2.md`, `MESSAGING_VOICE_BRIDGE_WA_INBOUND_FAZ2=1`).

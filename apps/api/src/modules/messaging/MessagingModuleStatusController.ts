@@ -32,7 +32,10 @@ import {
   messagingVoiceTranscribeAutoFaz3Enabled,
   messagingVoiceTranscribeFaz1Enabled,
 } from "./messagingVoiceTranscribeConfig";
-import { messagingVoiceBridgeSttFaz1Enabled } from "./messagingVoiceBridgeSttConfig";
+import {
+  messagingVoiceBridgeSttFaz1Enabled,
+  messagingVoiceBridgeWaInboundFaz2Enabled,
+} from "./messagingVoiceBridgeSttConfig";
 import { MessagingWebRtcSignalingService } from "./MessagingWebRtcSignalingService";
 import type { WhatsappBridgeDeliverySnapshot } from "@nakliyeborsasi/core";
 
@@ -97,6 +100,7 @@ export class MessagingModuleStatusController {
       transcribeAdvancedFaz2Enabled: boolean;
       transcribeAutoFaz3Enabled: boolean;
       bridgeSttFaz1Enabled: boolean;
+      bridgeWaInboundFaz2Enabled: boolean;
       sttConfigured: boolean;
     };
   }> {
@@ -224,6 +228,7 @@ export class MessagingModuleStatusController {
     const voiceTranscribeFaz2 = messagingVoiceTranscribeAdvancedFaz2Enabled();
     const voiceTranscribeFaz3 = messagingVoiceTranscribeAutoFaz3Enabled();
     const voiceBridgeSttFaz1 = messagingVoiceBridgeSttFaz1Enabled();
+    const voiceBridgeWaInboundFaz2 = messagingVoiceBridgeWaInboundFaz2Enabled();
     if (voiceTranscribeFaz1) {
       messagingFeatures.push("messaging_voice_transcribe_manual_faz1");
     }
@@ -235,6 +240,9 @@ export class MessagingModuleStatusController {
     }
     if (voiceBridgeSttFaz1) {
       messagingFeatures.push("messaging_voice_bridge_stt_faz1");
+    }
+    if (voiceBridgeWaInboundFaz2) {
+      messagingFeatures.push("messaging_voice_bridge_wa_inbound_faz2");
     }
     return {
       module: "messaging",
@@ -302,6 +310,7 @@ export class MessagingModuleStatusController {
         transcribeAdvancedFaz2Enabled: voiceTranscribeFaz2,
         transcribeAutoFaz3Enabled: voiceTranscribeFaz3,
         bridgeSttFaz1Enabled: voiceBridgeSttFaz1,
+        bridgeWaInboundFaz2Enabled: voiceBridgeWaInboundFaz2,
         sttConfigured: messagingVoiceSttConfigured(),
       },
     };
