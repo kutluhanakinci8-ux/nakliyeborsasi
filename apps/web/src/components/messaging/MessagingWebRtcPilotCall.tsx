@@ -39,7 +39,9 @@ import {
   blobToBase64,
   downloadArchiveWebmFromBase64,
   fetchMessagingWebRtcRecordingArchiveBlob,
+  downloadMeetRecordingExportJson,
   fetchMessagingWebRtcRecordingArchives,
+  fetchMessagingWebRtcRecordingExportManifest,
   postMessagingWebRtcRecordingArchive,
   type WebRtcMeetRecordingArchiveMeta,
 } from "../../lib/messagingWebRtcMeetArchive";
@@ -350,6 +352,7 @@ export function MessagingWebRtcPilotCall({
             status.features.includes("messaging_webrtc_meet_enterprise_faz11") &&
             status.features.includes("messaging_webrtc_meet_turn_prod_faz12") &&
             status.features.includes("messaging_webrtc_meet_native_shell_faz13") &&
+            status.features.includes("messaging_webrtc_meet_ediscovery_faz14") &&
             status.webrtc?.signaling === "redis_relay",
         );
       })
@@ -1103,6 +1106,21 @@ export function MessagingWebRtcPilotCall({
     }
   }
 
+  async function downloadMeetEdiscoveryExport(): Promise<void> {
+    if (!threadId) {
+      return;
+    }
+    try {
+      const manifest = await fetchMessagingWebRtcRecordingExportManifest(
+        accessToken,
+        threadId,
+      );
+      downloadMeetRecordingExportJson(manifest);
+    } catch {
+      setError("eDiscovery dışa aktarma başarısız.");
+    }
+  }
+
   async function downloadArchivedRecording(archiveId: string): Promise<void> {
     if (!threadId) {
       return;
@@ -1790,6 +1808,18 @@ export function MessagingWebRtcPilotCall({
           />
           Görüşme kaydı — katılımcıları bilgilendirdim (KVKK)
         </label>
+      ) : null}
+
+      {archivePanelOpen && recordingArchives.length > 0 ? (
+        <div className="messaging-webrtc-faz14-export-row">
+          <button
+            type="button"
+            className="messaging-webrtc-pilot-btn messaging-webrtc-faz14-export-btn"
+            onClick={() => void downloadMeetEdiscoveryExport()}
+          >
+            eDiscovery JSON
+          </button>
+        </div>
       ) : null}
 
       {archivePanelOpen && recordingArchives.length > 0 ? (

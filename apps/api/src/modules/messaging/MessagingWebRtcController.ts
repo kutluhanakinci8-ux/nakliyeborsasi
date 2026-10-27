@@ -128,6 +128,18 @@ export class MessagingWebRtcController {
     return { ok: true, archive };
   }
 
+  @Get("threads/:threadId/recordings/export")
+  public async exportRecordingManifest(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("threadId") threadId: string,
+  ) {
+    const manifest = await this.meetRecordingArchiveService.exportManifest(
+      user,
+      threadId,
+    );
+    return { manifest };
+  }
+
   @Get("threads/:threadId/recordings/:archiveId")
   public async getRecordingArchive(
     @AuthenticatedUserParam() user: AuthenticatedUserContext,
