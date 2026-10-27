@@ -108,5 +108,29 @@ export function messagingVoiceSttModel(
   return env.MESSAGING_VOICE_STT_MODEL?.trim() || "whisper-1";
 }
 
+/** STT-OSS-3: Whisper `language` parametresi varsayılanı (ör. tr). */
+export function messagingVoiceSttDefaultLanguage(
+  env: NodeJS.ProcessEnv = process.env,
+): string | null {
+  const raw = env.MESSAGING_VOICE_STT_DEFAULT_LANGUAGE?.trim().toLowerCase();
+  if (!raw) {
+    return null;
+  }
+  return raw.slice(0, 8);
+}
+
+export function messagingVoiceSttGlossaryPath(
+  env: NodeJS.ProcessEnv = process.env,
+): string | null {
+  const raw = env.MESSAGING_VOICE_STT_GLOSSARY_PATH?.trim();
+  return raw || null;
+}
+
+export function messagingVoiceSttTrQualityFaz1Enabled(
+  env: NodeJS.ProcessEnv = process.env,
+): boolean {
+  return env.MESSAGING_VOICE_STT_TR_QUALITY_FAZ1?.trim() === "1";
+}
+
 export const MESSAGING_VOICE_TRANSCRIBE_KVKK_NOTICE_TR =
   "Ses kaydınızı yazıya çevirmek için ses işleme (speech-to-text) yapılacaktır. İşlem, onayladığınız KVKK / AI asistan rızası ve firma mesajlaşma politikası kapsamında gerçekleşir.";

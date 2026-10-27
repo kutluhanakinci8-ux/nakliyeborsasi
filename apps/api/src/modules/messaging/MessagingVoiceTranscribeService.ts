@@ -33,6 +33,7 @@ import {
   resolveMessagingVoiceSttProvider,
   messagingVoiceSttModel,
   messagingVoiceSttMonthlyQuotaPerCompany,
+  messagingVoiceSttTrQualityFaz1Enabled,
   messagingVoiceTranscribeAdvancedFaz2Enabled,
   messagingVoiceTranscribeAutoFaz3Enabled,
   messagingVoiceTranscribeFaz1Enabled,
@@ -531,6 +532,10 @@ export class MessagingVoiceTranscribeService {
     }
     const model = messagingVoiceSttModel();
     const advanced = messagingVoiceTranscribeAdvancedFaz2Enabled();
+    const applyGlossary =
+      advanced || messagingVoiceSttTrQualityFaz1Enabled();
+    const providerKind = resolveMessagingVoiceSttProvider();
+    const preferVerbose = advanced && providerKind === "openai";
     const form = new FormData();
     const bytes = new Uint8Array(buffer);
     form.append(
@@ -542,18 +547,45 @@ export class MessagingVoiceTranscribeService {
     if (language) {
       form.append("language", language);
     }
-    form.append("response_format", advanced ? "verbose_json" : "json");
+    form.append("response_format", preferVerbose ? "verbose_json" : "json");
     try {
       const headers: Record<string, string> = {};
       if (apiKey) {
         headers.Authorization = `Bearer ${apiKey}`;
       }
-      const response = await fetch(apiUrl, {
+      let response = await fetch(apiUrl, {
         method: "POST",
         headers,
         body: form,
       });
-      if (!response.ok) {
+      if (!response.ok && preferVerbose) {
+        const body = await response.text();
+        this.logger.warn(
+          `Voice STT verbose_json failed status=${response.status} — json retry`,
+        );
+        const retryForm = new FormData();
+        retryForm.append(
+          "file",
+          new Blob([bytes], { type: contentType }),
+          filename || "voice.webm",
+        );
+        retryForm.append("model", model);
+        if (language) {
+          retryForm.append("language", language);
+        }
+        retryForm.append("response_format", "json");
+        response = await fetch(apiUrl, {
+          method: "POST",
+          headers,
+          body: retryForm,
+        });
+        if (!response.ok) {
+          this.logger.warn(
+            `Voice STT failed status=${response.status} body=${body.slice(0, 200)}`,
+          );
+          return { text: null, provider: "stt-error", confidenceScore: null };
+        }
+      } else if (!response.ok) {
         const body = await response.text();
         this.logger.warn(
           `Voice STT failed status=${response.status} body=${body.slice(0, 200)}`,
@@ -565,7 +597,7 @@ export class MessagingVoiceTranscribeService {
         segments?: { avg_logprob?: number }[];
       };
       let text = payload.text?.trim() ?? null;
-      if (text && advanced) {
+      if (text && applyGlossary) {
         text = applyMessagingVoiceSttGlossary(text);
       }
       let confidenceScore: number | null = null;
@@ -578,10 +610,9 @@ export class MessagingVoiceTranscribeService {
           confidenceScore = Math.min(1, Math.max(0, Math.exp(avg)));
         }
       }
-      const provider = resolveMessagingVoiceSttProvider();
       return {
         text,
-        provider: provider === "openai" ? "whisper" : "local-whisper",
+        provider: providerKind === "openai" ? "whisper" : "local-whisper",
         confidenceScore,
       };
     } catch (error) {

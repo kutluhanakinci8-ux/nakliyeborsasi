@@ -79,7 +79,7 @@ SBOM / vitrin: `docs/oss/` veya mevcut lisans envanterine STT servisi satırı e
 
 ---
 
-## STT-OSS-3 — Türkçe kalite ve STT-2 entegrasyonu
+## STT-OSS-3 — Türkçe kalite ve STT-2 entegrasyonu — uygulama
 
 **Amaç:** TR dil varsayılanı, glossary, confidence (mevcut STT-2) yerel motorla.
 
@@ -90,7 +90,7 @@ SBOM / vitrin: `docs/oss/` veya mevcut lisans envanterine STT servisi satırı e
 - Load test: 30 sn voice_note → süre SLA dokümanı
 - Köprü otomatik STT (STT-3 + BR) aynı motoru kullanır
 
-**Doğrulama:** BR verify + örnek WhatsApp/Telegram ses → transcript `bridge_inbound`.
+**Doğrulama:** [VOICE-TRANSCRIBE-STT-OSS-3.md](./VOICE-TRANSCRIBE-STT-OSS-3.md), `verify-messaging-voice-stt-oss3.sh`
 
 ---
 
@@ -123,7 +123,8 @@ SBOM / vitrin: `docs/oss/` veya mevcut lisans envanterine STT servisi satırı e
 
 ---
 
-## STT-OSS-6 — Kullanıcı rızası UX (Mesaj uygulaması) — uygulama
+## STT-OSS-6 — Kullanıcı rızası UX (Mesaj uygulaması) — uygulama (main)
+
 
 **Amaç:** Posta webmail’e gitmeden `aiMailAssistConsent` (mesajlaşma STT + AI özet).
 

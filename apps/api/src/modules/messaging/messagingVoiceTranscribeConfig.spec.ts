@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   messagingVoiceSttConfigured,
+  messagingVoiceSttDefaultLanguage,
   resolveMessagingVoiceSttApiKey,
   resolveMessagingVoiceSttProvider,
 } from "./messagingVoiceTranscribeConfig";
@@ -15,6 +16,14 @@ describe("messagingVoiceTranscribeConfig", () => {
     expect(messagingVoiceSttConfigured(env)).toBe(true);
     expect(resolveMessagingVoiceSttProvider(env)).toBe("local");
     expect(resolveMessagingVoiceSttApiKey(env)).toBe("local-stt-internal");
+  });
+
+  it("default language tr (OSS-3)", () => {
+    expect(
+      messagingVoiceSttDefaultLanguage({
+        MESSAGING_VOICE_STT_DEFAULT_LANGUAGE: "tr",
+      }),
+    ).toBe("tr");
   });
 
   it("auth optional without key when local enabled", () => {

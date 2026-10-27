@@ -26,5 +26,10 @@ append_kv "MESSAGING_VOICE_STT_API_KEY" "${STT_KEY}"
 append_kv "MESSAGING_VOICE_TRANSCRIBE_FAZ1" "1"
 append_kv "MESSAGING_VOICE_TRANSCRIBE_ADVANCED_FAZ2" "1"
 append_kv "MESSAGING_VOICE_TRANSCRIBE_AUTO_FAZ3" "1"
+# STT-OSS-3: TR varsayılan dil + glossary (repo data dosyası VPS yoluna kopyalanır)
+GLOSSARY_PATH="${MESSAGING_VOICE_STT_GLOSSARY_PATH:-/var/www/nakliyeborsasi/data/messaging/voice-stt-glossary-tr.json}"
+append_kv "MESSAGING_VOICE_STT_DEFAULT_LANGUAGE" "tr"
+append_kv "MESSAGING_VOICE_STT_GLOSSARY_PATH" "${GLOSSARY_PATH}"
+append_kv "MESSAGING_VOICE_STT_TR_QUALITY_FAZ1" "1"
 
-echo "OK: STT-OSS-1 local env → ${ENV_FILE}"
+echo "OK: STT-OSS-1/3 local env → ${ENV_FILE}"
