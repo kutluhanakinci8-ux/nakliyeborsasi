@@ -188,9 +188,10 @@ export class MessagingVoiceTranscribeService {
     const model = messagingVoiceSttModel();
     const language = locale.toLowerCase().startsWith("tr") ? "tr" : undefined;
     const form = new FormData();
+    const bytes = new Uint8Array(buffer);
     form.append(
       "file",
-      new Blob([buffer], { type: contentType }),
+      new Blob([bytes], { type: contentType }),
       filename || "voice.webm",
     );
     form.append("model", model);
