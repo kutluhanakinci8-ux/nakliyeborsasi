@@ -18,8 +18,10 @@ import {
   resolveMessagingWebRtcIceServers,
   summarizeMessagingWebRtcIceCaps,
 } from "./messagingWebRtcIceConfig";
+import { MessagingWebRtcMeetOverflowIntentService } from "./MessagingWebRtcMeetOverflowIntentService";
 import { MessagingWebRtcMeetRecordingArchiveService } from "./MessagingWebRtcMeetRecordingArchiveService";
 import { MessagingWebRtcMeetScheduleService } from "./MessagingWebRtcMeetScheduleService";
+import { PostMessagingWebRtcOverflowIntentRequestDto } from "./MessagingWebRtcOverflowIntentRequestDto";
 import { PostMessagingWebRtcRecordingArchiveRequestDto } from "./MessagingWebRtcRecordingRequestDto";
 import { UpsertMessagingWebRtcScheduleRequestDto } from "./MessagingWebRtcScheduleRequestDto";
 import {
@@ -39,6 +41,7 @@ export class MessagingWebRtcController {
     private readonly signalingService: MessagingWebRtcSignalingService,
     private readonly meetScheduleService: MessagingWebRtcMeetScheduleService,
     private readonly meetRecordingArchiveService: MessagingWebRtcMeetRecordingArchiveService,
+    private readonly meetOverflowIntentService: MessagingWebRtcMeetOverflowIntentService,
   ) {}
 
   @Get("config")
@@ -66,6 +69,32 @@ export class MessagingWebRtcController {
   @Get("capacity")
   public getCapacityPolicy() {
     return { capacity: summarizeMessagingWebRtcMeetCapacity() };
+  }
+
+  @Get("threads/:threadId/overflow-intent")
+  public async getOverflowIntentStatus(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("threadId") threadId: string,
+  ) {
+    const status = await this.meetOverflowIntentService.getThreadStatus(
+      user,
+      threadId,
+    );
+    return { status };
+  }
+
+  @Post("threads/:threadId/overflow-intent")
+  public async postOverflowIntent(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("threadId") threadId: string,
+    @Body() body: PostMessagingWebRtcOverflowIntentRequestDto,
+  ) {
+    const intent = await this.meetOverflowIntentService.registerIntent(
+      user,
+      threadId,
+      body.note,
+    );
+    return { ok: true, intent };
   }
 
   @Get("threads/:threadId/schedule")

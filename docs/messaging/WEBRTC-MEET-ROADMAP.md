@@ -7,6 +7,7 @@
 | 13 | `messaging_webrtc_meet_native_shell_faz13` | Expo shell → hub meet deep link |
 | 14 | `messaging_webrtc_meet_ediscovery_faz14` | Kayıt arşivi eDiscovery manifest + SHA-256 |
 | 15 | `messaging_webrtc_meet_capacity_faz15` | Kapasite politikası (mesh ≤3, SFU kapalı, 409 metinleri) |
-| 16+ | — | SFU / &gt;3 kişi, RN WebRTC native (ürün kararı) |
+| 16 | `messaging_webrtc_meet_sfu_intent_faz16` | SFU beta overflow intent (Redis, ops sayacı) |
+| 17+ | — | SFU medya sunucusu, RN WebRTC native |
 
-Faz 1–15 kodlandı.
+Faz 1–16 kodlandı.

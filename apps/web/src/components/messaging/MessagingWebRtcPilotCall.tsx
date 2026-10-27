@@ -57,6 +57,10 @@ import {
   isMeetDeepLinkActive,
 } from "../../lib/messagingWebRtcMeetDeepLink";
 import {
+  fetchMessagingWebRtcOverflowIntentStatus,
+  postMessagingWebRtcOverflowIntent,
+} from "../../lib/messagingWebRtcMeetOverflowIntent";
+import {
   startMeetIncomingRing,
   stopMeetIncomingRing,
 } from "../../lib/messagingWebRtcRing";
@@ -212,6 +216,9 @@ export function MessagingWebRtcPilotCall({
     useState<MessagingWebRtcTurnMonitor | null>(null);
   const [meetCapacity, setMeetCapacity] =
     useState<MessagingWebRtcMeetCapacity | null>(null);
+  const [overflowIntentRegistered, setOverflowIntentRegistered] = useState(false);
+  const [showOverflowIntentCta, setShowOverflowIntentCta] = useState(false);
+  const [overflowIntentBusy, setOverflowIntentBusy] = useState(false);
   const [maxRecordingArchiveBytes, setMaxRecordingArchiveBytes] = useState(
     2_500_000,
   );
@@ -357,6 +364,7 @@ export function MessagingWebRtcPilotCall({
             status.features.includes("messaging_webrtc_meet_native_shell_faz13") &&
             status.features.includes("messaging_webrtc_meet_ediscovery_faz14") &&
             status.features.includes("messaging_webrtc_meet_capacity_faz15") &&
+            status.features.includes("messaging_webrtc_meet_sfu_intent_faz16") &&
             status.webrtc?.signaling === "redis_relay",
         );
       })
@@ -396,6 +404,9 @@ export function MessagingWebRtcPilotCall({
     void fetchMessagingWebRtcRecordingArchives(accessToken, threadId)
       .then(setRecordingArchives)
       .catch(() => setRecordingArchives([]));
+    void fetchMessagingWebRtcOverflowIntentStatus(accessToken, threadId)
+      .then((status) => setOverflowIntentRegistered(status.registered))
+      .catch(() => setOverflowIntentRegistered(false));
   }, [accessToken, enabled, threadId]);
 
   useEffect(() => {
@@ -804,6 +815,29 @@ export function MessagingWebRtcPilotCall({
     );
   }
 
+  function isMeetRoomFullError(err: unknown): boolean {
+    const message = err instanceof Error ? err.message : String(err);
+    return message.includes("dolu");
+  }
+
+  async function submitSfuOverflowIntent(): Promise<void> {
+    if (!threadId || overflowIntentRegistered || overflowIntentBusy) {
+      return;
+    }
+    setOverflowIntentBusy(true);
+    setError("");
+    try {
+      await postMessagingWebRtcOverflowIntent(accessToken, threadId);
+      setOverflowIntentRegistered(true);
+      setShowOverflowIntentCta(false);
+      setStatusLine("SFU beta talebi kaydedildi — ekip önceliklendirir.");
+    } catch {
+      setError("SFU beta talebi gönderilemedi.");
+    } finally {
+      setOverflowIntentBusy(false);
+    }
+  }
+
   async function enterCallAndMesh(): Promise<void> {
     if (!threadId || !currentUserId) {
       return;
@@ -857,6 +891,9 @@ export function MessagingWebRtcPilotCall({
     } catch (err) {
       teardown();
       setPhase("error");
+      if (isMeetRoomFullError(err)) {
+        setShowOverflowIntentCta(true);
+      }
       setError(formatWebRtcMediaError(err));
     }
   }
@@ -884,6 +921,9 @@ export function MessagingWebRtcPilotCall({
     } catch (err) {
       teardown();
       setPhase("error");
+      if (isMeetRoomFullError(err)) {
+        setShowOverflowIntentCta(true);
+      }
       setError(formatWebRtcMediaError(err));
     }
   }
@@ -1374,7 +1414,7 @@ export function MessagingWebRtcPilotCall({
 
   return (
     <div
-      className="messaging-webrtc-pilot messaging-webrtc-meet-faz1 messaging-webrtc-meet-faz2 messaging-webrtc-meet-faz3 messaging-webrtc-meet-faz4 messaging-webrtc-meet-faz5 messaging-webrtc-meet-faz6 messaging-webrtc-meet-faz7 messaging-webrtc-meet-faz9 messaging-webrtc-meet-faz10 messaging-webrtc-meet-faz15"
+      className="messaging-webrtc-pilot messaging-webrtc-meet-faz1 messaging-webrtc-meet-faz2 messaging-webrtc-meet-faz3 messaging-webrtc-meet-faz4 messaging-webrtc-meet-faz5 messaging-webrtc-meet-faz6 messaging-webrtc-meet-faz7 messaging-webrtc-meet-faz9 messaging-webrtc-meet-faz10 messaging-webrtc-meet-faz15 messaging-webrtc-meet-faz16"
       role="region"
       aria-label={`Görüntülü ve sesli görüşme (en fazla ${meetCapacity?.effectiveMaxParticipants ?? MAX_PARTICIPANTS} kişi)`}
     >
@@ -1387,6 +1427,25 @@ export function MessagingWebRtcPilotCall({
           {meetCapacity.topology === "mesh_p2p" ? "Mesh P2P" : meetCapacity.topology} · en
           fazla {meetCapacity.effectiveMaxParticipants} kişi
         </p>
+      ) : null}
+      {meetCapacity?.sfuOverflowIntent?.enabled &&
+      threadId &&
+      (showOverflowIntentCta || !overflowIntentRegistered) ? (
+        <div className="messaging-webrtc-faz16-overflow-intent">
+          <button
+            type="button"
+            className="messaging-webrtc-pilot-btn"
+            disabled={overflowIntentRegistered || overflowIntentBusy}
+            title={meetCapacity.sfuOverflowIntent.hintTr}
+            onClick={() => void submitSfuOverflowIntent()}
+          >
+            {overflowIntentRegistered
+              ? "SFU beta talebi kayıtlı"
+              : overflowIntentBusy
+                ? "Gönderiliyor…"
+                : "SFU beta talebi (4+ kişi)"}
+          </button>
+        </div>
       ) : null}
       {isLikelyMobileBrowser() && (phase === "idle" || phase === "ended") ? (
         <p className="messaging-webrtc-faz10-mobile-hint" role="note">

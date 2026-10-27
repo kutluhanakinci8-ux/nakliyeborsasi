@@ -23,6 +23,7 @@ REQUIRED=(
   messaging_webrtc_meet_native_shell_faz13
   messaging_webrtc_meet_ediscovery_faz14
   messaging_webrtc_meet_capacity_faz15
+  messaging_webrtc_meet_sfu_intent_faz16
 )
 
 payload="$(curl -fsS "${API_BASE}/messaging/status")"
@@ -43,4 +44,5 @@ PY
 API_BASE="${API_BASE}" bash "${ROOT}/scripts/verify-messaging-webrtc-meet-faz6-gate.sh"
 API_BASE="${API_BASE}" bash "${ROOT}/scripts/verify-messaging-webrtc-meet-faz12-turn-prod.sh"
 API_BASE="${API_BASE}" bash "${ROOT}/scripts/verify-messaging-webrtc-meet-faz15-capacity.sh"
+API_BASE="${API_BASE}" bash "${ROOT}/scripts/verify-messaging-webrtc-meet-faz16-sfu-intent.sh"
 echo "verify-messaging-webrtc-meet-faz-gate: PASS"

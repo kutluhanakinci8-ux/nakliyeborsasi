@@ -27,6 +27,7 @@ import { MessagingWebRtcMeetRecordingArchiveService } from "./MessagingWebRtcMee
 import { MessagingWebRtcIncomingCallNotifyService } from "./MessagingWebRtcIncomingCallNotifyService";
 import { MessagingWebRtcMeetReminderScheduler } from "./MessagingWebRtcMeetReminderScheduler";
 import { MessagingWebRtcMeetReminderService } from "./MessagingWebRtcMeetReminderService";
+import { MessagingWebRtcMeetOverflowIntentService } from "./MessagingWebRtcMeetOverflowIntentService";
 import { MessagingWebRtcMeetScheduleService } from "./MessagingWebRtcMeetScheduleService";
 import { MessagingWebRtcController } from "./MessagingWebRtcController";
 import { MessagingPushController } from "./MessagingPushController";
@@ -115,6 +116,7 @@ import { SocialHubModule } from "../social-hub/SocialHubModule";
     MessagingExpoPushService,
     MessagingWebRtcSignalingService,
     MessagingWebRtcMeetScheduleService,
+    MessagingWebRtcMeetOverflowIntentService,
     MessagingWebRtcMeetRecordingArchiveService,
     MessagingWebRtcIncomingCallNotifyService,
     MessagingWebRtcMeetReminderService,
