@@ -54,8 +54,10 @@ export class MessagingModuleStatusController {
       signaling: "redis_relay" | "unavailable" | "planned";
       codecsShippedWithApp: false;
       configPath: string;
+      capacityPath: string;
       maxParticipants: number;
       meshMode: "p2p";
+      capacity: ReturnType<typeof summarizeMessagingWebRtcMeetCapacity>;
       iceCaps: ReturnType<typeof summarizeMessagingWebRtcIceCaps>;
       turnMonitor: Awaited<ReturnType<typeof probeMessagingWebRtcTurnMonitor>>;
       recordingArchive: { s3Enabled: boolean; maxBytes: number };
