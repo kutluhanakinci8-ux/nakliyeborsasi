@@ -24,14 +24,62 @@ export function messagingVoiceSttMonthlyQuotaPerCompany(
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 500;
 }
 
+export function messagingVoiceSttLocalFaz1Enabled(
+  env: NodeJS.ProcessEnv = process.env,
+): boolean {
+  return env.MESSAGING_VOICE_STT_LOCAL_FAZ1?.trim() === "1";
+}
+
+export function messagingVoiceSttAuthOptional(
+  env: NodeJS.ProcessEnv = process.env,
+): boolean {
+  return (
+    env.MESSAGING_VOICE_STT_AUTH_OPTIONAL?.trim() === "1" ||
+    env.MESSAGING_VOICE_STT_LOCAL_ENABLED?.trim() === "1"
+  );
+}
+
+export function resolveMessagingVoiceSttApiKey(
+  env: NodeJS.ProcessEnv = process.env,
+): string {
+  const dedicated = env.MESSAGING_VOICE_STT_API_KEY?.trim();
+  if (dedicated) {
+    return dedicated;
+  }
+  return env.LERTA_MAIL_AI_COMPOSE_API_KEY?.trim() ?? "";
+}
+
 export function messagingVoiceSttConfigured(
   env: NodeJS.ProcessEnv = process.env,
 ): boolean {
-  const key = env.LERTA_MAIL_AI_COMPOSE_API_KEY?.trim();
-  const url =
-    env.MESSAGING_VOICE_STT_API_URL?.trim() ||
-    (key ? "https://api.openai.com/v1/audio/transcriptions" : "");
-  return Boolean(url && key);
+  const url = resolveMessagingVoiceSttApiUrl(env);
+  if (!url) {
+    return false;
+  }
+  const key = resolveMessagingVoiceSttApiKey(env);
+  if (key) {
+    return true;
+  }
+  return messagingVoiceSttAuthOptional(env);
+}
+
+export function resolveMessagingVoiceSttProvider(
+  env: NodeJS.ProcessEnv = process.env,
+): "local" | "openai" | "unconfigured" {
+  if (!messagingVoiceSttConfigured(env)) {
+    return "unconfigured";
+  }
+  const url = resolveMessagingVoiceSttApiUrl(env) ?? "";
+  if (
+    env.MESSAGING_VOICE_STT_LOCAL_ENABLED?.trim() === "1" ||
+    /127\.0\.0\.1|localhost/.test(url)
+  ) {
+    return "local";
+  }
+  if (url.includes("api.openai.com")) {
+    return "openai";
+  }
+  return "local";
 }
 
 export function resolveMessagingVoiceSttApiUrl(
@@ -41,9 +89,15 @@ export function resolveMessagingVoiceSttApiUrl(
   if (explicit) {
     return explicit.replace(/\/$/, "");
   }
-  const key = env.LERTA_MAIL_AI_COMPOSE_API_KEY?.trim();
+  const key = resolveMessagingVoiceSttApiKey(env);
   if (key) {
     return "https://api.openai.com/v1/audio/transcriptions";
+  }
+  if (messagingVoiceSttAuthOptional(env)) {
+    return (
+      env.MESSAGING_VOICE_STT_DEFAULT_URL?.trim() ||
+      "http://127.0.0.1:9010/v1/audio/transcriptions"
+    ).replace(/\/$/, "");
   }
   return null;
 }

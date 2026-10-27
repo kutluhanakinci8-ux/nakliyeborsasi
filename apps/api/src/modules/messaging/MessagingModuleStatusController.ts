@@ -29,9 +29,11 @@ import {
 } from "./messagingVoiceNoteConfig";
 import {
   messagingVoiceSttConfigured,
+  messagingVoiceSttLocalFaz1Enabled,
   messagingVoiceTranscribeAdvancedFaz2Enabled,
   messagingVoiceTranscribeAutoFaz3Enabled,
   messagingVoiceTranscribeFaz1Enabled,
+  resolveMessagingVoiceSttProvider,
 } from "./messagingVoiceTranscribeConfig";
 import {
   messagingVoiceBridgeSttFaz1Enabled,
@@ -104,6 +106,7 @@ export class MessagingModuleStatusController {
       bridgeSttFaz1Enabled: boolean;
       bridgeWaInboundFaz2Enabled: boolean;
       sttConfigured: boolean;
+      sttProvider: "local" | "openai" | "unconfigured";
     };
   }> {
     const deepl = Boolean(
@@ -235,6 +238,7 @@ export class MessagingModuleStatusController {
     const voiceTranscribeFaz3 = messagingVoiceTranscribeAutoFaz3Enabled();
     const voiceBridgeSttFaz1 = messagingVoiceBridgeSttFaz1Enabled();
     const voiceBridgeWaInboundFaz2 = messagingVoiceBridgeWaInboundFaz2Enabled();
+    const voiceSttLocalFaz1 = messagingVoiceSttLocalFaz1Enabled();
     if (voiceTranscribeFaz1) {
       messagingFeatures.push("messaging_voice_transcribe_manual_faz1");
     }
@@ -249,6 +253,9 @@ export class MessagingModuleStatusController {
     }
     if (voiceBridgeWaInboundFaz2) {
       messagingFeatures.push("messaging_voice_bridge_wa_inbound_faz2");
+    }
+    if (voiceSttLocalFaz1) {
+      messagingFeatures.push("messaging_voice_stt_local_faz1");
     }
     return {
       module: "messaging",
@@ -319,6 +326,7 @@ export class MessagingModuleStatusController {
         bridgeSttFaz1Enabled: voiceBridgeSttFaz1,
         bridgeWaInboundFaz2Enabled: voiceBridgeWaInboundFaz2,
         sttConfigured: messagingVoiceSttConfigured(),
+        sttProvider: resolveMessagingVoiceSttProvider(),
       },
     };
   }

@@ -27,7 +27,10 @@ import {
   resolveMessagingVoiceSttLanguage,
 } from "./messagingVoiceSttGlossary";
 import {
+  messagingVoiceSttAuthOptional,
   messagingVoiceSttConfigured,
+  resolveMessagingVoiceSttApiKey,
+  resolveMessagingVoiceSttProvider,
   messagingVoiceSttModel,
   messagingVoiceSttMonthlyQuotaPerCompany,
   messagingVoiceTranscribeAdvancedFaz2Enabled,
@@ -519,10 +522,11 @@ export class MessagingVoiceTranscribeService {
       };
     }
     const apiUrl = resolveMessagingVoiceSttApiUrl();
-    const apiKey = this.configService
-      .get<string>("LERTA_MAIL_AI_COMPOSE_API_KEY")
-      ?.trim();
-    if (!apiUrl || !apiKey) {
+    const apiKey = resolveMessagingVoiceSttApiKey();
+    if (!apiUrl) {
+      return { text: null, provider: "unconfigured", confidenceScore: null };
+    }
+    if (!apiKey && !messagingVoiceSttAuthOptional()) {
       return { text: null, provider: "unconfigured", confidenceScore: null };
     }
     const model = messagingVoiceSttModel();
@@ -540,11 +544,13 @@ export class MessagingVoiceTranscribeService {
     }
     form.append("response_format", advanced ? "verbose_json" : "json");
     try {
+      const headers: Record<string, string> = {};
+      if (apiKey) {
+        headers.Authorization = `Bearer ${apiKey}`;
+      }
       const response = await fetch(apiUrl, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-        },
+        headers,
         body: form,
       });
       if (!response.ok) {
@@ -572,7 +578,12 @@ export class MessagingVoiceTranscribeService {
           confidenceScore = Math.min(1, Math.max(0, Math.exp(avg)));
         }
       }
-      return { text, provider: "whisper", confidenceScore };
+      const provider = resolveMessagingVoiceSttProvider();
+      return {
+        text,
+        provider: provider === "openai" ? "whisper" : "local-whisper",
+        confidenceScore,
+      };
     } catch (error) {
       this.logger.warn(
         `Voice STT exception: ${

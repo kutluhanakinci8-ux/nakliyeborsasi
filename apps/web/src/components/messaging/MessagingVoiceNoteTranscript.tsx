@@ -57,8 +57,8 @@ export function MessagingVoiceNoteTranscript({
   if (!sttConfigured) {
     return (
       <p className="chat-voice-transcript-missing" role="status">
-        Ses→metin sunucuda yapılandırılmamış (OpenAI Whisper API anahtarı). Yönetici:
-        <code>LERTA_MAIL_AI_COMPOSE_API_KEY</code>
+        Ses→metin sunucusu yapılandırılmamış. Yönetici: yerel STT servisi (
+        <code>MESSAGING_VOICE_STT_API_URL</code>) veya bulut Whisper anahtarı.
       </p>
     );
   }
