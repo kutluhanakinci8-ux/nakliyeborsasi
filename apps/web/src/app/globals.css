@@ -7026,6 +7026,86 @@ button.btn-secondary {
   color: #64748b;
 }
 
+.messaging-webrtc-meet-faz2 .messaging-webrtc-faz2-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  margin-top: 0.35rem;
+  font-size: 0.68rem;
+}
+
+.messaging-webrtc-faz2-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #475569;
+}
+
+.messaging-webrtc-faz2-inline select {
+  font-size: 0.68rem;
+  padding: 0.15rem 0.3rem;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+}
+
+.messaging-webrtc-network {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+}
+
+.messaging-webrtc-network--good {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.messaging-webrtc-network--fair {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.messaging-webrtc-network--poor {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.messaging-webrtc-network--unknown {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.messaging-webrtc-pilot-videos--speaker {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: minmax(120px, 1fr) auto;
+  gap: 0.45rem;
+  max-width: 560px;
+}
+
+.messaging-webrtc-pilot-videos--speaker .messaging-webrtc-pilot-video--spotlight {
+  max-height: 220px;
+  grid-column: 1 / -1;
+}
+
+.messaging-webrtc-pilot-videos--speaker .messaging-webrtc-pilot-video--remote:not(.messaging-webrtc-pilot-video--spotlight) {
+  max-height: 90px;
+}
+
+.messaging-webrtc-pilot-video.is-active-speaker {
+  outline: 3px solid #22c55e;
+  outline-offset: 2px;
+}
+
+.messaging-webrtc-video-effect--blur {
+  filter: blur(10px) saturate(1.15);
+  transform: scale(1.08);
+}
+
+.messaging-webrtc-video-effect--lowlight {
+  filter: brightness(1.18) contrast(1.05);
+}
+
 .messaging-webrtc-pilot-status {
   font-size: 0.72rem;
   color: #64748b;

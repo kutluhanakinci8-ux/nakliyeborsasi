@@ -13,31 +13,36 @@ export async function listWebRtcMediaDevices(): Promise<MediaDeviceLists> {
   };
 }
 
+import {
+  type VideoQualityProfile,
+  videoConstraintsForProfile,
+} from "./messagingWebRtcQuality";
+
 export type CallMediaMode = "audio" | "video";
 
 export async function acquireWebRtcLocalStream(params: {
   mode: CallMediaMode;
   audioDeviceId?: string;
   videoDeviceId?: string;
+  qualityProfile?: VideoQualityProfile;
 }): Promise<MediaStream> {
   const audio: boolean | MediaTrackConstraints = params.audioDeviceId
-    ? { deviceId: { exact: params.audioDeviceId } }
-    : true;
+    ? {
+        deviceId: { exact: params.audioDeviceId },
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+      }
+    : {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+      };
+  const profile = params.qualityProfile ?? "auto";
   const video: boolean | MediaTrackConstraints =
     params.mode === "audio"
       ? false
-      : params.videoDeviceId
-        ? {
-            deviceId: { exact: params.videoDeviceId },
-            facingMode: "user",
-            width: { ideal: 640 },
-            height: { ideal: 480 },
-          }
-        : {
-            facingMode: "user",
-            width: { ideal: 640 },
-            height: { ideal: 480 },
-          };
+      : videoConstraintsForProfile(profile, params.videoDeviceId);
   return navigator.mediaDevices.getUserMedia({ audio, video });
 }
 
