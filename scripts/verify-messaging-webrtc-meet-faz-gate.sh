@@ -31,6 +31,8 @@ REQUIRED=(
   messaging_webrtc_meet_native_module_faz21
   messaging_webrtc_meet_rn_webrtc_pilot_faz22
   messaging_webrtc_meet_rn_mesh_media_faz23
+  messaging_webrtc_meet_rn_rtc_view_faz24
+  messaging_webrtc_meet_program_closure_faz25
 )
 
 payload="$(curl -fsS "${API_BASE}/messaging/status")"
@@ -59,4 +61,6 @@ API_BASE="${API_BASE}" bash "${ROOT}/scripts/verify-messaging-webrtc-meet-faz20-
 API_BASE="${API_BASE}" bash "${ROOT}/scripts/verify-messaging-webrtc-meet-faz21-native-module.sh"
 API_BASE="${API_BASE}" bash "${ROOT}/scripts/verify-messaging-webrtc-meet-faz22-rn-pilot.sh"
 API_BASE="${API_BASE}" bash "${ROOT}/scripts/verify-messaging-webrtc-meet-faz23-rn-mesh.sh"
+API_BASE="${API_BASE}" bash "${ROOT}/scripts/verify-messaging-webrtc-meet-faz24-rtc-view.sh"
+API_BASE="${API_BASE}" bash "${ROOT}/scripts/verify-messaging-webrtc-meet-faz25-closure.sh"
 echo "verify-messaging-webrtc-meet-faz-gate: PASS"

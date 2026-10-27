@@ -15,6 +15,11 @@ export type MessagingWebRtcNativeMediaModule = {
     stack: "rn_peer_connection";
     globalInject: "LertaRnWebRTC";
   };
+  rnRemoteVideo?: {
+    enabled: boolean;
+    rtcViewGlobal: "RTCView";
+    backgroundPausePoll: boolean;
+  };
   hintTr: string;
 };
 

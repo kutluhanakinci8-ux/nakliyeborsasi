@@ -16,7 +16,7 @@ Pilot oturum: `joinToken`, `iceServers`, `redis_relay` sinyal (mesh ≤3).
 
 ```javascript
 import { RTCPeerConnection, mediaDevices } from "react-native-webrtc";
-global.LertaRnWebRTC = { RTCPeerConnection, mediaDevices };
+global.LertaRnWebRTC = { RTCPeerConnection, RTCView, mediaDevices };
 ```
 
 Expo uygulamasında **Native mesh (sinyal + medya)** thread ID ile odaya katılır; offer/answer/ICE redis relay üzerinden gider.

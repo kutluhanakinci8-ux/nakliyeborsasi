@@ -1,3 +1,11 @@
+import type { ComponentType } from "react";
+
+export type RnRtcViewProps = {
+  streamURL?: string;
+  style?: object;
+  objectFit?: "cover" | "contain";
+};
+
 export type LertaRnWebRtcGlobal = {
   RTCPeerConnection: new (config: {
     iceServers?: Array<{ urls: string | string[] }>;
@@ -8,10 +16,12 @@ export type LertaRnWebRtcGlobal = {
       video?: boolean;
     }) => Promise<RnMediaStream>;
   };
+  RTCView?: ComponentType<RnRtcViewProps>;
 };
 
 export type RnMediaStream = {
   getTracks: () => Array<{ stop: () => void }>;
+  toURL?: () => string;
 };
 
 export type RnPeerConnection = {
@@ -31,6 +41,10 @@ export type RnPeerConnection = {
   onicecandidate: ((ev: { candidate: unknown }) => void) | null;
   ontrack: ((ev: { streams: RnMediaStream[] }) => void) | null;
 };
+
+export function readLertaRnWebRtcRtcView(): ComponentType<RnRtcViewProps> | null {
+  return readLertaRnWebRtcGlobal()?.RTCView ?? null;
+}
 
 export function readLertaRnWebRtcGlobal(): LertaRnWebRtcGlobal | null {
   const g = globalThis as unknown as { LertaRnWebRTC?: LertaRnWebRtcGlobal };
