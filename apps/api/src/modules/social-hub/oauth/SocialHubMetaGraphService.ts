@@ -703,6 +703,89 @@ export class SocialHubMetaGraphService {
     };
   }
 
+  public async sendWhatsAppAudio(params: {
+    phoneNumberId?: string;
+    accessToken: string;
+    to: string;
+    buffer: Buffer;
+    contentType: string;
+    filename: string;
+    caption?: string;
+  }): Promise<{ ok: boolean; message: string; externalMessageId?: string }> {
+    if (!params.phoneNumberId) {
+      return {
+        ok: false,
+        message: "WhatsApp phone_number_id yok; OAuth yenileyin.",
+      };
+    }
+    const toDigits = params.to.replace(/\D/g, "");
+    if (!toDigits) {
+      return { ok: false, message: "WhatsApp alıcı numarası geçersiz." };
+    }
+    const uploadUrl = new URL(
+      `https://graph.facebook.com/v21.0/${params.phoneNumberId}/media`,
+    );
+    const form = new FormData();
+    form.append("messaging_product", "whatsapp");
+    form.append("type", params.contentType || "audio/ogg");
+    form.append(
+      "file",
+      new Blob([Uint8Array.from(params.buffer)], {
+        type: params.contentType || "audio/ogg",
+      }),
+      params.filename || "voice.ogg",
+    );
+    const uploadResponse = await fetch(uploadUrl.toString(), {
+      method: "POST",
+      headers: { Authorization: `Bearer ${params.accessToken}` },
+      body: form,
+    });
+    const uploadPayload = (await uploadResponse.json()) as {
+      id?: string;
+      error?: { message?: string };
+    };
+    if (!uploadResponse.ok || !uploadPayload.id) {
+      return {
+        ok: false,
+        message:
+          uploadPayload.error?.message ??
+          "WhatsApp ses medyası yüklenemedi.",
+      };
+    }
+    const msgUrl = new URL(
+      `https://graph.facebook.com/v21.0/${params.phoneNumberId}/messages`,
+    );
+    const messageBody: Record<string, unknown> = {
+      messaging_product: "whatsapp",
+      to: toDigits,
+      type: "audio",
+      audio: { id: uploadPayload.id },
+    };
+    const response = await fetch(msgUrl.toString(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${params.accessToken}`,
+      },
+      body: JSON.stringify(messageBody),
+    });
+    const payload = (await response.json()) as {
+      messages?: Array<{ id: string }>;
+      error?: { message?: string };
+    };
+    if (!response.ok) {
+      return {
+        ok: false,
+        message: payload.error?.message ?? "WhatsApp ses gönderimi başarısız.",
+      };
+    }
+    return {
+      ok: true,
+      message: "WhatsApp sesli mesaj gönderildi.",
+      externalMessageId: payload.messages?.[0]?.id,
+    };
+  }
+
   private async sendWhatsAppText(params: {
     phoneNumberId?: string;
     accessToken: string;

@@ -53,6 +53,12 @@ export class MessageVoiceTranscriptEntity {
   @Column({ type: "timestamptz" })
   public kvkkConsentAt!: Date;
 
+  @Column({ name: "transcript_source", type: "varchar", length: 32, default: "manual" })
+  public transcriptSource!: "manual" | "outbound_auto" | "bridge_inbound";
+
+  @Column({ name: "bridge_platform", type: "varchar", length: 32, nullable: true })
+  public bridgePlatform!: string | null;
+
   @CreateDateColumn({ type: "timestamptz" })
   public createdAt!: Date;
 

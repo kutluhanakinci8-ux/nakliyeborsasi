@@ -34,10 +34,15 @@ export class SocialHubTelegramFileService {
           );
           continue;
         }
+        const isVoice =
+          item.kind === "voice" ||
+          item.kind === "audio" ||
+          item.contentType.toLowerCase().startsWith("audio/");
         inputs.push({
           filename: item.filename,
           contentType: item.contentType,
           contentBase64: buffer.toString("base64"),
+          ...(isVoice ? { kind: "voice_note" as const } : {}),
         });
       } catch (error) {
         this.logger.warn(

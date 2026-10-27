@@ -127,8 +127,17 @@ export class SocialHubTelegramOutboundService {
       method = "sendVideo";
       field = "video";
     } else if (contentType.startsWith("audio/")) {
-      method = "sendAudio";
-      field = "audio";
+      const voiceNote =
+        attachment.filename.toLowerCase().includes("voice") ||
+        contentType.includes("ogg") ||
+        contentType.includes("opus");
+      if (voiceNote) {
+        method = "sendVoice";
+        field = "voice";
+      } else {
+        method = "sendAudio";
+        field = "audio";
+      }
     }
     form.append(field, blob, attachment.filename);
     const response = await callTelegramBotMultipart<{ message_id: number }>(
