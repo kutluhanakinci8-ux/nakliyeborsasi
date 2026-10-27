@@ -13,6 +13,7 @@
 | 19 | `messaging_webrtc_meet_sfu_embed_faz19` | Tarayıcı gömme (local preview + signaling iframe) |
 | 20 | `messaging_webrtc_meet_native_rtc_faz20` | Expo native RTC köprü + handshake API |
 | 21 | `messaging_webrtc_meet_native_module_faz21` | RN WebRTC capabilities + SFU medya modu raporu |
-| 22+ | — | `react-native-webrtc` dev client medya |
+| 22 | `messaging_webrtc_meet_rn_webrtc_pilot_faz22` | Native mesh pilot oturum API (linked dev client) |
+| 23+ | — | RN RTCPeerConnection mesh medya |
 
-Faz 1–21 kodlandı.
+Faz 1–22 kodlandı.

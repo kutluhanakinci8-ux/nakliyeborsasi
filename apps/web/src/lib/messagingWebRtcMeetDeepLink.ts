@@ -33,6 +33,13 @@ export function isNativeRtcDeepLinkActive(): boolean {
   return new URLSearchParams(window.location.search).get("nativeRtc") === "1";
 }
 
+export function isNativeMeshPilotDeepLinkActive(): boolean {
+  if (typeof window === "undefined") {
+    return false;
+  }
+  return new URLSearchParams(window.location.search).get("nativePilot") === "1";
+}
+
 export function readNativeRtcBridgeIdFromLocation(): string | null {
   if (typeof window === "undefined") {
     return null;

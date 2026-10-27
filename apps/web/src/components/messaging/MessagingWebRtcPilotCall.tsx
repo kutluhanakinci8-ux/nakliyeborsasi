@@ -55,10 +55,15 @@ import {
   buildMessagingMeetDeepLink,
   isLikelyMobileBrowser,
   isMeetDeepLinkActive,
+  isNativeMeshPilotDeepLinkActive,
   isNativeRtcDeepLinkActive,
   isSfuPilotDeepLinkActive,
   readNativeRtcBridgeIdFromLocation,
 } from "../../lib/messagingWebRtcMeetDeepLink";
+import {
+  createMessagingWebRtcNativeMeshPilotSession,
+  type WebRtcNativeMeshPilotSession,
+} from "../../lib/messagingWebRtcNativeMeshPilot";
 import {
   fetchMessagingWebRtcNativeBridgeCapabilities,
   fetchMessagingWebRtcNativeBridgeConfig,
@@ -246,6 +251,9 @@ export function MessagingWebRtcPilotCall({
   const [nativeMediaModuleHint, setNativeMediaModuleHint] = useState<
     string | null
   >(null);
+  const [nativeMeshPilotSession, setNativeMeshPilotSession] =
+    useState<WebRtcNativeMeshPilotSession | null>(null);
+  const [nativeMeshPilotBusy, setNativeMeshPilotBusy] = useState(false);
   const [maxRecordingArchiveBytes, setMaxRecordingArchiveBytes] = useState(
     2_500_000,
   );
@@ -397,6 +405,7 @@ export function MessagingWebRtcPilotCall({
             status.features.includes("messaging_webrtc_meet_sfu_embed_faz19") &&
             status.features.includes("messaging_webrtc_meet_native_rtc_faz20") &&
             status.features.includes("messaging_webrtc_meet_native_module_faz21") &&
+            status.features.includes("messaging_webrtc_meet_rn_webrtc_pilot_faz22") &&
             status.webrtc?.signaling === "redis_relay",
         );
       })
@@ -484,6 +493,49 @@ export function MessagingWebRtcPilotCall({
       })
       .catch(() => setNativeMediaModuleHint(null));
   }, [accessToken, enabled]);
+
+  useEffect(() => {
+    if (
+      !enabled ||
+      !threadId ||
+      !accessToken ||
+      !isNativeMeshPilotDeepLinkActive()
+    ) {
+      return;
+    }
+    void createMessagingWebRtcNativeMeshPilotSession(accessToken, threadId)
+      .then((session) => {
+        setNativeMeshPilotSession(session);
+        setStatusLine(session.hintTr);
+      })
+      .catch((err) => {
+        setError(
+          err instanceof Error ? err.message : "Native mesh pilot başlatılamadı.",
+        );
+      });
+  }, [accessToken, enabled, threadId]);
+
+  async function startNativeMeshPilotSession(): Promise<void> {
+    if (!threadId || nativeMeshPilotBusy) {
+      return;
+    }
+    setNativeMeshPilotBusy(true);
+    setError("");
+    try {
+      const session = await createMessagingWebRtcNativeMeshPilotSession(
+        accessToken,
+        threadId,
+      );
+      setNativeMeshPilotSession(session);
+      setStatusLine(session.hintTr);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Native mesh pilot başlatılamadı.",
+      );
+    } finally {
+      setNativeMeshPilotBusy(false);
+    }
+  }
 
   useEffect(() => {
     if (!enabled || !threadId || phase !== "idle") {
@@ -1545,7 +1597,7 @@ export function MessagingWebRtcPilotCall({
 
   return (
     <div
-      className="messaging-webrtc-pilot messaging-webrtc-meet-faz1 messaging-webrtc-meet-faz2 messaging-webrtc-meet-faz3 messaging-webrtc-meet-faz4 messaging-webrtc-meet-faz5 messaging-webrtc-meet-faz6 messaging-webrtc-meet-faz7 messaging-webrtc-meet-faz9 messaging-webrtc-meet-faz10 messaging-webrtc-meet-faz15 messaging-webrtc-meet-faz16 messaging-webrtc-meet-faz17 messaging-webrtc-meet-faz18 messaging-webrtc-meet-faz19 messaging-webrtc-meet-faz20 messaging-webrtc-meet-faz21"
+      className="messaging-webrtc-pilot messaging-webrtc-meet-faz1 messaging-webrtc-meet-faz2 messaging-webrtc-meet-faz3 messaging-webrtc-meet-faz4 messaging-webrtc-meet-faz5 messaging-webrtc-meet-faz6 messaging-webrtc-meet-faz7 messaging-webrtc-meet-faz9 messaging-webrtc-meet-faz10 messaging-webrtc-meet-faz15 messaging-webrtc-meet-faz16 messaging-webrtc-meet-faz17 messaging-webrtc-meet-faz18 messaging-webrtc-meet-faz19 messaging-webrtc-meet-faz20 messaging-webrtc-meet-faz21 messaging-webrtc-meet-faz22"
       role="region"
       aria-label={`Görüntülü ve sesli görüşme (en fazla ${meetCapacity?.effectiveMaxParticipants ?? MAX_PARTICIPANTS} kişi)`}
     >
@@ -1644,6 +1696,24 @@ export function MessagingWebRtcPilotCall({
         <p className="messaging-webrtc-faz21-native-module" role="status">
           {nativeMediaModuleHint}
         </p>
+      ) : null}
+      {nativeMediaModuleHint?.includes("dev client") && threadId ? (
+        <div className="messaging-webrtc-faz22-native-pilot">
+          <button
+            type="button"
+            className="messaging-webrtc-pilot-btn"
+            disabled={nativeMeshPilotBusy}
+            onClick={() => void startNativeMeshPilotSession()}
+          >
+            {nativeMeshPilotBusy ? "Native pilot…" : "Native mesh pilot (RN)"}
+          </button>
+          {nativeMeshPilotSession ? (
+            <span role="status">
+              Pilot {nativeMeshPilotSession.pilotSessionId.slice(0, 8)}… · token{" "}
+              {nativeMeshPilotSession.joinToken.slice(0, 8)}…
+            </span>
+          ) : null}
+        </div>
       ) : null}
       {isLikelyMobileBrowser() && (phase === "idle" || phase === "ended") ? (
         <p className="messaging-webrtc-faz10-mobile-hint" role="note">

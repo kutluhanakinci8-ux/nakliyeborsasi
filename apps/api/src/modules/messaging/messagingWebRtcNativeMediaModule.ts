@@ -7,6 +7,11 @@ export type MessagingWebRtcNativeMediaModuleSnapshot = {
   rnWebRtcStatus: RnWebRtcModuleStatus;
   sfuMediaMode: NativeSfuMediaMode;
   capabilitiesPath: string;
+  nativeMeshPilot: {
+    enabled: boolean;
+    pathTemplate: string;
+    requiresRnWebRtc: true;
+  };
   hintTr: string;
 };
 
@@ -16,7 +21,12 @@ export function defaultNativeMediaModuleSnapshot(): MessagingWebRtcNativeMediaMo
     rnWebRtcStatus: "absent",
     sfuMediaMode: "webview_embed",
     capabilitiesPath: "/messaging/webrtc/native-bridge/capabilities",
+    nativeMeshPilot: {
+      enabled: true,
+      pathTemplate: "/messaging/webrtc/threads/{threadId}/native-pilot/session",
+      requiresRnWebRtc: true,
+    },
     hintTr:
-      "Expo handoff aktif; react-native-webrtc dev client build ile Faz 22+ native medya.",
+      "Native mesh pilot (Faz 22): linked_dev_client capabilities + thread oturum API.",
   };
 }
