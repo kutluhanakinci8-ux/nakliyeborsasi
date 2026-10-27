@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import type Redis from "ioredis";
 import type { AuthenticatedUserContext } from "@nakliyeborsasi/core";
 import { RedisConnectionProvider } from "../../infrastructure/redis/RedisConnectionProvider";
@@ -156,6 +156,44 @@ export class MessagingWebRtcMeetRecordingArchiveService {
       .expire(this.listKey(threadId), META_TTL_SECONDS)
       .exec();
     return meta;
+  }
+
+  public async exportManifest(
+    user: AuthenticatedUserContext,
+    threadId: string,
+  ): Promise<{
+    threadId: string;
+    exportedAt: string;
+    archiveCount: number;
+    archives: Array<
+      WebRtcMeetRecordingArchiveMeta & { contentSha256?: string }
+    >;
+  }> {
+    const archives = await this.listArchives(user, threadId);
+    const enriched: Array<
+      WebRtcMeetRecordingArchiveMeta & { contentSha256?: string }
+    > = [];
+    for (const meta of archives) {
+      if (!meta.hasBlob) {
+        enriched.push(meta);
+        continue;
+      }
+      try {
+        const { base64 } = await this.fetchArchiveBlob(user, threadId, meta.id);
+        const sha = createHash("sha256")
+          .update(Buffer.from(base64, "base64"))
+          .digest("hex");
+        enriched.push({ ...meta, contentSha256: sha });
+      } catch {
+        enriched.push(meta);
+      }
+    }
+    return {
+      threadId,
+      exportedAt: new Date().toISOString(),
+      archiveCount: enriched.length,
+      archives: enriched,
+    };
   }
 
   public async fetchArchiveBlob(

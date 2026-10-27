@@ -10,6 +10,6 @@
 
 Status feature: `messaging_webrtc_meet_native_shell_faz13`
 
-## Sonraki (Faz 14+)
+## Sonraki
 
-SFU, yerel RN WebRTC — `WEBRTC-MEET-ROADMAP.md`.
+Faz 14 eDiscovery — `WEBRTC-MEET-FAZ14.md`, `WEBRTC-MEET-ROADMAP.md`.

@@ -8,6 +8,12 @@ import { EmailOutboxService } from "../notification/EmailOutboxService";
 import { EmailDeliveryHealthService } from "../notification/EmailDeliveryHealthService";
 import { buildMessagingAttachmentOpsSnapshot } from "./messagingAttachmentOpsSnapshot";
 import { MessagingAttachmentS3ProbeService } from "./MessagingAttachmentS3ProbeService";
+import { MESSAGING_WEBRTC_MAX_PARTICIPANTS } from "./messagingWebRtcConstants";
+import { summarizeMessagingWebRtcIceCaps } from "./messagingWebRtcIceConfig";
+import {
+  meetRecordingMaxBytes,
+  meetRecordingS3Enabled,
+} from "./messagingWebRtcMeetRecordingS3";
 
 @Controller("platform-admin/communications-ops")
 @UseGuards(JwtAuthenticationGuard, PlatformAdminGuard)
@@ -53,6 +59,12 @@ export class PlatformCommunicationsOpsController {
         ReturnType<MessagingAttachmentS3ProbeService["probe"]>
       >;
     };
+    webrtcMeet: {
+      meshMaxParticipants: number;
+      sfuMode: "disabled";
+      iceCaps: ReturnType<typeof summarizeMessagingWebRtcIceCaps>;
+      recordingArchive: { s3Enabled: boolean; maxBytes: number };
+    };
   }> {
     const mailHealth = this.emailDeliveryHealthService.getSnapshot();
     const p95Max = Number.parseInt(
@@ -87,6 +99,15 @@ export class PlatformCommunicationsOpsController {
       messagingAttachments: {
         ops: buildMessagingAttachmentOpsSnapshot(),
         s3Probe: await this.messagingAttachmentS3ProbeService.probe(),
+      },
+      webrtcMeet: {
+        meshMaxParticipants: MESSAGING_WEBRTC_MAX_PARTICIPANTS,
+        sfuMode: "disabled",
+        iceCaps: summarizeMessagingWebRtcIceCaps(),
+        recordingArchive: {
+          s3Enabled: meetRecordingS3Enabled(),
+          maxBytes: meetRecordingMaxBytes(),
+        },
       },
     };
   }

@@ -11,10 +11,49 @@ export type WebRtcMeetRecordingArchiveMeta = {
   createdByUserId: string;
   createdAt: string;
   consentAcknowledged?: boolean;
+  contentSha256?: string;
 };
 
 function apiBase(): string {
   return PublicApiConfiguration.resolveBaseUrl().replace(/\/$/, "");
+}
+
+export type WebRtcMeetRecordingExportManifest = {
+  threadId: string;
+  exportedAt: string;
+  archiveCount: number;
+  archives: WebRtcMeetRecordingArchiveMeta[];
+};
+
+export async function fetchMessagingWebRtcRecordingExportManifest(
+  accessToken: string,
+  threadId: string,
+): Promise<WebRtcMeetRecordingExportManifest> {
+  const response = await fetch(
+    `${apiBase()}/messaging/webrtc/threads/${encodeURIComponent(threadId)}/recordings/export`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  );
+  if (!response.ok) {
+    throw new Error("webrtc recordings export");
+  }
+  const body = (await response.json()) as {
+    manifest: WebRtcMeetRecordingExportManifest;
+  };
+  return body.manifest;
+}
+
+export function downloadMeetRecordingExportJson(
+  manifest: WebRtcMeetRecordingExportManifest,
+): void {
+  const blob = new Blob([JSON.stringify(manifest, null, 2)], {
+    type: "application/json",
+  });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = `lerta-meet-archives-${manifest.threadId.slice(0, 8)}.json`;
+  anchor.click();
+  URL.revokeObjectURL(url);
 }
 
 export async function fetchMessagingWebRtcRecordingArchives(
