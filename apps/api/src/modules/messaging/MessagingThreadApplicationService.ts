@@ -81,6 +81,18 @@ export const MESSAGING_EXTERNAL_INBOUND_SENDER_USER_ID =
   "00000000-0000-0000-0000-000000000001";
 const EXTERNAL_INBOUND_SENDER_USER_ID = MESSAGING_EXTERNAL_INBOUND_SENDER_USER_ID;
 
+function attachmentsIncludeVoiceNote(
+  attachments: MessageAttachmentMeta[] | null | undefined,
+): boolean {
+  return Boolean(
+    attachments?.some(
+      (row) =>
+        row.kind === "voice_note" ||
+        row.contentType.toLowerCase().startsWith("audio/"),
+    ),
+  );
+}
+
 export type MessagingChannelDeliveryResult = {
   status: "ok" | "failed";
   errorMessage: string | null;
@@ -687,6 +699,7 @@ export class MessagingThreadApplicationService {
         ? trimmed.slice(0, 280)
         : stored?.map((item) => item.filename).join(", ").slice(0, 280) ??
           "Ek dosya";
+    const hasVoiceNote = attachmentsIncludeVoiceNote(stored);
     if (messageKind !== "internal") {
       void this.operationalNotificationService.afterMessagingMessageSent({
         threadId: thread.id,
@@ -713,6 +726,7 @@ export class MessagingThreadApplicationService {
           senderCompany?.legalName?.trim() || authenticatedUser.companyId,
         bodyPreview: preview,
         freightListingId: thread.freightListingId,
+        hasVoiceNote,
       });
     }
     if (mentionUserIds.length > 0) {
@@ -1703,6 +1717,7 @@ export class MessagingThreadApplicationService {
         ? trimmed.slice(0, 280)
         : stored?.map((item) => item.filename).join(", ").slice(0, 280) ??
           "Ek dosya";
+    const hasVoiceNote = attachmentsIncludeVoiceNote(stored);
     void this.messagingWebPushService.notifyNewChatMessage({
       companyId: thread.companyAId,
       threadId: thread.id,
@@ -1716,6 +1731,7 @@ export class MessagingThreadApplicationService {
       senderCompanyName: params.senderDisplayName,
       bodyPreview: preview,
       freightListingId: thread.freightListingId,
+      hasVoiceNote,
     });
     void this.fanOutRealtime(thread, {
       type: "message.created",

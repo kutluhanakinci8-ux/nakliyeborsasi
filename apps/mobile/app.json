@@ -8,11 +8,23 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.lerta.logistics"
+      "bundleIdentifier": "com.lerta.logistics",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "Sesli mesaj kaydı için mikrofon erişimi gerekir."
+      }
     },
     "android": {
-      "package": "com.lerta.logistics"
+      "package": "com.lerta.logistics",
+      "permissions": ["RECORD_AUDIO"]
     },
-    "plugins": ["expo-notifications"]
+    "plugins": [
+      "expo-notifications",
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Sesli mesaj kaydı için mikrofon erişimi gerekir."
+        }
+      ]
+    ]
   }
 }

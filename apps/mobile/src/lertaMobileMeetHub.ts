@@ -17,6 +17,7 @@ export function buildMeetHubUrl(params?: {
   sfuPilot?: boolean;
   nativeRtc?: boolean;
   nativePilot?: boolean;
+  voiceNote?: boolean;
 }): string {
   const query = new URLSearchParams({ tab: "chat" });
   if (params?.threadId) {
@@ -34,7 +35,18 @@ export function buildMeetHubUrl(params?: {
   if (params?.nativePilot) {
     query.set("nativePilot", "1");
   }
+  if (params?.voiceNote) {
+    query.set("voiceNote", "1");
+  }
   return `${resolveLertaWebBase()}/messaging?${query.toString()}`;
+}
+
+export async function openMessagingHubForVoice(params?: {
+  threadId?: string;
+}): Promise<void> {
+  await WebBrowser.openBrowserAsync(
+    buildMeetHubUrl({ threadId: params?.threadId, voiceNote: true }),
+  );
 }
 
 export async function openMeetMessagingHub(params?: {
@@ -74,8 +86,15 @@ export function parseMeetDeepLinkFromUrl(
     const meetInvite = parsed.queryParams?.meet === "1";
     const sfuPilot = parsed.queryParams?.sfuPilot === "1";
     const nativeRtc = parsed.queryParams?.nativeRtc === "1";
-    return { threadId, meetInvite, sfuPilot, nativeRtc };
+    const voiceNote = parsed.queryParams?.voiceNote === "1";
+    return { threadId, meetInvite, sfuPilot, nativeRtc, voiceNote };
   } catch {
-    return { threadId: null, meetInvite: false, sfuPilot: false, nativeRtc: false };
+    return {
+      threadId: null,
+      meetInvite: false,
+      sfuPilot: false,
+      nativeRtc: false,
+      voiceNote: false,
+    };
   }
 }

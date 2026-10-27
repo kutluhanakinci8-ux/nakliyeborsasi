@@ -63,6 +63,7 @@ export class MessagingExpoPushService {
     senderCompanyName: string;
     bodyPreview: string;
     freightListingId: string | null;
+    hasVoiceNote?: boolean;
   }): Promise<void> {
     const rows = await this.tokenRepository.find({
       where: { companyId: params.companyId },
@@ -77,12 +78,13 @@ export class MessagingExpoPushService {
     const listingQuery = params.freightListingId
       ? `&listingId=${encodeURIComponent(params.freightListingId)}`
       : "";
-    const url = `${webBase.replace(/\/$/, "")}/messaging?tab=chat&threadId=${encodeURIComponent(params.threadId)}${listingQuery}`;
-    const title = "Yeni firma mesajı";
-    const body = `${params.senderCompanyName}: ${params.bodyPreview}`.slice(
-      0,
-      180,
-    );
+    const voiceQuery = params.hasVoiceNote ? "&voiceNote=1" : "";
+    const url = `${webBase.replace(/\/$/, "")}/messaging?tab=chat&threadId=${encodeURIComponent(params.threadId)}${listingQuery}${voiceQuery}`;
+    const title = params.hasVoiceNote ? "Sesli mesaj" : "Yeni firma mesajı";
+    const preview = params.hasVoiceNote
+      ? "🎤 Sesli mesaj"
+      : params.bodyPreview;
+    const body = `${params.senderCompanyName}: ${preview}`.slice(0, 180);
 
     const messages = [];
     const rowByToken = new Map<string, MessagingExpoPushTokenEntity>();
