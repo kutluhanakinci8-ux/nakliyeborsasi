@@ -768,12 +768,36 @@ export class MessagingThreadApplicationService {
       thread.threadKind === "external_social" &&
       (trimmed.length > 0 || (stored && stored.length > 0))
     ) {
+      const inlineOutboundAttachments: Array<{
+        buffer: Buffer;
+        contentType: string;
+        filename: string;
+      }> = [];
+      if (stored?.length) {
+        for (const meta of stored) {
+          try {
+            inlineOutboundAttachments.push(
+              await this.readMessageAttachmentFile(
+                thread.id,
+                saved.id,
+                meta.index,
+              ),
+            );
+          } catch {
+            // tryDispatchOutbound ses eki için yeniden dener veya hata kaydeder
+          }
+        }
+      }
       const outbound =
         await this.socialHubOutboundMessagingService.tryDispatchOutbound({
           companyId: authenticatedUser.companyId,
           messageThreadId: thread.id,
           messageId: saved.id,
           bodyText: trimmed,
+          inlineAttachments:
+            inlineOutboundAttachments.length > 0
+              ? inlineOutboundAttachments
+              : undefined,
         });
       if (outbound.attempted) {
         channelDelivery = {

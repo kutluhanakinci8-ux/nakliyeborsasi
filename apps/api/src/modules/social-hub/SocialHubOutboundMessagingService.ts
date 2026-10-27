@@ -51,6 +51,12 @@ export class SocialHubOutboundMessagingService {
     messageThreadId: string;
     messageId: string | null;
     bodyText: string;
+    /** Gönderim anında disk/S3 okuma (sesli mesaj köprüsü). */
+    inlineAttachments?: Array<{
+      buffer: Buffer;
+      contentType: string;
+      filename: string;
+    }>;
   }): Promise<SocialOutboundDispatchResult> {
     const trimmed = params.bodyText.trim();
     const link = await this.linkRepository.findOne({
@@ -64,14 +70,16 @@ export class SocialHubOutboundMessagingService {
       return { attempted: false, ok: true, message: "" };
     }
     const channelAttachments =
-      params.messageId &&
-      (link.platformCode === SocialPlatformCode.Telegram ||
-        link.platformCode === SocialPlatformCode.WhatsAppCloud)
-        ? await this.loadOutboundMessageAttachments(
-            params.messageThreadId,
-            params.messageId,
-          )
-        : [];
+      params.inlineAttachments && params.inlineAttachments.length > 0
+        ? params.inlineAttachments
+        : params.messageId &&
+            (link.platformCode === SocialPlatformCode.Telegram ||
+              link.platformCode === SocialPlatformCode.WhatsAppCloud)
+          ? await this.loadOutboundMessageAttachments(
+              params.messageThreadId,
+              params.messageId,
+            )
+          : [];
     if (!trimmed && channelAttachments.length === 0) {
       if (
         params.messageId &&
@@ -142,55 +150,14 @@ export class SocialHubOutboundMessagingService {
         params.companyId,
         platformCode,
       );
-      const whatsAppAudioAttachment =
-        platformCode === SocialPlatformCode.WhatsAppCloud
-          ? channelAttachments.find((row) =>
-              row.contentType.toLowerCase().startsWith("audio/"),
-            )
-          : undefined;
-      const result =
-        platformCode === "TIKTOK"
-          ? await this.dispatchTikTokOutbound({
-              companyId: params.companyId,
-              accessToken: token,
-              externalThreadId: link.externalThreadId,
-              bodyText: trimmed,
-            })
-          : platformCode === "YOUTUBE"
-            ? await this.dispatchYouTubeOutbound({
-                companyId: params.companyId,
-                accessToken: token,
-                externalThreadId: link.externalThreadId,
-                bodyText: trimmed,
-              })
-            : platformCode === "X"
-              ? await this.dispatchXOutbound({
-                  accessToken: token,
-                  externalThreadId: link.externalThreadId,
-                  bodyText: trimmed,
-                })
-              : platformCode === SocialPlatformCode.Telegram
-                ? await this.dispatchTelegramOutbound({
-                    accessToken: token,
-                    externalThreadId: link.externalThreadId,
-                    bodyText: trimmed,
-                    attachments: channelAttachments,
-                  })
-                : whatsAppAudioAttachment
-                  ? await this.dispatchWhatsAppAudioOutbound({
-                      companyId: params.companyId,
-                      accessToken: token,
-                      recipientExternalId: link.externalThreadId,
-                      bodyText: trimmed,
-                      attachment: whatsAppAudioAttachment,
-                    })
-            : await this.metaGraphService.sendChannelTextMessage({
-                companyId: params.companyId,
-                platformCode: platformCode as SocialPlatformCode,
-                accessToken: token,
-                recipientExternalId: link.externalThreadId,
-                bodyText: trimmed,
-              });
+      const result = await this.routePlatformOutbound({
+        platformCode,
+        companyId: params.companyId,
+        accessToken: token,
+        externalThreadId: link.externalThreadId,
+        bodyText: trimmed,
+        channelAttachments,
+      });
       if (!result.ok) {
         await this.recordOutbound({
           link,
@@ -308,6 +275,87 @@ export class SocialHubOutboundMessagingService {
       message: send.message,
       externalMessageId: send.externalMessageId,
     };
+  }
+
+  private async routePlatformOutbound(params: {
+    platformCode: string;
+    companyId: string;
+    accessToken: string;
+    externalThreadId: string;
+    bodyText: string;
+    channelAttachments: Array<{
+      buffer: Buffer;
+      contentType: string;
+      filename: string;
+    }>;
+  }): Promise<{ ok: boolean; message: string; externalMessageId?: string }> {
+    const trimmed = params.bodyText.trim();
+    if (params.platformCode === "TIKTOK") {
+      return this.dispatchTikTokOutbound({
+        companyId: params.companyId,
+        accessToken: params.accessToken,
+        externalThreadId: params.externalThreadId,
+        bodyText: trimmed,
+      });
+    }
+    if (params.platformCode === "YOUTUBE") {
+      return this.dispatchYouTubeOutbound({
+        companyId: params.companyId,
+        accessToken: params.accessToken,
+        externalThreadId: params.externalThreadId,
+        bodyText: trimmed,
+      });
+    }
+    if (params.platformCode === "X") {
+      return this.dispatchXOutbound({
+        accessToken: params.accessToken,
+        externalThreadId: params.externalThreadId,
+        bodyText: trimmed,
+      });
+    }
+    if (params.platformCode === SocialPlatformCode.Telegram) {
+      return this.dispatchTelegramOutbound({
+        accessToken: params.accessToken,
+        externalThreadId: params.externalThreadId,
+        bodyText: trimmed,
+        attachments: params.channelAttachments,
+      });
+    }
+    if (params.platformCode === SocialPlatformCode.WhatsAppCloud) {
+      const audio = params.channelAttachments.find((row) =>
+        row.contentType.toLowerCase().startsWith("audio/"),
+      );
+      if (audio) {
+        return this.dispatchWhatsAppAudioOutbound({
+          companyId: params.companyId,
+          accessToken: params.accessToken,
+          recipientExternalId: params.externalThreadId,
+          bodyText: trimmed,
+          attachment: audio,
+        });
+      }
+      if (!trimmed) {
+        return {
+          ok: false,
+          message:
+            "WhatsApp için metin veya ses eki gerekli; boş gönderim yapılmadı.",
+        };
+      }
+      return this.metaGraphService.sendChannelTextMessage({
+        companyId: params.companyId,
+        platformCode: SocialPlatformCode.WhatsAppCloud,
+        accessToken: params.accessToken,
+        recipientExternalId: params.externalThreadId,
+        bodyText: trimmed,
+      });
+    }
+    return this.metaGraphService.sendChannelTextMessage({
+      companyId: params.companyId,
+      platformCode: params.platformCode as SocialPlatformCode,
+      accessToken: params.accessToken,
+      recipientExternalId: params.externalThreadId,
+      bodyText: trimmed,
+    });
   }
 
   private async dispatchWhatsAppAudioOutbound(params: {
