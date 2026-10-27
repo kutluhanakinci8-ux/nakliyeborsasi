@@ -71,6 +71,12 @@ fi
 if [[ -x scripts/apply-messaging-prod-ops-env.sh ]]; then
   bash scripts/apply-messaging-prod-ops-env.sh "$INSTALL_DIR" || true
 fi
+if [[ -x scripts/setup-messaging-stt-local-vps.sh ]]; then
+  if grep -q '^MESSAGING_VOICE_STT_LOCAL_ENABLED=1' "${INSTALL_DIR}/.env" 2>/dev/null; then
+    bash scripts/setup-messaging-stt-local-vps.sh "${INSTALL_DIR}" || true
+    bash scripts/apply-messaging-voice-stt-local-vps-env.sh || true
+  fi
+fi
 if [[ -f scripts/verify-messaging-attachment-s3.sh ]]; then
   bash scripts/verify-messaging-attachment-s3.sh "$INSTALL_DIR" || {
     echo "WARN: messaging attachment S3 verify failed (bucket/credentials?)" >&2
