@@ -17,6 +17,7 @@ import {
   type AccountNotificationPreferences,
 } from "../../../../lib/AccountNotificationPreferencesApi";
 import { MessagingApiClient } from "../../../../lib/MessagingApiClient";
+import { MessagingAiProcessingConsentCard } from "../../../../components/messaging/MessagingAiProcessingConsentCard";
 
 type UserProfile = {
   fullName: string;
@@ -562,6 +563,30 @@ export function ProfilePageClient() {
                   {hubDefaultMessage}
                 </p>
               ) : null}
+            </section>
+          ) : null}
+
+          {accessToken ? (
+            <section
+              id="profile-ai-consent"
+              className="account-profile-panel module-panel module-panel--elevated account-profile-section"
+            >
+              <header className="account-profile-panel-head">
+                <div>
+                  <p className="account-profile-panel-kicker">02c · Gizlilik</p>
+                  <h2 className="account-profile-panel-title">
+                    AI ve ses işleme rızası
+                  </h2>
+                  <p className="account-profile-panel-lead">
+                    Firma sohbetinde ses→metin ve AI özet için. Posta webmail
+                    gizlilik ayarı ile aynı hesap tercihidir.
+                  </p>
+                </div>
+              </header>
+              <MessagingAiProcessingConsentCard
+                accessToken={accessToken}
+                variant="profile"
+              />
             </section>
           ) : null}
 

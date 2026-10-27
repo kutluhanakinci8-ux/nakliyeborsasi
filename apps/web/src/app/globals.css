@@ -18112,6 +18112,85 @@ button.btn-secondary {
   min-height: 280px;
 }
 
+.messaging-ai-consent {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.75rem 0.85rem;
+  background: #f8fafc;
+}
+
+.messaging-ai-consent--compact {
+  margin: 0.5rem 0.75rem 0;
+}
+
+.messaging-ai-consent--profile {
+  border: none;
+  padding: 0;
+  background: transparent;
+}
+
+.messaging-ai-consent-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.messaging-ai-consent-title {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.messaging-ai-consent-pill {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.messaging-ai-consent-pill--on {
+  background: #ccfbf1;
+  color: #0f766e;
+}
+
+.messaging-ai-consent-lead {
+  margin: 0 0 0.5rem;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: #475569;
+}
+
+.messaging-ai-consent-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+}
+
+.messaging-ai-consent-toggle input {
+  margin-top: 0.15rem;
+}
+
+.messaging-ai-consent-status {
+  margin: 0.35rem 0 0;
+  font-size: 0.72rem;
+  color: #0f766e;
+}
+
+.messaging-ai-consent-hint {
+  margin: 0.35rem 0 0;
+  font-size: 0.72rem;
+  color: #b45309;
+}
+
 .messaging-chat-notifications-panel {
   padding: 0.85rem 1rem;
   border-radius: 10px;

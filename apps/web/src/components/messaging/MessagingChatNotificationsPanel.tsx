@@ -8,6 +8,7 @@ import {
 } from "../../lib/AccountNotificationPreferencesApi";
 import { ensureMessagingWebPush } from "../../lib/messagingPush";
 import { fetchMessagingPublicStatus } from "../../lib/messagingPublicStatus";
+import { MessagingAiProcessingConsentCard } from "./MessagingAiProcessingConsentCard";
 
 type Props = {
   accessToken: string;
@@ -143,6 +144,10 @@ export function MessagingChatNotificationsPanel({ accessToken }: Props) {
         {pushState ? (
           <p className="module-hint" role="status">{pushStatusLabel(pushState)}</p>
         ) : null}
+      </div>
+
+      <div className="messaging-chat-notifications-block">
+        <MessagingAiProcessingConsentCard accessToken={accessToken} variant="panel" />
       </div>
 
       <div className="messaging-chat-notifications-block">
