@@ -66,6 +66,7 @@ export function MessagingConversationPanel({
     counterpartyTrust,
     acceptOfferBusy,
     isBusy,
+    voiceNoteSendBusy,
     acceptListingFixedPrice,
     contextPinCollapsed,
     setContextPinCollapsed,
@@ -453,6 +454,11 @@ export function MessagingConversationPanel({
                 <span>İç notlar</span>
               </button>
             </div>
+            {voiceNoteSendBusy ? (
+              <p className="chat-voice-send-status" role="status">
+                Sesli mesaj kaydediliyor… (WhatsApp köprüsü arka planda tamamlanır)
+              </p>
+            ) : null}
             <div className="chat-messages" data-chat-bg={chatBackgroundId}>
               {displayedMessages.length === 0 ? (
                 <EmptyState
@@ -907,7 +913,11 @@ export function MessagingConversationPanel({
                   <MessagingVoiceNoteComposeButton
                     enabled={voiceNoteEnabled && !internalNote}
                     maxDurationMs={voiceNoteMaxDurationMs}
-                    disabled={!activeThreadId || Boolean(threadLegalHold)}
+                    disabled={
+                      !activeThreadId ||
+                      Boolean(threadLegalHold) ||
+                      voiceNoteSendBusy
+                    }
                     highlightFromDeepLink={highlightVoiceNoteMic}
                     onDeepLinkHighlightConsumed={clearVoiceNoteDeepLinkFocus}
                     onRecorded={(attachment) =>

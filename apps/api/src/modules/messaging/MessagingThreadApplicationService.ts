@@ -788,22 +788,34 @@ export class MessagingThreadApplicationService {
           }
         }
       }
-      const outbound =
-        await this.socialHubOutboundMessagingService.tryDispatchOutbound({
-          companyId: authenticatedUser.companyId,
-          messageThreadId: thread.id,
-          messageId: saved.id,
-          bodyText: trimmed,
-          inlineAttachments:
-            inlineOutboundAttachments.length > 0
-              ? inlineOutboundAttachments
-              : undefined,
-        });
-      if (outbound.attempted) {
-        channelDelivery = {
-          status: outbound.ok ? "ok" : "failed",
-          errorMessage: outbound.ok ? null : outbound.message,
-        };
+      const dispatchParams = {
+        companyId: authenticatedUser.companyId,
+        messageThreadId: thread.id,
+        messageId: saved.id,
+        bodyText: trimmed,
+        inlineAttachments:
+          inlineOutboundAttachments.length > 0
+            ? inlineOutboundAttachments
+            : undefined,
+      };
+      const asyncVoiceChannelDispatch = Boolean(
+        stored?.some((row) => row.kind === "voice_note"),
+      );
+      if (asyncVoiceChannelDispatch) {
+        void this.socialHubOutboundMessagingService
+          .tryDispatchOutbound(dispatchParams)
+          .catch(() => undefined);
+      } else {
+        const outbound =
+          await this.socialHubOutboundMessagingService.tryDispatchOutbound(
+            dispatchParams,
+          );
+        if (outbound.attempted) {
+          channelDelivery = {
+            status: outbound.ok ? "ok" : "failed",
+            errorMessage: outbound.ok ? null : outbound.message,
+          };
+        }
       }
     }
     if (clientContext) {
