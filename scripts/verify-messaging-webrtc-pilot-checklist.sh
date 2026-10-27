@@ -23,11 +23,11 @@ API_BASE="${API_BASE}" bash "${ROOT}/scripts/verify-messaging-webrtc-meet-faz6-g
 cat <<'TXT'
 
 Manuel (aynı thread, en fazla 3 katılımcı):
-  1) Hub → «Görüntülü görüşme (max 3)» → birinci katılımcı
-  2) İkinci/üçüncü katılımcı aynı düğme veya «Gelen aramayı kabul et»
-  3) Ses + video; NAT sorununda TURN env güncelle
-  4) 4. kişi → API «oda dolu» (409)
-  5) Kapat → oda leave + polling durur
+  1) Sesli / görüntülü ara → precall → bağlan
+  2) 2.–3. katılımcı: gelen arama veya aynı thread join
+  3) Ekran paylaşımı, tepki, el kaldır, kayıt (onay kutusu), planlı görüşme
+  4) 4. kişi → 409; bitir → leave + dahili özet
+  5) Arşiv listesi → indir (varsa blob)
 
 TXT
 echo "verify-messaging-webrtc-pilot-checklist: PASS"
