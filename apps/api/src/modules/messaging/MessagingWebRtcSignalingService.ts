@@ -14,6 +14,7 @@ import {
   MESSAGING_WEBRTC_MAX_PARTICIPANTS,
   MESSAGING_WEBRTC_ROOM_TTL_SECONDS,
 } from "./messagingWebRtcConstants";
+import { summarizeMessagingWebRtcMeetCapacity } from "./messagingWebRtcMeetCapacity";
 
 export type WebRtcSignalType =
   | "offer"
@@ -77,9 +78,8 @@ export class MessagingWebRtcSignalingService {
     if (!already) {
       const count = await this.redis.scard(roomKey);
       if (count >= MESSAGING_WEBRTC_MAX_PARTICIPANTS) {
-        throw new ConflictException(
-          `Görüntülü görüşme dolu (en fazla ${MESSAGING_WEBRTC_MAX_PARTICIPANTS} kişi).`,
-        );
+        const capacity = summarizeMessagingWebRtcMeetCapacity();
+        throw new ConflictException(capacity.overflowHintTr);
       }
     }
     await this.redis

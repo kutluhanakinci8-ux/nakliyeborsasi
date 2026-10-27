@@ -17,11 +17,23 @@ export type MessagingWebRtcTurnMonitor = {
   detail?: string;
 };
 
+export type MessagingWebRtcMeetCapacity = {
+  topology: "mesh_p2p";
+  meshMaxParticipants: number;
+  sfuMode: "disabled";
+  sfuMaxParticipants: number;
+  effectiveMaxParticipants: number;
+  overflowPolicy: "reject_join";
+  overflowHintTr: string;
+  sfuRoadmapHintTr: string;
+};
+
 export type MessagingWebRtcConfig = {
   iceServers: RTCIceServer[];
   signaling: "redis_relay" | "unavailable" | "planned";
   maxParticipants?: number;
   meshMode?: "p2p";
+  capacity?: MessagingWebRtcMeetCapacity;
   iceCaps?: MessagingWebRtcIceCaps;
   turnMonitor?: MessagingWebRtcTurnMonitor;
   maxRecordingArchiveBytes?: number;
@@ -72,6 +84,21 @@ export async function fetchMessagingWebRtcConfig(
   return (await response.json()) as MessagingWebRtcConfig;
 }
 
+export async function fetchMessagingWebRtcCapacityPolicy(
+  accessToken: string,
+): Promise<MessagingWebRtcMeetCapacity> {
+  const response = await fetch(`${apiBase()}/messaging/webrtc/capacity`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!response.ok) {
+    throw new Error("webrtc capacity");
+  }
+  const body = (await response.json()) as {
+    capacity: MessagingWebRtcMeetCapacity;
+  };
+  return body.capacity;
+}
+
 export async function joinMessagingWebRtcRoom(
   accessToken: string,
   threadId: string,
@@ -86,8 +113,11 @@ export async function joinMessagingWebRtcRoom(
   if (!response.ok) {
     const text = await response.text();
     if (response.status === 409) {
+      const trimmed = text.trim();
       throw new Error(
-        "Görüntülü görüşme dolu (en fazla 3 kişi). Bir katılımcı ayrıldığında tekrar deneyin.",
+        trimmed.length > 0 && trimmed.length < 400
+          ? trimmed
+          : "Görüntülü görüşme dolu. Bir katılımcı ayrıldığında tekrar deneyin.",
       );
     }
     throw new Error(text || "webrtc room join");

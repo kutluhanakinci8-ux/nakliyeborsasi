@@ -10,6 +10,6 @@
 
 Status feature: `messaging_webrtc_meet_ediscovery_faz14`
 
-## Sonraki (Faz 15+)
+## Sonraki
 
-SFU / &gt;3 kişi veya RN WebRTC native — `WEBRTC-MEET-ROADMAP.md`.
+Faz 15 kapasite — `WEBRTC-MEET-FAZ15.md`, `WEBRTC-MEET-ROADMAP.md`.
