@@ -23,6 +23,7 @@ import { summarizeMessagingWebRtcMeetProgramClosure } from "./messagingWebRtcMee
 import {
   messagingVoiceNoteFaz1Enabled,
   messagingVoiceNoteMaxDurationMs,
+  messagingVoiceNoteMobileFaz3Enabled,
   messagingVoiceNotePlayerFaz2Enabled,
 } from "./messagingVoiceNoteConfig";
 import {
@@ -90,6 +91,7 @@ export class MessagingModuleStatusController {
     voiceNote: {
       faz1Enabled: boolean;
       playerFaz2Enabled: boolean;
+      mobileFaz3Enabled: boolean;
       maxDurationMs: number;
       transcribeFaz1Enabled: boolean;
       transcribeAdvancedFaz2Enabled: boolean;
@@ -114,6 +116,7 @@ export class MessagingModuleStatusController {
     const sfuBackend = await probeMessagingWebRtcSfuBackend();
     const voiceNoteFaz1 = messagingVoiceNoteFaz1Enabled();
     const voiceNotePlayerFaz2 = messagingVoiceNotePlayerFaz2Enabled();
+    const voiceNoteMobileFaz3 = messagingVoiceNoteMobileFaz3Enabled();
     const messagingFeatures: string[] = [
         "company_threads",
         "freight_listing_threads",
@@ -214,6 +217,9 @@ export class MessagingModuleStatusController {
     if (voiceNotePlayerFaz2) {
       messagingFeatures.push("messaging_voice_note_player_faz2");
     }
+    if (voiceNoteMobileFaz3) {
+      messagingFeatures.push("messaging_voice_note_mobile_faz3");
+    }
     const voiceTranscribeFaz1 = messagingVoiceTranscribeFaz1Enabled();
     const voiceTranscribeFaz2 = messagingVoiceTranscribeAdvancedFaz2Enabled();
     const voiceTranscribeFaz3 = messagingVoiceTranscribeAutoFaz3Enabled();
@@ -290,6 +296,7 @@ export class MessagingModuleStatusController {
       voiceNote: {
         faz1Enabled: voiceNoteFaz1,
         playerFaz2Enabled: voiceNotePlayerFaz2,
+        mobileFaz3Enabled: voiceNoteMobileFaz3,
         maxDurationMs: messagingVoiceNoteMaxDurationMs(),
         transcribeFaz1Enabled: voiceTranscribeFaz1,
         transcribeAdvancedFaz2Enabled: voiceTranscribeFaz2,

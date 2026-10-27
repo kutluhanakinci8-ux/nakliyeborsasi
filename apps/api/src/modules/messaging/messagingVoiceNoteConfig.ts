@@ -12,6 +12,12 @@ export function messagingVoiceNotePlayerFaz2Enabled(
   return env.MESSAGING_VOICE_NOTE_PLAYER_FAZ2?.trim() === "1";
 }
 
+export function messagingVoiceNoteMobileFaz3Enabled(
+  env: NodeJS.ProcessEnv = process.env,
+): boolean {
+  return env.MESSAGING_VOICE_NOTE_MOBILE_FAZ3?.trim() === "1";
+}
+
 export function messagingVoiceNoteMaxDurationMs(
   env: NodeJS.ProcessEnv = process.env,
 ): number {

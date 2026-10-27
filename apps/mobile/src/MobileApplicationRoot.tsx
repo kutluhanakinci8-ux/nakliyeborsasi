@@ -24,8 +24,11 @@ import { fetchMobileAuthConfigFromApi } from "./lertaMobileAuthConfig";
 import type { RemoteMobileAuthConfig } from "./lertaMobileAuthConfig";
 import {
   openMeetMessagingHub,
+  openMessagingHubForVoice,
   parseMeetDeepLinkFromUrl,
 } from "./lertaMobileMeetHub";
+import { MessagingVoiceNoteMobilePanel } from "./MessagingVoiceNoteMobilePanel";
+import * as Notifications from "expo-notifications";
 import { openNativeRtcMeetHub } from "./lertaMobileNativeRtcBridge";
 import { NativeMeetMeshPilotPanel } from "./NativeMeetMeshPilotPanel";
 import * as Linking from "expo-linking";
@@ -46,6 +49,7 @@ export function MobileApplicationRoot(): React.ReactElement {
   const [loginBusy, setLoginBusy] = useState(false);
   const [remoteAuthConfig, setRemoteAuthConfig] =
     useState<RemoteMobileAuthConfig | null>(null);
+  const [voiceThreadId, setVoiceThreadId] = useState<string | null>(null);
 
   const loadSession = useCallback(async () => {
     const token = await resolveMobileAccessToken();
@@ -73,6 +77,15 @@ export function MobileApplicationRoot(): React.ReactElement {
         });
         return;
       }
+      if (parsed.voiceNote) {
+        setVoiceThreadId(parsed.threadId);
+        if (accessToken) {
+          void openMessagingHubForVoice({
+            threadId: parsed.threadId ?? undefined,
+          });
+        }
+        return;
+      }
       if (parsed.meetInvite) {
         void openMeetMessagingHub({ threadId: parsed.threadId ?? undefined });
       }
@@ -87,6 +100,31 @@ export function MobileApplicationRoot(): React.ReactElement {
     });
     return () => sub.remove();
   }, [accessToken]);
+
+  React.useEffect(() => {
+    const sub = Notifications.addNotificationResponseReceivedListener(
+      (response) => {
+        const url =
+          response.notification.request.content.data?.url ??
+          response.notification.request.content.data?.linkUrl;
+        if (typeof url === "string" && url.includes("voiceNote=1")) {
+          try {
+            const threadMatch = /threadId=([^&]+)/.exec(url);
+            const threadId = threadMatch?.[1]
+              ? decodeURIComponent(threadMatch[1])
+              : null;
+            setVoiceThreadId(threadId);
+            void openMessagingHubForVoice(
+              threadId ? { threadId } : undefined,
+            );
+          } catch {
+            void openMessagingHubForVoice();
+          }
+        }
+      },
+    );
+    return () => sub.remove();
+  }, []);
 
   const push = useLertaMobilePushRegistration(accessToken);
   const oauthConfigured =
@@ -226,6 +264,23 @@ export function MobileApplicationRoot(): React.ReactElement {
             </Text>
           </Pressable>
           <NativeMeetMeshPilotPanel accessToken={accessToken} />
+          <MessagingVoiceNoteMobilePanel
+            accessToken={accessToken}
+            initialThreadId={voiceThreadId}
+          />
+          <Pressable
+            style={styles.buttonSecondary}
+            onPress={() =>
+              void openMessagingHubForVoice({
+                threadId: voiceThreadId ?? undefined,
+              })
+            }
+            accessibilityRole="button"
+          >
+            <Text style={styles.buttonSecondaryText}>
+              Sohbet (sesli mesaj web)
+            </Text>
+          </Pressable>
           <Pressable
             style={styles.buttonSecondary}
             onPress={() => void handleLogout()}
