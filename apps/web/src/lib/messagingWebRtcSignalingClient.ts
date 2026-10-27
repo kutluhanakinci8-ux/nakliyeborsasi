@@ -26,6 +26,11 @@ export type MessagingWebRtcMeetCapacity = {
   overflowPolicy: "reject_join";
   overflowHintTr: string;
   sfuRoadmapHintTr: string;
+  sfuOverflowIntent?: {
+    enabled: boolean;
+    registerPathTemplate: string;
+    hintTr: string;
+  };
 };
 
 export type MessagingWebRtcConfig = {

@@ -14,6 +14,7 @@ import {
   meetRecordingS3Enabled,
 } from "./messagingWebRtcMeetRecordingS3";
 import { summarizeMessagingWebRtcMeetCapacity } from "./messagingWebRtcMeetCapacity";
+import { MessagingWebRtcMeetOverflowIntentService } from "./MessagingWebRtcMeetOverflowIntentService";
 
 @Controller("platform-admin/communications-ops")
 @UseGuards(JwtAuthenticationGuard, PlatformAdminGuard)
@@ -25,6 +26,7 @@ export class PlatformCommunicationsOpsController {
     private readonly emailOutboxService: EmailOutboxService,
     private readonly emailDeliveryHealthService: EmailDeliveryHealthService,
     private readonly messagingAttachmentS3ProbeService: MessagingAttachmentS3ProbeService,
+    private readonly meetOverflowIntentService: MessagingWebRtcMeetOverflowIntentService,
   ) {}
 
   @Get("snapshot")
@@ -61,6 +63,7 @@ export class PlatformCommunicationsOpsController {
     };
     webrtcMeet: {
       capacity: ReturnType<typeof summarizeMessagingWebRtcMeetCapacity>;
+      sfuOverflowIntentTotal: number;
       iceCaps: ReturnType<typeof summarizeMessagingWebRtcIceCaps>;
       recordingArchive: { s3Enabled: boolean; maxBytes: number };
     };
@@ -101,6 +104,8 @@ export class PlatformCommunicationsOpsController {
       },
       webrtcMeet: {
         capacity: summarizeMessagingWebRtcMeetCapacity(),
+        sfuOverflowIntentTotal:
+          await this.meetOverflowIntentService.countGlobalIntents(),
         iceCaps: summarizeMessagingWebRtcIceCaps(),
         recordingArchive: {
           s3Enabled: meetRecordingS3Enabled(),

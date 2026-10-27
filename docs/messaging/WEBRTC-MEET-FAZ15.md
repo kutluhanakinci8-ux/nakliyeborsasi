@@ -12,6 +12,6 @@
 
 Status feature: `messaging_webrtc_meet_capacity_faz15`
 
-## Sonraki (Faz 16+)
+## Sonraki
 
-Gerçek SFU veya RN native WebRTC — `WEBRTC-MEET-ROADMAP.md`.
+Faz 16 SFU beta talebi — `WEBRTC-MEET-FAZ16.md`, `WEBRTC-MEET-ROADMAP.md`.
