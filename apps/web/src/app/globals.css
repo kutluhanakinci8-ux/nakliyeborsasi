@@ -5436,6 +5436,38 @@ button.btn-secondary {
   color: #fff;
 }
 
+.chat-voice-transcript-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #a7f3d0;
+  background: #fff;
+  color: #047857;
+  border-radius: 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  cursor: pointer;
+  width: 100%;
+  justify-content: center;
+}
+
+.chat-voice-transcript {
+  margin: 6px 0 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: #0f172a;
+  width: 100%;
+}
+
+.chat-voice-transcript-label {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #64748b;
+  margin-bottom: 2px;
+}
+
 .chat-stamp-btn {
   font-size: 0.72rem;
   padding: 2px 8px;

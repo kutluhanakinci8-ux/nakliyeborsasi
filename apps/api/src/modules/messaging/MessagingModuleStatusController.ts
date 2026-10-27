@@ -25,6 +25,10 @@ import {
   messagingVoiceNoteMaxDurationMs,
   messagingVoiceNotePlayerFaz2Enabled,
 } from "./messagingVoiceNoteConfig";
+import {
+  messagingVoiceSttConfigured,
+  messagingVoiceTranscribeFaz1Enabled,
+} from "./messagingVoiceTranscribeConfig";
 import { MessagingWebRtcSignalingService } from "./MessagingWebRtcSignalingService";
 import type { WhatsappBridgeDeliverySnapshot } from "@nakliyeborsasi/core";
 
@@ -84,6 +88,8 @@ export class MessagingModuleStatusController {
       faz1Enabled: boolean;
       playerFaz2Enabled: boolean;
       maxDurationMs: number;
+      transcribeFaz1Enabled: boolean;
+      sttConfigured: boolean;
     };
   }> {
     const deepl = Boolean(
@@ -202,6 +208,10 @@ export class MessagingModuleStatusController {
     if (voiceNotePlayerFaz2) {
       messagingFeatures.push("messaging_voice_note_player_faz2");
     }
+    const voiceTranscribeFaz1 = messagingVoiceTranscribeFaz1Enabled();
+    if (voiceTranscribeFaz1) {
+      messagingFeatures.push("messaging_voice_transcribe_manual_faz1");
+    }
     return {
       module: "messaging",
       phase: "ga",
@@ -263,6 +273,8 @@ export class MessagingModuleStatusController {
         faz1Enabled: voiceNoteFaz1,
         playerFaz2Enabled: voiceNotePlayerFaz2,
         maxDurationMs: messagingVoiceNoteMaxDurationMs(),
+        transcribeFaz1Enabled: voiceTranscribeFaz1,
+        sttConfigured: messagingVoiceSttConfigured(),
       },
     };
   }

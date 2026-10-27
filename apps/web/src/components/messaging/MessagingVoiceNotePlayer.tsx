@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { MessagingApiClient } from "../../lib/MessagingApiClient";
+import type { ThreadMessageAttachmentRecord } from "../../lib/MessagingApiClient";
+import { MessagingVoiceNoteTranscript } from "./MessagingVoiceNoteTranscript";
 
 type Props = {
   accessToken: string;
@@ -9,8 +11,11 @@ type Props = {
   threadId: string;
   messageId: string;
   attachmentIndex: number;
+  attachment: ThreadMessageAttachmentRecord;
   durationMs?: number;
   advancedPlayer: boolean;
+  transcribeEnabled: boolean;
+  onTranscriptReady: () => void;
   onError: (message: string) => void;
 };
 
@@ -20,8 +25,11 @@ export function MessagingVoiceNotePlayer({
   threadId,
   messageId,
   attachmentIndex,
+  attachment,
   durationMs,
   advancedPlayer,
+  transcribeEnabled,
+  onTranscriptReady,
   onError,
 }: Props) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -104,6 +112,16 @@ export function MessagingVoiceNotePlayer({
           ))}
         </div>
       ) : null}
+      <MessagingVoiceNoteTranscript
+        accessToken={accessToken}
+        locale={locale}
+        threadId={threadId}
+        messageId={messageId}
+        attachment={attachment}
+        transcribeEnabled={transcribeEnabled}
+        onTranscriptReady={onTranscriptReady}
+        onError={onError}
+      />
     </div>
   );
 }

@@ -118,6 +118,7 @@ export function MessagingConversationPanel({
     messageInputRef,
     handleSendMessage,
     sendVoiceNoteAttachment,
+    loadMessages,
     setErrorMessage,
   } = chat;
   const [threadDeliveries, setThreadDeliveries] = useState<
@@ -126,6 +127,7 @@ export function MessagingConversationPanel({
   const [voiceNoteEnabled, setVoiceNoteEnabled] = useState(false);
   const [voiceNotePlayerEnabled, setVoiceNotePlayerEnabled] = useState(false);
   const [voiceNoteMaxDurationMs, setVoiceNoteMaxDurationMs] = useState(180_000);
+  const [voiceTranscribeEnabled, setVoiceTranscribeEnabled] = useState(false);
 
   useEffect(() => {
     void fetchMessagingPublicStatus()
@@ -139,10 +141,14 @@ export function MessagingConversationPanel({
         setVoiceNoteMaxDurationMs(
           status.voiceNote?.maxDurationMs ?? 180_000,
         );
+        setVoiceTranscribeEnabled(
+          status.features.includes("messaging_voice_transcribe_manual_faz1"),
+        );
       })
       .catch(() => {
         setVoiceNoteEnabled(false);
         setVoiceNotePlayerEnabled(false);
+        setVoiceTranscribeEnabled(false);
       });
   }, []);
 
@@ -555,6 +561,13 @@ export function MessagingConversationPanel({
                                     kind={attachment.kind}
                                     durationMs={attachment.durationMs}
                                     voiceNotePlayerEnabled={voiceNotePlayerEnabled}
+                                    voiceTranscribeEnabled={voiceTranscribeEnabled}
+                                    attachmentRecord={attachment}
+                                    onTranscriptReady={() => {
+                                      if (activeThreadId) {
+                                        void loadMessages(activeThreadId);
+                                      }
+                                    }}
                                     onError={(msg) => setErrorMessage(msg)}
                                   />
                                 ) : null}
