@@ -27,6 +27,8 @@ import {
 } from "./messagingVoiceNoteConfig";
 import {
   messagingVoiceSttConfigured,
+  messagingVoiceTranscribeAdvancedFaz2Enabled,
+  messagingVoiceTranscribeAutoFaz3Enabled,
   messagingVoiceTranscribeFaz1Enabled,
 } from "./messagingVoiceTranscribeConfig";
 import { MessagingWebRtcSignalingService } from "./MessagingWebRtcSignalingService";
@@ -89,6 +91,8 @@ export class MessagingModuleStatusController {
       playerFaz2Enabled: boolean;
       maxDurationMs: number;
       transcribeFaz1Enabled: boolean;
+      transcribeAdvancedFaz2Enabled: boolean;
+      transcribeAutoFaz3Enabled: boolean;
       sttConfigured: boolean;
     };
   }> {
@@ -209,8 +213,16 @@ export class MessagingModuleStatusController {
       messagingFeatures.push("messaging_voice_note_player_faz2");
     }
     const voiceTranscribeFaz1 = messagingVoiceTranscribeFaz1Enabled();
+    const voiceTranscribeFaz2 = messagingVoiceTranscribeAdvancedFaz2Enabled();
+    const voiceTranscribeFaz3 = messagingVoiceTranscribeAutoFaz3Enabled();
     if (voiceTranscribeFaz1) {
       messagingFeatures.push("messaging_voice_transcribe_manual_faz1");
+    }
+    if (voiceTranscribeFaz2) {
+      messagingFeatures.push("messaging_voice_transcribe_advanced_faz2");
+    }
+    if (voiceTranscribeFaz3) {
+      messagingFeatures.push("messaging_voice_transcribe_auto_faz3");
     }
     return {
       module: "messaging",
@@ -274,6 +286,8 @@ export class MessagingModuleStatusController {
         playerFaz2Enabled: voiceNotePlayerFaz2,
         maxDurationMs: messagingVoiceNoteMaxDurationMs(),
         transcribeFaz1Enabled: voiceTranscribeFaz1,
+        transcribeAdvancedFaz2Enabled: voiceTranscribeFaz2,
+        transcribeAutoFaz3Enabled: voiceTranscribeFaz3,
         sttConfigured: messagingVoiceSttConfigured(),
       },
     };

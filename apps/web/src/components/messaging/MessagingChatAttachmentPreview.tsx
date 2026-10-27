@@ -20,6 +20,7 @@ type Props = {
   durationMs?: number;
   voiceNotePlayerEnabled?: boolean;
   voiceTranscribeEnabled?: boolean;
+  voiceTranscribeAdvancedEnabled?: boolean;
   attachmentRecord?: {
     index: number;
     filename: string;
@@ -162,6 +163,7 @@ export function MessagingChatAttachmentPreview(props: Props) {
     durationMs,
     voiceNotePlayerEnabled = false,
     voiceTranscribeEnabled = false,
+    voiceTranscribeAdvancedEnabled = false,
     attachmentRecord,
     onTranscriptReady,
     onError,
@@ -188,6 +190,7 @@ export function MessagingChatAttachmentPreview(props: Props) {
         durationMs={durationMs}
         advancedPlayer={voiceNotePlayerEnabled}
         transcribeEnabled={voiceTranscribeEnabled}
+        transcribeAdvancedEnabled={voiceTranscribeAdvancedEnabled}
         onTranscriptReady={() => onTranscriptReady?.()}
         onError={onError}
       />

@@ -30,6 +30,7 @@ import { TranslateMessagingTextRequestDto } from "./TranslateMessagingTextReques
 import { UpdateThreadMessageRequestDto } from "./UpdateThreadMessageRequestDto";
 import { MessagingVoiceTranscribeService } from "./MessagingVoiceTranscribeService";
 import { MessagingVoiceTranscribeRequestDto } from "./MessagingVoiceTranscribeRequestDto";
+import { MessagingVoiceTranscriptEditRequestDto } from "./MessagingVoiceTranscriptEditRequestDto";
 import { messagingMessageViewsToJson } from "./messagingMessageViewJson";
 import { MessagingAuditService } from "./MessagingAuditService";
 
@@ -428,6 +429,34 @@ export class MessagingThreadController {
     return { transcript };
   }
 
+  @Patch(
+    "threads/:threadId/messages/:messageId/attachments/:index/transcript",
+  )
+  public async editVoiceTranscript(
+    @Param("threadId") threadId: string,
+    @Param("messageId") messageId: string,
+    @Param("index", ParseIntPipe) index: number,
+    @Body() body: MessagingVoiceTranscriptEditRequestDto,
+    @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
+    @Headers("accept-language") acceptLanguage: string | undefined,
+    @Query("lang") queryLanguage: string | undefined,
+  ): Promise<{ transcript: unknown }> {
+    const locale = this.localeResolutionService.resolveFromHeaders(
+      acceptLanguage,
+      queryLanguage,
+    );
+    const transcript = await this.messagingVoiceTranscribeService.editTranscript(
+      authenticatedUser,
+      threadId,
+      messageId,
+      index,
+      locale,
+      body.editedText,
+      body.languageCode,
+    );
+    return { transcript };
+  }
+
   @Get("export")
   public async exportArchive(
     @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
@@ -480,12 +509,40 @@ export class MessagingThreadController {
       queryLanguage,
     );
     const limit = limitRaw ? Number.parseInt(limitRaw, 10) : 40;
-    return this.messagingThreadApplicationService.searchMessages(
+    const capped = Number.isFinite(limit) ? limit : 40;
+    const base = await this.messagingThreadApplicationService.searchMessages(
       authenticatedUser,
       locale,
       query ?? "",
-      Number.isFinite(limit) ? limit : 40,
+      capped,
     );
+    const transcriptHits =
+      await this.messagingVoiceTranscribeService.searchTranscriptHits(
+        authenticatedUser.companyId,
+        base.query,
+        Math.min(20, capped),
+      );
+    const seen = new Set(
+      base.results.map((row) => `${row.threadId}:${row.messageId}`),
+    );
+    const merged = [...base.results];
+    for (const hit of transcriptHits) {
+      const key = `${hit.threadId}:${hit.messageId}`;
+      if (seen.has(key)) {
+        continue;
+      }
+      seen.add(key);
+      merged.push({
+        kind: "voice_transcript" as const,
+        threadId: hit.threadId,
+        messageId: hit.messageId,
+        snippet: hit.snippet,
+        counterpartyCompanyId: "",
+        counterpartyLegalName: null,
+        createdAt: hit.createdAt,
+      });
+    }
+    return { query: base.query, results: merged };
   }
 
   @Get("quick-replies")

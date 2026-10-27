@@ -2,6 +2,10 @@ export type MessagingVoiceTranscriptView = {
   status: "pending" | "ready" | "failed";
   text: string | null;
   provider: string | null;
+  languageCode?: string | null;
+  confidenceScore?: number | null;
+  editedText?: string | null;
+  displayText?: string | null;
 };
 
 export type MessagingMessageAttachmentView = {

@@ -36,6 +36,10 @@ export type ThreadMessageAttachmentRecord = {
     status: "pending" | "ready" | "failed";
     text: string | null;
     provider: string | null;
+    languageCode?: string | null;
+    confidenceScore?: number | null;
+    editedText?: string | null;
+    displayText?: string | null;
   };
 };
 
@@ -578,11 +582,33 @@ export class MessagingApiClient {
         body: JSON.stringify({ kvkkConsentAcknowledged: true }),
       },
     ) as Promise<{
-      transcript: {
+      transcript: ThreadMessageAttachmentRecord["transcript"] & {
         status: "pending" | "ready" | "failed";
         text: string | null;
         provider: string | null;
       };
+    }>;
+  }
+
+  public static async editVoiceTranscript(
+    accessToken: string,
+    locale: string,
+    threadId: string,
+    messageId: string,
+    attachmentIndex: number,
+    editedText: string,
+  ): Promise<{
+    transcript: NonNullable<ThreadMessageAttachmentRecord["transcript"]>;
+  }> {
+    return AuthenticatedApiClient.fetchJson(
+      accessToken,
+      `/messaging/threads/${threadId}/messages/${messageId}/attachments/${attachmentIndex}/transcript?lang=${locale}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ editedText }),
+      },
+    ) as Promise<{
+      transcript: NonNullable<ThreadMessageAttachmentRecord["transcript"]>;
     }>;
   }
 }

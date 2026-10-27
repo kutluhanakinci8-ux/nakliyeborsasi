@@ -12,9 +12,20 @@ type Props = {
   messageId: string;
   attachment: ThreadMessageAttachmentRecord;
   transcribeEnabled: boolean;
+  transcribeAdvancedEnabled: boolean;
   onTranscriptReady: () => void;
   onError: (message: string) => void;
 };
+
+function initialDisplayText(
+  attachment: ThreadMessageAttachmentRecord,
+): string | null {
+  const t = attachment.transcript;
+  if (!t || t.status !== "ready") {
+    return null;
+  }
+  return t.displayText ?? t.editedText ?? t.text ?? null;
+}
 
 export function MessagingVoiceNoteTranscript({
   accessToken,
@@ -23,12 +34,18 @@ export function MessagingVoiceNoteTranscript({
   messageId,
   attachment,
   transcribeEnabled,
+  transcribeAdvancedEnabled,
   onTranscriptReady,
   onError,
 }: Props) {
   const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState("");
   const [localText, setLocalText] = useState<string | null>(
-    attachment.transcript?.status === "ready" ? attachment.transcript.text : null,
+    initialDisplayText(attachment),
+  );
+  const [confidence, setConfidence] = useState<number | null>(
+    attachment.transcript?.confidenceScore ?? null,
   );
 
   if (!transcribeEnabled) {
@@ -51,8 +68,13 @@ export function MessagingVoiceNoteTranscript({
         messageId,
         attachment.index,
       );
-      if (result.transcript.status === "ready" && result.transcript.text) {
-        setLocalText(result.transcript.text);
+      const display =
+        result.transcript.displayText ??
+        result.transcript.editedText ??
+        result.transcript.text;
+      if (result.transcript.status === "ready" && display) {
+        setLocalText(display);
+        setConfidence(result.transcript.confidenceScore ?? null);
         onTranscriptReady();
       } else {
         onError(
@@ -66,12 +88,80 @@ export function MessagingVoiceNoteTranscript({
     }
   }
 
+  async function saveEdit(): Promise<void> {
+    if (!transcribeAdvancedEnabled || !draft.trim()) {
+      return;
+    }
+    setBusy(true);
+    try {
+      const result = await MessagingApiClient.editVoiceTranscript(
+        accessToken,
+        locale,
+        threadId,
+        messageId,
+        attachment.index,
+        draft.trim(),
+      );
+      const display =
+        result.transcript.displayText ??
+        result.transcript.editedText ??
+        result.transcript.text;
+      setLocalText(display ?? draft.trim());
+      setEditing(false);
+      onTranscriptReady();
+    } catch (error) {
+      onError(error instanceof Error ? error.message : "Kayıt hatası");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (localText && editing) {
+    return (
+      <div className="chat-voice-transcript-edit">
+        <textarea
+          className="chat-voice-transcript-textarea"
+          value={draft}
+          rows={3}
+          onChange={(event) => setDraft(event.target.value)}
+        />
+        <div className="chat-voice-transcript-edit-actions">
+          <button type="button" onClick={() => setEditing(false)} disabled={busy}>
+            İptal
+          </button>
+          <button type="button" onClick={() => void saveEdit()} disabled={busy}>
+            Kaydet
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (localText) {
     return (
-      <p className="chat-voice-transcript" role="note">
-        <span className="chat-voice-transcript-label">Transkript</span>
-        {localText}
-      </p>
+      <div className="chat-voice-transcript-wrap">
+        <p className="chat-voice-transcript" role="note">
+          <span className="chat-voice-transcript-label">Transkript</span>
+          {localText}
+        </p>
+        {transcribeAdvancedEnabled && confidence !== null ? (
+          <span className="chat-voice-transcript-confidence">
+            Güven: {Math.round(confidence * 100)}%
+          </span>
+        ) : null}
+        {transcribeAdvancedEnabled ? (
+          <button
+            type="button"
+            className="chat-voice-transcript-edit-btn"
+            onClick={() => {
+              setDraft(localText);
+              setEditing(true);
+            }}
+          >
+            Düzenle
+          </button>
+        ) : null}
+      </div>
     );
   }
 

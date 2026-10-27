@@ -5468,6 +5468,45 @@ button.btn-secondary {
   margin-bottom: 2px;
 }
 
+.chat-voice-transcript-wrap {
+  width: 100%;
+}
+
+.chat-voice-transcript-confidence {
+  font-size: 0.65rem;
+  color: #64748b;
+}
+
+.chat-voice-transcript-edit-btn {
+  margin-top: 4px;
+  border: none;
+  background: transparent;
+  color: #047857;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.chat-voice-transcript-edit {
+  width: 100%;
+}
+
+.chat-voice-transcript-textarea {
+  width: 100%;
+  font-size: 0.8rem;
+  border-radius: 8px;
+  border: 1px solid #bbf7d0;
+  padding: 6px 8px;
+  resize: vertical;
+}
+
+.chat-voice-transcript-edit-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+  justify-content: flex-end;
+}
+
 .chat-stamp-btn {
   font-size: 0.72rem;
   padding: 2px 8px;
