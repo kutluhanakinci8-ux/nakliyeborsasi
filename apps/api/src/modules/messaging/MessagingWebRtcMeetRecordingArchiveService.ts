@@ -8,6 +8,13 @@ import type Redis from "ioredis";
 import type { AuthenticatedUserContext } from "@nakliyeborsasi/core";
 import { RedisConnectionProvider } from "../../infrastructure/redis/RedisConnectionProvider";
 import { MessagingThreadApplicationService } from "./MessagingThreadApplicationService";
+import {
+  buildMeetRecordingS3Key,
+  getMeetRecordingS3,
+  meetRecordingMaxBytes,
+  meetRecordingS3Enabled,
+  putMeetRecordingS3,
+} from "./messagingWebRtcMeetRecordingS3";
 
 export type WebRtcMeetRecordingArchiveMeta = {
   id: string;
@@ -17,6 +24,8 @@ export type WebRtcMeetRecordingArchiveMeta = {
   filename: string;
   byteSize: number;
   hasBlob: boolean;
+  storage?: "redis" | "s3";
+  storagePath?: string;
   createdByUserId: string;
   createdAt: string;
   consentAcknowledged?: boolean;
@@ -37,9 +46,17 @@ export class MessagingWebRtcMeetRecordingArchiveService {
   }
 
   public maxArchiveBytes(): number {
-    const raw = process.env.MESSAGING_WEBRTC_MEET_RECORDING_MAX_BYTES?.trim();
-    const parsed = raw ? Number.parseInt(raw, 10) : 2_500_000;
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : 2_500_000;
+    return meetRecordingMaxBytes();
+  }
+
+  public recordingStorageSnapshot(): {
+    s3Enabled: boolean;
+    maxBytes: number;
+  } {
+    return {
+      s3Enabled: meetRecordingS3Enabled(),
+      maxBytes: meetRecordingMaxBytes(),
+    };
   }
 
   public async listArchives(
@@ -80,7 +97,12 @@ export class MessagingWebRtcMeetRecordingArchiveService {
     const maxBytes = this.maxArchiveBytes();
     let byteSize = 0;
     let hasBlob = false;
+    let storage: "redis" | "s3" | undefined;
+    let storagePath: string | undefined;
     const id = randomUUID();
+    const filename =
+      input.filename?.trim() ||
+      `meet-${input.media}-${new Date().toISOString().slice(0, 10)}.webm`;
     if (input.contentBase64?.trim()) {
       if (!input.consentAcknowledged) {
         throw new BadRequestException(
@@ -95,23 +117,34 @@ export class MessagingWebRtcMeetRecordingArchiveService {
         );
       }
       hasBlob = true;
-      await this.redis.set(
-        this.blobKey(id),
-        buf,
-        "EX",
-        META_TTL_SECONDS,
-      );
+      if (meetRecordingS3Enabled()) {
+        const key = buildMeetRecordingS3Key(threadId, id, filename);
+        storagePath = await putMeetRecordingS3(
+          key,
+          buf,
+          "video/webm",
+        );
+        storage = "s3";
+      } else {
+        await this.redis.set(
+          this.blobKey(id),
+          buf,
+          "EX",
+          META_TTL_SECONDS,
+        );
+        storage = "redis";
+      }
     }
     const meta: WebRtcMeetRecordingArchiveMeta = {
       id,
       threadId,
       durationSeconds: input.durationSeconds,
       media: input.media,
-      filename:
-        input.filename?.trim() ||
-        `meet-${input.media}-${new Date().toISOString().slice(0, 10)}.webm`,
+      filename,
       byteSize,
       hasBlob,
+      ...(storage ? { storage } : {}),
+      ...(storagePath ? { storagePath } : {}),
       createdByUserId: user.userId,
       createdAt: new Date().toISOString(),
       ...(input.consentAcknowledged ? { consentAcknowledged: true } : {}),
@@ -133,6 +166,10 @@ export class MessagingWebRtcMeetRecordingArchiveService {
     const meta = await this.findMeta(user, threadId, archiveId);
     if (!meta.hasBlob) {
       throw new NotFoundException("Kayıt dosyası yok (yalnızca meta).");
+    }
+    if (meta.storage === "s3" && meta.storagePath) {
+      const buf = await getMeetRecordingS3(meta.storagePath);
+      return { meta, base64: buf.toString("base64") };
     }
     const buf = await this.redis.getBuffer(this.blobKey(archiveId));
     if (!buf) {

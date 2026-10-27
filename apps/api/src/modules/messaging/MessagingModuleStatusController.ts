@@ -12,6 +12,10 @@ import {
   enrichTurnMonitorWithIceCaps,
   probeMessagingWebRtcTurnMonitor,
 } from "./messagingWebRtcTurnMonitor";
+import {
+  meetRecordingMaxBytes,
+  meetRecordingS3Enabled,
+} from "./messagingWebRtcMeetRecordingS3";
 import { MessagingWebRtcSignalingService } from "./MessagingWebRtcSignalingService";
 import type { WhatsappBridgeDeliverySnapshot } from "@nakliyeborsasi/core";
 
@@ -53,6 +57,7 @@ export class MessagingModuleStatusController {
       meshMode: "p2p";
       iceCaps: ReturnType<typeof summarizeMessagingWebRtcIceCaps>;
       turnMonitor: Awaited<ReturnType<typeof probeMessagingWebRtcTurnMonitor>>;
+      recordingArchive: { s3Enabled: boolean; maxBytes: number };
     };
     mobileExpoPush: { registerPath: string; enabled: boolean };
   }> {
@@ -150,6 +155,7 @@ export class MessagingModuleStatusController {
         "messaging_webrtc_meet_qa_gate_faz8",
         "messaging_webrtc_meet_realtime_faz9",
         "messaging_webrtc_meet_mobile_faz10",
+        "messaging_webrtc_meet_enterprise_faz11",
       ],
       translate: { deepl, libretranslate: libre },
       attachments: (() => {
@@ -184,6 +190,10 @@ export class MessagingModuleStatusController {
         meshMode: "p2p",
         iceCaps,
         turnMonitor,
+        recordingArchive: {
+          s3Enabled: meetRecordingS3Enabled(),
+          maxBytes: meetRecordingMaxBytes(),
+        },
       },
       mobileExpoPush: {
         registerPath: "/messaging/push/expo/register",
