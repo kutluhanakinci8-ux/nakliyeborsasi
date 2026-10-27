@@ -14,6 +14,7 @@ import type { AuthenticatedUserContext } from "@nakliyeborsasi/core";
 import { MessageEntity } from "../../infrastructure/database/entities/MessageEntity";
 import { MessageThreadEntity } from "../../infrastructure/database/entities/MessageThreadEntity";
 import { MessageVoiceTranscriptEntity } from "../../infrastructure/database/entities/MessageVoiceTranscriptEntity";
+import { CompanyMessagingSettingsEntity } from "../../infrastructure/database/entities/CompanyMessagingSettingsEntity";
 import { MailAiComposeService } from "../notification/MailAiComposeService";
 import { MessagingThreadApplicationService } from "./MessagingThreadApplicationService";
 import {
@@ -23,7 +24,9 @@ import {
 import {
   messagingVoiceSttConfigured,
   messagingVoiceSttModel,
+  messagingVoiceSttMonthlyQuotaPerCompany,
   messagingVoiceTranscribeAdvancedFaz2Enabled,
+  messagingVoiceTranscribeAutoFaz3Enabled,
   messagingVoiceTranscribeFaz1Enabled,
   resolveMessagingVoiceSttApiUrl,
 } from "./messagingVoiceTranscribeConfig";
@@ -49,6 +52,8 @@ export class MessagingVoiceTranscribeService {
     private readonly messageRepository: Repository<MessageEntity>,
     @InjectRepository(MessageThreadEntity)
     private readonly threadRepository: Repository<MessageThreadEntity>,
+    @InjectRepository(CompanyMessagingSettingsEntity)
+    private readonly companyMessagingSettingsRepository: Repository<CompanyMessagingSettingsEntity>,
     @Inject(forwardRef(() => MessagingThreadApplicationService))
     private readonly messagingThreadApplicationService: MessagingThreadApplicationService,
     private readonly mailAiComposeService: MailAiComposeService,
@@ -73,6 +78,80 @@ export class MessagingVoiceTranscribeService {
     const display =
       row.editedTextBody?.trim() || row.textBody?.trim() || "";
     row.searchText = display ? display.slice(0, 8000) : null;
+  }
+
+  public async countSttUsageThisMonth(companyId: string): Promise<number> {
+    const start = new Date();
+    start.setUTCDate(1);
+    start.setUTCHours(0, 0, 0, 0);
+    return this.transcriptRepository
+      .createQueryBuilder("t")
+      .where("t.requestedByCompanyId = :companyId", { companyId })
+      .andWhere("t.createdAt >= :start", { start })
+      .andWhere("t.status IN (:...statuses)", {
+        statuses: ["ready", "pending"],
+      })
+      .getCount();
+  }
+
+  public async maybeAutoTranscribeAfterSend(
+    authenticatedUser: AuthenticatedUserContext,
+    threadId: string,
+    message: MessageEntity,
+    locale: string,
+  ): Promise<void> {
+    if (!messagingVoiceTranscribeAutoFaz3Enabled()) {
+      return;
+    }
+    if (!messagingVoiceTranscribeFaz1Enabled() || !messagingVoiceSttConfigured()) {
+      return;
+    }
+    const settings = await this.companyMessagingSettingsRepository.findOne({
+      where: { companyId: authenticatedUser.companyId },
+    });
+    if (settings?.voiceTranscribeMode !== "auto") {
+      return;
+    }
+    if (!settings.voiceTranscribeAutoKvkkAcceptedAt) {
+      return;
+    }
+    const attachments = message.attachments ?? [];
+    const voiceIndexes = attachments
+      .filter(
+        (row) =>
+          row.kind === "voice_note" ||
+          row.contentType.toLowerCase().startsWith("audio/"),
+      )
+      .map((row) => row.index);
+    if (voiceIndexes.length === 0) {
+      return;
+    }
+    const quota = messagingVoiceSttMonthlyQuotaPerCompany();
+    let used = await this.countSttUsageThisMonth(authenticatedUser.companyId);
+    for (const attachmentIndex of voiceIndexes) {
+      if (used >= quota) {
+        this.logger.warn(
+          `STT aylık kota doldu (company=${authenticatedUser.companyId})`,
+        );
+        return;
+      }
+      try {
+        await this.transcribeVoiceAttachment(
+          authenticatedUser,
+          threadId,
+          message.id,
+          attachmentIndex,
+          locale,
+          true,
+          { skipConsentCheck: true },
+        );
+        used += 1;
+      } catch (error) {
+        this.logger.warn(
+          `Otomatik STT başarısız message=${message.id} index=${attachmentIndex}: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+    }
   }
 
   public async mapTranscriptsByMessageAndIndex(

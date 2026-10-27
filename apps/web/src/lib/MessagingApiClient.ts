@@ -568,11 +568,7 @@ export class MessagingApiClient {
     messageId: string,
     attachmentIndex: number,
   ): Promise<{
-    transcript: {
-      status: "pending" | "ready" | "failed";
-      text: string | null;
-      provider: string | null;
-    };
+    transcript: NonNullable<ThreadMessageAttachmentRecord["transcript"]>;
   }> {
     return AuthenticatedApiClient.fetchJson(
       accessToken,
@@ -582,11 +578,7 @@ export class MessagingApiClient {
         body: JSON.stringify({ kvkkConsentAcknowledged: true }),
       },
     ) as Promise<{
-      transcript: ThreadMessageAttachmentRecord["transcript"] & {
-        status: "pending" | "ready" | "failed";
-        text: string | null;
-        provider: string | null;
-      };
+      transcript: NonNullable<ThreadMessageAttachmentRecord["transcript"]>;
     }>;
   }
 

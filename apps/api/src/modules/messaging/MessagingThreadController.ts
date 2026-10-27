@@ -176,6 +176,14 @@ export class MessagingThreadController {
       clientContext,
       request.path,
     );
+    void this.messagingVoiceTranscribeService
+      .maybeAutoTranscribeAfterSend(
+        authenticatedUser,
+        threadId,
+        result.message,
+        locale,
+      )
+      .catch(() => undefined);
     return {
       message: result.message,
       ...(result.channelDelivery

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   MessagingIntegrationApiClient,
+  type MessagingVoiceTranscribeSnapshot,
   type MessagingWhatsappBridgeSnapshot,
 } from "../../lib/MessagingIntegrationApiClient";
 
@@ -21,6 +22,11 @@ export function MessagingChannelSettingsPanel({ accessToken, visible }: Props) {
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
   const [testMessage, setTestMessage] = useState("");
+  const [voiceStt, setVoiceStt] = useState<MessagingVoiceTranscribeSnapshot | null>(
+    null,
+  );
+  const [voiceSttKvkk, setVoiceSttKvkk] = useState(false);
+  const [voiceSttSaved, setVoiceSttSaved] = useState(false);
 
   useEffect(() => {
     if (!visible || !accessToken) {
@@ -30,6 +36,11 @@ export function MessagingChannelSettingsPanel({ accessToken, visible }: Props) {
       .then((payload) => {
         setBridge(payload.integration.whatsappBridge);
         setKvkkChecked(Boolean(payload.integration.whatsappBridge.kvkkAcceptedAt));
+        const vt = payload.integration.voiceTranscribe;
+        if (vt) {
+          setVoiceStt(vt);
+          setVoiceSttKvkk(Boolean(vt.kvkkAcceptedAt));
+        }
       })
       .catch(() => setError("Kanal ayarları yüklenemedi"));
   }, [visible, accessToken]);
@@ -168,6 +179,89 @@ export function MessagingChannelSettingsPanel({ accessToken, visible }: Props) {
       ) : null}
       {error ? <p className="form-error">{error}</p> : null}
       {saved ? <p className="chat-channel-settings-ok">Kaydedildi.</p> : null}
+
+      {voiceStt?.faz3Enabled ? (
+        <>
+          <h3 className="chat-channel-settings-title">Sesli mesaj — otomatik yazıya çevir (STT-3)</h3>
+          <p className="chat-channel-settings-hint">
+            <strong>Otomatik</strong> modda gönderilen sesli mesajlar firma kotası içinde
+            arka planda transkribe edilir. Manuel modda kullanıcı sohbetten tetikler.
+          </p>
+          {voiceStt.kvkkNoticeTr ? (
+            <p className="chat-channel-settings-kvkk">{voiceStt.kvkkNoticeTr}</p>
+          ) : null}
+          <p className="chat-channel-settings-status" role="status">
+            STT API: {voiceStt.sttConfigured ? "yapılandırılmış" : "yapılandırılmamış"}
+            {" · "}
+            Bu ay: {voiceStt.monthlyUsed}/{voiceStt.monthlyQuota}
+            {" · "}
+            Mod: {voiceStt.mode === "auto" ? "otomatik" : "manuel"}
+          </p>
+          <label className="chat-channel-settings-check">
+            <input
+              type="checkbox"
+              checked={voiceSttKvkk}
+              onChange={(event) => setVoiceSttKvkk(event.target.checked)}
+            />
+            Otomatik STT için KVKK / AI işleme bilgilendirmesini onaylıyorum
+          </label>
+          <div className="chat-channel-settings-actions">
+            <button
+              type="button"
+              className="btn-accent"
+              disabled={
+                busy ||
+                !voiceStt.sttConfigured ||
+                (voiceStt.mode !== "auto" && !voiceSttKvkk)
+              }
+              onClick={() => {
+                setBusy(true);
+                setVoiceSttSaved(false);
+                void MessagingIntegrationApiClient.updateVoiceTranscribe(
+                  accessToken,
+                  { mode: "auto", kvkkNoticeAccepted: voiceSttKvkk },
+                )
+                  .then((payload) => {
+                    setVoiceStt(payload.voiceTranscribe);
+                    setVoiceSttSaved(true);
+                  })
+                  .catch((err) =>
+                    setError(err instanceof Error ? err.message : "Kaydedilemedi"),
+                  )
+                  .finally(() => setBusy(false));
+              }}
+            >
+              Otomatik transkripsiyon
+            </button>
+            <button
+              type="button"
+              className="btn-account-secondary"
+              disabled={busy}
+              onClick={() => {
+                setBusy(true);
+                setVoiceSttSaved(false);
+                void MessagingIntegrationApiClient.updateVoiceTranscribe(
+                  accessToken,
+                  { mode: "manual" },
+                )
+                  .then((payload) => {
+                    setVoiceStt(payload.voiceTranscribe);
+                    setVoiceSttSaved(true);
+                  })
+                  .catch((err) =>
+                    setError(err instanceof Error ? err.message : "Kaydedilemedi"),
+                  )
+                  .finally(() => setBusy(false));
+              }}
+            >
+              Manuel mod
+            </button>
+          </div>
+          {voiceSttSaved ? (
+            <p className="chat-channel-settings-ok">STT politikası kaydedildi.</p>
+          ) : null}
+        </>
+      ) : null}
     </section>
   );
 }
