@@ -10,6 +10,20 @@ import {
   type CallMediaMode,
   type MediaDeviceLists,
 } from "../../lib/messagingWebRtcDevices";
+import {
+  networkQualityLabel,
+  sampleNetworkQuality,
+  type NetworkQualityLevel,
+} from "../../lib/messagingWebRtcNetworkMonitor";
+import {
+  applyQualityToAllPeerConnections,
+  applyVideoSenderBitrate,
+  qualityProfileLabel,
+  type CallLayoutMode,
+  type VideoEffect,
+  type VideoQualityProfile,
+} from "../../lib/messagingWebRtcQuality";
+import { attachStreamLevelMeter } from "../../lib/messagingWebRtcSpeakerLevel";
 import { fetchMessagingPublicStatus } from "../../lib/messagingPublicStatus";
 import {
   fetchMessagingWebRtcConfig,
@@ -88,8 +102,17 @@ export function MessagingWebRtcPilotCall({
   const [videoOff, setVideoOff] = useState(false);
   const [callSeconds, setCallSeconds] = useState(0);
   const callModeRef = useRef<CallMediaMode>("video");
+  const [qualityProfile, setQualityProfile] = useState<VideoQualityProfile>("auto");
+  const [layoutMode, setLayoutMode] = useState<CallLayoutMode>("grid");
+  const [videoEffect, setVideoEffect] = useState<VideoEffect>("none");
+  const [networkLevel, setNetworkLevel] = useState<NetworkQualityLevel>("unknown");
+  const [activeSpeakerId, setActiveSpeakerId] = useState<string | null>(null);
 
   const pcsRef = useRef<Map<string, RTCPeerConnection>>(new Map());
+  const speakerMetersRef = useRef<Map<string, ReturnType<typeof attachStreamLevelMeter>>>(
+    new Map(),
+  );
+  const thirdPersonWarnedRef = useRef(false);
   const iceQueuesRef = useRef<Map<string, RTCIceCandidateInit[]>>(new Map());
   const seenSignalIdsRef = useRef<Set<string>>(new Set());
   const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -112,11 +135,21 @@ export function MessagingWebRtcPilotCall({
     setRemotePeers((prev) => {
       const rest = prev.filter((p) => p.userId !== userId);
       const next = [...rest, { userId, stream }];
-      setStatusLine(
-        `Bağlı (${Math.min(next.length + 1, MAX_PARTICIPANTS)}/${MAX_PARTICIPANTS})`,
-      );
+      if (next.length >= 2 && !thirdPersonWarnedRef.current) {
+        thirdPersonWarnedRef.current = true;
+        setStatusLine(
+          "3 kişi — upload yüksek; Veri tasarrufu veya sesli mod önerilir.",
+        );
+      } else {
+        setStatusLine(
+          `Bağlı (${Math.min(next.length + 1, MAX_PARTICIPANTS)}/${MAX_PARTICIPANTS})`,
+        );
+      }
       return next;
     });
+    if (!speakerMetersRef.current.has(userId) && stream.getAudioTracks().length > 0) {
+      speakerMetersRef.current.set(userId, attachStreamLevelMeter(stream));
+    }
     setPhase("connected");
     if (!callStartedAtRef.current) {
       callStartedAtRef.current = Date.now();
@@ -149,6 +182,13 @@ export function MessagingWebRtcPilotCall({
     setRemotePeers([]);
     setMicMuted(false);
     setVideoOff(false);
+    setActiveSpeakerId(null);
+    setNetworkLevel("unknown");
+    thirdPersonWarnedRef.current = false;
+    for (const meter of speakerMetersRef.current.values()) {
+      meter.stop();
+    }
+    speakerMetersRef.current.clear();
     seenSignalIdsRef.current.clear();
     lastPollIdRef.current = null;
     incomingOfferRef.current = null;
@@ -165,6 +205,7 @@ export function MessagingWebRtcPilotCall({
           status.features.includes("messaging_webrtc_signaling_relay") &&
             status.features.includes("messaging_webrtc_mesh_three") &&
             status.features.includes("messaging_webrtc_meet_core_faz1") &&
+            status.features.includes("messaging_webrtc_meet_hd_faz2") &&
             status.webrtc?.signaling === "redis_relay",
         );
       })
@@ -259,9 +300,10 @@ export function MessagingWebRtcPilotCall({
           void tryIceRestart(peerUserId);
         }
       };
+      void applyVideoSenderBitrate(pc, qualityProfile);
       return pc;
     },
-    [accessToken, setRemoteForPeer, threadId, tryIceRestart],
+    [accessToken, qualityProfile, setRemoteForPeer, threadId, tryIceRestart],
   );
 
   const acquireLocalMedia = useCallback(async (): Promise<MediaStream> => {
@@ -269,8 +311,40 @@ export function MessagingWebRtcPilotCall({
       mode: callModeRef.current,
       audioDeviceId: audioInputId || undefined,
       videoDeviceId: videoInputId || undefined,
+      qualityProfile,
     });
-  }, [audioInputId, videoInputId]);
+  }, [audioInputId, qualityProfile, videoInputId]);
+
+  useEffect(() => {
+    if (phase !== "connected" && phase !== "outgoing") {
+      return;
+    }
+    const timer = setInterval(() => {
+      const firstPc = pcsRef.current.values().next().value as
+        | RTCPeerConnection
+        | undefined;
+      if (firstPc) {
+        void sampleNetworkQuality(firstPc).then(setNetworkLevel);
+      }
+      let bestId: string | null = null;
+      let bestLevel = 0;
+      for (const [userId, meter] of speakerMetersRef.current.entries()) {
+        const level = meter.getLevel();
+        if (level > bestLevel) {
+          bestLevel = level;
+          bestId = userId;
+        }
+      }
+      if (bestLevel > 8) {
+        setActiveSpeakerId(bestId);
+      }
+    }, 400);
+    return () => clearInterval(timer);
+  }, [phase, remotePeers.length]);
+
+  useEffect(() => {
+    void applyQualityToAllPeerConnections(pcsRef.current.values(), qualityProfile);
+  }, [qualityProfile, remotePeers.length]);
 
   const connectOffersToExistingPeers = useCallback(
     async (local: MediaStream, peerUserIds: string[]) => {
@@ -323,6 +397,8 @@ export function MessagingWebRtcPilotCall({
           const pc = pcsRef.current.get(peerId);
           pc?.close();
           pcsRef.current.delete(peerId);
+          speakerMetersRef.current.get(peerId)?.stop();
+          speakerMetersRef.current.delete(peerId);
           setRemotePeers((prev) => prev.filter((p) => p.userId !== peerId));
           return;
         }
@@ -586,6 +662,21 @@ export function MessagingWebRtcPilotCall({
     setVideoOff(next);
   }
 
+  async function enterPictureInPicture(video: HTMLVideoElement | null): Promise<void> {
+    if (!video || !document.pictureInPictureEnabled) {
+      return;
+    }
+    try {
+      if (document.pictureInPictureElement) {
+        await document.exitPictureInPicture();
+      } else {
+        await video.requestPictureInPicture();
+      }
+    } catch {
+      /* kullanıcı iptal */
+    }
+  }
+
   async function endCall(): Promise<void> {
     if (threadId && currentUserId) {
       for (const peerId of pcsRef.current.keys()) {
@@ -640,9 +731,27 @@ export function MessagingWebRtcPilotCall({
   const showVideos =
     inCallUi && callModeRef.current === "video" && !videoOff;
 
+  const sortedRemotes =
+    layoutMode === "speaker" && activeSpeakerId
+      ? [
+          ...remotePeers.filter((p) => p.userId === activeSpeakerId),
+          ...remotePeers.filter((p) => p.userId !== activeSpeakerId),
+        ]
+      : remotePeers;
+
+  const localVideoClass = [
+    "messaging-webrtc-pilot-video",
+    "messaging-webrtc-pilot-video--local",
+    videoEffect === "softBlur" ? "messaging-webrtc-video-effect--blur" : "",
+    videoEffect === "lowLight" ? "messaging-webrtc-video-effect--lowlight" : "",
+    activeSpeakerId === currentUserId ? "is-active-speaker" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <div
-      className="messaging-webrtc-pilot messaging-webrtc-meet-faz1"
+      className="messaging-webrtc-pilot messaging-webrtc-meet-faz1 messaging-webrtc-meet-faz2"
       role="region"
       aria-label="Görüntülü ve sesli görüşme (en fazla 3 kişi)"
     >
@@ -720,6 +829,32 @@ export function MessagingWebRtcPilotCall({
             ) : null}
             <button
               type="button"
+              className="messaging-webrtc-pilot-btn"
+              onClick={() =>
+                setLayoutMode((m) => (m === "grid" ? "speaker" : "grid"))
+              }
+              title="Görünüm"
+            >
+              {layoutMode === "grid" ? "Konuşmacı" : "Izgara"}
+            </button>
+            <button
+              type="button"
+              className="messaging-webrtc-pilot-btn"
+              onClick={() =>
+                void enterPictureInPicture(
+                  remotePeers[0]
+                    ? (document.querySelector(
+                        `[data-webrtc-peer="${remotePeers[0].userId}"]`,
+                      ) as HTMLVideoElement | null)
+                    : localVideoRef.current,
+                )
+              }
+              title="Picture-in-Picture"
+            >
+              PiP
+            </button>
+            <button
+              type="button"
               className="messaging-webrtc-pilot-btn messaging-webrtc-pilot-btn--end"
               onClick={() => void endCall()}
               title="Bitir (Esc)"
@@ -728,6 +863,14 @@ export function MessagingWebRtcPilotCall({
             </button>
           </>
         )}
+        {inCallUi ? (
+          <span
+            className={`messaging-webrtc-network messaging-webrtc-network--${networkLevel}`}
+            title={networkQualityLabel(networkLevel)}
+          >
+            {networkQualityLabel(networkLevel)}
+          </span>
+        ) : null}
         {inCallUi && callStartedAtRef.current ? (
           <span className="messaging-webrtc-pilot-timer" aria-live="polite">
             {formatCallDuration(callSeconds)}
@@ -790,29 +933,100 @@ export function MessagingWebRtcPilotCall({
                   </select>
                 </label>
               ) : null}
+              <label>
+                Kalite
+                <select
+                  value={qualityProfile}
+                  onChange={(e) =>
+                    setQualityProfile(e.target.value as VideoQualityProfile)
+                  }
+                >
+                  <option value="auto">Otomatik</option>
+                  <option value="saver">Veri tasarrufu</option>
+                  <option value="hd">HD</option>
+                </select>
+              </label>
+              {preCallMode === "video" ? (
+                <label>
+                  Görüntü efekti
+                  <select
+                    value={videoEffect}
+                    onChange={(e) =>
+                      setVideoEffect(e.target.value as VideoEffect)
+                    }
+                  >
+                    <option value="none">Yok</option>
+                    <option value="softBlur">Yumuşak arka plan (beta)</option>
+                    <option value="lowLight">Düşük ışık</option>
+                  </select>
+                </label>
+              ) : null}
             </div>
           ) : null}
           <p className="messaging-webrtc-precall-hint">
-            En fazla {MAX_PARTICIPANTS} kişi · Kısayol: M sessiz, V kamera, Esc bitir
+            En fazla {MAX_PARTICIPANTS} kişi · {qualityProfileLabel(qualityProfile)} ·
+            M/V/Esc
           </p>
         </div>
       ) : null}
 
+      {inCallUi && callModeRef.current === "video" ? (
+        <div className="messaging-webrtc-faz2-bar">
+          <label className="messaging-webrtc-faz2-inline">
+            Kalite
+            <select
+              value={qualityProfile}
+              onChange={(e) =>
+                setQualityProfile(e.target.value as VideoQualityProfile)
+              }
+            >
+              <option value="auto">Otomatik</option>
+              <option value="saver">Tasarruf</option>
+              <option value="hd">HD</option>
+            </select>
+          </label>
+          <label className="messaging-webrtc-faz2-inline">
+            Efekt
+            <select
+              value={videoEffect}
+              onChange={(e) => setVideoEffect(e.target.value as VideoEffect)}
+            >
+              <option value="none">Yok</option>
+              <option value="softBlur">Blur β</option>
+              <option value="lowLight">Işık+</option>
+            </select>
+          </label>
+        </div>
+      ) : null}
+
       {showVideos || (inCallUi && remotePeers.length > 0) ? (
-        <div className="messaging-webrtc-pilot-videos messaging-webrtc-pilot-videos--mesh">
+        <div
+          className={
+            layoutMode === "speaker"
+              ? "messaging-webrtc-pilot-videos messaging-webrtc-pilot-videos--speaker"
+              : "messaging-webrtc-pilot-videos messaging-webrtc-pilot-videos--mesh"
+          }
+        >
           {showVideos ? (
             <video
               ref={localVideoRef}
-              className="messaging-webrtc-pilot-video messaging-webrtc-pilot-video--local"
+              className={localVideoClass}
               autoPlay
               muted
               playsInline
             />
           ) : null}
-          {remotePeers.map((peer) => (
+          {sortedRemotes.map((peer, index) => (
             <video
               key={peer.userId}
-              className="messaging-webrtc-pilot-video messaging-webrtc-pilot-video--remote"
+              data-webrtc-peer={peer.userId}
+              className={
+                layoutMode === "speaker" && index === 0
+                  ? "messaging-webrtc-pilot-video messaging-webrtc-pilot-video--remote messaging-webrtc-pilot-video--spotlight is-active-speaker"
+                  : `messaging-webrtc-pilot-video messaging-webrtc-pilot-video--remote${
+                      activeSpeakerId === peer.userId ? " is-active-speaker" : ""
+                    }`
+              }
               autoPlay
               playsInline
               ref={(el) => attachStreamToVideo(el, peer.stream)}
