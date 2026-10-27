@@ -5356,6 +5356,86 @@ button.btn-secondary {
   opacity: 0.85;
 }
 
+.chat-voice-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  max-width: min(320px, 100%);
+}
+
+.chat-voice-note-audio {
+  flex: 1 1 160px;
+  min-width: 140px;
+  height: 32px;
+}
+
+.chat-voice-note-meta {
+  font-size: 0.72rem;
+  color: #047857;
+  font-weight: 600;
+}
+
+.chat-voice-note-rates {
+  display: flex;
+  gap: 4px;
+}
+
+.chat-voice-note-rate {
+  border: 1px solid #a7f3d0;
+  background: #fff;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  cursor: pointer;
+}
+
+.chat-voice-note-rate--active {
+  background: #059669;
+  color: #fff;
+  border-color: #059669;
+}
+
+.chat-voice-compose {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+.chat-voice-compose-timer {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #b91c1c;
+  min-width: 2.5rem;
+}
+
+.chat-voice-compose-btn {
+  border: none;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.chat-voice-compose-btn--cancel {
+  background: #fff;
+  color: #64748b;
+}
+
+.chat-voice-compose-btn--send {
+  background: #059669;
+  color: #fff;
+}
+
 .chat-stamp-btn {
   font-size: 0.72rem;
   padding: 2px 8px;

@@ -30,6 +30,8 @@ export type ThreadMessageAttachmentRecord = {
   filename: string;
   contentType: string;
   sizeBytes: number;
+  kind?: "voice_note";
+  durationMs?: number;
 };
 
 export type ThreadMessageRecord = {
@@ -394,6 +396,8 @@ export class MessagingApiClient {
       filename: string;
       contentType: string;
       contentBase64: string;
+      kind?: "voice_note";
+      durationMs?: number;
     }[],
     messageKind?: "public" | "internal",
   ): Promise<{ channelDelivery?: MessagingChannelDeliveryRecord }> {

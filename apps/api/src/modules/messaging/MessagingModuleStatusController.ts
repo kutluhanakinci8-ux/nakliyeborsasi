@@ -20,6 +20,11 @@ import { summarizeMessagingWebRtcMeetCapacity } from "./messagingWebRtcMeetCapac
 import { probeMessagingWebRtcSfuBackend } from "./messagingWebRtcSfuBackend";
 import { summarizeMessagingWebRtcNativeBridge } from "./messagingWebRtcNativeBridge";
 import { summarizeMessagingWebRtcMeetProgramClosure } from "./messagingWebRtcMeetProgramClosure";
+import {
+  messagingVoiceNoteFaz1Enabled,
+  messagingVoiceNoteMaxDurationMs,
+  messagingVoiceNotePlayerFaz2Enabled,
+} from "./messagingVoiceNoteConfig";
 import { MessagingWebRtcSignalingService } from "./MessagingWebRtcSignalingService";
 import type { WhatsappBridgeDeliverySnapshot } from "@nakliyeborsasi/core";
 
@@ -75,6 +80,11 @@ export class MessagingModuleStatusController {
       recordingArchive: { s3Enabled: boolean; maxBytes: number };
     };
     mobileExpoPush: { registerPath: string; enabled: boolean };
+    voiceNote: {
+      faz1Enabled: boolean;
+      playerFaz2Enabled: boolean;
+      maxDurationMs: number;
+    };
   }> {
     const deepl = Boolean(
       this.configService.get<string>("MESSAGING_DEEPL_API_KEY")?.trim(),
@@ -90,10 +100,9 @@ export class MessagingModuleStatusController {
       iceCaps.turnCredentialsConfigured,
     );
     const sfuBackend = await probeMessagingWebRtcSfuBackend();
-    return {
-      module: "messaging",
-      phase: "ga",
-      features: [
+    const voiceNoteFaz1 = messagingVoiceNoteFaz1Enabled();
+    const voiceNotePlayerFaz2 = messagingVoiceNotePlayerFaz2Enabled();
+    const messagingFeatures: string[] = [
         "company_threads",
         "freight_listing_threads",
         "email_notifications",
@@ -186,7 +195,17 @@ export class MessagingModuleStatusController {
         "messaging_webrtc_meet_rn_mesh_media_faz23",
         "messaging_webrtc_meet_rn_rtc_view_faz24",
         "messaging_webrtc_meet_program_closure_faz25",
-      ],
+    ];
+    if (voiceNoteFaz1) {
+      messagingFeatures.push("messaging_voice_note_faz1");
+    }
+    if (voiceNotePlayerFaz2) {
+      messagingFeatures.push("messaging_voice_note_player_faz2");
+    }
+    return {
+      module: "messaging",
+      phase: "ga",
+      features: messagingFeatures,
       translate: { deepl, libretranslate: libre },
       attachments: (() => {
         const ops = buildMessagingAttachmentOpsSnapshot();
@@ -239,6 +258,11 @@ export class MessagingModuleStatusController {
       mobileExpoPush: {
         registerPath: "/messaging/push/expo/register",
         enabled: true,
+      },
+      voiceNote: {
+        faz1Enabled: voiceNoteFaz1,
+        playerFaz2Enabled: voiceNotePlayerFaz2,
+        maxDurationMs: messagingVoiceNoteMaxDurationMs(),
       },
     };
   }

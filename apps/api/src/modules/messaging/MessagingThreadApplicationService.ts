@@ -627,12 +627,25 @@ export class MessagingThreadApplicationService {
     if (!trimmed && (!attachmentsInput || attachmentsInput.length === 0)) {
       throw new ValidationException("Mesaj metni veya ek gerekli");
     }
-    const mentionUserIds = parseMessagingMentionUserIds(trimmed);
+    const { assertVoiceNoteAttachmentsAllowed, defaultBodyTextForAttachments } =
+      await import("./messagingVoiceNoteValidation");
+    const { messagingVoiceNoteFaz1Enabled } = await import(
+      "./messagingVoiceNoteConfig"
+    );
+    if (
+      attachmentsInput?.some((row) => row.kind === "voice_note") &&
+      !messagingVoiceNoteFaz1Enabled()
+    ) {
+      throw new ValidationException("Sesli mesaj özelliği bu ortamda kapalı.");
+    }
+    assertVoiceNoteAttachmentsAllowed(attachmentsInput);
+    const resolvedBody = defaultBodyTextForAttachments(trimmed, attachmentsInput);
+    const mentionUserIds = parseMessagingMentionUserIds(resolvedBody);
     const draft = this.messageRepository.create({
       threadId: thread.id,
       senderCompanyId: authenticatedUser.companyId,
       senderUserId: authenticatedUser.userId,
-      bodyText: trimmed || "📎 Ek dosya",
+      bodyText: resolvedBody,
       kind: messageKind === "internal" ? "internal" : "public",
       mentionUserIds: mentionUserIds.length > 0 ? mentionUserIds : null,
       deletedAt: null,
@@ -815,7 +828,14 @@ export class MessagingThreadApplicationService {
 
   private publicAttachments(
     attachments: MessageAttachmentMeta[] | null,
-  ): { index: number; filename: string; contentType: string; sizeBytes: number }[] {
+  ): {
+    index: number;
+    filename: string;
+    contentType: string;
+    sizeBytes: number;
+    kind?: "voice_note";
+    durationMs?: number;
+  }[] {
     if (!attachments?.length) {
       return [];
     }
@@ -824,6 +844,9 @@ export class MessagingThreadApplicationService {
       filename: row.filename,
       contentType: row.contentType,
       sizeBytes: row.sizeBytes,
+      ...(row.kind === "voice_note"
+        ? { kind: row.kind, durationMs: row.durationMs }
+        : {}),
     }));
   }
 

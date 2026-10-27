@@ -36,6 +36,8 @@ import type { MessagingChatController } from "../../hooks/useMessagingChatContro
 import type { ChatConversationBackgroundId } from "../../lib/messagingChatBackground";
 import type { AuthSessionRecord } from "../../lib/SessionApiClient";
 import { MessagingWebRtcPilotCall } from "./MessagingWebRtcPilotCall";
+import { MessagingVoiceNoteComposeButton } from "./MessagingVoiceNoteComposeButton";
+import { fetchMessagingPublicStatus } from "../../lib/messagingPublicStatus";
 
 type Props = {
   chat: MessagingChatController;
@@ -115,11 +117,34 @@ export function MessagingConversationPanel({
     setMessageBody,
     messageInputRef,
     handleSendMessage,
+    sendVoiceNoteAttachment,
     setErrorMessage,
   } = chat;
   const [threadDeliveries, setThreadDeliveries] = useState<
     SocialHubOutboundDelivery[]
   >([]);
+  const [voiceNoteEnabled, setVoiceNoteEnabled] = useState(false);
+  const [voiceNotePlayerEnabled, setVoiceNotePlayerEnabled] = useState(false);
+  const [voiceNoteMaxDurationMs, setVoiceNoteMaxDurationMs] = useState(180_000);
+
+  useEffect(() => {
+    void fetchMessagingPublicStatus()
+      .then((status) => {
+        setVoiceNoteEnabled(
+          status.features.includes("messaging_voice_note_faz1"),
+        );
+        setVoiceNotePlayerEnabled(
+          status.features.includes("messaging_voice_note_player_faz2"),
+        );
+        setVoiceNoteMaxDurationMs(
+          status.voiceNote?.maxDurationMs ?? 180_000,
+        );
+      })
+      .catch(() => {
+        setVoiceNoteEnabled(false);
+        setVoiceNotePlayerEnabled(false);
+      });
+  }, []);
 
   useEffect(() => {
     if (
@@ -527,6 +552,9 @@ export function MessagingConversationPanel({
                                     contentType={attachment.contentType}
                                     filename={attachment.filename}
                                     sizeBytes={attachment.sizeBytes}
+                                    kind={attachment.kind}
+                                    durationMs={attachment.durationMs}
+                                    voiceNotePlayerEnabled={voiceNotePlayerEnabled}
                                     onError={(msg) => setErrorMessage(msg)}
                                   />
                                 ) : null}
@@ -817,6 +845,15 @@ export function MessagingConversationPanel({
                       </select>
                     </label>
                   ) : null}
+                  <MessagingVoiceNoteComposeButton
+                    enabled={voiceNoteEnabled && !internalNote}
+                    maxDurationMs={voiceNoteMaxDurationMs}
+                    disabled={!activeThreadId || Boolean(threadLegalHold)}
+                    onRecorded={(attachment) =>
+                      void sendVoiceNoteAttachment(attachment)
+                    }
+                    onError={(msg) => setErrorMessage(msg)}
+                  />
                 </div>
               </div>
               <div className="chat-compose-editor">
