@@ -1,6 +1,6 @@
 # WebRTC — ICE / TURN (VPS)
 
-Pilot görüntülü arama (`messaging/webrtc/*`) için API, tarayıcıya ICE sunucu listesi döner. Varsayılan: Google STUN (`stun:stun.l.google.com:19302`). Üretimde NAT arkasındaki istemciler için **TURN** eklenmelidir.
+Görüntülü arama (`messaging/webrtc/*`) — **en fazla 3 kişi** P2P mesh (SFU yok). API, tarayıcıya ICE sunucu listesi döner; oda: `POST …/room/join`, sinyal `targetUserId` ile eşleşir. Varsayılan: Google STUN (`stun:stun.l.google.com:19302`). Üretimde NAT arkasındaki istemciler için **TURN** eklenmelidir.
 
 ## Ortam değişkeni
 

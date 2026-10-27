@@ -21,11 +21,12 @@ API_BASE="${API_BASE}" bash "${ROOT}/scripts/verify-messaging-webrtc-ice-config.
 
 cat <<'TXT'
 
-Manuel (2 tarayıcı / 2 firma, aynı thread):
-  1) Hub → Pilot görüntülü arama → arama başlat
-  2) Karşı tarafta «Gelen aramayı kabul et» (Safari zorunlu)
+Manuel (aynı thread, en fazla 3 katılımcı):
+  1) Hub → «Görüntülü görüşme (max 3)» → birinci katılımcı
+  2) İkinci/üçüncü katılımcı aynı düğme veya «Gelen aramayı kabul et»
   3) Ses + video; NAT sorununda TURN env güncelle
-  4) Kapat → signaling polling durur
+  4) 4. kişi → API «oda dolu» (409)
+  5) Kapat → oda leave + polling durur
 
 TXT
 echo "verify-messaging-webrtc-pilot-checklist: PASS"

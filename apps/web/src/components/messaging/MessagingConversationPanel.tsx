@@ -168,6 +168,7 @@ export function MessagingConversationPanel({
               <MessagingWebRtcPilotCall
                 accessToken={accessToken}
                 threadId={activeThreadId || null}
+                currentUserId={session?.userId ?? null}
               />
               {activeThread?.threadKind === "group" &&
               groupParticipants.length > 0 ? (

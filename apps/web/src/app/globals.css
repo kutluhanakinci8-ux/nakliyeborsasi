@@ -6980,6 +6980,17 @@ button.btn-secondary {
   max-width: 420px;
 }
 
+.messaging-webrtc-pilot-videos--mesh {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  max-width: 560px;
+}
+
+@media (max-width: 640px) {
+  .messaging-webrtc-pilot-videos--mesh {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
 .messaging-webrtc-pilot-video {
   width: 100%;
   max-height: 160px;

@@ -35,7 +35,8 @@ export function MessagingWebRtcDisclosure({ accessToken }: Props) {
 
   return (
     <p className="messaging-chat-compliance-webrtc module-hint" role="note">
-      <strong>Görüntülü görüşme (WebRTC)</strong> — sinyalleşme:{" "}
+      <strong>Görüntülü görüşme (WebRTC)</strong> — en fazla 3 kişi (P2P mesh);
+      sinyalleşme:{" "}
       {signalingMode === "redis_relay"
         ? "Redis relay (SDP/ICE pilot)"
         : signalingMode === "unavailable"
