@@ -1,5 +1,10 @@
 export type SocialMetaMessagingChannel = "instagram" | "messenger";
 
+export type WhatsAppInboundAudioRef = {
+  mediaId: string;
+  mimeType: string;
+};
+
 export type ParsedInboundSocialMessage = {
   entryId: string;
   externalThreadId: string;
@@ -9,6 +14,8 @@ export type ParsedInboundSocialMessage = {
   channel: SocialMetaMessagingChannel;
   /** WhatsApp Cloud: value.metadata.phone_number_id — webhook routing */
   whatsAppPhoneNumberId?: string | null;
+  /** BR-2: inbound voice/audio media id for Graph download */
+  whatsAppInboundAudio?: WhatsAppInboundAudioRef | null;
 };
 
 export function parseMetaWebhookBody(body: Record<string, unknown>): {
@@ -290,9 +297,30 @@ function parseWhatsAppChange(
       externalMessageId: id,
       channel: "messenger",
       whatsAppPhoneNumberId: phoneNumberId,
+      whatsAppInboundAudio: extractWhatsAppInboundAudio(msg),
     };
   }
   return null;
+}
+
+export function extractWhatsAppInboundAudio(
+  msg: Record<string, unknown>,
+): WhatsAppInboundAudioRef | null {
+  const type = typeof msg.type === "string" ? msg.type.trim() : "";
+  if (type !== "audio" && type !== "voice") {
+    return null;
+  }
+  const media =
+    (msg[type] as Record<string, unknown> | undefined) ??
+    (msg.audio as Record<string, unknown> | undefined);
+  const mediaId = typeof media?.id === "string" ? media.id.trim() : "";
+  if (!mediaId) {
+    return null;
+  }
+  const rawMime =
+    typeof media?.mime_type === "string" ? media.mime_type.trim() : "";
+  const mimeType = rawMime.split(";")[0]?.trim() || "audio/ogg";
+  return { mediaId, mimeType };
 }
 
 function extractWhatsAppMessageBody(msg: Record<string, unknown>): string {

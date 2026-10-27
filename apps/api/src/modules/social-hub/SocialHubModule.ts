@@ -24,6 +24,7 @@ import { SocialHubTelegramWebhookBootstrap } from "./oauth/SocialHubTelegramWebh
 import { SocialHubTelegramWebhookIngestService } from "./oauth/SocialHubTelegramWebhookIngestService";
 import { SocialHubTelegramOutboundService } from "./oauth/SocialHubTelegramOutboundService";
 import { SocialHubTelegramFileService } from "./oauth/SocialHubTelegramFileService";
+import { SocialHubWhatsAppMediaService } from "./oauth/SocialHubWhatsAppMediaService";
 import { SocialHubTelegramPublishService } from "./oauth/SocialHubTelegramPublishService";
 import { MessageEntity } from "../../infrastructure/database/entities/MessageEntity";
 import { SocialPostPublishScheduler } from "./SocialPostPublishScheduler";
@@ -137,6 +138,7 @@ import { SocialHubTelegramMediaGroupBufferService } from "./oauth/SocialHubTeleg
     SocialHubTelegramWebhookIngestService,
     SocialHubTelegramOutboundService,
     SocialHubTelegramFileService,
+    SocialHubWhatsAppMediaService,
     SocialHubTelegramPublishService,
     SocialHubTelegramMediaGroupBufferService,
     SocialHubRoadmapPublishApplicationService,

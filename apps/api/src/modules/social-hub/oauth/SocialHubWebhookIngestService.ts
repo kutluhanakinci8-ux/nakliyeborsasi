@@ -6,6 +6,9 @@ import { SocialHubWebhookRoutingService } from "./SocialHubWebhookRoutingService
 import { SocialHubMessagingBridgeService } from "../SocialHubMessagingBridgeService";
 import { SocialHubWebhookBridgeAuditService } from "../SocialHubWebhookBridgeAuditService";
 import { SocialPlatformCode } from "@nakliyeborsasi/core";
+import { messagingVoiceBridgeWaInboundFaz2Enabled } from "../../messaging/messagingVoiceBridgeSttConfig";
+import { SocialHubTokenVaultService } from "./SocialHubTokenVaultService";
+import { SocialHubWhatsAppMediaService } from "./SocialHubWhatsAppMediaService";
 
 @Injectable()
 export class SocialHubWebhookIngestService {
@@ -16,6 +19,8 @@ export class SocialHubWebhookIngestService {
     private readonly routingService: SocialHubWebhookRoutingService,
     private readonly messagingBridgeService: SocialHubMessagingBridgeService,
     private readonly webhookBridgeAuditService: SocialHubWebhookBridgeAuditService,
+    private readonly tokenVault: SocialHubTokenVaultService,
+    private readonly whatsAppMediaService: SocialHubWhatsAppMediaService,
   ) {}
 
   public async ingestMetaPayload(
@@ -51,6 +56,13 @@ export class SocialHubWebhookIngestService {
           message.channel === "instagram" || object === "instagram"
             ? SocialPlatformCode.Instagram
             : route.platformCode;
+        const attachmentsInput = await this.resolveWhatsAppInboundAudioAttachments(
+          {
+            companyId: route.companyId,
+            platformCode,
+            audio: message.whatsAppInboundAudio,
+          },
+        );
         const result = await this.messagingBridgeService.ingestWebhookInbound({
           companyId: route.companyId,
           platformCode,
@@ -58,6 +70,7 @@ export class SocialHubWebhookIngestService {
           displayLabel: message.displayLabel,
           bodyText: message.bodyText,
           externalMessageId: message.externalMessageId,
+          attachmentsInput,
         });
         if (result.ingested) {
           this.logger.log(
@@ -147,6 +160,39 @@ export class SocialHubWebhookIngestService {
     if (shapes.length > 0) {
       this.logger.log(`Instagram webhook shape: ${shapes.join(" | ")}`);
     }
+  }
+
+  private async resolveWhatsAppInboundAudioAttachments(params: {
+    companyId: string;
+    platformCode: SocialPlatformCode | string;
+    audio?: { mediaId: string; mimeType: string } | null;
+  }) {
+    if (!params.audio?.mediaId) {
+      return undefined;
+    }
+    if (!messagingVoiceBridgeWaInboundFaz2Enabled()) {
+      return undefined;
+    }
+    if (params.platformCode !== SocialPlatformCode.WhatsAppCloud) {
+      return undefined;
+    }
+    const accessToken = await this.tokenVault.getAccessToken(
+      params.companyId,
+      SocialPlatformCode.WhatsAppCloud,
+    );
+    if (!accessToken) {
+      this.logger.warn(
+        `WhatsApp inbound audio skipped (no token) company=${params.companyId}`,
+      );
+      return undefined;
+    }
+    const attachment =
+      await this.whatsAppMediaService.downloadInboundAudioAsVoiceAttachment({
+        accessToken,
+        mediaId: params.audio.mediaId,
+        mimeType: params.audio.mimeType,
+      });
+    return attachment ? [attachment] : undefined;
   }
 
   private verifyMetaSignature(

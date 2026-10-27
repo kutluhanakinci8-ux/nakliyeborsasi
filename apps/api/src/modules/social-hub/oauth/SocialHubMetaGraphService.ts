@@ -703,6 +703,39 @@ export class SocialHubMetaGraphService {
     };
   }
 
+  public async downloadWhatsAppMedia(params: {
+    accessToken: string;
+    mediaId: string;
+  }): Promise<{ buffer: Buffer; mimeType: string } | null> {
+    const metaUrl = new URL(
+      `https://graph.facebook.com/v21.0/${encodeURIComponent(params.mediaId)}`,
+    );
+    const metaRes = await fetch(metaUrl.toString(), {
+      headers: { Authorization: `Bearer ${params.accessToken}` },
+    });
+    const metaPayload = (await metaRes.json()) as {
+      url?: string;
+      mime_type?: string;
+      error?: { message?: string };
+    };
+    if (!metaRes.ok || !metaPayload.url) {
+      return null;
+    }
+    const fileRes = await fetch(metaPayload.url, {
+      headers: { Authorization: `Bearer ${params.accessToken}` },
+    });
+    if (!fileRes.ok) {
+      return null;
+    }
+    const arrayBuffer = await fileRes.arrayBuffer();
+    const mimeType =
+      typeof metaPayload.mime_type === "string"
+        ? metaPayload.mime_type.split(";")[0]?.trim() || "application/octet-stream"
+        : fileRes.headers.get("content-type")?.split(";")[0]?.trim() ||
+          "application/octet-stream";
+    return { buffer: Buffer.from(arrayBuffer), mimeType };
+  }
+
   public async sendWhatsAppAudio(params: {
     phoneNumberId?: string;
     accessToken: string;
