@@ -169,6 +169,7 @@ export class MessagingModuleStatusController {
         "messaging_webrtc_meet_capacity_faz15",
         "messaging_webrtc_meet_sfu_intent_faz16",
         "messaging_webrtc_meet_sfu_config_faz17",
+        "messaging_webrtc_meet_sfu_session_faz18",
       ],
       translate: { deepl, libretranslate: libre },
       attachments: (() => {

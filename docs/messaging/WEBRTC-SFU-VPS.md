@@ -12,6 +12,10 @@ Faz 17 **medya yönlendirmesini açmaz**; yalnızca SFU altyapısının tanımla
 
 Deploy sonrası: `GET /api/v1/messaging/webrtc/sfu/status` veya `/messaging/status` → `webrtc.sfuBackend`.
 
+## Faz 18 oturum API
+
+`POST /api/v1/messaging/webrtc/threads/:threadId/sfu/session` → `join.signalingUrl` + `joinQuery` (harici istemci).
+
 ## Sonraki
 
-Faz 18+ gerçek SFU join/signaling entegrasyonu.
+Faz 19+ tarayıcı içi SFU medya veya RN native.

@@ -1,11 +1,15 @@
 const DEFAULT_PLANNED_MAX = 12;
 
 export type MessagingWebRtcSfuBackendSnapshot = {
-  /** Faz 17: medya hâlâ P2P mesh; SFU yalnızca yapılandırma + sağlık. */
+  /** Faz 17–18: varsayılan medya P2P mesh; SFU oturumu ayrı pilot kanalı. */
   meshOnly: true;
   healthUrlConfigured: boolean;
   signalingUrlConfigured: boolean;
   plannedMaxParticipants: number;
+  sessionJoin: {
+    enabled: boolean;
+    pathTemplate: string;
+  };
   probe: {
     ok: boolean;
     source: "disabled" | "http_probe";
@@ -46,12 +50,17 @@ export async function probeMessagingWebRtcSfuBackend(): Promise<MessagingWebRtcS
   const healthUrl = resolveMessagingWebRtcSfuHealthUrl();
   const signalingUrl = resolveMessagingWebRtcSfuSignalingUrl();
   const plannedMaxParticipants = plannedMessagingWebRtcSfuMaxParticipants();
+  const sessionJoin = {
+    enabled: Boolean(signalingUrl),
+    pathTemplate: "/messaging/webrtc/threads/{threadId}/sfu/session",
+  };
   if (!healthUrl) {
     return {
       meshOnly: true,
       healthUrlConfigured: false,
       signalingUrlConfigured: Boolean(signalingUrl),
       plannedMaxParticipants,
+      sessionJoin,
       probe: {
         ok: false,
         source: "disabled",
@@ -77,6 +86,7 @@ export async function probeMessagingWebRtcSfuBackend(): Promise<MessagingWebRtcS
       healthUrlConfigured: true,
       signalingUrlConfigured: Boolean(signalingUrl),
       plannedMaxParticipants,
+      sessionJoin,
       probe: {
         ok,
         source: "http_probe",
@@ -93,6 +103,7 @@ export async function probeMessagingWebRtcSfuBackend(): Promise<MessagingWebRtcS
       healthUrlConfigured: true,
       signalingUrlConfigured: Boolean(signalingUrl),
       plannedMaxParticipants,
+      sessionJoin,
       probe: {
         ok: false,
         source: "http_probe",
