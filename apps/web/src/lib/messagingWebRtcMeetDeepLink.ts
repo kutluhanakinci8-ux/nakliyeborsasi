@@ -12,6 +12,20 @@ export function isMeetDeepLinkActive(): boolean {
   return new URLSearchParams(window.location.search).get("meet") === "1";
 }
 
+export function buildMessagingSfuPilotDeepLink(threadId: string): string {
+  if (typeof window === "undefined") {
+    return `/messaging?tab=chat&threadId=${encodeURIComponent(threadId)}&sfuPilot=1`;
+  }
+  return `${window.location.origin}/messaging?tab=chat&threadId=${encodeURIComponent(threadId)}&sfuPilot=1`;
+}
+
+export function isSfuPilotDeepLinkActive(): boolean {
+  if (typeof window === "undefined") {
+    return false;
+  }
+  return new URLSearchParams(window.location.search).get("sfuPilot") === "1";
+}
+
 export function isLikelyMobileBrowser(): boolean {
   if (typeof navigator === "undefined") {
     return false;

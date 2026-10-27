@@ -10,6 +10,12 @@ export type WebRtcMeetSfuSessionJoinBundle = {
   media: "audio" | "video";
   expiresAt: string;
   pilotHintTr: string;
+  embed: {
+    mode: "signaling_iframe";
+    sandbox: string;
+    localMediaPreview: boolean;
+    hintTr: string;
+  };
 };
 
 function apiBase(): string {

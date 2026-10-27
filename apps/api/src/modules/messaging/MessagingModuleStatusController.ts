@@ -61,6 +61,11 @@ export class MessagingModuleStatusController {
       capacity: ReturnType<typeof summarizeMessagingWebRtcMeetCapacity>;
       sfuStatusPath: string;
       sfuBackend: Awaited<ReturnType<typeof probeMessagingWebRtcSfuBackend>>;
+      sfuEmbed: {
+        enabled: boolean;
+        deepLinkParam: string;
+        localMediaPreview: boolean;
+      };
       iceCaps: ReturnType<typeof summarizeMessagingWebRtcIceCaps>;
       turnMonitor: Awaited<ReturnType<typeof probeMessagingWebRtcTurnMonitor>>;
       recordingArchive: { s3Enabled: boolean; maxBytes: number };
@@ -170,6 +175,7 @@ export class MessagingModuleStatusController {
         "messaging_webrtc_meet_sfu_intent_faz16",
         "messaging_webrtc_meet_sfu_config_faz17",
         "messaging_webrtc_meet_sfu_session_faz18",
+        "messaging_webrtc_meet_sfu_embed_faz19",
       ],
       translate: { deepl, libretranslate: libre },
       attachments: (() => {
@@ -206,6 +212,11 @@ export class MessagingModuleStatusController {
         capacity: summarizeMessagingWebRtcMeetCapacity(),
         sfuStatusPath: "/messaging/webrtc/sfu/status",
         sfuBackend,
+        sfuEmbed: {
+          enabled: true,
+          deepLinkParam: "sfuPilot",
+          localMediaPreview: true,
+        },
         iceCaps,
         turnMonitor,
         recordingArchive: {
