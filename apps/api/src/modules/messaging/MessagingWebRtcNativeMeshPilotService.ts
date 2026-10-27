@@ -20,6 +20,16 @@ export type WebRtcNativeMeshPilotSession = {
   joinToken: string;
   iceServers: ReturnType<typeof resolveMessagingWebRtcIceServers>;
   signalingRelay: "redis_relay";
+  meshSignaling: {
+    roomJoinPath: string;
+    roomLeavePath: string;
+    signalsPollPath: string;
+    signalsPostPath: string;
+  };
+  meshMedia: {
+    stack: "rn_peer_connection";
+    globalInject: "LertaRnWebRTC";
+  };
   createdAt: string;
   expiresAt: string;
   hintTr: string;
@@ -84,10 +94,20 @@ export class MessagingWebRtcNativeMeshPilotService {
       joinToken: randomUUID(),
       iceServers: resolveMessagingWebRtcIceServers(),
       signalingRelay: "redis_relay",
+      meshSignaling: {
+        roomJoinPath: `/messaging/webrtc/threads/${threadId}/room/join`,
+        roomLeavePath: `/messaging/webrtc/threads/${threadId}/room/leave`,
+        signalsPollPath: `/messaging/webrtc/threads/${threadId}/signals`,
+        signalsPostPath: `/messaging/webrtc/threads/${threadId}/signals`,
+      },
+      meshMedia: {
+        stack: "rn_peer_connection",
+        globalInject: "LertaRnWebRTC",
+      },
       createdAt: new Date(now).toISOString(),
       expiresAt: new Date(now + PILOT_TTL_SECONDS * 1000).toISOString(),
       hintTr:
-        "RN WebRTC dev client: bu oturum joinToken ile mesh sinyal (redis_relay) kullanır; web mesh pilotu paralel kalabilir.",
+        "RN mesh: room/join + signals poll/post; RTCPeerConnection global.LertaRnWebRTC (react-native-webrtc).",
     };
     await this.redis.set(
       this.sessionKey(threadId),

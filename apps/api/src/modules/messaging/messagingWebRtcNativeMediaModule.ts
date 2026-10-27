@@ -12,6 +12,11 @@ export type MessagingWebRtcNativeMediaModuleSnapshot = {
     pathTemplate: string;
     requiresRnWebRtc: true;
   };
+  rnMeshMedia: {
+    enabled: boolean;
+    stack: "rn_peer_connection";
+    globalInject: "LertaRnWebRTC";
+  };
   hintTr: string;
 };
 
@@ -26,7 +31,12 @@ export function defaultNativeMediaModuleSnapshot(): MessagingWebRtcNativeMediaMo
       pathTemplate: "/messaging/webrtc/threads/{threadId}/native-pilot/session",
       requiresRnWebRtc: true,
     },
+    rnMeshMedia: {
+      enabled: true,
+      stack: "rn_peer_connection",
+      globalInject: "LertaRnWebRTC",
+    },
     hintTr:
-      "Native mesh pilot (Faz 22): linked_dev_client capabilities + thread oturum API.",
+      "Faz 23: RN mesh sinyal tüketimi + LertaRnWebRTC global ile peer connection.",
   };
 }

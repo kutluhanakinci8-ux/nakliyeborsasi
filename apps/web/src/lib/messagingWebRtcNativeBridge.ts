@@ -10,6 +10,11 @@ export type MessagingWebRtcNativeMediaModule = {
     pathTemplate: string;
     requiresRnWebRtc: true;
   };
+  rnMeshMedia?: {
+    enabled: boolean;
+    stack: "rn_peer_connection";
+    globalInject: "LertaRnWebRTC";
+  };
   hintTr: string;
 };
 
