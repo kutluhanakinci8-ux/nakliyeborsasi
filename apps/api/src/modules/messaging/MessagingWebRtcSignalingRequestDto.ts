@@ -6,6 +6,9 @@ export const MESSAGING_WEBRTC_SIGNAL_TYPES = [
   "ice",
   "hangup",
   "invite",
+  "raise",
+  "reaction",
+  "screen",
 ] as const;
 
 export class PostMessagingWebRtcSignalRequestDto {

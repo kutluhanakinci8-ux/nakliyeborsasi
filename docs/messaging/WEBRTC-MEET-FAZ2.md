@@ -17,4 +17,4 @@ Status feature: `messaging_webrtc_meet_hd_faz2`
 
 ## Sonraki (Faz 3)
 
-Ekran paylaşımı, ilan şeridi, planlı görüşme.
+Bkz. `WEBRTC-MEET-FAZ3.md` — ekran paylaşımı, ilan şeridi, el kaldır / tepkiler.

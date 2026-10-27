@@ -25,6 +25,9 @@ import {
 } from "../../lib/messagingWebRtcQuality";
 import { attachStreamLevelMeter } from "../../lib/messagingWebRtcSpeakerLevel";
 import { fetchMessagingPublicStatus } from "../../lib/messagingPublicStatus";
+import { MessagingApiClient } from "../../lib/MessagingApiClient";
+import type { MessagingListingCardRecord } from "../../lib/MessagingApiClient";
+import { replaceOutgoingVideoTrack } from "../../lib/messagingWebRtcScreenShare";
 import {
   fetchMessagingWebRtcConfig,
   fetchMessagingWebRtcRoom,
@@ -35,12 +38,17 @@ import {
   type WebRtcSignalEnvelope,
 } from "../../lib/messagingWebRtcSignalingClient";
 
+const QUICK_REACTIONS = ["👍", "👏", "❤️", "😂"] as const;
+
 const MAX_PARTICIPANTS = 3;
 
 type Props = {
   accessToken: string;
+  locale: string;
   threadId: string | null;
   currentUserId: string | null;
+  threadTitle?: string;
+  listingCard?: MessagingListingCardRecord | null;
 };
 
 type PilotPhase =
@@ -77,10 +85,22 @@ function parseInviteMedia(payload: string): CallMediaMode {
   }
 }
 
+function parseScreenSharing(payload: string): boolean {
+  try {
+    const data = JSON.parse(payload) as { sharing?: boolean };
+    return Boolean(data.sharing);
+  } catch {
+    return false;
+  }
+}
+
 export function MessagingWebRtcPilotCall({
   accessToken,
+  locale,
   threadId,
   currentUserId,
+  threadTitle,
+  listingCard,
 }: Props) {
   const [enabled, setEnabled] = useState(false);
   const [phase, setPhase] = useState<PilotPhase>("idle");
@@ -107,8 +127,18 @@ export function MessagingWebRtcPilotCall({
   const [videoEffect, setVideoEffect] = useState<VideoEffect>("none");
   const [networkLevel, setNetworkLevel] = useState<NetworkQualityLevel>("unknown");
   const [activeSpeakerId, setActiveSpeakerId] = useState<string | null>(null);
+  const [screenSharing, setScreenSharing] = useState(false);
+  const [handRaised, setHandRaised] = useState(false);
+  const [raisedPeerIds, setRaisedPeerIds] = useState<string[]>([]);
+  const [peerReactions, setPeerReactions] = useState<Record<string, string>>({});
+  const [linkCopied, setLinkCopied] = useState(false);
 
   const pcsRef = useRef<Map<string, RTCPeerConnection>>(new Map());
+  const cameraVideoTrackRef = useRef<MediaStreamTrack | null>(null);
+  const screenTrackRef = useRef<MediaStreamTrack | null>(null);
+  const reactionClearTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(
+    new Map(),
+  );
   const speakerMetersRef = useRef<Map<string, ReturnType<typeof attachStreamLevelMeter>>>(
     new Map(),
   );
@@ -184,6 +214,18 @@ export function MessagingWebRtcPilotCall({
     setVideoOff(false);
     setActiveSpeakerId(null);
     setNetworkLevel("unknown");
+    setScreenSharing(false);
+    setHandRaised(false);
+    setRaisedPeerIds([]);
+    setPeerReactions({});
+    setLinkCopied(false);
+    screenTrackRef.current?.stop();
+    screenTrackRef.current = null;
+    cameraVideoTrackRef.current = null;
+    for (const timer of reactionClearTimersRef.current.values()) {
+      clearTimeout(timer);
+    }
+    reactionClearTimersRef.current.clear();
     thirdPersonWarnedRef.current = false;
     for (const meter of speakerMetersRef.current.values()) {
       meter.stop();
@@ -206,6 +248,7 @@ export function MessagingWebRtcPilotCall({
             status.features.includes("messaging_webrtc_mesh_three") &&
             status.features.includes("messaging_webrtc_meet_core_faz1") &&
             status.features.includes("messaging_webrtc_meet_hd_faz2") &&
+            status.features.includes("messaging_webrtc_meet_biz_faz3") &&
             status.webrtc?.signaling === "redis_relay",
         );
       })
@@ -384,6 +427,60 @@ export function MessagingWebRtcPilotCall({
 
       if (signal.type === "invite") {
         setIncomingMedia(parseInviteMedia(signal.payload));
+        return;
+      }
+
+      if (signal.type === "raise") {
+        try {
+          const data = JSON.parse(signal.payload) as { raised?: boolean };
+          setRaisedPeerIds((prev) => {
+            const set = new Set(prev);
+            if (data.raised) {
+              set.add(peerId);
+            } else {
+              set.delete(peerId);
+            }
+            return [...set];
+          });
+        } catch {
+          /* ignore */
+        }
+        return;
+      }
+
+      if (signal.type === "reaction") {
+        try {
+          const data = JSON.parse(signal.payload) as { emoji?: string };
+          if (data.emoji) {
+            setPeerReactions((prev) => ({ ...prev, [peerId]: data.emoji! }));
+            const existing = reactionClearTimersRef.current.get(peerId);
+            if (existing) {
+              clearTimeout(existing);
+            }
+            reactionClearTimersRef.current.set(
+              peerId,
+              setTimeout(() => {
+                setPeerReactions((prev) => {
+                  const next = { ...prev };
+                  delete next[peerId];
+                  return next;
+                });
+                reactionClearTimersRef.current.delete(peerId);
+              }, 4500),
+            );
+          }
+        } catch {
+          /* ignore */
+        }
+        return;
+      }
+
+      if (signal.type === "screen") {
+        setStatusLine(
+          parseScreenSharing(signal.payload)
+            ? "Karşı taraf ekran paylaşıyor"
+            : "Ekran paylaşımı bitti",
+        );
         return;
       }
 
@@ -655,11 +752,140 @@ export function MessagingWebRtcPilotCall({
     if (!stream) {
       return;
     }
+    if (screenSharing) {
+      return;
+    }
     const next = !videoOff;
     stream.getVideoTracks().forEach((t) => {
-      t.enabled = !next;
+      if (t !== screenTrackRef.current) {
+        t.enabled = !next;
+      }
     });
     setVideoOff(next);
+  }
+
+  async function stopScreenShare(): Promise<void> {
+    const local = localStreamRef.current;
+    const screenTrack = screenTrackRef.current;
+    const cameraTrack = cameraVideoTrackRef.current;
+    if (!local || !screenTrack) {
+      setScreenSharing(false);
+      return;
+    }
+    screenTrack.stop();
+    local.removeTrack(screenTrack);
+    screenTrackRef.current = null;
+    if (cameraTrack && callModeRef.current === "video") {
+      cameraTrack.enabled = !videoOff;
+      if (!local.getVideoTracks().includes(cameraTrack)) {
+        local.addTrack(cameraTrack);
+      }
+      await replaceOutgoingVideoTrack(pcsRef.current.values(), cameraTrack);
+    } else {
+      await replaceOutgoingVideoTrack(pcsRef.current.values(), null);
+    }
+    setLocalStream(new MediaStream(local.getTracks()));
+    setScreenSharing(false);
+    if (threadId) {
+      await postMessagingWebRtcSignal(
+        accessToken,
+        threadId,
+        "screen",
+        JSON.stringify({ sharing: false }),
+        null,
+      ).catch(() => undefined);
+    }
+  }
+
+  async function toggleScreenShare(): Promise<void> {
+    if (screenSharing) {
+      await stopScreenShare();
+      return;
+    }
+    if (callModeRef.current !== "video" || !localStreamRef.current) {
+      return;
+    }
+    try {
+      const displayStream = await navigator.mediaDevices.getDisplayMedia({
+        video: true,
+        audio: false,
+      });
+      const screenTrack = displayStream.getVideoTracks()[0];
+      if (!screenTrack) {
+        displayStream.getTracks().forEach((t) => t.stop());
+        return;
+      }
+      const local = localStreamRef.current;
+      const cameraTrack = local.getVideoTracks().find(
+        (t) => t !== screenTrackRef.current,
+      );
+      if (cameraTrack) {
+        cameraVideoTrackRef.current = cameraTrack;
+        local.removeTrack(cameraTrack);
+      }
+      screenTrackRef.current = screenTrack;
+      screenTrack.onended = () => {
+        void stopScreenShare();
+      };
+      local.addTrack(screenTrack);
+      await replaceOutgoingVideoTrack(pcsRef.current.values(), screenTrack);
+      setLocalStream(new MediaStream(local.getTracks()));
+      setScreenSharing(true);
+      setStatusLine("Ekran paylaşılıyor");
+      if (threadId) {
+        await postMessagingWebRtcSignal(
+          accessToken,
+          threadId,
+          "screen",
+          JSON.stringify({ sharing: true }),
+          null,
+        );
+      }
+    } catch {
+      setStatusLine("Ekran paylaşımı iptal edildi");
+    }
+  }
+
+  async function toggleHandRaise(): Promise<void> {
+    if (!threadId) {
+      return;
+    }
+    const next = !handRaised;
+    setHandRaised(next);
+    await postMessagingWebRtcSignal(
+      accessToken,
+      threadId,
+      "raise",
+      JSON.stringify({ raised: next }),
+      null,
+    ).catch(() => undefined);
+  }
+
+  async function sendQuickReaction(emoji: string): Promise<void> {
+    if (!threadId) {
+      return;
+    }
+    await postMessagingWebRtcSignal(
+      accessToken,
+      threadId,
+      "reaction",
+      JSON.stringify({ emoji }),
+      null,
+    ).catch(() => undefined);
+  }
+
+  async function copyMeetLink(): Promise<void> {
+    if (!threadId || typeof window === "undefined") {
+      return;
+    }
+    const url = `${window.location.origin}/messaging?threadId=${encodeURIComponent(threadId)}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2500);
+    } catch {
+      setStatusLine("Bağlantı kopyalanamadı");
+    }
   }
 
   async function enterPictureInPicture(video: HTMLVideoElement | null): Promise<void> {
@@ -678,6 +904,13 @@ export function MessagingWebRtcPilotCall({
   }
 
   async function endCall(): Promise<void> {
+    const durationSec =
+      callStartedAtRef.current
+        ? Math.floor((Date.now() - callStartedAtRef.current) / 1000)
+        : callSeconds;
+    if (screenSharing) {
+      await stopScreenShare().catch(() => undefined);
+    }
     if (threadId && currentUserId) {
       for (const peerId of pcsRef.current.keys()) {
         await postMessagingWebRtcSignal(
@@ -692,6 +925,21 @@ export function MessagingWebRtcPilotCall({
     teardown();
     setPhase("ended");
     setStatusLine("Arama sonlandı");
+    if (threadId && durationSec >= 5) {
+      const listingHint = listingCard
+        ? ` · ${listingCard.routeLabel}`
+        : "";
+      const modeLabel =
+        callModeRef.current === "audio" ? "Sesli görüşme" : "Görüntülü görüşme";
+      void MessagingApiClient.sendMessage(
+        accessToken,
+        locale,
+        threadId,
+        `📞 ${modeLabel} özeti: ${formatCallDuration(durationSec)}${listingHint}`,
+        undefined,
+        "internal",
+      ).catch(() => undefined);
+    }
   }
 
   useEffect(() => {
@@ -749,12 +997,33 @@ export function MessagingWebRtcPilotCall({
     .filter(Boolean)
     .join(" ");
 
+  const showContextStrip =
+    Boolean(threadTitle || listingCard) &&
+    phase !== "idle" &&
+    phase !== "ended";
+
   return (
     <div
-      className="messaging-webrtc-pilot messaging-webrtc-meet-faz1 messaging-webrtc-meet-faz2"
+      className="messaging-webrtc-pilot messaging-webrtc-meet-faz1 messaging-webrtc-meet-faz2 messaging-webrtc-meet-faz3"
       role="region"
       aria-label="Görüntülü ve sesli görüşme (en fazla 3 kişi)"
     >
+      {showContextStrip ? (
+        <div className="messaging-webrtc-faz3-context" role="status">
+          {threadTitle ? (
+            <span className="messaging-webrtc-faz3-context-title">{threadTitle}</span>
+          ) : null}
+          {listingCard ? (
+            <span className="messaging-webrtc-faz3-context-listing">
+              {listingCard.routeLabel} · {listingCard.equipmentTypeCode} ·{" "}
+              {listingCard.weightTonnes} t
+              {listingCard.priceAmount
+                ? ` · ${listingCard.priceAmount} ${listingCard.priceCurrencyCode ?? ""}`
+                : ""}
+            </span>
+          ) : null}
+        </div>
+      ) : null}
       <div className="messaging-webrtc-pilot-toolbar">
         {phase === "incoming" ? (
           <>
@@ -806,6 +1075,14 @@ export function MessagingWebRtcPilotCall({
             >
               Görüntülü ara
             </button>
+            <button
+              type="button"
+              className="messaging-webrtc-pilot-btn"
+              onClick={() => void copyMeetLink()}
+              title="Görüşme bağlantısı"
+            >
+              {linkCopied ? "Kopyalandı" : "Bağlantı"}
+            </button>
           </>
         ) : (
           <>
@@ -827,6 +1104,32 @@ export function MessagingWebRtcPilotCall({
                 {videoOff ? "Kamera kapalı" : "Kamera"}
               </button>
             ) : null}
+            {callModeRef.current === "video" ? (
+              <button
+                type="button"
+                className={`messaging-webrtc-pilot-btn ${screenSharing ? "is-active" : ""}`}
+                onClick={() => void toggleScreenShare()}
+                title="Ekran paylaş"
+              >
+                {screenSharing ? "Ekranı durdur" : "Ekran"}
+              </button>
+            ) : null}
+            <button
+              type="button"
+              className={`messaging-webrtc-pilot-btn ${handRaised ? "is-active" : ""}`}
+              onClick={() => void toggleHandRaise()}
+              title="El kaldır"
+            >
+              {handRaised ? "El indir" : "El kaldır"}
+            </button>
+            <button
+              type="button"
+              className="messaging-webrtc-pilot-btn"
+              onClick={() => void copyMeetLink()}
+              title="Görüşme bağlantısı"
+            >
+              {linkCopied ? "Kopyalandı" : "Bağlantı"}
+            </button>
             <button
               type="button"
               className="messaging-webrtc-pilot-btn"
@@ -999,6 +1302,32 @@ export function MessagingWebRtcPilotCall({
         </div>
       ) : null}
 
+      {inCallUi ? (
+        <div className="messaging-webrtc-faz3-reactions" aria-label="Tepkiler">
+          {QUICK_REACTIONS.map((emoji) => (
+            <button
+              key={emoji}
+              type="button"
+              className="messaging-webrtc-faz3-reaction-btn"
+              onClick={() => void sendQuickReaction(emoji)}
+              title="Tepki gönder"
+            >
+              {emoji}
+            </button>
+          ))}
+          {raisedPeerIds.length > 0 || handRaised ? (
+            <span className="messaging-webrtc-faz3-raised-hint">
+              ✋{" "}
+              {[
+                ...(handRaised && currentUserId ? [currentUserId] : []),
+                ...raisedPeerIds,
+              ].length}{" "}
+              el kaldırdı
+            </span>
+          ) : null}
+        </div>
+      ) : null}
+
       {showVideos || (inCallUi && remotePeers.length > 0) ? (
         <div
           className={
@@ -1008,29 +1337,50 @@ export function MessagingWebRtcPilotCall({
           }
         >
           {showVideos ? (
-            <video
-              ref={localVideoRef}
-              className={localVideoClass}
-              autoPlay
-              muted
-              playsInline
-            />
+            <div className="messaging-webrtc-pilot-remote-wrap">
+              <video
+                ref={localVideoRef}
+                className={localVideoClass}
+                autoPlay
+                muted
+                playsInline
+              />
+              {handRaised ? (
+                <span className="messaging-webrtc-hand-raise" aria-hidden>
+                  ✋
+                </span>
+              ) : null}
+            </div>
           ) : null}
           {sortedRemotes.map((peer, index) => (
-            <video
+            <div
               key={peer.userId}
-              data-webrtc-peer={peer.userId}
-              className={
-                layoutMode === "speaker" && index === 0
-                  ? "messaging-webrtc-pilot-video messaging-webrtc-pilot-video--remote messaging-webrtc-pilot-video--spotlight is-active-speaker"
-                  : `messaging-webrtc-pilot-video messaging-webrtc-pilot-video--remote${
-                      activeSpeakerId === peer.userId ? " is-active-speaker" : ""
-                    }`
-              }
-              autoPlay
-              playsInline
-              ref={(el) => attachStreamToVideo(el, peer.stream)}
-            />
+              className="messaging-webrtc-pilot-remote-wrap"
+            >
+              <video
+                data-webrtc-peer={peer.userId}
+                className={
+                  layoutMode === "speaker" && index === 0
+                    ? "messaging-webrtc-pilot-video messaging-webrtc-pilot-video--remote messaging-webrtc-pilot-video--spotlight is-active-speaker"
+                    : `messaging-webrtc-pilot-video messaging-webrtc-pilot-video--remote${
+                        activeSpeakerId === peer.userId ? " is-active-speaker" : ""
+                      }`
+                }
+                autoPlay
+                playsInline
+                ref={(el) => attachStreamToVideo(el, peer.stream)}
+              />
+              {raisedPeerIds.includes(peer.userId) ? (
+                <span className="messaging-webrtc-hand-raise" aria-hidden>
+                  ✋
+                </span>
+              ) : null}
+              {peerReactions[peer.userId] ? (
+                <span className="messaging-webrtc-reaction-pop">
+                  {peerReactions[peer.userId]}
+                </span>
+              ) : null}
+            </div>
           ))}
         </div>
       ) : null}

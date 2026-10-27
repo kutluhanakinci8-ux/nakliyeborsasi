@@ -130,6 +130,7 @@ export class MessagingModuleStatusController {
         "messaging_webrtc_mesh_three",
         "messaging_webrtc_meet_core_faz1",
         "messaging_webrtc_meet_hd_faz2",
+        "messaging_webrtc_meet_biz_faz3",
       ],
       translate: { deepl, libretranslate: libre },
       attachments: (() => {

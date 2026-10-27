@@ -167,8 +167,20 @@ export function MessagingConversationPanel({
               </h2>
               <MessagingWebRtcPilotCall
                 accessToken={accessToken}
+                locale={locale}
                 threadId={activeThreadId || null}
                 currentUserId={session?.userId ?? null}
+                threadTitle={
+                  activeThread
+                    ? activeThread.threadKind === "group"
+                      ? activeThread.title?.trim() ||
+                        activeThread.counterpartyLegalName?.trim() ||
+                        "Grup sohbet"
+                      : activeThread.counterpartyLegalName?.trim() ||
+                        shortCompanyId(activeThread.counterpartyCompanyId)
+                    : undefined
+                }
+                listingCard={listingCard}
               />
               {activeThread?.threadKind === "group" &&
               groupParticipants.length > 0 ? (
