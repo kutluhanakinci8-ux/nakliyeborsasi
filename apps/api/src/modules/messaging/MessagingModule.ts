@@ -49,6 +49,8 @@ import { MessageOperationStampEntity } from "../../infrastructure/database/entit
 import { MessagingWebhookDispatcherService } from "./MessagingWebhookDispatcherService";
 import { MessagingCompanyIntegrationService } from "./MessagingCompanyIntegrationService";
 import { MessagingIntegrationController } from "./MessagingIntegrationController";
+import { MessagingVoiceSttHealthController } from "./MessagingVoiceSttHealthController";
+import { MessagingVoiceSttHealthService } from "./MessagingVoiceSttHealthService";
 import { MessagingAutomationCatalogController } from "./MessagingAutomationCatalogController";
 import { MessagingPublicApiController } from "./MessagingPublicApiController";
 import { MessagingPublicApiScopeGuard } from "./MessagingPublicApiScopeGuard";
@@ -108,6 +110,7 @@ import { SocialHubModule } from "../social-hub/SocialHubModule";
     MessagingWebRtcController,
     MessagingStreamController,
     MessagingIntegrationController,
+    MessagingVoiceSttHealthController,
     MessagingAutomationCatalogController,
     MessagingPublicApiController,
     PlatformCommunicationsOpsController,
@@ -115,6 +118,7 @@ import { SocialHubModule } from "../social-hub/SocialHubModule";
   providers: [
     MessagingThreadApplicationService,
     MessagingVoiceTranscribeService,
+    MessagingVoiceSttHealthService,
     MessagingTranslationService,
     MessagingAttachmentQuotaService,
     MessagingAttachmentS3ProbeService,

@@ -26,9 +26,11 @@ import {
   applyMessagingVoiceSttGlossary,
   resolveMessagingVoiceSttLanguage,
 } from "./messagingVoiceSttGlossary";
+import { withMessagingVoiceSttSlot } from "./messagingVoiceSttConcurrency";
 import {
   messagingVoiceSttAuthOptional,
   messagingVoiceSttConfigured,
+  messagingVoiceSttMaxConcurrent,
   resolveMessagingVoiceSttApiKey,
   resolveMessagingVoiceSttProvider,
   messagingVoiceSttModel,
@@ -530,98 +532,113 @@ export class MessagingVoiceTranscribeService {
     if (!apiKey && !messagingVoiceSttAuthOptional()) {
       return { text: null, provider: "unconfigured", confidenceScore: null };
     }
-    const model = messagingVoiceSttModel();
-    const advanced = messagingVoiceTranscribeAdvancedFaz2Enabled();
-    const applyGlossary =
-      advanced || messagingVoiceSttTrQualityFaz1Enabled();
-    const providerKind = resolveMessagingVoiceSttProvider();
-    const preferVerbose = advanced && providerKind === "openai";
-    const form = new FormData();
-    const bytes = new Uint8Array(buffer);
-    form.append(
-      "file",
-      new Blob([bytes], { type: contentType }),
-      filename || "voice.webm",
-    );
-    form.append("model", model);
-    if (language) {
-      form.append("language", language);
-    }
-    form.append("response_format", preferVerbose ? "verbose_json" : "json");
-    try {
-      const headers: Record<string, string> = {};
-      if (apiKey) {
-        headers.Authorization = `Bearer ${apiKey}`;
-      }
-      let response = await fetch(apiUrl, {
-        method: "POST",
-        headers,
-        body: form,
-      });
-      if (!response.ok && preferVerbose) {
-        const body = await response.text();
-        this.logger.warn(
-          `Voice STT verbose_json failed status=${response.status} — json retry`,
-        );
-        const retryForm = new FormData();
-        retryForm.append(
+    const outcome = await withMessagingVoiceSttSlot(
+      messagingVoiceSttMaxConcurrent(),
+      async () => {
+        const model = messagingVoiceSttModel();
+        const advanced = messagingVoiceTranscribeAdvancedFaz2Enabled();
+        const applyGlossary =
+          advanced || messagingVoiceSttTrQualityFaz1Enabled();
+        const providerKind = resolveMessagingVoiceSttProvider();
+        const preferVerbose = advanced && providerKind === "openai";
+        const form = new FormData();
+        const bytes = new Uint8Array(buffer);
+        form.append(
           "file",
           new Blob([bytes], { type: contentType }),
           filename || "voice.webm",
         );
-        retryForm.append("model", model);
+        form.append("model", model);
         if (language) {
-          retryForm.append("language", language);
+          form.append("language", language);
         }
-        retryForm.append("response_format", "json");
-        response = await fetch(apiUrl, {
-          method: "POST",
-          headers,
-          body: retryForm,
-        });
-        if (!response.ok) {
+        form.append("response_format", preferVerbose ? "verbose_json" : "json");
+        try {
+          const headers: Record<string, string> = {};
+          if (apiKey) {
+            headers.Authorization = `Bearer ${apiKey}`;
+          }
+          let response = await fetch(apiUrl, {
+            method: "POST",
+            headers,
+            body: form,
+          });
+          if (!response.ok && preferVerbose) {
+            const body = await response.text();
+            this.logger.warn(
+              `Voice STT verbose_json failed status=${response.status} — json retry`,
+            );
+            const retryForm = new FormData();
+            retryForm.append(
+              "file",
+              new Blob([bytes], { type: contentType }),
+              filename || "voice.webm",
+            );
+            retryForm.append("model", model);
+            if (language) {
+              retryForm.append("language", language);
+            }
+            retryForm.append("response_format", "json");
+            response = await fetch(apiUrl, {
+              method: "POST",
+              headers,
+              body: retryForm,
+            });
+            if (!response.ok) {
+              this.logger.warn(
+                `Voice STT failed status=${response.status} body=${body.slice(0, 200)}`,
+              );
+              return {
+                text: null,
+                provider: "stt-error",
+                confidenceScore: null,
+              };
+            }
+          } else if (!response.ok) {
+            const body = await response.text();
+            this.logger.warn(
+              `Voice STT failed status=${response.status} body=${body.slice(0, 200)}`,
+            );
+            return { text: null, provider: "stt-error", confidenceScore: null };
+          }
+          const payload = (await response.json()) as {
+            text?: string;
+            segments?: { avg_logprob?: number }[];
+          };
+          let text = payload.text?.trim() ?? null;
+          if (text && applyGlossary) {
+            text = applyMessagingVoiceSttGlossary(text);
+          }
+          let confidenceScore: number | null = null;
+          if (advanced && payload.segments?.length) {
+            const probs = payload.segments
+              .map((segment) => segment.avg_logprob)
+              .filter((value): value is number => typeof value === "number");
+            if (probs.length > 0) {
+              const avg =
+                probs.reduce((sum, value) => sum + value, 0) / probs.length;
+              confidenceScore = Math.min(1, Math.max(0, Math.exp(avg)));
+            }
+          }
+          return {
+            text,
+            provider: providerKind === "openai" ? "whisper" : "local-whisper",
+            confidenceScore,
+          };
+        } catch (error) {
           this.logger.warn(
-            `Voice STT failed status=${response.status} body=${body.slice(0, 200)}`,
+            `Voice STT exception: ${
+              error instanceof Error ? error.message : String(error)
+            }`,
           );
           return { text: null, provider: "stt-error", confidenceScore: null };
         }
-      } else if (!response.ok) {
-        const body = await response.text();
-        this.logger.warn(
-          `Voice STT failed status=${response.status} body=${body.slice(0, 200)}`,
-        );
-        return { text: null, provider: "stt-error", confidenceScore: null };
-      }
-      const payload = (await response.json()) as {
-        text?: string;
-        segments?: { avg_logprob?: number }[];
-      };
-      let text = payload.text?.trim() ?? null;
-      if (text && applyGlossary) {
-        text = applyMessagingVoiceSttGlossary(text);
-      }
-      let confidenceScore: number | null = null;
-      if (advanced && payload.segments?.length) {
-        const probs = payload.segments
-          .map((segment) => segment.avg_logprob)
-          .filter((value): value is number => typeof value === "number");
-        if (probs.length > 0) {
-          const avg = probs.reduce((sum, value) => sum + value, 0) / probs.length;
-          confidenceScore = Math.min(1, Math.max(0, Math.exp(avg)));
-        }
-      }
-      return {
-        text,
-        provider: providerKind === "openai" ? "whisper" : "local-whisper",
-        confidenceScore,
-      };
-    } catch (error) {
-      this.logger.warn(
-        `Voice STT exception: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
-      );
-      return { text: null, provider: "stt-error", confidenceScore: null };
+      },
+    );
+    if (outcome === "stt-busy") {
+      this.logger.warn("Voice STT rejected: max concurrent jobs reached");
+      return { text: null, provider: "stt-busy", confidenceScore: null };
     }
+    return outcome;
   }
 }

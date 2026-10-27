@@ -94,7 +94,7 @@ SBOM / vitrin: `docs/oss/` veya mevcut lisans envanterine STT servisi satırı e
 
 ---
 
-## STT-OSS-4 — Kapasite, kota ve güvenilirlik
+## STT-OSS-4 — Kapasite, kota ve güvenilirlik — uygulama
 
 **Amaç:** Üretimde CPU patlamasını önlemek.
 
@@ -105,7 +105,7 @@ SBOM / vitrin: `docs/oss/` veya mevcut lisans envanterine STT servisi satırı e
 - Health: `GET /messaging/integration/voice-stt/health` (local ping)
 - Runbook: servis çökerse API graceful `provider: stt-error`, UI mesajı
 
-**Doğrulama:** k6 veya basit parallel transcribe script.
+**Doğrulama:** [VOICE-TRANSCRIBE-STT-OSS-4.md](./VOICE-TRANSCRIBE-STT-OSS-4.md), `verify-messaging-voice-stt-oss4.sh`
 
 ---
 

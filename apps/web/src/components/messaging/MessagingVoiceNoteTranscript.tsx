@@ -87,6 +87,14 @@ export function MessagingVoiceNoteTranscript({
         setLocalText(display);
         setConfidence(result.transcript.confidenceScore ?? null);
         onTranscriptReady();
+      } else if (result.transcript.provider === "stt-busy") {
+        onError(
+          "Ses→metin servisi yoğun. Birkaç saniye sonra tekrar deneyin.",
+        );
+      } else if (result.transcript.provider === "stt-error") {
+        onError(
+          "Ses→metin sunucusu yanıt vermedi. Yönetici: STT konteyneri ve /messaging/integration/voice-stt/health.",
+        );
       } else {
         onError(
           "Transkripsiyon tamamlanamadı. STT yapılandırmasını veya AI rızanızı kontrol edin.",

@@ -31,6 +31,8 @@ import {
   messagingVoiceSttConfigured,
   messagingVoiceSttDefaultLanguage,
   messagingVoiceSttLocalFaz1Enabled,
+  messagingVoiceSttMaxConcurrent,
+  messagingVoiceSttReliabilityFaz1Enabled,
   messagingVoiceSttTrQualityFaz1Enabled,
   messagingVoiceTranscribeAdvancedFaz2Enabled,
   messagingVoiceTranscribeAutoFaz3Enabled,
@@ -42,6 +44,7 @@ import {
   messagingVoiceBridgeWaInboundFaz2Enabled,
 } from "./messagingVoiceBridgeSttConfig";
 import { messagingVoiceSttGlossaryRuleCount } from "./messagingVoiceSttGlossary";
+import { messagingVoiceSttActiveCount } from "./messagingVoiceSttConcurrency";
 import { MessagingWebRtcSignalingService } from "./MessagingWebRtcSignalingService";
 import type { WhatsappBridgeDeliverySnapshot } from "@nakliyeborsasi/core";
 
@@ -113,6 +116,9 @@ export class MessagingModuleStatusController {
       sttDefaultLanguage: string | null;
       sttGlossaryRuleCount: number;
       sttTrQualityFaz1Enabled: boolean;
+      sttMaxConcurrent: number;
+      sttActiveJobs: number;
+      sttReliabilityFaz1Enabled: boolean;
     };
   }> {
     const deepl = Boolean(
@@ -246,6 +252,7 @@ export class MessagingModuleStatusController {
     const voiceBridgeWaInboundFaz2 = messagingVoiceBridgeWaInboundFaz2Enabled();
     const voiceSttLocalFaz1 = messagingVoiceSttLocalFaz1Enabled();
     const voiceSttTrQualityFaz1 = messagingVoiceSttTrQualityFaz1Enabled();
+    const voiceSttReliabilityFaz1 = messagingVoiceSttReliabilityFaz1Enabled();
     if (voiceTranscribeFaz1) {
       messagingFeatures.push("messaging_voice_transcribe_manual_faz1");
     }
@@ -266,6 +273,9 @@ export class MessagingModuleStatusController {
     }
     if (voiceSttTrQualityFaz1) {
       messagingFeatures.push("messaging_voice_stt_tr_quality_faz1");
+    }
+    if (voiceSttReliabilityFaz1) {
+      messagingFeatures.push("messaging_voice_stt_reliability_faz1");
     }
     return {
       module: "messaging",
@@ -340,6 +350,9 @@ export class MessagingModuleStatusController {
         sttDefaultLanguage: messagingVoiceSttDefaultLanguage(),
         sttGlossaryRuleCount: messagingVoiceSttGlossaryRuleCount(),
         sttTrQualityFaz1Enabled: voiceSttTrQualityFaz1,
+        sttMaxConcurrent: messagingVoiceSttMaxConcurrent(),
+        sttActiveJobs: messagingVoiceSttActiveCount(),
+        sttReliabilityFaz1Enabled: voiceSttReliabilityFaz1,
       },
     };
   }
