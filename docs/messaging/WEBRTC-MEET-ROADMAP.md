@@ -15,6 +15,7 @@
 | 21 | `messaging_webrtc_meet_native_module_faz21` | RN WebRTC capabilities + SFU medya modu raporu |
 | 22 | `messaging_webrtc_meet_rn_webrtc_pilot_faz22` | Native mesh pilot oturum API (linked dev client) |
 | 23 | `messaging_webrtc_meet_rn_mesh_media_faz23` | RN sinyal tüketimi + LertaRnWebRTC mesh medya |
-| 24+ | — | RTCView, arka plan, prod dev client |
+| 24 | `messaging_webrtc_meet_rn_rtc_view_faz24` | RTCView uzak video + arka plan poll |
+| 25 | `messaging_webrtc_meet_program_closure_faz25` | GA program kapanışı + meetProgram status |
 
-Faz 1–23 kodlandı.
+**Program tamamlandı** — `WEBRTC-MEET-CLOSURE.md`

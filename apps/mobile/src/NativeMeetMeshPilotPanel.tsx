@@ -7,6 +7,7 @@ import {
   startNativeRnMeshMediaPilot,
   type NativeRnMeshRunState,
 } from "./lertaMobileRnMeshMediaRunner";
+import { NativeMeetRemoteRtcView } from "./NativeMeetRemoteRtcView";
 
 type Props = {
   accessToken: string;
@@ -85,9 +86,11 @@ export function NativeMeetMeshPilotPanel({
       {meshState ? (
         <Text style={styles.hint}>
           Faz: {meshState.phase} · peers: {meshState.peerCount}
+          {meshState.backgroundPaused ? " · arka plan" : ""}
           {meshState.lastSignalType ? ` · ${meshState.lastSignalType}` : ""}
         </Text>
       ) : null}
+      <NativeMeetRemoteRtcView streamUrl={meshState?.remoteStreamUrl ?? null} />
     </View>
   );
 }

@@ -19,6 +19,7 @@ import {
 import { summarizeMessagingWebRtcMeetCapacity } from "./messagingWebRtcMeetCapacity";
 import { probeMessagingWebRtcSfuBackend } from "./messagingWebRtcSfuBackend";
 import { summarizeMessagingWebRtcNativeBridge } from "./messagingWebRtcNativeBridge";
+import { summarizeMessagingWebRtcMeetProgramClosure } from "./messagingWebRtcMeetProgramClosure";
 import { MessagingWebRtcSignalingService } from "./MessagingWebRtcSignalingService";
 import type { WhatsappBridgeDeliverySnapshot } from "@nakliyeborsasi/core";
 
@@ -68,6 +69,7 @@ export class MessagingModuleStatusController {
         localMediaPreview: boolean;
       };
       nativeRtcBridge: ReturnType<typeof summarizeMessagingWebRtcNativeBridge>;
+      meetProgram: ReturnType<typeof summarizeMessagingWebRtcMeetProgramClosure>;
       iceCaps: ReturnType<typeof summarizeMessagingWebRtcIceCaps>;
       turnMonitor: Awaited<ReturnType<typeof probeMessagingWebRtcTurnMonitor>>;
       recordingArchive: { s3Enabled: boolean; maxBytes: number };
@@ -182,6 +184,8 @@ export class MessagingModuleStatusController {
         "messaging_webrtc_meet_native_module_faz21",
         "messaging_webrtc_meet_rn_webrtc_pilot_faz22",
         "messaging_webrtc_meet_rn_mesh_media_faz23",
+        "messaging_webrtc_meet_rn_rtc_view_faz24",
+        "messaging_webrtc_meet_program_closure_faz25",
       ],
       translate: { deepl, libretranslate: libre },
       attachments: (() => {
@@ -224,6 +228,7 @@ export class MessagingModuleStatusController {
           localMediaPreview: true,
         },
         nativeRtcBridge: summarizeMessagingWebRtcNativeBridge(),
+        meetProgram: summarizeMessagingWebRtcMeetProgramClosure(),
         iceCaps,
         turnMonitor,
         recordingArchive: {

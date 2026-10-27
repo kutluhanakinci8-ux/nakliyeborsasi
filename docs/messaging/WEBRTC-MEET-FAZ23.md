@@ -10,6 +10,6 @@
 - `LertaRnWebRTC` yoksa yalnızca sinyal poll modu
 - Status: `messaging_webrtc_meet_rn_mesh_media_faz23`, `rnMeshMedia` snapshot
 
-## Sonraki (Faz 24+)
+## Sonraki
 
-Uzak video render (RTCView), arka plan, prod dev client CI.
+Faz 24–25 — `WEBRTC-MEET-FAZ24.md`, `WEBRTC-MEET-CLOSURE.md`.

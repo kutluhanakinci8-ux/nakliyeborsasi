@@ -1,3 +1,4 @@
+import { AppState, type AppStateStatus } from "react-native";
 import type { NativeMeshPilotSession } from "./lertaMobileNativeMeshPilotApi";
 import {
   rnMeshJoinRoom,
@@ -6,15 +7,22 @@ import {
   rnMeshPostSignal,
   type RnMeshSignalEnvelope,
 } from "./lertaMobileRnMeshSignalingClient";
-import { readLertaRnWebRtcGlobal, type RnPeerConnection } from "./lertaMobileRnWebRtcGlobal";
+import {
+  readLertaRnWebRtcGlobal,
+  type RnMediaStream,
+  type RnPeerConnection,
+} from "./lertaMobileRnWebRtcGlobal";
 
 const POLL_MS = 900;
 
 export type NativeRnMeshRunState = {
-  phase: "idle" | "signaling" | "media" | "error";
+  phase: "idle" | "signaling" | "media" | "error" | "background";
   lastSignalType: string | null;
   peerCount: number;
   message: string;
+  backgroundPaused: boolean;
+  hasRemoteVideo: boolean;
+  remoteStreamUrl: string | null;
 };
 
 export type NativeRnMeshRunner = {
@@ -31,23 +39,46 @@ export function startNativeRnMeshMediaPilot(params: {
   let stopped = false;
   let pollTimer: ReturnType<typeof setInterval> | null = null;
   let lastSignalId: string | null = null;
+  let appBackground = false;
   const pcs = new Map<string, RnPeerConnection>();
-  let localStream: { getTracks: () => Array<{ stop: () => void }> } | null =
-    null;
+  let localStream: RnMediaStream | null = null;
 
   const iceServers = params.pilotSession.iceServers?.map((entry) => ({
     urls: entry.urls,
   }));
 
-  function update(partial: Partial<NativeRnMeshRunState>): void {
-    params.onUpdate({
+  function baseState(): NativeRnMeshRunState {
+    return {
       phase: "signaling",
       lastSignalType: null,
       peerCount: 0,
       message: "",
-      ...partial,
-    });
+      backgroundPaused: appBackground,
+      hasRemoteVideo: false,
+      remoteStreamUrl: null,
+    };
   }
+
+  function update(partial: Partial<NativeRnMeshRunState>): void {
+    params.onUpdate({ ...baseState(), ...partial });
+  }
+
+  const appSub = AppState.addEventListener("change", (next: AppStateStatus) => {
+    appBackground = next !== "active";
+    if (appBackground) {
+      update({
+        phase: "background",
+        message: "Arka plan: sinyal poll duraklatıldı.",
+        backgroundPaused: true,
+      });
+    } else {
+      update({
+        phase: "media",
+        message: "Ön plan: sinyal poll devam ediyor.",
+        backgroundPaused: false,
+      });
+    }
+  });
 
   async function ensurePc(peerId: string): Promise<RnPeerConnection | null> {
     const rtc = readLertaRnWebRtcGlobal();
@@ -70,6 +101,16 @@ export function startNativeRnMeshMediaPilot(params: {
         JSON.stringify(ev.candidate),
         peerId,
       ).catch(() => undefined);
+    };
+    pc.ontrack = (ev) => {
+      const stream = ev.streams[0];
+      const url = stream?.toURL?.() ?? null;
+      update({
+        phase: "media",
+        hasRemoteVideo: Boolean(url),
+        remoteStreamUrl: url,
+        message: url ? "Uzak video akışı alındı (RTCView)." : "Uzak track alındı.",
+      });
     };
     if (localStream) {
       for (const track of localStream.getTracks()) {
@@ -160,11 +201,14 @@ export function startNativeRnMeshMediaPilot(params: {
         params.accessToken,
         params.threadId,
         "invite",
-        JSON.stringify({ media: "video", pilot: params.pilotSession.pilotSessionId }),
+        JSON.stringify({
+          media: "video",
+          pilot: params.pilotSession.pilotSessionId,
+        }),
         null,
       );
       pollTimer = setInterval(() => {
-        if (stopped) {
+        if (stopped || appBackground) {
           return;
         }
         void rnMeshPollSignals(
@@ -198,6 +242,7 @@ export function startNativeRnMeshMediaPilot(params: {
   return {
     stop: () => {
       stopped = true;
+      appSub.remove();
       if (pollTimer) {
         clearInterval(pollTimer);
       }

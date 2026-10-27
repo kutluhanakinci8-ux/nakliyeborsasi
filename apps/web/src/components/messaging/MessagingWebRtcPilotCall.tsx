@@ -407,6 +407,8 @@ export function MessagingWebRtcPilotCall({
             status.features.includes("messaging_webrtc_meet_native_module_faz21") &&
             status.features.includes("messaging_webrtc_meet_rn_webrtc_pilot_faz22") &&
             status.features.includes("messaging_webrtc_meet_rn_mesh_media_faz23") &&
+            status.features.includes("messaging_webrtc_meet_rn_rtc_view_faz24") &&
+            status.features.includes("messaging_webrtc_meet_program_closure_faz25") &&
             status.webrtc?.signaling === "redis_relay",
         );
       })
@@ -1598,7 +1600,7 @@ export function MessagingWebRtcPilotCall({
 
   return (
     <div
-      className="messaging-webrtc-pilot messaging-webrtc-meet-faz1 messaging-webrtc-meet-faz2 messaging-webrtc-meet-faz3 messaging-webrtc-meet-faz4 messaging-webrtc-meet-faz5 messaging-webrtc-meet-faz6 messaging-webrtc-meet-faz7 messaging-webrtc-meet-faz9 messaging-webrtc-meet-faz10 messaging-webrtc-meet-faz15 messaging-webrtc-meet-faz16 messaging-webrtc-meet-faz17 messaging-webrtc-meet-faz18 messaging-webrtc-meet-faz19 messaging-webrtc-meet-faz20 messaging-webrtc-meet-faz21 messaging-webrtc-meet-faz22 messaging-webrtc-meet-faz23"
+      className="messaging-webrtc-pilot messaging-webrtc-meet-faz1 messaging-webrtc-meet-faz2 messaging-webrtc-meet-faz3 messaging-webrtc-meet-faz4 messaging-webrtc-meet-faz5 messaging-webrtc-meet-faz6 messaging-webrtc-meet-faz7 messaging-webrtc-meet-faz9 messaging-webrtc-meet-faz10 messaging-webrtc-meet-faz15 messaging-webrtc-meet-faz16 messaging-webrtc-meet-faz17 messaging-webrtc-meet-faz18 messaging-webrtc-meet-faz19 messaging-webrtc-meet-faz20 messaging-webrtc-meet-faz21 messaging-webrtc-meet-faz22 messaging-webrtc-meet-faz23 messaging-webrtc-meet-faz24 messaging-webrtc-meet-faz25 messaging-webrtc-meet-program-closure"
       role="region"
       aria-label={`Görüntülü ve sesli görüşme (en fazla ${meetCapacity?.effectiveMaxParticipants ?? MAX_PARTICIPANTS} kişi)`}
     >
@@ -1725,6 +1727,10 @@ export function MessagingWebRtcPilotCall({
           <code>LertaRnWebRTC</code> peer connection.
         </p>
       ) : null}
+      <p className="messaging-webrtc-faz25-closure" role="status">
+        WebRTC Meet programı (Faz 1–25) GA — mesh ≤3, SFU opsiyonel, RN dev client
+        pilot. Kapı: <code>verify-messaging-webrtc-meet-faz-gate.sh</code>
+      </p>
       {isLikelyMobileBrowser() && (phase === "idle" || phase === "ended") ? (
         <p className="messaging-webrtc-faz10-mobile-hint" role="note">
           Mobil: görüşme için tarayıcıda bu sohbeti açık tutun; bildirimdeki bağlantı

@@ -17,6 +17,11 @@ export type MessagingWebRtcNativeMediaModuleSnapshot = {
     stack: "rn_peer_connection";
     globalInject: "LertaRnWebRTC";
   };
+  rnRemoteVideo: {
+    enabled: boolean;
+    rtcViewGlobal: "RTCView";
+    backgroundPausePoll: true;
+  };
   hintTr: string;
 };
 
@@ -36,7 +41,12 @@ export function defaultNativeMediaModuleSnapshot(): MessagingWebRtcNativeMediaMo
       stack: "rn_peer_connection",
       globalInject: "LertaRnWebRTC",
     },
+    rnRemoteVideo: {
+      enabled: true,
+      rtcViewGlobal: "RTCView",
+      backgroundPausePoll: true,
+    },
     hintTr:
-      "Faz 23: RN mesh sinyal tüketimi + LertaRnWebRTC global ile peer connection.",
+      "Faz 24–25: RTCView uzak video, arka plan poll duraklatma, program GA kapanışı.",
   };
 }
