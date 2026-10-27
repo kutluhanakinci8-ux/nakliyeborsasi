@@ -13,6 +13,7 @@ type Props = {
   attachment: ThreadMessageAttachmentRecord;
   transcribeEnabled: boolean;
   transcribeAdvancedEnabled: boolean;
+  sttConfigured: boolean;
   onTranscriptReady: () => void;
   onError: (message: string) => void;
 };
@@ -35,6 +36,7 @@ export function MessagingVoiceNoteTranscript({
   attachment,
   transcribeEnabled,
   transcribeAdvancedEnabled,
+  sttConfigured,
   onTranscriptReady,
   onError,
 }: Props) {
@@ -50,6 +52,15 @@ export function MessagingVoiceNoteTranscript({
 
   if (!transcribeEnabled) {
     return null;
+  }
+
+  if (!sttConfigured) {
+    return (
+      <p className="chat-voice-transcript-missing" role="status">
+        Ses→metin sunucuda yapılandırılmamış (OpenAI Whisper API anahtarı). Yönetici:
+        <code>LERTA_MAIL_AI_COMPOSE_API_KEY</code>
+      </p>
+    );
   }
 
   async function requestTranscript(): Promise<void> {

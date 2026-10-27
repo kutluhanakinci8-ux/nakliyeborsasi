@@ -14,8 +14,13 @@ export type MessagingPublicStatus = {
   voiceNote?: {
     faz1Enabled: boolean;
     playerFaz2Enabled: boolean;
+    mobileFaz3Enabled?: boolean;
+    deeplinkFaz4Enabled?: boolean;
     maxDurationMs: number;
     transcribeFaz1Enabled?: boolean;
+    transcribeAdvancedFaz2Enabled?: boolean;
+    transcribeAutoFaz3Enabled?: boolean;
+    bridgeSttFaz1Enabled?: boolean;
     sttConfigured?: boolean;
   };
 };

@@ -1040,6 +1040,12 @@ export function useMessagingChatController({
         true,
       );
       setLlmSummary(payload.llmSummary?.text ?? null);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "AI özet alınamadı (API anahtarı veya rıza gerekli olabilir).",
+      );
     } finally {
       setLlmBusy(false);
     }

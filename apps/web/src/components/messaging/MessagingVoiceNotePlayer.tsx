@@ -16,6 +16,7 @@ type Props = {
   advancedPlayer: boolean;
   transcribeEnabled: boolean;
   transcribeAdvancedEnabled: boolean;
+  sttConfigured: boolean;
   onTranscriptReady: () => void;
   onError: (message: string) => void;
 };
@@ -31,6 +32,7 @@ export function MessagingVoiceNotePlayer({
   advancedPlayer,
   transcribeEnabled,
   transcribeAdvancedEnabled,
+  sttConfigured,
   onTranscriptReady,
   onError,
 }: Props) {
@@ -122,6 +124,7 @@ export function MessagingVoiceNotePlayer({
         attachment={attachment}
         transcribeEnabled={transcribeEnabled}
         transcribeAdvancedEnabled={transcribeAdvancedEnabled}
+        sttConfigured={sttConfigured}
         onTranscriptReady={onTranscriptReady}
         onError={onError}
       />
