@@ -27,7 +27,7 @@ import json, os, sys
 
 d = json.loads(os.environ["MESSAGING_STATUS_JSON"])
 features = set(d.get("features") or [])
-required = os.environ["REQUIRED_FEATURES"].split()
+required = os.environ["STT_OSS_GATE_REQUIRED_FEATURES"].split()
 missing = [f for f in required if f not in features]
 vn = d.get("voiceNote") or {}
 if not vn.get("transcribeFaz1Enabled"):
