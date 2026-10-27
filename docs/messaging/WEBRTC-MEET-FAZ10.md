@@ -13,4 +13,4 @@ Status feature: `messaging_webrtc_meet_mobile_faz10`
 
 ## Sonraki
 
-Native React Native WebRTC (ayrı ürün kararı), SFU (&gt;3 kişi).
+`WEBRTC-MEET-ROADMAP.md` — Faz 11+ (S3 arşiv, TURN prod, mobil shell).
