@@ -8,6 +8,7 @@ import { randomUUID } from "node:crypto";
 import type Redis from "ioredis";
 import { RedisConnectionProvider } from "../../infrastructure/redis/RedisConnectionProvider";
 import { MessagingThreadApplicationService } from "./MessagingThreadApplicationService";
+import { MessagingWebRtcIncomingCallNotifyService } from "./MessagingWebRtcIncomingCallNotifyService";
 import type { AuthenticatedUserContext } from "@nakliyeborsasi/core";
 import {
   MESSAGING_WEBRTC_MAX_PARTICIPANTS,
@@ -57,6 +58,7 @@ export class MessagingWebRtcSignalingService {
   public constructor(
     redisConnectionProvider: RedisConnectionProvider,
     private readonly messagingThreadApplicationService: MessagingThreadApplicationService,
+    private readonly incomingCallNotifyService: MessagingWebRtcIncomingCallNotifyService,
   ) {
     this.redis = redisConnectionProvider.getClient();
   }
@@ -170,6 +172,23 @@ export class MessagingWebRtcSignalingService {
       .ltrim(key, 0, SIGNAL_MAX_LEN - 1)
       .expire(key, SIGNAL_TTL_SECONDS)
       .exec();
+    if (params.type === "invite") {
+      let media: "audio" | "video" = "video";
+      try {
+        const parsed = JSON.parse(params.payload) as { media?: string };
+        media = parsed.media === "audio" ? "audio" : "video";
+      } catch {
+        /* default video */
+      }
+      void this.incomingCallNotifyService
+        .notifyIncomingInvite({
+          threadId: params.threadId,
+          fromUserId: params.user.userId,
+          fromCompanyId: params.user.companyId,
+          media,
+        })
+        .catch(() => undefined);
+    }
     return envelope;
   }
 

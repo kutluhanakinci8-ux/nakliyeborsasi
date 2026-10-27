@@ -15,6 +15,6 @@ Status feature: `messaging_webrtc_meet_qa_gate_faz8`
 2. Ekran paylaşımı, planlı görüşme, kayıt + arşiv indir
 3. ICE/TURN rozeti ve `turnMonitor` status
 
-## Sonraki (Faz 9+)
+## Sonraki (Faz 9)
 
-WS sinyal, gelen arama push, mobil deep link.
+Bkz. `WEBRTC-MEET-FAZ9.md`.
