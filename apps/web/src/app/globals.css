@@ -7301,6 +7301,43 @@ button.btn-secondary {
   background: #eef2ff;
 }
 
+.messaging-webrtc-faz7-archive-btn {
+  border: none;
+  cursor: pointer;
+}
+
+.messaging-webrtc-faz7-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+  font-size: 0.65rem;
+  color: #475569;
+  margin-top: 0.35rem;
+  max-width: 420px;
+}
+
+.messaging-webrtc-faz7-archive-list {
+  list-style: none;
+  margin: 0.35rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.65rem;
+  max-width: 420px;
+}
+
+.messaging-webrtc-faz7-archive-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.45rem;
+  border-radius: 6px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
 .messaging-webrtc-pilot-video.is-active-speaker {
   outline: 3px solid #22c55e;
   outline-offset: 2px;

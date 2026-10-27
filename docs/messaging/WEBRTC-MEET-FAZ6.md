@@ -22,4 +22,4 @@ bash scripts/apply-messaging-webrtc-ice-vps-env.sh /var/www/nakliyeborsasi
 
 ## Sonraki (Faz 7)
 
-Uyum arşivi UI, kayıt onayı, S3 kalıcı depo.
+Bkz. `WEBRTC-MEET-FAZ7.md`.
