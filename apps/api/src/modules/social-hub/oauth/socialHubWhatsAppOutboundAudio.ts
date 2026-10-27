@@ -1,11 +1,19 @@
 import { execFile } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { unlink, writeFile } from "node:fs/promises";
+import { readFile, unlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
 
 const execFileAsync = promisify(execFile);
+
+function resolveFfmpegBinary(): string {
+  const fromEnv = process.env.FFMPEG_PATH?.trim();
+  if (fromEnv) {
+    return fromEnv;
+  }
+  return "ffmpeg";
+}
 
 /** Meta WhatsApp Cloud API — upload `type` için izinli ses MIME'ları. */
 export const WHATSAPP_CLOUD_ALLOWED_AUDIO_MIME = new Set([
@@ -32,6 +40,13 @@ export type WhatsAppPreparedAudio = {
   transcoded: boolean;
 };
 
+async function runFfmpeg(args: string[]): Promise<void> {
+  await execFileAsync(resolveFfmpegBinary(), args, {
+    timeout: 120_000,
+    maxBuffer: 8 * 1024 * 1024,
+  });
+}
+
 async function transcodeToOggOpus(
   inputBuffer: Buffer,
   inputExt: string,
@@ -39,10 +54,21 @@ async function transcodeToOggOpus(
   const id = randomBytes(8).toString("hex");
   const inPath = join(tmpdir(), `wa-audio-in-${id}.${inputExt}`);
   const outPath = join(tmpdir(), `wa-audio-out-${id}.ogg`);
+  const ffmpeg = resolveFfmpegBinary();
   try {
     await writeFile(inPath, inputBuffer);
-    await execFileAsync(
-      "ffmpeg",
+    const attempts: string[][] = [
+      [
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-y",
+        "-i",
+        inPath,
+        "-c:a",
+        "copy",
+        outPath,
+      ],
       [
         "-hide_banner",
         "-loglevel",
@@ -56,12 +82,27 @@ async function transcodeToOggOpus(
         "32k",
         outPath,
       ],
-      { timeout: 120_000 },
-    );
-    const { readFile } = await import("node:fs/promises");
-    const out = await readFile(outPath);
-    return out.length > 0 ? out : null;
-  } catch {
+    ];
+    for (const extra of attempts) {
+      await unlink(outPath).catch(() => undefined);
+      try {
+        await runFfmpeg(extra);
+        const out = await readFile(outPath);
+        if (out.length > 0) {
+          return out;
+        }
+      } catch {
+        // next strategy
+      }
+    }
+    return null;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (!message.includes("ENOENT")) {
+      console.warn(
+        `[whatsapp-audio] ffmpeg transcode failed (${ffmpeg}): ${message}`,
+      );
+    }
     return null;
   } finally {
     await unlink(inPath).catch(() => undefined);
