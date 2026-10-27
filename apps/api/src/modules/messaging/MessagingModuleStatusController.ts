@@ -18,6 +18,7 @@ import {
 } from "./messagingWebRtcMeetRecordingS3";
 import { summarizeMessagingWebRtcMeetCapacity } from "./messagingWebRtcMeetCapacity";
 import { probeMessagingWebRtcSfuBackend } from "./messagingWebRtcSfuBackend";
+import { summarizeMessagingWebRtcNativeBridge } from "./messagingWebRtcNativeBridge";
 import { MessagingWebRtcSignalingService } from "./MessagingWebRtcSignalingService";
 import type { WhatsappBridgeDeliverySnapshot } from "@nakliyeborsasi/core";
 
@@ -66,6 +67,7 @@ export class MessagingModuleStatusController {
         deepLinkParam: string;
         localMediaPreview: boolean;
       };
+      nativeRtcBridge: ReturnType<typeof summarizeMessagingWebRtcNativeBridge>;
       iceCaps: ReturnType<typeof summarizeMessagingWebRtcIceCaps>;
       turnMonitor: Awaited<ReturnType<typeof probeMessagingWebRtcTurnMonitor>>;
       recordingArchive: { s3Enabled: boolean; maxBytes: number };
@@ -176,6 +178,7 @@ export class MessagingModuleStatusController {
         "messaging_webrtc_meet_sfu_config_faz17",
         "messaging_webrtc_meet_sfu_session_faz18",
         "messaging_webrtc_meet_sfu_embed_faz19",
+        "messaging_webrtc_meet_native_rtc_faz20",
       ],
       translate: { deepl, libretranslate: libre },
       attachments: (() => {
@@ -217,6 +220,7 @@ export class MessagingModuleStatusController {
           deepLinkParam: "sfuPilot",
           localMediaPreview: true,
         },
+        nativeRtcBridge: summarizeMessagingWebRtcNativeBridge(),
         iceCaps,
         turnMonitor,
         recordingArchive: {

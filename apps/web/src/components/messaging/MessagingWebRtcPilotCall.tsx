@@ -55,8 +55,11 @@ import {
   buildMessagingMeetDeepLink,
   isLikelyMobileBrowser,
   isMeetDeepLinkActive,
+  isNativeRtcDeepLinkActive,
   isSfuPilotDeepLinkActive,
+  readNativeRtcBridgeIdFromLocation,
 } from "../../lib/messagingWebRtcMeetDeepLink";
+import { fetchMessagingWebRtcNativeBridgeConfig } from "../../lib/messagingWebRtcNativeBridge";
 import { MessagingWebRtcSfuPilotEmbed } from "./MessagingWebRtcSfuPilotEmbed";
 import {
   fetchMessagingWebRtcOverflowIntentStatus,
@@ -236,6 +239,7 @@ export function MessagingWebRtcPilotCall({
     useState<WebRtcMeetSfuSessionJoinBundle | null>(null);
   const [sfuSessionBusy, setSfuSessionBusy] = useState(false);
   const [sfuEmbedOpen, setSfuEmbedOpen] = useState(false);
+  const [nativeBridgeHint, setNativeBridgeHint] = useState<string | null>(null);
   const [maxRecordingArchiveBytes, setMaxRecordingArchiveBytes] = useState(
     2_500_000,
   );
@@ -385,6 +389,7 @@ export function MessagingWebRtcPilotCall({
             status.features.includes("messaging_webrtc_meet_sfu_config_faz17") &&
             status.features.includes("messaging_webrtc_meet_sfu_session_faz18") &&
             status.features.includes("messaging_webrtc_meet_sfu_embed_faz19") &&
+            status.features.includes("messaging_webrtc_meet_native_rtc_faz20") &&
             status.webrtc?.signaling === "redis_relay",
         );
       })
@@ -430,6 +435,24 @@ export function MessagingWebRtcPilotCall({
       .then((status) => setOverflowIntentRegistered(status.registered))
       .catch(() => setOverflowIntentRegistered(false));
   }, [accessToken, enabled, threadId]);
+
+  useEffect(() => {
+    if (!enabled || !accessToken || !isNativeRtcDeepLinkActive()) {
+      setNativeBridgeHint(null);
+      return;
+    }
+    const bridgeId = readNativeRtcBridgeIdFromLocation();
+    void fetchMessagingWebRtcNativeBridgeConfig(accessToken)
+      .then((config) => {
+        setNativeBridgeHint(
+          bridgeId
+            ? `${config.hintTr} (köprü: ${bridgeId.slice(0, 8)}…)`
+            : config.hintTr,
+        );
+        setStatusLine("Native RTC köprü — Meet pilot web görünümünde açıldı.");
+      })
+      .catch(() => setNativeBridgeHint(null));
+  }, [accessToken, enabled]);
 
   useEffect(() => {
     if (!enabled || !threadId || phase !== "idle") {
@@ -1491,7 +1514,7 @@ export function MessagingWebRtcPilotCall({
 
   return (
     <div
-      className="messaging-webrtc-pilot messaging-webrtc-meet-faz1 messaging-webrtc-meet-faz2 messaging-webrtc-meet-faz3 messaging-webrtc-meet-faz4 messaging-webrtc-meet-faz5 messaging-webrtc-meet-faz6 messaging-webrtc-meet-faz7 messaging-webrtc-meet-faz9 messaging-webrtc-meet-faz10 messaging-webrtc-meet-faz15 messaging-webrtc-meet-faz16 messaging-webrtc-meet-faz17 messaging-webrtc-meet-faz18 messaging-webrtc-meet-faz19"
+      className="messaging-webrtc-pilot messaging-webrtc-meet-faz1 messaging-webrtc-meet-faz2 messaging-webrtc-meet-faz3 messaging-webrtc-meet-faz4 messaging-webrtc-meet-faz5 messaging-webrtc-meet-faz6 messaging-webrtc-meet-faz7 messaging-webrtc-meet-faz9 messaging-webrtc-meet-faz10 messaging-webrtc-meet-faz15 messaging-webrtc-meet-faz16 messaging-webrtc-meet-faz17 messaging-webrtc-meet-faz18 messaging-webrtc-meet-faz19 messaging-webrtc-meet-faz20"
       role="region"
       aria-label={`Görüntülü ve sesli görüşme (en fazla ${meetCapacity?.effectiveMaxParticipants ?? MAX_PARTICIPANTS} kişi)`}
     >
@@ -1581,10 +1604,18 @@ export function MessagingWebRtcPilotCall({
           </button>
         </div>
       ) : null}
+      {nativeBridgeHint ? (
+        <p className="messaging-webrtc-faz20-native-bridge" role="note">
+          {nativeBridgeHint}
+        </p>
+      ) : null}
       {isLikelyMobileBrowser() && (phase === "idle" || phase === "ended") ? (
         <p className="messaging-webrtc-faz10-mobile-hint" role="note">
           Mobil: görüşme için tarayıcıda bu sohbeti açık tutun; bildirimdeki bağlantı
           sizi doğrudan arama alanına getirir.
+          {isNativeRtcDeepLinkActive()
+            ? " Native köprü aktif — Expo handoff ile tam Meet pilotu kullanılıyor."
+            : ""}
         </p>
       ) : null}
       {showContextStrip ? (

@@ -26,6 +26,7 @@ import {
   openMeetMessagingHub,
   parseMeetDeepLinkFromUrl,
 } from "./lertaMobileMeetHub";
+import { openNativeRtcMeetHub } from "./lertaMobileNativeRtcBridge";
 import * as Linking from "expo-linking";
 
 /** OAuth redirect — AppAuth / expo-auth-session (W6). */
@@ -64,6 +65,13 @@ export function MobileApplicationRoot(): React.ReactElement {
     }
     function handleUrl(url: string): void {
       const parsed = parseMeetDeepLinkFromUrl(url);
+      if (parsed.nativeRtc && accessToken) {
+        void openNativeRtcMeetHub({
+          accessToken,
+          threadId: parsed.threadId ?? undefined,
+        });
+        return;
+      }
       if (parsed.meetInvite) {
         void openMeetMessagingHub({ threadId: parsed.threadId ?? undefined });
       }
@@ -200,6 +208,21 @@ export function MobileApplicationRoot(): React.ReactElement {
             accessibilityLabel="Mesajlaşma hub görüşme"
           >
             <Text style={styles.buttonText}>Mesajlaşma / Meet (web)</Text>
+          </Pressable>
+          <Pressable
+            style={styles.buttonSecondary}
+            onPress={() => {
+              if (!accessToken) {
+                return;
+              }
+              void openNativeRtcMeetHub({ accessToken });
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="Native RTC köprü beta"
+          >
+            <Text style={styles.buttonSecondaryText}>
+              Meet native köprü (beta)
+            </Text>
           </Pressable>
           <Pressable
             style={styles.buttonSecondary}
