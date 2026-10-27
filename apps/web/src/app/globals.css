@@ -6962,6 +6962,70 @@ button.btn-secondary {
   background: #b91c1c;
 }
 
+.messaging-webrtc-pilot-btn--primary {
+  border-color: #0a3d66;
+  background: #0a3d66;
+}
+
+.messaging-webrtc-pilot-btn.is-muted {
+  opacity: 0.8;
+  outline: 2px solid #f59e0b;
+}
+
+.messaging-webrtc-pilot-timer {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: #0f172a;
+}
+
+.messaging-webrtc-precall {
+  margin-top: 0.5rem;
+  padding: 0.65rem;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  max-width: 560px;
+}
+
+.messaging-webrtc-precall-preview {
+  max-height: 140px;
+  margin-bottom: 0.5rem;
+}
+
+.messaging-webrtc-precall-audio-hint {
+  font-size: 0.75rem;
+  color: #475569;
+  margin: 0 0 0.5rem;
+}
+
+.messaging-webrtc-device-picks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+}
+
+.messaging-webrtc-device-picks label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  color: #334155;
+}
+
+.messaging-webrtc-device-picks select {
+  font-size: 0.72rem;
+  padding: 0.25rem 0.35rem;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+}
+
+.messaging-webrtc-precall-hint {
+  margin: 0.5rem 0 0;
+  font-size: 0.68rem;
+  color: #64748b;
+}
+
 .messaging-webrtc-pilot-status {
   font-size: 0.72rem;
   color: #64748b;

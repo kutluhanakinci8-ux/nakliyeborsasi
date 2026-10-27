@@ -3,6 +3,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { summarizeBrowserWebRtcSupport } from "@nakliyeborsasi/core";
 import { formatWebRtcMediaError } from "../../lib/messagingWebRtcMediaErrors";
+import {
+  acquireWebRtcLocalStream,
+  formatCallDuration,
+  listWebRtcMediaDevices,
+  type CallMediaMode,
+  type MediaDeviceLists,
+} from "../../lib/messagingWebRtcDevices";
 import { fetchMessagingPublicStatus } from "../../lib/messagingPublicStatus";
 import {
   fetchMessagingWebRtcConfig,
@@ -24,6 +31,7 @@ type Props = {
 
 type PilotPhase =
   | "idle"
+  | "precall"
   | "outgoing"
   | "incoming"
   | "connected"
@@ -46,6 +54,15 @@ function attachStreamToVideo(
   void video.play().catch(() => undefined);
 }
 
+function parseInviteMedia(payload: string): CallMediaMode {
+  try {
+    const data = JSON.parse(payload) as { media?: string };
+    return data.media === "audio" ? "audio" : "video";
+  } catch {
+    return "video";
+  }
+}
+
 export function MessagingWebRtcPilotCall({
   accessToken,
   threadId,
@@ -59,7 +76,18 @@ export function MessagingWebRtcPilotCall({
   const [remotePeers, setRemotePeers] = useState<RemotePeer[]>([]);
   const [incomingOffer, setIncomingOffer] =
     useState<WebRtcSignalEnvelope | null>(null);
+  const [incomingMedia, setIncomingMedia] = useState<CallMediaMode>("video");
   const incomingOfferRef = useRef<WebRtcSignalEnvelope | null>(null);
+
+  const [preCallMode, setPreCallMode] = useState<CallMediaMode>("video");
+  const [devices, setDevices] = useState<MediaDeviceLists | null>(null);
+  const [audioInputId, setAudioInputId] = useState("");
+  const [videoInputId, setVideoInputId] = useState("");
+  const [previewStream, setPreviewStream] = useState<MediaStream | null>(null);
+  const [micMuted, setMicMuted] = useState(false);
+  const [videoOff, setVideoOff] = useState(false);
+  const [callSeconds, setCallSeconds] = useState(0);
+  const callModeRef = useRef<CallMediaMode>("video");
 
   const pcsRef = useRef<Map<string, RTCPeerConnection>>(new Map());
   const iceQueuesRef = useRef<Map<string, RTCIceCandidateInit[]>>(new Map());
@@ -67,8 +95,10 @@ export function MessagingWebRtcPilotCall({
   const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastPollIdRef = useRef<string | null>(null);
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
+  const previewVideoRef = useRef<HTMLVideoElement | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
   const inCallRef = useRef(false);
+  const callStartedAtRef = useRef<number | null>(null);
   const browserReady = summarizeBrowserWebRtcSupport().ready;
 
   const stopPolling = useCallback(() => {
@@ -88,22 +118,37 @@ export function MessagingWebRtcPilotCall({
       return next;
     });
     setPhase("connected");
+    if (!callStartedAtRef.current) {
+      callStartedAtRef.current = Date.now();
+    }
+  }, []);
+
+  const stopPreview = useCallback(() => {
+    setPreviewStream((prev) => {
+      prev?.getTracks().forEach((t) => t.stop());
+      return null;
+    });
   }, []);
 
   const teardown = useCallback(() => {
     stopPolling();
     inCallRef.current = false;
+    callStartedAtRef.current = null;
+    setCallSeconds(0);
     for (const pc of pcsRef.current.values()) {
       pc.close();
     }
     pcsRef.current.clear();
     iceQueuesRef.current.clear();
+    stopPreview();
     setLocalStream((prev) => {
       prev?.getTracks().forEach((track) => track.stop());
       return null;
     });
     localStreamRef.current = null;
     setRemotePeers([]);
+    setMicMuted(false);
+    setVideoOff(false);
     seenSignalIdsRef.current.clear();
     lastPollIdRef.current = null;
     incomingOfferRef.current = null;
@@ -111,7 +156,7 @@ export function MessagingWebRtcPilotCall({
     if (threadId) {
       void leaveMessagingWebRtcRoom(accessToken, threadId).catch(() => undefined);
     }
-  }, [accessToken, stopPolling, threadId]);
+  }, [accessToken, stopPolling, stopPreview, threadId]);
 
   useEffect(() => {
     void fetchMessagingPublicStatus()
@@ -119,6 +164,7 @@ export function MessagingWebRtcPilotCall({
         setEnabled(
           status.features.includes("messaging_webrtc_signaling_relay") &&
             status.features.includes("messaging_webrtc_mesh_three") &&
+            status.features.includes("messaging_webrtc_meet_core_faz1") &&
             status.webrtc?.signaling === "redis_relay",
         );
       })
@@ -130,6 +176,24 @@ export function MessagingWebRtcPilotCall({
     attachStreamToVideo(localVideoRef.current, localStream);
   }, [localStream, phase]);
 
+  useEffect(() => {
+    attachStreamToVideo(previewVideoRef.current, previewStream);
+  }, [previewStream, phase]);
+
+  useEffect(() => {
+    if (phase !== "connected" && phase !== "outgoing") {
+      return;
+    }
+    const timer = setInterval(() => {
+      if (callStartedAtRef.current) {
+        setCallSeconds(
+          Math.floor((Date.now() - callStartedAtRef.current) / 1000),
+        );
+      }
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [phase]);
+
   const flushIceQueue = useCallback(async (pc: RTCPeerConnection, peerId: string) => {
     if (!pc.remoteDescription) {
       return;
@@ -140,6 +204,27 @@ export function MessagingWebRtcPilotCall({
       await pc.addIceCandidate(candidate);
     }
   }, []);
+
+  const tryIceRestart = useCallback(
+    async (peerUserId: string) => {
+      const stream = localStreamRef.current;
+      const pc = pcsRef.current.get(peerUserId);
+      if (!stream || !pc || !threadId) {
+        return;
+      }
+      setStatusLine("Bağlantı zayıf — yeniden deneniyor…");
+      const offer = await pc.createOffer({ iceRestart: true });
+      await pc.setLocalDescription(offer);
+      await postMessagingWebRtcSignal(
+        accessToken,
+        threadId,
+        "offer",
+        JSON.stringify(offer),
+        peerUserId,
+      );
+    },
+    [accessToken, threadId],
+  );
 
   const ensurePeerConnection = useCallback(
     async (peerUserId: string, stream: MediaStream): Promise<RTCPeerConnection> => {
@@ -169,21 +254,23 @@ export function MessagingWebRtcPilotCall({
           peerUserId,
         );
       };
+      pc.onconnectionstatechange = () => {
+        if (pc.connectionState === "failed") {
+          void tryIceRestart(peerUserId);
+        }
+      };
       return pc;
     },
-    [accessToken, setRemoteForPeer, threadId],
+    [accessToken, setRemoteForPeer, threadId, tryIceRestart],
   );
 
   const acquireLocalMedia = useCallback(async (): Promise<MediaStream> => {
-    return navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: "user",
-        width: { ideal: 640 },
-        height: { ideal: 480 },
-      },
-      audio: true,
+    return acquireWebRtcLocalStream({
+      mode: callModeRef.current,
+      audioDeviceId: audioInputId || undefined,
+      videoDeviceId: videoInputId || undefined,
     });
-  }, []);
+  }, [audioInputId, videoInputId]);
 
   const connectOffersToExistingPeers = useCallback(
     async (local: MediaStream, peerUserIds: string[]) => {
@@ -221,6 +308,11 @@ export function MessagingWebRtcPilotCall({
       seenSignalIdsRef.current.add(signal.id);
       lastPollIdRef.current = signal.id;
 
+      if (signal.type === "invite") {
+        setIncomingMedia(parseInviteMedia(signal.payload));
+        return;
+      }
+
       const local = localStreamRef.current;
       if (!local && signal.type !== "offer") {
         return;
@@ -241,7 +333,11 @@ export function MessagingWebRtcPilotCall({
               incomingOfferRef.current = signal;
               setIncomingOffer(signal);
               setPhase("incoming");
-              setStatusLine("Gelen arama — kabul etmek için dokunun");
+              setStatusLine(
+                incomingMedia === "audio"
+                  ? "Gelen sesli arama"
+                  : "Gelen görüntülü arama",
+              );
             }
             return;
           }
@@ -302,6 +398,7 @@ export function MessagingWebRtcPilotCall({
       currentUserId,
       ensurePeerConnection,
       flushIceQueue,
+      incomingMedia,
       threadId,
     ],
   );
@@ -318,14 +415,13 @@ export function MessagingWebRtcPilotCall({
       )
         .then((signals) => {
           for (const signal of signals) {
-            if (signal.type === "offer") {
+            if (signal.type === "invite" || signal.type === "offer") {
               void processRemoteSignal(signal);
-              return;
             }
           }
         })
         .catch(() => undefined);
-    }, 2500);
+    }, 2000);
     return () => clearInterval(timer);
   }, [accessToken, enabled, phase, processRemoteSignal, threadId]);
 
@@ -336,10 +432,7 @@ export function MessagingWebRtcPilotCall({
     const room = await fetchMessagingWebRtcRoom(accessToken, threadId);
     const missing = room.participants
       .map((p) => p.userId)
-      .filter(
-        (id) =>
-          id !== currentUserId && !pcsRef.current.has(id),
-      );
+      .filter((id) => id !== currentUserId && !pcsRef.current.has(id));
     if (missing.length > 0) {
       await connectOffersToExistingPeers(localStreamRef.current, missing);
     }
@@ -362,21 +455,38 @@ export function MessagingWebRtcPilotCall({
           }
         })
         .catch(() => undefined);
-    }, 2000);
+    }, 1500);
   }, [accessToken, processRemoteSignal, syncNewRoomPeers, threadId]);
+
+  async function postCallInvite(): Promise<void> {
+    if (!threadId) {
+      return;
+    }
+    await postMessagingWebRtcSignal(
+      accessToken,
+      threadId,
+      "invite",
+      JSON.stringify({ media: callModeRef.current }),
+      null,
+    );
+  }
 
   async function enterCallAndMesh(): Promise<void> {
     if (!threadId || !currentUserId) {
       return;
     }
+    stopPreview();
     const room = await joinMessagingWebRtcRoom(accessToken, threadId);
     inCallRef.current = true;
+    callStartedAtRef.current = Date.now();
+    await postCallInvite();
     const others = room.participants
       .map((p) => p.userId)
       .filter((id) => id !== currentUserId);
     const local = await acquireLocalMedia();
     localStreamRef.current = local;
     setLocalStream(local);
+    setVideoOff(callModeRef.current === "audio");
     await connectOffersToExistingPeers(local, others);
     startPolling();
     if (others.length === 0) {
@@ -384,22 +494,30 @@ export function MessagingWebRtcPilotCall({
     }
   }
 
-  async function startCall(): Promise<void> {
-    if (!threadId || !browserReady || !currentUserId) {
-      return;
-    }
+  async function openPreCall(mode: CallMediaMode): Promise<void> {
     setError("");
-    stopPolling();
-    for (const pc of pcsRef.current.values()) {
-      pc.close();
+    setPreCallMode(mode);
+    callModeRef.current = mode;
+    setPhase("precall");
+    try {
+      const listed = await listWebRtcMediaDevices();
+      setDevices(listed);
+      const stream = await acquireWebRtcLocalStream({
+        mode,
+        audioDeviceId: audioInputId || undefined,
+        videoDeviceId: videoInputId || undefined,
+      });
+      setPreviewStream(stream);
+    } catch (err) {
+      setPhase("error");
+      setError(formatWebRtcMediaError(err));
     }
-    pcsRef.current.clear();
-    inCallRef.current = false;
-    if (threadId) {
-      await leaveMessagingWebRtcRoom(accessToken, threadId).catch(() => undefined);
-    }
+  }
+
+  async function confirmPreCall(): Promise<void> {
+    stopPreview();
     setPhase("outgoing");
-    setStatusLine("Kamera izni isteniyor…");
+    setStatusLine("Bağlanıyor…");
     try {
       await enterCallAndMesh();
       setPhase("connected");
@@ -410,12 +528,19 @@ export function MessagingWebRtcPilotCall({
     }
   }
 
+  function cancelPreCall(): void {
+    stopPreview();
+    setPhase("idle");
+    setStatusLine("");
+  }
+
   async function acceptIncomingCall(): Promise<void> {
     if (!threadId || !incomingOffer || incomingOffer.type !== "offer") {
       return;
     }
+    callModeRef.current = incomingMedia;
     setError("");
-    setStatusLine("Kamera izni isteniyor…");
+    setStatusLine("Bağlanıyor…");
     try {
       await enterCallAndMesh();
       const offer = incomingOffer;
@@ -423,7 +548,6 @@ export function MessagingWebRtcPilotCall({
       setIncomingOffer(null);
       await processRemoteSignal(offer);
       setPhase("connected");
-      setStatusLine("Bağlanıyor…");
     } catch (err) {
       teardown();
       setPhase("error");
@@ -436,6 +560,30 @@ export function MessagingWebRtcPilotCall({
     setIncomingOffer(null);
     setPhase("idle");
     setStatusLine("");
+  }
+
+  function toggleMic(): void {
+    const stream = localStreamRef.current;
+    if (!stream) {
+      return;
+    }
+    const next = !micMuted;
+    stream.getAudioTracks().forEach((t) => {
+      t.enabled = !next;
+    });
+    setMicMuted(next);
+  }
+
+  function toggleVideo(): void {
+    const stream = localStreamRef.current;
+    if (!stream) {
+      return;
+    }
+    const next = !videoOff;
+    stream.getVideoTracks().forEach((t) => {
+      t.enabled = !next;
+    });
+    setVideoOff(next);
   }
 
   async function endCall(): Promise<void> {
@@ -455,18 +603,48 @@ export function MessagingWebRtcPilotCall({
     setStatusLine("Arama sonlandı");
   }
 
+  useEffect(() => {
+    if (phase !== "connected" && phase !== "outgoing") {
+      return;
+    }
+    function onKeyDown(event: KeyboardEvent): void {
+      if (
+        event.target instanceof HTMLInputElement ||
+        event.target instanceof HTMLTextAreaElement ||
+        event.target instanceof HTMLSelectElement
+      ) {
+        return;
+      }
+      const key = event.key.toLowerCase();
+      if (key === "m") {
+        event.preventDefault();
+        toggleMic();
+      } else if (key === "v") {
+        event.preventDefault();
+        toggleVideo();
+      } else if (key === "escape") {
+        event.preventDefault();
+        void endCall();
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [phase, micMuted, videoOff]);
+
   if (!enabled || !threadId || !browserReady || !currentUserId) {
     return null;
   }
 
+  const inCallUi =
+    phase === "outgoing" || phase === "connected";
   const showVideos =
-    phase === "outgoing" || phase === "connected" || phase === "incoming";
+    inCallUi && callModeRef.current === "video" && !videoOff;
 
   return (
     <div
-      className="messaging-webrtc-pilot"
+      className="messaging-webrtc-pilot messaging-webrtc-meet-faz1"
       role="region"
-      aria-label="Görüntülü görüşme (en fazla 3 kişi)"
+      aria-label="Görüntülü ve sesli görüşme (en fazla 3 kişi)"
     >
       <div className="messaging-webrtc-pilot-toolbar">
         {phase === "incoming" ? (
@@ -476,7 +654,7 @@ export function MessagingWebRtcPilotCall({
               className="messaging-webrtc-pilot-btn"
               onClick={() => void acceptIncomingCall()}
             >
-              Gelen aramayı kabul et
+              {incomingMedia === "audio" ? "Sesli aramayı kabul et" : "Görüntülü kabul et"}
             </button>
             <button
               type="button"
@@ -486,23 +664,75 @@ export function MessagingWebRtcPilotCall({
               Reddet
             </button>
           </>
+        ) : phase === "precall" ? (
+          <>
+            <button
+              type="button"
+              className="messaging-webrtc-pilot-btn messaging-webrtc-pilot-btn--primary"
+              onClick={() => void confirmPreCall()}
+            >
+              {preCallMode === "audio" ? "Sesli görüşmeyi başlat" : "Görüntülü görüşmeyi başlat"}
+            </button>
+            <button
+              type="button"
+              className="messaging-webrtc-pilot-btn"
+              onClick={() => cancelPreCall()}
+            >
+              İptal
+            </button>
+          </>
         ) : phase === "idle" || phase === "ended" || phase === "error" ? (
-          <button
-            type="button"
-            className="messaging-webrtc-pilot-btn"
-            onClick={() => void startCall()}
-          >
-            Görüntülü görüşme (max {MAX_PARTICIPANTS})
-          </button>
+          <>
+            <button
+              type="button"
+              className="messaging-webrtc-pilot-btn"
+              onClick={() => void openPreCall("audio")}
+            >
+              Sesli ara
+            </button>
+            <button
+              type="button"
+              className="messaging-webrtc-pilot-btn messaging-webrtc-pilot-btn--primary"
+              onClick={() => void openPreCall("video")}
+            >
+              Görüntülü ara
+            </button>
+          </>
         ) : (
-          <button
-            type="button"
-            className="messaging-webrtc-pilot-btn messaging-webrtc-pilot-btn--end"
-            onClick={() => void endCall()}
-          >
-            Aramayı bitir
-          </button>
+          <>
+            <button
+              type="button"
+              className={`messaging-webrtc-pilot-btn ${micMuted ? "is-muted" : ""}`}
+              onClick={() => toggleMic()}
+              title="Mikrofon (M)"
+            >
+              {micMuted ? "Sessiz" : "Mikrofon"}
+            </button>
+            {callModeRef.current === "video" ? (
+              <button
+                type="button"
+                className={`messaging-webrtc-pilot-btn ${videoOff ? "is-muted" : ""}`}
+                onClick={() => toggleVideo()}
+                title="Kamera (V)"
+              >
+                {videoOff ? "Kamera kapalı" : "Kamera"}
+              </button>
+            ) : null}
+            <button
+              type="button"
+              className="messaging-webrtc-pilot-btn messaging-webrtc-pilot-btn--end"
+              onClick={() => void endCall()}
+              title="Bitir (Esc)"
+            >
+              Bitir
+            </button>
+          </>
         )}
+        {inCallUi && callStartedAtRef.current ? (
+          <span className="messaging-webrtc-pilot-timer" aria-live="polite">
+            {formatCallDuration(callSeconds)}
+          </span>
+        ) : null}
         {statusLine ? (
           <span className="messaging-webrtc-pilot-status">{statusLine}</span>
         ) : null}
@@ -512,17 +742,73 @@ export function MessagingWebRtcPilotCall({
           </span>
         ) : null}
       </div>
-      {showVideos ? (
-        <div
-          className="messaging-webrtc-pilot-videos messaging-webrtc-pilot-videos--mesh"
-        >
-          <video
-            ref={localVideoRef}
-            className="messaging-webrtc-pilot-video messaging-webrtc-pilot-video--local"
-            autoPlay
-            muted
-            playsInline
-          />
+
+      {phase === "precall" ? (
+        <div className="messaging-webrtc-precall">
+          {preCallMode === "video" ? (
+            <video
+              ref={previewVideoRef}
+              className="messaging-webrtc-pilot-video messaging-webrtc-precall-preview"
+              autoPlay
+              muted
+              playsInline
+            />
+          ) : (
+            <p className="messaging-webrtc-precall-audio-hint">
+              Mikrofon testi — konuşunca seviye göstergesi tarayıcıda görünür.
+            </p>
+          )}
+          {devices ? (
+            <div className="messaging-webrtc-device-picks">
+              <label>
+                Mikrofon
+                <select
+                  value={audioInputId}
+                  onChange={(e) => setAudioInputId(e.target.value)}
+                >
+                  <option value="">Varsayılan</option>
+                  {devices.audioInputs.map((d) => (
+                    <option key={d.deviceId} value={d.deviceId}>
+                      {d.label || "Mikrofon"}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {preCallMode === "video" ? (
+                <label>
+                  Kamera
+                  <select
+                    value={videoInputId}
+                    onChange={(e) => setVideoInputId(e.target.value)}
+                  >
+                    <option value="">Varsayılan</option>
+                    {devices.videoInputs.map((d) => (
+                      <option key={d.deviceId} value={d.deviceId}>
+                        {d.label || "Kamera"}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : null}
+            </div>
+          ) : null}
+          <p className="messaging-webrtc-precall-hint">
+            En fazla {MAX_PARTICIPANTS} kişi · Kısayol: M sessiz, V kamera, Esc bitir
+          </p>
+        </div>
+      ) : null}
+
+      {showVideos || (inCallUi && remotePeers.length > 0) ? (
+        <div className="messaging-webrtc-pilot-videos messaging-webrtc-pilot-videos--mesh">
+          {showVideos ? (
+            <video
+              ref={localVideoRef}
+              className="messaging-webrtc-pilot-video messaging-webrtc-pilot-video--local"
+              autoPlay
+              muted
+              playsInline
+            />
+          ) : null}
           {remotePeers.map((peer) => (
             <video
               key={peer.userId}

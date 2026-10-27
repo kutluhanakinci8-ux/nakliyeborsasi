@@ -14,7 +14,12 @@ import {
   MESSAGING_WEBRTC_ROOM_TTL_SECONDS,
 } from "./messagingWebRtcConstants";
 
-export type WebRtcSignalType = "offer" | "answer" | "ice" | "hangup";
+export type WebRtcSignalType =
+  | "offer"
+  | "answer"
+  | "ice"
+  | "hangup"
+  | "invite";
 
 export type WebRtcSignalEnvelope = {
   id: string;
