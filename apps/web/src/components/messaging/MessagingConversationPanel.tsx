@@ -191,7 +191,14 @@ export function MessagingConversationPanel({
     })
       .then(setThreadDeliveries)
       .catch(() => setThreadDeliveries([]));
-  }, [accessToken, activeThreadId, activeThread?.threadKind, chat.messages.length]);
+  }, [
+    accessToken,
+    activeThreadId,
+    activeThread?.threadKind,
+    activeThread?.externalOutboundStatus,
+    activeThread?.externalOutboundError,
+    chat.messages.length,
+  ]);
 
   const threadLegalHold = Boolean(activeThread?.legalHoldAt);
 

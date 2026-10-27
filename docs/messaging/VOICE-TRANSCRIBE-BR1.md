@@ -2,7 +2,7 @@
 
 - **Telegram inbound:** ses ekleri `voice_note` + otomatik STT (firma `auto` + STT-3 + BR flag)
 - **Telegram outbound:** `sendVoice` (OGG/Opus sesli not)
-- **WhatsApp outbound:** tek `audio/*` ek → Cloud API media upload (`audio/webm` → ffmpeg → `audio/ogg`)
+- **WhatsApp outbound:** tek `audio/*` ek → Cloud API media upload (`audio/webm` → **VPS ffmpeg** → `audio/ogg`; `scripts/ensure-vps-ffmpeg.sh`)
 - **Export:** `GET /messaging/integration/voice-transcripts/export.csv`
 - **Kaynak:** `transcript_source` = `bridge_inbound` | `outbound_auto` | `manual`
 
