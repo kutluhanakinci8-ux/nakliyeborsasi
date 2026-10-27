@@ -15,6 +15,8 @@ export type MessagingPublicStatus = {
     faz1Enabled: boolean;
     playerFaz2Enabled: boolean;
     maxDurationMs: number;
+    transcribeFaz1Enabled?: boolean;
+    sttConfigured?: boolean;
   };
 };
 

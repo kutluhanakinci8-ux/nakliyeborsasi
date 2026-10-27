@@ -282,6 +282,11 @@ export class MailAiComposeService {
     };
   }
 
+  /** Mesajlaşma AI özet ve ses transkripsiyon için ortak rıza. */
+  public async hasMessagingAiConsent(userId: string): Promise<boolean> {
+    return this.canUseLlm(userId);
+  }
+
   private async canUseLlm(userId: string): Promise<boolean> {
     if (!this.isLlmConfigured()) {
       return false;

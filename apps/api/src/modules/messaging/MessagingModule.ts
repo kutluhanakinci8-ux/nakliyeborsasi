@@ -2,6 +2,7 @@ import { Module, forwardRef } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { MessageThreadEntity } from "../../infrastructure/database/entities/MessageThreadEntity";
 import { MessageEntity } from "../../infrastructure/database/entities/MessageEntity";
+import { MessageVoiceTranscriptEntity } from "../../infrastructure/database/entities/MessageVoiceTranscriptEntity";
 import { MessageThreadReadStateEntity } from "../../infrastructure/database/entities/MessageThreadReadStateEntity";
 import { MessageThreadUserReadStateEntity } from "../../infrastructure/database/entities/MessageThreadUserReadStateEntity";
 import { UserAccountEntity } from "../../infrastructure/database/entities/UserAccountEntity";
@@ -9,6 +10,7 @@ import { CompanyMembershipEntity } from "../../infrastructure/database/entities/
 import { MessagingModuleStatusController } from "./MessagingModuleStatusController";
 import { MessagingThreadController } from "./MessagingThreadController";
 import { MessagingThreadApplicationService } from "./MessagingThreadApplicationService";
+import { MessagingVoiceTranscribeService } from "./MessagingVoiceTranscribeService";
 import { SubscriptionModule } from "../subscription/SubscriptionModule";
 import { AuthModule } from "../auth/AuthModule";
 import { NotificationModule } from "../notification/NotificationModule";
@@ -73,6 +75,7 @@ import { SocialHubModule } from "../social-hub/SocialHubModule";
     TypeOrmModule.forFeature([
       MessageThreadEntity,
       MessageEntity,
+      MessageVoiceTranscriptEntity,
       MessageOperationStampEntity,
       CompanyMessagingWebhookEndpointEntity,
       CompanyMessagingSettingsEntity,
@@ -111,6 +114,7 @@ import { SocialHubModule } from "../social-hub/SocialHubModule";
   ],
   providers: [
     MessagingThreadApplicationService,
+    MessagingVoiceTranscribeService,
     MessagingTranslationService,
     MessagingAttachmentQuotaService,
     MessagingAttachmentS3ProbeService,

@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MessagingApiClient } from "../../lib/MessagingApiClient";
+import {
+  MessagingApiClient,
+  type ThreadMessageAttachmentRecord,
+} from "../../lib/MessagingApiClient";
 import { MessagingVoiceNotePlayer } from "./MessagingVoiceNotePlayer";
 
 type Props = {
@@ -16,6 +19,17 @@ type Props = {
   kind?: "voice_note";
   durationMs?: number;
   voiceNotePlayerEnabled?: boolean;
+  voiceTranscribeEnabled?: boolean;
+  attachmentRecord?: {
+    index: number;
+    filename: string;
+    contentType: string;
+    sizeBytes: number;
+    kind?: "voice_note";
+    durationMs?: number;
+    transcript?: ThreadMessageAttachmentRecord["transcript"];
+  };
+  onTranscriptReady?: () => void;
   onError: (message: string) => void;
 };
 
@@ -147,10 +161,22 @@ export function MessagingChatAttachmentPreview(props: Props) {
     kind,
     durationMs,
     voiceNotePlayerEnabled = false,
+    voiceTranscribeEnabled = false,
+    attachmentRecord,
+    onTranscriptReady,
     onError,
   } = props;
 
   if (isVoiceAttachment(kind, contentType, filename)) {
+    const attachment: ThreadMessageAttachmentRecord =
+      attachmentRecord ?? {
+        index: attachmentIndex,
+        filename,
+        contentType,
+        sizeBytes: props.sizeBytes,
+        kind,
+        durationMs,
+      };
     return (
       <MessagingVoiceNotePlayer
         accessToken={accessToken}
@@ -158,8 +184,11 @@ export function MessagingChatAttachmentPreview(props: Props) {
         threadId={threadId}
         messageId={messageId}
         attachmentIndex={attachmentIndex}
+        attachment={attachment}
         durationMs={durationMs}
         advancedPlayer={voiceNotePlayerEnabled}
+        transcribeEnabled={voiceTranscribeEnabled}
+        onTranscriptReady={() => onTranscriptReady?.()}
         onError={onError}
       />
     );

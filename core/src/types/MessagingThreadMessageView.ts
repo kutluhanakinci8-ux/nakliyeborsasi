@@ -1,3 +1,9 @@
+export type MessagingVoiceTranscriptView = {
+  status: "pending" | "ready" | "failed";
+  text: string | null;
+  provider: string | null;
+};
+
 export type MessagingMessageAttachmentView = {
   index: number;
   filename: string;
@@ -5,6 +11,7 @@ export type MessagingMessageAttachmentView = {
   sizeBytes: number;
   kind?: "voice_note";
   durationMs?: number;
+  transcript?: MessagingVoiceTranscriptView;
 };
 
 export type MessagingOperationStampView = {

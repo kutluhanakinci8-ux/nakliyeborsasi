@@ -32,6 +32,11 @@ export type ThreadMessageAttachmentRecord = {
   sizeBytes: number;
   kind?: "voice_note";
   durationMs?: number;
+  transcript?: {
+    status: "pending" | "ready" | "failed";
+    text: string | null;
+    provider: string | null;
+  };
 };
 
 export type ThreadMessageRecord = {
@@ -550,5 +555,34 @@ export class MessagingApiClient {
       throw new Error("Ek indirilemedi");
     }
     return response.blob();
+  }
+
+  public static async transcribeVoiceAttachment(
+    accessToken: string,
+    locale: string,
+    threadId: string,
+    messageId: string,
+    attachmentIndex: number,
+  ): Promise<{
+    transcript: {
+      status: "pending" | "ready" | "failed";
+      text: string | null;
+      provider: string | null;
+    };
+  }> {
+    return AuthenticatedApiClient.fetchJson(
+      accessToken,
+      `/messaging/threads/${threadId}/messages/${messageId}/attachments/${attachmentIndex}/transcribe?lang=${locale}`,
+      {
+        method: "POST",
+        body: JSON.stringify({ kvkkConsentAcknowledged: true }),
+      },
+    ) as Promise<{
+      transcript: {
+        status: "pending" | "ready" | "failed";
+        text: string | null;
+        provider: string | null;
+      };
+    }>;
   }
 }

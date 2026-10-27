@@ -28,6 +28,10 @@ import { OpenMessagingGroupThreadRequestDto } from "./OpenMessagingGroupThreadRe
 import { SendThreadMessageRequestDto } from "./MessagingAttachmentRequestDto";
 import { TranslateMessagingTextRequestDto } from "./TranslateMessagingTextRequestDto";
 import { UpdateThreadMessageRequestDto } from "./UpdateThreadMessageRequestDto";
+import { MessagingVoiceTranscribeService } from "./MessagingVoiceTranscribeService";
+import { MessagingVoiceTranscribeRequestDto } from "./MessagingVoiceTranscribeRequestDto";
+import { messagingMessageViewsToJson } from "./messagingMessageViewJson";
+import { MessagingAuditService } from "./MessagingAuditService";
 
 @Controller("messaging")
 @UseGuards(JwtAuthenticationGuard)
@@ -37,6 +41,8 @@ export class MessagingThreadController {
     private readonly messagingTranslationService: MessagingTranslationService,
     private readonly localeResolutionService: LocaleResolutionService,
     private readonly platformSupportService: PlatformSupportService,
+    private readonly messagingVoiceTranscribeService: MessagingVoiceTranscribeService,
+    private readonly messagingAuditService: MessagingAuditService,
   ) {}
 
   @Get("platform-support")
@@ -136,7 +142,13 @@ export class MessagingThreadController {
         threadId,
         locale,
       );
-    return { messages };
+    const transcriptMap =
+      await this.messagingVoiceTranscribeService.mapTranscriptsByMessageAndIndex(
+        messages.map((row) => row.id),
+      );
+    return {
+      messages: messagingMessageViewsToJson(messages, transcriptMap),
+    };
   }
 
   @Post("threads/:threadId/messages")
@@ -372,6 +384,48 @@ export class MessagingThreadController {
       `attachment; filename="${encodeURIComponent(file.filename)}"`,
     );
     response.send(file.buffer);
+  }
+
+  @Post(
+    "threads/:threadId/messages/:messageId/attachments/:index/transcribe",
+  )
+  public async transcribeVoiceAttachment(
+    @Param("threadId") threadId: string,
+    @Param("messageId") messageId: string,
+    @Param("index", ParseIntPipe) index: number,
+    @Body() body: MessagingVoiceTranscribeRequestDto,
+    @AuthenticatedUserParam() authenticatedUser: AuthenticatedUserContext,
+    @Req() request: Request,
+    @Headers("accept-language") acceptLanguage: string | undefined,
+    @Query("lang") queryLanguage: string | undefined,
+  ): Promise<{ transcript: unknown }> {
+    const locale = this.localeResolutionService.resolveFromHeaders(
+      acceptLanguage,
+      queryLanguage,
+    );
+    const clientContext = resolveMessagingClientRequestContext(request);
+    const transcript =
+      await this.messagingVoiceTranscribeService.transcribeVoiceAttachment(
+        authenticatedUser,
+        threadId,
+        messageId,
+        index,
+        locale,
+        body.kvkkConsentAcknowledged,
+      );
+    void this.messagingAuditService.recordMessageMutation(
+      "MESSAGING_VOICE_TRANSCRIBE",
+      authenticatedUser,
+      clientContext,
+      {
+        threadId,
+        messageId,
+        httpMethod: "POST",
+        requestPath: request.path,
+        extra: { attachmentIndex: index, provider: transcript.provider },
+      },
+    );
+    return { transcript };
   }
 
   @Get("export")
