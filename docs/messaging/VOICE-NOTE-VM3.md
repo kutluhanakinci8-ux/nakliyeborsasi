@@ -1,7 +1,7 @@
 # Sesli mesaj — VM-3 (mobil / Expo)
 
 - `expo-av` ile yerel kayıt ve API üzerinden `voice_note` gönderimi
-- Expo push: sesli mesaj başlığı + `voiceNote=1` deep link
+- Expo push: sesli mesaj başlığı + `voiceNote=1` deep link (web vurgusu: VM-4)
 - Mobil panel: `MessagingVoiceNoteMobilePanel` (thread UUID + kayıt)
 
 ## Bayraklar

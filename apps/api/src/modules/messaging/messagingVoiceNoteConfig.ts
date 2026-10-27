@@ -18,6 +18,16 @@ export function messagingVoiceNoteMobileFaz3Enabled(
   return env.MESSAGING_VOICE_NOTE_MOBILE_FAZ3?.trim() === "1";
 }
 
+/** VM-4: Expo push / mobil `voiceNote=1` → web sohbette mikrofon vurgusu */
+export function messagingVoiceNoteDeeplinkFaz4Enabled(
+  env: NodeJS.ProcessEnv = process.env,
+): boolean {
+  return (
+    messagingVoiceNoteFaz1Enabled(env) &&
+    env.MESSAGING_VOICE_NOTE_DEEPLINK_FAZ4?.trim() === "1"
+  );
+}
+
 export function messagingVoiceNoteMaxDurationMs(
   env: NodeJS.ProcessEnv = process.env,
 ): number {

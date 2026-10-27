@@ -118,6 +118,8 @@ export function MessagingConversationPanel({
     messageInputRef,
     handleSendMessage,
     sendVoiceNoteAttachment,
+    voiceNoteDeepLinkFocus,
+    clearVoiceNoteDeepLinkFocus,
     loadMessages,
     setErrorMessage,
   } = chat;
@@ -127,6 +129,7 @@ export function MessagingConversationPanel({
   const [voiceNoteEnabled, setVoiceNoteEnabled] = useState(false);
   const [voiceNotePlayerEnabled, setVoiceNotePlayerEnabled] = useState(false);
   const [voiceNoteMaxDurationMs, setVoiceNoteMaxDurationMs] = useState(180_000);
+  const [voiceNoteDeeplinkEnabled, setVoiceNoteDeeplinkEnabled] = useState(false);
   const [voiceTranscribeEnabled, setVoiceTranscribeEnabled] = useState(false);
   const [voiceTranscribeAdvancedEnabled, setVoiceTranscribeAdvancedEnabled] =
     useState(false);
@@ -143,6 +146,9 @@ export function MessagingConversationPanel({
         setVoiceNoteMaxDurationMs(
           status.voiceNote?.maxDurationMs ?? 180_000,
         );
+        setVoiceNoteDeeplinkEnabled(
+          status.features.includes("messaging_voice_note_deeplink_faz4"),
+        );
         setVoiceTranscribeEnabled(
           status.features.includes("messaging_voice_transcribe_manual_faz1"),
         );
@@ -153,10 +159,18 @@ export function MessagingConversationPanel({
       .catch(() => {
         setVoiceNoteEnabled(false);
         setVoiceNotePlayerEnabled(false);
+        setVoiceNoteDeeplinkEnabled(false);
         setVoiceTranscribeEnabled(false);
         setVoiceTranscribeAdvancedEnabled(false);
       });
   }, []);
+
+  const highlightVoiceNoteMic =
+    voiceNoteDeepLinkFocus &&
+    voiceNoteDeeplinkEnabled &&
+    voiceNoteEnabled &&
+    Boolean(activeThreadId) &&
+    !internalNote;
 
   useEffect(() => {
     if (
@@ -867,10 +881,17 @@ export function MessagingConversationPanel({
                       </select>
                     </label>
                   ) : null}
+                  {highlightVoiceNoteMic ? (
+                    <p className="chat-voice-deeplink-hint" role="status">
+                      Sesli mesaj için mikrofona dokunun
+                    </p>
+                  ) : null}
                   <MessagingVoiceNoteComposeButton
                     enabled={voiceNoteEnabled && !internalNote}
                     maxDurationMs={voiceNoteMaxDurationMs}
                     disabled={!activeThreadId || Boolean(threadLegalHold)}
+                    highlightFromDeepLink={highlightVoiceNoteMic}
+                    onDeepLinkHighlightConsumed={clearVoiceNoteDeepLinkFocus}
                     onRecorded={(attachment) =>
                       void sendVoiceNoteAttachment(attachment)
                     }

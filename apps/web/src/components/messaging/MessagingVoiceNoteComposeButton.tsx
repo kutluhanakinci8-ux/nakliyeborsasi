@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { IconMic } from "./ChatUiIcons";
 import { useMessagingVoiceNoteRecorder } from "../../hooks/useMessagingVoiceNoteRecorder";
 
@@ -7,6 +8,8 @@ type Props = {
   enabled: boolean;
   maxDurationMs: number;
   disabled: boolean;
+  highlightFromDeepLink?: boolean;
+  onDeepLinkHighlightConsumed?: () => void;
   onRecorded: (attachment: import("../../lib/messagingPageHelpers").PendingAttachment) => void;
   onError: (message: string) => void;
 };
@@ -22,9 +25,21 @@ export function MessagingVoiceNoteComposeButton({
   enabled,
   maxDurationMs,
   disabled,
+  highlightFromDeepLink = false,
+  onDeepLinkHighlightConsumed,
   onRecorded,
   onError,
 }: Props) {
+  const micButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!highlightFromDeepLink || !enabled) {
+      return;
+    }
+    micButtonRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    micButtonRef.current?.focus({ preventScroll: true });
+  }, [highlightFromDeepLink, enabled]);
+
   const {
     isRecording,
     elapsedMs,
@@ -75,12 +90,20 @@ export function MessagingVoiceNoteComposeButton({
 
   return (
     <button
+      ref={micButtonRef}
       type="button"
-      className="chat-compose-tool-btn"
+      className={
+        highlightFromDeepLink
+          ? "chat-compose-tool-btn chat-compose-tool-btn--voice-deeplink"
+          : "chat-compose-tool-btn"
+      }
       disabled={disabled || state === "processing"}
       title="Sesli mesaj kaydet"
       aria-label="Sesli mesaj kaydet"
-      onClick={() => void startRecording()}
+      onClick={() => {
+        onDeepLinkHighlightConsumed?.();
+        void startRecording();
+      }}
     >
       <IconMic size={16} />
       <span className="sr-only">Sesli mesaj</span>

@@ -76,6 +76,7 @@ export function parseMeetDeepLinkFromUrl(
   meetInvite: boolean;
   sfuPilot: boolean;
   nativeRtc: boolean;
+  voiceNote: boolean;
 } {
   try {
     const parsed = Linking.parse(url);

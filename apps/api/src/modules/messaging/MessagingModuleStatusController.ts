@@ -21,6 +21,7 @@ import { probeMessagingWebRtcSfuBackend } from "./messagingWebRtcSfuBackend";
 import { summarizeMessagingWebRtcNativeBridge } from "./messagingWebRtcNativeBridge";
 import { summarizeMessagingWebRtcMeetProgramClosure } from "./messagingWebRtcMeetProgramClosure";
 import {
+  messagingVoiceNoteDeeplinkFaz4Enabled,
   messagingVoiceNoteFaz1Enabled,
   messagingVoiceNoteMaxDurationMs,
   messagingVoiceNoteMobileFaz3Enabled,
@@ -95,6 +96,7 @@ export class MessagingModuleStatusController {
       faz1Enabled: boolean;
       playerFaz2Enabled: boolean;
       mobileFaz3Enabled: boolean;
+      deeplinkFaz4Enabled: boolean;
       maxDurationMs: number;
       transcribeFaz1Enabled: boolean;
       transcribeAdvancedFaz2Enabled: boolean;
@@ -121,6 +123,7 @@ export class MessagingModuleStatusController {
     const voiceNoteFaz1 = messagingVoiceNoteFaz1Enabled();
     const voiceNotePlayerFaz2 = messagingVoiceNotePlayerFaz2Enabled();
     const voiceNoteMobileFaz3 = messagingVoiceNoteMobileFaz3Enabled();
+    const voiceNoteDeeplinkFaz4 = messagingVoiceNoteDeeplinkFaz4Enabled();
     const messagingFeatures: string[] = [
         "company_threads",
         "freight_listing_threads",
@@ -224,6 +227,9 @@ export class MessagingModuleStatusController {
     if (voiceNoteMobileFaz3) {
       messagingFeatures.push("messaging_voice_note_mobile_faz3");
     }
+    if (voiceNoteDeeplinkFaz4) {
+      messagingFeatures.push("messaging_voice_note_deeplink_faz4");
+    }
     const voiceTranscribeFaz1 = messagingVoiceTranscribeFaz1Enabled();
     const voiceTranscribeFaz2 = messagingVoiceTranscribeAdvancedFaz2Enabled();
     const voiceTranscribeFaz3 = messagingVoiceTranscribeAutoFaz3Enabled();
@@ -305,6 +311,7 @@ export class MessagingModuleStatusController {
         faz1Enabled: voiceNoteFaz1,
         playerFaz2Enabled: voiceNotePlayerFaz2,
         mobileFaz3Enabled: voiceNoteMobileFaz3,
+        deeplinkFaz4Enabled: voiceNoteDeeplinkFaz4,
         maxDurationMs: messagingVoiceNoteMaxDurationMs(),
         transcribeFaz1Enabled: voiceTranscribeFaz1,
         transcribeAdvancedFaz2Enabled: voiceTranscribeFaz2,
