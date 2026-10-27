@@ -6,6 +6,7 @@ import { buildMessagingAttachmentOpsSnapshot } from "./messagingAttachmentOpsSna
 import { MessagingRealtimeHubService } from "./MessagingRealtimeHubService";
 import { MessagingOptionalWsService } from "./MessagingOptionalWsService";
 import { MessagingWhatsappBridgeService } from "./MessagingWhatsappBridgeService";
+import { MESSAGING_WEBRTC_MAX_PARTICIPANTS } from "./messagingWebRtcConstants";
 import { MessagingWebRtcSignalingService } from "./MessagingWebRtcSignalingService";
 import type { WhatsappBridgeDeliverySnapshot } from "@nakliyeborsasi/core";
 
@@ -43,6 +44,8 @@ export class MessagingModuleStatusController {
       signaling: "redis_relay" | "unavailable" | "planned";
       codecsShippedWithApp: false;
       configPath: string;
+      maxParticipants: number;
+      meshMode: "p2p";
     };
     mobileExpoPush: { registerPath: string; enabled: boolean };
   }> {
@@ -124,6 +127,7 @@ export class MessagingModuleStatusController {
         "browser_webrtc_disclosure",
         "mobile_expo_push_api",
         "messaging_webrtc_signaling_relay",
+        "messaging_webrtc_mesh_three",
       ],
       translate: { deepl, libretranslate: libre },
       attachments: (() => {
@@ -154,6 +158,8 @@ export class MessagingModuleStatusController {
         signaling: webrtcRelay ? "redis_relay" : "unavailable",
         codecsShippedWithApp: false,
         configPath: "/messaging/webrtc/config",
+        maxParticipants: MESSAGING_WEBRTC_MAX_PARTICIPANTS,
+        meshMode: "p2p",
       },
       mobileExpoPush: {
         registerPath: "/messaging/push/expo/register",

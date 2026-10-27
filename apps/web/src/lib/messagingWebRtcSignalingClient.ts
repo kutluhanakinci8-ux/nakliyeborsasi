@@ -3,14 +3,28 @@ import { PublicApiConfiguration } from "./PublicApiConfiguration";
 export type MessagingWebRtcConfig = {
   iceServers: RTCIceServer[];
   signaling: "redis_relay" | "unavailable" | "planned";
+  maxParticipants?: number;
+  meshMode?: "p2p";
+};
+
+export type WebRtcRoomParticipant = {
+  userId: string;
+  companyId: string;
+};
+
+export type WebRtcRoomSnapshot = {
+  threadId: string;
+  maxParticipants: number;
+  participants: WebRtcRoomParticipant[];
 };
 
 export type WebRtcSignalEnvelope = {
   id: string;
   threadId: string;
   fromUserId: string;
-  type: "offer" | "answer" | "ice";
+  type: "offer" | "answer" | "ice" | "hangup";
   payload: string;
+  targetUserId?: string | null;
   createdAt: string;
 };
 
@@ -30,11 +44,59 @@ export async function fetchMessagingWebRtcConfig(
   return (await response.json()) as MessagingWebRtcConfig;
 }
 
+export async function joinMessagingWebRtcRoom(
+  accessToken: string,
+  threadId: string,
+): Promise<WebRtcRoomSnapshot> {
+  const response = await fetch(
+    `${apiBase()}/messaging/webrtc/threads/${encodeURIComponent(threadId)}/room/join`,
+    {
+      method: "POST",
+      headers: { Authorization: `Bearer ${accessToken}` },
+    },
+  );
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || "webrtc room join");
+  }
+  const body = (await response.json()) as { room: WebRtcRoomSnapshot };
+  return body.room;
+}
+
+export async function leaveMessagingWebRtcRoom(
+  accessToken: string,
+  threadId: string,
+): Promise<void> {
+  await fetch(
+    `${apiBase()}/messaging/webrtc/threads/${encodeURIComponent(threadId)}/room/leave`,
+    {
+      method: "POST",
+      headers: { Authorization: `Bearer ${accessToken}` },
+    },
+  );
+}
+
+export async function fetchMessagingWebRtcRoom(
+  accessToken: string,
+  threadId: string,
+): Promise<WebRtcRoomSnapshot> {
+  const response = await fetch(
+    `${apiBase()}/messaging/webrtc/threads/${encodeURIComponent(threadId)}/room`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  );
+  if (!response.ok) {
+    throw new Error("webrtc room get");
+  }
+  const body = (await response.json()) as { room: WebRtcRoomSnapshot };
+  return body.room;
+}
+
 export async function postMessagingWebRtcSignal(
   accessToken: string,
   threadId: string,
   type: WebRtcSignalEnvelope["type"],
   payload: string,
+  targetUserId?: string | null,
 ): Promise<WebRtcSignalEnvelope> {
   const response = await fetch(
     `${apiBase()}/messaging/webrtc/threads/${encodeURIComponent(threadId)}/signals`,
@@ -44,7 +106,11 @@ export async function postMessagingWebRtcSignal(
         Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ type, payload }),
+      body: JSON.stringify({
+        type,
+        payload,
+        ...(targetUserId ? { targetUserId } : {}),
+      }),
     },
   );
   if (!response.ok) {

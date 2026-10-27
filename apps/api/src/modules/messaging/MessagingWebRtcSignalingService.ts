@@ -1,11 +1,20 @@
-import { Injectable, Logger } from "@nestjs/common";
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  Logger,
+} from "@nestjs/common";
 import { randomUUID } from "node:crypto";
 import type Redis from "ioredis";
 import { RedisConnectionProvider } from "../../infrastructure/redis/RedisConnectionProvider";
 import { MessagingThreadApplicationService } from "./MessagingThreadApplicationService";
 import type { AuthenticatedUserContext } from "@nakliyeborsasi/core";
+import {
+  MESSAGING_WEBRTC_MAX_PARTICIPANTS,
+  MESSAGING_WEBRTC_ROOM_TTL_SECONDS,
+} from "./messagingWebRtcConstants";
 
-export type WebRtcSignalType = "offer" | "answer" | "ice";
+export type WebRtcSignalType = "offer" | "answer" | "ice" | "hangup";
 
 export type WebRtcSignalEnvelope = {
   id: string;
@@ -14,7 +23,19 @@ export type WebRtcSignalEnvelope = {
   fromCompanyId: string;
   type: WebRtcSignalType;
   payload: string;
+  targetUserId?: string | null;
   createdAt: string;
+};
+
+export type WebRtcRoomParticipant = {
+  userId: string;
+  companyId: string;
+};
+
+export type WebRtcRoomSnapshot = {
+  threadId: string;
+  maxParticipants: number;
+  participants: WebRtcRoomParticipant[];
 };
 
 const SIGNAL_TTL_SECONDS = 7200;
@@ -32,16 +53,98 @@ export class MessagingWebRtcSignalingService {
     this.redis = redisConnectionProvider.getClient();
   }
 
+  public async joinRoom(
+    user: AuthenticatedUserContext,
+    threadId: string,
+  ): Promise<WebRtcRoomSnapshot> {
+    await this.messagingThreadApplicationService.assertThreadParticipantForSignaling(
+      user,
+      threadId,
+    );
+    const roomKey = this.roomRedisKey(threadId);
+    const memberKey = this.roomMemberKey(threadId, user.userId);
+    const already = await this.redis.exists(memberKey);
+    if (!already) {
+      const count = await this.redis.scard(roomKey);
+      if (count >= MESSAGING_WEBRTC_MAX_PARTICIPANTS) {
+        throw new ConflictException(
+          `Görüntülü görüşme dolu (en fazla ${MESSAGING_WEBRTC_MAX_PARTICIPANTS} kişi).`,
+        );
+      }
+    }
+    await this.redis
+      .multi()
+      .sadd(roomKey, user.userId)
+      .set(
+        memberKey,
+        user.companyId,
+        "EX",
+        MESSAGING_WEBRTC_ROOM_TTL_SECONDS,
+      )
+      .expire(roomKey, MESSAGING_WEBRTC_ROOM_TTL_SECONDS)
+      .exec();
+    return await this.getRoomSnapshot(user, threadId);
+  }
+
+  public async leaveRoom(
+    user: AuthenticatedUserContext,
+    threadId: string,
+  ): Promise<WebRtcRoomSnapshot> {
+    await this.messagingThreadApplicationService.assertThreadParticipantForSignaling(
+      user,
+      threadId,
+    );
+    await this.redis
+      .multi()
+      .srem(this.roomRedisKey(threadId), user.userId)
+      .del(this.roomMemberKey(threadId, user.userId))
+      .exec();
+    return await this.getRoomSnapshot(user, threadId);
+  }
+
+  public async getRoomSnapshot(
+    user: AuthenticatedUserContext,
+    threadId: string,
+  ): Promise<WebRtcRoomSnapshot> {
+    await this.messagingThreadApplicationService.assertThreadParticipantForSignaling(
+      user,
+      threadId,
+    );
+    const userIds = await this.redis.smembers(this.roomRedisKey(threadId));
+    const participants: WebRtcRoomParticipant[] = [];
+    for (const userId of userIds) {
+      const companyId = await this.redis.get(this.roomMemberKey(threadId, userId));
+      if (!companyId) {
+        await this.redis.srem(this.roomRedisKey(threadId), userId);
+        continue;
+      }
+      participants.push({ userId, companyId });
+    }
+    participants.sort((a, b) => a.userId.localeCompare(b.userId));
+    return {
+      threadId,
+      maxParticipants: MESSAGING_WEBRTC_MAX_PARTICIPANTS,
+      participants,
+    };
+  }
+
   public async postSignal(params: {
     user: AuthenticatedUserContext;
     threadId: string;
     type: WebRtcSignalType;
     payload: string;
+    targetUserId?: string | null;
   }): Promise<WebRtcSignalEnvelope> {
     await this.messagingThreadApplicationService.assertThreadParticipantForSignaling(
       params.user,
       params.threadId,
     );
+    if (
+      params.targetUserId &&
+      params.targetUserId === params.user.userId
+    ) {
+      throw new BadRequestException("targetUserId kendiniz olamaz.");
+    }
     const envelope: WebRtcSignalEnvelope = {
       id: randomUUID(),
       threadId: params.threadId,
@@ -49,6 +152,7 @@ export class MessagingWebRtcSignalingService {
       fromCompanyId: params.user.companyId,
       type: params.type,
       payload: params.payload,
+      targetUserId: params.targetUserId ?? null,
       createdAt: new Date().toISOString(),
     };
     const key = this.redisKey(params.threadId);
@@ -84,6 +188,7 @@ export class MessagingWebRtcSignalingService {
     const filtered = parsed.filter(
       (row) =>
         row.fromUserId !== params.user.userId &&
+        this.isSignalForUser(row, params.user.userId) &&
         (!params.afterId || row.id !== params.afterId),
     );
     if (!params.afterId) {
@@ -94,8 +199,20 @@ export class MessagingWebRtcSignalingService {
       return filtered.slice(-30);
     }
     return parsed.slice(idx + 1).filter(
-      (row) => row.fromUserId !== params.user.userId,
+      (row) =>
+        row.fromUserId !== params.user.userId &&
+        this.isSignalForUser(row, params.user.userId),
     );
+  }
+
+  private isSignalForUser(
+    row: WebRtcSignalEnvelope,
+    userId: string,
+  ): boolean {
+    if (!row.targetUserId) {
+      return true;
+    }
+    return row.targetUserId === userId;
   }
 
   public async isRelayAvailable(): Promise<boolean> {
@@ -112,5 +229,13 @@ export class MessagingWebRtcSignalingService {
 
   private redisKey(threadId: string): string {
     return `messaging:webrtc:signal:${threadId}`;
+  }
+
+  private roomRedisKey(threadId: string): string {
+    return `messaging:webrtc:room:${threadId}`;
+  }
+
+  private roomMemberKey(threadId: string, userId: string): string {
+    return `messaging:webrtc:room:${threadId}:member:${userId}`;
   }
 }

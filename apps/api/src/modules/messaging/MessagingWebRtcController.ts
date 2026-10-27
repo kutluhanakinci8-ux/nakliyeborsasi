@@ -10,6 +10,7 @@ import {
 import { AuthenticatedUserContext } from "@nakliyeborsasi/core";
 import { JwtAuthenticationGuard } from "../auth/JwtAuthenticationGuard";
 import { AuthenticatedUserParam } from "../auth/AuthenticatedUserParam";
+import { MESSAGING_WEBRTC_MAX_PARTICIPANTS } from "./messagingWebRtcConstants";
 import { resolveMessagingWebRtcIceServers } from "./messagingWebRtcIceConfig";
 import { MessagingWebRtcSignalingService } from "./MessagingWebRtcSignalingService";
 import {
@@ -30,7 +31,36 @@ export class MessagingWebRtcController {
     return {
       iceServers: resolveMessagingWebRtcIceServers(),
       signaling: relay ? "redis_relay" : "unavailable",
+      maxParticipants: MESSAGING_WEBRTC_MAX_PARTICIPANTS,
+      meshMode: "p2p",
     };
+  }
+
+  @Get("threads/:threadId/room")
+  public async getRoom(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("threadId") threadId: string,
+  ) {
+    const room = await this.signalingService.getRoomSnapshot(user, threadId);
+    return { room };
+  }
+
+  @Post("threads/:threadId/room/join")
+  public async joinRoom(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("threadId") threadId: string,
+  ) {
+    const room = await this.signalingService.joinRoom(user, threadId);
+    return { ok: true, room };
+  }
+
+  @Post("threads/:threadId/room/leave")
+  public async leaveRoom(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Param("threadId") threadId: string,
+  ) {
+    const room = await this.signalingService.leaveRoom(user, threadId);
+    return { ok: true, room };
   }
 
   @Post("threads/:threadId/signals")
@@ -44,6 +74,7 @@ export class MessagingWebRtcController {
       threadId,
       type: body.type,
       payload: body.payload,
+      targetUserId: body.targetUserId ?? null,
     });
     return { ok: true, signal };
   }
