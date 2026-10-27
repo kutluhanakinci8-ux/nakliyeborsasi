@@ -32,6 +32,7 @@ import {
   messagingVoiceSttDefaultLanguage,
   messagingVoiceSttLocalFaz1Enabled,
   messagingVoiceSttMaxConcurrent,
+  messagingVoiceSttOssGateFaz7Enabled,
   messagingVoiceSttReliabilityFaz1Enabled,
   messagingVoiceSttTrQualityFaz1Enabled,
   messagingVoiceTranscribeAdvancedFaz2Enabled,
@@ -119,6 +120,7 @@ export class MessagingModuleStatusController {
       sttMaxConcurrent: number;
       sttActiveJobs: number;
       sttReliabilityFaz1Enabled: boolean;
+      sttOssGateFaz7Enabled: boolean;
     };
   }> {
     const deepl = Boolean(
@@ -253,6 +255,7 @@ export class MessagingModuleStatusController {
     const voiceSttLocalFaz1 = messagingVoiceSttLocalFaz1Enabled();
     const voiceSttTrQualityFaz1 = messagingVoiceSttTrQualityFaz1Enabled();
     const voiceSttReliabilityFaz1 = messagingVoiceSttReliabilityFaz1Enabled();
+    const voiceSttOssGateFaz7 = messagingVoiceSttOssGateFaz7Enabled();
     if (voiceTranscribeFaz1) {
       messagingFeatures.push("messaging_voice_transcribe_manual_faz1");
     }
@@ -276,6 +279,9 @@ export class MessagingModuleStatusController {
     }
     if (voiceSttReliabilityFaz1) {
       messagingFeatures.push("messaging_voice_stt_reliability_faz1");
+    }
+    if (voiceSttOssGateFaz7) {
+      messagingFeatures.push("messaging_voice_stt_oss_gate_faz7");
     }
     return {
       module: "messaging",
@@ -353,6 +359,7 @@ export class MessagingModuleStatusController {
         sttMaxConcurrent: messagingVoiceSttMaxConcurrent(),
         sttActiveJobs: messagingVoiceSttActiveCount(),
         sttReliabilityFaz1Enabled: voiceSttReliabilityFaz1,
+        sttOssGateFaz7Enabled: voiceSttOssGateFaz7,
       },
     };
   }

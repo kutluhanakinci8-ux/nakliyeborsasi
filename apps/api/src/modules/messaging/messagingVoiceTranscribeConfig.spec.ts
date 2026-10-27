@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   messagingVoiceSttConfigured,
   messagingVoiceSttDefaultLanguage,
+  messagingVoiceSttOssGateFaz7Enabled,
   resolveMessagingVoiceSttApiKey,
   resolveMessagingVoiceSttProvider,
 } from "./messagingVoiceTranscribeConfig";
@@ -16,6 +17,14 @@ describe("messagingVoiceTranscribeConfig", () => {
     expect(messagingVoiceSttConfigured(env)).toBe(true);
     expect(resolveMessagingVoiceSttProvider(env)).toBe("local");
     expect(resolveMessagingVoiceSttApiKey(env)).toBe("local-stt-internal");
+  });
+
+  it("OSS gate faz7 flag", () => {
+    expect(
+      messagingVoiceSttOssGateFaz7Enabled({
+        MESSAGING_VOICE_STT_OSS_GATE_FAZ7: "1",
+      }),
+    ).toBe(true);
   });
 
   it("default language tr (OSS-3)", () => {
