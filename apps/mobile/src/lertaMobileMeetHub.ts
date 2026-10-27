@@ -14,6 +14,7 @@ export function resolveLertaWebBase(): string {
 export function buildMeetHubUrl(params?: {
   threadId?: string;
   meetInvite?: boolean;
+  sfuPilot?: boolean;
 }): string {
   const query = new URLSearchParams({ tab: "chat" });
   if (params?.threadId) {
@@ -21,6 +22,9 @@ export function buildMeetHubUrl(params?: {
   }
   if (params?.meetInvite) {
     query.set("meet", "1");
+  }
+  if (params?.sfuPilot) {
+    query.set("sfuPilot", "1");
   }
   return `${resolveLertaWebBase()}/messaging?${query.toString()}`;
 }
@@ -33,9 +37,21 @@ export async function openMeetMessagingHub(params?: {
   );
 }
 
+export async function openSfuPilotMessagingHub(params?: {
+  threadId?: string;
+}): Promise<void> {
+  await WebBrowser.openBrowserAsync(
+    buildMeetHubUrl({
+      threadId: params?.threadId,
+      meetInvite: true,
+      sfuPilot: true,
+    }),
+  );
+}
+
 export function parseMeetDeepLinkFromUrl(
   url: string,
-): { threadId: string | null; meetInvite: boolean } {
+): { threadId: string | null; meetInvite: boolean; sfuPilot: boolean } {
   try {
     const parsed = Linking.parse(url);
     const threadId =
@@ -43,8 +59,9 @@ export function parseMeetDeepLinkFromUrl(
         ? parsed.queryParams.threadId
         : null;
     const meetInvite = parsed.queryParams?.meet === "1";
-    return { threadId, meetInvite };
+    const sfuPilot = parsed.queryParams?.sfuPilot === "1";
+    return { threadId, meetInvite, sfuPilot };
   } catch {
-    return { threadId: null, meetInvite: false };
+    return { threadId: null, meetInvite: false, sfuPilot: false };
   }
 }

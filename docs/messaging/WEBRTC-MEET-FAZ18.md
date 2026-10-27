@@ -14,6 +14,6 @@ Status feature: `messaging_webrtc_meet_sfu_session_faz18`
 
 Gerekli env: `MESSAGING_WEBRTC_SFU_SIGNALING_URL` — `WEBRTC-SFU-VPS.md`
 
-## Sonraki (Faz 19+)
+## Sonraki
 
-Tarayıcıda yerleşik SFU medya veya RN native WebRTC.
+Faz 19 tarayıcı gömme — `WEBRTC-MEET-FAZ19.md`.

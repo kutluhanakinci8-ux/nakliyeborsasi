@@ -38,6 +38,12 @@ export type WebRtcMeetSfuSessionJoinBundle = {
   media: "audio" | "video";
   expiresAt: string;
   pilotHintTr: string;
+  embed: {
+    mode: "signaling_iframe";
+    sandbox: string;
+    localMediaPreview: boolean;
+    hintTr: string;
+  };
 };
 
 @Injectable()
@@ -161,6 +167,14 @@ export class MessagingWebRtcMeetSfuSessionService {
       expiresAt: record.expiresAt,
       pilotHintTr:
         "SFU pilot: harici signaling istemcisi bu parametrelerle odaya bağlanır; mesh görüşme ayrı kalır.",
+      embed: {
+        mode: "signaling_iframe",
+        sandbox:
+          "allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox",
+        localMediaPreview: true,
+        hintTr:
+          "Tarayıcıda yerel kamera/mikrofon önizlemesi + signaling iframe; tam SFU medya sunucusu bağlantısı harici URL üzerinden.",
+      },
     };
   }
 }
