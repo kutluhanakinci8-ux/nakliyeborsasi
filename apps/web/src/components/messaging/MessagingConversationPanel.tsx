@@ -37,6 +37,7 @@ import type { ChatConversationBackgroundId } from "../../lib/messagingChatBackgr
 import type { AuthSessionRecord } from "../../lib/SessionApiClient";
 import { MessagingWebRtcPilotCall } from "./MessagingWebRtcPilotCall";
 import { MessagingVoiceNoteComposeButton } from "./MessagingVoiceNoteComposeButton";
+import { MessagingAiProcessingConsentCard } from "./MessagingAiProcessingConsentCard";
 import { fetchMessagingPublicStatus } from "../../lib/messagingPublicStatus";
 
 type Props = {
@@ -423,6 +424,12 @@ export function MessagingConversationPanel({
               <p className="chat-legal-hold-inline" role="status">
                 Legal hold — mesaj silme kapalı; işlemler denetim kaydında.
               </p>
+            ) : null}
+            {voiceTranscribeEnabled && activeThreadId ? (
+              <MessagingAiProcessingConsentCard
+                accessToken={accessToken}
+                variant="compact"
+              />
             ) : null}
             <div className="chat-messages-toolbar">
               <button

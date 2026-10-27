@@ -123,7 +123,7 @@ SBOM / vitrin: `docs/oss/` veya mevcut lisans envanterine STT servisi satırı e
 
 ---
 
-## STT-OSS-6 — Kullanıcı rızası UX (Mesaj uygulaması)
+## STT-OSS-6 — Kullanıcı rızası UX (Mesaj uygulaması) — uygulama
 
 **Amaç:** Posta webmail’e gitmeden `aiMailAssistConsent` (mesajlaşma STT + AI özet).
 
