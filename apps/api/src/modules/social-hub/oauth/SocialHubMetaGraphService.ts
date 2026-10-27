@@ -748,6 +748,8 @@ export class SocialHubMetaGraphService {
     contentType: string;
     filename: string;
     caption?: string;
+    /** Cloud API: sesli mesaj (PTT) olarak işaretle */
+    voiceMessage?: boolean;
   }): Promise<{ ok: boolean; message: string; externalMessageId?: string }> {
     if (!params.phoneNumberId) {
       return {
@@ -810,7 +812,10 @@ export class SocialHubMetaGraphService {
       messaging_product: "whatsapp",
       to: toDigits,
       type: "audio",
-      audio: { id: uploadPayload.id },
+      audio: {
+        id: uploadPayload.id,
+        ...(params.voiceMessage ? { voice: true } : {}),
+      },
     };
     const response = await fetch(msgUrl.toString(), {
       method: "POST",

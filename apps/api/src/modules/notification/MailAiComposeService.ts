@@ -284,7 +284,15 @@ export class MailAiComposeService {
 
   /** Mesajlaşma AI özet ve ses transkripsiyon için ortak rıza. */
   public async hasMessagingAiConsent(userId: string): Promise<boolean> {
-    return this.canUseLlm(userId);
+    const requireConsent =
+      this.configService.get<string>("LERTA_MAIL_AI_REQUIRE_CONSENT")?.trim() !==
+      "false";
+    if (!requireConsent) {
+      return true;
+    }
+    return await this.userNotificationPreferenceService.hasAiMailAssistConsent(
+      userId,
+    );
   }
 
   private async canUseLlm(userId: string): Promise<boolean> {

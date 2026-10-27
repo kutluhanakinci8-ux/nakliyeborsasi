@@ -2,7 +2,7 @@
 # STT-OSS-3 ops benchmark: 30s mono WAV → local Whisper HTTP (SLA rehberi).
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-STT_URL="${MESSAGING_VOICE_STT_API_URL:-http://127.0.0.1:9010/v1/audio/transcriptions}"
+STT_URL="${MESSAGING_VOICE_STT_API_URL:-http://127.0.0.1:9010/asr}"
 MODEL="${MESSAGING_VOICE_STT_MODEL:-base}"
 LANG="${MESSAGING_VOICE_STT_DEFAULT_LANGUAGE:-tr}"
 TMP="$(mktemp -d)"

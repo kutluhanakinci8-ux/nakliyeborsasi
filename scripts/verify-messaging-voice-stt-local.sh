@@ -23,10 +23,9 @@ ffmpeg -y -f lavfi -i "sine=frequency=440:duration=1" -ac 1 "${SAMPLE}.wav" 2>/d
 ffmpeg -y -i "${SAMPLE}.wav" -c:a libopus "${SAMPLE}" 2>/dev/null
 
 code="$(curl -sS -o /tmp/lerta-stt-out.json -w "%{http_code}" -X POST \
-  "${STT_BASE}/v1/audio/transcriptions" \
+  "${STT_BASE}/asr?task=transcribe&output=json" \
   -H "Authorization: Bearer ${STT_KEY}" \
-  -F "file=@${SAMPLE}" \
-  -F "model=base" || echo "000")"
+  -F "audio_file=@${SAMPLE}" || echo "000")"
 
 if [[ "${code}" != "200" ]]; then
   echo "FAIL: local STT HTTP ${code}"
@@ -34,7 +33,17 @@ if [[ "${code}" != "200" ]]; then
   exit 1
 fi
 
-python3 -c "import json; d=json.load(open('/tmp/lerta-stt-out.json')); assert 'text' in d; print('OK: local STT text len', len(d.get('text') or ''))"
+python3 -c "
+import json
+raw=open('/tmp/lerta-stt-out.json').read().strip()
+try:
+  d=json.loads(raw)
+  t=(d.get('text') or d.get('transcription') or '').strip()
+except json.JSONDecodeError:
+  t=raw
+assert t, 'empty STT response'
+print('OK: local STT text len', len(t))
+"
 
 # shellcheck source=scripts/resolve-local-api-base.sh
 source "${ROOT}/scripts/resolve-local-api-base.sh" "${ROOT}"

@@ -8,6 +8,7 @@ import {
   resolveMessagingVoiceSttProvider,
 } from "./messagingVoiceTranscribeConfig";
 import { messagingVoiceSttActiveCount } from "./messagingVoiceSttConcurrency";
+import { buildLocalWhisperAsrRequestUrl } from "./messagingVoiceSttLocalAsr";
 
 /** Minimal valid WAV (silence) for STT reachability probe. */
 const PROBE_WAV = Buffer.from(
@@ -70,25 +71,35 @@ export class MessagingVoiceSttHealthService {
     const started = Date.now();
     try {
       const form = new FormData();
-      form.append(
-        "file",
-        new Blob([PROBE_WAV], { type: "audio/wav" }),
-        "probe.wav",
-      );
-      form.append("model", "base");
-      form.append("response_format", "json");
       const headers: Record<string, string> = {};
       if (apiKey) {
         headers.Authorization = `Bearer ${apiKey}`;
       }
-      const response = await fetch(apiUrl, {
+      let probeUrl = apiUrl;
+      if (provider === "local") {
+        probeUrl = buildLocalWhisperAsrRequestUrl(apiUrl);
+        form.append(
+          "audio_file",
+          new Blob([PROBE_WAV], { type: "audio/wav" }),
+          "probe.wav",
+        );
+      } else {
+        form.append(
+          "file",
+          new Blob([PROBE_WAV], { type: "audio/wav" }),
+          "probe.wav",
+        );
+        form.append("model", "base");
+        form.append("response_format", "json");
+      }
+      const response = await fetch(probeUrl, {
         method: "POST",
         headers,
         body: form,
         signal: AbortSignal.timeout(15_000),
       });
       const latencyMs = Date.now() - started;
-      const reachable = response.status < 500;
+      const reachable = response.ok;
       if (!reachable) {
         const body = await response.text();
         this.logger.warn(

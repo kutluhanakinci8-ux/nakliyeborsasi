@@ -2,7 +2,7 @@
 # STT-OSS-1: Nest API → loopback Whisper + transcribe bayrakları.
 set -euo pipefail
 ENV_FILE="${ENV_FILE:-/var/www/nakliyeborsasi/.env}"
-STT_URL="${MESSAGING_VOICE_STT_API_URL:-http://127.0.0.1:9010/v1/audio/transcriptions}"
+STT_URL="${MESSAGING_VOICE_STT_API_URL:-http://127.0.0.1:9010/asr}"
 STT_MODEL="${MESSAGING_VOICE_STT_MODEL:-base}"
 # STT-OSS-2'de MESSAGING_VOICE_STT_API_KEY ile değişecek
 STT_KEY="${MESSAGING_VOICE_STT_API_KEY:-local-stt-internal}"
