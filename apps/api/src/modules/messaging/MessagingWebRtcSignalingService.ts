@@ -19,7 +19,10 @@ export type WebRtcSignalType =
   | "answer"
   | "ice"
   | "hangup"
-  | "invite";
+  | "invite"
+  | "raise"
+  | "reaction"
+  | "screen";
 
 export type WebRtcSignalEnvelope = {
   id: string;

@@ -22,7 +22,15 @@ export type WebRtcSignalEnvelope = {
   id: string;
   threadId: string;
   fromUserId: string;
-  type: "offer" | "answer" | "ice" | "hangup" | "invite";
+  type:
+    | "offer"
+    | "answer"
+    | "ice"
+    | "hangup"
+    | "invite"
+    | "raise"
+    | "reaction"
+    | "screen";
   payload: string;
   targetUserId?: string | null;
   createdAt: string;
