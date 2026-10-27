@@ -29,7 +29,9 @@ import {
 } from "./messagingVoiceNoteConfig";
 import {
   messagingVoiceSttConfigured,
+  messagingVoiceSttDefaultLanguage,
   messagingVoiceSttLocalFaz1Enabled,
+  messagingVoiceSttTrQualityFaz1Enabled,
   messagingVoiceTranscribeAdvancedFaz2Enabled,
   messagingVoiceTranscribeAutoFaz3Enabled,
   messagingVoiceTranscribeFaz1Enabled,
@@ -39,6 +41,7 @@ import {
   messagingVoiceBridgeSttFaz1Enabled,
   messagingVoiceBridgeWaInboundFaz2Enabled,
 } from "./messagingVoiceBridgeSttConfig";
+import { messagingVoiceSttGlossaryRuleCount } from "./messagingVoiceSttGlossary";
 import { MessagingWebRtcSignalingService } from "./MessagingWebRtcSignalingService";
 import type { WhatsappBridgeDeliverySnapshot } from "@nakliyeborsasi/core";
 
@@ -107,6 +110,9 @@ export class MessagingModuleStatusController {
       bridgeWaInboundFaz2Enabled: boolean;
       sttConfigured: boolean;
       sttProvider: "local" | "openai" | "unconfigured";
+      sttDefaultLanguage: string | null;
+      sttGlossaryRuleCount: number;
+      sttTrQualityFaz1Enabled: boolean;
     };
   }> {
     const deepl = Boolean(
@@ -239,6 +245,7 @@ export class MessagingModuleStatusController {
     const voiceBridgeSttFaz1 = messagingVoiceBridgeSttFaz1Enabled();
     const voiceBridgeWaInboundFaz2 = messagingVoiceBridgeWaInboundFaz2Enabled();
     const voiceSttLocalFaz1 = messagingVoiceSttLocalFaz1Enabled();
+    const voiceSttTrQualityFaz1 = messagingVoiceSttTrQualityFaz1Enabled();
     if (voiceTranscribeFaz1) {
       messagingFeatures.push("messaging_voice_transcribe_manual_faz1");
     }
@@ -256,6 +263,9 @@ export class MessagingModuleStatusController {
     }
     if (voiceSttLocalFaz1) {
       messagingFeatures.push("messaging_voice_stt_local_faz1");
+    }
+    if (voiceSttTrQualityFaz1) {
+      messagingFeatures.push("messaging_voice_stt_tr_quality_faz1");
     }
     return {
       module: "messaging",
@@ -327,6 +337,9 @@ export class MessagingModuleStatusController {
         bridgeWaInboundFaz2Enabled: voiceBridgeWaInboundFaz2,
         sttConfigured: messagingVoiceSttConfigured(),
         sttProvider: resolveMessagingVoiceSttProvider(),
+        sttDefaultLanguage: messagingVoiceSttDefaultLanguage(),
+        sttGlossaryRuleCount: messagingVoiceSttGlossaryRuleCount(),
+        sttTrQualityFaz1Enabled: voiceSttTrQualityFaz1,
       },
     };
   }

@@ -1,0 +1,6 @@
+[
+  { "pattern": "\\bnakliye\\b", "replacement": "nakliye", "flags": "gi" },
+  { "pattern": "\\byükveren\\b", "replacement": "yükveren", "flags": "gi" },
+  { "pattern": "\\bfrigo\\b", "replacement": "frigo", "flags": "gi" },
+  { "pattern": "\\bkonteyner\\b", "replacement": "konteyner", "flags": "gi" }
+]
