@@ -73,6 +73,7 @@ import {
   postMessagingWebRtcSignal,
   type MessagingWebRtcIceCaps,
   type MessagingWebRtcMeetCapacity,
+  type MessagingWebRtcSfuBackend,
   type MessagingWebRtcTurnMonitor,
   type WebRtcSignalEnvelope,
 } from "../../lib/messagingWebRtcSignalingClient";
@@ -219,6 +220,9 @@ export function MessagingWebRtcPilotCall({
   const [overflowIntentRegistered, setOverflowIntentRegistered] = useState(false);
   const [showOverflowIntentCta, setShowOverflowIntentCta] = useState(false);
   const [overflowIntentBusy, setOverflowIntentBusy] = useState(false);
+  const [sfuBackend, setSfuBackend] = useState<MessagingWebRtcSfuBackend | null>(
+    null,
+  );
   const [maxRecordingArchiveBytes, setMaxRecordingArchiveBytes] = useState(
     2_500_000,
   );
@@ -365,6 +369,7 @@ export function MessagingWebRtcPilotCall({
             status.features.includes("messaging_webrtc_meet_ediscovery_faz14") &&
             status.features.includes("messaging_webrtc_meet_capacity_faz15") &&
             status.features.includes("messaging_webrtc_meet_sfu_intent_faz16") &&
+            status.features.includes("messaging_webrtc_meet_sfu_config_faz17") &&
             status.webrtc?.signaling === "redis_relay",
         );
       })
@@ -384,11 +389,13 @@ export function MessagingWebRtcPilotCall({
           config.maxRecordingArchiveBytes ?? 2_500_000,
         );
         setMeetCapacity(config.capacity ?? null);
+        setSfuBackend(config.sfuBackend ?? null);
       })
       .catch(() => {
         setIceCaps(null);
         setTurnMonitor(null);
         setMeetCapacity(null);
+        setSfuBackend(null);
       });
   }, [accessToken, enabled]);
 
@@ -1414,7 +1421,7 @@ export function MessagingWebRtcPilotCall({
 
   return (
     <div
-      className="messaging-webrtc-pilot messaging-webrtc-meet-faz1 messaging-webrtc-meet-faz2 messaging-webrtc-meet-faz3 messaging-webrtc-meet-faz4 messaging-webrtc-meet-faz5 messaging-webrtc-meet-faz6 messaging-webrtc-meet-faz7 messaging-webrtc-meet-faz9 messaging-webrtc-meet-faz10 messaging-webrtc-meet-faz15 messaging-webrtc-meet-faz16"
+      className="messaging-webrtc-pilot messaging-webrtc-meet-faz1 messaging-webrtc-meet-faz2 messaging-webrtc-meet-faz3 messaging-webrtc-meet-faz4 messaging-webrtc-meet-faz5 messaging-webrtc-meet-faz6 messaging-webrtc-meet-faz7 messaging-webrtc-meet-faz9 messaging-webrtc-meet-faz10 messaging-webrtc-meet-faz15 messaging-webrtc-meet-faz16 messaging-webrtc-meet-faz17"
       role="region"
       aria-label={`Görüntülü ve sesli görüşme (en fazla ${meetCapacity?.effectiveMaxParticipants ?? MAX_PARTICIPANTS} kişi)`}
     >
@@ -1426,6 +1433,22 @@ export function MessagingWebRtcPilotCall({
         >
           {meetCapacity.topology === "mesh_p2p" ? "Mesh P2P" : meetCapacity.topology} · en
           fazla {meetCapacity.effectiveMaxParticipants} kişi
+        </p>
+      ) : null}
+      {sfuBackend ? (
+        <p
+          className="messaging-webrtc-faz17-sfu-backend"
+          role="status"
+          title={
+            sfuBackend.probe.detail ??
+            "SFU medya sunucusu henüz devreye alınmadı; görüşmeler mesh P2P."
+          }
+        >
+          {sfuBackend.healthUrlConfigured
+            ? sfuBackend.probe.ok
+              ? `SFU altyapı: sağlıklı (plan ≤${sfuBackend.plannedMaxParticipants} kişi, mesh aktif)`
+              : "SFU altyapı: sağlık kontrolü başarısız (mesh aktif)"
+            : `SFU altyapı: yapılandırılmadı (plan ≤${sfuBackend.plannedMaxParticipants} kişi)`}
         </p>
       ) : null}
       {meetCapacity?.sfuOverflowIntent?.enabled &&

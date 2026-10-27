@@ -12,6 +12,6 @@
 
 Status feature: `messaging_webrtc_meet_sfu_intent_faz16`
 
-## Sonraki (Faz 17+)
+## Sonraki
 
-Gerçek SFU medya sunucusu veya RN native WebRTC — `WEBRTC-MEET-ROADMAP.md`.
+Faz 17 SFU yapılandırma — `WEBRTC-MEET-FAZ17.md`, `WEBRTC-SFU-VPS.md`.

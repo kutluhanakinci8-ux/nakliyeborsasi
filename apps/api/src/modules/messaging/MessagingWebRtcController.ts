@@ -14,6 +14,7 @@ import { JwtAuthenticationGuard } from "../auth/JwtAuthenticationGuard";
 import { AuthenticatedUserParam } from "../auth/AuthenticatedUserParam";
 import { MESSAGING_WEBRTC_MAX_PARTICIPANTS } from "./messagingWebRtcConstants";
 import { summarizeMessagingWebRtcMeetCapacity } from "./messagingWebRtcMeetCapacity";
+import { probeMessagingWebRtcSfuBackend } from "./messagingWebRtcSfuBackend";
 import {
   resolveMessagingWebRtcIceServers,
   summarizeMessagingWebRtcIceCaps,
@@ -53,17 +54,25 @@ export class MessagingWebRtcController {
       iceCaps.turnCredentialsConfigured,
     );
     const capacity = summarizeMessagingWebRtcMeetCapacity();
+    const sfuBackend = await probeMessagingWebRtcSfuBackend();
     return {
       iceServers: resolveMessagingWebRtcIceServers(),
       signaling: relay ? "redis_relay" : "unavailable",
       maxParticipants: capacity.effectiveMaxParticipants,
       meshMode: "p2p",
       capacity,
+      sfuBackend,
       iceCaps,
       turnMonitor,
       maxRecordingArchiveBytes:
         this.meetRecordingArchiveService.maxArchiveBytes(),
     };
+  }
+
+  @Get("sfu/status")
+  public async getSfuBackendStatus() {
+    const sfuBackend = await probeMessagingWebRtcSfuBackend();
+    return { sfuBackend };
   }
 
   @Get("capacity")
