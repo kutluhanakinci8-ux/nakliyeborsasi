@@ -22,7 +22,7 @@ export type WebRtcSignalEnvelope = {
   id: string;
   threadId: string;
   fromUserId: string;
-  type: "offer" | "answer" | "ice" | "hangup";
+  type: "offer" | "answer" | "ice" | "hangup" | "invite";
   payload: string;
   targetUserId?: string | null;
   createdAt: string;
@@ -57,6 +57,11 @@ export async function joinMessagingWebRtcRoom(
   );
   if (!response.ok) {
     const text = await response.text();
+    if (response.status === 409) {
+      throw new Error(
+        "Görüntülü görüşme dolu (en fazla 3 kişi). Bir katılımcı ayrıldığında tekrar deneyin.",
+      );
+    }
     throw new Error(text || "webrtc room join");
   }
   const body = (await response.json()) as { room: WebRtcRoomSnapshot };

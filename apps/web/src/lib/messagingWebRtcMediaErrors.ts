@@ -15,6 +15,9 @@ export function formatWebRtcMediaError(error: unknown): string {
     return error.message;
   }
   if (error instanceof Error) {
+    if (error.message.includes("Görüntülü görüşme dolu")) {
+      return error.message;
+    }
     return error.message;
   }
   return "Medya veya arama hatası";

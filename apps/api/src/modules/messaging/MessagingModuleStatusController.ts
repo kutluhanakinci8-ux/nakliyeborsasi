@@ -128,6 +128,7 @@ export class MessagingModuleStatusController {
         "mobile_expo_push_api",
         "messaging_webrtc_signaling_relay",
         "messaging_webrtc_mesh_three",
+        "messaging_webrtc_meet_core_faz1",
       ],
       translate: { deepl, libretranslate: libre },
       attachments: (() => {
