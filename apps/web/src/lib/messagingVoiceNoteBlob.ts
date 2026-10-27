@@ -13,14 +13,18 @@ export function pickVoiceNoteMimeType(): string {
   if (typeof MediaRecorder === "undefined") {
     return "audio/webm";
   }
+  // WhatsApp Cloud yalnızca ogg/opus vb. — webm değil; önce OGG dene.
+  if (MediaRecorder.isTypeSupported("audio/ogg;codecs=opus")) {
+    return "audio/ogg;codecs=opus";
+  }
+  if (MediaRecorder.isTypeSupported("audio/ogg")) {
+    return "audio/ogg";
+  }
   if (MediaRecorder.isTypeSupported("audio/webm;codecs=opus")) {
     return "audio/webm;codecs=opus";
   }
   if (MediaRecorder.isTypeSupported("audio/webm")) {
     return "audio/webm";
-  }
-  if (MediaRecorder.isTypeSupported("audio/ogg;codecs=opus")) {
-    return "audio/ogg;codecs=opus";
   }
   return "audio/webm";
 }

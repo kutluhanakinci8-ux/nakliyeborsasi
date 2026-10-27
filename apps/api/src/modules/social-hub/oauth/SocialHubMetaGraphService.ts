@@ -10,6 +10,10 @@ import {
   type SocialHubConnectionMetadata,
 } from "./SocialHubConnectionMetadata";
 import { SocialHubOAuthConfigService } from "./SocialHubOAuthConfigService";
+import {
+  isWhatsAppCloudAllowedAudioMime,
+  prepareWhatsAppOutboundAudio,
+} from "./socialHubWhatsAppOutboundAudio";
 
 type AccountsResponse = {
   data?: Array<{ id: string; name: string; access_token?: string }>;
@@ -755,18 +759,31 @@ export class SocialHubMetaGraphService {
     if (!toDigits) {
       return { ok: false, message: "WhatsApp alıcı numarası geçersiz." };
     }
+    const prepared = await prepareWhatsAppOutboundAudio({
+      buffer: params.buffer,
+      contentType: params.contentType,
+      filename: params.filename,
+    });
+    const uploadMime = prepared.contentType || "audio/ogg";
+    if (!isWhatsAppCloudAllowedAudioMime(uploadMime)) {
+      return {
+        ok: false,
+        message:
+          "WhatsApp ses formatı desteklenmiyor (ör. audio/webm). Sunucuda ffmpeg ile OGG dönüşümü gerekir.",
+      };
+    }
     const uploadUrl = new URL(
       `https://graph.facebook.com/v21.0/${params.phoneNumberId}/media`,
     );
     const form = new FormData();
     form.append("messaging_product", "whatsapp");
-    form.append("type", params.contentType || "audio/ogg");
+    form.append("type", uploadMime);
     form.append(
       "file",
-      new Blob([Uint8Array.from(params.buffer)], {
-        type: params.contentType || "audio/ogg",
+      new Blob([Uint8Array.from(prepared.buffer)], {
+        type: uploadMime,
       }),
-      params.filename || "voice.ogg",
+      prepared.filename || "voice.ogg",
     );
     const uploadResponse = await fetch(uploadUrl.toString(), {
       method: "POST",
