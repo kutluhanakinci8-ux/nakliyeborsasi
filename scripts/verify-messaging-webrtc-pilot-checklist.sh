@@ -18,6 +18,7 @@ print('OK: redis_relay signaling')
 "
 
 API_BASE="${API_BASE}" bash "${ROOT}/scripts/verify-messaging-webrtc-ice-config.sh"
+API_BASE="${API_BASE}" bash "${ROOT}/scripts/verify-messaging-webrtc-meet-faz6-gate.sh"
 
 cat <<'TXT'
 

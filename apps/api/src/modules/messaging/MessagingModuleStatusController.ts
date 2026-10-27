@@ -8,7 +8,10 @@ import { MessagingOptionalWsService } from "./MessagingOptionalWsService";
 import { MessagingWhatsappBridgeService } from "./MessagingWhatsappBridgeService";
 import { MESSAGING_WEBRTC_MAX_PARTICIPANTS } from "./messagingWebRtcConstants";
 import { summarizeMessagingWebRtcIceCaps } from "./messagingWebRtcIceConfig";
-import { probeMessagingWebRtcTurnMonitor } from "./messagingWebRtcTurnMonitor";
+import {
+  enrichTurnMonitorWithIceCaps,
+  probeMessagingWebRtcTurnMonitor,
+} from "./messagingWebRtcTurnMonitor";
 import { MessagingWebRtcSignalingService } from "./MessagingWebRtcSignalingService";
 import type { WhatsappBridgeDeliverySnapshot } from "@nakliyeborsasi/core";
 
@@ -61,7 +64,11 @@ export class MessagingModuleStatusController {
     );
     const vapid = resolveMessagingVapidFromEnv();
     const webrtcRelay = await this.messagingWebRtcSignalingService.isRelayAvailable();
-    const turnMonitor = await probeMessagingWebRtcTurnMonitor();
+    const iceCaps = summarizeMessagingWebRtcIceCaps();
+    const turnMonitor = enrichTurnMonitorWithIceCaps(
+      await probeMessagingWebRtcTurnMonitor(),
+      iceCaps.turnCredentialsConfigured,
+    );
     return {
       module: "messaging",
       phase: "ga",
@@ -138,6 +145,7 @@ export class MessagingModuleStatusController {
         "messaging_webrtc_meet_biz_faz3",
         "messaging_webrtc_meet_ops_faz4",
         "messaging_webrtc_meet_reliability_faz5",
+        "messaging_webrtc_meet_prod_net_faz6",
       ],
       translate: { deepl, libretranslate: libre },
       attachments: (() => {
@@ -170,7 +178,7 @@ export class MessagingModuleStatusController {
         configPath: "/messaging/webrtc/config",
         maxParticipants: MESSAGING_WEBRTC_MAX_PARTICIPANTS,
         meshMode: "p2p",
-        iceCaps: summarizeMessagingWebRtcIceCaps(),
+        iceCaps,
         turnMonitor,
       },
       mobileExpoPush: {

@@ -60,7 +60,9 @@ fi
 if [[ -n "${ice_json}" ]]; then
   set_kv "MESSAGING_WEBRTC_ICE_SERVERS" "${ice_json}"
   if [[ -n "${TURN_URL:-}" ]]; then
-    echo "OK: STUN + TURN yazıldı"
+    hint="${MESSAGING_WEBRTC_TURN_ALLOCATIONS_HINT:-0}"
+    set_kv "MESSAGING_WEBRTC_TURN_ALLOCATIONS_HINT" "${hint}"
+    echo "OK: STUN + TURN yazıldı (turnMonitor hint=${hint})"
   else
     echo "OK: STUN yazıldı — TURN: docs/messaging/WEBRTC-TURN-VPS.md veya TURN_URL/TURN_USERNAME/TURN_CREDENTIAL"
   fi

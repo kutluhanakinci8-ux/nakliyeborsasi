@@ -16,6 +16,27 @@ function envAllocationsHint(): number | null {
   return Number.isFinite(n) && n >= 0 ? n : null;
 }
 
+export function enrichTurnMonitorWithIceCaps(
+  monitor: MessagingWebRtcTurnMonitorSnapshot,
+  turnCredentialsConfigured: boolean,
+): MessagingWebRtcTurnMonitorSnapshot {
+  if (monitor.enabled) {
+    return monitor;
+  }
+  if (!turnCredentialsConfigured) {
+    return monitor;
+  }
+  const hint = envAllocationsHint();
+  return {
+    enabled: true,
+    ok: true,
+    source: "env_hint",
+    activeAllocationsHint: hint,
+    checkedAt: new Date().toISOString(),
+    detail: "turn_in_ice_servers",
+  };
+}
+
 export async function probeMessagingWebRtcTurnMonitor(): Promise<MessagingWebRtcTurnMonitorSnapshot> {
   const url = process.env.MESSAGING_WEBRTC_TURN_METRICS_URL?.trim();
   const hint = envAllocationsHint();

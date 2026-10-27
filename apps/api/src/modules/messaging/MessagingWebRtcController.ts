@@ -21,7 +21,10 @@ import { MessagingWebRtcMeetRecordingArchiveService } from "./MessagingWebRtcMee
 import { MessagingWebRtcMeetScheduleService } from "./MessagingWebRtcMeetScheduleService";
 import { PostMessagingWebRtcRecordingArchiveRequestDto } from "./MessagingWebRtcRecordingRequestDto";
 import { UpsertMessagingWebRtcScheduleRequestDto } from "./MessagingWebRtcScheduleRequestDto";
-import { probeMessagingWebRtcTurnMonitor } from "./messagingWebRtcTurnMonitor";
+import {
+  enrichTurnMonitorWithIceCaps,
+  probeMessagingWebRtcTurnMonitor,
+} from "./messagingWebRtcTurnMonitor";
 import { MessagingWebRtcSignalingService } from "./MessagingWebRtcSignalingService";
 import {
   ListMessagingWebRtcSignalsQueryDto,
@@ -40,13 +43,17 @@ export class MessagingWebRtcController {
   @Get("config")
   public async getConfig() {
     const relay = await this.signalingService.isRelayAvailable();
-    const turnMonitor = await probeMessagingWebRtcTurnMonitor();
+    const iceCaps = summarizeMessagingWebRtcIceCaps();
+    const turnMonitor = enrichTurnMonitorWithIceCaps(
+      await probeMessagingWebRtcTurnMonitor(),
+      iceCaps.turnCredentialsConfigured,
+    );
     return {
       iceServers: resolveMessagingWebRtcIceServers(),
       signaling: relay ? "redis_relay" : "unavailable",
       maxParticipants: MESSAGING_WEBRTC_MAX_PARTICIPANTS,
       meshMode: "p2p",
-      iceCaps: summarizeMessagingWebRtcIceCaps(),
+      iceCaps,
       turnMonitor,
       maxRecordingArchiveBytes:
         this.meetRecordingArchiveService.maxArchiveBytes(),

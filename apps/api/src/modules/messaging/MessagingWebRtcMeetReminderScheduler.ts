@@ -5,6 +5,7 @@ import {
   OnModuleInit,
 } from "@nestjs/common";
 import { MessagingWebRtcMeetReminderService } from "./MessagingWebRtcMeetReminderService";
+import { MessagingWebRtcMeetScheduleService } from "./MessagingWebRtcMeetScheduleService";
 
 @Injectable()
 export class MessagingWebRtcMeetReminderScheduler
@@ -15,6 +16,7 @@ export class MessagingWebRtcMeetReminderScheduler
 
   public constructor(
     private readonly meetReminderService: MessagingWebRtcMeetReminderService,
+    private readonly meetScheduleService: MessagingWebRtcMeetScheduleService,
   ) {}
 
   public onModuleInit(): void {
@@ -34,6 +36,9 @@ export class MessagingWebRtcMeetReminderScheduler
         );
       });
     }, intervalMs);
+    void this.meetScheduleService
+      .backfillScheduleIndex()
+      .catch(() => undefined);
     void this.meetReminderService.runReminderSweep().catch(() => undefined);
   }
 

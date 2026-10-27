@@ -154,6 +154,51 @@ export class MessagingWebRtcMeetScheduleService {
     await this.redis.set(this.reminderKey(threadId, kind), "1", "EX", 86400);
   }
 
+  /** Faz 5 öncesi kayıtlar için ZSET index (push hatırlatma). */
+  public async backfillScheduleIndex(): Promise<number> {
+    let cursor = "0";
+    let repaired = 0;
+    do {
+      const [next, keys] = await this.redis.scan(
+        cursor,
+        "MATCH",
+        "messaging:webrtc:meet:schedule:*",
+        "COUNT",
+        100,
+      );
+      cursor = next;
+      for (const key of keys) {
+        if (
+          key === this.indexKey() ||
+          key.includes(":reminder:sent:") ||
+          key.includes(":recording:")
+        ) {
+          continue;
+        }
+        const suffix = key.replace(/^messaging:webrtc:meet:schedule:/, "");
+        if (!suffix || suffix.includes(":")) {
+          continue;
+        }
+        const raw = await this.redis.get(key);
+        if (!raw) {
+          continue;
+        }
+        try {
+          const record = JSON.parse(raw) as WebRtcMeetScheduleRecord;
+          const atMs = Date.parse(record.scheduledAt);
+          if (!Number.isFinite(atMs)) {
+            continue;
+          }
+          await this.redis.zadd(this.indexKey(), atMs, record.threadId);
+          repaired += 1;
+        } catch {
+          /* skip */
+        }
+      }
+    } while (cursor !== "0");
+    return repaired;
+  }
+
   private redisKey(threadId: string): string {
     return `messaging:webrtc:meet:schedule:${threadId}`;
   }
