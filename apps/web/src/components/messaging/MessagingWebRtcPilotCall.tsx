@@ -59,7 +59,10 @@ import {
   isSfuPilotDeepLinkActive,
   readNativeRtcBridgeIdFromLocation,
 } from "../../lib/messagingWebRtcMeetDeepLink";
-import { fetchMessagingWebRtcNativeBridgeConfig } from "../../lib/messagingWebRtcNativeBridge";
+import {
+  fetchMessagingWebRtcNativeBridgeCapabilities,
+  fetchMessagingWebRtcNativeBridgeConfig,
+} from "../../lib/messagingWebRtcNativeBridge";
 import { MessagingWebRtcSfuPilotEmbed } from "./MessagingWebRtcSfuPilotEmbed";
 import {
   fetchMessagingWebRtcOverflowIntentStatus,
@@ -240,6 +243,9 @@ export function MessagingWebRtcPilotCall({
   const [sfuSessionBusy, setSfuSessionBusy] = useState(false);
   const [sfuEmbedOpen, setSfuEmbedOpen] = useState(false);
   const [nativeBridgeHint, setNativeBridgeHint] = useState<string | null>(null);
+  const [nativeMediaModuleHint, setNativeMediaModuleHint] = useState<
+    string | null
+  >(null);
   const [maxRecordingArchiveBytes, setMaxRecordingArchiveBytes] = useState(
     2_500_000,
   );
@@ -390,6 +396,7 @@ export function MessagingWebRtcPilotCall({
             status.features.includes("messaging_webrtc_meet_sfu_session_faz18") &&
             status.features.includes("messaging_webrtc_meet_sfu_embed_faz19") &&
             status.features.includes("messaging_webrtc_meet_native_rtc_faz20") &&
+            status.features.includes("messaging_webrtc_meet_native_module_faz21") &&
             status.webrtc?.signaling === "redis_relay",
         );
       })
@@ -452,6 +459,30 @@ export function MessagingWebRtcPilotCall({
         setStatusLine("Native RTC köprü — Meet pilot web görünümünde açıldı.");
       })
       .catch(() => setNativeBridgeHint(null));
+  }, [accessToken, enabled]);
+
+  useEffect(() => {
+    if (!enabled || !accessToken) {
+      setNativeMediaModuleHint(null);
+      return;
+    }
+    void fetchMessagingWebRtcNativeBridgeCapabilities(accessToken)
+      .then(({ mediaModule, capabilities }) => {
+        const statusLabel =
+          mediaModule.rnWebRtcStatus === "linked_dev_client"
+            ? "RN WebRTC modülü (dev client)"
+            : "RN WebRTC modülü yok (handoff)";
+        const sfuLabel =
+          mediaModule.sfuMediaMode === "native_planned"
+            ? "SFU native planlı"
+            : "SFU web gömme";
+        setNativeMediaModuleHint(
+          capabilities
+            ? `${statusLabel} · ${sfuLabel}`
+            : `${statusLabel} · ${sfuLabel} — capabilities henüz raporlanmadı`,
+        );
+      })
+      .catch(() => setNativeMediaModuleHint(null));
   }, [accessToken, enabled]);
 
   useEffect(() => {
@@ -1514,7 +1545,7 @@ export function MessagingWebRtcPilotCall({
 
   return (
     <div
-      className="messaging-webrtc-pilot messaging-webrtc-meet-faz1 messaging-webrtc-meet-faz2 messaging-webrtc-meet-faz3 messaging-webrtc-meet-faz4 messaging-webrtc-meet-faz5 messaging-webrtc-meet-faz6 messaging-webrtc-meet-faz7 messaging-webrtc-meet-faz9 messaging-webrtc-meet-faz10 messaging-webrtc-meet-faz15 messaging-webrtc-meet-faz16 messaging-webrtc-meet-faz17 messaging-webrtc-meet-faz18 messaging-webrtc-meet-faz19 messaging-webrtc-meet-faz20"
+      className="messaging-webrtc-pilot messaging-webrtc-meet-faz1 messaging-webrtc-meet-faz2 messaging-webrtc-meet-faz3 messaging-webrtc-meet-faz4 messaging-webrtc-meet-faz5 messaging-webrtc-meet-faz6 messaging-webrtc-meet-faz7 messaging-webrtc-meet-faz9 messaging-webrtc-meet-faz10 messaging-webrtc-meet-faz15 messaging-webrtc-meet-faz16 messaging-webrtc-meet-faz17 messaging-webrtc-meet-faz18 messaging-webrtc-meet-faz19 messaging-webrtc-meet-faz20 messaging-webrtc-meet-faz21"
       role="region"
       aria-label={`Görüntülü ve sesli görüşme (en fazla ${meetCapacity?.effectiveMaxParticipants ?? MAX_PARTICIPANTS} kişi)`}
     >
@@ -1607,6 +1638,11 @@ export function MessagingWebRtcPilotCall({
       {nativeBridgeHint ? (
         <p className="messaging-webrtc-faz20-native-bridge" role="note">
           {nativeBridgeHint}
+        </p>
+      ) : null}
+      {nativeMediaModuleHint ? (
+        <p className="messaging-webrtc-faz21-native-module" role="status">
+          {nativeMediaModuleHint}
         </p>
       ) : null}
       {isLikelyMobileBrowser() && (phase === "idle" || phase === "ended") ? (

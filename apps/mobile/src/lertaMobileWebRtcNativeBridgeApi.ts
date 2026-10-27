@@ -1,5 +1,36 @@
 import { Platform } from "react-native";
 import { resolveApiBaseUrl } from "./lertaMobileAuth";
+import {
+  detectRnWebRtcModuleStatus,
+  resolveNativeSfuMediaMode,
+} from "./lertaMobileWebRtcCapabilities";
+import type { RnWebRtcModuleStatus } from "./lertaMobileWebRtcCapabilityTypes";
+
+export async function postLertaNativeRtcBridgeCapabilities(
+  accessToken: string,
+): Promise<RnWebRtcModuleStatus | null> {
+  const rnWebRtcModule = detectRnWebRtcModuleStatus();
+  const sfuMediaMode = resolveNativeSfuMediaMode();
+  try {
+    const response = await fetch(
+      `${resolveApiBaseUrl()}/messaging/webrtc/native-bridge/capabilities`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ rnWebRtcModule, sfuMediaMode }),
+      },
+    );
+    if (!response.ok) {
+      return null;
+    }
+    return rnWebRtcModule;
+  } catch {
+    return null;
+  }
+}
 
 export async function postLertaNativeRtcBridgeHandshake(
   accessToken: string,

@@ -12,6 +12,7 @@
 | 18 | `messaging_webrtc_meet_sfu_session_faz18` | SFU oturum mint + join bundle (harici signaling) |
 | 19 | `messaging_webrtc_meet_sfu_embed_faz19` | Tarayıcı gömme (local preview + signaling iframe) |
 | 20 | `messaging_webrtc_meet_native_rtc_faz20` | Expo native RTC köprü + handshake API |
-| 21+ | — | RN `react-native-webrtc`, entegre SFU medya |
+| 21 | `messaging_webrtc_meet_native_module_faz21` | RN WebRTC capabilities + SFU medya modu raporu |
+| 22+ | — | `react-native-webrtc` dev client medya |
 
-Faz 1–20 kodlandı.
+Faz 1–21 kodlandı.

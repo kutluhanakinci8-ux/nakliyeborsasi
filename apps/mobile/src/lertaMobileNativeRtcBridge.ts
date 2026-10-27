@@ -1,6 +1,9 @@
 import * as WebBrowser from "expo-web-browser";
 import { buildMeetHubUrl } from "./lertaMobileMeetHub";
-import { postLertaNativeRtcBridgeHandshake } from "./lertaMobileWebRtcNativeBridgeApi";
+import {
+  postLertaNativeRtcBridgeCapabilities,
+  postLertaNativeRtcBridgeHandshake,
+} from "./lertaMobileWebRtcNativeBridgeApi";
 
 export function buildNativeRtcMeetHubUrl(params?: {
   threadId?: string;
@@ -24,6 +27,7 @@ export async function openNativeRtcMeetHub(params: {
   threadId?: string;
   appVersion?: string;
 }): Promise<void> {
+  await postLertaNativeRtcBridgeCapabilities(params.accessToken);
   const handshake = await postLertaNativeRtcBridgeHandshake(
     params.accessToken,
     params.appVersion,

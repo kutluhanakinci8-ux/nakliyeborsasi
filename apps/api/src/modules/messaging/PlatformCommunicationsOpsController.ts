@@ -69,6 +69,7 @@ export class PlatformCommunicationsOpsController {
       sfuOverflowIntentTotal: number;
       sfuBackend: Awaited<ReturnType<typeof probeMessagingWebRtcSfuBackend>>;
       nativeRtcBridgeHandshakes: number;
+      nativeRnWebRtcLinkedReports: number;
       iceCaps: ReturnType<typeof summarizeMessagingWebRtcIceCaps>;
       recordingArchive: { s3Enabled: boolean; maxBytes: number };
     };
@@ -114,6 +115,8 @@ export class PlatformCommunicationsOpsController {
         sfuBackend: await probeMessagingWebRtcSfuBackend(),
         nativeRtcBridgeHandshakes:
           await this.nativeBridgeService.countHandshakes(),
+        nativeRnWebRtcLinkedReports:
+          await this.nativeBridgeService.countLinkedDevClientReports(),
         iceCaps: summarizeMessagingWebRtcIceCaps(),
         recordingArchive: {
           s3Enabled: meetRecordingS3Enabled(),
