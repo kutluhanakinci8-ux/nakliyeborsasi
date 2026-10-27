@@ -13,6 +13,7 @@ import { AuthenticatedUserContext } from "@nakliyeborsasi/core";
 import { JwtAuthenticationGuard } from "../auth/JwtAuthenticationGuard";
 import { AuthenticatedUserParam } from "../auth/AuthenticatedUserParam";
 import { MESSAGING_WEBRTC_MAX_PARTICIPANTS } from "./messagingWebRtcConstants";
+import { summarizeMessagingWebRtcMeetCapacity } from "./messagingWebRtcMeetCapacity";
 import {
   resolveMessagingWebRtcIceServers,
   summarizeMessagingWebRtcIceCaps,
@@ -48,16 +49,23 @@ export class MessagingWebRtcController {
       await probeMessagingWebRtcTurnMonitor(),
       iceCaps.turnCredentialsConfigured,
     );
+    const capacity = summarizeMessagingWebRtcMeetCapacity();
     return {
       iceServers: resolveMessagingWebRtcIceServers(),
       signaling: relay ? "redis_relay" : "unavailable",
-      maxParticipants: MESSAGING_WEBRTC_MAX_PARTICIPANTS,
+      maxParticipants: capacity.effectiveMaxParticipants,
       meshMode: "p2p",
+      capacity,
       iceCaps,
       turnMonitor,
       maxRecordingArchiveBytes:
         this.meetRecordingArchiveService.maxArchiveBytes(),
     };
+  }
+
+  @Get("capacity")
+  public getCapacityPolicy() {
+    return { capacity: summarizeMessagingWebRtcMeetCapacity() };
   }
 
   @Get("threads/:threadId/schedule")

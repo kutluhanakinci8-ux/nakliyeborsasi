@@ -16,6 +16,7 @@ import {
   meetRecordingMaxBytes,
   meetRecordingS3Enabled,
 } from "./messagingWebRtcMeetRecordingS3";
+import { summarizeMessagingWebRtcMeetCapacity } from "./messagingWebRtcMeetCapacity";
 import { MessagingWebRtcSignalingService } from "./MessagingWebRtcSignalingService";
 import type { WhatsappBridgeDeliverySnapshot } from "@nakliyeborsasi/core";
 
@@ -159,6 +160,7 @@ export class MessagingModuleStatusController {
         "messaging_webrtc_meet_turn_prod_faz12",
         "messaging_webrtc_meet_native_shell_faz13",
         "messaging_webrtc_meet_ediscovery_faz14",
+        "messaging_webrtc_meet_capacity_faz15",
       ],
       translate: { deepl, libretranslate: libre },
       attachments: (() => {
@@ -189,8 +191,10 @@ export class MessagingModuleStatusController {
         signaling: webrtcRelay ? "redis_relay" : "unavailable",
         codecsShippedWithApp: false,
         configPath: "/messaging/webrtc/config",
+        capacityPath: "/messaging/webrtc/capacity",
         maxParticipants: MESSAGING_WEBRTC_MAX_PARTICIPANTS,
         meshMode: "p2p",
+        capacity: summarizeMessagingWebRtcMeetCapacity(),
         iceCaps,
         turnMonitor,
         recordingArchive: {

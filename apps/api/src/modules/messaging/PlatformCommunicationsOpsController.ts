@@ -8,12 +8,12 @@ import { EmailOutboxService } from "../notification/EmailOutboxService";
 import { EmailDeliveryHealthService } from "../notification/EmailDeliveryHealthService";
 import { buildMessagingAttachmentOpsSnapshot } from "./messagingAttachmentOpsSnapshot";
 import { MessagingAttachmentS3ProbeService } from "./MessagingAttachmentS3ProbeService";
-import { MESSAGING_WEBRTC_MAX_PARTICIPANTS } from "./messagingWebRtcConstants";
 import { summarizeMessagingWebRtcIceCaps } from "./messagingWebRtcIceConfig";
 import {
   meetRecordingMaxBytes,
   meetRecordingS3Enabled,
 } from "./messagingWebRtcMeetRecordingS3";
+import { summarizeMessagingWebRtcMeetCapacity } from "./messagingWebRtcMeetCapacity";
 
 @Controller("platform-admin/communications-ops")
 @UseGuards(JwtAuthenticationGuard, PlatformAdminGuard)
@@ -60,8 +60,7 @@ export class PlatformCommunicationsOpsController {
       >;
     };
     webrtcMeet: {
-      meshMaxParticipants: number;
-      sfuMode: "disabled";
+      capacity: ReturnType<typeof summarizeMessagingWebRtcMeetCapacity>;
       iceCaps: ReturnType<typeof summarizeMessagingWebRtcIceCaps>;
       recordingArchive: { s3Enabled: boolean; maxBytes: number };
     };
@@ -101,8 +100,7 @@ export class PlatformCommunicationsOpsController {
         s3Probe: await this.messagingAttachmentS3ProbeService.probe(),
       },
       webrtcMeet: {
-        meshMaxParticipants: MESSAGING_WEBRTC_MAX_PARTICIPANTS,
-        sfuMode: "disabled",
+        capacity: summarizeMessagingWebRtcMeetCapacity(),
         iceCaps: summarizeMessagingWebRtcIceCaps(),
         recordingArchive: {
           s3Enabled: meetRecordingS3Enabled(),
