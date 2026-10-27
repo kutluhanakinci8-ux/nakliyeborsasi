@@ -149,6 +149,7 @@ export class MessagingModuleStatusController {
         "messaging_webrtc_meet_compliance_faz7",
         "messaging_webrtc_meet_qa_gate_faz8",
         "messaging_webrtc_meet_realtime_faz9",
+        "messaging_webrtc_meet_mobile_faz10",
       ],
       translate: { deepl, libretranslate: libre },
       attachments: (() => {
