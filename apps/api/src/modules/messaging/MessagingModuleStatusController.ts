@@ -17,6 +17,7 @@ import {
   meetRecordingS3Enabled,
 } from "./messagingWebRtcMeetRecordingS3";
 import { summarizeMessagingWebRtcMeetCapacity } from "./messagingWebRtcMeetCapacity";
+import { probeMessagingWebRtcSfuBackend } from "./messagingWebRtcSfuBackend";
 import { MessagingWebRtcSignalingService } from "./MessagingWebRtcSignalingService";
 import type { WhatsappBridgeDeliverySnapshot } from "@nakliyeborsasi/core";
 
@@ -58,6 +59,8 @@ export class MessagingModuleStatusController {
       maxParticipants: number;
       meshMode: "p2p";
       capacity: ReturnType<typeof summarizeMessagingWebRtcMeetCapacity>;
+      sfuStatusPath: string;
+      sfuBackend: Awaited<ReturnType<typeof probeMessagingWebRtcSfuBackend>>;
       iceCaps: ReturnType<typeof summarizeMessagingWebRtcIceCaps>;
       turnMonitor: Awaited<ReturnType<typeof probeMessagingWebRtcTurnMonitor>>;
       recordingArchive: { s3Enabled: boolean; maxBytes: number };
@@ -77,6 +80,7 @@ export class MessagingModuleStatusController {
       await probeMessagingWebRtcTurnMonitor(),
       iceCaps.turnCredentialsConfigured,
     );
+    const sfuBackend = await probeMessagingWebRtcSfuBackend();
     return {
       module: "messaging",
       phase: "ga",
@@ -164,6 +168,7 @@ export class MessagingModuleStatusController {
         "messaging_webrtc_meet_ediscovery_faz14",
         "messaging_webrtc_meet_capacity_faz15",
         "messaging_webrtc_meet_sfu_intent_faz16",
+        "messaging_webrtc_meet_sfu_config_faz17",
       ],
       translate: { deepl, libretranslate: libre },
       attachments: (() => {
@@ -198,6 +203,8 @@ export class MessagingModuleStatusController {
         maxParticipants: MESSAGING_WEBRTC_MAX_PARTICIPANTS,
         meshMode: "p2p",
         capacity: summarizeMessagingWebRtcMeetCapacity(),
+        sfuStatusPath: "/messaging/webrtc/sfu/status",
+        sfuBackend,
         iceCaps,
         turnMonitor,
         recordingArchive: {

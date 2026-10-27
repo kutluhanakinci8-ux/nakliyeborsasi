@@ -33,12 +33,26 @@ export type MessagingWebRtcMeetCapacity = {
   };
 };
 
+export type MessagingWebRtcSfuBackend = {
+  meshOnly: true;
+  healthUrlConfigured: boolean;
+  signalingUrlConfigured: boolean;
+  plannedMaxParticipants: number;
+  probe: {
+    ok: boolean;
+    source: "disabled" | "http_probe";
+    checkedAt: string | null;
+    detail?: string;
+  };
+};
+
 export type MessagingWebRtcConfig = {
   iceServers: RTCIceServer[];
   signaling: "redis_relay" | "unavailable" | "planned";
   maxParticipants?: number;
   meshMode?: "p2p";
   capacity?: MessagingWebRtcMeetCapacity;
+  sfuBackend?: MessagingWebRtcSfuBackend;
   iceCaps?: MessagingWebRtcIceCaps;
   turnMonitor?: MessagingWebRtcTurnMonitor;
   maxRecordingArchiveBytes?: number;
