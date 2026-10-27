@@ -16,6 +16,7 @@ import {
 import { summarizeMessagingWebRtcMeetCapacity } from "./messagingWebRtcMeetCapacity";
 import { MessagingWebRtcMeetOverflowIntentService } from "./MessagingWebRtcMeetOverflowIntentService";
 import { probeMessagingWebRtcSfuBackend } from "./messagingWebRtcSfuBackend";
+import { MessagingWebRtcNativeBridgeService } from "./MessagingWebRtcNativeBridgeService";
 
 @Controller("platform-admin/communications-ops")
 @UseGuards(JwtAuthenticationGuard, PlatformAdminGuard)
@@ -28,6 +29,7 @@ export class PlatformCommunicationsOpsController {
     private readonly emailDeliveryHealthService: EmailDeliveryHealthService,
     private readonly messagingAttachmentS3ProbeService: MessagingAttachmentS3ProbeService,
     private readonly meetOverflowIntentService: MessagingWebRtcMeetOverflowIntentService,
+    private readonly nativeBridgeService: MessagingWebRtcNativeBridgeService,
   ) {}
 
   @Get("snapshot")
@@ -66,6 +68,7 @@ export class PlatformCommunicationsOpsController {
       capacity: ReturnType<typeof summarizeMessagingWebRtcMeetCapacity>;
       sfuOverflowIntentTotal: number;
       sfuBackend: Awaited<ReturnType<typeof probeMessagingWebRtcSfuBackend>>;
+      nativeRtcBridgeHandshakes: number;
       iceCaps: ReturnType<typeof summarizeMessagingWebRtcIceCaps>;
       recordingArchive: { s3Enabled: boolean; maxBytes: number };
     };
@@ -109,6 +112,8 @@ export class PlatformCommunicationsOpsController {
         sfuOverflowIntentTotal:
           await this.meetOverflowIntentService.countGlobalIntents(),
         sfuBackend: await probeMessagingWebRtcSfuBackend(),
+        nativeRtcBridgeHandshakes:
+          await this.nativeBridgeService.countHandshakes(),
         iceCaps: summarizeMessagingWebRtcIceCaps(),
         recordingArchive: {
           s3Enabled: meetRecordingS3Enabled(),

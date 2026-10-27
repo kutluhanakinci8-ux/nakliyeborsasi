@@ -26,6 +26,21 @@ export function isSfuPilotDeepLinkActive(): boolean {
   return new URLSearchParams(window.location.search).get("sfuPilot") === "1";
 }
 
+export function isNativeRtcDeepLinkActive(): boolean {
+  if (typeof window === "undefined") {
+    return false;
+  }
+  return new URLSearchParams(window.location.search).get("nativeRtc") === "1";
+}
+
+export function readNativeRtcBridgeIdFromLocation(): string | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  const value = new URLSearchParams(window.location.search).get("bridgeId");
+  return value && value.length > 0 ? value : null;
+}
+
 export function isLikelyMobileBrowser(): boolean {
   if (typeof navigator === "undefined") {
     return false;

@@ -15,6 +15,8 @@ import { AuthenticatedUserParam } from "../auth/AuthenticatedUserParam";
 import { MESSAGING_WEBRTC_MAX_PARTICIPANTS } from "./messagingWebRtcConstants";
 import { summarizeMessagingWebRtcMeetCapacity } from "./messagingWebRtcMeetCapacity";
 import { probeMessagingWebRtcSfuBackend } from "./messagingWebRtcSfuBackend";
+import { MessagingWebRtcNativeBridgeService } from "./MessagingWebRtcNativeBridgeService";
+import { PostMessagingWebRtcNativeBridgeHandshakeDto } from "./MessagingWebRtcNativeBridgeRequestDto";
 import {
   resolveMessagingWebRtcIceServers,
   summarizeMessagingWebRtcIceCaps,
@@ -46,6 +48,7 @@ export class MessagingWebRtcController {
     private readonly meetRecordingArchiveService: MessagingWebRtcMeetRecordingArchiveService,
     private readonly meetOverflowIntentService: MessagingWebRtcMeetOverflowIntentService,
     private readonly meetSfuSessionService: MessagingWebRtcMeetSfuSessionService,
+    private readonly nativeBridgeService: MessagingWebRtcNativeBridgeService,
   ) {}
 
   @Get("config")
@@ -76,6 +79,23 @@ export class MessagingWebRtcController {
   public async getSfuBackendStatus() {
     const sfuBackend = await probeMessagingWebRtcSfuBackend();
     return { sfuBackend };
+  }
+
+  @Get("native-bridge/config")
+  public getNativeBridgeConfig() {
+    return { config: this.nativeBridgeService.getConfig() };
+  }
+
+  @Post("native-bridge/handshake")
+  public async postNativeBridgeHandshake(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: PostMessagingWebRtcNativeBridgeHandshakeDto,
+  ) {
+    const handshake = await this.nativeBridgeService.handshake(user, {
+      platform: body.platform,
+      appVersion: body.appVersion,
+    });
+    return { ok: true, ...handshake };
   }
 
   @Get("capacity")

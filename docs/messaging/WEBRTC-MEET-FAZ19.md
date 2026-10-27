@@ -14,6 +14,6 @@ Status: `webrtc.sfuEmbed` (`deepLinkParam: sfuPilot`)
 
 Mesh görüşme değişmez; tam SFU medya hâlâ harici signaling URL üzerinden.
 
-## Sonraki (Faz 20+)
+## Sonraki
 
-RN native WebRTC veya tek tık SFU medya köprüsü.
+Faz 20 native köprü — `WEBRTC-MEET-FAZ20.md`.
