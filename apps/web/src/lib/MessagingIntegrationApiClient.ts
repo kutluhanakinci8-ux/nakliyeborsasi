@@ -25,6 +25,16 @@ export type MessagingRetentionSnapshot = {
   retentionMode: "archive" | "delete";
 };
 
+export type MessagingVoiceTranscribeSnapshot = {
+  faz3Enabled: boolean;
+  sttConfigured: boolean;
+  mode: "manual" | "auto";
+  monthlyQuota: number;
+  monthlyUsed: number;
+  kvkkNoticeTr: string;
+  kvkkAcceptedAt: string | null;
+};
+
 export type MessagingIntegrationSnapshot = {
   companyId: string;
   webhooks: MessagingWebhookSnapshot[];
@@ -32,6 +42,7 @@ export type MessagingIntegrationSnapshot = {
   retention: MessagingRetentionSnapshot;
   slackBridge: { enabled: boolean; configured: boolean };
   whatsappBridge: MessagingWhatsappBridgeSnapshot;
+  voiceTranscribe?: MessagingVoiceTranscribeSnapshot;
   publicApiBasePath: string;
   requiredOAuthScopes: string[];
   automationCatalogPath: string;
@@ -63,6 +74,23 @@ export class MessagingIntegrationApiClient {
       accessToken,
       "/messaging/integration",
     ) as Promise<{ integration: MessagingIntegrationSnapshot }>;
+  }
+
+  public static async updateVoiceTranscribe(
+    accessToken: string,
+    params: {
+      mode: "manual" | "auto";
+      kvkkNoticeAccepted?: boolean;
+    },
+  ): Promise<{ voiceTranscribe: MessagingVoiceTranscribeSnapshot }> {
+    return AuthenticatedApiClient.fetchJson(
+      accessToken,
+      "/messaging/integration/voice-transcribe",
+      {
+        method: "PATCH",
+        body: JSON.stringify(params),
+      },
+    ) as Promise<{ voiceTranscribe: MessagingVoiceTranscribeSnapshot }>;
   }
 
   public static async updateWhatsappBridge(

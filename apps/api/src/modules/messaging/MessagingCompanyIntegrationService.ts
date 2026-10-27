@@ -17,7 +17,15 @@ import {
 import {
   CompanyMessagingSettingsEntity,
   type MessagingRetentionMode,
+  type MessagingVoiceTranscribeMode,
 } from "../../infrastructure/database/entities/CompanyMessagingSettingsEntity";
+import {
+  MESSAGING_VOICE_TRANSCRIBE_KVKK_NOTICE_TR,
+  messagingVoiceSttConfigured,
+  messagingVoiceSttMonthlyQuotaPerCompany,
+  messagingVoiceTranscribeAutoFaz3Enabled,
+} from "./messagingVoiceTranscribeConfig";
+import { MessagingVoiceTranscribeService } from "./MessagingVoiceTranscribeService";
 import { generateWebhookSigningSecret } from "../notification/MailIntegrationCrypto";
 import { MessagingBotService } from "./MessagingBotService";
 import { MessagingWhatsappBridgeService } from "./MessagingWhatsappBridgeService";
@@ -48,6 +56,7 @@ export class MessagingCompanyIntegrationService {
     private readonly settingsRepository: Repository<CompanyMessagingSettingsEntity>,
     private readonly messagingBotService: MessagingBotService,
     private readonly messagingWhatsappBridgeService: MessagingWhatsappBridgeService,
+    private readonly messagingVoiceTranscribeService: MessagingVoiceTranscribeService,
   ) {}
 
   public async getSnapshot(authenticatedUser: AuthenticatedUserContext) {
@@ -60,6 +69,11 @@ export class MessagingCompanyIntegrationService {
     const bots = await this.messagingBotService.listBots(
       authenticatedUser.companyId,
     );
+    const monthlyQuota = messagingVoiceSttMonthlyQuotaPerCompany();
+    const monthlyUsed =
+      await this.messagingVoiceTranscribeService.countSttUsageThisMonth(
+        authenticatedUser.companyId,
+      );
     return {
       companyId: authenticatedUser.companyId,
       webhooks,
@@ -83,6 +97,16 @@ export class MessagingCompanyIntegrationService {
           settingsRow?.whatsappBridgeKvkkAcceptedAt?.toISOString() ?? null,
       },
       bots,
+      voiceTranscribe: {
+        faz3Enabled: messagingVoiceTranscribeAutoFaz3Enabled(),
+        sttConfigured: messagingVoiceSttConfigured(),
+        mode: settingsRow?.voiceTranscribeMode ?? "manual",
+        monthlyQuota,
+        monthlyUsed,
+        kvkkNoticeTr: MESSAGING_VOICE_TRANSCRIBE_KVKK_NOTICE_TR,
+        kvkkAcceptedAt:
+          settingsRow?.voiceTranscribeAutoKvkkAcceptedAt?.toISOString() ?? null,
+      },
       automationCatalogPath: "/api/v1/messaging/integration/automation-catalog",
       publicApiBasePath: "/api/v1/public/lerta-messaging/v1",
       requiredOAuthScopes: ["messaging:read", "messaging:write"],
@@ -303,6 +327,67 @@ export class MessagingCompanyIntegrationService {
       throw new BadRequestException(result.reason);
     }
     return { ok: true };
+  }
+
+  public async updateVoiceTranscribePolicy(
+    authenticatedUser: AuthenticatedUserContext,
+    params: {
+      mode: MessagingVoiceTranscribeMode;
+      kvkkNoticeAccepted?: boolean;
+    },
+  ) {
+    this.assertOwner(authenticatedUser);
+    if (!messagingVoiceTranscribeAutoFaz3Enabled()) {
+      throw new BadRequestException(
+        "Otomatik ses transkripsiyonu bu ortamda kapalı (STT-3 flag).",
+      );
+    }
+    if (params.mode !== "manual" && params.mode !== "auto") {
+      throw new BadRequestException("mode manual veya auto olmalı.");
+    }
+    let row = await this.settingsRepository.findOne({
+      where: { companyId: authenticatedUser.companyId },
+    });
+    if (!row) {
+      row = this.settingsRepository.create({
+        companyId: authenticatedUser.companyId,
+        retentionDays: null,
+        retentionMode: "archive",
+        voiceTranscribeMode: "manual",
+      });
+    }
+    if (params.mode === "auto") {
+      if (!messagingVoiceSttConfigured()) {
+        throw new BadRequestException(
+          "Otomatik transkripsiyon için STT API anahtarı yapılandırılmalı.",
+        );
+      }
+      const alreadyAccepted = Boolean(row.voiceTranscribeAutoKvkkAcceptedAt);
+      if (!alreadyAccepted && !params.kvkkNoticeAccepted) {
+        throw new BadRequestException(
+          "Otomatik STT için KVKK bilgilendirme onayı gerekir (kvkkNoticeAccepted).",
+        );
+      }
+      if (!alreadyAccepted) {
+        row.voiceTranscribeAutoKvkkAcceptedAt = new Date();
+      }
+    }
+    row.voiceTranscribeMode = params.mode;
+    await this.settingsRepository.save(row);
+    const monthlyQuota = messagingVoiceSttMonthlyQuotaPerCompany();
+    const monthlyUsed =
+      await this.messagingVoiceTranscribeService.countSttUsageThisMonth(
+        authenticatedUser.companyId,
+      );
+    return {
+      faz3Enabled: messagingVoiceTranscribeAutoFaz3Enabled(),
+      sttConfigured: messagingVoiceSttConfigured(),
+      mode: row.voiceTranscribeMode,
+      monthlyQuota,
+      monthlyUsed,
+      kvkkNoticeTr: MESSAGING_VOICE_TRANSCRIBE_KVKK_NOTICE_TR,
+      kvkkAcceptedAt: row.voiceTranscribeAutoKvkkAcceptedAt?.toISOString() ?? null,
+    };
   }
 
   public async updateWhatsappBridge(

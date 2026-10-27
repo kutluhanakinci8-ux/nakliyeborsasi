@@ -2,6 +2,8 @@ import { Column, Entity, PrimaryColumn, UpdateDateColumn } from "typeorm";
 
 export type MessagingRetentionMode = "archive" | "delete";
 
+export type MessagingVoiceTranscribeMode = "manual" | "auto";
+
 @Entity({ name: "company_messaging_settings" })
 export class CompanyMessagingSettingsEntity {
   @PrimaryColumn({ name: "company_id", type: "uuid" })
@@ -35,6 +37,16 @@ export class CompanyMessagingSettingsEntity {
 
   @Column({ name: "whatsapp_bridge_kvkk_accepted_at", type: "timestamptz", nullable: true })
   public whatsappBridgeKvkkAcceptedAt!: Date | null;
+
+  @Column({ name: "voice_transcribe_mode", type: "varchar", length: 16, default: "manual" })
+  public voiceTranscribeMode!: MessagingVoiceTranscribeMode;
+
+  @Column({
+    name: "voice_transcribe_auto_kvkk_accepted_at",
+    type: "timestamptz",
+    nullable: true,
+  })
+  public voiceTranscribeAutoKvkkAcceptedAt!: Date | null;
 
   @UpdateDateColumn({ name: "updated_at", type: "timestamptz" })
   public updatedAt!: Date;

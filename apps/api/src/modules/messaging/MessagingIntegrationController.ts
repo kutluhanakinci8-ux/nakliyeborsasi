@@ -5,7 +5,10 @@ import { AuthenticatedUserContext } from "@nakliyeborsasi/core";
 import { MessagingCompanyIntegrationService } from "./MessagingCompanyIntegrationService";
 import { MessagingBotService } from "./MessagingBotService";
 import type { MessagingWebhookEventType } from "../../infrastructure/database/entities/CompanyMessagingWebhookEndpointEntity";
-import type { MessagingRetentionMode } from "../../infrastructure/database/entities/CompanyMessagingSettingsEntity";
+import type {
+  MessagingRetentionMode,
+  MessagingVoiceTranscribeMode,
+} from "../../infrastructure/database/entities/CompanyMessagingSettingsEntity";
 
 @Controller("messaging/integration")
 @UseGuards(JwtAuthenticationGuard)
@@ -120,6 +123,24 @@ export class MessagingIntegrationController {
   ) {
     const ok = await this.messagingBotService.revokeBot(user, botId);
     return { ok };
+  }
+
+  @Patch("voice-transcribe")
+  public async updateVoiceTranscribe(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body()
+    body: {
+      mode: MessagingVoiceTranscribeMode;
+      kvkkNoticeAccepted?: boolean;
+    },
+  ) {
+    return {
+      voiceTranscribe:
+        await this.messagingCompanyIntegrationService.updateVoiceTranscribePolicy(
+          user,
+          body,
+        ),
+    };
   }
 
   @Patch("retention")
