@@ -132,5 +132,20 @@ export function messagingVoiceSttTrQualityFaz1Enabled(
   return env.MESSAGING_VOICE_STT_TR_QUALITY_FAZ1?.trim() === "1";
 }
 
+/** STT-OSS-4: eşzamanlı transkripsiyon üst sınırı (0 = limitsiz). */
+export function messagingVoiceSttMaxConcurrent(
+  env: NodeJS.ProcessEnv = process.env,
+): number {
+  const raw = env.MESSAGING_VOICE_STT_MAX_CONCURRENT?.trim();
+  const parsed = raw ? Number.parseInt(raw, 10) : 2;
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : 2;
+}
+
+export function messagingVoiceSttReliabilityFaz1Enabled(
+  env: NodeJS.ProcessEnv = process.env,
+): boolean {
+  return env.MESSAGING_VOICE_STT_RELIABILITY_FAZ1?.trim() === "1";
+}
+
 export const MESSAGING_VOICE_TRANSCRIBE_KVKK_NOTICE_TR =
   "Ses kaydınızı yazıya çevirmek için ses işleme (speech-to-text) yapılacaktır. İşlem, onayladığınız KVKK / AI asistan rızası ve firma mesajlaşma politikası kapsamında gerçekleşir.";
