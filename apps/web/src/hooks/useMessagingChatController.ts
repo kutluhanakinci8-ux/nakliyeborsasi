@@ -75,6 +75,7 @@ export function useMessagingChatController({
   const [messages, setMessages] = useState<ThreadMessageRecord[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [isBusy, setIsBusy] = useState(false);
+  const [voiceNoteSendBusy, setVoiceNoteSendBusy] = useState(false);
   const [acceptOfferBusy, setAcceptOfferBusy] = useState(false);
   const [threadSearch, setThreadSearch] = useState("");
   const [chatSearchFocused, setChatSearchFocused] = useState(false);
@@ -703,6 +704,7 @@ export function useMessagingChatController({
     if (!activeThreadId || attachment.kind !== "voice_note") {
       return;
     }
+    setVoiceNoteSendBusy(true);
     try {
       const sendResult = await MessagingApiClient.sendMessage(
         accessToken,
@@ -717,13 +719,21 @@ export function useMessagingChatController({
           sendResult.channelDelivery.errorMessage ??
             "Mesaj kaydedildi ancak WhatsApp/kanala gönderilemedi.",
         );
-      } else if (sendResult.channelDelivery?.status === "ok") {
+      } else {
         setErrorMessage("");
       }
       await loadMessages(activeThreadId);
       await loadThreads();
     } catch (error) {
+      try {
+        await loadMessages(activeThreadId);
+        await loadThreads();
+      } catch {
+        // ignore refresh errors
+      }
       setErrorMessage(error instanceof Error ? error.message : "Gönderim hatası");
+    } finally {
+      setVoiceNoteSendBusy(false);
     }
   }
 
@@ -1198,6 +1208,7 @@ export function useMessagingChatController({
     errorMessage,
     setErrorMessage,
     isBusy,
+    voiceNoteSendBusy,
     acceptOfferBusy,
     threadSearch,
     setThreadSearch,
