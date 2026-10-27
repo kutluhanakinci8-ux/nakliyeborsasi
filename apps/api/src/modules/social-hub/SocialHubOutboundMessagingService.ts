@@ -377,6 +377,7 @@ export class SocialHubOutboundMessagingService {
       phoneNumberId,
       accessToken: params.accessToken,
       to: params.recipientExternalId,
+      voiceMessage: true,
       buffer: params.attachment.buffer,
       contentType: params.attachment.contentType,
       filename: params.attachment.filename,

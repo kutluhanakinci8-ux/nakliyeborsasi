@@ -41,6 +41,10 @@ import {
   messagingVoiceTranscribeFaz1Enabled,
   resolveMessagingVoiceSttApiUrl,
 } from "./messagingVoiceTranscribeConfig";
+import {
+  buildLocalWhisperAsrRequestUrl,
+  parseLocalWhisperAsrResponseBody,
+} from "./messagingVoiceSttLocalAsr";
 
 export type VoiceTranscriptView = {
   status: "pending" | "ready" | "failed";
@@ -540,6 +544,17 @@ export class MessagingVoiceTranscribeService {
         const applyGlossary =
           advanced || messagingVoiceSttTrQualityFaz1Enabled();
         const providerKind = resolveMessagingVoiceSttProvider();
+        if (providerKind === "local") {
+          return await this.runLocalWhisperAsr(
+            apiUrl,
+            apiKey,
+            buffer,
+            contentType,
+            filename,
+            language,
+            advanced,
+          );
+        }
         const preferVerbose = advanced && providerKind === "openai";
         const form = new FormData();
         const bytes = new Uint8Array(buffer);
@@ -640,5 +655,64 @@ export class MessagingVoiceTranscribeService {
       return { text: null, provider: "stt-busy", confidenceScore: null };
     }
     return outcome;
+  }
+
+  private async runLocalWhisperAsr(
+    apiUrl: string,
+    apiKey: string,
+    buffer: Buffer,
+    contentType: string,
+    filename: string,
+    language?: string,
+    advanced?: boolean,
+  ): Promise<{
+    text: string | null;
+    provider: string;
+    confidenceScore: number | null;
+  }> {
+    const applyGlossary =
+      advanced || messagingVoiceSttTrQualityFaz1Enabled();
+    const requestUrl = buildLocalWhisperAsrRequestUrl(apiUrl, language);
+    const form = new FormData();
+    const bytes = new Uint8Array(buffer);
+    form.append(
+      "audio_file",
+      new Blob([bytes], { type: contentType }),
+      filename || "voice.ogg",
+    );
+    const headers: Record<string, string> = {};
+    if (apiKey) {
+      headers.Authorization = `Bearer ${apiKey}`;
+    }
+    try {
+      const response = await fetch(requestUrl, {
+        method: "POST",
+        headers,
+        body: form,
+      });
+      const body = await response.text();
+      if (!response.ok) {
+        this.logger.warn(
+          `Local STT failed status=${response.status} body=${body.slice(0, 200)}`,
+        );
+        return { text: null, provider: "stt-error", confidenceScore: null };
+      }
+      let text = parseLocalWhisperAsrResponseBody(body);
+      if (text && applyGlossary) {
+        text = applyMessagingVoiceSttGlossary(text);
+      }
+      return {
+        text,
+        provider: "local-whisper",
+        confidenceScore: null,
+      };
+    } catch (error) {
+      this.logger.warn(
+        `Local STT exception: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+      return { text: null, provider: "stt-error", confidenceScore: null };
+    }
   }
 }

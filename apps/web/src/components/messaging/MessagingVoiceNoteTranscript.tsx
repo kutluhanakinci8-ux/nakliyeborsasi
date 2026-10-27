@@ -101,7 +101,21 @@ export function MessagingVoiceNoteTranscript({
         );
       }
     } catch (error) {
-      onError(error instanceof Error ? error.message : "Transkripsiyon hatası");
+      let message =
+        error instanceof Error ? error.message : "Transkripsiyon hatası";
+      try {
+        const parsed = JSON.parse(message) as { message?: string };
+        if (parsed.message) {
+          message = parsed.message;
+        }
+      } catch {
+        // plain text error
+      }
+      if (/AI \/ ses işleme rızası|aiMailAssistConsent/i.test(message)) {
+        message =
+          "AI / ses işleme rızası kapalı. Sohbet üstündeki «AI ses işleme» kartından veya Profil → bildirimlerden onaylayın.";
+      }
+      onError(message);
     } finally {
       setBusy(false);
     }

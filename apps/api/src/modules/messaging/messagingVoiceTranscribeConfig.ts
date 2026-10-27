@@ -96,7 +96,7 @@ export function resolveMessagingVoiceSttApiUrl(
   if (messagingVoiceSttAuthOptional(env)) {
     return (
       env.MESSAGING_VOICE_STT_DEFAULT_URL?.trim() ||
-      "http://127.0.0.1:9010/v1/audio/transcriptions"
+      "http://127.0.0.1:9010/asr"
     ).replace(/\/$/, "");
   }
   return null;
