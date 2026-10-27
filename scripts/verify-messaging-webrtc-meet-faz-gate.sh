@@ -20,6 +20,7 @@ REQUIRED=(
   messaging_webrtc_meet_mobile_faz10
   messaging_webrtc_meet_enterprise_faz11
   messaging_webrtc_meet_turn_prod_faz12
+  messaging_webrtc_meet_native_shell_faz13
 )
 
 payload="$(curl -fsS "${API_BASE}/messaging/status")"
