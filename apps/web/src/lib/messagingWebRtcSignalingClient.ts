@@ -8,12 +8,23 @@ export type MessagingWebRtcIceCaps = {
   usingDefaultStunOnly: boolean;
 };
 
+export type MessagingWebRtcTurnMonitor = {
+  enabled: boolean;
+  ok: boolean;
+  source: "disabled" | "env_hint" | "http_probe";
+  activeAllocationsHint: number | null;
+  checkedAt: string | null;
+  detail?: string;
+};
+
 export type MessagingWebRtcConfig = {
   iceServers: RTCIceServer[];
   signaling: "redis_relay" | "unavailable" | "planned";
   maxParticipants?: number;
   meshMode?: "p2p";
   iceCaps?: MessagingWebRtcIceCaps;
+  turnMonitor?: MessagingWebRtcTurnMonitor;
+  maxRecordingArchiveBytes?: number;
 };
 
 export type WebRtcRoomParticipant = {

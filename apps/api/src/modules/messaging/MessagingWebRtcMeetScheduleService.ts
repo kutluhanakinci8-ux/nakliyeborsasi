@@ -84,12 +84,16 @@ export class MessagingWebRtcMeetScheduleService {
       createdAt: new Date().toISOString(),
     };
     const ttlSeconds = Math.ceil((atMs - now + GRACE_AFTER_MS) / 1000);
-    await this.redis.set(
-      this.redisKey(threadId),
-      JSON.stringify(record),
-      "EX",
-      Math.max(ttlSeconds, 3600),
-    );
+    await this.redis
+      .multi()
+      .set(
+        this.redisKey(threadId),
+        JSON.stringify(record),
+        "EX",
+        Math.max(ttlSeconds, 3600),
+      )
+      .zadd(this.indexKey(), atMs, threadId)
+      .exec();
     return record;
   }
 
@@ -101,10 +105,64 @@ export class MessagingWebRtcMeetScheduleService {
       user,
       threadId,
     );
-    await this.redis.del(this.redisKey(threadId));
+    await this.redis
+      .multi()
+      .del(this.redisKey(threadId))
+      .zrem(this.indexKey(), threadId)
+      .del(this.reminderKey(threadId, "t15"))
+      .del(this.reminderKey(threadId, "start"))
+      .exec();
+  }
+
+  public async getScheduleRaw(
+    threadId: string,
+  ): Promise<WebRtcMeetScheduleRecord | null> {
+    const raw = await this.redis.get(this.redisKey(threadId));
+    if (!raw) {
+      return null;
+    }
+    try {
+      return JSON.parse(raw) as WebRtcMeetScheduleRecord;
+    } catch {
+      return null;
+    }
+  }
+
+  public async listThreadIdsScheduledBetween(
+    startMs: number,
+    endMs: number,
+  ): Promise<string[]> {
+    return await this.redis.zrangebyscore(
+      this.indexKey(),
+      startMs,
+      endMs,
+    );
+  }
+
+  public async isReminderSent(
+    threadId: string,
+    kind: "t15" | "start",
+  ): Promise<boolean> {
+    const exists = await this.redis.exists(this.reminderKey(threadId, kind));
+    return exists === 1;
+  }
+
+  public async markReminderSent(
+    threadId: string,
+    kind: "t15" | "start",
+  ): Promise<void> {
+    await this.redis.set(this.reminderKey(threadId, kind), "1", "EX", 86400);
   }
 
   private redisKey(threadId: string): string {
     return `messaging:webrtc:meet:schedule:${threadId}`;
+  }
+
+  private indexKey(): string {
+    return "messaging:webrtc:meet:schedule:index";
+  }
+
+  private reminderKey(threadId: string, kind: "t15" | "start"): string {
+    return `messaging:webrtc:meet:reminder:sent:${threadId}:${kind}`;
   }
 }

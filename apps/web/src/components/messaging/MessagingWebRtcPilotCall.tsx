@@ -36,6 +36,12 @@ import {
   type WebRtcMeetScheduleRecord,
 } from "../../lib/messagingWebRtcMeetSchedule";
 import {
+  blobToBase64,
+  fetchMessagingWebRtcRecordingArchives,
+  postMessagingWebRtcRecordingArchive,
+  type WebRtcMeetRecordingArchiveMeta,
+} from "../../lib/messagingWebRtcMeetArchive";
+import {
   downloadMeetRecordingBlob,
   startMeetLocalRecorder,
   type MeetLocalRecorder,
@@ -49,6 +55,7 @@ import {
   pollMessagingWebRtcSignals,
   postMessagingWebRtcSignal,
   type MessagingWebRtcIceCaps,
+  type MessagingWebRtcTurnMonitor,
   type WebRtcSignalEnvelope,
 } from "../../lib/messagingWebRtcSignalingClient";
 
@@ -108,20 +115,27 @@ function parseScreenSharing(payload: string): boolean {
   }
 }
 
-function iceCapsStatusLabel(caps: MessagingWebRtcIceCaps | null): string {
+function iceCapsStatusLabel(
+  caps: MessagingWebRtcIceCaps | null,
+  turnMonitor: MessagingWebRtcTurnMonitor | null,
+): string {
+  const monitorHint =
+    turnMonitor?.enabled && turnMonitor.activeAllocationsHint != null
+      ? ` · alloc ~${turnMonitor.activeAllocationsHint}`
+      : "";
   if (!caps) {
-    return "ICE…";
+    return `ICE…${monitorHint}`;
   }
   if (caps.turnUrlCount > 0 && caps.turnCredentialsConfigured) {
-    return "TURN hazır";
+    return `TURN hazır${monitorHint}`;
   }
   if (caps.usingDefaultStunOnly) {
-    return "Yalnızca STUN — üretimde TURN önerilir";
+    return `Yalnızca STUN${monitorHint}`;
   }
   if (caps.turnUrlCount > 0) {
-    return "TURN — kimlik bilgisi eksik";
+    return `TURN eksik kimlik${monitorHint}`;
   }
-  return `STUN ×${caps.stunUrlCount}`;
+  return `STUN ×${caps.stunUrlCount}${monitorHint}`;
 }
 
 function defaultDatetimeLocalValue(): string {
@@ -178,9 +192,18 @@ export function MessagingWebRtcPilotCall({
   const [scheduleNote, setScheduleNote] = useState("");
   const [scheduleBusy, setScheduleBusy] = useState(false);
   const [recording, setRecording] = useState(false);
+  const [turnMonitor, setTurnMonitor] =
+    useState<MessagingWebRtcTurnMonitor | null>(null);
+  const [maxRecordingArchiveBytes, setMaxRecordingArchiveBytes] = useState(
+    2_500_000,
+  );
+  const [recordingArchives, setRecordingArchives] = useState<
+    WebRtcMeetRecordingArchiveMeta[]
+  >([]);
 
   const pcsRef = useRef<Map<string, RTCPeerConnection>>(new Map());
   const meetRecorderRef = useRef<MeetLocalRecorder | null>(null);
+  const recordingStartedAtRef = useRef<number | null>(null);
   const cameraVideoTrackRef = useRef<MediaStreamTrack | null>(null);
   const screenTrackRef = useRef<MediaStreamTrack | null>(null);
   const reactionClearTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(
@@ -302,6 +325,7 @@ export function MessagingWebRtcPilotCall({
             status.features.includes("messaging_webrtc_meet_hd_faz2") &&
             status.features.includes("messaging_webrtc_meet_biz_faz3") &&
             status.features.includes("messaging_webrtc_meet_ops_faz4") &&
+            status.features.includes("messaging_webrtc_meet_reliability_faz5") &&
             status.webrtc?.signaling === "redis_relay",
         );
       })
@@ -314,18 +338,31 @@ export function MessagingWebRtcPilotCall({
       return;
     }
     void fetchMessagingWebRtcConfig(accessToken)
-      .then((config) => setIceCaps(config.iceCaps ?? null))
-      .catch(() => setIceCaps(null));
+      .then((config) => {
+        setIceCaps(config.iceCaps ?? null);
+        setTurnMonitor(config.turnMonitor ?? null);
+        setMaxRecordingArchiveBytes(
+          config.maxRecordingArchiveBytes ?? 2_500_000,
+        );
+      })
+      .catch(() => {
+        setIceCaps(null);
+        setTurnMonitor(null);
+      });
   }, [accessToken, enabled]);
 
   useEffect(() => {
     if (!enabled || !threadId || !accessToken) {
       setMeetSchedule(null);
+      setRecordingArchives([]);
       return;
     }
     void fetchMessagingWebRtcMeetSchedule(accessToken, threadId)
       .then(setMeetSchedule)
       .catch(() => setMeetSchedule(null));
+    void fetchMessagingWebRtcRecordingArchives(accessToken, threadId)
+      .then(setRecordingArchives)
+      .catch(() => setRecordingArchives([]));
   }, [accessToken, enabled, threadId]);
 
   useEffect(() => {
@@ -960,18 +997,64 @@ export function MessagingWebRtcPilotCall({
     }
   }
 
+  async function archiveMeetRecordingBlob(
+    blob: Blob,
+    durationSeconds: number,
+  ): Promise<void> {
+    if (!threadId) {
+      return;
+    }
+    try {
+      let contentBase64: string | undefined;
+      if (blob.size <= maxRecordingArchiveBytes) {
+        contentBase64 = await blobToBase64(blob);
+      }
+      const archive = await postMessagingWebRtcRecordingArchive(
+        accessToken,
+        threadId,
+        {
+          durationSeconds,
+          media: callModeRef.current,
+          contentBase64,
+        },
+      );
+      setRecordingArchives((prev) => [archive, ...prev].slice(0, 12));
+      setStatusLine(
+        archive.hasBlob
+          ? "Kayıt sunucu arşivine eklendi"
+          : "Kayıt özeti arşivlendi (dosya boyutu limit üstü)",
+      );
+      void MessagingApiClient.sendMessage(
+        accessToken,
+        locale,
+        threadId,
+        `🎙️ Görüşme kaydı arşivi: ${formatCallDuration(durationSeconds)}${archive.hasBlob ? " (dosya)" : " (meta)"}`,
+        undefined,
+        "internal",
+      ).catch(() => undefined);
+    } catch {
+      setStatusLine("Sunucu arşivi başarısız — yerel indirme kullanılabilir");
+    }
+  }
+
   async function stopMeetRecording(download: boolean): Promise<void> {
     const recorder = meetRecorderRef.current;
     if (!recorder) {
       return;
     }
+    const startedAt = recordingStartedAtRef.current;
     meetRecorderRef.current = null;
+    recordingStartedAtRef.current = null;
     setRecording(false);
     try {
       const blob = await recorder.stop();
+      const durationSeconds = startedAt
+        ? Math.max(1, Math.floor((Date.now() - startedAt) / 1000))
+        : Math.max(1, callSeconds);
       if (download) {
         downloadMeetRecordingBlob(blob);
       }
+      await archiveMeetRecordingBlob(blob, durationSeconds);
     } catch {
       setStatusLine("Kayıt durdurulamadı");
     }
@@ -992,8 +1075,11 @@ export function MessagingWebRtcPilotCall({
         remoteStreams: remotePeers.map((peer) => peer.stream),
         mode: callModeRef.current,
       });
+      recordingStartedAtRef.current = Date.now();
       setRecording(true);
-      setStatusLine("Yerel kayıt — dosya yalnızca cihazınıza indirilir");
+      setStatusLine(
+        "Yerel kayıt — bitince indirilir ve küçük dosyalar arşivlenir",
+      );
     } catch {
       setStatusLine("Kayıt başlatılamadı");
     }
@@ -1197,7 +1283,7 @@ export function MessagingWebRtcPilotCall({
 
   return (
     <div
-      className="messaging-webrtc-pilot messaging-webrtc-meet-faz1 messaging-webrtc-meet-faz2 messaging-webrtc-meet-faz3 messaging-webrtc-meet-faz4"
+      className="messaging-webrtc-pilot messaging-webrtc-meet-faz1 messaging-webrtc-meet-faz2 messaging-webrtc-meet-faz3 messaging-webrtc-meet-faz4 messaging-webrtc-meet-faz5"
       role="region"
       aria-label="Görüntülü ve sesli görüşme (en fazla 3 kişi)"
     >
@@ -1429,10 +1515,15 @@ export function MessagingWebRtcPilotCall({
         ) : null}
         <span
           className={`messaging-webrtc-faz4-ice ${iceCaps?.turnCredentialsConfigured ? "is-turn-ok" : "is-turn-warn"}`}
-          title={iceCapsStatusLabel(iceCaps)}
+          title={iceCapsStatusLabel(iceCaps, turnMonitor)}
         >
-          {iceCapsStatusLabel(iceCaps)}
+          {iceCapsStatusLabel(iceCaps, turnMonitor)}
         </span>
+        {recordingArchives.length > 0 ? (
+          <span className="messaging-webrtc-faz5-archive-hint">
+            Arşiv: {recordingArchives.length}
+          </span>
+        ) : null}
         {inCallUi && callStartedAtRef.current ? (
           <span className="messaging-webrtc-pilot-timer" aria-live="polite">
             {formatCallDuration(callSeconds)}
