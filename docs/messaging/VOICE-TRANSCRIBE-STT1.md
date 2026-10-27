@@ -3,7 +3,21 @@
 ## Bayrak
 
 - `MESSAGING_VOICE_TRANSCRIBE_FAZ1=1`
-- Status: `messaging_voice_transcribe_manual_faz1`
+- Status: `messaging_voice_transcribe_manual_faz1`, `voiceNote.sttConfigured` (Whisper API anahtarı)
+
+## Üretim (zorunlu)
+
+VPS `.env`:
+
+```bash
+LERTA_MAIL_AI_COMPOSE_API_KEY=sk-...   # OpenAI Whisper
+# isteğe bağlı: MESSAGING_VOICE_STT_API_URL, MESSAGING_VOICE_STT_MODEL
+bash scripts/apply-messaging-voice-stt-vps-env.sh
+pm2 restart nakliyeborsasi-api --update-env
+bash scripts/verify-messaging-voice-stt-prod.sh
+```
+
+Kullanıcı: profil → bildirim/AI rızası (mesajlaşma STT için).
 
 ## STT motoru
 

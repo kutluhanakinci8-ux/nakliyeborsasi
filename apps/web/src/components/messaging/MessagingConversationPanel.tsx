@@ -133,6 +133,7 @@ export function MessagingConversationPanel({
   const [voiceTranscribeEnabled, setVoiceTranscribeEnabled] = useState(false);
   const [voiceTranscribeAdvancedEnabled, setVoiceTranscribeAdvancedEnabled] =
     useState(false);
+  const [voiceSttConfigured, setVoiceSttConfigured] = useState(false);
 
   useEffect(() => {
     void fetchMessagingPublicStatus()
@@ -155,6 +156,7 @@ export function MessagingConversationPanel({
         setVoiceTranscribeAdvancedEnabled(
           status.features.includes("messaging_voice_transcribe_advanced_faz2"),
         );
+        setVoiceSttConfigured(Boolean(status.voiceNote?.sttConfigured));
       })
       .catch(() => {
         setVoiceNoteEnabled(false);
@@ -162,6 +164,7 @@ export function MessagingConversationPanel({
         setVoiceNoteDeeplinkEnabled(false);
         setVoiceTranscribeEnabled(false);
         setVoiceTranscribeAdvancedEnabled(false);
+        setVoiceSttConfigured(false);
       });
   }, []);
 
@@ -585,6 +588,7 @@ export function MessagingConversationPanel({
                                     voiceTranscribeAdvancedEnabled={
                                       voiceTranscribeAdvancedEnabled
                                     }
+                                    voiceSttConfigured={voiceSttConfigured}
                                     attachmentRecord={attachment}
                                     onTranscriptReady={() => {
                                       if (activeThreadId) {
