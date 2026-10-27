@@ -1,7 +1,12 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { detectRnWebRtcModuleStatus } from "./lertaMobileWebRtcCapabilities";
 import { createNativeMeshPilotSession } from "./lertaMobileNativeMeshPilotApi";
+import { readUserIdFromAccessToken } from "./lertaMobileJwt";
+import {
+  startNativeRnMeshMediaPilot,
+  type NativeRnMeshRunState,
+} from "./lertaMobileRnMeshMediaRunner";
 
 type Props = {
   accessToken: string;
@@ -14,6 +19,17 @@ export function NativeMeetMeshPilotPanel({
   const [threadId, setThreadId] = useState("");
   const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [meshState, setMeshState] = useState<NativeRnMeshRunState | null>(null);
+  const runnerRef = useRef<ReturnType<typeof startNativeRnMeshMediaPilot> | null>(
+    null,
+  );
+
+  useEffect(() => {
+    return () => {
+      runnerRef.current?.stop();
+      runnerRef.current = null;
+    };
+  }, []);
 
   if (!linked) {
     return null;
@@ -34,24 +50,44 @@ export function NativeMeetMeshPilotPanel({
         disabled={busy || threadId.trim().length < 8}
         onPress={() => {
           setBusy(true);
-          void createNativeMeshPilotSession(accessToken, threadId.trim())
+          runnerRef.current?.stop();
+          runnerRef.current = null;
+          const trimmed = threadId.trim();
+          const userId = readUserIdFromAccessToken(accessToken);
+          void createNativeMeshPilotSession(accessToken, trimmed)
             .then((session) => {
-              if (!session) {
-                setStatus("Oturum oluşturulamadı (capabilities veya thread).");
+              if (!session || !userId) {
+                setStatus("Oturum veya kullanıcı kimliği alınamadı.");
                 return;
               }
               setStatus(
-                `Pilot ${session.pilotSessionId.slice(0, 8)}… token ${session.joinToken.slice(0, 8)}…`,
+                `Pilot ${session.pilotSessionId.slice(0, 8)}… — mesh başlatılıyor`,
               );
+              runnerRef.current = startNativeRnMeshMediaPilot({
+                accessToken,
+                threadId: trimmed,
+                pilotSession: session,
+                currentUserId: userId,
+                onUpdate: (state) => {
+                  setMeshState(state);
+                  setStatus(state.message);
+                },
+              });
             })
             .finally(() => setBusy(false));
         }}
       >
         <Text style={styles.buttonText}>
-          {busy ? "Oluşturuluyor…" : "Native pilot oturumu"}
+          {busy ? "Başlatılıyor…" : "Native mesh (sinyal + medya)"}
         </Text>
       </Pressable>
       {status ? <Text style={styles.hint}>{status}</Text> : null}
+      {meshState ? (
+        <Text style={styles.hint}>
+          Faz: {meshState.phase} · peers: {meshState.peerCount}
+          {meshState.lastSignalType ? ` · ${meshState.lastSignalType}` : ""}
+        </Text>
+      ) : null}
     </View>
   );
 }

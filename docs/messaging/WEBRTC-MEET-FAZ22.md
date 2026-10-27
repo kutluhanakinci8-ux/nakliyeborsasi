@@ -15,6 +15,6 @@ Status feature: `messaging_webrtc_meet_rn_webrtc_pilot_faz22`
 
 Kurulum: `WEBRTC-RN-WEBRTC-DEV-CLIENT.md`
 
-## Sonraki (Faz 23+)
+## Sonraki
 
-Gerçek RN `RTCPeerConnection` mesh bağlantısı (sinyal tüketimi).
+Faz 23 RN mesh medya — `WEBRTC-MEET-FAZ23.md`.

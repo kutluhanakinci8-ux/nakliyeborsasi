@@ -14,6 +14,7 @@
 | 20 | `messaging_webrtc_meet_native_rtc_faz20` | Expo native RTC köprü + handshake API |
 | 21 | `messaging_webrtc_meet_native_module_faz21` | RN WebRTC capabilities + SFU medya modu raporu |
 | 22 | `messaging_webrtc_meet_rn_webrtc_pilot_faz22` | Native mesh pilot oturum API (linked dev client) |
-| 23+ | — | RN RTCPeerConnection mesh medya |
+| 23 | `messaging_webrtc_meet_rn_mesh_media_faz23` | RN sinyal tüketimi + LertaRnWebRTC mesh medya |
+| 24+ | — | RTCView, arka plan, prod dev client |
 
-Faz 1–22 kodlandı.
+Faz 1–23 kodlandı.

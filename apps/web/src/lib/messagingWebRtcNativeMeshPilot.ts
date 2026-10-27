@@ -10,6 +10,16 @@ export type WebRtcNativeMeshPilotSession = {
   signalingRelay: "redis_relay";
   expiresAt: string;
   hintTr: string;
+  meshSignaling?: {
+    roomJoinPath: string;
+    roomLeavePath: string;
+    signalsPollPath: string;
+    signalsPostPath: string;
+  };
+  meshMedia?: {
+    stack: "rn_peer_connection";
+    globalInject: "LertaRnWebRTC";
+  };
 };
 
 function apiBase(): string {

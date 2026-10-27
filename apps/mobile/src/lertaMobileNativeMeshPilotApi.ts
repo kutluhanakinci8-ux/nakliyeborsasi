@@ -6,6 +6,7 @@ export type NativeMeshPilotSession = {
   joinToken: string;
   maxParticipants: number;
   hintTr: string;
+  iceServers?: Array<{ urls: string | string[] }>;
 };
 
 export async function createNativeMeshPilotSession(

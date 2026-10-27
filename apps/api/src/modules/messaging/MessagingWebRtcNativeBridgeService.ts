@@ -135,6 +135,7 @@ export class MessagingWebRtcNativeBridgeService {
       rnWebRtcStatus: record.rnWebRtcModule,
       sfuMediaMode: record.sfuMediaMode,
       nativeMeshPilot: base.nativeMeshPilot,
+      rnMeshMedia: base.rnMeshMedia,
     };
   }
 

@@ -406,6 +406,7 @@ export function MessagingWebRtcPilotCall({
             status.features.includes("messaging_webrtc_meet_native_rtc_faz20") &&
             status.features.includes("messaging_webrtc_meet_native_module_faz21") &&
             status.features.includes("messaging_webrtc_meet_rn_webrtc_pilot_faz22") &&
+            status.features.includes("messaging_webrtc_meet_rn_mesh_media_faz23") &&
             status.webrtc?.signaling === "redis_relay",
         );
       })
@@ -1597,7 +1598,7 @@ export function MessagingWebRtcPilotCall({
 
   return (
     <div
-      className="messaging-webrtc-pilot messaging-webrtc-meet-faz1 messaging-webrtc-meet-faz2 messaging-webrtc-meet-faz3 messaging-webrtc-meet-faz4 messaging-webrtc-meet-faz5 messaging-webrtc-meet-faz6 messaging-webrtc-meet-faz7 messaging-webrtc-meet-faz9 messaging-webrtc-meet-faz10 messaging-webrtc-meet-faz15 messaging-webrtc-meet-faz16 messaging-webrtc-meet-faz17 messaging-webrtc-meet-faz18 messaging-webrtc-meet-faz19 messaging-webrtc-meet-faz20 messaging-webrtc-meet-faz21 messaging-webrtc-meet-faz22"
+      className="messaging-webrtc-pilot messaging-webrtc-meet-faz1 messaging-webrtc-meet-faz2 messaging-webrtc-meet-faz3 messaging-webrtc-meet-faz4 messaging-webrtc-meet-faz5 messaging-webrtc-meet-faz6 messaging-webrtc-meet-faz7 messaging-webrtc-meet-faz9 messaging-webrtc-meet-faz10 messaging-webrtc-meet-faz15 messaging-webrtc-meet-faz16 messaging-webrtc-meet-faz17 messaging-webrtc-meet-faz18 messaging-webrtc-meet-faz19 messaging-webrtc-meet-faz20 messaging-webrtc-meet-faz21 messaging-webrtc-meet-faz22 messaging-webrtc-meet-faz23"
       role="region"
       aria-label={`Görüntülü ve sesli görüşme (en fazla ${meetCapacity?.effectiveMaxParticipants ?? MAX_PARTICIPANTS} kişi)`}
     >
@@ -1711,9 +1712,18 @@ export function MessagingWebRtcPilotCall({
             <span role="status">
               Pilot {nativeMeshPilotSession.pilotSessionId.slice(0, 8)}… · token{" "}
               {nativeMeshPilotSession.joinToken.slice(0, 8)}…
+              {nativeMeshPilotSession.meshMedia?.globalInject
+                ? ` · ${nativeMeshPilotSession.meshMedia.globalInject}`
+                : ""}
             </span>
           ) : null}
         </div>
+      ) : null}
+      {nativeMediaModuleHint ? (
+        <p className="messaging-webrtc-faz23-rn-mesh-hint" role="note">
+          RN mesh medya: Expo panelinde «Native mesh» — redis sinyal +{" "}
+          <code>LertaRnWebRTC</code> peer connection.
+        </p>
       ) : null}
       {isLikelyMobileBrowser() && (phase === "idle" || phase === "ended") ? (
         <p className="messaging-webrtc-faz10-mobile-hint" role="note">
