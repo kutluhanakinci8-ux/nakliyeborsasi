@@ -4,8 +4,15 @@ import type Redis from "ioredis";
 import type { AuthenticatedUserContext } from "@nakliyeborsasi/core";
 import { RedisConnectionProvider } from "../../infrastructure/redis/RedisConnectionProvider";
 import { summarizeMessagingWebRtcNativeBridge } from "./messagingWebRtcNativeBridge";
+import type {
+  MessagingWebRtcNativeMediaModuleSnapshot,
+  NativeSfuMediaMode,
+  RnWebRtcModuleStatus,
+} from "./messagingWebRtcNativeMediaModule";
+import { defaultNativeMediaModuleSnapshot } from "./messagingWebRtcNativeMediaModule";
 
 const HANDSHAKE_TTL_SECONDS = 24 * 60 * 60;
+const CAPABILITIES_TTL_SECONDS = 7 * 24 * 60 * 60;
 
 export type WebRtcNativeBridgeHandshakeRecord = {
   bridgeId: string;
@@ -14,6 +21,14 @@ export type WebRtcNativeBridgeHandshakeRecord = {
   platform: "expo" | "web" | "capacitor";
   appVersion?: string;
   createdAt: string;
+};
+
+export type WebRtcNativeBridgeCapabilitiesRecord = {
+  userId: string;
+  companyId: string;
+  rnWebRtcModule: RnWebRtcModuleStatus;
+  sfuMediaMode: NativeSfuMediaMode;
+  reportedAt: string;
 };
 
 @Injectable()
@@ -66,6 +81,77 @@ export class MessagingWebRtcNativeBridgeService {
 
   public async countHandshakes(): Promise<number> {
     return await this.redis.scard(this.globalSetKey());
+  }
+
+  public async reportCapabilities(
+    user: AuthenticatedUserContext,
+    input: {
+      rnWebRtcModule: RnWebRtcModuleStatus;
+      sfuMediaMode?: NativeSfuMediaMode;
+    },
+  ): Promise<WebRtcNativeBridgeCapabilitiesRecord> {
+    const record: WebRtcNativeBridgeCapabilitiesRecord = {
+      userId: user.userId,
+      companyId: user.companyId,
+      rnWebRtcModule: input.rnWebRtcModule,
+      sfuMediaMode: input.sfuMediaMode ?? "webview_embed",
+      reportedAt: new Date().toISOString(),
+    };
+    await this.redis.set(
+      this.capabilitiesKey(user.userId),
+      JSON.stringify(record),
+      "EX",
+      CAPABILITIES_TTL_SECONDS,
+    );
+    if (input.rnWebRtcModule === "linked_dev_client") {
+      await this.redis.incr(this.linkedModuleCounterKey());
+    }
+    return record;
+  }
+
+  public async getCapabilities(
+    user: AuthenticatedUserContext,
+  ): Promise<WebRtcNativeBridgeCapabilitiesRecord | null> {
+    const raw = await this.redis.get(this.capabilitiesKey(user.userId));
+    if (!raw) {
+      return null;
+    }
+    try {
+      return JSON.parse(raw) as WebRtcNativeBridgeCapabilitiesRecord;
+    } catch {
+      return null;
+    }
+  }
+
+  public resolveMediaModuleSnapshot(
+    record: WebRtcNativeBridgeCapabilitiesRecord | null,
+  ): MessagingWebRtcNativeMediaModuleSnapshot {
+    const base = defaultNativeMediaModuleSnapshot();
+    if (!record) {
+      return base;
+    }
+    return {
+      ...base,
+      rnWebRtcStatus: record.rnWebRtcModule,
+      sfuMediaMode: record.sfuMediaMode,
+    };
+  }
+
+  public async countLinkedDevClientReports(): Promise<number> {
+    const raw = await this.redis.get(this.linkedModuleCounterKey());
+    if (!raw) {
+      return 0;
+    }
+    const n = Number.parseInt(raw, 10);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  private capabilitiesKey(userId: string): string {
+    return `messaging:webrtc:native-bridge:capabilities:${userId}`;
+  }
+
+  private linkedModuleCounterKey(): string {
+    return "messaging:webrtc:native-bridge:rn-webrtc-linked-count";
   }
 
   private userKey(userId: string): string {

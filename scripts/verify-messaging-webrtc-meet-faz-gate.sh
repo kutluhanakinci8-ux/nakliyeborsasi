@@ -28,6 +28,7 @@ REQUIRED=(
   messaging_webrtc_meet_sfu_session_faz18
   messaging_webrtc_meet_sfu_embed_faz19
   messaging_webrtc_meet_native_rtc_faz20
+  messaging_webrtc_meet_native_module_faz21
 )
 
 payload="$(curl -fsS "${API_BASE}/messaging/status")"
@@ -53,4 +54,5 @@ API_BASE="${API_BASE}" bash "${ROOT}/scripts/verify-messaging-webrtc-meet-faz17-
 API_BASE="${API_BASE}" bash "${ROOT}/scripts/verify-messaging-webrtc-meet-faz18-sfu-session.sh"
 API_BASE="${API_BASE}" bash "${ROOT}/scripts/verify-messaging-webrtc-meet-faz19-sfu-embed.sh"
 API_BASE="${API_BASE}" bash "${ROOT}/scripts/verify-messaging-webrtc-meet-faz20-native-rtc.sh"
+API_BASE="${API_BASE}" bash "${ROOT}/scripts/verify-messaging-webrtc-meet-faz21-native-module.sh"
 echo "verify-messaging-webrtc-meet-faz-gate: PASS"

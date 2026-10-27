@@ -17,6 +17,7 @@ import { summarizeMessagingWebRtcMeetCapacity } from "./messagingWebRtcMeetCapac
 import { probeMessagingWebRtcSfuBackend } from "./messagingWebRtcSfuBackend";
 import { MessagingWebRtcNativeBridgeService } from "./MessagingWebRtcNativeBridgeService";
 import { PostMessagingWebRtcNativeBridgeHandshakeDto } from "./MessagingWebRtcNativeBridgeRequestDto";
+import { PostMessagingWebRtcNativeBridgeCapabilitiesDto } from "./MessagingWebRtcNativeBridgeCapabilitiesRequestDto";
 import {
   resolveMessagingWebRtcIceServers,
   summarizeMessagingWebRtcIceCaps,
@@ -96,6 +97,30 @@ export class MessagingWebRtcController {
       appVersion: body.appVersion,
     });
     return { ok: true, ...handshake };
+  }
+
+  @Get("native-bridge/capabilities")
+  public async getNativeBridgeCapabilities(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+  ) {
+    const record = await this.nativeBridgeService.getCapabilities(user);
+    const mediaModule =
+      this.nativeBridgeService.resolveMediaModuleSnapshot(record);
+    return { capabilities: record, mediaModule };
+  }
+
+  @Post("native-bridge/capabilities")
+  public async postNativeBridgeCapabilities(
+    @AuthenticatedUserParam() user: AuthenticatedUserContext,
+    @Body() body: PostMessagingWebRtcNativeBridgeCapabilitiesDto,
+  ) {
+    const record = await this.nativeBridgeService.reportCapabilities(user, {
+      rnWebRtcModule: body.rnWebRtcModule,
+      sfuMediaMode: body.sfuMediaMode,
+    });
+    const mediaModule =
+      this.nativeBridgeService.resolveMediaModuleSnapshot(record);
+    return { ok: true, capabilities: record, mediaModule };
   }
 
   @Get("capacity")

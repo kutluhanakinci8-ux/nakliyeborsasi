@@ -15,6 +15,6 @@ Status: `webrtc.nativeRtcBridge`
 
 Yerel `react-native-webrtc` modülü henüz yok; handoff tam Meet pilot web UI üzerinden.
 
-## Sonraki (Faz 21+)
+## Sonraki
 
-Gerçek RN WebRTC modülü veya entegre SFU medya akışı.
+Faz 21 capabilities — `WEBRTC-MEET-FAZ21.md`.

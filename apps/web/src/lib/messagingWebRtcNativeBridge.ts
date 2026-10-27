@@ -1,5 +1,13 @@
 import { PublicApiConfiguration } from "./PublicApiConfiguration";
 
+export type MessagingWebRtcNativeMediaModule = {
+  rnWebRtcTarget: "react_native_webrtc";
+  rnWebRtcStatus: "absent" | "linked_dev_client";
+  sfuMediaMode: "webview_embed" | "native_planned";
+  capabilitiesPath: string;
+  hintTr: string;
+};
+
 export type MessagingWebRtcNativeBridgeConfig = {
   enabled: true;
   mode: "expo_webview_handoff";
@@ -8,6 +16,13 @@ export type MessagingWebRtcNativeBridgeConfig = {
   sfuPilotInWebView: true;
   handshakePath: string;
   hintTr: string;
+  mediaModule: MessagingWebRtcNativeMediaModule;
+};
+
+export type MessagingWebRtcNativeBridgeCapabilities = {
+  rnWebRtcModule: "absent" | "linked_dev_client";
+  sfuMediaMode: "webview_embed" | "native_planned";
+  reportedAt: string;
 };
 
 function apiBase(): string {
@@ -28,4 +43,23 @@ export async function fetchMessagingWebRtcNativeBridgeConfig(
     config: MessagingWebRtcNativeBridgeConfig;
   };
   return body.config;
+}
+
+export async function fetchMessagingWebRtcNativeBridgeCapabilities(
+  accessToken: string,
+): Promise<{
+  capabilities: MessagingWebRtcNativeBridgeCapabilities | null;
+  mediaModule: MessagingWebRtcNativeMediaModule;
+}> {
+  const response = await fetch(
+    `${apiBase()}/messaging/webrtc/native-bridge/capabilities`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  );
+  if (!response.ok) {
+    throw new Error("native bridge capabilities");
+  }
+  return (await response.json()) as {
+    capabilities: MessagingWebRtcNativeBridgeCapabilities | null;
+    mediaModule: MessagingWebRtcNativeMediaModule;
+  };
 }
