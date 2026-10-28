@@ -866,14 +866,48 @@ footer {
 }
 
 .lerta-brand-logo--header {
-  height: 44px;
-  width: min(168px, 46vw);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  height: 56px;
+  min-width: 220px;
+  max-width: min(280px, 58vw);
+  padding: 8px 16px 8px 12px;
+  border-radius: 14px;
+  background: linear-gradient(155deg, #121214 0%, #050506 48%, #0a0a0c 100%);
+  border: 1px solid rgba(212, 175, 55, 0.52);
+  box-shadow:
+    0 4px 18px rgba(0, 0, 0, 0.22),
+    0 0 24px rgba(212, 175, 55, 0.12),
+    inset 0 1px 0 rgba(212, 175, 55, 0.15);
+}
+
+.lerta-brand-logo--header .lerta-brand-logo__video {
+  height: 42px;
+  width: auto;
+  max-width: 100%;
+  mix-blend-mode: normal;
+  filter: contrast(1.08) saturate(1.25) brightness(1.06);
 }
 
 .lerta-brand-logo--hero {
-  width: min(340px, 92vw);
+  width: min(380px, 94vw);
   aspect-ratio: 512 / 288;
-  max-height: 200px;
+  max-height: 220px;
+  padding: 12px 16px;
+  border-radius: 18px;
+  background: linear-gradient(155deg, #121214 0%, #050506 50%, #0a0a0c 100%);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.18),
+    0 0 32px rgba(212, 175, 55, 0.1);
+  box-sizing: border-box;
+}
+
+.lerta-brand-logo--hero .lerta-brand-logo__video {
+  mix-blend-mode: normal;
+  filter: contrast(1.06) saturate(1.2);
 }
 
 .lerta-brand-logo__video {
@@ -884,19 +918,18 @@ footer {
   vertical-align: middle;
 }
 
-/* MP4 yedek: koyu zemin → şeffaf (açık header / hero) */
-.lerta-brand-logo--header .lerta-brand-logo__video,
-.lerta-hero-brand .lerta-brand-logo__video {
-  mix-blend-mode: screen;
+.lerta-hero-brand .lerta-brand-logo--hero {
+  margin-bottom: 8px;
 }
 
 .lerta-brand--animated {
   gap: 0;
-  padding: 2px 0;
+  padding: 4px 0;
 }
 
 .platform-header .lerta-brand--animated {
   flex-shrink: 0;
+  margin-right: 4px;
 }
 
 .lerta-hero-brand__text {
@@ -910,9 +943,10 @@ footer {
 
 .lerta-hero-brand__tagline {
   margin: 0;
-  font-size: clamp(0.95rem, 2.5vw, 1.15rem);
-  color: var(--muted);
-  font-weight: 500;
+  font-size: clamp(1rem, 2.5vw, 1.2rem);
+  color: #1a1a1a;
+  font-weight: 600;
+  letter-spacing: 0.02em;
   opacity: 0;
   transform: translateY(10px);
   transition:
