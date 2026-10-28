@@ -873,11 +873,17 @@ footer {
   background: transparent;
 }
 
+.lerta-brand-logo-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 320px;
+}
+
 .lerta-svg-icon {
   width: 100%;
   height: auto;
   max-width: 320px;
-  filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.3));
 }
 
 .lerta-text {
@@ -899,8 +905,9 @@ footer {
   padding: 4px 0;
 }
 
+.lerta-logo-wrapper--header .lerta-brand-logo-img,
 .lerta-logo-wrapper--header .lerta-svg-icon {
-  max-width: 220px;
+  max-width: 200px;
 }
 
 .lerta-logo-wrapper--header .lerta-text {
