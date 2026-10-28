@@ -9,7 +9,7 @@ import { PricingSection } from "../PricingSection";
 
 export default function PostaProductPage() {
   return (
-    <MarketingPageShell contentClassName="platform-content--posta">
+    <MarketingPageShell contentClassName="platform-content--product-vitrin">
       <nav className="breadcrumb breadcrumb--premium" aria-label="Breadcrumb">
         <a href="/">Lerta</a>
         <span aria-hidden="true">/</span>

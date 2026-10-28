@@ -1,37 +1,26 @@
 import { MarketingPageShell } from "@/components/MarketingPageShell";
+import {
+  MesajChannelsSection,
+  MesajCtaBand,
+  MesajFeaturesSection,
+  MesajHeroSection,
+  MesajStepsSection,
+} from "@/components/MesajProductSections";
+
 export default function MesajProductPage() {
   return (
-    <MarketingPageShell>
-      <p className="breadcrumb">
-        <a href="/">Lerta</a> / Mesajlaşma
-      </p>
-      <section className="hero">
-        <p className="hero-eyebrow">Firma sohbeti</p>
-        <h1>Kurumsal mesajlaşma ve kanal köprüleri</h1>
-        <p className="lead">
-          Ekip içi sohbet, dosya paylaşımı, bildirimler ve entegrasyon API&apos;si.
-          WhatsApp ve Slack köprüleri ile müşteri iletişimini tek yerde toplayın.
-        </p>
-        <p className="hero-hint">
-          <strong>Giriş yap</strong> ve <strong>Sohbeti aç</strong> üst menüde —
-          nakliye veya lojistik arayüzü açılmaz; yalnızca Lerta Mesaj.
-        </p>
-      </section>
+    <MarketingPageShell contentClassName="platform-content--product-vitrin">
+      <nav className="breadcrumb breadcrumb--premium" aria-label="Breadcrumb">
+        <a href="/">Lerta</a>
+        <span aria-hidden="true">/</span>
+        <span>Mesajlaşma</span>
+      </nav>
 
-      <section className="grid">
-        <article className="card">
-          <h3>Gerçek zamanlı</h3>
-          <p>Okundu bilgisi, yazıyor göstergesi ve anlık bildirimler.</p>
-        </article>
-        <article className="card">
-          <h3>Denetim ve kayıt</h3>
-          <p>Denetlenebilir mesaj geçmişi ve saklama politikaları.</p>
-        </article>
-        <article className="card">
-          <h3>Entegrasyon</h3>
-          <p>Webhook, public API ve üçüncü taraf kanal köprüleri.</p>
-        </article>
-      </section>
+      <MesajHeroSection />
+      <MesajChannelsSection />
+      <MesajFeaturesSection />
+      <MesajStepsSection />
+      <MesajCtaBand />
     </MarketingPageShell>
   );
 }
