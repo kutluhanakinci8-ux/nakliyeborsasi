@@ -17,6 +17,3 @@ export const FOOTER_LEGAL_LINKS: FooterLegalLink[] = [
   { href: "/kullanim-sartlari", label: "Kullanım şartları", regions: ["global"] },
   { href: "/marka", label: "Ticari markalar", regions: ["global"] },
 ];
-
-export const FOOTER_LEGAL_NOTE =
-  "Hizmet bölgeleri genişledikçe yerel veri koruma metinleri (KVKK, GDPR vb.) bu alandan erişilebilir olacaktır.";

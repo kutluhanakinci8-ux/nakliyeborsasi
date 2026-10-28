@@ -1,9 +1,5 @@
 import Link from "next/link";
-import {
-  FOOTER_LEGAL_LINKS,
-  FOOTER_LEGAL_NOTE,
-  FOOTER_LOCALE_LABEL,
-} from "@/lib/marketingLegalFooter";
+import { FOOTER_LEGAL_LINKS, FOOTER_LOCALE_LABEL } from "@/lib/marketingLegalFooter";
 
 export function MarketingFooterLegalBar() {
   const year = new Date().getFullYear();
@@ -28,7 +24,6 @@ export function MarketingFooterLegalBar() {
       <p className="site-footer__legal-copy">
         © {year} Lerta · Posta ve Mesajlaşma
       </p>
-      <p className="site-footer__legal-note">{FOOTER_LEGAL_NOTE}</p>
     </div>
   );
 }
