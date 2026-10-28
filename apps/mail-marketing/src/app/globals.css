@@ -860,70 +860,65 @@ footer {
   display: none;
 }
 
-/* Kullanıcı SVG + Montserrat kaynak logo (şeffaf zemin, gölge yok) */
-.lerta-logo-mark {
+/* Kullanıcı kaynak HTML — .lerta-logo-wrapper / .lerta-svg-icon / .lerta-text */
+.lerta-logo-wrapper {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: transparent;
-  box-sizing: border-box;
-}
-
-.lerta-logo-mark__icon {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-
-.lerta-logo-mark__text {
-  font-family: var(--font-lerta-brand), "Montserrat", sans-serif;
-  font-weight: 400;
-  color: #d4af37;
-  text-transform: uppercase;
-  text-align: center;
-  line-height: 1;
-  margin: 0;
-}
-
-.lerta-logo-mark--header {
-  padding: 0;
-  max-width: min(504px, 85vw);
-}
-
-.lerta-logo-mark--header .lerta-logo-mark__icon {
-  max-width: 240px;
-}
-
-.lerta-logo-mark--header .lerta-logo-mark__text {
-  font-size: 26px;
-  letter-spacing: 7px;
-  margin-top: 8px;
-  padding-left: 7px;
-}
-
-.lerta-logo-mark--hero {
   width: 100%;
   max-width: 450px;
-  padding: 8px 0;
+  padding: 20px;
+  box-sizing: border-box;
+  background: transparent;
 }
 
-.lerta-logo-mark--hero .lerta-logo-mark__text {
-  font-size: clamp(36px, 8vw, 52px);
+.lerta-svg-icon {
+  width: 100%;
+  height: auto;
+  max-width: 320px;
+  filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.lerta-text {
+  font-family: var(--font-lerta-brand), "Montserrat", -apple-system,
+    BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 52px;
+  font-weight: 400;
+  color: #d4af37;
   letter-spacing: 14px;
   margin-top: 15px;
+  text-align: center;
   padding-left: 14px;
+  text-transform: uppercase;
+  line-height: 1;
 }
 
-.lerta-logo-mark--hero .lerta-logo-mark__icon {
-  max-width: 320px;
+.lerta-logo-wrapper--header {
+  max-width: min(504px, 85vw);
+  padding: 4px 0;
+}
+
+.lerta-logo-wrapper--header .lerta-svg-icon {
+  max-width: 220px;
+}
+
+.lerta-logo-wrapper--header .lerta-text {
+  font-size: 28px;
+  letter-spacing: 8px;
+  margin-top: 10px;
+  padding-left: 8px;
+}
+
+.lerta-logo-wrapper--hero {
+  margin: 0 auto;
 }
 
 .lerta-hero-brand__text {
   display: none;
 }
 
-.lerta-hero-brand .lerta-logo-mark--hero {
+.lerta-hero-brand .lerta-logo-wrapper--hero {
   margin-bottom: 8px;
 }
 

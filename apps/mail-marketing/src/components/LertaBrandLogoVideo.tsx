@@ -5,7 +5,7 @@ type Props = {
   className?: string;
 };
 
-/** Kullanıcı kaynak HTML — vektör kanat + LERTA, şeffaf zemin. */
+/** Birebir kullanıcı HTML kaynağı (.lerta-logo-wrapper). */
 export function LertaBrandLogoVideo({
   variant = "hero",
   className = "",
@@ -14,13 +14,13 @@ export function LertaBrandLogoVideo({
 
   return (
     <div
-      className={`lerta-logo-mark ${
-        isHeader ? "lerta-logo-mark--header" : "lerta-logo-mark--hero"
+      className={`lerta-logo-wrapper ${
+        isHeader ? "lerta-logo-wrapper--header" : "lerta-logo-wrapper--hero"
       } ${className}`.trim()}
       aria-hidden={isHeader}
     >
       <svg
-        className="lerta-logo-mark__icon"
+        className="lerta-svg-icon"
         viewBox="0 0 400 300"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
@@ -51,11 +51,9 @@ export function LertaBrandLogoVideo({
             strokeWidth={3.5}
           />
           <path d="M 185 145 A 18 18 0 0 1 188 172" strokeWidth={3.5} />
-          <path d="M 197 136 A 28 28 0 0 1 202 180" strokeWidth={3.5} />
-          <path d="M 210 126 A 40 40 0 0 1 217 188" strokeWidth={3.5} />
         </g>
       </svg>
-      <span className="lerta-logo-mark__text">LERTA</span>
+      <div className="lerta-text">LERTA</div>
     </div>
   );
 }
