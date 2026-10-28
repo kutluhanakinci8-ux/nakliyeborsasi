@@ -883,18 +883,12 @@ footer {
   min-width: 0;
 }
 
-.lerta-brand-logo--header .lerta-brand-logo__img-static,
-.lerta-brand-logo--header .lerta-brand-logo__video,
-.lerta-brand-logo--header .lerta-brand-logo__img-base,
-.lerta-brand-logo--header .lerta-brand-logo__img-fallback {
+.lerta-brand-logo--header .lerta-brand-logo__img-static {
   height: 112px;
   width: auto;
   max-width: min(504px, 85vw);
   object-fit: contain;
   display: block;
-  mix-blend-mode: normal;
-  filter: none;
-  background: transparent;
 }
 
 .lerta-brand-logo--hero {
@@ -910,19 +904,12 @@ footer {
   box-sizing: border-box;
 }
 
-.lerta-brand-logo--hero .lerta-brand-logo__img-static,
-.lerta-brand-logo--hero .lerta-brand-logo__video,
-.lerta-brand-logo--hero .lerta-brand-logo__img-base {
-  mix-blend-mode: normal;
-  filter: none;
-  background: transparent;
-  width: 100%;
+.lerta-brand-logo--hero .lerta-brand-logo__img-static {
+  width: min(400px, 94vw);
   height: auto;
-  max-height: 240px;
+  max-height: none;
   object-fit: contain;
   display: block;
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
 }
 
 .lerta-hero-brand__text {
