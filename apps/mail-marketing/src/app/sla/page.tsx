@@ -9,6 +9,30 @@ export const metadata: Metadata = {
     "Lerta Posta ve Mesaj hizmet düzeyi hedefleri: kullanılabilirlik, teslimat ve destek yanıt süreleri.",
 };
 
+const SUPPORT_TIERS = [
+  {
+    plan: "Pilot",
+    channels: "E-posta (destek@)",
+    firstResponse: "Hedef: 2 iş günü",
+    hours: "İş günleri 09:00–18:00 (TR)",
+    notes: "Self-servis: SSS, rehberler",
+  },
+  {
+    plan: "Kurumsal",
+    channels: "E-posta, telefon (aynı hat)",
+    firstResponse: "Hedef: 1 iş günü",
+    hours: "İş günleri 09:00–18:00 (TR)",
+    notes: "Panel ticket — yakında",
+  },
+  {
+    plan: "Enterprise",
+    channels: "Öncelikli e-posta, telefon",
+    firstResponse: "Hedef: 8 saat (iş günü, sözleşme)",
+    hours: "Genişletilmiş (sözleşmeye bağlı)",
+    notes: "satis@ ile onboarding",
+  },
+] as const;
+
 export default function SlaPage() {
   return (
     <MarketingPageShell
@@ -18,17 +42,44 @@ export default function SlaPage() {
       <nav className="breadcrumb breadcrumb--premium" aria-label="Breadcrumb">
         <Link href="/">Lerta</Link>
         <span aria-hidden="true">/</span>
-        <Link href="/guven">Güven & uyum</Link>
+        <Link href="/destek">Destek</Link>
         <span aria-hidden="true">/</span>
         <span>SLA</span>
       </nav>
 
       <h1 className="section-title section-title--lg">Hizmet düzeyi (SLA) — özet</h1>
       <p className="section-lead">
-        Lerta Posta ve Lerta Mesaj için hedeflenen kullanılabilirlik ve destek
-        süreleri. Kesin taahhütler kurumsal müşteri sözleşmesinde yer alır; bu
-        sayfa ön bilgilendirme amaçlıdır.
+        Lerta Posta ve Lerta Mesaj için hedeflenen kullanılabilirlik ve destek süreleri. Kesin
+        taahhütler kurumsal müşteri sözleşmesinde yer alır; bu sayfa ön bilgilendirme amaçlıdır.
       </p>
+
+      <h2 className="destek-section-title">Destek seviyeleri (plan)</h2>
+      <div className="destek-table-scroll">
+        <table className="sla-table sla-table--support-tiers">
+          <thead>
+            <tr>
+              <th scope="col">Plan</th>
+              <th scope="col">Kanallar</th>
+              <th scope="col">İlk yanıt hedefi</th>
+              <th scope="col">Saatler</th>
+              <th scope="col">Not</th>
+            </tr>
+          </thead>
+          <tbody>
+            {SUPPORT_TIERS.map((row) => (
+              <tr key={row.plan}>
+                <th scope="row">{row.plan}</th>
+                <td>{row.channels}</td>
+                <td>{row.firstResponse}</td>
+                <td>{row.hours}</td>
+                <td>{row.notes}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <h2 className="destek-section-title">Hizmet kullanılabilirliği</h2>
       <table className="sla-table">
         <thead>
           <tr>
@@ -59,7 +110,7 @@ export default function SlaPage() {
           </tr>
           <tr>
             <td>Destek (e-posta)</td>
-            <td>İş günü 24 saat içinde ilk yanıt</td>
+            <td>İş günü 24 saat içinde ilk yanıt (Kurumsal tablosu esas)</td>
           </tr>
           <tr>
             <td>Enterprise öncelikli destek</td>

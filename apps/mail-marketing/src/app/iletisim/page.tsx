@@ -1,53 +1,37 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { Suspense } from "react";
+import { ContactInquiryForm } from "@/components/ContactInquiryForm";
 import { MarketingPageShell } from "@/components/MarketingPageShell";
-import {
-  COMPANY_ADDRESS,
-  COMPANY_EMAIL,
-  COMPANY_PHONE_DISPLAY,
-  COMPANY_PHONE_TEL,
-  SALES_EMAIL,
-  SUPPORT_EMAIL,
-} from "@/lib/marketingSite";
-import { CONSOLE_URL } from "@/lib/marketingUrls";
 
 export const metadata: Metadata = {
-  title: "İletişim — Lerta Mail",
-  description: "Lerta Mail destek, satış ve ürün erişim bilgileri.",
+  title: "İletişim — Lerta",
+  description:
+    "Satış, teknik destek ve faturalama için iletişim formu; telefon ve e-posta kanalları.",
 };
 
 export default function ContactPage() {
   return (
-    <MarketingPageShell narrow>
-      <h1>İletişim</h1>
-      <ul>
-        <li>
-          Telefon:{" "}
-          <a href={`tel:${COMPANY_PHONE_TEL}`}>{COMPANY_PHONE_DISPLAY}</a>
-        </li>
-        <li>Adres: {COMPANY_ADDRESS}</li>
-        <li>
-          Genel:{" "}
-          <a href={`mailto:${COMPANY_EMAIL}`}>{COMPANY_EMAIL}</a>
-        </li>
-        <li>
-          Destek:{" "}
-          <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>
-        </li>
-        <li>
-          Kurumsal satış / Enterprise:{" "}
-          <a href={`mailto:${SALES_EMAIL}`}>{SALES_EMAIL}</a>
-        </li>
-        <li>
-          Yönetim konsolu:{" "}
-          <a href={CONSOLE_URL}>{CONSOLE_URL.replace(/^https?:\/\//, "")}</a>
-        </li>
-        <li>Webmail: posta.lerta.com.tr</li>
-      </ul>
-      <p style={{ color: "var(--muted)" }}>
-        Yanıt süresi hedefi: destek için iş günü 24 saat; Enterprise için iş
-        günü 8 saat (sözleşmeye bağlı). Acil kesinti bildirimi için /durum
-        sayfasını kontrol edin.
+    <MarketingPageShell
+      contentClassName="platform-content--product-vitrin platform-content--support-docs"
+    >
+      <nav className="breadcrumb breadcrumb--premium" aria-label="Breadcrumb">
+        <Link href="/">Lerta</Link>
+        <span aria-hidden="true">/</span>
+        <Link href="/destek">Destek</Link>
+        <span aria-hidden="true">/</span>
+        <span>İletişim</span>
+      </nav>
+
+      <h1 className="section-title section-title--lg">İletişim</h1>
+      <p className="pricing-lead">
+        Konuya göre yönlendirilmiş e-posta formu. Yanıt hedefi: teknik ve fatura için 1 iş günü;
+        Enterprise sözleşmesine göre öncelikli destek — <Link href="/sla">SLA özeti</Link>.
       </p>
+
+      <Suspense fallback={<p className="pricing-lead">Form yükleniyor…</p>}>
+        <ContactInquiryForm />
+      </Suspense>
     </MarketingPageShell>
   );
 }
