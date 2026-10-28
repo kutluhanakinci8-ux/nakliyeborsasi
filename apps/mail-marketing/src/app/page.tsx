@@ -23,16 +23,17 @@ export default function PlatformHomePage() {
 
       <section className="trust-strip trust-strip--premium" aria-labelledby="trust-heading">
         <div className="trust-strip__copy">
-          <h2 id="trust-heading">Güven ve şeffaflık</h2>
+          <h2 id="trust-heading">Güven & uyum</h2>
           <p>
-            SLA, durum sayfası ve iletişim kanalları her zaman erişilebilir.
+            Türkiye barındırma, SLA taahhütleri ve şeffaf destek kanalları — global
+            ölçekte kurumsal beklentilere uygun vitrin.
           </p>
         </div>
         <div className="trust-links">
-          <a href="/sss">Sık sorulan sorular</a>
-          <a href="/sla">Hizmet düzeyi (SLA)</a>
-          <a href="/durum">Canlı durum</a>
-          <a href="/iletisim">İletişim</a>
+          <a href="/guven">Güven merkezi</a>
+          <a href="/destek">Destek</a>
+          <a href="/sla">SLA</a>
+          <a href="/sss">SSS</a>
         </div>
       </section>
     </MarketingPageShell>

@@ -2482,6 +2482,107 @@ footer {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
+.platform-content--trust .trust-page__head {
+  margin-bottom: 2rem;
+}
+
+.platform-content--trust .trust-pillar-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 2.5rem;
+}
+
+.platform-content--trust .trust-pillar-card h3 {
+  font-family: var(--font-lerta-brand), "Montserrat", var(--lerta-font);
+  font-size: 1.0625rem;
+  font-weight: 650;
+  margin: 0 0 8px;
+}
+
+.platform-content--trust .trust-doc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.platform-content--trust .trust-doc-list a {
+  font-weight: 650;
+  color: var(--lerta-gold-deep);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(184, 148, 31, 0.35);
+}
+
+.platform-content--trust .trust-doc-list a:hover {
+  border-bottom-color: var(--lerta-gold-deep);
+}
+
+.platform-content--product-vitrin .destek-channel-grid {
+  margin-bottom: 2.5rem;
+}
+
+.platform-content--product-vitrin .destek-channel-card h3 {
+  font-family: var(--font-lerta-brand), "Montserrat", var(--lerta-font);
+  font-weight: 650;
+}
+
+.platform-content--product-vitrin .destek-channel-card__cta {
+  margin-top: 12px;
+}
+
+.platform-content--product-vitrin .destek-contact-strip {
+  padding: 28px 24px;
+  border-radius: var(--lerta-radius-card);
+  border: 1px solid var(--lerta-gold-border);
+  background: linear-gradient(
+    165deg,
+    rgba(252, 250, 244, 0.95) 0%,
+    rgba(255, 255, 255, 0.98) 100%
+  );
+}
+
+.platform-content--product-vitrin .destek-contact-list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 14px;
+}
+
+.platform-content--product-vitrin .destek-contact-label {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #9ca3af;
+  margin-bottom: 4px;
+}
+
+.platform-content--product-vitrin .mesaj-plans__grid .btn {
+  margin-top: 8px;
+}
+
+.legal-muted {
+  color: var(--lerta-muted);
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+.trust-strip--premium .trust-links a {
+  font-weight: 650;
+  letter-spacing: 0.04em;
+}
+
+@media (max-width: 720px) {
+  .platform-content--trust .trust-pillar-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 1024px) {
   .premium-hero,
   .posta-hero {

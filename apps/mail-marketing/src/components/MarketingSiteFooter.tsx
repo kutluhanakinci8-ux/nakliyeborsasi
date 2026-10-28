@@ -64,6 +64,12 @@ export function MarketingSiteFooter() {
           <h3 className="site-footer__col-title">Destek</h3>
           <ul className="site-footer__col-list">
             <li>
+              <Link href="/destek">Destek merkezi</Link>
+            </li>
+            <li>
+              <Link href="/guven">Güven & uyum</Link>
+            </li>
+            <li>
               <Link href="/sss">Sık sorulan sorular</Link>
             </li>
             <li>
