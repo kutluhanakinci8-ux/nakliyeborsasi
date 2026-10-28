@@ -874,17 +874,17 @@ footer {
   box-shadow: none;
   padding: 0;
   margin: 0;
-  height: 80px;
+  height: 112px;
   width: auto;
-  max-width: min(360px, 78vw);
+  max-width: min(504px, 85vw);
   min-width: 0;
 }
 
 .lerta-brand-logo--header .lerta-brand-logo__video,
 .lerta-brand-logo--header .lerta-brand-logo__img-fallback {
-  height: 80px;
+  height: 112px;
   width: auto;
-  max-width: min(360px, 78vw);
+  max-width: min(504px, 85vw);
   object-fit: contain;
   display: block;
   mix-blend-mode: normal;
