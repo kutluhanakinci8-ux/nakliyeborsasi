@@ -2883,6 +2883,180 @@ footer {
   }
 }
 
+.platform-content--support-docs .destek-section-title {
+  font-family: var(--font-lerta-brand), "Montserrat", var(--lerta-font);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--lerta-gold-deep);
+  margin: 2rem 0 1rem;
+}
+
+.platform-content--support-docs .destek-search__input {
+  width: 100%;
+  max-width: 560px;
+  padding: 14px 18px;
+  font-size: 1rem;
+  border-radius: 14px;
+  border: 1px solid var(--lerta-gold-border);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.platform-content--support-docs .destek-search__label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #9ca3af;
+  margin-bottom: 8px;
+}
+
+.sss-explorer__search {
+  margin-bottom: 1.25rem;
+}
+
+.sss-explorer__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.sss-explorer__tab {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--lerta-gold-border);
+  background: rgba(255, 255, 255, 0.9);
+  font-size: 0.8125rem;
+  font-weight: 650;
+  cursor: pointer;
+  color: #374151;
+}
+
+.sss-explorer__tab--active {
+  background: linear-gradient(
+    165deg,
+    rgba(184, 148, 31, 0.18) 0%,
+    rgba(252, 250, 244, 0.95) 100%
+  );
+  border-color: var(--lerta-gold-deep);
+  color: var(--lerta-gold-deep);
+}
+
+.sss-explorer__count {
+  font-size: 0.8125rem;
+  color: var(--lerta-muted);
+  margin: 0 0 8px;
+}
+
+.sss-explorer__empty {
+  padding: 16px;
+  color: var(--lerta-muted);
+}
+
+.sss-explorer__faq-cat {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--lerta-gold-deep);
+  margin-right: 10px;
+}
+
+.guide-index__group:first-of-type .destek-section-title {
+  margin-top: 1.5rem;
+}
+
+.guide-index__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.guide-index__card {
+  display: block;
+  padding: 18px 20px;
+  border-radius: var(--lerta-radius-card);
+  border: 1px solid var(--lerta-gold-border);
+  background: rgba(255, 255, 255, 0.94);
+  text-decoration: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.guide-index__card:hover {
+  border-color: var(--lerta-gold-deep);
+  box-shadow: 0 4px 16px rgba(184, 148, 31, 0.08);
+}
+
+.guide-index__card-title {
+  display: block;
+  font-weight: 700;
+  color: #1f2937;
+  font-family: var(--font-lerta-brand), "Montserrat", var(--lerta-font);
+}
+
+.guide-index__card-summary {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.9375rem;
+  color: var(--lerta-muted);
+  line-height: 1.45;
+}
+
+.guide-index__card-meta {
+  display: block;
+  margin-top: 8px;
+  font-size: 0.75rem;
+  font-weight: 650;
+  color: #9ca3af;
+}
+
+.guide-index__cat {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lerta-gold-deep);
+  margin: 0 0 8px;
+}
+
+.guide-index__meta {
+  font-size: 0.875rem;
+  color: var(--lerta-muted);
+  margin: -8px 0 1.5rem;
+}
+
+.guide-article__section h2 {
+  font-size: 1.1rem;
+  margin: 1.5rem 0 0.75rem;
+  font-family: var(--font-lerta-brand), "Montserrat", var(--lerta-font);
+}
+
+.guide-article__section p {
+  line-height: 1.65;
+  color: #374151;
+}
+
+.guide-article__section ul {
+  margin: 0.75rem 0 1rem;
+  padding-left: 1.25rem;
+  line-height: 1.6;
+  color: #374151;
+}
+
+.guide-article__help {
+  margin-top: 2rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(184, 148, 31, 0.15);
+  font-size: 0.9375rem;
+  color: var(--lerta-muted);
+}
+
 .platform-content--product-vitrin .mesaj-plans__grid .btn {
   margin-top: 8px;
 }

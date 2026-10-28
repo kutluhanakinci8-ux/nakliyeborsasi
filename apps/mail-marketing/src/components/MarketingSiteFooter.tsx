@@ -73,6 +73,9 @@ export function MarketingSiteFooter() {
               <Link href="/sss">Sık sorulan sorular</Link>
             </li>
             <li>
+              <Link href="/rehberler">Kurulum rehberleri</Link>
+            </li>
+            <li>
               <Link href="/sla">Hizmet düzeyi (SLA)</Link>
             </li>
             <li>
