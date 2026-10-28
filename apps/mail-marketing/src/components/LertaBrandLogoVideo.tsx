@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 
-const WEBM_SRC = "/brand/lerta-brand-transparent.webm";
-const MP4_SRC = "/brand/lerta-hero-animation.mp4";
-const PNG_SRC = "/brand/lerta-brand-header.png";
-const POSTER_SRC = "/brand/lerta-hero-poster.jpg";
+/** Bump when brand alpha assets are regenerated (cache bust on CDN/browser). */
+const BRAND_ASSET_REV = "4";
+
+const webmSrc = `/brand/lerta-brand-transparent.webm?v=${BRAND_ASSET_REV}`;
+const pngSrc = `/brand/lerta-brand-header.png?v=${BRAND_ASSET_REV}`;
+const posterSrc = `/brand/lerta-hero-poster.jpg?v=${BRAND_ASSET_REV}`;
 
 type Props = {
   variant?: "header" | "hero";
@@ -32,16 +34,16 @@ export function LertaBrandLogoVideo({
             muted
             playsInline
             preload="auto"
-            poster={PNG_SRC}
+            poster={pngSrc}
             aria-hidden
             onError={() => setHeaderVideoFailed(true)}
           >
-            <source src={WEBM_SRC} type="video/webm" />
+            <source src={webmSrc} type="video/webm" />
           </video>
         ) : (
           <img
             className="lerta-brand-logo__img-fallback"
-            src={PNG_SRC}
+            src={pngSrc}
             alt=""
             aria-hidden
             decoding="async"
@@ -62,11 +64,10 @@ export function LertaBrandLogoVideo({
         muted
         playsInline
         preload="auto"
-        poster={POSTER_SRC}
+        poster={posterSrc}
         aria-label="Lerta marka animasyonu"
       >
-        <source src={WEBM_SRC} type="video/webm" />
-        <source src={MP4_SRC} type="video/mp4" />
+        <source src={webmSrc} type="video/webm" />
       </video>
     </span>
   );
