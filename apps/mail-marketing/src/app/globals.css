@@ -1741,19 +1741,27 @@ footer {
   align-items: center;
   justify-content: center;
   width: 100%;
-  min-height: clamp(140px, 28vw, 280px);
-  padding: 8px 0;
+  height: 224px;
+  max-height: 224px;
+  padding: 0;
   line-height: 0;
   overflow: hidden;
 }
 
 .posta-cta-band__loop {
   width: 100%;
-  max-width: 960px;
-  height: auto;
+  height: 100%;
+  max-width: 100%;
   display: block;
-  object-fit: contain;
-  object-position: center;
+  object-fit: cover;
+  object-position: center center;
+}
+
+@media (max-width: 640px) {
+  .posta-cta-band__showcase-frame {
+    height: 200px;
+    max-height: 200px;
+  }
 }
 
 .pricing {
