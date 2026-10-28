@@ -52,16 +52,18 @@ export function PricingSection() {
   const corporateCheckoutHint = `${CONSOLE.replace(/\/$/, "")}/dashboard`;
 
   return (
-    <section className="pricing" id="fiyatlar">
-      <h2>Planlar</h2>
-      <p className="pricing-lead">
-        Fiyatlar API kataloğundan gelir. Kayıt{" "}
-        <strong>yonetim.lerta.com.tr</strong> üzerinden.
-      </p>
+    <section className="pricing pricing--posta" id="fiyatlar">
+      <div className="section-head section-head--center">
+        <h2 className="section-title section-title--lg">Planlar</h2>
+        <p className="section-lead section-lead--wide pricing-lead">
+          Fiyatlar API kataloğundan gelir. Kayıt{" "}
+          <strong>yonetim.lerta.com.tr</strong> üzerinden.
+        </p>
+      </div>
       {loading ? (
-        <p className="pricing-lead">Planlar yükleniyor…</p>
+        <p className="pricing-lead pricing-lead--status">Planlar yükleniyor…</p>
       ) : null}
-      {error ? <p style={{ color: "#f87171" }}>{error}</p> : null}
+      {error ? <p className="pricing-error">{error}</p> : null}
       <div className="pricing-grid">
         {plans.map((plan) => (
           <article
@@ -101,7 +103,7 @@ export function PricingSection() {
               ) : null}
             </ul>
             <a
-              className={`btn ${plan.recommended ? "btn-primary" : "btn-ghost"}`}
+              className={`btn ${plan.recommended ? "btn-primary posta-btn-primary" : "btn-ghost posta-btn-secondary"}`}
               href={
                 plan.customDomainAllowed
                   ? registerHref(plan.planCode)

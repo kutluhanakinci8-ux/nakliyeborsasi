@@ -1454,6 +1454,10 @@ footer {
   max-width: 40rem;
 }
 
+.section-head--center .section-lead {
+  margin-bottom: 0;
+}
+
 .section-title--lg {
   font-family: var(--lerta-font-display);
   font-size: clamp(1.75rem, 3.5vw, 2.35rem);
@@ -2134,6 +2138,310 @@ footer {
 .price-card.highlight {
   border-color: var(--lerta-blue);
   box-shadow: 0 12px 40px rgba(37, 99, 235, 0.15);
+}
+
+/* —— Posta product page: gold corporate identity (header/footer uyumlu) —— */
+
+.platform-main:has(.platform-content--posta) {
+  padding-top: 32px;
+}
+
+.platform-content--posta {
+  color: var(--lerta-text);
+}
+
+.platform-content--posta .breadcrumb--premium {
+  font-size: 0.75rem;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8a7a5c;
+  margin-bottom: 20px;
+}
+
+.platform-content--posta .breadcrumb--premium a {
+  color: #6b7280;
+  text-decoration: none;
+}
+
+.platform-content--posta .breadcrumb--premium a:hover {
+  color: var(--lerta-gold-deep);
+}
+
+.platform-content--posta .premium-gradient-text {
+  background: linear-gradient(
+    115deg,
+    #6b5420 0%,
+    var(--lerta-gold-deep) 38%,
+    var(--lerta-gold) 72%,
+    #e8c96a 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.platform-content--posta .premium-eyebrow--posta {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.6875rem;
+  font-weight: 650;
+  font-family: var(--font-lerta-brand), "Montserrat", var(--lerta-font);
+  padding: 7px 14px;
+  border-radius: var(--lerta-radius-pill);
+  border: 1px solid var(--lerta-gold-border);
+  background: var(--lerta-gold-soft);
+  color: #4a3d14;
+}
+
+.platform-content--posta .premium-icon {
+  color: var(--lerta-gold-deep);
+}
+
+.platform-content--posta .posta-hero__title {
+  font-family: var(--lerta-font-display);
+  font-weight: 600;
+  font-size: clamp(2.05rem, 4.2vw, 3.05rem);
+  max-width: 15ch;
+}
+
+.platform-content--posta .posta-hero__lead {
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  color: var(--lerta-muted);
+}
+
+.platform-content--posta .posta-hero__lead strong {
+  font-weight: 650;
+  color: var(--lerta-text);
+}
+
+.platform-content--posta .posta-hero__meta {
+  font-size: 0.875rem;
+}
+
+.platform-content--posta .posta-hero__meta a {
+  color: var(--lerta-gold-deep);
+  font-weight: 650;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(184, 148, 31, 0.35);
+}
+
+.platform-content--posta .posta-hero__meta a:hover {
+  border-bottom-color: var(--lerta-gold-deep);
+}
+
+.platform-content--posta .posta-btn-primary,
+.platform-content--posta .btn-primary.posta-btn-primary {
+  background: linear-gradient(
+    145deg,
+    #ecd592 0%,
+    var(--lerta-gold) 42%,
+    var(--lerta-gold-deep) 100%
+  );
+  color: #1a1508;
+  border: 1px solid rgba(184, 148, 31, 0.5);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    0 4px 16px rgba(212, 175, 55, 0.22);
+  font-family: var(--font-lerta-brand), "Montserrat", var(--lerta-font);
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+
+.platform-content--posta .posta-btn-primary:hover,
+.platform-content--posta .btn-primary.posta-btn-primary:hover {
+  background: linear-gradient(
+    145deg,
+    #f0dc9e 0%,
+    #e0c060 45%,
+    #a88218 100%
+  );
+  color: #1a1508;
+}
+
+.platform-content--posta .posta-btn-secondary,
+.platform-content--posta .btn-ghost.posta-btn-secondary {
+  border-color: var(--lerta-gold-border);
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--lerta-text);
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+
+.platform-content--posta .posta-btn-secondary:hover,
+.platform-content--posta .btn-ghost.posta-btn-secondary:hover {
+  border-color: var(--lerta-gold);
+  background: var(--lerta-gold-soft);
+  color: #3d3210;
+}
+
+.platform-content--posta .posta-stat {
+  border-color: var(--lerta-gold-border);
+  background: linear-gradient(
+    165deg,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(252, 248, 238, 0.92) 100%
+  );
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.platform-content--posta .posta-stat__value {
+  font-family: var(--font-lerta-brand), "Montserrat", var(--lerta-font);
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+  color: var(--lerta-gold-deep);
+}
+
+.platform-content--posta .posta-stat__label {
+  font-size: 0.6875rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #8a7a5c;
+}
+
+.platform-content--posta .section-head--center {
+  max-width: 44rem;
+}
+
+.platform-content--posta .section-title--lg {
+  margin: 0 0 12px;
+}
+
+.platform-content--posta .section-lead {
+  font-size: 1.0625rem;
+  line-height: 1.65;
+}
+
+.platform-content--posta .posta-section {
+  margin-top: 64px;
+}
+
+.platform-content--posta .posta-section--soft {
+  background: linear-gradient(
+    180deg,
+    rgba(252, 250, 244, 0.95) 0%,
+    var(--lerta-surface) 100%
+  );
+  border: 1px solid rgba(212, 175, 55, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.platform-content--posta .posta-feature-card {
+  border-color: var(--lerta-gold-border);
+  border-radius: var(--lerta-radius-card);
+  background: #fff;
+  box-shadow:
+    0 4px 20px rgba(26, 22, 71, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+.platform-content--posta .posta-feature-card:hover {
+  border-color: rgba(184, 148, 31, 0.45);
+  box-shadow: 0 14px 36px rgba(212, 175, 55, 0.12);
+}
+
+.platform-content--posta .posta-feature-card__icon {
+  background: var(--lerta-gold-soft);
+  border: 1px solid rgba(212, 175, 55, 0.18);
+}
+
+.platform-content--posta .posta-feature-card h3 {
+  font-family: var(--font-lerta-brand), "Montserrat", var(--lerta-font);
+  font-size: 1.0625rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  color: var(--lerta-text);
+}
+
+.platform-content--posta .posta-feature-card p {
+  font-size: 0.9375rem;
+}
+
+.platform-content--posta .posta-step {
+  border-color: var(--lerta-gold-border);
+  border-radius: var(--lerta-radius-card);
+  box-shadow: 0 4px 18px rgba(26, 22, 71, 0.04);
+}
+
+.platform-content--posta .posta-step__num {
+  font-family: var(--font-lerta-brand), "Montserrat", var(--lerta-font);
+  font-size: 1.625rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--lerta-gold-deep);
+}
+
+.platform-content--posta .posta-step h3 {
+  font-family: var(--font-lerta-brand), "Montserrat", var(--lerta-font);
+  font-weight: 650;
+  font-size: 1.0625rem;
+}
+
+.platform-content--posta .pricing--posta {
+  margin-top: 72px;
+}
+
+.platform-content--posta .pricing--posta .pricing-lead {
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.platform-content--posta .pricing-lead--status {
+  text-align: center;
+  color: var(--lerta-muted);
+  margin-bottom: 1.5rem;
+}
+
+.platform-content--posta .pricing-error {
+  text-align: center;
+  color: #b45309;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.platform-content--posta .pricing-grid {
+  gap: 20px;
+}
+
+.platform-content--posta .price-card {
+  border-color: var(--lerta-gold-border);
+  background: linear-gradient(
+    165deg,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(252, 248, 238, 0.55) 100%
+  );
+}
+
+.platform-content--posta .price-card.highlight {
+  border-color: var(--lerta-gold-deep);
+  box-shadow:
+    0 0 0 1px rgba(212, 175, 55, 0.35),
+    0 16px 44px rgba(212, 175, 55, 0.16);
+}
+
+.platform-content--posta .price-card h3 {
+  font-family: var(--font-lerta-brand), "Montserrat", var(--lerta-font);
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+
+.platform-content--posta .price {
+  font-family: var(--lerta-font-display);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.platform-content--posta .price-card ul {
+  font-size: 0.9rem;
+}
+
+.platform-content--posta .price-card a:not(.btn) {
+  color: var(--lerta-gold-deep);
+  font-weight: 650;
 }
 
 @media (max-width: 1024px) {
