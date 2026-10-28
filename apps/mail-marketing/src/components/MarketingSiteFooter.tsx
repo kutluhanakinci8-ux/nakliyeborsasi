@@ -6,7 +6,6 @@ import {
   COMPANY_PHONE_TEL,
 } from "@/lib/marketingSite";
 import {
-  CONSOLE_URL,
   CORPORATE_REGISTER,
   MAIL_WEB_URL,
   MESSAGING_APP_URL,
@@ -78,9 +77,6 @@ export function MarketingSiteFooter() {
             </li>
             <li>
               <Link href="/iletisim">İletişim formu</Link>
-            </li>
-            <li>
-              <a href={CONSOLE_URL}>Yönetim konsolu</a>
             </li>
             <li>
               <a href={`mailto:${COMPANY_EMAIL}`}>{COMPANY_EMAIL}</a>
