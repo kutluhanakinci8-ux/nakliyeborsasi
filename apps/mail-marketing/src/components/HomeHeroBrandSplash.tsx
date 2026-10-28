@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-const HERO_VIDEO_SRC = "/brand/lerta-hero-animation.mp4";
-const HERO_POSTER_SRC = "/brand/lerta-hero-poster.jpg";
+import { LertaBrandLogoVideo } from "./LertaBrandLogoVideo";
 
 const SLOGANS = [
   "%100 Yerli",
@@ -31,19 +29,7 @@ export function HomeHeroBrandSplash() {
 
   return (
     <div className="lerta-hero-brand" aria-label="Lerta marka tanıtımı">
-      <div className="lerta-hero-brand__logo-wrap">
-        <video
-          className="lerta-hero-brand__video"
-          src={HERO_VIDEO_SRC}
-          poster={HERO_POSTER_SRC}
-          autoPlay
-          loop
-          muted
-          playsInline
-          preload="auto"
-          aria-label="Lerta altın kanat logosu animasyonu"
-        />
-      </div>
+      <LertaBrandLogoVideo variant="hero" />
       <div className="lerta-hero-brand__text">
         <p
           className={
