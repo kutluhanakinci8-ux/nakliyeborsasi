@@ -16,13 +16,6 @@ import { MarketingFooterLegalBar } from "./MarketingFooterLegalBar";
 import { LertaBrandLogoVideo } from "./LertaBrandLogoVideo";
 import { MarketingSocialLinks } from "./MarketingSocialLinks";
 
-const TRUST_ITEMS = [
-  { value: "TR", label: "Veri Türkiye'de" },
-  { value: "99,9%", label: "Hedef SLA" },
-  { value: "DKIM", label: "İmzalı gönderim" },
-  { value: "PWA", label: "Mobil webmail" },
-] as const;
-
 export function MarketingSiteFooter() {
   const webmail = `${MAIL_WEB_URL.replace(/\/$/, "")}/login`;
 
@@ -34,9 +27,17 @@ export function MarketingSiteFooter() {
             <LertaBrandLogoVideo variant="footer" />
           </Link>
           <p className="site-footer__tagline">
-            Kurumsal posta ve firma mesajlaşması — Türkiye&apos;de barındırılan altyapı.
+            <span className="site-footer__tagline-main">
+              Kurumsal posta ve firma mesajlaşması
+            </span>
+            <span className="site-footer__tagline-sub">
+              Türkiye&apos;de barındırılan altyapı
+            </span>
           </p>
-          <MarketingSocialLinks />
+          <div className="site-footer__brand-actions">
+            <MarketingSocialLinks />
+            <MarketingAppStoreBadges />
+          </div>
         </div>
 
         <div className="site-footer__col">
@@ -101,18 +102,6 @@ export function MarketingSiteFooter() {
             </li>
           </ul>
         </div>
-      </div>
-
-      <div className="site-footer__promo-row">
-        <ul className="site-footer__trust site-footer__trust--row" aria-label="Güven göstergeleri">
-          {TRUST_ITEMS.map((item) => (
-            <li key={item.label} className="site-footer__trust-item">
-              <span className="site-footer__trust-value">{item.value}</span>
-              <span className="site-footer__trust-label">{item.label}</span>
-            </li>
-          ))}
-        </ul>
-        <MarketingAppStoreBadges />
       </div>
 
       <MarketingFooterLegalBar />
