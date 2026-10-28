@@ -15,7 +15,7 @@ export function MarketingPlatformHeader() {
   const ctas = ctasForProduct(productId);
 
   return (
-    <header className="platform-header">
+    <header className="platform-header platform-header--premium">
       <div className="platform-header-inner">
         <div className="platform-header-row">
           <Link
@@ -42,23 +42,29 @@ export function MarketingPlatformHeader() {
           </nav>
 
           <div className="platform-header-actions">
-            <Link className="platform-meta-link" href="/durum">Durum</Link>
-            <Link className="platform-meta-link" href="/posta#fiyatlar">
-              Fiyatlar
-            </Link>
-            {ctas.map((cta) => (
-              <a
-                key={`${cta.href}-${cta.label}`}
-                href={cta.href}
-                className={
-                  cta.variant === "primary"
-                    ? "btn btn-primary platform-cta"
-                    : "btn btn-ghost platform-cta"
-                }
-              >
-                {cta.label}
-              </a>
-            ))}
+            <div className="platform-header-actions__meta">
+              <Link className="platform-meta-link" href="/durum">
+                Durum
+              </Link>
+              <Link className="platform-meta-link" href="/posta#fiyatlar">
+                Fiyatlar
+              </Link>
+            </div>
+            <div className="platform-header-actions__ctas">
+              {ctas.map((cta) => (
+                <a
+                  key={`${cta.href}-${cta.label}`}
+                  href={cta.href}
+                  className={
+                    cta.variant === "primary"
+                      ? "btn btn-primary platform-cta"
+                      : "btn btn-ghost platform-cta"
+                  }
+                >
+                  {cta.label}
+                </a>
+              ))}
+            </div>
           </div>
         </div>
       </div>
