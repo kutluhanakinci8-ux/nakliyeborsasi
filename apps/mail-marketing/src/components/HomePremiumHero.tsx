@@ -2,6 +2,7 @@ import Link from "next/link";
 import { PLATFORM_REGISTER_HREF } from "@/lib/platformProducts";
 import { MAIL_WEB_URL } from "@/lib/marketingUrls";
 import { MarketingIcon } from "./MarketingIcons";
+import { HomeHeroBrandSplash } from "./HomeHeroBrandSplash";
 
 const webmail = `${MAIL_WEB_URL.replace(/\/$/, "")}/login`;
 
@@ -49,23 +50,8 @@ export function HomePremiumHero() {
           </li>
         </ul>
       </div>
-      <div className="premium-hero__visual" aria-hidden="true">
-        <div className="premium-mock premium-mock--posta">
-          <div className="premium-mock__chrome">
-            <span />
-            <span />
-            <span />
-          </div>
-          <div className="premium-mock__body">
-            <div className="premium-mock__sidebar" />
-            <div className="premium-mock__main">
-              <div className="premium-mock__line premium-mock__line--wide" />
-              <div className="premium-mock__line" />
-              <div className="premium-mock__line" />
-              <div className="premium-mock__card" />
-            </div>
-          </div>
-        </div>
+      <div className="premium-hero__visual">
+        <HomeHeroBrandSplash />
       </div>
     </section>
   );
