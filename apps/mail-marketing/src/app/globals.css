@@ -178,6 +178,46 @@ a {
   padding-top: 28px;
 }
 
+.site-footer--platform {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 20px;
+  padding-top: 36px;
+  padding-bottom: 8px;
+}
+
+.site-footer__logo {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+.site-footer__logo:hover {
+  opacity: 0.92;
+}
+
+.site-footer__copy {
+  margin: 0;
+  max-width: 36rem;
+  line-height: 1.5;
+}
+
+.site-footer__links {
+  flex-wrap: wrap;
+  justify-content: center;
+  row-gap: 12px;
+}
+
+.lerta-logo-wrapper--footer {
+  max-width: min(280px, 72vw);
+  padding: 0;
+}
+
+.lerta-logo-wrapper--footer .lerta-brand-logo-img {
+  max-width: 240px;
+}
+
 .brand {
   display: inline-flex;
   align-items: center;
