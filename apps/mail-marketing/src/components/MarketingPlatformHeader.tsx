@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { LertaBrandLogoVideo } from "./LertaBrandLogoVideo";
 import {
   PRODUCT_TABS,
   ctasForProduct,
@@ -17,9 +18,12 @@ export function MarketingPlatformHeader() {
     <header className="platform-header">
       <div className="platform-header-inner">
         <div className="platform-header-row">
-          <Link href="/" className="brand lerta-brand" aria-label="Lerta platform">
-            <span className="brand-mark lerta-brand-mark" aria-hidden="true">L</span>
-            <span>Lerta</span>
+          <Link
+            href="/"
+            className="brand lerta-brand lerta-brand--animated"
+            aria-label="Lerta ana sayfa"
+          >
+            <LertaBrandLogoVideo variant="header" />
           </Link>
 
           <nav className="platform-product-nav" aria-label="Ürünler">
