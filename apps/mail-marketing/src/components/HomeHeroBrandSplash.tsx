@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 
+const HERO_VIDEO_SRC = "/brand/lerta-hero-animation.mp4";
+const HERO_POSTER_SRC = "/brand/lerta-hero-poster.jpg";
+
 const SLOGANS = [
   "%100 Yerli",
   "Yeni Neslin Haberleşme Sistemi",
@@ -27,19 +30,21 @@ export function HomeHeroBrandSplash() {
   }, []);
 
   return (
-    <div
-      className="lerta-hero-brand"
-      aria-labelledby="lerta-hero-brand-title"
-    >
+    <div className="lerta-hero-brand" aria-label="Lerta marka tanıtımı">
       <div className="lerta-hero-brand__logo-wrap">
-        <span className="lerta-hero-brand__logo-mark" aria-hidden="true">
-          L
-        </span>
+        <video
+          className="lerta-hero-brand__video"
+          src={HERO_VIDEO_SRC}
+          poster={HERO_POSTER_SRC}
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="auto"
+          aria-label="Lerta altın kanat logosu animasyonu"
+        />
       </div>
       <div className="lerta-hero-brand__text">
-        <p id="lerta-hero-brand-title" className="lerta-hero-brand__wordmark">
-          Lerta
-        </p>
         <p
           className={
             visible
