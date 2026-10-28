@@ -13,6 +13,7 @@ import {
   PILOT_REGISTER,
 } from "@/lib/marketingUrls";
 import { MarketingAppStoreBadges } from "./MarketingAppStoreBadges";
+import { MarketingFooterLegalBar } from "./MarketingFooterLegalBar";
 import { LertaBrandLogoVideo } from "./LertaBrandLogoVideo";
 import { MarketingSocialLinks } from "./MarketingSocialLinks";
 
@@ -24,7 +25,6 @@ const TRUST_ITEMS = [
 ] as const;
 
 export function MarketingSiteFooter() {
-  const year = new Date().getFullYear();
   const webmail = `${MAIL_WEB_URL.replace(/\/$/, "")}/login`;
 
   return (
@@ -38,15 +38,6 @@ export function MarketingSiteFooter() {
             Kurumsal posta ve firma mesajlaşması — Türkiye&apos;de barındırılan altyapı.
           </p>
           <MarketingSocialLinks />
-          <MarketingAppStoreBadges />
-          <ul className="site-footer__trust" aria-label="Güven göstergeleri">
-            {TRUST_ITEMS.map((item) => (
-              <li key={item.label} className="site-footer__trust-item">
-                <span className="site-footer__trust-value">{item.value}</span>
-                <span className="site-footer__trust-label">{item.label}</span>
-              </li>
-            ))}
-          </ul>
         </div>
 
         <div className="site-footer__col">
@@ -116,13 +107,19 @@ export function MarketingSiteFooter() {
         </div>
       </div>
 
-      <div className="site-footer__bottom">
-        <p className="site-footer__copy">
-          <span className="site-footer__copy-mark">© {year}</span>{" "}
-          <span className="site-footer__copy-brand">Lerta</span> · Posta ve Mesajlaşma
-          — Türkiye&apos;de barındırılan kurumsal platform
-        </p>
+      <div className="site-footer__promo-row">
+        <ul className="site-footer__trust site-footer__trust--row" aria-label="Güven göstergeleri">
+          {TRUST_ITEMS.map((item) => (
+            <li key={item.label} className="site-footer__trust-item">
+              <span className="site-footer__trust-value">{item.value}</span>
+              <span className="site-footer__trust-label">{item.label}</span>
+            </li>
+          ))}
+        </ul>
+        <MarketingAppStoreBadges />
       </div>
+
+      <MarketingFooterLegalBar />
     </footer>
   );
 }
