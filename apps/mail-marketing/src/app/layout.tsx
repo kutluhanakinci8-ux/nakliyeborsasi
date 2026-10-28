@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DM_Sans, Fraunces } from "next/font/google";
+import { DM_Sans, Fraunces, Montserrat } from "next/font/google";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -11,6 +11,13 @@ const dmSans = DM_Sans({
 const fraunces = Fraunces({
   subsets: ["latin", "latin-ext"],
   variable: "--font-fraunces",
+  display: "swap",
+});
+
+const montserratBrand = Montserrat({
+  subsets: ["latin", "latin-ext"],
+  weight: ["400", "500", "600"],
+  variable: "--font-lerta-brand",
   display: "swap",
 });
 
@@ -26,7 +33,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="tr" className={`${dmSans.variable} ${fraunces.variable}`}>
+    <html
+      lang="tr"
+      className={`${dmSans.variable} ${fraunces.variable} ${montserratBrand.variable}`}
+    >
       <body>{children}</body>
     </html>
   );
