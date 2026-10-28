@@ -1609,6 +1609,32 @@ footer {
   font-weight: 600;
 }
 
+.posta-hero__panel {
+  width: 100%;
+  min-width: 0;
+}
+
+.posta-hero__showcase {
+  width: 100%;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid var(--lerta-gold-border);
+  background: linear-gradient(180deg, #0c0e18 0%, #0a0c14 100%);
+  line-height: 0;
+  box-shadow:
+    0 10px 32px rgba(26, 22, 71, 0.1),
+    inset 0 1px 0 rgba(212, 175, 55, 0.1);
+}
+
+.posta-hero__loop {
+  width: 100%;
+  height: auto;
+  display: block;
+  aspect-ratio: 360 / 202;
+  object-fit: cover;
+  object-position: center;
+}
+
 .posta-section {
   margin-top: 56px;
 }

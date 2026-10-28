@@ -42,7 +42,7 @@ export function PostaHeroSection() {
           <a href={POSTA_CONSOLE}>yonetim.lerta.com.tr</a>
         </p>
       </div>
-      <div className="posta-hero__panel" aria-hidden="true">
+      <div className="posta-hero__panel">
         <div className="posta-stats">
           {POSTA_HERO_STATS.map((s) => (
             <div key={s.label} className="posta-stat">
@@ -51,21 +51,16 @@ export function PostaHeroSection() {
             </div>
           ))}
         </div>
-        <div className="premium-mock premium-mock--posta premium-mock--large">
-          <div className="premium-mock__chrome">
-            <span />
-            <span />
-            <span />
-          </div>
-          <div className="premium-mock__body">
-            <div className="premium-mock__sidebar" />
-            <div className="premium-mock__main">
-              <div className="premium-mock__line premium-mock__line--wide" />
-              <div className="premium-mock__line" />
-              <div className="premium-mock__line premium-mock__line--accent" />
-              <div className="premium-mock__card premium-mock__card--highlight" />
-            </div>
-          </div>
+        <div className="posta-hero__showcase" aria-hidden="true">
+          <img
+            className="posta-hero__loop"
+            src="/brand/lerta-falcon-hero-loop.gif?v=1"
+            width={360}
+            height={202}
+            alt=""
+            decoding="async"
+            draggable={false}
+          />
         </div>
       </div>
     </section>
