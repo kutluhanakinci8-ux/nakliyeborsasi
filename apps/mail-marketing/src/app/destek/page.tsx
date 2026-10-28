@@ -42,9 +42,15 @@ const QUICK_PATHS = [
 const SELF_SERVICE = [
   {
     title: "Sık sorulan sorular",
-    body: "Domain, DNS, planlar, faturalama ve güvenlik.",
+    body: "Domain, DNS, planlar, faturalama ve güvenlik — kategorili SSS.",
     href: "/sss",
     cta: "SSS'ye git",
+  },
+  {
+    title: "Kurulum rehberleri",
+    body: "DNS, webmail, istemci, mesaj girişi ve faturalama adımları.",
+    href: "/rehberler",
+    cta: "Rehberlere git",
   },
   {
     title: "İletişim formu",
@@ -75,7 +81,7 @@ const SELF_SERVICE = [
 const SUPPORT_CHANNELS = [
   {
     channel: "Self-servis",
-    scope: "SSS, SLA, durum, güven",
+    scope: "SSS, rehberler, SLA, durum, güven",
     hours: "7/24",
     response: "Anında",
   },
@@ -244,12 +250,6 @@ export default function DestekPage() {
             </article>
           ))}
         </div>
-        <p className="destek-rehber-teaser">
-          Adım adım kurulum rehberleri (DNS, e-posta istemcisi, mesaj) —{" "}
-          <strong>yakında</strong> vitrinde <Link href="/sss">SSS</Link> ile birlikte{" "}
-          <code>/rehberler</code> indeksinde; uzun vadede{" "}
-          <code>destek.lerta.com.tr</code> bilgi bankası.
-        </p>
       </section>
 
       <section className="destek-channels-table-wrap" aria-labelledby="destek-channels-title">

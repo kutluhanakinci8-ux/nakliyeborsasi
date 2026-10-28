@@ -1,4 +1,5 @@
 import { MARKETING_FAQ_ACTIVE } from "./marketingFaq";
+import { MARKETING_GUIDES } from "./marketingGuides";
 
 export type SupportSearchHit = {
   id: string;
@@ -7,7 +8,7 @@ export type SupportSearchHit = {
   href: string;
 };
 
-/** Destek hub araması — SSS + sabit rehber hedefleri (Faz 2'de genişler). */
+/** Destek hub araması — SSS + rehberler + sabit sayfalar. */
 export const SUPPORT_SEARCH_INDEX: SupportSearchHit[] = [
   ...MARKETING_FAQ_ACTIVE.map((item, i) => ({
     id: `faq-${i}`,
@@ -15,17 +16,17 @@ export const SUPPORT_SEARCH_INDEX: SupportSearchHit[] = [
     excerpt: item.a,
     href: "/sss",
   })),
+  ...MARKETING_GUIDES.map((g) => ({
+    id: `guide-${g.slug}`,
+    title: g.title,
+    excerpt: g.summary,
+    href: `/rehberler/${g.slug}`,
+  })),
   {
-    id: "guide-dns",
-    title: "DNS ve domain doğrulama",
-    excerpt: "MX, SPF, DKIM, DMARC kayıtları ve yönetim konsolu doğrulama adımları.",
-    href: "/sss",
-  },
-  {
-    id: "guide-webmail",
-    title: "Webmail girişi",
-    excerpt: "posta.lerta.com.tr üzerinden kurumsal posta kutusu.",
-    href: "/sss",
+    id: "guides-index",
+    title: "Kurulum rehberleri",
+    excerpt: "DNS, webmail, istemci, mesaj, faturalama ve güvenlik rehberleri.",
+    href: "/rehberler",
   },
   {
     id: "sla",
