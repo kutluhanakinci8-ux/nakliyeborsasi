@@ -13,6 +13,8 @@ export function LertaBrandLogoVideo({
   variant = "hero",
   className = "",
 }: Props) {
+  const isHeader = variant === "header";
+
   return (
     <span
       className={`lerta-brand-logo lerta-brand-logo--${variant} ${className}`.trim()}
@@ -25,11 +27,16 @@ export function LertaBrandLogoVideo({
         playsInline
         preload="auto"
         poster={POSTER_SRC}
-        aria-hidden={variant === "header"}
-        aria-label={variant === "hero" ? "Lerta marka animasyonu" : undefined}
+        aria-hidden={isHeader}
+        aria-label={isHeader ? undefined : "Lerta marka animasyonu"}
+        {...(isHeader ? { src: MP4_SRC } : {})}
       >
-        <source src={WEBM_SRC} type="video/webm" />
-        <source src={MP4_SRC} type="video/mp4" />
+        {!isHeader ? (
+          <>
+            <source src={WEBM_SRC} type="video/webm" />
+            <source src={MP4_SRC} type="video/mp4" />
+          </>
+        ) : null}
       </video>
     </span>
   );
