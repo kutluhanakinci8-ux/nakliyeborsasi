@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
 import { MarketingPageShell } from "@/components/MarketingPageShell";
-import { SALES_EMAIL, SUPPORT_EMAIL } from "@/lib/marketingSite";
+import {
+  COMPANY_ADDRESS,
+  COMPANY_EMAIL,
+  COMPANY_PHONE_DISPLAY,
+  COMPANY_PHONE_TEL,
+  SALES_EMAIL,
+  SUPPORT_EMAIL,
+} from "@/lib/marketingSite";
 import { CONSOLE_URL } from "@/lib/marketingUrls";
 
 export const metadata: Metadata = {
@@ -13,6 +20,15 @@ export default function ContactPage() {
     <MarketingPageShell narrow>
       <h1>İletişim</h1>
       <ul>
+        <li>
+          Telefon:{" "}
+          <a href={`tel:${COMPANY_PHONE_TEL}`}>{COMPANY_PHONE_DISPLAY}</a>
+        </li>
+        <li>Adres: {COMPANY_ADDRESS}</li>
+        <li>
+          Genel:{" "}
+          <a href={`mailto:${COMPANY_EMAIL}`}>{COMPANY_EMAIL}</a>
+        </li>
         <li>
           Destek:{" "}
           <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>
