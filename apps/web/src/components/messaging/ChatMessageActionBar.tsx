@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   IconCheck,
+  IconCopy,
   IconEye,
   IconLanguages,
   IconPencil,
@@ -10,6 +11,9 @@ import {
   IconTrash,
   IconX,
 } from "./ChatUiIcons";
+import {
+  copyTextToClipboard,
+} from "../../lib/messagingMessageCopy";
 import {
   operationStampLabel,
   type MessagingOperationStampType,
@@ -34,6 +38,9 @@ type ChatMessageActionBarProps = {
   onTranslate: (target: string) => void;
   onEdit: () => void;
   onDelete?: () => void;
+  /** Panoya kopyalanacak düz metin; yoksa düğme kapalı. */
+  copyText?: string | null;
+  onCopyError?: (message: string) => void;
 };
 
 export function ChatMessageActionBar({
@@ -47,9 +54,13 @@ export function ChatMessageActionBar({
   onTranslate,
   onEdit,
   onDelete,
+  copyText,
+  onCopyError,
 }: ChatMessageActionBarProps) {
   const [translateOpen, setTranslateOpen] = useState(false);
+  const [copyDone, setCopyDone] = useState(false);
   const translateRef = useRef<HTMLDivElement>(null);
+  const copyable = Boolean(copyText?.trim()) && !deleted;
 
   useEffect(() => {
     if (!translateOpen) {
@@ -69,6 +80,20 @@ export function ChatMessageActionBar({
 
   const showCounterpartyActions = !isMine && !deleted && !isInternal;
   const showOwnerActions = isMine && !deleted;
+
+  async function handleCopy(): Promise<void> {
+    const text = copyText?.trim();
+    if (!text) {
+      return;
+    }
+    try {
+      await copyTextToClipboard(text);
+      setCopyDone(true);
+      window.setTimeout(() => setCopyDone(false), 2000);
+    } catch {
+      onCopyError?.("Mesaj panoya kopyalanamadı.");
+    }
+  }
 
   return (
     <div
@@ -107,6 +132,21 @@ export function ChatMessageActionBar({
             ))}
           </div>
         </>
+      ) : null}
+      {copyable ? (
+        <button
+          type="button"
+          className={
+            copyDone
+              ? "chat-icon-btn chat-icon-btn--copy-done"
+              : "chat-icon-btn"
+          }
+          aria-label={copyDone ? "Kopyalandı" : "Metni kopyala"}
+          title={copyDone ? "Kopyalandı" : "Metni kopyala"}
+          onClick={() => void handleCopy()}
+        >
+          <IconCopy size={16} />
+        </button>
       ) : null}
       <div className="chat-translate-anchor" ref={translateRef}>
         <button
