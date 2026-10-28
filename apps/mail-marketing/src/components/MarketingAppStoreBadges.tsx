@@ -1,22 +1,24 @@
 "use client";
 
+import type { ReactNode } from "react";
+
 const PLAY = process.env.NEXT_PUBLIC_GOOGLE_PLAY_URL ?? "#";
 const APP_STORE = process.env.NEXT_PUBLIC_APP_STORE_URL ?? "#";
 
-function StoreIconLink({
+function StoreBadgeLink({
   href,
   label,
   children,
 }: {
   href: string;
   label: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   const pending = href === "#" || href === "";
   return (
     <a
       href={href}
-      className={`site-footer__store-icon${pending ? " is-pending" : ""}`}
+      className={`site-footer__store-badge${pending ? " is-pending" : ""}`}
       aria-label={label}
       title={pending ? `${label} — yakında` : label}
       target={pending ? undefined : "_blank"}
@@ -34,27 +36,39 @@ function StoreIconLink({
   );
 }
 
-/** Yalnızca mağaza ikonları — koyu zemin yok. */
+/** Açık zemin, altın çerçeve — koyu blok yok; net ikon + tipografi. */
 export function MarketingAppStoreBadges() {
   return (
     <div className="site-footer__stores" aria-label="Mobil uygulama mağazaları">
-      <StoreIconLink href={PLAY} label="Google Play'den indir">
-        <svg viewBox="0 0 40 40" width={40} height={40} aria-hidden>
-          <path d="M8 6.5 28 20 8 33.5V6.5z" fill="#34A853" />
-          <path d="M8 6.5 28 20 33 16 8 6.5z" fill="#FBBC04" />
-          <path d="M8 33.5 28 20 33 24 8 33.5z" fill="#EA4335" />
-          <path d="M33 16 28 20 33 24 36 20 33 16z" fill="#4285F4" />
-        </svg>
-      </StoreIconLink>
-      <StoreIconLink href={APP_STORE} label="App Store'dan indir">
-        <svg viewBox="0 0 40 40" width={40} height={40} aria-hidden>
-          <path
-            d="M26.2 6.5c.2 1.3-.4 2.6-1.1 3.5-.9 1.1-2.4 2-3.8 1.9-.2-1.2.5-2.5 1.1-3.3 1-1.1 2.6-2 3.8-2.1zm1.2 5.2c2.1-.2 3.9 1.2 4.8 1.2.9 0 2.6-1.1 4.3-1 .8 0 2.9.3 4.2 2.4-.1.1-2.5 1.5-2.5 4.4 0 3.4 3 4.6 3 4.6s0 .1-.1.2c-.5 1.5-2 2.5-3.4 2.5-1.1 0-1.9-.7-3.1-.7-1.2 0-2 .7-3.2.7-1.4 0-2.6-1-3.3-2.5-1.1-2.1-2-5.3-.9-7.6.8-1.6 2.3-2.6 3.9-2.6z"
-            fill="currentColor"
-            transform="translate(-4 4) scale(0.88)"
-          />
-        </svg>
-      </StoreIconLink>
+      <StoreBadgeLink href={PLAY} label="Google Play'den indir">
+        <span className="site-footer__store-badge-icon" aria-hidden>
+          <svg viewBox="0 0 24 24" width={32} height={32} aria-hidden>
+            <path d="M3 4.5 14.5 12 3 19.5V4.5z" fill="#34A853" />
+            <path d="M3 4.5 14.5 12 17.5 9.5 3 4.5z" fill="#FBBC04" />
+            <path d="M3 19.5 14.5 12 17.5 14.5 3 19.5z" fill="#EA4335" />
+            <path d="M17.5 9.5 14.5 12 17.5 14.5 20 12 17.5 9.5z" fill="#4285F4" />
+          </svg>
+        </span>
+        <span className="site-footer__store-badge-text">
+          <span className="site-footer__store-badge-eyebrow">İndir</span>
+          <span className="site-footer__store-badge-title">Google Play</span>
+        </span>
+      </StoreBadgeLink>
+      <StoreBadgeLink href={APP_STORE} label="App Store'dan indir">
+        <span className="site-footer__store-badge-icon site-footer__store-badge-icon--apple" aria-hidden>
+          <svg viewBox="0 0 24 24" width={30} height={30} aria-hidden>
+            <path
+              fill="currentColor"
+              d="M17.05 3.28c-.03 1.78-1.3 3.32-2.65 4.26-1.02.78-2.78 1.38-4.2 1.42-.08-1.62.58-3.28 1.35-4.32C12.55 3.62 14.58 2.82 17.05 3.28zm.95 6.02c2.62-.12 4.85 1.48 6.08 1.48 1.22 0 3.35-1.35 5.62-1.28 1.08.02 3.75.38 5.52 2.88-.14.1-3.3 1.92-3.28 5.72.02 4.28 3.72 5.72 3.78 5.75-.04.12-.58 1.98-1.92 3.32-1.15 1.18-2.38 2.35-4.28 2.35-1.42 0-1.85-.92-3.45-.92-1.62 0-2.08.9-3.48.92-2.22.04-3.92-2.28-5.05-4.45-2.72-5.02-3.02-10.92-1.35-14.05 1.18-2.35 3.25-3.82 5.52-3.85 2.15-.03 4.18 1.42 5.18 1.42.98 0 3.15-1.75 5.32-1.48z"
+              transform="scale(0.52) translate(2 4)"
+            />
+          </svg>
+        </span>
+        <span className="site-footer__store-badge-text">
+          <span className="site-footer__store-badge-eyebrow">İndir</span>
+          <span className="site-footer__store-badge-title">App Store</span>
+        </span>
+      </StoreBadgeLink>
     </div>
   );
 }
