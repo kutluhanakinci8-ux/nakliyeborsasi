@@ -16,6 +16,7 @@ import {
   groupParticipantRoleLabel,
   operationStampLabel,
 } from "../../lib/messagingChatUi";
+import { buildCopyableMessageText } from "../../lib/messagingMessageCopy";
 import {
   MESSAGING_ATTACHMENT_MAX_COUNT,
   messagingAttachmentAttachTitle,
@@ -656,6 +657,13 @@ export function MessagingConversationPanel({
                               ? undefined
                               : () => setDeleteMessageId(message.id)
                           }
+                          copyText={buildCopyableMessageText({
+                            bodyText: message.bodyText,
+                            deleted: message.deleted,
+                            attachments: message.attachments,
+                            translationOverlay: translations[message.id],
+                          })}
+                          onCopyError={(msg) => setErrorMessage(msg)}
                         />
                             </div>
                           </div>

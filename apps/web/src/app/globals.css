@@ -6465,6 +6465,10 @@ button.btn-secondary {
   color: #0369a1;
 }
 
+.chat-icon-btn--copy-done {
+  color: #0d9488;
+}
+
 .chat-translate-anchor {
   position: relative;
 }
