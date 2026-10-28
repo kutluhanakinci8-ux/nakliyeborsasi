@@ -1,7 +1,10 @@
 "use client";
 
+import { useState } from "react";
+
 const WEBM_SRC = "/brand/lerta-brand-transparent.webm";
 const MP4_SRC = "/brand/lerta-hero-animation.mp4";
+const PNG_SRC = "/brand/lerta-brand-header.png";
 const POSTER_SRC = "/brand/lerta-hero-poster.jpg";
 
 type Props = {
@@ -15,28 +18,55 @@ export function LertaBrandLogoVideo({
 }: Props) {
   const isHeader = variant === "header";
 
+  if (isHeader) {
+    const [videoFailed, setVideoFailed] = useState(false);
+    return (
+      <span
+        className={`lerta-brand-logo lerta-brand-logo--header ${className}`.trim()}
+      >
+        {!videoFailed ? (
+          <video
+            className="lerta-brand-logo__video lerta-brand-logo__video--alpha"
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="auto"
+            poster={PNG_SRC}
+            aria-hidden
+            onError={() => setVideoFailed(true)}
+          >
+            <source src={WEBM_SRC} type="video/webm" />
+          </video>
+        ) : (
+          <img
+            className="lerta-brand-logo__img-fallback"
+            src={PNG_SRC}
+            alt=""
+            aria-hidden
+            decoding="async"
+          />
+        )}
+      </span>
+    );
+  }
+
   return (
     <span
-      className={`lerta-brand-logo lerta-brand-logo--${variant} ${className}`.trim()}
+      className={`lerta-brand-logo lerta-brand-logo--hero ${className}`.trim()}
     >
       <video
-        className="lerta-brand-logo__video"
+        className="lerta-brand-logo__video lerta-brand-logo__video--alpha"
         autoPlay
         loop
         muted
         playsInline
         preload="auto"
         poster={POSTER_SRC}
-        aria-hidden={isHeader}
-        aria-label={isHeader ? undefined : "Lerta marka animasyonu"}
-        {...(isHeader ? { src: MP4_SRC } : {})}
+        aria-label="Lerta marka animasyonu"
       >
-        {!isHeader ? (
-          <>
-            <source src={WEBM_SRC} type="video/webm" />
-            <source src={MP4_SRC} type="video/mp4" />
-          </>
-        ) : null}
+        <source src={WEBM_SRC} type="video/webm" />
+        <source src={MP4_SRC} type="video/mp4" />
       </video>
     </span>
   );
