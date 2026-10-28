@@ -1,11 +1,14 @@
 "use client";
 
+const ICON_1X = "/brand/lerta-brand-icon.png?v=8";
+const ICON_2X = "/brand/lerta-brand-icon@2x.png?v=8";
+
 type Props = {
   variant?: "header" | "hero";
   className?: string;
 };
 
-/** Birebir kullanıcı HTML kaynağı (.lerta-logo-wrapper). */
+/** Kullanıcı HTML yapısı; ikon = net referans PNG, metin = Montserrat LERTA. */
 export function LertaBrandLogoVideo({
   variant = "hero",
   className = "",
@@ -19,40 +22,17 @@ export function LertaBrandLogoVideo({
       } ${className}`.trim()}
       aria-hidden={isHeader}
     >
-      <svg
+      <img
         className="lerta-svg-icon"
-        viewBox="0 0 400 300"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        aria-hidden
-      >
-        <g
-          stroke="#D4AF37"
-          strokeWidth={3.5}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M 50 175 C 60 100, 160 60, 280 70 C 230 100, 180 115, 120 125 C 200 100, 260 90, 275 100 C 210 125, 170 145, 105 160 C 190 125, 260 120, 275 130 C 220 150, 160 170, 95 180 Z" />
-          <path d="M 280 70 C 260 110, 230 150, 180 175 C 220 145, 255 125, 270 140 C 240 160, 200 180, 155 190 C 190 170, 230 155, 240 168 C 210 182, 170 195, 135 200" />
-          <rect
-            x={110}
-            y={140}
-            width={70}
-            height={48}
-            rx={4}
-            transform="rotate(-12 145 164)"
-            fill="none"
-            strokeWidth={3.5}
-          />
-          <path
-            d="M 112 142 L 143 166 L 179 133"
-            transform="rotate(-12 145 164)"
-            fill="none"
-            strokeWidth={3.5}
-          />
-          <path d="M 185 145 A 18 18 0 0 1 188 172" strokeWidth={3.5} />
-        </g>
-      </svg>
+        src={ICON_2X}
+        srcSet={`${ICON_1X} 560w, ${ICON_2X} 1120w`}
+        sizes="(max-width: 85vw) 320px, 320px"
+        width={560}
+        height={188}
+        alt=""
+        draggable={false}
+        decoding="sync"
+      />
       <div className="lerta-text">LERTA</div>
     </div>
   );
