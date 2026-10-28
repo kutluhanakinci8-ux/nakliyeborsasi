@@ -437,21 +437,32 @@ a {
 
 .site-footer__brand-actions {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 16px;
-  margin-top: 18px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px 20px;
   width: 100%;
-  max-width: 320px;
+  max-width: 1120px;
+  margin: 8px auto 0;
+  padding: 16px 24px 4px;
+  box-sizing: border-box;
+  border-top: 1px solid rgba(212, 175, 55, 0.12);
+}
+
+.site-footer--premium .site-footer__brand-actions .site-footer__social {
+  margin-top: 0;
 }
 
 .site-footer__stores {
   display: flex;
   flex-direction: row;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: stretch;
+  justify-content: flex-end;
   gap: 10px;
   margin-top: 0;
+  margin-left: auto;
 }
 
 .site-footer__store-badge {
@@ -513,7 +524,8 @@ a {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  line-height: 1.1;
+  gap: 3px;
+  line-height: 1.15;
 }
 
 .site-footer__store-badge-eyebrow {
@@ -610,9 +622,17 @@ a {
     gap: 24px;
   }
 
+  .site-footer__brand-actions {
+    flex-direction: column;
+    align-items: flex-start;
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
   .site-footer__stores {
     width: 100%;
     justify-content: flex-start;
+    margin-left: 0;
   }
 
   .site-footer__store-badge {

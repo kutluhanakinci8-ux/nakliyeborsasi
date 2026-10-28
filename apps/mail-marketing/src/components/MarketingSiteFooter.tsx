@@ -34,10 +34,6 @@ export function MarketingSiteFooter() {
               Türkiye&apos;de barındırılan altyapı
             </span>
           </p>
-          <div className="site-footer__brand-actions">
-            <MarketingSocialLinks />
-            <MarketingAppStoreBadges />
-          </div>
         </div>
 
         <div className="site-footer__col">
@@ -102,6 +98,11 @@ export function MarketingSiteFooter() {
             </li>
           </ul>
         </div>
+      </div>
+
+      <div className="site-footer__brand-actions">
+        <MarketingSocialLinks />
+        <MarketingAppStoreBadges />
       </div>
 
       <MarketingFooterLegalBar />
