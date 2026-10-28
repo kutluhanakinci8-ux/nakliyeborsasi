@@ -33,9 +33,9 @@ export function LertaBrandLogoVideo({
         srcSet={`${LOGO_1X} 458w, ${LOGO_2X} 916w`}
         sizes={
           isHeader
-            ? "(max-width: 85vw) 200px, 200px"
+            ? "(max-width: 85vw) 148px, 148px"
             : isFooter
-              ? "(max-width: 85vw) 240px, 240px"
+              ? "(max-width: 85vw) 200px, 200px"
               : "(max-width: 85vw) 320px, 320px"
         }
         width={916}

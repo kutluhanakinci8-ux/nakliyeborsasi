@@ -86,13 +86,13 @@ a {
 .platform-header-inner {
   max-width: 1120px;
   margin: 0 auto;
-  padding: 14px 24px;
+  padding: 6px 20px;
 }
 
 .platform-header-row {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
@@ -106,10 +106,10 @@ a {
 }
 
 .platform-product-nav a {
-  padding: 8px 16px;
+  padding: 5px 12px;
   border-radius: var(--lerta-radius-pill);
   border: 1px solid var(--lerta-border);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--lerta-text);
   text-decoration: none;
@@ -136,10 +136,10 @@ a {
 }
 
 .platform-meta-link {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 600;
   color: var(--lerta-muted);
-  padding: 6px 10px;
+  padding: 4px 8px;
   text-decoration: none;
 }
 
@@ -148,8 +148,8 @@ a {
 }
 
 .platform-cta {
-  padding: 10px 18px !important;
-  font-size: 0.88rem !important;
+  padding: 7px 14px !important;
+  font-size: 0.84rem !important;
   white-space: nowrap;
 }
 
@@ -180,11 +180,12 @@ a {
 
 .site-footer--platform {
   flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 20px;
-  padding-top: 36px;
-  padding-bottom: 8px;
+  align-items: flex-start;
+  text-align: left;
+  gap: 14px;
+  padding-top: 24px;
+  padding-bottom: 4px;
+  width: 100%;
 }
 
 .site-footer__logo {
@@ -205,17 +206,18 @@ a {
 
 .site-footer__links {
   flex-wrap: wrap;
-  justify-content: center;
-  row-gap: 12px;
+  justify-content: flex-start;
+  row-gap: 10px;
 }
 
 .lerta-logo-wrapper--footer {
-  max-width: min(280px, 72vw);
+  max-width: min(220px, 58vw);
   padding: 0;
+  margin: 0;
 }
 
 .lerta-logo-wrapper--footer .lerta-brand-logo-img {
-  max-width: 240px;
+  max-width: 200px;
 }
 
 .brand {
@@ -941,13 +943,13 @@ footer {
 }
 
 .lerta-logo-wrapper--header {
-  max-width: min(504px, 85vw);
-  padding: 4px 0;
+  max-width: min(168px, 42vw);
+  padding: 0;
 }
 
 .lerta-logo-wrapper--header .lerta-brand-logo-img,
 .lerta-logo-wrapper--header .lerta-svg-icon {
-  max-width: 200px;
+  max-width: 148px;
 }
 
 .lerta-logo-wrapper--header .lerta-text {
@@ -971,7 +973,7 @@ footer {
 
 .lerta-brand--animated {
   gap: 0;
-  padding: 4px 0;
+  padding: 0;
   display: inline-flex;
   align-items: center;
   background: transparent;
