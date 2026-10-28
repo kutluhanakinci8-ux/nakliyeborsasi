@@ -27,13 +27,16 @@ export function PostaHeroSection() {
           modeliyle ölçeklenin.
         </p>
         <div className="premium-hero__cta posta-hero__cta">
-          <a className="btn btn-primary btn-lg" href={PLATFORM_REGISTER_HREF}>
+          <a
+            className="btn btn-primary btn-lg posta-btn-primary"
+            href={PLATFORM_REGISTER_HREF}
+          >
             Domain ile başla
           </a>
-          <a className="btn btn-ghost btn-lg" href={POSTA_LOGIN}>
+          <a className="btn btn-ghost btn-lg posta-btn-secondary" href={POSTA_LOGIN}>
             Webmail giriş
           </a>
-          <Link className="btn btn-ghost btn-lg" href="/posta#fiyatlar">
+          <Link className="btn btn-ghost btn-lg posta-btn-secondary" href="/posta#fiyatlar">
             Planları gör
           </Link>
         </div>
@@ -70,7 +73,7 @@ export function PostaHeroSection() {
 export function PostaFeaturesSection() {
   return (
     <section className="posta-section" aria-labelledby="posta-features-title">
-      <div className="section-head">
+      <div className="section-head section-head--center">
         <h2 id="posta-features-title" className="section-title section-title--lg">
           Kurumsal posta için tam paket
         </h2>
@@ -97,7 +100,7 @@ export function PostaFeaturesSection() {
 export function PostaStepsSection() {
   return (
     <section className="posta-section posta-section--soft" aria-labelledby="posta-steps-title">
-      <div className="section-head">
+      <div className="section-head section-head--center">
         <h2 id="posta-steps-title" className="section-title section-title--lg">
           Dakikalar içinde canlıya alın
         </h2>

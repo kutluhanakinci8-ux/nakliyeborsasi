@@ -5,17 +5,23 @@ import { MarketingSiteFooter } from "./MarketingSiteFooter";
 export function MarketingPageShell({
   children,
   narrow,
+  contentClassName,
 }: {
   children: ReactNode;
   narrow?: boolean;
+  contentClassName?: string;
 }) {
+  const contentClasses = ["platform-content", contentClassName]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <div className="landing">
       <MarketingPlatformHeader />
       <main
         className={`platform-main ${narrow ? "platform-main--narrow" : ""}`}
       >
-        <div className="platform-content">{children}</div>
+        <div className={contentClasses}>{children}</div>
       </main>
       <div className="platform-footer-wrap">
         <MarketingSiteFooter />
