@@ -2520,6 +2520,207 @@ footer {
   border-bottom-color: var(--lerta-gold-deep);
 }
 
+.platform-content--trust .destek-section-title {
+  font-family: var(--font-lerta-brand), "Montserrat", var(--lerta-font);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--lerta-gold-deep);
+  margin: 2rem 0 1rem;
+}
+
+.sla-table--support-tiers {
+  min-width: 640px;
+}
+
+.contact-page {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 32px;
+  align-items: start;
+  margin-top: 1.5rem;
+}
+
+.contact-form__topic-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.contact-form__topic {
+  display: block;
+  padding: 14px 16px;
+  border-radius: var(--lerta-radius-card);
+  border: 1px solid var(--lerta-gold-border);
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.94);
+}
+
+.contact-form__topic input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.contact-form__topic--active {
+  border-color: var(--lerta-gold-deep);
+  background: rgba(252, 250, 244, 0.95);
+}
+
+.contact-form__topic-title {
+  display: block;
+  font-weight: 700;
+  font-size: 0.9375rem;
+}
+
+.contact-form__topic-hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.8125rem;
+  color: var(--lerta-muted);
+  line-height: 1.4;
+}
+
+.contact-form__topic-email {
+  display: block;
+  margin-top: 8px;
+  font-size: 0.75rem;
+  font-weight: 650;
+  color: var(--lerta-gold-deep);
+}
+
+.contact-form__fields {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px 16px;
+  margin-top: 1.5rem;
+}
+
+.contact-form__fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.8125rem;
+  font-weight: 650;
+  color: #374151;
+}
+
+.contact-form__fields input,
+.contact-form__fields textarea {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--lerta-gold-border);
+  font: inherit;
+  font-weight: 400;
+}
+
+.contact-form__message {
+  grid-column: 1 / -1;
+}
+
+.contact-form__routing {
+  margin: 1rem 0;
+  font-size: 0.875rem;
+  color: var(--lerta-muted);
+  line-height: 1.5;
+}
+
+.contact-aside__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.contact-aside__hours {
+  display: block;
+  font-size: 0.8125rem;
+  color: var(--lerta-muted);
+  margin-top: 4px;
+}
+
+.platform-content--status-page .status-banner__time {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.platform-content--status-page .status-page-error {
+  color: #fbbf24;
+  padding: 12px 0;
+}
+
+.platform-content--status-page .status-group {
+  margin: 2rem 0;
+}
+
+.platform-content--status-page .status-group__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.platform-content--status-page .status-group__title {
+  font-family: var(--font-lerta-brand), "Montserrat", var(--lerta-font);
+  font-size: 1.15rem;
+  margin: 0;
+}
+
+.platform-content--status-page .status-group__lead {
+  font-size: 0.9375rem;
+  color: var(--lerta-muted);
+  margin: 0 0 12px;
+}
+
+.platform-content--status-page .status-group__note {
+  font-size: 0.8125rem;
+  color: var(--lerta-muted);
+  margin: 10px 0 0;
+}
+
+.platform-content--status-page .status-table__note {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.platform-content--status-page .status-subscribe {
+  margin-top: 2.5rem;
+  padding: 22px 24px;
+  border-radius: var(--lerta-radius-card);
+  border: 1px solid var(--lerta-gold-border);
+  background: rgba(252, 250, 244, 0.6);
+}
+
+.platform-content--status-page .status-subscribe__lead {
+  margin: 0 0 16px;
+  line-height: 1.55;
+}
+
+.platform-content--status-page .status-subscribe__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+@media (max-width: 900px) {
+  .contact-page {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-form__topic-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-form__fields {
+    grid-template-columns: 1fr;
+  }
+}
+
 .platform-content--product-vitrin .destek-channel-grid {
   margin-bottom: 2.5rem;
 }
