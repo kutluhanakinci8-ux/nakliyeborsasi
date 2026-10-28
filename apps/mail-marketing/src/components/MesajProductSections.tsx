@@ -152,6 +152,58 @@ export function MesajStepsSection() {
   );
 }
 
+export function MesajPlansSection() {
+  return (
+    <section
+      className="posta-section pricing pricing--posta mesaj-plans"
+      id="planlar"
+      aria-labelledby="mesaj-plans-title"
+    >
+      <div className="section-head section-head--center">
+        <h2 id="mesaj-plans-title" className="section-title section-title--lg">
+          Planlar ve erişim
+        </h2>
+        <p className="section-lead section-lead--wide pricing-lead">
+          Lerta Mesaj, kurumsal kiracı modeliyle sunulur. Ekip lisansları ve
+          köprü paketleri için{" "}
+          <a href="/posta#fiyatlar">Lerta Posta planları</a> ile birlikte veya
+          ayrı satış kanalı üzerinden teklif alın.
+        </p>
+      </div>
+      <div className="posta-feature-grid mesaj-plans__grid">
+        <article className="posta-feature-card price-card">
+          <h3>Ekip erişimi</h3>
+          <p className="price-period">
+            Mevcut kurumsal hesabınızla giriş; kanallar ve köprüler panelden
+            yapılandırılır.
+          </p>
+          <a className="btn btn-primary posta-btn-primary" href={MESSAGING_LOGIN_URL}>
+            Giriş yap
+          </a>
+        </article>
+        <article className="posta-feature-card price-card highlight">
+          <h3>Canlı sohbet</h3>
+          <p className="price-period">
+            Web ve mobil arayüz; dosya, bildirim ve entegrasyon API&apos;si.
+          </p>
+          <a className="btn btn-primary posta-btn-primary" href={MESSAGING_APP_URL}>
+            Sohbeti aç
+          </a>
+        </article>
+        <article className="posta-feature-card price-card">
+          <h3>Kurumsal teklif</h3>
+          <p className="price-period">
+            Çok kiracılı yapı, SLA ve uyum gereksinimleri için satış ekibi.
+          </p>
+          <a className="btn btn-ghost posta-btn-secondary" href="/iletisim">
+            İletişime geçin
+          </a>
+        </article>
+      </div>
+    </section>
+  );
+}
+
 export function MesajCtaBand() {
   return (
     <section

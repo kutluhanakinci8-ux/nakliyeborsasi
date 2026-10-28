@@ -8,11 +8,13 @@ import {
   ctasForProduct,
   resolveProductId,
 } from "@/lib/platformNav";
+import { metaNavForProduct } from "@/lib/marketingMetaNav";
 
 export function MarketingPlatformHeader() {
   const pathname = usePathname() ?? "/";
   const productId = resolveProductId(pathname);
   const ctas = ctasForProduct(productId);
+  const metaNav = metaNavForProduct(productId);
 
   return (
     <header className="platform-header platform-header--premium">
@@ -43,12 +45,16 @@ export function MarketingPlatformHeader() {
 
           <div className="platform-header-actions">
             <div className="platform-header-actions__meta">
-              <Link className="platform-meta-link" href="/durum">
-                Durum
-              </Link>
-              <Link className="platform-meta-link" href="/posta#fiyatlar">
-                Fiyatlar
-              </Link>
+              {metaNav.map((item) => (
+                <Link
+                  key={item.href}
+                  className="platform-meta-link"
+                  href={item.href}
+                  title={item.description}
+                >
+                  {item.label}
+                </Link>
+              ))}
             </div>
             <div className="platform-header-actions__ctas">
               {ctas.map((cta) => (

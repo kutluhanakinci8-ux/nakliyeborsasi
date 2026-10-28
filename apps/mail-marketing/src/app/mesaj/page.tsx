@@ -4,6 +4,7 @@ import {
   MesajCtaBand,
   MesajFeaturesSection,
   MesajHeroSection,
+  MesajPlansSection,
   MesajStepsSection,
 } from "@/components/MesajProductSections";
 
@@ -20,6 +21,7 @@ export default function MesajProductPage() {
       <MesajChannelsSection />
       <MesajFeaturesSection />
       <MesajStepsSection />
+      <MesajPlansSection />
       <MesajCtaBand />
     </MarketingPageShell>
   );
