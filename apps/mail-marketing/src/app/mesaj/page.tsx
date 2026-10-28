@@ -24,7 +24,7 @@ export default function MesajProductPage() {
           <p>Okundu bilgisi, yazıyor göstergesi ve anlık bildirimler.</p>
         </article>
         <article className="card">
-          <h3>KVKK ve kayıt</h3>
+          <h3>Denetim ve kayıt</h3>
           <p>Denetlenebilir mesaj geçmişi ve saklama politikaları.</p>
         </article>
         <article className="card">

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { PLATFORM_REGISTER_HREF } from "@/lib/platformProducts";
 import { MAIL_WEB_URL } from "@/lib/marketingUrls";
 import { MarketingIcon } from "./MarketingIcons";
 import { HomeHeroBrandSplash } from "./HomeHeroBrandSplash";
@@ -16,13 +15,12 @@ export function HomePremiumHero() {
           Kurumsal iletişim platformu · Türkiye
         </p>
         <h1 id="home-hero-title" className="premium-hero__title">
-          Posta, mesajlaşma ve uyumluluk —{" "}
+          Kurumsal posta ve mesajlaşma —{" "}
           <span className="premium-gradient-text">tek marka</span> altında
         </h1>
         <p className="premium-hero__lead">
           <strong>Lerta Posta</strong> ile domain tabanlı kurumsal e-posta;{" "}
-          <strong>Lerta Mesaj</strong> ile firma sohbeti;{" "}
-          <strong>KVKK (U88)</strong> ile çerez ve VERBİS control plane.
+          <strong>Lerta Mesaj</strong> ile firma sohbeti ve kanal köprüleri.
         </p>
         <div className="premium-hero__cta">
           <Link className="btn btn-primary btn-lg" href="/posta">
@@ -31,8 +29,8 @@ export function HomePremiumHero() {
           <a className="btn btn-ghost btn-lg" href={webmail}>
             Webmail giriş
           </a>
-          <a className="btn btn-ghost btn-lg" href={PLATFORM_REGISTER_HREF}>
-            Domain ile başla
+          <a className="btn btn-ghost btn-lg" href="/mesaj">
+            Mesajlaşmayı keşfet
           </a>
         </div>
         <ul className="premium-hero__pills" aria-label="Öne çıkan özellikler">
@@ -46,7 +44,7 @@ export function HomePremiumHero() {
           </li>
           <li>
             <MarketingIcon name="check" className="premium-icon premium-icon--sm" />
-            KVKK uyum paketi
+            Gerçek zamanlı sohbet
           </li>
         </ul>
       </div>

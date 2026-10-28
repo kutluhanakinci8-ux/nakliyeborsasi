@@ -1,5 +1,12 @@
+import { redirect } from "next/navigation";
+import { MARKETING_KVKK_PRODUCT_ENABLED } from "@/lib/marketingFeatureFlags";
 import { MarketingPageShell } from "@/components/MarketingPageShell";
+
 export default function U88ProductPage() {
+  if (!MARKETING_KVKK_PRODUCT_ENABLED) {
+    redirect("/");
+  }
+
   return (
     <MarketingPageShell>
       <p className="breadcrumb">

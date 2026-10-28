@@ -22,9 +22,9 @@ const montserratBrand = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "Lerta — Posta, Mesajlaşma ve KVKK",
+  title: "Lerta — Posta ve Mesajlaşma",
   description:
-    "Lerta platformu: kurumsal e-posta SaaS, firma mesajlaşması ve KVKK control plane (U88).",
+    "Lerta platformu: kurumsal e-posta SaaS ve firma mesajlaşması — Türkiye'de barındırılan kurumsal iletişim.",
 };
 
 export default function RootLayout({

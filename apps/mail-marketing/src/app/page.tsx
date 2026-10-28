@@ -1,7 +1,7 @@
 import { MarketingPageShell } from "@/components/MarketingPageShell";
 import { PlatformProductCards } from "@/components/PlatformProductCards";
 import { HomePremiumHero } from "@/components/HomePremiumHero";
-import { PLATFORM_PRODUCTS } from "@/lib/platformProducts";
+import { PLATFORM_PRODUCTS_ACTIVE } from "@/lib/platformProducts";
 
 export default function PlatformHomePage() {
   return (
@@ -14,24 +14,23 @@ export default function PlatformHomePage() {
             Ürünler
           </h2>
           <p className="section-lead section-lead--wide">
-            Her ürün ayrı uygulama ve kiracı modeliyle çalışır; ihtiyacınıza göre
-            Posta, Mesaj veya KVKK ile başlayın.
+            Posta ve Mesaj ayrı uygulama ve kiracı modeliyle çalışır; ihtiyacınıza
+            göre e-posta veya firma sohbeti ile başlayın.
           </p>
         </div>
-        <PlatformProductCards products={PLATFORM_PRODUCTS} featuredSlug="posta" />
+        <PlatformProductCards products={PLATFORM_PRODUCTS_ACTIVE} featuredSlug="posta" />
       </section>
 
       <section className="trust-strip trust-strip--premium" aria-labelledby="trust-heading">
         <div className="trust-strip__copy">
           <h2 id="trust-heading">Güven ve şeffaflık</h2>
           <p>
-            SLA, durum sayfası ve KVKK aydınlatması her zaman erişilebilir.
+            SLA, durum sayfası ve iletişim kanalları her zaman erişilebilir.
           </p>
         </div>
         <div className="trust-links">
           <a href="/sss">Sık sorulan sorular</a>
           <a href="/sla">Hizmet düzeyi (SLA)</a>
-          <a href="/kvkk">KVKK aydınlatma</a>
           <a href="/durum">Canlı durum</a>
           <a href="/iletisim">İletişim</a>
         </div>

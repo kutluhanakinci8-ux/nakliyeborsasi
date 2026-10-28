@@ -1,3 +1,4 @@
+import { MARKETING_KVKK_PRODUCT_ENABLED } from "./marketingFeatureFlags";
 import {
   CORPORATE_REGISTER,
   MAIL_WEB_URL,
@@ -48,7 +49,7 @@ export const PLATFORM_PRODUCTS: PlatformProduct[] = [
     ctaLabel: "Mesajlaşmaya git",
     secondaryHref: MESSAGING_LOGIN_URL,
     secondaryLabel: "Giriş yap",
-    features: ["Gerçek zamanlı sohbet", "KVKK kayıt", "API ve webhook"],
+    features: ["Gerçek zamanlı sohbet", "Denetim kaydı", "API ve webhook"],
   },
   {
     slug: "u88",
@@ -64,5 +65,9 @@ export const PLATFORM_PRODUCTS: PlatformProduct[] = [
     features: ["Consent Mode v2", "VERBİS + İYS", "14 gün deneme"],
   },
 ];
+
+export const PLATFORM_PRODUCTS_ACTIVE = PLATFORM_PRODUCTS.filter(
+  (p) => p.slug !== "u88" || MARKETING_KVKK_PRODUCT_ENABLED,
+);
 
 export const PLATFORM_REGISTER_HREF = CORPORATE_REGISTER;

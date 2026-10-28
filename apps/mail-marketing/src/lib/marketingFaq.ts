@@ -1,4 +1,5 @@
 import { CONSOLE_URL } from "./marketingUrls";
+import { MARKETING_KVKK_PRODUCT_ENABLED } from "./marketingFeatureFlags";
 
 const consoleBase = CONSOLE_URL.replace(/\/$/, "");
 
@@ -51,3 +52,7 @@ export const MARKETING_FAQ: FaqItem[] = [
     a: "Bağımsız ürünler. Lerta Mail lerta.com.tr; lojistik platformu lerta.tr.",
   },
 ];
+
+export const MARKETING_FAQ_ACTIVE = MARKETING_FAQ.filter(
+  (item) => MARKETING_KVKK_PRODUCT_ENABLED || !item.q.includes("KVKK"),
+);
