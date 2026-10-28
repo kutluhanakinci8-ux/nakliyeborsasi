@@ -22,7 +22,7 @@ const SUPPORT_TIERS = [
     channels: "E-posta, telefon (aynı hat)",
     firstResponse: "Hedef: 1 iş günü",
     hours: "İş günleri 09:00–18:00 (TR)",
-    notes: "Panel ticket — yakında",
+    notes: "Panel ticket — /destek/talepler (konsol)",
   },
   {
     plan: "Enterprise",

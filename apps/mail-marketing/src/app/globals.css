@@ -2530,6 +2530,106 @@ footer {
   margin: 2rem 0 1rem;
 }
 
+.platform-content--trust .trust-product-controls__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.platform-content--trust .trust-product-block {
+  padding: 22px 20px;
+  border-radius: var(--lerta-radius-card);
+  border: 1px solid var(--lerta-gold-border);
+  background: rgba(255, 255, 255, 0.94);
+}
+
+.platform-content--trust .trust-product-block h3 {
+  font-family: var(--font-lerta-brand), "Montserrat", var(--lerta-font);
+  margin: 0 0 12px;
+  font-size: 1.05rem;
+}
+
+.platform-content--trust .trust-product-block ul {
+  margin: 0;
+  padding-left: 1.2rem;
+  line-height: 1.6;
+  color: #374151;
+}
+
+.platform-content--trust .trust-product-block__guide {
+  margin: 14px 0 0;
+  font-size: 0.875rem;
+}
+
+.platform-content--trust .trust-product-block__guide a {
+  color: var(--lerta-gold-deep);
+  font-weight: 650;
+}
+
+.platform-content--trust .trust-incident {
+  margin: 2rem 0;
+  padding: 20px 22px;
+  border-radius: var(--lerta-radius-card);
+  border: 1px solid rgba(184, 148, 31, 0.25);
+  background: rgba(252, 250, 244, 0.65);
+}
+
+.platform-content--trust .trust-incident__lead {
+  margin: 0 0 12px;
+  line-height: 1.55;
+}
+
+.platform-content--trust .trust-incident__list {
+  margin: 0;
+  padding-left: 1.2rem;
+  line-height: 1.65;
+}
+
+.platform-content--trust .trust-data-rights {
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.platform-content--trust .trust-roadmap__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.platform-content--trust .trust-roadmap__item {
+  padding: 16px 18px;
+  border-radius: var(--lerta-radius-card);
+  border: 1px dashed var(--lerta-gold-border);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.platform-content--trust .trust-roadmap__label {
+  font-weight: 700;
+  margin-right: 10px;
+}
+
+.platform-content--trust .trust-roadmap__status {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--lerta-gold-deep);
+}
+
+.platform-content--trust .trust-roadmap__item p {
+  margin: 8px 0 0;
+  font-size: 0.875rem;
+  color: var(--lerta-muted);
+}
+
+@media (max-width: 720px) {
+  .platform-content--trust .trust-product-controls__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .sla-table--support-tiers {
   min-width: 640px;
 }
