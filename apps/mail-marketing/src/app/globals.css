@@ -888,7 +888,7 @@ footer {
   object-fit: contain;
   display: block;
   mix-blend-mode: normal;
-  filter: contrast(1.08) saturate(1.25);
+  filter: contrast(1.06) saturate(1.18);
 }
 
 .lerta-brand-logo--header .lerta-brand-logo__video {
@@ -910,7 +910,7 @@ footer {
 
 .lerta-brand-logo--hero .lerta-brand-logo__video {
   mix-blend-mode: normal;
-  filter: contrast(1.08) saturate(1.3) drop-shadow(0 4px 16px rgba(180, 140, 40, 0.2));
+  filter: contrast(1.06) saturate(1.2);
 }
 
 .lerta-brand-logo__video {
