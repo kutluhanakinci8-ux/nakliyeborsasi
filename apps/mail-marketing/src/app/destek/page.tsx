@@ -10,6 +10,7 @@ import {
   SALES_EMAIL,
   SUPPORT_EMAIL,
 } from "@/lib/marketingSite";
+import { CONSOLE_LOGIN_SUPPORT_NEXT } from "@/lib/marketingSupportConsole";
 import { CONSOLE_URL, MAIL_WEB_URL, MESSAGING_LOGIN_URL } from "@/lib/marketingUrls";
 
 export const metadata: Metadata = {
@@ -105,9 +106,9 @@ const SUPPORT_CHANNELS = [
   },
   {
     channel: "Destek talebi (panel)",
-    scope: "Ticket oluşturma ve takip",
-    hours: "Yakında — yönetim konsolu",
-    response: "Planlanıyor",
+    scope: "Ticket — yönetim konsolu /destek/talepler (yayında)",
+    hours: "Oturum açmanız gerekir",
+    response: "Şimdilik e-posta; konsol linki rol kartında",
   },
   {
     channel: "Canlı sohbet",
@@ -182,8 +183,11 @@ export default function DestekPage() {
               </li>
             </ul>
             <p className="destek-role-note">
-              Panel içi destek talepleri (ticket) —{" "}
-              <strong>yakında</strong>. Şimdilik{" "}
+              Panel destek talepleri:{" "}
+              <a href={CONSOLE_LOGIN_SUPPORT_NEXT} rel="noopener noreferrer">
+                yönetim konsolu (ticket)
+              </a>{" "}
+              — <strong>yayına alınırken</strong> aktif olacak. Şimdilik{" "}
               <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>.
             </p>
           </article>
