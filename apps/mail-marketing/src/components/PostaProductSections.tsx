@@ -128,21 +128,20 @@ export function PostaStepsSection() {
 
 export function PostaCtaBand() {
   return (
-    <section className="posta-cta-band" aria-labelledby="posta-cta-title">
-      <div className="posta-cta-band__inner">
-        <h2 id="posta-cta-title">Hazır mısınız?</h2>
-        <p>
-          Kurumsal kayıt, plan seçimi ve DNS sihirbazı — hepsi yönetim
-          konsolunda.
-        </p>
-        <div className="premium-hero__cta">
-          <a className="btn btn-primary btn-lg" href={PLATFORM_REGISTER_HREF}>
-            Ücretsiz pilot / kurumsal kayıt
-          </a>
-          <a className="btn btn-ghost btn-lg btn-on-dark" href={POSTA_LOGIN}>
-            Mevcut hesaba giriş
-          </a>
-        </div>
+    <section
+      className="posta-cta-band posta-cta-band--showcase"
+      aria-label="Lerta marka animasyonu"
+    >
+      <div className="posta-cta-band__showcase-frame">
+        <img
+          className="posta-cta-band__loop"
+          src="/brand/lerta-falcon-loop.gif?v=1"
+          width={360}
+          height={202}
+          alt=""
+          decoding="async"
+          draggable={false}
+        />
       </div>
     </section>
   );

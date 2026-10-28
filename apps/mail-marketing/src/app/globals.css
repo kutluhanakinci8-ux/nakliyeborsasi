@@ -1706,26 +1706,54 @@ footer {
   color: #fff;
 }
 
-.posta-cta-band__inner {
-  padding: 40px 32px;
-  text-align: center;
+.posta-cta-band--showcase {
+  position: relative;
+  margin-top: 56px;
+  padding: 0;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #0c0e18 0%, #121528 48%, #0a0c14 100%);
+  border: 1px solid var(--lerta-gold-border);
+  box-shadow:
+    0 12px 40px rgba(26, 22, 71, 0.12),
+    inset 0 1px 0 rgba(212, 175, 55, 0.12);
 }
 
-.posta-cta-band h2 {
-  font-family: var(--lerta-font-display);
-  font-size: 1.75rem;
-  margin: 0 0 10px;
+.posta-cta-band--showcase::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(212, 175, 55, 0.55) 20%,
+    rgba(212, 175, 55, 0.55) 80%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 1;
 }
 
-.posta-cta-band p {
-  margin: 0 auto 24px;
-  max-width: 42ch;
-  opacity: 0.9;
-  line-height: 1.55;
-}
-
-.posta-cta-band .premium-hero__cta {
+.posta-cta-band__showcase-frame {
+  display: flex;
+  align-items: center;
   justify-content: center;
+  width: 100%;
+  min-height: clamp(140px, 28vw, 280px);
+  padding: 8px 0;
+  line-height: 0;
+  overflow: hidden;
+}
+
+.posta-cta-band__loop {
+  width: 100%;
+  max-width: 960px;
+  height: auto;
+  display: block;
+  object-fit: contain;
+  object-position: center;
 }
 
 .pricing {
