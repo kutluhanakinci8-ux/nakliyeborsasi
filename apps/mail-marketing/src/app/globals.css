@@ -2562,6 +2562,327 @@ footer {
   margin-bottom: 4px;
 }
 
+.platform-content--destek-hub .destek-hero {
+  margin-bottom: 2.75rem;
+  max-width: 720px;
+}
+
+.platform-content--destek-hub .destek-hero__title {
+  font-size: clamp(1.85rem, 4vw, 2.45rem);
+  margin: 0.35rem 0 0.75rem;
+}
+
+.platform-content--destek-hub .destek-hero__lead {
+  margin-bottom: 1.5rem;
+}
+
+.platform-content--destek-hub .destek-section-title {
+  font-family: var(--font-lerta-brand), "Montserrat", var(--lerta-font);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--lerta-gold-deep);
+  margin: 0 0 1rem;
+}
+
+.platform-content--destek-hub .destek-search__label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #9ca3af;
+  margin-bottom: 8px;
+}
+
+.platform-content--destek-hub .destek-search__field-wrap {
+  position: relative;
+}
+
+.platform-content--destek-hub .destek-search__input {
+  width: 100%;
+  max-width: 560px;
+  padding: 14px 18px;
+  font-size: 1rem;
+  border-radius: 14px;
+  border: 1px solid var(--lerta-gold-border);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 2px 12px rgba(184, 148, 31, 0.06);
+}
+
+.platform-content--destek-hub .destek-search__input:focus {
+  outline: 2px solid rgba(184, 148, 31, 0.35);
+  outline-offset: 2px;
+}
+
+.platform-content--destek-hub .destek-search__hint {
+  margin: 10px 0 0;
+  font-size: 0.875rem;
+  color: var(--lerta-muted);
+  line-height: 1.5;
+}
+
+.platform-content--destek-hub .destek-search__hint a {
+  color: var(--lerta-gold-deep);
+  font-weight: 650;
+}
+
+.platform-content--destek-hub .destek-search__results {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  max-width: 560px;
+  border: 1px solid var(--lerta-gold-border);
+  border-radius: var(--lerta-radius-card);
+  background: #fff;
+  overflow: hidden;
+}
+
+.platform-content--destek-hub .destek-search__hit {
+  display: block;
+  padding: 12px 16px;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(184, 148, 31, 0.12);
+}
+
+.platform-content--destek-hub .destek-search__hit:last-child {
+  border-bottom: none;
+}
+
+.platform-content--destek-hub .destek-search__hit:hover {
+  background: rgba(252, 250, 244, 0.9);
+}
+
+.platform-content--destek-hub .destek-search__hit-title {
+  display: block;
+  font-weight: 650;
+  color: #1f2937;
+}
+
+.platform-content--destek-hub .destek-search__hit-excerpt {
+  display: block;
+  font-size: 0.8125rem;
+  color: var(--lerta-muted);
+  margin-top: 4px;
+  line-height: 1.45;
+}
+
+.platform-content--destek-hub .destek-search__empty {
+  padding: 14px 16px;
+  font-size: 0.9rem;
+  color: var(--lerta-muted);
+}
+
+.platform-content--destek-hub .destek-search__popular {
+  margin-top: 14px;
+  font-size: 0.875rem;
+}
+
+.platform-content--destek-hub .destek-search__popular-label {
+  font-weight: 700;
+  color: #6b7280;
+  margin-right: 8px;
+}
+
+.platform-content--destek-hub .destek-search__popular ul {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+
+.platform-content--destek-hub .destek-search__popular a {
+  color: var(--lerta-gold-deep);
+  font-weight: 650;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(184, 148, 31, 0.3);
+}
+
+.platform-content--destek-hub .destek-quick-paths {
+  margin-bottom: 2.5rem;
+}
+
+.platform-content--destek-hub .destek-quick-paths__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.platform-content--destek-hub .destek-quick-card {
+  padding: 24px 22px;
+  border-radius: var(--lerta-radius-card);
+  border: 1px solid var(--lerta-gold-border);
+  background: linear-gradient(
+    165deg,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(252, 250, 244, 0.92) 100%
+  );
+}
+
+.platform-content--destek-hub .destek-quick-card h3 {
+  font-family: var(--font-lerta-brand), "Montserrat", var(--lerta-font);
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+
+.platform-content--destek-hub .destek-quick-card p {
+  margin: 0 0 16px;
+  font-size: 0.9375rem;
+  color: var(--lerta-muted);
+  line-height: 1.5;
+}
+
+.platform-content--destek-hub .destek-roles {
+  margin-bottom: 2.5rem;
+}
+
+.platform-content--destek-hub .destek-roles__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.platform-content--destek-hub .destek-role-card {
+  padding: 24px 22px;
+  border-radius: var(--lerta-radius-card);
+  border: 1px solid rgba(184, 148, 31, 0.22);
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.platform-content--destek-hub .destek-role-card h3 {
+  font-family: var(--font-lerta-brand), "Montserrat", var(--lerta-font);
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0 0 10px;
+}
+
+.platform-content--destek-hub .destek-role-links {
+  list-style: none;
+  margin: 12px 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.platform-content--destek-hub .destek-role-links a {
+  color: var(--lerta-gold-deep);
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.platform-content--destek-hub .destek-role-links a:hover {
+  text-decoration: underline;
+}
+
+.platform-content--destek-hub .destek-role-note {
+  margin: 12px 0 0;
+  font-size: 0.8125rem;
+  color: var(--lerta-muted);
+  line-height: 1.5;
+}
+
+.platform-content--destek-hub .destek-outage {
+  margin-bottom: 2.5rem;
+  padding: 20px 22px;
+  border-radius: var(--lerta-radius-card);
+  border: 1px dashed rgba(184, 148, 31, 0.45);
+  background: rgba(252, 250, 244, 0.6);
+}
+
+.platform-content--destek-hub .destek-outage__steps {
+  margin: 0;
+  padding-left: 1.25rem;
+  line-height: 1.65;
+  color: #374151;
+}
+
+.platform-content--destek-hub .destek-outage__steps a {
+  color: var(--lerta-gold-deep);
+  font-weight: 650;
+}
+
+.platform-content--destek-hub .destek-rehber-teaser {
+  margin: -0.5rem 0 2rem;
+  font-size: 0.875rem;
+  color: var(--lerta-muted);
+}
+
+.platform-content--destek-hub .destek-rehber-teaser code {
+  font-size: 0.8125rem;
+}
+
+.platform-content--destek-hub .destek-channels-table-wrap {
+  margin-bottom: 2.5rem;
+}
+
+.platform-content--destek-hub .destek-table-scroll {
+  overflow-x: auto;
+}
+
+.platform-content--destek-hub .destek-channels-table {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.platform-content--destek-hub .destek-channels-table th,
+.platform-content--destek-hub .destek-channels-table td {
+  padding: 12px 14px;
+  text-align: left;
+  border-bottom: 1px solid rgba(184, 148, 31, 0.15);
+}
+
+.platform-content--destek-hub .destek-channels-table thead th {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #9ca3af;
+  font-weight: 700;
+}
+
+.platform-content--destek-hub .destek-channels-table tbody th[scope="row"] {
+  font-weight: 650;
+  color: #1f2937;
+}
+
+.platform-content--destek-hub .destek-sla-teaser {
+  margin-bottom: 2.5rem;
+  padding: 22px 24px;
+  border-radius: var(--lerta-radius-card);
+  border: 1px solid var(--lerta-gold-border);
+  background: rgba(255, 255, 255, 0.94);
+}
+
+.platform-content--destek-hub .destek-sla-teaser__lead {
+  margin: 0 0 14px;
+  line-height: 1.55;
+  color: #374151;
+}
+
+.platform-content--destek-hub .destek-contact-list--cols {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+@media (max-width: 900px) {
+  .platform-content--destek-hub .destek-quick-paths__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .platform-content--destek-hub .destek-roles__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .platform-content--destek-hub .destek-contact-list--cols {
+    grid-template-columns: 1fr;
+  }
+}
+
 .platform-content--product-vitrin .mesaj-plans__grid .btn {
   margin-top: 8px;
 }
