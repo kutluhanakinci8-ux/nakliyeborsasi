@@ -17,14 +17,14 @@ export function LertaBrandLogoVideo({
   className = "",
 }: Props) {
   const isHeader = variant === "header";
+  const [headerVideoFailed, setHeaderVideoFailed] = useState(false);
 
   if (isHeader) {
-    const [videoFailed, setVideoFailed] = useState(false);
     return (
       <span
         className={`lerta-brand-logo lerta-brand-logo--header ${className}`.trim()}
       >
-        {!videoFailed ? (
+        {!headerVideoFailed ? (
           <video
             className="lerta-brand-logo__video lerta-brand-logo__video--alpha"
             autoPlay
@@ -34,7 +34,7 @@ export function LertaBrandLogoVideo({
             preload="auto"
             poster={PNG_SRC}
             aria-hidden
-            onError={() => setVideoFailed(true)}
+            onError={() => setHeaderVideoFailed(true)}
           >
             <source src={WEBM_SRC} type="video/webm" />
           </video>
