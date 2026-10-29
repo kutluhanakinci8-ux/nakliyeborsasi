@@ -4,7 +4,9 @@
 **Bitiş hedefi:** 2028-10  
 **Ürün:** Lerta Document (`.ltr`) — operasyonel belgede PDF alternatifi; resmi/e-Fatura ekosisteminde PDF export yan yolu.
 
-**İlgili:** [LTR_SPEC_V1_DRAFT.md](./LTR_SPEC_V1_DRAFT.md) · [LTR_ECOSYSTEM_MASTER_PLAN.md](./LTR_ECOSYSTEM_MASTER_PLAN.md) · `@nakliyeborsasi/core` → `ltr/*`
+**Öncelik:** Önce **[WinLRT istemcileri](./WINLRT_PRODUCT_ROADMAP.md)** (Windows, macOS, Android, iOS indirilebilir). Posta/Mesaj entegrasyonu **WinLRT W5 sonrası**.
+
+**İlgili:** [WINLRT_PRODUCT_ROADMAP.md](./WINLRT_PRODUCT_ROADMAP.md) · [LTR_SPEC_V1_DRAFT.md](./LTR_SPEC_V1_DRAFT.md) · [LTR_ECOSYSTEM_MASTER_PLAN.md](./LTR_ECOSYSTEM_MASTER_PLAN.md)
 
 ---
 
