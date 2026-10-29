@@ -11,12 +11,22 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.lerta.winlrt",
+      "buildNumber": "1",
       "infoPlist": {
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLName": "com.lerta.winlrt",
+            "CFBundleURLSchemes": ["winlrt"]
+          }
+        ],
+        "LSSupportsOpeningDocumentsInPlace": true,
+        "UISupportsDocumentBrowser": true,
         "CFBundleDocumentTypes": [
           {
             "CFBundleTypeName": "Lerta Document",
             "LSHandlerRank": "Owner",
-            "LSItemContentTypes": ["com.lerta.document.ltr"]
+            "LSItemContentTypes": ["com.lerta.document.ltr"],
+            "LSIsAppleDefaultForType": true
           }
         ],
         "UTExportedTypeDeclarations": [
