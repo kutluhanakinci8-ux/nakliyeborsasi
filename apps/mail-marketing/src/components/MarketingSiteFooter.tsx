@@ -67,6 +67,9 @@ export function MarketingSiteFooter() {
               <Link href="/destek">Destek merkezi</Link>
             </li>
             <li>
+              <Link href="/destek/yazilim-indir">Yazılım indir</Link>
+            </li>
+            <li>
               <Link href="/guven">Güven & uyum</Link>
             </li>
             <li>

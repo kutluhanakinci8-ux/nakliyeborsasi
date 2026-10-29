@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="ltr" content="1.0">
+  <title>Örnek taşıma teklifi — LTR</title>
+  <script type="application/ltr+json" id="ltr-content">{"schema":"lerta/ltr/1.0","lang":"tr","mode":"sealed","title":"Örnek taşıma teklifi","subtitle":"TR · Antalya → Hamburg","meta":{"author":"Lerta Demo","organization":"Lerta Logistics","createdAt":"2026-10-29T10:00:00+03:00","generator":"LTR F0 sample"},"blocks":[{"type":"callout","tone":"info","text":"Bu dosya LTR formatının mühürlü örneğidir. İnternet olmadan tarayıcıda açılır."},{"type":"kpis","items":[{"value":"€2.450","label":"Teklif","delta":"KDV hariç"},{"value":"3 gün","label":"Transit"},{"value":"FTL","label":"Araç"}]},{"type":"markdown","md":"## Güzergah\n- **Yükleme:** Antalya OSB\n- **Boşaltma:** Hamburg\n\n## Koşullar\nStandart CMR ve platform içi mesajlaşma ile teyit."},{"type":"table","title":"Kalemler","columns":["Kalem","Tutar"],"rows":[["Taşıma bedeli","€2.200"],["Sigorta","€250"]]},{"type":"quote","text":"LTR operasyonel belgelerde PDF yerine geçecek taşınabilir formattır.","cite":"LTR Spec v1.0 taslak"}]}</script>
+  <style>
+    :root { color-scheme: light dark; --bg: #f6f7f9; --fg: #1a1d23; --muted: #5c6370; --accent: #0b5cab; --card: #fff; --border: #dfe3ea; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #121418; --fg: #eef0f4; --muted: #9aa3b2; --accent: #5ba4ff; --card: #1c1f26; --border: #2e3440; }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, sans-serif; background: var(--bg); color: var(--fg); line-height: 1.5; }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 3rem; }
+    header { margin-bottom: 1.5rem; }
+    .eyebrow { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+    h1 { font-size: 1.75rem; margin: 0.25rem 0; }
+    .sub { color: var(--muted); margin: 0; }
+    .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin: 1.25rem 0; }
+    .kpi { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; }
+    .kpi strong { display: block; font-size: 1.25rem; color: var(--accent); }
+    .kpi span { font-size: 0.8rem; color: var(--muted); }
+    .callout { border-left: 4px solid var(--accent); padding: 0.75rem 1rem; background: var(--card); border-radius: 0 8px 8px 0; margin: 1rem 0; }
+    section { margin: 1.5rem 0; }
+    h2 { font-size: 1.1rem; margin-bottom: 0.5rem; }
+    table { width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    th, td { padding: 0.6rem 0.75rem; text-align: left; border-bottom: 1px solid var(--border); }
+    th { background: var(--bg); font-size: 0.85rem; }
+    blockquote { margin: 1.5rem 0; padding: 1rem; border-radius: 8px; background: var(--card); border: 1px solid var(--border); }
+    blockquote cite { display: block; margin-top: 0.5rem; font-size: 0.85rem; color: var(--muted); }
+    footer { margin-top: 2rem; font-size: 0.8rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <p class="eyebrow">Lerta Document · sealed</p>
+      <h1>Örnek taşıma teklifi</h1>
+      <p class="sub">TR · Antalya → Hamburg</p>
+    </header>
+    <div class="callout">Bu dosya LTR formatının mühürlü örneğidir. İnternet olmadan tarayıcıda açılır.</div>
+    <div class="kpis">
+      <div class="kpi"><strong>€2.450</strong><span>Teklif · KDV hariç</span></div>
+      <div class="kpi"><strong>3 gün</strong><span>Transit</span></div>
+      <div class="kpi"><strong>FTL</strong><span>Araç</span></div>
+    </div>
+    <section>
+      <h2>Güzergah</h2>
+      <p><strong>Yükleme:</strong> Antalya OSB<br><strong>Boşaltma:</strong> Hamburg</p>
+      <h2>Koşullar</h2>
+      <p>Standart CMR ve platform içi mesajlaşma ile teyit.</p>
+    </section>
+    <section>
+      <h2>Kalemler</h2>
+      <table>
+        <thead><tr><th>Kalem</th><th>Tutar</th></tr></thead>
+        <tbody>
+          <tr><td>Taşıma bedeli</td><td>€2.200</td></tr>
+          <tr><td>Sigorta</td><td>€250</td></tr>
+        </tbody>
+      </table>
+    </section>
+    <blockquote>
+      LTR operasyonel belgelerde PDF yerine geçecek taşınabilir formattır.
+      <cite>LTR Spec v1.0 taslak</cite>
+    </blockquote>
+    <footer>Örnek dosya — lerta.com.tr/indirmeler</footer>
+  </div>
+</body>
+</html>

@@ -28,6 +28,7 @@ import {
   parseMeetDeepLinkFromUrl,
 } from "./lertaMobileMeetHub";
 import { MessagingVoiceNoteMobilePanel } from "./MessagingVoiceNoteMobilePanel";
+import { LertaMobileLtrViewerPanel } from "./LertaMobileLtrViewerPanel";
 import * as Notifications from "expo-notifications";
 import { openNativeRtcMeetHub } from "./lertaMobileNativeRtcBridge";
 import { NativeMeetMeshPilotPanel } from "./NativeMeetMeshPilotPanel";
@@ -268,6 +269,7 @@ export function MobileApplicationRoot(): React.ReactElement {
             accessToken={accessToken}
             initialThreadId={voiceThreadId}
           />
+          <LertaMobileLtrViewerPanel />
           <Pressable
             style={styles.buttonSecondary}
             onPress={() =>

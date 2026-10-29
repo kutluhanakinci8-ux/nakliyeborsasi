@@ -10,12 +10,44 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.lerta.logistics",
       "infoPlist": {
-        "NSMicrophoneUsageDescription": "Sesli mesaj kaydı için mikrofon erişimi gerekir."
+        "NSMicrophoneUsageDescription": "Sesli mesaj kaydı için mikrofon erişimi gerekir.",
+        "CFBundleDocumentTypes": [
+          {
+            "CFBundleTypeName": "Lerta Document",
+            "LSHandlerRank": "Alternate",
+            "LSItemContentTypes": ["com.lerta.document.ltr"]
+          }
+        ],
+        "UTExportedTypeDeclarations": [
+          {
+            "UTTypeIdentifier": "com.lerta.document.ltr",
+            "UTTypeDescription": "Lerta Document (LTR)",
+            "UTTypeConformsTo": ["public.data", "public.content"],
+            "UTTypeTagSpecification": {
+              "public.filename-extension": ["ltr"],
+              "public.mime-type": ["application/vnd.lerta.document+html"]
+            }
+          }
+        ]
       }
     },
     "android": {
       "package": "com.lerta.logistics",
-      "permissions": ["RECORD_AUDIO"]
+      "permissions": ["RECORD_AUDIO"],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "category": ["BROWSABLE", "DEFAULT"],
+          "data": [
+            {
+              "mimeType": "application/vnd.lerta.document+html"
+            },
+            {
+              "mimeType": "text/html"
+            }
+          ]
+        }
+      ]
     },
     "plugins": [
       "expo-notifications",
