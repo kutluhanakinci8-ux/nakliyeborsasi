@@ -1345,3 +1345,60 @@ export async function replySupportTicket(
     },
   );
 }
+
+export type MailSupportTicketOperatorSummary = MailSupportTicketSummary & {
+  organizationId: string;
+  companyLegalName: string;
+};
+
+export type MailSupportTicketOperatorDetail = MailSupportTicketDetail & {
+  organizationId: string;
+  companyLegalName: string;
+};
+
+export async function fetchOperatorSupportTickets(accessToken: string) {
+  return apiFetch<{ tickets: MailSupportTicketOperatorSummary[] }>(
+    accessToken,
+    "platform-admin/mail/support/tickets",
+  );
+}
+
+export async function fetchOperatorSupportTicket(
+  accessToken: string,
+  ticketId: string,
+) {
+  return apiFetch<{ ticket: MailSupportTicketOperatorDetail }>(
+    accessToken,
+    `platform-admin/mail/support/tickets/${ticketId}`,
+  );
+}
+
+export async function operatorReplySupportTicket(
+  accessToken: string,
+  ticketId: string,
+  message: string,
+) {
+  return apiFetch<{ ticket: MailSupportTicketOperatorDetail }>(
+    accessToken,
+    `platform-admin/mail/support/tickets/${ticketId}/messages`,
+    {
+      method: "POST",
+      body: JSON.stringify({ message }),
+    },
+  );
+}
+
+export async function operatorUpdateSupportTicketStatus(
+  accessToken: string,
+  ticketId: string,
+  status: MailSupportTicketStatus,
+) {
+  return apiFetch<{ ticket: MailSupportTicketOperatorDetail }>(
+    accessToken,
+    `platform-admin/mail/support/tickets/${ticketId}/status`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    },
+  );
+}

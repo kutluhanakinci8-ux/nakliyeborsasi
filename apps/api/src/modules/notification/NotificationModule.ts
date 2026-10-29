@@ -208,6 +208,8 @@ import { MailOrganizationSupportTicketEntity } from "../../infrastructure/databa
 import { MailOrganizationSupportTicketMessageEntity } from "../../infrastructure/database/entities/MailOrganizationSupportTicketMessageEntity";
 import { CompanyMailSupportTicketController } from "./CompanyMailSupportTicketController";
 import { MailOrganizationSupportTicketService } from "./MailOrganizationSupportTicketService";
+import { PlatformMailSupportTicketController } from "./PlatformMailSupportTicketController";
+import { MailSupportTicketNotificationService } from "./MailSupportTicketNotificationService";
 
 @Module({
   imports: [
@@ -280,6 +282,7 @@ import { MailOrganizationSupportTicketService } from "./MailOrganizationSupportT
   controllers: [
     PlatformNotificationAdminController,
     PlatformMailIdentityAdminController,
+    PlatformMailSupportTicketController,
     MailInboundWebhookController,
     CompanyMailIdentityController,
     CompanyMailSupportTicketController,
@@ -421,6 +424,7 @@ import { MailOrganizationSupportTicketService } from "./MailOrganizationSupportT
     MailDeliverabilityHubService,
     MailOnboardingKpiService,
     MailOrganizationSupportTicketService,
+    MailSupportTicketNotificationService,
   ],
   exports: [
     AuthNotificationService,

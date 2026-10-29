@@ -141,6 +141,11 @@ export default function OperatorPage() {
   return (
     <ConsoleShell operator={true}>
       <h1 style={{ marginTop: 0 }}>Operatör — mail domainleri</h1>
+      <p style={{ margin: "0 0 16px" }}>
+        <a className="btn secondary" href="/operator/destek">
+          Destek talepleri (ticket)
+        </a>
+      </p>
       {kpi ? (
         <div className="card" style={{ marginBottom: 16 }}>
           <h2 style={{ marginTop: 0 }}>Ürün KPI (özet)</h2>

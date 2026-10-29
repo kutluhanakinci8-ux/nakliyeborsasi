@@ -114,6 +114,9 @@ bash "$INSTALL_DIR/scripts/nginx-kurumsal-lerta-com-tr.sh"
 if [[ -f "$INSTALL_DIR/scripts/nginx-status-lerta-com-tr.sh" ]]; then
   bash "$INSTALL_DIR/scripts/nginx-status-lerta-com-tr.sh" || true
 fi
+if [[ -f "$INSTALL_DIR/scripts/apply-status-lerta-com-tr-cert.sh" ]]; then
+  bash "$INSTALL_DIR/scripts/apply-status-lerta-com-tr-cert.sh" || echo "UYARI: status.lerta.com.tr cert/DNS henüz hazır değil (§ DNS 2.5)"
+fi
 
 if [[ -f "$INSTALL_DIR/scripts/audit-nginx-posta-isolation.sh" ]]; then
   bash "$INSTALL_DIR/scripts/audit-nginx-posta-isolation.sh"
