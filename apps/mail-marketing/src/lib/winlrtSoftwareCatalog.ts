@@ -46,11 +46,12 @@ export const WINLRT_SOFTWARE_CATALOG: SoftwareDownloadItem[] = [
   {
     id: "winlrt-android",
     name: "WinLRT — Google Play",
-    description: "Android telefon ve tablet; WhatsApp’tan indirilen .ltr dosyalarını açın.",
+    description:
+      "Android (com.lerta.winlrt): .ltr açma ve paylaşım. Play internal test — mağaza linki yayınlandığında aktif olur.",
     platform: "android",
     phase: "W3",
     available: false,
-    href: "#winlrt-android",
+    href: "https://play.google.com/store/apps/details?id=com.lerta.winlrt",
     external: true,
   },
   {
