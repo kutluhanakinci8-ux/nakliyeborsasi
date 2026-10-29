@@ -1,0 +1,56 @@
+name: Deploy WinLRT vitrin
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/mail-marketing/**"
+      - "apps/winlrt/**"
+      - "core/src/ltr/**"
+      - "scripts/deploy-winlrt-vitrin-only.sh"
+      - "scripts/restart-mail-marketing.sh"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-winlrt-vitrin
+  cancel-in-progress: false
+
+jobs:
+  deploy-vitrin:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: VPS secrets gate
+        id: vps_gate
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          if [[ -z "${VPS_HOST}" || -z "${VPS_SSH_KEY}" ]]; then
+            echo "skip=true" >> "${GITHUB_OUTPUT}"
+            echo "SKIP: VPS secrets missing — bash scripts/deploy-winlrt-vitrin-only.sh (VPS_SSH_*)"
+          else
+            echo "skip=false" >> "${GITHUB_OUTPUT}"
+          fi
+      - name: WinLRT vitrin-only deploy
+        if: steps.vps_gate.outputs.skip != 'true'
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          command_timeout: 18m
+          script: |
+            set -euo pipefail
+            INSTALL_DIR=/var/www/nakliyeborsasi
+            WEB_PORT=3014
+            cd "${INSTALL_DIR}"
+            echo "=== WinLRT vitrin-only: git main ==="
+            git fetch origin main
+            git merge --abort 2>/dev/null || true
+            git checkout -f main 2>/dev/null || true
+            git reset --hard origin/main
+            git log -1 --oneline
+            bash scripts/restart-mail-marketing.sh "${INSTALL_DIR}" "${WEB_PORT}"
+            curl -sf -o /dev/null -w 'yazilim-indir HTTP %{http_code}\n' "http://127.0.0.1:${WEB_PORT}/destek/yazilim-indir"
