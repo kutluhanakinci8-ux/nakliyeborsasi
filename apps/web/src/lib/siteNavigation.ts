@@ -27,6 +27,7 @@ export const HIZMETLER_NAV_ITEM = {
 /** «Kurumsal» açılır menüsü */
 export const CORPORATE_DROPDOWN_ITEMS = [
   { href: "/hakkimizda", label: "Hakkımızda" },
+  { href: "/indirmeler", label: "İndirmeler" },
   { href: "/basin", label: "Basın" },
   { href: "/kariyer", label: "Kariyer" },
   { href: "/blog", label: "Blog" },
