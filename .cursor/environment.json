@@ -1,0 +1,4 @@
+{
+  "install": "npm ci\nnpm run build -w @nakliyeborsasi/core\nnpm run validate -w @lerta/winlrt-mobile",
+  "start": "bash scripts/cursor-winlrt-start-check.sh"
+}
