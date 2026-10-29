@@ -26,6 +26,11 @@ export class AddMailSupportTicketMessageDto {
   public message!: string;
 }
 
+export class UpdateMailSupportTicketStatusDto {
+  @IsIn(["open", "waiting_customer", "resolved"])
+  public status!: "open" | "waiting_customer" | "resolved";
+}
+
 export class MailSupportTicketIdParamDto {
   @IsUUID()
   public ticketId!: string;

@@ -32,9 +32,17 @@ sudo bash scripts/nginx-status-lerta-com-tr.sh
 HTTPS için DNS A kaydı sonrası:
 
 ```bash
+sudo bash scripts/apply-status-lerta-com-tr-cert.sh
+```
+
+Manuel certbot:
+
+```bash
 sudo certbot certonly --webroot -w /var/www/certbot -d status.lerta.com.tr
 sudo bash scripts/nginx-status-lerta-com-tr.sh
 ```
+
+DNS (isimtescil): A `status` → `168.231.109.27` — [DNS_LERTA_COM_TR_KURUMSAL_ISIMTESCIL.md](./DNS_LERTA_COM_TR_KURUMSAL_ISIMTESCIL.md) §2.5.
 
 `deploy-posta-lerta-com-tr.sh` ve `apply-www-cutover-lerta-mail.sh` bu script’i otomatik çağırır (HTTP 302 → `https://www.lerta.com.tr/durum`).
 

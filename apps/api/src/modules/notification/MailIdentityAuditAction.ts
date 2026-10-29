@@ -59,6 +59,8 @@ export const MailIdentityAuditAction = {
   CryptoSettingsUpdated: "MAIL_CRYPTO_SETTINGS_UPDATED",
   SupportTicketCreated: "MAIL_SUPPORT_TICKET_CREATED",
   SupportTicketCustomerReply: "MAIL_SUPPORT_TICKET_CUSTOMER_REPLY",
+  SupportTicketStaffReply: "MAIL_SUPPORT_TICKET_STAFF_REPLY",
+  SupportTicketStatusUpdated: "MAIL_SUPPORT_TICKET_STATUS_UPDATED",
 } as const;
 
 export type MailIdentityAuditActionCode =

@@ -203,6 +203,29 @@ export class EmailTemplateService {
           ),
           text: payload.inviteUrl ?? "",
         };
+      case NotificationEventCode.MailSupportTicketOpened:
+        return {
+          subject: `[${PLATFORM_EMAIL_SUBJECT_TAG}] Destek #${payload.ticketRef ?? "—"} — ${payload.ticketSubject ?? ""}`,
+          html: wrapCorporateEmail(
+            "Yeni destek talebi",
+            `${leadParagraph(
+              `<strong>${escapeHtml(payload.companyLegalName ?? "Firma")}</strong> yönetim konsolundan yeni bir destek talebi açtı.`,
+            )}
+            ${detailTable([
+              { label: "Ref", value: `#${payload.ticketRef ?? "—"}` },
+              { label: "Konu", value: payload.topicLabel ?? "—" },
+              { label: "Başlık", value: payload.ticketSubject ?? "—" },
+              { label: "Talep eden", value: payload.requesterEmail ?? "—" },
+            ])}
+            ${leadParagraph(escapeHtml(payload.messagePreview ?? ""))}
+            ${primaryButton(payload.operatorTicketUrl ?? "#", "Operatör panelinde aç")}`,
+            {
+              eyebrow: "Lerta destek",
+              preheader: `Talep #${payload.ticketRef ?? ""}`,
+            },
+          ),
+          text: `${payload.operatorTicketUrl ?? ""}\n\n${payload.messagePreview ?? ""}`,
+        };
       default:
         return {
           subject: PLATFORM_PRODUCT_NAME,

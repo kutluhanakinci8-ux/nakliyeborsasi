@@ -49,8 +49,9 @@ dig +short A mail.lerta.com.tr
 |---|-----|------|--------|
 | 2.3 | A | `kurumsal` | `168.231.109.27` |
 | 2.4 | A | `yonetim` | `168.231.109.27` |
+| 2.5 | A | `status` | `168.231.109.27` | Halka açık durum alias → `www.lerta.com.tr/durum` |
 
-VPS tarafında Let’s Encrypt / nginx bu hostlar için ayrıca yapılandırılır (DNS dışı).
+VPS tarafında Let’s Encrypt / nginx bu hostlar için ayrıca yapılandırılır (DNS dışı). `status` için: `bash scripts/apply-status-lerta-com-tr-cert.sh`.
 
 ---
 

@@ -68,6 +68,8 @@ const LABELS: Record<string, string> = {
   [MailIdentityAuditAction.SecurityTotpDisabled]: "TOTP kapatıldı",
   [MailIdentityAuditAction.SupportTicketCreated]: "Destek talebi açıldı",
   [MailIdentityAuditAction.SupportTicketCustomerReply]: "Destek talebine yanıt",
+  [MailIdentityAuditAction.SupportTicketStaffReply]: "Destek talebi — Lerta yanıtı",
+  [MailIdentityAuditAction.SupportTicketStatusUpdated]: "Destek talebi durumu",
 };
 
 function readString(metadata: Record<string, unknown> | null, key: string): string | null {
@@ -157,6 +159,16 @@ export function mailAuditSummaryTr(
       const ticketId = readString(metadata, "ticketId");
       const ref = ticketId ? ticketId.split("-")[0]?.toUpperCase() : null;
       return ref ? `#${ref}` : "Müşteri yanıtı";
+    }
+    case MailIdentityAuditAction.SupportTicketStaffReply:
+    case MailIdentityAuditAction.SupportTicketStatusUpdated: {
+      const ticketId = readString(metadata, "ticketId");
+      const status = readString(metadata, "status");
+      const ref = ticketId ? ticketId.split("-")[0]?.toUpperCase() : null;
+      if (status) {
+        return ref ? `#${ref} → ${status}` : status;
+      }
+      return ref ? `#${ref}` : "Operatör işlemi";
     }
     default:
       return domain ?? fromAddress ?? email ?? "";
