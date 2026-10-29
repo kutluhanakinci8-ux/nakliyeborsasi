@@ -19,7 +19,7 @@ const ROADMAP_PHASES = [
     id: "F1",
     months: "Ay 3–6",
     title: "Mühürlü format + web viewer (TR)",
-    items: ["Tarayıcı viewer", "PDF’e aktar", "Blok renderer v1"],
+    items: ["Web viewer", "Play/App kapalı test", "Blok renderer v1"],
   },
   {
     id: "F2",
@@ -43,7 +43,7 @@ const ROADMAP_PHASES = [
     id: "F5",
     months: "Ay 19–21",
     title: "TR ölçek",
-    items: ["Mobil + masaüstü viewer", "WA deep link", "Adoption ≥ %45"],
+    items: ["Mağaza yayını", "Mesaj native WebView", "WA deep link", "Adoption ≥ %45"],
   },
   {
     id: "F6",
@@ -61,9 +61,15 @@ const DOWNLOADS = [
     available: true,
   },
   {
-    name: "LTR Viewer",
-    desc: "Windows / macOS / Linux — F1 ile yayınlanacak.",
-    href: "#viewer",
+    name: "LTR Web Viewer",
+    desc: "Tarayıcıda .ltr açın, yazdır / PDF.",
+    href: "/ltr/viewer",
+    available: true,
+  },
+  {
+    name: "LTR Viewer (Google Play / App Store)",
+    desc: "F5 halka açık · F1 kapalı test.",
+    href: "#stores",
     available: false,
   },
   {
@@ -100,7 +106,24 @@ export function DownloadsPageClient() {
             Teknik spec ve 24 ay planı: repoda{" "}
             <code>docs/LTR_SPEC_V1_DRAFT.md</code> ve{" "}
             <code>docs/LTR_24_MONTH_ROADMAP.md</code>
+            {" · "}
+            <code>docs/LTR_ECOSYSTEM_MASTER_PLAN.md</code>
           </p>
+        </section>
+
+        <section className="about-premium-section" id="stores">
+          <h2 className="about-premium-h2">Google Play ve App Store</h2>
+          <p>
+            <strong>LTR Viewer</strong> ve <strong>LTR Author</strong> ayrı mağaza listeleri;
+            Lerta Logistics uygulaması mesaj eklerini aynı renderer ile açar. Detay:{" "}
+            <code>docs/LTR_ECOSYSTEM_MASTER_PLAN.md</code>
+          </p>
+          <ul style={{ paddingLeft: "1.25rem" }}>
+            <li>F1: TestFlight + Play internal (salt okuma)</li>
+            <li>F3: Lerta mobil — mesaj LTR eki</li>
+            <li>F5: TR halka açık mağaza</li>
+            <li>F6: Global listing (EN)</li>
+          </ul>
         </section>
 
         <section className="about-premium-section" id="indir">

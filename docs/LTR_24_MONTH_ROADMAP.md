@@ -4,7 +4,7 @@
 **Bitiş hedefi:** 2028-10  
 **Ürün:** Lerta Document (`.ltr`) — operasyonel belgede PDF alternatifi; resmi/e-Fatura ekosisteminde PDF export yan yolu.
 
-**İlgili:** [LTR_SPEC_V1_DRAFT.md](./LTR_SPEC_V1_DRAFT.md) · `@nakliyeborsasi/core` → `ltr/*`
+**İlgili:** [LTR_SPEC_V1_DRAFT.md](./LTR_SPEC_V1_DRAFT.md) · [LTR_ECOSYSTEM_MASTER_PLAN.md](./LTR_ECOSYSTEM_MASTER_PLAN.md) · `@nakliyeborsasi/core` → `ltr/*`
 
 ---
 
@@ -26,11 +26,11 @@
 
 ```text
 M0–2   F0  İskelet + spec + vitrin İndirmeler
-M3–6   F1  TR: mühürlü format + web viewer + örnekler
+M3–6   F1  TR: web viewer + renderer; Play/TestFlight kapalı test
 M7–10  F2  TR: Lerta Posta (ek, önizleme, PDF export)
 M11–14 F3  TR: Lerta Mesaj + lojistik şablonlar + OG link
 M15–18 F4  TR: Author beta, linked mod, güvenlik katmanı
-M19–21 F5  TR: mobil viewer, WA deep link, KOBİ yayılım
+M19–21 F5  TR: mağaza Viewer+Author; mesaj native; WA deep link
 M22–24 F6  Global: locale, view portal, MIME/IANA yolu, EU bölgesi
 ```
 
