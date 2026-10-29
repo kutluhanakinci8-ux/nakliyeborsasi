@@ -37,11 +37,11 @@ export const WINLRT_SOFTWARE_CATALOG: SoftwareDownloadItem[] = [
   {
     id: "winlrt-macos",
     name: "WinLRT for Mac",
-    description: "macOS için WinLRT istemcisi (DMG).",
+    description: "macOS (Apple Silicon) DMG; .ltr UTType com.lerta.document.ltr. Gatekeeper uyarısı: imzasız beta.",
     platform: "macos",
     phase: "W2",
-    available: false,
-    href: "#winlrt-macos",
+    available: true,
+    href: "/downloads/winlrt/WinLRT_0.1.0_aarch64.dmg",
   },
   {
     id: "winlrt-android",
