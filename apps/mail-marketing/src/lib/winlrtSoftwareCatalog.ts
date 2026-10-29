@@ -1,7 +1,9 @@
 /**
  * WinLRT / bağımsız istemci indirmeleri — posta/mesaj API’sine bağlı değil.
- * Durum güncellemesi: deploy sonrası `available` ve `href` alanları.
+ * Sürüm: `winlrtReleaseMeta.ts` (W5 tek kaynak).
  */
+
+import { WINLRT_RELEASE, winlrtDownloadHref } from "./winlrtReleaseMeta";
 
 export type SoftwareDownloadPlatform =
   | "windows"
@@ -28,26 +30,26 @@ export const WINLRT_SOFTWARE_CATALOG: SoftwareDownloadItem[] = [
   {
     id: "winlrt-windows",
     name: "WinLRT for Windows",
-    description: ".ltr belgelerini açın, yazdırın ve PDF’e aktarın. Kurulumda dosya ilişkilendirme.",
+    description: `.ltr açın, Author v1 ile oluşturun, yazdırın. Sürüm ${WINLRT_RELEASE.version}.`,
     platform: "windows",
     phase: "W1",
     available: true,
-    href: "/downloads/winlrt/WinLRT_0.1.0_x64_en-US.msi",
+    href: winlrtDownloadHref("msi"),
   },
   {
     id: "winlrt-macos",
     name: "WinLRT for Mac",
-    description: "macOS (Apple Silicon) DMG; .ltr UTType com.lerta.document.ltr. Gatekeeper uyarısı: imzasız beta.",
+    description: `Apple Silicon DMG · sürüm ${WINLRT_RELEASE.version}. UTType com.lerta.document.ltr.`,
     platform: "macos",
     phase: "W2",
     available: true,
-    href: "/downloads/winlrt/WinLRT_0.1.0_aarch64.dmg",
+    href: winlrtDownloadHref("macosDmg"),
   },
   {
     id: "winlrt-android",
     name: "WinLRT — Google Play",
     description:
-      "Android (com.lerta.winlrt): .ltr açma ve paylaşım. Play internal test — mağaza linki yayınlandığında aktif olur.",
+      "Android (com.lerta.winlrt): .ltr açma, paylaşım ve Author v1. Play linki yayınlandığında aktif olur.",
     platform: "android",
     phase: "W3",
     available: false,
@@ -58,7 +60,7 @@ export const WINLRT_SOFTWARE_CATALOG: SoftwareDownloadItem[] = [
     id: "winlrt-ios",
     name: "WinLRT — App Store",
     description:
-      "iPhone / iPad (com.lerta.winlrt): Dosyalar’dan .ltr açma. TestFlight / App Store linki yayınlandığında aktif olur.",
+      "iPhone / iPad: Dosyalar’dan .ltr ve Author v1. TestFlight / App Store sonrası aktif olur.",
     platform: "ios",
     phase: "W4",
     available: false,
@@ -75,6 +77,33 @@ export const WINLRT_SOFTWARE_CATALOG: SoftwareDownloadItem[] = [
     href: "/downloads/samples/ornek-teklif.ltr",
   },
   {
+    id: "template-teklif",
+    name: "Şablon — Taşıma teklifi",
+    description: "Author v1 boş teklif şablonu; WinLRT ile düzenleyip kaydedin.",
+    platform: "sample",
+    phase: "W5",
+    available: true,
+    href: "/downloads/samples/sablon-teklif.ltr",
+  },
+  {
+    id: "template-kapasite",
+    name: "Şablon — Kapasite bildirimi",
+    description: "Boş kapasite / tonaj özeti şablonu.",
+    platform: "sample",
+    phase: "W5",
+    available: true,
+    href: "/downloads/samples/sablon-kapasite.ltr",
+  },
+  {
+    id: "template-rota",
+    name: "Şablon — Rota özeti",
+    description: "Durak ve mesafe özeti şablonu.",
+    platform: "sample",
+    phase: "W5",
+    available: true,
+    href: "/downloads/samples/sablon-rota.ltr",
+  },
+  {
     id: "web-preview",
     name: "Tarayıcı önizlemesi (geçici)",
     description: "WinLRT kurmadan .ltr yükleyip görüntüleyin. WinLRT yayına kadar geçici.",
@@ -89,5 +118,7 @@ export const SOFTWARE_DOWNLOAD_PAGE = {
   path: "/destek/yazilim-indir",
   title: "Yazılım indir",
   lead:
-    "WinLRT, LTR (.ltr) belgeleri için indirilebilir istemcidir. Posta ve mesajlaşmadan bağımsız çalışır; kurulum sonrası çift tıkla açılır.",
+    "WinLRT, LTR (.ltr) belgeleri için indirilebilir istemcidir. Author v1 ile lojistik şablonlarından belge oluşturabilirsiniz. Posta ve mesajlaşmadan bağımsızdır.",
 } as const;
+
+export { WINLRT_RELEASE };

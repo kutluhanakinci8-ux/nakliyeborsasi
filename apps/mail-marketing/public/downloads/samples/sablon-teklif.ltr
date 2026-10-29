@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="ltr" content="1.0">
+<title>Taşıma teklifi</title>
+<style>
+:root { color-scheme: light dark; --ltr-bg: #f6f7f9; --ltr-fg: #1a1d23; --ltr-muted: #5c6370; --ltr-accent: #0b5cab; --ltr-card: #fff; --ltr-border: #dfe3ea; }
+@media (prefers-color-scheme: dark) {
+  :root { --ltr-bg: #121418; --ltr-fg: #eef0f4; --ltr-muted: #9aa3b2; --ltr-accent: #5ba4ff; --ltr-card: #1c1f26; --ltr-border: #2e3440; }
+}
+body { margin: 0; font-family: system-ui, sans-serif; background: var(--ltr-bg); color: var(--ltr-fg); line-height: 1.5; }
+.ltr-wrap { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 3rem; }
+.ltr-eyebrow { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ltr-muted); }
+.ltr-title { font-size: 1.75rem; margin: 0.25rem 0; }
+.ltr-sub { color: var(--ltr-muted); margin: 0 0 1.25rem; }
+.ltr-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.75rem; margin: 1rem 0; }
+.ltr-kpi { background: var(--ltr-card); border: 1px solid var(--ltr-border); border-radius: 8px; padding: 0.75rem; }
+.ltr-kpi strong { display: block; font-size: 1.25rem; color: var(--ltr-accent); }
+.ltr-kpi span { font-size: 0.8rem; color: var(--ltr-muted); }
+.ltr-callout { border-left: 4px solid var(--ltr-accent); padding: 0.75rem 1rem; background: var(--ltr-card); border-radius: 0 8px 8px 0; margin: 1rem 0; }
+.ltr-table { width: 100%; border-collapse: collapse; background: var(--ltr-card); border: 1px solid var(--ltr-border); border-radius: 8px; overflow: hidden; margin: 1rem 0; }
+.ltr-table th, .ltr-table td { padding: 0.6rem 0.75rem; text-align: left; border-bottom: 1px solid var(--ltr-border); }
+.ltr-table th { background: var(--ltr-bg); font-size: 0.85rem; }
+.ltr-quote { margin: 1.5rem 0; padding: 1rem; border-radius: 8px; background: var(--ltr-card); border: 1px solid var(--ltr-border); }
+.ltr-quote cite { display: block; margin-top: 0.5rem; font-size: 0.85rem; color: var(--ltr-muted); }
+.ltr-section { margin: 1.5rem 0; }
+</style>
+<script type="application/ltr+json" id="ltr-content">{"schema":"lerta/ltr/1.0","lang":"tr","mode":"sealed","title":"Taşıma teklifi","subtitle":"Yükleme → Boşaltma","meta":{"author":"WinLRT Author","organization":"Lerta","createdAt":"2026-10-29T10:03:56.591Z","generator":"WinLRT Author v1"},"blocks":[{"type":"callout","tone":"info","text":"Bu belge WinLRT Author ile oluşturuldu. Müşteriye .ltr olarak gönderilebilir."},{"type":"kpis","items":[{"value":"—","label":"Teklif","delta":"KDV hariç"},{"value":"—","label":"Transit"},{"value":"FTL","label":"Araç"}]},{"type":"markdown","md":"## Güzergah\n- **Yükleme:** \n- **Boşaltma:** \n\n## Koşullar\nCMR ve yazılı teyit."},{"type":"table","title":"Kalemler","columns":["Kalem","Tutar"],"rows":[["Taşıma bedeli","—"],["Ek hizmetler","—"]]}]}</script>
+</head>
+<body>
+<div class="ltr-wrap">
+<header>
+<p class="ltr-eyebrow">Lerta Document · sealed</p>
+<h1 class="ltr-title">Taşıma teklifi</h1>
+<p class="ltr-sub">Yükleme → Boşaltma</p>
+</header>
+<div class="ltr-callout ltr-callout--info">Bu belge WinLRT Author ile oluşturuldu. Müşteriye .ltr olarak gönderilebilir.</div>
+<div class="ltr-kpis"><div class="ltr-kpi"><strong>—</strong><span>Teklif<span class="ltr-kpi-delta">KDV hariç</span></span></div><div class="ltr-kpi"><strong>—</strong><span>Transit</span></div><div class="ltr-kpi"><strong>FTL</strong><span>Araç</span></div></div>
+<h2>Güzergah</h2>
+<p>- <strong>Yükleme:</strong></p>
+<p>- <strong>Boşaltma:</strong></p>
+<h2>Koşullar</h2>
+<p>CMR ve yazılı teyit.</p>
+<h2>Kalemler</h2><table class="ltr-table"><thead><tr><th>Kalem</th><th>Tutar</th></tr></thead><tbody><tr><td>Taşıma bedeli</td><td>—</td></tr><tr><td>Ek hizmetler</td><td>—</td></tr></tbody></table>
+</div>
+</body>
+</html>
