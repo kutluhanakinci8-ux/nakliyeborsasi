@@ -1,4 +1,4 @@
-name: WinLRT Android
+name: WinLRT Mobile
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ on:
       - "core/src/ltr/**"
 
 jobs:
-  validate-android:
+  validate-mobile:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,5 +19,5 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
-      - name: Build core + typecheck mobile
+      - name: Build core + typecheck WinLRT mobile (Android + iOS)
         run: npm run validate -w @lerta/winlrt-mobile

@@ -1,24 +1,28 @@
 # WinLRT Mobile (Android + iOS)
 
-Expo uygulaması: `com.lerta.winlrt` — WebView + `@nakliyeborsasi/core/ltr`.
+Expo: **`com.lerta.winlrt`** — WebView + `@nakliyeborsasi/core/ltr`.
 
 ## W3 — Android
 
-- [x] Expo iskelet + `.ltr` VIEW / SEND intent
-- [x] CI typecheck + core build
-- [ ] EAS → Google Play internal testing (hesap + `eas submit`)
+- [x] VIEW / SEND intent · CI
+- [ ] Google Play internal test (`eas submit`)
+
+Bkz. [WINLRT_W3_ANDROID_BUILD.md](../../../docs/WINLRT_W3_ANDROID_BUILD.md)
+
+## W4 — iOS
+
+- [x] UTType + Dosyalar entegrasyonu · CI (paylaşımlı mobile workflow)
+- [ ] TestFlight / App Store (`eas build -p ios`)
+- [ ] Share Extension v0 (native target, opsiyonel)
+
+Bkz. [WINLRT_W4_IOS_BUILD.md](../../../docs/WINLRT_W4_IOS_BUILD.md)
 
 ## Geliştirme
 
 ```bash
-cd apps/winlrt/mobile
-npm install   # repo kökünden npm ci
-npm run validate
-npx expo start
+npm ci
+npm run validate -w @lerta/winlrt-mobile
+cd apps/winlrt/mobile && npx expo start
 ```
 
-## Play yayını
-
-Bkz. [WINLRT_W3_ANDROID_BUILD.md](../../../docs/WINLRT_W3_ANDROID_BUILD.md)
-
-Vitrin: Play linki (APK yok) — `winlrtSoftwareCatalog.ts` → `winlrt-android`.
+Vitrin: `winlrtSoftwareCatalog.ts` — Play / App Store linkleri (APK/IPA yok).

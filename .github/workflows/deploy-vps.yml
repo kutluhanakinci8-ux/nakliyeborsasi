@@ -11,7 +11,7 @@ on:
       - "docs/LTR_**"
       - ".github/workflows/winlrt-windows.yml"
       - ".github/workflows/winlrt-macos.yml"
-      - ".github/workflows/winlrt-android.yml"
+      - ".github/workflows/winlrt-mobile.yml"
       - ".github/workflows/deploy-winlrt-vitrin.yml"
   workflow_dispatch:
     inputs:

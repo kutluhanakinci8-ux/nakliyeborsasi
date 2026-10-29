@@ -57,11 +57,12 @@ export const WINLRT_SOFTWARE_CATALOG: SoftwareDownloadItem[] = [
   {
     id: "winlrt-ios",
     name: "WinLRT — App Store",
-    description: "iPhone ve iPad; Dosyalar uygulamasından .ltr açma.",
+    description:
+      "iPhone / iPad (com.lerta.winlrt): Dosyalar’dan .ltr açma. TestFlight / App Store linki yayınlandığında aktif olur.",
     platform: "ios",
     phase: "W4",
     available: false,
-    href: "#winlrt-ios",
+    href: "https://apps.apple.com/tr/search?term=WinLRT+Lerta",
     external: true,
   },
   {
