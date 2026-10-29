@@ -43,6 +43,8 @@
 
 **Web:** `lerta.com.tr/indirmeler` — indirme linkleri + sürüm notları (WinLRT web viewer geçici köprü kalır).
 
+**Destek vitrin (Posta/Mesaj sitesi):** `https://www.lerta.com.tr/destek/yazilim-indir` — footer **Destek → Yazılım indir**; WinLRT MSI/APK/store linklerinin **tek vitrin** (posta/mesaj API’sinden bağımsız).
+
 ---
 
 ## 3. Teknik mimari (kendi yolumuz)

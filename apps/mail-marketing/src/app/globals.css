@@ -2146,3 +2146,122 @@ footer {
     align-items: flex-start;
   }
 }
+
+/* ——— Destek · Yazılım indir (WinLRT) ——— */
+.software-dl-kicker {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  color: var(--lerta-gold-deep);
+  margin: 0 0 0.5rem;
+}
+
+.software-dl-page {
+  margin-top: 1.5rem;
+}
+
+.software-dl-intro {
+  font-size: 1.05rem;
+  max-width: 42rem;
+}
+
+.software-dl-note {
+  color: var(--muted);
+  font-size: 0.92rem;
+  max-width: 42rem;
+}
+
+.software-dl-section {
+  margin-top: 2rem;
+}
+
+.software-dl-section--muted {
+  padding: 1.25rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg-soft);
+}
+
+.software-dl-section__title {
+  font-family: var(--lerta-font-display);
+  font-size: 1.15rem;
+  margin: 0 0 1rem;
+}
+
+.software-dl-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.software-dl-row {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem 1.15rem;
+  background: var(--bg-soft);
+}
+
+.software-dl-row a {
+  display: grid;
+  gap: 0.35rem;
+  text-decoration: none;
+}
+
+.software-dl-row--soon {
+  opacity: 0.72;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.software-dl-row__name {
+  font-weight: 600;
+}
+
+.software-dl-row__desc {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.software-dl-row__badge {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.software-dl-row__badge--ready {
+  color: var(--lerta-gold-deep);
+}
+
+.software-dl-roadmap {
+  margin: 0 0 1rem;
+  padding-left: 1.25rem;
+  color: var(--muted);
+}
+
+.software-dl-preview__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.software-dl-file-label {
+  cursor: pointer;
+  margin: 0;
+}
+
+.software-dl-preview__frame {
+  width: 100%;
+  min-height: 520px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-top: 0.75rem;
+}
+
+.software-dl-error {
+  color: #b42318;
+}
