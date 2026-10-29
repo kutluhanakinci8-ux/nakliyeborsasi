@@ -27,3 +27,5 @@ VPS_SSH_PASSWORD='…' bash scripts/deploy-winlrt-vitrin-only.sh
 - Footer: Destek → Yazılım indir
 
 Tam stack deploy için (WinLRT dışı): `bash scripts/agent-merge-deploy-main.sh`
+
+Cursor + GitHub: [WINLRT_CURSOR_GITHUB.md](./WINLRT_CURSOR_GITHUB.md)

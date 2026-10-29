@@ -1,0 +1,24 @@
+---
+description: WinLRT Cloud Agent kapsamı — posta/mesaj/API entegrasyonu yok
+globs:
+  - apps/winlrt/**
+  - core/src/ltr/**
+  - apps/mail-marketing/src/lib/winlrt*
+  - apps/mail-marketing/src/app/destek/yazilim-indir/**
+  - apps/mail-marketing/public/downloads/**
+  - docs/WINLRT_**
+  - scripts/*winlrt*
+  - scripts/agent-merge-deploy-winlrt-vitrin.sh
+  - .github/workflows/winlrt-*.yml
+  - .github/workflows/deploy-winlrt-vitrin.yml
+alwaysApply: false
+---
+
+# WinLRT agent kuralları
+
+- **Canonical kod:** `kutluhanakinci8-ux/nakliyeborsasi` (bu repo). Ayrı `winlrt-` reposu yalnızca vitrin/redirect; kaynak burada.
+- **Deploy:** WinLRT fazları için yalnızca `scripts/agent-merge-deploy-winlrt-vitrin.sh` veya `scripts/deploy-winlrt-vitrin-only.sh`. `deploy-production-vps.sh` / tam stack **kullanma**.
+- **Entegrasyon:** LTR’yi posta, mesaj veya API’ye **W6+ olmadan bağlama**.
+- **Dal adı:** `cursor/<açıklama>-81ce`
+- **Vitrin URL:** https://www.lerta.com.tr/destek/yazilim-indir
+- **Roadmap:** `docs/WINLRT_PRODUCT_ROADMAP.md`
