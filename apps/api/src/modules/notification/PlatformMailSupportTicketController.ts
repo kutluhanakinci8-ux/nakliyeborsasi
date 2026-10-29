@@ -1,10 +1,11 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
 import { AuthenticatedUserContext } from "@nakliyeborsasi/core";
 import { JwtAuthenticationGuard } from "../auth/JwtAuthenticationGuard";
 import { PlatformAdminGuard } from "../platform-admin/PlatformAdminGuard";
 import { AuthenticatedUserParam } from "../auth/AuthenticatedUserParam";
 import {
   AddMailSupportTicketMessageDto,
+  ListOperatorSupportTicketsQueryDto,
   UpdateMailSupportTicketStatusDto,
 } from "./MailSupportTicketRequestDto";
 import { MailOrganizationSupportTicketService } from "./MailOrganizationSupportTicketService";
@@ -22,9 +23,12 @@ export class PlatformMailSupportTicketController {
   ) {}
 
   @Get()
-  public async list() {
+  public async list(@Query() query: ListOperatorSupportTicketsQueryDto) {
     const tickets =
-      await this.mailOrganizationSupportTicketService.listForOperator();
+      await this.mailOrganizationSupportTicketService.listForOperator({
+        topic: query.topic,
+        companyQuery: query.company,
+      });
     return { message: "OK", tickets };
   }
 

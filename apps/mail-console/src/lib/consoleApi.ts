@@ -1356,10 +1356,21 @@ export type MailSupportTicketOperatorDetail = MailSupportTicketDetail & {
   companyLegalName: string;
 };
 
-export async function fetchOperatorSupportTickets(accessToken: string) {
+export async function fetchOperatorSupportTickets(
+  accessToken: string,
+  filters?: { topic?: MailSupportTicketTopic; company?: string },
+) {
+  const params = new URLSearchParams();
+  if (filters?.topic) {
+    params.set("topic", filters.topic);
+  }
+  if (filters?.company?.trim()) {
+    params.set("company", filters.company.trim());
+  }
+  const suffix = params.toString() ? `?${params.toString()}` : "";
   return apiFetch<{ tickets: MailSupportTicketOperatorSummary[] }>(
     accessToken,
-    "platform-admin/mail/support/tickets",
+    `platform-admin/mail/support/tickets${suffix}`,
   );
 }
 

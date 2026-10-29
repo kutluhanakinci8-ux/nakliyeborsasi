@@ -14,6 +14,7 @@ export enum NotificationEventCode {
   MessagingChatWebPush = "MESSAGING_CHAT_WEB_PUSH",
   MailTeamInvite = "MAIL_TEAM_INVITE",
   MailSupportTicketOpened = "MAIL_SUPPORT_TICKET_OPENED",
+  MailSupportTicketStaffReply = "MAIL_SUPPORT_TICKET_STAFF_REPLY",
   TrustTransportConfirmRequest = "TRUST_TRANSPORT_CONFIRM_REQUEST",
   TrustReviewReminder = "TRUST_REVIEW_REMINDER",
   SocialHubHealthDegraded = "SOCIAL_HUB_HEALTH_DEGRADED",

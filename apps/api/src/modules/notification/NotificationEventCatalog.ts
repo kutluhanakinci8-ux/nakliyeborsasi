@@ -84,6 +84,14 @@ export const NOTIFICATION_EVENT_CATALOG: NotificationEventDefinition[] = [
     labelTr: "Lerta Mail — yeni destek talebi",
   },
   {
+    code: NotificationEventCode.MailSupportTicketStaffReply,
+    category: "auth",
+    userPreferenceKey: null,
+    defaultAdminEnabled: false,
+    defaultUserEnabled: true,
+    labelTr: "Lerta Mail — destek yanıtı",
+  },
+  {
     code: NotificationEventCode.AuctionBidPlaced,
     category: "auction",
     userPreferenceKey: "notifyAuctions",

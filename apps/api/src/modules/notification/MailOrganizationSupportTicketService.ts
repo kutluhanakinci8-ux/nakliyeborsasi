@@ -179,11 +179,39 @@ export class MailOrganizationSupportTicketService {
     return this.getForOrganization(params.organizationId, ticket.id);
   }
 
-  public async listForOperator(): Promise<MailSupportTicketOperatorSummaryDto[]> {
-    const tickets = await this.ticketRepository.find({
-      order: { updatedAt: "DESC" },
-      take: 200,
-    });
+  public async listForOperator(filters?: {
+    topic?: MailSupportTicketTopic;
+    companyQuery?: string;
+  }): Promise<MailSupportTicketOperatorSummaryDto[]> {
+    const qb = this.ticketRepository
+      .createQueryBuilder("ticket")
+      .orderBy("ticket.updatedAt", "DESC")
+      .take(200);
+
+    if (filters?.topic) {
+      qb.andWhere("ticket.topic = :topic", { topic: filters.topic });
+    }
+
+    const companyQuery = filters?.companyQuery?.trim();
+    if (companyQuery) {
+      const uuidPattern =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      if (uuidPattern.test(companyQuery)) {
+        qb.andWhere("ticket.organization_id = :organizationId", {
+          organizationId: companyQuery,
+        });
+      } else {
+        qb.innerJoin(
+          CompanyEntity,
+          "company",
+          "company.id = ticket.organization_id",
+        ).andWhere("LOWER(company.legalName) LIKE :companyName", {
+          companyName: `%${companyQuery.toLowerCase()}%`,
+        });
+      }
+    }
+
+    const tickets = await qb.getMany();
     if (tickets.length === 0) {
       return [];
     }
@@ -252,7 +280,7 @@ export class MailOrganizationSupportTicketService {
     if (!body) {
       throw new BadRequestException("Mesaj boş olamaz.");
     }
-    await this.messageRepository.save(
+    const savedMessage = await this.messageRepository.save(
       this.messageRepository.create({
         ticketId: ticket.id,
         authorUserId: params.staffUserId,
@@ -263,6 +291,17 @@ export class MailOrganizationSupportTicketService {
     ticket.status = "waiting_customer";
     ticket.updatedAt = new Date();
     await this.ticketRepository.save(ticket);
+    const publicRef =
+      ticket.id.split("-")[0]?.toUpperCase() ?? ticket.id.slice(0, 8);
+    void this.mailSupportTicketNotificationService.notifyCustomerStaffReply({
+      ticketId: ticket.id,
+      messageId: savedMessage.id,
+      publicRef,
+      organizationId: ticket.organizationId,
+      createdByUserId: ticket.createdByUserId,
+      ticketSubject: ticket.subject,
+      staffMessagePreview: body,
+    });
     return this.getForOperator(ticket.id);
   }
 

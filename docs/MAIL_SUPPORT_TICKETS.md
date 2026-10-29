@@ -44,6 +44,10 @@ Konsol UI: `https://yonetim.lerta.com.tr/operator/destek` (platform operatör JW
 
 Ortam: `MAIL_SUPPORT_NOTIFY_EMAIL` (virgülle ayrılmış; varsayılan `destek@lerta.com.tr`). Olay: `MAIL_SUPPORT_TICKET_OPENED` (outbox).
 
+Staff yanıtında talep **oluşturan kullanıcıya** `MAIL_SUPPORT_TICKET_STAFF_REPLY` e-postası (konsol linki `/destek/talepler/:id`).
+
+Operatör liste filtreleri (query): `topic`, `company` (unvan LIKE veya organization UUID).
+
 ## İlgili
 
 - Vitrin `/destek`, `apps/mail-marketing/src/lib/marketingSupportConsole.ts`
