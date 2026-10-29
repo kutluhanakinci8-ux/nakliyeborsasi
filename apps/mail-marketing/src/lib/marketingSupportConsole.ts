@@ -1,6 +1,6 @@
 import { consolePath, CONSOLE_URL } from "./marketingUrls";
 
-/** Planlanan yönetim konsolu destek talepleri (ticket) modülü. */
+/** Yönetim konsolu destek talepleri (ticket) modülü. */
 export const CONSOLE_SUPPORT_TICKETS_PATH = "/destek/talepler";
 
 export const CONSOLE_SUPPORT_TICKETS_URL = consolePath(CONSOLE_SUPPORT_TICKETS_PATH);
