@@ -38,9 +38,19 @@
         "ext": ["ltr"],
         "name": "Lerta Document",
         "description": "Lerta Document (LTR)",
-        "mimeType": "application/vnd.lerta.document+html"
+        "mimeType": "application/vnd.lerta.document+html",
+        "role": "Viewer",
+        "rank": "Owner",
+        "contentTypes": ["com.lerta.document.ltr"],
+        "exportedType": {
+          "identifier": "com.lerta.document.ltr",
+          "conformsTo": ["public.data", "public.content"]
+        }
       }
     ],
+    "macOS": {
+      "minimumSystemVersion": "10.15"
+    },
     "windows": {
       "nsis": {
         "installMode": "currentUser"
