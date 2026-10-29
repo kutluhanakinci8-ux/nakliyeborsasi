@@ -25,7 +25,7 @@ git fetch origin '${VPS_BRANCH}'
 git merge --abort 2>/dev/null || true
 git checkout -f '${VPS_BRANCH}' 2>/dev/null || true
 git reset --hard 'origin/${VPS_BRANCH}'
-git clean -fdx -e .env -e apps/web/.env.local -e apps/mail-web/.env.local -e apps/mail-marketing/.env.local
+# WinLRT vitrin: git clean YAPMA — diğer uygulamaların .env.local / node_modules silinmesin.
 git log -1 --oneline
 echo '=== WinLRT vitrin-only: mail-marketing build + pm2 ==='
 bash scripts/restart-mail-marketing.sh '${VPS_INSTALL_DIR}' '${WEB_PORT}'
