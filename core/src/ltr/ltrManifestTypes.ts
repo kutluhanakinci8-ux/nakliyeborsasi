@@ -7,8 +7,10 @@ export type LtrManifestMeta = {
   generator?: string;
 };
 
+/** Blok türüne göre ek alanlar (callout.tone, markdown.md, …) serbest. */
 export type LtrBlockBase = {
   type: string;
+  [key: string]: unknown;
 };
 
 export type LtrManifest = {
