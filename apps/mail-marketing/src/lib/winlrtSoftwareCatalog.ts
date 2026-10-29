@@ -31,8 +31,8 @@ export const WINLRT_SOFTWARE_CATALOG: SoftwareDownloadItem[] = [
     description: ".ltr belgelerini açın, yazdırın ve PDF’e aktarın. Kurulumda dosya ilişkilendirme.",
     platform: "windows",
     phase: "W1",
-    available: false,
-    href: "#winlrt-windows",
+    available: true,
+    href: "/downloads/winlrt/WinLRT_0.1.0_x64_en-US.msi",
   },
   {
     id: "winlrt-macos",
