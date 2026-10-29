@@ -31,6 +31,19 @@ export class UpdateMailSupportTicketStatusDto {
   public status!: "open" | "waiting_customer" | "resolved";
 }
 
+const OPERATOR_TOPICS = ["technical", "billing", "sales", "general"] as const;
+
+export class ListOperatorSupportTicketsQueryDto {
+  @IsOptional()
+  @IsIn(OPERATOR_TOPICS)
+  public topic?: (typeof OPERATOR_TOPICS)[number];
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  public company?: string;
+}
+
 export class MailSupportTicketIdParamDto {
   @IsUUID()
   public ticketId!: string;

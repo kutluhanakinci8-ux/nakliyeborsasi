@@ -114,6 +114,29 @@ export class EmailTemplateService {
           ),
           text: `İlk giriş: ${payload.emailAddress}`,
         };
+      case NotificationEventCode.MailSupportTicketOpened:
+        return {
+          subject: `[${PLATFORM_EMAIL_SUBJECT_TAG}] Destek #${payload.ticketRef ?? "—"} — ${payload.ticketSubject ?? ""}`,
+          html: wrapCorporateEmail(
+            "Yeni destek talebi",
+            `${leadParagraph(
+              `<strong>${escapeHtml(payload.companyLegalName ?? "Firma")}</strong> yönetim konsolundan yeni bir destek talebi açtı.`,
+            )}
+            ${detailTable([
+              { label: "Ref", value: `#${payload.ticketRef ?? "—"}` },
+              { label: "Konu", value: payload.topicLabel ?? "—" },
+              { label: "Başlık", value: payload.ticketSubject ?? "—" },
+              { label: "Talep eden", value: payload.requesterEmail ?? "—" },
+            ])}
+            ${leadParagraph(escapeHtml(payload.messagePreview ?? ""))}
+            ${primaryButton(payload.operatorTicketUrl ?? "#", "Operatör panelinde aç")}`,
+            {
+              eyebrow: "Lerta destek",
+              preheader: `Talep #${payload.ticketRef ?? ""}`,
+            },
+          ),
+          text: `${payload.operatorTicketUrl ?? ""}\n\n${payload.messagePreview ?? ""}`,
+        };
       default:
         return {
           subject: `[${PLATFORM_EMAIL_SUBJECT_TAG}] Bildirim — ${eventCode}`,
@@ -203,28 +226,26 @@ export class EmailTemplateService {
           ),
           text: payload.inviteUrl ?? "",
         };
-      case NotificationEventCode.MailSupportTicketOpened:
+      case NotificationEventCode.MailSupportTicketStaffReply:
         return {
-          subject: `[${PLATFORM_EMAIL_SUBJECT_TAG}] Destek #${payload.ticketRef ?? "—"} — ${payload.ticketSubject ?? ""}`,
+          subject: `Lerta destek yanıtı — #${payload.ticketRef ?? ""}`,
           html: wrapCorporateEmail(
-            "Yeni destek talebi",
+            "Destek ekibinden yanıt",
             `${leadParagraph(
-              `<strong>${escapeHtml(payload.companyLegalName ?? "Firma")}</strong> yönetim konsolundan yeni bir destek talebi açtı.`,
+              `Merhaba ${escapeHtml(payload.displayName ?? "")},`,
             )}
-            ${detailTable([
-              { label: "Ref", value: `#${payload.ticketRef ?? "—"}` },
-              { label: "Konu", value: payload.topicLabel ?? "—" },
-              { label: "Başlık", value: payload.ticketSubject ?? "—" },
-              { label: "Talep eden", value: payload.requesterEmail ?? "—" },
-            ])}
+            ${leadParagraph(
+              `<strong>#${escapeHtml(payload.ticketRef ?? "")}</strong> — ${escapeHtml(payload.ticketSubject ?? "")} talebinize Lerta destek yanıt verdi.`,
+            )}
             ${leadParagraph(escapeHtml(payload.messagePreview ?? ""))}
-            ${primaryButton(payload.operatorTicketUrl ?? "#", "Operatör panelinde aç")}`,
+            ${primaryButton(payload.ticketUrl ?? "#", "Talebi konsolda aç")}
+            ${mutedParagraph("Yanıt vermek için yönetim konsolundaki destek talepleri sayfasını kullanın.")}`,
             {
-              eyebrow: "Lerta destek",
-              preheader: `Talep #${payload.ticketRef ?? ""}`,
+              eyebrow: "Lerta Mail destek",
+              preheader: `Destek yanıtı #${payload.ticketRef ?? ""}`,
             },
           ),
-          text: `${payload.operatorTicketUrl ?? ""}\n\n${payload.messagePreview ?? ""}`,
+          text: `${payload.ticketUrl ?? ""}\n\n${payload.messagePreview ?? ""}`,
         };
       default:
         return {

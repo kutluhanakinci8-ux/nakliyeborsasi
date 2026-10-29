@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ConsoleShell } from "@/components/ConsoleShell";
 import {
   fetchOperatorSupportTickets,
   isPlatformOperator,
   type MailSupportTicketOperatorSummary,
+  type MailSupportTicketTopic,
 } from "@/lib/consoleApi";
 import { useConsoleSession } from "@/lib/session";
 
@@ -16,6 +17,14 @@ const STATUS_LABELS: Record<string, string> = {
   waiting_customer: "Müşteri yanıtı bekleniyor",
   resolved: "Çözüldü",
 };
+
+const TOPIC_OPTIONS: { value: "" | MailSupportTicketTopic; label: string }[] = [
+  { value: "", label: "Tüm konular" },
+  { value: "technical", label: "Teknik" },
+  { value: "billing", label: "Faturalama" },
+  { value: "sales", label: "Satış" },
+  { value: "general", label: "Genel" },
+];
 
 function formatWhen(iso: string) {
   try {
@@ -36,6 +45,29 @@ export default function OperatorSupportTicketsPage() {
   const [tickets, setTickets] = useState<MailSupportTicketOperatorSummary[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [topicFilter, setTopicFilter] = useState<"" | MailSupportTicketTopic>("");
+  const [companyFilter, setCompanyFilter] = useState("");
+  const [appliedTopic, setAppliedTopic] = useState<"" | MailSupportTicketTopic>("");
+  const [appliedCompany, setAppliedCompany] = useState("");
+
+  const reload = useCallback(async () => {
+    if (!accessToken) {
+      return;
+    }
+    setLoading(true);
+    try {
+      const data = await fetchOperatorSupportTickets(accessToken, {
+        topic: appliedTopic || undefined,
+        company: appliedCompany || undefined,
+      });
+      setTickets(data.tickets);
+      setError("");
+    } catch {
+      setError("Talepler yüklenemedi.");
+    } finally {
+      setLoading(false);
+    }
+  }, [accessToken, appliedCompany, appliedTopic]);
 
   useEffect(() => {
     if (!accessToken) {
@@ -48,18 +80,15 @@ export default function OperatorSupportTicketsPage() {
         setDenied(true);
         return;
       }
-      setLoading(true);
-      try {
-        const data = await fetchOperatorSupportTickets(accessToken);
-        setTickets(data.tickets);
-        setError("");
-      } catch {
-        setError("Talepler yüklenemedi.");
-      } finally {
-        setLoading(false);
-      }
+      await reload();
     })();
-  }, [accessToken, router]);
+  }, [accessToken, appliedCompany, appliedTopic, reload, router]);
+
+  function onFilterSubmit(event: FormEvent) {
+    event.preventDefault();
+    setAppliedTopic(topicFilter);
+    setAppliedCompany(companyFilter.trim());
+  }
 
   if (denied) {
     return (
@@ -76,9 +105,52 @@ export default function OperatorSupportTicketsPage() {
       </p>
       <h1>Operatör — destek talepleri</h1>
       <p style={{ color: "var(--muted)", maxWidth: 720 }}>
-        Müşteri konsolundan açılan ticket&apos;lar. Yanıt gönderildiğinde durum
-        otomatik «müşteri yanıtı bekleniyor» olur.
+        Müşteri konsolundan açılan ticket&apos;lar. Lerta yanıtı talep
+        sahibine e-posta ile gider.
       </p>
+
+      <form
+        className="card"
+        style={{
+          marginTop: 16,
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 12,
+          alignItems: "flex-end",
+        }}
+        onSubmit={onFilterSubmit}
+      >
+        <div>
+          <label htmlFor="topic-filter">Konu</label>
+          <select
+            id="topic-filter"
+            className="input"
+            value={topicFilter}
+            onChange={(e) =>
+              setTopicFilter(e.target.value as "" | MailSupportTicketTopic)
+            }
+          >
+            {TOPIC_OPTIONS.map((o) => (
+              <option key={o.label} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div style={{ flex: "1 1 200px" }}>
+          <label htmlFor="company-filter">Firma (unvan veya org id)</label>
+          <input
+            id="company-filter"
+            className="input"
+            value={companyFilter}
+            onChange={(e) => setCompanyFilter(e.target.value)}
+            placeholder="Örn. Lerta veya UUID"
+          />
+        </div>
+        <button type="submit" className="btn secondary">
+          Filtrele
+        </button>
+      </form>
 
       {error ? (
         <p className="error-banner" style={{ marginTop: 16 }}>
@@ -90,7 +162,9 @@ export default function OperatorSupportTicketsPage() {
         {loading && tickets.length === 0 ? (
           <p style={{ color: "var(--muted)" }}>Yükleniyor…</p>
         ) : tickets.length === 0 ? (
-          <p style={{ color: "var(--muted)" }}>Açık talep yok.</p>
+          <p style={{ color: "var(--muted)" }}>
+            Filtreye uyan talep yok.
+          </p>
         ) : (
           <table
             style={{
@@ -107,6 +181,7 @@ export default function OperatorSupportTicketsPage() {
                 }}
               >
                 <th style={{ padding: "8px 6px" }}>Ref</th>
+                <th style={{ padding: "8px 6px" }}>Konu</th>
                 <th style={{ padding: "8px 6px" }}>Firma</th>
                 <th style={{ padding: "8px 6px" }}>Başlık</th>
                 <th style={{ padding: "8px 6px" }}>Durum</th>
@@ -121,6 +196,10 @@ export default function OperatorSupportTicketsPage() {
                 >
                   <td style={{ padding: "8px 6px" }}>
                     <Link href={`/operator/destek/${t.id}`}>#{t.publicRef}</Link>
+                  </td>
+                  <td style={{ padding: "8px 6px" }}>
+                    {TOPIC_OPTIONS.find((o) => o.value === t.topic)?.label ??
+                      t.topic}
                   </td>
                   <td style={{ padding: "8px 6px" }}>{t.companyLegalName}</td>
                   <td style={{ padding: "8px 6px" }}>{t.subject}</td>
