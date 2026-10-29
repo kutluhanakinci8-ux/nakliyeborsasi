@@ -42,6 +42,12 @@ const QUICK_PATHS = [
 
 const SELF_SERVICE = [
   {
+    title: "Yazılım indir",
+    body: "WinLRT — .ltr belgeleri için Windows, Mac, Android ve iOS istemcileri.",
+    href: "/destek/yazilim-indir",
+    cta: "İndirmeler",
+  },
+  {
     title: "Sık sorulan sorular",
     body: "Domain, DNS, planlar, faturalama ve güvenlik — kategorili SSS.",
     href: "/sss",
