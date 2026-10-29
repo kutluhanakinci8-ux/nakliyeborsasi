@@ -4,6 +4,13 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - "apps/winlrt/**"
+      - "core/src/ltr/**"
+      - "docs/WINLRT_**"
+      - "docs/LTR_**"
+      - ".github/workflows/winlrt-windows.yml"
+      - ".github/workflows/deploy-winlrt-vitrin.yml"
   workflow_dispatch:
     inputs:
       skip_ekolojik_post_deploy:
