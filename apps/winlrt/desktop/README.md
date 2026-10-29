@@ -14,6 +14,6 @@
 - [x] Tauri macOS build + UTType `com.lerta.document.ltr`
 - [x] GitHub Actions DMG build
 - [ ] Notarization (Apple Developer — üretim)
-- [ ] DMG vitrinde yayın (CI artefakt)
+- [x] DMG vitrinde yayın (`public/downloads/winlrt/`)
 
 Bkz. [WINLRT_W1_WINDOWS_BUILD.md](../../../docs/WINLRT_W1_WINDOWS_BUILD.md) · [WINLRT_W2_MACOS_BUILD.md](../../../docs/WINLRT_W2_MACOS_BUILD.md)
