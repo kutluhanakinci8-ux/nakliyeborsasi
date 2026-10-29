@@ -1,18 +1,24 @@
 # WinLRT Mobile (Android + iOS)
 
-**Stack (plan):** Expo + React Native WebView + `@nakliyeborsasi/core/ltr` (bundled)
-
-**Bundle ID:** `com.lerta.winlrt` (Lerta Logistics uygulamasından ayrı)
+Expo uygulaması: `com.lerta.winlrt` — WebView + `@nakliyeborsasi/core/ltr`.
 
 ## W3 — Android
 
-- [ ] Yeni Expo app (bu dizinde `package.json`)
-- [ ] `intentFilters` `.ltr`
-- [ ] Play internal track
+- [x] Expo iskelet + `.ltr` VIEW / SEND intent
+- [x] CI typecheck + core build
+- [ ] EAS → Google Play internal testing (hesap + `eas submit`)
 
-## W4 — iOS
+## Geliştirme
 
-- [ ] TestFlight
-- [ ] Document type + Share Extension
+```bash
+cd apps/winlrt/mobile
+npm install   # repo kökünden npm ci
+npm run validate
+npx expo start
+```
 
-`apps/mobile` (Lerta Logistics) ile kod paylaşımı yok; yalnızca `core/ltr`.
+## Play yayını
+
+Bkz. [WINLRT_W3_ANDROID_BUILD.md](../../../docs/WINLRT_W3_ANDROID_BUILD.md)
+
+Vitrin: Play linki (APK yok) — `winlrtSoftwareCatalog.ts` → `winlrt-android`.

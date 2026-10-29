@@ -91,8 +91,8 @@ export function SoftwareDownloadPageClient() {
       <section className="software-dl-section software-dl-section--muted">
         <h2 className="software-dl-section__title">Yol haritası</h2>
         <ol className="software-dl-roadmap">
-          <li>W1 — Windows beta (bu sayfadan MSI)</li>
-          <li>W2 — macOS · W3 — Google Play · W4 — App Store</li>
+          <li>W1 — Windows · W2 — macOS (bu sayfadan)</li>
+          <li>W3 — Google Play · W4 — App Store</li>
           <li>W5 — Belge oluşturma · W6+ — Posta / Mesaj</li>
         </ol>
         <p className="software-dl-note">

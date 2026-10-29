@@ -1,0 +1,75 @@
+{
+  "expo": {
+    "name": "WinLRT",
+    "slug": "winlrt",
+    "version": "0.1.0",
+    "orientation": "default",
+    "userInterfaceStyle": "automatic",
+    "scheme": "winlrt",
+    "icon": "./assets/icon.png",
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.lerta.winlrt",
+      "infoPlist": {
+        "CFBundleDocumentTypes": [
+          {
+            "CFBundleTypeName": "Lerta Document",
+            "LSHandlerRank": "Owner",
+            "LSItemContentTypes": ["com.lerta.document.ltr"]
+          }
+        ],
+        "UTExportedTypeDeclarations": [
+          {
+            "UTTypeIdentifier": "com.lerta.document.ltr",
+            "UTTypeDescription": "Lerta Document (LTR)",
+            "UTTypeConformsTo": ["public.data", "public.content"],
+            "UTTypeTagSpecification": {
+              "public.filename-extension": ["ltr"],
+              "public.mime-type": ["application/vnd.lerta.document+html"]
+            }
+          }
+        ]
+      }
+    },
+    "android": {
+      "package": "com.lerta.winlrt",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0B5CAB"
+      },
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "category": ["BROWSABLE", "DEFAULT"],
+          "data": [
+            {
+              "mimeType": "application/vnd.lerta.document+html"
+            },
+            {
+              "mimeType": "text/html"
+            },
+            {
+              "scheme": "content"
+            },
+            {
+              "scheme": "file"
+            }
+          ]
+        },
+        {
+          "action": "SEND",
+          "category": ["DEFAULT"],
+          "data": [
+            {
+              "mimeType": "application/vnd.lerta.document+html"
+            },
+            {
+              "mimeType": "text/plain"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

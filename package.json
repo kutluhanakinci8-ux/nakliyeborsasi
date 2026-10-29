@@ -8,7 +8,8 @@
     "apps/mail-web",
     "apps/mail-console",
     "apps/mail-marketing",
-    "apps/winlrt/desktop"
+    "apps/winlrt/desktop",
+    "apps/winlrt/mobile"
   ],
   "scripts": {
     "verify-root": "bash scripts/verify-project-root.sh",
