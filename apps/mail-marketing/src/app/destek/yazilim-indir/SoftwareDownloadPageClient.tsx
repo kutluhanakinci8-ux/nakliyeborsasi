@@ -3,6 +3,7 @@
 import Link from "next/link";
 import {
   SOFTWARE_DOWNLOAD_PAGE,
+  WINLRT_RELEASE,
   WINLRT_SOFTWARE_CATALOG,
   type SoftwareDownloadItem,
 } from "@/lib/winlrtSoftwareCatalog";
@@ -62,7 +63,8 @@ export function SoftwareDownloadPageClient() {
     <div className="software-dl-page">
       <p className="software-dl-intro">{SOFTWARE_DOWNLOAD_PAGE.lead}</p>
       <p className="software-dl-note">
-        Lerta Posta ve Lerta Mesaj entegrasyonu WinLRT istemcileri yayınlandıktan sonra
+        WinLRT sürüm <strong>{WINLRT_RELEASE.version}</strong> (masaüstü vitrin indirmeleri bu
+        sürümle hizalı). Lerta Posta / Mesaj entegrasyonu WinLRT istemcileri olgunlaştıktan sonra
         gelecektir. Format: <code>.ltr</code> (Lerta Document).
       </p>
 
@@ -93,7 +95,8 @@ export function SoftwareDownloadPageClient() {
         <ol className="software-dl-roadmap">
           <li>W1 — Windows · W2 — macOS (bu sayfadan)</li>
           <li>W3 — Google Play · W4 — App Store</li>
-          <li>W5 — Belge oluşturma · W6+ — Posta / Mesaj</li>
+          <li>W5 — Author v1 + lojistik şablonları (bu sayfa)</li>
+          <li>W6+ — Posta / Mesaj LTR entegrasyonu</li>
         </ol>
         <p className="software-dl-note">
           Teknik plan: repoda <code>docs/WINLRT_PRODUCT_ROADMAP.md</code>

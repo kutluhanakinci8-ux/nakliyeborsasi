@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="ltr" content="1.0">
+<title>Rota özeti</title>
+<style>
+:root { color-scheme: light dark; --ltr-bg: #f6f7f9; --ltr-fg: #1a1d23; --ltr-muted: #5c6370; --ltr-accent: #0b5cab; --ltr-card: #fff; --ltr-border: #dfe3ea; }
+@media (prefers-color-scheme: dark) {
+  :root { --ltr-bg: #121418; --ltr-fg: #eef0f4; --ltr-muted: #9aa3b2; --ltr-accent: #5ba4ff; --ltr-card: #1c1f26; --ltr-border: #2e3440; }
+}
+body { margin: 0; font-family: system-ui, sans-serif; background: var(--ltr-bg); color: var(--ltr-fg); line-height: 1.5; }
+.ltr-wrap { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 3rem; }
+.ltr-eyebrow { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ltr-muted); }
+.ltr-title { font-size: 1.75rem; margin: 0.25rem 0; }
+.ltr-sub { color: var(--ltr-muted); margin: 0 0 1.25rem; }
+.ltr-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.75rem; margin: 1rem 0; }
+.ltr-kpi { background: var(--ltr-card); border: 1px solid var(--ltr-border); border-radius: 8px; padding: 0.75rem; }
+.ltr-kpi strong { display: block; font-size: 1.25rem; color: var(--ltr-accent); }
+.ltr-kpi span { font-size: 0.8rem; color: var(--ltr-muted); }
+.ltr-callout { border-left: 4px solid var(--ltr-accent); padding: 0.75rem 1rem; background: var(--ltr-card); border-radius: 0 8px 8px 0; margin: 1rem 0; }
+.ltr-table { width: 100%; border-collapse: collapse; background: var(--ltr-card); border: 1px solid var(--ltr-border); border-radius: 8px; overflow: hidden; margin: 1rem 0; }
+.ltr-table th, .ltr-table td { padding: 0.6rem 0.75rem; text-align: left; border-bottom: 1px solid var(--ltr-border); }
+.ltr-table th { background: var(--ltr-bg); font-size: 0.85rem; }
+.ltr-quote { margin: 1.5rem 0; padding: 1rem; border-radius: 8px; background: var(--ltr-card); border: 1px solid var(--ltr-border); }
+.ltr-quote cite { display: block; margin-top: 0.5rem; font-size: 0.85rem; color: var(--ltr-muted); }
+.ltr-section { margin: 1.5rem 0; }
+</style>
+<script type="application/ltr+json" id="ltr-content">{"schema":"lerta/ltr/1.0","lang":"tr","mode":"sealed","title":"Rota özeti","subtitle":"Çok duraklı sefer","meta":{"author":"WinLRT Author","organization":"Lerta","createdAt":"2026-10-29T10:03:56.595Z","generator":"WinLRT Author v1"},"blocks":[{"type":"callout","tone":"info","text":"Operasyon veya müşteri bilgilendirmesi için rota kartı."},{"type":"kpis","items":[{"value":"— km","label":"Mesafe"},{"value":"— s","label":"Süre"},{"value":"—","label":"Durak"}]},{"type":"markdown","md":"## Duraklar\n1. \n2. \n3. \n\n## Notlar\nTrafik / sınır geçiş süreleri dahil değildir."},{"type":"quote","text":"Rota bilgisi bilgilendirme amaçlıdır; nihai plan operasyon onayı ile kesinleşir.","cite":"WinLRT Author"}]}</script>
+</head>
+<body>
+<div class="ltr-wrap">
+<header>
+<p class="ltr-eyebrow">Lerta Document · sealed</p>
+<h1 class="ltr-title">Rota özeti</h1>
+<p class="ltr-sub">Çok duraklı sefer</p>
+</header>
+<div class="ltr-callout ltr-callout--info">Operasyon veya müşteri bilgilendirmesi için rota kartı.</div>
+<div class="ltr-kpis"><div class="ltr-kpi"><strong>— km</strong><span>Mesafe</span></div><div class="ltr-kpi"><strong>— s</strong><span>Süre</span></div><div class="ltr-kpi"><strong>—</strong><span>Durak</span></div></div>
+<h2>Duraklar</h2>
+<p>1.</p>
+<p>2.</p>
+<p>3.</p>
+<h2>Notlar</h2>
+<p>Trafik / sınır geçiş süreleri dahil değildir.</p>
+<blockquote class="ltr-quote">Rota bilgisi bilgilendirme amaçlıdır; nihai plan operasyon onayı ile kesinleşir.<cite>WinLRT Author</cite></blockquote>
+</div>
+</body>
+</html>

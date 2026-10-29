@@ -17,3 +17,11 @@
 - [x] DMG vitrinde yayın (`public/downloads/winlrt/`)
 
 Bkz. [WINLRT_W1_WINDOWS_BUILD.md](../../../docs/WINLRT_W1_WINDOWS_BUILD.md) · [WINLRT_W2_MACOS_BUILD.md](../../../docs/WINLRT_W2_MACOS_BUILD.md)
+
+## W5 — Author v1
+
+- [x] Core şablonlar (teklif, kapasite, rota) + `sealLtrDocumentHtml`
+- [x] Desktop: şablon çubuğu + Kaydet
+- [x] Vitrin: `winlrtReleaseMeta.ts` + şablon `.ltr` indirmeleri
+
+Bkz. [WINLRT_W5_AUTHOR_BUILD.md](../../../docs/WINLRT_W5_AUTHOR_BUILD.md)

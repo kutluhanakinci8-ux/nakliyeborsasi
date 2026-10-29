@@ -1,10 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { open } from "@tauri-apps/plugin-dialog";
+import { open, save } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
 import {
+  createLtrFromAuthorTemplate,
   extractLtrManifestJsonFromHtml,
+  LTR_AUTHOR_TEMPLATES,
   renderLtrDocumentHtml,
+  sealLtrDocumentHtml,
   validateLtrManifest,
+  type LtrAuthorTemplateId,
   type LtrManifest,
 } from "@nakliyeborsasi/core";
 
@@ -63,6 +67,42 @@ export function WinLrtApp() {
     }
   }, []);
 
+  const createFromTemplate = useCallback((id: LtrAuthorTemplateId) => {
+    const title = window.prompt("Belge başlığı (isteğe bağlı)")?.trim();
+    const manifest = createLtrFromAuthorTemplate(id, title ? { title } : undefined);
+    const html = renderLtrDocumentHtml(manifest);
+    setState({
+      status: "ready",
+      manifest,
+      html,
+      label: `sablon-${id}.ltr`,
+    });
+  }, []);
+
+  const saveDocument = useCallback(async () => {
+    if (state.status !== "ready") {
+      return;
+    }
+    try {
+      const sealed = sealLtrDocumentHtml(state.manifest);
+      const defaultName = state.label.endsWith(".ltr") ? state.label : `${state.label}.ltr`;
+      const path = await save({
+        defaultPath: defaultName,
+        filters: [{ name: "Lerta Document", extensions: ["ltr"] }],
+      });
+      if (!path || typeof path !== "string") {
+        return;
+      }
+      await invoke("write_text_file", { path, contents: sealed });
+      setState(parseLtr(sealed, path.split(/[/\\]/).pop() ?? path));
+    } catch (e) {
+      setState({
+        status: "error",
+        message: e instanceof Error ? e.message : "Kaydedilemedi.",
+      });
+    }
+  }, [state]);
+
   useEffect(() => {
     void invoke<string[]>("cli_open_paths").then((paths) => {
       if (paths[0]) {
@@ -87,6 +127,9 @@ export function WinLrtApp() {
         <button type="button" className="primary" onClick={() => void openFile()}>
           .ltr aç
         </button>
+        <button type="button" onClick={() => void saveDocument()} disabled={state.status !== "ready"}>
+          Kaydet
+        </button>
         {onPrint ? (
           <button type="button" onClick={onPrint}>
             Yazdır / PDF
@@ -98,6 +141,14 @@ export function WinLrtApp() {
           </span>
         ) : null}
       </header>
+      <div className="author-bar">
+        <span className="author-bar__label">Author v1 — şablon:</span>
+        {LTR_AUTHOR_TEMPLATES.map((t) => (
+          <button key={t.id} type="button" className="author-chip" onClick={() => createFromTemplate(t.id)}>
+            {t.name}
+          </button>
+        ))}
+      </div>
       {state.status === "error" ? <p className="error">{state.message}</p> : null}
       {state.status === "ready" ? (
         <iframe
@@ -108,8 +159,7 @@ export function WinLrtApp() {
         />
       ) : state.status === "idle" ? (
         <p style={{ padding: "1rem", color: "var(--muted)" }}>
-          WinLRT — Lerta Document (.ltr) görüntüleyici. Dosya açın veya .ltr dosyasına çift
-          tıklayın.
+          WinLRT — LTR görüntüleyici ve Author v1. Şablondan yeni belge oluşturun veya .ltr açın.
         </p>
       ) : null}
     </div>
