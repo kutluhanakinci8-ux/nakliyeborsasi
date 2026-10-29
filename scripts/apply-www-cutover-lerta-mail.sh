@@ -42,6 +42,7 @@ if [[ "$(id -u)" -eq 0 ]]; then
   if [[ "${REDIRECT_KURUMSAL}" == "yes" ]]; then
     bash scripts/nginx-kurumsal-redirect-to-www.sh || echo "UYARI: kurumsal redirect atlandı veya sertifika eksik"
   fi
+  bash scripts/nginx-status-lerta-com-tr.sh || echo "UYARI: status alias atlandı veya sertifika eksik"
 else
   echo "NOT: root değilsiniz — nginx-www-lerta-mail-marketing.sh VPS'te root ile çalıştırın." >&2
 fi

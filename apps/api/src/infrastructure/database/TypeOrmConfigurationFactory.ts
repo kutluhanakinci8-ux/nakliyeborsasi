@@ -63,6 +63,8 @@ import { CompanyMailTeamInviteEntity } from "./entities/CompanyMailTeamInviteEnt
 import { MailOrganizationBillingStateEntity } from "./entities/MailOrganizationBillingStateEntity";
 import { MailOrganizationOperatorStateEntity } from "./entities/MailOrganizationOperatorStateEntity";
 import { MailOrganizationDeletionRequestEntity } from "./entities/MailOrganizationDeletionRequestEntity";
+import { MailOrganizationSupportTicketEntity } from "./entities/MailOrganizationSupportTicketEntity";
+import { MailOrganizationSupportTicketMessageEntity } from "./entities/MailOrganizationSupportTicketMessageEntity";
 import { MailOrganizationBrandingEntity } from "./entities/MailOrganizationBrandingEntity";
 import { MailOrganizationApiKeyEntity } from "./entities/MailOrganizationApiKeyEntity";
 import { MailOrganizationWebhookEndpointEntity } from "./entities/MailOrganizationWebhookEndpointEntity";
@@ -193,6 +195,8 @@ export class TypeOrmConfigurationFactory implements TypeOrmOptionsFactory {
         MailCalendarGoogleAccountEntity,
         MailContactCardDavAccountEntity,
         MailDmarcAggregateReportEntity,
+        MailOrganizationSupportTicketEntity,
+        MailOrganizationSupportTicketMessageEntity,
         CompanySocialConnectionEntity,
         CompanySocialPostEntity,
         CompanySocialReplyTemplateEntity,

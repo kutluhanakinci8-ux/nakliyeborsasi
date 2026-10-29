@@ -1260,3 +1260,88 @@ export async function selectMailPlan(accessToken: string, planCode: string) {
     },
   );
 }
+
+export type MailSupportTicketTopic =
+  | "technical"
+  | "billing"
+  | "sales"
+  | "general";
+
+export type MailSupportTicketStatus =
+  | "open"
+  | "waiting_customer"
+  | "resolved";
+
+export type MailSupportTicketSummary = {
+  id: string;
+  publicRef: string;
+  topic: MailSupportTicketTopic;
+  subject: string;
+  status: MailSupportTicketStatus;
+  domainName: string | null;
+  createdAt: string;
+  updatedAt: string;
+  messageCount: number;
+};
+
+export type MailSupportTicketMessage = {
+  id: string;
+  authorKind: "customer" | "staff";
+  body: string;
+  createdAt: string;
+};
+
+export type MailSupportTicketDetail = MailSupportTicketSummary & {
+  messages: MailSupportTicketMessage[];
+};
+
+export async function fetchSupportTickets(accessToken: string) {
+  return apiFetch<{ tickets: MailSupportTicketSummary[] }>(
+    accessToken,
+    "company/mail-identity/support/tickets",
+  );
+}
+
+export async function fetchSupportTicket(
+  accessToken: string,
+  ticketId: string,
+) {
+  return apiFetch<{ ticket: MailSupportTicketDetail }>(
+    accessToken,
+    `company/mail-identity/support/tickets/${ticketId}`,
+  );
+}
+
+export async function createSupportTicket(
+  accessToken: string,
+  body: {
+    topic: MailSupportTicketTopic;
+    subject: string;
+    message: string;
+    domain?: string;
+  },
+) {
+  return apiFetch<{ ticket: MailSupportTicketDetail }>(
+    accessToken,
+    "company/mail-identity/support/tickets",
+    {
+      method: "POST",
+      body: JSON.stringify(body),
+    },
+  );
+}
+
+export async function replySupportTicket(
+  accessToken: string,
+  ticketId: string,
+  message: string,
+) {
+  return apiFetch<{ ticket: MailSupportTicketDetail }>(
+    accessToken,
+    `company/mail-identity/support/tickets/${ticketId}/messages`,
+    {
+      method: "POST",
+      body: JSON.stringify({ message }),
+    },
+  );
+}

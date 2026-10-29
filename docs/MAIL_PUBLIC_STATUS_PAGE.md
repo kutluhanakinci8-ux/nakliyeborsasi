@@ -21,7 +21,24 @@ Kaynak: F1 `MailPlatformMonitoringService` (hassas yol/IP sızdırmaz).
 | `MAIL_PUBLIC_STATUS_MESSAGE` | Banner altında kullanıcıya metin |
 | `MAIL_PUBLIC_STATUS_MAINTENANCE=true` | Tüm bileşenler «bakım» |
 
-## Nginx örneği (`status.lerta.com.tr`)
+## Nginx (`status.lerta.com.tr`)
+
+VPS’te:
+
+```bash
+sudo bash scripts/nginx-status-lerta-com-tr.sh
+```
+
+HTTPS için DNS A kaydı sonrası:
+
+```bash
+sudo certbot certonly --webroot -w /var/www/certbot -d status.lerta.com.tr
+sudo bash scripts/nginx-status-lerta-com-tr.sh
+```
+
+`deploy-posta-lerta-com-tr.sh` ve `apply-www-cutover-lerta-mail.sh` bu script’i otomatik çağırır (HTTP 302 → `https://www.lerta.com.tr/durum`).
+
+## Nginx örneği (manuel)
 
 ```nginx
 server {

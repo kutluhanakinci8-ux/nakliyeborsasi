@@ -111,6 +111,9 @@ bash "$INSTALL_DIR/scripts/restart-mail-marketing.sh" "$INSTALL_DIR" 3014 "https
 bash "$INSTALL_DIR/scripts/nginx-posta-lerta-com-tr.sh"
 bash "$INSTALL_DIR/scripts/nginx-yonetim-lerta-com-tr.sh"
 bash "$INSTALL_DIR/scripts/nginx-kurumsal-lerta-com-tr.sh"
+if [[ -f "$INSTALL_DIR/scripts/nginx-status-lerta-com-tr.sh" ]]; then
+  bash "$INSTALL_DIR/scripts/nginx-status-lerta-com-tr.sh" || true
+fi
 
 if [[ -f "$INSTALL_DIR/scripts/audit-nginx-posta-isolation.sh" ]]; then
   bash "$INSTALL_DIR/scripts/audit-nginx-posta-isolation.sh"

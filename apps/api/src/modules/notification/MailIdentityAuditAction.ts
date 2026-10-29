@@ -57,6 +57,8 @@ export const MailIdentityAuditAction = {
   LegalHoldEnabled: "MAIL_LEGAL_HOLD_ENABLED",
   LegalHoldReleased: "MAIL_LEGAL_HOLD_RELEASED",
   CryptoSettingsUpdated: "MAIL_CRYPTO_SETTINGS_UPDATED",
+  SupportTicketCreated: "MAIL_SUPPORT_TICKET_CREATED",
+  SupportTicketCustomerReply: "MAIL_SUPPORT_TICKET_CUSTOMER_REPLY",
 } as const;
 
 export type MailIdentityAuditActionCode =

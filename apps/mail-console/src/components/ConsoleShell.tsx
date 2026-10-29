@@ -65,6 +65,9 @@ export function ConsoleShell({
           <Link className={navClass("/integration")} href="/integration">
             Entegrasyon
           </Link>
+          <Link className={navClass("/destek/talepler")} href="/destek/talepler">
+            Destek talepleri
+          </Link>
           {operator ? (
             <Link className={navClass("/operator")} href="/operator">
               Operatör

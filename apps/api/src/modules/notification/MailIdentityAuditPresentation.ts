@@ -66,6 +66,8 @@ const LABELS: Record<string, string> = {
     "2FA zorunluluğu güncellendi",
   [MailIdentityAuditAction.SecurityTotpEnabled]: "TOTP etkinleştirildi",
   [MailIdentityAuditAction.SecurityTotpDisabled]: "TOTP kapatıldı",
+  [MailIdentityAuditAction.SupportTicketCreated]: "Destek talebi açıldı",
+  [MailIdentityAuditAction.SupportTicketCustomerReply]: "Destek talebine yanıt",
 };
 
 function readString(metadata: Record<string, unknown> | null, key: string): string | null {
@@ -145,6 +147,17 @@ export function mailAuditSummaryTr(
       return readString(metadata, "organizationId")
         ? `Firma: ${readString(metadata, "organizationId")?.slice(0, 8)}…`
         : "eDiscovery paketi";
+    case MailIdentityAuditAction.SupportTicketCreated: {
+      const topic = readString(metadata, "topic");
+      const ticketId = readString(metadata, "ticketId");
+      const ref = ticketId ? ticketId.split("-")[0]?.toUpperCase() : null;
+      return ref ? `#${ref}${topic ? ` · ${topic}` : ""}` : topic ?? "Yeni talep";
+    }
+    case MailIdentityAuditAction.SupportTicketCustomerReply: {
+      const ticketId = readString(metadata, "ticketId");
+      const ref = ticketId ? ticketId.split("-")[0]?.toUpperCase() : null;
+      return ref ? `#${ref}` : "Müşteri yanıtı";
+    }
     default:
       return domain ?? fromAddress ?? email ?? "";
   }

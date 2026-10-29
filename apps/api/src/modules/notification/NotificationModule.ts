@@ -204,6 +204,10 @@ import {
 import { AuditModule } from "../../infrastructure/audit/AuditModule";
 import { SubscriptionModule } from "../subscription/SubscriptionModule";
 import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogEntity";
+import { MailOrganizationSupportTicketEntity } from "../../infrastructure/database/entities/MailOrganizationSupportTicketEntity";
+import { MailOrganizationSupportTicketMessageEntity } from "../../infrastructure/database/entities/MailOrganizationSupportTicketMessageEntity";
+import { CompanyMailSupportTicketController } from "./CompanyMailSupportTicketController";
+import { MailOrganizationSupportTicketService } from "./MailOrganizationSupportTicketService";
 
 @Module({
   imports: [
@@ -269,6 +273,8 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
       MailOrganizationBillingStateEntity,
       MailOrganizationOperatorStateEntity,
       CompanySubscriptionEntity,
+      MailOrganizationSupportTicketEntity,
+      MailOrganizationSupportTicketMessageEntity,
     ]),
   ],
   controllers: [
@@ -276,6 +282,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     PlatformMailIdentityAdminController,
     MailInboundWebhookController,
     CompanyMailIdentityController,
+    CompanyMailSupportTicketController,
     CompanyMailTeamController,
     MailTeamInvitePublicController,
     CompanyMailInboxController,
@@ -413,6 +420,7 @@ import { AuditLogEntity } from "../../infrastructure/database/entities/AuditLogE
     MailContactCardDavSyncScheduler,
     MailDeliverabilityHubService,
     MailOnboardingKpiService,
+    MailOrganizationSupportTicketService,
   ],
   exports: [
     AuthNotificationService,
